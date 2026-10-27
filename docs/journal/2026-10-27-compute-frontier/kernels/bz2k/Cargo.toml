@@ -1,0 +1,12 @@
+[package]
+name = "bz2k"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+debug = "line-tables-only"
