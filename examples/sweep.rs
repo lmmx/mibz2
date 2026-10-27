@@ -9,11 +9,17 @@
 //! sweep FILE.bz2 [ROUNDS] [GHZ]
 //! ```
 //!
-//! Each block's T-vector is built once, then each round walks it at every setting, the
-//! settings' order rotated block by block so no setting always runs first after the build.
-//! A setting's round is its time summed over the blocks. Against the default (the
-//! settings `Segmented` uses), each round's ratio is paired, and the geometric mean of the
-//! rounds' ratios is given with its 95% interval (a t-interval on the logs).
+//! Each round decodes the file once at each setting, as `decode` does on one thread: block
+//! by block, MTF, the build, the walk and RLE1, only the walk timed, so each walk comes
+//! after the stages and the walk of the block before at the same setting, in the caches'
+//! state a decode leaves (not after the same block walked moments before at the same
+//! setting, which repeats find faster than any decode: up to a quarter at 512 segments on
+//! one CPU, so that settings sharing the default's layout looked faster than the rest). The
+//! settings' order is rotated round by round. A setting's round is its time summed over
+//! the blocks. Against the default (the settings `Segmented` uses), each round's ratio is
+//! paired, and the geometric mean of the rounds' ratios is given with its 95% interval (a
+//! t-interval on the logs). Each setting's output is checked against the plain walk's
+//! first, block by block.
 //!
 //! Where the kernel lets a process count its own events (Linux on x86_64, a PMU exposed to
 //! the machine, `perf_event_paranoid` at 2 or below), one more round, untimed, counts each
@@ -28,7 +34,7 @@ use mibz2::bwt::{
     PF_L2, PF_NTA, PF_OFF,
 };
 use mibz2::stream::{Event, Scanner, SliceSource};
-use mibz2::{mtf, Kernels};
+use mibz2::{mtf, rle, Kernels};
 
 type Walk = fn(&mut TVector, u32, &mut Vec<u8>, &mut SegScratch, usize);
 
@@ -117,7 +123,7 @@ fn main() {
     let mut cover = vec![(0u64, 0u64); settings.len()];
     let (mut ll, mut freq) = (Vec::new(), [0u32; 256]);
     let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
-    let (mut plain, mut out) = (Vec::new(), Vec::new());
+    let (mut plain, mut out, mut bytes) = (Vec::new(), Vec::new(), Vec::new());
     let mut n = 0usize;
     for (bi, b) in blocks.iter().enumerate() {
         mtf::mtf(b, &mut ll, &mut freq, k).unwrap();
@@ -135,26 +141,41 @@ fn main() {
                 s.segments
             );
         }
-        for (r, round) in times.iter_mut().enumerate() {
-            for j in 0..settings.len() {
-                let si = (j + bi + r) % settings.len();
-                let s = &settings[si];
-                let t = Instant::now();
-                (s.f)(&mut tt, b.orig_ptr, &mut out, &mut seg, s.segments);
-                round[si] += t.elapsed().as_secs_f64();
-            }
+    }
+
+    // A decode of the file at one setting, as `decode` runs it on one thread; `time` wraps
+    // the walk alone
+    let mut decode = |s: &Setting, time: &mut dyn FnMut(&mut dyn FnMut())| {
+        for b in &blocks {
+            mtf::mtf(b, &mut ll, &mut freq, k).unwrap();
+            build(&ll, &freq, &mut tt);
+            time(&mut || (s.f)(&mut tt, b.orig_ptr, &mut out, &mut seg, s.segments));
+            bytes.clear();
+            rle::unrle(&out, &mut bytes, k).unwrap();
         }
-        if let Some(c) = counters.as_mut() {
-            for (si, s) in settings.iter().enumerate() {
+    };
+    for (r, round) in times.iter_mut().enumerate() {
+        for j in 0..settings.len() {
+            let si = (j + r) % settings.len();
+            decode(&settings[si], &mut |f| {
+                let t = Instant::now();
+                f();
+                round[si] += t.elapsed().as_secs_f64();
+            });
+        }
+    }
+    if let Some(c) = counters.as_mut() {
+        for (si, s) in settings.iter().enumerate() {
+            decode(s, &mut |f| {
                 c.start();
-                (s.f)(&mut tt, b.orig_ptr, &mut out, &mut seg, s.segments);
+                f();
                 let (v, enabled, running) = c.stop();
                 for (total, v) in counts[si].iter_mut().zip(v) {
                     *total += v;
                 }
                 cover[si].0 += enabled;
                 cover[si].1 += running;
-            }
+            });
         }
     }
 
