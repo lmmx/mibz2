@@ -17,6 +17,10 @@ on:
         description: "Thread counts, e.g. 1,2,4 (default: 1, 2, 4, ... up to the CPUs)"
         required: false
         default: ""
+      args:
+        description: "More arguments for the instrument, e.g. --placements packed/spread"
+        required: false
+        default: ""
   pull_request:
     paths:
       - src/trace.rs
@@ -64,8 +68,11 @@ jobs:
         env:
           ROUNDS: ${{ inputs.rounds || '6' }}
           THREADS: ${{ inputs.threads || '' }}
+          ARGS: ${{ inputs.args || '' }}
         run: |
-          just bench-occupancy --rounds "$ROUNDS" ${THREADS:+--threads "$THREADS"} --out occupancy.json \
+          # (ARGS is split into words: e.g. --placements packed/spread)
+          # shellcheck disable=SC2086
+          just bench-occupancy --rounds "$ROUNDS" ${THREADS:+--threads "$THREADS"} $ARGS --out occupancy.json \
             --meta "runner=github-hosted ${{ runner.os }}" --meta "run=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             | tee occupancy.txt
           { echo '```text'; cat occupancy.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

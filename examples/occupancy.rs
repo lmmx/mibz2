@@ -13,6 +13,13 @@
 //! 1-thread runs are pinned to one CPU, as the benchmark's are. Every run must give the same
 //! bytes.
 //!
+//! **Placements** (`--placements packed/spread`, or CPU lists): each an arm of its own in
+//! every round, the whole process pinned to its CPUs (the scanner, feeder and reader with
+//! the workers), so a difference is the decoder's placement, not the workers' alone.
+//! `packed` takes each core's SMT siblings before the next core, `spread` one CPU a core
+//! first, both from the machine's own sibling map. Each placement's throughput against
+//! the first's, paired by round in `off`, is the comparison's verdict.
+//!
 //! **Three modes a thread count,** each round in a rotated order: `off` (no marks), the
 //! `timeline` (src/trace.rs level 1: timestamps of the scanner's, workers' and reader's
 //! states) and `full` (level 2: also each worker's CPU time and scheduler counters at
@@ -469,6 +476,7 @@ const MODES: [(&str, u8); 3] = [("off", 0), ("timeline", 1), ("full", 2)];
 fn parent(args: &[String]) {
     let mut file = None;
     let (mut threads, mut rounds, mut slots, mut out) = (None, 6usize, None, None);
+    let mut placements: Option<Vec<String>> = None;
     let mut meta: Vec<(String, String)> = Vec::new();
     let mut it = args.iter();
     while let Some(a) = it.next() {
@@ -492,13 +500,22 @@ fn parent(args: &[String]) {
                 )
             }
             "--out" => out = Some(it.next().expect("--out PATH").clone()),
+            "--placements" => {
+                placements = Some(
+                    it.next()
+                        .expect("--placements A/B")
+                        .split('/')
+                        .map(String::from)
+                        .collect(),
+                )
+            }
             "--meta" => {
                 let kv = it.next().expect("--meta K=V");
                 let (k, v) = kv.split_once('=').expect("--meta K=V");
                 meta.push((k.into(), v.into()));
             }
             "-h" | "--help" => {
-                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--out PATH] [--meta K=V]...");
+                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--placements packed/spread] [--out PATH] [--meta K=V]...");
                 return;
             }
             f => file = Some(f.to_string()),
@@ -518,6 +535,28 @@ fn parent(args: &[String]) {
     let pin = m.allowed_list.first().copied();
     let taskset = Command::new("taskset").arg("-V").output().is_ok();
     let exe = std::env::current_exe().unwrap();
+    // each placement an arm of its own in every round: the whole process (workers, scanner,
+    // feeder and reader) pinned to its CPUs; "" is none (1-thread runs pinned, as the
+    // benchmark's)
+    let specs: Vec<String> = placements.clone().unwrap_or_else(|| vec![String::new()]);
+    if placements.is_some() && !taskset {
+        eprintln!("occupancy: --placements needs taskset on PATH");
+        std::process::exit(2);
+    }
+    let mut cpus_of: BTreeMap<(usize, String), String> = BTreeMap::new();
+    for &t in &threads {
+        for spec in specs.iter().filter(|s| !s.is_empty()) {
+            match placement(spec, t, &m) {
+                Ok(c) => {
+                    cpus_of.insert((t, spec.clone()), c);
+                }
+                Err(e) => {
+                    eprintln!("occupancy: placement {spec:?} at {t} threads: {e}");
+                    std::process::exit(2);
+                }
+            }
+        }
+    }
     eprintln!(
         "occupancy: {} · {} CPUs allowed · threads {threads:?} · {rounds} rounds × {} modes",
         m.cpu,
@@ -525,54 +564,64 @@ fn parent(args: &[String]) {
         MODES.len()
     );
 
-    // runs[(threads, mode)] = one key=value map a round
-    let mut runs: BTreeMap<(usize, &str), Vec<BTreeMap<String, String>>> = BTreeMap::new();
+    // runs[(threads, placement, mode)] = one key=value map a round
+    type Runs<'a> = BTreeMap<(usize, String, &'a str), Vec<BTreeMap<String, String>>>;
+    let mut runs: Runs = BTreeMap::new();
     let mut raw = Vec::new();
     for r in 0..rounds {
         for &t in &threads {
             let s = slots.unwrap_or(2 * t);
-            let mut order: Vec<(&str, u8)> = MODES.to_vec();
-            order.rotate_left(r % MODES.len());
-            for (mode, level) in order {
-                let mut cmd = match pin.filter(|_| t == 1 && taskset) {
-                    Some(cpu) => {
-                        let mut c = Command::new("taskset");
-                        c.arg("-c").arg(cpu.to_string()).arg(&exe);
-                        c
+            let mut places = specs.clone();
+            let n = places.len();
+            places.rotate_left(r % n);
+            for spec in places {
+                let mut order: Vec<(&str, u8)> = MODES.to_vec();
+                order.rotate_left(r % MODES.len());
+                for (mode, level) in order {
+                    let cpus = cpus_of
+                        .get(&(t, spec.clone()))
+                        .cloned()
+                        .or_else(|| pin.filter(|_| t == 1 && taskset).map(|c| c.to_string()));
+                    let mut cmd = match cpus {
+                        Some(cpus) => {
+                            let mut c = Command::new("taskset");
+                            c.arg("-c").arg(cpus).arg(&exe);
+                            c
+                        }
+                        None => Command::new(&exe),
+                    };
+                    cmd.args([
+                        "--child",
+                        &file,
+                        &t.to_string(),
+                        &s.to_string(),
+                        &level.to_string(),
+                    ]);
+                    let o = cmd.output().expect("run a child");
+                    let line = String::from_utf8_lossy(&o.stdout).trim().to_string();
+                    let kv: BTreeMap<String, String> = line
+                        .split_whitespace()
+                        .filter_map(|p| {
+                            p.split_once('=')
+                                .map(|(k, v)| (k.to_string(), v.to_string()))
+                        })
+                        .collect();
+                    if !o.status.success() || kv.get("err").map_or(true, |e| e != "-") {
+                        eprintln!(
+                            "r{r} t={t} {mode}: failed: {line} {}",
+                            String::from_utf8_lossy(&o.stderr)
+                        );
                     }
-                    None => Command::new(&exe),
-                };
-                cmd.args([
-                    "--child",
-                    &file,
-                    &t.to_string(),
-                    &s.to_string(),
-                    &level.to_string(),
-                ]);
-                let o = cmd.output().expect("run a child");
-                let line = String::from_utf8_lossy(&o.stdout).trim().to_string();
-                let kv: BTreeMap<String, String> = line
-                    .split_whitespace()
-                    .filter_map(|p| {
-                        p.split_once('=')
-                            .map(|(k, v)| (k.to_string(), v.to_string()))
-                    })
-                    .collect();
-                if !o.status.success() || kv.get("err").map_or(true, |e| e != "-") {
                     eprintln!(
-                        "r{r} t={t} {mode}: failed: {line} {}",
-                        String::from_utf8_lossy(&o.stderr)
+                        "r{r} t={t:<3} {spec:<7} {mode:<8} wall {:>7} s{}",
+                        kv.get("wall").map_or("?", String::as_str),
+                        kv.get("t.complete")
+                            .map_or(String::new(), |c| format!("  trace complete: {c}"))
                     );
+                    raw.push((r, t, s, spec.clone(), mode, line));
+                    runs.entry((t, spec.clone(), mode)).or_default().push(kv);
+                    std::thread::sleep(Duration::from_millis(150));
                 }
-                eprintln!(
-                    "r{r} t={t:<3} {mode:<8} wall {:>7} s{}",
-                    kv.get("wall").map_or("?", String::as_str),
-                    kv.get("t.complete")
-                        .map_or(String::new(), |c| format!("  trace complete: {c}"))
-                );
-                raw.push((r, t, s, mode, line));
-                runs.entry((t, mode)).or_default().push(kv);
-                std::thread::sleep(Duration::from_millis(150));
             }
         }
     }
@@ -603,9 +652,11 @@ fn parent(args: &[String]) {
     let num =
         |kv: &BTreeMap<String, String>, k: &str| kv.get(k).and_then(|v| v.parse::<f64>().ok());
     let mbs = |kv: &BTreeMap<String, String>| out_bytes / 1e6 / num(kv, "wall").unwrap_or(f64::NAN);
-    let base1: Vec<f64> = runs
-        .get(&(threads[0], "off"))
-        .map_or(vec![], |v| v.iter().map(mbs).collect());
+    let off_of = |t: usize, spec: &str| -> Vec<f64> {
+        runs.get(&(t, spec.to_string(), "off"))
+            .map_or(vec![], |v| v.iter().map(mbs).collect())
+    };
+    let mut comparisons = Vec::new();
 
     let mut results = Vec::new();
     let mut table = String::new();
@@ -614,10 +665,12 @@ fn parent(args: &[String]) {
         "\n{:>4} {:>9} {:>17} {:>16} {:>16} | {:>6} {:>6} {:>6} {:>6} {:>6} {:>6} {:>6} | {:>6} {:>6} | {:>7} {:>7} {:>7} {:>6}",
         "thr", "MB/s", "speedup (95%)", "timeline cost", "full cost", "dec", "idle", "i:sl-d", "i:sl-r", "i:in", "i:rd", "i:q", "s:in", "r:wait", "blk ms", "cpu ms", "runq ms", "slices"
     );
-    for &t in &threads {
-        let off: Vec<f64> = runs
-            .get(&(t, "off"))
-            .map_or(vec![], |v| v.iter().map(mbs).collect());
+    for (t, spec) in threads
+        .iter()
+        .flat_map(|&t| specs.iter().map(move |s| (t, s.clone())))
+    {
+        let base1 = off_of(threads[0], &spec);
+        let off = off_of(t, &spec);
         let speed = ratio_ci(
             &off.iter()
                 .zip(&base1)
@@ -627,18 +680,19 @@ fn parent(args: &[String]) {
         let mut cost = Vec::new();
         for mode in ["timeline", "full"] {
             let v: Vec<f64> = runs
-                .get(&(t, mode))
+                .get(&(t, spec.clone(), mode))
                 .map_or(vec![], |v| v.iter().map(mbs).collect());
             // a mode's throughput over off's, round by round (< 1: tracing slows it)
             let c = ratio_ci(&v.iter().zip(&off).map(|(a, b)| a / b).collect::<Vec<_>>());
             cost.push((mode, c));
         }
         let traced = |mode: &str| -> Vec<(String, J)> {
-            let rs: Vec<&BTreeMap<String, String>> = runs.get(&(t, mode)).map_or(vec![], |v| {
-                v.iter()
-                    .filter(|kv| kv.get("t.complete").map(String::as_str) == Some("yes"))
-                    .collect()
-            });
+            let rs: Vec<&BTreeMap<String, String>> =
+                runs.get(&(t, spec.clone(), mode)).map_or(vec![], |v| {
+                    v.iter()
+                        .filter(|kv| kv.get("t.complete").map(String::as_str) == Some("yes"))
+                        .collect()
+                });
             let keys: BTreeSet<&String> = rs
                 .iter()
                 .flat_map(|kv| kv.keys())
@@ -684,7 +738,11 @@ fn parent(args: &[String]) {
         let _ = writeln!(
             table,
             "{:>4} {:>9.1} {:>17} {:>16} {:>16} | {:>6} {:>6} {:>6} {:>6} {:>6} {:>6} {:>6} | {:>6} {:>6} | {:>7.2} {:>7.2} {:>7.3} {:>6.1}",
-            format!("{t}{}", if m.cores.is_some_and(|c| t > c) { "*" } else { "" }),
+            format!(
+                "{t}{}{}",
+                if m.cores.is_some_and(|c| t > c) { "*" } else { "" },
+                cpus_of.get(&(t, spec.clone())).map_or(String::new(), |c| format!(" {spec} [{c}]"))
+            ),
             median(&mut off.clone()),
             if t == threads[0] { "1".into() } else { format!("{:.2}× ({:.2},{:.2})", speed.0, speed.1, speed.2) },
             ci(cost[0].1),
@@ -721,6 +779,20 @@ fn parent(args: &[String]) {
         };
         results.push(J::O(vec![
             ("threads".into(), J::N(t as f64)),
+            (
+                "placement".into(),
+                if spec.is_empty() {
+                    J::Null
+                } else {
+                    J::S(spec.clone())
+                },
+            ),
+            (
+                "cpus".into(),
+                cpus_of
+                    .get(&(t, spec.clone()))
+                    .map_or(J::Null, |c| J::S(c.clone())),
+            ),
             ("slots".into(), J::N(slots.unwrap_or(2 * t) as f64)),
             (
                 "above_physical_cores".into(),
@@ -728,7 +800,7 @@ fn parent(args: &[String]) {
             ),
             (
                 "pinned_to_one_cpu".into(),
-                J::B(t == 1 && taskset && pin.is_some()),
+                J::B(t == 1 && taskset && pin.is_some() && spec.is_empty()),
             ),
             (
                 "throughput_mb_s_off".into(),
@@ -755,6 +827,37 @@ fn parent(args: &[String]) {
             ("full".into(), J::O(full)),
         ]));
     }
+    // each placement's throughput against the first's, paired by round (off mode): the
+    // verdict; the per-block clocks above explain it
+    for &t in &threads {
+        for spec in specs.iter().skip(1) {
+            let (a, b) = (off_of(t, spec), off_of(t, &specs[0]));
+            let c = ratio_ci(&a.iter().zip(&b).map(|(x, y)| x / y).collect::<Vec<_>>());
+            let _ = writeln!(
+                table,
+                "{t} threads: {spec} [{}] over {} [{}]: throughput {:+.1}% ({:+.1}, {:+.1}), paired by round",
+                cpus_of.get(&(t, spec.clone())).map_or("", String::as_str),
+                specs[0],
+                cpus_of.get(&(t, specs[0].clone())).map_or("", String::as_str),
+                100.0 * (c.0 - 1.0),
+                100.0 * (c.1 - 1.0),
+                100.0 * (c.2 - 1.0)
+            );
+            comparisons.push(J::O(vec![
+                ("threads".into(), J::N(t as f64)),
+                ("placement".into(), J::S(spec.clone())),
+                ("against".into(), J::S(specs[0].clone())),
+                (
+                    "throughput_ratio".into(),
+                    J::O(vec![
+                        ("ratio".into(), J::N(c.0)),
+                        ("lo".into(), J::N(c.1)),
+                        ("hi".into(), J::N(c.2)),
+                    ]),
+                ),
+            ]));
+        }
+    }
 
     let report = J::O(vec![
         ("tool".into(), J::S("examples/occupancy.rs (#39)".into())),
@@ -779,9 +882,10 @@ fn parent(args: &[String]) {
         ("output_bytes".into(), J::N(out_bytes)),
         ("schedstat".into(), selftest.clone()),
         ("results".into(), J::A(results)),
+        ("placement_comparisons".into(), J::A(comparisons)),
         (
             "runs".into(),
-            J::A(raw.iter().map(|(r, t, s, mode, line)| J::O(vec![("round".into(), J::N(*r as f64)), ("threads".into(), J::N(*t as f64)), ("slots".into(), J::N(*s as f64)), ("mode".into(), J::S(mode.to_string())), ("line".into(), J::S(line.clone()))])).collect()),
+            J::A(raw.iter().map(|(r, t, s, spec, mode, line)| J::O(vec![("round".into(), J::N(*r as f64)), ("threads".into(), J::N(*t as f64)), ("slots".into(), J::N(*s as f64)), ("placement".into(), J::S(spec.clone())), ("mode".into(), J::S(mode.to_string())), ("line".into(), J::S(line.clone()))])).collect()),
         ),
     ]);
     let out = out.unwrap_or_else(|| "occupancy.json".into());
@@ -836,6 +940,43 @@ fn ratio_ci(r: &[f64]) -> (f64, f64, f64) {
     ];
     let h = T.get(n - 2).copied().unwrap_or(1.96) * sd / (n as f64).sqrt();
     (m.exp(), (m - h).exp(), (m + h).exp())
+}
+
+/// A placement's CPUs for `t` threads, from the machine's own SMT sibling map: `packed`
+/// fills each core's siblings before the next core, `spread` takes one CPU a core before
+/// any core's second; anything else is a CPU list as taskset takes it
+fn placement(spec: &str, t: usize, m: &Machine) -> Result<String, String> {
+    if spec != "packed" && spec != "spread" {
+        return Ok(spec.to_string());
+    }
+    let sets: Vec<Vec<usize>> = m
+        .siblings
+        .as_ref()
+        .ok_or("no SMT sibling map on this machine")?
+        .iter()
+        .map(|s| cpu_list(s))
+        .collect();
+    let mut cpus = Vec::new();
+    if spec == "packed" {
+        cpus.extend(sets.iter().flatten().copied());
+    } else {
+        let depth = sets.iter().map(Vec::len).max().unwrap_or(0);
+        for i in 0..depth {
+            cpus.extend(sets.iter().filter_map(|s| s.get(i)).copied());
+        }
+    }
+    if cpus.len() < t {
+        return Err(format!("{} CPUs, fewer than the threads", cpus.len()));
+    }
+    let cpus = &cpus[..t];
+    if sets.iter().all(|s| s.len() < 2) {
+        return Err("no SMT here: packed and spread are the same CPUs".into());
+    }
+    Ok(cpus
+        .iter()
+        .map(|c| c.to_string())
+        .collect::<Vec<_>>()
+        .join(","))
 }
 
 fn median(v: &mut [f64]) -> f64 {
