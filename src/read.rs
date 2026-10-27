@@ -87,7 +87,7 @@ impl<R: Read + Send + 'static> BzReader<R> {
         let read_error = Arc::new(Mutex::new(None));
         let (d, e) = (dec.clone(), read_error.clone());
         let feeder = std::thread::Builder::new()
-            .name("bunzip-read".into())
+            .name("mibz2-read".into())
             .spawn(move || {
                 loop {
                     let mut buf = vec![0u8; CHUNK];

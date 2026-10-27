@@ -4,7 +4,7 @@
 //! decoded every way the crate offers.
 
 mod common;
-use bunzip::{BzReader, ErrorKind, Kernels};
+use mibz2::{BzReader, ErrorKind, Kernels};
 use common::*;
 use std::io::Read;
 
@@ -33,9 +33,9 @@ fn every_entry_point() {
         for level in [1, 6, 9] {
             let z = compress(&data, level);
             let ctx = format!("{name} level {level}");
-            assert!(bunzip::decode(&z).unwrap() == data, "{ctx}: decode");
-            assert!(bunzip::decode_with::<bunzip::bwt::Plain>(&z, Kernels::scalar()).unwrap() == data, "{ctx}: scalar plain");
-            assert!(bunzip::decode_parallel(&z, 3).unwrap() == data, "{ctx}: decode_parallel");
+            assert!(mibz2::decode(&z).unwrap() == data, "{ctx}: decode");
+            assert!(mibz2::decode_with::<mibz2::bwt::Plain>(&z, Kernels::scalar()).unwrap() == data, "{ctx}: scalar plain");
+            assert!(mibz2::decode_parallel(&z, 3).unwrap() == data, "{ctx}: decode_parallel");
             let mut out = Vec::new();
             BzReader::new(&z[..]).read_to_end(&mut out).unwrap();
             assert!(out == data, "{ctx}: BzReader");
@@ -43,11 +43,11 @@ fn every_entry_point() {
             BzReader::parallel(std::io::Cursor::new(z.clone()), 4).read_to_end(&mut out).unwrap();
             assert!(out == data, "{ctx}: BzReader::parallel");
             // the blocks found, then each decoded alone, in any order
-            let spans: Vec<_> = bunzip::scan(&z).collect::<Result<_, _>>().unwrap();
+            let spans: Vec<_> = mibz2::scan(&z).collect::<Result<_, _>>().unwrap();
             assert!(!spans.is_empty() || data.is_empty());
             let mut parts: Vec<Vec<u8>> = vec![Vec::new(); spans.len()];
             for (i, s) in spans.iter().enumerate().rev() {
-                let r = bunzip::decode_blocks(&z, s.start_bit, s.end_bit, s.level, Kernels::detect(), &mut parts[i]).unwrap();
+                let r = mibz2::decode_blocks(&z, s.start_bit, s.end_bit, s.level, Kernels::detect(), &mut parts[i]).unwrap();
                 assert_eq!(r.blocks, vec![(s.start_bit, s.end_bit, s.crc)]);
             }
             assert!(parts.concat() == data, "{ctx}: scan + decode_blocks");
@@ -76,7 +76,7 @@ fn readers_on_short_reads_and_failing_sources() {
     for r in [BzReader::new(&bad[..]).read_to_end(&mut Vec::new()), BzReader::parallel(std::io::Cursor::new(bad.clone()), 2).read_to_end(&mut Vec::new())] {
         let e = r.unwrap_err();
         assert_eq!(e.kind(), std::io::ErrorKind::InvalidData);
-        let inner = e.into_inner().unwrap().downcast::<bunzip::Error>().unwrap();
+        let inner = e.into_inner().unwrap().downcast::<mibz2::Error>().unwrap();
         // (a data error, whichever check the flipped bit trips: not the source's, not a bug)
         assert!(!matches!(inner.kind, ErrorKind::Io(..) | ErrorKind::Cancelled | ErrorKind::Internal(_)), "{inner}");
     }

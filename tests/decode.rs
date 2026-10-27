@@ -3,7 +3,7 @@
 //! (from a block writer); and malformed streams, which must fail as libbzip2's do.
 
 mod common;
-use bunzip::{Kernels, ErrorKind};
+use mibz2::{Kernels, ErrorKind};
 use common::*;
 
 fn kernels() -> Vec<Kernels> {
@@ -14,7 +14,7 @@ fn kernels() -> Vec<Kernels> {
     v
 }
 
-fn kind(r: Result<Vec<u8>, bunzip::Error>) -> ErrorKind {
+fn kind(r: Result<Vec<u8>, mibz2::Error>) -> ErrorKind {
     r.expect_err("an error").kind
 }
 
@@ -117,7 +117,7 @@ fn crafted_blocks_match_libbzip2() {
             assert!(got == want, "case {case} n {n} {k:?}");
         }
         // and the plain walk, the kernel the segmented one must equal
-        assert!(bunzip::decode_with::<bunzip::bwt::Plain>(&z, Kernels::scalar()).unwrap() == want, "case {case}: plain");
+        assert!(mibz2::decode_with::<mibz2::bwt::Plain>(&z, Kernels::scalar()).unwrap() == want, "case {case}: plain");
     }
     assert!(unfinished > 0 && unfinished < 100, "{unfinished}");
 }
@@ -259,7 +259,7 @@ fn crc_errors() {
         let mut t = z.clone();
         let bit = crc_end - 1;
         t[(bit / 8) as usize] ^= 0x80 >> (bit % 8);
-        if let Err(e) = bunzip::decode(&t) {
+        if let Err(e) = mibz2::decode(&t) {
             if matches!(e.kind, ErrorKind::StreamCrc { .. }) {
                 assert!(oracle(&t).is_err());
                 found = true;
@@ -338,7 +338,7 @@ fn block_ranges() {
     for (i, &b) in starts.iter().enumerate() {
         let mut out = Vec::new();
         let end = starts.get(i + 1).copied().unwrap_or(u64::MAX);
-        let r = bunzip::decode_blocks(&z, b, end, 1, Kernels::detect(), &mut out).unwrap();
+        let r = mibz2::decode_blocks(&z, b, end, 1, Kernels::detect(), &mut out).unwrap();
         lens.push(out.len());
         assert_eq!(r.blocks.len(), 1);
         if i + 1 == starts.len() {
@@ -350,18 +350,18 @@ fn block_ranges() {
         for j in i + 1..=starts.len() {
             let end = starts.get(j).copied().unwrap_or(u64::MAX);
             let mut out = Vec::new();
-            let r = bunzip::decode_blocks(&z, starts[i], end, 1, Kernels::scalar(), &mut out).unwrap();
+            let r = mibz2::decode_blocks(&z, starts[i], end, 1, Kernels::scalar(), &mut out).unwrap();
             assert!(out == data[offs[i]..offs[j]], "blocks {i}..{j}");
             if j == starts.len() {
                 assert!(r.stream_end);
                 if i == 0 {
-                    assert_eq!(bunzip::combine(r.blocks.iter().map(|b| b.2)), r.stored_combined);
+                    assert_eq!(mibz2::combine(r.blocks.iter().map(|b| b.2)), r.stored_combined);
                 }
             }
         }
     }
     let mut out = Vec::new();
-    let e = bunzip::decode_blocks(&z, starts[0], starts[1] - 1, 1, Kernels::detect(), &mut out).unwrap_err();
+    let e = mibz2::decode_blocks(&z, starts[0], starts[1] - 1, 1, Kernels::detect(), &mut out).unwrap_err();
     assert_eq!(e.kind, ErrorKind::RangeOvershoot);
 }
 
@@ -371,7 +371,7 @@ fn reader_stops_early() {
     let mut rng = Rng(21);
     let data = samples(&mut rng).swap_remove(3).1;
     let z = compress(&data, 9);
-    let dec = bunzip::StreamDecoder::new(4, 4, Kernels::detect());
+    let dec = mibz2::StreamDecoder::new(4, 4, Kernels::detect());
     std::thread::scope(|s| {
         let w = s.spawn(|| {
             for c in z.chunks(1000) {

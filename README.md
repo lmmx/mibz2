@@ -1,4 +1,4 @@
-# bunzip
+# mibz2
 
 A bzip2 decoder built for memory-level parallelism. It is block-parallel like lbzip2. Within
 a block, its inverse BWT is walked as 12 interleaved chains, so a core keeps a dozen of the
@@ -11,8 +11,8 @@ walk's cache-missing loads in flight instead of one.
 
 It lives in [wikidata-pq](https://github.com/lmmx/wikidata-pq), whose split decodes the
 Wikidata dump with it (`WIKIDATA_BZ2_DECODER=native`). It knows nothing of Wikidata, and
-nothing in this directory depends on the rest of that repository. *The name is
-provisional; the crate is not published.*
+nothing in this directory depends on the rest of that repository. Its name is
+for "multi-chain inversion of bzip2". *The crate is not published.*
 
 ## Use
 
@@ -21,23 +21,23 @@ use std::io::Read;
 
 // a whole .bz2 in memory (its streams one after another): on this thread, or on 4
 let data = std::fs::read("file.bz2")?;
-let text = bunzip::decode(&data)?;
-let same = bunzip::decode_parallel(&data, 4)?;
+let text = mibz2::decode(&data)?;
+let same = mibz2::decode_parallel(&data, 4)?;
 
 // any Read, as a Read: on this thread, or block-parallel on 4 worker threads
 let mut out = Vec::new();
-bunzip::BzReader::new(std::fs::File::open("file.bz2")?).read_to_end(&mut out)?;
-bunzip::BzReader::parallel(std::fs::File::open("file.bz2")?, 4).read_to_end(&mut out)?;
+mibz2::BzReader::new(std::fs::File::open("file.bz2")?).read_to_end(&mut out)?;
+mibz2::BzReader::parallel(std::fs::File::open("file.bz2")?, 4).read_to_end(&mut out)?;
 
 // the block boundaries (each block's header and Huffman symbols read, nothing decoded),
 // then any range of whole blocks decoded on its own, on any thread: a caller's own
 // parallelism, or a sweep over block-aligned segments
-for span in bunzip::scan(&data) {
+for span in mibz2::scan(&data) {
     let span = span?;
     let mut part = Vec::new();
-    let range = bunzip::decode_blocks(&data, span.start_bit, span.end_bit, span.level,
-                                      bunzip::Kernels::detect(), &mut part)?;
-    // range.blocks: each block's (start bit, end bit, CRC); bunzip::combine(...) gives a
+    let range = mibz2::decode_blocks(&data, span.start_bit, span.end_bit, span.level,
+                                      mibz2::Kernels::detect(), &mut part)?;
+    // range.blocks: each block's (start bit, end bit, CRC); mibz2::combine(...) gives a
     // stream's combined CRC from its blocks'
 }
 ```
@@ -45,7 +45,7 @@ for span in bunzip::scan(&data) {
 | API | what |
 |---|---|
 | `decode`, `decode_parallel(data, threads)` | a whole .bz2 in memory |
-| `BzReader::new(r)`, `BzReader::parallel(r, threads)`, `parallel_with(r, threads, slots, kernels)` | a `Read` adaptor; a bad stream is an `io::Error` (`InvalidData`) wrapping `bunzip::Error` |
+| `BzReader::new(r)`, `BzReader::parallel(r, threads)`, `parallel_with(r, threads, slots, kernels)` | a `Read` adaptor; a bad stream is an `io::Error` (`InvalidData`) wrapping `mibz2::Error` |
 | `StreamDecoder::new(threads, slots, kernels)` | the push form: `write` compressed chunks from one thread, `read` decoded bytes from another, `close`, `cancel`; at most `slots` blocks in flight |
 | `scan(data)` → `BlockSpan { index, start_bit, end_bit, crc, stream, level }` | block boundaries, without decoding |
 | `decode_blocks(data, start_bit, end_bit, level, kernels, out)` → `Range` | a range of whole blocks, each CRC checked |
@@ -155,7 +155,7 @@ PCLMULQDQ) with other jobs running, so the figures are indicative only. Between 
 libbzip2's own figure on the text corpus moved from 18 to 34 MB/s. Corpora at the default
 scale (8–20 MB each), level 9:
 
-| corpus | ratio | libbzip2, 1 thread | bunzip, 1 thread | scalar kernels, 1 thread | plain walk, 1 thread | bunzip, 4 threads |
+| corpus | ratio | libbzip2, 1 thread | mibz2, 1 thread | scalar kernels, 1 thread | plain walk, 1 thread | mibz2, 4 threads |
 |---|--:|--:|--:|--:|--:|--:|
 | text (sources) | 19.8× | 34 MB/s | 84 MB/s | 66 MB/s | 17 MB/s | 155 MB/s |
 | random | 1.1× | 8 | 31 | 28 | 17 | 89 |

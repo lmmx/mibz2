@@ -11,7 +11,7 @@
 #[path = "../tests/common/mod.rs"]
 mod common;
 
-use bunzip::{bwt, Kernels};
+use mibz2::{bwt, Kernels};
 use std::io::Read;
 use std::time::Instant;
 
@@ -40,7 +40,7 @@ fn main() {
     println!("machine: {cpu}, {threads} threads, {} ({:?}), kernels {:?}", std::env::consts::ARCH,
              ghz.map(|g| format!("{g:.2} GHz")), Kernels::detect());
     println!("{:<10} {:>9} {:>9}  {:>14} {:>14} {:>14} {:>14} {:>14}", "corpus", "MB out", "ratio", "libbzip2 1t",
-             "bunzip 1t", "scalar 1t", "plain walk 1t", format!("bunzip {threads}t"));
+             "mibz2 1t", "scalar 1t", "plain walk 1t", format!("mibz2 {threads}t"));
     for (name, data) in common::corpora(scale) {
         let z = common::compress(&data, 9);
         let mb = data.len() as f64 / 1e6;
@@ -50,13 +50,13 @@ fn main() {
             out.len()
         });
         assert_eq!(n, data.len());
-        let (t_one, n) = best(|| bunzip::decode(&z).unwrap().len());
+        let (t_one, n) = best(|| mibz2::decode(&z).unwrap().len());
         assert_eq!(n, data.len());
-        let (t_scalar, n) = best(|| bunzip::decode_with::<bwt::Segmented>(&z, Kernels::scalar()).unwrap().len());
+        let (t_scalar, n) = best(|| mibz2::decode_with::<bwt::Segmented>(&z, Kernels::scalar()).unwrap().len());
         assert_eq!(n, data.len());
-        let (t_plain, n) = best(|| bunzip::decode_with::<bwt::Plain>(&z, Kernels::detect()).unwrap().len());
+        let (t_plain, n) = best(|| mibz2::decode_with::<bwt::Plain>(&z, Kernels::detect()).unwrap().len());
         assert_eq!(n, data.len());
-        let (t_par, n) = best(|| bunzip::decode_parallel(&z, threads).unwrap().len());
+        let (t_par, n) = best(|| mibz2::decode_parallel(&z, threads).unwrap().len());
         assert_eq!(n, data.len());
         let cell = |t: f64| match ghz {
             Some(g) => format!("{:>6.0} MB/s {:>4.1}c", mb / t, t * g * 1e9 / data.len() as f64),
