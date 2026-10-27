@@ -2,7 +2,8 @@
 model, the pull request comment, and the record kept for a master commit.
 
     report.py summary RUNS.jsonl --corpora DIR --mode pr|master|dispatch --head SHA
-                      [--base SHA] [--date ISO] [--run URL] --out RESULT.json --md OUT.md
+                      [--base SHA] [--date ISO] [--run URL] [--stages STAGES.jsonl]
+                      --out RESULT.json --md OUT.md
     report.py record STORE RESULT.json RUNS.jsonl
 
 `summary` reads the runs, the corpora's files (their sizes and SHA-256) and
@@ -18,6 +19,10 @@ the toolchain) and its Markdown:
 - **Where mibz2's CPU goes** on the Wikidata blocks at N threads: the scanner thread's
   CPU (each block's header and Huffman symbols, the one sequential part), the workers'
   (the rest of each block, in parallel across blocks) and the reading thread's.
+- **Where a decode's time goes, stage by stage** (`--stages`, bench/stages.py's runs of
+  examples/phases.rs): on the Wikidata blocks at 1 thread, each stage's median cycles a
+  byte of output at the runner's reported clock (and ns a byte), for each build; on a
+  pull request, head over base per stage, paired by round as above.
 - **Modelled, not measured:** a whole dump's decode (`model`), from the Wikidata blocks.
 
 `record` adds a master commit's result to the results store (the `bench-results`
@@ -33,6 +38,9 @@ patch version.
 - 1.1.0: master's run has every alternative (ALTERNATIVES), each arm classed as
   block-parallel or single-threaded (`parallel`); a single-threaded arm runs at 1 thread
   only, and its 1-thread runs stand, marked, in every thread count's figures.
+- 1.2.0: the stage table (`stages`, from bench/stages.py's runs of examples/phases.rs):
+  each stage's cycles a byte on the Wikidata blocks at 1 thread, and on a pull request
+  head over base per stage. Every existing figure is as it was.
 """
 
 import argparse
@@ -48,7 +56,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "1.1.0"
+BENCH = "1.2.0"
 # The other decoders, in the order they are shown: the block-parallel, then the
 # single-threaded (examples/ab.rs: `parallel`)
 ALTERNATIVES = ["pbz2", "lbzip2", "indexed_bzip2", "fbz", "lbzip2-rs", "libbzip2", "libbz2-rs"]
@@ -326,6 +334,74 @@ def figures(runs: list[dict], ref: str, mhz: float | None, pr: bool) -> dict:
 
 
 # ---------------------------------------------------------------------------------------
+# The stages
+
+
+# The stages as shown, in examples/phases.rs's order (bench/stages.py's keys)
+STAGE_ROWS = [
+    ("scan", "scanner (headers, Huffman)"),
+    ("mtf", "MTF + RLE2"),
+    ("build", "T-vector build"),
+    ("walk", "walk, flagged (used)"),
+    ("rle", "RLE1"),
+    ("crc", "CRC"),
+    ("total", "total"),
+]
+
+
+def stage_figures(lines: list[dict], mhz: float | None, pr: bool) -> dict:
+    """Each build's stages (bench/stages.py's runs, picoseconds a byte): the median ns and
+    cycles a byte of output (at the reported clock) and each round's ns; on a pull
+    request, head over base per stage, the rounds' paired ratios as `figures`'."""
+    by = defaultdict(dict)  # arm -> round -> run
+    for r in lines:
+        by[r["arm"]][r["round"]] = r
+    keys = [k for k, _ in STAGE_ROWS]
+    arms = {}
+    for arm, rounds in by.items():
+        ok = {k: r for k, r in sorted(rounds.items()) if not r.get("err")}
+        f = {
+            "n": len(ok),
+            "errors": sorted({r["err"] for r in rounds.values() if r.get("err")}),
+            "stages": {},
+            "rounds_ns_per_byte": {},
+        }
+        for key in keys:
+            v = [r["ps_per_byte"][key] / 1000 for r in ok.values()]
+            if not v:
+                continue
+            med = statistics.median(v)
+            f["stages"][key] = {
+                "ns_per_byte": round(med, 4),
+                "cycles_per_byte": round(med * mhz / 1000, 3) if mhz else None,
+            }
+            f["rounds_ns_per_byte"][key] = v
+        arms[arm] = f
+    out = {
+        "corpus": "wikidata",
+        "tool": "examples/phases.rs (bench/stages.py)",
+        "threads": 1,
+        "repeats": max((r.get("repeats", 1) for r in lines), default=None),
+        "rounds": len({r["round"] for r in lines}),
+        "runs": len(lines),
+        "seconds": round(sum(r.get("wall", 0) for r in lines), 1),
+        "mhz": mhz,
+        "arms": arms,
+    }
+    if pr and {"base", "head"} <= set(by):
+        b, h = by["base"], by["head"]
+        pairs = [
+            (h[k]["ps_per_byte"], b[k]["ps_per_byte"])
+            for k in h
+            if k in b and not h[k].get("err") and not b[k].get("err")
+        ]
+        out["change"] = {
+            key: ratio_ci([x[key] / y[key] for x, y in pairs if y.get(key)]) for key in keys
+        }
+    return out
+
+
+# ---------------------------------------------------------------------------------------
 # The full-dump model
 
 
@@ -537,6 +613,76 @@ def model_lines(models: dict[str, dict], n: int, pr: bool) -> list[str]:
     return out
 
 
+def stage_lines(st: dict, pr: bool) -> list[str]:
+    """The stage table: each stage's median cycles a byte (ns a byte without a clock),
+    base → head and head over base on a pull request."""
+    arms = st["arms"]
+    shown = ["base", "head"] if pr and {"base", "head"} <= set(arms) else list(arms)
+    cycles = bool(st.get("mhz"))
+    unit = "c/B" if cycles else "ns/B"
+    value = lambda a, k: (
+        a["stages"][k]["cycles_per_byte"] if cycles else a["stages"][k]["ns_per_byte"]
+    )
+    last = arms[shown[-1]]
+    out = [
+        "",
+        f"### Where a decode's time goes, stage by stage: the Wikidata blocks on one thread (median {unit})",
+        "",
+        f"Each of {st['rounds']} rounds runs {'each build' if len(shown) > 1 else 'the build'}'s "
+        "`examples/phases.rs` once (bench/stages.py), pinned to one CPU"
+        + (", the builds' order alternating" if len(shown) > 1 else "")
+        + ": every block's stages timed one by one with the library's own functions"
+        + (f" (each the best of {st['repeats']})" if (st.get("repeats") or 1) > 1 else "")
+        + ", summed over the blocks, "
+        + (
+            f"in cycles a byte of output at the reported clock ({st['mhz']:.0f} MHz)"
+            if cycles
+            else "in ns a byte of output"
+        )
+        + (
+            ". **Change** is head over base per stage, paired by round as above. "
+            if len(shown) > 1
+            else ". "
+        )
+        + f"Diagnostic only: the decoder's own figures are the tables above. {st['runs']} runs, "
+        f"{duration(st['seconds'])} of the run.",
+        "",
+    ]
+    if len(shown) > 1:
+        out += [
+            f"| stage | base → head {unit} (median) | head share | change |",
+            "|---|--:|--:|--:|",
+        ]
+    else:
+        out += [f"| stage | {shown[0]} {unit} (median) | share |", "|---|--:|--:|"]
+    for key, name in STAGE_ROWS:
+        cells = []
+        for arm in shown:
+            a = arms[arm]
+            cells.append(f"{value(a, key):.2f}" if key in a["stages"] else "–")
+        tot = last["stages"].get("total")
+        share = (
+            f"{100 * last['stages'][key]['ns_per_byte'] / tot['ns_per_byte']:.1f}%"
+            if key in last["stages"] and tot and key != "total"
+            else ""
+        )
+        title = f"**{name}**" if key == "total" else name
+        if len(shown) > 1:
+            out.append(
+                f"| {title} | {' → '.join(cells)} | {share} | {change((st.get('change') or {}).get(key))} |"
+            )
+        else:
+            out.append(f"| {title} | {cells[0]} | {share} |")
+    errors = {arm: a["errors"] for arm, a in arms.items() if a["errors"]}
+    if errors:
+        out += [
+            "",
+            "**Stage runs failed:** "
+            + "; ".join(f"{k}: {', '.join(v)}" for k, v in errors.items()),
+        ]
+    return out
+
+
 def alternatives_lines(res: dict, order: list[str]) -> list[str]:
     """The master run's tables: every other decoder's wall, CPU and peak RSS against
     mibz2's, a column each; a single-threaded decoder's figures are its 1-thread runs,
@@ -676,6 +822,8 @@ def markdown(res: dict) -> str:
             lines.append(
                 f"| {k} | {s['scan']:.2f} | {s['workers']:.2f} | {s['other']:.2f} | {w[k]['wall']:.3f} |"
             )
+    if res.get("stages"):
+        lines += stage_lines(res["stages"], pr)
     if res.get("models"):
         lines += model_lines(res["models"], n, pr)
     lines += [
@@ -744,6 +892,10 @@ def summary(a: argparse.Namespace) -> None:
         "figures": figs,
         "models": models,
     }
+    if a.stages and Path(a.stages).exists():
+        lines = [json.loads(l) for l in Path(a.stages).read_text().splitlines() if l.strip()]
+        if lines:
+            res["stages"] = stage_figures(lines, mach["mhz"], a.mode == "pr")
     Path(a.out).write_text(json.dumps(res, indent=1, allow_nan=False) + "\n")
     Path(a.md).write_text(markdown(res))
     print(
@@ -790,6 +942,7 @@ def main() -> None:
     s.add_argument("--base")
     s.add_argument("--date")
     s.add_argument("--run")
+    s.add_argument("--stages")
     s.add_argument("--out", required=True)
     s.add_argument("--md", required=True)
     r = sub.add_parser("record")

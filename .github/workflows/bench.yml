@@ -23,6 +23,11 @@
 # 12 MB of the Wikidata dump's own bzip2 blocks (bench/wikidata.json: byte-range windows
 # of a dated dump, each window's SHA-256 and the corpus's pinned). At 1 thread and at the
 # runner's cores, ROUNDS rounds.
+#
+# The stages (bench/stages.py): each build's examples/phases.rs on the Wikidata blocks,
+# pinned to one CPU, STAGE_ROUNDS rounds of each build once, best of STAGE_REPEATS; a
+# table of each stage's cycles a byte (head over base on a pull request), beside the
+# decoder's figures, not part of them.
 name: Benchmark
 
 on:
@@ -34,6 +39,7 @@ on:
       - "Cargo.lock"
       - "examples/ab.rs"
       - "examples/windows.rs"
+      - "examples/phases.rs"
       - "tests/common/**" # (the corpora's recipe)
       - "bench/**"
       - ".github/workflows/bench.yml"
@@ -45,6 +51,7 @@ on:
       - "Cargo.lock"
       - "examples/ab.rs"
       - "examples/windows.rs"
+      - "examples/phases.rs"
       - "tests/common/**"
       - "bench/**"
       - ".github/workflows/bench.yml"
@@ -67,6 +74,8 @@ env:
   ROUNDS: 10
   SCALE: 4 # ab gen's: corpora of 8-20 MB of output each
   SETTLE: 0.25 # seconds the harness samples the other processes' load before each run
+  STAGE_ROUNDS: 4 # bench/stages.py's rounds (each about 10 s a build)
+  STAGE_REPEATS: 1 # phases' repeats a run (each stage's best of them)
   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   CARGO_TERM_COLOR: never
 
@@ -121,8 +130,8 @@ jobs:
       # The release profile (Cargo.toml's: fat LTO, one codegen unit), as published
       - name: Build the head
         run: |
-          cargo build --release --example ab --example windows
-          mkdir -p bin && cp target/release/examples/ab bin/ab
+          cargo build --release --example ab --example windows --example phases
+          mkdir -p bin && cp target/release/examples/ab bin/ab && cp target/release/examples/phases bin/phases
 
       # The alternatives (master and the Actions tab only): bench/alternatives' build of the
       # harness, and indexed_bzip2 in a virtualenv of its own
@@ -139,8 +148,11 @@ jobs:
         run: |
           git worktree add --detach .base-src "$BASE_SHA"
           test -f .base-src/examples/ab.rs || { echo "::error::the base $BASE_SHA has no examples/ab.rs"; exit 1; }
-          (cd .base-src && CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo build --release --example ab)
+          # (and its examples/phases.rs, for the stage table, where it has one)
+          phases=$(test -f .base-src/examples/phases.rs && echo "--example phases" || true)
+          (cd .base-src && CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo build --release --example ab $phases)
           mkdir -p base && cp target/release/examples/ab base/ab
+          if [ -n "$phases" ]; then cp target/release/examples/phases base/phases; fi
 
       - name: Corpora
         run: bin/ab gen corpora "$SCALE"
@@ -169,12 +181,25 @@ jobs:
         run: |
           bin/ab run runs.jsonl --arms "$ARMS" --threads "1,$(nproc)" --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
 
+      # Each stage on its own, on one thread: a diagnostic beside the decoder's figures
+      - name: Stages
+        run: |
+          if [ "$MODE" = pr ]; then
+            arms="head=bin/phases"; [ -x base/phases ] && arms="base=base/phases $arms"
+          else
+            arms="mibz2=bin/phases"
+          fi
+          start=$SECONDS
+          python3 bench/stages.py run stages.jsonl --rounds "$STAGE_ROUNDS" --repeats "$STAGE_REPEATS" corpora/wikidata.bz2 $arms
+          echo "stages: $((SECONDS - start)) s"
+
       - name: Figures
         run: |
           ref=$([ "$MODE" = pr ] && echo "mibz2@base/ab" || echo mibz2)
           { echo "## ab summary (reference: $ref)"; bin/ab summary runs.jsonl --ref "$ref"; } > ab-summary.md
           python3 bench/report.py summary runs.jsonl --corpora corpora --mode "$MODE" --head "$HEAD_SHA" \
-            ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --out result.json --md comment.md
+            ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --stages stages.jsonl \
+            --out result.json --md comment.md
           cat comment.md ab-summary.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Comment
@@ -196,6 +221,7 @@ jobs:
           name: bench-${{ env.MODE }}-${{ env.HEAD_SHA }}
           path: |
             runs.jsonl
+            stages.jsonl
             result.json
             comment.md
             ab-summary.md
