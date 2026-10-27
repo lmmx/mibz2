@@ -25,3 +25,8 @@ target/
 /docs/site/assets/bench-history.json
 /docs/site/assets/alternatives.json
 /docs/generated/
+
+# just bench-occupancy's corpus, its windows and its result files (bench/occupancy.sh)
+/corpora/
+/windows/
+/occupancy-*.json

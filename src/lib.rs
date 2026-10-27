@@ -86,6 +86,8 @@ pub mod parallel;
 mod read;
 pub mod rle;
 pub mod stream;
+#[cfg(feature = "trace")]
+pub mod trace;
 
 #[cfg(feature = "python")]
 mod python;

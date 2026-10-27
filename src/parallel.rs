@@ -35,6 +35,18 @@ const INPUT_QUEUE: usize = 2;
 /// Bytes the scanner's window keeps behind it before it drops them
 const COMPACT: usize = 4 << 20;
 
+/// A mark on the decoder's timeline (src/trace.rs), with the `trace` feature only
+macro_rules! mark {
+    ($kind:ident) => {
+        #[cfg(feature = "trace")]
+        crate::trace::mark(crate::trace::Kind::$kind, crate::trace::NONE);
+    };
+    ($kind:ident, $place:expr) => {
+        #[cfg(feature = "trace")]
+        crate::trace::mark(crate::trace::Kind::$kind, $place);
+    };
+}
+
 /// A block to finish: its place in the stream, its first bit, its symbols
 type Job = (u64, u64, super::block::Symbols);
 
@@ -207,6 +219,7 @@ impl StreamDecoder {
                 st.free_out.push(spent);
             }
             r.at = 0;
+            mark!(ReadWait);
             loop {
                 if st.cancelled {
                     r.failed = Some(Error::new(ErrorKind::Cancelled));
@@ -216,6 +229,7 @@ impl StreamDecoder {
                 if let Some(res) = st.ready.remove(&taken) {
                     st.taken += 1;
                     self.shared.cv.notify_all();
+                    mark!(Taken, taken);
                     match res {
                         Ok(v) => r.cur = v,
                         Err(e) => r.failed = Some(e),
@@ -261,8 +275,10 @@ struct ChannelSource<'a> {
 impl Source for ChannelSource<'_> {
     fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), ErrorKind> {
         while !self.eof && self.base + (self.buf.len() as u64) < from + want as u64 {
+            mark!(InputWait);
             match self.rx.recv() {
                 Ok(chunk) => {
+                    mark!(InputGot);
                     let drop_n = (self.released - self.base) as usize;
                     if drop_n >= COMPACT {
                         self.buf.drain(..drop_n);
@@ -270,7 +286,10 @@ impl Source for ChannelSource<'_> {
                     }
                     self.buf.extend_from_slice(&chunk);
                 }
-                Err(_) => self.eof = true,
+                Err(_) => {
+                    mark!(InputEnd);
+                    self.eof = true;
+                }
             }
             if self.shared.lock().cancelled {
                 return Err(ErrorKind::Cancelled);
@@ -311,6 +330,7 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
     };
     loop {
         // a slot first, and a symbols buffer to reuse
+        mark!(SlotWait);
         let syms = {
             let mut st = shared.lock();
             while !st.cancelled && st.issued - st.taken >= shared.slots {
@@ -322,6 +342,7 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
             }
             st.free_syms.pop().unwrap_or_default()
         };
+        mark!(SlotGot);
         let next = catch_unwind(AssertUnwindSafe(|| sc.next(syms)))
             .unwrap_or_else(|p| Err(Error::new(ErrorKind::Internal(panic_message(p)))));
         match next {
@@ -335,10 +356,12 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
                 let place = st.issued;
                 st.issued += 1;
                 drop(st);
+                mark!(Issued, place);
                 debug_assert_eq!(place, index);
                 if jobs.send((place, bit, symbols)).is_err() {
                     return finish(None);
                 }
+                mark!(Enqueued, place);
             }
             Ok(Event::Done) => return finish(None),
             Err(e) => return finish(Some(e)),
@@ -351,10 +374,16 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
 fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels) {
     let mut scratch = Scratch::<I>::default();
     loop {
-        let job = jobs.lock().unwrap_or_else(|e| e.into_inner()).recv();
+        mark!(JobLock);
+        let job = {
+            let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());
+            mark!(JobRecv);
+            rx.recv()
+        };
         let Ok((place, bit, symbols)) = job else {
             return;
         };
+        mark!(JobGot, place);
         let mut out = {
             let mut st = shared.lock();
             if st.cancelled {
@@ -363,9 +392,11 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             st.free_out.pop().unwrap_or_default()
         };
         out.clear();
+        mark!(DecodeStart, place);
         let res = catch_unwind(AssertUnwindSafe(|| {
             decode_block(&symbols, k, &mut scratch, &mut out)
         }));
+        mark!(DecodeEnd, place);
         let res = match res {
             Ok(Ok(_)) => Ok(out),
             Ok(Err(kind)) => Err(kind),
@@ -387,6 +418,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             st.free_syms.push(symbols.syms);
         }
         drop(st);
+        mark!(Ready, place);
         shared.cv.notify_all();
     }
 }

@@ -1,3 +1,4 @@
+import ".just/bench.just"
 import ".just/commit.just"
 import ".just/docs.just"
 import ".just/python.just"
