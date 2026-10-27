@@ -77,6 +77,12 @@ shipped #37, is not affected.
 | four copies, L2 | 12.72 | 10.82 | 9.70 | 10.21 | 10.58 | 10.49 | 10.62 |
 | four copies, NTA | 12.27 | 10.76 | 10.32 | 10.22 | 10.51 | 10.45 | 10.52 |
 
+**The four CPUs separately**, with four copies running:
+- each copy's default (32 lanes, L1) took 9.67, 10.35, 10.85 and 10.62 c/B;
+- L1's saving over no prefetch was 11–16% at 8 lanes and 15–22% at 32 lanes across the four;
+- the CPUs differ by up to 12% in level but not in the curve's shape. Each copy's file is
+  in the run's artifact.
+
 **The flagged walk**, at matched settings, costs about 15–20% more at one copy and 15–25%
 more at four (32 lanes with L1: 5.86 against 5.00, and 12.70 against 10.37).
 

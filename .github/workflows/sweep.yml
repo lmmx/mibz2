@@ -73,11 +73,11 @@ jobs:
           bin=target/release/examples/sweep
           start=$SECONDS
           # each file names its runner: runners differ in CPU model, and so in the figures
-          { echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported"; taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } | tee sweep-1.txt
+          { echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); rounds $ROUNDS"; taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } | tee sweep-1.txt
           alone=$((SECONDS - start)); start=$SECONDS
           cpus=$(nproc)
           for c in $(seq 0 $((cpus - 1))); do
-            { echo "runner: $model, $cpus CPUs, ${ghz} GHz reported"; taskset -c "$c" $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } > "sweep-$cpus-cpu$c.txt" &
+            { echo "runner: $model, $cpus CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); rounds $ROUNDS; this copy on CPU $c"; taskset -c "$c" $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } > "sweep-$cpus-cpu$c.txt" &
           done
           wait
           together=$((SECONDS - start))
