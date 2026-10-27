@@ -30,7 +30,7 @@
         
       
       
-      <link rel="icon" href="../../assets/favicon.svg">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="zensical-0.0.71">
     
     
@@ -110,7 +110,8 @@
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="mibz2" class="md-header__button md-logo" aria-label="mibz2" data-md-component="logo">
       
-  <img src="../../assets/logo.svg" alt="mibz2">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
 
     </a>
     <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
@@ -218,7 +219,8 @@
   <label class="md-nav__title" for="__drawer">
     <a href="../.." title="mibz2" class="md-nav__button md-logo" aria-label="mibz2" data-md-component="logo">
       
-  <img src="../../assets/logo.svg" alt="mibz2">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 5v16M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg>
 
     </a>
     mibz2
@@ -644,6 +646,23 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Against other decoders
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="././" class="md-nav__link md-nav__link--active">
         
   
@@ -659,6 +678,48 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-mibz2s-cpu-goes-the-wikidata-blocks-at-4-threads-median-cpu-seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Where mibz2's CPU goes: the Wikidata blocks at 4 threads (median CPU seconds)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modelled-not-measured-a-whole-dump" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Modelled, not measured: a whole dump
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1074,6 +1135,11 @@
                       
                     
                     
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
                   
                   <div class="md-sidebar__inner">
                     
@@ -1085,6 +1151,36 @@
   
     
   
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-mibz2s-cpu-goes-the-wikidata-blocks-at-4-threads-median-cpu-seconds" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Where mibz2's CPU goes: the Wikidata blocks at 4 threads (median CPU seconds)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modelled-not-measured-a-whole-dump" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Modelled, not measured: a whole dump
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1120,10 +1216,293 @@
 one runner (<a href="../">methodology</a>). A ratio above 1 is the other decoder taking longer
 than mibz2. These are decoder-level results; end-to-end pipeline results are in
 <a href="https://lmmx.github.io/wikidata-pq/guide/bench-history/">wikidata-pq's tracker</a>.</p>
-<div class="admonition note">
-<p class="admonition-title">No master commit is recorded yet</p>
-<p>The first record appears once the Benchmark workflow has run on a push to master.</p>
-</div>
+<p>The latest record: <a href="https://github.com/lmmx/mibz2/commit/2a68359b1e09c620bfb056411b7a89f16a1251a6"><code>2a68359</code></a> (2026-10-27).</p>
+<p><strong>mibz2 against pbz2 0.2.0 and lbzip2 version 2.5</strong>: 10 rounds on one runner · <a href="https://github.com/lmmx/mibz2/actions/runs/40500845444">run</a></p>
+<p>AMD EPYC 7763 64-Core Processor, 4 cores · rustc 1.99.1 (58cf8f9c3 2026-10-13) · bench 1.0.0</p>
+<p>Each round decodes every corpus once with each decoder at each thread count (<code>ab run</code>), their order rotated round to round. <strong>Time against mibz2</strong> is the decoder's wall (or CPU) over mibz2's: the geometric mean of the rounds' paired ratios and its 95% interval; above 1, mibz2 is faster. 1-thread runs are pinned to one CPU.</p>
+<table>
+<thead>
+<tr>
+<th>corpus</th>
+<th style="text-align: right;">threads</th>
+<th style="text-align: right;">mibz2 wall (median)</th>
+<th style="text-align: right;">mibz2 MB/s</th>
+<th style="text-align: right;">mibz2 c/B</th>
+<th style="text-align: right;">pbz2 wall / mibz2</th>
+<th style="text-align: right;">pbz2 CPU / mibz2</th>
+<th style="text-align: right;">lbzip2 wall / mibz2</th>
+<th style="text-align: right;">lbzip2 CPU / mibz2</th>
+<th style="text-align: right;">peak RSS: mibz2, pbz2, lbzip2</th>
+<th>same bytes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.527 s</td>
+<td style="text-align: right;">137</td>
+<td style="text-align: right;">17.8</td>
+<td style="text-align: right;">0.98× (0.97–0.98)</td>
+<td style="text-align: right;">0.98× (0.97–0.98)</td>
+<td style="text-align: right;">2.27× (2.25–2.30)</td>
+<td style="text-align: right;">2.26× (2.24–2.28)</td>
+<td style="text-align: right;">27, 10, 8 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.685 s</td>
+<td style="text-align: right;">306</td>
+<td style="text-align: right;">29.2</td>
+<td style="text-align: right;">0.99× (0.98–1.00)</td>
+<td style="text-align: right;">1.01× (1.00–1.02)</td>
+<td style="text-align: right;">1.48× (1.45–1.50)</td>
+<td style="text-align: right;">1.57× (1.55–1.59)</td>
+<td style="text-align: right;">76, 31, 39 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.015 s</td>
+<td style="text-align: right;">1,338</td>
+<td style="text-align: right;">2.1</td>
+<td style="text-align: right;">0.76× (0.73–0.79)</td>
+<td style="text-align: right;">0.79× (0.76–0.81)</td>
+<td style="text-align: right;">6.78× (6.53–7.04)</td>
+<td style="text-align: right;">4.28× (4.13–4.43)</td>
+<td style="text-align: right;">34, 10, 6 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.015 s</td>
+<td style="text-align: right;">1,329</td>
+<td style="text-align: right;">2.1</td>
+<td style="text-align: right;">0.78× (0.77–0.79)</td>
+<td style="text-align: right;">0.80× (0.79–0.82)</td>
+<td style="text-align: right;">6.69× (6.58–6.81)</td>
+<td style="text-align: right;">4.59× (4.52–4.66)</td>
+<td style="text-align: right;">33, 7, 5 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.085 s</td>
+<td style="text-align: right;">232</td>
+<td style="text-align: right;">10.8</td>
+<td style="text-align: right;">1.01× (1.00–1.02)</td>
+<td style="text-align: right;">1.01× (1.00–1.02)</td>
+<td style="text-align: right;">1.20× (1.19–1.21)</td>
+<td style="text-align: right;">1.18× (1.17–1.18)</td>
+<td style="text-align: right;">18, 10, 7 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.043 s</td>
+<td style="text-align: right;">461</td>
+<td style="text-align: right;">19.4</td>
+<td style="text-align: right;">1.04× (1.01–1.06)</td>
+<td style="text-align: right;">1.05× (1.03–1.08)</td>
+<td style="text-align: right;">1.19× (1.16–1.21)</td>
+<td style="text-align: right;">1.00× (0.98–1.02)</td>
+<td style="text-align: right;">42, 26, 27 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.192 s</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">59.3</td>
+<td style="text-align: right;">0.89× (0.87–0.92)</td>
+<td style="text-align: right;">0.90× (0.87–0.92)</td>
+<td style="text-align: right;">2.06× (2.00–2.12)</td>
+<td style="text-align: right;">1.82× (1.76–1.87)</td>
+<td style="text-align: right;">24, 11, 7 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.085 s</td>
+<td style="text-align: right;">94</td>
+<td style="text-align: right;">79.5</td>
+<td style="text-align: right;">1.02× (0.99–1.04)</td>
+<td style="text-align: right;">1.11× (1.09–1.14)</td>
+<td style="text-align: right;">1.80× (1.76–1.83)</td>
+<td style="text-align: right;">1.76× (1.74–1.78)</td>
+<td style="text-align: right;">53, 32, 22 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.237 s</td>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">60.9</td>
+<td style="text-align: right;">0.87× (0.86–0.89)</td>
+<td style="text-align: right;">0.87× (0.86–0.89)</td>
+<td style="text-align: right;">2.09× (2.04–2.14)</td>
+<td style="text-align: right;">1.91× (1.88–1.94)</td>
+<td style="text-align: right;">24, 11, 7 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.103 s</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">85.2</td>
+<td style="text-align: right;">1.00× (0.98–1.03)</td>
+<td style="text-align: right;">1.07× (1.03–1.10)</td>
+<td style="text-align: right;">1.97× (1.94–1.99)</td>
+<td style="text-align: right;">1.78× (1.73–1.82)</td>
+<td style="text-align: right;">59, 33, 26 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.012 s</td>
+<td style="text-align: right;">820</td>
+<td style="text-align: right;">3.5</td>
+<td style="text-align: right;">0.66× (0.64–0.68)</td>
+<td style="text-align: right;">0.71× (0.70–0.73)</td>
+<td style="text-align: right;">4.15× (4.07–4.22)</td>
+<td style="text-align: right;">2.99× (2.93–3.05)</td>
+<td style="text-align: right;">24, 10, 5 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.013 s</td>
+<td style="text-align: right;">784</td>
+<td style="text-align: right;">3.7</td>
+<td style="text-align: right;">0.63× (0.62–0.64)</td>
+<td style="text-align: right;">0.68× (0.67–0.70)</td>
+<td style="text-align: right;">3.96× (3.91–4.00)</td>
+<td style="text-align: right;">3.08× (3.01–3.16)</td>
+<td style="text-align: right;">26, 6, 4 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>text</code> (778 kB → 12 MB, 15.5×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.100 s</td>
+<td style="text-align: right;">120</td>
+<td style="text-align: right;">20.8</td>
+<td style="text-align: right;">1.01× (1.00–1.02)</td>
+<td style="text-align: right;">1.01× (1.00–1.02)</td>
+<td style="text-align: right;">2.52× (2.51–2.53)</td>
+<td style="text-align: right;">2.28× (2.27–2.29)</td>
+<td style="text-align: right;">19, 10, 7 MB</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>text</code> (778 kB → 12 MB, 15.5×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.050 s</td>
+<td style="text-align: right;">241</td>
+<td style="text-align: right;">35.0</td>
+<td style="text-align: right;">0.94× (0.91–0.96)</td>
+<td style="text-align: right;">1.04× (0.99–1.08)</td>
+<td style="text-align: right;">2.03× (1.97–2.09)</td>
+<td style="text-align: right;">1.59× (1.57–1.61)</td>
+<td style="text-align: right;">53, 27, 25 MB</td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Same bytes:</strong> every run of every arm gave the same output hash on that corpus, with no error.</p>
+<h2 id="where-mibz2s-cpu-goes-the-wikidata-blocks-at-4-threads-median-cpu-seconds">Where mibz2's CPU goes: the Wikidata blocks at 4 threads (median CPU seconds)<a class="headerlink" href="#where-mibz2s-cpu-goes-the-wikidata-blocks-at-4-threads-median-cpu-seconds" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>build</th>
+<th style="text-align: right;">scanner (serial)</th>
+<th style="text-align: right;">workers (summed)</th>
+<th style="text-align: right;">the reading thread and the rest</th>
+<th style="text-align: right;">wall</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mibz2</td>
+<td style="text-align: right;">0.15</td>
+<td style="text-align: right;">2.16</td>
+<td style="text-align: right;">0.02</td>
+<td style="text-align: right;">0.685</td>
+</tr>
+</tbody>
+</table>
+<h2 id="modelled-not-measured-a-whole-dump">Modelled, not measured: a whole dump<a class="headerlink" href="#modelled-not-measured-a-whole-dump" title="Permanent link">&para;</a></h2>
+<p>The decode of <code>wikidata-20261019-all.json.bz2</code> (103 GB of bz2; 1.83 TB of JSON at the sample's 17.69×), scaled from the Wikidata blocks' runs above, round by round (mean ± its 95% interval, the sample ratio's own uncertainty added in):</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: right;">mibz2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 thread</td>
+<td style="text-align: right;">3h42m ± 28m14s</td>
+</tr>
+<tr>
+<td>4 threads</td>
+<td style="text-align: right;">1h40m ± 14m03s</td>
+</tr>
+<tr>
+<td>4 threads, the sample's overlap gap as a fixed cost</td>
+<td style="text-align: right;">1h18m ± 11m02s</td>
+</tr>
+<tr>
+<td>the scanner alone (its serial part)</td>
+<td style="text-align: right;">21m49s ± 41.6s</td>
+</tr>
+<tr>
+<td>the workers alone, over 4</td>
+<td style="text-align: right;">1h18m ± 11m02s</td>
+</tr>
+</tbody>
+</table>
+<p>At 4 threads the workers bound it. Per byte: the scanner 12.7 ns a byte of bz2, the workers 10.25 ns a byte of output at 4 threads (CPU, summed over them), 6.59 ns at 1 thread (wall, less the scanner's part); the scanner would bind from about 14 worker threads (mibz2).</p>
+<details><summary>What the model assumes</summary>
+
+- **Linear in bytes:** the scanner's time in the dump's bz2 bytes, the workers' in its output bytes.
+- **The sample stands for the dump:** 12 windows of 1 MiB at (2i + 1)/24 of the dump, 431 of its own blocks; their mix of entities and their ratio, 17.69× (the windows' 95% interval ±14.0%), stand for the whole dump's. Another sample of the same dump (wikidata-pq's bench/full, 24 windows of 25 MB) measured 18.68×; wikidata-pq's CI slice, lines recompressed, is 13.69×.
+- **The wall at N threads** is the larger of the scanner's time and the workers' time over N (the scanner is one thread; the workers run blocks in parallel), times the sample's own wall over that bound: its overlap and fill taken to grow with the work, which errs long. Read as a fixed cost instead, the same gap gives the third row.
+- **The machine is this runner,** reading the dump from page cache: no download, no disk, no other work. The output is hashed by the reading thread and discarded.
+- The uncertainty is the rounds' spread, with the sample ratio's added in quadrature to the part that scales with the output; not the runner's: another CPU model gives other figures.
+
+</details>
+
+<details><summary>The corpora, the machine and the toolchain</summary>
+
+| corpus | bz2 bytes | output bytes | SHA-256 | source |
+|---|--:|--:|---|---|
+| `wikidata` | 11,854,933 | 209,700,196 | `82f65ace0731962d…` | wikidata-20261019-all.json.bz2: 12 windows' whole blocks (bench/wikidata.json) |
+| `onebyte` | 51 | 20,000,000 | `22924f5b3187645f…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |
+| `pattern` | 1,116 | 19,600,000 | `0f07e2a274b91896…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |
+| `random` | 7,097,921 | 8,000,000 | `10d444e6204289af…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |
+| `records` | 9,587,840 | 9,600,000 | `ff8b5f6ed3dd4445…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |
+| `runs` | 37,995 | 10,000,235 | `af3be4d130faf312…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |
+| `text` | 777,944 | 12,019,425 | `05591211e20d28df…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |
+
+- CPU: AMD EPYC 7763 64-Core Processor, 4 cores, reported clock 2445.4 MHz (cycles a byte use it), flags avx2, bmi1, bmi2, pclmulqdq, sse4_1, ssse3; kernel 6.17.0-1022-azure; image ubuntu24 20261023.334.3
+- rustc 1.99.1 (58cf8f9c3 2026-10-13); pbz2 0.2.0 (a dev-dependency, the harness's arm); lbzip2 version 2.5
+- bench 1.0.0 (bench/report.py), 10 rounds, threads 1, 4
+
+</details>
 
 
 

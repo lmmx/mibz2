@@ -20,16 +20,13 @@
   display: none;
 }
 
-/* The home page's hero: the logo beside the name and the tagline, stacked on narrow screens. */
+/* The home page's hero: the name and the tagline, centred. */
 .md-typeset .home-hero {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1.6rem;
   margin: 1.2rem 0 2rem;
-}
-.md-typeset .home-hero-logo {
-  flex: none;
 }
 .md-typeset .home-hero h1 {
   margin: 0;
