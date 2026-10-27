@@ -1,0 +1,78 @@
+name: Occupancy
+
+# The occupancy instrument (#39, examples/occupancy.rs): where the parallel decoder's time
+# goes at each thread count, on the benchmark's Wikidata corpus. It runs `just
+# bench-occupancy`, the same command as on any other machine, and keeps its result file.
+# From the Actions tab, and on a pull request that changes the instrument itself.
+# Diagnostic only: the benchmark's paired A/B decides what is faster.
+
+on:
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: "Rounds (each runs every thread count in all three modes)"
+        required: false
+        default: "6"
+      threads:
+        description: "Thread counts, e.g. 1,2,4 (default: 1, 2, 4, ... up to the CPUs)"
+        required: false
+        default: ""
+  pull_request:
+    paths:
+      - src/trace.rs
+      - examples/occupancy.rs
+      - bench/occupancy.sh
+      - .just/bench.just
+      - .github/workflows/occupancy.yml
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: never
+
+jobs:
+  occupancy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # lbzip2: examples/windows.rs's check of the Wikidata blocks
+      - name: lbzip2
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install just
+        uses: taiki-e/install-action@64adfd9e935fa438859b9e080fd026720b2ba070 # tag=just
+        with:
+          tool: just@1.38.0
+
+      # The same blocks as bench.yml's (bench/wikidata.json); bench/occupancy.sh reads them
+      # from here, else the bench-data branch, else the dump
+      - name: Wikidata windows (cache)
+        uses: actions/cache@v4
+        with:
+          path: windows
+          key: bench-wikidata-${{ hashFiles('bench/wikidata.json') }}
+
+      - name: Occupancy
+        env:
+          ROUNDS: ${{ inputs.rounds || '6' }}
+          THREADS: ${{ inputs.threads || '' }}
+        run: |
+          just bench-occupancy --rounds "$ROUNDS" ${THREADS:+--threads "$THREADS"} --out occupancy.json \
+            --meta "runner=github-hosted ${{ runner.os }}" --meta "run=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            | tee occupancy.txt
+          { echo '```text'; cat occupancy.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: occupancy-${{ github.sha }}
+          path: |
+            occupancy.json
+            occupancy.txt

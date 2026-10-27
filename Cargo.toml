@@ -39,6 +39,9 @@ pyo3 = { features = ["abi3-py310"], optional = true, version = "0.29" }
 [features]
 default = []
 python = ["dep:pyo3"]
+# The parallel decoder's own timeline (src/trace.rs), for examples/occupancy.rs (#39); off
+# by default, and each mark a relaxed load when compiled in and not turned on
+trace = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -74,3 +77,8 @@ overflow-checks = true
 # examples/ab.rs's arms built by bench/alternatives only (its build.rs sets the cfg)
 [lints.rust]
 unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
+
+# The occupancy instrument (#39) needs the decoder's timeline
+[[example]]
+name = "occupancy"
+required-features = ["trace"]
