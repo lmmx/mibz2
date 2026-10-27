@@ -250,13 +250,28 @@ fn load1() -> f64 {
 
 const HZ: f64 = 100.0;
 
-/// Cores the other processes keep busy, over `secs` while nothing of ours runs
-fn others_busy(secs: f64) -> f64 {
-    let (b0, _, _) = stat();
+/// Busy jiffies of each CPU
+fn per_cpu() -> Vec<u64> {
+    let s = std::fs::read_to_string("/proc/stat").unwrap();
+    s.lines()
+        .filter(|l| l.starts_with("cpu") && l.as_bytes().get(3).is_some_and(u8::is_ascii_digit))
+        .map(|l| {
+            let f: Vec<u64> = l.split_whitespace().skip(1).map(|x| x.parse().unwrap()).collect();
+            f[0] + f[1] + f[2] + f[5] + f[6] + f[7]
+        })
+        .collect()
+}
+
+/// Cores the other processes keep busy, over `secs` while nothing of ours runs: in all,
+/// and the busiest single CPU's share
+fn others_busy(secs: f64) -> (f64, f64) {
+    let a = per_cpu();
     let t = Instant::now();
     std::thread::sleep(Duration::from_secs_f64(secs));
-    let (b1, _, _) = stat();
-    (b1 - b0) as f64 / HZ / t.elapsed().as_secs_f64()
+    let b = per_cpu();
+    let dt = t.elapsed().as_secs_f64() * HZ;
+    let each: Vec<f64> = a.iter().zip(&b).map(|(x, y)| (y - x) as f64 / dt).collect();
+    (each.iter().sum(), each.iter().cloned().fold(0.0, f64::max))
 }
 
 fn json_str(line: &str, key: &str) -> Option<String> {
@@ -323,11 +338,13 @@ fn run(args: &[String]) {
                 }
                 for arm in order {
                     let waited = Instant::now();
-                    let mut busy = others_busy(2.0);
-                    while busy > max_busy {
-                        eprintln!("  waiting: others keep {busy:.2} cores busy (load {:.2})", load1());
+                    // (and no CPU more than half busy: a 1-thread run is pinned to one, and
+                    // a pinned job of someone else's would share it)
+                    let (mut busy, mut one) = others_busy(2.0);
+                    while busy > max_busy || one > 0.5 {
+                        eprintln!("  waiting: others keep {busy:.2} cores busy, one CPU {one:.2} (load {:.2})", load1());
                         std::thread::sleep(Duration::from_secs(20));
-                        busy = others_busy(2.0);
+                        (busy, one) = others_busy(2.0);
                     }
                     let (name, exe) = match arm.split_once('@') {
                         Some((n, e)) => (n.to_string(), std::path::PathBuf::from(e)),
