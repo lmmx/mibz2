@@ -42,10 +42,10 @@ python = ["dep:pyo3"]
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
-bzip2 = { version = "0.4", features = ["static"] }
+bzip2 = { features = ["static"], version = "0.4" }
 # The A/B harness's comparison only (examples/ab.rs): pbz2 0.2.0 (Soof Golan, MIT), never
 # a dependency of the library
-pbz2 = { version = "=0.2.0", default-features = false, features = ["simd"] }
+pbz2 = { default-features = false, features = ["simd"], version = "=0.2.0" }
 
 [[bench]]
 harness = false
