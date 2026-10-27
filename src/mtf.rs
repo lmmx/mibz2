@@ -4,11 +4,11 @@
 //! index below 32, nearly all of them, as one blend of the list and the list a byte on.
 
 use super::block::Symbols;
-use super::{Kernels, Kind};
+use super::{Kernels, ErrorKind};
 
 /// Undo the runs and the move-to-front of `b`'s symbols into `ll` (cleared), counting
 /// each byte in `counts`. Returns the block's length.
-pub fn mtf(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256], k: Kernels) -> Result<usize, Kind> {
+pub fn mtf(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256], k: Kernels) -> Result<usize, ErrorKind> {
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
@@ -23,7 +23,7 @@ pub fn mtf(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256], k: Kernels) -
 /// A run's weight (N in libbzip2) refused at this, so its length cannot overflow
 const MAX_RUN_WEIGHT: u32 = 2 * 1024 * 1024;
 
-pub fn mtf_scalar(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Result<usize, Kind> {
+pub fn mtf_scalar(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Result<usize, ErrorKind> {
     ll.clear();
     ll.reserve(b.max_len);
     *counts = [0; 256];
@@ -32,7 +32,7 @@ pub fn mtf_scalar(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Res
     for &s in &b.syms {
         if s <= 1 {
             if weight >= MAX_RUN_WEIGHT {
-                return Err(Kind::RunTooLong);
+                return Err(ErrorKind::RunTooLong);
             }
             run += (s as u32 + 1) * weight;
             weight <<= 1;
@@ -40,7 +40,7 @@ pub fn mtf_scalar(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Res
         }
         if run != 0 {
             if ll.len() + run as usize > b.max_len {
-                return Err(Kind::BlockTooLong);
+                return Err(ErrorKind::BlockTooLong);
             }
             let c = b.seq_to_unseq[list[0] as usize];
             counts[c as usize] += run;
@@ -51,7 +51,7 @@ pub fn mtf_scalar(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Res
             break;
         }
         if ll.len() >= b.max_len {
-            return Err(Kind::BlockTooLong);
+            return Err(ErrorKind::BlockTooLong);
         }
         let nn = (s - 1) as usize;
         let v = list[nn];
@@ -66,7 +66,7 @@ pub fn mtf_scalar(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Res
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
-unsafe fn mtf_avx2(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Result<usize, Kind> {
+unsafe fn mtf_avx2(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Result<usize, ErrorKind> {
     use std::arch::x86_64::*;
     let max = b.max_len;
     ll.clear();
@@ -94,7 +94,7 @@ unsafe fn mtf_avx2(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Re
     for &s in &b.syms {
         if s <= 1 {
             if weight >= MAX_RUN_WEIGHT {
-                result = Err(Kind::RunTooLong);
+                result = Err(ErrorKind::RunTooLong);
                 break;
             }
             run += (s as u32 + 1) * weight;
@@ -103,7 +103,7 @@ unsafe fn mtf_avx2(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Re
         }
         if run != 0 {
             if n + run as usize > max {
-                result = Err(Kind::BlockTooLong);
+                result = Err(ErrorKind::BlockTooLong);
                 break;
             }
             let c = s2u[*base as usize];
@@ -116,7 +116,7 @@ unsafe fn mtf_avx2(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Re
             break;
         }
         if n >= max {
-            result = Err(Kind::BlockTooLong);
+            result = Err(ErrorKind::BlockTooLong);
             break;
         }
         // (s - 1 < 256: a symbol is below the alphabet, at most 257)

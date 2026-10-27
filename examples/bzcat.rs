@@ -1,5 +1,5 @@
 //! The parallel decoder as a command, for timing it against lbzip2 alone:
-//! `bzcat THREADS [SLOTS] < in.bz2 > out` (WIKIDATA_BZ2_SIMD=off: the scalar kernels).
+//! `cargo run --release --example bzcat -- THREADS [SLOTS] < in.bz2 > out` (BUNZIP_SIMD=off: the scalar kernels).
 //! Exits 1 with the error on a bad stream, after writing every block before it.
 //! BZ2_INVERSE=plain: the plain walk in place of the segmented one (bwt::InverseBwt).
 
@@ -9,10 +9,13 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let threads: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(4);
     let slots: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(2 * threads);
-    let k = bunzip::Kernels::from_env();
+    let k = match std::env::var("BUNZIP_SIMD").as_deref() {
+        Ok("0") | Ok("off") => bunzip::Kernels::scalar(),
+        _ => bunzip::Kernels::detect(),
+    };
     let dec = match std::env::var("BZ2_INVERSE").as_deref() {
-        Ok("plain") => bunzip::parallel::Decoder::with_inverse::<bunzip::bwt::Plain>(threads, slots, k),
-        _ => bunzip::parallel::Decoder::new(threads, slots, k),
+        Ok("plain") => bunzip::StreamDecoder::with_inverse::<bunzip::bwt::Plain>(threads, slots, k),
+        _ => bunzip::StreamDecoder::new(threads, slots, k),
     };
     let code = std::thread::scope(|s| {
         s.spawn(|| {

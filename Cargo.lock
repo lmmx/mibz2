@@ -3,8 +3,8 @@
 version = 4
 
 [[package]]
-name = "bunzip-tests"
-version = "0.0.0"
+name = "bunzip"
+version = "0.1.0"
 dependencies = [
  "bzip2",
 ]

@@ -1,6 +1,6 @@
-//! The block-parallel streaming decoder: compressed bytes written in (`Decoder::write`, from
+//! The block-parallel streaming decoder: compressed bytes written in (`StreamDecoder::write`, from
 //! any thread, blocking while the input queued is full), decoded bytes read out in order
-//! (`Decoder::read`). Like lbzip2's, its parallelism is across blocks:
+//! (`StreamDecoder::read`). Like lbzip2's, its parallelism is across blocks:
 //!
 //! - a **scanner** thread reads the stream in order (stream.rs): each block's header and
 //!   Huffman-coded symbols (the one phase that must be sequential: a block's end is
@@ -23,7 +23,7 @@
 //! error, so a bad input can only ever end the decode with an error.
 
 use super::stream::{Event, Scanner, Source};
-use super::{decode_block, Error, Kernels, Kind, Scratch};
+use super::{decode_block, Error, Kernels, ErrorKind, Scratch};
 use std::collections::BTreeMap;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::mpsc::{channel, sync_channel, Receiver, SyncSender};
@@ -70,7 +70,7 @@ impl Shared {
 #[derive(Debug)]
 pub struct Stopped;
 
-pub struct Decoder {
+pub struct StreamDecoder {
     input: Mutex<Option<SyncSender<Vec<u8>>>>,
     shared: Arc<Shared>,
     handles: Mutex<Vec<JoinHandle<()>>>,
@@ -86,16 +86,16 @@ struct Reader {
     done: bool,
 }
 
-impl Decoder {
+impl StreamDecoder {
     /// A decoder on `threads` workers (at least 1) with `slots` blocks in flight (at least
     /// `threads`), on kernels `k`
-    pub fn new(threads: usize, slots: usize, k: Kernels) -> Decoder {
+    pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
         Self::with_inverse::<super::bwt::Segmented>(threads, slots, k)
     }
 
     /// `new` with the inverse-BWT kernel `I` (bwt::InverseBwt), so the whole decoder can
     /// be timed with each
-    pub fn with_inverse<I: super::bwt::InverseBwt + 'static>(threads: usize, slots: usize, k: Kernels) -> Decoder {
+    pub fn with_inverse<I: super::bwt::InverseBwt + 'static>(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
         let threads = threads.max(1);
         let slots = slots.max(threads) as u64;
         let shared = Arc::new(Shared {
@@ -131,7 +131,7 @@ impl Decoder {
                 .spawn(move || scanner(&sh, in_rx, job_tx))
                 .expect("spawn the bz2 scanner"),
         );
-        Decoder { input: Mutex::new(Some(in_tx)), shared, handles: Mutex::new(handles), reader: Mutex::default(), threads }
+        StreamDecoder { input: Mutex::new(Some(in_tx)), shared, handles: Mutex::new(handles), reader: Mutex::default(), threads }
     }
 
     pub fn threads(&self) -> usize {
@@ -171,7 +171,7 @@ impl Decoder {
     pub fn read(&self, buf: &mut [u8]) -> Result<usize, Error> {
         let mut r = self.reader.lock().unwrap_or_else(|e| e.into_inner());
         if !r.done && r.failed.is_none() && self.shared.lock().cancelled {
-            r.failed = Some(Error::new(Kind::Cancelled));
+            r.failed = Some(Error::new(ErrorKind::Cancelled));
         }
         loop {
             if let Some(e) = &r.failed {
@@ -194,7 +194,7 @@ impl Decoder {
             r.at = 0;
             loop {
                 if st.cancelled {
-                    r.failed = Some(Error::new(Kind::Cancelled));
+                    r.failed = Some(Error::new(ErrorKind::Cancelled));
                     break;
                 }
                 let taken = st.taken;
@@ -226,7 +226,7 @@ impl Decoder {
     }
 }
 
-impl Drop for Decoder {
+impl Drop for StreamDecoder {
     fn drop(&mut self) {
         self.join();
     }
@@ -244,7 +244,7 @@ struct ChannelSource<'a> {
 }
 
 impl Source for ChannelSource<'_> {
-    fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), Kind> {
+    fn view(&mut self, from: u64, want: usize) -> Result<(&[u8], bool), ErrorKind> {
         while !self.eof && self.base + (self.buf.len() as u64) < from + want as u64 {
             match self.rx.recv() {
                 Ok(chunk) => {
@@ -258,7 +258,7 @@ impl Source for ChannelSource<'_> {
                 Err(_) => self.eof = true,
             }
             if self.shared.lock().cancelled {
-                return Err(Kind::Cancelled);
+                return Err(ErrorKind::Cancelled);
             }
         }
         let i = (from - self.base) as usize;
@@ -277,7 +277,7 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
         let mut st = shared.lock();
         let at = st.issued;
         match res {
-            Some(e) if e.kind != Kind::Cancelled => {
+            Some(e) if e.kind != ErrorKind::Cancelled => {
                 st.ready.insert(at, Err(e));
                 st.issued += 1;
                 st.end = Some(at + 1);
@@ -301,9 +301,9 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
             st.free_syms.pop().unwrap_or_default()
         };
         let next = catch_unwind(AssertUnwindSafe(|| sc.next(syms)))
-            .unwrap_or_else(|p| Err(Error::new(Kind::Internal(panic_message(p)))));
+            .unwrap_or_else(|p| Err(Error::new(ErrorKind::Internal(panic_message(p)))));
         match next {
-            Ok(Event::Block { index, bit, symbols }) => {
+            Ok(Event::Block { index, bit, symbols, .. }) => {
                 let mut st = shared.lock();
                 let place = st.issued;
                 st.issued += 1;
@@ -340,7 +340,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             Ok(Err(kind)) => Err(kind),
             Err(p) => {
                 scratch = Scratch::default();
-                Err(Kind::Internal(panic_message(p)))
+                Err(ErrorKind::Internal(panic_message(p)))
             }
         }
         .map_err(|kind| Error { kind, block: Some(place), bit: Some(bit) });

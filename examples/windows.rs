@@ -9,7 +9,7 @@
 //! Usage: windows OUT_DIR WINDOW... (each window's stream is left in OUT_DIR as
 //! NAME.blocks.bz2, for timing the decoders on real blocks)
 
-#[path = "../../tests/common/mod.rs"]
+#[path = "../tests/common/mod.rs"]
 mod common;
 
 use bunzip::bits::Bits;
@@ -101,7 +101,7 @@ fn main() {
         let lb = Command::new("lbzip2").args(["-dc", "-n4"]).arg(&file).stderr(Stdio::inherit()).output().unwrap();
         checks.push(("lbzip2", if lb.status.success() { Ok(lb.stdout) } else { Err("lbzip2 failed".into()) }));
         for (n, k) in [("scalar", Kernels::scalar()), ("simd", Kernels::detect())] {
-            checks.push((n, bunzip::decode(&stream, k).map_err(|e| e.to_string())));
+            checks.push((n, bunzip::decode_with::<bunzip::bwt::Segmented>(&stream, k).map_err(|e| e.to_string())));
         }
         checks.push(("parallel", parallel(&stream, 4, 8, 8 << 20, 16 << 20, Kernels::detect()).map_err(|e| e.to_string())));
         let mut ranged = Vec::new();

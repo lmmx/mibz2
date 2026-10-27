@@ -4,7 +4,7 @@
 //! the same way, in the same terms, so a stream libbzip2 refuses is refused here too.
 
 use super::bits::Bits;
-use super::Kind;
+use super::ErrorKind;
 
 /// A block header's magic (pi) and the stream end's (sqrt(pi))
 pub const BLOCK_MAGIC: u64 = 0x3141_5926_5359;
@@ -118,38 +118,38 @@ impl Huff {
     }
 
     #[inline(always)]
-    fn decode(&self, br: &mut Bits) -> Result<u16, Kind> {
+    fn decode(&self, br: &mut Bits) -> Result<u16, ErrorKind> {
         let e = self.lut[br.peek(LUT_BITS) as usize];
         if e != 0 && e != BAD {
             br.skip(e >> 16);
             return Ok(e as u16);
         }
         if e == BAD {
-            return Err(Kind::BadHuffmanCode);
+            return Err(ErrorKind::BadHuffmanCode);
         }
         self.decode_slow(br)
     }
 
     #[cold]
-    fn decode_slow(&self, br: &mut Bits) -> Result<u16, Kind> {
+    fn decode_slow(&self, br: &mut Bits) -> Result<u16, ErrorKind> {
         let mut zn = self.min_len;
         let mut zvec = br.peek(zn) as i32;
         while zvec > self.limit[zn as usize] {
             zn += 1;
             if zn > 20 {
-                return Err(Kind::BadHuffmanCode);
+                return Err(ErrorKind::BadHuffmanCode);
             }
             zvec = br.peek(zn) as i32;
         }
         br.skip(zn);
-        self.symbol(zn, zvec).ok_or(Kind::BadHuffmanCode)
+        self.symbol(zn, zvec).ok_or(ErrorKind::BadHuffmanCode)
     }
 }
 
 /// The next item of a stream of level `level` (1-9) from `br`, at a block header or the
 /// stream's end: a block's header and its symbols (into `syms`, reused), or the end and
 /// its CRC. A block found to run past the input (`br.overran()`) is the caller's to judge.
-pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, (Kind, Vec<u16>)> {
+pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, (ErrorKind, Vec<u16>)> {
     macro_rules! fail {
         ($k:expr) => {
             return Err(($k, syms))
@@ -160,18 +160,18 @@ pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, 
         return Ok(Item::End(br.bits(32)));
     }
     if magic != BLOCK_MAGIC {
-        fail!(Kind::BadBlockMagic);
+        fail!(ErrorKind::BadBlockMagic);
     }
     let crc = br.bits(32);
     if br.bit() {
         // bzip2 0.9.0 and earlier randomised a block it could not sort fast; nothing has
         // written one since 0.9.5 (1999), and neither does Wikimedia
-        fail!(Kind::Randomised);
+        fail!(ErrorKind::Randomised);
     }
     let orig_ptr = br.bits(24);
     let max_len = 100_000 * level as usize;
     if orig_ptr as usize > 10 + max_len {
-        fail!(Kind::BadOrigPtr);
+        fail!(ErrorKind::BadOrigPtr);
     }
     let in_use16 = br.bits(16);
     let mut seq_to_unseq = [0u8; 256];
@@ -188,16 +188,16 @@ pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, 
         }
     }
     if n_in_use == 0 {
-        fail!(Kind::NoSymbols);
+        fail!(ErrorKind::NoSymbols);
     }
     let alpha = n_in_use + 2;
     let n_groups = br.bits(3) as usize;
     if !(2..=MAX_GROUPS).contains(&n_groups) {
-        fail!(Kind::BadGroups);
+        fail!(ErrorKind::BadGroups);
     }
     let n_sel = br.bits(15) as usize;
     if n_sel < 1 {
-        fail!(Kind::BadSelectors);
+        fail!(ErrorKind::BadSelectors);
     }
     // the selectors, move-to-front coded; those past MAX_SELECTORS are read and dropped
     // (as libbzip2 1.0.8 does: some encoders round their number up)
@@ -208,7 +208,7 @@ pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, 
         while br.bit() {
             j += 1;
             if j >= n_groups {
-                fail!(Kind::BadSelector);
+                fail!(ErrorKind::BadSelector);
             }
         }
         if i < MAX_SELECTORS {
@@ -218,7 +218,7 @@ pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, 
             selectors.push(v);
         }
         if br.overran() {
-            fail!(Kind::Truncated);
+            fail!(ErrorKind::Truncated);
         }
     }
     let mut tables = Vec::with_capacity(n_groups);
@@ -228,7 +228,7 @@ pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, 
         for l in lens[..alpha].iter_mut() {
             loop {
                 if !(1..=20).contains(&curr) {
-                    fail!(Kind::BadCodeLength);
+                    fail!(ErrorKind::BadCodeLength);
                 }
                 if !br.bit() {
                     break;
@@ -239,7 +239,7 @@ pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, 
                     curr += 1
                 }
                 if br.overran() {
-                    fail!(Kind::Truncated);
+                    fail!(ErrorKind::Truncated);
                 }
             }
             *l = curr as u8;
@@ -251,7 +251,7 @@ pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, 
     syms.reserve(MAX_SYMS);
     let mut sel = 0;
     'groups: loop {
-        let Some(&g) = selectors.get(sel) else { fail!(Kind::SelectorOverrun) };
+        let Some(&g) = selectors.get(sel) else { fail!(ErrorKind::SelectorOverrun) };
         let t = &tables[g as usize];
         sel += 1;
         for _ in 0..GROUP {
@@ -265,7 +265,7 @@ pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, 
             }
         }
         if br.overran() {
-            fail!(Kind::Truncated);
+            fail!(ErrorKind::Truncated);
         }
     }
     Ok(Item::Block(Symbols { crc, orig_ptr, seq_to_unseq, syms, eob, max_len }))

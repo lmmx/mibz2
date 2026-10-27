@@ -46,13 +46,13 @@ pub fn compress(data: &[u8], level: u32) -> Vec<u8> {
 
 /// The sequential decoder, a panic caught and reported as one
 pub fn ours(data: &[u8], k: Kernels) -> Result<Result<Vec<u8>, Error>, String> {
-    catch_unwind(AssertUnwindSafe(|| bunzip::decode(data, k))).map_err(|_| "PANIC".to_string())
+    catch_unwind(AssertUnwindSafe(|| bunzip::decode_with::<bunzip::bwt::Segmented>(data, k))).map_err(|_| "PANIC".to_string())
 }
 
 /// The parallel decoder, fed `chunk` bytes at a time from another thread, read `read`
 /// bytes at a time
 pub fn parallel(data: &[u8], threads: usize, slots: usize, chunk: usize, read: usize, k: Kernels) -> Result<Vec<u8>, Error> {
-    let dec = bunzip::parallel::Decoder::new(threads, slots, k);
+    let dec = bunzip::StreamDecoder::new(threads, slots, k);
     let mut out = Vec::new();
     let res = std::thread::scope(|s| {
         s.spawn(|| {
@@ -346,3 +346,42 @@ pub fn block_starts(data: &[u8]) -> Vec<u64> {
     }
     v
 }
+
+/// Corpora with nothing of Wikidata, each a few blocks long (`scale` times): a text
+/// corpus (this crate's own sources and README), random bytes, one byte repeated, a
+/// short pattern repeated, runs of random lengths, and binary records
+pub fn corpora(scale: usize) -> Vec<(&'static str, Vec<u8>)> {
+    let root = env!("CARGO_MANIFEST_DIR");
+    let mut text = Vec::new();
+    for dir in ["src", "tests", "examples"] {
+        let mut files: Vec<_> = std::fs::read_dir(format!("{root}/{dir}")).unwrap().flatten().map(|e| e.path()).collect();
+        files.sort();
+        for f in files.into_iter().filter(|f| f.is_file()) {
+            text.extend(std::fs::read(f).unwrap());
+        }
+    }
+    text.extend(std::fs::read(format!("{root}/README.md")).unwrap());
+    let one = text.clone();
+    let mut i = 0;
+    while text.len() < 3_000_000 * scale {
+        text.extend(format!("\n-- copy {i} --\n").bytes());
+        text.extend(&one);
+        i += 1;
+    }
+    let mut rng = Rng(0xfeed_beef_dead_cafe);
+    let records: Vec<u8> = (0..600_000 * scale as u32).flat_map(|i| (i.wrapping_mul(2_654_435_761) >> 12 | i << 20).to_le_bytes()).collect();
+    let mut runs = Vec::new();
+    while runs.len() < 2_500_000 * scale {
+        let n = 1 + rng.below(600) as usize;
+        runs.extend(std::iter::repeat(b"xyz"[rng.below(3) as usize]).take(n));
+    }
+    vec![
+        ("text", text),
+        ("random", rng.bytes(2_000_000 * scale)),
+        ("one byte", vec![b'a'; 5_000_000 * scale]),
+        ("pattern", b"0123456".repeat(700_000 * scale)),
+        ("runs", runs),
+        ("records", records),
+    ]
+}
+

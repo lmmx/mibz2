@@ -3,7 +3,7 @@
 //! (from a block writer); and malformed streams, which must fail as libbzip2's do.
 
 mod common;
-use bunzip::{Kernels, Kind};
+use bunzip::{Kernels, ErrorKind};
 use common::*;
 
 fn kernels() -> Vec<Kernels> {
@@ -14,7 +14,7 @@ fn kernels() -> Vec<Kernels> {
     v
 }
 
-fn kind(r: Result<Vec<u8>, bunzip::Error>) -> Kind {
+fn kind(r: Result<Vec<u8>, bunzip::Error>) -> ErrorKind {
     r.expect_err("an error").kind
 }
 
@@ -105,7 +105,7 @@ fn crafted_blocks_match_libbzip2() {
             // (it ends inside a run: refused by both)
             assert!(oracle(&z).is_err(), "case {case}: oracle");
             for k in kernels() {
-                assert_eq!(kind(ours(&z, k).unwrap()), Kind::RunUnfinished, "case {case}");
+                assert_eq!(kind(ours(&z, k).unwrap()), ErrorKind::RunUnfinished, "case {case}");
             }
             unfinished += 1;
             continue;
@@ -137,7 +137,7 @@ fn block_size_levels() {
         let z = craft(level, &[Spec::of(over, 3)], None);
         assert!(oracle(&z).is_err());
         for k in kernels() {
-            assert_eq!(kind(ours(&z, k).unwrap()), Kind::BlockTooLong, "level {level}");
+            assert_eq!(kind(ours(&z, k).unwrap()), ErrorKind::BlockTooLong, "level {level}");
         }
         // and a real stream's header lowered below its blocks' size
         let real = compress(&vec![7u8; max + 50_000].iter().enumerate().map(|(i, _)| (i * 31 % 253) as u8).collect::<Vec<_>>(), 9);
@@ -145,7 +145,7 @@ fn block_size_levels() {
         low[3] = b'0' + level;
         if level < 9 {
             assert!(oracle(&low).is_err());
-            assert_eq!(kind(ours(&low, Kernels::detect()).unwrap()), Kind::BlockTooLong);
+            assert_eq!(kind(ours(&low, Kernels::detect()).unwrap()), ErrorKind::BlockTooLong);
         }
     }
 }
@@ -160,7 +160,7 @@ fn oversized_runs() {
     let z = craft(9, &[s], Some(0));
     assert!(oracle(&z).is_err());
     for k in kernels() {
-        assert_eq!(kind(ours(&z, k).unwrap()), Kind::RunTooLong);
+        assert_eq!(kind(ours(&z, k).unwrap()), ErrorKind::RunTooLong);
     }
     let mut s = Spec::of(vec![b'a'; 10], 0);
     s.in_use = Some(vec![b'a']);
@@ -168,7 +168,7 @@ fn oversized_runs() {
     let z = craft(9, &[s], Some(0));
     assert!(oracle(&z).is_err());
     for k in kernels() {
-        assert_eq!(kind(ours(&z, k).unwrap()), Kind::BlockTooLong);
+        assert_eq!(kind(ours(&z, k).unwrap()), ErrorKind::BlockTooLong);
     }
     // the most a block holds as one run: 900,000 bytes of one value
     let mut s = Spec::of(vec![b'q'; 900_000], 5);
@@ -185,7 +185,7 @@ fn bad_header_fields() {
     let ok = craft(9, &[Spec::of(ll.clone(), 4)], None);
     assert!(oracle(&ok).is_ok());
     // a primary index at the block's length, and past the level's bound
-    for (orig, want) in [(14, Kind::BadOrigPtr), (900_011, Kind::BadOrigPtr)] {
+    for (orig, want) in [(14, ErrorKind::BadOrigPtr), (900_011, ErrorKind::BadOrigPtr)] {
         let mut s = Spec::of(ll.clone(), orig);
         s.crc = Some(0);
         let z = craft(9, &[s], Some(0));
@@ -198,14 +198,14 @@ fn bad_header_fields() {
     s.syms = Some(vec![2]);
     let z = craft(9, &[s], Some(0));
     assert!(oracle(&z).is_err());
-    assert_eq!(kind(ours(&z, Kernels::detect()).unwrap()), Kind::BadOrigPtr);
+    assert_eq!(kind(ours(&z, Kernels::detect()).unwrap()), ErrorKind::BadOrigPtr);
     // no symbols in use
     let mut s = Spec::of(vec![], 0);
     s.in_use = Some(vec![]);
     s.syms = Some(vec![1]);
     let z = craft(9, &[s], Some(0));
     assert!(oracle(&z).is_err());
-    assert_eq!(kind(ours(&z, Kernels::detect()).unwrap()), Kind::NoSymbols);
+    assert_eq!(kind(ours(&z, Kernels::detect()).unwrap()), ErrorKind::NoSymbols);
     // symbols outrunning the selectors: no EOB within the selectors' groups
     let mut s = Spec::of(vec![b'a'; 3], 0);
     s.in_use = Some(vec![b'a', b'b']);
@@ -213,7 +213,7 @@ fn bad_header_fields() {
     s.crc = Some(0);
     let z = craft(9, &[s], Some(0));
     assert!(oracle(&z).is_err());
-    assert_eq!(kind(ours(&z, Kernels::detect()).unwrap()), Kind::SelectorOverrun);
+    assert_eq!(kind(ours(&z, Kernels::detect()).unwrap()), ErrorKind::SelectorOverrun);
 }
 
 #[test]
@@ -223,9 +223,9 @@ fn randomised_blocks_refused() {
     s.randomised = true;
     let z = craft(9, &[s], None);
     for k in kernels() {
-        assert_eq!(kind(ours(&z, k).unwrap()), Kind::Randomised);
+        assert_eq!(kind(ours(&z, k).unwrap()), ErrorKind::Randomised);
     }
-    assert_eq!(parallel(&z, 2, 2, 7, 100, Kernels::detect()).unwrap_err().kind, Kind::Randomised);
+    assert_eq!(parallel(&z, 2, 2, 7, 100, Kernels::detect()).unwrap_err().kind, ErrorKind::Randomised);
 }
 
 #[test]
@@ -242,10 +242,10 @@ fn crc_errors() {
         bad[(bit / 8) as usize] ^= 0x80 >> (bit % 8);
         assert!(oracle(&bad).is_err());
         for k in kernels() {
-            assert!(matches!(kind(ours(&bad, k).unwrap()), Kind::BlockCrc { .. }));
+            assert!(matches!(kind(ours(&bad, k).unwrap()), ErrorKind::BlockCrc { .. }));
         }
         let e = parallel(&bad, 3, 3, 1 << 16, 1 << 16, Kernels::detect()).unwrap_err();
-        assert!(matches!(e.kind, Kind::BlockCrc { .. }));
+        assert!(matches!(e.kind, ErrorKind::BlockCrc { .. }));
         assert_eq!(e.bit, Some(b));
     }
     // the stream's stored CRC: the bits just before the padding
@@ -259,8 +259,8 @@ fn crc_errors() {
         let mut t = z.clone();
         let bit = crc_end - 1;
         t[(bit / 8) as usize] ^= 0x80 >> (bit % 8);
-        if let Err(e) = bunzip::decode(&t, Kernels::detect()) {
-            if matches!(e.kind, Kind::StreamCrc { .. }) {
+        if let Err(e) = bunzip::decode(&t) {
+            if matches!(e.kind, ErrorKind::StreamCrc { .. }) {
                 assert!(oracle(&t).is_err());
                 found = true;
                 bad = t;
@@ -270,7 +270,7 @@ fn crc_errors() {
     }
     assert!(found, "a stream CRC flip");
     let e = parallel(&bad, 2, 2, 1 << 16, 1 << 16, Kernels::detect()).unwrap_err();
-    assert!(matches!(e.kind, Kind::StreamCrc { .. }));
+    assert!(matches!(e.kind, ErrorKind::StreamCrc { .. }));
 }
 
 #[test]
@@ -281,22 +281,22 @@ fn truncation_and_trailing_bytes() {
     for cut in (0..z.len()).step_by(997).chain(z.len() - 12..z.len()) {
         assert!(oracle(&z[..cut]).is_err());
         let e = ours(&z[..cut], Kernels::detect()).unwrap().unwrap_err();
-        assert!(matches!(e.kind, Kind::Truncated | Kind::Empty), "cut {cut}: {e}");
+        assert!(matches!(e.kind, ErrorKind::Truncated | ErrorKind::Empty), "cut {cut}: {e}");
         if cut % 5 == 0 {
             let e = parallel(&z[..cut], 2, 2, 1 << 12, 1 << 14, Kernels::detect()).unwrap_err();
-            assert!(matches!(e.kind, Kind::Truncated | Kind::Empty), "cut {cut}: {e}");
+            assert!(matches!(e.kind, ErrorKind::Truncated | ErrorKind::Empty), "cut {cut}: {e}");
         }
     }
     for tail in [&b"x"[..], b"\0", b"\0\0\0\0", b"BZ", b"BZh", b"BZh0", b"BZhx", b"garbage"] {
         let t = [z.clone(), tail.to_vec()].concat();
-        assert_eq!(kind(ours(&t, Kernels::detect()).unwrap()), Kind::TrailingData, "{tail:?}");
+        assert_eq!(kind(ours(&t, Kernels::detect()).unwrap()), ErrorKind::TrailingData, "{tail:?}");
     }
     // a stream header and no more: truncated
     let t = [z.clone(), b"BZh9".to_vec()].concat();
-    assert_eq!(kind(ours(&t, Kernels::detect()).unwrap()), Kind::Truncated);
-    assert_eq!(kind(ours(b"", Kernels::detect()).unwrap()), Kind::Empty);
-    assert_eq!(kind(ours(b"PK\x03\x04", Kernels::detect()).unwrap()), Kind::NotBz2);
-    assert_eq!(kind(ours(b"BZh0", Kernels::detect()).unwrap()), Kind::NotBz2);
+    assert_eq!(kind(ours(&t, Kernels::detect()).unwrap()), ErrorKind::Truncated);
+    assert_eq!(kind(ours(b"", Kernels::detect()).unwrap()), ErrorKind::Empty);
+    assert_eq!(kind(ours(b"PK\x03\x04", Kernels::detect()).unwrap()), ErrorKind::NotBz2);
+    assert_eq!(kind(ours(b"BZh0", Kernels::detect()).unwrap()), ErrorKind::NotBz2);
 }
 
 #[test]
@@ -362,7 +362,7 @@ fn block_ranges() {
     }
     let mut out = Vec::new();
     let e = bunzip::decode_blocks(&z, starts[0], starts[1] - 1, 1, Kernels::detect(), &mut out).unwrap_err();
-    assert_eq!(e.kind, Kind::RangeOvershoot);
+    assert_eq!(e.kind, ErrorKind::RangeOvershoot);
 }
 
 #[test]
@@ -371,7 +371,7 @@ fn reader_stops_early() {
     let mut rng = Rng(21);
     let data = samples(&mut rng).swap_remove(3).1;
     let z = compress(&data, 9);
-    let dec = bunzip::parallel::Decoder::new(4, 4, Kernels::detect());
+    let dec = bunzip::StreamDecoder::new(4, 4, Kernels::detect());
     std::thread::scope(|s| {
         let w = s.spawn(|| {
             for c in z.chunks(1000) {
@@ -387,7 +387,7 @@ fn reader_stops_early() {
         assert_eq!(&buf[..], &data[..100_000]);
         dec.cancel();
         let _ = w.join().unwrap();
-        assert_eq!(dec.read(&mut buf).unwrap_err().kind, Kind::Cancelled);
+        assert_eq!(dec.read(&mut buf).unwrap_err().kind, ErrorKind::Cancelled);
     });
     dec.join();
 }

@@ -8,10 +8,10 @@
 //!
 //! Usage: fuzz SECONDS [SEED] [OUT_DIR for the inputs of any failure]
 
-#[path = "../../tests/common/mod.rs"]
+#[path = "../tests/common/mod.rs"]
 mod common;
 
-use bunzip::{Kernels, Kind};
+use bunzip::{Kernels, ErrorKind};
 use common::*;
 use std::collections::BTreeMap;
 use std::time::{Duration, Instant};
@@ -98,7 +98,7 @@ fn main() {
     std::process::exit(if bad == 0 { 0 } else { 1 });
 }
 
-fn short(k: &Kind) -> String {
+fn short(k: &ErrorKind) -> String {
     let s = format!("{k:?}");
     s.split([' ', '{', '(']).next().unwrap_or("").to_string()
 }

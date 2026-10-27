@@ -1,0 +1,42 @@
+[package]
+name = "bunzip"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+description = "A bzip2 decoder built for memory-level parallelism: block-parallel, its inverse BWT walked as interleaved chains, SIMD kernels chosen at run time"
+readme = "README.md"
+keywords = ["bzip2", "bz2", "decompression", "bwt"]
+categories = ["compression"]
+# (no licence yet: the repository it lives in declares none; see README.md)
+publish = false
+
+# No dependencies: std only.
+[dependencies]
+
+[dev-dependencies]
+# The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
+bzip2 = { version = "0.4", features = ["static"] }
+
+[[bench]]
+name = "decode"
+harness = false
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+debug = "line-tables-only"
+
+[profile.bench]
+codegen-units = 1
+lto = "fat"
+
+[profile.test]
+opt-level = 3
+
+# The fuzz loop's (examples/fuzz.rs): release speed, with overflow checks and debug
+# assertions on, so an overflow or a broken invariant is a panic (counted as a failure)
+# rather than wrong bytes
+[profile.fuzz]
+inherits = "release"
+overflow-checks = true
+debug-assertions = true
