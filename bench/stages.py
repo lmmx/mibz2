@@ -57,6 +57,15 @@ def parse(text: str) -> dict[str, float]:
     return out
 
 
+def walk_name(text: str) -> str | None:
+    """The walk the build's total counts (its line's label, e.g. "walk, room (used)"): the
+    stage is the same across builds, its implementation each build's own."""
+    for line in text.splitlines():
+        if (m := LINE.match(line)) and stage_key(m.group(1), m.group(3)) == "walk":
+            return m.group(1)
+    return None
+
+
 def run(a: argparse.Namespace) -> None:
     arms = [x.split("=", 1) for x in a.arms]
     with open(a.out, "w") as f:
@@ -69,6 +78,7 @@ def run(a: argparse.Namespace) -> None:
                 wall = time.monotonic() - t
                 ps = parse(p.stdout)
                 rec = {"round": rnd, "arm": arm, "repeats": a.repeats, "wall": round(wall, 3)}
+                rec["walk"] = walk_name(p.stdout)
                 if p.returncode or set(ps) != set(STAGES):
                     rec["err"] = (p.stderr.strip().splitlines() or ["no stages read"])[-1][:200]
                 rec["ps_per_byte"] = ps

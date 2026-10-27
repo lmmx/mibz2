@@ -372,6 +372,8 @@ def stage_figures(lines: list[dict], mhz: float | None, pr: bool) -> dict:
             "errors": sorted({r["err"] for r in rounds.values() if r.get("err")}),
             "stages": {},
             "rounds_ns_per_byte": {},
+            # the walk the build uses, as its phases names it (the same in every run)
+            "walk": next((r["walk"] for r in ok.values() if r.get("walk")), None),
         }
         for key in keys:
             v = [r["ps_per_byte"][key] / 1000 for r in ok.values()]
@@ -686,6 +688,15 @@ def stage_lines(st: dict, pr: bool) -> list[str]:
             )
         else:
             out.append(f"| {title} | {cells[0]} | {share} |")
+    named = [(arm, arms[arm].get("walk")) for arm in shown]
+    if any(w for _, w in named):
+        out += [
+            "",
+            "The walk row is the stage, the same in every build; its implementation is "
+            "each build's own, as its `phases` names it: "
+            + "; ".join(f"{arm}, “{w}”" if w else f"{arm}, not named" for arm, w in named)
+            + ".",
+        ]
     errors = {arm: a["errors"] for arm, a in arms.items() if a["errors"]}
     if errors:
         out += [
