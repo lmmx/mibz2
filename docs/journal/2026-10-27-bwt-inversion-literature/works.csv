@@ -1,0 +1,43 @@
+key,title,authors_as_shown,year,venue_as_shown,first_seen_in,scholar_cited_by,status,notes
+kkp2012-slashing,Slashing the Time for BWT Inversion,"J. Kärkkäinen, D. Kempa, S. J. Puglisi",2012,"Data Compression Conference (DCC) 2012, pp. 99–108",root,,root,DOI 10.1109/DCC.2012.18 as given in the conversation; to verify
+navarro2021-indexing-ii,"Indexing Highly Repetitive String Collections, Part II: Compressed Indexes",G. Navarro,2021,not shown,C0,,lead,possibly a later version or part of navarro2020-indexing
+kempa2017-optimal-construction,Optimal Construction of Compressed Indexes for Highly Repetitive Texts,D. Kempa,2017,not shown,C0,,lead,ChatGPT claims published at SODA 2019 (unverified); see kempa2017-closing-in
+kkp2016-lazy-lz,Lazy Lempel-Ziv Factorization Algorithms,"J. Kärkkäinen, D. Kempa, S. J. Puglisi",2016,not shown,C0,,lead,same authors as the root
+navarro2020-indexing,Indexing Highly Repetitive String Collections,G. Navarro,2020,not shown,C0,,lead-possible-duplicate,possibly an earlier version of navarro2021-indexing-ii; kept separate until checked
+baier2018-undetected-redundancy,On Undetected Redundancy in the Burrows-Wheeler Transform,U. Baier,2018,not shown,C0,19,lead,introduces BWT tunnelling (from citing works' snippets); its cited-by list is captured as C2 (complete: 10 + 9 results)
+daykin-watson2017-indeterminate,Indeterminate String Factorizations and Degenerate Text Transformations,"J. W. Daykin, B. W. Watson",2017,not shown,C0,,lead,
+daykin2018-survey-orderings,A Survey of String Orderings and Their Application to the Burrows–Wheeler Transform,J. W. Daykin et al.,2018,not shown,C0,,lead,survey
+daykin2016-bbort,Binary Block Order Rouen Transform,J. W. Daykin et al.,2016,not shown,C0,,lead,a BWT variant
+baier-dede2019-tunnel-planning,BWT Tunnel Planning Is Hard but Manageable,"U. Baier, K. Dede",2019,"2019 Data Compression Conference (DCC), ieeexplore.ieee.org",C0,6,lead,appears in C0 (cites the root) and in C2 (cites baier2018); its cited-by list is captured as C3
+kmk2012-grammar-precompression,Grammar Precompression Speeds Up Burrows–Wheeler Compression,"J. Kärkkäinen, P. Mikkola, D. Kempa",2012,not shown,C0,,lead,two authors shared with the root; its cited-by list is captured as C4
+gnp2017-fast-locating-rlbwt,Fast Locating with the RLBWT,"T. Gagie, G. Navarro, N. Prezza",2017,not shown,C0,,lead,its cited-by list is captured as C1
+baierje2021-ambroxol,"Charakterisierung der inhibitorischen Wirkung von Ambroxol auf die Toxine TcdA, TcdB und CDT von C. difficile",J. E. Baier,2021,"[BOOK] search.proquest.com",C0,2,false-positive,a medical dissertation; appears under C0, C2 and C3 (a different Baier: a likely author-name collision in Scholar)
+burrows-blocksorting,Block-Sorting Compression,M. Burrows,,not shown,C0,,lead,year not shown in the capture
+petri2024-scalable-succinct,Scalable Succinct Indexing for Large Text Collections,M. Petri,2024,not shown,C0,,lead,year as given in the transcription; to verify
+ferragina-manzini2014-bwt,Burrows-Wheeler Transform,"P. Ferragina, G. Manzini",2014,not shown (described as an encyclopedia entry),C0,,lead,background reference
+kempa2017-closing-in,Closing in on Time and Space Optimal Construction of Compressed Indexes,D. Kempa,2017,not shown,C0,,lead-possible-duplicate,possibly related to kempa2017-optimal-construction; kept separate until checked
+sadakane-navarro2017-computation-compressed,Computation over Compressed Structured Data,"K. Sadakane, G. Navarro",2017,"[PDF] shonan.nii.ac.jp",C1,,lead,a Shonan meeting report (snippet mentions BWT variants for sets of strings, trees and de Bruijn graphs)
+fan2023-spectrum-tilings,Spectrum preserving tilings enable sparse and modular reference indexing,"J. Fan, J. Khan, G. E. Pibiri, R. Patro",2023,"International Conference on Research … (Springer)",C2,20,lead,
+brown2026-colbwt,Col-bwt: Pangenomic seed chaining with maximal matches improves read classification,"N. K. Brown, V. S. Shivakumar, …",2026,"Journal of … (journals.sagepub.com)",C2,4,lead,also in C3
+brown2025-chain-statistics,Improved pangenomic classification accuracy with chain statistics,"N. K. Brown, V. S. Shivakumar, B. Langmead",2025,"International Conference on … (Springer)",C2,5,lead,also in C3
+cotumaccio2025-wheeler-languages,Wheeler graphs and Wheeler languages,"N. Cotumaccio, G. D'Agostino, …",2025,"… Data: A Festschrift … (researchportal.helsinki.fi)",C2,6,lead,
+alanko2019-tunneling-wheeler,Tunneling on Wheeler Graphs,"J. Alanko, T. Gagie, G. Navarro, L. Seelbach Benkner",2019,"2019 Data Compression Conference (DCC), ieeexplore.ieee.org",C2,28,lead,
+bannai2019-bijective-bwt,Indexing the bijective BWT,"H. Bannai, J. Kärkkäinen, …",2019,30th Annual … (dagstuhl),C2,22,lead,Kärkkäinen is a root author
+gagie2026-reportable-shortcuts,Reportable Shortcuts with RLBWTs,T. Gagie,2026,arXiv:2609.06596,C2,,lead,also in C3; snippet: shortcuts over long stretches of a pattern in RLBWT backward search
+goga-balaz2022-pfp-tunnelled,Prefix-free parsing for building large tunnelled Wheeler graphs,"A. Goga, A. Baláž",2022,arXiv:2206.15097,C2,9,lead,also in C3
+prezza2021-subpath-survey,Subpath queries on compressed graphs: A survey,N. Prezza,2021,Algorithms (mdpi.com),C2,7,lead,survey
+samofalov-polak2026-ternary,Ternary Data Categorization for Evaluating the Impact of Data Transforms on Image Compressibility,"A. Samofalov, L. Polak",2026,Radioengineering (radioeng.cz),C2,,lead,
+bonizzoni2026-leaky-tunnels,Patching leaky tunnels in BWTs,"P. Bonizzoni, D. Cozzi, T. Gagie, Y. Gao, …",2026,arXiv preprint,C2,,lead,also in C3; snippet says it extends Baier's work on tunnelling
+langmead2025-wheeler-primer,We Are What We Index; a Primer for the Wheeler Graph Era (Invited Talk),B. Langmead,2025,"25th International Conference on Algorithms for … (drops.dagstuhl.de)",C2,,lead,an invited talk
+alanko2025-beyond-wheeler,Graph Indexing Beyond Wheeler Graphs,"J. N. Alanko, E. Biagi, M. Equi, …",2025,"… Data: A Festschrift … (researchportal.helsinki.fi)",C2,1,lead,
+baier2022-edge-min-debruijn,Edge minimization in de Bruijn graphs,"U. Baier, T. Büchler, E. Ohlebusch, P. Weber",2022,Information and Computation (Elsevier),C2,5,lead,
+mustafa2022-petabase-thesis,Algorithms for efficient sensitive search and sample comparison on petabase-scale genomics data,H. Mustafa,2022,research-collection.ethz.ch,C2,5,lead,a thesis
+alanko2020-space-efficient-thesis,Space-Efficient Algorithms for Strings and Prefix-Sortable Graphs,J. Alanko,2020,helda.helsinki.fi,C2,1,lead,a thesis from the root authors' university
+gagie2018-relaxing-wheeler,Relaxing wheeler graphs for indexing reads,"T. Gagie, G. Gourdel, G. Manzini, G. Navarro, J. Simpson",2018,arXiv preprint,C2,1,lead,[CITATION]-only record in Scholar
+jez2015-fully-compressed-pm,Faster fully compressed pattern matching by recompression,A. Jeż,2015,ACM Transactions on Algorithms (TALG),C4,110,lead,
+jez2015-approx-grammar,Approximation of grammar-based compression via recompression,A. Jeż,2015,Theoretical Computer Science (Elsevier),C4,94,lead,
+deng2022-fm-grammars,FM-indexing grammars induced by suffix sorting for long patterns,"J. J. Deng, W. K. Hon, D. Köppl, …",2022,2022 Data Compression Conference (DCC),C4,11,lead,
+jez2020-recompression-talk,Recompression: Technique for word equations and compressed data,A. Jeż,2020,International Conference on Language and Automata … (Springer),C4,1,lead,a talk
+cankaya-darwish2013-star-encoding,Improving compression performance with a star encoding front end: A linguistic comparison,"E. C. Cankaya, O. Darwish",2013,world-comp.org,C4,1,lead,
+kempa-kociumaka2023-collapsing,Collapsing the Hierarchy of Compressed Data Structures: Suffix Arrays in Optimal Compressed Space,"D. Kempa, T. Kociumaka",2023,FOCS 2023 (as given),chatgpt-topical,,unverified-lead,found by ChatGPT's topical search; NOT shown to cite the root or any captured work
+cache-friendly-bw-inversion,Cache-Friendly Burrows-Wheeler Inversion,not given,,not given,chatgpt-topical,,unverified-lead,ChatGPT says the Helsinki group's publication page links it as earlier work; a possible precursor (backward reference) of the root
