@@ -28,28 +28,11 @@ the toolchain) and its Markdown:
 `record` adds a master commit's result to the results store (the `bench-results`
 branch): runs/<commit>.json, raw/<commit>.jsonl and a line of records.jsonl.
 
-BENCH is the benchmark's version (semver), stamped on every result. A change to what is
-measured or how (the corpora and their scale, the rounds, the thread counts, the
-harness's timing, a figure's meaning) is a new major version, and the site's history
-never joins a series across major versions; a change to how results are shown or stored,
-or a new arm beside the others that leaves every existing figure as it was, is a minor or
-patch version.
-
-- 1.1.0: master's run has every alternative (ALTERNATIVES), each arm classed as
-  block-parallel or single-threaded (`parallel`); a single-threaded arm runs at 1 thread
-  only, and its 1-thread runs stand, marked, in every thread count's figures.
-- 1.2.0: the stage table (`stages`, from bench/stages.py's runs of examples/phases.rs):
-  each stage's cycles a byte on the Wikidata blocks at 1 thread, and on a pull request
-  head over base per stage. Every existing figure is as it was.
-- 2.0.0: the stage table's figures change meaning. examples/phases.rs decodes the file in
-  decode order, each stage timed as it runs and its fastest pass kept, the other walks in
-  passes of their own; before, each stage kept its best of repeats on the same block, the
-  walks back to back on it, a warm state no decode reaches (docs/journal/
-  2026-10-27-walk-sweep.md). The decoder's own figures are measured as before; the
-  history starts their series again at 2.0.0 all the same, as it does at any major
-  version, and keeps the 1.x results under 1.x.
-- 2.1.0: the stage table has a row within the walk's: the room walk's segment assembly,
-  timed on its own (#48). The walk's row still counts it, and every figure is as it was.
+BENCH is the benchmark's version (semver), stamped on every result: what each kind of
+change is, and every version's entry, are in bench/CHANGELOG.md, whose newest entry it
+matches (bench/test_report.py). MEANING records, for each family of figures, the major
+versions that redefined it, so the site's history joins a family's points only within the
+major that last set its meaning.
 """
 
 import argparse
@@ -65,7 +48,21 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "2.1.0"
+BENCH = "2.1.1"
+# Each family of figures, and the major versions that set or redefined its meaning
+# (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus
+# and thread count) since 1.0.0; the stage table's since 2.0.0 (1.2.0's measured warm
+# repeats). A new major that redefines a family adds itself to that family's list.
+MEANING = {"decoder": [1], "stages": [1, 2]}
+
+
+def meaning_major(family: str, bench: str) -> int:
+    """The major version that last set the meaning of `family`'s figures, as measured by
+    bench version `bench`: its points compare only with points of the same."""
+    major = int(bench.split(".")[0])
+    return max(m for m in MEANING[family] if m <= major)
+
+
 # The other decoders, in the order they are shown: the block-parallel, then the
 # single-threaded (examples/ab.rs: `parallel`)
 ALTERNATIVES = ["pbz2", "lbzip2", "indexed_bzip2", "fbz", "lbzip2-rs", "libbzip2", "libbz2-rs"]
@@ -84,7 +81,8 @@ not recorded.
   the toolchain and the corpora's sizes and SHA-256.
 - `raw/<commit>.jsonl`: the harness's records (`ab run`), one line a run.
 
-Results compare only within one major bench version, one runner CPU model and one set of corpora.
+A figure compares only within the major bench version that last set its meaning (MEANING in
+bench/report.py, bench/CHANGELOG.md), one runner CPU model and one set of corpora.
 """
 
 

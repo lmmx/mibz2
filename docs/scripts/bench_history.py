@@ -9,9 +9,12 @@ one result each. Writes:
 - docs/site/assets/bench-history.json, read by the History page's charts
   (docs/site/assets/javascripts/bench.js): for each corpus and thread count, mibz2's
   throughput (MB/s of output), CPU time and peak RSS at each recorded commit, the mean of
-  its rounds and the half-width of its 95% interval. A series holds only commits of one
-  major bench version, one runner CPU model and core count, and one set of corpora: each
-  such class is a line of its own, never joined to another;
+  its rounds and the half-width of its 95% interval. A series holds only commits whose
+  bench versions share the major that last set these figures' meaning
+  (report.meaning_major("decoder", ...): bench/CHANGELOG.md), one runner CPU model and
+  core count, and one set of corpora: each such class is a line of its own, never joined
+  to another. Within a class, a corpus's points join only where its content (its sha256)
+  is the same. Each commit keeps the bench version that measured it;
 - docs/generated/alternatives.md, included by the Alternatives page: the latest
   master result, mibz2 against every other decoder it ran (bench/report.py's tables);
 - docs/site/assets/alternatives.json, read by that page's chart (bench.js): the same
@@ -51,6 +54,35 @@ def git(*args: str) -> str:
     return subprocess.run(
         ["git", "-C", str(ROOT), *args], capture_output=True, text=True, check=True
     ).stdout
+
+
+def line_class(res: dict) -> tuple[str, str]:
+    """A result's line in the history, as a key and a label.
+
+    The key is the bench major that last set the decoder's figures' meaning (not the
+    result's own major: report.meaning_major), the runner's CPU model and core count, and
+    the set of corpora. Results of different keys are never joined; each keeps the bench
+    version that measured it.
+    """
+    major = report.meaning_major("decoder", res["bench"])
+    machine = res["machine"]
+    label = (
+        f"bench {major}.0+ · {cpu_name(machine['cpu'])} · {machine['cores']} cores"
+        f" · {len(res['corpora'])} corpora"
+    )
+    key = f"{major}|{machine['cpu']}|{machine['cores']}|{','.join(sorted(res['corpora']))}"
+    return key, label
+
+
+def line_key(res: dict, corpus: str) -> tuple[str, str | None]:
+    """A series' line for one result: its class (line_class) and the corpus's content.
+
+    The content is the corpus's recorded sha256: a corpus of one name and different bytes
+    is a different workload, and its points are never joined (`text` is generated from
+    this crate's own sources, so it changes with them).
+    """
+    sha = res["corpora"].get(corpus, {}).get("sha256")
+    return line_class(res)[0], sha[:12] if sha else None
 
 
 def reader(store: Path | None, ref: str):
@@ -160,26 +192,23 @@ def build(read, master: str) -> tuple[dict, dict | None]:
                 "bench": res["bench"],
             }
         )
-        major = res["bench"].split(".")[0]
-        cls = (
-            f"bench {major}.x · {cpu_name(res['machine']['cpu'])} · {res['machine']['cores']} cores"
-            f" · {len(res['corpora'])} corpora"
-        )
-        corpus_set = ",".join(sorted(res["corpora"]))
-        key = f"{major}|{res['machine']['cpu']}|{res['machine']['cores']}|{corpus_set}"
+        key, cls = line_class(res)
         classes.setdefault(key, cls)
         for (corpus, t), p in points(res, raw).items():
-            series[(corpus, t)][key].append({"c": i, **p})
+            series[(corpus, t)][line_key(res, corpus)].append({"c": i, **p})
     keys = list(classes)
     out_series = []
-    for (corpus, t), by_class in sorted(
+    for (corpus, t), by_line in sorted(
         series.items(), key=lambda kv: (kv[0][0] != "wikidata", kv[0][0], kv[0][1])
     ):
         out_series.append(
             {
                 "corpus": corpus,
                 "threads": t,
-                "lines": [{"class": keys.index(k), "points": pts} for k, pts in by_class.items()],
+                "lines": [
+                    {"class": keys.index(k), "content": sha, "points": pts}
+                    for (k, sha), pts in by_line.items()
+                ],
             }
         )
     data = {
