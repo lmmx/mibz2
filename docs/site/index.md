@@ -4,8 +4,6 @@ description: "A bzip2 decoder built for memory-level parallelism."
 
 <div class="home-hero" markdown>
 
-![The mibz2 mark: twelve chains of a walk interleaved, each a row of steps](assets/logo.svg){ .home-hero-logo width="160" }
-
 <div class="home-hero-text" markdown>
 
 # mibz2
