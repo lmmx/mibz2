@@ -1,0 +1,221 @@
+# The decoder benchmark: a small, fixed workload decoded in interleaved rounds on one
+# runner, by examples/ab.rs (`ab run`), and its figures (bench/report.py).
+#
+# - A pull request: its head against its base (the merge base with master), both built
+#   here and run as two arms of one harness (`mibz2` and `mibz2@base/ab`, the base's own
+#   harness binary), so the builds run in the same process shape, their order alternating
+#   round to round. The figures go to one comment on the pull request, edited in place.
+#   Nothing from a pull request is recorded.
+# - A push to master: the commit's mibz2 against pbz2 and lbzip2, its result kept on the
+#   bench-results branch (a data-only branch, never merged; nothing is committed to
+#   master). The site's benchmark pages are built from it.
+# - From the Actions tab: any ref, against pbz2 and lbzip2, or against `base` if given (as
+#   on a pull request). Its figures are the run's summary and artifact, never recorded.
+#
+# The workload: the crate's corpora (`ab gen`, tests/common/mod.rs) at a small scale, and
+# 12 MB of the Wikidata dump's own bzip2 blocks (bench/wikidata.json: byte-range windows
+# of a dated dump, each window's SHA-256 and the corpus's pinned). At 1 thread and at the
+# runner's cores, ROUNDS rounds.
+name: Benchmark
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "examples/ab.rs"
+      - "examples/windows.rs"
+      - "tests/common/**" # (the corpora's recipe)
+      - "bench/**"
+      - ".github/workflows/bench.yml"
+  push:
+    branches: [master]
+    paths:
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "examples/ab.rs"
+      - "examples/windows.rs"
+      - "tests/common/**"
+      - "bench/**"
+      - ".github/workflows/bench.yml"
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "A commit to compare against, as on a pull request (empty: mibz2 against pbz2 and lbzip2)"
+        required: false
+
+# A push to a pull request cancels its run in progress; master's runs each make a record
+concurrency:
+  group: bench-${{ github.event.pull_request.number || github.sha }}-${{ inputs.base }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: write # (master: the bench-results and bench-data branches)
+  pull-requests: write # (the comment)
+
+env:
+  ROUNDS: 10
+  SCALE: 4 # ab gen's: corpora of 8-20 MB of output each
+  SETTLE: 0.25 # seconds the harness samples the other processes' load before each run
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  CARGO_TERM_COLOR: never
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      # A pull request's head commit itself, not GitHub's merge of it into the base
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Arms
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          INPUT_BASE: ${{ inputs.base }}
+        run: |
+          head=$(git rev-parse HEAD)
+          case "$GITHUB_EVENT_NAME" in
+            pull_request) mode=pr; base=$(git merge-base "$PR_BASE" "$PR_HEAD") ;;
+            push) mode=master; base= ;;
+            *) if [ -n "$INPUT_BASE" ]; then mode=pr; base=$(git rev-parse "$INPUT_BASE^{commit}"); else mode=dispatch; base=; fi ;;
+          esac
+          if [ "$mode" = pr ]; then arms="mibz2,mibz2@base/ab"; else arms="mibz2,pbz2,lbzip2"; fi
+          {
+            echo "MODE=$mode"; echo "HEAD_SHA=$head"; echo "BASE_SHA=$base"; echo "ARMS=$arms"
+            echo "HEAD_DATE=$(git show -s --format=%cI "$head")"
+          } >> "$GITHUB_ENV"
+          echo "mode $mode, head $head, base ${base:-none}, arms $arms"
+
+      - name: Comment (pending)
+        if: github.event_name == 'pull_request'
+        continue-on-error: true # (a fork's pull request has a read-only token)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 bench/comment.py pending ${{ github.event.pull_request.number }} "$HEAD_SHA"
+
+      # lbzip2: an arm, and examples/windows.rs's check of the Wikidata blocks
+      - name: lbzip2
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null && lbzip2 --version | head -1
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      # The release profile (Cargo.toml's: fat LTO, one codegen unit), as published
+      - name: Build the head
+        run: |
+          cargo build --release --example ab --example windows
+          mkdir -p bin && cp target/release/examples/ab bin/ab
+
+      - name: Build the base
+        if: env.MODE == 'pr'
+        run: |
+          git worktree add --detach .base-src "$BASE_SHA"
+          test -f .base-src/examples/ab.rs || { echo "::error::the base $BASE_SHA has no examples/ab.rs"; exit 1; }
+          (cd .base-src && CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo build --release --example ab)
+          mkdir -p base && cp target/release/examples/ab base/ab
+
+      - name: Corpora
+        run: bin/ab gen corpora "$SCALE"
+
+      # Wikimedia serves a dated dump for about six weeks: the windows are kept on the
+      # bench-data branch once a master run has read them, and read from there first
+      - name: Wikidata windows (cache)
+        uses: actions/cache@v4
+        with:
+          path: windows
+          key: bench-wikidata-${{ hashFiles('bench/wikidata.json') }}
+
+      - name: Wikidata windows
+        run: |
+          dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+          if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ] && git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null; then
+            git archive origin/bench-data "$dir" | tar -x || true
+          fi
+          source=$(python3 bench/wikidata.py fetch bench/wikidata.json "$dir")
+          echo "WINDOWS_SOURCE=$source" >> "$GITHUB_ENV"
+          echo "WINDOWS_DIR=$dir" >> "$GITHUB_ENV"
+          python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2
+          ls -l corpora
+
+      - name: Run
+        run: |
+          bin/ab run runs.jsonl --arms "$ARMS" --threads "1,$(nproc)" --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
+
+      - name: Figures
+        run: |
+          ref=$([ "$MODE" = pr ] && echo "mibz2@base/ab" || echo mibz2)
+          { echo "## ab summary (reference: $ref)"; bin/ab summary runs.jsonl --ref "$ref"; } > ab-summary.md
+          python3 bench/report.py summary runs.jsonl --corpora corpora --mode "$MODE" --head "$HEAD_SHA" \
+            ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --out result.json --md comment.md
+          cat comment.md ab-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment
+        if: "!cancelled() && github.event_name == 'pull_request'"
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f comment.md ]; then
+            python3 bench/comment.py final ${{ github.event.pull_request.number }} comment.md
+          else
+            python3 bench/comment.py failed ${{ github.event.pull_request.number }} "$HEAD_SHA"
+          fi
+
+      - name: Results
+        if: "!cancelled()"
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-${{ env.MODE }}-${{ env.HEAD_SHA }}
+          path: |
+            runs.jsonl
+            result.json
+            comment.md
+            ab-summary.md
+          if-no-files-found: ignore
+
+      # master only: the commit's result appended to the bench-results branch, and the
+      # Wikidata windows kept on the bench-data branch if they were read from Wikimedia
+      - name: Record
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # (a data-only branch, checked out beside the code: its last commit, or a new one)
+          open_branch() {
+            if git fetch -q origin "$1:refs/remotes/origin/$1" 2>/dev/null; then
+              git worktree add -q --detach "$2" "origin/$1"
+            else
+              git worktree add -q --orphan -b "$1" "$2"
+            fi
+          }
+          push_branch() {
+            for try in 1 2 3; do
+              git -C "$2" push -q origin "HEAD:$1" && return 0
+              git -C "$2" fetch -q origin "$1" && git -C "$2" rebase -q FETCH_HEAD
+            done
+            return 1
+          }
+          open_branch bench-results .store
+          python3 bench/report.py record .store result.json runs.jsonl
+          git -C .store add -A
+          git -C .store commit -qm "record bench: ${HEAD_SHA::7}, method $(python3 -c 'import json; print(json.load(open("result.json"))["method"])')"
+          push_branch bench-results .store
+          if [ "$WINDOWS_SOURCE" != kept ] || ! git cat-file -e "origin/bench-data:$WINDOWS_DIR" 2>/dev/null; then
+            open_branch bench-data .data
+            mkdir -p ".data/$WINDOWS_DIR" && cp "$WINDOWS_DIR"/*.bin ".data/$WINDOWS_DIR/" && cp bench/wikidata.json ".data/$WINDOWS_DIR/"
+            python3 bench/wikidata.py readme bench/wikidata.json > .data/README.md
+            git -C .data add -A
+            if git -C .data diff --cached --quiet; then
+              echo "bench-data already holds $WINDOWS_DIR"
+            else
+              git -C .data commit -qm "bench data: $WINDOWS_DIR"
+              push_branch bench-data .data
+            fi
+          fi

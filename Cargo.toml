@@ -19,6 +19,7 @@ exclude = [
   ".just/",
   ".pre-commit-config.yaml",
   "Justfile",
+  "bench/",
   "docs/",
   "pyproject.toml",
   "python/",

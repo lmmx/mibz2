@@ -1,0 +1,122 @@
+{
+  "about": "Byte-range windows of a dated Wikidata JSON dump (Wikimedia's own bzip2 blocks, CC0): 12 windows of 1 MiB at (2i + 1)/24 of the file. examples/windows.rs keeps each window's whole blocks, their bits untouched, as a stream of its own; the streams one after another are the corpus wikidata.bz2.",
+  "dump": "wikidata-20261019-all.json.bz2",
+  "url": "https://dumps.wikimedia.org/wikidatawiki/entities/20261019/wikidata-20261019-all.json.bz2",
+  "dump_bytes": 103488697311,
+  "dump_sha1": "a05b8b809ab80576da6d838c67138ddf401055e6",
+  "windows_dir": "windows/wikidata-20261019",
+  "corpus": "wikidata.bz2",
+  "corpus_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+  "corpus_bytes": 11854933,
+  "decoded_bytes": 209700196,
+  "windows": [
+    {
+      "name": "w00",
+      "offset": 4312029054,
+      "length": 1048576,
+      "sha256": "b03bd32b1e03616c73c10e12981a500ec4829f46b1040a48dcd4a55cb1cc7024",
+      "blocks": 37,
+      "stream_bytes": 968019,
+      "decoded_bytes": 19800013
+    },
+    {
+      "name": "w01",
+      "offset": 12936087163,
+      "length": 1048576,
+      "sha256": "95dcf0d34f4b3b6628ed317419044b2d0580d08b793bd221b240dbc3e5d39959",
+      "blocks": 26,
+      "stream_bytes": 1007397,
+      "decoded_bytes": 13500017
+    },
+    {
+      "name": "w02",
+      "offset": 21560145273,
+      "length": 1048576,
+      "sha256": "12ca228c2a71e0f9fcf29d81200d1f0bbf1ba287671bd32efec1a071e920844b",
+      "blocks": 42,
+      "stream_bytes": 1014480,
+      "decoded_bytes": 18900000
+    },
+    {
+      "name": "w03",
+      "offset": 30184203382,
+      "length": 1048576,
+      "sha256": "7361eb56a2ef6c2001259c0fe20848e67b493ee57666135532fb2f1983f2b0d1",
+      "blocks": 47,
+      "stream_bytes": 1037915,
+      "decoded_bytes": 21600009
+    },
+    {
+      "name": "w04",
+      "offset": 38808261491,
+      "length": 1048576,
+      "sha256": "7572e53733dd527e8dfa3cf9a46018b85467ece687993fa994b0c816eb04c70c",
+      "blocks": 23,
+      "stream_bytes": 938989,
+      "decoded_bytes": 12600036
+    },
+    {
+      "name": "w05",
+      "offset": 47432319600,
+      "length": 1048576,
+      "sha256": "755e945cf03a5f6e50408138a1ad30b8a024eec46759796bb5342c2553235a3d",
+      "blocks": 45,
+      "stream_bytes": 993461,
+      "decoded_bytes": 19800010
+    },
+    {
+      "name": "w06",
+      "offset": 56056377710,
+      "length": 1048576,
+      "sha256": "78cca9c646e6a06e7fd87397e52034eb1b3183ca646a27daa90a029c075e7572",
+      "blocks": 45,
+      "stream_bytes": 1000551,
+      "decoded_bytes": 21600008
+    },
+    {
+      "name": "w07",
+      "offset": 64680435819,
+      "length": 1048576,
+      "sha256": "e002e96ed72d7a852c181989e48c521fedf9c5f7996a85345e1693f99d5a1036",
+      "blocks": 19,
+      "stream_bytes": 957704,
+      "decoded_bytes": 10800021
+    },
+    {
+      "name": "w08",
+      "offset": 73304493928,
+      "length": 1048576,
+      "sha256": "1ecf51cb1915291e1566bf18868ce63362a206ef7d9418d8dc5d992bd51914c4",
+      "blocks": 47,
+      "stream_bytes": 1012857,
+      "decoded_bytes": 20700024
+    },
+    {
+      "name": "w09",
+      "offset": 81928552037,
+      "length": 1048576,
+      "sha256": "acb9b6853f182c2f09240929a6005b54af053743a5b05eaa041abf3940e55eb3",
+      "blocks": 43,
+      "stream_bytes": 975999,
+      "decoded_bytes": 20700020
+    },
+    {
+      "name": "w10",
+      "offset": 90552610147,
+      "length": 1048576,
+      "sha256": "0a728b3c2869ca9a718b3ae478dcf325791087b1b76b25e0f53ddd958d01ea6a",
+      "blocks": 16,
+      "stream_bytes": 957141,
+      "decoded_bytes": 11700024
+    },
+    {
+      "name": "w11",
+      "offset": 99176668256,
+      "length": 1048576,
+      "sha256": "64072577a130372aa47a7528126ea9757ecdee5ffa0ae733f9206cb2fdc6c724",
+      "blocks": 41,
+      "stream_bytes": 990420,
+      "decoded_bytes": 18000014
+    }
+  ]
+}
