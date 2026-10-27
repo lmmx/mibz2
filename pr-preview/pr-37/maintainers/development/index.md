@@ -29,6 +29,8 @@ cargo run --release --example bzcat -- 4 < f.bz2 > f   # the parallel decoder as
 
 On aarch64: `rustup target add aarch64-unknown-linux-gnu`, `apt install qemu-user gcc-aarch64-linux-gnu`, then `cargo test --release --target aarch64-unknown-linux-gnu --config .cargo/aarch64-qemu.toml`.
 
+The segmented walks' unsafe code also runs under [Miri](<https://github.com/rust-lang/miri>), on blocks small enough to interpret: `cargo +nightly miri test --lib -- miri_` (about a minute; CI runs it on changes to `src/bwt.rs`). Those tests assert they reached the transitions the walks' handoffs guard (a buffer growing, a pass ending with a buffer full, a lane coming into the tail full, and so on), so a walk change that stops them reaching one fails rather than passing having checked less.
+
 ## Benchmarking
 
 Performance is measured on CI (`.github/workflows/bench.yml`, the [benchmark](<https://lmmx.github.io/mibz2/pr-preview/pr-37/benchmarks/index.md>)): a pull request that touches the decoder gets a comment with its head against its base. Locally, the same harness:
