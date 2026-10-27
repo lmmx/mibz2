@@ -640,7 +640,8 @@ def stage_lines(st: dict, pr: bool) -> list[str]:
             else "in ns a byte of output"
         )
         + (
-            ". **Change** is head over base per stage, paired by round as above. "
+            ". **Change** is head over base per stage, paired by round as above; with seven "
+            "intervals a run, a mark on one stage alone can be chance (about one run in three). "
             if len(shown) > 1
             else ". "
         )

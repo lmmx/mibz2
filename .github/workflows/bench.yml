@@ -74,7 +74,7 @@ env:
   ROUNDS: 10
   SCALE: 4 # ab gen's: corpora of 8-20 MB of output each
   SETTLE: 0.25 # seconds the harness samples the other processes' load before each run
-  STAGE_ROUNDS: 7 # bench/stages.py's rounds (each about 5 s a build on the runner)
+  STAGE_ROUNDS: 6 # bench/stages.py's rounds (each about 5 s a build on the runner)
   STAGE_REPEATS: 2 # phases' repeats a run (each stage's best of them)
   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   CARGO_TERM_COLOR: never
