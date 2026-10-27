@@ -1,8 +1,9 @@
 // The benchmark history (docs/site/benchmarks/history.md): a small chart per corpus and
 // thread count of master's mibz2 figures over its commits, from
 // assets/bench-history.json (docs/scripts/bench_history.py), in plain SVG. Each class of
-// results (a major bench version, a runner CPU and core count, a set of corpora) is a
-// line of its own, never joined to another. Runs on any page with a #bench-history
+// results (the bench major that last set these figures' meaning, a runner CPU and core
+// count, a set of corpora) is a line of its own, never joined to another, and so is each
+// content of a corpus (its sha256). Runs on any page with a #bench-history
 // element, on load and on each instant navigation.
 (() => {
   "use strict";
@@ -86,6 +87,7 @@
         svg("circle", { cx: x(p.c), cy: y(m), r: 12, class: "bh-hit" }, a);
         svg("title", {}, a).textContent =
           `${cm.sha.slice(0, 7)} ${cm.subject}\n${cm.date.slice(0, 10)} · ${data.classes[line.class]}\n` +
+          (line.content ? `corpus ${series.corpus} sha256 ${line.content}\n` : "") +
           `${metric[1]}: ${fmt(m)} ± ${fmt(h)} ${unit} (95% interval, ${p.n} rounds)` + (p.same_bytes ? "" : "\nSAME BYTES: NO");
       }
     }
@@ -97,8 +99,9 @@
   // the left axis, in that figure's own units, is the highlighted line's, with its 95%
   // band. Pointing at (or focusing) a legend entry or a line highlights it and fades the
   // rest; a click or tap keeps it highlighted, and another releases it. A class of results
-  // (a major bench version, a runner CPU and core count, a set of corpora) is never joined
-  // to another: a dashed rule names each new one.
+  // (the bench major that last set these figures' meaning, a runner CPU and core count, a
+  // set of corpora) is never joined
+  // to another: a dashed rule names each new one. Nor is a corpus's content (its sha256).
   const hero = { pinned: null, hover: null, commit: null };
   const HERO_DEFAULT = "mb_s-4";
   function hero_(data, root) {
@@ -125,7 +128,7 @@
     METRICS.forEach((m, mi) => {
       for (const s of data.series.filter((q) => q.corpus === state.heroCorpus).sort((a, b) => a.threads - b.threads)) {
         const vals = new Map();
-        for (const l of s.lines) for (const p of l.points) if (p[m[0]]) vals.set(p.c, { v: p[m[0]][0], h: p[m[0]][1], n: p.n, cls: l.class, same: p.same_bytes });
+        for (const l of s.lines) for (const p of l.points) if (p[m[0]]) vals.set(p.c, { v: p[m[0]][0], h: p[m[0]][1], n: p.n, cls: l.class, seg: `${l.class}|${l.content}`, same: p.same_bytes });
         if (vals.size) figs.push({ key: `${m[0]}-${s.threads}`, m, mi, threads: s.threads, label: `${m[1]}, ${s.threads} thread${s.threads === 1 ? "" : "s"}`, vals });
       }
     });
@@ -135,7 +138,7 @@
     const body = el("div", { class: "bh-hero-chart" }, box);
     const link = el("p", { class: "bh-hero-commit" }, box);
     const legend = el("div", { class: "bh-hero-legend" }, box);
-    el("p", { class: "bh-hero-note", text: "Each line is scaled to its own range over the commits recorded, so every figure's shape shows at once; the axis on the left, in the figure's own units, is the highlighted line's, with its 95% interval as a band. Point at a legend entry or a line to highlight it; click or tap to keep it highlighted, and again to release it (on the keyboard: Tab to an entry, Enter to keep; on the chart, ←/→ a commit, ↑/↓ a line). Solid lines are one thread, dashed ones four. A dashed rule marks a new class of results (a bench version, a runner kind, a set of corpora), whose lines are never joined to the last's. Each commit's label links to its pull request." }, box);
+    el("p", { class: "bh-hero-note", text: "Each line is scaled to its own range over the commits recorded, so every figure's shape shows at once; the axis on the left, in the figure's own units, is the highlighted line's, with its 95% interval as a band. Point at a legend entry or a line to highlight it; click or tap to keep it highlighted, and again to release it (on the keyboard: Tab to an entry, Enter to keep; on the chart, ←/→ a commit, ↑/↓ a line). Solid lines are one thread, dashed ones four. A dashed rule marks a new class of results (a bench version that redefined these figures, a runner kind, a set of corpora), whose lines are never joined to the last's, and a corpus whose bytes changed (text, made from mibz2's own sources) is never joined either; a bench version that left them as they were keeps the line, and each point's tooltip names the version that measured it. Each commit's label links to its pull request." }, box);
     const tip = el("div", { class: "bh-tip", hidden: "" }, box);
     if (!cs.length) { el("p", { text: "No points yet." }, body); return; }
     if (!byKey.has(hero.pinned)) hero.pinned = null;
@@ -190,15 +193,17 @@
     const lineG = svg("g", {}, s);
     const paths = new Map();
     for (const f of figs) {
-      // one path per class, never joined across a class's boundary
+      // one path per class and corpus content, never joined across either's boundary (a
+      // point on its own is a dot)
       let d = "", prev = null;
       for (const c of cs) {
         if (!f.vals.has(c)) { prev = null; continue; }
         const o = f.vals.get(c);
-        d += `${prev !== null && prev === o.cls ? "L" : "M"}${x(c).toFixed(1)} ${y(f, o.v).toFixed(1)}`;
-        prev = o.cls;
+        const at = `${x(c).toFixed(1)} ${y(f, o.v).toFixed(1)}`;
+        d += prev !== null && prev === o.seg ? `L${at}` : `M${at}h0`;
+        prev = o.seg;
       }
-      const p = svg("path", { d: d + (f.vals.size === 1 ? "h0" : ""), class: `bh-hero-line${f.threads === 1 ? "" : " bh-dashed"}`, stroke: slot(f.mi) }, lineG);
+      const p = svg("path", { d, class: `bh-hero-line${f.threads === 1 ? "" : " bh-dashed"}`, stroke: slot(f.mi) }, lineG);
       paths.set(f.key, p);
     }
     const axisG = svg("g", {}, s);
@@ -221,7 +226,7 @@
         svg("line", { x1: M.l - 5, x2: M.l - 0.5, y1: y(f, t), y2: y(f, t), class: "bh-hero-axis", stroke: col }, axisG);
         svg("text", { x: M.l - 8, y: y(f, t) + 4, "text-anchor": "end", class: "bh-tick" }, axisG).textContent = f.m[3](t);
       }
-      // the highlighted line's 95% band and whiskers, one band per class
+      // the highlighted line's 95% band and whiskers, one band per class and corpus content
       let run = [];
       const flush = () => {
         if (run.length > 1) {
@@ -233,7 +238,7 @@
       };
       for (const c of cs) {
         if (!f.vals.has(c)) { flush(); continue; }
-        if (run.length && f.vals.get(run[run.length - 1]).cls !== f.vals.get(c).cls) flush();
+        if (run.length && f.vals.get(run[run.length - 1]).seg !== f.vals.get(c).seg) flush();
         run.push(c);
         const o = f.vals.get(c);
         svg("line", { x1: x(c), x2: x(c), y1: y(f, o.v - o.h), y2: y(f, o.v + o.h), class: "bh-whisker", stroke: col }, dots);
