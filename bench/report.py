@@ -349,7 +349,7 @@ STAGE_ROWS = [
     ("scan", "scanner (headers, Huffman)"),
     ("mtf", "MTF + RLE2"),
     ("build", "T-vector build"),
-    ("walk", "walk, flagged (used)"),
+    ("walk", "walk (the one each build uses)"),
     ("rle", "RLE1"),
     ("crc", "CRC"),
     ("total", "total"),
