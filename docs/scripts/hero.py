@@ -6,10 +6,15 @@ independent chains, one block. Each tube is drawn as translucent facets, painted
 near, over a blurred shadow of its own colour.
 
 Run from the repository root: python docs/scripts/hero.py
+
+`python docs/scripts/hero.py mark PATH` writes the same object without its shadows, cropped
+to it, to PATH. The header logo and the favicon (docs/site/assets/logo-header.png and
+favicon.png) are that mark rendered to PNG, 96 px high and 64 px square.
 """
 
 import math
 import re
+import sys
 from pathlib import Path
 
 OUT = Path("docs/site/assets/images/hero.svg")
@@ -123,7 +128,7 @@ def mix(c, w, k):
     return tuple(a * (1 - k) + b * k for a, b in zip(c, w))
 
 
-def svg():
+def svg(shadows=True):
     faces = []
     # coral in the xy-plane, blue in yz, mint in zx: each threads the next
     for axes, colour in (((0, 1), CORAL), ((1, 2), BLUE), ((2, 0), MINT)):
@@ -146,18 +151,29 @@ def svg():
         (BLUE, [(0, -A), (0, A)]),
         (MINT, [(-B, 0), (B, 0)]),
     )
-    shadows = []
+    shadow = []
     for colour, pts in footprints:
         poly = " ".join("%.1f,%.1f" % project((x, y, floor)) for x, y in pts)
-        shadows.append(
+        shadow.append(
             f'<polygon points="{poly}" fill="none" stroke="{rgb(colour)}" stroke-opacity="0.30"'
             f' stroke-width="{T * 1.5 * SC}" stroke-linejoin="round"/>'
         )
-    x, y, w, h = VIEWBOX
+    if shadows:
+        x, y, w, h = VIEWBOX
+        under = (
+            '<defs><filter id="blur" x="-50%" y="-50%" width="200%" height="200%">'
+            '<feGaussianBlur stdDeviation="26"/></filter></defs>\n'
+            f'<g filter="url(#blur)">{"".join(shadow)}</g>\n'
+        )
+    else:
+        # the mark: the object alone, cropped to its facets with a small margin
+        pts = [project(v) for _, quad, _, _ in faces for v in quad]
+        x0, y0 = min(p[0] for p in pts) - 4, min(p[1] for p in pts) - 4
+        x1, y1 = max(p[0] for p in pts) + 4, max(p[1] for p in pts) + 4
+        x, y, w, h = round(x0), round(y0), round(x1 - x0), round(y1 - y0)
+        under = ""
     out = f"""<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three interlocking glass loops" viewBox="{x} {y} {w} {h}" width="{w}" height="{h}">
-<defs><filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter></defs>
-<g filter="url(#blur)">{"".join(shadows)}</g>
-{chr(10).join(body)}
+{under}{chr(10).join(body)}
 </svg>"""
     # whole units are finer than a pixel at the sizes the page shows it
     return re.sub(
@@ -169,4 +185,7 @@ def svg():
 
 
 if __name__ == "__main__":
-    OUT.write_text(svg())
+    if sys.argv[1:2] == ["mark"]:
+        Path(sys.argv[2]).write_text(svg(shadows=False))
+    else:
+        OUT.write_text(svg())

@@ -113,9 +113,12 @@ features = [
   "search.suggest",
   "toc.follow",
 ]
+favicon = "assets/favicon.png"
 font.code = "IBM Plex Mono"
 font.text = "IBM Plex Sans"
 language = "en"
+# the home page's illustration without its shadows (docs/scripts/hero.py mark), as PNG
+logo = "assets/logo-header.png"
 variant = "modern"
 
 [project.theme.icon]
