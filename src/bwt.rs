@@ -166,6 +166,25 @@ pub struct SegScratch {
     bitmap: Vec<u64>,
     bufs: Vec<Vec<u8>>,
     next: Vec<usize>,
+    /// the room walk's last block: its length and the segment its output starts in
+    n: usize,
+    first: usize,
+}
+
+impl SegScratch {
+    /// The room walk's segments (`walk_segments_room_parts`'s), joined in the output's
+    /// order into `out`, which they replace: the walk's own last step, timed apart
+    pub fn assemble(&self, out: &mut Vec<u8>) {
+        let n = self.n;
+        out.clear();
+        out.reserve(n);
+        let mut seg = self.first;
+        while out.len() < n {
+            let b = &self.bufs[seg];
+            out.extend_from_slice(&b[..b.len().min(n - out.len())]);
+            seg = self.next[seg];
+        }
+    }
 }
 
 /// The walk, segmented where the block is long enough: exactly `walk`'s output
@@ -488,10 +507,27 @@ macro_rules! transition {
 /// pointer update or end test. A lane whose segment ends mid-pass takes the next one and
 /// is rebased so that base + offset is its new buffer. Exactly `walk`'s output.
 pub fn walk_segments_room(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mut SegScratch) {
-    if tt.len() < MIN_SEGMENTED {
-        return walk(tt, orig_ptr, out);
+    if walk_segments_room_parts(tt, orig_ptr, out, s) {
+        s.assemble(out);
     }
-    walk_segments_room_with::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, out, s, FLAGGED_SEGMENTS)
+}
+
+/// `walk_segments_room` in its two parts, to time them apart (examples/phases.rs): the
+/// walk, which leaves each segment's bytes in `s` and returns true, for
+/// `SegScratch::assemble` to join into the output; or, for a block too short to segment,
+/// `walk`'s output written to `out`, returning false
+pub fn walk_segments_room_parts(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+) -> bool {
+    if tt.len() < MIN_SEGMENTED {
+        walk(tt, orig_ptr, out);
+        return false;
+    }
+    room_segments::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    true
 }
 
 /// `walk_segments_room` with `L` lanes and `segments` segments, on a block of any length
@@ -520,11 +556,26 @@ pub fn walk_segments_room_with<const L: usize, const PF: u8>(
     s: &mut SegScratch,
     segments: usize,
 ) {
-    let n = tt.0.len();
     out.clear();
-    if n == 0 {
+    if tt.0.is_empty() {
         return;
     }
+    room_segments::<L, PF>(tt, orig_ptr, s, segments);
+    s.assemble(out);
+}
+
+/// The room walk itself, on a block of one row or more: each segment's bytes into its
+/// buffer in `s`, its successor in `s.next`, and the block's length and first segment
+/// for `SegScratch::assemble`. Never inlined, so the decoder and the stage table's split
+/// timing (`walk_segments_room_parts`) run the same machine code for the walk
+#[inline(never)]
+fn room_segments<const L: usize, const PF: u8>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    s: &mut SegScratch,
+    segments: usize,
+) {
+    let n = tt.0.len();
     let r0 = tt.0[orig_ptr as usize] >> 8;
     random_rows(n, segments - 1, &mut s.starts);
     s.starts.push(r0);
@@ -699,13 +750,8 @@ pub fn walk_segments_room_with<const L: usize, const PF: u8>(
     for &r in starts {
         tt.0[r as usize] &= LINK;
     }
-    out.reserve(n);
-    let mut seg = seg_of(r0);
-    while out.len() < n {
-        let b = &bufs[seg];
-        out.extend_from_slice(&b[..b.len().min(n - out.len())]);
-        seg = next[seg];
-    }
+    s.first = seg_of(r0);
+    s.n = n;
 }
 
 /// A hint that the T-vector entry at `row` (below its length) is read soon: a software

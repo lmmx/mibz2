@@ -194,6 +194,10 @@ jobs:
           python3 bench/stages.py run stages.jsonl --rounds "$STAGE_ROUNDS" --repeats "$STAGE_REPEATS" corpora/wikidata.bz2 $arms
           echo "stages: $((SECONDS - start)) s"
 
+      # the report's stage table across builds whose phases report different stages
+      - name: Report tests
+        run: python3 bench/test_report.py
+
       - name: Figures
         run: |
           ref=$([ "$MODE" = pr ] && echo "mibz2@base/ab" || echo mibz2)

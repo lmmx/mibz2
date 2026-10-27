@@ -4,16 +4,22 @@
 # settings Segmented uses, paired by round; alone on one CPU, then with a copy on every CPU;
 # with hardware counters where the runner exposes them. A diagnostic for choosing settings to try, from the Actions tab only: its
 # figures are the run's summary and artifact, never recorded, and a setting it favours is
-# decided by the decoder's own A/B (bench.yml) on a pull request.
+# decided by the decoder's own A/B (bench.yml) on a pull request. With `tool: phases`, the
+# stage table's examples/phases.rs runs the same way instead (ROUNDS its passes): the
+# stages alone and with every CPU busy, as a multi-threaded decode runs them.
 name: Walk sweep
 
 on:
   workflow_dispatch:
     inputs:
       rounds:
-        description: "Rounds (each walks every block at every setting)"
+        description: "Rounds (each walks every block at every setting); for phases, its passes"
         required: false
         default: "5"
+      tool:
+        description: "sweep (the factorial) or phases (the stages)"
+        required: false
+        default: "sweep"
 
 permissions:
   contents: read
@@ -38,7 +44,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Build
-        run: cargo build --release --example sweep --example windows
+        run: cargo build --release --example sweep --example phases --example windows
 
       # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
       - name: Wikidata windows (cache)
@@ -66,23 +72,25 @@ jobs:
       - name: Sweep
         env:
           ROUNDS: ${{ inputs.rounds }}
+          TOOL: ${{ inputs.tool || 'sweep' }}
         run: |
           mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
           model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
           ghz=$(python3 -c "print(round($mhz / 1000, 4))")
-          bin=target/release/examples/sweep
+          case "$TOOL" in sweep|phases) ;; *) echo "tool: sweep or phases"; exit 1 ;; esac
+          bin=target/release/examples/$TOOL
           start=$SECONDS
           # each file names its runner: runners differ in CPU model, and so in the figures
-          { echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); rounds $ROUNDS"; taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } | tee sweep-1.txt
+          { echo "runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS"; taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } | tee sweep-1.txt
           alone=$((SECONDS - start)); start=$SECONDS
           cpus=$(nproc)
           for c in $(seq 0 $((cpus - 1))); do
-            { echo "runner: $model, $cpus CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); rounds $ROUNDS; this copy on CPU $c"; taskset -c "$c" $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } > "sweep-$cpus-cpu$c.txt" &
+            { echo "runner: $model, $cpus CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); $TOOL, rounds $ROUNDS; this copy on CPU $c"; taskset -c "$c" $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz"; } > "sweep-$cpus-cpu$c.txt" &
           done
           wait
           together=$((SECONDS - start))
           {
-            echo "## Walk sweep: $model, $cpus cores, at its reported clock (${ghz} GHz)"
+            echo "## Walk sweep ($TOOL): $model, $cpus cores, at its reported clock (${ghz} GHz)"
             echo
             echo "Head \`$(git rev-parse --short HEAD)\`, $(rustc --version). Diagnostic only: the decoder's A/B decides."
             echo
