@@ -1167,8 +1167,9 @@
 <code>bench/report.py</code>. Nothing about performance is decided on a developer's machine.</p>
 <ul>
 <li><a href="history/">History</a>: master's figures over its commits.</li>
-<li><a href="alternatives/">Alternatives</a>: the latest master commit against pbz2 and
-  lbzip2.</li>
+<li><a href="alternatives/">Alternatives</a>: the latest master commit against the other
+  bzip2 decoders: pbz2, lbzip2, indexed_bzip2, fbz, the <code>lbzip2</code> crate, libbzip2 and
+  libbz2-rs.</li>
 </ul>
 <p>These are decoder-level results: one process decoding one file, nothing else.
 End-to-end results, the decoder inside a pipeline, are in
@@ -1190,16 +1191,20 @@ End-to-end results, the decoder inside a pipeline, are in
 </tr>
 <tr>
 <td>a push to master</td>
-<td>mibz2, pbz2 0.2.0 and lbzip2</td>
+<td>mibz2 and the <a href="alternatives/">alternatives</a></td>
 <td>the commit's result on the <code>bench-results</code> branch, and these pages</td>
 </tr>
 <tr>
 <td>the Actions tab</td>
-<td>either</td>
+<td>either: a base commit given, as a pull request; none, as master</td>
 <td>the run's summary, not recorded</td>
 </tr>
 </tbody>
 </table>
+<p>Pull requests never run the alternatives: their runs are the head against the base
+only. The alternatives that are Rust crates with dependencies of their own (fbz, the
+<code>lbzip2</code> crate, libbz2-rs) are built into a second build of the harness,
+<code>bench/alternatives</code>, so the crate's own dev-dependencies stay as they are.</p>
 <p>Only master's commits are recorded. A pull request's runs, and experiments that did not
 land, are not recorded or shown here; experiments are written up in the
 <a href="../background/journals/">journals</a>.</p>
@@ -1227,10 +1232,14 @@ land, are not recorded or shown here; experiments are written up in the
 <li><strong>A round</strong> decodes every corpus once with each arm at each thread count: 1 thread
   (pinned to one CPU) and the runner's cores. The arms' order is rotated and reversed
   round to round. There are 10 rounds.</li>
+<li><strong>Block-parallel or single-threaded:</strong> each arm is classed in its records
+  (<code>parallel</code>). A single-threaded decoder (libbzip2, libbz2-rs) runs at 1 thread only,
+  once a round; at the runner's cores its figures are those 1-thread runs, paired with
+  mibz2's at that count, and shown as 1-thread runs, never as a decode on more threads.</li>
 <li><strong>On a pull request</strong>, the base's own harness binary is an arm (<code>mibz2@base/ab</code>), so
   both builds run in the same process shape on the same runner.</li>
 <li><strong>Paired ratios:</strong> each round's ratio of one arm's time to the reference arm's (the
-  base; or mibz2, against pbz2 and lbzip2), their geometric mean, and its 95% t-interval
+  base; or mibz2, against the alternatives), their geometric mean, and its 95% t-interval
   over the rounds. A change is called faster or slower only where the interval excludes
   no change.</li>
 <li><strong>The bench version</strong> (<code>bench/report.py</code>, semver) is stamped on every result. A change

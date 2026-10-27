@@ -15,7 +15,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 mibz2's speed is measured on GitHub's runners by the Benchmark workflow (`.github/workflows/bench.yml`), with the A/B harness `examples/ab.rs` and `bench/report.py`. Nothing about performance is decided on a developer's machine.
 
 - [History](<https://lmmx.github.io/mibz2/benchmarks/history/index.md>): master's figures over its commits.
-- [Alternatives](<https://lmmx.github.io/mibz2/benchmarks/alternatives/index.md>): the latest master commit against pbz2 and lbzip2.
+- [Alternatives](<https://lmmx.github.io/mibz2/benchmarks/alternatives/index.md>): the latest master commit against the other bzip2 decoders: pbz2, lbzip2, indexed\_bzip2, fbz, the `lbzip2` crate, libbzip2 and libbz2-rs.
 
 These are decoder-level results: one process decoding one file, nothing else. End-to-end results, the decoder inside a pipeline, are in [wikidata-pq's benchmark history](<https://lmmx.github.io/wikidata-pq/guide/bench-history/>).
 
@@ -24,8 +24,10 @@ These are decoder-level results: one process decoding one file, nothing else. En
 | event | arms | result |
 | --- | --- | --- |
 | a pull request that touches the decoder, the harness, the corpora or the bench | its head and its base (the merge base with master), both built on the runner | one comment on the pull request, edited in place on every push |
-| a push to master | mibz2, pbz2 0.2.0 and lbzip2 | the commit's result on the `bench-results` branch, and these pages |
-| the Actions tab | either | the run's summary, not recorded |
+| a push to master | mibz2 and the [alternatives](<https://lmmx.github.io/mibz2/benchmarks/alternatives/index.md>) | the commit's result on the `bench-results` branch, and these pages |
+| the Actions tab | either: a base commit given, as a pull request; none, as master | the run's summary, not recorded |
+
+Pull requests never run the alternatives: their runs are the head against the base only. The alternatives that are Rust crates with dependencies of their own (fbz, the `lbzip2` crate, libbz2-rs) are built into a second build of the harness, `bench/alternatives`, so the crate's own dev-dependencies stay as they are.
 
 Only master's commits are recorded. A pull request's runs, and experiments that did not land, are not recorded or shown here; experiments are written up in the [journals](<https://lmmx.github.io/mibz2/background/journals/index.md>).
 
@@ -38,8 +40,9 @@ Only master's commits are recorded. A pull request's runs, and experiments that 
 
 - **A run** is one process decoding one file from disk, end to end, its output hashed (the same hash for every arm, or the run fails: the same-bytes check). It records the wall time, the CPU time (user + sys), the peak RSS, and each thread's CPU.
 - **A round** decodes every corpus once with each arm at each thread count: 1 thread (pinned to one CPU) and the runner's cores. The arms' order is rotated and reversed round to round. There are 10 rounds.
+- **Block-parallel or single-threaded:** each arm is classed in its records (`parallel`). A single-threaded decoder (libbzip2, libbz2-rs) runs at 1 thread only, once a round; at the runner's cores its figures are those 1-thread runs, paired with mibz2's at that count, and shown as 1-thread runs, never as a decode on more threads.
 - **On a pull request**, the base's own harness binary is an arm (`mibz2@base/ab`), so both builds run in the same process shape on the same runner.
-- **Paired ratios:** each round's ratio of one arm's time to the reference arm's (the base; or mibz2, against pbz2 and lbzip2), their geometric mean, and its 95% t-interval over the rounds. A change is called faster or slower only where the interval excludes no change.
+- **Paired ratios:** each round's ratio of one arm's time to the reference arm's (the base; or mibz2, against the alternatives), their geometric mean, and its 95% t-interval over the rounds. A change is called faster or slower only where the interval excludes no change.
 - **The bench version** (`bench/report.py`, semver) is stamped on every result. A change to what is measured or how is a new major version, and the history never joins a series across major versions, runner CPU models or sets of corpora.
 
 ## The full-dump figure is modelled
@@ -70,32 +73,88 @@ Loading the benchmark history…
 
 Loading the chart…
 
-mibz2 beside other bzip2 decoders, pbz2 (Soof Golan's Rust decoder, the harness's dev-dependency) and lbzip2 (C, `lbzip2 -dc -n T`), on master's latest recorded commit, decoded in the same rounds on one runner ([methodology](<https://lmmx.github.io/mibz2/benchmarks/index.md>)). A ratio above 1× is the alternative taking longer (or more memory) than mibz2: there, mibz2 is faster. These are decoder-level results; end-to-end pipeline results are in [wikidata-pq's tracker](<https://lmmx.github.io/wikidata-pq/guide/bench-history/>).
+mibz2 beside other bzip2 decoders on master's latest recorded commit, decoded in the same rounds on one runner ([methodology](<https://lmmx.github.io/mibz2/benchmarks/index.md>)). A ratio above 1× is the alternative taking longer (or more memory) than mibz2: there, mibz2 is faster. These are decoder-level results; end-to-end pipeline results are in [wikidata-pq's tracker](<https://lmmx.github.io/wikidata-pq/guide/bench-history/>).
+
+| decoder | what runs | threads |
+| --- | --- | --- |
+| pbz2 | Soof Golan's Rust decoder: `DecoderReader`, or `ParallelDecoder::with_threads` | block-parallel |
+| lbzip2 | the C program: `lbzip2 -dc -n T`, read through a pipe | block-parallel |
+| indexed\_bzip2 | C++, from Python: `IndexedBzip2File(path, parallelization=T)` (`bench/ib.py`; the interpreter's start left out) | block-parallel |
+| fbz | Answer.AI's Rust decoder: `fbz::Reader`, `threads: T` | block-parallel |
+| lbzip2-rs | the `lbzip2` crate (pure Rust): `StreamingBz2Read`, on the CPUs it may run on (it takes no thread count) | block-parallel |
+| libbzip2 | the reference C library, 1.0.8: the `bzip2` crate's bundled source, `MultiBzDecoder` (as `bzip2 -dc` and Python's `bz2` decode) | single-threaded |
+| libbz2-rs | libbz2-rs-sys, the pure-Rust port of libbzip2, through the `bzip2` crate 0.6 | single-threaded |
+
+**Single-threaded decoders run at 1 thread only.** libbzip2 and libbz2-rs have no thread count, so they never decode on 4 threads. At 4 threads, their figures are their 1-thread runs against mibz2's at 4 threads: in the chart, hollow points with dashed whiskers, under "single-threaded (1 thread)"; in the tables, marked ¹.
+
+Not included: `bzip2 -dc` and Python's `bz2` module, which are libbzip2 itself (its arm stands for them); and bz2k, mibz2's own prototype, which it replaced.
 
 The latest record: [`7574f2c`](<https://github.com/lmmx/mibz2/commit/7574f2c4410800ea4b1d66d05b5f35f03bff29d7>) (2026-10-27).
 
-**mibz2 against pbz2 0.2.0 and lbzip2 version 2.5**: 10 rounds on one runner · [run](<https://github.com/lmmx/mibz2/actions/runs/40526627798>)
+**mibz2 against pbz2 and lbzip2**: 10 rounds on one runner · [run](<https://github.com/lmmx/mibz2/actions/runs/40526627798>)
 
 AMD EPYC 9V74 80-Core Processor, 4 cores · rustc 1.99.1 (58cf8f9c3 2026-10-13) · bench 1.0.0
 
-Each round decodes every corpus once with each decoder at each thread count (`ab run`), their order rotated round to round. **Time against mibz2** is the decoder's wall (or CPU) over mibz2's: the geometric mean of the rounds' paired ratios and its 95% interval; above 1, mibz2 is faster. 1-thread runs are pinned to one CPU.
+Each round decodes every corpus once with each decoder at each thread count (`ab run`), their order rotated round to round. **Against mibz2** is the decoder's wall (or CPU, or peak RSS) over mibz2's: the geometric mean of the rounds' paired ratios and its 95% interval; above 1, mibz2 is faster (or leaner). 1-thread runs are pinned to one CPU.
 
-| corpus | threads | mibz2 wall (median) | mibz2 MB/s | mibz2 c/B | pbz2 wall / mibz2 | pbz2 CPU / mibz2 | lbzip2 wall / mibz2 | lbzip2 CPU / mibz2 | peak RSS: mibz2, pbz2, lbzip2 | same bytes |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| `wikidata` (11.9 MB → 210 MB, 17.7×) | 1 | 0.775 s | 271 | 13.7 | 1.51× (1.48–1.54) | 1.51× (1.48–1.54) | 3.56× (3.47–3.65) | 3.53× (3.44–3.62) | 28, 10, 9 MB | yes |
-| `wikidata` (11.9 MB → 210 MB, 17.7×) | 4 | 0.392 s | 535 | 25.0 | 1.42× (1.39–1.45) | 1.47× (1.44–1.50) | 2.06× (2.02–2.09) | 2.23× (2.20–2.26) | 77, 31, 38 MB | yes |
-| `onebyte` (51 B → 20 MB, 392156.9×) | 1 | 0.013 s | 1,587 | 2.7 | 0.73× (0.70–0.76) | 0.77× (0.74–0.79) | 8.12× (7.86–8.40) | 3.98× (3.88–4.08) | 34, 10, 6 MB | yes |
-| `onebyte` (51 B → 20 MB, 392156.9×) | 4 | 0.012 s | 1,633 | 2.6 | 0.79× (0.74–0.84) | 0.81× (0.78–0.85) | 4.13× (4.07–4.19) | 4.28× (4.23–4.33) | 35, 7, 5 MB | yes |
-| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 1 | 0.045 s | 433 | 8.9 | 1.53× (1.50–1.55) | 1.50× (1.49–1.51) | 2.24× (2.22–2.26) | 1.73× (1.72–1.75) | 18, 10, 7 MB | yes |
-| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 4 | 0.030 s | 656 | 20.2 | 1.20× (1.13–1.27) | 1.19× (1.13–1.26) | 1.67× (1.60–1.73) | 1.13× (1.06–1.20) | 43, 26, 27 MB | yes |
-| `random` (7.1 MB → 8 MB, 1.1×) | 1 | 0.126 s | 64 | 58.9 | 1.21× (1.18–1.25) | 1.21× (1.17–1.25) | 2.40× (2.39–2.42) | 2.28× (2.27–2.29) | 24, 11, 7 MB | yes |
-| `random` (7.1 MB → 8 MB, 1.1×) | 4 | 0.057 s | 140 | 80.1 | 1.24× (1.20–1.29) | 1.39× (1.36–1.42) | 2.63× (2.55–2.71) | 2.17× (2.14–2.20) | 54, 32, 23 MB | yes |
-| `records` (9.59 MB → 9.6 MB, 1.0×) | 1 | 0.162 s | 59 | 63.1 | 1.11× (1.09–1.13) | 1.11× (1.09–1.13) | 2.49× (2.47–2.51) | 2.24× (2.22–2.26) | 25, 11, 7 MB | yes |
-| `records` (9.59 MB → 9.6 MB, 1.0×) | 4 | 0.069 s | 138 | 86.1 | 1.25× (1.20–1.30) | 1.34× (1.29–1.40) | 2.17× (2.11–2.23) | 2.19× (2.15–2.23) | 59, 33, 23 MB | yes |
-| `runs` (38 kB → 10 MB, 263.2×) | 1 | 0.010 s | 990 | 4.5 | 0.65× (0.63–0.67) | 0.70× (0.69–0.72) | 5.05× (4.93–5.17) | 2.78× (2.70–2.86) | 24, 10, 5 MB | yes |
-| `runs` (38 kB → 10 MB, 263.2×) | 4 | 0.010 s | 985 | 4.5 | 0.64× (0.61–0.67) | 0.69× (0.67–0.72) | 4.98× (4.85–5.12) | 2.95× (2.88–3.02) | 26, 6, 5 MB | yes |
-| `text` (897 kB → 12.1 MB, 13.5×) | 1 | 0.061 s | 198 | 19.2 | 1.27× (1.25–1.29) | 1.26× (1.24–1.28) | 3.33× (3.27–3.39) | 2.96× (2.91–3.02) | 20, 10, 7 MB | yes |
-| `text` (897 kB → 12.1 MB, 13.5×) | 4 | 0.032 s | 372 | 32.3 | 1.17× (1.13–1.22) | 1.29× (1.24–1.34) | 3.13× (3.07–3.18) | 2.12× (2.05–2.19) | 46, 27, 24 MB | yes |
+Block-parallel: pbz2, lbzip2.
+
+## Wall time against mibz2
+
+| corpus | threads | mibz2 wall (median) | mibz2 MB/s | mibz2 c/B | pbz2 | lbzip2 | same bytes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| `wikidata` (11.9 MB → 210 MB, 17.7×) | 1 | 0.775 s | 271 | 13.7 | 1.51× (1.48–1.54) | 3.56× (3.47–3.65) | yes |
+| `wikidata` (11.9 MB → 210 MB, 17.7×) | 4 | 0.392 s | 535 | 25.0 | 1.42× (1.39–1.45) | 2.06× (2.02–2.09) | yes |
+| `onebyte` (51 B → 20 MB, 392156.9×) | 1 | 0.013 s | 1,587 | 2.7 | 0.73× (0.70–0.76) | 8.12× (7.86–8.40) | yes |
+| `onebyte` (51 B → 20 MB, 392156.9×) | 4 | 0.012 s | 1,633 | 2.6 | 0.79× (0.74–0.84) | 4.13× (4.07–4.19) | yes |
+| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 1 | 0.045 s | 433 | 8.9 | 1.53× (1.50–1.55) | 2.24× (2.22–2.26) | yes |
+| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 4 | 0.030 s | 656 | 20.2 | 1.20× (1.13–1.27) | 1.67× (1.60–1.73) | yes |
+| `random` (7.1 MB → 8 MB, 1.1×) | 1 | 0.126 s | 64 | 58.9 | 1.21× (1.18–1.25) | 2.40× (2.39–2.42) | yes |
+| `random` (7.1 MB → 8 MB, 1.1×) | 4 | 0.057 s | 140 | 80.1 | 1.24× (1.20–1.29) | 2.63× (2.55–2.71) | yes |
+| `records` (9.59 MB → 9.6 MB, 1.0×) | 1 | 0.162 s | 59 | 63.1 | 1.11× (1.09–1.13) | 2.49× (2.47–2.51) | yes |
+| `records` (9.59 MB → 9.6 MB, 1.0×) | 4 | 0.069 s | 138 | 86.1 | 1.25× (1.20–1.30) | 2.17× (2.11–2.23) | yes |
+| `runs` (38 kB → 10 MB, 263.2×) | 1 | 0.010 s | 990 | 4.5 | 0.65× (0.63–0.67) | 5.05× (4.93–5.17) | yes |
+| `runs` (38 kB → 10 MB, 263.2×) | 4 | 0.010 s | 985 | 4.5 | 0.64× (0.61–0.67) | 4.98× (4.85–5.12) | yes |
+| `text` (897 kB → 12.1 MB, 13.5×) | 1 | 0.061 s | 198 | 19.2 | 1.27× (1.25–1.29) | 3.33× (3.27–3.39) | yes |
+| `text` (897 kB → 12.1 MB, 13.5×) | 4 | 0.032 s | 372 | 32.3 | 1.17× (1.13–1.22) | 3.13× (3.07–3.18) | yes |
+
+## CPU time against mibz2
+
+| corpus | threads | pbz2 | lbzip2 |
+| --- | ---: | ---: | ---: |
+| `wikidata` (11.9 MB → 210 MB, 17.7×) | 1 | 1.51× (1.48–1.54) | 3.53× (3.44–3.62) |
+| `wikidata` (11.9 MB → 210 MB, 17.7×) | 4 | 1.47× (1.44–1.50) | 2.23× (2.20–2.26) |
+| `onebyte` (51 B → 20 MB, 392156.9×) | 1 | 0.77× (0.74–0.79) | 3.98× (3.88–4.08) |
+| `onebyte` (51 B → 20 MB, 392156.9×) | 4 | 0.81× (0.78–0.85) | 4.28× (4.23–4.33) |
+| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 1 | 1.50× (1.49–1.51) | 1.73× (1.72–1.75) |
+| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 4 | 1.19× (1.13–1.26) | 1.13× (1.06–1.20) |
+| `random` (7.1 MB → 8 MB, 1.1×) | 1 | 1.21× (1.17–1.25) | 2.28× (2.27–2.29) |
+| `random` (7.1 MB → 8 MB, 1.1×) | 4 | 1.39× (1.36–1.42) | 2.17× (2.14–2.20) |
+| `records` (9.59 MB → 9.6 MB, 1.0×) | 1 | 1.11× (1.09–1.13) | 2.24× (2.22–2.26) |
+| `records` (9.59 MB → 9.6 MB, 1.0×) | 4 | 1.34× (1.29–1.40) | 2.19× (2.15–2.23) |
+| `runs` (38 kB → 10 MB, 263.2×) | 1 | 0.70× (0.69–0.72) | 2.78× (2.70–2.86) |
+| `runs` (38 kB → 10 MB, 263.2×) | 4 | 0.69× (0.67–0.72) | 2.95× (2.88–3.02) |
+| `text` (897 kB → 12.1 MB, 13.5×) | 1 | 1.26× (1.24–1.28) | 2.96× (2.91–3.02) |
+| `text` (897 kB → 12.1 MB, 13.5×) | 4 | 1.29× (1.24–1.34) | 2.12× (2.05–2.19) |
+
+## Peak RSS against mibz2
+
+| corpus | threads | mibz2 peak RSS | pbz2 | lbzip2 |
+| --- | ---: | ---: | ---: | ---: |
+| `wikidata` (11.9 MB → 210 MB, 17.7×) | 1 | 28 MB | 0.37× (0.37–0.37) | 0.33× (0.33–0.34) |
+| `wikidata` (11.9 MB → 210 MB, 17.7×) | 4 | 77 MB | 0.40× (0.40–0.41) | 0.48× (0.47–0.49) |
+| `onebyte` (51 B → 20 MB, 392156.9×) | 1 | 34 MB | 0.30× (0.30–0.30) | 0.18× (0.17–0.18) |
+| `onebyte` (51 B → 20 MB, 392156.9×) | 4 | 35 MB | 0.20× (0.20–0.20) | 0.15× (0.15–0.15) |
+| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 1 | 18 MB | 0.57× (0.56–0.58) | 0.41× (0.40–0.41) |
+| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 4 | 43 MB | 0.63× (0.61–0.66) | 0.64× (0.61–0.66) |
+| `random` (7.1 MB → 8 MB, 1.1×) | 1 | 24 MB | 0.45× (0.44–0.45) | 0.30× (0.30–0.30) |
+| `random` (7.1 MB → 8 MB, 1.1×) | 4 | 54 MB | 0.59× (0.58–0.60) | 0.42× (0.41–0.43) |
+| `records` (9.59 MB → 9.6 MB, 1.0×) | 1 | 25 MB | 0.45× (0.44–0.45) | 0.30× (0.30–0.30) |
+| `records` (9.59 MB → 9.6 MB, 1.0×) | 4 | 59 MB | 0.56× (0.55–0.58) | 0.42× (0.39–0.45) |
+| `runs` (38 kB → 10 MB, 263.2×) | 1 | 24 MB | 0.42× (0.41–0.44) | 0.21× (0.19–0.22) |
+| `runs` (38 kB → 10 MB, 263.2×) | 4 | 26 MB | 0.25× (0.25–0.25) | 0.18× (0.18–0.18) |
+| `text` (897 kB → 12.1 MB, 13.5×) | 1 | 20 MB | 0.52× (0.51–0.53) | 0.37× (0.37–0.38) |
+| `text` (897 kB → 12.1 MB, 13.5×) | 4 | 46 MB | 0.60× (0.59–0.60) | 0.53× (0.48–0.57) |
 
 **Same bytes:** every run of every arm gave the same output hash on that corpus, with no error.
 
@@ -125,7 +184,7 @@ At 4 threads the workers bound it. Per byte: the scanner 6.2 ns a byte of bz2, t
 
 **The corpora, the machine and the toolchain**
 
-| corpus | bz2 bytes | output bytes | SHA-256 | source | |---|--:|--:|---|---| | \`wikidata\` | 11,854,933 | 209,700,196 | \`82f65ace0731962d…\` | wikidata-20261019-all.json.bz2: 12 windows' whole blocks (bench/wikidata.json) | | \`onebyte\` | 51 | 20,000,000 | \`22924f5b3187645f…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | | \`pattern\` | 1,116 | 19,600,000 | \`0f07e2a274b91896…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | | \`random\` | 7,097,921 | 8,000,000 | \`10d444e6204289af…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | | \`records\` | 9,587,840 | 9,600,000 | \`ff8b5f6ed3dd4445…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | | \`runs\` | 37,995 | 10,000,235 | \`af3be4d130faf312…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | | \`text\` | 896,995 | 12,067,111 | \`a3f2c5c9e5f9eafe…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | - CPU: AMD EPYC 9V74 80-Core Processor, 4 cores, reported clock 3692.4 MHz (cycles a byte use it), flags avx2, avx512f, bmi1, bmi2, pclmulqdq, sse4\_1, ssse3; kernel 6.17.0-1022-azure; image ubuntu24 20261023.334.3 - rustc 1.99.1 (58cf8f9c3 2026-10-13); pbz2 0.2.0 (a dev-dependency, the harness's arm); lbzip2 version 2.5 - bench 1.0.0 (bench/report.py), 10 rounds, threads 1, 4
+| corpus | bz2 bytes | output bytes | SHA-256 | source | |---|--:|--:|---|---| | \`wikidata\` | 11,854,933 | 209,700,196 | \`82f65ace0731962d…\` | wikidata-20261019-all.json.bz2: 12 windows' whole blocks (bench/wikidata.json) | | \`onebyte\` | 51 | 20,000,000 | \`22924f5b3187645f…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | | \`pattern\` | 1,116 | 19,600,000 | \`0f07e2a274b91896…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | | \`random\` | 7,097,921 | 8,000,000 | \`10d444e6204289af…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | | \`records\` | 9,587,840 | 9,600,000 | \`ff8b5f6ed3dd4445…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | | \`runs\` | 37,995 | 10,000,235 | \`af3be4d130faf312…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | | \`text\` | 896,995 | 12,067,111 | \`a3f2c5c9e5f9eafe…\` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 | - CPU: AMD EPYC 9V74 80-Core Processor, 4 cores, reported clock 3692.4 MHz (cycles a byte use it), flags avx2, avx512f, bmi1, bmi2, pclmulqdq, sse4\_1, ssse3; kernel 6.17.0-1022-azure; image ubuntu24 20261023.334.3 - rustc 1.99.1 (58cf8f9c3 2026-10-13); pbz2 0.2.0; lbzip2 version 2.5; libbzip2 (the corpora's encoder) 1.0.8 (the bzip2 crate's bundled source) - bench 1.0.0 (bench/report.py), 10 rounds, threads 1, 4
 
 # Concepts
 
@@ -609,7 +668,7 @@ Its name is for "multi-chain inversion of bzip2". It was written in [wikidata-pq
 - [Installation](<https://lmmx.github.io/mibz2/getting-started/installation/index.md>) and the [quickstart](<https://lmmx.github.io/mibz2/getting-started/quickstart/index.md>), in Python and in Rust.
 - [What is checked, and when](<https://lmmx.github.io/mibz2/concepts/checks/index.md>): each block's CRC before its bytes are returned, each stream's at its end, and what an error reports.
 - [How it works](<https://lmmx.github.io/mibz2/concepts/how-it-works/index.md>): the scanner, the workers and the multi-chain walk.
-- [Benchmarks](<https://lmmx.github.io/mibz2/benchmarks/index.md>): master's figures over its commits, and mibz2 against pbz2 and lbzip2.
+- [Benchmarks](<https://lmmx.github.io/mibz2/benchmarks/index.md>): master's figures over its commits, and mibz2 against the other bzip2 decoders.
 - [Reference](<https://lmmx.github.io/mibz2/reference/index.md>): the Python API, and the Rust API on docs.rs.
 
 ## Install

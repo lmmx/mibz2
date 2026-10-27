@@ -27,7 +27,7 @@ Its name is for "multi-chain inversion of bzip2". It was written in [wikidata-pq
 - [Installation](<https://lmmx.github.io/mibz2/getting-started/installation/index.md>) and the [quickstart](<https://lmmx.github.io/mibz2/getting-started/quickstart/index.md>), in Python and in Rust.
 - [What is checked, and when](<https://lmmx.github.io/mibz2/concepts/checks/index.md>): each block's CRC before its bytes are returned, each stream's at its end, and what an error reports.
 - [How it works](<https://lmmx.github.io/mibz2/concepts/how-it-works/index.md>): the scanner, the workers and the multi-chain walk.
-- [Benchmarks](<https://lmmx.github.io/mibz2/benchmarks/index.md>): master's figures over its commits, and mibz2 against pbz2 and lbzip2.
+- [Benchmarks](<https://lmmx.github.io/mibz2/benchmarks/index.md>): master's figures over its commits, and mibz2 against the other bzip2 decoders.
 - [Reference](<https://lmmx.github.io/mibz2/reference/index.md>): the Python API, and the Rust API on docs.rs.
 
 ## Install

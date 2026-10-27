@@ -696,6 +696,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#wall-time-against-mibz2" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Wall time against mibz2
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cpu-time-against-mibz2" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        CPU time against mibz2
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#peak-rss-against-mibz2" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Peak RSS against mibz2
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#where-mibz2s-cpu-goes-the-wikidata-blocks-at-4-threads-median-cpu-seconds" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1161,6 +1194,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#wall-time-against-mibz2" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Wall time against mibz2
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cpu-time-against-mibz2" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        CPU time against mibz2
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#peak-rss-against-mibz2" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Peak RSS against mibz2
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#where-mibz2s-cpu-goes-the-wikidata-blocks-at-4-threads-median-cpu-seconds" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1216,15 +1282,69 @@
 <div data-src="../../assets/alternatives.json" id="alternatives-hero">
 <p>Loading the chart…</p>
 </div>
-<p>mibz2 beside other bzip2 decoders, pbz2 (Soof Golan's Rust decoder, the harness's
-dev-dependency) and lbzip2 (C, <code>lbzip2 -dc -n T</code>), on master's latest recorded commit,
-decoded in the same rounds on one runner (<a href="../">methodology</a>). A ratio above 1× is
-the alternative taking longer (or more memory) than mibz2: there, mibz2 is faster. These are decoder-level results; end-to-end pipeline results are in
+<p>mibz2 beside other bzip2 decoders on master's latest recorded commit, decoded in the
+same rounds on one runner (<a href="../">methodology</a>). A ratio above 1× is the alternative
+taking longer (or more memory) than mibz2: there, mibz2 is faster. These are
+decoder-level results; end-to-end pipeline results are in
 <a href="https://lmmx.github.io/wikidata-pq/guide/bench-history/">wikidata-pq's tracker</a>.</p>
+<table>
+<thead>
+<tr>
+<th>decoder</th>
+<th>what runs</th>
+<th>threads</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pbz2</td>
+<td>Soof Golan's Rust decoder: <code>DecoderReader</code>, or <code>ParallelDecoder::with_threads</code></td>
+<td>block-parallel</td>
+</tr>
+<tr>
+<td>lbzip2</td>
+<td>the C program: <code>lbzip2 -dc -n T</code>, read through a pipe</td>
+<td>block-parallel</td>
+</tr>
+<tr>
+<td>indexed_bzip2</td>
+<td>C++, from Python: <code>IndexedBzip2File(path, parallelization=T)</code> (<code>bench/ib.py</code>; the interpreter's start left out)</td>
+<td>block-parallel</td>
+</tr>
+<tr>
+<td>fbz</td>
+<td>Answer.AI's Rust decoder: <code>fbz::Reader</code>, <code>threads: T</code></td>
+<td>block-parallel</td>
+</tr>
+<tr>
+<td>lbzip2-rs</td>
+<td>the <code>lbzip2</code> crate (pure Rust): <code>StreamingBz2Read</code>, on the CPUs it may run on (it takes no thread count)</td>
+<td>block-parallel</td>
+</tr>
+<tr>
+<td>libbzip2</td>
+<td>the reference C library, 1.0.8: the <code>bzip2</code> crate's bundled source, <code>MultiBzDecoder</code> (as <code>bzip2 -dc</code> and Python's <code>bz2</code> decode)</td>
+<td>single-threaded</td>
+</tr>
+<tr>
+<td>libbz2-rs</td>
+<td>libbz2-rs-sys, the pure-Rust port of libbzip2, through the <code>bzip2</code> crate 0.6</td>
+<td>single-threaded</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Single-threaded decoders run at 1 thread only.</strong> libbzip2 and libbz2-rs have no
+thread count, so they never decode on 4 threads. At 4 threads, their figures are
+their 1-thread runs against mibz2's at 4 threads: in the chart, hollow points with
+dashed whiskers, under "single-threaded (1 thread)"; in the tables, marked ¹.</p>
+<p>Not included: <code>bzip2 -dc</code> and Python's <code>bz2</code> module, which are libbzip2 itself (its arm
+stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <p>The latest record: <a href="https://github.com/lmmx/mibz2/commit/7574f2c4410800ea4b1d66d05b5f35f03bff29d7"><code>7574f2c</code></a> (2026-10-27).</p>
-<p><strong>mibz2 against pbz2 0.2.0 and lbzip2 version 2.5</strong>: 10 rounds on one runner · <a href="https://github.com/lmmx/mibz2/actions/runs/40526627798">run</a></p>
+<p><strong>mibz2 against pbz2 and lbzip2</strong>: 10 rounds on one runner · <a href="https://github.com/lmmx/mibz2/actions/runs/40526627798">run</a></p>
 <p>AMD EPYC 9V74 80-Core Processor, 4 cores · rustc 1.99.1 (58cf8f9c3 2026-10-13) · bench 1.0.0</p>
-<p>Each round decodes every corpus once with each decoder at each thread count (<code>ab run</code>), their order rotated round to round. <strong>Time against mibz2</strong> is the decoder's wall (or CPU) over mibz2's: the geometric mean of the rounds' paired ratios and its 95% interval; above 1, mibz2 is faster. 1-thread runs are pinned to one CPU.</p>
+<p>Each round decodes every corpus once with each decoder at each thread count (<code>ab run</code>), their order rotated round to round. <strong>Against mibz2</strong> is the decoder's wall (or CPU, or peak RSS) over mibz2's: the geometric mean of the rounds' paired ratios and its 95% interval; above 1, mibz2 is faster (or leaner). 1-thread runs are pinned to one CPU.</p>
+<p>Block-parallel: pbz2, lbzip2.</p>
+<h2 id="wall-time-against-mibz2">Wall time against mibz2<a class="headerlink" href="#wall-time-against-mibz2" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1233,11 +1353,8 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <th style="text-align: right;">mibz2 wall (median)</th>
 <th style="text-align: right;">mibz2 MB/s</th>
 <th style="text-align: right;">mibz2 c/B</th>
-<th style="text-align: right;">pbz2 wall / mibz2</th>
-<th style="text-align: right;">pbz2 CPU / mibz2</th>
-<th style="text-align: right;">lbzip2 wall / mibz2</th>
-<th style="text-align: right;">lbzip2 CPU / mibz2</th>
-<th style="text-align: right;">peak RSS: mibz2, pbz2, lbzip2</th>
+<th style="text-align: right;">pbz2</th>
+<th style="text-align: right;">lbzip2</th>
 <th>same bytes</th>
 </tr>
 </thead>
@@ -1249,10 +1366,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">271</td>
 <td style="text-align: right;">13.7</td>
 <td style="text-align: right;">1.51× (1.48–1.54)</td>
-<td style="text-align: right;">1.51× (1.48–1.54)</td>
 <td style="text-align: right;">3.56× (3.47–3.65)</td>
-<td style="text-align: right;">3.53× (3.44–3.62)</td>
-<td style="text-align: right;">28, 10, 9 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1262,10 +1376,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">535</td>
 <td style="text-align: right;">25.0</td>
 <td style="text-align: right;">1.42× (1.39–1.45)</td>
-<td style="text-align: right;">1.47× (1.44–1.50)</td>
 <td style="text-align: right;">2.06× (2.02–2.09)</td>
-<td style="text-align: right;">2.23× (2.20–2.26)</td>
-<td style="text-align: right;">77, 31, 38 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1275,10 +1386,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">1,587</td>
 <td style="text-align: right;">2.7</td>
 <td style="text-align: right;">0.73× (0.70–0.76)</td>
-<td style="text-align: right;">0.77× (0.74–0.79)</td>
 <td style="text-align: right;">8.12× (7.86–8.40)</td>
-<td style="text-align: right;">3.98× (3.88–4.08)</td>
-<td style="text-align: right;">34, 10, 6 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1288,10 +1396,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">1,633</td>
 <td style="text-align: right;">2.6</td>
 <td style="text-align: right;">0.79× (0.74–0.84)</td>
-<td style="text-align: right;">0.81× (0.78–0.85)</td>
 <td style="text-align: right;">4.13× (4.07–4.19)</td>
-<td style="text-align: right;">4.28× (4.23–4.33)</td>
-<td style="text-align: right;">35, 7, 5 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1301,10 +1406,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">433</td>
 <td style="text-align: right;">8.9</td>
 <td style="text-align: right;">1.53× (1.50–1.55)</td>
-<td style="text-align: right;">1.50× (1.49–1.51)</td>
 <td style="text-align: right;">2.24× (2.22–2.26)</td>
-<td style="text-align: right;">1.73× (1.72–1.75)</td>
-<td style="text-align: right;">18, 10, 7 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1314,10 +1416,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">656</td>
 <td style="text-align: right;">20.2</td>
 <td style="text-align: right;">1.20× (1.13–1.27)</td>
-<td style="text-align: right;">1.19× (1.13–1.26)</td>
 <td style="text-align: right;">1.67× (1.60–1.73)</td>
-<td style="text-align: right;">1.13× (1.06–1.20)</td>
-<td style="text-align: right;">43, 26, 27 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1327,10 +1426,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">64</td>
 <td style="text-align: right;">58.9</td>
 <td style="text-align: right;">1.21× (1.18–1.25)</td>
-<td style="text-align: right;">1.21× (1.17–1.25)</td>
 <td style="text-align: right;">2.40× (2.39–2.42)</td>
-<td style="text-align: right;">2.28× (2.27–2.29)</td>
-<td style="text-align: right;">24, 11, 7 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1340,10 +1436,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">140</td>
 <td style="text-align: right;">80.1</td>
 <td style="text-align: right;">1.24× (1.20–1.29)</td>
-<td style="text-align: right;">1.39× (1.36–1.42)</td>
 <td style="text-align: right;">2.63× (2.55–2.71)</td>
-<td style="text-align: right;">2.17× (2.14–2.20)</td>
-<td style="text-align: right;">54, 32, 23 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1353,10 +1446,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">59</td>
 <td style="text-align: right;">63.1</td>
 <td style="text-align: right;">1.11× (1.09–1.13)</td>
-<td style="text-align: right;">1.11× (1.09–1.13)</td>
 <td style="text-align: right;">2.49× (2.47–2.51)</td>
-<td style="text-align: right;">2.24× (2.22–2.26)</td>
-<td style="text-align: right;">25, 11, 7 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1366,10 +1456,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">138</td>
 <td style="text-align: right;">86.1</td>
 <td style="text-align: right;">1.25× (1.20–1.30)</td>
-<td style="text-align: right;">1.34× (1.29–1.40)</td>
 <td style="text-align: right;">2.17× (2.11–2.23)</td>
-<td style="text-align: right;">2.19× (2.15–2.23)</td>
-<td style="text-align: right;">59, 33, 23 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1379,10 +1466,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">990</td>
 <td style="text-align: right;">4.5</td>
 <td style="text-align: right;">0.65× (0.63–0.67)</td>
-<td style="text-align: right;">0.70× (0.69–0.72)</td>
 <td style="text-align: right;">5.05× (4.93–5.17)</td>
-<td style="text-align: right;">2.78× (2.70–2.86)</td>
-<td style="text-align: right;">24, 10, 5 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1392,10 +1476,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">985</td>
 <td style="text-align: right;">4.5</td>
 <td style="text-align: right;">0.64× (0.61–0.67)</td>
-<td style="text-align: right;">0.69× (0.67–0.72)</td>
 <td style="text-align: right;">4.98× (4.85–5.12)</td>
-<td style="text-align: right;">2.95× (2.88–3.02)</td>
-<td style="text-align: right;">26, 6, 5 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1405,10 +1486,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">198</td>
 <td style="text-align: right;">19.2</td>
 <td style="text-align: right;">1.27× (1.25–1.29)</td>
-<td style="text-align: right;">1.26× (1.24–1.28)</td>
 <td style="text-align: right;">3.33× (3.27–3.39)</td>
-<td style="text-align: right;">2.96× (2.91–3.02)</td>
-<td style="text-align: right;">20, 10, 7 MB</td>
 <td>yes</td>
 </tr>
 <tr>
@@ -1418,11 +1496,217 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 <td style="text-align: right;">372</td>
 <td style="text-align: right;">32.3</td>
 <td style="text-align: right;">1.17× (1.13–1.22)</td>
-<td style="text-align: right;">1.29× (1.24–1.34)</td>
 <td style="text-align: right;">3.13× (3.07–3.18)</td>
-<td style="text-align: right;">2.12× (2.05–2.19)</td>
-<td style="text-align: right;">46, 27, 24 MB</td>
 <td>yes</td>
+</tr>
+</tbody>
+</table>
+<h2 id="cpu-time-against-mibz2">CPU time against mibz2<a class="headerlink" href="#cpu-time-against-mibz2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>corpus</th>
+<th style="text-align: right;">threads</th>
+<th style="text-align: right;">pbz2</th>
+<th style="text-align: right;">lbzip2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.51× (1.48–1.54)</td>
+<td style="text-align: right;">3.53× (3.44–3.62)</td>
+</tr>
+<tr>
+<td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.47× (1.44–1.50)</td>
+<td style="text-align: right;">2.23× (2.20–2.26)</td>
+</tr>
+<tr>
+<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.77× (0.74–0.79)</td>
+<td style="text-align: right;">3.98× (3.88–4.08)</td>
+</tr>
+<tr>
+<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.81× (0.78–0.85)</td>
+<td style="text-align: right;">4.28× (4.23–4.33)</td>
+</tr>
+<tr>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.50× (1.49–1.51)</td>
+<td style="text-align: right;">1.73× (1.72–1.75)</td>
+</tr>
+<tr>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.19× (1.13–1.26)</td>
+<td style="text-align: right;">1.13× (1.06–1.20)</td>
+</tr>
+<tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.21× (1.17–1.25)</td>
+<td style="text-align: right;">2.28× (2.27–2.29)</td>
+</tr>
+<tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.39× (1.36–1.42)</td>
+<td style="text-align: right;">2.17× (2.14–2.20)</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.11× (1.09–1.13)</td>
+<td style="text-align: right;">2.24× (2.22–2.26)</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.34× (1.29–1.40)</td>
+<td style="text-align: right;">2.19× (2.15–2.23)</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.70× (0.69–0.72)</td>
+<td style="text-align: right;">2.78× (2.70–2.86)</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.69× (0.67–0.72)</td>
+<td style="text-align: right;">2.95× (2.88–3.02)</td>
+</tr>
+<tr>
+<td><code>text</code> (897 kB → 12.1 MB, 13.5×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.26× (1.24–1.28)</td>
+<td style="text-align: right;">2.96× (2.91–3.02)</td>
+</tr>
+<tr>
+<td><code>text</code> (897 kB → 12.1 MB, 13.5×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.29× (1.24–1.34)</td>
+<td style="text-align: right;">2.12× (2.05–2.19)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="peak-rss-against-mibz2">Peak RSS against mibz2<a class="headerlink" href="#peak-rss-against-mibz2" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>corpus</th>
+<th style="text-align: right;">threads</th>
+<th style="text-align: right;">mibz2 peak RSS</th>
+<th style="text-align: right;">pbz2</th>
+<th style="text-align: right;">lbzip2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">28 MB</td>
+<td style="text-align: right;">0.37× (0.37–0.37)</td>
+<td style="text-align: right;">0.33× (0.33–0.34)</td>
+</tr>
+<tr>
+<td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">77 MB</td>
+<td style="text-align: right;">0.40× (0.40–0.41)</td>
+<td style="text-align: right;">0.48× (0.47–0.49)</td>
+</tr>
+<tr>
+<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">34 MB</td>
+<td style="text-align: right;">0.30× (0.30–0.30)</td>
+<td style="text-align: right;">0.18× (0.17–0.18)</td>
+</tr>
+<tr>
+<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">35 MB</td>
+<td style="text-align: right;">0.20× (0.20–0.20)</td>
+<td style="text-align: right;">0.15× (0.15–0.15)</td>
+</tr>
+<tr>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">18 MB</td>
+<td style="text-align: right;">0.57× (0.56–0.58)</td>
+<td style="text-align: right;">0.41× (0.40–0.41)</td>
+</tr>
+<tr>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">43 MB</td>
+<td style="text-align: right;">0.63× (0.61–0.66)</td>
+<td style="text-align: right;">0.64× (0.61–0.66)</td>
+</tr>
+<tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">24 MB</td>
+<td style="text-align: right;">0.45× (0.44–0.45)</td>
+<td style="text-align: right;">0.30× (0.30–0.30)</td>
+</tr>
+<tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">54 MB</td>
+<td style="text-align: right;">0.59× (0.58–0.60)</td>
+<td style="text-align: right;">0.42× (0.41–0.43)</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">25 MB</td>
+<td style="text-align: right;">0.45× (0.44–0.45)</td>
+<td style="text-align: right;">0.30× (0.30–0.30)</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">59 MB</td>
+<td style="text-align: right;">0.56× (0.55–0.58)</td>
+<td style="text-align: right;">0.42× (0.39–0.45)</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">24 MB</td>
+<td style="text-align: right;">0.42× (0.41–0.44)</td>
+<td style="text-align: right;">0.21× (0.19–0.22)</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">26 MB</td>
+<td style="text-align: right;">0.25× (0.25–0.25)</td>
+<td style="text-align: right;">0.18× (0.18–0.18)</td>
+</tr>
+<tr>
+<td><code>text</code> (897 kB → 12.1 MB, 13.5×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">20 MB</td>
+<td style="text-align: right;">0.52× (0.51–0.53)</td>
+<td style="text-align: right;">0.37× (0.37–0.38)</td>
+</tr>
+<tr>
+<td><code>text</code> (897 kB → 12.1 MB, 13.5×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">46 MB</td>
+<td style="text-align: right;">0.60× (0.59–0.60)</td>
+<td style="text-align: right;">0.53× (0.48–0.57)</td>
 </tr>
 </tbody>
 </table>
@@ -1504,7 +1788,7 @@ the alternative taking longer (or more memory) than mibz2: there, mibz2 is faste
 | `text` | 896,995 | 12,067,111 | `a3f2c5c9e5f9eafe…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |
 
 - CPU: AMD EPYC 9V74 80-Core Processor, 4 cores, reported clock 3692.4 MHz (cycles a byte use it), flags avx2, avx512f, bmi1, bmi2, pclmulqdq, sse4_1, ssse3; kernel 6.17.0-1022-azure; image ubuntu24 20261023.334.3
-- rustc 1.99.1 (58cf8f9c3 2026-10-13); pbz2 0.2.0 (a dev-dependency, the harness's arm); lbzip2 version 2.5
+- rustc 1.99.1 (58cf8f9c3 2026-10-13); pbz2 0.2.0; lbzip2 version 2.5; libbzip2 (the corpora's encoder) 1.0.8 (the bzip2 crate's bundled source)
 - bench 1.0.0 (bench/report.py), 10 rounds, threads 1, 4
 
 </details>
