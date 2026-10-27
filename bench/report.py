@@ -48,6 +48,8 @@ patch version.
   2026-10-27-walk-sweep.md). The decoder's own figures are measured as before; the
   history starts their series again at 2.0.0 all the same, as it does at any major
   version, and keeps the 1.x results under 1.x.
+- 2.1.0: the stage table has a row within the walk's: the room walk's segment assembly,
+  timed on its own (#48). The walk's row still counts it, and every figure is as it was.
 """
 
 import argparse
@@ -63,7 +65,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "2.0.0"
+BENCH = "2.1.0"
 # The other decoders, in the order they are shown: the block-parallel, then the
 # single-threaded (examples/ab.rs: `parallel`)
 ALTERNATIVES = ["pbz2", "lbzip2", "indexed_bzip2", "fbz", "lbzip2-rs", "libbzip2", "libbz2-rs"]
@@ -350,6 +352,7 @@ STAGE_ROWS = [
     ("mtf", "MTF + RLE2"),
     ("build", "T-vector build"),
     ("walk", "walk (the one each build uses)"),
+    ("assemble", "of which: segment assembly"),
     ("rle", "RLE1"),
     ("crc", "CRC"),
     ("total", "total"),

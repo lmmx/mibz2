@@ -28,7 +28,10 @@ from pathlib import Path
 GHZ = 1000  # phases' "c/B" at 1000 GHz: picoseconds a byte
 LINE = re.compile(r"^  (\S.*?)\s+(-?\d+(?:\.\d+)?) c/B(.*)$")
 # The stages in phases' order (its labels' prefixes); `walk` is the walk in the total
-STAGES = ["scan", "mtf", "build", "walk", "rle", "crc", "total"]
+STAGES = ["scan", "mtf", "build", "walk", "assemble", "rle", "crc", "total"]
+# Stages a build's phases may not have: the segments' assembly, timed on its own from
+# bench 2.1.0, within the walk's figure (which counts it, as it always has)
+OPTIONAL = {"assemble"}
 
 
 def stage_key(name: str, rest: str) -> str | None:
@@ -39,6 +42,7 @@ def stage_key(name: str, rest: str) -> str | None:
         ("mtf", "MTF"),
         ("build", "T-vector build"),
         ("walk", "walk"),
+        ("assemble", "segment assembly"),
         ("rle", "RLE1"),
         ("crc", "CRC"),
         ("total", "total"),
@@ -79,7 +83,7 @@ def run(a: argparse.Namespace) -> None:
                 ps = parse(p.stdout)
                 rec = {"round": rnd, "arm": arm, "repeats": a.repeats, "wall": round(wall, 3)}
                 rec["walk"] = walk_name(p.stdout)
-                if p.returncode or set(ps) != set(STAGES):
+                if p.returncode or not set(STAGES) - OPTIONAL <= set(ps) <= set(STAGES):
                     rec["err"] = (p.stderr.strip().splitlines() or ["no stages read"])[-1][:200]
                 rec["ps_per_byte"] = ps
                 f.write(json.dumps(rec) + "\n")
