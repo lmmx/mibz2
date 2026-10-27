@@ -1,0 +1,21 @@
+[package]
+name = "bakeoff"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Each decoder behind one command line: `bakeoff DECODER THREADS FILE` writes the
+# decoded bytes to stdout (run.py hashes or discards them and times the process).
+[dependencies]
+pbz2 = { version = "=0.2.0", default-features = false, features = ["simd"] }
+fbz = "=0.1.13"
+lbzip2 = "=0.5.13"
+bzip2 = "=0.6.1" # default backend: libbz2-rs-sys (the Rust port of libbzip2)
+# ours: the prototype (master) and the integration's crate (branch bz2-native-decoder
+# @ ed06991, its crates/bunzip placed at the repository's root)
+bz2k = { path = "../../2026-10-27-compute-frontier/kernels/bz2k" }
+bunzip = { path = "../../../../crates/bunzip" }
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
