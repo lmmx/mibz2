@@ -1,5 +1,11 @@
 # mibz2
 
+[![PyPI](https://img.shields.io/pypi/v/mibz2?color=%2300dc00)](https://pypi.org/project/mibz2)
+[![crates.io: mibz2](https://img.shields.io/crates/v/mibz2.svg)](https://crates.io/crates/mibz2)
+[![docs.rs](https://img.shields.io/docsrs/mibz2)](https://docs.rs/mibz2)
+[![Documentation](https://img.shields.io/badge/docs-lmmx.github.io%2Fmibz2-blue)](https://lmmx.github.io/mibz2/)
+[![MIT OR Apache-2.0](https://img.shields.io/crates/l/mibz2.svg)](https://github.com/lmmx/mibz2/blob/master/LICENSE-MIT)
+
 A bzip2 decoder built for memory-level parallelism. It is block-parallel like lbzip2. Within
 a block, its inverse BWT is walked as 12 interleaved chains, so a core keeps a dozen of the
 walk's cache-missing loads in flight instead of one.
