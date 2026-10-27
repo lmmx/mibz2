@@ -422,13 +422,177 @@
     el("p", { class: "bh-generated", text: `${data.commits.length} commits recorded; data generated ${data.generated}.` }, root);
   }
 
+  // The Alternatives page's chart (#alternatives-hero): master's latest record,
+  // each other decoder's time (or CPU, or peak RSS) over mibz2's on each corpus, the
+  // geometric mean of the rounds' paired ratios with its 95% interval, on a log scale
+  // about 1 (mibz2). Pointing at or focusing a legend entry highlights that decoder and
+  // fades the rest; a click, tap or Enter keeps it. A row's tooltip gives every decoder's
+  // own figures there.
+  const CMP_METRICS = [
+    ["wall", "Wall time", "wall_ratio"],
+    ["cpu", "CPU time", "cpu_ratio"],
+    ["rss", "Peak RSS", "rss_ratio"],
+  ];
+  const cmp = { pinned: null, hover: null };
+  function alternativesHero(d, host) {
+    host.textContent = "";
+    host.classList.add("bh-root");
+    const box = el("section", { class: "bh-hero" }, host);
+    if (!d) { el("p", { text: "No master commit is recorded yet." }, box); return; }
+    const others = d.arms.filter((a) => a !== d.reference);
+    const threadsAll = [...new Set(Object.values(d.figures).flatMap((f) => Object.keys(f)))].sort((a, b) => a - b);
+    if (!threadsAll.includes(String(state.cmpThreads))) state.cmpThreads = threadsAll[threadsAll.length - 1];
+    if (!CMP_METRICS.some((m) => m[0] === state.cmpMetric)) state.cmpMetric = "wall";
+    const metric = CMP_METRICS.find((m) => m[0] === state.cmpMetric);
+    const save = () => { try { localStorage.setItem("mibz2-bench", JSON.stringify(state)); } catch (e) { /* (none) */ } };
+    const head = el("div", { class: "bh-hero-head" }, box);
+    el("h2", { class: "bh-hero-title", id: "every-alternative", text: "mibz2 and its alternatives, now" }, head);
+    const bar = el("div", { class: "bh-hero-bar" }, head);
+    const seg = (label, opts, value, set, id) => {
+      const g = el("div", { class: "bh-seg", role: "radiogroup", "aria-label": label }, bar);
+      for (const [v, t] of opts) {
+        const b = el("button", { type: "button", role: "radio", "aria-checked": String(String(v) === String(value)), text: t, "data-hero-id": `${id}-${v}` }, g);
+        b.addEventListener("click", () => { set(v); save(); alternativesHero(d, host); host.querySelector(`[data-hero-id="${id}-${v}"]`).focus(); });
+      }
+    };
+    seg("Figure", CMP_METRICS.map((m) => [m[0], m[1]]), state.cmpMetric, (v) => (state.cmpMetric = v), "cmp-metric");
+    seg("Threads", threadsAll.map((t) => [t, `${t} thread${t === "1" ? "" : "s"}`]), state.cmpThreads, (v) => (state.cmpThreads = v), "cmp-threads");
+    const tag = d.pr ? `#${d.pr}` : d.head.slice(0, 7);
+    const sub = el("p", { class: "bh-hero-focus" }, box);
+    sub.append(`At master's latest record, `);
+    el("a", { href: d.pr ? `${d.repo}/pull/${d.pr}` : `${d.repo}/commit/${d.head}`, text: `${tag} (${d.head.slice(0, 7)})` }, sub);
+    sub.append(`, ${d.date.slice(0, 10)}: ${d.rounds} rounds on one ${d.cpu} runner, ${d.cores} cores · `);
+    if (d.run) el("a", { href: d.run, text: "bench run" }, sub);
+    const body = el("div", { class: "bh-hero-chart" }, box);
+    const legend = el("div", { class: "bh-hero-legend bh-cmp-legend" }, box);
+    el("p", { class: "bh-hero-note", text: `Each point is an alternative's ${metric[1].toLowerCase()} over mibz2's on that corpus at ${state.cmpThreads} thread${state.cmpThreads === "1" ? "" : "s"}: the geometric mean of the rounds' paired ratios, with its 95% interval as a whisker, on a log scale. Right of the line (above 1×), the alternative takes more ${state.cmpMetric === "rss" ? "memory" : "time"} than mibz2, so mibz2 is ${state.cmpMetric === "rss" ? "leaner" : "faster"}; left of it, the alternative is. Point at a legend entry to highlight that alternative; click or tap to keep it. Point at a row for every decoder's own figures there. The tables below give the same run in full.` }, box);
+    const tip = el("div", { class: "bh-tip", hidden: "" }, box);
+
+    const order = Object.keys(d.figures).sort((a, b) => (a === "wikidata" ? -1 : b === "wikidata" ? 1 : a.localeCompare(b)));
+    const rows = order.filter((c) => d.figures[c][state.cmpThreads]);
+    const pts = [];
+    for (const c of rows) for (const a of others) {
+      const r = d.figures[c][state.cmpThreads].arms[a]?.[metric[2]];
+      if (r) pts.push({ c, a, r });
+    }
+    if (!pts.length) { el("p", { text: "No figures for this choice." }, body); return; }
+    const lo = Math.min(1, ...pts.map((p) => p.r[1])), hi = Math.max(1, ...pts.map((p) => p.r[2]));
+    const L0 = Math.log(lo) - 0.12, L1 = Math.log(hi) + 0.12;
+    const W = Math.max(300, Math.round(body.clientWidth) || 700);
+    const narrow = W < 560;
+    const rowH = narrow ? 34 : 38;
+    const M = { l: narrow ? 92 : 190, r: 18, t: 26, b: 34 };
+    const H = M.t + M.b + rows.length * rowH;
+    const x = (v) => M.l + ((Math.log(v) - L0) * (W - M.l - M.r)) / (L1 - L0);
+    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `Each alternative's ${metric[1]} over mibz2's, per corpus, at ${state.cmpThreads} threads` }, body);
+    const bandsG = svg("g", {}, s);
+    // ticks: 1-2-5 steps across the range, and the 1× line
+    const cand = narrow ? [0.1, 0.25, 0.5, 1, 2, 5, 10, 20] : [0.1, 0.2, 0.25, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 3, 4, 5, 7, 10, 20, 50];
+    for (const t of cand.filter((t) => Math.log(t) >= L0 && Math.log(t) <= L1)) {
+      svg("line", { x1: x(t), x2: x(t), y1: M.t, y2: H - M.b, class: t === 1 ? "bh-cmp-one" : "bh-grid" }, s);
+      svg("text", { x: x(t), y: H - M.b + 16, "text-anchor": "middle", class: "bh-tick" }, s).textContent = `${t}×`;
+    }
+    svg("text", { x: x(1), y: M.t - 10, "text-anchor": "middle", class: "bh-tick bh-cmp-ref" }, s).textContent = "mibz2";
+    if (Math.log(lo) < 0) svg("text", { x: M.l + 2, y: H - 4, class: "bh-tick" }, s).textContent = `← the alternative ${state.cmpMetric === "rss" ? "leaner" : "faster"}`;
+    svg("text", { x: W - M.r, y: H - 4, "text-anchor": "end", class: "bh-tick" }, s).textContent = `mibz2 ${state.cmpMetric === "rss" ? "leaner" : "faster"} →`;
+    const colour = (a) => slot(1 + others.indexOf(a));
+    const groups = new Map(others.map((a) => [a, svg("g", { class: "bh-cmp-arm" }, s)]));
+    rows.forEach((c, i) => {
+      const y0 = M.t + i * rowH, yc = y0 + rowH / 2;
+      if (i % 2) svg("rect", { x: 0, y: y0, width: W, height: rowH, class: "bh-cmp-band" }, bandsG);
+      const f = d.figures[c][state.cmpThreads], me = f.arms[d.reference];
+      const lab = svg("text", { x: 4, y: yc - (narrow ? 2 : 3), class: "bh-cmp-corpus" }, s);
+      lab.textContent = c;
+      svg("text", { x: 4, y: yc + (narrow ? 11 : 12), class: "bh-tick" }, s).textContent =
+        narrow ? `${me.mb_s.toFixed(0)} MB/s` : `mibz2 ${me.mb_s.toFixed(me.mb_s < 100 ? 1 : 0)} MB/s · ${me.rss_mb.toFixed(0)} MB`;
+      others.forEach((a, j) => {
+        const r = f.arms[a]?.[metric[2]];
+        if (!r) return;
+        const yy = yc + (j - (others.length - 1) / 2) * 9;
+        const g = groups.get(a);
+        svg("line", { x1: x(r[1]), x2: x(r[2]), y1: yy, y2: yy, stroke: colour(a), class: "bh-cmp-ci" }, g);
+        svg("circle", { cx: x(r[0]), cy: yy, r: 5, fill: colour(a), class: "bh-marker" }, g);
+        svg("text", { x: x(r[0]) + (r[0] >= 1 ? 9 : -9), y: yy + 4, "text-anchor": r[0] >= 1 ? "start" : "end", class: "bh-tick bh-cmp-val", fill: colour(a) }, g).textContent = `${r[0].toFixed(2)}×`;
+      });
+      const hit = svg("rect", { x: 0, y: y0, width: W, height: rowH, class: "bh-hit", tabindex: 0, "aria-label": `${c}: ${others.map((a) => `${a} ${f.arms[a]?.[metric[2]]?.[0]?.toFixed(2)}×`).join(", ")}` }, s);
+      const show = () => {
+        tip.textContent = "";
+        el("div", { class: "bh-tip-title", text: `${c} · ${state.cmpThreads} thread${state.cmpThreads === "1" ? "" : "s"}${f.same_bytes ? " · same bytes" : " · BYTES DIFFER"}` }, tip);
+        const corp = d.corpora[c];
+        if (corp) el("div", { class: "bh-tip-subject", text: `${(corp.bytes / 1e6).toFixed(corp.bytes < 1e6 ? 3 : 1)} MB → ${(corp.out / 1e6).toFixed(1)} MB` }, tip);
+        for (const a of d.arms) {
+          const o = f.arms[a];
+          if (!o) continue;
+          const row = el("div", { class: `bh-tip-row${a === d.reference ? " is-on" : ""}` }, tip);
+          el("span", { class: "bh-swatch", style: `background:${a === d.reference ? "var(--bh-ink-2)" : colour(a)}` }, row);
+          const rr = o[metric[2]];
+          el("span", { text: `${a}: ${o.mb_s.toFixed(o.mb_s < 100 ? 1 : 0)} MB/s · wall ${o.wall.toFixed(3)} s · CPU ${o.cpu.toFixed(3)} s · ${o.rss_mb.toFixed(0)} MB${rr ? ` · ${rr[0].toFixed(2)}× (${rr[1].toFixed(2)}–${rr[2].toFixed(2)})` : ""}` }, row);
+        }
+        tip.hidden = false;
+        const r = s.getBoundingClientRect(), hb = box.getBoundingClientRect(), k = r.width / W;
+        tip.style.left = `${Math.max(0, Math.min(hb.width - tip.offsetWidth, r.left - hb.left + M.l * k))}px`;
+        tip.style.top = `${r.top - hb.top + (y0 + rowH) * k + 4}px`;
+      };
+      hit.addEventListener("pointerenter", show);
+      hit.addEventListener("focus", show);
+      hit.addEventListener("pointerleave", () => { tip.hidden = true; });
+      hit.addEventListener("blur", () => { tip.hidden = true; });
+    });
+    const paint = () => {
+      const key = cmp.pinned || cmp.hover;
+      for (const [a, g] of groups) {
+        g.classList.toggle("is-dim", !!key && a !== key);
+        g.classList.toggle("is-on", a === key);
+      }
+      for (const b of legend.querySelectorAll(".bh-hero-item")) {
+        b.classList.toggle("is-focus", b.dataset.key === key);
+        b.setAttribute("aria-pressed", String(b.dataset.key === cmp.pinned));
+      }
+    };
+    for (const a of others) {
+      const b = el("button", { type: "button", class: "bh-hero-item", "aria-pressed": "false", "data-key": a }, legend);
+      el("span", { class: "bh-swatch", style: `background:${colour(a)}` }, b);
+      const ver = Object.entries(d.toolchain || {}).find(([k]) => k === a || k.startsWith(`${a} `));
+      el("span", { text: ver ? `${a} ${String(ver[1]).replace(/^lbzip2 version /, "")}` : a }, b);
+      const wk = d.figures.wikidata?.[state.cmpThreads]?.arms[a]?.[metric[2]];
+      el("span", { class: "bh-num", text: wk ? `wikidata ${wk[0].toFixed(2)}×` : "" }, b);
+      b.addEventListener("click", () => { cmp.pinned = cmp.pinned === a ? null : a; cmp.hover = a; paint(); });
+      const enter = () => { cmp.hover = a; paint(); };
+      const leave = () => { if (cmp.hover === a) { cmp.hover = null; paint(); } };
+      b.addEventListener("pointerenter", enter);
+      b.addEventListener("focus", enter);
+      b.addEventListener("pointerleave", leave);
+      b.addEventListener("blur", leave);
+    }
+    paint();
+  }
+
+  // Redrawn on resize (each chart is sized to its box), whichever the page has
+  const drawn = { hero: null, cmp: null };
+  let resizeT;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => {
+      if (drawn.hero && drawn.hero[1].isConnected) hero_(...drawn.hero);
+      if (drawn.cmp && drawn.cmp[1].isConnected) alternativesHero(...drawn.cmp);
+    }, 150);
+  });
+
   function init() {
     const root = document.getElementById("bench-history");
-    if (!root) return;
-    fetch(root.dataset.src)
-      .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then((d) => { render(root, d); let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => hero_(d, root), 150); }); })
-      .catch((e) => { root.textContent = `The benchmark history could not be loaded (${e.message}).`; });
+    if (root) {
+      fetch(root.dataset.src)
+        .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then((d) => { render(root, d); drawn.hero = [d, root]; })
+        .catch((e) => { root.textContent = `The benchmark history could not be loaded (${e.message}).`; });
+    }
+    const ch = document.getElementById("alternatives-hero");
+    if (ch) {
+      fetch(ch.dataset.src)
+        .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then((d) => { alternativesHero(d, ch); drawn.cmp = [d, ch]; })
+        .catch((e) => { ch.textContent = `The comparison could not be loaded (${e.message}).`; });
+    }
   }
   if (window.document$ && typeof window.document$.subscribe === "function") window.document$.subscribe(init);
   else if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

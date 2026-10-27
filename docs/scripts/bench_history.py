@@ -12,8 +12,10 @@ one result each. Writes:
   its rounds and the half-width of its 95% interval. A series holds only commits of one
   major bench version, one runner CPU model and core count, and one set of corpora: each
   such class is a line of its own, never joined to another;
-- docs/generated/competitors.md, included by the Against other decoders page: the latest
-  master result, mibz2 against pbz2 and lbzip2 (bench/report.py's tables).
+- docs/generated/alternatives.md, included by the Alternatives page: the latest
+  master result, mibz2 against pbz2 and lbzip2 (bench/report.py's tables);
+- docs/site/assets/alternatives.json, read by that page's chart (bench.js): the same
+  result's figures, every decoder on every corpus and thread count.
 
 Commits are ordered by `git log --first-parent` of --master (default origin/master, else
 HEAD). Without --store, the store is read from --ref; with neither, both files say that
@@ -33,6 +35,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "site" / "assets" / "bench-history.json"
+ALTERNATIVES = ROOT / "docs" / "site" / "assets" / "alternatives.json"
 GENERATED = ROOT / "docs" / "generated"
 sys.path.insert(0, str(ROOT / "bench"))
 import report  # noqa: E402  (bench/report.py: the tables, as the pull request comment has them)
@@ -187,8 +190,8 @@ def build(read, master: str) -> tuple[dict, dict | None]:
     return data, (ordered[-1][1] if ordered else None)
 
 
-def competitors(res: dict | None) -> str:
-    """The Against other decoders page's tables, from the latest master result."""
+def alternatives(res: dict | None) -> str:
+    """The Alternatives page's tables, from the latest master result."""
     if res is None:
         return (
             '!!! note "No master commit is recorded yet"\n\n'
@@ -203,8 +206,31 @@ def competitors(res: dict | None) -> str:
     return head + body.replace(f"**`{sha[:7]}`, ", "**", 1).rstrip("\n") + "\n"
 
 
+def alternatives_data(res: dict | None, data: dict) -> dict | None:
+    """The Alternatives page's chart data: the latest master result's figures"""
+    if res is None:
+        return None
+    pr = next((c.get("pr") for c in data["commits"] if c["sha"] == res["head"]), None)
+    return {
+        "repo": REPO,
+        "head": res["head"],
+        "pr": pr,
+        "date": res["date"],
+        "run": res.get("run"),
+        "bench": res.get("bench"),
+        "rounds": res.get("rounds"),
+        "cpu": cpu_name(res["machine"]["cpu"]),
+        "cores": res["machine"].get("cores"),
+        "toolchain": res.get("toolchain", {}),
+        "reference": res.get("reference", "mibz2"),
+        "arms": res["arms"],
+        "corpora": {k: {"bytes": v.get("bytes"), "out": v.get("out")} for k, v in res["corpora"].items()},
+        "figures": res["figures"],
+    }
+
+
 def main() -> None:
-    """Write the history's data and the competitors' tables."""
+    """Write the history's data and the alternatives' tables."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--store", type=Path, help="a checkout of the bench-results branch")
     ap.add_argument("--ref", default="origin/bench-results")
@@ -222,10 +248,11 @@ def main() -> None:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(data, separators=(",", ":"), allow_nan=False))
     GENERATED.mkdir(parents=True, exist_ok=True)
-    (GENERATED / "competitors.md").write_text(competitors(latest))
+    (GENERATED / "alternatives.md").write_text(alternatives(latest))
+    ALTERNATIVES.write_text(json.dumps(alternatives_data(latest, data), separators=(",", ":"), allow_nan=False))
     print(
         f"{OUT.relative_to(ROOT)}: {len(data['commits'])} commits, {len(data['series'])} series, "
-        f"{len(data['classes'])} classes; docs/generated/competitors.md",
+        f"{len(data['classes'])} classes; docs/generated/alternatives.md",
         file=sys.stderr,
     )
 

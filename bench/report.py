@@ -393,7 +393,7 @@ def size(b: float) -> str:
 
 def change(r: list[float] | None, inverse: bool = False) -> str:
     """A paired ratio as a change: "−3.1% (−4.0, −2.2) **faster**", where the interval
-    excludes none. `inverse` shows it the other way round: competitor over mibz2 as a
+    excludes none. `inverse` shows it the other way round: alternative over mibz2 as a
     multiple ("1.84× (1.80–1.88)")."""
     if not r:
         return "–"
