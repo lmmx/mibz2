@@ -1356,6 +1356,17 @@ target/release/examples/ab<span class="w"> </span>gen<span class="w"> </span>cor
 target/release/examples/ab<span class="w"> </span>run<span class="w"> </span>runs.jsonl<span class="w"> </span>--arms<span class="w"> </span>mibz2,pbz2,lbzip2<span class="w"> </span>--threads<span class="w"> </span><span class="m">1</span>,4<span class="w"> </span>--rounds<span class="w"> </span><span class="m">5</span><span class="w"> </span>corpora/*.bz2
 target/release/examples/ab<span class="w"> </span>summary<span class="w"> </span>runs.jsonl
 </code></pre></div>
+<p>The benchmark has a version of its own (<code>BENCH</code> in <code>bench/report.py</code>), with its
+history in <a href="https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md"><code>bench/CHANGELOG.md</code></a>:
+- <strong>A pull request that changes the benchmark</strong> (<code>bench/</code>, <code>examples/ab.rs</code>,
+  <code>examples/phases.rs</code>, <code>.github/workflows/bench.yml</code>) either adds a changelog entry with
+  its new version, or says in its description why no version is needed.
+- <strong>A major version that redefines a family of figures</strong> adds itself to that family in
+  <code>MEANING</code> (<code>bench/report.py</code>), so the site's history splits that family there and joins
+  the others across it.
+- <strong><code>python3 bench/test_report.py</code></strong> checks that <code>BENCH</code> and the newest entry agree, and
+  that the history joins versions but never runner models, core counts, corpora or a
+  corpus's different contents.</p>
 <h2 id="commits">Commits<a class="headerlink" href="#commits" title="Permanent link">&para;</a></h2>
 <p>Commit messages follow <a href="https://www.conventionalcommits.org/">Conventional Commits</a>
 (<code>feat:</code>, <code>fix:</code>, <code>docs:</code>, <code>ci:</code> ...); the <code>conventional-pre-commit</code> hook checks them.
