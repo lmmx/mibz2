@@ -21,8 +21,8 @@ description: "The work mibz2 builds on: libbzip2's format and checks, Kärkkäin
       that end each segment, and the joining in order.
 - **libsais** (Ilya Grebnov), 2.12's cyclic inverse BWT, "as used by bzip2": its
   `RUN_LANES` store, 16 equal last-column bytes linked at once, is in mibz2's T-vector
-  build. Its chain decode's shared-offset passes are being tried in the walk (in
-  progress, [#37](https://github.com/lmmx/mibz2/pull/37)).
+  build. Its chain decode's shared-offset passes are mibz2's walk since 0.1.5
+  ([#37](https://github.com/lmmx/mibz2/pull/37)).
 - **Block-parallel decoding** is lbzip2's (Mikołaj Izdebski) and pbzip2's approach.
 - **pbz2** (Soof Golan) arrived independently at a segmented, multi-chain walk too; the
   bake-off that found it is in the
