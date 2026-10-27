@@ -10,12 +10,14 @@
 //!
 //! The stages are the library's own functions, in the order `decode_block` runs them; the
 //! output is checked against `decode`'s, so a stage timed is a stage that is right. The
-//! walks are timed side by side: the plain one, the bitmap-segmented one, and the flagged
-//! one that `Segmented` uses.
+//! walks are timed side by side: the plain one, the bitmap-segmented one, the flagged one,
+//! and the room walk (the flagged walk in passes, #37) that `Segmented` uses.
 
 use std::time::Instant;
 
-use mibz2::bwt::{build, walk, walk_fast, walk_segments_flagged, SegScratch, TVector};
+use mibz2::bwt::{
+    build, walk, walk_fast, walk_segments_flagged, walk_segments_room, SegScratch, TVector,
+};
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{crc, mtf, rle, Kernels};
 
@@ -27,6 +29,7 @@ struct Times {
     walk_plain: f64,
     walk_bitmap: f64,
     walk_flagged: f64,
+    walk_room: f64,
     rle: f64,
     crc: f64,
 }
@@ -69,8 +72,8 @@ fn main() {
 
     let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
     let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
-    let (mut plain, mut bitmap, mut flagged, mut out) =
-        (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let (mut plain, mut bitmap, mut flagged, mut room, mut out) =
+        (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
     let mut decoded = Vec::new();
     for b in &blocks {
         tm.mtf += best(repeats, || {
@@ -84,7 +87,13 @@ fn main() {
         tm.walk_flagged += best(repeats, || {
             walk_segments_flagged(&mut tt, b.orig_ptr, &mut flagged, &mut seg)
         });
-        assert!(plain == bitmap && plain == flagged, "the walks differ");
+        tm.walk_room += best(repeats, || {
+            walk_segments_room(&mut tt, b.orig_ptr, &mut room, &mut seg)
+        });
+        assert!(
+            plain == bitmap && plain == flagged && plain == room,
+            "the walks differ"
+        );
         tm.rle += best(repeats, || {
             out.clear();
             rle::unrle(&plain, &mut out, k).unwrap();
@@ -105,7 +114,7 @@ fn main() {
         ("scanner (headers, Huffman)", tm.scan),
         ("MTF + RLE2", tm.mtf),
         ("T-vector build", tm.build),
-        ("walk, flagged (used)", tm.walk_flagged),
+        ("walk, room (used)", tm.walk_room),
         ("RLE1", tm.rle),
         ("CRC", tm.crc),
     ];
@@ -120,6 +129,11 @@ fn main() {
     for (name, s) in rows {
         println!("  {name:28} {:6.2} c/B  {:5.1}%", cb(s), 100.0 * s / total);
     }
+    println!(
+        "  {:28} {:6.2} c/B  (not in the total)",
+        "walk, flagged (before #37)",
+        cb(tm.walk_flagged)
+    );
     println!(
         "  {:28} {:6.2} c/B  (not in the total)",
         "walk, bitmap (before #4)",
