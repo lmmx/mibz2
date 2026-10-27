@@ -8,6 +8,10 @@
   --bh-s2: #eb6834;
   --bh-s3: #1baf7a;
   --bh-s4: #eda100;
+  --bh-s5: #e87ba4;
+  --bh-s6: #008300;
+  --bh-s7: #6250d6;
+  --bh-s8: #e34948;
   --bh-old: #a3a29b;
   font-variant-numeric: tabular-nums;
 }
@@ -18,6 +22,10 @@
   --bh-s2: #d95926;
   --bh-s3: #199e70;
   --bh-s4: #c98500;
+  --bh-s5: #d55181;
+  --bh-s6: #008300;
+  --bh-s7: #9085e9;
+  --bh-s8: #e66767;
   --bh-old: #6d6c67;
 }
 .bh-root .bh-controls {
@@ -354,6 +362,16 @@
 }
 .bh-hero .bh-cmp-val {
   font-weight: 600;
+}
+/* A single-threaded decoder's point: hollow (its whisker dashed) */
+.bh-hero .bh-cmp-hollow {
+  fill: var(--md-default-bg-color);
+  stroke-width: 2;
+}
+.bh-root .bh-swatch.is-hollow {
+  box-sizing: border-box;
+  border: 2px solid;
+  background: transparent;
 }
 .bh-hero .bh-cmp-arm {
   transition: opacity 120ms ease-out;

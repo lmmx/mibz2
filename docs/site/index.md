@@ -59,7 +59,7 @@ nothing of Wikidata ([history](background/history.md)).
 - [How it works](concepts/how-it-works.md): the scanner, the workers and the multi-chain
   walk.
 - [Benchmarks](benchmarks/index.md): master's figures over its commits, and mibz2 against
-  pbz2 and lbzip2.
+  the other bzip2 decoders.
 - [Reference](reference/index.md): the Python API, and the Rust API on docs.rs.
 
 ## Install

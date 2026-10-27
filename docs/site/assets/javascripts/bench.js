@@ -427,19 +427,27 @@
   // geometric mean of the rounds' paired ratios with its 95% interval, on a log scale
   // about 1 (mibz2). Pointing at or focusing a legend entry highlights that decoder and
   // fades the rest; a click, tap or Enter keeps it. A row's tooltip gives every decoder's
-  // own figures there.
+  // own figures there. The legend is in two groups, block-parallel and single-threaded
+  // (the record's `parallel`): a single-threaded decoder runs at 1 thread only, so at N
+  // threads its point (hollow, its whisker dashed) is its 1-thread run against mibz2's
+  // at N, and says so.
   const CMP_METRICS = [
     ["wall", "Wall time", "wall_ratio"],
     ["cpu", "CPU time", "cpu_ratio"],
     ["rss", "Peak RSS", "rss_ratio"],
   ];
   const cmp = { pinned: null, hover: null };
+  // Each decoder's colour slot, fixed (a decoder keeps its colour whichever ran), from
+  // the second (bench.css: --bh-s2..s8)
+  const CMP_ORDER = ["pbz2", "lbzip2", "indexed_bzip2", "fbz", "lbzip2-rs", "libbzip2", "libbz2-rs"];
+  const CMP_SLOTS = 8;
   function alternativesHero(d, host) {
     host.textContent = "";
     host.classList.add("bh-root");
     const box = el("section", { class: "bh-hero" }, host);
     if (!d) { el("p", { text: "No master commit is recorded yet." }, box); return; }
     const others = d.arms.filter((a) => a !== d.reference);
+    const single = (a) => d.parallel?.[a] === false;
     const threadsAll = [...new Set(Object.values(d.figures).flatMap((f) => Object.keys(f)))].sort((a, b) => a - b);
     if (!threadsAll.includes(String(state.cmpThreads))) state.cmpThreads = threadsAll[threadsAll.length - 1];
     if (!CMP_METRICS.some((m) => m[0] === state.cmpMetric)) state.cmpMetric = "wall";
@@ -465,7 +473,8 @@
     if (d.run) el("a", { href: d.run, text: "bench run" }, sub);
     const body = el("div", { class: "bh-hero-chart" }, box);
     const legend = el("div", { class: "bh-hero-legend bh-cmp-legend" }, box);
-    el("p", { class: "bh-hero-note", text: `Each point is an alternative's ${metric[1].toLowerCase()} over mibz2's on that corpus at ${state.cmpThreads} thread${state.cmpThreads === "1" ? "" : "s"}: the geometric mean of the rounds' paired ratios, with its 95% interval as a whisker, on a log scale. Right of the line (above 1×), the alternative takes more ${state.cmpMetric === "rss" ? "memory" : "time"} than mibz2, so mibz2 is ${state.cmpMetric === "rss" ? "leaner" : "faster"}; left of it, the alternative is. Point at a legend entry to highlight that alternative; click or tap to keep it. Point at a row for every decoder's own figures there. The tables below give the same run in full.` }, box);
+    const many = state.cmpThreads !== "1";
+    el("p", { class: "bh-hero-note", text: `Each point is an alternative's ${metric[1].toLowerCase()} over mibz2's on that corpus at ${state.cmpThreads} thread${many ? "s" : ""}: the geometric mean of the rounds' paired ratios, with its 95% interval as a whisker, on a log scale.${others.some(single) ? ` A single-threaded decoder (hollow, its whisker dashed) runs at 1 thread only${many ? `: here its point is its 1-thread run against mibz2's at ${state.cmpThreads} threads` : ""}.` : ""} Right of the line (above 1×), the alternative takes more ${state.cmpMetric === "rss" ? "memory" : "time"} than mibz2, so mibz2 is ${state.cmpMetric === "rss" ? "leaner" : "faster"}; left of it, the alternative is. Point at a legend entry to highlight that alternative; click or tap to keep it. Point at a row for every decoder's own figures there. The tables below give the same run in full.` }, box);
     const tip = el("div", { class: "bh-tip", hidden: "" }, box);
 
     const order = Object.keys(d.figures).sort((a, b) => (a === "wikidata" ? -1 : b === "wikidata" ? 1 : a.localeCompare(b)));
@@ -480,7 +489,8 @@
     const L0 = Math.log(lo) - 0.12, L1 = Math.log(hi) + 0.12;
     const W = Math.max(300, Math.round(body.clientWidth) || 700);
     const narrow = W < 560;
-    const rowH = narrow ? 34 : 38;
+    const step = narrow ? 11 : 12; // (between one decoder's point and the next in a row)
+    const rowH = Math.max(narrow ? 34 : 38, others.length * step + 14);
     const M = { l: narrow ? 92 : 190, r: 18, t: 26, b: 34 };
     const H = M.t + M.b + rows.length * rowH;
     const x = (v) => M.l + ((Math.log(v) - L0) * (W - M.l - M.r)) / (L1 - L0);
@@ -495,7 +505,11 @@
     svg("text", { x: x(1), y: M.t - 10, "text-anchor": "middle", class: "bh-tick bh-cmp-ref" }, s).textContent = "mibz2";
     if (Math.log(lo) < 0) svg("text", { x: M.l + 2, y: H - 4, class: "bh-tick" }, s).textContent = `← the alternative ${state.cmpMetric === "rss" ? "leaner" : "faster"}`;
     svg("text", { x: W - M.r, y: H - 4, "text-anchor": "end", class: "bh-tick" }, s).textContent = `mibz2 ${state.cmpMetric === "rss" ? "leaner" : "faster"} →`;
-    const colour = (a) => slot(1 + others.indexOf(a));
+    const colour = (a) => {
+      const k = CMP_ORDER.includes(a) ? 1 + CMP_ORDER.indexOf(a) : 1 + CMP_ORDER.length + others.filter((o) => !CMP_ORDER.includes(o)).indexOf(a);
+      return k < CMP_SLOTS ? `var(--bh-s${k + 1})` : "var(--bh-old)";
+    };
+    const runAt = (a) => (single(a) && many ? " (1 thread)" : "");
     const groups = new Map(others.map((a) => [a, svg("g", { class: "bh-cmp-arm" }, s)]));
     rows.forEach((c, i) => {
       const y0 = M.t + i * rowH, yc = y0 + rowH / 2;
@@ -508,13 +522,15 @@
       others.forEach((a, j) => {
         const r = f.arms[a]?.[metric[2]];
         if (!r) return;
-        const yy = yc + (j - (others.length - 1) / 2) * 9;
+        const yy = yc + (j - (others.length - 1) / 2) * step;
         const g = groups.get(a);
-        svg("line", { x1: x(r[1]), x2: x(r[2]), y1: yy, y2: yy, stroke: colour(a), class: "bh-cmp-ci" }, g);
-        svg("circle", { cx: x(r[0]), cy: yy, r: 5, fill: colour(a), class: "bh-marker" }, g);
-        svg("text", { x: x(r[0]) + (r[0] >= 1 ? 9 : -9), y: yy + 4, "text-anchor": r[0] >= 1 ? "start" : "end", class: "bh-tick bh-cmp-val", fill: colour(a) }, g).textContent = `${r[0].toFixed(2)}×`;
+        svg("line", { x1: x(r[1]), x2: x(r[2]), y1: yy, y2: yy, stroke: colour(a), class: "bh-cmp-ci", "stroke-dasharray": single(a) ? "3 3" : null }, g);
+        svg("circle", single(a)
+          ? { cx: x(r[0]), cy: yy, r: 4, stroke: colour(a), class: "bh-cmp-hollow" }
+          : { cx: x(r[0]), cy: yy, r: 5, fill: colour(a), class: "bh-marker" }, g);
+        svg("text", { x: x(r[0]) + (r[0] >= 1 ? 9 : -9), y: yy + 4, "text-anchor": r[0] >= 1 ? "start" : "end", class: "bh-tick bh-cmp-val" }, g).textContent = `${r[0].toFixed(2)}×`;
       });
-      const hit = svg("rect", { x: 0, y: y0, width: W, height: rowH, class: "bh-hit", tabindex: 0, "aria-label": `${c}: ${others.map((a) => `${a} ${f.arms[a]?.[metric[2]]?.[0]?.toFixed(2)}×`).join(", ")}` }, s);
+      const hit = svg("rect", { x: 0, y: y0, width: W, height: rowH, class: "bh-hit", tabindex: 0, "aria-label": `${c}: ${others.map((a) => `${a}${runAt(a)} ${f.arms[a]?.[metric[2]]?.[0]?.toFixed(2)}×`).join(", ")}` }, s);
       const show = () => {
         tip.textContent = "";
         el("div", { class: "bh-tip-title", text: `${c} · ${state.cmpThreads} thread${state.cmpThreads === "1" ? "" : "s"}${f.same_bytes ? " · same bytes" : " · BYTES DIFFER"}` }, tip);
@@ -524,9 +540,10 @@
           const o = f.arms[a];
           if (!o) continue;
           const row = el("div", { class: `bh-tip-row${a === d.reference ? " is-on" : ""}` }, tip);
-          el("span", { class: "bh-swatch", style: `background:${a === d.reference ? "var(--bh-ink-2)" : colour(a)}` }, row);
+          el("span", { class: `bh-swatch${single(a) ? " is-hollow" : ""}`, style: `${single(a) ? "border-color" : "background"}:${a === d.reference ? "var(--bh-ink-2)" : colour(a)}` }, row);
           const rr = o[metric[2]];
-          el("span", { text: `${a}: ${o.mb_s.toFixed(o.mb_s < 100 ? 1 : 0)} MB/s · wall ${o.wall.toFixed(3)} s · CPU ${o.cpu.toFixed(3)} s · ${o.rss_mb.toFixed(0)} MB${rr ? ` · ${rr[0].toFixed(2)}× (${rr[1].toFixed(2)}–${rr[2].toFixed(2)})` : ""}` }, row);
+          const who = single(a) ? ` (single-threaded${many ? ": its 1-thread run" : ""})` : "";
+          el("span", { text: `${a}${who}${o.same_bytes === false ? " · BYTES DIFFER" : ""}: ${o.mb_s.toFixed(o.mb_s < 100 ? 1 : 0)} MB/s · wall ${o.wall.toFixed(3)} s · CPU ${o.cpu.toFixed(3)} s · ${o.rss_mb.toFixed(0)} MB${rr ? ` · ${rr[0].toFixed(2)}× (${rr[1].toFixed(2)}–${rr[2].toFixed(2)})` : ""}` }, row);
         }
         tip.hidden = false;
         const r = s.getBoundingClientRect(), hb = box.getBoundingClientRect(), k = r.width / W;
@@ -549,20 +566,29 @@
         b.setAttribute("aria-pressed", String(b.dataset.key === cmp.pinned));
       }
     };
-    for (const a of others) {
-      const b = el("button", { type: "button", class: "bh-hero-item", "aria-pressed": "false", "data-key": a }, legend);
-      el("span", { class: "bh-swatch", style: `background:${colour(a)}` }, b);
-      const ver = Object.entries(d.toolchain || {}).find(([k]) => k === a || k.startsWith(`${a} `));
-      el("span", { text: ver ? `${a} ${String(ver[1]).replace(/^lbzip2 version /, "")}` : a }, b);
-      const wk = d.figures.wikidata?.[state.cmpThreads]?.arms[a]?.[metric[2]];
-      el("span", { class: "bh-num", text: wk ? `wikidata ${wk[0].toFixed(2)}×` : "" }, b);
-      b.addEventListener("click", () => { cmp.pinned = cmp.pinned === a ? null : a; cmp.hover = a; paint(); });
-      const enter = () => { cmp.hover = a; paint(); };
-      const leave = () => { if (cmp.hover === a) { cmp.hover = null; paint(); } };
-      b.addEventListener("pointerenter", enter);
-      b.addEventListener("focus", enter);
-      b.addEventListener("pointerleave", leave);
-      b.addEventListener("blur", leave);
+    const lgroups = [
+      [`block-parallel (${state.cmpThreads} thread${many ? "s" : ""})`, others.filter((a) => !single(a))],
+      ["single-threaded (1 thread)", others.filter(single)],
+    ].filter(([, as]) => as.length);
+    for (const [title, as] of lgroups) {
+      const lg = el("div", { class: "bh-hero-lgroup", role: "group", "aria-label": title }, legend);
+      if (lgroups.length > 1 || as.some(single)) el("div", { class: "bh-hero-ghead", text: title }, lg);
+      for (const a of as) {
+        const b = el("button", { type: "button", class: "bh-hero-item", "aria-pressed": "false", "data-key": a }, lg);
+        el("span", { class: `bh-swatch${single(a) ? " is-hollow" : ""}`, style: `${single(a) ? "border-color" : "background"}:${colour(a)}` }, b);
+        const tc = Object.entries(d.toolchain || {});
+        const ver = tc.find(([k]) => k === a) || tc.find(([k]) => k.startsWith(`${a} `));
+        el("span", { text: ver ? `${a} ${String(ver[1]).replace(/^lbzip2 version /, "").replace(/ \(.*\)$/, "")}` : a }, b);
+        const wk = d.figures.wikidata?.[state.cmpThreads]?.arms[a]?.[metric[2]];
+        el("span", { class: "bh-num", text: wk ? `wikidata ${wk[0].toFixed(2)}×` : "" }, b);
+        b.addEventListener("click", () => { cmp.pinned = cmp.pinned === a ? null : a; cmp.hover = a; paint(); });
+        const enter = () => { cmp.hover = a; paint(); };
+        const leave = () => { if (cmp.hover === a) { cmp.hover = null; paint(); } };
+        b.addEventListener("pointerenter", enter);
+        b.addEventListener("focus", enter);
+        b.addEventListener("pointerleave", leave);
+        b.addEventListener("blur", leave);
+      }
     }
     paint();
   }

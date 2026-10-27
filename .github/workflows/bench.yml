@@ -6,11 +6,18 @@
 #   harness binary), so the builds run in the same process shape, their order alternating
 #   round to round. The figures go to one comment on the pull request, edited in place.
 #   Nothing from a pull request is recorded.
-# - A push to master: the commit's mibz2 against pbz2 and lbzip2, its result kept on the
+# - A push to master: the commit's mibz2 against the alternatives (pbz2, the lbzip2 CLI,
+#   indexed_bzip2, fbz, the lbzip2 crate, libbzip2 and libbz2-rs), its result kept on the
 #   bench-results branch (a data-only branch, never merged; nothing is committed to
 #   master). The site's benchmark pages are built from it.
-# - From the Actions tab: any ref, against pbz2 and lbzip2, or against `base` if given (as
-#   on a pull request). Its figures are the run's summary and artifact, never recorded.
+# - From the Actions tab: any ref, against the alternatives as on master, or against
+#   `base` if given (as on a pull request). Its figures are the run's summary and
+#   artifact, never recorded.
+#
+# The alternatives that are Rust crates with dependencies of their own (fbz, the lbzip2
+# crate, libbz2-rs) are arms of bench/alternatives' build of the harness (`ARM@alts/ab`);
+# indexed_bzip2 runs through Python (bench/ib.py, AB_PYTHON). Single-threaded decoders
+# (libbzip2, libbz2-rs) run at 1 thread only (examples/ab.rs: `parallel`).
 #
 # The workload: the crate's corpora (`ab gen`, tests/common/mod.rs) at a small scale, and
 # 12 MB of the Wikidata dump's own bzip2 blocks (bench/wikidata.json: byte-range windows
@@ -44,7 +51,7 @@ on:
   workflow_dispatch:
     inputs:
       base:
-        description: "A commit to compare against, as on a pull request (empty: mibz2 against pbz2 and lbzip2)"
+        description: "A commit to compare against, as on a pull request (empty: mibz2 against the alternatives, as on master)"
         required: false
 
 # A push to a pull request cancels its run in progress; master's runs each make a record
@@ -86,7 +93,11 @@ jobs:
             push) mode=master; base= ;;
             *) if [ -n "$INPUT_BASE" ]; then mode=pr; base=$(git rev-parse "$INPUT_BASE^{commit}"); else mode=dispatch; base=; fi ;;
           esac
-          if [ "$mode" = pr ]; then arms="mibz2,mibz2@base/ab"; else arms="mibz2,pbz2,lbzip2"; fi
+          if [ "$mode" = pr ]; then
+            arms="mibz2,mibz2@base/ab"
+          else
+            arms="mibz2,pbz2,lbzip2,indexed_bzip2,fbz@alts/ab,lbzip2-rs@alts/ab,libbzip2,libbz2-rs@alts/ab"
+          fi
           {
             echo "MODE=$mode"; echo "HEAD_SHA=$head"; echo "BASE_SHA=$base"; echo "ARMS=$arms"
             echo "HEAD_DATE=$(git show -s --format=%cI "$head")"
@@ -112,6 +123,16 @@ jobs:
         run: |
           cargo build --release --example ab --example windows
           mkdir -p bin && cp target/release/examples/ab bin/ab
+
+      # The alternatives (master and the Actions tab only): bench/alternatives' build of the
+      # harness, and indexed_bzip2 in a virtualenv of its own
+      - name: Build the alternatives
+        if: env.MODE != 'pr'
+        run: |
+          CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target/alts" cargo build --release --locked --manifest-path bench/alternatives/Cargo.toml
+          mkdir -p alts && cp target/alts/release/ab alts/ab
+          python3 -m venv "$RUNNER_TEMP/ib" && "$RUNNER_TEMP/ib/bin/pip" install -q indexed_bzip2==1.7.0
+          echo "AB_PYTHON=$RUNNER_TEMP/ib/bin/python" >> "$GITHUB_ENV"
 
       - name: Build the base
         if: env.MODE == 'pr'

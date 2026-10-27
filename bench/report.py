@@ -24,10 +24,15 @@ the toolchain) and its Markdown:
 branch): runs/<commit>.json, raw/<commit>.jsonl and a line of records.jsonl.
 
 BENCH is the benchmark's version (semver), stamped on every result. A change to what is
-measured or how (the corpora and their scale, the arms, the rounds, the thread counts,
-the harness's timing, a figure's meaning) is a new major version, and the site's history
-never joins a series across major versions; a change to how results are shown or stored
-is a minor or patch version.
+measured or how (the corpora and their scale, the rounds, the thread counts, the
+harness's timing, a figure's meaning) is a new major version, and the site's history
+never joins a series across major versions; a change to how results are shown or stored,
+or a new arm beside the others that leaves every existing figure as it was, is a minor or
+patch version.
+
+- 1.1.0: master's run has every alternative (ALTERNATIVES), each arm classed as
+  block-parallel or single-threaded (`parallel`); a single-threaded arm runs at 1 thread
+  only, and its 1-thread runs stand, marked, in every thread count's figures.
 """
 
 import argparse
@@ -43,7 +48,10 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "1.0.0"
+BENCH = "1.1.0"
+# The other decoders, in the order they are shown: the block-parallel, then the
+# single-threaded (examples/ab.rs: `parallel`)
+ALTERNATIVES = ["pbz2", "lbzip2", "indexed_bzip2", "fbz", "lbzip2-rs", "libbzip2", "libbz2-rs"]
 HERE = Path(__file__).resolve().parent
 WIKIDATA = json.loads((HERE / "wikidata.json").read_text())
 MARK = "<!-- mibz2-bench -->"
@@ -151,16 +159,36 @@ def machine() -> dict:
     }
 
 
-def toolchain() -> dict:
-    lock = Path("Cargo.lock").read_text() if Path("Cargo.lock").exists() else ""
-    pbz2 = re.search(r'name = "pbz2"\nversion = "([^"]+)"', lock)
+def locked(name: str, lockfile: str = "Cargo.lock") -> str | None:
+    """A package's version in a Cargo.lock (the first, if it is there twice)."""
+    lock = Path(lockfile).read_text() if Path(lockfile).exists() else ""
+    m = re.search(rf'name = "{re.escape(name)}"\nversion = "([^"]+)"', lock)
+    return m.group(1) if m else None
+
+
+def toolchain(arms: list[str]) -> dict:
+    """The compiler and each arm's version (the alternatives' only where they ran)."""
+    names = {label(a) for a in arms}
     lbzip2 = run_out("lbzip2", "--version").splitlines()
-    return {
+    alts = "bench/alternatives/Cargo.lock"
+    py = os.environ.get("AB_PYTHON", "python3")
+    ib = run_out(py, "-c", "import indexed_bzip2; print(indexed_bzip2.__version__)")
+    out = {
         "rustc": run_out("rustc", "-V"),
-        "pbz2": pbz2.group(1) if pbz2 else None,
+        "pbz2": locked("pbz2"),
         "lbzip2": next((l for l in lbzip2 if "lbzip2" in l.lower()), lbzip2[0] if lbzip2 else None),
-        "libbzip2 (the corpora's encoder)": "1.0.8 (the bzip2 crate's bundled source)",
     }
+    more = {
+        "indexed_bzip2": ib if re.fullmatch(r"[\w.]+", ib) else None,
+        "fbz": locked("fbz", alts),
+        "lbzip2-rs": locked("lbzip2", alts) and f"{locked('lbzip2', alts)} (the lbzip2 crate)",
+        "libbzip2": "1.0.8 (the bzip2 crate's bundled source)",
+        "libbz2-rs": locked("libbz2-rs-sys", alts)
+        and f"{locked('libbz2-rs-sys', alts)} (libbz2-rs-sys, through the bzip2 crate)",
+    }
+    out |= {k: v for k, v in more.items() if k in names}
+    out["libbzip2 (the corpora's encoder)"] = "1.0.8 (the bzip2 crate's bundled source)"
+    return out
 
 
 def corpora(directory: Path, runs: list[dict]) -> dict:
@@ -213,17 +241,33 @@ def split_cpu(run: dict) -> dict | None:
 
 
 def label(arm: str, pr: bool = False) -> str:
-    """An arm as shown: `mibz2@base/ab` (another build of the harness) is "base", and on a
+    """An arm as shown: `mibz2@base/ab` (another build of mibz2) is "base"; another
+    decoder in another build of the harness (`fbz@alts/ab`) is that decoder; and on a
     pull request this build's `mibz2` is "head"."""
     if "@" in arm:
-        return arm.split("@", 1)[1].split("/")[0]
+        name, exe = arm.split("@", 1)
+        return exe.split("/")[0] if name == "mibz2" else name
     return "head" if pr and arm == "mibz2" else arm
 
 
+def parallel(runs: list[dict], pr: bool = False) -> dict[str, bool]:
+    """Each arm, as shown, and whether it decodes blocks in parallel (an older record's
+    runs say nothing: every arm then was), in ALTERNATIVES' order after the reference."""
+    out = {label(r["arm"], pr): r.get("parallel", True) for r in runs}
+    rank = lambda a: (a in ALTERNATIVES, ALTERNATIVES.index(a) if a in ALTERNATIVES else 0)
+    return {a: out[a] for a in sorted(out, key=rank)}
+
+
 def figures(runs: list[dict], ref: str, mhz: float | None, pr: bool) -> dict:
+    """Per corpus and thread count, each arm's figures. A single-threaded arm runs at the
+    fewest threads only: those runs stand at every thread count, marked (`parallel`
+    false, `threads_run`), paired round by round with the reference's at that count."""
     by = defaultdict(lambda: defaultdict(dict))  # (corpus, threads) -> arm -> round -> run
+    counts = sorted({r["threads"] for r in runs})
     for r in runs:
-        by[(r["corpus"], r["threads"])][r["arm"]][r["round"]] = r
+        at = counts if r.get("parallel") is False else [r["threads"]]
+        for t in at:
+            by[(r["corpus"], t)][r["arm"]][r["round"]] = r
     out = {}
     for (corpus, t), arms in sorted(by.items()):
         cell = {}
@@ -238,8 +282,12 @@ def figures(runs: list[dict], ref: str, mhz: float | None, pr: bool) -> dict:
                 continue
             col = lambda k: [r[k] for r in ok]
             wall, cpu = statistics.median(col("wall")), statistics.median(col("cpu"))
+            ref_hashes = {r["hash"] for r in base.values() if not r.get("err")}
             f = {
                 "arm": arm,
+                "parallel": ok[0].get("parallel", True),
+                "threads_run": ok[0]["threads"],
+                "same_bytes": {r["hash"] for r in ok} == ref_hashes and len(ok) == len(rounds),
                 "n": len(ok),
                 "wall": round(wall, 4),
                 "wall_best": round(min(col("wall")), 4),
@@ -489,6 +537,76 @@ def model_lines(models: dict[str, dict], n: int, pr: bool) -> list[str]:
     return out
 
 
+def alternatives_lines(res: dict, order: list[str]) -> list[str]:
+    """The master run's tables: every other decoder's wall, CPU and peak RSS against
+    mibz2's, a column each; a single-threaded decoder's figures are its 1-thread runs,
+    marked ¹ at every thread count."""
+    classes = res.get("parallel") or {"mibz2": True, "pbz2": True, "lbzip2": True}
+    others = [a for a in classes if a != "mibz2"]
+    single = [a for a in others if not classes[a]]
+    head = lambda a: f"{a}{' ¹' if a in single else ''}"
+    out = [
+        "Each round decodes every corpus once with each decoder at each thread count (`ab run`), their "
+        "order rotated round to round. **Against mibz2** is the decoder's wall (or CPU, or peak RSS) over "
+        "mibz2's: the geometric mean of the rounds' paired ratios and its 95% interval; above 1, mibz2 is "
+        "faster (or leaner). 1-thread runs are pinned to one CPU.",
+        "",
+        f"Block-parallel: {', '.join(a for a in others if a not in single)}."
+        + (
+            f" Single-threaded (¹): {', '.join(single)}, run at 1 thread only; at {max(res['threads'])} "
+            f"threads their figures are their 1-thread runs, against mibz2's at {max(res['threads'])} threads."
+            if single
+            else ""
+        ),
+    ]
+    tables = [
+        ("Wall time against mibz2", "wall_ratio", True),
+        ("CPU time against mibz2", "cpu_ratio", False),
+        ("Peak RSS against mibz2", "rss_ratio", False),
+    ]
+    for title, key, first in tables:
+        out += [
+            "",
+            f"### {title}",
+            "",
+            "| corpus | threads | "
+            + ("mibz2 wall (median) | mibz2 MB/s | mibz2 c/B | " if first else "")
+            + ("mibz2 peak RSS | " if key == "rss_ratio" else "")
+            + " | ".join(head(a) for a in others)
+            + (" | same bytes |" if first else " |"),
+            "|---|--:|"
+            + ("--:|--:|--:|" if first else "")
+            + ("--:|" if key == "rss_ratio" else "")
+            + "--:|" * len(others)
+            + ("---|" if first else ""),
+        ]
+        for corpus in order:
+            for t, cell in sorted(res["figures"][corpus].items(), key=lambda kv: int(kv[0])):
+                a = cell["arms"]
+                mb = a.get("mibz2", {})
+                name = corpus_cell(corpus, res["corpora"].get(corpus, {}))
+                if not mb.get("n"):
+                    out.append(f"| {name} | {t} | errors: {mb.get('errors')} |")
+                    continue
+
+                def ratio(x: dict) -> str:
+                    if not x.get("n"):
+                        return f"errors: {', '.join(x.get('errors', [])) or '–'}" if x else "–"
+                    r = change(x.get(key), True)
+                    return r if x.get("same_bytes", True) else f"{r} **bytes differ**"
+
+                cells = [ratio(a.get(o, {})) for o in others]
+                lead = ""
+                if first:
+                    cb = f"{mb['cycles_per_byte']:.1f}" if mb.get("cycles_per_byte") else "–"
+                    lead = f"{mb['wall']:.3f} s | {mb['mb_s']:,.0f} | {cb} | "
+                if key == "rss_ratio":
+                    lead = f"{mb['rss_mb']:.0f} MB | "
+                same = (" | yes" if cell["same_bytes"] else " | **NO**") if first else ""
+                out.append(f"| {name} | {t} | {lead}{' | '.join(cells)}{same} |")
+    return out
+
+
 def markdown(res: dict) -> str:
     pr = res["mode"] == "pr"
     n = max(res["threads"])
@@ -501,8 +619,9 @@ def markdown(res: dict) -> str:
             f"{res['rounds']} paired rounds on one runner{run}"
         )
     else:
+        others = [a for a in res.get("parallel", {}) if a != "mibz2"] or ["pbz2", "lbzip2"]
         lines.append(
-            f"**`{res['head'][:7]}`, mibz2 against pbz2 {tc['pbz2']} and {tc['lbzip2']}**: "
+            f"**`{res['head'][:7]}`, mibz2 against {', '.join(others[:-1])} and {others[-1]}**: "
             f"{res['rounds']} rounds on one runner{run}"
         )
     lines += ["", f"{m['cpu']}, {m['cores']} cores · {tc['rustc']} · bench {res['bench']}", ""]
@@ -518,49 +637,25 @@ def markdown(res: dict) -> str:
             "head MB/s | same bytes |",
             "|---|--:|--:|--:|--:|--:|--:|---|",
         ]
-    else:
-        lines += [
-            "Each round decodes every corpus once with each decoder at each thread count (`ab run`), their "
-            "order rotated round to round. **Time against mibz2** is the decoder's wall (or CPU) over "
-            "mibz2's: the geometric mean of the rounds' paired ratios and its 95% interval; above 1, mibz2 is "
-            "faster. 1-thread runs are pinned to one CPU.",
-            "",
-            "| corpus | threads | mibz2 wall (median) | mibz2 MB/s | mibz2 c/B | pbz2 wall / mibz2 | pbz2 CPU / mibz2 "
-            "| lbzip2 wall / mibz2 | lbzip2 CPU / mibz2 | peak RSS: mibz2, pbz2, lbzip2 | same bytes |",
-            "|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|",
-        ]
     order = sorted(res["figures"], key=lambda c: (c != "wikidata", c))
-    for corpus in order:
+    if not pr:
+        lines += alternatives_lines(res, order)
+    for corpus in order if pr else []:
         for t, cell in sorted(res["figures"][corpus].items(), key=lambda kv: int(kv[0])):
             a = cell["arms"]
             same = "yes" if cell["same_bytes"] else "**NO**"
             name = corpus_cell(corpus, res["corpora"].get(corpus, {}))
-            if pr:
-                b, h = a.get("base", {}), a.get("head", {})
-                if not b.get("n") or not h.get("n"):
-                    lines.append(
-                        f"| {name} | {t} | errors: {b.get('errors')} {h.get('errors')} | | | | | {same} |"
-                    )
-                    continue
+            b, h = a.get("base", {}), a.get("head", {})
+            if not b.get("n") or not h.get("n"):
                 lines.append(
-                    f"| {name} | {t} | {b['wall']:.3f} → {h['wall']:.3f} s | {change(h.get('wall_ratio'))} | "
-                    f"{change(h.get('cpu_ratio'))} | {b['rss_mb']:.0f} → {h['rss_mb']:.0f} MB "
-                    f"({rss_change(h.get('rss_ratio'))}) | {h['mb_s']:,.0f} | {same} |"
+                    f"| {name} | {t} | errors: {b.get('errors')} {h.get('errors')} | | | | | {same} |"
                 )
-            else:
-                mb, pb, lb = a.get("mibz2", {}), a.get("pbz2", {}), a.get("lbzip2", {})
-                if not mb.get("n"):
-                    lines.append(
-                        f"| {name} | {t} | errors: {mb.get('errors')} | | | | | | | | {same} |"
-                    )
-                    continue
-                rss = ", ".join(f"{x['rss_mb']:.0f}" if x.get("n") else "–" for x in (mb, pb, lb))
-                cb = f"{mb['cycles_per_byte']:.1f}" if mb.get("cycles_per_byte") else "–"
-                lines.append(
-                    f"| {name} | {t} | {mb['wall']:.3f} s | {mb['mb_s']:,.0f} | {cb} | "
-                    f"{change(pb.get('wall_ratio'), True)} | {change(pb.get('cpu_ratio'), True)} | "
-                    f"{change(lb.get('wall_ratio'), True)} | {change(lb.get('cpu_ratio'), True)} | {rss} MB | {same} |"
-                )
+                continue
+            lines.append(
+                f"| {name} | {t} | {b['wall']:.3f} → {h['wall']:.3f} s | {change(h.get('wall_ratio'))} | "
+                f"{change(h.get('cpu_ratio'))} | {b['rss_mb']:.0f} → {h['rss_mb']:.0f} MB "
+                f"({rss_change(h.get('rss_ratio'))}) | {h['mb_s']:,.0f} | {same} |"
+            )
     lines += [
         "",
         "**Same bytes:** every run of every arm gave the same output hash on that corpus, with no error."
@@ -600,7 +695,12 @@ def markdown(res: dict) -> str:
         "",
         f"- CPU: {m['cpu']}, {m['cores']} cores, reported clock {m['mhz']} MHz (cycles a byte use it), "
         f"flags {', '.join(m['flags'])}; kernel {m['kernel']}; image {m['image']}",
-        f"- {tc['rustc']}; pbz2 {tc['pbz2']} (a dev-dependency, the harness's arm); {tc['lbzip2']}",
+        f"- {tc['rustc']}; "
+        + "; ".join(
+            f"{k} {v}" if not str(v).startswith(k) else str(v)
+            for k, v in tc.items()
+            if k != "rustc" and v
+        ),
         f"- bench {res['bench']} (bench/report.py), {res['rounds']} rounds, threads "
         f"{', '.join(map(str, res['threads']))}",
         "",
@@ -634,8 +734,9 @@ def summary(a: argparse.Namespace) -> None:
         "rounds": len({r["round"] for r in runs}),
         "threads": threads,
         "machine": mach,
-        "toolchain": toolchain(),
+        "toolchain": toolchain(sorted({r["arm"] for r in runs})),
         "arms": sorted({r["arm"] for r in runs}),
+        "parallel": parallel(runs, a.mode == "pr"),
         "reference": ref,
         "corpora": corpora(Path(a.corpora), runs),
         "dump": dump_facts(),
