@@ -52,11 +52,8 @@ fn main() {
     let mut blocks = Vec::new();
     let t = Instant::now();
     let mut sc = Scanner::new(SliceSource(&data));
-    loop {
-        match sc.next(Vec::new()).unwrap() {
-            Event::Block { symbols, .. } => blocks.push(symbols),
-            Event::Done => break,
-        }
+    while let Event::Block { symbols, .. } = sc.next(Vec::new()).unwrap() {
+        blocks.push(symbols);
     }
     let mut tm = Times {
         scan: t.elapsed().as_secs_f64(),
