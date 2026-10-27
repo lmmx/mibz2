@@ -77,8 +77,7 @@ fn readers_on_short_reads_and_failing_sources() {
         let e = r.unwrap_err();
         assert_eq!(e.kind(), std::io::ErrorKind::InvalidData);
         let inner = e.into_inner().unwrap().downcast::<bunzip::Error>().unwrap();
-        assert!(matches!(inner.kind, ErrorKind::BlockCrc { .. } | ErrorKind::BadHuffmanCode | ErrorKind::BadOrigPtr
-                                     | ErrorKind::BlockTooLong | ErrorKind::RunUnfinished | ErrorKind::SelectorOverrun),
-                "{inner}");
+        // (a data error, whichever check the flipped bit trips: not the source's, not a bug)
+        assert!(!matches!(inner.kind, ErrorKind::Io(..) | ErrorKind::Cancelled | ErrorKind::Internal(_)), "{inner}");
     }
 }

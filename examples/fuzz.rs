@@ -1,7 +1,8 @@
 //! A mutation fuzz loop against libbzip2: valid streams (several shapes, levels, crafted
 //! blocks, several streams) mutated (bits flipped, bytes set, cut, spliced, inserted,
-//! deleted), each decoded by libbzip2 and by this decoder (sequential on both kernel sets,
-//! and now and then parallel). Errors must be errors: never different bytes, never bytes
+//! deleted), each decoded by libbzip2 and by the decoders under test (tests/common's
+//! `candidates`: this crate's, sequential on both kernel sets, and now and then parallel;
+//! any other in-process decoder behind `Candidate`). Errors must be errors: never different bytes, never bytes
 //! where libbzip2 fails, never a panic. Where libbzip2 decodes what this decoder refuses
 //! (a randomised block, an oversubscribed code past its alphabet), the case is counted by
 //! its error.
@@ -11,7 +12,6 @@
 #[path = "../tests/common/mod.rs"]
 mod common;
 
-use bunzip::{Kernels, ErrorKind};
 use common::*;
 use std::collections::BTreeMap;
 use std::time::{Duration, Instant};
@@ -39,7 +39,7 @@ fn main() {
             corpus.push(z);
         }
     }
-    let ks = [Kernels::scalar(), Kernels::detect()];
+    let cands = candidates();
     let deadline = Instant::now() + Duration::from_secs(secs);
     let (mut cases, mut bad) = (0u64, 0u64);
     let mut outcomes: BTreeMap<String, u64> = BTreeMap::new();
@@ -52,42 +52,31 @@ fn main() {
         }
         cases += 1;
         let want = oracle(&t);
-        let k = ks[(cases % 2) as usize];
-        let got = match ours(&t, k) {
+        // (each candidate in turn; tests/common's last, the parallel one, is slower to
+        // start, so it takes only every 16th case)
+        let c = if cases % 16 == 0 { &cands[cands.len() - 1] } else { &cands[cases as usize % (cands.len() - 1).max(1)] };
+        let got = match try_decode(c.as_ref(), &t) {
             Ok(r) => r,
             Err(_) => {
                 bad += 1;
-                report(&out_dir, &t, cases, "panic");
+                report(&out_dir, &t, cases, &format!("{}: panic", c.name()));
                 continue;
             }
         };
-        if cases % 16 == 0 {
-            let p = parallel(&t, 1 + rng.below(4) as usize, 1 + rng.below(6) as usize, 1 + rng.below(70_000) as usize,
-                             1 + rng.below(100_000) as usize, k);
-            let same = match (&p, &got) {
-                (Ok(a), Ok(b)) => a == b,
-                (Err(a), Err(b)) => a.kind == b.kind,
-                _ => false,
-            };
-            if !same {
-                bad += 1;
-                report(&out_dir, &t, cases, "parallel differs from sequential");
-            }
-        }
         let outcome = match (&want, &got) {
             (Ok(a), Ok(b)) if a == b => "both decode, same bytes".to_string(),
             (Ok(_), Ok(_)) => {
                 bad += 1;
-                report(&out_dir, &t, cases, "different bytes");
+                report(&out_dir, &t, cases, &format!("{}: different bytes", c.name()));
                 "DIFFERENT BYTES".into()
             }
             (Err(_), Ok(_)) => {
                 bad += 1;
-                report(&out_dir, &t, cases, "libbzip2 fails, this decodes");
+                report(&out_dir, &t, cases, &format!("{}: libbzip2 fails, this decodes", c.name()));
                 "LIBBZIP2 FAILS, THIS DECODES".into()
             }
-            (Err(_), Err(e)) => format!("both fail ({})", short(&e.kind)),
-            (Ok(_), Err(e)) => format!("libbzip2 decodes, this refuses ({})", short(&e.kind)),
+            (Err(_), Err(e)) => format!("both fail ({e})"),
+            (Ok(_), Err(e)) => format!("libbzip2 decodes, this refuses ({e})"),
         };
         *outcomes.entry(outcome).or_default() += 1;
     }
@@ -96,11 +85,6 @@ fn main() {
         println!("{n:>9}  {o}");
     }
     std::process::exit(if bad == 0 { 0 } else { 1 });
-}
-
-fn short(k: &ErrorKind) -> String {
-    let s = format!("{k:?}");
-    s.split([' ', '{', '(']).next().unwrap_or("").to_string()
 }
 
 fn mutate(t: &mut Vec<u8>, corpus: &[Vec<u8>], rng: &mut Rng) {

@@ -3,8 +3,9 @@
 //! first block magic at any bit, then block after block, across stream ends and headers)
 //! and decoded with its CRC checked; the whole blocks are then written as a stream of their
 //! own (a header, their bits, an end marker, their combined CRC), which libbzip2, lbzip2 and
-//! this decoder (sequential on both kernel sets, and parallel) must each decode to exactly
-//! the blocks' bytes; and `decode_blocks` on the window's own bits must give them too.
+//! every decoder under test (tests/common's `candidates`) must each decode to exactly the
+//! blocks' bytes; and this crate's `decode_blocks` on the window's own bits must give them
+//! too.
 //!
 //! Usage: windows OUT_DIR WINDOW... (each window's stream is left in OUT_DIR as
 //! NAME.blocks.bz2, for timing the decoders on real blocks)
@@ -97,17 +98,16 @@ fn main() {
         let file = out_dir.join(format!("{name}.blocks.bz2"));
         std::fs::write(&file, &stream).unwrap();
         let mut checks = Vec::new();
-        checks.push(("libbzip2", oracle(&stream).map_err(|e| e.to_string())));
+        checks.push(("libbzip2".to_string(), oracle(&stream).map_err(|e| e.to_string())));
         let lb = Command::new("lbzip2").args(["-dc", "-n4"]).arg(&file).stderr(Stdio::inherit()).output().unwrap();
-        checks.push(("lbzip2", if lb.status.success() { Ok(lb.stdout) } else { Err("lbzip2 failed".into()) }));
-        for (n, k) in [("scalar", Kernels::scalar()), ("simd", Kernels::detect())] {
-            checks.push((n, bunzip::decode_with::<bunzip::bwt::Segmented>(&stream, k).map_err(|e| e.to_string())));
+        checks.push(("lbzip2".to_string(), if lb.status.success() { Ok(lb.stdout) } else { Err("lbzip2 failed".into()) }));
+        for c in candidates() {
+            checks.push((c.name(), try_decode(c.as_ref(), &stream).unwrap_or_else(Err)));
         }
-        checks.push(("parallel", parallel(&stream, 4, 8, 8 << 20, 16 << 20, Kernels::detect()).map_err(|e| e.to_string())));
         let mut ranged = Vec::new();
         let r = bunzip::decode_blocks(&data, blocks[0].0, blocks.last().unwrap().1, level, Kernels::detect(), &mut ranged);
-        checks.push(("decode_blocks", r.map(|_| ranged).map_err(|e| e.to_string())));
-        let bad: Vec<&str> = checks.iter().filter(|(_, r)| r.as_ref() != Ok(&want)).map(|(n, _)| *n).collect();
+        checks.push(("bunzip decode_blocks".to_string(), r.map(|_| ranged).map_err(|e| e.to_string())));
+        let bad: Vec<&str> = checks.iter().filter(|(_, r)| r.as_ref() != Ok(&want)).map(|(n, _)| n.as_str()).collect();
         failed += !bad.is_empty() as usize;
         total_blocks += blocks.len();
         total_bytes += want.len();
@@ -118,7 +118,7 @@ fn main() {
             blocks.last().unwrap().1,
             streams,
             want.len(),
-            if bad.is_empty() { "identical in libbzip2, lbzip2, scalar, simd, parallel, decode_blocks".to_string() } else { format!("DIFFERENT in {bad:?}") }
+            if bad.is_empty() { format!("identical in {}", checks.iter().map(|c| c.0.as_str()).collect::<Vec<_>>().join(", ")) } else { format!("DIFFERENT in {bad:?}") }
         );
     }
     println!("{total_blocks} blocks, {total_bytes} bytes, {failed} windows failed");

@@ -385,3 +385,48 @@ pub fn corpora(scale: usize) -> Vec<(&'static str, Vec<u8>)> {
     ]
 }
 
+
+/// A bz2 decoder under test, behind one small interface, so that the harness around it
+/// (libbzip2 as the oracle, the fuzz loop, the check of real dump windows) runs on any
+/// in-process decoder: this crate's, or another put beside it for comparison
+pub trait Candidate {
+    fn name(&self) -> String;
+    /// A whole .bz2 decoded, or the decoder's error as text
+    fn decode(&self, data: &[u8]) -> Result<Vec<u8>, String>;
+}
+
+/// This crate's decoder: sequential (`threads` 0) or parallel, on the kernels given
+pub struct Bunzip {
+    pub kernels: Kernels,
+    pub threads: usize,
+}
+
+impl Candidate for Bunzip {
+    fn name(&self) -> String {
+        let k = if self.kernels == Kernels::scalar() { "scalar" } else { "simd" };
+        if self.threads == 0 { format!("bunzip {k}") } else { format!("bunzip {k} {}t", self.threads) }
+    }
+    fn decode(&self, data: &[u8]) -> Result<Vec<u8>, String> {
+        let r = if self.threads == 0 {
+            bunzip::decode_with::<bunzip::bwt::Segmented>(data, self.kernels)
+        } else {
+            parallel(data, self.threads, 2 * self.threads, 1 << 20, 1 << 20, self.kernels)
+        };
+        r.map_err(|e| format!("{:?}", e.kind).split([' ', '{', '(']).next().unwrap_or("").to_string())
+    }
+}
+
+/// The decoders the harness checks: this crate's, sequential on both kernel sets and
+/// parallel (another decoder joins here)
+pub fn candidates() -> Vec<Box<dyn Candidate>> {
+    vec![
+        Box::new(Bunzip { kernels: Kernels::scalar(), threads: 0 }),
+        Box::new(Bunzip { kernels: Kernels::detect(), threads: 0 }),
+        Box::new(Bunzip { kernels: Kernels::detect(), threads: 3 }),
+    ]
+}
+
+/// A candidate's decode, a panic caught and reported as one
+pub fn try_decode(c: &dyn Candidate, data: &[u8]) -> Result<Result<Vec<u8>, String>, String> {
+    catch_unwind(AssertUnwindSafe(|| c.decode(data))).map_err(|_| "PANIC".to_string())
+}
