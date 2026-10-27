@@ -5,6 +5,9 @@
 #   --threads 1,2,4,8   the thread counts (default 1, 2, 4, ... up to the CPUs allowed)
 #   --rounds N          rounds (default 6: each mode first twice)
 #   --slots N           the window (default 2 x threads, BzReader::parallel's)
+#   --placements A/B    arms pinned to CPUs, paired by round: packed (SMT siblings first) or
+#                       spread (one CPU a core first), from this machine's sibling map, or
+#                       CPU lists; the whole process is pinned, scanner and reader included
 #   --out PATH          the result file (default occupancy-<UTC time>.json here)
 # Needs: cargo, python3, git and lbzip2 (the corpus's blocks are checked against it).
 set -euo pipefail
