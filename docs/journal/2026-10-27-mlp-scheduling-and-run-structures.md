@@ -2,7 +2,8 @@
 
 A literature round, written after the room walk (#37) merged and shipped in 0.1.5. It reads
 three sources and the vendor documents, and asks one question of our own: what else stops
-the hardware from keeping more misses in flight? Its outputs are issues #39, #40 and #42.
+the hardware from keeping more misses in flight? §5 adds the user's leads, as open questions for
+the next experiment. Its outputs are issues #39, #40 and #42.
 Nothing here changes `src/`.
 
 Every finding is labelled as one of three kinds:
@@ -283,9 +284,9 @@ The next is a scratch 32-lane walk over the c = 4 structure (#42).
   concurrency.
 
 **Hypothesis:** on fill-buffer-bound Intel cores, `T1` (into L2) in place of `T0` frees fill
-buffers, at the cost of an L2 hit at the demand load. AMD's guide doesn't document a difference
-between the hints. That is #39's hint arm, which must win on both runner types or be gated by
-vendor.
+buffers, at the cost of an L2 hit at the demand load. The Zen 3 and Zen 4 guides don't say what
+the hints do (§5, lead 5). That is the hint arm of #39 and #41's factorial, which must win on both
+runner types or be gated by vendor.
 
 ### The L2 hardware prefetcher
 
@@ -339,15 +340,199 @@ vendor.
 - **What blocks the measurement locally:** there is no PMU locally (`/sys/bus/event_source/devices`
   has no `cpu`), and `perf` isn't built for this kernel.
 
+## 5. Open questions that could redirect the next experiment (the user's leads)
+
+These five leads came from the user. Each primary source was read here, and what it does or
+doesn't say is recorded. A lead whose source doesn't support it is marked as such, not dropped
+silently.
+
+The questions are carried on #39. The instrument is #41's sweep tool, which the coordinator is
+extending to the factorial below.
+
+### Lead 1. Software prefetch of one dependent chain, and what the gain is made of
+
+**Published:** confirmed in substance (Ainsworth & Jones, TOCS, §1 and §4.8; see §2).
+- Linked-list prefetching has "limited performance improvement due to the lack of memory-level
+  parallelism inherent in linked structures".
+- Their pass "does not attempt to generate prefetches in these cases, as there is no induction
+  variable to move ahead in the computation".
+- AMAC (lead 3) says the same: "prefetching within the traversal of single pointer chain is not
+  possible".
+
+**Ours, measured (prior evidence, PR #21):** the flagged walk alone, local, at 2.8 GHz nominal,
+512 segments, before the room walk:
+
+| Lanes | No prefetch | `T0` prefetch |
+|--:|--:|--:|
+| 8 | 16.42 | 14.63 |
+| 12 | 15.41 | 11.97 |
+| 16 | 15.31 | 11.17 |
+| 24 | 16.24 | 11.22 |
+| 32 | 16.39 | 11.51 |
+
+- With four copies at once on four CPUs, the candidates' order changed. 12 lanes, 256 segments,
+  no prefetch was 50.99 c/B, against 20.35 at 32 lanes and 512 segments with prefetch.
+- At one walk, 16–32 lanes with prefetch were within noise of each other.
+
+**Interpretation:**
+- **Without the prefetch,** lanes past about 12 add nothing or lose. The reorder window then
+  caps the misses in flight, which is AMAC's claim (lead 3).
+- **With it,** 16–32 lanes gain 26–28% over 12 lanes without.
+- **The split:** interleaving supplies the parallelism, and the prefetch is what lets more than
+  about 12 lanes' misses overlap.
+- **After the room walk,** the split is unknown. Fewer instructions a step let the window span
+  more lanes, so the prefetch's share may have shrunk.
+
+**Open question:** how much of 0.1.5's walk is interleaving and how much is the prefetch? The
+factorial's prefetch-off arm answers it.
+
+### Lead 2. Intel's data-dependent hardware prefetchers
+
+**Published:** partly confirmed, with one correction.
+- **Where the AOP prefetcher appears:** Intel's optimization manual (248966-051, October 2026,
+  §2.1.1.5) introduces the Array of Pointers (AOP) prefetcher with **Redwood Cove**, not
+  Crestmont. Its Crestmont chapter lists next-line, IP-stride and next-page L1 prefetchers and
+  L2 streamers, and no AOP.
+- **What it detects:** the prefetcher "treats the data prefetched for a constant stride load as a
+  pointer and may issue prefetch requests to the memory addresses corresponding to the pointer's
+  value".
+- **Its conditions:**
+  - the first load is "a regular integer load, naturally aligned";
+  - the second load "depends upon the first load through the base operand and has no index
+    operand";
+  - it doesn't trigger when the offset exceeds 32 bytes;
+  - it can be turned off by bit 7 of MSR 0x1A4. The manual calls it a data-dependent prefetcher.
+- **The other data-dependent prefetchers:** Intel's data-dependent prefetcher page
+  (software-security guidance) describes DDPs that "may also examine data values in memory" to
+  pick prefetch addresses, including a pointer or "a computed address, such as a base plus an
+  index".
+  - They don't recurse.
+  - They are enumerated by CPUID.(7,2):EDX[3] and disabled for user mode by IA32_SPEC_CTRL bit 8.
+  - The page names no microarchitectures, and Intel's hardware-prefetch control guide for Atom
+    cores (357930-001) covers cores up to Gracemont only.
+
+**Interpretation:**
+- The CI's Xeon 6973P-C is a Xeon 6 P-core part, Granite Rapids, which uses Redwood Cove cores.
+  Intel's product pages aren't cited here.
+- The walk's load `t[(q >> 8)]` isn't a constant-stride load followed by a base-only dependent
+  load. The lanes' state loads are strided, but the T-vector load uses an index operand. So AOP's
+  stated conditions don't match the walk.
+- Whether a more general DDP matches it, the documents don't say.
+
+**Clue, not evidence:** #37 gained −10.3% at one thread on the EPYC 9V74 (head `db3593d`) and
+−5.8% on the Xeon 6973P-C (head `6c645ef`).
+- The two runs differ in head, bench version and runner.
+- A hardware prefetcher doing part of the software prefetch's work on the Intel runner is one
+  possible reading. Fill-buffer limits (§4) are another.
+
+**Open question:** does software prefetch overlap or interfere with a data-dependent prefetcher
+on the Intel runner? That would show as a smaller prefetch-on gain there than on the AMD runner,
+in the factorial's prefetch arm. Its cause can only be named with counters.
+
+### Lead 3. Kocberber, Falsafi & Grot, "Asynchronous Memory Access Chaining" (AMAC)
+
+O. Kocberber, B. Falsafi, B. Grot. *Asynchronous Memory Access Chaining.* PVLDB 9(4), 252–263,
+December 2015 (doi:10.14778/2856318.2856321), https://www.vldb.org/pvldb/vol9/p252-kocberber.pdf.
+The venue is PVLDB volume 9, VLDB 2016's volume.
+
+**Published:**
+- **The window limit:** inter-lookup parallelism "is beyond the reach of modern out-of-order cores
+  due to the limited size of their instruction window" (abstract).
+- **The mechanism:** AMAC keeps each lookup's state separately in a software circular buffer, so
+  a new lookup starts as soon as any in-flight one completes, with a prefetch at each stage.
+- **What bounds it:**
+  - one thread's MLP "is constrained by the number of L1 data cache misses that can be in-flight
+    at once";
+  - on a Xeon x5670 (10 L1-D MSHRs), ten in-flight lookups were best;
+  - beyond about eight, performance showed "little sensitivity";
+  - more than 32 in flight "can be harmful due to TLB thrashing on large datasets";
+  - across cores, the 32-entry LLC miss queue bounded six threads.
+- **Results:** up to 2.3× over group and software-pipelined prefetching on irregular lookups.
+
+**Interpretation:**
+- The room walk is an AMAC-like loop with uniform stages: one hop a step, every lane in
+  lockstep.
+- The hypothesis passed on: fewer instructions a step also let the window hold more lanes' loads,
+  so part of #37's gain may be MLP rather than issue slots.
+- **The test:** instructions per byte against stall or miss counters, before and after #37.
+  - Instructions falling modestly while stalls fall disproportionately supports it.
+  - Stalls tracking instructions argues against it.
+- It needs a PMU, which the local machine lacks. #40's first step checks the CI runners.
+
+### Lead 4. Lemire, testingmlp
+
+https://github.com/lemire/testingmlp (README, read here).
+
+**Published:**
+- "The answer seem to vary between 1 and 25, more or less", for the concurrent memory requests a
+  core supports. The benchmark adds pointer-chasing "lanes" until throughput stops growing.
+- In the README's one sample output (the CPU isn't named), efficiency over the previous lane
+  count falls to 88% at 9 lanes, 64% at 11 and 40% at 12, with a 10.1× speedup at 12.
+- The array is RAM-sized (2²⁵ words), and the README warns that "the translation lookaside
+  buffer (TLB) is put to work", advising transparent huge pages.
+
+**Interpretation:**
+- 32 software lanes don't mean 32 misses in flight. The buffer counts in §4 (16–24) cap them
+  lower.
+- The README's diminishing returns past 10–12 are one sample machine, DRAM-bound, and TLB-bound.
+  The T-vector is L3-resident and fits the STLB (§4), so its knee can be elsewhere.
+- The per-processor range is the README's summary. The blog posts behind it weren't read here.
+
+### Lead 5. Prefetch hints, distance, and 1 against 4 threads
+
+**Published:**
+- **AMD:** only the Zen 5 guide (58455 rev 1.00, §2.13.1, Table 8) documents the hints.
+  - `PREFETCHT0` moves data "into all data cache levels";
+  - `PREFETCHT1` into all levels "except 0th level (L1)";
+  - `PREFETCHT2` into all levels "except 0th level (L1) and 1st level (L2) caches".
+
+  The Zen 3 (56665) and Zen 4 (57647) guides describe only `PREFETCHNTA`. The lead's "T1/T2 fill
+  L2" therefore holds for T1 on Zen 5, while T2 targets L3. No hint semantics are documented for
+  the Zen 4 runner.
+- **AMD on software prefetch interfering between threads that share caches:** not found in any of
+  the three AMD guides. The lead is unsupported by these sources.
+- **Intel (248966-051):**
+  - on distance (§20.13.1.2, in the AMX GEMM chapter): too close and "the CPU will stall", too
+    distant and "the data might be evicted";
+  - on saturation (the floating-point tuning procedure): "adding PREFETCH instructions will not
+    help if the bus is already saturated";
+  - on fill buffers: L1 prefetches hold them, L2 prefetches don't (248966-046, §4 above).
+
+**Ours, measured (prior):** #21's four-copies run reordered the lane counts relative to one walk
+(lead 1's table).
+
+**Open question:** does the best hint, or the best lane count, differ between a 1-thread decode
+and 4 concurrent ones? At 4 threads the L3 and its miss queues are shared. The factorial runs
+both.
+
+### The next experiment, as a small factorial (the coordinator's framing)
+
+It separates three mechanisms:
+
+| Factor | Levels |
+|---|---|
+| chain interleaving | the lane count, e.g. 8 / 16 / 32 / 48 |
+| software prefetch | off, `T0`, `T1` |
+| shared-offset scheduling | the room walk (0.1.5) against the flagged walk (0.1.4) |
+
+- **Measured:** the walk alone, at 1 thread and with 4 concurrent copies, every arm byte-checked
+  against `bwt::walk`, on as many runner types as CI hands out.
+- **Optionally:** instructions and stall or miss counters where a runner exposes a PMU (lead 3,
+  #40).
+- **Decided by:** the paired whole-decoder A/B at 1 and 4 threads. The walk-only figures pick the
+  candidates.
+- **Prior negatives:** none of the arms adds per-step work, the cost that sank ψ² (#6, #34) and
+  Precopy (#9, #36).
+
 ## Mapped onto the issues
 
 | Issue | Finding | Status |
 |---|---|---|
-| #5 (closed) lane count and prefetch | §1, §2, §4: the lead, buffer counts, the hint | the question is reopened on the room walk as **#39**, not on #5 |
+| #5 (closed) lane count and prefetch | §1, §2, §4, §5: the lead, buffer counts, the hint, #21's on/off data | the question is reopened on the room walk as **#39**, not on #5 |
 | #6 (closed) ψ² | §2: staggering costs O(n²); §4: #29's table against STLB reach | comment with the TLB arithmetic; stays closed |
 | #8 memory | §3: a run-length ψ would cut ≈3 MB a slot | noted in #42; no change to #8 |
 | #9 (closed) Precopy | §3: a run-length ψ keeps every step and makes the scattered ones cheaper | linked from #42; stays closed |
-| new | lanes × hint × placement on the room walk | **#39** |
+| new | lanes × hint × placement on the room walk; §5's open questions | **#39** holds the questions; **#41** (the coordinator's sweep tool, being extended to §5's factorial) is the instrument |
 | new | the walk's STLB cost, measured; huge pages flagged for the user's decision | **#40** |
 | new | a length-capped run-length ψ; feasibility measured above | **#42** |
 
@@ -356,6 +541,8 @@ vendor.
 - **Hardware-counter evidence:** no PMU is exposed locally (§4). #40 asks whether the CI runners
   expose one.
 - **The CGO 2017 text:** read only through the TOCS version, which extends it.
+- **Lemire's per-processor figures:** only the testingmlp README was read, not the blog posts
+  behind its "between 1 and 25".
 - **The 2004 TOCS framework paper (Choi et al.):** cited, not read.
 - **Move-r, RLBWT tricks and Movi:** read only for their role in the SEA paper.
 - **`text`, `records`, `random`:** the r/n counter ran only on Wikidata. The synthetic corpora are
