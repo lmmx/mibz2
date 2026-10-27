@@ -156,6 +156,24 @@ where its interval excludes zero.
 - **The journal:** the external research reports and a source-grounded synthesis of them
   ([#33](https://github.com/lmmx/mibz2/pull/33)).
 
+### Downstream: wikidata-pq
+
+These are not decoder figures. They come from wikidata-pq's own bench on its pull request
+that bumps the decoder from 0.1.4 to 0.1.5,
+[lmmx/wikidata-pq#209](https://github.com/lmmx/wikidata-pq/pull/209)
+([its bench comment](https://github.com/lmmx/wikidata-pq/pull/209#issuecomment-6450883879)).
+That bench was the PR tier, 3 rounds, on a 4-chunk sample, and the pull request was still
+open when this was written.
+
+- *Measured:* the split's CPU went from 18.3 s ± 0.2 to 17.6 s ± 0.4. Each figure is a mean
+  with its 95% interval; the comment gives no paired interval for this row.
+- *Measured:* the sample end to end (split, pipeline and finalise) shows no change beyond
+  noise. CPU went from 1m43s to 1m42s, and wall from 40.77 s to 40.79 s.
+- *Modelled:* the full Wikidata release ETA went from 4h50m17s to 4h45m30s, no change beyond
+  noise. The split's share went from 1h39m32s to 1h35m38s. wikidata-pq's comment states the
+  model's assumptions.
+- *Measured:* parity passed.
+
 ## [0.1.4](https://github.com/lmmx/mibz2/compare/v0.1.3...v0.1.4) - 2026-10-27
 
 ### <!-- 3 -->Performance
