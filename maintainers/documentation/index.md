@@ -10,6 +10,7 @@ just docs-check   # strict build, site checks, and the pages' examples as tests
 - `docs/scripts/check_site.py` checks that every page is in the nav, that internal links and anchors resolve, that every page has a description matching its llms.txt entry, and that every public name is in the API reference.
 - `docs/conftest.py` runs each page's Python examples with pytest (`pytest docs/site`); a `pycon` block's output must match.
 - `docs/scripts/bench_history.py` turns the `bench-results` branch into the benchmark pages' data (`docs/site/assets/bench-history.json`) and tables (`docs/generated/`) before each build. Without a checkout of the branch (`--store`), it reads `origin/bench-results`, or writes empty ones.
+- `docs/site/assets/data/lane-sweeps.json` holds the measured walk timings by lane count that [Why 32 couriers beat one](<https://lmmx.github.io/mibz2/concepts/couriers/#lane-counts>) draws (`assets/javascripts/couriers.js`). It is written by hand, from the record: one panel a sweep, each with its own axes, its points (`x`, `y`, and optionally `lo` and `hi` for an interval) and its source. A new sweep is a new panel; the page draws every panel. Only measured points go in it.
 
 ## Publishing
 

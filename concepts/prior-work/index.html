@@ -70,6 +70,8 @@
     
       <link rel="stylesheet" href="../../assets/stylesheets/bench.css">
     
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css">
+    
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
@@ -399,6 +401,8 @@
       
         
       
+        
+      
     
     
     
@@ -445,6 +449,33 @@
             </label>
             <ul class="md-nav__list" data-md-scrollfix>
               
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../couriers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why 32 couriers beat one
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
                 
               
                 
@@ -1126,12 +1157,17 @@
   out-of-order execution keeps their loads in flight, is Kärkkäinen, Kempa and Puglisi's
   idea: "Slashing the Time for BWT Inversion", DCC 2012, pp. 99–108.<ul>
 <li>They also use a super-alphabet (an LF² table: two characters a dependent lookup)
-  and "Precopy" for repetitive data. Neither is used here.</li>
+  and "Precopy" for repetitive data. Neither is used here: both were built in mibz2
+  and lost (<a href="../couriers/#cheaper-steps">why</a>).</li>
 <li>What is particular here is only how the traversals are found in an existing bzip2
-  file, which carries no metadata for them: the random starts, the stop bitmap, and
-  the joining in order.</li>
+  file, which carries no metadata for them: the random starts, the flagged starts
+  that end each segment, and the joining in order.</li>
 </ul>
 </li>
+<li><strong>libsais</strong> (Ilya Grebnov), 2.12's cyclic inverse BWT, "as used by bzip2": its
+  <code>RUN_LANES</code> store, 16 equal last-column bytes linked at once, is in mibz2's T-vector
+  build. Its chain decode's shared-offset passes are mibz2's walk since 0.1.5
+  (<a href="https://github.com/lmmx/mibz2/pull/37">#37</a>).</li>
 <li><strong>Block-parallel decoding</strong> is lbzip2's (Mikołaj Izdebski) and pbzip2's approach.</li>
 <li><strong>pbz2</strong> (Soof Golan) arrived independently at a segmented, multi-chain walk too; the
   bake-off that found it is in the
@@ -1282,6 +1318,8 @@
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
         <script src="../../assets/javascripts/bench.js"></script>
+      
+        <script src="../../assets/javascripts/couriers.js"></script>
       
     
   </body>

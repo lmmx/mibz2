@@ -17,6 +17,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Concepts
 
 - [Concepts](<https://lmmx.github.io/mibz2/concepts/index.md>): What mibz2 decodes, what it checks, and how it decodes in parallel.
+- [Why 32 couriers beat one](<https://lmmx.github.io/mibz2/concepts/couriers/index.md>): mibz2's premise, memory-level parallelism in the inverse BWT, explained through couriers and a dispatcher: independent lanes, prefetching, the per-step cost that binds next, and the measurements.
 - [What is checked, and when](<https://lmmx.github.io/mibz2/concepts/checks/index.md>): Which CRCs mibz2 checks and when, what its errors report, and the inputs it refuses.
 - [How it works](<https://lmmx.github.io/mibz2/concepts/how-it-works/index.md>): mibz2's scanner thread, its workers, and the inverse BWT walked as interleaved chains.
 - [Prior work](<https://lmmx.github.io/mibz2/concepts/prior-work/index.md>): The work mibz2 builds on: libbzip2's format and checks, Kärkkäinen, Kempa and Puglisi's interleaved BWT inversion, and lbzip2's and pbzip2's block parallelism.
