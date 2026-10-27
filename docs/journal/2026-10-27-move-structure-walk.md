@@ -171,3 +171,12 @@ The fast-forwards are counted in the walk itself.
   0.695). A bit-packed record would need more decoding instructions in the step that
   bounds the walk.
 - One thread only. Four threads were not measured.
+- **Best of 3 on the same block is a warm state no decode reaches.** Found after this
+  run, in the sweep ([#45](https://github.com/lmmx/mibz2/pull/45)): walking a block again
+  in the same layout runs faster than the first walk, by up to a quarter for
+  `walk_segments_room` at 512 segments on this machine (4.05 → 3.00 ns/B by the fourth
+  call). Each arm here kept its best of three repeats, so each was measured warm. The bias
+  should favour the larger working set (the 3.6 MB T-vector) over the 0.6 MB structure,
+  which flatters today's arms. Taking the whole quarter off them, (3) would still be
+  about +50% or more, so the verdict stands; the percentages above are not decode-state
+  figures.
