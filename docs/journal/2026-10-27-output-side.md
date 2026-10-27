@@ -144,10 +144,33 @@ Labels:
   access. A chain of contiguous slices keeps a tight local loop while removing the
   materialisation.
 
+## 7. The assembly copy is cheap: #48 stops at step 1 (measured)
+
+- **Gate, fixed before CI reported:** at least 5% of the one-thread stage total in the
+  decode-order CI stage table.
+- **Measured** (#49, EPYC 9V74, 5 paired rounds): **1.4%** (0.14 c/B of 9.94), about
+  1.35% of the whole decoder's one-thread cycles. Elsewhere: 1.5% alone and 1.9–2.0% with
+  four copies on an EPYC 7763; 3.9–4.3% on the local VM. Contention barely moves it,
+  while the walk around it doubles.
+- **The instrument held:** the walk row, base (walk and assembly timed as one call)
+  against head (the two timed parts summed), +1.2% (−2.1%, +4.7%). Splitting the timer
+  did not move the operation. The decoder was unchanged, at the same bytes.
+- **The local check row's 9–10% gap** was pass order: the check passes had always run
+  after the split ones. Interleaved (and with the walk never inlined, so both paths run
+  the same code), its sign changed run to run within the VM's noise. Both controls went
+  in at once, so which mattered is not separated.
+- **Outcome:** step 2, slice-at-a-time RLE1, is not built, and with it the ladder's later
+  steps. Removing the copy could save at most about 1.4–2% before anything a
+  slice-reading RLE1 adds back. Kept on the record, not revived: the slice-chain design
+  (item 6), cheaper contiguous assembly, and non-temporal stores (item 5). Each reopens
+  only if a runner or a change puts the assembly over 5% of a decode.
+- **Lesson:** a structural removal can be clean and correct, and still not be worth its
+  code. What it saves is bounded by what the copy costs, measured in decode order.
+
 ## Open, in order
 
-1. CI's decode-order assembly share, and its check row: walk and assembly timed as one
-   against the two rows summed (#48 step 1).
-2. Only if the share is material: slice-at-a-time RLE1 (#48 step 2).
-3. #42's pre-registered contention test.
-4. A four-copy stage table beside the one-copy one.
+1. #39: the four-thread ceiling. First the decoder's own block supply (the admission
+   window's state transitions and the workers' time, no change to the walk), then the
+   copy-count curve with topology, then a contention experiment.
+2. #42's pre-registered contention test (≥10% under build + room walk per copy, with four
+   copies at once).
