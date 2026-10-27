@@ -13,7 +13,11 @@ const fn tables() -> [[u32; 256]; 8] {
         let mut c = (i as u32) << 24;
         let mut k = 0;
         while k < 8 {
-            c = if c & 0x8000_0000 != 0 { (c << 1) ^ POLY } else { c << 1 };
+            c = if c & 0x8000_0000 != 0 {
+                (c << 1) ^ POLY
+            } else {
+                c << 1
+            };
             k += 1;
         }
         t[0][i] = c;
@@ -130,7 +134,10 @@ unsafe fn clmul_update(state: u32, data: &[u8]) -> u32 {
     // from state 0, then the remainder
     let mut tail = [0u8; 64];
     for (i, x) in [x0, x1, x2, x3].into_iter().enumerate() {
-        _mm_storeu_si128(tail.as_mut_ptr().add(i * 16) as *mut __m128i, _mm_shuffle_epi8(x, rev));
+        _mm_storeu_si128(
+            tail.as_mut_ptr().add(i * 16) as *mut __m128i,
+            _mm_shuffle_epi8(x, rev),
+        );
     }
     let s = update(0, &tail);
     update(s, &data[blocks * 64..])

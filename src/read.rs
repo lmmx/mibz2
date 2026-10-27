@@ -57,7 +57,13 @@ impl<R: Read> BzReader<R> {
     /// Decode on the calling thread, with the kernels given (`Kernels::scalar()`: the
     /// portable ones)
     pub fn with_kernels(r: R, kernels: Kernels) -> Self {
-        let src = ReadSource { r, buf: Vec::new(), base: 0, released: 0, eof: false };
+        let src = ReadSource {
+            r,
+            buf: Vec::new(),
+            base: 0,
+            released: 0,
+            eof: false,
+        };
         BzReader {
             inner: Inner::Seq(Box::new(Seq {
                 scanner: Scanner::new(src),
@@ -110,7 +116,13 @@ impl<R: Read + Send + 'static> BzReader<R> {
                 d.close();
             })
             .expect("spawn the bz2 reader thread");
-        BzReader { inner: Inner::Par(Par { dec, feeder: Some(feeder), read_error }) }
+        BzReader {
+            inner: Inner::Par(Par {
+                dec,
+                feeder: Some(feeder),
+                read_error,
+            }),
+        }
     }
 }
 
@@ -135,7 +147,12 @@ impl<R: Read> Read for BzReader<R> {
             Inner::Par(p) => match p.dec.read(buf) {
                 Ok(n) => Ok(n),
                 Err(e) => {
-                    if let Some(err) = p.read_error.lock().unwrap_or_else(|x| x.into_inner()).take() {
+                    if let Some(err) = p
+                        .read_error
+                        .lock()
+                        .unwrap_or_else(|x| x.into_inner())
+                        .take()
+                    {
                         return Err(err);
                     }
                     Err(e.into())
@@ -163,9 +180,20 @@ impl<R: Read> Seq<R> {
             self.out.clear();
             self.at = 0;
             match self.scanner.next(std::mem::take(&mut self.syms)) {
-                Ok(Event::Block { index, bit, symbols, .. }) => {
-                    if let Err(kind) = decode_block(&symbols, self.kernels, &mut self.scratch, &mut self.out) {
-                        self.failed = Some(Error { kind, block: Some(index), bit: Some(bit) });
+                Ok(Event::Block {
+                    index,
+                    bit,
+                    symbols,
+                    ..
+                }) => {
+                    if let Err(kind) =
+                        decode_block(&symbols, self.kernels, &mut self.scratch, &mut self.out)
+                    {
+                        self.failed = Some(Error {
+                            kind,
+                            block: Some(index),
+                            bit: Some(bit),
+                        });
                     }
                     self.syms = symbols.syms;
                 }
@@ -255,7 +283,11 @@ pub struct BlockSpan {
 /// CRC is checked here, but each stream's combined CRC is checked against its blocks'
 /// stored CRCs). Each span can then be decoded by `decode_blocks`, on any thread.
 pub fn scan(data: &[u8]) -> Scan<'_> {
-    Scan { scanner: Scanner::new(SliceSource(data)), syms: Vec::new(), done: false }
+    Scan {
+        scanner: Scanner::new(SliceSource(data)),
+        syms: Vec::new(),
+        done: false,
+    }
 }
 
 pub struct Scan<'a> {
@@ -272,8 +304,22 @@ impl Iterator for Scan<'_> {
             return None;
         }
         match self.scanner.next(std::mem::take(&mut self.syms)) {
-            Ok(Event::Block { index, bit, end, stream, level, symbols }) => {
-                let span = BlockSpan { index, start_bit: bit, end_bit: end, crc: symbols.crc, stream, level };
+            Ok(Event::Block {
+                index,
+                bit,
+                end,
+                stream,
+                level,
+                symbols,
+            }) => {
+                let span = BlockSpan {
+                    index,
+                    start_bit: bit,
+                    end_bit: end,
+                    crc: symbols.crc,
+                    stream,
+                    level,
+                };
                 self.syms = symbols.syms;
                 Some(Ok(span))
             }

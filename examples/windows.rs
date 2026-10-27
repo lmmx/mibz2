@@ -13,10 +13,10 @@
 #[path = "../tests/common/mod.rs"]
 mod common;
 
+use common::*;
 use mibz2::bits::Bits;
 use mibz2::block::{read_item, Item, BLOCK_MAGIC};
 use mibz2::{decode_block, Kernels, Scratch};
-use common::*;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
@@ -27,7 +27,11 @@ fn main() {
     let (mut total_blocks, mut total_bytes, mut failed) = (0usize, 0usize, 0usize);
     for path in &args[2..] {
         let data = std::fs::read(path).unwrap();
-        let name = Path::new(path).file_stem().unwrap().to_string_lossy().to_string();
+        let name = Path::new(path)
+            .file_stem()
+            .unwrap()
+            .to_string_lossy()
+            .to_string();
         // the first block magic, at any bit
         let first = (0..data.len() as u64 * 8 - 48).find(|&b| {
             let mut br = Bits::at(&data, b);
@@ -70,7 +74,10 @@ fn main() {
                         }
                         None => break,
                         Some(_) => {
-                            println!("{name}: {} bytes after a stream's end, not a stream", data.len() - at);
+                            println!(
+                                "{name}: {} bytes after a stream's end, not a stream",
+                                data.len() - at
+                            );
                             break;
                         }
                     }
@@ -98,16 +105,48 @@ fn main() {
         let file = out_dir.join(format!("{name}.blocks.bz2"));
         std::fs::write(&file, &stream).unwrap();
         let mut checks = Vec::new();
-        checks.push(("libbzip2".to_string(), oracle(&stream).map_err(|e| e.to_string())));
-        let lb = Command::new("lbzip2").args(["-dc", "-n4"]).arg(&file).stderr(Stdio::inherit()).output().unwrap();
-        checks.push(("lbzip2".to_string(), if lb.status.success() { Ok(lb.stdout) } else { Err("lbzip2 failed".into()) }));
+        checks.push((
+            "libbzip2".to_string(),
+            oracle(&stream).map_err(|e| e.to_string()),
+        ));
+        let lb = Command::new("lbzip2")
+            .args(["-dc", "-n4"])
+            .arg(&file)
+            .stderr(Stdio::inherit())
+            .output()
+            .unwrap();
+        checks.push((
+            "lbzip2".to_string(),
+            if lb.status.success() {
+                Ok(lb.stdout)
+            } else {
+                Err("lbzip2 failed".into())
+            },
+        ));
         for c in candidates() {
-            checks.push((c.name(), try_decode(c.as_ref(), &stream).unwrap_or_else(Err)));
+            checks.push((
+                c.name(),
+                try_decode(c.as_ref(), &stream).unwrap_or_else(Err),
+            ));
         }
         let mut ranged = Vec::new();
-        let r = mibz2::decode_blocks(&data, blocks[0].0, blocks.last().unwrap().1, level, Kernels::detect(), &mut ranged);
-        checks.push(("mibz2 decode_blocks".to_string(), r.map(|_| ranged).map_err(|e| e.to_string())));
-        let bad: Vec<&str> = checks.iter().filter(|(_, r)| r.as_ref() != Ok(&want)).map(|(n, _)| n.as_str()).collect();
+        let r = mibz2::decode_blocks(
+            &data,
+            blocks[0].0,
+            blocks.last().unwrap().1,
+            level,
+            Kernels::detect(),
+            &mut ranged,
+        );
+        checks.push((
+            "mibz2 decode_blocks".to_string(),
+            r.map(|_| ranged).map_err(|e| e.to_string()),
+        ));
+        let bad: Vec<&str> = checks
+            .iter()
+            .filter(|(_, r)| r.as_ref() != Ok(&want))
+            .map(|(n, _)| n.as_str())
+            .collect();
         failed += !bad.is_empty() as usize;
         total_blocks += blocks.len();
         total_bytes += want.len();

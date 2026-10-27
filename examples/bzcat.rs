@@ -8,7 +8,10 @@ use std::io::{Read, Write};
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let threads: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(4);
-    let slots: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(2 * threads);
+    let slots: usize = args
+        .get(2)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(2 * threads);
     let k = match std::env::var("BUNZIP_SIMD").as_deref() {
         Ok("0") | Ok("off") => mibz2::Kernels::scalar(),
         _ => mibz2::Kernels::detect(),

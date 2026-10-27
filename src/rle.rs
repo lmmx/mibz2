@@ -2,7 +2,7 @@
 //! or (AVX2) the test for 4 equal bytes made at 32 positions at once, the stretches
 //! between runs copied whole.
 
-use super::{Kernels, ErrorKind};
+use super::{ErrorKind, Kernels};
 
 /// `rle` with its runs undone, appended to `out`. Err if it ends with a run's 4 bytes and
 /// no count: libbzip2 then reads a count past the block's end and refuses the block
@@ -25,7 +25,9 @@ pub fn unrle_scalar(rle: &[u8], out: &mut Vec<u8>, mut i: usize) -> Result<(), E
     while i < n {
         let c = rle[i];
         if i + 3 < n && rle[i + 1] == c && rle[i + 2] == c && rle[i + 3] == c {
-            let Some(&extra) = rle.get(i + 4) else { return Err(ErrorKind::RunUnfinished) };
+            let Some(&extra) = rle.get(i + 4) else {
+                return Err(ErrorKind::RunUnfinished);
+            };
             out.extend_from_slice(&[c, c, c, c]);
             out.resize(out.len() + extra as usize, c);
             i += 5;
@@ -64,7 +66,9 @@ unsafe fn unrle_avx2(rle: &[u8], out: &mut Vec<u8>) -> Result<(), ErrorKind> {
         let j = i + m.trailing_zeros() as usize; // the first run's start
         out.extend_from_slice(&rle[i..j]);
         let c = rle[j];
-        let Some(&extra) = rle.get(j + 4) else { return Err(ErrorKind::RunUnfinished) };
+        let Some(&extra) = rle.get(j + 4) else {
+            return Err(ErrorKind::RunUnfinished);
+        };
         out.extend_from_slice(&[c, c, c, c]);
         out.resize(out.len() + extra as usize, c);
         i = j + 5;

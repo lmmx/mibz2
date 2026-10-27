@@ -70,13 +70,20 @@ struct Hash {
 
 impl Hash {
     fn new() -> Self {
-        Hash { h: [1, 2, 3, 4], tail: [0; 32], nt: 0, n: 0 }
+        Hash {
+            h: [1, 2, 3, 4],
+            tail: [0; 32],
+            nt: 0,
+            n: 0,
+        }
     }
     #[inline]
     fn block(&mut self, b: &[u8]) {
         for (i, w) in b.chunks_exact(8).enumerate() {
             let w = u64::from_le_bytes(w.try_into().unwrap());
-            self.h[i] = (self.h[i] ^ w).wrapping_mul(0x9e37_79b9_7f4a_7c15).rotate_left(31);
+            self.h[i] = (self.h[i] ^ w)
+                .wrapping_mul(0x9e37_79b9_7f4a_7c15)
+                .rotate_left(31);
         }
     }
     fn update(&mut self, mut b: &[u8]) {
@@ -123,12 +130,18 @@ struct Threads {
 }
 
 fn sample_tasks(pid: u32, seen: &std::sync::Mutex<BTreeMap<String, u64>>) {
-    let Ok(dir) = std::fs::read_dir(format!("/proc/{pid}/task")) else { return };
+    let Ok(dir) = std::fs::read_dir(format!("/proc/{pid}/task")) else {
+        return;
+    };
     let mut m = seen.lock().unwrap();
     for e in dir.flatten() {
-        let Ok(st) = std::fs::read_to_string(e.path().join("stat")) else { continue };
+        let Ok(st) = std::fs::read_to_string(e.path().join("stat")) else {
+            continue;
+        };
         // fields after the ")" of the name: state is 3rd, utime 14th, stime 15th
-        let Some(rest) = st.rsplit_once(')').map(|x| x.1) else { continue };
+        let Some(rest) = st.rsplit_once(')').map(|x| x.1) else {
+            continue;
+        };
         let f: Vec<&str> = rest.split_whitespace().collect();
         let ticks = f.get(11).and_then(|u| u.parse::<u64>().ok()).unwrap_or(0)
             + f.get(12).and_then(|u| u.parse::<u64>().ok()).unwrap_or(0);
@@ -144,13 +157,21 @@ impl Threads {
         let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let seen = std::sync::Arc::new(std::sync::Mutex::new(BTreeMap::new()));
         let (s, m) = (stop.clone(), seen.clone());
-        let handle = std::thread::Builder::new().name("sampler".into()).spawn(move || {
-            while !s.load(std::sync::atomic::Ordering::Relaxed) {
-                sample_tasks(pid, &m);
-                std::thread::sleep(Duration::from_millis(50));
-            }
-        }).unwrap();
-        Threads { stop, seen, handle: Some(handle), pid }
+        let handle = std::thread::Builder::new()
+            .name("sampler".into())
+            .spawn(move || {
+                while !s.load(std::sync::atomic::Ordering::Relaxed) {
+                    sample_tasks(pid, &m);
+                    std::thread::sleep(Duration::from_millis(50));
+                }
+            })
+            .unwrap();
+        Threads {
+            stop,
+            seen,
+            handle: Some(handle),
+            pid,
+        }
     }
     /// The threads that ran (more than 2% of the busiest's CPU), and each one's CPU
     /// seconds, busiest first (the sampler left out; "main" is the thread reading the
@@ -166,11 +187,24 @@ impl Threads {
         let mut v: Vec<(u64, String)> = m
             .iter()
             .filter(|(k, _)| !k.starts_with("sampler:"))
-            .map(|(k, &t)| (t, if own && *k == me { "main".to_string() } else { k.clone() }))
+            .map(|(k, &t)| {
+                (
+                    t,
+                    if own && *k == me {
+                        "main".to_string()
+                    } else {
+                        k.clone()
+                    },
+                )
+            })
             .collect();
         v.sort_by(|a, b| b.cmp(a));
         let top = v.first().map_or(0, |x| x.0);
-        let busy: Vec<String> = v.iter().filter(|x| x.0 * 50 > top).map(|(t, k)| format!("{}={:.2}", k.split(':').next().unwrap(), *t as f64 / HZ)).collect();
+        let busy: Vec<String> = v
+            .iter()
+            .filter(|x| x.0 * 50 > top)
+            .map(|(t, k)| format!("{}={:.2}", k.split(':').next().unwrap(), *t as f64 / HZ))
+            .collect();
         (busy.len(), busy.join(" "))
     }
 }
@@ -190,16 +224,24 @@ fn drain(mut r: impl Read, h: &mut Hash) -> Result<(), String> {
 fn child(arm: &str, threads: usize, path: &str) {
     let open = || std::fs::File::open(path).unwrap();
     let mut h = Hash::new();
-    let watch = if arm == "lbzip2" { None } else { Some(Threads::watch(std::process::id())) };
+    let watch = if arm == "lbzip2" {
+        None
+    } else {
+        Some(Threads::watch(std::process::id()))
+    };
     let mut kid_threads = None;
     let t0 = Instant::now();
     let res = match arm {
         "mibz2" if threads == 1 => drain(mibz2::BzReader::new(open()), &mut h),
         "mibz2" => drain(mibz2::BzReader::parallel(open(), threads), &mut h),
-        "mibz2-scalar" if threads == 1 => drain(mibz2::BzReader::with_kernels(open(), mibz2::Kernels::scalar()), &mut h),
-        "mibz2-scalar" => {
-            drain(mibz2::BzReader::parallel_with(open(), threads, 2 * threads, mibz2::Kernels::scalar()), &mut h)
-        }
+        "mibz2-scalar" if threads == 1 => drain(
+            mibz2::BzReader::with_kernels(open(), mibz2::Kernels::scalar()),
+            &mut h,
+        ),
+        "mibz2-scalar" => drain(
+            mibz2::BzReader::parallel_with(open(), threads, 2 * threads, mibz2::Kernels::scalar()),
+            &mut h,
+        ),
         "pbz2" if threads == 1 => drain(pbz2::DecoderReader::new(open()), &mut h),
         "pbz2" => drain(pbz2::ParallelDecoder::with_threads(open(), threads), &mut h),
         "lbzip2" => {
@@ -212,7 +254,13 @@ fn child(arm: &str, threads: usize, path: &str) {
             let r = drain(p.stdout.take().unwrap(), &mut h);
             kid_threads = Some(w.finish(false));
             let st = p.wait().unwrap();
-            r.and_then(|()| if st.success() { Ok(()) } else { Err(format!("lbzip2: {st}")) })
+            r.and_then(|()| {
+                if st.success() {
+                    Ok(())
+                } else {
+                    Err(format!("lbzip2: {st}"))
+                }
+            })
         }
         _ => Err(format!("unknown arm {arm}")),
     };
@@ -238,14 +286,27 @@ fn child(arm: &str, threads: usize, path: &str) {
 /// (busy, steal, total) jiffies over all CPUs
 fn stat() -> (u64, u64, u64) {
     let s = std::fs::read_to_string("/proc/stat").unwrap();
-    let f: Vec<u64> = s.lines().next().unwrap().split_whitespace().skip(1).map(|x| x.parse().unwrap()).collect();
+    let f: Vec<u64> = s
+        .lines()
+        .next()
+        .unwrap()
+        .split_whitespace()
+        .skip(1)
+        .map(|x| x.parse().unwrap())
+        .collect();
     // user nice system idle iowait irq softirq steal
     let busy = f[0] + f[1] + f[2] + f[5] + f[6] + f[7];
     (busy, f[7], f[..8].iter().sum())
 }
 
 fn load1() -> f64 {
-    std::fs::read_to_string("/proc/loadavg").unwrap().split_whitespace().next().unwrap().parse().unwrap()
+    std::fs::read_to_string("/proc/loadavg")
+        .unwrap()
+        .split_whitespace()
+        .next()
+        .unwrap()
+        .parse()
+        .unwrap()
 }
 
 const HZ: f64 = 100.0;
@@ -256,7 +317,11 @@ fn per_cpu() -> Vec<u64> {
     s.lines()
         .filter(|l| l.starts_with("cpu") && l.as_bytes().get(3).is_some_and(u8::is_ascii_digit))
         .map(|l| {
-            let f: Vec<u64> = l.split_whitespace().skip(1).map(|x| x.parse().unwrap()).collect();
+            let f: Vec<u64> = l
+                .split_whitespace()
+                .skip(1)
+                .map(|x| x.parse().unwrap())
+                .collect();
             f[0] + f[1] + f[2] + f[5] + f[6] + f[7]
         })
         .collect()
@@ -287,7 +352,9 @@ fn json_str(line: &str, key: &str) -> Option<String> {
 }
 
 fn json_f(line: &str, key: &str) -> f64 {
-    json_str(line, key).and_then(|s| s.parse().ok()).unwrap_or(f64::NAN)
+    json_str(line, key)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(f64::NAN)
 }
 
 fn run(args: &[String]) {
@@ -326,7 +393,11 @@ fn run(args: &[String]) {
         i += 1;
     }
     let me = std::env::current_exe().unwrap();
-    let mut out = std::fs::OpenOptions::new().create(true).append(true).open(out_path).unwrap();
+    let mut out = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(out_path)
+        .unwrap();
     for round in 0..rounds {
         for file in &files {
             for &t in &threads {
@@ -369,7 +440,11 @@ fn run(args: &[String]) {
                     let cpu = json_f(line, "cpu");
                     let others = ((b1 - b0) as f64 / HZ - cpu).max(0.0) / span;
                     let steal = 100.0 * (s1 - s0) as f64 / (tot1 - tot0).max(1) as f64;
-                    let base = std::path::Path::new(file).file_stem().unwrap().to_string_lossy().to_string();
+                    let base = std::path::Path::new(file)
+                        .file_stem()
+                        .unwrap()
+                        .to_string_lossy()
+                        .to_string();
                     let rec = format!(
                         "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"waited_s\":{:.0},{}",
                         waited.elapsed().as_secs_f64() - 2.0,
@@ -393,8 +468,9 @@ fn run(args: &[String]) {
 /// The two-sided 95% t quantile for `df` degrees of freedom
 fn t95(df: usize) -> f64 {
     const T: [f64; 30] = [
-        12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160, 2.145, 2.131,
-        2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056, 2.052, 2.048, 2.045, 2.042,
+        12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160,
+        2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056,
+        2.052, 2.048, 2.045, 2.042,
     ];
     if df == 0 {
         f64::NAN
@@ -425,7 +501,10 @@ fn median(v: &mut [f64]) -> f64 {
 
 fn summary(args: &[String]) {
     let text = std::fs::read_to_string(&args[0]).unwrap();
-    let reference = args.iter().position(|a| a == "--ref").map(|i| args[i + 1].clone());
+    let reference = args
+        .iter()
+        .position(|a| a == "--ref")
+        .map(|i| args[i + 1].clone());
     // (corpus, threads) -> arm -> round -> line
     let mut by: BTreeMap<(String, u64), BTreeMap<String, BTreeMap<u64, String>>> = BTreeMap::new();
     let mut arm_order: Vec<String> = Vec::new();
@@ -435,27 +514,42 @@ fn summary(args: &[String]) {
         if !arm_order.contains(&arm) {
             arm_order.push(arm.clone());
         }
-        by.entry(key).or_default().entry(arm).or_default().insert(json_f(l, "round") as u64, l.to_string());
+        by.entry(key)
+            .or_default()
+            .entry(arm)
+            .or_default()
+            .insert(json_f(l, "round") as u64, l.to_string());
     }
     let reference = reference.unwrap_or_else(|| arm_order[0].clone());
     for ((corpus, t), arms) in &by {
         let ref_runs = arms.get(&reference);
-        let ref_hash = ref_runs.and_then(|r| r.values().next()).and_then(|l| json_str(l, "hash"));
-        let out_mb = ref_runs.and_then(|r| r.values().next()).map_or(f64::NAN, |l| json_f(l, "out") / 1e6);
+        let ref_hash = ref_runs
+            .and_then(|r| r.values().next())
+            .and_then(|l| json_str(l, "hash"));
+        let out_mb = ref_runs
+            .and_then(|r| r.values().next())
+            .map_or(f64::NAN, |l| json_f(l, "out") / 1e6);
         println!("\n### {corpus}, {t} thread{} ({out_mb:.0} MB out; ratios: arm / {reference}, paired by round)\n", if *t == 1 { "" } else { "s" });
         println!("| arm | n | wall best | wall median | CPU best | CPU median | peak RSS | wall ratio [95% CI] | CPU ratio [95% CI] | others busy | same bytes |");
         println!("|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|---|");
         for arm in arm_order.iter().filter(|a| arms.contains_key(*a)) {
             let runs = &arms[arm];
             let col = |k: &str| runs.values().map(|l| json_f(l, k)).collect::<Vec<f64>>();
-            let (mut w, mut c, mut r, mut o) = (col("wall"), col("cpu"), col("rss_kb"), col("others_busy"));
+            let (mut w, mut c, mut r, mut o) =
+                (col("wall"), col("cpu"), col("rss_kb"), col("others_busy"));
             let best = |v: &[f64]| v.iter().cloned().fold(f64::MAX, f64::min);
-            let errs: Vec<String> = runs.values().filter_map(|l| json_str(l, "err")).filter(|e| !e.is_empty()).collect();
+            let errs: Vec<String> = runs
+                .values()
+                .filter_map(|l| json_str(l, "err"))
+                .filter(|e| !e.is_empty())
+                .collect();
             let same = runs.values().all(|l| json_str(l, "hash") == ref_hash) && errs.is_empty();
             let pair = |k: &str| {
                 let rr: Vec<f64> = runs
                     .iter()
-                    .filter_map(|(round, l)| ref_runs?.get(round).map(|rl| json_f(l, k) / json_f(rl, k)))
+                    .filter_map(|(round, l)| {
+                        ref_runs?.get(round).map(|rl| json_f(l, k) / json_f(rl, k))
+                    })
                     .collect();
                 if arm == &reference {
                     "1".to_string()
@@ -477,7 +571,11 @@ fn summary(args: &[String]) {
                 pair("wall"),
                 pair("cpu"),
                 median(&mut o),
-                if same { "yes".to_string() } else { format!("NO {errs:?}") }
+                if same {
+                    "yes".to_string()
+                } else {
+                    format!("NO {errs:?}")
+                }
             );
         }
     }
@@ -498,7 +596,10 @@ fn gen(args: &[String]) {
 }
 
 fn main() {
-    let args: Vec<String> = std::env::args().skip(1).filter(|a| a != "--bench").collect();
+    let args: Vec<String> = std::env::args()
+        .skip(1)
+        .filter(|a| a != "--bench")
+        .collect();
     match args.first().map(String::as_str) {
         Some("child") => child(&args[1], args[2].parse().unwrap(), &args[3]),
         Some("run") => run(&args[1..]),

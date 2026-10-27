@@ -4,11 +4,16 @@
 //! index below 32, nearly all of them, as one blend of the list and the list a byte on.
 
 use super::block::Symbols;
-use super::{Kernels, ErrorKind};
+use super::{ErrorKind, Kernels};
 
 /// Undo the runs and the move-to-front of `b`'s symbols into `ll` (cleared), counting
 /// each byte in `counts`. Returns the block's length.
-pub fn mtf(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256], k: Kernels) -> Result<usize, ErrorKind> {
+pub fn mtf(
+    b: &Symbols,
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+    k: Kernels,
+) -> Result<usize, ErrorKind> {
     #[cfg(target_arch = "x86_64")]
     {
         if k.avx2 {
@@ -23,7 +28,11 @@ pub fn mtf(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256], k: Kernels) -
 /// A run's weight (N in libbzip2) refused at this, so its length cannot overflow
 const MAX_RUN_WEIGHT: u32 = 2 * 1024 * 1024;
 
-pub fn mtf_scalar(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Result<usize, ErrorKind> {
+pub fn mtf_scalar(
+    b: &Symbols,
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+) -> Result<usize, ErrorKind> {
     ll.clear();
     ll.reserve(b.max_len);
     *counts = [0; 256];
@@ -66,7 +75,11 @@ pub fn mtf_scalar(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Res
 
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
-unsafe fn mtf_avx2(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Result<usize, ErrorKind> {
+unsafe fn mtf_avx2(
+    b: &Symbols,
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+) -> Result<usize, ErrorKind> {
     use std::arch::x86_64::*;
     let max = b.max_len;
     ll.clear();
@@ -81,8 +94,8 @@ unsafe fn mtf_avx2(b: &Symbols, ll: &mut Vec<u8>, counts: &mut [u32; 256]) -> Re
     }
     let base = store.0.as_mut_ptr().add(32);
     let idx = _mm256_setr_epi8(
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-        30, 31,
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+        25, 26, 27, 28, 29, 30, 31,
     );
     let s2u = &b.seq_to_unseq;
     let (mut run, mut weight) = (0u32, 1u32);

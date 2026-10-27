@@ -46,12 +46,22 @@ pub fn compress(data: &[u8], level: u32) -> Vec<u8> {
 
 /// The sequential decoder, a panic caught and reported as one
 pub fn ours(data: &[u8], k: Kernels) -> Result<Result<Vec<u8>, Error>, String> {
-    catch_unwind(AssertUnwindSafe(|| mibz2::decode_with::<mibz2::bwt::Segmented>(data, k))).map_err(|_| "PANIC".to_string())
+    catch_unwind(AssertUnwindSafe(|| {
+        mibz2::decode_with::<mibz2::bwt::Segmented>(data, k)
+    }))
+    .map_err(|_| "PANIC".to_string())
 }
 
 /// The parallel decoder, fed `chunk` bytes at a time from another thread, read `read`
 /// bytes at a time
-pub fn parallel(data: &[u8], threads: usize, slots: usize, chunk: usize, read: usize, k: Kernels) -> Result<Vec<u8>, Error> {
+pub fn parallel(
+    data: &[u8],
+    threads: usize,
+    slots: usize,
+    chunk: usize,
+    read: usize,
+    k: Kernels,
+) -> Result<Vec<u8>, Error> {
     let dec = mibz2::StreamDecoder::new(threads, slots, k);
     let mut out = Vec::new();
     let res = std::thread::scope(|s| {
@@ -97,7 +107,19 @@ impl Rng {
 
 /// Test data of several shapes (text, runs, random, few symbols, repetitions)
 pub fn samples(rng: &mut Rng) -> Vec<(String, Vec<u8>)> {
-    let words: Vec<&[u8]> = vec![b"{\"id\":\"Q", b"\",\"labels\":{", b"\"en\":", b"\"value\":\"", b"Douglas Adams", b"},", b"\\u00e9", b"P31", b"\"claims\":[", b" ", b"\n"];
+    let words: Vec<&[u8]> = vec![
+        b"{\"id\":\"Q",
+        b"\",\"labels\":{",
+        b"\"en\":",
+        b"\"value\":\"",
+        b"Douglas Adams",
+        b"},",
+        b"\\u00e9",
+        b"P31",
+        b"\"claims\":[",
+        b" ",
+        b"\n",
+    ];
     let mut text = Vec::new();
     while text.len() < 2_500_000 {
         text.extend_from_slice(words[rng.below(words.len() as u64) as usize]);
@@ -111,7 +133,9 @@ pub fn samples(rng: &mut Rng) -> Vec<(String, Vec<u8>)> {
         let n = [1, 2, 3, 4, 5, 255, 259, 260, 1000, 70_000][rng.below(10) as usize];
         runs.extend(std::iter::repeat(c).take(n));
     }
-    let few: Vec<u8> = (0..1_000_000).map(|_| b"ab"[rng.below(2) as usize]).collect();
+    let few: Vec<u8> = (0..1_000_000)
+        .map(|_| b"ab"[rng.below(2) as usize])
+        .collect();
     vec![
         ("empty".into(), Vec::new()),
         ("one".into(), b"x".to_vec()),
@@ -123,7 +147,10 @@ pub fn samples(rng: &mut Rng) -> Vec<(String, Vec<u8>)> {
         ("zeros".into(), vec![0u8; 3_000_000]),
         ("abab".into(), b"ab".repeat(600_000)),
         ("period3".into(), b"abc".repeat(400_000)),
-        ("all bytes".into(), (0..=255u8).cycle().take(1_000_000).collect()),
+        (
+            "all bytes".into(),
+            (0..=255u8).cycle().take(1_000_000).collect(),
+        ),
     ]
 }
 
@@ -173,7 +200,14 @@ pub struct Spec {
 
 impl Spec {
     pub fn of(ll: Vec<u8>, orig_ptr: u32) -> Spec {
-        Spec { ll, orig_ptr, crc: None, randomised: false, syms: None, in_use: None }
+        Spec {
+            ll,
+            orig_ptr,
+            crc: None,
+            randomised: false,
+            syms: None,
+            in_use: None,
+        }
     }
 }
 
@@ -272,7 +306,9 @@ pub fn craft(level: u8, blocks: &[Spec], stream_crc: Option<u32>) -> Vec<u8> {
     w.put((b'0' + level) as u64, 8);
     let mut combined = 0u32;
     for b in blocks {
-        let crc = b.crc.unwrap_or_else(|| crc32(&reference(&b.ll, b.orig_ptr).unwrap_or_default()));
+        let crc = b
+            .crc
+            .unwrap_or_else(|| crc32(&reference(&b.ll, b.orig_ptr).unwrap_or_default()));
         combined = combined.rotate_left(1) ^ crc;
         write_block(&mut w, b, crc);
     }
@@ -354,7 +390,11 @@ pub fn corpora(scale: usize) -> Vec<(&'static str, Vec<u8>)> {
     let root = env!("CARGO_MANIFEST_DIR");
     let mut text = Vec::new();
     for dir in ["src", "tests", "examples"] {
-        let mut files: Vec<_> = std::fs::read_dir(format!("{root}/{dir}")).unwrap().flatten().map(|e| e.path()).collect();
+        let mut files: Vec<_> = std::fs::read_dir(format!("{root}/{dir}"))
+            .unwrap()
+            .flatten()
+            .map(|e| e.path())
+            .collect();
         files.sort();
         for f in files.into_iter().filter(|f| f.is_file()) {
             text.extend(std::fs::read(f).unwrap());
@@ -369,7 +409,9 @@ pub fn corpora(scale: usize) -> Vec<(&'static str, Vec<u8>)> {
         i += 1;
     }
     let mut rng = Rng(0xfeed_beef_dead_cafe);
-    let records: Vec<u8> = (0..600_000 * scale as u32).flat_map(|i| (i.wrapping_mul(2_654_435_761) >> 12 | i << 20).to_le_bytes()).collect();
+    let records: Vec<u8> = (0..600_000 * scale as u32)
+        .flat_map(|i| (i.wrapping_mul(2_654_435_761) >> 12 | i << 20).to_le_bytes())
+        .collect();
     let mut runs = Vec::new();
     while runs.len() < 2_500_000 * scale {
         let n = 1 + rng.below(600) as usize;
@@ -384,7 +426,6 @@ pub fn corpora(scale: usize) -> Vec<(&'static str, Vec<u8>)> {
         ("records", records),
     ]
 }
-
 
 /// A bz2 decoder under test, behind one small interface, so that the harness around it
 /// (libbzip2 as the oracle, the fuzz loop, the check of real dump windows) runs on any
@@ -403,16 +444,37 @@ pub struct Mibz2 {
 
 impl Candidate for Mibz2 {
     fn name(&self) -> String {
-        let k = if self.kernels == Kernels::scalar() { "scalar" } else { "simd" };
-        if self.threads == 0 { format!("mibz2 {k}") } else { format!("mibz2 {k} {}t", self.threads) }
+        let k = if self.kernels == Kernels::scalar() {
+            "scalar"
+        } else {
+            "simd"
+        };
+        if self.threads == 0 {
+            format!("mibz2 {k}")
+        } else {
+            format!("mibz2 {k} {}t", self.threads)
+        }
     }
     fn decode(&self, data: &[u8]) -> Result<Vec<u8>, String> {
         let r = if self.threads == 0 {
             mibz2::decode_with::<mibz2::bwt::Segmented>(data, self.kernels)
         } else {
-            parallel(data, self.threads, 2 * self.threads, 1 << 20, 1 << 20, self.kernels)
+            parallel(
+                data,
+                self.threads,
+                2 * self.threads,
+                1 << 20,
+                1 << 20,
+                self.kernels,
+            )
         };
-        r.map_err(|e| format!("{:?}", e.kind).split([' ', '{', '(']).next().unwrap_or("").to_string())
+        r.map_err(|e| {
+            format!("{:?}", e.kind)
+                .split([' ', '{', '('])
+                .next()
+                .unwrap_or("")
+                .to_string()
+        })
     }
 }
 
@@ -420,9 +482,18 @@ impl Candidate for Mibz2 {
 /// parallel (another decoder joins here)
 pub fn candidates() -> Vec<Box<dyn Candidate>> {
     vec![
-        Box::new(Mibz2 { kernels: Kernels::scalar(), threads: 0 }),
-        Box::new(Mibz2 { kernels: Kernels::detect(), threads: 0 }),
-        Box::new(Mibz2 { kernels: Kernels::detect(), threads: 3 }),
+        Box::new(Mibz2 {
+            kernels: Kernels::scalar(),
+            threads: 0,
+        }),
+        Box::new(Mibz2 {
+            kernels: Kernels::detect(),
+            threads: 0,
+        }),
+        Box::new(Mibz2 {
+            kernels: Kernels::detect(),
+            threads: 3,
+        }),
     ]
 }
 

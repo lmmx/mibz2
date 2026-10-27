@@ -30,7 +30,14 @@ fn main() {
             corpus.push(compress(small, level));
         }
     }
-    corpus.push([compress(b"one", 9), compress(b"", 2), compress(&rng.bytes(5000), 1)].concat());
+    corpus.push(
+        [
+            compress(b"one", 9),
+            compress(b"", 2),
+            compress(&rng.bytes(5000), 1),
+        ]
+        .concat(),
+    );
     for n in [5usize, 300, 70_000] {
         let ll: Vec<u8> = (0..n).map(|_| b"abc"[rng.below(3) as usize]).collect();
         let p = rng.below(n as u64) as u32;
@@ -54,7 +61,11 @@ fn main() {
         let want = oracle(&t);
         // (each candidate in turn; tests/common's last, the parallel one, is slower to
         // start, so it takes only every 16th case)
-        let c = if cases % 16 == 0 { &cands[cands.len() - 1] } else { &cands[cases as usize % (cands.len() - 1).max(1)] };
+        let c = if cases % 16 == 0 {
+            &cands[cands.len() - 1]
+        } else {
+            &cands[cases as usize % (cands.len() - 1).max(1)]
+        };
         let got = match try_decode(c.as_ref(), &t) {
             Ok(r) => r,
             Err(_) => {
@@ -67,12 +78,22 @@ fn main() {
             (Ok(a), Ok(b)) if a == b => "both decode, same bytes".to_string(),
             (Ok(_), Ok(_)) => {
                 bad += 1;
-                report(&out_dir, &t, cases, &format!("{}: different bytes", c.name()));
+                report(
+                    &out_dir,
+                    &t,
+                    cases,
+                    &format!("{}: different bytes", c.name()),
+                );
                 "DIFFERENT BYTES".into()
             }
             (Err(_), Ok(_)) => {
                 bad += 1;
-                report(&out_dir, &t, cases, &format!("{}: libbzip2 fails, this decodes", c.name()));
+                report(
+                    &out_dir,
+                    &t,
+                    cases,
+                    &format!("{}: libbzip2 fails, this decodes", c.name()),
+                );
                 "LIBBZIP2 FAILS, THIS DECODES".into()
             }
             (Err(_), Err(e)) => format!("both fail ({e})"),

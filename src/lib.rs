@@ -104,7 +104,10 @@ pub struct Kernels {
 impl Kernels {
     /// The portable kernels, on any CPU
     pub const fn scalar() -> Self {
-        Kernels { avx2: false, clmul: false }
+        Kernels {
+            avx2: false,
+            clmul: false,
+        }
     }
 
     /// The fastest kernels this CPU has
@@ -112,7 +115,8 @@ impl Kernels {
         #[cfg(target_arch = "x86_64")]
         {
             Kernels {
-                avx2: std::is_x86_feature_detected!("avx2") && std::is_x86_feature_detected!("bmi1"),
+                avx2: std::is_x86_feature_detected!("avx2")
+                    && std::is_x86_feature_detected!("bmi1"),
                 clmul: std::is_x86_feature_detected!("pclmulqdq")
                     && std::is_x86_feature_detected!("sse4.1")
                     && std::is_x86_feature_detected!("ssse3"),
@@ -123,7 +127,6 @@ impl Kernels {
             Kernels::scalar()
         }
     }
-
 }
 
 /// What is wrong with the input
@@ -146,8 +149,14 @@ pub enum ErrorKind {
     RunTooLong,
     BlockTooLong,
     RunUnfinished,
-    BlockCrc { stored: u32, computed: u32 },
-    StreamCrc { stored: u32, computed: u32 },
+    BlockCrc {
+        stored: u32,
+        computed: u32,
+    },
+    StreamCrc {
+        stored: u32,
+        computed: u32,
+    },
     Truncated,
     TrailingData,
     BlockTooLarge,
@@ -210,7 +219,11 @@ pub struct Error {
 
 impl Error {
     pub fn new(kind: ErrorKind) -> Self {
-        Error { kind, block: None, bit: None }
+        Error {
+            kind,
+            block: None,
+            bit: None,
+        }
     }
 }
 
@@ -250,7 +263,12 @@ pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
 
 impl<I: bwt::InverseBwt> Default for Scratch<I> {
     fn default() -> Self {
-        Scratch { ll: Vec::new(), counts: [0; 256], inverse: I::default(), rle: Vec::new() }
+        Scratch {
+            ll: Vec::new(),
+            counts: [0; 256],
+            inverse: I::default(),
+            rle: Vec::new(),
+        }
     }
 }
 
@@ -275,7 +293,10 @@ pub fn decode_block<I: bwt::InverseBwt>(
     let computed = crc::crc32(&out[start..], k);
     if computed != b.crc {
         out.truncate(start);
-        return Err(ErrorKind::BlockCrc { stored: b.crc, computed });
+        return Err(ErrorKind::BlockCrc {
+            stored: b.crc,
+            computed,
+        });
     }
     Ok(computed)
 }
@@ -322,9 +343,17 @@ pub fn decode_with<I: bwt::InverseBwt>(data: &[u8], k: Kernels) -> Result<Vec<u8
     let mut syms = Vec::new();
     loop {
         match sc.next(syms)? {
-            stream::Event::Block { index, bit, symbols, .. } => {
-                decode_block(&symbols, k, &mut s, &mut out)
-                    .map_err(|kind| Error { kind, block: Some(index), bit: Some(bit) })?;
+            stream::Event::Block {
+                index,
+                bit,
+                symbols,
+                ..
+            } => {
+                decode_block(&symbols, k, &mut s, &mut out).map_err(|kind| Error {
+                    kind,
+                    block: Some(index),
+                    bit: Some(bit),
+                })?;
                 syms = symbols.syms;
             }
             stream::Event::Done => return Ok(out),
@@ -361,11 +390,18 @@ pub fn decode_blocks(
 ) -> Result<Range, Error> {
     let mut s = Scratch::<bwt::Segmented>::default();
     let mut syms = Vec::new();
-    let mut range = Range { end: start_bit, ..Range::default() };
+    let mut range = Range {
+        end: start_bit,
+        ..Range::default()
+    };
     let mut bit = start_bit;
     while bit < end_bit {
         let index = range.blocks.len() as u64;
-        let at = |kind| Error { kind, block: Some(index), bit: Some(bit) };
+        let at = |kind| Error {
+            kind,
+            block: Some(index),
+            bit: Some(bit),
+        };
         let mut br = bits::Bits::at(data, bit);
         let item = block::read_item(&mut br, level, syms);
         if br.overran() {

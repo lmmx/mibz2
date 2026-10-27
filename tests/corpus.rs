@@ -4,8 +4,8 @@
 //! decoded every way the crate offers.
 
 mod common;
-use mibz2::{BzReader, ErrorKind, Kernels};
 use common::*;
+use mibz2::{BzReader, ErrorKind, Kernels};
 use std::io::Read;
 
 /// A reader giving at most 1-7 bytes a call (and, with `fail_at`, an error there)
@@ -20,7 +20,10 @@ impl Read for Trickle<'_> {
         if self.fail_at.is_some_and(|f| self.at >= f) {
             return Err(std::io::Error::other("the source failed"));
         }
-        let n = buf.len().min(1 + self.at % 7).min(self.data.len() - self.at);
+        let n = buf
+            .len()
+            .min(1 + self.at % 7)
+            .min(self.data.len() - self.at);
         buf[..n].copy_from_slice(&self.data[self.at..self.at + n]);
         self.at += n;
         Ok(n)
@@ -34,20 +37,36 @@ fn every_entry_point() {
             let z = compress(&data, level);
             let ctx = format!("{name} level {level}");
             assert!(mibz2::decode(&z).unwrap() == data, "{ctx}: decode");
-            assert!(mibz2::decode_with::<mibz2::bwt::Plain>(&z, Kernels::scalar()).unwrap() == data, "{ctx}: scalar plain");
-            assert!(mibz2::decode_parallel(&z, 3).unwrap() == data, "{ctx}: decode_parallel");
+            assert!(
+                mibz2::decode_with::<mibz2::bwt::Plain>(&z, Kernels::scalar()).unwrap() == data,
+                "{ctx}: scalar plain"
+            );
+            assert!(
+                mibz2::decode_parallel(&z, 3).unwrap() == data,
+                "{ctx}: decode_parallel"
+            );
             let mut out = Vec::new();
             BzReader::new(&z[..]).read_to_end(&mut out).unwrap();
             assert!(out == data, "{ctx}: BzReader");
             let mut out = Vec::new();
-            BzReader::parallel(std::io::Cursor::new(z.clone()), 4).read_to_end(&mut out).unwrap();
+            BzReader::parallel(std::io::Cursor::new(z.clone()), 4)
+                .read_to_end(&mut out)
+                .unwrap();
             assert!(out == data, "{ctx}: BzReader::parallel");
             // the blocks found, then each decoded alone, in any order
             let spans: Vec<_> = mibz2::scan(&z).collect::<Result<_, _>>().unwrap();
             assert!(!spans.is_empty() || data.is_empty());
             let mut parts: Vec<Vec<u8>> = vec![Vec::new(); spans.len()];
             for (i, s) in spans.iter().enumerate().rev() {
-                let r = mibz2::decode_blocks(&z, s.start_bit, s.end_bit, s.level, Kernels::detect(), &mut parts[i]).unwrap();
+                let r = mibz2::decode_blocks(
+                    &z,
+                    s.start_bit,
+                    s.end_bit,
+                    s.level,
+                    Kernels::detect(),
+                    &mut parts[i],
+                )
+                .unwrap();
                 assert_eq!(r.blocks, vec![(s.start_bit, s.end_bit, s.crc)]);
             }
             assert!(parts.concat() == data, "{ctx}: scan + decode_blocks");
@@ -60,24 +79,52 @@ fn readers_on_short_reads_and_failing_sources() {
     let (_, data) = corpora(1).swap_remove(0);
     let z = compress(&data[..400_000], 9);
     let mut out = Vec::new();
-    BzReader::new(Trickle { data: &z, at: 0, fail_at: None }).read_to_end(&mut out).unwrap();
+    BzReader::new(Trickle {
+        data: &z,
+        at: 0,
+        fail_at: None,
+    })
+    .read_to_end(&mut out)
+    .unwrap();
     assert!(out == data[..400_000]);
     // a source that fails: its own error, not a decode error
-    let e = BzReader::new(Trickle { data: &z, at: 0, fail_at: Some(z.len() / 2) }).read_to_end(&mut Vec::new()).unwrap_err();
+    let e = BzReader::new(Trickle {
+        data: &z,
+        at: 0,
+        fail_at: Some(z.len() / 2),
+    })
+    .read_to_end(&mut Vec::new())
+    .unwrap_err();
     assert_eq!(e.to_string(), "the source failed");
     let owned: &'static [u8] = Box::leak(z.clone().into_boxed_slice());
-    let e = BzReader::parallel(Trickle { data: owned, at: 0, fail_at: Some(z.len() / 2) }, 2)
-        .read_to_end(&mut Vec::new())
-        .unwrap_err();
+    let e = BzReader::parallel(
+        Trickle {
+            data: owned,
+            at: 0,
+            fail_at: Some(z.len() / 2),
+        },
+        2,
+    )
+    .read_to_end(&mut Vec::new())
+    .unwrap_err();
     assert_eq!(e.to_string(), "the source failed");
     // a bad stream: InvalidData, wrapping the crate's error
     let mut bad = z.clone();
     bad[z.len() / 2] ^= 1;
-    for r in [BzReader::new(&bad[..]).read_to_end(&mut Vec::new()), BzReader::parallel(std::io::Cursor::new(bad.clone()), 2).read_to_end(&mut Vec::new())] {
+    for r in [
+        BzReader::new(&bad[..]).read_to_end(&mut Vec::new()),
+        BzReader::parallel(std::io::Cursor::new(bad.clone()), 2).read_to_end(&mut Vec::new()),
+    ] {
         let e = r.unwrap_err();
         assert_eq!(e.kind(), std::io::ErrorKind::InvalidData);
         let inner = e.into_inner().unwrap().downcast::<mibz2::Error>().unwrap();
         // (a data error, whichever check the flipped bit trips: not the source's, not a bug)
-        assert!(!matches!(inner.kind, ErrorKind::Io(..) | ErrorKind::Cancelled | ErrorKind::Internal(_)), "{inner}");
+        assert!(
+            !matches!(
+                inner.kind,
+                ErrorKind::Io(..) | ErrorKind::Cancelled | ErrorKind::Internal(_)
+            ),
+            "{inner}"
+        );
     }
 }

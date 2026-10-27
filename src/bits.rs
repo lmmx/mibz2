@@ -16,7 +16,12 @@ pub struct Bits<'a> {
 impl<'a> Bits<'a> {
     /// A reader at bit `bit` of `data` (bit 0 the first byte's most significant)
     pub fn at(data: &'a [u8], bit: u64) -> Self {
-        let mut b = Bits { data, pos: (bit / 8) as usize, buf: 0, live: 0 };
+        let mut b = Bits {
+            data,
+            pos: (bit / 8) as usize,
+            buf: 0,
+            live: 0,
+        };
         let r = (bit % 8) as u32;
         if r != 0 {
             b.refill();
@@ -98,13 +103,18 @@ mod tests {
     #[test]
     fn reads_bits_at_any_offset() {
         let data: Vec<u8> = (0..40u32).map(|i| (i * 37 + 11) as u8).collect();
-        let all: Vec<bool> = data.iter().flat_map(|&b| (0..8).rev().map(move |k| b >> k & 1 == 1)).collect();
+        let all: Vec<bool> = data
+            .iter()
+            .flat_map(|&b| (0..8).rev().map(move |k| b >> k & 1 == 1))
+            .collect();
         for start in 0..70u64 {
             for n in 1..=32u32 {
                 let mut b = Bits::at(&data, start);
                 let mut at = start as usize;
                 while at + n as usize <= all.len() {
-                    let want = all[at..at + n as usize].iter().fold(0u32, |v, &x| v << 1 | x as u32);
+                    let want = all[at..at + n as usize]
+                        .iter()
+                        .fold(0u32, |v, &x| v << 1 | x as u32);
                     assert_eq!(b.bits(n), want, "start {start} n {n} at {at}");
                     at += n as usize;
                     assert_eq!(b.bit_pos(), at as u64);

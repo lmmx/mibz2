@@ -23,7 +23,7 @@
 //! error, so a bad input can only ever end the decode with an error.
 
 use super::stream::{Event, Scanner, Source};
-use super::{decode_block, Error, Kernels, ErrorKind, Scratch};
+use super::{decode_block, Error, ErrorKind, Kernels, Scratch};
 use std::collections::BTreeMap;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::mpsc::{channel, sync_channel, Receiver, SyncSender};
@@ -95,7 +95,11 @@ impl StreamDecoder {
 
     /// `new` with the inverse-BWT kernel `I` (bwt::InverseBwt), so the whole decoder can
     /// be timed with each
-    pub fn with_inverse<I: super::bwt::InverseBwt + 'static>(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
+    pub fn with_inverse<I: super::bwt::InverseBwt + 'static>(
+        threads: usize,
+        slots: usize,
+        k: Kernels,
+    ) -> StreamDecoder {
         let threads = threads.max(1);
         let slots = slots.max(threads) as u64;
         let shared = Arc::new(Shared {
@@ -131,7 +135,13 @@ impl StreamDecoder {
                 .spawn(move || scanner(&sh, in_rx, job_tx))
                 .expect("spawn the bz2 scanner"),
         );
-        StreamDecoder { input: Mutex::new(Some(in_tx)), shared, handles: Mutex::new(handles), reader: Mutex::default(), threads }
+        StreamDecoder {
+            input: Mutex::new(Some(in_tx)),
+            shared,
+            handles: Mutex::new(handles),
+            reader: Mutex::default(),
+            threads,
+        }
     }
 
     pub fn threads(&self) -> usize {
@@ -142,7 +152,12 @@ impl StreamDecoder {
     /// closed or the decode has stopped (ended in an error, or cancelled): its writer
     /// should stop, as a pipe's writer does when its reader is gone.
     pub fn write(&self, data: Vec<u8>) -> Result<(), Stopped> {
-        let tx = self.input.lock().unwrap_or_else(|e| e.into_inner()).clone().ok_or(Stopped)?;
+        let tx = self
+            .input
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
+            .ok_or(Stopped)?;
         if data.is_empty() {
             return Ok(());
         }
@@ -271,7 +286,14 @@ impl Source for ChannelSource<'_> {
 }
 
 fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender<Job>) {
-    let src = ChannelSource { rx, buf: Vec::new(), base: 0, released: 0, eof: false, shared };
+    let src = ChannelSource {
+        rx,
+        buf: Vec::new(),
+        base: 0,
+        released: 0,
+        eof: false,
+        shared,
+    };
     let mut sc = Scanner::new(src);
     let finish = |res: Option<Error>| {
         let mut st = shared.lock();
@@ -303,7 +325,12 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
         let next = catch_unwind(AssertUnwindSafe(|| sc.next(syms)))
             .unwrap_or_else(|p| Err(Error::new(ErrorKind::Internal(panic_message(p)))));
         match next {
-            Ok(Event::Block { index, bit, symbols, .. }) => {
+            Ok(Event::Block {
+                index,
+                bit,
+                symbols,
+                ..
+            }) => {
                 let mut st = shared.lock();
                 let place = st.issued;
                 st.issued += 1;
@@ -325,7 +352,9 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
     let mut scratch = Scratch::<I>::default();
     loop {
         let job = jobs.lock().unwrap_or_else(|e| e.into_inner()).recv();
-        let Ok((place, bit, symbols)) = job else { return };
+        let Ok((place, bit, symbols)) = job else {
+            return;
+        };
         let mut out = {
             let mut st = shared.lock();
             if st.cancelled {
@@ -334,7 +363,9 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             st.free_out.pop().unwrap_or_default()
         };
         out.clear();
-        let res = catch_unwind(AssertUnwindSafe(|| decode_block(&symbols, k, &mut scratch, &mut out)));
+        let res = catch_unwind(AssertUnwindSafe(|| {
+            decode_block(&symbols, k, &mut scratch, &mut out)
+        }));
         let res = match res {
             Ok(Ok(_)) => Ok(out),
             Ok(Err(kind)) => Err(kind),
@@ -343,7 +374,11 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
                 Err(ErrorKind::Internal(panic_message(p)))
             }
         }
-        .map_err(|kind| Error { kind, block: Some(place), bit: Some(bit) });
+        .map_err(|kind| Error {
+            kind,
+            block: Some(place),
+            bit: Some(bit),
+        });
         let mut st = shared.lock();
         if !st.cancelled {
             st.ready.insert(place, res);

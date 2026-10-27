@@ -27,39 +27,77 @@ fn best<F: FnMut() -> usize>(mut f: F) -> (f64, usize) {
 }
 
 fn main() {
-    let scale: usize = std::env::args().skip(1).find_map(|a| a.parse().ok()).unwrap_or(4);
+    let scale: usize = std::env::args()
+        .skip(1)
+        .find_map(|a| a.parse().ok())
+        .unwrap_or(4);
     let threads = std::thread::available_parallelism().map_or(1, |n| n.get());
     let cpu = std::fs::read_to_string("/proc/cpuinfo")
         .ok()
-        .and_then(|c| c.lines().find(|l| l.starts_with("model name")).map(|l| l.split(':').nth(1).unwrap().trim().to_string()))
+        .and_then(|c| {
+            c.lines()
+                .find(|l| l.starts_with("model name"))
+                .map(|l| l.split(':').nth(1).unwrap().trim().to_string())
+        })
         .unwrap_or_else(|| std::env::consts::ARCH.to_string());
     let ghz: Option<f64> = std::fs::read_to_string("/proc/cpuinfo")
         .ok()
-        .and_then(|c| c.lines().find(|l| l.starts_with("cpu MHz")).and_then(|l| l.split(':').nth(1)?.trim().parse::<f64>().ok()))
+        .and_then(|c| {
+            c.lines()
+                .find(|l| l.starts_with("cpu MHz"))
+                .and_then(|l| l.split(':').nth(1)?.trim().parse::<f64>().ok())
+        })
         .map(|mhz| mhz / 1000.0);
-    println!("machine: {cpu}, {threads} threads, {} ({:?}), kernels {:?}", std::env::consts::ARCH,
-             ghz.map(|g| format!("{g:.2} GHz")), Kernels::detect());
-    println!("{:<10} {:>9} {:>9}  {:>14} {:>14} {:>14} {:>14} {:>14}", "corpus", "MB out", "ratio", "libbzip2 1t",
-             "mibz2 1t", "scalar 1t", "plain walk 1t", format!("mibz2 {threads}t"));
+    println!(
+        "machine: {cpu}, {threads} threads, {} ({:?}), kernels {:?}",
+        std::env::consts::ARCH,
+        ghz.map(|g| format!("{g:.2} GHz")),
+        Kernels::detect()
+    );
+    println!(
+        "{:<10} {:>9} {:>9}  {:>14} {:>14} {:>14} {:>14} {:>14}",
+        "corpus",
+        "MB out",
+        "ratio",
+        "libbzip2 1t",
+        "mibz2 1t",
+        "scalar 1t",
+        "plain walk 1t",
+        format!("mibz2 {threads}t")
+    );
     for (name, data) in common::corpora(scale) {
         let z = common::compress(&data, 9);
         let mb = data.len() as f64 / 1e6;
         let (t_ref, n) = best(|| {
             let mut out = Vec::with_capacity(data.len());
-            bzip2::read::MultiBzDecoder::new(&z[..]).read_to_end(&mut out).unwrap();
+            bzip2::read::MultiBzDecoder::new(&z[..])
+                .read_to_end(&mut out)
+                .unwrap();
             out.len()
         });
         assert_eq!(n, data.len());
         let (t_one, n) = best(|| mibz2::decode(&z).unwrap().len());
         assert_eq!(n, data.len());
-        let (t_scalar, n) = best(|| mibz2::decode_with::<bwt::Segmented>(&z, Kernels::scalar()).unwrap().len());
+        let (t_scalar, n) = best(|| {
+            mibz2::decode_with::<bwt::Segmented>(&z, Kernels::scalar())
+                .unwrap()
+                .len()
+        });
         assert_eq!(n, data.len());
-        let (t_plain, n) = best(|| mibz2::decode_with::<bwt::Plain>(&z, Kernels::detect()).unwrap().len());
+        let (t_plain, n) = best(|| {
+            mibz2::decode_with::<bwt::Plain>(&z, Kernels::detect())
+                .unwrap()
+                .len()
+        });
         assert_eq!(n, data.len());
         let (t_par, n) = best(|| mibz2::decode_parallel(&z, threads).unwrap().len());
         assert_eq!(n, data.len());
         let cell = |t: f64| match ghz {
-            Some(g) => format!("{:>6.0} MB/s {:>4.1}c", mb / t, t * g * 1e9 / data.len() as f64),
+            Some(g) => format!(
+                "{:>6.0} MB/s {:>4.1}c",
+                mb / t,
+                t * g * 1e9 / data.len() as f64
+            ),
             None => format!("{:>9.0} MB/s", mb / t),
         };
         println!("{name:<10} {mb:>9.1} {:>8.1}x  {:>14} {:>14} {:>14} {:>14} {:>14}   (1t: {:.2}x libbzip2)",

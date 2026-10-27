@@ -28,7 +28,14 @@ impl Source for SliceSource<'_> {
 pub enum Event {
     /// a block's symbols; its index (counted across streams), first bit and end bit (the
     /// next item's first); its stream (counted from 0) and that stream's level
-    Block { index: u64, bit: u64, end: u64, stream: u64, level: u32, symbols: Symbols },
+    Block {
+        index: u64,
+        bit: u64,
+        end: u64,
+        stream: u64,
+        level: u32,
+        symbols: Symbols,
+    },
     /// the input's end, after a whole stream
     Done,
 }
@@ -56,7 +63,14 @@ pub struct Scanner<S> {
 
 impl<S: Source> Scanner<S> {
     pub fn new(src: S) -> Self {
-        Scanner { src, bit: 0, state: State::Header { first: true }, blocks: 0, streams: 0, lookahead: LOOKAHEAD }
+        Scanner {
+            src,
+            bit: 0,
+            state: State::Header { first: true },
+            blocks: 0,
+            streams: 0,
+            lookahead: LOOKAHEAD,
+        }
     }
 
     /// The next block (its symbols read into `syms`, reused), or the input's end
@@ -66,7 +80,11 @@ impl<S: Source> Scanner<S> {
                 State::Done => return Ok(Event::Done),
                 State::Header { first } => {
                     let at = self.bit;
-                    let err = |kind| Error { kind, block: None, bit: Some(at) };
+                    let err = |kind| Error {
+                        kind,
+                        block: None,
+                        bit: Some(at),
+                    };
                     let (data, eof) = self.src.view(at / 8, 4).map_err(err)?;
                     if data.is_empty() && eof {
                         if first {
@@ -77,16 +95,29 @@ impl<S: Source> Scanner<S> {
                     }
                     match data {
                         [b'B', b'Z', b'h', l @ b'1'..=b'9', ..] => {
-                            self.state = State::Stream { level: (l - b'0') as u32, combined: 0 };
+                            self.state = State::Stream {
+                                level: (l - b'0') as u32,
+                                combined: 0,
+                            };
                             self.bit += 32;
                         }
-                        _ => return Err(err(if first { ErrorKind::NotBz2 } else { ErrorKind::TrailingData })),
+                        _ => {
+                            return Err(err(if first {
+                                ErrorKind::NotBz2
+                            } else {
+                                ErrorKind::TrailingData
+                            }))
+                        }
                     }
                 }
                 State::Stream { level, combined } => {
                     let at = self.bit;
                     let index = self.blocks;
-                    let err = |kind| Error { kind, block: Some(index), bit: Some(at) };
+                    let err = |kind| Error {
+                        kind,
+                        block: Some(index),
+                        bit: Some(at),
+                    };
                     let base = at / 8;
                     let (data, eof) = self.src.view(base, self.lookahead).map_err(err)?;
                     let mut br = Bits::at(data, at % 8);
@@ -113,7 +144,10 @@ impl<S: Source> Scanner<S> {
                     match item.map_err(|(kind, _)| err(kind))? {
                         Item::End(stored) => {
                             if stored != combined {
-                                return Err(err(ErrorKind::StreamCrc { stored, computed: combined }));
+                                return Err(err(ErrorKind::StreamCrc {
+                                    stored,
+                                    computed: combined,
+                                }));
                             }
                             // the next stream starts at a byte
                             self.bit = self.bit.div_ceil(8) * 8;
@@ -124,10 +158,20 @@ impl<S: Source> Scanner<S> {
                         Item::Block(symbols) => {
                             // (the stored CRC: each block's computed CRC is checked
                             // against it by its worker, in order before this stream's end)
-                            self.state = State::Stream { level, combined: combined.rotate_left(1) ^ symbols.crc };
+                            self.state = State::Stream {
+                                level,
+                                combined: combined.rotate_left(1) ^ symbols.crc,
+                            };
                             self.blocks += 1;
                             let (end, stream) = (self.bit, self.streams);
-                            return Ok(Event::Block { index, bit: at, end, stream, level, symbols });
+                            return Ok(Event::Block {
+                                index,
+                                bit: at,
+                                end,
+                                stream,
+                                level,
+                                symbols,
+                            });
                         }
                     }
                 }

@@ -89,7 +89,14 @@ impl Huff {
         for i in min_len + 1..=max_len {
             base[i] = ((limit[i - 1] + 1) << 1) - base[i];
         }
-        let mut h = Huff { lut: [0; 1 << LUT_BITS], limit, base, perm, min_len: min_len as u32, alpha: alpha as i32 };
+        let mut h = Huff {
+            lut: [0; 1 << LUT_BITS],
+            limit,
+            base,
+            perm,
+            min_len: min_len as u32,
+            alpha: alpha as i32,
+        };
         for w in 0..1u32 << LUT_BITS {
             let mut zn = h.min_len;
             h.lut[w as usize] = loop {
@@ -149,7 +156,11 @@ impl Huff {
 /// The next item of a stream of level `level` (1-9) from `br`, at a block header or the
 /// stream's end: a block's header and its symbols (into `syms`, reused), or the end and
 /// its CRC. A block found to run past the input (`br.overran()`) is the caller's to judge.
-pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, (ErrorKind, Vec<u16>)> {
+pub fn read_item(
+    br: &mut Bits,
+    level: u32,
+    mut syms: Vec<u16>,
+) -> Result<Item, (ErrorKind, Vec<u16>)> {
     macro_rules! fail {
         ($k:expr) => {
             return Err(($k, syms))
@@ -251,7 +262,9 @@ pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, 
     syms.reserve(MAX_SYMS);
     let mut sel = 0;
     'groups: loop {
-        let Some(&g) = selectors.get(sel) else { fail!(ErrorKind::SelectorOverrun) };
+        let Some(&g) = selectors.get(sel) else {
+            fail!(ErrorKind::SelectorOverrun)
+        };
         let t = &tables[g as usize];
         sel += 1;
         for _ in 0..GROUP {
@@ -268,5 +281,12 @@ pub fn read_item(br: &mut Bits, level: u32, mut syms: Vec<u16>) -> Result<Item, 
             fail!(ErrorKind::Truncated);
         }
     }
-    Ok(Item::Block(Symbols { crc, orig_ptr, seq_to_unseq, syms, eob, max_len }))
+    Ok(Item::Block(Symbols {
+        crc,
+        orig_ptr,
+        seq_to_unseq,
+        syms,
+        eob,
+        max_len,
+    }))
 }
