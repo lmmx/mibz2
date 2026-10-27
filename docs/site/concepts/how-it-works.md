@@ -23,18 +23,25 @@ With one thread, the same phases run in order on the calling thread.
 ## The walk
 
 The inverse BWT is a chain of dependent loads: each step's row is the previous step's
-load. A plain walk keeps one load in flight. The default walk (`bwt::walk_segments`)
-keeps a dozen:
+load. A plain walk keeps one load in flight. The default walk
+(`bwt::walk_segments_room`, the flagged walk in passes) keeps many, one a lane
+([Why 32 couriers beat one](couriers.md) explains why, and where it stops paying):
 
-- 256 pseudo-random rows, the walk's first among them, are segment starts;
-- a bitmap of the starts ends each segment;
-- 12 lanes walk segments in lockstep, each taking the next segment when its own ends;
+- 512 pseudo-random rows, the walk's first among them, are segment starts;
+- each start is flagged in its own T-vector entry, which ends the segment before it;
+- 32 lanes walk segments in lockstep, each taking the next segment when its own ends,
+  and each lane's next entry is prefetched as soon as its row is known;
+- the lanes step in passes of `room` rounds, `room` the fewest bytes any lane's buffer has
+  spare, each byte written at its lane's base plus the pass's offset, so a step has no
+  pointer store or buffer-end test (after libsais's chain decode,
+  [#37](https://github.com/lmmx/mibz2/pull/37));
 - the segments are joined in order.
 
 It equals the plain walk on every list, lists of several cycles included: the join follows
-the segments' links until the block's length is reached. Blocks under 64 Ki are walked
-plainly. The kernel is behind `bwt::InverseBwt` (`Segmented`, the default; `Plain`), so a
-walk can be swapped and timed as part of the whole decoder.
+the segments' links until the block's length is reached. The flags are cleared before the
+walk returns. Blocks under 64 Ki are walked plainly. The kernel is behind
+`bwt::InverseBwt` (`Segmented`, the default; `Plain`), so a walk can be swapped and timed
+as part of the whole decoder.
 
 ## Kernels
 
