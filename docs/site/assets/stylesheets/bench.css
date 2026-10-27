@@ -325,3 +325,45 @@
     padding: 0.6rem 0.6rem 0.4rem;
   }
 }
+
+/* The Alternatives page's chart (#alternatives-hero) */
+.bh-hero .bh-hero-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.8rem;
+}
+.bh-hero .bh-cmp-one {
+  stroke: var(--bh-ink-2);
+  stroke-width: 1.5;
+}
+.bh-hero .bh-cmp-ref {
+  font-weight: 600;
+}
+.bh-hero .bh-cmp-band {
+  fill: var(--bh-grid);
+  opacity: 0.35;
+}
+.bh-hero .bh-cmp-corpus {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--md-default-fg-color);
+}
+.bh-hero .bh-cmp-ci {
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+.bh-hero .bh-cmp-val {
+  font-weight: 600;
+}
+.bh-hero .bh-cmp-arm {
+  transition: opacity 120ms ease-out;
+}
+.bh-hero .bh-cmp-arm.is-dim {
+  opacity: 0.15;
+}
+.bh-hero .bh-cmp-legend {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+}
+.bh-hero .bh-cmp-legend .bh-hero-item {
+  grid-template-columns: 0.9em auto 1fr;
+}

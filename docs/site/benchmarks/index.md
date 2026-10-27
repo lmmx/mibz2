@@ -9,7 +9,7 @@ mibz2's speed is measured on GitHub's runners by the Benchmark workflow
 `bench/report.py`. Nothing about performance is decided on a developer's machine.
 
 - [History](history.md): master's figures over its commits.
-- [Against other decoders](competitors.md): the latest master commit against pbz2 and
+- [Alternatives](alternatives.md): the latest master commit against pbz2 and
   lbzip2.
 
 These are decoder-level results: one process decoding one file, nothing else.
