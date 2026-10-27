@@ -1,6 +1,8 @@
-# The walk's settings swept on the Wikidata blocks, on one runner (examples/sweep.rs): the
-# lane count, the segment count and the prefetch, each against the settings Segmented uses,
-# paired by round. A diagnostic for choosing settings to try, from the Actions tab only: its
+# The walk's mechanisms taken apart on the Wikidata blocks, on one runner
+# (examples/sweep.rs): the lane count (the interleaved chains), the prefetch (none, L1, L2,
+# non-temporal) and the scheduling (the room walk against the flagged walk), each against the
+# settings Segmented uses, paired by round; alone on one CPU, then with a copy on every CPU;
+# with hardware counters where the runner exposes them. A diagnostic for choosing settings to try, from the Actions tab only: its
 # figures are the run's summary and artifact, never recorded, and a setting it favours is
 # decided by the decoder's own A/B (bench.yml) on a pull request.
 name: Walk sweep
@@ -22,7 +24,7 @@ env:
 jobs:
   sweep:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
         with:
@@ -55,6 +57,12 @@ jobs:
           python3 bench/wikidata.py fetch bench/wikidata.json "$dir"
           python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2
 
+      # Counters where the runner exposes a PMU: let this process count its own events
+      - name: Counters
+        run: sudo sysctl -w kernel.perf_event_paranoid=1 || true
+
+      # One copy pinned to one CPU, then a copy on each CPU at once: a setting that wins
+      # alone can lose when four walks share the caches and the memory system
       - name: Sweep
         env:
           ROUNDS: ${{ inputs.rounds }}
@@ -62,15 +70,31 @@ jobs:
           mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
           model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
           ghz=$(python3 -c "print(round($mhz / 1000, 4))")
+          bin=target/release/examples/sweep
           start=$SECONDS
-          taskset -c 1 target/release/examples/sweep corpora/wikidata.bz2 "$ROUNDS" "$ghz" | tee sweep.txt
+          taskset -c 1 $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz" | tee sweep-1.txt
+          alone=$((SECONDS - start)); start=$SECONDS
+          cpus=$(nproc)
+          for c in $(seq 0 $((cpus - 1))); do
+            taskset -c "$c" $bin corpora/wikidata.bz2 "$ROUNDS" "$ghz" > "sweep-$cpus-cpu$c.txt" &
+          done
+          wait
+          together=$((SECONDS - start))
           {
-            echo "## Walk sweep: $model, $(nproc) cores, at its reported clock (${ghz} GHz), pinned to one CPU"
+            echo "## Walk sweep: $model, $cpus cores, at its reported clock (${ghz} GHz)"
             echo
-            echo "Head \`$(git rev-parse --short HEAD)\`, $(rustc --version), $((SECONDS - start)) s. Diagnostic only: the decoder's A/B decides."
+            echo "Head \`$(git rev-parse --short HEAD)\`, $(rustc --version). Diagnostic only: the decoder's A/B decides."
+            echo
+            echo "### One copy, pinned to one CPU (${alone} s)"
             echo
             echo '```'
-            cat sweep.txt
+            cat sweep-1.txt
+            echo '```'
+            echo
+            echo "### $cpus copies at once, one a CPU (${together} s): the copy on CPU 0 (the others are in the artifact)"
+            echo
+            echo '```'
+            cat "sweep-$cpus-cpu0.txt"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -79,5 +103,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sweep-${{ github.sha }}
-          path: sweep.txt
+          path: sweep-*.txt
           if-no-files-found: ignore

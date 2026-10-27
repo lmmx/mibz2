@@ -147,7 +147,14 @@ const SEGMENTS: usize = 256;
 /// 256-1024 segments on Wikidata's blocks, at one walk and at four at once
 const FLAGGED_LANES: usize = 32;
 const FLAGGED_SEGMENTS: usize = 512;
-const PREFETCH: bool = true;
+const PREFETCH: u8 = PF_L1;
+/// The walks' prefetch (their `PF`): none, or a hint into L1 (`prefetcht0`, `prfm
+/// pldl1keep`), into L2 (`prefetcht1`, `prfm pldl2keep`), or non-temporal (`prefetchnta`,
+/// `prfm pldl1strm`): the same values read whichever, so they can be measured side by side
+pub const PF_OFF: u8 = 0;
+pub const PF_L1: u8 = 1;
+pub const PF_L2: u8 = 2;
+pub const PF_NTA: u8 = 3;
 /// Blocks shorter than this are walked plainly (the segments' bookkeeping would cost more
 /// than the latency they hide; such blocks are only a stream's last)
 const MIN_SEGMENTED: usize = 1 << 16;
@@ -293,7 +300,7 @@ pub fn walk_segments_flagged(
 /// prefetched as soon as its row is known if `PF`: each configuration exactly `walk`'s
 /// output, so they can be measured side by side. It segments a block of any length (the
 /// tests walk small ones; `walk_segments_flagged` leaves those below MIN_SEGMENTED to `walk`).
-pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
+pub fn walk_segments_flagged_with<const L: usize, const PF: u8>(
     tt: &mut TVector,
     orig_ptr: u32,
     out: &mut Vec<u8>,
@@ -371,8 +378,8 @@ pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
     let mut active = 0;
     while active < L && queued < ns {
         lanes[active] = take(queued, bufs);
-        if PF {
-            prefetch(t, lanes[active].row);
+        if PF != PF_OFF {
+            prefetch::<PF>(t, lanes[active].row);
         }
         queued += 1;
         active += 1;
@@ -389,15 +396,15 @@ pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
                         break 'full;
                     }
                     *l = take(queued, bufs);
-                    if PF {
-                        prefetch(t, l.row);
+                    if PF != PF_OFF {
+                        prefetch::<PF>(t, l.row);
                     }
                     queued += 1;
                     continue;
                 }
                 l.row = q >> 8;
-                if PF {
-                    prefetch(t, l.row);
+                if PF != PF_OFF {
+                    prefetch::<PF>(t, l.row);
                 }
                 // SAFETY: p < end, within the buffer's allocation
                 unsafe {
@@ -429,8 +436,8 @@ pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
                 continue;
             }
             l.row = q >> 8;
-            if PF {
-                prefetch(t, l.row);
+            if PF != PF_OFF {
+                prefetch::<PF>(t, l.row);
             }
             unsafe {
                 *l.p = q as u8;
@@ -506,7 +513,7 @@ pub fn walk_segments_room(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s:
 /// - **Lifetimes:** a buffer grows only at a pass's start or in the tail, and its lane's
 ///   p and end (and base, from p) are taken from the grown buffer; `bufs` itself is not
 ///   resized during the walk, so no other buffer moves.
-pub fn walk_segments_room_with<const L: usize, const PF: bool>(
+pub fn walk_segments_room_with<const L: usize, const PF: u8>(
     tt: &mut TVector,
     orig_ptr: u32,
     out: &mut Vec<u8>,
@@ -580,8 +587,8 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
     let mut active = 0;
     while active < L && queued < ns {
         lanes[active] = take(queued, bufs);
-        if PF {
-            prefetch(t, lanes[active].row);
+        if PF != PF_OFF {
+            prefetch::<PF>(t, lanes[active].row);
         }
         queued += 1;
         active += 1;
@@ -627,8 +634,8 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
                         }
                         transition!(MID_PASS_TAKES);
                         *l = take(queued, bufs);
-                        if PF {
-                            prefetch(t, l.row);
+                        if PF != PF_OFF {
+                            prefetch::<PF>(t, l.row);
                         }
                         queued += 1;
                         // its next byte, at offset off + 1, goes at its p
@@ -636,8 +643,8 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
                         continue;
                     }
                     l.row = q >> 8;
-                    if PF {
-                        prefetch(t, l.row);
+                    if PF != PF_OFF {
+                        prefetch::<PF>(t, l.row);
                     }
                     // SAFETY: base + off is below the lane's end: room is at most its spare
                     // at the pass's start (or, for a buffer taken mid-pass, its capacity
@@ -676,8 +683,8 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
                 continue;
             }
             l.row = q >> 8;
-            if PF {
-                prefetch(t, l.row);
+            if PF != PF_OFF {
+                prefetch::<PF>(t, l.row);
             }
             unsafe {
                 *l.p = q as u8;
@@ -702,20 +709,35 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
 }
 
 /// A hint that the T-vector entry at `row` (below its length) is read soon: a software
-/// prefetch into L1 where the target has one (`prefetcht0`, `prfm pldl1keep`), else
-/// nothing. A hint only: it changes no value read.
+/// prefetch at the level `H` names (`PF_L1`, `PF_L2`, `PF_NTA`) where the target has one,
+/// else nothing. A hint only: it changes no value read.
 #[inline(always)]
-fn prefetch(t: *const u32, row: u32) {
+fn prefetch<const H: u8>(t: *const u32, row: u32) {
     let p = t.wrapping_add(row as usize);
     #[cfg(target_arch = "x86_64")]
     // SAFETY: SSE is in x86_64's baseline; a prefetch never faults
     unsafe {
-        core::arch::x86_64::_mm_prefetch::<{ core::arch::x86_64::_MM_HINT_T0 }>(p as *const i8)
+        use core::arch::x86_64::{_mm_prefetch, _MM_HINT_NTA, _MM_HINT_T0, _MM_HINT_T1};
+        match H {
+            PF_L2 => _mm_prefetch::<_MM_HINT_T1>(p as *const i8),
+            PF_NTA => _mm_prefetch::<_MM_HINT_NTA>(p as *const i8),
+            _ => _mm_prefetch::<_MM_HINT_T0>(p as *const i8),
+        }
     };
     #[cfg(target_arch = "aarch64")]
     // SAFETY: a prefetch never faults and writes nothing
     unsafe {
-        core::arch::asm!("prfm pldl1keep, [{p}]", p = in(reg) p, options(nostack, preserves_flags, readonly))
+        match H {
+            PF_L2 => {
+                core::arch::asm!("prfm pldl2keep, [{p}]", p = in(reg) p, options(nostack, preserves_flags, readonly))
+            }
+            PF_NTA => {
+                core::arch::asm!("prfm pldl1strm, [{p}]", p = in(reg) p, options(nostack, preserves_flags, readonly))
+            }
+            _ => {
+                core::arch::asm!("prfm pldl1keep, [{p}]", p = in(reg) p, options(nostack, preserves_flags, readonly))
+            }
+        }
     };
     #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
     let _ = p;
@@ -801,7 +823,7 @@ mod tests {
             }
             assert!(tt.0.iter().all(|&e| e & START == 0));
             for segments in [2, 40, 512, 4096] {
-                walk_segments_room_with::<32, true>(
+                walk_segments_room_with::<32, PF_L1>(
                     &mut tt,
                     orig_ptr,
                     &mut flagged,
@@ -809,7 +831,7 @@ mod tests {
                     segments,
                 );
                 assert!(plain == flagged, "room walk, {segments} segments");
-                walk_segments_room_with::<5, false>(
+                walk_segments_room_with::<5, PF_OFF>(
                     &mut tt,
                     orig_ptr,
                     &mut flagged,
@@ -822,7 +844,7 @@ mod tests {
             assert!(tt.0.iter().all(|&e| e & START == 0));
             // other lane and segment counts, with and without the prefetch
             for segments in [1, 256, 1024] {
-                walk_segments_flagged_with::<12, false>(
+                walk_segments_flagged_with::<12, PF_OFF>(
                     &mut tt,
                     orig_ptr,
                     &mut flagged,
@@ -830,7 +852,7 @@ mod tests {
                     segments,
                 );
                 assert!(plain == flagged, "12 lanes, {segments} segments");
-                walk_segments_flagged_with::<7, true>(
+                walk_segments_flagged_with::<7, PF_L1>(
                     &mut tt,
                     orig_ptr,
                     &mut flagged,
@@ -917,7 +939,7 @@ mod tests {
             for orig_ptr in [0, 1, n as u32 / 2, n as u32 - 1] {
                 walk(&tt, orig_ptr, &mut plain);
                 for segments in [33, 64, 512, 4096] {
-                    walk_segments_room_with::<32, true>(
+                    walk_segments_room_with::<32, PF_L1>(
                         &mut tt, orig_ptr, &mut room, &mut seg, segments,
                     );
                     assert!(plain == room, "orig_ptr {orig_ptr}, {segments} segments");
@@ -1045,22 +1067,22 @@ mod tests {
                 assert!(plain == out, "flagged walk, n {n}");
                 for segments in [1, 2, 33, 256] {
                     let what = format!("n {n}, {segments} segments");
-                    walk_segments_room_with::<32, true>(
+                    walk_segments_room_with::<32, PF_L1>(
                         &mut tt, orig_ptr, &mut out, &mut seg, segments,
                     );
                     assert!(plain == out, "room walk, {what}");
                     check_segments(&tt, &seg, &what);
-                    walk_segments_room_with::<5, false>(
+                    walk_segments_room_with::<5, PF_OFF>(
                         &mut tt, orig_ptr, &mut out, &mut seg, segments,
                     );
                     assert!(plain == out, "room walk, 5 lanes, {what}");
                     check_segments(&tt, &seg, &what);
-                    walk_segments_flagged_with::<32, true>(
+                    walk_segments_flagged_with::<32, PF_L1>(
                         &mut tt, orig_ptr, &mut out, &mut seg, segments,
                     );
                     assert!(plain == out, "flagged walk, {what}");
                     check_segments(&tt, &seg, &what);
-                    walk_segments_flagged_with::<7, false>(
+                    walk_segments_flagged_with::<7, PF_OFF>(
                         &mut tt, orig_ptr, &mut out, &mut seg, segments,
                     );
                     assert!(plain == out, "flagged walk, 7 lanes, {what}");
@@ -1100,10 +1122,10 @@ mod tests {
             build(&ll, &counts, &mut tt);
             let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
             walk(&tt, orig_ptr, &mut plain);
-            walk_segments_room_with::<32, true>(&mut tt, orig_ptr, &mut out, &mut seg, 256);
+            walk_segments_room_with::<32, PF_L1>(&mut tt, orig_ptr, &mut out, &mut seg, 256);
             assert!(plain == out, "room walk, seed {seed}");
             check_segments(&tt, &seg, "room walk");
-            walk_segments_flagged_with::<32, true>(&mut tt, orig_ptr, &mut out, &mut seg, 256);
+            walk_segments_flagged_with::<32, PF_L1>(&mut tt, orig_ptr, &mut out, &mut seg, 256);
             assert!(plain == out, "flagged walk, seed {seed}");
             check_segments(&tt, &seg, "flagged walk");
         }
@@ -1120,10 +1142,10 @@ mod tests {
             let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
             walk(&tt, 1, &mut plain);
             for segments in [33, 256] {
-                walk_segments_room_with::<32, true>(&mut tt, 1, &mut out, &mut seg, segments);
+                walk_segments_room_with::<32, PF_L1>(&mut tt, 1, &mut out, &mut seg, segments);
                 assert!(plain == out, "room walk, {segments} segments");
                 check_segments(&tt, &seg, "room walk");
-                walk_segments_flagged_with::<32, true>(&mut tt, 1, &mut out, &mut seg, segments);
+                walk_segments_flagged_with::<32, PF_L1>(&mut tt, 1, &mut out, &mut seg, segments);
                 assert!(plain == out, "flagged walk, {segments} segments");
                 check_segments(&tt, &seg, "flagged walk");
             }
