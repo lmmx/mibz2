@@ -179,5 +179,6 @@ What the table shows:
 
 ## Licence
 
-None declared yet. The repository this crate lives in declares no licence, so this
-crate's is for its owner to choose before it is extracted or published.
+Prepared as **MIT OR Apache-2.0** (`LICENSE-MIT`, `LICENSE-APACHE`), at the licensee's
+option. *To be confirmed by its owner before it is published*: the repository this crate
+lives in declares no licence of its own.

@@ -7,7 +7,10 @@ description = "A bzip2 decoder built for memory-level parallelism: block-paralle
 readme = "README.md"
 keywords = ["bzip2", "bz2", "decompression", "bwt"]
 categories = ["compression"]
-# (no licence yet: the repository it lives in declares none; see README.md)
+# TODO(owner): confirm the licence before any publication. Prepared as MIT OR Apache-2.0
+# (LICENSE-MIT, LICENSE-APACHE), the Rust ecosystem's usual pair; the repository it lives
+# in declares none
+license = "MIT OR Apache-2.0"
 publish = false
 
 # No dependencies: std only.
