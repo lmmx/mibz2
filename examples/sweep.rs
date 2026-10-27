@@ -227,24 +227,21 @@ fn main() {
             // unscaled counts over the time the group ran, rated over the bytes that time
             // covered (all of them, where it was never multiplexed out)
             let (enabled, running) = cover[si];
-            let counted = if enabled > 0 {
-                running as f64 / enabled as f64
+            if running == 0 {
+                print!("  {:>52}", "not counted (the group never ran)");
             } else {
-                0.0
-            };
-            let per = |i: usize| counts[si][i] as f64 / (n as f64 * counted.max(1e-9));
-            print!(
-                "  {:5.2}  {:5.2}  {:11.2}  {:>14}  {:6.1}%",
-                per(0),
-                per(1),
-                1e3 * per(2),
-                if c.has_stalls() {
-                    format!("{:5.1}%", 100.0 * per(3) / per(1))
-                } else {
-                    "n/a".to_string()
-                },
-                100.0 * counted
-            );
+                let counted = running as f64 / enabled as f64;
+                let per = |i: usize| counts[si][i] as f64 / (n as f64 * counted);
+                let or_na = |i: usize, v: String| if c.has(i) { v } else { "n/a".to_string() };
+                print!(
+                    "  {:5.2}  {:5.2}  {:>11}  {:>14}  {:6.1}%",
+                    per(0),
+                    per(1),
+                    or_na(2, format!("{:.2}", 1e3 * per(2))),
+                    or_na(3, format!("{:5.1}%", 100.0 * per(3) / per(1))),
+                    100.0 * counted
+                );
+            }
         }
         println!();
     }
@@ -345,35 +342,54 @@ mod pmu {
     }
 
     impl Counters {
+        /// The largest of instructions + cycles + LLC misses + back-end stalls, the same
+        /// without the stalls, and instructions + cycles alone that opens and is scheduled
+        /// onto the PMU in a short trial (a group can open and still never be scheduled,
+        /// its events together needing more counters than the PMU has); else none
         pub fn open() -> Option<Counters> {
-            let leader = match open(CONFIG[0].0, None) {
+            for events in [&[0usize, 1, 2, 3][..], &[0, 1, 2], &[0, 1]] {
+                let Some(mut c) = Self::open_group(events) else {
+                    continue;
+                };
+                c.start();
+                let mut x = 0u64;
+                for i in 0..1_000_000u64 {
+                    x = std::hint::black_box(x.wrapping_mul(31).wrapping_add(i));
+                }
+                let (_, enabled, running) = c.stop();
+                if enabled > 0 && running > 0 {
+                    return Some(c);
+                }
+                WHY.store(-1, Ordering::Relaxed);
+            }
+            None
+        }
+        fn open_group(events: &[usize]) -> Option<Counters> {
+            let leader = match open(CONFIG[events[0]].0, None) {
                 Ok(f) => f,
                 Err(e) => {
                     WHY.store(e, Ordering::Relaxed);
                     return None;
                 }
             };
-            let mut members = Vec::new();
-            for (i, &(config, _)) in CONFIG.iter().enumerate().skip(1) {
-                match open(config, Some(&leader)) {
-                    Ok(f) => members.push((i, f)),
-                    // cycles and the misses are needed; the stalls are optional
-                    Err(e) if i < 3 => {
+            let mut files = Vec::new();
+            for &i in &events[1..] {
+                match open(CONFIG[i].0, Some(&leader)) {
+                    Ok(f) => files.push((i, f)),
+                    Err(e) => {
                         WHY.store(e, Ordering::Relaxed);
                         return None;
                     }
-                    Err(_) => {}
                 }
             }
-            let mut files = vec![(0, leader)];
-            files.extend(members);
+            files.insert(0, (events[0], leader));
             Some(Counters { files })
+        }
+        pub fn has(&self, i: usize) -> bool {
+            self.files.iter().any(|(j, _)| *j == i)
         }
         pub fn names(&self) -> Vec<&'static str> {
             self.files.iter().map(|(i, _)| CONFIG[*i].1).collect()
-        }
-        pub fn has_stalls(&self) -> bool {
-            self.files.iter().any(|(i, _)| *i == 3)
         }
         pub fn start(&mut self) {
             ioctl(&self.files[0].1, IOC_RESET);
@@ -400,6 +416,7 @@ mod pmu {
         match WHY.load(Ordering::Relaxed) {
             1 | 13 => "not permitted: perf_event_paranoid".into(),
             2 | 19 | 95 => "no PMU exposed to this machine".into(),
+            -1 => "the counters opened but were never scheduled onto the PMU".into(),
             e => format!("perf_event_open: errno {e}"),
         }
     }
@@ -416,7 +433,7 @@ mod pmu {
         pub fn names(&self) -> Vec<&'static str> {
             Vec::new()
         }
-        pub fn has_stalls(&self) -> bool {
+        pub fn has(&self, _: usize) -> bool {
             false
         }
         pub fn start(&mut self) {}
