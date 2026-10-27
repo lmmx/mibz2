@@ -33,6 +33,9 @@ pub struct Symbols {
     pub max_len: usize,
 }
 
+// (a block's symbols move through by value, once a block: boxing them would allocate
+// a block's worth for nothing)
+#[allow(clippy::large_enum_variant)]
 pub enum Item {
     Block(Symbols),
     /// the stream's end, and the combined CRC it stores

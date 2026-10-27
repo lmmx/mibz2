@@ -87,6 +87,9 @@ mod read;
 pub mod rle;
 pub mod stream;
 
+#[cfg(feature = "python")]
+mod python;
+
 pub use parallel::StreamDecoder;
 pub use read::{scan, BlockSpan, BzReader, Scan};
 

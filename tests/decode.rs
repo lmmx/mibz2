@@ -109,7 +109,7 @@ fn crafted_blocks_match_libbzip2() {
             3 => 899_000 + rng.below(1000) as usize,
             _ => 1 + rng.below(300_000) as usize,
         };
-        let alphabet = 1 + rng.below(if case % 2 == 0 { 3 } else { 256 }) as u64;
+        let alphabet = 1 + rng.below(if case % 2 == 0 { 3 } else { 256 });
         let mut ll: Vec<u8> = (0..n).map(|_| (rng.below(alphabet) * 7) as u8).collect();
         if case % 5 == 0 {
             // periodic: a string repeated, whose list is several cycles

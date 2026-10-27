@@ -25,6 +25,7 @@ impl Source for SliceSource<'_> {
     }
 }
 
+#[allow(clippy::large_enum_variant)] // (as block.rs's Item: moved once a block)
 pub enum Event {
     /// a block's symbols; its index (counted across streams), first bit and end bit (the
     /// next item's first); its stream (counted from 0) and that stream's level

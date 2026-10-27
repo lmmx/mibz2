@@ -122,7 +122,7 @@ fn mutate(t: &mut Vec<u8>, corpus: &[Vec<u8>], rng: &mut Rng) {
         }
     };
     match rng.below(8) {
-        0 | 1 | 2 => {
+        0..=2 => {
             let i = pos(rng, t.len());
             t[i] ^= 1 << rng.below(8);
         }

@@ -9,12 +9,53 @@ walk's cache-missing loads in flight instead of one.
   run time, and each has a portable scalar twin.
 - It depends on std only.
 
-It lives in [wikidata-pq](https://github.com/lmmx/wikidata-pq), whose split decodes the
-Wikidata dump with it (`WIKIDATA_BZ2_DECODER=native`). It knows nothing of Wikidata, and
-nothing in this directory depends on the rest of that repository. Its name is
-for "multi-chain inversion of bzip2". *The crate is not published.*
+It was written in [wikidata-pq](https://github.com/lmmx/wikidata-pq), whose split decodes
+the Wikidata dump with it (`WIKIDATA_BZ2_DECODER=native`), and moved here with its history
+and journals (`docs/journal/`). It knows nothing of Wikidata. Its name is for "multi-chain
+inversion of bzip2".
 
-## Use
+## Install
+
+```sh
+cargo add mibz2     # Rust
+pip install mibz2   # Python 3.10+ (abi3 wheels: Linux x86-64 and aarch64, macOS, Windows x64)
+```
+
+## What is checked, and when
+
+- **Every block's CRC is checked before any of that block's bytes are returned.** A block
+  whose CRC does not match returns none of its bytes: the error comes instead.
+- **Each stream's combined CRC is checked at the stream's end.** The bytes of a stream's
+  blocks are returned as each block is verified, before the stream's own CRC has been
+  read. A streaming caller has the whole stream verified only once a read reaches its end
+  without an error; until then what it has read is provisional (in Python,
+  `BZ2Reader.verified`).
+- **An error says where decoding failed** (`Error { block, bit }`): which block, and the
+  bit it starts at. A damaged bit can be found later than where it lies, since the input
+  is only known to be wrong once something it encodes fails a check.
+- **bzip2 1.0 and later output is decoded** (libbzip2 1.0.8's format). Randomised blocks,
+  written only by bzip2 0.9.0 and earlier, are refused with their own error (see
+  [Choices](#choices)).
+
+## Python
+
+```python
+import mibz2
+
+data = mibz2.decompress(open("file.bz2", "rb").read())  # a whole .bz2, on every CPU
+data = mibz2.decompress(compressed, threads=1)           # or on one thread
+
+# a path or a binary file object, decoded as it is read (a buffered binary file)
+with mibz2.open("file.bz2") as f:
+    for line in f:
+        ...
+    assert f.raw.verified  # the end was reached and every CRC matched
+```
+
+A bad input raises `mibz2.DecodeError` (a `ValueError`): from `decompress`, or from the
+read at which it is found.
+
+## Rust
 
 ```rust
 use std::io::Read;
@@ -130,7 +171,7 @@ cargo run --release --example windows -- OUT w.bin...  # blocks found in byte-ra
 
 **On aarch64:** `rustup target add aarch64-unknown-linux-gnu`, then `apt install qemu-user
 gcc-aarch64-linux-gnu`, then `cargo test --release --target aarch64-unknown-linux-gnu`
-(`.cargo/config.toml` sets the linker and the qemu runner).
+with `--config .cargo/aarch64-qemu.toml` (it sets the linker and the qemu runner).
 
 **The tests' corpora, none of them Wikidata** (`tests/common/mod.rs`, `corpora`), each
 compressed by reference bzip2 (libbzip2 1.0.8):
@@ -175,10 +216,13 @@ What the table shows:
 - **Data of near-infinite ratio** (one byte, runs) is bound by copying its output, at
   0.7–2 GB/s.
 - On the Wikidata dump's own blocks (its JSON, 12–21×), this decoder is 2.0–2.3× lbzip2
-  on one thread (the repository's journal, `docs/journal/2026-10-27-bz2-decoder.md`).
+  on one thread (`docs/journal/2026-10-27-bz2-decoder.md`). Against other decoders, on
+  the dump's blocks at 4 threads, pbz2 0.2.0 takes 1.06× its time (a tie on the CI slice,
+  interleaved: wall 1.00×), and lbzip2, fbz, the `lbzip2` crate and indexed_bzip2 take
+  1.46–1.86× (`docs/journal/2026-10-27-bz2-bakeoff.md`).
+  These are decoder-level figures; in wikidata-pq's split, end to end, the decoder took
+  20% less CPU and 16% less wall time than lbzip2 (lmmx/wikidata-pq#197).
 
 ## Licence
 
-Prepared as **MIT OR Apache-2.0** (`LICENSE-MIT`, `LICENSE-APACHE`), at the licensee's
-option. *To be confirmed by its owner before it is published*: the repository this crate
-lives in declares no licence of its own.
+**MIT OR Apache-2.0** (`LICENSE-MIT`, `LICENSE-APACHE`), at the licensee's option.
