@@ -12,6 +12,7 @@
 //!                      decoder's helper threads share its core)
 //!     --rounds N       rounds (default 5); each round runs every arm once per file and
 //!                      thread count, the arms' order rotated and reversed round to round
+//!     --pin CPU        the CPU 1-thread runs are pinned to (default 1)
 //!     --max-busy C     before each run, wait until the other processes keep at most C
 //!                      cores busy (default 1.5; sampled over 2 s while nothing of ours runs)
 //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired
@@ -112,6 +113,68 @@ impl Hash {
     }
 }
 
+/// Each thread's CPU (ticks) of process `pid`, sampled every 50 ms until `stop`, the last
+/// sample of each thread kept (a thread's CPU only grows)
+struct Threads {
+    stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    seen: std::sync::Arc<std::sync::Mutex<BTreeMap<String, u64>>>,
+    handle: Option<std::thread::JoinHandle<()>>,
+    pid: u32,
+}
+
+fn sample_tasks(pid: u32, seen: &std::sync::Mutex<BTreeMap<String, u64>>) {
+    let Ok(dir) = std::fs::read_dir(format!("/proc/{pid}/task")) else { return };
+    let mut m = seen.lock().unwrap();
+    for e in dir.flatten() {
+        let Ok(st) = std::fs::read_to_string(e.path().join("stat")) else { continue };
+        // fields after the ")" of the name: state is 3rd, utime 14th, stime 15th
+        let Some(rest) = st.rsplit_once(')').map(|x| x.1) else { continue };
+        let f: Vec<&str> = rest.split_whitespace().collect();
+        let ticks = f.get(11).and_then(|u| u.parse::<u64>().ok()).unwrap_or(0)
+            + f.get(12).and_then(|u| u.parse::<u64>().ok()).unwrap_or(0);
+        let name = std::fs::read_to_string(e.path().join("comm")).unwrap_or_default();
+        let key = format!("{}:{}", name.trim(), e.file_name().to_string_lossy());
+        let v = m.entry(key).or_insert(0);
+        *v = (*v).max(ticks);
+    }
+}
+
+impl Threads {
+    fn watch(pid: u32) -> Threads {
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let seen = std::sync::Arc::new(std::sync::Mutex::new(BTreeMap::new()));
+        let (s, m) = (stop.clone(), seen.clone());
+        let handle = std::thread::Builder::new().name("sampler".into()).spawn(move || {
+            while !s.load(std::sync::atomic::Ordering::Relaxed) {
+                sample_tasks(pid, &m);
+                std::thread::sleep(Duration::from_millis(50));
+            }
+        }).unwrap();
+        Threads { stop, seen, handle: Some(handle), pid }
+    }
+    /// The threads that ran (more than 2% of the busiest's CPU), and each one's CPU
+    /// seconds, busiest first (the sampler left out; "main" is the thread reading the
+    /// decoder and hashing its output)
+    fn finish(mut self, own: bool) -> (usize, String) {
+        if own {
+            sample_tasks(self.pid, &self.seen);
+        }
+        self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        self.handle.take().unwrap().join().unwrap();
+        let me = format!("ab:{}", self.pid);
+        let m = self.seen.lock().unwrap();
+        let mut v: Vec<(u64, String)> = m
+            .iter()
+            .filter(|(k, _)| !k.starts_with("sampler:"))
+            .map(|(k, &t)| (t, if own && *k == me { "main".to_string() } else { k.clone() }))
+            .collect();
+        v.sort_by(|a, b| b.cmp(a));
+        let top = v.first().map_or(0, |x| x.0);
+        let busy: Vec<String> = v.iter().filter(|x| x.0 * 50 > top).map(|(t, k)| format!("{}={:.2}", k.split(':').next().unwrap(), *t as f64 / HZ)).collect();
+        (busy.len(), busy.join(" "))
+    }
+}
+
 fn drain(mut r: impl Read, h: &mut Hash) -> Result<(), String> {
     let mut buf = vec![0u8; 4 << 20];
     loop {
@@ -127,6 +190,8 @@ fn drain(mut r: impl Read, h: &mut Hash) -> Result<(), String> {
 fn child(arm: &str, threads: usize, path: &str) {
     let open = || std::fs::File::open(path).unwrap();
     let mut h = Hash::new();
+    let watch = if arm == "lbzip2" { None } else { Some(Threads::watch(std::process::id())) };
+    let mut kid_threads = None;
     let t0 = Instant::now();
     let res = match arm {
         "mibz2" if threads == 1 => drain(mibz2::BzReader::new(open()), &mut h),
@@ -143,20 +208,27 @@ fn child(arm: &str, threads: usize, path: &str) {
                 .stdout(Stdio::piped())
                 .spawn()
                 .expect("lbzip2 on PATH");
+            let w = Threads::watch(p.id());
             let r = drain(p.stdout.take().unwrap(), &mut h);
+            kid_threads = Some(w.finish(false));
             let st = p.wait().unwrap();
             r.and_then(|()| if st.success() { Ok(()) } else { Err(format!("lbzip2: {st}")) })
         }
         _ => Err(format!("unknown arm {arm}")),
     };
     let wall = t0.elapsed().as_secs_f64();
+    let (nthreads, per_thread) = match (watch, kid_threads) {
+        (_, Some(k)) => k,
+        (Some(w), None) => w.finish(true),
+        _ => (0, String::new()),
+    };
     let (cpu_self, rss_self) = rusage(0);
     let (cpu_kids, rss_kids) = rusage(-1);
     // (lbzip2's arm: its own peak RSS, and its CPU with this process's hashing)
     let rss = if arm == "lbzip2" { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"err\":\"{err}\"}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"err\":\"{err}\"}}",
         cpu_self + cpu_kids,
         h.n,
         h.finish()
@@ -209,6 +281,7 @@ fn run(args: &[String]) {
     let mut threads = vec![1usize, 4];
     let mut rounds = 5;
     let mut max_busy = 1.5;
+    let mut pin = "1".to_string();
     let mut files = Vec::new();
     let mut i = 1;
     while i < args.len() {
@@ -223,6 +296,10 @@ fn run(args: &[String]) {
             }
             "--rounds" => {
                 rounds = args[i + 1].parse().unwrap();
+                i += 1;
+            }
+            "--pin" => {
+                pin = args[i + 1].clone();
                 i += 1;
             }
             "--max-busy" => {
@@ -258,7 +335,7 @@ fn run(args: &[String]) {
                     };
                     let mut cmd = if t == 1 {
                         let mut c = Command::new("taskset");
-                        c.args(["-c", "1"]).arg(&exe);
+                        c.args(["-c", &pin]).arg(&exe);
                         c
                     } else {
                         Command::new(&exe)
