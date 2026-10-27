@@ -1,0 +1,77 @@
+[build-system]
+build-backend = "maturin"
+requires = ["maturin>=1.0,<2.0"]
+
+[project]
+authors = [{ email = "louismmx@gmail.com", name = "Louis Maddox" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python",
+  "Programming Language :: Rust",
+  "Topic :: System :: Archiving :: Compression",
+]
+dependencies = []
+description = "A fast bzip2 decoder: block-parallel, its inverse BWT walked as interleaved chains, SIMD kernels chosen at run time"
+keywords = ["bwt", "bz2", "bzip2", "decompression"]
+license = "MIT OR Apache-2.0"
+license-files = ["LICENSE-APACHE", "LICENSE-MIT"]
+name = "mibz2"
+readme = "README.md"
+requires-python = ">=3.10"
+version = "0.1.0"
+
+[project.urls]
+Documentation = "https://lmmx.github.io/mibz2/"
+Homepage = "https://github.com/lmmx/mibz2"
+Issues = "https://github.com/lmmx/mibz2/issues"
+Repository = "https://github.com/lmmx/mibz2.git"
+
+[tool.maturin]
+features = ["python"]
+module-name = "mibz2._mibz2"
+python-source = "python"
+release = true
+strip = true
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+testpaths = ["python"]
+
+[tool.uv]
+# Build Rust code in development mode (faster builds)
+config-settings = { build-args = "--profile=dev" }
+default-groups = ["build", "dev", "test", "typing"]
+
+[dependency-groups]
+build = ["maturin>=1.15.0"]
+dev = ["pdbpp>=0.11.7"]
+test = ["pytest>=8.4.1"]
+typing = ["ty>=0.0.89"]
+
+[tool.ty.src]
+include = ["python"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+ignore = ["D401"]
+select = ["D"]
+
+[tool.ruff.lint.per-file-ignores]
+"python/tests/*" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"

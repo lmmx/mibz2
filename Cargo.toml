@@ -1,0 +1,71 @@
+[package]
+authors = ["Louis Maddox <louismmx@gmail.com>"]
+categories = ["compression"]
+description = "A bzip2 decoder built for memory-level parallelism: block-parallel, its inverse BWT walked as interleaved chains, SIMD kernels chosen at run time"
+documentation = "https://docs.rs/mibz2"
+edition = "2021"
+homepage = "https://lmmx.github.io/mibz2/"
+keywords = ["bwt", "bz2", "bzip2", "decompression"]
+license = "MIT OR Apache-2.0"
+name = "mibz2"
+readme = "README.md"
+repository = "https://github.com/lmmx/mibz2"
+rust-version = "1.80"
+version = "0.1.0"
+# The published crate: the source, its tests, examples and benches, not the journals, the
+# Python package (maturin adds python/ to the sdist itself) or the repository's tooling
+exclude = [
+  ".github/",
+  ".just/",
+  ".pre-commit-config.yaml",
+  "Justfile",
+  "docs/",
+  "pyproject.toml",
+  "python/",
+  "release-plz.toml",
+  "taplo.toml",
+]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "mibz2"
+
+# The library depends on std only. PyO3 is for the Python extension module (the `python`
+# feature, built by maturin: see pyproject.toml)
+[dependencies]
+pyo3 = { features = ["abi3-py310"], optional = true, version = "0.29" }
+
+[features]
+default = []
+python = ["dep:pyo3"]
+
+[dev-dependencies]
+# The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
+bzip2 = { version = "0.4", features = ["static"] }
+# The A/B harness's comparison only (examples/ab.rs): pbz2 0.2.0 (Soof Golan, MIT), never
+# a dependency of the library
+pbz2 = { version = "=0.2.0", default-features = false, features = ["simd"] }
+
+[[bench]]
+harness = false
+name = "decode"
+
+[profile.release]
+codegen-units = 1
+debug = "line-tables-only"
+lto = "fat"
+
+[profile.bench]
+codegen-units = 1
+lto = "fat"
+
+[profile.test]
+opt-level = 3
+
+# The fuzz loop's (examples/fuzz.rs): release speed, with overflow checks and debug
+# assertions on, so an overflow or a broken invariant is a panic (counted as a failure)
+# rather than wrong bytes
+[profile.fuzz]
+debug-assertions = true
+inherits = "release"
+overflow-checks = true
