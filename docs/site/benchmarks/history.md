@@ -1,11 +1,18 @@
 ---
 description: "mibz2's decoding speed, CPU time and peak memory over master's commits, per corpus and thread count."
+hide:
+  - navigation
+  - toc
 ---
 
 # History
 
-Master's mibz2 figures over its commits, oldest to newest, one chart per corpus and
-thread count. Each point is a recorded commit (linked to it): the mean of its 10 rounds,
+<div id="bench-hero">
+Loading the chart…
+</div>
+
+Master's mibz2 figures over its commits, oldest to newest. The chart above draws every
+figure at once; below it, one chart per corpus and thread count. Each point is a recorded commit (linked to it): the mean of its 10 rounds,
 and its 95% interval as a whisker. The figures are measured on GitHub's runners
 ([methodology](index.md)).
 

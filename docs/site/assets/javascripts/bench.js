@@ -91,6 +91,130 @@
     }
   }
 
+  // The hero chart: every figure (each metric, corpus and thread count) of master's
+  // recorded commits on one chart, as its change since the first commit of its class of
+  // results, turned so that up is better (throughput's ratio, the others' inverse). A
+  // class (a major bench version, a runner CPU and core count, a set of corpora) is never
+  // joined to another: each starts at × 1 again after a hairline naming it. Wikidata's
+  // lines are bold, with their 95% band; the other corpora's are faint. The legend hides
+  // or shows a metric.
+  const BETTER_UP = new Set(["mb_s"]);
+  function hero(data, root) {
+    // (drawn into #bench-hero, first on the page, when the page has one)
+    const target = document.getElementById("bench-hero") || root;
+    if (target !== root) { target.textContent = ""; target.classList.add("bh-root"); }
+    const box = el("section", { class: "bh-hero" }, target);
+    el("h2", { class: "bh-hero-title", id: "every-figure", text: "Every figure, every merge" }, box);
+    const lines = [];
+    for (const s of data.series) {
+      if (state.threads !== "all" && String(s.threads) !== state.threads) continue;
+      for (const l of s.lines) {
+        METRICS.forEach((m, mi) => {
+          const pts = l.points.filter((p) => p[m[0]]).sort((a, b) => a.c - b.c);
+          if (!pts.length) return;
+          const [b0, h0] = pts[0][m[0]];
+          lines.push({
+            s, m, mi, cls: l.class,
+            pts: pts.map((p, i) => {
+              const [v, h] = p[m[0]];
+              const f = BETTER_UP.has(m[0]) ? v / b0 : b0 / v;
+              return { c: p.c, f, half: f * Math.hypot(h / v, i ? h0 / b0 : 0), v, h, n: p.n, same: p.same_bytes };
+            }),
+          });
+        });
+      }
+    }
+    if (!lines.length) { el("p", { text: "No points yet." }, box); return; }
+    const hidden = new Set(state.heroHidden || []);
+    const cs = [...new Set(lines.flatMap((l) => l.pts.map((p) => p.c)))].sort((a, b) => a - b);
+    const tag = (cm) => (cm.pr ? `#${cm.pr}` : cm.sha.slice(0, 7));
+    const starts = new Map(); // class → its first commit
+    for (const l of lines) if (!starts.has(l.cls) || l.pts[0].c < starts.get(l.cls)) starts.set(l.cls, l.pts[0].c);
+    el("p", {
+      class: "bh-hero-note",
+      text: "Master's recorded commits, oldest to newest. Each line is one figure's change since the " +
+        "first commit of its class of results: × 1.10 is 10% better, whether faster, less CPU or " +
+        "less memory. Bold lines are the Wikidata dump blocks, with their 95% interval as a band; " +
+        "faint ones are the other corpora. Solid lines are one thread, dashed ones four. Hover a " +
+        "point for its figures; a commit's label links to its pull request.",
+    }, box);
+    const legend = el("div", { class: "bh-hero-legend", role: "group", "aria-label": "Metrics shown" }, box);
+    METRICS.forEach((m, mi) => {
+      const b = el("button", { type: "button", "aria-pressed": String(!hidden.has(m[0])), class: "bh-hero-key" }, legend);
+      el("span", { class: "bh-swatch", style: `background:${slot(mi)}` }, b);
+      b.append(`${m[1]} (${m[2]})`);
+      b.addEventListener("click", () => {
+        const h = new Set(state.heroHidden || []);
+        if (h.has(m[0])) h.delete(m[0]); else h.add(m[0]);
+        state.heroHidden = [...h];
+        try { localStorage.setItem("mibz2-bench", JSON.stringify(state)); } catch (e) { /* (none) */ }
+        render(root, data);
+      });
+    });
+    const shown = lines.filter((l) => !hidden.has(l.m[0]));
+    const W = 960, H = 360, L = 60, R = 150, T = 26, B = 40;
+    const x = (c) => L + (cs.length === 1 ? (W - L - R) / 2 : (cs.indexOf(c) * (W - L - R)) / (cs.length - 1));
+    const fs = shown.flatMap((l) => l.pts.flatMap((p) => (l.s.corpus === "wikidata" ? [p.f - p.half, p.f + p.half] : [p.f])));
+    const ty = ticks(Math.min(1, ...fs) - 0.02, Math.max(1, ...fs) + 0.02, 6);
+    const y0 = ty[0], y1 = ty[ty.length - 1];
+    const y = (f) => T + (H - T - B) * (1 - (f - y0) / (y1 - y0 || 1));
+    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Every figure's change since the first commit of its class, by commit" }, box);
+    for (const v of ty) {
+      svg("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), class: Math.abs(v - 1) < 1e-9 ? "bh-grid bh-unity" : "bh-grid" }, s);
+      svg("text", { x: L - 6, y: y(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = `× ${v.toFixed(2)}`;
+    }
+    for (const [cls, c] of starts) {
+      const bx = cs.length === 1 ? L : x(c) - (cs.indexOf(c) ? (W - L - R) / (cs.length - 1) / 2 : 0);
+      if (cs.indexOf(c)) svg("line", { x1: bx, x2: bx, y1: T - 8, y2: H - B, class: "bh-hero-boundary" }, s);
+      svg("text", { x: bx + 4, y: T - 12, class: "bh-tick" }, s).textContent = data.classes[cls];
+    }
+    for (const c of cs) {
+      const cm = data.commits[c];
+      const a = svg("a", { href: cm.pr ? `${data.repo}/pull/${cm.pr}` : `${data.repo}/commit/${cm.sha}`, target: "_top" }, s);
+      svg("text", { x: x(c), y: H - B + 18, class: "bh-tick bh-hero-x", "text-anchor": "middle" }, a).textContent = tag(cm);
+      svg("title", {}, a).textContent = `${cm.sha.slice(0, 7)} ${cm.subject}\n${cm.date.slice(0, 10)} · bench ${cm.bench}`;
+    }
+    // the faint corpora first, Wikidata's bold lines and bands over them
+    const order = [...shown].sort((a, b) => (a.s.corpus === "wikidata") - (b.s.corpus === "wikidata"));
+    const labels = [];
+    for (const l of order) {
+      const main = l.s.corpus === "wikidata";
+      const col = slot(l.mi);
+      const g = svg("g", { class: main ? "bh-hero-line bh-hero-main" : "bh-hero-line" }, s);
+      if (main && l.pts.length > 1) {
+        const up = l.pts.map((p) => `${x(p.c)},${y(p.f + p.half)}`);
+        const dn = l.pts.map((p) => `${x(p.c)},${y(p.f - p.half)}`).reverse();
+        svg("polygon", { points: [...up, ...dn].join(" "), fill: col, class: "bh-hero-band" }, g);
+      }
+      if (l.pts.length > 1) {
+        svg("polyline", {
+          points: l.pts.map((p) => `${x(p.c)},${y(p.f)}`).join(" "),
+          stroke: col, fill: "none", "stroke-dasharray": l.s.threads === 1 ? null : "6 4",
+        }, g);
+      }
+      for (const p of l.pts) {
+        const cm = data.commits[p.c];
+        if (main && p.half > 0) svg("line", { x1: x(p.c), x2: x(p.c), y1: y(p.f - p.half), y2: y(p.f + p.half), stroke: col, class: "bh-whisker" }, g);
+        svg("circle", { cx: x(p.c), cy: y(p.f), r: main ? 4.5 : 2.5, fill: col }, g);
+        const hit = svg("circle", { cx: x(p.c), cy: y(p.f), r: 10, class: "bh-hit" }, g);
+        svg("title", {}, hit).textContent =
+          `${l.m[1]} · ${l.s.corpus} · ${l.s.threads} thread${l.s.threads === 1 ? "" : "s"}\n` +
+          `${tag(cm)} ${cm.sha.slice(0, 7)} ${cm.subject}\n` +
+          `${l.m[3](p.v)} ± ${l.m[3](p.h)} ${l.m[2]} (95% interval, ${p.n} rounds)\n` +
+          `× ${p.f.toFixed(3)} ± ${p.half.toFixed(3)} since ${tag(data.commits[l.pts[0].c])}` +
+          (p.same ? "" : "\nSAME BYTES: NO");
+      }
+      if (main) {
+        const last = l.pts[l.pts.length - 1];
+        labels.push({ y: y(last.f), x: x(last.c) + 10, col, text: `${l.m[1]} ${l.s.threads}t × ${last.f.toFixed(2)}` });
+      }
+    }
+    // the end labels, spread so they don't overlap
+    labels.sort((a, b) => a.y - b.y);
+    for (let i = 1; i < labels.length; i++) labels[i].y = Math.max(labels[i].y, labels[i - 1].y + 13);
+    for (const lb of labels) svg("text", { x: lb.x, y: lb.y + 4, class: "bh-hero-label", fill: lb.col }, s).textContent = lb.text;
+  }
+
   function table(data, metric, root) {
     const [key, label, unit, fmt] = metric;
     const d = el("details", { class: "bh-table" }, root);
@@ -125,6 +249,7 @@
       el("p", { text: "No master commit is recorded yet: the first record appears once the Benchmark workflow has run on a push to master." }, root);
       return;
     }
+    hero(data, root);
     const controls = el("div", { class: "bh-controls" }, root);
     const pick = (label, options, value, set) => {
       const lab = el("label", {}, controls);
