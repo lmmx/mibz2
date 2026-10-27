@@ -257,7 +257,7 @@ impl From<Error> for std::io::Error {
 }
 
 /// A worker's buffers, kept from block to block (about 7 MB at the 900 kB block size)
-pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
+pub struct Scratch<I: bwt::InverseBwt = bwt::Precopy> {
     ll: Vec<u8>,
     counts: [u32; 256],
     inverse: I,
@@ -307,7 +307,7 @@ pub fn decode_block<I: bwt::InverseBwt>(
 /// A whole .bz2 (its streams one after another) decoded on this thread, every block's and
 /// stream's CRC checked, with the fastest kernels this CPU has
 pub fn decode(data: &[u8]) -> Result<Vec<u8>, Error> {
-    decode_with::<bwt::Segmented>(data, Kernels::detect())
+    decode_with::<bwt::Precopy>(data, Kernels::detect())
 }
 
 /// A whole .bz2 decoded on `threads` worker threads (at least 1), a block each, in order
@@ -391,7 +391,7 @@ pub fn decode_blocks(
     k: Kernels,
     out: &mut Vec<u8>,
 ) -> Result<Range, Error> {
-    let mut s = Scratch::<bwt::Segmented>::default();
+    let mut s = Scratch::<bwt::Precopy>::default();
     let mut syms = Vec::new();
     let mut range = Range {
         end: start_bit,
