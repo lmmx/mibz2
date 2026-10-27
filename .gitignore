@@ -26,7 +26,8 @@ target/
 /docs/site/assets/alternatives.json
 /docs/generated/
 
-# just bench-occupancy's corpus, its windows and its result files (bench/occupancy.sh)
+# just bench-occupancy's and bench-imc's corpus, its windows and their result files
 /corpora/
 /windows/
 /occupancy-*.json
+/imc-*.json
