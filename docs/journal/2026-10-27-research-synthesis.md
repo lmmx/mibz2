@@ -85,9 +85,11 @@ thread.
 - **Run lanes in our own build: #32.** Our single table needs only `L[i..i+16]` uniform.
   Locally: Wikidata build 5.70 → 2.55 c/B (81.9% of rows), text 5.63 → 4.40, runs
   5.62 → 3.29, no consistent change on records and random. CI decides.
-- **#6 reopened** for a ψ² kernel with run lanes and the 2-byte walk, inside our flagged
-  segmented walk. At libsais's costs, it would leave about −2 c/B on Wikidata after #32.
-  The evidence is on [#6](https://github.com/lmmx/mibz2/issues/6).
+- **#6 reopened, then closed again:** a ψ² kernel with run lanes and the 2-byte walk,
+  inside our flagged segmented walk (#34). It was byte-identical, but slower on every
+  corpus (Wikidata +40.6% at 1 thread). See [the pair walk](2026-10-27-pair-walk.md).
+  After #32, libsais's remaining edge (10.86 against 12.92 c/B) is in its decode loop's
+  per-step economy, not in the pair table.
 - **libsais's decode has converged on our walk:** many interleaved chains, sampled starts,
   successor links and a prefetch one step ahead. Its remaining walk advantage is 2 bytes
   a step.
@@ -207,7 +209,7 @@ gives an inspectable reference on the same input (finding 1).
 
 | Issue | Finding | Status |
 |---|---|---|
-| #6 LF² / ψ² | 1: libsais's run lanes + 2-byte walk beat our build + walk by 34% on Wikidata, byte-identical | **reopened**: port after #32 |
+| #6 LF² / ψ² | 1: libsais's run lanes + 2-byte walk beat our build + walk by 34% on Wikidata, byte-identical | reopened, ported (#34), slower: **closed**. The walk-loop question is queued |
 | #7 build (the goal) | 1: `RUN_LANES` in our single-table build | **#32**, in CI |
 | #8 fused front end, memory | 3: in-place T-vector (indexed_bzip2, libbzip2); 4: sliding MTF, ceiling measured as negligible on Wikidata; 2: buffer lifetimes | H4 as planned; 3 is its first experiment, after #32 |
 | #9 Precopy | 2: memcpy for repeats is already the plan | unchanged: forward chains, 44.7% coverage |
@@ -216,11 +218,11 @@ gives an inspectable reference on the same input (finding 1).
 **No new issues.** Every finding fits #6–#10 or is out of scope.
 
 **Order from here** (the decision log is wikidata-pq#97):
-1. #32's bench.
-2. The ψ² port (#6).
-3. Precopy (#9). It's designed on the single table, so whichever of #6 and #9 lands first
-   sets the other's baseline.
+1. #32: merged, −16% decode, released as 0.1.4.
+2. The ψ² port (#34): slower, closed.
+3. Precopy (#9), on the single table.
 4. The in-place front end (#8).
+5. Per-stage figures in the CI bench, then libsais's decode-loop mechanics in our ψ walk.
 
 ## Not done, and why
 
