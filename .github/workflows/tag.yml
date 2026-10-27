@@ -1,0 +1,56 @@
+name: Tag Release
+
+# Tags an existing commit py-<version>, at the version its pyproject.toml and Cargo.toml
+# already hold (no bump), and starts CI on the tag: CI publishes that commit's wheels to
+# PyPI and its crate to crates.io, each skipped where the registry already has the version.
+# Deploy Release bumps, commits and tags in one; this tags a commit as it is.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "The commit to release (its full SHA)"
+        required: true
+        type: string
+
+jobs:
+  tag:
+    name: Tag the commit and start CI on the tag
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Tag the commit at its own version
+        env:
+          SHA: ${{ inputs.sha }}
+        run: |
+          git checkout --detach "$SHA"
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          crate=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["package"]["version"])')
+          if [[ "$version" != "$crate" ]]; then
+            echo "::error::pyproject.toml has $version but Cargo.toml has $crate"
+            exit 1
+          fi
+          git tag -a "py-$version" -m "Python Release $version"
+          git push origin "py-$version"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      # A tag pushed with this workflow's token starts no workflow, so CI is started here
+      # (workflow_dispatch, which crates.io's Trusted Publishing accepts)
+      - name: Start CI on the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run CI.yml --ref "py-$VERSION"
