@@ -1341,6 +1341,12 @@ cargo<span class="w"> </span>run<span class="w"> </span>--release<span class="w"
 <p>On aarch64: <code>rustup target add aarch64-unknown-linux-gnu</code>, <code>apt install qemu-user
 gcc-aarch64-linux-gnu</code>, then <code>cargo test --release --target aarch64-unknown-linux-gnu
 --config .cargo/aarch64-qemu.toml</code>.</p>
+<p>The segmented walks' unsafe code also runs under <a href="https://github.com/rust-lang/miri">Miri</a>,
+on blocks small enough to interpret: <code>cargo +nightly miri test --lib -- miri_</code> (about a
+minute; CI runs it on changes to <code>src/bwt.rs</code>). Those tests assert they reached the
+transitions the walks' handoffs guard (a buffer growing, a pass ending with a buffer full,
+a lane coming into the tail full, and so on), so a walk change that stops them reaching one
+fails rather than passing having checked less.</p>
 <h2 id="benchmarking">Benchmarking<a class="headerlink" href="#benchmarking" title="Permanent link">&para;</a></h2>
 <p>Performance is measured on CI (<code>.github/workflows/bench.yml</code>, the
 <a href="../../benchmarks/">benchmark</a>): a pull request that touches the decoder gets a
