@@ -22,6 +22,12 @@ just docs-check   # strict build, site checks, and the pages' examples as tests
   pages' data (`docs/site/assets/bench-history.json`) and tables (`docs/generated/`)
   before each build. Without a checkout of the branch (`--store`), it reads
   `origin/bench-results`, or writes empty ones.
+- `docs/site/assets/data/lane-sweeps.json` holds the measured walk timings by lane
+  count that [Why 32 couriers beat one](../concepts/couriers.md#lane-counts) draws
+  (`assets/javascripts/couriers.js`). It is written by hand, from the record: one panel
+  a sweep, each with its own axes, its points (`x`, `y`, and optionally `lo` and `hi`
+  for an interval) and its source. A new sweep is a new panel; the page draws every
+  panel. Only measured points go in it.
 
 ## Publishing
 

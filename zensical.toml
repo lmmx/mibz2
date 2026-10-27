@@ -2,8 +2,15 @@
 copyright = "mibz2 is licensed under MIT OR Apache-2.0"
 docs_dir = "docs/site"
 edit_uri = "edit/master/docs/site/"
-extra_css = ["assets/stylesheets/extra.css", "assets/stylesheets/bench.css"]
-extra_javascript = ["assets/javascripts/bench.js"]
+extra_css = [
+  "assets/stylesheets/extra.css",
+  "assets/stylesheets/bench.css",
+  "assets/stylesheets/couriers.css",
+]
+extra_javascript = [
+  "assets/javascripts/bench.js",
+  "assets/javascripts/couriers.js",
+]
 nav = [
   { "Home" = "index.md" },
   { "Get started" = [
@@ -12,6 +19,7 @@ nav = [
   ] },
   { "Concepts" = [
     "concepts/index.md",
+    { "Why 32 couriers beat one" = "concepts/couriers.md" },
     { "What is checked, and when" = "concepts/checks.md" },
     { "How it works" = "concepts/how-it-works.md" },
     { "Prior work" = "concepts/prior-work.md" },
@@ -175,6 +183,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Concepts" = [
   { "concepts/index.md" = "What mibz2 decodes, what it checks, and how it decodes in parallel." },
+  { "concepts/couriers.md" = "mibz2's premise, memory-level parallelism in the inverse BWT, explained through couriers and a dispatcher: independent lanes, prefetching, the per-step cost that binds next, and the measurements." },
   { "concepts/checks.md" = "Which CRCs mibz2 checks and when, what its errors report, and the inputs it refuses." },
   { "concepts/how-it-works.md" = "mibz2's scanner thread, its workers, and the inverse BWT walked as interleaved chains." },
   { "concepts/prior-work.md" = "The work mibz2 builds on: libbzip2's format and checks, Kärkkäinen, Kempa and Puglisi's interleaved BWT inversion, and lbzip2's and pbzip2's block parallelism." },
