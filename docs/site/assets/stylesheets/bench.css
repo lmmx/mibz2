@@ -362,6 +362,11 @@
 }
 .bh-hero .bh-cmp-val {
   font-weight: 600;
+  /* (a halo, so a whisker passing behind a value does not strike it through) */
+  paint-order: stroke;
+  stroke: var(--md-default-bg-color);
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 /* A single-threaded decoder's point: hollow (its whisker dashed) */
 .bh-hero .bh-cmp-hollow {

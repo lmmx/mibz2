@@ -498,7 +498,13 @@
     const bandsG = svg("g", {}, s);
     // ticks: 1-2-5 steps across the range, and the 1× line
     const cand = narrow ? [0.1, 0.25, 0.5, 1, 2, 5, 10, 20] : [0.1, 0.2, 0.25, 0.5, 0.67, 0.75, 1, 1.25, 1.5, 2, 3, 4, 5, 7, 10, 20, 50];
-    for (const t of cand.filter((t) => Math.log(t) >= L0 && Math.log(t) <= L1)) {
+    // (1× always; then each candidate at least 34px from every tick kept, so a wide range
+    // keeps its labels apart)
+    const kept = [1];
+    for (const t of cand.filter((t) => t !== 1 && Math.log(t) >= L0 && Math.log(t) <= L1)) {
+      if (kept.every((k) => Math.abs(x(t) - x(k)) >= 34)) kept.push(t);
+    }
+    for (const t of kept.filter((t) => Math.log(t) >= L0 && Math.log(t) <= L1)) {
       svg("line", { x1: x(t), x2: x(t), y1: M.t, y2: H - M.b, class: t === 1 ? "bh-cmp-one" : "bh-grid" }, s);
       svg("text", { x: x(t), y: H - M.b + 16, "text-anchor": "middle", class: "bh-tick" }, s).textContent = `${t}×`;
     }
