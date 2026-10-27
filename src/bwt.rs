@@ -79,13 +79,45 @@ pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
         ftab[i] = cum;
         cum += counts[i];
     }
-    for (i, &c) in ll.iter().enumerate() {
+    // 16 bytes at a time: 16 equal bytes are 16 consecutive rows of their byte's bucket
+    // (rows i..i + 16 take its next 16 slots in order), so their links go in with one
+    // 16-wide store and one counter step, libsais's RUN_LANES. After the BWT, most of
+    // Wikidata's last column is in such runs; other windows take the one-byte steps.
+    let mut i = 0;
+    while i + 16 <= ll.len() {
+        let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
+        if a == b && a == a.rotate_left(8) {
+            let c = ll[i] as usize;
+            let k = ftab[c] as usize;
+            let base = (i as u32) << 8;
+            for (j, e) in tt[k..k + 16].iter_mut().enumerate() {
+                *e = (*e & 0xff) | (base + ((j as u32) << 8));
+            }
+            ftab[c] += 16;
+        } else {
+            link(ll, tt, &mut ftab, i..i + 16);
+        }
+        i += 16;
+    }
+    link(ll, tt, &mut ftab, i..ll.len());
+}
+
+/// `build`'s one-byte steps, over the rows `rows`
+#[inline(always)]
+fn link(ll: &[u8], tt: &mut [u32], ftab: &mut [u32; 256], rows: std::ops::Range<usize>) {
+    for i in rows {
+        let c = ll[i];
         let k = ftab[c as usize] as usize;
         // (k < len, as the counts are ll's own: indexed checked all the same, and the
         // link assigned, not added, so each link is some i < len whatever happened)
         tt[k] = (tt[k] & 0xff) | (i as u32) << 8;
         ftab[c as usize] += 1;
     }
+}
+
+#[inline(always)]
+fn read_u64(b: &[u8], i: usize) -> u64 {
+    u64::from_ne_bytes(b[i..i + 8].try_into().unwrap())
 }
 
 /// The plain walk: the list followed from the primary index, the RLE1-coded block out
@@ -492,6 +524,61 @@ mod tests {
                 assert!(plain == flagged, "7 lanes, prefetch, {segments} segments");
                 assert!(tt.0.iter().all(|&e| e & START == 0));
             }
+        }
+    }
+
+    /// `build` (16-byte run stores) gives the one-pass counting sort's T-vector exactly: runs
+    /// of every length around 16 at every alignment, mixed with random bytes, a run to the
+    /// end, one byte throughout, and lengths 0 to 40 for the tail
+    #[test]
+    fn run_stores_equal_one_pass() {
+        fn one_pass(ll: &[u8], counts: &[u32; 256]) -> Vec<u32> {
+            let mut ftab = [0u32; 256];
+            let mut cum = 0;
+            for c in 0..256 {
+                ftab[c] = cum;
+                cum += counts[c];
+            }
+            let mut tt: Vec<u32> = ll.iter().map(|&c| c as u32).collect();
+            for (i, &c) in ll.iter().enumerate() {
+                let k = ftab[c as usize] as usize;
+                tt[k] |= (i as u32) << 8;
+                ftab[c as usize] += 1;
+            }
+            tt
+        }
+        let mut x = 0x2545_f491_4f6c_dd1du64;
+        let mut rnd = move || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        let mut inputs: Vec<Vec<u8>> = (0..=40).map(|n| vec![7u8; n]).collect();
+        for _ in 0..40 {
+            let mut ll = Vec::new();
+            while ll.len() < 3000 {
+                let c = (rnd() % 5) as u8;
+                let run = [1, 2, 15, 16, 17, 31, 32, 33, 48, 100][(rnd() % 10) as usize];
+                ll.extend(std::iter::repeat_n(c, run));
+            }
+            ll.truncate(3000 - (rnd() % 16) as usize);
+            inputs.push(ll);
+        }
+        inputs.push((0..5000).map(|_| rnd() as u8).collect());
+        inputs.push(
+            (0..5000)
+                .map(|i| if i < 1003 { (i % 3) as u8 } else { 9 })
+                .collect(),
+        );
+        for ll in &inputs {
+            let mut counts = [0u32; 256];
+            for &c in ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(ll, &counts, &mut tt);
+            assert!(tt.0 == one_pass(ll, &counts), "length {}", ll.len());
         }
     }
 
