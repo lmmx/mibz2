@@ -15,7 +15,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 mibz2's speed is measured on GitHub's runners by the Benchmark workflow (`.github/workflows/bench.yml`), with the A/B harness `examples/ab.rs` and `bench/report.py`. Nothing about performance is decided on a developer's machine.
 
 - [History](<https://lmmx.github.io/mibz2/benchmarks/history/index.md>): master's figures over its commits.
-- [Against other decoders](<https://lmmx.github.io/mibz2/benchmarks/competitors/index.md>): the latest master commit against pbz2 and lbzip2.
+- [Alternatives](<https://lmmx.github.io/mibz2/benchmarks/alternatives/index.md>): the latest master commit against pbz2 and lbzip2.
 
 These are decoder-level results: one process decoding one file, nothing else. End-to-end results, the decoder inside a pipeline, are in [wikidata-pq's benchmark history](<https://lmmx.github.io/wikidata-pq/guide/bench-history/>).
 
@@ -66,9 +66,11 @@ These are decoder-level results. End-to-end results, the decoder in wikidata-pq'
 
 Loading the benchmark history…
 
-# Against other decoders
+# Alternatives
 
-mibz2 against pbz2 (Soof Golan's Rust decoder, the harness's dev-dependency) and lbzip2 (C, `lbzip2 -dc -n T`) on master's latest recorded commit, decoded in the same rounds on one runner ([methodology](<https://lmmx.github.io/mibz2/benchmarks/index.md>)). A ratio above 1 is the other decoder taking longer than mibz2. These are decoder-level results; end-to-end pipeline results are in [wikidata-pq's tracker](<https://lmmx.github.io/wikidata-pq/guide/bench-history/>).
+Loading the chart…
+
+mibz2 beside other bzip2 decoders, pbz2 (Soof Golan's Rust decoder, the harness's dev-dependency) and lbzip2 (C, `lbzip2 -dc -n T`), on master's latest recorded commit, decoded in the same rounds on one runner ([methodology](<https://lmmx.github.io/mibz2/benchmarks/index.md>)). A ratio above 1× is the alternative taking longer (or more memory) than mibz2: there, mibz2 is faster. These are decoder-level results; end-to-end pipeline results are in [wikidata-pq's tracker](<https://lmmx.github.io/wikidata-pq/guide/bench-history/>).
 
 The latest record: [`935008e`](<https://github.com/lmmx/mibz2/commit/935008ef555807f3cdda6ca4a079f1ed95dd6f1c>) (2026-10-27).
 

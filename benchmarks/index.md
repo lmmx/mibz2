@@ -3,7 +3,7 @@
 mibz2's speed is measured on GitHub's runners by the Benchmark workflow (`.github/workflows/bench.yml`), with the A/B harness `examples/ab.rs` and `bench/report.py`. Nothing about performance is decided on a developer's machine.
 
 - [History](<https://lmmx.github.io/mibz2/benchmarks/history/index.md>): master's figures over its commits.
-- [Against other decoders](<https://lmmx.github.io/mibz2/benchmarks/competitors/index.md>): the latest master commit against pbz2 and lbzip2.
+- [Alternatives](<https://lmmx.github.io/mibz2/benchmarks/alternatives/index.md>): the latest master commit against pbz2 and lbzip2.
 
 These are decoder-level results: one process decoding one file, nothing else. End-to-end results, the decoder inside a pipeline, are in [wikidata-pq's benchmark history](<https://lmmx.github.io/wikidata-pq/guide/bench-history/>).
 

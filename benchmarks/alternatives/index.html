@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="mibz2 against pbz2 and lbzip2 on master's latest benchmark run: paired ratios with 95% intervals, per corpus and thread count.">
+        <meta name="description" content="mibz2 beside other bzip2 decoders on master's latest benchmark run: paired ratios with 95% intervals, per corpus and thread count.">
       
       
         <meta name="author" content="Louis Maddox">
       
       
-        <link rel="canonical" href="https://lmmx.github.io/mibz2/benchmarks/competitors/">
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/benchmarks/alternatives/">
       
       
         <link rel="describedby" href="../../llms.txt">
@@ -35,7 +35,7 @@
     
     
       
-        <title>Against other decoders - mibz2</title>
+        <title>Alternatives - mibz2</title>
       
     
     
@@ -127,7 +127,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Against other decoders
+              Alternatives
             
           </span>
         </div>
@@ -207,7 +207,9 @@
           
             
               
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" hidden>
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -651,7 +653,7 @@
   <span class="md-ellipsis">
     
   
-  Against other decoders
+  Alternatives
 
     
   </span>
@@ -668,7 +670,7 @@
   <span class="md-ellipsis">
     
   
-  Against other decoders
+  Alternatives
 
     
   </span>
@@ -1124,7 +1126,9 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
                 <div class="md-sidebar__scrollwrap">
                   
                     
@@ -1200,7 +1204,7 @@
 
 
   
-    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/benchmarks/competitors.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/benchmarks/alternatives.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
     </a>
@@ -1208,11 +1212,15 @@
   
 
 
-<h1 id="against-other-decoders">Against other decoders<a class="headerlink" href="#against-other-decoders" title="Permanent link">&para;</a></h1>
-<p>mibz2 against pbz2 (Soof Golan's Rust decoder, the harness's dev-dependency) and lbzip2
-(C, <code>lbzip2 -dc -n T</code>) on master's latest recorded commit, decoded in the same rounds on
-one runner (<a href="../">methodology</a>). A ratio above 1 is the other decoder taking longer
-than mibz2. These are decoder-level results; end-to-end pipeline results are in
+<h1 id="alternatives">Alternatives<a class="headerlink" href="#alternatives" title="Permanent link">&para;</a></h1>
+<div id="alternatives-hero" data-src="../../../assets/alternatives.json">
+Loading the chart…
+</div>
+
+<p>mibz2 beside other bzip2 decoders, pbz2 (Soof Golan's Rust decoder, the harness's
+dev-dependency) and lbzip2 (C, <code>lbzip2 -dc -n T</code>), on master's latest recorded commit,
+decoded in the same rounds on one runner (<a href="../">methodology</a>). A ratio above 1× is
+the alternative taking longer (or more memory) than mibz2: there, mibz2 is faster. These are decoder-level results; end-to-end pipeline results are in
 <a href="https://lmmx.github.io/wikidata-pq/guide/bench-history/">wikidata-pq's tracker</a>.</p>
 <p>The latest record: <a href="https://github.com/lmmx/mibz2/commit/935008ef555807f3cdda6ca4a079f1ed95dd6f1c"><code>935008e</code></a> (2026-10-27).</p>
 <p><strong>mibz2 against pbz2 0.2.0 and lbzip2 version 2.5</strong>: 10 rounds on one runner · <a href="https://github.com/lmmx/mibz2/actions/runs/40503297184">run</a></p>
@@ -1502,6 +1510,8 @@ than mibz2. These are decoder-level results; end-to-end pipeline results are in
 
 </details>
 
+  
+
 
 
 
@@ -1515,6 +1525,8 @@ than mibz2. These are decoder-level results; end-to-end pipeline results are in
 
 
 
+
+  
 
 
 
@@ -1539,6 +1551,8 @@ than mibz2. These are decoder-level results; end-to-end pipeline results are in
         <footer class="md-footer">
   
     
+      
+        
       
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
