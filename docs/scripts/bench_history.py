@@ -224,7 +224,9 @@ def alternatives_data(res: dict | None, data: dict) -> dict | None:
         "toolchain": res.get("toolchain", {}),
         "reference": res.get("reference", "mibz2"),
         "arms": res["arms"],
-        "corpora": {k: {"bytes": v.get("bytes"), "out": v.get("out")} for k, v in res["corpora"].items()},
+        "corpora": {
+            k: {"bytes": v.get("bytes"), "out": v.get("out")} for k, v in res["corpora"].items()
+        },
         "figures": res["figures"],
     }
 
@@ -249,7 +251,9 @@ def main() -> None:
     OUT.write_text(json.dumps(data, separators=(",", ":"), allow_nan=False))
     GENERATED.mkdir(parents=True, exist_ok=True)
     (GENERATED / "alternatives.md").write_text(alternatives(latest))
-    ALTERNATIVES.write_text(json.dumps(alternatives_data(latest, data), separators=(",", ":"), allow_nan=False))
+    ALTERNATIVES.write_text(
+        json.dumps(alternatives_data(latest, data), separators=(",", ":"), allow_nan=False)
+    )
     print(
         f"{OUT.relative_to(ROOT)}: {len(data['commits'])} commits, {len(data['series'])} series, "
         f"{len(data['classes'])} classes; docs/generated/alternatives.md",
