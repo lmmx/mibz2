@@ -31,3 +31,18 @@ bench-quiet *args:
     bash bench/corpus.sh
     python3 bench/imc.py "$@"
     bash bench/occupancy.sh --threads 6,8,10
+
+# bench/thermal.py: turbostat's busy clock, package temperature and power sampled
+# throughout; the occupancy runs at 6 and 8 threads each joined to the samples taken while
+# they ran, then 90 s of back-to-back decodes at 4, 6, 8 and 20 threads, each after 30 s of
+# idle, as a release decodes. Needs turbostat (linux-tools) and sudo. It writes
+# thermal-<UTC time>.json (and the occupancy file) to share.
+#   just bench-thermal
+#   just bench-thermal --occupancy 6 --threads 4,5,6 --seconds 120
+#   just bench-thermal sustained --note "fresh boot"
+
+# The clock, temperature and power beside the decode, and sustained throughput (#39)
+[positional-arguments]
+bench-thermal *args:
+    bash bench/corpus.sh
+    python3 bench/thermal.py "$@"

@@ -31,3 +31,4 @@ target/
 /windows/
 /occupancy-*.json
 /imc-*.json
+/thermal-*.json
