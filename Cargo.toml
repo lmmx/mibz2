@@ -16,6 +16,9 @@ publish = false
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
 bzip2 = { version = "0.4", features = ["static"] }
+# The A/B harness's comparison only (examples/ab.rs): pbz2 0.2.0 (Soof Golan, MIT), never
+# a dependency of the library
+pbz2 = { version = "=0.2.0", default-features = false, features = ["simd"] }
 
 [[bench]]
 name = "decode"
