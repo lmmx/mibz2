@@ -113,6 +113,8 @@ fn main() {
     // counters' totals over the untimed round
     let mut times = vec![vec![0f64; settings.len()]; rounds];
     let mut counts = vec![[0u64; pmu::EVENTS]; settings.len()];
+    // each setting's group time enabled and running, summed
+    let mut cover = vec![(0u64, 0u64); settings.len()];
     let (mut ll, mut freq) = (Vec::new(), [0u32; 256]);
     let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
     let (mut plain, mut out) = (Vec::new(), Vec::new());
@@ -146,9 +148,12 @@ fn main() {
             for (si, s) in settings.iter().enumerate() {
                 c.start();
                 (s.f)(&mut tt, b.orig_ptr, &mut out, &mut seg, s.segments);
-                for (total, v) in counts[si].iter_mut().zip(c.stop()) {
+                let (v, enabled, running) = c.stop();
+                for (total, v) in counts[si].iter_mut().zip(v) {
                     *total += v;
                 }
+                cover[si].0 += enabled;
+                cover[si].1 += running;
             }
         }
     }
@@ -181,14 +186,16 @@ fn main() {
     );
     match &counters {
         Some(c) => println!(
-            "counters (one untimed round): {}; a byte of output, misses a kB",
+            "counters (one untimed round, one group): {}; a byte of output, misses a kB, \
+             unscaled; \"counted\" is the share of the walks' time the group was on the PMU: \
+             below 100% it was multiplexed out, and that row's counts are exploratory",
             c.names().join(", ")
         ),
         None => println!("counters: unavailable here ({})", pmu::why()),
     }
     print!("walk     lanes  prefetch  segments    c/B  change (95% interval)        ");
     if counters.is_some() {
-        print!("  ins/B  cyc/B  LLC miss/kB  back-end stall");
+        print!("  ins/B  cyc/B  LLC miss/kB  back-end stall  counted");
     }
     println!();
     let mut order: Vec<usize> = (0..settings.len()).collect();
@@ -217,26 +224,36 @@ fn main() {
             100.0 * hi
         );
         if let Some(c) = &counters {
-            let per = |i: usize| counts[si][i] as f64 / n as f64;
+            // unscaled counts over the time the group ran, rated over the bytes that time
+            // covered (all of them, where it was never multiplexed out)
+            let (enabled, running) = cover[si];
+            let counted = if enabled > 0 {
+                running as f64 / enabled as f64
+            } else {
+                0.0
+            };
+            let per = |i: usize| counts[si][i] as f64 / (n as f64 * counted.max(1e-9));
             print!(
-                "  {:5.2}  {:5.2}  {:11.2}  {}",
+                "  {:5.2}  {:5.2}  {:11.2}  {:>14}  {:6.1}%",
                 per(0),
                 per(1),
                 1e3 * per(2),
                 if c.has_stalls() {
                     format!("{:5.1}%", 100.0 * per(3) / per(1))
                 } else {
-                    "  n/a".to_string()
-                }
+                    "n/a".to_string()
+                },
+                100.0 * counted
             );
         }
         println!();
     }
 }
 
-/// The process's own hardware counters, by perf_event_open(2): instructions, cycles,
-/// last-level cache misses and back-end stall cycles (that one optional: not every PMU
-/// counts it), user space only, each scaled for any multiplexing
+/// The process's own hardware counters, by perf_event_open(2), as one group (scheduled onto
+/// the PMU together or not at all): instructions, cycles, last-level cache misses and
+/// back-end stall cycles (that one optional: not every PMU counts it), user space only,
+/// unscaled, with the group's times enabled and running
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 mod pmu {
     use std::fs::File;
@@ -289,21 +306,26 @@ mod pmu {
         ret
     }
 
-    fn open(config: u64) -> Result<File, isize> {
+    /// One event of the group led by `leader` (or the leader itself, disabled until the
+    /// group is enabled); the leader reads the group's values with its times enabled and
+    /// running, so every ratio comes from the same intervals
+    fn open(config: u64, leader: Option<&File>) -> Result<File, isize> {
         let attr = Attr {
             kind: 0, // PERF_TYPE_HARDWARE
             size: 64,
             config,
             sample_period: 0,
             sample_type: 0,
-            read_format: 1 | 2, // TOTAL_TIME_ENABLED | TOTAL_TIME_RUNNING
-            flags: 1 | (1 << 5) | (1 << 6), // disabled, exclude_kernel, exclude_hv
+            read_format: 1 | 2 | 8, // TOTAL_TIME_ENABLED | TOTAL_TIME_RUNNING | GROUP
+            // disabled (the leader only), exclude_kernel, exclude_hv
+            flags: u64::from(leader.is_none()) | (1 << 5) | (1 << 6),
             wakeup_events: 0,
             bp_type: 0,
             config1: 0,
         };
-        let args = [&attr as *const Attr as usize, 0, usize::MAX, usize::MAX, 0];
-        // SAFETY: attr outlives the call; pid 0 (this process), cpu -1 (any), group -1
+        let group = leader.map_or(usize::MAX, |f| f.as_raw_fd() as usize);
+        let args = [&attr as *const Attr as usize, 0, usize::MAX, group, 0];
+        // SAFETY: attr outlives the call; pid 0 (this process), cpu -1 (any)
         let fd = unsafe { syscall(SYS_PERF_EVENT_OPEN, args) };
         if fd < 0 {
             return Err(-fd);
@@ -313,21 +335,29 @@ mod pmu {
     }
 
     fn ioctl(f: &File, req: usize) {
-        // SAFETY: a perf event's descriptor and a request without an argument
-        unsafe { syscall(SYS_IOCTL, [f.as_raw_fd() as usize, req, 0, 0, 0]) };
+        // SAFETY: a perf event's descriptor; the argument is PERF_IOC_FLAG_GROUP
+        unsafe { syscall(SYS_IOCTL, [f.as_raw_fd() as usize, req, 1, 0, 0]) };
     }
 
     pub struct Counters {
+        // the leader (instructions) first, then the events that joined its group
         files: Vec<(usize, File)>,
     }
 
     impl Counters {
         pub fn open() -> Option<Counters> {
-            let mut files = Vec::new();
-            for (i, &(config, _)) in CONFIG.iter().enumerate() {
-                match open(config) {
-                    Ok(f) => files.push((i, f)),
-                    // the first three are needed; the stalls are optional
+            let leader = match open(CONFIG[0].0, None) {
+                Ok(f) => f,
+                Err(e) => {
+                    WHY.store(e, Ordering::Relaxed);
+                    return None;
+                }
+            };
+            let mut members = Vec::new();
+            for (i, &(config, _)) in CONFIG.iter().enumerate().skip(1) {
+                match open(config, Some(&leader)) {
+                    Ok(f) => members.push((i, f)),
+                    // cycles and the misses are needed; the stalls are optional
                     Err(e) if i < 3 => {
                         WHY.store(e, Ordering::Relaxed);
                         return None;
@@ -335,6 +365,8 @@ mod pmu {
                     Err(_) => {}
                 }
             }
+            let mut files = vec![(0, leader)];
+            files.extend(members);
             Some(Counters { files })
         }
         pub fn names(&self) -> Vec<&'static str> {
@@ -344,29 +376,23 @@ mod pmu {
             self.files.iter().any(|(i, _)| *i == 3)
         }
         pub fn start(&mut self) {
-            for (_, f) in &self.files {
-                ioctl(f, IOC_RESET);
-                ioctl(f, IOC_ENABLE);
-            }
+            ioctl(&self.files[0].1, IOC_RESET);
+            ioctl(&self.files[0].1, IOC_ENABLE);
         }
-        pub fn stop(&mut self) -> [u64; EVENTS] {
+        /// The group's counts since `start`, unscaled, and its times enabled and running
+        /// (running below enabled: the group was multiplexed out for part of it)
+        pub fn stop(&mut self) -> ([u64; EVENTS], u64, u64) {
+            ioctl(&self.files[0].1, IOC_DISABLE);
             let mut v = [0u64; EVENTS];
-            for (i, f) in &mut self.files {
-                ioctl(f, IOC_DISABLE);
-                let mut buf = [0u8; 24];
-                if f.read_exact(&mut buf).is_ok() {
-                    let w = |k: usize| {
-                        u64::from_ne_bytes(buf[8 * k..8 * k + 8].try_into().unwrap()) as f64
-                    };
-                    let (value, enabled, running) = (w(0), w(1), w(2));
-                    v[*i] = if running > 0.0 {
-                        (value * enabled / running) as u64
-                    } else {
-                        0
-                    };
-                }
+            let mut buf = vec![0u8; 8 * (3 + self.files.len())];
+            if self.files[0].1.read_exact(&mut buf).is_err() {
+                return (v, 0, 0);
             }
-            v
+            let w = |k: usize| u64::from_ne_bytes(buf[8 * k..8 * k + 8].try_into().unwrap());
+            for (j, (i, _)) in self.files.iter().enumerate() {
+                v[*i] = w(3 + j);
+            }
+            (v, w(1), w(2))
         }
     }
 
@@ -394,8 +420,8 @@ mod pmu {
             false
         }
         pub fn start(&mut self) {}
-        pub fn stop(&mut self) -> [u64; EVENTS] {
-            [0; EVENTS]
+        pub fn stop(&mut self) -> ([u64; EVENTS], u64, u64) {
+            ([0; EVENTS], 0, 0)
         }
     }
     pub fn why() -> String {
