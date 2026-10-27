@@ -23,9 +23,11 @@ the toolchain) and its Markdown:
 `record` adds a master commit's result to the results store (the `bench-results`
 branch): runs/<commit>.json, raw/<commit>.jsonl and a line of records.jsonl.
 
-METHOD names what is measured and how: the corpora and their scale, the arms, the
-rounds, the thread counts, the harness's timing. A change to any of them is a new
-METHOD, and the site's history starts a new series at it.
+BENCH is the benchmark's version (semver), stamped on every result. A change to what is
+measured or how (the corpora and their scale, the arms, the rounds, the thread counts,
+the harness's timing, a figure's meaning) is a new major version, and the site's history
+never joins a series across major versions; a change to how results are shown or stored
+is a minor or patch version.
 """
 
 import argparse
@@ -41,7 +43,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-METHOD = "1"
+BENCH = "1.0.0"
 HERE = Path(__file__).resolve().parent
 WIKIDATA = json.loads((HERE / "wikidata.json").read_text())
 MARK = "<!-- mibz2-bench -->"
@@ -51,13 +53,13 @@ Data only, never merged: master's benchmark results, one per commit the Benchmar
 ran on (`.github/workflows/bench.yml`, `bench/report.py record`). Pull requests' runs are
 not recorded.
 
-- `records.jsonl`: a line a commit: its SHA, date, METHOD, runner CPU and cores, rounds,
+- `records.jsonl`: a line a commit: its SHA, date, bench version, runner CPU and cores, rounds,
   corpora and the run's URL.
 - `runs/<commit>.json`: its result (`bench/report.py summary`): every figure, the machine,
   the toolchain and the corpora's sizes and SHA-256.
 - `raw/<commit>.jsonl`: the harness's records (`ab run`), one line a run.
 
-Results compare only within one METHOD, one runner CPU model and one set of corpora.
+Results compare only within one major bench version, one runner CPU model and one set of corpora.
 """
 
 
@@ -503,7 +505,7 @@ def markdown(res: dict) -> str:
             f"**`{res['head'][:7]}`, mibz2 against pbz2 {tc['pbz2']} and {tc['lbzip2']}**: "
             f"{res['rounds']} rounds on one runner{run}"
         )
-    lines += ["", f"{m['cpu']}, {m['cores']} cores · {tc['rustc']} · method {res['method']}", ""]
+    lines += ["", f"{m['cpu']}, {m['cores']} cores · {tc['rustc']} · bench {res['bench']}", ""]
     if pr:
         lines += [
             "Each round decodes every corpus once with each build at each thread count (`ab run`: the base's "
@@ -599,7 +601,7 @@ def markdown(res: dict) -> str:
         f"- CPU: {m['cpu']}, {m['cores']} cores, reported clock {m['mhz']} MHz (cycles a byte use it), "
         f"flags {', '.join(m['flags'])}; kernel {m['kernel']}; image {m['image']}",
         f"- {tc['rustc']}; pbz2 {tc['pbz2']} (a dev-dependency, the harness's arm); {tc['lbzip2']}",
-        f"- method {res['method']} (bench/report.py), {res['rounds']} rounds, threads "
+        f"- bench {res['bench']} (bench/report.py), {res['rounds']} rounds, threads "
         f"{', '.join(map(str, res['threads']))}",
         "",
         "</details>",
@@ -623,7 +625,7 @@ def summary(a: argparse.Namespace) -> None:
         if (mo := model(runs, arm, n)) is not None:
             models[label(arm, a.mode == "pr")] = mo
     res = {
-        "method": METHOD,
+        "bench": BENCH,
         "mode": a.mode,
         "head": a.head,
         "base": a.base,
@@ -663,7 +665,7 @@ def record(a: argparse.Namespace) -> None:
     line = {
         "commit": sha,
         "date": res["date"],
-        "method": res["method"],
+        "bench": res["bench"],
         "cpu": res["machine"]["cpu"],
         "cores": res["machine"]["cores"],
         "rounds": res["rounds"],

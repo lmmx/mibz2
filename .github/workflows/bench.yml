@@ -205,7 +205,7 @@ jobs:
           open_branch bench-results .store
           python3 bench/report.py record .store result.json runs.jsonl
           git -C .store add -A
-          git -C .store commit -qm "record bench: ${HEAD_SHA::7}, method $(python3 -c 'import json; print(json.load(open("result.json"))["method"])')"
+          git -C .store commit -qm "record bench: ${HEAD_SHA::7}, bench $(python3 -c 'import json; print(json.load(open("result.json"))["bench"])')"
           push_branch bench-results .store
           if [ "$WINDOWS_SOURCE" != kept ] || ! git cat-file -e "origin/bench-data:$WINDOWS_DIR" 2>/dev/null; then
             open_branch bench-data .data

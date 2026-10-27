@@ -4,14 +4,6 @@ categories = ["compression"]
 description = "A bzip2 decoder built for memory-level parallelism: block-parallel, its inverse BWT walked as interleaved chains, SIMD kernels chosen at run time"
 documentation = "https://docs.rs/mibz2"
 edition = "2021"
-homepage = "https://lmmx.github.io/mibz2/"
-keywords = ["bwt", "bz2", "bzip2", "decompression"]
-license = "MIT OR Apache-2.0"
-name = "mibz2"
-readme = "README.md"
-repository = "https://github.com/lmmx/mibz2"
-rust-version = "1.80"
-version = "0.1.1"
 # The published crate: the source, its tests, examples and benches, not the journals, the
 # Python package (maturin adds python/ to the sdist itself) or the repository's tooling
 exclude = [
@@ -26,6 +18,14 @@ exclude = [
   "release-plz.toml",
   "taplo.toml",
 ]
+homepage = "https://lmmx.github.io/mibz2/"
+keywords = ["bwt", "bz2", "bzip2", "decompression"]
+license = "MIT OR Apache-2.0"
+name = "mibz2"
+readme = "README.md"
+repository = "https://github.com/lmmx/mibz2"
+rust-version = "1.80"
+version = "0.1.1"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
