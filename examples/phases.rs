@@ -4,7 +4,8 @@
 //! where the cycles go: the CI benchmark (the whole decoder, A/B) decides what is faster.
 //!
 //! ```text
-//! phases FILE.bz2 [REPEATS] [GHZ]   (REPEATS: each block's stages run again, best kept)
+//! phases FILE.bz2 [REPEATS] [GHZ]   (REPEATS: the scanner's pass and each block's stages
+//!                                    run again, best kept)
 //! ```
 //!
 //! The stages are the library's own functions, in the order `decode_block` runs them; the
@@ -48,17 +49,23 @@ fn main() {
     let data = std::fs::read(path).unwrap();
     let k = Kernels::detect();
 
-    // The scanner, timed over the whole file (its blocks' symbols kept for the rest)
+    // The scanner, timed over the whole file with one symbols buffer reused, as `decode`
+    // reuses it; then its blocks' symbols kept for the rest
+    let mut tm = Times {
+        scan: best(repeats, || {
+            let mut sc = Scanner::new(SliceSource(&data));
+            let mut syms = Vec::new();
+            while let Event::Block { symbols, .. } = sc.next(syms).unwrap() {
+                syms = symbols.syms;
+            }
+        }),
+        ..Times::default()
+    };
     let mut blocks = Vec::new();
-    let t = Instant::now();
     let mut sc = Scanner::new(SliceSource(&data));
     while let Event::Block { symbols, .. } = sc.next(Vec::new()).unwrap() {
         blocks.push(symbols);
     }
-    let mut tm = Times {
-        scan: t.elapsed().as_secs_f64(),
-        ..Times::default()
-    };
 
     let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
     let (mut tt, mut seg) = (TVector::new(), SegScratch::default());

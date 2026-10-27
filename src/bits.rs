@@ -30,11 +30,12 @@ impl<'a> Bits<'a> {
         b
     }
 
+    /// At least 56 bits live: the next 8 bytes loaded whole, without a test of how many
+    /// bits are live (the bits below the live ones are the input's next bits already, so
+    /// or-ing them in again changes nothing); a byte at a time near the slice's end
     #[inline(always)]
-    fn refill(&mut self) {
+    pub fn refill(&mut self) {
         if let Some(w) = self.data.get(self.pos..self.pos + 8) {
-            // (live <= 56 here: refill is called only when fewer than 33 bits are live,
-            // or from `at`, with none)
             let v = u64::from_be_bytes(w.try_into().unwrap());
             self.buf |= v >> self.live;
             let take = (63 - self.live) >> 3;
@@ -63,6 +64,22 @@ impl<'a> Bits<'a> {
             self.refill();
         }
         (self.buf >> (64 - n)) as u32
+    }
+
+    /// The next `n` bits (1 to 32), not consumed, where at least `n` are live (after
+    /// `refill`, and fewer consumed since than it leaves over `n`)
+    #[inline(always)]
+    pub fn peek_live(&self, n: u32) -> u32 {
+        debug_assert!((1..=32).contains(&n) && n <= self.live);
+        (self.buf >> (64 - n)) as u32
+    }
+
+    /// Consume `n` bits (below 64, and at most those live)
+    #[inline(always)]
+    pub fn skip_short(&mut self, n: u32) {
+        debug_assert!(n < 64 && n <= self.live);
+        self.buf <<= n & 63;
+        self.live -= n;
     }
 
     /// Consume `n` bits (at most those peeked)
