@@ -4,6 +4,8 @@ description: "A bzip2 decoder built for memory-level parallelism."
 
 <div class="home-hero" markdown>
 
+<img class="home-hero-image" src="assets/images/hero.svg" alt="Three interlocking glass loops">
+
 <div class="home-hero-text" markdown>
 
 # mibz2

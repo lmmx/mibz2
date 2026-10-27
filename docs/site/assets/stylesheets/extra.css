@@ -20,13 +20,19 @@
   display: none;
 }
 
-/* The home page's hero: the name and the tagline, centred. */
+/* The home page's hero: the illustration (docs/scripts/hero.py), then the name and the
+   tagline, centred. */
 .md-typeset .home-hero {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1.6rem;
   margin: 1.2rem 0 2rem;
+}
+.md-typeset .home-hero-image {
+  width: 13rem;
+  height: auto;
+  flex: none;
 }
 .md-typeset .home-hero h1 {
   margin: 0;
@@ -55,6 +61,9 @@
   }
   .md-typeset .home-hero-tagline {
     margin: 0.3rem auto 0;
+  }
+  .md-typeset .home-hero-image {
+    width: 10rem;
   }
 }
 
