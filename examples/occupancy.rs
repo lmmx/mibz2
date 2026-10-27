@@ -788,11 +788,14 @@ fn parent(args: &[String]) {
     std::fs::write(&out, format!("{report}\n")).unwrap();
 
     println!(
-        "occupancy: {} · {} CPUs allowed ({}) · physical cores {} · parity {}",
+        "occupancy: {} · {} CPUs allowed ({}) · physical cores {} · SMT siblings {} · parity {}",
         m.cpu,
         m.allowed,
         m.allowed_str,
         m.cores.map_or("unknown".into(), |c| c.to_string()),
+        m.siblings
+            .as_ref()
+            .map_or("unknown".into(), |v| v.join(" | ")),
         if parity { "ok" } else { "FAILED" }
     );
     println!("schedstat run-queue counter: {selftest}");
@@ -919,6 +922,7 @@ struct Machine {
     allowed_list: Vec<usize>,
     allowed_str: String,
     cores: Option<usize>,
+    siblings: Option<Vec<String>>,
     l3: Option<Vec<String>>,
     numa: Option<Vec<String>>,
     kernel: String,
@@ -943,6 +947,7 @@ impl Machine {
                 "smt".into(),
                 self.cores.map_or(J::Null, |c| J::B(self.allowed > c)),
             ),
+            ("smt_sibling_lists".into(), list(&self.siblings)),
             ("l3_shared_cpu_lists".into(), list(&self.l3)),
             ("numa_node_cpu_lists".into(), list(&self.numa)),
             ("kernel".into(), J::S(self.kernel.clone())),
@@ -1005,6 +1010,11 @@ fn machine() -> Machine {
         .map(|&c| Some((topo(c, "physical_package_id")?, topo(c, "core_id")?)))
         .collect::<Option<BTreeSet<_>>>()
         .map(|s| s.len());
+    let siblings = allowed_list
+        .iter()
+        .map(|&c| topo(c, "thread_siblings_list"))
+        .collect::<Option<BTreeSet<String>>>()
+        .map(|s| s.into_iter().collect());
     let l3 = allowed_list
         .iter()
         .map(|&c| {
@@ -1041,6 +1051,7 @@ fn machine() -> Machine {
         allowed_list,
         allowed_str,
         cores,
+        siblings,
         l3,
         numa,
         kernel,
