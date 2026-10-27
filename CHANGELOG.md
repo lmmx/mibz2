@@ -159,20 +159,24 @@ where its interval excludes zero.
 ### Downstream: wikidata-pq
 
 These are not decoder figures. They come from wikidata-pq's own bench on its pull request
-that bumps the decoder from 0.1.4 to 0.1.5,
+that bumped the decoder from 0.1.4 to 0.1.5,
 [lmmx/wikidata-pq#209](https://github.com/lmmx/wikidata-pq/pull/209)
-([its bench comment](https://github.com/lmmx/wikidata-pq/pull/209#issuecomment-6450883879)).
-That bench was the PR tier, 3 rounds, on a 4-chunk sample, and the pull request was still
-open when this was written.
+([its bench comment](https://github.com/lmmx/wikidata-pq/pull/209#issuecomment-6450883879)),
+from its full tier: 3 paired rounds on a 4-chunk sample. The pull request was closed
+unmerged, under wikidata-pq's rule that a change merges only when an end-to-end figure
+improves beyond noise; the pin moves with the next release.
 
-- *Measured:* the split's CPU went from 18.3 s ± 0.2 to 17.6 s ± 0.4. Each figure is a mean
-  with its 95% interval; the comment gives no paired interval for this row.
+- *Measured:* parity passed: the pipeline, the misfit chunk, a new claims field, and the
+  split by this decoder against lbzip2's, byte for byte (68 files).
+- *Measured:* the split's CPU on the sample went from 17.2 s to 16.5 s.
 - *Measured:* the sample end to end (split, pipeline and finalise) shows no change beyond
-  noise. CPU went from 1m43s to 1m42s, and wall from 40.77 s to 40.79 s.
-- *Modelled:* the full Wikidata release ETA went from 4h50m17s to 4h45m30s, no change beyond
-  noise. The split's share went from 1h39m32s to 1h35m38s. wikidata-pq's comment states the
-  model's assumptions.
-- *Measured:* parity passed.
+  noise: CPU 1m36s and wall 38.12 s, before and after.
+- *Modelled:* the full Wikidata release ETA went from 4h34m37s ± 13m13s to 4h32m14s ± 9m20s,
+  and the split's share from 1h33m22s ± 3m19s to 1h29m44s ± 2m53s (−3.9%): no change beyond
+  noise. wikidata-pq's comment states the model's assumptions.
+- *Interpretation, not a measurement:* decoding is about a third of the split's CPU, so the
+  one-thread change above predicts about −3% on the split; the change seen is that size,
+  and below what that bench resolves.
 
 ## [0.1.4](https://github.com/lmmx/mibz2/compare/v0.1.3...v0.1.4) - 2026-10-27
 
