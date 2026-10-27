@@ -212,7 +212,7 @@ gives an inspectable reference on the same input (finding 1).
 | #6 LF² / ψ² | 1: libsais's run lanes + 2-byte walk beat our build + walk by 34% on Wikidata, byte-identical | reopened, ported (#34), slower: **closed**. The walk-loop question is queued |
 | #7 build (the goal) | 1: `RUN_LANES` in our single-table build | **#32**, in CI |
 | #8 fused front end, memory | 3: in-place T-vector (indexed_bzip2, libbzip2); 4: sliding MTF, ceiling measured as negligible on Wikidata; 2: buffer lifetimes | H4 as planned; 3 is its first experiment, after #32 |
-| #9 Precopy | 2: memcpy for repeats is already the plan | unchanged: forward chains, 44.7% coverage |
+| #9 Precopy | 2: memcpy for repeats is already the plan | forward chains built (#36): 31.5% copied, still slower (Wikidata +18%): **closed**, see [the forward-chain write-up](2026-10-27-precopy-forward-chains.md) |
 | #10 scanner | 2: rapidgzip's block-finder simplification is Deflate's | deferred |
 
 **No new issues.** Every finding fits #6–#10 or is out of scope.
@@ -220,7 +220,7 @@ gives an inspectable reference on the same input (finding 1).
 **Order from here** (the decision log is wikidata-pq#97):
 1. #32: merged, −16% decode, released as 0.1.4.
 2. The ψ² port (#34): slower, closed.
-3. Precopy (#9), on the single table.
+3. Precopy (#9), on the single table: built and slower (#36), closed.
 4. The in-place front end (#8).
 5. Per-stage figures in the CI bench, then libsais's decode-loop mechanics in our ψ walk.
 
