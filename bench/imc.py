@@ -191,7 +191,8 @@ def idle(seconds):
 def calibrate(gib, settle):
     wall0, _, rows0 = perf(IMC, ["sleep", str(settle)], system=True)
     r0, w0 = rates(wall0, rows0)
-    cmd = ["perf", "bench", "mem", "memcpy", "-s", "1GB", "-l", str(gib)]
+    # (-f default: without it perf bench runs every memcpy it has, three on x86-64)
+    cmd = ["perf", "bench", "mem", "memcpy", "-f", "default", "-s", "1GB", "-l", str(gib)]
     wall, out, rows = perf(IMC, cmd, system=True)
     wall = span(wall, rows)
     reads = rows[None][IMC[0]] - r0 * wall
