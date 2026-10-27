@@ -51,6 +51,34 @@ impl InverseBwt for Segmented {
     }
 }
 
+/// The pair walk (#6): ψ², two bytes a step, as libsais 2.12 inverts a cyclic BWT
+/// (`build_pairs`, `walk_pairs_flagged`), the segmented walk for a short block
+#[derive(Default)]
+pub struct Pairs {
+    pairs: PairTable,
+    seg: SegScratch,
+    lfs: Vec<(u32, u32)>,
+    short: Segmented,
+}
+
+impl InverseBwt for Pairs {
+    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
+        if ll.len() < MIN_SEGMENTED {
+            return self.short.invert(ll, counts, orig_ptr, out);
+        }
+        walk_pairs_flagged::<FLAGGED_LANES, PREFETCH>(
+            &mut self.pairs,
+            ll,
+            counts,
+            orig_ptr,
+            out,
+            &mut self.seg,
+            &mut self.lfs,
+            FLAGGED_SEGMENTS,
+        );
+    }
+}
+
 /// A block's T-vector. Built only by `build`, so every link in it is below its length,
 /// which the walks rely on to read it unchecked.
 #[derive(Default)]
@@ -449,6 +477,442 @@ pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
     }
 }
 
+/// The pair table: row r's entry is its last-column byte L[r] | ψ²(r) << 8, and the byte
+/// after L[r] in the text, L[ψ(r)], is F(r), row r's first byte, found from `first` and
+/// the buckets' starts `f`. So a step from r gives two bytes and the row two on. Built
+/// only by `build_pairs`, so every link is below its length; bits 30 and 31 are the walk's
+/// flags (links are below 2^20).
+pub struct PairTable {
+    p: Vec<u32>,
+    b2: Vec<u32>,
+    first: Vec<u8>,
+    f: [u32; 257],
+    fshift: u32,
+}
+
+impl Default for PairTable {
+    fn default() -> Self {
+        PairTable {
+            p: Vec::new(),
+            b2: Vec::new(),
+            first: Vec::new(),
+            f: [0; 257],
+            fshift: 0,
+        }
+    }
+}
+
+/// A segment's start (in its own entry), and with it, in the entry of the row one before
+/// it in the text (LF of the start), the mark that a lane reaching that row ends there
+/// after one byte: a step of two rows passes over every other row, so a start is seen
+/// from whichever of the two the lane lands on (libsais's marks and their LF rows)
+const PAIR_LF: u32 = 1 << 30;
+const PAIR_LINK: u32 = !(START | PAIR_LF);
+
+impl PairTable {
+    /// Row r's first byte: its F bucket, from the slice of rows r is in
+    #[inline(always)]
+    fn first_byte(&self, r: u32) -> u8 {
+        // SAFETY: r < n, so r >> fshift < first.len(), and the bucket ends rise to f[256] = n
+        unsafe {
+            let mut c = *self.first.get_unchecked((r >> self.fshift) as usize) as usize;
+            while *self.f.get_unchecked(c + 1) <= r {
+                c += 1;
+            }
+            c as u8
+        }
+    }
+}
+
+/// ψ² of the last column `ll` (whose bytes `counts` counts), as libsais builds it.
+/// - A step i of the counting sort has p = LF(i) (its byte c's next slot), and i's row
+///   two on from the row LF(p) = LF²(i), the next slot of the bigram (L[p], c): the rows
+///   sorted by their first two bytes, in i's order within each.
+/// - The bigram counts come from a byte histogram of each F bucket's slice of `ll` (row p
+///   in bucket c is bigram (L[p], c)): sequential, not a pass of LF lookups.
+/// - 16 equal bytes c at i whose LF rows' 16 bytes are equal too (the run lemma, twice)
+///   go in with one 16-wide store, libsais's RUN_LANES, as in `build`.
+///
+/// `rows` (sorted) are the rows whose LF is wanted: each one's is pushed to `lf`, in order.
+#[allow(clippy::needless_range_loop)]
+pub fn build_pairs(
+    ll: &[u8],
+    counts: &[u32; 256],
+    t: &mut PairTable,
+    rows: &[u32],
+    lf: &mut Vec<u32>,
+) {
+    let n = ll.len();
+    t.p.clear();
+    t.p.extend(ll.iter().map(|&c| c as u32));
+    let mut cum = 0u32;
+    for c in 0..256 {
+        t.f[c] = cum;
+        cum += counts[c];
+    }
+    t.f[256] = cum;
+    t.fshift = 0;
+    while (n >> t.fshift) >= 1 << 15 {
+        t.fshift += 1;
+    }
+    t.first.clear();
+    let mut c = 0;
+    for j in 0..((n - 1) >> t.fshift) + 1 {
+        let r = (j << t.fshift) as u32;
+        while t.f[c + 1] <= r {
+            c += 1;
+        }
+        t.first.push(c as u8);
+    }
+    // The bigram counts, then each bigram's first slot (first byte major)
+    t.b2.clear();
+    t.b2.resize(1 << 16, 0);
+    let mut h = [[0u32; 256]; 4];
+    for c in 0..256 {
+        let slice = &ll[t.f[c] as usize..t.f[c + 1] as usize];
+        if slice.is_empty() {
+            continue;
+        }
+        let mut q = slice.chunks_exact(4);
+        for x in &mut q {
+            h[0][x[0] as usize] += 1;
+            h[1][x[1] as usize] += 1;
+            h[2][x[2] as usize] += 1;
+            h[3][x[3] as usize] += 1;
+        }
+        for &d in q.remainder() {
+            h[0][d as usize] += 1;
+        }
+        for d in 0..256 {
+            t.b2[d << 8 | c] = h[0][d] + h[1][d] + h[2][d] + h[3][d];
+            (h[0][d], h[1][d], h[2][d], h[3][d]) = (0, 0, 0, 0);
+        }
+    }
+    let mut sum = 0u32;
+    for e in t.b2.iter_mut() {
+        let v = *e;
+        *e = sum;
+        sum += v;
+    }
+    // The scatter
+    let (p, b2) = (&mut t.p, &mut t.b2);
+    let mut b1 = [0u32; 256];
+    b1.copy_from_slice(&t.f[..256]);
+    lf.clear();
+    let mut next = rows.first().map_or(usize::MAX, |&r| r as usize);
+    let mut ri = 0;
+    let mut i = 0;
+    while i + 16 <= n {
+        let c = ll[i] as usize;
+        let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
+        if a == b && a == a.rotate_left(8) {
+            let q = b1[c] as usize;
+            if q + 16 <= n {
+                let (a, b) = (read_u64(ll, q), read_u64(ll, q + 8));
+                if a == b && a == a.rotate_left(8) {
+                    let w = (ll[q] as usize) << 8 | c;
+                    let x = b2[w] as usize;
+                    let base = (i as u32) << 8;
+                    for (j, e) in p[x..x + 16].iter_mut().enumerate() {
+                        *e = (*e & 0xff) | (base + ((j as u32) << 8));
+                    }
+                    while next < i + 16 {
+                        lf.push((q + next - i) as u32);
+                        ri += 1;
+                        next = rows.get(ri).map_or(usize::MAX, |&r| r as usize);
+                    }
+                    b1[c] += 16;
+                    b2[w] += 16;
+                    i += 16;
+                    continue;
+                }
+            }
+        }
+        let e = i + 16;
+        if next >= e {
+            pair_steps(ll, p, b2, &mut b1, i..e);
+        } else {
+            for i in i..e {
+                if i == next {
+                    lf.push(b1[ll[i] as usize]);
+                    ri += 1;
+                    next = rows.get(ri).map_or(usize::MAX, |&r| r as usize);
+                }
+                pair_steps(ll, p, b2, &mut b1, i..i + 1);
+            }
+        }
+        i = e;
+    }
+    for i in i..n {
+        if i == next {
+            lf.push(b1[ll[i] as usize]);
+            ri += 1;
+            next = rows.get(ri).map_or(usize::MAX, |&r| r as usize);
+        }
+        pair_steps(ll, p, b2, &mut b1, i..i + 1);
+    }
+}
+
+/// `build_pairs`'s one-row steps, over the rows `rows`
+#[inline(always)]
+fn pair_steps(
+    ll: &[u8],
+    p: &mut [u32],
+    b2: &mut [u32],
+    b1: &mut [u32; 256],
+    rows: std::ops::Range<usize>,
+) {
+    for i in rows {
+        // SAFETY: the counts are ll's own, so q < n, and the bigram slots x < n
+        unsafe {
+            let c = *ll.get_unchecked(i) as usize;
+            let q = *b1.get_unchecked(c) as usize;
+            *b1.get_unchecked_mut(c) += 1;
+            let w = (*ll.get_unchecked(q) as usize) << 8 | c;
+            let x = *b2.get_unchecked(w) as usize;
+            *b2.get_unchecked_mut(w) += 1;
+            let e = p.get_unchecked_mut(x);
+            *e = (*e & 0xff) | (i as u32) << 8;
+        }
+    }
+}
+
+/// The row ψ(orig_ptr) the text starts at: the row whose LF is `orig_ptr`, the
+/// (orig_ptr − f[c])-th c in `ll`, for c = F(orig_ptr)
+fn pair_start(ll: &[u8], t: &PairTable, orig_ptr: u32) -> u32 {
+    let c = t.first_byte(orig_ptr);
+    let mut k = (orig_ptr - t.f[c as usize]) as usize;
+    let mut base = 0;
+    for chunk in ll.chunks(64) {
+        let m = chunk.iter().filter(|&&b| b == c).count();
+        if k < m {
+            let j = chunk
+                .iter()
+                .enumerate()
+                .filter(|&(_, &b)| b == c)
+                .nth(k)
+                .unwrap()
+                .0;
+            return (base + j) as u32;
+        }
+        k -= m;
+        base += chunk.len();
+    }
+    unreachable!("the counts are ll's own")
+}
+
+/// The flagged segmented walk over the pair table: `walk_segments_flagged`'s lanes,
+/// segments and joins, two bytes a step. The segments' starts are flagged in their own
+/// entries, and their LF rows with `PAIR_LF`: a lane landing on one writes its byte and
+/// ends, its successor the start one row on. A start whose LF row is another start is
+/// dropped (the text's first row is kept). Exactly `walk`'s output.
+#[allow(clippy::too_many_arguments)]
+pub fn walk_pairs_flagged<const L: usize, const PF: bool>(
+    t: &mut PairTable,
+    ll: &[u8],
+    counts: &[u32; 256],
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    lfs: &mut Vec<(u32, u32)>,
+    segments: usize,
+) {
+    let n = ll.len();
+    out.clear();
+    random_rows(n, segments - 1, &mut s.starts);
+    s.starts.sort_unstable();
+    s.starts.dedup();
+    let mut lf_rows = Vec::with_capacity(s.starts.len());
+    build_pairs(ll, counts, t, &s.starts, &mut lf_rows);
+    let r0 = pair_start(ll, t, orig_ptr);
+    // (row, its LF) for every start, the text's first row among them, sorted by row
+    let mut st: Vec<(u32, u32)> = s
+        .starts
+        .iter()
+        .copied()
+        .zip(lf_rows.iter().copied())
+        .collect();
+    match st.binary_search_by_key(&r0, |e| e.0) {
+        Ok(_) => {}
+        Err(k) => st.insert(k, (r0, orig_ptr)),
+    }
+    // A start whose LF row is another start: one of the two dropped (never the first row)
+    let mut drop = vec![false; st.len()];
+    for k in 0..st.len() {
+        // (a row that is its own LF, a cycle of one, needs no LF mark: its lane comes back
+        // to it. ψ has several cycles when a block's text is periodic, as `pattern` is)
+        if let Ok(j) = st.binary_search_by_key(&st[k].1, |e| e.0) {
+            if j == k {
+                continue;
+            }
+            if st[j].0 == r0 {
+                drop[k] = true;
+            } else {
+                drop[j] = true;
+            }
+        }
+    }
+    let mut kept = drop.iter();
+    st.retain(|_| !*kept.next().unwrap());
+    s.starts.clear();
+    s.starts.extend(st.iter().map(|e| e.0));
+    lfs.clear();
+    lfs.extend(st.iter().enumerate().map(|(k, e)| (e.1, k as u32)));
+    lfs.sort_unstable();
+    for &(r, l) in &st {
+        if l != r {
+            t.p[l as usize] |= START | PAIR_LF;
+        }
+        t.p[r as usize] |= START;
+    }
+
+    let ns = s.starts.len();
+    let cap = 2 * n / ns + 64;
+    s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
+    for b in &mut s.bufs[..ns] {
+        b.clear();
+        b.reserve(cap);
+    }
+    s.next.clear();
+    s.next.resize(ns, usize::MAX);
+    let starts = &s.starts;
+    let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let lfs = &*lfs;
+    let seg_after = |row: u32| match lfs.binary_search_by_key(&row, |e| e.0) {
+        Ok(k) => lfs[k].1 as usize,
+        Err(_) => usize::MAX,
+    };
+    let tp = t.p.as_ptr();
+    let tt = &*t;
+    let bufs = &mut s.bufs;
+    let next = &mut s.next;
+
+    // A lane takes segment `seg`: its first step (its start's own, flagged, entry) here
+    let take = |seg: usize, bufs: &mut Vec<Vec<u8>>| -> Lane {
+        let b = &mut bufs[seg];
+        let base = b.as_mut_ptr();
+        let r = starts[seg];
+        // SAFETY: the starts are rows below n; the buffer has `cap` > 2 spare bytes
+        let q = unsafe { *tp.add(r as usize) } & PAIR_LINK;
+        unsafe {
+            *base = q as u8;
+            *base.add(1) = tt.first_byte(r);
+        }
+        Lane {
+            row: q >> 8,
+            seg,
+            p: unsafe { base.add(2) },
+            end: unsafe { base.add(b.capacity()) },
+        }
+    };
+    // A lane reads a flagged entry at its row: its segment ends there (after the row's
+    // byte, at an LF row), its length and successor recorded
+    let finish = |l: &mut Lane, q: u32, bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| {
+        if q & PAIR_LF != 0 {
+            // SAFETY: a step leaves at least 2 spare bytes
+            unsafe {
+                *l.p = q as u8;
+                l.p = l.p.add(1);
+            }
+            next[l.seg] = seg_after(l.row);
+        } else {
+            next[l.seg] = seg_of(l.row);
+        }
+        let b = &mut bufs[l.seg];
+        // SAFETY: p is within b's allocation, every byte below it written
+        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+    };
+    // Fewer than 2 spare bytes: the buffer grows (its written bytes kept)
+    let grow = |l: &mut Lane, bufs: &mut Vec<Vec<u8>>| {
+        let b = &mut bufs[l.seg];
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
+        b.reserve(b.capacity());
+        l.p = unsafe { b.as_mut_ptr().add(len) };
+        l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
+    };
+    // One step: two bytes, and the row two on
+    let step = |l: &mut Lane, q: u32, bufs: &mut Vec<Vec<u8>>| {
+        let r = l.row;
+        l.row = q >> 8;
+        if PF {
+            prefetch(tp, l.row);
+        }
+        // SAFETY: at least 2 spare bytes, within the buffer's allocation
+        unsafe {
+            (l.p as *mut u16).write_unaligned(u16::from_le_bytes([q as u8, tt.first_byte(r)]));
+            l.p = l.p.add(2);
+        }
+        if unsafe { l.end.offset_from(l.p) } < 2 {
+            grow(l, bufs);
+        }
+    };
+
+    let mut queued = 0;
+    let mut lanes: [Lane; L] = std::array::from_fn(|_| Lane {
+        row: 0,
+        seg: usize::MAX,
+        p: std::ptr::null_mut(),
+        end: std::ptr::null_mut(),
+    });
+    let mut active = 0;
+    while active < L && queued < ns {
+        lanes[active] = take(queued, bufs);
+        if PF {
+            prefetch(tp, lanes[active].row);
+        }
+        queued += 1;
+        active += 1;
+    }
+    if active == L {
+        'full: loop {
+            for l in lanes.iter_mut() {
+                // SAFETY: rows are below n (PairTable)
+                let q = unsafe { *tp.add(l.row as usize) };
+                if q & START != 0 {
+                    finish(l, q, bufs, next);
+                    if queued == ns {
+                        break 'full;
+                    }
+                    *l = take(queued, bufs);
+                    if PF {
+                        prefetch(tp, l.row);
+                    }
+                    queued += 1;
+                    continue;
+                }
+                step(l, q, bufs);
+            }
+        }
+    }
+    let mut live: Vec<Lane> = lanes[..active]
+        .iter()
+        .copied()
+        .filter(|l| next_unset(l, next))
+        .collect();
+    while !live.is_empty() {
+        let mut i = 0;
+        while i < live.len() {
+            let l = &mut live[i];
+            let q = unsafe { *tp.add(l.row as usize) };
+            if q & START != 0 {
+                finish(l, q, bufs, next);
+                live.swap_remove(i);
+                continue;
+            }
+            step(l, q, bufs);
+            i += 1;
+        }
+    }
+    out.reserve(n);
+    let mut seg = seg_of(r0);
+    while out.len() < n {
+        let b = &bufs[seg];
+        out.extend_from_slice(&b[..b.len().min(n - out.len())]);
+        seg = next[seg];
+    }
+}
+
 /// A hint that the T-vector entry at `row` (below its length) is read soon: a software
 /// prefetch into L1 where the target has one (`prefetcht0`, `prfm pldl1keep`), else
 /// nothing. A hint only: it changes no value read.
@@ -579,6 +1043,59 @@ mod tests {
             let mut tt = TVector::new();
             build(ll, &counts, &mut tt);
             assert!(tt.0 == one_pass(ll, &counts), "length {}", ll.len());
+        }
+    }
+
+    /// The pair walk gives the plain walk's output: random columns (lists of many cycles,
+    /// so lanes go round their own), periodic ones, ones in long runs (the 16-wide stores
+    /// on both sides), at several primary indices and segment counts
+    #[test]
+    fn pair_walk_equals_plain() {
+        let n = MIN_SEGMENTED + 1001;
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut rnd = move || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        let mut inputs = vec![
+            (0..n).map(|_| (rnd() % 7) as u8).collect::<Vec<u8>>(),
+            (0..n).map(|i| b"abc"[i % 3]).collect(),
+            (0..n).map(|i| b"ab"[i % 2]).collect(),
+        ];
+        let mut runs = Vec::new();
+        while runs.len() < n {
+            let c = (rnd() % 4) as u8;
+            runs.extend(std::iter::repeat_n(
+                c,
+                [1, 5, 16, 17, 40, 300][(rnd() % 6) as usize],
+            ));
+        }
+        runs.truncate(n);
+        inputs.push(runs);
+        for ll in &inputs {
+            let mut counts = [0u32; 256];
+            for &c in ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(ll, &counts, &mut tt);
+            let (mut plain, mut pairs) = (Vec::new(), Vec::new());
+            let (mut t, mut seg, mut lfs) =
+                (PairTable::default(), SegScratch::default(), Vec::new());
+            for orig_ptr in [0, ll.len() as u32 / 3, ll.len() as u32 - 1] {
+                walk(&tt, orig_ptr, &mut plain);
+                for segments in [2, 64, 512, 4096] {
+                    walk_pairs_flagged::<7, true>(
+                        &mut t, ll, &counts, orig_ptr, &mut pairs, &mut seg, &mut lfs, segments,
+                    );
+                    assert!(plain == pairs, "orig_ptr {orig_ptr}, {segments} segments");
+                }
+                let mut k = Pairs::default();
+                k.invert(ll, &counts, orig_ptr, &mut pairs);
+                assert!(plain == pairs, "Pairs, orig_ptr {orig_ptr}");
+            }
         }
     }
 
