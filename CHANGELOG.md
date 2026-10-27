@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/lmmx/mibz2/compare/v0.1.3...v0.1.4) - 2026-10-27
+
+### <!-- 3 -->Performance
+
+- *(build)* 16 equal last-column bytes linked with one 16-wide store ([#7](https://github.com/lmmx/mibz2/pull/7)) ([#32](https://github.com/lmmx/mibz2/pull/32))
+
 ## [0.1.3](https://github.com/lmmx/mibz2/compare/v0.1.2...v0.1.3) - 2026-10-27
 
 ### <!-- 1 -->Features
