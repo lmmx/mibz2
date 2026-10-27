@@ -41,6 +41,13 @@ patch version.
 - 1.2.0: the stage table (`stages`, from bench/stages.py's runs of examples/phases.rs):
   each stage's cycles a byte on the Wikidata blocks at 1 thread, and on a pull request
   head over base per stage. Every existing figure is as it was.
+- 2.0.0: the stage table's figures change meaning. examples/phases.rs decodes the file in
+  decode order, each stage timed as it runs and its fastest pass kept, the other walks in
+  passes of their own; before, each stage kept its best of repeats on the same block, the
+  walks back to back on it, a warm state no decode reaches (docs/journal/
+  2026-10-27-walk-sweep.md). The decoder's own figures are measured as before; the
+  history starts their series again at 2.0.0 all the same, as it does at any major
+  version, and keeps the 1.x results under 1.x.
 """
 
 import argparse
@@ -56,7 +63,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "1.2.0"
+BENCH = "2.0.0"
 # The other decoders, in the order they are shown: the block-parallel, then the
 # single-threaded (examples/ab.rs: `parallel`)
 ALTERNATIVES = ["pbz2", "lbzip2", "indexed_bzip2", "fbz", "lbzip2-rs", "libbzip2", "libbz2-rs"]
@@ -342,7 +349,7 @@ STAGE_ROWS = [
     ("scan", "scanner (headers, Huffman)"),
     ("mtf", "MTF + RLE2"),
     ("build", "T-vector build"),
-    ("walk", "walk, flagged (used)"),
+    ("walk", "walk (the one each build uses)"),
     ("rle", "RLE1"),
     ("crc", "CRC"),
     ("total", "total"),
@@ -365,6 +372,8 @@ def stage_figures(lines: list[dict], mhz: float | None, pr: bool) -> dict:
             "errors": sorted({r["err"] for r in rounds.values() if r.get("err")}),
             "stages": {},
             "rounds_ns_per_byte": {},
+            # the walk the build uses, as its phases names it (the same in every run)
+            "walk": next((r["walk"] for r in ok.values() if r.get("walk")), None),
         }
         for key in keys:
             v = [r["ps_per_byte"][key] / 1000 for r in ok.values()]
@@ -631,8 +640,13 @@ def stage_lines(st: dict, pr: bool) -> list[str]:
         f"Each of {st['rounds']} rounds runs {'each build' if len(shown) > 1 else 'the build'}'s "
         "`examples/phases.rs` once (bench/stages.py), pinned to one CPU"
         + (", the builds' order alternating" if len(shown) > 1 else "")
-        + ": every block's stages timed one by one with the library's own functions"
-        + (f" (each the best of {st['repeats']})" if (st.get("repeats") or 1) > 1 else "")
+        + ": the file decoded in decode order, block by block, each stage timed as it runs"
+        " with the library's own functions"
+        + (
+            f" (each stage's fastest of {st['repeats']} passes)"
+            if (st.get("repeats") or 1) > 1
+            else ""
+        )
         + ", summed over the blocks, "
         + (
             f"in cycles a byte of output at the reported clock ({st['mhz']:.0f} MHz)"
@@ -674,6 +688,15 @@ def stage_lines(st: dict, pr: bool) -> list[str]:
             )
         else:
             out.append(f"| {title} | {cells[0]} | {share} |")
+    named = [(arm, arms[arm].get("walk")) for arm in shown]
+    if any(w for _, w in named):
+        out += [
+            "",
+            "The walk row is the stage, the same in every build; its implementation is "
+            "each build's own, as its `phases` names it: "
+            + "; ".join(f"{arm}, “{w}”" if w else f"{arm}, not named" for arm, w in named)
+            + ".",
+        ]
     errors = {arm: a["errors"] for arm, a in arms.items() if a["errors"]}
     if errors:
         out += [

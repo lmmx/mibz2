@@ -25,7 +25,8 @@
 # runner's cores, ROUNDS rounds.
 #
 # The stages (bench/stages.py): each build's examples/phases.rs on the Wikidata blocks,
-# pinned to one CPU, STAGE_ROUNDS rounds of each build once, best of STAGE_REPEATS; a
+# pinned to one CPU, STAGE_ROUNDS rounds of each build once, each stage's fastest of
+# STAGE_REPEATS passes of the file in decode order; a
 # table of each stage's cycles a byte (head over base on a pull request), beside the
 # decoder's figures, not part of them.
 name: Benchmark
@@ -75,7 +76,7 @@ env:
   SCALE: 4 # ab gen's: corpora of 8-20 MB of output each
   SETTLE: 0.25 # seconds the harness samples the other processes' load before each run
   STAGE_ROUNDS: 5 # bench/stages.py's rounds (each 13-17 s on the runners seen)
-  STAGE_REPEATS: 2 # phases' repeats a run (each stage's best of them)
+  STAGE_REPEATS: 2 # phases' passes a run, each a decode of the file (each stage's fastest kept)
   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   CARGO_TERM_COLOR: never
 

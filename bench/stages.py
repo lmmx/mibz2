@@ -4,7 +4,9 @@ is made from (`--stages`).
 
     stages.py run OUT.jsonl --rounds R [--repeats N] [--pin CPU] FILE.bz2 ARM=EXE ...
 
-Each round runs every arm's `phases FILE REPEATS GHZ` once, pinned to one CPU (`taskset`,
+Each round runs every arm's `phases FILE N GHZ` once (N: phases' passes, each a decode of
+the file in decode order, each stage's fastest kept; a build from before bench 2.0.0 reads
+N as repeats of each stage on each block), pinned to one CPU (`taskset`,
 as `ab run` pins its 1-thread runs), the arms' order reversed every other round; one JSON
 line a run: the round, the arm, the run's wall seconds, and each stage's time in
 picoseconds a byte of output.
@@ -55,6 +57,15 @@ def parse(text: str) -> dict[str, float]:
     return out
 
 
+def walk_name(text: str) -> str | None:
+    """The walk the build's total counts (its line's label, e.g. "walk, room (used)"): the
+    stage is the same across builds, its implementation each build's own."""
+    for line in text.splitlines():
+        if (m := LINE.match(line)) and stage_key(m.group(1), m.group(3)) == "walk":
+            return m.group(1)
+    return None
+
+
 def run(a: argparse.Namespace) -> None:
     arms = [x.split("=", 1) for x in a.arms]
     with open(a.out, "w") as f:
@@ -67,6 +78,7 @@ def run(a: argparse.Namespace) -> None:
                 wall = time.monotonic() - t
                 ps = parse(p.stdout)
                 rec = {"round": rnd, "arm": arm, "repeats": a.repeats, "wall": round(wall, 3)}
+                rec["walk"] = walk_name(p.stdout)
                 if p.returncode or set(ps) != set(STAGES):
                     rec["err"] = (p.stderr.strip().splitlines() or ["no stages read"])[-1][:200]
                 rec["ps_per_byte"] = ps

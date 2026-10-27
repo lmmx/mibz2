@@ -54,6 +54,10 @@ measures. `examples/phases.rs` (the bench's stage table) is in the repeated stat
 So its walk row, the room walk's, is measured warm. The decoder's paired A/B, which
 shipped #37, is not affected.
 
+[#47](https://github.com/lmmx/mibz2/pull/47) puts it in decode order (bench 2.0.0).
+Locally, the room walk's row went from 2.85 to 4.06–4.36 ns/B, and its share of a decode
+from 54% to 60%.
+
 ## The curve in decode order (measured)
 
 [Run 40573190665](https://github.com/lmmx/mibz2/actions/runs/40573190665), at `5431d90`:
