@@ -4,14 +4,24 @@
 //! where the cycles go: the CI benchmark (the whole decoder, A/B) decides what is faster.
 //!
 //! ```text
-//! phases FILE.bz2 [REPEATS] [GHZ]   (REPEATS: the scanner's pass and each block's stages
-//!                                    run again, best kept)
+//! phases FILE.bz2 [PASSES] [GHZ]   (PASSES: decodes of the file, each stage's fastest
+//!                                   pass kept)
 //! ```
 //!
-//! The stages are the library's own functions, in the order `decode_block` runs them; the
-//! output is checked against `decode`'s, so a stage timed is a stage that is right. The
-//! walks are timed side by side: the plain one, the bitmap-segmented one, the flagged one,
-//! and the room walk (the flagged walk in passes, #37) that `Segmented` uses.
+//! A pass decodes the file once in decode order, block by block, as `decode` and the
+//! parallel decoder's workers do: the scanner's next block, MTF, the build, the walk, RLE1
+//! (into an output buffer reused block to block) and the CRC, each stage timed as it runs.
+//! So each stage meets the caches as a decode leaves them: the scratch and buffers warm
+//! from the block before, never from the same block timed moments before. A stage's figure
+//! is its time summed over the blocks in its fastest pass. (Before bench 2.0.0 each stage
+//! kept its best of repeats on the same block, and the walks ran back to back on it: a
+//! warm state no decode reaches, which flattered the walk; docs/journal/
+//! 2026-10-27-walk-sweep.md.)
+//!
+//! The walks not used (the plain one, the bitmap-segmented one and the flagged one) are
+//! timed in passes of their own, the same way, each in the walk's place: MTF, the build,
+//! the walk timed, then RLE1 and the CRC, which check its output. The pass that `decode`
+//! runs is checked against `decode`'s output.
 
 use std::time::Instant;
 
@@ -26,102 +36,132 @@ struct Times {
     scan: f64,
     mtf: f64,
     build: f64,
-    walk_plain: f64,
-    walk_bitmap: f64,
-    walk_flagged: f64,
-    walk_room: f64,
+    walk: f64,
     rle: f64,
     crc: f64,
 }
 
-fn best(repeats: usize, mut f: impl FnMut()) -> f64 {
-    (0..repeats)
-        .map(|_| {
-            let t = Instant::now();
-            f();
-            t.elapsed().as_secs_f64()
-        })
-        .fold(f64::INFINITY, f64::min)
+/// A walk in the decoder's place: the T-vector, its `orig_ptr`, the walk's output, scratch
+type Walk = fn(&mut TVector, u32, &mut Vec<u8>, &mut SegScratch);
+
+fn plain(tt: &mut TVector, p: u32, out: &mut Vec<u8>, _: &mut SegScratch) {
+    walk(tt, p, out)
+}
+fn bitmap(tt: &mut TVector, p: u32, out: &mut Vec<u8>, s: &mut SegScratch) {
+    walk_fast(tt, p, out, s)
+}
+
+/// One decode of the file in decode order with `w` as the walk, each stage timed; returns
+/// the stages' times and, if `keep`, the decoded bytes
+fn pass(data: &[u8], k: Kernels, w: Walk, keep: bool) -> (Times, usize, usize, Vec<u8>) {
+    let mut tm = Times::default();
+    let mut sc = Scanner::new(SliceSource(data));
+    let (mut syms, mut ll, mut counts) = (Vec::new(), Vec::new(), [0u32; 256]);
+    let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
+    let (mut walked, mut out, mut decoded) = (Vec::new(), Vec::new(), Vec::new());
+    let (mut n, mut blocks) = (0, 0);
+    let time = |slot: &mut f64, f: &mut dyn FnMut()| {
+        let t = Instant::now();
+        f();
+        *slot += t.elapsed().as_secs_f64();
+    };
+    loop {
+        let mut ev = None;
+        time(&mut tm.scan, &mut || {
+            ev = Some(sc.next(std::mem::take(&mut syms)).unwrap())
+        });
+        let Some(Event::Block { symbols: b, .. }) = ev else {
+            break;
+        };
+        time(&mut tm.mtf, &mut || {
+            mtf::mtf(&b, &mut ll, &mut counts, k).unwrap();
+        });
+        time(&mut tm.build, &mut || build(&ll, &counts, &mut tt));
+        time(&mut tm.walk, &mut || {
+            w(&mut tt, b.orig_ptr, &mut walked, &mut seg)
+        });
+        time(&mut tm.rle, &mut || {
+            out.clear();
+            rle::unrle(&walked, &mut out, k).unwrap();
+        });
+        let mut c = 0;
+        time(&mut tm.crc, &mut || c = crc::crc32(&out, k));
+        assert_eq!(c, b.crc, "a block's CRC");
+        n += out.len();
+        blocks += 1;
+        if keep {
+            decoded.extend_from_slice(&out);
+        }
+        syms = b.syms;
+    }
+    (tm, n, blocks, decoded)
 }
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    let path = args.get(1).expect("usage: phases FILE.bz2 [REPEATS] [GHZ]");
-    let repeats: usize = args.get(2).map_or(3, |s| s.parse().unwrap());
+    let path = args.get(1).expect("usage: phases FILE.bz2 [PASSES] [GHZ]");
+    let passes: usize = args.get(2).map_or(3, |s| s.parse().unwrap());
     let ghz: f64 = args.get(3).map_or(2.8, |s| s.parse().unwrap());
+    assert!(passes >= 1, "PASSES: at least 1");
     let data = std::fs::read(path).unwrap();
     let k = Kernels::detect();
 
-    // The scanner, timed over the whole file with one symbols buffer reused, as `decode`
-    // reuses it; then its blocks' symbols kept for the rest
-    let mut tm = Times {
-        scan: best(repeats, || {
-            let mut sc = Scanner::new(SliceSource(&data));
-            let mut syms = Vec::new();
-            while let Event::Block { symbols, .. } = sc.next(syms).unwrap() {
-                syms = symbols.syms;
-            }
-        }),
-        ..Times::default()
+    // Each stage's fastest pass; the used walk's passes first, then each other walk's
+    let fastest = |a: Times, b: Times| Times {
+        scan: a.scan.min(b.scan),
+        mtf: a.mtf.min(b.mtf),
+        build: a.build.min(b.build),
+        walk: a.walk.min(b.walk),
+        rle: a.rle.min(b.rle),
+        crc: a.crc.min(b.crc),
     };
-    let mut blocks = Vec::new();
-    let mut sc = Scanner::new(SliceSource(&data));
-    while let Event::Block { symbols, .. } = sc.next(Vec::new()).unwrap() {
-        blocks.push(symbols);
+    let inf = Times {
+        scan: f64::INFINITY,
+        mtf: f64::INFINITY,
+        build: f64::INFINITY,
+        walk: f64::INFINITY,
+        rle: f64::INFINITY,
+        crc: f64::INFINITY,
+    };
+    let mut tm = inf;
+    let (mut n, mut blocks) = (0, 0);
+    for i in 0..passes {
+        let (t, bytes, count, decoded) = pass(&data, k, walk_segments_room, i == 0);
+        if i == 0 {
+            assert!(
+                decoded == mibz2::decode(&data).unwrap(),
+                "the stages' output differs from decode's"
+            );
+        }
+        tm = fastest(tm, t);
+        (n, blocks) = (bytes, count);
     }
+    let others: [(&str, Walk); 3] = [
+        ("walk, flagged (before #37)", walk_segments_flagged),
+        ("walk, bitmap (before #4)", bitmap),
+        ("walk, plain", plain),
+    ];
+    let others = others.map(|(name, w)| {
+        let best = (0..passes)
+            .map(|_| pass(&data, k, w, false).0.walk)
+            .fold(f64::INFINITY, f64::min);
+        (name, best)
+    });
 
-    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
-    let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
-    let (mut plain, mut bitmap, mut flagged, mut room, mut out) =
-        (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
-    let mut decoded = Vec::new();
-    for b in &blocks {
-        tm.mtf += best(repeats, || {
-            mtf::mtf(b, &mut ll, &mut counts, k).unwrap();
-        });
-        tm.build += best(repeats, || build(&ll, &counts, &mut tt));
-        tm.walk_plain += best(repeats, || walk(&tt, b.orig_ptr, &mut plain));
-        tm.walk_bitmap += best(repeats, || {
-            walk_fast(&tt, b.orig_ptr, &mut bitmap, &mut seg)
-        });
-        tm.walk_flagged += best(repeats, || {
-            walk_segments_flagged(&mut tt, b.orig_ptr, &mut flagged, &mut seg)
-        });
-        tm.walk_room += best(repeats, || {
-            walk_segments_room(&mut tt, b.orig_ptr, &mut room, &mut seg)
-        });
-        assert!(
-            plain == bitmap && plain == flagged && plain == room,
-            "the walks differ"
-        );
-        tm.rle += best(repeats, || {
-            out.clear();
-            rle::unrle(&plain, &mut out, k).unwrap();
-        });
-        let mut c = 0;
-        tm.crc += best(repeats, || c = crc::crc32(&out, k));
-        assert_eq!(c, b.crc, "a block's CRC");
-        decoded.extend_from_slice(&out);
-    }
-    assert!(
-        decoded == mibz2::decode(&data).unwrap(),
-        "the stages' output differs from decode's"
-    );
-
-    let n = decoded.len() as f64;
+    let n = n as f64;
     let cb = |s: f64| s * ghz * 1e9 / n;
     let rows = [
         ("scanner (headers, Huffman)", tm.scan),
         ("MTF + RLE2", tm.mtf),
         ("T-vector build", tm.build),
-        ("walk, room (used)", tm.walk_room),
+        ("walk, room (used)", tm.walk),
         ("RLE1", tm.rle),
         ("CRC", tm.crc),
     ];
     let total: f64 = rows.iter().map(|r| r.1).sum();
     println!(
-        "{path}: {} blocks, {:.1} MB -> {:.1} MB ({:.2}x); c/B of output at {ghz} GHz, best of {repeats}",
-        blocks.len(),
+        "{path}: {blocks} blocks, {:.1} MB -> {:.1} MB ({:.2}x); c/B of output at {ghz} GHz, \
+         decode order, each stage's fastest of {passes} passes",
         data.len() as f64 / 1e6,
         n / 1e6,
         n / data.len() as f64,
@@ -129,21 +169,9 @@ fn main() {
     for (name, s) in rows {
         println!("  {name:28} {:6.2} c/B  {:5.1}%", cb(s), 100.0 * s / total);
     }
-    println!(
-        "  {:28} {:6.2} c/B  (not in the total)",
-        "walk, flagged (before #37)",
-        cb(tm.walk_flagged)
-    );
-    println!(
-        "  {:28} {:6.2} c/B  (not in the total)",
-        "walk, bitmap (before #4)",
-        cb(tm.walk_bitmap)
-    );
-    println!(
-        "  {:28} {:6.2} c/B  (not in the total)",
-        "walk, plain",
-        cb(tm.walk_plain)
-    );
+    for (name, s) in others {
+        println!("  {name:28} {:6.2} c/B  (not in the total)", cb(s));
+    }
     println!(
         "  {:28} {:6.2} c/B  = {:.0} MB/s on one thread",
         "total",

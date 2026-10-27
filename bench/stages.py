@@ -4,7 +4,9 @@ is made from (`--stages`).
 
     stages.py run OUT.jsonl --rounds R [--repeats N] [--pin CPU] FILE.bz2 ARM=EXE ...
 
-Each round runs every arm's `phases FILE REPEATS GHZ` once, pinned to one CPU (`taskset`,
+Each round runs every arm's `phases FILE N GHZ` once (N: phases' passes, each a decode of
+the file in decode order, each stage's fastest kept; a build from before bench 2.0.0 reads
+N as repeats of each stage on each block), pinned to one CPU (`taskset`,
 as `ab run` pins its 1-thread runs), the arms' order reversed every other round; one JSON
 line a run: the round, the arm, the run's wall seconds, and each stage's time in
 picoseconds a byte of output.
