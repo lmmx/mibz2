@@ -68,25 +68,76 @@ impl TVector {
     }
 }
 
-/// The T-vector of the last column `ll`, whose bytes `counts` counts
+/// The T-vector of the last column `ll`, whose bytes `counts` counts.
+///
+/// A counting sort: row `ftab[c]` (the next slot of byte `c`) gets the link `i` of each
+/// `ll[i] == c` in turn. On a run of equal bytes every step bumps the same counter, so
+/// each waits on the last's store (forwarded through memory). So the column is cut in
+/// four quarters, each with its own slots (byte `c`'s slots for quarter `q` start after
+/// those of `c` in the quarters before it), and the quarters are interleaved: four
+/// independent counters a step, and exactly the one-pass result, since a quarter's
+/// occurrences of `c` all come before the next quarter's (pbz2 0.2.0's `link`; #7).
 pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
     let tt = &mut tt.0;
     tt.clear();
     tt.extend(ll.iter().map(|&c| c as u32));
+    let n = ll.len();
     let mut ftab = [0u32; 256];
     let mut cum = 0u32;
     for i in 0..256 {
         ftab[i] = cum;
         cum += counts[i];
     }
-    for (i, &c) in ll.iter().enumerate() {
-        let k = ftab[c as usize] as usize;
-        // (k < len, as the counts are ll's own: indexed checked all the same, and the
-        // link assigned, not added, so each link is some i < len whatever happened)
+    // (k < len, as the counts are ll's own: indexed checked all the same, and the link
+    // assigned, not added, so each link is some i < len whatever happened)
+    if n < BUILD_LANES_MIN {
+        for (i, &c) in ll.iter().enumerate() {
+            let k = ftab[c as usize] as usize;
+            tt[k] = (tt[k] & 0xff) | (i as u32) << 8;
+            ftab[c as usize] += 1;
+        }
+        return;
+    }
+    let q = n / 4;
+    // each quarter's first slot for each byte: the slots of the quarters before it after
+    // ftab's (the last quarter, ll[3q..], also takes the n % 4 bytes past 4q)
+    let mut slot = [[0u32; 256]; 4];
+    slot[0] = ftab;
+    for k in 1..4 {
+        let mut next = slot[k - 1];
+        for &c in &ll[(k - 1) * q..k * q] {
+            next[c as usize] += 1;
+        }
+        slot[k] = next;
+    }
+    let [mut s0, mut s1, mut s2, mut s3] = slot;
+    for i in 0..q {
+        let (c0, c1, c2, c3) = (ll[i], ll[q + i], ll[2 * q + i], ll[3 * q + i]);
+        let (k0, k1, k2, k3) = (
+            s0[c0 as usize] as usize,
+            s1[c1 as usize] as usize,
+            s2[c2 as usize] as usize,
+            s3[c3 as usize] as usize,
+        );
+        tt[k0] = (tt[k0] & 0xff) | (i as u32) << 8;
+        tt[k1] = (tt[k1] & 0xff) | ((q + i) as u32) << 8;
+        tt[k2] = (tt[k2] & 0xff) | ((2 * q + i) as u32) << 8;
+        tt[k3] = (tt[k3] & 0xff) | ((3 * q + i) as u32) << 8;
+        s0[c0 as usize] += 1;
+        s1[c1 as usize] += 1;
+        s2[c2 as usize] += 1;
+        s3[c3 as usize] += 1;
+    }
+    for (i, &c) in ll.iter().enumerate().skip(4 * q) {
+        let k = s3[c as usize] as usize;
         tt[k] = (tt[k] & 0xff) | (i as u32) << 8;
-        ftab[c as usize] += 1;
+        s3[c as usize] += 1;
     }
 }
+
+/// Columns shorter than this are built in one pass (the quarters' extra counting pass
+/// would cost more than the stalls it saves)
+const BUILD_LANES_MIN: usize = 4096;
 
 /// The plain walk: the list followed from the primary index, the RLE1-coded block out
 /// (`orig_ptr` below the block's length: checked by the caller)
@@ -457,6 +508,50 @@ fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The T-vector of one pass, the counting sort as it was before the quarters
+    fn build_one_pass(ll: &[u8], counts: &[u32; 256]) -> Vec<u32> {
+        let mut tt: Vec<u32> = ll.iter().map(|&c| c as u32).collect();
+        let mut ftab = [0u32; 256];
+        let mut cum = 0u32;
+        for i in 0..256 {
+            ftab[i] = cum;
+            cum += counts[i];
+        }
+        for (i, &c) in ll.iter().enumerate() {
+            let k = ftab[c as usize] as usize;
+            tt[k] = (tt[k] & 0xff) | (i as u32) << 8;
+            ftab[c as usize] += 1;
+        }
+        tt
+    }
+
+    #[test]
+    fn four_lane_build_equals_one_pass() {
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut rnd = || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        // random bytes, few distinct bytes in long runs, one byte, around the threshold
+        // and with n % 4 of every value
+        for n in [1, 3, 4095, 4096, 4097, 4098, 4099, 65_537, 900_001] {
+            let random: Vec<u8> = (0..n).map(|_| rnd() as u8).collect();
+            let runs: Vec<u8> = (0..n).map(|i| b"ab"[(i / 97) % 2]).collect();
+            let one = vec![7u8; n];
+            for ll in [random, runs, one] {
+                let mut counts = [0u32; 256];
+                for &c in &ll {
+                    counts[c as usize] += 1;
+                }
+                let mut tt = TVector::new();
+                build(&ll, &counts, &mut tt);
+                assert!(tt.0 == build_one_pass(&ll, &counts), "n {n}");
+            }
+        }
+    }
 
     fn check(ll: &[u8]) {
         let mut counts = [0u32; 256];
