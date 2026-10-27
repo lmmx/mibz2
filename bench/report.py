@@ -379,7 +379,8 @@ def stage_figures(lines: list[dict], mhz: float | None, pr: bool) -> dict:
             "walk": next((r["walk"] for r in ok.values() if r.get("walk")), None),
         }
         for key in keys:
-            v = [r["ps_per_byte"][key] / 1000 for r in ok.values()]
+            # a stage a build's phases doesn't have (from an earlier bench version) is left out
+            v = [r["ps_per_byte"][key] / 1000 for r in ok.values() if key in r["ps_per_byte"]]
             if not v:
                 continue
             med = statistics.median(v)
@@ -408,7 +409,8 @@ def stage_figures(lines: list[dict], mhz: float | None, pr: bool) -> dict:
             if k in b and not h[k].get("err") and not b[k].get("err")
         ]
         out["change"] = {
-            key: ratio_ci([x[key] / y[key] for x, y in pairs if y.get(key)]) for key in keys
+            key: ratio_ci([x[key] / y[key] for x, y in pairs if x.get(key) and y.get(key)])
+            for key in keys
         }
     return out
 
