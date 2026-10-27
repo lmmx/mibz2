@@ -91,128 +91,269 @@
     }
   }
 
-  // The hero chart: every figure (each metric, corpus and thread count) of master's
-  // recorded commits on one chart, as its change since the first commit of its class of
-  // results, turned so that up is better (throughput's ratio, the others' inverse). A
-  // class (a major bench version, a runner CPU and core count, a set of corpora) is never
-  // joined to another: each starts at × 1 again after a hairline naming it. Wikidata's
-  // lines are bold, with their 95% band; the other corpora's are faint. The legend hides
-  // or shows a metric.
-  const BETTER_UP = new Set(["mb_s"]);
-  function hero(data, root) {
-    // (drawn into #bench-hero, first on the page, when the page has one)
-    const target = document.getElementById("bench-hero") || root;
-    if (target !== root) { target.textContent = ""; target.classList.add("bh-root"); }
-    const box = el("section", { class: "bh-hero" }, target);
-    el("h2", { class: "bh-hero-title", id: "every-figure", text: "Every figure, every merge" }, box);
-    const lines = [];
-    for (const s of data.series) {
-      if (state.threads !== "all" && String(s.threads) !== state.threads) continue;
-      for (const l of s.lines) {
-        METRICS.forEach((m, mi) => {
-          const pts = l.points.filter((p) => p[m[0]]).sort((a, b) => a.c - b.c);
-          if (!pts.length) return;
-          const [b0, h0] = pts[0][m[0]];
-          lines.push({
-            s, m, mi, cls: l.class,
-            pts: pts.map((p, i) => {
-              const [v, h] = p[m[0]];
-              const f = BETTER_UP.has(m[0]) ? v / b0 : b0 / v;
-              return { c: p.c, f, half: f * Math.hypot(h / v, i ? h0 / b0 : 0), v, h, n: p.n, same: p.same_bytes };
-            }),
-          });
-        });
-      }
-    }
-    if (!lines.length) { el("p", { text: "No points yet." }, box); return; }
-    const hidden = new Set(state.heroHidden || []);
-    const cs = [...new Set(lines.flatMap((l) => l.pts.map((p) => p.c)))].sort((a, b) => a - b);
-    const tag = (cm) => (cm.pr ? `#${cm.pr}` : cm.sha.slice(0, 7));
-    const starts = new Map(); // class → its first commit
-    for (const l of lines) if (!starts.has(l.cls) || l.pts[0].c < starts.get(l.cls)) starts.set(l.cls, l.pts[0].c);
-    el("p", {
-      class: "bh-hero-note",
-      text: "Master's recorded commits, oldest to newest. Each line is one figure's change since the " +
-        "first commit of its class of results: × 1.10 is 10% better, whether faster, less CPU or " +
-        "less memory. Bold lines are the Wikidata dump blocks, with their 95% interval as a band; " +
-        "faint ones are the other corpora. Solid lines are one thread, dashed ones four. Hover a " +
-        "point for its figures; a commit's label links to its pull request.",
-    }, box);
-    const legend = el("div", { class: "bh-hero-legend", role: "group", "aria-label": "Metrics shown" }, box);
-    METRICS.forEach((m, mi) => {
-      const b = el("button", { type: "button", "aria-pressed": String(!hidden.has(m[0])), class: "bh-hero-key" }, legend);
-      el("span", { class: "bh-swatch", style: `background:${slot(mi)}` }, b);
-      b.append(`${m[1]} (${m[2]})`);
+  // The hero chart (#bench-hero, first on the page), after wikidata-pq's: every figure
+  // of one corpus (each metric at 1 and 4 threads) over master's recorded commits, each
+  // line on its own scale (its own range, padded), so every figure's shape shows at once;
+  // the left axis, in that figure's own units, is the highlighted line's, with its 95%
+  // band. Pointing at (or focusing) a legend entry or a line highlights it and fades the
+  // rest; a click or tap keeps it highlighted, and another releases it. A class of results
+  // (a major bench version, a runner CPU and core count, a set of corpora) is never joined
+  // to another: a dashed rule names each new one.
+  const hero = { pinned: null, hover: null, commit: null };
+  const HERO_DEFAULT = "mb_s-4";
+  function hero_(data, root) {
+    const host = document.getElementById("bench-hero") || el("div", {}, root);
+    host.textContent = "";
+    host.classList.add("bh-root");
+    const box = el("section", { class: "bh-hero" }, host);
+    const corpora = [...new Set(data.series.map((s) => s.corpus))];
+    if (!corpora.includes(state.heroCorpus)) state.heroCorpus = corpora.includes("wikidata") ? "wikidata" : corpora[0];
+    const head = el("div", { class: "bh-hero-head" }, box);
+    el("h2", { class: "bh-hero-title", id: "every-figure", text: "Every figure, every merge" }, head);
+    const seg = el("div", { class: "bh-seg", role: "radiogroup", "aria-label": "Corpus" }, head);
+    for (const c of corpora) {
+      const b = el("button", { type: "button", role: "radio", "aria-checked": String(c === state.heroCorpus), text: c, "data-hero-id": `corpus-${c}` }, seg);
       b.addEventListener("click", () => {
-        const h = new Set(state.heroHidden || []);
-        if (h.has(m[0])) h.delete(m[0]); else h.add(m[0]);
-        state.heroHidden = [...h];
+        state.heroCorpus = c;
         try { localStorage.setItem("mibz2-bench", JSON.stringify(state)); } catch (e) { /* (none) */ }
-        render(root, data);
+        hero_(data, root);
+        host.querySelector(`[data-hero-id="corpus-${c}"]`).focus();
       });
+    }
+    // the figures: each metric at each thread count, its points by commit
+    const figs = [];
+    METRICS.forEach((m, mi) => {
+      for (const s of data.series.filter((q) => q.corpus === state.heroCorpus).sort((a, b) => a.threads - b.threads)) {
+        const vals = new Map();
+        for (const l of s.lines) for (const p of l.points) if (p[m[0]]) vals.set(p.c, { v: p[m[0]][0], h: p[m[0]][1], n: p.n, cls: l.class, same: p.same_bytes });
+        if (vals.size) figs.push({ key: `${m[0]}-${s.threads}`, m, mi, threads: s.threads, label: `${m[1]}, ${s.threads} thread${s.threads === 1 ? "" : "s"}`, vals });
+      }
     });
-    const shown = lines.filter((l) => !hidden.has(l.m[0]));
-    const W = 960, H = 360, L = 60, R = 150, T = 26, B = 40;
-    const x = (c) => L + (cs.length === 1 ? (W - L - R) / 2 : (cs.indexOf(c) * (W - L - R)) / (cs.length - 1));
-    const fs = shown.flatMap((l) => l.pts.flatMap((p) => (l.s.corpus === "wikidata" ? [p.f - p.half, p.f + p.half] : [p.f])));
-    const ty = ticks(Math.min(1, ...fs) - 0.02, Math.max(1, ...fs) + 0.02, 6);
-    const y0 = ty[0], y1 = ty[ty.length - 1];
-    const y = (f) => T + (H - T - B) * (1 - (f - y0) / (y1 - y0 || 1));
-    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Every figure's change since the first commit of its class, by commit" }, box);
-    for (const v of ty) {
-      svg("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), class: Math.abs(v - 1) < 1e-9 ? "bh-grid bh-unity" : "bh-grid" }, s);
-      svg("text", { x: L - 6, y: y(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = `× ${v.toFixed(2)}`;
+    const byKey = new Map(figs.map((f) => [f.key, f]));
+    const cs = [...new Set(figs.flatMap((f) => [...f.vals.keys()]))].sort((a, b) => a - b);
+    const focusP = el("p", { class: "bh-hero-focus" }, box);
+    const body = el("div", { class: "bh-hero-chart" }, box);
+    const link = el("p", { class: "bh-hero-commit" }, box);
+    const legend = el("div", { class: "bh-hero-legend" }, box);
+    el("p", { class: "bh-hero-note", text: "Each line is scaled to its own range over the commits recorded, so every figure's shape shows at once; the axis on the left, in the figure's own units, is the highlighted line's, with its 95% interval as a band. Point at a legend entry or a line to highlight it; click or tap to keep it highlighted, and again to release it (on the keyboard: Tab to an entry, Enter to keep; on the chart, ←/→ a commit, ↑/↓ a line). Solid lines are one thread, dashed ones four. A dashed rule marks a new class of results (a bench version, a runner kind, a set of corpora), whose lines are never joined to the last's. Each commit's label links to its pull request." }, box);
+    const tip = el("div", { class: "bh-tip", hidden: "" }, box);
+    if (!cs.length) { el("p", { text: "No points yet." }, body); return; }
+    if (!byKey.has(hero.pinned)) hero.pinned = null;
+    if (!byKey.has(hero.hover)) hero.hover = null;
+    const current = () => hero.pinned || hero.hover || (byKey.has(HERO_DEFAULT) ? HERO_DEFAULT : figs[0].key);
+    const tag = (cm) => (cm.pr ? `#${cm.pr}` : cm.sha.slice(0, 7));
+
+    const W = Math.max(300, Math.round(body.clientWidth) || 700), H = W < 560 ? 320 : 400;
+    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `${figs.length} figures of the ${state.heroCorpus} corpus over ${cs.length} master commits, each on its own scale` }, body);
+    for (const f of figs) {
+      const vs = [...f.vals.values()].flatMap((o) => [o.v - o.h, o.v + o.h]);
+      const lo = Math.min(...vs), hi = Math.max(...vs);
+      const pad = (hi - lo) * 0.12 || Math.abs(hi) * 0.05 || 1;
+      f.ticks = ticks(Math.max(0, lo - pad), hi + pad, W < 560 ? 4 : 5);
+      f.lo = f.ticks[0]; f.hi = f.ticks[f.ticks.length - 1];
     }
-    for (const [cls, c] of starts) {
-      const bx = cs.length === 1 ? L : x(c) - (cs.indexOf(c) ? (W - L - R) / (cs.length - 1) / 2 : 0);
-      if (cs.indexOf(c)) svg("line", { x1: bx, x2: bx, y1: T - 8, y2: H - B, class: "bh-hero-boundary" }, s);
-      svg("text", { x: bx + 4, y: T - 12, class: "bh-tick" }, s).textContent = data.classes[cls];
+    const meas = svg("text", { class: "bh-tick", x: 0, y: -50 }, s);
+    const textW = (t) => { meas.textContent = t; return meas.getComputedTextLength(); };
+    let tw = 24;
+    for (const f of figs) for (const t of f.ticks) tw = Math.max(tw, textW(f.m[3](t)));
+    const M = { l: Math.ceil(tw) + 14, r: 14, t: 26, b: 30 };
+    const inner = W - M.l - M.r, ih = H - M.t - M.b;
+    const xi = new Map(cs.map((c, i) => [c, i]));
+    const padX = cs.length > 1 ? Math.min(24, inner / (cs.length - 1) / 2) : 0;
+    const x = (c) => (cs.length === 1 ? M.l + inner / 2 : M.l + padX + (xi.get(c) * (inner - 2 * padX)) / (cs.length - 1));
+    const y = (f, v) => M.t + ((f.hi - v) * ih) / (f.hi - f.lo || 1);
+
+    const gridG = svg("g", {}, s);
+    const deco = svg("g", {}, s);
+    svg("line", { x1: M.l, x2: W - M.r, y1: H - M.b, y2: H - M.b, class: "bh-grid" }, deco);
+    // each class's first commit: a dashed rule before it (none before the first), and its name
+    const first = new Map();
+    for (const f of figs) for (const [c, o] of f.vals) if (!first.has(o.cls) || c < first.get(o.cls)) first.set(o.cls, c);
+    for (const [cls, c] of [...first].sort((a, b) => a[1] - b[1])) {
+      const i = xi.get(c);
+      const xx = i ? (x(cs[i - 1]) + x(c)) / 2 : M.l;
+      if (i) svg("line", { x1: xx, x2: xx, y1: M.t - 8, y2: H - M.b, class: "bh-hero-rule" }, deco);
+      svg("text", { x: xx + 3, y: M.t - 12, class: "bh-tick" }, deco).textContent = data.classes[cls];
     }
-    for (const c of cs) {
+    const placed = [];
+    for (const c of cs.slice().reverse()) {
+      const cm = data.commits[c], text = tag(cm), w = textW(text);
+      const lx = Math.max(M.l + w / 2, Math.min(W - w / 2, x(c)));
+      if (!placed.every((q) => Math.abs(q - lx) >= w + 12)) continue;
+      placed.push(lx);
+      const a = svg("a", { href: cm.pr ? `${data.repo}/pull/${cm.pr}` : `${data.repo}/commit/${cm.sha}`, class: "bh-hero-xlink", "aria-label": `${text}: ${cm.subject}` }, deco);
+      svg("text", { x: lx, y: H - M.b + 17, "text-anchor": "middle", class: "bh-tick" }, a).textContent = text;
+    }
+    meas.remove();
+
+    const bandG = svg("g", {}, s);
+    const lineG = svg("g", {}, s);
+    const paths = new Map();
+    for (const f of figs) {
+      // one path per class, never joined across a class's boundary
+      let d = "", prev = null;
+      for (const c of cs) {
+        if (!f.vals.has(c)) { prev = null; continue; }
+        const o = f.vals.get(c);
+        d += `${prev !== null && prev === o.cls ? "L" : "M"}${x(c).toFixed(1)} ${y(f, o.v).toFixed(1)}`;
+        prev = o.cls;
+      }
+      const p = svg("path", { d: d + (f.vals.size === 1 ? "h0" : ""), class: `bh-hero-line${f.threads === 1 ? "" : " bh-dashed"}`, stroke: slot(f.mi) }, lineG);
+      paths.set(f.key, p);
+    }
+    const axisG = svg("g", {}, s);
+    const cross = svg("line", { y1: M.t, y2: H - M.b, class: "bh-cross", visibility: "hidden" }, s);
+    const dots = svg("g", {}, s);
+    const hit = svg("rect", { x: M.l - 8, y: M.t - 6, width: inner + 16, height: ih + 6, class: "bh-hit bh-hero-hit", tabindex: 0, "data-hero-id": "plot", "aria-label": "The chart: ←/→ moves between commits, ↑/↓ between lines, Enter keeps the highlighted line, Escape releases it" }, s);
+
+    const paint = () => {
+      const key = current(), f = byKey.get(key), active = !!(hero.pinned || hero.hover);
+      for (const [k, p] of paths) {
+        p.classList.toggle("is-on", k === key);
+        p.classList.toggle("is-dim", active && k !== key);
+      }
+      lineG.appendChild(paths.get(key));
+      gridG.textContent = ""; axisG.textContent = ""; dots.textContent = ""; bandG.textContent = "";
+      const col = slot(f.mi);
+      svg("line", { x1: M.l - 0.5, x2: M.l - 0.5, y1: M.t, y2: H - M.b, class: "bh-hero-axis", stroke: col }, axisG);
+      for (const t of f.ticks) {
+        svg("line", { x1: M.l, x2: W - M.r, y1: y(f, t), y2: y(f, t), class: "bh-grid" }, gridG);
+        svg("line", { x1: M.l - 5, x2: M.l - 0.5, y1: y(f, t), y2: y(f, t), class: "bh-hero-axis", stroke: col }, axisG);
+        svg("text", { x: M.l - 8, y: y(f, t) + 4, "text-anchor": "end", class: "bh-tick" }, axisG).textContent = f.m[3](t);
+      }
+      // the highlighted line's 95% band and whiskers, one band per class
+      let run = [];
+      const flush = () => {
+        if (run.length > 1) {
+          const up = run.map((c) => `${x(c)},${y(f, f.vals.get(c).v + f.vals.get(c).h)}`);
+          const dn = run.map((c) => `${x(c)},${y(f, f.vals.get(c).v - f.vals.get(c).h)}`).reverse();
+          svg("polygon", { points: [...up, ...dn].join(" "), class: "bh-hero-band", fill: col }, bandG);
+        }
+        run = [];
+      };
+      for (const c of cs) {
+        if (!f.vals.has(c)) { flush(); continue; }
+        if (run.length && f.vals.get(run[run.length - 1]).cls !== f.vals.get(c).cls) flush();
+        run.push(c);
+        const o = f.vals.get(c);
+        svg("line", { x1: x(c), x2: x(c), y1: y(f, o.v - o.h), y2: y(f, o.v + o.h), class: "bh-whisker", stroke: col }, dots);
+        svg("circle", { cx: x(c), cy: y(f, o.v), r: hero.commit === c ? 5 : 3.5, class: "bh-marker", fill: col }, dots);
+      }
+      flush();
+      const lastC = cs.filter((c) => f.vals.has(c)).pop(), lv = f.vals.get(lastC);
+      focusP.textContent = "Axis: ";
+      el("strong", { text: f.label }, focusP);
+      focusP.append(` (${f.m[2]}) · ${f.m[3](lv.v)} ± ${f.m[3](lv.h)} at ${tag(data.commits[lastC])}${hero.pinned ? " · kept: click it again to release it" : ""}`);
+      for (const b of legend.querySelectorAll(".bh-hero-item")) {
+        b.classList.toggle("is-focus", b.dataset.key === key);
+        b.setAttribute("aria-pressed", String(b.dataset.key === hero.pinned));
+      }
+    };
+    const commitLinks = (c) => {
       const cm = data.commits[c];
-      const a = svg("a", { href: cm.pr ? `${data.repo}/pull/${cm.pr}` : `${data.repo}/commit/${cm.sha}`, target: "_top" }, s);
-      svg("text", { x: x(c), y: H - B + 18, class: "bh-tick bh-hero-x", "text-anchor": "middle" }, a).textContent = tag(cm);
-      svg("title", {}, a).textContent = `${cm.sha.slice(0, 7)} ${cm.subject}\n${cm.date.slice(0, 10)} · bench ${cm.bench}`;
-    }
-    // the faint corpora first, Wikidata's bold lines and bands over them
-    const order = [...shown].sort((a, b) => (a.s.corpus === "wikidata") - (b.s.corpus === "wikidata"));
-    const labels = [];
-    for (const l of order) {
-      const main = l.s.corpus === "wikidata";
-      const col = slot(l.mi);
-      const g = svg("g", { class: main ? "bh-hero-line bh-hero-main" : "bh-hero-line" }, s);
-      if (main && l.pts.length > 1) {
-        const up = l.pts.map((p) => `${x(p.c)},${y(p.f + p.half)}`);
-        const dn = l.pts.map((p) => `${x(p.c)},${y(p.f - p.half)}`).reverse();
-        svg("polygon", { points: [...up, ...dn].join(" "), fill: col, class: "bh-hero-band" }, g);
+      link.textContent = "";
+      el("strong", { text: tag(cm) }, link);
+      link.append(` · ${cm.date.slice(0, 10)} · ${cm.subject} · `);
+      el("a", { href: `${data.repo}/commit/${cm.sha}`, text: `commit ${cm.sha.slice(0, 7)}` }, link);
+      if (cm.pr) { link.append(" · "); el("a", { href: `${data.repo}/pull/${cm.pr}`, text: `pull request #${cm.pr}` }, link); }
+      if (cm.run) { link.append(" · "); el("a", { href: cm.run, text: "bench run" }, link); }
+    };
+    const hideTip = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); hero.commit = null; };
+    const show = (c, py) => {
+      hero.commit = c;
+      commitLinks(c);
+      cross.setAttribute("x1", x(c)); cross.setAttribute("x2", x(c)); cross.setAttribute("visibility", "visible");
+      paint();
+      const key = current(), cm = data.commits[c];
+      tip.textContent = "";
+      el("div", { class: "bh-tip-title", text: `${tag(cm)} · ${cm.sha.slice(0, 7)} · bench ${cm.bench}` }, tip);
+      el("div", { class: "bh-tip-subject", text: cm.subject.length > 90 ? `${cm.subject.slice(0, 88)}…` : cm.subject }, tip);
+      for (const f of figs) {
+        if (!f.vals.has(c)) continue;
+        const o = f.vals.get(c);
+        const row = el("div", { class: `bh-tip-row${f.key === key ? " is-on" : ""}` }, tip);
+        el("span", { class: "bh-swatch", style: `background:${slot(f.mi)}` }, row);
+        el("span", { text: `${f.label}: ${f.m[3](o.v)} ± ${f.m[3](o.h)} ${f.m[2]}${o.same ? "" : " (SAME BYTES: NO)"}` }, row);
       }
-      if (l.pts.length > 1) {
-        svg("polyline", {
-          points: l.pts.map((p) => `${x(p.c)},${y(p.f)}`).join(" "),
-          stroke: col, fill: "none", "stroke-dasharray": l.s.threads === 1 ? null : "6 4",
-        }, g);
+      tip.hidden = false;
+      const r = s.getBoundingClientRect(), hb = box.getBoundingClientRect(), k = r.width / W;
+      const px = r.left - hb.left + x(c) * k, tw2 = tip.offsetWidth, th = tip.offsetHeight;
+      let left = px + 14;
+      if (left + tw2 > hb.width) left = px - tw2 - 14;
+      tip.style.left = `${Math.max(0, Math.min(hb.width - tw2, left))}px`;
+      const top = r.top - hb.top + M.t * k, bottom = r.top - hb.top + (H - M.b) * k;
+      if (W < 560) tip.style.top = `${r.bottom - hb.top + 4}px`;
+      else tip.style.top = `${py < M.t + ih / 2 ? Math.max(top, bottom - th) : top}px`;
+    };
+    const nearest = (c, py) => {
+      let best = null, bd = Infinity;
+      for (const f of figs) {
+        if (!f.vals.has(c)) continue;
+        const d = Math.abs(y(f, f.vals.get(c).v) - py);
+        if (d < bd) { bd = d; best = f.key; }
       }
-      for (const p of l.pts) {
-        const cm = data.commits[p.c];
-        if (main && p.half > 0) svg("line", { x1: x(p.c), x2: x(p.c), y1: y(p.f - p.half), y2: y(p.f + p.half), stroke: col, class: "bh-whisker" }, g);
-        svg("circle", { cx: x(p.c), cy: y(p.f), r: main ? 4.5 : 2.5, fill: col }, g);
-        const hit = svg("circle", { cx: x(p.c), cy: y(p.f), r: 10, class: "bh-hit" }, g);
-        svg("title", {}, hit).textContent =
-          `${l.m[1]} · ${l.s.corpus} · ${l.s.threads} thread${l.s.threads === 1 ? "" : "s"}\n` +
-          `${tag(cm)} ${cm.sha.slice(0, 7)} ${cm.subject}\n` +
-          `${l.m[3](p.v)} ± ${l.m[3](p.h)} ${l.m[2]} (95% interval, ${p.n} rounds)\n` +
-          `× ${p.f.toFixed(3)} ± ${p.half.toFixed(3)} since ${tag(data.commits[l.pts[0].c])}` +
-          (p.same ? "" : "\nSAME BYTES: NO");
+      return best;
+    };
+    const at = (ev) => {
+      const r = s.getBoundingClientRect();
+      const px = ((ev.clientX - r.left) * W) / r.width, py = ((ev.clientY - r.top) * H) / r.height;
+      const c = cs.reduce((a, q) => (Math.abs(x(q) - px) < Math.abs(x(a) - px) ? q : a), cs[0]);
+      return { c, py, key: nearest(c, py) };
+    };
+    const move = (ev) => { const { c, py, key } = at(ev); if (!hero.pinned && key) hero.hover = key; show(c, py); };
+    hit.addEventListener("pointermove", move);
+    hit.addEventListener("pointerdown", move);
+    hit.addEventListener("click", (ev) => {
+      const { c, py, key } = at(ev);
+      if (hero.pinned) { hero.pinned = null; hero.hover = key; } else hero.pinned = key;
+      show(c, py);
+    });
+    hit.addEventListener("pointerleave", () => { hideTip(); hero.hover = null; paint(); });
+    let ki = cs.length - 1;
+    const keyShow = () => { const f = byKey.get(current()); show(cs[ki], f.vals.has(cs[ki]) ? y(f, f.vals.get(cs[ki]).v) : M.t); };
+    hit.addEventListener("focus", keyShow);
+    hit.addEventListener("blur", () => { hideTip(); hero.hover = null; paint(); });
+    hit.addEventListener("keydown", (ev) => {
+      if (ev.key === "ArrowLeft") ki = Math.max(0, ki - 1);
+      else if (ev.key === "ArrowRight") ki = Math.min(cs.length - 1, ki + 1);
+      else if (ev.key === "ArrowUp" || ev.key === "ArrowDown") {
+        const c = cs[ki];
+        const order = figs.filter((f) => f.vals.has(c)).sort((a, b) => y(a, a.vals.get(c).v) - y(b, b.vals.get(c).v)).map((f) => f.key);
+        const i = order.indexOf(current());
+        const next = order[i < 0 ? 0 : Math.max(0, Math.min(order.length - 1, i + (ev.key === "ArrowUp" ? -1 : 1)))];
+        if (hero.pinned) hero.pinned = next; else hero.hover = next;
+      } else if (ev.key === "Enter" || ev.key === " ") {
+        if (hero.pinned) { hero.hover = hero.pinned; hero.pinned = null; } else hero.pinned = current();
+      } else if (ev.key === "Escape") { hero.pinned = null; hero.hover = null; }
+      else return;
+      ev.preventDefault();
+      keyShow();
+    });
+
+    // The legend under the chart, by metric: pointing at or focusing an entry highlights
+    // its line and fades the rest; a click, tap or Enter keeps it, and another releases it
+    METRICS.forEach((m, mi) => {
+      const items = figs.filter((f) => f.mi === mi);
+      if (!items.length) return;
+      const g = el("div", { class: "bh-hero-lgroup", role: "group", "aria-label": m[1] }, legend);
+      el("div", { class: "bh-hero-ghead", text: `${m[1]} (${m[2]})` }, g);
+      for (const f of items) {
+        const b = el("button", { type: "button", class: "bh-hero-item", "aria-pressed": "false", "data-key": f.key, "data-hero-id": `fig-${f.key}` }, g);
+        svg("line", { x1: 1, x2: 21, y1: 5, y2: 5, stroke: slot(mi), "stroke-width": 2.5, "stroke-dasharray": f.threads === 1 ? null : "5 3" }, svg("svg", { width: 22, height: 10, "aria-hidden": "true" }, b));
+        const lv = f.vals.get(cs.filter((c) => f.vals.has(c)).pop());
+        el("span", { text: `${f.threads} thread${f.threads === 1 ? "" : "s"}` }, b);
+        el("span", { class: "bh-num", text: `${f.m[3](lv.v)} ± ${f.m[3](lv.h)}` }, b);
+        b.addEventListener("click", () => { hero.pinned = hero.pinned === f.key ? null : f.key; hero.hover = f.key; paint(); });
+        const enter = () => { hero.hover = f.key; paint(); };
+        const leave = () => { if (hero.hover === f.key) { hero.hover = null; paint(); } };
+        b.addEventListener("pointerenter", enter);
+        b.addEventListener("focus", enter);
+        b.addEventListener("pointerleave", leave);
+        b.addEventListener("blur", leave);
       }
-      if (main) {
-        const last = l.pts[l.pts.length - 1];
-        labels.push({ y: y(last.f), x: x(last.c) + 10, col, text: `${l.m[1]} ${l.s.threads}t × ${last.f.toFixed(2)}` });
-      }
-    }
-    // the end labels, spread so they don't overlap
-    labels.sort((a, b) => a.y - b.y);
-    for (let i = 1; i < labels.length; i++) labels[i].y = Math.max(labels[i].y, labels[i - 1].y + 13);
-    for (const lb of labels) svg("text", { x: lb.x, y: lb.y + 4, class: "bh-hero-label", fill: lb.col }, s).textContent = lb.text;
+    });
+    commitLinks(cs[cs.length - 1]);
+    paint();
   }
 
   function table(data, metric, root) {
@@ -249,7 +390,7 @@
       el("p", { text: "No master commit is recorded yet: the first record appears once the Benchmark workflow has run on a push to master." }, root);
       return;
     }
-    hero(data, root);
+    hero_(data, root);
     const controls = el("div", { class: "bh-controls" }, root);
     const pick = (label, options, value, set) => {
       const lab = el("label", {}, controls);
@@ -286,7 +427,7 @@
     if (!root) return;
     fetch(root.dataset.src)
       .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then((d) => render(root, d))
+      .then((d) => { render(root, d); let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => hero_(d, root), 150); }); })
       .catch((e) => { root.textContent = `The benchmark history could not be loaded (${e.message}).`; });
   }
   if (window.document$ && typeof window.document$.subscribe === "function") window.document$.subscribe(init);
