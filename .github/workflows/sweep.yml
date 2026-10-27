@@ -1,0 +1,83 @@
+# The walk's settings swept on the Wikidata blocks, on one runner (examples/sweep.rs): the
+# lane count, the segment count and the prefetch, each against the settings Segmented uses,
+# paired by round. A diagnostic for choosing settings to try, from the Actions tab only: its
+# figures are the run's summary and artifact, never recorded, and a setting it favours is
+# decided by the decoder's own A/B (bench.yml) on a pull request.
+name: Walk sweep
+
+on:
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: "Rounds (each walks every block at every setting)"
+        required: false
+        default: "5"
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: never
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # lbzip2: examples/windows.rs's check of the Wikidata blocks
+      - name: lbzip2
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: cargo build --release --example sweep --example windows
+
+      # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
+      - name: Wikidata windows (cache)
+        uses: actions/cache@v4
+        with:
+          path: windows
+          key: bench-wikidata-${{ hashFiles('bench/wikidata.json') }}
+
+      - name: Wikidata windows
+        run: |
+          mkdir -p corpora
+          dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+          if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ] && git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null; then
+            git archive origin/bench-data "$dir" | tar -x || true
+          fi
+          python3 bench/wikidata.py fetch bench/wikidata.json "$dir"
+          python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2
+
+      - name: Sweep
+        env:
+          ROUNDS: ${{ inputs.rounds }}
+        run: |
+          mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
+          model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
+          ghz=$(python3 -c "print(round($mhz / 1000, 4))")
+          start=$SECONDS
+          taskset -c 1 target/release/examples/sweep corpora/wikidata.bz2 "$ROUNDS" "$ghz" | tee sweep.txt
+          {
+            echo "## Walk sweep: $model, $(nproc) cores, at its reported clock (${ghz} GHz), pinned to one CPU"
+            echo
+            echo "Head \`$(git rev-parse --short HEAD)\`, $(rustc --version), $((SECONDS - start)) s. Diagnostic only: the decoder's A/B decides."
+            echo
+            echo '```'
+            cat sweep.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Results
+        if: "!cancelled()"
+        uses: actions/upload-artifact@v4
+        with:
+          name: sweep-${{ github.sha }}
+          path: sweep.txt
+          if-no-files-found: ignore
