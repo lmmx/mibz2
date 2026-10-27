@@ -27,10 +27,12 @@ Labels:
     block, and the walks ran back to back on it.
 - **Now:**
   - both instruments run in decode order (#45, #47);
-  - in decode order, the walk is about a fifth costlier than the stage table had shown
-    (CI: 4.02 → 4.97 c/B on an EPYC 9V74);
-  - the stage total explains 90% of the whole decoder's one-thread cycles, against 81%
-    before;
+  - in decode order, the walk costs more than the stage table had shown, by an amount
+    that depends on the runner: +23.9% on an EPYC 9V74 (4.02 → 4.97 c/B), +3.6% (within
+    noise) on an EPYC 9V45, where the build moved instead (+8.7%), and about +40–50% on
+    the local VM. A stage table's shares are a runner's, not the decoder's;
+  - on the 9V74, the stage total explains 90% of the whole decoder's one-thread cycles,
+    against 81% before;
   - the warmth lived in the 1.8 MB of segment output buffers, not the T-vector. That was
     the first sign that the output side matters.
 - **Lesson:** a benchmark that repeats an operation over retained working memory answers
