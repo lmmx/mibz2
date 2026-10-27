@@ -207,7 +207,7 @@ def alternatives(res: dict | None) -> str:
 
 
 def alternatives_data(res: dict | None, data: dict) -> dict | None:
-    """The Alternatives page's chart data: the latest master result's figures"""
+    """The Alternatives page's chart data: the latest master result's figures."""
     if res is None:
         return None
     pr = next((c.get("pr") for c in data["commits"] if c["sha"] == res["head"]), None)
