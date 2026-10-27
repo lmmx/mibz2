@@ -14,6 +14,7 @@
 - bench/report.py models a whole dump's decode (103,488,697,311 B of bz2), labelled as modelled: the scanner's time per byte of bz2, the workers' per byte of output (the dump's output taken as its bz2 bytes times the sample's 17.69×), the wall at N threads as the larger of the two (the workers' over N) times the sample's wall over that bound, and the same gap as a fixed cost beside it; its interval adds the windows' ratio spread (±14.0%) in quadrature to the part scaled by output
 - The bench version is semver, `BENCH = "1.0.0"` in bench/report.py, stamped on every result as `bench`
 - The first pull request run (lmmx/mibz2#11, head c6ef0b4, an AMD EPYC 9V45 runner with 4 cores) took 3m05s in all; mibz2 decoded the Wikidata blocks at 252 MB/s on 1 thread and 478 MB/s on 4, and every arm gave the same bytes on every corpus
+- The first master record on `bench-results` is 2a68359's (bench 1.0.0, an AMD EPYC 7763 runner with 4 cores, 10 rounds): one commit and 14 series (7 corpora at 1 and 4 threads) in the History page's data (docs/scripts/bench_history.py)
 - examples/ab.rs `run` takes `--settle S`, the length of its load sample before each run (default 2 s, as before); the workflow passes 0.25
 - The documentation site is Zensical (`zensical.toml`, `docs/site/`), adapted from lmmx/pq-glue's: home, installation, quickstart, concepts (checks, how it works, prior work), benchmarks (methodology, history, competitors), the Python API by mkdocstrings (`::: mibz2`), the Rust API as a summary and a link to docs.rs, background (history, journals) and maintainers (development, documentation, releasing)
 - `.github/workflows/site.yml` builds the site on master pushes, pull requests and each completed Benchmark run on master (`workflow_run`), deploys master to the `gh-pages` branch and a pull request to `gh-pages/pr-preview/pr-<number>/` with rossjrw/pr-preview-action's comment, once Pages serves `gh-pages`
@@ -24,7 +25,6 @@
 
 ## Missing
 
-- No record on `bench-results` until the Benchmark workflow runs on a push to master; the History and Against other decoders pages say so until then
 - No end-to-end figures: the benchmark times the decoder alone (wikidata-pq's tracker holds the pipeline's)
 - No aarch64 runner in the benchmark: every figure is an x86-64 runner's
 
