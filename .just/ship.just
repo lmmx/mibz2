@@ -15,6 +15,9 @@ release bump_level="patch":
     new_version=$(uv version --short)
     sed -i "0,/^version = \".*\"/s//version = \"$new_version\"/" Cargo.toml
     cargo update --workspace --quiet
+    # 🦀 And the benchmark's alternatives build (bench/alternatives), which has its own lock
+    # and takes this crate by path: left behind, bench.yml's --locked build fails on master
+    cargo update -p mibz2 --manifest-path bench/alternatives/Cargo.toml --quiet
 
     # 📝 Writing the crate's changelog with release-plz: CI publishes the crate to crates.io
     # at this version (the crates job in CI.yml)
@@ -103,6 +106,9 @@ ship-rust-and-python bump="patch" mode="":
         sed -i "0,/^version = \".*\"/s//version = \"$version\"/" Cargo.toml
     fi
     cargo update --workspace --quiet
+    # 🦀 And the benchmark's alternatives build (bench/alternatives), which has its own lock
+    # and takes this crate by path: left behind, bench.yml's --locked build fails on master
+    cargo update -p mibz2 --manifest-path bench/alternatives/Cargo.toml --quiet
 
     # 📝 Writing the changelog with release-plz
     release-plz update --allow-dirty
