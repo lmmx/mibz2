@@ -20,3 +20,7 @@ target/
 
 # Documentation site build output
 /site/
+
+# The benchmark pages' generated data (docs/scripts/bench_history.py)
+/docs/site/assets/bench-history.json
+/docs/generated/

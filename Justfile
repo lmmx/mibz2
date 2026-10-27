@@ -1,4 +1,5 @@
 import ".just/commit.just"
+import ".just/docs.just"
 import ".just/python.just"
 import ".just/quality.just"
 import ".just/rust.just"
