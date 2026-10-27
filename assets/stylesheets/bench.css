@@ -107,3 +107,72 @@
   color: var(--bh-ink-2);
   font-size: 0.75rem;
 }
+
+/* The hero chart: every figure on one chart, first on the page */
+.md-typeset .bh-root .bh-hero {
+  margin: 0 0 1.6rem;
+  padding: 0.8rem 1rem 0.6rem;
+  border: 1px solid var(--bh-grid);
+  border-radius: 6px;
+}
+.md-typeset .bh-root .bh-hero-title {
+  margin: 0 0 0.3rem;
+}
+.md-typeset .bh-root .bh-hero-note {
+  margin: 0.2rem 0 0.5rem;
+  font-size: 0.7rem;
+  color: var(--bh-ink-2);
+}
+.bh-root .bh-hero-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
+  margin: 0.2rem 0 0.4rem;
+}
+.bh-root .bh-hero-key {
+  font: inherit;
+  font-size: 0.7rem;
+  color: inherit;
+  background: none;
+  border: 1px solid var(--bh-grid);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  cursor: pointer;
+}
+.bh-root .bh-hero-key[aria-pressed="false"] {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+.bh-root .bh-hero-line polyline {
+  stroke-width: 1.2;
+  opacity: 0.45;
+}
+.bh-root .bh-hero-line circle:not(.bh-hit) {
+  opacity: 0.45;
+}
+.bh-root .bh-hero-main polyline {
+  stroke-width: 2.6;
+  opacity: 1;
+}
+.bh-root .bh-hero-main circle:not(.bh-hit) {
+  opacity: 1;
+}
+.bh-root .bh-hero-band {
+  opacity: 0.14;
+  stroke: none;
+}
+.bh-root .bh-unity {
+  stroke: var(--bh-ink-2);
+  stroke-dasharray: 2 3;
+}
+.bh-root .bh-hero-boundary {
+  stroke: var(--bh-ink-2);
+  stroke-width: 1;
+}
+.bh-root .bh-hero-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+.bh-root .bh-hero-x {
+  font-weight: 600;
+}
