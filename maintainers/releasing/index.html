@@ -1128,6 +1128,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#release-notes-the-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Release notes: the evidence
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Release notes: the evidence">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The template
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1207,6 +1235,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#release-notes-the-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Release notes: the evidence
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Release notes: the evidence">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The template
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1261,6 +1317,74 @@ GitHub release). Both use Trusted Publishing, in the <code>pypi</code> and <code
 <li><strong>Release Notes</strong> (<code>release-notes.yml</code>): makes a version's GitHub release (<code>v&lt;version&gt;</code>)
   at a given commit if it does not exist, or updates its notes, from that version's
   section of <code>CHANGELOG.md</code>.</li>
+</ul>
+<h2 id="release-notes-the-evidence">Release notes: the evidence<a class="headerlink" href="#release-notes-the-evidence" title="Permanent link">&para;</a></h2>
+<p>Every version's section of <code>CHANGELOG.md</code> is the GitHub release's notes, so it carries the
+release's evidence. release-plz writes a one-line entry per commit (and only for commits
+that touch the crate's files). After the release, rewrite the section by hand:</p>
+<ol>
+<li>
+<p><strong>Dispatch the tag-to-tag bench.</strong> Run <strong>Benchmark</strong> (<code>bench.yml</code>) from the Actions tab
+   with <em>Use workflow from</em> the new tag and <code>base</code> the previous tag:</p>
+<div class="language-sh highlight"><pre><span></span><code>gh<span class="w"> </span>workflow<span class="w"> </span>run<span class="w"> </span>bench.yml<span class="w"> </span>--ref<span class="w"> </span>vX.Y.Z<span class="w"> </span>-f<span class="w"> </span><span class="nv">base</span><span class="o">=</span>vX.Y.W
+</code></pre></div>
+<p>It is a paired A/B like a pull request's (the base's own harness binary as the arm
+<code>mibz2@base/ab</code>, the order alternating round to round), on one runner. Its figures are
+the run's summary and its artifact (<code>bench-pr-&lt;sha&gt;</code>: <code>result.json</code>, <code>comment.md</code>,
+<code>runs.jsonl</code>, <code>stages.jsonl</code>); nothing is recorded. The base needs <code>examples/ab.rs</code>,
+and the stage table needs <code>examples/phases.rs</code> (v0.1.2 on); v0.1.3 and v0.1.4 have run
+as bases this way. The comment's "the merge base with master" means the base given.</p>
+</li>
+<li>
+<p><strong>Write the entry</strong> to the template below, from that run alone, in a pull request.
+   Never add up or chain the pull requests' figures: they were measured against other
+   bases, often on other runner CPUs. A section holds no line starting <code>## [</code> (Release
+   Notes ends the section there), so its headings are <code>###</code> and below.</p>
+</li>
+<li>
+<p><strong>Re-run Release Notes</strong> (<code>release-notes.yml</code>) once the pull request is merged, with the
+   version and its release commit, so the GitHub release takes the section from master.</p>
+</li>
+</ol>
+<h3 id="the-template">The template<a class="headerlink" href="#the-template" title="Permanent link">&para;</a></h3>
+<div class="language-markdown highlight"><pre><span></span><code><span class="gu">## [X.Y.Z](https://github.com/lmmx/mibz2/compare/vX.Y.W...vX.Y.Z) - YYYY-MM-DD</span>
+
+One or two sentences: what changed for a user, and the release's own Wikidata figure at
+1 thread and at the runner's cores, from the tag-to-tag run.
+
+<span class="gu">### Measured: vX.Y.Z against vX.Y.W</span>
+
+| corpus | threads | wall, vX.Y.W → vX.Y.Z (median) | wall change (95% interval) | peak RSS | same bytes |
+|---|--:|--:|--:|--:|---|
+
+Peak RSS, same bytes, and the stage table's rows for any stage a change moved (with the
+total), as bullets.
+
+&lt;details&gt;&lt;summary&gt;Reproducing this run&lt;/summary&gt;
+
+The rerun command and the artifact's name; both tags' full SHAs; the runner's CPU, cores,
+clock, kernel and image; rustc; the bench version, rounds and threads; the corpora's bytes
+and full SHA-256s (<span class="sb">`result.json`</span>'s <span class="sb">`corpora`</span>).
+
+&lt;/details&gt;
+
+<span class="gu">### &lt;!-- 3 --&gt;Performance (one heading per group: Features, Bug Fixes, ...)</span>
+
+<span class="k">-</span><span class="w"> </span><span class="gs">**The change, in a few words**</span> ([#N](https://github.com/lmmx/mibz2/pull/N))
+<span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="ge">*Mechanism:*</span> one or two sentences.
+<span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="ge">*Measured, in its pull request:*</span> its own paired figures, with the runner CPU.
+<span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="ge">*Trade-offs:*</span> what got slower or bigger, and why it was kept.
+<span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="ge">*Evidence:*</span> the bench comment, its runs, the journal entry.
+
+<span class="gu">### Downstream: wikidata-pq (if it exists; marked measured or modelled)</span>
+</code></pre></div>
+<ul>
+<li><strong>Decoder figures and downstream figures stay apart.</strong> wikidata-pq's figures go under
+  their own heading, each marked <em>measured</em> (a run, linked) or <em>modelled</em> (what the model
+  assumes).</li>
+<li><strong>Measurement-only and docs-only changes</strong> get one line each: what they add, and that
+  the decoder's figures did not change.</li>
+<li><strong>Rejected experiments</strong> go in the journal (<code>docs/journal/</code>), not the changelog.</li>
 </ul>
 
 
