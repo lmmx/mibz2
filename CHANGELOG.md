@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5](https://github.com/lmmx/mibz2/compare/v0.1.4...v0.1.5) - 2026-10-27
+
+### <!-- 3 -->Performance
+
+- *(bwt)* the flagged walk in passes with a shared offset, as libsais's chain decode runs ([#37](https://github.com/lmmx/mibz2/pull/37))
+
 ## [0.1.4](https://github.com/lmmx/mibz2/compare/v0.1.3...v0.1.4) - 2026-10-27
 
 ### <!-- 3 -->Performance

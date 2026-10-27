@@ -73,7 +73,7 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "mibz2"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "bzip2",
  "pbz2",
