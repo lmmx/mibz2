@@ -47,9 +47,34 @@ pub struct Segmented {
 impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         build(ll, counts, &mut self.tt);
-        walk_segments_flagged(&mut self.tt, orig_ptr, out, &mut self.seg);
+        if few_runs(ll) {
+            walk(&self.tt, orig_ptr, out);
+        } else {
+            walk_segments_flagged(&mut self.tt, orig_ptr, out, &mut self.seg);
+        }
     }
 }
+
+/// A block whose last column has fewer than one run of equal bytes per RUNS_PLAIN bytes
+/// is walked plainly: a short repeated pattern, whose list is a few long cycles through
+/// the T-vector, which the hardware prefetcher follows, so the lanes' bookkeeping only
+/// costs (#9: the plain walk took 0.34-0.62 of the segmented one's time on such blocks,
+/// at ~10^5 bytes a run; every real-data block measured had at most ~19). Counting stops
+/// once past the limit, so a block of real data is decided within its first few kB.
+fn few_runs(ll: &[u8]) -> bool {
+    let limit = ll.len() / RUNS_PLAIN;
+    let mut runs = 0;
+    for w in ll.windows(2) {
+        runs += (w[0] != w[1]) as usize;
+        if runs > limit {
+            return false;
+        }
+    }
+    true
+}
+
+/// See `few_runs`
+const RUNS_PLAIN: usize = 1024;
 
 /// A block's T-vector. Built only by `build`, so every link in it is below its length,
 /// which the walks rely on to read it unchecked.
