@@ -1,0 +1,34 @@
+name: Miri
+
+# The segmented walks' unsafe code under Miri, on blocks small enough to interpret
+# (bwt::tests::miri_*, about a minute). Each test asserts it reached the walk's handoff
+# transitions, so a pass means they were checked. Only on changes to the walks.
+on:
+  pull_request:
+    paths:
+      - "src/bwt.rs"
+      - ".github/workflows/miri.yml"
+  push:
+    branches: [main, master]
+    paths:
+      - "src/bwt.rs"
+      - ".github/workflows/miri.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  miri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: miri, rust-src
+      - uses: Swatinem/rust-cache@v2
+      - name: Miri setup
+        run: cargo miri setup
+      - name: Miri
+        run: cargo miri test --lib -- miri_

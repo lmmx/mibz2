@@ -283,12 +283,16 @@ pub fn walk_segments_flagged(
     out: &mut Vec<u8>,
     s: &mut SegScratch,
 ) {
+    if tt.len() < MIN_SEGMENTED {
+        return walk(tt, orig_ptr, out);
+    }
     walk_segments_flagged_with::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, out, s, FLAGGED_SEGMENTS)
 }
 
 /// `walk_segments_flagged` with `L` lanes and `segments` segments, each lane's next entry
 /// prefetched as soon as its row is known if `PF`: each configuration exactly `walk`'s
-/// output, so they can be measured side by side
+/// output, so they can be measured side by side. It segments a block of any length (the
+/// tests walk small ones; `walk_segments_flagged` leaves those below MIN_SEGMENTED to `walk`).
 pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
     tt: &mut TVector,
     orig_ptr: u32,
@@ -298,8 +302,8 @@ pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
 ) {
     let n = tt.0.len();
     out.clear();
-    if n < MIN_SEGMENTED {
-        return walk(tt, orig_ptr, out);
+    if n == 0 {
+        return;
     }
     let r0 = tt.0[orig_ptr as usize] >> 8;
     random_rows(n, segments - 1, &mut s.starts);
@@ -450,16 +454,58 @@ pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
     }
 }
 
+// Counts of the walks' rarer transitions, in test builds only (per thread, so each test
+// reads its own), so a test can show it reached them; nothing in other builds
+#[cfg(test)]
+thread_local! {
+    static GROWS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static PASS_ENDS_FULL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static MID_PASS_TAKES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static FULL_PHASE_ENDS_MID_PASS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static TAIL_ENTERED_FULL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+#[cfg(test)]
+macro_rules! transition {
+    ($c:ident) => {
+        $c.with(|c| c.set(c.get() + 1))
+    };
+}
+#[cfg(not(test))]
+macro_rules! transition {
+    ($c:ident) => {};
+}
+
 /// `walk_segments_flagged` in passes, as libsais's chain decode runs (`decode_chains`):
 /// each pass is `room` rounds of every lane, `room` the fewest bytes any lane's buffer has
 /// spare, so a lane writes its byte at its base plus the pass's offset, with no per-step
 /// pointer update or end test. A lane whose segment ends mid-pass takes the next one and
 /// is rebased so that base + offset is its new buffer. Exactly `walk`'s output.
 pub fn walk_segments_room(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mut SegScratch) {
+    if tt.len() < MIN_SEGMENTED {
+        return walk(tt, orig_ptr, out);
+    }
     walk_segments_room_with::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, out, s, FLAGGED_SEGMENTS)
 }
 
-/// `walk_segments_room` with `L` lanes and `segments` segments
+/// `walk_segments_room` with `L` lanes and `segments` segments, on a block of any length
+/// (the tests walk small ones; `walk_segments_room` leaves those below MIN_SEGMENTED to
+/// `walk`).
+///
+/// What its unchecked writes rely on (the walks' contract, which the tests check
+/// against a safe reference of the segments, `tests::segment_oracle`):
+/// - **Rows:** every row read is below n (links come from `build`; starts are rows).
+/// - **Ownership:** a segment is taken once and walked by one lane, which writes only
+///   its buffer; a lane stops at the next start, so no two lanes walk the same rows.
+/// - **Spare:** at a pass's start every lane has at least `room` bytes spare, and a lane
+///   taken mid-pass at offset o has at least `cap` - 1 after its first byte, which covers
+///   the pass's `room` - o - 1 to come; so every write at base + offset is in bounds.
+/// - **Handoffs:** a lane comes into a pass, and into the tail, with p < end (the tail
+///   writes before it tests); a pass may end with p == end, so both entries grow first.
+/// - **Initialised:** a lane's writes are consecutive from its buffer's start, so every
+///   byte below p is written when `set_len` exposes it.
+/// - **Lifetimes:** a buffer grows only at a pass's start or in the tail, and its lane's
+///   p and end (and base, from p) are taken from the grown buffer; `bufs` itself is not
+///   resized during the walk, so no other buffer moves.
 pub fn walk_segments_room_with<const L: usize, const PF: bool>(
     tt: &mut TVector,
     orig_ptr: u32,
@@ -469,8 +515,8 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
 ) {
     let n = tt.0.len();
     out.clear();
-    if n < MIN_SEGMENTED {
-        return walk(tt, orig_ptr, out);
+    if n == 0 {
+        return;
     }
     let r0 = tt.0[orig_ptr as usize] >> 8;
     random_rows(n, segments - 1, &mut s.starts);
@@ -515,6 +561,7 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
         next[l.seg] = seg_of(l.row);
     };
     let grow = |l: &mut Lane, bufs: &mut Vec<Vec<u8>>| {
+        transition!(GROWS);
         let b = &mut bufs[l.seg];
         let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
         unsafe { b.set_len(len) };
@@ -550,6 +597,13 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
                 }
                 room = room.min(unsafe { l.end.offset_from(l.p) } as usize);
             }
+            debug_assert!(room > 0);
+            if lanes
+                .iter()
+                .any(|l| unsafe { l.end.offset_from(l.p) } as usize == room)
+            {
+                transition!(PASS_ENDS_FULL);
+            }
             let mut base: [*mut u8; L] = std::array::from_fn(|k| lanes[k].p);
             for off in 0..room {
                 for k in 0..L {
@@ -568,8 +622,10 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
                                     lj.p = base[j].wrapping_add(off);
                                 }
                             }
+                            transition!(FULL_PHASE_ENDS_MID_PASS);
                             break 'full;
                         }
+                        transition!(MID_PASS_TAKES);
                         *l = take(queued, bufs);
                         if PF {
                             prefetch(t, l.row);
@@ -604,8 +660,10 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
     // tail writes before it tests, so each lane comes into it with a byte to spare
     for l in live.iter_mut() {
         if l.p == l.end {
+            transition!(TAIL_ENTERED_FULL);
             grow(l, bufs);
         }
+        debug_assert!(l.p < l.end);
     }
     while !live.is_empty() {
         let mut i = 0;
@@ -684,6 +742,43 @@ fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
 mod tests {
     use super::*;
 
+    /// The segments' reference, safe and slow: from each start, the walks' own steps (its
+    /// first byte from its own entry, then a row's byte at a time until the next start),
+    /// giving each segment's bytes and its successor. Every segment, on every cycle of the
+    /// list, not only those the output joins: a walk writes them all.
+    fn segment_oracle(tt: &TVector, starts: &[u32]) -> Vec<(Vec<u8>, usize)> {
+        let t = &tt.0;
+        let mut index = vec![usize::MAX; t.len()];
+        for (i, &r) in starts.iter().enumerate() {
+            index[r as usize] = i;
+        }
+        starts
+            .iter()
+            .map(|&r| {
+                let mut bytes = vec![t[r as usize] as u8];
+                let mut row = (t[r as usize] >> 8) as usize;
+                while index[row] == usize::MAX {
+                    bytes.push(t[row] as u8);
+                    row = (t[row] >> 8) as usize;
+                }
+                (bytes, index[row])
+            })
+            .collect()
+    }
+
+    /// A walk's segments (each one's bytes and successor, in `s`) are the reference's
+    fn check_segments(tt: &TVector, s: &SegScratch, what: &str) {
+        let want = segment_oracle(tt, &s.starts);
+        for (i, (bytes, next)) in want.iter().enumerate() {
+            assert!(s.bufs[i] == *bytes, "{what}: segment {i}'s bytes");
+            assert_eq!(s.next[i], *next, "{what}: segment {i}'s successor");
+        }
+    }
+
+    fn count(c: &'static std::thread::LocalKey<std::cell::Cell<usize>>) -> usize {
+        c.with(|c| c.get())
+    }
+
     fn check(ll: &[u8]) {
         let mut counts = [0u32; 256];
         for &c in ll {
@@ -696,8 +791,14 @@ mod tests {
             walk(&tt, orig_ptr, &mut plain);
             walk_segments_flagged(&mut tt, orig_ptr, &mut flagged, &mut seg);
             assert!(plain == flagged, "orig_ptr {orig_ptr}");
+            if ll.len() >= MIN_SEGMENTED {
+                check_segments(&tt, &seg, "flagged walk");
+            }
             walk_segments_room(&mut tt, orig_ptr, &mut flagged, &mut seg);
             assert!(plain == flagged, "room walk, orig_ptr {orig_ptr}");
+            if ll.len() >= MIN_SEGMENTED {
+                check_segments(&tt, &seg, "room walk");
+            }
             assert!(tt.0.iter().all(|&e| e & START == 0));
             for segments in [2, 40, 512, 4096] {
                 walk_segments_room_with::<32, true>(
@@ -859,11 +960,32 @@ mod tests {
             walk(&tt, orig_ptr, &mut plain);
             walk_segments_room(&mut tt, orig_ptr, &mut room, &mut seg);
             assert!(plain == room, "case {case} n {n} alphabet {alphabet}");
+            check_segments(&tt, &seg, "room walk");
+            walk_segments_flagged(&mut tt, orig_ptr, &mut room, &mut seg);
+            assert!(plain == room, "flagged walk, case {case}");
+            check_segments(&tt, &seg, "flagged walk");
+        }
+        // the transitions the walk's handoffs guard were all reached (the one that
+        // overran, a lane coming into the tail with its buffer full, among them)
+        assert_reached();
+    }
+
+    /// Asserts that every transition the room walk's handoffs guard was reached on this
+    /// thread
+    fn assert_reached() {
+        for (name, c) in [
+            ("a buffer grown", &GROWS),
+            ("a pass ending with a buffer full", &PASS_ENDS_FULL),
+            ("a segment taken mid-pass", &MID_PASS_TAKES),
+            ("the full phase ending mid-pass", &FULL_PHASE_ENDS_MID_PASS),
+            ("a lane coming into the tail full", &TAIL_ENTERED_FULL),
+        ] {
+            assert!(count(c) > 0, "never reached: {name}");
         }
     }
 
     /// The flagged walk on a random last column and on a periodic one (a list of several
-    /// cycles), both past MIN_SEGMENTED so the segments are walked: small enough for Miri
+    /// cycles), both past MIN_SEGMENTED so the segments are walked
     #[test]
     fn flagged_walk_equals_plain() {
         let n = MIN_SEGMENTED + 1000;
@@ -879,5 +1001,132 @@ mod tests {
         check(&random);
         let periodic: Vec<u8> = (0..n).map(|i| b"abc"[i % 3]).collect();
         check(&periodic);
+    }
+
+    /// The segmented walks segment a block of any length (the wrappers leave those below
+    /// MIN_SEGMENTED to `walk`): every length edge, through both, at lane and segment
+    /// counts below, at and above the lanes
+    #[test]
+    fn segmented_walks_on_any_length() {
+        let mut x = 7u64;
+        for n in [
+            1,
+            2,
+            3,
+            31,
+            32,
+            33,
+            100,
+            1000,
+            MIN_SEGMENTED - 1,
+            MIN_SEGMENTED,
+            MIN_SEGMENTED + 1,
+        ] {
+            let ll: Vec<u8> = (0..n)
+                .map(|_| {
+                    x ^= x << 13;
+                    x ^= x >> 7;
+                    x ^= x << 17;
+                    (x % 3) as u8
+                })
+                .collect();
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            for orig_ptr in [0, n as u32 / 2, n as u32 - 1] {
+                walk(&tt, orig_ptr, &mut plain);
+                walk_segments_room(&mut tt, orig_ptr, &mut out, &mut seg);
+                assert!(plain == out, "room walk, n {n}");
+                walk_segments_flagged(&mut tt, orig_ptr, &mut out, &mut seg);
+                assert!(plain == out, "flagged walk, n {n}");
+                for segments in [1, 2, 33, 256] {
+                    let what = format!("n {n}, {segments} segments");
+                    walk_segments_room_with::<32, true>(
+                        &mut tt, orig_ptr, &mut out, &mut seg, segments,
+                    );
+                    assert!(plain == out, "room walk, {what}");
+                    check_segments(&tt, &seg, &what);
+                    walk_segments_room_with::<5, false>(
+                        &mut tt, orig_ptr, &mut out, &mut seg, segments,
+                    );
+                    assert!(plain == out, "room walk, 5 lanes, {what}");
+                    check_segments(&tt, &seg, &what);
+                    walk_segments_flagged_with::<32, true>(
+                        &mut tt, orig_ptr, &mut out, &mut seg, segments,
+                    );
+                    assert!(plain == out, "flagged walk, {what}");
+                    check_segments(&tt, &seg, &what);
+                    walk_segments_flagged_with::<7, false>(
+                        &mut tt, orig_ptr, &mut out, &mut seg, segments,
+                    );
+                    assert!(plain == out, "flagged walk, 7 lanes, {what}");
+                    check_segments(&tt, &seg, &what);
+                }
+                assert!(tt.0.iter().all(|&e| e & START == 0));
+            }
+        }
+    }
+
+    /// For Miri (`cargo +nightly miri test --lib -- miri_`): the segmented walks' unsafe
+    /// code on blocks small enough to interpret, each found to reach every transition the
+    /// room walk's handoffs guard. The test asserts it reached them, so a change to the walk
+    /// that stops these blocks reaching one fails here rather than passing having checked
+    /// less. (Each is 32 lanes and 256 segments on a random column of about 3,000 rows: a
+    /// block that small needs that many segments for a buffer to grow; the counts were
+    /// searched for natively, and these are the smallest found.)
+    #[test]
+    fn miri_room_walk_handoffs() {
+        for seed in [170_778u64, 8_824] {
+            let mut x = seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1;
+            let mut rnd = move |m: u64| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                x % m
+            };
+            let n = 200 + rnd(4000) as usize;
+            let alphabet = 1 + rnd(if seed % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            walk_segments_room_with::<32, true>(&mut tt, orig_ptr, &mut out, &mut seg, 256);
+            assert!(plain == out, "room walk, seed {seed}");
+            check_segments(&tt, &seg, "room walk");
+            walk_segments_flagged_with::<32, true>(&mut tt, orig_ptr, &mut out, &mut seg, 256);
+            assert!(plain == out, "flagged walk, seed {seed}");
+            check_segments(&tt, &seg, "flagged walk");
+        }
+        assert_reached();
+        // and the degenerate columns (segments of one and two bytes), on a smaller block
+        let n = 600;
+        for ll in [vec![3u8; n], (0..n).map(|i| (i % 2) as u8).collect()] {
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, 1, &mut plain);
+            for segments in [33, 256] {
+                walk_segments_room_with::<32, true>(&mut tt, 1, &mut out, &mut seg, segments);
+                assert!(plain == out, "room walk, {segments} segments");
+                check_segments(&tt, &seg, "room walk");
+                walk_segments_flagged_with::<32, true>(&mut tt, 1, &mut out, &mut seg, segments);
+                assert!(plain == out, "flagged walk, {segments} segments");
+                check_segments(&tt, &seg, "flagged walk");
+            }
+        }
     }
 }
