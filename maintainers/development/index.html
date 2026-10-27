@@ -1356,6 +1356,17 @@ target/release/examples/ab<span class="w"> </span>gen<span class="w"> </span>cor
 target/release/examples/ab<span class="w"> </span>run<span class="w"> </span>runs.jsonl<span class="w"> </span>--arms<span class="w"> </span>mibz2,pbz2,lbzip2<span class="w"> </span>--threads<span class="w"> </span><span class="m">1</span>,4<span class="w"> </span>--rounds<span class="w"> </span><span class="m">5</span><span class="w"> </span>corpora/*.bz2
 target/release/examples/ab<span class="w"> </span>summary<span class="w"> </span>runs.jsonl
 </code></pre></div>
+<p>Where the parallel decoder's time goes as its thread count grows (#39) is measured by
+the occupancy instrument (<code>examples/occupancy.rs</code>, feature <code>trace</code>), run on the pinned
+Wikidata corpus by one recipe on any machine, as CI's Occupancy workflow does:</p>
+<div class="language-sh highlight"><pre><span></span><code>just<span class="w"> </span>bench-occupancy<span class="w">                             </span><span class="c1"># 1, 2, 4, ... up to the CPUs allowed</span>
+just<span class="w"> </span>bench-occupancy<span class="w"> </span>--threads<span class="w"> </span><span class="m">1</span>,2,4,8,12,16,20
+</code></pre></div>
+<p>It needs cargo, python3, git and lbzip2, and writes <code>occupancy-&lt;UTC time&gt;.json</code>: the
+machine as the process sees it, each thread count's throughput and the cost of tracing,
+and the decoder's own timeline (workers decoding or idle and why, the scanner, the
+reader, and per block its CPU time and run-queue wait). It is a diagnostic: the benchmark's
+paired A/B decides what is faster.</p>
 <p>The benchmark has a version of its own (<code>BENCH</code> in <code>bench/report.py</code>), with its
 history in <a href="https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md"><code>bench/CHANGELOG.md</code></a>:
 - <strong>A pull request that changes the benchmark</strong> (<code>bench/</code>, <code>examples/ab.rs</code>,
