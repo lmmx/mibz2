@@ -1,0 +1,363 @@
+# Memory-level parallelism, prefetch scheduling and run-length permutations, read against the room walk
+
+A literature round, written after the room walk (#37) merged and shipped in 0.1.5. It reads
+three sources and the vendor documents, and asks one question of our own: what else stops
+the hardware from keeping more misses in flight? Its outputs are issues #39, #40 and #42.
+Nothing here changes `src/`.
+
+Every finding is labelled as one of three kinds:
+- **published:** what a source states or measured;
+- **ours, measured:** a figure from our CI or a local run;
+- **interpretation** or **hypothesis:** ours, and untested.
+
+No paper's speedup below is a claim about mibz2.
+
+## The baseline the sources are read against (ours, measured)
+
+**The room walk (#37), on the CI bench's final head `6c645ef`** (Intel Xeon 6973P-C, 10 paired
+rounds, bench 1.2.0):
+- **Whole decode, Wikidata:** −5.8% at 1 thread and −2.7% at 4 threads.
+- **Stage table:** walk 4.37 → 3.81 c/B (−14.2%), 47.7% of a one-thread decode; build 1.71 c/B.
+
+**The CI runner varies between bench runs.** #37's earlier head `db3593d` was benched on an AMD
+EPYC 9V74 (Zen 4) at −10.3% / −9.1%. Each verdict is paired on one runner, but a
+hardware-specific tuning can rank differently on the other runner type.
+
+**The walk's mechanics** (`src/bwt.rs`):
+- 32 lanes and 512 pseudo-random segment starts, flagged with START (bit 31) in their own
+  entries;
+- `_MM_HINT_T0` on each lane's next entry, issued as soon as the row is known (`prefetch`,
+  bwt.rs:456–468);
+- the room walk's passes, which run `room` rounds over all lanes. `room` is the fewest spare
+  bytes in any lane's buffer.
+
+**Prior negative results** that every hypothesis below is checked against:
+- **ψ² (#6, #29, #34; [the pair walk](2026-10-27-pair-walk.md)):** half the steps, each about
+  twice the cost, +21–51%.
+- **Forward-chain Precopy (#9, #30, #36; [Precopy](2026-10-27-precopy-forward-chains.md)):**
+  removing cheap, cache-resident steps saved nothing, +6–20%.
+- **The lesson both left:** with prefetch keeping 32 misses in flight, the walk is bound by
+  instructions per step. Per-step work added loses.
+
+## 1. Kohout, Choi, Kim & Yeung, "Multi-Chain Prefetching" (PACT 2001)
+
+N. Kohout, S. Choi, D. Kim, D. Yeung. *Multi-Chain Prefetching: Effective Exploitation of
+Inter-Chain Memory Parallelism for Pointer-Chasing Codes.* PACT 2001, Barcelona.
+- doi:10.1109/PACT.2001.953307
+- PDF: http://maggini.eng.umd.edu/pub/yeung_multichain.pdf
+- Journal version: S. Choi, N. Kohout, S. Pamnani, D. Kim, D. Yeung, *A General Framework for
+  Prefetch Scheduling in Linked Data Structures and its Application to Multi-Chain
+  Prefetching*, ACM TOCS 22(2), 214–280, 2004 (doi:10.1145/986533.986536). Read for its
+  citation only.
+
+**Published:**
+- **The mechanism** (§2.1, §3.2): a *hardware prefetch engine* beside the core traverses
+  several independent pointer chains ahead of the program, to a schedule computed offline.
+  - The schedule has two numbers per chain descriptor: the pre-traversal time PT (how early a
+    chain's traversal must start) and the prefetch distance PD = ⌈PT / w⌉, where w is the work
+    per outer-loop iteration.
+  - PD is the number of chains in flight at once.
+  - For one list with l-cycle misses and w₁ cycles of work a link, the stall is 3l − 2w₁ for
+    three links (Figure 1a). A single chain gives no memory parallelism; independent chains do.
+- **Evaluation:** simulated, not real hardware.
+  - an L1 with 8 MSHRs and an L2 with 16;
+  - a 1/10/70-cycle hierarchy and a 32-entry prefetch buffer.
+- **Results:** 40% lower execution time on six Olden kernels and 8% on four SPECint2000 programs.
+  The technique "loses its effectiveness when the pointer-chain traversal order is
+  unpredictable".
+
+**Applicability to standard .bz2 streams:**
+- The hardware engine doesn't exist on our CPUs.
+- The scheduling model transfers as arithmetic. mibz2's lanes are its software equivalent: chains
+  known to be independent (segments from pseudo-random starts), each prefetched one hop ahead,
+  the only hop whose address is known.
+- **Terminology:** Kohout's "chain" is a lane's pointer chain. KP 2011's "chain", the one #36's
+  Precopy used, is a run of parallel adjacent rows. The two are unrelated.
+
+**Interpretation:**
+- **The lead:** in a round of L lanes at s cycles a step, a lane's prefetch leads its load by
+  about L·s cycles. At 32 lanes and 3.8–7.4 c a step (CI and local room walk), that is about
+  120–240 cycles.
+- **Against L3 latency:** the documented L3 latencies are 46–50 cycles on Zen 3/4 (AMD 56665,
+  57647) and about 77 cycles on Skylake-SP (AnandTech, one source). PD = ⌈PT / w⌉ says latency
+  alone would need about 8–12 lanes.
+- So 32 lanes are set by something other than latency: miss-buffer capacity (§4), and in the
+  room walk, the pass length.
+
+**Hypothesis:** with fewer instructions per step after #37, the best lane count can move. It
+interacts with `room`, since the minimum spare over 32 buffers is smaller than over 16. That is
+#39.
+
+**Limits:**
+- The results are simulations, of 2001 cores, with a hardware engine.
+- None of the speedups bears on a software-prefetched walk.
+
+## 2. Ainsworth & Jones, "Software Prefetching for Indirect Memory Accesses" (CGO 2017; TOCS)
+
+- S. Ainsworth, T. M. Jones. *Software Prefetching for Indirect Memory Accesses.* CGO 2017,
+  pp. 305–317 (doi:10.1109/CGO.2017.7863749).
+  https://www.cl.cam.ac.uk/~sa614/papers/Software-Prefetching-CGO2017.pdf
+- The extended version: *Software Prefetching for Indirect Memory Accesses: A Microarchitectural
+  Perspective*, ACM Transactions on Computer Systems 36(3), pp. 1–34
+  (doi:10.1145/3319393). Preprint: https://www.cl.cam.ac.uk/~tmj32/papers/docs/ainsworth19-tocs.pdf
+- **Which is "2019":**
+  - the preprint's ACM reference reads "March 2019";
+  - Crossref dates volume 36 issue 3 to 2018-08-31.
+
+  So "2019" is the TOCS article's publication, in an issue dated 2018. The 2019 version adds four
+  systems and two configurable benchmarks, Kangaroo and Camel. The TOCS version was read in full
+  text, the CGO version only as cited by it.
+
+**Published (TOCS):**
+- **The target class** (§4): stride-indirect accesses `A[B[i]]` traced back to an induction
+  variable.
+  - §4.8 excludes linked structures explicitly: "there is no induction variable to move ahead in
+    the computation".
+  - The introduction says linked-list prefetching has "limited performance improvement due to
+    the lack of memory-level parallelism inherent in linked structures".
+- **The schedule** (§4.4, eq. 1): `offset = c(t − l)/t`, for load l of t in a dependent sequence.
+  Dependent prefetches are spaced equally.
+  - c = 64 is "close to optimal for every benchmark and microarchitecture combination" (§6.2,
+    Figure 6), on Haswell, Kaby Lake, Cortex-A57, A72, A53, Kryo and Xeon Phi.
+  - Arriving late hurts more than arriving early.
+- **The costs of prefetching** (§6.2, §7.7):
+  - Prefetching every level of a dependent sequence costs O(n²) extra code, and on all four
+    systems in Figure 7 it was best to leave the last level out.
+  - When the data fits in the LLC (Kangaroo at 0.5 MiB arrays), prefetching "is usually reduced
+    compared to the baseline due to the code overhead, reaching as low as 0.4×".
+  - On the out-of-order A72, CG (data in the LLC) lost from prefetching.
+- **TLB** (§6.2, Figure 11):
+  - The A57 handles one page-table walk at a time, which limited its gains.
+  - With transparent huge pages, the gains were slightly lower for simple benchmarks and higher
+    for page-walk-bound ones.
+- **Speedups** (abstract): 1.1–1.35× on out-of-order cores, 2.1× and 2.7× on in-order ones.
+
+**Applicability:**
+- The walk is a pointer chain per lane, outside the paper's class. There is no look-ahead array,
+  so the distance can't be tuned as an offset.
+- In our walk, "distance" is the lane count times the step time (§1). The knobs left are the hint
+  and the placement.
+- The O(n²) staggering result is the same wall ψ² met (#6): ψ(ψ(x)) can't be prefetched without
+  first loading ψ(x). That is why ψ² changed the table instead, and paid for it per step.
+
+**Interpretation:**
+- The T-vector (3.6 MB) is LLC-resident on every machine we run on, which is the case where the
+  paper found prefetch overhead can dominate.
+- Our prefetch was a win all the same (#21). A plausible reason, unmeasured: without it, the next
+  round's load of a lane is 32 lane-steps away, beyond what the reorder window covers.
+- So prefetch placement and hint are worth a measured sweep after an instruction-mix change,
+  rather than assumed. That is #39.
+
+**Limits:**
+- Their codes are not pointer chains, and their cores are 2014–2017 designs.
+- The c = 64 finding doesn't transfer as a number.
+
+## 3. Run-length permutations: the move structure and length capping
+
+- **Brown & Langmead, SEA 2026:** N. K. Brown, B. Langmead. *Bounding the Average Move Structure
+  Query for Faster and Smaller RLBWT Permutations.* SEA 2026, LIPIcs, article 9
+  (doi:10.4230/LIPIcs.SEA.2026.9; arXiv:2602.11029). Library: Orbit,
+  https://github.com/drnatebrown/orbit (the v1 preprint names it RunPerm).
+- **Nishimoto & Tabei, ICALP 2021, the antecedent:** T. Nishimoto, Y. Tabei. *Optimal-Time Queries
+  on BWT-Runs Compressed Indexes.* ICALP 2021, LIPIcs 198, 101:1–101:15 (arXiv:2006.05104), §3.
+- **Practical balancing, also built on:**
+  - N. Bertram, J. Fischer, L. Nalbach, *Move-r: Optimizing the r-index*, SEA 2024, LIPIcs 301, 1;
+  - Brown, Gagie & Rossi, *RLBWT tricks*;
+  - Zakeri et al., *Movi*, iScience 2024.
+
+  These were read for their role in the SEA paper only.
+
+**Published:**
+- **The move structure** (Nishimoto & Tabei §3.2): a permutation consecutive on k input intervals
+  is stored as `Dpair[x] = (start p_x, image q_x)` and `Dindex[x]`, the interval holding q_x
+  (3k words).
+  - A query computes `i' = q_x + (i − p_x)`, then scans forward from `Dindex[x]` to the interval
+    holding i'.
+  - *Balancing* splits intervals until each output interval has at most three incoming. That
+    gives ≤ 2k intervals and ≤ 3 fast-forwards per query.
+  - For LF on a BWT, k = r, the number of runs.
+- **Length capping** (Brown & Langmead):
+  - split every interval longer than L = c·(n/r);
+  - that adds at most r/c intervals, and the build is O(r);
+  - over n queries on a single-cycle permutation the fast-forwards total at most c·n + n, so the
+    average is ≤ c + 1;
+  - the worst case is O(n/r), or O(log(n/r)) with exponential search.
+- **Their experiments:**
+  - 16–1,000 copies of human chromosome 19 (n/r 29.2–1,287.4), on a Xeon Gold 6248R, one
+    thread;
+  - BWT inversion took 83–98 ns per LF query (Table 2, d = 16), as one dependent chain;
+  - "up to ∼17 times faster when compared to an unbalanced representation of ϕ";
+  - "at least a ∼40% disk size decrease for LF … when compared to a balanced/unbalanced move
+    structure".
+- **What they don't compare:** every comparison is between move-structure variants. None is
+  against an explicit array of LF or ψ, nor against an interleaved walk.
+
+**Applicability:**
+- **Format:** none needed. ψ is consecutive on the runs of the last column within each F-bucket,
+  so a bzip2 block's ψ is a run-length permutation like LF.
+- **The emitted byte** is constant per interval, so it can be stored with it.
+- **The build:** a sequential scan of L for runs, plus O(r) to link intervals.
+
+**Ours, measured** (local, one build of an uncommitted scratch counter on the bench's
+`wikidata.bz2`, SHA-256 `82f65ace…`; its ψ checked against `bwt::walk`'s output on every block):
+
+| Measure | Value |
+|---|---|
+| Blocks | 431. The 233 of ≥ 65,536 rows (188 of exactly 900,000, 45 of 899,809–899,999) hold 209,697,662 rows, 99.996%. The other 198 hold 8,895 rows (median 29). |
+| BWT runs, r / n (the 233 blocks) | **0.0722**, n/r 13.85. Per block: min 0.0533, p10 0.0568, median 0.0623, p90 0.1100, max 0.2000 |
+| ψ intervals / n | 0.0722: 15,147,913 intervals against 15,148,086 runs, all blocks |
+| Rows by the length of their run | 1: 5.18%; 2–3: 2.23%; 4–7: 1.89%; 8–15: 3.08%; 16–31: 3.57%; 32–63: 3.78%; 64–255: 8.92%; ≥ 256: 71.35% |
+
+The move structure is bit-packed at minimum widths: start and image 20 bits each, the rank
+⌈log₂ r'⌉ bits, and the byte 8 bits. The mean fast-forward is over all rows. A walk visits
+every row once, so that is the mean per walk step, whatever the lane order.
+
+| Capping | Intervals / n | Mean fast-forwards a step | Max | Size | A 900,000-row block |
+|---|--:|--:|--:|--:|--:|
+| none | 0.0722 | 7.475 | 3,160 | 0.581 B/row | 523 kB |
+| c = 8 | 0.0787 | 0.534 | 150 | 0.635 B/row | 572 kB |
+| c = 4 | 0.0859 | 0.416 | 75 | 0.695 B/row | 626 kB |
+| c = 2 | 0.1007 | 0.342 | 37 | 0.821 B/row | 739 kB |
+| c = 1 | 0.1308 | 0.297 | 18 | 1.067 B/row | 960 kB |
+
+The capped averages sit well under the paper's c + 1 bound. Without capping, the long runs (71%
+of rows in runs of 256 or more) make the fast-forward 7.5 a step.
+
+**Interpretation:**
+- **n/r:** at 13.85, Wikidata's n/r is below the paper's smallest dataset (29.2).
+- **Size:** the structure is still 0.6–1.1 B/row against 4, about 0.5–1 MB a block against
+  3.6 MB. That is near a 1 MB L2 (Zen 4, Cascade Lake) and within a 2 MB one (Golden Cove server).
+- **What it would change:** the walk's misses would move from L3 toward L2, with fewer lines in
+  flight per step. That is the opposite trade to ψ² (#34), which kept the misses and changed the
+  steps.
+- **The cost:** each step would add a packed-record decode, a fast-forward test and a second piece
+  of lane state (the interval index). The fast-forward branch is taken on 30–53% of steps at
+  c = 1–8 and is data-dependent, so it likely mispredicts often.
+- **Against the prior results:**
+  - #34 lost at twice the per-step cost with half the steps.
+  - The move walk keeps every step, so it gains only if L2 residency removes more cycles than the
+    extra instructions add.
+  - #36 says that removing cheap steps saves nothing. The move walk removes none. It makes the
+    expensive scattered steps cheaper, which is the question #36 left open.
+- **Other corpora:** for `random` and `records`, r/n is near 1 (about 8 B/row). A run-length ψ
+  could only be a per-block choice by r/n. That is cheap to compute, but #27's per-block choice
+  was rejected, for its own reasons.
+
+**Hypothesis:** a length-capped run-length ψ beats the explicit T-vector on Wikidata's run-heavy
+blocks, build and per-step lookup included. Its first experiment (above) passes the size gate.
+The next is a scratch 32-lane walk over the c = 4 structure (#42).
+
+**Limits:**
+- The paper's timings are one chain, a billion-row DRAM-resident n, and genomes. None of them
+  transfers.
+- Our size estimate leaves out alignment padding, which a fast decoder may want.
+
+## 4. What else limits the misses in flight (the coordinator's question)
+
+### Miss buffers
+
+**Published (vendor documents):**
+- **Zen 3 and Zen 4:** "The LS unit can track up to 24 outstanding in-flight cache misses in the
+  Miss Address Buffer (MAB)" (AMD 56665 rev 3.00, AMD 57647 rev 1.00).
+  - L2: 1 MB, ≥ 14 cycles.
+  - L3: an average of 46 (Zen 3) or 50 (Zen 4) cycles.
+- **Golden Cove:** "16 FB", with MLC miss queues deepened from 32 to 48 (Intel 248966-046,
+  January 2023).
+- **Nehalem:** 10 fill buffers (the same manual, §E.4.5).
+- **Skylake Server / Cascade Lake** (the local machine, model 85 stepping 7): the manual read here
+  gives no fill-buffer count. The commonly cited 12 is unverified.
+- **The Intel manual on software prefetch:** "A software prefetch into L1 will consume critical
+  hardware resources (fill buffer) until the cacheline fill completes. A software prefetch into L2
+  does not hold those resources."
+
+**Interpretation:**
+- The briefing's 10–16 holds for Intel cores. AMD's Zen 3/4 have 24.
+- **Little's law floor:** steps per cycle ≤ buffers / latency.
+  - With 24 buffers and a 50-cycle L3, the floor is about 2 c a step even if every step went to
+    L3, well under the CI walk's 3.8 c/B.
+  - With 16 buffers, the floor depends on the Granite Rapids L3 latency, which no source here
+    gives. Of the order of 100 cycles would put it near 3 c/B, close to the measured 3.81. That is
+    unverified.
+- So the walk can be bound by instructions on one runner and by fill buffers on another.
+- 32 lanes exceed every buffer count above. Lanes past the buffer count add lead, not
+  concurrency.
+
+**Hypothesis:** on fill-buffer-bound Intel cores, `T1` (into L2) in place of `T0` frees fill
+buffers, at the cost of an L2 hit at the demand load. AMD's guide doesn't document a difference
+between the hints. That is #39's hint arm, which must win on both runner types or be gated by
+vendor.
+
+### The L2 hardware prefetcher
+
+**Published:**
+- Intel's L2 spatial prefetcher "strives to complete every cache line fetched to the L2 cache
+  with the pair line that completes it to a 128-byte aligned chunk" (248966-046).
+- Zen 4's L2 Up/Down prefetcher "uses memory access history to determine whether to fetch the
+  next or previous line for all memory accesses" (57647).
+- Both vendors control the prefetchers by MSR only.
+
+**Hypothesis (no experiment):**
+- For the walk's pseudo-random misses, a pair or next-line fetch doubles the L3 → L2 line traffic
+  and takes L2 queue entries and L2 capacity.
+- A library has no lever over this, and turning prefetchers off is machine configuration. It is
+  recorded so it isn't rediscovered as an idea.
+
+### TLB reach
+
+**Published (vendor documents, and one measurement):**
+- **Zen 4:** L1 DTLB 72 entries; L2 DTLB 3,072, 24-way; six page-table walkers (57647). Chips and
+  Cheese gives "288 KB … with no latency overhead, or 12 MB with a slight 7–8 cycle penalty".
+- **Skylake / Cascade Lake** (248966-046, Table C-1):
+  - L1 DTLB: 64 4K entries;
+  - STLB: 1,536 entries, 12-way, shared by 4K and 2M pages;
+  - an STLB hit costs 7 cycles: `%STLB.HIT.COST = 100 × DTLB_LOAD_MISSES.STLB_HIT × 7 /
+    CPU_CLK_UNHALTED.THREAD` (248966-046).
+- **Golden Cove:** a 96-entry load DTLB for 4K pages, and four D-side page walks in parallel
+  (248966-046).
+- **Sandy Bridge / Ivy Bridge** (Bloom's i7-3770; the same Table C-1): STLB 512 4K entries, 4-way.
+  That is 2 MB of reach.
+- **Bloom, measured** ([Bloom](2026-10-27-bloom-inverse-bwt.md)): large pages took enwik7's 4×8
+  decoder from 36.1 to 28.2 c/B.
+
+**Interpretation:**
+- A 900,000-row T-vector is 879 4K pages. That is beyond every L1 DTLB above (256–384 kB of reach),
+  so nearly every walk load misses it.
+- 879 pages fit the Skylake / Cascade Lake and Zen 4 STLBs (6 and 12 MB of reach), so the walk
+  pays STLB hits, overlapped across lanes, and almost no page walks. Golden Cove's STLB size isn't
+  given in the manual read here.
+- At 4 threads each core walks its own block, so per-core reach is unchanged, unless SMT siblings
+  share a core.
+- Bloom's tables were tens of MB on a 2 MB-reach STLB, so his gain was from page walks and doesn't
+  transfer.
+- #29's 8-byte pair table (7.2 MB a block) exceeded Skylake's reach and not Zen 4's. That fits
+  #29's unmeasured "TLB pressure" explanation (#6) on the local machine only.
+
+**Needs the user's decision, not proposed:**
+- Huge pages for the T-vector (transparent huge pages, or `madvise(MADV_HUGEPAGE)`; the local THP
+  mode is `madvise`) change how memory is allocated. The project's rules forbid allocator changes.
+- So the idea is recorded for the user to decide on, and #40 is limited to measuring the STLB cost.
+- **What blocks the measurement locally:** there is no PMU locally (`/sys/bus/event_source/devices`
+  has no `cpu`), and `perf` isn't built for this kernel.
+
+## Mapped onto the issues
+
+| Issue | Finding | Status |
+|---|---|---|
+| #5 (closed) lane count and prefetch | §1, §2, §4: the lead, buffer counts, the hint | the question is reopened on the room walk as **#39**, not on #5 |
+| #6 (closed) ψ² | §2: staggering costs O(n²); §4: #29's table against STLB reach | comment with the TLB arithmetic; stays closed |
+| #8 memory | §3: a run-length ψ would cut ≈3 MB a slot | noted in #42; no change to #8 |
+| #9 (closed) Precopy | §3: a run-length ψ keeps every step and makes the scattered ones cheaper | linked from #42; stays closed |
+| new | lanes × hint × placement on the room walk | **#39** |
+| new | the walk's STLB cost, measured; huge pages flagged for the user's decision | **#40** |
+| new | a length-capped run-length ψ; feasibility measured above | **#42** |
+
+## Not done, and why
+
+- **Hardware-counter evidence:** no PMU is exposed locally (§4). #40 asks whether the CI runners
+  expose one.
+- **The CGO 2017 text:** read only through the TOCS version, which extends it.
+- **The 2004 TOCS framework paper (Choi et al.):** cited, not read.
+- **Move-r, RLBWT tricks and Movi:** read only for their role in the SEA paper.
+- **`text`, `records`, `random`:** the r/n counter ran only on Wikidata. The synthetic corpora are
+  generated by `ab gen` and weren't built here.
+- **The scratch counter:** kept out of the repository, and its build output deleted.
