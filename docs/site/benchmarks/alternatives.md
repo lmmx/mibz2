@@ -7,7 +7,7 @@ hide:
 
 # Alternatives
 
-<div id="alternatives-hero" data-src="../../assets/alternatives.json">
+<div id="alternatives-hero" data-src="../../assets/alternatives.json" markdown>
 Loading the chart…
 </div>
 
