@@ -25,6 +25,10 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Tests
         run: cargo test
+      # bench/alternatives has its own lock, on this crate by path, and master's benchmark
+      # builds it --locked: a version bump that leaves it behind fails here, not only there
+      - name: The benchmark alternatives' lock
+        run: cargo metadata --locked --format-version 1 --manifest-path bench/alternatives/Cargo.toml > /dev/null
 
   get-python-versions:
     runs-on: ubuntu-latest
