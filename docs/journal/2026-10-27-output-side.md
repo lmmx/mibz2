@@ -125,6 +125,16 @@ Labels:
   - These are precedents for the interface, not evidence of a speedup.
   - Gated on the assembly's measured share (locally 4.3%, against the 5% gate) and the
     paired whole-decoder A/B at 1 and 4 threads.
+  - **The gate's denominator, fixed before CI reported:** 5% of the one-thread stage
+    total in the decode-order CI stage table (its share column). Two readings are
+    reported beside it, not used as the gate: the share of the whole decoder's
+    one-thread cycles, and the share with four copies at once. The local 4.3% of a stage
+    total that explains about 90% of the decoder is about 3.9% of the decoder.
+  - **The ceiling:** removing the copy saves at most its own cost, less whatever a
+    slice-reading RLE1 adds back. That cost is direct (reading the segments, writing the
+    block) and set against an indirect value (a contiguous input for RLE1). Either a
+    share under the gate at 1 and at 4 copies closes step 2 as a recorded negative: the
+    copy is cheap enough relative to the walk, where the 60% is.
   - The interactions to watch: the copy may cost more than removing it saves, because
     assembly also hands RLE1 a contiguous stream; or removing it may save more at
     4 threads than the timer shows, if output traffic is part of the contention.
