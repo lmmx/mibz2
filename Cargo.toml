@@ -70,3 +70,7 @@ opt-level = 3
 debug-assertions = true
 inherits = "release"
 overflow-checks = true
+
+# examples/ab.rs's arms built by bench/alternatives only (its build.rs sets the cfg)
+[lints.rust]
+unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }

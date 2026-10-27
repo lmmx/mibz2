@@ -1,0 +1,51 @@
+# The benchmark's alternatives that are Rust crates with dependencies of their own: the
+# A/B harness (examples/ab.rs) built again with them as arms, so the crate's own
+# dev-dependencies (and every `cargo test`) stay as they are. bench.yml builds it on
+# master and from the Actions tab only, and runs its arms as `ARM@alts/ab` beside the
+# crate's own build of the harness (mibz2, pbz2, libbzip2 and the CLI arms). Never
+# published, and not part of the crate's package.
+#
+# build.rs sets cfg(mibz2_alternatives): examples/ab.rs's arms that need these
+# dependencies. rust-version is the crate's, so the shared sources are linted alike.
+[package]
+build = "build.rs"
+edition = "2021"
+name = "mibz2-bench-alternatives"
+publish = false
+rust-version = "1.80"
+version = "0.0.0"
+
+[[bin]]
+name = "ab"
+path = "../../examples/ab.rs"
+
+[dependencies]
+# As the crate's dev-dependencies: the harness's own arms and its corpora's encoder
+bzip2 = { features = ["static"], version = "0.4" }
+mibz2 = { path = "../.." }
+pbz2 = { default-features = false, features = ["simd"], version = "=0.2.0" }
+# The alternatives: libbz2-rs-sys 0.2.5 (the pure-Rust port of libbzip2) through the
+# bzip2 crate's default backend; the `lbzip2` crate (nordisk, pure Rust); fbz (Answer.AI)
+bzip2_rs = { package = "bzip2", version = "=0.6.1" }
+fbz = "=0.1.13"
+lbzip2 = "=0.5.13"
+libbz2-rs-sys = "=0.2.5"
+
+
+[package.metadata.cargo-machete]
+# (used by ../../examples/ab.rs, outside this directory; libbz2-rs-sys is pinned only)
+ignored = [
+  "bzip2",
+  "bzip2_rs",
+  "fbz",
+  "lbzip2",
+  "libbz2-rs-sys",
+  "mibz2",
+  "pbz2",
+]
+
+# The crate's release profile (../../Cargo.toml), so every arm is built as mibz2 is
+[profile.release]
+codegen-units = 1
+debug = "line-tables-only"
+lto = "fat"

@@ -6,12 +6,13 @@
 //! ab gen DIR [SCALE]                 the crate's corpora (tests/common), libbzip2 -9, into DIR
 //! ab run OUT.jsonl [options] FILE..  time the arms on each file; one JSON line a run
 //!     --arms a,b,c     arms (default mibz2,pbz2,lbzip2); ARM@EXE runs ARM in another
-//!                      build of this harness (a baseline commit's), so builds compare
-//!                      in the same process shape
+//!                      build of this harness (a baseline commit's, or bench/alternatives'),
+//!                      so builds compare in the same process shape
 //!     --threads 1,4    thread counts (1-thread runs are pinned to one CPU, so a
 //!                      decoder's helper threads share its core)
 //!     --rounds N       rounds (default 5); each round runs every arm once per file and
 //!                      thread count, the arms' order rotated and reversed round to round
+//!     --cap ARM=N,..   run ARM (as given in --arms) in the first N rounds only
 //!     --pin CPU        the CPU 1-thread runs are pinned to (default 1)
 //!     --max-busy C     before each run, wait until the other processes keep at most C
 //!                      cores busy (default 1.5; sampled over 2 s while nothing of ours runs)
@@ -22,10 +23,25 @@
 //! ab child ARM THREADS FILE          one run (what `run` spawns)
 //! ```
 //!
-//! Arms: `mibz2` (this build: `BzReader::new`, or `BzReader::parallel`), `mibz2-scalar`
-//! (the portable kernels), `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
-//! `ParallelDecoder::with_threads`), `lbzip2` (`lbzip2 -dc -nT`, its output read through a
-//! pipe and hashed here, its CPU and peak RSS its own).
+//! Arms, block-parallel unless said:
+//!
+//! - `mibz2` (this build: `BzReader::new`, or `BzReader::parallel`), `mibz2-scalar` (the
+//!   portable kernels);
+//! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
+//!   `ParallelDecoder::with_threads`);
+//! - `libbzip2` (libbzip2 1.0.8, C, the bzip2 crate's bundled source: `MultiBzDecoder`),
+//!   single-threaded;
+//! - `lbzip2` (`lbzip2 -dc -nT`) and `indexed_bzip2` (bench/ib.py: indexed_bzip2's
+//!   `IndexedBzip2File(parallelization=T)`), programs whose output is read through a pipe
+//!   and hashed here, their CPU and peak RSS their own (an interpreter's start left out);
+//! - in bench/alternatives' build of this harness only (`cfg(mibz2_alternatives)`: crates
+//!   with dependencies of their own, kept out of this crate's dev-dependencies):
+//!   `libbz2-rs` (libbz2-rs-sys, the Rust port of libbzip2, through the bzip2 crate 0.6:
+//!   `MultiBzDecoder`), single-threaded; `lbzip2-rs` (the `lbzip2` crate:
+//!   `StreamingBz2Read`, on the CPUs it may run on); `fbz` (`fbz::Reader`, `threads: T`).
+//!
+//! A single-threaded arm runs once a round on each file, at the fewest threads, and the
+//! summaries pair that run with the reference's at every thread count.
 //!
 //! Recorded a run: wall (the decode, from opening the file to the last byte read), CPU
 //! (user + sys), peak RSS, output bytes and hash; and around it, the 1-minute load, the
@@ -223,63 +239,144 @@ fn drain(mut r: impl Read, h: &mut Hash) -> Result<(), String> {
     }
 }
 
-fn child(arm: &str, threads: usize, path: &str) {
-    let open = || std::fs::File::open(path).unwrap();
-    let mut h = Hash::new();
-    let watch = if arm == "lbzip2" {
-        None
-    } else {
-        Some(Threads::watch(std::process::id()))
-    };
-    let mut kid_threads = None;
-    let t0 = Instant::now();
-    let res = match arm {
-        "mibz2" if threads == 1 => drain(mibz2::BzReader::new(open()), &mut h),
-        "mibz2" => drain(mibz2::BzReader::parallel(open(), threads), &mut h),
+/// Whether an arm decodes a stream's blocks in parallel. A single-threaded arm (libbzip2
+/// and its Rust port, which have no thread count) runs once a round on each file, at the
+/// smallest thread count (pinned to one CPU, as every 1-thread run), and the summaries
+/// pair that run with the reference's at every thread count
+fn parallel(arm: &str) -> bool {
+    !matches!(arm, "libbzip2" | "libbz2-rs")
+}
+
+/// An arm that is another program writing the decoded bytes to stdout, read through a
+/// pipe and hashed here: lbzip2's CLI, and indexed_bzip2 through Python (bench/ib.py, run
+/// from the repository's root; AB_PYTHON the interpreter that has it, default python3).
+/// The flag: the program starts an interpreter first, and says when it is ready to
+/// decode, and the CPU it took to get there, in a first line ("ready SECONDS")
+fn program(arm: &str, threads: usize, path: &str) -> Option<(Command, bool)> {
+    let t = threads.to_string();
+    match arm {
+        "lbzip2" => {
+            let mut c = Command::new("lbzip2");
+            c.args(["-dc", "-n", &t, path]);
+            Some((c, false))
+        }
+        "indexed_bzip2" => {
+            let mut c =
+                Command::new(std::env::var("AB_PYTHON").unwrap_or_else(|_| "python3".into()));
+            c.args(["bench/ib.py", &t, path]);
+            Some((c, true))
+        }
+        _ => None,
+    }
+}
+
+/// An in-process arm's decode of the file at `path`, every byte through `h`
+fn decode(arm: &str, threads: usize, path: &str, h: &mut Hash) -> Result<(), String> {
+    let open = || std::fs::File::open(path).map_err(|e| e.to_string());
+    match arm {
+        "mibz2" if threads == 1 => drain(mibz2::BzReader::new(open()?), h),
+        "mibz2" => drain(mibz2::BzReader::parallel(open()?, threads), h),
         "mibz2-scalar" if threads == 1 => drain(
-            mibz2::BzReader::with_kernels(open(), mibz2::Kernels::scalar()),
-            &mut h,
+            mibz2::BzReader::with_kernels(open()?, mibz2::Kernels::scalar()),
+            h,
         ),
         "mibz2-scalar" => drain(
-            mibz2::BzReader::parallel_with(open(), threads, 2 * threads, mibz2::Kernels::scalar()),
-            &mut h,
+            mibz2::BzReader::parallel_with(open()?, threads, 2 * threads, mibz2::Kernels::scalar()),
+            h,
         ),
-        "pbz2" if threads == 1 => drain(pbz2::DecoderReader::new(open()), &mut h),
-        "pbz2" => drain(pbz2::ParallelDecoder::with_threads(open(), threads), &mut h),
-        "lbzip2" => {
-            let mut p = Command::new("lbzip2")
-                .args(["-dc", "-n", &threads.to_string(), path])
-                .stdout(Stdio::piped())
-                .spawn()
-                .expect("lbzip2 on PATH");
-            let w = Threads::watch(p.id());
-            let r = drain(p.stdout.take().unwrap(), &mut h);
-            kid_threads = Some(w.finish(false));
-            let st = p.wait().unwrap();
-            r.and_then(|()| {
-                if st.success() {
-                    Ok(())
-                } else {
-                    Err(format!("lbzip2: {st}"))
-                }
-            })
+        "pbz2" if threads == 1 => drain(pbz2::DecoderReader::new(open()?), h),
+        "pbz2" => drain(pbz2::ParallelDecoder::with_threads(open()?, threads), h),
+        // libbzip2 1.0.8 (C: the bzip2 crate's bundled source, the tests' oracle), one
+        // stream after another, as `bzip2 -dc` and Python's bz2 decode a file
+        "libbzip2" => drain(bzip2::read::MultiBzDecoder::new(open()?), h),
+        // (bench/alternatives' build of this harness only)
+        #[cfg(mibz2_alternatives)]
+        "libbz2-rs" => drain(bzip2_rs::read::MultiBzDecoder::new(open()?), h),
+        // (no thread count: it takes the CPUs this process may run on, so a 1-thread
+        // run's pin decides)
+        #[cfg(mibz2_alternatives)]
+        "lbzip2-rs" => drain(
+            lbzip2::reader::StreamingBz2Read::new(open()?).map_err(|e| format!("{e:?}"))?,
+            h,
+        ),
+        #[cfg(mibz2_alternatives)]
+        "fbz" => {
+            let opts = fbz::DecodeOptions {
+                format: fbz::DecodeFormat::Bzip2,
+                threads,
+                ..Default::default()
+            };
+            drain(fbz::Reader::open(path, opts).map_err(|e| e.to_string())?, h)
         }
-        _ => Err(format!("unknown arm {arm}")),
+        _ => Err(format!("unknown arm {arm} (in this build of the harness)")),
+    }
+}
+
+/// A program's run: the result, the wall time, its busy threads, and the CPU it spent
+/// before it was ready to decode
+fn piped(
+    mut cmd: Command,
+    ready: bool,
+    h: &mut Hash,
+) -> (Result<(), String>, f64, (usize, String), f64) {
+    let mut t0 = Instant::now();
+    let mut p = match cmd.stdout(Stdio::piped()).spawn() {
+        Ok(p) => p,
+        Err(e) => return (Err(format!("{cmd:?}: {e}")), 0.0, (0, String::new()), 0.0),
     };
+    let w = Threads::watch(p.id());
+    let mut out = p.stdout.take().unwrap();
+    let mut startup = Ok(0.0);
+    if ready {
+        let mut line = Vec::new();
+        let mut b = [0u8];
+        while out.read(&mut b).is_ok_and(|n| n == 1) && b[0] != b'\n' {
+            line.push(b[0]);
+        }
+        let line = String::from_utf8_lossy(&line).to_string();
+        startup = line
+            .strip_prefix("ready ")
+            .and_then(|s| s.trim().parse::<f64>().ok())
+            .ok_or_else(|| format!("no ready line ({line:?})"));
+        t0 = Instant::now();
+    }
+    let r = drain(out, h);
+    let threads = w.finish(false);
+    let st = p.wait().unwrap();
     let wall = t0.elapsed().as_secs_f64();
-    let (nthreads, per_thread) = match (watch, kid_threads) {
-        (_, Some(k)) => k,
-        (Some(w), None) => w.finish(true),
-        _ => (0, String::new()),
+    let r = r.and(startup.clone().map(|_| ())).and_then(|()| {
+        if st.success() {
+            Ok(())
+        } else {
+            Err(format!("{:?}: {st}", cmd.get_program()))
+        }
+    });
+    (r, wall, threads, startup.unwrap_or(0.0))
+}
+
+fn child(arm: &str, threads: usize, path: &str) {
+    let mut h = Hash::new();
+    let external = program(arm, threads, path);
+    let is_program = external.is_some();
+    let (res, wall, (nthreads, per_thread), startup) = match external {
+        Some((cmd, ready)) => piped(cmd, ready, &mut h),
+        None => {
+            let w = Threads::watch(std::process::id());
+            let t0 = Instant::now();
+            let res = decode(arm, threads, path, &mut h);
+            let wall = t0.elapsed().as_secs_f64();
+            (res, wall, w.finish(true), 0.0)
+        }
     };
     let (cpu_self, rss_self) = rusage(0);
     let (cpu_kids, rss_kids) = rusage(-1);
-    // (lbzip2's arm: its own peak RSS, and its CPU with this process's hashing)
-    let rss = if arm == "lbzip2" { rss_kids } else { rss_self };
+    // (a program's arm: its own peak RSS, and its CPU with this process's hashing, less
+    // its interpreter's start)
+    let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
     println!(
         "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"err\":\"{err}\"}}",
-        cpu_self + cpu_kids,
+        cpu_self + cpu_kids - startup,
         h.n,
         h.finish()
     );
@@ -367,6 +464,7 @@ fn run(args: &[String]) {
     let mut max_busy = 1.5;
     let mut settle = 2.0;
     let mut pin = "1".to_string();
+    let mut capped: BTreeMap<String, usize> = BTreeMap::new();
     let mut files = Vec::new();
     let mut i = 1;
     while i < args.len() {
@@ -395,6 +493,13 @@ fn run(args: &[String]) {
                 settle = args[i + 1].parse().unwrap();
                 i += 1;
             }
+            "--cap" => {
+                for c in args[i + 1].split(',') {
+                    let (arm, n) = c.split_once('=').expect("--cap ARM=ROUNDS,..");
+                    capped.insert(arm.to_string(), n.parse().unwrap());
+                }
+                i += 1;
+            }
             f => files.push(f.to_string()),
         }
         i += 1;
@@ -405,6 +510,7 @@ fn run(args: &[String]) {
         .append(true)
         .open(out_path)
         .unwrap();
+    let fewest = threads.iter().copied().min().unwrap_or(1);
     for round in 0..rounds {
         for file in &files {
             for &t in &threads {
@@ -415,6 +521,14 @@ fn run(args: &[String]) {
                     order.reverse();
                 }
                 for arm in order {
+                    let name = arm.split_once('@').map_or(arm.as_str(), |x| x.0);
+                    // (a single-threaded arm once a round, at the fewest threads; a capped
+                    // arm in its first rounds only)
+                    if (!parallel(name) && t != fewest)
+                        || capped.get(arm).is_some_and(|&n| round >= n)
+                    {
+                        continue;
+                    }
                     let waited = Instant::now();
                     // (and no CPU more than half busy: a 1-thread run is pinned to one, and
                     // a pinned job of someone else's would share it)
@@ -453,7 +567,8 @@ fn run(args: &[String]) {
                         .to_string_lossy()
                         .to_string();
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"waited_s\":{:.0},{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"waited_s\":{:.0},{}",
+                        parallel(&name),
                         waited.elapsed().as_secs_f64() - settle,
                         line.strip_prefix('{').unwrap_or("\"broken\":1}")
                     );
@@ -515,17 +630,28 @@ fn summary(args: &[String]) {
     // (corpus, threads) -> arm -> round -> line
     let mut by: BTreeMap<(String, u64), BTreeMap<String, BTreeMap<u64, String>>> = BTreeMap::new();
     let mut arm_order: Vec<String> = Vec::new();
-    for l in text.lines().filter(|l| !l.trim().is_empty()) {
-        let key = (json_str(l, "corpus").unwrap(), json_f(l, "threads") as u64);
+    let lines: Vec<&str> = text.lines().filter(|l| !l.trim().is_empty()).collect();
+    let all_threads: std::collections::BTreeSet<u64> =
+        lines.iter().map(|l| json_f(l, "threads") as u64).collect();
+    for l in &lines {
         let arm = json_str(l, "arm").unwrap();
         if !arm_order.contains(&arm) {
             arm_order.push(arm.clone());
         }
-        by.entry(key)
-            .or_default()
-            .entry(arm)
-            .or_default()
-            .insert(json_f(l, "round") as u64, l.to_string());
+        // (a single-threaded arm's run stands at every thread count)
+        let t = json_f(l, "threads") as u64;
+        let at: Vec<u64> = if json_str(l, "parallel").as_deref() == Some("false") {
+            all_threads.iter().copied().collect()
+        } else {
+            vec![t]
+        };
+        for t in at {
+            by.entry((json_str(l, "corpus").unwrap(), t))
+                .or_default()
+                .entry(arm.clone())
+                .or_default()
+                .insert(json_f(l, "round") as u64, l.to_string());
+        }
     }
     let reference = reference.unwrap_or_else(|| arm_order[0].clone());
     for ((corpus, t), arms) in &by {
@@ -567,8 +693,14 @@ fn summary(args: &[String]) {
                     "-".into()
                 }
             };
+            // (a single-threaded arm's 1-thread runs, at another thread count)
+            let serial = runs
+                .values()
+                .next()
+                .is_some_and(|l| json_f(l, "threads") as u64 != *t);
             println!(
-                "| {arm} | {} | {:.3} | {:.3} | {:.3} | {:.3} | {:.0} MB | {} | {} | {:.2} | {} |",
+                "| {arm}{} | {} | {:.3} | {:.3} | {:.3} | {:.3} | {:.0} MB | {} | {} | {:.2} | {} |",
+                if serial { " (single-threaded: its 1-thread runs)" } else { "" },
                 runs.len(),
                 best(&w),
                 median(&mut w),

@@ -13,9 +13,11 @@ one result each. Writes:
   major bench version, one runner CPU model and core count, and one set of corpora: each
   such class is a line of its own, never joined to another;
 - docs/generated/alternatives.md, included by the Alternatives page: the latest
-  master result, mibz2 against pbz2 and lbzip2 (bench/report.py's tables);
+  master result, mibz2 against every other decoder it ran (bench/report.py's tables);
 - docs/site/assets/alternatives.json, read by that page's chart (bench.js): the same
-  result's figures, every decoder on every corpus and thread count.
+  result's figures, every decoder on every corpus and thread count, and whether each
+  decodes blocks in parallel (`parallel`: a single-threaded decoder's figures at any
+  thread count are its 1-thread runs).
 
 Commits are ordered by `git log --first-parent` of --master (default origin/master, else
 HEAD). Without --store, the store is read from --ref; with neither, both files say that
@@ -211,6 +213,7 @@ def alternatives_data(res: dict | None, data: dict) -> dict | None:
     if res is None:
         return None
     pr = next((c.get("pr") for c in data["commits"] if c["sha"] == res["head"]), None)
+    classes = res.get("parallel") or {report.label(a): True for a in res["arms"]}
     return {
         "repo": REPO,
         "head": res["head"],
@@ -223,7 +226,10 @@ def alternatives_data(res: dict | None, data: dict) -> dict | None:
         "cores": res["machine"].get("cores"),
         "toolchain": res.get("toolchain", {}),
         "reference": res.get("reference", "mibz2"),
-        "arms": res["arms"],
+        # (each arm as the figures name it, in the order shown; a record before bench
+        # 1.1 ran block-parallel arms only)
+        "arms": list(classes),
+        "parallel": classes,
         "corpora": {
             k: {"bytes": v.get("bytes"), "out": v.get("out")} for k, v in res["corpora"].items()
         },
