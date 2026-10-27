@@ -1,0 +1,57 @@
+name: Release Notes
+
+# A version's GitHub release (v<version>), its notes the version's section of CHANGELOG.md
+# on master: made at the commit given, with its tag, if it does not exist yet, and its notes
+# updated if it does. release-plz makes the release when it publishes the crate (CI.yml's
+# crates job); this covers a version whose crate was published another way, or whose notes
+# were written later.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The version (e.g. 0.1.0)"
+        required: true
+        type: string
+      sha:
+        description: "The commit the version was released from (its full SHA), for a release that does not exist yet"
+        required: true
+        type: string
+
+jobs:
+  release:
+    name: Make or update the GitHub release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: The version's section of CHANGELOG.md
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          python3 - <<'PY' > notes.md
+          import os, re, sys
+          text = open("CHANGELOG.md").read()
+          version = re.escape(os.environ["VERSION"])
+          m = re.search(rf"^## \[{version}\].*?\n(.*?)(?=^## \[|\Z)", text, re.M | re.S)
+          if not m:
+              sys.exit(f"CHANGELOG.md has no section for {os.environ['VERSION']}")
+          print(m.group(1).strip())
+          PY
+          cat notes.md
+
+      - name: Make the release, or update its notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          SHA: ${{ inputs.sha }}
+        run: |
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            gh release edit "v$VERSION" --notes-file notes.md
+          else
+            gh release create "v$VERSION" --target "$SHA" --title "v$VERSION" --notes-file notes.md
+          fi
