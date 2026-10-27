@@ -47,7 +47,7 @@ pub struct Segmented {
 impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         build(ll, counts, &mut self.tt);
-        walk_fast(&self.tt, orig_ptr, out, &mut self.seg);
+        walk_segments_flagged(&mut self.tt, orig_ptr, out, &mut self.seg);
     }
 }
 
@@ -215,6 +215,180 @@ pub fn walk_segments(tt: &TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mut Seg
     }
 }
 
+/// The flag marking a segment start in its own T-vector entry (links are below 2^20, so
+/// bit 31 is free), and the mask that takes it off a link
+const START: u32 = 1 << 31;
+const LINK: u32 = !START;
+
+/// One lane's state in `walk_segments_flagged`: the row it reads next, and where its
+/// segment's bytes go (`p` up to `end`, the segment's buffer's spare capacity)
+#[derive(Clone, Copy)]
+struct Lane {
+    row: u32,
+    seg: usize,
+    p: *mut u8,
+    end: *mut u8,
+}
+
+/// `walk_segments`, its bookkeeping out of the hot loop (#4): the starts flagged in their
+/// own entries (no bitmap), a segment's first step taken when a lane takes it (so a
+/// flagged entry read in the loop is always the next segment's start), the bytes written
+/// through raw per-lane pointers (no `Vec` header per step), and a loop that does not test
+/// for idle lanes until the last segments are taken. The flags are taken off again before
+/// it returns, so `tt` is as `build` left it. Exactly `walk`'s output.
+pub fn walk_segments_flagged(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+) {
+    let n = tt.0.len();
+    out.clear();
+    if n < MIN_SEGMENTED {
+        return walk(tt, orig_ptr, out);
+    }
+    let r0 = tt.0[orig_ptr as usize] >> 8;
+    random_rows(n, SEGMENTS - 1, &mut s.starts);
+    s.starts.push(r0);
+    s.starts.sort_unstable();
+    s.starts.dedup();
+    let ns = s.starts.len();
+    for &r in &s.starts {
+        tt.0[r as usize] |= START;
+    }
+    let cap = 2 * n / ns + 64;
+    s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
+    for b in &mut s.bufs[..ns] {
+        b.clear();
+        b.reserve(cap);
+    }
+    s.next.clear();
+    s.next.resize(ns, usize::MAX);
+    let starts = &s.starts;
+    let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let t = tt.0.as_ptr();
+    let bufs = &mut s.bufs;
+    let next = &mut s.next;
+
+    // A lane takes segment `seg`: its first step (its start's own, flagged, entry) taken
+    // here, so the loop's flag test only ever sees the next segment's start
+    let take = |seg: usize, bufs: &mut Vec<Vec<u8>>| -> Lane {
+        let b = &mut bufs[seg];
+        let base = b.as_mut_ptr();
+        // SAFETY: the starts are rows below n; the buffer has `cap` > 0 spare bytes
+        let q = unsafe { *t.add(starts[seg] as usize) } & LINK;
+        debug_assert!(b.capacity() > 1);
+        unsafe { *base = q as u8 };
+        Lane {
+            row: q >> 8,
+            seg,
+            p: unsafe { base.add(1) },
+            end: unsafe { base.add(b.capacity()) },
+        }
+    };
+    // A lane's segment ends at `row`, a start: its length recorded and its successor
+    let finish = |l: &Lane, bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| {
+        let b = &mut bufs[l.seg];
+        // SAFETY: p is within b's allocation, every byte below it written
+        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+        next[l.seg] = seg_of(l.row);
+    };
+    // A lane's buffer is full: it grows (its written bytes kept)
+    let grow = |l: &mut Lane, bufs: &mut Vec<Vec<u8>>| {
+        let b = &mut bufs[l.seg];
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
+        b.reserve(b.capacity());
+        l.p = unsafe { b.as_mut_ptr().add(len) };
+        l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
+    };
+
+    let mut queued = 0;
+    let mut lanes: [Lane; LANES] = std::array::from_fn(|_| Lane {
+        row: 0,
+        seg: usize::MAX,
+        p: std::ptr::null_mut(),
+        end: std::ptr::null_mut(),
+    });
+    let mut active = 0;
+    while active < LANES && queued < ns {
+        lanes[active] = take(queued, bufs);
+        queued += 1;
+        active += 1;
+    }
+    // Every lane busy while segments remain to be taken
+    if active == LANES {
+        'full: loop {
+            for l in lanes.iter_mut() {
+                // SAFETY: rows are below n (TVector), with the flag masked off below
+                let q = unsafe { *t.add(l.row as usize) };
+                if q & START != 0 {
+                    finish(l, bufs, next);
+                    if queued == ns {
+                        break 'full;
+                    }
+                    *l = take(queued, bufs);
+                    queued += 1;
+                    continue;
+                }
+                // SAFETY: p < end, within the buffer's allocation
+                unsafe {
+                    *l.p = q as u8;
+                    l.p = l.p.add(1);
+                }
+                l.row = q >> 8;
+                if l.p == l.end {
+                    grow(l, bufs);
+                }
+            }
+        }
+    }
+    // The tail: the lanes still walking, each dropped as its segment ends. (A lane that
+    // broke out of the full loop above has finished: its segment was recorded, and it is
+    // known by p having been reset below.)
+    let mut live: Vec<Lane> = lanes[..active]
+        .iter()
+        .copied()
+        .filter(|l| next_unset(l, next))
+        .collect();
+    while !live.is_empty() {
+        let mut i = 0;
+        while i < live.len() {
+            let l = &mut live[i];
+            let q = unsafe { *t.add(l.row as usize) };
+            if q & START != 0 {
+                finish(l, bufs, next);
+                live.swap_remove(i);
+                continue;
+            }
+            unsafe {
+                *l.p = q as u8;
+                l.p = l.p.add(1);
+            }
+            l.row = q >> 8;
+            if l.p == l.end {
+                grow(l, bufs);
+            }
+            i += 1;
+        }
+    }
+    for &r in starts {
+        tt.0[r as usize] &= LINK;
+    }
+    out.reserve(n);
+    let mut seg = seg_of(r0);
+    while out.len() < n {
+        let b = &bufs[seg];
+        out.extend_from_slice(&b[..b.len().min(n - out.len())]);
+        seg = next[seg];
+    }
+}
+
+/// A lane whose segment has not been recorded as finished
+fn next_unset(l: &Lane, next: &[usize]) -> bool {
+    l.seg != usize::MAX && next[l.seg] == usize::MAX
+}
+
 /// `m` pseudo-random rows below `n` (xorshift, seeded by n: the same rows every time)
 fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
     rows.clear();
@@ -225,4 +399,45 @@ fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
         x ^= x << 17;
         (x % n as u64) as u32
     }));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn check(ll: &[u8]) {
+        let mut counts = [0u32; 256];
+        for &c in ll {
+            counts[c as usize] += 1;
+        }
+        let mut tt = TVector::new();
+        build(ll, &counts, &mut tt);
+        let (mut plain, mut flagged, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+        for orig_ptr in [0, ll.len() as u32 / 3, ll.len() as u32 - 1] {
+            walk(&tt, orig_ptr, &mut plain);
+            walk_segments_flagged(&mut tt, orig_ptr, &mut flagged, &mut seg);
+            assert!(plain == flagged, "orig_ptr {orig_ptr}");
+            // the flags are taken off again: the T-vector is as build left it
+            assert!(tt.0.iter().all(|&e| e & START == 0));
+        }
+    }
+
+    /// The flagged walk on a random last column and on a periodic one (a list of several
+    /// cycles), both past MIN_SEGMENTED so the segments are walked: small enough for Miri
+    #[test]
+    fn flagged_walk_equals_plain() {
+        let n = MIN_SEGMENTED + 1000;
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let random: Vec<u8> = (0..n)
+            .map(|_| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                (x % 7) as u8
+            })
+            .collect();
+        check(&random);
+        let periodic: Vec<u8> = (0..n).map(|i| b"abc"[i % 3]).collect();
+        check(&periodic);
+    }
 }
