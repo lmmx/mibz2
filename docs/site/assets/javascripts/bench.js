@@ -72,9 +72,18 @@
     });
     for (const line of series.lines) {
       const lp = line.points.filter((p) => p[key]);
-      if (lp.length > 1) {
+      // joined only between neighbouring commits: a commit of another class (or one with no
+      // point) between two of this line's breaks it, so no segment spans commits it didn't
+      // measure
+      const runs = [];
+      for (const p of lp) {
+        const last = runs[runs.length - 1];
+        if (last && xi.get(p.c) === xi.get(last[last.length - 1].c) + 1) last.push(p);
+        else runs.push([p]);
+      }
+      for (const run of runs.filter((r) => r.length > 1)) {
         svg("polyline", {
-          points: lp.map((p) => `${x(p.c)},${y(p[key][0])}`).join(" "),
+          points: run.map((p) => `${x(p.c)},${y(p[key][0])}`).join(" "),
           class: "bh-line", stroke: slot(line.class),
         }, s);
       }
