@@ -13,9 +13,9 @@
 #[path = "../tests/common/mod.rs"]
 mod common;
 
-use bunzip::bits::Bits;
-use bunzip::block::{read_item, Item, BLOCK_MAGIC};
-use bunzip::{decode_block, Kernels, Scratch};
+use mibz2::bits::Bits;
+use mibz2::block::{read_item, Item, BLOCK_MAGIC};
+use mibz2::{decode_block, Kernels, Scratch};
 use common::*;
 use std::path::Path;
 use std::process::{Command, Stdio};
@@ -93,7 +93,7 @@ fn main() {
             }
         }
         w.put(0x1772_4538_5090, 48);
-        w.put(bunzip::combine(blocks.iter().map(|b| b.2)) as u64, 32);
+        w.put(mibz2::combine(blocks.iter().map(|b| b.2)) as u64, 32);
         let stream = w.finish();
         let file = out_dir.join(format!("{name}.blocks.bz2"));
         std::fs::write(&file, &stream).unwrap();
@@ -105,8 +105,8 @@ fn main() {
             checks.push((c.name(), try_decode(c.as_ref(), &stream).unwrap_or_else(Err)));
         }
         let mut ranged = Vec::new();
-        let r = bunzip::decode_blocks(&data, blocks[0].0, blocks.last().unwrap().1, level, Kernels::detect(), &mut ranged);
-        checks.push(("bunzip decode_blocks".to_string(), r.map(|_| ranged).map_err(|e| e.to_string())));
+        let r = mibz2::decode_blocks(&data, blocks[0].0, blocks.last().unwrap().1, level, Kernels::detect(), &mut ranged);
+        checks.push(("mibz2 decode_blocks".to_string(), r.map(|_| ranged).map_err(|e| e.to_string())));
         let bad: Vec<&str> = checks.iter().filter(|(_, r)| r.as_ref() != Ok(&want)).map(|(n, _)| n.as_str()).collect();
         failed += !bad.is_empty() as usize;
         total_blocks += blocks.len();

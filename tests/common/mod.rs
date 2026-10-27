@@ -2,7 +2,7 @@
 //! decoders under test, a block writer for streams no encoder writes, and test data.
 #![allow(dead_code)]
 
-use bunzip::{Error, Kernels};
+use mibz2::{Error, Kernels};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
 /// libbzip2 1.0.8 (the bzip2 crate's bundled source) on a whole input, its streams one
@@ -46,13 +46,13 @@ pub fn compress(data: &[u8], level: u32) -> Vec<u8> {
 
 /// The sequential decoder, a panic caught and reported as one
 pub fn ours(data: &[u8], k: Kernels) -> Result<Result<Vec<u8>, Error>, String> {
-    catch_unwind(AssertUnwindSafe(|| bunzip::decode_with::<bunzip::bwt::Segmented>(data, k))).map_err(|_| "PANIC".to_string())
+    catch_unwind(AssertUnwindSafe(|| mibz2::decode_with::<mibz2::bwt::Segmented>(data, k))).map_err(|_| "PANIC".to_string())
 }
 
 /// The parallel decoder, fed `chunk` bytes at a time from another thread, read `read`
 /// bytes at a time
 pub fn parallel(data: &[u8], threads: usize, slots: usize, chunk: usize, read: usize, k: Kernels) -> Result<Vec<u8>, Error> {
-    let dec = bunzip::StreamDecoder::new(threads, slots, k);
+    let dec = mibz2::StreamDecoder::new(threads, slots, k);
     let mut out = Vec::new();
     let res = std::thread::scope(|s| {
         s.spawn(|| {
@@ -260,7 +260,7 @@ pub fn reference(ll: &[u8], orig_ptr: u32) -> Option<Vec<u8>> {
 }
 
 pub fn crc32(data: &[u8]) -> u32 {
-    !bunzip::crc::update_bytewise(!0, data)
+    !mibz2::crc::update_bytewise(!0, data)
 }
 
 /// A stream of `level` holding these blocks; its combined CRC their CRCs' (or `stream_crc`)
@@ -337,10 +337,10 @@ fn write_block(w: &mut BitWriter, b: &Spec, crc: u32) {
 /// The bit at which each block of a .bz2 starts, and each stream's level, by the
 /// decoder's own scanner (with the decoded length of each block, from `decode_blocks`)
 pub fn block_starts(data: &[u8]) -> Vec<u64> {
-    let mut sc = bunzip::stream::Scanner::new(bunzip::stream::SliceSource(data));
+    let mut sc = mibz2::stream::Scanner::new(mibz2::stream::SliceSource(data));
     let mut v = Vec::new();
     let mut syms = Vec::new();
-    while let Ok(bunzip::stream::Event::Block { bit, symbols, .. }) = sc.next(syms) {
+    while let Ok(mibz2::stream::Event::Block { bit, symbols, .. }) = sc.next(syms) {
         v.push(bit);
         syms = symbols.syms;
     }
@@ -396,19 +396,19 @@ pub trait Candidate {
 }
 
 /// This crate's decoder: sequential (`threads` 0) or parallel, on the kernels given
-pub struct Bunzip {
+pub struct Mibz2 {
     pub kernels: Kernels,
     pub threads: usize,
 }
 
-impl Candidate for Bunzip {
+impl Candidate for Mibz2 {
     fn name(&self) -> String {
         let k = if self.kernels == Kernels::scalar() { "scalar" } else { "simd" };
-        if self.threads == 0 { format!("bunzip {k}") } else { format!("bunzip {k} {}t", self.threads) }
+        if self.threads == 0 { format!("mibz2 {k}") } else { format!("mibz2 {k} {}t", self.threads) }
     }
     fn decode(&self, data: &[u8]) -> Result<Vec<u8>, String> {
         let r = if self.threads == 0 {
-            bunzip::decode_with::<bunzip::bwt::Segmented>(data, self.kernels)
+            mibz2::decode_with::<mibz2::bwt::Segmented>(data, self.kernels)
         } else {
             parallel(data, self.threads, 2 * self.threads, 1 << 20, 1 << 20, self.kernels)
         };
@@ -420,9 +420,9 @@ impl Candidate for Bunzip {
 /// parallel (another decoder joins here)
 pub fn candidates() -> Vec<Box<dyn Candidate>> {
     vec![
-        Box::new(Bunzip { kernels: Kernels::scalar(), threads: 0 }),
-        Box::new(Bunzip { kernels: Kernels::detect(), threads: 0 }),
-        Box::new(Bunzip { kernels: Kernels::detect(), threads: 3 }),
+        Box::new(Mibz2 { kernels: Kernels::scalar(), threads: 0 }),
+        Box::new(Mibz2 { kernels: Kernels::detect(), threads: 0 }),
+        Box::new(Mibz2 { kernels: Kernels::detect(), threads: 3 }),
     ]
 }
 

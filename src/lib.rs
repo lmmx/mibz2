@@ -11,17 +11,17 @@
 //! use std::io::Read;
 //! // a whole .bz2 in memory, on this thread, or on 4 threads
 //! let data = std::fs::read("file.bz2")?;
-//! let text = bunzip::decode(&data)?;
-//! let same = bunzip::decode_parallel(&data, 4)?;
+//! let text = mibz2::decode(&data)?;
+//! let same = mibz2::decode_parallel(&data, 4)?;
 //! # assert_eq!(text, same);
 //! // any `Read`, as a `Read`: on this thread, or block-parallel
 //! let mut out = Vec::new();
-//! bunzip::BzReader::parallel(std::fs::File::open("file.bz2")?, 4).read_to_end(&mut out)?;
+//! mibz2::BzReader::parallel(std::fs::File::open("file.bz2")?, 4).read_to_end(&mut out)?;
 //! // the blocks without decoding them, then any range of whole blocks, on any thread
-//! for span in bunzip::scan(&data) {
+//! for span in mibz2::scan(&data) {
 //!     let span = span?;
 //!     let mut part = Vec::new();
-//!     bunzip::decode_blocks(&data, span.start_bit, span.end_bit, span.level, bunzip::Kernels::detect(), &mut part)?;
+//!     mibz2::decode_blocks(&data, span.start_bit, span.end_bit, span.level, mibz2::Kernels::detect(), &mut part)?;
 //! }
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```

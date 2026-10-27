@@ -119,7 +119,7 @@ impl StreamDecoder {
             let (shared, job_rx) = (shared.clone(), job_rx.clone());
             handles.push(
                 std::thread::Builder::new()
-                    .name(format!("bunzip-{i}"))
+                    .name(format!("mibz2-{i}"))
                     .spawn(move || worker::<I>(&shared, &job_rx, k))
                     .expect("spawn a bz2 worker"),
             );
@@ -127,7 +127,7 @@ impl StreamDecoder {
         let sh = shared.clone();
         handles.push(
             std::thread::Builder::new()
-                .name("bunzip-scan".into())
+                .name("mibz2-scan".into())
                 .spawn(move || scanner(&sh, in_rx, job_tx))
                 .expect("spawn the bz2 scanner"),
         );

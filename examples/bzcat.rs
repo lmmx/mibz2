@@ -10,12 +10,12 @@ fn main() {
     let threads: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(4);
     let slots: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(2 * threads);
     let k = match std::env::var("BUNZIP_SIMD").as_deref() {
-        Ok("0") | Ok("off") => bunzip::Kernels::scalar(),
-        _ => bunzip::Kernels::detect(),
+        Ok("0") | Ok("off") => mibz2::Kernels::scalar(),
+        _ => mibz2::Kernels::detect(),
     };
     let dec = match std::env::var("BZ2_INVERSE").as_deref() {
-        Ok("plain") => bunzip::StreamDecoder::with_inverse::<bunzip::bwt::Plain>(threads, slots, k),
-        _ => bunzip::StreamDecoder::new(threads, slots, k),
+        Ok("plain") => mibz2::StreamDecoder::with_inverse::<mibz2::bwt::Plain>(threads, slots, k),
+        _ => mibz2::StreamDecoder::new(threads, slots, k),
     };
     let code = std::thread::scope(|s| {
         s.spawn(|| {

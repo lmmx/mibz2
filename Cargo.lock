@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "bunzip"
+name = "mibz2"
 version = "0.1.0"
 dependencies = [
  "bzip2",
