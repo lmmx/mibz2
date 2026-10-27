@@ -71,6 +71,7 @@ ignore = ["D401"]
 select = ["D"]
 
 [tool.ruff.lint.per-file-ignores]
+"bench/*" = ["D"]
 "python/tests/*" = ["D"]
 
 [tool.ruff.lint.pydocstyle]

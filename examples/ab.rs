@@ -15,6 +15,8 @@
 //!     --pin CPU        the CPU 1-thread runs are pinned to (default 1)
 //!     --max-busy C     before each run, wait until the other processes keep at most C
 //!                      cores busy (default 1.5; sampled over 2 s while nothing of ours runs)
+//!     --settle S       that sample's length in seconds (default 2; CI's runners, which
+//!                      run nothing else, take a shorter one)
 //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired
 //!                                    ratios against ARM (geometric mean, 95% CI over rounds)
 //! ab child ARM THREADS FILE          one run (what `run` spawns)
@@ -363,6 +365,7 @@ fn run(args: &[String]) {
     let mut threads = vec![1usize, 4];
     let mut rounds = 5;
     let mut max_busy = 1.5;
+    let mut settle = 2.0;
     let mut pin = "1".to_string();
     let mut files = Vec::new();
     let mut i = 1;
@@ -388,6 +391,10 @@ fn run(args: &[String]) {
                 max_busy = args[i + 1].parse().unwrap();
                 i += 1;
             }
+            "--settle" => {
+                settle = args[i + 1].parse().unwrap();
+                i += 1;
+            }
             f => files.push(f.to_string()),
         }
         i += 1;
@@ -411,11 +418,11 @@ fn run(args: &[String]) {
                     let waited = Instant::now();
                     // (and no CPU more than half busy: a 1-thread run is pinned to one, and
                     // a pinned job of someone else's would share it)
-                    let (mut busy, mut one) = others_busy(2.0);
+                    let (mut busy, mut one) = others_busy(settle);
                     while busy > max_busy || one > 0.5 {
                         eprintln!("  waiting: others keep {busy:.2} cores busy, one CPU {one:.2} (load {:.2})", load1());
                         std::thread::sleep(Duration::from_secs(20));
-                        (busy, one) = others_busy(2.0);
+                        (busy, one) = others_busy(settle);
                     }
                     let (name, exe) = match arm.split_once('@') {
                         Some((n, e)) => (n.to_string(), std::path::PathBuf::from(e)),
@@ -447,7 +454,7 @@ fn run(args: &[String]) {
                         .to_string();
                     let rec = format!(
                         "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"waited_s\":{:.0},{}",
-                        waited.elapsed().as_secs_f64() - 2.0,
+                        waited.elapsed().as_secs_f64() - settle,
                         line.strip_prefix('{').unwrap_or("\"broken\":1}")
                     );
                     eprintln!(
@@ -605,6 +612,6 @@ fn main() {
         Some("run") => run(&args[1..]),
         Some("summary") => summary(&args[1..]),
         Some("gen") => gen(&args[1..]),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE"),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE"),
     }
 }
