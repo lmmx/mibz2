@@ -417,6 +417,240 @@ pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
     }
 }
 
+/// The super-alphabet walk (#6; Kärkkäinen, Kempa and Puglisi 2012, section 4): a pair
+/// table built from the T-vector, each dependent load giving two bytes, so the chain is
+/// half as long. Its buffers (the pair table: 8 bytes a row) are kept from block to block
+#[derive(Default)]
+pub struct Pairs {
+    tt: TVector,
+    pairs: Vec<u64>,
+    seg: SegScratch,
+}
+
+impl InverseBwt for Pairs {
+    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
+        build(ll, counts, &mut self.tt);
+        walk_pairs(&mut self.tt, orig_ptr, out, &mut self.seg, &mut self.pairs);
+    }
+}
+
+/// A pair entry's fields: row i's byte (bits 0-7), the next row's (8-15), the row after
+/// that (16-35: rows are below 2^20), and two flags: i is a segment start (S0), or the
+/// next row is (S1, when the row field holds that next row instead, where the segment
+/// stops after one byte)
+const P_ROW: u32 = 16;
+const P_MASK: u64 = (1 << 20) - 1;
+const P_S0: u64 = 1 << 36;
+const P_S1: u64 = 1 << 37;
+
+/// `walk_segments_flagged` over a pair table: the same segments (the starts flagged in
+/// `tt`, then the table built from it, one independent gather a row), each lane taking
+/// two bytes a dependent load, and stopping after one where the row between is a start.
+/// The flags are taken off `tt` again once the table is built. Exactly `walk`'s output
+pub fn walk_pairs(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    pairs: &mut Vec<u64>,
+) {
+    const L: usize = FLAGGED_LANES;
+    let n = tt.0.len();
+    out.clear();
+    if n < MIN_SEGMENTED {
+        return walk(tt, orig_ptr, out);
+    }
+    let r0 = tt.0[orig_ptr as usize] >> 8;
+    random_rows(n, FLAGGED_SEGMENTS - 1, &mut s.starts);
+    s.starts.push(r0);
+    s.starts.sort_unstable();
+    s.starts.dedup();
+    let ns = s.starts.len();
+    for &r in &s.starts {
+        tt.0[r as usize] |= START;
+    }
+    let t = &tt.0;
+    pairs.clear();
+    pairs.extend(t.iter().map(|&e| {
+        let r1 = (e & LINK) >> 8;
+        // SAFETY: every link is below n (TVector)
+        let e1 = unsafe { *t.get_unchecked(r1 as usize) };
+        let s0 = if e & START != 0 { P_S0 } else { 0 };
+        let (row, s1) = if e1 & START != 0 {
+            (r1, P_S1)
+        } else {
+            ((e1 & LINK) >> 8, 0)
+        };
+        (e as u8 as u64) | (e1 as u8 as u64) << 8 | (row as u64) << P_ROW | s0 | s1
+    }));
+    for &r in &s.starts {
+        tt.0[r as usize] &= LINK;
+    }
+    let cap = 2 * n / ns + 64;
+    s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
+    for b in &mut s.bufs[..ns] {
+        b.clear();
+        b.reserve(cap);
+    }
+    s.next.clear();
+    s.next.resize(ns, usize::MAX);
+    let starts = &s.starts;
+    let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let pt = pairs.as_ptr();
+    let bufs = &mut s.bufs;
+    let next = &mut s.next;
+
+    // One step from an entry: its bytes written (two, or one where it stops), and
+    // whether the segment ends, at the lane's (new) row
+    #[inline(always)]
+    fn step(l: &mut Lane, q: u64) -> bool {
+        // SAFETY: p + 2 <= end (the lane grows its buffer before it is within 2 of it)
+        unsafe { (l.p as *mut u16).write_unaligned(q as u16) };
+        l.row = ((q >> P_ROW) & P_MASK) as u32;
+        if q & P_S1 != 0 {
+            l.p = unsafe { l.p.add(1) };
+            true
+        } else {
+            l.p = unsafe { l.p.add(2) };
+            false
+        }
+    }
+    let take = |seg: usize, bufs: &mut Vec<Vec<u8>>| -> (Lane, bool) {
+        let b = &mut bufs[seg];
+        let base = b.as_mut_ptr();
+        let mut l = Lane {
+            row: 0,
+            seg,
+            p: base,
+            end: unsafe { base.add(b.capacity()) },
+        };
+        // SAFETY: the starts are rows below n; the buffer has `cap` > 2 spare bytes
+        let q = unsafe { *pt.add(starts[seg] as usize) };
+        let done = step(&mut l, q);
+        (l, done)
+    };
+    let finish = |l: &Lane, bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| {
+        let b = &mut bufs[l.seg];
+        // SAFETY: p is within b's allocation, every byte below it written
+        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+        next[l.seg] = seg_of(l.row);
+    };
+    let grow = |l: &mut Lane, bufs: &mut Vec<Vec<u8>>| {
+        let b = &mut bufs[l.seg];
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
+        b.reserve(b.capacity());
+        l.p = unsafe { b.as_mut_ptr().add(len) };
+        l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
+    };
+    let pf = |row: u32| prefetch(pt as *const u32, 2 * row);
+
+    // A lane given its next segment, or none left: the segments that end on their first
+    // step (one byte, the next row a start) finished as they are taken
+    let mut queued = 0;
+    let mut refill = |bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| -> Option<Lane> {
+        while queued < ns {
+            let (l, done) = take(queued, bufs);
+            queued += 1;
+            if done {
+                finish(&l, bufs, next);
+            } else {
+                pf(l.row);
+                return Some(l);
+            }
+        }
+        None
+    };
+    let mut lanes: [Lane; L] = std::array::from_fn(|_| Lane {
+        row: 0,
+        seg: usize::MAX,
+        p: std::ptr::null_mut(),
+        end: std::ptr::null_mut(),
+    });
+    let mut active = 0;
+    while active < L {
+        match refill(bufs, next) {
+            Some(l) => lanes[active] = l,
+            None => break,
+        }
+        active += 1;
+    }
+    // Every lane busy while segments remain to be taken
+    let mut live: Vec<Lane> = Vec::new();
+    if active == L {
+        'full: loop {
+            for k in 0..L {
+                let l = &mut lanes[k];
+                // SAFETY: rows are below n (the pair table's fields are T-vector links)
+                let q = unsafe { *pt.add(l.row as usize) };
+                if q & (P_S0 | P_S1) == 0 {
+                    // SAFETY: p + 2 <= end
+                    unsafe { (l.p as *mut u16).write_unaligned(q as u16) };
+                    l.row = ((q >> P_ROW) & P_MASK) as u32;
+                    pf(l.row);
+                    l.p = unsafe { l.p.add(2) };
+                    if unsafe { l.end.offset_from(l.p) } < 2 {
+                        grow(l, bufs);
+                    }
+                    continue;
+                }
+                if q & P_S0 == 0 {
+                    step(l, q);
+                }
+                finish(l, bufs, next);
+                match refill(bufs, next) {
+                    Some(nl) => *l = nl,
+                    None => {
+                        live.extend(
+                            lanes
+                                .iter()
+                                .enumerate()
+                                .filter(|&(j, _)| j != k)
+                                .map(|(_, l)| *l),
+                        );
+                        break 'full;
+                    }
+                }
+            }
+        }
+    } else {
+        live.extend_from_slice(&lanes[..active]);
+    }
+    // The tail: the lanes still walking, each dropped as its segment ends
+    while !live.is_empty() {
+        let mut i = 0;
+        while i < live.len() {
+            let l = &mut live[i];
+            let q = unsafe { *pt.add(l.row as usize) };
+            let ended = if q & P_S0 != 0 {
+                true
+            } else {
+                let done = step(l, q);
+                if !done {
+                    pf(l.row);
+                    if unsafe { l.end.offset_from(l.p) } < 2 {
+                        grow(l, bufs);
+                    }
+                }
+                done
+            };
+            if ended {
+                finish(l, bufs, next);
+                live.swap_remove(i);
+                continue;
+            }
+            i += 1;
+        }
+    }
+    out.reserve(n);
+    let mut seg = seg_of(r0);
+    while out.len() < n {
+        let b = &bufs[seg];
+        out.extend_from_slice(&b[..b.len().min(n - out.len())]);
+        seg = next[seg];
+    }
+}
+
 /// A hint that the T-vector entry at `row` (below its length) is read soon: a software
 /// prefetch into L1 where the target has one (`prefetcht0`, `prfm pldl1keep`), else
 /// nothing. A hint only: it changes no value read.
@@ -466,10 +700,13 @@ mod tests {
         let mut tt = TVector::new();
         build(ll, &counts, &mut tt);
         let (mut plain, mut flagged, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+        let mut pairs = Vec::new();
         for orig_ptr in [0, ll.len() as u32 / 3, ll.len() as u32 - 1] {
             walk(&tt, orig_ptr, &mut plain);
             walk_segments_flagged(&mut tt, orig_ptr, &mut flagged, &mut seg);
             assert!(plain == flagged, "orig_ptr {orig_ptr}");
+            walk_pairs(&mut tt, orig_ptr, &mut flagged, &mut seg, &mut pairs);
+            assert!(plain == flagged, "pairs, orig_ptr {orig_ptr}");
             // the flags are taken off again: the T-vector is as build left it
             assert!(tt.0.iter().all(|&e| e & START == 0));
             // other lane and segment counts, with and without the prefetch

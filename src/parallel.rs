@@ -90,7 +90,7 @@ impl StreamDecoder {
     /// A decoder on `threads` workers (at least 1) with `slots` blocks in flight (at least
     /// `threads`), on kernels `k`
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
-        Self::with_inverse::<super::bwt::Segmented>(threads, slots, k)
+        Self::with_inverse::<super::bwt::Pairs>(threads, slots, k)
     }
 
     /// `new` with the inverse-BWT kernel `I` (bwt::InverseBwt), so the whole decoder can
