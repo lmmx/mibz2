@@ -23,9 +23,10 @@
 //! within the walk's, which still counts both. The
 //! walks not used (the plain one, the bitmap-segmented one and the flagged one) are timed
 //! in passes of their own, the same way, each in the walk's place: MTF, the build, the
-//! walk timed, then RLE1 and the CRC, which check its output; and so is the room walk with
-//! its assembly timed as one, the check that timing them apart changed neither. The pass
-//! that `decode` runs is checked against `decode`'s output.
+//! walk timed, then RLE1 and the CRC, which check its output. So is the room walk with its
+//! assembly timed as one, the check that timing them apart changed neither, its passes
+//! interleaved with the split ones (which goes first alternating). The pass that `decode`
+//! runs is checked against `decode`'s output.
 
 use std::time::Instant;
 
@@ -145,7 +146,15 @@ fn main() {
     };
     let mut tm = inf;
     let (mut n, mut blocks) = (0, 0);
+    // The check that timing the assembly apart leaves the walk as it was: the room walk
+    // with its assembly timed as one, in passes interleaved with the split ones, which of
+    // the two goes first alternating, so that neither always follows the other
+    let mut as_one = f64::INFINITY;
+    let check = || pass(&data, k, Some(walk_segments_room), false).0.walk;
     for i in 0..passes {
+        if i % 2 == 1 {
+            as_one = as_one.min(check());
+        }
         let (t, bytes, count, decoded) = pass(&data, k, None, i == 0);
         if i == 0 {
             assert!(
@@ -155,10 +164,11 @@ fn main() {
         }
         tm = fastest(tm, t);
         (n, blocks) = (bytes, count);
+        if i % 2 == 0 {
+            as_one = as_one.min(check());
+        }
     }
-    let others: [(&str, Walk); 4] = [
-        // the check that timing the assembly apart leaves the two as they were
-        ("walk, room + assembly as one", walk_segments_room),
+    let others: [(&str, Walk); 3] = [
         ("walk, flagged (before #37)", walk_segments_flagged),
         ("walk, bitmap (before #4)", bitmap),
         ("walk, plain", plain),
@@ -196,6 +206,11 @@ fn main() {
         "segment assembly",
         cb(tm.assemble),
         100.0 * tm.assemble / total
+    );
+    println!(
+        "  {:28} {:6.2} c/B  (not in the total: the walk's row, timed as one)",
+        "walk, room + assembly as one",
+        cb(as_one)
     );
     for (name, s) in others {
         println!("  {name:28} {:6.2} c/B  (not in the total)", cb(s));

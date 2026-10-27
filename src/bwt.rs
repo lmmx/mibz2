@@ -566,7 +566,9 @@ pub fn walk_segments_room_with<const L: usize, const PF: u8>(
 
 /// The room walk itself, on a block of one row or more: each segment's bytes into its
 /// buffer in `s`, its successor in `s.next`, and the block's length and first segment
-/// for `SegScratch::assemble`
+/// for `SegScratch::assemble`. Never inlined, so the decoder and the stage table's split
+/// timing (`walk_segments_room_parts`) run the same machine code for the walk
+#[inline(never)]
 fn room_segments<const L: usize, const PF: u8>(
     tt: &mut TVector,
     orig_ptr: u32,
