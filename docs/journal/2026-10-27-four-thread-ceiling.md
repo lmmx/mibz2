@@ -90,6 +90,14 @@ Labels:
 
 ## Outcome, and what is open
 
+- **Established:** spreading two decoder threads over separate cores, rather than packing
+  them onto SMT siblings, raises end-to-end throughput by about 40%. Replicated on two
+  EPYC models (+40.5% and +39.6%).
+- **Falsified:** that SMT sharing alone explains the four-thread ceiling. The registered
+  prediction (about 2× from one packed core to two) measured 1.62×.
+- **Unresolved:** the remaining loss coincides with higher CPU per block and with workers
+  idle while the scanner reads. Neither is shown to be a bottleneck that can be
+  recovered.
 - **Settled for these runners:** the "1.5–1.9× from four workers" is mostly the runners'
   topology. Four vCPUs are two cores' worth. No decoder change follows from that.
 - **Open, for a machine with more cores** (`just bench-occupancy` on the 20-core
@@ -100,7 +108,9 @@ Labels:
     contention test).
 - **Open:** the EPYC 9V45's weaker 1.50×. No run has landed on one yet.
 - **Not claimed:**
-  - that the scanner or a shared resource causes the remainder: each needs its own A/B;
+  - that the scanner or a shared resource causes the remainder: each needs its own A/B.
+    A symptom in a trace doesn't by itself reopen #10 (speculative Huffman in the
+    workers) or #42 (the move structure under contention); a paired experiment does;
   - that SMT is bad for mibz2: the fourth worker still adds throughput.
 - **Lesson:** a speedup's denominator should be physical cores, read from the machine,
   not its advertised vCPUs. The instrument now records both.
