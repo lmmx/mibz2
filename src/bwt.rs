@@ -46,8 +46,14 @@ pub struct Segmented {
 
 impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
-        build(ll, counts, &mut self.tt);
-        walk_segments_flagged(&mut self.tt, orig_ptr, out, &mut self.seg);
+        let runs = build_runs(ll, counts, &mut self.tt);
+        // A block a quarter of whose rows went in by run stores is repetitive enough for
+        // the walk to look for copies (#9); others walk as before
+        if runs * 4 >= ll.len() {
+            walk_segments_precopy(&mut self.tt, orig_ptr, out, &mut self.seg);
+        } else {
+            walk_segments_flagged(&mut self.tt, orig_ptr, out, &mut self.seg);
+        }
     }
 }
 
@@ -70,8 +76,16 @@ impl TVector {
 
 /// The T-vector of the last column `ll`, whose bytes `counts` counts
 pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
+    build_runs(ll, counts, tt);
+}
+
+/// `build`, returning how many rows went in by 16-wide run stores (a block's
+/// repetitiveness, which `Segmented` uses to choose its walk)
+pub fn build_runs(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) -> usize {
     let tt = &mut tt.0;
     tt.clear();
+    // (room for the Precopy walk's sentinel, so pushing it never moves the vector)
+    tt.reserve(ll.len() + 1);
     tt.extend(ll.iter().map(|&c| c as u32));
     let mut ftab = [0u32; 256];
     let mut cum = 0u32;
@@ -84,6 +98,7 @@ pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
     // 16-wide store and one counter step, libsais's RUN_LANES. After the BWT, most of
     // Wikidata's last column is in such runs; other windows take the one-byte steps.
     let mut i = 0;
+    let mut runs = 0;
     while i + 16 <= ll.len() {
         let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
         if a == b && a == a.rotate_left(8) {
@@ -94,12 +109,14 @@ pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
                 *e = (*e & 0xff) | (base + ((j as u32) << 8));
             }
             ftab[c] += 16;
+            runs += 16;
         } else {
             link(ll, tt, &mut ftab, i..i + 16);
         }
         i += 16;
     }
     link(ll, tt, &mut ftab, i..ll.len());
+    runs
 }
 
 /// `build`'s one-byte steps, over the rows `rows`
@@ -158,6 +175,7 @@ pub struct SegScratch {
     bitmap: Vec<u64>,
     bufs: Vec<Vec<u8>>,
     next: Vec<usize>,
+    chains: Vec<Chain>,
 }
 
 /// The walk, segmented where the block is long enough: exactly `walk`'s output
@@ -449,6 +467,294 @@ pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
     }
 }
 
+/// A forward chain's mark in the entry of the row it starts one after (bit 30: links are
+/// below 2^20, START is bit 31), with the chain's index in the bits below
+const MARK: u32 = 1 << 30;
+/// The shortest chain worth a mark: 44.7% of Wikidata's bytes are in chains this long in
+/// the lanes' order (#9's count)
+const MIN_CHAIN: u32 = 32;
+
+/// A forward chain (KP 2011, §IV): rows j and j + 1 ran in parallel for `len` steps (the
+/// same byte each step, and links one apart), so the text from j + 1 is the text from j
+/// for `len` bytes, already written at `off` in segment `seg`'s buffer; then it goes on
+/// at row `resume`. `row` is j + 1, whose entry `saved` the mark took the place of.
+#[derive(Clone, Copy)]
+struct Chain {
+    seg: usize,
+    off: usize,
+    len: usize,
+    resume: u32,
+    row: u32,
+    saved: u32,
+}
+
+/// `PrecopyLane`: a lane of `walk_segments_precopy`, with its buffer's start (for the
+/// offsets of the bytes a chain copies) and the chain it is following: `clen` steps
+/// from row `cj`, whose byte is at `csrc` in its buffer
+#[derive(Clone, Copy)]
+struct PrecopyLane {
+    row: u32,
+    seg: usize,
+    base: *mut u8,
+    p: *mut u8,
+    end: *mut u8,
+    clen: u32,
+    cj: u32,
+    csrc: usize,
+}
+
+/// `walk_segments_flagged` with forward-chain Precopy (#9), as KP 2011 copies repeats:
+/// - a lane at row s also reads row s + 1's entry (most often in the same cache line):
+///   `t[s + 1] == t[s] + 256` (the same byte, and a link one on, so the next rows are
+///   again adjacent) is one step of a chain, followed for as long as it lasts;
+/// - a chain of `MIN_CHAIN` steps or more is recorded, and its first row's neighbour
+///   j + 1 marked: the lane that later reaches j + 1 (its one way in: every row has one
+///   predecessor) copies the chain's bytes and goes on from the row after it, with no
+///   walk over them.
+///
+/// A chain ends at any row whose neighbour is flagged (a start, or another mark), so no
+/// start is copied over. Exactly `walk`'s output; the entries marked and flagged are put
+/// back before it returns.
+pub fn walk_segments_precopy(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+) {
+    walk_segments_precopy_with::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, out, s, FLAGGED_SEGMENTS)
+}
+
+/// `walk_segments_precopy` with `L` lanes and `segments` segments
+pub fn walk_segments_precopy_with<const L: usize, const PF: bool>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    segments: usize,
+) {
+    let n = tt.0.len();
+    out.clear();
+    if n < MIN_SEGMENTED {
+        return walk(tt, orig_ptr, out);
+    }
+    let r0 = tt.0[orig_ptr as usize] >> 8;
+    random_rows(n, segments - 1, &mut s.starts);
+    s.starts.push(r0);
+    s.starts.sort_unstable();
+    s.starts.dedup();
+    let ns = s.starts.len();
+    for &r in &s.starts {
+        tt.0[r as usize] |= START;
+    }
+    let cap = 2 * n / ns + 64;
+    s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
+    for b in &mut s.bufs[..ns] {
+        b.clear();
+        b.reserve(cap);
+    }
+    s.next.clear();
+    s.next.resize(ns, usize::MAX);
+    s.chains.clear();
+    // A sentinel entry past the end, so the neighbour read needs no bounds test (it is
+    // never `t[s] + 256`: links are below 2^20)
+    tt.0.push(u32::MAX);
+    let starts = &s.starts;
+    let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let t = tt.0.as_mut_ptr();
+    let bufs = &mut s.bufs;
+    let next = &mut s.next;
+    let chains = &mut s.chains;
+
+    let take = |seg: usize, bufs: &mut Vec<Vec<u8>>| -> PrecopyLane {
+        let b = &mut bufs[seg];
+        let base = b.as_mut_ptr();
+        // SAFETY: the starts are rows below n; the buffer has `cap` > 0 spare bytes
+        let q = unsafe { *t.add(starts[seg] as usize) } & LINK;
+        unsafe { *base = q as u8 };
+        PrecopyLane {
+            row: q >> 8,
+            seg,
+            base,
+            p: unsafe { base.add(1) },
+            end: unsafe { base.add(b.capacity()) },
+            clen: 0,
+            cj: 0,
+            csrc: 0,
+        }
+    };
+    let finish = |l: &PrecopyLane, bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| {
+        let b = &mut bufs[l.seg];
+        // SAFETY: p is within b's allocation, every byte below it written
+        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+        next[l.seg] = seg_of(l.row);
+    };
+    // The buffer grows until it has more than `need` spare bytes (its bytes kept)
+    let grow = |l: &mut PrecopyLane, bufs: &mut Vec<Vec<u8>>, need: usize| {
+        let b = &mut bufs[l.seg];
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
+        b.reserve(b.capacity().max(need + 1));
+        l.base = b.as_mut_ptr();
+        l.p = unsafe { l.base.add(len) };
+        l.end = unsafe { l.base.add(b.capacity()) };
+    };
+    // The lane's chain ends at its row: recorded and its j + 1 marked, if long enough.
+    // (j + 1's entry is as at the chain's first step: only a chain from j marks it, and
+    // the starts were flagged before.)
+    let end_chain = |l: &mut PrecopyLane, chains: &mut Vec<Chain>| {
+        if l.clen >= MIN_CHAIN {
+            let row = l.cj + 1;
+            // SAFETY: j + 1 was read as a plain entry, so it is below n
+            let e = unsafe { t.add(row as usize) };
+            chains.push(Chain {
+                seg: l.seg,
+                off: l.csrc,
+                len: l.clen as usize,
+                resume: l.row + 1,
+                row,
+                saved: unsafe { *e },
+            });
+            unsafe { *e = MARK | (chains.len() - 1) as u32 };
+        }
+        l.clen = 0;
+    };
+    // A lane reaches a marked row: the chain's bytes copied, and on from its resume row
+    let copy = |l: &mut PrecopyLane, c: &Chain, bufs: &mut Vec<Vec<u8>>| {
+        if (unsafe { l.end.offset_from(l.p) } as usize) <= c.len {
+            grow(l, bufs, c.len);
+        }
+        // SAFETY: the chain's bytes were written before its mark (by its lane, in its
+        // buffer, below that lane's p), so they are initialised, within the allocation,
+        // and (in this lane's own buffer) below p, apart from where they go
+        unsafe {
+            let src = bufs[c.seg].as_ptr().add(c.off);
+            std::ptr::copy_nonoverlapping(src, l.p, c.len);
+            l.p = l.p.add(c.len);
+        }
+        l.row = c.resume;
+        if PF {
+            prefetch(t, l.row);
+        }
+    };
+    // One lane's step, inline (the flagged walk's, plus the neighbour's entry read and
+    // compared); `$done` set when its segment has ended at a start. The rare paths (a
+    // flagged entry, a chain's end, a full buffer) are the closures above.
+    macro_rules! step {
+        ($l:expr, $done:ident) => {{
+            let l: &mut PrecopyLane = $l;
+            let row = l.row as usize;
+            // SAFETY: rows are below n (TVector), resume rows too (a chain's last step had
+            // its neighbour's link one past its own); row + 1 <= n, the sentinel's
+            let q = unsafe { *t.add(row) };
+            if q & (START | MARK) != 0 {
+                if l.clen != 0 {
+                    end_chain(l, chains);
+                }
+                if q & START != 0 {
+                    finish(l, bufs, next);
+                    $done = true;
+                } else {
+                    let c = chains[(q & !MARK) as usize];
+                    copy(l, &c, bufs);
+                }
+            } else {
+                let q1 = unsafe { *t.add(row + 1) };
+                if q1 == q + 256 {
+                    if l.clen == 0 {
+                        l.cj = l.row;
+                        l.csrc = unsafe { l.p.offset_from(l.base) } as usize;
+                    }
+                    l.clen += 1;
+                } else if l.clen != 0 {
+                    end_chain(l, chains);
+                }
+                l.row = q >> 8;
+                if PF {
+                    prefetch(t, l.row);
+                }
+                // SAFETY: p < end, within the buffer's allocation
+                unsafe {
+                    *l.p = q as u8;
+                    l.p = l.p.add(1);
+                }
+                if l.p == l.end {
+                    grow(l, bufs, 0);
+                }
+            }
+        }};
+    }
+
+    let mut queued = 0;
+    let mut lanes: [PrecopyLane; L] = std::array::from_fn(|_| PrecopyLane {
+        row: 0,
+        seg: usize::MAX,
+        base: std::ptr::null_mut(),
+        p: std::ptr::null_mut(),
+        end: std::ptr::null_mut(),
+        clen: 0,
+        cj: 0,
+        csrc: 0,
+    });
+    let mut active = 0;
+    while active < L && queued < ns {
+        lanes[active] = take(queued, bufs);
+        if PF {
+            prefetch(t, lanes[active].row);
+        }
+        queued += 1;
+        active += 1;
+    }
+    if active == L {
+        'full: loop {
+            for l in lanes.iter_mut() {
+                let mut done = false;
+                step!(l, done);
+                if done {
+                    if queued == ns {
+                        break 'full;
+                    }
+                    *l = take(queued, bufs);
+                    if PF {
+                        prefetch(t, l.row);
+                    }
+                    queued += 1;
+                }
+            }
+        }
+    }
+    let mut live: Vec<PrecopyLane> = lanes[..active]
+        .iter()
+        .copied()
+        .filter(|l| l.seg != usize::MAX && next[l.seg] == usize::MAX)
+        .collect();
+    while !live.is_empty() {
+        let mut i = 0;
+        while i < live.len() {
+            let mut done = false;
+            step!(&mut live[i], done);
+            if done {
+                live.swap_remove(i);
+                continue;
+            }
+            i += 1;
+        }
+    }
+    tt.0.pop();
+    for c in chains.iter() {
+        tt.0[c.row as usize] = c.saved;
+    }
+    for &r in starts {
+        tt.0[r as usize] &= LINK;
+    }
+    out.reserve(n);
+    let mut seg = seg_of(r0);
+    while out.len() < n {
+        let b = &bufs[seg];
+        out.extend_from_slice(&b[..b.len().min(n - out.len())]);
+        seg = next[seg];
+    }
+}
+
 /// A hint that the T-vector entry at `row` (below its length) is read soon: a software
 /// prefetch into L1 where the target has one (`prefetcht0`, `prfm pldl1keep`), else
 /// nothing. A hint only: it changes no value read.
@@ -579,6 +885,63 @@ mod tests {
             let mut tt = TVector::new();
             build(ll, &counts, &mut tt);
             assert!(tt.0 == one_pass(ll, &counts), "length {}", ll.len());
+        }
+    }
+
+    /// The Precopy walk gives the plain walk's output, and puts the T-vector back: columns
+    /// in runs (long chains, marks inside chains, copies of copies), periodic ones (lists
+    /// of many cycles), random ones (few chains), at several primary indices, lane and
+    /// segment counts
+    #[test]
+    fn precopy_walk_equals_plain() {
+        let n = MIN_SEGMENTED + 1003;
+        let mut x = 0x2545_f491_4f6c_dd1du64;
+        let mut rnd = move || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        let mut inputs = vec![
+            (0..n).map(|_| (rnd() % 7) as u8).collect::<Vec<u8>>(),
+            (0..n).map(|i| b"abc"[i % 3]).collect(),
+            (0..n).map(|i| b"abcdefghij"[(i / 7) % 10]).collect(),
+        ];
+        for runs_of in [[1, 3, 40, 200], [32, 33, 64, 100], [2, 5, 16, 1000]] {
+            let mut ll = Vec::new();
+            while ll.len() < n {
+                let c = (rnd() % 5) as u8;
+                ll.extend(std::iter::repeat_n(c, runs_of[(rnd() % 4) as usize]));
+            }
+            ll.truncate(n);
+            inputs.push(ll);
+        }
+        for ll in &inputs {
+            let mut counts = [0u32; 256];
+            for &c in ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(ll, &counts, &mut tt);
+            let before = tt.0.clone();
+            let (mut plain, mut pc, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            for orig_ptr in [0, ll.len() as u32 / 3, ll.len() as u32 - 1] {
+                walk(&tt, orig_ptr, &mut plain);
+                walk_segments_precopy(&mut tt, orig_ptr, &mut pc, &mut seg);
+                assert!(plain == pc, "orig_ptr {orig_ptr}");
+                assert!(tt.0 == before, "the T-vector put back");
+                for segments in [2, 64, 1024] {
+                    walk_segments_precopy_with::<5, true>(
+                        &mut tt, orig_ptr, &mut pc, &mut seg, segments,
+                    );
+                    assert!(plain == pc, "5 lanes, {segments} segments");
+                    walk_segments_precopy_with::<32, false>(
+                        &mut tt, orig_ptr, &mut pc, &mut seg, segments,
+                    );
+                    assert!(plain == pc, "32 lanes, {segments} segments");
+                }
+                assert!(tt.0 == before);
+            }
         }
     }
 
