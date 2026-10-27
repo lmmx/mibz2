@@ -138,7 +138,7 @@
     const body = el("div", { class: "bh-hero-chart" }, box);
     const link = el("p", { class: "bh-hero-commit" }, box);
     const legend = el("div", { class: "bh-hero-legend" }, box);
-    el("p", { class: "bh-hero-note", text: "Each line is scaled to its own range over the commits recorded, so every figure's shape shows at once; the axis on the left, in the figure's own units, is the highlighted line's, with its 95% interval as a band. Point at a legend entry or a line to highlight it; click or tap to keep it highlighted, and again to release it (on the keyboard: Tab to an entry, Enter to keep; on the chart, ←/→ a commit, ↑/↓ a line). Solid lines are one thread, dashed ones four. A dashed rule marks a new class of results (a bench version that redefined these figures, a runner kind, a set of corpora), whose lines are never joined to the last's, and a corpus whose bytes changed (text, made from mibz2's own sources) is never joined either; a bench version that left them as they were keeps the line, and each point's tooltip names the version that measured it. Each commit's label links to its pull request." }, box);
+    el("p", { class: "bh-hero-note", text: "Each line is scaled to its own range over the commits recorded, so every figure's shape shows at once; the axis on the left, in the figure's own units, is the highlighted line's, with its 95% interval as a band. Point at a legend entry or a line to highlight it; click or tap to keep it highlighted, and again to release it (on the keyboard: Tab to an entry, Enter to keep; on the chart, ←/→ a commit, ↑/↓ a line). Solid lines are one thread, dashed ones four. A dashed rule marks each change of class of results, a return to an earlier one included (a bench version that redefined these figures, a runner kind, a set of corpora), whose lines are never joined to the last's, and a corpus whose bytes changed (text, made from mibz2's own sources) is never joined either; a bench version that left them as they were keeps the line, and each point's tooltip names the version that measured it. Each commit's label links to its pull request." }, box);
     const tip = el("div", { class: "bh-tip", hidden: "" }, box);
     if (!cs.length) { el("p", { text: "No points yet." }, body); return; }
     if (!byKey.has(hero.pinned)) hero.pinned = null;
@@ -169,15 +169,23 @@
     const gridG = svg("g", {}, s);
     const deco = svg("g", {}, s);
     svg("line", { x1: M.l, x2: W - M.r, y1: H - M.b, y2: H - M.b, class: "bh-grid" }, deco);
-    // each class's first commit: a dashed rule before it (none before the first), and its name
-    const first = new Map();
-    for (const f of figs) for (const [c, o] of f.vals) if (!first.has(o.cls) || c < first.get(o.cls)) first.set(o.cls, c);
-    for (const [cls, c] of [...first].sort((a, b) => a[1] - b[1])) {
-      const i = xi.get(c);
-      const xx = i ? (x(cs[i - 1]) + x(c)) / 2 : M.l;
-      if (i) svg("line", { x1: xx, x2: xx, y1: M.t - 8, y2: H - M.b, class: "bh-hero-rule" }, deco);
-      svg("text", { x: xx + 3, y: M.t - 12, class: "bh-tick" }, deco).textContent = data.classes[cls];
+    // every change of class from one commit to the next, a return to an earlier one included:
+    // a dashed rule before it (none before the first), and its name, or the runner's alone
+    // where the whole would run into the next rule (nothing, if neither fits)
+    const clsAt = new Map();
+    for (const f of figs) for (const [c, o] of f.vals) if (!clsAt.has(c)) clsAt.set(c, o.cls);
+    const changes = [];
+    for (const c of cs) {
+      const cls = clsAt.get(c), i = xi.get(c);
+      if (changes.length && changes[changes.length - 1].cls === cls) continue;
+      changes.push({ cls, i, xx: i ? (x(cs[i - 1]) + x(c)) / 2 : M.l });
     }
+    changes.forEach(({ cls, i, xx }, k) => {
+      if (i) svg("line", { x1: xx, x2: xx, y1: M.t - 8, y2: H - M.b, class: "bh-hero-rule" }, deco);
+      const room = (k + 1 < changes.length ? changes[k + 1].xx - 8 : W) - (xx + 3);
+      const name = [data.classes[cls], data.classes[cls].split(" · ")[1]].find((t) => t && textW(t) <= room);
+      if (name) svg("text", { x: xx + 3, y: M.t - 12, class: "bh-tick" }, deco).textContent = name;
+    });
     const placed = [];
     for (const c of cs.slice().reverse()) {
       const cm = data.commits[c], text = tag(cm), w = textW(text);
