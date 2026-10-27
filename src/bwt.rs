@@ -103,10 +103,18 @@ pub fn walk(tt: &TVector, orig_ptr: u32, out: &mut Vec<u8>) {
     }
 }
 
-/// The lanes walked at once, and the segments a block is cut into (the prototype's
-/// measured best on this machine class: kernels/bz2k)
+/// The lanes walked at once, and the segments a block is cut into, in the bitmap walk
+/// (the prototype's measured best on this machine class: kernels/bz2k)
 const LANES: usize = 12;
 const SEGMENTS: usize = 256;
+/// The same in the flagged walk, which prefetches each lane's next entry as soon as its
+/// row is known (#5). A prefetch retires without waiting for its line, so the lanes' misses
+/// are no longer bounded by how many steps the reorder buffer holds, and more lanes keep
+/// more of them in flight: 32 lanes and 512 segments were the best of 8-32 lanes and
+/// 256-1024 segments on Wikidata's blocks, at one walk and at four at once
+const FLAGGED_LANES: usize = 32;
+const FLAGGED_SEGMENTS: usize = 512;
+const PREFETCH: bool = true;
 /// Blocks shorter than this are walked plainly (the segments' bookkeeping would cost more
 /// than the latency they hide; such blocks are only a stream's last)
 const MIN_SEGMENTED: usize = 1 << 16;
@@ -242,13 +250,26 @@ pub fn walk_segments_flagged(
     out: &mut Vec<u8>,
     s: &mut SegScratch,
 ) {
+    walk_segments_flagged_with::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, out, s, FLAGGED_SEGMENTS)
+}
+
+/// `walk_segments_flagged` with `L` lanes and `segments` segments, each lane's next entry
+/// prefetched as soon as its row is known if `PF`: each configuration exactly `walk`'s
+/// output, so they can be measured side by side
+pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    segments: usize,
+) {
     let n = tt.0.len();
     out.clear();
     if n < MIN_SEGMENTED {
         return walk(tt, orig_ptr, out);
     }
     let r0 = tt.0[orig_ptr as usize] >> 8;
-    random_rows(n, SEGMENTS - 1, &mut s.starts);
+    random_rows(n, segments - 1, &mut s.starts);
     s.starts.push(r0);
     s.starts.sort_unstable();
     s.starts.dedup();
@@ -304,20 +325,23 @@ pub fn walk_segments_flagged(
     };
 
     let mut queued = 0;
-    let mut lanes: [Lane; LANES] = std::array::from_fn(|_| Lane {
+    let mut lanes: [Lane; L] = std::array::from_fn(|_| Lane {
         row: 0,
         seg: usize::MAX,
         p: std::ptr::null_mut(),
         end: std::ptr::null_mut(),
     });
     let mut active = 0;
-    while active < LANES && queued < ns {
+    while active < L && queued < ns {
         lanes[active] = take(queued, bufs);
+        if PF {
+            prefetch(t, lanes[active].row);
+        }
         queued += 1;
         active += 1;
     }
     // Every lane busy while segments remain to be taken
-    if active == LANES {
+    if active == L {
         'full: loop {
             for l in lanes.iter_mut() {
                 // SAFETY: rows are below n (TVector), with the flag masked off below
@@ -328,15 +352,21 @@ pub fn walk_segments_flagged(
                         break 'full;
                     }
                     *l = take(queued, bufs);
+                    if PF {
+                        prefetch(t, l.row);
+                    }
                     queued += 1;
                     continue;
+                }
+                l.row = q >> 8;
+                if PF {
+                    prefetch(t, l.row);
                 }
                 // SAFETY: p < end, within the buffer's allocation
                 unsafe {
                     *l.p = q as u8;
                     l.p = l.p.add(1);
                 }
-                l.row = q >> 8;
                 if l.p == l.end {
                     grow(l, bufs);
                 }
@@ -361,11 +391,14 @@ pub fn walk_segments_flagged(
                 live.swap_remove(i);
                 continue;
             }
+            l.row = q >> 8;
+            if PF {
+                prefetch(t, l.row);
+            }
             unsafe {
                 *l.p = q as u8;
                 l.p = l.p.add(1);
             }
-            l.row = q >> 8;
             if l.p == l.end {
                 grow(l, bufs);
             }
@@ -382,6 +415,26 @@ pub fn walk_segments_flagged(
         out.extend_from_slice(&b[..b.len().min(n - out.len())]);
         seg = next[seg];
     }
+}
+
+/// A hint that the T-vector entry at `row` (below its length) is read soon: a software
+/// prefetch into L1 where the target has one (`prefetcht0`, `prfm pldl1keep`), else
+/// nothing. A hint only: it changes no value read.
+#[inline(always)]
+fn prefetch(t: *const u32, row: u32) {
+    let p = t.wrapping_add(row as usize);
+    #[cfg(target_arch = "x86_64")]
+    // SAFETY: SSE is in x86_64's baseline; a prefetch never faults
+    unsafe {
+        core::arch::x86_64::_mm_prefetch::<{ core::arch::x86_64::_MM_HINT_T0 }>(p as *const i8)
+    };
+    #[cfg(target_arch = "aarch64")]
+    // SAFETY: a prefetch never faults and writes nothing
+    unsafe {
+        core::arch::asm!("prfm pldl1keep, [{p}]", p = in(reg) p, options(nostack, preserves_flags, readonly))
+    };
+    #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+    let _ = p;
 }
 
 /// A lane whose segment has not been recorded as finished
@@ -419,6 +472,26 @@ mod tests {
             assert!(plain == flagged, "orig_ptr {orig_ptr}");
             // the flags are taken off again: the T-vector is as build left it
             assert!(tt.0.iter().all(|&e| e & START == 0));
+            // other lane and segment counts, with and without the prefetch
+            for segments in [1, 256, 1024] {
+                walk_segments_flagged_with::<12, false>(
+                    &mut tt,
+                    orig_ptr,
+                    &mut flagged,
+                    &mut seg,
+                    segments,
+                );
+                assert!(plain == flagged, "12 lanes, {segments} segments");
+                walk_segments_flagged_with::<7, true>(
+                    &mut tt,
+                    orig_ptr,
+                    &mut flagged,
+                    &mut seg,
+                    segments,
+                );
+                assert!(plain == flagged, "7 lanes, prefetch, {segments} segments");
+                assert!(tt.0.iter().all(|&e| e & START == 0));
+            }
         }
     }
 
