@@ -107,6 +107,12 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
   - **Kept out of the run.** The sampler moves itself off the CPUs a run is pinned to, so
     it never preempts a pinned decode, and its own CPU (RUSAGE_THREAD, exact) is left out
     of the run's CPU.
+  - **The decode's clock starts only once the sampler has moved.**
+  - **Measured on CI** (`base_sample_ms=0`: the same commit sampled and unsampled):
+    - wikidata within noise at 1/2/4 threads (+1.6%, −1.5%, +2.4%, intervals about ±4%);
+    - before that handshake, the 12 ms `onebyte` runs were +9.8% at 1 thread.
+  - **On a 2-core runner a 2-thread run's other CPUs are its own cores' SMT siblings,** so
+    there the sampler shares the workers' cores.
   - **What that removes.** Kept in, at 10 ms, it cost the 1-thread runs +1.0% (+0.4%,
     +1.7%) in wall and CPU on #69's first bench. Before 3.0.0 the sampler's smaller cost
     was in every run's CPU. Runs on every CPU (4 threads on CI) still share their CPUs

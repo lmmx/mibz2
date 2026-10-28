@@ -268,11 +268,15 @@ impl Threads {
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(10);
+        // (the decode's clock starts only once the sampler has left the pinned CPUs: until
+        // it moves, it shares the decode's CPU, which cost a 12 ms run about 1 ms)
+        let (moved, ready) = std::sync::mpsc::sync_channel::<()>(1);
         let handle = (every > 0).then(|| {
             std::thread::Builder::new()
                 .name("sampler".into())
                 .spawn(move || {
                     let away = off_the_pin();
+                    let _ = moved.send(());
                     while !s.load(std::sync::atomic::Ordering::Relaxed) {
                         sample_tasks(pid, &m);
                         std::thread::sleep(Duration::from_millis(every));
@@ -281,6 +285,9 @@ impl Threads {
                 })
                 .unwrap()
         });
+        if handle.is_some() {
+            let _ = ready.recv();
+        }
         Threads {
             stop,
             seen,
