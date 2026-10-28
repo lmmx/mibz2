@@ -307,6 +307,72 @@ So a winning arm is first profiled against p4 and p8 with the existing counters
 (`just bench-imc`'s L3 hit share, misses per KB and occupancy per miss) before any
 scheduler is built on either reading.
 
+## 5b. Conditional leads (recorded before the run; none changes it)
+
+From a second outside literature pass (2026-10-28), each checked against its primary
+source here. Each says when it would be pursued. None adds an arm to the registered run.
+
+1. **The pair walk, under pressure.**
+   - **Source** (libsais 2.12.1 at c284ba8, `libsais.c`): the cyclic inverse that bzip2
+     needs, `libsais_unbwt_cyclic` → `libsais_unbwt_main` → `libsais_unbwt_core`, does use
+     the bigram (ψ²) machinery. Its per-row table is still one 32-bit word a row (`P`,
+     n + 1 words), the same 4 B/row as our T-vector. Each dependent `P[p]` load yields two
+     output bytes (`libsais_unbwt_decode_1`, L11689: the bigram recovered through
+     `fastbits[p >> shift]` and a short search of `bucket2`). Its extra footprint is
+     shared tables, not rows: `bucket2` (65,536 × 4 B = 256 KB) and `fastbits` (2¹⁷ × 2 B
+     ≈ 256 KB). So the worry that "a bigger two-symbol table undoes the cache gain" doesn't
+     apply to libsais's design. The table is the same size, and the dependent misses a
+     decoded byte halve.
+   - **Our own history** (`2026-10-27-pair-walk.md`): our ψ² port was rejected at +40.6%
+     (1 thread) and +24.3% (4 threads), on CI's 2-core runners. The stated reason was
+     that "our walk is bound by instructions per step, not by memory latency… so halving
+     the dependent loads buys almost nothing". That holds below the knee. Past it, the
+     workstation measured the walk memory-bound (IPC 1.06 → 0.50, L3 hit share
+     0.76 → 0.38 from 4 to 10 workers). That is the regime where halving misses a byte
+     could pay, and the pair walk was never measured there.
+   - **Reopening condition (hypothesis):** the pair walk at 6–10 independent workers on the
+     workstation. It needs no code: libsais's own pair walk is in this harness. After the
+     registered run, `bash bench/coop.sh --arms p4,p8,p10,s4x1,s8x1,s10x1 --rounds 12`
+     asks whether libsais at 8–10 workers holds up where mibz2 falls. If it does,
+     `perf/pair-walk` (kept) is re-measured at 8–10 workers. Under the journal's rule, a
+     closed idea reopens only on a named condition; this is that condition, named now.
+2. **Work-optimal parallel decompression exists in theory; its practice is unshown on
+   commodity cores.**
+   - **Source:** Edwards & Vishkin, "Parallel algorithms for Burrows–Wheeler compression
+     and decompression": the UMD technical report (2012) and the *Theoretical Computer
+     Science* article (doi:10.1016/j.tcs.2013.10.009; the DOI resolves to TCS).
+     Decompression is O(log n) depth and O(n) work, via list ranking and prefix sums.
+   - Their empirical companion ("Empirical speedup study of truly parallel data
+     compression", UMD, 2013) measured 13× over bzip2 for decompression on the XMT
+     prototype only. Its claim about commercial hardware is an inference ("70x
+     improvement over what current commercial parallel hardware can achieve"), not a
+     measurement.
+   - **Bearing:** depth is not the problem here. The 32 lanes and the segments already give
+     ample parallelism. What decides is the misses, traffic and synchronisation per
+     decoded byte that the parallel form adds, which is what §5's gates price.
+3. **Practical list ranking.**
+   - **Source:** Bader-Research/ListRanking (README). It is Helman–JáJá over Reid-Miller and
+     Blelloch's sparse ruling sets, "scalable performance up to 16 processors" despite
+     contention for memory, and on SMPs "performance is primarily a function of
+     non-contiguous memory accesses".
+   - The README does not say how sublists are chosen or work divided; the source would.
+   - **Bearing (hypothesis):** our segments are their sublists. Our dynamic counter is one
+     shared cache line, touched once a segment (about 1,760 bytes walked), which is far
+     from the per-byte sharing of negative finding 2.
+   - **Pursued only if** a winning or near-winning arm shows a large coordination share
+     (§4's columns, about 3% of a block's walk on the VM). Then the test is batched
+     dispatch (b segments a fetch) at fixed cores, tables and bytes.
+4. **Read-only sharing against shared writes.** Once flagged, the shared T-vector is only
+   read during the walk, so it needs no line ownership to move between cores. The
+   writable shared state is:
+   - the segment counter;
+   - each segment's buffer header, which is written at take, grow and finish only;
+   - the successor array;
+   - the per-thread share and time slots, written once a block.
+
+   If coordination is high on the workstation, `perf c2c` on the winning arm says which
+   line it is.
+
 ## 6. Decisions
 
 - wikidata-pq keeps its cap, `min(physical cores, 4)` (lmmx/wikidata-pq#212). Cooperative
