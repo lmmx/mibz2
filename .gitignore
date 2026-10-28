@@ -40,3 +40,4 @@ target/
 /contend-*.json
 /blocks-*.json
 /blocks-*.jsonl
+/coop-*.md

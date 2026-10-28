@@ -160,3 +160,17 @@ bench-fingerprint *args:
     bash bench/corpus.sh
     cargo build --release --example ab --example stress
     python3 bench/fingerprint.py "$@"
+
+# bench/coop.sh: the knee pilot's cooperative inversion (examples/coop.rs, research only):
+# one block's T-vector built and walked by k cores, then N blocks in flight on k cores each
+# against N production workers, on one CPU of each physical core, with libsais 2.12.1's
+# multi-threaded inverse BWT beside it when gcc has OpenMP. A few minutes. It writes
+# coop-<UTC time>.md to share.
+#   just bench-coop
+#   just bench-coop --rounds 8 --arms p4,p8,4x2,5x2
+
+# Whether k cores sharing one block's T-vector move the knee (#39, #65)
+[positional-arguments]
+bench-coop *args:
+    bash bench/corpus.sh
+    bash bench/coop.sh "$@"
