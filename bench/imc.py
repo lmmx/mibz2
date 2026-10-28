@@ -113,6 +113,13 @@ def parse(text, events):
         except (IndexError, ValueError):
             run_ns = 0.0
         rows[at]["_run_ns"] = max(rows[at].get("_run_ns", 0.0), run_ns)
+        # the share of the run each event was counted (under 100: multiplexed, scaled)
+        try:
+            pct = float(f[i + 2])
+        except (IndexError, ValueError):
+            pct = math.nan
+        cov = rows[at].setdefault("_counted_pct", {})
+        cov[e] = min(cov.get(e, pct), pct)
     for at, r in rows.items():
         missing = [e for e in events if e not in r]
         if missing:
@@ -243,6 +250,7 @@ def core(threads, reps, loops, mem=False):
                     "ipc": r["instructions"] / r["cycles"],
                     "clock_ratio": r["cycles"] / r["ref-cycles"],
                     **(memory(r, n) if mem else {}),
+                    "counted_pct": r.get("_counted_pct", {}),
                 }
             )
     return res
@@ -342,6 +350,13 @@ def report(res):
                 "l3_miss_stall_share",
                 "page_walk_share",
             ]
+            print(f"        events (process-scoped, each thread inherited): {', '.join(MEM)}")
+            cov = [(e, p) for r in res["core"] for e, p in r["counted_pct"].items() if p == p]
+            low = min((p for _, p in cov), default=math.nan)
+            print(
+                f"        least counted share of a run: {low:.0f}%"
+                + ("" if low >= 99.5 else " (multiplexed: perf scaled those counts)")
+            )
             print(
                 "memory  threads  L3 misses/KB  L3 hit share  reads past L2/KB"
                 "  cycles a read waits  stalled on L3 miss  walking page tables"
