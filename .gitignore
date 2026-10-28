@@ -33,3 +33,5 @@ target/
 /imc-*.json
 /thermal-*.json
 /regimes-*.json
+/scaling-*.json
+/scaling-*.jsonl

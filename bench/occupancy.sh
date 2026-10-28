@@ -8,6 +8,8 @@
 #   --placements A/B    arms pinned to CPUs, paired by round: packed (SMT siblings first) or
 #                       spread (one CPU a core first), from this machine's sibling map, or
 #                       CPU lists; the whole process is pinned, scanner and reader included
+#   --gap SECONDS       idle before each run (default none: a release decodes without
+#                       pauses; on the i9-10900K a 0.15 s gap brings on slow runs, #39)
 #   --out PATH          the result file (default occupancy-<UTC time>.json here)
 # Needs: cargo, python3, git and lbzip2 (the corpus's blocks are checked against it).
 set -euo pipefail

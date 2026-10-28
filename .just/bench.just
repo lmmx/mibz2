@@ -60,3 +60,17 @@ bench-thermal *args:
 bench-regimes *args:
     bash bench/corpus.sh
     python3 bench/regimes.py "$@"
+
+# bench/scaling.py: examples/ab.rs's mibz2, pbz2 and lbzip2 arms on the benchmark's
+# Wikidata corpus at 2, 4, 6, 8, 10 and 20 threads, interleaved by round, back to back (no
+# idle wait before a run); each arm's throughput and its scaling against its own 4-thread
+# runs, paired by round. It writes scaling-<UTC time>.json (and ab's .jsonl) to share.
+#   just bench-scaling
+#   just bench-scaling --threads 2,4,5,6,8 --rounds 10
+
+# Whether mibz2's scaling knee is the decoder's or the machine's: other decoders beside it (#39)
+[positional-arguments]
+bench-scaling *args:
+    bash bench/corpus.sh
+    cargo build --release --example ab
+    python3 bench/scaling.py "$@"

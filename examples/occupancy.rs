@@ -3,7 +3,7 @@
 //! pinned Wikidata corpus); CI runs the same recipe.
 //!
 //! ```text
-//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--out PATH] [--meta K=V]...
+//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--gap SECONDS] [--out PATH] [--meta K=V]...
 //! ```
 //!
 //! **The workload is the benchmark's.** Each run is a fresh process decoding FILE as
@@ -476,6 +476,7 @@ const MODES: [(&str, u8); 3] = [("off", 0), ("timeline", 1), ("full", 2)];
 fn parent(args: &[String]) {
     let mut file = None;
     let (mut threads, mut rounds, mut slots, mut out) = (None, 6usize, None, None);
+    let mut gap = 0.0f64;
     let mut placements: Option<Vec<String>> = None;
     let mut meta: Vec<(String, String)> = Vec::new();
     let mut it = args.iter();
@@ -500,6 +501,13 @@ fn parent(args: &[String]) {
                 )
             }
             "--out" => out = Some(it.next().expect("--out PATH").clone()),
+            "--gap" => {
+                gap = it
+                    .next()
+                    .expect("--gap SECONDS")
+                    .parse()
+                    .expect("gap seconds")
+            }
             "--placements" => {
                 placements = Some(
                     it.next()
@@ -515,7 +523,7 @@ fn parent(args: &[String]) {
                 meta.push((k.into(), v.into()));
             }
             "-h" | "--help" => {
-                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--placements packed/spread] [--out PATH] [--meta K=V]...");
+                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]...");
                 return;
             }
             f => file = Some(f.to_string()),
@@ -620,7 +628,9 @@ fn parent(args: &[String]) {
                     );
                     raw.push((r, t, s, spec.clone(), mode, line));
                     runs.entry((t, spec.clone(), mode)).or_default().push(kv);
-                    std::thread::sleep(Duration::from_millis(150));
+                    if gap > 0.0 {
+                        std::thread::sleep(Duration::from_secs_f64(gap));
+                    }
                 }
             }
         }
@@ -870,6 +880,7 @@ fn parent(args: &[String]) {
                 ("file".into(), J::S(file.clone())),
                 ("threads".into(), J::A(threads.iter().map(|t| J::N(*t as f64)).collect())),
                 ("rounds".into(), J::N(rounds as f64)),
+                ("gap_seconds".into(), J::N(gap)),
                 ("slots".into(), slots.map_or(J::S("2 x threads (BzReader::parallel's)".into()), |s| J::N(s as f64))),
                 (
                     "workload".into(),
