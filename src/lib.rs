@@ -86,7 +86,8 @@ pub mod parallel;
 mod read;
 pub mod rle;
 pub mod stream;
-#[cfg(feature = "trace")]
+// (the `trace` feature's; compiled for the tests too, which check its footprint ledger)
+#[cfg(any(test, feature = "trace"))]
 pub mod trace;
 
 #[cfg(feature = "python")]
@@ -266,6 +267,25 @@ pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     rle: Vec<u8>,
 }
 
+impl<I: bwt::InverseBwt> Scratch<I> {
+    /// Its buffers' sizes, for the footprint ledger (src/trace.rs): tests and the `trace`
+    /// feature only
+    #[cfg(any(test, feature = "trace"))]
+    pub fn buffers(&self) -> Vec<trace::Buffer> {
+        let mut v = vec![
+            trace::Buffer::of("ll", &self.ll),
+            trace::Buffer {
+                name: "counts",
+                len: std::mem::size_of_val(&self.counts),
+                cap: std::mem::size_of_val(&self.counts),
+            },
+            trace::Buffer::of("rle", &self.rle),
+        ];
+        v.extend(self.inverse.buffers());
+        v
+    }
+}
+
 impl<I: bwt::InverseBwt> Default for Scratch<I> {
     fn default() -> Self {
         Scratch {
@@ -289,7 +309,16 @@ pub fn decode_block<I: bwt::InverseBwt>(
     if b.orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
     }
+    #[cfg(feature = "trace")]
+    trace::mark_sized(
+        trace::Kind::InvertStart,
+        trace::NONE,
+        n as u64,
+        trace::UNREAD,
+    );
     s.inverse.invert(&s.ll, &s.counts, b.orig_ptr, &mut s.rle);
+    #[cfg(feature = "trace")]
+    trace::mark(trace::Kind::InvertEnd, trace::NONE);
     let start = out.len();
     if let Err(kind) = rle::unrle(&s.rle, out, k) {
         out.truncate(start);

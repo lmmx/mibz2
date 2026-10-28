@@ -4,6 +4,7 @@
 //!
 //! ```text
 //! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--gap SECONDS] [--out PATH] [--meta K=V]...
+//! occupancy FILE.bz2 --ledger [--threads 1,2,4,10] [--slots N]
 //! ```
 //!
 //! **The workload is the benchmark's.** Each run is a fresh process decoding FILE as
@@ -43,8 +44,31 @@
 //!   counts a thread stalled on memory as running: CPU rising with little run-queue wait is
 //!   an on-CPU cost, not by itself cache or memory contention.
 //!
+//! **Queues and live structures** (the summary after the table, six lines a thread count,
+//! from the same sweep; docs/ledger.md defines each figure):
+//! - reader starved: the reader waiting for its next block (the decoder behind; not
+//!   backpressure);
+//! - scanner backpressured: waiting for a slot while the earliest untaken block is ready
+//!   (the reader binds), apart from waiting while it is still decoding (the workers bind);
+//! - workers decoding, idle with no job queued, idle with a job queued (the handoff);
+//! - the T-vector phase (`decode_block`'s inverse BWT, its build and walk): blocks in it,
+//!   mean and most, and their T-vectors' bytes, the hot model;
+//! - the window's occupancy (issued and not taken, plus the block the scanner reads in its
+//!   slot), the blocks ready and not taken and their bytes, split by what held them (head
+//!   of line, the reader busy, the handoff), and how long each was held;
+//! - the symbol buffers held, and how much of them dead (MTF done, not yet returned); the
+//!   output buffers' capacity against their bytes; the scanner's window; each worker's
+//!   buffers as it recorded them at its end, checked against the ledger's bounds.
+//!
+//! **The footprint ledger** (src/trace.rs, `trace::ledger`): what the decoder reserves,
+//! holds live and (a model) reads at random, by category, from the file's level, the threads
+//! and the window, with each thread count's totals beside its peak RSS. `--ledger` prints
+//! the arithmetic alone, without a run. Reserved is `Vec` capacity, RSS is resident pages,
+//! and neither is cache residency.
+//!
 //! A trace is used only if complete: every thread's start and end, every block's start
-//! matched by its end, and the blocks decoded, published and taken the same.
+//! matched by its end (and its inverse BWT inside it), and the blocks decoded, published
+//! and taken the same.
 //!
 //! **The run-queue counter is checked, not assumed:** once, after every timed run, threads
 //! twice the CPUs allowed spin for 0.2 s; unless their run-queue wait rises with their time
@@ -104,6 +128,15 @@ fn child(a: &[String]) {
             )
         });
         summarise(&trace::take(), threads, level, timeout, &mut kv);
+        // the decoded bytes the marks sum, against the bytes the reader read: an
+        // independent anchor, its remainder shown rather than hidden
+        let sum =
+            kv.0.iter()
+                .find(|(k, _)| k == "t.f.decoded_sum")
+                .and_then(|(_, v)| v.parse::<f64>().ok());
+        if let Some(sum) = sum {
+            kv.f("t.f.decoded_unreconciled", h.n as f64 - sum);
+        }
     }
     trace::set_level(0);
     let (cpu, rss) = rusage();
@@ -209,6 +242,7 @@ fn summarise(
             problem = format!("{}: no start or end mark (unbalanced)", t.name);
         }
         let mut open = None;
+        let mut inverting = false;
         for m in &t.marks {
             match m.kind {
                 Kind::DecodeStart if open.is_some() => {
@@ -218,10 +252,21 @@ fn summarise(
                 Kind::DecodeEnd if open != Some(m.place) => {
                     problem = format!("{}: an end without its start", t.name)
                 }
+                Kind::DecodeEnd if inverting => {
+                    problem = format!("{}: a block ended inside its inverse BWT", t.name)
+                }
                 Kind::DecodeEnd => {
                     open = None;
                     ended.push(m.place);
                 }
+                Kind::InvertStart if open.is_none() || inverting => {
+                    problem = format!("{}: an inverse BWT outside a block, or twice", t.name)
+                }
+                Kind::InvertStart => inverting = true,
+                Kind::InvertEnd if !inverting => {
+                    problem = format!("{}: an inverse BWT's end without its start", t.name)
+                }
+                Kind::InvertEnd => inverting = false,
                 Kind::Ready => published.push(m.place),
                 Kind::Taken => taken_set.push(m.place),
                 Kind::Issued => issued += 1,
@@ -258,7 +303,10 @@ fn summarise(
             ev.extend(t.marks.iter().map(|m| (m.ns, i, m.kind, m.place)));
         }
     }
+    // (stable: a thread's marks stay in its order, so each event's mark is its thread's next)
     ev.sort_by_key(|e| e.0);
+    let marks_of: Vec<&[trace::Mark]> = traces.iter().map(|t| &t.marks[..]).collect();
+    let mut at_of = vec![0usize; traces.len()];
     let span = ev.last().map_or(0, |e| e.0) as f64;
     let widx: BTreeMap<usize, usize> = roles
         .iter()
@@ -282,6 +330,7 @@ fn summarise(
     let (mut s_slot_decoding, mut s_slot_ready) = (0f64, 0f64);
     let (mut r_wait, mut r_consume) = (0f64, 0f64);
     let (mut decoding_int, mut all_decoding) = (0f64, 0f64);
+    let mut q = Queues::default();
     let mut prev = 0u64;
     for &(ns, i, kind, place) in &ev {
         let dt = (ns - prev) as f64;
@@ -322,7 +371,16 @@ fn summarise(
             } else if reader_started && !reader_ended {
                 r_consume += dt;
             }
+            q.credit(dt, reader_waiting, ss == S::Slot && ready.contains(&taken));
         }
+        q.step(
+            roles[i],
+            widx.get(&i).copied(),
+            kind,
+            place,
+            marks_of[i][at_of[i]],
+        );
+        at_of[i] += 1;
         match roles[i] {
             Some(Role::Worker) => {
                 let w = &mut ws[widx[&i]];
@@ -414,6 +472,12 @@ fn summarise(
     kv.f("t.s.reading", s_reading / span);
     kv.f("t.r.waiting", r_wait / span);
     kv.f("t.r.consuming", r_consume / span);
+    kv.f(
+        "t.w.idle.no_job",
+        (w_acc[W::Lock as usize] + w_acc[W::Recv as usize] - id_queued) / wspan,
+    );
+    q.report(span, kv);
+    footprint(traces, &roles, kv);
 
     if level < 2 {
         return;
@@ -468,6 +532,288 @@ fn summarise(
     kv.f("t.wk.slices", if sched_ok { life_slices } else { na });
 }
 
+/// The sweep's queues and live structures (keys `t.q.*`, sizes `t.f.*`), each interval
+/// credited to the state before the mark that ends it:
+/// - the window: blocks issued and not taken, plus the one the scanner is reading in the
+///   slot it got (`SlotGot` to `Issued`): at most `slots`, by the decoder's own count;
+/// - the T-vector phase: workers between `InvertStart` and `InvertEnd` (the build and the
+///   walk), and the rows they hold, at 4 bytes a row;
+/// - ready, not taken: blocks published (`Ready`) and not yet taken, and their decoded
+///   bytes, split three ways by what the reader was doing meanwhile: waiting while the next
+///   block in order was still decoding (head of line: held for an earlier block), consuming
+///   a block (the reader behind), or waiting with the next block ready (the handoff: its
+///   wake-up);
+/// - symbols held: from `Issued` until the worker returns the buffer (`Ready`), and of
+///   them, dead: after MTF has read them (`InvertStart` on), still held;
+/// - the handoff: the reader waiting while the next block in order is ready (its wake-up),
+///   and of the scanner's backpressure, the part while the reader was so waiting.
+#[derive(Default)]
+struct Queues {
+    issued: i64,
+    taken: i64,
+    scan_holds: bool,
+    win_int: f64,
+    win_hw: i64,
+    inv_rows: Vec<u64>,
+    tv_n: i64,
+    tv_rows: u64,
+    tv_int: f64,
+    tv_rows_int: f64,
+    tv_hw: i64,
+    tv_rows_hw: u64,
+    rows_max: u64,
+    out_len: BTreeMap<u64, u64>,
+    out_len_sum: f64,
+    out_cap_sum: f64,
+    out_cap_max: u64,
+    decoded_max: u64,
+    ready: BTreeMap<u64, u64>,
+    taken_next: u64,
+    ready_bytes: i64,
+    ready_hw: usize,
+    ready_bytes_hw: i64,
+    rb_waiting_int: f64,
+    rb_busy_int: f64,
+    rb_handoff_int: f64,
+    r_wait_next_ready: f64,
+    bp_reader_waiting: f64,
+    hold_sum: f64,
+    hold_max: f64,
+    held: f64,
+    dec_start: Vec<u64>,
+    dec_sum: f64,
+    dec_n: f64,
+    place_of: Vec<u64>,
+    dead: Vec<bool>,
+    syms_len: BTreeMap<u64, u64>,
+    syms_cap_max: u64,
+    syms_held: i64,
+    syms_dead: i64,
+    syms_held_int: f64,
+    syms_dead_int: f64,
+    window_live_max: u64,
+    window_cap_max: u64,
+    decoded_sum: u64,
+    ready_after_taken: u64,
+}
+
+impl Queues {
+    fn credit(&mut self, dt: f64, reader_waiting: bool, backpressured: bool) {
+        let next_ready = self.ready.contains_key(&self.taken_next);
+        if reader_waiting && next_ready {
+            self.r_wait_next_ready += dt;
+        }
+        if backpressured && reader_waiting {
+            self.bp_reader_waiting += dt;
+        }
+        self.win_int += dt * self.window() as f64;
+        self.tv_int += dt * self.tv_n as f64;
+        self.tv_rows_int += dt * self.tv_rows as f64;
+        let rb = dt * self.ready_bytes as f64;
+        if !reader_waiting {
+            self.rb_busy_int += rb;
+        } else if next_ready {
+            self.rb_handoff_int += rb;
+        } else {
+            self.rb_waiting_int += rb;
+        }
+        self.syms_held_int += dt * self.syms_held as f64;
+        self.syms_dead_int += dt * self.syms_dead as f64;
+    }
+
+    fn window(&self) -> i64 {
+        self.issued - self.taken + self.scan_holds as i64
+    }
+
+    fn step(
+        &mut self,
+        role: Option<Role>,
+        w: Option<usize>,
+        kind: Kind,
+        place: u64,
+        m: trace::Mark,
+    ) {
+        if let Some(w) = w {
+            if self.place_of.len() <= w {
+                self.place_of.resize(w + 1, u64::MAX);
+                self.dead.resize(w + 1, false);
+                self.inv_rows.resize(w + 1, 0);
+                self.dec_start.resize(w + 1, 0);
+            }
+        }
+        match (role, kind) {
+            (Some(Role::Scanner), Kind::SlotGot) => self.scan_holds = true,
+            (Some(Role::Scanner), Kind::ThreadEnd) => self.scan_holds = false,
+            (Some(Role::Scanner), Kind::Issued) => {
+                self.scan_holds = false;
+                self.issued += 1;
+                if m.len != UNREAD {
+                    self.syms_len.insert(place, m.len);
+                    self.syms_held += m.len as i64;
+                    self.syms_cap_max = self.syms_cap_max.max(m.cap);
+                }
+            }
+            (Some(Role::Scanner), Kind::Window) => {
+                self.window_live_max = self.window_live_max.max(m.len);
+                self.window_cap_max = self.window_cap_max.max(m.cap);
+            }
+            (Some(Role::Worker), Kind::DecodeStart) => {
+                let w = w.unwrap();
+                self.place_of[w] = place;
+                self.dec_start[w] = m.ns;
+            }
+            (Some(Role::Worker), Kind::InvertStart) => {
+                let w = w.unwrap();
+                self.inv_rows[w] = m.len;
+                self.tv_n += 1;
+                self.tv_rows += m.len;
+                self.tv_hw = self.tv_hw.max(self.tv_n);
+                self.tv_rows_hw = self.tv_rows_hw.max(self.tv_rows);
+                self.rows_max = self.rows_max.max(m.len);
+                self.dead[w] = true;
+                self.syms_dead += *self.syms_len.get(&self.place_of[w]).unwrap_or(&0) as i64;
+            }
+            (Some(Role::Worker), Kind::InvertEnd) => {
+                let w = w.unwrap();
+                self.tv_n -= 1;
+                self.tv_rows -= self.inv_rows[w];
+                self.inv_rows[w] = 0;
+            }
+            (Some(Role::Worker), Kind::DecodeEnd) => {
+                let w = w.unwrap();
+                self.dec_sum += (m.ns - self.dec_start[w]) as f64;
+                self.dec_n += 1.0;
+                if m.len != UNREAD {
+                    self.out_len.insert(place, m.len);
+                    self.out_len_sum += m.len as f64;
+                    self.out_cap_sum += m.cap as f64;
+                    self.out_cap_max = self.out_cap_max.max(m.cap);
+                    self.decoded_max = self.decoded_max.max(m.len);
+                    self.decoded_sum += m.len;
+                }
+            }
+            (Some(Role::Worker), Kind::Ready) => {
+                let w = w.unwrap();
+                let syms = *self.syms_len.get(&place).unwrap_or(&0) as i64;
+                self.syms_held -= syms;
+                if std::mem::take(&mut self.dead[w]) {
+                    self.syms_dead -= syms;
+                }
+                // (published, then marked outside the lock: the reader may have taken it
+                // between, and then it was never waiting)
+                if place >= self.taken_next {
+                    self.ready.insert(place, m.ns);
+                    self.ready_bytes += *self.out_len.get(&place).unwrap_or(&0) as i64;
+                    self.ready_hw = self.ready_hw.max(self.ready.len());
+                    self.ready_bytes_hw = self.ready_bytes_hw.max(self.ready_bytes);
+                } else {
+                    self.ready_after_taken += 1;
+                }
+            }
+            (Some(Role::Reader), Kind::Taken) => {
+                self.taken += 1;
+                self.taken_next = place + 1;
+                let mut hold = 0.0;
+                if let Some(at) = self.ready.remove(&place) {
+                    self.ready_bytes -= *self.out_len.get(&place).unwrap_or(&0) as i64;
+                    hold = m.ns.saturating_sub(at) as f64;
+                }
+                self.hold_sum += hold;
+                self.hold_max = self.hold_max.max(hold);
+                self.held += 1.0;
+            }
+            _ => {}
+        }
+        self.win_hw = self.win_hw.max(self.window());
+    }
+
+    fn report(&self, span: f64, kv: &mut Kv) {
+        const MB: f64 = 1e6;
+        let tt = trace::TT_ROW as f64;
+        kv.f("t.r.waiting.next_ready", self.r_wait_next_ready / span);
+        kv.f(
+            "t.s.slot_earliest_ready.reader_waiting",
+            self.bp_reader_waiting / span,
+        );
+        kv.f("t.q.window_mean", self.win_int / span);
+        kv.f("t.q.window_hw", self.win_hw as f64);
+        kv.f("t.q.tvec_mean", self.tv_int / span);
+        kv.f("t.q.tvec_hw", self.tv_hw as f64);
+        kv.f("t.q.tvec_mb_mean", tt * self.tv_rows_int / span / MB);
+        kv.f("t.q.tvec_mb_hw", tt * self.tv_rows_hw as f64 / MB);
+        kv.f("t.q.ready_hw", self.ready_hw as f64);
+        kv.f("t.q.ready_mb_hw", self.ready_bytes_hw as f64 / MB);
+        kv.f(
+            "t.q.ready_mb_mean",
+            (self.rb_waiting_int + self.rb_busy_int + self.rb_handoff_int) / span / MB,
+        );
+        kv.f(
+            "t.q.ready_mb_mean.head_of_line",
+            self.rb_waiting_int / span / MB,
+        );
+        kv.f(
+            "t.q.ready_mb_mean.reader_busy",
+            self.rb_busy_int / span / MB,
+        );
+        kv.f("t.q.ready_mb_mean.handoff", self.rb_handoff_int / span / MB);
+        kv.f("t.q.hold_ms_mean", self.hold_sum / self.held / 1e6);
+        kv.f("t.q.hold_ms_max", self.hold_max / 1e6);
+        kv.f("t.q.decode_ms_mean", self.dec_sum / self.dec_n / 1e6);
+        kv.f("t.q.syms_mb_mean", self.syms_held_int / span / MB);
+        kv.f("t.q.syms_dead_mb_mean", self.syms_dead_int / span / MB);
+        kv.f("t.f.rows_max", self.rows_max as f64);
+        kv.f("t.f.decoded_max", self.decoded_max as f64);
+        kv.f("t.f.out_cap_max_mb", self.out_cap_max as f64 / MB);
+        kv.f("t.f.out_cap_over_len", self.out_cap_sum / self.out_len_sum);
+        kv.f("t.f.syms_cap_max_mb", self.syms_cap_max as f64 / MB);
+        kv.f("t.f.window_live_max_mb", self.window_live_max as f64 / MB);
+        kv.f("t.f.window_cap_max_mb", self.window_cap_max as f64 / MB);
+        // reconciliation: every figure above is summed from events, never sampled; what
+        // the events leave over at the trace's end (each 0 when they balance), and the
+        // decoded bytes they sum, for the child to hold against the bytes it read
+        kv.f(
+            "t.q.residual",
+            (self.ready.len() as i64
+                + self.ready_bytes.abs()
+                + self.syms_held.abs()
+                + self.syms_dead.abs()
+                + self.tv_n.abs()
+                + self.tv_rows as i64
+                + self.window().abs()) as f64,
+        );
+        kv.f("t.q.ready_after_taken", self.ready_after_taken as f64);
+        kv.f("t.f.decoded_sum", self.decoded_sum as f64);
+    }
+}
+
+/// The workers' buffers as each recorded them at its end (their high-water capacities):
+/// each buffer's mean over the workers, and a worker's total, mean and largest (`t.f.w.*`)
+fn footprint(traces: &[ThreadTrace], roles: &[Option<Role>], kv: &mut Kv) {
+    let mut by: BTreeMap<&str, f64> = BTreeMap::new();
+    let (mut n, mut max) = (0f64, 0f64);
+    for (t, r) in traces.iter().zip(roles) {
+        if *r != Some(Role::Worker) || t.buffers.is_empty() {
+            continue;
+        }
+        n += 1.0;
+        let mut total = 0f64;
+        for b in &t.buffers {
+            *by.entry(b.name).or_default() += b.cap as f64;
+            total += b.cap as f64;
+        }
+        max = max.max(total);
+    }
+    kv.f("t.f.w.recorded", n);
+    if n == 0.0 {
+        return;
+    }
+    for (name, cap) in &by {
+        kv.f(&format!("t.f.w.{name}.cap_mb"), cap / n / 1e6);
+    }
+    kv.f("t.f.w.cap_mb", by.values().sum::<f64>() / n / 1e6);
+    kv.f("t.f.w.cap_mb_max", max / 1e6);
+}
+
 // ---------------------------------------------------------------------------------------
 // The sweep: runs, statistics, the machine, the self-test, the report
 
@@ -479,6 +825,7 @@ fn parent(args: &[String]) {
     let mut gap = 0.0f64;
     let mut placements: Option<Vec<String>> = None;
     let mut meta: Vec<(String, String)> = Vec::new();
+    let mut ledger_only = false;
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
@@ -522,8 +869,9 @@ fn parent(args: &[String]) {
                 let (k, v) = kv.split_once('=').expect("--meta K=V");
                 meta.push((k.into(), v.into()));
             }
+            "--ledger" => ledger_only = true,
             "-h" | "--help" => {
-                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]...");
+                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
                 return;
             }
             f => file = Some(f.to_string()),
@@ -540,6 +888,16 @@ fn parent(args: &[String]) {
         }
         v
     });
+    let (level, n_blocks) = file_level(&file);
+    if ledger_only {
+        // the arithmetic alone, for full blocks of the file's level: no runs
+        let ls: Vec<trace::Settings> = threads
+            .iter()
+            .map(|&t| trace::Settings::new(level, t, slots.unwrap_or(2 * t)))
+            .collect();
+        print!("{}", ledger_table(&ls, &[], n_blocks));
+        return;
+    }
     let pin = m.allowed_list.first().copied();
     let taskset = Command::new("taskset").arg("-V").output().is_ok();
     let exe = std::env::current_exe().unwrap();
@@ -670,6 +1028,8 @@ fn parent(args: &[String]) {
 
     let mut results = Vec::new();
     let mut table = String::new();
+    let mut summary = String::new();
+    let mut ledgers: Vec<(trace::Settings, Option<f64>)> = Vec::new();
     let _ = writeln!(
         table,
         "\n{:>4} {:>9} {:>17} {:>16} {:>16} | {:>6} {:>6} {:>6} {:>6} {:>6} {:>6} {:>6} | {:>6} {:>6} | {:>7} {:>7} {:>7} {:>6}",
@@ -771,6 +1131,20 @@ fn parent(args: &[String]) {
             g(&full, "b.runq_ms"),
             g(&full, "b.slices"),
         );
+        let s = slots.unwrap_or(2 * t);
+        let rows = g(&tl, "f.rows_max");
+        let decoded = g(&tl, "f.decoded_max");
+        let mut ls = trace::Settings::new(level, t, s);
+        if rows.is_finite() && rows > 0.0 {
+            (ls.rows, ls.decoded) = (rows as usize, decoded as usize);
+        }
+        let rss: Vec<f64> = runs.get(&(t, spec.clone(), "off")).map_or(vec![], |v| {
+            v.iter().filter_map(|kv| num(kv, "rss_kb")).collect()
+        });
+        if spec == specs[0] {
+            ledgers.push((ls, Some(median(&mut rss.clone()) * 1024.0)));
+        }
+        summary.push_str(&queue_summary(t, &spec, s, &tl, &trace::ledger(&ls)));
         let verdict = |c: (f64, f64, f64)| {
             J::S(if !c.1.is_finite() {
                 "too few rounds".into()
@@ -922,10 +1296,320 @@ fn parent(args: &[String]) {
     );
     println!("Timeline (medians of complete traces; shares of the workers' time): dec = decoding; idle = on the jobs' lock or waiting in recv; i:sl-d, i:sl-r = idle while the scanner waited for a slot and the earliest block not taken was still decoding / ready for the reader (reader backpressure); i:in, i:rd = idle while the scanner waited for input / read a block; i:q = idle while jobs sat in the queue (handoff). s:in = the scanner waiting for input, a share of the span; r:wait = the reader waiting for its next block. Idle during slot waits, in worker-seconds, is in the file: an upper bound on what a wider window could recover.");
     println!("Full, per block over decode_block: elapsed, CPU, run-queue wait and timeslices (Linux). CPU counts memory stalls as running: CPU up with little run-queue wait is an on-CPU cost, not by itself contention. * = more threads than physical cores.");
+    let (ls, rss): (Vec<_>, Vec<_>) = ledgers.into_iter().unzip();
+    print!("\n{}", ledger_table(&ls, &rss, n_blocks));
+    println!("\nQueues and live structures (timeline medians; docs/ledger.md has the exact definitions):");
+    print!("{summary}");
     println!("Written: {out}");
     if !parity {
         std::process::exit(1);
     }
+}
+
+/// The file's highest stream level, and its blocks (their symbols read, not decoded)
+fn file_level(path: &str) -> (u32, usize) {
+    let data = std::fs::read(path).unwrap_or_else(|e| panic!("read {path}: {e}"));
+    let (mut level, mut n) = (0, 0);
+    for span in mibz2::scan(&data) {
+        match span {
+            Ok(b) => {
+                level = level.max(b.level);
+                n += 1;
+            }
+            Err(e) => {
+                eprintln!("occupancy: {path}: {e}");
+                break;
+            }
+        }
+    }
+    (level.max(1), n)
+}
+
+fn mb(x: usize) -> String {
+    format!("{:.2}", x as f64 / 1e6)
+}
+
+/// A size in B, KB or MB (decimal)
+fn size(x: usize) -> String {
+    match x {
+        x if x >= 100_000 => format!("{:.2} MB", x as f64 / 1e6),
+        x if x >= 1000 => format!("{:.1} KB", x as f64 / 1e3),
+        x => format!("{x} B"),
+    }
+}
+
+/// The footprint ledger (src/trace.rs) for each thread count: its entries once (at the
+/// first settings), then each thread count's totals, beside its peak RSS where measured
+fn ledger_table(ls: &[trace::Settings], rss: &[Option<f64>], blocks: usize) -> String {
+    let mut o = String::new();
+    let Some(first) = ls.first() else {
+        return o;
+    };
+    let _ = writeln!(
+        o,
+        "Footprint ledger (src/trace.rs, docs/ledger.md): level {} ({} blocks; at most {} rows a block), longest block {} rows, largest decoded {} MB, input chunks of {} MiB. Each buffer:",
+        first.level,
+        blocks,
+        trace::block_rows(first.level),
+        first.rows,
+        mb(first.decoded),
+        first.chunk >> 20
+    );
+    let _ = writeln!(
+        o,
+        "  {:<8} {:<15} {:<16} {:>10} {:>10} {:>10} {:>10}  {:<10}",
+        "owner", "buffer", "how many", "reserved", "≤ bound", "live ≤", "hot*", "allocated"
+    );
+    for e in trace::ledger(first) {
+        let _ = writeln!(
+            o,
+            "  {:<8} {:<15} {:<16} {:>10} {:>10} {:>10} {:>10}  {:<10}",
+            e.owner,
+            e.name,
+            e.per,
+            size(e.alloc),
+            e.alloc_max.map_or("ratchets".into(), size),
+            size(e.live),
+            if e.hot > 0 { size(e.hot) } else { "–".into() },
+            e.life
+        );
+    }
+    for (i, s) in ls.iter().enumerate() {
+        let l = trace::ledger(s);
+        let (alloc, max, live, hot) = trace::totals(&l);
+        let bounded: Vec<trace::Entry> = l
+            .iter()
+            .filter(|e| e.alloc_max.is_some())
+            .cloned()
+            .collect();
+        let _ = writeln!(
+            o,
+            "  {:>3} threads, window {:>3}: reserved ≥ {:>6} MB, ≤ {:>6} MB{} · live ≤ {:>6} MB (each buffer's maximum, summed) · hot* {:>5} MB{}",
+            s.threads,
+            s.slots,
+            mb(alloc),
+            mb(max.unwrap_or_else(|| trace::totals(&bounded).1.unwrap_or(0))),
+            if max.is_none() { " + the segment buffers (they ratchet: measured below)" } else { "" },
+            mb(live),
+            mb(hot),
+            rss.get(i)
+                .copied()
+                .flatten()
+                .filter(|r| r.is_finite())
+                .map_or(String::new(), |r| format!(" · peak RSS (off, median) {:.1} MB", r / 1e6))
+        );
+    }
+    let _ = writeln!(o, "  * hot: a model of what the T-vector phase reads at random (each worker's T-vector), not a measured cache residency. Reserved is Vec capacity: pages never written are not resident, so RSS can be below it; RSS is resident pages, not cache residency.");
+    o
+}
+
+/// One thread count's queues and live structures, from its timeline medians, in at most
+/// six lines; and the ledger's bounds checked against what was measured
+fn queue_summary(
+    t: usize,
+    spec: &str,
+    slots: usize,
+    tl: &[(String, J)],
+    l: &[trace::Entry],
+) -> String {
+    let g = |k: &str| {
+        tl.iter()
+            .find(|(kk, _)| kk == k)
+            .map_or(f64::NAN, |(_, v)| match v {
+                J::N(x) => *x,
+                _ => f64::NAN,
+            })
+    };
+    let p = |k: &str| {
+        let x = g(k);
+        if x.is_finite() {
+            format!("{:.1}%", 100.0 * x)
+        } else {
+            "–".into()
+        }
+    };
+    let pd = |a: &str, b: &str| {
+        let x = g(a) - g(b);
+        if x.is_finite() {
+            format!("{:.1}%", 100.0 * x)
+        } else {
+            "–".into()
+        }
+    };
+    let f = |k: &str, d: usize| {
+        let x = g(k);
+        if x.is_finite() {
+            format!("{x:.d$}")
+        } else {
+            "–".into()
+        }
+    };
+    let mut o = String::new();
+    let head = if spec.is_empty() {
+        format!("{t} threads, window {slots}")
+    } else {
+        format!("{t} threads {spec}, window {slots}")
+    };
+    if !g("complete_rounds").is_finite() || g("complete_rounds") == 0.0 {
+        let _ = writeln!(o, "{head}: no complete trace");
+        return o;
+    }
+    let _ = writeln!(
+        o,
+        "{head}: reader waiting {} (starved, the next block not ready, {}; the handoff, ready and the reader not yet woken, {}) · scanner backpressured (slot wait, the earliest untaken block ready: the reader binds) {} ({} of it in the handoff) · slot wait, the earliest untaken still decoding (the workers bind) {} · input wait {}  [of the span]",
+        p("r.waiting"),
+        pd("r.waiting", "r.waiting.next_ready"),
+        p("r.waiting.next_ready"),
+        p("s.slot_earliest_ready"),
+        p("s.slot_earliest_ready.reader_waiting"),
+        p("s.slot_earliest_decoding"),
+        p("s.input")
+    );
+    let _ = writeln!(
+        o,
+        "  workers: decoding {} · idle, no job queued {} · idle, a job queued (handoff) {}  [of worker time] · mean decoding {} of {t}",
+        p("w.decoding"),
+        p("w.idle.no_job"),
+        p("w.idle.jobs_queued"),
+        f("w.mean_decoding", 2)
+    );
+    let _ = writeln!(
+        o,
+        "  T-vector phase (build and walk): mean {} blocks, max {} · live T-vectors mean {} MB, max {} MB (the hot model)",
+        f("q.tvec_mean", 2),
+        f("q.tvec_hw", 0),
+        f("q.tvec_mb_mean", 1),
+        f("q.tvec_mb_hw", 1)
+    );
+    let _ = writeln!(
+        o,
+        "  window: mean {}, max {} of {slots} · ready, not taken: max {} blocks, {} MB; mean {} MB = {} head of line (an earlier block decoding) + {} reader busy + {} handoff · ready→taken mean {} ms, max {} ms (decode mean {} ms)",
+        f("q.window_mean", 1),
+        f("q.window_hw", 0),
+        f("q.ready_hw", 0),
+        f("q.ready_mb_hw", 1),
+        f("q.ready_mb_mean", 2),
+        f("q.ready_mb_mean.head_of_line", 2),
+        f("q.ready_mb_mean.reader_busy", 2),
+        f("q.ready_mb_mean.handoff", 2),
+        f("q.hold_ms_mean", 2),
+        f("q.hold_ms_max", 1),
+        f("q.decode_ms_mean", 1)
+    );
+    let _ = writeln!(
+        o,
+        "  held: symbols mean {} MB, {} MB of it dead (read by MTF, not yet returned) · output buffers reserved/used {}×, largest {} MB · window live ≤ {} MB, reserved ≤ {} MB",
+        f("q.syms_mb_mean", 1),
+        f("q.syms_dead_mb_mean", 1),
+        f("f.out_cap_over_len", 2),
+        f("f.out_cap_max_mb", 2),
+        f("f.window_live_max_mb", 1),
+        f("f.window_cap_max_mb", 1)
+    );
+    // the worker's buffers (each worker's at its end), largest first
+    let mut w: Vec<(String, f64)> = tl
+        .iter()
+        .filter_map(|(k, v)| {
+            match (
+                k.strip_prefix("f.w.")
+                    .and_then(|k| k.strip_suffix(".cap_mb")),
+                v,
+            ) {
+                (Some(n), J::N(x)) => Some((n.to_string(), *x)),
+                _ => None,
+            }
+        })
+        .collect();
+    w.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    let parts: Vec<String> = w
+        .iter()
+        .take(4)
+        .map(|(n, x)| format!("{n} {x:.2}"))
+        .collect();
+    // the ledger's bounds against the measurements (medians over the rounds)
+    let mut bad = Vec::new();
+    let e = |n: &str| l.iter().find(|e| e.name == n);
+    let mut check = |what: &str, x: f64, lo: f64, hi: Option<f64>| {
+        if x.is_finite() && (x < lo * 0.999 || hi.is_some_and(|h| x > h * 1.001)) {
+            bad.push(format!("{what} {x:.0} outside {lo:.0}..={hi:?}"));
+        }
+    };
+    for n in [
+        "ll",
+        "tt",
+        "rle",
+        "seg.starts",
+        "seg.next",
+        "seg.bufs.outer",
+    ] {
+        if let Some(e) = e(n) {
+            check(
+                n,
+                g(&format!("f.w.{n}.cap_mb")) * 1e6,
+                e.alloc as f64,
+                e.alloc_max.map(|m| m as f64),
+            );
+        }
+    }
+    if let Some(e) = e("symbols") {
+        check(
+            "symbols",
+            g("f.syms_cap_max_mb") * 1e6,
+            e.alloc as f64,
+            e.alloc_max.map(|m| m as f64),
+        );
+    }
+    if let Some(e) = e("out") {
+        check(
+            "out",
+            g("f.out_cap_max_mb") * 1e6,
+            0.0,
+            e.alloc_max.map(|m| m as f64),
+        );
+    }
+    if let Some(e) = e("window") {
+        check(
+            "window",
+            g("f.window_cap_max_mb") * 1e6,
+            0.0,
+            e.alloc_max.map(|m| m as f64),
+        );
+    }
+    check(
+        "window occupancy",
+        g("q.window_hw"),
+        0.0,
+        Some(slots as f64),
+    );
+    check("T-vector phase", g("q.tvec_hw"), 0.0, Some(t as f64));
+    // the events' reconciliations: what they leave over at the end, the decoded bytes
+    // they sum against the bytes read, and every worker's buffers recorded
+    let mut rec = Vec::new();
+    if g("q.residual") != 0.0 {
+        rec.push(format!("end state not empty ({})", f("q.residual", 0)));
+    }
+    if g("f.decoded_unreconciled") != 0.0 {
+        rec.push(format!(
+            "decoded bytes off by {}",
+            f("f.decoded_unreconciled", 0)
+        ));
+    }
+    if g("f.w.recorded") != t as f64 {
+        rec.push(format!(
+            "{} of {t} workers' buffers recorded",
+            f("f.w.recorded", 0)
+        ));
+    }
+    let _ = writeln!(
+        o,
+        "  worker buffers (each at its end, mean MB): {} total = {} · ledger check: {} · events reconciled: {}{}",
+        f("f.w.cap_mb", 2),
+        parts.join(" + "),
+        if bad.is_empty() { "ok".into() } else { format!("VIOLATED: {}", bad.join("; ")) },
+        if rec.is_empty() { "ok (Σ decoded = bytes read, end state empty, every worker recorded)".into() } else { format!("NO: {}", rec.join("; ")) },
+        if g("q.ready_after_taken") > 0.0 { format!(" · {} blocks marked ready after taken (held 0)", f("q.ready_after_taken", 0)) } else { String::new() }
+    );
+    o
 }
 
 /// The geometric mean of paired ratios and its 95% interval (t distribution)
@@ -1342,5 +2026,222 @@ impl std::fmt::Display for J {
                 write!(f, "}}")
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mibz2::trace::{Mark, NONE};
+
+    fn mk(ns: u64, kind: Kind, place: u64, len: u64, cap: u64) -> Mark {
+        Mark {
+            ns,
+            kind,
+            place,
+            cpu_ns: UNREAD,
+            run_ns: UNREAD,
+            wait_ns: UNREAD,
+            slices: UNREAD,
+            len,
+            cap,
+        }
+    }
+
+    /// A thread's marks, its times in ms and its sizes in MB (so that every figure below
+    /// is well above the 6 decimals a key is written with)
+    fn thread(name: &str, marks: &[(u64, Kind, u64, u64, u64)]) -> ThreadTrace {
+        let mb = |x: u64| if x == UNREAD { x } else { x * 1_000_000 };
+        ThreadTrace {
+            name: name.into(),
+            marks: marks
+                .iter()
+                .map(|&(ms, k, p, l, c)| mk(ms * 1_000_000, k, p, mb(l), mb(c)))
+                .collect(),
+            buffers: vec![],
+        }
+    }
+
+    /// The queue summary's definitions on a hand-built trace: 2 workers, a window of 2,
+    /// 3 blocks, over 90 ms (sizes in MB, rows in millions). Block 1 is ready at 35 while the reader still waits for block
+    /// 0 (head of line); the reader consumes block 0 from 51 to 80, while the scanner waits
+    /// for a slot with block 1 ready (backpressure: the reader binds).
+    #[test]
+    fn queue_definitions() {
+        use Kind::*;
+        const U: u64 = UNREAD;
+        let n = NONE;
+        let scan = thread(
+            "mibz2-scan",
+            &[
+                (0, ThreadStart, n, U, U),
+                (0, SlotWait, n, U, U),
+                (0, SlotGot, n, U, U),
+                (5, Window, n, 1000, 4096),
+                (10, Issued, 0, 200, 1000),
+                (10, Enqueued, 0, U, U),
+                (10, SlotWait, n, U, U),
+                (10, SlotGot, n, U, U),
+                (20, Issued, 1, 100, 1000),
+                (20, Enqueued, 1, U, U),
+                (20, SlotWait, n, U, U),
+                (52, SlotGot, n, U, U),
+                (55, Issued, 2, 50, 1000),
+                (55, Enqueued, 2, U, U),
+                (55, SlotWait, n, U, U),
+                (81, SlotGot, n, U, U),
+                (82, ThreadEnd, n, U, U),
+            ],
+        );
+        let w0 = thread(
+            "mibz2-0",
+            &[
+                (0, ThreadStart, n, U, U),
+                (0, JobLock, n, U, U),
+                (0, JobRecv, n, U, U),
+                (10, JobGot, 0, U, U),
+                (10, DecodeStart, 0, U, U),
+                (15, InvertStart, n, 1000, U),
+                (45, InvertEnd, n, U, U),
+                (50, DecodeEnd, 0, 900, 1064),
+                (50, Ready, 0, U, U),
+                (50, JobLock, n, U, U),
+                (50, JobRecv, n, U, U),
+                (57, JobGot, 2, U, U),
+                (57, DecodeStart, 2, U, U),
+                (58, InvertStart, n, 100, U),
+                (60, InvertEnd, n, U, U),
+                (61, DecodeEnd, 2, 90, 1064),
+                (61, Ready, 2, U, U),
+                (61, JobLock, n, U, U),
+                (61, JobRecv, n, U, U),
+                (90, ThreadEnd, n, U, U),
+            ],
+        );
+        let w1 = thread(
+            "mibz2-1",
+            &[
+                (0, ThreadStart, n, U, U),
+                (0, JobLock, n, U, U),
+                (0, JobRecv, n, U, U),
+                (20, JobGot, 1, U, U),
+                (20, DecodeStart, 1, U, U),
+                (22, InvertStart, n, 500, U),
+                (30, InvertEnd, n, U, U),
+                (35, DecodeEnd, 1, 400, 2128),
+                (35, Ready, 1, U, U),
+                (35, JobLock, n, U, U),
+                (35, JobRecv, n, U, U),
+                (90, ThreadEnd, n, U, U),
+            ],
+        );
+        let reader = thread(
+            "main",
+            &[
+                (0, ThreadStart, n, U, U),
+                (0, ReadWait, n, U, U),
+                (51, Taken, 0, U, U),
+                (80, ReadWait, n, U, U),
+                (80, Taken, 1, U, U),
+                (85, ReadWait, n, U, U),
+                (85, Taken, 2, U, U),
+                (88, ReadWait, n, U, U),
+                (90, ThreadEnd, n, U, U),
+            ],
+        );
+        let mut kv = Kv::default();
+        summarise(&[scan, w0, w1, reader], 2, 1, None, &mut kv);
+        let got: BTreeMap<String, String> = kv.0.into_iter().collect();
+        let v = |k: &str| -> f64 {
+            got.get(k)
+                .unwrap_or_else(|| panic!("no {k}"))
+                .parse()
+                .unwrap_or_else(|_| panic!("{k} = {}", got[k]))
+        };
+        assert_eq!(got["t.complete"], "yes", "{}", got["t.problem"]);
+        let close = |k: &str, want: f64| {
+            let x = v(k);
+            assert!(
+                (x - want).abs() <= 1e-6 + 1e-6 * want.abs(),
+                "{k}: {x}, want {want}"
+            );
+        };
+        let (span, wspan) = (90.0, 180.0);
+        // the reader waiting for its next block, 0-51 and 88-90: of it, 50-51 with block 0
+        // ready (the handoff: its wake-up), the rest starved
+        close("t.r.waiting", 53.0 / span);
+        close("t.r.waiting.next_ready", 1.0 / span);
+        // the scanner waiting for a slot: the earliest untaken block still decoding (20-50:
+        // the workers bind), or ready (50-52, 55-81: the reader binds, backpressure)
+        close("t.s.slot_earliest_decoding", 30.0 / span);
+        close("t.s.slot_earliest_ready", 28.0 / span);
+        // (of the backpressure, 50-51 while the reader was waking to block 0)
+        close("t.s.slot_earliest_ready.reader_waiting", 1.0 / span);
+        // workers: decoding 10-50, 57-61 and 20-35; idle 121 worker-ns, 4 of it (55-57,
+        // both idle) with a job queued, so 117 with none
+        close("t.w.decoding", 59.0 / wspan);
+        close("t.w.idle", 121.0 / wspan);
+        close("t.w.idle.jobs_queued", 4.0 / wspan);
+        close("t.w.idle.no_job", 117.0 / wspan);
+        // the T-vector phase: 15-45 (1000 rows), 22-30 (500), 58-60 (100)
+        close("t.q.tvec_mean", 40.0 / span);
+        close("t.q.tvec_hw", 2.0);
+        close("t.q.tvec_mb_mean", 4.0 * 34_200.0 / span);
+        close("t.q.tvec_mb_hw", 4.0 * 1500.0);
+        // the window: issued and not taken, plus the block the scanner reads in its slot
+        close("t.q.window_mean", 155.0 / span);
+        close("t.q.window_hw", 2.0);
+        // ready, not taken: block 1 35-50 head of line (block 0 decoding), 0 and 1 50-51
+        // at the handoff, then 1 (51-80) and 2 (61-85) while the reader consumed
+        close("t.q.ready_hw", 2.0);
+        close("t.q.ready_mb_hw", 1300.0);
+        close("t.q.ready_mb_mean.head_of_line", 6000.0 / span);
+        close("t.q.ready_mb_mean.handoff", 1300.0 / span);
+        close("t.q.ready_mb_mean.reader_busy", 13_760.0 / span);
+        close("t.q.hold_ms_mean", (1.0 + 45.0 + 24.0) / 3.0);
+        close("t.q.hold_ms_max", 45.0);
+        // symbols held from their read to their return, dead from MTF's end
+        close("t.q.syms_mb_mean", 9800.0 / span);
+        close("t.q.syms_dead_mb_mean", 8450.0 / span);
+        close("t.f.rows_max", 1000.0 * 1e6);
+        close("t.f.out_cap_max_mb", 2128.0);
+        close("t.f.out_cap_over_len", (1064.0 * 2.0 + 2128.0) / 1390.0);
+        close("t.f.window_cap_max_mb", 4096.0);
+        close("t.q.residual", 0.0);
+        close("t.q.ready_after_taken", 0.0);
+        close("t.f.decoded_sum", 1390.0 * 1e6);
+        close("t.f.window_live_max_mb", 1000.0);
+        close("t.q.decode_ms_mean", (40.0 + 15.0 + 4.0) / 3.0);
+        close("t.f.syms_cap_max_mb", 1000.0);
+    }
+
+    /// An inverse BWT outside its block makes the trace incomplete
+    #[test]
+    fn unbalanced_inverse_is_incomplete() {
+        use Kind::*;
+        const U: u64 = UNREAD;
+        let n = NONE;
+        let t = vec![
+            thread(
+                "mibz2-scan",
+                &[(0, ThreadStart, n, U, U), (1, ThreadEnd, n, U, U)],
+            ),
+            thread(
+                "mibz2-0",
+                &[
+                    (0, ThreadStart, n, U, U),
+                    (1, InvertStart, n, 10, U),
+                    (2, ThreadEnd, n, U, U),
+                ],
+            ),
+            thread(
+                "main",
+                &[(0, ThreadStart, n, U, U), (2, ThreadEnd, n, U, U)],
+            ),
+        ];
+        let mut kv = Kv::default();
+        summarise(&t, 1, 1, None, &mut kv);
+        let got: BTreeMap<String, String> = kv.0.into_iter().collect();
+        assert_eq!(got["t.complete"], "no");
     }
 }
