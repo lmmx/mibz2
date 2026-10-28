@@ -99,6 +99,29 @@ def summarise(raw, arms, threads, ref, labels=None, against=None):
             "against",
             lambda arm, t: wall.get((against, t), {}),
         )
+    # each arm's best thread count, and its best throughput against `against`'s best,
+    # round by round (each round's fastest run of each arm, at whichever thread count)
+    print("\nbest thread count (by median), and the best against the best, paired by round")
+    for row in rows:
+        t_best = max(
+            threads, key=lambda t: row["mb_s"][t] if row["mb_s"][t] == row["mb_s"][t] else 0
+        )
+        row["best"] = {"threads": t_best, "mb_s": row["mb_s"][t_best]}
+        line = f"{row['arm']:<{width}} {row['mb_s'][t_best]:6.0f} MB/s at {t_best:>2} threads"
+        if against:
+
+            def best(arm):
+                per = {}
+                for t in threads:
+                    for k, w in wall.get((arm, t), {}).items():
+                        per[k] = min(per.get(k, w), w)
+                return per
+
+            mine, base = best(row["exe"]), best(against)
+            c = ratio_ci([base[k] / mine[k] for k in mine if k in base])
+            row["best"]["against"] = {"ratio": c[0], "lo": c[1], "hi": c[2]}
+            line += f"   {c[0]:.3f} ({c[1]:.3f}-{c[2]:.3f}) of {name(against)}'s best"
+        print(line)
     return rows, same, out_bytes
 
 
