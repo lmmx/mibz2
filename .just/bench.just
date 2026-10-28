@@ -141,3 +141,22 @@ bench-blocks *args:
 bench-ledger *args:
     bash bench/corpus.sh
     target/release/examples/occupancy corpora/wikidata.bz2 --ledger "$@"
+
+# bench/fingerprint.py: the contention fingerprint. mibz2 at 1 thread, pinned to one
+# physical core, alone and beside a competitor on another core: a register-only loop (the
+# control), a random read-modify-write bubble of half the effective cache, a streaming copy
+# over 2 x 64 MB, and a second copy of itself, in randomized interleaved rounds, after a
+# calibration on this machine (a pointer chase gives the effective cache; each stressor
+# is checked). Each condition's slowdown against solo and against the control, or
+# INCONCLUSIVE with the reason. About 1-2 minutes. It writes fingerprint-<UTC time>.json
+# and .md to share.
+#   just bench-fingerprint
+#   just bench-fingerprint --rounds 12 --sibling
+#   just bench-fingerprint --victim head=target/release/examples/ab --victim v0.1.5=/path/to/ab
+
+# Whether the decoder slows unusually beside a co-runner on another core
+[positional-arguments]
+bench-fingerprint *args:
+    bash bench/corpus.sh
+    cargo build --release --example ab --example stress
+    python3 bench/fingerprint.py "$@"
