@@ -31,6 +31,7 @@ a summary on stdout.
 import argparse
 import datetime
 import json
+import math
 import os
 import shutil
 import statistics
@@ -41,6 +42,18 @@ import time
 
 IMC = ["uncore_imc/data_reads/", "uncore_imc/data_writes/"]
 CORE = ["cycles", "ref-cycles", "instructions"]
+# where the stall cycles go (Skylake-family core events, the i9-10900K's): loads served by
+# DRAM against L3, cycles stalled with an L3 miss outstanding, the data reads sent past L2
+# and their occupancy of the queue to the uncore (Little's law: occupancy over requests is
+# the average cycles a read waits), and cycles spent walking page tables for loads
+MEM = [
+    "mem_load_retired.l3_miss",
+    "mem_load_retired.l3_hit",
+    "cycle_activity.stalls_l3_miss",
+    "offcore_requests.all_data_rd",
+    "offcore_requests_outstanding.all_data_rd",
+    "dtlb_load_misses.walk_active",
+]
 # perf scales the memory controller's counts to MiB; a bare count is 64-byte lines
 SCALE = {"B": 1, "KiB": 2**10, "MiB": 2**20, "GiB": 2**30, "": 64}
 GIB = 2**30
@@ -211,11 +224,12 @@ def calibrate(gib, settle):
     }
 
 
-def core(threads, reps, loops):
+def core(threads, reps, loops, mem=False):
+    events = CORE + (MEM if mem else [])
     res = []
     for rep in range(reps):
         for t in threads[rep % len(threads) :] + threads[: rep % len(threads)]:
-            wall, out, rows = perf(CORE, decode(t, loops), system=False)
+            wall, out, rows = perf(events, decode(t, loops), system=False)
             n, dwall, k = decoded(out)
             r = rows[None]
             res.append(
@@ -225,12 +239,30 @@ def core(threads, reps, loops):
                     "decodes": k,
                     "out": n,
                     "decode_wall": dwall,
-                    **{e: r[e] for e in CORE},
+                    **{e: r[e] for e in events},
                     "ipc": r["instructions"] / r["cycles"],
                     "clock_ratio": r["cycles"] / r["ref-cycles"],
+                    **(memory(r, n) if mem else {}),
                 }
             )
     return res
+
+
+def memory(r, n):
+    """the memory events as rates: per KB of output, or shares of the cycles"""
+    kb = n / 1000
+    miss, hit = r["mem_load_retired.l3_miss"], r["mem_load_retired.l3_hit"]
+    reads = r["offcore_requests.all_data_rd"]
+    return {
+        "l3_miss_per_kb": miss / kb,
+        "l3_hit_share": hit / (hit + miss) if hit + miss else math.nan,
+        "reads_past_l2_per_kb": reads / kb,
+        "read_wait_cycles": r["offcore_requests_outstanding.all_data_rd"] / reads
+        if reads
+        else math.nan,
+        "l3_miss_stall_share": r["cycle_activity.stalls_l3_miss"] / r["cycles"],
+        "page_walk_share": r["dtlb_load_misses.walk_active"] / r["cycles"],
+    }
 
 
 def curve(threads, reps, loops, pair):
@@ -301,6 +333,26 @@ def report(res):
                 f" {s['cycles']['mean'] / k:10.3e}  {s['ipc']['mean']:4.2f}"
                 f"  {s['clock_ratio']['mean']:.3f}"
             )
+        if res["core"] and "l3_miss_per_kb" in res["core"][0]:
+            keys = [
+                "l3_miss_per_kb",
+                "l3_hit_share",
+                "reads_past_l2_per_kb",
+                "read_wait_cycles",
+                "l3_miss_stall_share",
+                "page_walk_share",
+            ]
+            print(
+                "memory  threads  L3 misses/KB  L3 hit share  reads past L2/KB"
+                "  cycles a read waits  stalled on L3 miss  walking page tables"
+            )
+            for t, s in by_threads(res["core"], keys).items():
+                m = {k: s[k]["mean"] for k in keys}
+                print(
+                    f"{'':8}{t:7}  {m['l3_miss_per_kb']:12.1f}  {m['l3_hit_share']:12.2f}"
+                    f"  {m['reads_past_l2_per_kb']:16.1f}  {m['read_wait_cycles']:19.0f}"
+                    f"  {m['l3_miss_stall_share']:17.0%}  {m['page_walk_share']:19.1%}"
+                )
     if "curve" in res:
         print(
             "curve   threads  MB/s (sd)    reads  writes  idle reads  net read GiB/s"
@@ -332,6 +384,13 @@ def main():
     ap.add_argument("--threads", default="1,6,8,10")
     ap.add_argument("--reps", type=int, default=5)
     ap.add_argument("--loops", type=int, default=3, help="decodes in each reading")
+    ap.add_argument(
+        "--events",
+        choices=["basic", "mem"],
+        default="basic",
+        help="the core step's: cycles, ref-cycles and instructions, or with them where the"
+        " stalls go (L3 misses, read wait, page walks; Skylake-family event names)",
+    )
     ap.add_argument("--idle", type=int, default=30, help="seconds of idle readings")
     ap.add_argument("--copy", type=int, default=20, help="GiB the calibration copies")
     ap.add_argument("--pair", type=float, default=3, help="seconds of each paired idle")
@@ -361,6 +420,7 @@ def main():
             "threads": threads,
             "reps": a.reps,
             "loops": a.loops,
+            "events": a.events,
             "pair_seconds": a.pair,
             "steps": todo,
         }
@@ -378,7 +438,7 @@ def main():
         elif step == "calibrate":
             res[step] = calibrate(a.copy, max(a.pair, 5))
         elif step == "core":
-            res[step] = core(threads, a.reps, a.loops)
+            res[step] = core(threads, a.reps, a.loops, mem=a.events == "mem")
         elif step == "curve":
             res[step] = curve(threads, a.reps, a.loops, a.pair)
         with open(out, "w") as f:

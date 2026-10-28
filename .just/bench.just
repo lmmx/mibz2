@@ -74,3 +74,18 @@ bench-scaling *args:
     bash bench/corpus.sh
     cargo build --release --example ab
     python3 bench/scaling.py "$@"
+
+# bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
+# (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
+# checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10
+# threads, interleaved by round, back to back. Each one's scaling against its own 4-thread
+# runs and its throughput against this build's. It writes variants-<UTC time>.json.
+#   just bench-variants
+#   just bench-variants --variants v0.1.2,v0.1.3,lanes8,pf-off --rounds 8
+
+# Which of mibz2's own changes moved its scaling knee: versions and walk settings (#39, #52)
+[positional-arguments]
+bench-variants *args:
+    bash bench/corpus.sh
+    cargo build --release --example ab
+    python3 bench/variants.py "$@"

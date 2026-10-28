@@ -35,3 +35,5 @@ target/
 /regimes-*.json
 /scaling-*.json
 /scaling-*.jsonl
+/variants-*.json
+/variants-*.jsonl
