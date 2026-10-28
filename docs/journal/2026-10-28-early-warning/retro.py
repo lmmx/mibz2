@@ -21,12 +21,14 @@ T95 = {4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262}
 
 
 def ci(logs: list[float]) -> str:
+    """The geometric mean of paired log ratios and its 95% t-interval, as "g (lo-hi)"."""
     m = statistics.fmean(logs)
     h = T95.get(len(logs) - 1, 2.0) * statistics.stdev(logs) / math.sqrt(len(logs))
     return f"{math.exp(m):.2f} ({math.exp(m - h):.2f}-{math.exp(m + h):.2f})"
 
 
 def main(store: Path) -> None:
+    """Print the table: a row per recorded commit."""
     print("| commit | runner | mibz2 | lbzip2 | pbz2 | mibz2 over lbzip2 |")
     print("|---|---|--:|--:|--:|--:|")
     for line in (store / "records.jsonl").read_text().splitlines():
@@ -41,7 +43,9 @@ def main(store: Path) -> None:
             return by[(arm, 4)][k]["cpu"] / by[(arm, 1)][k]["cpu"]
 
         def rounds(*arms: str) -> list[int]:
-            return [k for k in by[(arms[0], 1)] if all(k in by[(a, t)] for a in arms for t in (1, 4))]
+            return [
+                k for k in by[(arms[0], 1)] if all(k in by[(a, t)] for a in arms for t in (1, 4))
+            ]
 
         cells = [ci([math.log(amp(a, k)) for k in rounds(a)]) for a in ("mibz2", "lbzip2", "pbz2")]
         ks = rounds("mibz2", "lbzip2")

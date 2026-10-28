@@ -243,15 +243,21 @@ counted.
   - The registered constant was wrong by about 2.2×. 6.5 MB was the fitted C of the hit
     share C/W, not the aggregate where adding a worker stops paying.
   - Taken alone, the move fits capacity better than "both".
-- **The cost of each block's work, the most direct evidence.** Worker CPU-seconds for the
-  whole decode, from 4 to 10 workers:
+- **The cost of each block's work, the most direct evidence.** The process's CPU-seconds
+  for the whole decode (getrusage, exact), from 4 to 10 workers:
 
   | level | 4 workers | 10 workers | ratio |
   |---|--:|--:|--:|
-  | -9 | 0.64 | 2.46 | ×3.9 |
-  | -6 | 0.48 | 1.53 | ×3.2 |
-  | -3 | 0.48 | 0.56 | ×1.17 |
-  | -1 | 0.52 | 0.42 | flat |
+  | -9 | 0.834 | 2.921 | ×3.50 |
+  | -6 | 0.729 | 1.930 | ×2.65 |
+  | -3 | 0.704 | 1.012 | ×1.44 |
+  | -1 | 0.791 | 0.874 | ×1.10 |
+
+  - **Corrected (2026-10-28-early-warning.md, section 2).** This section first gave the
+    per-thread split's worker CPU (×3.9, ×3.2, ×1.17 and flat). That split's 50 ms
+    sampler lost 0.31–0.35 s a run at 10 workers, as workers ended between samples.
+    The totals above are exact. The 10% at -1 includes the per-thread overhead of six
+    more threads.
 
   - Per-block overheads (tables, headers, setup) don't depend on how many workers run, so
     they can't produce this. The inflation is the product of concurrency and block size,
