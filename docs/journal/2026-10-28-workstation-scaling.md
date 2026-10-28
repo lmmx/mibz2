@@ -157,9 +157,56 @@ compressed, 210 MB decoded, 431 blocks).
     the shared limit past the knee.
 - **#40's huge-page idea is dropped:** walk activity is far under its 10% criterion.
 
+## 8. The last session: clean counters, stages under contention, walk gates
+
+`just bench-session`: imc-20261028T013015Z, contend-20261028T013108Z,
+variants-20261028T013629Z.
+
+- **Measured (each pair of events counted in its own pass, 100% coverage):**
+  - The multiplexed profile's trends hold within a few percent. From 4 to 10 workers:
+    - the demand L3 hit share falls 0.76 → 0.38;
+    - occupancy per read past L2 rises 63 → 292 cycles.
+  - **Capacity:** demand reads that miss L3 rise from 10.2 to 47.1 per KB. Most of the
+    rise is from 4 to 8 workers (×2.7, ×1.6, then ×1.07).
+  - **Queueing past the LLC:** the occupancy per demand read that misses L3 rises from 396
+    to 858 cycles (81 → 175 ns at 4.9 GHz). It keeps growing after capacity has stopped.
+    From the event definitions this includes uncore queueing as well as DRAM service.
+  - **Not the limit:**
+    - the per-core request queue: superqueue-full cycles fall 1.5% → 0.3%;
+    - page walks: 1-2% of cycles, so #40 is closed;
+    - prefetch coverage: it drops only a little, with demand reads going from 4.2% to
+      6.2% of reads past L2.
+- **Measured (contention proxy: N pinned processes of `phases.rs`, time per byte against
+  one alone):**
+  - The build and walk carry 84-93% of the added time at every count. At 10 copies the
+    walk is ×9.9 and the build ×9.0, while MTF + RLE2 is ×1.8 and the scanner ×1.45.
+  - Segment assembly (×13.6) and RLE1 (×10.2) are the most sensitive relatively, but 3%
+    and 3% of the time per byte at 10 copies. That bounds #48's possible recovery at high
+    concurrency to a few percent.
+  - This is stage sensitivity under concurrent independent decodes, not the parallel
+    decoder's own breakdown.
+- **Measured (gates: at most K workers in `invert`, the build and the walk together):**
+  - With 6 permits, throughput rises 1.13× (1.09-1.17) at 8 workers and 1.21×
+    (1.15-1.27) at 10. With 4 permits, 1.17× at 10. With 2-3 permits it's no better or
+    worse.
+  - No gate's best beats this build's best, 1019 MB/s at 4 workers: the best gated
+    figure, 782 MB/s, is 0.77× of it.
+  - Phase-aware scheduling is dropped as a remedy beyond the worker cap.
+  - Gate3 at 10 workers holds about as many blocks in `invert` as 4 ungated workers do,
+    yet gives 712 MB/s. That points at total live footprint (the waiting workers' scratch,
+    the wider window) rather than active walks alone (inference). The condvar also wakes
+    waiters out of block order.
+- **Now:** the knee is memory contention in the T-vector phase, in two stages:
+  1. L3 capacity, as live T-vectors outgrow it (4 to about 8 workers);
+  2. queueing past the LLC (6 to 10).
+
+  The lever is how many decodes are live at once.
+
 ## Decisions
 
-- **The worker count is the first lever.** On this machine mibz2 at 4 workers is 2.1× its
+- **The worker count is the first lever** (lmmx/mibz2#65). A principled default to test:
+  workers = min(physical cores, L3 / per-worker hot set). Here that's 20 MB / about 4 MB ≈
+  4-5, the measured optimum. On this machine mibz2 at 4 workers is 2.1× its
   20-worker throughput, and no decoder variant tested comes near it at more workers.
   wikidata-pq decodes on every core by default (`WIKIDATA_BZ2_THREADS`).
   - A cap is the baseline. Autodetect is a candidate beside it, with two-sided signals:
@@ -168,9 +215,14 @@ compressed, 210 MB decoded, 431 blocks).
   - Either needs a release-shaped paired comparison on a many-core machine. CI's 4 vCPUs
     can't measure it.
 - **Lane and prefetch tuning: closed.**
-- **The decoder-side direction is fewer DRAM bytes per output byte without slowing the
-  walk:** #8 (fusion), #48 (copies, reopenable: its verdict was measured where the copies
-  stay in cache), output-window bounds. Measure each at 8-10 workers as well as 1-4.
+- **The decoder-side direction is fewer bytes live per worker in the T-vector phase,
+  without slowing the walk:**
+  - #8's fusion takes the last column's write and its re-read out of that phase;
+  - output-window bounds.
+
+  Measure each at 8-10 workers as well as 1-4. #48 stays closed: the contention proxy
+  bounds what the output copies could recover to a few percent.
+- **Phase-aware gating and TLB work (#40) are closed.**
 - **#42 stays closed.** The C/W model prices a smaller T-vector in hit share, not in the
   cost per worker it was measured to carry.
 - **#10 stays closed.**
