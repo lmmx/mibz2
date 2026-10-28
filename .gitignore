@@ -37,3 +37,4 @@ target/
 /scaling-*.jsonl
 /variants-*.json
 /variants-*.jsonl
+/contend-*.json

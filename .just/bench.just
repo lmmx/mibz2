@@ -89,3 +89,30 @@ bench-variants *args:
     bash bench/corpus.sh
     cargo build --release --example ab
     python3 bench/variants.py "$@"
+
+# bench/contend.py: N copies of examples/phases.rs at once (1, 2, 4, 6, 8, 10), each pinned
+# to a physical core of its own, sharing the L3 and memory as N workers do: each stage's
+# time a byte (scanner, MTF, build, walk, assembly, RLE1, CRC) against one copy alone. It
+# writes contend-<UTC time>.json to share.
+#   just bench-contend
+#   just bench-contend --copies 1,4,8 --reps 3
+
+# Which of the decode's stages slow down as more decodes share the machine (#39)
+[positional-arguments]
+bench-contend *args:
+    bash bench/corpus.sh
+    cargo build --release --example phases
+    python3 bench/contend.py "$@"
+
+# The workstation session of #39's last questions, in order: the unmultiplexed counter
+# groups at 4-10 threads, the stages under contention, and the walk gates (at most 2, 3, 4
+# or 6 workers in the T-vector phase at once) beside this build. About 10-15 minutes;
+# needs sudo for perf. Upload imc-*.json, contend-*.json and variants-*.json(l).
+#   just bench-session --note "quiet, recent reboot"
+[positional-arguments]
+bench-session *args:
+    bash bench/corpus.sh
+    cargo build --release --example ab --example phases
+    python3 bench/imc.py core --events grouped --threads 4,6,8,10 --reps 3 --settle 0 "$@"
+    python3 bench/contend.py "$@"
+    python3 bench/variants.py --variants gate2,gate3,gate4,gate6 --threads 4,6,8,10 "$@"
