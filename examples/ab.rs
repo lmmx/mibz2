@@ -11,7 +11,9 @@
 //!     --threads 1,4    thread counts (1-thread runs are pinned to one CPU, so a
 //!                      decoder's helper threads share its core)
 //!     --rounds N       rounds (default 5); each round runs every arm once per file and
-//!                      thread count, the arms' order rotated and reversed round to round
+//!                      thread count, the arms' order rotated a step each round and
+//!                      reversed every other cycle of rounds (`arm_order`): over 2 × arms
+//!                      rounds, each arm runs in each position equally often
 //!     --cap ARM=N,..   run ARM (as given in --arms) in the first N rounds only
 //!     --pin CPU        the CPU 1-thread runs are pinned to (default 1)
 //!     --spread         pin a run of T threads, where the machine has at least T physical
@@ -852,13 +854,7 @@ fn run(args: &[String]) {
     for round in 0..rounds {
         for file in &files {
             for &t in &threads {
-                // the arms' order rotated a step each round, and reversed every other
-                let mut order: Vec<&String> = arms.iter().collect();
-                order.rotate_left(round % arms.len());
-                if round % 2 == 1 {
-                    order.reverse();
-                }
-                for arm in order {
+                for arm in arm_order(round, arms.len()).into_iter().map(|i| &arms[i]) {
                     let name = arm.split_once('@').map_or(arm.as_str(), |x| x.0);
                     // (a single-threaded arm once a round, at the fewest threads; a capped
                     // arm in its first rounds only)
@@ -937,6 +933,23 @@ fn run(args: &[String]) {
             }
         }
     }
+}
+
+/// The arms' order in round `round` (indices into the arms): rotated a step each round,
+/// and reversed in every other cycle of `n` rounds, so that over 2n rounds each arm runs
+/// in each position equally often. (Before bench 3.0.0 the order was reversed in every
+/// other round, which with 2 arms undid the rotation: head ran first in every round of
+/// every pull request's bench.)
+fn arm_order(round: usize, n: usize) -> Vec<usize> {
+    let mut order: Vec<usize> = (0..n).collect();
+    if n == 0 {
+        return order;
+    }
+    order.rotate_left(round % n);
+    if (round / n) % 2 == 1 {
+        order.reverse();
+    }
+    order
 }
 
 /// The two-sided 95% t quantile for `df` degrees of freedom
@@ -1104,6 +1117,29 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn every_arm_runs_in_every_position_equally() {
+        for n in 1..=8 {
+            // counts[arm][position] over 2n rounds
+            let mut counts = vec![vec![0; n]; n];
+            for round in 0..2 * n {
+                let order = arm_order(round, n);
+                let mut seen = order.clone();
+                seen.sort();
+                assert_eq!(seen, (0..n).collect::<Vec<_>>(), "a permutation");
+                for (pos, &arm) in order.iter().enumerate() {
+                    counts[arm][pos] += 1;
+                }
+            }
+            for row in &counts {
+                assert!(row.iter().all(|&c| c == 2), "n {n}: {counts:?}");
+            }
+        }
+        // two arms: head (0) and base (1) alternate first, in a balanced pattern
+        let first: Vec<usize> = (0..4).map(|r| arm_order(r, 2)[0]).collect();
+        assert_eq!(first, vec![0, 1, 1, 0]);
+    }
 
     #[test]
     fn cpu_lists() {

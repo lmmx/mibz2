@@ -79,6 +79,22 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
   split never holds more than the process's total, getrusage over every thread. Failing
   it fails the run, as broken instrumentation.
 
+### Fixed
+
+- **The arms' order now alternates (`arm_order` in examples/ab.rs).** Before, a round's order
+  was rotated a step and then reversed in every other round. With two arms the reversal
+  undid the rotation, so on every pull request since 1.0.0 head ran before base in every
+  round, at every thread count.
+  - An A/A run on CI (#69: one commit as head and as base, 10 rounds, EPYC 9V74) measured
+    the first-run arm at:
+    - wall 1.8% faster at 1 thread (−3.2%, −0.4%) and 2.3% faster at 2 (−4.1%, −0.5%);
+    - CPU 2.4% lower at 4 threads (−3.5%, −1.3%);
+    - 7 of 42 head-over-base rows excluding no change, against about 2 by chance;
+    - an assessment of "Better (CPU cost)" for no change at all.
+  - Over 2 × arms rounds, each arm now runs in each position equally often, with a test.
+  - **Past head-over-base verdicts within a few percent may lean toward head.** Larger
+    ones stand.
+
 ### Changed
 
 - **The decoder's figures are redefined (`MEANING`: decoder [1, 3]).** The per-thread
