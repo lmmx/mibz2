@@ -202,11 +202,99 @@ variants-20261028T013629Z.
 
   The lever is how many decodes are live at once.
 
+## 9. Block size: the knee follows the live T-vectors, until the scanner binds
+
+`just bench-blocks`: blocks-20261028T015837Z, quiet, after a reboot.
+
+The corpus's decoded bytes were recompressed with `lbzip2 -1/-3/-6/-9`, and each file
+decoded to the same 209,700,196 bytes. The runs used 2-10 workers, 6 interleaved rounds
+and one run per round. Each run is short, 0.12-0.33 s, and per-thread CPU comes in 10 ms
+ticks, so the thread splits are coarse.
+
+Pre-registered (#39):
+- **Capacity:** the best worker count moves up as the blocks shrink, as about
+  6.5 MB / T-vector: 16, 5, 3 and 2 workers, capped by the cores.
+- **Queueing past the LLC:** it stays near 4.
+- **Both:** it moves less than inversely.
+
+**Measured:**
+
+| level | T-vector | compressed | blocks (est.) | 2 | 4 | 6 | 8 | 10 | best |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| -9 | 3.6 MB | 11.86 MB | ≈233 | 707 | **1026** | 889 | 698 | 645 | 4 |
+| -6 | 2.4 MB | 12.64 MB | ≈350 | 687 | 1156 | **1327** | 1013 | 931 | 6 |
+| -3 | 1.2 MB | 14.42 MB | ≈700 | 673 | 1230 | 1654 | **1729** | 1604 | 6-8 |
+| -1 | 0.4 MB | 19.03 MB | ≈2,100 | 608 | 1207 | **1464** | 1457 | 1458 | 6-10 |
+
+The values are MB/s medians. The block counts are 210 MB divided by the block size, not
+counted.
+
+- **The best worker count moves up as the blocks shrink: 4, 6, 6-8, then a plateau.**
+  - The neighbours are resolved on the per-round paired ratios:
+    - at -9, 4 workers beat 6 by 1.15× (1.12-1.18);
+    - at -6, 6 beat 8 by 1.30× (1.21-1.39);
+    - at -3, 6 against 8 is unresolved (1.03×, 0.84-1.26);
+    - at -1, 6, 8 and 10 tie (within ±4%).
+  - So the knee isn't fixed, and the queueing-only reading is out.
+- **From -9 to -6, the knee moves inversely with the block size**, within the grid's
+  2-worker resolution. The blocks are 1.5× smaller and the knee 1.5× higher.
+  - Both knees sit at the same aggregate T-vector, 4 × 3.6 = 6 × 2.4 = 14.4 MB, about
+    0.7 of the 20 MB L3.
+  - The registered constant was wrong by about 2.2×. 6.5 MB was the fitted C of the hit
+    share C/W, not the aggregate where adding a worker stops paying.
+  - Taken alone, the move fits capacity better than "both".
+- **The cost of each block's work, the most direct evidence.** Worker CPU-seconds for the
+  whole decode, from 4 to 10 workers:
+
+  | level | 4 workers | 10 workers | ratio |
+  |---|--:|--:|--:|
+  | -9 | 0.64 | 2.46 | ×3.9 |
+  | -6 | 0.48 | 1.53 | ×3.2 |
+  | -3 | 0.48 | 0.56 | ×1.17 |
+  | -1 | 0.52 | 0.42 | flat |
+
+  - Per-block overheads (tables, headers, setup) don't depend on how many workers run, so
+    they can't produce this. The inflation is the product of concurrency and block size,
+    which is what a shared-cache footprint predicts.
+  - The confounds: smaller blocks also change the number of blocks, the Huffman tables,
+    the ratio and the run structure, so this supports the working-set reading without
+    proving it alone.
+- **Early warning on few cores.** At -9, total CPU rises 1.36× from 2 to 4 workers (worker
+  CPU 1.48×), while throughput still rises 1.45×. At -1 the same step costs 1.01×.
+  - The CPU per byte at a few workers already separated the big-block case, before the
+    knee. CI reports CPU against the base at 1 and 4 threads, but not CPU per byte against
+    the arm's own lower thread count.
+  - On CI's runner, 4 threads are 2 cores with SMT (`2026-10-27-four-thread-ceiling.md`).
+    The SMT penalty and cache sharing are confounded there.
+- **Smaller blocks cost more at low concurrency and win at high concurrency.**
+  - At 2 workers -9 is fastest (707 MB/s against 608 at -1). The scanner's CPU rises with
+    the compressed bytes and the block count: 0.05 s at -9, 0.12 s at -1.
+  - From 4 workers up, every smaller level beats -9. The best peak is -3's: 1654-1729 MB/s,
+    1.6-1.7× -9's best.
+  - Smaller blocks don't lose at every worker count. The locality gain outweighs the
+    per-block overheads from 4 workers up.
+- **The -1 plateau (inference):**
+  - workers are busy 29-46% of the wall at 6-10;
+  - the serial scanner uses 0.09 s of the 0.143 s wall, and startup and the last block's
+    decode take most of the rest.
+
+  This is consistent with the scanner bound #10 describes. It isn't shown. Not reaching
+  the predicted 16 workers doesn't falsify capacity: the grid stops at 10, and the scanner
+  caps first.
+- **Now:**
+  - capacity is the first-order mechanism of the knee;
+  - the knee sits at an aggregate live T-vector of about 0.7 × L3 on this machine;
+  - queueing past the LLC remains what the counters show beyond it (section 8);
+  - per-worker footprint is a real lever: a decoder with a -3-sized hot set on -9 data
+    would have room for about 1.6× at the knee, an upper bound, since the other block
+    effects come with it.
+
 ## Decisions
 
 - **The worker count is the first lever** (lmmx/mibz2#65). A principled default to test:
-  workers = min(physical cores, L3 / per-worker hot set). Here that's 20 MB / about 4 MB ≈
-  4-5, the measured optimum. On this machine mibz2 at 4 workers is 2.1× its
+  workers = min(physical cores, k × L3 / (4 B × the stream header's block size)), with k
+  ≈ 0.7 fitted here (section 9). That gives 4 at -9 and 6 at -6, the measured optima.
+  A scanner cap sits above it for small blocks. On this machine mibz2 at 4 workers is 2.1× its
   20-worker throughput, and no decoder variant tested comes near it at more workers.
   wikidata-pq decodes on every core by default (`WIKIDATA_BZ2_THREADS`).
   - A cap is the baseline. Autodetect is a candidate beside it, with two-sided signals:
@@ -227,7 +315,8 @@ variants-20261028T013629Z.
   cost per worker it was measured to carry.
 - **#10 stays closed.**
 - **Left open:**
-  - capacity against compulsory-traffic queueing, which the same content recompressed at
-    smaller block sizes would separate (release dumps are -9, so that test explains and
-    doesn't remedy);
+  - the per-worker footprint lever (section 9). #42's move structure, at 0.6-1.1 B/row,
+    would hold a -9 block in a -3 block's footprint or less. Its risk is unchanged:
+    instructions per step. If it's ever revisited, measure it at 8-10 workers, not only
+    1-4. It stays closed until then.
   - the plain-gap slow runs' mechanism.
