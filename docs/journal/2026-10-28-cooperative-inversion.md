@@ -438,3 +438,224 @@ not read.
   inversion isn't expected to help its split (premonition 1).
 - The cooperative pilot's verdict is the workstation's.
 - No decoder change until it passes §5.
+- **2026-10-28, after the discovery run (§7):** the 4x2 gate passes in discovery; 3x3 is
+  nominated beside it. Both are confirmed alone against p4 (§8.1) before anything else. The
+  pilot's code stays frozen at c2620b8 for the confirmation, and production is untouched.
+
+## 7. The workstation's discovery run (measured, c2620b8, 2026-10-28T23:39:45Z)
+
+The raw report and its rounds are kept in
+[`2026-10-28-cooperative-inversion/results/`](2026-10-28-cooperative-inversion/results/).
+The analysis below is [`analyse.py`](2026-10-28-cooperative-inversion/analyse.py) run on
+the JSONL. The discovery grid nominates; it doesn't confirm (§5, "Two stages").
+
+**The run:**
+- the i9-10900K, CPUs 0–9 (one a physical core), load 1.51 at the start;
+- 19 arms × 38 rounds = 722 records, none missing;
+- every thread was seen on its CPU in every round (0 misplaced);
+- every arm's every block passed its hash in the untimed check round;
+- the T-vector phase only (build + walk) on the 431 Wikidata blocks (209.7 MB of BWT).
+
+### 7.1 The gate and the nominee
+
+Paired against p4 in the same round. Geometric means of the ratio, the t-interval, and a
+block bootstrap (blocks of 4 rounds) as a check on serial correlation:
+
+| arm | cores | live tables | vs p4 | 95% (t) | 95% (block bootstrap) | worst round | rounds > 1.10 |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| 4x2 (pre-registered) | 8 | 4 | 1.226 | 1.214–1.238 | 1.211–1.239 | 1.129 | 38/38 |
+| 3x3 (best of ours) | 9 | 3 | 1.354 | 1.344–1.364 | 1.342–1.367 | 1.277 | 38/38 |
+| s3x3 (libsais, reference) | 9 | 3 | 1.629 | 1.581–1.679 | 1.574–1.681 | 1.022 | 37/38 |
+| s4x1 (libsais, 4 independent) | 4 | 4 | 1.083 | 1.074–1.093 | 1.071–1.096 | 0.999 | 10/38 |
+| 5x2 | 10 | 5 | 1.046 | 1.033–1.058 | 1.032–1.060 | 0.962 | |
+| p8 | 8 | 8 | 0.469 | 0.465–0.474 | | 0.436 | |
+
+In MB/s (medians): p4 1412, 4x2 1736, 3x3 1912, s3x3 2356, p8 662, p10 561.
+
+- **The pre-registered gate's discovery stage passes:** 4x2 is 1.23 × p4, above 1.10 in
+  every round. That is above p8 (×2.61 at equal cores) and above p4: the peak moved.
+- **3x3 is better again:** 1.104 × 4x2 paired (1.096–1.113), beating it in 38/38 rounds.
+  Being the best of about 19 arms, it's biased upwards, so it is confirmed alone (§8.1).
+
+**Predictions (§5):**
+- **Met:**
+  - p6–p10 below p4 (0.71, 0.47, 0.40): the knee reproduced;
+  - 4x1 at 0.865, inside 0.8–0.9;
+  - 4x2 above p8, and at least 1.1 × p4;
+  - 4x2 above 4x1@1024, by ×1.445: the second core buys it, the finer cut doesn't (4x1@1024
+    is 0.98 of 4x1);
+  - w4x2 below 4x2 (×1.08), so the parallel build helps here.
+- **Failed:** 5x2 at or above 4x2. It's 0.853 of it. Five tables (18 MB) is 0.9 of the L3.
+- **Mixed:** the libsais arms at or above ours. s3x3 and s4x1 are above; s4x2 (1.155)
+  and s5x2 (0.912) are below 4x2 and 5x2.
+
+### 7.2 Run order, drift and correlation
+
+- **Drift is in the denominator.** p4's median fell 2.1% from the first half of the run to
+  the second (1423 → 1394 MB/s). 3x3's held (1912 → 1910), and 4x2's rose 1.2%. So the
+  ratios' rise between halves (4x2 1.206 → 1.247, 3x3 1.340 → 1.368, s3x3 1.578 → 1.682)
+  is mostly p4 slowing. Every arm's ratio has a small upward trend, +0.2–1.5% per 10 rounds
+  (s3x3 +3.0%). That's p4 drifting, not the cooperative arms improving. Its cause isn't
+  measured; thermal or turbo budget is a hypothesis.
+- **Little serial correlation.** The paired log-ratios' lag-1 autocorrelation is −0.24 to
+  +0.18. The block bootstrap's and an AR(1)-widened interval differ from the t-interval
+  by at most 0.003 for ours, 0.01 for s3x3.
+- **No position effect.** Regressing each ratio on the arm's slot relative to p4's in the
+  round order gives at most 0.0026 in log per slot.
+- The drift is an order of magnitude below the gains. A two-arm confirmation's order
+  (AB, BA, BA, AB, ...) cancels a linear drift every 4 rounds.
+
+### 7.3 Where 3x3's time goes: the walk wins, the build is now 42%
+
+The phase throughputs add as times (1/build + 1/walk reproduces each arm's total within
+0.5%). Each phase is MB/s of output over the wall spent in it:
+
+| arm | build MB/s | walk MB/s | walk vs p4's walk | build share of the time |
+|---|--:|--:|--:|--:|
+| p4 | 5390 | 1927 | 1.00 | 26% |
+| 4x2 | 4148 | 3007 | 1.56 | 42% |
+| w4x2 | 3627 | 2905 | 1.51 | 44% |
+| 3x3 | 4511 | 3332 | 1.73 | 42% |
+| w3x3 | 2914 | 3092 | 1.61 | 51% |
+| 5x2 | 3734 | 2452 | 1.28 | 40% |
+
+- **The shared walk is the win.** At 3x3 it runs at 1.73 × p4's walk.
+- **The parallel build helps, but is the next limit.** 3x3's build, on 9 cores, is 0.84 of
+  p4's on 4. Building on one core (w3x3) costs 1.28× in total. If 3x3's build ran at p4's
+  5390 MB/s, 3x3 would be about 2060 MB/s, 1.46 × p4. That's a model, from the additive
+  times above.
+- **Coordination stays small.** The helpers' last start plus the threads' end spread is
+  about 4% of a block's walk at 4x2 and 3x3 (as on the VM). It's 10% and 20% in the w
+  arms, whose helpers wait out the serial build.
+- **Balance.** The busiest thread's bytes over the mean are 1.31 (4x2) and 1.36 (3x3). The
+  imbalance is real but bounded by the 512 segments a thread; it costs less than the
+  build.
+
+### 7.4 What the grid says about the mechanism, before counters
+
+Three contrasts at a fixed footprint or a fixed core count:
+- **Footprint fixed at 4 tables, cores 4 → 8:** 4x1 → 4x2 is ×1.42.
+- **Cores fixed at 8, tables 8 → 4:** p8 → 4x2 is ×2.61.
+- **Neighbours:**
+  - 4x2 → 3x3 (one more core, one fewer table) is ×1.10;
+  - 4x2 → 5x2 (two more cores, one more table) is ×0.85.
+
+So above about 4 live tables (0.7 of the L3) the footprint dominates the core count. Below
+it, extra cores on the same tables pay. That's what the capacity reading predicts.
+
+It doesn't separate §5's two mechanisms, fewer misses from residency against more misses
+overlapped. The ×1.42 at a fixed footprint is consistent with either, so the counters
+decide (§8.2).
+
+### 7.5 libsais: the gap is its kernel, not its cooperation
+
+- **Same lift from cooperating:**
+  - over each implementation's own 4 independent workers, 3x3 / 4x1 = 1.565 and
+    s3x3 / s4x1 = 1.504;
+  - cooperating lifts the two by about the same factor.
+- **Different kernels:**
+  - libsais's kernel at 4 independent workers is 1.083 × production's (s4x1);
+  - our cooperative kernel is 0.865 × production's (4x1).
+  - 1.083 / 0.865 = 1.25, which accounts for the s3x3 / 3x3 ratio of 1.20.
+- **So the next gain on our side is the kernel, which the §5 promotion step already
+  requires** (4x1 at least 0.97 × p4). If cooperating's lift held while the kernel reached
+  parity, 3x3 would project to about 1.52 × p4. That's a hypothesis: it assumes the lift is
+  multiplicative.
+- **The pair walk's reopening condition (§5b.1) has partly fired.** libsais's own ψ² walk
+  beats production at 4 independent workers on this machine, 37/38 rounds. That's the
+  opposite sign to our port on CI's 2-core runners (+40.6% slower). It doesn't yet show
+  the 8–10 worker regime that §5b.1 names. Its run is already written there.
+- **s3x3's caveats:**
+  - Its build is inside its walk, so there's no attribution.
+  - It runs on OpenMP.
+  - One round (13) fell to 1430 MB/s, with one block group finishing 13 ms before the
+    others. That's a stall in one OpenMP team. Without it the worst round is 1.459.
+  - Its interval is three times ours.
+
+## 8. Next, in order (pre-registered before any of them runs)
+
+### 8.1 Confirmation (the quiet workstation, the pilot at c2620b8)
+
+Two separate two-arm runs, one after the other, nothing else running:
+
+    bash bench/coop.sh --arms p4,4x2 --rounds 20
+    bash bench/coop.sh --arms p4,3x3 --rounds 20
+
+- **The rule for each, from §5:**
+  - the paired geometric mean is at least 1.10;
+  - the 95% interval's lower bound is above 1.0;
+  - the arm beats p4 in all 20 rounds.
+- **Analysis:** `python3 docs/journal/2026-10-28-cooperative-inversion/analyse.py
+  coop-<time>.jsonl`, the same script as §7. It reports the t-interval, the block bootstrap
+  and the halves.
+- **4x2's run decides the pre-registered hypothesis. 3x3's validates the nominee.**
+- **libsais's s3x3 gets its own exploratory run only after both:**
+  `bash bench/coop.sh --arms p4,s3x3 --rounds 20`, then §5b.1's `p4,p8,p10,s4x1,s8x1,s10x1`.
+  Neither is part of the gate.
+
+### 8.2 If confirmed: which mechanism (hardware counters)
+
+- **No new kernel code.** Each arm is run alone under `perf stat`, pinned as in the grid,
+  as `grid … 1 ARM` and `grid … 21 ARM`. The difference of the counts is 20 timed rounds,
+  without the setup and the check round.
+- **Events:** bench-session's pairs, each pair in its own pass (100% coverage), and the
+  memory controller's reads and writes.
+- **Arms:** p4, p8, 4x1, 4x2, 3x3.
+- **Per KB of output:**
+  - the demand L3 hit share;
+  - L3-missing demand reads;
+  - reads in flight (outstanding over cycles, summed over cores);
+  - occupancy per L3-missing read;
+  - DRAM bytes read and written.
+- **Predictions:**
+  - **Residency:** 4x2's and 3x3's hit share is at least p4's (0.76 in §8 of the workstation
+    entry) and well above p8's. L3-missing reads per KB are at or below p4's. The DRAM
+    write bytes per output byte return to p4's level.
+  - **Overlap:** the hit share stays near p4's or lower, while the reads in flight
+    machine-wide are about 2 × p4's, at no lower occupancy per miss.
+  - **Both:** each reading leaves its mark, and the design budgets both the live tables
+    and the lanes.
+- **What it decides:** whether the scheduler is budgeted by tables against the L3
+  (residency) or by lanes per block (overlap), §5's last paragraph. The script is a small
+  research addition, written after the confirmation, not before.
+
+### 8.3 Then: the kernel and the build, still in the harness
+
+- 4x1 to at least 0.97 × p4, the promotion's parity condition. libsais's kernel shows
+  there's 25% to find (§7.5).
+- The build to near p4's per-byte cost. It's 42% of 3x3's time (§7.3).
+- Each measured in the grid against p4, as now.
+
+### 8.4 Then: the decoder A/B (inversion phase ≠ end to end)
+
+The grid measures the T-vector phase only. The decoder adds the serial scanner, MTF + RLE2,
+RLE1, the CRC, segment assembly and the ordered output.
+
+- **A model, not a measurement:**
+  - the decoder at 4 workers ran at 1019 MB/s on the workstation (§8 of the workstation
+    entry, an older build and session);
+  - p4's T-vector phase runs at 1412 here;
+  - if the rest costs the same per byte and doesn't contend, 3x3's phase would put the
+    decoder at about 1.23 × its 4-worker figure, not 1.35 ×.
+- **Premonitions for the integration (hypotheses):**
+  - **The per-block serial stages inside a team.** MTF + RLE2 and the CRC run on one thread
+    a block. In a team of 3, two cores idle through them unless the team overlaps the next
+    block's MTF with this block's walk, or idle helpers take other work.
+  - **Core budget.** 3x3 uses 9 of 10 physical cores, which leaves one for the scanner and
+    the writer, or their SMT siblings.
+  - **Keep production's path.** At 4 or fewer cores the decoder runs today's code: k = 1 is
+    production's walk, not the cooperative kernel at k = 1, which is 0.865 × it. Teams start
+    only above the knee.
+  - **Ownership.** The shared table's handoffs need the segment oracle, fuzzing and Miri on
+    their new ownership (§5, promotion step 2).
+- **The A/B:**
+  - **The workstation, at 4, 6, 8 and 10 cores, paired rounds.** Production at its best
+    (4 workers) against the team decoder at its best. Wall of `-dc` to /dev/null and to a
+    file, CPU-seconds, peak RSS, byte-identical output.
+  - **CI's 2-core runners and wikidata-pq's 4-core bench, for non-inferiority.** Below the
+    knee the team path is off by construction, so CI can't show the gain.
+  - The gain lives only on machines with more than 4 cores, and the workstation is where
+    it's measured. That's a known gap in "the CI bench is the authority", and it's stated in
+    the PR when one exists.
+- **No production merge** until the counters (§8.2) say why and the decoder A/B says how
+  much survives.
