@@ -8,7 +8,8 @@
 //! ```text
 //! coop block FILE.bz2 [PASSES] [K,...]     one block at a time on k cores (default 1,2,3,4)
 //! coop grid FILE.bz2 [ROUNDS] [ARM,...]    N blocks at once on k cores each: ARM is NxK
-//!                                          (cooperative), pNxK (N production workers; K 1)
+//!                                          (cooperative), wNxK (the same walk, the build
+//!                                          on one core), pNxK (N production workers; K 1)
 //!                                          or sNxK (libsais, with --cfg libsais)
 //! ```
 //!
@@ -35,6 +36,9 @@
 //! each inverting every Nth block in turn on its own k threads, timed from a common start
 //! to the last block's end: the arm's throughput in decoded bytes a second. The arms run
 //! in an order rotated and reversed by the round. Each block's output is checked by its hash.
+//! Each arm's build and walk are timed apart too, as phase throughputs (the bytes over a
+//! worker's seconds in the phase), so a slow build and an ineffective walk are told apart;
+//! with COOP_JSONL set, every round's figures are appended to that file.
 //! Run it under `taskset` with one CPU of each physical core, so that N × k threads are on
 //! N × k cores.
 
@@ -485,7 +489,9 @@ fn fnv(b: &[u8]) -> u64 {
 /// An inversion method, kept by one block worker
 enum Inv {
     Prod(TVector, SegScratch),
-    Coop(Pool, Box<Coop>),
+    /// the cooperative walk on the first pool; the build on it too, or on the second (one
+    /// core: `w` arms, so a slow parallel build can't hide what the shared walk does)
+    Coop(Pool, Box<Coop>, Option<Pool>),
     #[cfg(libsais)]
     Sais(*mut std::ffi::c_void, Vec<u8>, Vec<i32>, Vec<i32>),
 }
@@ -502,7 +508,8 @@ impl Inv {
                 vec![],
                 vec![],
             ),
-            _ => Inv::Coop(Pool::new(k), Box::default()),
+            'w' => Inv::Coop(Pool::new(k), Box::default(), Some(Pool::new(1))),
+            _ => Inv::Coop(Pool::new(k), Box::default(), None),
         }
     }
 
@@ -516,8 +523,8 @@ impl Inv {
                 walk_segments_room(tv, b.orig_ptr, out, seg);
                 (m, s.elapsed().as_secs_f64() - m)
             }
-            Inv::Coop(pool, c) => {
-                coop_build(&b.ll, &b.counts, pool, c);
+            Inv::Coop(pool, c, one) => {
+                coop_build(&b.ll, &b.counts, one.as_ref().unwrap_or(pool), c);
                 let m = s.elapsed().as_secs_f64();
                 coop_walk(b.orig_ptr, pool, c, out);
                 (m, s.elapsed().as_secs_f64() - m)
@@ -634,6 +641,7 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String]) {
         let (kind, rest) = match s.as_bytes()[0] {
             b'p' => ('p', &s[1..]),
             b's' => ('s', &s[1..]),
+            b'w' => ('w', &s[1..]),
             _ => ('c', s),
         };
         let (n, k) = rest.split_once('x').unwrap_or((rest, "1"));
@@ -645,10 +653,24 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String]) {
         "s arms need --cfg libsais"
     );
     let mut results: Vec<Vec<f64>> = vec![Vec::new(); arms.len()];
-    for round in 0..rounds {
+    // each round's build and walk seconds, a block worker's (the workers' sum over N)
+    let mut phases: Vec<Vec<(f64, f64)>> = vec![Vec::new(); arms.len()];
+    let mut raw = std::env::var("COOP_JSONL").ok().map(|p| {
+        std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(p)
+            .unwrap()
+    });
+    // round -1 checks every arm's every block by its hash, untimed; the timed rounds after it
+    // run the same code without the hash, which the workers would otherwise share unevenly
+    // (an arm with fewer blocks in flight would hash on fewer threads)
+    for round in -1..rounds as i64 {
+        let check = round < 0;
+        let r = round.max(0) as usize;
         let mut order: Vec<usize> = (0..arms.len()).collect();
-        order.rotate_left(round % arms.len());
-        if (round / arms.len()) % 2 == 1 {
+        order.rotate_left(r % arms.len());
+        if (r / arms.len()) % 2 == 1 {
             order.reverse();
         }
         for &a in &order {
@@ -663,24 +685,47 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String]) {
                         let (go, want_hash) = (&go, &want_hash);
                         sc.spawn(move || {
                             let mut out = Vec::new();
+                            let (mut tb, mut tw) = (0.0, 0.0);
                             go.wait();
                             let mut i = w;
                             while i < bs.len() {
-                                inv.invert(&bs[i], &mut out);
-                                assert_eq!(fnv(&out), want_hash[i], "block {i} differs");
+                                let (b, w) = inv.invert(&bs[i], &mut out);
+                                (tb, tw) = (tb + b, tw + w);
+                                if check {
+                                    assert_eq!(fnv(&out), want_hash[i], "block {i} differs");
+                                }
                                 i += n;
                             }
+                            (tb, tw)
                         })
                     })
                     .collect();
                 go.wait();
                 let s = Instant::now();
+                let (mut tb, mut tw) = (0.0, 0.0);
                 for h in hs {
-                    h.join().unwrap();
+                    let (b, w) = h.join().unwrap();
+                    (tb, tw) = (tb + b, tw + w);
                 }
-                s.elapsed().as_secs_f64()
+                (s.elapsed().as_secs_f64(), tb / n as f64, tw / n as f64)
             });
+            let (wall, tb, tw) = wall;
+            if check {
+                eprintln!("checked {}: every block's output the room walk's", specs[a]);
+                continue;
+            }
             results[a].push(bytes as f64 / wall / 1e6);
+            phases[a].push((tb, tw));
+            if let Some(f) = raw.as_mut() {
+                use std::io::Write;
+                writeln!(
+                    f,
+                    r#"{{"round": {round}, "arm": "{}", "kind": "{kind}", "blocks_live": {n}, "cores_a_block": {k}, "wall_s": {wall:.6}, "mb_s": {:.3}, "build_s_a_worker": {tb:.6}, "walk_s_a_worker": {tw:.6}}}"#,
+                    specs[a],
+                    bytes as f64 / wall / 1e6
+                )
+                .unwrap();
+            }
             eprintln!(
                 "round {round} {}: {:.0} MB/s",
                 specs[a],
@@ -701,23 +746,39 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String]) {
         bytes as f64 / 1e6
     );
     println!(
-        "| arm | blocks live | cores | MB/s, median | vs {}, paired mean (min-max) |",
+        "| arm | blocks live | cores | MB/s, median | vs {0}, paired mean (min-max) | build MB/s | walk MB/s | walk vs {0}, paired mean |",
         specs[0]
     );
-    println!("|---|--:|--:|--:|--:|");
+    println!("|---|--:|--:|--:|--:|--:|--:|--:|");
+    // a phase's throughput: the bytes over a worker's seconds in it (each of the N workers
+    // inverts 1/N of the bytes, all at once), so arms of different N compare
     for (a, r) in results.iter().enumerate() {
-        let (kind, n, k) = arms[a];
+        let (_, n, k) = arms[a];
         let ratios: Vec<f64> = r.iter().zip(base).map(|(x, y)| x / y).collect();
         let mean = ratios.iter().sum::<f64>() / ratios.len() as f64;
         let (lo, hi) = ratios
             .iter()
             .fold((f64::INFINITY, 0f64), |(l, h), &x| (l.min(x), h.max(x)));
-        let _ = kind;
+        let mbs = |t: f64| bytes as f64 / t / 1e6;
+        let build: Vec<f64> = phases[a].iter().map(|p| mbs(p.0)).collect();
+        let walk: Vec<f64> = phases[a].iter().map(|p| mbs(p.1)).collect();
+        let wr: Vec<f64> = phases[a]
+            .iter()
+            .zip(&phases[0])
+            .map(|(p, q)| q.1 / p.1)
+            .collect();
         println!(
-            "| {} | {n} | {} | {:.0} | {mean:.3} ({lo:.3}-{hi:.3}) |",
+            "| {} | {n} | {} | {:.0} | {mean:.3} ({lo:.3}-{hi:.3}) | {} | {:.0} | {:.3} |",
             specs[a],
             n * k,
-            med(r)
+            med(r),
+            if arms[a].0 == 's' {
+                "(in walk)".to_string()
+            } else {
+                format!("{:.0}", med(&build))
+            },
+            med(&walk),
+            wr.iter().sum::<f64>() / wr.len() as f64
         );
     }
 }

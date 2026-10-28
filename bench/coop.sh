@@ -2,7 +2,8 @@
 # The knee pilot's cooperative inversion (examples/coop.rs, research only;
 # docs/journal/2026-10-28-cooperative-inversion.md): one block's T-vector built and walked
 # by k cores, and N blocks in flight on k cores each against N production workers, on one
-# CPU of each physical core. Writes coop-<UTC time>.md, the file to share.
+# CPU of each physical core. Writes coop-<UTC time>.md and its rounds, raw, in
+# coop-<UTC time>.jsonl: the files to share.
 #
 #   bash bench/coop.sh [--rounds R] [--arms p4,p8,4x2,...] [--no-libsais]
 #
@@ -54,12 +55,12 @@ bin=$target/release/examples/coop
 # at 4 x 1 (its cost against production's at the same footprint), and N x k with N blocks
 # live on N x k cores
 if [ -z "$arms" ]; then
-  arms="p4,p2,p6,p8,p10,4x1,2x2,3x2,4x2,5x2,3x3,2x4"
+  arms="p4,p2,p6,p8,p10,4x1,2x2,3x2,4x2,5x2,3x3,2x4,w4x2,w5x2,w3x3"
   [ "$libsais" = 1 ] && arms="$arms,s4x1,s4x2,s5x2,s3x3"
 fi
 fit=""
 for a in $(echo "$arms" | tr ',' ' '); do
-  s=${a#[ps]}; n=${s%x*}; k=1; [ "$s" != "$n" ] && k=${s#*x}
+  s=${a#[psw]}; n=${s%x*}; k=1; [ "$s" != "$n" ] && k=${s#*x}
   [ $((n * k)) -le "$cores" ] && fit="$fit,$a"
 done
 fit=${fit#,}
@@ -68,6 +69,7 @@ rounds=${rounds:-$((2 * n_arms))}
 ks="1,2,3,4"; [ "$cores" -lt 4 ] && ks="1,2"
 
 out=coop-$(date -u +%Y%m%dT%H%M%SZ).md
+export COOP_JSONL=${out%.md}.jsonl  # (every round of the grid, raw)
 {
   echo "# The cooperative inversion pilot ($(git rev-parse --short HEAD), $(date -u +%FT%TZ))"
   echo
@@ -83,4 +85,4 @@ out=coop-$(date -u +%Y%m%dT%H%M%SZ).md
   echo
   taskset -c "$cpus" "$bin" grid corpora/wikidata.bz2 "$rounds" "$fit"
 } 2> >(grep -v '^pass\|^round' >&2) | tee "$out"
-echo "wrote $out"
+echo "wrote $out and $COOP_JSONL"

@@ -142,7 +142,7 @@ sharing can only show its costs here. Its 4 vCPUs are shared, so a 4th spinning 
 unreliable: libsais also falls at 4 in some runs. What it validates is the harness and the
 kernel's costs.
 
-### Three negative findings on the way (each fixed in the harness)
+### Four negative findings on the way (each fixed in the harness)
 
 1. **A thread spawned a block, with fresh buffers:** 2 cores gave 1.05×, slower than 1
    when pinned to 2 CPUs. The spawn, the cross-thread frees and the page faults cost more
@@ -153,8 +153,13 @@ kernel's costs.
 3. **512 segments for k × 32 lanes:** 4 cores gave 1.08×. With only about 4 segments a
    lane, the walk waits on its tail's longest chains, as Helman–JáJá warn. At 16 a lane,
    the room walk's density, it scales.
+4. **The grid's output check inside its timing:** each block worker hashed its outputs as
+   it went. An arm with fewer blocks in flight did that hashing on fewer threads, which
+   penalised exactly the cooperative arms. The first grid figures (p4 647 MB/s on the VM)
+   were wrong by that much. The check now runs in an untimed pass over every arm before
+   the timed rounds (p4: 931 MB/s).
 
-### The harness's figures (`coop-20261028T120750Z.md`, 3 passes and 2 rounds; indicative)
+### The harness's figures (block: `coop-20261028T120750Z.md`, 3 passes; indicative)
 
 | one block on k cores | build ns/B | walk ns/B | vs prod |
 |---|--:|--:|--:|
@@ -173,13 +178,16 @@ kernel's costs.
 - **libsais's multi-threaded inversion reaches 1.76× its own one thread at 4.** A
   practitioner's version of the same idea scales on this machine.
 
-| grid: N blocks × k cores | MB/s | vs p2 |
-|---|--:|--:|
-| p2 (2 production workers) | 342 | 1.00 |
-| p4 | 700 | 2.06 |
-| 4x1 (the coop kernel, 4 blocks) | 578 | 1.70 |
-| 2x2 (2 blocks, 4 cores) | 381 | 1.08 |
-| s4x1 (libsais, 4 blocks) | 721 | 2.09 |
+Grid, `coop-20261028T130747Z.md` (4 rounds, the check out of the timing; indicative):
+
+| grid: N blocks × k cores | MB/s | vs p4, paired | walk vs p4, paired |
+|---|--:|--:|--:|
+| p4 (4 production workers) | 931 | 1.00 | 1.00 |
+| p2 | 490 | 0.53 | 0.54 |
+| 4x1 (the coop kernel, 4 blocks) | 796 | 0.85 | 0.85 |
+| 2x2 (2 blocks, 4 cores) | 532 | 0.58 | 0.64 |
+| w2x2 (the same, built on one core) | 497 | 0.51 | 0.59 |
+| s2x2 (libsais, 2 blocks × 2 threads) | 562 | 0.59 | (its build is in its walk) |
 
 With no capacity pressure, independent blocks win, as expected. This is the control for
 the workstation run: there, p4 is the peak and p6–p10 fall.
@@ -188,8 +196,10 @@ the workstation run: there, p4 is the peak and p6–p10 fall.
 
 Run on the quiet i9, with nothing else open (§1 of the workstation entry). It takes a
 few minutes. The grid's arms by default are p2, p4, p6, p8, p10, 4x1, 2x2, 3x2, 4x2, 5x2,
-3x3 and 2x4; with libsais, also s4x1, s4x2, s5x2 and s3x3. There are 2 × arms rounds,
-rotated and reversed, paired against p4.
+3x3 and 2x4; w4x2, w5x2 and w3x3, the same walks with the table built on one core; and
+with libsais, also s4x1, s4x2, s5x2 and s3x3. There are 2 × arms rounds, rotated and
+reversed, paired against p4. Each arm's build and walk are reported apart, as phase
+throughputs, and every round's figures are kept raw (`coop-<UTC>.jsonl`).
 
 **Predictions if capacity is the knee's mechanism:**
 - p6–p10 below p4, reproducing the knee;
@@ -199,9 +209,22 @@ rotated and reversed, paired against p4.
 - 5x2 at or above 4x2;
 - the libsais arms at or above ours.
 
+**The decisive comparison is 4x2 (and its best neighbour) against p4,** today's best. 4x2
+against p8 says whether sharing relieves the contention; only beating p4 says the peak
+moved.
+
+**Attributing a miss before applying the rule.** The parallel build is known not to scale
+(§4), so a 4x2 that loses doesn't by itself falsify the shared table:
+- if w4x2 (the build on one core) beats 4x2, the parallel build is losing it;
+- if the walk's phase throughput at 4x2 beats p4's while the arm's total doesn't, the walk
+  works and the build or the serial work around it is the bottleneck.
+
+Either way, the next step is the build, not the idea.
+
 **What falsifies it as a lever:**
-- 4x2 ≤ p4 in every round means that sharing a table across cores costs more than the
-  footprint saves, even under pressure;
+- 4x2 and w4x2 both ≤ p4 in every round, **and** the walk's own phase throughput at 4x2 no
+  better than p4's, means that sharing a table across cores costs more than the footprint
+  saves, even under pressure;
 - then cooperative inversion closes, and the footprint lever passes to the table's
   representation (`2026-10-28-workstation-scaling.md`, "Left open") or to nothing.
 
