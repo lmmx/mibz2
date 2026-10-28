@@ -24,6 +24,7 @@ on:
   pull_request:
     paths:
       - src/trace.rs
+      - docs/ledger.md
       - examples/occupancy.rs
       - bench/occupancy.sh
       - .just/bench.just
@@ -63,6 +64,11 @@ jobs:
         with:
           path: windows
           key: bench-wikidata-${{ hashFiles('bench/wikidata.json') }}
+
+      # The instrument's own tests: the footprint ledger against the buffers' capacities
+      # (src/trace.rs), and the queue summary's definitions on a hand-built trace
+      - name: Instrument tests
+        run: cargo test --release --features trace --lib --example occupancy
 
       - name: Occupancy
         env:

@@ -22,6 +22,13 @@
 /// into `out` (cleared). Its buffers are its own, kept from block to block.
 pub trait InverseBwt: Default + Send {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>);
+
+    /// Its buffers' sizes, for the footprint ledger (src/trace.rs): tests and the `trace`
+    /// feature only
+    #[cfg(any(test, feature = "trace"))]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        Vec::new()
+    }
 }
 
 /// The plain walk: one chain of dependent loads (lbzip2's and libbzip2's)
@@ -34,6 +41,11 @@ impl InverseBwt for Plain {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         build(ll, counts, &mut self.tt);
         walk(&self.tt, orig_ptr, out);
+    }
+
+    #[cfg(any(test, feature = "trace"))]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        vec![crate::trace::Buffer::of("tt", &self.tt.0)]
     }
 }
 
@@ -49,6 +61,27 @@ impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         build(ll, counts, &mut self.tt);
         walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+    }
+
+    #[cfg(any(test, feature = "trace"))]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        use crate::trace::Buffer;
+        let s = &self.seg;
+        let mut v = vec![Buffer::of("tt", &self.tt.0)];
+        if s.bufs.capacity() > 0 {
+            v.push(Buffer {
+                name: "seg.bufs",
+                len: s.bufs.iter().map(Vec::len).sum(),
+                cap: s.bufs.iter().map(Vec::capacity).sum(),
+            });
+            v.push(Buffer::of("seg.bufs.outer", &s.bufs));
+            v.push(Buffer::of("seg.starts", &s.starts));
+            v.push(Buffer::of("seg.next", &s.next));
+        }
+        if s.bitmap.capacity() > 0 {
+            v.push(Buffer::of("seg.bitmap", &s.bitmap));
+        }
+        v
     }
 }
 
@@ -146,7 +179,7 @@ const SEGMENTS: usize = 256;
 /// more of them in flight: 32 lanes and 512 segments were the best of 8-32 lanes and
 /// 256-1024 segments on Wikidata's blocks, at one walk and at four at once
 const FLAGGED_LANES: usize = 32;
-const FLAGGED_SEGMENTS: usize = 512;
+pub(crate) const FLAGGED_SEGMENTS: usize = 512;
 const PREFETCH: u8 = PF_L1;
 /// The walks' prefetch (their `PF`): none, or a hint into L1 (`prefetcht0`, `prfm
 /// pldl1keep`), into L2 (`prefetcht1`, `prfm pldl2keep`), or non-temporal (`prefetchnta`,
@@ -157,7 +190,7 @@ pub const PF_L2: u8 = 2;
 pub const PF_NTA: u8 = 3;
 /// Blocks shorter than this are walked plainly (the segments' bookkeeping would cost more
 /// than the latency they hide; such blocks are only a stream's last)
-const MIN_SEGMENTED: usize = 1 << 16;
+pub(crate) const MIN_SEGMENTED: usize = 1 << 16;
 
 /// The segment walk's buffers, kept from block to block
 #[derive(Default)]
