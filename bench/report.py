@@ -2,7 +2,7 @@
 model, the pull request comment, and the record kept for a master commit.
 
     report.py summary RUNS.jsonl --corpora DIR --mode pr|master|dispatch --head SHA
-                      [--base SHA] [--date ISO] [--run URL] [--stages STAGES.jsonl]
+                      [--base SHA] [--date ISO] [--run URL] [--stages STAGES.jsonl] [--env ENV.json]
                       --out RESULT.json --md OUT.md
     report.py record STORE RESULT.json RUNS.jsonl
 
@@ -24,6 +24,15 @@ the toolchain) and its Markdown:
   byte of output at the runner's reported clock (and ns a byte), for each build; on a
   pull request, head over base per stage, paired by round as above.
 - **Modelled, not measured:** a whole dump's decode (`model`), from the Wikidata blocks.
+- **Resources** (`resources`, `assessment`), per corpus for each arm: CPU per byte at each
+  thread count; its amplification, CPU per byte at N threads over the same arm's at the
+  fewest, paired by round; parallel efficiency (speedup over N); each arm's best thread
+  count; the threads' mean run-queue wait (time runnable, not running, over the wall) and
+  the CPU the per-thread split leaves unattributed. On a pull request, head's
+  amplification over base's, best against best, and a short **assessment**: what moved
+  beyond noise among four pre-declared comparisons, whether the measurement could
+  answer, and when a change needs a machine with more cores. The conditions (`--env`,
+  `ab env`): the runner's cores, CPU quota, throttling and the run-queue counter.
 
 `record` adds a master commit's result to the results store (the `bench-results`
 branch): runs/<commit>.json, raw/<commit>.jsonl and a line of records.jsonl.
@@ -48,12 +57,14 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "2.1.1"
+BENCH = "3.0.0"
 # Each family of figures, and the major versions that set or redefined its meaning
 # (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus
-# and thread count) since 1.0.0; the stage table's since 2.0.0 (1.2.0's measured warm
-# repeats). A new major that redefines a family adds itself to that family's list.
-MEANING = {"decoder": [1], "stages": [1, 2]}
+# and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler, inside
+# each run's process, every 10 ms instead of 50: its CPU is the run's); the stage
+# table's since 2.0.0 (1.2.0's measured warm repeats). A new major that redefines a family
+# adds itself to that family's list.
+MEANING = {"decoder": [1, 3], "stages": [1, 2]}
 
 
 def meaning_major(family: str, bench: str) -> int:
@@ -252,6 +263,9 @@ def split_cpu(run: dict) -> dict | None:
         "scan": t["mibz2-scan"],
         "workers": workers,
         "other": sum(t.values()) - t["mibz2-scan"] - workers,
+        # the process's CPU (the kernel's total) that no sampled thread holds: threads
+        # that ended between samples, below each thread's last tick, the sampler's own
+        "unattributed": run["cpu"] - sum(t.values()),
     }
 
 
@@ -338,6 +352,197 @@ def figures(runs: list[dict], ref: str, mhz: float | None, pr: bool) -> dict:
             "same_bytes": len(hashes) == 1 and not errors,
         }
     return out
+
+
+# ---------------------------------------------------------------------------------------
+# Resources: CPU per byte, scaling, and the conditions
+
+
+def accounting(runs: list[dict]) -> list[str]:
+    """The CPU accounting's own check, on this build's runs (an arm without `@`, whose
+    child is this harness): the per-thread split never holds more than the process's
+    total (getrusage over every thread), beyond a tick a thread. More would be a thread
+    counted twice, or a total that misses threads: broken instrumentation, not a figure."""
+    bad = []
+    for r in runs:
+        if "@" in r["arm"] or r.get("err") or "runq_s" not in r:
+            continue
+        split = sum(threads_of(r).values())
+        if split > r["cpu"] + 0.01 * (r.get("threads_busy", 1) + 1):
+            bad.append(
+                f"{r['arm']} {r['corpus']} {r['threads']}t round {r['round']}: "
+                f"threads {split:.3f} s > total {r['cpu']:.3f} s"
+            )
+    return bad
+
+
+def resources(runs: list[dict], pr: bool) -> dict:
+    """Per corpus and arm (as shown), per thread count: CPU per byte, its amplification
+    over the arm's own fewest-thread runs, speedup and parallel efficiency, the CPUs the
+    runs had, the threads' mean run-queue wait and the split's unattributed CPU; and the
+    arm's best thread count by median wall. Each ratio is paired by round: the rounds'
+    ratios, their geometric mean and its 95% interval (`ratio_ci`)."""
+    by = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))  # corpus, arm, t, round
+    for r in runs:
+        if r.get("parallel") is False or r.get("err"):
+            continue
+        by[r["corpus"]][label(r["arm"], pr)][r["threads"]][r["round"]] = r
+    out = {}
+    for corpus, arms in sorted(by.items()):
+        for arm, ts in arms.items():
+            fewest = min(ts)
+            one = ts[fewest]
+            per = {}
+            for t, rounds in sorted(ts.items()):
+                ok = list(rounds.values())
+                med = lambda f: statistics.median([f(r) for r in ok])
+                cell = {
+                    "n": len(ok),
+                    "cpus": statistics.mode([r.get("cpus", "all" if t > 1 else "1") for r in ok]),
+                    "mb_s": round(ok[0]["out"] / 1e6 / med(lambda r: r["wall"]), 1),
+                    "cpu_ns_per_byte": round(med(lambda r: 1e9 * r["cpu"] / r["out"]), 3),
+                    "cpu_s_per_gib": round(med(lambda r: r["cpu"] / r["out"] * 2**30), 3),
+                }
+                if all("runq_s" in r for r in ok):
+                    cell["runq_threads"] = round(med(lambda r: r["runq_s"] / r["wall"]), 3)
+                if all(r.get("thread_cpu") for r in ok):
+                    cell["unattributed"] = round(
+                        med(lambda r: (r["cpu"] - sum(threads_of(r).values())) / r["cpu"]), 3
+                    )
+                thr = [r.get("throttled_n") for r in ok]
+                cell["throttled_runs"] = (
+                    sum(1 for x in thr if x) if all(x is not None for x in thr) else None
+                )
+                if t != fewest:
+                    ks = [k for k in rounds if k in one]
+                    cell["amplification"] = ratio_ci([rounds[k]["cpu"] / one[k]["cpu"] for k in ks])
+                    sp = ratio_ci([one[k]["wall"] / rounds[k]["wall"] for k in ks])
+                    cell["speedup"] = sp
+                    cell["efficiency"] = [round(x * fewest / t, 4) for x in sp] if sp else None
+                per[str(t)] = cell
+            walls = {t: statistics.median([r["wall"] for r in rs.values()]) for t, rs in ts.items()}
+            best = min(walls, key=walls.get)
+            out.setdefault(corpus, {})[arm] = {"fewest": fewest, "best": best, "threads": per}
+    return out
+
+
+def paired_resources(runs: list[dict], head: str, base: str) -> dict:
+    """On a pull request, per corpus: head's amplification over base's at each thread
+    count (each round's (head N / head fewest) / (base N / base fewest) CPU), and head's
+    best thread count against base's, best against best (each round's wall at head's
+    best over base's at base's best, the best chosen by median wall on the same runs)."""
+    by = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+    for r in runs:
+        if r.get("err") or r["arm"] not in (head, base):
+            continue
+        by[r["corpus"]][r["arm"]][r["threads"]][r["round"]] = r
+    out = {}
+    for corpus, arms in by.items():
+        if not {head, base} <= set(arms):
+            continue
+        h, b = arms[head], arms[base]
+        ts = sorted(set(h) & set(b))
+        if len(ts) < 2:
+            continue
+        f = ts[0]
+        amp = {}
+        for t in ts[1:]:
+            ks = [k for k in h[t] if k in b[t] and k in h[f] and k in b[f]]
+            amp[str(t)] = ratio_ci(
+                [(h[t][k]["cpu"] / h[f][k]["cpu"]) / (b[t][k]["cpu"] / b[f][k]["cpu"]) for k in ks]
+            )
+        med = lambda arm, t: statistics.median([r["wall"] for r in arm[t].values()])
+        bh, bb = min(ts, key=lambda t: med(h, t)), min(ts, key=lambda t: med(b, t))
+        ks = [k for k in h[bh] if k in b[bb]]
+        out[corpus] = {
+            "amplification_change": amp,
+            "best": {"head": bh, "base": bb},
+            "best_wall_ratio": ratio_ci([h[bh][k]["wall"] / b[bb][k]["wall"] for k in ks]),
+        }
+    return out
+
+
+def direction(r: list[float] | None) -> int:
+    """+1 where a ratio's interval lies above 1, −1 below, 0 where it holds 1 (or none)."""
+    return 0 if not r else 1 if r[1] > 1 else -1 if r[2] < 1 else 0
+
+
+def assessment(res: dict, corpus: str = "wikidata") -> dict | None:
+    """A pull request's resource verdict on `corpus`, from four comparisons declared here
+    in advance, each moved only where its 95% interval excludes no change:
+
+    - **speed:** head's best thread count against base's, best against best (wall);
+    - **CPU cost:** CPU per byte at the most threads (head over base);
+    - **contention sensitivity:** CPU amplification over the fewest threads, head's over
+      base's, at every other thread count (CI's 2-thread runs, one CPU a core, are the
+      measure free of SMT; its 4 share each core's two siblings);
+    - **memory:** peak RSS at the most threads.
+
+    Then whether the run could answer (parity, broken accounting, throttling), and
+    whether the change needs a machine with more cores: when the sensitivity rose, the
+    memory grew, or the change in wall at one thread and at the most point opposite ways.
+    """
+    pairs = (res.get("paired_resources") or {}).get(corpus)
+    figs = res["figures"].get(corpus)
+    if not pairs or not figs:
+        return None
+    n = str(max(res["threads"]))
+    one = str(min(res["threads"]))
+    h_n = figs.get(n, {}).get("arms", {}).get("head", {})
+    h_1 = figs.get(one, {}).get("arms", {}).get("head", {})
+    amp = pairs["amplification_change"]
+    signs = {
+        "speed": -direction(pairs["best_wall_ratio"]),  # +1: faster
+        "CPU cost": direction(h_n.get("cpu_ratio")),  # +1: more CPU a byte
+        "contention sensitivity": max((direction(v) for v in amp.values()), default=0)
+        or min((direction(v) for v in amp.values()), default=0),
+        "memory": direction(h_n.get("rss_ratio")),
+    }
+    better = [k for k in signs if (signs[k] > 0) == (k == "speed") and signs[k] != 0]
+    worse = [k for k in signs if signs[k] != 0 and k not in better]
+    why = []
+    if not res["parity"]:
+        why.append("the outputs differ (parity failed)")
+    if res.get("accounting"):
+        why.append(f"the CPU accounting failed its own check ({len(res['accounting'])} runs)")
+    throttled = [
+        f"{a} {t}t"
+        for a, ar in (res.get("resources", {}).get(corpus) or {}).items()
+        for t, c in ar["threads"].items()
+        if c.get("throttled_runs")
+    ]
+    if throttled:
+        why.append(f"the cgroup throttled runs ({', '.join(throttled)})")
+    w1, wn = direction(h_1.get("wall_ratio")), direction(h_n.get("wall_ratio"))
+    broader = []
+    if signs["contention sensitivity"] > 0:
+        broader.append("CPU amplification rose")
+    if signs["memory"] > 0:
+        broader.append("peak RSS grew")
+    if w1 and wn and w1 != wn:
+        broader.append(f"the wall moved one way at {one} thread and the other at {n}")
+    if why:
+        verdict = "Inconclusive: " + "; ".join(why) + "."
+    elif better and not worse:
+        verdict = f"Better ({', '.join(better)}), and no measure worse."
+    elif worse and not better:
+        verdict = f"Worse ({', '.join(worse)}), and no measure better."
+    elif better and worse:
+        verdict = (
+            f"A trade-off: better {', '.join(better)}; worse {', '.join(worse)}. "
+            "Neither build dominates: weigh it for the deployment (wikidata-pq's release)."
+        )
+    else:
+        verdict = "No change detected on the four measures."
+    return {
+        "corpus": corpus,
+        "signs": signs,
+        "better": better,
+        "worse": worse,
+        "inconclusive": why,
+        "broader_hardware": broader,
+        "verdict": verdict,
+    }
 
 
 # ---------------------------------------------------------------------------------------
@@ -625,6 +830,169 @@ def model_lines(models: dict[str, dict], n: int, pr: bool) -> list[str]:
     return out
 
 
+def ratio_x(r: list[float] | None) -> str:
+    """A ratio as a multiple with its interval: "1.62× (1.60–1.64)"."""
+    return f"{r[0]:.2f}× ({r[1]:.2f}–{r[2]:.2f})" if r else "–"
+
+
+def conditions(env: dict | None, res: dict) -> str:
+    """What the runner gave the runs, in a sentence: cores, quota, placement, throttling."""
+    if not env:
+        return "The runner's topology was not recorded (`ab env`)."
+    groups = " | ".join(env.get("core_cpus", []))
+    quota = env.get("cpu_quota")
+    two = next(
+        (
+            c["cpus"]
+            for a in (res.get("resources", {}).get("wikidata") or {}).values()
+            for t, c in a["threads"].items()
+            if t == "2"
+        ),
+        None,
+    )
+    parts = [
+        f"{env['cpus']} CPUs on {env['cores']} physical cores ({groups})",
+        f"a CPU quota of {quota:g} CPUs" if quota else "no CPU quota",
+        "the run-queue counter checked and counting"
+        if env.get("runq", {}).get("counts")
+        else "**the run-queue counter not counting** (its waits read as unavailable)",
+    ]
+    if two:
+        parts.append(
+            f"2-thread runs on CPUs {two}"
+            + (" (one CPU a core)" if two.count(",") == 1 and env["cores"] >= 2 else "")
+        )
+    if env["cores"] < env["cpus"]:
+        parts.append(f"{max(res['threads'])}-thread runs share cores' SMT siblings")
+    return "Conditions: " + "; ".join(parts) + "."
+
+
+def resources_lines(res: dict, pr: bool, corpus: str = "wikidata") -> list[str]:
+    """The resource table and, on a pull request, the assessment: one screen."""
+    rs = (res.get("resources") or {}).get(corpus)
+    if not rs:
+        return []
+    shown = [a for a in (["base", "head"] if pr else ["mibz2", "lbzip2", "pbz2"]) if a in rs]
+    if not shown:
+        return []
+    ts = sorted({int(t) for a in shown for t in rs[a]["threads"]})
+    out = ["", f"### Resources: CPU per byte and scaling, the `{corpus}` corpus", ""]
+    a = res.get("assessment")
+    if pr and a:
+        out.append(f"**Assessment:** {a['verdict']}")
+        if a["broader_hardware"]:
+            out.append(
+                f"**Needs a machine with more cores before a release:** {'; '.join(a['broader_hardware'])}. "
+                f"This runner has {res.get('env', {}).get('cores', '?')} physical cores; a change in CPU "
+                "amplification or in memory can grow with the cores (the 10-core workstation's knee: #39, #65)."
+            )
+        out.append("")
+    out += [
+        "**CPU per byte** is the process's CPU (every thread, user + sys) over the output. "
+        "**Amplification** is that at N threads over the same build's at "
+        f"{min(ts)}, paired by round: 1× is no extra CPU for the same bytes, and above it the work "
+        "costs more as threads are added (stalls, sharing, synchronisation; CPU counts a thread "
+        "stalled on memory as running). **Efficiency** is the speedup over N. **Run-queue** is the "
+        "threads' mean count runnable but not running.",
+        "",
+    ]
+    # (on master, the other decoders' amplification only: the control beside mibz2's, on
+    # the same runner and rounds)
+    full = lambda x: pr or x == "mibz2"
+    head = "| threads (CPUs) | " + " | ".join(
+        f"{x} MB/s | {x} CPU ns/B | {x} amplification | {x} efficiency"
+        if full(x)
+        else f"{x} amplification"
+        for x in shown
+    )
+    if pr and len(shown) == 2:
+        head += " | amplification, head over base"
+    out.append(head + " |")
+    out.append(
+        "|---|"
+        + "".join("--:|--:|--:|--:|" if full(x) else "--:|" for x in shown)
+        + ("--:|" if pr and len(shown) == 2 else "")
+    )
+    pairs = (res.get("paired_resources") or {}).get(corpus, {})
+    for t in ts:
+        cpus = next(
+            (rs[x]["threads"][str(t)]["cpus"] for x in shown if str(t) in rs[x]["threads"]), ""
+        )
+        row = [f"{t} ({cpus})"]
+        for x in shown:
+            c = rs[x]["threads"].get(str(t))
+            if not c:
+                row += ["–"] * (4 if full(x) else 1)
+                continue
+            eff = c.get("efficiency")
+            if not full(x):
+                row.append(ratio_x(c.get("amplification")) if "amplification" in c else "1")
+                continue
+            row += [
+                f"{c['mb_s']:,.0f}",
+                f"{c['cpu_ns_per_byte']:.2f}",
+                ratio_x(c.get("amplification")) if "amplification" in c else "1",
+                f"{100 * eff[0]:.0f}%" if eff else "–",
+            ]
+        if pr and len(shown) == 2:
+            row.append(
+                change(pairs.get("amplification_change", {}).get(str(t)))
+                .replace("**faster**", "**less**")
+                .replace("**slower**", "**more**")
+                if str(t) in pairs.get("amplification_change", {})
+                else ""
+            )
+        out.append("| " + " | ".join(row) + " |")
+    best = [
+        f"{x} at {rs[x]['best']} threads ({rs[x]['threads'][str(rs[x]['best'])]['mb_s']:,.0f} MB/s)"
+        for x in shown
+    ]
+    line = "**Best:** " + "; ".join(best)
+    if pr and pairs.get("best_wall_ratio"):
+        line += f"; head's best against base's, wall: {change(pairs['best_wall_ratio'])}"
+    out += ["", line + "."]
+    rq = [
+        f"{x} {t}t {c['runq_threads']:.2f}"
+        for x in shown
+        for t, c in rs[x]["threads"].items()
+        if c.get("runq_threads") is not None
+    ]
+    un = [
+        f"{x} {t}t {100 * c['unattributed']:.0f}%"
+        for x in shown
+        for t, c in rs[x]["threads"].items()
+        if c.get("unattributed") is not None and int(t) > 1
+    ]
+    out += [
+        "",
+        conditions(res.get("env"), res),
+        "",
+        "<details><summary>How to read it, and what it cannot show</summary>",
+        "",
+        "- **The four comparisons the assessment reads,** declared in bench/report.py (`assessment`): "
+        "best against best (wall), CPU per byte at the most threads, amplification at each thread "
+        "count, and peak RSS at the most threads. Each moves only where its 95% interval excludes no "
+        "change. With no real change, about one run in five flags one by chance: a flag that matters "
+        "reproduces on a re-run.",
+        "- **A trade-off is not a failure.** Faster for more CPU or memory, or the reverse, is for the "
+        "reviewer to weigh against the deployment; the report names it, and nothing here fails CI but "
+        "the outputs and the accounting.",
+        "- **What it can't show:** which shared resource a rise in amplification comes from (cache, "
+        "memory bandwidth, SMT, the scanner's handoffs): no hardware counters are read. CI's runners "
+        "have 2 physical cores, so it cannot show a knee past 2 (the workstation's is at 4-5 "
+        "workers, #39). The cores' L3 is shared with other tenants and its size unknown.",
+        "- **Run-queue wait** (threads' mean count runnable, not running; schedstat): "
+        + (", ".join(rq) if rq else "not recorded")
+        + ". A pinned 2-thread run has four threads (two workers, the scanner, the reader) on two "
+        "CPUs, so some wait is its shape, not interference.",
+        "- **The per-thread split's unattributed CPU** (the process's total that no sampled thread "
+        "holds, sampled every 10 ms): " + (", ".join(un) if un else "not recorded") + ".",
+        "",
+        "</details>",
+    ]
+    return out
+
+
 def stage_lines(st: dict, pr: bool) -> list[str]:
     """The stage table: each stage's median cycles a byte (ns a byte without a clock),
     base → head and head over base on a pull request."""
@@ -835,6 +1203,13 @@ def markdown(res: dict) -> str:
         if res["parity"]
         else "**Same bytes: NO.** An arm's output differed or it failed on a corpus: see the table.",
     ]
+    if res.get("accounting"):
+        lines += [
+            "",
+            "**The CPU accounting failed its own check** (a thread's CPU counted twice, or a total "
+            "missing threads): " + "; ".join(res["accounting"][:5]),
+        ]
+    lines += resources_lines(res, pr)
     w = res["figures"].get("wikidata", {}).get(str(n), {}).get("arms", {})
     splits = {k: v["cpu_split"] for k, v in w.items() if v.get("cpu_split")}
     if splits:
@@ -842,13 +1217,23 @@ def markdown(res: dict) -> str:
             "",
             f"### Where mibz2's CPU goes: the Wikidata blocks at {n} threads (median CPU seconds)",
             "",
-            "| build | scanner (serial) | workers (summed) | the reading thread and the rest | wall |",
-            "|---|--:|--:|--:|--:|",
+            "| build | scanner (serial) | workers (summed) | the reading thread and the rest | "
+            "unattributed | wall |",
+            "|---|--:|--:|--:|--:|--:|",
         ]
         for k, s in splits.items():
+            un = f"{s['unattributed']:.2f}" if "unattributed" in s else "–"
             lines.append(
-                f"| {k} | {s['scan']:.2f} | {s['workers']:.2f} | {s['other']:.2f} | {w[k]['wall']:.3f} |"
+                f"| {k} | {s['scan']:.2f} | {s['workers']:.2f} | {s['other']:.2f} | {un} | "
+                f"{w[k]['wall']:.3f} |"
             )
+        lines += [
+            "",
+            "Unattributed: the process's CPU that no sampled thread holds (threads ending between "
+            "samples). Before bench 3.0.0 the sampler ran every 50 ms and left 0.1-0.35 s a run "
+            "here; a base built before 3.0.0 still does, so its split and the model below undercount "
+            "its workers against head's.",
+        ]
     if res.get("stages"):
         lines += stage_lines(res["stages"], pr)
     if res.get("models"):
@@ -919,6 +1304,13 @@ def summary(a: argparse.Namespace) -> None:
         "figures": figs,
         "models": models,
     }
+    res["accounting"] = accounting(runs)
+    res["resources"] = resources(runs, a.mode == "pr")
+    if a.env and Path(a.env).exists() and Path(a.env).read_text().strip():
+        res["env"] = json.loads(Path(a.env).read_text())
+    if a.mode == "pr":
+        res["paired_resources"] = paired_resources(runs, "mibz2", ref)
+        res["assessment"] = assessment(res)
     if a.stages and Path(a.stages).exists():
         lines = [json.loads(l) for l in Path(a.stages).read_text().splitlines() if l.strip()]
         if lines:
@@ -930,6 +1322,11 @@ def summary(a: argparse.Namespace) -> None:
         file=sys.stderr,
     )
     if not res["parity"]:
+        sys.exit(1)
+    if res["accounting"]:
+        print(
+            "CPU accounting failed its own check:\n" + "\n".join(res["accounting"]), file=sys.stderr
+        )
         sys.exit(1)
 
 
@@ -970,6 +1367,7 @@ def main() -> None:
     s.add_argument("--date")
     s.add_argument("--run")
     s.add_argument("--stages")
+    s.add_argument("--env", help="`ab env`'s line: the runner's cores, quota and counters")
     s.add_argument("--out", required=True)
     s.add_argument("--md", required=True)
     r = sub.add_parser("record")

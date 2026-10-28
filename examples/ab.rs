@@ -14,6 +14,10 @@
 //!                      thread count, the arms' order rotated and reversed round to round
 //!     --cap ARM=N,..   run ARM (as given in --arms) in the first N rounds only
 //!     --pin CPU        the CPU 1-thread runs are pinned to (default 1)
+//!     --spread         pin a run of T threads, where the machine has at least T physical
+//!                      cores, to one CPU on each of T cores (its first SMT sibling), so 2
+//!                      threads on CI's 2-core runners are two cores' worth, never one
+//!                      core's two siblings; more threads than cores run unpinned
 //!     --max-busy C     before each run, wait until the other processes keep at most C
 //!                      cores busy (default 1.5; sampled over 2 s while nothing of ours runs)
 //!     --settle S       that sample's length in seconds (default 2; CI's runners, which
@@ -21,6 +25,9 @@
 //! ab summary OUT.jsonl [--ref ARM]   best and median wall and CPU, peak RSS, and paired
 //!                                    ratios against ARM (geometric mean, 95% CI over rounds)
 //! ab child ARM THREADS FILE          one run (what `run` spawns)
+//! ab env                             the machine as the runs see it, one JSON line: the
+//!                                    CPUs allowed, their physical cores, the cgroup's CPU
+//!                                    quota, and whether the run-queue counter counts
 //! ```
 //!
 //! Arms, block-parallel unless said:
@@ -44,9 +51,22 @@
 //! summaries pair that run with the reference's at every thread count.
 //!
 //! Recorded a run: wall (the decode, from opening the file to the last byte read), CPU
-//! (user + sys), peak RSS, output bytes and hash; and around it, the 1-minute load, the
+//! (user + sys, of every thread of the process: `getrusage`'s RUSAGE_SELF, and
+//! RUSAGE_CHILDREN for a program's arm), peak RSS, output bytes and hash; each busy
+//! thread's CPU and the threads' summed run-queue wait (time runnable but not running,
+//! /proc's schedstat); and around it, the CPUs the run was given, the 1-minute load, the
 //! cores the other processes kept busy during the run (the machine's busy time less the
-//! run's own CPU) and the steal.
+//! run's own CPU), the steal, and the cgroup's CPU throttling and the CPU pressure stall
+//! time (PSI) over the run, where the kernel has them (null where not).
+//!
+//! **Each thread's CPU is sampled from /proc every 10 ms** (and once more after the last
+//! byte is read, before an in-process decoder is dropped), so a thread that ends between
+//! samples loses at most about 10 ms, against the clock ticks' own 10 ms. Before bench
+//! 3.0.0 the sampling was every 50 ms: mibz2's workers end when the jobs run out, before
+//! the reader's last block, and lost up to 50 ms each, 0.1-0.35 s a run uncounted in the
+//! per-thread split (never in the CPU total, which is the kernel's). The split's shortfall
+//! against the total stays in the record, as the report's unattributed CPU; the sampler's
+//! own CPU, which an in-process arm's total includes, is recorded (`sampler_s`).
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -138,16 +158,34 @@ impl Hash {
     }
 }
 
-/// Each thread's CPU (ticks) of process `pid`, sampled every 50 ms until `stop`, the last
-/// sample of each thread kept (a thread's CPU only grows)
+/// Each thread, by its id: its name, its CPU (ticks) and its run-queue wait (ns: time
+/// runnable, waiting for a CPU). Keyed by the id alone, the name read with the CPU from
+/// the same `stat`: a name read apart can come back empty as a thread ends, and before
+/// bench 3.0.0 that made a second entry for the same thread, counted twice
+type Seen = BTreeMap<u32, (String, u64, u64)>;
+
+/// A run's threads, as `Threads::finish` gives them: how many were busy, each one's CPU
+/// ("name=seconds ..."), their summed run-queue wait and the sampler's own CPU (seconds)
+type Busy = (usize, String, f64, f64);
+
+/// Each thread's CPU and run-queue wait of process `pid`, sampled every 10 ms until `stop`,
+/// the last sample of each thread kept (both only grow)
 struct Threads {
     stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
-    seen: std::sync::Arc<std::sync::Mutex<BTreeMap<String, u64>>>,
+    seen: std::sync::Arc<std::sync::Mutex<Seen>>,
     handle: Option<std::thread::JoinHandle<()>>,
     pid: u32,
 }
 
-fn sample_tasks(pid: u32, seen: &std::sync::Mutex<BTreeMap<String, u64>>) {
+/// A schedstat file's run-queue wait (its second field, ns), 0 where it can't be read
+fn run_delay(path: &std::path::Path) -> u64 {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|s| s.split_whitespace().nth(1)?.parse().ok())
+        .unwrap_or(0)
+}
+
+fn sample_tasks(pid: u32, seen: &std::sync::Mutex<Seen>) {
     let Ok(dir) = std::fs::read_dir(format!("/proc/{pid}/task")) else {
         return;
     };
@@ -156,17 +194,26 @@ fn sample_tasks(pid: u32, seen: &std::sync::Mutex<BTreeMap<String, u64>>) {
         let Ok(st) = std::fs::read_to_string(e.path().join("stat")) else {
             continue;
         };
-        // fields after the ")" of the name: state is 3rd, utime 14th, stime 15th
-        let Some(rest) = st.rsplit_once(')').map(|x| x.1) else {
+        // "tid (name) state ...": fields after the ")" of the name, state 3rd, utime 14th,
+        // stime 15th
+        let (Some((head, rest)), Ok(tid)) = (
+            st.rsplit_once(')'),
+            e.file_name().to_string_lossy().parse::<u32>(),
+        ) else {
             continue;
         };
+        let name = head.split_once('(').map_or("", |x| x.1);
         let f: Vec<&str> = rest.split_whitespace().collect();
         let ticks = f.get(11).and_then(|u| u.parse::<u64>().ok()).unwrap_or(0)
             + f.get(12).and_then(|u| u.parse::<u64>().ok()).unwrap_or(0);
-        let name = std::fs::read_to_string(e.path().join("comm")).unwrap_or_default();
-        let key = format!("{}:{}", name.trim(), e.file_name().to_string_lossy());
-        let v = m.entry(key).or_insert(0);
-        *v = (*v).max(ticks);
+        let wait = run_delay(&e.path().join("schedstat"));
+        // (the latest name: a new thread has its parent's until it names itself)
+        let v = m.entry(tid).or_insert_with(|| (String::new(), 0, 0));
+        if !name.is_empty() {
+            v.0 = name.to_string();
+        }
+        v.1 = v.1.max(ticks);
+        v.2 = v.2.max(wait);
     }
 }
 
@@ -180,7 +227,7 @@ impl Threads {
             .spawn(move || {
                 while !s.load(std::sync::atomic::Ordering::Relaxed) {
                     sample_tasks(pid, &m);
-                    std::thread::sleep(Duration::from_millis(50));
+                    std::thread::sleep(Duration::from_millis(10));
                 }
             })
             .unwrap();
@@ -191,27 +238,44 @@ impl Threads {
             pid,
         }
     }
+    /// A sample now (an in-process decoder's, once its last byte is read and before it is
+    /// dropped, while its threads are still there to read)
+    fn sample(&self) {
+        sample_tasks(self.pid, &self.seen);
+    }
     /// The threads that ran (more than 2% of the busiest's CPU), and each one's CPU
     /// seconds, busiest first (the sampler left out; "main" is the thread reading the
-    /// decoder and hashing its output)
-    fn finish(mut self, own: bool) -> (usize, String) {
+    /// decoder and hashing its output); every thread's run-queue wait, summed, in
+    /// seconds; and the sampler's own CPU seconds
+    fn finish(mut self, own: bool) -> Busy {
         if own {
             sample_tasks(self.pid, &self.seen);
         }
         self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
         self.handle.take().unwrap().join().unwrap();
-        let me = format!("ab:{}", self.pid);
         let m = self.seen.lock().unwrap();
+        let sampler = m
+            .values()
+            .filter(|x| x.0 == "sampler")
+            .map(|x| x.1 as f64 / HZ)
+            .sum();
+        let runq = m
+            .values()
+            .filter(|x| x.0 != "sampler")
+            .map(|x| x.2 as f64 * 1e-9)
+            .sum();
+        // (in this process, the thread whose id is the process's is the reading thread)
         let mut v: Vec<(u64, String)> = m
             .iter()
-            .filter(|(k, _)| !k.starts_with("sampler:"))
-            .map(|(k, &t)| {
+            .filter(|(_, x)| x.0 != "sampler")
+            .map(|(&tid, x)| {
+                let main = own && tid == self.pid;
                 (
-                    t,
-                    if own && *k == me {
+                    x.1,
+                    if main {
                         "main".to_string()
                     } else {
-                        k.clone()
+                        x.0.clone()
                     },
                 )
             })
@@ -221,17 +285,22 @@ impl Threads {
         let busy: Vec<String> = v
             .iter()
             .filter(|x| x.0 * 50 > top)
-            .map(|(t, k)| format!("{}={:.2}", k.split(':').next().unwrap(), *t as f64 / HZ))
+            .map(|(t, k)| format!("{k}={:.2}", *t as f64 / HZ))
             .collect();
-        (busy.len(), busy.join(" "))
+        (busy.len(), busy.join(" "), runq, sampler)
     }
 }
 
-fn drain(mut r: impl Read, h: &mut Hash) -> Result<(), String> {
+/// Every byte of `r` through `h`; `last` runs after the last byte, while `r` (and a
+/// decoder's threads) still lives
+fn drain(mut r: impl Read, h: &mut Hash, last: &dyn Fn()) -> Result<(), String> {
     let mut buf = vec![0u8; 4 << 20];
     loop {
         match r.read(&mut buf) {
-            Ok(0) => return Ok(()),
+            Ok(0) => {
+                last();
+                return Ok(());
+            }
             Ok(n) => h.update(&buf[..n]),
             Err(e) if e.kind() == std::io::ErrorKind::Interrupted => {}
             Err(e) => return Err(e.to_string()),
@@ -270,34 +339,48 @@ fn program(arm: &str, threads: usize, path: &str) -> Option<(Command, bool)> {
     }
 }
 
-/// An in-process arm's decode of the file at `path`, every byte through `h`
-fn decode(arm: &str, threads: usize, path: &str, h: &mut Hash) -> Result<(), String> {
+/// An in-process arm's decode of the file at `path`, every byte through `h`, `last` run
+/// after its last byte (`drain`)
+fn decode(
+    arm: &str,
+    threads: usize,
+    path: &str,
+    h: &mut Hash,
+    last: &dyn Fn(),
+) -> Result<(), String> {
     let open = || std::fs::File::open(path).map_err(|e| e.to_string());
     match arm {
-        "mibz2" if threads == 1 => drain(mibz2::BzReader::new(open()?), h),
-        "mibz2" => drain(mibz2::BzReader::parallel(open()?, threads), h),
+        "mibz2" if threads == 1 => drain(mibz2::BzReader::new(open()?), h, last),
+        "mibz2" => drain(mibz2::BzReader::parallel(open()?, threads), h, last),
         "mibz2-scalar" if threads == 1 => drain(
             mibz2::BzReader::with_kernels(open()?, mibz2::Kernels::scalar()),
             h,
+            last,
         ),
         "mibz2-scalar" => drain(
             mibz2::BzReader::parallel_with(open()?, threads, 2 * threads, mibz2::Kernels::scalar()),
             h,
+            last,
         ),
-        "pbz2" if threads == 1 => drain(pbz2::DecoderReader::new(open()?), h),
-        "pbz2" => drain(pbz2::ParallelDecoder::with_threads(open()?, threads), h),
+        "pbz2" if threads == 1 => drain(pbz2::DecoderReader::new(open()?), h, last),
+        "pbz2" => drain(
+            pbz2::ParallelDecoder::with_threads(open()?, threads),
+            h,
+            last,
+        ),
         // libbzip2 1.0.8 (C: the bzip2 crate's bundled source, the tests' oracle), one
         // stream after another, as `bzip2 -dc` and Python's bz2 decode a file
-        "libbzip2" => drain(bzip2::read::MultiBzDecoder::new(open()?), h),
+        "libbzip2" => drain(bzip2::read::MultiBzDecoder::new(open()?), h, last),
         // (bench/alternatives' build of this harness only)
         #[cfg(mibz2_alternatives)]
-        "libbz2-rs" => drain(bzip2_rs::read::MultiBzDecoder::new(open()?), h),
+        "libbz2-rs" => drain(bzip2_rs::read::MultiBzDecoder::new(open()?), h, last),
         // (no thread count: it takes the CPUs this process may run on, so a 1-thread
         // run's pin decides)
         #[cfg(mibz2_alternatives)]
         "lbzip2-rs" => drain(
             lbzip2::reader::StreamingBz2Read::new(open()?).map_err(|e| format!("{e:?}"))?,
             h,
+            last,
         ),
         #[cfg(mibz2_alternatives)]
         "fbz" => {
@@ -306,7 +389,11 @@ fn decode(arm: &str, threads: usize, path: &str, h: &mut Hash) -> Result<(), Str
                 threads,
                 ..Default::default()
             };
-            drain(fbz::Reader::open(path, opts).map_err(|e| e.to_string())?, h)
+            drain(
+                fbz::Reader::open(path, opts).map_err(|e| e.to_string())?,
+                h,
+                last,
+            )
         }
         _ => Err(format!("unknown arm {arm} (in this build of the harness)")),
     }
@@ -314,15 +401,18 @@ fn decode(arm: &str, threads: usize, path: &str, h: &mut Hash) -> Result<(), Str
 
 /// A program's run: the result, the wall time, its busy threads, and the CPU it spent
 /// before it was ready to decode
-fn piped(
-    mut cmd: Command,
-    ready: bool,
-    h: &mut Hash,
-) -> (Result<(), String>, f64, (usize, String), f64) {
+fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f64, Busy, f64) {
     let mut t0 = Instant::now();
     let mut p = match cmd.stdout(Stdio::piped()).spawn() {
         Ok(p) => p,
-        Err(e) => return (Err(format!("{cmd:?}: {e}")), 0.0, (0, String::new()), 0.0),
+        Err(e) => {
+            return (
+                Err(format!("{cmd:?}: {e}")),
+                0.0,
+                (0, String::new(), 0.0, 0.0),
+                0.0,
+            )
+        }
     };
     let w = Threads::watch(p.id());
     let mut out = p.stdout.take().unwrap();
@@ -340,7 +430,7 @@ fn piped(
             .ok_or_else(|| format!("no ready line ({line:?})"));
         t0 = Instant::now();
     }
-    let r = drain(out, h);
+    let r = drain(out, h, &|| ());
     let threads = w.finish(false);
     let st = p.wait().unwrap();
     let wall = t0.elapsed().as_secs_f64();
@@ -358,12 +448,12 @@ fn child(arm: &str, threads: usize, path: &str) {
     let mut h = Hash::new();
     let external = program(arm, threads, path);
     let is_program = external.is_some();
-    let (res, wall, (nthreads, per_thread), startup) = match external {
+    let (res, wall, (nthreads, per_thread, runq, sampler), startup) = match external {
         Some((cmd, ready)) => piped(cmd, ready, &mut h),
         None => {
             let w = Threads::watch(std::process::id());
             let t0 = Instant::now();
-            let res = decode(arm, threads, path, &mut h);
+            let res = decode(arm, threads, path, &mut h, &|| w.sample());
             let wall = t0.elapsed().as_secs_f64();
             (res, wall, w.finish(true), 0.0)
         }
@@ -375,7 +465,7 @@ fn child(arm: &str, threads: usize, path: &str) {
     let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"err\":\"{err}\"}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.3},\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup,
         h.n,
         h.finish()
@@ -438,6 +528,200 @@ fn others_busy(secs: f64) -> (f64, f64) {
     (each.iter().sum(), each.iter().cloned().fold(0.0, f64::max))
 }
 
+/// A CPU list ("0-3,6"), as sysfs and /proc write them
+fn cpu_list(s: &str) -> Vec<usize> {
+    let mut out = Vec::new();
+    for part in s.trim().split(',').filter(|p| !p.is_empty()) {
+        match part.split_once('-') {
+            Some((a, b)) => {
+                if let (Ok(a), Ok(b)) = (a.parse::<usize>(), b.parse::<usize>()) {
+                    out.extend(a..=b);
+                }
+            }
+            None => out.extend(part.parse::<usize>().ok()),
+        }
+    }
+    out
+}
+
+/// The CPUs this process may run on (its Cpus_allowed_list), grouped by physical core
+/// (sysfs's thread_siblings_list), each core's CPUs in order, the cores in order of their
+/// first CPU; a CPU whose siblings can't be read is a core of its own
+fn cores() -> Vec<Vec<usize>> {
+    let status = std::fs::read_to_string("/proc/self/status").unwrap_or_default();
+    let allowed = status
+        .lines()
+        .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))
+        .map(cpu_list)
+        .unwrap_or_else(|| {
+            (0..std::thread::available_parallelism().map_or(1, |n| n.get())).collect()
+        });
+    group(&allowed, |c| {
+        std::fs::read_to_string(format!(
+            "/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list"
+        ))
+        .ok()
+        .map(|s| cpu_list(&s))
+    })
+}
+
+/// The allowed CPUs grouped by core, given each CPU's siblings (None: a core of its own)
+fn group(allowed: &[usize], siblings: impl Fn(usize) -> Option<Vec<usize>>) -> Vec<Vec<usize>> {
+    let mut out: Vec<Vec<usize>> = Vec::new();
+    for &c in allowed {
+        let sib = siblings(c).unwrap_or_else(|| vec![c]);
+        let mut core: Vec<usize> = sib.into_iter().filter(|x| allowed.contains(x)).collect();
+        if !core.contains(&c) {
+            core = vec![c];
+        }
+        if !out.contains(&core) {
+            out.push(core);
+        }
+    }
+    out.sort();
+    out
+}
+
+/// `--spread`'s CPUs for `t` threads: the first CPU of each of the first `t` cores, where
+/// there are at least `t` (and `t` > 1); None runs unpinned
+fn spread_list(cores: &[Vec<usize>], t: usize) -> Option<String> {
+    (t > 1 && t <= cores.len()).then(|| {
+        cores[..t]
+            .iter()
+            .map(|c| c[0].to_string())
+            .collect::<Vec<_>>()
+            .join(",")
+    })
+}
+
+/// The cgroup's CPU throttling so far: (periods throttled, time throttled in µs), from
+/// cpu.stat (cgroup v2's `throttled_usec`, or v1's cpu controller's `throttled_time` in
+/// ns); None where neither can be read
+fn throttled() -> Option<(u64, u64)> {
+    let cg = std::fs::read_to_string("/proc/self/cgroup").ok()?;
+    let mut paths = Vec::new();
+    for l in cg.lines() {
+        let mut f = l.splitn(3, ':');
+        let (id, ctl, path) = (f.next()?, f.next()?, f.next()?);
+        if id == "0" && ctl.is_empty() {
+            paths.push((format!("/sys/fs/cgroup{path}/cpu.stat"), 1));
+        } else if ctl.split(',').any(|c| c == "cpu") {
+            paths.push((format!("/sys/fs/cgroup/{ctl}{path}/cpu.stat"), 1000));
+        }
+    }
+    for (p, per_us) in paths {
+        let Ok(st) = std::fs::read_to_string(&p) else {
+            continue;
+        };
+        let get = |k: &str| {
+            st.lines()
+                .find_map(|l| l.strip_prefix(k)?.trim().parse::<u64>().ok())
+        };
+        if let Some(n) = get("nr_throttled ") {
+            let t = get("throttled_usec ").or_else(|| get("throttled_time ").map(|ns| ns / per_us));
+            return Some((n, t.unwrap_or(0)));
+        }
+    }
+    None
+}
+
+/// The CPU pressure stall time so far (µs: some task runnable and waiting for a CPU,
+/// /proc/pressure/cpu's `some total`); None without PSI. A stall here is waiting for a
+/// CPU, never a core waiting on memory: none says nothing about cache or memory contention
+fn psi_cpu() -> Option<u64> {
+    let s = std::fs::read_to_string("/proc/pressure/cpu").ok()?;
+    let l = s.lines().find(|l| l.starts_with("some"))?;
+    l.split_whitespace()
+        .find_map(|f| f.strip_prefix("total=")?.parse().ok())
+}
+
+/// A JSON number, or null
+fn opt(v: Option<f64>) -> String {
+    v.map_or("null".into(), |x| format!("{x:.3}"))
+}
+
+/// `ab env`: the machine as a run sees it, one JSON line. The run-queue counter is
+/// checked, not assumed: twice as many threads as CPUs spin for 0.3 s, and it counts if
+/// their summed wait is at least a quarter of their summed time off a CPU (most of it
+/// should be wait); a counter that reads zero there is never read as no wait
+fn env() {
+    let cores = cores();
+    let ncpu: usize = cores.iter().map(Vec::len).sum();
+    let quota = std::fs::read_to_string("/sys/fs/cgroup/cpu.max")
+        .ok()
+        .and_then(|s| {
+            let mut f = s.split_whitespace();
+            let (q, p) = (f.next()?, f.next()?.parse::<f64>().ok()?);
+            Some(if q == "max" {
+                None
+            } else {
+                Some(q.parse::<f64>().ok()? / p)
+            })
+        })
+        .or_else(|| {
+            let q: f64 = std::fs::read_to_string("/sys/fs/cgroup/cpu/cpu.cfs_quota_us")
+                .ok()?
+                .trim()
+                .parse()
+                .ok()?;
+            let p: f64 = std::fs::read_to_string("/sys/fs/cgroup/cpu/cpu.cfs_period_us")
+                .ok()?
+                .trim()
+                .parse()
+                .ok()?;
+            Some(if q < 0.0 { None } else { Some(q / p) })
+        });
+    let spin = 2 * ncpu.max(1);
+    let t0 = Instant::now();
+    let hs: Vec<_> = (0..spin)
+        .map(|_| {
+            std::thread::spawn(move || {
+                let t = Instant::now();
+                let mut x = 0u64;
+                while t.elapsed() < Duration::from_millis(300) {
+                    x = x.wrapping_mul(6364136223846793005).wrapping_add(1);
+                }
+                std::hint::black_box(x);
+                let st = std::fs::read_to_string("/proc/thread-self/schedstat").unwrap_or_default();
+                let f: Vec<u64> = st
+                    .split_whitespace()
+                    .filter_map(|x| x.parse().ok())
+                    .collect();
+                (
+                    t.elapsed().as_secs_f64(),
+                    f.first().copied(),
+                    f.get(1).copied(),
+                )
+            })
+        })
+        .collect();
+    let r: Vec<_> = hs.into_iter().map(|h| h.join().unwrap()).collect();
+    let _ = t0;
+    let off: f64 = r
+        .iter()
+        .map(|(w, on, _)| w - on.unwrap_or(0) as f64 * 1e-9)
+        .sum();
+    let wait: f64 = r.iter().map(|(_, _, w)| w.unwrap_or(0) as f64 * 1e-9).sum();
+    let counts = r.iter().all(|x| x.2.is_some()) && off > 0.0 && wait >= 0.25 * off;
+    let list = |v: &[usize]| {
+        v.iter()
+            .map(|c| c.to_string())
+            .collect::<Vec<_>>()
+            .join(",")
+    };
+    println!(
+        "{{\"cpus\":{ncpu},\"cores\":{},\"core_cpus\":[{}],\"cpu_quota\":{},\"throttling\":{},\"psi_cpu\":{},\"runq\":{{\"counts\":{counts},\"spin_threads\":{spin},\"off_cpu_s\":{off:.3},\"wait_s\":{wait:.3}}}}}",
+        cores.len(),
+        cores.iter().map(|c| format!("\"{}\"", list(c))).collect::<Vec<_>>().join(","),
+        match quota {
+            Some(Some(q)) => format!("{q:.2}"),
+            _ => "null".into(),
+        },
+        throttled().is_some(),
+        psi_cpu().is_some(),
+    );
+}
+
 fn json_str(line: &str, key: &str) -> Option<String> {
     let k = format!("\"{key}\":");
     let i = line.find(&k)? + k.len();
@@ -464,6 +748,7 @@ fn run(args: &[String]) {
     let mut max_busy = 1.5;
     let mut settle = 2.0;
     let mut pin = "1".to_string();
+    let mut spread = false;
     let mut capped: BTreeMap<String, usize> = BTreeMap::new();
     let mut files = Vec::new();
     let mut i = 1;
@@ -485,6 +770,7 @@ fn run(args: &[String]) {
                 pin = args[i + 1].clone();
                 i += 1;
             }
+            "--spread" => spread = true,
             "--max-busy" => {
                 max_busy = args[i + 1].parse().unwrap();
                 i += 1;
@@ -511,6 +797,9 @@ fn run(args: &[String]) {
         .open(out_path)
         .unwrap();
     let fewest = threads.iter().copied().min().unwrap_or(1);
+    // (--spread: a run of t threads, where there are t cores, on each core's first CPU)
+    let cores = cores();
+    let spread_cpus = |t: usize| spread.then(|| spread_list(&cores, t)).flatten();
     for round in 0..rounds {
         for file in &files {
             for &t in &threads {
@@ -542,20 +831,30 @@ fn run(args: &[String]) {
                         Some((n, e)) => (n.to_string(), std::path::PathBuf::from(e)),
                         None => (arm.clone(), me.clone()),
                     };
-                    let mut cmd = if t == 1 {
-                        let mut c = Command::new("taskset");
-                        c.args(["-c", &pin]).arg(&exe);
-                        c
+                    let cpus = if t == 1 {
+                        Some(pin.clone())
                     } else {
-                        Command::new(&exe)
+                        spread_cpus(t)
+                    };
+                    let mut cmd = match &cpus {
+                        Some(list) => {
+                            let mut c = Command::new("taskset");
+                            c.args(["-c", list]).arg(&exe);
+                            c
+                        }
+                        None => Command::new(&exe),
                     };
                     cmd.args(["child", &name, &t.to_string(), file]);
                     let load = load1();
                     let (b0, s0, tot0) = stat();
+                    let (th0, psi0) = (throttled(), psi_cpu());
                     let w0 = Instant::now();
                     let o = cmd.output().unwrap();
                     let span = w0.elapsed().as_secs_f64();
                     let (b1, s1, tot1) = stat();
+                    let (th1, psi1) = (throttled(), psi_cpu());
+                    let throttle = th0.zip(th1).map(|(a, b)| (b.0 - a.0, b.1 - a.1));
+                    let psi_ms = psi0.zip(psi1).map(|(a, b)| (b - a) as f64 / 1000.0);
                     let line = String::from_utf8_lossy(&o.stdout);
                     let line = line.trim();
                     let cpu = json_f(line, "cpu");
@@ -567,8 +866,12 @@ fn run(args: &[String]) {
                         .to_string_lossy()
                         .to_string();
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"waited_s\":{:.0},{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},{}",
                         parallel(&name),
+                        cpus.as_deref().unwrap_or("all"),
+                        opt(throttle.map(|x| x.0 as f64)),
+                        opt(throttle.map(|x| x.1 as f64 / 1000.0)),
+                        opt(psi_ms),
                         waited.elapsed().as_secs_f64() - settle,
                         line.strip_prefix('{').unwrap_or("\"broken\":1}")
                     );
@@ -744,6 +1047,42 @@ fn main() {
         Some("run") => run(&args[1..]),
         Some("summary") => summary(&args[1..]),
         Some("gen") => gen(&args[1..]),
-        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE"),
+        Some("env") => env(),
+        _ => eprintln!("usage: ab gen DIR [SCALE] | ab run OUT.jsonl [--arms a,b] [--threads 1,4] [--rounds N] [--settle S] FILE.. | ab summary OUT.jsonl [--ref ARM] | ab child ARM T FILE | ab env"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cpu_lists() {
+        assert_eq!(cpu_list("0-3,6\n"), vec![0, 1, 2, 3, 6]);
+        assert_eq!(cpu_list("5"), vec![5]);
+        assert_eq!(cpu_list(""), Vec::<usize>::new());
+    }
+
+    #[test]
+    fn spread_takes_one_cpu_a_core() {
+        // CI's runners: 4 CPUs on 2 cores, siblings 0-1 | 2-3
+        let sib = |c: usize| Some(if c < 2 { vec![0, 1] } else { vec![2, 3] });
+        let cores = group(&[0, 1, 2, 3], sib);
+        assert_eq!(cores, vec![vec![0, 1], vec![2, 3]]);
+        assert_eq!(spread_list(&cores, 2).as_deref(), Some("0,2"));
+        // more threads than cores, or one thread: unpinned (1 thread has its own pin)
+        assert_eq!(spread_list(&cores, 4), None);
+        assert_eq!(spread_list(&cores, 1), None);
+        // siblings interleaved (0,4 | 1,5 | ...), as many Intel parts number them
+        let sib = |c: usize| Some(vec![c % 4, c % 4 + 4]);
+        let cores = group(&(0..8).collect::<Vec<_>>(), sib);
+        assert_eq!(spread_list(&cores, 4).as_deref(), Some("0,1,2,3"));
+        // a CPU set that allows one sibling of each core
+        let cores = group(&[0, 2], |c| {
+            Some(if c < 2 { vec![0, 1] } else { vec![2, 3] })
+        });
+        assert_eq!(cores, vec![vec![0], vec![2]]);
+        // siblings unreadable: each CPU a core of its own
+        assert_eq!(group(&[0, 1], |_| None), vec![vec![0], vec![1]]);
     }
 }

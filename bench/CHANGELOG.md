@@ -35,6 +35,63 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.0.0] - 2026-10-28
+
+### Added
+
+- **Resources, beside the decoder's figures** (`resources`, `paired_resources` and
+  `assessment` in bench/report.py), on the Wikidata blocks:
+  - CPU per byte at each thread count;
+  - its **amplification**: CPU at N threads over the same build's at 1, paired by round.
+    1× means no extra CPU for the same bytes. Rising, it means the work costs more as
+    threads are added, from stalls, sharing or synchronisation;
+  - parallel efficiency;
+  - each build's best thread count;
+  - the threads' mean run-queue wait;
+  - the CPU the per-thread split leaves unattributed.
+- **On a pull request:**
+  - head's amplification over base's, at each thread count;
+  - best against best;
+  - a one-line **assessment** from four comparisons declared in `assessment`: speed (best
+    against best), CPU per byte at the most threads, amplification, and peak RSS at the
+    most threads. It says whether the run could answer (parity, accounting, throttling),
+    and when a change needs a machine with more cores.
+  - Nothing in it fails CI, except the outputs and the accounting's own check.
+- **2-thread runs, pinned to one CPU a core** (`ab run --spread`). On CI's runners (4 CPUs
+  on 2 cores) they are two cores' worth, so their amplification is free of SMT. The
+  4-thread runs share each core's two siblings, as before.
+- **Recorded per run:**
+  - the CPUs a run was given (`cpus`);
+  - the threads' run-queue wait (`runq_s`, from schedstat);
+  - the sampler's own CPU (`sampler_s`);
+  - the cgroup's CPU throttling over the run (`throttled_n`, `throttled_ms`; null where
+    unreadable);
+  - the system's CPU pressure stall time (`psi_cpu_ms`, PSI; null without it). A CPU
+    stall is waiting for a CPU, never a core waiting on memory.
+- **`ab env`:** the CPUs allowed, their physical cores, the cgroup's CPU quota, and a check
+  that the run-queue counter counts (threads twice the CPUs spin for 0.3 s).
+- **The CPU accounting's own check** (`accounting`): on this build's runs, the per-thread
+  split never holds more than the process's total, getrusage over every thread. Failing
+  it fails the run, as broken instrumentation.
+
+### Changed
+
+- **The decoder's figures are redefined (`MEANING`: decoder [1, 3]).** The per-thread
+  sampler, a thread inside each run's process whose CPU is the run's, now samples every
+  10 ms instead of every 50 ms.
+  - At 50 ms, mibz2's workers, which end when the jobs run out before the reader's last
+    block, each lost up to 50 ms. That was 0.1-0.35 s a run, never in the CPU total but
+    in the split and in the whole-dump model's workers: about 14% of the workers' CPU on
+    CI's 4-thread Wikidata runs.
+  - At 10 ms the split's shortfall is 4-6% (unattributed, now shown).
+  - The sampler's own CPU is recorded: about 0.01 s a second of run.
+- **A thread is keyed by its id alone, its name read with its CPU from one `stat`.** A name
+  read apart could come back empty as a thread ended, which made a second entry for the
+  same thread and counted it twice.
+- **The CPU split table shows the unattributed CPU.** A base built before 3.0.0 still
+  samples every 50 ms, so on such a pull request its split and the model undercount its
+  workers against head's.
+
 ## [2.1.1] - 2026-10-27
 
 ### Changed
