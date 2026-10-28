@@ -32,3 +32,4 @@ target/
 /occupancy-*.json
 /imc-*.json
 /thermal-*.json
+/regimes-*.json

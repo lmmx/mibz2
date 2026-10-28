@@ -46,3 +46,17 @@ bench-quiet *args:
 bench-thermal *args:
     bash bench/corpus.sh
     python3 bench/thermal.py "$@"
+
+# bench/regimes.py: the same decode run as the occupancy instrument runs it (plain), under
+# perf stat as this user, and under sudo perf stat as bench-imc's core step does, each with
+# the instrument's 0.15 s gap before a run and with none, interleaved by round. Each run's
+# wall time, and where perf counts it its clock (cycles / ref-cycles) and IPC. It writes
+# regimes-<UTC time>.json to share.
+#   just bench-regimes
+#   just bench-regimes --threads 8 --rounds 20
+
+# Which way of running the decode gives the slow runs, and at what clock (#39)
+[positional-arguments]
+bench-regimes *args:
+    bash bench/corpus.sh
+    python3 bench/regimes.py "$@"
