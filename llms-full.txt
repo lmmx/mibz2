@@ -163,9 +163,11 @@ Block-parallel: pbz2, lbzip2, indexed\_bzip2, fbz, lbzip2-rs. Single-threaded (Â
 
 ## Where mibz2's CPU goes: the Wikidata blocks at 4 threads (median CPU seconds)
 
-| build | scanner (serial) | workers (summed) | the reading thread and the rest | wall |
-| --- | ---: | ---: | ---: | ---: |
-| mibz2 | 0.11 | 1.17 | 0.02 | 0.425 |
+| build | scanner (serial) | workers (summed) | the reading thread and the rest | unattributed | wall |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| mibz2 | 0.11 | 1.17 | 0.02 | â€“ | 0.425 |
+
+Unattributed: the process's CPU that no sampled thread holds (threads ending between samples). Before bench 3.0.0 the sampler ran every 50 ms and left 0.1-0.35 s a run here; a base built before 3.0.0 still does, so its split and the model below undercount its workers against head's.
 
 ## Where a decode's time goes, stage by stage: the Wikidata blocks on one thread (median c/B)
 

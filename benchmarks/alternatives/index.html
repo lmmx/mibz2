@@ -1997,6 +1997,7 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <th style="text-align: right;">scanner (serial)</th>
 <th style="text-align: right;">workers (summed)</th>
 <th style="text-align: right;">the reading thread and the rest</th>
+<th style="text-align: right;">unattributed</th>
 <th style="text-align: right;">wall</th>
 </tr>
 </thead>
@@ -2006,10 +2007,12 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <td style="text-align: right;">0.11</td>
 <td style="text-align: right;">1.17</td>
 <td style="text-align: right;">0.02</td>
+<td style="text-align: right;">–</td>
 <td style="text-align: right;">0.425</td>
 </tr>
 </tbody>
 </table>
+<p>Unattributed: the process's CPU that no sampled thread holds (threads ending between samples). Before bench 3.0.0 the sampler ran every 50 ms and left 0.1-0.35 s a run here; a base built before 3.0.0 still does, so its split and the model below undercount its workers against head's.</p>
 <h2 id="where-a-decodes-time-goes-stage-by-stage-the-wikidata-blocks-on-one-thread-median-cb">Where a decode's time goes, stage by stage: the Wikidata blocks on one thread (median c/B)<a class="headerlink" href="#where-a-decodes-time-goes-stage-by-stage-the-wikidata-blocks-on-one-thread-median-cb" title="Permanent link">&para;</a></h2>
 <p>Each of 5 rounds runs the build's <code>examples/phases.rs</code> once (bench/stages.py), pinned to one CPU: the file decoded in decode order, block by block, each stage timed as it runs with the library's own functions (each stage's fastest of 2 passes), summed over the blocks, in cycles a byte of output at the reported clock (3241 MHz). Diagnostic only: the decoder's own figures are the tables above. 5 runs, 1m15s of the run.</p>
 <table>
