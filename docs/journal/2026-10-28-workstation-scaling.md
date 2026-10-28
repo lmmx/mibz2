@@ -106,21 +106,76 @@ compressed, 210 MB decoded, 431 blocks).
   - Different decoders do different work a block (BWT inversion, buffering, output
     path), so the comparison doesn't identify the limiting resource.
 
+## 6. Did CI's runners select for the knee? Versions and walk settings
+
+- **Believed (hypothesis):** every change was accepted on 1- and 4-thread figures from
+  2-core AMD runners. Changes that kept more misses in flight (32 lanes with each lane's
+  next entry prefetched, #5 and #21) might have bought low-concurrency speed at the cost
+  of the many-core curve.
+- **Measured (`just bench-variants`, v0.1.1-v0.1.5 and this build with 16 or 8 lanes,
+  prefetch off, into L2 or non-temporal, back to back, 6 rounds, the same bytes from every
+  run):**
+  - No variant's best beats this build's (1005 MB/s at 4 workers):
+    - v0.1.5 1.006× (0.972-1.040), pf-l2 0.989×, v0.1.4 0.976×;
+    - lanes16 0.955× (0.928-0.983), pf-off 0.881×, lanes8 0.853×, pf-nta 0.610×.
+  - Fewer lanes and no prefetch lose by more at 8-10 workers: at 10, lanes16 0.86×, pf-off
+    0.76×, lanes8 0.71× this build's throughput.
+  - At 10 workers, every variant fast enough reaches one ceiling: 634-650 MB/s for this
+    build, v0.1.3, v0.1.4, v0.1.5 and pf-l2. At 8 workers it's 692-717 MB/s.
+  - The older releases fall less relative to their own 4 workers (v0.1.1 0.85× at 8), but
+    from lower peaks.
+  - v0.1.2 → v0.1.3 (#21, #24) gains at every thread count. v0.1.3 → v0.1.5 (#7, #37)
+    gains 14-20% at 2-4 workers and nothing measurable at 6-10, without losing there.
+- **Now:**
+  - The lane and prefetch remedy is falsified. The CI-chosen setting is the best tested on
+    this Intel machine too.
+  - The history steepened the normalised curve by raising its low end, not by lowering its
+    high end.
+  - A worker needs its outstanding misses to approach the shared limit. What costs is the
+    number of such workers.
+
+## 7. Where the added cycles go: L3 hit share, then the memory system's queue
+
+- **Measured (`bench-imc core --events mem`, process-scoped, multiplexed: the least
+  coverage 43%, scaled estimates):** from 2 to 10 workers:
+  - reads leaving L2 per output byte stay at about 1.45-1.5;
+  - the demand-load L3 hit share falls 0.96 → 0.75 → 0.53 → 0.41 → 0.37;
+  - L3 misses per KB rise 1.2 → 32 (flat from 8 to 10);
+  - queue occupancy per request past L2 rises 44 → 298 cycles. That is a pressure proxy,
+    not a measured latency.
+  - cycles stalled on an L3 miss reach 24%, about 30% of the cycles added;
+  - page-walk activity stays at 1-2.5% of cycles.
+- **A model the data fit (hypothesis):** random reads over a working set larger than the
+  cache, hit share ≈ C / W. The hit share times the workers' total T-vector size is 5.8-7.2
+  MB from 4 to 10 workers, an effective 6-7 MB of the 20 MB L3 for the walk.
+- **A mechanism it exposes (hypothesis, testable):**
+  - Bytes written per output byte at the memory controller rise from 0.3 (1 worker) to
+    11.5-12.8 (6-10).
+  - That is close to what the decode writes: the T-vector, the last column, and the
+    output's copies through segment assembly (#48 traced five).
+  - These stay in cache at 1-4 workers, where #48 measured them, and become DRAM traffic on
+    the shared limit past the knee.
+- **#40's huge-page idea is dropped:** walk activity is far under its 10% criterion.
+
 ## Decisions
 
-- **The thread count matters more than any decoder change seen here.** On this machine
-  mibz2 at 4 workers is 2.1× its 20-worker throughput, and wikidata-pq decodes on every
-  core by default (`WIKIDATA_BZ2_THREADS`).
-  - A cap, or an adaptive worker count that finds the knee at run time, is the
-    candidate.
-  - CI's 4-vCPU runners can't measure a cap of 4 or more, so it needs a release-shaped
-    paired comparison on a many-core machine, with the decoder sharing it with the
-    pipeline's other stages. Not decided here.
-- **#42 stays closed.** A smaller per-worker footprint is a plausible lever on the
-  steeper fall, but nothing here shows it would pay for what it costs a worker. It
-  reopens only on a paired experiment.
+- **The worker count is the first lever.** On this machine mibz2 at 4 workers is 2.1× its
+  20-worker throughput, and no decoder variant tested comes near it at more workers.
+  wikidata-pq decodes on every core by default (`WIKIDATA_BZ2_THREADS`).
+  - A cap is the baseline. Autodetect is a candidate beside it, with two-sided signals:
+    reader starvation against sustained backpressure, with hysteresis, adding a worker only
+    as a probe kept if delivered throughput rises.
+  - Either needs a release-shaped paired comparison on a many-core machine. CI's 4 vCPUs
+    can't measure it.
+- **Lane and prefetch tuning: closed.**
+- **The decoder-side direction is fewer DRAM bytes per output byte without slowing the
+  walk:** #8 (fusion), #48 (copies, reopenable: its verdict was measured where the copies
+  stay in cache), output-window bounds. Measure each at 8-10 workers as well as 1-4.
+- **#42 stays closed.** The C/W model prices a smaller T-vector in hit share, not in the
+  cost per worker it was measured to carry.
 - **#10 stays closed.**
-- **The investigation stops here.** The stopping rule was one targeted experiment after
-  the gap result, and this was it. Left open:
-  - the limiting resource (DRAM bandwidth against a queueing or L3 limit);
+- **Left open:**
+  - capacity against compulsory-traffic queueing, which the same content recompressed at
+    smaller block sizes would separate (release dumps are -9, so that test explains and
+    doesn't remedy);
   - the plain-gap slow runs' mechanism.
