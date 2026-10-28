@@ -225,6 +225,8 @@ jobs:
             ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --stages stages.jsonl --env env.json \
             --out result.json --md comment.md
           cat comment.md ab-summary.md >> "$GITHUB_STEP_SUMMARY"
+          # (the resources section in the log too, where a dispatched run's figures can be read)
+          sed -n '/^### Resources/,/^<\/details>/p' comment.md
 
       - name: Comment
         if: "!cancelled() && github.event_name == 'pull_request'"
