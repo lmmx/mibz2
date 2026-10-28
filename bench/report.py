@@ -533,7 +533,10 @@ def assessment(res: dict, corpus: str = "wikidata") -> dict | None:
             "Neither build dominates: weigh it for the deployment (wikidata-pq's release)."
         )
     else:
-        verdict = "No change detected on the four measures."
+        verdict = (
+            "No change detected on the four measures at this run's precision (every interval "
+            "holds no change; not a proof that nothing changed)."
+        )
     return {
         "corpus": corpus,
         "signs": signs,
@@ -835,6 +838,22 @@ def ratio_x(r: list[float] | None) -> str:
     return f"{r[0]:.2f}× ({r[1]:.2f}–{r[2]:.2f})" if r else "–"
 
 
+def placement(t: int, cpus: str, env: dict | None) -> str:
+    """A thread count's placement as a reader needs it: the 1-thread runs' pinned CPU; a
+    pinned set with one CPU on each of distinct cores; or the runs on every CPU, sharing
+    cores' SMT siblings where there are more CPUs than cores."""
+    if t == 1:
+        return f"pinned to CPU {cpus}"
+    cores = [set(map(int, c.split(","))) for c in (env or {}).get("core_cpus", [])]
+    if cpus not in ("", "all"):
+        mine = [int(c) for c in cpus.split(",")]
+        hit = {i for c in mine for i, core in enumerate(cores) if c in core}
+        return f"CPUs {cpus}, " + ("one a core" if cores and len(hit) == len(mine) else "pinned")
+    if env and env.get("cores", 0) < env.get("cpus", 0) and t > env["cores"]:
+        return f"all {env['cpus']} CPUs, sharing SMT siblings"
+    return "all CPUs"
+
+
 def conditions(env: dict | None, res: dict) -> str:
     """What the runner gave the runs, in a sentence: cores, quota, placement, throttling."""
     if not env:
@@ -899,7 +918,7 @@ def resources_lines(res: dict, pr: bool, corpus: str = "wikidata") -> list[str]:
     # (on master, the other decoders' amplification only: the control beside mibz2's, on
     # the same runner and rounds)
     full = lambda x: pr or x == "mibz2"
-    head = "| threads (CPUs) | " + " | ".join(
+    head = "| threads: placement | " + " | ".join(
         f"{x} MB/s | {x} CPU ns/B | {x} amplification | {x} efficiency"
         if full(x)
         else f"{x} amplification"
@@ -918,7 +937,7 @@ def resources_lines(res: dict, pr: bool, corpus: str = "wikidata") -> list[str]:
         cpus = next(
             (rs[x]["threads"][str(t)]["cpus"] for x in shown if str(t) in rs[x]["threads"]), ""
         )
-        row = [f"{t} ({cpus})"]
+        row = [f"{t}: {placement(t, cpus, res.get('env'))}"]
         for x in shown:
             c = rs[x]["threads"].get(str(t))
             if not c:

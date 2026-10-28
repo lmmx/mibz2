@@ -69,7 +69,7 @@
 //! is the harness's, not the decode's: it moves itself off the CPUs a run is pinned to
 //! (onto the machine's others, where there are any: `sampler_cpus`), so it never preempts
 //! a pinned decode, and its own CPU (RUSAGE_THREAD, exact: `sampler_s`) is left out of
-//! the run's CPU.
+//! the run's CPU. `AB_SAMPLE_MS` sets its interval (0: none, to measure its cost).
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -256,43 +256,56 @@ fn sample_tasks(pid: u32, seen: &std::sync::Mutex<Seen>) {
 }
 
 impl Threads {
+    /// The sampler, every AB_SAMPLE_MS milliseconds (default 10; 0: no sampler at all, so
+    /// its cost to the decode can itself be measured: no split, no run-queue wait)
     fn watch(pid: u32) -> Threads {
         let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
         let seen = std::sync::Arc::new(std::sync::Mutex::new(BTreeMap::new()));
         let (s, m) = (stop.clone(), seen.clone());
-        let handle = std::thread::Builder::new()
-            .name("sampler".into())
-            .spawn(move || {
-                let away = off_the_pin();
-                while !s.load(std::sync::atomic::Ordering::Relaxed) {
-                    sample_tasks(pid, &m);
-                    std::thread::sleep(Duration::from_millis(10));
-                }
-                (rusage(1).0, away)
-            })
-            .unwrap();
+        let every: u64 = std::env::var("AB_SAMPLE_MS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(10);
+        let handle = (every > 0).then(|| {
+            std::thread::Builder::new()
+                .name("sampler".into())
+                .spawn(move || {
+                    let away = off_the_pin();
+                    while !s.load(std::sync::atomic::Ordering::Relaxed) {
+                        sample_tasks(pid, &m);
+                        std::thread::sleep(Duration::from_millis(every));
+                    }
+                    (rusage(1).0, away)
+                })
+                .unwrap()
+        });
         Threads {
             stop,
             seen,
-            handle: Some(handle),
+            handle,
             pid,
         }
     }
     /// A sample now (an in-process decoder's, once its last byte is read and before it is
     /// dropped, while its threads are still there to read)
     fn sample(&self) {
-        sample_tasks(self.pid, &self.seen);
+        if self.handle.is_some() {
+            sample_tasks(self.pid, &self.seen);
+        }
     }
     /// The threads that ran (more than 2% of the busiest's CPU), and each one's CPU
     /// seconds, busiest first (the sampler left out; "main" is the thread reading the
     /// decoder and hashing its output); every thread's run-queue wait, summed, in
     /// seconds; and the sampler's own CPU seconds
     fn finish(mut self, own: bool) -> Busy {
+        let Some(handle) = self.handle.take() else {
+            return (0, String::new(), 0.0, 0.0, "off".into());
+        };
         if own {
             sample_tasks(self.pid, &self.seen);
         }
         self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
-        let (sampler, away) = self.handle.take().unwrap().join().unwrap();
+        let (sampler, away) = handle.join().unwrap();
         let m = self.seen.lock().unwrap();
         let runq = m
             .values()

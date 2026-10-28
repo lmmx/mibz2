@@ -68,6 +68,11 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
     unreadable);
   - the system's CPU pressure stall time (`psi_cpu_ms`, PSI; null without it). A CPU
     stall is waiting for a CPU, never a core waiting on memory.
+- **`AB_SAMPLE_MS`:** the sampler's interval (default 10; 0: no sampler). The Actions tab's
+  `base_sample_ms` input sets it for the base arm, so a run with the base set to head
+  measures the sampler's own cost to the decode.
+- **Each thread count's placement, as a row label:** "pinned to CPU 1", "CPUs 0,2, one a
+  core", or "all 4 CPUs, sharing SMT siblings".
 - **`ab env`:** the CPUs allowed, their physical cores, the cgroup's CPU quota, and a check
   that the run-queue counter counts (threads twice the CPUs spin for 0.3 s).
 - **The CPU accounting's own check** (`accounting`): on this build's runs, the per-thread

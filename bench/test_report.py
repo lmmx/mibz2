@@ -244,6 +244,7 @@ class Resources(unittest.TestCase):
         self.assertEqual(a["worse"], [])
         self.assertEqual(a["broader_hardware"], [])
         self.assertTrue(a["verdict"].startswith("No change"))
+        self.assertIn("not a proof", a["verdict"])
 
     def test_faster_for_more_cpu_a_thread_is_a_trade_off(self):
         # head: 10% faster at 4 threads, for 15% more CPU there (amplification up)
@@ -272,6 +273,18 @@ class Resources(unittest.TestCase):
         a = pr_result(runs)["assessment"]
         self.assertTrue(a["verdict"].startswith("Inconclusive"))
         self.assertIn("throttled", a["verdict"])
+
+
+class Placement(unittest.TestCase):
+    ENV = {"cpus": 4, "cores": 2, "core_cpus": ["0,1", "2,3"]}
+
+    def test_each_thread_count_says_where_it_ran(self):
+        self.assertEqual(report.placement(1, "1", self.ENV), "pinned to CPU 1")
+        self.assertEqual(report.placement(2, "0,2", self.ENV), "CPUs 0,2, one a core")
+        # a pinned pair on one core's siblings is never called spread
+        self.assertEqual(report.placement(2, "0,1", self.ENV), "CPUs 0,1, pinned")
+        self.assertEqual(report.placement(4, "all", self.ENV), "all 4 CPUs, sharing SMT siblings")
+        self.assertEqual(report.placement(4, "all", None), "all CPUs")
 
 
 class Accounting(unittest.TestCase):
