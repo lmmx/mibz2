@@ -11,6 +11,7 @@
 #   --gap SECONDS       idle before each run (default none: a release decodes without
 #                       pauses; on the i9-10900K a 0.15 s gap brings on slow runs, #39)
 #   --out PATH          the result file (default occupancy-<UTC time>.json here)
+#   --ledger            print the footprint ledger (src/trace.rs) alone, with no runs
 # Needs: cargo, python3, git and lbzip2 (the corpus's blocks are checked against it).
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"

@@ -31,9 +31,9 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
 
 /// Input chunks queued for the scanner (the split writes 8 MB at a time)
-const INPUT_QUEUE: usize = 2;
+pub(crate) const INPUT_QUEUE: usize = 2;
 /// Bytes the scanner's window keeps behind it before it drops them
-const COMPACT: usize = 4 << 20;
+pub(crate) const COMPACT: usize = 4 << 20;
 
 /// A mark on the decoder's timeline (src/trace.rs), with the `trace` feature only
 macro_rules! mark {
@@ -44,6 +44,11 @@ macro_rules! mark {
     ($kind:ident, $place:expr) => {
         #[cfg(feature = "trace")]
         crate::trace::mark(crate::trace::Kind::$kind, $place);
+    };
+    // (with two sizes, in bytes: in use and reserved)
+    ($kind:ident, $place:expr, $len:expr, $cap:expr) => {
+        #[cfg(feature = "trace")]
+        crate::trace::mark_sized(crate::trace::Kind::$kind, $place, $len as u64, $cap as u64);
     };
 }
 
@@ -285,6 +290,12 @@ impl Source for ChannelSource<'_> {
                         self.base = self.released;
                     }
                     self.buf.extend_from_slice(&chunk);
+                    mark!(
+                        Window,
+                        crate::trace::NONE,
+                        self.base + self.buf.len() as u64 - self.released,
+                        self.buf.capacity()
+                    );
                 }
                 Err(_) => {
                     mark!(InputEnd);
@@ -356,7 +367,12 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
                 let place = st.issued;
                 st.issued += 1;
                 drop(st);
-                mark!(Issued, place);
+                mark!(
+                    Issued,
+                    place,
+                    std::mem::size_of_val(&symbols.syms[..]),
+                    symbols.syms.capacity() * std::mem::size_of::<u16>()
+                );
                 debug_assert_eq!(place, index);
                 if jobs.send((place, bit, symbols)).is_err() {
                     return finish(None);
@@ -381,6 +397,11 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             rx.recv()
         };
         let Ok((place, bit, symbols)) = job else {
+            // (its buffers' high-water marks, for the footprint ledger)
+            #[cfg(feature = "trace")]
+            if crate::trace::level() > 0 {
+                crate::trace::buffers(&scratch.buffers());
+            }
             return;
         };
         mark!(JobGot, place);
@@ -396,7 +417,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
         let res = catch_unwind(AssertUnwindSafe(|| {
             decode_block(&symbols, k, &mut scratch, &mut out)
         }));
-        mark!(DecodeEnd, place);
+        mark!(DecodeEnd, place, out.len(), out.capacity());
         let res = match res {
             Ok(Ok(_)) => Ok(out),
             Ok(Err(kind)) => Err(kind),

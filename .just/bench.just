@@ -129,3 +129,15 @@ bench-blocks *args:
     bash bench/corpus.sh
     cargo build --release --example ab
     python3 bench/blocks.py "$@"
+
+# The footprint ledger (src/trace.rs, docs/ledger.md) for the pinned corpus: what the
+# parallel decoder reserves, holds live and reads at random, by category, at each thread
+# count, from the code alone (no run). bench-occupancy prints it with the measured figures.
+#   just bench-ledger
+#   just bench-ledger --threads 1,2,4,10
+
+# The parallel decoder's footprint, by category, from its arithmetic (#39, #65)
+[positional-arguments]
+bench-ledger *args:
+    bash bench/corpus.sh
+    target/release/examples/occupancy corpora/wikidata.bz2 --ledger "$@"
