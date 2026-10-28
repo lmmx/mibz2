@@ -9,6 +9,7 @@ differs:
 - plain: the decode as the occupancy instrument runs it (this user, no perf);
 - perf: the same under `perf stat -e cycles:u,ref-cycles:u,instructions:u` (this user;
   needs kernel.perf_event_paranoid <= 2, else the arm is left out and said so);
+- sudo: as root without perf (`sudo` alone), which separates running as root from counting;
 - sudo-perf: as bench-imc's core step runs it (root, `sudo perf stat`, user and kernel);
 
 each with the occupancy instrument's 0.15 s gap before a run, and with none. Each run's
@@ -45,6 +46,8 @@ def once(arm, t):
         out = os.path.join(d, "perf.csv")
         if arm == "plain":
             argv = child
+        elif arm == "sudo":
+            argv = ["sudo", *child]
         else:
             ev = EVENTS[arm]
             argv = ["perf", "stat", "-x,", "-o", out, "-e", ",".join(ev), "--", *child]
@@ -57,7 +60,7 @@ def once(arm, t):
         if kv.get("err", "-") != "-" or "wall" not in kv:
             sys.exit(f"bench-regimes: the decode failed: {line or r.stdout}")
         res = {"wall": float(kv["wall"]), "cpu": float(kv["cpu"]), "out": int(kv["out"])}
-        if arm != "plain":
+        if arm in EVENTS:
             with open(out) as f:
                 got = parse(f.read(), EVENTS[arm])[None]
             c = {k.split(":")[0]: v for k, v in got.items()}
@@ -92,7 +95,7 @@ def main():
     for p in [EXE, CORPUS]:
         if not os.path.exists(p):
             sys.exit(f"bench-regimes: no {p}; run bash bench/corpus.sh (just bench-regimes does)")
-    arms = ["plain", "sudo-perf"]
+    arms = ["plain", "sudo", "sudo-perf"]
     paranoid = (run(["cat", "/proc/sys/kernel/perf_event_paranoid"]).stdout or "?").strip()
     if perf_allowed():
         arms.insert(1, "perf")
@@ -101,7 +104,7 @@ def main():
             f"bench-regimes: perf_event_paranoid is {paranoid}, so this user can't count its"
             " own process: the perf arm is left out"
         )
-    print("bench-regimes: the sudo-perf arm needs sudo")
+    print("bench-regimes: the sudo and sudo-perf arms need sudo")
     run(["sudo", "-v"])
     utc = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out = a.out or f"regimes-{utc}.json"
