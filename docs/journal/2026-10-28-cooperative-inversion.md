@@ -293,6 +293,20 @@ That is 20 balanced rounds, with the paired mean and its 95% interval.
 Four-core non-inferiority holds by construction (§1), and is checked on CI's 2-core
 runners as for any walk change.
 
+**If it wins, measure why before building on it.** Cooperative inversion can raise
+throughput in two ways:
+- fewer misses, with 4 live tables in place of 8 and the L3 hit share held at p4's;
+- more misses in flight per table, with 8 cores' fill buffers overlapping one table's
+  latency.
+
+The two may coexist, and they call for different designs:
+- the first, a scheduler that budgets live tables by the L3 (§1);
+- the second, more lanes per block, however they are spread.
+
+So a winning arm is first profiled against p4 and p8 with the existing counters
+(`just bench-imc`'s L3 hit share, misses per KB and occupancy per miss) before any
+scheduler is built on either reading.
+
 ## 6. Decisions
 
 - wikidata-pq keeps its cap, `min(physical cores, 4)` (lmmx/wikidata-pq#212). Cooperative
