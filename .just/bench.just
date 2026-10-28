@@ -116,3 +116,16 @@ bench-session *args:
     python3 bench/imc.py core --events grouped --threads 4,6,8,10 --reps 3 --settle 0 "$@"
     python3 bench/contend.py "$@"
     python3 bench/variants.py --variants gate2,gate3,gate4,gate6 --threads 4,6,8,10 "$@"
+
+# bench/blocks.py: the benchmark's content recompressed at -1, -3, -6 and -9 (lbzip2), each
+# decoded by mibz2 at 2, 4, 6, 8 and 10 threads back to back: whether the best worker
+# count moves as the blocks (and so every worker's T-vector) shrink. It writes
+# blocks-<UTC time>.json (and ab's .jsonl per level) to share.
+#   just bench-blocks --note "quiet, recent reboot"
+
+# Whether the scaling knee follows the block size: the same content at -1 to -9 (#39, #65)
+[positional-arguments]
+bench-blocks *args:
+    bash bench/corpus.sh
+    cargo build --release --example ab
+    python3 bench/blocks.py "$@"
