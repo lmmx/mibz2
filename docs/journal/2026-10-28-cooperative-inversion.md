@@ -373,6 +373,65 @@ source here. Each says when it would be pursued. None adds an arm to the registe
    If coordination is high on the workstation, `perf c2c` on the winning arm says which
    line it is.
 
+## 5c. A third pass: what was already known, what's new (recorded before the run)
+
+Another outside literature pass (2026-10-28). Most of it is already in this journal; the
+new parts are a footprint measured from source and one more lead of the pair walk's
+shape.
+
+**Already recorded:**
+- **Weißenberger & Schmidt, ICPP 2024** (doi:10.1145/3673038.3673067). Their GPU inverse
+  BWT for standard bzip2 streams was read at 66d263c (`2026-10-27-research-synthesis.md`,
+  finding 5): Helman–JáJá list ranking from splitters, then a positional scatter. It was
+  recorded as "nothing to transfer to the CPU decoder".
+- **KKP 2012 §3's independently decoded parts** assume boundary positions carried with the
+  input (auxiliary indices from the forward transform). A bzip2 stream carries only
+  `orig_ptr`, so mibz2 finds its segments itself, from pseudo-random flagged starts, and
+  joins them by successor links (finding 7 there). libsais's chain decode does the same
+  from hashed mark rows.
+- **KKP's Precopy** was tried, as #9 (`2026-10-27-precopy-forward-chains.md`). It copies
+  31.5% of Wikidata's bytes, so whether the corpus is repetitive enough is already
+  measured, not inferred from repetitive test sets.
+
+**New, from source** (`weissenberger/bzip2gpu`, `src/ibwt.cu` on main, 2026-10-28):
+- **Splitters:** at a fixed stride, every `LIST_DISTANCE` = 32 rows (`head = tid *
+  list_distance`, with the primary index overriding one). A sublist ends at the next
+  multiple of 32 it reaches. Their mean length is 32, with no bound on a single one shown.
+- **Output:** each byte is scattered to `ranks[i] + reduced_ranks[sublist]`. The local
+  rank comes from `helman_jaja_local`, the sublist offsets from a prefix sum in
+  `helman_jaja_reduce`.
+- **Footprint a row:**
+  - 2 B of BWT byte copies (a sort double buffer);
+  - 8 B of permutation (`perm`, `perm_alt`, the latter reused as the ranks);
+  - 4 B of `sublist_ids`;
+  - about 0.25 B of reduced lists and ranks.
+
+  That is about 14 B a row, 12.8 MB for a 900 kB block, against our 4 B a row.
+- **Bearing (hypothesis):** three ways exist to pay for independent inversion work on one
+  block:
+  1. boundary indices carried in the input, which bzip2 lacks;
+  2. discover segments and join them (mibz2, libsais);
+  3. rank every element and scatter (the GPU decoder).
+
+  On the i9, the third's 3.5× footprint would put about one block in the L3 budget that
+  holds four of ours. It is a reference for the output-assembly question only: pursued
+  only if a cooperative arm's join (`SegScratch::assemble`'s copy) shows up as a cost.
+
+**New conditional lead: Precopy under pressure.** Precopy turns runs of random T-vector
+reads into sequential copies, which is a cut in misses a byte, like the pair walk. It was
+rejected on CI's 2-core runners, at +18.0% (1 thread) and +6.0% (4 threads) on Wikidata.
+Its penalty shrank as the threads rose. That fits a cost paid in instructions and a saving
+paid in misses, and the saving grows past the knee (hypothesis).
+- **Reopening condition:** `perf/precopy-chains` (kept) measured at 8–10 workers on the
+  workstation, after the registered run and the pair walk's lead. A miss-cutting change
+  that loses below the knee can win past it.
+- The scaling shape and the absolute figure are reported separately, as for the pair walk.
+
+**Not verified here:** Sibeyn, Guillaume & Seidel's "Practical parallel list ranking"
+(1999), cited by the outside pass as showing that list ranking struggles to beat the
+sequential walk. It is plausible and consistent with §4's negative findings, but it was
+not read.
+
 ## 6. Decisions
 
 - wikidata-pq keeps its cap, `min(physical cores, 4)` (lmmx/wikidata-pq#212). Cooperative
