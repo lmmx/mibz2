@@ -63,7 +63,7 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
 - **Recorded per run:**
   - the CPUs a run was given (`cpus`);
   - the threads' run-queue wait (`runq_s`, from schedstat);
-  - the sampler's own CPU (`sampler_s`);
+  - the sampler's own CPU and CPUs (`sampler_s`, `sampler_cpus`);
   - the cgroup's CPU throttling over the run (`throttled_n`, `throttled_ms`; null where
     unreadable);
   - the system's CPU pressure stall time (`psi_cpu_ms`, PSI; null without it). A CPU
@@ -77,14 +77,19 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
 ### Changed
 
 - **The decoder's figures are redefined (`MEANING`: decoder [1, 3]).** The per-thread
-  sampler, a thread inside each run's process whose CPU is the run's, now samples every
-  10 ms instead of every 50 ms.
-  - At 50 ms, mibz2's workers, which end when the jobs run out before the reader's last
-    block, each lost up to 50 ms. That was 0.1-0.35 s a run, never in the CPU total but
-    in the split and in the whole-dump model's workers: about 14% of the workers' CPU on
-    CI's 4-thread Wikidata runs.
-  - At 10 ms the split's shortfall is 4-6% (unattributed, now shown).
-  - The sampler's own CPU is recorded: about 0.01 s a second of run.
+  sampler now samples every 10 ms instead of every 50 ms, and it is kept out of the run.
+  - **Why the old split was short.** At 50 ms, mibz2's workers, which end when the jobs
+    run out before the reader's last block, each lost up to 50 ms. That was 0.1-0.35 s a
+    run, never missing from the CPU total but missing from the split and from the
+    whole-dump model's workers: about 14% of the workers' CPU on CI's 4-thread Wikidata
+    runs. At 10 ms the split's shortfall is 4-9%, now shown as unattributed.
+  - **Kept out of the run.** The sampler moves itself off the CPUs a run is pinned to, so
+    it never preempts a pinned decode, and its own CPU (RUSAGE_THREAD, exact) is left out
+    of the run's CPU.
+  - **What that removes.** Kept in, at 10 ms, it cost the 1-thread runs +1.0% (+0.4%,
+    +1.7%) in wall and CPU on #69's first bench. Before 3.0.0 the sampler's smaller cost
+    was in every run's CPU. Runs on every CPU (4 threads on CI) still share their CPUs
+    with it.
 - **A thread is keyed by its id alone, its name read with its CPU from one `stat`.** A name
   read apart could come back empty as a thread ended, which made a second entry for the
   same thread and counted it twice.

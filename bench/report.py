@@ -60,8 +60,8 @@ from pathlib import Path
 BENCH = "3.0.0"
 # Each family of figures, and the major versions that set or redefined its meaning
 # (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus
-# and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler, inside
-# each run's process, every 10 ms instead of 50: its CPU is the run's); the stage
+# and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler every
+# 10 ms instead of 50, off a run's pinned CPUs, its own CPU left out of the run's); the stage
 # table's since 2.0.0 (1.2.0's measured warm repeats). A new major that redefines a family
 # adds itself to that family's list.
 MEANING = {"decoder": [1, 3], "stages": [1, 2]}

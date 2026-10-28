@@ -65,8 +65,11 @@
 //! 3.0.0 the sampling was every 50 ms: mibz2's workers end when the jobs run out, before
 //! the reader's last block, and lost up to 50 ms each, 0.1-0.35 s a run uncounted in the
 //! per-thread split (never in the CPU total, which is the kernel's). The split's shortfall
-//! against the total stays in the record, as the report's unattributed CPU; the sampler's
-//! own CPU, which an in-process arm's total includes, is recorded (`sampler_s`).
+//! against the total stays in the record, as the report's unattributed CPU. The sampler
+//! is the harness's, not the decode's: it moves itself off the CPUs a run is pinned to
+//! (onto the machine's others, where there are any: `sampler_cpus`), so it never preempts
+//! a pinned decode, and its own CPU (RUSAGE_THREAD, exact: `sampler_s`) is left out of
+//! the run's CPU.
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -86,9 +89,11 @@ struct Rusage {
 
 extern "C" {
     fn getrusage(who: i32, usage: *mut Rusage) -> i32;
+    fn sched_setaffinity(pid: i32, size: usize, mask: *const u64) -> i32;
 }
 
-/// (CPU seconds, peak RSS in KiB) of this process (who 0) or its waited-for children (-1)
+/// (CPU seconds, peak RSS in KiB) of this process (who 0), its waited-for children (-1)
+/// or the calling thread (1, RUSAGE_THREAD)
 fn rusage(who: i32) -> (f64, i64) {
     let mut r = Rusage::default();
     // SAFETY: a plain out-parameter of the size the kernel writes (struct rusage, LP64)
@@ -158,6 +163,36 @@ impl Hash {
     }
 }
 
+/// Move the calling thread (the sampler) off the CPUs its process is pinned to, onto the
+/// machine's other online CPUs, so it never preempts a pinned decode: the CPUs it moved
+/// to, or None where there are none (a run on every CPU) or the kernel refuses
+fn off_the_pin() -> Option<String> {
+    let status = std::fs::read_to_string("/proc/thread-self/status").ok()?;
+    let pinned = cpu_list(
+        status
+            .lines()
+            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))?,
+    );
+    let online = cpu_list(&std::fs::read_to_string("/sys/devices/system/cpu/online").ok()?);
+    let others: Vec<usize> = online.into_iter().filter(|c| !pinned.contains(c)).collect();
+    if others.is_empty() || others.iter().any(|&c| c >= 1024) {
+        return None;
+    }
+    let mut mask = [0u64; 16];
+    for &c in &others {
+        mask[c / 64] |= 1 << (c % 64);
+    }
+    // SAFETY: a cpu_set_t of 1024 bits, read by the kernel; pid 0 is the calling thread
+    let ok = unsafe { sched_setaffinity(0, std::mem::size_of_val(&mask), mask.as_ptr()) } == 0;
+    ok.then(|| {
+        others
+            .iter()
+            .map(|c| c.to_string())
+            .collect::<Vec<_>>()
+            .join(",")
+    })
+}
+
 /// Each thread, by its id: its name, its CPU (ticks) and its run-queue wait (ns: time
 /// runnable, waiting for a CPU). Keyed by the id alone, the name read with the CPU from
 /// the same `stat`: a name read apart can come back empty as a thread ends, and before
@@ -165,15 +200,18 @@ impl Hash {
 type Seen = BTreeMap<u32, (String, u64, u64)>;
 
 /// A run's threads, as `Threads::finish` gives them: how many were busy, each one's CPU
-/// ("name=seconds ..."), their summed run-queue wait and the sampler's own CPU (seconds)
-type Busy = (usize, String, f64, f64);
+/// ("name=seconds ..."), their summed run-queue wait, the sampler's own CPU (seconds,
+/// exact) and the CPUs it ran on ("pinned": the run's own)
+type Busy = (usize, String, f64, f64, String);
 
 /// Each thread's CPU and run-queue wait of process `pid`, sampled every 10 ms until `stop`,
 /// the last sample of each thread kept (both only grow)
 struct Threads {
     stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
     seen: std::sync::Arc<std::sync::Mutex<Seen>>,
-    handle: Option<std::thread::JoinHandle<()>>,
+    /// the sampler: its own CPU seconds (RUSAGE_THREAD) and the CPUs it ran on, when it
+    /// could leave the run's pinned CPUs
+    handle: Option<std::thread::JoinHandle<(f64, Option<String>)>>,
     pid: u32,
 }
 
@@ -225,10 +263,12 @@ impl Threads {
         let handle = std::thread::Builder::new()
             .name("sampler".into())
             .spawn(move || {
+                let away = off_the_pin();
                 while !s.load(std::sync::atomic::Ordering::Relaxed) {
                     sample_tasks(pid, &m);
                     std::thread::sleep(Duration::from_millis(10));
                 }
+                (rusage(1).0, away)
             })
             .unwrap();
         Threads {
@@ -252,13 +292,8 @@ impl Threads {
             sample_tasks(self.pid, &self.seen);
         }
         self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
-        self.handle.take().unwrap().join().unwrap();
+        let (sampler, away) = self.handle.take().unwrap().join().unwrap();
         let m = self.seen.lock().unwrap();
-        let sampler = m
-            .values()
-            .filter(|x| x.0 == "sampler")
-            .map(|x| x.1 as f64 / HZ)
-            .sum();
         let runq = m
             .values()
             .filter(|x| x.0 != "sampler")
@@ -287,7 +322,8 @@ impl Threads {
             .filter(|x| x.0 * 50 > top)
             .map(|(t, k)| format!("{k}={:.2}", *t as f64 / HZ))
             .collect();
-        (busy.len(), busy.join(" "), runq, sampler)
+        let away = away.unwrap_or_else(|| "pinned".into());
+        (busy.len(), busy.join(" "), runq, sampler, away)
     }
 }
 
@@ -409,7 +445,7 @@ fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f6
             return (
                 Err(format!("{cmd:?}: {e}")),
                 0.0,
-                (0, String::new(), 0.0, 0.0),
+                (0, String::new(), 0.0, 0.0, String::new()),
                 0.0,
             )
         }
@@ -448,7 +484,7 @@ fn child(arm: &str, threads: usize, path: &str) {
     let mut h = Hash::new();
     let external = program(arm, threads, path);
     let is_program = external.is_some();
-    let (res, wall, (nthreads, per_thread, runq, sampler), startup) = match external {
+    let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus), startup) = match external {
         Some((cmd, ready)) => piped(cmd, ready, &mut h),
         None => {
             let w = Threads::watch(std::process::id());
@@ -461,12 +497,12 @@ fn child(arm: &str, threads: usize, path: &str) {
     let (cpu_self, rss_self) = rusage(0);
     let (cpu_kids, rss_kids) = rusage(-1);
     // (a program's arm: its own peak RSS, and its CPU with this process's hashing, less
-    // its interpreter's start)
+    // its interpreter's start; every arm's less the sampler's own, which is ours)
     let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.3},\"err\":\"{err}\"}}",
-        cpu_self + cpu_kids - startup,
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"err\":\"{err}\"}}",
+        cpu_self + cpu_kids - startup - sampler,
         h.n,
         h.finish()
     );
