@@ -21,8 +21,10 @@
 #
 # The workload: the crate's corpora (`ab gen`, tests/common/mod.rs) at a small scale, and
 # 12 MB of the Wikidata dump's own bzip2 blocks (bench/wikidata.json: byte-range windows
-# of a dated dump, each window's SHA-256 and the corpus's pinned). At 1 thread and at the
-# runner's cores, ROUNDS rounds.
+# of a dated dump, each window's SHA-256 and the corpus's pinned). At 1 thread, at 2 (one
+# CPU on each of 2 cores, `--spread`: the runners' 4 CPUs are 2 cores) and at the runner's
+# CPUs, ROUNDS rounds. The 2-thread runs (about 40 s of the run) give CPU amplification
+# free of SMT: the report's resources table and its assessment (bench/report.py).
 #
 # The stages (bench/stages.py): each build's examples/phases.rs on the Wikidata blocks,
 # pinned to one CPU, STAGE_ROUNDS rounds of each build once, each stage's fastest of
@@ -60,6 +62,9 @@ on:
     inputs:
       base:
         description: "A commit to compare against, as on a pull request (empty: mibz2 against the alternatives, as on master)"
+        required: false
+      base_sample_ms:
+        description: "The base arm's thread sampler interval (AB_SAMPLE_MS; 0: none). With base set to the head commit, this measures the sampler's own cost to the decode"
         required: false
 
 # A push to a pull request cancels its run in progress; master's runs each make a record
@@ -146,6 +151,8 @@ jobs:
 
       - name: Build the base
         if: env.MODE == 'pr'
+        env:
+          BASE_SAMPLE_MS: ${{ inputs.base_sample_ms }}
         run: |
           git worktree add --detach .base-src "$BASE_SHA"
           test -f .base-src/examples/ab.rs || { echo "::error::the base $BASE_SHA has no examples/ab.rs"; exit 1; }
@@ -154,6 +161,13 @@ jobs:
           (cd .base-src && CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target" cargo build --release --example ab $phases)
           mkdir -p base && cp target/release/examples/ab base/ab
           if [ -n "$phases" ]; then cp target/release/examples/phases base/phases; fi
+          # (the Actions tab only: the base arm with its own sampler interval, AB_SAMPLE_MS)
+          if [ -n "$BASE_SAMPLE_MS" ]; then
+            mv base/ab base/ab-bin
+            printf '#!/bin/sh\nAB_SAMPLE_MS=%s exec "%s" "$@"\n' "$BASE_SAMPLE_MS" "$PWD/base/ab-bin" > base/ab
+            chmod +x base/ab
+            echo "base arm: AB_SAMPLE_MS=$BASE_SAMPLE_MS"
+          fi
 
       - name: Corpora
         run: bin/ab gen corpora "$SCALE"
@@ -178,9 +192,14 @@ jobs:
           python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2
           ls -l corpora
 
+      # The runner as the runs see it (cores, quota, the run-queue counter's check)
+      - name: Environment
+        run: bin/ab env | tee env.json
+
       - name: Run
         run: |
-          bin/ab run runs.jsonl --arms "$ARMS" --threads "1,$(nproc)" --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
+          threads=$([ "$(nproc)" -gt 2 ] && echo "1,2,$(nproc)" || echo "1,$(nproc)")
+          bin/ab run runs.jsonl --arms "$ARMS" --threads "$threads" --spread --rounds "$ROUNDS" --settle "$SETTLE" corpora/*.bz2
 
       # Each stage on its own, on one thread: a diagnostic beside the decoder's figures
       - name: Stages
@@ -203,9 +222,11 @@ jobs:
           ref=$([ "$MODE" = pr ] && echo "mibz2@base/ab" || echo mibz2)
           { echo "## ab summary (reference: $ref)"; bin/ab summary runs.jsonl --ref "$ref"; } > ab-summary.md
           python3 bench/report.py summary runs.jsonl --corpora corpora --mode "$MODE" --head "$HEAD_SHA" \
-            ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --stages stages.jsonl \
+            ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --stages stages.jsonl --env env.json \
             --out result.json --md comment.md
           cat comment.md ab-summary.md >> "$GITHUB_STEP_SUMMARY"
+          # (the resources section in the log too, where a dispatched run's figures can be read)
+          sed -n '/^### Resources/,/^<\/details>/p' comment.md
 
       - name: Comment
         if: "!cancelled() && github.event_name == 'pull_request'"
@@ -226,6 +247,7 @@ jobs:
           name: bench-${{ env.MODE }}-${{ env.HEAD_SHA }}
           path: |
             runs.jsonl
+            env.json
             stages.jsonl
             result.json
             comment.md

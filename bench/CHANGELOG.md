@@ -35,6 +35,100 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.0.0] - 2026-10-28
+
+### Added
+
+- **Resources, beside the decoder's figures** (`resources`, `paired_resources` and
+  `assessment` in bench/report.py), on the Wikidata blocks:
+  - CPU per byte at each thread count;
+  - its **amplification**: CPU at N threads over the same build's at 1, paired by round.
+    1× means no extra CPU for the same bytes. Rising, it means the work costs more as
+    threads are added, from stalls, sharing or synchronisation;
+  - parallel efficiency;
+  - each build's best thread count;
+  - the threads' mean run-queue wait;
+  - the CPU the per-thread split leaves unattributed.
+- **On a pull request:**
+  - head's amplification over base's, at each thread count;
+  - best against best;
+  - a one-line **assessment** from four comparisons declared in `assessment`: speed (best
+    against best), CPU per byte at the most threads, amplification, and peak RSS at the
+    most threads. It says whether the run could answer (parity, accounting, throttling),
+    and when a change needs a machine with more cores.
+  - Nothing in it fails CI, except the outputs and the accounting's own check.
+- **2-thread runs, pinned to one CPU a core** (`ab run --spread`). On CI's runners (4 CPUs
+  on 2 cores) they are two cores' worth, so their amplification is free of SMT. The
+  4-thread runs share each core's two siblings, as before.
+- **Recorded per run:**
+  - the CPUs a run was given (`cpus`);
+  - the threads' run-queue wait (`runq_s`, from schedstat);
+  - the sampler's own CPU and CPUs (`sampler_s`, `sampler_cpus`);
+  - the cgroup's CPU throttling over the run (`throttled_n`, `throttled_ms`; null where
+    unreadable);
+  - the system's CPU pressure stall time (`psi_cpu_ms`, PSI; null without it). A CPU
+    stall is waiting for a CPU, never a core waiting on memory.
+- **`AB_SAMPLE_MS`:** the sampler's interval (default 10; 0: no sampler). The Actions tab's
+  `base_sample_ms` input sets it for the base arm, so a run with the base set to head
+  measures the sampler's own cost to the decode.
+- **Each thread count's placement, as a row label:** "pinned to CPU 1", "CPUs 0,2, one a
+  core", or "all 4 CPUs, sharing SMT siblings".
+- **`ab env`:** the CPUs allowed, their physical cores, the cgroup's CPU quota, and a check
+  that the run-queue counter counts (threads twice the CPUs spin for 0.3 s).
+- **The CPU accounting's own check** (`accounting`): on this build's runs, the per-thread
+  split never holds more than the process's total, getrusage over every thread. Failing
+  it fails the run, as broken instrumentation.
+
+### Fixed
+
+- **The arms' order now alternates (`arm_order` in examples/ab.rs).** Before, a round's order
+  was rotated a step and then reversed in every other round. With two arms the reversal
+  undid the rotation, so on every pull request since 1.0.0 head ran before base in every
+  round, at every thread count.
+  - An A/A run on CI (#69: one commit as head and as base, 10 rounds, EPYC 9V74) measured
+    the first-run arm at:
+    - wall 1.8% faster at 1 thread (−3.2%, −0.4%) and 2.3% faster at 2 (−4.1%, −0.5%);
+    - CPU 2.4% lower at 4 threads (−3.5%, −1.3%);
+    - 7 of 42 head-over-base rows excluding no change, against about 2 by chance;
+    - an assessment of "Better (CPU cost)" for no change at all.
+  - Over 2 × arms rounds, each arm now runs in each position equally often, with a test.
+  - **Past head-over-base verdicts within a few percent may lean toward head.** Larger
+    ones stand.
+
+### Changed
+
+- **The decoder's figures are redefined (`MEANING`: decoder [1, 3]).** The per-thread
+  sampler now samples every 10 ms instead of every 50 ms, and it is kept out of the run.
+  - **Why the old split was short.** At 50 ms, mibz2's workers, which end when the jobs
+    run out before the reader's last block, each lost up to 50 ms. That was 0.1-0.35 s a
+    run, never missing from the CPU total but missing from the split and from the
+    whole-dump model's workers: about 14% of the workers' CPU on CI's 4-thread Wikidata
+    runs. At 10 ms the split's shortfall is 4-9%, now shown as unattributed.
+  - **Kept out of the run.** The sampler moves itself off the CPUs a run is pinned to, so
+    it never preempts a pinned decode, and its own CPU (RUSAGE_THREAD, exact) is left out
+    of the run's CPU.
+  - **The decode's clock starts only once the sampler has moved.**
+  - **Measured on CI** (`base_sample_ms=0`: the same commit sampled and unsampled):
+    - wikidata within noise at 1/2/4 threads (+1.6%, −1.5%, +2.4%, intervals about ±4%);
+    - before that handshake, the 12 ms `onebyte` runs were +9.8% at 1 thread.
+  - **A 1-thread run of an in-process arm runs no sampler at all.** After the handshake,
+    sampling still cost 12 ms single-threaded runs +4.7–17% in wall (`runs`, `onebyte`),
+    though wikidata stayed within noise (+0.6%, +0.7%, +1.2% at 1/2/4 threads, its CPU at 4
+    threads +0.2%). Its split is its own thread's CPU, and its run-queue wait is its own
+    schedstat.
+  - **On a 2-core runner a 2-thread run's other CPUs are its own cores' SMT siblings,** so
+    there the sampler shares the workers' cores.
+  - **What that removes.** Kept in, at 10 ms, it cost the 1-thread runs +1.0% (+0.4%,
+    +1.7%) in wall and CPU on #69's first bench. Before 3.0.0 the sampler's smaller cost
+    was in every run's CPU. Runs on every CPU (4 threads on CI) still share their CPUs
+    with it.
+- **A thread is keyed by its id alone, its name read with its CPU from one `stat`.** A name
+  read apart could come back empty as a thread ended, which made a second entry for the
+  same thread and counted it twice.
+- **The CPU split table shows the unattributed CPU.** A base built before 3.0.0 still
+  samples every 50 ms, so on such a pull request its split and the model undercount its
+  workers against head's.
+
 ## [2.1.1] - 2026-10-27
 
 ### Changed

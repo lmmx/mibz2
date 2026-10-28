@@ -25,6 +25,9 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: Tests
         run: cargo test
+      # the benchmark harness's own tests (examples/ab.rs: CPU lists, cores, --spread)
+      - name: Harness tests
+        run: cargo test --example ab
       # bench/alternatives has its own lock, on this crate by path, and master's benchmark
       # builds it --locked: a version bump that leaves it behind fails here, not only there
       - name: The benchmark alternatives' lock
