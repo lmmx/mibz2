@@ -96,6 +96,21 @@ These come from one sweep of every thread's marks in time order. Each interval i
 credited to the states before the mark that ends it. Shares are of the trace's span, or,
 for the workers, of the workers' time.
 
+**Every figure is summed from events, never sampled:** a block's admission (`Issued`)
+and release (`Taken`), a decode's start and end, a buffer's size where it is filled. So
+no block or buffer can come and go between two readings, and the high-water marks are
+exact for the trace. Each run reconciles the events against independent anchors and
+prints any remainder rather than hiding it:
+- the decoded bytes summed over `DecodeEnd` against the bytes the reader read;
+- the end state empty: no block ready and untaken, no symbols held, no T-vector live,
+  the window at 0;
+- every worker's buffers recorded;
+- the blocks decoded, published and taken, which the trace's completeness check already
+  requires to be the same.
+
+One race is counted, not hidden: a worker marks `Ready` after it releases the lock, so the
+reader can take a block before its `Ready` mark. Such a block counts as held for 0.
+
 - **Reader waiting:** from `ReadWait` to `Taken`. Split into:
   - **starved:** the next block in order is not yet ready, so the decoder is behind;
   - **the handoff:** the next block is ready and the reader has not yet woken to take it.

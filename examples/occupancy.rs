@@ -128,6 +128,15 @@ fn child(a: &[String]) {
             )
         });
         summarise(&trace::take(), threads, level, timeout, &mut kv);
+        // the decoded bytes the marks sum, against the bytes the reader read: an
+        // independent anchor, its remainder shown rather than hidden
+        let sum =
+            kv.0.iter()
+                .find(|(k, _)| k == "t.f.decoded_sum")
+                .and_then(|(_, v)| v.parse::<f64>().ok());
+        if let Some(sum) = sum {
+            kv.f("t.f.decoded_unreconciled", h.n as f64 - sum);
+        }
     }
     trace::set_level(0);
     let (cpu, rss) = rusage();
@@ -584,6 +593,8 @@ struct Queues {
     syms_dead_int: f64,
     window_live_max: u64,
     window_cap_max: u64,
+    decoded_sum: u64,
+    ready_after_taken: u64,
 }
 
 impl Queues {
@@ -678,6 +689,7 @@ impl Queues {
                     self.out_cap_sum += m.cap as f64;
                     self.out_cap_max = self.out_cap_max.max(m.cap);
                     self.decoded_max = self.decoded_max.max(m.len);
+                    self.decoded_sum += m.len;
                 }
             }
             (Some(Role::Worker), Kind::Ready) => {
@@ -694,6 +706,8 @@ impl Queues {
                     self.ready_bytes += *self.out_len.get(&place).unwrap_or(&0) as i64;
                     self.ready_hw = self.ready_hw.max(self.ready.len());
                     self.ready_bytes_hw = self.ready_bytes_hw.max(self.ready_bytes);
+                } else {
+                    self.ready_after_taken += 1;
                 }
             }
             (Some(Role::Reader), Kind::Taken) => {
@@ -754,6 +768,21 @@ impl Queues {
         kv.f("t.f.syms_cap_max_mb", self.syms_cap_max as f64 / MB);
         kv.f("t.f.window_live_max_mb", self.window_live_max as f64 / MB);
         kv.f("t.f.window_cap_max_mb", self.window_cap_max as f64 / MB);
+        // reconciliation: every figure above is summed from events, never sampled; what
+        // the events leave over at the trace's end (each 0 when they balance), and the
+        // decoded bytes they sum, for the child to hold against the bytes it read
+        kv.f(
+            "t.q.residual",
+            (self.ready.len() as i64
+                + self.ready_bytes.abs()
+                + self.syms_held.abs()
+                + self.syms_dead.abs()
+                + self.tv_n.abs()
+                + self.tv_rows as i64
+                + self.window().abs()) as f64,
+        );
+        kv.f("t.q.ready_after_taken", self.ready_after_taken as f64);
+        kv.f("t.f.decoded_sum", self.decoded_sum as f64);
     }
 }
 
@@ -774,6 +803,7 @@ fn footprint(traces: &[ThreadTrace], roles: &[Option<Role>], kv: &mut Kv) {
         }
         max = max.max(total);
     }
+    kv.f("t.f.w.recorded", n);
     if n == 0.0 {
         return;
     }
@@ -1552,16 +1582,32 @@ fn queue_summary(
         Some(slots as f64),
     );
     check("T-vector phase", g("q.tvec_hw"), 0.0, Some(t as f64));
+    // the events' reconciliations: what they leave over at the end, the decoded bytes
+    // they sum against the bytes read, and every worker's buffers recorded
+    let mut rec = Vec::new();
+    if g("q.residual") != 0.0 {
+        rec.push(format!("end state not empty ({})", f("q.residual", 0)));
+    }
+    if g("f.decoded_unreconciled") != 0.0 {
+        rec.push(format!(
+            "decoded bytes off by {}",
+            f("f.decoded_unreconciled", 0)
+        ));
+    }
+    if g("f.w.recorded") != t as f64 {
+        rec.push(format!(
+            "{} of {t} workers' buffers recorded",
+            f("f.w.recorded", 0)
+        ));
+    }
     let _ = writeln!(
         o,
-        "  worker buffers (each at its end, mean MB): {} total = {} · ledger check: {}",
+        "  worker buffers (each at its end, mean MB): {} total = {} · ledger check: {} · events reconciled: {}{}",
         f("f.w.cap_mb", 2),
         parts.join(" + "),
-        if bad.is_empty() {
-            "ok".into()
-        } else {
-            format!("VIOLATED: {}", bad.join("; "))
-        }
+        if bad.is_empty() { "ok".into() } else { format!("VIOLATED: {}", bad.join("; ")) },
+        if rec.is_empty() { "ok (Σ decoded = bytes read, end state empty, every worker recorded)".into() } else { format!("NO: {}", rec.join("; ")) },
+        if g("q.ready_after_taken") > 0.0 { format!(" · {} blocks marked ready after taken (held 0)", f("q.ready_after_taken", 0)) } else { String::new() }
     );
     o
 }
@@ -2161,6 +2207,9 @@ mod tests {
         close("t.f.out_cap_max_mb", 2128.0);
         close("t.f.out_cap_over_len", (1064.0 * 2.0 + 2128.0) / 1390.0);
         close("t.f.window_cap_max_mb", 4096.0);
+        close("t.q.residual", 0.0);
+        close("t.q.ready_after_taken", 0.0);
+        close("t.f.decoded_sum", 1390.0 * 1e6);
         close("t.f.window_live_max_mb", 1000.0);
         close("t.q.decode_ms_mean", (40.0 + 15.0 + 4.0) / 3.0);
         close("t.f.syms_cap_max_mb", 1000.0);
