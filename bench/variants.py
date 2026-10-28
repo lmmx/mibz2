@@ -10,7 +10,10 @@ decoder and runs them side by side, back to back, across thread counts:
   v0.1.3 (32 lanes with each lane's next entry prefetched, #21, and the 2-symbol Huffman
   lookups, #24), v0.1.4 (the 16-wide run store, #7), v0.1.5 (the room walk's passes, #37);
 - the walk's settings on this build: fewer lanes (`FLAGGED_LANES`: 16, 8) and another
-  prefetch hint (`PREFETCH`: none, into L2, non-temporal), each one constant changed.
+  prefetch hint (`PREFETCH`: none, into L2, non-temporal), each one constant changed;
+- research gates on this build (`gate2`-`gate6`, not in the default set): at most K
+  workers in the T-vector phase (`invert`: the build and the walk) at once, the others free
+  for MTF, RLE1 and the CRC.
 
 Each variant is examples/ab.rs built from its own worktree (target/variants/), checked to
 give this build's bytes on the corpus, and run as an arm of this build's harness
@@ -43,7 +46,34 @@ SETTINGS = {
     "pf-l2": ("PREFETCH: u8", "PF_L2"),
     "pf-nta": ("PREFETCH: u8", "PF_NTA"),
 }
+# a research variant (never on master): at most K of the decoder's workers in the T-vector
+# phase (the build and the walk, `invert`) at once, the others free for MTF, RLE1 and the
+# CRC; a process-wide counting semaphore around the one call
+GATES = {f"gate{k}": k for k in (2, 3, 4, 5, 6)}
+INVERT = "    s.inverse.invert(&s.ll, &s.counts, b.orig_ptr, &mut s.rle);\n"
+GATED = """    {
+        let (m, cv) = &WALK_GATE;
+        let mut n = m.lock().unwrap_or_else(|e| e.into_inner());
+        while *n >= WALK_PERMITS {
+            n = cv.wait(n).unwrap_or_else(|e| e.into_inner());
+        }
+        *n += 1;
+    }
+    s.inverse.invert(&s.ll, &s.counts, b.orig_ptr, &mut s.rle);
+    {
+        let (m, cv) = &WALK_GATE;
+        *m.lock().unwrap_or_else(|e| e.into_inner()) -= 1;
+        cv.notify_one();
+    }
+"""
+GATE_DEFS = """
+/// bench/variants.py's gate (a research variant): at most WALK_PERMITS blocks in `invert`
+static WALK_GATE: (std::sync::Mutex<usize>, std::sync::Condvar) =
+    (std::sync::Mutex::new(0), std::sync::Condvar::new());
+const WALK_PERMITS: usize = {k};
+"""
 DEFAULT = ",".join([*RELEASES, *SETTINGS])
+KNOWN = ",".join([*RELEASES, *SETTINGS, *GATES])
 
 
 def build(name, root, out):
@@ -55,6 +85,13 @@ def build(name, root, out):
     ref = name if name in RELEASES else "HEAD"
     run(["git", "worktree", "add", "--detach", tree, ref], check=True)
     try:
+        if name in GATES:
+            path = os.path.join(tree, "src", "lib.rs")
+            src = open(path).read()
+            if src.count(INVERT) != 1:
+                sys.exit(f"bench-variants: {name}: no single `invert` call in src/lib.rs")
+            src = src.replace(INVERT, GATED) + GATE_DEFS.replace("{k}", str(GATES[name]))
+            open(path, "w").write(src)
         if name in SETTINGS:
             const, value = SETTINGS[name]
             path = os.path.join(tree, "src", "bwt.rs")
@@ -87,7 +124,7 @@ def output(exe, file):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--variants", default=DEFAULT, help=f"any of {DEFAULT}")
+    ap.add_argument("--variants", default=DEFAULT, help=f"any of {KNOWN}")
     ap.add_argument("--threads", default="2,4,6,8,10")
     ap.add_argument("--rounds", type=int, default=6)
     ap.add_argument("--ref", type=int, default=4, help="the thread count scaling is against")
@@ -101,9 +138,9 @@ def main():
         if not os.path.exists(p):
             sys.exit(f"bench-variants: no {p}; `just bench-variants` builds it")
     names = [v for v in a.variants.split(",") if v]
-    unknown = [v for v in names if v not in RELEASES and v not in SETTINGS]
+    unknown = [v for v in names if v not in RELEASES and v not in SETTINGS and v not in GATES]
     if unknown:
-        sys.exit(f"bench-variants: unknown variants {unknown}; any of {DEFAULT}")
+        sys.exit(f"bench-variants: unknown variants {unknown}; any of {KNOWN}")
     threads = [int(t) for t in a.threads.split(",")]
     if a.ref not in threads:
         sys.exit(f"bench-variants: --threads must include --ref {a.ref}")
@@ -139,7 +176,11 @@ def main():
             "argv": argv,
             "ref_threads": a.ref,
             "variants": {
-                n: {"ref": n if n in RELEASES else "HEAD", "setting": SETTINGS.get(n)}
+                n: {
+                    "ref": n if n in RELEASES else "HEAD",
+                    "setting": SETTINGS.get(n),
+                    "walk_permits": GATES.get(n),
+                }
                 for n in names
             },
             "dropped": dropped,

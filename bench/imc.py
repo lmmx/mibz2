@@ -256,6 +256,103 @@ def core(threads, reps, loops, mem=False):
     return res
 
 
+# the same questions, each counted in a pass of its own beside the fixed counters (cycles,
+# instructions, ref-cycles), so that a ratio's two events share one counting interval
+# and nothing is multiplexed: each group's two events take two of the core's general
+# counters. Skylake-family names (the i9-10900K's); a group the PMU lacks is reported so
+GROUPS = {
+    "reads": ["offcore_requests.all_data_rd", "offcore_requests_outstanding.all_data_rd"],
+    "llc": ["mem_load_retired.l3_hit", "mem_load_retired.l3_miss"],
+    "beyond_llc": [
+        "offcore_requests.l3_miss_demand_data_rd",
+        "offcore_requests_outstanding.l3_miss_demand_data_rd",
+    ],
+    "queue": ["offcore_requests_buffer.sq_full", "cycle_activity.stalls_l3_miss"],
+    "tlb": ["dtlb_load_misses.walk_active", "offcore_requests.demand_data_rd"],
+}
+
+
+def grouped(threads, reps, loops):
+    """core(), one pass a group at each thread count, the thread counts rotated"""
+    res, unsupported = [], {}
+    for rep in range(reps):
+        for t in threads[rep % len(threads) :] + threads[: rep % len(threads)]:
+            for g, evs in GROUPS.items():
+                if g in unsupported:
+                    continue
+                try:
+                    wall, out, rows = perf(CORE + evs, decode(t, loops), system=False)
+                except SystemExit as e:
+                    unsupported[g] = str(e)
+                    print(f"bench-imc: group {g} left out: {e}")
+                    continue
+                n, dwall, k = decoded(out)
+                r = rows[None]
+                res.append(
+                    {
+                        "rep": rep,
+                        "threads": t,
+                        "group": g,
+                        "decodes": k,
+                        "out": n,
+                        "decode_wall": dwall,
+                        **{e: r[e] for e in CORE + evs},
+                        "ipc": r["instructions"] / r["cycles"],
+                        "clock_ratio": r["cycles"] / r["ref-cycles"],
+                        **derived(g, r, n),
+                        "counted_pct": r.get("_counted_pct", {}),
+                    }
+                )
+    return res, unsupported
+
+
+def derived(g, r, n):
+    kb, cyc = n / 1000, r["cycles"]
+    if g == "reads":
+        q = r["offcore_requests.all_data_rd"]
+        return {
+            "reads_past_l2_per_kb": q / kb,
+            "occupancy_per_read": r["offcore_requests_outstanding.all_data_rd"] / q,
+            "reads_in_flight": r["offcore_requests_outstanding.all_data_rd"] / cyc,
+        }
+    if g == "llc":
+        hit, miss = r["mem_load_retired.l3_hit"], r["mem_load_retired.l3_miss"]
+        return {"l3_hit_share": hit / (hit + miss), "l3_miss_per_kb": miss / kb}
+    if g == "beyond_llc":
+        q = r["offcore_requests.l3_miss_demand_data_rd"]
+        return {
+            "demand_l3_miss_reads_per_kb": q / kb,
+            "occupancy_per_l3_miss_read": r["offcore_requests_outstanding.l3_miss_demand_data_rd"]
+            / q,
+        }
+    if g == "queue":
+        return {
+            "sq_full_share": r["offcore_requests_buffer.sq_full"] / cyc,
+            "l3_miss_stall_share": r["cycle_activity.stalls_l3_miss"] / cyc,
+        }
+    if g == "tlb":
+        return {
+            "page_walk_share": r["dtlb_load_misses.walk_active"] / cyc,
+            "demand_reads_per_kb": r["offcore_requests.demand_data_rd"] / kb,
+        }
+    return {}
+
+
+GROUPED_KEYS = [
+    ("reads_past_l2_per_kb", "reads past L2/KB", "{:9.0f}"),
+    ("occupancy_per_read", "occupancy/read", "{:9.0f}"),
+    ("reads_in_flight", "reads in flight", "{:9.1f}"),
+    ("l3_hit_share", "L3 hit share", "{:9.2f}"),
+    ("l3_miss_per_kb", "L3 misses/KB", "{:9.1f}"),
+    ("demand_l3_miss_reads_per_kb", "demand L3-miss reads/KB", "{:9.1f}"),
+    ("occupancy_per_l3_miss_read", "occupancy/L3-miss read", "{:9.0f}"),
+    ("sq_full_share", "superqueue full", "{:9.1%}"),
+    ("l3_miss_stall_share", "stalled on L3 miss", "{:9.0%}"),
+    ("page_walk_share", "page walks", "{:9.1%}"),
+    ("demand_reads_per_kb", "demand reads past L2/KB", "{:9.0f}"),
+]
+
+
 def memory(r, n):
     """the memory events as rates: per KB of output, or shares of the cycles"""
     kb = n / 1000
@@ -368,6 +465,23 @@ def report(res):
                     f"  {m['reads_past_l2_per_kb']:16.1f}  {m['read_wait_cycles']:19.0f}"
                     f"  {m['l3_miss_stall_share']:17.0%}  {m['page_walk_share']:19.1%}"
                 )
+    if res.get("grouped"):
+        rows = res["grouped"]
+        ts = sorted({r["threads"] for r in rows})
+        low = min((p for r in rows for p in r["counted_pct"].values() if p == p), default=math.nan)
+        print(
+            f"grouped counters (a pass per group, process-scoped; least counted share {low:.0f}%)"
+        )
+        print(f"{'':26}" + "".join(f"{t:>9}" for t in ts))
+        for key, label, fmt in GROUPED_KEYS:
+            cells = []
+            for t in ts:
+                v = [r[key] for r in rows if r["threads"] == t and key in r]
+                cells.append(fmt.format(statistics.median(v)) if v else f"{'-':>9}")
+            if any(c.strip() != "-" for c in cells):
+                print(f"  {label:<24}" + "".join(cells))
+        for g, why in res.get("unsupported_groups", {}).items():
+            print(f"  (group {g} not counted: {why})")
     if "curve" in res:
         print(
             "curve   threads  MB/s (sd)    reads  writes  idle reads  net read GiB/s"
@@ -401,10 +515,11 @@ def main():
     ap.add_argument("--loops", type=int, default=3, help="decodes in each reading")
     ap.add_argument(
         "--events",
-        choices=["basic", "mem"],
+        choices=["basic", "mem", "grouped"],
         default="basic",
-        help="the core step's: cycles, ref-cycles and instructions, or with them where the"
-        " stalls go (L3 misses, read wait, page walks; Skylake-family event names)",
+        help="the core step's: cycles, ref-cycles and instructions; with them where the"
+        " stalls go (mem: all at once, multiplexed; grouped: a pass per pair of events,"
+        " unmultiplexed, adding beyond-L3 reads and superqueue-full; Skylake-family names)",
     )
     ap.add_argument("--idle", type=int, default=30, help="seconds of idle readings")
     ap.add_argument("--copy", type=int, default=20, help="GiB the calibration copies")
@@ -453,7 +568,11 @@ def main():
         elif step == "calibrate":
             res[step] = calibrate(a.copy, max(a.pair, 5))
         elif step == "core":
-            res[step] = core(threads, a.reps, a.loops, mem=a.events == "mem")
+            if a.events == "grouped":
+                res["grouped"], res["unsupported_groups"] = grouped(threads, a.reps, a.loops)
+                res[step] = [r for r in res["grouped"] if r["group"] == "reads"]
+            else:
+                res[step] = core(threads, a.reps, a.loops, mem=a.events == "mem")
         elif step == "curve":
             res[step] = curve(threads, a.reps, a.loops, a.pair)
         with open(out, "w") as f:
