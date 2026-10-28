@@ -15,6 +15,8 @@ package temperature, package power). Steps, both by default:
   back-to-back decodes for --seconds, as a release decodes for an hour: throughput, clock,
   temperature and power over the first 10 s and over the last 30 s.
 
+It also records what sets the clock (frequency driver, governor, energy preference, the
+package's RAPL power limits, the power profile) and the transparent-huge-page settings.
 Everything goes to one JSON file (thermal-<UTC time>.json) and a summary on stdout. Needs
 turbostat (linux-tools) and sudo.
 """
@@ -99,6 +101,50 @@ class Turbostat:
         rows = self.samples()
         shutil.rmtree(self.dir, ignore_errors=True)
         return rows
+
+
+def read(path):
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
+
+def power():
+    """what sets the clock: the frequency driver, governor and energy preference, the
+    package's RAPL limits (each constraint's name, watts and window), the power profile"""
+    cpu = "/sys/devices/system/cpu"
+    rapl = {}
+    for zone in sorted(glob.glob("/sys/class/powercap/intel-rapl:[0-9]")):
+        limits = []
+        for c in sorted(glob.glob(f"{zone}/constraint_*_name")):
+            n = c[: -len("_name")]
+            uw, us = read(f"{n}_power_limit_uw"), read(f"{n}_time_window_us")
+            limits.append(
+                {
+                    "name": read(c),
+                    "watts": int(uw) / 1e6 if uw else None,
+                    "window_s": int(us) / 1e6 if us else None,
+                }
+            )
+        rapl[read(f"{zone}/name") or zone] = {
+            "enabled": read(f"{zone}/enabled"),
+            "limits": limits,
+        }
+    profile = shutil.which("powerprofilesctl") and run(["powerprofilesctl", "get"]).stdout
+    return {
+        "driver": read(f"{cpu}/cpu0/cpufreq/scaling_driver"),
+        "governor": read(f"{cpu}/cpu0/cpufreq/scaling_governor"),
+        "epp": read(f"{cpu}/cpu0/cpufreq/energy_performance_preference"),
+        "max_khz": read(f"{cpu}/cpu0/cpufreq/scaling_max_freq"),
+        "intel_pstate": {
+            k: read(f"{cpu}/intel_pstate/{k}")
+            for k in ["status", "no_turbo", "max_perf_pct", "min_perf_pct", "hwp_dynamic_boost"]
+        },
+        "rapl": rapl,
+        "power_profile": profile.strip() if profile else None,
+    }
 
 
 def during(samples, start, end):
@@ -192,6 +238,14 @@ def fmt(s):
 
 def report(res):
     print(f"\n== bench-thermal {res['meta']['utc']}  note: {res['meta'].get('note') or '-'}")
+    p = res["meta"]["power"]
+    print(
+        f"clock policy: {p['driver']} / {p['governor']} / EPP {p['epp']};"
+        f" profile {p['power_profile']}; intel_pstate {p['intel_pstate']}"
+    )
+    for zone, z in p["rapl"].items():
+        lims = ", ".join(f"{x['name']} {x['watts']} W over {x['window_s']} s" for x in z["limits"])
+        print(f"RAPL {zone} (enabled {z['enabled']}): {lims}")
     if "occupancy" in res:
         print("occupancy runs        wall    MB/s   busy MHz  max C  watts")
         rows = res["occupancy"]
@@ -255,13 +309,7 @@ def main():
     run(["sudo", "modprobe", "msr"])
     if not run(["sudo", "sh", "-c", "command -v turbostat"]).stdout.strip():
         sys.exit("bench-thermal: needs turbostat (linux-tools) on root's PATH")
-    thp = {}
-    for k in ["enabled", "defrag"]:
-        try:
-            with open(f"/sys/kernel/mm/transparent_hugepage/{k}") as f:
-                thp[k] = f.read().strip()
-        except OSError:
-            thp[k] = None
+    thp = {k: read(f"/sys/kernel/mm/transparent_hugepage/{k}") for k in ["enabled", "defrag"]}
     res = {
         "meta": {
             "utc": utc,
@@ -269,6 +317,7 @@ def main():
             "commit": run(["git", "rev-parse", "HEAD"]).stdout.strip(),
             "turbostat_interval": a.interval,
             "transparent_hugepage": thp,
+            "power": power(),
             "steps": todo,
         }
     }
