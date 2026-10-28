@@ -1,0 +1,134 @@
+# The contention fingerprint (bench/fingerprint.py, examples/stress.rs): whether mibz2, at
+# 1 thread on one physical core, slows down beside a competitor on another core more than
+# a register-only control explains. A cache-sized bubble, a streaming copy and a second
+# copy of the decoder, after a calibration on the runner (a pointer chase gives the
+# effective cache; each stressor is checked), in randomized interleaved rounds; each
+# condition's verdict, or INCONCLUSIVE with the reason.
+#
+# The periodic, opt-in tier, never part of the pull request benchmark (bench.yml): on a
+# push to master that changes the decoder, from the Actions tab (with other builds as
+# extra victims: tags or commits, each built in a worktree), and on a pull request that
+# changes the instrument itself. Its figures are the run's summary and artifact, never
+# recorded.
+name: Fingerprint
+
+on:
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: "Rounds (each runs every victim in every condition once, shuffled)"
+        required: false
+        default: "8"
+      refs:
+        description: "Extra victims: refs or tags, comma-separated (e.g. v0.1.1,v0.1.5,master), each built in a worktree"
+        required: false
+        default: ""
+      args:
+        description: "More arguments for bench/fingerprint.py, e.g. --sibling"
+        required: false
+        default: ""
+  push:
+    branches: [master]
+    paths:
+      - "src/**"
+  pull_request:
+    paths:
+      - examples/stress.rs
+      - bench/fingerprint.py
+      - bench/test_fingerprint.py
+      - .github/workflows/fingerprint.yml
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: never
+
+jobs:
+  fingerprint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      # lbzip2: examples/windows.rs's check of the Wikidata blocks
+      - name: lbzip2
+        run: sudo apt-get install -y -qq lbzip2 > /dev/null
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      # The release profile (Cargo.toml's), as published
+      - name: Build
+        run: |
+          cargo build --release --example ab --example stress --example windows
+          mkdir -p bin && cp target/release/examples/ab bin/ab && cp target/release/examples/stress bin/stress
+
+      # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
+      - name: Wikidata windows (cache)
+        uses: actions/cache@v4
+        with:
+          path: windows
+          key: bench-wikidata-${{ hashFiles('bench/wikidata.json') }}
+
+      - name: Wikidata windows
+        run: |
+          mkdir -p corpora
+          dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+          if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ] && git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null; then
+            git archive origin/bench-data "$dir" | tar -x || true
+          fi
+          python3 bench/wikidata.py fetch bench/wikidata.json "$dir"
+          python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2
+
+      # Other builds of examples/ab.rs as victims beside this one (as bench/variants.py
+      # builds released versions): each ref in a worktree of its own
+      - name: Victims
+        env:
+          REFS: ${{ inputs.refs }}
+        run: |
+          victims="--victim head=bin/ab"
+          for ref in ${REFS//,/ }; do
+            sha=$(git rev-parse --verify "$ref^{commit}" 2>/dev/null || git rev-parse --verify "origin/$ref^{commit}")
+            name=${ref//\//-}
+            git worktree add --detach ".victims/$name" "$sha"
+            (cd ".victims/$name" && CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target/victims" cargo build --release --example ab)
+            cp target/victims/release/examples/ab "bin/ab-$name"
+            victims="$victims --victim $name=bin/ab-$name"
+            echo "victim $name: $ref ($sha)"
+          done
+          echo "VICTIMS=$victims" >> "$GITHUB_ENV"
+
+      # The rules (screens, statistics, C_eff, wording) and the cleanup of a real stressor
+      - name: Tests
+        run: FINGERPRINT_STRESS=bin/stress python3 bench/test_fingerprint.py
+
+      - name: Fingerprint
+        env:
+          ROUNDS: ${{ inputs.rounds || '8' }}
+          ARGS: ${{ inputs.args }}
+        run: |
+          start=$SECONDS
+          # (the runner's topology, for the record)
+          lscpu | grep -E 'Model name|^CPU\(s\)|Thread|Core|L2|L3' || true
+          python3 bench/fingerprint.py $VICTIMS --stress bin/stress --file corpora/wikidata.bz2 \
+            --rounds "$ROUNDS" $ARGS --note "${GITHUB_EVENT_NAME} ${GITHUB_REF_NAME}" \
+            --out fingerprint.json --md fingerprint.md
+          echo "fingerprint: $((SECONDS - start)) s"
+
+      - name: Summary
+        if: "!cancelled()"
+        run: if [ -f fingerprint.md ]; then cat fingerprint.md >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Results
+        if: "!cancelled()"
+        uses: actions/upload-artifact@v4
+        with:
+          name: fingerprint-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          path: |
+            fingerprint.json
+            fingerprint.md
+          if-no-files-found: ignore
