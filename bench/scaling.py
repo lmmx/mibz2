@@ -39,6 +39,69 @@ def ratio_ci(xs):
     return math.exp(m), math.exp(m - t * se), math.exp(m + t * se)
 
 
+def summarise(raw, arms, threads, ref, labels=None, against=None):
+    """ab's records in `raw`: each arm's median throughput, its scaling against its own
+    `ref`-thread runs and, given `against` (an arm), its throughput against that arm's at
+    each thread count, both paired by round; printed, and returned with whether every run
+    gave the same bytes, and the output's size"""
+    labels = labels or {}
+    name = lambda arm: labels.get(arm, arm)  # noqa: E731
+    recs = [json.loads(ln) for ln in open(raw) if ln.strip()]
+    bad = [r for r in recs if r.get("broken") or r.get("err")]
+    hashes = {r.get("hash") for r in recs if "hash" in r}
+    same = len(hashes) == 1 and not bad
+    # wall[(arm, threads)][round]
+    wall = {}
+    for r in recs:
+        if "wall" in r and not r.get("err"):
+            wall.setdefault((r["arm"], r["threads"]), {})[r["round"]] = r["wall"]
+    out_bytes = next((r["out"] for r in recs if "out" in r), None)
+    width = max(10, *(len(name(x)) + 1 for x in arms))
+    head = f"{'arm':<{width}}" + "".join(f"{t:>9}" for t in threads)
+    print(f"\nsame bytes from every run: {'yes' if same else 'NO'}")
+    print(f"MB/s (median)\n{head}")
+    rows = []
+    for arm in arms:
+        cells = []
+        for t in threads:
+            w = list(wall.get((arm, t), {}).values())
+            cells.append(out_bytes / statistics.median(w) / 1e6 if w and out_bytes else math.nan)
+        print(f"{name(arm):<{width}}" + "".join(f"{c:9.0f}" for c in cells))
+        rows.append({"arm": name(arm), "exe": arm, "mb_s": dict(zip(threads, cells))})
+
+    def paired(title, key, base_of):
+        print(f"\n{title}\n{head}")
+        for row in rows:
+            cells, row[key] = [], {}
+            for t in threads:
+                mine, base = wall.get((row["exe"], t), {}), base_of(row["exe"], t)
+                # throughput ratio = the base's wall over this one's, round by round
+                c = ratio_ci([base[k] / mine[k] for k in mine if k in base])
+                row[key][t] = {"ratio": c[0], "lo": c[1], "hi": c[2]}
+                cells.append(f"{c[0]:.2f}")
+            print(f"{row['arm']:<{width}}" + "".join(f"{c:>9}" for c in cells))
+        print("95% intervals:")
+        for row in rows:
+            r = row[key]
+            print(
+                f"{row['arm']:<{width}}"
+                + "  ".join(f"{t}: {r[t]['lo']:.2f}-{r[t]['hi']:.2f}" for t in threads)
+            )
+
+    paired(
+        f"throughput against the arm's own {ref}-thread runs, paired by round (95%)",
+        "scaling",
+        lambda arm, t: wall.get((arm, ref), {}),
+    )
+    if against:
+        paired(
+            f"throughput against {name(against)}'s at the same thread count, paired by round",
+            "against",
+            lambda arm, t: wall.get((against, t), {}),
+        )
+    return rows, same, out_bytes
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--arms", default="mibz2,pbz2,lbzip2")
@@ -62,47 +125,8 @@ def main():
     argv += ["--rounds", str(a.rounds), "--settle", "0", a.file]
     if subprocess.run(argv).returncode:
         sys.exit("bench-scaling: ab run failed")
-    recs = [json.loads(ln) for ln in open(raw) if ln.strip()]
-    bad = [r for r in recs if r.get("broken") or r.get("err")]
-    hashes = {r.get("hash") for r in recs if "hash" in r}
-    arms = a.arms.split(",")
-    # wall[(arm, threads)][round]
-    wall = {}
-    for r in recs:
-        if "wall" in r and not r.get("err"):
-            wall.setdefault((r["arm"], r["threads"]), {})[r["round"]] = r["wall"]
-    out_bytes = next((r["out"] for r in recs if "out" in r), None)
-    rows = []
-    print(f"\n== bench-scaling {utc}  note: {a.note or '-'}")
-    print(f"same bytes from every run: {'yes' if len(hashes) == 1 and not bad else 'NO'}")
-    head = f"{'arm':<10}" + "".join(f"{t:>9}" for t in threads)
-    print(f"MB/s (median)\n{head}")
-    for arm in arms:
-        cells = []
-        for t in threads:
-            w = list(wall.get((arm, t), {}).values())
-            cells.append(out_bytes / statistics.median(w) / 1e6 if w and out_bytes else math.nan)
-        print(f"{arm:<10}" + "".join(f"{c:9.0f}" for c in cells))
-        rows.append({"arm": arm, "mb_s": dict(zip(threads, cells))})
-    print(f"\nthroughput against the arm's own {a.ref}-thread runs, paired by round (95%)")
-    print(head)
-    for row in rows:
-        arm, ref = row["arm"], wall.get((row["arm"], a.ref), {})
-        cells, row["scaling"] = [], {}
-        for t in threads:
-            mine = wall.get((arm, t), {})
-            # throughput ratio = the reference's wall over this one's, round by round
-            c = ratio_ci([ref[k] / mine[k] for k in mine if k in ref])
-            row["scaling"][t] = {"ratio": c[0], "lo": c[1], "hi": c[2]}
-            cells.append(f"{c[0]:.2f}")
-        print(f"{arm:<10}" + "".join(f"{c:>9}" for c in cells))
-    print("95% intervals:")
-    for row in rows:
-        s = row["scaling"]
-        print(
-            f"{row['arm']:<10}"
-            + "  ".join(f"{t}: {s[t]['lo']:.2f}-{s[t]['hi']:.2f}" for t in threads if t != a.ref)
-        )
+    rows, same, out_bytes = summarise(raw, a.arms.split(","), threads, a.ref)
+    print(f"(bench-scaling {utc}, note: {a.note or '-'})")
     res = {
         "meta": {
             "utc": utc,
@@ -112,7 +136,7 @@ def main():
             "argv": argv,
             "ref_threads": a.ref,
         },
-        "same_bytes": len(hashes) == 1 and not bad,
+        "same_bytes": same,
         "output_bytes": out_bytes,
         "arms": rows,
         "records": raw,
