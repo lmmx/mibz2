@@ -10,8 +10,17 @@
 //! coop grid FILE.bz2 [ROUNDS] [ARM,...]    N blocks at once on k cores each: ARM is NxK
 //!                                          (cooperative), wNxK (the same walk, the build
 //!                                          on one core), pNxK (N production workers; K 1)
-//!                                          or sNxK (libsais, with --cfg libsais)
+//!                                          or sNxK (libsais, with --cfg libsais); @S sets
+//!                                          a cooperative arm's segments a block (4x1@1024:
+//!                                          one core a block, with 4x2's segments)
 //! ```
+//!
+//! COOP_CPUS (a comma list) pins every thread to its own CPU of it: in `block`, thread j of a
+//! pool to the j-th; in `grid`, block worker w's k threads to the w-th k of them (a libsais
+//! worker to those k together, which its OpenMP team inherits). Where each thread ran is
+//! checked. `block` adds the equal-segment controls (one core walking k threads' segments)
+//! and reports each cooperative walk's balance: its busiest thread's share of the bytes, the
+//! last thread's start and the spread of the threads' ends.
 //!
 //! The cooperative inversion, on a pool of k threads kept for the run (the caller one of
 //! them; the others spin between jobs, then park):
@@ -33,7 +42,7 @@
 //!
 //! `grid` measures the T-vector phase as a decoder runs it: every block's last column made
 //! first (the scanner and MTF are outside the timing), then for each arm N block workers,
-//! each inverting every Nth block in turn on its own k threads, timed from a common start
+//! each taking the next block from one counter and inverting it on its own k threads, timed from a common start
 //! to the last block's end: the arm's throughput in decoded bytes a second. The arms run
 //! in an order rotated and reversed by the round. Each block's output is checked by its hash.
 //! Each arm's build and walk are timed apart too, as phase throughputs (the bytes over a
@@ -101,6 +110,40 @@ fn prefetch(t: *const u32, row: u32) {
     let _ = (t, row);
 }
 
+/// The calling thread pinned to the CPUs `cpus` (sched_setaffinity on itself): false if
+/// refused, or not Linux
+fn pin(cpus: &[usize]) -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        extern "C" {
+            fn sched_setaffinity(pid: i32, size: usize, mask: *const u64) -> i32;
+        }
+        let mut mask = [0u64; 16]; // a cpu_set_t: 1024 CPUs
+        for &c in cpus {
+            mask[c / 64] |= 1 << (c % 64);
+        }
+        unsafe { sched_setaffinity(0, std::mem::size_of_val(&mask), mask.as_ptr()) == 0 }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = cpus;
+        false
+    }
+}
+
+/// The CPU the calling thread is running on (-1 where unknown)
+fn cpu_now() -> i64 {
+    #[cfg(target_os = "linux")]
+    {
+        extern "C" {
+            fn sched_getcpu() -> i32;
+        }
+        unsafe { sched_getcpu() as i64 }
+    }
+    #[cfg(not(target_os = "linux"))]
+    -1
+}
+
 /// A task for a pool: called once on each of its k threads with the thread's index
 type Task<'a> = &'a (dyn Fn(usize) + Sync);
 
@@ -114,6 +157,9 @@ struct Pool {
     fat: Arc<std::sync::atomic::AtomicU64>,
     fat2: Arc<std::sync::atomic::AtomicU64>,
     hs: Vec<std::thread::JoinHandle<()>>,
+    // each helper's CPU, if pinned, and the CPU it was last seen on (after a task)
+    cpus: Option<Vec<usize>>,
+    seen: Arc<Vec<std::sync::atomic::AtomicI64>>,
 }
 
 fn to_words(t: Task) -> (u64, u64) {
@@ -123,7 +169,14 @@ fn to_words(t: Task) -> (u64, u64) {
 }
 
 impl Pool {
-    fn new(k: usize) -> Pool {
+    /// With `cpus`, thread j (the caller is 0) is pinned to `cpus[j]`
+    fn new(k: usize, cpus: Option<&[usize]>) -> Pool {
+        let seen: Arc<Vec<std::sync::atomic::AtomicI64>> = Arc::new(
+            (0..k)
+                .map(|_| std::sync::atomic::AtomicI64::new(-1))
+                .collect(),
+        );
+        let cpus = cpus.map(|c| c[..k].to_vec());
         let epoch = Arc::new(AtomicUsize::new(0));
         let done = Arc::new(AtomicUsize::new(0));
         let fat = Arc::new(std::sync::atomic::AtomicU64::new(0));
@@ -132,11 +185,16 @@ impl Pool {
             .map(|idx| {
                 let (epoch, done, fat, fat2) =
                     (epoch.clone(), done.clone(), fat.clone(), fat2.clone());
+                let (cpu, seen_cpu) = (cpus.as_ref().map(|c| c[idx]), seen.clone());
                 std::thread::spawn(move || {
+                    if let Some(c) = cpu {
+                        assert!(pin(&[c]), "could not pin a helper to CPU {c}");
+                    }
                     let mut seen = 0;
                     loop {
-                        // spin a while (the next job is microseconds away), then park, so
-                        // the pools of the arms not running leave their cores alone
+                        // spin briefly (within an arm the next job is microseconds away),
+                        // then park, so the pools of the arms not running leave their cores
+                        // (and any SMT siblings) alone
                         let mut spins = 0u32;
                         let e = loop {
                             let e = epoch.load(Ordering::Acquire);
@@ -144,7 +202,7 @@ impl Pool {
                                 break e;
                             }
                             spins += 1;
-                            if spins < 50_000 {
+                            if spins < 2_000 {
                                 std::hint::spin_loop();
                             } else {
                                 std::thread::park();
@@ -158,6 +216,7 @@ impl Pool {
                         // SAFETY: the task outlives the epoch it was posted in (run waits)
                         let f: *const (dyn Fn(usize) + Sync) = unsafe { std::mem::transmute(w) };
                         unsafe { (*f)(idx) };
+                        seen_cpu[idx].store(cpu_now(), Ordering::Relaxed);
                         done.fetch_add(1, Ordering::AcqRel);
                     }
                 })
@@ -170,7 +229,18 @@ impl Pool {
             fat,
             fat2,
             hs,
+            cpus,
+            seen,
         }
+    }
+
+    /// Whether every helper that has run was on the CPU it was pinned to (true unpinned)
+    fn placement_ok(&self) -> bool {
+        let Some(c) = &self.cpus else { return true };
+        (1..self.k).all(|j| {
+            let s = self.seen[j].load(Ordering::Relaxed);
+            s == -1 || s == c[j] as i64
+        })
     }
 
     /// `f` on every thread of the pool, the caller's index 0; returns when all have ended
@@ -230,6 +300,17 @@ struct Coop {
     starts: Vec<u32>,
     bufs: Vec<Vec<u8>>,
     next: Vec<usize>,
+    /// a block's segments, if not 512 a thread (the equal-segment controls)
+    segments: Option<usize>,
+    /// each thread's bytes walked in the last block, and the walk's imbalance summed over
+    /// blocks (the busiest thread's bytes over the threads' mean) with its count
+    share: Vec<std::sync::atomic::AtomicU64>,
+    imbalance: (f64, usize),
+    /// each thread's start and end in the last block's walk, in ns from the walk's post;
+    /// summed over blocks: the last thread's start (the helpers' wake-up lag) and the spread
+    /// of the threads' ends (the tail where some wait), in µs
+    times: Vec<(std::sync::atomic::AtomicU64, std::sync::atomic::AtomicU64)>,
+    sync_us: (f64, f64),
 }
 
 #[inline(always)]
@@ -353,8 +434,9 @@ unsafe fn traverse(
     bufs: P<Vec<u8>>,
     next: P<usize>,
     taken: &AtomicUsize,
-) {
+) -> u64 {
     let ns = starts.len();
+    let mut walked = 0u64;
     let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
     let take = |seg: usize| -> Lane {
         let b = &mut *bufs.get().add(seg);
@@ -389,6 +471,7 @@ unsafe fn traverse(
             break;
         }
         live.push(take(s));
+        walked += 1;
     }
     while !live.is_empty() {
         let mut i = 0;
@@ -400,6 +483,7 @@ unsafe fn traverse(
                 let s = taken.fetch_add(1, Ordering::Relaxed);
                 if s < ns {
                     *l = take(s);
+                    walked += 1;
                     i += 1;
                 } else {
                     live.swap_remove(i);
@@ -413,9 +497,11 @@ unsafe fn traverse(
             }
             *l.p = q as u8;
             l.p = l.p.add(1);
+            walked += 1;
             i += 1;
         }
     }
+    walked
 }
 
 /// The cooperative walk of `c.tt` on the pool's threads: `walk`'s output into `out`
@@ -424,7 +510,8 @@ fn coop_walk(orig_ptr: u32, pool: &Pool, c: &mut Coop, out: &mut Vec<u8>) {
     let r0 = c.tt[orig_ptr as usize] >> 8;
     // 16 segments a lane, as the room walk has (512 for its 32): k threads' lanes need k
     // times the segments, or the walk waits on its tail's few longest chains
-    random_rows(n, SEGMENTS_A_THREAD * pool.k - 1, &mut c.starts);
+    let segments = c.segments.unwrap_or(SEGMENTS_A_THREAD * pool.k);
+    random_rows(n, segments - 1, &mut c.starts);
     c.starts.push(r0);
     c.starts.sort_unstable();
     c.starts.dedup();
@@ -443,7 +530,37 @@ fn coop_walk(orig_ptr: u32, pool: &Pool, c: &mut Coop, out: &mut Vec<u8>) {
     let taken = AtomicUsize::new(0);
     let (t, starts) = (P(c.tt.as_mut_ptr()), &c.starts[..]);
     let (bufs, next) = (P(c.bufs.as_mut_ptr()), P(c.next.as_mut_ptr()));
-    pool.run(&|_| unsafe { traverse(t.get(), starts, bufs, next, &taken) });
+    let k = pool.k;
+    c.share.resize_with(k, Default::default);
+    c.times.resize_with(k, Default::default);
+    let (share, times) = (&c.share, &c.times);
+    let posted = Instant::now();
+    pool.run(&|j| {
+        times[j]
+            .0
+            .store(posted.elapsed().as_nanos() as u64, Ordering::Relaxed);
+        let w = unsafe { traverse(t.get(), starts, bufs, next, &taken) };
+        times[j]
+            .1
+            .store(posted.elapsed().as_nanos() as u64, Ordering::Relaxed);
+        share[j].store(w, Ordering::Relaxed);
+    });
+    if k > 1 {
+        let w: Vec<f64> = c
+            .share
+            .iter()
+            .map(|x| x.load(Ordering::Relaxed) as f64)
+            .collect();
+        let mean = w.iter().sum::<f64>() / k as f64;
+        c.imbalance.0 += w.iter().cloned().fold(0.0, f64::max) / mean;
+        c.imbalance.1 += 1;
+        let us = |x: &std::sync::atomic::AtomicU64| x.load(Ordering::Relaxed) as f64 / 1e3;
+        let last_start = c.times.iter().map(|t| us(&t.0)).fold(0.0, f64::max);
+        let ends: Vec<f64> = c.times.iter().map(|t| us(&t.1)).collect();
+        let spread = ends.iter().cloned().fold(0.0, f64::max)
+            - ends.iter().cloned().fold(f64::INFINITY, f64::min);
+        c.sync_us = (c.sync_us.0 + last_start, c.sync_us.1 + spread);
+    }
     for &r in c.starts.iter() {
         c.tt[r as usize] &= LINK;
     }
@@ -498,7 +615,15 @@ enum Inv {
 unsafe impl Send for Inv {}
 
 impl Inv {
-    fn new(kind: char, k: usize) -> Inv {
+    /// `kind`'s inversion on k threads (pinned to `cpus`, one each, when given), with `segments`
+    /// a block (the cooperative ones; else 512 a thread)
+    fn new(kind: char, k: usize, cpus: Option<&[usize]>, segments: Option<usize>) -> Inv {
+        let coop = || {
+            Box::new(Coop {
+                segments,
+                ..Default::default()
+            })
+        };
         match kind {
             'p' => Inv::Prod(TVector::new(), SegScratch::default()),
             #[cfg(libsais)]
@@ -508,8 +633,35 @@ impl Inv {
                 vec![],
                 vec![],
             ),
-            'w' => Inv::Coop(Pool::new(k), Box::default(), Some(Pool::new(1))),
-            _ => Inv::Coop(Pool::new(k), Box::default(), None),
+            'w' => Inv::Coop(Pool::new(k, cpus), coop(), Some(Pool::new(1, None))),
+            _ => Inv::Coop(Pool::new(k, cpus), coop(), None),
+        }
+    }
+
+    /// The cooperative walk's mean imbalance (busiest thread's bytes over the mean), if any
+    fn imbalance(&self) -> Option<f64> {
+        match self {
+            Inv::Coop(_, c, _) if c.imbalance.1 > 0 => Some(c.imbalance.0 / c.imbalance.1 as f64),
+            _ => None,
+        }
+    }
+
+    /// The cooperative walk's mean helper wake-up lag and end spread a block, in µs
+    fn sync_us(&self) -> Option<(f64, f64)> {
+        match self {
+            Inv::Coop(_, c, _) if c.imbalance.1 > 0 => {
+                let n = c.imbalance.1 as f64;
+                Some((c.sync_us.0 / n, c.sync_us.1 / n))
+            }
+            _ => None,
+        }
+    }
+
+    /// Whether the pool's helpers ran where they were pinned
+    fn placement_ok(&self) -> bool {
+        match self {
+            Inv::Coop(p, _, _) => p.placement_ok(),
+            _ => true,
         }
     }
 
@@ -555,13 +707,71 @@ impl Inv {
     }
 }
 
-/// `block`: each block inverted in decode order by every arm in turn
-fn block_mode(bs: &[Block], passes: usize, ks: &[usize]) {
-    let sais = cfg!(libsais);
-    let mut arms: Vec<(String, Inv)> = vec![("prod (room walk, 1 core)".into(), Inv::new('p', 1))];
-    arms.extend(ks.iter().map(|&k| (format!("coop {k}"), Inv::new('c', k))));
-    if sais {
-        arms.extend(ks.iter().map(|&k| (format!("sais {k}"), Inv::new('s', k))));
+/// The 97.5% quantile of Student's t with `df` degrees of freedom (a 95% two-sided interval)
+fn t975(df: usize) -> f64 {
+    const T: [f64; 30] = [
+        12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160,
+        2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056,
+        2.052, 2.048, 2.045, 2.042,
+    ];
+    if df == 0 {
+        f64::NAN
+    } else if df <= 30 {
+        T[df - 1]
+    } else {
+        1.96 + 2.4 / df as f64
+    }
+}
+
+/// The mean of `x` and its 95% half-width
+fn interval(x: &[f64]) -> (f64, f64) {
+    let n = x.len();
+    let m = x.iter().sum::<f64>() / n as f64;
+    if n < 2 {
+        return (m, f64::NAN);
+    }
+    let v = x.iter().map(|y| (y - m) * (y - m)).sum::<f64>() / (n - 1) as f64;
+    (m, t975(n - 1) * (v / n as f64).sqrt())
+}
+
+/// `block`: each block inverted in decode order by every arm in turn. With `cpus`, the
+/// caller is pinned to the first and each pool's thread j to the j-th (libsais's OpenMP
+/// team, which inherits its caller's CPUs, is given the first k for its call)
+fn block_mode(bs: &[Block], passes: usize, ks: &[usize], cpus: Option<&[usize]>) {
+    if let Some(c) = cpus {
+        assert!(
+            c.len() >= *ks.iter().max().unwrap(),
+            "fewer CPUs than threads"
+        );
+        assert!(pin(&c[..1]), "could not pin the caller");
+    }
+    // (name, inversion, its own one-thread arm, its k)
+    let mut arms: Vec<(String, Inv, usize, usize)> = vec![(
+        "prod (room walk, 1 core)".into(),
+        Inv::new('p', 1, None, None),
+        0,
+        1,
+    )];
+    let one = arms.len();
+    for &k in ks {
+        arms.push((format!("coop {k}"), Inv::new('c', k, cpus, None), one, k));
+    }
+    // the equal-segment controls: one core walking k threads' segments, so that what k cores
+    // buy is told from what the finer cut costs or buys
+    for &k in ks.iter().filter(|&&k| k > 1) {
+        let seg = SEGMENTS_A_THREAD * k;
+        arms.push((
+            format!("coop 1, {seg} segments (coop {k}'s)"),
+            Inv::new('c', 1, cpus, Some(seg)),
+            one,
+            1,
+        ));
+    }
+    if cfg!(libsais) {
+        let one = arms.len();
+        for &k in ks {
+            arms.push((format!("sais {k}"), Inv::new('s', k, None, None), one, k));
+        }
     }
     let na = arms.len();
     let bytes: usize = bs.iter().map(|b| b.ll.len()).sum();
@@ -575,7 +785,14 @@ fn block_mode(bs: &[Block], passes: usize, ks: &[usize]) {
             t[0].1 += w;
             for j in 0..na - 1 {
                 let a = 1 + (j + nb) % (na - 1);
+                let sais = arms[a].0.starts_with("sais");
+                if let (true, Some(c)) = (sais, cpus) {
+                    pin(&c[..arms[a].3]);
+                }
                 let (m, w) = arms[a].1.invert(b, &mut got);
+                if let (true, Some(c)) = (sais, cpus) {
+                    pin(&c[..1]);
+                }
                 t[a].0 += m;
                 t[a].1 += w;
                 assert!(
@@ -593,25 +810,27 @@ fn block_mode(bs: &[Block], passes: usize, ks: &[usize]) {
             t[0].0, t[0].1
         );
     }
+    let placed = arms.iter().all(|a| a.1.placement_ok());
     let ns = |s: f64| s * 1e9 / bytes as f64;
     println!(
-        "{} blocks, {:.1} MB (BWT bytes), fastest of {passes} passes",
+        "{} blocks, {:.1} MB (BWT bytes), fastest of {passes} passes; {}",
         bs.len(),
-        bytes as f64 / 1e6
+        bytes as f64 / 1e6,
+        match (cpus, placed) {
+            (None, _) => "threads not pinned".to_string(),
+            (Some(c), true) => format!(
+                "thread j pinned to CPU {:?}[j], every helper seen there",
+                &c[..*ks.iter().max().unwrap()]
+            ),
+            (Some(_), false) => "PINNED, BUT A HELPER WAS SEEN ON ANOTHER CPU".to_string(),
+        }
     );
-    println!("| arm | build ns/B | walk ns/B | inversion MB/s | vs prod | vs its 1 thread |");
-    println!("|---|--:|--:|--:|--:|--:|");
+    println!("| arm | build ns/B | walk ns/B | inversion MB/s | vs prod | vs its 1 thread | walk: busiest thread's bytes / mean | walk: last start, end spread (µs a block) |");
+    println!("|---|--:|--:|--:|--:|--:|--:|--:|");
     let tot = |i: usize| best[i].0 + best[i].1;
     for i in 0..na {
-        let one = if i == 0 {
-            0
-        } else if i <= ks.len() {
-            1
-        } else {
-            1 + ks.len()
-        };
         println!(
-            "| {} | {} | {:.2} | {:.0} | {:.2}x | {:.2}x |",
+            "| {} | {} | {:.2} | {:.0} | {:.2}x | {:.2}x | {} | {} |",
             arms[i].0,
             if arms[i].0.starts_with("sais") {
                 "(in walk)".into()
@@ -621,15 +840,55 @@ fn block_mode(bs: &[Block], passes: usize, ks: &[usize]) {
             ns(best[i].1),
             bytes as f64 / tot(i) / 1e6,
             tot(0) / tot(i),
-            tot(one) / tot(i)
+            tot(arms[i].2) / tot(i),
+            arms[i]
+                .1
+                .imbalance()
+                .map_or("".into(), |x| format!("{x:.3}")),
+            arms[i]
+                .1
+                .sync_us()
+                .map_or("".into(), |(l, e)| format!("{l:.0}, {e:.0}"))
         );
     }
 }
 
-/// `grid`: the T-vector phase with N blocks in flight on k cores each
-fn grid_mode(bs: &[Block], rounds: usize, specs: &[String]) {
+/// An arm of the grid: its kind, N blocks in flight, k cores a block, and its segments a
+/// block if set (`4x1@1024`)
+#[derive(Clone, Copy)]
+struct Arm {
+    kind: char,
+    n: usize,
+    k: usize,
+    segments: Option<usize>,
+}
+
+fn parse_arm(s: &str) -> Arm {
+    let (kind, rest) = match s.as_bytes()[0] {
+        b'p' => ('p', &s[1..]),
+        b's' => ('s', &s[1..]),
+        b'w' => ('w', &s[1..]),
+        _ => ('c', s),
+    };
+    let (rest, segments) = match rest.split_once('@') {
+        Some((r, g)) => (r, Some(g.parse().unwrap())),
+        None => (rest, None),
+    };
+    let (n, k) = rest.split_once('x').unwrap_or((rest, "1"));
+    Arm {
+        kind,
+        n: n.parse().unwrap(),
+        k: k.parse().unwrap(),
+        segments,
+    }
+}
+
+/// `grid`: the T-vector phase with N blocks in flight on k cores each. With `cpus`, block
+/// worker w's k threads are pinned to cpus[w k ..][..k], one each (a libsais worker to the k
+/// together, its OpenMP team inheriting them), and where each was seen is checked
+fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize]>) {
     let mut want_hash = Vec::with_capacity(bs.len());
-    let mut inv = Inv::new('p', 1);
+    let mut inv = Inv::new('p', 1, None, None);
     let mut out = Vec::new();
     for b in bs {
         inv.invert(b, &mut out);
@@ -637,24 +896,27 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String]) {
     }
     drop(inv);
     let bytes: usize = bs.iter().map(|b| b.ll.len()).sum();
-    let parse = |s: &str| -> (char, usize, usize) {
-        let (kind, rest) = match s.as_bytes()[0] {
-            b'p' => ('p', &s[1..]),
-            b's' => ('s', &s[1..]),
-            b'w' => ('w', &s[1..]),
-            _ => ('c', s),
-        };
-        let (n, k) = rest.split_once('x').unwrap_or((rest, "1"));
-        (kind, n.parse().unwrap(), k.parse().unwrap())
-    };
-    let arms: Vec<(char, usize, usize)> = specs.iter().map(|s| parse(s)).collect();
+    let arms: Vec<Arm> = specs.iter().map(|s| parse_arm(s)).collect();
     assert!(
-        cfg!(libsais) || arms.iter().all(|a| a.0 != 's'),
+        cfg!(libsais) || arms.iter().all(|a| a.kind != 's'),
         "s arms need --cfg libsais"
     );
+    if let Some(c) = cpus {
+        for (a, s) in arms.iter().zip(specs) {
+            assert!(
+                a.n * a.k <= c.len(),
+                "{s} needs {} CPUs, {} given",
+                a.n * a.k,
+                c.len()
+            );
+        }
+    }
     let mut results: Vec<Vec<f64>> = vec![Vec::new(); arms.len()];
     // each round's build and walk seconds, a block worker's (the workers' sum over N)
     let mut phases: Vec<Vec<(f64, f64)>> = vec![Vec::new(); arms.len()];
+    let mut imbalance: Vec<Option<f64>> = vec![None; arms.len()];
+    let mut misplaced = vec![0usize; arms.len()];
+    let mut sync_us: Vec<Option<(f64, f64)>> = vec![None; arms.len()];
     let mut raw = std::env::var("COOP_JSONL").ok().map(|p| {
         std::fs::OpenOptions::new()
             .create(true)
@@ -674,55 +936,107 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String]) {
             order.reverse();
         }
         for &a in &order {
-            let (kind, n, k) = arms[a];
-            let mut workers: Vec<Inv> = (0..n).map(|_| Inv::new(kind, k)).collect();
+            let Arm {
+                kind,
+                n,
+                k,
+                segments,
+            } = arms[a];
+            let group = |w: usize| cpus.map(|c| &c[w * k..(w + 1) * k]);
+            let mut workers: Vec<Inv> = (0..n)
+                .map(|w| Inv::new(kind, k, group(w), segments))
+                .collect();
             let go = std::sync::Barrier::new(n + 1);
-            let wall = std::thread::scope(|sc| {
+            // the blocks taken in order from one counter, as the decoder's workers take jobs
+            // from one queue, so a slow worker doesn't keep a fixed share
+            let next_block = AtomicUsize::new(0);
+            let (wall, busy, placed) = std::thread::scope(|sc| {
                 let hs: Vec<_> = workers
                     .iter_mut()
                     .enumerate()
                     .map(|(w, inv)| {
-                        let (go, want_hash) = (&go, &want_hash);
+                        let (go, want_hash, g, next_block) =
+                            (&go, &want_hash, group(w), &next_block);
                         sc.spawn(move || {
+                            if let Some(g) = g {
+                                assert!(
+                                    pin(if kind == 's' { g } else { &g[..1] }),
+                                    "could not pin a worker"
+                                );
+                            }
                             let mut out = Vec::new();
                             let (mut tb, mut tw) = (0.0, 0.0);
                             go.wait();
-                            let mut i = w;
-                            while i < bs.len() {
+                            loop {
+                                let i = next_block.fetch_add(1, Ordering::Relaxed);
+                                if i >= bs.len() {
+                                    break;
+                                }
                                 let (b, w) = inv.invert(&bs[i], &mut out);
                                 (tb, tw) = (tb + b, tw + w);
                                 if check {
                                     assert_eq!(fnv(&out), want_hash[i], "block {i} differs");
                                 }
-                                i += n;
                             }
-                            (tb, tw)
+                            let here = cpu_now();
+                            let placed = g.map_or(true, |g| g.iter().any(|&c| c as i64 == here));
+                            (tb, tw, placed)
                         })
                     })
                     .collect();
                 go.wait();
                 let s = Instant::now();
-                let (mut tb, mut tw) = (0.0, 0.0);
-                for h in hs {
-                    let (b, w) = h.join().unwrap();
-                    (tb, tw) = (tb + b, tw + w);
-                }
-                (s.elapsed().as_secs_f64(), tb / n as f64, tw / n as f64)
+                let ends: Vec<(f64, f64, bool)> =
+                    hs.into_iter().map(|h| h.join().unwrap()).collect();
+                (
+                    s.elapsed().as_secs_f64(),
+                    ends.clone(),
+                    ends.iter().all(|e| e.2),
+                )
             });
-            let (wall, tb, tw) = wall;
+            let placed = placed && workers.iter().all(|w| w.placement_ok());
             if check {
+                assert!(
+                    cpus.is_none() || placed,
+                    "{}: a thread was seen off its CPU",
+                    specs[a]
+                );
                 eprintln!("checked {}: every block's output the room walk's", specs[a]);
                 continue;
             }
+            misplaced[a] += !placed as usize;
+            let tb = busy.iter().map(|b| b.0).sum::<f64>() / n as f64;
+            let tw = busy.iter().map(|b| b.1).sum::<f64>() / n as f64;
+            // the busiest and idlest block worker's build + walk seconds: wall less the
+            // busiest is what no worker's phases account for (startup, the last block's tail)
+            let totals = busy.iter().map(|b| b.0 + b.1);
+            let bmax = totals.clone().fold(0.0, f64::max);
+            let bmin = totals.fold(f64::INFINITY, f64::min);
             results[a].push(bytes as f64 / wall / 1e6);
             phases[a].push((tb, tw));
+            let imb = workers
+                .iter()
+                .filter_map(|w| w.imbalance())
+                .reduce(f64::max);
+            imbalance[a] = imb.or(imbalance[a]);
+            let sync = workers
+                .iter()
+                .filter_map(|w| w.sync_us())
+                .reduce(|x, y| (x.0.max(y.0), x.1.max(y.1)));
+            sync_us[a] = sync.or(sync_us[a]);
             if let Some(f) = raw.as_mut() {
                 use std::io::Write;
                 writeln!(
                     f,
-                    r#"{{"round": {round}, "arm": "{}", "kind": "{kind}", "blocks_live": {n}, "cores_a_block": {k}, "wall_s": {wall:.6}, "mb_s": {:.3}, "build_s_a_worker": {tb:.6}, "walk_s_a_worker": {tw:.6}}}"#,
+                    r#"{{"round": {round}, "arm": "{}", "kind": "{kind}", "blocks_live": {n}, "cores_a_block": {k}, "segments": {}, "pinned": {}, "placement_ok": {placed}, "wall_s": {wall:.6}, "mb_s": {:.3}, "build_s_a_worker": {tb:.6}, "walk_s_a_worker": {tw:.6}, "busy_max_s": {bmax:.6}, "busy_min_s": {bmin:.6}, "unaccounted_s": {:.6}, "walk_imbalance": {}, "walk_last_start_us": {}, "walk_end_spread_us": {}}}"#,
                     specs[a],
-                    bytes as f64 / wall / 1e6
+                    segments.map_or("null".into(), |g| g.to_string()),
+                    cpus.is_some(),
+                    bytes as f64 / wall / 1e6,
+                    wall - bmax,
+                    imb.map_or("null".into(), |x| format!("{x:.4}")),
+                    sync.map_or("null".into(), |s| format!("{:.1}", s.0)),
+                    sync.map_or("null".into(), |s| format!("{:.1}", s.1))
                 )
                 .unwrap();
             }
@@ -741,21 +1055,22 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String]) {
     // paired against the first arm, round by round
     let base = &results[0];
     println!(
-        "{} blocks, {:.1} MB, {rounds} rounds; the T-vector phase only (build + walk)",
+        "{} blocks, {:.1} MB, {rounds} timed rounds; the T-vector phase only (build + walk), not the decoder; {}",
         bs.len(),
-        bytes as f64 / 1e6
+        bytes as f64 / 1e6,
+        if cpus.is_some() { "each thread pinned to its own CPU, checked" } else { "threads not pinned" }
     );
     println!(
-        "| arm | blocks live | cores | MB/s, median | vs {0}, paired mean (min-max) | build MB/s | walk MB/s | walk vs {0}, paired mean |",
+        "| arm | blocks live | cores | MB/s, median | vs {0}, paired: mean ±95% (min-max) | build MB/s | walk MB/s | walk vs {0}, paired | walk: busiest thread's bytes / mean | walk: last start, end spread (µs a block) | rounds misplaced |",
         specs[0]
     );
-    println!("|---|--:|--:|--:|--:|--:|--:|--:|");
+    println!("|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|");
     // a phase's throughput: the bytes over a worker's seconds in it (each of the N workers
     // inverts 1/N of the bytes, all at once), so arms of different N compare
     for (a, r) in results.iter().enumerate() {
-        let (_, n, k) = arms[a];
+        let Arm { kind, n, k, .. } = arms[a];
         let ratios: Vec<f64> = r.iter().zip(base).map(|(x, y)| x / y).collect();
-        let mean = ratios.iter().sum::<f64>() / ratios.len() as f64;
+        let (mean, h) = interval(&ratios);
         let (lo, hi) = ratios
             .iter()
             .fold((f64::INFINITY, 0f64), |(l, h), &x| (l.min(x), h.max(x)));
@@ -768,17 +1083,16 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String]) {
             .map(|(p, q)| q.1 / p.1)
             .collect();
         println!(
-            "| {} | {n} | {} | {:.0} | {mean:.3} ({lo:.3}-{hi:.3}) | {} | {:.0} | {:.3} |",
+            "| {} | {n} | {} | {:.0} | {mean:.3} ±{h:.3} ({lo:.3}-{hi:.3}) | {} | {:.0} | {:.3} | {} | {} | {} |",
             specs[a],
             n * k,
             med(r),
-            if arms[a].0 == 's' {
-                "(in walk)".to_string()
-            } else {
-                format!("{:.0}", med(&build))
-            },
+            if kind == 's' { "(in walk)".to_string() } else { format!("{:.0}", med(&build)) },
             med(&walk),
-            wr.iter().sum::<f64>() / wr.len() as f64
+            interval(&wr).0,
+            imbalance[a].map_or("".into(), |x| format!("{x:.3}")),
+            sync_us[a].map_or("".into(), |(l, e)| format!("{l:.0}, {e:.0}")),
+            misplaced[a]
         );
     }
 }
@@ -788,6 +1102,11 @@ fn main() {
     let mode = args.get(1).map(String::as_str).unwrap_or("");
     let data =
         std::fs::read(args.get(2).expect("coop block|grid FILE.bz2 ...")).expect("a .bz2 file");
+    // COOP_CPUS: the CPUs to pin to, one a thread (bench/coop.sh: one of each physical core)
+    let cpus: Option<Vec<usize>> = std::env::var("COOP_CPUS")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .map(|s| s.split(',').map(|c| c.parse().unwrap()).collect());
     let bs = blocks(&data);
     match mode {
         "block" => {
@@ -798,7 +1117,7 @@ fn main() {
                 .split(',')
                 .map(|s| s.parse().unwrap())
                 .collect();
-            block_mode(&bs, passes, &ks);
+            block_mode(&bs, passes, &ks, cpus.as_deref());
         }
         "grid" => {
             let rounds = args.get(3).map_or(4, |s| s.parse().unwrap());
@@ -808,7 +1127,7 @@ fn main() {
                 .split(',')
                 .map(String::from)
                 .collect();
-            grid_mode(&bs, rounds, &specs);
+            grid_mode(&bs, rounds, &specs, cpus.as_deref());
         }
         _ => panic!("coop block|grid FILE.bz2 ..."),
     }

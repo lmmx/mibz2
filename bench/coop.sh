@@ -51,16 +51,19 @@ fi
 RUSTFLAGS="$flags" CARGO_TARGET_DIR=$target cargo build --release --example coop
 bin=$target/release/examples/coop
 
-# The arms that fit the cores: production workers at 4 and beyond, the cooperative kernel
+# The arms that fit the cores (the discovery grid: confirm a winner after it with
+#   bash bench/coop.sh --arms p4,WINNER --rounds 20): production workers at 4 and beyond, the cooperative kernel
 # at 4 x 1 (its cost against production's at the same footprint), and N x k with N blocks
 # live on N x k cores
 if [ -z "$arms" ]; then
-  arms="p4,p2,p6,p8,p10,4x1,2x2,3x2,4x2,5x2,3x3,2x4,w4x2,w5x2,w3x3"
+  # 4x1@1024, 5x1@1024, 3x1@1536: one core a block with 4x2's, 5x2's and 3x3's segments,
+  # so what the second and third cores buy is told from what the finer cut does
+  arms="p4,p2,p6,p8,p10,4x1,4x2,w4x2,4x1@1024,5x2,w5x2,5x1@1024,3x3,w3x3,3x1@1536"
   [ "$libsais" = 1 ] && arms="$arms,s4x1,s4x2,s5x2,s3x3"
 fi
 fit=""
 for a in $(echo "$arms" | tr ',' ' '); do
-  s=${a#[psw]}; n=${s%x*}; k=1; [ "$s" != "$n" ] && k=${s#*x}
+  s=${a#[psw]}; s=${s%@*}; n=${s%x*}; k=1; [ "$s" != "$n" ] && k=${s#*x}
   [ $((n * k)) -le "$cores" ] && fit="$fit,$a"
 done
 fit=${fit#,}
@@ -70,6 +73,7 @@ ks="1,2,3,4"; [ "$cores" -lt 4 ] && ks="1,2"
 
 out=coop-$(date -u +%Y%m%dT%H%M%SZ).md
 export COOP_JSONL=${out%.md}.jsonl  # (every round of the grid, raw)
+export COOP_CPUS=$cpus  # (each thread pinned to its own CPU of these, and checked)
 {
   echo "# The cooperative inversion pilot ($(git rev-parse --short HEAD), $(date -u +%FT%TZ))"
   echo

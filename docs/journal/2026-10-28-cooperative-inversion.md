@@ -127,12 +127,16 @@ beside the decoder actually used.
 ## 4. The pilot (measured, a 4-vCPU cloud VM: Xeon @ 2.1 GHz, 260 MB L3, no SMT shown)
 
 `examples/coop.rs` (research only) builds and walks a block's table on a pool of k
-threads. The pool is kept for the run; its threads spin briefly, then park. `bench/coop.sh`
-runs it as `just bench-coop`:
+threads. The pool is kept for the run; its threads spin briefly, then park. With
+`COOP_CPUS` set, as `bench/coop.sh` sets it to one CPU of each physical core, every thread
+is pinned to its own CPU (`sched_setaffinity`), and where each ran is checked. A run with a
+thread seen off its CPU fails its check pass. `bench/coop.sh` runs it as `just bench-coop`:
 - `block`: one block at a time on k cores, against the production inversion and libsais
   2.12.1's on k OpenMP threads;
 - `grid`: N blocks in flight on k cores each, against N production workers, on the T-vector
-  phase (the scanner and MTF done first, outside the timing).
+  phase (the scanner and MTF done first, outside the timing). Its figure is the T-vector
+  phase's throughput, not the decoder's: a grid gain is a candidate for a decoder A/B,
+  not a decoder gain.
 
 Every output is checked against the production walk's, byte for byte (`block`) or by hash
 (`grid`).
@@ -142,7 +146,7 @@ sharing can only show its costs here. Its 4 vCPUs are shared, so a 4th spinning 
 unreliable: libsais also falls at 4 in some runs. What it validates is the harness and the
 kernel's costs.
 
-### Four negative findings on the way (each fixed in the harness)
+### Six negative findings on the way (each fixed in the harness)
 
 1. **A thread spawned a block, with fresh buffers:** 2 cores gave 1.05×, slower than 1
    when pinned to 2 CPUs. The spawn, the cross-thread frees and the page faults cost more
@@ -158,54 +162,91 @@ kernel's costs.
    penalised exactly the cooperative arms. The first grid figures (p4 647 MB/s on the VM)
    were wrong by that much. The check now runs in an untimed pass over every arm before
    the timed rounds (p4: 931 MB/s).
+5. **Blocks dealt to workers in a fixed rotation:** the grid gave worker w every Nth
+   block, so a worker slowed for any reason kept its whole share. Its busiest and idlest
+   block workers differed by 0.38 against 0.22 s. The blocks are now taken from one
+   counter, as the decoder's workers take jobs from one queue. Busy times now match within
+   1%, and p4 measured 1264 MB/s.
+6. **Threads free to share a CPU, and idle pools spinning:** `taskset` limited the process
+   to one CPU of each core, but not one thread to a CPU. The idle pools of other arms also
+   spun for about 3 ms after each job. With threads pinned and the spin cut to about
+   2,000 iterations before parking, `coop 4` went from erratic (0.65–1.15× prod) to 1.67×.
+   `coop 1`'s walk went from 6.6 to 4.0 ns/B, where it had been slowed by a spinning
+   neighbour (the VM's vCPUs may share physical cores).
 
-### The harness's figures (block: `coop-20261028T120750Z.md`, 3 passes; indicative)
+### The harness's figures (`coop-20261028T144113Z.md`: threads pinned, blocks from one counter; indicative)
 
-| one block on k cores | build ns/B | walk ns/B | vs prod |
-|---|--:|--:|--:|
-| prod (room walk, 1 core) | 1.27 | 3.38 | 1.00 |
-| coop 1 | 1.30 | 4.03 | 0.87 |
-| coop 2 | 2.11 | 2.37 | 1.04 |
-| coop 3 | 2.08 | 2.02 | 1.13 |
-| libsais 1 / 3 / 4 | (with the walk) | 3.81 / 2.39 / 2.16 | 1.22 / 1.94 / 2.15 |
+| one block on k cores (3 passes) | build ns/B | walk ns/B | vs prod | vs its 1 thread | busiest thread's bytes / mean | last start, end spread (µs a block) |
+|---|--:|--:|--:|--:|--:|--:|
+| prod (room walk, 1 core) | 1.45 | 3.51 | 1.00 | | | |
+| coop 1 | 1.51 | 3.99 | 0.90 | 1.00 | | |
+| coop 2 | 1.93 | 2.54 | 1.11 | 1.23 | 1.25 | 37, 28 |
+| coop 3 | 2.26 | 1.93 | 1.18 | 1.31 | 1.56 | 46, 42 |
+| coop 4 | 1.27 | 1.69 | 1.67 | 1.86 | 1.85 | 75, 48 |
+| coop 1 with coop 2's, 3's, 4's segments | 1.50 | 4.11 / 4.21 / 4.34 | 0.88 / 0.87 / 0.85 | 0.98 / 0.96 / 0.94 | | |
+| libsais 1 / 2 / 3 / 4 | (with the walk) | 4.00 / 3.52 / 2.63 / 2.34 | 1.24 / 1.41 / 1.88 / 2.12 | 1.00 / 1.13 / 1.52 / 1.71 | | |
 
-- **The shared walk scales:** 4.03 → 2.37 → 2.02 ns/B at 1 → 2 → 3 cores, 1.7–2.0×.
-- **The parallel build doesn't:** 1.30 → 2.1 ns/B, worse at 2 cores than 1. This fits
-  premonition 4, and it is the first thing to fix (build on one core while the others
-  start the walk's setup, or a bucket-major split).
-- **The cooperative kernel costs 13% on one core** (its walk loop lacks the room walk's
-  passes).
-- **libsais's multi-threaded inversion reaches 1.76× its own one thread at 4.** A
-  practitioner's version of the same idea scales on this machine.
+- **The shared walk scales:** 3.99 → 2.54 → 1.93 → 1.69 ns/B from 1 to 4 cores, 2.4× at 4.
+- **The finer cut is not what buys it.** One core walking 4 cores' segments is 6% slower,
+  not faster. So the gain is the cores', and slightly understated.
+- **Coordination is small against a block's walk** (about 2 ms):
+  - the last helper starts 37–75 µs in;
+  - the threads end within 28–48 µs of each other.
+- **The byte shares are uneven (1.25–1.85) but the ends are not.** Some threads are
+  slower, and the shared counter gives them fewer segments, as it is meant to. On this VM
+  that is a placement effect, not a tail.
+- **The parallel build** is erratic here: 1.93 and 2.26 ns/B at 2 and 3 cores, 1.27 at 4,
+  against 1.51 on one. It is still the first thing to fix.
+- **The cooperative kernel costs 10–14% on one core**, as its walk loop lacks the room
+  walk's passes.
 
-Grid, `coop-20261028T130747Z.md` (4 rounds, the check out of the timing; indicative):
+Grid (6 rounds; the paired mean with its 95% interval):
 
 | grid: N blocks × k cores | MB/s | vs p4, paired | walk vs p4, paired |
 |---|--:|--:|--:|
-| p4 (4 production workers) | 931 | 1.00 | 1.00 |
-| p2 | 490 | 0.53 | 0.54 |
-| 4x1 (the coop kernel, 4 blocks) | 796 | 0.85 | 0.85 |
-| 2x2 (2 blocks, 4 cores) | 532 | 0.58 | 0.64 |
-| w2x2 (the same, built on one core) | 497 | 0.51 | 0.59 |
-| s2x2 (libsais, 2 blocks × 2 threads) | 562 | 0.59 | (its build is in its walk) |
+| p4 (4 production workers) | 1264 | 1.00 | 1.00 |
+| p2 | 599 | 0.51 ±0.05 | 0.51 |
+| 4x1 (the coop kernel, 4 blocks) | 942 | 0.79 ±0.10 | 0.80 |
+| 2x2 (2 blocks, 4 cores) | 641 | 0.53 ±0.05 | 0.63 |
+| w2x2 (the same, built on one core) | 629 | 0.52 ±0.06 | 0.60 |
+| 2x1@1024 (2 blocks, 1 core each, 2x2's segments) | 506 | 0.42 ±0.04 | 0.41 |
+| s2x2 (libsais, 2 blocks × 2 threads) | 655 | 0.55 ±0.05 | (its build is in its walk) |
 
 With no capacity pressure, independent blocks win, as expected. This is the control for
 the workstation run: there, p4 is the peak and p6–p10 fall.
 
 ## 5. The deciding test, pre-registered (the workstation, `just bench-coop`)
 
-Run on the quiet i9, with nothing else open (§1 of the workstation entry). It takes a
-few minutes. The grid's arms by default are p2, p4, p6, p8, p10, 4x1, 2x2, 3x2, 4x2, 5x2,
-3x3 and 2x4; w4x2, w5x2 and w3x3, the same walks with the table built on one core; and
-with libsais, also s4x1, s4x2, s5x2 and s3x3. There are 2 × arms rounds, rotated and
-reversed, paired against p4. Each arm's build and walk are reported apart, as phase
-throughputs, and every round's figures are kept raw (`coop-<UTC>.jsonl`).
+Run on the quiet i9, with nothing else open (§1 of the workstation entry). It takes about
+5–10 minutes. Every thread is pinned to its own physical core and checked.
+
+**The discovery grid's arms (by default):**
+- production: p2, p4, p6, p8, p10;
+- the cooperative kernel: 4x1, its cost at today's footprint;
+- the candidates: 4x2, 5x2, 3x3;
+- the same walks with the table built on one core: w4x2, w5x2, w3x3;
+- the equal-segment controls, one core a block with 4x2's, 5x2's and 3x3's segments:
+  4x1@1024, 5x1@1024, 3x1@1536;
+- with libsais: s4x1, s4x2, s5x2, s3x3.
+
+There are 2 × arms rounds, rotated and reversed, paired against p4.
+
+**What each arm reports:**
+- its throughput;
+- its build and walk as phase throughputs;
+- the walk's busiest thread's share and its coordination (the helpers' start lag, the
+  threads' end spread);
+- the rounds where any thread was seen off its CPU.
+
+The raw JSONL also keeps each round's busiest and idlest block worker, and the wall left
+unaccounted.
 
 **Predictions if capacity is the knee's mechanism:**
 - p6–p10 below p4, reproducing the knee;
-- 4x1 at about 0.85–0.9 of p4, the kernel's cost;
+- 4x1 at about 0.8–0.9 of p4, the kernel's cost;
 - **4x2 above p8**, at equal cores and half the live tables;
 - **4x2 at least 1.1 × p4**;
+- 4x2 above 4x1@1024, so the second core buys it and the finer cut doesn't;
 - 5x2 at or above 4x2;
 - the libsais arms at or above ours.
 
@@ -217,9 +258,11 @@ moved.
 (§4), so a 4x2 that loses doesn't by itself falsify the shared table:
 - if w4x2 (the build on one core) beats 4x2, the parallel build is losing it;
 - if the walk's phase throughput at 4x2 beats p4's while the arm's total doesn't, the walk
-  works and the build or the serial work around it is the bottleneck.
+  works and the build or the serial work around it is the bottleneck;
+- if the coordination columns are a large share of a block's walk (they are about 3% on
+  the VM), the handoffs are.
 
-Either way, the next step is the build, not the idea.
+Each of those makes the build or the handoffs the next step, not the idea.
 
 **What falsifies it as a lever:**
 - 4x2 and w4x2 both ≤ p4 in every round, **and** the walk's own phase throughput at 4x2 no
@@ -228,12 +271,24 @@ Either way, the next step is the build, not the idea.
 - then cooperative inversion closes, and the footprint lever passes to the table's
   representation (`2026-10-28-workstation-scaling.md`, "Left open") or to nothing.
 
-**What promotes it to the decoder:** the best cooperative arm beats p4 by at least 10%,
-paired, in every round. Even then, before integration:
-- the kernel reaches parity, 4x1 at least 0.97 × p4;
-- the build is fixed;
-- the room walk's shared-table form passes the segment oracle, fuzzing and Miri on its
-  new ownership.
+**Two stages.** The discovery grid only nominates. With about 19 arms, the best of them is
+biased upwards. A candidate is then confirmed alone against p4:
+
+    just bench-coop --arms p4,CANDIDATE --rounds 20
+
+That is 20 balanced rounds, with the paired mean and its 95% interval.
+
+**What promotes it to the decoder:**
+1. the confirmation's paired mean is at least 1.10 × p4, its 95% interval's lower bound
+   is above 1.0, and it beats p4 in every round;
+2. then, before integration:
+   - the kernel reaches parity, 4x1 at least 0.97 × p4;
+   - the build is fixed;
+   - the room walk's shared-table form passes the segment oracle, fuzzing and Miri on its
+     new ownership;
+3. and the decoder itself, with the scanner, MTF, RLE1, the CRC and the ordered output,
+   is A/B'd on the workstation at 4–10 cores. A T-vector phase gain counts only as far as
+   it survives there.
 
 Four-core non-inferiority holds by construction (§1), and is checked on CI's 2-core
 runners as for any walk change.
