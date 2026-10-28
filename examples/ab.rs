@@ -71,7 +71,9 @@
 //! is the harness's, not the decode's: it moves itself off the CPUs a run is pinned to
 //! (onto the machine's others, where there are any: `sampler_cpus`), so it never preempts
 //! a pinned decode, and its own CPU (RUSAGE_THREAD, exact: `sampler_s`) is left out of
-//! the run's CPU. `AB_SAMPLE_MS` sets its interval (0: none, to measure its cost).
+//! the run's CPU. `AB_SAMPLE_MS` sets its interval (0: none, to measure its cost). A
+//! 1-thread run of an in-process arm has no sampler: its split is its own thread's CPU
+//! (RUSAGE_THREAD), and anything else its process spent shows as unattributed.
 
 #[path = "../tests/common/mod.rs"]
 mod common;
@@ -508,6 +510,17 @@ fn child(arm: &str, threads: usize, path: &str) {
     let is_program = external.is_some();
     let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus), startup) = match external {
         Some((cmd, ready)) => piped(cmd, ready, &mut h),
+        // (a 1-thread in-process run has one thread to account for, so no sampler at all:
+        // reading another thread's /proc entries cost a 12 ms run up to 17% (#69). Its split
+        // is its own thread's CPU, RUSAGE_THREAD, and its run-queue wait its own schedstat)
+        None if threads == 1 => {
+            let t0 = Instant::now();
+            let res = decode(arm, threads, path, &mut h, &|| ());
+            let wall = t0.elapsed().as_secs_f64();
+            let wait = run_delay(std::path::Path::new("/proc/thread-self/schedstat")) as f64 * 1e-9;
+            let main = format!("main={:.2}", rusage(1).0);
+            (res, wall, (1, main, wait, 0.0, "none".into()), 0.0)
+        }
         None => {
             let w = Threads::watch(std::process::id());
             let t0 = Instant::now();

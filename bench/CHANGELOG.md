@@ -111,6 +111,11 @@ pull requests. Until then, these versions were kept by hand, with no check in CI
   - **Measured on CI** (`base_sample_ms=0`: the same commit sampled and unsampled):
     - wikidata within noise at 1/2/4 threads (+1.6%, −1.5%, +2.4%, intervals about ±4%);
     - before that handshake, the 12 ms `onebyte` runs were +9.8% at 1 thread.
+  - **A 1-thread run of an in-process arm runs no sampler at all.** After the handshake,
+    sampling still cost 12 ms single-threaded runs +4.7–17% in wall (`runs`, `onebyte`),
+    though wikidata stayed within noise (+0.6%, +0.7%, +1.2% at 1/2/4 threads, its CPU at 4
+    threads +0.2%). Its split is its own thread's CPU, and its run-queue wait is its own
+    schedstat.
   - **On a 2-core runner a 2-thread run's other CPUs are its own cores' SMT siblings,** so
     there the sampler shares the workers' cores.
   - **What that removes.** Kept in, at 10 ms, it cost the 1-thread runs +1.0% (+0.4%,
