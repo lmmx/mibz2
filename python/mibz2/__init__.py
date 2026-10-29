@@ -36,7 +36,8 @@ class BZ2Reader(io.RawIOBase):
         Decoding threads: ``1`` decodes on the reading thread; more decode blocks at
         once on worker threads, a block each, or, on 6 or more physical cores, in teams
         of 2 sharing each block (as many teams as keep their tables in the CPU's last
-        cache level). ``None`` (the default) uses every CPU this process may use.
+        cache level, or one a core pair for a stream of level 1-3, whose blocks are
+        small). ``None`` (the default) uses every CPU this process may use.
 
     Raises
     ------

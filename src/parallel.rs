@@ -73,6 +73,55 @@ struct Shared {
     state: Mutex<State>,
     cv: Condvar,
     slots: u64,
+    /// the level policy's bound on large blocks inverted at once (`Plan::for_stream`)
+    gate: Option<Arc<Gate>>,
+}
+
+/// At most `permits` blocks of more than `rows` rows in their inverse BWT at once: the
+/// level policy's bound when it plans more teams than a large block's table allows
+/// (`plan_for_stream`), so a later stream of large blocks in a concatenation keeps today's
+/// live tables. A worker takes a pass after its block's MTF stage, when the block's length
+/// is known, and before its table is built; smaller blocks pass freely.
+pub(crate) struct Gate {
+    rows: usize,
+    permits: usize,
+    inside: Mutex<usize>,
+    cv: Condvar,
+}
+
+impl Gate {
+    pub(crate) fn new(rows: usize, permits: usize) -> Gate {
+        Gate {
+            rows,
+            permits: permits.max(1),
+            inside: Mutex::new(0),
+            cv: Condvar::new(),
+        }
+    }
+
+    /// For a block of `n` rows: none if it is small, else a pass once one is free, given
+    /// back when dropped (on unwinding too)
+    pub(crate) fn enter(&self, n: usize) -> Option<GatePass<'_>> {
+        if n <= self.rows {
+            return None;
+        }
+        let mut inside = self.inside.lock().unwrap_or_else(|e| e.into_inner());
+        while *inside >= self.permits {
+            inside = self.cv.wait(inside).unwrap_or_else(|e| e.into_inner());
+        }
+        *inside += 1;
+        Some(GatePass(self))
+    }
+}
+
+/// A large block's pass through the `Gate`
+pub(crate) struct GatePass<'a>(&'a Gate);
+
+impl Drop for GatePass<'_> {
+    fn drop(&mut self) {
+        *self.0.inside.lock().unwrap_or_else(|e| e.into_inner()) -= 1;
+        self.0.cv.notify_one();
+    }
 }
 
 impl Shared {
@@ -110,9 +159,21 @@ impl StreamDecoder {
     /// cores, teams of 2 sharing each block, with the window scaled to the teams (`window`).
     /// `planned(Plan::Workers(threads), ..)` is the decoder before the policy.
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
+        Self::for_stream(threads, slots, k, None)
+    }
+
+    /// `new`, knowing the input's first stream's level (its header's `BZh1`-`BZh9`, None if
+    /// not known), as `Plan::for_stream` plans for it; `BzReader::parallel` and
+    /// `decode_parallel` read it from the input. With no level it is `new`.
+    pub fn for_stream(
+        threads: usize,
+        slots: usize,
+        k: Kernels,
+        level: Option<u32>,
+    ) -> StreamDecoder {
         let threads = threads.max(1);
-        let plan = Plan::for_threads(threads);
-        Self::planned(plan, window(plan, threads, slots), k)
+        let (plan, gate) = plan_for_stream(threads, physical_cores(), l3_bytes(), level);
+        Self::planned_gated(plan, window(plan, threads, slots), k, gate)
     }
 
     /// A decoder spending its threads as `plan` says: production's workers, or teams of
@@ -120,14 +181,26 @@ impl StreamDecoder {
     /// the plan's workers or teams). The team size is 2, 3 or 4; another runs as that many
     /// production workers.
     pub fn planned(plan: Plan, slots: usize, k: Kernels) -> StreamDecoder {
+        Self::planned_gated(plan, slots, k, None)
+    }
+
+    /// `planned`, with the large blocks inverted at once bounded by `gate` if one is given
+    fn planned_gated(plan: Plan, slots: usize, k: Kernels, gate: Option<Gate>) -> StreamDecoder {
         use super::bwt::{Cooperative, Segmented};
+        let g = gate.map(Arc::new);
         let mut dec = match plan {
-            Plan::Workers(n) => Self::with_inverse::<Segmented>(n, slots, k),
-            Plan::Teams { teams, k: 2 } => Self::with_inverse::<Cooperative<2>>(teams, slots, k),
-            Plan::Teams { teams, k: 3 } => Self::with_inverse::<Cooperative<3>>(teams, slots, k),
-            Plan::Teams { teams, k: 4 } => Self::with_inverse::<Cooperative<4>>(teams, slots, k),
+            Plan::Workers(n) => Self::with_inverse_gated::<Segmented>(n, slots, k, g),
+            Plan::Teams { teams, k: 2 } => {
+                Self::with_inverse_gated::<Cooperative<2>>(teams, slots, k, g)
+            }
+            Plan::Teams { teams, k: 3 } => {
+                Self::with_inverse_gated::<Cooperative<3>>(teams, slots, k, g)
+            }
+            Plan::Teams { teams, k: 4 } => {
+                Self::with_inverse_gated::<Cooperative<4>>(teams, slots, k, g)
+            }
             Plan::Teams { teams, k: t } => {
-                Self::with_inverse::<Segmented>(teams.max(1) * t.max(1), slots, k)
+                Self::with_inverse_gated::<Segmented>(teams.max(1) * t.max(1), slots, k, g)
             }
         };
         dec.threads = plan.threads();
@@ -140,6 +213,15 @@ impl StreamDecoder {
         threads: usize,
         slots: usize,
         k: Kernels,
+    ) -> StreamDecoder {
+        Self::with_inverse_gated::<I>(threads, slots, k, None)
+    }
+
+    fn with_inverse_gated<I: super::bwt::InverseBwt + 'static>(
+        threads: usize,
+        slots: usize,
+        k: Kernels,
+        gate: Option<Arc<Gate>>,
     ) -> StreamDecoder {
         let threads = threads.max(1);
         let slots = slots.max(threads) as u64;
@@ -155,6 +237,7 @@ impl StreamDecoder {
             }),
             cv: Condvar::new(),
             slots,
+            gate,
         });
         let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
         let (job_tx, job_rx) = channel::<Job>();
@@ -413,7 +496,7 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
 }
 
 fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels) {
-    let mut scratch = Scratch::<I>::default();
+    let mut scratch = Scratch::<I>::default().gated(shared.gate.clone());
     loop {
         mark!(JobLock);
         let job = {
@@ -447,7 +530,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             Ok(Ok(_)) => Ok(out),
             Ok(Err(kind)) => Err(kind),
             Err(p) => {
-                scratch = Scratch::default();
+                scratch = Scratch::default().gated(shared.gate.clone());
                 Err(ErrorKind::Internal(panic_message(p)))
             }
         }
@@ -493,6 +576,23 @@ pub const COOP_MIN_CORES: usize = 6;
 /// A full block's T-vector: 900,000 rows × 4 bytes
 const FULL_TABLE: f64 = 3.6e6;
 
+/// The highest level whose streams the policy plans teams on every physical core for (the
+/// level policy's rule R1, held out at levels 1-3 on the i9:
+/// docs/journal/2026-10-29-level-policy.md). Higher levels keep `Plan::for_threads`.
+pub const SMALL_LEVEL: u32 = 3;
+
+/// The rows a block of a stream at `SMALL_LEVEL` can hold (a level's blocks are at most
+/// level × 100 000 bytes before the BWT): larger blocks go through the level policy's gate
+const SMALL_ROWS: usize = SMALL_LEVEL as usize * 100_000;
+
+/// A stream header's level, from the input's first bytes (`BZh1`-`BZh9`), if they are one
+pub(crate) fn header_level(head: &[u8]) -> Option<u32> {
+    match head {
+        [b'B', b'Z', b'h', l @ b'1'..=b'9', ..] => Some((l - b'0') as u32),
+        _ => None,
+    }
+}
+
 impl Plan {
     /// The cooperative decoder's policy for a caller's `threads`, on this machine, and the
     /// default (`StreamDecoder::new`, so `BzReader::parallel` and `decode_parallel`), as
@@ -506,6 +606,21 @@ impl Plan {
     ///   two block sizes (workstation journal §9), 4 teams there.
     pub fn for_threads(threads: usize) -> Plan {
         plan_with(threads.max(1), physical_cores(), l3_bytes())
+    }
+
+    /// `for_threads`, knowing the input's first stream's level (`BZh1`-`BZh9`; None: not
+    /// known, and `for_threads`' plan). Where that plans teams and the level is at most
+    /// `SMALL_LEVEL`, teams of 2 on all the physical cores the threads can use, with
+    /// `for_threads`' team count kept as the bound on blocks larger than `SMALL_LEVEL`'s
+    /// inverted at once, for a later stream of a concatenation with larger blocks
+    /// (`StreamDecoder::for_stream`). Levels above `SMALL_LEVEL` plan as `for_threads`.
+    ///
+    /// At levels 1 and 2 the blocks are below `bwt::MIN_COOP` rows, so each team inverts
+    /// its block on one core and its helper never starts: those teams are one-core
+    /// workers, more of them than `for_threads` plans. The helpers start only at a larger
+    /// block, which the bound then admits as `for_threads` would.
+    pub fn for_stream(threads: usize, level: Option<u32>) -> Plan {
+        plan_for_stream(threads.max(1), physical_cores(), l3_bytes(), level).0
     }
 
     /// The decoder's worker threads (teams count as one each) and its threads in all
@@ -549,6 +664,27 @@ pub(crate) fn plan_with(threads: usize, phys: Option<usize>, l3: Option<u64>) ->
         teams: (cores / 2).min(cap).max(1),
         k: 2,
     }
+}
+
+/// `Plan::for_stream` on a machine of `phys` physical cores and an L3 of `l3` bytes, with the
+/// gate bounding its large blocks where it plans more teams than `plan_with` does
+fn plan_for_stream(
+    threads: usize,
+    phys: Option<usize>,
+    l3: Option<u64>,
+    level: Option<u32>,
+) -> (Plan, Option<Gate>) {
+    let plan = plan_with(threads, phys, l3);
+    if let (Plan::Teams { teams, k: 2 }, Some(level), Some(phys)) = (plan, level, phys) {
+        let wide = threads.min(phys) / 2;
+        if level <= SMALL_LEVEL && wide > teams {
+            return (
+                Plan::Teams { teams: wide, k: 2 },
+                Some(Gate::new(SMALL_ROWS, teams)),
+            );
+        }
+    }
+    (plan, None)
 }
 
 /// The physical cores of the CPUs this process may use, where the OS says (Linux: the CPUs
@@ -651,6 +787,213 @@ mod plan_tests {
             let e = dec.read(&mut [0; 16]).unwrap_err();
             assert_eq!(e.kind, ErrorKind::Empty);
         }
+    }
+
+    /// The level policy (R1) on the i9: teams of 2 on every core at levels 1-3, with
+    /// `for_threads`' 4 teams the bound on larger blocks; levels 4-9, no level, fewer cores
+    /// or no topology plan as `for_threads`, with no bound
+    #[test]
+    fn the_level_policy() {
+        let i9 = (Some(10), Some(20 << 20));
+        let at = |t, l| {
+            let (p, g) = plan_for_stream(t, i9.0, i9.1, l);
+            (p, g.map(|g| (g.rows, g.permits)))
+        };
+        let wide = (Plan::Teams { teams: 5, k: 2 }, Some((300_000, 4)));
+        for l in 1..=3 {
+            assert_eq!(at(20, Some(l)), wide);
+            assert_eq!(at(10, Some(l)), wide);
+            // fewer threads: no more teams than for_threads' plan, so no bound
+            assert_eq!(at(8, Some(l)), (Plan::Teams { teams: 4, k: 2 }, None));
+            assert_eq!(at(6, Some(l)), (Plan::Teams { teams: 3, k: 2 }, None));
+            assert_eq!(at(4, Some(l)), (Plan::Workers(4), None));
+        }
+        for l in [None, Some(4), Some(5), Some(6), Some(9)] {
+            for t in [1, 4, 6, 8, 10, 20] {
+                assert_eq!(
+                    at(t, l),
+                    (plan_with(t, i9.0, i9.1), None),
+                    "{t} threads, {l:?}"
+                );
+            }
+        }
+        // no topology, or below 6 physical cores: workers at any level, as for_threads
+        assert_eq!(
+            plan_for_stream(20, None, i9.1, Some(1)).0,
+            Plan::Workers(20)
+        );
+        assert_eq!(
+            plan_for_stream(20, Some(4), i9.1, Some(1)).0,
+            Plan::Workers(20)
+        );
+        // an L3 whose cap already plans a team a core pair: no change
+        let big = plan_for_stream(16, Some(16), Some(64 << 20), Some(1));
+        assert_eq!(
+            (big.0, big.1.is_none()),
+            (Plan::Teams { teams: 8, k: 2 }, true)
+        );
+        assert_eq!(header_level(b"BZh9"), Some(9));
+        assert_eq!(header_level(b"BZh1\x31AY"), Some(1));
+        for h in [&b"BZh0"[..], b"BZh", b"", b"BZx9", b"bzh9"] {
+            assert_eq!(header_level(h), None, "{h:?}");
+        }
+    }
+
+    /// The gate admits at most its permits of blocks above its rows at once and smaller
+    /// ones freely, and a pass held through a panic is given back
+    #[test]
+    fn the_gate() {
+        use std::sync::atomic::{AtomicUsize, Ordering::SeqCst};
+        let g = Gate::new(100, 2);
+        assert!(g.enter(100).is_none());
+        let (now, most) = (AtomicUsize::new(0), AtomicUsize::new(0));
+        std::thread::scope(|s| {
+            for _ in 0..8 {
+                s.spawn(|| {
+                    for _ in 0..200 {
+                        let _pass = g.enter(101).expect("a large block's pass");
+                        let n = now.fetch_add(1, SeqCst) + 1;
+                        most.fetch_max(n, SeqCst);
+                        std::thread::yield_now();
+                        now.fetch_sub(1, SeqCst);
+                    }
+                });
+            }
+        });
+        assert!(
+            most.load(SeqCst) <= 2,
+            "{} inside at once",
+            most.load(SeqCst)
+        );
+        assert_eq!(*g.inside.lock().unwrap(), 0);
+        let r = catch_unwind(AssertUnwindSafe(|| {
+            let _pass = g.enter(101);
+            panic!("a panic holding a pass");
+        }));
+        assert!(r.is_err());
+        assert_eq!(*g.inside.lock().unwrap(), 0);
+    }
+
+    fn compress(data: &[u8], level: u32) -> Vec<u8> {
+        use std::io::Write;
+        let mut e = bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(level));
+        e.write_all(data).unwrap();
+        e.finish().unwrap()
+    }
+
+    /// Words of random letters (few RLE1 runs, so a block's rows are about its bytes)
+    fn words(n: usize, seed: u64) -> Vec<u8> {
+        let mut x = seed | 1;
+        let mut v = Vec::with_capacity(n);
+        while v.len() < n {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            v.push(if x % 7 == 0 {
+                b' '
+            } else {
+                b'a' + (x % 26) as u8
+            });
+        }
+        v
+    }
+
+    /// `data` written into `dec` from another thread and read out whole
+    fn through(dec: StreamDecoder, data: &[u8]) -> Result<Vec<u8>, Error> {
+        let mut out = Vec::new();
+        std::thread::scope(|s| {
+            s.spawn(|| {
+                for c in data.chunks(64 << 10) {
+                    if dec.write(c.to_vec()).is_err() {
+                        return;
+                    }
+                }
+                dec.close();
+            });
+            let mut buf = vec![0u8; 1 << 16];
+            loop {
+                match dec.read(&mut buf) {
+                    Ok(0) => break Ok(out),
+                    Ok(n) => out.extend_from_slice(&buf[..n]),
+                    Err(e) => break Err(e),
+                }
+            }
+        })
+    }
+
+    /// Concatenations of a -3 stream (blocks under 300 000 rows) and a -9 one (larger),
+    /// in both orders, decode to the serial decoder's bytes under the level policy's
+    /// bound (one permit: large blocks wait for each other) on teams and on workers, and
+    /// through `BzReader::parallel`'s plan for this machine
+    #[test]
+    fn mixed_levels_decode_whole() {
+        use std::io::Read;
+        let small = compress(&words(700_000, 3), 3);
+        let large = compress(&words(1_100_000, 9), 9);
+        for (name, data) in [
+            ("-3 then -9", [&small[..], &large[..]].concat()),
+            ("-9 then -3", [&large[..], &small[..]].concat()),
+        ] {
+            let want = crate::decode(&data).unwrap();
+            for plan in [Plan::Teams { teams: 3, k: 2 }, Plan::Workers(3)] {
+                let dec = StreamDecoder::planned_gated(
+                    plan,
+                    6,
+                    Kernels::detect(),
+                    Some(Gate::new(SMALL_ROWS, 1)),
+                );
+                let got = through(dec, &data).unwrap();
+                assert!(
+                    got == want,
+                    "{name}, {plan:?}: not the serial decoder's bytes"
+                );
+            }
+            let mut got = Vec::new();
+            crate::BzReader::parallel(std::io::Cursor::new(data.clone()), 20)
+                .read_to_end(&mut got)
+                .unwrap();
+            assert!(
+                got == want,
+                "{name}, BzReader::parallel: not the serial decoder's bytes"
+            );
+            assert!(
+                crate::decode_parallel(&data, 20).unwrap() == want,
+                "{name}, decode_parallel"
+            );
+        }
+    }
+
+    /// Reading the header first changes no error: an empty input, a short one, one not a
+    /// .bz2, and a source failing at its first read fail as the serial reader does
+    #[test]
+    fn the_header_read_keeps_the_errors() {
+        use std::io::Read;
+        fn kind(r: std::io::Result<usize>) -> Option<ErrorKind> {
+            let e = r.expect_err("an error");
+            e.get_ref()
+                .and_then(|i| i.downcast_ref::<Error>())
+                .map(|e| e.kind.clone())
+        }
+        for input in [&b""[..], b"BZ", b"BZh", b"hello, world", b"BZh9\x31AY&SY"] {
+            let (mut a, mut b) = (Vec::new(), Vec::new());
+            let serial = kind(crate::BzReader::new(input).read_to_end(&mut a));
+            let par = kind(
+                crate::BzReader::parallel(std::io::Cursor::new(input.to_vec()), 4)
+                    .read_to_end(&mut b),
+            );
+            assert_eq!(serial, par, "{input:?}");
+            assert!(a == b, "{input:?}: the bytes before the error");
+        }
+        struct Failing;
+        impl Read for Failing {
+            fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
+                Err(std::io::Error::other("the source failed"))
+            }
+        }
+        let e = crate::BzReader::parallel(Failing, 4)
+            .read_to_end(&mut Vec::new())
+            .unwrap_err();
+        assert_eq!(e.to_string(), "the source failed");
     }
 
     /// Whatever this machine is, the plan is one of the two shapes and never more threads

@@ -269,9 +269,17 @@ pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     checkpoints: Vec<[u32; 256]>,
     inverse: I,
     rle: Vec<u8>,
+    /// the parallel decoder's bound on large blocks inverted at once, if it has one
+    gate: Option<std::sync::Arc<parallel::Gate>>,
 }
 
 impl<I: bwt::InverseBwt> Scratch<I> {
+    /// With the parallel decoder's large-block bound (`parallel::Gate`), if it has one
+    pub(crate) fn gated(mut self, gate: Option<std::sync::Arc<parallel::Gate>>) -> Self {
+        self.gate = gate;
+        self
+    }
+
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs): tests and the `trace`
     /// feature only
     #[cfg(any(test, feature = "trace"))]
@@ -301,6 +309,7 @@ impl<I: bwt::InverseBwt> Default for Scratch<I> {
             checkpoints: Vec::new(),
             inverse: I::default(),
             rle: Vec::new(),
+            gate: None,
         }
     }
 }
@@ -322,6 +331,10 @@ pub fn decode_block<I: bwt::InverseBwt>(
     if b.orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
     }
+    // a large block waits here for the parallel decoder's bound, if it has one, before
+    // its table is built (held through the inversion, given back on unwinding)
+    let gate = s.gate.clone();
+    let _pass = gate.as_deref().and_then(|g| g.enter(n));
     #[cfg(feature = "trace")]
     trace::mark_sized(
         trace::Kind::InvertStart,
@@ -361,9 +374,10 @@ pub fn decode(data: &[u8]) -> Result<Vec<u8>, Error> {
 }
 
 /// A whole .bz2 decoded on `threads` threads (at least 1), in order, spent as
-/// `StreamDecoder::new` plans them
+/// `StreamDecoder::for_stream` plans them for its first stream's level
 pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
-    let dec = StreamDecoder::new(threads, 2 * threads.max(1), Kernels::detect());
+    let level = parallel::header_level(data);
+    let dec = StreamDecoder::for_stream(threads, 2 * threads.max(1), Kernels::detect(), level);
     let mut out = Vec::with_capacity(data.len().saturating_mul(4));
     std::thread::scope(|s| {
         s.spawn(|| {

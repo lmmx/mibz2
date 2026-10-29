@@ -82,16 +82,27 @@ impl<R: Read> BzReader<R> {
 
 impl<R: Read + Send + 'static> BzReader<R> {
     /// Decode on `threads` threads (at least 1), with at most 2 x `threads` blocks in
-    /// flight, spent as `StreamDecoder::new` plans them (a block a worker, or teams of 2
-    /// sharing each block on 6 or more physical cores: `Plan::for_threads`)
+    /// flight, spent as `StreamDecoder::for_stream` plans them for the input's first
+    /// stream's level (a block a worker, or teams of 2 sharing each block on 6 or more
+    /// physical cores: `Plan::for_stream`). It reads the input's first 4 bytes, that
+    /// stream's header, on the calling thread before it returns.
     pub fn parallel(r: R, threads: usize) -> Self {
         Self::parallel_with(r, threads, 2 * threads.max(1), Kernels::detect())
     }
 
     /// `parallel`, with the blocks in flight (`slots`, at least `threads`; scaled to the
     /// teams where it plans teams) and the kernels given
-    pub fn parallel_with(r: R, threads: usize, slots: usize, kernels: Kernels) -> Self {
-        Self::on(r, StreamDecoder::new(threads, slots, kernels))
+    pub fn parallel_with(mut r: R, threads: usize, slots: usize, kernels: Kernels) -> Self {
+        // the first stream's header, for the plan; its bytes (or the error reading them)
+        // go to the decoder first, so the decode sees the input whole, as before
+        let mut head = [0u8; 4];
+        let head = read_full(&mut r, &mut head).map(|n| head[..n].to_vec());
+        let level = head
+            .as_ref()
+            .ok()
+            .and_then(|h| crate::parallel::header_level(h));
+        let dec = StreamDecoder::for_stream(threads, slots, kernels, level);
+        Self::on_after(r, dec, head)
     }
 
     /// Decode as `plan` says (production's workers, or cooperative teams: `Plan`), with
@@ -100,13 +111,32 @@ impl<R: Read + Send + 'static> BzReader<R> {
         Self::on(r, StreamDecoder::planned(plan, slots, kernels))
     }
 
-    fn on(mut r: R, dec: StreamDecoder) -> Self {
+    fn on(r: R, dec: StreamDecoder) -> Self {
+        Self::on_after(r, dec, Ok(Vec::new()))
+    }
+
+    /// `on`, the input's first bytes already read from `r` (`head`, or the error reading
+    /// them), written to the decoder before the rest
+    fn on_after(mut r: R, dec: StreamDecoder, head: io::Result<Vec<u8>>) -> Self {
         let dec = Arc::new(dec);
         let read_error = Arc::new(Mutex::new(None));
         let (d, e) = (dec.clone(), read_error.clone());
         let feeder = std::thread::Builder::new()
             .name("mibz2-read".into())
             .spawn(move || {
+                match head {
+                    Ok(h) if h.is_empty() => {}
+                    Ok(h) => {
+                        if d.write(h).is_err() {
+                            return;
+                        }
+                    }
+                    Err(err) => {
+                        *e.lock().unwrap_or_else(|p| p.into_inner()) = Some(err);
+                        d.cancel();
+                        return;
+                    }
+                }
                 loop {
                     let mut buf = vec![0u8; CHUNK];
                     let n = match read_full(&mut r, &mut buf) {

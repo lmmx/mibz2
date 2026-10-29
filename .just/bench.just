@@ -91,6 +91,24 @@ bench-coop-decoder *args:
     cargo build --release --example ab
     python3 bench/coop_decoder.py "$@"
 
+# The level-aware plan (docs/journal/2026-10-29-level-aware-plan.md, pre-registered): the
+# default decoder (`mibz2`, planning for the input's first stream's level) against today's
+# plan (`mibz2-auto`), whole decoder, paired by round, on the bench content at -1, -2, -3,
+# -6 and as published, and on two concatenations, -3 then -9 and -9 then -3; the 4-core
+# pass on -1 and the native corpus; then scored (bench/level_aware.py). Needs bzip2; about
+# 35 minutes. Upload each coop-decoder-*.md, .json and .jsonl (the -4cores ones too), the
+# scores and the console.
+#   just bench-level-aware 2>&1 | tee level-aware-console.log
+bench-level-aware rounds="20":
+    bash bench/corpus.sh
+    cargo build --release --example ab
+    for l in 1 2 3 6 9; do test -s corpora/wikidata-bz$l.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -$l > corpora/wikidata-bz$l.bz2); done
+    cat corpora/wikidata-bz3.bz2 corpora/wikidata-bz9.bz2 > corpora/wikidata-mix39.bz2
+    cat corpora/wikidata-bz9.bz2 corpora/wikidata-bz3.bz2 > corpora/wikidata-mix93.bz2
+    for c in wikidata-bz1 wikidata; do python3 bench/coop_decoder.py --file corpora/$c.bz2 --rounds {{rounds}} --arms mibz2-workers,mibz2-auto,mibz2 --gate mibz2 --note "level-aware plan: $c"; done
+    for c in bz2 bz3 bz6 mix39 mix93; do python3 bench/coop_decoder.py --file corpora/wikidata-$c.bz2 --rounds {{rounds}} --arms mibz2-workers,mibz2-auto,mibz2 --gate mibz2 --no-small --note "level-aware plan: $c"; done
+    python3 bench/level_aware.py $(ls -t coop-decoder-*Z.jsonl | head -7) | tee level-aware-scores.md
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10

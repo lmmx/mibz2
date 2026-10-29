@@ -7,7 +7,8 @@ def decompress(data: bytes | bytearray, threads: int | None = None) -> bytes:
     """Decode a whole .bz2 (its streams one after another), every CRC checked.
 
     It runs on every CPU this process may use, or on ``threads``: a block a worker,
-    or teams of 2 sharing each block on 6 or more physical cores.
+    or teams of 2 sharing each block on 6 or more physical cores (one a core pair for
+    a stream of level 1-3, whose blocks are small).
 
     Raises
     ------
