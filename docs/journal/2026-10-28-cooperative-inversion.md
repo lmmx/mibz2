@@ -1251,3 +1251,56 @@ arm.
   - Not its exact request totals.
   - Not the p8 and s3x3 misses × 64 B, which run 6–7% above the controller's bytes (still
     open).
+
+## 11. Where the cooperative kernel's instructions go (#77): the procedure, before it runs
+
+E3 measured the instructions per output byte (§10.4): p4 23.8, 4x1 31.8, 3x3 35.3, s4x1
+21.4. The companion review's caution stands: those totals mix build and walk, so they don't
+say which code to change. This procedure attributes them, with no change to any kernel.
+
+**`just bench-coop-profile`** (`bench/coop_profile.py`, branch `research/coop-profile`):
+- **What runs:** the arms are p4, 4x1, 3x3 and s4x1, each alone as `grid FILE 11 ARM`,
+  pinned as in the grid.
+- **Three `perf record` runs per arm, one event each, at a fixed period** (2,000,003), so
+  samples × period counts the event:
+  - `instructions:u`, the retired instructions;
+  - `cycles:u`, the time;
+  - `cycle_activity.stalls_mem_any`, the cycles stalled on memory. It is left out if the
+    PMU lacks it.
+- **Per symbol, per output byte:** each event's count over the bytes of the 11 timed rounds
+  and the check round. Each symbol is labelled by phase:
+  - walk (`room_segments`, `coop_walk`, libsais's `decode_chains_*`);
+  - build (`coop_build`, libsais's `calculate_biPSI*` and histogram; production's build,
+    inlined in `Inv::invert`);
+  - synchronisation (the pool, OpenMP);
+  - copies (`memmove`, `memset`);
+  - setup (MTF, Huffman, the grid's own loop and its check hashes), which is outside the
+    kernel's work.
+- **Per symbol, the hottest instructions** of each arm's top 4 symbols by instructions and by
+  cycles, under all three events. The full `perf annotate` output goes into the archive,
+  with source lines where the debug info has them.
+- **Provenance:** the commit, the binary's SHA-256 and build id, rustc and perf. The
+  `perf.data` files stay on the machine and are kept out of the archive.
+
+**Its checks:**
+- The per-byte instructions of each arm's kernel symbols (walk + build + synchronisation +
+  copies) should be close to E3's totals.
+- Setup is excluded from both, but the grid's own per-round code may sit in a "setup" symbol.
+  So this is a cross-check, not a criterion.
+
+**What it should answer, with no code changed:**
+1. **Of 4x1's +8.0 instructions a byte over p4:** how much is the walk (`coop_walk` against
+   `room_segments`), and how much the build (`coop_build`'s copy and scatter against
+   production's inlined build)?
+2. **Of 3x3's further +3.5 over 4x1:** how much is the k > 1 recount (#78), the pool's spin
+   and park loops (`pause` instructions retire, so a spin-wait shows as instructions), and
+   the segment claims?
+3. **Per phase, retired work against memory stalls:**
+   - a symbol with high instructions and few stall cycles is work that can be removed;
+   - one dominated by stall cycles is latency, which removing instructions won't buy.
+4. **In the hottest instructions:** which sequences have no counterpart in production's
+   walk? For example, per-lane state spilled to memory, bounds checks, flag tests or
+   segment bookkeeping.
+
+**Then, and only then, a change is proposed:** one sequence, its expected saving in
+instructions a byte, and the grid A/B against PR #73's kernel as its measure.
