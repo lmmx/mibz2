@@ -260,3 +260,99 @@ kernel, not a finding.
   is not indicated for the 32-bit table (docs/journal/2026-10-29-amac.md).
 - **If instead the fill buffers are full** as often as p4's, the walk is memory-parallelism
   bound, and lane count and scheduling come back in.
+
+## Follow-up, measured (the i9, 0764213, 2026-10-29)
+
+**The run:** `just bench-libsais-why`.
+- **Grid pass:** the console's table, [`coop-20261029T184729Z-console.md`](2026-10-29-libsais-rematch/coop-20261029T184729Z-console.md).
+  Its .md and .jsonl weren't uploaded, so only the printed ratios are here.
+- **Counters:** [`coop-counters-20261029T184803Z.md`](2026-10-29-libsais-rematch/coop-counters-20261029T184803Z.md)
+  and its .jsonl, 612 runs. Every pass was counted 100% of the time (nothing multiplexed)
+  and none failed.
+  - The prefetch-inclusive offcore pair isn't on this perf (as §10.2 found). Its raw
+    encodings are counted instead (`l3_all_raw`, the `ocr_*` passes).
+  - The fill-buffer rate, instructions per byte, reads past L2 per byte and their wait were
+    recomputed from the raw counts, and agree with the report.
+
+### 1. The 7%: the code, not the placement
+
+| pair, against x3x3 in the same rounds | paired mean ±95% |
+|---|--:|
+| g3x3 (x placed as the library places its threads) | 0.999 ±0.006 |
+| l3x3 (the library) | 1.081 ±0.008 |
+| control: g4x2 / x4x2 | 0.995 (0.962 / 0.967) |
+| control: l4x2 / x4x2 | 1.016 (0.982 / 0.967) |
+
+- **The pre-registered reading applies: the code explains it.** Placement changes nothing
+  (g3x3 = x3x3), and the library stays about 8% ahead of g3x3 (1.081 / 0.999). The paired
+  l3x3 / g3x3 interval needs the grid's .jsonl.
+- **The symbol profiles** (one `perf record` each, user cycles, setup included) say where
+  the research arm spends what the library doesn't:
+  - `memset`: 3.75% of g3x3's cycles against 0.25% of l3x3's, a per-block clear in the
+    research kernel that the library's reused table doesn't do;
+  - the pool's helper loop (spin and park, outside any task): 11.2% against 6.6%;
+  - `coop_build_given`'s closures: 7.0% in g3x3, inside the research fused build's path.
+- **What follows:** the research x arms carry harness overheads, not a missing trick. So
+  the library isn't faster because of something to port back. The research harness
+  understates a kernel by about 8% at 3x3, and §16–17's x and y figures should be read
+  that way.
+- **Not settled:** the remaining split between those three is unmeasured.
+
+### 2. The counters on the shipped kernel: the fill buffers are back
+
+Per output byte, the difference of the 1- and 21-round runs, median of 3 repeats:
+
+| figure | p4 (one core a block) | l3x3 | l4x2 | x3x3 | s3x3 (libsais) | the old kernel's teams (§10.4) |
+|---|--:|--:|--:|--:|--:|--:|
+| requests that found the fill buffers full / cycle | **0.244** | **0.194** | **0.195** | 0.199 | 0.080 | 0.07–0.08 |
+| the same, per output byte | 3.23 | 3.05 | 3.08 | 3.32 | 1.48 | |
+| data reads in flight past L2, per core | 7.0 | 6.2 | 6.1 | 5.8 | 3.5 | 4.66–4.85 |
+| cycles a read past L2 waits | 66.5 | 71.9 | 71.9 | 69.8 | 72.0 | 62–67 |
+| data reads past L2 / B | 1.401 | 1.366 | 1.354 | 1.369 | **0.897** | 1.40–1.55 |
+| instructions / B | 23.7 | 27.8 | 27.5 | 25.8 | 23.2 | 35.0–35.3 |
+| IPC | 1.77 | 1.77 | 1.74 | 1.56 | 1.25 | |
+| L3 hit share of reads past L2 | 0.951 | 0.966 | 0.951 | 0.967 | 0.963 | |
+| DRAM bytes read / B | 6.57 | 4.19 | 6.61 | 3.92 | 3.07 | |
+
+**The pre-registered reading.** The instruction-bound hypothesis held for the shipped
+kernel only if its fill buffers filled well below p4's rate. They don't.
+- **The rate is close to p4's:** 0.194 against 0.244 a cycle (0.79×), and per byte 3.05
+  against 3.23 (0.94×).
+- **The kernel has changed:**
+  - instructions per byte fell from 35 to 28, since the fused build has no recount and no
+    second pass;
+  - reads in flight per core rose from about 4.7 to 6.2;
+  - the fill-buffer rate rose from 0.07–0.08 to 0.19.
+- **The bound has moved:** the shipped walk is memory-parallelism bound again, at L3
+  latency. Its reads wait about 72 cycles, and 95–97% hit L3. It is not instruction-bound.
+- **So the coop journal §10.4's "the teams are instruction-bound" is superseded** for
+  v0.2.0's kernel. It stays true of the kernel it measured.
+
+**What that means for the levers:**
+- **More misses in flight per core is not available.** The fill buffers already turn
+  requests away at 0.19 a cycle. This is AMAC's own saturation mechanism (its §5.1: ten
+  in flight on its Xeon, the L1-D MSHRs). More lanes, or AMAC-style scheduling, would
+  queue more requests at the same full buffers. The levers instead:
+  - **Fewer reads per byte.** libsais's walk makes 0.90 reads past L2 a byte against our
+    1.37 (ψ², two bytes a step), and meets full fill buffers at 0.08 a cycle against our
+    0.19. Its one-core arm is the faster one-core inversion (s4x1 / p4 = 1.075). This is
+    the ψ² port the coop journal §10.4 left "only with an instruction budget". Today's
+    kernel spends 27.8 instructions a byte to libsais's 23.2, so the budget is now
+    concrete.
+  - **Prefetches that don't hold a fill buffer.** Intel's manual: "A software prefetch
+    into L1 will consume critical hardware resources (fill buffer) until the cacheline
+    fill completes. A software prefetch into L2 does not hold those resources." The
+    walk's lanes prefetch into L1 (`PF_L1`).
+    - **Earlier evidence:** CI's walk sweep found L2 prefetch faster at four copies (−4 to
+      −9%) and 23% slower at one copy. The teams on the i9 are the fill-buffer-bound case,
+      untested there.
+    - **Cost to test:** the cheapest test the counters point at, about a line in the
+      cooperative walk (its prefetch level is a const).
+  - **A smaller table** (compact Ψ). It lowers both the reads that miss and their wait,
+    so each fill buffer is held for less time. A two-tier record's second, dependent load
+    is one more fill-buffer request. Staging it (AMAC) overlaps it with other lanes but
+    still needs a free buffer, so it can only pay if the payload is usually an L1 or L2
+    hit.
+- **Unchanged:** the MTF stage. A team's helpers idle 11% (4x2) to 19% (3x3) of its
+  core-time while one core makes the next block's last column (pass 2 above). That is
+  independent of the walk's bound.
