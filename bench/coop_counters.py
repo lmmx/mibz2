@@ -77,6 +77,13 @@ EXTRA = {
     # core requests that missed L2, by whether L3 had them; data, code, RFOs and
     # prefetches together, so a second, independent prefetch-inclusive share
     "llc_all": ["cache-references", "cache-misses"],
+    # checks on the raw encoding (journal §10.6): the scheme against perf's own name for the
+    # same demand-read event; the raw pair without bit 7 (PF_L3_DATA_RD) beside
+    # offcore_requests.all_data_rd, which the PMU describes as excluding L3 prefetches; and
+    # bit 7 alone
+    "ocr_named": ["offcore_response.demand_data_rd.l3_hit.any_snoop", "ocr_dmnd_l3_hit"],
+    "ocr_no_l3pf": ["ocr_nol3pf_l3_hit", "ocr_nol3pf_l3_miss", "offcore_requests.all_data_rd"],
+    "ocr_l3pf": ["ocr_l3pf_l3_hit", "ocr_l3pf_l3_miss"],
 }
 # events given by encoding, under the alias perf reports them by: OFFCORE_RESPONSE (event
 # 0xB7, umask 0x01) with the response MSR's value from Intel's Skylake-client tables:
@@ -84,6 +91,11 @@ EXTRA = {
 # 0x491) by supplier, L3_HIT (0x3C0000) or L3_MISS (0x3C000000), any snoop (0x3F80000000).
 # The kernel moves the second onto the other response MSR (event 0xBB) itself
 RAW = {
+    "ocr_dmnd_l3_hit": "cpu/event=0xb7,umask=0x1,offcore_rsp=0x3F803C0001,name=ocr_dmnd_l3_hit/",
+    "ocr_nol3pf_l3_hit": "cpu/event=0xb7,umask=0x1,offcore_rsp=0x3F803C0411,name=ocr_nol3pf_l3_hit/",
+    "ocr_nol3pf_l3_miss": "cpu/event=0xb7,umask=0x1,offcore_rsp=0x3FBC000411,name=ocr_nol3pf_l3_miss/",
+    "ocr_l3pf_l3_hit": "cpu/event=0xb7,umask=0x1,offcore_rsp=0x3F803C0080,name=ocr_l3pf_l3_hit/",
+    "ocr_l3pf_l3_miss": "cpu/event=0xb7,umask=0x1,offcore_rsp=0x3FBC000080,name=ocr_l3pf_l3_miss/",
     "ocr_all_data_rd_l3_hit": "cpu/event=0xb7,umask=0x1,offcore_rsp=0x3F803C0491,name=ocr_all_data_rd_l3_hit/",
     "ocr_all_data_rd_l3_miss": "cpu/event=0xb7,umask=0x1,offcore_rsp=0x3FBC000491,name=ocr_all_data_rd_l3_miss/",
 }
@@ -251,6 +263,28 @@ FIGURES = [
         lambda c, b, t: c["ocr_all_data_rd_l3_miss"] / b,
     ),
     (
+        "raw demand-read L3 hits / perf's named event for them (same pass)",
+        "ocr_named",
+        lambda c, b, t: c["ocr_dmnd_l3_hit"]
+        / c["offcore_response.demand_data_rd.l3_hit.any_snoop"],
+    ),
+    (
+        "raw data reads past L2 without L3 prefetches / offcore_requests.all_data_rd (same pass)",
+        "ocr_no_l3pf",
+        lambda c, b, t: (c["ocr_nol3pf_l3_hit"] + c["ocr_nol3pf_l3_miss"])
+        / c["offcore_requests.all_data_rd"],
+    ),
+    (
+        "L3 prefetch reads (PF_L3_DATA_RD) / B",
+        "ocr_l3pf",
+        lambda c, b, t: (c["ocr_l3pf_l3_hit"] + c["ocr_l3pf_l3_miss"]) / b,
+    ),
+    (
+        "L3 hit share of L3 prefetch reads",
+        "ocr_l3pf",
+        lambda c, b, t: c["ocr_l3pf_l3_hit"] / (c["ocr_l3pf_l3_hit"] + c["ocr_l3pf_l3_miss"]),
+    ),
+    (
         "L3 hit share of all requests past L2 (architectural LLC events)",
         "llc_all",
         lambda c, b, t: 1 - c["cache-misses"] / c["cache-references"],
@@ -373,6 +407,10 @@ UNITS = {
     "data reads past L2 that missed L3 / B (offcore response)": "requests per output byte",
     "L3 hit share of all requests past L2 (architectural LLC events)": "a fraction of requests (data, code, RFO, prefetch)",
     "requests past L2 / B (architectural LLC events)": "requests per output byte",
+    "raw demand-read L3 hits / perf's named event for them (same pass)": "a ratio of two counts of the same event (1 if the encoding is right)",
+    "raw data reads past L2 without L3 prefetches / offcore_requests.all_data_rd (same pass)": "a ratio of requests",
+    "L3 prefetch reads (PF_L3_DATA_RD) / B": "requests per output byte",
+    "L3 hit share of L3 prefetch reads": "a fraction of requests",
     "software prefetches executed / B (useful or not)": "instructions per output byte",
     "late prefetches (a load found its line still arriving) / prefetch": "loads per software prefetch",
     "L3 hit share of demand loads beyond L2 (what prefetch missed)": "a fraction of retired loads",

@@ -1225,3 +1225,29 @@ only prefetch-inclusive form on this machine.
 5. **The scheduler budgets both:**
    - live tables under the L3 (residency: four of these tables hold 0.945, eight 0.657);
    - cores per table (overlap: 1.38–1.49× reads in flight at L3 latency).
+
+### 10.6 The raw pair's excess over `offcore_requests.all_data_rd`: three checks, fixed before they run
+
+§10.5 found the raw ALL_DATA_RD pair 23–39% above `offcore_requests.all_data_rd` in every
+arm.
+- **The hypothesis:**
+  - The raw request mask 0x491 is DMND_DATA_RD (bit 0), PF_L2_DATA_RD (bit 4),
+    PF_L3_DATA_RD (bit 7) and PF_L1D_AND_SW (bit 10).
+  - The PMU describes `offcore_requests.all_data_rd` as including "L2 prefetchers (not L3
+    prefetchers)".
+  - So the excess would be bit 7, the L2 streamer's prefetches into L3.
+- **The checks** are three passes, `--groups ocr_named,ocr_no_l3pf,ocr_l3pf`, each pair in
+  one pass:
+  1. **The encoding scheme:** perf's named `offcore_response.demand_data_rd.l3_hit.any_snoop`
+     against the raw 0x3F803C0001, its encoding by the same scheme. **Pass:** within 1% in
+     every arm. **Fail:** the scheme is wrong, and §10.5's raw figures are withdrawn.
+  2. **The excess:** the raw pair without bit 7 (0x411), against
+     `offcore_requests.all_data_rd` in the same pass. **Pass:** their ratio is 0.9–1.1 in
+     every arm.
+  3. **Bit 7 alone (0x080), per byte:** it should account for most of §10.5's gap of 0.45
+     (p4) to 0.55 (3x3) requests per byte.
+- **What §10.5 rests on meanwhile:** its arm-to-arm directions, which the architectural pair
+  reproduces independently.
+  - Not its exact request totals.
+  - Not the p8 and s3x3 misses × 64 B, which run 6–7% above the controller's bytes (still
+    open).
