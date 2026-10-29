@@ -315,9 +315,13 @@ The census shows there is structure to exploit. It says nothing yet about speed,
 
 The roadmap, in order
 
-Each step's prediction and pass and fail thresholds are written down before it runs. Status on 29 October 2026.
+Each step's prediction and pass and fail thresholds are written down before it runs. Status on 29 October 2026, after the workstation run of \#81.
 
-Three table designs are kept as candidates. None is built yet, and they will compete on measured navigation cost, not on size alone:
+The first of them has now run. Building the table in one pass, rather than copying first and scattering after, made the cooperative build 1.31× faster on the 10-core workstation. That raises the bar for every compact design: each must now beat the fused 32-bit build and its walk, not the old two-pass one.
+
+It also sharpens the question. The most interesting version of a compact table is not one made by compressing a finished T-vector, but one built straight from the BWT, record by record, so the full 32-bit table is never written at all. Writing fewer bytes need not mean doing less work, so that too will be measured before anything is built on it.
+
+Three table designs are kept as candidates. None is built yet, and they will compete on measured construction and navigation cost, not on size alone:
 
 - **24-bit direct links:** the simple reference, a quarter smaller than today's table.
 - **Fixed 64-byte records:** 32 pointers to a cache line, 16.16 bits a row on the corpus.
