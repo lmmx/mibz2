@@ -100,3 +100,123 @@ All arms run one core a block. Each uses production's build and room walk, copie
 - **The counters:** reads, LLC and the memory controller; 2 repeats. On p4, p6, p8, u4, u6, u8, u10 and v6.
 
 Upload the `coop-*.md`, the `coop-counters-*.md`, their `.jsonl`, and the console.
+
+## 5. The result (measured, the i9, b99b92b, 2026-10-29)
+
+**The run:** `just bench-compact-psi`. Its files are in `2026-10-29-compact-psi/`: the grid
+`coop-20261029T215136Z`, the counters `coop-counters-20261029T215323Z`, their `.jsonl`, and
+the console.
+- **The grid:** 20 rounds, pinned, no round misplaced.
+- **The check:** every arm's every block was compared with the room walk's output in round −1.
+- **The counted runs** are within 1% of their grid medians.
+
+### 5.1 The two questions, kept apart
+
+**Scientific: does a smaller table alone move the knee? Yes.**
+- The same blocks were used, with only the entry changed.
+- The 24-bit table's throughput peaks at **6 blocks** (1,615 MB/s); production's peaks at
+  **4** (1,461). Paired, u6/u5 is 1.089 (1.083–1.095) and u6/u8 is 1.332, against p5/p4's 0.885.
+- **The hit share moved by the bytes alone.** Live table bytes predicted it within 0.031 at
+  every N, on a curve fitted to block-size data from another run:
+
+  | | u4 | u6 | u8 | u10 | p6 | p8 | v6 |
+  |---|--:|--:|--:|--:|--:|--:|--:|
+  | live MB | 10.8 | 16.2 | 21.6 | 27.0 | 21.6 | 28.8 | 21.6 |
+  | predicted hit share | 0.951 | 0.895 | 0.794 | 0.679 | 0.794 | 0.640 | 0.794 |
+  | measured | 0.971 | 0.926 | 0.809 | 0.686 | 0.793 | 0.638 | 0.814 |
+
+- **v is the control that pins it to the bytes.** v holds the same 3.6 MB as p, with the
+  byte recovered as u's is. Its hit share at 6 blocks (0.814) is p's (0.793), not u's
+  (0.926).
+
+**Engineering: is this representation worth shipping? Not as it stands.**
+- At one block it costs a third of the speed.
+- At its peak it reaches 0.687× the shipped cooperative kernel on fewer cores (below).
+
+### 5.2 The pre-registered tests
+
+| test | registered | measured | result |
+|---|---|--:|---|
+| 1a: hit share, u6 − p6 | ≥ 0.05 | **0.133** (0.926 − 0.793) | **met** |
+| 1b: hit share, u8 − p8 | ≥ 0.077 | **0.171** (0.809 − 0.638) | **met** |
+| 1c: u peaks at more blocks than p | u's peak N > 4 | **6** | **met** |
+| control: o against p | ≈ 1 | o1/p1 1.004 (0.999–1.008), o4/p4 1.004 (0.994–1.015) | **the copy holds** |
+| 2: the cost at one block (reported) | — | u1/o1 **0.681** (0.678–0.684); v1/o1 0.829 (0.816–0.842); u1/v1 0.821 (0.810–0.833) | reported |
+| 3: u's best against p4 | ≥ 1.05, lower bound > 1.00 | u6/p4 **1.100** (1.093–1.108) | **met** |
+| stage B: test 1 holds and u1/o1 ≥ 0.85 | both | 1 holds; u1/o1 0.681 | **not met: no stage B on this design** |
+
+**Against the shipped cooperative kernel, in the same grid** (not gated):
+- u6/l4x2 is 0.687 (0.680–0.695), on 6 cores against 8.
+- u6/l5x2 is 0.921 (0.907–0.936).
+- l5x2/l4x2 is 0.746: five full-table teams overflow the cache, as in the release run.
+
+**The stage B rule's reasoning checked a second way:**
+- At nearly equal live table bytes, u5 (13.5 MB) per block against p4 (14.4 MB) per block
+  is 1.010 × 4/5 = 0.81.
+- Five compact teams against four full ones would then be about 5/4 × 0.81 ≈ 1.01× l4x2.
+  That is before the second limit at 10 cores, which l5x2 shows is real.
+- So no gain is predicted, as the gate implied.
+
+### 5.3 Where the cost is (paired, 20 rounds)
+
+| | whole phase | build | walk |
+|---|--:|--:|--:|
+| v1/o1: the byte from F, and a store-only build | 0.829 | **1.279** | **0.721** |
+| u1/v1: the 24-bit packing | 0.821 | 0.786 | 0.830 |
+| v4/o4 | 0.950 | 1.490 | **0.839** |
+| u4/v4 | 0.940 | 0.823 | **0.969** |
+| u6/p6 | 1.460 | 2.476 | 1.258 |
+| u8/p8 | 1.742 | 2.827 | 1.553 |
+
+**Readings (measured unless marked):**
+1. **Recovering the byte is the larger cost where it matters.**
+   - At one block, the F lookup costs 28% of the walk and the packing 17%.
+   - At 4 blocks, with memory waits to hide behind, the packing costs only 3% of the walk,
+     but the F lookup still costs 16%.
+   - Under memory pressure, then, the F lookup is the cost to attack.
+2. **The store-only build is a gain in its own right:** 1.28× at 1 block and 1.49× at 4,
+   in `v`. It drops production's init pass and the read-modify-write of each entry.
+   - In u the 3-byte stride and the bucket-end compare take the gain back at 1 block.
+   - Past the knee, u's build is 2.5–2.8× production's (u6/p6, u8/p8), because it moves
+     fewer DRAM bytes.
+3. **u makes 26% more reads past L2 per byte** than p at 4 blocks (1.765 against 1.399).
+   v makes 5% more at 6 (1.454 against 1.382).
+   - So the extra reads belong to the packing, not the F lookup.
+   - Loads that cross a cache line (3 rows in 64) explain at most about 5 points of the 26.
+   - The rest is **not explained** by these counters, which count build and walk together.
+4. **The knee is where DRAM traffic reaches the plateau** (derived: counted MB/s × DRAM
+   bytes per output byte):
+
+   | | p4 | p6 | p8 | u4 | u6 | u8 | u10 | v6 |
+   |---|--:|--:|--:|--:|--:|--:|--:|--:|
+   | DRAM GB/s, read + write | 14.3 | 28.0 | 28.5 | 6.3 | 18.0 | 28.3 | 28.3 | 27.3 |
+   | cycles a read waits | 66.8 | 137.5 | 361.4 | 52.3 | 61.4 | 145.5 | 337.3 | 116.7 |
+
+   - u6 is still at 18 GB/s with a 61-cycle wait; u8 is at the plateau. p reaches it at 6.
+   - The memory probe brackets the plateau: 26 GB/s of random reads, 34 of streaming (knee
+     journal, "The memory probe").
+
+### 5.4 What it changes
+
+- **The original question is answered.** The cache knee moves when the navigation table's
+  representation alone shrinks: by 2 blocks for a 25% smaller table. The hit share
+  followed the table's bytes as the block-size curve predicted. This holds whether or not
+  any compact table ships.
+- **This representation is not promoted:** it fails stage B's cost gate, and is 0.687× the
+  shipped kernel at its peak. Per the registration, the next candidate is **a cheaper byte
+  recovery, not a smaller table.** The F lookup's 16% walk cost at 4 blocks is the target:
+  - **one load, not two:** a window entry that holds the byte and a bucket-boundary flag,
+    with the boundary table read only for flagged windows (about 1% of them);
+  - **a smaller window table** (64- or 128-row windows: 14 or 7 KB), more likely to stay
+    in L1;
+  - **the same F lookup in the cooperative kernel**, whose two-core teams may hide more of
+    it. That is stage B's design, run only if the lookup gets cheaper.
+- **A production-facing side result:**
+  - The store-only build's 1.28–1.49× (`v`) suggests a candidate: production's one-core
+    build without its init pass, the byte read from L at the slot, as the cooperative
+    kernel's fused build already does (#81, E11).
+  - It is the plan on every machine below 6 physical cores, CI's runners included, so the
+    CI bench can measure it.
+  - Not yet measured: the fused one-core build keeps the byte in the entry, so it is not v's
+    build, and its gain is unknown. A research harness arm, `x4x1`, ran at about p4 with
+    the cooperative walk, which conflates the two.
