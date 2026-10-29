@@ -1853,3 +1853,83 @@ just bench-coop-net
 ```
 
 Upload `coop-net-*.md`, its `.jsonl`, and `coop-ab-*.md`. It takes about three minutes.
+
+### 14.4 The result (measured, the i9, dc302b5, 2026-10-29): a net gain, and a failed criterion
+
+The run was `coop-net-20261029T113702Z` (with `coop-ab-20261029T113728Z`): 20 rounds, every
+thread pinned with none misplaced, and every block's output and checkpoints checked.
+
+**1. The MTF stage alone, one core:**
+
+| kernel | MB/s | paired against production | predicted |
+|---|--:|--:|--:|
+| production's | 2316 | 1 | |
+| `mtf_cp` | 2174 | **0.9370 ±0.0025** (0.926–0.947) | 0.99–1.01 |
+
+The checkpoints come to 30.2 a block on average (55 at most): 30 KiB at the mean, 1.27% on
+top of a block's table and last column.
+
+**2. The grid, with the MTF stage timed in every arm:**
+
+| | paired MB/s, mean ±95% (min–max) | rounds won | build phase | walk phase (control) | predicted |
+|---|--:|--:|--:|--:|--:|
+| **n3x3 against r3x3 (the net)** | **1.033 ±0.008** (1.002–1.074) | 20/20 | 1.184 | 0.992 | 1.02–1.05 |
+| n3x3 against q3x3 (making the checkpoints) | 0.979 ±0.006 | 2/20 | (MTF phase 0.923) | 1.000 | 0.99–1.01 |
+| q3x3 against r3x3 (the bound, the MTF timed) | 1.055 ±0.005 | 20/20 | 1.187 | 0.992 | 1.02–1.05 |
+| n4x1 against r4x1 (null) | 0.985 ±0.016 | 5/20 | 0.977 | 1.005 | 0.98–1.02 |
+
+**A worker's seconds by phase, n3x3 against r3x3,** paired: the build saves **7.74 ±0.33 ms**;
+the MTF stage costs **2.72 ±0.13 ms**; the walk costs 0.51 ±0.81 ms. That leaves a **4.51
+±1.09 ms** net saving. (These are a worker's totals over a round, not per-block times.) The
+MTF stage is 24% of r3x3's worker time on the i9, against 30–45% on the VM.
+
+**Against §14.2's rule, as registered:**
+1. **n3x3/r3x3's interval excludes 1:** 1.025–1.041. **Pass.**
+2. **The walk control is within ±3%:** 0.992. **Pass.**
+3. **`mtf_cp` costs no more than 2% of the MTF stage:** it costs 6.3%. **Fail.**
+
+**So #78's stage 2 does not meet its acceptance rule.** It is a **mixed result**: the net
+gain in this harness is real (1.033, 20/20), but it came with a checkpoint cost three times
+the limit, and it isn't called a success. **No production change follows,** and the recount
+stays in the research kernel's baseline (§14.2).
+- **The predictions:** the net was inside its range. The MTF cost was well outside its
+  0.99–1.01. q3x3 against r3x3 (1.055) was above its 1.02–1.05, because the MTF share
+  (0.24) was smaller than the VM had suggested.
+- **The null holds:** n4x1, 0.985, its interval reaching 1. Its build carries the scatter
+  codegen penalty (§13.4), and its MTF the 6% cost.
+- **The ratios against p4** are recorded in the results file. They aren't quoted here as a
+  peak figure: they include the MTF stage, so they don't compare with §12.4's.
+
+**Why `mtf_cp` costs 6.3%, from its machine code** (read off the binary, the same rustc as
+the i9's; static, not profiled):
+- **The kernel more than doubled in size:** 0x6dc bytes against production's 0x326. Most of
+  the growth is the checkpoint and split-run paths, which run once every 16 KiB. But the
+  hot loop changed too, and that is where the cost is.
+- **The common path got longer.** For one byte from a symbol, with no run and an index
+  below 32, production executes about 40 instructions and `mtf_cp` about 44. The extra
+  four are spills and reloads:
+  - the byte count `n` lives on the stack and is stored and reloaded every byte. Production
+    keeps it in a register;
+  - the end-of-block symbol is compared from memory, not from a register;
+  - two values are spilled to the stack at every symbol.
+- **The cause is register pressure.** The comparison against the nearer limit replaced the
+  comparison against the block's limit at no cost in the source, as intended. But the added
+  live state is the next checkpoint, both limits and the checkpoint vector. With it, the
+  allocator pushes `n` and others out of registers in the hot loop.
+- **The checkpoint copy itself is cold:** one 1 KiB `memcpy` every 16 KiB.
+- **So the 6.3% is attributed to specific instructions of this implementation, not to
+  making checkpoints as such.** The static count (about +10% instructions, with a store and
+  reload on the byte count's dependency chain) is consistent with the measured cost, though
+  not a measurement of it.
+- **A form that might recover it, recorded and not built:** an outer loop per checkpoint,
+  with production's inner loop unchanged except that its limit is the checkpoint. That keeps
+  the hot loop's live state as production's, and would need its own MTF-only A/B. It is not
+  started: the plan agreed at this checkpoint is the succinct-structures review first.
+
+**Where #78 stands:**
+- **Removing the recount works** (stage 1: 1.083 with the checkpoints free).
+- **Making the checkpoints this way costs 6.3% of the MTF stage.** The net in this harness
+  is 1.033, but the rule fails.
+- **The MTF cost is a candidate target,** attributed to spills, with a plausible fix not yet
+  measured.
+- **Nothing here is a decoder figure (§8.4).**
