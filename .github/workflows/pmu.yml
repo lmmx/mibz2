@@ -1,0 +1,52 @@
+# The PMU probe (bench/pmu_probe.py): what a GitHub-hosted runner's performance counters
+# can measure, before any counter study is planned for CI (lmmx/mibz2#76). The i9's study
+# used events an earlier CI run could not reach (no PMU was exposed then:
+# docs/journal/2026-10-27-walk-sweep.md). Each job lands on a runner from the pool, so
+# three probe at once to sample its CPU models. It measures nothing about mibz2.
+#
+# Diagnostic only, from the Actions tab and on a pull request that changes the probe:
+# its findings are the run's summary and artifacts, never recorded, and nothing here
+# gates a pull request.
+name: PMU probe
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - bench/pmu_probe.py
+      - .github/workflows/pmu.yml
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v6
+
+      # perf for the running kernel (Azure's kernels have their own tools package), and
+      # the counters opened to this job where the kernel allows
+      - name: perf
+        run: |
+          sudo apt-get update -qq > /dev/null
+          sudo apt-get install -y -qq "linux-tools-$(uname -r)" > /dev/null 2>&1 \
+            || sudo apt-get install -y -qq linux-tools-azure > /dev/null 2>&1 \
+            || echo "no linux-tools package for $(uname -r)"
+          sudo sysctl -w kernel.perf_event_paranoid=-1 || true
+
+      - name: Probe
+        run: python3 bench/pmu_probe.py --perf "sudo perf" --out "pmu-probe-${{ matrix.sample }}.json" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Results
+        if: "!cancelled()"
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmu-probe-${{ matrix.sample }}
+          path: pmu-probe-*.json
+          if-no-files-found: ignore
