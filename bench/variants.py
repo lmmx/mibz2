@@ -42,7 +42,8 @@ from scaling import AB, summarise
 RELEASES = ["v0.1.1", "v0.1.2", "v0.1.3", "v0.1.4", "v0.1.5"]
 # kept research branches, by commit (not in the default set): `pairwalk` is the pair walk
 # (psi^2, two bytes a step: libsais's symbol-rows decode ported, #6), v0.1.4 and one commit,
-# so `--variants v0.1.4,pairwalk` is that one change on the i9 (2026-10-29-expert-review.md)
+# so `--variants v0.1.4,pairwalk` is that one change on the i9, and v0.1.5 beside them is
+# today's walk (the room walk, #37) (2026-10-29-expert-review.md, E1)
 COMMITS = {"pairwalk": "a3687d8fc9932d886490d65768a9bd1939edc66f"}
 # a walk setting: the constant in src/bwt.rs and its value
 SETTINGS = {
