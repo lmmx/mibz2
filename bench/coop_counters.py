@@ -71,6 +71,21 @@ EXTRA = {
         "offcore_response.all_data_rd.l3_miss.any_snoop",
     ],
     "l3_all_ocr": ["ocr.all_data_rd.l3_hit.any_snoop", "ocr.all_data_rd.l3_miss.any_snoop"],
+    # the same two, raw (RAW below), for a perf whose tables carry neither name
+    "l3_all_raw": ["ocr_all_data_rd_l3_hit", "ocr_all_data_rd_l3_miss"],
+    # the architectural last-level-cache events (perf's generic names, on every Intel core):
+    # core requests that missed L2, by whether L3 had them; data, code, RFOs and
+    # prefetches together, so a second, independent prefetch-inclusive share
+    "llc_all": ["cache-references", "cache-misses"],
+}
+# events given by encoding, under the alias perf reports them by: OFFCORE_RESPONSE (event
+# 0xB7, umask 0x01) with the response MSR's value from Intel's Skylake-client tables:
+# ALL_DATA_RD (demand data reads, L2 and L3 data prefetches, L1D and software prefetches:
+# 0x491) by supplier, L3_HIT (0x3C0000) or L3_MISS (0x3C000000), any snoop (0x3F80000000).
+# The kernel moves the second onto the other response MSR (event 0xBB) itself
+RAW = {
+    "ocr_all_data_rd_l3_hit": "cpu/event=0xb7,umask=0x1,offcore_rsp=0x3F803C0491,name=ocr_all_data_rd_l3_hit/",
+    "ocr_all_data_rd_l3_miss": "cpu/event=0xb7,umask=0x1,offcore_rsp=0x3FBC000491,name=ocr_all_data_rd_l3_miss/",
 }
 GROUPS = {**imc.GROUPS, **EXTRA}
 # the medians of the confirmation and exploratory runs (coop-20261029T08*), MB/s
@@ -110,7 +125,7 @@ def counted(perf, events, cmd, system):
     """`cmd` under `perf stat`: its wall, the parsed counts (or None) and perf's raw CSV"""
     with tempfile.TemporaryDirectory() as d:
         out = os.path.join(d, "perf.csv")
-        argv = [*perf, "stat", "-x,", "-o", out, "-e", ",".join(events)]
+        argv = [*perf, "stat", "-x,", "-o", out, "-e", ",".join(RAW.get(e, e) for e in events)]
         argv += ["-a"] if system else []
         t0 = time.monotonic()
         r = subprocess.run([*argv, "--", *cmd], capture_output=True, text=True)
@@ -225,6 +240,27 @@ FIGURES = [
         / (c["ocr.all_data_rd.l3_hit.any_snoop"] + c["ocr.all_data_rd.l3_miss.any_snoop"]),
     ),
     (
+        "L3 hit share of data reads, prefetches included",
+        "l3_all_raw",
+        lambda c, b, t: c["ocr_all_data_rd_l3_hit"]
+        / (c["ocr_all_data_rd_l3_hit"] + c["ocr_all_data_rd_l3_miss"]),
+    ),
+    (
+        "data reads past L2 that missed L3 / B (offcore response)",
+        "l3_all_raw",
+        lambda c, b, t: c["ocr_all_data_rd_l3_miss"] / b,
+    ),
+    (
+        "L3 hit share of all requests past L2 (architectural LLC events)",
+        "llc_all",
+        lambda c, b, t: 1 - c["cache-misses"] / c["cache-references"],
+    ),
+    (
+        "requests past L2 / B (architectural LLC events)",
+        "llc_all",
+        lambda c, b, t: c["cache-references"] / b,
+    ),
+    (
         "software prefetches executed / B (useful or not)",
         "prefetch",
         lambda c, b, t: c["sw_prefetch_access.t0"] / b,
@@ -334,6 +370,9 @@ UNITS = {
     "cycles / B (all threads)": "core cycles per output byte, summed over threads",
     "data reads past L2 / B (prefetches included)": "requests per output byte",
     "L3 hit share of data reads, prefetches included": "a fraction of requests (offcore responses)",
+    "data reads past L2 that missed L3 / B (offcore response)": "requests per output byte",
+    "L3 hit share of all requests past L2 (architectural LLC events)": "a fraction of requests (data, code, RFO, prefetch)",
+    "requests past L2 / B (architectural LLC events)": "requests per output byte",
     "software prefetches executed / B (useful or not)": "instructions per output byte",
     "late prefetches (a load found its line still arriving) / prefetch": "loads per software prefetch",
     "L3 hit share of demand loads beyond L2 (what prefetch missed)": "a fraction of retired loads",
@@ -579,7 +618,7 @@ def main():
         w()
         w("| figure | " + " | ".join(arms) + " |")
         w("|---|" + "--:|" * len(arms))
-        for label, _, _ in FIGURES:
+        for label in dict.fromkeys(label for label, _, _ in FIGURES):
             cells = []
             for arm in arms:
                 v = fig.get((arm, label))
@@ -613,9 +652,27 @@ def main():
         for arm in [x for x in ("4x2", "3x3") if x in arms]:
             if "p4" not in arms:
                 break
-            share = "L3 hit share of data reads, prefetches included"
-            if g("p4", share) is None:
-                share = "L3 hit share of demand loads beyond L2 (what prefetch missed)"
+            w(f"**{arm}:**")
+            # the prefetch-inclusive shares first; the demand-only one only with a warning,
+            # since the walks' prefetches hide most of their traffic from it
+            share = next(
+                (
+                    x
+                    for x in (
+                        "L3 hit share of data reads, prefetches included",
+                        "L3 hit share of all requests past L2 (architectural LLC events)",
+                    )
+                    if g("p4", x) is not None and g(arm, x) is not None
+                ),
+                "L3 hit share of demand loads beyond L2 (what prefetch missed)",
+            )
+            if "demand" in share:
+                w(
+                    "- **No prefetch-inclusive L3 share counted here,** so the residency line below "
+                    "uses the demand-only share, which sees only what the prefetches missed. "
+                    "It is not evidence of residency on its own."
+                )
+            w(f"- the share used: {share}")
             hs, hp4, hp8 = (g(x, share) for x in (arm, "p4", "p8"))
             mk, mp4 = (
                 g(arm, "L3-missing demand reads / KB"),
@@ -635,7 +692,6 @@ def main():
             )
             yn = lambda c: "" if c is None else ("yes" if c else "no")  # noqa: E731
             ok = lambda *xs: all(x is not None for x in xs)  # noqa: E731
-            w(f"**{arm}:**")
             w(
                 f"- residency: hit share {fmt(hs)} ≥ p4's {fmt(hp4)}: {yn(hs >= hp4 if ok(hs, hp4) else None)}; above p8's {fmt(hp8)}: {yn(hs > hp8 if ok(hs, hp8) else None)}"
             )
