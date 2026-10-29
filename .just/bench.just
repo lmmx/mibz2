@@ -206,6 +206,20 @@ bench-coop-given *args:
     bash bench/coop.sh --arms r3x3,q3x3,r4x1,q4x1,p4 --rounds 20 "$@"
     python3 bench/coop_ab.py
 
+# bench/coop_net.sh: #78's stage 2 (the coop journal's §14), the net. First the MTF stage
+# alone on one core, production's kernel against the one that also makes the count
+# checkpoints; then the grid with every worker running the MTF stage in its timing:
+# r3x3 (#77's), q3x3 (checkpoints free), n3x3 (checkpoints made by its own MTF), r4x1,
+# n4x1 and p4, 20 rounds paired, each thread pinned. About three minutes; close the browser
+# and other busy programs first. Upload coop-net-*.md, its .jsonl and coop-ab-*.md.
+#   just bench-coop-net
+
+# #78's net: the build's saving against the cost of making its checkpoints in the MTF
+[positional-arguments]
+bench-coop-net *args:
+    bash bench/corpus.sh
+    bash bench/coop_net.sh "$@"
+
 # bench/coop_counters.py: the counters behind the cooperative grid (#76; the coop journal's
 # §8.2 and §10): each arm alone under `perf stat` for 1 and 21 rounds, one counter pair a
 # pass, 3 repeats, the memory controller machine-wide, then one `perf record` each of p4, 4x1

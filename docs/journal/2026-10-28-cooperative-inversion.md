@@ -1757,3 +1757,99 @@ misplaced, and every block's output was checked.
 - **The walk is unchanged:** 17.1 instructions a byte in both, as it should be.
 - **A lead, not acted on:** the scatter compiles in two ways, with different instruction
   counts. Which one is better is a question for later, on its own.
+
+## 14. #78's stage 2: the checkpoints made in the MTF stage, the net (pre-registered before it runs)
+
+Branch `research/coop-checkpoint`. The baseline is #77's room walk (`r`). Production `src/`
+is untouched.
+
+### 14.1 What changes, and what stays the same
+
+**`mtf_cp`** (examples/coop.rs) is production's AVX2 MTF kernel (`mibz2::mtf`), copied
+unchanged except for the checkpoints:
+- **Where the checkpoint test lives.** The kernel already compares each byte's position
+  with the block's limit, and each run's end with it. In `mtf_cp` that limit is the next
+  checkpoint or the block's end, whichever is nearer. So the comparison that finds a
+  checkpoint is the one the kernel already makes: no instruction is added per byte.
+- **At a checkpoint** the counts are copied, 1 KiB every 16 KiB of output.
+- **A run that crosses a checkpoint** is split there.
+- **Checked:** on every block, its last column, counts and checkpoints equal production's
+  and `blocks`'.
+
+**Three arm kinds, all with the MTF stage in the timing** (`COOP_WITH_MTF=1`). Each worker
+makes its block's last column from the symbols inside its timing, as a decoder does, so
+every arm has the same timing boundaries:
+- `rX`: production's MTF, then #77's kernel (the baseline);
+- `qX`: production's MTF, then the given-counts build, its checkpoints still free (stage 1's
+  bound, now diluted by the MTF);
+- `nX`: `mtf_cp`, then the same build, reading the checkpoints its own MTF made (**the
+  net**).
+
+`p4` runs beside them. The build, the walk and the scheduling are unchanged; the kernels'
+machine code was checked identical to stage 1's.
+
+**What each comparison isolates:**
+
+| comparison | what it measures |
+|---|---|
+| `coop mtf`: `mtf_cp` against production's MTF, one core | the checkpoints' cost in the MTF stage alone, without the grid's noise |
+| n3x3 against q3x3 | the same: the checkpoints made, not given, inside the grid |
+| q3x3 against r3x3 | stage 1's bound, diluted by the MTF stage's share |
+| **n3x3 against r3x3** | **the net** |
+| n4x1 against r4x1 | the null: at k = 1 there's no recount to remove |
+
+**Costs the run accounts for, as asked:**
+- **Making the checkpoints:** the MTF timings.
+- **Storing them:** printed by `coop mtf`. At about 30 checkpoints of 1 KiB for this
+  corpus's mean 486 KB block, that is about 1.25% more than the block's table and last
+  column.
+- **Their memory traffic:** the copies are in the timed MTF stage, and the build reads two
+  checkpoints a range.
+- **Scheduling:** the rounded ranges are in both q and n. The MTF stage runs on the team's
+  caller while its helpers wait, the same in every arm.
+
+The bench script reports each pair's seconds a worker by phase (MTF, build, walk). So the
+build's saving and the MTF stage's cost can be read in milliseconds, not only as a ratio
+diluted by the MTF.
+
+**A boundary on what this shows:** a decoder that overlapped the next block's MTF stage
+with this block's inversion would dilute the gain less. This harness doesn't, and its
+figure is the cooperative kernel's with the MTF stage *in series*. It isn't the
+decoder's (§8.4).
+
+### 14.2 The predictions and the criteria
+
+**The size of the dilution.** The MTF stage's share m of a worker's time in r3x3 is printed
+by the run. On the VM it is 0.3–0.45 (indicative only). With the bound B = 1.083 (§13.4)
+and a checkpoint cost c in the MTF stage, the net is about 1/((1 − m)/B + m·c). For m from
+0.3 to 0.55 and c from 1.00 to 1.01, that gives 1.03–1.06.
+
+| comparison | predicted |
+|---|--:|
+| `mtf_cp` against production's MTF, one core, MB/s | **0.99–1.01** |
+| n3x3 against r3x3, MB/s (the net) | **1.02–1.05** |
+| n3x3 against q3x3 | 0.99–1.01 |
+| q3x3 against r3x3 | 1.02–1.05 |
+| n4x1 against r4x1 (null) | 0.98–1.02 |
+
+**#78's net succeeds when all three hold:**
+1. n3x3/r3x3's paired 95% interval excludes 1;
+2. its walk control stays within ±3%;
+3. `mtf_cp` costs no more than 2% of the MTF stage alone (its paired ratio ≥ 0.98).
+
+**If any fails,** it's recorded as a negative result, and the recount stays.
+
+**Either way, no production change follows from this run alone.** Taking the checkpoints
+into the decoder is a separate change, with its own decoder-level A/B (§8.4). And the
+succinct-structures review comes before the next optimisation is chosen (the plan agreed
+at this checkpoint).
+
+### 14.3 The commands (the i9, with the browser and other busy programs closed)
+
+```
+git fetch origin research/coop-checkpoint
+git checkout --detach origin/research/coop-checkpoint
+just bench-coop-net
+```
+
+Upload `coop-net-*.md`, its `.jsonl`, and `coop-ab-*.md`. It takes about three minutes.
