@@ -8,7 +8,7 @@
 #   Nothing from a pull request is recorded.
 # - A push to master: the commit's mibz2 against the alternatives (pbz2, the lbzip2 CLI,
 #   indexed_bzip2, fbz, the lbzip2 crate, libbzip2, libbz2-rs, bz2ngrs and bz2-ng's C),
-#   and its inverse BWT against bz2ngrs's phase by phase, its result kept on the
+#   and its inverse BWT against bz2ngrs's and libsais's, its result kept on the
 #   bench-results branch (a data-only branch, never merged; nothing is committed to
 #   master). The site's benchmark pages are built from it.
 # - From the Actions tab: any ref, against the alternatives as on master, or against
@@ -148,6 +148,11 @@ jobs:
       - name: Build the alternatives
         if: env.MODE != 'pr'
         run: |
+          # libsais 2.12.1 at a pinned commit, single-threaded, for the kernels binary's libsais
+          # kernel (bench/libsais.sh: its source checked by SHA-256)
+          # (two steps, so a failed build fails the step: `export` would hide its status)
+          LIBSAIS_DIR=$(bash bench/libsais.sh "$RUNNER_TEMP/libsais")
+          export LIBSAIS_DIR
           CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target/alts" cargo build --release --locked --manifest-path bench/alternatives/Cargo.toml
           mkdir -p alts && cp target/alts/release/ab target/alts/release/kernels alts/
           # bz2-ng's C at a pinned commit, its CLI (CMake's Release build, as its README builds it)

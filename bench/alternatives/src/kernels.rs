@@ -1,5 +1,6 @@
-//! mibz2's inverse BWT against bz2ngrs's (src/ngrs_bwt.rs, its src/bwt.rs as it is) on the
-//! same blocks, on one thread: each kernel's build, walk and output assembly timed apart.
+//! mibz2's inverse BWT against bz2ngrs's (src/ngrs_bwt.rs, its src/bwt.rs as it is) and,
+//! built with LIBSAIS_DIR (bench/libsais.sh), libsais 2.12.1's, on the same blocks, on one
+//! thread: each kernel's build, walk and output assembly timed apart where it has them.
 //!
 //! ```text
 //! kernels FILE.bz2 [PASSES] [OUT.jsonl]
@@ -18,9 +19,15 @@
 //! - bz2ngrs: `build_t` (its 8-part count, then the scatter); `mark_splitters` and `walk`
 //!   (the lanes walked into 1 KiB chunks in the column's own buffer); `gather` (the chunks
 //!   copied into the block in text order). Its count alone is also timed (`count_only`).
+//! - libsais (`cfg(mibz2_libsais)`): `libsais_unbwt_cyclic_ctx` on a context made once, the
+//!   counts from MTF as mibz2's build takes them, one call a block: its build (the bigram
+//!   table), walk and joining are inside it, so only its total is timed. It is an inverse
+//!   BWT, not a bzip2 decoder.
 //!
-//! Each pass is one JSON line a kernel; the summary is each phase's median over passes in
-//! ns per byte, and bz2ngrs's over mibz2's paired by pass with a 95% t-interval.
+//! The kernels' order rotates a step each pass and reverses every other cycle. Each pass is
+//! one JSON line a kernel (null for a phase it doesn't time apart). The summary is each
+//! phase's median over passes in ns per byte, and each other kernel's over mibz2's, paired
+//! by pass, with a 95% t-interval.
 
 // (bz2ngrs's file as it is, its own formatting kept)
 #[rustfmt::skip]
@@ -71,6 +78,58 @@ struct Ngrs {
     text: Box<[u8; ngrs_bwt::BYTES]>,
 }
 
+#[cfg(mibz2_libsais)]
+extern "C" {
+    fn libsais_unbwt_create_ctx() -> *mut std::ffi::c_void;
+    fn libsais_unbwt_cyclic_ctx(
+        ctx: *const std::ffi::c_void,
+        t: *const u8,
+        u: *mut u8,
+        a: *mut i32,
+        n: i32,
+        freq: *const i32,
+        i: i32,
+    ) -> i32;
+}
+
+/// libsais's context and buffers, kept from block to block: its output, its 4-byte-a-row
+/// table and the counts
+#[cfg(mibz2_libsais)]
+struct Sais {
+    ctx: *mut std::ffi::c_void,
+    u: Vec<u8>,
+    a: Vec<i32>,
+    freq: Vec<i32>,
+}
+
+/// One block through libsais's kernel: its total in seconds
+#[cfg(mibz2_libsais)]
+fn run_sais(x: &mut Sais, b: &Block) -> f64 {
+    let n = b.ll.len();
+    x.freq.clear();
+    x.freq.extend(b.counts.iter().map(|&c| c as i32));
+    x.u.resize(n, 0);
+    x.a.resize(n + 1, 0);
+    let t0 = Instant::now();
+    // SAFETY: the context is libsais's own, made once and never freed while used; `u` holds n
+    // bytes and `a` n + 1 words, as libsais_unbwt_cyclic_ctx takes them; `ll` holds n bytes,
+    // `freq` 256 counts of them, and orig_ptr < n (the scanner checks it)
+    let r = unsafe {
+        libsais_unbwt_cyclic_ctx(
+            x.ctx,
+            b.ll.as_ptr(),
+            x.u.as_mut_ptr(),
+            x.a.as_mut_ptr(),
+            n as i32,
+            x.freq.as_ptr(),
+            b.orig_ptr as i32,
+        )
+    };
+    let t = t0.elapsed().as_secs_f64();
+    assert_eq!(r, 0, "libsais_unbwt_cyclic_ctx");
+    t
+}
+
 /// One block through mibz2's kernel: [build, walk, assemble] in seconds
 fn run_mibz2(m: &mut Mibz2, b: &Block) -> [f64; 3] {
     m.ll.clear();
@@ -108,6 +167,17 @@ fn zeroed() -> Box<[u8; ngrs_bwt::BYTES]> {
         .into_boxed_slice()
         .try_into()
         .unwrap()
+}
+
+/// The kernels' order in pass `p` of `n`: rotated a step each pass, reversed every other
+/// cycle, so that over 2n passes each kernel runs in each position equally often
+fn order(p: usize, n: usize) -> Vec<usize> {
+    let mut o: Vec<usize> = (0..n).collect();
+    o.rotate_left(p % n);
+    if (p / n) % 2 == 1 {
+        o.reverse();
+    }
+    o
 }
 
 fn t975(df: usize) -> f64 {
@@ -167,8 +237,22 @@ fn main() {
         ll: zeroed(),
         text: zeroed(),
     };
+    #[cfg(mibz2_libsais)]
+    let mut sais = Sais {
+        // SAFETY: no arguments; a null result is checked below
+        ctx: unsafe { libsais_unbwt_create_ctx() },
+        u: Vec::new(),
+        a: Vec::new(),
+        freq: Vec::new(),
+    };
+    #[cfg(mibz2_libsais)]
+    assert!(!sais.ctx.is_null(), "libsais_unbwt_create_ctx");
+    let mut names = vec!["mibz2", "bz2ngrs"];
+    if cfg!(mibz2_libsais) {
+        names.push("libsais");
+    }
 
-    // the check: the same bytes from both, and each block's CRC after RLE1
+    // the check: the same bytes from every kernel, and each block's CRC after RLE1
     let mut rled = Vec::new();
     for (i, b) in bs.iter().enumerate() {
         run_mibz2(&mut m, b);
@@ -177,45 +261,71 @@ fn main() {
         assert_eq!(m.walked.len(), n, "block {i}: mibz2's length");
         assert!(
             m.walked == g.text[..n],
-            "block {i}: the kernels' bytes differ"
+            "block {i}: bz2ngrs's bytes differ from mibz2's"
         );
+        #[cfg(mibz2_libsais)]
+        {
+            run_sais(&mut sais, b);
+            assert!(
+                m.walked == sais.u,
+                "block {i}: libsais's bytes differ from mibz2's"
+            );
+        }
         rled.clear();
         rle::unrle(&m.walked, &mut rled, k).unwrap();
         assert_eq!(crc::crc32(&rled, k), b.crc, "block {i}: the CRC");
     }
     eprintln!(
-        "checked: {} blocks, {bytes} bytes, the same from both kernels, every CRC",
-        bs.len()
+        "checked: {} blocks, {bytes} bytes, the same from every kernel ({}), every CRC",
+        bs.len(),
+        names.join(", ")
     );
 
-    // [kernel][phase] per pass, phase 3 the total; and bz2ngrs's count alone
-    let mut t: [[Vec<f64>; 4]; 2] = Default::default();
+    // [kernel][phase] per pass, phase 3 the total (a phase a kernel doesn't time apart is
+    // NaN); and bz2ngrs's count alone
+    let mut t: Vec<[Vec<f64>; 4]> = names.iter().map(|_| Default::default()).collect();
     let mut counts = Vec::new();
-    let names = ["mibz2", "bz2ngrs"];
     for pass in 0..passes {
-        let order = if pass % 2 == 0 { [0, 1] } else { [1, 0] };
-        for &kn in &order {
+        for kn in order(pass, names.len()) {
             let mut s = [0f64; 3];
+            let mut tot = 0.0;
             for b in &bs {
-                let x = if kn == 0 {
-                    run_mibz2(&mut m, b)
-                } else {
-                    run_ngrs(&mut g, b)
+                let x = match kn {
+                    0 => run_mibz2(&mut m, b),
+                    1 => run_ngrs(&mut g, b),
+                    #[cfg(mibz2_libsais)]
+                    _ => {
+                        tot += run_sais(&mut sais, b);
+                        continue;
+                    }
+                    #[cfg(not(mibz2_libsais))]
+                    _ => unreachable!(),
                 };
                 for j in 0..3 {
                     s[j] += x[j];
                 }
+                tot += x.iter().sum::<f64>();
             }
-            let tot = s.iter().sum::<f64>();
+            let phases = kn < 2;
+            let cell = |v: f64| {
+                if phases {
+                    format!("{v:.6}")
+                } else {
+                    "null".into()
+                }
+            };
             for j in 0..3 {
-                t[kn][j].push(s[j]);
+                t[kn][j].push(if phases { s[j] } else { f64::NAN });
             }
             t[kn][3].push(tot);
             if let Some(f) = out.as_mut() {
                 writeln!(
                     f,
-                    "{{\"pass\":{pass},\"kernel\":\"{}\",\"bytes\":{bytes},\"build_s\":{:.6},\"walk_s\":{:.6},\"assemble_s\":{:.6},\"total_s\":{tot:.6}}}",
-                    names[kn], s[0], s[1], s[2]
+                    "{{\"pass\":{pass},\"kernel\":\"{}\",\"bytes\":{bytes},\"build_s\":{},\"walk_s\":{},\"assemble_s\":{},\"total_s\":{tot:.6}}}",
+                    names[kn],
+                    cell(s[0]),
+                    cell(s[1]),
+                    cell(s[2])
                 )
                 .unwrap();
             }
@@ -236,18 +346,44 @@ fn main() {
         bs.len(),
         bytes as f64 / 1e6
     );
-    println!("| phase | mibz2 ns/B | bz2ngrs ns/B | bz2ngrs / mibz2, paired: mean (95%) |");
-    println!("|---|--:|--:|--:|");
+    let others = &names[1..];
+    println!(
+        "| phase | {} | {} |",
+        names
+            .iter()
+            .map(|n| format!("{n} ns/B"))
+            .collect::<Vec<_>>()
+            .join(" | "),
+        others
+            .iter()
+            .map(|n| format!("{n} / mibz2, paired: mean (95%)"))
+            .collect::<Vec<_>>()
+            .join(" | ")
+    );
+    println!("|---|{}", "--:|".repeat(names.len() + others.len()));
     let phase = ["build", "walk", "assemble / gather", "inverse BWT, total"];
     for j in 0..4 {
-        let r: Vec<f64> = (0..passes).map(|p| t[1][j][p] / t[0][j][p]).collect();
-        let (gm, lo, hi) = ratio(&r);
-        println!(
-            "| {} | {:.3} | {:.3} | {gm:.3} ({lo:.3}-{hi:.3}) |",
-            phase[j],
-            ns(median(t[0][j].clone())),
-            ns(median(t[1][j].clone()))
-        );
+        let mut cells: Vec<String> = t
+            .iter()
+            .map(|k| {
+                let v = median(k[j].clone());
+                if v.is_nan() {
+                    "(in its total)".into()
+                } else {
+                    format!("{:.3}", ns(v))
+                }
+            })
+            .collect();
+        for kn in 1..names.len() {
+            let r: Vec<f64> = (0..passes).map(|p| t[kn][j][p] / t[0][j][p]).collect();
+            if r.iter().any(|v| v.is_nan()) {
+                cells.push("".into());
+            } else {
+                let (gm, lo, hi) = ratio(&r);
+                cells.push(format!("{gm:.3} ({lo:.3}-{hi:.3})"));
+            }
+        }
+        println!("| {} | {} |", phase[j], cells.join(" | "));
     }
     println!(
         "\nbz2ngrs's count alone (its 8-part histogram, in its build above): {:.3} ns/B",

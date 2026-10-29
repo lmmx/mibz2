@@ -34,9 +34,12 @@ bz2ng have no thread count, so they never decode on 4 threads. At 4 threads, the
 their 1-thread runs against mibz2's at 4 threads: in the chart, hollow points with
 dashed whiskers, under "single-threaded (1 thread)"; in the tables, marked ¹.
 
-**mibz2's inverse BWT against bz2ngrs's.** Below the decoders' tables, both kernels run
-on the same Wikidata blocks, with the build, the walk and the output's assembly timed
-apart. bz2ngrs and mibz2 store the same successor link in each 32-bit entry, but a
+**mibz2's inverse BWT against bz2ngrs's and libsais's.** Below the decoders' tables, the
+kernels run on the same Wikidata blocks, with the build, the walk and the output's assembly
+timed apart where a kernel allows it. libsais 2.12.1 (Ilya Grebnov) is the fastest inverse
+BWT measured here. It is a library of BWT algorithms, not a bzip2 decoder, so it appears in
+that table only, never in the chart. Its build and walk happen inside one call, so it
+shows a total. bz2ngrs and mibz2 store the same successor link in each 32-bit entry, but a
 different byte beside it: bz2ngrs the row's first-column byte, mibz2 its last-column
 byte (lbzip2's packing). The table says which phase a whole-decoder difference comes
 from ([the study](https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-bz2ngrs.md)).

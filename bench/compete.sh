@@ -15,9 +15,9 @@
 #    - one-shot (the file read whole, decoded into one growing Vec): mibz2-oneshot
 #      (`mibz2::decode`) and bz2ngrs-oneshot (`Decoder::decompress_all_to_vec`), so a
 #      reader's cost shows apart from its decoder's.
-# 2. The inverse BWT alone (bench/alternatives/src/kernels.rs): both kernels on the same
-#    blocks' last columns, build, walk and assembly timed apart, after a check that they
-#    give every block the same bytes.
+# 2. The inverse BWT alone (bench/alternatives/src/kernels.rs): mibz2's, bz2ngrs's and
+#    libsais's kernels on the same blocks' last columns, build, walk and assembly timed
+#    apart where a kernel has them, after a check that they give every block the same bytes.
 # 3. With perf: one run of each of mibz2, bz2ngrs and bz2-ng's C sampled, their hottest
 #    symbols, to place a whole-decoder difference outside the inverse BWT.
 set -euo pipefail
@@ -60,7 +60,9 @@ fi
 export AB_BZ2NG=$src/build/bzip2
 
 # The harness with the alternatives (bz2ngrs at its pinned commit: bench/alternatives/Cargo.toml)
-CARGO_TARGET_DIR=$target cargo build --release --manifest-path bench/alternatives/Cargo.toml --bin ab --bin kernels
+# (and libsais 2.12.1, single-threaded, for the kernels' third: bench/libsais.sh)
+LIBSAIS_DIR=$(bash bench/libsais.sh "$target/libsais")
+LIBSAIS_DIR=$LIBSAIS_DIR CARGO_TARGET_DIR=$target cargo build --release --manifest-path bench/alternatives/Cargo.toml --bin ab --bin kernels
 ab=$target/release/ab
 kernels=$target/release/kernels
 
