@@ -82,6 +82,7 @@ bench-scaling *args:
 # runs and its throughput against this build's. It writes variants-<UTC time>.json.
 #   just bench-variants
 #   just bench-variants --variants v0.1.2,v0.1.3,lanes8,pf-off --rounds 8
+#   just bench-variants --variants v0.1.4,pairwalk,v0.1.5 --threads 1,4,6,8,10 --rounds 10
 
 # Which of mibz2's own changes moved its scaling knee: versions and walk settings (#39, #52)
 [positional-arguments]
@@ -160,6 +161,30 @@ bench-fingerprint *args:
     bash bench/corpus.sh
     cargo build --release --example ab --example stress
     python3 bench/fingerprint.py "$@"
+
+# bench/compete.sh: mibz2 against bz2ngrs on one physical core (research only: the whole
+# decoders with libbzip2, libbz2-rs and bz2-ng's C beside them, then the two inverse BWTs
+# phase by phase on the same blocks, then perf's hottest symbols). About 10 minutes. It
+# writes compete-<UTC time>.md (and its .jsonl and .kernels.jsonl) to share.
+#   just bench-compete
+#   just bench-compete --rounds 7 --passes 6 --no-perf
+
+# A competitor study: mibz2 against bz2ngrs, one core (docs/journal/2026-10-29-bz2ngrs.md)
+[positional-arguments]
+bench-compete *args:
+    bash bench/corpus.sh
+    bash bench/compete.sh "$@"
+
+# bench/pmu_probe.py, as the PMU probe workflow runs it on CI: the CPU, its caches and
+# quota, perf's permissions and the PMUs registered, then each candidate counter tried on
+# its own over a short busy loop. Needs perf and sudo. It writes pmu-probe.json to share.
+#   just bench-pmu-probe
+#   just bench-pmu-probe --out pmu-probe-i9.json
+
+# What this machine's performance counters can measure (diagnostic only)
+[positional-arguments]
+bench-pmu-probe *args:
+    python3 bench/pmu_probe.py "$@"
 
 # bench/compact.sh: the compact T-vector pilot (examples/compact.rs, research only): the
 # inverse BWT with a 20-bit ψ table (2.5 B a row: packed, and libbzip2's split ll16 + ll4)

@@ -7,7 +7,8 @@
 #   round to round. The figures go to one comment on the pull request, edited in place.
 #   Nothing from a pull request is recorded.
 # - A push to master: the commit's mibz2 against the alternatives (pbz2, the lbzip2 CLI,
-#   indexed_bzip2, fbz, the lbzip2 crate, libbzip2 and libbz2-rs), its result kept on the
+#   indexed_bzip2, fbz, the lbzip2 crate, libbzip2, libbz2-rs, bz2ngrs and bz2-ng's C),
+#   and its inverse BWT against bz2ngrs's and libsais's, its result kept on the
 #   bench-results branch (a data-only branch, never merged; nothing is committed to
 #   master). The site's benchmark pages are built from it.
 # - From the Actions tab: any ref, against the alternatives as on master, or against
@@ -15,9 +16,11 @@
 #   artifact, never recorded.
 #
 # The alternatives that are Rust crates with dependencies of their own (fbz, the lbzip2
-# crate, libbz2-rs) are arms of bench/alternatives' build of the harness (`ARM@alts/ab`);
-# indexed_bzip2 runs through Python (bench/ib.py, AB_PYTHON). Single-threaded decoders
-# (libbzip2, libbz2-rs) run at 1 thread only (examples/ab.rs: `parallel`).
+# crate, libbz2-rs, bz2ngrs) are arms of bench/alternatives' build of the harness
+# (`ARM@alts/ab`); indexed_bzip2 runs through Python (bench/ib.py, AB_PYTHON), and bz2-ng's
+# C as its own `bzip2 -dc`, built here at a pinned commit (AB_BZ2NG). Single-threaded
+# decoders (libbzip2, libbz2-rs, bz2ngrs, bz2ng) run at 1 thread only (examples/ab.rs:
+# `parallel`).
 #
 # The workload: the crate's corpora (`ab gen`, tests/common/mod.rs) at a small scale, and
 # 12 MB of the Wikidata dump's own bzip2 blocks (bench/wikidata.json: byte-range windows
@@ -82,6 +85,7 @@ env:
   SETTLE: 0.25 # seconds the harness samples the other processes' load before each run
   STAGE_ROUNDS: 5 # bench/stages.py's rounds (each 13-17 s on the runners seen)
   STAGE_REPEATS: 2 # phases' passes a run, each a decode of the file (each stage's fastest kept)
+  KERNEL_PASSES: 10 # bench/alternatives' kernels: passes of both inverse BWTs over the Wikidata blocks (about 3 s each)
   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   CARGO_TERM_COLOR: never
 
@@ -111,7 +115,7 @@ jobs:
           if [ "$mode" = pr ]; then
             arms="mibz2,mibz2@base/ab"
           else
-            arms="mibz2,pbz2,lbzip2,indexed_bzip2,fbz@alts/ab,lbzip2-rs@alts/ab,libbzip2,libbz2-rs@alts/ab"
+            arms="mibz2,pbz2,lbzip2,indexed_bzip2,fbz@alts/ab,lbzip2-rs@alts/ab,libbzip2,libbz2-rs@alts/ab,bz2ngrs@alts/ab,bz2ng"
           fi
           {
             echo "MODE=$mode"; echo "HEAD_SHA=$head"; echo "BASE_SHA=$base"; echo "ARMS=$arms"
@@ -144,8 +148,21 @@ jobs:
       - name: Build the alternatives
         if: env.MODE != 'pr'
         run: |
+          # libsais 2.12.1 at a pinned commit, single-threaded, for the kernels binary's libsais
+          # kernel (bench/libsais.sh: its source checked by SHA-256)
+          # (two steps, so a failed build fails the step: `export` would hide its status)
+          LIBSAIS_DIR=$(bash bench/libsais.sh "$RUNNER_TEMP/libsais")
+          export LIBSAIS_DIR
           CARGO_TARGET_DIR="$GITHUB_WORKSPACE/target/alts" cargo build --release --locked --manifest-path bench/alternatives/Cargo.toml
-          mkdir -p alts && cp target/alts/release/ab alts/ab
+          mkdir -p alts && cp target/alts/release/ab target/alts/release/kernels alts/
+          # bz2-ng's C at a pinned commit, its CLI (CMake's Release build, as its README builds it)
+          ng=517948ed836d4c52d68d8e633887aaa21c17ba27
+          git init -q "$RUNNER_TEMP/bz2-ng" && git -C "$RUNNER_TEMP/bz2-ng" fetch -q --depth 1 https://github.com/tfenne/bz2-ng "$ng"
+          git -C "$RUNNER_TEMP/bz2-ng" checkout -q FETCH_HEAD
+          cmake -S "$RUNNER_TEMP/bz2-ng/c" -B "$RUNNER_TEMP/bz2-ng/build" -DCMAKE_BUILD_TYPE=Release -DBZ2NG_BUILD_SHARED=OFF \
+            -DBZ2NG_BUILD_TESTS=OFF -DBZ2NG_BUILD_BENCH=OFF -DBZ2NG_BUILD_FUZZ=OFF > /dev/null
+          cmake --build "$RUNNER_TEMP/bz2-ng/build" -j "$(nproc)" --target bzip2 > /dev/null
+          echo "AB_BZ2NG=$RUNNER_TEMP/bz2-ng/build/bzip2" >> "$GITHUB_ENV"
           python3 -m venv "$RUNNER_TEMP/ib" && "$RUNNER_TEMP/ib/bin/pip" install -q indexed_bzip2==1.7.0
           echo "AB_PYTHON=$RUNNER_TEMP/ib/bin/python" >> "$GITHUB_ENV"
 
@@ -213,6 +230,15 @@ jobs:
           python3 bench/stages.py run stages.jsonl --rounds "$STAGE_ROUNDS" --repeats "$STAGE_REPEATS" corpora/wikidata.bz2 $arms
           echo "stages: $((SECONDS - start)) s"
 
+      # The inverse BWT alone, mibz2's against bz2ngrs's phase by phase, on one CPU (master
+      # and the Actions tab only: bench/alternatives' kernels binary)
+      - name: Kernels
+        if: env.MODE != 'pr'
+        run: |
+          start=$SECONDS
+          taskset -c 1 alts/kernels corpora/wikidata.bz2 "$KERNEL_PASSES" kernels.jsonl
+          echo "kernels: $((SECONDS - start)) s"
+
       # the report's stage table across builds whose phases report different stages
       - name: Report tests
         run: python3 bench/test_report.py
@@ -222,7 +248,7 @@ jobs:
           ref=$([ "$MODE" = pr ] && echo "mibz2@base/ab" || echo mibz2)
           { echo "## ab summary (reference: $ref)"; bin/ab summary runs.jsonl --ref "$ref"; } > ab-summary.md
           python3 bench/report.py summary runs.jsonl --corpora corpora --mode "$MODE" --head "$HEAD_SHA" \
-            ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --stages stages.jsonl --env env.json \
+            ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --stages stages.jsonl --env env.json --kernels kernels.jsonl \
             --out result.json --md comment.md
           cat comment.md ab-summary.md >> "$GITHUB_STEP_SUMMARY"
           # (the resources section in the log too, where a dispatched run's figures can be read)
@@ -249,6 +275,7 @@ jobs:
             runs.jsonl
             env.json
             stages.jsonl
+            kernels.jsonl
             result.json
             comment.md
             ab-summary.md

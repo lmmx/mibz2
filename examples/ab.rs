@@ -47,7 +47,12 @@
 //!   with dependencies of their own, kept out of this crate's dev-dependencies):
 //!   `libbz2-rs` (libbz2-rs-sys, the Rust port of libbzip2, through the bzip2 crate 0.6:
 //!   `MultiBzDecoder`), single-threaded; `lbzip2-rs` (the `lbzip2` crate:
-//!   `StreamingBz2Read`, on the CPUs it may run on); `fbz` (`fbz::Reader`, `threads: T`).
+//!   `StreamingBz2Read`, on the CPUs it may run on); `fbz` (`fbz::Reader`, `threads: T`);
+//!   `bz2ngrs` (Softleif's Rust port of bz2-ng: `DecompressReader`), single-threaded;
+//!   `bz2ngrs-oneshot` (`Decoder::decompress_all_to_vec` on the file read whole), beside
+//!   `mibz2-oneshot` (`mibz2::decode` likewise), so the readers' cost shows apart;
+//! - `bz2ng` (bz2-ng's C `bzip2 -dc`, the program AB_BZ2NG names: bench/compete.sh builds
+//!   it), single-threaded.
 //!
 //! A single-threaded arm runs once a round on each file, at the fewest threads, and the
 //! summaries pair that run with the reference's at every thread count.
@@ -373,7 +378,10 @@ fn drain(mut r: impl Read, h: &mut Hash, last: &dyn Fn()) -> Result<(), String> 
 /// smallest thread count (pinned to one CPU, as every 1-thread run), and the summaries
 /// pair that run with the reference's at every thread count
 fn parallel(arm: &str) -> bool {
-    !matches!(arm, "libbzip2" | "libbz2-rs")
+    !matches!(
+        arm,
+        "libbzip2" | "libbz2-rs" | "bz2ngrs" | "bz2ngrs-oneshot" | "mibz2-oneshot" | "bz2ng"
+    )
 }
 
 /// An arm that is another program writing the decoded bytes to stdout, read through a
@@ -387,6 +395,11 @@ fn program(arm: &str, threads: usize, path: &str) -> Option<(Command, bool)> {
         "lbzip2" => {
             let mut c = Command::new("lbzip2");
             c.args(["-dc", "-n", &t, path]);
+            Some((c, false))
+        }
+        "bz2ng" => {
+            let mut c = Command::new(std::env::var("AB_BZ2NG").unwrap_or_else(|_| "bz2ng".into()));
+            c.args(["-dc", path]);
             Some((c, false))
         }
         "indexed_bzip2" => {
@@ -442,6 +455,27 @@ fn decode(
             h,
             last,
         ),
+        // (one stream after another, as `MultiBzDecoder`)
+        #[cfg(mibz2_alternatives)]
+        "bz2ngrs" => drain(bz2ngrs::DecompressReader::new(open()?), h, last),
+        // (the file read whole, then decoded into one growing Vec: no reader between)
+        #[cfg(mibz2_alternatives)]
+        "bz2ngrs-oneshot" => {
+            let data = std::fs::read(path).map_err(|e| e.to_string())?;
+            let out = bz2ngrs::Decoder::new()
+                .decompress_all_to_vec(&data, usize::MAX)
+                .map_err(|e| e.to_string())?;
+            h.update(&out);
+            last();
+            Ok(())
+        }
+        "mibz2-oneshot" => {
+            let data = std::fs::read(path).map_err(|e| e.to_string())?;
+            let out = mibz2::decode(&data).map_err(|e| e.to_string())?;
+            h.update(&out);
+            last();
+            Ok(())
+        }
         #[cfg(mibz2_alternatives)]
         "fbz" => {
             let opts = fbz::DecodeOptions {
