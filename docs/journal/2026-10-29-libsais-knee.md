@@ -160,3 +160,90 @@ just bench-libsais-knee-cause
 ```
 
 Upload every new `coop-*.md` and `coop-counters-*.md`, and their `.jsonl`.
+
+## The result (measured, the i9, d5460e9, 2026-10-29): the same knee, a shallower fall
+
+**The run:** `just bench-libsais-knee`,
+[`coop-20261029T192315Z.md`](2026-10-29-libsais-knee/coop-20261029T192315Z.md) and its
+.jsonl, load 1.2 at the start.
+- Every block of every arm matched the room walk's output, and no thread was misplaced.
+- The ratios below are paired over the 20 rounds, recomputed from the raw rounds.
+
+### One core a block: mibz2's one-core inversion (pN) against libsais's (sNx1)
+
+| N blocks = cores | p MB/s | s MB/s | s / p, paired (95%) |
+|--:|--:|--:|--:|
+| 1 | 544 | 546 | 0.989 (0.974–1.004) |
+| 2 | 1074 | 1037 | 0.960 (0.950–0.969) |
+| 3 | 1284 | 1348 | 1.049 (1.039–1.060) |
+| **4** | **1467** | **1552** | 1.062 (1.050–1.073) |
+| 5 | 1302 | 1499 | 1.148 (1.139–1.158) |
+| 6 | 1103 | 1239 | 1.121 (1.110–1.131) |
+| 8 | 713 | 887 | 1.251 (1.239–1.263) |
+| 10 | 571 | 746 | 1.320 (1.300–1.341) |
+
+**Each family's falloff from its peak:**
+
+| | at 5 | at 8 | at 10 |
+|---|--:|--:|--:|
+| p (against p4) | 0.887 (0.877–0.897) | 0.482 (0.476–0.488) | 0.383 (0.376–0.390) |
+| s (against s4x1) | 0.960 (0.950–0.969) | 0.568 (0.563–0.573) | 0.476 (0.471–0.481) |
+
+### Teams of 2: the library (lNx2) against libsais (sNx2)
+
+| N blocks (2N cores) | l MB/s | s MB/s | s / l, paired (95%) |
+|--:|--:|--:|--:|
+| 1 | 890 | 692 | 0.774 (0.764–0.784) |
+| 2 | 1514 | 1229 | 0.811 (0.803–0.820) |
+| 3 | 2053 | 1563 | 0.760 (0.749–0.771) |
+| **4** | **2328** | **1652** | 0.710 (0.700–0.721) |
+| 5 | 1758 | 1273 | 0.725 (0.712–0.739) |
+
+The falloff from 4 to 5 blocks is l 0.762 (0.746–0.779) and s 0.778 (0.766–0.791).
+
+### The pre-registered readings
+
+1. **Every family peaks at 4 blocks.** One core a block: p4 and s4x1 (s5x1 / s4x1 =
+   0.960 excludes 1). Teams of 2: l4x2 and s4x2.
+2. **"libsais falls off less": yes, one core a block.** s / p is 1.062 (1.050–1.073) at 4
+   blocks, 1.251 (1.239–1.263) at 8 and 1.320 (1.300–1.341) at 10. The intervals don't
+   overlap. At 10 blocks libsais keeps 0.48 of its peak, mibz2 0.38.
+3. **"The knee moves": no, for either.** Both peak at the same N, so libsais has a higher,
+   shallower curve with the same knee. Its knee is not in a different place.
+4. **Teams of 2:** no difference in shape over the one step past the peak that 10 cores
+   allow (0.762 against 0.778). The library leads at every N, by 1.23–1.41×.
+5. **Reproduction:** s4x1 / p4 = 1.062 here, against the rematch's 1.075 (1 / 0.930).
+   Within ±5%.
+6. **No core shortage:** every added block brought its own core (N ≤ 10). Both curves
+   fall rather than flatten, so more blocks cost throughput: contention for something
+   shared.
+
+### What it says, and doesn't, about the cause
+
+**What the data say:**
+- **Equal alone:** at one block the two kernels are equal (0.989).
+- **Apart under contention:** they separate only as blocks are added: libsais 1.06× at 4
+  and 1.32× at 10.
+- **The difference is how much each block's work suffers from the others,** not the
+  work's own speed.
+- **What libsais does differently:** its walk makes 0.90 reads past L2 a byte against
+  our 1.37 (ψ², two bytes a step; the rematch's counters at 3 × 3). Fewer requests to the
+  shared L3 and DRAM per output byte is the obvious candidate for suffering less from
+  each other block.
+
+**What they don't say:**
+- **The cause is not settled.** The two kernels' tables are close in size (n words each),
+  so capacity also predicts the same knee position. And capacity is in doubt here: these
+  native blocks (about 1.95 MB of table) knee at 4, as full 3.6 MB blocks do, not near 7
+  (the section above).
+- **The cause run decides it:** the same sweep at full blocks, and the memory controller
+  and cache counters for both kernels at 2–10 blocks on both corpora
+  (`just bench-libsais-knee-cause`).
+- **Fewer reads per byte is a candidate, not a finding.** It is the most direct way libsais
+  differs, and it would explain a shallower fall under either cause. The counters say
+  whether its DRAM traffic and L3 miss rate grow more slowly with N than ours.
+
+**For the decoder:** the shipped teams already sit at the knee's peak (4 × 2). A shallower
+fall matters past the peak, where the policy doesn't go. The shipped decoder gains from
+libsais's property only if fewer reads per byte also raise the peak; at 4 blocks they're
+worth 1.06× on one core a block.
