@@ -7,7 +7,12 @@ Each change is one arm kind against the kind it changes, round by round in one g
   (`traverse_room`); the changed phase is the walk, the control the build;
 - **`qX` against `rX` (#78's bound, journal §13):** the build given each range's counts
   from the block's checkpoints, made outside the timing (`coop_build_given`); the changed
-  phase is the build, the control the walk.
+  phase is the build, the control the walk;
+- **with the MTF stage timed (COOP_WITH_MTF=1, #78's stage 2, journal §14):** `nX` against
+  `rX`, the net (the checkpoints made by the worker's own `mtf_cp`, then the given build),
+  and `nX` against `qX`, the checkpoints' cost (the same build, its checkpoints free or
+  made); there each pair's seconds a worker are given per phase too, so the build's saving
+  and the MTF stage's cost are read in seconds, not only as a ratio diluted by the MTF.
 
 For each pair:
 - **MB/s:** the paired ratio, mean ±95% (Student's t), its range, and the rounds won;
@@ -31,18 +36,28 @@ import sys
 T975 = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179,
         2.160, 2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064,
         2.060, 2.056, 2.052, 2.048, 2.045, 2.042]  # fmt: skip
-# the predictions registered in the journal (§12.2, §13.2): (low, high) of the paired MB/s
-# ratio against the twin
+# the predictions registered in the journal (§12.2, §13.2, §14.2): (low, high) of the
+# paired MB/s ratio, by (arm, twin); the stage-2 ones apply to a run with the MTF timed
 PREDICTED = {
-    "r4x1": (1.05, 1.15),
-    "r3x3": (1.04, 1.14),
-    "q4x1": (0.98, 1.02),
-    "q3x3": (1.06, 1.14),
+    ("r4x1", "4x1"): (1.05, 1.15),
+    ("r3x3", "3x3"): (1.04, 1.14),
+    ("q4x1", "r4x1"): (0.98, 1.02),
+    ("q3x3", "r3x3"): (1.06, 1.14),
 }
-# an arm kind: (its twin's prefix, the phase it changes, its control, what it is)
+PREDICTED_WITH_MTF = {
+    ("q3x3", "r3x3"): (1.02, 1.05),
+    ("n3x3", "r3x3"): (1.02, 1.05),
+    ("n3x3", "q3x3"): (0.99, 1.01),
+    ("n4x1", "r4x1"): (0.98, 1.02),
+}
+# an arm kind: [(its twin's prefix, the phase it changes, its control, what it is)]
 CHANGES = {
-    "r": ("", "walk", "build", "#77: the walk in room passes"),
-    "q": ("r", "build", "walk", "#78's bound: the build given each range's counts"),
+    "r": [("", "walk", "build", "#77: the walk in room passes")],
+    "q": [("r", "build", "walk", "#78's bound: the build given each range's counts")],
+    "n": [
+        ("r", "build", "walk", "#78's net: the checkpoints made by the MTF, then the build"),
+        ("q", "mtf", "walk", "#78's checkpoint cost: the same build, its checkpoints made"),
+    ],
 }
 
 
@@ -79,10 +94,15 @@ def main():
         d = json.loads(line)
         rounds.setdefault(d["round"], {})[d["arm"]] = d
     arms = sorted({a for r in rounds.values() for a in r})
+    with_mtf = any(
+        r.get("mtf_s_a_worker", 0) > 0 for arms_ in rounds.values() for r in arms_.values()
+    )
+    predicted = PREDICTED_WITH_MTF if with_mtf else PREDICTED
     pairs = [
-        (CHANGES[a[0]][0] + a[1:], a)
+        (twin + a[1:], a, changed, control, what)
         for a in arms
-        if a[0] in CHANGES and CHANGES[a[0]][0] + a[1:] in arms
+        for twin, changed, control, what in CHANGES.get(a[0], [])
+        if twin + a[1:] in arms
     ]
     if not pairs:
         sys.exit(f"coop-ab: no changed arm with its twin in {path}")
@@ -91,12 +111,11 @@ def main():
     w(f"# The cooperative kernel's A/Bs ({os.path.basename(path)})")
     w("")
     w(f"- **Rounds:** {len(rounds)}; arms {', '.join(arms)}")
-    for kind in sorted({a[0] for _, a in pairs}):
-        twin, changed, control, what = CHANGES[kind]
-        w(
-            f"- **{kind} arms:** {what}, against the {twin or 'frozen '}{'' if twin else 'kernel'}"
-            f"{' arms' if twin else ''}; changed phase the {changed}, control the {control}"
-        )
+    w(
+        f"- **The MTF stage:** {'timed, in every arm (COOP_WITH_MTF=1)' if with_mtf else 'outside the timing'}"
+    )
+    for base, arm, changed, control, what in pairs:
+        w(f"- **{arm} against {base}:** {what}; changed phase the {changed}, control the {control}")
     w("")
     w("## Each changed arm against its twin, paired round by round")
     w("")
@@ -105,8 +124,7 @@ def main():
     )
     w("|---|---|--:|--:|--:|--:|--:|--:|")
     verdicts = []
-    for base, arm in pairs:
-        _, changed, control, _ = CHANGES[arm[0]]
+    for base, arm, changed, control, _ in pairs:
         mb = paired(rounds, base, arm, ("mb_s", False))
         wk = paired(rounds, base, arm, (f"{changed}_s_a_worker", True))
         bd = paired(rounds, base, arm, (f"{control}_s_a_worker", True))
@@ -114,8 +132,8 @@ def main():
         wm, wh = interval(wk)
         bm, bh = interval(bd)
         med = lambda a: statistics.median(r[a]["mb_s"] for r in rounds.values() if a in r)  # noqa: E731
-        lo, hi = PREDICTED.get(arm, (math.nan, math.nan))
-        said = f"{lo:.2f}-{hi:.2f}" if arm in PREDICTED else "(none)"
+        lo, hi = predicted.get((arm, base), (math.nan, math.nan))
+        said = f"{lo:.2f}-{hi:.2f}" if (arm, base) in predicted else "(none)"
         w(
             f"| {arm} | {base} | {med(base):.0f} → {med(arm):.0f} | {m:.3f} ±{h:.3f} ({min(mb):.3f}-{max(mb):.3f}) | {sum(x > 1 for x in mb)}/{len(mb)} | {changed} {wm:.3f} ±{wh:.3f} | {control} {bm:.3f} ±{bh:.3f} | {said} |"
         )
@@ -128,7 +146,7 @@ def main():
         )
         inside = (
             f"the mean is {'inside' if lo <= m <= hi else 'outside'} the predicted {said}"
-            if arm in PREDICTED
+            if (arm, base) in predicted
             else "no prediction registered"
         )
         control = (
@@ -136,7 +154,37 @@ def main():
             if abs(bm - 1) <= 0.03
             else f"**the control moved ({bm:.3f}): drift or interference; read the gain with care**"
         )
-        verdicts.append(f"- **{arm}:** {gain}; {inside}; {control}")
+        verdicts.append(f"- **{arm} against {base}:** {gain}; {inside}; {control}")
+    if with_mtf:
+        w("")
+        w("## A worker's seconds by phase, paired: twin minus arm (+ is the arm's saving)")
+        w("")
+        w("| arm | vs | MTF | build | walk | all three | the MTF's share of the twin's |")
+        w("|---|---|--:|--:|--:|--:|--:|")
+        for base, arm, _, _, _ in pairs:
+            cols = []
+            for f in ("mtf", "build", "walk"):
+                d = [
+                    r[base][f"{f}_s_a_worker"] - r[arm][f"{f}_s_a_worker"]
+                    for r in rounds.values()
+                    if base in r and arm in r
+                ]
+                cols.append(d)
+            tot = [sum(x) for x in zip(*cols)]
+            share = statistics.median(
+                r[base]["mtf_s_a_worker"]
+                / (
+                    r[base]["mtf_s_a_worker"]
+                    + r[base]["build_s_a_worker"]
+                    + r[base]["walk_s_a_worker"]
+                )
+                for r in rounds.values()
+                if base in r
+            )
+            ms = lambda d: "{:+.2f} ±{:.2f} ms".format(*(1e3 * x for x in interval(d)))  # noqa: E731
+            w(
+                f"| {arm} | {base} | {ms(cols[0])} | {ms(cols[1])} | {ms(cols[2])} | {ms(tot)} | {share:.2f} |"
+            )
     if "p4" in arms:
         w("")
         w("## Against production (p4), paired")
