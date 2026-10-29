@@ -855,3 +855,59 @@ its 95% interval.
   - At 4 workers libsais leads by only 6.5%, so the "at its best" half is the harder one.
 - **For the counters (E3):** at pN against sNx1, `mem_load_retired.l3_miss` per output byte
   should fall by about half if ψ² is the mechanism. That joins §8.2's predictions.
+
+## 10. The counters' procedure (E3, #76; written after the confirmation, as §8.2 said)
+
+On the branch `research/coop-counters`. The pilot's kernels are unchanged from c2620b8,
+and two harness changes come with the procedure:
+- **The grid's helper timings are medians.**
+  - The grid's table printed the *last* round's walk imbalance and helper start or end
+    spread, not a median.
+  - In the five-arm run (§9.5) the last round, 19, was the disturbed one. That is where
+    its 236 and 185 µs came from: the other 19 rounds were 5–10 µs, as in the
+    confirmations.
+  - The table now gives the medians over the timed rounds. The JSONL always had every
+    round's.
+- **`bench/coop.sh --build-only`** builds the pilot (with libsais) and prints its path and
+  CPUs, so the counters script builds exactly what the grid runs.
+
+**The procedure** (`bench/coop_counters.py`, `just bench-coop-counters`) is §8.2's, as
+registered:
+- Each arm runs alone, pinned as in the grid, as `grid FILE 1 ARM` and `grid FILE 21 ARM`.
+  Their difference is 20 timed rounds, without the setup or the check round.
+- Each counter pair is a pass of its own beside the fixed counters:
+  - bench-imc's five pairs (`reads`, `llc`, `beyond_llc`, `queue`, `tlb`);
+  - added after the expert review: `mlp` (`l1d_pend_miss.pending`, `.pending_cycles`),
+    `fill` (`.fb_full`, L1-missing loads), `snoop` (`xsnp_hitm`, stores, for #81), and
+    top-down level 1 in two passes (`slots`, `frontend`);
+  - the memory controller's reads and writes, machine-wide.
+- The default arms are p4, p8, 4x1, 4x2 and 3x3, plus s4x1 and s3x3 with libsais.
+- There are 3 repeats, with the arms and passes rotated and the short and long runs' order
+  alternating.
+- **The guards:**
+  - every run's raw counts and perf CSV are kept in the JSONL;
+  - a reading counted under 99.5% of the time is dropped as multiplexed;
+  - a difference whose spread over the repeats exceeds 10% is flagged (†);
+  - each counted run's own MB/s is set against the confirmed medians, so a counted run is
+    a typical one;
+  - a group whose events don't count on the machine is left out and reported, not
+    guessed.
+- **The phase attribution:** one `perf record` each of p4, 4x1 and s4x1, with the hottest
+  user symbols. For libsais that is `calculate_biPSI*`, `decode_chains_symbol_rows` and its
+  copies, against our build and walk. This is E3's libsais half, and E1 (§7 of the expert
+  review) made it the question: what makes libsais's ψ² cheap where ours isn't.
+- **The predictions it reads** are §8.2's, unchanged:
+  - **Residency:** 4x2's and 3x3's L3 hit share ≥ p4's and well above p8's;
+    L3-missing reads per KB ≤ p4's; DRAM writes per byte back at p4's level.
+  - **Overlap:** the hit share near p4's or lower, while L3-missing reads in flight
+    machine-wide are about 2 × p4's, at no lower occupancy per miss.
+  - **Both:** each leaves its mark.
+  - **Added from E2:** at sNx1 against pN, L3-missing loads per KB fall by about half if
+    libsais's lead under pressure is ψ²'s.
+  - The script prints these readings mechanically, with its thresholds stated. The
+    journal interprets them.
+- **Checked on the VM** with a stand-in perf (the VM's perf doesn't match its kernel): the
+  plumbing, differences, coverage, figures and report, against the pilot's real grid
+  runs. The counts there were stand-ins, so nothing about the events is checked until the
+  i9's first short run, which is why it comes first:
+  `just bench-coop-counters --arms p4 --reps 1 --rounds 3 --no-record`.
