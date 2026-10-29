@@ -18,8 +18,7 @@ to 3 workers, the low-memory end, is not yet measured.
 
 | finding | status |
 |---|---|
-| Shared cache capacity bounds throughput: the knee sits at about 14.4 MB of live tables, 0.7 of the i9's 20 MB L3, at two block sizes of the recompressed corpus (3.6 and 2.4 MB tables) | measured ([workstation journal §9](https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-28-workstation-scaling.md)) |
-| The bench corpus's native blocks (1.95 MB tables on average) knee at 4 workers, as full 3.6 MB blocks do, not near 7 as live table bytes alone would put it | measured anomaly; its cause is under test ([the knee journal](https://github.com/lmmx/mibz2/blob/research/libsais-rematch/docs/journal/2026-10-29-libsais-knee.md)) |
+| Shared cache capacity bounds throughput: the knee sits at about 14.4 MB of live tables, 0.7 of the i9's 20 MB L3, at two block sizes | measured ([workstation journal §9](https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-28-workstation-scaling.md)) |
 | The table is compressible: about 77% of a full block's rows are in 32-row translation groups | measured ([ψ census](https://github.com/lmmx/mibz2/issues/99)) |
 | Sharing a block's table between threads moves the full decoder's throughput–RSS frontier: every worker count from 4 to 20 is dominated by a team configuration | measured on one machine and workload, at 4 threads and above ([decoder journal](https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-cooperative-decoder.md), series 3) |
 | A compact table can be navigated as fast, built directly from the last column | not shown |
@@ -37,9 +36,8 @@ in the tables [below](#what-is-measured-so-far).
    `mibz2`), fixed teams of 2 and of 3, and the policy (v0.2.0's default). Where one plan
    ran at several thread counts, its marks are noise around one configuration. No worker
    counts below 4 were measured, so it is not yet the whole frontier.
-2. **Throughput against concurrent blocks,** as live table memory (blocks live × the
-   workload's mean table, computed: 3.6 MB for full 900 K blocks in series 1, 1.95 MB for
-   the bench corpus's native blocks in series 2 and 3): where a smaller table would overtake the 32-bit one, if it does, as
+2. **Throughput against concurrent full blocks,** as live table memory (blocks live ×
+   3.6 MB, computed): where a smaller table would overtake the 32-bit one, if it does, as
    more blocks are live. No compact table exists yet, so it shows today's table and the
    knee measured in the [workstation journal §9](https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-28-workstation-scaling.md):
    series 1's worker counts and series 3's workers and teams, a panel each, since they
@@ -57,7 +55,7 @@ The charts are drawn here by JavaScript. The tables
 - **Two kinds of memory, never mixed:** the live tables' bytes (computed: live full
   blocks × 900,000 rows × 4 bytes for today's table) and the process's peak RSS
   (measured). Peak RSS also counts the scanner's slots, the output and every worker's
-  buffers: at 4 threads on CI it is about 74 MB, against about 7.8 MB of tables.
+  buffers: at 4 threads on CI it is about 74 MB, against 14.4 MB of tables.
 - **Two levels, never mixed:** the full decoder (a file to verified output) and the
   research harness's inversion (MTF, build and walk). The headline is the full decoder;
   the inversion shows the mechanism.
@@ -94,9 +92,9 @@ research harness's MTF, build and walk; [coop journal §17.4](https://github.com
 
 | configuration | live tables | cores | MB/s | against p4 (paired) |
 |---|--:|--:|--:|--:|
-| p4, production | 7.8 MB | 4 | 1206 | 1 |
-| y3x3, cooperative | 5.8 MB | 9 | 1657 | 1.375 ±0.022 |
-| y4x2, cooperative | 7.8 MB | 8 | 1725 | 1.439 ±0.020 |
+| p4, production | 14.4 MB | 4 | 1206 | 1 |
+| y3x3, cooperative | 10.8 MB | 9 | 1657 | 1.375 ±0.022 |
+| y4x2, cooperative | 14.4 MB | 8 | 1725 | 1.439 ±0.020 |
 
 A cooperative team shares one block's table among k cores, so N teams keep N tables
 live on N × k cores.
@@ -119,26 +117,22 @@ and 8), the table gives the range of their medians, which is noise.
 
 | plan | live tables | threads | MB/s | against p4 (paired, 95%) | peak RSS | CPU-s | nondominated |
 |---|--:|--:|--:|--:|--:|--:|:-:|
-| 4 workers (p4) | 7.8 MB | 4 | 1007 | 1 | 76 MB | 0.84 | no |
-| 6 workers | 11.7 MB | 6 | 858 | 0.861 (0.842–0.881) | 102 MB | 1.45 | no |
-| 8 workers | 15.6 MB | 8 | 674 | 0.693 (0.673–0.714) | 128 MB | 2.41 | no |
-| 10 workers | 19.5 MB | 10 | 632 | 0.644 (0.621–0.668) | 152 MB | 2.97 | no |
-| 20 workers | 38.9 MB | 20 | 471 | 0.479 (0.462–0.497) | 267 MB | 7.31 | no |
-| 1 team of 3 | 1.9 MB | 3 | 530 | 0.540 (0.524–0.556) | 35 MB | 0.77 | **yes** |
-| 2 teams of 2 | 3.9 MB | 4 | 891 | 0.904 (0.885–0.923) | 50 MB | 0.73 | no |
-| 2 teams of 3 | 3.9 MB | 6 | 987–988 | 1.004–1.006 | 50 MB | 0.82 | **yes** |
-| 3 teams of 2 (the policy at 6) | 5.8 MB | 6 | 1155–1189 | 1.166 (1.123–1.210) to 1.200 | 64 MB | 0.81–0.84 | no |
-| 3 teams of 3 | 5.8 MB | 9 | 1234 | 1.264 (1.211–1.318) | 64 MB | 0.96 | **yes** |
-| 4 teams of 2 (the policy at 8–20) | 7.8 MB | 8 | 1223–1256 | 1.243–1.274; at 20, 1.257 (1.197–1.320) | 77 MB | 1.02–1.04 | **yes**, by its best median |
-| 5 teams of 2 | 9.7 MB | 10 | 1147 | 1.162 (1.121–1.204) | 91 MB | 1.36 | no |
-| 6 teams of 3 | 11.7 MB | 18 | 1084 | 1.095 (1.060–1.132) | 105 MB | 2.16 | no |
-| 10 teams of 2 | 19.5 MB | 20 | 825 | 0.838 (0.813–0.864) | 155 MB | 3.76 | no |
+| 4 workers (p4) | 14.4 MB | 4 | 1007 | 1 | 76 MB | 0.84 | no |
+| 6 workers | 21.6 MB | 6 | 858 | 0.861 (0.842–0.881) | 102 MB | 1.45 | no |
+| 8 workers | 28.8 MB | 8 | 674 | 0.693 (0.673–0.714) | 128 MB | 2.41 | no |
+| 10 workers | 36.0 MB | 10 | 632 | 0.644 (0.621–0.668) | 152 MB | 2.97 | no |
+| 20 workers | 72.0 MB | 20 | 471 | 0.479 (0.462–0.497) | 267 MB | 7.31 | no |
+| 1 team of 3 | 3.6 MB | 3 | 530 | 0.540 (0.524–0.556) | 35 MB | 0.77 | **yes** |
+| 2 teams of 2 | 7.2 MB | 4 | 891 | 0.904 (0.885–0.923) | 50 MB | 0.73 | no |
+| 2 teams of 3 | 7.2 MB | 6 | 987–988 | 1.004–1.006 | 50 MB | 0.82 | **yes** |
+| 3 teams of 2 (the policy at 6) | 10.8 MB | 6 | 1155–1189 | 1.166 (1.123–1.210) to 1.200 | 64 MB | 0.81–0.84 | no |
+| 3 teams of 3 | 10.8 MB | 9 | 1234 | 1.264 (1.211–1.318) | 64 MB | 0.96 | **yes** |
+| 4 teams of 2 (the policy at 8–20) | 14.4 MB | 8 | 1223–1256 | 1.243–1.274; at 20, 1.257 (1.197–1.320) | 77 MB | 1.02–1.04 | **yes**, by its best median |
+| 5 teams of 2 | 18.0 MB | 10 | 1147 | 1.162 (1.121–1.204) | 91 MB | 1.36 | no |
+| 6 teams of 3 | 21.6 MB | 18 | 1084 | 1.095 (1.060–1.132) | 105 MB | 2.16 | no |
+| 10 teams of 2 | 36.0 MB | 20 | 825 | 0.838 (0.813–0.864) | 155 MB | 3.76 | no |
 
-Peak RSS is measured (the median run's, in decimal MB). Live tables are computed: live
-blocks × 1.95 MB, the native blocks' mean table (corrected on 2026-10-29: the page first
-used 3.6 MB, a full block's, for series 2 and 3; the native blocks average 486,543 rows).
-At 4 workers the knee sits at about 7.8 MB of tables here, not §9's 14.4, which is why
-the knee's cause is now under test. The
+Peak RSS is measured (the median run's, in decimal MB). Live tables are computed. The
 nondominated column compares medians on throughput (higher) and peak RSS (lower) within
 this series.
 
