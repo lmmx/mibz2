@@ -92,6 +92,8 @@ jobs:
           git fetch -q origin bench-results:refs/remotes/origin/bench-results || echo "no bench-results branch yet"
           python3 docs/scripts/bench_history.py
       - uses: astral-sh/setup-uv@v8.1.0
+      - name: Version the site's own assets
+        run: sed -i "s|?v=dev\"|?v=${GITHUB_SHA::12}\"|" zensical.toml
       - name: Point the site at its preview path
         if: github.event_name == 'pull_request'
         env:
