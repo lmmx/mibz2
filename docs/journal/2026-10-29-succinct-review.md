@@ -196,7 +196,7 @@ The compressed-permutation results (Barbay–Navarro, CSA Ψ encodings, Nishimot
    - a step: line = j >> 5, r = j & 31, high = tzcnt(pdep(1 << r, unary)) − r, and the low bits by a shift;
    - the byte comes from the header, so no F table is needed;
    - exceptions are the lines that cross a bucket boundary and the spans too wide.
-   
+
    **The guardian's corrections, accepted:**
    - one line is one fetch but several loads, with decoding between the fetch and the next address. The chain lengthens by about 15 cycles, and prefetching waits on it;
    - full-line *ordinary* stores still read the line for ownership; only non-temporal stores avoid it, and they bypass the cache. The agent had overstated this;
@@ -205,7 +205,7 @@ The compressed-permutation results (Barbay–Navarro, CSA Ψ encodings, Nishimot
    - **FOR-14:** 64-bit header plus 32 × 14-bit offsets from the base, for spans below 2^14, so ψ(j) = base + extract₁₄(slot);
    - **EF-12:** 64-bit unary high part plus 32 × 12-bit lows, for spans below 33 · 2^12 (about 135 k);
    - **an exception record.**
-   
+
    Its point is to keep the common case to a shift, mask and add. The record address j >> 5 needs no F lookup.
 4. **Blocked rank** (the research chatbot): L as bytes, plus per-block cumulative counts. 256 × 32-bit counters cost 1024/B bytes a row: 4 at B = 256, 1 at B = 1024, with a long local count. It is LF-oriented (§6), so it is not for our ψ walk.
 5. **Alphabet-specialised recovery** (the research chatbot): a constant for σ = 1, comparisons for 2–4, and so on. It waits until a general lookup is measured.
@@ -268,7 +268,7 @@ It runs in 1.3 s on the VM. `psi-census.md` is the output, `psi-census.jsonl` th
    - read the generated code of #91's F lookup;
    - add the `e` arm to isolate the recovery cost;
    - port the winner to the room walk.
-   
+
    Only then C, at 24 bits.
 3. **The line-blocked designs** (EF, FOR-14/EF-12, run records) stay sketches until a written dependency path for one step shows the decode can sit on the chain. It must give the number of cycles from the line's arrival to the next address, and prefetching must be able to wait for it. The census now gives their sizes. A prototype comes after that analysis, not before.
 4. **The MTF lead** (coop journal §15.4): keep the list's front 32 bytes in a register. It is a separate, later experiment.
@@ -296,7 +296,7 @@ Both are that chatbot's view, not measurements. They agree with each other and w
 - **The guardian's §8 "next research measurement" and the research chatbot's question 2 are measured for this corpus:**
   - FOR-14 holds 98.11% of rows, EF-12 1.40%, and exceptions 0.49% (boundary crossings 0.29%, spans too wide 0.21%);
   - the effective size is 16.12 bits a row with exceptions stored at 24 bits.
-  
+
   By the guardian's own rule ("if ordinary records rarely qualify... deprioritise"), the hybrid is *not* deprioritised. Its next step is the exact bit layout and the dependency-path audit, and only then a microbenchmark.
 - **The variation with alphabet and block size is not tested.** This corpus's working blocks are all full, with σ between 65 and 128. Another corpus is needed for that.
 - **The F-bucket boundary distribution,** part of the guardian's "#79 audit", is measured: at k = 5, 0.15% of rows are stepped for, and 93% of mixed windows hold one boundary. What remains of the audit is the lookup's generated code, and the `e` arm.
