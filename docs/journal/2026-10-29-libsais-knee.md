@@ -61,6 +61,20 @@ The rematch's harness (`examples/coop.rs grid`, PR #107) at this branch's head:
 6. **The p and s arms at N = 4 reproduce** the rematch's p4 and s4x1 (their ratio was 0.93
    in both passes), within about ±5%.
 
+7. **A core ceiling is ruled out by the design, a capacity knee is not proven by it.**
+   - **No core shortage:** in the one-core-a-block family every added block brings its own
+     physical core, and N never exceeds the 10 there are. Total MB/s falling as N rises
+     can't be a shortage of cores. It is contention for something shared: L3 capacity,
+     L3 or uncore bandwidth, or DRAM bandwidth.
+   - **How mibz2's was attributed to capacity:** the workstation journal §9 moved its knee
+     with the block size (the knee tracked live table bytes, not N).
+   - **libsais's knee, if it has one,** gets no such attribution from this run. If its
+     falloff differs from ours, the follow-up registers the same sweep at a smaller block
+     size (the corpus recompressed at a lower level, as §9 did). Moving with table bytes
+     says capacity; staying at the same N says bandwidth.
+   - **Separately labelled:** a curve that merely flattens (more cores buying nothing) is
+     reported apart from one that falls (more blocks costing throughput).
+
 **Not read from this run:** why. If libsais falls off less, the counters at N = 4 and 10
 (p and s) are the next run: DRAM bytes and reads past L2 a byte, which say whether its
 fewer reads are what spares the L3. That run isn't registered until this one says it's
