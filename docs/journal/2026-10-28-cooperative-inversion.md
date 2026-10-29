@@ -967,3 +967,29 @@ registered:
   - "late prefetches" is `load_hit_pre.sw_pf`, a demand load dispatched to a fill buffer a
     software prefetch had allocated. It is read with its quoted definition beside it.
   - The short check runs again before the full run, for the two new passes.
+
+### 10.2 The full run's first lines: neither offcore-response name exists (2026-10-29)
+
+perf 6.8.12 on the i9 rejected both names of the prefetch-inclusive L3 pair:
+`offcore_response.all_data_rd.l3_{hit,miss}.any_snoop` and `ocr.all_data_rd.*`.
+- The run left both groups out, as built to, and went on with 12 passes: the 11 of the
+  short run plus `prefetch`.
+- So that run has no prefetch-inclusive L3 hit share.
+  - Its residency line uses the demand-only share, which sees only what the prefetches
+    missed.
+  - It is not read as residency evidence.
+  - The report now says so wherever that happens.
+- **Two independent replacements, for a short follow-up run of their own:**
+  - **`l3_all_raw`:** the same offcore-response events by encoding. That is event 0xB7,
+    umask 0x01, with the response MSR from Intel's Skylake-client tables: ALL_DATA_RD
+    (0x491: demand data reads, L2 and L3 data prefetches, L1D and software prefetches) by
+    supplier, L3_HIT 0x3C0000 or L3_MISS 0x3C000000, any snoop 0x3F80000000. That gives
+    0x3F803C0491 and 0x3FBC000491. The kernel moves the second onto the other response
+    MSR.
+  - **`llc_all`:** the architectural last-level-cache events, perf's generic
+    `cache-references` and `cache-misses`. They exist on every Intel core: core requests
+    that missed L2, by whether L3 had them, with data, code, RFOs and prefetches
+    together.
+  - Neither is the demand-only share. If both count, they cross-check each other, and
+    `l3_all_raw`'s misses × 64 B against the memory controller's read bytes checks the
+    encoding.
