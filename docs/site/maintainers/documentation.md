@@ -28,6 +28,12 @@ just docs-check   # strict build, site checks, and the pages' examples as tests
   a sweep, each with its own axes, its points (`x`, `y`, and optionally `lo` and `hi`
   for an interval) and its source. A new sweep is a new panel; the page draws every
   panel. Only measured points go in it.
+- `docs/site/assets/data/frontier.json` holds the measured series that the
+  [Throughput–memory frontier](../benchmarks/frontier.md) page draws
+  (`assets/javascripts/frontier.js`): throughput against measured peak RSS, and against
+  computed live table memory. It is written by hand, from the record, under the rules in
+  its `about` field. The page's tables give the same values, and stand in for the charts
+  if the script does not run.
 
 ## Publishing
 
