@@ -59,6 +59,18 @@ EXTRA = {
     # the front end left empty and the cycles lost recovering from bad speculation
     "slots": ["uops_issued.any", "uops_retired.retire_slots"],
     "frontend": ["idq_uops_not_delivered.core", "int_misc.recovery_cycles"],
+    # the walks prefetch each lane's next entry (to L1, libsais a round ahead), so the demand
+    # loads above see only what the prefetches miss: the software prefetches, and the loads
+    # that found their line still arriving (a late prefetch)
+    "prefetch": ["sw_prefetch_access.t0", "load_hit_pre.sw_pf"],
+    # every data read past L2, prefetches included, by where the L3 found it (the offcore
+    # response events; the PMU's name differs by perf version, so both are tried and the
+    # one that doesn't count here is left out)
+    "l3_all": [
+        "offcore_response.all_data_rd.l3_hit.any_snoop",
+        "offcore_response.all_data_rd.l3_miss.any_snoop",
+    ],
+    "l3_all_ocr": ["ocr.all_data_rd.l3_hit.any_snoop", "ocr.all_data_rd.l3_miss.any_snoop"],
 }
 GROUPS = {**imc.GROUPS, **EXTRA}
 # the medians of the confirmation and exploratory runs (coop-20261029T08*), MB/s
@@ -193,7 +205,33 @@ FIGURES = [
     ("IPC", "llc", lambda c, b, t: c["instructions"] / c["cycles"]),
     ("cycles / B (all threads)", "llc", lambda c, b, t: c["cycles"] / b),
     (
-        "L3 hit share of loads beyond L2",
+        "data reads past L2 / B (prefetches included)",
+        "reads",
+        lambda c, b, t: c["offcore_requests.all_data_rd"] / b,
+    ),
+    (
+        "L3 hit share of data reads, prefetches included",
+        "l3_all",
+        lambda c, b, t: c["offcore_response.all_data_rd.l3_hit.any_snoop"]
+        / (
+            c["offcore_response.all_data_rd.l3_hit.any_snoop"]
+            + c["offcore_response.all_data_rd.l3_miss.any_snoop"]
+        ),
+    ),
+    (
+        "L3 hit share of data reads, prefetches included",
+        "l3_all_ocr",
+        lambda c, b, t: c["ocr.all_data_rd.l3_hit.any_snoop"]
+        / (c["ocr.all_data_rd.l3_hit.any_snoop"] + c["ocr.all_data_rd.l3_miss.any_snoop"]),
+    ),
+    ("software prefetches / B", "prefetch", lambda c, b, t: c["sw_prefetch_access.t0"] / b),
+    (
+        "late prefetches (a load found its line still arriving) / prefetch",
+        "prefetch",
+        lambda c, b, t: c["load_hit_pre.sw_pf"] / c["sw_prefetch_access.t0"],
+    ),
+    (
+        "L3 hit share of demand loads beyond L2 (what prefetch missed)",
         "llc",
         lambda c, b, t: c["mem_load_retired.l3_hit"]
         / (c["mem_load_retired.l3_hit"] + c["mem_load_retired.l3_miss"]),
@@ -242,19 +280,26 @@ FIGURES = [
         lambda c, b, t: c["dtlb_load_misses.walk_active"] / c["cycles"],
     ),
     (
-        "L1D misses in flight, while any",
+        "L1D demand misses in flight, while any (not the prefetches)",
         "mlp",
         lambda c, b, t: c["l1d_pend_miss.pending"] / c["l1d_pend_miss.pending_cycles"],
     ),
     (
-        "share of cycles with an L1D miss pending",
+        "share of cycles with an L1D demand miss pending",
         "mlp",
         lambda c, b, t: c["l1d_pend_miss.pending_cycles"] / c["cycles"],
     ),
+    # fb_full counts requests (loads, stores, software prefetches) that found no free fill
+    # buffer, not cycles: a rate, not a share of time
     (
-        "share of cycles with the fill buffers full",
+        "requests that found the fill buffers full / cycle",
         "fill",
         lambda c, b, t: c["l1d_pend_miss.fb_full"] / c["cycles"],
+    ),
+    (
+        "requests that found the fill buffers full / B",
+        "fill",
+        lambda c, b, t: c["l1d_pend_miss.fb_full"] / b,
     ),
     ("L1D-missing loads / B", "fill", lambda c, b, t: c["mem_load_retired.l1_miss"] / b),
     (
@@ -516,7 +561,10 @@ def main():
         for arm in [x for x in ("4x2", "3x3") if x in arms]:
             if "p4" not in arms:
                 break
-            hs, hp4, hp8 = (g(x, "L3 hit share of loads beyond L2") for x in (arm, "p4", "p8"))
+            share = "L3 hit share of data reads, prefetches included"
+            if g("p4", share) is None:
+                share = "L3 hit share of demand loads beyond L2 (what prefetch missed)"
+            hs, hp4, hp8 = (g(x, share) for x in (arm, "p4", "p8"))
             mk, mp4 = (
                 g(arm, "L3-missing demand reads / KB"),
                 g("p4", "L3-missing demand reads / KB"),

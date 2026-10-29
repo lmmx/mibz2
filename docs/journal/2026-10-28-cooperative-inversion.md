@@ -911,3 +911,47 @@ registered:
   runs. The counts there were stand-ins, so nothing about the events is checked until the
   i9's first short run, which is why it comes first:
   `just bench-coop-counters --arms p4 --reps 1 --rounds 3 --no-record`.
+
+### 10.1 The i9's short run, and what it changed (measured, 2026-10-29)
+
+`coop-counters-20261029T085523Z`: p4, 1 repeat, 1 and 3 rounds. The raw counts are in
+`results/`.
+- **Everything counts.**
+  - All 11 passes counted 100% of the time: nothing multiplexed, no failed runs.
+  - p4 ran at 1450 MB/s while counted, against its confirmed 1470 (0.986).
+- **The subtraction is sound.**
+  - The cycles between the two runs are 5.66e9 for 2 rounds. That is the rounds' 0.29 s
+    × 4 threads × about 4.9 GHz, so the difference is the timed work, with the cores busy
+    throughout.
+  - The instructions between them are 9.96–9.97e9 in every pass, so the runs are alike.
+- **Two corrections to how the events were read:**
+  - **`l1d_pend_miss.fb_full` counts requests, not cycles.** It counts the loads, stores
+    and software prefetches that found no free fill buffer. p4's figure is 0.24 such
+    requests a cycle, 2.9 an output byte, not "24% of cycles". It's still a strong sign
+    that the core's fill buffers bind, but it's a rate.
+  - **The demand-load events see only what prefetch missed.**
+    - Both native walks prefetch each lane's next entry to L1, and libsais prefetches a
+      round ahead.
+    - `mem_load_retired.l3_hit` is 0.013 a byte, against one random load a byte in the
+      walk. So its "L3 hit share" (0.748, matching the earlier workstation run's 0.76)
+      is the hit share of prefetch misses, not of the walk's traffic.
+    - The traffic is in `offcore_requests.all_data_rd`, prefetches included: 1.43 reads
+      past L2 a byte, each waiting 60 cycles, about 30 in flight machine-wide.
+    - `l1d_pend_miss.pending` is demand-only too. That is why it shows 1.8 misses in
+      flight while 7.6 reads per core are outstanding past L2.
+- **So §8.2's residency reading needs a hit share that includes prefetches.** Two passes
+  are added:
+  - `prefetch`: `sw_prefetch_access.t0` and `load_hit_pre.sw_pf`, the prefetches and the
+    loads that found their line still arriving;
+  - `l3_all`: every data read past L2, prefetches included, by where the L3 found it (the
+    offcore-response events, under both of perf's names, so one is left out).
+  - The report's residency reading uses the prefetch-inclusive share when it counts, and
+    says which share it used.
+- **p4's figures, indicative from one short run:**
+  - IPC 1.76, at 23.8 instructions a byte;
+  - an L3-missing read waits about 595 cycles;
+  - 0.128 of cycles stalled on an L3 miss;
+  - DRAM traffic of 6.6 B read and 3.2 B written per output byte;
+  - page walks 1.2% of cycles;
+  - cross-core HITM 0.011 a KB, as expected with no sharing.
+  - These become evidence only in the full run, beside the other arms.
