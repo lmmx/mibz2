@@ -460,8 +460,13 @@
   ];
   const cmp = { pinned: null, hover: null };
   // Each decoder's colour slot, fixed (a decoder keeps its colour whichever ran), from
-  // the second (bench.css: --bh-s2..s8)
+  // the second (bench.css: --bh-s2..s8). A single-threaded decoder is drawn hollow, its
+  // whisker dashed, and listed in a legend group of its own, so it may share a
+  // block-parallel decoder's hue: bz2ngrs takes lbzip2's (beside libbzip2's and
+  // libbz2-rs's: no normal-vision pair below ΔE 22, colour-blind 6.5-6.9, the floor band
+  // that the legend's groups and the tables carry). Any other decoder takes the muted slot.
   const CMP_ORDER = ["pbz2", "lbzip2", "indexed_bzip2", "fbz", "lbzip2-rs", "libbzip2", "libbz2-rs"];
+  const CMP_SHARED = { bz2ngrs: "lbzip2" };
   const CMP_SLOTS = 8;
   function alternativesHero(d, host) {
     host.textContent = "";
@@ -534,6 +539,7 @@
     if (Math.log(lo) < 0) svg("text", { x: M.l + 2, y: H - 4, class: "bh-tick" }, s).textContent = `← the alternative ${state.cmpMetric === "rss" ? "leaner" : "faster"}`;
     svg("text", { x: W - M.r, y: H - 4, "text-anchor": "end", class: "bh-tick" }, s).textContent = `mibz2 ${state.cmpMetric === "rss" ? "leaner" : "faster"} →`;
     const colour = (a) => {
+      if (CMP_SHARED[a]) a = CMP_SHARED[a];
       const k = CMP_ORDER.includes(a) ? 1 + CMP_ORDER.indexOf(a) : 1 + CMP_ORDER.length + others.filter((o) => !CMP_ORDER.includes(o)).indexOf(a);
       return k < CMP_SLOTS ? `var(--bh-s${k + 1})` : "var(--bh-old)";
     };
