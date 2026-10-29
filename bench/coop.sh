@@ -70,7 +70,11 @@ if [ -z "$arms" ]; then
 fi
 fit=""
 for a in $(echo "$arms" | tr ',' ' '); do
-  s=${a#[pswrqn]}; s=${s%@*}; n=${s%x*}; k=1; [ "$s" != "$n" ] && k=${s#*x}
+  # the arm's kind letter, as parse_arm in examples/coop.rs reads it, then N x K @ segments
+  s=${a#[pswrqnmfxy]}; s=${s%@*}; n=${s%x*}; k=1; [ "$s" != "$n" ] && k=${s#*x}
+  case "$n$k" in
+    *[!0-9]* | "") echo "bench/coop.sh: cannot read arm $a (a kind letter of p s w r q n m f x y, then N or NxK)"; exit 1 ;;
+  esac
   [ $((n * k)) -le "$cores" ] && fit="$fit,$a"
 done
 fit=${fit#,}

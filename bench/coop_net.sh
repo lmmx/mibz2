@@ -12,14 +12,18 @@
 # With --spill, #78's spill fix (§15): the same two measurements, the MTF stage alone now
 # also timing `mtf_cp2` and `mtf_cp2p`, the grid's default arms adding m3x3 and f3x3 (and
 # f4x1, the null), written as coop-spill-<UTC time>.*.
+# With --made, the cooperative integration's PR 0 (§17): the fused build (x) with its
+# checkpoints made by `mtf_cp2p` (y), against the given build with the same MTF (f), the
+# fused build with free checkpoints (x) and p4, at 3x3 and 4x2, written as coop-made-*.
 #
-#   bash bench/coop_net.sh [--spill] [--rounds R] [--arms LIST]
+#   bash bench/coop_net.sh [--spill | --made] [--rounds R] [--arms LIST]
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 rounds=20 arms="" label=net
 while [ $# -gt 0 ]; do
   case "$1" in
     --spill) label=spill; shift ;;
+    --made) label=made; shift ;;
     --rounds) rounds="$2"; shift 2 ;;
     --arms) arms="$2"; shift 2 ;;
     *) echo "coop-net: unknown argument $1" >&2; exit 2 ;;
@@ -28,11 +32,15 @@ done
 if [ -z "$arms" ]; then
   if [ "$label" = spill ]; then
     arms="r3x3,q3x3,n3x3,m3x3,f3x3,r4x1,f4x1,p4"
+  elif [ "$label" = made ]; then
+    arms="f3x3,x3x3,y3x3,f4x2,x4x2,y4x2,p4"
   else
     arms="r3x3,q3x3,n3x3,r4x1,n4x1,p4"
   fi
 fi
-if [ "$label" = spill ]; then
+if [ "$label" = made ]; then
+  title="The integration's PR 0: the fused build, its checkpoints made by the MTF stage (journal §17)"
+elif [ "$label" = spill ]; then
   title="#78's spill fix: the checkpoints made by \`mtf_cp2\` and \`mtf_cp2p\` (journal §15)"
 else
   title="#78's stage 2: the checkpoints made in the MTF stage"

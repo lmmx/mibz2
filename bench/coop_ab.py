@@ -43,6 +43,10 @@ PREDICTED = {
     ("r3x3", "3x3"): (1.04, 1.14),
     ("q4x1", "r4x1"): (0.98, 1.02),
     ("q3x3", "r3x3"): (1.06, 1.14),
+    # #81's cooperative test (§16.2)
+    ("x3x3", "q3x3"): (1.02, 1.06),
+    ("x4x2", "q4x2"): (1.01, 1.05),
+    ("x4x1", "q4x1"): (0.99, 1.02),
 }
 PREDICTED_WITH_MTF = {
     ("q3x3", "r3x3"): (1.02, 1.05),
@@ -56,6 +60,11 @@ PREDICTED_WITH_MTF = {
     ("f3x3", "n3x3"): (1.01, 1.03),
     ("f3x3", "q3x3"): (0.99, 1.01),
     ("f4x1", "r4x1"): (0.98, 1.02),
+    # the integration's PR 0 (§17.2): the fused build with made checkpoints, MTF timed
+    ("y3x3", "f3x3"): (1.05, 1.09),
+    ("y4x2", "f4x2"): (1.05, 1.10),
+    ("y3x3", "x3x3"): (0.98, 1.00),
+    ("y4x2", "x4x2"): (0.98, 1.00),
 }
 # an arm kind: [(its twin's prefix, the phase it changes, its control, what it is)]
 CHANGES = {
@@ -69,11 +78,16 @@ CHANGES = {
         ("r", "build", "walk", "#78's net with the spill fix (`mtf_cp2`)"),
         ("n", "mtf", "walk", "the spill fix: `mtf_cp2` against `mtf_cp`, the same build"),
     ],
+    "x": [("q", "build", "walk", "#81: the given build in one pass, L's byte taken from L")],
     "f": [
         ("r", "build", "walk", "#78's net with the spill fix, store order pinned (`mtf_cp2p`)"),
         ("n", "mtf", "walk", "the spill fix, pinned: `mtf_cp2p` against `mtf_cp`, the same build"),
         ("q", "mtf", "walk", "the fix's checkpoint cost: `mtf_cp2p` against free checkpoints"),
         ("m", "mtf", "walk", "the store order alone: `mtf_cp2p` against `mtf_cp2`"),
+    ],
+    "y": [
+        ("f", "build", "walk", "PR 0: the fused build, its checkpoints made by `mtf_cp2p`"),
+        ("x", "mtf", "walk", "PR 0: the fused build's checkpoints made, not free"),
     ],
 }
 

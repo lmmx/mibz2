@@ -235,6 +235,35 @@ bench-coop-spill *args:
     bash bench/corpus.sh
     bash bench/coop_net.sh --spill "$@"
 
+# bench/coop.sh with #81's arms (the coop journal's §16): the given-counts build (q) against
+# the same build in one pass, the scatter taking L's byte from L and no copy, count or
+# barrier before it (x), at 3x3, 4x2 and 4x1, with p4 beside them, 20 rounds paired, each
+# thread pinned, then bench/coop_ab.py's pairs. The fused table is checked word for word
+# against the given build's on every block first. About four minutes; close the browser and
+# other busy programs first. Upload coop-*.md, coop-*.jsonl and coop-ab-*.md.
+#   just bench-coop-fused
+
+# #81's cooperative test: the cooperative build in one pass
+[positional-arguments]
+bench-coop-fused *args:
+    bash bench/corpus.sh
+    bash bench/coop.sh --arms q3x3,x3x3,q4x2,x4x2,q4x1,x4x1,p4 --rounds 20 "$@"
+    python3 bench/coop_ab.py
+
+# The cooperative integration's PR 0 (the coop journal's §17): the one composition not yet
+# measured, the fused build (x) with its checkpoints made by the MTF stage (`mtf_cp2p`), the
+# MTF timed in series: y3x3 and y4x2 against f (the given build, the same MTF), x
+# (checkpoints free) and p4, 20 rounds paired, each thread pinned, then bench/coop_ab.py's
+# pairs. About five minutes; close the browser and other busy programs first. Upload
+# coop-made-*.md, coop-made-*.jsonl and coop-ab-*.md.
+#   just bench-coop-made
+
+# PR 0: the cooperative inversion as the decoder would run it
+[positional-arguments]
+bench-coop-made *args:
+    bash bench/corpus.sh
+    bash bench/coop_net.sh --made "$@"
+
 # bench/coop_counters.py: the counters behind the cooperative grid (#76; the coop journal's
 # §8.2 and §10): each arm alone under `perf stat` for 1 and 21 rounds, one counter pair a
 # pass, 3 repeats, the memory controller machine-wide, then one `perf record` each of p4, 4x1

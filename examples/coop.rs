@@ -22,7 +22,13 @@
 //!                                          own MTF, `mtf_cp`: #78's stage 2; with
 //!                                          COOP_WITH_MTF=1 only), mNxK and fNxK (the
 //!                                          n arm, its MTF `mtf_cp2` or `mtf_cp2p`:
-//!                                          #78's spill fix; COOP_WITH_MTF=1 only);
+//!                                          #78's spill fix; COOP_WITH_MTF=1 only),
+//!                                          xNxK (the q arm, its build in one pass, the
+//!                                          scatter taking L's byte from L: #81), yNxK
+//!                                          (the f arm with x's build: the checkpoints
+//!                                          made by `mtf_cp2p`, then the fused build, the
+//!                                          cooperative decoder's inversion as it would
+//!                                          run; COOP_WITH_MTF=1 only);
 //!                                          @S sets
 //!                                          a cooperative arm's segments a block (4x1@1024:
 //!                                          one core a block, with 4x2's segments)
@@ -324,6 +330,9 @@ struct Coop {
     /// the build given each range's counts from the block's checkpoints
     /// (`coop_build_given`, the `q` arms), else `coop_build`, which counts them
     given: bool,
+    /// the given build in one pass, the scatter taking L's byte from L (`coop_build_fused`,
+    /// the `x` arms: #81)
+    fused: bool,
     /// each thread's bytes walked in the last block, and the walk's imbalance summed over
     /// blocks (the busiest thread's bytes over the threads' mean) with its count
     share: Vec<std::sync::atomic::AtomicU64>,
@@ -531,6 +540,110 @@ fn coop_build_given(
             ftab[cb] += 1;
         }
     });
+}
+
+/// `coop_build_given` in one pass (#81's cooperative test): each range's first slot in
+/// each bucket is the bucket's start plus the counts before the range, which is the
+/// block's checkpoint at the range's start, so no pass counts, copies or sums before the
+/// scatter, and the threads need no barrier between. The scatter writes each entry whole,
+/// `ll[s] | i << 8` at slot s, taking the byte from L (the 256 cursors' own streams), as
+/// #93 does on one core; nothing reads the table back. Every slot is written once (each
+/// range fills its own slots of every bucket), so the table is only sized, and a kept
+/// table's stale words are all overwritten. The table equals `coop_build_given`'s word
+/// for word (`fused_check`, before any timing)
+fn coop_build_fused(
+    ll: &[u8],
+    counts: &[u32; 256],
+    checkpoints: &[[u32; 256]],
+    pool: &Pool,
+    c: &mut Coop,
+) {
+    let (n, k) = (ll.len(), pool.k);
+    if c.tt.len() != n {
+        c.tt.resize(n, 0);
+    }
+    let edge = |j: usize| {
+        if j == k {
+            n
+        } else {
+            ((n * j / k + CHECKPOINT / 2) / CHECKPOINT * CHECKPOINT).min(n)
+        }
+    };
+    let at = |e: usize| {
+        if e == n {
+            counts
+        } else {
+            &checkpoints[e / CHECKPOINT]
+        }
+    };
+    let mut starts = [0u32; 256];
+    let mut cum = 0u32;
+    for b in 0..256 {
+        starts[b] = cum;
+        cum += counts[b];
+    }
+    let tt = P(c.tt.as_mut_ptr());
+    pool.run(&|j| {
+        let r = edge(j)..edge(j + 1);
+        let before = at(r.start);
+        let mut ftab = [0u32; 256];
+        for b in 0..256 {
+            ftab[b] = starts[b] + before[b];
+        }
+        // SAFETY: slot s < n (the counts are the block's own), and the ranges' slots are
+        // disjoint, so each is written by one thread
+        let t = |s: usize| unsafe { &mut *tt.get().add(s) };
+        let mut i = r.start;
+        while i + 16 <= r.end {
+            let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
+            if a == b && a == a.rotate_left(8) {
+                let cb = ll[i] as usize;
+                let s = ftab[cb] as usize;
+                let base = (i as u32) << 8;
+                for (jj, &l) in ll[s..s + 16].iter().enumerate() {
+                    *t(s + jj) = l as u32 | (base + ((jj as u32) << 8));
+                }
+                ftab[cb] += 16;
+            } else {
+                for ii in i..i + 16 {
+                    let cb = ll[ii] as usize;
+                    let s = ftab[cb] as usize;
+                    *t(s) = ll[s] as u32 | (ii as u32) << 8;
+                    ftab[cb] += 1;
+                }
+            }
+            i += 16;
+        }
+        for ii in i..r.end {
+            let cb = ll[ii] as usize;
+            let s = ftab[cb] as usize;
+            *t(s) = ll[s] as u32 | (ii as u32) << 8;
+            ftab[cb] += 1;
+        }
+    });
+}
+
+/// `coop_build_fused`'s table against `coop_build_given`'s, word for word, on every block
+/// at k = 1, 2, 3 and 4 threads, the fused build each time into a table kept from the
+/// block before (so a stale word left unwritten would show), untimed
+fn fused_check(bs: &[Block]) {
+    let mut words = 0usize;
+    for k in 1..=4 {
+        let pool = Pool::new(k, None);
+        let (mut given, mut fused) = (Coop::default(), Coop::default());
+        for (i, b) in bs.iter().enumerate() {
+            coop_build_given(&b.ll, &b.counts, &b.checkpoints, &pool, &mut given);
+            coop_build_fused(&b.ll, &b.counts, &b.checkpoints, &pool, &mut fused);
+            assert!(
+                fused.tt == given.tt,
+                "block {i}, k {k}: the fused table differs"
+            );
+            words += b.ll.len();
+        }
+    }
+    eprintln!(
+        "fused check: {words} words, every block at k = 1-4: the fused table the given build's"
+    );
 }
 
 struct Lane {
@@ -1527,8 +1640,9 @@ impl Inv {
         let coop = || {
             Box::new(Coop {
                 segments,
-                room: matches!(kind, 'r' | 'q' | 'n' | 'm' | 'f'),
-                given: matches!(kind, 'q' | 'n' | 'm' | 'f'),
+                room: matches!(kind, 'r' | 'q' | 'n' | 'm' | 'f' | 'x' | 'y'),
+                given: matches!(kind, 'q' | 'n' | 'm' | 'f' | 'x' | 'y'),
+                fused: matches!(kind, 'x' | 'y'),
                 ..Default::default()
             })
         };
@@ -1595,7 +1709,9 @@ impl Inv {
                 (m, s.elapsed().as_secs_f64() - m)
             }
             Inv::Coop(pool, c, one) => {
-                if c.given {
+                if c.fused {
+                    coop_build_fused(&b.ll, &b.counts, checkpoints, pool, c);
+                } else if c.given {
                     coop_build_given(&b.ll, &b.counts, checkpoints, pool, c);
                 } else {
                     coop_build(&b.ll, &b.counts, one.as_ref().unwrap_or(pool), c);
@@ -1800,6 +1916,8 @@ fn parse_arm(s: &str) -> Arm {
         b'n' => ('n', &s[1..]),
         b'm' => ('m', &s[1..]),
         b'f' => ('f', &s[1..]),
+        b'x' => ('x', &s[1..]),
+        b'y' => ('y', &s[1..]),
         _ => ('c', s),
     };
     let (rest, segments) = match rest.split_once('@') {
@@ -1833,22 +1951,29 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
     drop(inv);
     let bytes: usize = bs.iter().map(|b| b.ll.len()).sum();
     let arms: Vec<Arm> = specs.iter().map(|s| parse_arm(s)).collect();
+    if arms.iter().any(|a| matches!(a.kind, 'x' | 'y')) {
+        fused_check(bs);
+    }
     assert!(
         cfg!(libsais) || arms.iter().all(|a| a.kind != 's'),
         "s arms need --cfg libsais"
     );
     assert!(
-        with_mtf || arms.iter().all(|a| !matches!(a.kind, 'n' | 'm' | 'f')),
-        "n, m and f arms need COOP_WITH_MTF=1"
+        with_mtf
+            || arms
+                .iter()
+                .all(|a| !matches!(a.kind, 'n' | 'm' | 'f' | 'y')),
+        "n, m, f and y arms need COOP_WITH_MTF=1"
     );
     assert!(
         !with_mtf || arms.iter().all(|a| a.kind != 's'),
         "s arms (libsais) don't take symbols: not with COOP_WITH_MTF=1"
     );
     assert!(
-        arms.iter().all(|a| !matches!(a.kind, 'n' | 'm' | 'f'))
+        arms.iter()
+            .all(|a| !matches!(a.kind, 'n' | 'm' | 'f' | 'y'))
             || std::arch::is_x86_feature_detected!("avx2"),
-        "n, m and f arms' MTF kernels are AVX2"
+        "n, m, f and y arms' MTF kernels are AVX2"
     );
     if let Some(c) = cpus {
         for (a, s) in arms.iter().zip(specs) {
@@ -1946,7 +2071,7 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
                                             )
                                         }
                                         .unwrap();
-                                    } else if matches!(kind, 'm' | 'f') {
+                                    } else if matches!(kind, 'm' | 'f' | 'y') {
                                         // SAFETY: mtf_cp2 needs AVX2, asserted at the start
                                         let (ll, c, cps) =
                                             (&mut mine.ll, &mut mine.counts, &mut mine.checkpoints);
@@ -1966,14 +2091,14 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
                                     tm += s.elapsed().as_secs_f64();
                                     if check {
                                         assert!(
-                                            !matches!(kind, 'n' | 'm' | 'f')
+                                            !matches!(kind, 'n' | 'm' | 'f' | 'y')
                                                 || mine.checkpoints == bs[i].checkpoints,
                                             "block {i}: {kind}'s MTF checkpoints differ"
                                         );
                                     }
                                     // a q arm's checkpoints are still the free ones (its bound
-                                    // with the MTF stage in the timing); an n, m or f arm's are its own
-                                    let cps = if matches!(kind, 'n' | 'm' | 'f') {
+                                    // with the MTF stage in the timing); an n, m, f or y arm's are its own
+                                    let cps = if matches!(kind, 'n' | 'm' | 'f' | 'y') {
                                         &mine.checkpoints
                                     } else {
                                         &bs[i].checkpoints

@@ -2115,7 +2115,7 @@ The run was `coop-spill-20261029T123205Z` (with `coop-ab-20261029T123245Z`): 20 
 - **The finding:** in production's own MTF loop, each symbol's 32-byte list load overlaps two stores from the previous symbol:
   - its 32-byte vector store;
   - the 1-byte store of the new front.
-  
+
   The shifted load at `base − 1` overlaps the vector store only in part. On Intel, neither load can be forwarded from those stores. So each waits for the stores to commit.
 - **What the 5.8% suggests:** that wait is on production's critical path too, not only on `mtf_cp2`'s.
 - **A candidate change:** keep the list's front 32 bytes in a register across symbols:
@@ -2132,3 +2132,252 @@ The run was `coop-spill-20261029T123205Z` (with `coop-ab-20261029T123245Z`): 20 
 - making its checkpoints in the MTF stage costs 2.6–3.9% of that stage, depending on the kernel and the build;
 - the net in this harness is 1.047–1.050 at 3x3, with the MTF stage in series;
 - nothing here is a decoder figure (§8.4).
+
+## 16. #81's cooperative test: the build in one pass (pre-registered before it runs)
+
+Branch `research/coop-fused`, stacked on `research/coop-spill`. Production `src/` is untouched here. #81's single-core half is on master's PR #93, measured on CI at 1.027× the build, below its 1.03 floor, and not merged.
+
+### 16.1 What changes, and what stays the same
+
+**`coop_build_fused`** (the `x` arms) is `coop_build_given` (the `q` arms, §13) in one pass:
+- **Each range's first slot in every bucket is computed, not counted.** It is the bucket's start plus the counts before the range, which is the block's checkpoint at the range's start.
+- **So there is no copy phase, no histogram, no serial prefix sum and no second `pool.run`.** The build is one `pool.run`, with no barrier inside it.
+- **The scatter writes each entry whole:** `ll[s] | i << 8` at slot s, the byte taken from L, as #93 does on one core. Nothing reads the table back.
+- **The table is only sized.** Every slot is written once, so a kept table's stale words are all overwritten.
+- **Checked before any timing** (`fused_check`): the fused table equals `coop_build_given`'s word for word, on every block, at k = 1, 2, 3 and 4, into a table kept from the block before. The grid then checks every arm's output against production by hash, as before.
+
+**What stays the same:** the checkpoints are given free, as in q (§13; making them is §14–15's question, not this one). The ranges are rounded to checkpoints as in q. The walk is #77's room walk.
+
+**What each comparison isolates:**
+
+| comparison | what it measures |
+|---|---|
+| **x3x3 against q3x3** | the fusion where the copy phase and its barrier matter most |
+| x4x2 against q4x2 | the same with two threads a block (#81 names 3x3 and 4x2) |
+| x4x1 against q4x1 | one thread a block: the single-core fusion inside the grid, with no cross-thread barrier to remove (a check on #93's 1.027) |
+
+The MTF stage is outside the timing here (`bench/coop.sh`, not `coop_net.sh`): the build phase is read undiluted.
+
+### 16.2 The predictions and the criteria
+
+**Where the saving should come from:**
+- q3x3's build is about 41.7 ms of a worker's round (§15.4's run), about 42% of its time with the MTF outside it.
+- About 78 full blocks a worker a round. Each removed `pool.run` should save about the walk's wake-up lag and end spread: 21 and 11 µs a block (§15.4). That is about 2–2.5 ms a round, about 5% of the build.
+- The copy pass's own share is about what #93 found on one core, about 2–3%.
+- The cross-core handoff of the copied lines was measured small (E3, #81's comment), so no large gain is expected from it.
+
+| comparison | predicted, paired MB/s | predicted, build phase |
+|---|--:|--:|
+| x3x3 against q3x3 | **1.02–1.06** | **1.04–1.12** |
+| x4x2 against q4x2 | 1.01–1.05 | 1.03–1.10 |
+| x4x1 against q4x1 | 0.99–1.02 | 1.00–1.04 |
+
+**The criteria are #81's, fixed when it was filed:**
+- **pass:** 3x3's build ≥ 1.15× its twin, with the table identical;
+- **fail:** below 1.03×, since the single-core test already fell below it. #81 then closes as negative;
+- **between 1.03× and 1.15×** (a band #81 left undefined, defined here before the run): a gain below #81's bar. It is recorded, and no production change follows. The fused build becomes the research kernel's build for later experiments only if x3x3 against q3x3's MB/s interval excludes 1, with the walk control within ±3%.
+
+The prediction sits in the band, below the pass line. If it comes in there, the experiment fails to justify #81's production change but still improves the research kernel.
+
+### 16.3 The commands (the i9, with the browser and other busy programs closed)
+
+```
+git fetch origin research/coop-fused
+git checkout --detach origin/research/coop-fused
+just bench-coop-fused
+```
+
+It takes about four minutes. Upload `coop-*.md`, its `.jsonl`, and `coop-ab-*.md`.
+
+### 16.4 The result (measured, the i9, 98abd74, 2026-10-29): a pass, far above the prediction
+
+The run was `coop-20261029T143618Z` (with `coop-ab-20261029T143657Z`; the files are beside this journal). It ran 20 rounds, every thread pinned and none misplaced, at load 0.98.
+
+The first attempt stopped before any round. `bench/coop.sh`'s fit check did not know the `x` kind: `x3x3` read as N = "x3", an unbound variable. 98abd74 fixed it; the arms, kernels and criteria are unchanged.
+
+`fused_check` passed first: 838,826,228 words, every block at k = 1–4, the fused table the given build's word for word. In the grid, every arm's output was checked against production's.
+
+**The grid, with the MTF stage outside the timing:**
+
+| comparison | paired MB/s, mean ±95% (min–max) | rounds won | build phase | walk (control) | predicted MB/s | predicted build |
+|---|--:|--:|--:|--:|--:|--:|
+| **x3x3 against q3x3** | **1.102 ±0.012** (1.029–1.135) | 20/20 | **1.313 ±0.033** | 0.998 ±0.006 | 1.02–1.06 | 1.04–1.12 |
+| x4x2 against q4x2 | 1.111 ±0.015 (1.057–1.201) | 20/20 | 1.408 ±0.012 | 0.975 ±0.019 | 1.01–1.05 | 1.03–1.10 |
+| x4x1 against q4x1 | 1.110 ±0.012 (1.053–1.149) | 20/20 | 1.437 ±0.012 | 0.989 ±0.012 | 0.99–1.02 | 1.00–1.04 |
+
+**A worker's milliseconds a round** (medians; the savings are paired, mean ±95%):
+
+| arm | build | walk | round | build saved by fusion | round saved |
+|---|--:|--:|--:|--:|--:|
+| q3x3 → x3x3 | 37.8 → 28.3 | 57.9 → 58.2 | 95.9 → 86.9 | 8.92 ±0.79 | 8.86 ±1.00 |
+| q4x2 → x4x2 | 40.2 → 28.6 | 61.6 → 63.4 | 102.4 → 92.3 | 11.79 ±0.41 | 10.29 ±1.31 |
+| q4x1 → x4x1 | 54.6 → 38.1 | 101.8 → 103.6 | 157.1 → 141.9 | 16.64 ±0.40 | 15.65 ±1.60 |
+| p4 (production) | 37.2 | 105.2 | 142.9 | | |
+
+**Against #81's criteria, as registered (§16.2):**
+1. **3x3's build is at least 1.15× its twin:** 1.313, interval 1.28–1.35. **Pass.**
+2. **The table is identical:** `fused_check` on every block at k = 1–4, and every arm's output in the grid. **Pass.**
+3. **For the research kernel:** x3x3/q3x3's MB/s interval excludes 1 (1.090–1.114), with the walk control within ±3% (0.998). **Pass.**
+
+**So #81's cooperative test passes.** The fused build becomes the research kernel's build for later experiments. The single-core half stays as measured: #93 at 1.027× the build on CI, below its 1.03 floor. These are separate results, and both stand.
+
+**The predictions missed, all of them high.** They are left as registered:
+- §16.2 expected the saving to come from one removed `pool.run` (2–2.5 ms a round) and a copy pass the size of #93's (2–3%).
+- The build saved 8.9 ms a round at 3x3.
+- Every arm gained, including x4x1, which has no barrier inside a block to remove. So synchronisation is not the main source.
+
+**Where the saving came from: the given build's overhead, not the barrier alone.**
+- **In the grid at k = 1:** q4x1's build takes 54.6 ms a worker against production's 37.2 ms (p4), although both make the same two passes over the table:
+  - a copy of L into the table;
+  - a read-modify-write scatter.
+
+  The fused build at k = 1 takes 38.1 ms, within 2% of production's (−0.61 ±0.51 ms against p4).
+- **On one thread, outside the grid (a scratch timing on the 4-core VM, two runs, indicative only; not committed):**
+
+  | build | ns/B, full blocks | ns/B, all 431 blocks in order |
+  |---|--:|--:|
+  | production's `build` | 0.92–1.12 | 1.00 |
+  | the given build, k = 1 | 1.49–1.50 | 1.65–1.77 |
+  | the fused build, k = 1 | 1.04–1.16 | 1.50–1.56 |
+
+  - **The given build is 1.35–1.6× production's on one thread.** That is an overhead of its own implementation: the same two passes are slower than production's. Its generated code has not been read, so the cause is not yet named.
+  - **Fusion removes that overhead** and lands at about production's single-core speed, not beyond it. That agrees with #93's 1.027× and with x4x1 against p4 (1.009 ±0.012 overall).
+  - **Both research builds size the table with `resize(n, 0)`.** In corpus order, a full block after a tiny one zero-fills the table first. Production's build appends instead (`clear` then `extend`), so it doesn't. This is the gap between the two columns, and it falls on q and x alike, so it does not bias x against q.
+- **So the ratios against q are real, but they are not all fusion.** Part of each is the research build reaching production's codegen. The figure a decoder can use is x against production: x3x3 is 1.643 ±0.014 of p4, against q3x3's 1.491.
+
+**What this does not say:**
+- **It is not a check on #93.** §16.1 called x4x1 against q4x1 "a check on #93's 1.027". It isn't one, because its twin is not production's build.
+- **It is not a decoder figure (§8.4):**
+  - the checkpoints are given free in both q and x;
+  - the MTF stage is outside the timing.
+
+  With the MTF stage making the checkpoints and timed in series (§15's `f` arms, which use q's build), the fused build's net is unmeasured.
+- **The walk control at 4x2 is marginal.** Its mean, 0.975, is within ±3%, but its interval reaches 0.956. At 3x3 the walk is 0.998 ±0.006.
+
+**What follows:**
+- **No production change.** Production has no cooperative build, so there is nothing to fuse in `src/`.
+  - The fused build is a component of the cooperative decoder, should it be integrated.
+  - It is not a change to production's single-core build, which is already about as fast (#93).
+- **The minimum before any production proposal is the decoder A/B (§8.4).** It needs the cooperative path in `src/` behind an option:
+  - the MTF stage making the checkpoints (§15);
+  - the fused build;
+  - the room walk on k threads.
+
+  It would be measured end to end on the i9: a `.bz2` file to verified output, CRCs checked, against production at the same core count. That is an integration project, not a further arm of this experiment.
+- **Recorded, not started:** the given build's own overhead, its codegen read against production's `build`, and how the research kernel should size its table (it writes every slot, so it need not zero-fill).
+
+## 17. The integration's PR 0: the fused build with its checkpoints made (pre-registered before it runs)
+
+This is step 0 of the cooperative decoder's integration plan, the one composition not yet measured. §16.4 timed the fused build with its checkpoints free and the MTF stage outside the timing. §15.4 timed the checkpoints made by the MTF stage, but with the given build. The decoder would run both together.
+
+The gates for the decoder itself were approved before this run (the literature study's `10-synthesis-coordinator.md` on master, §5):
+- headline success: ≥ 1.15× the full decoder at p4, 95% lower bound above 1.05;
+- identical output;
+- peak RSS ≤ 1.15× and CPU ≤ 1.5×;
+- smaller reproducible gains reported, not rejected automatically.
+
+This step is not that A/B. It is the grid, with no scanner, RLE1, CRC or joining in it, every thread pinned.
+
+### 17.1 What changes
+
+**The `y` arms:**
+- the MTF stage of the `f` arms: `mtf_cp2p`, making the checkpoints, timed in series;
+- the fused build of the `x` arms (`coop_build_fused`), reading those checkpoints;
+- #77's room walk.
+
+**Checked before any timing:**
+- `fused_check` on every block at k = 1–4;
+- in the grid's untimed round, each block's made checkpoints equal to the free ones, and every arm's output equal to production's by hash.
+
+On the 4-core VM, `y1x2` and `y2x1` passed both (correctness only; the VM's figures say nothing here).
+
+**The arms:** f3x3, x3x3, y3x3, f4x2, x4x2, y4x2 and p4, all with the MTF stage timed (`COOP_WITH_MTF=1`). Under that setting an `x` arm runs production's MTF, with its checkpoints still free.
+
+### 17.2 The predictions and the criteria
+
+**From the measured figures:**
+- **f3x3** ran at 1.227× p4 with the MTF timed (1.050 / 0.856 against r3x3; §15.4's run): 133 ms a round against p4's 164.
+- **Fusion** saved 8.9 ms a worker a round at 3x3 and 11.8 at 4x2 (§16.4).
+- **Making the checkpoints** costs about 0.9 ms a worker a round (§15.4).
+
+| comparison | predicted, paired MB/s | what it measures |
+|---|--:|--|
+| y3x3 against f3x3 | 1.05–1.09 | the fusion, with the MTF stage in the round |
+| y4x2 against f4x2 | 1.05–1.10 | the same at two threads a block |
+| y3x3 against x3x3 | 0.98–1.00 | the checkpoints' cost with the fused build |
+| y4x2 against x4x2 | 0.98–1.00 | the same at 4x2 |
+| **y3x3 against p4** | **1.27–1.36** | the cooperative inversion as the decoder would run it |
+| **y4x2 against p4** | **1.28–1.40** | the same; less certain, f4x2 has not run before |
+
+**What the result decides** (for the integration's PRs 1–7), on the better y arm against p4, its paired MB/s's 95% lower bound:
+- **≥ 1.20:** proceed with PRs 1–7 as planned. The plan's model takes about 0.05–0.10 off this figure for the decoder's serial parts, which leaves the 1.15 headline in reach.
+- **1.10–1.20:** proceed, but the headline is unlikely from the first integration. Bring the batched team (the plan's PR 9) forward as the lever for the serial MTF stage.
+- **below 1.10:** pause before the pool (PR 2) and report, with the figures, for a decision on whether a smaller gain is worth the integration.
+
+**Controls:**
+- the walk within ±3% of its twin in every y pair;
+- no round misplaced.
+
+Either failing makes the run inconclusive, not negative.
+
+### 17.3 The commands (the i9, with the browser and other busy programs closed)
+
+```
+git fetch origin research/coop-fused
+git checkout --detach origin/research/coop-fused
+just bench-coop-made
+```
+
+It takes about five minutes. Upload `coop-made-*.md`, its `.jsonl`, and `coop-ab-*.md`.
+
+### 17.4 The result (measured, the i9, bc94272, 2026-10-29): a pass, above the predicted range against p4
+
+The run was `coop-made-20261029T163333Z` (with `coop-ab-20261029T163409Z`; the files are beside this journal). It ran 20 rounds, every thread pinned and none misplaced, at load 1.14.
+
+**The checks first, all passed:**
+- `mtf_check`: 2,207 runs of each kernel over 431 blocks and 10 edge cases at levels 1 and 9. 758 were refused exactly as production refuses them.
+- `fused_check`: 838,826,228 words at k = 1–4.
+- In the grid's untimed round, every arm's output equalled production's by hash, and every y block's made checkpoints equalled the free ones.
+
+**The MTF stage alone, one core:** `mtf_cp2p` ran at 0.9776 ±0.0027 of production's (§15.4: 0.9743).
+
+**The registered comparisons:**
+
+| comparison | paired MB/s, mean ±95% (min–max) | rounds won | changed phase | walk (control) | predicted |
+|---|--:|--:|--:|--:|--:|
+| y3x3 against f3x3 | 1.074 ±0.016 (1.017–1.162) | 20/20 | build 1.263 ±0.035 | 1.016 ±0.017 | 1.05–1.09 |
+| y4x2 against f4x2 | 1.099 ±0.020 (1.004–1.166) | 20/20 | build 1.410 ±0.030 | 1.000 ±0.023 | 1.05–1.10 |
+| y3x3 against x3x3 | 0.991 ±0.007 (0.960–1.018) | 6/20 | MTF 0.975 ±0.006 | 1.000 ±0.010 | 0.98–1.00 |
+| y4x2 against x4x2 | 0.991 ±0.018 (0.909–1.076) | 6/20 | MTF 0.972 ±0.011 | 1.000 ±0.022 | 0.98–1.00 |
+| **y3x3 against p4** | **1.375 ±0.022** (1.279–1.486) | | | | 1.27–1.36 |
+| **y4x2 against p4** | **1.439 ±0.020** (1.353–1.503) | | | | 1.28–1.40 |
+
+The fusion and checkpoint pairs landed inside their predictions. Both y arms against p4 came in above them. p4 ran at 1206 MB/s here, against 1282 in §15.4's run. The ratios are paired, so a slower p4 round lowers both sides of a pair, but it does widen the gap between runs.
+
+**A worker's milliseconds a round** (medians), and a CPU model (ours: the helpers are counted busy for the build and the walk, and parked through the MTF stage; spinning is not counted):
+
+| arm | MTF | build | walk | wall | core-ms a round | against p4 | MTF share |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| p4 | 26.0 | 39.6 | 107.7 | 174.1 | 693 | 1 | 0.15 |
+| f3x3 | 34.4 | 41.7 | 58.8 | 135.5 | 1,007 | 1.45 | 0.25 |
+| y3x3 | 34.7 | 33.1 | 58.2 | 126.9 | 926 | 1.34 | 0.28 |
+| f4x2 | 26.9 | 42.5 | 63.5 | 133.7 | 956 | 1.38 | 0.20 |
+| y4x2 | 27.0 | 30.2 | 63.8 | 121.8 | 860 | 1.24 | 0.22 |
+
+**Against §17.2's decision:** the better y arm, y4x2, has a lower bound of 1.419 against p4, and y3x3 has 1.353. Both clear the 1.20 line. **The integration proceeds with PRs 1–7.** The controls held: every walk was within ±3% of its twin, and no round was misplaced.
+
+**What it shows:**
+- **The 1.643× of §16.4 did not depend on free checkpoints.** Made by the MTF stage and timed, they cost 0.9% of the round (y against x: 0.991), within the predicted 0.98–1.00.
+- **4x2 leads 3x3 in all three ways measured:**
+  - faster: 1.439 against 1.375;
+  - on fewer cores: 8 against 9;
+  - better balanced: its busiest walking thread does 1.34× the mean, against 1.60–1.63× at 3x3.
+
+  By the CPU model it is also cheaper, 1.24× p4's core-ms against 1.34×, because its serial MTF share is smaller (0.22 against 0.28).
+- **The serial MTF stage is the next lever.** It is 22–28% of a team's round, run on one core while the team's others wait. That is the plan's batched team (PR 9).
+
+**What it does not show:**
+- It is not the decoder. The scanner, RLE1, the CRC and the segments' joining are outside the grid, and every thread is pinned.
+- The CPU figures are a model, not a measurement.
+
+The decoder A/B (the plan's PR 7, unpinned as users run it, peak RSS and CPU-seconds measured) is the gate for any claim about decompression. Both 4x2 and 3x3 stay arms through it.
