@@ -655,7 +655,8 @@ def main():
                 for t in r["timed"]
             ]
             m = median(mbs)
-            ref = TYPICAL.get(arm)
+            # the confirmed medians are the bench corpus's: another corpus has none here
+            ref = TYPICAL.get(arm) if a.file == CORPUS else None
             w(f"| {arm} | {fmt(m)} | {ref or ''} | {fmt(m / ref) if ref else ''} |")
         w()
         w(

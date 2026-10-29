@@ -406,9 +406,10 @@ fast. That would point at something per block other than table bytes.
 
 ## Footprint, measured (the i9, 0eeeab4, 2026-10-29): smaller tables move the knee
 
-**The run:** `just bench-libsais-knee-footprint`, from the console (relayed). The two grid
-reports (`coop-20261029T203034Z`, `coop-20261029T203114Z`) and the two counter reports
-(`coop-counters-20261029T203142Z`, `-203650Z`) are to be uploaded with their .jsonl.
+**The run:** `just bench-libsais-knee-footprint`. Its files are beside this journal: the two
+grid reports (`coop-20261029T203034Z`, bzip2 -9; `coop-20261029T203114Z`, bzip2 -3), the two
+counter reports (`coop-counters-20261029T203142Z`, -9; `-203650Z`, -3), their .jsonl, and
+the console (`knee-footprint-console.log`, with the `coop sizes` reports).
 - Every block of every arm matched the room walk's output, and no thread was misplaced.
 - The memory probe (`bench/dram.py`) crashed on reading its own output, a parsing bug in
   the script, since fixed. perf exited cleanly, so its control handshake worked. It is
@@ -463,8 +464,9 @@ reports (`coop-20261029T203034Z`, `coop-20261029T203114Z`) and the two counter r
    - **So small blocks knee at fewer table bytes than full ones.** Something besides the
      table also scales with the number of live blocks: each block's L, its walk's output
      buffers, its segment bookkeeping, and the extra cores' own traffic.
-   - **Table bytes are the dominant control, not the only one.** The counters (to be
-     uploaded) show how the L3 hit share and DRAM bytes per byte move with N at each size.
+   - **Table bytes are the dominant control, not the only one.** The counters (§3 below)
+     place the extra cost: not in the cache's hit share, which follows table bytes, but in
+     what each request costs when 10 cores share the uncore.
 4. **libsais at bzip2 -3** stays at or ahead of mibz2 from 4 blocks on, and keeps rising
    where mibz2 turns. That fits its lower traffic per byte.
 
@@ -481,3 +483,117 @@ reports (`coop-20261029T203034Z`, `coop-20261029T203114Z`) and the two counter r
     files (bzip2 -1 to -6) the knee is at more blocks, so the policy leaves cores idle there.
   - The stream header's level gives the block size before any block is decoded.
   - This needs its own decoder A/B before any change ships.
+
+### 3. The counters, -9 against -3 (measured; 2 repeats, 20 rounds a run, none multiplexed)
+
+**The counted runs are the grid's runs.** Each counted run is within 1.2% of its own
+corpus's grid median: -9 p4 1462 against 1479, p10 566 against 570; -3 p8 3257 against
+3279, p10 3097 against 3077. The report's "confirmed" column compared the -3 runs with
+the bench corpus's medians, so its ratios (1.2–5.6) are meaningless for -3.
+`coop_counters.py` now leaves that column blank for any other corpus.
+
+**The pre-registered counter reading, met:** at bzip2 -3 the L3 hit share holds at 0.94 or
+more through 10 blocks, and DRAM bytes per output byte stay below bzip2 -9's at 4 blocks.
+
+Every counted cell, ordered by live table bytes (blocks × the time-weighted table). The
+first five figures are from the counter reports. DRAM GB/s and the per-block figures are
+derived: counted MB/s × DRAM bytes per byte, and machine-wide figures ÷ blocks.
+
+| live tables | corpus, arm | L3 hit share | DRAM B / output B (read + write) | DRAM GB/s | cycles a read past L2 waits | MB/s a block | reads in flight a block |
+|--:|---|--:|--:|--:|--:|--:|--:|
+| 2.4 MB | -3 p2 | 0.987 | 1.35 | 1.5 | 50.8 | 541 | 6.7 |
+| 4.8 MB | -3 p4 | 0.983 | 1.77 | 3.3 | 57.9 | 458 | 6.8 |
+| 7.2 MB | -9 p2 | 0.979 | 2.54 | 2.7 | 52.2 | 534 | 7.3 |
+| 7.2 MB | -3 p6 | 0.975 | 2.77 | 7.2 | 58.6 | 434 | 6.7 |
+| 9.6 MB | -3 p8 | 0.961 | 4.45 | 14.5 | 63.8 | 407 | 6.8 |
+| 12.0 MB | -3 p10 | 0.940 | 6.84 | 21.2 | 82.2 | 310 | 6.5 |
+| 14.4 MB | -9 p4 | 0.929 | 9.74 | 14.2 | 66.6 | 366 | 6.9 |
+| 21.6 MB | -9 p6 | 0.794 | 25.6 | 28.1 | 135.5 | 183 | 7.0 |
+| 28.8 MB | -9 p8 | 0.640 | 40.9 | 28.8 | 357.1 | 88 | 8.7 |
+| 36.0 MB | -9 p10 | 0.539 | 50.5 | 28.6 | 623.8 | 57 | 9.4 |
+| 4.8 MB | -3 s4x1 (libsais) | 0.982 | 1.30 | 2.4 | 51.9 | 460 | 3.8 |
+| 9.6 MB | -3 s8x1 (libsais) | 0.954 | 3.86 | 13.1 | 56.9 | 425 | 3.9 |
+| 14.4 MB | -9 s4x1 (libsais) | 0.900 | 9.69 | 15.4 | 68.5 | 398 | 4.7 |
+| 28.8 MB | -9 s8x1 (libsais) | 0.625 | 29.5 | 29.3 | 332.7 | 124 | 6.8 |
+
+**Readings (measured unless marked):**
+1. **The kernel asks the cache for the same thing at both sizes.** Data reads past L2 per
+   output byte are 1.25–1.29 at -3 and 1.30–1.40 at -9 (mibz2); 0.79 and 0.80–0.85
+   (libsais). One block alone runs at the same speed at both sizes (p1: 539 and 542 MB/s).
+   What the intervention changed is where those reads are served, not how many there are.
+2. **The hit share follows live table bytes, across both corpora.** At the one table size
+   both corpora reach, 7.2 MB (-9 at 2 blocks, -3 at 6), the hit shares are 0.979 and
+   0.975. The -3 points (9.6 and 12 MB) fall between -9's 7.2 and 14.4 MB points. That is
+   consistent with a single curve in live table bytes, from one exact overlap. It is not
+   proof: one point can't exclude a small offset from the blocks' other data.
+3. **-3 never reaches the bandwidth plateau.** Its DRAM traffic peaks at 21 GB/s, at 10
+   blocks. -9 sits at 28–29 GB/s from 6 blocks on, and so does libsais at 8. Whether 29 is
+   the machine's ceiling is the probe's question (to be rerun).
+4. **An accounting identity, not a model.** Per thread, MB/s = reads in flight ÷ cycles a
+   read waits ÷ reads per byte × clock. The counters satisfy it by construction (wait =
+   occupancy ÷ requests). It is still a useful split. Reads in flight a block are a kernel
+   constant (6.5–7 for mibz2 up to 6 blocks, about 4 for libsais), and reads per byte barely
+   move. **So the knee is the wait:** -9's waits go 52 → 67 → 136 → 357 → 624 cycles, and
+   -3's go 51 → 58 → 59 → 64 → 82. It also explains the libsais lead at -9, 8 blocks (1.41×
+   per block): libsais keeps fewer reads in flight but makes 0.60× the reads per byte.
+5. **-3's turn from 8 to 10 blocks is mostly the build, and comes with a 29% longer wait at
+   a hit share still at 0.94** (paired, 10 rounds, 95%):
+
+   | -3, p10 against p8 | speed ratio |
+   |---|--:|
+   | build + walk | 0.948 (0.937–0.959) |
+   | build | 0.891 (0.877–0.905) |
+   | walk | 0.978 (0.968–0.989) |
+   | libsais s10x1 against s8x1 | 1.060 (1.049–1.070) |
+
+   - **DRAM traffic:** writes per byte almost double from 8 to 10 blocks (1.16 → 2.17), and
+     reads rise 1.42× (3.29 → 4.67).
+   - **Compared with -9 at 4 blocks:** -3 at 10 blocks has a slightly higher hit share
+     (0.940 against 0.929) but waits longer (82 against 67 cycles), at 21 against 14 GB/s.
+   - **Hypothesis, not established:** the cost of a request grows with the number of
+     cores loading the shared L3, ring and memory queues, apart from the hit share. That
+     would explain why -3 turns at fewer table bytes (9.6–12 MB) than -9 (14.4–18 MB).
+   - **Also a hypothesis:** the build's scattered stores into the table (write-allocate,
+     then write-back once the lines are evicted) are the first to suffer. That fits the
+     doubled DRAM writes and the build taking most of the loss.
+   - **Not measured here:** these counters cover build + walk together.
+6. **libsais at -3 is still rising at 10 blocks** (s10x1/s8x1 1.060). Its hit share at 8
+   blocks (0.954) is close to mibz2's (0.961). It waits less (57 against 64 cycles) and
+   makes fewer reads per byte. There is no build phase to suffer.
+
+**What this changes in the readings above:**
+- **Reading 3 of §2 is narrowed.** "Something besides the table also scales with the number
+  of live blocks" was placed in the blocks' other data. The counters don't show that: the
+  hit share tracks table bytes across both sizes. The extra cost at -3, 10 blocks shows up
+  instead in each request's wait at nearly the same hit share. That is a property of the
+  number of cores, not of the bytes a block holds (hypothesis 5).
+- **The causal claim stands, qualified as before.** Changing the bzip2 level changes the
+  block's L, its MTF output and its block count (700 against 234) as well as its table.
+  The counters remove the most direct alternative: the kernel's demand per byte is
+  unchanged, and the hit share moves with table bytes.
+- **For compact Ψ:**
+  - A smaller table at a fixed block size should move the hit-share curve the way these
+    corpora did, if reading 2's single curve holds.
+  - Its payoff is capped by reading 5: past about 8 cores the wait rises at a high hit
+    share.
+  - Compact Ψ also adds decode work per read. Reading 4's identity says that is paid
+    only if it raises reads per byte, or lowers the reads in flight a thread keeps.
+
+### 4. The next experiment this indicates (proposed; to be pre-registered before it runs)
+
+**Iso-footprint lines** separate table bytes from the number of blocks. bzip2's levels give
+tables of 0.4 MB a level step (level n: n × 100 K rows, 4 bytes a row). The same live table
+bytes are reachable at several N:
+- **7.2 MB:** -9 at 2 blocks, -6 at 3, -3 at 6, -2 at 9;
+- **14.4 MB:** -9 at 4, -6 at 6, -4 at 9.
+
+**What each outcome would mean:**
+- **If the hit share and the wait are flat along each line:** table bytes alone set the
+  knee, and compact Ψ's ceiling can be read off the level sweep. A 20-bit Ψ for 900 K-row
+  blocks is 2.25 MB, close to -6's 2.4.
+- **If the wait rises with N along a line at a constant hit share:** hypothesis 5 holds,
+  and the cores' own load is a second limit that no table shrinkage removes.
+
+**Also wanted:** a fixed-N cut across levels 2–9 (N = 8 and 10) gives throughput against
+table bytes at a constant number of cores. That is compact Ψ's predicted ceiling, before
+its decode cost.
