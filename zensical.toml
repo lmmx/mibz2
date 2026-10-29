@@ -200,8 +200,8 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
   { "getting-started/quickstart.md" = "Decode a .bz2 file with mibz2 from Python and from Rust." },
 ]
 "Optional" = [
-  { "blog/index.md" = "The research blog: plain-language write-ups of what mibz2's experiments are finding." },
-  { "blog/2026-10-29-compact-navigation-tables.md" = "A plain-language account of the succinct-data-structures review: how compactly the inverse BWT's navigation table can be stored, and what remains to be measured." },
+  { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-10-29-compact-navigation-tables.md" = "Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next." },
   { "background/history.md" = "Where mibz2 came from: written in wikidata-pq to decode the Wikidata dump, then moved to a repository of its own." },
   { "background/status.md" = "Where mibz2's research stands: the cooperative inverse BWT found, confirmed and explained on a 10-core workstation, and what comes next." },
   { "background/journals.md" = "mibz2's development journals: where they are and what each one records." },
