@@ -1077,6 +1077,32 @@ mod tests {
         }
     }
 
+    /// `bwt::Cooperative` on a block past `MIN_COOP` really runs the team (its pool spawned,
+    /// no fallback), and gives `walk`'s output; below it, the one-core kernel
+    #[test]
+    fn cooperative_kernel_engages() {
+        use crate::bwt::InverseBwt;
+        let mut r = xorshift(3);
+        let big: Vec<u8> = (0..crate::bwt::MIN_COOP + 12_345)
+            .map(|_| (r() % 9) as u8)
+            .collect();
+        let small = &big[..crate::bwt::MIN_COOP - 1];
+        for ll in [&big[..], small] {
+            let counts = counts_of(ll);
+            let cps = checkpoints_of(ll, crate::mtf::CHECKPOINT);
+            let mut tt = TVector::new();
+            crate::bwt::build(ll, &counts, &mut tt);
+            let mut want = Vec::new();
+            crate::bwt::walk(&tt, 17, &mut want);
+            let mut c = crate::bwt::Cooperative::<3>::default();
+            assert!(c.wants_checkpoints());
+            let mut out = Vec::new();
+            c.invert_checkpointed(ll, &counts, &cps, 17, &mut out);
+            assert!(out == want);
+            assert_eq!(c.engaged(), ll.len() >= crate::bwt::MIN_COOP);
+        }
+    }
+
     /// Pools kept by several threads at once, as the decoder's workers would keep them
     #[test]
     fn pool_per_worker() {

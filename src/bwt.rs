@@ -23,6 +23,25 @@
 pub trait InverseBwt: Default + Send {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>);
 
+    /// Whether this kernel reads the MTF stage's count checkpoints (`mtf::mtf_checkpoints`,
+    /// `mtf::CHECKPOINT` rows apart); if so the decoder calls `invert_checkpointed`
+    fn wants_checkpoints(&self) -> bool {
+        false
+    }
+
+    /// `invert`, given `checkpoints[i]`, the counts of `ll[..i * mtf::CHECKPOINT]`
+    fn invert_checkpointed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        checkpoints: &[[u32; 256]],
+        orig_ptr: u32,
+        out: &mut Vec<u8>,
+    ) {
+        let _ = checkpoints;
+        self.invert(ll, counts, orig_ptr, out)
+    }
+
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs): tests and the `trace`
     /// feature only
     #[cfg(any(test, feature = "trace"))]
@@ -80,6 +99,117 @@ impl InverseBwt for Segmented {
         }
         if s.bitmap.capacity() > 0 {
             v.push(Buffer::of("seg.bitmap", &s.bitmap));
+        }
+        v
+    }
+}
+
+/// The cooperative inverse BWT: a block's table built and walked by K cores that share it
+/// (`coop::build_fused`, then `coop::walk_room`, its threads kept for the kernel's life:
+/// the coop journal, docs/journal/2026-10-28-cooperative-inversion.md). N workers on this
+/// kernel keep N tables live on N × K cores, where production's keep N × K. Exactly
+/// `walk`'s output.
+///
+/// It runs the one-core kernel (`Segmented`) where cooperation can't help or can't run: a
+/// block below `MIN_COOP` rows, a call without checkpoints, or a pool whose threads
+/// couldn't be spawned. If the cooperative build refuses the checkpoints, a bug in their
+/// maker, the block is built on one core instead, so its output is still right (and a
+/// debug build stops at the assertion).
+pub struct Cooperative<const K: usize> {
+    /// None until the first cooperative block; an Err if its threads couldn't be spawned
+    pool: Option<std::io::Result<crate::coop::Pool>>,
+    tt: TVector,
+    seg: SegScratch,
+}
+
+/// The rows below which `Cooperative` runs the one-core kernel: 16 checkpoints, 4 ×
+/// `MIN_SEGMENTED`, the ranges' rounding then at most 1/32 of a range (to be tuned by the
+/// decoder A/B)
+pub const MIN_COOP: usize = 16 * crate::mtf::CHECKPOINT;
+
+impl<const K: usize> Cooperative<K> {
+    /// Whether a block has been inverted on the team (its threads spawned)
+    #[cfg(test)]
+    pub(crate) fn engaged(&self) -> bool {
+        matches!(self.pool, Some(Ok(_)))
+    }
+}
+
+impl<const K: usize> Default for Cooperative<K> {
+    fn default() -> Self {
+        Cooperative {
+            pool: None,
+            tt: TVector::new(),
+            seg: SegScratch::default(),
+        }
+    }
+}
+
+impl<const K: usize> InverseBwt for Cooperative<K> {
+    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
+        build(ll, counts, &mut self.tt);
+        walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+    }
+
+    fn wants_checkpoints(&self) -> bool {
+        K > 1
+    }
+
+    fn invert_checkpointed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        checkpoints: &[[u32; 256]],
+        orig_ptr: u32,
+        out: &mut Vec<u8>,
+    ) {
+        if K < 2 || ll.len() < MIN_COOP {
+            return self.invert(ll, counts, orig_ptr, out);
+        }
+        let pool = match self.pool.get_or_insert_with(|| crate::coop::Pool::new(K)) {
+            Ok(p) => p,
+            Err(_) => return self.invert(ll, counts, orig_ptr, out),
+        };
+        let built = crate::coop::build_fused(
+            ll,
+            counts,
+            checkpoints,
+            crate::mtf::CHECKPOINT,
+            pool,
+            &mut self.tt,
+        );
+        if let Err(e) = built {
+            debug_assert!(
+                false,
+                "the cooperative build refused its checkpoints: {}",
+                e.0
+            );
+            build(ll, counts, &mut self.tt);
+        }
+        crate::coop::walk_room::<FLAGGED_LANES>(
+            &mut self.tt,
+            orig_ptr,
+            &mut self.seg,
+            pool,
+            FLAGGED_SEGMENTS * K,
+        );
+        self.seg.assemble(out);
+    }
+
+    #[cfg(any(test, feature = "trace"))]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        use crate::trace::Buffer;
+        let s = &self.seg;
+        let mut v = vec![Buffer::of("tt", &self.tt.0)];
+        if s.bufs.capacity() > 0 {
+            v.push(Buffer {
+                name: "seg.bufs",
+                len: s.bufs.iter().map(Vec::len).sum(),
+                cap: s.bufs.iter().map(Vec::capacity).sum(),
+            });
+            v.push(Buffer::of("seg.bufs.outer", &s.bufs));
+            v.push(Buffer::of("seg.starts", &s.starts));
+            v.push(Buffer::of("seg.next", &s.next));
         }
         v
     }
