@@ -20,4 +20,5 @@ description: "Where mibz2 came from: written in wikidata-pq to decode the Wikida
   It was published as 0.1.0 and 0.1.1 on crates.io and PyPI, the crate and the Python
   package at one version.
 
-The [journals](journals.md) record each step.
+The [journals](journals.md) record each step, and [Status](status.md) says where the
+research stands now.
