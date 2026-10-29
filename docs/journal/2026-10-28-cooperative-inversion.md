@@ -1251,3 +1251,48 @@ arm.
   - Not its exact request totals.
   - Not the p8 and s3x3 misses × 64 B, which run 6–7% above the controller's bytes (still
     open).
+
+### 10.7 The three checks (measured, `coop-counters-20261029T101634Z`, 9d17560): one passes, two fail
+
+These are the three passes of §10.6, on all 7 arms with 3 repeats: 126 runs. Every run was
+counted 100% of the time, and none failed. While counted, the arms ran at 0.88–0.95 of their
+confirmed MB/s, below §10.5's 0.90–1.00. The browser was in use during the run. That doesn't
+touch the checks, which are ratios of counts taken in the same pass, but it rules this run
+out for any throughput figure.
+
+| check | criterion, fixed in §10.6 | measured | verdict |
+|---|---|---|---|
+| 1. The encoding scheme: raw 0x3F803C0001 against perf's `offcore_response.demand_data_rd.l3_hit.any_snoop` | within 1% in every arm | 1.000 in every arm | **pass** |
+| 2. The excess: the raw pair without bit 7 (0x411) against `offcore_requests.all_data_rd` | 0.9–1.1 in every arm | 1.219 (p8) to 1.365 (s3x3) | **fail** |
+| 3. Bit 7 alone (PF_L3_DATA_RD), per byte | most of the 0.45–0.55 gap | 0.004 (p8) to 0.036 (4x1) | **fail** |
+
+- **The hypothesis of §10.6 is refuted.** The L2 streamer's prefetches into L3 are 1–7% of
+  the gap, and without them the raw pair is still 22–37% above
+  `offcore_requests.all_data_rd`.
+- **What check 1 establishes:** the raw scheme (request bits, supplier bits, snoop bits)
+  encodes this core's offcore-response events as perf's own table does. So the raw pair
+  counts what its bits say it counts. The open question is what
+  `offcore_requests.all_data_rd` leaves out.
+- **What remains, untested:**
+  - Bit 10 (PF_L1D_AND_SW) is the L1D prefetcher's and the software prefetches' reads.
+    Every walk issues a `prefetcht0` a step, and libsais more.
+  - Bit 4 is the L2 prefetcher's reads. The PMU says `offcore_requests.all_data_rd` includes
+    it.
+  - Whether the two events count at the same point in the request's life (the super queue's
+    allocation against the response) is not documented for this core.
+  - A per-bit split (0x001, 0x010 and 0x400 alone) would test the first two. It is not run
+    now: no decision waits on it (below).
+  - Comet Lake's PMU tables and specification update are where a definitive answer would
+    be. This run drew on Skylake-client's.
+- **What stands, and with what label:**
+  - §10.5's arm-to-arm directions stand. The architectural LLC pair, independent of the
+    offcore encoding, ranks the arms identically (§10.5, step 2).
+  - The mechanism's reading (residency at a fixed core count, overlap at a fixed footprint,
+    both in 3x3) rests on those directions and on §10.4's in-flight counts. It doesn't rest
+    on the raw totals.
+  - The raw hit shares (3x3's 0.967, p8's 0.657) are the raw pair's own figures, which check
+    1 validates as an encoding. They are **not reconciled** with the request totals of
+    `offcore_requests`. They are quoted with that label from here on, not as a measured
+    L3 hit rate of every data read.
+- **No further counter runs for now.** The #77 experiment (§12) is measured by throughput
+  and instructions retired, neither of which depends on this question.
