@@ -104,6 +104,18 @@ bench-level-policy rounds="20":
     test -s corpora/wikidata-bz6.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -6 > corpora/wikidata-bz6.bz2)
     for f in corpora/wikidata-bz3.bz2 corpora/wikidata-bz6.bz2 corpora/wikidata.bz2; do python3 bench/coop_decoder.py --file $f --rounds {{rounds}} --arms mibz2-workers,mibz2-coop2,mibz2-auto --no-small --note "level policy: $f"; done
 
+# The level policy's held-out sweep (docs/journal/2026-10-29-level-policy.md, "The held-out
+# sweep", pre-registered): the same A/B on the bench corpus recompressed at levels 1, 2, 4
+# and 5, then 3 again as the control, none of them seen when the candidate rule was fixed.
+# No policy is changed. Needs bzip2; about 20 minutes. Upload each coop-decoder-*.md, .json
+# and .jsonl, and the console.
+#   just bench-level-holdout 2>&1 | tee level-holdout-console.log
+bench-level-holdout rounds="20":
+    bash bench/corpus.sh
+    cargo build --release --example ab
+    for l in 1 2 4 5 3; do test -s corpora/wikidata-bz$l.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -$l > corpora/wikidata-bz$l.bz2); done
+    for l in 1 2 4 5 3; do python3 bench/coop_decoder.py --file corpora/wikidata-bz$l.bz2 --rounds {{rounds}} --arms mibz2-workers,mibz2-coop2,mibz2-auto --no-small --note "level policy, held out: -$l"; done
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10

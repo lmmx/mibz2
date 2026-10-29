@@ -127,3 +127,63 @@ In MB/s (medians):
   with -3 repeated.
 - **The reach is narrow.** bzip2, lbzip2 and pbzip2 all default to -9, as Wikimedia's dumps
   are. The gain applies to files written at low levels on purpose.
+
+## The held-out sweep (pre-registered, before any run)
+
+**The run:** `just bench-level-holdout`.
+- **Corpora:** the bench content recompressed by bzip2 at -1, -2, -4 and -5, none of them
+  seen when the rule below was fixed, then -3 again as the control.
+- **Arms:** the same as above, `mibz2-workers`, `mibz2-coop2` and `mibz2-auto` at 4, 6, 8, 10
+  and 20 threads.
+- **Rounds:** 20, unpinned.
+- **No policy is changed by this run.**
+
+**The candidate rule, fixed now from the -3, -6 and native runs:**
+- **R1:** at level ≤ 3, plan teams of 2 on all physical cores (5 teams on the i9).
+- Otherwise, today's policy.
+- On the i9, R1 is the `mibz2-coop2` arm at 10 threads, at levels 1–3.
+
+**The gate, per level, as before:** `mibz2-coop2`@10 against `mibz2-auto`@20, paired by round:
+- a geometric mean ≥ 1.05, with its 95% lower bound > 1.00;
+- peak RSS ≤ 1.15× (kept as registered, not relaxed);
+- CPU-seconds ≤ 1.5×;
+- one output hash.
+
+**How R1 is read:**
+- **R1 holds out of sample** if the gate is met at -1, -2 and -3 (repeated).
+- **It is rejected** if the gate fails at any of the three.
+- **At -4 and -5, R1 changes nothing,** so those rows only locate the boundary.
+  - If `coop2`@10 meets the gate there too, R1 is conservative, and the gain extends
+    higher.
+  - A wider rule would then need its own held-out test, and only -7 and -8 remain unseen.
+- **The worker arms are reported against the same gate,** RSS budget included.
+
+**A mechanism to keep in view (from the code, before the run).**
+- The cooperative kernel runs blocks below `MIN_COOP` rows (16 checkpoints × 16 K =
+  262,144) on one core (`bwt::Cooperative::invert_checkpointed`). Its helper threads are
+  spawned only at its first cooperative block.
+- Levels 1 and 2 have blocks of about 100 K and 200 K rows, all below it. So at -1 and -2:
+  - `Teams { t, 2 }` runs t one-core workers, and no helper ever runs;
+  - **today's default there is 4 one-core workers on a 10-core machine;**
+  - `coop2`@10 is 5.
+- So R1 at levels 1–2 tests five workers against four, not cooperation. -3, at 300 K rows,
+  is the lowest level that cooperates.
+
+**Predictions (fixed now):**
+- **-1 and -2:**
+  - `coop2`@10 beats the default by about the core ratio's share of the gain, 1.1–1.25, at
+    RSS near 1.1×. R1 is likely to meet the gate there, but because it runs a fifth worker.
+  - `mibz2-workers` at 6–10 is likely faster still, its RSS likely above the budget.
+- **-3:** `coop2`@10 against the default repeats today's 1.092 within its interval
+  (1.058–1.128).
+- **-4 and -5** (real teams, 1.6 and 2.0 MB tables): between -3's 1.092 and -6's 1.006.
+  There is no sharper prediction.
+
+**What it decides:**
+- **If R1 holds,** a policy PR implementing it, with its own A/B (the native corpus and the
+  4-core pass unchanged), is the next step.
+- **If the worker arms win widely but only over the RSS budget,** the trade-off is put to
+  you explicitly, with the figures. It isn't decided here.
+- **At -1 and -2, the default leaving 6 of 10 cores idle** is a finding in its own right,
+  whatever R1's verdict. The policy plans helpers that the kernel never uses at those block
+  sizes.
