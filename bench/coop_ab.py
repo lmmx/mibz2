@@ -60,6 +60,11 @@ PREDICTED_WITH_MTF = {
     ("f3x3", "n3x3"): (1.01, 1.03),
     ("f3x3", "q3x3"): (0.99, 1.01),
     ("f4x1", "r4x1"): (0.98, 1.02),
+    # the integration's PR 0 (§17.2): the fused build with made checkpoints, MTF timed
+    ("y3x3", "f3x3"): (1.05, 1.09),
+    ("y4x2", "f4x2"): (1.05, 1.10),
+    ("y3x3", "x3x3"): (0.98, 1.00),
+    ("y4x2", "x4x2"): (0.98, 1.00),
 }
 # an arm kind: [(its twin's prefix, the phase it changes, its control, what it is)]
 CHANGES = {
@@ -79,6 +84,10 @@ CHANGES = {
         ("n", "mtf", "walk", "the spill fix, pinned: `mtf_cp2p` against `mtf_cp`, the same build"),
         ("q", "mtf", "walk", "the fix's checkpoint cost: `mtf_cp2p` against free checkpoints"),
         ("m", "mtf", "walk", "the store order alone: `mtf_cp2p` against `mtf_cp2`"),
+    ],
+    "y": [
+        ("f", "build", "walk", "PR 0: the fused build, its checkpoints made by `mtf_cp2p`"),
+        ("x", "mtf", "walk", "PR 0: the fused build's checkpoints made, not free"),
     ],
 }
 

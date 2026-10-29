@@ -24,7 +24,11 @@
 //!                                          n arm, its MTF `mtf_cp2` or `mtf_cp2p`:
 //!                                          #78's spill fix; COOP_WITH_MTF=1 only),
 //!                                          xNxK (the q arm, its build in one pass, the
-//!                                          scatter taking L's byte from L: #81);
+//!                                          scatter taking L's byte from L: #81), yNxK
+//!                                          (the f arm with x's build: the checkpoints
+//!                                          made by `mtf_cp2p`, then the fused build, the
+//!                                          cooperative decoder's inversion as it would
+//!                                          run; COOP_WITH_MTF=1 only);
 //!                                          @S sets
 //!                                          a cooperative arm's segments a block (4x1@1024:
 //!                                          one core a block, with 4x2's segments)
@@ -1636,9 +1640,9 @@ impl Inv {
         let coop = || {
             Box::new(Coop {
                 segments,
-                room: matches!(kind, 'r' | 'q' | 'n' | 'm' | 'f' | 'x'),
-                given: matches!(kind, 'q' | 'n' | 'm' | 'f' | 'x'),
-                fused: kind == 'x',
+                room: matches!(kind, 'r' | 'q' | 'n' | 'm' | 'f' | 'x' | 'y'),
+                given: matches!(kind, 'q' | 'n' | 'm' | 'f' | 'x' | 'y'),
+                fused: matches!(kind, 'x' | 'y'),
                 ..Default::default()
             })
         };
@@ -1913,6 +1917,7 @@ fn parse_arm(s: &str) -> Arm {
         b'm' => ('m', &s[1..]),
         b'f' => ('f', &s[1..]),
         b'x' => ('x', &s[1..]),
+        b'y' => ('y', &s[1..]),
         _ => ('c', s),
     };
     let (rest, segments) = match rest.split_once('@') {
@@ -1946,7 +1951,7 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
     drop(inv);
     let bytes: usize = bs.iter().map(|b| b.ll.len()).sum();
     let arms: Vec<Arm> = specs.iter().map(|s| parse_arm(s)).collect();
-    if arms.iter().any(|a| a.kind == 'x') {
+    if arms.iter().any(|a| matches!(a.kind, 'x' | 'y')) {
         fused_check(bs);
     }
     assert!(
@@ -1954,17 +1959,21 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
         "s arms need --cfg libsais"
     );
     assert!(
-        with_mtf || arms.iter().all(|a| !matches!(a.kind, 'n' | 'm' | 'f')),
-        "n, m and f arms need COOP_WITH_MTF=1"
+        with_mtf
+            || arms
+                .iter()
+                .all(|a| !matches!(a.kind, 'n' | 'm' | 'f' | 'y')),
+        "n, m, f and y arms need COOP_WITH_MTF=1"
     );
     assert!(
         !with_mtf || arms.iter().all(|a| a.kind != 's'),
         "s arms (libsais) don't take symbols: not with COOP_WITH_MTF=1"
     );
     assert!(
-        arms.iter().all(|a| !matches!(a.kind, 'n' | 'm' | 'f'))
+        arms.iter()
+            .all(|a| !matches!(a.kind, 'n' | 'm' | 'f' | 'y'))
             || std::arch::is_x86_feature_detected!("avx2"),
-        "n, m and f arms' MTF kernels are AVX2"
+        "n, m, f and y arms' MTF kernels are AVX2"
     );
     if let Some(c) = cpus {
         for (a, s) in arms.iter().zip(specs) {
@@ -2062,7 +2071,7 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
                                             )
                                         }
                                         .unwrap();
-                                    } else if matches!(kind, 'm' | 'f') {
+                                    } else if matches!(kind, 'm' | 'f' | 'y') {
                                         // SAFETY: mtf_cp2 needs AVX2, asserted at the start
                                         let (ll, c, cps) =
                                             (&mut mine.ll, &mut mine.counts, &mut mine.checkpoints);
@@ -2082,14 +2091,14 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
                                     tm += s.elapsed().as_secs_f64();
                                     if check {
                                         assert!(
-                                            !matches!(kind, 'n' | 'm' | 'f')
+                                            !matches!(kind, 'n' | 'm' | 'f' | 'y')
                                                 || mine.checkpoints == bs[i].checkpoints,
                                             "block {i}: {kind}'s MTF checkpoints differ"
                                         );
                                     }
                                     // a q arm's checkpoints are still the free ones (its bound
-                                    // with the MTF stage in the timing); an n, m or f arm's are its own
-                                    let cps = if matches!(kind, 'n' | 'm' | 'f') {
+                                    // with the MTF stage in the timing); an n, m, f or y arm's are its own
+                                    let cps = if matches!(kind, 'n' | 'm' | 'f' | 'y') {
                                         &mine.checkpoints
                                     } else {
                                         &bs[i].checkpoints

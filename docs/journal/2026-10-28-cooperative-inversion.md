@@ -2265,3 +2265,67 @@ The first attempt stopped before any round. `bench/coop.sh`'s fit check did not 
 
   It would be measured end to end on the i9: a `.bz2` file to verified output, CRCs checked, against production at the same core count. That is an integration project, not a further arm of this experiment.
 - **Recorded, not started:** the given build's own overhead, its codegen read against production's `build`, and how the research kernel should size its table (it writes every slot, so it need not zero-fill).
+
+## 17. The integration's PR 0: the fused build with its checkpoints made (pre-registered before it runs)
+
+This is step 0 of the cooperative decoder's integration plan, the one composition not yet measured. §16.4 timed the fused build with its checkpoints free and the MTF stage outside the timing. §15.4 timed the checkpoints made by the MTF stage, but with the given build. The decoder would run both together.
+
+The gates for the decoder itself were approved before this run (the literature study's `10-synthesis-coordinator.md` on master, §5):
+- headline success: ≥ 1.15× the full decoder at p4, 95% lower bound above 1.05;
+- identical output;
+- peak RSS ≤ 1.15× and CPU ≤ 1.5×;
+- smaller reproducible gains reported, not rejected automatically.
+
+This step is not that A/B. It is the grid, with no scanner, RLE1, CRC or joining in it, every thread pinned.
+
+### 17.1 What changes
+
+**The `y` arms:**
+- the MTF stage of the `f` arms: `mtf_cp2p`, making the checkpoints, timed in series;
+- the fused build of the `x` arms (`coop_build_fused`), reading those checkpoints;
+- #77's room walk.
+
+**Checked before any timing:**
+- `fused_check` on every block at k = 1–4;
+- in the grid's untimed round, each block's made checkpoints equal to the free ones, and every arm's output equal to production's by hash.
+
+On the 4-core VM, `y1x2` and `y2x1` passed both (correctness only; the VM's figures say nothing here).
+
+**The arms:** f3x3, x3x3, y3x3, f4x2, x4x2, y4x2 and p4, all with the MTF stage timed (`COOP_WITH_MTF=1`). Under that setting an `x` arm runs production's MTF, with its checkpoints still free.
+
+### 17.2 The predictions and the criteria
+
+**From the measured figures:**
+- **f3x3** ran at 1.227× p4 with the MTF timed (1.050 / 0.856 against r3x3; §15.4's run): 133 ms a round against p4's 164.
+- **Fusion** saved 8.9 ms a worker a round at 3x3 and 11.8 at 4x2 (§16.4).
+- **Making the checkpoints** costs about 0.9 ms a worker a round (§15.4).
+
+| comparison | predicted, paired MB/s | what it measures |
+|---|--:|--|
+| y3x3 against f3x3 | 1.05–1.09 | the fusion, with the MTF stage in the round |
+| y4x2 against f4x2 | 1.05–1.10 | the same at two threads a block |
+| y3x3 against x3x3 | 0.98–1.00 | the checkpoints' cost with the fused build |
+| y4x2 against x4x2 | 0.98–1.00 | the same at 4x2 |
+| **y3x3 against p4** | **1.27–1.36** | the cooperative inversion as the decoder would run it |
+| **y4x2 against p4** | **1.28–1.40** | the same; less certain, f4x2 has not run before |
+
+**What the result decides** (for the integration's PRs 1–7), on the better y arm against p4, its paired MB/s's 95% lower bound:
+- **≥ 1.20:** proceed with PRs 1–7 as planned. The plan's model takes about 0.05–0.10 off this figure for the decoder's serial parts, which leaves the 1.15 headline in reach.
+- **1.10–1.20:** proceed, but the headline is unlikely from the first integration. Bring the batched team (the plan's PR 9) forward as the lever for the serial MTF stage.
+- **below 1.10:** pause before the pool (PR 2) and report, with the figures, for a decision on whether a smaller gain is worth the integration.
+
+**Controls:**
+- the walk within ±3% of its twin in every y pair;
+- no round misplaced.
+
+Either failing makes the run inconclusive, not negative.
+
+### 17.3 The commands (the i9, with the browser and other busy programs closed)
+
+```
+git fetch origin research/coop-fused
+git checkout --detach origin/research/coop-fused
+just bench-coop-made
+```
+
+It takes about five minutes. Upload `coop-made-*.md`, its `.jsonl`, and `coop-ab-*.md`.
