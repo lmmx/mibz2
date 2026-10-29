@@ -318,7 +318,7 @@ After the census, two more texts were relayed to be recorded. Both are kept verb
   - (III) formats without branching;
   - (IV) the next pointer without a second dependent access;
   - (V) behaviour on other input distributions.
-  
+
   New references: Gog, Navarro & Petri, *Improved and Extended Locating Functionality on Compressed Suffix Arrays*; Ottaviano & Venturini's partitioned Elias–Fano; Ferragina & Pucci's generalised Elias–Fano. **Not yet read by the agent.**
 - **`2026-10-29-succinct-review/coordinator-phase-2.md`:** the coordinator, formerly called the guardian.
   - **The roles:** the research chatbot explores; the agent validates against the repository, builds controlled experiments, inspects machine code and records; the coordinator gates; the user decides.
@@ -334,3 +334,86 @@ After the census, two more texts were relayed to be recorded. Both are kept verb
 | (Ψ(j), segment marker(j), F[j]) as the record's required triple | adopted as the definition of a record's function |
 | III–IV (branching, the dependency path) | analysis first, written down before any prototype |
 | a prototype of the hybrid record | held, per the coordinator, until #81's cooperative result is in |
+
+## 13. The atlas, measured: census v2 (untimed, exact; `examples/psi_census.rs`)
+
+The census now classifies four record formats at three group sizes, gives quantiles per full block, measures L's runs, and runs on other inputs (`psi_census --inputs`). Outputs: `psi-census.md` (the bench corpus, superseding §9's table, with v1's figures within 0.2 points) and `psi-census-inputs.md`.
+
+**The record family at 16 bits a row,** with G rows in 2G bytes:
+- a 64-bit header: base 20, byte 8, format 2, and the segment-start mask;
+- a payload of 16G − 64 bits;
+- the formats:
+  - **RUN**: span exactly G − 1, so ψ = base + slot, with no payload;
+  - **FOR-(16 − 64/G)**: 14 bits at G = 32;
+  - **EF-(14 − 64/G)**: 12 low bits and a 2G-bit unary high part;
+  - **exceptions**: a group that crosses a bucket, or whose span is too wide. Its entries are stored whole, 32 bits each, for 16 + 32 bits a row.
+
+**The required triple** (atlas §6): (ψ(j), start(j), F[j]).
+- Ordinary records hold all three: ψ from base and payload, the start bit from the mask, F[j] as the header's byte.
+- Groups that cross a bucket boundary have no single byte, so they're exceptions, and their 32-bit entries carry the byte.
+
+### 13.1 The bench corpus
+
+| full blocks | G | RUN | FOR | EF | crossing | too wide | exceptions | bits a row |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| 233 | 16 | 81.95% | 15.74% | 1.39% | 0.14% | 0.78% | 0.92% | 16.29 |
+| 233 | **32** | **77.39%** | **20.73%** | 1.40% | 0.28% | 0.21% | **0.49%** | **16.16** |
+| 233 | 64 | 72.18% | 25.50% | 1.73% | 0.55% | 0.04% | 0.59% | 16.19 |
+
+**Per full block at G = 32** (min / p10 / median / p90 / max):
+
+| measure | quantiles |
+|---|--:|
+| RUN | 63.7 / 72.2 / 78.0 / 80.9 / 88.0% |
+| RUN or FOR-14 | 97.8 / 98.0 / 98.1 / 98.2 / 98.5% |
+| exceptions | 0.4 / 0.5 / 0.5 / 0.5 / 0.6% |
+| bits a row | 16.14 / 16.14 / 16.15 / 16.17 / 16.19 |
+
+So the fit is not an aggregate artefact: every full block is within 0.05 bits of the mean. G = 32 is the best of the three. Smaller groups catch more runs but cross more boundaries (G = 16 doubles the exceptions); larger groups lose runs.
+
+**L's runs** (= ψ's translation runs, §13.3):
+- there are 15.1 M runs over 209.7 M rows, n/r = 13.8;
+- weighted by rows, they are long: 51% of rows are in runs of at least 1,024, and 19% of rows in runs of 2^11–2^12;
+- the Wikidata BWT is highly run-structured, which is why RUN dominates.
+
+**The F windows:** unchanged from §9.
+
+### 13.2 Other inputs (atlas V; each compressed by libbzip2 at level 9; G = 32)
+
+| input | n/r | RUN | FOR-14 | EF-12 | exceptions | bits a row |
+|---|--:|--:|--:|--:|--:|--:|
+| random bytes, 2.7 MB | 1.0 | 0.00% | 99.11% | 0.00% | 0.89% | 16.29 |
+| a 4-letter alphabet, random, 2.7 MB | 1.4 | 3.44% | 96.42% | 0.09% | 0.04% | 16.01 |
+| English prose (this journal), 0.5 MB | 2.3 | 8.86% | 87.58% | 2.62% | 0.94% | 16.30 |
+| Rust source, 0.4 MB | 3.1 | 22.29% | 74.09% | 2.57% | 1.05% | 16.34 |
+| an ELF binary, 3.0 MB | 3.4 | 34.84% | 54.73% | 8.61% | 1.83% | 16.58 |
+| already compressed (the corpus's bz2 bytes), 2.7 MB | 1.0 | 0.00% | 99.05% | 0.07% | 0.88% | 16.28 |
+| periodic, period 1000, 2.7 MB | 892 | 96.60% | 0.24% | 1.15% | 2.01% | 16.64 |
+
+**What it says:**
+- **The 16-bit fixed record fits every input tested,** at 16.0–16.6 bits a row, with exceptions at 2.0% or less.
+- **The worst case for crossings is reached** by random bytes and compressed data: σ = 256 gives 255 boundaries, 0.89% of rows against the (σ − 1)·G/n bound of 0.91%.
+- **Wide spans** need a byte rarer than about 1 in 4,224 rows (32 occurrences spread over more than 135 k rows). They peak at 1.2% (periodic) and are near zero on random data.
+- **The format mix is workload-specific.** RUN dominates Wikidata (77%) and periodic data (97%). FOR-14 dominates random, compressed and prose (88–99%). EF-12 matters only for the ELF binary (8.6%) and prose (2.6%). **The RUN fast path is Wikidata's; FOR-14 is the general one.**
+
+### 13.3 Two conclusions for the design (agent's reading)
+
+1. **ψ's translation runs are exactly L's runs.** This settles the research chatbot's question I.
+   - In c's bucket, consecutive rows hold c's consecutive occurrences in L.
+   - So ψ(j + 1) = ψ(j) + 1 exactly when those two occurrences are adjacent in L, that is, inside one run of c.
+   - So the number of translation runs is r, the BWT's run count (the r of the r-index literature), and their lengths are L's run lengths.
+   - A fixed group is RUN when it lies inside one run of L.
+2. **With fixed records, RUN costs no less space than FOR-14:** a RUN group is FOR-14 with offsets 0..31. So **one FOR-14 extraction can serve every ordinary group but EF's**, which bears on the atlas's question III. With RUN counted as FOR, that path covers:
+   - 98.1% of the corpus's rows;
+   - 99.1% of random bytes, 99.9% of the 4-letter alphabet, 99.05% of compressed data;
+   - 96.4% of prose and of source, 96.8% of periodic data;
+   - 89.6% of the ELF binary.
+   
+   A separate RUN fast path would skip one payload load and a shift and mask, but adds a format branch. Whether that pays is a codegen and measurement question (atlas IV), which the prototype would decide. So the first prototype should have **one common path** (FOR-14, RUN folded in) plus EF and exceptions, with a RUN fast path as its variant.
+
+**Still open:**
+- the dependency path's cycles, from the line's arrival to the next address (atlas IV);
+- the build's cost;
+- the first-priority reading: Gog, Navarro & Petri on Ψ list encodings.
+
+The prototype stays held until #81's cooperative result is in (§12).
