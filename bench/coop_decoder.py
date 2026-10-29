@@ -32,6 +32,8 @@ user to decide on; the gates are not moved.
 
 `just bench-coop-decoder [--rounds 20] [--threads 4,6,8,10,ALL] [--no-small]` writes
 coop-decoder-<UTC time>.md (the report), .json (its figures) and the raw .jsonl files.
+`--arms mibz2-workers,mibz2 --gate mibz2` reads the same gates on the default decoder as
+users call it (`BzReader::parallel`), the release's own path.
 """
 
 import argparse
@@ -119,6 +121,11 @@ def main():
     ap.add_argument("--rounds", type=int, default=20)
     ap.add_argument("--threads", default="4,6,8,10,ALL")
     ap.add_argument("--arms", default=ARMS)
+    ap.add_argument(
+        "--gate",
+        default="mibz2-auto",
+        help="the arm the gates are read on (mibz2: the default decoder as users call it)",
+    )
     ap.add_argument("--no-small", action="store_true", help="skip the 4-core pass")
     ap.add_argument("--file", default=CORPUS)
     ap.add_argument("--note", default="")
@@ -153,7 +160,7 @@ def main():
                 "run",
                 small_raw,
                 "--arms",
-                f"{REF},mibz2-auto",
+                f"{REF},{a.gate}",
             ]
             sargv += [
                 "--threads",
@@ -179,9 +186,9 @@ def main():
     prod = [r for r in rows if r["arm"] == REF]
     pbest = max(prod, key=lambda r: r["mb_s"]) if prod else None
     rows_best = table(recs, (REF, pbest["threads"])) if pbest else []
-    auto = next((r for r in rows if r["arm"] == "mibz2-auto" and r["threads"] == ncpu), None)
+    auto = next((r for r in rows if r["arm"] == a.gate and r["threads"] == ncpu), None)
     srows = table(small, (REF, 4)) if small else []
-    sauto = next((r for r in srows if r["arm"] == "mibz2-auto"), None)
+    sauto = next((r for r in srows if r["arm"] == a.gate), None)
 
     gates = []
     if auto:
@@ -216,7 +223,7 @@ def main():
     ]
     if a.note:
         lines += [f"- **Note:** {a.note}"]
-    lines += ["", f"## The gates (mibz2-auto at all CPUs against {REF} at 4)", ""]
+    lines += ["", f"## The gates ({a.gate} at all CPUs against {REF} at 4)", ""]
     lines += ["| gate | pass | measured |", "|---|---|--:|"]
     lines += [f"| {g} | {'yes' if ok else '**no**'} | {v} |" for g, ok, v in gates]
     if auto:
@@ -273,6 +280,7 @@ def main():
                 "same_bytes": same,
                 "gates": gates,
                 "passed": passed,
+                "gate": a.gate,
                 "rows_p4": rows,
                 "rows_pbest": rows_best,
                 "small": srows,
