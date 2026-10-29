@@ -382,9 +382,16 @@ lbzip2 -9 corpus within 1.5% throughout):
 
 **What capacity predicts (fixed now):**
 - **bzip2 -9 knees where native and lbzip2 -9 do,** at 4 blocks.
-- **bzip2 -3 knees at about 3× the blocks** (about 12 at 1.2 MB, so beyond these 10
-  cores). Its curve keeps rising, or flattens, through 8–10 blocks.
-- **Its L3 hit share holds near 0.93** until far more blocks than 4.
+- **bzip2 -3's peak shifts substantially to more blocks.** Capacity alone would put it at
+  about 3× (about 12 at 1.2 MB, beyond these 10 cores). It doesn't have to keep scaling
+  through 10 blocks (the coordinator's softening): other shared data and bandwidth can
+  impose another limit. The evidence is the shift, not unlimited scaling.
+- **Its L3 hit share holds near 0.93 well past 4 blocks,** and its DRAM bytes per output
+  byte stay low there.
+- **Occupancy is read two ways:** `coop sizes` reports the time-weighted table a worker
+  holds, and a simulated concurrent occupancy (N workers taking blocks in decode order,
+  each block taking time in proportion to its rows: the live tables' total averaged over
+  time, and its 90th percentile). The two can differ when large blocks cluster.
 
 **Against capacity:** bzip2 -3 also knees at 4–6 blocks, with misses per byte rising as
 fast. That would point at something per block other than table bytes.

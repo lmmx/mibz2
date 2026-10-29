@@ -2350,6 +2350,46 @@ fn sizes_mode(bs: &[Block]) {
         6.0 * tw * 4.0 / 1e6,
         8.0 * tw * 4.0 / 1e6
     );
+    // concurrent occupancy, simulated: N workers take blocks in decode order from one
+    // counter, each block taking time in proportion to its rows; the live tables' total,
+    // averaged over the time all N are busy, and its 90th percentile over that time
+    for w in [2usize, 4, 6, 8, 10] {
+        if order.len() < 2 * w {
+            continue;
+        }
+        let mut ends: Vec<(f64, usize)> = Vec::new(); // (end time, rows) of the live blocks
+        let (mut next, mut clock) = (0usize, 0f64);
+        let mut spans: Vec<(f64, f64)> = Vec::new(); // (duration, live rows) while all busy
+        while next < w {
+            ends.push((order[next] as f64, order[next]));
+            next += 1;
+        }
+        while next < order.len() {
+            ends.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+            let (t, _) = ends[0];
+            let live: usize = ends.iter().map(|e| e.1).sum();
+            spans.push((t - clock, live as f64));
+            clock = t;
+            ends[0] = (t + order[next] as f64, order[next]);
+            next += 1;
+        }
+        let total: f64 = spans.iter().map(|x| x.0).sum();
+        let mean = spans.iter().map(|x| x.0 * x.1).sum::<f64>() / total;
+        spans.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        let (mut acc, mut p90) = (0f64, 0f64);
+        for (d, l) in &spans {
+            acc += d;
+            if acc >= 0.9 * total {
+                p90 = *l;
+                break;
+            }
+        }
+        println!(
+            "{w:>2} workers, simulated: live tables {:.1} MB on average over time, p90 {:.1} MB",
+            mean * 4.0 / 1e6,
+            p90 * 4.0 / 1e6
+        );
+    }
     let mut n: Vec<usize> = order;
     n.sort_unstable();
     let total: usize = n.iter().sum();
