@@ -1429,4 +1429,4 @@ inversion's 1.4 and 0.6. The corrected figures replace them.)
     once a step.
   - The buffers, successor table and flags are production's own.
   - Cooperation costs nothing per step. The +5.4 is the frozen loop's form, which
-    production replaced with room passes (#117's journal).
+    production's walk replaced with room passes (`room_segments`, src/bwt.rs).
