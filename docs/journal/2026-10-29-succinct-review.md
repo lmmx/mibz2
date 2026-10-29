@@ -257,6 +257,8 @@ It runs in 1.3 s on the VM. `psi-census.md` is the output, `psi-census.jsonl` th
 **What it says:**
 - **The hybrid's common case is nearly universal on this corpus.** 98.1% of rows decode as FOR-14 and 0.49% are exceptions, for an effective 16.12 bits a row. So the guardian's question, whether the corpus permits the simple case, is answered yes for Wikidata.
 - **A sharper common case appears:** 77.6% of rows are in run groups, where ψ(j) = base + (j & 31). A record format for these needs one add after the fetch, which is less decode than today's shift. The run-length structure behind the move structure shows up here locally, with fixed addressing and no interval search. This is a hypothesis about design, not speed.
+  - **Exact for steps too:** a full inversion visits each row once, so 77.6% of the walk's *steps* fall in run groups. The share of *time* is another matter: a format test and its branch still sit on every step (the guardian's caution).
+  - **A two-level variant it suggests** (a hypothesis, not yet analysed): run groups carry no per-row data. So an 8-byte descriptor per 32-row group (base, byte, format, start mask: 2 bits a row) could serve them alone. Payload records, at 14 bits a row, would be kept only for the 22.4% of non-run groups. That is about 2 + 0.224 × 14 + exceptions ≈ 5 bits a row, at the price of a second, dependent load on about 22% of steps. It is a different point on the frontier from the fixed 16-bit record, and would face the same dependency-path audit.
 - **F recovery:** at k = 5 the correction loop runs for 0.15% of rows, and 93% of mixed windows need one step.
 - **What it doesn't say:** anything about speed. That needs the decode's dependency path (§10).
 
