@@ -107,6 +107,7 @@ bench-coop-decoder *args:
 # 5 minutes. Upload variants-*.json, its .jsonl and the console.
 #   just bench-one-pass 2>&1 | tee one-pass-console.log
 bench-one-pass rounds="10":
+    git rev-parse -q --verify 'v0.2.0^{commit}' > /dev/null || git fetch origin tag v0.2.0 --no-tags
     just bench-variants --variants v0.2.0 --threads 1,2,4,6,8,10 --rounds {{rounds}} --note "one-pass build against v0.2.0"
 
 # Which of mibz2's own changes moved its scaling knee: versions and walk settings (#39, #52)
