@@ -35,6 +35,22 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.2.0] - 2026-10-29
+
+### Added
+
+- **libsais in the kernels' table:** libsais 2.12.1's `libsais_unbwt_cyclic_ctx`, its
+  inverse BWT for bzip2's cyclic BWT, beside mibz2's and bz2ngrs's kernels.
+  - It is built single-threaded from its pinned, SHA-256-checked source
+    (bench/libsais.sh), the same commit and flags as the cooperative pilot's, without
+    OpenMP.
+  - It takes the counts from MTF, as mibz2's build does, and is timed as one call a
+    block. Its build and walk are inside that call, so only its total is shown.
+  - It is an inverse BWT, not a bzip2 decoder, so it's in the kernels' table only, never
+    in the decoders' figures or the Alternatives chart.
+
+Every existing figure is as it was.
+
 ## [3.1.0] - 2026-10-29
 
 ### Added

@@ -24,10 +24,10 @@ the toolchain) and its Markdown:
   examples/phases.rs): on the Wikidata blocks at 1 thread, each stage's median cycles a
   byte of output at the runner's reported clock (and ns a byte), for each build; on a
   pull request, head over base per stage, paired by round as above.
-- **The inverse BWT alone, against bz2ngrs's** (`--kernels`, bench/alternatives'
-  kernels binary, master and the Actions tab only): both kernels on the Wikidata blocks
-  at 1 thread, build, walk and assembly, the median ns a byte and bz2ngrs's over mibz2's
-  per phase, paired by pass.
+- **The inverse BWT alone, against bz2ngrs's and libsais's** (`--kernels`,
+  bench/alternatives' kernels binary, master and the Actions tab only): the kernels on the
+  Wikidata blocks at 1 thread, build, walk and assembly where a kernel has them, the
+  median ns a byte and each other kernel's over mibz2's per phase, paired by pass.
 - **Modelled, not measured:** a whole dump's decode (`model`), from the Wikidata blocks.
 - **Resources** (`resources`, `assessment`), per corpus for each arm: CPU per byte at each
   thread count; its amplification, CPU per byte at N threads over the same arm's at the
@@ -62,7 +62,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "3.1.0"
+BENCH = "3.2.0"
 # Each family of figures, and the major versions that set or redefined its meaning
 # (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus
 # and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler every
@@ -625,8 +625,9 @@ KERNEL_ROWS = [
 
 
 def kernel_figures(lines: list[dict]) -> dict | None:
-    """Each kernel's median ns a byte per phase over the passes, and bz2ngrs's over
-    mibz2's per phase, paired by pass."""
+    """Each kernel's median ns a byte per phase over the passes, and each other kernel's
+    over mibz2's per phase, paired by pass: bz2ngrs's as `ratio`, libsais's (where the
+    kernels binary was built with it; its total only) as `ratio_libsais`."""
     by = defaultdict(dict)  # kernel -> pass -> line
     for r in lines:
         by[r["kernel"]][r["pass"]] = r
@@ -634,41 +635,76 @@ def kernel_figures(lines: list[dict]) -> dict | None:
         return None
     bytes_ = lines[0]["bytes"]
     ns = lambda s: s * 1e9 / bytes_
-    passes = sorted(set(by["mibz2"]) & set(by["bz2ngrs"]))
+    kernels = [k for k in ("mibz2", "bz2ngrs", "libsais") if k in by]
+    passes = sorted(set.intersection(*(set(by[k]) for k in kernels)))
     out = {"tool": "bench/alternatives/src/kernels.rs", "passes": len(passes), "bytes": bytes_}
-    for k in ("mibz2", "bz2ngrs"):
+    # (a phase a kernel doesn't time apart is null in its lines, and None here)
+    timed = lambda k, key: by[k][passes[0]][key] is not None
+    for k in kernels:
         out[k] = {
             key: round(ns(statistics.median(by[k][p][key] for p in passes)), 4)
+            if timed(k, key)
+            else None
             for key, _ in KERNEL_ROWS
         }
-    out["ratio"] = {
-        key: ratio_ci([by["bz2ngrs"][p][key] / by["mibz2"][p][key] for p in passes])
-        for key, _ in KERNEL_ROWS
-    }
+    for k, field in (("bz2ngrs", "ratio"), ("libsais", "ratio_libsais")):
+        if k in kernels:
+            out[field] = {
+                key: ratio_ci([by[k][p][key] / by["mibz2"][p][key] for p in passes])
+                if timed(k, key)
+                else None
+                for key, _ in KERNEL_ROWS
+            }
     return out
 
 
 def kernel_lines(k: dict) -> list[str]:
-    """The kernels' table: each phase's median ns a byte and bz2ngrs over mibz2."""
+    """The kernels' table: each phase's median ns a byte, and each other kernel over mibz2."""
+    sais = "libsais" in k
+    cell = lambda v: "(in its total)" if v is None else f"{v:.3f}"
     out = [
         "",
-        "### The inverse BWT alone: mibz2's kernel against bz2ngrs's, phase by phase (median ns/B)",
+        "### The inverse BWT alone: mibz2's kernel against "
+        + ("bz2ngrs's and libsais's" if sais else "bz2ngrs's")
+        + ", phase by phase (median ns/B)",
         "",
-        f"Both kernels on the same Wikidata blocks' last columns, on one pinned CPU, {k['passes']} "
-        "passes of the file in decode order, the kernels' order alternating (`kernels`, "
-        "bench/alternatives: bz2ngrs's src/bwt.rs as it is, its steps timed apart). Every block's "
-        "bytes are checked the same from both, and its CRC, before the timed passes. mibz2's "
-        "build takes its byte counts from MTF; bz2ngrs's counts them itself, so its build row "
-        "holds that count. A ratio above 1× is bz2ngrs taking longer. Diagnostic only: the "
-        "decoders' own figures are the tables above.",
+        f"The kernels on the same Wikidata blocks' last columns, on one pinned CPU, {k['passes']} "
+        "passes of the file in decode order, the kernels' order rotating (`kernels`, "
+        "bench/alternatives: bz2ngrs's src/bwt.rs as it is, its steps timed apart"
+        + (
+            "; libsais 2.12.1's `libsais_unbwt_cyclic_ctx`, built single-threaded from its pinned "
+            "source, timed as one call a block, its build and walk inside it"
+            if sais
+            else ""
+        )
+        + "). Every block's bytes are checked the same from every kernel, and its CRC, before the "
+        "timed passes. mibz2's build"
+        + (" and libsais take" if sais else " takes")
+        + " the byte counts from MTF; bz2ngrs's counts them itself, so its build row holds that "
+        "count. A ratio above 1× is the other kernel taking longer than mibz2's."
+        + (
+            " libsais is an inverse BWT, not a bzip2 decoder: it isn't in the decoders' "
+            "figures above."
+            if sais
+            else ""
+        )
+        + " Diagnostic only: the decoders' own figures are the tables above.",
         "",
-        "| phase | mibz2 | bz2ngrs | bz2ngrs / mibz2 |",
-        "|---|--:|--:|--:|",
+        "| phase | mibz2 | bz2ngrs | "
+        + ("libsais | " if sais else "")
+        + "bz2ngrs / mibz2 |"
+        + (" libsais / mibz2 |" if sais else ""),
+        "|---|--:|--:|" + ("--:|" if sais else "") + "--:|" + ("--:|" if sais else ""),
     ]
     for key, name in KERNEL_ROWS:
-        out.append(
-            f"| {name} | {k['mibz2'][key]:.3f} | {k['bz2ngrs'][key]:.3f} | {ratio_x(k['ratio'][key])} |"
-        )
+        row = f"| {name} | {cell(k['mibz2'][key])} | {cell(k['bz2ngrs'][key])} | "
+        if sais:
+            row += f"{cell(k['libsais'][key])} | "
+        row += f"{ratio_x(k['ratio'][key])} |"
+        if sais:
+            r = k["ratio_libsais"][key]
+            row += f" {ratio_x(r) if r else ''} |"
+        out.append(row)
     return out
 
 
@@ -1447,6 +1483,10 @@ def summary(a: argparse.Namespace) -> None:
         lines = [json.loads(l) for l in Path(a.kernels).read_text().splitlines() if l.strip()]
         if lines and (k := kernel_figures(lines)):
             res["kernels"] = k
+            if "libsais" in k:
+                res["toolchain"]["libsais (the kernels' only)"] = (
+                    "2.12.1 at c284ba8 (C: -O3 -march=native, single-threaded; bench/libsais.sh)"
+                )
     Path(a.out).write_text(json.dumps(res, indent=1, allow_nan=False) + "\n")
     Path(a.md).write_text(markdown(res))
     print(
