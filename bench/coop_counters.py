@@ -120,7 +120,7 @@ COVERED = 99.5
 
 
 def threads(arm):
-    s = arm.lstrip("pswrqnmfxylg").split("@")[0]
+    s = arm.lstrip("pswrqnmfxylgovu").split("@")[0]
     n, _, k = s.partition("x")
     return int(n) * int(k or 1)
 
