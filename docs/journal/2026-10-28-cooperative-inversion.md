@@ -1430,3 +1430,102 @@ inversion's 1.4 and 0.6. The corrected figures replace them.)
   - The buffers, successor table and flags are production's own.
   - Cooperation costs nothing per step. The +5.4 is the frozen loop's form, which
     production's walk replaced with room passes (`room_segments`, src/bwt.rs).
+
+## 12. The #77 experiment: the cooperative walk in room passes (pre-registered before it runs)
+
+Branch `research/coop-room`. The baseline is the frozen kernel (c2620b8): its `c` and `w`
+arms run unchanged beside the experiment.
+
+### 12.1 The one change
+
+§11.1 found the cooperative walk's +5.4 instructions a byte in its loop's form, not in
+cooperation. Of `traverse`'s 22 instructions a step:
+
+| | instructions a step | in the room loop |
+|---|--:|---|
+| **Essential, as production's:** the lane's row loaded; `t[row]` loaded; the flag tested; the row shifted and stored; `prefetcht0`; the byte stored; the loop's step | 16 | kept, as they are |
+| **Removable:** the buffer-end test (load, compare, branch) | 3 | once a pass, for every lane: the pass is `room` steps, the fewest any lane has spare |
+| **Removable:** the output pointer's read-modify-write in memory | 1 | none: the byte goes at base + offset |
+| **Removable:** `walked += 1` | 1 | once a segment: its length, at its end |
+| **Removable:** the `Vec`'s pointer and `t` reloaded from the stack, and the lane's address rebuilt | 2–3 | none: the lanes are a stack array, stepped by one `add` |
+| **Coordination,** the shared counter's `lock xadd` | 0 a step | once a segment, as before |
+
+**`traverse_room`** (examples/coop.rs, the `r` arms: `r4x1`, `r3x3`, …) is production's
+`room_segments` loop with one difference. A lane whose segment ends takes the next segment
+from the shared counter, not from a private queue. When the counter is empty the pass ends
+there, and the lanes still walking finish in `traverse`'s loop, as production's tail does.
+
+**Everything else is the frozen kernel's:**
+- the build (`coop_build`);
+- 32 lanes a thread;
+- 512 segments a thread;
+- one `prefetcht0` a step, issued the moment the row is known;
+- the segments' buffers and the join.
+
+**What was checked on the VM** (4 vCPUs; indicative only):
+- **Output.** Every block's output matches the frozen walk's hash in the grid's check
+  round. The arms covered: `r4x1` and `r1x3`; fewer segments than lanes (`r1x1@16`); the
+  tail alone (`r1x2@40`); a counter split unevenly across threads (`r2x2@33`); 64, 200 and
+  4,096 segments; and segments so long their buffers grow (`r1x2@100000`).
+- **The frozen kernel is unchanged in machine code.** `coop_walk`'s closure and both of
+  `coop_build`'s disassemble to the same instructions, addresses aside, in binaries built
+  with and without the change. The `r` arm only adds code beside them.
+- **The new loop's hot path is 16 instructions a step,** as production's.
+- **Timings, indicative only:** on the VM (shared and unpinned), r2x1 ran at 1.129 ±0.068 of
+  2x1 (6 of 6 rounds), and r1x3 at 1.004 ±0.345 of 1x3, with its build control off by 9%.
+  These are not evidence. The i9 measures.
+
+### 12.2 The predictions and the criteria
+
+**Instructions** (the profile, `just bench-coop-profile --arms p4,4x1,r4x1,3x3,r3x3`):
+- **The walk:** 22.2 → 16.8 ± 1.5 a byte in r4x1, and 22.4 → 17.0 ± 1.5 in r3x3.
+- **The kernel's totals:** 31.5 → 26.1 (r4x1) and 34.5 → 29.1 (r3x3).
+- **The build is unchanged:** ±0.3 of the frozen arm's.
+
+**Throughput** (`just bench-coop-ab`: 3x3, r3x3, 4x1, r4x1 and p4, 20 rounds paired, pinned):
+- **How the size of the gain is predicted.**
+  - 4x1 and p4 have the same footprint and nearly the same misses (§10.5: 0.089 against
+    0.102 a byte).
+  - 4x1 runs at 0.866 of p4 with 1.34× the instructions. That is an elasticity of throughput
+    to instructions of about 0.49.
+  - Applied to the change's instruction ratios (0.829 in r4x1, 0.843 in r3x3), that
+    predicts **r4x1/4x1 about 1.10 (registered 1.05–1.15)** and **r3x3/3x3 about 1.09
+    (1.04–1.14)**.
+  - It predicts r4x1/p4 about 0.95, since the build's +2.6 remains.
+- **The gain:** a paired ratio whose 95% interval excludes 1. r3x3 is the primary test,
+  r4x1 the single-core control that isolates the kernel.
+- **The control:** the build phase's paired ratio within ±3% of 1. The change doesn't touch
+  the build, so a build that moves means drift or interference, and the run is repeated.
+- **The walk phase's paired ratio** is reported. It should carry the gain: about 1.2–1.3 if
+  the walk's time follows its instructions.
+
+**The risk, and how it would show:**
+- With fewer instructions between a lane's prefetch and its next step (31 other lanes × 16,
+  not × 22), each prefetch has less time to land.
+- If the walk is latency-bound at that point, the instructions fall and the throughput
+  doesn't follow: the walk's memory-stall cycles a byte rise by about what its other cycles
+  fall.
+- The profile's `cycle_activity.stalls_mem_any` for r4x1 and r3x3 against 4x1 and 3x3 tells
+  that apart from a failed change.
+
+**The decision:**
+- **Both gains shown, and the control holds:** the room walk becomes the cooperative
+  kernel's walk for what follows (re-confirming 3x3 against p4, then #78's recount and #81).
+  Production's walk already has this form, so no production code changes.
+- **The instructions fall, but no gain is shown:** a negative result, written up. The walk
+  is then latency-bound at this lane count, and the next lever is in-flight reads (lanes,
+  prefetch distance), not instructions. The frozen kernel stays.
+- **The instructions don't fall as predicted:** the codegen is read again before anything
+  else.
+
+### 12.3 The commands (the i9, with the browser and other busy programs closed)
+
+```
+git fetch origin research/coop-room
+git checkout --detach origin/research/coop-room
+just bench-coop-ab
+just bench-coop-profile --arms p4,4x1,r4x1,3x3,r3x3
+```
+
+Upload `coop-ab-*.md` and `coop-*.md` with its `.jsonl` (the A/B), and `coop-profile-*.md`
+with its `.tar.gz` (the profile). The A/B takes about two minutes, and the profile about four.
