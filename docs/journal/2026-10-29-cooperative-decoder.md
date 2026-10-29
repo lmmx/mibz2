@@ -115,3 +115,39 @@ The prediction was 1.15–1.35. The run came in inside it, in its upper half.
 - **Not shown here:**
   - other CPUs (the policy engages only where Linux reports 6 or more physical cores);
   - other block sizes. At `-1` to `-3` the scanner binds first (workstation journal §9), and the policy doesn't yet look at the stream's level.
+
+## The release candidate on the i9: the default decoder itself (measured, ce7cdc6, 2026-10-29)
+
+The run above measured the policy through the `mibz2-auto` arm, at 34c6ef7. #106 then made the
+policy the default (`StreamDecoder::new`), which CI's 2-core runners never exercise on the team
+path. So the user ran the gates again, on #106's head and through the entry point users call:
+- **Build:** ce7cdc6 (#106's head, merged unchanged as 0711dc3).
+- **First:** `just test-ci --release`. Every test passed on the i9, including
+  `plan_tests::the_default_is_the_plan`, which runs the team path through `new` on a machine
+  with 6 or more cores.
+- **Then:**
+  `just bench-coop-decoder --arms mibz2-workers,mibz2 --gate mibz2 --threads 4,6,ALL --rounds 10`.
+  `mibz2` is `BzReader::parallel`, the default, and `mibz2-workers` is the decoder before the
+  policy.
+- **Files:** [`coop-decoder-20261029T181511Z.md`](2026-10-29-cooperative-decoder/coop-decoder-20261029T181511Z.md),
+  its `.json` and both `.jsonl`, beside the first run's.
+
+| gate | measured | pass |
+|---|--:|---|
+| throughput ≥ 1.15× (the default at 20 CPUs against 4 workers) | 1.223 | yes |
+| its 95% lower bound > 1.05 | 1.163 | yes |
+| same bytes | one hash in 80 runs, no errors | yes |
+| peak RSS ≤ 1.15× | 1.016 | yes |
+| CPU-seconds ≤ 1.5× | 1.254 | yes |
+| 4 physical cores (CPUs 0–3): lower bound ≥ 0.97 | 1.013 (0.999–1.027) | yes |
+
+The figures were recomputed from the raw rounds, apart from the report script, and agree.
+
+- **At 6 threads** the default gives 1,071 MB/s, 1.217× (1.178–1.258), at 60 MB peak RSS (0.83×)
+  and 0.94× the CPU. On this run it is faster and smaller than 4 workers (863 MB/s, 73 MB).
+- **Both arms ran slower in absolute terms than in the first run** (4 workers 863 MB/s against
+  1,007; the machine's load was 4.3 at the start). The paired ratios reproduce within each
+  other's intervals: 1.223 against 1.257 at 20 CPUs, 1.217 against 1.166 at 6.
+- **6 threads above 20 here, 1,071 against 1,050,** is within noise. The two plans differ: 3 × 2
+  at 6, and 4 × 2 at 8 and above. Which is better is the policy-tuning question, after the
+  release.
