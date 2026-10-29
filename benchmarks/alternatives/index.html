@@ -1455,9 +1455,9 @@ byte (lbzip2's packing). The table says which phase a whole-decoder difference c
 from (<a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-bz2ngrs.md">the study</a>).</p>
 <p>Not included: <code>bzip2 -dc</code> and Python's <code>bz2</code> module, which are libbzip2 itself (its arm
 stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
-<p>The latest record: <a href="https://github.com/lmmx/mibz2/commit/311c76cf82a75915a73981187c8365a48a137770"><code>311c76c</code></a> (2026-10-29).</p>
-<p><strong>mibz2 against pbz2, lbzip2, indexed_bzip2, fbz, lbzip2-rs, libbzip2, libbz2-rs, bz2ngrs and bz2ng</strong>: 10 rounds on one runner · <a href="https://github.com/lmmx/mibz2/actions/runs/40836359261">run</a></p>
-<p>AMD EPYC 9V74 80-Core Processor, 4 cores · rustc 1.99.1 (58cf8f9c3 2026-10-13) · bench 3.2.0</p>
+<p>The latest record: <a href="https://github.com/lmmx/mibz2/commit/f9f688730c01977fc756a8e51dde1aa8958b39ea"><code>f9f6887</code></a> (2026-10-29).</p>
+<p><strong>mibz2 against pbz2, lbzip2, indexed_bzip2, fbz, lbzip2-rs, libbzip2, libbz2-rs, bz2ngrs and bz2ng</strong>: 10 rounds on one runner · <a href="https://github.com/lmmx/mibz2/actions/runs/40838356303">run</a></p>
+<p>AMD EPYC 9V45 96-Core Processor, 4 cores · rustc 1.99.1 (58cf8f9c3 2026-10-13) · bench 3.2.0</p>
 <p>Each round decodes every corpus once with each decoder at each thread count (<code>ab run</code>), their order rotated round to round. <strong>Against mibz2</strong> is the decoder's wall (or CPU, or peak RSS) over mibz2's: the geometric mean of the rounds' paired ratios and its 95% interval; above 1, mibz2 is faster (or leaner). 1-thread runs are pinned to one CPU.</p>
 <p>Block-parallel: pbz2, lbzip2, indexed_bzip2, fbz, lbzip2-rs. Single-threaded (¹): libbzip2, libbz2-rs, bz2ngrs, bz2ng, run at 1 thread only; at 4 threads their figures are their 1-thread runs, against mibz2's at 4 threads.</p>
 <h2 id="wall-time-against-mibz2">Wall time against mibz2<a class="headerlink" href="#wall-time-against-mibz2" title="Permanent link">&para;</a></h2>
@@ -1485,358 +1485,358 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <tr>
 <td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">0.642 s</td>
-<td style="text-align: right;">327</td>
-<td style="text-align: right;">11.3</td>
-<td style="text-align: right;">1.92× (1.87–1.98)</td>
-<td style="text-align: right;">4.40× (4.24–4.57)</td>
-<td style="text-align: right;">4.57× (4.38–4.76)</td>
-<td style="text-align: right;">5.20× (4.99–5.41)</td>
-<td style="text-align: right;">4.62× (4.41–4.84)</td>
-<td style="text-align: right;">5.13× (4.94–5.32)</td>
-<td style="text-align: right;">4.47× (4.32–4.63)</td>
-<td style="text-align: right;">1.43× (1.40–1.47)</td>
-<td style="text-align: right;">1.59× (1.53–1.66)</td>
+<td style="text-align: right;">0.390 s</td>
+<td style="text-align: right;">538</td>
+<td style="text-align: right;">4.8</td>
+<td style="text-align: right;">2.13× (2.04–2.23)</td>
+<td style="text-align: right;">5.32× (5.10–5.56)</td>
+<td style="text-align: right;">5.51× (5.22–5.83)</td>
+<td style="text-align: right;">6.30× (6.06–6.55)</td>
+<td style="text-align: right;">5.59× (5.32–5.88)</td>
+<td style="text-align: right;">5.88× (5.61–6.18)</td>
+<td style="text-align: right;">5.48× (5.26–5.71)</td>
+<td style="text-align: right;">1.66× (1.59–1.73)</td>
+<td style="text-align: right;">1.93× (1.85–2.01)</td>
 <td>yes</td>
 </tr>
 <tr>
 <td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
 <td style="text-align: right;">2</td>
-<td style="text-align: right;">0.404 s</td>
-<td style="text-align: right;">519</td>
-<td style="text-align: right;">12.0</td>
-<td style="text-align: right;">1.72× (1.66–1.79)</td>
-<td style="text-align: right;">3.60× (3.44–3.76)</td>
-<td style="text-align: right;">4.16× (3.99–4.35)</td>
-<td style="text-align: right;">4.24× (4.04–4.46)</td>
-<td style="text-align: right;">3.81× (3.65–3.98)</td>
-<td style="text-align: right;">7.84× (7.47–8.22)</td>
-<td style="text-align: right;">6.84× (6.48–7.22)</td>
-<td style="text-align: right;">2.19× (2.08–2.31)</td>
-<td style="text-align: right;">2.44× (2.30–2.58)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">0.363 s</td>
-<td style="text-align: right;">578</td>
-<td style="text-align: right;">21.4</td>
-<td style="text-align: right;">1.68× (1.63–1.73)</td>
-<td style="text-align: right;">2.59× (2.46–2.73)</td>
-<td style="text-align: right;">3.08× (2.97–3.20)</td>
-<td style="text-align: right;">3.05× (2.92–3.19)</td>
-<td style="text-align: right;">3.10× (3.00–3.20)</td>
-<td style="text-align: right;">9.26× (8.97–9.56)</td>
-<td style="text-align: right;">8.08× (7.77–8.40)</td>
-<td style="text-align: right;">2.59× (2.49–2.70)</td>
-<td style="text-align: right;">2.88× (2.77–2.99)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0.019 s</td>
-<td style="text-align: right;">1,055</td>
-<td style="text-align: right;">3.8</td>
-<td style="text-align: right;">0.54× (0.53–0.56)</td>
-<td style="text-align: right;">3.21× (3.11–3.31)</td>
-<td style="text-align: right;">4.35× (4.18–4.52)</td>
-<td style="text-align: right;">3.36× (3.26–3.45)</td>
-<td style="text-align: right;">6.23× (6.04–6.42)</td>
-<td style="text-align: right;">2.51× (2.44–2.58)</td>
-<td style="text-align: right;">2.49× (2.42–2.57)</td>
-<td style="text-align: right;">1.00× (0.96–1.04)</td>
-<td style="text-align: right;">2.14× (2.08–2.20)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">0.019 s</td>
-<td style="text-align: right;">1,075</td>
-<td style="text-align: right;">3.8</td>
-<td style="text-align: right;">0.53× (0.52–0.55)</td>
-<td style="text-align: right;">2.76× (2.68–2.85)</td>
-<td style="text-align: right;">6.10× (5.91–6.29)</td>
-<td style="text-align: right;">3.47× (3.37–3.58)</td>
-<td style="text-align: right;">6.37× (6.21–6.53)</td>
-<td style="text-align: right;">2.58× (2.51–2.67)</td>
-<td style="text-align: right;">2.57× (2.49–2.65)</td>
-<td style="text-align: right;">1.03× (1.00–1.06)</td>
-<td style="text-align: right;">2.20× (2.14–2.27)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">0.019 s</td>
-<td style="text-align: right;">1,050</td>
-<td style="text-align: right;">3.8</td>
-<td style="text-align: right;">0.54× (0.49–0.61)</td>
-<td style="text-align: right;">2.69× (2.65–2.73)</td>
-<td style="text-align: right;">5.93× (5.82–6.03)</td>
-<td style="text-align: right;">3.38× (3.32–3.44)</td>
-<td style="text-align: right;">6.25× (6.13–6.37)</td>
-<td style="text-align: right;">2.51× (2.47–2.55)</td>
-<td style="text-align: right;">2.49× (2.45–2.53)</td>
-<td style="text-align: right;">1.00× (0.97–1.04)</td>
-<td style="text-align: right;">2.14× (2.11–2.17)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0.034 s</td>
-<td style="text-align: right;">574</td>
-<td style="text-align: right;">6.7</td>
-<td style="text-align: right;">2.11× (2.04–2.19)</td>
-<td style="text-align: right;">2.39× (2.35–2.43)</td>
-<td style="text-align: right;">3.00× (2.95–3.05)</td>
-<td style="text-align: right;">3.26× (3.10–3.43)</td>
-<td style="text-align: right;">3.84× (3.78–3.90)</td>
-<td style="text-align: right;">2.67× (2.62–2.71)</td>
-<td style="text-align: right;">1.76× (1.74–1.79)</td>
-<td style="text-align: right;">1.65× (1.63–1.67)</td>
-<td style="text-align: right;">2.38× (2.34–2.42)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">0.022 s</td>
-<td style="text-align: right;">877</td>
-<td style="text-align: right;">8.3</td>
-<td style="text-align: right;">1.76× (1.63–1.89)</td>
-<td style="text-align: right;">2.26× (1.97–2.58)</td>
-<td style="text-align: right;">3.49× (3.09–3.95)</td>
-<td style="text-align: right;">2.75× (2.42–3.13)</td>
-<td style="text-align: right;">4.41× (3.90–4.99)</td>
-<td style="text-align: right;">3.93× (3.49–4.43)</td>
-<td style="text-align: right;">2.60× (2.31–2.93)</td>
-<td style="text-align: right;">2.43× (2.16–2.73)</td>
-<td style="text-align: right;">3.51× (3.11–3.97)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">0.026 s</td>
-<td style="text-align: right;">751</td>
-<td style="text-align: right;">16.7</td>
-<td style="text-align: right;">1.47× (1.43–1.52)</td>
-<td style="text-align: right;">1.62× (1.58–1.67)</td>
-<td style="text-align: right;">2.36× (2.21–2.52)</td>
-<td style="text-align: right;">1.78× (1.71–1.85)</td>
-<td style="text-align: right;">3.60× (3.50–3.70)</td>
-<td style="text-align: right;">3.52× (3.42–3.62)</td>
-<td style="text-align: right;">2.33× (2.27–2.40)</td>
-<td style="text-align: right;">2.18× (2.12–2.24)</td>
-<td style="text-align: right;">3.15× (3.05–3.24)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0.127 s</td>
-<td style="text-align: right;">63</td>
-<td style="text-align: right;">59.3</td>
-<td style="text-align: right;">1.21× (1.20–1.22)</td>
-<td style="text-align: right;">2.34× (2.31–2.38)</td>
-<td style="text-align: right;">2.14× (2.12–2.17)</td>
-<td style="text-align: right;">2.19× (2.16–2.21)</td>
-<td style="text-align: right;">2.57× (2.50–2.64)</td>
-<td style="text-align: right;">2.78× (2.74–2.82)</td>
-<td style="text-align: right;">2.61× (2.57–2.65)</td>
-<td style="text-align: right;">1.10× (1.09–1.11)</td>
-<td style="text-align: right;">1.20× (1.18–1.22)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">0.079 s</td>
-<td style="text-align: right;">102</td>
-<td style="text-align: right;">64.1</td>
-<td style="text-align: right;">1.12× (1.06–1.18)</td>
-<td style="text-align: right;">2.16× (2.08–2.23)</td>
-<td style="text-align: right;">2.10× (2.03–2.18)</td>
-<td style="text-align: right;">2.69× (2.57–2.82)</td>
-<td style="text-align: right;">2.64× (2.53–2.76)</td>
-<td style="text-align: right;">4.45× (4.24–4.68)</td>
-<td style="text-align: right;">4.19× (4.00–4.38)</td>
-<td style="text-align: right;">1.76× (1.68–1.84)</td>
-<td style="text-align: right;">1.93× (1.84–2.01)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">0.060 s</td>
-<td style="text-align: right;">133</td>
-<td style="text-align: right;">82.2</td>
-<td style="text-align: right;">1.24× (1.23–1.26)</td>
-<td style="text-align: right;">2.04× (1.98–2.10)</td>
-<td style="text-align: right;">2.08× (1.99–2.17)</td>
-<td style="text-align: right;">2.53× (2.45–2.62)</td>
-<td style="text-align: right;">2.90× (2.83–2.97)</td>
-<td style="text-align: right;">5.84× (5.75–5.93)</td>
-<td style="text-align: right;">5.49× (5.39–5.58)</td>
-<td style="text-align: right;">2.31× (2.27–2.35)</td>
-<td style="text-align: right;">2.52× (2.48–2.57)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0.165 s</td>
-<td style="text-align: right;">58</td>
-<td style="text-align: right;">64.0</td>
-<td style="text-align: right;">1.10× (1.06–1.15)</td>
-<td style="text-align: right;">2.26× (2.16–2.37)</td>
-<td style="text-align: right;">1.94× (1.87–2.02)</td>
-<td style="text-align: right;">1.98× (1.90–2.07)</td>
-<td style="text-align: right;">2.35× (2.21–2.50)</td>
-<td style="text-align: right;">2.88× (2.77–2.98)</td>
-<td style="text-align: right;">2.81× (2.69–2.92)</td>
-<td style="text-align: right;">1.12× (1.06–1.17)</td>
-<td style="text-align: right;">1.26× (1.20–1.32)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">0.096 s</td>
-<td style="text-align: right;">101</td>
-<td style="text-align: right;">67.9</td>
-<td style="text-align: right;">1.10× (0.97–1.24)</td>
-<td style="text-align: right;">2.17× (2.10–2.25)</td>
-<td style="text-align: right;">1.97× (1.88–2.06)</td>
-<td style="text-align: right;">2.76× (2.68–2.85)</td>
-<td style="text-align: right;">2.49× (2.38–2.60)</td>
-<td style="text-align: right;">4.91× (4.72–5.11)</td>
-<td style="text-align: right;">4.79× (4.61–4.98)</td>
-<td style="text-align: right;">1.91× (1.83–1.99)</td>
-<td style="text-align: right;">2.15× (2.06–2.24)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">0.072 s</td>
-<td style="text-align: right;">134</td>
-<td style="text-align: right;">88.1</td>
-<td style="text-align: right;">1.24× (1.21–1.27)</td>
-<td style="text-align: right;">2.07× (2.00–2.14)</td>
-<td style="text-align: right;">2.03× (1.94–2.12)</td>
-<td style="text-align: right;">2.71× (2.66–2.76)</td>
-<td style="text-align: right;">2.72× (2.65–2.80)</td>
-<td style="text-align: right;">6.61× (6.49–6.73)</td>
-<td style="text-align: right;">6.45× (6.33–6.56)</td>
-<td style="text-align: right;">2.56× (2.49–2.63)</td>
-<td style="text-align: right;">2.89× (2.83–2.96)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0.013 s</td>
-<td style="text-align: right;">800</td>
-<td style="text-align: right;">5.2</td>
-<td style="text-align: right;">0.60× (0.59–0.60)</td>
-<td style="text-align: right;">3.27× (3.23–3.31)</td>
-<td style="text-align: right;">4.14× (4.08–4.19)</td>
-<td style="text-align: right;">2.94× (2.91–2.97)</td>
-<td style="text-align: right;">7.13× (7.05–7.21)</td>
-<td style="text-align: right;">2.22× (2.20–2.25)</td>
-<td style="text-align: right;">2.19× (2.17–2.21)</td>
-<td style="text-align: right;">0.98× (0.97–0.99)</td>
-<td style="text-align: right;">1.65× (1.62–1.67)</td>
-<td>yes</td>
-</tr>
-<tr>
-<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">0.013 s</td>
-<td style="text-align: right;">778</td>
+<td style="text-align: right;">0.274 s</td>
+<td style="text-align: right;">765</td>
 <td style="text-align: right;">5.5</td>
-<td style="text-align: right;">0.51× (0.50–0.53)</td>
-<td style="text-align: right;">2.42× (2.37–2.48)</td>
-<td style="text-align: right;">4.89× (4.78–5.00)</td>
-<td style="text-align: right;">2.91× (2.84–2.98)</td>
-<td style="text-align: right;">6.97× (6.82–7.13)</td>
-<td style="text-align: right;">2.19× (2.14–2.24)</td>
-<td style="text-align: right;">2.16× (2.11–2.20)</td>
-<td style="text-align: right;">0.96× (0.94–0.99)</td>
-<td style="text-align: right;">1.62× (1.58–1.66)</td>
+<td style="text-align: right;">1.77× (1.67–1.89)</td>
+<td style="text-align: right;">3.96× (3.71–4.24)</td>
+<td style="text-align: right;">4.75× (4.46–5.06)</td>
+<td style="text-align: right;">4.77× (4.50–5.05)</td>
+<td style="text-align: right;">4.27× (3.99–4.58)</td>
+<td style="text-align: right;">8.23× (7.69–8.81)</td>
+<td style="text-align: right;">7.67× (7.19–8.18)</td>
+<td style="text-align: right;">2.32× (2.19–2.46)</td>
+<td style="text-align: right;">2.70× (2.53–2.87)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.255 s</td>
+<td style="text-align: right;">824</td>
+<td style="text-align: right;">10.2</td>
+<td style="text-align: right;">1.53× (1.50–1.55)</td>
+<td style="text-align: right;">2.58× (2.49–2.67)</td>
+<td style="text-align: right;">3.23× (3.14–3.31)</td>
+<td style="text-align: right;">3.12× (2.97–3.28)</td>
+<td style="text-align: right;">3.16× (3.04–3.29)</td>
+<td style="text-align: right;">8.87× (8.43–9.34)</td>
+<td style="text-align: right;">8.27× (7.90–8.66)</td>
+<td style="text-align: right;">2.50× (2.41–2.60)</td>
+<td style="text-align: right;">2.91× (2.78–3.04)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.015 s</td>
+<td style="text-align: right;">1,370</td>
+<td style="text-align: right;">2.0</td>
+<td style="text-align: right;">0.55× (0.53–0.57)</td>
+<td style="text-align: right;">3.46× (3.32–3.60)</td>
+<td style="text-align: right;">4.56× (4.25–4.89)</td>
+<td style="text-align: right;">3.53× (3.44–3.63)</td>
+<td style="text-align: right;">7.02× (6.17–7.98)</td>
+<td style="text-align: right;">2.66× (2.56–2.77)</td>
+<td style="text-align: right;">2.66× (2.57–2.74)</td>
+<td style="text-align: right;">1.00× (0.98–1.03)</td>
+<td style="text-align: right;">2.08× (1.99–2.16)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.014 s</td>
+<td style="text-align: right;">1,404</td>
+<td style="text-align: right;">2.1</td>
+<td style="text-align: right;">0.52× (0.50–0.53)</td>
+<td style="text-align: right;">2.88× (2.74–3.04)</td>
+<td style="text-align: right;">5.87× (5.66–6.09)</td>
+<td style="text-align: right;">3.63× (3.50–3.77)</td>
+<td style="text-align: right;">6.65× (6.50–6.80)</td>
+<td style="text-align: right;">2.71× (2.62–2.80)</td>
+<td style="text-align: right;">2.70× (2.60–2.81)</td>
+<td style="text-align: right;">1.02× (0.98–1.06)</td>
+<td style="text-align: right;">2.11× (2.04–2.19)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.015 s</td>
+<td style="text-align: right;">1,370</td>
+<td style="text-align: right;">2.1</td>
+<td style="text-align: right;">0.56× (0.49–0.64)</td>
+<td style="text-align: right;">2.85× (2.70–3.02)</td>
+<td style="text-align: right;">5.79× (5.67–5.91)</td>
+<td style="text-align: right;">3.60× (3.48–3.71)</td>
+<td style="text-align: right;">6.57× (6.42–6.73)</td>
+<td style="text-align: right;">2.67× (2.63–2.72)</td>
+<td style="text-align: right;">2.67× (2.60–2.73)</td>
+<td style="text-align: right;">1.01× (0.99–1.02)</td>
+<td style="text-align: right;">2.08× (2.02–2.15)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.022 s</td>
+<td style="text-align: right;">875</td>
+<td style="text-align: right;">3.1</td>
+<td style="text-align: right;">2.38× (2.36–2.40)</td>
+<td style="text-align: right;">3.11× (3.01–3.21)</td>
+<td style="text-align: right;">3.38× (3.29–3.48)</td>
+<td style="text-align: right;">3.69× (3.67–3.71)</td>
+<td style="text-align: right;">4.65× (4.58–4.72)</td>
+<td style="text-align: right;">2.28× (2.26–2.31)</td>
+<td style="text-align: right;">2.22× (2.09–2.37)</td>
+<td style="text-align: right;">1.72× (1.69–1.76)</td>
+<td style="text-align: right;">2.70× (2.65–2.75)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.015 s</td>
+<td style="text-align: right;">1,315</td>
+<td style="text-align: right;">4.0</td>
+<td style="text-align: right;">1.84× (1.62–2.09)</td>
+<td style="text-align: right;">2.55× (2.24–2.90)</td>
+<td style="text-align: right;">3.59× (3.10–4.16)</td>
+<td style="text-align: right;">3.13× (2.76–3.54)</td>
+<td style="text-align: right;">5.34× (4.52–6.32)</td>
+<td style="text-align: right;">3.21× (2.87–3.59)</td>
+<td style="text-align: right;">3.12× (2.70–3.61)</td>
+<td style="text-align: right;">2.42× (2.14–2.74)</td>
+<td style="text-align: right;">3.79× (3.33–4.31)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.019 s</td>
+<td style="text-align: right;">1,034</td>
+<td style="text-align: right;">8.3</td>
+<td style="text-align: right;">1.46× (1.29–1.65)</td>
+<td style="text-align: right;">1.63× (1.55–1.72)</td>
+<td style="text-align: right;">2.43× (2.33–2.53)</td>
+<td style="text-align: right;">1.90× (1.82–1.98)</td>
+<td style="text-align: right;">3.87× (3.73–4.02)</td>
+<td style="text-align: right;">2.66× (2.56–2.78)</td>
+<td style="text-align: right;">2.59× (2.42–2.77)</td>
+<td style="text-align: right;">2.01× (1.92–2.10)</td>
+<td style="text-align: right;">3.15× (2.97–3.33)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.086 s</td>
+<td style="text-align: right;">92</td>
+<td style="text-align: right;">28.5</td>
+<td style="text-align: right;">1.20× (1.10–1.31)</td>
+<td style="text-align: right;">2.74× (2.52–2.99)</td>
+<td style="text-align: right;">2.45× (2.23–2.69)</td>
+<td style="text-align: right;">2.41× (2.21–2.62)</td>
+<td style="text-align: right;">2.78× (2.55–3.03)</td>
+<td style="text-align: right;">3.27× (2.99–3.57)</td>
+<td style="text-align: right;">3.00× (2.75–3.26)</td>
+<td style="text-align: right;">1.20× (1.11–1.31)</td>
+<td style="text-align: right;">1.28× (1.16–1.40)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.053 s</td>
+<td style="text-align: right;">151</td>
+<td style="text-align: right;">31.4</td>
+<td style="text-align: right;">1.16× (1.13–1.20)</td>
+<td style="text-align: right;">2.70× (2.63–2.78)</td>
+<td style="text-align: right;">2.54× (2.40–2.69)</td>
+<td style="text-align: right;">3.17× (2.98–3.36)</td>
+<td style="text-align: right;">3.11× (2.91–3.33)</td>
+<td style="text-align: right;">5.52× (5.33–5.71)</td>
+<td style="text-align: right;">5.06× (4.91–5.21)</td>
+<td style="text-align: right;">2.03× (1.98–2.09)</td>
+<td style="text-align: right;">2.16× (2.09–2.23)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.043 s</td>
+<td style="text-align: right;">186</td>
+<td style="text-align: right;">43.0</td>
+<td style="text-align: right;">1.18× (1.16–1.21)</td>
+<td style="text-align: right;">2.28× (2.20–2.37)</td>
+<td style="text-align: right;">2.29× (2.19–2.40)</td>
+<td style="text-align: right;">2.71× (2.60–2.82)</td>
+<td style="text-align: right;">3.08× (3.02–3.13)</td>
+<td style="text-align: right;">6.71× (6.48–6.94)</td>
+<td style="text-align: right;">6.15× (6.01–6.29)</td>
+<td style="text-align: right;">2.47× (2.43–2.52)</td>
+<td style="text-align: right;">2.62× (2.56–2.68)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.111 s</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">30.4</td>
+<td style="text-align: right;">1.10× (1.07–1.12)</td>
+<td style="text-align: right;">2.81× (2.68–2.94)</td>
+<td style="text-align: right;">2.22× (2.17–2.28)</td>
+<td style="text-align: right;">2.29× (2.23–2.36)</td>
+<td style="text-align: right;">2.64× (2.57–2.72)</td>
+<td style="text-align: right;">3.52× (3.44–3.60)</td>
+<td style="text-align: right;">3.45× (3.36–3.53)</td>
+<td style="text-align: right;">1.24× (1.20–1.27)</td>
+<td style="text-align: right;">1.36× (1.33–1.40)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.068 s</td>
+<td style="text-align: right;">140</td>
+<td style="text-align: right;">34.1</td>
+<td style="text-align: right;">1.04× (0.95–1.14)</td>
+<td style="text-align: right;">2.53× (2.42–2.64)</td>
+<td style="text-align: right;">2.16× (2.08–2.23)</td>
+<td style="text-align: right;">3.07× (2.86–3.29)</td>
+<td style="text-align: right;">2.72× (2.58–2.88)</td>
+<td style="text-align: right;">5.69× (5.49–5.89)</td>
+<td style="text-align: right;">5.58× (5.38–5.78)</td>
+<td style="text-align: right;">2.00× (1.94–2.06)</td>
+<td style="text-align: right;">2.21× (2.15–2.26)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.053 s</td>
+<td style="text-align: right;">181</td>
+<td style="text-align: right;">46.4</td>
+<td style="text-align: right;">1.11× (1.04–1.18)</td>
+<td style="text-align: right;">2.20× (2.08–2.32)</td>
+<td style="text-align: right;">2.11× (1.99–2.25)</td>
+<td style="text-align: right;">2.82× (2.62–3.05)</td>
+<td style="text-align: right;">2.87× (2.66–3.08)</td>
+<td style="text-align: right;">7.15× (6.70–7.63)</td>
+<td style="text-align: right;">7.01× (6.55–7.49)</td>
+<td style="text-align: right;">2.51× (2.34–2.69)</td>
+<td style="text-align: right;">2.77× (2.60–2.96)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.010 s</td>
+<td style="text-align: right;">1,020</td>
+<td style="text-align: right;">2.9</td>
+<td style="text-align: right;">0.59× (0.58–0.60)</td>
+<td style="text-align: right;">3.06× (2.94–3.19)</td>
+<td style="text-align: right;">4.31× (4.12–4.51)</td>
+<td style="text-align: right;">2.98× (2.90–3.06)</td>
+<td style="text-align: right;">7.34× (7.11–7.58)</td>
+<td style="text-align: right;">2.29× (2.10–2.51)</td>
+<td style="text-align: right;">2.21× (2.13–2.30)</td>
+<td style="text-align: right;">0.99× (0.97–1.00)</td>
+<td style="text-align: right;">2.05× (1.97–2.13)</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.010 s</td>
+<td style="text-align: right;">1,010</td>
+<td style="text-align: right;">3.0</td>
+<td style="text-align: right;">0.46× (0.36–0.58)</td>
+<td style="text-align: right;">2.80× (2.20–3.56)</td>
+<td style="text-align: right;">4.89× (3.83–6.23)</td>
+<td style="text-align: right;">2.69× (2.14–3.40)</td>
+<td style="text-align: right;">6.56× (5.19–8.29)</td>
+<td style="text-align: right;">2.09× (1.62–2.70)</td>
+<td style="text-align: right;">2.02× (1.60–2.54)</td>
+<td style="text-align: right;">0.90× (0.72–1.13)</td>
+<td style="text-align: right;">1.87× (1.47–2.38)</td>
 <td>yes</td>
 </tr>
 <tr>
 <td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">0.013 s</td>
-<td style="text-align: right;">784</td>
-<td style="text-align: right;">5.3</td>
-<td style="text-align: right;">0.52× (0.51–0.53)</td>
-<td style="text-align: right;">2.45× (2.41–2.48)</td>
-<td style="text-align: right;">4.93× (4.86–5.01)</td>
-<td style="text-align: right;">2.94× (2.90–2.98)</td>
-<td style="text-align: right;">7.02× (6.85–7.19)</td>
-<td style="text-align: right;">2.20× (2.18–2.23)</td>
-<td style="text-align: right;">2.17× (2.14–2.20)</td>
-<td style="text-align: right;">0.97× (0.95–0.99)</td>
-<td style="text-align: right;">1.63× (1.61–1.65)</td>
+<td style="text-align: right;">0.010 s</td>
+<td style="text-align: right;">985</td>
+<td style="text-align: right;">3.0</td>
+<td style="text-align: right;">0.50× (0.48–0.51)</td>
+<td style="text-align: right;">3.01× (2.90–3.14)</td>
+<td style="text-align: right;">5.25× (5.03–5.47)</td>
+<td style="text-align: right;">2.92× (2.82–3.02)</td>
+<td style="text-align: right;">7.18× (6.91–7.46)</td>
+<td style="text-align: right;">2.25× (2.08–2.43)</td>
+<td style="text-align: right;">2.17× (2.10–2.24)</td>
+<td style="text-align: right;">0.97× (0.95–0.98)</td>
+<td style="text-align: right;">2.01× (1.93–2.09)</td>
 <td>yes</td>
 </tr>
 <tr>
 <td><code>text</code> (1.48 MB → 12.3 MB, 8.3×)</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">0.068 s</td>
-<td style="text-align: right;">180</td>
-<td style="text-align: right;">20.9</td>
-<td style="text-align: right;">1.30× (1.28–1.33)</td>
-<td style="text-align: right;">2.84× (2.78–2.90)</td>
-<td style="text-align: right;">3.26× (3.19–3.33)</td>
-<td style="text-align: right;">3.30× (3.26–3.35)</td>
-<td style="text-align: right;">3.71× (3.59–3.84)</td>
-<td style="text-align: right;">3.34× (3.28–3.40)</td>
-<td style="text-align: right;">3.09× (3.04–3.15)</td>
-<td style="text-align: right;">1.05× (1.04–1.07)</td>
-<td style="text-align: right;">1.21× (1.17–1.24)</td>
+<td style="text-align: right;">0.047 s</td>
+<td style="text-align: right;">260</td>
+<td style="text-align: right;">10.3</td>
+<td style="text-align: right;">1.34× (1.32–1.36)</td>
+<td style="text-align: right;">3.22× (3.15–3.30)</td>
+<td style="text-align: right;">3.48× (3.42–3.54)</td>
+<td style="text-align: right;">3.55× (3.49–3.61)</td>
+<td style="text-align: right;">4.06× (3.99–4.12)</td>
+<td style="text-align: right;">3.75× (3.63–3.87)</td>
+<td style="text-align: right;">3.35× (3.29–3.41)</td>
+<td style="text-align: right;">1.13× (1.11–1.15)</td>
+<td style="text-align: right;">1.31× (1.28–1.35)</td>
 <td>yes</td>
 </tr>
 <tr>
 <td><code>text</code> (1.48 MB → 12.3 MB, 8.3×)</td>
 <td style="text-align: right;">2</td>
-<td style="text-align: right;">0.042 s</td>
-<td style="text-align: right;">292</td>
-<td style="text-align: right;">24.5</td>
-<td style="text-align: right;">1.18× (1.13–1.23)</td>
-<td style="text-align: right;">2.58× (2.42–2.75)</td>
-<td style="text-align: right;">3.24× (3.10–3.39)</td>
-<td style="text-align: right;">3.53× (3.44–3.63)</td>
-<td style="text-align: right;">3.83× (3.71–3.96)</td>
-<td style="text-align: right;">5.39× (5.24–5.55)</td>
-<td style="text-align: right;">5.00× (4.87–5.15)</td>
-<td style="text-align: right;">1.70× (1.65–1.76)</td>
-<td style="text-align: right;">1.95× (1.87–2.03)</td>
+<td style="text-align: right;">0.030 s</td>
+<td style="text-align: right;">403</td>
+<td style="text-align: right;">12.1</td>
+<td style="text-align: right;">1.14× (1.10–1.17)</td>
+<td style="text-align: right;">2.72× (2.58–2.86)</td>
+<td style="text-align: right;">3.20× (2.99–3.41)</td>
+<td style="text-align: right;">3.83× (3.43–4.28)</td>
+<td style="text-align: right;">4.02× (3.86–4.20)</td>
+<td style="text-align: right;">5.77× (5.51–6.04)</td>
+<td style="text-align: right;">5.16× (4.94–5.39)</td>
+<td style="text-align: right;">1.74× (1.68–1.81)</td>
+<td style="text-align: right;">2.02× (1.96–2.08)</td>
 <td>yes</td>
 </tr>
 <tr>
 <td><code>text</code> (1.48 MB → 12.3 MB, 8.3×)</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">0.036 s</td>
-<td style="text-align: right;">344</td>
-<td style="text-align: right;">35.8</td>
-<td style="text-align: right;">1.21× (1.17–1.25)</td>
-<td style="text-align: right;">2.29× (2.09–2.51)</td>
-<td style="text-align: right;">2.99× (2.73–3.29)</td>
-<td style="text-align: right;">3.04× (2.95–3.12)</td>
-<td style="text-align: right;">3.73× (3.53–3.94)</td>
-<td style="text-align: right;">6.32× (6.10–6.56)</td>
-<td style="text-align: right;">5.87× (5.67–6.07)</td>
-<td style="text-align: right;">2.00× (1.93–2.07)</td>
-<td style="text-align: right;">2.28× (2.18–2.39)</td>
+<td style="text-align: right;">0.028 s</td>
+<td style="text-align: right;">431</td>
+<td style="text-align: right;">19.6</td>
+<td style="text-align: right;">1.04× (1.01–1.07)</td>
+<td style="text-align: right;">2.02× (1.84–2.21)</td>
+<td style="text-align: right;">2.61× (2.51–2.72)</td>
+<td style="text-align: right;">2.89× (2.82–2.96)</td>
+<td style="text-align: right;">3.56× (3.43–3.69)</td>
+<td style="text-align: right;">6.28× (5.94–6.64)</td>
+<td style="text-align: right;">5.62× (5.39–5.85)</td>
+<td style="text-align: right;">1.90× (1.84–1.96)</td>
+<td style="text-align: right;">2.20× (2.10–2.30)</td>
 <td>yes</td>
 </tr>
 </tbody>
@@ -1862,275 +1862,275 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <tr>
 <td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">1.92× (1.87–1.98)</td>
-<td style="text-align: right;">4.38× (4.22–4.55)</td>
-<td style="text-align: right;">4.55× (4.36–4.75)</td>
-<td style="text-align: right;">5.19× (4.98–5.40)</td>
-<td style="text-align: right;">4.61× (4.40–4.83)</td>
-<td style="text-align: right;">5.12× (4.93–5.31)</td>
-<td style="text-align: right;">4.46× (4.31–4.62)</td>
-<td style="text-align: right;">1.43× (1.40–1.47)</td>
-<td style="text-align: right;">1.59× (1.52–1.66)</td>
+<td style="text-align: right;">2.13× (2.03–2.23)</td>
+<td style="text-align: right;">5.30× (5.07–5.53)</td>
+<td style="text-align: right;">5.49× (5.20–5.80)</td>
+<td style="text-align: right;">6.28× (6.04–6.53)</td>
+<td style="text-align: right;">5.58× (5.31–5.86)</td>
+<td style="text-align: right;">5.87× (5.59–6.16)</td>
+<td style="text-align: right;">5.47× (5.25–5.70)</td>
+<td style="text-align: right;">1.66× (1.59–1.73)</td>
+<td style="text-align: right;">1.91× (1.84–1.99)</td>
 </tr>
 <tr>
 <td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
 <td style="text-align: right;">2</td>
-<td style="text-align: right;">1.78× (1.71–1.85)</td>
-<td style="text-align: right;">4.04× (3.82–4.27)</td>
-<td style="text-align: right;">4.29× (4.10–4.49)</td>
-<td style="text-align: right;">4.85× (4.57–5.14)</td>
-<td style="text-align: right;">4.14× (3.95–4.35)</td>
-<td style="text-align: right;">4.56× (4.31–4.82)</td>
-<td style="text-align: right;">3.97× (3.74–4.23)</td>
-<td style="text-align: right;">1.28× (1.20–1.35)</td>
-<td style="text-align: right;">1.41× (1.32–1.51)</td>
+<td style="text-align: right;">1.91× (1.78–2.04)</td>
+<td style="text-align: right;">4.74× (4.43–5.07)</td>
+<td style="text-align: right;">4.96× (4.67–5.27)</td>
+<td style="text-align: right;">5.76× (5.43–6.11)</td>
+<td style="text-align: right;">4.87× (4.53–5.23)</td>
+<td style="text-align: right;">5.04× (4.68–5.44)</td>
+<td style="text-align: right;">4.70× (4.38–5.05)</td>
+<td style="text-align: right;">1.42× (1.34–1.52)</td>
+<td style="text-align: right;">1.64× (1.53–1.76)</td>
 </tr>
 <tr>
 <td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">1.79× (1.73–1.84)</td>
-<td style="text-align: right;">3.04× (2.89–3.21)</td>
-<td style="text-align: right;">3.17× (3.04–3.30)</td>
-<td style="text-align: right;">3.57× (3.44–3.71)</td>
-<td style="text-align: right;">3.15× (3.02–3.29)</td>
-<td style="text-align: right;">2.78× (2.69–2.87)</td>
-<td style="text-align: right;">2.43× (2.34–2.52)</td>
-<td style="text-align: right;">0.78× (0.75–0.81)</td>
-<td style="text-align: right;">0.86× (0.83–0.89)</td>
+<td style="text-align: right;">1.60× (1.57–1.64)</td>
+<td style="text-align: right;">3.09× (2.99–3.19)</td>
+<td style="text-align: right;">3.32× (3.21–3.45)</td>
+<td style="text-align: right;">3.78× (3.59–3.97)</td>
+<td style="text-align: right;">3.29× (3.14–3.45)</td>
+<td style="text-align: right;">2.74× (2.59–2.89)</td>
+<td style="text-align: right;">2.55× (2.42–2.68)</td>
+<td style="text-align: right;">0.77× (0.74–0.81)</td>
+<td style="text-align: right;">0.89× (0.85–0.94)</td>
 </tr>
 <tr>
 <td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">0.58× (0.56–0.60)</td>
-<td style="text-align: right;">2.78× (2.67–2.90)</td>
-<td style="text-align: right;">3.71× (3.57–3.85)</td>
-<td style="text-align: right;">3.16× (3.05–3.27)</td>
-<td style="text-align: right;">5.79× (5.58–6.00)</td>
-<td style="text-align: right;">2.38× (2.30–2.46)</td>
-<td style="text-align: right;">2.36× (2.28–2.45)</td>
-<td style="text-align: right;">1.00× (0.95–1.05)</td>
-<td style="text-align: right;">1.59× (1.54–1.64)</td>
+<td style="text-align: right;">0.60× (0.58–0.62)</td>
+<td style="text-align: right;">2.98× (2.88–3.09)</td>
+<td style="text-align: right;">3.96× (3.71–4.24)</td>
+<td style="text-align: right;">3.35× (3.26–3.43)</td>
+<td style="text-align: right;">6.59× (5.81–7.48)</td>
+<td style="text-align: right;">2.55× (2.46–2.64)</td>
+<td style="text-align: right;">2.54× (2.45–2.62)</td>
+<td style="text-align: right;">1.01× (0.98–1.04)</td>
+<td style="text-align: right;">1.81× (1.75–1.88)</td>
 </tr>
 <tr>
 <td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
 <td style="text-align: right;">2</td>
-<td style="text-align: right;">0.58× (0.56–0.59)</td>
-<td style="text-align: right;">2.69× (2.62–2.77)</td>
-<td style="text-align: right;">5.34× (5.19–5.50)</td>
-<td style="text-align: right;">3.24× (3.15–3.33)</td>
-<td style="text-align: right;">5.84× (5.70–5.97)</td>
-<td style="text-align: right;">2.41× (2.35–2.48)</td>
-<td style="text-align: right;">2.40× (2.33–2.47)</td>
-<td style="text-align: right;">1.01× (0.99–1.04)</td>
-<td style="text-align: right;">1.61× (1.57–1.65)</td>
+<td style="text-align: right;">0.57× (0.55–0.59)</td>
+<td style="text-align: right;">2.81× (2.72–2.89)</td>
+<td style="text-align: right;">5.06× (4.91–5.23)</td>
+<td style="text-align: right;">3.37× (3.25–3.48)</td>
+<td style="text-align: right;">6.05× (5.93–6.18)</td>
+<td style="text-align: right;">2.52× (2.44–2.59)</td>
+<td style="text-align: right;">2.50× (2.42–2.59)</td>
+<td style="text-align: right;">0.99× (0.96–1.03)</td>
+<td style="text-align: right;">1.79× (1.72–1.85)</td>
 </tr>
 <tr>
 <td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">0.59× (0.51–0.67)</td>
-<td style="text-align: right;">2.96× (2.91–3.00)</td>
-<td style="text-align: right;">5.29× (5.22–5.37)</td>
-<td style="text-align: right;">3.23× (3.18–3.28)</td>
-<td style="text-align: right;">5.85× (5.74–5.96)</td>
-<td style="text-align: right;">2.40× (2.37–2.44)</td>
-<td style="text-align: right;">2.39× (2.35–2.42)</td>
-<td style="text-align: right;">1.01× (0.97–1.04)</td>
-<td style="text-align: right;">1.60× (1.58–1.62)</td>
+<td style="text-align: right;">0.60× (0.53–0.69)</td>
+<td style="text-align: right;">3.04× (2.96–3.11)</td>
+<td style="text-align: right;">5.12× (5.00–5.24)</td>
+<td style="text-align: right;">3.42× (3.31–3.52)</td>
+<td style="text-align: right;">6.12× (5.97–6.26)</td>
+<td style="text-align: right;">2.55× (2.50–2.59)</td>
+<td style="text-align: right;">2.53× (2.48–2.59)</td>
+<td style="text-align: right;">1.01× (1.00–1.02)</td>
+<td style="text-align: right;">1.81× (1.77–1.85)</td>
 </tr>
 <tr>
 <td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">2.06× (1.99–2.14)</td>
-<td style="text-align: right;">2.29× (2.26–2.33)</td>
-<td style="text-align: right;">2.72× (2.68–2.75)</td>
-<td style="text-align: right;">3.16× (3.00–3.33)</td>
-<td style="text-align: right;">3.71× (3.65–3.77)</td>
-<td style="text-align: right;">2.59× (2.55–2.63)</td>
-<td style="text-align: right;">1.73× (1.70–1.76)</td>
-<td style="text-align: right;">1.62× (1.60–1.64)</td>
-<td style="text-align: right;">2.13× (2.09–2.16)</td>
-</tr>
-<tr>
-<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">1.78× (1.74–1.82)</td>
-<td style="text-align: right;">1.99× (1.91–2.07)</td>
-<td style="text-align: right;">2.64× (2.55–2.74)</td>
-<td style="text-align: right;">2.62× (2.52–2.72)</td>
-<td style="text-align: right;">3.08× (2.96–3.21)</td>
-<td style="text-align: right;">2.09× (2.01–2.17)</td>
-<td style="text-align: right;">1.40× (1.34–1.45)</td>
-<td style="text-align: right;">1.31× (1.27–1.35)</td>
-<td style="text-align: right;">1.72× (1.65–1.78)</td>
-</tr>
-<tr>
-<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">1.60× (1.53–1.66)</td>
-<td style="text-align: right;">1.42× (1.36–1.47)</td>
-<td style="text-align: right;">1.76× (1.71–1.82)</td>
-<td style="text-align: right;">1.66× (1.61–1.70)</td>
-<td style="text-align: right;">1.77× (1.72–1.82)</td>
-<td style="text-align: right;">1.04× (1.02–1.07)</td>
-<td style="text-align: right;">0.70× (0.68–0.72)</td>
-<td style="text-align: right;">0.65× (0.63–0.68)</td>
-<td style="text-align: right;">0.86× (0.83–0.89)</td>
-</tr>
-<tr>
-<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1.21× (1.20–1.22)</td>
-<td style="text-align: right;">2.28× (2.26–2.30)</td>
-<td style="text-align: right;">2.09× (2.07–2.10)</td>
-<td style="text-align: right;">2.17× (2.14–2.20)</td>
-<td style="text-align: right;">2.55× (2.48–2.62)</td>
-<td style="text-align: right;">2.75× (2.72–2.79)</td>
-<td style="text-align: right;">2.59× (2.55–2.63)</td>
-<td style="text-align: right;">1.10× (1.09–1.11)</td>
-<td style="text-align: right;">1.16× (1.15–1.17)</td>
-</tr>
-<tr>
-<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">1.16× (1.15–1.17)</td>
-<td style="text-align: right;">2.21× (2.19–2.23)</td>
-<td style="text-align: right;">2.02× (2.00–2.05)</td>
-<td style="text-align: right;">2.65× (2.62–2.68)</td>
-<td style="text-align: right;">2.38× (2.35–2.41)</td>
-<td style="text-align: right;">2.53× (2.48–2.57)</td>
-<td style="text-align: right;">2.38× (2.35–2.41)</td>
-<td style="text-align: right;">1.01× (0.99–1.02)</td>
-<td style="text-align: right;">1.07× (1.05–1.08)</td>
-</tr>
-<tr>
-<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">1.41× (1.39–1.44)</td>
-<td style="text-align: right;">2.23× (2.12–2.33)</td>
-<td style="text-align: right;">1.93× (1.86–1.99)</td>
-<td style="text-align: right;">2.55× (2.47–2.63)</td>
-<td style="text-align: right;">2.47× (2.37–2.57)</td>
-<td style="text-align: right;">1.98× (1.94–2.02)</td>
-<td style="text-align: right;">1.86× (1.83–1.90)</td>
-<td style="text-align: right;">0.79× (0.78–0.80)</td>
-<td style="text-align: right;">0.84× (0.82–0.85)</td>
-</tr>
-<tr>
-<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1.10× (1.05–1.15)</td>
-<td style="text-align: right;">2.22× (2.13–2.33)</td>
-<td style="text-align: right;">1.91× (1.83–1.99)</td>
-<td style="text-align: right;">1.97× (1.89–2.06)</td>
-<td style="text-align: right;">2.34× (2.19–2.49)</td>
-<td style="text-align: right;">2.86× (2.75–2.96)</td>
-<td style="text-align: right;">2.79× (2.67–2.90)</td>
-<td style="text-align: right;">1.11× (1.06–1.17)</td>
-<td style="text-align: right;">1.22× (1.17–1.28)</td>
-</tr>
-<tr>
-<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
-<td style="text-align: right;">2</td>
-<td style="text-align: right;">1.09× (1.08–1.11)</td>
-<td style="text-align: right;">2.21× (2.16–2.27)</td>
-<td style="text-align: right;">1.89× (1.87–1.90)</td>
-<td style="text-align: right;">2.66× (2.62–2.71)</td>
-<td style="text-align: right;">2.25× (2.22–2.28)</td>
+<td style="text-align: right;">2.30× (2.27–2.32)</td>
 <td style="text-align: right;">2.69× (2.66–2.72)</td>
-<td style="text-align: right;">2.63× (2.61–2.65)</td>
-<td style="text-align: right;">1.05× (1.03–1.07)</td>
-<td style="text-align: right;">1.15× (1.14–1.17)</td>
+<td style="text-align: right;">3.16× (3.12–3.20)</td>
+<td style="text-align: right;">3.54× (3.50–3.57)</td>
+<td style="text-align: right;">4.44× (4.38–4.51)</td>
+<td style="text-align: right;">2.22× (2.20–2.24)</td>
+<td style="text-align: right;">2.16× (2.02–2.31)</td>
+<td style="text-align: right;">1.68× (1.64–1.72)</td>
+<td style="text-align: right;">2.28× (2.25–2.32)</td>
 </tr>
 <tr>
-<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
-<td style="text-align: right;">4</td>
-<td style="text-align: right;">1.37× (1.35–1.38)</td>
-<td style="text-align: right;">2.24× (2.15–2.33)</td>
-<td style="text-align: right;">1.78× (1.69–1.88)</td>
-<td style="text-align: right;">2.47× (2.46–2.48)</td>
-<td style="text-align: right;">2.35× (2.26–2.43)</td>
-<td style="text-align: right;">2.09× (2.06–2.11)</td>
-<td style="text-align: right;">2.04× (2.02–2.06)</td>
-<td style="text-align: right;">0.81× (0.80–0.83)</td>
-<td style="text-align: right;">0.89× (0.88–0.91)</td>
-</tr>
-<tr>
-<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0.64× (0.64–0.65)</td>
-<td style="text-align: right;">2.38× (2.35–2.41)</td>
-<td style="text-align: right;">3.30× (3.28–3.32)</td>
-<td style="text-align: right;">2.71× (2.69–2.73)</td>
-<td style="text-align: right;">6.41× (6.33–6.48)</td>
-<td style="text-align: right;">2.08× (2.06–2.10)</td>
-<td style="text-align: right;">2.07× (2.02–2.11)</td>
-<td style="text-align: right;">0.98× (0.98–0.99)</td>
-<td style="text-align: right;">1.33× (1.31–1.34)</td>
-</tr>
-<tr>
-<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
 <td style="text-align: right;">2</td>
-<td style="text-align: right;">0.58× (0.57–0.59)</td>
-<td style="text-align: right;">2.22× (2.18–2.27)</td>
-<td style="text-align: right;">4.22× (4.14–4.29)</td>
-<td style="text-align: right;">2.68× (2.62–2.74)</td>
-<td style="text-align: right;">6.15× (6.03–6.28)</td>
-<td style="text-align: right;">2.00× (1.97–2.04)</td>
-<td style="text-align: right;">1.99× (1.96–2.02)</td>
-<td style="text-align: right;">0.95× (0.93–0.97)</td>
-<td style="text-align: right;">1.28× (1.25–1.31)</td>
+<td style="text-align: right;">1.89× (1.81–1.97)</td>
+<td style="text-align: right;">2.24× (2.14–2.34)</td>
+<td style="text-align: right;">2.67× (2.59–2.76)</td>
+<td style="text-align: right;">2.91× (2.79–3.03)</td>
+<td style="text-align: right;">3.70× (3.25–4.21)</td>
+<td style="text-align: right;">1.70× (1.64–1.78)</td>
+<td style="text-align: right;">1.66× (1.53–1.80)</td>
+<td style="text-align: right;">1.29× (1.22–1.36)</td>
+<td style="text-align: right;">1.75× (1.67–1.85)</td>
 </tr>
 <tr>
-<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">0.57× (0.57–0.58)</td>
-<td style="text-align: right;">2.51× (2.46–2.56)</td>
-<td style="text-align: right;">4.34× (4.27–4.41)</td>
-<td style="text-align: right;">2.81× (2.78–2.84)</td>
-<td style="text-align: right;">6.41× (6.26–6.57)</td>
-<td style="text-align: right;">2.09× (2.06–2.11)</td>
-<td style="text-align: right;">2.07× (2.03–2.12)</td>
-<td style="text-align: right;">0.99× (0.97–1.01)</td>
-<td style="text-align: right;">1.33× (1.31–1.35)</td>
+<td style="text-align: right;">1.65× (1.44–1.88)</td>
+<td style="text-align: right;">1.52× (1.45–1.60)</td>
+<td style="text-align: right;">1.81× (1.73–1.91)</td>
+<td style="text-align: right;">1.82× (1.73–1.90)</td>
+<td style="text-align: right;">1.99× (1.90–2.08)</td>
+<td style="text-align: right;">0.85× (0.81–0.90)</td>
+<td style="text-align: right;">0.83× (0.76–0.90)</td>
+<td style="text-align: right;">0.64× (0.62–0.68)</td>
+<td style="text-align: right;">0.88× (0.83–0.93)</td>
 </tr>
 <tr>
-<td><code>text</code> (1.48 MB → 12.3 MB, 8.3×)</td>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">1.30× (1.27–1.32)</td>
-<td style="text-align: right;">2.73× (2.69–2.78)</td>
-<td style="text-align: right;">3.12× (3.07–3.17)</td>
-<td style="text-align: right;">3.25× (3.21–3.29)</td>
-<td style="text-align: right;">3.65× (3.52–3.77)</td>
-<td style="text-align: right;">3.28× (3.22–3.34)</td>
-<td style="text-align: right;">3.04× (2.99–3.10)</td>
-<td style="text-align: right;">1.05× (1.04–1.07)</td>
+<td style="text-align: right;">1.20× (1.10–1.31)</td>
+<td style="text-align: right;">2.67× (2.46–2.91)</td>
+<td style="text-align: right;">2.35× (2.14–2.58)</td>
+<td style="text-align: right;">2.39× (2.20–2.60)</td>
+<td style="text-align: right;">2.75× (2.53–3.00)</td>
+<td style="text-align: right;">3.24× (2.96–3.54)</td>
+<td style="text-align: right;">2.97× (2.73–3.22)</td>
+<td style="text-align: right;">1.20× (1.10–1.31)</td>
+<td style="text-align: right;">1.24× (1.14–1.34)</td>
+</tr>
+<tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1.17× (1.14–1.19)</td>
+<td style="text-align: right;">2.65× (2.62–2.69)</td>
+<td style="text-align: right;">2.26× (2.20–2.31)</td>
+<td style="text-align: right;">2.95× (2.82–3.09)</td>
+<td style="text-align: right;">2.67× (2.53–2.80)</td>
+<td style="text-align: right;">3.01× (2.94–3.08)</td>
+<td style="text-align: right;">2.76× (2.71–2.81)</td>
+<td style="text-align: right;">1.12× (1.10–1.13)</td>
 <td style="text-align: right;">1.15× (1.13–1.17)</td>
 </tr>
 <tr>
+<td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.28× (1.24–1.31)</td>
+<td style="text-align: right;">2.36× (2.33–2.40)</td>
+<td style="text-align: right;">2.02× (1.94–2.09)</td>
+<td style="text-align: right;">2.62× (2.53–2.71)</td>
+<td style="text-align: right;">2.48× (2.43–2.54)</td>
+<td style="text-align: right;">2.22× (2.17–2.27)</td>
+<td style="text-align: right;">2.04× (2.02–2.06)</td>
+<td style="text-align: right;">0.82× (0.82–0.83)</td>
+<td style="text-align: right;">0.85× (0.84–0.86)</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.10× (1.07–1.12)</td>
+<td style="text-align: right;">2.77× (2.65–2.89)</td>
+<td style="text-align: right;">2.17× (2.11–2.23)</td>
+<td style="text-align: right;">2.28× (2.22–2.35)</td>
+<td style="text-align: right;">2.62× (2.55–2.70)</td>
+<td style="text-align: right;">3.49× (3.41–3.57)</td>
+<td style="text-align: right;">3.42× (3.34–3.50)</td>
+<td style="text-align: right;">1.23× (1.20–1.27)</td>
+<td style="text-align: right;">1.30× (1.26–1.35)</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1.04× (1.01–1.06)</td>
+<td style="text-align: right;">2.53× (2.47–2.60)</td>
+<td style="text-align: right;">2.01× (1.97–2.05)</td>
+<td style="text-align: right;">2.87× (2.77–2.98)</td>
+<td style="text-align: right;">2.43× (2.35–2.51)</td>
+<td style="text-align: right;">3.08× (3.03–3.13)</td>
+<td style="text-align: right;">3.02× (2.95–3.09)</td>
+<td style="text-align: right;">1.09× (1.07–1.11)</td>
+<td style="text-align: right;">1.15× (1.11–1.20)</td>
+</tr>
+<tr>
+<td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1.18× (1.12–1.24)</td>
+<td style="text-align: right;">2.31× (2.23–2.40)</td>
+<td style="text-align: right;">1.74× (1.66–1.83)</td>
+<td style="text-align: right;">2.53× (2.36–2.72)</td>
+<td style="text-align: right;">2.32× (2.22–2.42)</td>
+<td style="text-align: right;">2.23× (2.13–2.33)</td>
+<td style="text-align: right;">2.18× (2.08–2.29)</td>
+<td style="text-align: right;">0.79× (0.75–0.83)</td>
+<td style="text-align: right;">0.83× (0.79–0.88)</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.64× (0.63–0.65)</td>
+<td style="text-align: right;">2.44× (2.38–2.50)</td>
+<td style="text-align: right;">3.30× (3.21–3.40)</td>
+<td style="text-align: right;">2.74× (2.65–2.82)</td>
+<td style="text-align: right;">6.58× (6.34–6.83)</td>
+<td style="text-align: right;">2.15× (1.96–2.36)</td>
+<td style="text-align: right;">2.06× (1.97–2.15)</td>
+<td style="text-align: right;">0.98× (0.96–1.00)</td>
+<td style="text-align: right;">1.44× (1.40–1.49)</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.52× (0.41–0.65)</td>
+<td style="text-align: right;">2.11× (1.65–2.68)</td>
+<td style="text-align: right;">3.64× (2.88–4.61)</td>
+<td style="text-align: right;">2.47× (1.96–3.11)</td>
+<td style="text-align: right;">5.73× (4.55–7.23)</td>
+<td style="text-align: right;">1.90× (1.48–2.44)</td>
+<td style="text-align: right;">1.82× (1.45–2.28)</td>
+<td style="text-align: right;">0.87× (0.70–1.09)</td>
+<td style="text-align: right;">1.28× (1.02–1.61)</td>
+</tr>
+<tr>
+<td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.55× (0.54–0.57)</td>
+<td style="text-align: right;">2.47× (2.42–2.53)</td>
+<td style="text-align: right;">4.01× (3.90–4.11)</td>
+<td style="text-align: right;">2.78× (2.69–2.86)</td>
+<td style="text-align: right;">6.51× (6.28–6.75)</td>
+<td style="text-align: right;">2.12× (1.97–2.28)</td>
+<td style="text-align: right;">2.03× (1.97–2.09)</td>
+<td style="text-align: right;">0.97× (0.95–0.99)</td>
+<td style="text-align: right;">1.43× (1.40–1.46)</td>
+</tr>
+<tr>
+<td><code>text</code> (1.48 MB → 12.3 MB, 8.3×)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1.33× (1.31–1.35)</td>
+<td style="text-align: right;">3.04× (2.99–3.10)</td>
+<td style="text-align: right;">3.28× (3.23–3.32)</td>
+<td style="text-align: right;">3.49× (3.43–3.55)</td>
+<td style="text-align: right;">3.98× (3.92–4.04)</td>
+<td style="text-align: right;">3.68× (3.56–3.80)</td>
+<td style="text-align: right;">3.29× (3.23–3.35)</td>
+<td style="text-align: right;">1.13× (1.11–1.15)</td>
+<td style="text-align: right;">1.25× (1.23–1.27)</td>
+</tr>
+<tr>
 <td><code>text</code> (1.48 MB → 12.3 MB, 8.3×)</td>
 <td style="text-align: right;">2</td>
-<td style="text-align: right;">1.19× (1.16–1.22)</td>
-<td style="text-align: right;">2.47× (2.40–2.55)</td>
-<td style="text-align: right;">2.89× (2.80–2.99)</td>
-<td style="text-align: right;">3.11× (3.04–3.18)</td>
-<td style="text-align: right;">3.17× (3.10–3.24)</td>
-<td style="text-align: right;">2.82× (2.75–2.89)</td>
-<td style="text-align: right;">2.62× (2.56–2.68)</td>
-<td style="text-align: right;">0.91× (0.89–0.93)</td>
-<td style="text-align: right;">0.99× (0.96–1.01)</td>
+<td style="text-align: right;">1.19× (1.16–1.23)</td>
+<td style="text-align: right;">2.63× (2.56–2.70)</td>
+<td style="text-align: right;">2.91× (2.81–3.00)</td>
+<td style="text-align: right;">3.28× (3.20–3.37)</td>
+<td style="text-align: right;">3.38× (3.29–3.47)</td>
+<td style="text-align: right;">3.08× (2.96–3.20)</td>
+<td style="text-align: right;">2.75× (2.67–2.84)</td>
+<td style="text-align: right;">0.94× (0.93–0.96)</td>
+<td style="text-align: right;">1.04× (1.02–1.07)</td>
 </tr>
 <tr>
 <td><code>text</code> (1.48 MB → 12.3 MB, 8.3×)</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">1.35× (1.30–1.41)</td>
-<td style="text-align: right;">2.23× (2.03–2.46)</td>
-<td style="text-align: right;">2.76× (2.42–3.15)</td>
-<td style="text-align: right;">2.59× (2.54–2.64)</td>
-<td style="text-align: right;">2.74× (2.60–2.88)</td>
-<td style="text-align: right;">1.90× (1.86–1.95)</td>
-<td style="text-align: right;">1.77× (1.73–1.81)</td>
-<td style="text-align: right;">0.61× (0.60–0.62)</td>
-<td style="text-align: right;">0.67× (0.65–0.68)</td>
+<td style="text-align: right;">1.18× (1.16–1.21)</td>
+<td style="text-align: right;">2.15× (2.00–2.32)</td>
+<td style="text-align: right;">2.32× (2.25–2.38)</td>
+<td style="text-align: right;">2.50× (2.46–2.55)</td>
+<td style="text-align: right;">2.58× (2.48–2.68)</td>
+<td style="text-align: right;">1.92× (1.81–2.03)</td>
+<td style="text-align: right;">1.72× (1.64–1.80)</td>
+<td style="text-align: right;">0.59× (0.57–0.61)</td>
+<td style="text-align: right;">0.65× (0.62–0.68)</td>
 </tr>
 </tbody>
 </table>
@@ -2160,8 +2160,8 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <td style="text-align: right;">0.32× (0.32–0.32)</td>
 <td style="text-align: right;">0.35× (0.34–0.36)</td>
 <td style="text-align: right;">1.16× (1.16–1.17)</td>
-<td style="text-align: right;">0.84× (0.84–0.84)</td>
-<td style="text-align: right;">11.82× (11.80–11.83)</td>
+<td style="text-align: right;">0.86× (0.84–0.88)</td>
+<td style="text-align: right;">11.83× (11.82–11.84)</td>
 <td style="text-align: right;">0.28× (0.28–0.28)</td>
 <td style="text-align: right;">0.30× (0.29–0.30)</td>
 <td style="text-align: right;">0.45× (0.45–0.45)</td>
@@ -2170,28 +2170,28 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <tr>
 <td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
 <td style="text-align: right;">2</td>
-<td style="text-align: right;">50 MB</td>
-<td style="text-align: right;">0.37× (0.37–0.38)</td>
-<td style="text-align: right;">0.50× (0.43–0.59)</td>
-<td style="text-align: right;">0.85× (0.83–0.87)</td>
-<td style="text-align: right;">0.66× (0.65–0.67)</td>
-<td style="text-align: right;">6.29× (6.19–6.39)</td>
+<td style="text-align: right;">49 MB</td>
+<td style="text-align: right;">0.38× (0.37–0.38)</td>
+<td style="text-align: right;">0.55× (0.49–0.63)</td>
+<td style="text-align: right;">0.86× (0.85–0.87)</td>
+<td style="text-align: right;">0.68× (0.67–0.69)</td>
+<td style="text-align: right;">6.35× (6.26–6.44)</td>
 <td style="text-align: right;">0.15× (0.15–0.15)</td>
 <td style="text-align: right;">0.16× (0.16–0.16)</td>
-<td style="text-align: right;">0.24× (0.24–0.24)</td>
-<td style="text-align: right;">0.12× (0.12–0.12)</td>
+<td style="text-align: right;">0.24× (0.24–0.25)</td>
+<td style="text-align: right;">0.12× (0.12–0.13)</td>
 </tr>
 <tr>
 <td><code>wikidata</code> (11.9 MB → 210 MB, 17.7×)</td>
 <td style="text-align: right;">4</td>
 <td style="text-align: right;">74 MB</td>
-<td style="text-align: right;">0.41× (0.40–0.42)</td>
-<td style="text-align: right;">0.62× (0.54–0.71)</td>
-<td style="text-align: right;">0.78× (0.77–0.80)</td>
-<td style="text-align: right;">0.65× (0.64–0.66)</td>
-<td style="text-align: right;">4.31× (4.25–4.38)</td>
+<td style="text-align: right;">0.41× (0.40–0.41)</td>
+<td style="text-align: right;">0.75× (0.63–0.89)</td>
+<td style="text-align: right;">0.76× (0.76–0.77)</td>
+<td style="text-align: right;">0.64× (0.63–0.65)</td>
+<td style="text-align: right;">4.26× (4.24–4.28)</td>
 <td style="text-align: right;">0.10× (0.10–0.10)</td>
-<td style="text-align: right;">0.11× (0.10–0.11)</td>
+<td style="text-align: right;">0.10× (0.10–0.11)</td>
 <td style="text-align: right;">0.16× (0.16–0.16)</td>
 <td style="text-align: right;">0.08× (0.08–0.08)</td>
 </tr>
@@ -2200,27 +2200,27 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">34 MB</td>
 <td style="text-align: right;">0.27× (0.27–0.27)</td>
-<td style="text-align: right;">0.17× (0.17–0.18)</td>
+<td style="text-align: right;">0.18× (0.17–0.18)</td>
 <td style="text-align: right;">0.81× (0.81–0.81)</td>
 <td style="text-align: right;">0.80× (0.80–0.80)</td>
-<td style="text-align: right;">4.28× (4.27–4.28)</td>
+<td style="text-align: right;">4.28× (4.28–4.28)</td>
 <td style="text-align: right;">0.25× (0.25–0.25)</td>
-<td style="text-align: right;">0.27× (0.26–0.27)</td>
+<td style="text-align: right;">0.27× (0.27–0.27)</td>
 <td style="text-align: right;">0.91× (0.90–0.91)</td>
-<td style="text-align: right;">0.10× (0.10–0.11)</td>
+<td style="text-align: right;">0.11× (0.11–0.11)</td>
 </tr>
 <tr>
 <td><code>onebyte</code> (51 B → 20 MB, 392156.9×)</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">33 MB</td>
-<td style="text-align: right;">0.19× (0.19–0.20)</td>
+<td style="text-align: right;">0.20× (0.19–0.20)</td>
 <td style="text-align: right;">0.16× (0.16–0.16)</td>
 <td style="text-align: right;">1.77× (1.77–1.77)</td>
 <td style="text-align: right;">0.83× (0.83–0.83)</td>
-<td style="text-align: right;">4.39× (4.39–4.40)</td>
+<td style="text-align: right;">4.40× (4.39–4.40)</td>
 <td style="text-align: right;">0.26× (0.26–0.26)</td>
 <td style="text-align: right;">0.27× (0.27–0.28)</td>
-<td style="text-align: right;">0.93× (0.92–0.93)</td>
+<td style="text-align: right;">0.93× (0.93–0.93)</td>
 <td style="text-align: right;">0.11× (0.11–0.11)</td>
 </tr>
 <tr>
@@ -2229,8 +2229,8 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <td style="text-align: right;">33 MB</td>
 <td style="text-align: right;">0.19× (0.19–0.19)</td>
 <td style="text-align: right;">0.16× (0.16–0.16)</td>
-<td style="text-align: right;">1.77× (1.77–1.78)</td>
-<td style="text-align: right;">0.83× (0.83–0.84)</td>
+<td style="text-align: right;">1.77× (1.77–1.77)</td>
+<td style="text-align: right;">0.83× (0.83–0.83)</td>
 <td style="text-align: right;">4.40× (4.39–4.40)</td>
 <td style="text-align: right;">0.26× (0.26–0.26)</td>
 <td style="text-align: right;">0.27× (0.27–0.28)</td>
@@ -2242,41 +2242,41 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">17 MB</td>
 <td style="text-align: right;">0.49× (0.49–0.49)</td>
-<td style="text-align: right;">0.43× (0.43–0.43)</td>
-<td style="text-align: right;">1.63× (1.63–1.63)</td>
-<td style="text-align: right;">0.64× (0.63–0.64)</td>
-<td style="text-align: right;">7.76× (7.75–7.77)</td>
+<td style="text-align: right;">0.45× (0.43–0.47)</td>
+<td style="text-align: right;">1.63× (1.62–1.63)</td>
+<td style="text-align: right;">0.64× (0.64–0.64)</td>
+<td style="text-align: right;">7.76× (7.74–7.78)</td>
 <td style="text-align: right;">0.62× (0.62–0.62)</td>
 <td style="text-align: right;">0.65× (0.65–0.66)</td>
-<td style="text-align: right;">0.71× (0.70–0.71)</td>
+<td style="text-align: right;">0.71× (0.71–0.71)</td>
 <td style="text-align: right;">0.35× (0.35–0.35)</td>
 </tr>
 <tr>
 <td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">24 MB</td>
-<td style="text-align: right;">0.63× (0.61–0.64)</td>
-<td style="text-align: right;">0.57× (0.53–0.60)</td>
-<td style="text-align: right;">1.53× (1.50–1.55)</td>
-<td style="text-align: right;">0.86× (0.85–0.88)</td>
-<td style="text-align: right;">5.53× (5.43–5.64)</td>
-<td style="text-align: right;">0.44× (0.43–0.45)</td>
+<td style="text-align: right;">0.63× (0.61–0.65)</td>
+<td style="text-align: right;">0.63× (0.57–0.69)</td>
+<td style="text-align: right;">1.51× (1.49–1.53)</td>
+<td style="text-align: right;">0.87× (0.85–0.89)</td>
+<td style="text-align: right;">5.48× (5.42–5.55)</td>
+<td style="text-align: right;">0.44× (0.43–0.44)</td>
 <td style="text-align: right;">0.46× (0.45–0.47)</td>
-<td style="text-align: right;">0.50× (0.50–0.51)</td>
-<td style="text-align: right;">0.25× (0.25–0.26)</td>
+<td style="text-align: right;">0.50× (0.49–0.51)</td>
+<td style="text-align: right;">0.25× (0.24–0.25)</td>
 </tr>
 <tr>
 <td><code>pattern</code> (1.12 kB → 19.6 MB, 17562.7×)</td>
 <td style="text-align: right;">4</td>
 <td style="text-align: right;">42 MB</td>
-<td style="text-align: right;">0.61× (0.59–0.62)</td>
-<td style="text-align: right;">0.65× (0.61–0.69)</td>
-<td style="text-align: right;">1.10× (1.09–1.11)</td>
-<td style="text-align: right;">0.86× (0.85–0.87)</td>
-<td style="text-align: right;">3.22× (3.18–3.25)</td>
+<td style="text-align: right;">0.60× (0.59–0.62)</td>
+<td style="text-align: right;">0.65× (0.62–0.68)</td>
+<td style="text-align: right;">1.10× (1.08–1.12)</td>
+<td style="text-align: right;">0.85× (0.83–0.86)</td>
+<td style="text-align: right;">3.18× (3.13–3.23)</td>
 <td style="text-align: right;">0.25× (0.24–0.25)</td>
-<td style="text-align: right;">0.26× (0.26–0.26)</td>
-<td style="text-align: right;">0.28× (0.28–0.29)</td>
+<td style="text-align: right;">0.26× (0.25–0.26)</td>
+<td style="text-align: right;">0.28× (0.28–0.28)</td>
 <td style="text-align: right;">0.14× (0.14–0.14)</td>
 </tr>
 <tr>
@@ -2286,40 +2286,40 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <td style="text-align: right;">0.39× (0.39–0.39)</td>
 <td style="text-align: right;">0.31× (0.31–0.31)</td>
 <td style="text-align: right;">1.14× (1.14–1.14)</td>
-<td style="text-align: right;">0.71× (0.71–0.72)</td>
-<td style="text-align: right;">5.06× (5.05–5.07)</td>
-<td style="text-align: right;">0.32× (0.31–0.32)</td>
-<td style="text-align: right;">0.33× (0.33–0.33)</td>
-<td style="text-align: right;">0.51× (0.50–0.51)</td>
+<td style="text-align: right;">0.71× (0.71–0.71)</td>
+<td style="text-align: right;">5.05× (5.05–5.06)</td>
+<td style="text-align: right;">0.31× (0.31–0.31)</td>
+<td style="text-align: right;">0.33× (0.33–0.34)</td>
+<td style="text-align: right;">0.51× (0.51–0.51)</td>
 <td style="text-align: right;">0.26× (0.26–0.26)</td>
 </tr>
 <tr>
 <td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
 <td style="text-align: right;">2</td>
-<td style="text-align: right;">36 MB</td>
-<td style="text-align: right;">0.51× (0.51–0.52)</td>
-<td style="text-align: right;">0.43× (0.41–0.46)</td>
-<td style="text-align: right;">0.94× (0.94–0.95)</td>
-<td style="text-align: right;">0.76× (0.76–0.77)</td>
-<td style="text-align: right;">3.29× (3.26–3.32)</td>
+<td style="text-align: right;">37 MB</td>
+<td style="text-align: right;">0.51× (0.50–0.52)</td>
+<td style="text-align: right;">0.44× (0.43–0.44)</td>
+<td style="text-align: right;">0.93× (0.92–0.94)</td>
+<td style="text-align: right;">0.75× (0.74–0.76)</td>
+<td style="text-align: right;">3.25× (3.22–3.28)</td>
 <td style="text-align: right;">0.20× (0.20–0.20)</td>
 <td style="text-align: right;">0.21× (0.21–0.22)</td>
-<td style="text-align: right;">0.33× (0.32–0.33)</td>
-<td style="text-align: right;">0.17× (0.16–0.17)</td>
+<td style="text-align: right;">0.32× (0.32–0.33)</td>
+<td style="text-align: right;">0.16× (0.16–0.17)</td>
 </tr>
 <tr>
 <td><code>random</code> (7.1 MB → 8 MB, 1.1×)</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">53 MB</td>
-<td style="text-align: right;">0.58× (0.56–0.60)</td>
-<td style="text-align: right;">0.42× (0.41–0.43)</td>
-<td style="text-align: right;">0.80× (0.78–0.82)</td>
-<td style="text-align: right;">0.75× (0.72–0.78)</td>
-<td style="text-align: right;">2.34× (2.29–2.40)</td>
+<td style="text-align: right;">52 MB</td>
+<td style="text-align: right;">0.60× (0.59–0.61)</td>
+<td style="text-align: right;">0.44× (0.42–0.45)</td>
+<td style="text-align: right;">0.82× (0.80–0.84)</td>
+<td style="text-align: right;">0.76× (0.73–0.79)</td>
+<td style="text-align: right;">2.41× (2.37–2.45)</td>
 <td style="text-align: right;">0.14× (0.14–0.14)</td>
-<td style="text-align: right;">0.15× (0.14–0.15)</td>
-<td style="text-align: right;">0.22× (0.22–0.23)</td>
-<td style="text-align: right;">0.11× (0.11–0.12)</td>
+<td style="text-align: right;">0.15× (0.15–0.15)</td>
+<td style="text-align: right;">0.23× (0.23–0.23)</td>
+<td style="text-align: right;">0.12× (0.11–0.12)</td>
 </tr>
 <tr>
 <td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
@@ -2329,53 +2329,53 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <td style="text-align: right;">0.32× (0.31–0.32)</td>
 <td style="text-align: right;">1.15× (1.15–1.15)</td>
 <td style="text-align: right;">0.81× (0.81–0.81)</td>
-<td style="text-align: right;">5.09× (5.09–5.10)</td>
+<td style="text-align: right;">5.09× (5.08–5.10)</td>
 <td style="text-align: right;">0.31× (0.31–0.31)</td>
 <td style="text-align: right;">0.33× (0.33–0.33)</td>
-<td style="text-align: right;">0.51× (0.50–0.51)</td>
-<td style="text-align: right;">0.25× (0.25–0.26)</td>
+<td style="text-align: right;">0.50× (0.50–0.51)</td>
+<td style="text-align: right;">0.26× (0.25–0.26)</td>
 </tr>
 <tr>
 <td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">40 MB</td>
-<td style="text-align: right;">0.48× (0.48–0.49)</td>
-<td style="text-align: right;">0.40× (0.38–0.42)</td>
-<td style="text-align: right;">0.87× (0.87–0.88)</td>
-<td style="text-align: right;">0.72× (0.70–0.75)</td>
-<td style="text-align: right;">3.02× (3.00–3.04)</td>
-<td style="text-align: right;">0.19× (0.18–0.19)</td>
-<td style="text-align: right;">0.20× (0.19–0.20)</td>
-<td style="text-align: right;">0.30× (0.30–0.30)</td>
+<td style="text-align: right;">0.48× (0.47–0.49)</td>
+<td style="text-align: right;">0.39× (0.36–0.41)</td>
+<td style="text-align: right;">0.87× (0.85–0.88)</td>
+<td style="text-align: right;">0.74× (0.72–0.76)</td>
+<td style="text-align: right;">3.01× (2.95–3.06)</td>
+<td style="text-align: right;">0.18× (0.18–0.19)</td>
+<td style="text-align: right;">0.19× (0.19–0.20)</td>
+<td style="text-align: right;">0.30× (0.29–0.30)</td>
 <td style="text-align: right;">0.15× (0.15–0.15)</td>
 </tr>
 <tr>
 <td><code>records</code> (9.59 MB → 9.6 MB, 1.0×)</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">57 MB</td>
-<td style="text-align: right;">0.56× (0.54–0.57)</td>
-<td style="text-align: right;">0.47× (0.44–0.50)</td>
-<td style="text-align: right;">0.75× (0.74–0.75)</td>
-<td style="text-align: right;">0.74× (0.73–0.76)</td>
-<td style="text-align: right;">2.17× (2.14–2.20)</td>
+<td style="text-align: right;">59 MB</td>
+<td style="text-align: right;">0.54× (0.53–0.55)</td>
+<td style="text-align: right;">0.44× (0.41–0.47)</td>
+<td style="text-align: right;">0.72× (0.71–0.73)</td>
+<td style="text-align: right;">0.74× (0.71–0.76)</td>
+<td style="text-align: right;">2.10× (2.08–2.12)</td>
+<td style="text-align: right;">0.12× (0.12–0.13)</td>
 <td style="text-align: right;">0.13× (0.13–0.13)</td>
-<td style="text-align: right;">0.14× (0.13–0.14)</td>
-<td style="text-align: right;">0.21× (0.20–0.21)</td>
-<td style="text-align: right;">0.10× (0.10–0.11)</td>
+<td style="text-align: right;">0.20× (0.20–0.20)</td>
+<td style="text-align: right;">0.10× (0.10–0.10)</td>
 </tr>
 <tr>
 <td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">23 MB</td>
 <td style="text-align: right;">0.37× (0.37–0.37)</td>
-<td style="text-align: right;">0.23× (0.21–0.24)</td>
+<td style="text-align: right;">0.23× (0.22–0.24)</td>
 <td style="text-align: right;">1.08× (1.08–1.08)</td>
 <td style="text-align: right;">0.76× (0.76–0.77)</td>
-<td style="text-align: right;">5.41× (5.40–5.42)</td>
+<td style="text-align: right;">5.40× (5.39–5.41)</td>
 <td style="text-align: right;">0.35× (0.35–0.35)</td>
 <td style="text-align: right;">0.37× (0.36–0.37)</td>
 <td style="text-align: right;">0.92× (0.92–0.92)</td>
-<td style="text-align: right;">0.14× (0.13–0.14)</td>
+<td style="text-align: right;">0.13× (0.13–0.13)</td>
 </tr>
 <tr>
 <td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
@@ -2383,51 +2383,51 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <td style="text-align: right;">23 MB</td>
 <td style="text-align: right;">0.23× (0.23–0.24)</td>
 <td style="text-align: right;">0.20× (0.20–0.20)</td>
-<td style="text-align: right;">1.62× (1.62–1.62)</td>
+<td style="text-align: right;">1.62× (1.61–1.62)</td>
 <td style="text-align: right;">0.77× (0.77–0.77)</td>
 <td style="text-align: right;">5.38× (5.37–5.38)</td>
-<td style="text-align: right;">0.35× (0.34–0.35)</td>
+<td style="text-align: right;">0.35× (0.35–0.35)</td>
 <td style="text-align: right;">0.36× (0.36–0.37)</td>
 <td style="text-align: right;">0.91× (0.91–0.91)</td>
-<td style="text-align: right;">0.13× (0.13–0.14)</td>
+<td style="text-align: right;">0.13× (0.13–0.13)</td>
 </tr>
 <tr>
 <td><code>runs</code> (38 kB → 10 MB, 263.2×)</td>
 <td style="text-align: right;">4</td>
 <td style="text-align: right;">23 MB</td>
-<td style="text-align: right;">0.23× (0.22–0.23)</td>
+<td style="text-align: right;">0.23× (0.23–0.23)</td>
 <td style="text-align: right;">0.20× (0.20–0.20)</td>
-<td style="text-align: right;">1.62× (1.62–1.62)</td>
-<td style="text-align: right;">0.77× (0.77–0.77)</td>
-<td style="text-align: right;">5.38× (5.37–5.39)</td>
-<td style="text-align: right;">0.35× (0.34–0.35)</td>
+<td style="text-align: right;">1.62× (1.62–1.63)</td>
+<td style="text-align: right;">0.77× (0.76–0.77)</td>
+<td style="text-align: right;">5.39× (5.38–5.41)</td>
+<td style="text-align: right;">0.35× (0.35–0.35)</td>
 <td style="text-align: right;">0.36× (0.36–0.37)</td>
 <td style="text-align: right;">0.91× (0.91–0.92)</td>
-<td style="text-align: right;">0.13× (0.13–0.14)</td>
+<td style="text-align: right;">0.13× (0.13–0.13)</td>
 </tr>
 <tr>
 <td><code>text</code> (1.48 MB → 12.3 MB, 8.3×)</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">19 MB</td>
-<td style="text-align: right;">0.46× (0.45–0.46)</td>
-<td style="text-align: right;">0.39× (0.39–0.40)</td>
-<td style="text-align: right;">1.45× (1.44–1.45)</td>
+<td style="text-align: right;">0.46× (0.46–0.46)</td>
+<td style="text-align: right;">0.39× (0.39–0.39)</td>
+<td style="text-align: right;">1.45× (1.45–1.45)</td>
 <td style="text-align: right;">0.63× (0.63–0.64)</td>
-<td style="text-align: right;">6.54× (6.53–6.55)</td>
-<td style="text-align: right;">0.39× (0.39–0.40)</td>
-<td style="text-align: right;">0.42× (0.41–0.42)</td>
-<td style="text-align: right;">0.64× (0.64–0.65)</td>
-<td style="text-align: right;">0.32× (0.31–0.32)</td>
+<td style="text-align: right;">6.55× (6.55–6.56)</td>
+<td style="text-align: right;">0.39× (0.39–0.39)</td>
+<td style="text-align: right;">0.42× (0.42–0.42)</td>
+<td style="text-align: right;">0.65× (0.64–0.65)</td>
+<td style="text-align: right;">0.32× (0.32–0.32)</td>
 </tr>
 <tr>
 <td><code>text</code> (1.48 MB → 12.3 MB, 8.3×)</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">31 MB</td>
-<td style="text-align: right;">0.51× (0.50–0.52)</td>
-<td style="text-align: right;">0.42× (0.38–0.46)</td>
-<td style="text-align: right;">1.25× (1.22–1.29)</td>
-<td style="text-align: right;">0.76× (0.73–0.79)</td>
-<td style="text-align: right;">3.94× (3.86–4.02)</td>
+<td style="text-align: right;">0.51× (0.50–0.53)</td>
+<td style="text-align: right;">0.41× (0.38–0.45)</td>
+<td style="text-align: right;">1.25× (1.22–1.28)</td>
+<td style="text-align: right;">0.77× (0.75–0.79)</td>
+<td style="text-align: right;">3.95× (3.87–4.03)</td>
 <td style="text-align: right;">0.24× (0.23–0.24)</td>
 <td style="text-align: right;">0.25× (0.25–0.26)</td>
 <td style="text-align: right;">0.39× (0.38–0.40)</td>
@@ -2436,12 +2436,12 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <tr>
 <td><code>text</code> (1.48 MB → 12.3 MB, 8.3×)</td>
 <td style="text-align: right;">4</td>
-<td style="text-align: right;">51 MB</td>
-<td style="text-align: right;">0.54× (0.52–0.55)</td>
-<td style="text-align: right;">0.49× (0.45–0.52)</td>
-<td style="text-align: right;">1.02× (0.99–1.04)</td>
-<td style="text-align: right;">0.80× (0.78–0.82)</td>
-<td style="text-align: right;">2.59× (2.53–2.65)</td>
+<td style="text-align: right;">50 MB</td>
+<td style="text-align: right;">0.53× (0.52–0.55)</td>
+<td style="text-align: right;">0.50× (0.46–0.54)</td>
+<td style="text-align: right;">1.01× (0.99–1.04)</td>
+<td style="text-align: right;">0.81× (0.79–0.83)</td>
+<td style="text-align: right;">2.59× (2.52–2.65)</td>
 <td style="text-align: right;">0.15× (0.14–0.15)</td>
 <td style="text-align: right;">0.16× (0.15–0.16)</td>
 <td style="text-align: right;">0.24× (0.24–0.25)</td>
@@ -2467,8 +2467,8 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <tbody>
 <tr>
 <td>1: pinned to CPU 1</td>
-<td style="text-align: right;">327</td>
-<td style="text-align: right;">3.07</td>
+<td style="text-align: right;">538</td>
+<td style="text-align: right;">1.86</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">–</td>
 <td style="text-align: right;">1</td>
@@ -2476,33 +2476,33 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 </tr>
 <tr>
 <td>2: CPUs 0,2, one a core</td>
-<td style="text-align: right;">519</td>
-<td style="text-align: right;">3.26</td>
-<td style="text-align: right;">1.12× (1.07–1.18)</td>
-<td style="text-align: right;">76%</td>
-<td style="text-align: right;">1.03× (1.01–1.06)</td>
-<td style="text-align: right;">1.04× (1.01–1.07)</td>
+<td style="text-align: right;">765</td>
+<td style="text-align: right;">2.13</td>
+<td style="text-align: right;">1.16× (1.09–1.24)</td>
+<td style="text-align: right;">70%</td>
+<td style="text-align: right;">1.04× (1.03–1.05)</td>
+<td style="text-align: right;">1.04× (1.02–1.06)</td>
 </tr>
 <tr>
 <td>4: all 4 CPUs, sharing SMT siblings</td>
-<td style="text-align: right;">578</td>
-<td style="text-align: right;">5.79</td>
-<td style="text-align: right;">1.84× (1.77–1.92)</td>
-<td style="text-align: right;">45%</td>
-<td style="text-align: right;">1.28× (1.20–1.37)</td>
-<td style="text-align: right;">1.71× (1.63–1.79)</td>
+<td style="text-align: right;">824</td>
+<td style="text-align: right;">3.91</td>
+<td style="text-align: right;">2.14× (2.06–2.23)</td>
+<td style="text-align: right;">38%</td>
+<td style="text-align: right;">1.25× (1.22–1.28)</td>
+<td style="text-align: right;">1.61× (1.52–1.71)</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Best:</strong> mibz2 at 4 threads (578 MB/s); lbzip2 at 4 threads (240 MB/s); pbz2 at 4 threads (353 MB/s).</p>
+<p><strong>Best:</strong> mibz2 at 4 threads (824 MB/s); lbzip2 at 4 threads (308 MB/s); pbz2 at 4 threads (540 MB/s).</p>
 <p>Conditions: 4 CPUs on 2 physical cores (0,1 | 2,3); no CPU quota; the run-queue counter checked and counting; 2-thread runs on CPUs 0,2 (one CPU a core); 4-thread runs share cores' SMT siblings.</p>
 <details><summary>How to read it, and what it cannot show</summary>
 
 - **The four comparisons the assessment reads,** declared in bench/report.py (`assessment`): best against best (wall), CPU per byte at the most threads, amplification at each thread count, and peak RSS at the most threads. Each moves only where its 95% interval excludes no change. With no real change, about one run in five flags one by chance: a flag that matters reproduces on a re-run.
 - **A trade-off is not a failure.** Faster for more CPU or memory, or the reverse, is for the reviewer to weigh against the deployment; the report names it, and nothing here fails CI but the outputs and the accounting.
 - **What it can't show:** which shared resource a rise in amplification comes from (cache, memory bandwidth, SMT, the scanner's handoffs): no hardware counters are read. CI's runners have 2 physical cores, so it cannot show a knee past 2 (the workstation's is at 4-5 workers, #39). The cores' L3 is shared with other tenants and its size unknown.
-- **Run-queue wait** (threads' mean count runnable, not running; schedstat): mibz2 1t 0.00, mibz2 2t 0.71, mibz2 4t 0.98, lbzip2 1t 0.07, lbzip2 2t 0.23, lbzip2 4t 0.39, pbz2 1t 0.00, pbz2 2t 0.42, pbz2 4t 0.43. A pinned 2-thread run has four threads (two workers, the scanner, the reader) on two CPUs, so some wait is its shape, not interference.
-- **The per-thread split's unattributed CPU** (the process's total that no sampled thread holds, sampled every 10 ms): mibz2 2t 7%, mibz2 4t 7%, lbzip2 2t 3%, lbzip2 4t 3%, pbz2 2t 4%, pbz2 4t 4%.
+- **Run-queue wait** (threads' mean count runnable, not running; schedstat): mibz2 1t 0.00, mibz2 2t 0.78, mibz2 4t 1.04, lbzip2 1t 0.08, lbzip2 2t 0.28, lbzip2 4t 0.46, pbz2 1t 0.00, pbz2 2t 0.47, pbz2 4t 0.55. A pinned 2-thread run has four threads (two workers, the scanner, the reader) on two CPUs, so some wait is its shape, not interference.
+- **The per-thread split's unattributed CPU** (the process's total that no sampled thread holds, sampled every 10 ms): mibz2 2t 10%, mibz2 4t 10%, lbzip2 2t 4%, lbzip2 4t 4%, pbz2 2t 5%, pbz2 4t 5%.
 
 </details>
 
@@ -2521,17 +2521,17 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <tbody>
 <tr>
 <td>mibz2</td>
-<td style="text-align: right;">0.09</td>
-<td style="text-align: right;">1.02</td>
-<td style="text-align: right;">0.02</td>
+<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">0.68</td>
+<td style="text-align: right;">0.01</td>
 <td style="text-align: right;">0.08</td>
-<td style="text-align: right;">0.363</td>
+<td style="text-align: right;">0.255</td>
 </tr>
 </tbody>
 </table>
 <p>Unattributed: the process's CPU that no sampled thread holds (threads ending between samples). Before bench 3.0.0 the sampler ran every 50 ms and left 0.1-0.35 s a run here; a base built before 3.0.0 still does, so its split and the model below undercount its workers against head's.</p>
 <h2 id="where-a-decodes-time-goes-stage-by-stage-the-wikidata-blocks-on-one-thread-median-cb">Where a decode's time goes, stage by stage: the Wikidata blocks on one thread (median c/B)<a class="headerlink" href="#where-a-decodes-time-goes-stage-by-stage-the-wikidata-blocks-on-one-thread-median-cb" title="Permanent link">&para;</a></h2>
-<p>Each of 5 rounds runs the build's <code>examples/phases.rs</code> once (bench/stages.py), pinned to one CPU: the file decoded in decode order, block by block, each stage timed as it runs with the library's own functions (each stage's fastest of 2 passes), summed over the blocks, in cycles a byte of output at the reported clock (3691 MHz). Diagnostic only: the decoder's own figures are the tables above. 5 runs, 55.8s of the run.</p>
+<p>Each of 5 rounds runs the build's <code>examples/phases.rs</code> once (bench/stages.py), pinned to one CPU: the file decoded in decode order, block by block, each stage timed as it runs with the library's own functions (each stage's fastest of 2 passes), summed over the blocks, in cycles a byte of output at the reported clock (2596 MHz). Diagnostic only: the decoder's own figures are the tables above. 5 runs, 44.2s of the run.</p>
 <table>
 <thead>
 <tr>
@@ -2543,42 +2543,42 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <tbody>
 <tr>
 <td>scanner (headers, Huffman)</td>
-<td style="text-align: right;">1.15</td>
-<td style="text-align: right;">11.4%</td>
+<td style="text-align: right;">0.64</td>
+<td style="text-align: right;">11.6%</td>
 </tr>
 <tr>
 <td>MTF + RLE2</td>
-<td style="text-align: right;">2.10</td>
-<td style="text-align: right;">20.8%</td>
+<td style="text-align: right;">1.16</td>
+<td style="text-align: right;">20.9%</td>
 </tr>
 <tr>
 <td>T-vector build</td>
-<td style="text-align: right;">1.71</td>
-<td style="text-align: right;">17.0%</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">16.2%</td>
 </tr>
 <tr>
 <td>walk (the one each build uses)</td>
-<td style="text-align: right;">4.69</td>
-<td style="text-align: right;">46.5%</td>
+<td style="text-align: right;">2.60</td>
+<td style="text-align: right;">47.0%</td>
 </tr>
 <tr>
 <td>of which: segment assembly</td>
-<td style="text-align: right;">0.15</td>
-<td style="text-align: right;">1.5%</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: right;">1.6%</td>
 </tr>
 <tr>
 <td>RLE1</td>
-<td style="text-align: right;">0.19</td>
-<td style="text-align: right;">1.9%</td>
+<td style="text-align: right;">0.09</td>
+<td style="text-align: right;">1.7%</td>
 </tr>
 <tr>
 <td>CRC</td>
-<td style="text-align: right;">0.25</td>
-<td style="text-align: right;">2.5%</td>
+<td style="text-align: right;">0.16</td>
+<td style="text-align: right;">2.9%</td>
 </tr>
 <tr>
 <td><strong>total</strong></td>
-<td style="text-align: right;">10.09</td>
+<td style="text-align: right;">5.53</td>
 <td style="text-align: right;"></td>
 </tr>
 </tbody>
@@ -2600,35 +2600,35 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <tbody>
 <tr>
 <td>T-vector build</td>
-<td style="text-align: right;">0.467</td>
-<td style="text-align: right;">1.062</td>
+<td style="text-align: right;">0.344</td>
+<td style="text-align: right;">0.717</td>
 <td style="text-align: right;">(in its total)</td>
-<td style="text-align: right;">2.27× (2.26–2.28)</td>
+<td style="text-align: right;">2.13× (2.04–2.23)</td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>walk</td>
-<td style="text-align: right;">1.185</td>
-<td style="text-align: right;">2.058</td>
+<td style="text-align: right;">0.799</td>
+<td style="text-align: right;">1.623</td>
 <td style="text-align: right;">(in its total)</td>
-<td style="text-align: right;">1.73× (1.70–1.77)</td>
+<td style="text-align: right;">2.04× (1.92–2.16)</td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>segment assembly (mibz2) / gather (bz2ngrs)</td>
-<td style="text-align: right;">0.038</td>
-<td style="text-align: right;">0.041</td>
+<td style="text-align: right;">0.026</td>
+<td style="text-align: right;">0.031</td>
 <td style="text-align: right;">(in its total)</td>
-<td style="text-align: right;">1.06× (1.03–1.09)</td>
+<td style="text-align: right;">1.20× (1.12–1.29)</td>
 <td style="text-align: right;"></td>
 </tr>
 <tr>
 <td>inverse BWT, total</td>
-<td style="text-align: right;">1.689</td>
-<td style="text-align: right;">3.161</td>
-<td style="text-align: right;">1.912</td>
-<td style="text-align: right;">1.86× (1.84–1.89)</td>
-<td style="text-align: right;">1.14× (1.12–1.16)</td>
+<td style="text-align: right;">1.170</td>
+<td style="text-align: right;">2.372</td>
+<td style="text-align: right;">1.351</td>
+<td style="text-align: right;">2.05× (1.95–2.15)</td>
+<td style="text-align: right;">1.16× (1.12–1.20)</td>
 </tr>
 </tbody>
 </table>
@@ -2644,27 +2644,27 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 <tbody>
 <tr>
 <td>1 thread</td>
-<td style="text-align: right;">1h33m ± 12m17s</td>
+<td style="text-align: right;">58m13s ± 7m47s</td>
 </tr>
 <tr>
 <td>4 threads</td>
-<td style="text-align: right;">51m46s ± 7m34s</td>
+<td style="text-align: right;">38m38s ± 6m00s</td>
 </tr>
 <tr>
 <td>4 threads, the sample's overlap gap as a fixed cost</td>
-<td style="text-align: right;">36m16s ± 5m22s</td>
+<td style="text-align: right;">25m39s ± 4m05s</td>
 </tr>
 <tr>
 <td>the scanner alone (its serial part)</td>
-<td style="text-align: right;">12m22s ± 32.9s</td>
+<td style="text-align: right;">8m53s ± 46.1s</td>
 </tr>
 <tr>
 <td>the workers alone, over 4</td>
-<td style="text-align: right;">36m16s ± 5m22s</td>
+<td style="text-align: right;">25m39s ± 4m05s</td>
 </tr>
 </tbody>
 </table>
-<p>At 4 threads the workers bound it. Per byte: the scanner 7.2 ns a byte of bz2, the workers 4.75 ns a byte of output at 4 threads (CPU, summed over them), 2.66 ns at 1 thread (wall, less the scanner's part); the scanner would bind from about 12 worker threads (mibz2).</p>
+<p>At 4 threads the workers bound it. Per byte: the scanner 5.1 ns a byte of bz2, the workers 3.36 ns a byte of output at 4 threads (CPU, summed over them), 1.62 ns at 1 thread (wall, less the scanner's part); the scanner would bind from about 12 worker threads (mibz2).</p>
 <details><summary>What the model assumes</summary>
 
 - **Linear in bytes:** the scanner's time in the dump's bz2 bytes, the workers' in its output bytes.
@@ -2687,7 +2687,7 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 | `runs` | 37,995 | 10,000,235 | `af3be4d130faf312…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |
 | `text` | 1,478,819 | 12,273,030 | `80f51ade7d6ce928…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |
 
-- CPU: AMD EPYC 9V74 80-Core Processor, 4 cores, reported clock 3691.0 MHz (cycles a byte use it), flags avx2, avx512f, bmi1, bmi2, pclmulqdq, sse4_1, ssse3; kernel 7.0.0-1017-azure; image ubuntu24 20261026.354.1
+- CPU: AMD EPYC 9V45 96-Core Processor, 4 cores, reported clock 2596.1 MHz (cycles a byte use it), flags avx2, avx512f, bmi1, bmi2, pclmulqdq, sse4_1, ssse3; kernel 7.0.0-1017-azure; image ubuntu24 20261026.354.1
 - rustc 1.99.1 (58cf8f9c3 2026-10-13); pbz2 0.2.0; lbzip2 version 2.5; indexed_bzip2 1.7.0; fbz 0.1.13; lbzip2-rs 0.5.13 (the lbzip2 crate); libbzip2 1.0.8 (the bzip2 crate's bundled source); libbz2-rs 0.2.5 (libbz2-rs-sys, through the bzip2 crate); bz2ngrs 0.1.0 at 6a92590 (git); bz2ng bz2-ng 0.1.0 (C, its `bzip2 -dc`); libbzip2 (the corpora's encoder) 1.0.8 (the bzip2 crate's bundled source); libsais (the kernels' only) 2.12.1 at c284ba8 (C: -O3 -march=native, single-threaded; bench/libsais.sh)
 - bench 3.2.0 (bench/report.py), 10 rounds, threads 1, 2, 4
 
