@@ -32,7 +32,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle, Thread};
 
-use crate::bwt::{read_u64, TVector};
+use crate::bwt::{prefetch, random_rows, read_u64, SegScratch, TVector, LINK, PF_L1, START};
 
 /// A task for a pool, called once on each of its k threads with the thread's index (the
 /// caller's is 0)
@@ -389,6 +389,270 @@ pub(crate) fn build_fused(
     Ok(())
 }
 
+/// The shared walk's handoffs, counted in the tests (each asserts it reached them)
+#[cfg(test)]
+pub(crate) mod handoffs {
+    use std::sync::atomic::AtomicUsize;
+    pub(crate) static GROWS: AtomicUsize = AtomicUsize::new(0);
+    pub(crate) static PASS_ENDS_FULL: AtomicUsize = AtomicUsize::new(0);
+    pub(crate) static MID_PASS_TAKES: AtomicUsize = AtomicUsize::new(0);
+    pub(crate) static FULL_PHASE_ENDS_MID_PASS: AtomicUsize = AtomicUsize::new(0);
+    pub(crate) static TAIL_ENTERED_FULL: AtomicUsize = AtomicUsize::new(0);
+}
+#[cfg(test)]
+macro_rules! handoff {
+    ($c:ident) => {
+        handoffs::$c.fetch_add(1, Ordering::Relaxed)
+    };
+}
+#[cfg(not(test))]
+macro_rules! handoff {
+    ($c:ident) => {};
+}
+
+/// One lane's state in the shared walk: the row it reads next, and where its segment's
+/// bytes go (`p` up to `end`, the segment's buffer's spare capacity)
+#[derive(Clone, Copy)]
+struct Lane {
+    row: u32,
+    seg: usize,
+    p: *mut u8,
+    end: *mut u8,
+}
+
+/// The segments' buffers and successors, for the pool's threads to reach through: each
+/// segment's are touched only by the lane that took it
+#[derive(Clone, Copy)]
+struct Segs {
+    bufs: *mut Vec<u8>,
+    next: *mut usize,
+}
+// SAFETY: a segment index is taken once (`taken.fetch_add`), so each buffer and successor
+// slot has one writer; the outer vectors are not resized while the threads run
+unsafe impl Sync for Segs {}
+
+/// The room walk on k threads sharing one T-vector: `bwt::walk_segments_room`'s walk (its
+/// `room_segments`), every thread's L lanes taking segments from one counter, so a block's
+/// `segments` (k times the one-core walk's, so the tail's few long chains don't leave the
+/// team waiting) are walked by k·L lanes at once. Each segment's bytes go to its buffer
+/// in `s` and its successor to `s.next`, as the one-core walk leaves them, for
+/// `SegScratch::assemble` to join: exactly `bwt::walk`'s output.
+///
+/// The one-core walk's contract (its Rows, Ownership, Spare, Handoffs, Initialised and
+/// Lifetimes; `bwt::walk_segments_room_with_prefetch`) holds for each thread's lanes, with:
+/// - **Sharing:** the table is read-only while the threads run. The starts are flagged
+///   before the run and unflagged after it, on the caller.
+/// - **Taking:** each segment index is taken once, by `fetch_add`, so its buffer and its
+///   successor slot have one writer, the lane that took it.
+/// - **Outer vectors:** `s.bufs` and `s.next` are sized before the run and not resized in
+///   it; a lane grows only the buffer of the segment it holds.
+/// - **Visibility:** the pool's run publishes every thread's writes to the caller before
+///   `assemble` reads them (`Pool::run`'s ordering).
+pub(crate) fn walk_room<const L: usize>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    s: &mut SegScratch,
+    pool: &Pool,
+    segments: usize,
+) {
+    let n = tt.0.len();
+    let r0 = tt.0[orig_ptr as usize] >> 8;
+    random_rows(n, segments.max(1) - 1, &mut s.starts);
+    s.starts.push(r0);
+    s.starts.sort_unstable();
+    s.starts.dedup();
+    let ns = s.starts.len();
+    for &r in &s.starts {
+        tt.0[r as usize] |= START;
+    }
+    let cap = 2 * n / ns + 64;
+    s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
+    for b in &mut s.bufs[..ns] {
+        b.clear();
+        b.reserve(cap);
+    }
+    s.next.clear();
+    s.next.resize(ns, usize::MAX);
+    let segs = Segs {
+        bufs: s.bufs.as_mut_ptr(),
+        next: s.next.as_mut_ptr(),
+    };
+    let segs = &segs;
+    let (t, starts) = (tt.0.as_ptr(), &s.starts[..]);
+    let t = Slots(t as *mut u32);
+    let t = &t;
+    let taken = AtomicUsize::new(0);
+    pool.run(&|_| {
+        // SAFETY: as the contract above: rows below n, starts flagged, each segment taken
+        // once, every buffer with `cap` spare bytes
+        unsafe { traverse::<L>(t.0 as *const u32, starts, *segs, &taken, cap) }
+    });
+    for &r in &s.starts {
+        tt.0[r as usize] &= LINK;
+    }
+    s.first = s.starts.binary_search(&r0).unwrap_or(usize::MAX);
+    s.n = n;
+}
+
+/// One thread's lanes of `walk_room`: `room_segments`'s loop, its next segment taken from
+/// `taken` instead of a local count
+///
+/// SAFETY: as `walk_room`'s contract
+unsafe fn traverse<const L: usize>(
+    t: *const u32,
+    starts: &[u32],
+    segs: Segs,
+    taken: &AtomicUsize,
+    cap: usize,
+) {
+    let ns = starts.len();
+    let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let take = |seg: usize| -> Lane {
+        // SAFETY: seg < ns, taken once, so this lane is its buffer's one user
+        let b = unsafe { &mut *segs.bufs.add(seg) };
+        let base = b.as_mut_ptr();
+        // SAFETY: the starts are rows below n; the buffer has `cap` > 0 spare bytes
+        let q = unsafe { *t.add(starts[seg] as usize) } & LINK;
+        unsafe { *base = q as u8 };
+        prefetch::<PF_L1>(t, q >> 8);
+        Lane {
+            row: q >> 8,
+            seg,
+            p: unsafe { base.add(1) },
+            end: unsafe { base.add(b.capacity()) },
+        }
+    };
+    let finish = |l: &Lane| {
+        // SAFETY: the lane holds segment l.seg, its buffer's one user and its successor's
+        // one writer; p is within the buffer, every byte below it written
+        let b = unsafe { &mut *segs.bufs.add(l.seg) };
+        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+        unsafe { *segs.next.add(l.seg) = seg_of(l.row) };
+    };
+    let grow = |l: &mut Lane| {
+        handoff!(GROWS);
+        // SAFETY: as `finish`
+        let b = unsafe { &mut *segs.bufs.add(l.seg) };
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
+        b.reserve(b.capacity());
+        l.p = unsafe { b.as_mut_ptr().add(len) };
+        l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
+    };
+    let next_seg = || {
+        let s = taken.fetch_add(1, Ordering::Relaxed);
+        (s < ns).then_some(s)
+    };
+
+    let mut lanes: [Lane; L] = std::array::from_fn(|_| Lane {
+        row: 0,
+        seg: usize::MAX,
+        p: std::ptr::null_mut(),
+        end: std::ptr::null_mut(),
+    });
+    let mut active = 0;
+    while active < L {
+        let Some(seg) = next_seg() else { break };
+        lanes[active] = take(seg);
+        active += 1;
+    }
+    if active == L {
+        'full: loop {
+            // the pass's room: what every lane has spare, and no more than a buffer taken
+            // mid-pass has after its first byte (`cap` - 1)
+            let mut room = cap - 1;
+            for l in lanes.iter_mut() {
+                if l.p == l.end {
+                    grow(l);
+                }
+                room = room.min(unsafe { l.end.offset_from(l.p) } as usize);
+            }
+            debug_assert!(room > 0);
+            if lanes
+                .iter()
+                .any(|l| unsafe { l.end.offset_from(l.p) } as usize == room)
+            {
+                handoff!(PASS_ENDS_FULL);
+            }
+            let mut base: [*mut u8; L] = std::array::from_fn(|k| lanes[k].p);
+            for off in 0..room {
+                for k in 0..L {
+                    let l = &mut lanes[k];
+                    // SAFETY: rows are below n (TVector), with the flag masked off below
+                    let q = unsafe { *t.add(l.row as usize) };
+                    if q & START != 0 {
+                        l.p = base[k].wrapping_add(off);
+                        finish(l);
+                        let Some(seg) = next_seg() else {
+                            // the lanes before this one wrote at `off`, those after it not yet
+                            for (j, lj) in lanes.iter_mut().enumerate() {
+                                if j < k {
+                                    lj.p = base[j].wrapping_add(off + 1);
+                                } else if j > k {
+                                    lj.p = base[j].wrapping_add(off);
+                                }
+                            }
+                            handoff!(FULL_PHASE_ENDS_MID_PASS);
+                            break 'full;
+                        };
+                        handoff!(MID_PASS_TAKES);
+                        *l = take(seg);
+                        // its next byte, at offset off + 1, goes at its p
+                        base[k] = l.p.wrapping_sub(off + 1);
+                        continue;
+                    }
+                    l.row = q >> 8;
+                    prefetch::<PF_L1>(t, l.row);
+                    // SAFETY: base + off is below the lane's end: room is at most its spare
+                    // at the pass's start (or, for a buffer taken mid-pass, its capacity
+                    // after its first byte)
+                    debug_assert!(base[k].wrapping_add(off) < l.end);
+                    unsafe { *base[k].wrapping_add(off) = q as u8 };
+                }
+            }
+            for (l, b) in lanes.iter_mut().zip(base) {
+                l.p = b.wrapping_add(room);
+            }
+        }
+    }
+    // the lanes still walking: a finished lane's successor is set, and this thread holds
+    // every segment its lanes took, so it alone reads those slots
+    let unfinished =
+        |l: &Lane| l.seg != usize::MAX && unsafe { *segs.next.add(l.seg) } == usize::MAX;
+    let mut live: Vec<Lane> = lanes[..active].iter().copied().filter(unfinished).collect();
+    // a pass can end with a lane's buffer exactly full (its room was all its spare): the
+    // tail writes before it tests, so each lane comes into it with a byte to spare
+    for l in live.iter_mut() {
+        if l.p == l.end {
+            handoff!(TAIL_ENTERED_FULL);
+            grow(l);
+        }
+        debug_assert!(l.p < l.end);
+    }
+    while !live.is_empty() {
+        let mut i = 0;
+        while i < live.len() {
+            let l = &mut live[i];
+            let q = unsafe { *t.add(l.row as usize) };
+            if q & START != 0 {
+                finish(l);
+                live.swap_remove(i);
+                continue;
+            }
+            l.row = q >> 8;
+            prefetch::<PF_L1>(t, l.row);
+            unsafe {
+                *l.p = q as u8;
+                l.p = l.p.add(1);
+            }
+            if l.p == l.end {
+                grow(l);
+            }
+            i += 1;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -715,6 +979,101 @@ mod tests {
             let p = Pool::new(k).unwrap();
             fused_matches_build(&p, 64, 80);
             refuses(&p, 64, 2);
+        }
+    }
+
+    /// The shared walk on `ll`'s table from `orig_ptr`, against `bwt::walk` and the
+    /// segments' oracle, with `segments` a block
+    fn walk_matches(
+        p: &Pool,
+        ll: &[u8],
+        orig_ptr: u32,
+        segments: usize,
+        s: &mut SegScratch,
+        what: &str,
+    ) {
+        let counts = counts_of(ll);
+        let mut tt = TVector::new();
+        crate::bwt::build(ll, &counts, &mut tt);
+        let mut want = Vec::new();
+        crate::bwt::walk(&tt, orig_ptr, &mut want);
+        let before = tt.0.clone();
+        walk_room::<8>(&mut tt, orig_ptr, s, p, segments);
+        assert!(tt.0 == before, "{what}: the flags were not all taken off");
+        // the segments are the oracle's, on every cycle, not only those the output joins
+        let oracle = crate::bwt::tests::segment_oracle(&tt, &s.starts);
+        for (i, (bytes, next)) in oracle.iter().enumerate() {
+            assert!(
+                s.bufs[i] == *bytes,
+                "{what}: segment {i}'s bytes, k {}",
+                p.threads()
+            );
+            assert_eq!(s.next[i], *next, "{what}: segment {i}'s successor");
+        }
+        let mut out = vec![1, 2, 3];
+        s.assemble(&mut out);
+        assert!(
+            out == want,
+            "{what}: k {}, segments {segments}: not walk's output",
+            p.threads()
+        );
+    }
+
+    #[test]
+    fn walk_room_is_walk() {
+        let mut s = SegScratch::default();
+        for k in 1..=4 {
+            let p = Pool::new(k).unwrap();
+            for (name, ll) in columns(30_000) {
+                if ll.is_empty() {
+                    continue;
+                }
+                let n = ll.len() as u32;
+                for segments in [1, 2, 7, 64, 512 * k, 4096] {
+                    for orig_ptr in [0, n / 3, n - 1] {
+                        walk_matches(&p, &ll, orig_ptr, segments, &mut s, &name);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Small blocks under Miri at k = 2 and 3: the shared buffers' and successors' one
+    /// writer each (its race detector), the lanes' unchecked writes, and every handoff
+    /// reached (lanes taken mid-pass, full passes, the full phase ending mid-pass, the
+    /// tail entered full, buffers grown)
+    #[test]
+    fn miri_walk_room_handoffs() {
+        use handoffs::*;
+        let mut s = SegScratch::default();
+        let mut r = xorshift(11);
+        let cases: Vec<Vec<u8>> = vec![
+            (0..1500).map(|_| (r() % 4) as u8).collect(),
+            b"ab".repeat(600),
+            (0..900).map(|i| ((i / 37) % 3) as u8).collect(),
+        ];
+        for k in [2, 3] {
+            let p = Pool::new(k).unwrap();
+            for (c, ll) in cases.iter().enumerate() {
+                for segments in [24, 96] {
+                    walk_matches(
+                        &p,
+                        ll,
+                        (ll.len() / 2) as u32,
+                        segments,
+                        &mut s,
+                        &format!("case {c}"),
+                    );
+                }
+            }
+        }
+        for (name, c) in [
+            ("GROWS", &GROWS),
+            ("PASS_ENDS_FULL", &PASS_ENDS_FULL),
+            ("MID_PASS_TAKES", &MID_PASS_TAKES),
+            ("FULL_PHASE_ENDS_MID_PASS", &FULL_PHASE_ENDS_MID_PASS),
+        ] {
+            assert!(c.load(Ordering::Relaxed) > 0, "never reached: {name}");
         }
     }
 

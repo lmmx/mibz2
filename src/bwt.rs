@@ -196,13 +196,13 @@ pub(crate) const MIN_SEGMENTED: usize = 1 << 16;
 /// The segment walk's buffers, kept from block to block
 #[derive(Default)]
 pub struct SegScratch {
-    starts: Vec<u32>,
+    pub(crate) starts: Vec<u32>,
     bitmap: Vec<u64>,
-    bufs: Vec<Vec<u8>>,
-    next: Vec<usize>,
+    pub(crate) bufs: Vec<Vec<u8>>,
+    pub(crate) next: Vec<usize>,
     /// the room walk's last block: its length and the segment its output starts in
-    n: usize,
-    first: usize,
+    pub(crate) n: usize,
+    pub(crate) first: usize,
 }
 
 impl SegScratch {
@@ -318,8 +318,8 @@ pub fn walk_segments(tt: &TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mut Seg
 
 /// The flag marking a segment start in its own T-vector entry (links are below 2^20, so
 /// bit 31 is free), and the mask that takes it off a link
-const START: u32 = 1 << 31;
-const LINK: u32 = !START;
+pub(crate) const START: u32 = 1 << 31;
+pub(crate) const LINK: u32 = !START;
 
 /// One lane's state in `walk_segments_flagged`: the row it reads next, and where its
 /// segment's bytes go (`p` up to `end`, the segment's buffer's spare capacity)
@@ -836,7 +836,7 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
 /// prefetch at the level `H` names (`PF_L1`, `PF_L2`, `PF_NTA`) where the target has one,
 /// else nothing. A hint only: it changes no value read.
 #[inline(always)]
-fn prefetch<const H: u8>(t: *const u32, row: u32) {
+pub(crate) fn prefetch<const H: u8>(t: *const u32, row: u32) {
     let p = t.wrapping_add(row as usize);
     #[cfg(target_arch = "x86_64")]
     // SAFETY: SSE is in x86_64's baseline; a prefetch never faults
@@ -873,7 +873,7 @@ fn next_unset(l: &Lane, next: &[usize]) -> bool {
 }
 
 /// `m` pseudo-random rows below `n` (xorshift, seeded by n: the same rows every time)
-fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
+pub(crate) fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
     rows.clear();
     let mut x = 0x2545_f491_4f6c_dd1du64 ^ n as u64;
     rows.extend((0..m).map(|_| {
@@ -885,14 +885,14 @@ fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     /// The segments' reference, safe and slow: from each start, the walks' own steps (its
     /// first byte from its own entry, then a row's byte at a time until the next start),
     /// giving each segment's bytes and its successor. Every segment, on every cycle of the
     /// list, not only those the output joins: a walk writes them all.
-    fn segment_oracle(tt: &TVector, starts: &[u32]) -> Vec<(Vec<u8>, usize)> {
+    pub(crate) fn segment_oracle(tt: &TVector, starts: &[u32]) -> Vec<(Vec<u8>, usize)> {
         let t = &tt.0;
         let mut index = vec![usize::MAX; t.len()];
         for (i, &r) in starts.iter().enumerate() {
