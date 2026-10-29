@@ -102,11 +102,24 @@ impl TVector {
     }
 }
 
-/// The T-vector of the last column `ll`, whose bytes `counts` counts
+/// The T-vector of the last column `ll`, whose bytes `counts` counts, in one pass.
+///
+/// Each row's entry is its link and its last-column byte, `(i << 8) | ll[k]` at slot k. The
+/// scatter writes both at once, taking `ll[k]` from L: the slots a bucket fills advance in
+/// step with its cursor, so those reads are the writes' own 256 sequential streams. No pass
+/// writes the bytes beforehand, and no slot is read back (#81). Every slot is written once,
+/// so the table is only sized here: a table kept from a block as long or longer is cut to
+/// n, its stale words all overwritten, and only growth writes the new tail first.
+///
+/// Panics if `counts` isn't `ll`'s own (the check that every slot was written).
 pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
     let tt = &mut tt.0;
-    tt.clear();
-    tt.extend(ll.iter().map(|&c| c as u32));
+    let n = ll.len();
+    if tt.len() < n {
+        tt.resize(n, 0);
+    } else {
+        tt.truncate(n);
+    }
     let mut ftab = [0u32; 256];
     let mut cum = 0u32;
     for i in 0..256 {
@@ -118,14 +131,14 @@ pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
     // 16-wide store and one counter step, libsais's RUN_LANES. After the BWT, most of
     // Wikidata's last column is in such runs; other windows take the one-byte steps.
     let mut i = 0;
-    while i + 16 <= ll.len() {
+    while i + 16 <= n {
         let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
         if a == b && a == a.rotate_left(8) {
             let c = ll[i] as usize;
             let k = ftab[c] as usize;
             let base = (i as u32) << 8;
-            for (j, e) in tt[k..k + 16].iter_mut().enumerate() {
-                *e = (*e & 0xff) | (base + ((j as u32) << 8));
+            for (j, (e, &l)) in tt[k..k + 16].iter_mut().zip(&ll[k..k + 16]).enumerate() {
+                *e = l as u32 | (base + ((j as u32) << 8));
             }
             ftab[c] += 16;
         } else {
@@ -133,7 +146,22 @@ pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
         }
         i += 16;
     }
-    link(ll, tt, &mut ftab, i..ll.len());
+    link(ll, tt, &mut ftab, i..n);
+    // every slot written: each byte's bucket filled exactly to the next one's start, and
+    // the last to n (the walks read the table unchecked, and a kept table's stale words
+    // could link past n)
+    let mut end = 0u32;
+    for c in 0..256 {
+        end += counts[c];
+        assert_eq!(
+            ftab[c], end,
+            "bwt::build: the counts are not the last column's"
+        );
+    }
+    assert_eq!(
+        end as usize, n,
+        "bwt::build: the counts are not the last column's"
+    );
 }
 
 /// `build`'s one-byte steps, over the rows `rows`
@@ -142,9 +170,9 @@ fn link(ll: &[u8], tt: &mut [u32], ftab: &mut [u32; 256], rows: std::ops::Range<
     for i in rows {
         let c = ll[i];
         let k = ftab[c as usize] as usize;
-        // (k < len, as the counts are ll's own: indexed checked all the same, and the
-        // link assigned, not added, so each link is some i < len whatever happened)
-        tt[k] = (tt[k] & 0xff) | (i as u32) << 8;
+        // (k < len, as the counts are ll's own: indexed checked all the same, and the link
+        // assigned whole, so each link is some i < len whatever happened)
+        tt[k] = ll[k] as u32 | (i as u32) << 8;
         ftab[c as usize] += 1;
     }
 }
@@ -988,15 +1016,45 @@ mod tests {
                 .map(|i| if i < 1003 { (i % 3) as u8 } else { 9 })
                 .collect(),
         );
-        for ll in &inputs {
+        // each into a new table, and all into one kept table in turn (longer and shorter
+        // blocks after each other: a kept table's stale words are all overwritten)
+        let mut kept = TVector::new();
+        for ll in inputs.iter().chain(inputs.iter().rev()) {
             let mut counts = [0u32; 256];
             for &c in ll {
                 counts[c as usize] += 1;
             }
+            let want = one_pass(ll, &counts);
             let mut tt = TVector::new();
             build(ll, &counts, &mut tt);
-            assert!(tt.0 == one_pass(ll, &counts), "length {}", ll.len());
+            assert!(tt.0 == want, "length {}", ll.len());
+            build(ll, &counts, &mut kept);
+            assert!(kept.0 == want, "length {}, the kept table", ll.len());
         }
+    }
+
+    /// `build` refuses counts that aren't the last column's, whose slots it would not all
+    /// write: a bucket short, or the counts one row short of ll's length
+    #[test]
+    fn build_refuses_others_counts() {
+        let ll = b"abracadabra-abracadabra".repeat(9);
+        let mut counts = [0u32; 256];
+        for &c in &ll {
+            counts[c as usize] += 1;
+        }
+        let mut tt = TVector::new();
+        build(&ll, &counts, &mut tt);
+        for (from, to) in [(b'a', b'b'), (b'r', b'-')] {
+            let mut wrong = counts;
+            wrong[from as usize] -= 1;
+            wrong[to as usize] += 1;
+            let r = std::panic::catch_unwind(|| build(&ll, &wrong, &mut TVector::new()));
+            assert!(r.is_err(), "counts moved from {from} to {to}");
+        }
+        let mut short = counts;
+        short[b'a' as usize] -= 1;
+        let r = std::panic::catch_unwind(|| build(&ll, &short, &mut TVector::new()));
+        assert!(r.is_err(), "counts a row short");
     }
 
     /// The room walk on degenerate columns (cycles of one and two rows: segments of one or
