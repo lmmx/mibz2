@@ -6,6 +6,7 @@
 # coop-<UTC time>.jsonl: the files to share.
 #
 #   bash bench/coop.sh [--rounds R] [--arms p4,p8,4x2,...] [--no-libsais] [--build-only]
+#                      [--file F.bz2] [--grid-only]
 #
 # --build-only builds and prints `bin=PATH cpus=LIST libsais=0|1` for bench/coop_counters.py.
 #
@@ -14,13 +15,15 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-rounds="" arms="" libsais=1 build_only=0
+rounds="" arms="" libsais=1 build_only=0 file=corpora/wikidata.bz2 block=1
 while [ $# -gt 0 ]; do
   case "$1" in
     --rounds) rounds="$2"; shift 2 ;;
     --arms) arms="$2"; shift 2 ;;
     --no-libsais) libsais=0; shift ;;
     --build-only) build_only=1; shift ;;
+    --file) file="$2"; shift 2 ;;
+    --grid-only) block=0; shift ;;
     *) echo "bench/coop.sh: unknown argument $1"; exit 1 ;;
   esac
 done
@@ -91,14 +94,15 @@ export COOP_CPUS=$cpus  # (each thread pinned to its own CPU of these, and check
   echo "- **Machine:** $(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2 | xargs); $(nproc --all) CPUs on $cores physical cores used ($cpus); L3 $(cat /sys/devices/system/cpu/cpu0/cache/index3/size 2> /dev/null) shared by CPUs $(cat /sys/devices/system/cpu/cpu0/cache/index3/shared_cpu_list 2> /dev/null)"
   echo "- **libsais:** $([ "$libsais" = 1 ] && echo "2.12.1 at c284ba8, OpenMP" || echo "not built")"
   echo "- **Load:** $(cut -d' ' -f1-3 /proc/loadavg)"
+  echo "- **Corpus:** $file ($(stat -c %s "$file") bytes, sha256 $(sha256sum "$file" | cut -c1-16)...)"
   echo "- **Build:** $(git rev-parse HEAD); **timing boundary:** $([ "${COOP_WITH_MTF:-}" = 1 ] && echo "MTF + build + walk (COOP_WITH_MTF=1; libsais given production's MTF)" || echo "the T-vector phase only, build + walk (the MTF outside the timing)")"
   echo
   echo "## One block on k cores (block)"
   echo
-  taskset -c "$cpus" "$bin" block corpora/wikidata.bz2 3 "$ks"
+  if [ "$block" = 1 ]; then taskset -c "$cpus" "$bin" block "$file" 3 "$ks"; fi
   echo
   echo "## N blocks in flight on k cores each (grid, $rounds rounds)"
   echo
-  taskset -c "$cpus" "$bin" grid corpora/wikidata.bz2 "$rounds" "$fit"
+  taskset -c "$cpus" "$bin" grid "$file" "$rounds" "$fit"
 } 2> >(grep -v '^pass\|^round' >&2) | tee "$out"
 echo "wrote $out and $COOP_JSONL"

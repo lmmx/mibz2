@@ -80,6 +80,67 @@ The rematch's harness (`examples/coop.rs grid`, PR #107) at this branch's head:
 fewer reads are what spares the L3. That run isn't registered until this one says it's
 needed.
 
+## Footprint and bandwidth: what causes each knee (pre-registered, a second recipe)
+
+**An anomaly already in the record.** The bench corpus's blocks are Wikimedia's own: 431
+blocks averaging 486,543 rows (the harness counts 209.7 MB of BWT over 431 blocks; per
+window, 440–731 K rows a block). That is about **1.95 MB of table a block, not 3.6 MB**.
+The 3.6 MB of the workstation journal §9 was its lbzip2 -9 recompression's (≈233 blocks
+of 900 K).
+- **The two curves are the same shape:** on the native blocks the old decoder peaks at 4
+  workers and falls off almost exactly as §9's 3.6 MB blocks do:
+
+  | blocks | 4 → 6 workers | 6 → 8 workers | source |
+  |---|--:|--:|---|
+  | lbzip2 -9 (3.6 MB tables) | 1026 → 889 | 889 → 698 | §9 |
+  | native (≈1.95 MB) | 1007 → 858 | 858 → 674 | the decoder A/B, coop-decoder-20261029T174657Z |
+  | lbzip2 -6 (2.4 MB) | 1156 → 1327 | peak at 6 | §9 |
+
+- **They should differ if table bytes set the knee:** a knee set by live table bytes
+  (§9's 14.4 MB, 0.7 of the L3) would put the native blocks' knee near 7, beside -6's 6,
+  not at -9's 4.
+- **They are confounded:** the native blocks vary in size, come from 12 separate windows
+  of the dump, and were measured in a different run from §9's.
+- **The correction this forces:** the coop journal's §7.1 note ("five tables (18 MB) is
+  0.9 of the L3"), the policy's `FULL_TABLE` rationale and the frontier page's
+  `table_mb` for series 2 and 3 all used 3.6 MB a block on the native corpus. They
+  overstate its live tables about 1.85×. The policy's cap of 4 teams agrees with the
+  measurements on this corpus regardless (4 × 2 beat 5 × 2). Its stated reason is what
+  doesn't hold, not its choice.
+
+**The run, `just bench-libsais-knee-cause`** (needs lbzip2, and sudo for perf):
+1. **The corpus at full blocks:** the same content recompressed with lbzip2 -9 (900 K
+   blocks, 3.6 MB tables), as §9 made it (`corpora/wikidata-l9.bz2`).
+2. **The one-core-a-block sweep on it,** at the grid boundary: p1–p10 and s1x1–s10x1, 20
+   rounds. With `just bench-libsais-knee`'s native sweep this gives each kernel's curve at
+   two footprints, over the same content and the same block counts.
+3. **The counters on both corpora** for p and s at 2, 4, 6, 8 and 10 blocks (`perf stat`,
+   1 and 21 rounds by difference, 2 repeats):
+   - the memory controller's reads and writes, machine-wide;
+   - the reads past L2, their wait and their number in flight;
+   - the LLC's references and misses;
+   - the super-queue-full cycles;
+   - the fill-buffer rate.
+
+**What each cause predicts (fixed now):**
+
+| | capacity (live tables overflow the L3) | bandwidth or queueing (DRAM or the uncore saturates) |
+|---|---|---|
+| knee position against footprint | moves to more blocks as the tables shrink: native about 1.85× -9's N | about the same N on both corpora |
+| L3 hit share of reads past L2, past the knee | falls | holds |
+| DRAM bytes per output byte, past the knee | rises | holds |
+| DRAM GB/s (bytes per output byte × MB/s) | rises with N, then falls with throughput | rises to a common ceiling across kernels and corpora, then flat |
+| wait per read past L2 | rises with the misses | rises without more misses (queueing) |
+
+- **The readings are taken at each kernel's own knee and two steps past it,** on each
+  corpus.
+- **Both causes, or neither, may show.** Each row is reported as it reads, and a mixed
+  verdict is a result.
+- **Your caveat holds:** a smaller block also changes locality, per-block overhead and
+  traffic. So the counters, not the knee's position alone, carry the attribution.
+- **libsais is read the same way.** If its knee has a different cause from ours, that is
+  the finding that says which of its properties to borrow.
+
 ## The command
 
 ```sh
@@ -90,3 +151,12 @@ just bench-libsais-knee
 ```
 
 It takes about 10 minutes. Upload the `coop-*.md` and its `.jsonl`.
+
+Then, for the cause (about 35 minutes; lbzip2 and sudo):
+
+```sh
+sudo -v
+just bench-libsais-knee-cause
+```
+
+Upload every new `coop-*.md` and `coop-counters-*.md`, and their `.jsonl`.

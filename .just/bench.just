@@ -127,6 +127,20 @@ bench-libsais-knee rounds="20":
     bash bench/corpus.sh
     bash bench/coop.sh --rounds {{rounds}} --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1,l1x2,l2x2,l3x2,l4x2,l5x2,s1x2,s2x2,s3x2,s4x2,s5x2
 
+# The knee's cause (docs/journal/2026-10-29-libsais-knee.md, "Footprint and bandwidth"):
+# the same content at full 900k blocks (lbzip2 -9, 3.6 MB tables) beside the native blocks
+# (about 1.95 MB), the one-core-a-block sweep on it, then the counters (memory controller
+# machine-wide, reads past L2, LLC, fill buffers) for mibz2 and libsais at 2-10 blocks on
+# both corpora. Needs lbzip2 and sudo for perf; about 35 minutes. Upload every coop-*.md,
+# coop-counters-*.md and their .jsonl.
+#   just bench-libsais-knee-cause
+bench-libsais-knee-cause rounds="20":
+    bash bench/corpus.sh
+    test -s corpora/wikidata-l9.bz2 || (lbzip2 -dc corpora/wikidata.bz2 | lbzip2 -9 > corpora/wikidata-l9.bz2)
+    bash bench/coop.sh --grid-only --file corpora/wikidata-l9.bz2 --rounds {{rounds}} --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1
+    python3 bench/coop_counters.py --arms p2,p4,p6,p8,p10,s2x1,s4x1,s6x1,s8x1,s10x1 --groups reads,llc_all,queue,fill --reps 2 --no-record
+    python3 bench/coop_counters.py --file corpora/wikidata-l9.bz2 --arms p2,p4,p6,p8,p10,s2x1,s4x1,s6x1,s8x1,s10x1 --groups reads,llc_all,queue,fill --reps 2 --no-record
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10

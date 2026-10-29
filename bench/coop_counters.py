@@ -162,7 +162,7 @@ def grid(env_cpus, binary, rounds, arm, jsonl):
         env_cpus,
         binary,
         "grid",
-        CORPUS,
+        os.environ.get("COOP_FILE", CORPUS),
         str(rounds),
         arm,
     ]
@@ -519,7 +519,9 @@ def main():
     )
     ap.add_argument("--perf", default="sudo perf")
     ap.add_argument("--note", default="")
+    ap.add_argument("--file", default=CORPUS, help="the corpus (default the bench's)")
     a = ap.parse_args()
+    os.environ["COOP_FILE"] = a.file
     perf = shlex.split(a.perf)
 
     b = build()
@@ -623,6 +625,7 @@ def main():
             "?",
         )
         w(f"- **Machine:** {model}; {cores} physical cores used ({cpus})")
+        w(f"- **Corpus:** {a.file} ({os.path.getsize(a.file)} bytes)")
         w(
             f"- **perf:** {subprocess.run([*perf, '--version'], capture_output=True, text=True).stdout.strip()}"
         )
