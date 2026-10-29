@@ -91,6 +91,20 @@ bench-coop-decoder *args:
     cargo build --release --example ab
     python3 bench/coop_decoder.py "$@"
 
+# The libsais rematch (docs/journal/2026-10-29-libsais-rematch.md): the research harness's
+# grid (examples/coop.rs, bench/coop.sh) that measured libsais's s3x3 at 2,356 MB/s (coop
+# journal §7.1), on v0.2.0, with the library's own cooperative inverse BWT added as l arms.
+# Pass 1 is that run's boundary, the T-vector phase only (build + walk, the MTF outside the
+# timing): the historical arms (p4, 4x2, 3x3, s3x3) first reproduced, beside the fused
+# research kernel (x) and the library (l). Pass 2 adds the MTF stage to every arm's timing
+# (the decoder's boundary: libsais given production's MTF). Every thread pinned, one CPU a
+# physical core; about 15 minutes. Upload both coop-*.md files and both .jsonl.
+#   just bench-libsais-rematch
+bench-libsais-rematch rounds="20":
+    bash bench/corpus.sh
+    bash bench/coop.sh --rounds {{rounds}} --arms p4,4x2,3x3,x4x2,x3x3,l4x2,l3x3,s4x1,s4x2,s3x3
+    COOP_WITH_MTF=1 bash bench/coop.sh --rounds {{rounds}} --arms p4,y4x2,y3x3,l4x2,l3x3,s4x1,s4x2,s3x3
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10
