@@ -9,44 +9,110 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.6](https://github.com/lmmx/mibz2/compare/v0.1.5...v0.1.6) - 2026-10-29
 
+An instrumentation release. Decoding is unchanged from 0.1.5: in one paired run of the two
+tags on one runner, every corpus decodes to the same bytes, no change in wall time was
+detected at any thread count, and the resource assessment found no change in CPU or peak
+memory. 0.1.6 adds an opt-in `trace` feature (the
+parallel decoder's own timeline and a footprint ledger) and the public helpers the bench's
+walk sweeps use. The Rust API is compatible with 0.1.5, and the Python package is unchanged.
+
+### Measured: v0.1.6 against v0.1.5
+
+One paired run of the two tags ([run 40902365737](https://github.com/lmmx/mibz2/actions/runs/40902365737)).
+It ran 10 rounds on one runner. Each round decodes every corpus once with each build at each
+thread count, and the builds' order alternates from round to round. v0.1.5 runs as its own
+harness binary (`mibz2@base/ab`), so both builds run in the same process shape.
+
+**Change** is v0.1.6 over v0.1.5: the geometric mean of the rounds' paired wall ratios, with
+its 95% interval. A minus sign means faster. A figure is marked **faster** or **slower** only
+where its interval excludes zero.
+
+| corpus | threads | wall, v0.1.5 → v0.1.6 (median) | wall change (95% interval) | peak RSS | same bytes |
+|---|--:|--:|--:|--:|---|
+| `wikidata` | 1 | 0.463 → 0.470 s | +0.1% (−3.4%, +3.8%) | 26 → 26 MB | yes |
+| `wikidata` | 2 | 0.348 → 0.350 s | −2.6% (−9.2%, +4.6%) | 50 → 49 MB | yes |
+| `wikidata` | 4 | 0.311 → 0.307 s | −0.8% (−4.8%, +3.4%) | 74 → 74 MB | yes |
+| `pattern` | 1 | 0.025 → 0.025 s | +3.8% (−6.0%, +14.5%) | 17 → 17 MB | yes |
+| `pattern` | 2 | 0.021 → 0.018 s | −19.8% (−36.1%, +0.5%) | 24 → 24 MB | yes |
+| `pattern` | 4 | 0.024 → 0.022 s | −3.7% (−8.3%, +1.0%) | 43 → 43 MB | yes |
+| `text` | 1 | 0.054 → 0.054 s | −0.4% (−2.1%, +1.3%) | 19 → 19 MB | yes |
+| `text` | 2 | 0.037 → 0.036 s | +1.6% (−4.9%, +8.7%) | 32 → 32 MB | yes |
+| `text` | 4 | 0.032 → 0.032 s | −0.9% (−3.7%, +2.0%) | 50 → 52 MB | yes |
+| `random` | 1 | 0.098 → 0.097 s | +0.7% (−2.1%, +3.6%) | 24 → 24 MB | yes |
+| `random` | 2 | 0.061 → 0.060 s | +4.8% (−3.7%, +14.1%) | 37 → 37 MB | yes |
+| `random` | 4 | 0.051 → 0.049 s | −3.6% (−9.1%, +2.3%) | 52 → 53 MB | yes |
+| `records` | 1 | 0.129 → 0.124 s | −3.1% (−8.9%, +3.1%) | 24 → 24 MB | yes |
+| `records` | 2 | 0.074 → 0.075 s | +1.6% (−5.8%, +9.6%) | 40 → 40 MB | yes |
+| `records` | 4 | 0.060 → 0.060 s | +0.1% (−3.5%, +3.8%) | 60 → 60 MB | yes |
+| `runs` | 1 | 0.011 → 0.011 s | −4.8% (−14.8%, +6.3%) | 23 → 23 MB | yes |
+| `runs` | 2 | 0.011 → 0.011 s | −0.0% (−4.3%, +4.4%) | 23 → 23 MB | yes |
+| `runs` | 4 | 0.011 → 0.011 s | −4.2% (−10.0%, +2.0%) | 23 → 23 MB | yes |
+| `onebyte` | 1 | 0.017 → 0.016 s | −0.8% (−2.4%, +0.8%) | 34 → 34 MB | yes |
+| `onebyte` | 2 | 0.016 → 0.016 s | +4.5% (−8.9%, +19.8%) | 33 → 33 MB | yes |
+| `onebyte` | 4 | 0.017 → 0.016 s | −0.9% (−3.9%, +2.2%) | 33 → 33 MB | yes |
+
+- **Same bytes:** every run of every arm gave the same output hash on every corpus, with no error.
+- **The resource assessment** (best against best, CPU per byte, amplification at each thread count, peak RSS at the most threads): no change detected.
+- **The stage table does not compare across these tags, so it is not quoted.**
+  - Each build runs its own `examples/phases.rs`.
+  - v0.1.5's times each stage as its best repeat on the same block, cache-warm.
+  - 0.1.6's times the stages once each, in decode order (bench 2.0.0, [#47](https://github.com/lmmx/mibz2/pull/47)).
+  - So the table's differences here (+6.6% in total) are the change of method, mostly in the stages that move the most data (build +8.1%, walk +10.8%). They are not the decoder.
+  - The decoder's own figures above use one harness for both builds. Two earlier pre-release runs of master against v0.1.5, on another CPU model, agreed with them (runs [40895174632](https://github.com/lmmx/mibz2/actions/runs/40895174632) and [40896779028](https://github.com/lmmx/mibz2/actions/runs/40896779028)).
+
+<details><summary>Reproducing this run</summary>
+
+`gh workflow run bench.yml --ref py-0.1.6 -f base=v0.1.5`. Artifact `bench-pr-4fc6af0759da5d600059847f0c450ee77ee2e18c`.
+
+- **Tags:** v0.1.6 is 4fc6af0759da5d600059847f0c450ee77ee2e18c (tagged `py-0.1.6`), and v0.1.5 is 7ff58cee77250c46c1317830ca8038b331380c05.
+- **Runner:** AMD EPYC 9V45 96-Core Processor, 4 cores (2 physical), 4229.4 MHz reported; kernel 7.0.0-1017-azure; image ubuntu24 20261026.354.1.
+- **Toolchain and bench:** rustc 1.99.1 (58cf8f9c3 2026-10-13); bench 3.2.0; 10 rounds; threads 1, 2 and 4.
+- **Corpora:**
+  - `wikidata`: 11,854,933 → 209,700,196 bytes, SHA-256 `82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915`
+  - `pattern`: 1,116 → 19,600,000 bytes, SHA-256 `0f07e2a274b9189677c0f22fd3fc8d15f17324b1f49e651a321239321d4e1407`
+  - `text`: 1,502,031 → 12,368,727 bytes, SHA-256 `b92cb4c4cbeb8dfcd163a4060a506a6c3a8a9cee10d3b998ff7e94c7dcac3525`
+  - `random`: 7,097,921 → 8,000,000 bytes, SHA-256 `10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18`
+  - `records`: 9,587,840 → 9,600,000 bytes, SHA-256 `ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c`
+  - `runs`: 37,995 → 10,000,235 bytes, SHA-256 `af3be4d130faf312fe087baee037ca0d802dcf9cd6aefeefe9d9373b25a92fb8`
+  - `onebyte`: 51 → 20,000,000 bytes, SHA-256 `22924f5b3187645f97653ae4923df14d2597816c2e57f2c7228bc844119c4a9e`
+
+</details>
+
 ### <!-- 1 -->Features
 
-- *(bench)* CPU per byte, amplification and a resource assessment on every pull request; the A/B order alternates (#39, #65) ([#69](https://github.com/lmmx/mibz2/pull/69))
-- *(bench)* the contention fingerprint, mibz2 beside a co-runner on another core ([#71](https://github.com/lmmx/mibz2/pull/71))
-- *(occupancy)* the footprint ledger and a condensed queue summary (#39, #65) ([#70](https://github.com/lmmx/mibz2/pull/70))
-- *(bench)* bench-blocks, the scaling knee against the block size ([#67](https://github.com/lmmx/mibz2/pull/67))
-- *(bench)* the last workstation session for #39: grouped counters, stages under contention, walk gates ([#64](https://github.com/lmmx/mibz2/pull/64))
-- *(bench)* bench-variants, versions and walk settings across thread counts; bench-imc's stall profile ([#61](https://github.com/lmmx/mibz2/pull/61))
-- *(bench)* occupancy runs back to back by default; bench-scaling beside pbz2 and lbzip2 ([#59](https://github.com/lmmx/mibz2/pull/59))
-- *(bench)* just bench-thermal and bench-regimes, where the workstation's slow decodes come from ([#58](https://github.com/lmmx/mibz2/pull/58))
-- *(bench)* just bench-imc and bench-quiet, the memory-controller counters on a quiet machine ([#56](https://github.com/lmmx/mibz2/pull/56))
-- *(occupancy)* placements as paired arms, packed against spread from the sibling map ([#54](https://github.com/lmmx/mibz2/pull/54))
-- *(parallel)* the occupancy instrument, the parallel decoder's own timeline at each thread count ([#53](https://github.com/lmmx/mibz2/pull/53))
-- *(bench)* the room walk's segment assembly timed on its own (#48 step 1, bench 2.1.0) ([#49](https://github.com/lmmx/mibz2/pull/49))
-- *(bench)* a factorial sweep of the walk's mechanisms: chains, prefetch level, scheduling (Actions tab only) ([#41](https://github.com/lmmx/mibz2/pull/41))
+- **`trace`: the parallel decoder's own timeline** ([#53](https://github.com/lmmx/mibz2/pull/53), [#70](https://github.com/lmmx/mibz2/pull/70))
+  - *Mechanism:*
+    - marks at the decoder's waits and handoffs: input, the scanner's slots, blocks taken, and each block's inversion;
+    - a footprint ledger of each worker's buffers (`trace::Buffer`, `Scratch::buffers`).
+
+    It is compiled in only with the opt-in `trace` feature, so the default build carries none of it. `examples/occupancy.rs` reads it (`--features trace`).
+  - *Measured:* the default build decodes as 0.1.5 does (the table above).
+- **The walk sweep's controls** ([#41](https://github.com/lmmx/mibz2/pull/41), [#49](https://github.com/lmmx/mibz2/pull/49))
+  - `walk_segments_flagged_with_prefetch` and `walk_segments_room_with_prefetch` take the prefetch level as `PF_OFF`, `PF_L1`, `PF_L2` or `PF_NTA`.
+  - `walk_segments_room_parts` and `SegScratch::assemble` make the room walk's segment assembly a step of its own, which the bench times.
+  - The decoder uses the same walk and prefetch as 0.1.5 (`PF_L1`).
 
 ### <!-- 2 -->Bug Fixes
 
-- *(bwt)* keep 0.1.5's walk signatures; the prefetch level moves to *_with_prefetch ([#97](https://github.com/lmmx/mibz2/pull/97))
-- *(bench)* the stage table in decode order, not each stage's best on the same block (bench 2.0.0) ([#47](https://github.com/lmmx/mibz2/pull/47))
-- *(bench)* the sweep times each walk in decode order, not right after the same walk ([#45](https://github.com/lmmx/mibz2/pull/45))
+- **0.1.5's walk signatures kept** ([#97](https://github.com/lmmx/mibz2/pull/97))
+  - `walk_segments_flagged_with` and `walk_segments_room_with` take 0.1.5's `bool` prefetch switch again (`true` is `PF_L1`).
+  - The sweep's change of their parameter to a `u8` level ([#41](https://github.com/lmmx/mibz2/pull/41)) would otherwise have broken 0.1.5's callers.
 
-### <!-- 4 -->Documentation
+### Measurement and documentation (the decoder's figures did not change)
 
-- *(site)* version the site's own CSS and JS by the commit deployed
-- *(blog)* the pointer chain is interactive
-- *(blog)* descriptions say what the posts find, not what they are
-- social cards for link previews
-- *(blog)* draw the first post's figures as inline SVG
-- *(blog)* retitle the first post and tone down its wording
-- *(blog)* add a research blog with the succinct-structures write-up ([#96](https://github.com/lmmx/mibz2/pull/96))
-- a Status page, where the research stands (29 October 2026) ([#86](https://github.com/lmmx/mibz2/pull/86))
-- *(changelog)* 0.1.5's notes to an evidence bar, its own tag-to-tag paired run ([#44](https://github.com/lmmx/mibz2/pull/44))
-- *(site)* Why 32 couriers beat one, memory-level parallelism explained ([#38](https://github.com/lmmx/mibz2/pull/38))
-
-### <!-- 9 -->Other
-
-- bz2ngrs and bz2-ng's C as alternatives; mibz2's inverse BWT against bz2ngrs's, phase by phase (bench 3.1.0) ([#74](https://github.com/lmmx/mibz2/pull/74))
+- **The bench (2.0.0 → 3.2.0):**
+  - the stage table in decode order ([#47](https://github.com/lmmx/mibz2/pull/47)), and the segment assembly timed on its own ([#49](https://github.com/lmmx/mibz2/pull/49));
+  - the walk sweep timed in decode order ([#45](https://github.com/lmmx/mibz2/pull/45));
+  - CPU per byte, amplification and a resource assessment on every pull request ([#69](https://github.com/lmmx/mibz2/pull/69));
+  - the contention fingerprint ([#71](https://github.com/lmmx/mibz2/pull/71));
+  - bz2ngrs, bz2-ng and libsais as alternatives ([#74](https://github.com/lmmx/mibz2/pull/74), [#75](https://github.com/lmmx/mibz2/pull/75));
+  - a PMU probe of what a hosted runner's counters can measure ([#87](https://github.com/lmmx/mibz2/pull/87)).
+- **The workstation instruments:** occupancy, scaling, block size, thermal, regimes, the memory-controller counters and the stall profile ([#54](https://github.com/lmmx/mibz2/pull/54), [#56](https://github.com/lmmx/mibz2/pull/56), [#58](https://github.com/lmmx/mibz2/pull/58), [#59](https://github.com/lmmx/mibz2/pull/59), [#61](https://github.com/lmmx/mibz2/pull/61), [#64](https://github.com/lmmx/mibz2/pull/64), [#67](https://github.com/lmmx/mibz2/pull/67)).
+- **The documentation site:**
+  - Why 32 couriers beat one ([#38](https://github.com/lmmx/mibz2/pull/38));
+  - a Status page ([#86](https://github.com/lmmx/mibz2/pull/86));
+  - a research blog with link-preview cards ([#96](https://github.com/lmmx/mibz2/pull/96));
+  - 0.1.5's notes held to their own tag-to-tag run ([#44](https://github.com/lmmx/mibz2/pull/44)).
 
 ## [0.1.5](https://github.com/lmmx/mibz2/compare/v0.1.4...v0.1.5) - 2026-10-27
 
