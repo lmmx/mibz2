@@ -24,7 +24,9 @@ paper unless said), **measured** (ours, said where), **hypothesis** (untested).
 | 6 | [`07-sadakane-csa-research.md`](2026-10-29-literature-study/07-sadakane-csa-research.md) | Sadakane, "New Text Indexing Functionalities of the Compressed Suffix Arrays", Journal of Algorithms, 2003; SDSL's `csa_sada`. The researcher read the abstract, secondary accounts and SDSL, not the full article | read |
 | 7 | [`08-patched-coding-plateaus-research.md`](2026-10-29-literature-study/08-patched-coding-plateaus-research.md) | patched integer coding (Lemire & Boytsov, "Decoding Billions of Integers per Second Through Vectorization", SPE 2015; Brisaboa, Ladra & Navarro, "DACs", 2013) and the residual-plateau record | read |
 | 8 | [`09-cacheline-ef-research.md`](2026-10-29-literature-study/09-cacheline-ef-research.md) | cache-line Elias–Fano and CPU-aware decoding: Groot Koerkamp's cacheline-ef and "PtrHash: Minimal Perfect Hashing at RAM Throughput", SEA 2025; Hough & Bhatele, "Elias–Fano Compression for Space-Efficient Rank and Select Structures", SEA 2025. The last item on the original list | read |
-| — | — | a synthesis: each design choice as prior art or as mibz2's own hypothesis, with the experiment that decides it | proposed by the researcher |
+| — | [`10-synthesis-research.md`](2026-10-29-literature-study/10-synthesis-research.md) | the researcher's synthesis, after reading this index's cross-checks | read |
+| — | [`10-synthesis-coordinator.md`](2026-10-29-literature-study/10-synthesis-coordinator.md) | the coordinator's notes on it, and its approval of the cooperative integration's gates | read |
+| — | [`11-closing.md`](2026-10-29-literature-study/11-closing.md) | the researcher's closing note and the coordinator's close of the literature phase | read; **the study is closed** |
 | — | — | the overview's other items (cacheline Elias–Fano, the LCSA line, the Orbit implementation in its own pass) | queued |
 
 The user calls paper 2 "the first paper", as the first they worked through with the
@@ -118,8 +120,8 @@ cheap census question.**
 - **Bucket boundaries are bounded for bzip2 (ours, arithmetic).** A block has at most 256
   byte buckets, so at most 255 boundaries, so at most 255 of a full block's 28,125 aligned
   32-row groups straddle one: 0.91% at most. Their word alphabet (about 3.9 M symbols)
-  has no such bound. A plain fallback record for straddling groups costs at most that
-  fraction.
+  has no such bound. **Measured** (the ψ census, #79's last comment): 0.29% of rows are in
+  groups that cross a bucket boundary, so a plain fallback record for them costs little.
 - **The whole lookup, not ψ alone:** their faster ψ gained less in full suffix-array
   operations, because the operations also read sampling data.
   - Today's T-vector entry is one u32 a row, ψ in its top 24 bits and the output byte in
@@ -147,7 +149,8 @@ cheap census question.**
     The walk loads the destination's entry and emits its low byte, L[ψ(r)], which is F[r].
     So the byte emitted at row r depends only on r's bucket.
   - A group inside one bucket has a single F byte, which its descriptor can carry once.
-    Only the straddling groups (at most 0.91% of a full block's) need anything per row.
+    Only the straddling groups (at most 0.91% of a full block's; 0.29% of rows measured)
+    need anything per row.
   - So for a 24-bit link-only table (#79) the researcher's warning, a symbol costing extra
     memory accesses, applies to at most those groups. Whether the walk's segment markers
     can be carried the same way is still to check against the room walk's handoffs.
@@ -202,6 +205,30 @@ cheap census question.**
   compression doesn't halve the traffic a step. It reduces the lines the table occupies,
   which is what matters for the shared cache at full concurrency (the i9's knee,
   `2026-10-28-workstation-scaling.md`). The traffic gain has to be measured, not inferred.
+
+## Where the study ends
+
+The researcher and the coordinator closed the literature phase (`11-closing.md`). What it
+leaves, sorted as the synthesis sorts it:
+- **Established (prior art):** ψ as per-byte increasing lists; translation (uniform)
+  groups; local codecs chosen per block; cache-line Elias–Fano with in-register select.
+- **Measured here:** translation coverage (about 77%); FOR-14 and EF-12 cover 99.5% of
+  rows; 0.29% of rows straddle a bucket; length-capped move structures lose under the
+  room walk (#42); #81's fused build.
+- **Open, and decided by two small tasks under #79:**
+  1. **The plateau census:** the joint distribution of plateaus, span and bucket crossing
+     for aligned 32-row groups, by groups and by rows, per block, with EF-12
+     eligibility.
+  2. **The marker audit:** whether the room walk can detect segment ends from its
+     existing lane and checkpoint state, without a dependent load or new
+     synchronisation on the critical path. If so, a two-plateau group fits a 64-bit
+     descriptor (40 + 5 + 8 + 4 = 57 bits).
+- **Conditional on both:** a dependent-successor throughput benchmark across 1–32 lanes,
+  against the T-vector.
+- **Unknown:** whether any compact ψ, built directly from L, beats #81's fused build plus
+  the walk.
+
+The cooperative decoder's integration stays the main engineering track.
 
 ## Open checks
 
