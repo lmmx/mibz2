@@ -585,8 +585,10 @@ Two separate two-arm runs, one after the other, nothing else running:
   - the paired geometric mean is at least 1.10;
   - the 95% interval's lower bound is above 1.0;
   - the arm beats p4 in all 20 rounds.
-- **Analysis:** `python3 docs/journal/2026-10-28-cooperative-inversion/analyse.py
-  coop-<time>.jsonl`, the same script as §7. It reports the t-interval, the block bootstrap
+- **Analysis:** the same script as §7. The worktree stays detached at c2620b8, so take
+  the script without moving it: `git fetch origin && git show
+  origin/research/coop-unbwt:docs/journal/2026-10-28-cooperative-inversion/analyse.py >
+  /tmp/analyse-coop.py`, then `python3 /tmp/analyse-coop.py coop-<time>.jsonl`. It reports the t-interval, the block bootstrap
   and the halves.
 - **4x2's run decides the pre-registered hypothesis. 3x3's validates the nominee.**
 - **libsais's s3x3 gets its own exploratory run only after both:**
@@ -615,6 +617,15 @@ Two separate two-arm runs, one after the other, nothing else running:
     machine-wide are about 2 × p4's, at no lower occupancy per miss.
   - **Both:** each reading leaves its mark, and the design budgets both the live tables
     and the lanes.
+- **Guarding the difference (from the outside review):** subtracting one run from another
+  is only as good as the two runs are alike.
+  - Each arm's 1-round and 21-round runs are repeated 3 times, interleaved. The raw
+    counts of every run are kept, not only the difference.
+  - A difference counts only if its spread over the repeats is small against it.
+  - Every event's time enabled must equal its time running (no multiplexing), or the
+    reading is dropped.
+  - The grid's own per-round wall in each run is checked against the discovery run's, so
+    a counted run is a typical one.
 - **What it decides:** whether the scheduler is budgeted by tables against the L3
   (residency) or by lanes per block (overlap), §5's last paragraph. The script is a small
   research addition, written after the confirmation, not before.
