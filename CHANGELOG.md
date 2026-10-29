@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/lmmx/mibz2/compare/v0.1.6...v0.2.0) - 2026-10-29
+
+### <!-- 3 -->Performance
+
+- *(parallel)* the cooperative policy is the default decoder ([#106](https://github.com/lmmx/mibz2/pull/106))
+- *(parallel)* the cooperative policy (Plan::for_threads) and the full-decoder A/B against the release gates ([#105](https://github.com/lmmx/mibz2/pull/105))
+- *(bwt)* the cooperative inverse BWT in the library: fused build, shared walk, bwt::Cooperative<K> (opt-in) ([#104](https://github.com/lmmx/mibz2/pull/104))
+- *(coop)* the cooperative inverse BWT's thread pool, panic-safe, under Miri (not wired) ([#103](https://github.com/lmmx/mibz2/pull/103))
+- *(mtf)* mtf_checkpoints, the MTF stage making the cooperative build's count checkpoints (not wired) ([#101](https://github.com/lmmx/mibz2/pull/101))
+
+### <!-- 4 -->Documentation
+
+- *(bench)* the throughput-memory frontier page, its rules and the two measured i9 series; the Seward conversation kept verbatim, and the audit of which results it can hold
+- *(changelog)* 0.1.6's notes from its own tag-to-tag paired run ([#98](https://github.com/lmmx/mibz2/pull/98))
+
 ## [0.1.6](https://github.com/lmmx/mibz2/compare/v0.1.5...v0.1.6) - 2026-10-29
 
 An instrumentation release. Decoding is unchanged from 0.1.5: in one paired run of the two
