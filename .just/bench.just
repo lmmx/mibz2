@@ -82,6 +82,7 @@ bench-scaling *args:
 # runs and its throughput against this build's. It writes variants-<UTC time>.json.
 #   just bench-variants
 #   just bench-variants --variants v0.1.2,v0.1.3,lanes8,pf-off --rounds 8
+#   just bench-variants --variants v0.1.4,pairwalk --threads 1,4,6,8,10 --rounds 10
 
 # Which of mibz2's own changes moved its scaling knee: versions and walk settings (#39, #52)
 [positional-arguments]

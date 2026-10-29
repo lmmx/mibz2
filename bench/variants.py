@@ -14,6 +14,8 @@ decoder and runs them side by side, back to back, across thread counts:
 - research gates on this build (`gate2`-`gate6`, not in the default set): at most K
   workers in the T-vector phase (`invert`: the build and the walk) at once, the others free
   for MTF, RLE1 and the CRC.
+- kept research branches, by commit (`pairwalk`, not in the default set): the pair walk
+  (#6), v0.1.4 and one commit, so `--variants v0.1.4,pairwalk` measures that one change.
 
 Each variant is examples/ab.rs built from its own worktree (target/variants/), checked to
 give this build's bytes on the corpus, and run as an arm of this build's harness
@@ -38,6 +40,10 @@ from imc import CORPUS, run
 from scaling import AB, summarise
 
 RELEASES = ["v0.1.1", "v0.1.2", "v0.1.3", "v0.1.4", "v0.1.5"]
+# kept research branches, by commit (not in the default set): `pairwalk` is the pair walk
+# (psi^2, two bytes a step: libsais's symbol-rows decode ported, #6), v0.1.4 and one commit,
+# so `--variants v0.1.4,pairwalk` is that one change on the i9 (2026-10-29-expert-review.md)
+COMMITS = {"pairwalk": "a3687d8fc9932d886490d65768a9bd1939edc66f"}
 # a walk setting: the constant in src/bwt.rs and its value
 SETTINGS = {
     "lanes16": ("FLAGGED_LANES: usize", "16"),
@@ -73,7 +79,7 @@ static WALK_GATE: (std::sync::Mutex<usize>, std::sync::Condvar) =
 const WALK_PERMITS: usize = {k};
 """
 DEFAULT = ",".join([*RELEASES, *SETTINGS])
-KNOWN = ",".join([*RELEASES, *SETTINGS, *GATES])
+KNOWN = ",".join([*RELEASES, *SETTINGS, *GATES, *COMMITS])
 
 
 def build(name, root, out):
@@ -82,7 +88,7 @@ def build(name, root, out):
     if os.path.exists(tree):
         run(["git", "worktree", "remove", "--force", tree])
         shutil.rmtree(tree, ignore_errors=True)
-    ref = name if name in RELEASES else "HEAD"
+    ref = name if name in RELEASES else COMMITS.get(name, "HEAD")
     run(["git", "worktree", "add", "--detach", tree, ref], check=True)
     try:
         if name in GATES:
@@ -138,7 +144,11 @@ def main():
         if not os.path.exists(p):
             sys.exit(f"bench-variants: no {p}; `just bench-variants` builds it")
     names = [v for v in a.variants.split(",") if v]
-    unknown = [v for v in names if v not in RELEASES and v not in SETTINGS and v not in GATES]
+    unknown = [
+        v
+        for v in names
+        if v not in RELEASES and v not in SETTINGS and v not in GATES and v not in COMMITS
+    ]
     if unknown:
         sys.exit(f"bench-variants: unknown variants {unknown}; any of {KNOWN}")
     threads = [int(t) for t in a.threads.split(",")]
@@ -177,7 +187,7 @@ def main():
             "ref_threads": a.ref,
             "variants": {
                 n: {
-                    "ref": n if n in RELEASES else "HEAD",
+                    "ref": n if n in RELEASES else COMMITS.get(n, "HEAD"),
                     "setting": SETTINGS.get(n),
                     "walk_permits": GATES.get(n),
                 }
