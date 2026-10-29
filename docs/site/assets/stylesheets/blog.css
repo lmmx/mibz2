@@ -13,6 +13,8 @@
   --bf-steel-tint: #d6e5ec;
   --bf-blue: #4a8fe8;
   --bf-blue-tint: #dce9fa;
+  --bf-amber: #b26b00;
+  --bf-amber-tint: #f8ead0;
 }
 [data-md-color-scheme="slate"] .bf-fig {
   --bf-frame: #34342f;
@@ -25,6 +27,8 @@
   --bf-steel-tint: #1f3440;
   --bf-blue: #3d86e0;
   --bf-blue-tint: #1d2f47;
+  --bf-amber: #f2b544;
+  --bf-amber-tint: #3b3020;
 }
 
 .md-typeset .bf-fig {
@@ -96,3 +100,14 @@
 .bf-fig .bf-link,
 .bf-fig .bf-icon { stroke: var(--bf-muted); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .bf-fig .bf-icon-green { stroke: var(--bf-green); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* status pills (the roadmap) */
+.bf-fig .bf-pill-done,
+.bf-fig .bf-pill-later { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-pill-ready { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1; }
+.bf-fig .bf-pill-next { fill: var(--bf-blue-tint); stroke: var(--bf-blue); stroke-width: 1; }
+.bf-fig .bf-dot-ready { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1.5; }
+.bf-fig .bf-pill-done-t,
+.bf-fig .bf-pill-later-t { fill: var(--bf-muted); font-size: 11px; font-weight: 600; }
+.bf-fig .bf-pill-ready-t { fill: var(--bf-amber); font-size: 11px; font-weight: 600; }
+.bf-fig .bf-pill-next-t { fill: var(--bf-blue); font-size: 11px; font-weight: 600; }
