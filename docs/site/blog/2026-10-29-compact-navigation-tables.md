@@ -1,4 +1,6 @@
 ---
+title: "Compact navigation tables for the inverse BWT: early findings"
+image: assets/social/blog-2026-10-29-compact-navigation-tables.png
 description: "A plain-language account of the succinct-data-structures review: how compactly the inverse BWT's navigation table can be stored, and what remains to be measured."
 ---
 

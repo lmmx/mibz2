@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{#- Link previews (Open Graph, Twitter): the page's title and description, and its card,
+    the front-matter `image` or the site's default (docs/scripts/social_cards.py makes
+    both). -#}
+{% block extrahead %}
+  {{ super() }}
+  {%- set og_title = page.meta.title if (page.meta and page.meta.title) else ((page.title | striptags) if (page.title and not (page.is_homepage or page.url in ['', '.', './'])) else config.site_name) %}
+  {%- set og_description = page.meta.description if (page.meta and page.meta.description) else config.site_description %}
+  {%- set og_image = page.meta.image if (page.meta and page.meta.image) else "assets/social/default.png" %}
+  <meta property="og:type" content="{{ 'article' if (page.meta and page.meta.image) else 'website' }}">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:title" content="{{ og_title }}">
+  <meta property="og:description" content="{{ og_description }}">
+  {%- if page.canonical_url %}
+  <meta property="og:url" content="{{ page.canonical_url }}">
+  {%- endif %}
+  <meta property="og:image" content="{{ config.site_url }}{{ og_image }}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{{ og_title }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ og_title }}">
+  <meta name="twitter:description" content="{{ og_description }}">
+  <meta name="twitter:image" content="{{ config.site_url }}{{ og_image }}">
+  <meta name="twitter:image:alt" content="{{ og_title }}">
+{% endblock %}

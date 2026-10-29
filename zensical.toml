@@ -134,6 +134,7 @@ language = "en"
 # the home page's illustration without its shadows (docs/scripts/hero.py mark), as PNG
 logo = "assets/logo-header.png"
 variant = "modern"
+custom_dir = "docs/overrides"
 
 [project.theme.icon]
 repo = "fontawesome/brands/github"
