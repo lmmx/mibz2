@@ -23,7 +23,8 @@ paper unless said), **measured** (ours, said where), **hypothesis** (untested).
 | 5 | [`06-gog-navarro-petri-research.md`](2026-10-29-literature-study/06-gog-navarro-petri-research.md) | Gog, Navarro & Petri, "Improved and Extended Locating Functionality on Compressed Suffix Arrays", Journal of Discrete Algorithms, 2015 | read |
 | 6 | [`07-sadakane-csa-research.md`](2026-10-29-literature-study/07-sadakane-csa-research.md) | Sadakane, "New Text Indexing Functionalities of the Compressed Suffix Arrays", Journal of Algorithms, 2003; SDSL's `csa_sada`. The researcher read the abstract, secondary accounts and SDSL, not the full article | read |
 | 7 | [`08-patched-coding-plateaus-research.md`](2026-10-29-literature-study/08-patched-coding-plateaus-research.md) | patched integer coding (Lemire & Boytsov, "Decoding Billions of Integers per Second Through Vectorization", SPE 2015; Brisaboa, Ladra & Navarro, "DACs", 2013) and the residual-plateau record | read |
-| 8 | — | cache-line Elias–Fano and CPU-aware decoding, the last item on the original list | next |
+| 8 | [`09-cacheline-ef-research.md`](2026-10-29-literature-study/09-cacheline-ef-research.md) | cache-line Elias–Fano and CPU-aware decoding: Groot Koerkamp's cacheline-ef and "PtrHash: Minimal Perfect Hashing at RAM Throughput", SEA 2025; Hough & Bhatele, "Elias–Fano Compression for Space-Efficient Rank and Select Structures", SEA 2025. The last item on the original list | read |
+| — | — | a synthesis: each design choice as prior art or as mibz2's own hypothesis, with the experiment that decides it | proposed by the researcher |
 | — | — | the overview's other items (cacheline Elias–Fano, the LCSA line, the Orbit implementation in its own pass) | queued |
 
 The user calls paper 2 "the first paper", as the first they worked through with the
@@ -178,12 +179,36 @@ cheap census question.**
   1, 2, 3–4, 5–8 and 9 or more, with straddling groups apart. A group's plateaus are its
   breaks plus one. This is the fourth reading in a row to end on it.
 
+**Cache-line Elias–Fano (paper 8) is a working precedent for the fixed-line record.**
+- **The precedent:** cacheline-ef keeps 44 sorted integers in one 64-byte line: a 32-bit
+  base, a low byte each, and a 128-bit high vector (4 + 44 + 16 bytes, 11.64 bits a value;
+  checked). A lookup touches one line, against about three for plain Elias–Fano in its
+  implementation. Select on a short high vector is PDEP plus TZCNT, as in Hough &
+  Bhatele's orzo.
+- **Our EF-12 record fits its line, just (ours, arithmetic):** a 20-bit base, 32 × 12-bit
+  lows and a 64-bit high vector are 468 bits, and with 32 marker bits and the group's byte
+  508. That leaves 4 bits of a 512-bit line for the format tag. Its span limit, an offset
+  of 32 · 4096 + 4095 = 135,167 (checked), makes it a conditional codec: wider groups need
+  another format.
+- **PDEP's cost depends on the CPU.** It is microcoded and slow on AMD's Zen 1 and Zen 2,
+  and fast on Intel since Haswell and on Zen 3 and later. The CI bench runner is an AMD
+  EPYC 7763 (Zen 3), and the i9-10900K is Comet Lake, so neither shows the slow case. An
+  EF arm needs a select that doesn't rely on PDEP, or a dispatch, before it could ship.
+- **Throughput, not latency, is the measure.** PtrHash's figures are for independent keys,
+  prefetched ahead. A ψ chain can't be prefetched beyond its next step, so the test is
+  successor throughput against the number of chains in flight, which the room walk's lane
+  count already sets. The researcher's closing question is that test.
+- **The cache-line correction:** a miss moves 64 bytes whatever the record holds, so
+  compression doesn't halve the traffic a step. It reduces the lines the table occupies,
+  which is what matters for the shared cache at full concurrency (the i9's knee,
+  `2026-10-28-workstation-scaling.md`). The traffic gain has to be measured, not inferred.
+
 ## Open checks
 
 - **Citations:** paper 1's are checked (`2026-10-29-expert-review.md` §1). We have not yet
   checked paper 2's arXiv v4 revision date, RLBWT Tricks' venue and the readings' figures
   against the papers. The research trail dates RLBWT Tricks 2024, and deep dive 2 gives
-  SEA 2022. Paper 4's Table 2, paper 5's Figure 3 and paper 7's encoding-speed ratios are the researcher's reading.
+  SEA 2022. Paper 4's Table 2, paper 5's Figure 3 paper 7's encoding-speed ratios and paper 8's PtrHash table are the researcher's reading.
 - **Cyclic BWT:** bzip2 sorts rotations with no sentinel. A periodic block gives ψ several
   cycles (for `abab`, LF = [2, 3, 0, 1], two cycles of 2), and the decoder walks one of
   them n times from `orig_ptr`. The papers' move structures assume a sentinel and a single
