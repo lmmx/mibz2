@@ -2329,3 +2329,55 @@ just bench-coop-made
 ```
 
 It takes about five minutes. Upload `coop-made-*.md`, its `.jsonl`, and `coop-ab-*.md`.
+
+### 17.4 The result (measured, the i9, bc94272, 2026-10-29): a pass, above the predicted range against p4
+
+The run was `coop-made-20261029T163333Z` (with `coop-ab-20261029T163409Z`; the files are beside this journal). It ran 20 rounds, every thread pinned and none misplaced, at load 1.14.
+
+**The checks first, all passed:**
+- `mtf_check`: 2,207 runs of each kernel over 431 blocks and 10 edge cases at levels 1 and 9. 758 were refused exactly as production refuses them.
+- `fused_check`: 838,826,228 words at k = 1–4.
+- In the grid's untimed round, every arm's output equalled production's by hash, and every y block's made checkpoints equalled the free ones.
+
+**The MTF stage alone, one core:** `mtf_cp2p` ran at 0.9776 ±0.0027 of production's (§15.4: 0.9743).
+
+**The registered comparisons:**
+
+| comparison | paired MB/s, mean ±95% (min–max) | rounds won | changed phase | walk (control) | predicted |
+|---|--:|--:|--:|--:|--:|
+| y3x3 against f3x3 | 1.074 ±0.016 (1.017–1.162) | 20/20 | build 1.263 ±0.035 | 1.016 ±0.017 | 1.05–1.09 |
+| y4x2 against f4x2 | 1.099 ±0.020 (1.004–1.166) | 20/20 | build 1.410 ±0.030 | 1.000 ±0.023 | 1.05–1.10 |
+| y3x3 against x3x3 | 0.991 ±0.007 (0.960–1.018) | 6/20 | MTF 0.975 ±0.006 | 1.000 ±0.010 | 0.98–1.00 |
+| y4x2 against x4x2 | 0.991 ±0.018 (0.909–1.076) | 6/20 | MTF 0.972 ±0.011 | 1.000 ±0.022 | 0.98–1.00 |
+| **y3x3 against p4** | **1.375 ±0.022** (1.279–1.486) | | | | 1.27–1.36 |
+| **y4x2 against p4** | **1.439 ±0.020** (1.353–1.503) | | | | 1.28–1.40 |
+
+The fusion and checkpoint pairs landed inside their predictions. Both y arms against p4 came in above them. p4 ran at 1206 MB/s here, against 1282 in §15.4's run. The ratios are paired, so a slower p4 round lowers both sides of a pair, but it does widen the gap between runs.
+
+**A worker's milliseconds a round** (medians), and a CPU model (ours: the helpers are counted busy for the build and the walk, and parked through the MTF stage; spinning is not counted):
+
+| arm | MTF | build | walk | wall | core-ms a round | against p4 | MTF share |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| p4 | 26.0 | 39.6 | 107.7 | 174.1 | 693 | 1 | 0.15 |
+| f3x3 | 34.4 | 41.7 | 58.8 | 135.5 | 1,007 | 1.45 | 0.25 |
+| y3x3 | 34.7 | 33.1 | 58.2 | 126.9 | 926 | 1.34 | 0.28 |
+| f4x2 | 26.9 | 42.5 | 63.5 | 133.7 | 956 | 1.38 | 0.20 |
+| y4x2 | 27.0 | 30.2 | 63.8 | 121.8 | 860 | 1.24 | 0.22 |
+
+**Against §17.2's decision:** the better y arm, y4x2, has a lower bound of 1.419 against p4, and y3x3 has 1.353. Both clear the 1.20 line. **The integration proceeds with PRs 1–7.** The controls held: every walk was within ±3% of its twin, and no round was misplaced.
+
+**What it shows:**
+- **The 1.643× of §16.4 did not depend on free checkpoints.** Made by the MTF stage and timed, they cost 0.9% of the round (y against x: 0.991), within the predicted 0.98–1.00.
+- **4x2 leads 3x3 in all three ways measured:**
+  - faster: 1.439 against 1.375;
+  - on fewer cores: 8 against 9;
+  - better balanced: its busiest walking thread does 1.34× the mean, against 1.60–1.63× at 3x3.
+
+  By the CPU model it is also cheaper, 1.24× p4's core-ms against 1.34×, because its serial MTF share is smaller (0.22 against 0.28).
+- **The serial MTF stage is the next lever.** It is 22–28% of a team's round, run on one core while the team's others wait. That is the plan's batched team (PR 9).
+
+**What it does not show:**
+- It is not the decoder. The scanner, RLE1, the CRC and the segments' joining are outside the grid, and every thread is pinned.
+- The CPU figures are a model, not a measurement.
+
+The decoder A/B (the plan's PR 7, unpinned as users run it, peak RSS and CPU-seconds measured) is the gate for any claim about decompression. Both 4x2 and 3x3 stay arms through it.
