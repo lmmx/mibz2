@@ -43,6 +43,10 @@ PREDICTED = {
     ("r3x3", "3x3"): (1.04, 1.14),
     ("q4x1", "r4x1"): (0.98, 1.02),
     ("q3x3", "r3x3"): (1.06, 1.14),
+    # #81's cooperative test (§16.2)
+    ("x3x3", "q3x3"): (1.02, 1.06),
+    ("x4x2", "q4x2"): (1.01, 1.05),
+    ("x4x1", "q4x1"): (0.99, 1.02),
 }
 PREDICTED_WITH_MTF = {
     ("q3x3", "r3x3"): (1.02, 1.05),
@@ -69,6 +73,7 @@ CHANGES = {
         ("r", "build", "walk", "#78's net with the spill fix (`mtf_cp2`)"),
         ("n", "mtf", "walk", "the spill fix: `mtf_cp2` against `mtf_cp`, the same build"),
     ],
+    "x": [("q", "build", "walk", "#81: the given build in one pass, L's byte taken from L")],
     "f": [
         ("r", "build", "walk", "#78's net with the spill fix, store order pinned (`mtf_cp2p`)"),
         ("n", "mtf", "walk", "the spill fix, pinned: `mtf_cp2p` against `mtf_cp`, the same build"),

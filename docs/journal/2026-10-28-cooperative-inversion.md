@@ -2115,7 +2115,7 @@ The run was `coop-spill-20261029T123205Z` (with `coop-ab-20261029T123245Z`): 20 
 - **The finding:** in production's own MTF loop, each symbol's 32-byte list load overlaps two stores from the previous symbol:
   - its 32-byte vector store;
   - the 1-byte store of the new front.
-  
+
   The shifted load at `base − 1` overlaps the vector store only in part. On Intel, neither load can be forwarded from those stores. So each waits for the stores to commit.
 - **What the 5.8% suggests:** that wait is on production's critical path too, not only on `mtf_cp2`'s.
 - **A candidate change:** keep the list's front 32 bytes in a register across symbols:
@@ -2132,3 +2132,59 @@ The run was `coop-spill-20261029T123205Z` (with `coop-ab-20261029T123245Z`): 20 
 - making its checkpoints in the MTF stage costs 2.6–3.9% of that stage, depending on the kernel and the build;
 - the net in this harness is 1.047–1.050 at 3x3, with the MTF stage in series;
 - nothing here is a decoder figure (§8.4).
+
+## 16. #81's cooperative test: the build in one pass (pre-registered before it runs)
+
+Branch `research/coop-fused`, stacked on `research/coop-spill`. Production `src/` is untouched here. #81's single-core half is on master's PR #93, measured on CI at 1.027× the build, below its 1.03 floor, and not merged.
+
+### 16.1 What changes, and what stays the same
+
+**`coop_build_fused`** (the `x` arms) is `coop_build_given` (the `q` arms, §13) in one pass:
+- **Each range's first slot in every bucket is computed, not counted.** It is the bucket's start plus the counts before the range, which is the block's checkpoint at the range's start.
+- **So there is no copy phase, no histogram, no serial prefix sum and no second `pool.run`.** The build is one `pool.run`, with no barrier inside it.
+- **The scatter writes each entry whole:** `ll[s] | i << 8` at slot s, the byte taken from L, as #93 does on one core. Nothing reads the table back.
+- **The table is only sized.** Every slot is written once, so a kept table's stale words are all overwritten.
+- **Checked before any timing** (`fused_check`): the fused table equals `coop_build_given`'s word for word, on every block, at k = 1, 2, 3 and 4, into a table kept from the block before. The grid then checks every arm's output against production by hash, as before.
+
+**What stays the same:** the checkpoints are given free, as in q (§13; making them is §14–15's question, not this one). The ranges are rounded to checkpoints as in q. The walk is #77's room walk.
+
+**What each comparison isolates:**
+
+| comparison | what it measures |
+|---|---|
+| **x3x3 against q3x3** | the fusion where the copy phase and its barrier matter most |
+| x4x2 against q4x2 | the same with two threads a block (#81 names 3x3 and 4x2) |
+| x4x1 against q4x1 | one thread a block: the single-core fusion inside the grid, with no cross-thread barrier to remove (a check on #93's 1.027) |
+
+The MTF stage is outside the timing here (`bench/coop.sh`, not `coop_net.sh`): the build phase is read undiluted.
+
+### 16.2 The predictions and the criteria
+
+**Where the saving should come from:**
+- q3x3's build is about 41.7 ms of a worker's round (§15.4's run), about 42% of its time with the MTF outside it.
+- About 78 full blocks a worker a round. Each removed `pool.run` should save about the walk's wake-up lag and end spread: 21 and 11 µs a block (§15.4). That is about 2–2.5 ms a round, about 5% of the build.
+- The copy pass's own share is about what #93 found on one core, about 2–3%.
+- The cross-core handoff of the copied lines was measured small (E3, #81's comment), so no large gain is expected from it.
+
+| comparison | predicted, paired MB/s | predicted, build phase |
+|---|--:|--:|
+| x3x3 against q3x3 | **1.02–1.06** | **1.04–1.12** |
+| x4x2 against q4x2 | 1.01–1.05 | 1.03–1.10 |
+| x4x1 against q4x1 | 0.99–1.02 | 1.00–1.04 |
+
+**The criteria are #81's, fixed when it was filed:**
+- **pass:** 3x3's build ≥ 1.15× its twin, with the table identical;
+- **fail:** below 1.03×, since the single-core test already fell below it. #81 then closes as negative;
+- **between 1.03× and 1.15×** (a band #81 left undefined, defined here before the run): a gain below #81's bar. It is recorded, and no production change follows. The fused build becomes the research kernel's build for later experiments only if x3x3 against q3x3's MB/s interval excludes 1, with the walk control within ±3%.
+
+The prediction sits in the band, below the pass line. If it comes in there, the experiment fails to justify #81's production change but still improves the research kernel.
+
+### 16.3 The commands (the i9, with the browser and other busy programs closed)
+
+```
+git fetch origin research/coop-fused
+git checkout --detach origin/research/coop-fused
+just bench-coop-fused
+```
+
+It takes about four minutes. Upload `coop-*.md`, its `.jsonl`, and `coop-ab-*.md`.
