@@ -110,6 +110,23 @@ impl StreamDecoder {
         Self::with_inverse::<super::bwt::Segmented>(threads, slots, k)
     }
 
+    /// A decoder spending its threads as `plan` says: production's workers, or teams of
+    /// k sharing each block (`bwt::Cooperative`), with `slots` blocks in flight (at least
+    /// the plan's workers or teams). The team size is 2, 3 or 4; another runs as that many
+    /// production workers.
+    pub fn planned(plan: Plan, slots: usize, k: Kernels) -> StreamDecoder {
+        use super::bwt::{Cooperative, Segmented};
+        match plan {
+            Plan::Workers(n) => Self::with_inverse::<Segmented>(n, slots, k),
+            Plan::Teams { teams, k: 2 } => Self::with_inverse::<Cooperative<2>>(teams, slots, k),
+            Plan::Teams { teams, k: 3 } => Self::with_inverse::<Cooperative<3>>(teams, slots, k),
+            Plan::Teams { teams, k: 4 } => Self::with_inverse::<Cooperative<4>>(teams, slots, k),
+            Plan::Teams { teams, k: t } => {
+                Self::with_inverse::<Segmented>(teams.max(1) * t.max(1), slots, k)
+            }
+        }
+    }
+
     /// `new` with the inverse-BWT kernel `I` (bwt::InverseBwt), so the whole decoder can
     /// be timed with each
     pub fn with_inverse<I: super::bwt::InverseBwt + 'static>(
@@ -449,4 +466,162 @@ fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
         .map(|s| s.to_string())
         .or_else(|| p.downcast_ref::<String>().cloned())
         .unwrap_or_else(|| "a panic".into())
+}
+
+/// How a decoder spends its threads: production's one block a worker, or teams of `k`
+/// threads each inverting one block together (`bwt::Cooperative<k>`), so `teams` tables
+/// are live on `teams × k` threads
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Plan {
+    Workers(usize),
+    Teams { teams: usize, k: usize },
+}
+
+/// The fewest physical cores the cooperative plan engages on: at 4 production is at its
+/// peak on the i9 (docs/journal/2026-10-28-workstation-scaling.md), and CI's 4 vCPUs are 2
+/// cores
+pub const COOP_MIN_CORES: usize = 6;
+
+/// A full block's T-vector: 900,000 rows × 4 bytes
+const FULL_TABLE: f64 = 3.6e6;
+
+impl Plan {
+    /// The cooperative decoder's policy for a caller's `threads`, on this machine (to be
+    /// validated by the decoder A/B, bench/coop_decoder.py, before it becomes the default):
+    /// - where the machine's topology can't be read (only Linux's is, so far), or fewer
+    ///   than `COOP_MIN_CORES` physical cores serve the threads, production's `threads`
+    ///   workers, as today;
+    /// - else teams of 2 on the physical cores the threads can use (never SMT siblings), as
+    ///   many as keep the live tables near 0.7 of the L3: the knee measured on the i9 at
+    ///   two block sizes (workstation journal §9), 4 teams there.
+    pub fn for_threads(threads: usize) -> Plan {
+        plan_with(threads.max(1), physical_cores(), l3_bytes())
+    }
+
+    /// The decoder's worker threads (teams count as one each) and its threads in all
+    pub fn workers(&self) -> usize {
+        match *self {
+            Plan::Workers(n) => n.max(1),
+            Plan::Teams { teams, .. } => teams.max(1),
+        }
+    }
+
+    pub fn threads(&self) -> usize {
+        match *self {
+            Plan::Workers(n) => n.max(1),
+            Plan::Teams { teams, k } => teams.max(1) * k.max(1),
+        }
+    }
+}
+
+/// `Plan::for_threads` on a machine of `phys` physical cores and an L3 of `l3` bytes
+pub(crate) fn plan_with(threads: usize, phys: Option<usize>, l3: Option<u64>) -> Plan {
+    let Some(phys) = phys else {
+        return Plan::Workers(threads);
+    };
+    let cores = threads.min(phys);
+    if cores < COOP_MIN_CORES {
+        return Plan::Workers(threads);
+    }
+    let cap = l3.map_or(4, |b| {
+        ((0.7 * b as f64) / FULL_TABLE).round().max(1.0) as usize
+    });
+    Plan::Teams {
+        teams: (cores / 2).min(cap).max(1),
+        k: 2,
+    }
+}
+
+/// The physical cores of the CPUs this process may use, where the OS says (Linux: the CPUs
+/// in this process's affinity, `Cpus_allowed_list`, grouped by their sysfs package and
+/// core ids), so a process limited to some CPUs counts only their cores
+fn physical_cores() -> Option<usize> {
+    #[cfg(target_os = "linux")]
+    {
+        let status = std::fs::read_to_string("/proc/self/status").ok()?;
+        let allowed = status
+            .lines()
+            .find_map(|l| l.strip_prefix("Cpus_allowed_list:"))?
+            .trim()
+            .to_string();
+        let mut cores = std::collections::BTreeSet::new();
+        for part in allowed.split(',') {
+            let (a, b) = part.split_once('-').unwrap_or((part, part));
+            let (a, b): (usize, usize) = (a.parse().ok()?, b.parse().ok()?);
+            for c in a..=b {
+                let t = format!("/sys/devices/system/cpu/cpu{c}/topology");
+                let Ok(core) = std::fs::read_to_string(format!("{t}/core_id")) else {
+                    continue; // (an allowed CPU that is offline)
+                };
+                let pkg = std::fs::read_to_string(format!("{t}/physical_package_id")).ok()?;
+                cores.insert((pkg.trim().to_string(), core.trim().to_string()));
+            }
+        }
+        (!cores.is_empty()).then_some(cores.len())
+    }
+    #[cfg(not(target_os = "linux"))]
+    None
+}
+
+/// The last-level cache's size, where the OS says (Linux: cpu0's level-3 cache)
+fn l3_bytes() -> Option<u64> {
+    #[cfg(target_os = "linux")]
+    {
+        let s = std::fs::read_to_string("/sys/devices/system/cpu/cpu0/cache/index3/size").ok()?;
+        let s = s.trim();
+        let (num, mult) = match s.as_bytes().last()? {
+            b'K' => (&s[..s.len() - 1], 1u64 << 10),
+            b'M' => (&s[..s.len() - 1], 1 << 20),
+            _ => (s, 1),
+        };
+        num.parse::<u64>().ok().map(|n| n * mult)
+    }
+    #[cfg(not(target_os = "linux"))]
+    None
+}
+
+#[cfg(test)]
+mod plan_tests {
+    use super::*;
+
+    #[test]
+    fn the_policy() {
+        let i9 = (Some(10), Some(20 << 20));
+        // below 6 cores, or no topology: production's workers, as today
+        assert_eq!(plan_with(4, i9.0, i9.1), Plan::Workers(4));
+        assert_eq!(plan_with(5, i9.0, i9.1), Plan::Workers(5));
+        assert_eq!(plan_with(8, None, i9.1), Plan::Workers(8));
+        assert_eq!(plan_with(20, Some(4), i9.1), Plan::Workers(20));
+        // the i9: teams of 2, at most 4 (0.7 × 20 MiB over a full table)
+        assert_eq!(plan_with(6, i9.0, i9.1), Plan::Teams { teams: 3, k: 2 });
+        assert_eq!(plan_with(8, i9.0, i9.1), Plan::Teams { teams: 4, k: 2 });
+        assert_eq!(plan_with(10, i9.0, i9.1), Plan::Teams { teams: 4, k: 2 });
+        assert_eq!(plan_with(20, i9.0, i9.1), Plan::Teams { teams: 4, k: 2 });
+        // a bigger cache, more teams; no cache size read, 4
+        assert_eq!(
+            plan_with(16, Some(16), Some(32 << 20)),
+            Plan::Teams { teams: 7, k: 2 }
+        );
+        assert_eq!(
+            plan_with(12, Some(12), None),
+            Plan::Teams { teams: 4, k: 2 }
+        );
+        let p = Plan::Teams { teams: 4, k: 2 };
+        assert_eq!((p.workers(), p.threads()), (4, 8));
+    }
+
+    /// Whatever this machine is, the plan is one of the two shapes and never more threads
+    /// than asked
+    #[test]
+    fn the_policy_here() {
+        if cfg!(target_os = "linux") {
+            let p = physical_cores().expect("Linux's topology");
+            let logical = std::thread::available_parallelism().unwrap().get();
+            assert!(p >= 1 && p <= logical, "{p} cores of {logical} CPUs");
+        }
+        for t in [1, 2, 4, 6, 8, 64] {
+            let p = Plan::for_threads(t);
+            assert!(p.threads() <= t.max(1), "{t}: {p:?}");
+        }
+    }
 }
