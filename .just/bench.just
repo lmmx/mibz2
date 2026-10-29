@@ -149,8 +149,8 @@ bench-libsais-knee-cause rounds="20":
 # walk-shaped random probe and a sequential copy, perf counting only the probe). Needs bzip2
 # and sudo; about 40 minutes. Upload every coop-*.md, coop-counters-*.md, dram-*.md, their
 # .jsonl, and the console (the sizes are printed there).
-#   just bench-knee-footprint
-bench-knee-footprint rounds="10":
+#   just bench-libsais-knee-footprint
+bench-libsais-knee-footprint rounds="10":
     bash bench/corpus.sh
     bash bench/coop.sh --build-only > /dev/null
     CARGO_TARGET_DIR=target/coop cargo build --release --example dram
