@@ -1,0 +1,15 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 22.24s
+w00: 37 whole blocks (bits 332560..8076600), 0 streams ended, 19800013 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w01: 26 whole blocks (bits 240072..8299136), 0 streams ended, 13500017 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w02: 42 whole blocks (bits 265400..8381128), 0 streams ended, 18900000 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w03: 47 whole blocks (bits 23504..8326712), 0 streams ended, 21600009 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w04: 23 whole blocks (bits 407808..7919608), 0 streams ended, 12600036 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w05: 45 whole blocks (bits 213280..8160856), 0 streams ended, 19800010 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w06: 45 whole blocks (bits 228536..8232832), 0 streams ended, 21600008 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w07: 19 whole blocks (bits 560064..8221584), 0 streams ended, 10800021 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w08: 47 whole blocks (bits 11000..8113744), 0 streams ended, 20700024 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w09: 43 whole blocks (bits 269560..8077440), 0 streams ended, 20700020 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w10: 16 whole blocks (bits 298696..7955712), 0 streams ended, 11700024 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w11: 41 whole blocks (bits 330936..8254184), 0 streams ended, 18000014 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+431 blocks, 209700196 bytes, 0 windows failed
+corpora/wikidata.bz2: 11854933 bytes, SHA-256 checked
