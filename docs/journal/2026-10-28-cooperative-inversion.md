@@ -1252,6 +1252,51 @@ arm.
   - Not the p8 and s3x3 misses × 64 B, which run 6–7% above the controller's bytes (still
     open).
 
+### 10.7 The three checks (measured, `coop-counters-20261029T101634Z`, 9d17560): one passes, two fail
+
+These are the three passes of §10.6, on all 7 arms with 3 repeats: 126 runs. Every run was
+counted 100% of the time, and none failed. While counted, the arms ran at 0.88–0.95 of their
+confirmed MB/s, below §10.5's 0.90–1.00. The browser was in use during the run. That doesn't
+touch the checks, which are ratios of counts taken in the same pass, but it rules this run
+out for any throughput figure.
+
+| check | criterion, fixed in §10.6 | measured | verdict |
+|---|---|---|---|
+| 1. The encoding scheme: raw 0x3F803C0001 against perf's `offcore_response.demand_data_rd.l3_hit.any_snoop` | within 1% in every arm | 1.000 in every arm | **pass** |
+| 2. The excess: the raw pair without bit 7 (0x411) against `offcore_requests.all_data_rd` | 0.9–1.1 in every arm | 1.219 (p8) to 1.365 (s3x3) | **fail** |
+| 3. Bit 7 alone (PF_L3_DATA_RD), per byte | most of the 0.45–0.55 gap | 0.004 (p8) to 0.036 (4x1) | **fail** |
+
+- **The hypothesis of §10.6 is refuted.** The L2 streamer's prefetches into L3 are 1–7% of
+  the gap, and without them the raw pair is still 22–37% above
+  `offcore_requests.all_data_rd`.
+- **What check 1 establishes:** the raw scheme (request bits, supplier bits, snoop bits)
+  encodes this core's offcore-response events as perf's own table does. So the raw pair
+  counts what its bits say it counts. The open question is what
+  `offcore_requests.all_data_rd` leaves out.
+- **What remains, untested:**
+  - Bit 10 (PF_L1D_AND_SW) is the L1D prefetcher's and the software prefetches' reads.
+    Every walk issues a `prefetcht0` a step, and libsais more.
+  - Bit 4 is the L2 prefetcher's reads. The PMU says `offcore_requests.all_data_rd` includes
+    it.
+  - Whether the two events count at the same point in the request's life (the super queue's
+    allocation against the response) is not documented for this core.
+  - A per-bit split (0x001, 0x010 and 0x400 alone) would test the first two. It is not run
+    now: no decision waits on it (below).
+  - Comet Lake's PMU tables and specification update are where a definitive answer would
+    be. This run drew on Skylake-client's.
+- **What stands, and with what label:**
+  - §10.5's arm-to-arm directions stand. The architectural LLC pair, independent of the
+    offcore encoding, ranks the arms identically (§10.5, step 2).
+  - The mechanism's reading (residency at a fixed core count, overlap at a fixed footprint,
+    both in 3x3) rests on those directions and on §10.4's in-flight counts. It doesn't rest
+    on the raw totals.
+  - The raw hit shares (3x3's 0.967, p8's 0.657) are the raw pair's own figures, which check
+    1 validates as an encoding. They are **not reconciled** with the request totals of
+    `offcore_requests`. They are quoted with that label from here on, not as a measured
+    L3 hit rate of every data read.
+- **No further counter runs for now.** The #77 experiment (§12) is measured by throughput
+  and instructions retired, neither of which depends on this question.
+
 ## 11. Where the cooperative kernel's instructions go (#77): the procedure, before it runs
 
 E3 measured the instructions per output byte (§10.4): p4 23.8, 4x1 31.8, 3x3 35.3, s4x1
@@ -1304,3 +1349,84 @@ say which code to change. This procedure attributes them, with no change to any 
 
 **Then, and only then, a change is proposed:** one sequence, its expected saving in
 instructions a byte, and the grid A/B against PR #73's kernel as its measure.
+
+### 11.1 The profile (measured, `coop-profile-20261029T102256Z`, b838672; the kernels c2620b8's)
+
+The full run covered p4, 4x1, 3x3 and s4x1, as `grid FILE 11 ARM`, with three events each.
+The quick run (`T102235Z`: p4 and 4x1 at 3 rounds) agrees once its setup is spread over 4
+inversions instead of 12. The browser was in use during both. That adds noise to the
+samples, but it doesn't change which instructions retire. Every annotation is in the
+archive, `coop-profile-20261029T102256Z.tar.gz`.
+
+**The normalisation, audited against E3's `perf stat` totals (§10.4).** Each count is
+divided by the bytes of 12 inversions: the 11 timed rounds and the check round. But the grid
+also inverts every block once before the rounds, on production's kernel, for the check's
+hashes.
+- **In the cooperative and libsais arms,** that reference inversion appears under
+  production's symbols: `room_segments` 1.40 and `Inv::invert` 0.56–0.72 a byte, about
+  1/12 of production's 25. It is setup, not the arm's kernel.
+- **In p4** the reference shares the arm's own symbols, so p4's figures are 13 inversions
+  over 12 rounds' bytes, and they scale by 12/13.
+
+Corrected this way, each arm's kernel symbols reproduce E3's totals to 1–2%:
+
+| arm | walk | build | pool / OpenMP | kernel total | E3's `perf stat` (§10.4) | ratio |
+|---|--:|--:|--:|--:|--:|--:|
+| p4 | 16.8 | 6.7 | | 23.5 | 23.8 | 0.99 |
+| 4x1 | 22.2 | 9.25 (copy 1.34, scatter 7.91) | | 31.5 | 31.8 | 0.99 |
+| 3x3 | 22.4 | 11.94 (copy + recount 4.04, scatter 7.91) | 0.11 | 34.5 | 35.3 | 0.98 |
+| s4x1 | 10.9 | 9.57 (marks 8.26, histogram 1.25, bigrams 0.06) | 0.30 | 21.1 (with `decode_split` 0.28) | 21.4 | 0.98 |
+
+(Instructions retired, per output byte, from samples × period. The figures relayed earlier
+in the conversation, 23.6 and 9.3 for 4x1 and 23.8 and 11.9 for 3x3, include the reference
+inversion's 1.4 and 0.6. The corrected figures replace them.)
+
+**§11's questions, answered:**
+1. **4x1's +8.0 over p4 is mostly the walk: +5.4 (22.2 against 16.8).** The build adds
+   +2.6 (9.25 against 6.7).
+   - The cooperative build's two passes are a copy, `ll` into the table (1.34), and the
+     scatter (7.91).
+   - Production does both in 6.7: its copy is `Vec::extend`, which vectorises, and its
+     scatter is the same code against a stack-local `ftab`.
+2. **3x3's further +3.0 over 4x1 is the recount: +2.70.**
+   - At k > 1 the first pass also counts its range's bytes: 4.04 against k = 1's 1.34.
+     The block's counts are already known (#78).
+   - The pool adds 0.11, and the walk +0.2.
+3. **The pool's spin is cycles, not instructions.** Correcting §11's premise:
+   - In 3x3, `Pool::new`'s helper loop retires 0.11 instructions a byte but takes 2.23
+     cycles a byte, 98% of them on one instruction.
+   - That is the instruction after `pause`, which this core runs for about 140 cycles.
+   - So `pause` shows as cycles, not as retired instructions.
+   - What the helpers wait through is the caller's serial work between and after the
+     passes: the prefix sums, the starts' sort, the flags, and the join of the segments
+     (memmove 0.74 and memset 0.62 cycles a byte).
+   - That is a serial fraction, for later, not an instruction cost.
+4. **The walk is mostly not waiting on memory.** Memory-stall cycles are 41% of p4's walk
+   cycles (3.65 of 8.91 a byte, scaled), 33% of 4x1's (3.36 of 10.1) and 23% of 3x3's
+   (2.29 of 9.84).
+   - The rest is issue and retirement, which retired instructions do cost.
+   - So the walk's extra instructions are a plausible lever.
+   - What they buy is the A/B's question. If the extra instructions were hidden under the
+     memory waits, removing them would buy nothing.
+
+**The two loops, step by step** (`perf annotate`, the hottest blocks).
+- **Production's** `room_segments::<32, 1>` takes 16 instructions a step: load the lane's
+  row; load `t[row]`; test the flag; shift and store the row; `prefetcht0`; load the lane's
+  base; store the byte at base + offset; and the loop's own three.
+- **The cooperative** `traverse` takes 22. It does the same work, plus:
+  - **the buffer-end test every step:** `mov 0x8(%r12)`, `cmp 0x10(%r12)`, `jne`. That is
+    3 instructions, and the single hottest, at 28% of the loop's samples;
+  - **the output pointer's increment, as a read-modify-write of the lane in memory**
+    (`incq 0x8(%r12)`);
+  - **a per-step byte count** (`inc %r13`, `walked += 1`), kept for the imbalance figure;
+  - **the lanes in a `Vec`:** the vector's pointer and `t` are reloaded from the stack
+    every step (`mov 0x28(%rsp)`, `mov 0x30(%rsp)`), and each lane's address is rebuilt
+    (`shl`, `lea`), where production's array is stepped through with one `add`. The byte
+    store through a `*mut u8` may alias anything, so the compiler can't keep them in
+    registers.
+- **None of the extra instructions is cooperation.**
+  - The shared segment counter's `lock xadd` runs once a segment (about 1,800 bytes), not
+    once a step.
+  - The buffers, successor table and flags are production's own.
+  - Cooperation costs nothing per step. The +5.4 is the frozen loop's form, which
+    production's walk replaced with room passes (`room_segments`, src/bwt.rs).
