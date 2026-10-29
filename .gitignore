@@ -44,3 +44,7 @@ target/
 # just bench-compete's result files
 /compete-*.md
 /compete-*.jsonl
+
+# just bench-compact's result files
+/compact-*.md
+/compact-*.jsonl

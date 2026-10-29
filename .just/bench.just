@@ -185,3 +185,17 @@ bench-compete *args:
 [positional-arguments]
 bench-pmu-probe *args:
     python3 bench/pmu_probe.py "$@"
+
+# bench/compact.sh: the compact T-vector pilot (examples/compact.rs, research only): the
+# inverse BWT with a 20-bit ψ table (2.5 B a row: packed, and libbzip2's split ll16 + ll4)
+# against production's 32-bit T-vector and a 32-bit control under the same walk, at 1-10
+# blocks in flight on one physical core each, after a correctness selftest. About 10
+# minutes. It writes compact-<UTC time>.md and .jsonl to share.
+#   just bench-compact
+#   just bench-compact --rounds 20 --arms p4,c6,c8
+
+# Whether a 20-bit ψ table moves the knee (#39, #65)
+[positional-arguments]
+bench-compact *args:
+    bash bench/corpus.sh
+    bash bench/compact.sh "$@"
