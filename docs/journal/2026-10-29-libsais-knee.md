@@ -638,3 +638,8 @@ its decode cost.
    - The knee falls where N × the per-block rate × DRAM B/B(N) reaches about 28 GB/s.
    - Every counted arm past its peak sits at 27.3–29.3 GB/s, in four runs. That fits the
      model, but the model has not predicted a run it wasn't fitted to.
+   - **Correlation, not proof:** the knee and the plateau coincide in every run, but that
+     doesn't show the plateau causes the knee, nor that 28 GB/s is a machine ceiling. The
+     probe's two ceilings differ (26 for random reads, 34 for streaming), so any ceiling is
+     specific to an access pattern. This workload's mix of random reads and write-backs
+     has not been probed on its own.
