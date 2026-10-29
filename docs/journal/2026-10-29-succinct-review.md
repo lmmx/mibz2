@@ -408,7 +408,7 @@ So the fit is not an aggregate artefact: every full block is within 0.05 bits of
    - 99.1% of random bytes, 99.9% of the 4-letter alphabet, 99.05% of compressed data;
    - 96.4% of prose and of source, 96.8% of periodic data;
    - 89.6% of the ELF binary.
-   
+
    A separate RUN fast path would skip one payload load and a shift and mask, but adds a format branch. Whether that pays is a codegen and measurement question (atlas IV), which the prototype would decide. So the first prototype should have **one common path** (FOR-14, RUN folded in) plus EF and exceptions, with a RUN fast path as its variant.
 
 **Still open:**
@@ -417,3 +417,126 @@ So the fit is not an aggregate artefact: every full block is within 0.05 bits of
 - the first-priority reading: Gog, Navarro & Petri on Ψ list encodings.
 
 The prototype stays held until #81's cooperative result is in (§12).
+
+## 14. Phase II's handoff checked: prior art read, the designs' exact sizes, and a one-step dependency analysis
+
+Two more texts are stored verbatim:
+- `2026-10-29-succinct-review/phase-2-findings-research.md`: the research chatbot's Phase II findings and technical handoff, with the **two-tier design**;
+- `2026-10-29-succinct-review/coordinator-phase-2-verdict.md`: the coordinator's verdict. Its instruction:
+  - keep three candidates: 24-bit links, the 16-bit fixed line, and the two-tier design;
+  - before any implementation, count the two-tier design's storage exactly, per block, partial groups included, and account for its directory's residency and dependency cost;
+  - #81 stays first;
+  - no compact-representation implementation is authorised yet.
+
+### 14.1 The two new prior-art claims, read at their sources
+
+**Gog, Navarro & Petri, *Improved and Extended Locating Functionality on Compressed Suffix Arrays*** (preprint, 14 January 2015; an early partial version at SEA 2014). **Read.**
+- They encode Ψ as "a sequence containing σ monotonically increasing runs". They compare Elias-δ, OptPFor and their modification of partitioned Elias–Fano, in blocks of 128 with stored block starts.
+- **Uniform blocks** come from partitioned EF: a block "containing all the values in between two block representatives" costs zero bits. They apply the idea to OptPFor too, and note it "was not used in the original CSA implementation of Sadakane or in previous versions of sdsl". This is the RUN format's prior art.
+- Blocks with a run transition "we store... as a prefix-sum encoded sequence". This is our boundary-crossing case.
+- On a byte alphabet, partitioned EF answers Ψ[i] "in around 200 nanoseconds, which is roughly the cost of two memory accesses and thus close to optimal" (english.2108MB, Pizza&Chili). That is a persistent index with a top level plus a block, two dependent accesses: the cost our designs are trying to avoid.
+
+**Groot Koerkamp, `cacheline-ef`** (GitHub README). **Read.**
+- "packs chunks of 44 sorted 40-bit values into a single cacheline": a 4-byte base (the 32 high bits of the smallest value), 44 low bytes, and 16 bytes of unary high bits. That is 11.6 bits a value, with a span of up to 256 · 84.
+- It "only requires reading a single cacheline per query", against about 3 for plain Elias–Fano, and offers `index` and `prefetch`. It is described in the PtrHash paper (arXiv 2502.15539).
+- It is the prior art for one-line-per-query EF. Our fixed-line records specialise the idea: FOR-14, the byte and the start flags beside EF.
+
+The EF-12 bound the research chatbot corrected to 135,167 is what `psi_census` already used (span < 33 · 2^12).
+
+### 14.2 The designs' exact sizes, counted (census v3)
+
+`psi_census` now counts groups by class and gives each design's exact bytes:
+- **fixed line:** 64 bytes a group, plus an exception's 32 entries stored whole at 4 bytes each;
+- **two-tier:** 8 bytes a group, plus 64 bytes for each FOR or EF group, plus an exception's 128 bytes.
+
+The RUN share was always a share of *groups*: rows in actual 32-row groups, each block's partial last group counted as its own. So the coordinator's distinction between eligible rows and complete groups was already respected, and here it is counted directly.
+
+**The corpus's 233 full blocks, G = 32:**
+
+| design | bits a row | a full block's table |
+|---|--:|--:|
+| today's T-vector | 32.00 | 3.600 MB |
+| 24-bit links | 24.00 | 2.700 MB |
+| fixed-line records | **16.16** | **1.818 MB** |
+| two-tier | **5.70** | **0.641 MB**: descriptors 225 KB, payloads 398 KB, exception entries 18 KB |
+
+**Per full block** (min / p10 / median / p90 / max):
+
+| measure | quantiles |
+|---|--:|
+| fixed line, bits a row | 16.14 / 16.14 / 16.15 / 16.17 / 16.19 |
+| two-tier, bits a row | 3.98 / 5.13 / 5.59 / 6.53 / 7.89 |
+| two-tier steps that need a second dependent load (rows not in a RUN group) | 12.0 / 19.1 / 22.0 / 27.8 / 36.3% |
+
+So the illustrative 5.6 bits a row was close, and the exact figure is 5.70. But the two-tier design's second load is not a fixed 22%: it ranges from 12% to 36% of steps by block.
+
+**Other inputs, G = 32** (`psi-census-inputs.md`):
+
+| input | fixed line | two-tier | two-tier steps with a second load |
+|---|--:|--:|--:|
+| random bytes | 16.29 | 18.14 | 100% |
+| a 4-letter alphabet | 16.01 | 17.46 | 97% |
+| English prose | 16.30 | 16.73 | 91% |
+| Rust source | 16.34 | 14.59 | 78% |
+| an ELF binary | 16.58 | 12.72 | 65% |
+| already compressed | 16.28 | 18.14 | 100% |
+| periodic | 16.64 | 2.86 | 3% |
+
+**The two-tier design is Wikidata-shaped.** Without runs it is larger than the fixed line, and every step takes two dependent loads. With runs it is far smaller. A decoder could choose per block at build time, since the RUN share is known then, at the cost of two walk loops.
+
+### 14.3 The directory's residency (analysis)
+
+The i9-10900K has 32 KB L1D and 256 KB L2 per core, and 20 MB of shared L3.
+- **A full block's 225 KB directory does not fit L1.** On its own it would nearly fill a core's L2. But the two-tier design's working set is 641 KB a block, and its accesses are random across the block.
+- **In the cooperative walk,** every thread of a team touches the whole block, so each core's L2 would see the whole 641 KB: mostly misses to L3.
+- **On one core,** the directory alone at 88% of L2, competing with the payloads, output lines and walk state, should hit L2 often but not reliably.
+- **So, unless measured otherwise, model both of its loads as L3-latency.** Its gain is capacity: 0.641 MB a block, so ten blocks are 6.4 MB, well inside the L3. The fixed line's ten blocks are 18.2 MB, near the L3's capacity, and today's are 36 MB, past it.
+
+### 14.4 One step's dependency path, from the row known to the next row known (analysis; latencies assumed)
+
+**The assumed latencies,** typical for this core and *not measured here*:
+
+| operation | cycles |
+|---|--:|
+| L1 hit | about 5 |
+| L2 hit | about 14 |
+| L3 hit | about 42 |
+| `pdep`, `tzcnt`, `imul` | 3 each |
+| shift, add, `lea` | 1 |
+| a branch mispredict | about 17, plus the younger work it flushes |
+
+| design | address (from the row) | dependent memory levels | after the data arrives | format branch on Wikidata | chain, L3-resident | instructions a step (estimate) |
+|---|---|--:|---|---|--:|--:|
+| today | `t + 4·row` | 1 | `>> 8` | none | about 43 | about 17 (measured: 16.8 in the walk) |
+| 24-bit | `t + 3·row` | 1 (4.7% of reads split across lines) | mask | none | about 44 | about 19, plus the F lookup off the chain |
+| fixed line, RUN folded into FOR-14 | `r + 64·(row >> 5)`; the payload word's offset `(row & 31)·14 / 8` also comes from the row | 1: the header and payload words are independent loads from one line | shift, mask, add base | EF and exceptions only (1.9% of rows): predictable | about 45 | about 25 |
+| fixed line, separate RUN path | the same | 1 | an add (RUN) or shift/mask/add (FOR) | **RUN 77% against FOR 21%, interleaved: unpredictable** | about 45, plus mispredicts | about 23 |
+| two-tier | `d + 8·(row >> 5)` | **1 for RUN, 2 for FOR or EF** | an add (RUN); payload address, load, shift/mask/add (FOR) | **RUN 78% against the rest: unpredictable** | about 43 (RUN), about 90 (FOR), plus mispredicts | about 20 (RUN), about 30 (FOR) |
+
+**What it says:**
+- **The fixed line, with RUN folded into FOR-14, adds only about 2–3 cycles to the chain** at equal residency.
+  - Every payload word's address comes from the row alone, so the line's loads issue together and the decode is a shift, mask and add.
+  - Its cost is about 8 more instructions a step, which at the measured elasticity (0.16–0.32) is a few percent. Its gain is residency: the knee from about 4 to about 8 full blocks.
+- **A RUN fast path is a mistake in an interleaved walk on Wikidata.** RUN and FOR groups alternate unpredictably, so a format branch mispredicts on about a fifth of steps. Each mispredict flushes younger instructions, including other lanes' issued loads and prefetches, which cuts memory-level parallelism. This firms up §13.3's recommendation: one common FOR-14 path.
+- **The two-tier design cannot avoid that branch.**
+  - Making it branchless means a conditional move that waits for the payload load on *every* step, which makes every step two loads.
+  - So it pays mispredicts on roughly 12–36% of steps, plus a second dependent L3 load on the same steps.
+  - At equal residency, its mean chain is about 0.78 × 43 + 0.22 × 90 ≈ 53 cycles, against today's 43.
+  - It should therefore lose inside the L3 and can win only where today's table spills to DRAM, past the knee. There its tables (6.4 MB for ten blocks) stay resident while today's (36 MB) don't.
+- **The ranking this predicts** (a hypothesis):
+  - at or below the knee: today ≈ fixed line > two-tier;
+  - past the knee: the fixed line, then perhaps the two-tier, can beat today. The two-tier design's advantage grows with concurrency and with RUN share.
+  - Best-at-best-concurrency is the criterion (§4), so the fixed line is the first candidate to measure. The two-tier design is the second.
+
+### 14.5 What follows, in the coordinator's order
+
+1. **#81's cooperative test** (#95), waiting for the i9.
+2. **#79's audit:** the F lookup's generated code, and the `e` control arm.
+3. **The isolated navigation cost** the coordinator ranked next, as a matched pointer-chasing harness:
+   - the real ψ of the corpus's blocks, in each representation: today's 32-bit table, 24-bit links, the fixed line with RUN folded into FOR-14 (and the RUN-branch variant), and the two-tier design;
+   - walked by the same interleaved lane loop, at 1–10 concurrent blocks;
+   - reporting steps a second and MB/s per core, with the build measured separately;
+   - the predictions in §14.4, pre-registered when it is built.
+
+   It is not authorised yet. It comes after #81's result.
+4. **Only if that justifies it,** a decoder prototype with construction, exceptions and concurrency.

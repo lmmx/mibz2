@@ -20,7 +20,20 @@
 | RUN rows | 63.7% / 72.2% / 78.0% / 80.9% / 88.0% |
 | RUN or FOR-14 rows | 97.8% / 98.0% / 98.1% / 98.2% / 98.5% |
 | exception rows | 0.4% / 0.5% / 0.5% / 0.5% / 0.6% |
-| bits a row | 16.14 / 16.14 / 16.15 / 16.17 / 16.19 |
+| fixed-line bits a row (exact) | 16.14 / 16.14 / 16.15 / 16.17 / 16.19 |
+| two-tier bits a row (exact) | 3.98 / 5.13 / 5.59 / 6.53 / 7.89 |
+| two-tier steps taking a second dependent load (rows not in a RUN group) | 12.0% / 19.1% / 22.0% / 27.8% / 36.3% |
+
+## 2a. The designs' exact sizes, the full blocks at G = 32
+
+| design | bytes, all full blocks | bits a row | a full block's table |
+|---|--:|--:|--:|
+| today's T-vector (32 bits) | 838.8 MB | 32.00 | 3.600 MB |
+| 24-bit links | 629.1 MB | 24.00 | 2.700 MB |
+| fixed-line records | 423.5 MB | 16.16 | 1.818 MB |
+| two-tier (descriptors + payloads) | 149.3 MB | 5.70 | 0.641 MB |
+
+The two-tier design's parts, a full block: descriptors 225 KB, payloads 398 KB, exception entries 18 KB; groups: 5071189 RUN, 1449915 FOR or EF, 31967 exceptions
 
 ## 3. L's runs (= ψ's translation runs): 15148086 runs over 209.7 M rows, n/r = 13.84
 

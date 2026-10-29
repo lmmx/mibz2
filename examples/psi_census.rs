@@ -46,6 +46,11 @@ struct Classes {
     ef: u64,
     crossing: u64,
     wide: u64,
+    /// groups, all and by class: RUN, ordinary (FOR or EF, not RUN), exception
+    groups: u64,
+    run_g: u64,
+    ord_g: u64,
+    exc_g: u64,
 }
 
 impl Classes {
@@ -56,6 +61,10 @@ impl Classes {
         self.ef += o.ef;
         self.crossing += o.crossing;
         self.wide += o.wide;
+        self.groups += o.groups;
+        self.run_g += o.run_g;
+        self.ord_g += o.ord_g;
+        self.exc_g += o.exc_g;
     }
     fn exceptions(&self) -> u64 {
         self.crossing + self.wide
@@ -63,6 +72,20 @@ impl Classes {
     /// bits a row: 16 for every record, and 32 more a row for an exception's entries
     fn bits(&self) -> f64 {
         16.0 + 32.0 * self.exceptions() as f64 / self.rows.max(1) as f64
+    }
+    /// the fixed-line design's exact bytes at group size g: a 2g-byte record a group, and
+    /// an exception's g entries stored whole, 4 bytes each, beside it
+    fn fixed_bytes(&self, g: usize) -> u64 {
+        self.groups * 2 * g as u64 + self.exc_g * 4 * g as u64
+    }
+    /// the two-tier design's exact bytes: an 8-byte descriptor a group (a RUN group's
+    /// whole answer), a 2g-byte payload for each FOR or EF group, and an exception's g
+    /// entries whole
+    fn two_tier_bytes(&self, g: usize) -> u64 {
+        self.groups * 8 + self.ord_g * 2 * g as u64 + self.exc_g * 4 * g as u64
+    }
+    fn per_row(&self, bytes: u64) -> f64 {
+        8.0 * bytes as f64 / self.rows.max(1) as f64
     }
 }
 
@@ -108,19 +131,25 @@ fn census(ll: &[u8], counts: &[u32; 256]) -> Census {
         for a in (0..n).step_by(g) {
             let end = (a + g).min(n);
             let rows = (end - a) as u64;
+            t.groups += 1;
             if f[a] != f[end - 1] {
                 t.crossing += rows;
+                t.exc_g += 1;
                 continue;
             }
             let span = psi[end - 1] - psi[a];
             if span as usize == end - a - 1 {
                 t.run += rows;
+                t.run_g += 1;
             } else if span < for_span {
                 t.for_k += rows;
+                t.ord_g += 1;
             } else if span < ef_span {
                 t.ef += rows;
+                t.ord_g += 1;
             } else {
                 t.wide += rows;
+                t.exc_g += 1;
             }
         }
     }
@@ -232,7 +261,7 @@ fn corpus(path: &str, out: Option<&str>) {
     let mut per_window = [[0u64; 4]; 5];
     let mut run_log2 = [0u64; 21];
     let (mut runs, mut rows) = (0u64, 0u64);
-    let mut per_block: Vec<[f64; 4]> = Vec::new();
+    let mut per_block: Vec<[f64; 6]> = Vec::new();
     let mut sigmas = Vec::new();
     let mut i = 0;
     blocks_of(&data, kern, |ll, counts| {
@@ -250,7 +279,9 @@ fn corpus(path: &str, out: Option<&str>) {
                 100.0 * t.run as f64 / r,
                 100.0 * (t.run + t.for_k) as f64 / r,
                 100.0 * t.exceptions() as f64 / r,
-                t.bits(),
+                t.per_row(t.fixed_bytes(32)),
+                t.per_row(t.two_tier_bytes(32)),
+                100.0 * (t.rows - t.run) as f64 / r,
             ]);
             sigmas.push(c.sigma as f64);
         } else {
@@ -306,16 +337,50 @@ fn corpus(path: &str, out: Option<&str>) {
     println!("| RUN rows | {} |", quantiles(col(0)));
     println!("| RUN or FOR-14 rows | {} |", quantiles(col(1)));
     println!("| exception rows | {} |", quantiles(col(2)));
-    let bits = col(3);
-    let mut b = bits.clone();
-    b.sort_by(|a, c| a.partial_cmp(c).unwrap());
+    let fmt = |mut v: Vec<f64>| {
+        v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let q = |p: f64| v[((v.len() - 1) as f64 * p).round() as usize];
+        format!(
+            "{:.2} / {:.2} / {:.2} / {:.2} / {:.2}",
+            q(0.0),
+            q(0.1),
+            q(0.5),
+            q(0.9),
+            q(1.0)
+        )
+    };
+    println!("| fixed-line bits a row (exact) | {} |", fmt(col(3)));
+    println!("| two-tier bits a row (exact) | {} |", fmt(col(4)));
     println!(
-        "| bits a row | {:.2} / {:.2} / {:.2} / {:.2} / {:.2} |",
-        b[0],
-        b[b.len() / 10],
-        b[b.len() / 2],
-        b[b.len() * 9 / 10],
-        b[b.len() - 1]
+        "| two-tier steps taking a second dependent load (rows not in a RUN group) | {} |",
+        quantiles(col(5))
+    );
+    let t = &full[1];
+    println!("\n## 2a. The designs' exact sizes, the full blocks at G = 32\n");
+    println!("| design | bytes, all full blocks | bits a row | a full block's table |");
+    println!("|---|--:|--:|--:|");
+    let per_block_mb = |b: u64| b as f64 / nfull as f64 / 1e6;
+    for (name, b) in [
+        ("today's T-vector (32 bits)", t.rows * 4),
+        ("24-bit links", t.rows * 3),
+        ("fixed-line records", t.fixed_bytes(32)),
+        ("two-tier (descriptors + payloads)", t.two_tier_bytes(32)),
+    ] {
+        println!(
+            "| {name} | {:.1} MB | {:.2} | {:.3} MB |",
+            b as f64 / 1e6,
+            t.per_row(b),
+            per_block_mb(b)
+        );
+    }
+    println!(
+        "\nThe two-tier design's parts, a full block: descriptors {:.0} KB, payloads {:.0} KB, exception entries {:.0} KB; groups: {} RUN, {} FOR or EF, {} exceptions",
+        t.groups as f64 * 8.0 / nfull as f64 / 1e3,
+        t.ord_g as f64 * 64.0 / nfull as f64 / 1e3,
+        t.exc_g as f64 * 128.0 / nfull as f64 / 1e3,
+        t.run_g,
+        t.ord_g,
+        t.exc_g
     );
     println!(
         "\n## 3. L's runs (= ψ's translation runs): {runs} runs over {:.1} M rows, n/r = {:.2}\n",
@@ -421,6 +486,7 @@ fn inputs() {
         p.repeat(2700)
     }));
     let kern = Kernels::detect();
+    let mut designs = Vec::new();
     println!("# The ψ census on other inputs (atlas V; libbzip2 level 9; all blocks)\n");
     class_header("input (MB)");
     for (name, data) in &cases {
@@ -446,6 +512,19 @@ fn inputs() {
             rows as f64 / runs.max(1) as f64
         );
         println!("{}", class_row(&label, 32, &t[1]));
+        let c = &t[1];
+        designs.push(format!(
+            "| {label} | {:.2} | {:.2} | {} |",
+            c.per_row(c.fixed_bytes(32)),
+            c.per_row(c.two_tier_bytes(32)),
+            pct(c.rows - c.run, c.rows)
+        ));
+    }
+    println!("\n## The designs' exact sizes on the same inputs (G = 32)\n");
+    println!("| input | fixed-line bits a row | two-tier bits a row | two-tier steps with a second dependent load |");
+    println!("|---|--:|--:|--:|");
+    for d in designs {
+        println!("{d}");
     }
 }
 
