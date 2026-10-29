@@ -30,8 +30,8 @@
 use std::time::Instant;
 
 use mibz2::bwt::{
-    build, walk, walk_segments_flagged_with, walk_segments_room_with, SegScratch, TVector, PF_L1,
-    PF_L2, PF_NTA, PF_OFF,
+    build, walk, walk_segments_flagged_with_prefetch, walk_segments_room_with_prefetch, SegScratch,
+    TVector, PF_L1, PF_L2, PF_NTA, PF_OFF,
 };
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{mtf, rle, Kernels};
@@ -50,10 +50,10 @@ macro_rules! settings {
     ($v:ident, $segments:expr; $($l:literal),*) => {
         $(
             for (pf, room, flagged) in [
-                (PF_OFF, walk_segments_room_with::<$l, PF_OFF> as Walk, walk_segments_flagged_with::<$l, PF_OFF> as Walk),
-                (PF_L1, walk_segments_room_with::<$l, PF_L1>, walk_segments_flagged_with::<$l, PF_L1>),
-                (PF_L2, walk_segments_room_with::<$l, PF_L2>, walk_segments_flagged_with::<$l, PF_L2>),
-                (PF_NTA, walk_segments_room_with::<$l, PF_NTA>, walk_segments_flagged_with::<$l, PF_NTA>),
+                (PF_OFF, walk_segments_room_with_prefetch::<$l, PF_OFF> as Walk, walk_segments_flagged_with_prefetch::<$l, PF_OFF> as Walk),
+                (PF_L1, walk_segments_room_with_prefetch::<$l, PF_L1>, walk_segments_flagged_with_prefetch::<$l, PF_L1>),
+                (PF_L2, walk_segments_room_with_prefetch::<$l, PF_L2>, walk_segments_flagged_with_prefetch::<$l, PF_L2>),
+                (PF_NTA, walk_segments_room_with_prefetch::<$l, PF_NTA>, walk_segments_flagged_with_prefetch::<$l, PF_NTA>),
             ] {
                 $v.push(Setting { walk: "room", lanes: $l, pf, segments: $segments, f: room });
                 $v.push(Setting { walk: "flagged", lanes: $l, pf, segments: $segments, f: flagged });
@@ -100,7 +100,7 @@ fn main() {
             lanes: 32,
             pf: PF_L1,
             segments,
-            f: walk_segments_room_with::<32, PF_L1>,
+            f: walk_segments_room_with_prefetch::<32, PF_L1>,
         });
     }
     let default = settings
