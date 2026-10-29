@@ -220,6 +220,21 @@ bench-coop-net *args:
     bash bench/corpus.sh
     bash bench/coop_net.sh "$@"
 
+# bench/coop_net.sh --spill: #78's spill fix (the coop journal's §15). First the MTF stage
+# alone on one core: production's kernel, `mtf_cp` (§14), `mtf_cp2` (production's inner
+# loop, its limit the next checkpoint) and `mtf_cp2p` (the same, production's store order
+# pinned), after a check of all three against production on every block and on edge cases.
+# Then the grid with the MTF stage timed: r3x3, q3x3, n3x3, m3x3 (mtf_cp2), f3x3 (mtf_cp2p),
+# r4x1, f4x1 and p4, 20 rounds paired, each thread pinned. About four minutes; close the
+# browser and other busy programs first. Upload coop-spill-*.md, its .jsonl and coop-ab-*.md.
+#   just bench-coop-spill
+
+# #78's spill fix: whether making the checkpoints with production's hot loop recovers the MTF
+[positional-arguments]
+bench-coop-spill *args:
+    bash bench/corpus.sh
+    bash bench/coop_net.sh --spill "$@"
+
 # bench/coop_counters.py: the counters behind the cooperative grid (#76; the coop journal's
 # §8.2 and §10): each arm alone under `perf stat` for 1 and 21 rounds, one counter pair a
 # pass, 3 repeats, the memory controller machine-wide, then one `perf record` each of p4, 4x1

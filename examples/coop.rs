@@ -8,8 +8,9 @@
 //! ```text
 //! coop block FILE.bz2 [PASSES] [K,...]     one block at a time on k cores (default 1,2,3,4)
 //! coop mtf FILE.bz2 [ROUNDS]               the MTF stage alone, one core: production's
-//!                                          against `mtf_cp`, which also makes the count
-//!                                          checkpoints (#78's stage 2), paired by round
+//!                                          against `mtf_cp` and `mtf_cp2`, which also
+//!                                          make the count checkpoints (#78's stage 2 and
+//!                                          its spill fix), paired by round
 //! coop grid FILE.bz2 [ROUNDS] [ARM,...]    N blocks at once on k cores each: ARM is NxK
 //!                                          (cooperative), wNxK (the same walk, the build
 //!                                          on one core), pNxK (N production workers; K 1)
@@ -19,7 +20,9 @@
 //!                                          counts instead of counting them: #78's bound),
 //!                                          nNxK (the q arm with its checkpoints made by its
 //!                                          own MTF, `mtf_cp`: #78's stage 2; with
-//!                                          COOP_WITH_MTF=1 only);
+//!                                          COOP_WITH_MTF=1 only), mNxK and fNxK (the
+//!                                          n arm, its MTF `mtf_cp2` or `mtf_cp2p`:
+//!                                          #78's spill fix; COOP_WITH_MTF=1 only);
 //!                                          @S sets
 //!                                          a cooperative arm's segments a block (4x1@1024:
 //!                                          one core a block, with 4x2's segments)
@@ -1075,6 +1078,165 @@ unsafe fn mtf_cp(
     result.map(|()| n)
 }
 
+/// `mtf_cp`'s checkpoints in the form that keeps production's hot loop (#78's spill fix,
+/// the coop journal's §15). `mtf_cp` makes them in the loop itself, and its added live
+/// state (the next checkpoint, two limits, the checkpoint vector) pushed the byte count
+/// and the end-of-block symbol out of registers (§14.4). Here production's loop runs
+/// unchanged but for its limit, the nearer of the block's end and the next checkpoint, a
+/// value fixed for the loop as production's `max` is. Where it stops at that limit, the
+/// outer loop, entered once every `CHECKPOINT` bytes, tells the block's end (production's
+/// error) from a checkpoint, copies the counts, splits a run that crosses one, and takes
+/// the symbol it stopped at. The byte step is production's, written once (`byte!`).
+///
+/// `PIN` (`mtf_cp2::<true>`, `mtf_cp2p`): a compiler fence after the list's new front is
+/// stored, which emits no instruction. Without it, LLVM schedules that store after the
+/// count's increment, where production and `mtf_cp` have it before. The next symbol's 32-byte
+/// list load overlaps that byte store, so it can't be forwarded and waits for its commit,
+/// which waits for every older instruction. So that order may put the `s2u` load and the
+/// count's read-modify-write on the loop-carried chain (§15.1). The fence keeps production's order.
+///
+/// SAFETY: as `mibz2::mtf`'s kernel: AVX2 must be present
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn mtf_cp2<const PIN: bool>(
+    b: &Symbols,
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+    checkpoints: &mut Vec<[u32; 256]>,
+) -> Result<usize, ErrorKind> {
+    use std::arch::x86_64::*;
+    let max = b.max_len;
+    ll.clear();
+    ll.reserve(max);
+    *counts = [0; 256];
+    checkpoints.clear();
+    checkpoints.push([0; 256]);
+    #[repr(align(64))]
+    struct L([u8; 320]);
+    let mut store = L([0u8; 320]);
+    for i in 0..256 {
+        store.0[32 + i] = i as u8;
+    }
+    let base = store.0.as_mut_ptr().add(32);
+    let idx = _mm256_setr_epi8(
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+        25, 26, 27, 28, 29, 30, 31,
+    );
+    let s2u = &b.seq_to_unseq;
+    let (mut run, mut weight) = (0u32, 1u32);
+    let out = ll.as_mut_ptr();
+    let mut n = 0usize;
+    let mut result = Ok(());
+    // production's byte step: symbol $s's byte moved to the front and written at n
+    macro_rules! byte {
+        ($s:expr) => {{
+            let nn = ($s - 1) as usize;
+            let v = *base.add(nn);
+            if nn < 32 {
+                let old = _mm256_load_si256(base as *const __m256i);
+                let shifted = _mm256_loadu_si256(base.sub(1) as *const __m256i);
+                let m = _mm256_cmpgt_epi8(_mm256_set1_epi8(nn as i8 + 1), idx);
+                _mm256_store_si256(base as *mut __m256i, _mm256_blendv_epi8(old, shifted, m));
+            } else {
+                std::ptr::copy(base, base.add(1), nn);
+            }
+            *base = v;
+            if PIN {
+                std::sync::atomic::compiler_fence(std::sync::atomic::Ordering::SeqCst);
+            }
+            let c = s2u[v as usize];
+            counts[c as usize] += 1;
+            *out.add(n) = c;
+            n += 1;
+        }};
+    }
+    let mut next = CHECKPOINT;
+    let mut syms = b.syms.iter();
+    'block: loop {
+        let limit = max.min(next);
+        // production's loop, `max` replaced by `limit`; `at` the symbol it stopped before
+        let mut at = None;
+        for &s in syms.by_ref() {
+            if s <= 1 {
+                if weight >= MAX_RUN_WEIGHT {
+                    result = Err(ErrorKind::RunTooLong);
+                    break 'block;
+                }
+                run += (s as u32 + 1) * weight;
+                weight <<= 1;
+                continue;
+            }
+            if run != 0 {
+                if n + run as usize > limit {
+                    at = Some(s);
+                    break;
+                }
+                let c = s2u[*base as usize];
+                counts[c as usize] += run;
+                std::ptr::write_bytes(out.add(n), c, run as usize);
+                n += run as usize;
+                (run, weight) = (0, 1);
+            }
+            if s == b.eob {
+                break 'block;
+            }
+            if n >= limit {
+                at = Some(s);
+                break;
+            }
+            byte!(s);
+        }
+        // the symbols ran out with no end-of-block symbol: production's loop ends there too
+        let Some(s) = at else { break 'block };
+        if run != 0 {
+            // a run past the limit: past the block's end, production's error; else it crosses
+            // one or more checkpoints, written up to each, then the copy
+            if n + run as usize > max {
+                result = Err(ErrorKind::BlockTooLong);
+                break 'block;
+            }
+            let c = s2u[*base as usize];
+            let mut left = run as usize;
+            while n + left >= next {
+                let part = next - n;
+                counts[c as usize] += part as u32;
+                std::ptr::write_bytes(out.add(n), c, part);
+                (n, left) = (next, left - part);
+                checkpoints.push(*counts);
+                next += CHECKPOINT;
+            }
+            counts[c as usize] += left as u32;
+            std::ptr::write_bytes(out.add(n), c, left);
+            n += left;
+            (run, weight) = (0, 1);
+            // then the symbol after the run, as production's loop takes it (n < next here)
+            if s == b.eob {
+                break 'block;
+            }
+            if n >= max {
+                result = Err(ErrorKind::BlockTooLong);
+                break 'block;
+            }
+        } else {
+            // a byte at the limit: at the block's end, production's error; else n == next,
+            // and the bytes before it complete a checkpoint
+            if n >= max {
+                result = Err(ErrorKind::BlockTooLong);
+                break 'block;
+            }
+            checkpoints.push(*counts);
+            next += CHECKPOINT;
+        }
+        byte!(s);
+    }
+    // a block that ends on a checkpoint completes it
+    if result.is_ok() && n == next {
+        checkpoints.push(*counts);
+    }
+    ll.set_len(n);
+    result.map(|()| n)
+}
+
 /// A worker's placeholder for the symbols it never reads (its own block's are in `bs`)
 fn empty_symbols() -> Symbols {
     Symbols {
@@ -1090,60 +1252,210 @@ fn empty_symbols() -> Symbols {
 /// `mibz2::mtf`'s limit on a run's weight, as its kernel has it
 const MAX_RUN_WEIGHT: u32 = 2 * 1024 * 1024;
 
-/// `mtf`: the MTF stage alone on one core, each round production's kernel over every block
-/// and `mtf_cp` over every block, in an order alternating by round; every block's `ll`,
-/// counts and checkpoints checked against production's and `blocks`' first
+/// The three MTF kernels on one block's symbols with `max_len` set to `max`: each one's
+/// result, and its output where it succeeds, must be production's; both checkpoint kernels'
+/// checkpoints must be `want`'s (the counts of every CHECKPOINT bytes of production's ll)
+fn mtf_agree(sym: &Symbols, max: usize, want: Option<&[[u32; 256]]>, what: &str) -> bool {
+    let kern = Kernels::detect();
+    let s = Symbols {
+        crc: sym.crc,
+        orig_ptr: sym.orig_ptr,
+        seq_to_unseq: sym.seq_to_unseq,
+        syms: sym.syms.clone(),
+        eob: sym.eob,
+        max_len: max,
+    };
+    let (mut ll0, mut c0) = (Vec::new(), [0u32; 256]);
+    let r0 = mtf::mtf(&s, &mut ll0, &mut c0, kern);
+    type Kernel = unsafe fn(
+        &Symbols,
+        &mut Vec<u8>,
+        &mut [u32; 256],
+        &mut Vec<[u32; 256]>,
+    ) -> Result<usize, ErrorKind>;
+    for (name, f) in [
+        ("mtf_cp", mtf_cp as Kernel),
+        ("mtf_cp2", mtf_cp2::<false>),
+        ("mtf_cp2p", mtf_cp2::<true>),
+    ] {
+        let (mut ll, mut c, mut cps) = (Vec::new(), [0u32; 256], Vec::new());
+        // SAFETY: AVX2, asserted by the caller
+        let r = unsafe { f(&s, &mut ll, &mut c, &mut cps) };
+        assert_eq!(
+            r, r0,
+            "{what}, max {max}: {name}'s result differs from production's"
+        );
+        if r0.is_ok() {
+            assert!(
+                ll == ll0 && c == c0,
+                "{what}, max {max}: {name}'s ll or counts differ"
+            );
+            let mut cum = [0u32; 256];
+            let mut own = vec![cum];
+            for chunk in ll0.chunks(CHECKPOINT) {
+                chunk.iter().for_each(|&x| cum[x as usize] += 1);
+                if chunk.len() == CHECKPOINT {
+                    own.push(cum);
+                }
+            }
+            assert!(cps == own, "{what}, max {max}: {name}'s checkpoints differ");
+            if let Some(w) = want {
+                assert!(
+                    cps == w,
+                    "{what}: {name}'s checkpoints differ from the block's"
+                );
+            }
+        }
+    }
+    r0.is_ok()
+}
+
+/// Both checkpoint kernels against production's on `bs` and on libbzip2-compressed edge
+/// cases, each block also with its limit cut to its length less one, to its last whole
+/// checkpoint (the block's end and a checkpoint the same limit) and raised to its next:
+/// every result, error kind, output and checkpoint list the same
+fn mtf_check(bs: &[Block]) {
+    let mut x = 0x9e37_79b9_7f4a_7c15u64;
+    let mut rnd = |m: usize| -> Vec<u8> {
+        (0..m)
+            .map(|_| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                x as u8
+            })
+            .collect()
+    };
+    let cp = CHECKPOINT;
+    let mut zeros_then = vec![0u8; 2 * cp];
+    zeros_then.push(7);
+    let cases: Vec<(String, Vec<u8>)> = vec![
+        ("one byte".into(), vec![b'x']),
+        ("two bytes".into(), b"ab".to_vec()),
+        ("a run of 1 MB".into(), vec![0u8; 1 << 20]),
+        ("2 checkpoints of zeros, then a byte".into(), zeros_then),
+        ("period 3".into(), b"abc".repeat(300_000)),
+        ("random, 3 checkpoints".into(), rnd(3 * cp)),
+        ("random, 3 checkpoints less 1".into(), rnd(3 * cp - 1)),
+        ("random, 3 checkpoints and 1".into(), rnd(3 * cp + 1)),
+        ("random 2 MB".into(), rnd(2 << 20)),
+        (
+            "runs of 1-300".into(),
+            (0..4000u32)
+                .flat_map(|i| {
+                    std::iter::repeat((i % 7) as u8 + b'a').take(1 + (i * 37 % 300) as usize)
+                })
+                .collect(),
+        ),
+    ];
+    let (mut checked, mut refused) = (0usize, 0usize);
+    let mut one = |sym: &Symbols, n: usize, want: Option<&[[u32; 256]]>, what: &str| {
+        let mut limits = vec![sym.max_len, n, n.div_ceil(cp) * cp];
+        if n > 0 {
+            limits.push(n - 1);
+        }
+        if n > cp && n % cp != 0 {
+            limits.push(n / cp * cp);
+        }
+        for m in limits {
+            checked += 1;
+            refused += !mtf_agree(sym, m, want.filter(|_| m >= n), what) as usize;
+        }
+    };
+    for (name, data) in &cases {
+        for level in [1, 9] {
+            let mut e = bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(level));
+            std::io::Write::write_all(&mut e, data).unwrap();
+            for b in blocks(&e.finish().unwrap()) {
+                one(
+                    &b.symbols,
+                    b.ll.len(),
+                    Some(&b.checkpoints),
+                    &format!("{name}, level {level}"),
+                );
+            }
+        }
+    }
+    for (i, b) in bs.iter().enumerate() {
+        one(
+            &b.symbols,
+            b.ll.len(),
+            Some(&b.checkpoints),
+            &format!("block {i}"),
+        );
+    }
+    println!(
+        "mtf check: {checked} runs of each kernel ({refused} refused as production refuses them, with its error), over {} blocks and {} edge cases at levels 1 and 9: every result, ll, counts and checkpoint list production's",
+        bs.len(),
+        cases.len()
+    );
+}
+
+/// `mtf`: the MTF stage alone on one core: production's kernel, `mtf_cp`, `mtf_cp2` and
+/// `mtf_cp2p` over every block each round, in an order rotated by round, after `mtf_check`
 fn mtf_mode(bs: &[Block], rounds: usize, cpus: Option<&[usize]>) {
     assert!(
         std::arch::is_x86_feature_detected!("avx2"),
-        "mtf_cp is AVX2"
+        "mtf_cp and mtf_cp2 are AVX2"
     );
     if let Some(c) = cpus {
         assert!(pin(&c[..1]), "could not pin");
     }
+    mtf_check(bs);
     let kern = Kernels::detect();
     let bytes: usize = bs.iter().map(|b| b.ll.len()).sum();
     let (mut ll, mut counts, mut cps) = (Vec::new(), [0u32; 256], Vec::new());
-    for (i, b) in bs.iter().enumerate() {
-        unsafe { mtf_cp(&b.symbols, &mut ll, &mut counts, &mut cps) }.unwrap();
-        assert!(
-            ll == b.ll && counts == b.counts && cps == b.checkpoints,
-            "block {i}: mtf_cp differs"
-        );
-    }
-    let (mut prod, mut cp) = (Vec::new(), Vec::new());
+    // the kernels, timed in an order rotated by the round and reversed every other cycle,
+    // so each takes each place equally over every 8 rounds
+    const NAMES: [&str; 4] = [
+        "production (`mibz2::mtf`)",
+        "`mtf_cp` (§14)",
+        "`mtf_cp2` (§15, the spill fix)",
+        "`mtf_cp2p` (§15, the fix, production's store order pinned)",
+    ];
+    let mut mb: [Vec<f64>; 4] = Default::default();
     for r in 0..rounds {
-        let mut time = |with_cp: bool| {
+        let mut order = [0usize, 1, 2, 3];
+        order.rotate_left(r % 4);
+        if (r / 4) % 2 == 1 {
+            order.reverse();
+        }
+        let mut got = [0f64; 4];
+        for k in order {
             let s = Instant::now();
             for b in bs {
-                if with_cp {
-                    unsafe { mtf_cp(&b.symbols, &mut ll, &mut counts, &mut cps) }.unwrap();
-                } else {
-                    mtf::mtf(&b.symbols, &mut ll, &mut counts, kern).unwrap();
+                // SAFETY (the checkpoint kernels): AVX2, asserted above
+                match k {
+                    0 => mtf::mtf(&b.symbols, &mut ll, &mut counts, kern),
+                    1 => unsafe { mtf_cp(&b.symbols, &mut ll, &mut counts, &mut cps) },
+                    2 => unsafe { mtf_cp2::<false>(&b.symbols, &mut ll, &mut counts, &mut cps) },
+                    _ => unsafe { mtf_cp2::<true>(&b.symbols, &mut ll, &mut counts, &mut cps) },
                 }
+                .unwrap();
             }
-            bytes as f64 / s.elapsed().as_secs_f64() / 1e6
-        };
-        let (a, c) = if r % 2 == 0 {
-            let a = time(false);
-            (a, time(true))
-        } else {
-            let c = time(true);
-            (time(false), c)
-        };
-        eprintln!("round {r} mtf: production {a:.0} MB/s, with checkpoints {c:.0} MB/s");
-        prod.push(a);
-        cp.push(c);
+            got[k] = bytes as f64 / s.elapsed().as_secs_f64() / 1e6;
+        }
+        eprintln!(
+            "round {r} mtf: production {:.0} MB/s, mtf_cp {:.0}, mtf_cp2 {:.0}, mtf_cp2p {:.0}",
+            got[0], got[1], got[2], got[3]
+        );
+        for k in 0..4 {
+            mb[k].push(got[k]);
+        }
     }
-    let ratios: Vec<f64> = cp.iter().zip(&prod).map(|(c, p)| c / p).collect();
-    let (m, h) = interval(&ratios);
-    let (lo, hi) = ratios
-        .iter()
-        .fold((f64::INFINITY, 0f64), |(l, h), &x| (l.min(x), h.max(x)));
     let med = |v: &[f64]| {
         let mut v = v.to_vec();
         v.sort_by(|a, b| a.partial_cmp(b).unwrap());
         v[v.len() / 2]
+    };
+    let cell = |a: usize, base: usize| {
+        let ratios: Vec<f64> = mb[a].iter().zip(&mb[base]).map(|(x, y)| x / y).collect();
+        let (m, h) = interval(&ratios);
+        let (lo, hi) = ratios
+            .iter()
+            .fold((f64::INFINITY, 0f64), |(l, h), &x| (l.min(x), h.max(x)));
+        let won = ratios.iter().filter(|&&x| x > 1.0).count();
+        format!("{m:.4} ±{h:.4} ({lo:.4}-{hi:.4}), {won}/{}", ratios.len())
     };
     let ncp: usize = bs.iter().map(|b| b.checkpoints.len()).sum();
     let most = bs.iter().map(|b| b.checkpoints.len()).max().unwrap_or(0);
@@ -1154,12 +1466,31 @@ fn mtf_mode(bs: &[Block], rounds: usize, cpus: Option<&[usize]>) {
         bytes as f64 / 1e6,
         if cpus.is_some() { ", pinned" } else { "" }
     );
-    println!("| kernel | MB/s, median | against production, paired: mean ±95% (min-max) |");
-    println!("|---|--:|--:|");
-    println!("| production (`mibz2::mtf`) | {:.0} | 1 |", med(&prod));
     println!(
-        "| `mtf_cp` (with checkpoints) | {:.0} | {m:.4} ±{h:.4} ({lo:.4}-{hi:.4}) |",
-        med(&cp)
+        "| kernel | MB/s, median | against production, paired: mean ±95% (min-max), rounds faster | against `mtf_cp`, paired | against `mtf_cp2`, paired |"
+    );
+    println!("|---|--:|--:|--:|--:|");
+    println!("| {} | {:.0} | 1 | | |", NAMES[0], med(&mb[0]));
+    println!(
+        "| {} | {:.0} | {} | 1 | |",
+        NAMES[1],
+        med(&mb[1]),
+        cell(1, 0)
+    );
+    println!(
+        "| {} | {:.0} | {} | {} | 1 |",
+        NAMES[2],
+        med(&mb[2]),
+        cell(2, 0),
+        cell(2, 1)
+    );
+    println!(
+        "| {} | {:.0} | {} | {} | {} |",
+        NAMES[3],
+        med(&mb[3]),
+        cell(3, 0),
+        cell(3, 1),
+        cell(3, 2)
     );
     println!();
     println!(
@@ -1196,8 +1527,8 @@ impl Inv {
         let coop = || {
             Box::new(Coop {
                 segments,
-                room: matches!(kind, 'r' | 'q' | 'n'),
-                given: matches!(kind, 'q' | 'n'),
+                room: matches!(kind, 'r' | 'q' | 'n' | 'm' | 'f'),
+                given: matches!(kind, 'q' | 'n' | 'm' | 'f'),
                 ..Default::default()
             })
         };
@@ -1467,6 +1798,8 @@ fn parse_arm(s: &str) -> Arm {
         b'r' => ('r', &s[1..]),
         b'q' => ('q', &s[1..]),
         b'n' => ('n', &s[1..]),
+        b'm' => ('m', &s[1..]),
+        b'f' => ('f', &s[1..]),
         _ => ('c', s),
     };
     let (rest, segments) = match rest.split_once('@') {
@@ -1505,16 +1838,17 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
         "s arms need --cfg libsais"
     );
     assert!(
-        with_mtf || arms.iter().all(|a| a.kind != 'n'),
-        "n arms need COOP_WITH_MTF=1"
+        with_mtf || arms.iter().all(|a| !matches!(a.kind, 'n' | 'm' | 'f')),
+        "n, m and f arms need COOP_WITH_MTF=1"
     );
     assert!(
         !with_mtf || arms.iter().all(|a| a.kind != 's'),
         "s arms (libsais) don't take symbols: not with COOP_WITH_MTF=1"
     );
     assert!(
-        arms.iter().all(|a| a.kind != 'n') || std::arch::is_x86_feature_detected!("avx2"),
-        "n arms' mtf_cp is AVX2"
+        arms.iter().all(|a| !matches!(a.kind, 'n' | 'm' | 'f'))
+            || std::arch::is_x86_feature_detected!("avx2"),
+        "n, m and f arms' MTF kernels are AVX2"
     );
     if let Some(c) = cpus {
         for (a, s) in arms.iter().zip(specs) {
@@ -1612,6 +1946,18 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
                                             )
                                         }
                                         .unwrap();
+                                    } else if matches!(kind, 'm' | 'f') {
+                                        // SAFETY: mtf_cp2 needs AVX2, asserted at the start
+                                        let (ll, c, cps) =
+                                            (&mut mine.ll, &mut mine.counts, &mut mine.checkpoints);
+                                        unsafe {
+                                            if kind == 'm' {
+                                                mtf_cp2::<false>(sym, ll, c, cps)
+                                            } else {
+                                                mtf_cp2::<true>(sym, ll, c, cps)
+                                            }
+                                        }
+                                        .unwrap();
                                     } else {
                                         mtf::mtf(sym, &mut mine.ll, &mut mine.counts, kern)
                                             .unwrap();
@@ -1620,13 +1966,14 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
                                     tm += s.elapsed().as_secs_f64();
                                     if check {
                                         assert!(
-                                            kind != 'n' || mine.checkpoints == bs[i].checkpoints,
-                                            "block {i}: mtf_cp's checkpoints differ"
+                                            !matches!(kind, 'n' | 'm' | 'f')
+                                                || mine.checkpoints == bs[i].checkpoints,
+                                            "block {i}: {kind}'s MTF checkpoints differ"
                                         );
                                     }
                                     // a q arm's checkpoints are still the free ones (its bound
-                                    // with the MTF stage in the timing); an n arm's are its own
-                                    let cps = if kind == 'n' {
+                                    // with the MTF stage in the timing); an n, m or f arm's are its own
+                                    let cps = if matches!(kind, 'n' | 'm' | 'f') {
                                         &mine.checkpoints
                                     } else {
                                         &bs[i].checkpoints

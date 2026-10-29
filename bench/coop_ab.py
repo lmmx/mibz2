@@ -49,6 +49,13 @@ PREDICTED_WITH_MTF = {
     ("n3x3", "r3x3"): (1.02, 1.05),
     ("n3x3", "q3x3"): (0.99, 1.01),
     ("n4x1", "r4x1"): (0.98, 1.02),
+    # #78's spill fix (§15.2)
+    ("m3x3", "r3x3"): (1.03, 1.06),
+    ("f3x3", "r3x3"): (1.04, 1.06),
+    ("m3x3", "n3x3"): (1.00, 1.03),
+    ("f3x3", "n3x3"): (1.01, 1.03),
+    ("f3x3", "q3x3"): (0.99, 1.01),
+    ("f4x1", "r4x1"): (0.98, 1.02),
 }
 # an arm kind: [(its twin's prefix, the phase it changes, its control, what it is)]
 CHANGES = {
@@ -57,6 +64,16 @@ CHANGES = {
     "n": [
         ("r", "build", "walk", "#78's net: the checkpoints made by the MTF, then the build"),
         ("q", "mtf", "walk", "#78's checkpoint cost: the same build, its checkpoints made"),
+    ],
+    "m": [
+        ("r", "build", "walk", "#78's net with the spill fix (`mtf_cp2`)"),
+        ("n", "mtf", "walk", "the spill fix: `mtf_cp2` against `mtf_cp`, the same build"),
+    ],
+    "f": [
+        ("r", "build", "walk", "#78's net with the spill fix, store order pinned (`mtf_cp2p`)"),
+        ("n", "mtf", "walk", "the spill fix, pinned: `mtf_cp2p` against `mtf_cp`, the same build"),
+        ("q", "mtf", "walk", "the fix's checkpoint cost: `mtf_cp2p` against free checkpoints"),
+        ("m", "mtf", "walk", "the store order alone: `mtf_cp2p` against `mtf_cp2`"),
     ],
 }
 
