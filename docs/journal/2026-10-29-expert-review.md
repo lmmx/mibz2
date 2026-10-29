@@ -26,7 +26,7 @@ Labels: **source** (read at the version or commit given), **measured** (said whe
 | Ainsworth & Jones, "Software Prefetching for Indirect Memory Accesses", CGO 2017 / TOCS | same entry, §2 | prefetch the next indirect target a distance ahead; one chain's own next hop can't be prefetched | shipped as each lane's next entry, prefetched to L1 (#5, v0.1.3); the sweep found no better setting (`2026-10-27-walk-sweep.md`) |
 | Brown & Langmead, "Bounding the Average Move Structure Query for Faster and Smaller RLBWT Permutations", SEA 2026, LIPIcs 9 (doi:10.4230/LIPIcs.SEA.2026.9; arXiv:2602.11029) | same entry, §3 | length capping bounds the average query | built for ψ and **rejected** (#42, `2026-10-27-move-structure-walk.md`): +90–108% under the room walk. A reopening condition is named (the walk sweep, "What it leaves open"): under four copies, move build + walk at least 10% under build + room walk |
 | Edwards & Vishkin, "Parallel algorithms for Burrows–Wheeler compression and decompression", TCS (doi:10.1016/j.tcs.2013.10.009) | `2026-10-28-cooperative-inversion.md` §5b.2 | O(log n) depth, O(n) work, by list ranking | theory. The cooperative pilot's segments are its practical form, and their coordination measured about 4% of a block's walk (§7.3 there) |
-| libbzip2's low-memory decoder (`BZ2_decompress` with `small`: ll16 + ll4, 2.5 B a row) | `2026-10-28-cooperative-inversion.md`; the compact pilot (unpublished branch) | 20-bit links instead of 32, 31% less table | a pilot built on the VM: the walk is 0.7–0.8 × the T-vector's, and the packed build is far slower (85 against 1,052 MB/s). It is parked behind the cooperative work |
+| libbzip2's low-memory decoder (`BZ2_decompress` with `small`: ll16 + ll4, 2.5 B a row) | `2026-10-28-cooperative-inversion.md`; the compact pilot (unpublished branch) | 20-bit links instead of 32: 2.5 B a row against 4, 37.5% less table (an earlier draft said 31%, which set 2.5 B against 3.6 MB) | a pilot built on the VM: the walk is 0.7–0.8 × the T-vector's, and the packed build is far slower (85 against 1,052 MB/s). It is parked behind the cooperative work |
 | Intel's top-down method: A. Yasin, "A Top-Down Method for Performance Analysis and Counters Architecture", ISPASS 2014, pp. 35–44; Intel's VTune memory-access guidance | not before (bench-imc used single events) | a hierarchy: retiring, bad speculation, front-end bound, back-end bound (memory: L1, L2, L3, DRAM, store bound; core) | **adopted as the method for §4's counters** (E3). Its events are confirmed on the i9 before relying on them |
 | Intel Performance Counter Monitor | — | memory-controller traffic | already measured through perf's `uncore_imc` events (`bench/imc.py`); PCM adds nothing needed |
 | libsais 2.12.0 / 2.12.1 (Ilya Grebnov) | §2 below, and [its source reading](2026-10-29-expert-review/libsais-unbwt-path.md) | the cyclic inverse BWT that our harness calls | read here, at c284ba8 |
@@ -153,16 +153,47 @@ The two pre-registered cooperative confirmations (`2026-10-28-cooperative-invers
 
 | # | experiment | mechanism | code | cost (workstation) | correctness risk | counters | pass / fail |
 |--:|---|---|---|---|---|---|---|
-| E1 | **The pair walk on the i9**: `just bench-variants --variants v0.1.4,pairwalk --threads 1,4,6,8,10 --rounds 10` | two bytes per dependent load, under pressure | none: the kept `perf/pair-walk` branch (v0.1.4 + one commit) as a `bench-variants` variant | ~15 min | none: byte-checked against this build | — | **pass:** pairwalk ≥ 1.05 × v0.1.4 at its best and at 8–10 workers, interval above 1, in paired rounds. **fail:** ≤ 1.0 at every count. ψ² then closes on the i9 too, and libsais's lead is its own code's. |
+| E1 | **The pair walk on the i9**: `just bench-variants --variants v0.1.4,pairwalk,v0.1.5 --threads 1,4,6,8,10 --rounds 10` (v0.1.5 added after the review: see below the table) | two bytes per dependent load, under pressure | none: the kept `perf/pair-walk` branch (v0.1.4 + one commit) as a `bench-variants` variant | ~15 min | none: byte-checked against this build | — | **pass:** pairwalk ≥ 1.05 × v0.1.4 at its best and at 8–10 workers, interval above 1, in paired rounds. **fail:** ≤ 1.0 at every count. ψ² then closes on the i9 too, and libsais's lead is its own code's. |
 | E2 | **libsais against production, by worker count** (queued: `p4…p10, s4x1…s10x1`, 16 rounds; `p4,4x1,3x3,s4x1,s3x3`, 20 rounds) | the same, as libsais | none (PR #73 at c2620b8) | ~10 min | none | — | **informs E1:** sNx1 / pN rising with N says ψ²'s gain is memory pressure. Flat at ~1.08 says it's a constant kernel difference. |
-| E3 | **Why 3x3 wins**, and libsais's phases: each arm alone under `perf stat`, top-down level 1–2 plus memory events plus IMC; libsais's symbols by `perf record` | residency against overlap (coop §8.2); libsais's build and copies against its walk | a script, after the confirmations | ~30 min | none | top-down (Yasin 2014; events confirmed on the i9 first), `mem_load_retired.l3_hit/miss`, `offcore_requests_outstanding.*`, `uncore_imc` reads and writes; repeats kept raw, multiplexing checked | as coop §8.2's predictions. For libsais: the share of `calculate_biPSI*`, `decode_chains_symbol_rows` and the copies in its time |
+| E3 | **Why 3x3 wins**, and libsais's phases: each arm alone under `perf stat`, top-down level 1–2 plus memory events plus IMC; libsais's symbols by `perf record` | residency against overlap (coop §8.2); libsais's build and copies against its walk | a script, after the confirmations | ~30 min | none | top-down (Yasin 2014; events confirmed on the i9 first), `mem_load_retired.l3_hit/miss`, `offcore_requests_outstanding.*`, `uncore_imc` reads and writes; added after the review: `l1d_pend_miss.pending`, `.pending_cycles` and `.fb_full` (misses in flight per core, and how often the fill buffers are full), and in the build `mem_load_l3_hit_retired.xsnp_hitm` (E11); repeats kept raw, multiplexing checked | as coop §8.2's predictions. For libsais: the share of `calculate_biPSI*`, `decode_chains_symbol_rows` and the copies in its time |
 | E4 | **The cooperative kernel at production's speed** | the build and walk's +18% and +16% on one core | research harness (#73's successor branch) | VM, then ~10 min | the shared table's handoffs: segment oracle, Miri | instructions per byte against production's | **pass:** 4x1 ≥ 0.97 × p4 in the grid, with 3x3 ≥ its confirmed ratio. **fail:** either misses |
 | E5 | **The parallel build without its count pass**: MTF already counts the block's bytes, so let it also snapshot the counts at the k cut points as it writes L. A team's threads then scatter at once. | the build is 42% of 3x3's time; libsais's own parallel build also recounts (L11572) | MTF and the coop build (research) | VM, then ~10 min | the cut points' counts must equal a recount: checked per block | — | **pass:** 3x3's build ≥ 1.25 × its current (4511 MB/s) and 3x3 ≥ 1.45 × p4. **fail:** below either |
 | E6 | libsais's walk parameters in our ψ² port (24 lanes, a round of prefetch lead, 256-row chains) | as libsais | the pair-walk branch | VM, then ~15 min | as #6's (byte checks) | — | **only if E1 passes:** ≥ libsais's s4x1 / p4 on the i9, and no worse than 1.0 × production on CI's 2-core runners. **Otherwise the per-machine choice is recorded instead.** |
-| E7 | The compact 20-bit ψ (ll16 + ll4 or packed) under pressure | 31% less table | the parked pilot | ~10 min | its self-test | L3 hit share | **pass:** its best absolute at 6–10 workers > p4's best. **fail:** below |
+| E7 | The compact 20-bit ψ (ll16 + ll4 or packed) under pressure | 37.5% less table (2.5 B a row against 4, plus an n/32-byte first-column table) | the parked pilot | ~10 min | its self-test | L3 hit share | **pass:** its best absolute at 6–10 workers > p4's best. **fail:** below |
 | E8 | The move structure under four copies (#42's named reopening) | a sixth of the T-vector's working set | the #42 branch | ~10 min | as #42's | — | as named: move build + walk ≥ 10% under build + room walk per copy at four copies; **otherwise it closes for good** |
 | E9 | The walk's output in L's freed buffer | memory reuse; its effect on the knee is unknown (`2026-10-29-bz2ngrs.md` §4) | the room walk (research) | ~10 min | as the room walk's oracle and Miri | DRAM write bytes per output byte | **pass:** occupancy curve at 6–10 workers ≥ 1.03 × today's |
-| E10 | Dynamic scheduling beyond the shared segment counter (AMAC proper) | refill at finer grain | — | — | — | — | **not run.** Its ceiling is the ~4% coordination share (§3). It reopens only if E3 finds the walk's end spread or start lag above 10% of a block. |
+| E10 | Dynamic scheduling beyond the shared segment counter (AMAC proper) | refill at finer grain | — | — | — | — | **not run.** The ~4% coordination share (§3) bounds what *balancing work between lanes and threads* can recover. It does not bound latency hiding within a core, which is a separate question (see below the table). It reopens only if E3 finds the walk's end spread or start lag above 10% of a block. |
+| E11 | **The build in one pass**: the scatter writes `ll[s] \| i << 8` and the init pass goes; the table is identical | production's build writes L into the table, then reads each entry back to keep it. In a team (`coop_build`), a slot's line was usually written in phase 1 by another thread, a cross-core handoff the single-core build doesn't have | the build (production's in `kernels`; the coop build) | `kernels` on CI, then ~10 min | low: the table compared word for word with today's | `mem_load_l3_hit_retired.xsnp_hitm`, `mem_inst_retired.all_stores` in the build; IMC write bytes | **pass:** the single-core build ≥ 1.10 × on CI, or 3x3's build ≥ 1.15 × PR #73's on the i9. **fail:** below 1.03 × on both ([#81](https://github.com/lmmx/mibz2/issues/81)) |
+
+**Added after the review, from a second outside reading (2026-10-29), each checked here:**
+- **E1 gains v0.1.5.** v0.1.4 to `pairwalk` isolates the one change, but production's walk
+  has moved since: v0.1.5 carries the room walk (#37, be44a66), and `src/bwt.rs`'s walk is
+  unchanged from v0.1.5 to master.
+  - E1's criterion stays pairwalk against v0.1.4, as registered.
+  - pairwalk against v0.1.5 is a second reading. It sets E6's starting gap, since E6's port
+    goes into today's walk, not v0.1.4's.
+  - It costs about half as much again (three variants, not two).
+- **What the ~4% bounds (E10).** It bounds what refilling idle lanes can recover, because
+  lanes and threads already take segments from one shared counter. AMAC's lever is
+  irregular work per step, and a walk step has none: every step is one load and one byte.
+  - What is left within a core is whether 32 lanes keep enough misses in flight, against
+    the core's fill buffers (Skylake-derived cores like the i9's have about a dozen).
+  - E3 measures that with `l1d_pend_miss.*`.
+  - If the walk is memory-bound but its misses in flight sit well below the fill buffers,
+    the lever is the lane count under pressure (`bench-variants`' `lanes8`, `lanes16`, on
+    the i9 at 4–10 workers), not a scheduler.
+- **E11, the build in one pass** ([#81](https://github.com/lmmx/mibz2/issues/81)). The
+  outside reading guessed that a shared-table build has bottlenecks the independent build
+  doesn't: cache-line ownership and store pressure. `coop_build`'s source shows a specific
+  one. Phase 1 writes each thread's range of L into the table. Phase 2's read-modify-write
+  then reads those lines from slots that, for k > 1, another thread mostly wrote.
+  - Reading the byte from `ll` instead removes both the pass and the handoff, and leaves
+    the walk untouched.
+  - With E5 (#78) it makes the cooperative build one parallel pass.
+- **Already planned, not new:** phase-aware teams. A team's helpers idling through MTF and
+  the CRC is §8's decoder A/B question (`2026-10-28-cooperative-inversion.md` §8, "the
+  per-block serial stages inside a team"). `bench-variants`' `gate2`…`gate6` already measure
+  the decoder with at most K workers in the T-vector phase.
 
 **Why this order:**
 - E1 and E2 need no code and decide the report's own first priority.
@@ -203,6 +234,7 @@ Filed as issues, so none depends on the outside session that produced them.
 - **E4**, the cooperative kernel's parity: [#77](https://github.com/lmmx/mibz2/issues/77).
 - **E5**, the build without its count pass: [#78](https://github.com/lmmx/mibz2/issues/78).
 - **E7 and E9**, footprint under pressure: [#79](https://github.com/lmmx/mibz2/issues/79).
+- **E11**, the build in one pass: [#81](https://github.com/lmmx/mibz2/issues/81).
 
 **Comments on existing issues:**
 - **E1 and E6** on [#6](https://github.com/lmmx/mibz2/issues/6#issuecomment-6490650295) (closed), with the reopening criterion.
