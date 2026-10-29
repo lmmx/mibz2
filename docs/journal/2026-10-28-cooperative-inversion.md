@@ -2123,7 +2123,7 @@ The run was `coop-spill-20261029T123205Z` (with `coop-ab-20261029T123245Z`): 20 
   - insert the new front with a blend;
   - touch the stored list only when an index is 32 or more.
 - **Why it is worth testing:**
-  - the MTF stage is 24% of a 3x3 worker's time, and about a quarter of an independent worker's, so a large gain there would count;
+  - the MTF stage is 24% of a 3x3 worker's time and 14% of a 4x1 worker's (this run), so a large gain there would count;
   - it is a production-kernel experiment (`src/mtf.rs`), which the CI bench can measure.
 - **Where it goes:** it joins the queue behind #81, beside the link-only milestone (#79), as its own pre-registered experiment.
 
