@@ -167,8 +167,9 @@ The two pre-registered cooperative confirmations (`2026-10-28-cooperative-invers
 
 **Added after the review, from a second outside reading (2026-10-29), each checked here:**
 - **E1 gains v0.1.5.** v0.1.4 to `pairwalk` isolates the one change, but production's walk
-  has moved since: v0.1.5 carries the room walk (#37, be44a66), and `src/bwt.rs`'s walk is
-  unchanged from v0.1.5 to master.
+  has moved since: v0.1.5 carries the room walk (#37, be44a66). From v0.1.5 to master the
+  walk's loop and settings are the same: later commits only factor out the segments'
+  assembly and make the prefetch level a setting, at the same default (L1).
   - E1's criterion stays pairwalk against v0.1.4, as registered.
   - pairwalk against v0.1.5 is a second reading. It sets E6's starting gap, since E6's port
     goes into today's walk, not v0.1.4's.
