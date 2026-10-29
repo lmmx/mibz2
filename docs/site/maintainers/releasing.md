@@ -30,6 +30,12 @@ GitHub release). Both use Trusted Publishing, in the `pypi` and `crates-io` envi
 - **Release Notes** (`release-notes.yml`): makes a version's GitHub release (`v<version>`)
   at a given commit if it does not exist, or updates its notes, from that version's
   section of `CHANGELOG.md`.
+- **A wheel job that never got a runner** (0.1.6: both macOS jobs were cancelled after
+  15 minutes waiting, so Release was skipped and PyPI had nothing while crates.io had the
+  crate): re-run the failed jobs on the tag's own CI run. Release then uploads with
+  `--skip-existing`. Don't bump, re-tag or republish. CI reports a runner that never came
+  the same way as a failed build ("cancelled"/"failure"), so check whether the job's steps
+  ran at all before treating it as a build failure.
 
 ## Release notes: the evidence
 
