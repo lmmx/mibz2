@@ -1,6 +1,6 @@
 # Compact navigation tables for the inverse BWT: early findings
 
-*29 October 2026 · A plain-language account of the succinct-data-structures review: how compactly the inverse BWT's navigation table can be stored, and what remains to be measured.*
+*29 October 2026 · Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.*
 
 This research began with a simple question:
 

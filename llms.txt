@@ -29,8 +29,8 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 
 ## Optional
 
-- [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): The research blog: plain-language write-ups of what mibz2's experiments are finding.
-- [Compact navigation tables for the inverse BWT](<https://lmmx.github.io/mibz2/blog/2026-10-29-compact-navigation-tables/index.md>): A plain-language account of the succinct-data-structures review: how compactly the inverse BWT's navigation table can be stored, and what remains to be measured.
+- [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Compact navigation tables for the inverse BWT](<https://lmmx.github.io/mibz2/blog/2026-10-29-compact-navigation-tables/index.md>): Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.
 - [History](<https://lmmx.github.io/mibz2/background/history/index.md>): Where mibz2 came from: written in wikidata-pq to decode the Wikidata dump, then moved to a repository of its own.
 - [Status](<https://lmmx.github.io/mibz2/background/status/index.md>): Where mibz2's research stands: the cooperative inverse BWT found, confirmed and explained on a 10-core workstation, and what comes next.
 - [Journals](<https://lmmx.github.io/mibz2/background/journals/index.md>): mibz2's development journals: where they are and what each one records.
