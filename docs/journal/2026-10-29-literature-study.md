@@ -120,7 +120,7 @@ cheap census question.**
 - **Bucket boundaries are bounded for bzip2 (ours, arithmetic).** A block has at most 256
   byte buckets, so at most 255 boundaries, so at most 255 of a full block's 28,125 aligned
   32-row groups straddle one: 0.91% at most. Their word alphabet (about 3.9 M symbols)
-  has no such bound. **Measured** (the ψ census, #79's last comment): 0.29% of rows are in
+  has no such bound. **Measured** (the ψ census, §13.1 and #99): 0.28% of rows are in
   groups that cross a bucket boundary, so a plain fallback record for them costs little.
 - **The whole lookup, not ψ alone:** their faster ψ gained less in full suffix-array
   operations, because the operations also read sampling data.
@@ -149,7 +149,7 @@ cheap census question.**
     The walk loads the destination's entry and emits its low byte, L[ψ(r)], which is F[r].
     So the byte emitted at row r depends only on r's bucket.
   - A group inside one bucket has a single F byte, which its descriptor can carry once.
-    Only the straddling groups (at most 0.91% of a full block's; 0.29% of rows measured)
+    Only the straddling groups (at most 0.91% of a full block's; 0.28% of rows measured)
     need anything per row.
   - So for a 24-bit link-only table (#79) the researcher's warning, a symbol costing extra
     memory accesses, applies to at most those groups. Whether the walk's segment markers
@@ -213,7 +213,7 @@ leaves, sorted as the synthesis sorts it:
 - **Established (prior art):** ψ as per-byte increasing lists; translation (uniform)
   groups; local codecs chosen per block; cache-line Elias–Fano with in-register select.
 - **Measured here:** translation coverage (about 77%); FOR-14 and EF-12 cover 99.5% of
-  rows; 0.29% of rows straddle a bucket; length-capped move structures lose under the
+  rows; 0.28% of rows straddle a bucket; length-capped move structures lose under the
   room walk (#42); #81's fused build.
 - **Open, and decided by two small tasks under #79:**
   1. **The plateau census:** the joint distribution of plateaus, span and bucket crossing
@@ -223,6 +223,11 @@ leaves, sorted as the synthesis sorts it:
      existing lane and checkpoint state, without a dependent load or new
      synchronisation on the critical path. If so, a two-plateau group fits a 64-bit
      descriptor (40 + 5 + 8 + 4 = 57 bits).
+  - **#99's result (measured, `research/psi-census` c32042b, succinct-review §18):**
+    two-plateau groups inside one bucket are **4.18% of all rows** (18.5% of the
+    non-translation rows; 0.91–7.12% a block, median 4.23%). That is the pre-registered
+    marginal band (3–8%). 42.8% of the non-translation rows are in groups of 9 or more
+    plateaus, which only a payload can serve.
 - **Conditional on both:** a dependent-successor throughput benchmark across 1–32 lanes,
   against the T-vector.
 - **Unknown:** whether any compact ψ, built directly from L, beats #81's fused build plus
