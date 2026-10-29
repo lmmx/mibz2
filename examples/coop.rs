@@ -39,6 +39,12 @@
 //!                                          its worker and helpers pinned to its k
 //!                                          CPUs together, left to the scheduler within
 //!                                          them, rather than one CPU each);
+//!                                          oN, vN and uN (the compact-Ψ prototype,
+//!                                          one core a block: production's build and
+//!                                          room walk copied, with production's entry
+//!                                          (o, the copy's control), a 32-bit link-only
+//!                                          entry (v) or a 24-bit one (u), the byte
+//!                                          recovered from F: coop/compact.rs);
 //!                                          @S sets
 //!                                          a cooperative arm's segments a block (4x1@1024:
 //!                                          one core a block, with 4x2's segments)
@@ -91,6 +97,9 @@ use mibz2::block::Symbols;
 use mibz2::bwt::{build, walk_segments_room, SegScratch, TVector};
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{mtf, ErrorKind, Kernels};
+
+#[path = "coop/compact.rs"]
+mod compact;
 
 const START: u32 = 1 << 31;
 const LINK: u32 = !START;
@@ -1658,6 +1667,8 @@ enum Inv {
     Lib2(mibz2::bwt::Cooperative<2>),
     Lib3(mibz2::bwt::Cooperative<3>),
     Lib4(mibz2::bwt::Cooperative<4>),
+    /// the compact-Ψ prototype's arms (`o`, `v`, `u`; coop/compact.rs), one core a block
+    Compact(char, Box<compact::Compact>),
 }
 unsafe impl Send for Inv {}
 
@@ -1676,6 +1687,10 @@ impl Inv {
         };
         match kind {
             'p' => Inv::Prod(TVector::new(), SegScratch::default()),
+            'o' | 'v' | 'u' => {
+                assert_eq!(k, 1, "compact arms take one core a block");
+                Inv::Compact(kind, Box::default())
+            }
             #[cfg(libsais)]
             's' => Inv::Sais(
                 unsafe { libsais_unbwt_create_ctx_omp(k as i32) },
@@ -1757,6 +1772,12 @@ impl Inv {
                 } else {
                     coop_walk(b.orig_ptr, pool, c, out);
                 }
+                (m, s.elapsed().as_secs_f64() - m)
+            }
+            Inv::Compact(kind, c) => {
+                c.build(*kind, &b.ll, &b.counts);
+                let m = s.elapsed().as_secs_f64();
+                c.walk(*kind, &b.ll, b.orig_ptr, out);
                 (m, s.elapsed().as_secs_f64() - m)
             }
             Inv::Lib2(c) => lib_invert(c, b, checkpoints, out, s),
@@ -1971,6 +1992,9 @@ fn parse_arm(s: &str) -> Arm {
         b'y' => ('y', &s[1..]),
         b'l' => ('l', &s[1..]),
         b'g' => ('g', &s[1..]),
+        b'o' => ('o', &s[1..]),
+        b'v' => ('v', &s[1..]),
+        b'u' => ('u', &s[1..]),
         _ => ('c', s),
     };
     let (rest, segments) = match rest.split_once('@') {

@@ -163,6 +163,18 @@ bench-libsais-knee-footprint rounds="10":
     python3 bench/coop_counters.py --file corpora/wikidata-bz3.bz2 --arms p2,p4,p6,p8,p10,s4x1,s8x1 --groups reads,llc_all --reps 2 --no-record
     python3 bench/dram.py
 
+# Compact Ψ, stage A (docs/journal/2026-10-29-compact-psi.md, pre-registered): production's
+# table (p, and o, the harness's copy of its kernel) against a 32-bit link-only table (v)
+# and a 24-bit one (u), the byte recovered from F, one core a block at 1-10 blocks on the
+# bench corpus, beside the shipped cooperative kernel (l4x2, l5x2); then the counters on
+# p, u and v. Needs sudo for the counters; about 10 minutes. Upload every coop-*.md,
+# coop-counters-*.md, their .jsonl, and the console.
+#   sudo -v && just bench-compact-psi 2>&1 | tee compact-psi-console.log
+bench-compact-psi rounds="20":
+    bash bench/corpus.sh
+    bash bench/coop.sh --grid-only --rounds {{rounds}} --arms p4,p1,p2,p5,p6,p8,p10,o1,o4,v1,v4,v6,u1,u2,u4,u5,u6,u8,u10,l4x2,l5x2
+    python3 bench/coop_counters.py --arms p4,p6,p8,u4,u6,u8,u10,v6 --groups reads,llc_all --reps 2 --no-record
+
 # The memory ceiling alone: the last stage of bench-libsais-knee-footprint, rerun without the
 # sweeps and counters before it (bench/dram.py; a walk-shaped random probe and a sequential
 # copy at 1-10 threads, perf counting only the probe). Needs sudo; about 5 minutes. Upload
