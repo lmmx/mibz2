@@ -3,6 +3,7 @@ model, the pull request comment, and the record kept for a master commit.
 
     report.py summary RUNS.jsonl --corpora DIR --mode pr|master|dispatch --head SHA
                       [--base SHA] [--date ISO] [--run URL] [--stages STAGES.jsonl] [--env ENV.json]
+                      [--kernels KERNELS.jsonl]
                       --out RESULT.json --md OUT.md
     report.py record STORE RESULT.json RUNS.jsonl
 
@@ -23,6 +24,10 @@ the toolchain) and its Markdown:
   examples/phases.rs): on the Wikidata blocks at 1 thread, each stage's median cycles a
   byte of output at the runner's reported clock (and ns a byte), for each build; on a
   pull request, head over base per stage, paired by round as above.
+- **The inverse BWT alone, against bz2ngrs's** (`--kernels`, bench/alternatives'
+  kernels binary, master and the Actions tab only): both kernels on the Wikidata blocks
+  at 1 thread, build, walk and assembly, the median ns a byte and bz2ngrs's over mibz2's
+  per phase, paired by pass.
 - **Modelled, not measured:** a whole dump's decode (`model`), from the Wikidata blocks.
 - **Resources** (`resources`, `assessment`), per corpus for each arm: CPU per byte at each
   thread count; its amplification, CPU per byte at N threads over the same arm's at the
@@ -57,7 +62,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-BENCH = "3.0.0"
+BENCH = "3.1.0"
 # Each family of figures, and the major versions that set or redefined its meaning
 # (bench/CHANGELOG.md): the decoder's own figures (throughput, CPU, peak RSS, by corpus
 # and thread count) since 1.0.0, redefined by 3.0.0 (the harness's thread sampler every
@@ -76,7 +81,17 @@ def meaning_major(family: str, bench: str) -> int:
 
 # The other decoders, in the order they are shown: the block-parallel, then the
 # single-threaded (examples/ab.rs: `parallel`)
-ALTERNATIVES = ["pbz2", "lbzip2", "indexed_bzip2", "fbz", "lbzip2-rs", "libbzip2", "libbz2-rs"]
+ALTERNATIVES = [
+    "pbz2",
+    "lbzip2",
+    "indexed_bzip2",
+    "fbz",
+    "lbzip2-rs",
+    "libbzip2",
+    "libbz2-rs",
+    "bz2ngrs",
+    "bz2ng",
+]
 HERE = Path(__file__).resolve().parent
 WIKIDATA = json.loads((HERE / "wikidata.json").read_text())
 MARK = "<!-- mibz2-bench -->"
@@ -161,7 +176,7 @@ def run_out(*cmd: str) -> str:
     try:
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         return (p.stdout or p.stderr).strip()
-    except OSError:
+    except (OSError, subprocess.TimeoutExpired):
         return ""
 
 
@@ -192,6 +207,37 @@ def locked(name: str, lockfile: str = "Cargo.lock") -> str | None:
     return m.group(1) if m else None
 
 
+def bz2ng_version() -> str | None:
+    """bz2-ng's version, from its `bzip2 --version` (AB_BZ2NG): on stderr, after which it
+    compresses stdin to stdout, so both are given nothing and dropped."""
+    exe = os.environ.get("AB_BZ2NG")
+    if not exe:
+        return None
+    try:
+        p = subprocess.run(
+            [exe, "--version"],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    line = next((l for l in p.stderr.decode(errors="replace").splitlines() if "bz2-ng" in l), "")
+    m = re.search(r"bz2-ng ([\w.]+?)\.?$", line.strip())
+    return m and m.group(1)
+
+
+def git_locked(name: str, lockfile: str) -> str | None:
+    """A git dependency's version and commit, as `lockfile` pins them."""
+    lock = Path(lockfile).read_text() if Path(lockfile).exists() else ""
+    m = re.search(
+        rf'name = "{re.escape(name)}"\nversion = "([^"]+)"\nsource = "git\+[^"#]*#([0-9a-f]+)"',
+        lock,
+    )
+    return m and f"{m.group(1)} at {m.group(2)[:7]} (git)"
+
+
 def toolchain(arms: list[str]) -> dict:
     """The compiler and each arm's version (the alternatives' only where they ran)."""
     names = {label(a) for a in arms}
@@ -199,6 +245,7 @@ def toolchain(arms: list[str]) -> dict:
     alts = "bench/alternatives/Cargo.lock"
     py = os.environ.get("AB_PYTHON", "python3")
     ib = run_out(py, "-c", "import indexed_bzip2; print(indexed_bzip2.__version__)")
+    bz2ng = bz2ng_version()
     out = {
         "rustc": run_out("rustc", "-V"),
         "pbz2": locked("pbz2"),
@@ -211,6 +258,8 @@ def toolchain(arms: list[str]) -> dict:
         "libbzip2": "1.0.8 (the bzip2 crate's bundled source)",
         "libbz2-rs": locked("libbz2-rs-sys", alts)
         and f"{locked('libbz2-rs-sys', alts)} (libbz2-rs-sys, through the bzip2 crate)",
+        "bz2ngrs": git_locked("bz2ngrs", alts),
+        "bz2ng": bz2ng and f"bz2-ng {bz2ng} (C, its `bzip2 -dc`)",
     }
     out |= {k: v for k, v in more.items() if k in names}
     out["libbzip2 (the corpora's encoder)"] = "1.0.8 (the bzip2 crate's bundled source)"
@@ -563,6 +612,64 @@ STAGE_ROWS = [
     ("crc", "CRC"),
     ("total", "total"),
 ]
+
+
+# The inverse BWT's phases, mibz2's kernel against bz2ngrs's (bench/alternatives'
+# kernels binary: master and the Actions tab only), as kernels.jsonl names them
+KERNEL_ROWS = [
+    ("build_s", "T-vector build"),
+    ("walk_s", "walk"),
+    ("assemble_s", "segment assembly (mibz2) / gather (bz2ngrs)"),
+    ("total_s", "inverse BWT, total"),
+]
+
+
+def kernel_figures(lines: list[dict]) -> dict | None:
+    """Each kernel's median ns a byte per phase over the passes, and bz2ngrs's over
+    mibz2's per phase, paired by pass."""
+    by = defaultdict(dict)  # kernel -> pass -> line
+    for r in lines:
+        by[r["kernel"]][r["pass"]] = r
+    if not {"mibz2", "bz2ngrs"} <= set(by):
+        return None
+    bytes_ = lines[0]["bytes"]
+    ns = lambda s: s * 1e9 / bytes_
+    passes = sorted(set(by["mibz2"]) & set(by["bz2ngrs"]))
+    out = {"tool": "bench/alternatives/src/kernels.rs", "passes": len(passes), "bytes": bytes_}
+    for k in ("mibz2", "bz2ngrs"):
+        out[k] = {
+            key: round(ns(statistics.median(by[k][p][key] for p in passes)), 4)
+            for key, _ in KERNEL_ROWS
+        }
+    out["ratio"] = {
+        key: ratio_ci([by["bz2ngrs"][p][key] / by["mibz2"][p][key] for p in passes])
+        for key, _ in KERNEL_ROWS
+    }
+    return out
+
+
+def kernel_lines(k: dict) -> list[str]:
+    """The kernels' table: each phase's median ns a byte and bz2ngrs over mibz2."""
+    out = [
+        "",
+        "### The inverse BWT alone: mibz2's kernel against bz2ngrs's, phase by phase (median ns/B)",
+        "",
+        f"Both kernels on the same Wikidata blocks' last columns, on one pinned CPU, {k['passes']} "
+        "passes of the file in decode order, the kernels' order alternating (`kernels`, "
+        "bench/alternatives: bz2ngrs's src/bwt.rs as it is, its steps timed apart). Every block's "
+        "bytes are checked the same from both, and its CRC, before the timed passes. mibz2's "
+        "build takes its byte counts from MTF; bz2ngrs's counts them itself, so its build row "
+        "holds that count. A ratio above 1× is bz2ngrs taking longer. Diagnostic only: the "
+        "decoders' own figures are the tables above.",
+        "",
+        "| phase | mibz2 | bz2ngrs | bz2ngrs / mibz2 |",
+        "|---|--:|--:|--:|",
+    ]
+    for key, name in KERNEL_ROWS:
+        out.append(
+            f"| {name} | {k['mibz2'][key]:.3f} | {k['bz2ngrs'][key]:.3f} | {ratio_x(k['ratio'][key])} |"
+        )
+    return out
 
 
 def stage_figures(lines: list[dict], mhz: float | None, pr: bool) -> dict:
@@ -1255,6 +1362,8 @@ def markdown(res: dict) -> str:
         ]
     if res.get("stages"):
         lines += stage_lines(res["stages"], pr)
+    if res.get("kernels"):
+        lines += kernel_lines(res["kernels"])
     if res.get("models"):
         lines += model_lines(res["models"], n, pr)
     lines += [
@@ -1334,6 +1443,10 @@ def summary(a: argparse.Namespace) -> None:
         lines = [json.loads(l) for l in Path(a.stages).read_text().splitlines() if l.strip()]
         if lines:
             res["stages"] = stage_figures(lines, mach["mhz"], a.mode == "pr")
+    if a.kernels and Path(a.kernels).exists():
+        lines = [json.loads(l) for l in Path(a.kernels).read_text().splitlines() if l.strip()]
+        if lines and (k := kernel_figures(lines)):
+            res["kernels"] = k
     Path(a.out).write_text(json.dumps(res, indent=1, allow_nan=False) + "\n")
     Path(a.md).write_text(markdown(res))
     print(
@@ -1386,6 +1499,7 @@ def main() -> None:
     s.add_argument("--date")
     s.add_argument("--run")
     s.add_argument("--stages")
+    s.add_argument("--kernels", help="the kernels binary's passes (bench/alternatives)")
     s.add_argument("--env", help="`ab env`'s line: the runner's cores, quota and counters")
     s.add_argument("--out", required=True)
     s.add_argument("--md", required=True)

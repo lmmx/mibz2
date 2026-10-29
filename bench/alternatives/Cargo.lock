@@ -130,6 +130,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
 
 [[package]]
+name = "bz2ngrs"
+version = "0.1.0"
+source = "git+https://github.com/Softleif/bz2ngrs?rev=6a9259078bd97e950020db2f3b5dc4c21613d670#6a9259078bd97e950020db2f3b5dc4c21613d670"
+dependencies = [
+ "fearless_simd",
+ "fearless_simd_macros",
+]
+
+[[package]]
 name = "bzip2"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -363,6 +372,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "629c9d6b6f30b5604089e0980f4d924a013aacb1654a6cdf5d3d852224f68651"
 dependencies = [
  "libm",
+]
+
+[[package]]
+name = "fearless_simd_macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3e91d94c6885390b81782d7ee60fd6583b33907333a8b340de25ccf468353315"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -634,6 +654,7 @@ version = "0.1.5"
 name = "mibz2-bench-alternatives"
 version = "0.0.0"
 dependencies = [
+ "bz2ngrs",
  "bzip2 0.4.4",
  "bzip2 0.6.1",
  "fbz",

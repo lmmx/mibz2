@@ -19,6 +19,11 @@ version = "0.0.0"
 name = "ab"
 path = "../../examples/ab.rs"
 
+# mibz2's inverse BWT against bz2ngrs's, phase by phase (src/kernels.rs, src/ngrs_bwt.rs)
+[[bin]]
+name = "kernels"
+path = "src/kernels.rs"
+
 [dependencies]
 # As the crate's dev-dependencies: the harness's own arms and its corpora's encoder
 bzip2 = { features = ["static"], version = "0.4" }
@@ -27,6 +32,9 @@ pbz2 = { default-features = false, features = ["simd"], version = "=0.2.0" }
 # The alternatives: libbz2-rs-sys 0.2.5 (the pure-Rust port of libbzip2) through the
 # bzip2 crate's default backend; the `lbzip2` crate (nordisk, pure Rust); fbz (Answer.AI)
 bzip2_rs = { package = "bzip2", version = "=0.6.1" }
+# bz2ngrs (Softleif: a safe-Rust port of bz2-ng, one thread a stream), at a pinned commit:
+# an arm of master's benchmark and of bench/compete.sh, and the kernels binary's comparison
+bz2ngrs = { git = "https://github.com/Softleif/bz2ngrs", rev = "6a9259078bd97e950020db2f3b5dc4c21613d670" }
 fbz = "=0.1.13"
 lbzip2 = "=0.5.13"
 libbz2-rs-sys = "=0.2.5"
@@ -35,6 +43,7 @@ libbz2-rs-sys = "=0.2.5"
 [package.metadata.cargo-machete]
 # (used by ../../examples/ab.rs, outside this directory; libbz2-rs-sys is pinned only)
 ignored = [
+  "bz2ngrs",
   "bzip2",
   "bzip2_rs",
   "fbz",

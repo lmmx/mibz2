@@ -160,3 +160,16 @@ bench-fingerprint *args:
     bash bench/corpus.sh
     cargo build --release --example ab --example stress
     python3 bench/fingerprint.py "$@"
+
+# bench/compete.sh: mibz2 against bz2ngrs on one physical core (research only: the whole
+# decoders with libbzip2, libbz2-rs and bz2-ng's C beside them, then the two inverse BWTs
+# phase by phase on the same blocks, then perf's hottest symbols). About 10 minutes. It
+# writes compete-<UTC time>.md (and its .jsonl and .kernels.jsonl) to share.
+#   just bench-compete
+#   just bench-compete --rounds 7 --passes 6 --no-perf
+
+# A competitor study: mibz2 against bz2ngrs, one core (docs/journal/2026-10-29-bz2ngrs.md)
+[positional-arguments]
+bench-compete *args:
+    bash bench/corpus.sh
+    bash bench/compete.sh "$@"
