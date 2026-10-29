@@ -66,13 +66,13 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=22875d5508a7">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=56d5fffc86d3">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=22875d5508a7">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=56d5fffc86d3">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=22875d5508a7">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=56d5fffc86d3">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=22875d5508a7">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=56d5fffc86d3">
     
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -1660,15 +1660,15 @@ blocks found, and what comes next.</p>
 <figcaption>Each card contains the number of the next card. The highlighted card is the current position: follow the pointers from card 0 until every card has been visited.</figcaption>
 </figure>
 
-<p>Your decoder uses a table called the T-vector, which is essentially a much larger, more sophisticated collection of such cards.</p>
+<p>mibz2's decoder uses a table called the T-vector, which is essentially a much larger, more sophisticated collection of such cards.</p>
 <p>For each position, it stores:</p>
 <ul>
 <li>Where to go next.</li>
 <li>The character associated with that position.</li>
-<li>A marker used by your cooperative traversal algorithm.</li>
+<li>A marker used by mibz2's cooperative traversal algorithm.</li>
 </ul>
 <p>At maximum bzip2 block size, this table occupies approximately 3.6 MB.</p>
-<p>mibz2's 32-lane implementation already tackles one major cost: instead of following one chain and repeatedly waiting for memory, you follow many independent chains at once.</p>
+<p>mibz2's 32-lane implementation already tackles one major cost: instead of following one chain and repeatedly waiting for memory, it follows many independent chains at once.</p>
 <p>That's memory-level parallelism (MLP).</p>
 <p>So far, so good.</p>
 <p>But then we asked a different question.</p>
@@ -1676,7 +1676,7 @@ blocks found, and what comes next.</p>
 <p>Why do we need four bytes for every card?</p>
 </blockquote>
 <h2 id="2-the-cards-arent-arbitrary">2. The cards aren't arbitrary<a class="headerlink" href="#2-the-cards-arent-arbitrary" title="Permanent link">&para;</a></h2>
-<p>Suppose I give you these two sequences of destinations:</p>
+<p>Take these two sequences of destinations:</p>
 <figure class="bf-fig">
 <p class="bf-title">Two groups of eight pointers</p>
 <svg viewBox="0 0 720 176" role="img" aria-label="Group A: 427, 18, 903, 61, 712, 295, 4, 846. Group B: 427 to 434, consecutive."><text x="0" y="18" class="bf-tm">Group A: arbitrary values</text><rect x="0" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="42.375" y="52" class="bf-t-strong" text-anchor="middle">427</text><rect x="90.75" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="133.125" y="52" class="bf-t-strong" text-anchor="middle">18</text><rect x="181.5" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="223.875" y="52" class="bf-t-strong" text-anchor="middle">903</text><rect x="272.25" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="314.625" y="52" class="bf-t-strong" text-anchor="middle">61</text><rect x="363" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="405.375" y="52" class="bf-t-strong" text-anchor="middle">712</text><rect x="453.75" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="496.125" y="52" class="bf-t-strong" text-anchor="middle">295</text><rect x="544.5" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="586.875" y="52" class="bf-t-strong" text-anchor="middle">4</text><rect x="635.25" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="677.625" y="52" class="bf-t-strong" text-anchor="middle">846</text><text x="0" y="96" class="bf-tm">Group B: consecutive values</text><rect x="0" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="42.375" y="130" class="bf-t-strong" text-anchor="middle">427</text><rect x="90.75" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="133.125" y="130" class="bf-t-strong" text-anchor="middle">428</text><rect x="181.5" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="223.875" y="130" class="bf-t-strong" text-anchor="middle">429</text><rect x="272.25" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="314.625" y="130" class="bf-t-strong" text-anchor="middle">430</text><rect x="363" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="405.375" y="130" class="bf-t-strong" text-anchor="middle">431</text><rect x="453.75" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="496.125" y="130" class="bf-t-strong" text-anchor="middle">432</text><rect x="544.5" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="586.875" y="130" class="bf-t-strong" text-anchor="middle">433</text><rect x="635.25" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="677.625" y="130" class="bf-t-strong" text-anchor="middle">434</text><text x="0" y="170" class="bf-tm">Group B in one line: base 427, then add the position (+0, +1, … +7)</text></svg>
@@ -1689,7 +1689,7 @@ blocks found, and what comes next.</p>
 <p>Start at 427 and add the position within the group.</p>
 </blockquote>
 <p>One starting number replaces eight separate numbers.</p>
-<p>The permutation your inverse BWT decoder follows, called Ψ (psi), isn't a completely arbitrary permutation.</p>
+<p>The permutation mibz2's inverse BWT decoder follows, called Ψ (psi), isn't a completely arbitrary permutation.</p>
 <p>Because of how the BWT is constructed, it consists of increasing sequences of positions.</p>
 <p>That means consecutive entries within a particular character group always point to increasing positions.</p>
 <p>They won't necessarily be consecutive like Group B—but they're at least sorted.</p>
@@ -1719,12 +1719,12 @@ blocks found, and what comes next.</p>
 <p>A more compact table is useful only if reconstructing its pointers doesn't make the decoder slower than before.</p>
 </blockquote>
 <h2 id="4-what-the-census-found">4. What the census found<a class="headerlink" href="#4-what-the-census-found" title="Permanent link">&para;</a></h2>
-<p>Initially, we had no idea how well these representations would fit your actual BWT data.</p>
+<p>Initially, we had no idea how well these representations would fit real BWT data.</p>
 <p>Perhaps the values were increasing but widely scattered, making compression awkward.</p>
 <p>So Claude wrote a census program to inspect them.</p>
 <p>It found more structure than the theory alone guarantees.</p>
 <figure class="bf-fig">
-<p class="bf-title">What Claude reported about your benchmark corpus</p>
+<p class="bf-title">What Claude reported about our benchmark corpus</p>
 <svg viewBox="0 0 720 150" role="img" aria-label="77.6% of rows are in simple consecutive groups; 99.51% fit compact FOR or Elias–Fano records."><text x="0" y="20" class="bf-ts">Simple consecutive groups</text><text x="720" y="22" class="bf-big-green" text-anchor="end">77.6%</text><rect x="0" y="32" width="720" height="13" rx="6.5" class="bf-track"/><rect x="0" y="32" width="558.72" height="13" rx="6.5" class="bf-green"/><text x="0" y="64" class="bf-tm">Rows where a complete group of pointers can potentially be represented by one base plus a simple offset.</text><text x="0" y="104" class="bf-ts">Fit compact FOR or Elias–Fano</text><text x="720" y="106" class="bf-big" text-anchor="end">99.51%</text><rect x="0" y="116" width="720" height="13" rx="6.5" class="bf-track"/><rect x="0" y="116" width="716.472" height="13" rx="6.5" class="bf-steel"/><text x="0" y="148" class="bf-tm">Only 0.49% of rows required exceptions under the proposed 32-value encoding scheme.</text><path d="M0 78.5H720" class="bf-rule"/></svg>
 <figcaption>These two percentages overlap: they aren't two separate populations.</figcaption>
 </figure>
@@ -1744,7 +1744,7 @@ blocks found, and what comes next.</p>
 <p>Now we reach the hardware connection.</p>
 <p>Modern CPUs don't fetch arbitrary isolated bytes from main memory one at a time. They work with cache lines, commonly 64 bytes.</p>
 <p>Imagine a cache line as a little tray of data.</p>
-<p>If your next pointer lives in that tray, the processor can fetch the tray and extract what it needs.</p>
+<p>If the next pointer lives in that tray, the processor can fetch the tray and extract what it needs.</p>
 <p>The first design asks:</p>
 <blockquote>
 <p>What if we could store 32 pointers in exactly one 64-byte cache line?</p>
@@ -1754,11 +1754,11 @@ blocks found, and what comes next.</p>
 <svg viewBox="0 0 720 232" role="img" aria-label="One 64-byte cache-line record holding 32 pointers: 2 bytes per pointer on average."><rect x="0.5" y="0.5" width="719" height="178" rx="8" class="bf-box"/><text x="16" y="26" class="bf-tm">One cache-line record</text><text x="704" y="27" class="bf-ts" text-anchor="end">64 bytes</text><rect x="16" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="56" class="bf-ttiny" text-anchor="middle">0</text><rect x="102.375" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="56" class="bf-ttiny" text-anchor="middle">1</text><rect x="188.75" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="56" class="bf-ttiny" text-anchor="middle">2</text><rect x="275.125" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="56" class="bf-ttiny" text-anchor="middle">3</text><rect x="361.5" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="56" class="bf-ttiny" text-anchor="middle">4</text><rect x="447.875" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="56" class="bf-ttiny" text-anchor="middle">5</text><rect x="534.25" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="56" class="bf-ttiny" text-anchor="middle">6</text><rect x="620.625" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="56" class="bf-ttiny" text-anchor="middle">7</text><rect x="16" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="83" class="bf-ttiny" text-anchor="middle">8</text><rect x="102.375" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="83" class="bf-ttiny" text-anchor="middle">9</text><rect x="188.75" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="83" class="bf-ttiny" text-anchor="middle">10</text><rect x="275.125" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="83" class="bf-ttiny" text-anchor="middle">11</text><rect x="361.5" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="83" class="bf-ttiny" text-anchor="middle">12</text><rect x="447.875" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="83" class="bf-ttiny" text-anchor="middle">13</text><rect x="534.25" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="83" class="bf-ttiny" text-anchor="middle">14</text><rect x="620.625" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="83" class="bf-ttiny" text-anchor="middle">15</text><rect x="16" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="110" class="bf-ttiny" text-anchor="middle">16</text><rect x="102.375" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="110" class="bf-ttiny" text-anchor="middle">17</text><rect x="188.75" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="110" class="bf-ttiny" text-anchor="middle">18</text><rect x="275.125" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="110" class="bf-ttiny" text-anchor="middle">19</text><rect x="361.5" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="110" class="bf-ttiny" text-anchor="middle">20</text><rect x="447.875" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="110" class="bf-ttiny" text-anchor="middle">21</text><rect x="534.25" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="110" class="bf-ttiny" text-anchor="middle">22</text><rect x="620.625" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="110" class="bf-ttiny" text-anchor="middle">23</text><rect x="16" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="137" class="bf-ttiny" text-anchor="middle">24</text><rect x="102.375" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="137" class="bf-ttiny" text-anchor="middle">25</text><rect x="188.75" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="137" class="bf-ttiny" text-anchor="middle">26</text><rect x="275.125" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="137" class="bf-ttiny" text-anchor="middle">27</text><rect x="361.5" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="137" class="bf-ttiny" text-anchor="middle">28</text><rect x="447.875" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="137" class="bf-ttiny" text-anchor="middle">29</text><rect x="534.25" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="137" class="bf-ttiny" text-anchor="middle">30</text><rect x="620.625" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="137" class="bf-ttiny" text-anchor="middle">31</text><text x="16" y="166" class="bf-tm">32 logical pointers represented inside a single physical record.</text><text x="0" y="222" class="bf-tl">Average space per pointer</text><text x="720" y="224" class="bf-big" text-anchor="end">2 bytes</text></svg>
 </figure>
 
-<p>Your current representation uses four bytes per pointer.</p>
+<p>mibz2's current representation uses four bytes per pointer.</p>
 <p>So the new design could halve the navigation table's storage, before exception overhead.</p>
 <p>And crucially, the record can be found immediately from the current row number.</p>
 <p>No searching for where the record was stored.</p>
-<p>This is very important because your existing decoder's greatest strength is how quickly it can issue independent memory requests.</p>
+<p>This is very important because mibz2's greatest strength is how quickly it can issue independent memory requests.</p>
 <p>A compact representation that introduces multiple dependent searches could destroy that advantage.</p>
 <p>The fixed-size record tries to avoid precisely that.</p>
 <h2 id="6-a-second-design-a-two-tier-layout">6. A second design: a two-tier layout<a class="headerlink" href="#6-a-second-design-a-two-tier-layout" title="Permanent link">&para;</a></h2>
@@ -1779,10 +1779,10 @@ blocks found, and what comes next.</p>
 <p>That's not a measured final footprint. It's an optimistic model built from the reported distribution.</p>
 <p>The attraction is real, but so is the risk: whenever we need the second record, we introduce another memory dependency.</p>
 <h2 id="7-why-a-smaller-table-could-make-mibz2-faster">7. Why a smaller table could make mibz2 faster<a class="headerlink" href="#7-why-a-smaller-table-could-make-mibz2-faster" title="Permanent link">&para;</a></h2>
-<p>Suppose you're decoding one full-sized bzip2 block.</p>
-<p>Your current T-vector is 3.6 MB.</p>
+<p>Suppose mibz2 is decoding one full-sized bzip2 block.</p>
+<p>Its T-vector for that block is 3.6 MB.</p>
 <p>But mibz2 can work on multiple blocks concurrently.</p>
-<p>If you have several full-size blocks in flight, their tables compete for space in the CPU's shared cache.</p>
+<p>With several full-size blocks in flight, their tables compete for space in the CPU's shared cache.</p>
 <figure class="bf-fig">
 <p class="bf-title">Eight simultaneous full-block tables</p>
 <svg viewBox="0 0 720 334" role="img" aria-label="Table storage for eight full blocks: current 28.8 MB, 24-bit 21.6 MB, 16-bit fixed 14.5 MB, two-tier about 5 MB (estimate)."><path d="M56 286H720" class="bf-axis"/><text x="46" y="290" class="bf-tm" text-anchor="end">0 MB</text><path d="M56 218.5H720" class="bf-grid"/><text x="46" y="222.5" class="bf-tm" text-anchor="end">8 MB</text><path d="M56 151H720" class="bf-grid"/><text x="46" y="155" class="bf-tm" text-anchor="end">16 MB</text><path d="M56 83.5H720" class="bf-grid"/><text x="46" y="87.5" class="bf-tm" text-anchor="end">24 MB</text><path d="M56 16H720" class="bf-grid"/><text x="46" y="20" class="bf-tm" text-anchor="end">32 MB</text><rect x="87" y="43" width="104" height="243" rx="6" class="bf-bar"/><text x="139" y="33" class="bf-t-strong" text-anchor="middle">28.8 MB</text><text x="139" y="308" class="bf-ts" text-anchor="middle">Current</text><text x="139" y="326" class="bf-tm" text-anchor="middle">32-bit T-vector</text><rect x="253" y="103.75" width="104" height="182.25" rx="6" class="bf-bar"/><text x="305" y="93.75" class="bf-t-strong" text-anchor="middle">21.6 MB</text><text x="305" y="308" class="bf-ts" text-anchor="middle">24-bit</text><text x="305" y="326" class="bf-tm" text-anchor="middle">direct links</text><rect x="419" y="163.656" width="104" height="122.344" rx="6" class="bf-bar"/><text x="471" y="153.656" class="bf-t-strong" text-anchor="middle">14.5 MB</text><text x="471" y="308" class="bf-ts" text-anchor="middle">16-bit fixed</text><text x="471" y="326" class="bf-tm" text-anchor="middle">cache-line records</text><rect x="585" y="243.812" width="104" height="42.1875" rx="6" class="bf-bar-est"/><text x="637" y="233.812" class="bf-t-strong" text-anchor="middle">about 5 MB</text><text x="637" y="308" class="bf-ts" text-anchor="middle">Two-tier</text><text x="637" y="326" class="bf-tm" text-anchor="middle">estimate</text></svg>
@@ -1795,13 +1795,13 @@ blocks found, and what comes next.</p>
 <p>We might see fewer expensive memory misses.</p>
 <p>Even if each individual pointer is slightly more expensive to decode, the overall decoder could become faster.</p>
 <p>This is the same kind of trade-off Julian Seward studied in 2001.</p>
-<p>But your work adds modern multicore concurrency and 32-lane traversal.</p>
+<p>But mibz2 adds modern multicore concurrency and 32-lane traversal.</p>
 <p>The goal is not to have the smallest possible table. It's to make the whole machine finish decoding sooner.</p>
 <h2 id="8-open-questions">8. Open questions<a class="headerlink" href="#8-open-questions" title="Permanent link">&para;</a></h2>
 <p>There are three substantial unanswered questions.</p>
 <p><strong>First, how much does decoding a compressed pointer cost?</strong> With the current T-vector, the CPU loads a 32-bit value and extracts the next row. With a compressed record, it may need shifts, masks, a format test and sometimes an additional memory access. Even a small amount of extra work matters when repeated millions of times.</p>
 <p><strong>Second, how expensive is construction?</strong> The compressed table must be built from the BWT before it can be traversed. A representation that makes traversal faster but takes twice as long to build might lose overall.</p>
-<p><strong>Third, does the 77.6% translation property hold broadly?</strong> We know it appears in your benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.</p>
+<p><strong>Third, does the 77.6% translation property hold broadly?</strong> We know it appears in our benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.</p>
 <p>The agents have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.</p>
 <h2 id="9-what-is-known-and-what-is-not">9. What is known and what is not<a class="headerlink" href="#9-what-is-known-and-what-is-not" title="Permanent link">&para;</a></h2>
 <table>
@@ -1830,7 +1830,7 @@ blocks found, and what comes next.</p>
 </tr>
 <tr>
 <td>Reduced working sets can improve cache residency</td>
-<td>Supported by your existing performance measurements</td>
+<td>Supported by mibz2's existing performance measurements</td>
 </tr>
 <tr>
 <td>Either compressed design will beat the current decoder</td>
@@ -1848,7 +1848,7 @@ blocks found, and what comes next.</p>
 <p>It's a convenient way to store answers to questions.</p>
 <p>The BWT already contains the information from which those answers can be derived.</p>
 <p>Succinct data structures teach us to exploit that fact.</p>
-<p>But your work adds an interesting twist:</p>
+<p>But our work adds an interesting twist:</p>
 <blockquote>
 <p>Rather than pursuing the absolutely smallest possible encoding, we're looking for a carefully chosen amount of redundancy that allows the CPU to recover answers quickly.</p>
 </blockquote>
@@ -1862,7 +1862,7 @@ blocks found, and what comes next.</p>
 <blockquote>
 <p>How few instructions can we execute per pointer?</p>
 </blockquote>
-<p>Your research asks:</p>
+<p>Our research asks:</p>
 <blockquote>
 <p>How should we arrange the information so that the CPU can follow millions of pointers with as little waiting as possible?</p>
 </blockquote>
@@ -2069,11 +2069,11 @@ and on <a href="https://github.com/lmmx/mibz2/issues/79">#79</a>.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=22875d5508a7"></script>
+        <script src="../../assets/javascripts/bench.js?v=56d5fffc86d3"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=22875d5508a7"></script>
+        <script src="../../assets/javascripts/couriers.js?v=56d5fffc86d3"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=22875d5508a7"></script>
+        <script src="../../assets/javascripts/blog.js?v=56d5fffc86d3"></script>
       
     
   </body>

@@ -44,17 +44,17 @@ Path: 0 → 3 → 6 → 4 → 1 → 5 → 2
 
 Each card contains the number of the next card. The highlighted card is the current position: follow the pointers from card 0 until every card has been visited.
 
-Your decoder uses a table called the T-vector, which is essentially a much larger, more sophisticated collection of such cards.
+mibz2's decoder uses a table called the T-vector, which is essentially a much larger, more sophisticated collection of such cards.
 
 For each position, it stores:
 
 - Where to go next.
 - The character associated with that position.
-- A marker used by your cooperative traversal algorithm.
+- A marker used by mibz2's cooperative traversal algorithm.
 
 At maximum bzip2 block size, this table occupies approximately 3.6 MB.
 
-mibz2's 32-lane implementation already tackles one major cost: instead of following one chain and repeatedly waiting for memory, you follow many independent chains at once.
+mibz2's 32-lane implementation already tackles one major cost: instead of following one chain and repeatedly waiting for memory, it follows many independent chains at once.
 
 That's memory-level parallelism (MLP).
 
@@ -66,7 +66,7 @@ But then we asked a different question.
 
 ## 2\. The cards aren't arbitrary
 
-Suppose I give you these two sequences of destinations:
+Take these two sequences of destinations:
 
 Two groups of eight pointers
 
@@ -80,7 +80,7 @@ You only need to remember:
 
 One starting number replaces eight separate numbers.
 
-The permutation your inverse BWT decoder follows, called Ψ (psi), isn't a completely arbitrary permutation.
+The permutation mibz2's inverse BWT decoder follows, called Ψ (psi), isn't a completely arbitrary permutation.
 
 Because of how the BWT is constructed, it consists of increasing sequences of positions.
 
@@ -132,7 +132,7 @@ And that creates our main tension:
 
 ## 4\. What the census found
 
-Initially, we had no idea how well these representations would fit your actual BWT data.
+Initially, we had no idea how well these representations would fit real BWT data.
 
 Perhaps the values were increasing but widely scattered, making compression awkward.
 
@@ -140,7 +140,7 @@ So Claude wrote a census program to inspect them.
 
 It found more structure than the theory alone guarantees.
 
-What Claude reported about your benchmark corpus
+What Claude reported about our benchmark corpus
 
 These two percentages overlap: they aren't two separate populations.
 
@@ -166,7 +166,7 @@ Modern CPUs don't fetch arbitrary isolated bytes from main memory one at a time.
 
 Imagine a cache line as a little tray of data.
 
-If your next pointer lives in that tray, the processor can fetch the tray and extract what it needs.
+If the next pointer lives in that tray, the processor can fetch the tray and extract what it needs.
 
 The first design asks:
 
@@ -174,7 +174,7 @@ The first design asks:
 
 The fixed-cache-line proposal
 
-Your current representation uses four bytes per pointer.
+mibz2's current representation uses four bytes per pointer.
 
 So the new design could halve the navigation table's storage, before exception overhead.
 
@@ -182,7 +182,7 @@ And crucially, the record can be found immediately from the current row number.
 
 No searching for where the record was stored.
 
-This is very important because your existing decoder's greatest strength is how quickly it can issue independent memory requests.
+This is very important because mibz2's greatest strength is how quickly it can issue independent memory requests.
 
 A compact representation that introduces multiple dependent searches could destroy that advantage.
 
@@ -216,13 +216,13 @@ The attraction is real, but so is the risk: whenever we need the second record, 
 
 ## 7\. Why a smaller table could make mibz2 faster
 
-Suppose you're decoding one full-sized bzip2 block.
+Suppose mibz2 is decoding one full-sized bzip2 block.
 
-Your current T-vector is 3.6 MB.
+Its T-vector for that block is 3.6 MB.
 
 But mibz2 can work on multiple blocks concurrently.
 
-If you have several full-size blocks in flight, their tables compete for space in the CPU's shared cache.
+With several full-size blocks in flight, their tables compete for space in the CPU's shared cache.
 
 Eight simultaneous full-block tables
 
@@ -240,7 +240,7 @@ Even if each individual pointer is slightly more expensive to decode, the overal
 
 This is the same kind of trade-off Julian Seward studied in 2001.
 
-But your work adds modern multicore concurrency and 32-lane traversal.
+But mibz2 adds modern multicore concurrency and 32-lane traversal.
 
 The goal is not to have the smallest possible table. It's to make the whole machine finish decoding sooner.
 
@@ -252,7 +252,7 @@ There are three substantial unanswered questions.
 
 **Second, how expensive is construction?** The compressed table must be built from the BWT before it can be traversed. A representation that makes traversal faster but takes twice as long to build might lose overall.
 
-**Third, does the 77.6% translation property hold broadly?** We know it appears in your benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.
+**Third, does the 77.6% translation property hold broadly?** We know it appears in our benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.
 
 The agents have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.
 
@@ -264,7 +264,7 @@ The agents have enough evidence to investigate these questions seriously, but no
 | Actual benchmark data contains abundant consecutive-position groups | Measured by Claude's census, as reported |
 | Fixed 64-byte records can represent the overwhelming majority of measured groups | Strongly supported by the census; complete encoding still needs validation |
 | A two-tier directory could shrink storage further | New design hypothesis |
-| Reduced working sets can improve cache residency | Supported by your existing performance measurements |
+| Reduced working sets can improve cache residency | Supported by mibz2's existing performance measurements |
 | Either compressed design will beat the current decoder | Unknown |
 
 And the most important distinction of all:
@@ -283,7 +283,7 @@ The BWT already contains the information from which those answers can be derived
 
 Succinct data structures teach us to exploit that fact.
 
-But your work adds an interesting twist:
+But our work adds an interesting twist:
 
 > Rather than pursuing the absolutely smallest possible encoding, we're looking for a carefully chosen amount of redundancy that allows the CPU to recover answers quickly.
 
@@ -299,7 +299,7 @@ A systems programmer might ask:
 
 > How few instructions can we execute per pointer?
 
-Your research asks:
+Our research asks:
 
 > How should we arrange the information so that the CPU can follow millions of pointers with as little waiting as possible?
 
