@@ -5,26 +5,28 @@ disk to hashed output, every block's and stream's CRC checked, wall, CPU-seconds
 RSS recorded. The arms, interleaved by round (rotated and reversed), back to back
 (`--settle 0`, as a release runs), unpinned as users run them:
 
-- `mibz2`: today's decoder at T workers;
+- `mibz2-workers`: the decoder before the policy, T workers of a block each
+  (`Plan::Workers`; the `mibz2` arm until the policy became the default);
 - `mibz2-coop2`, `mibz2-coop3`: the cooperative decoder, T cores as T/2 or T/3 teams;
-- `mibz2-auto`: the cooperative policy (`Plan::for_threads`), what the release would make
-  the default: today's workers below 6 physical cores, else teams of 2 capped by the L3.
+- `mibz2-auto`: the cooperative policy (`Plan::for_threads`), the default since it passed
+  here (what `mibz2` runs): workers below 6 physical cores, else teams of 2 capped by the
+  L3.
 
 Then a second, smaller pass in a process limited to one CPU on each of 4 physical cores
-(a 4-core machine): `mibz2` against `mibz2-auto` at 4 threads, where the policy must choose
-today's decoder and be no slower.
+(a 4-core machine): `mibz2-workers` against `mibz2-auto` at 4 threads, where the policy
+must choose workers and be no slower.
 
 The release gates (registered before the run: the coop journal §17, the integration plan's
 amendment; the user's, 2026-10-29), on the `mibz2-auto` arm at the machine's own thread
-count (all its CPUs, as Python's default is) against `mibz2` at 4 workers (production's
-peak on the i9), paired by round:
+count (all its CPUs, as Python's default is) against `mibz2-workers` at 4 (the decoder
+before the policy at its peak on the i9), paired by round:
 - **throughput:** the paired ratio's geometric mean at least 1.15, its 95% lower bound
   above 1.05;
 - **bytes:** every run of every arm the same output hash;
 - **peak RSS:** at most 1.15 x the reference's median;
 - **CPU-seconds:** at most 1.5 x the reference's median;
-- **the smaller machine:** `mibz2-auto` at 4 threads on 4 cores no slower than `mibz2`
-  there (the paired ratio's 95% lower bound at least 0.97).
+- **the smaller machine:** `mibz2-auto` at 4 threads on 4 cores no slower than
+  `mibz2-workers` there (the paired ratio's 95% lower bound at least 0.97).
 A smaller but reproducible gain (a lower bound above 1.00) is reported as such, for the
 user to decide on; the gates are not moved.
 
@@ -48,7 +50,8 @@ AB = "target/release/examples/ab"
 T975 = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179,
         2.160, 2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064,
         2.060, 2.056, 2.052, 2.048, 2.045, 2.042]  # fmt: skip
-ARMS = "mibz2,mibz2-coop2,mibz2-coop3,mibz2-auto"
+REF = "mibz2-workers"
+ARMS = f"{REF},mibz2-coop2,mibz2-coop3,mibz2-auto"
 
 
 def geo_ci(ratios):
@@ -150,7 +153,7 @@ def main():
                 "run",
                 small_raw,
                 "--arms",
-                "mibz2,mibz2-auto",
+                f"{REF},mibz2-auto",
             ]
             sargv += [
                 "--threads",
@@ -172,12 +175,12 @@ def main():
     hashes |= {r["hash"] for r in small if not r.get("err")}
     errors += [r for r in small if r.get("err")]
     same = len(hashes) == 1 and not errors
-    rows = table(recs, ("mibz2", 4))
-    prod = [r for r in rows if r["arm"] == "mibz2"]
+    rows = table(recs, (REF, 4))
+    prod = [r for r in rows if r["arm"] == REF]
     pbest = max(prod, key=lambda r: r["mb_s"]) if prod else None
-    rows_best = table(recs, ("mibz2", pbest["threads"])) if pbest else []
+    rows_best = table(recs, (REF, pbest["threads"])) if pbest else []
     auto = next((r for r in rows if r["arm"] == "mibz2-auto" and r["threads"] == ncpu), None)
-    srows = table(small, ("mibz2", 4)) if small else []
+    srows = table(small, (REF, 4)) if small else []
     sauto = next((r for r in srows if r["arm"] == "mibz2-auto"), None)
 
     gates = []
@@ -213,7 +216,7 @@ def main():
     ]
     if a.note:
         lines += [f"- **Note:** {a.note}"]
-    lines += ["", "## The gates (mibz2-auto at all CPUs against mibz2 at 4 workers)", ""]
+    lines += ["", f"## The gates (mibz2-auto at all CPUs against {REF} at 4)", ""]
     lines += ["| gate | pass | measured |", "|---|---|--:|"]
     lines += [f"| {g} | {'yes' if ok else '**no**'} | {v} |" for g, ok, v in gates]
     if auto:
@@ -226,9 +229,9 @@ def main():
         )
         lines += ["", f"Verdict: {verdict}."]
     for title, rs in [
-        ("against mibz2 at 4 workers (p4)", rows),
+        (f"against {REF} at 4 (p4)", rows),
         (
-            f"against production's best here (mibz2 at {pbest['threads']})" if pbest else "",
+            f"against the workers' best here ({REF} at {pbest['threads']})" if pbest else "",
             rows_best,
         ),
     ]:
@@ -245,7 +248,7 @@ def main():
                 f"| {r['won']}/{r['rounds']} | {r['rss_mb']:.0f} MB | {r['rss']:.2f} | {r['cpu_s']:.2f} | {r['cpu']:.2f} |"
             )
     if srows:
-        lines += ["", f"## A 4-core machine (CPUs {small_cpus}), against mibz2 at 4 there", ""]
+        lines += ["", f"## A 4-core machine (CPUs {small_cpus}), against {REF} at 4 there", ""]
         lines += [
             "| arm | MB/s | paired ratio (95%) | RSS ratio | CPU ratio |",
             "|---|--:|--:|--:|--:|",

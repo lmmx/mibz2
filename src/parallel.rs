@@ -104,10 +104,15 @@ struct Reader {
 }
 
 impl StreamDecoder {
-    /// A decoder on `threads` workers (at least 1) with `slots` blocks in flight (at least
-    /// `threads`), on kernels `k`
+    /// A decoder on `threads` threads (at least 1) with `slots` blocks in flight (at least
+    /// `threads`), on kernels `k`, spending them as the cooperative policy plans
+    /// (`Plan::for_threads`): `threads` workers of a block each, or, on 6 or more physical
+    /// cores, teams of 2 sharing each block, with the window scaled to the teams (`window`).
+    /// `planned(Plan::Workers(threads), ..)` is the decoder before the policy.
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
-        Self::with_inverse::<super::bwt::Segmented>(threads, slots, k)
+        let threads = threads.max(1);
+        let plan = Plan::for_threads(threads);
+        Self::planned(plan, window(plan, threads, slots), k)
     }
 
     /// A decoder spending its threads as `plan` says: production's workers, or teams of
@@ -116,7 +121,7 @@ impl StreamDecoder {
     /// production workers.
     pub fn planned(plan: Plan, slots: usize, k: Kernels) -> StreamDecoder {
         use super::bwt::{Cooperative, Segmented};
-        match plan {
+        let mut dec = match plan {
             Plan::Workers(n) => Self::with_inverse::<Segmented>(n, slots, k),
             Plan::Teams { teams, k: 2 } => Self::with_inverse::<Cooperative<2>>(teams, slots, k),
             Plan::Teams { teams, k: 3 } => Self::with_inverse::<Cooperative<3>>(teams, slots, k),
@@ -124,7 +129,9 @@ impl StreamDecoder {
             Plan::Teams { teams, k: t } => {
                 Self::with_inverse::<Segmented>(teams.max(1) * t.max(1), slots, k)
             }
-        }
+        };
+        dec.threads = plan.threads();
+        dec
     }
 
     /// `new` with the inverse-BWT kernel `I` (bwt::InverseBwt), so the whole decoder can
@@ -178,6 +185,7 @@ impl StreamDecoder {
         }
     }
 
+    /// The threads decoding blocks: the workers, or the teams' threads in all
     pub fn threads(&self) -> usize {
         self.threads
     }
@@ -486,8 +494,10 @@ pub const COOP_MIN_CORES: usize = 6;
 const FULL_TABLE: f64 = 3.6e6;
 
 impl Plan {
-    /// The cooperative decoder's policy for a caller's `threads`, on this machine (to be
-    /// validated by the decoder A/B, bench/coop_decoder.py, before it becomes the default):
+    /// The cooperative decoder's policy for a caller's `threads`, on this machine, and the
+    /// default (`StreamDecoder::new`, so `BzReader::parallel` and `decode_parallel`), as
+    /// validated by the decoder A/B (bench/coop_decoder.py; on the i9,
+    /// docs/journal/2026-10-29-cooperative-decoder.md):
     /// - where the machine's topology can't be read (only Linux's is, so far), or fewer
     ///   than `COOP_MIN_CORES` physical cores serve the threads, production's `threads`
     ///   workers, as today;
@@ -511,6 +521,15 @@ impl Plan {
             Plan::Workers(n) => n.max(1),
             Plan::Teams { teams, k } => teams.max(1) * k.max(1),
         }
+    }
+}
+
+/// The blocks in flight for `plan` when a caller asked for `slots` on `threads` threads:
+/// as many a worker as asked (a team counting as one worker), at least one each
+fn window(plan: Plan, threads: usize, slots: usize) -> usize {
+    match plan {
+        Plan::Workers(_) => slots,
+        Plan::Teams { teams, .. } => (slots.saturating_mul(teams) / threads.max(1)).max(teams),
     }
 }
 
@@ -608,6 +627,30 @@ mod plan_tests {
         );
         let p = Plan::Teams { teams: 4, k: 2 };
         assert_eq!((p.workers(), p.threads()), (4, 8));
+    }
+
+    /// The default's window: what the A/B ran (2 a team at 2 a thread asked), and at least
+    /// a block a team
+    #[test]
+    fn the_window() {
+        let t4 = Plan::Teams { teams: 4, k: 2 };
+        assert_eq!(window(Plan::Workers(4), 4, 8), 8);
+        assert_eq!(window(t4, 20, 40), 8);
+        assert_eq!(window(t4, 8, 16), 8);
+        assert_eq!(window(t4, 20, 1), 4);
+        assert_eq!(window(t4, 20, usize::MAX), usize::MAX / 20);
+    }
+
+    /// The default decoder's threads are the plan's for this machine
+    #[test]
+    fn the_default_is_the_plan() {
+        for t in [1, 4, 8] {
+            let dec = StreamDecoder::new(t, 2 * t, Kernels::detect());
+            assert_eq!(dec.threads(), Plan::for_threads(t).threads());
+            dec.close();
+            let e = dec.read(&mut [0; 16]).unwrap_err();
+            assert_eq!(e.kind, ErrorKind::Empty);
+        }
     }
 
     /// Whatever this machine is, the plan is one of the two shapes and never more threads

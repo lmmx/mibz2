@@ -93,7 +93,7 @@ for span in mibz2::scan(&data) {
 |---|---|
 | `decode`, `decode_parallel(data, threads)` | a whole .bz2 in memory |
 | `BzReader::new(r)`, `BzReader::parallel(r, threads)`, `parallel_with(r, threads, slots, kernels)` | a `Read` adaptor; a bad stream is an `io::Error` (`InvalidData`) wrapping `mibz2::Error` |
-| `StreamDecoder::new(threads, slots, kernels)` | the push form: `write` compressed chunks from one thread, `read` decoded bytes from another, `close`, `cancel`; at most `slots` blocks in flight |
+| `StreamDecoder::new(threads, slots, kernels)`, `planned(plan, slots, kernels)` | the push form: `write` compressed chunks from one thread, `read` decoded bytes from another, `close`, `cancel`; at most `slots` blocks in flight |
 | `scan(data)` → `BlockSpan { index, start_bit, end_bit, crc, stream, level }` | block boundaries, without decoding |
 | `decode_blocks(data, start_bit, end_bit, level, kernels, out)` → `Range` | a range of whole blocks, each CRC checked |
 | `Error { kind: ErrorKind, block, bit }` | what is wrong with the input, and where |
