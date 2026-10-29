@@ -1444,9 +1444,12 @@ decoder-level results; end-to-end pipeline results are in
 bz2ng have no thread count, so they never decode on 4 threads. At 4 threads, their figures are
 their 1-thread runs against mibz2's at 4 threads: in the chart, hollow points with
 dashed whiskers, under "single-threaded (1 thread)"; in the tables, marked ¹.</p>
-<p><strong>mibz2's inverse BWT against bz2ngrs's.</strong> Below the decoders' tables, both kernels run
-on the same Wikidata blocks, with the build, the walk and the output's assembly timed
-apart. bz2ngrs and mibz2 store the same successor link in each 32-bit entry, but a
+<p><strong>mibz2's inverse BWT against bz2ngrs's and libsais's.</strong> Below the decoders' tables, the
+kernels run on the same Wikidata blocks, with the build, the walk and the output's assembly
+timed apart where a kernel allows it. libsais 2.12.1 (Ilya Grebnov) is the fastest inverse
+BWT measured here. It is a library of BWT algorithms, not a bzip2 decoder, so it appears in
+that table only, never in the chart. Its build and walk happen inside one call, so it
+shows a total. bz2ngrs and mibz2 store the same successor link in each 32-bit entry, but a
 different byte beside it: bz2ngrs the row's first-column byte, mibz2 its last-column
 byte (lbzip2's packing). The table says which phase a whole-decoder difference comes
 from (<a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-bz2ngrs.md">the study</a>).</p>
@@ -2582,7 +2585,7 @@ stands for them); and bz2k, mibz2's own prototype, which it replaced.</p>
 </table>
 <p>The walk row is the stage, the same in every build; its implementation is each build's own, as its <code>phases</code> names it: mibz2, “walk, room (used)”.</p>
 <h2 id="the-inverse-bwt-alone-mibz2s-kernel-against-bz2ngrss-phase-by-phase-median-nsb">The inverse BWT alone: mibz2's kernel against bz2ngrs's, phase by phase (median ns/B)<a class="headerlink" href="#the-inverse-bwt-alone-mibz2s-kernel-against-bz2ngrss-phase-by-phase-median-nsb" title="Permanent link">&para;</a></h2>
-<p>Both kernels on the same Wikidata blocks' last columns, on one pinned CPU, 10 passes of the file in decode order, the kernels' order alternating (<code>kernels</code>, bench/alternatives: bz2ngrs's src/bwt.rs as it is, its steps timed apart). Every block's bytes are checked the same from both, and its CRC, before the timed passes. mibz2's build takes its byte counts from MTF; bz2ngrs's counts them itself, so its build row holds that count. A ratio above 1× is bz2ngrs taking longer. Diagnostic only: the decoders' own figures are the tables above.</p>
+<p>The kernels on the same Wikidata blocks' last columns, on one pinned CPU, 10 passes of the file in decode order, the kernels' order rotating (<code>kernels</code>, bench/alternatives: bz2ngrs's src/bwt.rs as it is, its steps timed apart). Every block's bytes are checked the same from every kernel, and its CRC, before the timed passes. mibz2's build takes the byte counts from MTF; bz2ngrs's counts them itself, so its build row holds that count. A ratio above 1× is the other kernel taking longer than mibz2's. Diagnostic only: the decoders' own figures are the tables above.</p>
 <table>
 <thead>
 <tr>
