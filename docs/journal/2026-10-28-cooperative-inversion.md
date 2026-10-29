@@ -2188,3 +2188,80 @@ just bench-coop-fused
 ```
 
 It takes about four minutes. Upload `coop-*.md`, its `.jsonl`, and `coop-ab-*.md`.
+
+### 16.4 The result (measured, the i9, 98abd74, 2026-10-29): a pass, far above the prediction
+
+The run was `coop-20261029T143618Z` (with `coop-ab-20261029T143657Z`; the files are beside this journal). It ran 20 rounds, every thread pinned and none misplaced, at load 0.98.
+
+The first attempt stopped before any round. `bench/coop.sh`'s fit check did not know the `x` kind: `x3x3` read as N = "x3", an unbound variable. 98abd74 fixed it; the arms, kernels and criteria are unchanged.
+
+`fused_check` passed first: 838,826,228 words, every block at k = 1–4, the fused table the given build's word for word. In the grid, every arm's output was checked against production's.
+
+**The grid, with the MTF stage outside the timing:**
+
+| comparison | paired MB/s, mean ±95% (min–max) | rounds won | build phase | walk (control) | predicted MB/s | predicted build |
+|---|--:|--:|--:|--:|--:|--:|
+| **x3x3 against q3x3** | **1.102 ±0.012** (1.029–1.135) | 20/20 | **1.313 ±0.033** | 0.998 ±0.006 | 1.02–1.06 | 1.04–1.12 |
+| x4x2 against q4x2 | 1.111 ±0.015 (1.057–1.201) | 20/20 | 1.408 ±0.012 | 0.975 ±0.019 | 1.01–1.05 | 1.03–1.10 |
+| x4x1 against q4x1 | 1.110 ±0.012 (1.053–1.149) | 20/20 | 1.437 ±0.012 | 0.989 ±0.012 | 0.99–1.02 | 1.00–1.04 |
+
+**A worker's milliseconds a round** (medians; the savings are paired, mean ±95%):
+
+| arm | build | walk | round | build saved by fusion | round saved |
+|---|--:|--:|--:|--:|--:|
+| q3x3 → x3x3 | 37.8 → 28.3 | 57.9 → 58.2 | 95.9 → 86.9 | 8.92 ±0.79 | 8.86 ±1.00 |
+| q4x2 → x4x2 | 40.2 → 28.6 | 61.6 → 63.4 | 102.4 → 92.3 | 11.79 ±0.41 | 10.29 ±1.31 |
+| q4x1 → x4x1 | 54.6 → 38.1 | 101.8 → 103.6 | 157.1 → 141.9 | 16.64 ±0.40 | 15.65 ±1.60 |
+| p4 (production) | 37.2 | 105.2 | 142.9 | | |
+
+**Against #81's criteria, as registered (§16.2):**
+1. **3x3's build is at least 1.15× its twin:** 1.313, interval 1.28–1.35. **Pass.**
+2. **The table is identical:** `fused_check` on every block at k = 1–4, and every arm's output in the grid. **Pass.**
+3. **For the research kernel:** x3x3/q3x3's MB/s interval excludes 1 (1.090–1.114), with the walk control within ±3% (0.998). **Pass.**
+
+**So #81's cooperative test passes.** The fused build becomes the research kernel's build for later experiments. The single-core half stays as measured: #93 at 1.027× the build on CI, below its 1.03 floor. These are separate results, and both stand.
+
+**The predictions missed, all of them high.** They are left as registered:
+- §16.2 expected the saving to come from one removed `pool.run` (2–2.5 ms a round) and a copy pass the size of #93's (2–3%).
+- The build saved 8.9 ms a round at 3x3.
+- Every arm gained, including x4x1, which has no barrier inside a block to remove. So synchronisation is not the main source.
+
+**Where the saving came from: the given build's overhead, not the barrier alone.**
+- **In the grid at k = 1:** q4x1's build takes 54.6 ms a worker against production's 37.2 ms (p4), although both make the same two passes over the table:
+  - a copy of L into the table;
+  - a read-modify-write scatter.
+
+  The fused build at k = 1 takes 38.1 ms, within 2% of production's (−0.61 ±0.51 ms against p4).
+- **On one thread, outside the grid (a scratch timing on the 4-core VM, two runs, indicative only; not committed):**
+
+  | build | ns/B, full blocks | ns/B, all 431 blocks in order |
+  |---|--:|--:|
+  | production's `build` | 0.92–1.12 | 1.00 |
+  | the given build, k = 1 | 1.49–1.50 | 1.65–1.77 |
+  | the fused build, k = 1 | 1.04–1.16 | 1.50–1.56 |
+
+  - **The given build is 1.35–1.6× production's on one thread.** That is an overhead of its own implementation: the same two passes are slower than production's. Its generated code has not been read, so the cause is not yet named.
+  - **Fusion removes that overhead** and lands at about production's single-core speed, not beyond it. That agrees with #93's 1.027× and with x4x1 against p4 (1.009 ±0.012 overall).
+  - **Both research builds size the table with `resize(n, 0)`.** In corpus order, a full block after a tiny one zero-fills the table first. Production's build appends instead (`clear` then `extend`), so it doesn't. This is the gap between the two columns, and it falls on q and x alike, so it does not bias x against q.
+- **So the ratios against q are real, but they are not all fusion.** Part of each is the research build reaching production's codegen. The figure a decoder can use is x against production: x3x3 is 1.643 ±0.014 of p4, against q3x3's 1.491.
+
+**What this does not say:**
+- **It is not a check on #93.** §16.1 called x4x1 against q4x1 "a check on #93's 1.027". It isn't one, because its twin is not production's build.
+- **It is not a decoder figure (§8.4):**
+  - the checkpoints are given free in both q and x;
+  - the MTF stage is outside the timing.
+
+  With the MTF stage making the checkpoints and timed in series (§15's `f` arms, which use q's build), the fused build's net is unmeasured.
+- **The walk control at 4x2 is marginal.** Its mean, 0.975, is within ±3%, but its interval reaches 0.956. At 3x3 the walk is 0.998 ±0.006.
+
+**What follows:**
+- **No production change.** Production has no cooperative build, so there is nothing to fuse in `src/`.
+  - The fused build is a component of the cooperative decoder, should it be integrated.
+  - It is not a change to production's single-core build, which is already about as fast (#93).
+- **The minimum before any production proposal is the decoder A/B (§8.4).** It needs the cooperative path in `src/` behind an option:
+  - the MTF stage making the checkpoints (§15);
+  - the fused build;
+  - the room walk on k threads.
+
+  It would be measured end to end on the i9: a `.bz2` file to verified output, CRCs checked, against production at the same core count. That is an integration project, not a further arm of this experiment.
+- **Recorded, not started:** the given build's own overhead, its codegen read against production's `build`, and how the research kernel should size its table (it writes every slot, so it need not zero-fill).
