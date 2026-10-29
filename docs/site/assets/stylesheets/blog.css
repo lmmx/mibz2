@@ -1,0 +1,98 @@
+/* The blog's figures (blog/*.md): a framed figure holding a title, an inline SVG and a
+   caption. Colours are roles, light by default and stepped for the dark scheme (slate). */
+.bf-fig {
+  --bf-ink: var(--md-default-fg-color);
+  --bf-muted: var(--md-default-fg-color--light);
+  --bf-frame: #e1e0d9;
+  --bf-surface: #f4f3ef;
+  --bf-track: #e9e8e3;
+  --bf-green: #1f9a72;
+  --bf-green-ink: #12805a;
+  --bf-green-tint: #dcefe7;
+  --bf-steel: #4687a8;
+  --bf-steel-tint: #d6e5ec;
+  --bf-blue: #4a8fe8;
+  --bf-blue-tint: #dce9fa;
+}
+[data-md-color-scheme="slate"] .bf-fig {
+  --bf-frame: #34342f;
+  --bf-surface: #23231f;
+  --bf-track: #34342f;
+  --bf-green: #22a87c;
+  --bf-green-ink: #4fd1a1;
+  --bf-green-tint: #1b3a2f;
+  --bf-steel: #5199bd;
+  --bf-steel-tint: #1f3440;
+  --bf-blue: #3d86e0;
+  --bf-blue-tint: #1d2f47;
+}
+
+.md-typeset .bf-fig {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  margin: 1.4rem 0;
+  padding: 0.8rem 0.9rem 0.7rem;
+  border: 1px solid var(--bf-frame);
+  border-radius: 0.6rem;
+  text-align: left;
+}
+.md-typeset .bf-fig .bf-title {
+  margin: 0 0 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.md-typeset .bf-fig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--md-text-font-family);
+}
+.md-typeset .bf-fig figcaption {
+  max-width: none;
+  margin: 0.7rem 0 0;
+  color: var(--bf-muted);
+  font-size: 0.64rem;
+  font-style: normal;
+}
+
+/* text */
+.bf-fig .bf-t { fill: var(--bf-ink); font-size: 13px; }
+.bf-fig .bf-t-strong { fill: var(--bf-ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-t-green { fill: var(--bf-green-ink); font-size: 14px; font-weight: 600; }
+.bf-fig .bf-ts { fill: var(--bf-ink); font-size: 14px; font-weight: 600; }
+.bf-fig .bf-tm { fill: var(--bf-muted); font-size: 11.5px; }
+.bf-fig .bf-tl { fill: var(--bf-muted); font-size: 15px; }
+.bf-fig .bf-ttiny { fill: var(--bf-ink); font-size: 10px; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-num { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-big { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-big-green { fill: var(--bf-green-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* shapes */
+.bf-fig .bf-card,
+.bf-fig .bf-cell,
+.bf-fig .bf-panel,
+.bf-fig .bf-pill { fill: var(--bf-surface); }
+.bf-fig .bf-pill { stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-card-hi,
+.bf-fig .bf-pill-hi { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 2; }
+.bf-fig .bf-cell-hi { fill: var(--bf-green-tint); }
+.bf-fig .bf-box { fill: none; stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-slot { fill: var(--bf-steel-tint); }
+.bf-fig .bf-track { fill: var(--bf-track); }
+.bf-fig .bf-green { fill: var(--bf-green); }
+.bf-fig .bf-steel { fill: var(--bf-steel); }
+.bf-fig .bf-bar { fill: var(--bf-blue); }
+.bf-fig .bf-bar-est { fill: var(--bf-blue-tint); stroke: var(--bf-blue); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.bf-fig .bf-dot { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-dot-hi { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1.5; }
+
+/* lines */
+.bf-fig .bf-rule,
+.bf-fig .bf-axis { stroke: var(--bf-frame); stroke-width: 1; fill: none; }
+.bf-fig .bf-grid { stroke: var(--bf-frame); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+.bf-fig .bf-arrow,
+.bf-fig .bf-link,
+.bf-fig .bf-icon { stroke: var(--bf-muted); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.bf-fig .bf-icon-green { stroke: var(--bf-green); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }

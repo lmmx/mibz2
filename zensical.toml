@@ -6,6 +6,7 @@ extra_css = [
   "assets/stylesheets/extra.css",
   "assets/stylesheets/bench.css",
   "assets/stylesheets/couriers.css",
+  "assets/stylesheets/blog.css",
 ]
 extra_javascript = [
   "assets/javascripts/bench.js",
