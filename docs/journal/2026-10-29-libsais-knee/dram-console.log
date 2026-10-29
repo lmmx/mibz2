@@ -1,0 +1,29 @@
+CARGO_TARGET_DIR=target/coop cargo build --release --example dram
+   Compiling proc-macro2 v1.0.107
+   Compiling mibz2 v0.2.0 (/home/louis/dev/mibz2-coop)
+   Compiling quote v1.0.47
+   Compiling libm v0.2.16
+   Compiling thiserror v2.0.21
+   Compiling libc v0.2.191
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling syn v3.0.9
+   Compiling fearless_simd v1.2.0
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 11.13s
+python3 bench/dram.py
+dram: walk 1 threads: read 8.5 + write 0.0 = 8.5 GB/s
+dram: walk 2 threads: read 16.2 + write 0.1 = 16.2 GB/s
+dram: walk 4 threads: read 25.7 + write 0.3 = 26.0 GB/s
+dram: walk 6 threads: read 26.3 + write 0.4 = 26.7 GB/s
+dram: walk 8 threads: read 26.2 + write 0.4 = 26.6 GB/s
+dram: walk 10 threads: read 26.0 + write 0.4 = 26.4 GB/s
+dram: copy 1 threads: read 13.2 + write 17.5 = 30.7 GB/s
+dram: copy 2 threads: read 16.3 + write 18.1 = 34.4 GB/s
+dram: copy 4 threads: read 16.5 + write 17.1 = 33.7 GB/s
+dram: copy 6 threads: read 16.1 + write 16.4 = 32.5 GB/s
+dram: copy 8 threads: read 15.9 + write 15.9 = 31.8 GB/s
+dram: copy 10 threads: read 15.7 + write 15.7 = 31.4 GB/s
+dram: wrote dram-20261029T215028Z.md and dram-20261029T215028Z.jsonl
