@@ -278,3 +278,31 @@ It runs in 1.3 s on the VM. `psi-census.md` is the output, `psi-census.jsonl` th
 - Does a run-record format (ψ = base + r) let the walk's common step be *cheaper* than today's while halving the table?
 - How does an alphabet-partitioned select (Barbay–Gagie–Navarro–Nekrich) map onto the cost classes?
 - Where do the corpus's tiny blocks come from, and does any bench figure average over them where it shouldn't?
+
+## 11. The two chatbots' final conclusions (stored verbatim), and what the census has answered
+
+At the user's request ("State your conclusions, I'll have them recorded"), both chatbots wrote a final statement. They are kept verbatim and unedited beside this entry:
+- `2026-10-29-succinct-review/conclusions-guardian.md`: the guardian chatbot's "Succinct-Structures Research Review — Final Conclusions";
+- `2026-10-29-succinct-review/conclusions-research.md`: the research chatbot's "Research conclusions: Succinct Data Structures for High-Performance Inverse BWT".
+
+Both are that chatbot's view, not measurements. They agree with each other and with this entry on:
+- the facts: ψ = LF⁻¹ is select over 256 sorted occurrence lists, and the information is ≈ nH₀;
+- the prior art;
+- the cost model (dependency depth, not operation count, with peak throughput at the best concurrency);
+- the candidates: 24-bit C first, the 16-bit FOR-14/EF-12 hybrid as an unscheduled sketch;
+- the sequence: #81's cooperative test, then #79's audit.
+
+**What the census (§9), run after they were written, has answered:**
+- **The guardian's §8 "next research measurement" and the research chatbot's question 2 are measured for this corpus:**
+  - FOR-14 holds 98.11% of rows, EF-12 1.40%, and exceptions 0.49% (boundary crossings 0.29%, spans too wide 0.21%);
+  - the effective size is 16.12 bits a row with exceptions stored at 24 bits.
+  
+  By the guardian's own rule ("if ordinary records rarely qualify... deprioritise"), the hybrid is *not* deprioritised. Its next step is the exact bit layout and the dependency-path audit, and only then a microbenchmark.
+- **The variation with alphabet and block size is not tested.** This corpus's working blocks are all full, with σ between 65 and 128. Another corpus is needed for that.
+- **The F-bucket boundary distribution,** part of the guardian's "#79 audit", is measured: at k = 5, 0.15% of rows are stepped for, and 93% of mixed windows hold one boundary. What remains of the audit is the lookup's generated code, and the `e` arm.
+- **One thing neither foresaw:** 77.6% of rows are in 32-row groups that are a single run in L, where ψ = base + r. A run-record format would decode with one add after the fetch.
+- **The research chatbot's confidence table** marks "the proposed 16-bit hybrid records are practical on real BWTs" as unproven. Their *size* is now shown for this corpus (98.6% of rows fit a 64-byte record). Their *speed* remains unproven.
+
+**Marks to keep in mind when reading them:**
+- Seward's paper was read by the research chatbot, not by the agent ("directly established by the paper" is relayed).
+- The mibz2 measurements they cite (the 14.4 MB knee, the ψ² / Precopy / move-structure negatives, #81's 1.027×) are ours, from the journals and CI.
