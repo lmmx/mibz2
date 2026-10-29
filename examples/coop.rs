@@ -11,7 +11,9 @@
 //!                                          (cooperative), wNxK (the same walk, the build
 //!                                          on one core), pNxK (N production workers; K 1)
 //!                                          or sNxK (libsais, with --cfg libsais), rNxK (the
-//!                                          cooperative arm, its walk in room passes: #77);
+//!                                          cooperative arm, its walk in room passes: #77),
+//!                                          qNxK (the r arm, its build given each range's
+//!                                          counts instead of counting them: #78's bound);
 //!                                          @S sets
 //!                                          a cooperative arm's segments a block (4x1@1024:
 //!                                          one core a block, with 4x2's segments)
@@ -68,6 +70,9 @@ const START: u32 = 1 << 31;
 const LINK: u32 = !START;
 const LANES: usize = 32;
 const SEGMENTS_A_THREAD: usize = 512;
+/// The stride of a block's count checkpoints (#78): a `q` arm's build ranges start and end
+/// on multiples of it, so each range's counts are two checkpoints' difference
+const CHECKPOINT: usize = 16 << 10;
 
 #[cfg(libsais)]
 #[link(name = "libsais_omp", kind = "static")]
@@ -304,8 +309,11 @@ struct Coop {
     next: Vec<usize>,
     /// a block's segments, if not 512 a thread (the equal-segment controls)
     segments: Option<usize>,
-    /// the walk in room passes (`coop_walk_room`, the `r` arms), else `coop_walk`
+    /// the walk in room passes (`coop_walk_room`, the `r` and `q` arms), else `coop_walk`
     room: bool,
+    /// the build given each range's counts from the block's checkpoints
+    /// (`coop_build_given`, the `q` arms), else `coop_build`, which counts them
+    given: bool,
     /// each thread's bytes walked in the last block, and the walk's imbalance summed over
     /// blocks (the busiest thread's bytes over the threads' mean) with its count
     share: Vec<std::sync::atomic::AtomicU64>,
@@ -367,6 +375,103 @@ fn coop_build(ll: &[u8], counts: &[u32; 256], pool: &Pool, c: &mut Coop) {
         }
         for b in 0..256 {
             h[b] = h4[0][b] + h4[1][b] + h4[2][b] + h4[3][b];
+        }
+    });
+    // each range's first slot in each bucket: the bucket's start, then the earlier ranges'
+    let mut cum = 0u32;
+    let mut starts = [0u32; 256];
+    for b in 0..256 {
+        starts[b] = cum;
+        cum += counts[b];
+    }
+    for j in 0..k {
+        for b in 0..256 {
+            let h = c.hist[j][b];
+            c.hist[j][b] = starts[b];
+            starts[b] += h;
+        }
+    }
+    pool.run(&|j| {
+        let r = range(j);
+        let ftab = unsafe { &mut *hist.get().add(j) };
+        let t = |k: usize| unsafe { &mut *tt.get().add(k) };
+        let mut i = r.start;
+        while i + 16 <= r.end {
+            let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
+            if a == b && a == a.rotate_left(8) {
+                let cb = ll[i] as usize;
+                let s = ftab[cb] as usize;
+                let base = (i as u32) << 8;
+                for jj in 0..16 {
+                    let e = t(s + jj);
+                    *e = (*e & 0xff) | (base + ((jj as u32) << 8));
+                }
+                ftab[cb] += 16;
+            } else {
+                for ii in i..i + 16 {
+                    let cb = ll[ii] as usize;
+                    let e = t(ftab[cb] as usize);
+                    *e = (*e & 0xff) | (ii as u32) << 8;
+                    ftab[cb] += 1;
+                }
+            }
+            i += 16;
+        }
+        for ii in i..r.end {
+            let cb = ll[ii] as usize;
+            let e = t(ftab[cb] as usize);
+            *e = (*e & 0xff) | (ii as u32) << 8;
+            ftab[cb] += 1;
+        }
+    });
+}
+
+/// `coop_build` given each range's counts, the one change of #78's first experiment: the
+/// ranges start and end on multiples of `CHECKPOINT`, so each range's counts are the
+/// difference of two of the block's checkpoints (`checkpoints[i]`, the counts of
+/// `ll[..i * CHECKPOINT]`; the block's own counts at its end), and the first pass only
+/// copies. The checkpoints are made outside the timing: this bounds what removing the
+/// recount buys, it is not what producing them would cost
+fn coop_build_given(
+    ll: &[u8],
+    counts: &[u32; 256],
+    checkpoints: &[[u32; 256]],
+    pool: &Pool,
+    c: &mut Coop,
+) {
+    let (n, k) = (ll.len(), pool.k);
+    // every entry is written in the first task before any is read: the length only
+    if c.tt.len() != n {
+        c.tt.resize(n, 0);
+    }
+    c.hist.resize(k, [0; 256]);
+    // a range's ends: k equal shares, each rounded to the nearest checkpoint
+    let edge = |j: usize| {
+        if j == k {
+            n
+        } else {
+            ((n * j / k + CHECKPOINT / 2) / CHECKPOINT * CHECKPOINT).min(n)
+        }
+    };
+    let range = |j: usize| edge(j)..edge(j + 1);
+    let at = |e: usize| {
+        if e == n {
+            counts
+        } else {
+            &checkpoints[e / CHECKPOINT]
+        }
+    };
+    let (tt, hist) = (P(c.tt.as_mut_ptr()), P(c.hist.as_mut_ptr()));
+    pool.run(&|j| {
+        let r = range(j);
+        let h = unsafe { &mut *hist.get().add(j) };
+        let dst = unsafe { std::slice::from_raw_parts_mut(tt.get().add(r.start), r.len()) };
+        for (d, &c) in dst.iter_mut().zip(&ll[r.clone()]) {
+            *d = c as u32;
+        }
+        let (lo, hi) = (at(r.start), at(r.end));
+        for b in 0..256 {
+            h[b] = hi[b] - lo[b];
         }
     });
     // each range's first slot in each bucket: the bucket's start, then the earlier ranges'
@@ -805,6 +910,9 @@ struct Block {
     ll: Vec<u8>,
     counts: [u32; 256],
     orig_ptr: u32,
+    /// the counts of `ll[..i * CHECKPOINT]` for each i with i * CHECKPOINT <= its length,
+    /// made here, outside every timing (the `q` arms' build reads them: #78's bound)
+    checkpoints: Vec<[u32; 256]>,
 }
 
 fn blocks(data: &[u8]) -> Vec<Block> {
@@ -814,10 +922,22 @@ fn blocks(data: &[u8]) -> Vec<Block> {
     while let Event::Block { symbols, .. } = sc.next(Vec::new()).unwrap() {
         let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
         mtf::mtf(&symbols, &mut ll, &mut counts, kern).unwrap();
+        let mut checkpoints = vec![[0u32; 256]];
+        let mut cum = [0u32; 256];
+        for chunk in ll.chunks(CHECKPOINT) {
+            for &c in chunk {
+                cum[c as usize] += 1;
+            }
+            if chunk.len() == CHECKPOINT {
+                checkpoints.push(cum);
+            }
+        }
+        assert_eq!(cum, counts, "the checkpoints' counts are the block's");
         v.push(Block {
             ll,
             counts,
             orig_ptr: symbols.orig_ptr,
+            checkpoints,
         });
     }
     v
@@ -847,7 +967,8 @@ impl Inv {
         let coop = || {
             Box::new(Coop {
                 segments,
-                room: kind == 'r',
+                room: kind == 'r' || kind == 'q',
+                given: kind == 'q',
                 ..Default::default()
             })
         };
@@ -903,7 +1024,11 @@ impl Inv {
                 (m, s.elapsed().as_secs_f64() - m)
             }
             Inv::Coop(pool, c, one) => {
-                coop_build(&b.ll, &b.counts, one.as_ref().unwrap_or(pool), c);
+                if c.given {
+                    coop_build_given(&b.ll, &b.counts, &b.checkpoints, pool, c);
+                } else {
+                    coop_build(&b.ll, &b.counts, one.as_ref().unwrap_or(pool), c);
+                }
                 let m = s.elapsed().as_secs_f64();
                 if c.room {
                     coop_walk_room(b.orig_ptr, pool, c, out);
@@ -1100,6 +1225,7 @@ fn parse_arm(s: &str) -> Arm {
         b's' => ('s', &s[1..]),
         b'w' => ('w', &s[1..]),
         b'r' => ('r', &s[1..]),
+        b'q' => ('q', &s[1..]),
         _ => ('c', s),
     };
     let (rest, segments) = match rest.split_once('@') {

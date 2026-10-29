@@ -1602,3 +1602,158 @@ use the measured figure for the phase they change, not an arm-to-arm one.
 - **Not done, deliberately:** retuning the walk's lanes or prefetch distance to win back
   the re-exposed stall. That would be a second change, measured on its own after the
   build's.
+
+## 13. #78, the build's recount: first an optimistic bound (pre-registered before it runs)
+
+Branch `research/coop-given`. The baseline is #77's room-walk kernel (the `r` arms). The
+frozen `c` kernel stays in the harness unchanged.
+
+### 13.1 The question, and why it comes in two stages
+
+At k > 1 the cooperative build's first pass counts each range's bytes, so that the scatter
+can find each range's slots. The block's counts are already known, from the MTF stage, but
+each range's are not.
+- **What the recount costs:** in r3x3, the first pass is 4.01 instructions and 2.93 cycles a
+  byte, against 1.36 and 0.84 at k = 1, where it only copies. So the recount is about **2.65
+  instructions and 2.1 cycles a byte**: about 31% of the build's 6.68 cycles a byte, and the
+  build is 45% of r3x3's time (§12.4).
+- **What removing it would need:** the decoder learns a block's length only when its MTF
+  stage ends, so ranges of exactly n/k bytes can't be counted as the bytes are made. But
+  **cumulative counts at a fixed stride can be.** At 16 KiB that is a 1 KiB copy every
+  16 KiB, and about 30 checkpoints (30 KiB) for this corpus's mean block of 486 KB. The k
+  ranges are then the k equal shares, each end rounded to the nearest checkpoint, and each
+  range's counts are the difference of two checkpoints.
+- **Stage 1 (this run) is the bound.** The checkpoints are made when the blocks are prepared,
+  outside every timing, and the `q` arms' build reads them (`coop_build_given`). That
+  measures what the build gains if the counts are free. **It is an optimistic bound, not a
+  deployable speedup.**
+- **Stage 2, only if the bound is worth it,** times the checkpoints' production in the MTF
+  stage, the stage that would make them, with their memory and the ranges' imbalance. It
+  then measures the net gain end to end. #78 isn't called a success on stage 1 alone.
+
+### 13.2 The change, the checks, the predictions
+
+**`coop_build_given`** (the `q` arms, for example `q3x3` and `q4x1`) is `coop_build` with two
+differences:
+- the ranges' ends are rounded to the nearest 16 KiB checkpoint;
+- the first pass copies only; each range's counts are two checkpoints' difference, 256
+  subtractions a range.
+
+The scatter, the room walk and everything else are unchanged. Nothing changes the lanes,
+the prefetch distance or the table's representation.
+
+**Checked on the VM** (indicative only):
+- **Output:** every block's output matches the frozen walk's hash, for q4x1, q1x3, q2x2,
+  q1x4, q3x1, a tail-only walk (`q1x2@40`) and growing buffers (`q1x3@100000`).
+- **The checkpoints:** when made, each block's cumulative counts are asserted equal to its
+  own counts.
+- **Machine code:** `coop_build`'s two closures, `coop_walk`'s and `coop_walk_room`'s
+  disassemble to the same instructions, addresses aside, in binaries built with and without
+  the change.
+
+**The predictions** (`just bench-coop-given`: r3x3, q3x3, r4x1, q4x1 and p4, 20 rounds
+paired):
+
+| | instructions a byte, build | build-phase ratio | MB/s ratio against the r twin |
+|---|--:|--:|--:|
+| q4x1 (k = 1: no recount to remove, the null control) | 9.28 ± 0.2 | 0.98–1.02 | **0.98–1.02** |
+| q3x3 | 11.92 → 9.3 ± 0.4 | 1.25–1.46 | **1.06–1.14** |
+
+**How the size is predicted:**
+- §12.4's lesson applies here: the prediction uses this phase's own cycles, not an
+  arm-to-arm elasticity.
+- If the build's wall time follows its summed cycles (6.68 → 4.59 a byte), the build phase
+  speeds up 1.46×. That is the top of the range.
+- Two things pull it down. The rounded ranges are unequal, by up to ±8 KiB on ~162 KB
+  shares, so the slowest thread governs each pass. And any memory latency the recount
+  overlapped would be exposed. That gives the bottom of the range, 1.25.
+- With the build at 45% of r3x3's time, the build-phase range gives an overall 1.06–1.14
+  (1.10 at its middle).
+
+**What counts:**
+- **The bound's gain:** q3x3/r3x3's paired 95% interval excludes 1.
+- **The controls:**
+  - the walk phase's paired ratio stays within ±3% of 1;
+  - q4x1/r4x1 stays within 0.98–1.02. That is the null: at k = 1 the change only swaps one
+    copy of the counts for 256 subtractions.
+- **The profile** (`just bench-coop-profile --arms p4,r4x1,q4x1,r3x3,q3x3`) checks the
+  instructions. The mechanism is checked too: does the first pass fall to about k = 1's
+  1.36 instructions a byte?
+
+**The decision, fixed now:**
+- **Stage 2 goes ahead** only if the bound's lower 95% limit reaches **1.03** overall. Below
+  that, the checkpoints' cost and imbalance could plausibly take all of it.
+- **Stage 2's net gain must then show,** paired, on the same terms, before #78 is called a
+  success.
+- **Below 1.03:** the bound is recorded as a negative result, and the recount stays.
+- **Either way the figures are the inversion stage's, not the decoder's.** p4 is beside
+  the arms for reference, but the decoder's own A/B is a later and separate step (§8.4).
+
+### 13.3 The commands (the i9, with the browser and other busy programs closed)
+
+```
+git fetch origin research/coop-given
+git checkout --detach origin/research/coop-given
+just bench-coop-given
+just bench-coop-profile --arms p4,r4x1,q4x1,r3x3,q3x3
+```
+
+Upload `coop-ab-*.md`, `coop-*.md` with its `.jsonl`, and `coop-profile-*.md` with its
+`.tar.gz`.
+
+### 13.4 The bound (measured, the i9, fd06f3d, 2026-10-29): it clears 1.03; stage 2 goes ahead
+
+The runs were `coop-20261029T111247Z` (with `coop-ab-20261029T111324Z`), and the profile
+`coop-profile-20261029T111329Z`. The A/B ran 20 paired rounds, every thread pinned with none
+misplaced, and every block's output was checked.
+
+| | r twin | q | paired ratio, mean ±95% (min–max) | rounds won | build phase (changed) | walk phase (control) | predicted |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| q3x3 against r3x3 | 1905 MB/s | 2078 MB/s | **1.083 ±0.016** (1.027–1.130) | 20/20 | 1.223 ±0.020 | 0.993 ±0.015 | 1.06–1.14 |
+| q4x1 against r4x1 (null) | 1228 MB/s | 1247 MB/s | 1.015 ±0.020 (0.935–1.085) | 10/20 | 0.986 ±0.014 | **1.031 ±0.024** | 0.98–1.02 |
+
+**Against §13.2, as registered:**
+- **The bound's gain:** q3x3's interval is 1.067–1.099. It excludes 1, and its mean is
+  inside the predicted 1.06–1.14. **Its lower limit clears the 1.03 bar, so stage 2 goes
+  ahead.**
+- **The build phase, 1.223,** is just **below** its predicted 1.25–1.46. The overall
+  figure agrees with it: 1/(0.55 + 0.45/1.223) = 1.089.
+- **The walk control holds for q3x3** (0.993).
+- **The q4x1 null holds on throughput** (1.015, inside 0.98–1.02, its interval reaching 1).
+- **But q4x1's walk control moved, to 1.031 ±0.024, just past ±3%.** r4x1 and q4x1 run the
+  same walk code, so this is drift or interference, not the change. The run was noisier
+  than §12.4's: p4 ranged 1099–1451 MB/s across rounds, against 1319–1505 there, and
+  r3x3's median was 1908, against 2016. The paired design absorbs drift common to a round.
+  It can't absorb what lands on one arm. That's recorded against q4x1. q3x3's control
+  held in the same rounds.
+- **The ratios against p4 in this run** (q3x3 1.570, r3x3 1.449) come from a slower p4
+  than §12.4's. They aren't a new peak figure. The within-run q3x3/r3x3 pairing is the
+  result.
+
+**The profile: the recount went, as intended, and one unintended difference came with it.**
+
+| build, per byte | r4x1 | q4x1 | r3x3 | q3x3 |
+|---|--:|--:|--:|--:|
+| first pass, instructions (copy, and the recount at k > 1) | 1.37 | 1.36 | 4.05 | **1.30** |
+| first pass, cycles | 1.05 | 0.95 | 3.24 | 1.24 |
+| scatter, instructions | 7.94 | **6.95** | 7.93 | **6.98** |
+| scatter, cycles | 4.02 | 4.13 | 3.84 | 3.99 |
+| scatter, memory-stall cycles | 0.65 | 1.05 | 0.55 | 0.67 |
+| build instructions, total | 9.31 | 8.31 | 11.98 | **8.28** |
+
+- **The recount is gone:** q3x3's first pass fell to k = 1's level (1.30 against 1.36), as
+  §13.2 asked. That is −2.75 instructions and −2.0 cycles a byte.
+- **The scatter changed too, and it shouldn't have.** `coop_build_given` copies
+  `coop_build`'s scatter source unchanged, but it compiled differently: its closure is
+  0x6b2 bytes against 0x35f, and it retires about 1 instruction a byte fewer, at slightly
+  more cycles and memory-stall cycles. That's why the build total (8.28) is below the
+  predicted 9.3 ± 0.4.
+- **So the timed gain is the recount's removal, less a small scatter penalty.** q4x1's
+  build ratio, 0.986, shows the same penalty at k = 1, where nothing else changed. Stage 1
+  is therefore conservative about the recount, not inflated by the codegen.
+- **Build cycles in q3x3 fell 26%** (7.08 → 5.23 a byte). The build phase's wall time
+  fell less (1.223). That fits the rounded ranges' inequality (§13.2) and the scatter
+  penalty. It isn't separately measured.
+- **The walk is unchanged:** 17.1 instructions a byte in both, as it should be.
+- **A lead, not acted on:** the scatter compiles in two ways, with different instruction
+  counts. Which one is better is a question for later, on its own.
