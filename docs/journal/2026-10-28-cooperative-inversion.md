@@ -1083,9 +1083,12 @@ Each of §8.2's two readings leaves its mark, at a different contrast:
   - p4 averages 7.0 reads in flight a core, against 4.85 in 4x2 and 4.66 in 3x3.
   - Requests found the fill buffers full 0.24 times a cycle in p4, against 0.07–0.08 in
     every cooperative and libsais arm.
-  - So production's walk presses on each core's fill buffers, and adding cores to a table
-    relieves them. Within a team, a core's in-flight count is held down by its own
-    instructions, not by the fill buffers.
+  - So production's walk meets full fill buffers about three times as often per cycle.
+    That is pressure, not a measured limit: how much throughput relieving them would buy
+    isn't measured.
+  - Within a team, a core's in-flight count is lower (4.7–4.9 against p4's 7.0) at the same
+    wait. That fits a core held back by its own instructions, but it is a reading, not a
+    measurement.
 
 **The instruction finding (E4, #77).**
 - Instructions per byte are p4 23.8, 4x1 31.8 (+34%), 4x2 35.0, 3x3 35.3 (+48%), s4x1
@@ -1131,5 +1134,10 @@ Each of §8.2's two readings leaves its mark, at a different contrast:
 3. **ψ² only with an instruction budget.** libsais's ≤ 23 instructions a byte (build
    included) at 0.9 reads a byte is the bar. Our port (E1) paid more instructions than it
    saved in reads below the knee.
-4. **The hot working set (E7, E9) is not the lever at 3x3.** Its reads past L2 already
-   wait at L3 latency, with DRAM at most 5% of them. It would matter beyond the knee.
+4. **The hot working set (E7, E9) is not a lever for 3x3 as it is.** Its reads past L2
+   already wait at L3 latency, with DRAM at most 5% of them.
+   - It is a different lever: a smaller table could keep 4–5 teams' tables resident where
+     3 fit now (4x2 → 5x2, say). That raises the blocks in flight, which is a scheduling
+     gain rather than a residency one.
+   - E7's criterion (the best absolute at 6–10 workers) already covers it. It also needs
+     the team arms in its grid, not only independent workers.
