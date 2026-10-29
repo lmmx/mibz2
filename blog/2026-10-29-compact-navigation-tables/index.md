@@ -1,6 +1,10 @@
+[mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
+
 # Compact navigation tables for the inverse BWT: early findings
 
-*29 October 2026 · Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.*
+Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.
+
+29 October 2026 · 10 min read · [Work in progress](<#what-comes-next>)
 
 This research began with a simple question:
 
