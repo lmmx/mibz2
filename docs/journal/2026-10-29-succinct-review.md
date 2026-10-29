@@ -717,3 +717,85 @@ These are not started now. The coordinator's narrow structural step, before any 
 4. A₂ against the independent-access reference.
 
 They come after the release and the cooperative decoder, and they reuse the corpus and `psi_census.rs`.
+
+## 18. The groups' shapes: plateaus × bucket × span (#99; measured on the VM, untimed, exact; `examples/psi_census.rs`)
+
+The question (#99): is a few-plateau group record (two bases and a split, 57 bits with the byte and a tag) worth a prototype, or do non-translation groups go to FOR/EF payloads? §17.1's mean of 9.4 breaks a non-translation group was against it, but a mean cannot rule out a bimodal split. So the census now counts each group's shape.
+
+Outputs, in `2026-10-29-succinct-review/`:
+- `psi-plateaus.md`: the new sections 5–6 of the run (sections 1–4 are `psi-census.md`, diffed: identical);
+- `psi-plateaus.jsonl`: one line a block, `psi-census.jsonl`'s fields (identical on all 431 blocks) plus d, the breaks inside groups, K₃₂ by both rules, and the joint table by rows and by groups.
+
+### 18.1 What is counted
+
+For every aligned 32-row group (`a` steps by 32 from row 0) of the 233 full blocks, from the real ψ:
+- **plateaus:** the breaks inside the group, plus one. A break is a j with j and j + 1 in the group and ψ(j + 1) ≠ ψ(j) + 1. An F-bucket boundary is a break unless ψ happens to stay consecutive across it.
+- **bucket status:** inside one bucket, or crossing (`f[a] != f[end - 1]`, the census's rule).
+- **span:** max − min of ψ over the group. FOR-14 below 2^14 (RUN included), EF-12 below 33 · 2^12, else too wide. Inside one bucket this is ψ(last) − ψ(first), the census's own span.
+- 6,553,071 groups over 209,697,662 rows. Only each block's last group can be short, so the row-weighted and group-weighted tables agree to 0.01 point.
+- A unit test checks the counting on hand-made ψ: 500, 501, 502, 510, 511, 512, 530, 531, padded to 32, is 3 plateaus inside one bucket with span 55; a crossing with a jump is 2; a crossing with ψ consecutive across it is 1; a break at a group edge counts in d but in no group.
+
+### 18.2 The joint table (measured; share of all rows of the full blocks)
+
+| plateaus | one bucket, FOR-14 span | one bucket, EF-12 span | one bucket, too wide | crossing | all |
+|---|--:|--:|--:|--:|--:|
+| 1 | 77.39% | 0.00% | 0.00% | 0.00% | 77.39% |
+| **2** | **4.01%** | 0.14% | 0.03% | 0.01% | 4.19% |
+| 3–4 | 3.95% | 0.28% | 0.03% | 0.03% | 4.29% |
+| 5–8 | 3.92% | 0.41% | 0.05% | 0.07% | 4.45% |
+| 9+ | 8.85% | 0.57% | 0.10% | 0.17% | 9.68% |
+| all | 98.11% | 1.40% | 0.21% | 0.28% | 100.00% |
+
+- **Weighted by groups,** every cell is the same to two decimals (`psi-plateaus.md` §5.2).
+- **The non-translation rows (22.61%) split** 18.5% two plateaus, 19.0% 3–4, 19.7% 5–8 and 42.8% 9+.
+- **Crossing groups are almost all too wide:** 586,244 of their 590,276 rows (99.3%); 384 rows have a FOR-14 span and 3,648 an EF-12 span. Every crossing group holds a break.
+
+### 18.3 The two-plateau share (measured)
+
+**Two-plateau groups inside one bucket: 4.18% of all rows,** 18.46% of the non-translation rows. Of the 4.18 points, 4.01 have a FOR-14 span, 0.14 EF-12 and 0.03 too wide.
+
+| full blocks (233) | min | p10 | median | p90 | max |
+|---|--:|--:|--:|--:|--:|
+| two plateaus, one bucket, % of all rows | 0.91 | 2.43 | 4.23 | 5.48 | 7.12 |
+| the same, % of non-translation rows | 3.78 | 10.10 | 19.34 | 24.25 | 27.33 |
+
+By the pre-registered bands: no block reaches 8%, 198 blocks are in 3–8%, and 35 are below 3%.
+
+### 18.4 The shape of the distribution (measured)
+
+Rows by exact plateau count (`psi-plateaus.md` §5.4):
+- **from 2 plateaus down:** 4.18%, then 2.46%, 1.80%, 1.42%, 1.16%, … falling steadily to a minimum of 0.24% each at 23–25;
+- **a second mode at 28–32:** 0.36%, 0.51%, 0.70%, 0.74%, 0.46%, so 2.77% of rows in groups where nearly every row is its own plateau.
+
+So the distribution is bimodal, but not in the way §17's caveat allowed for: the upper mode is near-saturated groups, and the lower arm decays from 2 with no spike there.
+- **Interpretation, not measured:** a group of 28–32 plateaus is 32 rows of one byte whose occurrences in L are almost all isolated runs of length 1, such as a rarer byte in a varied context. Which bytes they are is not counted.
+
+### 18.5 Cross-checks (measured)
+
+- **The census's classes, reproduced exactly on every block** (asserted in the run):
+  - plateau-1 one-bucket rows = RUN;
+  - the four columns = RUN + FOR-14, EF-12, too wide and crossing;
+  - the non-translation groups = K₃₂.
+
+  The totals are 98.11%, 1.40%, 0.21% and 0.28%, as §13.1. The crossing share is 0.2815%, so 0.28%; #99's "0.29%" is a rounding slip.
+- **Translation coverage per block:** 63.7% / 78.0% / 88.0% (min / median / max), as §13.1.
+- **d ÷ K₃₂ reproduces §17.1:**
+
+  | full blocks (233) | min | p10 | median | p90 | max |
+  |---|--:|--:|--:|--:|--:|
+  | d ÷ K₃₂ | 7.57 | 8.46 | 9.39 | 13.03 | 26.69 |
+  | breaks inside a group ÷ K₃₂ | 7.33 | 8.20 | 9.10 | 12.63 | 25.86 |
+
+  - The first row falls inside §17.1's ranges (7.56–7.57, 9.38–9.39, 26.68–26.69).
+  - The in-group count is lower because a break at j ≡ 31 mod 32 sits between two groups and belongs to neither. Those are 473,028 of d = 15,141,365, so 3.12% (3.00–3.22% a block), which is 1/32 to within noise. The edge breaks land at the rate a uniform placement would give.
+  - The plateau counts above use the in-group breaks, which is what a group record sees.
+- **d is now exact, not bounded:** d = r − 1 on 229 of the 233 full blocks and r − 2 on 4. So every bucket boundary is a break, except one on each of 4 blocks where ψ stays consecutive across it. This sharpens §17.1's "within 0.2%".
+- **K₃₂ by ψ's own rule equals the census's rule on every block** (1,481,882 in total). No crossing group is a translation, so §17.3's "can differ by at most about 0.3%" is 0 on this corpus.
+
+### 18.6 The reading, against #99's pre-registered table (interpretation)
+
+- **4.18% of all rows is in the 3–8% band: marginal.** A two-plateau descriptor would have to be weighed against the added format in the walk.
+- **It is not near the credible band.** The ≥ 8% line assumed about a third of the non-translation rows; the measured share is 18.5%, and no block reaches 8% (the maximum is 7.12%).
+- **The prior holds:** the few-plateau arm is not where the non-translation rows are. 42.8% of them are in groups of 9 or more plateaus, which only a payload serves.
+- **What such a descriptor would take over:** 4.01 of its 4.18 points are FOR-14 groups today, and 0.17 points EF-12 or exceptions. No savings are modelled here.
+- **The decision is the coordinator's.** The marker audit (#100) is a separate gate and is not affected by this count. On this count alone, the default is that non-translation groups go to FOR/EF payloads.

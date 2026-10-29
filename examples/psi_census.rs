@@ -18,6 +18,14 @@
 //! consecutive occurrences of byte c are adjacent in L if and only if their rows are
 //! consecutive in c's bucket with consecutive ψ. So the run lengths of L are measured too.
 //!
+//! The groups' shapes at G = 32 (#99): each aligned 32-row group's plateaus (the breaks of
+//! R(j) = ψ(j) − j inside the group, plus one; a break is a j with ψ(j + 1) ≠ ψ(j) + 1, so
+//! an F-bucket boundary is one unless ψ happens to stay consecutive across it), jointly
+//! with its bucket status (inside one bucket, or crossing) and its span (max − min of ψ:
+//! FOR-14 below 2^14, EF-12 below 33 · 2^12, else too wide, as the classes above). Counted
+//! from the real ψ, every group, including the crossing ones; d (every break in the block)
+//! is counted too, to check against §17's d ÷ K₃₂.
+//!
 //! ```text
 //! psi_census FILE.bz2 [OUT.jsonl]     the bench corpus: everything below, one JSON line a
 //!                                     block in OUT
@@ -89,6 +97,128 @@ impl Classes {
     }
 }
 
+/// The plateau bins: 1, 2, 3–4, 5–8, 9+
+const PBINS: [&str; 5] = ["1", "2", "3–4", "5–8", "9+"];
+/// The joint table's columns: inside one bucket by span (FOR-14, RUN included; EF-12; too
+/// wide), and crossing a bucket boundary (any span)
+const COLS: [&str; 4] = [
+    "one bucket, FOR-14 span",
+    "one bucket, EF-12 span",
+    "one bucket, too wide",
+    "crossing",
+];
+
+fn pbin(plateaus: u32) -> usize {
+    match plateaus {
+        1 => 0,
+        2 => 1,
+        3..=4 => 2,
+        5..=8 => 3,
+        _ => 4,
+    }
+}
+
+/// One group's shape: its plateaus (breaks inside the group + 1), whether it crosses an
+/// F-bucket boundary, and its span (max − min of ψ over the group)
+fn group_shape(psi: &[u32], f: &[u8], a: usize, end: usize) -> (u32, bool, u32) {
+    let g = &psi[a..end];
+    let breaks = g
+        .windows(2)
+        .filter(|w| w[1] != w[0].wrapping_add(1))
+        .count() as u32;
+    let (lo, hi) = g
+        .iter()
+        .fold((u32::MAX, 0), |(lo, hi), &x| (lo.min(x), hi.max(x)));
+    (breaks + 1, f[a] != f[end - 1], hi - lo)
+}
+
+/// The groups' shapes at G = 32, one block or summed: the joint table of plateau bin ×
+/// column, by rows and by groups; rows by exact plateau count (one bucket / crossing);
+/// crossing rows by span class; and the break counts
+#[derive(Default, Clone, Copy)]
+struct Shape {
+    rows: [[u64; 4]; 5],
+    groups: [[u64; 4]; 5],
+    /// rows by exact plateau count 1..=32 (index plateaus − 1): [one bucket, crossing]
+    hist: [[u64; 32]; 2],
+    /// crossing rows whose span is FOR-14, EF-12, too wide
+    cross_span: [u64; 3],
+    /// every break in the block (d), and those inside an aligned group
+    d: u64,
+    breaks_in: u64,
+    /// groups not a translation group (a break inside, or crossing: the census's K₃₂), and
+    /// groups with a break inside (ψ's own rule, a crossing group with no break excepted)
+    k32: u64,
+    k32_psi: u64,
+}
+
+impl Shape {
+    fn add(&mut self, o: &Shape) {
+        for p in 0..5 {
+            for c in 0..4 {
+                self.rows[p][c] += o.rows[p][c];
+                self.groups[p][c] += o.groups[p][c];
+            }
+        }
+        for b in 0..2 {
+            for k in 0..32 {
+                self.hist[b][k] += o.hist[b][k];
+            }
+        }
+        for k in 0..3 {
+            self.cross_span[k] += o.cross_span[k];
+        }
+        self.d += o.d;
+        self.breaks_in += o.breaks_in;
+        self.k32 += o.k32;
+        self.k32_psi += o.k32_psi;
+    }
+    fn total_rows(&self) -> u64 {
+        self.rows.iter().flatten().sum()
+    }
+    fn total_groups(&self) -> u64 {
+        self.groups.iter().flatten().sum()
+    }
+}
+
+fn shape_of(psi: &[u32], f: &[u8]) -> Shape {
+    const G: usize = 32;
+    let (for_span, ef_span) = (1u32 << 14, 33u32 << 12);
+    let n = psi.len();
+    let mut s = Shape {
+        d: psi
+            .windows(2)
+            .filter(|w| w[1] != w[0].wrapping_add(1))
+            .count() as u64,
+        ..Shape::default()
+    };
+    for a in (0..n).step_by(G) {
+        let end = (a + G).min(n);
+        let rows = (end - a) as u64;
+        let (plateaus, crossing, span) = group_shape(psi, f, a, end);
+        let col = if crossing {
+            3
+        } else if span < for_span {
+            0
+        } else if span < ef_span {
+            1
+        } else {
+            2
+        };
+        let p = pbin(plateaus);
+        s.rows[p][col] += rows;
+        s.groups[p][col] += 1;
+        s.hist[crossing as usize][plateaus as usize - 1] += rows;
+        if crossing {
+            s.cross_span[(span >= for_span) as usize + (span >= ef_span) as usize] += rows;
+        }
+        s.breaks_in += plateaus as u64 - 1;
+        s.k32 += (plateaus > 1 || crossing) as u64;
+        s.k32_psi += (plateaus > 1) as u64;
+    }
+    s
+}
+
 /// One block's census: the classes at each group size, the F windows (k = 4..8: windows,
 /// mixed, rows in mixed windows, rows stepped; mixed windows by boundary count 1/2/3/4+),
 /// the rows by their L-run's length (log2), and the runs' count
@@ -99,6 +229,7 @@ struct Census {
     run_log2: [u64; 21],
     runs: u64,
     sigma: usize,
+    shape: Shape,
 }
 
 fn psi_of(ll: &[u8], counts: &[u32; 256]) -> (Vec<u32>, [u32; 257]) {
@@ -201,6 +332,7 @@ fn census(ll: &[u8], counts: &[u32; 256]) -> Census {
         run_log2,
         runs,
         sigma: counts.iter().filter(|&&c| c > 0).count(),
+        shape: shape_of(&psi, &f),
     }
 }
 
@@ -263,6 +395,8 @@ fn corpus(path: &str, out: Option<&str>) {
     let (mut runs, mut rows) = (0u64, 0u64);
     let mut per_block: Vec<[f64; 6]> = Vec::new();
     let mut sigmas = Vec::new();
+    let mut shape = Shape::default();
+    let mut per_shape: Vec<[f64; 6]> = Vec::new();
     let mut i = 0;
     blocks_of(&data, kern, |ll, counts| {
         let c = census(ll, counts);
@@ -284,6 +418,23 @@ fn corpus(path: &str, out: Option<&str>) {
                 100.0 * (t.rows - t.run) as f64 / r,
             ]);
             sigmas.push(c.sigma as f64);
+            // the joint table must reproduce the classes exactly
+            let h = &c.shape;
+            let col = |k: usize| h.rows.iter().map(|p| p[k]).sum::<u64>();
+            assert_eq!(h.rows[0][0] + h.rows[0][1] + h.rows[0][2], t.run);
+            assert_eq!(col(0), t.run + t.for_k);
+            assert_eq!((col(1), col(2), col(3)), (t.ef, t.wide, t.crossing));
+            assert_eq!(h.k32, t.groups - t.run_g);
+            shape.add(h);
+            let two = (h.rows[1][0] + h.rows[1][1] + h.rows[1][2]) as f64;
+            per_shape.push([
+                100.0 * two / r,
+                100.0 * two / (t.rows - t.run) as f64,
+                100.0 * h.rows[1][0] as f64 / r,
+                h.d as f64 / h.k32 as f64,
+                h.breaks_in as f64 / h.k32 as f64,
+                h.breaks_in as f64 / h.k32_psi as f64,
+            ]);
         } else {
             ntiny += 1;
         }
@@ -300,10 +451,12 @@ fn corpus(path: &str, out: Option<&str>) {
         rows += n as u64;
         if let Some(o) = out.as_mut() {
             let t = &c.classes[1];
+            let h = &c.shape;
             writeln!(
                 o,
-                "{{\"block\": {i}, \"rows\": {n}, \"sigma\": {}, \"runs\": {}, \"run\": {}, \"for14\": {}, \"ef12\": {}, \"crossing\": {}, \"wide\": {}}}",
-                c.sigma, c.runs, t.run, t.for_k, t.ef, t.crossing, t.wide
+                "{{\"block\": {i}, \"rows\": {n}, \"sigma\": {}, \"runs\": {}, \"run\": {}, \"for14\": {}, \"ef12\": {}, \"crossing\": {}, \"wide\": {}, \"d\": {}, \"breaks_in\": {}, \"k32\": {}, \"k32_psi\": {}, \"joint_rows\": {:?}, \"joint_groups\": {:?}}}",
+                c.sigma, c.runs, t.run, t.for_k, t.ef, t.crossing, t.wide,
+                h.d, h.breaks_in, h.k32, h.k32_psi, h.rows, h.groups
             )
             .unwrap();
         }
@@ -421,6 +574,126 @@ fn corpus(path: &str, out: Option<&str>) {
             p[3]
         );
     }
+    shape_report(&shape, &per_shape, nfull);
+}
+
+fn spread(mut v: Vec<f64>, dp: usize) -> String {
+    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let q = |p: f64| v[((v.len() - 1) as f64 * p).round() as usize];
+    format!(
+        "{:.dp$} / {:.dp$} / {:.dp$} / {:.dp$} / {:.dp$}",
+        q(0.0),
+        q(0.1),
+        q(0.5),
+        q(0.9),
+        q(1.0)
+    )
+}
+
+/// §5–6: the groups' shapes at G = 32, the full blocks (#99), and their cross-checks
+fn shape_report(h: &Shape, per: &[[f64; 6]], nfull: usize) {
+    let (rows, groups) = (h.total_rows(), h.total_groups());
+    let nontr: u64 = rows - h.rows[0][..3].iter().sum::<u64>();
+    println!(
+        "\n## 5. The groups' shapes at G = 32: plateaus × bucket × span, the {nfull} full blocks\n"
+    );
+    println!(
+        "{rows} rows, {groups} groups; non-translation rows (a break inside, or crossing) {}\n",
+        pct(nontr, rows)
+    );
+    for (k, what, m, of) in [
+        (1, "rows, as a share of all rows", &h.rows, rows),
+        (2, "groups, as a share of all groups", &h.groups, groups),
+    ] {
+        println!("### 5.{k} By {what}\n");
+        println!("| plateaus | {} | all |", COLS.join(" | "));
+        println!("|---|--:|--:|--:|--:|--:|");
+        for (p, name) in PBINS.iter().enumerate() {
+            let cells: Vec<String> = m[p].iter().map(|&x| pct(x, of)).collect();
+            println!(
+                "| {name} | {} | {} |",
+                cells.join(" | "),
+                pct(m[p].iter().sum(), of)
+            );
+        }
+        let cells: Vec<String> = (0..4)
+            .map(|c| pct(m.iter().map(|p| p[c]).sum(), of))
+            .collect();
+        println!("| all | {} | 100.00% |\n", cells.join(" | "));
+    }
+    let two: u64 = h.rows[1][..3].iter().sum();
+    println!("### 5.3 The two-plateau share\n");
+    println!(
+        "Two-plateau groups inside one bucket: {} of all rows, {} of the non-translation rows; of them FOR-14 span {}, EF-12 {}, too wide {} (of all rows)\n",
+        pct(two, rows),
+        pct(two, nontr),
+        pct(h.rows[1][0], rows),
+        pct(h.rows[1][1], rows),
+        pct(h.rows[1][2], rows)
+    );
+    println!("| per full block | min / p10 / median / p90 / max |");
+    println!("|---|--:|");
+    let col = |k: usize| per.iter().map(|b| b[k]).collect::<Vec<f64>>();
+    println!(
+        "| two plateaus, one bucket, % of all rows | {} |",
+        spread(col(0), 2)
+    );
+    println!(
+        "| two plateaus, one bucket, % of non-translation rows | {} |",
+        spread(col(1), 2)
+    );
+    println!(
+        "| two plateaus, one bucket, FOR-14 span, % of all rows | {} |",
+        spread(col(2), 2)
+    );
+    println!("\n### 5.4 Rows by exact plateau count (% of all rows)\n");
+    println!("| plateaus | one bucket | crossing | cumulative |");
+    println!("|--:|--:|--:|--:|");
+    let mut cum = 0;
+    for k in 1..=32 {
+        let (a, b) = (h.hist[0][k - 1], h.hist[1][k - 1]);
+        cum += a + b;
+        if a + b > 0 {
+            println!(
+                "| {k} | {} | {} | {} |",
+                pct(a, rows),
+                pct(b, rows),
+                pct(cum, rows)
+            );
+        }
+    }
+    println!(
+        "\nCrossing rows by span (max − min of ψ): FOR-14 {} ({} rows), EF-12 {} ({} rows), too wide {} ({} rows) (of all rows)",
+        pct(h.cross_span[0], rows),
+        h.cross_span[0],
+        pct(h.cross_span[1], rows),
+        h.cross_span[1],
+        pct(h.cross_span[2], rows),
+        h.cross_span[2]
+    );
+    println!("\n## 6. Cross-checks (the full blocks)\n");
+    println!(
+        "- the joint table's columns and plateau-1 cells equal the census's classes (RUN, FOR-14, EF-12, too wide, crossing) and K₃₂ on every block (asserted)"
+    );
+    println!(
+        "- d, every break: {}; inside an aligned group: {} ({}); at a group edge (j ≡ 31 mod 32): {}",
+        h.d,
+        h.breaks_in,
+        pct(h.breaks_in, h.d),
+        h.d - h.breaks_in
+    );
+    println!(
+        "- K₃₂ (census rule): {}; groups with a break inside (ψ's rule): {}\n",
+        h.k32, h.k32_psi
+    );
+    println!("| per full block | min / p10 / median / p90 / max |");
+    println!("|---|--:|");
+    println!("| d ÷ K₃₂ | {} |", spread(col(3), 2));
+    println!("| breaks inside a group ÷ K₃₂ | {} |", spread(col(4), 2));
+    println!(
+        "| breaks inside a group ÷ groups with a break inside | {} |",
+        spread(col(5), 2)
+    );
 }
 
 /// Atlas V: the same classes on other inputs, each compressed by libbzip2 at level 9 here
@@ -534,5 +807,42 @@ fn main() {
         Some("--inputs") => inputs(),
         Some(path) => corpus(path, args.get(2).map(String::as_str)),
         None => panic!("psi_census FILE.bz2 [OUT.jsonl] | psi_census --inputs"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// a group of three plateaus inside one bucket, padded to 32 rows by its last plateau
+    #[test]
+    fn plateaus_of_a_hand_made_group() {
+        let mut psi = vec![500, 501, 502, 510, 511, 512, 530, 531];
+        while psi.len() < 32 {
+            psi.push(psi[psi.len() - 1] + 1);
+        }
+        let f = vec![7u8; 32];
+        assert_eq!(group_shape(&psi, &f, 0, 32), (3, false, 555 - 500));
+        // a translation group: one plateau
+        let run: Vec<u32> = (100..132).collect();
+        assert_eq!(group_shape(&run, &f, 0, 32), (1, false, 31));
+        // a bucket boundary is a break unless ψ stays consecutive across it
+        let mut g = f.clone();
+        g[16..].fill(8);
+        assert_eq!(group_shape(&run, &g, 0, 32), (1, true, 31));
+        let mut jump = run.clone();
+        jump[16..].iter_mut().for_each(|x| *x -= 90);
+        assert_eq!(group_shape(&jump, &g, 0, 32), (2, true, 115 - 26));
+        // a short last group
+        assert_eq!(group_shape(&psi, &f, 24, 30), (1, false, 5));
+        // the block's counts: d and the in-group breaks differ by the break at the group edge
+        let mut two = psi.clone();
+        two.extend(900..932);
+        let s = shape_of(&two, &[7u8; 64]);
+        assert_eq!((s.d, s.breaks_in, s.k32, s.k32_psi), (3, 2, 1, 1));
+        assert_eq!(
+            (s.rows[pbin(3)][0], s.rows[0][0], s.groups[2][0]),
+            (32, 32, 1)
+        );
     }
 }
