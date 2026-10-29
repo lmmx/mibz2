@@ -403,3 +403,81 @@ fast. That would point at something per block other than table bytes.
    for their own reasons (request concurrency, latency).
 3. **The copy reaches far more than the walk probe:** expected for streaming. It shows the
    access pattern's cost, not a contradiction.
+
+## Footprint, measured (the i9, 0eeeab4, 2026-10-29): smaller tables move the knee
+
+**The run:** `just bench-libsais-knee-footprint`, from the console (relayed). The two grid
+reports (`coop-20261029T203034Z`, `coop-20261029T203114Z`) and the two counter reports
+(`coop-counters-20261029T203142Z`, `-203650Z`) are to be uploaded with their .jsonl.
+- Every block of every arm matched the room walk's output, and no thread was misplaced.
+- The memory probe (`bench/dram.py`) crashed on reading its own output, a parsing bug in
+  the script, since fixed. perf exited cleanly, so its control handshake worked. It is
+  to be rerun alone.
+
+### 1. The block sizes, measured (`coop sizes` on the i9)
+
+| corpus | blocks | rows a block: p10 / median / max | at the 900 K ceiling | mean table | time-weighted table a worker holds | 4 workers' live tables (simulated, mean = p90) |
+|---|--:|---|--:|--:|--:|--:|
+| native (Wikimedia's) | 431 | 10 / 899,938 / 900,000 | 54.1% (198 blocks under 100 K) | 1.946 MB | **3.600 MB** | 14.4 MB |
+| lbzip2 -9 | 421 | 10 / 899,967 / 900,000 | 55.3% | 1.992 MB | 3.600 MB | 14.4 MB |
+| bzip2 -9 | 234 | 899,981 throughout | 99.6% | 3.585 MB | 3.600 MB | 14.4 MB |
+| bzip2 -3 | 700 | 299,981 throughout | 0% | 1.198 MB | **1.200 MB** | 4.8 MB |
+
+**What the table settles:**
+- **The native corpus is bimodal:** full blocks and tiny ones, as lbzip2 makes. A worker
+  holds a full 3.6 MB table nearly all the time.
+- **So this entry's "anomaly" was not one,** and the frontier page's correction (#110) was
+  wrong. It is reverted.
+- **The workstation journal §9's table sizes stand** in the time-weighted sense, and so does
+  its knee at about 14.4 MB of live tables (0.7 of the 20 MB L3).
+- **The lesson for every footprint figure:** weight block sizes by time (Σn² / Σn), never
+  by count.
+
+### 2. The sweep (one core a block, MTF outside the timing, 10 rounds; median MB/s)
+
+| N blocks = cores | bzip2 -9: mibz2 | bzip2 -9: libsais | bzip2 -3: mibz2 | bzip2 -3: libsais |
+|--:|--:|--:|--:|--:|
+| 1 | 542 | 563 | 539 | 520 |
+| 2 | 1065 | 1052 | 1084 | 1009 |
+| 3 | 1283 | 1364 | 1403 | 1414 |
+| 4 | **1479** | **1608** | 1855 | 1855 |
+| 5 | 1309 | 1566 | 2119 | 2212 |
+| 6 | 1113 | 1373 | 2615 | 2669 |
+| 8 | 706 | 999 | **3279** | 3386 |
+| 10 | 570 | 836 | 3077 | **3596** |
+
+### The pre-registered readings
+
+1. **bzip2 -9 knees where the native and lbzip2 -9 corpora do,** at 4 blocks (mibz2 p5/p4
+   0.891, libsais s5/s4 0.974). Uniform and bimodal blocks of the same time-weighted
+   footprint behave alike: **met**.
+2. **bzip2 -3's peak moves substantially to more blocks: met.**
+   - **mibz2 peaks at 8 blocks** (3279 MB/s, 2.2× its bzip2 -9 peak), and falls only
+     slightly at 10 (0.94 of the peak, p10 / p8 from the medians).
+   - **libsais is still rising at 10** (3596 MB/s).
+   - Smaller tables let both kernels use more cores before the knee. The knee is not fixed
+     at 4 blocks: on the evidence that registered it, it is set by the live tables.
+3. **Not a pure table-bytes constant.**
+   - **The knees in live table bytes:** mibz2's knee sits between 4 and 5 blocks at 3.6 MB
+     (14.4–18 MB of tables), and between 8 and 10 at 1.2 MB (9.6–12 MB).
+   - **So small blocks knee at fewer table bytes than full ones.** Something besides the
+     table also scales with the number of live blocks: each block's L, its walk's output
+     buffers, its segment bookkeeping, and the extra cores' own traffic.
+   - **Table bytes are the dominant control, not the only one.** The counters (to be
+     uploaded) show how the L3 hit share and DRAM bytes per byte move with N at each size.
+4. **libsais at bzip2 -3** stays at or ahead of mibz2 from 4 blocks on, and keeps rising
+   where mibz2 turns. That fits its lower traffic per byte.
+
+**What it means for the project:**
+- **The original objective is directly supported:** a smaller live table moves the knee to
+  more concurrent blocks. Here, a 3× smaller table moved mibz2's peak from 4 to 8 blocks
+  and raised it 2.2×.
+- **Compact Ψ is the in-decoder version of this experiment.** Shrinking the table without
+  changing the block size is what would move the knee on the full-block files most users
+  have. The measured knee shift is the case for it, to be shown again once a compact table
+  exists.
+- **A level-aware policy is now indicated.**
+  - `Plan::for_threads` caps teams as if every block were a full 900 K one. On small-block
+    files (bzip2 -1 to -6) the knee is at more blocks, so the policy leaves cores idle there.
+  - The stream header's level gives the block size before any block is decoded.
+  - This needs its own decoder A/B before any change ships.

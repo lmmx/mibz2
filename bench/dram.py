@@ -62,9 +62,19 @@ def run(mode, threads, secs, cpus, events=EVENTS, system=True, perf=("sudo", "pe
             v = float(f[0])
             unit = f[1]
             counts[f[2]] = v * (1 << 20) if unit == "MiB" else v * 64 if unit == "" else v
-    words = r.stdout.split()
-    probe = dict(zip(words[0::2], words[1::2]))
-    return counts, probe
+    return counts, parse(r.stdout)
+
+
+def parse(out):
+    """The probe's line, `MODE threads T secs S ...`, as a dict (the mode under "mode")"""
+    words = out.split()
+    if not words:
+        sys.exit(f"dram: the probe printed nothing: {out!r}")
+    probe = dict(zip(words[1::2], words[2::2]))
+    probe["mode"] = words[0]
+    if "secs" not in probe:
+        sys.exit(f"dram: can't read the probe's line: {out!r}")
+    return probe
 
 
 def main():
