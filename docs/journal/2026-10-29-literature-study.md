@@ -22,7 +22,8 @@ paper unless said), **measured** (ours, said where), **hypothesis** (untested).
 | 4 | [`05-partitioned-elias-fano-research.md`](2026-10-29-literature-study/05-partitioned-elias-fano-research.md) | Ottaviano & Venturini, "Partitioned Elias–Fano Indexes", SIGIR 2014 | read |
 | 5 | [`06-gog-navarro-petri-research.md`](2026-10-29-literature-study/06-gog-navarro-petri-research.md) | Gog, Navarro & Petri, "Improved and Extended Locating Functionality on Compressed Suffix Arrays", Journal of Discrete Algorithms, 2015 | read |
 | 6 | [`07-sadakane-csa-research.md`](2026-10-29-literature-study/07-sadakane-csa-research.md) | Sadakane, "New Text Indexing Functionalities of the Compressed Suffix Arrays", Journal of Algorithms, 2003; SDSL's `csa_sada`. The researcher read the abstract, secondary accounts and SDSL, not the full article | read |
-| 7 | — | piecewise-constant residuals and patched integer coding | next |
+| 7 | [`08-patched-coding-plateaus-research.md`](2026-10-29-literature-study/08-patched-coding-plateaus-research.md) | patched integer coding (Lemire & Boytsov, "Decoding Billions of Integers per Second Through Vectorization", SPE 2015; Brisaboa, Ladra & Navarro, "DACs", 2013) and the residual-plateau record | read |
+| 8 | — | cache-line Elias–Fano and CPU-aware decoding, the last item on the original list | next |
 | — | — | the overview's other items (cacheline Elias–Fano, the LCSA line, the Orbit implementation in its own pass) | queued |
 
 The user calls paper 2 "the first paper", as the first they worked through with the
@@ -153,12 +154,36 @@ cheap census question.**
   of an extra pass over ψ is a loss here (#81's fused build is the baseline to beat). Our
   input is already the BWT, so the build is a scan of L, not suffix sorting.
 
+**Patched coding (paper 7) turns the plateau question into candidate records.**
+- **From the literature:** keep the common case fixed-width and cheap, and handle the
+  exceptions apart (PFOR). Encoding cost counts: OptPFD's encoding is 20–50× slower than
+  SIMD-FastPFOR in Lemire & Boytsov (the researcher's reading). Bulk-decode throughput
+  doesn't carry over to a dependent chain, which needs one value at a time (DACs' problem,
+  and ours).
+- **The plateau record (the researcher's design, a hypothesis):** a 32-bit break mask M
+  and the plateau values V, so ψ(a + i) = a + i + V[popcount(M & (2^(i+1) − 1))]. It is
+  exact for any group within one bucket, and small when the plateaus are few:
+  - 32 + 20k bits for k plateaus (20 bits suffice for a 900,000-row block);
+  - the two-plateau case is 45 bits (two 20-bit bases and a 5-bit split), decoded with
+    one compare and an add.
+
+  Against 448 bits for 32 FOR-14 offsets, that is a large saving only where the record
+  size can shrink (the two-tier design's variable payloads). A fixed 64-byte line gains
+  speed from it, not space.
+- **A correction to §10's table:** log2 C(31, k − 1), the bits needed to place k − 1
+  breaks, is 12.13 for k = 4, 21.33 for k = 8 and 28.16 for k = 16. The reading gives
+  12.31, 21.47 and 28.54. The 2- and 3-plateau entries (4.95, 8.86) are right, and nothing
+  in its argument depends on the three that are off.
+- **The census it asks for** is the histogram set out under paper 4: plateaus per group,
+  1, 2, 3–4, 5–8 and 9 or more, with straddling groups apart. A group's plateaus are its
+  breaks plus one. This is the fourth reading in a row to end on it.
+
 ## Open checks
 
 - **Citations:** paper 1's are checked (`2026-10-29-expert-review.md` §1). We have not yet
   checked paper 2's arXiv v4 revision date, RLBWT Tricks' venue and the readings' figures
   against the papers. The research trail dates RLBWT Tricks 2024, and deep dive 2 gives
-  SEA 2022. Paper 4's Table 2 and paper 5's Figure 3 figures are the researcher's reading.
+  SEA 2022. Paper 4's Table 2, paper 5's Figure 3 and paper 7's encoding-speed ratios are the researcher's reading.
 - **Cyclic BWT:** bzip2 sorts rotations with no sentinel. A periodic block gives ψ several
   cycles (for `abab`, LF = [2, 3, 0, 1], two cycles of 2), and the decoder walks one of
   them n times from `orig_ptr`. The papers' move structures assume a sentinel and a single
