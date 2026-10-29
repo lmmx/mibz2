@@ -247,3 +247,47 @@ The falloff from 4 to 5 blocks is l 0.762 (0.746–0.779) and s 0.778 (0.766–0
 fall matters past the peak, where the policy doesn't go. The shipped decoder gains from
 libsais's property only if fewer reads per byte also raise the peak; at 4 blocks they're
 worth 1.06× on one core a block.
+
+### What the data already in hand say about the cause (before the cause run)
+
+The user's caveat, recorded: the one-core and two-core curves spend different core
+budgets at each N, so their peaks alone don't isolate cooperation's effect. Read with the
+counters already measured, though, they narrow the cause.
+
+1. **The knee follows live blocks, not cores or threads.**
+   - One core a block peaks at 4 blocks on 4 cores; teams of 2 peak at 4 blocks on 8 cores.
+   - The same holds for libsais: s4x1 on 4 cores, s4x2 on 8.
+   - So whatever binds grows with the number of live blocks: their tables, their buffers,
+     or traffic per block. Thread or core count alone doesn't explain it.
+2. **A fixed DRAM bandwidth ceiling at p4's peak is ruled out.** The memory controller's
+   bytes (the 18:48 counter run, `coop-counters-20261029T184803Z`; 1- and 21-round runs by
+   difference, medians of 3; the timed rounds' own seconds):
+
+   | arm | MB/s | DRAM read B / output B | DRAM read GB/s | read + write GB/s |
+   |---|--:|--:|--:|--:|
+   | p4 (at its peak) | 1407 | 6.57 | 9.2 | 13.6 |
+   | l4x2 (4 blocks, at its peak) | 2216 | 6.61 | 14.7 | 21.6 |
+   | l3x3 | 2428 | 4.19 | 10.2 | 14.4 |
+   | s3x3 | 2231 | 3.07 | 6.9 | 11.1 |
+
+   - At 4 live blocks, the teams move 1.6× p4's DRAM traffic and are still rising, so the
+     link isn't what stops p at 4.
+   - p4 and l4x2 read about the same DRAM bytes per output byte (6.6). The same 4 live
+     blocks miss about as much per byte whether 4 cores or 8 walk them.
+3. **Past the knee, misses per byte multiply.**
+   - The coop journal §10.4's full counter run (research/coop-fused, the native corpus) put
+     p8 at 34.4 DRAM bytes read per output byte, against p4's 7.7, about 4.5×. That is about
+     23 GB/s of reads at its 662 MB/s, plus 6.5 GB/s of writes.
+   - The fall past 4 is a rise in misses per byte, the signature of the hot data no longer
+     fitting. The DRAM traffic it creates may then press on bandwidth as well.
+   - Those §10.4 figures are from a different run on the research kernels, so they're
+     indicative here. The cause run measures p and s at 2–10 blocks in one run.
+4. **The open contradiction.**
+   - "The hot data stops fitting at 4 blocks" fits points 1–3, but on these native blocks 4
+     tables are about 7.8 MB, 0.38 of the L3, not §9's 14.4 MB.
+   - So either the hot footprint per block is not the table alone (the walk's output
+     buffers, L and the build's scatter add to it), or something per block other than
+     capacity binds.
+   - The cause run's second corpus (full 3.6 MB blocks) separates them. If both corpora
+     knee at 4 blocks again with misses per byte rising past it, the binding footprint
+     isn't the table's size. If full blocks knee earlier, it is.
