@@ -291,3 +291,108 @@ counters already measured, though, they narrow the cause.
    - The cause run's second corpus (full 3.6 MB blocks) separates them. If both corpora
      knee at 4 blocks again with misses per byte rising past it, the binding footprint
      isn't the table's size. If full blocks knee earlier, it is.
+
+## The cause run (measured, the i9, 4db1e3f, 2026-10-29): the second corpus wasn't a second footprint, and the memory link has a ceiling
+
+**The files:**
+- the lbzip2 -9 grid: [`coop-20261029T193653Z.md`](2026-10-29-libsais-knee/coop-20261029T193653Z.md);
+- the counters on the native corpus: [`coop-counters-20261029T193811Z.md`](2026-10-29-libsais-knee/coop-counters-20261029T193811Z.md);
+- the counters on the lbzip2 -9 corpus: [`coop-counters-20261029T195025Z.md`](2026-10-29-libsais-knee/coop-counters-20261029T195025Z.md);
+- the .jsonl beside each.
+
+No pass multiplexed or failed, and every counted run ran within 2.6% of its confirmed MB/s.
+
+### 1. lbzip2 -9 didn't change the footprint, and the average was the wrong measure
+
+- **Block counts:** the lbzip2 -9 corpus has 421 blocks against the native 431 (the user spotted this independently). The two corpora's curves and counters agree to about 1%:
+  - p4 1463 against 1470 MB/s;
+  - L3 hit share at p10 0.537 against 0.538;
+  - DRAM reads per output byte at p10 41.0 against 41.2.
+- **The block-size report** (`coop sizes`, new) on a 45 MB JSON sample, on this VM:
+  - **lbzip2 -9:** 101 blocks, alternating full and tiny: 49.5% at the 900 K ceiling, the rest mostly around 100 rows (p10 103, median 509,889).
+  - **bzip2 -9:** 51 blocks, 98% full.
+  - **bzip2 -3:** 152 blocks of 300 K.
+- **What a worker holds:**
+  - a block's inversion takes time in proportion to its rows, so a worker's table averaged over time is Σn² / Σn rows, not the mean;
+  - by that measure lbzip2 -9 and bzip2 -9 are the same, 3.595 MB a worker, on a second sample;
+  - the mean (1.80 MB for lbzip2 -9) counts the tiny blocks as if they took as long as the full ones.
+- **What follows, pending the i9's own report:**
+  - The native corpus is likely lbzip2-made and bimodal the same way: 431 blocks averaging 486 K rows fits half full, half tiny.
+  - If so, its time-weighted footprint is about 3.6 MB a worker, not 1.95 MB. Then:
+    - this entry's "anomaly" was not one;
+    - the frontier page's correction (#110) was wrong and should be reverted;
+    - the workstation journal §9's nominal table sizes (lbzip2 -9/-6/-3/-1) were right in the time-weighted sense;
+    - its knee at about 14.4 MB of live tables (0.7 of the 20 MB L3) stands.
+  - Not reverted until `coop sizes` runs on the i9's corpora.
+
+### 2. The memory controller: a common ceiling past the knee
+
+Read + write, from the counted MB/s and the DRAM bytes per output byte (native corpus; the
+lbzip2 -9 corpus within 1.5% throughout):
+
+| blocks | mibz2 DRAM B / output B | mibz2 GB/s | libsais DRAM B / output B | libsais GB/s | L3 hit share (mibz2, libsais) | wait per read past L2 (cycles) |
+|--:|--:|--:|--:|--:|--:|--:|
+| 2 | 2.5 | 2.7 | 1.7 | 1.8 | 0.979, 0.980 | 52, 53 |
+| 4 | 9.5 | 14.1 | 9.4 | 14.7 | 0.930, 0.907 | 67, 69 |
+| 6 | 25.4 | 28.0 | 22.8 | 28.6 | 0.794, 0.748 | 135, 175 |
+| 8 | 40.5 | 28.6 | 33.1 | 29.3 | 0.644, 0.596 | 359, 393 |
+| 10 | 50.7 | 28.8 | 38.8 | 29.0 | 0.538, 0.504 | 620, 621 |
+
+**What the counters show:**
+- **One ceiling for both kernels:** from 6 blocks on, both reach about 28–29 GB/s read +
+  write, on both corpora, though their read/write mixes differ (at 10 blocks, mibz2 23.4
+  read + 5.4 write, libsais 20.7 + 8.3).
+- **Past the ceiling, throughput is ceiling ÷ DRAM bytes per output byte.** At 29 GB/s that
+  predicts p10 at 572 MB/s (measured 567) and s10x1 at 747 (746).
+- **libsais's shallower fall is its lower DRAM bytes per output byte** (38.8 against 50.7
+  at 10 blocks), from fewer reads past L2 per byte (0.77 against 1.30).
+- **Before the ceiling, between 4 and 6 blocks:**
+  - the L3 hit share falls (0.93 → 0.79 for mibz2);
+  - DRAM bytes per output byte nearly triple (9.5 → 25.4);
+  - the wait per read doubles as the link fills.
+
+**What it doesn't establish:**
+- **The ceiling is a plateau in this workload, not yet the machine's.** The probe below
+  measures the machine with a walk-shaped random pattern and a sequential copy.
+- **It doesn't say why misses begin between 4 and 6 blocks.** Capacity (about 4 × 3.6 =
+  14.4 MB of tables, time-weighted, plus the walk's other data) is the reading the
+  corrected footprint supports. The footprint run tests it.
+- **The working hypothesis, a chain:** more live blocks → the hot data outgrows the L3 →
+  more DRAM bytes per output byte → the link saturates → throughput is the ceiling over
+  that traffic. Each link is measured except the first's cause.
+
+## Footprint, measured: the next run (pre-registered)
+
+`just bench-libsais-knee-footprint` (needs bzip2 and sudo):
+1. **`coop sizes` on every corpus:** native, lbzip2 -9, bzip2 -9 and bzip2 -3. The
+   distributions, the share at the ceiling, and the time-weighted table a worker holds.
+   The native corpus's figure decides whether #110 is reverted.
+2. **The one-core-a-block sweep** (p1–p10, s1x1–s10x1, 10 rounds) on two corpora:
+   - **bzip2 -9:** uniform full blocks, the same time-weighted footprint as lbzip2 -9
+     (3.6 MB). It is the control for bimodal against uniform blocks.
+   - **bzip2 -3:** uniform 300 K blocks, 1.2 MB. The genuine contrast.
+3. **The counters** (reads, LLC, memory controller; 2 repeats) on both, for p2–p10, s4x1
+   and s8x1.
+4. **The machine's memory ceiling** (`bench/dram.py`, examples/dram.rs), at 1–10 threads:
+   - a walk-shaped probe: 32 dependent chains a thread through a 512 MB random cycle, a
+     line read, a prefetch and a byte written a step;
+   - a sequential copy;
+   - each under `perf stat -a`, counting only between the probe's own enable and disable
+     (after its setup).
+
+**What capacity predicts (fixed now):**
+- **bzip2 -9 knees where native and lbzip2 -9 do,** at 4 blocks.
+- **bzip2 -3 knees at about 3× the blocks** (about 12 at 1.2 MB, so beyond these 10
+  cores). Its curve keeps rising, or flattens, through 8–10 blocks.
+- **Its L3 hit share holds near 0.93** until far more blocks than 4.
+
+**Against capacity:** bzip2 -3 also knees at 4–6 blocks, with misses per byte rising as
+fast. That would point at something per block other than table bytes.
+
+**The ceiling, read three ways:**
+1. **The walk probe saturates near 29 GB/s:** the decoders' plateau is the machine's
+   ceiling for this access pattern.
+2. **The probe sustains well above 29:** the decoders stop short of the machine's ceiling
+   for their own reasons (request concurrency, latency).
+3. **The copy reaches far more than the walk probe:** expected for streaming. It shows the
+   access pattern's cost, not a contradiction.

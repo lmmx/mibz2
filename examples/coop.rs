@@ -2329,6 +2329,58 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
     }
 }
 
+/// `sizes`: each block's BWT length (its rows, the table's entries): the distribution, the
+/// share at bzip2's ceiling, and the mean table a live block holds (4 bytes a row), so a
+/// corpus's footprint is measured rather than inferred from its compressor's level
+fn sizes_mode(bs: &[Block]) {
+    // what a worker holds while it works: a block's time is about its rows, so the table a
+    // worker holds, averaged over time, is sum(n^2) / sum(n) rows (a corpus of alternating
+    // full and tiny blocks keeps its workers on full ones almost all the time), and N
+    // workers hold about N of those
+    let order: Vec<usize> = bs.iter().map(|b| b.ll.len()).collect();
+    let (s1, s2) = order.iter().fold((0f64, 0f64), |(a, b), &n| {
+        (a + n as f64, b + n as f64 * n as f64)
+    });
+    let tw = s2 / s1;
+    println!(
+        "time-weighted table a worker holds: {:.0} rows, {:.3} MB; N workers: 4 -> {:.1} MB, 6 -> {:.1} MB, 8 -> {:.1} MB",
+        tw,
+        tw * 4.0 / 1e6,
+        4.0 * tw * 4.0 / 1e6,
+        6.0 * tw * 4.0 / 1e6,
+        8.0 * tw * 4.0 / 1e6
+    );
+    let mut n: Vec<usize> = order;
+    n.sort_unstable();
+    let total: usize = n.iter().sum();
+    let q = |f: f64| n[((n.len() - 1) as f64 * f).round() as usize];
+    let mean = total as f64 / n.len() as f64;
+    println!(
+        "{} blocks, {} rows; rows a block: min {}, p10 {}, median {}, mean {:.0}, p90 {}, max {}",
+        n.len(),
+        total,
+        n[0],
+        q(0.1),
+        q(0.5),
+        mean,
+        q(0.9),
+        n[n.len() - 1]
+    );
+    let full = n.iter().filter(|&&r| r >= 899_000).count();
+    println!(
+        "at bzip2's ceiling (>= 899,000 rows): {full} ({:.1}%); mean table a live block: {:.3} MB",
+        100.0 * full as f64 / n.len() as f64,
+        mean * 4.0 / 1e6
+    );
+    let mut hist = [0usize; 10];
+    for &r in &n {
+        hist[(r / 100_000).min(9)] += 1;
+    }
+    for (i, c) in hist.iter().enumerate() {
+        println!("  {:>3}-{:<3} K rows: {c}", i * 100, (i + 1) * 100);
+    }
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let mode = args.get(1).map(String::as_str).unwrap_or("");
@@ -2365,6 +2417,7 @@ fn main() {
                 .collect();
             grid_mode(&bs, rounds, &specs, cpus.as_deref());
         }
-        _ => panic!("coop block|mtf|grid FILE.bz2 ..."),
+        "sizes" => sizes_mode(&bs),
+        _ => panic!("coop block|mtf|grid|sizes FILE.bz2 ..."),
     }
 }

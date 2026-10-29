@@ -141,6 +141,28 @@ bench-libsais-knee-cause rounds="20":
     python3 bench/coop_counters.py --arms p2,p4,p6,p8,p10,s2x1,s4x1,s6x1,s8x1,s10x1 --groups reads,llc_all,queue,fill --reps 2 --no-record
     python3 bench/coop_counters.py --file corpora/wikidata-l9.bz2 --arms p2,p4,p6,p8,p10,s2x1,s4x1,s6x1,s8x1,s10x1 --groups reads,llc_all,queue,fill --reps 2 --no-record
 
+# The knee against a genuinely different footprint (docs/journal/2026-10-29-libsais-knee.md,
+# "Footprint, measured"): the content recompressed by the reference bzip2 at -9 (blocks of
+# 900 K rows, 3.6 MB tables) and -3 (300 K, 1.2 MB), every corpus's block sizes and
+# concurrent footprints reported first (coop sizes), the one-core-a-block sweep on both new
+# corpora, the counters on them, then the machine's own memory ceiling (bench/dram.py: a
+# walk-shaped random probe and a sequential copy, perf counting only the probe). Needs bzip2
+# and sudo; about 40 minutes. Upload every coop-*.md, coop-counters-*.md, dram-*.md, their
+# .jsonl, and the console (the sizes are printed there).
+#   just bench-knee-footprint
+bench-knee-footprint rounds="10":
+    bash bench/corpus.sh
+    bash bench/coop.sh --build-only > /dev/null
+    CARGO_TARGET_DIR=target/coop cargo build --release --example dram
+    test -s corpora/wikidata-bz9.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -9 > corpora/wikidata-bz9.bz2)
+    test -s corpora/wikidata-bz3.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -3 > corpora/wikidata-bz3.bz2)
+    for f in corpora/wikidata.bz2 corpora/wikidata-l9.bz2 corpora/wikidata-bz9.bz2 corpora/wikidata-bz3.bz2; do test -s $f && echo "== $f" && target/coop/release/examples/coop sizes $f; done
+    bash bench/coop.sh --grid-only --file corpora/wikidata-bz9.bz2 --rounds {{rounds}} --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1
+    bash bench/coop.sh --grid-only --file corpora/wikidata-bz3.bz2 --rounds {{rounds}} --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1
+    python3 bench/coop_counters.py --file corpora/wikidata-bz9.bz2 --arms p2,p4,p6,p8,p10,s4x1,s8x1 --groups reads,llc_all --reps 2 --no-record
+    python3 bench/coop_counters.py --file corpora/wikidata-bz3.bz2 --arms p2,p4,p6,p8,p10,s4x1,s8x1 --groups reads,llc_all --reps 2 --no-record
+    python3 bench/dram.py
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10
