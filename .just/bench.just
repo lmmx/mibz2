@@ -175,6 +175,22 @@ bench-coop *args:
     bash bench/corpus.sh
     bash bench/coop.sh "$@"
 
+# bench/coop_ab.py after bench/coop.sh: the #77 experiment (the coop journal's §12). The
+# frozen cooperative kernel (3x3, 4x1) against the same with its walk in room passes (r3x3,
+# r4x1), with production's p4 beside them, 20 rounds paired, each thread pinned. About two
+# minutes. Close the browser and other busy programs first: the gains sought are a few
+# percent. It writes coop-<UTC time>.md, its .jsonl and coop-ab-<UTC time>.md: upload the
+# coop-ab and coop .md files and the .jsonl.
+#   just bench-coop-ab
+#   just bench-coop-ab --rounds 40
+
+# The #77 A/B: the cooperative walk in room passes against the frozen kernel
+[positional-arguments]
+bench-coop-ab *args:
+    bash bench/corpus.sh
+    bash bench/coop.sh --arms 3x3,r3x3,4x1,r4x1,p4 --rounds 20 "$@"
+    python3 bench/coop_ab.py
+
 # bench/coop_counters.py: the counters behind the cooperative grid (#76; the coop journal's
 # §8.2 and §10): each arm alone under `perf stat` for 1 and 21 rounds, one counter pair a
 # pass, 3 repeats, the memory controller machine-wide, then one `perf record` each of p4, 4x1
