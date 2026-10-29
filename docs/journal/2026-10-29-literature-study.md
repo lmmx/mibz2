@@ -228,6 +228,10 @@ leaves, sorted as the synthesis sorts it:
     non-translation rows; 0.91–7.12% a block, median 4.23%). That is the pre-registered
     marginal band (3–8%). 42.8% of the non-translation rows are in groups of 9 or more
     plateaus, which only a payload can serve.
+  - **#100's result (verified in code, `2026-10-29-marker-audit.md`):** pass. Segment
+    ends need 1 bit a group (every start at the block's one slot, r0 & 31) or 6 bits (a
+    flag and a slot), with no added load or synchronisation. So a two-plateau descriptor
+    fits one word (58 or 63 bits), but it would serve about 4% of rows.
 - **Conditional on both:** a dependent-successor throughput benchmark across 1–32 lanes,
   against the T-vector.
 - **Unknown:** whether any compact ψ, built directly from L, beats #81's fused build plus
