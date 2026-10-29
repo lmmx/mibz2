@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "about": "Measured observations for the throughput-memory frontier page (benchmarks/frontier.md). Each series is one machine, one workload, one measurement level and one run or build: never plot points from two series on one line. table_mb is computed, not measured: live full blocks x 900,000 rows x 4 bytes (the T-vector). peak_rss_mb and cpu_s are measured where given, else null. Models and hypothetical formats never appear here.",
+  "series": [
+    {
+      "id": "i9-decoder-lbzip2-9-20261028",
+      "machine": "Intel i9-10900K, 10 cores, 20 MB L3",
+      "workload": "the bench corpus's decoded bytes (209,700,196) recompressed with lbzip2 -9: about 233 blocks of 900 kB",
+      "level": "full decoder (file to hashed output, every CRC checked)",
+      "representation": "T-vector, 32 bits a row",
+      "build": "master, 2026-10-28",
+      "placement": "unpinned",
+      "release": false,
+      "source": "docs/journal/2026-10-28-workstation-scaling.md, section 9 (run blocks-20261028T015837Z), MB/s medians of 6 interleaved rounds",
+      "points": [
+        {"config": "p2", "blocks_live": 2, "cores": 2, "mb_s": 707, "table_mb": 7.2, "peak_rss_mb": null, "cpu_s": null},
+        {"config": "p4", "blocks_live": 4, "cores": 4, "mb_s": 1026, "table_mb": 14.4, "peak_rss_mb": null, "cpu_s": 0.834},
+        {"config": "p6", "blocks_live": 6, "cores": 6, "mb_s": 889, "table_mb": 21.6, "peak_rss_mb": null, "cpu_s": null},
+        {"config": "p8", "blocks_live": 8, "cores": 8, "mb_s": 698, "table_mb": 28.8, "peak_rss_mb": null, "cpu_s": null},
+        {"config": "p10", "blocks_live": 10, "cores": 10, "mb_s": 645, "table_mb": 36.0, "peak_rss_mb": null, "cpu_s": 2.921}
+      ]
+    },
+    {
+      "id": "i9-inversion-pr0-20261029",
+      "machine": "Intel i9-10900K, 10 cores, 20 MB L3",
+      "workload": "the bench corpus (sha256 82f65ace...): 431 blocks, 209.7 MB decoded",
+      "level": "MTF stage + T-vector build + walk (research harness, not the decoder: no scanner, RLE1, CRC or joining)",
+      "representation": "T-vector, 32 bits a row; cooperative arms share one table among a block's k cores",
+      "build": "research/coop-fused bc94272",
+      "placement": "every thread pinned to its own physical core",
+      "release": false,
+      "source": "docs/journal/2026-10-28-cooperative-inversion.md, section 17.4 (run coop-made-20261029T163333Z), MB/s medians of 20 paired rounds",
+      "points": [
+        {"config": "p4", "blocks_live": 4, "cores": 4, "mb_s": 1206, "table_mb": 14.4, "peak_rss_mb": null, "cpu_s": null},
+        {"config": "f3x3", "blocks_live": 3, "cores": 9, "mb_s": 1549, "table_mb": 10.8, "peak_rss_mb": null, "cpu_s": null},
+        {"config": "x3x3", "blocks_live": 3, "cores": 9, "mb_s": 1664, "table_mb": 10.8, "peak_rss_mb": null, "cpu_s": null},
+        {"config": "y3x3", "blocks_live": 3, "cores": 9, "mb_s": 1657, "table_mb": 10.8, "peak_rss_mb": null, "cpu_s": null},
+        {"config": "f4x2", "blocks_live": 4, "cores": 8, "mb_s": 1574, "table_mb": 14.4, "peak_rss_mb": null, "cpu_s": null},
+        {"config": "x4x2", "blocks_live": 4, "cores": 8, "mb_s": 1751, "table_mb": 14.4, "peak_rss_mb": null, "cpu_s": null},
+        {"config": "y4x2", "blocks_live": 4, "cores": 8, "mb_s": 1725, "table_mb": 14.4, "peak_rss_mb": null, "cpu_s": null}
+      ]
+    }
+  ]
+}
