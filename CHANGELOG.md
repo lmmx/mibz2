@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6](https://github.com/lmmx/mibz2/compare/v0.1.5...v0.1.6) - 2026-10-29
+
+### <!-- 1 -->Features
+
+- *(bench)* CPU per byte, amplification and a resource assessment on every pull request; the A/B order alternates (#39, #65) ([#69](https://github.com/lmmx/mibz2/pull/69))
+- *(bench)* the contention fingerprint, mibz2 beside a co-runner on another core ([#71](https://github.com/lmmx/mibz2/pull/71))
+- *(occupancy)* the footprint ledger and a condensed queue summary (#39, #65) ([#70](https://github.com/lmmx/mibz2/pull/70))
+- *(bench)* bench-blocks, the scaling knee against the block size ([#67](https://github.com/lmmx/mibz2/pull/67))
+- *(bench)* the last workstation session for #39: grouped counters, stages under contention, walk gates ([#64](https://github.com/lmmx/mibz2/pull/64))
+- *(bench)* bench-variants, versions and walk settings across thread counts; bench-imc's stall profile ([#61](https://github.com/lmmx/mibz2/pull/61))
+- *(bench)* occupancy runs back to back by default; bench-scaling beside pbz2 and lbzip2 ([#59](https://github.com/lmmx/mibz2/pull/59))
+- *(bench)* just bench-thermal and bench-regimes, where the workstation's slow decodes come from ([#58](https://github.com/lmmx/mibz2/pull/58))
+- *(bench)* just bench-imc and bench-quiet, the memory-controller counters on a quiet machine ([#56](https://github.com/lmmx/mibz2/pull/56))
+- *(occupancy)* placements as paired arms, packed against spread from the sibling map ([#54](https://github.com/lmmx/mibz2/pull/54))
+- *(parallel)* the occupancy instrument, the parallel decoder's own timeline at each thread count ([#53](https://github.com/lmmx/mibz2/pull/53))
+- *(bench)* the room walk's segment assembly timed on its own (#48 step 1, bench 2.1.0) ([#49](https://github.com/lmmx/mibz2/pull/49))
+- *(bench)* a factorial sweep of the walk's mechanisms: chains, prefetch level, scheduling (Actions tab only) ([#41](https://github.com/lmmx/mibz2/pull/41))
+
+### <!-- 2 -->Bug Fixes
+
+- *(bwt)* keep 0.1.5's walk signatures; the prefetch level moves to *_with_prefetch ([#97](https://github.com/lmmx/mibz2/pull/97))
+- *(bench)* the stage table in decode order, not each stage's best on the same block (bench 2.0.0) ([#47](https://github.com/lmmx/mibz2/pull/47))
+- *(bench)* the sweep times each walk in decode order, not right after the same walk ([#45](https://github.com/lmmx/mibz2/pull/45))
+
+### <!-- 4 -->Documentation
+
+- *(site)* version the site's own CSS and JS by the commit deployed
+- *(blog)* the pointer chain is interactive
+- *(blog)* descriptions say what the posts find, not what they are
+- social cards for link previews
+- *(blog)* draw the first post's figures as inline SVG
+- *(blog)* retitle the first post and tone down its wording
+- *(blog)* add a research blog with the succinct-structures write-up ([#96](https://github.com/lmmx/mibz2/pull/96))
+- a Status page, where the research stands (29 October 2026) ([#86](https://github.com/lmmx/mibz2/pull/86))
+- *(changelog)* 0.1.5's notes to an evidence bar, its own tag-to-tag paired run ([#44](https://github.com/lmmx/mibz2/pull/44))
+- *(site)* Why 32 couriers beat one, memory-level parallelism explained ([#38](https://github.com/lmmx/mibz2/pull/38))
+
+### <!-- 9 -->Other
+
+- bz2ngrs and bz2-ng's C as alternatives; mibz2's inverse BWT against bz2ngrs's, phase by phase (bench 3.1.0) ([#74](https://github.com/lmmx/mibz2/pull/74))
+
 ## [0.1.5](https://github.com/lmmx/mibz2/compare/v0.1.4...v0.1.5) - 2026-10-27
 
 The inverse BWT's walk now runs in passes at a shared output offset, after libsais's chain
