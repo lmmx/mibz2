@@ -670,3 +670,128 @@ RLE1, the CRC, segment assembly and the ordered output.
     the PR when one exists.
 - **No production merge** until the counters (§8.2) say why and the decoder A/B says how
   much survives.
+
+## 9. The confirmation (measured, c2620b8, 2026-10-29, the quiet i9)
+
+Two separate two-arm runs, one after the other, as §8.1 registered them:
+- `coop-20261029T081457Z`: p4 against 4x2;
+- `coop-20261029T081605Z`: p4 against 3x3.
+
+Both use 20 rounds, with the builds' order alternating, every block's output checked
+against the room walk's, and no rounds misplaced. The files are in `results/`, and the
+analysis is `analyse.py`, unchanged.
+
+### 9.1 The rule: both pass
+
+| arm | paired geometric mean vs p4 | t 95% | block bootstrap (L = 4) | rounds won | worst round | halves | rule |
+|---|--:|--:|--:|--:|--:|--:|---|
+| 4x2 | **1.230** | 1.217–1.243 | 1.219–1.238 | 20/20 | 1.186 | 1.227, 1.233 | **pass** |
+| 3x3 | **1.323** | 1.312–1.335 | 1.312–1.333 | 20/20 | 1.271 | 1.324, 1.323 | **pass** |
+
+- **4x2 decides the pre-registered hypothesis, and it holds.**
+  - Its discovery figure (1.226, 1.214–1.238) reproduces within 0.3%.
+- **3x3 is confirmed as the nominee.**
+  - It came in 2.3% under its discovery figure (1.354, 1.344–1.364), and the two intervals
+    don't overlap. §5's "two stages" anticipated this: the best of about 19 arms is biased
+    upwards, which is why it was confirmed alone.
+  - Most of the gap is p4, not 3x3. p4's median rose from 1412 to 1463–1465 MB/s, and 3x3's
+    from 1912 to 1942.
+  - In the 19-arm grid, p4 shared the machine with arms of 8–10 cores between its rounds.
+    Here it shares it with one arm.
+- **Stable.**
+  - Lag-1 autocorrelation is −0.06 and −0.03.
+  - The trend is −0.12% and −0.18% per 10 rounds (t −0.1, −0.2).
+  - Neither run shows a position effect.
+  - p4 drifted −1.1% and −0.7% between halves, while the cooperative arms held (+0.4%, −0.0%).
+- **Absolute figures (medians):** p4 1465 and 1463 MB/s, 4x2 1808, 3x3 1942.
+
+So the promotion's step 1 (§5) is met for both. Its step 2 (kernel parity, the build, the
+shared table's checks) and step 3 (the decoder A/B) are still ahead.
+
+### 9.2 Where the time goes, again: the build barely scales
+
+| run | arm | build share | walk vs p4's, paired |
+|---|---|--:|--:|
+| confirmation | 4x2 | 42.7% | 1.578 |
+| confirmation | 3x3 | 42.9% | 1.702 |
+| discovery | 4x2 | 42.0% | — |
+| discovery | 3x3 | 42.5% | 1.73 |
+| both | p4 | 26.3–26.6% | 1.000 |
+
+**Per block, the team's build gains little from its cores.** The figures are wall time per
+block: a worker's build or walk time over the blocks it took, with N blocks live, in ns/B.
+
+| blocks live | arm | k | build | walk | build's gain over k = 1 | walk's gain over k = 1 |
+|--:|---|--:|--:|--:|--:|--:|
+| 4 | 4x1 | 1 | 1.019 | 2.246 | — | — |
+| 4 | 4x2 | 2 | 0.965 (0.941 confirmed) | 1.331 | **1.06×** | 1.69× |
+| 3 | 3x1@1536 | 1 | 0.960 | 2.024 | — | — |
+| 3 | 3x3 | 3 | 0.665 (0.662 confirmed) | 0.901 | **1.44×** | 2.25× |
+| 4 | p4 (production) | 1 | 0.742 (0.724 confirmed) | 2.076 | | |
+
+The k = 1 rows are discovery's, since the confirmation ran no k = 1 arm. The confirmed
+figures in brackets agree within 3%.
+
+- **4x2's team build, on 2 cores, is slower than production's build on 1** (0.94–0.97
+  against 0.72–0.74 ns/B a block).
+- **The source names what a team adds over one thread** (`coop_build`, issue #81):
+  - k > 1 recounts each range (#78, E5);
+  - there is a barrier between the copy and the scatter;
+  - phase 2's read-modify-write lands, for k > 1, mostly on lines that another thread wrote
+    in phase 1 (#81, E11).
+  - Which of these costs what is open. E3's build-only counters (`xsnp_hitm`, stores, IMC
+    writes) and the E5/E11 variants decide it.
+- **What the build is worth (a model, from the additive times above, not a measurement):**
+  - If 3x3's build scaled ideally from the cooperative kernel's own k = 1 (0.96 / 3 = 0.32
+    ns/B a block), 3x3's block would take 1.20 ns/B instead of 1.54. That is ×1.29, about
+    1.70 × p4.
+  - If it matched p4's aggregate build rate, it would be 1.38–1.44 × p4.
+  - E5's pass line (3x3 ≥ 1.45 × p4, `2026-10-29-expert-review.md`) sits between the two.
+- **So the build is now the larger lever, and the kernel the other.**
+  - The cooperative kernel's own +18% build and +16% walk on one core are #77, E4.
+  - The order §8.3 set (the kernel and the build, in the harness) stands. The build's
+    measured non-scaling moves E5 and E11 to the front of it.
+
+### 9.3 A separate observation: one block alone, with the pool idle (informative, not gated)
+
+The single-block table (each block inverted by every arm in turn, the arms rotated) shows the
+team's build getting slower as cores are added:
+
+| k | build ns/B (two runs) | walk ns/B | walk's last helper start (µs a block) |
+|--:|--:|--:|--:|
+| 1 | 0.96, 0.97 | 1.64, 1.71 | — |
+| 2 | 1.57, 1.67 | 1.28, 1.39 | 316, 337 |
+| 3 | 2.58, 2.61 | 1.07, 1.08 | 190, 192 |
+| 4 | 2.30, 2.19 | 0.88, 0.84 | 137, 117 |
+
+Discovery's run showed the same (0.98, 1.75, 2.54, 2.27).
+
+- **In the grid the same team starts its helpers within 7–11 µs, against 117–337 µs here.**
+- In this mode, between one block of an arm and its next, the other eleven arms run. A
+  helper spins about 2,000 `pause`s (tens of µs on this core), then parks, so it is asleep
+  when the next block arrives.
+- **Hypothesis:** wake-up latency, possibly a deep C-state exit, plus whatever cold-cache
+  cost an idle pool's first touch pays.
+  - That would explain the walk's late starts.
+  - At about 0.8 ms extra per block at k = 3, it may not be all of the build's slowdown.
+- **Why it matters later, not now:**
+  - The grid is the decision metric, and its helpers stay warm.
+  - A decoder's team goes idle whenever its queue drains: small files, a stream's tail, low
+    thread counts. So the decoder A/B (§8.4) needs its idle-to-busy cost measured, and
+    perhaps a longer spin while blocks are queued.
+- **The test that would separate the causes** (deferred):
+  - one block alone, with the helpers never parking;
+  - then, separately, with deep C-states disabled for the run (`cpupower idle-set -D` and
+    re-enabled after).
+  - Each shows the build at k = 2–4 against k = 1.
+
+### 9.4 What follows
+
+- **Exploratory, now that the gate has passed** (§8.1, E2), on the same pilot, one at a time:
+  - `just bench-coop --arms p4,4x1,3x3,s4x1,s3x3 --rounds 20`: the kernels side by side
+    at a fixed footprint;
+  - `just bench-coop --arms p4,p6,p8,p10,s4x1,s6x1,s8x1,s10x1 --rounds 16`: libsais's
+    scaling under pressure.
+- **The counters (§8.2, E3)** need a script that runs one arm alone under `perf stat`,
+  pinned as in the grid. It goes on a successor branch, so this pilot stays as measured.
+- **Then §8.3 in the harness:** the build first (E5, E11), then the kernel (E4).
