@@ -1529,3 +1529,76 @@ just bench-coop-profile --arms p4,4x1,r4x1,3x3,r3x3
 
 Upload `coop-ab-*.md` and `coop-*.md` with its `.jsonl` (the A/B), and `coop-profile-*.md`
 with its `.tar.gz` (the profile). The A/B takes about two minutes, and the profile about four.
+
+### 12.4 The result (measured, the i9, ef6a576, 2026-10-29): both gains shown, 3x3's below its prediction
+
+The runs were `coop-20261029T105209Z` (with `coop-ab-20261029T105244Z`), and the profile
+`coop-profile-20261029T105249Z`. The browser was closed. The A/B ran 20 paired rounds, every
+thread pinned with none misplaced, and every block's output was checked.
+
+| | frozen | room walk | paired ratio, mean ±95% (min–max) | rounds won | walk-phase ratio | build ratio (control) | predicted |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| 3x3 → r3x3 | 1950 MB/s | 2016 MB/s | **1.027 ±0.009** (0.976–1.053) | 18/20 | 1.057 ±0.009 | 0.991 ±0.011 | 1.04–1.14 |
+| 4x1 → r4x1 | 1276 MB/s | 1339 MB/s | **1.060 ±0.011** (1.002–1.088) | 20/20 | 1.092 ±0.017 | 0.999 ±0.006 | 1.05–1.15 |
+
+Against p4 in the same run, paired: 3x3 1.331 → r3x3 **1.368**, and 4x1 0.872 → r4x1
+0.923.
+
+**The instructions fell as predicted.** The kernel's own symbols, without the reference
+inversion (§11.1):
+
+| per byte | 4x1 | r4x1 | 3x3 | r3x3 |
+|---|--:|--:|--:|--:|
+| walk instructions | 22.2 | **16.9** | 22.4 | **17.1** |
+| walk cycles | 10.1 | 8.44 | 10.1 | 8.89 |
+| of which stalled on memory | 2.64 | 3.16 | 2.15 | 3.08 |
+| of which not stalled | 7.46 | 5.28 | 7.95 | 5.81 |
+| build instructions | 9.27 | 9.28 | 11.98 | 11.92 |
+
+(The relayed figures, 23.6 → 18.2 and 23.7 → 18.5, include the reference inversion's
+1.4. The difference is the same.)
+
+**Against §12.2, as registered:**
+- **Instructions:** predicted 16.8 ± 1.5 and 17.0 ± 1.5; measured 16.9 and 17.1. **Pass.**
+- **The build is unchanged:** **pass**, at ±0.1 a byte. The timed control held too (0.999
+  and 0.991).
+- **r4x1/4x1 = 1.060.** Inside the predicted 1.05–1.15, at its low end. **A gain.**
+- **r3x3/3x3 = 1.027.** **A gain**, since its interval excludes 1. But it is **below the
+  predicted 1.04–1.14.** The prediction failed, and that is recorded as such.
+- **The decision rule's first branch applies** (both gains shown, the control held). The
+  room walk becomes the cooperative kernel's walk from here on, and production code is
+  untouched.
+
+**Why 3x3 gained less: the cycles the change removed came partly back as memory stalls.**
+This is the risk §12.2 named.
+- **The walk's cycles that weren't memory stalls fell by 2.2 a byte in r4x1 and 2.1 in
+  r3x3.** That much went with the instructions.
+- **Its memory-stall cycles rose,** by 0.52 a byte in r4x1 and 0.93 in r3x3.
+- **So the net saving was 1.66 a byte (−16%) in r4x1 and 1.21 (−12%) in r3x3.** About a
+  quarter of the issue time removed reappeared as stall in r4x1, and over two fifths in
+  r3x3.
+- **What fits, and what isn't measured:** this fits a walk that is closer to latency-bound
+  in teams, where the overlap is already high (§10.4). There, each lane's next step comes
+  sooner after its prefetch, with 31 × 16 instructions between them instead of 31 × 22.
+  But these are sampled `stalls_mem_any` cycles, not a measure of late prefetches. Prefetch
+  lead time is the leading explanation, not a measured one.
+- **The build is now 45% of r3x3's time** (a worker's median build seconds over build +
+  walk), against 43% in 3x3 and 26% in p4. The walk's gain is diluted by a phase the
+  change didn't touch.
+
+**Why the size of the gain was mispredicted.** The 0.49 elasticity came from comparing 4x1
+with p4. Those two differ in their build code as well as their walks, and the comparison
+couldn't see that the walk's cost is part latency. Measured on this change, the elasticity
+of throughput to instructions is about 0.32 in r4x1 and 0.16 in r3x3. Later predictions
+use the measured figure for the phase they change, not an arm-to-arm one.
+
+**Where the arms stand now:**
+- **r4x1's walk now outruns production's** (paired walk phase 1.038 × p4's). Its remaining
+  0.923 against p4 is all the build: 9.28 instructions a byte against production's 6.65,
+  and 3925 against 5678 build MB/s.
+- **In r3x3, the build's k > 1 recount (#78) is 2.65 instructions a byte** (4.01 against
+  k = 1's 1.36), and the scatter is 7.91, against production's ~5.3 for the same work.
+  That makes the build the next lever, ahead of any further tuning of the walk.
+- **Not done, deliberately:** retuning the walk's lanes or prefetch distance to win back
+  the re-exposed stall. That would be a second change, measured on its own after the
+  build's.
