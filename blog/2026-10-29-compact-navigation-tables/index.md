@@ -136,11 +136,11 @@ Initially, we had no idea how well these representations would fit real BWT data
 
 Perhaps the values were increasing but widely scattered, making compression awkward.
 
-So Claude wrote a census program to inspect them.
+So we wrote a census program to inspect them.
 
 It found more structure than the theory alone guarantees.
 
-What Claude reported about our benchmark corpus
+What our census found in the benchmark corpus
 
 These two percentages overlap: they aren't two separate populations.
 
@@ -254,14 +254,14 @@ There are three substantial unanswered questions.
 
 **Third, does the 77.6% translation property hold broadly?** We know it appears in our benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.
 
-The agents have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.
+We have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.
 
 ## 9\. What is known and what is not
 
 | Finding | Status |
 | --- | --- |
 | Ψ has increasing sequences that can be compressed | Mathematically established |
-| Actual benchmark data contains abundant consecutive-position groups | Measured by Claude's census, as reported |
+| Actual benchmark data contains abundant consecutive-position groups | Measured by our census |
 | Fixed 64-byte records can represent the overwhelming majority of measured groups | Strongly supported by the census; complete encoding still needs validation |
 | A two-tier directory could shrink storage further | New design hypothesis |
 | Reduced working sets can improve cache residency | Supported by mibz2's existing performance measurements |
@@ -335,7 +335,7 @@ To:
 
 > "We have evidence that most of the permutation can be represented by simple rules, and we have several concrete ways of exploiting those rules while protecting the memory-level parallelism that makes mibz2 fast."
 
-The agents now have a real engineering question to settle: whether those smaller representations can make the CPU finish its work faster.
+We now have a real engineering question to settle: whether those smaller representations can make the CPU finish its work faster.
 
 The working hypothesis, in one line:
 

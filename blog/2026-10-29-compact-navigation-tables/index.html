@@ -66,13 +66,13 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=56d5fffc86d3">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=4caf33e54d85">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=56d5fffc86d3">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=4caf33e54d85">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=56d5fffc86d3">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=4caf33e54d85">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=56d5fffc86d3">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=4caf33e54d85">
     
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -1721,10 +1721,10 @@ blocks found, and what comes next.</p>
 <h2 id="4-what-the-census-found">4. What the census found<a class="headerlink" href="#4-what-the-census-found" title="Permanent link">&para;</a></h2>
 <p>Initially, we had no idea how well these representations would fit real BWT data.</p>
 <p>Perhaps the values were increasing but widely scattered, making compression awkward.</p>
-<p>So Claude wrote a census program to inspect them.</p>
+<p>So we wrote a census program to inspect them.</p>
 <p>It found more structure than the theory alone guarantees.</p>
 <figure class="bf-fig">
-<p class="bf-title">What Claude reported about our benchmark corpus</p>
+<p class="bf-title">What our census found in the benchmark corpus</p>
 <svg viewBox="0 0 720 150" role="img" aria-label="77.6% of rows are in simple consecutive groups; 99.51% fit compact FOR or Elias–Fano records."><text x="0" y="20" class="bf-ts">Simple consecutive groups</text><text x="720" y="22" class="bf-big-green" text-anchor="end">77.6%</text><rect x="0" y="32" width="720" height="13" rx="6.5" class="bf-track"/><rect x="0" y="32" width="558.72" height="13" rx="6.5" class="bf-green"/><text x="0" y="64" class="bf-tm">Rows where a complete group of pointers can potentially be represented by one base plus a simple offset.</text><text x="0" y="104" class="bf-ts">Fit compact FOR or Elias–Fano</text><text x="720" y="106" class="bf-big" text-anchor="end">99.51%</text><rect x="0" y="116" width="720" height="13" rx="6.5" class="bf-track"/><rect x="0" y="116" width="716.472" height="13" rx="6.5" class="bf-steel"/><text x="0" y="148" class="bf-tm">Only 0.49% of rows required exceptions under the proposed 32-value encoding scheme.</text><path d="M0 78.5H720" class="bf-rule"/></svg>
 <figcaption>These two percentages overlap: they aren't two separate populations.</figcaption>
 </figure>
@@ -1802,7 +1802,7 @@ blocks found, and what comes next.</p>
 <p><strong>First, how much does decoding a compressed pointer cost?</strong> With the current T-vector, the CPU loads a 32-bit value and extracts the next row. With a compressed record, it may need shifts, masks, a format test and sometimes an additional memory access. Even a small amount of extra work matters when repeated millions of times.</p>
 <p><strong>Second, how expensive is construction?</strong> The compressed table must be built from the BWT before it can be traversed. A representation that makes traversal faster but takes twice as long to build might lose overall.</p>
 <p><strong>Third, does the 77.6% translation property hold broadly?</strong> We know it appears in our benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.</p>
-<p>The agents have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.</p>
+<p>We have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.</p>
 <h2 id="9-what-is-known-and-what-is-not">9. What is known and what is not<a class="headerlink" href="#9-what-is-known-and-what-is-not" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1818,7 +1818,7 @@ blocks found, and what comes next.</p>
 </tr>
 <tr>
 <td>Actual benchmark data contains abundant consecutive-position groups</td>
-<td>Measured by Claude's census, as reported</td>
+<td>Measured by our census</td>
 </tr>
 <tr>
 <td>Fixed 64-byte records can represent the overwhelming majority of measured groups</td>
@@ -1870,7 +1870,7 @@ blocks found, and what comes next.</p>
 <h2 id="where-weve-arrived">Where we've arrived<a class="headerlink" href="#where-weve-arrived" title="Permanent link">&para;</a></h2>
 <figure class="bf-fig">
 <p class="bf-title">Our research journey</p>
-<svg viewBox="0 0 720 340" role="img" aria-label="Five steps: Seward 2001; compressed permutation research; the 16-bit hypothesis; the corpus census (77.6% translation groups); the two-tier idea."><path d="M15 30V66" class="bf-link"/><circle cx="15" cy="14" r="13" class="bf-dot"/><text x="15" y="19" class="bf-t-strong" text-anchor="middle">1</text><text x="44" y="19" class="bf-ts">Seward, 2001</text><text x="44" y="42" class="bf-t">Showed that inverse-BWT navigation can trade memory for computation.</text><path d="M15 98V134" class="bf-link"/><circle cx="15" cy="82" r="13" class="bf-dot"/><text x="15" y="87" class="bf-t-strong" text-anchor="middle">2</text><text x="44" y="87" class="bf-ts">Compressed permutation research</text><text x="44" y="110" class="bf-t">Established that the sorted structure of Ψ can be represented economically.</text><path d="M15 166V202" class="bf-link"/><circle cx="15" cy="150" r="13" class="bf-dot"/><text x="15" y="155" class="bf-t-strong" text-anchor="middle">3</text><text x="44" y="155" class="bf-ts">Our 16-bit hypothesis</text><text x="44" y="178" class="bf-t">Proposed fitting 32 navigation values inside one cache line.</text><path d="M15 234V270" class="bf-link"/><circle cx="15" cy="218" r="13" class="bf-dot-hi"/><text x="15" y="223" class="bf-t-strong" text-anchor="middle">4</text><text x="44" y="223" class="bf-ts">Claude's corpus census</text><text x="44" y="246" class="bf-t">Found that 77.6% of rows qualify for simple translation groups, making a cheap fast path plausible.</text><circle cx="15" cy="286" r="13" class="bf-dot-hi"/><text x="15" y="291" class="bf-t-strong" text-anchor="middle">5</text><text x="44" y="291" class="bf-ts">Our latest two-tier idea</text><text x="44" y="314" class="bf-t">Proposed storing complete answers for simple groups directly in tiny descriptors,</text><text x="44" y="332" class="bf-t">fetching larger records only when needed.</text></svg>
+<svg viewBox="0 0 720 340" role="img" aria-label="Five steps: Seward 2001; compressed permutation research; the 16-bit hypothesis; the corpus census (77.6% translation groups); the two-tier idea."><path d="M15 30V66" class="bf-link"/><circle cx="15" cy="14" r="13" class="bf-dot"/><text x="15" y="19" class="bf-t-strong" text-anchor="middle">1</text><text x="44" y="19" class="bf-ts">Seward, 2001</text><text x="44" y="42" class="bf-t">Showed that inverse-BWT navigation can trade memory for computation.</text><path d="M15 98V134" class="bf-link"/><circle cx="15" cy="82" r="13" class="bf-dot"/><text x="15" y="87" class="bf-t-strong" text-anchor="middle">2</text><text x="44" y="87" class="bf-ts">Compressed permutation research</text><text x="44" y="110" class="bf-t">Established that the sorted structure of Ψ can be represented economically.</text><path d="M15 166V202" class="bf-link"/><circle cx="15" cy="150" r="13" class="bf-dot"/><text x="15" y="155" class="bf-t-strong" text-anchor="middle">3</text><text x="44" y="155" class="bf-ts">Our 16-bit hypothesis</text><text x="44" y="178" class="bf-t">Proposed fitting 32 navigation values inside one cache line.</text><path d="M15 234V270" class="bf-link"/><circle cx="15" cy="218" r="13" class="bf-dot-hi"/><text x="15" y="223" class="bf-t-strong" text-anchor="middle">4</text><text x="44" y="223" class="bf-ts">Our corpus census</text><text x="44" y="246" class="bf-t">Found that 77.6% of rows qualify for simple translation groups, making a cheap fast path plausible.</text><circle cx="15" cy="286" r="13" class="bf-dot-hi"/><text x="15" y="291" class="bf-t-strong" text-anchor="middle">5</text><text x="44" y="291" class="bf-ts">Our latest two-tier idea</text><text x="44" y="314" class="bf-t">Proposed storing complete answers for simple groups directly in tiny descriptors,</text><text x="44" y="332" class="bf-t">fetching larger records only when needed.</text></svg>
 </figure>
 
 <h2 id="what-comes-next">What comes next<a class="headerlink" href="#what-comes-next" title="Permanent link">&para;</a></h2>
@@ -1903,7 +1903,7 @@ measured navigation cost, not on size alone:</p>
 <blockquote>
 <p>"We have evidence that most of the permutation can be represented by simple rules, and we have several concrete ways of exploiting those rules while protecting the memory-level parallelism that makes mibz2 fast."</p>
 </blockquote>
-<p>The agents now have a real engineering question to settle: whether those smaller representations can make the CPU finish its work faster.</p>
+<p>We now have a real engineering question to settle: whether those smaller representations can make the CPU finish its work faster.</p>
 <p>The working hypothesis, in one line:</p>
 <blockquote>
 <p>A decoder may get faster not by following its pointers more efficiently, but by not storing most of them individually.</p>
@@ -2069,11 +2069,11 @@ and on <a href="https://github.com/lmmx/mibz2/issues/79">#79</a>.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=56d5fffc86d3"></script>
+        <script src="../../assets/javascripts/bench.js?v=4caf33e54d85"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=56d5fffc86d3"></script>
+        <script src="../../assets/javascripts/couriers.js?v=4caf33e54d85"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=56d5fffc86d3"></script>
+        <script src="../../assets/javascripts/blog.js?v=4caf33e54d85"></script>
       
     
   </body>
