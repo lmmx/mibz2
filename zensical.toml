@@ -9,11 +9,13 @@ extra_css = [
   "assets/stylesheets/bench.css?v=dev",
   "assets/stylesheets/couriers.css?v=dev",
   "assets/stylesheets/blog.css?v=dev",
+  "assets/stylesheets/frontier.css?v=dev",
 ]
 extra_javascript = [
   "assets/javascripts/bench.js?v=dev",
   "assets/javascripts/couriers.js?v=dev",
   "assets/javascripts/blog.js?v=dev",
+  "assets/javascripts/frontier.js?v=dev",
 ]
 nav = [
   { "Home" = "index.md" },
