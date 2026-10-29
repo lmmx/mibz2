@@ -795,3 +795,63 @@ Discovery's run showed the same (0.98, 1.75, 2.54, 2.27).
 - **The counters (§8.2, E3)** need a script that runs one arm alone under `perf stat`,
   pinned as in the grid. It goes on a successor branch, so this pilot stays as measured.
 - **Then §8.3 in the harness:** the build first (E5, E11), then the kernel (E4).
+
+### 9.5 The exploratory runs (measured, same pilot, 2026-10-29; not gated)
+
+These are E2 in `2026-10-29-expert-review.md`, with each run's criterion fixed there before it
+ran:
+- `coop-20261029T082204Z`: p4, 4x1, 3x3, s4x1, s3x3, 20 rounds;
+- `coop-20261029T082917Z`: p4, p6, p8, p10, s4x1, s6x1, s8x1, s10x1, 16 rounds.
+
+**Run 3: the kernels at a fixed footprint.** Each figure is the paired geometric mean with
+its 95% interval.
+
+| ratio | this run | discovery |
+|---|--:|--:|
+| 4x1 / p4 (our cooperative kernel, k = 1) | 0.868 (0.857–0.879) | 0.865 |
+| s4x1 / p4 (libsais, independent) | 1.065 (1.055–1.074) | 1.083 |
+| 3x3 / p4 | 1.328 (1.302–1.355) | 1.354 |
+| s3x3 / p4 | 1.587 (1.540–1.636) | 1.629 |
+| **kernel: s4x1 / 4x1** | **1.227** (1.215–1.239) | 1.25 |
+| **kernel under cooperation: s3x3 / 3x3** | **1.195** (1.169–1.222) | 1.20 |
+| cooperation's lift, ours: 3x3 / 4x1 | 1.531 (1.505–1.557) | 1.565 |
+| cooperation's lift, libsais: s3x3 / s4x1 | 1.491 (1.446–1.537) | 1.504 |
+
+- **§7.5's decomposition reproduces.** Cooperation lifts both implementations by about 1.5.
+  The gap between them is the kernel, 1.2–1.23.
+- **Rounds 18 and 19 were disturbed.**
+  - Every arm slowed, by up to 18% for p4 and 31% for s3x3.
+  - 3x3's helpers started 236 µs late, against 6–10 µs in the other rounds.
+  - libsais had 6 ms of time unaccounted, against under 0.4 ms elsewhere.
+  - Something else ran on the machine.
+- **The rounds are kept, as the protocol says.** Without them, every ratio moves by at most
+  0.016 and every conclusion stands: s3x3 / 3x3 is 1.211 and 3x3 / 4x1 is 1.533.
+
+**Run 4: libsais against production as workers rise (E2's question).**
+
+| N independent workers | sNx1 / pN, paired (95%) | pN / p4 | sNx1 / p4 |
+|--:|--:|--:|--:|
+| 4 | 1.065 (1.057–1.073) | 1.000 | 1.065 |
+| 6 | 1.135 (1.121–1.148) | 0.740 | 0.840 |
+| 8 | 1.264 (1.251–1.277) | 0.471 | 0.595 |
+| 10 | **1.343** (1.322–1.365) | 0.372 | 0.500 |
+
+- **E2's reading: rising with N.** The criterion fixed in the expert review says that means
+  libsais's kernel gains with memory pressure; flat at about 1.08 would have meant a
+  constant kernel difference. The lead doubles from 6.5% to 34% as the live tables leave
+  the L3.
+- **The hypothesis it supports, not proves:**
+  - ψ² halves the dependent loads per output byte, so each extra miss a byte is worth more
+    the further it goes. libsais makes one load for two bytes.
+  - libsais's other walk mechanisms (24 lanes, a round of prefetch lead, its chains) are not
+    separated here. E1 (our own pair walk against v0.1.4 and v0.1.5, at 1–10 workers)
+    separates the two-bytes-a-load part on our own code.
+- **libsais has the same knee.** s6x1 falls to 0.84 × p4, and its best independent figure is
+  at 4 workers. So cooperation is still what moves the peak for either kernel. That is why
+  s3x3, at 1.59 × p4, is the best arm measured.
+- **What this does to E1's prior.**
+  - E1's pass line asks the pair walk for ≥ 1.05 × v0.1.4 at its best and at 8–10 workers.
+  - libsais's 1.26–1.34 at 8–10 makes the 8–10 half of that plausible on this machine.
+  - At 4 workers libsais leads by only 6.5%, so the "at its best" half is the harder one.
+- **For the counters (E3):** at pN against sNx1, `mem_load_retired.l3_miss` per output byte
+  should fall by about half if ψ² is the mechanism. That joins §8.2's predictions.
