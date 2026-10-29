@@ -79,3 +79,62 @@ threads, 10 rounds, paired.
   memory pressure may make the init pass's traffic count for more.
 - **At 6–10 threads:** within noise of 1 (the control).
 - **Any slowdown** at 1–4 beyond noise rejects the change.
+
+## The result (measured; merged as #114, 6a341f6)
+
+### 1. CI's bench (the pull request, head f121097, 10 paired rounds, a 2-core runner with SMT)
+
+**The registered criteria, all met:**
+- **The build stage is faster:** −6.0% (−8.5%, −3.5%).
+- **No thread count is slower:** none slower in wall time, across 21 corpus and thread-count
+  rows.
+- **The same bytes:** on every run.
+
+**What the criteria didn't gate, recorded as measured:**
+- **No whole-decoder gain beyond noise.** The Wikidata blocks: +0.8% (−1.2%, +2.8%) at
+  1 thread, +0.8% (−0.7%, +2.3%) at 4.
+  - The build is 16.7% of a one-thread decode there, so its −6% predicts only about −1%
+    overall, within the noise.
+- **CPU-seconds rose slightly in three rows,** each interval excluding no change:
+  - Wikidata at 4 threads: +1.1% (+0.2%, +2.1%);
+  - records at 2: +1.0%; records at 4: +2.0% (+1.0%, +2.9%).
+  - The runner's 4-thread runs share SMT siblings. The bench's own summary read "Worse (CPU
+    cost), and no measure better".
+
+### 2. The i9 (`just bench-one-pass`: this build against `v0.2.0`, 10 paired rounds)
+
+Files: `2026-10-29-one-pass-build/` (`variants-20261029T230112Z.*`, `one-pass-console.log`).
+
+| threads | speed | CPU-seconds | the plan |
+|--:|--:|--:|---|
+| 1 | **1.048 (1.026–1.070)** | **0.954 (0.934–0.975)** | the serial decoder (`bwt::build`) |
+| 2 | 1.025 (0.994–1.056) | 0.980 (0.953–1.006) | workers (`bwt::build`) |
+| 4 | **1.035 (1.010–1.060)** | **0.971 (0.945–0.998)** | workers (`bwt::build`) |
+| 6 | 0.999 (0.973–1.026) | 1.002 | teams (the fused build, unchanged): the control |
+| 8 | 1.007 (0.986–1.028) | 0.994 | the control |
+| 10 | 0.998 (0.961–1.036) | 1.001 | the control |
+
+**The registered i9 reading:** faster at 1–4 threads, the control within noise of 1, no
+slowdown at 1–4. **Met.** The bytes were the same on every run.
+
+### 3. The two machines disagree, and both stay in the record
+
+**Where the code changes,** the i9 shows a whole-decoder gain of 3.5–4.8%, at less CPU.
+CI shows none beyond noise, and a 1–2% CPU rise on its shared-core runs.
+
+**Not established:** why. The hypothesis is the extra loads, of L at each slot.
+- On SMT siblings they compete with the sibling's work.
+- On the i9's physical cores they cost less than the init pass's 3.6 MB of stores they
+  replace.
+- These measurements don't separate that from the runners' noise. The CI CPU rise is a
+  small, real signal for SMT-shared 2-core machines, and is kept as such.
+
+### 4. The shipping decision, made separately
+
+**The pre-registered experiment succeeded** on both of its registered measurements.
+
+**Merging was a separate engineering decision,** made by the user after both results.
+- **The basis:** the i9 shows a consistent gain at the thread counts the change reaches,
+  with less CPU, and none at the control.
+- **Against it, weighed:** CI's inconclusive whole-decoder result and its small CPU rise,
+  recorded above, not erased.

@@ -1,0 +1,179 @@
+git rev-parse -q --verify 'v0.2.0^{commit}' > /dev/null || git fetch origin tag v0.2.0 --no-tags
+just bench-variants --variants v0.2.0 --threads 1,2,4,6,8,10 --rounds 10 --note "one-pass build against v0.2.0"
+bash bench/corpus.sh
+   Compiling mibz2 v0.2.0 (/home/louis/dev/mibz2-coop)
+    Finished `release` profile [optimized + debuginfo] target(s) in 13.58s
+cargo build --release --example ab
+   Compiling mibz2 v0.2.0 (/home/louis/dev/mibz2-coop)
+    Finished `release` profile [optimized + debuginfo] target(s) in 13.87s
+python3 bench/variants.py "$@"
+bench-variants: building v0.2.0 (v0.2.0)
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling libm v0.2.16
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling thiserror v2.0.21
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling mibz2 v0.2.0 (/home/louis/dev/mibz2-coop/target/variants/v0.2.0)
+   Compiling cc v1.10.0
+   Compiling syn v3.0.9
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 19.15s
+r0 wikidata     t=1 mibz2            wall   0.528 cpu   0.529 rss    26MB others 0.00 steal 0.0% 
+r0 wikidata     t=1 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.543 cpu   0.545 rss    26MB others 0.01 steal 0.0% 
+r0 wikidata     t=2 mibz2            wall   0.300 cpu   0.619 rss    48MB others 0.04 steal 0.0% 
+r0 wikidata     t=2 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.299 cpu   0.613 rss    48MB others 0.06 steal 0.0% 
+r0 wikidata     t=4 mibz2            wall   0.198 cpu   0.802 rss    73MB others 0.23 steal 0.0% 
+r0 wikidata     t=4 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.208 cpu   0.841 rss    73MB others 0.04 steal 0.0% 
+r0 wikidata     t=6 mibz2            wall   0.175 cpu   0.810 rss    61MB others 0.05 steal 0.0% 
+r0 wikidata     t=6 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.173 cpu   0.798 rss    61MB others 0.07 steal 0.0% 
+r0 wikidata     t=8 mibz2            wall   0.161 cpu   0.979 rss    72MB others 0.19 steal 0.0% 
+r0 wikidata     t=8 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.164 cpu   0.995 rss    74MB others 0.15 steal 0.0% 
+r0 wikidata     t=10 mibz2            wall   0.164 cpu   1.002 rss    74MB others 0.15 steal 0.0% 
+r0 wikidata     t=10 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.167 cpu   1.010 rss    74MB others 0.17 steal 0.0% 
+r1 wikidata     t=1 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.551 cpu   0.552 rss    26MB others 0.03 steal 0.0% 
+r1 wikidata     t=1 mibz2            wall   0.529 cpu   0.530 rss    26MB others 0.09 steal 0.0% 
+r1 wikidata     t=2 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.307 cpu   0.629 rss    47MB others 0.10 steal 0.0% 
+r1 wikidata     t=2 mibz2            wall   0.299 cpu   0.609 rss    47MB others 0.03 steal 0.0% 
+r1 wikidata     t=4 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.211 cpu   0.849 rss    73MB others 0.14 steal 0.0% 
+r1 wikidata     t=4 mibz2            wall   0.200 cpu   0.796 rss    73MB others 0.16 steal 0.0% 
+r1 wikidata     t=6 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.172 cpu   0.791 rss    60MB others 0.11 steal 0.0% 
+r1 wikidata     t=6 mibz2            wall   0.181 cpu   0.826 rss    61MB others 0.13 steal 0.0% 
+r1 wikidata     t=8 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.158 cpu   0.969 rss    74MB others 0.24 steal 0.0% 
+r1 wikidata     t=8 mibz2            wall   0.161 cpu   0.978 rss    74MB others 0.25 steal 0.0% 
+r1 wikidata     t=10 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.164 cpu   0.987 rss    75MB others 0.14 steal 0.0% 
+r1 wikidata     t=10 mibz2            wall   0.160 cpu   0.979 rss    73MB others 0.19 steal 0.0% 
+r2 wikidata     t=1 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.551 cpu   0.552 rss    26MB others 0.05 steal 0.0% 
+r2 wikidata     t=1 mibz2            wall   0.526 cpu   0.527 rss    26MB others 0.04 steal 0.0% 
+r2 wikidata     t=2 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.304 cpu   0.630 rss    48MB others 0.06 steal 0.0% 
+r2 wikidata     t=2 mibz2            wall   0.300 cpu   0.615 rss    48MB others 0.08 steal 0.0% 
+r2 wikidata     t=4 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.207 cpu   0.837 rss    72MB others 0.15 steal 0.0% 
+r2 wikidata     t=4 mibz2            wall   0.195 cpu   0.785 rss    73MB others 0.12 steal 0.0% 
+r2 wikidata     t=6 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.182 cpu   0.828 rss    61MB others 0.12 steal 0.0% 
+r2 wikidata     t=6 mibz2            wall   0.171 cpu   0.800 rss    61MB others 0.12 steal 0.0% 
+r2 wikidata     t=8 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.169 cpu   1.012 rss    74MB others 0.27 steal 0.0% 
+r2 wikidata     t=8 mibz2            wall   0.164 cpu   0.998 rss    74MB others 0.19 steal 0.0% 
+r2 wikidata     t=10 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.164 cpu   0.993 rss    74MB others 0.22 steal 0.0% 
+r2 wikidata     t=10 mibz2            wall   0.162 cpu   0.989 rss    75MB others 0.24 steal 0.0% 
+r3 wikidata     t=1 mibz2            wall   0.547 cpu   0.548 rss    26MB others 0.04 steal 0.0% 
+r3 wikidata     t=1 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.554 cpu   0.555 rss    26MB others 0.05 steal 0.0% 
+r3 wikidata     t=2 mibz2            wall   0.301 cpu   0.615 rss    47MB others 0.08 steal 0.0% 
+r3 wikidata     t=2 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.301 cpu   0.619 rss    47MB others 0.07 steal 0.0% 
+r3 wikidata     t=4 mibz2            wall   0.205 cpu   0.826 rss    73MB others 0.20 steal 0.0% 
+r3 wikidata     t=4 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.203 cpu   0.812 rss    70MB others 0.32 steal 0.0% 
+r3 wikidata     t=6 mibz2            wall   0.177 cpu   0.814 rss    61MB others 0.89 steal 0.0% 
+r3 wikidata     t=6 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.175 cpu   0.807 rss    61MB others 0.23 steal 0.0% 
+r3 wikidata     t=8 mibz2            wall   0.164 cpu   0.992 rss    74MB others 0.11 steal 0.0% 
+r3 wikidata     t=8 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.164 cpu   0.992 rss    73MB others 0.22 steal 0.0% 
+r3 wikidata     t=10 mibz2            wall   0.163 cpu   0.994 rss    73MB others 0.22 steal 0.0% 
+r3 wikidata     t=10 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.163 cpu   0.985 rss    74MB others 0.27 steal 0.0% 
+r4 wikidata     t=1 mibz2            wall   0.534 cpu   0.535 rss    26MB others 0.05 steal 0.0% 
+r4 wikidata     t=1 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.547 cpu   0.548 rss    26MB others 0.06 steal 0.0% 
+r4 wikidata     t=2 mibz2            wall   0.324 cpu   0.664 rss    48MB others 0.05 steal 0.0% 
+r4 wikidata     t=2 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.303 cpu   0.621 rss    48MB others 0.26 steal 0.0% 
+r4 wikidata     t=4 mibz2            wall   0.190 cpu   0.775 rss    73MB others 0.18 steal 0.0% 
+r4 wikidata     t=4 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.201 cpu   0.812 rss    72MB others 0.13 steal 0.0% 
+r4 wikidata     t=6 mibz2            wall   0.172 cpu   0.790 rss    60MB others 0.17 steal 0.0% 
+r4 wikidata     t=6 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.174 cpu   0.804 rss    61MB others 0.09 steal 0.0% 
+r4 wikidata     t=8 mibz2            wall   0.165 cpu   1.006 rss    73MB others 0.20 steal 0.0% 
+r4 wikidata     t=8 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.162 cpu   0.992 rss    74MB others 0.04 steal 0.0% 
+r4 wikidata     t=10 mibz2            wall   0.173 cpu   1.037 rss    74MB others 0.24 steal 0.0% 
+r4 wikidata     t=10 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.176 cpu   1.078 rss    74MB others 0.85 steal 0.0% 
+r5 wikidata     t=1 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.555 cpu   0.556 rss    26MB others 0.24 steal 0.0% 
+r5 wikidata     t=1 mibz2            wall   0.539 cpu   0.540 rss    26MB others 0.29 steal 0.0% 
+r5 wikidata     t=2 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.304 cpu   0.620 rss    47MB others 0.13 steal 0.0% 
+r5 wikidata     t=2 mibz2            wall   0.284 cpu   0.592 rss    47MB others 0.17 steal 0.0% 
+r5 wikidata     t=4 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.204 cpu   0.824 rss    72MB others 0.22 steal 0.0% 
+r5 wikidata     t=4 mibz2            wall   0.198 cpu   0.794 rss    73MB others 0.17 steal 0.0% 
+r5 wikidata     t=6 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.171 cpu   0.793 rss    60MB others 0.21 steal 0.0% 
+r5 wikidata     t=6 mibz2            wall   0.170 cpu   0.786 rss    61MB others 0.14 steal 0.0% 
+r5 wikidata     t=8 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.162 cpu   0.989 rss    74MB others 0.30 steal 0.0% 
+r5 wikidata     t=8 mibz2            wall   0.160 cpu   0.976 rss    74MB others 0.26 steal 0.0% 
+r5 wikidata     t=10 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.167 cpu   1.008 rss    74MB others 0.18 steal 0.0% 
+r5 wikidata     t=10 mibz2            wall   0.163 cpu   0.997 rss    74MB others 0.26 steal 0.0% 
+r6 wikidata     t=1 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.583 cpu   0.584 rss    26MB others 0.59 steal 0.0% 
+r6 wikidata     t=1 mibz2            wall   0.554 cpu   0.555 rss    26MB others 0.48 steal 0.0% 
+r6 wikidata     t=2 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.317 cpu   0.652 rss    48MB others 0.48 steal 0.0% 
+r6 wikidata     t=2 mibz2            wall   0.300 cpu   0.624 rss    47MB others 0.41 steal 0.0% 
+r6 wikidata     t=4 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.217 cpu   0.874 rss    73MB others 0.72 steal 0.0% 
+r6 wikidata     t=4 mibz2            wall   0.206 cpu   0.838 rss    73MB others 0.70 steal 0.0% 
+r6 wikidata     t=6 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.184 cpu   0.852 rss    61MB others 0.54 steal 0.0% 
+r6 wikidata     t=6 mibz2            wall   0.183 cpu   0.851 rss    61MB others 0.64 steal 0.0% 
+r6 wikidata     t=8 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.178 cpu   1.083 rss    71MB others 1.25 steal 0.0% 
+r6 wikidata     t=8 mibz2            wall   0.166 cpu   1.009 rss    74MB others 0.45 steal 0.0% 
+r6 wikidata     t=10 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.168 cpu   1.031 rss    73MB others 0.38 steal 0.0% 
+r6 wikidata     t=10 mibz2            wall   0.176 cpu   1.038 rss    73MB others 0.28 steal 0.0% 
+r7 wikidata     t=1 mibz2            wall   0.549 cpu   0.550 rss    26MB others 0.27 steal 0.0% 
+r7 wikidata     t=1 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.573 cpu   0.574 rss    26MB others 0.34 steal 0.0% 
+r7 wikidata     t=2 mibz2            wall   0.305 cpu   0.625 rss    47MB others 0.43 steal 0.0% 
+r7 wikidata     t=2 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.319 cpu   0.651 rss    47MB others 0.82 steal 0.0% 
+r7 wikidata     t=4 mibz2            wall   0.210 cpu   0.859 rss    73MB others 0.88 steal 0.0% 
+r7 wikidata     t=4 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.215 cpu   0.865 rss    72MB others 0.50 steal 0.0% 
+r7 wikidata     t=6 mibz2            wall   0.185 cpu   0.852 rss    61MB others 0.44 steal 0.0% 
+r7 wikidata     t=6 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.178 cpu   0.822 rss    60MB others 0.42 steal 0.0% 
+r7 wikidata     t=8 mibz2            wall   0.193 cpu   1.184 rss    74MB others 1.48 steal 0.0% 
+r7 wikidata     t=8 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.186 cpu   1.152 rss    74MB others 1.30 steal 0.0% 
+r7 wikidata     t=10 mibz2            wall   0.187 cpu   1.110 rss    74MB others 0.85 steal 0.0% 
+r7 wikidata     t=10 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.164 cpu   1.001 rss    74MB others 0.41 steal 0.0% 
+r8 wikidata     t=1 mibz2            wall   0.538 cpu   0.539 rss    26MB others 0.17 steal 0.0% 
+r8 wikidata     t=1 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.584 cpu   0.585 rss    26MB others 0.68 steal 0.0% 
+r8 wikidata     t=2 mibz2            wall   0.285 cpu   0.593 rss    47MB others 0.20 steal 0.0% 
+r8 wikidata     t=2 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.307 cpu   0.634 rss    48MB others 0.15 steal 0.0% 
+r8 wikidata     t=4 mibz2            wall   0.211 cpu   0.854 rss    70MB others 0.49 steal 0.0% 
+r8 wikidata     t=4 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.203 cpu   0.810 rss    73MB others 0.24 steal 0.0% 
+r8 wikidata     t=6 mibz2            wall   0.180 cpu   0.823 rss    63MB others 0.20 steal 0.0% 
+r8 wikidata     t=6 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.173 cpu   0.796 rss    61MB others 0.25 steal 0.0% 
+r8 wikidata     t=8 mibz2            wall   0.165 cpu   1.010 rss    75MB others 0.24 steal 0.0% 
+r8 wikidata     t=8 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.168 cpu   1.014 rss    74MB others 0.37 steal 0.0% 
+r8 wikidata     t=10 mibz2            wall   0.176 cpu   1.065 rss    74MB others 0.77 steal 0.0% 
+r8 wikidata     t=10 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.176 cpu   1.045 rss    74MB others 0.22 steal 0.0% 
+r9 wikidata     t=1 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.583 cpu   0.587 rss    26MB others 0.07 steal 0.0% 
+r9 wikidata     t=1 mibz2            wall   0.522 cpu   0.523 rss    26MB others 0.13 steal 0.0% 
+r9 wikidata     t=2 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.300 cpu   0.612 rss    49MB others 0.15 steal 0.0% 
+r9 wikidata     t=2 mibz2            wall   0.290 cpu   0.599 rss    47MB others 0.14 steal 0.0% 
+r9 wikidata     t=4 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.205 cpu   0.822 rss    72MB others 0.26 steal 0.0% 
+r9 wikidata     t=4 mibz2            wall   0.192 cpu   0.782 rss    73MB others 0.54 steal 0.0% 
+r9 wikidata     t=6 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.191 cpu   0.865 rss    61MB others 1.34 steal 0.0% 
+r9 wikidata     t=6 mibz2            wall   0.180 cpu   0.824 rss    60MB others 0.24 steal 0.0% 
+r9 wikidata     t=8 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.172 cpu   1.045 rss    74MB others 0.59 steal 0.0% 
+r9 wikidata     t=8 mibz2            wall   0.172 cpu   1.053 rss    74MB others 0.93 steal 0.0% 
+r9 wikidata     t=10 mibz2@/home/louis/dev/mibz2-coop/target/variants/bin/v0.2.0-ab wall   0.174 cpu   1.058 rss    75MB others 0.40 steal 0.0% 
+r9 wikidata     t=10 mibz2            wall   0.164 cpu   0.997 rss    73MB others 0.37 steal 0.0% 
+
+same bytes from every run: yes
+MB/s (median)
+arm                1        2        4        6        8       10
+this build       391      699     1055     1175     1276     1278
+v0.2.0           378      689     1019     1202     1263     1256
+
+throughput against the arm's own 4-thread runs, paired by round (95%)
+arm                1        2        4        6        8       10
+this build      0.37     0.67     1.00     1.13     1.20     1.19
+v0.2.0          0.37     0.68     1.00     1.17     1.23     1.23
+95% intervals:
+this build 1: 0.37-0.38  2: 0.64-0.70  4: 1.00-1.00  6: 1.11-1.15  8: 1.16-1.25  10: 1.15-1.23
+v0.2.0     1: 0.36-0.38  2: 0.67-0.69  4: 1.00-1.00  6: 1.14-1.20  8: 1.20-1.27  10: 1.19-1.28
+
+throughput against this build's at the same thread count, paired by round
+arm                1        2        4        6        8       10
+this build      1.00     1.00     1.00     1.00     1.00     1.00
+v0.2.0          0.95     0.98     0.97     1.00     0.99     1.00
+95% intervals:
+this build 1: 1.00-1.00  2: 1.00-1.00  4: 1.00-1.00  6: 1.00-1.00  8: 1.00-1.00  10: 1.00-1.00
+v0.2.0     1: 0.93-0.97  2: 0.95-1.01  4: 0.94-0.99  6: 0.97-1.03  8: 0.97-1.01  10: 0.97-1.04
+
+best thread count (by median), and the best against the best, paired by round
+this build    1278 MB/s at 10 threads   1.000 (1.000-1.000) of this build's best
+v0.2.0        1263 MB/s at  8 threads   1.003 (0.972-1.035) of this build's best
+(bench-variants 20261029T230112Z, note: one-pass build against v0.2.0)
+
+bench-variants: wrote variants-20261029T230112Z.json and variants-20261029T230112Z.jsonl
