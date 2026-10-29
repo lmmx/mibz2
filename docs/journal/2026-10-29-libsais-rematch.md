@@ -276,27 +276,44 @@ kernel, not a finding.
 
 ### 1. The 7%: the code, not the placement
 
-| pair, against x3x3 in the same rounds | paired mean ±95% |
-|---|--:|
-| g3x3 (x placed as the library places its threads) | 0.999 ±0.006 |
-| l3x3 (the library) | 1.081 ±0.008 |
-| control: g4x2 / x4x2 | 0.995 (0.962 / 0.967) |
-| control: l4x2 / x4x2 | 1.016 (0.982 / 0.967) |
+**Files:** [`coop-20261029T184729Z.md`](2026-10-29-libsais-rematch/coop-20261029T184729Z.md)
+and its .jsonl. Paired over the 20 rounds, recomputed from the raw rounds (and
+independently by the user, with the same figures):
+
+| pair | paired ratio (95%) | median | won |
+|---|--:|--:|--:|
+| g3x3 / x3x3 (placement alone) | 0.999 (0.994–1.005) | 0.996 | 9/20 |
+| **l3x3 / g3x3** (the code, placement matched) | **1.082 (1.072–1.092)** | 1.083 | 20/20 |
+| g4x2 / x4x2 | 0.995 (0.986–1.004) | 0.992 | 7/20 |
+| l4x2 / g4x2 | 1.021 (1.010–1.032) | 1.017 | 17/20 |
+| l3x3 / s3x3 (the library against libsais, this run) | 1.096 (1.080–1.112) | 1.102 | 20/20 |
+| l4x2 / s3x3 | 0.995 (0.981–1.010) | 0.992 | 7/20 |
 
 - **The pre-registered reading applies: the code explains it.** Placement changes nothing
-  (g3x3 = x3x3), and the library stays about 8% ahead of g3x3 (1.081 / 0.999). The paired
-  l3x3 / g3x3 interval needs the grid's .jsonl.
-- **The symbol profiles** (one `perf record` each, user cycles, setup included) say where
-  the research arm spends what the library doesn't:
-  - `memset`: 3.75% of g3x3's cycles against 0.25% of l3x3's, a per-block clear in the
-    research kernel that the library's reused table doesn't do;
-  - the pool's helper loop (spin and park, outside any task): 11.2% against 6.6%;
-  - `coop_build_given`'s closures: 7.0% in g3x3, inside the research fused build's path.
-- **What follows:** the research x arms carry harness overheads, not a missing trick. So
-  the library isn't faster because of something to port back. The research harness
-  understates a kernel by about 8% at 3x3, and §16–17's x and y figures should be read
-  that way.
-- **Not settled:** the remaining split between those three is unmeasured.
+  (g3x3 / x3x3 includes 1), and l3x3 / g3x3 excludes 1 at 1.082.
+- **The gap depends on the team size:** 8% at 3 × 3, 2% at 4 × 2.
+- **The library against libsais at 9 cores reproduced** from the rematch (1.114 there,
+  1.096 here). l3x3 reached 2,584 MB/s (median), the highest shipped-kernel figure at this
+  boundary so far. It is a component figure, not the decoder's.
+
+**What the symbol profiles can't say.** They looked as if they located the gap
+(`coop_build_given`'s closures, 7% of g3x3's cycles; `memset`, 3.75% against 0.25%; the
+pool's helper loop, 11.2% against 6.6%). But:
+- **They are confounded by setup.** Each `perf record` covers a whole process, setup
+  included. With an x, y or g arm, the harness first runs `fused_check`, which builds
+  every block with `coop_build_given` and `coop_build_fused` at k = 1 to 4 (fresh tables,
+  fresh pools). The l arm's process doesn't. So those closures and much of the `memset`
+  are setup, not the timed rounds.
+- **One real per-block difference, found by reading the code:**
+  - the research fused build sizes its table with `resize(n, 0)` whenever a block's
+    length changes, zeroing the grown part;
+  - the library's `build_fused` reserves and writes every slot once, never zeroing.
+
+  Its cost isn't measured, and blocks change length often but by small amounts.
+- **The gap is unexplained.** The attribution that would explain it is a profile of the
+  timed rounds only. One option is two `perf record`s of each arm, at 1 and 41 rounds,
+  read by difference, as the counters are. Another is per-symbol counters restricted to
+  the walk and the build. Neither is registered yet.
 
 ### 2. The counters on the shipped kernel: fill-buffer pressure is back, and the bound isn't settled
 
