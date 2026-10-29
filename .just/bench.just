@@ -163,6 +163,15 @@ bench-libsais-knee-footprint rounds="10":
     python3 bench/coop_counters.py --file corpora/wikidata-bz3.bz2 --arms p2,p4,p6,p8,p10,s4x1,s8x1 --groups reads,llc_all --reps 2 --no-record
     python3 bench/dram.py
 
+# The memory ceiling alone: the last stage of bench-libsais-knee-footprint, rerun without the
+# sweeps and counters before it (bench/dram.py; a walk-shaped random probe and a sequential
+# copy at 1-10 threads, perf counting only the probe). Needs sudo; about 5 minutes. Upload
+# dram-*.md, dram-*.jsonl and the console.
+#   sudo -v && just bench-dram 2>&1 | tee dram-console.log
+bench-dram:
+    CARGO_TARGET_DIR=target/coop cargo build --release --example dram
+    python3 bench/dram.py
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10
