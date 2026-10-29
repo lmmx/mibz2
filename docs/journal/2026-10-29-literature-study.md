@@ -20,7 +20,8 @@ paper unless said), **measured** (ours, said where), **hypothesis** (untested).
 | — | [`03-research-trail-research.md`](2026-10-29-literature-study/03-research-trail-research.md) | the thread joining papers 2 to 5: building a compressed structure without first doing the work it exists to avoid | read |
 | 3 | [`04-rlbwt-tricks-research.md`](2026-10-29-literature-study/04-rlbwt-tricks-research.md) | Brown, Gagie & Rossi, "RLBWT Tricks", SEA 2022 | read |
 | 4 | [`05-partitioned-elias-fano-research.md`](2026-10-29-literature-study/05-partitioned-elias-fano-research.md) | Ottaviano & Venturini, "Partitioned Elias–Fano Indexes", SIGIR 2014 | read |
-| 5 | — | Gog, Navarro & Petri, "Improved and Extended Locating Functionality on Compressed Suffix Arrays", 2015 | next |
+| 5 | [`06-gog-navarro-petri-research.md`](2026-10-29-literature-study/06-gog-navarro-petri-research.md) | Gog, Navarro & Petri, "Improved and Extended Locating Functionality on Compressed Suffix Arrays", Journal of Discrete Algorithms, 2015 | read |
+| 6 | — | piecewise-constant and patched integer representations (the researcher's preference), or Sadakane's compressed suffix array and its implementations | next, to choose |
 | — | — | the overview's other items (cacheline Elias–Fano, the LCSA line, the Orbit implementation in its own pass) | queued |
 
 The user calls paper 2 "the first paper", as the first they worked through with the
@@ -101,12 +102,43 @@ cheap census question.**
     critical path, so the census decides only whether it is worth a prototype arm
     (alongside e and h), not whether it wins.
 
+**Gog, Navarro & Petri (paper 5) is the closest precedent: compressed ψ, by name.**
+- **Prior art, again:** their uniform blocks are our translation groups. They apply them to
+  Elias-δ, OptPFor and partitioned Elias–Fano, over blocks of 128 ψ values. Any novelty
+  here is in the construction, the cache-line layout and the cooperative walk, not in
+  spotting consecutive ψ values.
+- **Speed is not size:** in their isolated random-access tests, partitioned Elias–Fano is
+  the fastest of the three and about 5–10% larger than the smallest (Figure 3, as the
+  researcher reads it). Their texts are 2.1–4.6 GB under single random queries; ours is a
+  block of at most 900,000 rows, walked by 32 lanes. The ranking carries over as a reason
+  to time select fairly, not as a figure.
+- **Bucket boundaries are bounded for bzip2 (ours, arithmetic).** A block has at most 256
+  byte buckets, so at most 255 boundaries, so at most 255 of a full block's 28,125 aligned
+  32-row groups straddle one: 0.91% at most. Their word alphabet (about 3.9 M symbols)
+  has no such bound. A plain fallback record for straddling groups costs at most that
+  fraction.
+- **The whole lookup, not ψ alone:** their faster ψ gained less in full suffix-array
+  operations, because the operations also read sampling data.
+  - Today's T-vector entry is one u32 a row, ψ in its top 24 bits and the output byte in
+    its low 8 (`src/bwt.rs`), so one load gives both.
+  - A compact record has to give ψ and the byte from the same line, and leave the walk's
+    segment handoffs as cheap as they are. The hybrid prototype's e arm (embedded-byte
+    control) exists to measure exactly this.
+- **The taxonomy of non-translation groups** gives the census step its three classes:
+  - jumps inside one bucket (a few plateaus of R);
+  - increasing but spread (many breaks);
+  - straddling a bucket boundary.
+
+  A breaks-per-group histogram, split by whether the group straddles a boundary,
+  measures all three. That is the residual-plateau question from paper 4, and the
+  researcher now ranks it first.
+
 ## Open checks
 
 - **Citations:** paper 1's are checked (`2026-10-29-expert-review.md` §1). We have not yet
   checked paper 2's arXiv v4 revision date, RLBWT Tricks' venue and the readings' figures
   against the papers. The research trail dates RLBWT Tricks 2024, and deep dive 2 gives
-  SEA 2022. Paper 4's Table 2 figures are the researcher's reading.
+  SEA 2022. Paper 4's Table 2 and paper 5's Figure 3 figures are the researcher's reading.
 - **Cyclic BWT:** bzip2 sorts rotations with no sentinel. A periodic block gives ψ several
   cycles (for `abab`, LF = [2, 3, 0, 1], two cycles of 2), and the decoder walks one of
   them n times from `orig_ptr`. The papers' move structures assume a sentinel and a single
@@ -115,3 +147,6 @@ cheap census question.**
 - **Lost mathematics:** the chat copy dropped most inline symbols, so some sentences in the
   verbatim files have gaps. Where a reading's claim depends on a bound, check it against
   the paper, not the copy.
+- **Convention:** paper 5 defines ψ on a suffix array with an end marker. bzip2 has
+  rotations and `orig_ptr`. Monotonicity within a bucket holds in both, but traversal and
+  termination differ (the cyclic-BWT check above).
