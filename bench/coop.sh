@@ -70,7 +70,7 @@ if [ -z "$arms" ]; then
 fi
 fit=""
 for a in $(echo "$arms" | tr ',' ' '); do
-  s=${a#[pswr]}; s=${s%@*}; n=${s%x*}; k=1; [ "$s" != "$n" ] && k=${s#*x}
+  s=${a#[pswrq]}; s=${s%@*}; n=${s%x*}; k=1; [ "$s" != "$n" ] && k=${s#*x}
   [ $((n * k)) -le "$cores" ] && fit="$fit,$a"
 done
 fit=${fit#,}

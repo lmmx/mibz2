@@ -191,6 +191,21 @@ bench-coop-ab *args:
     bash bench/coop.sh --arms 3x3,r3x3,4x1,r4x1,p4 --rounds 20 "$@"
     python3 bench/coop_ab.py
 
+# bench/coop_ab.py after bench/coop.sh: #78's first experiment (the coop journal's §13),
+# an optimistic bound. The room-walk kernel (r3x3, r4x1, #77's) against the same with its
+# build given each range's counts from checkpoints made outside the timing (q3x3, q4x1),
+# with production's p4 beside them, 20 rounds paired, each thread pinned. About two
+# minutes; close the browser and other busy programs first. Upload the coop-ab and coop .md
+# files and the .jsonl.
+#   just bench-coop-given
+
+# #78's bound: the cooperative build without its recount, the counts given for free
+[positional-arguments]
+bench-coop-given *args:
+    bash bench/corpus.sh
+    bash bench/coop.sh --arms r3x3,q3x3,r4x1,q4x1,p4 --rounds 20 "$@"
+    python3 bench/coop_ab.py
+
 # bench/coop_counters.py: the counters behind the cooperative grid (#76; the coop journal's
 # §8.2 and §10): each arm alone under `perf stat` for 1 and 21 rounds, one counter pair a
 # pass, 3 repeats, the memory controller machine-wide, then one `perf record` each of p4, 4x1
