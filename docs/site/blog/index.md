@@ -7,6 +7,6 @@ description: "The research blog: plain-language write-ups of what mibz2's experi
 Plain-language write-ups of what the research is finding. The evidence behind each one is
 in the [journals](../background/journals.md) and the pull requests they link.
 
-- **29 October 2026:** [What on earth have we just discovered? 🧊](2026-10-29-what-have-we-discovered.md):
-  a gentler tour through the succinct-data-structures expedition, from the BWT to a
-  potentially much faster decoder.
+- **29 October 2026:** [Compact navigation tables for the inverse BWT: early findings](2026-10-29-compact-navigation-tables.md):
+  a plain-language account of the succinct-data-structures review: how compactly the
+  inverse BWT's navigation table can be stored, and what remains to be measured.

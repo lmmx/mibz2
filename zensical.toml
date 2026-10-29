@@ -41,7 +41,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "What on earth have we just discovered?" = "blog/2026-10-29-what-have-we-discovered.md" },
+    { "Compact navigation tables for the inverse BWT" = "blog/2026-10-29-compact-navigation-tables.md" },
   ] },
   { "Maintainers" = [
     "maintainers/development.md",
@@ -199,7 +199,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "The research blog: plain-language write-ups of what mibz2's experiments are finding." },
-  { "blog/2026-10-29-what-have-we-discovered.md" = "A gentler tour through our succinct-data-structures expedition, from the BWT to a potentially much faster decoder." },
+  { "blog/2026-10-29-compact-navigation-tables.md" = "A plain-language account of the succinct-data-structures review: how compactly the inverse BWT's navigation table can be stored, and what remains to be measured." },
   { "background/history.md" = "Where mibz2 came from: written in wikidata-pq to decode the Wikidata dump, then moved to a repository of its own." },
   { "background/status.md" = "Where mibz2's research stands: the cooperative inverse BWT found, confirmed and explained on a 10-core workstation, and what comes next." },
   { "background/journals.md" = "mibz2's development journals: where they are and what each one records." },

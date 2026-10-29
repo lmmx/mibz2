@@ -1,22 +1,22 @@
 ---
-description: "A gentler tour through our succinct-data-structures expedition, from the BWT to a potentially much faster decoder."
+description: "A plain-language account of the succinct-data-structures review: how compactly the inverse BWT's navigation table can be stored, and what remains to be measured."
 ---
 
-# What on earth have we just discovered? 🧊
+# Compact navigation tables for the inverse BWT: early findings
 
-*29 October 2026 · A gentler tour through our succinct-data-structures expedition, from the BWT to a potentially much faster decoder.*
+*29 October 2026 · A plain-language account of the succinct-data-structures review: how compactly the inverse BWT's navigation table can be stored, and what remains to be measured.*
 
-The wonderful thing about this research is that it began with a fairly innocent question:
+This research began with a simple question:
 
 > Can succinct data structures make my bzip2 decoder faster?
 
-And we've ended up discovering that the enormous table your decoder uses to reconstruct text may contain far more information than it actually needs to store—and that much of this information follows surprisingly simple patterns.
+The answer so far is that the large table the decoder uses to reconstruct text stores more than it needs to, and much of what it stores follows simple patterns.
 
-The especially exciting bit is that we have moved beyond theoretical speculation. Your agents have examined the actual data and found those patterns.
+This is no longer only theory: a census of the benchmark corpus's actual data shows those patterns.
 
-Let me explain everything from the beginning, without assuming you've spent the last twenty years studying compressed indexes.
+What follows starts from the beginning and assumes no background in compressed indexes.
 
-## 1. First, imagine your decoder is following a treasure map
+## 1. The decoder follows a chain of pointers
 
 When bzip2 compresses some text, it performs the Burrows–Wheeler Transform (BWT).
 
@@ -26,7 +26,7 @@ Imagine an enormous collection of numbered cards.
 
 Each card tells you which card to visit next.
 
-**A miniature pointer-chasing adventure**
+**A miniature pointer chain**
 
 | Card | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|--:|--:|--:|--:|--:|--:|--:|
@@ -44,7 +44,7 @@ For each position, it stores:
 
 At maximum bzip2 block size, this table occupies approximately 3.6 MB.
 
-And your clever 32-lane implementation has already tackled a major problem: instead of following one chain and repeatedly waiting for memory, you follow many independent chains at once.
+mibz2's 32-lane implementation already tackles one major cost: instead of following one chain and repeatedly waiting for memory, you follow many independent chains at once.
 
 That's memory-level parallelism (MLP).
 
@@ -54,7 +54,7 @@ But then we asked a different question.
 
 > Why do we need four bytes for every card?
 
-## 2. The first revelation: the cards aren't arbitrary
+## 2. The cards aren't arbitrary
 
 Suppose I give you these two sequences of destinations:
 
@@ -74,8 +74,6 @@ You only need to remember:
 > Start at 427 and add the position within the group.
 
 One starting number replaces eight separate numbers.
-
-And here's the interesting part.
 
 The permutation your inverse BWT decoder follows, called Ψ (psi), isn't a completely arbitrary permutation.
 
@@ -127,7 +125,7 @@ And that creates our main tension:
 
 > A more compact table is useful only if reconstructing its pointers doesn't make the decoder slower than before.
 
-## 4. The discovery that changed everything
+## 4. What the census found
 
 Initially, we had no idea how well these representations would fit your actual BWT data.
 
@@ -135,7 +133,7 @@ Perhaps the values were increasing but widely scattered, making compression awkw
 
 So Claude wrote a census program to inspect them.
 
-And the results were remarkable.
+It found more structure than the theory alone guarantees.
 
 **What Claude reported about your benchmark corpus**
 
@@ -146,7 +144,7 @@ And the results were remarkable.
 
 These two percentages overlap—they aren't two separate populations.
 
-The important observation is that more than three-quarters of the measured rows may be represented using an extremely simple arithmetic rule.
+The important observation is that more than three-quarters of the measured rows may be represented using a simple arithmetic rule.
 
 That is much better than we could have assumed from the mathematics alone.
 
@@ -157,8 +155,6 @@ It's the difference between saying:
 And:
 
 > We've examined the actual pointers, and most of them exhibit precisely the structure this encoding is designed to exploit.
-
-That's a major step forward.
 
 It does not yet mean the decoder will be faster. But it establishes that there is something real to exploit.
 
@@ -172,7 +168,7 @@ Imagine a cache line as a little tray of data.
 
 If your next pointer lives in that tray, the processor can fetch the tray and extract what it needs.
 
-Our first ambitious idea was:
+The first design asks:
 
 > What if we could store 32 pointers in exactly one 64-byte cache line?
 
@@ -201,9 +197,7 @@ A compact representation that introduces multiple dependent searches could destr
 
 The fixed-size record tries to avoid precisely that.
 
-## 6. Then we found an even more interesting possibility
-
-This is the most recent research development.
+## 6. A second design: a two-tier layout
 
 If 77.6% of rows belong to simple consecutive groups, why devote an entire 64-byte record to each of those groups?
 
@@ -227,7 +221,7 @@ Small 8-byte directory entry
                                   (decode FOR / Elias–Fano / exception)
 ```
 
-This is a rather clever compromise.
+It is a compromise.
 
 For the common case, the small directory entry already gives us the next pointer.
 
@@ -235,7 +229,7 @@ For the less common case, we fetch extra information.
 
 Because the directory is tiny compared with the current T-vector, it may fit much more comfortably in cache.
 
-And because we don't allocate a full 64-byte record for the simple groups, the storage could become dramatically smaller.
+And because we don't allocate a full 64-byte record for the simple groups, the storage could become much smaller.
 
 Our initial calculation suggested something in the neighbourhood of 5.6 bits per row, before additional exceptions and bookkeeping.
 
@@ -243,9 +237,7 @@ That's not a measured final footprint. It's an optimistic model built from the r
 
 The attraction is real, but so is the risk: whenever we need the second record, we introduce another memory dependency.
 
-## 7. Why smaller could actually make mibz2 faster
-
-This is the most important performance insight.
+## 7. Why a smaller table could make mibz2 faster
 
 Suppose you're decoding one full-sized bzip2 block.
 
@@ -266,11 +258,11 @@ If you have several full-size blocks in flight, their tables compete for space i
 
 *Illustrative table storage for eight full 900 KB blocks. The two-tier estimate excludes additional exception and alignment overhead.*
 
-Your agents have already measured evidence of a shared-cache residency threshold on your workstation.
+Earlier measurements on a 10-core workstation already show evidence of a shared-cache residency threshold.
 
 When the live tables become too large, the processor must fetch more data from slower parts of the memory hierarchy.
 
-So imagine being able to hold substantially more active navigation tables in the same cache capacity.
+Smaller tables would let more of them stay resident in the same cache capacity.
 
 We might see fewer expensive memory misses.
 
@@ -282,7 +274,7 @@ But your work adds modern multicore concurrency and 32-lane traversal.
 
 The goal is not to have the smallest possible table. It's to make the whole machine finish decoding sooner.
 
-## 8. Why we haven't declared victory
+## 8. Open questions
 
 There are three substantial unanswered questions.
 
@@ -290,11 +282,11 @@ There are three substantial unanswered questions.
 
 **Second, how expensive is construction?** The compressed table must be built from the BWT before it can be traversed. A representation that makes traversal faster but takes twice as long to build might lose overall.
 
-**Third, does the remarkable 77.6% translation property hold broadly?** We know it appears in your benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.
+**Third, does the 77.6% translation property hold broadly?** We know it appears in your benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.
 
 The agents have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.
 
-## 9. What we now know, and what we're hoping to discover
+## 9. What is known and what is not
 
 | Finding | Status |
 |---|---|
@@ -309,11 +301,11 @@ And the most important distinction of all:
 
 > We've found evidence that the data is compressible in a form suited to fast navigation. We haven't yet proved that navigating the compressed representation is faster.
 
-Those are two different accomplishments.
+These are separate claims.
 
-## 10. My favourite part of this discovery
+## 10. The underlying idea
 
-I think the most beautiful insight is that the T-vector—the enormous table of navigation pointers—isn't fundamentally necessary in its current form.
+The underlying point is that the T-vector—the enormous table of navigation pointers—isn't fundamentally necessary in its current form.
 
 It's a convenient way to store answers to questions.
 
@@ -323,7 +315,7 @@ Succinct data structures teach us to exploit that fact.
 
 But your work adds an interesting twist:
 
-> Rather than pursuing the absolutely smallest possible encoding, we're looking for a carefully chosen amount of redundancy that allows the CPU to recover answers exceptionally quickly.
+> Rather than pursuing the absolutely smallest possible encoding, we're looking for a carefully chosen amount of redundancy that allows the CPU to recover answers quickly.
 
 In other words, sometimes storing a little unnecessary information makes the whole algorithm faster.
 
@@ -361,17 +353,13 @@ We've moved from:
 
 To:
 
-> "We have evidence that most of the permutation can be represented by extremely simple rules, and we have several concrete ways of exploiting those rules while protecting the memory-level parallelism that makes mibz2 fast."
-
-That's significant progress.
+> "We have evidence that most of the permutation can be represented by simple rules, and we have several concrete ways of exploiting those rules while protecting the memory-level parallelism that makes mibz2 fast."
 
 The agents now have a real engineering question to settle: whether those smaller representations can make the CPU finish its work faster.
 
-And you have something rather wonderful to take away from this research already:
+The working hypothesis, in one line:
 
-> The secret to making a decoder faster may lie not in following its pointers more efficiently, but in realizing that most of those pointers never needed to be stored individually in the first place.
-
-That's the insight I would keep.
+> A decoder may get faster not by following its pointers more efficiently, but by not storing most of them individually.
 
 ---
 
