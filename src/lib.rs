@@ -80,6 +80,9 @@
 pub mod bits;
 pub mod block;
 pub mod bwt;
+// (the cooperative inverse BWT's pool, unused until its kernel: the integration's step 5)
+#[allow(dead_code)]
+mod coop;
 pub mod crc;
 pub mod mtf;
 pub mod parallel;
