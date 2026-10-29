@@ -64,13 +64,13 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=14abb5294a68">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1e98588115c7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=14abb5294a68">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1e98588115c7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=14abb5294a68">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1e98588115c7">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=14abb5294a68">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1e98588115c7">
     
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -1463,6 +1463,12 @@ GitHub release). Both use Trusted Publishing, in the <code>pypi</code> and <code
 <li><strong>Release Notes</strong> (<code>release-notes.yml</code>): makes a version's GitHub release (<code>v&lt;version&gt;</code>)
   at a given commit if it does not exist, or updates its notes, from that version's
   section of <code>CHANGELOG.md</code>.</li>
+<li><strong>A wheel job that never got a runner</strong> (0.1.6: both macOS jobs were cancelled after
+  15 minutes waiting, so Release was skipped and PyPI had nothing while crates.io had the
+  crate): re-run the failed jobs on the tag's own CI run. Release then uploads with
+  <code>--skip-existing</code>. Don't bump, re-tag or republish. CI reports a runner that never came
+  the same way as a failed build ("cancelled"/"failure"), so check whether the job's steps
+  ran at all before treating it as a build failure.</li>
 </ul>
 <h2 id="release-notes-the-evidence">Release notes: the evidence<a class="headerlink" href="#release-notes-the-evidence" title="Permanent link">&para;</a></h2>
 <p>Every version's section of <code>CHANGELOG.md</code> is the GitHub release's notes, so it carries the
@@ -1660,11 +1666,11 @@ and full SHA-256s (<span class="sb">`result.json`</span>'s <span class="sb">`cor
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=14abb5294a68"></script>
+        <script src="../../assets/javascripts/bench.js?v=1e98588115c7"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=14abb5294a68"></script>
+        <script src="../../assets/javascripts/couriers.js?v=1e98588115c7"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=14abb5294a68"></script>
+        <script src="../../assets/javascripts/blog.js?v=1e98588115c7"></script>
       
     
   </body>
