@@ -66,13 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=11407937dadd">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=6d98300ee360">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=11407937dadd">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=6d98300ee360">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=11407937dadd">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=6d98300ee360">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=11407937dadd">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=6d98300ee360">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=6d98300ee360">
     
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -1415,6 +1417,12 @@ just<span class="w"> </span>docs-check<span class="w">   </span><span class="c1"
   a sweep, each with its own axes, its points (<code>x</code>, <code>y</code>, and optionally <code>lo</code> and <code>hi</code>
   for an interval) and its source. A new sweep is a new panel; the page draws every
   panel. Only measured points go in it.</li>
+<li><code>docs/site/assets/data/frontier.json</code> holds the measured series that the
+  <a href="../../benchmarks/frontier/">Throughput–memory frontier</a> page draws
+  (<code>assets/javascripts/frontier.js</code>): throughput against measured peak RSS, and against
+  computed live table memory. It is written by hand, from the record, under the rules in
+  its <code>about</code> field. The page's tables give the same values, and stand in for the charts
+  if the script does not run.</li>
 </ul>
 <h2 id="publishing">Publishing<a class="headerlink" href="#publishing" title="Permanent link">&para;</a></h2>
 <p><code>.github/workflows/site.yml</code> builds the site on every push to master, and after each
@@ -1567,11 +1575,13 @@ branch.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=11407937dadd"></script>
+        <script src="../../assets/javascripts/bench.js?v=6d98300ee360"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=11407937dadd"></script>
+        <script src="../../assets/javascripts/couriers.js?v=6d98300ee360"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=11407937dadd"></script>
+        <script src="../../assets/javascripts/blog.js?v=6d98300ee360"></script>
+      
+        <script src="../../assets/javascripts/frontier.js?v=6d98300ee360"></script>
       
     
   </body>

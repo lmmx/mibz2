@@ -14,10 +14,12 @@ In 2001 Seward set the inverse BWT's space–time trade-off for one block: a sma
 
 ## The two charts
 
-They will be drawn from [`frontier.json`](<https://lmmx.github.io/mibz2/assets/data/frontier.json>), the page's measured observations, as series are added:
+Both are drawn from [`frontier.json`](<https://lmmx.github.io/mibz2/assets/data/frontier.json>), the page's measured observations. Point at a mark, or Tab to it, for its values. Every value is also in the tables [below](<#what-is-measured-so-far>).
 
-1. **Throughput against concurrent full blocks:** where a smaller table would overtake the 32-bit one, if it does, as more blocks are live.
-2. **Throughput against memory:** each configuration's measured throughput and memory, with the ones nothing beats on both marked. This is the frontier.
+1. **Throughput against memory:** each configuration's measured throughput and peak RSS, with the ones nothing beats on both ringed and joined by their step. This is the frontier. It draws series 3, the only one with measured RSS: the workers (arm `mibz2`), fixed teams of 2 and of 3, and the policy (v0.2.0's default). Where one plan ran at several thread counts, its marks are noise around one configuration. No worker counts below 4 were measured, so it is not yet the whole frontier.
+2. **Throughput against concurrent full blocks,** as live table memory (blocks live × 3.6 MB, computed): where a smaller table would overtake the 32-bit one, if it does, as more blocks are live. No compact table exists yet, so it shows today's table and the knee measured in the [workstation journal §9](<https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-28-workstation-scaling.md>): series 1's worker counts and series 3's workers and teams, a panel each, since they are different workloads. Series 2, the inversion, is a different level: it has its own small panel and axes, never the decoder's.
+
+The charts are drawn here by JavaScript. The tables [below](<#what-is-measured-so-far>) give every value they show.
 
 **The rules the charts keep:** - **One machine and one workload a chart.** An L3 effect on the i9 may appear at another concurrency, or not at all, on another CPU. - **Two kinds of memory, never mixed:** the live tables' bytes (computed: live full blocks × 900,000 rows × 4 bytes for today's table) and the process's peak RSS (measured). Peak RSS also counts the scanner's slots, the output and every worker's buffers: at 4 threads on CI it is about 74 MB, against 14.4 MB of tables. - **Two levels, never mixed:** the full decoder (a file to verified output) and the research harness's inversion (MTF, build and walk). The headline is the full decoder; the inversion shows the mechanism. - **Releases are the record.** Selected pull requests and research runs appear as labelled overlays. - **Only measurements.** Footprints of designs that don't exist yet, and models, stay in the text. - **The frontier is judged against the best alternative,** not a convenient one. A compact table at four blocks beating today's at four blocks is a step; the frontier moves only if it beats today's best configuration at any block count.
 

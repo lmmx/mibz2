@@ -11,6 +11,7 @@ just docs-check   # strict build, site checks, and the pages' examples as tests
 - `docs/conftest.py` runs each page's Python examples with pytest (`pytest docs/site`); a `pycon` block's output must match.
 - `docs/scripts/bench_history.py` turns the `bench-results` branch into the benchmark pages' data (`docs/site/assets/bench-history.json`) and tables (`docs/generated/`) before each build. Without a checkout of the branch (`--store`), it reads `origin/bench-results`, or writes empty ones.
 - `docs/site/assets/data/lane-sweeps.json` holds the measured walk timings by lane count that [Why 32 couriers beat one](<https://lmmx.github.io/mibz2/concepts/couriers/#lane-counts>) draws (`assets/javascripts/couriers.js`). It is written by hand, from the record: one panel a sweep, each with its own axes, its points (`x`, `y`, and optionally `lo` and `hi` for an interval) and its source. A new sweep is a new panel; the page draws every panel. Only measured points go in it.
+- `docs/site/assets/data/frontier.json` holds the measured series that the [Throughput–memory frontier](<https://lmmx.github.io/mibz2/benchmarks/frontier/index.md>) page draws (`assets/javascripts/frontier.js`): throughput against measured peak RSS, and against computed live table memory. It is written by hand, from the record, under the rules in its `about` field. The page's tables give the same values, and stand in for the charts if the script does not run.
 
 ## Publishing
 

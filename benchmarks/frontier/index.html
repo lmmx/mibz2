@@ -66,13 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=11407937dadd">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=6d98300ee360">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=11407937dadd">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=6d98300ee360">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=11407937dadd">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=6d98300ee360">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=11407937dadd">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=6d98300ee360">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=6d98300ee360">
     
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -1478,14 +1480,28 @@ to 3 workers, the low-memory end, is not yet measured.</p>
 </tbody>
 </table>
 <h2 id="the-two-charts">The two charts<a class="headerlink" href="#the-two-charts" title="Permanent link">&para;</a></h2>
-<p>They will be drawn from <a href="../../assets/data/frontier.json"><code>frontier.json</code></a>, the page's
-measured observations, as series are added:</p>
+<p>Both are drawn from <a href="../../assets/data/frontier.json"><code>frontier.json</code></a>, the page's
+measured observations. Point at a mark, or Tab to it, for its values. Every value is also
+in the tables <a href="#what-is-measured-so-far">below</a>.</p>
 <ol>
-<li><strong>Throughput against concurrent full blocks:</strong> where a smaller table would overtake
-   the 32-bit one, if it does, as more blocks are live.</li>
-<li><strong>Throughput against memory:</strong> each configuration's measured throughput and memory,
-   with the ones nothing beats on both marked. This is the frontier.</li>
+<li><strong>Throughput against memory:</strong> each configuration's measured throughput and peak RSS,
+   with the ones nothing beats on both ringed and joined by their step. This is the
+   frontier. It draws series 3, the only one with measured RSS: the workers (arm
+   <code>mibz2</code>), fixed teams of 2 and of 3, and the policy (v0.2.0's default). Where one plan
+   ran at several thread counts, its marks are noise around one configuration. No worker
+   counts below 4 were measured, so it is not yet the whole frontier.</li>
+<li><strong>Throughput against concurrent full blocks,</strong> as live table memory (blocks live ×
+   3.6 MB, computed): where a smaller table would overtake the 32-bit one, if it does, as
+   more blocks are live. No compact table exists yet, so it shows today's table and the
+   knee measured in the <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-28-workstation-scaling.md">workstation journal §9</a>:
+   series 1's worker counts and series 3's workers and teams, a panel each, since they
+   are different workloads. Series 2, the inversion, is a different level: it has its own
+   small panel and axes, never the decoder's.</li>
 </ol>
+<div data-src="../../assets/data/frontier.json" id="frontier-charts">
+<p>The charts are drawn here by JavaScript. The tables
+<a href="#what-is-measured-so-far">below</a> give every value they show.</p>
+</div>
 <p><strong>The rules the charts keep:</strong>
 - <strong>One machine and one workload a chart.</strong> An L3 effect on the i9 may appear at another
   concurrency, or not at all, on another CPU.
@@ -1938,11 +1954,13 @@ and the <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=11407937dadd"></script>
+        <script src="../../assets/javascripts/bench.js?v=6d98300ee360"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=11407937dadd"></script>
+        <script src="../../assets/javascripts/couriers.js?v=6d98300ee360"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=11407937dadd"></script>
+        <script src="../../assets/javascripts/blog.js?v=6d98300ee360"></script>
+      
+        <script src="../../assets/javascripts/frontier.js?v=6d98300ee360"></script>
       
     
   </body>
