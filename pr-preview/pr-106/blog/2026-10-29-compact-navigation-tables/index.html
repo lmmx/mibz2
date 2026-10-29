@@ -1,0 +1,2117 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.">
+      
+      
+        <meta name="author" content="Louis Maddox">
+      
+      
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-106/blog/2026-10-29-compact-navigation-tables/">
+      
+      
+        <link rel="describedby" href="../../llms.txt">
+        
+          <link rel="alternate" type="text/markdown" href="./index.md">
+        
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../../maintainers/development/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.png">
+      <meta name="generator" content="zensical-0.0.71">
+    
+    
+      
+        <title>Compact navigation tables for the inverse BWT: early findings - mibz2</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="../../assets/stylesheets/modern/main.e442bf79.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/modern/palette.b60ce83d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,300i,400,400i,500,500i,700,700i%7CIBM+Plex+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"IBM Plex Sans";--md-code-font:"IBM Plex Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=ae97fa121983">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=ae97fa121983">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=ae97fa121983">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=ae97fa121983">
+    
+    <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="mibz2">
+  <meta property="og:title" content="Compact navigation tables for the inverse BWT: early findings">
+  <meta property="og:description" content="Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-106/blog/2026-10-29-compact-navigation-tables/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-106/assets/social/blog-2026-10-29-compact-navigation-tables.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Compact navigation tables for the inverse BWT: early findings">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Compact navigation tables for the inverse BWT: early findings">
+  <meta name="twitter:description" content="Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-106/assets/social/blog-2026-10-29-compact-navigation-tables.png">
+  <meta name="twitter:image:alt" content="Compact navigation tables for the inverse BWT: early findings">
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-hidden="true"></label>
+    <div data-md-component="skip">
+      <a href="#__skip" class="md-skip">
+        Skip to content
+      </a>
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="mibz2" class="md-header__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            mibz2
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Compact navigation tables for the inverse BWT: early findings
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="mibz2" class="md-nav__button md-logo" aria-label="mibz2" data-md-component="logo">
+      
+  <img src="../../assets/logo-header.png" alt="mibz2">
+
+    </a>
+    mibz2
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/lmmx/mibz2" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+  </div>
+  <div class="md-source__repository">
+    lmmx/mibz2
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Get started
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Get started
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Installation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Quickstart
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../concepts/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Concepts
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_3">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Concepts
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/couriers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Why 32 couriers beat one
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  What is checked, and when
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/prior-work/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Prior work
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../benchmarks/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Benchmarks
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_4" id="__nav_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_4">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Benchmarks
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/alternatives/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Alternatives
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../benchmarks/frontier/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Throughput–memory frontier
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_5" id="__nav_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_5">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Reference
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/api/mibz2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Python)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/rust/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  mibz2 (Rust)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Background
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_6">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Background
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/history/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  History
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Status
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../background/journals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Journals
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Blog
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_7" id="__nav_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Blog
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+              
+                
+                  
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Compact navigation tables for the inverse BWT
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="././" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Compact navigation tables for the inverse BWT
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-decoder-follows-a-chain-of-pointers" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. The decoder follows a chain of pointers
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-the-cards-arent-arbitrary" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. The cards aren't arbitrary
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-succinct-structures-are-about-storing-the-pattern-not-the-individual-facts" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Succinct structures are about storing the pattern, not the individual facts
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-what-the-census-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. What the census found
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-why-the-cpus-cache-lines-became-central" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. Why the CPU's cache lines became central
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-a-second-design-a-two-tier-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. A second design: a two-tier layout
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-why-a-smaller-table-could-make-mibz2-faster" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7. Why a smaller table could make mibz2 faster
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        8. Open questions
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-what-is-known-and-what-is-not" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        9. What is known and what is not
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-the-underlying-idea" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        10. The underlying idea
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-weve-arrived" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Where we've arrived
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-comes-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What comes next
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-bottom-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The bottom line
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Maintainers
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_8">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Maintainers
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Development
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/documentation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Documentation
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maintainers/releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Releasing
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-decoder-follows-a-chain-of-pointers" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        1. The decoder follows a chain of pointers
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-the-cards-arent-arbitrary" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2. The cards aren't arbitrary
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-succinct-structures-are-about-storing-the-pattern-not-the-individual-facts" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. Succinct structures are about storing the pattern, not the individual facts
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-what-the-census-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        4. What the census found
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-why-the-cpus-cache-lines-became-central" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        5. Why the CPU's cache lines became central
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-a-second-design-a-two-tier-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        6. A second design: a two-tier layout
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-why-a-smaller-table-could-make-mibz2-faster" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        7. Why a smaller table could make mibz2 faster
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        8. Open questions
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-what-is-known-and-what-is-not" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        9. What is known and what is not
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-the-underlying-idea" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        10. The underlying idea
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#where-weve-arrived" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Where we've arrived
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-comes-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What comes next
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-bottom-line" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The bottom line
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                <a id="__skip" tabindex="-1"></a>
+                
+                  
+  <button type="button" title="Copy as Markdown" aria-label="Copy as Markdown" class="md-content__button md-icon" data-md-copy-url="./index.md">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 21H8V7h11m0-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2m-3-4H4a2 2 0 0 0-2 2v14h2V3h12z"/></svg>
+  </button>
+
+
+  
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-10-29-compact-navigation-tables.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
+    </a>
+  
+  
+
+
+<div class="post-hero">
+<div class="post-hero-text">
+<p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
+<h1 id="compact-navigation-tables-for-the-inverse-bwt-early-findings">Compact navigation tables for the inverse BWT: early findings<a class="headerlink" href="#compact-navigation-tables-for-the-inverse-bwt-early-findings" title="Permanent link">&para;</a></h1>
+<p class="post-dek">Most of the inverse BWT's navigation table follows simple patterns: what a census of real
+blocks found, and what comes next.</p>
+<p class="post-meta">29 October 2026 · 10 min read · <a href="#what-comes-next">Work in progress</a></p>
+</div>
+<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
+</div>
+<p>This research began with a simple question:</p>
+<blockquote>
+<p>Can succinct data structures make my bzip2 decoder faster?</p>
+</blockquote>
+<p>The answer so far is that the large table the decoder uses to reconstruct text stores more than it needs to, and much of what it stores follows simple patterns.</p>
+<p>This is no longer only theory: a census of the benchmark corpus's actual data shows those patterns.</p>
+<p>What follows starts from the beginning and assumes no background in compressed indexes.</p>
+<h2 id="1-the-decoder-follows-a-chain-of-pointers">1. The decoder follows a chain of pointers<a class="headerlink" href="#1-the-decoder-follows-a-chain-of-pointers" title="Permanent link">&para;</a></h2>
+<p>When bzip2 compresses some text, it performs the Burrows–Wheeler Transform (BWT).</p>
+<p>The BWT rearranges the characters in a way that helps compression. But recovering the original text requires following a particular sequence of positions.</p>
+<p>Imagine an enormous collection of numbered cards.</p>
+<p>Each card tells you which card to visit next.</p>
+<figure class="bf-fig bf-chain" data-next="3 5 0 6 1 2 4">
+<p class="bf-title">A miniature pointer chain</p>
+<ol class="bf-cards" aria-label="Seven cards, each holding the number of the next card"><li class="bf-cardx is-current"><span class="bf-cl">Card 0</span><span class="bf-cv">3</span><span class="bf-ca" aria-hidden="true">→</span></li><li class="bf-cardx"><span class="bf-cl">Card 1</span><span class="bf-cv">5</span><span class="bf-ca" aria-hidden="true">→</span></li><li class="bf-cardx"><span class="bf-cl">Card 2</span><span class="bf-cv">0</span><span class="bf-ca" aria-hidden="true">→</span></li><li class="bf-cardx"><span class="bf-cl">Card 3</span><span class="bf-cv">6</span><span class="bf-ca" aria-hidden="true">→</span></li><li class="bf-cardx"><span class="bf-cl">Card 4</span><span class="bf-cv">1</span><span class="bf-ca" aria-hidden="true">→</span></li><li class="bf-cardx"><span class="bf-cl">Card 5</span><span class="bf-cv">2</span><span class="bf-ca" aria-hidden="true">→</span></li><li class="bf-cardx"><span class="bf-cl">Card 6</span><span class="bf-cv">4</span><span class="bf-ca" aria-hidden="true">→</span></li></ol>
+<div class="bf-walk">
+<div class="bf-walk-head" aria-live="polite" hidden><span>Currently at card <strong class="bf-at">0</strong></span><span class="bf-count">1 of 7 visited</span></div>
+<div class="bf-buttons" hidden><button type="button" class="bf-btn bf-follow">Follow pointer →</button><button type="button" class="bf-btn bf-reset">Reset</button></div>
+<p class="bf-path">Path: <span class="bf-trail">0 → 3 → 6 → 4 → 1 → 5 → 2</span></p>
+</div>
+<figcaption>Each card contains the number of the next card. The highlighted card is the current position: follow the pointers from card 0 until every card has been visited.</figcaption>
+</figure>
+
+<p>mibz2's decoder uses a table called the T-vector, which is essentially a much larger, more sophisticated collection of such cards.</p>
+<p>For each position, it stores:</p>
+<ul>
+<li>Where to go next.</li>
+<li>The character associated with that position.</li>
+<li>A marker used by mibz2's cooperative traversal algorithm.</li>
+</ul>
+<p>At maximum bzip2 block size, this table occupies approximately 3.6 MB.</p>
+<p>mibz2's 32-lane implementation already tackles one major cost: instead of following one chain and repeatedly waiting for memory, it follows many independent chains at once.</p>
+<p>That's memory-level parallelism (MLP).</p>
+<p>So far, so good.</p>
+<p>But then we asked a different question.</p>
+<blockquote>
+<p>Why do we need four bytes for every card?</p>
+</blockquote>
+<h2 id="2-the-cards-arent-arbitrary">2. The cards aren't arbitrary<a class="headerlink" href="#2-the-cards-arent-arbitrary" title="Permanent link">&para;</a></h2>
+<p>Take these two sequences of destinations:</p>
+<figure class="bf-fig">
+<p class="bf-title">Two groups of eight pointers</p>
+<svg viewBox="0 0 720 176" role="img" aria-label="Group A: 427, 18, 903, 61, 712, 295, 4, 846. Group B: 427 to 434, consecutive."><text x="0" y="18" class="bf-tm">Group A: arbitrary values</text><rect x="0" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="42.375" y="52" class="bf-t-strong" text-anchor="middle">427</text><rect x="90.75" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="133.125" y="52" class="bf-t-strong" text-anchor="middle">18</text><rect x="181.5" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="223.875" y="52" class="bf-t-strong" text-anchor="middle">903</text><rect x="272.25" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="314.625" y="52" class="bf-t-strong" text-anchor="middle">61</text><rect x="363" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="405.375" y="52" class="bf-t-strong" text-anchor="middle">712</text><rect x="453.75" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="496.125" y="52" class="bf-t-strong" text-anchor="middle">295</text><rect x="544.5" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="586.875" y="52" class="bf-t-strong" text-anchor="middle">4</text><rect x="635.25" y="28" width="84.75" height="38" rx="6" class="bf-cell"/><text x="677.625" y="52" class="bf-t-strong" text-anchor="middle">846</text><text x="0" y="96" class="bf-tm">Group B: consecutive values</text><rect x="0" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="42.375" y="130" class="bf-t-strong" text-anchor="middle">427</text><rect x="90.75" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="133.125" y="130" class="bf-t-strong" text-anchor="middle">428</text><rect x="181.5" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="223.875" y="130" class="bf-t-strong" text-anchor="middle">429</text><rect x="272.25" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="314.625" y="130" class="bf-t-strong" text-anchor="middle">430</text><rect x="363" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="405.375" y="130" class="bf-t-strong" text-anchor="middle">431</text><rect x="453.75" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="496.125" y="130" class="bf-t-strong" text-anchor="middle">432</text><rect x="544.5" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="586.875" y="130" class="bf-t-strong" text-anchor="middle">433</text><rect x="635.25" y="106" width="84.75" height="38" rx="6" class="bf-cell-hi"/><text x="677.625" y="130" class="bf-t-strong" text-anchor="middle">434</text><text x="0" y="170" class="bf-tm">Group B in one line: base 427, then add the position (+0, +1, … +7)</text></svg>
+</figure>
+
+<p>For Group A, storing eight values individually is reasonable.</p>
+<p>But Group B?</p>
+<p>You only need to remember:</p>
+<blockquote>
+<p>Start at 427 and add the position within the group.</p>
+</blockquote>
+<p>One starting number replaces eight separate numbers.</p>
+<p>The permutation mibz2's inverse BWT decoder follows, called Ψ (psi), isn't a completely arbitrary permutation.</p>
+<p>Because of how the BWT is constructed, it consists of increasing sequences of positions.</p>
+<p>That means consecutive entries within a particular character group always point to increasing positions.</p>
+<p>They won't necessarily be consecutive like Group B—but they're at least sorted.</p>
+<p>And that gives us opportunities to compress them.</p>
+<p>This is where succinct data structures entered the picture.</p>
+<h2 id="3-succinct-structures-are-about-storing-the-pattern-not-the-individual-facts">3. Succinct structures are about storing the pattern, not the individual facts<a class="headerlink" href="#3-succinct-structures-are-about-storing-the-pattern-not-the-individual-facts" title="Permanent link">&para;</a></h2>
+<p>In ordinary programming, we tend to store arrays of values directly.</p>
+<p>A succinct representation asks:</p>
+<blockquote>
+<p>Can I describe the arrangement of these values more economically and reconstruct any particular value when needed?</p>
+</blockquote>
+<p>For example, rather than storing:</p>
+<div class="language-text highlight"><pre><span></span><code>1000, 1002, 1005, 1008, 1010
+</code></pre></div>
+<p>you might store:</p>
+<div class="language-text highlight"><pre><span></span><code>base = 1000
+</code></pre></div>
+<p>and:</p>
+<div class="language-text highlight"><pre><span></span><code>offsets = 0, 2, 5, 8, 10
+</code></pre></div>
+<p>The offsets are much smaller than the absolute values, so they may require fewer bits.</p>
+<p>This is called frame-of-reference encoding, or FOR.</p>
+<p>Another technique, Elias–Fano, is especially suited to sorted integer sequences. It separates the higher and lower parts of each number and compresses the high parts using the sequence's monotonicity.</p>
+<p>Neither is magic; you save memory at the cost of some work to recover an individual value.</p>
+<p>And that creates our main tension:</p>
+<blockquote>
+<p>A more compact table is useful only if reconstructing its pointers doesn't make the decoder slower than before.</p>
+</blockquote>
+<h2 id="4-what-the-census-found">4. What the census found<a class="headerlink" href="#4-what-the-census-found" title="Permanent link">&para;</a></h2>
+<p>Initially, we had no idea how well these representations would fit real BWT data.</p>
+<p>Perhaps the values were increasing but widely scattered, making compression awkward.</p>
+<p>So we wrote a census program to inspect them.</p>
+<p>It found more structure than the theory alone guarantees.</p>
+<figure class="bf-fig">
+<p class="bf-title">What our census found in the benchmark corpus</p>
+<svg viewBox="0 0 720 150" role="img" aria-label="77.6% of rows are in simple consecutive groups; 99.51% fit compact FOR or Elias–Fano records."><text x="0" y="20" class="bf-ts">Simple consecutive groups</text><text x="720" y="22" class="bf-big-green" text-anchor="end">77.6%</text><rect x="0" y="32" width="720" height="13" rx="6.5" class="bf-track"/><rect x="0" y="32" width="558.72" height="13" rx="6.5" class="bf-green"/><text x="0" y="64" class="bf-tm">Rows where a complete group of pointers can potentially be represented by one base plus a simple offset.</text><text x="0" y="104" class="bf-ts">Fit compact FOR or Elias–Fano</text><text x="720" y="106" class="bf-big" text-anchor="end">99.51%</text><rect x="0" y="116" width="720" height="13" rx="6.5" class="bf-track"/><rect x="0" y="116" width="716.472" height="13" rx="6.5" class="bf-steel"/><text x="0" y="148" class="bf-tm">Only 0.49% of rows required exceptions under the proposed 32-value encoding scheme.</text><path d="M0 78.5H720" class="bf-rule"/></svg>
+<figcaption>These two percentages overlap: they aren't two separate populations.</figcaption>
+</figure>
+
+<p>The important observation is that more than three-quarters of the measured rows may be represented using a simple arithmetic rule.</p>
+<p>That is much better than we could have assumed from the mathematics alone.</p>
+<p>It's the difference between saying:</p>
+<blockquote>
+<p>This encoding should work in principle.</p>
+</blockquote>
+<p>And:</p>
+<blockquote>
+<p>We've examined the actual pointers, and most of them exhibit precisely the structure this encoding is designed to exploit.</p>
+</blockquote>
+<p>It does not yet mean the decoder will be faster. But it establishes that there is something real to exploit.</p>
+<h2 id="5-why-the-cpus-cache-lines-became-central">5. Why the CPU's cache lines became central<a class="headerlink" href="#5-why-the-cpus-cache-lines-became-central" title="Permanent link">&para;</a></h2>
+<p>Now we reach the hardware connection.</p>
+<p>Modern CPUs don't fetch arbitrary isolated bytes from main memory one at a time. They work with cache lines, commonly 64 bytes.</p>
+<p>Imagine a cache line as a little tray of data.</p>
+<p>If the next pointer lives in that tray, the processor can fetch the tray and extract what it needs.</p>
+<p>The first design asks:</p>
+<blockquote>
+<p>What if we could store 32 pointers in exactly one 64-byte cache line?</p>
+</blockquote>
+<figure class="bf-fig">
+<p class="bf-title">The fixed-cache-line proposal</p>
+<svg viewBox="0 0 720 232" role="img" aria-label="One 64-byte cache-line record holding 32 pointers: 2 bytes per pointer on average."><rect x="0.5" y="0.5" width="719" height="178" rx="8" class="bf-box"/><text x="16" y="26" class="bf-tm">One cache-line record</text><text x="704" y="27" class="bf-ts" text-anchor="end">64 bytes</text><rect x="16" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="56" class="bf-ttiny" text-anchor="middle">0</text><rect x="102.375" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="56" class="bf-ttiny" text-anchor="middle">1</text><rect x="188.75" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="56" class="bf-ttiny" text-anchor="middle">2</text><rect x="275.125" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="56" class="bf-ttiny" text-anchor="middle">3</text><rect x="361.5" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="56" class="bf-ttiny" text-anchor="middle">4</text><rect x="447.875" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="56" class="bf-ttiny" text-anchor="middle">5</text><rect x="534.25" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="56" class="bf-ttiny" text-anchor="middle">6</text><rect x="620.625" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="56" class="bf-ttiny" text-anchor="middle">7</text><rect x="16" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="83" class="bf-ttiny" text-anchor="middle">8</text><rect x="102.375" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="83" class="bf-ttiny" text-anchor="middle">9</text><rect x="188.75" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="83" class="bf-ttiny" text-anchor="middle">10</text><rect x="275.125" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="83" class="bf-ttiny" text-anchor="middle">11</text><rect x="361.5" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="83" class="bf-ttiny" text-anchor="middle">12</text><rect x="447.875" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="83" class="bf-ttiny" text-anchor="middle">13</text><rect x="534.25" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="83" class="bf-ttiny" text-anchor="middle">14</text><rect x="620.625" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="83" class="bf-ttiny" text-anchor="middle">15</text><rect x="16" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="110" class="bf-ttiny" text-anchor="middle">16</text><rect x="102.375" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="110" class="bf-ttiny" text-anchor="middle">17</text><rect x="188.75" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="110" class="bf-ttiny" text-anchor="middle">18</text><rect x="275.125" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="110" class="bf-ttiny" text-anchor="middle">19</text><rect x="361.5" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="110" class="bf-ttiny" text-anchor="middle">20</text><rect x="447.875" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="110" class="bf-ttiny" text-anchor="middle">21</text><rect x="534.25" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="110" class="bf-ttiny" text-anchor="middle">22</text><rect x="620.625" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="110" class="bf-ttiny" text-anchor="middle">23</text><rect x="16" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="137" class="bf-ttiny" text-anchor="middle">24</text><rect x="102.375" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="137" class="bf-ttiny" text-anchor="middle">25</text><rect x="188.75" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="137" class="bf-ttiny" text-anchor="middle">26</text><rect x="275.125" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="137" class="bf-ttiny" text-anchor="middle">27</text><rect x="361.5" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="137" class="bf-ttiny" text-anchor="middle">28</text><rect x="447.875" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="137" class="bf-ttiny" text-anchor="middle">29</text><rect x="534.25" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="137" class="bf-ttiny" text-anchor="middle">30</text><rect x="620.625" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="137" class="bf-ttiny" text-anchor="middle">31</text><text x="16" y="166" class="bf-tm">32 logical pointers represented inside a single physical record.</text><text x="0" y="222" class="bf-tl">Average space per pointer</text><text x="720" y="224" class="bf-big" text-anchor="end">2 bytes</text></svg>
+</figure>
+
+<p>mibz2's current representation uses four bytes per pointer.</p>
+<p>So the new design could halve the navigation table's storage, before exception overhead.</p>
+<p>And crucially, the record can be found immediately from the current row number.</p>
+<p>No searching for where the record was stored.</p>
+<p>This is very important because mibz2's greatest strength is how quickly it can issue independent memory requests.</p>
+<p>A compact representation that introduces multiple dependent searches could destroy that advantage.</p>
+<p>The fixed-size record tries to avoid precisely that.</p>
+<h2 id="6-a-second-design-a-two-tier-layout">6. A second design: a two-tier layout<a class="headerlink" href="#6-a-second-design-a-two-tier-layout" title="Permanent link">&para;</a></h2>
+<p>If 77.6% of rows belong to simple consecutive groups, why devote an entire 64-byte record to each of those groups?</p>
+<p>Most of the record would contain information we don't actually need.</p>
+<p>So we proposed a two-tier layout.</p>
+<figure class="bf-fig">
+<p class="bf-title">Two-tier Ψ navigation</p>
+<svg viewBox="0 0 720 312" role="img" aria-label="The row number selects an 8-byte directory entry. For a translation group the answer is base plus offset, from the entry alone; for other groups an extra record is loaded and decoded."><rect x="0" y="0" width="720" height="150" rx="10" class="bf-panel"/><text x="360" y="30" class="bf-ts" text-anchor="middle">Current row number</text><path d="M0 0v9m-4-4 4 4 4-4" transform="translate(360 40)" class="bf-arrow"/><rect x="16.5" y="62.5" width="687" height="70" rx="8" class="bf-box"/><text x="360" y="92" class="bf-ts" text-anchor="middle">Small 8-byte directory entry</text><text x="360" y="114" class="bf-tm" text-anchor="middle">Contains format, markers and either a base or payload address</text><path d="M360 150V161H177V171M360 161H543V171" class="bf-link"/><path d="M173 167l4 4 4-4M539 167l4 4 4-4" class="bf-link"/><rect x="0" y="176" width="354" height="136" rx="10" class="bf-card-hi"/><text x="177" y="204" class="bf-t-green" text-anchor="middle">Translation group</text><path d="M0 0v9m-4-4 4 4 4-4" transform="translate(177 214)" class="bf-arrow"/><text x="177" y="246" class="bf-ts" text-anchor="middle">Base + offset</text><text x="177" y="266" class="bf-tm" text-anchor="middle">The answer is already in the directory entry</text><circle cx="177" cy="290" r="9" class="bf-icon-green"/><path d="M173 290l3 3 5-6" class="bf-icon-green"/><rect x="366" y="176" width="354" height="136" rx="10" class="bf-panel"/><text x="543" y="204" class="bf-t-strong" text-anchor="middle">Other group</text><path d="M0 0v9m-4-4 4 4 4-4" transform="translate(543 214)" class="bf-arrow"/><text x="543" y="246" class="bf-ts" text-anchor="middle">Load extra record</text><text x="543" y="266" class="bf-tm" text-anchor="middle">Decode FOR / Elias–Fano / exception</text><path d="M534 284h18M534 290h18M534 296h18" class="bf-icon"/></svg>
+</figure>
+
+<p>It is a compromise.</p>
+<p>For the common case, the small directory entry already gives us the next pointer.</p>
+<p>For the less common case, we fetch extra information.</p>
+<p>Because the directory is tiny compared with the current T-vector, it may fit much more comfortably in cache.</p>
+<p>And because we don't allocate a full 64-byte record for the simple groups, the storage could become much smaller.</p>
+<p>Our initial calculation suggested something in the neighbourhood of 5.6 bits per row, before additional exceptions and bookkeeping.</p>
+<p>That's not a measured final footprint. It's an optimistic model built from the reported distribution.</p>
+<p>The attraction is real, but so is the risk: whenever we need the second record, we introduce another memory dependency.</p>
+<h2 id="7-why-a-smaller-table-could-make-mibz2-faster">7. Why a smaller table could make mibz2 faster<a class="headerlink" href="#7-why-a-smaller-table-could-make-mibz2-faster" title="Permanent link">&para;</a></h2>
+<p>Suppose mibz2 is decoding one full-sized bzip2 block.</p>
+<p>Its T-vector for that block is 3.6 MB.</p>
+<p>But mibz2 can work on multiple blocks concurrently.</p>
+<p>With several full-size blocks in flight, their tables compete for space in the CPU's shared cache.</p>
+<figure class="bf-fig">
+<p class="bf-title">Eight simultaneous full-block tables</p>
+<svg viewBox="0 0 720 334" role="img" aria-label="Table storage for eight full blocks: current 28.8 MB, 24-bit 21.6 MB, 16-bit fixed 14.5 MB, two-tier about 5 MB (estimate)."><path d="M56 286H720" class="bf-axis"/><text x="46" y="290" class="bf-tm" text-anchor="end">0 MB</text><path d="M56 218.5H720" class="bf-grid"/><text x="46" y="222.5" class="bf-tm" text-anchor="end">8 MB</text><path d="M56 151H720" class="bf-grid"/><text x="46" y="155" class="bf-tm" text-anchor="end">16 MB</text><path d="M56 83.5H720" class="bf-grid"/><text x="46" y="87.5" class="bf-tm" text-anchor="end">24 MB</text><path d="M56 16H720" class="bf-grid"/><text x="46" y="20" class="bf-tm" text-anchor="end">32 MB</text><rect x="87" y="43" width="104" height="243" rx="6" class="bf-bar"/><text x="139" y="33" class="bf-t-strong" text-anchor="middle">28.8 MB</text><text x="139" y="308" class="bf-ts" text-anchor="middle">Current</text><text x="139" y="326" class="bf-tm" text-anchor="middle">32-bit T-vector</text><rect x="253" y="103.75" width="104" height="182.25" rx="6" class="bf-bar"/><text x="305" y="93.75" class="bf-t-strong" text-anchor="middle">21.6 MB</text><text x="305" y="308" class="bf-ts" text-anchor="middle">24-bit</text><text x="305" y="326" class="bf-tm" text-anchor="middle">direct links</text><rect x="419" y="163.656" width="104" height="122.344" rx="6" class="bf-bar"/><text x="471" y="153.656" class="bf-t-strong" text-anchor="middle">14.5 MB</text><text x="471" y="308" class="bf-ts" text-anchor="middle">16-bit fixed</text><text x="471" y="326" class="bf-tm" text-anchor="middle">cache-line records</text><rect x="585" y="243.812" width="104" height="42.1875" rx="6" class="bf-bar-est"/><text x="637" y="233.812" class="bf-t-strong" text-anchor="middle">about 5 MB</text><text x="637" y="308" class="bf-ts" text-anchor="middle">Two-tier</text><text x="637" y="326" class="bf-tm" text-anchor="middle">estimate</text></svg>
+<figcaption>Illustrative table storage for eight full 900 KB blocks. The two-tier estimate (dashed) excludes additional exception and alignment overhead.</figcaption>
+</figure>
+
+<p>Earlier measurements on a 10-core workstation already show evidence of a shared-cache residency threshold.</p>
+<p>When the live tables become too large, the processor must fetch more data from slower parts of the memory hierarchy.</p>
+<p>Smaller tables would let more of them stay resident in the same cache capacity.</p>
+<p>We might see fewer expensive memory misses.</p>
+<p>Even if each individual pointer is slightly more expensive to decode, the overall decoder could become faster.</p>
+<p>This is the same kind of trade-off Julian Seward studied in 2001.</p>
+<p>But mibz2 adds modern multicore concurrency and 32-lane traversal.</p>
+<p>The goal is not to have the smallest possible table. It's to make the whole machine finish decoding sooner.</p>
+<h2 id="8-open-questions">8. Open questions<a class="headerlink" href="#8-open-questions" title="Permanent link">&para;</a></h2>
+<p>There are three substantial unanswered questions.</p>
+<p><strong>First, how much does decoding a compressed pointer cost?</strong> With the current T-vector, the CPU loads a 32-bit value and extracts the next row. With a compressed record, it may need shifts, masks, a format test and sometimes an additional memory access. Even a small amount of extra work matters when repeated millions of times.</p>
+<p><strong>Second, how expensive is construction?</strong> The compressed table must be built from the BWT before it can be traversed. A representation that makes traversal faster but takes twice as long to build might lose overall.</p>
+<p><strong>Third, does the 77.6% translation property hold broadly?</strong> We know it appears in our benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.</p>
+<p>We have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.</p>
+<h2 id="9-what-is-known-and-what-is-not">9. What is known and what is not<a class="headerlink" href="#9-what-is-known-and-what-is-not" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ψ has increasing sequences that can be compressed</td>
+<td>Mathematically established</td>
+</tr>
+<tr>
+<td>Actual benchmark data contains abundant consecutive-position groups</td>
+<td>Measured by our census</td>
+</tr>
+<tr>
+<td>Fixed 64-byte records can represent the overwhelming majority of measured groups</td>
+<td>Strongly supported by the census; complete encoding still needs validation</td>
+</tr>
+<tr>
+<td>A two-tier directory could shrink storage further</td>
+<td>New design hypothesis</td>
+</tr>
+<tr>
+<td>Reduced working sets can improve cache residency</td>
+<td>Supported by mibz2's existing performance measurements</td>
+</tr>
+<tr>
+<td>Either compressed design will beat the current decoder</td>
+<td>Unknown</td>
+</tr>
+</tbody>
+</table>
+<p>And the most important distinction of all:</p>
+<blockquote>
+<p>We've found evidence that the data is compressible in a form suited to fast navigation. We haven't yet proved that navigating the compressed representation is faster.</p>
+</blockquote>
+<p>These are separate claims.</p>
+<h2 id="10-the-underlying-idea">10. The underlying idea<a class="headerlink" href="#10-the-underlying-idea" title="Permanent link">&para;</a></h2>
+<p>The underlying point is that the T-vector—the enormous table of navigation pointers—isn't fundamentally necessary in its current form.</p>
+<p>It's a convenient way to store answers to questions.</p>
+<p>The BWT already contains the information from which those answers can be derived.</p>
+<p>Succinct data structures teach us to exploit that fact.</p>
+<p>But our work adds an interesting twist:</p>
+<blockquote>
+<p>Rather than pursuing the absolutely smallest possible encoding, we're looking for a carefully chosen amount of redundancy that allows the CPU to recover answers quickly.</p>
+</blockquote>
+<p>In other words, sometimes storing a little unnecessary information makes the whole algorithm faster.</p>
+<p>That's what makes the problem so subtle.</p>
+<p>A theoretician might ask:</p>
+<blockquote>
+<p>How close can we get to the minimum number of bits?</p>
+</blockquote>
+<p>A systems programmer might ask:</p>
+<blockquote>
+<p>How few instructions can we execute per pointer?</p>
+</blockquote>
+<p>Our research asks:</p>
+<blockquote>
+<p>How should we arrange the information so that the CPU can follow millions of pointers with as little waiting as possible?</p>
+</blockquote>
+<p>That brings information theory, succinct data structures, cache architecture and instruction scheduling together in one problem.</p>
+<h2 id="where-weve-arrived">Where we've arrived<a class="headerlink" href="#where-weve-arrived" title="Permanent link">&para;</a></h2>
+<figure class="bf-fig">
+<p class="bf-title">Our research journey</p>
+<svg viewBox="0 0 720 340" role="img" aria-label="Five steps: Seward 2001; compressed permutation research; the 16-bit hypothesis; the corpus census (77.6% translation groups); the two-tier idea."><path d="M15 30V66" class="bf-link"/><circle cx="15" cy="14" r="13" class="bf-dot"/><text x="15" y="19" class="bf-t-strong" text-anchor="middle">1</text><text x="44" y="19" class="bf-ts">Seward, 2001</text><text x="44" y="42" class="bf-t">Showed that inverse-BWT navigation can trade memory for computation.</text><path d="M15 98V134" class="bf-link"/><circle cx="15" cy="82" r="13" class="bf-dot"/><text x="15" y="87" class="bf-t-strong" text-anchor="middle">2</text><text x="44" y="87" class="bf-ts">Compressed permutation research</text><text x="44" y="110" class="bf-t">Established that the sorted structure of Ψ can be represented economically.</text><path d="M15 166V202" class="bf-link"/><circle cx="15" cy="150" r="13" class="bf-dot"/><text x="15" y="155" class="bf-t-strong" text-anchor="middle">3</text><text x="44" y="155" class="bf-ts">Our 16-bit hypothesis</text><text x="44" y="178" class="bf-t">Proposed fitting 32 navigation values inside one cache line.</text><path d="M15 234V270" class="bf-link"/><circle cx="15" cy="218" r="13" class="bf-dot-hi"/><text x="15" y="223" class="bf-t-strong" text-anchor="middle">4</text><text x="44" y="223" class="bf-ts">Our corpus census</text><text x="44" y="246" class="bf-t">Found that 77.6% of rows qualify for simple translation groups, making a cheap fast path plausible.</text><circle cx="15" cy="286" r="13" class="bf-dot-hi"/><text x="15" y="291" class="bf-t-strong" text-anchor="middle">5</text><text x="44" y="291" class="bf-ts">Our latest two-tier idea</text><text x="44" y="314" class="bf-t">Proposed storing complete answers for simple groups directly in tiny descriptors,</text><text x="44" y="332" class="bf-t">fetching larger records only when needed.</text></svg>
+</figure>
+
+<h2 id="what-comes-next">What comes next<a class="headerlink" href="#what-comes-next" title="Permanent link">&para;</a></h2>
+<p>The census shows there is structure to exploit. It says nothing yet about speed, and the
+next steps are the measurements that will. They run in order, one controlled comparison
+at a time.</p>
+<figure class="bf-fig">
+<p class="bf-title">The roadmap, in order</p>
+<svg viewBox="0 0 720 770" role="img" aria-label="Eight steps: the single-core fused build, measured at 1.027 times, below its floor; the cooperative fused build, measured and passed at 1.31 times; the cooperative path in the decoder, next; an audit of the F-byte lookup and embedded byte versus F recovery, next; compact Psi built directly and a navigation-cost harness, later; and a decoder prototype only if justified."><path d="M15 30V112" class="bf-link"/><circle cx="15" cy="14" r="13" class="bf-dot"/><text x="15" y="19" class="bf-t-strong" text-anchor="middle">1</text><text x="44" y="19" class="bf-ts">Single-core fused build (#93)</text><rect x="278.4" y="4" width="124.4" height="21" rx="10.5" class="bf-pill-done"/><text x="340.6" y="18.5" class="bf-pill-done-t" text-anchor="middle">Measured: 1.027×</text><text x="44" y="44" class="bf-t">Removing the table fill and scattering straight into the T-vector gained 1.027× on CI, under the</text><text x="44" y="62" class="bf-t">pre-registered 1.03 floor. On one core the existing build is already about as fast. Kept as a</text><text x="44" y="80" class="bf-t">negative result.</text><path d="M15 144V226" class="bf-link"/><circle cx="15" cy="128" r="13" class="bf-dot-hi"/><text x="15" y="133" class="bf-t-strong" text-anchor="middle">2</text><text x="44" y="133" class="bf-ts">Cooperative fused build (#81)</text><rect x="278.4" y="118" width="124.4" height="21" rx="10.5" class="bf-pill-pass"/><text x="340.6" y="132.5" class="bf-pill-pass-t" text-anchor="middle">Measured: passed</text><text x="44" y="158" class="bf-t">On the 10-core workstation, the one-pass cooperative build ran 1.31× the two-pass one at 3×3 (20</text><text x="44" y="176" class="bf-t">of 20 rounds), and build and walk together 1.10×, past the pre-registered 1.15× bar. Not yet a</text><text x="44" y="194" class="bf-t">decoder figure: the checkpoints were given free and the MTF stage untimed.</text><path d="M15 258V322" class="bf-link"/><circle cx="15" cy="242" r="13" class="bf-dot"/><text x="15" y="247" class="bf-t-strong" text-anchor="middle">3</text><text x="44" y="247" class="bf-ts">The cooperative path in the decoder</text><rect x="324" y="232" width="47.6" height="21" rx="10.5" class="bf-pill-next"/><text x="347.8" y="246.5" class="bf-pill-next-t" text-anchor="middle">Next</text><text x="44" y="272" class="bf-t">Bring the cooperative build and walk into the decoder behind an option and measure it end to</text><text x="44" y="290" class="bf-t">end, from .bz2 file to checked output, against today's decoder at the same core count.</text><path d="M15 354V400" class="bf-link"/><circle cx="15" cy="338" r="13" class="bf-dot"/><text x="15" y="343" class="bf-t-strong" text-anchor="middle">4</text><text x="44" y="343" class="bf-ts">Audit the F-byte lookup (#79)</text><rect x="278.4" y="328" width="47.6" height="21" rx="10.5" class="bf-pill-next"/><text x="302.2" y="342.5" class="bf-pill-next-t" text-anchor="middle">Next</text><text x="44" y="368" class="bf-t">Read the generated code of the existing F-window lookup that recovers each output byte.</text><path d="M15 432V496" class="bf-link"/><circle cx="15" cy="416" r="13" class="bf-dot"/><text x="15" y="421" class="bf-t-strong" text-anchor="middle">5</text><text x="44" y="421" class="bf-ts">Embedded byte vs F recovery (#79)</text><rect x="308.8" y="406" width="47.6" height="21" rx="10.5" class="bf-pill-next"/><text x="332.6" y="420.5" class="bf-pill-next-t" text-anchor="middle">Next</text><text x="44" y="446" class="bf-t">One traversal kernel, lane scheduler and start-marker handling; only how the output byte is</text><text x="44" y="464" class="bf-t">recovered changes. That decides whether a 24-bit table is viable.</text><path d="M15 528V592" class="bf-link"/><circle cx="15" cy="512" r="13" class="bf-dot"/><text x="15" y="517" class="bf-t-strong" text-anchor="middle">6</text><text x="44" y="517" class="bf-ts">Compact Ψ, built directly</text><rect x="248" y="502" width="54" height="21" rx="10.5" class="bf-pill-later"/><text x="275" y="516.5" class="bf-pill-later-t" text-anchor="middle">Later</text><text x="44" y="542" class="bf-t">Exact layouts for the fixed-record and two-tier designs, and the cost of building their records</text><text x="44" y="560" class="bf-t">straight from the BWT, never making the 32-bit table at all.</text><path d="M15 624V688" class="bf-link"/><circle cx="15" cy="608" r="13" class="bf-dot"/><text x="15" y="613" class="bf-t-strong" text-anchor="middle">7</text><text x="44" y="613" class="bf-ts">Navigation-cost harness</text><rect x="232.8" y="598" width="54" height="21" rx="10.5" class="bf-pill-later"/><text x="259.8" y="612.5" class="bf-pill-later-t" text-anchor="middle">Later</text><text x="44" y="638" class="bf-t">Direct links, fixed 64-byte records and two-tier descriptors on a matched pointer-chasing</text><text x="44" y="656" class="bf-t">workload, the second dependent load included.</text><circle cx="15" cy="704" r="13" class="bf-dot"/><text x="15" y="709" class="bf-t-strong" text-anchor="middle">8</text><text x="44" y="709" class="bf-ts">Decoder prototype</text><rect x="187.2" y="694" width="98.8" height="21" rx="10.5" class="bf-pill-later"/><text x="236.6" y="708.5" class="bf-pill-later-t" text-anchor="middle">If justified</text><text x="44" y="734" class="bf-t">Construction, traversal, exceptions and concurrency together, before any change to the</text><text x="44" y="752" class="bf-t">production decoder.</text></svg>
+<figcaption>Each step's prediction and pass and fail thresholds are written down before it runs. Status on 29 October 2026, after the workstation run of #81.</figcaption>
+</figure>
+
+<p>The first of them has now run. Building the table in one pass, rather than copying first
+and scattering after, made the cooperative build 1.31× faster on the 10-core workstation.
+That raises the bar for every compact design: each must now beat the fused 32-bit build and
+its walk, not the old two-pass one.</p>
+<p>It also sharpens the question. The most interesting version of a compact table is not one
+made by compressing a finished T-vector, but one built straight from the BWT, record by
+record, so the full 32-bit table is never written at all. Writing fewer bytes need not mean
+doing less work, so that too will be measured before anything is built on it.</p>
+<p>Three table designs are kept as candidates. None is built yet, and they will compete on
+measured construction and navigation cost, not on size alone:</p>
+<ul>
+<li><strong>24-bit direct links:</strong> the simple reference, a quarter smaller than today's table.</li>
+<li><strong>Fixed 64-byte records:</strong> 32 pointers to a cache line, 16.16 bits a row on the corpus.</li>
+<li><strong>Two-tier descriptors:</strong> 5.70 bits a row on the corpus, but 12–36% of steps need a
+  second, dependent load, and on less regular inputs the design loses its advantage.</li>
+</ul>
+<p>This post will be updated as the results come in. The work is tracked on
+<a href="https://github.com/lmmx/mibz2/issues/81">#81</a> and
+<a href="https://github.com/lmmx/mibz2/issues/79">#79</a>.</p>
+<h2 id="the-bottom-line">The bottom line<a class="headerlink" href="#the-bottom-line" title="Permanent link">&para;</a></h2>
+<p>We've moved from:</p>
+<blockquote>
+<p>"Maybe succinct data structures could save us some memory."</p>
+</blockquote>
+<p>To:</p>
+<blockquote>
+<p>"We have evidence that most of the permutation can be represented by simple rules, and we have several concrete ways of exploiting those rules while protecting the memory-level parallelism that makes mibz2 fast."</p>
+</blockquote>
+<p>We now have a real engineering question to settle: whether those smaller representations can make the CPU finish its work faster.</p>
+<p>The working hypothesis, in one line:</p>
+<blockquote>
+<p>A decoder may get faster not by following its pointers more efficiently, but by not storing most of them individually.</p>
+</blockquote>
+<hr />
+<div class="admonition note">
+<p class="admonition-title">Since this was written</p>
+<p>The census has since been refined and the designs' sizes counted exactly. On the corpus's
+233 full blocks:</p>
+<ul>
+<li>77.39% of rows are in groups that are one run, ranging from 63.7% to 88.0% per block;</li>
+<li>the fixed 64-byte records come to 16.16 bits a row;</li>
+<li>the two-tier design comes to 5.70 bits a row, where 12–36% of steps need its second
+  lookup.</li>
+</ul>
+<p>On other inputs, such as random or already-compressed data, runs are rare. There the
+two-tier design is larger than the fixed records, while the fixed records still fit at
+about 16.3 bits a row. The details, sources and the full discussion are in the research
+journal (<code>docs/journal/2026-10-29-succinct-review.md</code>, <a href="https://github.com/lmmx/mibz2/pull/94">#94</a>)
+and on <a href="https://github.com/lmmx/mibz2/issues/79">#79</a>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Blog">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Blog
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../maintainers/development/" class="md-footer__link md-footer__link--next" aria-label="Next: Development">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Development
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      mibz2 is licensed under MIT OR Apache-2.0
+    </div>
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/lmmx/mibz2" target="_blank" rel="noopener" title="mibz2 on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M216.5 362.5c-66-8-112.5-55.5-112.5-117 0-25 9-52 24-70-6.5-16.5-5.5-51.5 2-66 20-2.5 47 8 63 22.5 19-6 39-9 63.5-9s44.5 3 62.5 8.5c15.5-14 43-24.5 63-22 7 13.5 8 48.5 1.5 65.5 16 19 24.5 44.5 24.5 70.5 0 61.5-46.5 108-113.5 116.5 17 11 28.5 35 28.5 62.5v52c0 15 12.5 23.5 27.5 17.5C441 459.5 512 369 512 257 512 115.5 397 0 255.5 0S0 115.5 0 257c0 111 70.5 203 165.5 237.5 13.5 5 26.5-4 26.5-17.5v-40c-7 3-16 5-24 5-33 0-52.5-18-66.5-51.5-5.5-13.5-11.5-21.5-23-23-6-.5-8-3-8-6 0-6 10-10.5 20-10.5 14.5 0 27 9 40 27.5 10 14.5 20.5 21 33 21s20.5-4.5 32-16c8.5-8.5 15-16 21-21"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://pypi.org/project/mibz2/" target="_blank" rel="noopener" title="mibz2 on PyPI" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.8 200.5c-7.7-30.9-22.3-54.2-53.4-54.2h-40.1v47.4c0 36.8-31.2 67.8-66.8 67.8H172.7c-29.2 0-53.4 25-53.4 54.3v101.8c0 29 25.2 46 53.4 54.3 33.8 9.9 66.3 11.7 106.8 0 26.9-7.8 53.4-23.5 53.4-54.3v-40.7H226.2v-13.6h160.2c31.1 0 42.6-21.7 53.4-54.2 11.2-33.5 10.7-65.7 0-108.6M286.2 444.7a20.4 20.4 0 1 1 0-40.7 20.4 20.4 0 1 1 0 40.7M167.8 248.1h106.8c29.7 0 53.4-24.5 53.4-54.3V91.9c0-29-24.4-50.7-53.4-55.6-35.8-5.9-74.7-5.6-106.8.1-45.2 8-53.4 24.7-53.4 55.6v40.7h106.9v13.6h-147c-31.1 0-58.3 18.7-66.8 54.2-9.8 40.7-10.2 66.1 0 108.6 7.6 31.6 25.7 54.2 56.8 54.2H101v-48.8c0-35.3 30.5-66.4 66.8-66.4m-6.6-183.4a20.4 20.4 0 1 1 0 40.8 20.4 20.4 0 1 1 0-40.8"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://crates.io/crates/mibz2" target="_blank" rel="noopener" title="mibz2 on crates.io" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.3.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="m508.5 249.8-21.8-13.5c-.2-2-.3-3.9-.5-5.9l18.7-17.5c.9-.9 1.6-1.9 2-3.1s.5-2.5.2-3.7-.8-2.4-1.6-3.3-1.8-1.7-3-2.1l-24-9c-.5-1.9-1.1-3.8-1.7-5.6l15-20.8c.7-1 1.2-2.2 1.3-3.4s0-2.5-.5-3.7-1.2-2.2-2.2-2.9-2.1-1.3-3.4-1.5l-25.4-4.2c-.9-1.7-1.8-3.4-2.7-5.2l10.7-23.4c.5-1.1.7-2.4.6-3.6s-.5-2.4-1.2-3.5-1.6-1.9-2.8-2.5-2.4-.8-3.6-.8l-25.8.9c-1.2-1.5-2.4-2.9-3.6-4.4l5.8-25.3c.3-1.2.3-2.5-.1-3.7s-1-2.3-1.9-3.2-2-1.5-3.2-1.9-2.5-.4-3.7-.1l-25.1 6c-1.4-1.2-2.9-2.4-4.4-3.6l.9-25.8c.1-1.3-.2-2.5-.8-3.6s-1.4-2.1-2.5-2.8-2.2-1.1-3.5-1.2-2.5.1-3.7.6l-23.3 10.7-5.1-2.7-4.2-25.4c-.2-1.2-.7-2.4-1.5-3.4s-1.8-1.7-2.9-2.2-2.4-.7-3.7-.5-2.4.6-3.4 1.3l-20.9 15c-1.9-.6-3.8-1.1-5.6-1.7l-9-24c-.4-1.2-1.2-2.2-2.1-3S307.2 5.2 306 5s-2.5-.2-3.7.2-2.3 1.1-3.1 2l-17.6 18.7c-2-.2-3.9-.4-5.9-.5L262.3 3.5c-.7-1.1-1.6-1.9-2.7-2.6S257.3 0 256 0s-2.5.3-3.6.9-2 1.5-2.7 2.6l-13.5 21.8c-2 .2-3.9.3-5.9.6L212.9 7.1c-.9-.9-1.9-1.6-3.1-2s-2.5-.5-3.7-.2-2.4.8-3.3 1.6-1.7 1.8-2.1 3l-9 24c-1.9.6-3.8 1.1-5.7 1.7l-20.8-15c-1-.7-2.2-1.2-3.4-1.3s-2.5 0-3.7.5-2.2 1.2-2.9 2.2-1.3 2.1-1.5 3.4l-4.2 25.4c-1.7.9-3.4 1.8-5.2 2.7l-23.4-10.5c-1.1-.5-2.4-.7-3.7-.6s-2.5.5-3.5 1.2-1.9 1.7-2.5 2.8-.8 2.4-.8 3.6l.9 25.8c-1.5 1.2-3 2.4-4.4 3.6l-25.1-6c-1.2-.3-2.5-.3-3.7.1s-2.3 1-3.2 1.9-1.5 2-1.9 3.2-.4 2.5-.1 3.7l6 25.1c-1.2 1.4-2.4 2.9-3.6 4.4l-25.8-.9c-1.3 0-2.5.2-3.6.8s-2.1 1.4-2.8 2.4-1.1 2.2-1.2 3.5.1 2.5.6 3.6l10.7 23.4c-.9 1.7-1.8 3.4-2.7 5.2l-25.4 4.1c-1.2.2-2.4.7-3.4 1.5s-1.7 1.8-2.2 2.9-.7 2.4-.5 3.7.6 2.4 1.3 3.4l15 20.8c-.6 1.9-1.1 3.8-1.7 5.7l-24 9c-1.2.4-2.2 1.2-3 2.1s-1.4 2.1-1.6 3.3-.2 2.5.2 3.7 1.1 2.3 2 3.1l18.7 17.5c-.2 2-.4 3.9-.6 5.9L3.5 249.8c-1.1.7-1.9 1.6-2.6 2.7s-.9 2.3-.9 3.6.3 2.5.9 3.6 1.5 2 2.6 2.7l21.8 13.5c.2 2 .3 3.9.6 5.9L7.1 299.1c-.9.9-1.6 1.9-2 3.1s-.5 2.5-.2 3.7.8 2.4 1.6 3.3 1.8 1.7 3 2.1l24 9c.6 1.9 1.1 3.8 1.7 5.6l-15 20.8c-.7 1-1.2 2.2-1.3 3.4s0 2.5.5 3.7 1.2 2.2 2.2 2.9 2.1 1.3 3.4 1.5l25.4 4.2 2.7 5.1-10.5 23.6c-.5 1.1-.7 2.4-.6 3.6s.5 2.5 1.2 3.5c.7 1.1 1.6 1.9 2.7 2.5s2.4.8 3.6.8l25.8-.9c1.2 1.5 2.4 2.9 3.6 4.4L73 430.2c-.3 1.2-.3 2.5.1 3.7s1 2.3 1.9 3.2 2 1.5 3.2 1.9 2.5.4 3.7.1l25.2-5.9c1.5 1.2 2.9 2.4 4.4 3.6l-.9 25.8c0 1.3.2 2.5.8 3.6s1.4 2.1 2.5 2.8 2.2 1.1 3.5 1.2 2.5-.1 3.6-.6l23.4-10.7 5.1 2.7 4.2 25.4c.2 1.2.7 2.4 1.5 3.4s1.8 1.8 2.9 2.2 2.4.7 3.7.5 2.4-.6 3.4-1.3l20.8-15c1.9.6 3.8 1.1 5.6 1.7l9 24c.4 1.2 1.2 2.2 2.1 3s2.1 1.4 3.3 1.6 2.5.2 3.7-.2 2.3-1.1 3.1-2l17.5-18.7c2 .2 3.9.4 5.9.6l13.5 21.8c.7 1.1 1.6 1.9 2.7 2.6s2.3.9 3.6.9 2.5-.3 3.6-.9 2-1.5 2.7-2.6l13.5-21.8c2-.2 3.9-.3 5.9-.6l17.5 18.7c.9.9 1.9 1.6 3.1 2s2.5.5 3.7.2 2.4-.8 3.3-1.6 1.7-1.8 2.1-3l9-24c1.9-.6 3.8-1.1 5.6-1.7l20.8 15c1 .7 2.2 1.2 3.4 1.3s2.5 0 3.7-.5 2.2-1.2 2.9-2.2 1.3-2.1 1.5-3.4l4.2-25.4 5.1-2.7 23.4 10.7c1.1.5 2.4.7 3.6.6s2.4-.5 3.5-1.2 1.9-1.6 2.5-2.8.8-2.4.8-3.6l-.9-25.8c1.5-1.2 2.9-2.4 4.4-3.6l25.2 5.9c1.2.3 2.5.3 3.7-.1s2.3-1 3.2-1.9 1.5-2 1.9-3.2.4-2.5.1-3.7l-5.9-25.2c1.2-1.4 2.4-2.9 3.6-4.4l25.8.9c1.3.1 2.5-.2 3.6-.8s2.1-1.4 2.8-2.5c.7-1 1.1-2.2 1.2-3.5s-.1-2.5-.6-3.6l-10.7-23.4 2.7-5.1 25.4-4.2c1.2-.2 2.4-.7 3.4-1.5s1.8-1.8 2.2-2.9.7-2.4.5-3.7-.6-2.4-1.3-3.4l-15-20.8c.6-1.9 1.1-3.8 1.7-5.6l24-9c1.2-.4 2.2-1.2 3-2.1s1.4-2.1 1.6-3.3.2-2.5-.2-3.7-1.1-2.3-2-3.1l-18.7-17.5c.2-1.9.4-3.9.6-5.9l21.8-13.5c1.1-.7 1.9-1.6 2.6-2.7s.9-2.3.9-3.6-.3-2.5-.9-3.6-1.5-2-2.6-2.7m-151 129.1c-3.6-.8-7.4-.1-10.5 1.9s-5.3 5.2-6 8.8l-7.6 35.7c-24.6 11.1-51.3 16.8-78.3 16.7s-53.6-6.1-78.1-17.4l-7.6-35.7c-.4-1.8-1.1-3.5-2.1-5s-2.4-2.8-3.9-3.8-3.2-1.7-5-2-3.6-.3-5.4.1l-31.5 6.8c-5.8-6-11.3-12.5-16.3-19.2h153.2c1.7 0 2.9-.3 2.9-1.9v-54.2c0-1.6-1.2-1.9-2.9-1.9h-44.8v-34.4h48.5c4.4 0 23.7 1.3 29.8 25.9 1.9 7.5 6.2 32.1 9.1 40 2.9 8.8 14.6 26.5 27.1 26.5h79c-5.3 7.1-11.1 13.8-17.3 20.1l-32.1-6.9zm25.8 34.5c0 3-.9 6-2.6 8.5s-4 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .8-8.8 3.1-5.2 5.6-6.9 5.4-2.6 8.5-2.6h.4c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zm-225.6-.7c0 3-.9 6-2.6 8.5s-4.1 4.5-6.8 5.6-5.8 1.5-8.8.9-5.7-2-7.8-4.2-3.6-4.8-4.2-7.8-.3-6 .9-8.8 3.1-5.2 5.6-6.8 5.4-2.6 8.5-2.6h.5c4 .1 7.7 1.8 10.5 4.6s4.3 6.7 4.3 10.6h.1zM69.6 234.2l32.8-14.6c1.7-.7 3.2-1.8 4.4-3.1s2.2-2.9 2.9-4.6 1-3.5.9-5.3-.5-3.6-1.2-5.3l-6.8-15.2h26.6v119.7H75.6c-6.6-23.2-8.7-47.6-6.1-71.6zm-11.3-36.1c0-2 .4-4 1.2-5.8s1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.5c3 .1 5.9 1 8.3 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4.1-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zm155.2 24.5v-35.3h63.3c3.3 0 23.1 3.8 23.1 18.6 0 12.3-15.2 16.7-27.7 16.7zM399 306.7c-9.8 1.1-20.6-4.1-22-10.1-5.8-32.5-15.4-39.4-30.6-51.4 18.9-12 38.5-29.6 38.5-53.3 0-25.5-17.5-41.6-29.4-49.5-16.8-11-35.3-13.2-40.3-13.2H116.3c27.5-30.7 64.4-51.5 104.9-59.2l23.5 24.6c1.3 1.3 2.8 2.4 4.4 3.1s3.5 1.1 5.3 1.2 3.6-.3 5.3-.9 3.2-1.7 4.6-2.9l26.3-25c26.8 5 52.1 15.8 74.3 31.6s40.6 36.2 54.1 59.9l-18 40.6c-1.5 3.4-1.5 7.2-.2 10.6s3.9 6.2 7.3 7.7l34.6 15.3c1.1 10.8 1.2 21.7.4 32.5h-19.3c-1.9 0-2.7 1.3-2.7 3.1v8.8c0 20.8-11.7 25.3-22 26.5zM240 60.2c0-4 1.6-7.9 4.5-10.7s6.7-4.5 10.7-4.5h.4c3 .1 5.9 1 8.4 2.8s4.3 4.1 5.4 6.9 1.3 5.8.7 8.8-2.1 5.6-4.3 7.7-4.9 3.5-7.8 4-6 .2-8.7-.9-5.1-3.1-6.8-5.6-2.5-5.4-2.5-8.4zM436.8 214c-2 0-4-.4-5.8-1.2s-3.5-1.9-4.9-3.3-2.5-3.1-3.3-4.9-1.2-3.8-1.2-5.8.4-4 1.2-5.8 1.9-3.5 3.3-4.9 3.1-2.5 4.9-3.3 3.8-1.2 5.8-1.2h.4c4 .1 7.9 1.7 10.7 4.6s4.4 6.8 4.3 10.8-1.7 7.9-4.6 10.7-6.8 4.4-10.8 4.3"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog" role="status" aria-atomic="true">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      
+      
+        
+        
+      <script id="__config" type="application/json">{"annotate":null,"base":"../..","features":["content.action.copy","content.action.edit","content.code.copy","content.tabs.link","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.top","search.highlight","search.suggest","toc.follow"],"redirect":null,"search":"../../assets/javascripts/workers/search.c47bb847.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","clipboard.error":"Could not copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
+      
+        <script src="../../assets/javascripts/bench.js?v=ae97fa121983"></script>
+      
+        <script src="../../assets/javascripts/couriers.js?v=ae97fa121983"></script>
+      
+        <script src="../../assets/javascripts/blog.js?v=ae97fa121983"></script>
+      
+    
+  </body>
+</html>
