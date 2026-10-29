@@ -9,18 +9,197 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0](https://github.com/lmmx/mibz2/compare/v0.1.6...v0.2.0) - 2026-10-29
 
+The parallel decoder now shares each block between two threads on machines that have the
+cores for it. It does this automatically: `BzReader::parallel`, `decode_parallel`,
+`StreamDecoder::new`, and Python's `mibz2.decompress` and `mibz2.open` all choose the
+cooperative path, with no change to their signatures.
+
+On the one machine where it has been measured, it decodes the benchmark's Wikidata corpus
+1.257× as fast as the best previous configuration (95% interval 1.197–1.320), with the
+same bytes, 1.015× the peak memory and 1.214× the CPU time. That machine is an Intel
+i9-10900K workstation (10 cores, 20 MiB L3, Linux).
+
+The policy engages only on Linux, and only when 6 or more physical cores serve the
+threads. Everywhere else the decoder runs as in 0.1.6: GitHub's runners, 4-core machines,
+macOS and Windows.
+
+### Who gets what
+
+- **Linux with 6 or more physical cores,** at the default thread count (all CPUs) or any
+  count of 6 or more: teams of 2 threads, each team decoding one block, with as many teams
+  as keep their tables within about 0.7 of the L3 cache (4 teams on a 20 MiB L3).
+- **Everything else:** a block a worker, exactly as 0.1.6, including the
+  same bytes, the same memory and the same speed. That covers fewer than 6 physical cores
+  (counted from the CPUs the process may use), macOS, Windows, and any machine whose
+  topology can't be read.
+- **The gain is largest where 0.1.6 was weakest.** 0.1.6 slowed down past 4 workers on the
+  i9: at 20 threads, Python's default there, it ran at 471 MB/s, against 1,007 at 4. The
+  0.2.0 default at 20 threads runs at 1,256 MB/s, 2.62× (2.54–2.71) the 0.1.6 default
+  there.
+
+### Measured: the cooperative decoder on an i9-10900K (workstation, full decoder)
+
+The pre-registered A/B ([journal](https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-cooperative-decoder.md),
+run `coop-decoder-20261029T174657Z`, its raw files beside the journal):
+- **Machine:** Intel i9-10900K, 10 cores and 20 CPUs (SMT), 20 MiB L3, 125 GB RAM, Linux.
+- **Workload:** the bench corpus `wikidata.bz2`: 12 windows of the 2026-10-19 Wikidata
+  dump's own bzip2 blocks (level 9), 11.9 MB compressed, 209.7 MB decoded.
+- **Level:** the whole decoder, from file to hashed output, every block and stream CRC
+  checked.
+- **Method:** 20 interleaved rounds, rotated and reversed, back to back and unpinned.
+- **Reference:** 4 workers, the previous decoder's best thread count on this machine.
+
+| gate (registered before the run) | result | pass |
+|---|--:|---|
+| throughput ≥ 1.15× | 1.257× | yes |
+| its 95% lower bound > 1.05 | 1.197 | yes |
+| same bytes | one output hash in 420 runs, no errors | yes |
+| peak RSS ≤ 1.15× | 1.015× | yes |
+| CPU-seconds ≤ 1.5× | 1.214× | yes |
+| 4 physical cores (CPUs 0–3, one SMT sibling each): no slower | 0.997× (0.980–1.014) | yes |
+
+| decoder | threads | MB/s | against 0.1.6 at 4 (paired, 95%) | peak RSS |
+|---|--:|--:|--:|--:|
+| 0.1.6 (workers) | 4 | 1,007 | 1 | 76 MB |
+| 0.1.6 (workers) | 20 | 471 | 0.479 (0.462–0.497) | 267 MB |
+| 0.2.0 (default) | 6 | 1,155 | 1.166 (1.123–1.210) | 64 MB |
+| 0.2.0 (default) | 20 | 1,256 | 1.257 (1.197–1.320) | 77 MB |
+
+**Confirmed at the release's own code,** through the default entry point users call
+(`BzReader::parallel`), by a second run on the same machine
+(`coop-decoder-20261029T181511Z`, 10 rounds, #106's head):
+- all six gates passed again: 1.223× (1.163–1.286) at 20 CPUs, one output hash, RSS 1.016×,
+  CPU 1.254×, and 1.013× (0.999–1.027) on 4 physical cores;
+- at 6 threads, 1.217× (1.178–1.258) at 0.83× the peak RSS;
+- both arms ran slower in absolute terms than in the first run, but the ratios reproduced.
+
+These are one machine and one workload. Another CPU, cache size or block mix may gain more,
+less or nothing. The figure is the whole decoder's. Earlier inversion-only figures from
+the research harness (1.38–1.44×) measured a part of the decoder, and are not this
+release's.
+
+### Measured: v0.2.0 against v0.1.6 on CI (tag to tag)
+
+One paired run of the two tags ([run 40930714619](https://github.com/lmmx/mibz2/actions/runs/40930714619)).
+- **Method:** 10 rounds on one runner. Each round decodes every corpus once with each build
+  at each thread count, the builds' order alternating; v0.1.6 runs as its own harness binary
+  (`mibz2@base/ab`).
+- **The runner is below the policy's threshold:** it has 2 physical cores, so v0.2.0 runs
+  workers there exactly as v0.1.6 did. This run is the check that nothing changed where the
+  policy doesn't engage.
+- **Change** is v0.2.0 over v0.1.6: the geometric mean of the paired wall ratios, with its
+  95% interval. A minus sign means faster.
+
+| corpus | threads | wall, v0.1.6 → v0.2.0 (median) | wall change (95% interval) | peak RSS | same bytes |
+|---|--:|--:|--:|--:|---|
+| `wikidata` | 1 | 0.864 → 0.862 s | −0.7% (−1.8%, +0.3%) | 26 → 26 MB | yes |
+| `wikidata` | 2 | 0.553 → 0.540 s | −2.2% (−4.5%, +0.2%) | 49 → 49 MB | yes |
+| `wikidata` | 4 | 0.436 → 0.437 s | −0.4% (−2.4%, +1.6%) | 74 → 74 MB | yes |
+| `onebyte` | 1 | 0.022 → 0.022 s | +0.4% (−1.2%, +2.1%) | 33 → 33 MB | yes |
+| `onebyte` | 2 | 0.022 → 0.022 s | +1.4% (−1.3%, +4.0%) | 33 → 33 MB | yes |
+| `onebyte` | 4 | 0.023 → 0.023 s | +1.1% (−0.7%, +3.0%) | 32 → 33 MB | yes |
+| `pattern` | 1 | 0.048 → 0.047 s | −0.6% (−3.6%, +2.5%) | 17 → 17 MB | yes |
+| `pattern` | 2 | 0.030 → 0.030 s | +2.0% (−2.3%, +6.5%) | 23 → 23 MB | yes |
+| `pattern` | 4 | 0.033 → 0.033 s | −0.4% (−3.9%, +3.2%) | 42 → 42 MB | yes |
+| `random` | 1 | 0.160 → 0.160 s | −2.0% (−9.4%, +6.0%) | 23 → 23 MB | yes |
+| `random` | 2 | 0.097 → 0.098 s | −1.3% (−5.2%, +2.6%) | 36 → 37 MB | yes |
+| `random` | 4 | 0.078 → 0.078 s | +1.0% (−1.6%, +3.7%) | 53 → 51 MB | yes |
+| `records` | 1 | 0.209 → 0.210 s | +1.4% (−1.3%, +4.1%) | 24 → 24 MB | yes |
+| `records` | 2 | 0.120 → 0.120 s | −0.3% (−2.3%, +1.8%) | 40 → 40 MB | yes |
+| `records` | 4 | 0.096 → 0.096 s | −0.3% (−1.0%, +0.5%) | 58 → 59 MB | yes |
+| `runs` | 1 | 0.015 → 0.015 s | −0.5% (−1.4%, +0.5%) | 23 → 23 MB | yes |
+| `runs` | 2 | 0.015 → 0.016 s | +0.2% (−2.5%, +2.9%) | 23 → 23 MB | yes |
+| `runs` | 4 | 0.016 → 0.016 s | +2.2% (−0.7%, +5.1%) | 23 → 23 MB | yes |
+| `text` | 1 | 0.100 → 0.100 s | −1.0% (−1.9%, −0.1%) **faster** | 19 → 19 MB | yes |
+| `text` | 2 | 0.059 → 0.059 s | −0.3% (−2.9%, +2.4%) | 32 → 32 MB | yes |
+| `text` | 4 | 0.048 → 0.048 s | −1.6% (−4.8%, +1.6%) | 52 → 52 MB | yes |
+
+- **Same bytes:** every run of every arm gave the same output hash on every corpus, with no
+  error.
+- **The resource assessment** found no change at this run's precision: best against best,
+  CPU per byte, amplification at each thread count, peak RSS at the most threads.
+- **The stage table** (one thread, diagnostic only) marks the build −2.5% and the scanner
+  −1.2%, with the total −1.2% (−3.4%, +1.1%). With seven intervals a run, a lone mark can be
+  chance, so neither is claimed.
+
+<details><summary>Reproducing this run</summary>
+
+- `gh workflow run bench.yml --ref v0.2.0 -f base=v0.1.6`; artifact
+  `bench-pr-11407937dadd94174d789269fca82294f4741713`.
+- **Tags:** v0.2.0 at 11407937dadd94174d789269fca82294f4741713; v0.1.6 at
+  4fc6af0759da5d600059847f0c450ee77ee2e18c.
+- **Runner:** AMD EPYC 7763, 4 cores (2 physical), reported clock 3250.8 MHz; kernel
+  7.0.0-1017-azure; image ubuntu24 20261026.354.1.
+- **Toolchain and bench:** rustc 1.99.1 (58cf8f9c3 2026-10-13); bench 3.2.0, 10 rounds,
+  threads 1, 2 and 4.
+- **Corpora:** `wikidata` 11,854,933 bytes, decoded 209,700,196 bytes, SHA-256
+  82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915; the others as in
+  result.json's `corpora`.
+
+</details>
+
 ### <!-- 3 -->Performance
 
-- *(parallel)* the cooperative policy is the default decoder ([#106](https://github.com/lmmx/mibz2/pull/106))
-- *(parallel)* the cooperative policy (Plan::for_threads) and the full-decoder A/B against the release gates ([#105](https://github.com/lmmx/mibz2/pull/105))
-- *(bwt)* the cooperative inverse BWT in the library: fused build, shared walk, bwt::Cooperative<K> (opt-in) ([#104](https://github.com/lmmx/mibz2/pull/104))
-- *(coop)* the cooperative inverse BWT's thread pool, panic-safe, under Miri (not wired) ([#103](https://github.com/lmmx/mibz2/pull/103))
-- *(mtf)* mtf_checkpoints, the MTF stage making the cooperative build's count checkpoints (not wired) ([#101](https://github.com/lmmx/mibz2/pull/101))
+- **Cooperative inverse BWT, chosen automatically** ([#101](https://github.com/lmmx/mibz2/pull/101),
+  [#103](https://github.com/lmmx/mibz2/pull/103), [#104](https://github.com/lmmx/mibz2/pull/104),
+  [#105](https://github.com/lmmx/mibz2/pull/105), [#106](https://github.com/lmmx/mibz2/pull/106))
+  - *Mechanism:* the step bounding the parallel decoder past 4 workers was the shared L3
+    cache, not compute. Each block's 3.6 MB table is walked at random, so more blocks at
+    once evicted each other's tables. A team of threads now shares one block's table.
+    The move-to-front stage records symbol counts every 16 KiB, so the team can build the
+    table in parallel (`coop::build_fused`) and walk it in parallel (`coop::walk_room`).
+    `Plan::for_threads` chooses teams of 2, capped by the L3 size.
+  - *Soundness:*
+    - The parallel build checks every window of its counts, and an end check proves the
+      table equals the one-thread build's. A refused build falls back to that build.
+    - The thread pool waits for every helper on every exit, and resumes a helper's panic
+      in the caller.
+    - Its tests run under Miri.
+    - Every sample shape at levels 1, 5 and 9 decodes to libbzip2's bytes at teams of 2,
+      3 and 4.
+    - Corrupt inputs fail with the same error, at the same bit, as the one-thread kernel.
+  - *Measured:* above (the i9). On CI each pull request's bench showed no change, as
+    expected below 6 physical cores.
+  - *Trade-offs:* about 1.2× the CPU-seconds for 1.26× the throughput on the i9. Building
+    the table in parallel costs about 7–8% of the build on the development VM for its window checks.
+    These were kept for soundness.
+  - *Evidence:* [the decoder journal](https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-cooperative-decoder.md);
+    the research record in the cooperative-inversion journal.
 
-### <!-- 4 -->Documentation
+### <!-- 0 -->Features
 
-- *(bench)* the throughput-memory frontier page, its rules and the two measured i9 series; the Seward conversation kept verbatim, and the audit of which results it can hold
-- *(changelog)* 0.1.6's notes from its own tag-to-tag paired run ([#98](https://github.com/lmmx/mibz2/pull/98))
+- **`parallel::Plan`, `StreamDecoder::planned` and `BzReader::parallel_planned`** (#105):
+  choose the plan by hand. `Plan::Workers(n)` is the 0.1.6 decoder, and
+  `Plan::Teams { teams, k }` uses teams of 2, 3 or 4. `bwt::Cooperative<K>` implements
+  `InverseBwt`, which gains two provided methods (`wants_checkpoints`,
+  `invert_checkpointed`), so existing implementations are unchanged.
+- **`mtf::mtf_checkpoints` and `mtf::CHECKPOINT`** (#101).
+
+### Behaviour changes
+
+- `StreamDecoder::new(threads, ..)` may run fewer threads than `threads` on a machine where
+  it plans teams. On the i9 it runs 8 threads (4 teams of 2) for any `threads` from 8 to
+  20. `StreamDecoder::threads()` reports the threads it runs. The blocks in flight scale to
+  the teams: `slots` × teams / `threads`, with at least one block per team.
+
+### Benchmarks and docs
+
+- `ab` gains the arms `mibz2-workers` (the 0.1.6 decoder), `mibz2-coop2/3/4` and
+  `mibz2-auto`. `just bench-coop-decoder` runs the release-gate A/B on a workstation.
+- The throughput–memory frontier page now has the i9's full-decoder series with measured
+  peak RSS. Every worker count from 4 to 20 is dominated, on throughput and RSS, by a team
+  configuration. The low-memory end (1–3 workers) is not yet measured.
+- The literature study, the marker audit and the ψ census are in the journal.
+- **The inverse BWT alone against libsais, measured after the release**
+  ([#107](https://github.com/lmmx/mibz2/pull/107)). This is the shipped
+  `bwt::Cooperative<K>` against libsais 2.12.1's multi-threaded inversion on the i9, in the
+  research harness that measured libsais at 2,356 MB/s. It is a component figure, not the
+  decoder's:
+  - **Build + walk** (the MTF outside the timing): the library at 3 × 3 reaches 2,430 MB/s
+    against libsais's 2,260 in the same run. Paired over 20 rounds that is 1.114×
+    (1.027–1.208), median 1.081, at 9 cores, and 1.343× (1.303–1.385) at 8.
+  - **With the MTF stage timed:** a tie at 9 cores, 1.022× (0.986–1.059); 1.218×
+    (1.182–1.255) at 8.
 
 ## [0.1.6](https://github.com/lmmx/mibz2/compare/v0.1.5...v0.1.6) - 2026-10-29
 
