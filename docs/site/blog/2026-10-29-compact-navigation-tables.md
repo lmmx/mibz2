@@ -57,17 +57,17 @@ Each card tells you which card to visit next.
 <figcaption>Each card contains the number of the next card. The highlighted card is the current position: follow the pointers from card 0 until every card has been visited.</figcaption>
 </figure>
 
-Your decoder uses a table called the T-vector, which is essentially a much larger, more sophisticated collection of such cards.
+mibz2's decoder uses a table called the T-vector, which is essentially a much larger, more sophisticated collection of such cards.
 
 For each position, it stores:
 
 - Where to go next.
 - The character associated with that position.
-- A marker used by your cooperative traversal algorithm.
+- A marker used by mibz2's cooperative traversal algorithm.
 
 At maximum bzip2 block size, this table occupies approximately 3.6 MB.
 
-mibz2's 32-lane implementation already tackles one major cost: instead of following one chain and repeatedly waiting for memory, you follow many independent chains at once.
+mibz2's 32-lane implementation already tackles one major cost: instead of following one chain and repeatedly waiting for memory, it follows many independent chains at once.
 
 That's memory-level parallelism (MLP).
 
@@ -79,7 +79,7 @@ But then we asked a different question.
 
 ## 2. The cards aren't arbitrary
 
-Suppose I give you these two sequences of destinations:
+Take these two sequences of destinations:
 
 <figure class="bf-fig">
 <p class="bf-title">Two groups of eight pointers</p>
@@ -96,7 +96,7 @@ You only need to remember:
 
 One starting number replaces eight separate numbers.
 
-The permutation your inverse BWT decoder follows, called Ψ (psi), isn't a completely arbitrary permutation.
+The permutation mibz2's inverse BWT decoder follows, called Ψ (psi), isn't a completely arbitrary permutation.
 
 Because of how the BWT is constructed, it consists of increasing sequences of positions.
 
@@ -148,7 +148,7 @@ And that creates our main tension:
 
 ## 4. What the census found
 
-Initially, we had no idea how well these representations would fit your actual BWT data.
+Initially, we had no idea how well these representations would fit real BWT data.
 
 Perhaps the values were increasing but widely scattered, making compression awkward.
 
@@ -157,7 +157,7 @@ So Claude wrote a census program to inspect them.
 It found more structure than the theory alone guarantees.
 
 <figure class="bf-fig">
-<p class="bf-title">What Claude reported about your benchmark corpus</p>
+<p class="bf-title">What Claude reported about our benchmark corpus</p>
 <svg viewBox="0 0 720 150" role="img" aria-label="77.6% of rows are in simple consecutive groups; 99.51% fit compact FOR or Elias–Fano records."><text x="0" y="20" class="bf-ts">Simple consecutive groups</text><text x="720" y="22" class="bf-big-green" text-anchor="end">77.6%</text><rect x="0" y="32" width="720" height="13" rx="6.5" class="bf-track"/><rect x="0" y="32" width="558.72" height="13" rx="6.5" class="bf-green"/><text x="0" y="64" class="bf-tm">Rows where a complete group of pointers can potentially be represented by one base plus a simple offset.</text><text x="0" y="104" class="bf-ts">Fit compact FOR or Elias–Fano</text><text x="720" y="106" class="bf-big" text-anchor="end">99.51%</text><rect x="0" y="116" width="720" height="13" rx="6.5" class="bf-track"/><rect x="0" y="116" width="716.472" height="13" rx="6.5" class="bf-steel"/><text x="0" y="148" class="bf-tm">Only 0.49% of rows required exceptions under the proposed 32-value encoding scheme.</text><path d="M0 78.5H720" class="bf-rule"/></svg>
 <figcaption>These two percentages overlap: they aren't two separate populations.</figcaption>
 </figure>
@@ -184,7 +184,7 @@ Modern CPUs don't fetch arbitrary isolated bytes from main memory one at a time.
 
 Imagine a cache line as a little tray of data.
 
-If your next pointer lives in that tray, the processor can fetch the tray and extract what it needs.
+If the next pointer lives in that tray, the processor can fetch the tray and extract what it needs.
 
 The first design asks:
 
@@ -195,7 +195,7 @@ The first design asks:
 <svg viewBox="0 0 720 232" role="img" aria-label="One 64-byte cache-line record holding 32 pointers: 2 bytes per pointer on average."><rect x="0.5" y="0.5" width="719" height="178" rx="8" class="bf-box"/><text x="16" y="26" class="bf-tm">One cache-line record</text><text x="704" y="27" class="bf-ts" text-anchor="end">64 bytes</text><rect x="16" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="56" class="bf-ttiny" text-anchor="middle">0</text><rect x="102.375" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="56" class="bf-ttiny" text-anchor="middle">1</text><rect x="188.75" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="56" class="bf-ttiny" text-anchor="middle">2</text><rect x="275.125" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="56" class="bf-ttiny" text-anchor="middle">3</text><rect x="361.5" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="56" class="bf-ttiny" text-anchor="middle">4</text><rect x="447.875" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="56" class="bf-ttiny" text-anchor="middle">5</text><rect x="534.25" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="56" class="bf-ttiny" text-anchor="middle">6</text><rect x="620.625" y="40" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="56" class="bf-ttiny" text-anchor="middle">7</text><rect x="16" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="83" class="bf-ttiny" text-anchor="middle">8</text><rect x="102.375" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="83" class="bf-ttiny" text-anchor="middle">9</text><rect x="188.75" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="83" class="bf-ttiny" text-anchor="middle">10</text><rect x="275.125" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="83" class="bf-ttiny" text-anchor="middle">11</text><rect x="361.5" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="83" class="bf-ttiny" text-anchor="middle">12</text><rect x="447.875" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="83" class="bf-ttiny" text-anchor="middle">13</text><rect x="534.25" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="83" class="bf-ttiny" text-anchor="middle">14</text><rect x="620.625" y="67" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="83" class="bf-ttiny" text-anchor="middle">15</text><rect x="16" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="110" class="bf-ttiny" text-anchor="middle">16</text><rect x="102.375" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="110" class="bf-ttiny" text-anchor="middle">17</text><rect x="188.75" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="110" class="bf-ttiny" text-anchor="middle">18</text><rect x="275.125" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="110" class="bf-ttiny" text-anchor="middle">19</text><rect x="361.5" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="110" class="bf-ttiny" text-anchor="middle">20</text><rect x="447.875" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="110" class="bf-ttiny" text-anchor="middle">21</text><rect x="534.25" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="110" class="bf-ttiny" text-anchor="middle">22</text><rect x="620.625" y="94" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="110" class="bf-ttiny" text-anchor="middle">23</text><rect x="16" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="57.6875" y="137" class="bf-ttiny" text-anchor="middle">24</text><rect x="102.375" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="144.062" y="137" class="bf-ttiny" text-anchor="middle">25</text><rect x="188.75" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="230.438" y="137" class="bf-ttiny" text-anchor="middle">26</text><rect x="275.125" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="316.812" y="137" class="bf-ttiny" text-anchor="middle">27</text><rect x="361.5" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="403.188" y="137" class="bf-ttiny" text-anchor="middle">28</text><rect x="447.875" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="489.562" y="137" class="bf-ttiny" text-anchor="middle">29</text><rect x="534.25" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="575.938" y="137" class="bf-ttiny" text-anchor="middle">30</text><rect x="620.625" y="121" width="83.375" height="24" rx="3" class="bf-slot"/><text x="662.312" y="137" class="bf-ttiny" text-anchor="middle">31</text><text x="16" y="166" class="bf-tm">32 logical pointers represented inside a single physical record.</text><text x="0" y="222" class="bf-tl">Average space per pointer</text><text x="720" y="224" class="bf-big" text-anchor="end">2 bytes</text></svg>
 </figure>
 
-Your current representation uses four bytes per pointer.
+mibz2's current representation uses four bytes per pointer.
 
 So the new design could halve the navigation table's storage, before exception overhead.
 
@@ -203,7 +203,7 @@ And crucially, the record can be found immediately from the current row number.
 
 No searching for where the record was stored.
 
-This is very important because your existing decoder's greatest strength is how quickly it can issue independent memory requests.
+This is very important because mibz2's greatest strength is how quickly it can issue independent memory requests.
 
 A compact representation that introduces multiple dependent searches could destroy that advantage.
 
@@ -240,13 +240,13 @@ The attraction is real, but so is the risk: whenever we need the second record, 
 
 ## 7. Why a smaller table could make mibz2 faster
 
-Suppose you're decoding one full-sized bzip2 block.
+Suppose mibz2 is decoding one full-sized bzip2 block.
 
-Your current T-vector is 3.6 MB.
+Its T-vector for that block is 3.6 MB.
 
 But mibz2 can work on multiple blocks concurrently.
 
-If you have several full-size blocks in flight, their tables compete for space in the CPU's shared cache.
+With several full-size blocks in flight, their tables compete for space in the CPU's shared cache.
 
 <figure class="bf-fig">
 <p class="bf-title">Eight simultaneous full-block tables</p>
@@ -266,7 +266,7 @@ Even if each individual pointer is slightly more expensive to decode, the overal
 
 This is the same kind of trade-off Julian Seward studied in 2001.
 
-But your work adds modern multicore concurrency and 32-lane traversal.
+But mibz2 adds modern multicore concurrency and 32-lane traversal.
 
 The goal is not to have the smallest possible table. It's to make the whole machine finish decoding sooner.
 
@@ -278,7 +278,7 @@ There are three substantial unanswered questions.
 
 **Second, how expensive is construction?** The compressed table must be built from the BWT before it can be traversed. A representation that makes traversal faster but takes twice as long to build might lose overall.
 
-**Third, does the 77.6% translation property hold broadly?** We know it appears in your benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.
+**Third, does the 77.6% translation property hold broadly?** We know it appears in our benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.
 
 The agents have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.
 
@@ -290,7 +290,7 @@ The agents have enough evidence to investigate these questions seriously, but no
 | Actual benchmark data contains abundant consecutive-position groups | Measured by Claude's census, as reported |
 | Fixed 64-byte records can represent the overwhelming majority of measured groups | Strongly supported by the census; complete encoding still needs validation |
 | A two-tier directory could shrink storage further | New design hypothesis |
-| Reduced working sets can improve cache residency | Supported by your existing performance measurements |
+| Reduced working sets can improve cache residency | Supported by mibz2's existing performance measurements |
 | Either compressed design will beat the current decoder | Unknown |
 
 And the most important distinction of all:
@@ -309,7 +309,7 @@ The BWT already contains the information from which those answers can be derived
 
 Succinct data structures teach us to exploit that fact.
 
-But your work adds an interesting twist:
+But our work adds an interesting twist:
 
 > Rather than pursuing the absolutely smallest possible encoding, we're looking for a carefully chosen amount of redundancy that allows the CPU to recover answers quickly.
 
@@ -325,7 +325,7 @@ A systems programmer might ask:
 
 > How few instructions can we execute per pointer?
 
-Your research asks:
+Our research asks:
 
 > How should we arrange the information so that the CPU can follow millions of pointers with as little waiting as possible?
 
