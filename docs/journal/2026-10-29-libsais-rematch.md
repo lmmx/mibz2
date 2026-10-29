@@ -109,3 +109,106 @@ just bench-libsais-rematch
 ```
 
 It writes two `coop-<UTC time>.md` files (one a pass) and their `.jsonl`. Upload all four.
+
+## The result (measured, the i9, 192fca6, 2026-10-29)
+
+**The run:**
+- **Command:** `just bench-libsais-rematch` on the i9-10900K, at this branch's head 192fca6.
+- **Pass 1** (build + walk): [`coop-20261029T183303Z.md`](2026-10-29-libsais-rematch/coop-20261029T183303Z.md), load 1.6.
+- **Pass 2** (MTF + build + walk): [`coop-20261029T183353Z.md`](2026-10-29-libsais-rematch/coop-20261029T183353Z.md), load 4.5 at its start.
+- **Raw files:** both `.jsonl`, beside the reports.
+- **Correctness:** every arm's every block matched the room walk's bytes, and the library's
+  checkpoints were the harness's on every block. No thread was misplaced in any round.
+
+All ratios below were recomputed from the raw rounds, paired by round over 20 rounds: the
+geometric mean, its 95% t-interval, the median ratio, and the rounds won.
+
+### 1. Reproduction: passes
+
+| arm against p4 | §7.1 | today | within ±5% |
+|---|--:|--:|---|
+| 4x2 | 1.226 | 1.213 (1.189–1.238) | yes |
+| 3x3 | 1.354 | 1.356 (1.329–1.383) | yes |
+| s3x3 (libsais) | 1.629 | 1.602 (1.480–1.733) | yes |
+
+- **Absolute figures:** p4 ran at 1,355 MB/s against §7.1's 1,412 (−4%), the slower machine
+  state seen all afternoon.
+- **One bad libsais round:** s3x3 had one round at 1,079 MB/s against its usual 2,200–2,430,
+  hence its wide interval. The median ratios below are untouched by that round.
+
+### 2. Pass 1, §7.1's boundary (build + walk): the shipped kernel beats libsais at every budget
+
+| matched budget | pair | paired ratio (95%) | median | won |
+|---|---|--:|--:|--:|
+| 9 cores, 3 blocks | **l3x3 / s3x3** | **1.114 (1.027–1.208)** | **1.081** | 19/20 |
+| 8 cores, 4 blocks | l4x2 / s4x2 | 1.343 (1.303–1.385) | 1.368 | 20/20 |
+| 4 cores, 4 blocks | p4 / s4x1 (one core a block) | 0.930 (0.909–0.952) | 0.929 | 2/20 |
+
+- **Each implementation's best:**
+  - the library at **l3x3, 2,430 MB/s** (median, 9 cores);
+  - libsais at **s3x3, 2,260 MB/s** (9 cores).
+- **Against the historical 2,356 MB/s** (across runs, so indicative only): l3x3's 2,430 is
+  above it, on a machine whose p4 ran 4% slower than then.
+- **On one core a block, libsais still wins:** s4x1 beats our one-core inversion (p4) by
+  7.5%. That is where its ψ² walk's fewer reads per byte show (coop journal §10.4). The
+  library's lead comes from cooperation, not from a faster one-core kernel.
+
+### 3. The library against its research twin
+
+| pair | paired ratio (95%) | median |
+|---|--:|--:|
+| l4x2 / x4x2 | 1.001 (0.976–1.025) | 0.999 |
+| l3x3 / x3x3 | 1.072 (1.051–1.094) | 1.082 |
+
+- **The predicted cost doesn't show:** the library's soundness checks (window checks, end
+  check, its own pool) were predicted to cost about 7–8% of the build. At 4x2 the library
+  equals the research kernel; at 3x3 it is 7% faster.
+- **Why 3x3 is faster isn't measured.** Candidates are the pools (the library's caller and
+  helpers park; the research pool spins between jobs), and the library taking each block's
+  pool and segment scratch from its own worker state. This is a lead, not a finding.
+
+### 4. Pass 2, the decoder's boundary (MTF + build + walk): a tie with libsais at 9 cores
+
+| matched budget | pair | paired ratio (95%) | median | won |
+|---|---|--:|--:|--:|
+| 9 cores | **l3x3 / s3x3** | **1.022 (0.986–1.059)** | **1.003** | 11/20 |
+| 8 cores | l4x2 / s4x2 | 1.218 (1.182–1.255) | 1.203 | 20/20 |
+| 4 cores | p4 / s4x1 | 0.939 (0.924–0.954) | 0.933 | 2/20 |
+| | l3x3 / y3x3 | 1.065 (1.051–1.080) | 1.070 | 19/20 |
+| | l4x2 / y4x2 | 1.008 (0.992–1.025) | 1.000 | 10/20 |
+
+- **Medians:** l3x3 1,731, s3x3 1,724, l4x2 1,707 MB/s.
+- **The MTF stage takes away the 3x3 lead.**
+  - l3x3 against l4x2 is 1.158 (1.128–1.190) in pass 1, and 1.014 (1.000–1.029) in pass 2.
+  - The MTF is one core a block. While it runs, a team's other threads wait: 0.19 of a
+    3x3 team's core-time and 0.11 of a 4x2's (the workers' MTF and inversion seconds in
+    the raw rounds).
+  - libsais pays the same in its s3x3 arm (0.19). Neither implementation overlaps the MTF
+    with inversion.
+- **What would remove that wait** is the batched team, overlapping one block's MTF with the
+  inversion of another. That item now has a measured size: up to 0.19 of a 3x3 team's
+  core-time at this boundary, and 0.11 of the 4x2 the policy ships. It is an upper bound
+  on the cores' idle share, not a throughput gain.
+
+### What it answers, and what it doesn't
+
+- **Yes, at the boundary 2,356 MB/s was measured at:** v0.2.0's cooperative inverse BWT
+  beats libsais 2.12.1's multi-threaded inversion on the same machine, blocks and core
+  budget. At 9 cores the median paired ratio is 1.081 (geometric mean 1.114, 1.027–1.208);
+  at 8 cores it is 1.343.
+- **A tie at the decoder's boundary, at 9 cores.** At 8 cores, the plan the policy ships,
+  the library leads libsais by 1.218.
+- **libsais still has the faster one-core kernel** (s4x1 over p4: 1.075).
+- **Not shown here:**
+  - the decoder's throughput: this is the inversion with or without the MTF stage, never
+    the scanner, RLE1, CRC or output;
+  - other machines;
+  - the counters on the shipped kernel. The instruction-bound reading in the coop
+    journal §10.4 is for the earlier research kernel (two-pass build), not this one.
+
+**What follows:**
+- **The batched team (MTF overlap) is the next experiment, sized here.**
+- **The policy question:** at the decoder level, 3x3 and 4x2 tie (1.014). The full-decoder
+  A/B's 3 × 3 lead (lower RSS at equal throughput) is consistent with that.
+- **The one-core gap to libsais** (ψ², two bytes a step) stays open, conditional on an
+  instruction budget (coop journal §10.4).
