@@ -566,3 +566,85 @@ The research chatbot read it from this programme's side, and the coordinator ans
 - **So the ratios against q mix two things:** fusion, and the research build's own overhead (not yet traced to its code).
 - **The figure for this programme's baseline** is the fused cooperative build against production: x3x3 1.643× p4, with its checkpoints given free and the MTF stage outside the timing.
 - **The researcher's three causal questions** (passes, cache and store behaviour, the same cause across configurations) stay open. Answering them needs the given build's code read against production's, and counters. That is recorded in §16.4 as not started.
+
+## 16. The second research programme after #81: ten cycles to a fixed point (stored verbatim), checked
+
+The research chatbot ran a second programme of ten cycles to a fixed point after #81, and the coordinator answered it. Both are stored unedited:
+- [after-81-cycles-research.md](2026-10-29-succinct-review/after-81-cycles-research.md)
+- [after-81-cycles-coordinator.md](2026-10-29-succinct-review/after-81-cycles-coordinator.md)
+
+Each finding is filed below by what kind of claim it is: proved, measured by the census, modelled, or untested. The checks against the census use `psi-census.jsonl` (431 blocks, 233 of them full) and `examples/psi_census.rs`.
+
+### 16.1 Proved
+
+- **Ψ comes out of one left-to-right scan of L in monotone order within each symbol** (cycle 1). It is the build's own scatter, and the census's `psi_of`. So a builder can fill 32-row groups as it scans, without sorting.
+  - A sequential builder needs at most 256 × 32 pending positions (32 KiB of `u32`).
+- **The break bound d ≤ r − 1** (cycle 3). Here d counts the j with Ψ(j+1) ≠ Ψ(j) + 1, and r is L's number of runs.
+  - A symbol's list breaks only between its runs, giving r − σ′ breaks.
+  - The F buckets add at most σ′ − 1 more.
+  - So at most r − 1 aligned 32-row groups are not translations.
+  - The bound also holds for translations that must lie inside one F bucket (the two-tier descriptor stores one symbol), because the bucket boundaries are among the counted breaks.
+- **A translation group's next row is arithmetic on one descriptor** (base + slot), and a fixed grid finds its group without a predecessor search (cycle 5).
+- **An exception group can be stored raw:** 32 × 20 bits = 80 bytes, with no monotonicity assumed (cycle 2).
+- **The modelled size identity** S = 2 + 16(1 − p) bits a row (8-byte descriptors, 64-byte payloads; cycle 6). This is arithmetic, not a measurement.
+
+### 16.2 Checked against the census (exact, untimed)
+
+- **The bound holds on every block:** no block has more non-translation groups than r − 1.
+- **But the bound is loose by an order of magnitude on this corpus,** and its guaranteed floor is empty:
+
+  | full blocks (233) | min | median | max |
+  |---|--:|--:|--:|
+  | L's runs, r | 47,936 | 56,032 | 179,972 |
+  | groups a block | 28,125 | 28,125 | 28,125 |
+  | non-translation groups | 3,369 | 6,174 | 10,205 |
+  | non-translation groups ÷ (r − 1) | 0.037 | 0.106 | 0.132 |
+
+  - r is larger than the number of groups in every full block.
+  - So ⌊n/32⌋ − (r − 1) ≤ 0, and the bound guarantees no translation group at all.
+- **The 77% coverage therefore comes from where the breaks fall, not from how few there are.** They are concentrated: at d's upper bound, a non-translation group holds about 9 of them at the median.
+  - This is cycle 4's point (placement matters more than count), and the coordinator's "two blocks with identical run counts could differ".
+  - It corrects the reading that the bound explains the 77.6% (the handoff's conclusion 3, and the coordinator's "a mathematical explanation"). The bound explains why breaks are tied to runs. On this corpus the clustering of runs, not their number, sets the coverage.
+- **The census measured the descriptor's unit** (cycle 9.1's specification check):
+  - its groups are globally aligned (`a` steps by 32 from row 0, i.e. `row >> 5`);
+  - a translation group must lie inside one F bucket (`f[a] == f[end - 1]`).
+
+  The row-weighted figures are 77.39% translation, FOR-14 20.73%, EF-12 1.40% and exceptions 0.49% (full blocks, §13). So FOR-14 and translation together cover 98.1% of rows, as cycle 2 says.
+- **Storage order against traversal order (cycle 9.3).** A full inversion visits every row exactly once.
+  - So §14's per-block share of steps that need a second load (12.0–36.3%, median 22.0%) is exact for traversal as a total.
+  - What the census cannot see is how those steps bunch in time across the 32 lanes. That is unmeasured.
+
+### 16.3 Modelled (not measured)
+
+- **The build share of the fused pipeline** (coordinator): x3x3's build takes 32.7% of build plus walk (28.3 of 86.5 ms a worker, cooperative-inversion journal §16.4).
+  - That is in the harness, with free checkpoints and the MTF stage outside.
+  - In a decoder, the share of the whole decode is smaller still, so walk overhead is even harder to repay with construction savings.
+- **The Amdahl form** S = 1 / (α/s_B + (1 − α)/s_W) (cycle 8). It assumes the stages add up and don't overlap.
+- **The two-tier size at 77.6%** (5.584 bits a row) is the cycle-6 identity. §14's exact count is 5.70 bits a row (3.98–7.89 by block).
+- **The exception-tail size** (about 138 raw groups a full block at 0.49%; cycle 2). It is row-weighted, so the census's exception groups are the exact figure.
+
+### 16.4 Untested hypotheses (each needs a measurement before it is believed)
+
+- **A parallel direct-to-compact builder** that keeps #81's gains (cycles 1 and 9.2). Its buffering, group assembly across worker and bucket edges, and format branches are uncosted.
+  - The fused 32-bit build is the baseline (§15).
+  - That build, at k = 1, is only about as fast as production's (cooperative-inversion journal §16.4).
+- **Translation + FOR + raw** beating translation + FOR + EF + raw, and how much translation + raw loses (cycle 2). This is a cost model to measure.
+- **Two-tier slow paths bunching across lanes** during traversal (cycle 9.3).
+- **The compact walk staying memory-bound** rather than instruction-bound (cycle 9.4).
+- **Choosing a design per block from run statistics** (cycle 7). This is deferred: it needs performance models for each design.
+- **Markers kept outside the descriptor** (cycle 6.B). Not pursued: the walk tests a marker every step.
+
+### 16.5 What is kept, and the order
+
+- **The three candidates are kept:**
+  - 24-bit direct links;
+  - the fixed 64-byte hybrid (with a raw 20-bit exception record as a candidate);
+  - the two-tier translation directory.
+
+  Each must build its records directly from L, and compete against the fastest validated decoder.
+- **No representation prototype is started.** The coordinator's order:
+  1. the release;
+  2. the cooperative decoder in `src/`;
+  3. #79's F-recovery audit and matched control, with the 24-bit table;
+  4. only then the compact designs.
+- **The researcher's framing is recorded:** a "directly addressed, locally compressed function", with prior art unsearched. No novelty is claimed.
