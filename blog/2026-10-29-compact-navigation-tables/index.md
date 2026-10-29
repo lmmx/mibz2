@@ -24,7 +24,21 @@ Each card tells you which card to visit next.
 
 A miniature pointer chain
 
-Each card contains the number of the next card. Starting at card 0 (highlighted) and following the pointers visits every card: 0 → 3 → 6 → 4 → 1 → 5 → 2.
+1. Card 03→
+2. Card 15→
+3. Card 20→
+4. Card 36→
+5. Card 41→
+6. Card 52→
+7. Card 64→
+
+Currently at card **0**1 of 7 visited
+
+Follow pointer →Reset
+
+Path: 0 → 3 → 6 → 4 → 1 → 5 → 2
+
+Each card contains the number of the next card. The highlighted card is the current position: follow the pointers from card 0 until every card has been visited.
 
 Your decoder uses a table called the T-vector, which is essentially a much larger, more sophisticated collection of such cards.
 
