@@ -10,7 +10,9 @@
 //! coop grid FILE.bz2 [ROUNDS] [ARM,...]    N blocks at once on k cores each: ARM is NxK
 //!                                          (cooperative), wNxK (the same walk, the build
 //!                                          on one core), pNxK (N production workers; K 1)
-//!                                          or sNxK (libsais, with --cfg libsais); @S sets
+//!                                          or sNxK (libsais, with --cfg libsais), rNxK (the
+//!                                          cooperative arm, its walk in room passes: #77);
+//!                                          @S sets
 //!                                          a cooperative arm's segments a block (4x1@1024:
 //!                                          one core a block, with 4x2's segments)
 //! ```
@@ -302,6 +304,8 @@ struct Coop {
     next: Vec<usize>,
     /// a block's segments, if not 512 a thread (the equal-segment controls)
     segments: Option<usize>,
+    /// the walk in room passes (`coop_walk_room`, the `r` arms), else `coop_walk`
+    room: bool,
     /// each thread's bytes walked in the last block, and the walk's imbalance summed over
     /// blocks (the busiest thread's bytes over the threads' mean) with its count
     share: Vec<std::sync::atomic::AtomicU64>,
@@ -574,6 +578,228 @@ fn coop_walk(orig_ptr: u32, pool: &Pool, c: &mut Coop, out: &mut Vec<u8>) {
     }
 }
 
+/// `traverse` in room passes, as the production room walk runs (`room_segments` in
+/// mibz2::bwt), the one change of the #77 experiment: each pass is `room` rounds of every
+/// lane, `room` the fewest bytes any lane's buffer has spare (and no more than `cap` - 1, a
+/// buffer taken mid-pass's spare after its first byte), so a lane writes its byte at its
+/// base plus the pass's offset, with no per-step pointer update or end test. The lanes are
+/// an array, not a Vec, and a thread's bytes are counted once a segment, at its end, not
+/// once a step. A lane whose segment ends mid-pass takes the next from `taken` and is
+/// rebased so that base + offset is its new buffer; when none is left the pass ends there,
+/// and the lanes still walking finish in `traverse`'s loop. Exactly `traverse`'s segments.
+///
+/// SAFETY: as `traverse`; every buffer has at least `cap` bytes of capacity
+unsafe fn traverse_room(
+    t: *const u32,
+    starts: &[u32],
+    bufs: P<Vec<u8>>,
+    next: P<usize>,
+    taken: &AtomicUsize,
+    cap: usize,
+) -> u64 {
+    let ns = starts.len();
+    let mut walked = 0u64;
+    let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let take = |seg: usize| -> Lane {
+        let b = &mut *bufs.get().add(seg);
+        let base = b.as_mut_ptr();
+        let q = *t.add(starts[seg] as usize) & LINK;
+        *base = q as u8;
+        prefetch(t, q >> 8);
+        Lane {
+            row: q >> 8,
+            seg,
+            p: base.add(1),
+            end: base.add(b.capacity()),
+        }
+    };
+    let grow = |l: &mut Lane| {
+        let b = &mut *bufs.get().add(l.seg);
+        let len = l.p.offset_from(b.as_ptr()) as usize;
+        b.set_len(len);
+        b.reserve(b.capacity());
+        l.p = b.as_mut_ptr().add(len);
+        l.end = b.as_mut_ptr().add(b.capacity());
+    };
+    // the segment's length, its first byte included (`traverse` counts it at the take)
+    let finish = |l: &Lane| -> u64 {
+        let b = &mut *bufs.get().add(l.seg);
+        let len = l.p.offset_from(b.as_ptr()) as usize;
+        b.set_len(len);
+        *next.get().add(l.seg) = seg_of(l.row);
+        len as u64
+    };
+    let mut lanes: [Lane; LANES] = std::array::from_fn(|_| Lane {
+        row: 0,
+        seg: usize::MAX,
+        p: std::ptr::null_mut(),
+        end: std::ptr::null_mut(),
+    });
+    let mut active = 0;
+    while active < LANES {
+        let s = taken.fetch_add(1, Ordering::Relaxed);
+        if s >= ns {
+            break;
+        }
+        lanes[active] = take(s);
+        active += 1;
+    }
+    if active == LANES {
+        'full: loop {
+            let mut room = cap - 1;
+            for l in lanes.iter_mut() {
+                if l.p == l.end {
+                    grow(l);
+                }
+                room = room.min(l.end.offset_from(l.p) as usize);
+            }
+            let mut base: [*mut u8; LANES] = std::array::from_fn(|k| lanes[k].p);
+            for off in 0..room {
+                for k in 0..LANES {
+                    let l = &mut lanes[k];
+                    let q = *t.add(l.row as usize);
+                    if q & START != 0 {
+                        l.p = base[k].wrapping_add(off);
+                        walked += finish(l);
+                        let s = taken.fetch_add(1, Ordering::Relaxed);
+                        if s >= ns {
+                            // the lanes before this one wrote at `off`, those after it not yet
+                            for (j, lj) in lanes.iter_mut().enumerate() {
+                                if j < k {
+                                    lj.p = base[j].wrapping_add(off + 1);
+                                } else if j > k {
+                                    lj.p = base[j].wrapping_add(off);
+                                }
+                            }
+                            break 'full;
+                        }
+                        *l = take(s);
+                        // its next byte, at offset off + 1, goes at its p
+                        base[k] = l.p.wrapping_sub(off + 1);
+                        continue;
+                    }
+                    l.row = q >> 8;
+                    prefetch(t, l.row);
+                    *base[k].wrapping_add(off) = q as u8;
+                }
+            }
+            for (l, b) in lanes.iter_mut().zip(base) {
+                l.p = b.wrapping_add(room);
+            }
+        }
+    }
+    // the lanes still walking (a finished lane's successor is set): `traverse`'s loop, with
+    // a byte to spare in each (a pass can end with a buffer exactly full)
+    let mut live: Vec<Lane> = Vec::with_capacity(LANES);
+    for l in lanes.into_iter().take(active) {
+        if *next.get().add(l.seg) == usize::MAX {
+            live.push(l);
+        }
+    }
+    for l in live.iter_mut() {
+        if l.p == l.end {
+            grow(l);
+        }
+    }
+    while !live.is_empty() {
+        let mut i = 0;
+        while i < live.len() {
+            let l = &mut live[i];
+            let q = *t.add(l.row as usize);
+            if q & START != 0 {
+                walked += finish(l);
+                let s = taken.fetch_add(1, Ordering::Relaxed);
+                if s < ns {
+                    *l = take(s);
+                    i += 1;
+                } else {
+                    live.swap_remove(i);
+                }
+                continue;
+            }
+            l.row = q >> 8;
+            prefetch(t, l.row);
+            *l.p = q as u8;
+            l.p = l.p.add(1);
+            if l.p == l.end {
+                grow(l);
+            }
+            i += 1;
+        }
+    }
+    walked
+}
+
+/// `coop_walk`, its threads' walks in room passes (`traverse_room`): the `r` arms
+fn coop_walk_room(orig_ptr: u32, pool: &Pool, c: &mut Coop, out: &mut Vec<u8>) {
+    let n = c.tt.len();
+    let r0 = c.tt[orig_ptr as usize] >> 8;
+    // 16 segments a lane, as the room walk has (512 for its 32): k threads' lanes need k
+    // times the segments, or the walk waits on its tail's few longest chains
+    let segments = c.segments.unwrap_or(SEGMENTS_A_THREAD * pool.k);
+    random_rows(n, segments - 1, &mut c.starts);
+    c.starts.push(r0);
+    c.starts.sort_unstable();
+    c.starts.dedup();
+    for &r in c.starts.iter() {
+        c.tt[r as usize] |= START;
+    }
+    let ns = c.starts.len();
+    let cap = 2 * n / ns + 64;
+    c.bufs.resize_with(ns.max(c.bufs.len()), Vec::new);
+    for b in &mut c.bufs[..ns] {
+        b.clear();
+        b.reserve(cap);
+    }
+    c.next.clear();
+    c.next.resize(ns, usize::MAX);
+    let taken = AtomicUsize::new(0);
+    let (t, starts) = (P(c.tt.as_mut_ptr()), &c.starts[..]);
+    let (bufs, next) = (P(c.bufs.as_mut_ptr()), P(c.next.as_mut_ptr()));
+    let k = pool.k;
+    c.share.resize_with(k, Default::default);
+    c.times.resize_with(k, Default::default);
+    let (share, times) = (&c.share, &c.times);
+    let posted = Instant::now();
+    pool.run(&|j| {
+        times[j]
+            .0
+            .store(posted.elapsed().as_nanos() as u64, Ordering::Relaxed);
+        let w = unsafe { traverse_room(t.get(), starts, bufs, next, &taken, cap) };
+        times[j]
+            .1
+            .store(posted.elapsed().as_nanos() as u64, Ordering::Relaxed);
+        share[j].store(w, Ordering::Relaxed);
+    });
+    if k > 1 {
+        let w: Vec<f64> = c
+            .share
+            .iter()
+            .map(|x| x.load(Ordering::Relaxed) as f64)
+            .collect();
+        let mean = w.iter().sum::<f64>() / k as f64;
+        c.imbalance.0 += w.iter().cloned().fold(0.0, f64::max) / mean;
+        c.imbalance.1 += 1;
+        let us = |x: &std::sync::atomic::AtomicU64| x.load(Ordering::Relaxed) as f64 / 1e3;
+        let last_start = c.times.iter().map(|t| us(&t.0)).fold(0.0, f64::max);
+        let ends: Vec<f64> = c.times.iter().map(|t| us(&t.1)).collect();
+        let spread = ends.iter().cloned().fold(0.0, f64::max)
+            - ends.iter().cloned().fold(f64::INFINITY, f64::min);
+        c.sync_us = (c.sync_us.0 + last_start, c.sync_us.1 + spread);
+    }
+    for &r in c.starts.iter() {
+        c.tt[r as usize] &= LINK;
+    }
+    out.clear();
+    out.reserve(n);
+    let mut seg = c.starts.binary_search(&r0).unwrap();
+    while out.len() < n {
+        let b = &c.bufs[seg];
+        out.extend_from_slice(&b[..b.len().min(n - out.len())]);
+        seg = c.next[seg];
+    }
+}
+
 /// A block's last column, its byte counts and primary index
 struct Block {
     ll: Vec<u8>,
@@ -621,6 +847,7 @@ impl Inv {
         let coop = || {
             Box::new(Coop {
                 segments,
+                room: kind == 'r',
                 ..Default::default()
             })
         };
@@ -678,7 +905,11 @@ impl Inv {
             Inv::Coop(pool, c, one) => {
                 coop_build(&b.ll, &b.counts, one.as_ref().unwrap_or(pool), c);
                 let m = s.elapsed().as_secs_f64();
-                coop_walk(b.orig_ptr, pool, c, out);
+                if c.room {
+                    coop_walk_room(b.orig_ptr, pool, c, out);
+                } else {
+                    coop_walk(b.orig_ptr, pool, c, out);
+                }
                 (m, s.elapsed().as_secs_f64() - m)
             }
             #[cfg(libsais)]
@@ -868,6 +1099,7 @@ fn parse_arm(s: &str) -> Arm {
         b'p' => ('p', &s[1..]),
         b's' => ('s', &s[1..]),
         b'w' => ('w', &s[1..]),
+        b'r' => ('r', &s[1..]),
         _ => ('c', s),
     };
     let (rest, segments) = match rest.split_once('@') {
