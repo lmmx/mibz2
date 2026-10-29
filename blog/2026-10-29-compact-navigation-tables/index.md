@@ -291,6 +291,22 @@ That brings information theory, succinct data structures, cache architecture and
 
 Our research journey
 
+## What comes next
+
+The census shows there is structure to exploit. It says nothing yet about speed, and the next steps are the measurements that will. They run in order, one controlled comparison at a time.
+
+The roadmap, in order
+
+Each step's prediction and pass and fail thresholds are written down before it runs. Status on 29 October 2026.
+
+Three table designs are kept as candidates. None is built yet, and they will compete on measured navigation cost, not on size alone:
+
+- **24-bit direct links:** the simple reference, a quarter smaller than today's table.
+- **Fixed 64-byte records:** 32 pointers to a cache line, 16.16 bits a row on the corpus.
+- **Two-tier descriptors:** 5.70 bits a row on the corpus, but 12–36% of steps need a second, dependent load, and on less regular inputs the design loses its advantage.
+
+This post will be updated as the results come in. The work is tracked on [\#81](<https://github.com/lmmx/mibz2/issues/81>) and [\#79](<https://github.com/lmmx/mibz2/issues/79>).
+
 ## The bottom line
 
 We've moved from:

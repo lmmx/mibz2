@@ -1233,6 +1233,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#what-comes-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What comes next
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-bottom-line" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1565,6 +1576,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#what-comes-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What comes next
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-bottom-line" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1838,6 +1860,27 @@
 <svg viewBox="0 0 720 340" role="img" aria-label="Five steps: Seward 2001; compressed permutation research; the 16-bit hypothesis; the corpus census (77.6% translation groups); the two-tier idea."><path d="M15 30V66" class="bf-link"/><circle cx="15" cy="14" r="13" class="bf-dot"/><text x="15" y="19" class="bf-t-strong" text-anchor="middle">1</text><text x="44" y="19" class="bf-ts">Seward, 2001</text><text x="44" y="42" class="bf-t">Showed that inverse-BWT navigation can trade memory for computation.</text><path d="M15 98V134" class="bf-link"/><circle cx="15" cy="82" r="13" class="bf-dot"/><text x="15" y="87" class="bf-t-strong" text-anchor="middle">2</text><text x="44" y="87" class="bf-ts">Compressed permutation research</text><text x="44" y="110" class="bf-t">Established that the sorted structure of Ψ can be represented economically.</text><path d="M15 166V202" class="bf-link"/><circle cx="15" cy="150" r="13" class="bf-dot"/><text x="15" y="155" class="bf-t-strong" text-anchor="middle">3</text><text x="44" y="155" class="bf-ts">Our 16-bit hypothesis</text><text x="44" y="178" class="bf-t">Proposed fitting 32 navigation values inside one cache line.</text><path d="M15 234V270" class="bf-link"/><circle cx="15" cy="218" r="13" class="bf-dot-hi"/><text x="15" y="223" class="bf-t-strong" text-anchor="middle">4</text><text x="44" y="223" class="bf-ts">Claude's corpus census</text><text x="44" y="246" class="bf-t">Found that 77.6% of rows qualify for simple translation groups, making a cheap fast path plausible.</text><circle cx="15" cy="286" r="13" class="bf-dot-hi"/><text x="15" y="291" class="bf-t-strong" text-anchor="middle">5</text><text x="44" y="291" class="bf-ts">Our latest two-tier idea</text><text x="44" y="314" class="bf-t">Proposed storing complete answers for simple groups directly in tiny descriptors,</text><text x="44" y="332" class="bf-t">fetching larger records only when needed.</text></svg>
 </figure>
 
+<h2 id="what-comes-next">What comes next<a class="headerlink" href="#what-comes-next" title="Permanent link">&para;</a></h2>
+<p>The census shows there is structure to exploit. It says nothing yet about speed, and the
+next steps are the measurements that will. They run in order, one controlled comparison
+at a time.</p>
+<figure class="bf-fig">
+<p class="bf-title">The roadmap, in order</p>
+<svg viewBox="0 0 720 560" role="img" aria-label="Six steps: the single-core fused build, measured at 1.027 times, below its floor; the cooperative fused build, ready and awaiting the workstation run; an audit of the F-byte lookup; embedded byte versus F recovery; a navigation-cost harness; and a decoder prototype only if justified."><path d="M15 30V94" class="bf-link"/><circle cx="15" cy="14" r="13" class="bf-dot"/><text x="15" y="19" class="bf-t-strong" text-anchor="middle">1</text><text x="44" y="19" class="bf-ts">Single-core fused build (#93)</text><rect x="278.4" y="4" width="124.4" height="21" rx="10.5" class="bf-pill-done"/><text x="340.6" y="18.5" class="bf-pill-done-t" text-anchor="middle">Measured: 1.027×</text><text x="44" y="44" class="bf-t">Removing the table fill and scattering straight into the T-vector gained 1.027× on CI, under the</text><text x="44" y="62" class="bf-t">pre-registered 1.03 floor. Kept as a negative result.</text><path d="M15 126V208" class="bf-link"/><circle cx="15" cy="110" r="13" class="bf-dot-ready"/><text x="15" y="115" class="bf-t-strong" text-anchor="middle">2</text><text x="44" y="115" class="bf-ts">Cooperative fused build (#81)</text><rect x="278.4" y="100" width="246" height="21" rx="10.5" class="bf-pill-ready"/><text x="401.4" y="114.5" class="bf-pill-ready-t" text-anchor="middle">Ready: awaiting the workstation run</text><text x="44" y="140" class="bf-t">The cooperative build has a copy phase and a synchronisation point that fusion may remove. Its</text><text x="44" y="158" class="bf-t">arm is built and checked word for word (#95). Pre-registered: a pass needs a build speed-up of</text><text x="44" y="176" class="bf-t">at least 1.15×; below 1.03× is a fail.</text><path d="M15 240V286" class="bf-link"/><circle cx="15" cy="224" r="13" class="bf-dot"/><text x="15" y="229" class="bf-t-strong" text-anchor="middle">3</text><text x="44" y="229" class="bf-ts">Audit the F-byte lookup (#79)</text><rect x="278.4" y="214" width="47.6" height="21" rx="10.5" class="bf-pill-next"/><text x="302.2" y="228.5" class="bf-pill-next-t" text-anchor="middle">Next</text><text x="44" y="254" class="bf-t">Read the generated code of the existing F-window lookup that recovers each output byte.</text><path d="M15 318V382" class="bf-link"/><circle cx="15" cy="302" r="13" class="bf-dot"/><text x="15" y="307" class="bf-t-strong" text-anchor="middle">4</text><text x="44" y="307" class="bf-ts">Embedded byte vs F recovery (#79)</text><rect x="308.8" y="292" width="47.6" height="21" rx="10.5" class="bf-pill-next"/><text x="332.6" y="306.5" class="bf-pill-next-t" text-anchor="middle">Next</text><text x="44" y="332" class="bf-t">One traversal kernel, lane scheduler and start-marker handling; only how the output byte is</text><text x="44" y="350" class="bf-t">recovered changes. That isolates the cost of symbol recovery before a 24-bit table.</text><path d="M15 414V478" class="bf-link"/><circle cx="15" cy="398" r="13" class="bf-dot"/><text x="15" y="403" class="bf-t-strong" text-anchor="middle">5</text><text x="44" y="403" class="bf-ts">Navigation-cost harness</text><rect x="232.8" y="388" width="54" height="21" rx="10.5" class="bf-pill-later"/><text x="259.8" y="402.5" class="bf-pill-later-t" text-anchor="middle">Later</text><text x="44" y="428" class="bf-t">Direct links, fixed 64-byte records and two-tier descriptors on a matched pointer-chasing</text><text x="44" y="446" class="bf-t">workload, the second dependent load included.</text><circle cx="15" cy="494" r="13" class="bf-dot"/><text x="15" y="499" class="bf-t-strong" text-anchor="middle">6</text><text x="44" y="499" class="bf-ts">Decoder prototype</text><rect x="187.2" y="484" width="98.8" height="21" rx="10.5" class="bf-pill-later"/><text x="236.6" y="498.5" class="bf-pill-later-t" text-anchor="middle">If justified</text><text x="44" y="524" class="bf-t">Construction, traversal, exceptions and concurrency together, before any change to the</text><text x="44" y="542" class="bf-t">production decoder.</text></svg>
+<figcaption>Each step's prediction and pass and fail thresholds are written down before it runs. Status on 29 October 2026.</figcaption>
+</figure>
+
+<p>Three table designs are kept as candidates. None is built yet, and they will compete on
+measured navigation cost, not on size alone:</p>
+<ul>
+<li><strong>24-bit direct links:</strong> the simple reference, a quarter smaller than today's table.</li>
+<li><strong>Fixed 64-byte records:</strong> 32 pointers to a cache line, 16.16 bits a row on the corpus.</li>
+<li><strong>Two-tier descriptors:</strong> 5.70 bits a row on the corpus, but 12–36% of steps need a
+  second, dependent load, and on less regular inputs the design loses its advantage.</li>
+</ul>
+<p>This post will be updated as the results come in. The work is tracked on
+<a href="https://github.com/lmmx/mibz2/issues/81">#81</a> and
+<a href="https://github.com/lmmx/mibz2/issues/79">#79</a>.</p>
 <h2 id="the-bottom-line">The bottom line<a class="headerlink" href="#the-bottom-line" title="Permanent link">&para;</a></h2>
 <p>We've moved from:</p>
 <blockquote>
