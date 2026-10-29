@@ -26,13 +26,28 @@ to 3 workers, the low-memory end, is not yet measured.
 
 ## The two charts
 
-They will be drawn from [`frontier.json`](../assets/data/frontier.json), the page's
-measured observations, as series are added:
+Both are drawn from [`frontier.json`](../assets/data/frontier.json), the page's
+measured observations. Point at a mark, or Tab to it, for its values. Every value is also
+in the tables [below](#what-is-measured-so-far).
 
-1. **Throughput against concurrent full blocks:** where a smaller table would overtake
-   the 32-bit one, if it does, as more blocks are live.
-2. **Throughput against memory:** each configuration's measured throughput and memory,
-   with the ones nothing beats on both marked. This is the frontier.
+1. **Throughput against memory:** each configuration's measured throughput and peak RSS,
+   with the ones nothing beats on both ringed and joined by their step. This is the
+   frontier. It draws series 3, the only one with measured RSS: the workers (arm
+   `mibz2`), fixed teams of 2 and of 3, and the policy (v0.2.0's default). Where one plan
+   ran at several thread counts, its marks are noise around one configuration. No worker
+   counts below 4 were measured, so it is not yet the whole frontier.
+2. **Throughput against concurrent full blocks,** as live table memory (blocks live ×
+   3.6 MB, computed): where a smaller table would overtake the 32-bit one, if it does, as
+   more blocks are live. No compact table exists yet, so it shows today's table and the
+   knee measured in the [workstation journal §9](https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-28-workstation-scaling.md):
+   series 1's worker counts and series 3's workers and teams, a panel each, since they
+   are different workloads. Series 2, the inversion, is a different level: it has its own
+   small panel and axes, never the decoder's.
+
+<div id="frontier-charts" data-src="../../assets/data/frontier.json" markdown>
+The charts are drawn here by JavaScript. The tables
+[below](#what-is-measured-so-far) give every value they show.
+</div>
 
 **The rules the charts keep:**
 - **One machine and one workload a chart.** An L3 effect on the i9 may appear at another
