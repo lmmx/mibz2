@@ -224,7 +224,11 @@ FIGURES = [
         lambda c, b, t: c["ocr.all_data_rd.l3_hit.any_snoop"]
         / (c["ocr.all_data_rd.l3_hit.any_snoop"] + c["ocr.all_data_rd.l3_miss.any_snoop"]),
     ),
-    ("software prefetches / B", "prefetch", lambda c, b, t: c["sw_prefetch_access.t0"] / b),
+    (
+        "software prefetches executed / B (useful or not)",
+        "prefetch",
+        lambda c, b, t: c["sw_prefetch_access.t0"] / b,
+    ),
     (
         "late prefetches (a load found its line still arriving) / prefetch",
         "prefetch",
@@ -321,6 +325,54 @@ FIGURES = [
     ("DRAM bytes read / output B", "imc", lambda c, b, t: c["uncore_imc/data_reads/"] / b),
     ("DRAM bytes written / output B", "imc", lambda c, b, t: c["uncore_imc/data_writes/"] / b),
 ]
+
+
+# each figure's unit: counts of requests, cycles and occupancy are not interchangeable
+UNITS = {
+    "instructions / B": "instructions per output byte, all threads",
+    "IPC": "instructions per core cycle",
+    "cycles / B (all threads)": "core cycles per output byte, summed over threads",
+    "data reads past L2 / B (prefetches included)": "requests per output byte",
+    "L3 hit share of data reads, prefetches included": "a fraction of requests (offcore responses)",
+    "software prefetches executed / B (useful or not)": "instructions per output byte",
+    "late prefetches (a load found its line still arriving) / prefetch": "loads per software prefetch",
+    "L3 hit share of demand loads beyond L2 (what prefetch missed)": "a fraction of retired loads",
+    "L3-missing loads / KB": "retired loads per KB of output",
+    "L3-missing demand reads / KB": "requests per KB of output",
+    "cycles an L3-missing read waits": "cycles (occupancy over requests, Little's law)",
+    "L3-missing reads in flight, machine-wide": "requests (mean occupancy per thread x threads)",
+    "data reads in flight past L2, machine-wide": "requests (mean occupancy per thread x threads)",
+    "cycles a read past L2 waits": "cycles (occupancy over requests, Little's law)",
+    "share of cycles stalled on an L3 miss": "a fraction of cycles",
+    "share of cycles with the super queue full": "a fraction of cycles",
+    "share of cycles walking page tables": "a fraction of cycles",
+    "L1D demand misses in flight, while any (not the prefetches)": "requests (occupancy over the cycles with any)",
+    "share of cycles with an L1D demand miss pending": "a fraction of cycles",
+    "requests that found the fill buffers full / cycle": "requests per cycle (a rate, not a share of time)",
+    "requests that found the fill buffers full / B": "requests per output byte",
+    "L1D-missing loads / B": "retired loads per output byte",
+    "loads from another core's modified line / KB": "retired loads per KB of output",
+    "stores / B": "retired stores per output byte",
+    "top-down: retiring": "a fraction of issue slots (4 a cycle)",
+    "top-down: front end (its own pass)": "a fraction of issue slots (4 a cycle)",
+    "DRAM bytes read / output B": "bytes per output byte, machine-wide",
+    "DRAM bytes written / output B": "bytes per output byte, machine-wide",
+}
+
+
+def descriptions(events):
+    """each event's description from this machine's own PMU tables (`perf list -j`)"""
+    r = subprocess.run(["perf", "list", "-j", "--long-desc"], capture_output=True, text=True)
+    try:
+        listed = json.loads(r.stdout)
+    except json.JSONDecodeError:
+        return {}
+    out = {}
+    for e in listed:
+        name = str(e.get("EventName", "")).lower()
+        if name in events:
+            out[name] = (e.get("PublicDescription") or e.get("BriefDescription") or "").strip()
+    return out
 
 
 def figures(diffs, arms):
@@ -597,6 +649,28 @@ def main():
                 f"- overlap: L3-missing reads in flight {fmt(fl)} ≥ 1.5 × p4's {fmt(fp4)}: {yn(fl >= 1.5 * fp4 if ok(fl, fp4) else None)}; each waits {fmt(oc)} cycles against p4's {fmt(op4)}"
             )
             w()
+        w("## What each figure counts")
+        w()
+        w("| figure | unit |")
+        w("|---|---|")
+        for label in dict.fromkeys(label for label, _, _ in FIGURES):
+            if any((arm, label) in fig for arm in arms):
+                w(f"| {label} | {UNITS.get(label, '')} |")
+        w()
+        evs = sorted({e for p in passes for e in (imc.IMC if p == "imc" else groups[p])})
+        desc = descriptions({e.lower() for e in evs})
+        w("Each event as this machine's PMU tables describe it (`perf list -j --long-desc`):")
+        w()
+        w("| event | description |")
+        w("|---|---|")
+        for e in evs:
+            d = (
+                desc.get(e.lower(), "(not in perf list's JSON)")
+                .replace("|", "/")
+                .replace("\n", " ")
+            )
+            w(f"| `{e}` | {d} |")
+        w()
         if symbols:
             w("## The hottest symbols (one `perf record` each, user cycles, setup included)")
             w()

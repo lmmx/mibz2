@@ -955,3 +955,15 @@ registered:
   - page walks 1.2% of cycles;
   - cross-core HITM 0.011 a KB, as expected with no sharing.
   - These become evidence only in the full run, beside the other arms.
+
+- **Each counter's units and meaning, in the report itself** (after the second outside reading):
+  - every figure states its unit: requests, retired loads, cycles, occupancy, bytes or a
+    fraction of issue slots. Counts of requests, cycles and occupancy are not
+    interchangeable;
+  - every event is quoted as the machine's own PMU tables describe it (`perf list -j
+    --long-desc`), so a reading's meaning is the i9's, not a recollection;
+  - "software prefetches executed" counts instructions, useful or not: a redundant
+    prefetch or one whose line is evicted before use is counted too;
+  - "late prefetches" is `load_hit_pre.sw_pf`, a demand load dispatched to a fill buffer a
+    software prefetch had allocated. It is read with its quoted definition beside it.
+  - The short check runs again before the full run, for the two new passes.
