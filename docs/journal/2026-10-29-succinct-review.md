@@ -648,3 +648,72 @@ Each finding is filed below by what kind of claim it is: proved, measured by the
   3. #79's F-recovery audit and matched control, with the 24-bit table;
   4. only then the compact designs.
 - **The researcher's framing is recorded:** a "directly addressed, locally compressed function", with prior art unsearched. No novelty is claimed.
+
+## 17. Where the discontinuities land: the third programme (stored verbatim), and the reconciliation it asked for
+
+The research chatbot answered §16 with a programme on where Ψ's breaks fall, and the coordinator read it. Both are stored unedited:
+- [discontinuities-research.md](2026-10-29-succinct-review/discontinuities-research.md)
+- [discontinuities-coordinator.md](2026-10-29-succinct-review/discontinuities-coordinator.md)
+
+### 17.1 The reconciliation: §16 measured K₃₂, never d
+
+The researcher asked which quantity was "about ten times smaller than r". It was **K₃₂**, the number of 32-row groups containing a break, not d, the number of breaks.
+- §16.2's table is "non-translation groups ÷ (r − 1)", from the census's group classes and its run count. The census does not count d.
+- The "10× looser than the discontinuity count" wording was a paraphrase of that table. The researcher's diagnosis is right, and the census figures stand.
+
+The sharper bound r − σ′ ≤ d ≤ r − 1 pins d with no new measurement: σ′ and r are both in `psi-census.jsonl`.
+
+| full blocks (233) | min | median | max |
+|---|--:|--:|--:|
+| active alphabet, σ′ | 79 | 87 | 102 |
+| d ÷ r, lower bound (r − σ′)/r | 0.9981 | 0.9984 | 0.9996 |
+| breaks per non-translation group, d ÷ K₃₂ | 7.56–7.57 | 9.38–9.39 | 26.68–26.69 |
+
+- **So d is r to within 0.2% on every full block.**
+- **The order of magnitude between r and K₃₂ is entirely occupancy:** a non-translation group holds 7.6 to 26.7 breaks, median 9.4.
+- §16.2's "at d's upper bound, about 9" is now exact, not a bound.
+
+The three quantities, as the coordinator's table names them:
+- **r** (L's runs): about 56,000 a full block.
+- **d** (Ψ's breaks): r − σ′ to r − 1, so also about 56,000.
+- **K₃₂** (groups that hold a break): about 6,200.
+
+### 17.2 Proved, in the researcher's report
+
+- **r − σ′ ≤ d ≤ r − 1.** A symbol's list breaks exactly once between consecutive runs of that symbol (r_c − 1 each), and the F-bucket boundaries add 0 to σ′ − 1.
+- **Every break's position from L's runs alone.** A run of c ends at q = C[c] + its cumulative length in c's runs.
+  - The break lies inside an aligned group exactly when q mod 32 ≠ 0, and then spoils group ⌊(q − 1)/32⌋.
+  - So K₃₂, and the translation coverage 1 − K₃₂/⌊n/32⌋, follow from L's run-length encoding and the counts, without making Ψ.
+  - A group bitmap costs 3.5 KiB for a full block.
+- **One-step slow-path correlation.** With S the rows of non-translation groups:
+  - A₂ = |S ∩ Ψ⁻¹(S)| counts a slow step followed by a slow step;
+  - P(slow next | slow now) = A₂/|S|;
+  - Ψ is a translation on each maximal interval, so A₂ is a sum of shifted-interval intersections, with no walk. A₃ and beyond are defined the same way.
+
+### 17.3 How the census relates to the run-derived count
+
+- **Within a bucket,** the census's RUN class (span = 31 inside one bucket) is the same as "no break inside the group". So the run-derived K₃₂ and the census agree there.
+- **At bucket boundaries, the census marks every crossing group as not a translation.** That is 68–86 groups in a full block. The researcher's exact rule would keep the few where Ψ happens to stay consecutive across the boundary.
+  - For the two-tier descriptor, which stores one symbol, the census's convention is the right one: a group of mixed symbols needs a payload regardless.
+  - The two counts can differ by at most about 0.3% of the groups.
+- **The run-derived count is an independent check** on `psi_census.rs`. It has not been computed. The coordinator asks for it only within a later, narrow structural step.
+
+### 17.4 What stays unknown, as both say
+
+- **A₂ describes one chain's logical order.** Whether several of the 32 lanes stall together depends on:
+  - the segment starts and their assignment to lanes;
+  - the scheduler;
+  - each format's latency;
+  - whether the payloads stay resident.
+
+  That needs a scheduling model or the hardware. The coordinator's line holds: an exact correlation is not a predicted speed-up.
+
+### 17.5 Kept for after the release (the coordinator's order unchanged)
+
+These are not started now. The coordinator's narrow structural step, before any compact decoder:
+1. r, d and K₃₂ for every block (d exactly, not bounded);
+2. the run-derived classification checked against the census for every block;
+3. per-block coverage;
+4. A₂ against the independent-access reference.
+
+They come after the release and the cooperative decoder, and they reuse the corpus and `psi_census.rs`.
