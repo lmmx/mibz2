@@ -4,7 +4,8 @@
 //
 // - Throughput against measured peak RSS: series i9-decoder-coop-20261029 only, one mark
 //   per arm and thread count, the nondominated ones ringed and joined by their step.
-// - Throughput against live table memory (computed, blocks live × 3.6 MB): the full
+// - Throughput against live table memory (computed, blocks live × each series'
+//   table_mb_per_block: 3.6 MB full blocks, 1.946 MB the native corpus's): the full
 //   decoder's two runs (i9-decoder-lbzip2-9-20261028's worker counts, and the coop run's
 //   workers and teams), with the knee of the workstation journal §9 marked.
 // - Beside it, on its own small axes: i9-inversion-pr0-20261029, the research harness's
@@ -284,13 +285,13 @@
   function tableChart(root, s1, s3) {
     const fig = el("figure", { class: "fr-panel" }, root);
     el("figcaption", { text: "Throughput against live table memory (computed), the full decoder" }, fig);
-    el("p", { class: "fr-sub", text: "Two runs, two workloads: a panel each, on the same scales. Live tables are blocks live × 3.6 MB, computed; the dashed rule is the knee measured in the workstation journal §9." }, fig);
+    el("p", { class: "fr-sub", text: "Two runs, two workloads: a panel each, on the same scales. Live tables are blocks live × each workload's mean table, computed (3.6 MB full blocks in series 1; 1.95 MB the native blocks in series 3); the dashed rule is the knee the workstation journal §9 measured at full blocks." }, fig);
     const grid = el("div", { class: "fr-facets" }, fig);
     const all = [s1, s3].filter(Boolean).flatMap((s) => s.points);
     const xMax = Math.max(...all.map((q) => q.table_mb)) * 1.04;
     const yMax = Math.max(...all.map((q) => q.mb_s)) * 1.06;
-    const knee = [{ x: KNEE_MB, lines: ["knee, about 14.4 MB:", "0.7 of the 20 MB L3", "(workstation journal §9)"] }];
-    const xLabel = "live tables, MB (computed: blocks live × 3.6 MB)";
+    const knee = [{ x: KNEE_MB, lines: ["knee at full blocks, about 14.4 MB:", "0.7 of the 20 MB L3", "(workstation journal §9)"] }];
+    const xLabel = "live tables, MB (computed: blocks live × the workload's mean table)";
     const yLabel = "MB/s decoded (higher is faster)";
     const facet = (s, title) => {
       const f = el("div", { class: "fr-facet" }, grid);
@@ -334,7 +335,7 @@
         aria: `Series 3, throughput against computed live tables: ${s3.machine}, ${s3.level}, run ${runId(s3)}`,
       });
     }
-    source(fig, [s1, s3].filter(Boolean), "Live table memory is computed, not measured: live full blocks × 900,000 rows × 4 bytes, 3.6 MB a block; a team of k threads shares one block's table. Measured memory is on the chart above. Each line joins one run's worker counts only. Marks of one plan at several thread counts are noise around one configuration. The rule is the knee the workstation journal §9 measured (at two block sizes), not a fit to these points.");
+    source(fig, [s1, s3].filter(Boolean), "Live table memory is computed, not measured: live blocks × the workload's mean table (rows × 4 bytes): 3.6 MB for series 1's full 900,000-row blocks, 1.95 MB for series 3's native blocks (corrected on 2026-10-29 from 3.6 MB). A team of k threads shares one block's table. The native blocks knee at 4 workers, about 7.8 MB of tables, left of the rule: the knee's cause is under test. Measured memory is on the chart above. Each line joins one run's worker counts only. Marks of one plan at several thread counts are noise around one configuration. The rule is the knee the workstation journal §9 measured (at two block sizes), not a fit to these points.");
     const a = el("p", { class: "fr-source" }, fig);
     el("a", { href: JOURNAL9, text: "The workstation journal, §9" }, a);
     a.append(", where the knee was measured.");

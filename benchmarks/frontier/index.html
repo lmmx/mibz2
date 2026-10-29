@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=2ddb8ee11684">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=473a423d070f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=2ddb8ee11684">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=473a423d070f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=2ddb8ee11684">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=473a423d070f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=2ddb8ee11684">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=473a423d070f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=2ddb8ee11684">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=473a423d070f">
     
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -1458,8 +1458,12 @@ to 3 workers, the low-memory end, is not yet measured.</p>
 </thead>
 <tbody>
 <tr>
-<td>Shared cache capacity bounds throughput: the knee sits at about 14.4 MB of live tables, 0.7 of the i9's 20 MB L3, at two block sizes</td>
+<td>Shared cache capacity bounds throughput: the knee sits at about 14.4 MB of live tables, 0.7 of the i9's 20 MB L3, at two block sizes of the recompressed corpus (3.6 and 2.4 MB tables)</td>
 <td>measured (<a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-28-workstation-scaling.md">workstation journal §9</a>)</td>
+</tr>
+<tr>
+<td>The bench corpus's native blocks (1.95 MB tables on average) knee at 4 workers, as full 3.6 MB blocks do, not near 7 as live table bytes alone would put it</td>
+<td>measured anomaly; its cause is under test (<a href="https://github.com/lmmx/mibz2/blob/research/libsais-rematch/docs/journal/2026-10-29-libsais-knee.md">the knee journal</a>)</td>
 </tr>
 <tr>
 <td>The table is compressible: about 77% of a full block's rows are in 32-row translation groups</td>
@@ -1490,8 +1494,9 @@ in the tables <a href="#what-is-measured-so-far">below</a>.</p>
    <code>mibz2</code>), fixed teams of 2 and of 3, and the policy (v0.2.0's default). Where one plan
    ran at several thread counts, its marks are noise around one configuration. No worker
    counts below 4 were measured, so it is not yet the whole frontier.</li>
-<li><strong>Throughput against concurrent full blocks,</strong> as live table memory (blocks live ×
-   3.6 MB, computed): where a smaller table would overtake the 32-bit one, if it does, as
+<li><strong>Throughput against concurrent blocks,</strong> as live table memory (blocks live × the
+   workload's mean table, computed: 3.6 MB for full 900 K blocks in series 1, 1.95 MB for
+   the bench corpus's native blocks in series 2 and 3): where a smaller table would overtake the 32-bit one, if it does, as
    more blocks are live. No compact table exists yet, so it shows today's table and the
    knee measured in the <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-28-workstation-scaling.md">workstation journal §9</a>:
    series 1's worker counts and series 3's workers and teams, a panel each, since they
@@ -1508,7 +1513,7 @@ in the tables <a href="#what-is-measured-so-far">below</a>.</p>
 - <strong>Two kinds of memory, never mixed:</strong> the live tables' bytes (computed: live full
   blocks × 900,000 rows × 4 bytes for today's table) and the process's peak RSS
   (measured). Peak RSS also counts the scanner's slots, the output and every worker's
-  buffers: at 4 threads on CI it is about 74 MB, against 14.4 MB of tables.
+  buffers: at 4 threads on CI it is about 74 MB, against about 7.8 MB of tables.
 - <strong>Two levels, never mixed:</strong> the full decoder (a file to verified output) and the
   research harness's inversion (MTF, build and walk). The headline is the full decoder;
   the inversion shows the mechanism.
@@ -1584,21 +1589,21 @@ research harness's MTF, build and walk; <a href="https://github.com/lmmx/mibz2/b
 <tbody>
 <tr>
 <td>p4, production</td>
-<td style="text-align: right;">14.4 MB</td>
+<td style="text-align: right;">7.8 MB</td>
 <td style="text-align: right;">4</td>
 <td style="text-align: right;">1206</td>
 <td style="text-align: right;">1</td>
 </tr>
 <tr>
 <td>y3x3, cooperative</td>
-<td style="text-align: right;">10.8 MB</td>
+<td style="text-align: right;">5.8 MB</td>
 <td style="text-align: right;">9</td>
 <td style="text-align: right;">1657</td>
 <td style="text-align: right;">1.375 ±0.022</td>
 </tr>
 <tr>
 <td>y4x2, cooperative</td>
-<td style="text-align: right;">14.4 MB</td>
+<td style="text-align: right;">7.8 MB</td>
 <td style="text-align: right;">8</td>
 <td style="text-align: right;">1725</td>
 <td style="text-align: right;">1.439 ±0.020</td>
@@ -1638,7 +1643,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 <tbody>
 <tr>
 <td>4 workers (p4)</td>
-<td style="text-align: right;">14.4 MB</td>
+<td style="text-align: right;">7.8 MB</td>
 <td style="text-align: right;">4</td>
 <td style="text-align: right;">1007</td>
 <td style="text-align: right;">1</td>
@@ -1648,7 +1653,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>6 workers</td>
-<td style="text-align: right;">21.6 MB</td>
+<td style="text-align: right;">11.7 MB</td>
 <td style="text-align: right;">6</td>
 <td style="text-align: right;">858</td>
 <td style="text-align: right;">0.861 (0.842–0.881)</td>
@@ -1658,7 +1663,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>8 workers</td>
-<td style="text-align: right;">28.8 MB</td>
+<td style="text-align: right;">15.6 MB</td>
 <td style="text-align: right;">8</td>
 <td style="text-align: right;">674</td>
 <td style="text-align: right;">0.693 (0.673–0.714)</td>
@@ -1668,7 +1673,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>10 workers</td>
-<td style="text-align: right;">36.0 MB</td>
+<td style="text-align: right;">19.5 MB</td>
 <td style="text-align: right;">10</td>
 <td style="text-align: right;">632</td>
 <td style="text-align: right;">0.644 (0.621–0.668)</td>
@@ -1678,7 +1683,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>20 workers</td>
-<td style="text-align: right;">72.0 MB</td>
+<td style="text-align: right;">38.9 MB</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">471</td>
 <td style="text-align: right;">0.479 (0.462–0.497)</td>
@@ -1688,7 +1693,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>1 team of 3</td>
-<td style="text-align: right;">3.6 MB</td>
+<td style="text-align: right;">1.9 MB</td>
 <td style="text-align: right;">3</td>
 <td style="text-align: right;">530</td>
 <td style="text-align: right;">0.540 (0.524–0.556)</td>
@@ -1698,7 +1703,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>2 teams of 2</td>
-<td style="text-align: right;">7.2 MB</td>
+<td style="text-align: right;">3.9 MB</td>
 <td style="text-align: right;">4</td>
 <td style="text-align: right;">891</td>
 <td style="text-align: right;">0.904 (0.885–0.923)</td>
@@ -1708,7 +1713,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>2 teams of 3</td>
-<td style="text-align: right;">7.2 MB</td>
+<td style="text-align: right;">3.9 MB</td>
 <td style="text-align: right;">6</td>
 <td style="text-align: right;">987–988</td>
 <td style="text-align: right;">1.004–1.006</td>
@@ -1718,7 +1723,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>3 teams of 2 (the policy at 6)</td>
-<td style="text-align: right;">10.8 MB</td>
+<td style="text-align: right;">5.8 MB</td>
 <td style="text-align: right;">6</td>
 <td style="text-align: right;">1155–1189</td>
 <td style="text-align: right;">1.166 (1.123–1.210) to 1.200</td>
@@ -1728,7 +1733,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>3 teams of 3</td>
-<td style="text-align: right;">10.8 MB</td>
+<td style="text-align: right;">5.8 MB</td>
 <td style="text-align: right;">9</td>
 <td style="text-align: right;">1234</td>
 <td style="text-align: right;">1.264 (1.211–1.318)</td>
@@ -1738,7 +1743,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>4 teams of 2 (the policy at 8–20)</td>
-<td style="text-align: right;">14.4 MB</td>
+<td style="text-align: right;">7.8 MB</td>
 <td style="text-align: right;">8</td>
 <td style="text-align: right;">1223–1256</td>
 <td style="text-align: right;">1.243–1.274; at 20, 1.257 (1.197–1.320)</td>
@@ -1748,7 +1753,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>5 teams of 2</td>
-<td style="text-align: right;">18.0 MB</td>
+<td style="text-align: right;">9.7 MB</td>
 <td style="text-align: right;">10</td>
 <td style="text-align: right;">1147</td>
 <td style="text-align: right;">1.162 (1.121–1.204)</td>
@@ -1758,7 +1763,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>6 teams of 3</td>
-<td style="text-align: right;">21.6 MB</td>
+<td style="text-align: right;">11.7 MB</td>
 <td style="text-align: right;">18</td>
 <td style="text-align: right;">1084</td>
 <td style="text-align: right;">1.095 (1.060–1.132)</td>
@@ -1768,7 +1773,7 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 <tr>
 <td>10 teams of 2</td>
-<td style="text-align: right;">36.0 MB</td>
+<td style="text-align: right;">19.5 MB</td>
 <td style="text-align: right;">20</td>
 <td style="text-align: right;">825</td>
 <td style="text-align: right;">0.838 (0.813–0.864)</td>
@@ -1778,7 +1783,11 @@ and 8), the table gives the range of their medians, which is noise.</p>
 </tr>
 </tbody>
 </table>
-<p>Peak RSS is measured (the median run's, in decimal MB). Live tables are computed. The
+<p>Peak RSS is measured (the median run's, in decimal MB). Live tables are computed: live
+blocks × 1.95 MB, the native blocks' mean table (corrected on 2026-10-29: the page first
+used 3.6 MB, a full block's, for series 2 and 3; the native blocks average 486,543 rows).
+At 4 workers the knee sits at about 7.8 MB of tables here, not §9's 14.4, which is why
+the knee's cause is now under test. The
 nondominated column compares medians on throughput (higher) and peak RSS (lower) within
 this series.</p>
 <p>What it shows, and what it doesn't:
@@ -1954,13 +1963,13 @@ and the <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=2ddb8ee11684"></script>
+        <script src="../../assets/javascripts/bench.js?v=473a423d070f"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=2ddb8ee11684"></script>
+        <script src="../../assets/javascripts/couriers.js?v=473a423d070f"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=2ddb8ee11684"></script>
+        <script src="../../assets/javascripts/blog.js?v=473a423d070f"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=2ddb8ee11684"></script>
+        <script src="../../assets/javascripts/frontier.js?v=473a423d070f"></script>
       
     
   </body>

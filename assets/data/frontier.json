@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "about": "Measured observations for the throughput-memory frontier page (benchmarks/frontier.md). Each series is one machine, one workload, one measurement level and one run or build: never plot points from two series on one line. table_mb is computed, not measured: live full blocks x 900,000 rows x 4 bytes (the T-vector). peak_rss_mb and cpu_s are measured where given, else null. Models and hypothetical formats never appear here.",
+ "about": "Measured observations for the throughput-memory frontier page (benchmarks/frontier.md). Each series is one machine, one workload, one measurement level and one run or build: never plot points from two series on one line. table_mb is computed, not measured: live blocks x the workload's mean table (its rows x 4 bytes): 3.6 MB for full 900,000-row blocks, 1.946 MB for the bench corpus's native blocks (431 blocks, 209,700,196 rows). peak_rss_mb and cpu_s are measured where given, else null. Models and hypothetical formats never appear here.",
  "series": [
   {
    "id": "i9-decoder-lbzip2-9-20261028",
@@ -58,7 +58,8 @@
      "peak_rss_mb": null,
      "cpu_s": 2.921
     }
-   ]
+   ],
+   "table_mb_per_block": 3.6
   },
   {
    "id": "i9-inversion-pr0-20261029",
@@ -76,7 +77,7 @@
      "blocks_live": 4,
      "cores": 4,
      "mb_s": 1206,
-     "table_mb": 14.4,
+     "table_mb": 7.8,
      "peak_rss_mb": null,
      "cpu_s": null
     },
@@ -85,7 +86,7 @@
      "blocks_live": 3,
      "cores": 9,
      "mb_s": 1549,
-     "table_mb": 10.8,
+     "table_mb": 5.8,
      "peak_rss_mb": null,
      "cpu_s": null
     },
@@ -94,7 +95,7 @@
      "blocks_live": 3,
      "cores": 9,
      "mb_s": 1664,
-     "table_mb": 10.8,
+     "table_mb": 5.8,
      "peak_rss_mb": null,
      "cpu_s": null
     },
@@ -103,7 +104,7 @@
      "blocks_live": 3,
      "cores": 9,
      "mb_s": 1657,
-     "table_mb": 10.8,
+     "table_mb": 5.8,
      "peak_rss_mb": null,
      "cpu_s": null
     },
@@ -112,7 +113,7 @@
      "blocks_live": 4,
      "cores": 8,
      "mb_s": 1574,
-     "table_mb": 14.4,
+     "table_mb": 7.8,
      "peak_rss_mb": null,
      "cpu_s": null
     },
@@ -121,7 +122,7 @@
      "blocks_live": 4,
      "cores": 8,
      "mb_s": 1751,
-     "table_mb": 14.4,
+     "table_mb": 7.8,
      "peak_rss_mb": null,
      "cpu_s": null
     },
@@ -130,11 +131,12 @@
      "blocks_live": 4,
      "cores": 8,
      "mb_s": 1725,
-     "table_mb": 14.4,
+     "table_mb": 7.8,
      "peak_rss_mb": null,
      "cpu_s": null
     }
-   ]
+   ],
+   "table_mb_per_block": 1.946
   },
   {
    "id": "i9-decoder-coop-20261029",
@@ -146,7 +148,7 @@
    "placement": "unpinned; threads above 10 run on SMT siblings",
    "release": false,
    "source": "docs/journal/2026-10-29-cooperative-decoder.md (run coop-decoder-20261029T174657Z; raw files beside it), medians of 20 interleaved rounds; ratio_p4 is the paired geometric mean against p@4 with its 95% t-interval",
-   "notes": "blocks_live and threads_used are the plan's (teams count one block each; auto follows Plan::for_threads on this machine); table_mb is computed (blocks_live x 3.6 MB); peak_rss_mb is measured (median, decimal MB); nondominated is on (mb_s up, peak_rss_mb down) among this series' points by their medians, with no worker counts below 4 measured",
+   "notes": "blocks_live and threads_used are the plan's (teams count one block each; auto follows Plan::for_threads on this machine); table_mb is computed (blocks_live x 1.946 MB, the native blocks' mean table; corrected 2026-10-29 from 3.6 MB, a full block's); peak_rss_mb is measured (median, decimal MB); nondominated is on (mb_s up, peak_rss_mb down) among this series' points by their medians, with no worker counts below 4 measured",
    "points": [
     {
      "config": "p@4",
@@ -159,7 +161,7 @@
      "ratio_p4": 1.0,
      "ratio_p4_low": 1.0,
      "ratio_p4_high": 1.0,
-     "table_mb": 14.4,
+     "table_mb": 7.8,
      "peak_rss_mb": 76.0,
      "cpu_s": 0.84,
      "nondominated": false
@@ -175,7 +177,7 @@
      "ratio_p4": 0.861,
      "ratio_p4_low": 0.842,
      "ratio_p4_high": 0.881,
-     "table_mb": 21.6,
+     "table_mb": 11.7,
      "peak_rss_mb": 102.0,
      "cpu_s": 1.452,
      "nondominated": false
@@ -191,7 +193,7 @@
      "ratio_p4": 0.693,
      "ratio_p4_low": 0.673,
      "ratio_p4_high": 0.714,
-     "table_mb": 28.8,
+     "table_mb": 15.6,
      "peak_rss_mb": 127.8,
      "cpu_s": 2.409,
      "nondominated": false
@@ -207,7 +209,7 @@
      "ratio_p4": 0.644,
      "ratio_p4_low": 0.621,
      "ratio_p4_high": 0.668,
-     "table_mb": 36.0,
+     "table_mb": 19.5,
      "peak_rss_mb": 151.6,
      "cpu_s": 2.971,
      "nondominated": false
@@ -223,7 +225,7 @@
      "ratio_p4": 0.479,
      "ratio_p4_low": 0.462,
      "ratio_p4_high": 0.497,
-     "table_mb": 72.0,
+     "table_mb": 38.9,
      "peak_rss_mb": 266.9,
      "cpu_s": 7.312,
      "nondominated": false
@@ -239,7 +241,7 @@
      "ratio_p4": 0.994,
      "ratio_p4_low": 0.972,
      "ratio_p4_high": 1.017,
-     "table_mb": 14.4,
+     "table_mb": 7.8,
      "peak_rss_mb": 76.4,
      "cpu_s": 0.848,
      "nondominated": false
@@ -255,7 +257,7 @@
      "ratio_p4": 1.166,
      "ratio_p4_low": 1.123,
      "ratio_p4_high": 1.21,
-     "table_mb": 10.8,
+     "table_mb": 5.8,
      "peak_rss_mb": 63.6,
      "cpu_s": 0.835,
      "nondominated": false
@@ -271,7 +273,7 @@
      "ratio_p4": 1.248,
      "ratio_p4_low": 1.219,
      "ratio_p4_high": 1.278,
-     "table_mb": 14.4,
+     "table_mb": 7.8,
      "peak_rss_mb": 77.3,
      "cpu_s": 1.023,
      "nondominated": false
@@ -287,7 +289,7 @@
      "ratio_p4": 1.274,
      "ratio_p4_low": 1.228,
      "ratio_p4_high": 1.322,
-     "table_mb": 14.4,
+     "table_mb": 7.8,
      "peak_rss_mb": 77.6,
      "cpu_s": 1.018,
      "nondominated": false
@@ -303,7 +305,7 @@
      "ratio_p4": 1.257,
      "ratio_p4_low": 1.197,
      "ratio_p4_high": 1.32,
-     "table_mb": 14.4,
+     "table_mb": 7.8,
      "peak_rss_mb": 77.1,
      "cpu_s": 1.02,
      "nondominated": true
@@ -319,7 +321,7 @@
      "ratio_p4": 0.904,
      "ratio_p4_low": 0.885,
      "ratio_p4_high": 0.923,
-     "table_mb": 7.2,
+     "table_mb": 3.9,
      "peak_rss_mb": 50.1,
      "cpu_s": 0.726,
      "nondominated": false
@@ -335,7 +337,7 @@
      "ratio_p4": 1.2,
      "ratio_p4_low": 1.173,
      "ratio_p4_high": 1.228,
-     "table_mb": 10.8,
+     "table_mb": 5.8,
      "peak_rss_mb": 63.6,
      "cpu_s": 0.812,
      "nondominated": false
@@ -351,7 +353,7 @@
      "ratio_p4": 1.243,
      "ratio_p4_low": 1.2,
      "ratio_p4_high": 1.287,
-     "table_mb": 14.4,
+     "table_mb": 7.8,
      "peak_rss_mb": 77.5,
      "cpu_s": 1.036,
      "nondominated": false
@@ -367,7 +369,7 @@
      "ratio_p4": 1.162,
      "ratio_p4_low": 1.121,
      "ratio_p4_high": 1.204,
-     "table_mb": 18.0,
+     "table_mb": 9.7,
      "peak_rss_mb": 90.7,
      "cpu_s": 1.357,
      "nondominated": false
@@ -383,7 +385,7 @@
      "ratio_p4": 0.838,
      "ratio_p4_low": 0.813,
      "ratio_p4_high": 0.864,
-     "table_mb": 36.0,
+     "table_mb": 19.5,
      "peak_rss_mb": 154.6,
      "cpu_s": 3.757,
      "nondominated": false
@@ -399,7 +401,7 @@
      "ratio_p4": 0.54,
      "ratio_p4_low": 0.524,
      "ratio_p4_high": 0.556,
-     "table_mb": 3.6,
+     "table_mb": 1.9,
      "peak_rss_mb": 35.4,
      "cpu_s": 0.767,
      "nondominated": true
@@ -415,7 +417,7 @@
      "ratio_p4": 1.006,
      "ratio_p4_low": 0.977,
      "ratio_p4_high": 1.035,
-     "table_mb": 7.2,
+     "table_mb": 3.9,
      "peak_rss_mb": 50.1,
      "cpu_s": 0.818,
      "nondominated": false
@@ -431,7 +433,7 @@
      "ratio_p4": 1.004,
      "ratio_p4_low": 0.974,
      "ratio_p4_high": 1.035,
-     "table_mb": 7.2,
+     "table_mb": 3.9,
      "peak_rss_mb": 50.1,
      "cpu_s": 0.817,
      "nondominated": true
@@ -447,7 +449,7 @@
      "ratio_p4": 1.264,
      "ratio_p4_low": 1.211,
      "ratio_p4_high": 1.318,
-     "table_mb": 10.8,
+     "table_mb": 5.8,
      "peak_rss_mb": 63.5,
      "cpu_s": 0.957,
      "nondominated": true
@@ -463,12 +465,13 @@
      "ratio_p4": 1.095,
      "ratio_p4_low": 1.06,
      "ratio_p4_high": 1.132,
-     "table_mb": 21.6,
+     "table_mb": 11.7,
      "peak_rss_mb": 104.6,
      "cpu_s": 2.159,
      "nondominated": false
     }
-   ]
+   ],
+   "table_mb_per_block": 1.946
   }
  ]
 }
