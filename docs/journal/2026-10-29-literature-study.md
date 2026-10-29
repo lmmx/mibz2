@@ -19,8 +19,8 @@ paper unless said), **measured** (ours, said where), **hypothesis** (untested).
 | 2 | [`02-optimal-time-construction-research.md`](2026-10-29-literature-study/02-optimal-time-construction-research.md) | Brown, Sanaullah, Zhang & Langmead, "Optimal-Time Move Structure Construction", arXiv v4, 22 October 2026. With alt text for its Figures 2.1, 2.2, 3.1 and 3.2, and the researcher's "why this paper" | read |
 | — | [`03-research-trail-research.md`](2026-10-29-literature-study/03-research-trail-research.md) | the thread joining papers 2 to 5: building a compressed structure without first doing the work it exists to avoid | read |
 | 3 | [`04-rlbwt-tricks-research.md`](2026-10-29-literature-study/04-rlbwt-tricks-research.md) | Brown, Gagie & Rossi, "RLBWT Tricks", SEA 2022 | read |
-| 4 | — | Ottaviano & Venturini, "Partitioned Elias–Fano Indexes", SIGIR 2014 | next |
-| 5 | — | Gog, Navarro & Petri, "Improved and Extended Locating Functionality on Compressed Suffix Arrays", 2015 | queued |
+| 4 | [`05-partitioned-elias-fano-research.md`](2026-10-29-literature-study/05-partitioned-elias-fano-research.md) | Ottaviano & Venturini, "Partitioned Elias–Fano Indexes", SIGIR 2014 | read |
+| 5 | — | Gog, Navarro & Petri, "Improved and Extended Locating Functionality on Compressed Suffix Arrays", 2015 | next |
 | — | — | the overview's other items (cacheline Elias–Fano, the LCSA line, the Orbit implementation in its own pass) | queued |
 
 The user calls paper 2 "the first paper", as the first they worked through with the
@@ -75,12 +75,38 @@ what #81 found by measurement, that construction cost moves a lot when redundant
   measured). That is below even paper 1's smallest dataset (29.2). Run-based results from
   genomic collections can't be carried over to bzip2 blocks without measuring them.
 
+**Partitioned Elias–Fano (paper 4) is prior art for translation groups, and gives a
+cheap census question.**
+- **Prior art:** a chunk that fills its local universe stores no values, only its
+  boundaries. That is a translation group, published in 2014. The census (77.4% of
+  32-row groups, §13, PR #94) makes it the common case on Wikidata's blocks, not an edge
+  case.
+- **Fixed against adaptive boundaries:** their uniform chunks are about 12% larger than
+  their near-optimal ones (Table 2, as the researcher reads it; Gov2 5.17 against
+  4.65 GB). Their index is built once and queried many times. mibz2 builds ψ in every
+  decode and may walk it once, and fixed groups keep the group address arithmetic
+  (g = j >> 5), with no predecessor search on the chain.
+  - **Hypothesis**, checkable offline without touching the decoder: computing the
+    near-optimal variable partition of the Wikidata blocks' ψ lists measures what fixed
+    addressing costs in bytes. A census figure, not a decoder change.
+- **The residual R(j) = ψ(j) − j.** Inside one F bucket ψ is strictly increasing, so R is
+  nondecreasing, and it is constant exactly where ψ is a translation.
+  - A group's plateaus are one more than the breaks inside it: ψ's discontinuities (d)
+    and bucket boundaries. The census already counts the breaks (d) and the groups that
+    hold one (K32), so a histogram of breaks per group is a small addition to the
+    structural census step. It answers the reading's new hypothesis: whether most
+    non-translation groups are two or three translations, which a record could hold as a
+    few (slot, displacement) pairs in place of FOR or EF offsets.
+  - **Hypothesis**, untested. Such a record has to find the slot's plateau on the chain's
+    critical path, so the census decides only whether it is worth a prototype arm
+    (alongside e and h), not whether it wins.
+
 ## Open checks
 
 - **Citations:** paper 1's are checked (`2026-10-29-expert-review.md` §1). We have not yet
   checked paper 2's arXiv v4 revision date, RLBWT Tricks' venue and the readings' figures
   against the papers. The research trail dates RLBWT Tricks 2024, and deep dive 2 gives
-  SEA 2022.
+  SEA 2022. Paper 4's Table 2 figures are the researcher's reading.
 - **Cyclic BWT:** bzip2 sorts rotations with no sentinel. A periodic block gives ψ several
   cycles (for `abab`, LF = [2, 3, 0, 1], two cycles of 2), and the decoder walks one of
   them n times from `orig_ptr`. The papers' move structures assume a sentinel and a single
