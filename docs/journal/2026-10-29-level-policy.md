@@ -187,3 +187,54 @@ In MB/s (medians):
 - **At -1 and -2, the default leaving 6 of 10 cores idle** is a finding in its own right,
   whatever R1's verdict. The policy plans helpers that the kernel never uses at those block
   sizes.
+
+## The held-out sweep: the result (measured, the i9, dab2670, 2026-10-29)
+
+**The run:** `just bench-level-holdout`. Its files are in `2026-10-29-level-policy/`:
+`coop-decoder-20261029T230319Z` (-1), `…230412Z` (-2), `…230541Z` (-4), `…230648Z` (-5),
+`…230800Z` (-3, the repeat), and `level-holdout-console.log`.
+- 20 rounds a level, unpinned.
+- Every run of every arm at every level gave one output hash, with no errors.
+
+**R1 against the default** (`coop2`@10 against `auto`@20), scored exactly against the registered
+gate: ≥ 1.05, lower bound > 1.00, RSS ≤ 1.15×, CPU ≤ 1.5×:
+
+| level | role | `coop2`@10 / `auto`@20 | RSS | CPU | gate |
+|---|---|--:|--:|--:|---|
+| -1 | held out | **1.150 (1.138–1.162)** | 1.04 | 1.00 | **met** |
+| -2 | held out | **1.216 (1.193–1.241)** | 1.11 | 1.03 | **met** |
+| -3 | the repeat (the first run: 1.092, 1.058–1.128) | **1.075 (1.043–1.108)** | 1.13 | 1.10 | **met** |
+| -4 | the boundary (R1 changes nothing) | 1.085 (1.064–1.105) | 1.12 | 1.11 | met |
+| -5 | the boundary | 1.049 (1.034–1.064) | 1.17 | 1.16 | not met (the mean, and RSS) |
+| -6 | the first run | 1.006 (0.990–1.021) | 1.16 | 1.21 | not met |
+
+**Verdict: R1 holds out of sample.** The gate is met at -1 and -2, held out, and at the -3
+repeat, which replicates the first run within its interval.
+
+**The predictions, scored:**
+- **-1 and -2:** `coop2`@10 at 1.1–1.25 with RSS near 1.1×: **met** (1.150 and 1.216; RSS
+  1.04 and 1.11).
+- **The mechanism:** at -1 and -2 the default runs as 4 one-core workers.
+  - **Confirmed:** `auto` at 4 threads against `auto` at 20 is 1.007 and 1.005. The plan's
+    helpers never run below `MIN_COOP`.
+- **Workers faster still at -2, over the RSS budget:** **met.**
+  - 6 workers: 1.355, at 1.21× the RSS. 8 workers: 1.362, at 1.40×.
+  - At -1, 6 workers (1.115, RSS 1.09×) are within the budget, but below R1's 1.150.
+- **-3 repeats 1.092 within its interval:** **met** (1.075).
+- **-4 and -5 fall between -3 and -6:** met. The gain ends between -4 and -5.
+
+**Readings:**
+1. **R1 is conservative by one level.** -4 also meets the gate. But a rule widened to level
+   ≤ 4 would be chosen from this run, so it would need its own held-out test, and only -7 and
+   -8 are unseen. R1 stays at level ≤ 3.
+2. **A finding outside R1:** at 6 threads the default runs at 0.76–0.83× its own speed at 20
+   threads, at every level here.
+   - The cause: at 6 threads it plans 3 teams, which at -1 and -2 are 3 one-core workers.
+   - On the native corpus, 3 teams at 6 threads are right (the release run: 1.166×
+     workers at 4).
+   - Recorded for a later look; this PR doesn't touch it.
+3. **The scope:** one machine (the i9), one content (the bench corpus recompressed at each
+   level). This is not evidence for other hardware or other data.
+
+**Next (as registered):** a policy PR implementing R1, with its own A/B. That A/B checks
+that the native corpus and the 4-core pass are unchanged.
