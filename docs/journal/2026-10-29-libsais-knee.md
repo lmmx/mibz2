@@ -597,3 +597,44 @@ bytes are reachable at several N:
 **Also wanted:** a fixed-N cut across levels 2–9 (N = 8 and 10) gives throughput against
 table bytes at a constant number of cores. That is compact Ψ's predicted ceiling, before
 its decode cost.
+
+## The memory probe (measured, the i9, 4a611b5, 2026-10-29)
+
+`just bench-dram` (`examples/dram.rs`, `bench/dram.py`; files `dram-20261029T215028Z.*` and
+`dram-console.log` beside this journal). Counting covers only the probe's own timed seconds.
+
+| threads | walk probe: DRAM read GB/s | walk: write | copy probe: read + write GB/s |
+|--:|--:|--:|--:|
+| 1 | 8.5 | 0.0 | 30.7 |
+| 2 | 16.2 | 0.1 | **34.4** |
+| 4 | 25.7 | 0.3 | 33.7 |
+| 6 | **26.3** | 0.4 | 32.5 |
+| 8 | 26.2 | 0.4 | 31.8 |
+| 10 | 26.0 | 0.4 | 31.4 |
+
+**Readings:**
+1. **The probe's random line reads saturate at 26 GB/s from 4 threads.** The copy reaches
+   34 GB/s of reads and writes together at 2 threads, then falls slowly as threads are
+   added. These are ceilings for these two access patterns on this machine. They are not
+   one universal limit.
+2. **The decoders' plateau sits between the two,** and is about the same for every
+   kernel and table past its peak:
+   - In the cause and footprint runs, -9: p6, p8 and p10 run at 28.0–28.6 GB/s, and
+     libsais s8x1 at 29.3.
+   - In the compact-Ψ run: p6 28.0, p8 28.5, u8 28.3, u10 28.3, and v6 27.3.
+   - The decoders' reads alone are 20–24 GB/s, 0.78–0.92 of the probe's random-read
+     ceiling. On top of those, 4–8 GB/s are written back: dirty table lines and output.
+   - So past the knee the inversion runs close to what this machine sustains for its own
+     mix of random reads and write-backs. That mix's own ceiling isn't measured; the probe
+     brackets it between 26 (reads alone) and 34 (streaming).
+3. **What it means for the pre-registered readings:** reading 1 ("the decoders' plateau
+   is the machine's ceiling for this access pattern") holds approximately, for the
+   access pattern taken as the decoders' mix. Reading 2 ("the probe sustains well above
+   29") is ruled out for random reads. The probe's 26 GB/s of reads, plus the decoders'
+   write-backs, is about the plateau.
+4. **A working model, to be tested, not established:**
+   - Below its knee, an arm's throughput is its per-block rate times N.
+   - Past it, throughput is about 28 GB/s ÷ its DRAM bytes per output byte.
+   - The knee falls where N × the per-block rate × DRAM B/B(N) reaches about 28 GB/s.
+   - Every counted arm past its peak sits at 27.3–29.3 GB/s, in four runs. That fits the
+     model, but the model has not predicted a run it wasn't fitted to.
