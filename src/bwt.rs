@@ -85,10 +85,11 @@ impl InverseBwt for Segmented {
     }
 }
 
-/// A block's T-vector. Built only by `build`, so every link in it is below its length,
-/// which the walks rely on to read it unchecked.
+/// A block's T-vector. Built only by `build`, or by `coop::build_fused` once its end check
+/// has passed, so every link in it is below its length, which the walks rely on to read
+/// it unchecked.
 #[derive(Default)]
-pub struct TVector(Vec<u32>);
+pub struct TVector(pub(crate) Vec<u32>);
 
 impl TVector {
     pub fn new() -> Self {
@@ -150,7 +151,7 @@ fn link(ll: &[u8], tt: &mut [u32], ftab: &mut [u32; 256], rows: std::ops::Range<
 }
 
 #[inline(always)]
-fn read_u64(b: &[u8], i: usize) -> u64 {
+pub(crate) fn read_u64(b: &[u8], i: usize) -> u64 {
     u64::from_ne_bytes(b[i..i + 8].try_into().unwrap())
 }
 

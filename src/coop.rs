@@ -32,6 +32,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle, Thread};
 
+use crate::bwt::{read_u64, TVector};
+
 /// A task for a pool, called once on each of its k threads with the thread's index (the
 /// caller's is 0)
 pub(crate) type Task<'a> = &'a (dyn Fn(usize) + Sync);
@@ -226,6 +228,167 @@ impl Drop for Pool {
     }
 }
 
+/// Why `build_fused` refused its inputs or found its table wrong: a bug in the caller (the
+/// MTF stage's checkpoints, or its counts), never an input error, since the last column
+/// and its counts come from the decoder itself
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct BuildError(pub(crate) &'static str);
+
+/// The rows `j` of `k` ranges starts at: n·j/k rounded to a multiple of `stride` (so a
+/// checkpoint gives its counts), the last range ending at n
+fn edge(n: usize, k: usize, stride: usize, j: usize) -> usize {
+    if j >= k {
+        n
+    } else {
+        ((n * j / k + stride / 2) / stride * stride).min(n)
+    }
+}
+
+/// A shared table's base pointer, for the pool's threads to write disjoint slots through
+struct Slots(*mut u32);
+// SAFETY: each thread writes only the slots of its own windows (checked in `build_fused`)
+unsafe impl Sync for Slots {}
+
+/// The T-vector of `ll` (whose bytes `counts` counts) built by the pool's k threads in one
+/// pass, `bwt::build`'s table word for word. The rows are cut into k ranges at multiples
+/// of `stride` (`mtf::CHECKPOINT` in the decoder), and `checkpoints[i]` is the counts of
+/// `ll[..i * stride]`, so range j's first slot in bucket b is b's start plus
+/// `checkpoints[start / stride][b]`, and its last is below b's start plus the next range's.
+/// Each range writes each of its entries whole, `ll[s] | i << 8` at slot s, with
+/// `bwt::build`'s 16-row run stores; there is no count, copy or barrier before the scatter
+/// (the coop journal §16).
+///
+/// It is sound whatever `checkpoints` and `counts` hold, and the table is right only if
+/// they are. Before the run (O(256) a checkpoint): the counts sum to n, the checkpoints
+/// are one a whole stride, start at zero, sum to their offsets, rise and stay within the
+/// counts. So each range's window in each bucket lies inside [0, n), and the ranges'
+/// windows are disjoint. Each write is checked against its window's end, so no thread
+/// writes outside its own windows. After the run, every range's every cursor must have
+/// reached its window's end. That proves every slot written once. It also proves the
+/// table right: the windows' sizes are then the bytes each range holds, so, summing from
+/// the first range (whose windows start at the buckets' starts), every window starts
+/// where `bwt::build` would put that range's first byte of its bucket. Only then is the
+/// table's length set, so a refused or failed build leaves it empty, never stale or
+/// uninitialised.
+pub(crate) fn build_fused(
+    ll: &[u8],
+    counts: &[u32; 256],
+    checkpoints: &[[u32; 256]],
+    stride: usize,
+    pool: &Pool,
+    tt: &mut TVector,
+) -> Result<(), BuildError> {
+    let n = ll.len();
+    let tt = &mut tt.0;
+    tt.clear();
+    if stride == 0 || n >= 1 << 24 {
+        return Err(BuildError("a zero stride or a block of 2^24 rows or more"));
+    }
+    if counts.iter().map(|&c| c as usize).sum::<usize>() != n {
+        return Err(BuildError("the counts don't sum to the block's length"));
+    }
+    if checkpoints.len() != n / stride + 1 {
+        return Err(BuildError("not one checkpoint a whole stride"));
+    }
+    let mut last = &[0u32; 256];
+    for (i, cp) in checkpoints.iter().enumerate() {
+        let rises = cp.iter().zip(last).all(|(&c, &l)| c >= l);
+        let within = cp.iter().zip(counts).all(|(&c, &t)| c <= t);
+        let sums = cp.iter().map(|&c| c as usize).sum::<usize>() == i * stride;
+        if !(rises && within && sums) {
+            return Err(BuildError(
+                "a checkpoint that falls, passes the counts or misses its offset",
+            ));
+        }
+        last = cp;
+    }
+    let mut starts = [0u32; 256];
+    let mut cum = 0u32;
+    for b in 0..256 {
+        starts[b] = cum;
+        cum += counts[b];
+    }
+    tt.reserve(n);
+    let k = pool.threads();
+    let slots = Slots(tt.as_mut_ptr());
+    let slots = &slots;
+    let bad = AtomicUsize::new(0);
+    // the counts before row e (a range's edge: a multiple of stride, or n)
+    let at = |e: usize| {
+        if e == n {
+            counts
+        } else {
+            &checkpoints[e / stride]
+        }
+    };
+    pool.run(&|j| {
+        let (lo, hi) = (edge(n, k, stride, j), edge(n, k, stride, j + 1));
+        let (before, after) = (at(lo), at(hi));
+        let mut ftab = [0u32; 256];
+        let mut lim = [0u32; 256];
+        for b in 0..256 {
+            ftab[b] = starts[b] + before[b];
+            lim[b] = starts[b] + after[b];
+        }
+        // the one-row step: row i's link at its byte's next slot, inside the window
+        let one = |i: usize, ftab: &mut [u32; 256]| -> bool {
+            let c = ll[i] as usize;
+            let s = ftab[c];
+            if s >= lim[c] {
+                return false;
+            }
+            // SAFETY: s is inside this range's window of bucket c, which lies in [0, n)
+            // (checked before the run) and which no other range's window overlaps
+            unsafe { *slots.0.add(s as usize) = ll[s as usize] as u32 | (i as u32) << 8 };
+            ftab[c] = s + 1;
+            true
+        };
+        let mut i = lo;
+        let mut ok = true;
+        'rows: while i + 16 <= hi {
+            let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
+            if a == b && a == a.rotate_left(8) {
+                // 16 equal bytes: 16 consecutive slots of their bucket, in one store each
+                let c = ll[i] as usize;
+                let s = ftab[c] as usize;
+                if s + 16 > lim[c] as usize {
+                    ok = false;
+                    break 'rows;
+                }
+                let base = (i as u32) << 8;
+                for (jj, &l) in ll[s..s + 16].iter().enumerate() {
+                    // SAFETY: s..s + 16 is inside this range's window of bucket c (as above)
+                    unsafe { *slots.0.add(s + jj) = l as u32 | (base + ((jj as u32) << 8)) };
+                }
+                ftab[c] += 16;
+            } else {
+                for ii in i..i + 16 {
+                    if !one(ii, &mut ftab) {
+                        ok = false;
+                        break 'rows;
+                    }
+                }
+            }
+            i += 16;
+        }
+        while ok && i < hi {
+            ok = one(i, &mut ftab);
+            i += 1;
+        }
+        // the end check: every window filled exactly
+        if !ok || ftab != lim {
+            bad.fetch_add(1, Ordering::Relaxed);
+        }
+    });
+    if bad.load(Ordering::Relaxed) != 0 {
+        return Err(BuildError("a range's bytes didn't fill its windows: the checkpoints or counts are not the block's"));
+    }
+    // SAFETY: every slot below n was written exactly once (the end check, by every range,
+    // whose windows tile [0, n)), and the pool's run has ended, its writes visible here
+    unsafe { tt.set_len(n) };
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -368,6 +531,191 @@ mod tests {
         }
         let want: u64 = (0..n).map(|i| 4 * (i * 4) + 6).sum();
         assert_eq!(sum.load(Ordering::Relaxed), want);
+    }
+
+    fn xorshift(seed: u64) -> impl FnMut() -> u64 {
+        let mut x = seed | 1;
+        move || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        }
+    }
+
+    /// Last columns of several shapes and lengths
+    fn columns(scale: usize) -> Vec<(String, Vec<u8>)> {
+        let mut r = xorshift(0x9e37_79b9_7f4a_7c15);
+        let mut runs = Vec::new();
+        while runs.len() < 3 * scale {
+            let c = (r() % 5) as u8;
+            let len = [1, 2, 15, 16, 17, 31, 33, 200][(r() % 8) as usize];
+            runs.extend(std::iter::repeat(c).take(len));
+        }
+        let mut v: Vec<(String, Vec<u8>)> = vec![
+            ("empty".into(), vec![]),
+            ("one byte".into(), vec![9]),
+            ("one byte value".into(), vec![42; 2 * scale + 7]),
+            ("period 3".into(), b"abc".repeat(scale)),
+            (
+                "random".into(),
+                (0..3 * scale + 5).map(|_| r() as u8).collect(),
+            ),
+            (
+                "few bytes".into(),
+                (0..2 * scale).map(|_| b"ab"[(r() & 1) as usize]).collect(),
+            ),
+            ("runs".into(), runs),
+        ];
+        for n in [2, 15, 16, 17, 33, 63, 64, 65] {
+            v.push((format!("random {n}"), (0..n).map(|_| r() as u8).collect()));
+        }
+        v
+    }
+
+    fn counts_of(ll: &[u8]) -> [u32; 256] {
+        let mut c = [0u32; 256];
+        ll.iter().for_each(|&b| c[b as usize] += 1);
+        c
+    }
+
+    fn checkpoints_of(ll: &[u8], stride: usize) -> Vec<[u32; 256]> {
+        let mut cum = [0u32; 256];
+        let mut v = vec![cum];
+        for chunk in ll.chunks_exact(stride) {
+            chunk.iter().for_each(|&b| cum[b as usize] += 1);
+            v.push(cum);
+        }
+        v
+    }
+
+    fn fused_matches_build(p: &Pool, stride: usize, scale: usize) {
+        // one table kept across every column, growing and shrinking, as a worker keeps it
+        let mut tt = TVector::new();
+        for (name, ll) in columns(scale) {
+            let counts = counts_of(&ll);
+            let mut want = TVector::new();
+            crate::bwt::build(&ll, &counts, &mut want);
+            let cps = checkpoints_of(&ll, stride);
+            build_fused(&ll, &counts, &cps, stride, p, &mut tt).unwrap();
+            assert!(
+                tt.0 == want.0,
+                "{name}: k {}, stride {stride}: the fused table differs from bwt::build's",
+                p.threads()
+            );
+        }
+    }
+
+    #[test]
+    fn build_fused_is_build() {
+        for k in 1..=4 {
+            let p = Pool::new(k).unwrap();
+            for stride in [16, 64, 1000, crate::mtf::CHECKPOINT] {
+                fused_matches_build(&p, stride, 20_000);
+            }
+        }
+    }
+
+    /// Wrong checkpoints or counts are refused, or caught by the end check: an error, the
+    /// table empty, and no write outside a window (Miri, in the miri_ test below)
+    fn refuses(p: &Pool, stride: usize, scale: usize) {
+        let mut r = xorshift(7);
+        let ll: Vec<u8> = (0..4 * stride * scale + 9)
+            .map(|_| (r() % 7) as u8)
+            .collect();
+        let counts = counts_of(&ll);
+        let cps = checkpoints_of(&ll, stride);
+        let mut tt = TVector::new();
+        build_fused(&ll, &counts, &cps, stride, p, &mut tt).unwrap();
+        let mut want = TVector::new();
+        crate::bwt::build(&ll, &counts, &mut want);
+        let check = |what: &str, counts: &[u32; 256], cps: &[[u32; 256]], tt: &mut TVector| {
+            assert!(
+                build_fused(&ll, counts, cps, stride, p, tt).is_err(),
+                "{what}: k {}, accepted",
+                p.threads()
+            );
+            assert!(tt.0.is_empty(), "{what}: the table was left set");
+        };
+        // a count moved from one byte to another at every checkpoint in turn, the sums kept:
+        // refused, or caught by the end check, where a range starts there; accepted only
+        // where no range reads it, and then the table is still bwt::build's
+        let k = p.threads();
+        let edges: Vec<usize> = (1..k).map(|j| edge(ll.len(), k, stride, j)).collect();
+        let (from, to) = (ll[0] as usize, (ll[0] as usize + 1) % 7);
+        let mut refused = 0;
+        for m in 1..cps.len() {
+            let mut moved = cps.clone();
+            if moved[m][from] == 0 {
+                continue;
+            }
+            moved[m][from] -= 1;
+            moved[m][to] += 1;
+            let r = build_fused(&ll, &counts, &moved, stride, p, &mut tt);
+            if edges.contains(&(m * stride)) {
+                assert!(
+                    r.is_err(),
+                    "a moved count at checkpoint {m}, a range's edge: k {k}, accepted"
+                );
+            }
+            match r {
+                Ok(()) => assert!(
+                    tt.0 == want.0,
+                    "a moved count at {m}: a wrong table accepted"
+                ),
+                Err(_) => {
+                    assert!(tt.0.is_empty());
+                    refused += 1;
+                }
+            }
+        }
+        assert!(
+            k == 1 || refused > 0,
+            "k {k}: no moved count reached an edge"
+        );
+        let mut falls = cps.clone();
+        falls[1] = falls[2];
+        check(
+            "a checkpoint repeated out of place",
+            &counts,
+            &falls,
+            &mut tt,
+        );
+        check("a checkpoint missing", &counts, &cps[1..], &mut tt);
+        let mut more = counts;
+        more[3] += 1;
+        check("a count too many", &more, &cps, &mut tt);
+        let mut swapped = counts;
+        swapped.swap(1, 2);
+        if swapped != counts {
+            check("two counts swapped", &swapped, &cps, &mut tt);
+        }
+        assert!(
+            build_fused(&ll, &counts, &cps, 0, p, &mut tt).is_err(),
+            "a zero stride"
+        );
+        assert!(tt.0.is_empty());
+        // and the same pool and table still build right afterwards
+        build_fused(&ll, &counts, &cps, stride, p, &mut tt).unwrap();
+        assert!(tt.0 == want.0);
+    }
+
+    #[test]
+    fn build_fused_refuses_wrong_checkpoints() {
+        for k in 1..=4 {
+            refuses(&Pool::new(k).unwrap(), 256, 8);
+        }
+    }
+
+    /// Small blocks under Miri: the disjoint slots (its race detector), the windows' bounds
+    /// and the refusals, at k = 2 and 3
+    #[test]
+    fn miri_build_fused() {
+        for k in [2, 3] {
+            let p = Pool::new(k).unwrap();
+            fused_matches_build(&p, 64, 80);
+            refuses(&p, 64, 2);
+        }
     }
 
     /// Pools kept by several threads at once, as the decoder's workers would keep them
