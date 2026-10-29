@@ -100,6 +100,15 @@ bench-coop-decoder *args:
 #   just bench-variants --variants v0.1.2,v0.1.3,lanes8,pf-off --rounds 8
 #   just bench-variants --variants v0.1.4,pairwalk,v0.1.5 --threads 1,4,6,8,10 --rounds 10
 
+# The one-pass build (docs/journal/2026-10-29-one-pass-build.md, pre-registered): this
+# build against v0.2.0, whose source differs from it by that change alone, at 1-10 threads,
+# paired by round. At 1-4 threads the default plan is a block a worker (`bwt::build`); from
+# 6 it plans teams, whose fused build is untouched, so those rows are the control. About
+# 5 minutes. Upload variants-*.json, its .jsonl and the console.
+#   just bench-one-pass 2>&1 | tee one-pass-console.log
+bench-one-pass rounds="10":
+    just bench-variants --variants v0.2.0 --threads 1,2,4,6,8,10 --rounds {{rounds}} --note "one-pass build against v0.2.0"
+
 # Which of mibz2's own changes moved its scaling knee: versions and walk settings (#39, #52)
 [positional-arguments]
 bench-variants *args:

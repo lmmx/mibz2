@@ -233,9 +233,94 @@ impl TVector {
     }
 }
 
-/// The T-vector of the last column `ll`, whose bytes `counts` counts
+/// The T-vector of the last column `ll`, whose bytes `counts` counts.
+///
+/// Built in one pass (`build_one_pass`) when the counts are `ll`'s own, as the decoder's
+/// always are; otherwise by `build_two_pass`, whose table is defined for any counts that
+/// keep its writes in bounds. Both give the same table where both apply.
 pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
-    let tt = &mut tt.0;
+    if !build_one_pass(ll, counts, &mut tt.0) {
+        build_two_pass(ll, counts, &mut tt.0);
+    }
+}
+
+/// `build` in one pass, as `coop::build_fused` builds at one core: each entry written whole,
+/// `ll[s] | i << 8` at slot s, with no pass first copying the last column in and no
+/// read-modify-write of each entry. Each write is checked against its bucket's end, and
+/// after the scatter every bucket's cursor must have reached its end, which proves every
+/// slot below n written exactly once. Only then is the table's length set; otherwise it
+/// is left empty and false returned (the counts are not `ll`'s own, or don't sum to n).
+fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
+    let n = ll.len();
+    tt.clear();
+    if n >= 1 << 24 || counts.iter().map(|&c| c as usize).sum::<usize>() != n {
+        return false;
+    }
+    let (mut ftab, mut lim) = ([0u32; 256], [0u32; 256]);
+    let mut cum = 0u32;
+    for b in 0..256 {
+        ftab[b] = cum;
+        cum += counts[b];
+        lim[b] = cum;
+    }
+    tt.reserve(n);
+    let t = tt.as_mut_ptr();
+    // the one-row step: row i's link at its byte's next slot, inside the bucket
+    let one = |i: usize, ftab: &mut [u32; 256]| -> bool {
+        let c = ll[i] as usize;
+        let s = ftab[c];
+        if s >= lim[c] {
+            return false;
+        }
+        // SAFETY: s is below its bucket's end, at most n, within tt's reserved capacity
+        unsafe { *t.add(s as usize) = ll[s as usize] as u32 | (i as u32) << 8 };
+        ftab[c] = s + 1;
+        true
+    };
+    // 16 rows at a time, as `build_two_pass` (its comment)
+    let mut i = 0;
+    while i + 16 <= n {
+        let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
+        if a == b && a == a.rotate_left(8) {
+            let c = ll[i] as usize;
+            let s = ftab[c] as usize;
+            if s + 16 > lim[c] as usize {
+                return false;
+            }
+            let base = (i as u32) << 8;
+            for (j, &l) in ll[s..s + 16].iter().enumerate() {
+                // SAFETY: s..s + 16 is below its bucket's end, as above
+                unsafe { *t.add(s + j) = l as u32 | (base + ((j as u32) << 8)) };
+            }
+            ftab[c] += 16;
+        } else {
+            for i in i..i + 16 {
+                if !one(i, &mut ftab) {
+                    return false;
+                }
+            }
+        }
+        i += 16;
+    }
+    for i in i..n {
+        if !one(i, &mut ftab) {
+            return false;
+        }
+    }
+    if ftab != lim {
+        return false;
+    }
+    // SAFETY: every slot below n was written exactly once: each bucket's slots by its own
+    // cursor, which rose one a write from the bucket's start to its end (the check above),
+    // and the buckets tile [0, n)
+    unsafe { tt.set_len(n) };
+    true
+}
+
+/// The two-pass build: the last column copied into the table, then each row's link added
+/// to its byte's next slot. `build` takes it when the counts are not `ll`'s own, so that
+/// its table stays what it always was for any counts that keep the writes in bounds
+fn build_two_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) {
     tt.clear();
     tt.extend(ll.iter().map(|&c| c as u32));
     let mut ftab = [0u32; 256];
@@ -1171,6 +1256,119 @@ pub(crate) mod tests {
             let mut tt = TVector::new();
             build(ll, &counts, &mut tt);
             assert!(tt.0 == one_pass(ll, &counts), "length {}", ll.len());
+        }
+    }
+
+    /// Columns for the builds' tests: lengths 0 to 40 of one byte, runs of every length
+    /// around 16 at every alignment among other bytes, random bytes, and a run to the end
+    fn build_inputs(rounds: usize, len: usize) -> Vec<Vec<u8>> {
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut rnd = move || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        };
+        let mut inputs: Vec<Vec<u8>> = (0..=40).map(|n| vec![3u8; n]).collect();
+        for _ in 0..rounds {
+            let mut ll = Vec::new();
+            while ll.len() < len {
+                let c = (rnd() % 5) as u8;
+                let run = [1, 2, 15, 16, 17, 31, 32, 33][(rnd() % 8) as usize];
+                ll.extend(std::iter::repeat_n(c, run));
+            }
+            ll.truncate(len - (rnd() % 16) as usize);
+            inputs.push(ll);
+        }
+        inputs.push((0..len).map(|_| rnd() as u8).collect());
+        inputs.push(
+            (0..len)
+                .map(|i| if i < len / 3 { (i % 3) as u8 } else { 9 })
+                .collect(),
+        );
+        inputs
+    }
+
+    fn counts_of(ll: &[u8]) -> [u32; 256] {
+        let mut counts = [0u32; 256];
+        for &c in ll {
+            counts[c as usize] += 1;
+        }
+        counts
+    }
+
+    /// On its own counts, a column's one-pass build is taken and is the two-pass table
+    fn one_pass_matches(ll: &[u8]) {
+        let counts = counts_of(ll);
+        let (mut one, mut two) = (Vec::new(), Vec::new());
+        assert!(
+            build_one_pass(ll, &counts, &mut one),
+            "length {}: refused",
+            ll.len()
+        );
+        build_two_pass(ll, &counts, &mut two);
+        assert!(one == two, "length {}", ll.len());
+    }
+
+    /// Counts that are not the column's own but keep the two-pass build's writes in bounds
+    /// (one count moved from the first byte present to the last, so the first bucket
+    /// overflows into the next; or one count short, so the counts sum to n - 1): the one-pass
+    /// build refuses them, and `build` gives the two-pass table, as before the one-pass build
+    fn wrong_counts_fall_back(ll: &[u8]) {
+        let counts = counts_of(ll);
+        let present: Vec<usize> = (0..256).filter(|&c| counts[c] > 0).collect();
+        let (Some(&lo), Some(&hi)) = (present.first(), present.last()) else {
+            return;
+        };
+        let mut moved = counts;
+        let mut short = counts;
+        short[hi] -= 1;
+        let mut cases = vec![short];
+        if lo != hi {
+            moved[lo] -= 1;
+            moved[hi] += 1;
+            cases.push(moved);
+        }
+        for wrong in cases {
+            let mut one = Vec::new();
+            assert!(
+                !build_one_pass(ll, &wrong, &mut one),
+                "length {}: accepted",
+                ll.len()
+            );
+            assert!(one.is_empty(), "a refused build leaves the table empty");
+            let (mut tt, mut want) = (TVector::new(), Vec::new());
+            build(ll, &wrong, &mut tt);
+            build_two_pass(ll, &wrong, &mut want);
+            assert!(tt.0 == want, "length {}: not the two-pass table", ll.len());
+        }
+    }
+
+    #[test]
+    fn one_pass_build_is_the_two_pass_build() {
+        for ll in build_inputs(40, 3000) {
+            one_pass_matches(&ll);
+        }
+    }
+
+    #[test]
+    fn wrong_counts_take_the_two_pass_build() {
+        for ll in build_inputs(10, 3000).iter().filter(|ll| !ll.is_empty()) {
+            wrong_counts_fall_back(ll);
+        }
+    }
+
+    /// The one-pass build's unchecked writes and its `set_len` under Miri, on small columns:
+    /// accepted, refused before the scatter (counts not summing to n) and refused mid-scatter
+    /// (an overflowing bucket). With counts summing to n and every write inside its bucket,
+    /// no bucket can end short, so the end check is the safety argument's step, not a path
+    #[test]
+    fn miri_build_one_pass() {
+        for ll in build_inputs(3, 80).iter().filter(|ll| ll.len() <= 80) {
+            one_pass_matches(ll);
+            if !ll.is_empty() {
+                wrong_counts_fall_back(ll);
+            }
         }
     }
 
