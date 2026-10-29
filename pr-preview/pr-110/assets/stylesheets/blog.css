@@ -1,0 +1,356 @@
+/* The blog's figures (blog/*.md): a framed figure holding a title, an inline SVG and a
+   caption. Colours are roles, light by default and stepped for the dark scheme (slate). */
+.bf-fig {
+  --bf-ink: var(--md-default-fg-color);
+  --bf-muted: var(--md-default-fg-color--light);
+  --bf-frame: #e1e0d9;
+  --bf-surface: #f4f3ef;
+  --bf-track: #e9e8e3;
+  --bf-green: #1f9a72;
+  --bf-green-ink: #12805a;
+  --bf-green-tint: #dcefe7;
+  --bf-steel: #4687a8;
+  --bf-steel-tint: #d6e5ec;
+  --bf-blue: #4a8fe8;
+  --bf-blue-tint: #dce9fa;
+  --bf-amber: #b26b00;
+  --bf-amber-tint: #f8ead0;
+}
+[data-md-color-scheme="slate"] .bf-fig {
+  --bf-frame: #34342f;
+  --bf-surface: #23231f;
+  --bf-track: #34342f;
+  --bf-green: #22a87c;
+  --bf-green-ink: #4fd1a1;
+  --bf-green-tint: #1b3a2f;
+  --bf-steel: #5199bd;
+  --bf-steel-tint: #1f3440;
+  --bf-blue: #3d86e0;
+  --bf-blue-tint: #1d2f47;
+  --bf-amber: #f2b544;
+  --bf-amber-tint: #3b3020;
+}
+
+.md-typeset .bf-fig {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  margin: 1.4rem 0;
+  padding: 0.8rem 0.9rem 0.7rem;
+  border: 1px solid var(--bf-frame);
+  border-radius: 0.6rem;
+  text-align: left;
+}
+.md-typeset .bf-fig .bf-title {
+  margin: 0 0 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.md-typeset .bf-fig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: var(--md-text-font-family);
+}
+.md-typeset .bf-fig figcaption {
+  max-width: none;
+  margin: 0.7rem 0 0;
+  color: var(--bf-muted);
+  font-size: 0.64rem;
+  font-style: normal;
+}
+
+/* text */
+.bf-fig .bf-t { fill: var(--bf-ink); font-size: 13px; }
+.bf-fig .bf-t-strong { fill: var(--bf-ink); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-t-green { fill: var(--bf-green-ink); font-size: 14px; font-weight: 600; }
+.bf-fig .bf-ts { fill: var(--bf-ink); font-size: 14px; font-weight: 600; }
+.bf-fig .bf-tm { fill: var(--bf-muted); font-size: 11.5px; }
+.bf-fig .bf-tl { fill: var(--bf-muted); font-size: 15px; }
+.bf-fig .bf-ttiny { fill: var(--bf-ink); font-size: 10px; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-num { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-big { fill: var(--bf-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bf-fig .bf-big-green { fill: var(--bf-green-ink); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* shapes */
+.bf-fig .bf-card,
+.bf-fig .bf-cell,
+.bf-fig .bf-panel,
+.bf-fig .bf-pill { fill: var(--bf-surface); }
+.bf-fig .bf-pill { stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-card-hi,
+.bf-fig .bf-pill-hi { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 2; }
+.bf-fig .bf-cell-hi { fill: var(--bf-green-tint); }
+.bf-fig .bf-box { fill: none; stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-slot { fill: var(--bf-steel-tint); }
+.bf-fig .bf-track { fill: var(--bf-track); }
+.bf-fig .bf-green { fill: var(--bf-green); }
+.bf-fig .bf-steel { fill: var(--bf-steel); }
+.bf-fig .bf-bar { fill: var(--bf-blue); }
+.bf-fig .bf-bar-est { fill: var(--bf-blue-tint); stroke: var(--bf-blue); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.bf-fig .bf-dot { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-dot-hi { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1.5; }
+
+/* lines */
+.bf-fig .bf-rule,
+.bf-fig .bf-axis { stroke: var(--bf-frame); stroke-width: 1; fill: none; }
+.bf-fig .bf-grid { stroke: var(--bf-frame); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+.bf-fig .bf-arrow,
+.bf-fig .bf-link,
+.bf-fig .bf-icon { stroke: var(--bf-muted); stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.bf-fig .bf-icon-green { stroke: var(--bf-green); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* status pills (the roadmap) */
+.bf-fig .bf-pill-done,
+.bf-fig .bf-pill-later { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1; }
+.bf-fig .bf-pill-ready { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1; }
+.bf-fig .bf-pill-next { fill: var(--bf-blue-tint); stroke: var(--bf-blue); stroke-width: 1; }
+.bf-fig .bf-dot-ready { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 1.5; }
+.bf-fig .bf-pill-done-t,
+.bf-fig .bf-pill-later-t { fill: var(--bf-muted); font-size: 11px; font-weight: 600; }
+.bf-fig .bf-pill-ready-t { fill: var(--bf-amber); font-size: 11px; font-weight: 600; }
+.bf-fig .bf-pill-next-t { fill: var(--bf-blue); font-size: 11px; font-weight: 600; }
+
+/* the interactive pointer chain (blog.js): cards, then the walk */
+.bf-chain [hidden] { display: none !important; }
+.md-typeset .bf-chain .bf-cards {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.md-typeset .bf-chain .bf-cards li { margin: 0; padding: 0; }
+.md-typeset .bf-chain .bf-cardx {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.2rem 0.35rem;
+  border: 2px solid transparent;
+  border-radius: 0.45rem;
+  background: var(--bf-surface);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.bf-chain .bf-cl { color: var(--bf-muted); font-size: 0.55rem; }
+.bf-chain .bf-cv { font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.bf-chain .bf-ca { color: var(--bf-muted); font-size: 0.6rem; line-height: 1; }
+.md-typeset .bf-chain .bf-cardx.is-current { background: var(--bf-green-tint); border-color: var(--bf-green); }
+.bf-chain .is-visited .bf-ca { color: var(--bf-green); }
+.bf-chain .bf-walk {
+  margin-top: 0.7rem;
+  padding: 0.75rem 0.85rem 0.65rem;
+  border-radius: 0.5rem;
+  background: var(--bf-surface);
+}
+.bf-chain .bf-walk-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  font-size: 0.8rem;
+}
+.bf-chain .bf-count { color: var(--bf-muted); font-size: 0.62rem; }
+.bf-chain .bf-buttons { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+.bf-chain .bf-btn {
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--bf-frame);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bf-ink);
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, opacity 0.15s;
+}
+.bf-chain .bf-btn:hover { background: var(--bf-track); }
+.bf-chain .bf-follow {
+  flex: 1;
+  border-color: var(--bf-ink);
+  background: var(--bf-ink);
+  color: var(--md-default-bg-color);
+}
+.bf-chain .bf-follow:hover { opacity: 0.88; background: var(--bf-ink); }
+.bf-chain .bf-follow:disabled {
+  border-color: var(--bf-track);
+  background: var(--bf-track);
+  color: var(--bf-muted);
+  opacity: 1;
+  cursor: default;
+}
+.bf-chain .bf-btn:focus-visible { outline: 2px solid var(--md-accent-fg-color); outline-offset: 2px; }
+.md-typeset .bf-chain .bf-path { margin: 0.55rem 0 0; color: var(--bf-muted); font-size: 0.62rem; }
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .bf-chain .bf-cardx, .bf-chain .bf-btn { transition: none; }
+}
+
+/* A post's header: the kicker, the title, the summary and the date, beside the home page's
+   illustration, on a panel with the accent bar the social cards have. */
+.md-typeset .post-hero {
+  --post-hero-bg: #f6f4ee;
+  clear: both;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  margin: 0 0 2rem;
+  padding: 1.5rem 1.2rem 1.3rem 1.6rem;
+  border-bottom: 5px solid var(--md-primary-fg-color);
+  border-radius: 0.8rem;
+  background: var(--post-hero-bg);
+  overflow: hidden;
+}
+[data-md-color-scheme="slate"] .md-typeset .post-hero {
+  --post-hero-bg: #22221f;
+}
+.md-typeset .post-hero-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.md-typeset .post-hero .post-kicker {
+  margin: 0 0 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.md-typeset .post-hero .post-kicker a {
+  color: var(--md-primary-fg-color);
+  text-decoration: none;
+}
+.md-typeset .post-hero .post-kicker a:hover {
+  text-decoration: underline;
+}
+.md-typeset .post-hero h1 {
+  margin: 0;
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--md-default-fg-color);
+}
+.md-typeset .post-hero h1 .headerlink {
+  display: none;
+}
+.md-typeset .post-hero .post-dek {
+  max-width: 32rem;
+  margin: 0.9rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-hero .post-meta {
+  margin: 1.1rem 0 0;
+  font-size: 0.68rem;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .post-meta a,
+.post-card-date {
+  --pill: #b26b00;
+  --pill-bg: #f8ead0;
+}
+[data-md-color-scheme="slate"] .md-typeset .post-meta a,
+[data-md-color-scheme="slate"] .post-card-date {
+  --pill: #f2b544;
+  --pill-bg: #3b3020;
+}
+.md-typeset .post-hero .post-meta a {
+  display: inline-block;
+  padding: 0.05rem 0.55rem;
+  border: 1px solid var(--pill);
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--pill);
+  font-weight: 600;
+  text-decoration: none;
+}
+/* the illustration's own margin is wide: the negative margins take some of it back */
+.md-typeset .post-hero-art {
+  flex: none;
+  width: 11.5rem;
+  margin: -1.2rem -0.6rem -1.2rem -0.8rem;
+}
+.md-typeset .post-hero-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .post-hero {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 1.1rem 1rem 1.1rem;
+  }
+  .md-typeset .post-hero-art {
+    width: 7.5rem;
+    margin: -0.3rem 0 -0.9rem -0.9rem;
+  }
+  .md-typeset .post-hero h1 {
+    font-size: 1.45rem;
+  }
+}
+
+/* The blog index: each post as a card, its social card beside its title and summary. */
+.md-typeset .post-list {
+  display: grid;
+  gap: 1rem;
+  margin: 1.4rem 0;
+}
+.md-typeset .post-card {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 1.1rem;
+  padding: 0.8rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.8rem;
+  color: var(--md-default-fg-color);
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.md-typeset .post-card * {
+  text-decoration: none;
+}
+.md-typeset .post-card:hover {
+  border-color: var(--md-primary-fg-color);
+  box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.08);
+  color: var(--md-default-fg-color);
+}
+.md-typeset .post-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+.md-typeset .post-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.md-typeset .post-card-date {
+  align-self: flex-start;
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--pill);
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+.md-typeset .post-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.md-typeset .post-card-dek {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .post-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.bf-fig .bf-pill-pass { fill: var(--bf-green-tint); stroke: var(--bf-green); stroke-width: 1; }
+.bf-fig .bf-pill-pass-t { fill: var(--bf-green-ink); font-size: 11px; font-weight: 600; }
