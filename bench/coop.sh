@@ -5,19 +5,22 @@
 # CPU of each physical core. Writes coop-<UTC time>.md and its rounds, raw, in
 # coop-<UTC time>.jsonl: the files to share.
 #
-#   bash bench/coop.sh [--rounds R] [--arms p4,p8,4x2,...] [--no-libsais]
+#   bash bench/coop.sh [--rounds R] [--arms p4,p8,4x2,...] [--no-libsais] [--build-only]
+#
+# --build-only builds and prints `bin=PATH cpus=LIST libsais=0|1` for bench/coop_counters.py.
 #
 # With gcc and OpenMP, libsais 2.12.1 (its cyclic inverse BWT, the multi-threaded reference)
 # is built from its source at a pinned commit, checked by SHA-256, and timed beside.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-rounds="" arms="" libsais=1
+rounds="" arms="" libsais=1 build_only=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --rounds) rounds="$2"; shift 2 ;;
     --arms) arms="$2"; shift 2 ;;
     --no-libsais) libsais=0; shift ;;
+    --build-only) build_only=1; shift ;;
     *) echo "bench/coop.sh: unknown argument $1"; exit 1 ;;
   esac
 done
@@ -50,6 +53,10 @@ else
 fi
 RUSTFLAGS="$flags" CARGO_TARGET_DIR=$target cargo build --release --example coop
 bin=$target/release/examples/coop
+if [ "$build_only" = 1 ]; then
+  echo "bin=$(pwd)/$bin cpus=$cpus libsais=$libsais"
+  exit 0
+fi
 
 # The arms that fit the cores (the discovery grid: confirm a winner after it with
 #   bash bench/coop.sh --arms p4,WINNER --rounds 20): production workers at 4 and beyond, the cooperative kernel

@@ -174,3 +174,19 @@ bench-fingerprint *args:
 bench-coop *args:
     bash bench/corpus.sh
     bash bench/coop.sh "$@"
+
+# bench/coop_counters.py: the counters behind the cooperative grid (#76; the coop journal's
+# §8.2 and §10): each arm alone under `perf stat` for 1 and 21 rounds, one counter pair a
+# pass, 3 repeats, the memory controller machine-wide, then one `perf record` each of p4, 4x1
+# and libsais. About 15 minutes (runs take 1-1.5 s each on the i9); needs sudo for perf.
+# Check the events first (under a minute), then the full run: of the two offcore-response
+# passes (l3_all, l3_all_ocr) one is expected to be left out, by perf's naming. Upload
+# coop-counters-*.md and coop-counters-*.jsonl.
+#   just bench-coop-counters --arms p4 --reps 1 --rounds 3 --no-record
+#   just bench-coop-counters
+
+# Why the cooperative arms win: the grid's arms under perf, residency against overlap (#76)
+[positional-arguments]
+bench-coop-counters *args:
+    bash bench/corpus.sh
+    python3 bench/coop_counters.py "$@"

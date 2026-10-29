@@ -914,9 +914,11 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
     let mut results: Vec<Vec<f64>> = vec![Vec::new(); arms.len()];
     // each round's build and walk seconds, a block worker's (the workers' sum over N)
     let mut phases: Vec<Vec<(f64, f64)>> = vec![Vec::new(); arms.len()];
-    let mut imbalance: Vec<Option<f64>> = vec![None; arms.len()];
+    // every timed round's, for their medians (not the last round's: one disturbed round at
+    // the end would stand for the arm)
+    let mut imbalance: Vec<Vec<f64>> = vec![Vec::new(); arms.len()];
     let mut misplaced = vec![0usize; arms.len()];
-    let mut sync_us: Vec<Option<(f64, f64)>> = vec![None; arms.len()];
+    let mut sync_us: Vec<Vec<(f64, f64)>> = vec![Vec::new(); arms.len()];
     let mut raw = std::env::var("COOP_JSONL").ok().map(|p| {
         std::fs::OpenOptions::new()
             .create(true)
@@ -1018,12 +1020,12 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
                 .iter()
                 .filter_map(|w| w.imbalance())
                 .reduce(f64::max);
-            imbalance[a] = imb.or(imbalance[a]);
+            imbalance[a].extend(imb);
             let sync = workers
                 .iter()
                 .filter_map(|w| w.sync_us())
                 .reduce(|x, y| (x.0.max(y.0), x.1.max(y.1)));
-            sync_us[a] = sync.or(sync_us[a]);
+            sync_us[a].extend(sync);
             if let Some(f) = raw.as_mut() {
                 use std::io::Write;
                 writeln!(
@@ -1061,7 +1063,7 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
         if cpus.is_some() { "each thread pinned to its own CPU, checked" } else { "threads not pinned" }
     );
     println!(
-        "| arm | blocks live | cores | MB/s, median | vs {0}, paired: mean ±95% (min-max) | build MB/s | walk MB/s | walk vs {0}, paired | walk: busiest thread's bytes / mean | walk: last start, end spread (µs a block) | rounds misplaced |",
+        "| arm | blocks live | cores | MB/s, median | vs {0}, paired: mean ±95% (min-max) | build MB/s | walk MB/s | walk vs {0}, paired | walk: busiest thread's bytes / mean, median | walk: last start, end spread (µs a block), medians | rounds misplaced |",
         specs[0]
     );
     println!("|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|");
@@ -1090,8 +1092,18 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
             if kind == 's' { "(in walk)".to_string() } else { format!("{:.0}", med(&build)) },
             med(&walk),
             interval(&wr).0,
-            imbalance[a].map_or("".into(), |x| format!("{x:.3}")),
-            sync_us[a].map_or("".into(), |(l, e)| format!("{l:.0}, {e:.0}")),
+            if imbalance[a].is_empty() {
+                String::new()
+            } else {
+                format!("{:.3}", med(&imbalance[a]))
+            },
+            if sync_us[a].is_empty() {
+                String::new()
+            } else {
+                let l: Vec<f64> = sync_us[a].iter().map(|s| s.0).collect();
+                let e: Vec<f64> = sync_us[a].iter().map(|s| s.1).collect();
+                format!("{:.0}, {:.0}", med(&l), med(&e))
+            },
             misplaced[a]
         );
     }
