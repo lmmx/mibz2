@@ -4,9 +4,27 @@ image: assets/social/blog-2026-10-29-compact-navigation-tables.png
 description: "Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next."
 ---
 
+<div class="post-hero" markdown>
+
+<div class="post-hero-text" markdown>
+
+[mibz2 · Research blog](index.md)
+{: .post-kicker }
+
 # Compact navigation tables for the inverse BWT: early findings
 
-*29 October 2026 · Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.*
+Most of the inverse BWT's navigation table follows simple patterns: what a census of real
+blocks found, and what comes next.
+{: .post-dek }
+
+29 October 2026 · 10 min read · [Work in progress](#what-comes-next)
+{: .post-meta }
+
+</div>
+
+<div class="post-hero-art"><img src="../assets/images/hero.svg" alt=""></div>
+
+</div>
 
 This research began with a simple question:
 
