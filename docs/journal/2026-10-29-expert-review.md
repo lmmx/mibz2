@@ -245,3 +245,79 @@ Filed as issues, so none depends on the outside session that produced them.
 **Already queued** (`2026-10-28-cooperative-inversion.md` §8): E2, and the two confirmations that come first.
 
 **What this entry adds to `bench/variants.py`:** the variant `pairwalk`, the kept `perf/pair-walk` commit, so E1 is one recipe.
+
+## 7. Results (measured, the i9-10900K, 2026-10-29)
+
+### E1: the pair walk on the i9, neither a pass nor a fail
+
+`variants-20261029T083548Z` (in `2026-10-29-expert-review/results/`):
+- `just bench-variants --variants v0.1.4,pairwalk,v0.1.5 --threads 1,4,6,8,10 --rounds 10`;
+- the whole decoder, `-dc` to /dev/null, on the Wikidata corpus;
+- every run's output byte-identical.
+
+**Pair walk against v0.1.4** (the one change), paired by round (95% interval):
+
+| threads | 1 | 4 | 6 | 8 | 10 |
+|---|--:|--:|--:|--:|--:|
+| pairwalk / v0.1.4 | 0.691 (0.649–0.736) | 0.816 (0.783–0.850) | 0.991 (0.940–1.044) | **1.107** (1.070–1.145) | **1.117** (1.087–1.147) |
+| rounds won | 0/10 | 0/10 | 4/10 | 10/10 | 10/10 |
+| pairwalk / v0.1.5 | 0.682 | 0.777 | 0.954 | 1.092 | 1.114 |
+| v0.1.5 / v0.1.4 | 1.013 | 1.050 | 1.039 | 1.013 | 1.003 |
+
+**Each build's best** (median MB/s):
+
+| build | best |
+|---|--:|
+| v0.1.4 | 881 at 4 threads |
+| v0.1.5 | 942 at 4 threads |
+| master | 927 at 4 threads |
+| pairwalk | 759 at 6 threads |
+
+pairwalk's best against v0.1.4's best, paired, is **0.856 (0.833–0.881)**.
+
+**Against the criterion fixed in §4:**
+- **Pass** needed ≥ 1.05 × v0.1.4 at its best *and* at 8–10 workers.
+  - At 8–10 it holds, with both intervals above 1.
+  - At its best it does not: 0.856.
+  - So **E1 does not pass**, and E6 (libsais's walk parameters in our ψ² port), conditional
+    on a pass, is not run.
+- **Fail** was "≤ 1.0 at every count", and it isn't.
+  - So the fail branch's conclusion ("ψ² closes on the i9 too, and libsais's lead is its own
+    code's") does not follow whole either.
+  - The split is recorded as it is, rather than forced into either branch.
+
+**What it shows:**
+- **Two bytes per dependent load is a pressure mechanism, on our own code.**
+  - pairwalk / v0.1.4 rises from 0.82 at 4 threads to 1.12 at 10.
+  - That is the shape E2 found for libsais against production: 1.065 at 4 to 1.343 at 10
+    (`2026-10-28-cooperative-inversion.md` §9.5).
+  - These are decoder ratios, diluted by the stages that don't change, so the T-vector
+    phase's own slope is steeper.
+- **It is not what makes libsais faster where the decoder peaks.**
+  - At 1–4 threads our port loses 18–31% of the whole decoder.
+  - libsais's kernel is 1.13 × production's at 1 core and 1.065 × at 4 (the coop grid).
+  - So libsais's low-pressure lead is how it implements ψ², not ψ² itself. Its build, 24
+    lanes, prefetch lead and copies are the candidates, and E3's `perf record` of libsais
+    attributes them.
+- **Beyond the knee is where no decoder should run.** pairwalk's gain is at 8–10 workers,
+  where every build is 0.7 × its own 4-worker figure or less. Cooperation keeps the tables
+  under the L3 instead, and there pairwalk's single-core cost is what counts.
+- **The per-machine choice is recorded** (§4, E6's "otherwise").
+  - On the i9, ψ² as ported pays only past the knee.
+  - On CI's EPYC it lost at every count (#6).
+  - It stays closed for production.
+  - It reopens if E3 attributes libsais's low-pressure lead to parts a port can carry (its
+    build, lanes or prefetch), with a new criterion fixed before that run.
+- **v0.1.5's room walk holds against v0.1.4** (1.05 at 4 threads, 1.001–1.101). master is
+  v0.1.5's walk, at 927 against 942 MB/s at its best (0.98–1.07 paired against master).
+
+### E2: libsais against production by worker count, rising
+
+Measured on the coop pilot and recorded in `2026-10-28-cooperative-inversion.md` §9.5:
+- sNx1 / pN is 1.065, 1.135, 1.264 and 1.343 at 4, 6, 8 and 10 workers;
+- libsais's own best is also at 4 workers;
+- the kernels at a fixed footprint differ by 1.2–1.23, and cooperation lifts both by about
+  1.5.
+
+By §4's reading, rising means libsais's gain is memory pressure. E1 then finds the same
+slope in our own ψ² port.
