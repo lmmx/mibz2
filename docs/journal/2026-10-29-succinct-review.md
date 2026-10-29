@@ -540,3 +540,29 @@ The i9-10900K has 32 KB L1D and 256 KB L2 per core, and 20 MB of shared L3.
 
    It is not authorised yet. It comes after #81's result.
 4. **Only if that justifies it,** a decoder prototype with construction, exceptions and concurrency.
+
+## 15. After #81: construction as a first-class cost, and direct construction (both stored verbatim)
+
+#81's cooperative test passed on the i9 (cooperative-inversion journal §16.4):
+- the fused one-pass build was 1.313× the given-counts build at 3x3;
+- the build and walk together were 1.102×, with the walk unchanged.
+
+The research chatbot read it from this programme's side, and the coordinator answered. Both are stored unedited: [after-81-research.md](2026-10-29-succinct-review/after-81-research.md) and [after-81-coordinator.md](2026-10-29-succinct-review/after-81-coordinator.md).
+
+**What they add to this programme:**
+- **The baseline is now the fused build.** Any compact Ψ table competes with the fused 32-bit constructor and its walk, not with the copy-and-scatter build.
+- **The direct-construction hypothesis:** build the compact Ψ records straight from L in row order (Ψ is sorted occurrence lists), never materialising the 32-bit table, rather than build T and compress it. This is recorded as the research direction.
+- **The coordinator's caution:** writing fewer bytes need not be less work. Direct construction may add per-symbol buffering, format-selection branches, less efficient writes and synchronisation.
+- **The 24-bit table stays in play** as the intermediate point and the control (#79's F-byte audit decides whether it is viable).
+- **No compact decoder prototype is authorised.** The order is unchanged:
+  1. #81's decoder-level assessment;
+  2. #79's matched F-recovery control;
+  3. then compact Ψ feasibility, with direct-construction costs counted.
+
+**One correction to both readings, from §16.4's own data:**
+- **The 4x1 gain is not synchronisation; that much is right.** But it isn't evidence that fusing a build is broadly cheap either.
+  - At k = 1, the given build was 1.47× slower than production's own copy-and-scatter build in the grid (54.6 against 37.2 ms a worker), with the same two passes.
+  - The fused build only brought it back to production's speed (38.1 ms). On one thread, production's build is already about as fast as a fused one (#93: 1.027×).
+- **So the ratios against q mix two things:** fusion, and the research build's own overhead (not yet traced to its code).
+- **The figure for this programme's baseline** is the fused cooperative build against production: x3x3 1.643× p4, with its checkpoints given free and the MTF stage outside the timing.
+- **The researcher's three causal questions** (passes, cache and store behaviour, the same cause across configurations) stay open. Answering them needs the given build's code read against production's, and counters. That is recorded in §16.4 as not started.
