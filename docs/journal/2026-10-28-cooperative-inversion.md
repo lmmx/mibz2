@@ -1141,3 +1141,87 @@ Each of §8.2's two readings leaves its mark, at a different contrast:
      gain rather than a residency one.
    - E7's criterion (the best absolute at 6–10 workers) already covers it. It also needs
      the team arms in its grid, not only independent workers.
+
+### 10.5 The L3 split (measured, `coop-counters-20261029T100349Z`, 3214f36)
+
+These are the two passes from §10.2 (`l3_all_raw`, `llc_all`), on all 7 arms, with 3 repeats:
+84 runs. Every run was counted 100% of the time, and none failed. While counted, the arms
+ran at 0.90 (p8) and 0.97–1.00 (the others) of their confirmed MB/s.
+
+**Why perf's names failed:** perf 6.8.12's tables for this core carry offcore-response
+events only for `demand_data_rd`, `demand_code_rd`, `demand_rfo` and `other`. No request
+type includes the prefetches (the grep in the run's notes), so the raw encoding is the
+only prefetch-inclusive form on this machine.
+
+**Step 1, validity: each check fixed in §10.3, against the full run (§10.4).**
+
+| arm | raw hits + misses / B | `offcore_requests.all_data_rd` / B | ratio | raw misses × 64 B / B | DRAM read B / B (§10.4) | ratio | `cache-references` / B |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| p4 | 1.849 | 1.398 | 1.32 | 6.52 | 7.71 | 0.85 | 2.06 |
+| p8 | 1.651 | 1.338 | 1.23 | 36.4 | 34.4 | 1.06 | 1.86 |
+| 4x1 | 2.056 | 1.516 | 1.36 | 5.71 | 8.23 | 0.69 | 2.35 |
+| 4x2 | 2.118 | 1.553 | 1.36 | 6.97 | 7.14 | 0.98 | 2.44 |
+| 3x3 | 2.071 | 1.518 | 1.36 | 4.32 | 5.08 | 0.85 | 2.43 |
+| s4x1 | 1.186 | 0.860 | 1.38 | 5.70 | 6.01 | 0.95 | 1.56 |
+| s3x3 | 1.236 | 0.891 | 1.39 | 3.28 | 3.08 | 1.07 | 1.68 |
+
+- **The totals agree in order, and the ratio is steady (1.23–1.39).**
+  - `offcore_requests.all_data_rd` counts demand reads and the L2 prefetchers' reads, but
+    not prefetches into L3 (the PMU's description, §10.4).
+  - The raw ALL_DATA_RD includes those (bit 7, PF_L3_DATA_RD).
+  - That fits the raw count's steady excess of about a third.
+- **Raw misses × 64 B against the controller's read bytes: 0.69–1.07.**
+  - p8 and s3x3 are 6–7% *above* the controller's figure. That is a small discrepancy
+    across two separate runs, and within the full run's repeat spread for p8 (32–38 B).
+  - Per §10.3, that prompts a check rather than a rejection. The likely cause is
+    run-to-run variation: p8 ran at 0.90 here and 0.93 there.
+- **`cache-references` is above the raw total in every arm,** as expected for events that
+  also count code reads and RFOs.
+
+**Step 2, the cross-check passes.** The two hit shares rank the arms identically:
+3x3 > s3x3 > 4x1 > 4x2 > p4 > s4x1 > p8, raw 0.967 … 0.657 and architectural 0.957 …
+0.631.
+
+**Step 3, the mechanism, now measured. It confirms §10.4's provisional reading.**
+
+| arm | L3 hit share, prefetches included | L3-missing data reads / B |
+|---|--:|--:|
+| p4 | 0.945 | 0.102 |
+| p8 | 0.657 | 0.569 |
+| 4x1 | 0.957 | 0.089 |
+| 4x2 | 0.949 | 0.109 |
+| 3x3 | 0.967 | 0.067 |
+| s4x1 | 0.925 | 0.089 |
+| s3x3 | 0.958 | 0.051 |
+
+- **Residency, at a fixed core count** (p8 → 4x2): the hit share rises from 0.657 to
+  0.949, and L3-missing reads per byte fall 81%.
+- **Overlap, at a fixed footprint** (p4 → 4x2):
+  - the hit share is unchanged (0.945, 0.949), and so are the misses per byte (0.102,
+    0.109);
+  - reads in flight rise 1.38× at the same wait (§10.4);
+  - so 4x2's gain over p4 is overlap.
+- **3x3 has both:** the hit share rises to 0.967, misses per byte fall 34% (as the DRAM
+  bytes did), and reads in flight rise 1.49×.
+- **Against §8.2's predictions, as registered:**
+  - **4x2:** its hit share ≥ p4's holds, barely, and it is far above p8's. Its misses per
+    byte (1.07 × p4's) miss the ≤ 1.05 line. The DRAM writes are at p4's level. Its reads
+    in flight are 1.38× p4's (the prediction said about 2×) at no lower occupancy.
+  - **So 4x2 reads as overlap, and 3x3 as both.** That is §8.2's "both: each reading
+    leaves its mark".
+- **libsais:**
+  - s4x1's hit share (0.925) is *below* p4's, yet it misses less per byte (0.089 against
+    0.102), because it reads past L2 a third less often.
+  - s3x3 misses least of all, at 0.051 a byte, half of p4's.
+  - Its residency comes from making fewer reads, not from a better hit share.
+
+**Step 4, the engineering choice:** §10.4's order stands, now on measured residency.
+1. **The cooperative kernel's instructions (#77).** 35 a byte against production's 23.8,
+   with the L3 already serving 96.7% of 3x3's reads.
+2. **The build's stores and passes (#78, #81).**
+3. **ψ² only under an instruction budget.** It halves the reads per byte, and with them
+   the misses: libsais at s3x3.
+4. **A smaller table, as a scheduling lever (more teams resident), not a 3x3 one (#79).**
+5. **The scheduler budgets both:**
+   - live tables under the L3 (residency: four of these tables hold 0.945, eight 0.657);
+   - cores per table (overlap: 1.38–1.49× reads in flight at L3 latency).
