@@ -36,6 +36,10 @@
 //!
 //! - `mibz2` (this build: `BzReader::new`, or `BzReader::parallel`), `mibz2-scalar` (the
 //!   portable kernels);
+//! - `mibz2-coop2`, `-coop3`, `-coop4` (the cooperative decoder, `bwt::Cooperative`:
+//!   THREADS cores as THREADS / K teams of K, `BzReader::parallel_planned`) and
+//!   `mibz2-auto` (the cooperative policy's plan for THREADS, `Plan::for_threads`: today's
+//!   workers below 6 physical cores, else teams of 2 capped by the L3);
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
 //!   `ParallelDecoder::with_threads`);
 //! - `libbzip2` (libbzip2 1.0.8, C, the bzip2 crate's bundled source: `MultiBzDecoder`),
@@ -435,6 +439,27 @@ fn decode(
             h,
             last,
         ),
+        // the cooperative decoder (bwt::Cooperative): THREADS cores as THREADS / K teams of
+        // K, or as the policy plans THREADS (`Plan::for_threads`)
+        "mibz2-coop2" | "mibz2-coop3" | "mibz2-coop4" | "mibz2-auto" => {
+            use mibz2::parallel::Plan;
+            let plan = match arm {
+                "mibz2-auto" => Plan::for_threads(threads),
+                _ => {
+                    let k = (arm.as_bytes()[arm.len() - 1] - b'0') as usize;
+                    Plan::Teams {
+                        teams: (threads / k).max(1),
+                        k,
+                    }
+                }
+            };
+            let slots = 2 * plan.workers();
+            drain(
+                mibz2::BzReader::parallel_planned(open()?, plan, slots, mibz2::Kernels::detect()),
+                h,
+                last,
+            )
+        }
         "pbz2" if threads == 1 => drain(pbz2::DecoderReader::new(open()?), h, last),
         "pbz2" => drain(
             pbz2::ParallelDecoder::with_threads(open()?, threads),

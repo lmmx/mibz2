@@ -75,6 +75,22 @@ bench-scaling *args:
     cargo build --release --example ab
     python3 bench/scaling.py "$@"
 
+# bench/coop_decoder.py: the cooperative decoder's full-decoder A/B against its release
+# gates. examples/ab.rs runs the Wikidata corpus from disk to hashed output (every CRC
+# checked): today's decoder, cooperative teams of 2 and 3, and the policy the release would
+# make the default (mibz2-auto), at 4, 6, 8 and 10 threads and all CPUs, 20 rounds
+# interleaved, unpinned; then a pass limited to 4 physical cores, where the policy must
+# pick today's decoder and be no slower. About 10 minutes; close the browser and other
+# busy programs first. Upload coop-decoder-*.md, coop-decoder-*.json and the .jsonl files.
+#   just bench-coop-decoder
+
+# The cooperative decoder against today's, end to end, with its release gates
+[positional-arguments]
+bench-coop-decoder *args:
+    bash bench/corpus.sh
+    cargo build --release --example ab
+    python3 bench/coop_decoder.py "$@"
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10
