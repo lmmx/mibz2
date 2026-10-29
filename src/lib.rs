@@ -80,8 +80,7 @@
 pub mod bits;
 pub mod block;
 pub mod bwt;
-// (the cooperative inverse BWT's pool, unused until its kernel: the integration's step 5)
-#[allow(dead_code)]
+// (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;
 pub mod mtf;
@@ -266,6 +265,8 @@ impl From<Error> for std::io::Error {
 pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     ll: Vec<u8>,
     counts: [u32; 256],
+    /// the MTF stage's count checkpoints, for a kernel that reads them
+    checkpoints: Vec<[u32; 256]>,
     inverse: I,
     rle: Vec<u8>,
 }
@@ -284,6 +285,9 @@ impl<I: bwt::InverseBwt> Scratch<I> {
             },
             trace::Buffer::of("rle", &self.rle),
         ];
+        if self.checkpoints.capacity() > 0 {
+            v.push(trace::Buffer::of("checkpoints", &self.checkpoints));
+        }
         v.extend(self.inverse.buffers());
         v
     }
@@ -294,6 +298,7 @@ impl<I: bwt::InverseBwt> Default for Scratch<I> {
         Scratch {
             ll: Vec::new(),
             counts: [0; 256],
+            checkpoints: Vec::new(),
             inverse: I::default(),
             rle: Vec::new(),
         }
@@ -308,7 +313,12 @@ pub fn decode_block<I: bwt::InverseBwt>(
     s: &mut Scratch<I>,
     out: &mut Vec<u8>,
 ) -> Result<u32, ErrorKind> {
-    let n = mtf::mtf(b, &mut s.ll, &mut s.counts, k)?;
+    let cooperative = s.inverse.wants_checkpoints();
+    let n = if cooperative {
+        mtf::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?
+    } else {
+        mtf::mtf(b, &mut s.ll, &mut s.counts, k)?
+    };
     if b.orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
     }
@@ -319,7 +329,13 @@ pub fn decode_block<I: bwt::InverseBwt>(
         n as u64,
         trace::UNREAD,
     );
-    s.inverse.invert(&s.ll, &s.counts, b.orig_ptr, &mut s.rle);
+    if cooperative {
+        let cps = &s.checkpoints;
+        s.inverse
+            .invert_checkpointed(&s.ll, &s.counts, cps, b.orig_ptr, &mut s.rle);
+    } else {
+        s.inverse.invert(&s.ll, &s.counts, b.orig_ptr, &mut s.rle);
+    }
     #[cfg(feature = "trace")]
     trace::mark(trace::Kind::InvertEnd, trace::NONE);
     let start = out.len();

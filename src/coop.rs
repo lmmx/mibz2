@@ -32,6 +32,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle, Thread};
 
+use crate::bwt::{prefetch, random_rows, read_u64, SegScratch, TVector, LINK, PF_L1, START};
+
 /// A task for a pool, called once on each of its k threads with the thread's index (the
 /// caller's is 0)
 pub(crate) type Task<'a> = &'a (dyn Fn(usize) + Sync);
@@ -226,6 +228,431 @@ impl Drop for Pool {
     }
 }
 
+/// Why `build_fused` refused its inputs or found its table wrong: a bug in the caller (the
+/// MTF stage's checkpoints, or its counts), never an input error, since the last column
+/// and its counts come from the decoder itself
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct BuildError(pub(crate) &'static str);
+
+/// The rows `j` of `k` ranges starts at: n·j/k rounded to a multiple of `stride` (so a
+/// checkpoint gives its counts), the last range ending at n
+fn edge(n: usize, k: usize, stride: usize, j: usize) -> usize {
+    if j >= k {
+        n
+    } else {
+        ((n * j / k + stride / 2) / stride * stride).min(n)
+    }
+}
+
+/// A shared table's base pointer, for the pool's threads to write disjoint slots through
+struct Slots(*mut u32);
+// SAFETY: each thread writes only the slots of its own windows (checked in `build_fused`)
+unsafe impl Sync for Slots {}
+
+/// The T-vector of `ll` (whose bytes `counts` counts) built by the pool's k threads in one
+/// pass, `bwt::build`'s table word for word. The rows are cut into k ranges at multiples
+/// of `stride` (`mtf::CHECKPOINT` in the decoder), and `checkpoints[i]` is the counts of
+/// `ll[..i * stride]`, so range j's first slot in bucket b is b's start plus
+/// `checkpoints[start / stride][b]`, and its last is below b's start plus the next range's.
+/// Each range writes each of its entries whole, `ll[s] | i << 8` at slot s, with
+/// `bwt::build`'s 16-row run stores; there is no count, copy or barrier before the scatter
+/// (the coop journal §16).
+///
+/// It is sound whatever `checkpoints` and `counts` hold, and the table is right only if
+/// they are. Before the run (O(256) a checkpoint): the counts sum to n, the checkpoints
+/// are one a whole stride, start at zero, sum to their offsets, rise and stay within the
+/// counts. So each range's window in each bucket lies inside [0, n), and the ranges'
+/// windows are disjoint. Each write is checked against its window's end, so no thread
+/// writes outside its own windows. After the run, every range's every cursor must have
+/// reached its window's end. That proves every slot written once. It also proves the
+/// table right: the windows' sizes are then the bytes each range holds, so, summing from
+/// the first range (whose windows start at the buckets' starts), every window starts
+/// where `bwt::build` would put that range's first byte of its bucket. Only then is the
+/// table's length set, so a refused or failed build leaves it empty, never stale or
+/// uninitialised.
+pub(crate) fn build_fused(
+    ll: &[u8],
+    counts: &[u32; 256],
+    checkpoints: &[[u32; 256]],
+    stride: usize,
+    pool: &Pool,
+    tt: &mut TVector,
+) -> Result<(), BuildError> {
+    let n = ll.len();
+    let tt = &mut tt.0;
+    tt.clear();
+    if stride == 0 || n >= 1 << 24 {
+        return Err(BuildError("a zero stride or a block of 2^24 rows or more"));
+    }
+    if counts.iter().map(|&c| c as usize).sum::<usize>() != n {
+        return Err(BuildError("the counts don't sum to the block's length"));
+    }
+    if checkpoints.len() != n / stride + 1 {
+        return Err(BuildError("not one checkpoint a whole stride"));
+    }
+    let mut last = &[0u32; 256];
+    for (i, cp) in checkpoints.iter().enumerate() {
+        let rises = cp.iter().zip(last).all(|(&c, &l)| c >= l);
+        let within = cp.iter().zip(counts).all(|(&c, &t)| c <= t);
+        let sums = cp.iter().map(|&c| c as usize).sum::<usize>() == i * stride;
+        if !(rises && within && sums) {
+            return Err(BuildError(
+                "a checkpoint that falls, passes the counts or misses its offset",
+            ));
+        }
+        last = cp;
+    }
+    let mut starts = [0u32; 256];
+    let mut cum = 0u32;
+    for b in 0..256 {
+        starts[b] = cum;
+        cum += counts[b];
+    }
+    tt.reserve(n);
+    let k = pool.threads();
+    let slots = Slots(tt.as_mut_ptr());
+    let slots = &slots;
+    let bad = AtomicUsize::new(0);
+    // the counts before row e (a range's edge: a multiple of stride, or n)
+    let at = |e: usize| {
+        if e == n {
+            counts
+        } else {
+            &checkpoints[e / stride]
+        }
+    };
+    pool.run(&|j| {
+        let (lo, hi) = (edge(n, k, stride, j), edge(n, k, stride, j + 1));
+        let (before, after) = (at(lo), at(hi));
+        let mut ftab = [0u32; 256];
+        let mut lim = [0u32; 256];
+        for b in 0..256 {
+            ftab[b] = starts[b] + before[b];
+            lim[b] = starts[b] + after[b];
+        }
+        // the one-row step: row i's link at its byte's next slot, inside the window
+        let one = |i: usize, ftab: &mut [u32; 256]| -> bool {
+            let c = ll[i] as usize;
+            let s = ftab[c];
+            if s >= lim[c] {
+                return false;
+            }
+            // SAFETY: s is inside this range's window of bucket c, which lies in [0, n)
+            // (checked before the run) and which no other range's window overlaps
+            unsafe { *slots.0.add(s as usize) = ll[s as usize] as u32 | (i as u32) << 8 };
+            ftab[c] = s + 1;
+            true
+        };
+        let mut i = lo;
+        let mut ok = true;
+        'rows: while i + 16 <= hi {
+            let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
+            if a == b && a == a.rotate_left(8) {
+                // 16 equal bytes: 16 consecutive slots of their bucket, in one store each
+                let c = ll[i] as usize;
+                let s = ftab[c] as usize;
+                if s + 16 > lim[c] as usize {
+                    ok = false;
+                    break 'rows;
+                }
+                let base = (i as u32) << 8;
+                for (jj, &l) in ll[s..s + 16].iter().enumerate() {
+                    // SAFETY: s..s + 16 is inside this range's window of bucket c (as above)
+                    unsafe { *slots.0.add(s + jj) = l as u32 | (base + ((jj as u32) << 8)) };
+                }
+                ftab[c] += 16;
+            } else {
+                for ii in i..i + 16 {
+                    if !one(ii, &mut ftab) {
+                        ok = false;
+                        break 'rows;
+                    }
+                }
+            }
+            i += 16;
+        }
+        while ok && i < hi {
+            ok = one(i, &mut ftab);
+            i += 1;
+        }
+        // the end check: every window filled exactly
+        if !ok || ftab != lim {
+            bad.fetch_add(1, Ordering::Relaxed);
+        }
+    });
+    if bad.load(Ordering::Relaxed) != 0 {
+        return Err(BuildError("a range's bytes didn't fill its windows: the checkpoints or counts are not the block's"));
+    }
+    // SAFETY: every slot below n was written exactly once (the end check, by every range,
+    // whose windows tile [0, n)), and the pool's run has ended, its writes visible here
+    unsafe { tt.set_len(n) };
+    Ok(())
+}
+
+/// The shared walk's handoffs, counted in the tests (each asserts it reached them)
+#[cfg(test)]
+pub(crate) mod handoffs {
+    use std::sync::atomic::AtomicUsize;
+    pub(crate) static GROWS: AtomicUsize = AtomicUsize::new(0);
+    pub(crate) static PASS_ENDS_FULL: AtomicUsize = AtomicUsize::new(0);
+    pub(crate) static MID_PASS_TAKES: AtomicUsize = AtomicUsize::new(0);
+    pub(crate) static FULL_PHASE_ENDS_MID_PASS: AtomicUsize = AtomicUsize::new(0);
+    pub(crate) static TAIL_ENTERED_FULL: AtomicUsize = AtomicUsize::new(0);
+}
+#[cfg(test)]
+macro_rules! handoff {
+    ($c:ident) => {
+        handoffs::$c.fetch_add(1, Ordering::Relaxed)
+    };
+}
+#[cfg(not(test))]
+macro_rules! handoff {
+    ($c:ident) => {};
+}
+
+/// One lane's state in the shared walk: the row it reads next, and where its segment's
+/// bytes go (`p` up to `end`, the segment's buffer's spare capacity)
+#[derive(Clone, Copy)]
+struct Lane {
+    row: u32,
+    seg: usize,
+    p: *mut u8,
+    end: *mut u8,
+}
+
+/// The segments' buffers and successors, for the pool's threads to reach through: each
+/// segment's are touched only by the lane that took it
+#[derive(Clone, Copy)]
+struct Segs {
+    bufs: *mut Vec<u8>,
+    next: *mut usize,
+}
+// SAFETY: a segment index is taken once (`taken.fetch_add`), so each buffer and successor
+// slot has one writer; the outer vectors are not resized while the threads run
+unsafe impl Sync for Segs {}
+
+/// The room walk on k threads sharing one T-vector: `bwt::walk_segments_room`'s walk (its
+/// `room_segments`), every thread's L lanes taking segments from one counter, so a block's
+/// `segments` (k times the one-core walk's, so the tail's few long chains don't leave the
+/// team waiting) are walked by k·L lanes at once. Each segment's bytes go to its buffer
+/// in `s` and its successor to `s.next`, as the one-core walk leaves them, for
+/// `SegScratch::assemble` to join: exactly `bwt::walk`'s output.
+///
+/// The one-core walk's contract (its Rows, Ownership, Spare, Handoffs, Initialised and
+/// Lifetimes; `bwt::walk_segments_room_with_prefetch`) holds for each thread's lanes, with:
+/// - **Sharing:** the table is read-only while the threads run. The starts are flagged
+///   before the run and unflagged after it, on the caller.
+/// - **Taking:** each segment index is taken once, by `fetch_add`, so its buffer and its
+///   successor slot have one writer, the lane that took it.
+/// - **Outer vectors:** `s.bufs` and `s.next` are sized before the run and not resized in
+///   it; a lane grows only the buffer of the segment it holds.
+/// - **Visibility:** the pool's run publishes every thread's writes to the caller before
+///   `assemble` reads them (`Pool::run`'s ordering).
+pub(crate) fn walk_room<const L: usize>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    s: &mut SegScratch,
+    pool: &Pool,
+    segments: usize,
+) {
+    let n = tt.0.len();
+    let r0 = tt.0[orig_ptr as usize] >> 8;
+    random_rows(n, segments.max(1) - 1, &mut s.starts);
+    s.starts.push(r0);
+    s.starts.sort_unstable();
+    s.starts.dedup();
+    let ns = s.starts.len();
+    for &r in &s.starts {
+        tt.0[r as usize] |= START;
+    }
+    let cap = 2 * n / ns + 64;
+    s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
+    for b in &mut s.bufs[..ns] {
+        b.clear();
+        b.reserve(cap);
+    }
+    s.next.clear();
+    s.next.resize(ns, usize::MAX);
+    let segs = Segs {
+        bufs: s.bufs.as_mut_ptr(),
+        next: s.next.as_mut_ptr(),
+    };
+    let segs = &segs;
+    let (t, starts) = (tt.0.as_ptr(), &s.starts[..]);
+    let t = Slots(t as *mut u32);
+    let t = &t;
+    let taken = AtomicUsize::new(0);
+    pool.run(&|_| {
+        // SAFETY: as the contract above: rows below n, starts flagged, each segment taken
+        // once, every buffer with `cap` spare bytes
+        unsafe { traverse::<L>(t.0 as *const u32, starts, *segs, &taken, cap) }
+    });
+    for &r in &s.starts {
+        tt.0[r as usize] &= LINK;
+    }
+    s.first = s.starts.binary_search(&r0).unwrap_or(usize::MAX);
+    s.n = n;
+}
+
+/// One thread's lanes of `walk_room`: `room_segments`'s loop, its next segment taken from
+/// `taken` instead of a local count
+///
+/// SAFETY: as `walk_room`'s contract
+unsafe fn traverse<const L: usize>(
+    t: *const u32,
+    starts: &[u32],
+    segs: Segs,
+    taken: &AtomicUsize,
+    cap: usize,
+) {
+    let ns = starts.len();
+    let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let take = |seg: usize| -> Lane {
+        // SAFETY: seg < ns, taken once, so this lane is its buffer's one user
+        let b = unsafe { &mut *segs.bufs.add(seg) };
+        let base = b.as_mut_ptr();
+        // SAFETY: the starts are rows below n; the buffer has `cap` > 0 spare bytes
+        let q = unsafe { *t.add(starts[seg] as usize) } & LINK;
+        unsafe { *base = q as u8 };
+        prefetch::<PF_L1>(t, q >> 8);
+        Lane {
+            row: q >> 8,
+            seg,
+            p: unsafe { base.add(1) },
+            end: unsafe { base.add(b.capacity()) },
+        }
+    };
+    let finish = |l: &Lane| {
+        // SAFETY: the lane holds segment l.seg, its buffer's one user and its successor's
+        // one writer; p is within the buffer, every byte below it written
+        let b = unsafe { &mut *segs.bufs.add(l.seg) };
+        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+        unsafe { *segs.next.add(l.seg) = seg_of(l.row) };
+    };
+    let grow = |l: &mut Lane| {
+        handoff!(GROWS);
+        // SAFETY: as `finish`
+        let b = unsafe { &mut *segs.bufs.add(l.seg) };
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
+        b.reserve(b.capacity());
+        l.p = unsafe { b.as_mut_ptr().add(len) };
+        l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
+    };
+    let next_seg = || {
+        let s = taken.fetch_add(1, Ordering::Relaxed);
+        (s < ns).then_some(s)
+    };
+
+    let mut lanes: [Lane; L] = std::array::from_fn(|_| Lane {
+        row: 0,
+        seg: usize::MAX,
+        p: std::ptr::null_mut(),
+        end: std::ptr::null_mut(),
+    });
+    let mut active = 0;
+    while active < L {
+        let Some(seg) = next_seg() else { break };
+        lanes[active] = take(seg);
+        active += 1;
+    }
+    if active == L {
+        'full: loop {
+            // the pass's room: what every lane has spare, and no more than a buffer taken
+            // mid-pass has after its first byte (`cap` - 1)
+            let mut room = cap - 1;
+            for l in lanes.iter_mut() {
+                if l.p == l.end {
+                    grow(l);
+                }
+                room = room.min(unsafe { l.end.offset_from(l.p) } as usize);
+            }
+            debug_assert!(room > 0);
+            if lanes
+                .iter()
+                .any(|l| unsafe { l.end.offset_from(l.p) } as usize == room)
+            {
+                handoff!(PASS_ENDS_FULL);
+            }
+            let mut base: [*mut u8; L] = std::array::from_fn(|k| lanes[k].p);
+            for off in 0..room {
+                for k in 0..L {
+                    let l = &mut lanes[k];
+                    // SAFETY: rows are below n (TVector), with the flag masked off below
+                    let q = unsafe { *t.add(l.row as usize) };
+                    if q & START != 0 {
+                        l.p = base[k].wrapping_add(off);
+                        finish(l);
+                        let Some(seg) = next_seg() else {
+                            // the lanes before this one wrote at `off`, those after it not yet
+                            for (j, lj) in lanes.iter_mut().enumerate() {
+                                if j < k {
+                                    lj.p = base[j].wrapping_add(off + 1);
+                                } else if j > k {
+                                    lj.p = base[j].wrapping_add(off);
+                                }
+                            }
+                            handoff!(FULL_PHASE_ENDS_MID_PASS);
+                            break 'full;
+                        };
+                        handoff!(MID_PASS_TAKES);
+                        *l = take(seg);
+                        // its next byte, at offset off + 1, goes at its p
+                        base[k] = l.p.wrapping_sub(off + 1);
+                        continue;
+                    }
+                    l.row = q >> 8;
+                    prefetch::<PF_L1>(t, l.row);
+                    // SAFETY: base + off is below the lane's end: room is at most its spare
+                    // at the pass's start (or, for a buffer taken mid-pass, its capacity
+                    // after its first byte)
+                    debug_assert!(base[k].wrapping_add(off) < l.end);
+                    unsafe { *base[k].wrapping_add(off) = q as u8 };
+                }
+            }
+            for (l, b) in lanes.iter_mut().zip(base) {
+                l.p = b.wrapping_add(room);
+            }
+        }
+    }
+    // the lanes still walking: a finished lane's successor is set, and this thread holds
+    // every segment its lanes took, so it alone reads those slots
+    let unfinished =
+        |l: &Lane| l.seg != usize::MAX && unsafe { *segs.next.add(l.seg) } == usize::MAX;
+    let mut live: Vec<Lane> = lanes[..active].iter().copied().filter(unfinished).collect();
+    // a pass can end with a lane's buffer exactly full (its room was all its spare): the
+    // tail writes before it tests, so each lane comes into it with a byte to spare
+    for l in live.iter_mut() {
+        if l.p == l.end {
+            handoff!(TAIL_ENTERED_FULL);
+            grow(l);
+        }
+        debug_assert!(l.p < l.end);
+    }
+    while !live.is_empty() {
+        let mut i = 0;
+        while i < live.len() {
+            let l = &mut live[i];
+            let q = unsafe { *t.add(l.row as usize) };
+            if q & START != 0 {
+                finish(l);
+                live.swap_remove(i);
+                continue;
+            }
+            l.row = q >> 8;
+            prefetch::<PF_L1>(t, l.row);
+            unsafe {
+                *l.p = q as u8;
+                l.p = l.p.add(1);
+            }
+            if l.p == l.end {
+                grow(l);
+            }
+            i += 1;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -368,6 +795,312 @@ mod tests {
         }
         let want: u64 = (0..n).map(|i| 4 * (i * 4) + 6).sum();
         assert_eq!(sum.load(Ordering::Relaxed), want);
+    }
+
+    fn xorshift(seed: u64) -> impl FnMut() -> u64 {
+        let mut x = seed | 1;
+        move || {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x
+        }
+    }
+
+    /// Last columns of several shapes and lengths
+    fn columns(scale: usize) -> Vec<(String, Vec<u8>)> {
+        let mut r = xorshift(0x9e37_79b9_7f4a_7c15);
+        let mut runs = Vec::new();
+        while runs.len() < 3 * scale {
+            let c = (r() % 5) as u8;
+            let len = [1, 2, 15, 16, 17, 31, 33, 200][(r() % 8) as usize];
+            runs.extend(std::iter::repeat(c).take(len));
+        }
+        let mut v: Vec<(String, Vec<u8>)> = vec![
+            ("empty".into(), vec![]),
+            ("one byte".into(), vec![9]),
+            ("one byte value".into(), vec![42; 2 * scale + 7]),
+            ("period 3".into(), b"abc".repeat(scale)),
+            (
+                "random".into(),
+                (0..3 * scale + 5).map(|_| r() as u8).collect(),
+            ),
+            (
+                "few bytes".into(),
+                (0..2 * scale).map(|_| b"ab"[(r() & 1) as usize]).collect(),
+            ),
+            ("runs".into(), runs),
+        ];
+        for n in [2, 15, 16, 17, 33, 63, 64, 65] {
+            v.push((format!("random {n}"), (0..n).map(|_| r() as u8).collect()));
+        }
+        v
+    }
+
+    fn counts_of(ll: &[u8]) -> [u32; 256] {
+        let mut c = [0u32; 256];
+        ll.iter().for_each(|&b| c[b as usize] += 1);
+        c
+    }
+
+    fn checkpoints_of(ll: &[u8], stride: usize) -> Vec<[u32; 256]> {
+        let mut cum = [0u32; 256];
+        let mut v = vec![cum];
+        for chunk in ll.chunks_exact(stride) {
+            chunk.iter().for_each(|&b| cum[b as usize] += 1);
+            v.push(cum);
+        }
+        v
+    }
+
+    fn fused_matches_build(p: &Pool, stride: usize, scale: usize) {
+        // one table kept across every column, growing and shrinking, as a worker keeps it
+        let mut tt = TVector::new();
+        for (name, ll) in columns(scale) {
+            let counts = counts_of(&ll);
+            let mut want = TVector::new();
+            crate::bwt::build(&ll, &counts, &mut want);
+            let cps = checkpoints_of(&ll, stride);
+            build_fused(&ll, &counts, &cps, stride, p, &mut tt).unwrap();
+            assert!(
+                tt.0 == want.0,
+                "{name}: k {}, stride {stride}: the fused table differs from bwt::build's",
+                p.threads()
+            );
+        }
+    }
+
+    #[test]
+    fn build_fused_is_build() {
+        for k in 1..=4 {
+            let p = Pool::new(k).unwrap();
+            for stride in [16, 64, 1000, crate::mtf::CHECKPOINT] {
+                fused_matches_build(&p, stride, 20_000);
+            }
+        }
+    }
+
+    /// Wrong checkpoints or counts are refused, or caught by the end check: an error, the
+    /// table empty, and no write outside a window (Miri, in the miri_ test below)
+    fn refuses(p: &Pool, stride: usize, scale: usize) {
+        let mut r = xorshift(7);
+        let ll: Vec<u8> = (0..4 * stride * scale + 9)
+            .map(|_| (r() % 7) as u8)
+            .collect();
+        let counts = counts_of(&ll);
+        let cps = checkpoints_of(&ll, stride);
+        let mut tt = TVector::new();
+        build_fused(&ll, &counts, &cps, stride, p, &mut tt).unwrap();
+        let mut want = TVector::new();
+        crate::bwt::build(&ll, &counts, &mut want);
+        let check = |what: &str, counts: &[u32; 256], cps: &[[u32; 256]], tt: &mut TVector| {
+            assert!(
+                build_fused(&ll, counts, cps, stride, p, tt).is_err(),
+                "{what}: k {}, accepted",
+                p.threads()
+            );
+            assert!(tt.0.is_empty(), "{what}: the table was left set");
+        };
+        // a count moved from one byte to another at every checkpoint in turn, the sums kept:
+        // refused, or caught by the end check, where a range starts there; accepted only
+        // where no range reads it, and then the table is still bwt::build's
+        let k = p.threads();
+        let edges: Vec<usize> = (1..k).map(|j| edge(ll.len(), k, stride, j)).collect();
+        let (from, to) = (ll[0] as usize, (ll[0] as usize + 1) % 7);
+        let mut refused = 0;
+        for m in 1..cps.len() {
+            let mut moved = cps.clone();
+            if moved[m][from] == 0 {
+                continue;
+            }
+            moved[m][from] -= 1;
+            moved[m][to] += 1;
+            let r = build_fused(&ll, &counts, &moved, stride, p, &mut tt);
+            if edges.contains(&(m * stride)) {
+                assert!(
+                    r.is_err(),
+                    "a moved count at checkpoint {m}, a range's edge: k {k}, accepted"
+                );
+            }
+            match r {
+                Ok(()) => assert!(
+                    tt.0 == want.0,
+                    "a moved count at {m}: a wrong table accepted"
+                ),
+                Err(_) => {
+                    assert!(tt.0.is_empty());
+                    refused += 1;
+                }
+            }
+        }
+        assert!(
+            k == 1 || refused > 0,
+            "k {k}: no moved count reached an edge"
+        );
+        let mut falls = cps.clone();
+        falls[1] = falls[2];
+        check(
+            "a checkpoint repeated out of place",
+            &counts,
+            &falls,
+            &mut tt,
+        );
+        check("a checkpoint missing", &counts, &cps[1..], &mut tt);
+        let mut more = counts;
+        more[3] += 1;
+        check("a count too many", &more, &cps, &mut tt);
+        let mut swapped = counts;
+        swapped.swap(1, 2);
+        if swapped != counts {
+            check("two counts swapped", &swapped, &cps, &mut tt);
+        }
+        assert!(
+            build_fused(&ll, &counts, &cps, 0, p, &mut tt).is_err(),
+            "a zero stride"
+        );
+        assert!(tt.0.is_empty());
+        // and the same pool and table still build right afterwards
+        build_fused(&ll, &counts, &cps, stride, p, &mut tt).unwrap();
+        assert!(tt.0 == want.0);
+    }
+
+    #[test]
+    fn build_fused_refuses_wrong_checkpoints() {
+        for k in 1..=4 {
+            refuses(&Pool::new(k).unwrap(), 256, 8);
+        }
+    }
+
+    /// Small blocks under Miri: the disjoint slots (its race detector), the windows' bounds
+    /// and the refusals, at k = 2 and 3
+    #[test]
+    fn miri_build_fused() {
+        for k in [2, 3] {
+            let p = Pool::new(k).unwrap();
+            fused_matches_build(&p, 64, 80);
+            refuses(&p, 64, 2);
+        }
+    }
+
+    /// The shared walk on `ll`'s table from `orig_ptr`, against `bwt::walk` and the
+    /// segments' oracle, with `segments` a block
+    fn walk_matches(
+        p: &Pool,
+        ll: &[u8],
+        orig_ptr: u32,
+        segments: usize,
+        s: &mut SegScratch,
+        what: &str,
+    ) {
+        let counts = counts_of(ll);
+        let mut tt = TVector::new();
+        crate::bwt::build(ll, &counts, &mut tt);
+        let mut want = Vec::new();
+        crate::bwt::walk(&tt, orig_ptr, &mut want);
+        let before = tt.0.clone();
+        walk_room::<8>(&mut tt, orig_ptr, s, p, segments);
+        assert!(tt.0 == before, "{what}: the flags were not all taken off");
+        // the segments are the oracle's, on every cycle, not only those the output joins
+        let oracle = crate::bwt::tests::segment_oracle(&tt, &s.starts);
+        for (i, (bytes, next)) in oracle.iter().enumerate() {
+            assert!(
+                s.bufs[i] == *bytes,
+                "{what}: segment {i}'s bytes, k {}",
+                p.threads()
+            );
+            assert_eq!(s.next[i], *next, "{what}: segment {i}'s successor");
+        }
+        let mut out = vec![1, 2, 3];
+        s.assemble(&mut out);
+        assert!(
+            out == want,
+            "{what}: k {}, segments {segments}: not walk's output",
+            p.threads()
+        );
+    }
+
+    #[test]
+    fn walk_room_is_walk() {
+        let mut s = SegScratch::default();
+        for k in 1..=4 {
+            let p = Pool::new(k).unwrap();
+            for (name, ll) in columns(30_000) {
+                if ll.is_empty() {
+                    continue;
+                }
+                let n = ll.len() as u32;
+                for segments in [1, 2, 7, 64, 512 * k, 4096] {
+                    for orig_ptr in [0, n / 3, n - 1] {
+                        walk_matches(&p, &ll, orig_ptr, segments, &mut s, &name);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Small blocks under Miri at k = 2 and 3: the shared buffers' and successors' one
+    /// writer each (its race detector), the lanes' unchecked writes, and every handoff
+    /// reached (lanes taken mid-pass, full passes, the full phase ending mid-pass, the
+    /// tail entered full, buffers grown)
+    #[test]
+    fn miri_walk_room_handoffs() {
+        use handoffs::*;
+        let mut s = SegScratch::default();
+        let mut r = xorshift(11);
+        let cases: Vec<Vec<u8>> = vec![
+            (0..1500).map(|_| (r() % 4) as u8).collect(),
+            b"ab".repeat(600),
+            (0..900).map(|i| ((i / 37) % 3) as u8).collect(),
+        ];
+        for k in [2, 3] {
+            let p = Pool::new(k).unwrap();
+            for (c, ll) in cases.iter().enumerate() {
+                for segments in [24, 96] {
+                    walk_matches(
+                        &p,
+                        ll,
+                        (ll.len() / 2) as u32,
+                        segments,
+                        &mut s,
+                        &format!("case {c}"),
+                    );
+                }
+            }
+        }
+        for (name, c) in [
+            ("GROWS", &GROWS),
+            ("PASS_ENDS_FULL", &PASS_ENDS_FULL),
+            ("MID_PASS_TAKES", &MID_PASS_TAKES),
+            ("FULL_PHASE_ENDS_MID_PASS", &FULL_PHASE_ENDS_MID_PASS),
+        ] {
+            assert!(c.load(Ordering::Relaxed) > 0, "never reached: {name}");
+        }
+    }
+
+    /// `bwt::Cooperative` on a block past `MIN_COOP` really runs the team (its pool spawned,
+    /// no fallback), and gives `walk`'s output; below it, the one-core kernel
+    #[test]
+    fn cooperative_kernel_engages() {
+        use crate::bwt::InverseBwt;
+        let mut r = xorshift(3);
+        let big: Vec<u8> = (0..crate::bwt::MIN_COOP + 12_345)
+            .map(|_| (r() % 9) as u8)
+            .collect();
+        let small = &big[..crate::bwt::MIN_COOP - 1];
+        for ll in [&big[..], small] {
+            let counts = counts_of(ll);
+            let cps = checkpoints_of(ll, crate::mtf::CHECKPOINT);
+            let mut tt = TVector::new();
+            crate::bwt::build(ll, &counts, &mut tt);
+            let mut want = Vec::new();
+            crate::bwt::walk(&tt, 17, &mut want);
+            let mut c = crate::bwt::Cooperative::<3>::default();
+            assert!(c.wants_checkpoints());
+            let mut out = Vec::new();
+            c.invert_checkpointed(ll, &counts, &cps, 17, &mut out);
+            assert!(out == want);
+            assert_eq!(c.engaged(), ll.len() >= crate::bwt::MIN_COOP);
+        }
     }
 
     /// Pools kept by several threads at once, as the decoder's workers would keep them

@@ -23,6 +23,25 @@
 pub trait InverseBwt: Default + Send {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>);
 
+    /// Whether this kernel reads the MTF stage's count checkpoints (`mtf::mtf_checkpoints`,
+    /// `mtf::CHECKPOINT` rows apart); if so the decoder calls `invert_checkpointed`
+    fn wants_checkpoints(&self) -> bool {
+        false
+    }
+
+    /// `invert`, given `checkpoints[i]`, the counts of `ll[..i * mtf::CHECKPOINT]`
+    fn invert_checkpointed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        checkpoints: &[[u32; 256]],
+        orig_ptr: u32,
+        out: &mut Vec<u8>,
+    ) {
+        let _ = checkpoints;
+        self.invert(ll, counts, orig_ptr, out)
+    }
+
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs): tests and the `trace`
     /// feature only
     #[cfg(any(test, feature = "trace"))]
@@ -85,10 +104,122 @@ impl InverseBwt for Segmented {
     }
 }
 
-/// A block's T-vector. Built only by `build`, so every link in it is below its length,
-/// which the walks rely on to read it unchecked.
+/// The cooperative inverse BWT: a block's table built and walked by K cores that share it
+/// (`coop::build_fused`, then `coop::walk_room`, its threads kept for the kernel's life:
+/// the coop journal, docs/journal/2026-10-28-cooperative-inversion.md). N workers on this
+/// kernel keep N tables live on N × K cores, where production's keep N × K. Exactly
+/// `walk`'s output.
+///
+/// It runs the one-core kernel (`Segmented`) where cooperation can't help or can't run: a
+/// block below `MIN_COOP` rows, a call without checkpoints, or a pool whose threads
+/// couldn't be spawned. If the cooperative build refuses the checkpoints, a bug in their
+/// maker, the block is built on one core instead, so its output is still right (and a
+/// debug build stops at the assertion).
+pub struct Cooperative<const K: usize> {
+    /// None until the first cooperative block; an Err if its threads couldn't be spawned
+    pool: Option<std::io::Result<crate::coop::Pool>>,
+    tt: TVector,
+    seg: SegScratch,
+}
+
+/// The rows below which `Cooperative` runs the one-core kernel: 16 checkpoints, 4 ×
+/// `MIN_SEGMENTED`, the ranges' rounding then at most 1/32 of a range (to be tuned by the
+/// decoder A/B)
+pub const MIN_COOP: usize = 16 * crate::mtf::CHECKPOINT;
+
+impl<const K: usize> Cooperative<K> {
+    /// Whether a block has been inverted on the team (its threads spawned)
+    #[cfg(test)]
+    pub(crate) fn engaged(&self) -> bool {
+        matches!(self.pool, Some(Ok(_)))
+    }
+}
+
+impl<const K: usize> Default for Cooperative<K> {
+    fn default() -> Self {
+        Cooperative {
+            pool: None,
+            tt: TVector::new(),
+            seg: SegScratch::default(),
+        }
+    }
+}
+
+impl<const K: usize> InverseBwt for Cooperative<K> {
+    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
+        build(ll, counts, &mut self.tt);
+        walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+    }
+
+    fn wants_checkpoints(&self) -> bool {
+        K > 1
+    }
+
+    fn invert_checkpointed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        checkpoints: &[[u32; 256]],
+        orig_ptr: u32,
+        out: &mut Vec<u8>,
+    ) {
+        if K < 2 || ll.len() < MIN_COOP {
+            return self.invert(ll, counts, orig_ptr, out);
+        }
+        let pool = match self.pool.get_or_insert_with(|| crate::coop::Pool::new(K)) {
+            Ok(p) => p,
+            Err(_) => return self.invert(ll, counts, orig_ptr, out),
+        };
+        let built = crate::coop::build_fused(
+            ll,
+            counts,
+            checkpoints,
+            crate::mtf::CHECKPOINT,
+            pool,
+            &mut self.tt,
+        );
+        if let Err(e) = built {
+            debug_assert!(
+                false,
+                "the cooperative build refused its checkpoints: {}",
+                e.0
+            );
+            build(ll, counts, &mut self.tt);
+        }
+        crate::coop::walk_room::<FLAGGED_LANES>(
+            &mut self.tt,
+            orig_ptr,
+            &mut self.seg,
+            pool,
+            FLAGGED_SEGMENTS * K,
+        );
+        self.seg.assemble(out);
+    }
+
+    #[cfg(any(test, feature = "trace"))]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        use crate::trace::Buffer;
+        let s = &self.seg;
+        let mut v = vec![Buffer::of("tt", &self.tt.0)];
+        if s.bufs.capacity() > 0 {
+            v.push(Buffer {
+                name: "seg.bufs",
+                len: s.bufs.iter().map(Vec::len).sum(),
+                cap: s.bufs.iter().map(Vec::capacity).sum(),
+            });
+            v.push(Buffer::of("seg.bufs.outer", &s.bufs));
+            v.push(Buffer::of("seg.starts", &s.starts));
+            v.push(Buffer::of("seg.next", &s.next));
+        }
+        v
+    }
+}
+
+/// A block's T-vector. Built only by `build`, or by `coop::build_fused` once its end check
+/// has passed, so every link in it is below its length, which the walks rely on to read
+/// it unchecked.
 #[derive(Default)]
-pub struct TVector(Vec<u32>);
+pub struct TVector(pub(crate) Vec<u32>);
 
 impl TVector {
     pub fn new() -> Self {
@@ -150,7 +281,7 @@ fn link(ll: &[u8], tt: &mut [u32], ftab: &mut [u32; 256], rows: std::ops::Range<
 }
 
 #[inline(always)]
-fn read_u64(b: &[u8], i: usize) -> u64 {
+pub(crate) fn read_u64(b: &[u8], i: usize) -> u64 {
     u64::from_ne_bytes(b[i..i + 8].try_into().unwrap())
 }
 
@@ -195,13 +326,13 @@ pub(crate) const MIN_SEGMENTED: usize = 1 << 16;
 /// The segment walk's buffers, kept from block to block
 #[derive(Default)]
 pub struct SegScratch {
-    starts: Vec<u32>,
+    pub(crate) starts: Vec<u32>,
     bitmap: Vec<u64>,
-    bufs: Vec<Vec<u8>>,
-    next: Vec<usize>,
+    pub(crate) bufs: Vec<Vec<u8>>,
+    pub(crate) next: Vec<usize>,
     /// the room walk's last block: its length and the segment its output starts in
-    n: usize,
-    first: usize,
+    pub(crate) n: usize,
+    pub(crate) first: usize,
 }
 
 impl SegScratch {
@@ -317,8 +448,8 @@ pub fn walk_segments(tt: &TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mut Seg
 
 /// The flag marking a segment start in its own T-vector entry (links are below 2^20, so
 /// bit 31 is free), and the mask that takes it off a link
-const START: u32 = 1 << 31;
-const LINK: u32 = !START;
+pub(crate) const START: u32 = 1 << 31;
+pub(crate) const LINK: u32 = !START;
 
 /// One lane's state in `walk_segments_flagged`: the row it reads next, and where its
 /// segment's bytes go (`p` up to `end`, the segment's buffer's spare capacity)
@@ -835,7 +966,7 @@ pub fn walk_segments_room_with<const L: usize, const PF: bool>(
 /// prefetch at the level `H` names (`PF_L1`, `PF_L2`, `PF_NTA`) where the target has one,
 /// else nothing. A hint only: it changes no value read.
 #[inline(always)]
-fn prefetch<const H: u8>(t: *const u32, row: u32) {
+pub(crate) fn prefetch<const H: u8>(t: *const u32, row: u32) {
     let p = t.wrapping_add(row as usize);
     #[cfg(target_arch = "x86_64")]
     // SAFETY: SSE is in x86_64's baseline; a prefetch never faults
@@ -872,7 +1003,7 @@ fn next_unset(l: &Lane, next: &[usize]) -> bool {
 }
 
 /// `m` pseudo-random rows below `n` (xorshift, seeded by n: the same rows every time)
-fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
+pub(crate) fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
     rows.clear();
     let mut x = 0x2545_f491_4f6c_dd1du64 ^ n as u64;
     rows.extend((0..m).map(|_| {
@@ -884,14 +1015,14 @@ fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     /// The segments' reference, safe and slow: from each start, the walks' own steps (its
     /// first byte from its own entry, then a row's byte at a time until the next start),
     /// giving each segment's bytes and its successor. Every segment, on every cycle of the
     /// list, not only those the output joins: a walk writes them all.
-    fn segment_oracle(tt: &TVector, starts: &[u32]) -> Vec<(Vec<u8>, usize)> {
+    pub(crate) fn segment_oracle(tt: &TVector, starts: &[u32]) -> Vec<(Vec<u8>, usize)> {
         let t = &tt.0;
         let mut index = vec![usize::MAX; t.len()];
         for (i, &r) in starts.iter().enumerate() {
