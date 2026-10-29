@@ -308,3 +308,29 @@ Both are that chatbot's view, not measurements. They agree with each other and w
 **Marks to keep in mind when reading them:**
 - Seward's paper was read by the research chatbot, not by the agent ("directly established by the paper" is relayed).
 - The mibz2 measurements they cite (the 14.4 MB knee, the ψ² / Precopy / move-structure negatives, #81's 1.027×) are ours, from the journals and CI.
+
+## 12. Phase II: the research agenda and the coordinator's priorities (both stored verbatim)
+
+After the census, two more texts were relayed to be recorded. Both are kept verbatim:
+- **`2026-10-29-succinct-review/agenda-phase-2-research.md`:** the research chatbot's "Phase II: From compressibility to navigability", its five questions, and a proposed **Ψ representation atlas**:
+  - (I) the structure of the translation population;
+  - (II) the simplest 64-byte record;
+  - (III) formats without branching;
+  - (IV) the next pointer without a second dependent access;
+  - (V) behaviour on other input distributions.
+  
+  New references: Gog, Navarro & Petri, *Improved and Extended Locating Functionality on Compressed Suffix Arrays*; Ottaviano & Venturini's partitioned Elias–Fano; Ferragina & Pucci's generalised Elias–Fano. **Not yet read by the agent.**
+- **`2026-10-29-succinct-review/coordinator-phase-2.md`:** the coordinator, formerly called the guardian.
+  - **The roles:** the research chatbot explores; the agent validates against the repository, builds controlled experiments, inspects machine code and records; the coordinator gates; the user decides.
+  - **The order:** #81's cooperative test, then #79's audit, then the 16-bit fixed-line hybrid, then sub-16-bit work as theory only.
+  - **The rule:** every experiment needs a falsifiable hypothesis, a matched control, explicit criteria and a stopping point. Negative results stay negative.
+
+**How the agenda maps onto the work:**
+
+| agenda item | where it stands |
+|---|---|
+| #81's cooperative test | built, checked and pre-registered (coop journal §16, #95), waiting for the i9 |
+| the atlas's questions I, II and V (group structure per block, exact layouts and budgets, other inputs) | measurement only: the census extended (`psi_census`, next), not a prototype |
+| (Ψ(j), segment marker(j), F[j]) as the record's required triple | adopted as the definition of a record's function |
+| III–IV (branching, the dependency path) | analysis first, written down before any prototype |
+| a prototype of the hybrid record | held, per the coordinator, until #81's cooperative result is in |
