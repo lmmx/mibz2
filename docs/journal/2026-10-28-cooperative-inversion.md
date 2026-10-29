@@ -2051,3 +2051,84 @@ just bench-coop-spill
 ```
 
 It takes about four minutes. Upload `coop-spill-*.md`, its `.jsonl`, and `coop-ab-*.md`.
+
+### 15.4 The result (measured, the i9, 301133f, 2026-10-29): a mixed result, and a measured store-order cost
+
+The run was `coop-spill-20261029T123205Z` (with `coop-ab-20261029T123245Z`): 20 rounds, every thread pinned with none misplaced. All three kernels passed `mtf_check` first, and every block's output and checkpoints were checked in the grid.
+
+**1. The MTF stage alone, one core:**
+
+| kernel | MB/s | against production | against `mtf_cp` | against `mtf_cp2` | predicted, against production |
+|---|--:|--:|--:|--:|--:|
+| production's | 2351 | 1 | | | |
+| `mtf_cp` (§14) | 2259 | 0.9611 ±0.0060, 0/20 | 1 | | |
+| `mtf_cp2` | 2165 | **0.9210 ±0.0082**, 0/20 | 0.9581 ±0.0030 | 1 | 0.94–1.00 |
+| `mtf_cp2p` | 2295 | **0.9743 ±0.0074** (0.924–1.006), 1/20 | **1.0138 ±0.0077**, 19/20 | **1.0582 ±0.0093**, 19/20 | 0.98–1.00 |
+
+**2. The grid, with the MTF stage timed in every arm:**
+
+| | paired MB/s, mean ±95% | rounds won | MTF phase | build phase | walk (control) | predicted |
+|---|--:|--:|--:|--:|--:|--:|
+| **f3x3 against r3x3 (the net)** | **1.050 ±0.006** | 20/20 | | 1.181 | 0.998 | 1.04–1.06 |
+| **f3x3 against n3x3** | **1.003 ±0.004** | 13/20 | 1.016 | | 1.002 | 1.01–1.03 |
+| f3x3 against q3x3 | 0.992 ±0.005 | 3/20 | 0.973 | | 1.004 | 0.99–1.01 |
+| f3x3 against m3x3 | 1.016 ±0.005 | 18/20 | 1.060 | | 1.002 | |
+| m3x3 against r3x3 | 1.034 ±0.008 | 20/20 | | 1.183 | 0.997 | 1.03–1.06 |
+| m3x3 against n3x3 | 0.987 ±0.005 | 2/20 | 0.959 | | 1.000 | 1.00–1.03 |
+| n3x3 against r3x3 | 1.047 ±0.005 | 20/20 | | 1.188 | 0.997 | (§14: 1.033) |
+| q3x3 against r3x3 | 1.058 ±0.005 | 20/20 | | 1.190 | 0.995 | (§14: 1.055) |
+| f4x1 against r4x1 (null) | 1.000 ±0.009 | 10/20 | | 0.981 | 1.019 | 0.98–1.02 |
+
+**A worker's seconds:** the MTF stage takes about 33 ms in r3x3, 24% of a worker's time. Against r3x3, f3x3's build saves 7.57 ±0.51 ms and its MTF stage costs 0.90 ±0.10 ms, a net of **6.57 ±0.80 ms**. That is 86% of the bound's 7.61 ms (q3x3).
+
+**Against §15.2's rule, as registered:**
+1. **The MTF-only ratio is ≥ 0.98:** `mtf_cp2p` reached 0.9743. **Fail.**
+2. **f3x3/r3x3's interval excludes 1:** 1.044–1.056. **Pass.**
+3. **The walk control is within ±3%:** 0.998. **Pass.**
+4. **f3x3 beats n3x3, its interval excluding 1:** 1.003, interval 0.999–1.007. **Fail.**
+
+**So the spill fix does not meet its rule.** It is another **mixed result**, and it isn't called a success:
+- the better form, `mtf_cp2p`, is faster than `mtf_cp` alone (1.014, 19/20);
+- inside the grid it doesn't separate from §14's form;
+- its remaining cost is 2.6% of the MTF stage alone, and 2.7% against free checkpoints in the grid.
+
+**No production change follows,** and the MTF kernel is not tuned further now: the plan moves to #81.
+
+**What it measured, beyond the verdict:**
+- **The store's position is a measured cost.**
+  - `mtf_cp2p` against `mtf_cp2` is 1.058 (19/20) alone, and 1.060 in the grid's MTF phase.
+  - The two kernels have the same source and the same 40-instruction common path; a compiler fence that emits nothing separates them.
+  - **One caveat:** the fence also changed one register allocation. `mtf_cp2` spills 3 values a symbol and `mtf_cp2p` spills 2. So the 5.8% belongs to the pair's difference (the store order, plus one spill store), not to the order alone.
+  - It is consistent with §15.1's hypothesis that the list-front store's commit is on the loop-carried chain. It does not prove that mechanism: no counters were taken.
+- **The §15.1 hypothesis was incomplete.** Removing the spills §14.4 found (`n` and the end-of-block symbol, back in registers) recovered nothing by itself: `mtf_cp2` is slower than `mtf_cp`. The instruction schedule mattered more than the instruction count.
+- **The same source measured differently between builds.**
+  - `mtf_cp`'s cost was 6.3% in §14.4's binary and 3.9% in this one, with its source unchanged. Its grid MTF phase against q moved from 0.923 to 0.958, and n3x3/r3x3 from 1.033 to 1.047.
+  - The binaries differ in code layout: this one adds two functions, so `mtf_cp` and production's kernel moved.
+  - So **a 2% criterion sits inside the build-to-build variation of these kernels.**
+  - Future kernel A/Bs at this resolution need a layout control, or a criterion read against it: for example the same arms in several builds with their code shifted, or with function and loop alignment fixed.
+
+**Predictions:**
+- inside their ranges: f3x3/r3x3, m3x3/r3x3, f3x3/q3x3, the null, and `mtf_cp2p` over `mtf_cp2` (registered at 1.00–1.06);
+- outside: `mtf_cp2p` alone (0.974 against 0.98–1.00), `mtf_cp2` alone (0.921 against 0.94–1.00), f3x3/n3x3 (1.003 against 1.01–1.03) and m3x3/n3x3 (0.987 against 1.00–1.03).
+
+**A lead, recorded and not started:**
+- **The finding:** in production's own MTF loop, each symbol's 32-byte list load overlaps two stores from the previous symbol:
+  - its 32-byte vector store;
+  - the 1-byte store of the new front.
+  
+  The shifted load at `base − 1` overlaps the vector store only in part. On Intel, neither load can be forwarded from those stores. So each waits for the stores to commit.
+- **What the 5.8% suggests:** that wait is on production's critical path too, not only on `mtf_cp2`'s.
+- **A candidate change:** keep the list's front 32 bytes in a register across symbols:
+  - shift it with an `alignr`/`permute2x128` pair;
+  - insert the new front with a blend;
+  - touch the stored list only when an index is 32 or more.
+- **Why it is worth testing:**
+  - the MTF stage is 24% of a 3x3 worker's time, and about a quarter of an independent worker's, so a large gain there would count;
+  - it is a production-kernel experiment (`src/mtf.rs`), which the CI bench can measure.
+- **Where it goes:** it joins the queue behind #81, beside the link-only milestone (#79), as its own pre-registered experiment.
+
+**Where #78 stands:**
+- removing the recount works: the bound is 1.058;
+- making its checkpoints in the MTF stage costs 2.6–3.9% of that stage, depending on the kernel and the build;
+- the net in this harness is 1.047–1.050 at 3x3, with the MTF stage in series;
+- nothing here is a decoder figure (§8.4).
