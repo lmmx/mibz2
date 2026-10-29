@@ -993,3 +993,26 @@ perf 6.8.12 on the i9 rejected both names of the prefetch-inclusive L3 pair:
   - Neither is the demand-only share. If both count, they cross-check each other, and
     `l3_all_raw`'s misses × 64 B against the memory controller's read bytes checks the
     encoding.
+
+### 10.3 How the counters will be read, fixed before they arrive
+
+In this order, and no step before the ones above it:
+1. **Validity.**
+   - Do the raw encodings count, unmultiplexed?
+   - Are their totals plausible? Raw hits plus misses should be of the same order as
+     `offcore_requests.all_data_rd`, and raw misses × 64 B of the same order as the memory
+     controller's read bytes.
+   - A small discrepancy starts an investigation, not a rejection. The controller's reads
+     also carry RFO fills, page walks, coherence transfers and background traffic, and
+     the PMU's definitions differ at the edges. The read-against-write split keeps
+     writebacks out of the reads.
+2. **Cross-check.** Do the raw data-read pair and the architectural LLC pair move the same
+   way between arms, allowing that the latter also counts code and RFOs?
+3. **Mechanism.** What changes between p4, p8, 4x2, 3x3, s4x1 and s3x3, against §8.2's
+   predictions.
+   - Those predictions are hypotheses, not validity tests.
+   - A direction against them, such as p8's hit share at or above p4's, sends the reading
+     back to the raw counts, the request mix and the DRAM traffic before anything is
+     concluded. It does not discard the counter.
+4. **The engineering choice.** Whether the findings favour the build (E5, E11 #81), the
+   misses in flight (lanes, prefetch distance) or the hot working set (E7, E9).
