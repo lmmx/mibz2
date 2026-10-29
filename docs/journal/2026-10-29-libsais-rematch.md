@@ -310,6 +310,9 @@ pool's helper loop, 11.2% against 6.6%). But:
   - the library's `build_fused` reserves and writes every slot once, never zeroing.
 
   Its cost isn't measured, and blocks change length often but by small amounts.
+- **Parked** (the user's call, 2026-10-29): the shipped kernel is the faster one, so the
+  gap is pursued only if it points at an optimisation that transfers. The knee experiment
+  comes first.
 - **The gap is unexplained.** The attribution that would explain it is a profile of the
   timed rounds only. One option is two `perf record`s of each arm, at 1 and 41 rounds,
   read by difference, as the counters are. Another is per-symbol counters restricted to
