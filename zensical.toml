@@ -32,6 +32,7 @@ nav = [
     "benchmarks/index.md",
     { "History" = "benchmarks/history.md" },
     { "Alternatives" = "benchmarks/alternatives.md" },
+    { "Throughput–memory frontier" = "benchmarks/frontier.md" },
   ] },
   { "Reference" = [
     "reference/index.md",
@@ -190,6 +191,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
   { "benchmarks/index.md" = "How mibz2's CI benchmark measures the decoder: the corpora, the rounds, the paired ratios and the modelled full-dump figure." },
   { "benchmarks/history.md" = "mibz2's decoding speed, CPU time and peak memory over master's commits, per corpus and thread count." },
   { "benchmarks/alternatives.md" = "mibz2 beside other bzip2 decoders on master's latest benchmark run: paired ratios with 95% intervals, per corpus and thread count." },
+  { "benchmarks/frontier.md" = "Whether mibz2 can decode faster with less memory when blocks share the cache: the question, the method, and what has been measured so far." },
 ]
 "Concepts" = [
   { "concepts/index.md" = "What mibz2 decodes, what it checks, and how it decodes in parallel." },
