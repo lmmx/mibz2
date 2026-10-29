@@ -1933,3 +1933,121 @@ the i9's; static, not profiled):
 - **The MTF cost is a candidate target,** attributed to spills, with a plausible fix not yet
   measured.
 - **Nothing here is a decoder figure (§8.4).**
+
+## 15. #78's spill fix: the checkpoints made with production's hot loop (pre-registered before it runs)
+
+Branch `research/coop-spill`, stacked on `research/coop-checkpoint`. This is one isolated
+experiment, the first agreed after §14.4: the #78 spill fix, then #81. The link-only
+T-vector is a later, separate milestone, recorded on #79. Production `src/` is untouched.
+`mtf_cp`, the `n` arms and every earlier arm stay as the controls.
+
+### 15.1 What changes
+
+**`mtf_cp2`** (examples/coop.rs) makes the same checkpoints as `mtf_cp`, in the form §14.4
+proposed:
+- **production's inner loop, unchanged but for its limit,** which is the nearer of the
+  block's end and the next checkpoint. Like production's `max`, the limit is fixed for the
+  whole loop;
+- **an outer loop,** entered once every 16 KiB. It tells the block's end (production's
+  error) from a checkpoint, copies the counts, splits a run that crosses a checkpoint, and
+  takes the symbol the inner loop stopped at;
+- **the byte step is production's,** written once in a macro, so the inner loop and the
+  outer one take a symbol the same way.
+
+**The static check before any timing** (rustc 1.97.0, read off the binary):
+
+| kernel | size | common byte path (no run, index < 32), instructions | `n` | end-of-block symbol | limit | spill stores a symbol | list's new front stored |
+|---|--:|--:|---|---|---|--:|---|
+| production (`mtf_avx2`) | 0x326 | 40 | register | register | memory (`max`) | 1 | before the count's increment |
+| `mtf_cp` (§14) | 0x6d3 | about 44 | **stack** | **memory** | register | 2 or more | before |
+| `mtf_cp2` | 0x82d | **40** | register | register | register | 3 | **after** the count's increment |
+| `mtf_cp2p` | 0x839 | **40** | register | register | register | 2 | before |
+
+**A codegen difference found by the check:**
+- In `mtf_cp2`, LLVM moved the store of the list's new front (`*base = v`) to *after* the
+  `s2u` load and the count's read-modify-write. Production and `mtf_cp` store it straight
+  after the vector store.
+- **Why the order might matter (a hypothesis):**
+  - the next symbol's 32-byte list load overlaps that 1-byte store, so it can't be
+    forwarded and waits for the store to commit;
+  - a store commits only after every older instruction retires;
+  - so the late store may put the `s2u` load and the count's update on the loop-carried
+    chain.
+- **`mtf_cp2p`** (`mtf_cp2::<true>`) adds a compiler fence after that store. It emits no
+  instruction, and restores production's order.
+- **The pair isolates the store order:** the same source, the same instruction count, one
+  spill store apart.
+
+**Checked** (`coop mtf` runs it first, every time). All three checkpoint kernels against
+production's, on:
+- every corpus block;
+- 10 libbzip2-compressed edge cases at levels 1 and 9: one byte, two bytes, a 1 MB run, two
+  checkpoints of zeros then a byte, period 3, random input of exactly 3 checkpoints and ±1,
+  2 MB random, and runs of 1–300;
+- each block also with its limit cut to its length less one, cut to its last whole
+  checkpoint (where the block's end and a checkpoint are the same limit), and raised to its
+  next checkpoint.
+
+Every result, error kind, last column, count and checkpoint list agrees. On the VM that was
+2,207 runs of each kernel, 758 of them refused with production's error. The grid's `m` and
+`f` arms check their checkpoints and every block's output, as `n` does.
+
+**The VM is not evidence here.** Two indicative VM runs of `coop mtf` contradicted each
+other:
+- `mtf_cp2` against `mtf_cp` came out at 0.91 in one and 1.07 in the other;
+- the rounds ranged 0.69–1.47;
+- in neither run did `mtf_cp` show its i9 cost (0.937).
+
+The i9 decides.
+
+### 15.2 The predictions and the criteria
+
+**From §14.4's i9 figures:**
+- the MTF stage is about 33 ms of a worker's time in r3x3, about 24%;
+- the given-counts build saves 7.74 ms;
+- q3x3 against r3x3 is 1.055;
+- a checkpoint cost of c of the MTF stage leaves a net of about 7.74 − 33c ms.
+
+| comparison | predicted |
+|---|--:|
+| `mtf_cp2p` against production's MTF, one core | **0.98–1.00** |
+| `mtf_cp2` against production's MTF, one core | 0.94–1.00 |
+| `mtf_cp2p` against `mtf_cp2` (the store order alone) | 1.00–1.06 |
+| f3x3 against r3x3, MB/s (the net with the fix) | **1.04–1.06** |
+| m3x3 against r3x3 | 1.03–1.06 |
+| f3x3 against n3x3 (the fix inside the grid) | 1.01–1.03 |
+| m3x3 against n3x3 | 1.00–1.03 |
+| f3x3 against q3x3 (the fix's remaining cost) | 0.99–1.01 |
+| f4x1 against r4x1 (null) | 0.98–1.02 |
+
+**The fix succeeds, and #78's stage 2 meets §14.2's rule, when all four hold for the
+better of `mtf_cp2` and `mtf_cp2p` (its `m` or `f` arm):**
+1. its paired MTF-only ratio against production is ≥ 0.98: §14.2's criterion 3, the one
+   that failed;
+2. its 3x3 arm against r3x3 has a paired 95% interval that excludes 1;
+3. its walk control stays within ±3%;
+4. its 3x3 arm against n3x3 is above 1, its interval excluding 1: the fix beats §14's form
+   inside the grid.
+
+**The reading of the pair:**
+- if `mtf_cp2p` beats `mtf_cp2` with an interval excluding 1, the store order is a
+  measured cost;
+- if they are within noise, the order is not what matters, and any recovery comes from the
+  register allocation alone.
+
+**If the criteria fail,** the result is recorded as negative, and the hot loop's remaining
+difference is named from the profile, not guessed.
+
+**Either way, no production change follows from this run.** Taking the checkpoints into the
+decoder needs its own decoder-level A/B (§8.4). After this checkpoint comes #81, which is a
+separate experiment.
+
+### 15.3 The commands (the i9, with the browser and other busy programs closed)
+
+```
+git fetch origin research/coop-spill
+git checkout --detach origin/research/coop-spill
+just bench-coop-spill
+```
+
+It takes about four minutes. Upload `coop-spill-*.md`, its `.jsonl`, and `coop-ab-*.md`.
