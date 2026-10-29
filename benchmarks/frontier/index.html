@@ -66,13 +66,13 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=d6d4cac5ad49">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=ff73b3292ac9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=d6d4cac5ad49">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=ff73b3292ac9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=d6d4cac5ad49">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=ff73b3292ac9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=d6d4cac5ad49">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=ff73b3292ac9">
     
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -1443,7 +1443,10 @@ merged one (<code>mergedTL</code>, the byte kept beside each link, the layout mi
 question here is whether that trade-off still holds when several blocks decode at once
 and their tables share one L3 cache. A table that is slower for one block might be faster
 for the machine, if its smaller footprint keeps more blocks resident.</p>
-<p><strong>Where it stands:</strong> the mechanism is measured. A shift of the frontier is not.</p>
+<p><strong>Where it stands:</strong> the mechanism is measured, and so is a first shift. On the i9 and the
+Wikidata corpus, the full decoder with cooperative teams dominates every worker count
+measured (4 to 20) on both throughput and peak RSS (series 3). Whether it also does at 1
+to 3 workers, the low-memory end, is not yet measured.</p>
 <table>
 <thead>
 <tr>
@@ -1459,6 +1462,10 @@ for the machine, if its smaller footprint keeps more blocks resident.</p>
 <tr>
 <td>The table is compressible: about 77% of a full block's rows are in 32-row translation groups</td>
 <td>measured (<a href="https://github.com/lmmx/mibz2/issues/99">ψ census</a>)</td>
+</tr>
+<tr>
+<td>Sharing a block's table between threads moves the full decoder's throughput–RSS frontier: every worker count from 4 to 20 is dominated by a team configuration</td>
+<td>measured on one machine and workload, at 4 threads and above (<a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-cooperative-decoder.md">decoder journal</a>, series 3)</td>
 </tr>
 <tr>
 <td>A compact table can be navigated as fast, built directly from the last column</td>
@@ -1497,7 +1504,7 @@ measured observations, as series are added:</p>
   compact table at four blocks beating today's at four blocks is a step; the frontier
   moves only if it beats today's best configuration at any block count.</p>
 <h2 id="what-is-measured-so-far">What is measured so far<a class="headerlink" href="#what-is-measured-so-far" title="Permanent link">&para;</a></h2>
-<p>Two series exist, on the i9 (Intel i9-10900K, 10 cores, 20 MB L3). They are different
+<p>Three series exist, on the i9 (Intel i9-10900K, 10 cores, 20 MB L3). They are different
 runs at different levels, so they are separate series, never one line.</p>
 <p><strong>1. The full decoder, today's table, by worker count</strong> (unpinned; the bench corpus's
 bytes recompressed with lbzip2 -9; <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-28-workstation-scaling.md">workstation journal §9</a>):</p>
@@ -1593,17 +1600,195 @@ live on N × k cores.
   - it is pinned;
   - its memory axis is computed table bytes, not peak RSS;
   - it uses more cores (CPU-seconds are not yet measured).</p>
+<p><strong>3. The full decoder, workers against cooperative teams, with measured memory</strong>
+(unpinned; the bench corpus, 209.7 MB decoded; 20 interleaved rounds; the
+<a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-cooperative-decoder.md">decoder journal</a>
+and its raw files). One point per distinct plan: where two arms ran the same plan (the
+policy at 8, 10 and 20 threads is 4 teams of 2 on this machine; 2 teams of 3 ran at both 6
+and 8), the table gives the range of their medians, which is noise.</p>
+<table>
+<thead>
+<tr>
+<th>plan</th>
+<th style="text-align: right;">live tables</th>
+<th style="text-align: right;">threads</th>
+<th style="text-align: right;">MB/s</th>
+<th style="text-align: right;">against p4 (paired, 95%)</th>
+<th style="text-align: right;">peak RSS</th>
+<th style="text-align: right;">CPU-s</th>
+<th style="text-align: center;">nondominated</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4 workers (p4)</td>
+<td style="text-align: right;">14.4 MB</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1007</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">76 MB</td>
+<td style="text-align: right;">0.84</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td>6 workers</td>
+<td style="text-align: right;">21.6 MB</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">858</td>
+<td style="text-align: right;">0.861 (0.842–0.881)</td>
+<td style="text-align: right;">102 MB</td>
+<td style="text-align: right;">1.45</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td>8 workers</td>
+<td style="text-align: right;">28.8 MB</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">674</td>
+<td style="text-align: right;">0.693 (0.673–0.714)</td>
+<td style="text-align: right;">128 MB</td>
+<td style="text-align: right;">2.41</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td>10 workers</td>
+<td style="text-align: right;">36.0 MB</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">632</td>
+<td style="text-align: right;">0.644 (0.621–0.668)</td>
+<td style="text-align: right;">152 MB</td>
+<td style="text-align: right;">2.97</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td>20 workers</td>
+<td style="text-align: right;">72.0 MB</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">471</td>
+<td style="text-align: right;">0.479 (0.462–0.497)</td>
+<td style="text-align: right;">267 MB</td>
+<td style="text-align: right;">7.31</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td>1 team of 3</td>
+<td style="text-align: right;">3.6 MB</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">530</td>
+<td style="text-align: right;">0.540 (0.524–0.556)</td>
+<td style="text-align: right;">35 MB</td>
+<td style="text-align: right;">0.77</td>
+<td style="text-align: center;"><strong>yes</strong></td>
+</tr>
+<tr>
+<td>2 teams of 2</td>
+<td style="text-align: right;">7.2 MB</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">891</td>
+<td style="text-align: right;">0.904 (0.885–0.923)</td>
+<td style="text-align: right;">50 MB</td>
+<td style="text-align: right;">0.73</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td>2 teams of 3</td>
+<td style="text-align: right;">7.2 MB</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">987–988</td>
+<td style="text-align: right;">1.004–1.006</td>
+<td style="text-align: right;">50 MB</td>
+<td style="text-align: right;">0.82</td>
+<td style="text-align: center;"><strong>yes</strong></td>
+</tr>
+<tr>
+<td>3 teams of 2 (the policy at 6)</td>
+<td style="text-align: right;">10.8 MB</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1155–1189</td>
+<td style="text-align: right;">1.166 (1.123–1.210) to 1.200</td>
+<td style="text-align: right;">64 MB</td>
+<td style="text-align: right;">0.81–0.84</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td>3 teams of 3</td>
+<td style="text-align: right;">10.8 MB</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">1234</td>
+<td style="text-align: right;">1.264 (1.211–1.318)</td>
+<td style="text-align: right;">64 MB</td>
+<td style="text-align: right;">0.96</td>
+<td style="text-align: center;"><strong>yes</strong></td>
+</tr>
+<tr>
+<td>4 teams of 2 (the policy at 8–20)</td>
+<td style="text-align: right;">14.4 MB</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">1223–1256</td>
+<td style="text-align: right;">1.243–1.274; at 20, 1.257 (1.197–1.320)</td>
+<td style="text-align: right;">77 MB</td>
+<td style="text-align: right;">1.02–1.04</td>
+<td style="text-align: center;"><strong>yes</strong>, by its best median</td>
+</tr>
+<tr>
+<td>5 teams of 2</td>
+<td style="text-align: right;">18.0 MB</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1147</td>
+<td style="text-align: right;">1.162 (1.121–1.204)</td>
+<td style="text-align: right;">91 MB</td>
+<td style="text-align: right;">1.36</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td>6 teams of 3</td>
+<td style="text-align: right;">21.6 MB</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">1084</td>
+<td style="text-align: right;">1.095 (1.060–1.132)</td>
+<td style="text-align: right;">105 MB</td>
+<td style="text-align: right;">2.16</td>
+<td style="text-align: center;">no</td>
+</tr>
+<tr>
+<td>10 teams of 2</td>
+<td style="text-align: right;">36.0 MB</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">825</td>
+<td style="text-align: right;">0.838 (0.813–0.864)</td>
+<td style="text-align: right;">155 MB</td>
+<td style="text-align: right;">3.76</td>
+<td style="text-align: center;">no</td>
+</tr>
+</tbody>
+</table>
+<p>Peak RSS is measured (the median run's, in decimal MB). Live tables are computed. The
+nondominated column compares medians on throughput (higher) and peak RSS (lower) within
+this series.</p>
+<p>What it shows, and what it doesn't:
+- <strong>Every worker count measured is dominated.</strong> p4, the decoder's best worker count here,
+  is beaten on both axes by 3 teams of 2 (the policy at 6 threads: 1.166× with its lower
+  bound 1.123, at 64 MB against 76) and by 3 teams of 3.
+- <strong>The nondominated set is all teams:</strong> 1×3, 2×3, 3×3 and 4×2. Measured by medians,
+  4×2 stays on the set by its best repeat. Its throughput is tied with 3×3's within noise
+  (their intervals overlap almost entirely), at 13 MB more RSS and about 6% more CPU. 3×3
+  is a lead for refining the policy, not yet a result.
+- <strong>Not a whole-frontier result.</strong> No worker counts below 4 were measured in this run. At
+  1 to 3 workers, today's decoder may still own the low-memory end: series 1 has 2
+  workers at 707 MB/s, but without RSS. Filling that in needs the same A/B at 1, 2 and 3
+  threads.
+- <strong>One machine, one workload, one level (the full decoder).</strong> Threads above 10 share
+  physical cores with SMT siblings.</p>
 <h2 id="what-fills-it-in">What fills it in<a class="headerlink" href="#what-fills-it-in" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>The cooperative decoder's A/B</strong> on the i9 (the integration's step 7) runs the full
-  decoder unpinned, with production at 4–10 workers and cooperative teams beside it, and
-  measures peak RSS and CPU-seconds. Its observations will be written in this page's
-  format: the first series with measured memory.</li>
+<li><strong>The low-memory end on the i9:</strong> the same A/B at 1, 2 and 3 threads, where today's
+  workers and the smallest teams meet.</li>
 <li><strong>The CI benchmark's release runs</strong> measure wall time, CPU and peak RSS at 1, 2 and 4
   threads on every release, on GitHub's 4-vCPU runners. That is below the i9's knee, so it
   can't show a crossover, but it keeps a frontier for every release.</li>
 <li><strong>Compact tables</strong> join when one exists: a 24-bit link-only table (#79) first, then
-  others if the census and the walk's costs justify them.</li>
+  others if the census and the walk's costs justify them. They are judged against the
+  cooperative decoder now, not against the workers.</li>
 </ul>
 <p>The research behind this page: Seward's trade-off revisited, verbatim
 (<a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-frontier/seward-frontier-research.md">the researcher</a>,
@@ -1753,11 +1938,11 @@ and the <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=d6d4cac5ad49"></script>
+        <script src="../../assets/javascripts/bench.js?v=ff73b3292ac9"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=d6d4cac5ad49"></script>
+        <script src="../../assets/javascripts/couriers.js?v=ff73b3292ac9"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=d6d4cac5ad49"></script>
+        <script src="../../assets/javascripts/blog.js?v=ff73b3292ac9"></script>
       
     
   </body>
