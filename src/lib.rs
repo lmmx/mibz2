@@ -360,7 +360,8 @@ pub fn decode(data: &[u8]) -> Result<Vec<u8>, Error> {
     decode_with::<bwt::Segmented>(data, Kernels::detect())
 }
 
-/// A whole .bz2 decoded on `threads` worker threads (at least 1), a block each, in order
+/// A whole .bz2 decoded on `threads` threads (at least 1), in order, spent as
+/// `StreamDecoder::new` plans them
 pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
     let dec = StreamDecoder::new(threads, 2 * threads.max(1), Kernels::detect());
     let mut out = Vec::with_capacity(data.len().saturating_mul(4));

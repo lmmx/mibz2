@@ -33,9 +33,10 @@ class BZ2Reader(io.RawIOBase):
     source
         A path, or a binary file object open for reading (its ``read`` is called).
     threads
-        Decoding threads: ``1`` decodes on the reading thread; more decode that many
-        blocks at once on worker threads. ``None`` (the default) uses every CPU this
-        process may use.
+        Decoding threads: ``1`` decodes on the reading thread; more decode blocks at
+        once on worker threads, a block each, or, on 6 or more physical cores, in teams
+        of 2 sharing each block (as many teams as keep their tables in the CPU's last
+        cache level). ``None`` (the default) uses every CPU this process may use.
 
     Raises
     ------
