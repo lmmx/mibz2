@@ -190,3 +190,17 @@ bench-coop *args:
 bench-coop-counters *args:
     bash bench/corpus.sh
     python3 bench/coop_counters.py "$@"
+
+# bench/coop_profile.py: where the cooperative kernel's instructions go (#77; the coop
+# journal's §11): p4, 4x1, 3x3 and libsais's s4x1, each alone under `perf record` for
+# retired instructions, cycles and memory-stall cycles; per symbol and phase per output byte,
+# and the hottest instructions of each arm's hottest symbols. About 3 minutes; needs sudo for
+# perf. Upload coop-profile-*.md and coop-profile-*.tar.gz.
+#   just bench-coop-profile --arms p4,4x1 --rounds 3
+#   just bench-coop-profile
+
+# Where the cooperative kernel's extra instructions are, by symbol and phase (#77)
+[positional-arguments]
+bench-coop-profile *args:
+    bash bench/corpus.sh
+    python3 bench/coop_profile.py "$@"

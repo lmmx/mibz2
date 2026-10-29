@@ -15,7 +15,7 @@ fix-eof-ws mode="":
     whitespace-format --add-new-line-marker-at-end-of-file \
           --new-line-marker=linux \
           --normalize-new-line-markers \
-          --exclude ".git/|target/|dist/|site/|__pycache__/|\.pyc$|\.swp|.egg-info/|\.so$|.json$|.lock$|.parquet$|.venv/|\..*cache/" \
+          --exclude ".git/|target/|dist/|site/|__pycache__/|\.pyc$|\.swp|.egg-info/|\.so$|.json$|.lock$|.parquet$|\.tar\.gz$|.venv/|\..*cache/" \
           $ARGS \
           .
 
