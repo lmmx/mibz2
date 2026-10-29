@@ -174,3 +174,14 @@ bench-fingerprint *args:
 bench-compete *args:
     bash bench/corpus.sh
     bash bench/compete.sh "$@"
+
+# bench/pmu_probe.py, as the PMU probe workflow runs it on CI: the CPU, its caches and
+# quota, perf's permissions and the PMUs registered, then each candidate counter tried on
+# its own over a short busy loop. Needs perf and sudo. It writes pmu-probe.json to share.
+#   just bench-pmu-probe
+#   just bench-pmu-probe --out pmu-probe-i9.json
+
+# What this machine's performance counters can measure (diagnostic only)
+[positional-arguments]
+bench-pmu-probe *args:
+    python3 bench/pmu_probe.py "$@"
