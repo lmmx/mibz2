@@ -1016,3 +1016,120 @@ In this order, and no step before the ones above it:
      concluded. It does not discard the counter.
 4. **The engineering choice.** Whether the findings favour the build (E5, E11 #81), the
    misses in flight (lanes, prefetch distance) or the hot working set (E7, E9).
+
+### 10.4 The full run (measured, `coop-counters-20261029T093232Z`, 16d4431)
+
+It ran 504 runs: 7 arms × 12 passes × 3 repeats × (1 and 21 rounds). `l3_all` and
+`l3_all_ocr` were left out (§10.2).
+
+**Step 1, validity** (§10.3's order). Most of it passes; one class of figures doesn't.
+- **Coverage and errors:** every pass was counted 100% of the time, with no failed runs
+  and no readings dropped.
+- **Typicality:** while counted, the arms ran at 0.93 (p8), 0.95 (4x2) and 0.98–1.005
+  (the others) of their confirmed MB/s. The first repeat was the slowest in every arm
+  (p4 1395 against 1486 and 1468).
+- **Stable figures**, spread under about 5% over the repeats:
+  - instructions per byte (spread under 0.2%);
+  - the prefetch-inclusive reads past L2: per byte, in flight and the cycles each waits;
+  - the fill-buffer rate;
+  - DRAM bytes, except p4 and s4x1 (6.6–8.9 and 5.2–8.5 B read per byte).
+- **Unstable figures:** the demand-only L3-miss ones (L3-missing demand reads, their
+  waits and their reads in flight). For example, s3x3's wait ranged 95–967 cycles and
+  p4's in-flight figure 0.62–1.46. They count the small remainder the prefetches miss,
+  so they are **not read** here.
+- **The stable figures reconcile with the measured throughput through Little's law.**
+  Reads per second are reads in flight over the wait, and MB/s is that over reads per
+  byte, at each arm's own clock (3.7 GHz × cycles / ref-cycles).
+
+| arm | clock | reads past L2 in flight, machine-wide | each waits | reads past L2 / B | model MB/s | measured | model / measured |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| p4 | 4.99 GHz | 28.1 | 67 cycles (13.5 ns) | 1.398 | 1493 | 1462 | 1.022 |
+| p8 | 4.91 | 70.0 | 366 (74.6 ns) | 1.338 | 702 | 654 | 1.073 |
+| 4x1 | 4.91 | 23.4 | 62 (12.6 ns) | 1.516 | 1225 | 1241 | 0.987 |
+| 4x2 | 4.90 | 38.8 | 64 (13.1 ns) | 1.553 | 1909 | 1712 | 1.115 |
+| 3x3 | 4.90 | 41.9 | 66 (13.4 ns) | 1.518 | 2056 | 1908 | 1.078 |
+| s4x1 | 4.94 | 19.4 | 71 (14.4 ns) | 0.860 | 1563 | 1561 | 1.002 |
+| s3x3 | 4.91 | 31.1 | 76 (15.5 ns) | 0.891 | 2256 | 2367 | 0.953 |
+
+The model overstates the team arms by up to 11%. The likely reason is the time a team's
+helpers spend outside the walk's read stream, in the build's barriers and its serial
+prefix sums.
+
+**Step 2, the cross-check:** waiting for the short follow-up's `l3_all_raw` and `llc_all`
+(§10.2). Until then the L3 split is inferred, not measured.
+- The memory controller's read lines per read past L2 bound the share that went to DRAM
+  from above: (DRAM read B per B / 64) / (reads past L2 per B).
+- That is p4 ≤ 8.6%, p8 ≤ 40%, 4x2 ≤ 7.2%, 3x3 ≤ 5.2%, s4x1 ≤ 10.9% and s3x3 ≤ 5.4%. The
+  controller's reads also carry other traffic, so these are upper bounds.
+
+**Step 3, the mechanism** (provisional, on the stable figures; the L3 split is to come).
+Each of §8.2's two readings leaves its mark, at a different contrast:
+- **Residency, at a fixed core count** (p8 against 4x2, 8 cores each):
+  - a read past L2 waits 366 cycles in p8 and 64 in 4x2;
+  - DRAM reads fall from 34.4 to 7.1 B per byte, and writes from 9.8 to 3.7;
+  - 8 live tables spill to DRAM and 4 don't.
+- **Overlap, at a fixed footprint** (p4 against 4x2, 4 tables each):
+  - the wait is the same (67 and 64 cycles), and so are the DRAM bytes (7.7 and 7.1);
+  - reads in flight rise 1.38×, from 28.1 to 38.8;
+  - so the second core on each table adds misses in flight at L3 latency.
+- **3x3 has both against p4:**
+  - DRAM reads −34% (7.71 to 5.08 B per byte), writes −42% (3.57 to 2.09);
+  - the same wait;
+  - 1.49× the reads in flight (28.1 to 41.9).
+- **This corrects a reading that went the other way.** The demand-only "L3-missing reads
+  in flight" is lower in 3x3 than in p4, but it is one of the unstable figures. The
+  prefetch-inclusive occupancy is the stable one, and it rises 1.49×.
+- **Per core, a team's cores are not fill-buffer bound; production's are.**
+  - p4 averages 7.0 reads in flight a core, against 4.85 in 4x2 and 4.66 in 3x3.
+  - Requests found the fill buffers full 0.24 times a cycle in p4, against 0.07–0.08 in
+    every cooperative and libsais arm.
+  - So production's walk presses on each core's fill buffers, and adding cores to a table
+    relieves them. Within a team, a core's in-flight count is held down by its own
+    instructions, not by the fill buffers.
+
+**The instruction finding (E4, #77).**
+- Instructions per byte are p4 23.8, 4x1 31.8 (+34%), 4x2 35.0, 3x3 35.3 (+48%), s4x1
+  21.4 and s3x3 23.2. The spreads are under 0.2%.
+- The cooperative kernel's k = 1 penalty (0.87 × p4) is instructions, not memory:
+  - 4x1 has +8% reads past L2 per byte and a similar wait;
+  - it runs a higher IPC (1.95 against 1.71) on 34% more instructions;
+  - it executes 4.55 stores per byte against 3.03.
+- A team adds about 3.5 more instructions per byte: the recount (#78), the barriers, the
+  segment claims.
+- libsais does its whole inversion, build included, in 21.4–23.2 instructions per byte.
+- `perf record`, in user cycles:
+  - 4x1: `coop_walk` 55.6%, the build's phase 2 (the scatter) 22.2%, phase 1 (the copy) 5.1%;
+  - p4: `room_segments` 62.9%, and `Inv::invert` 24.9% (production's build, inlined).
+
+**libsais's edge is fewer reads per byte, at a slightly longer wait.**
+- 0.86–0.89 reads past L2 per byte, against our 1.40–1.55, and 0.52 software prefetches
+  per byte against our 1.00. That is one dependent load for two bytes (ψ²).
+- Each read waits a little longer (71–76 cycles against 62–67), and more of its
+  prefetches are late (8.6–12.3% against 3.5–5.9%).
+- Its build is not cheap: in s4x1, `calculate_biPSI_marks_symbol_rows` takes 27% and
+  `compute_histogram` 6%, against the walk (`decode_chains_symbol_rows`) at 42%.
+- Its lead is the walk's reads per byte, at an instruction count our cooperative kernel
+  exceeds by half.
+
+**Cross-core snoops (#81) are not a material cost.**
+- HITM loads are 0.33 (4x2), 0.84 (3x3) and 2.98 (s3x3) per KB, against 0.005 in p4.
+- That is under 0.001 a byte, against 1.5 reads past L2 a byte. At about 100–150 cycles
+  each, it is under 0.15 cycles a byte of 3x3's 20.8, under 1%.
+- The store side (RFOs to another core's lines) isn't in this event. But #81's case now
+  rests on the pass it removes (stores 5.6 per byte in 3x3 against 3.0 in p4), not on
+  the handoff.
+
+**Step 4, what it points at** (provisional until step 2):
+1. **The cooperative kernel's instructions first (E4, #77).**
+   - The teams' cores are neither latency-bound at DRAM (the wait is at L3 level) nor
+     fill-buffer bound. They are busy executing 35 instructions a byte, which holds down
+     their misses in flight.
+   - Production's walk does the same job in 23.8. Closing that gap is the measured lever.
+   - The target is production's instructions per byte on the cooperative walk and build.
+2. **Then the build's stores and passes (E5 #78, E11 #81).** The case is the extra stores
+   and the recount, with the cross-core argument withdrawn.
+3. **ψ² only with an instruction budget.** libsais's ≤ 23 instructions a byte (build
+   included) at 0.9 reads a byte is the bar. Our port (E1) paid more instructions than it
+   saved in reads below the knee.
+4. **The hot working set (E7, E9) is not the lever at 3x3.** Its reads past L2 already
+   wait at L3 latency, with DRAM at most 5% of them. It would matter beyond the knee.
