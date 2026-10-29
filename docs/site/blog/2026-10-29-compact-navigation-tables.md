@@ -152,12 +152,12 @@ Initially, we had no idea how well these representations would fit real BWT data
 
 Perhaps the values were increasing but widely scattered, making compression awkward.
 
-So Claude wrote a census program to inspect them.
+So we wrote a census program to inspect them.
 
 It found more structure than the theory alone guarantees.
 
 <figure class="bf-fig">
-<p class="bf-title">What Claude reported about our benchmark corpus</p>
+<p class="bf-title">What our census found in the benchmark corpus</p>
 <svg viewBox="0 0 720 150" role="img" aria-label="77.6% of rows are in simple consecutive groups; 99.51% fit compact FOR or Elias–Fano records."><text x="0" y="20" class="bf-ts">Simple consecutive groups</text><text x="720" y="22" class="bf-big-green" text-anchor="end">77.6%</text><rect x="0" y="32" width="720" height="13" rx="6.5" class="bf-track"/><rect x="0" y="32" width="558.72" height="13" rx="6.5" class="bf-green"/><text x="0" y="64" class="bf-tm">Rows where a complete group of pointers can potentially be represented by one base plus a simple offset.</text><text x="0" y="104" class="bf-ts">Fit compact FOR or Elias–Fano</text><text x="720" y="106" class="bf-big" text-anchor="end">99.51%</text><rect x="0" y="116" width="720" height="13" rx="6.5" class="bf-track"/><rect x="0" y="116" width="716.472" height="13" rx="6.5" class="bf-steel"/><text x="0" y="148" class="bf-tm">Only 0.49% of rows required exceptions under the proposed 32-value encoding scheme.</text><path d="M0 78.5H720" class="bf-rule"/></svg>
 <figcaption>These two percentages overlap: they aren't two separate populations.</figcaption>
 </figure>
@@ -280,14 +280,14 @@ There are three substantial unanswered questions.
 
 **Third, does the 77.6% translation property hold broadly?** We know it appears in our benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.
 
-The agents have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.
+We have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.
 
 ## 9. What is known and what is not
 
 | Finding | Status |
 |---|---|
 | Ψ has increasing sequences that can be compressed | Mathematically established |
-| Actual benchmark data contains abundant consecutive-position groups | Measured by Claude's census, as reported |
+| Actual benchmark data contains abundant consecutive-position groups | Measured by our census |
 | Fixed 64-byte records can represent the overwhelming majority of measured groups | Strongly supported by the census; complete encoding still needs validation |
 | A two-tier directory could shrink storage further | New design hypothesis |
 | Reduced working sets can improve cache residency | Supported by mibz2's existing performance measurements |
@@ -335,7 +335,7 @@ That brings information theory, succinct data structures, cache architecture and
 
 <figure class="bf-fig">
 <p class="bf-title">Our research journey</p>
-<svg viewBox="0 0 720 340" role="img" aria-label="Five steps: Seward 2001; compressed permutation research; the 16-bit hypothesis; the corpus census (77.6% translation groups); the two-tier idea."><path d="M15 30V66" class="bf-link"/><circle cx="15" cy="14" r="13" class="bf-dot"/><text x="15" y="19" class="bf-t-strong" text-anchor="middle">1</text><text x="44" y="19" class="bf-ts">Seward, 2001</text><text x="44" y="42" class="bf-t">Showed that inverse-BWT navigation can trade memory for computation.</text><path d="M15 98V134" class="bf-link"/><circle cx="15" cy="82" r="13" class="bf-dot"/><text x="15" y="87" class="bf-t-strong" text-anchor="middle">2</text><text x="44" y="87" class="bf-ts">Compressed permutation research</text><text x="44" y="110" class="bf-t">Established that the sorted structure of Ψ can be represented economically.</text><path d="M15 166V202" class="bf-link"/><circle cx="15" cy="150" r="13" class="bf-dot"/><text x="15" y="155" class="bf-t-strong" text-anchor="middle">3</text><text x="44" y="155" class="bf-ts">Our 16-bit hypothesis</text><text x="44" y="178" class="bf-t">Proposed fitting 32 navigation values inside one cache line.</text><path d="M15 234V270" class="bf-link"/><circle cx="15" cy="218" r="13" class="bf-dot-hi"/><text x="15" y="223" class="bf-t-strong" text-anchor="middle">4</text><text x="44" y="223" class="bf-ts">Claude's corpus census</text><text x="44" y="246" class="bf-t">Found that 77.6% of rows qualify for simple translation groups, making a cheap fast path plausible.</text><circle cx="15" cy="286" r="13" class="bf-dot-hi"/><text x="15" y="291" class="bf-t-strong" text-anchor="middle">5</text><text x="44" y="291" class="bf-ts">Our latest two-tier idea</text><text x="44" y="314" class="bf-t">Proposed storing complete answers for simple groups directly in tiny descriptors,</text><text x="44" y="332" class="bf-t">fetching larger records only when needed.</text></svg>
+<svg viewBox="0 0 720 340" role="img" aria-label="Five steps: Seward 2001; compressed permutation research; the 16-bit hypothesis; the corpus census (77.6% translation groups); the two-tier idea."><path d="M15 30V66" class="bf-link"/><circle cx="15" cy="14" r="13" class="bf-dot"/><text x="15" y="19" class="bf-t-strong" text-anchor="middle">1</text><text x="44" y="19" class="bf-ts">Seward, 2001</text><text x="44" y="42" class="bf-t">Showed that inverse-BWT navigation can trade memory for computation.</text><path d="M15 98V134" class="bf-link"/><circle cx="15" cy="82" r="13" class="bf-dot"/><text x="15" y="87" class="bf-t-strong" text-anchor="middle">2</text><text x="44" y="87" class="bf-ts">Compressed permutation research</text><text x="44" y="110" class="bf-t">Established that the sorted structure of Ψ can be represented economically.</text><path d="M15 166V202" class="bf-link"/><circle cx="15" cy="150" r="13" class="bf-dot"/><text x="15" y="155" class="bf-t-strong" text-anchor="middle">3</text><text x="44" y="155" class="bf-ts">Our 16-bit hypothesis</text><text x="44" y="178" class="bf-t">Proposed fitting 32 navigation values inside one cache line.</text><path d="M15 234V270" class="bf-link"/><circle cx="15" cy="218" r="13" class="bf-dot-hi"/><text x="15" y="223" class="bf-t-strong" text-anchor="middle">4</text><text x="44" y="223" class="bf-ts">Our corpus census</text><text x="44" y="246" class="bf-t">Found that 77.6% of rows qualify for simple translation groups, making a cheap fast path plausible.</text><circle cx="15" cy="286" r="13" class="bf-dot-hi"/><text x="15" y="291" class="bf-t-strong" text-anchor="middle">5</text><text x="44" y="291" class="bf-ts">Our latest two-tier idea</text><text x="44" y="314" class="bf-t">Proposed storing complete answers for simple groups directly in tiny descriptors,</text><text x="44" y="332" class="bf-t">fetching larger records only when needed.</text></svg>
 </figure>
 
 ## What comes next
@@ -372,7 +372,7 @@ To:
 
 > "We have evidence that most of the permutation can be represented by simple rules, and we have several concrete ways of exploiting those rules while protecting the memory-level parallelism that makes mibz2 fast."
 
-The agents now have a real engineering question to settle: whether those smaller representations can make the CPU finish its work faster.
+We now have a real engineering question to settle: whether those smaller representations can make the CPU finish its work faster.
 
 The working hypothesis, in one line:
 
