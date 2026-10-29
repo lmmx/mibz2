@@ -212,3 +212,51 @@ geometric mean, its 95% t-interval, the median ratio, and the rounds won.
   A/B's 3 × 3 lead (lower RSS at equal throughput) is consistent with that.
 - **The one-core gap to libsais** (ψ², two bytes a step) stays open, conditional on an
   instruction budget (coop journal §10.4).
+
+## Follow-up, pre-registered: why l3x3 beats x3x3, and the shipped kernel's counters
+
+**1. The 7% between the library and its research twin** (l3x3 / x3x3 = 1.072,
+1.051–1.094). What differs, from the source, with no cause assumed:
+
+| | research `x3x3` | library `l3x3` |
+|---|---|---|
+| placement | each thread pinned to its own CPU | the worker pinned to its 3 CPUs together; its helpers, spawned on its thread, inherit them and float within them |
+| pool waits | 2,000 spins, then park | the same |
+| segments | 512 × k | 512 × K |
+| build | `coop_build_fused` | `coop::build_fused`, plus window checks and the end check |
+| instrumentation | build and walk timed apart; per-thread start and end times; walked bytes | none inside the call |
+| compilation | in the example's crate | in the library's, called across the crate boundary |
+
+**The test:** a new arm kind, `g`. It is the x kernel placed as the library places its
+threads: the worker and every helper pinned to the group's k CPUs together, unchecked.
+Run with `bash bench/coop.sh --arms x3x3,g3x3,l3x3,x4x2,g4x2,l4x2,s3x3`, 20 rounds.
+
+**The reading, fixed now:**
+- **Placement explains it** if g3x3 / x3x3 is above 1 (its interval excluding 1) and
+  l3x3 / g3x3 is within 1 ± 0.02 (its interval including 1).
+- **The code explains it** if g3x3 / x3x3 includes 1 and l3x3 / g3x3 excludes it. The
+  symbol profile (below) then says where: build, walk or assembly.
+- **Anything between is a split,** reported as measured.
+- **The 4x2 arms are the control:** l4x2 and x4x2 tied in the rematch (1.001), so g4x2
+  should tie too.
+
+**2. The counters on the shipped kernel.** The coop journal's §10.4 counters (09:30 today)
+were for the research harness's earlier kernel (the two-pass build with its recount). So
+"the teams are instruction-bound, not fill-buffer-bound" is a hypothesis for v0.2.0's
+kernel, not a finding.
+
+**The run:** `bench/coop_counters.py` as registered in the coop journal's §8.2 and §10:
+- each arm alone under `perf stat`, 1 and 21 rounds, 3 repeats, one counter pair a pass,
+  the memory controller machine-wide;
+- arms p4, x3x3, g3x3, l3x3, l4x2 and s3x3;
+- then `perf record` of l3x3, g3x3 and s3x3, by symbol in user cycles. That splits the
+  library's build from its walk, which its arm otherwise times as one.
+
+**The reading:**
+- **The hypothesis holds for the shipped kernel** if its arms meet the fill buffers full
+  well below p4's rate (§10.4: p4 0.24 a cycle, the old teams 0.07–0.08), at a similar
+  wait per read past L2, with instructions per byte above p4's.
+- **Then the levers are instructions,** not more misses in flight: AMAC-style scheduling
+  is not indicated for the 32-bit table (docs/journal/2026-10-29-amac.md).
+- **If instead the fill buffers are full** as often as p4's, the walk is memory-parallelism
+  bound, and lane count and scheduling come back in.

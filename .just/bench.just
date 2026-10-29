@@ -105,6 +105,18 @@ bench-libsais-rematch rounds="20":
     bash bench/coop.sh --rounds {{rounds}} --arms p4,4x2,3x3,x4x2,x3x3,l4x2,l3x3,s4x1,s4x2,s3x3
     COOP_WITH_MTF=1 bash bench/coop.sh --rounds {{rounds}} --arms p4,y4x2,y3x3,l4x2,l3x3,s4x1,s4x2,s3x3
 
+# The rematch's follow-up (docs/journal/2026-10-29-libsais-rematch.md, "Follow-up"): why the
+# library's l3x3 beats the research kernel's x3x3 (g arms: x placed as the library places
+# its threads), then the counters on the shipped kernel (bench/coop_counters.py: perf stat,
+# 3 repeats, the memory controller machine-wide; perf record of l3x3, g3x3 and s3x3 by
+# symbol). About 25 minutes; needs sudo for perf. Upload the coop-*.md, coop-counters-*.md
+# and both .jsonl.
+#   just bench-libsais-why
+bench-libsais-why rounds="20":
+    bash bench/corpus.sh
+    bash bench/coop.sh --rounds {{rounds}} --arms x3x3,g3x3,l3x3,x4x2,g4x2,l4x2,s3x3
+    python3 bench/coop_counters.py --arms p4,x3x3,g3x3,l3x3,l4x2,s3x3 --record-arms l3x3,g3x3,s3x3
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10

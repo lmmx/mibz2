@@ -35,6 +35,10 @@
 //!                                          with window checks and room walk; with
 //!                                          COOP_WITH_MTF=1 its checkpoints made by
 //!                                          `mtf::mtf_checkpoints` in the timing);
+//!                                          gNxK (the x arm placed as an l arm is:
+//!                                          its worker and helpers pinned to its k
+//!                                          CPUs together, left to the scheduler within
+//!                                          them, rather than one CPU each);
 //!                                          @S sets
 //!                                          a cooperative arm's segments a block (4x1@1024:
 //!                                          one core a block, with 4x2's segments)
@@ -200,6 +204,15 @@ fn to_words(t: Task) -> (u64, u64) {
 impl Pool {
     /// With `cpus`, thread j (the caller is 0) is pinned to `cpus[j]`
     fn new(k: usize, cpus: Option<&[usize]>) -> Pool {
+        Pool::placed(k, cpus, false)
+    }
+
+    /// `new`, or with `whole` every helper pinned to all of `cpus[..k]` together and left
+    /// to the scheduler within them (the `g` arms: the library's placement, its helpers
+    /// inheriting its worker's CPUs), unchecked
+    fn placed(k: usize, cpus: Option<&[usize]>, whole: bool) -> Pool {
+        let group: Option<Vec<usize>> = cpus.filter(|_| whole).map(|c| c[..k].to_vec());
+        let cpus = if whole { None } else { cpus };
         let seen: Arc<Vec<std::sync::atomic::AtomicI64>> = Arc::new(
             (0..k)
                 .map(|_| std::sync::atomic::AtomicI64::new(-1))
@@ -215,9 +228,13 @@ impl Pool {
                 let (epoch, done, fat, fat2) =
                     (epoch.clone(), done.clone(), fat.clone(), fat2.clone());
                 let (cpu, seen_cpu) = (cpus.as_ref().map(|c| c[idx]), seen.clone());
+                let group = group.clone();
                 std::thread::spawn(move || {
                     if let Some(c) = cpu {
                         assert!(pin(&[c]), "could not pin a helper to CPU {c}");
+                    }
+                    if let Some(g) = &group {
+                        assert!(pin(g), "could not pin a helper to CPUs {g:?}");
                     }
                     let mut seen = 0;
                     loop {
@@ -1651,9 +1668,9 @@ impl Inv {
         let coop = || {
             Box::new(Coop {
                 segments,
-                room: matches!(kind, 'r' | 'q' | 'n' | 'm' | 'f' | 'x' | 'y'),
-                given: matches!(kind, 'q' | 'n' | 'm' | 'f' | 'x' | 'y'),
-                fused: matches!(kind, 'x' | 'y'),
+                room: matches!(kind, 'r' | 'q' | 'n' | 'm' | 'f' | 'x' | 'y' | 'g'),
+                given: matches!(kind, 'q' | 'n' | 'm' | 'f' | 'x' | 'y' | 'g'),
+                fused: matches!(kind, 'x' | 'y' | 'g'),
                 ..Default::default()
             })
         };
@@ -1667,6 +1684,7 @@ impl Inv {
                 vec![],
             ),
             'w' => Inv::Coop(Pool::new(k, cpus), coop(), Some(Pool::new(1, None))),
+            'g' => Inv::Coop(Pool::placed(k, cpus, true), coop(), None),
             'l' => match k {
                 2 => Inv::Lib2(Default::default()),
                 3 => Inv::Lib3(Default::default()),
@@ -1952,6 +1970,7 @@ fn parse_arm(s: &str) -> Arm {
         b'x' => ('x', &s[1..]),
         b'y' => ('y', &s[1..]),
         b'l' => ('l', &s[1..]),
+        b'g' => ('g', &s[1..]),
         _ => ('c', s),
     };
     let (rest, segments) = match rest.split_once('@') {
@@ -1985,7 +2004,7 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
     drop(inv);
     let bytes: usize = bs.iter().map(|b| b.ll.len()).sum();
     let arms: Vec<Arm> = specs.iter().map(|s| parse_arm(s)).collect();
-    if arms.iter().any(|a| matches!(a.kind, 'x' | 'y')) {
+    if arms.iter().any(|a| matches!(a.kind, 'x' | 'y' | 'g')) {
         fused_check(bs);
     }
     if arms.iter().any(|a| a.kind == 'l') {
@@ -2082,7 +2101,7 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
                         sc.spawn(move || {
                             if let Some(g) = g {
                                 assert!(
-                                    pin(if matches!(kind, 's' | 'l') {
+                                    pin(if matches!(kind, 's' | 'l' | 'g') {
                                         g
                                     } else {
                                         &g[..1]
