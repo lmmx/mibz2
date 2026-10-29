@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A gentler tour through our succinct-data-structures expedition, from the BWT to a potentially much faster decoder.">
+        <meta name="description" content="A plain-language account of the succinct-data-structures review: how compactly the inverse BWT's navigation table can be stored, and what remains to be measured.">
       
       
         <meta name="author" content="Louis Maddox">
       
       
-        <link rel="canonical" href="https://lmmx.github.io/mibz2/blog/2026-10-29-what-have-we-discovered/">
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/blog/2026-10-29-compact-navigation-tables/">
       
       
         <link rel="describedby" href="../../llms.txt">
@@ -35,7 +35,7 @@
     
     
       
-        <title>What on earth have we just discovered? - mibz2</title>
+        <title>Compact navigation tables for the inverse BWT - mibz2</title>
       
     
     
@@ -129,7 +129,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              What on earth have we just discovered?
+              Compact navigation tables for the inverse BWT
             
           </span>
         </div>
@@ -1050,7 +1050,7 @@
   <span class="md-ellipsis">
     
   
-  What on earth have we just discovered?
+  Compact navigation tables for the inverse BWT
 
     
   </span>
@@ -1067,7 +1067,7 @@
   <span class="md-ellipsis">
     
   
-  What on earth have we just discovered?
+  Compact navigation tables for the inverse BWT
 
     
   </span>
@@ -1093,10 +1093,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-first-imagine-your-decoder-is-following-a-treasure-map" class="md-nav__link">
+  <a href="#1-the-decoder-follows-a-chain-of-pointers" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. First, imagine your decoder is following a treasure map
+        1. The decoder follows a chain of pointers
       </span>
     </span>
   </a>
@@ -1104,10 +1104,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-the-first-revelation-the-cards-arent-arbitrary" class="md-nav__link">
+  <a href="#2-the-cards-arent-arbitrary" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. The first revelation: the cards aren't arbitrary
+        2. The cards aren't arbitrary
       </span>
     </span>
   </a>
@@ -1126,10 +1126,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-the-discovery-that-changed-everything" class="md-nav__link">
+  <a href="#4-what-the-census-found" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. The discovery that changed everything
+        4. What the census found
       </span>
     </span>
   </a>
@@ -1148,10 +1148,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-then-we-found-an-even-more-interesting-possibility" class="md-nav__link">
+  <a href="#6-a-second-design-a-two-tier-layout" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. Then we found an even more interesting possibility
+        6. A second design: a two-tier layout
       </span>
     </span>
   </a>
@@ -1159,10 +1159,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-why-smaller-could-actually-make-mibz2-faster" class="md-nav__link">
+  <a href="#7-why-a-smaller-table-could-make-mibz2-faster" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7. Why smaller could actually make mibz2 faster
+        7. Why a smaller table could make mibz2 faster
       </span>
     </span>
   </a>
@@ -1170,10 +1170,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#8-why-we-havent-declared-victory" class="md-nav__link">
+  <a href="#8-open-questions" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        8. Why we haven't declared victory
+        8. Open questions
       </span>
     </span>
   </a>
@@ -1181,10 +1181,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#9-what-we-now-know-and-what-were-hoping-to-discover" class="md-nav__link">
+  <a href="#9-what-is-known-and-what-is-not" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        9. What we now know, and what we're hoping to discover
+        9. What is known and what is not
       </span>
     </span>
   </a>
@@ -1192,10 +1192,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#10-my-favourite-part-of-this-discovery" class="md-nav__link">
+  <a href="#10-the-underlying-idea" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        10. My favourite part of this discovery
+        10. The underlying idea
       </span>
     </span>
   </a>
@@ -1425,10 +1425,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-first-imagine-your-decoder-is-following-a-treasure-map" class="md-nav__link">
+  <a href="#1-the-decoder-follows-a-chain-of-pointers" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. First, imagine your decoder is following a treasure map
+        1. The decoder follows a chain of pointers
       </span>
     </span>
   </a>
@@ -1436,10 +1436,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-the-first-revelation-the-cards-arent-arbitrary" class="md-nav__link">
+  <a href="#2-the-cards-arent-arbitrary" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. The first revelation: the cards aren't arbitrary
+        2. The cards aren't arbitrary
       </span>
     </span>
   </a>
@@ -1458,10 +1458,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-the-discovery-that-changed-everything" class="md-nav__link">
+  <a href="#4-what-the-census-found" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. The discovery that changed everything
+        4. What the census found
       </span>
     </span>
   </a>
@@ -1480,10 +1480,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#6-then-we-found-an-even-more-interesting-possibility" class="md-nav__link">
+  <a href="#6-a-second-design-a-two-tier-layout" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        6. Then we found an even more interesting possibility
+        6. A second design: a two-tier layout
       </span>
     </span>
   </a>
@@ -1491,10 +1491,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-why-smaller-could-actually-make-mibz2-faster" class="md-nav__link">
+  <a href="#7-why-a-smaller-table-could-make-mibz2-faster" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7. Why smaller could actually make mibz2 faster
+        7. Why a smaller table could make mibz2 faster
       </span>
     </span>
   </a>
@@ -1502,10 +1502,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#8-why-we-havent-declared-victory" class="md-nav__link">
+  <a href="#8-open-questions" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        8. Why we haven't declared victory
+        8. Open questions
       </span>
     </span>
   </a>
@@ -1513,10 +1513,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#9-what-we-now-know-and-what-were-hoping-to-discover" class="md-nav__link">
+  <a href="#9-what-is-known-and-what-is-not" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        9. What we now know, and what we're hoping to discover
+        9. What is known and what is not
       </span>
     </span>
   </a>
@@ -1524,10 +1524,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#10-my-favourite-part-of-this-discovery" class="md-nav__link">
+  <a href="#10-the-underlying-idea" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        10. My favourite part of this discovery
+        10. The underlying idea
       </span>
     </span>
   </a>
@@ -1578,7 +1578,7 @@
 
 
   
-    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-10-29-what-have-we-discovered.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-10-29-compact-navigation-tables.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
     </a>
@@ -1586,21 +1586,21 @@
   
 
 
-<h1 id="what-on-earth-have-we-just-discovered">What on earth have we just discovered? 🧊<a class="headerlink" href="#what-on-earth-have-we-just-discovered" title="Permanent link">&para;</a></h1>
-<p><em>29 October 2026 · A gentler tour through our succinct-data-structures expedition, from the BWT to a potentially much faster decoder.</em></p>
-<p>The wonderful thing about this research is that it began with a fairly innocent question:</p>
+<h1 id="compact-navigation-tables-for-the-inverse-bwt-early-findings">Compact navigation tables for the inverse BWT: early findings<a class="headerlink" href="#compact-navigation-tables-for-the-inverse-bwt-early-findings" title="Permanent link">&para;</a></h1>
+<p><em>29 October 2026 · A plain-language account of the succinct-data-structures review: how compactly the inverse BWT's navigation table can be stored, and what remains to be measured.</em></p>
+<p>This research began with a simple question:</p>
 <blockquote>
 <p>Can succinct data structures make my bzip2 decoder faster?</p>
 </blockquote>
-<p>And we've ended up discovering that the enormous table your decoder uses to reconstruct text may contain far more information than it actually needs to store—and that much of this information follows surprisingly simple patterns.</p>
-<p>The especially exciting bit is that we have moved beyond theoretical speculation. Your agents have examined the actual data and found those patterns.</p>
-<p>Let me explain everything from the beginning, without assuming you've spent the last twenty years studying compressed indexes.</p>
-<h2 id="1-first-imagine-your-decoder-is-following-a-treasure-map">1. First, imagine your decoder is following a treasure map<a class="headerlink" href="#1-first-imagine-your-decoder-is-following-a-treasure-map" title="Permanent link">&para;</a></h2>
+<p>The answer so far is that the large table the decoder uses to reconstruct text stores more than it needs to, and much of what it stores follows simple patterns.</p>
+<p>This is no longer only theory: a census of the benchmark corpus's actual data shows those patterns.</p>
+<p>What follows starts from the beginning and assumes no background in compressed indexes.</p>
+<h2 id="1-the-decoder-follows-a-chain-of-pointers">1. The decoder follows a chain of pointers<a class="headerlink" href="#1-the-decoder-follows-a-chain-of-pointers" title="Permanent link">&para;</a></h2>
 <p>When bzip2 compresses some text, it performs the Burrows–Wheeler Transform (BWT).</p>
 <p>The BWT rearranges the characters in a way that helps compression. But recovering the original text requires following a particular sequence of positions.</p>
 <p>Imagine an enormous collection of numbered cards.</p>
 <p>Each card tells you which card to visit next.</p>
-<p><strong>A miniature pointer-chasing adventure</strong></p>
+<p><strong>A miniature pointer chain</strong></p>
 <table>
 <thead>
 <tr>
@@ -1636,14 +1636,14 @@
 <li>A marker used by your cooperative traversal algorithm.</li>
 </ul>
 <p>At maximum bzip2 block size, this table occupies approximately 3.6 MB.</p>
-<p>And your clever 32-lane implementation has already tackled a major problem: instead of following one chain and repeatedly waiting for memory, you follow many independent chains at once.</p>
+<p>mibz2's 32-lane implementation already tackles one major cost: instead of following one chain and repeatedly waiting for memory, you follow many independent chains at once.</p>
 <p>That's memory-level parallelism (MLP).</p>
 <p>So far, so good.</p>
 <p>But then we asked a different question.</p>
 <blockquote>
 <p>Why do we need four bytes for every card?</p>
 </blockquote>
-<h2 id="2-the-first-revelation-the-cards-arent-arbitrary">2. The first revelation: the cards aren't arbitrary<a class="headerlink" href="#2-the-first-revelation-the-cards-arent-arbitrary" title="Permanent link">&para;</a></h2>
+<h2 id="2-the-cards-arent-arbitrary">2. The cards aren't arbitrary<a class="headerlink" href="#2-the-cards-arent-arbitrary" title="Permanent link">&para;</a></h2>
 <p>Suppose I give you these two sequences of destinations:</p>
 <p><strong>Two groups of eight pointers</strong></p>
 <table>
@@ -1692,7 +1692,6 @@
 <p>Start at 427 and add the position within the group.</p>
 </blockquote>
 <p>One starting number replaces eight separate numbers.</p>
-<p>And here's the interesting part.</p>
 <p>The permutation your inverse BWT decoder follows, called Ψ (psi), isn't a completely arbitrary permutation.</p>
 <p>Because of how the BWT is constructed, it consists of increasing sequences of positions.</p>
 <p>That means consecutive entries within a particular character group always point to increasing positions.</p>
@@ -1722,11 +1721,11 @@
 <blockquote>
 <p>A more compact table is useful only if reconstructing its pointers doesn't make the decoder slower than before.</p>
 </blockquote>
-<h2 id="4-the-discovery-that-changed-everything">4. The discovery that changed everything<a class="headerlink" href="#4-the-discovery-that-changed-everything" title="Permanent link">&para;</a></h2>
+<h2 id="4-what-the-census-found">4. What the census found<a class="headerlink" href="#4-what-the-census-found" title="Permanent link">&para;</a></h2>
 <p>Initially, we had no idea how well these representations would fit your actual BWT data.</p>
 <p>Perhaps the values were increasing but widely scattered, making compression awkward.</p>
 <p>So Claude wrote a census program to inspect them.</p>
-<p>And the results were remarkable.</p>
+<p>It found more structure than the theory alone guarantees.</p>
 <p><strong>What Claude reported about your benchmark corpus</strong></p>
 <table>
 <thead>
@@ -1750,7 +1749,7 @@
 </tbody>
 </table>
 <p>These two percentages overlap—they aren't two separate populations.</p>
-<p>The important observation is that more than three-quarters of the measured rows may be represented using an extremely simple arithmetic rule.</p>
+<p>The important observation is that more than three-quarters of the measured rows may be represented using a simple arithmetic rule.</p>
 <p>That is much better than we could have assumed from the mathematics alone.</p>
 <p>It's the difference between saying:</p>
 <blockquote>
@@ -1760,14 +1759,13 @@
 <blockquote>
 <p>We've examined the actual pointers, and most of them exhibit precisely the structure this encoding is designed to exploit.</p>
 </blockquote>
-<p>That's a major step forward.</p>
 <p>It does not yet mean the decoder will be faster. But it establishes that there is something real to exploit.</p>
 <h2 id="5-why-the-cpus-cache-lines-became-central">5. Why the CPU's cache lines became central<a class="headerlink" href="#5-why-the-cpus-cache-lines-became-central" title="Permanent link">&para;</a></h2>
 <p>Now we reach the hardware connection.</p>
 <p>Modern CPUs don't fetch arbitrary isolated bytes from main memory one at a time. They work with cache lines, commonly 64 bytes.</p>
 <p>Imagine a cache line as a little tray of data.</p>
 <p>If your next pointer lives in that tray, the processor can fetch the tray and extract what it needs.</p>
-<p>Our first ambitious idea was:</p>
+<p>The first design asks:</p>
 <blockquote>
 <p>What if we could store 32 pointers in exactly one 64-byte cache line?</p>
 </blockquote>
@@ -1785,8 +1783,7 @@
 <p>This is very important because your existing decoder's greatest strength is how quickly it can issue independent memory requests.</p>
 <p>A compact representation that introduces multiple dependent searches could destroy that advantage.</p>
 <p>The fixed-size record tries to avoid precisely that.</p>
-<h2 id="6-then-we-found-an-even-more-interesting-possibility">6. Then we found an even more interesting possibility<a class="headerlink" href="#6-then-we-found-an-even-more-interesting-possibility" title="Permanent link">&para;</a></h2>
-<p>This is the most recent research development.</p>
+<h2 id="6-a-second-design-a-two-tier-layout">6. A second design: a two-tier layout<a class="headerlink" href="#6-a-second-design-a-two-tier-layout" title="Permanent link">&para;</a></h2>
 <p>If 77.6% of rows belong to simple consecutive groups, why devote an entire 64-byte record to each of those groups?</p>
 <p>Most of the record would contain information we don't actually need.</p>
 <p>So we proposed a two-tier layout.</p>
@@ -1803,16 +1800,15 @@ Small 8-byte directory entry
         └── Other group ────────► load extra record
                                   (decode FOR / Elias–Fano / exception)
 </code></pre></div>
-<p>This is a rather clever compromise.</p>
+<p>It is a compromise.</p>
 <p>For the common case, the small directory entry already gives us the next pointer.</p>
 <p>For the less common case, we fetch extra information.</p>
 <p>Because the directory is tiny compared with the current T-vector, it may fit much more comfortably in cache.</p>
-<p>And because we don't allocate a full 64-byte record for the simple groups, the storage could become dramatically smaller.</p>
+<p>And because we don't allocate a full 64-byte record for the simple groups, the storage could become much smaller.</p>
 <p>Our initial calculation suggested something in the neighbourhood of 5.6 bits per row, before additional exceptions and bookkeeping.</p>
 <p>That's not a measured final footprint. It's an optimistic model built from the reported distribution.</p>
 <p>The attraction is real, but so is the risk: whenever we need the second record, we introduce another memory dependency.</p>
-<h2 id="7-why-smaller-could-actually-make-mibz2-faster">7. Why smaller could actually make mibz2 faster<a class="headerlink" href="#7-why-smaller-could-actually-make-mibz2-faster" title="Permanent link">&para;</a></h2>
-<p>This is the most important performance insight.</p>
+<h2 id="7-why-a-smaller-table-could-make-mibz2-faster">7. Why a smaller table could make mibz2 faster<a class="headerlink" href="#7-why-a-smaller-table-could-make-mibz2-faster" title="Permanent link">&para;</a></h2>
 <p>Suppose you're decoding one full-sized bzip2 block.</p>
 <p>Your current T-vector is 3.6 MB.</p>
 <p>But mibz2 can work on multiple blocks concurrently.</p>
@@ -1845,21 +1841,21 @@ Small 8-byte directory entry
 </tbody>
 </table>
 <p><em>Illustrative table storage for eight full 900 KB blocks. The two-tier estimate excludes additional exception and alignment overhead.</em></p>
-<p>Your agents have already measured evidence of a shared-cache residency threshold on your workstation.</p>
+<p>Earlier measurements on a 10-core workstation already show evidence of a shared-cache residency threshold.</p>
 <p>When the live tables become too large, the processor must fetch more data from slower parts of the memory hierarchy.</p>
-<p>So imagine being able to hold substantially more active navigation tables in the same cache capacity.</p>
+<p>Smaller tables would let more of them stay resident in the same cache capacity.</p>
 <p>We might see fewer expensive memory misses.</p>
 <p>Even if each individual pointer is slightly more expensive to decode, the overall decoder could become faster.</p>
 <p>This is the same kind of trade-off Julian Seward studied in 2001.</p>
 <p>But your work adds modern multicore concurrency and 32-lane traversal.</p>
 <p>The goal is not to have the smallest possible table. It's to make the whole machine finish decoding sooner.</p>
-<h2 id="8-why-we-havent-declared-victory">8. Why we haven't declared victory<a class="headerlink" href="#8-why-we-havent-declared-victory" title="Permanent link">&para;</a></h2>
+<h2 id="8-open-questions">8. Open questions<a class="headerlink" href="#8-open-questions" title="Permanent link">&para;</a></h2>
 <p>There are three substantial unanswered questions.</p>
 <p><strong>First, how much does decoding a compressed pointer cost?</strong> With the current T-vector, the CPU loads a 32-bit value and extracts the next row. With a compressed record, it may need shifts, masks, a format test and sometimes an additional memory access. Even a small amount of extra work matters when repeated millions of times.</p>
 <p><strong>Second, how expensive is construction?</strong> The compressed table must be built from the BWT before it can be traversed. A representation that makes traversal faster but takes twice as long to build might lose overall.</p>
-<p><strong>Third, does the remarkable 77.6% translation property hold broadly?</strong> We know it appears in your benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.</p>
+<p><strong>Third, does the 77.6% translation property hold broadly?</strong> We know it appears in your benchmark corpus. We don't yet know how stable it is across different types of compressed data, and it's not a universal mathematical guarantee.</p>
 <p>The agents have enough evidence to investigate these questions seriously, but not enough to claim a faster decoder.</p>
-<h2 id="9-what-we-now-know-and-what-were-hoping-to-discover">9. What we now know, and what we're hoping to discover<a class="headerlink" href="#9-what-we-now-know-and-what-were-hoping-to-discover" title="Permanent link">&para;</a></h2>
+<h2 id="9-what-is-known-and-what-is-not">9. What is known and what is not<a class="headerlink" href="#9-what-is-known-and-what-is-not" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -1898,15 +1894,15 @@ Small 8-byte directory entry
 <blockquote>
 <p>We've found evidence that the data is compressible in a form suited to fast navigation. We haven't yet proved that navigating the compressed representation is faster.</p>
 </blockquote>
-<p>Those are two different accomplishments.</p>
-<h2 id="10-my-favourite-part-of-this-discovery">10. My favourite part of this discovery<a class="headerlink" href="#10-my-favourite-part-of-this-discovery" title="Permanent link">&para;</a></h2>
-<p>I think the most beautiful insight is that the T-vector—the enormous table of navigation pointers—isn't fundamentally necessary in its current form.</p>
+<p>These are separate claims.</p>
+<h2 id="10-the-underlying-idea">10. The underlying idea<a class="headerlink" href="#10-the-underlying-idea" title="Permanent link">&para;</a></h2>
+<p>The underlying point is that the T-vector—the enormous table of navigation pointers—isn't fundamentally necessary in its current form.</p>
 <p>It's a convenient way to store answers to questions.</p>
 <p>The BWT already contains the information from which those answers can be derived.</p>
 <p>Succinct data structures teach us to exploit that fact.</p>
 <p>But your work adds an interesting twist:</p>
 <blockquote>
-<p>Rather than pursuing the absolutely smallest possible encoding, we're looking for a carefully chosen amount of redundancy that allows the CPU to recover answers exceptionally quickly.</p>
+<p>Rather than pursuing the absolutely smallest possible encoding, we're looking for a carefully chosen amount of redundancy that allows the CPU to recover answers quickly.</p>
 </blockquote>
 <p>In other words, sometimes storing a little unnecessary information makes the whole algorithm faster.</p>
 <p>That's what makes the problem so subtle.</p>
@@ -1939,15 +1935,13 @@ Small 8-byte directory entry
 </blockquote>
 <p>To:</p>
 <blockquote>
-<p>"We have evidence that most of the permutation can be represented by extremely simple rules, and we have several concrete ways of exploiting those rules while protecting the memory-level parallelism that makes mibz2 fast."</p>
+<p>"We have evidence that most of the permutation can be represented by simple rules, and we have several concrete ways of exploiting those rules while protecting the memory-level parallelism that makes mibz2 fast."</p>
 </blockquote>
-<p>That's significant progress.</p>
 <p>The agents now have a real engineering question to settle: whether those smaller representations can make the CPU finish its work faster.</p>
-<p>And you have something rather wonderful to take away from this research already:</p>
+<p>The working hypothesis, in one line:</p>
 <blockquote>
-<p>The secret to making a decoder faster may lie not in following its pointers more efficiently, but in realizing that most of those pointers never needed to be stored individually in the first place.</p>
+<p>A decoder may get faster not by following its pointers more efficiently, but by not storing most of them individually.</p>
 </blockquote>
-<p>That's the insight I would keep.</p>
 <hr />
 <div class="admonition note">
 <p class="admonition-title">Since this was written</p>
