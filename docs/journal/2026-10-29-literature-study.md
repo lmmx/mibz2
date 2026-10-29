@@ -21,7 +21,8 @@ paper unless said), **measured** (ours, said where), **hypothesis** (untested).
 | 3 | [`04-rlbwt-tricks-research.md`](2026-10-29-literature-study/04-rlbwt-tricks-research.md) | Brown, Gagie & Rossi, "RLBWT Tricks", SEA 2022 | read |
 | 4 | [`05-partitioned-elias-fano-research.md`](2026-10-29-literature-study/05-partitioned-elias-fano-research.md) | Ottaviano & Venturini, "Partitioned Elias–Fano Indexes", SIGIR 2014 | read |
 | 5 | [`06-gog-navarro-petri-research.md`](2026-10-29-literature-study/06-gog-navarro-petri-research.md) | Gog, Navarro & Petri, "Improved and Extended Locating Functionality on Compressed Suffix Arrays", Journal of Discrete Algorithms, 2015 | read |
-| 6 | — | piecewise-constant and patched integer representations (the researcher's preference), or Sadakane's compressed suffix array and its implementations | next, to choose |
+| 6 | [`07-sadakane-csa-research.md`](2026-10-29-literature-study/07-sadakane-csa-research.md) | Sadakane, "New Text Indexing Functionalities of the Compressed Suffix Arrays", Journal of Algorithms, 2003; SDSL's `csa_sada`. The researcher read the abstract, secondary accounts and SDSL, not the full article | read |
+| 7 | — | piecewise-constant residuals and patched integer coding | next |
 | — | — | the overview's other items (cacheline Elias–Fano, the LCSA line, the Orbit implementation in its own pass) | queued |
 
 The user calls paper 2 "the first paper", as the first they worked through with the
@@ -132,6 +133,25 @@ cheap census question.**
   A breaks-per-group histogram, split by whether the group straddles a boundary,
   measures all three. That is the residual-plateau question from paper 4, and the
   researcher now ranks it first.
+
+**Sadakane (paper 6) is the origin of compressed ψ, and sharpens the output-byte question.**
+- **The lineage:** ψ stored as per-byte increasing lists, as sampled differences (γ or δ
+  codes, a sample every 128 or so). A lookup is a reconstruction, not a load: fine for an
+  index queried many times, a serial cost on every step for a decoder. Translation groups
+  invert the trade: the common case is one base and no differences at all.
+- **The output byte comes free on almost every group (ours, from the code and the bound
+  above).**
+  - In `src/bwt.rs`, row k's entry holds ψ(k) in its top 24 bits and L[k] in its low 8.
+    The walk loads the destination's entry and emits its low byte, L[ψ(r)], which is F[r].
+    So the byte emitted at row r depends only on r's bucket.
+  - A group inside one bucket has a single F byte, which its descriptor can carry once.
+    Only the straddling groups (at most 0.91% of a full block's) need anything per row.
+  - So for a 24-bit link-only table (#79) the researcher's warning, a symbol costing extra
+    memory accesses, applies to at most those groups. Whether the walk's segment markers
+    can be carried the same way is still to check against the room walk's handoffs.
+- **Construction is per block, not amortised.** An encoding that saves bits at the price
+  of an extra pass over ψ is a loss here (#81's fused build is the baseline to beat). Our
+  input is already the BWT, so the build is a scan of L, not suffix sorting.
 
 ## Open checks
 
