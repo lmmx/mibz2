@@ -117,6 +117,16 @@ bench-libsais-why rounds="20":
     bash bench/coop.sh --rounds {{rounds}} --arms x3x3,g3x3,l3x3,x4x2,g4x2,l4x2,s3x3
     python3 bench/coop_counters.py --arms p4,x3x3,g3x3,l3x3,l4x2,s3x3 --record-arms l3x3,g3x3,s3x3
 
+# The knee, matched (docs/journal/2026-10-29-libsais-knee.md, pre-registered): concurrent
+# blocks swept from 1 to 10 on one core each, mibz2's one-core inversion (pN) against
+# libsais's (sNx1), then teams of 2 (lNx2 against sNx2), at the rematch's boundary (build +
+# walk), every thread pinned, one CPU a physical core, 20 rounds. About 10 minutes. Upload
+# the coop-*.md and its .jsonl.
+#   just bench-libsais-knee
+bench-libsais-knee rounds="20":
+    bash bench/corpus.sh
+    bash bench/coop.sh --rounds {{rounds}} --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1,l1x2,l2x2,l3x2,l4x2,l5x2,s1x2,s2x2,s3x2,s4x2,s5x2
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10

@@ -298,7 +298,7 @@ kernel, not a finding.
   that way.
 - **Not settled:** the remaining split between those three is unmeasured.
 
-### 2. The counters on the shipped kernel: the fill buffers are back
+### 2. The counters on the shipped kernel: fill-buffer pressure is back, and the bound isn't settled
 
 Per output byte, the difference of the 1- and 21-round runs, median of 3 repeats:
 
@@ -315,7 +315,8 @@ Per output byte, the difference of the 1- and 21-round runs, median of 3 repeats
 | DRAM bytes read / B | 6.57 | 4.19 | 6.61 | 3.92 | 3.07 | |
 
 **The pre-registered reading.** The instruction-bound hypothesis held for the shipped
-kernel only if its fill buffers filled well below p4's rate. They don't.
+kernel only if its fill buffers filled well below p4's rate. They don't, so it isn't
+supported. Nor do the counters show the opposite.
 - **The rate is close to p4's:** 0.194 against 0.244 a cycle (0.79×), and per byte 3.05
   against 3.23 (0.94×).
 - **The kernel has changed:**
@@ -323,14 +324,26 @@ kernel only if its fill buffers filled well below p4's rate. They don't.
     second pass;
   - reads in flight per core rose from about 4.7 to 6.2;
   - the fill-buffer rate rose from 0.07–0.08 to 0.19.
-- **The bound has moved:** the shipped walk is memory-parallelism bound again, at L3
-  latency. Its reads wait about 72 cycles, and 95–97% hit L3. It is not instruction-bound.
-- **So the coop journal §10.4's "the teams are instruction-bound" is superseded** for
-  v0.2.0's kernel. It stays true of the kernel it measured.
+- **Evidence against a purely memory bound:**
+  - only 5.6% of l3x3's cycles stall on an L3-missing load;
+  - 96.6% of its reads past L2 hit L3, at about 72 cycles;
+  - its IPC (1.77) is above the research kernel's (1.56) and equal to p4's.
+- **Evidence against a purely instruction bound:** requests find the fill buffers full
+  0.19 times a cycle, 0.79× p4's rate and 2.5× the old kernel's.
+- **So neither label is established** for v0.2.0's kernel. The coop journal §10.4's "the
+  teams are instruction-bound" describes the kernel it measured and doesn't carry over.
+  How much throughput the full fill buffers cost isn't measured; the rate is pressure, not
+  a measured limit.
+- **A caveat on the instruction and IPC figures:** they count every thread's cycles and
+  instructions, including the pool's spin-waits. Those differ between the arms (the
+  helper loop is 6.6% of l3x3's cycles and 11.2% of g3x3's, from the symbol profiles). So
+  "l3x3 runs more instructions a byte at a higher IPC" is not yet a statement about the
+  kernels' own code. Separating them needs the counters per symbol, or the spin removed
+  from the count.
 
-**What that means for the levers:**
-- **More misses in flight per core is not available.** The fill buffers already turn
-  requests away at 0.19 a cycle. This is AMAC's own saturation mechanism (its §5.1: ten
+**What that means for the levers** (hypotheses the counters point at, each to be measured):
+- **More misses in flight per core is unlikely to be available.** The fill buffers already
+  turn requests away at 0.19 a cycle. This is AMAC's own saturation mechanism (its §5.1: ten
   in flight on its Xeon, the L1-D MSHRs). More lanes, or AMAC-style scheduling, would
   queue more requests at the same full buffers. The levers instead:
   - **Fewer reads per byte.** libsais's walk makes 0.90 reads past L2 a byte against our
