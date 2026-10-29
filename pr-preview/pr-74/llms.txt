@@ -1,0 +1,46 @@
+# mibz2
+
+> A bzip2 decoder built for memory-level parallelism.
+
+mibz2 is a bzip2 decoder, block-parallel, its inverse BWT walked as interleaved chains
+within each block, with byte-for-byte libbzip2 output and every block and stream CRC
+checked, from Python (`mibz2.decompress`, `mibz2.open`) or Rust (`mibz2::decode`,
+`mibz2::BzReader`). Install with `pip install mibz2` or `cargo add mibz2`. Each link below
+is the Markdown version of a page of https://lmmx.github.io/mibz2/.
+
+## Benchmarks
+
+- [Benchmarks](<https://lmmx.github.io/mibz2/pr-preview/pr-74/benchmarks/index.md>): How mibz2's CI benchmark measures the decoder: the corpora, the rounds, the paired ratios and the modelled full-dump figure.
+- [History](<https://lmmx.github.io/mibz2/pr-preview/pr-74/benchmarks/history/index.md>): mibz2's decoding speed, CPU time and peak memory over master's commits, per corpus and thread count.
+- [Alternatives](<https://lmmx.github.io/mibz2/pr-preview/pr-74/benchmarks/alternatives/index.md>): mibz2 beside other bzip2 decoders on master's latest benchmark run: paired ratios with 95% intervals, per corpus and thread count.
+
+## Concepts
+
+- [Concepts](<https://lmmx.github.io/mibz2/pr-preview/pr-74/concepts/index.md>): What mibz2 decodes, what it checks, and how it decodes in parallel.
+- [Why 32 couriers beat one](<https://lmmx.github.io/mibz2/pr-preview/pr-74/concepts/couriers/index.md>): mibz2's premise, memory-level parallelism in the inverse BWT, explained through couriers and a dispatcher: independent lanes, prefetching, the per-step cost that binds next, and the measurements.
+- [What is checked, and when](<https://lmmx.github.io/mibz2/pr-preview/pr-74/concepts/checks/index.md>): Which CRCs mibz2 checks and when, what its errors report, and the inputs it refuses.
+- [How it works](<https://lmmx.github.io/mibz2/pr-preview/pr-74/concepts/how-it-works/index.md>): mibz2's scanner thread, its workers, and the inverse BWT walked as interleaved chains.
+- [Prior work](<https://lmmx.github.io/mibz2/pr-preview/pr-74/concepts/prior-work/index.md>): The work mibz2 builds on: libbzip2's format and checks, Kärkkäinen, Kempa and Puglisi's interleaved BWT inversion, and lbzip2's and pbzip2's block parallelism.
+
+## Get started
+
+- [Installation](<https://lmmx.github.io/mibz2/pr-preview/pr-74/getting-started/installation/index.md>): Install mibz2 from PyPI or crates.io.
+- [Quickstart](<https://lmmx.github.io/mibz2/pr-preview/pr-74/getting-started/quickstart/index.md>): Decode a .bz2 file with mibz2 from Python and from Rust.
+
+## Optional
+
+- [History](<https://lmmx.github.io/mibz2/pr-preview/pr-74/background/history/index.md>): Where mibz2 came from: written in wikidata-pq to decode the Wikidata dump, then moved to a repository of its own.
+- [Journals](<https://lmmx.github.io/mibz2/pr-preview/pr-74/background/journals/index.md>): mibz2's development journals: where they are and what each one records.
+- [Development](<https://lmmx.github.io/mibz2/pr-preview/pr-74/maintainers/development/index.md>): The repository's layout, how to build, test and benchmark mibz2, and the commit conventions.
+- [Documentation](<https://lmmx.github.io/mibz2/pr-preview/pr-74/maintainers/documentation/index.md>): How the documentation site and its benchmark pages are built, checked, tested and published to GitHub Pages.
+- [Releasing](<https://lmmx.github.io/mibz2/pr-preview/pr-74/maintainers/releasing/index.md>): How mibz2 is released to crates.io and PyPI at one version: Deploy Release, Tag Release and Release Notes.
+
+## Reference
+
+- [Reference](<https://lmmx.github.io/mibz2/pr-preview/pr-74/reference/index.md>): mibz2's API in Python and in Rust.
+- [mibz2 (Python)](<https://lmmx.github.io/mibz2/pr-preview/pr-74/reference/api/mibz2/index.md>): The mibz2 Python package: decompress, open, BZ2Reader and DecodeError.
+- [mibz2 (Rust)](<https://lmmx.github.io/mibz2/pr-preview/pr-74/reference/rust/index.md>): The mibz2 Rust crate: decode, decode_parallel, BzReader, StreamDecoder, scan, decode_blocks and Error.
+
+## Start here
+
+- [Home](<https://lmmx.github.io/mibz2/pr-preview/pr-74/index.md>): A bzip2 decoder built for memory-level parallelism.
