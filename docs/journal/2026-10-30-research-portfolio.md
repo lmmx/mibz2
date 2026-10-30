@@ -944,6 +944,11 @@ algebra alone where its criterion is a performance figure.
 
 | # | Question (short) | Mark | Evidence | What remains |
 |---|---|---|---|---|
+| 11 | H4: fused front end / in-place T-vector | N | R13: buffer reuse (P78) is not work elimination (N3), and an in-place scatter must prove an alias-safe schedule. R14: N3 must carry the fallback's cost, with options A/B/C | lifetime and RSS analysis; N3's mixed-corpus cost |
+| 15 | E3: why 3x3 wins; where libsais's time goes | N | R13: a gap between throughputs (1,707 against 1,256 MB/s, P134) is not a component cost. The coop half was already answered | same-boundary phase profiling of libsais |
+| 19 | E7: 20-bit ψ at 6–10 workers | N | R13: 20 bits suffice for every row index (900,000 < 2²⁰); the raw footprint would be 2.25 MB, against 3.6 | the registered i9 run (never made) |
+| 21 | E9: walk output in L's freed buffer | N | R13: it cannot shrink the walk's hot table, so the strong form is disposed; RSS and contention benefit remain | an RSS/contention measurement |
+| 45 | FOR + EF + exception hybrid, or one scheme (per-block format choice) | N | R14 with meas.: a per-block choice is necessary (the controls fail). The graded rule: build level by level, accept the next level from m_2k ≤ 2m_k − 1, and reject from exact m_k. records and random → T-vector at level 1 (zero composition); text → P⁴ (2.45 MB); Wikidata → P⁸ on 233/233, 203 accepted before level 8 is built | the cost of the fallback path itself (N3 option A/B) |
 | 2 | Intel DDP/AOP prefetch interplay | N | R12: not attributable from timings; no design depends on it | an on/off comparison, only if a design comes to depend on it |
 | 3 | Room walk's window headroom (AMAC) | N | R12: plausible; window and memory bounds separated | PMU attribution |
 | 4 | 32 lanes = 32 misses? | A | R12: lanes bound outstanding successor requests and are not the miss count | exact occupancy (PMU), if needed |
@@ -972,14 +977,20 @@ algebra alone where its criterion is a performance figure.
 | 84 | Fill-buffer headroom | N | R12: the lane sweeps narrow it | counter attribution |
 | P132 | USL as an extrapolator | rejected | R12: three points can't validate a knee; descriptive use only | — |
 
-**The tally of the 47 open questions:**
+**The tally of the 47 open questions** (after rounds 10–14):
 - **10 answered:** #4, #25, #58, #63, #64, #65, #66, #69, #78, #81;
-- **16 narrowed to a named measurement:** #2, #3, #37, #38, #39, #44, #46, #53, #67,
-  #68, #71, #74, #77, #80, #82, #84;
-- **21 not yet worked:**
-  - the front end and whole decoder: #11, #15, #19, #20, #21;
-  - the literature: #28–#33, #36;
-  - implementation-bound: #43, #45, #47, #48, #51, #54, #72, #73, #75, #76.
+- **21 narrowed to a named measurement:** #2, #3, #11, #15, #19, #21, #37, #38, #39,
+  #44, #45, #46, #53, #67, #68, #71, #74, #77, #80, #82, #84;
+- **16 not yet worked:**
+  - #20, E8, the four-copy M2 run;
+  - the literature: #28–#33, #36. A read-only literature agent is working on these,
+    together with N1's precedent check (T4);
+  - implementation-bound: #43, #47, #48, #51, #54, #72, #73, #75, #76.
+
+**#53's evidence is now adverse as well as positive.** The algorithm exists, but its
+modelled traffic is about 23 bytes per output byte, against the T-vector build's 5
+(§3.1(h)). Confidence in N3's 1.8–2.5× one-core projection (§3.1(f)) is lowered
+accordingly, until Gate B reconciles the model with measured cycles.
 
 The register's own status column is updated only when the maintainer accepts these
 dispositions.
