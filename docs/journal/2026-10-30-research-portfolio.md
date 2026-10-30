@@ -15,7 +15,7 @@ that would decide it, and the approval it would need.
   hypothesis and experiment since 0.1.0, with its status, measurement boundary,
   condition, failure class and sources, plus the recorded question lists and the merged
   contradictions.
-- `2026-10-30-external-report-4.md` to `-21.md`: the inputs this round, verbatim.
+- `2026-10-30-external-report-4.md` to `-22.md`: the inputs this round, verbatim.
   - Report 5 holds the researcher's and the guardian's corrections to the coordinator's
     first reading.
   - Report 6 is the researcher's study session on the algebra of inverse MTF, and their
@@ -507,6 +507,24 @@ image-order view at that level; "idx" keeps a u32 permutation.
   sequential traffic plus 1.1 B/B of gathers, against the T-vector's 5 B/B of scattered
   writes, and that is Gate B.
 
+**(k) The counting gate (round 22): passed.**
+- **What was checked:** children counts taken from strict-interior popcounts:
+  - e_i = 1 + #{level-a source starts u : start J_i < u < end J_i};
+  - f_j = 1 + #{level-a image starts u : start I_j < u < end I_j}.
+- **The result:** on 8,160 random doubling levels (levels 2, 4 and 8 over random
+  run-structured permutations), with 0 failures in each of three assertions:
+  - the counts equal the merge-counted ones;
+  - Σe_i = Σf_j = m_2a;
+  - the source and image views built from them match the two-pass builder exactly,
+    endpoints, displacements and words included.
+- **Caps:** these counts are over the uncapped partition, as round 22 notes. The
+  segment caps are applied as a post-split of the final level only: at most
+  2(k − 1) records per segment start, the scheme already checked in (g)2. So no cap
+  boundary needs to enter the doubling counts.
+
+**The no-second-join construction is settled mathematically.** What remains is cycles,
+which is Gate B.
+
 **(d) What makes it materially different from M2.** This is the guardian's
 novelty condition:
 
@@ -848,6 +866,55 @@ own BWT, read-only.
   - It must differ materially from #25 and answer #25's regression on random data.
   - Its ceiling is the chain's share of about 38 cycles a token, unmeasured.
 
+### 3.2d P74: the structural test (round 21) passes
+
+**The register-held update for rank q ≤ 31** keeps the list's first 32 bytes in one ymm
+register, V, across tokens. It takes three instructions on the state's dependency chain:
+1. S = `vperm2i128`(V), which swaps the 128-bit lanes;
+2. A = `vpshufb`(V, idx_q) and B = `vpshufb`(S, idx_q), the same index used on both;
+3. V′ = `vpblendvb`(A, B, sel_q).
+
+idx_q and sel_q come from a 2 KB table indexed by the token's rank. They depend only on
+the token stream, which the scanner has already decoded, so they stay off the chain.
+
+**Checked:** an emulation of AVX2's byte semantics (within-lane `vpshufb`, lane swap,
+blend) is exact against plain MTF on 20,000 random states, for every q in 0–31.
+
+**Chain length** (published instruction latencies, being confirmed from primary tables by
+the literature agent):
+- **P74, about 5–6 cycles a token:** `vperm2i128` (≈ 3), then `vpshufb` (≈ 1), then
+  `vpblendvb` (≈ 1–2);
+- **the shipped `mtf_avx2`:** a 32-byte store followed by an unaligned 32-byte load that
+  overlaps it. The source's own comment says it "can't be forwarded from it and waits for
+  it to commit", a store-forwarding stall on every explicit token;
+- **AVX-512 VBMI** (`vpermb`) would make it one instruction. Neither the i9-10900K nor
+  CI's EPYC 7763 has it.
+
+**How P74 differs from #25:**
+- **Coverage:** 32 entries (98.4% of explicit tokens) against 16 (84.8%).
+- **The state never goes through memory** for the fast path.
+- **The cross-lane permutation is table-driven,** so no per-rank branching.
+
+**The fallback for rank ≥ 32** (1.6% of tokens on Wikidata):
+- **The head:** V′ = [tail[q−32], V[0…30]]. That is a cross-lane one-byte shift
+  (`vperm2i128` + `vpalignr`) plus an insert.
+- **The tail:** a memmove in memory, off the head's chain.
+
+**Random-data guard** (#25's regression): on random data, ranks are near-uniform and only
+about 12.5% are ≤ 31.
+- P74 then needs a per-block switch, for example on the block's running share of
+  rank > 31.
+- Any block whose used alphabet has ≤ 32 symbols is 100% fast path by construction.
+- Wikidata blocks use 79–102 symbols (the census's d₁), so they rely on rank locality.
+
+**The ceiling (model):** about 38 cycles an explicit token today, 0.061 tokens a byte.
+- **If the ~15–20-cycle forwarding chain binds:** cutting it to about 6 saves about
+  10–14 cycles a token, that is 0.6–0.85 c/B, or 5–7% of a one-core decode.
+- **If the loop is otherwise throughput-bound:** less.
+
+It is a real but modest candidate, not a breakthrough. It needs a CI-measurable microbenchmark,
+with no PMU required.
+
 ### 3.3 Ceilings, from the current stage table
 
 All of these are models, from #114's CI run (EPYC 7763, one thread, 12.93 c/B in all).
@@ -1074,7 +1141,7 @@ algebra alone where its criterion is a performance figure.
 | 39 | Alphabet-partitioned select | N | R11: Ψ(j) = select_c(L, j − C[c] + 1), with its run form | predecessor/select cost |
 | 44 | Next pointer by arithmetic | N | N1: one 8-byte jump per lookup, with n/H > 7.96 bytes a lookup under caps (§3.1(g)) | Gate C |
 | 46 | Direct select using F's intervals | N | R11: the exact select formula | whether direct indexing avoids select |
-| 53 | Ψ groups in one streaming pass | N | N1: run-native, 1 → 2 → 4 → 8, no sort, no search, no T-vector (§3.1(c′)); brute-force exact | Gate B cycles. Modelled at 23 bytes moved per output byte, against the T-vector build's 5 (§3.1(h)) |
+| 53 | Ψ groups in one streaming pass | N (mathematics settled: §3.1(k)) | N1: run-native, 1 → 2 → 4 → 8, no sort, no search, no T-vector (§3.1(c′)); brute-force exact | Gate B cycles. Modelled at 23 bytes moved per output byte, against the T-vector build's 5 (§3.1(h)) |
 | 58 | Other inputs; worst-case exceptions | A (structure) | meas.: the bench's random and records blocks have 0.000 pure 32-row groups, so 100% impure is reached by valid BWTs. R11's alternating column is not a valid BWT (its Ψ has unequal cycles) | each encoding's own worst-case exception rate |
 | 63 | Run length → group occupancy | A | R10: the exact occupancy formula. meas.: corr(n/r, pure fraction) = 0.78 over 40 blocks, so a strong but imperfect predictor | none for the question |
 | 64 | Symbol-specific boundary patterns | A | meas.: breaks per row by F-bucket range from `"` 0.007 and `p` 0.006 to `0` 0.154. The digit buckets carry about 20× the break density of the structural symbols | none |
