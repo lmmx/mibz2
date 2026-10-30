@@ -1181,7 +1181,11 @@ fn parent(args: &[String]) {
         if spec == specs[0] {
             ledgers.push((ls, Some(median(&mut rss.clone()) * 1024.0)));
         }
-        summary.push_str(&queue_summary(t, &spec, s, &tl, &trace::ledger(&ls)));
+        let plan = teams.map_or(Plan::for_threads(t), |k| Plan::Teams {
+            teams: (t / k).max(1),
+            k,
+        });
+        summary.push_str(&queue_summary(t, plan, &spec, s, &tl, &trace::ledger(&ls)));
         let verdict = |c: (f64, f64, f64)| {
             J::S(if !c.1.is_finite() {
                 "too few rounds".into()
@@ -1442,9 +1446,12 @@ fn ledger_table(ls: &[trace::Settings], rss: &[Option<f64>], blocks: usize) -> S
 }
 
 /// One thread count's queues and live structures, from its timeline medians, in at most
-/// six lines; and the ledger's bounds checked against what was measured
+/// six lines; and the ledger's bounds checked against what was measured, for the plan the
+/// decoder ran (its workers each recorded; a team's walk sizes its segments by its k, which
+/// the ledger, a model of one-core workers, doesn't, so they aren't checked under teams)
 fn queue_summary(
     t: usize,
+    plan: Plan,
     spec: &str,
     slots: usize,
     tl: &[(String, J)],
@@ -1572,6 +1579,7 @@ fn queue_summary(
             bad.push(format!("{what} {x:.0} outside {lo:.0}..={hi:?}"));
         }
     };
+    let teams = matches!(plan, Plan::Teams { .. });
     for n in [
         "ll",
         "tt",
@@ -1580,6 +1588,9 @@ fn queue_summary(
         "seg.next",
         "seg.bufs.outer",
     ] {
+        if teams && n.starts_with("seg.") {
+            continue;
+        }
         if let Some(e) = e(n) {
             check(
                 n,
@@ -1632,9 +1643,10 @@ fn queue_summary(
             f("f.decoded_unreconciled", 0)
         ));
     }
-    if g("f.w.recorded") != t as f64 {
+    let workers = plan.workers();
+    if g("f.w.recorded") != workers as f64 {
         rec.push(format!(
-            "{} of {t} workers' buffers recorded",
+            "{} of {workers} workers' buffers recorded",
             f("f.w.recorded", 0)
         ));
     }
@@ -1643,7 +1655,11 @@ fn queue_summary(
         "  worker buffers (each at its end, mean MB): {} total = {} · ledger check: {} · events reconciled: {}{}",
         f("f.w.cap_mb", 2),
         parts.join(" + "),
-        if bad.is_empty() { "ok".into() } else { format!("VIOLATED: {}", bad.join("; ")) },
+        match (bad.is_empty(), teams) {
+            (true, false) => "ok".into(),
+            (true, true) => "ok (the segment buffers not checked under teams)".into(),
+            (false, _) => format!("VIOLATED: {}", bad.join("; ")),
+        },
         if rec.is_empty() { "ok (Σ decoded = bytes read, end state empty, every worker recorded)".into() } else { format!("NO: {}", rec.join("; ")) },
         if g("q.ready_after_taken") > 0.0 { format!(" · {} blocks marked ready after taken (held 0)", f("q.ready_after_taken", 0)) } else { String::new() }
     );
