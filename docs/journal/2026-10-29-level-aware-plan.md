@@ -179,3 +179,18 @@ paired by round):
 decodes about 1% slower than today, with 14% more memory and 18% more CPU. That is rare
 input, but the rule's cost there is not nothing. A design that re-plans, or spawns
 helpers only when they can run, could remove it; it is not designed here.
+
+### The -6 repeat (registered before it runs; the user's decision, 2026-10-30)
+
+- **The run:** `just bench-coop-decoder --file corpora/wikidata-bz6.bz2 --rounds 20 --arms
+  mibz2-workers,mibz2-auto,mibz2 --gate mibz2 --no-small`, on the i9, at the PR's head, with
+  nothing else running.
+- **The scoring:** `bench/level_aware.py`, the unchanged gate as registered: `mibz2` against
+  `mibz2-auto` at 20 threads, lower bound ≥ 0.97, RSS ≤ 1.05×, one output hash.
+- **The first run stays in the record as not met,** whatever the repeat shows.
+- **If the repeat meets the gate,** the first run is judged a disturbed run. The -6 control
+  then counts as met for the shipping decision, recorded as "met on the repeat, after a
+  disturbed first run".
+- **If it fails again,** the -6 path is treated as a real regression and investigated
+  before any merge, starting from what differs: the header read and the first chunk.
+- **The mixed case's cost** (above) is a separate decision, not settled by this run.
