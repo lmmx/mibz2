@@ -65,7 +65,10 @@ report 4. Both corrections stand, and the register carries them.
    - **Classification:** open structural hypothesis, with no failure class assigned. It
      comes with a census and a strict test of total work (§3.2).
    - The coordinator's "probably experimentally inferior" is withdrawn.
-3. **General rule, adopted for the register:** a failed implementation is evidence
+3. **N1's record partition is not new** (added 30 October, from T4). It is KKP 2012's
+   s-runs in the Ψ direction (§3.1, after (k)). Only the per-visit k-byte walk and its
+   run-native construction were not found in the literature read.
+4. **General rule, adopted for the register:** a failed implementation is evidence
    against that implementation. It closes a mathematical direction only when the failure
    is shown to hold for every representation of it: failure class I, or class II with
    the budget argument made.
@@ -646,7 +649,41 @@ Their three additions, answered where the theory allows:
    - So the obstruction is not hidden. T1 measures it.
 
 **Novelty** is still owed on both sides. The researcher states they have not established
-it, and T4 is unchanged.
+it.
+
+**T4's result (the literature agent, `register/literature.md`; narrowed, not settled):**
+- **The record partition is prior art.** It is Kärkkäinen, Kempa and Puglisi's *s*-runs
+  ("Slashing the Time for BWT Inversion", DCC 2012, the Precopy section), mirrored from
+  LF to Ψ:
+  - their Lemma 8 makes LFᵏ one translation on each s-run, for k ≤ s;
+  - their Corollary 6 builds the run starts as the union of s shifts of L's run starts,
+    with r_s ≤ r·s.
+
+  N1's C_k = ⋃_{t<k} Ψ^{−t}(B) is the same union along the text cycle. So N1's ~110k
+  records per block are KKP's r₈, and the bound k·|B| is theirs. The exact count
+  Σ min(k, gᵢ) is implied by their construction but not stated in it. The repository's own
+  literature journal (`2026-10-27-literature-reading.md`) summarised these lemmas, and this
+  portfolio should have cited them from §3.1(a) on.
+- **The same object, or close relatives:**
+  - Baier, CPM 2018: "blocks" moved in parallel by LFˣ, used for compression and computed
+    from the runs;
+  - Kempa, SODA 2019, §6.1: LF-shortcuts, storing LF^d on blocks;
+  - Gagie 2026 (arXiv:2609.06596): multi-step LF on pattern intervals for backward
+    search, with doubling tier lengths, not a row-level walk;
+  - Nishimoto–Tabei, Brown–Gagie–Rossi, Brown–Langmead (SEA 2026), Move-r, Movi and
+    Movi 2: move structures with one step per character.
+- **Not found:**
+  - a Ψᵏ move structure whose records carry the k-byte word, inverting a whole block k
+    bytes per lookup on every visit (Precopy only skips k bytes on revisits, by copying);
+  - those records built from L's runs by interval-level doubling, without materialising
+    LF or Ψ.
+
+  "Not found" is a search result, not proof of novelty, and composing piecewise
+  translations is elementary.
+- **Consequence:** any N1 write-up cites KKP 2012 and Baier 2018 as the nearest prior art,
+  states the difference (the per-visit k-byte walk and its run-native construction), and
+  uses KKP's Theorem 9 (O(n/s + r_s + n/B) cache misses) as the comparison model. §3.1's
+  mathematics stands; its originality claim narrows to the two unfound items.
 
 ### 3.2 Reverse MTF: what bounds composition's value on Wikidata
 
@@ -931,6 +968,222 @@ about 12.5% are ≤ 31.
 It is a real but modest candidate, not a breakthrough. It needs a CI-measurable microbenchmark,
 with no PMU required.
 
+### 3.2e P74, rounds 25–33 checked: the one-shuffle path, the shipped loop's machine code, and what is left
+
+The sources are external reports 24–25 and the literature agent's instruction tables
+(`register/literature.md`). The checks are read-only, with scripts in the scratchpad's
+`theory/`: `p74_paths.py` and `runlens.py`.
+
+**(a) The emulated state machine, with round 27's one-shuffle path, is exact.**
+- **The emulation:** exact AVX2 byte semantics for `vpshufb` (lane-local, bit 7
+  zeroes), `vperm2i128`, `vpalignr` and `vpblendvb`.
+- **The three paths:**
+  - **q < 16:** V′ = `vpshufb`(V, MA_q), with round 27's mask. The upper lane takes the
+    identity, so one instruction carries the state.
+  - **16 ≤ q < 32:**
+    - A = `vpshufb`(V, MA_q): lane 0 shifted up a byte; lane 1 shifted over 16…q.
+    - B = `vpshufb`(`vperm2i128`(V, V, 0x01), MB_q): v_q to byte 0, v₁₅ to byte 16.
+    - V′ = `vpblendvb`(A, B, K), where K selects bytes 0 and 16 and is one constant for
+      every rank.
+  - **q ≥ 32:**
+    - `vpalignr`(V, `vperm2i128`(V, V, 0x08), 15) gives [0, v₀…v₃₀];
+    - the tail's element q − 32 is blended into byte 0;
+    - the tail takes [H[31]] and drops that element. That rewrites j + 1 = q − 31 tail
+      bytes, against the shipped kernel's q.
+- **The tables:** MA (31 × 32 B) and MB (16 × 32 B), 1.5 KB in all, plus one constant.
+  This replaces §3.2d's per-rank selector table.
+- **The symbol:** every path leaves it at V′[0] (round 31). The checker compares V′[0]
+  with plain MTF's symbol and the whole list after each token, so the fused extraction
+  is covered.
+- **The results:**
+  - **Synthetic:** 6 families × 167 sequences × 400 tokens, 0 mismatches. The families
+    are uniform 1–255, all < 16, all 16–31, the 14–17 and 30–33 crossings, and a
+    Wikidata-shaped mix.
+  - **Real:** the 20 T2-census blocks, with bzip2's used-symbol mapping (85–95 symbols,
+    50k–135k explicit tokens each). 0 mismatches.
+- **Explicit ranks are 1–255** (round 33's correction): rank 0 is carried by RUNA/RUNB,
+  and `explicit_ranks` never emits it.
+
+**(b) The path shares and the fallback's exact traffic** (20 blocks, weighted by
+token):
+
+| | value | range over blocks |
+|---|---|---|
+| q < 16 (one shuffle) | 84.6% | 81.9–86.7% |
+| 16 ≤ q < 32 (cross-lane) | 13.8% | 12.1–16.0% |
+| q ≥ 32 (fallback) | 1.59% | 1.11–2.11% |
+| Round 25's exact statistic, (1/N)·Σ_{q≥32}(2q − 63), logical bytes per explicit token | **0.49** | 0.32–0.65 |
+| the same, per output byte | 0.040 | 0.023–0.073 |
+| the shipped kernel's own fallback copy, (1/N)·Σ_{q≥32} q, bytes per token | 0.74 | 0.51–0.99 |
+
+Round 25's 7.15-byte bound holds with a factor of about 15 to spare. The used alphabet
+caps q at A − 1, so j ≤ A − 33 ≈ 60 and not 223.
+
+**(c) The state chain, at the literature agent's latencies.** The latencies are uops.info
+and Agner. For Skylake/Coffee Lake they are inferred for the i9's Comet Lake; Zen 3 is
+CI's EPYC 7763.
+
+| path | instructions on the V → V′ chain | Skylake family | Zen 3 |
+|---|---|---|---|
+| q < 16 | `vpshufb` | 1 | 1 |
+| 16–31 | `vperm2i128` → `vpshufb` → `vpblendvb` | 3 + 1 + 2 = 6 | 3 + 1 + 1 = 5 |
+| ≥ 32, the head | `vperm2i128` → `vpalignr` → `vpblendvb` | 6 | 5 |
+
+- **Off the chain:** the masks (their address comes from the rank, which the scanner has
+  already decoded into `Symbols.syms`, rounds 28 and 33), the low-byte extraction
+  (`vmovd`, ≤ 3 and ≤ 5 cycles), `s2u`, the count and the output store (rounds 31–32).
+- **A memory-operand `vpshufb`** (round 33) is one more form of the same thing.
+- **The lower bound (round 28):** with 32 entries in one register, a rank in 16–31 must
+  move a byte across lanes. Every AVX2 cross-lane byte move is at least `vperm2i128`'s 3
+  cycles, so 5–6 is close to the floor for this layout.
+
+**(d) The shipped kernel's chain, read from the published 0.2.1 wheel's machine code.**
+- **What was read:** `_mibz2.abi3.so`, the wheel cached by uv.
+  - Its symbols are stripped. The two checkpointing loops (`mtf_checkpoints_avx2`) and
+    the plain loop are the only three `vpblendvb`s.
+  - The calls resolve through the GOT to `memset@GLIBC` and `memmove@GLIBC`.
+- **Per explicit token with q < 32,** the list sits on the stack at `[rsp+0xe0]`:
+  - `movzx r12d, byte [rsp+rdx+0xe0]` (v);
+  - `vmovdqa ymm0, [rsp+0xe0]`;
+  - `vpblendvb ymm0, ymm0, [rsp+0xdf], ymm1` (the shifted list as a memory operand);
+  - `vmovdqa [rsp+0xe0], ymm0`;
+  - `mov byte [rsp+0xe0], al`;
+  - then `s2u`, `inc dword [rcx+rax*4]` and the output byte.
+- **The forwarding failures:** the next token's two 32-byte loads each overlap the
+  previous token's 32-byte store and 1-byte store without being contained in one store.
+  - Agner's microarchitecture manual says neither forwards: about 11 extra cycles on
+    Skylake (§11.13) and about 10 on Zen 3 (§23.17).
+  - So the shipped recurrence is one failed store-to-load forward per explicit token, as
+    the source's own comment says.
+  - Measured support, but not proof: on the coop-spill branch (journal
+    `2026-10-28-cooperative-inversion.md`), moving that store earlier measured
+    **1.058×** (19/20). The same entry warns that the arms also differ by one spill, and
+    that code layout alone moved identical source by 2–2.4% between builds. No counters
+    were taken.
+- **The model, consistent with that support:** about 15–17 cycles a token on the chain
+  today, against 1–6 for P74.
+
+**(e) Two costs the rounds had not charged.**
+1. **The dispatch branch.** The model is a 2-bit counter for the q < 16 test, tried
+   with 0, 4 and 12 bits of its own history.
+   - It mispredicts on **16.4%** of q < 32 tokens (14.2–19.1%), and history doesn't help.
+     At this granularity the rank stream is close to i.i.d.
+   - The q < 32 test the shipped kernel already has mispredicts on 1.8%.
+   - At an assumed 15–20 cycles a mispredict (not from the tables), the q < 16 branch
+     costs about 2.4–3.2 cycles per explicit token. It saves about 0.846 × (5–6 − 1) ≈
+     3.4–4.2.
+   - Two designs therefore need measuring against each other:
+     - **branchy:** about 1.6 cycles of chain plus about 2.4–3.2 of mispredicts;
+     - **branchless:** every q < 32 token on the cross-lane sequence, with a per-rank
+       blend mask of zero for q < 16, so 5–6 cycles uniformly and the shipped
+       kernel's 1.8% of mispredicts.
+
+     Both sit well below the shipped chain's ~15–17. Round 27's 84.8% is a share of
+     tokens, not a saving.
+2. **Every RLE2 run is a `memset` call, behind `vzeroupper`.**
+   - The System V ABI saves no vector register across a call, so a P74 build of this loop
+     shape spills V before each run and reloads it after. A same-size reload does
+     forward (~5–7 cycles), so this is a chain cost, not a stall.
+   - **How often** (four real blocks): 0.24–0.33 runs per explicit token, and 83–90% of
+     runs are ≤ 31 bytes (median 3). 94% of output bytes are in runs, mostly long ones
+     (p99 ≈ 900–1,200).
+   - **The design requirement:** write runs of ≤ 31 bytes with one 32-byte broadcast
+     store (`ll` reserved 32 bytes past `max`), and call `memset` only for longer runs.
+     That keeps V resident on about 9 runs in 10.
+   - The fallback's `memmove` (1.6% of tokens) spills V too, which is legitimate (round
+     31).
+   - The inline store would also cut the shipped kernel's per-run call. That is noted
+     here, not opened as a question.
+
+**(f) Checkpoints and counting (rounds 30 and 32), checked against `src/mtf.rs`.**
+- The checkpoint kernel is `mtf_avx2`'s byte step inside an outer loop.
+- Checkpoints are snapshots of `counts`. A run crossing a checkpoint is split using
+  `s2u[*base]`, which for P74 is V′[0]. So no new checkpoint work is needed.
+- The fence's docstring states the memory head's forwarding reason, which doesn't apply
+  to the register path.
+- **The count RMW** (`inc dword [rcx+rax*4]`) is off the state chain in both designs.
+  - Two consecutive explicit tokens never share a symbol, since rank ≥ 1.
+  - A run after a token does increment the counter that token just incremented, a
+    forwarded RMW pair on the count path only.
+- The second-pass alternative is `mtf_checkpoints_scalar`, already present: a known
+  trade of work against dependency (round 32).
+
+**(g) Round 29's selector, checked.**
+- `Symbols.syms` is a `Vec<u16>` filled by the scanner before MTF, and q = s − 1 for
+  2 ≤ s < eob.
+- The alphabet guarantees hold, since eob = A + 1: A ≤ 32 ⇒ no fallback, and A ≤ 16 ⇒
+  one shuffle throughout.
+- **An exact count pass costs little:** it reads syms at 2 bytes a symbol, and syms is
+  far shorter than the output (explicit tokens 0.06 a byte plus the RUNA/RUNB digits). An
+  AVX2 compare-and-count pass over it costs well under 0.1 c/B, against a candidate
+  saving of about 0.6 c/B. So C_select is not the binding term; the per-path costs d_i
+  are.
+- **For random data,** ~87.5% of tokens take the fallback, whose head chain is 5–6 cycles
+  plus a `memmove`, against the shipped kernel's own `memmove` plus a failed forward. That
+  is not obviously worse, but #25 regressed by 11% there, so the guard stays a
+  measurement.
+
+**(h) The ceiling, restated.**
+- **On CI** (EPYC, one thread), MTF+RLE2 is 2.29 c/B, about 37 cycles per explicit
+  token, of which the model puts ~15–17 on the forwarding chain.
+- **If P74's loop becomes throughput-bound** at roughly 5–6 cycles a token (about 15–20
+  instructions at about 4 IPC; an estimate), the saving is ≤ 10–12 cycles a token:
+  0.6–0.75 c/B, which is 26–32% of the stage and **4.6–5.8% of a one-core decode**.
+- Round 26's Amdahl bound of 1.215× is the stage's ceiling, not P74's.
+
+**(i) The library-call boundary (rounds 35–37), with the call densities measured.**
+The data is `theory/calls.py`, on the 20 T2-census blocks.
+- **The counts:** every RLE2 run is one `write_bytes`, a `memset` call in 0.2.1's machine
+  code, and every rank ≥ 32 is one `ptr::copy`, a `memmove`. Both are counted from L,
+  which is equivalent to counting maximal RUNA/RUNB sequences and symbols s ≥ 33 in
+  `Symbols.syms` (round 36).
+- **Medians over the 20 blocks, with their ranges:**
+
+| calls | per 1,000 explicit tokens | per decoded MB |
+|---|---|---|
+| `memset`: every RLE2 run, R | 310 (240–330) | 18,900 (16,000–40,300) |
+| `memmove`: every rank ≥ 32, F | 16.2 (11.1–21.1) | 970 (770–2,500) |
+| all, as the loop is shaped today | 329 (251–351) | 19,900 (16,700–42,700) |
+| left if runs ≤ 31 bytes are written inline | 48.8 (26.9–55.1) | 3,030 (2,610–5,120) |
+| left if runs and tail shifts ≤ 63 bytes are inline | 19.2 (6.5–24.0) | 1,230 (980–1,580) |
+
+  (The explicit tokens are 60,900 per MB, with a range of 53,300–149,900.)
+- **Round 37's bound holds in the source:**
+  - every extra fill in the checkpoint loop is a checkpoint boundary inside a run, so
+    R ≤ W ≤ R + K, with K = 54 for 900,000 bytes;
+  - a run ending exactly on a boundary leaves a zero-length `write_bytes`, and in 0.2.1
+    that is a real `memset(…, 0)` call (the remainder's call is unconditional);
+  - both are negligible beside R.
+- **What preserving V across calls costs (a model):**
+  - The one differential cost is the spill and reload. The call itself is in the shipped
+    loop already.
+  - A same-address 32-byte store then load forwards, at about 5–7 cycles on the chain.
+  - **With every call kept:** f·c ≈ 0.33 × 6 ≈ 2 cycles per explicit token, against a
+    modelled saving d of about 10–12 (§3.2e(h)).
+  - **With runs ≤ 31 bytes inline:** about 0.3 cycles.
+  - **With runs and shifts ≤ 63 bytes inline:** about 0.1 cycles.
+  - The logical traffic is 64 B a call: 1.3 B/B as the loop is shaped today, 0.2 with
+    short runs inline.
+  - So the ABI constraint costs a fifth of the modelled saving if ignored, and little
+    once short runs are inline. It is an amortisation term, not an obstacle (round 36).
+- **Not settled by counting:** what a compiler does with V across these calls. That is
+  read from the disassembly of a P74 kernel once one exists.
+
+**Disposition (P74, under the existing P74/#25 entry; no new question):**
+- **answered:** correctness (every path, real mapping, fused extraction), the lower
+  bound, the mask independence, checkpoint compatibility, the selector's exact
+  information, and the fallback's traffic;
+- **conditionally unresolved:** the performance.
+  - **The missing evidence:** a CI-measurable microbenchmark of the checkpoint-aware loop
+    on stored `Symbols` from the bench blocks, with two arms (branchy and branchless, both
+    with inline short runs), against shipped `mtf_checkpoints_avx2`. It runs on Wikidata,
+    random and records blocks, with the layout control the coop journal asks for, and
+    reads the disassembly for V spills (one arm with short runs and short tail shifts
+    inline, as (i) requires).
+  - **Why it can't be inferred:** the mispredict cost, the instruction throughput and
+    the register allocation are compiler- and machine-specific. It is a new kernel
+    variant, so it waits for the maintainer's approval.
+
 ### 3.3 Ceilings, from the current stage table
 
 All of these are models, from #114's CI run (EPYC 7763, one thread, 12.93 c/B in all).
@@ -1181,8 +1434,9 @@ register's 6 conditional rows, not an open one):
 - **19 narrowed to a named measurement:** #2, #3, #11, #15, #19, #21, #37, #38, #39,
   #44, #45, #46, #53, #67, #68, #71, #77, #80, #82;
 - **17 worked below:**
-  - the ten in the next table;
-  - the literature rows, #28–#33 and #36, which are with the literature agent.
+  - the ten in the next table (#73 now answered);
+  - the literature rows, #28–#33 and #36, all answered by the literature agent (table
+    after the conditional rows).
 
 **The completion standard** (the researcher's, in their burn-down status report). Every
 row ends with one of three dispositions:
@@ -1205,8 +1459,8 @@ evidence named.
 | 51 | Cost of non-translation payload loads | moot for N1; conditionally unresolved for compact Ψ | N1's records cover every row uniformly, so it has no exceptional payload path. For #112's formats, the #43 microbenchmark decides it |
 | 54 | Does any representation improve best-concurrency throughput? | answered negatively for compact Ψ as built; conditionally unresolved for N1 | #112: the knee moved from 4 to 6 blocks, but the best arm reached 0.687× of the shipped 4×2 teams. N1 is untested (Gates B and C) |
 | 72 | What the compiler emits for in-register select and extraction | conditionally unresolved | It needs a prototype of the format; none exists. It is cheap once code exists (read the disassembly) |
-| 73 | CPU-specific alternatives to PDEP | pending a primary-source check (with the literature agent) | instruction tables for Intel Haswell+, Zen 1/2 and Zen 3, plus PDEP-free select references |
-| 75 | Which structure predicts expensive extra loads under 32 lanes | narrowed | meas.: exceptional rows arrive in bursts along trajectories (84.8% of gaps ≤ 2), so the predictor is the burst structure rather than the mean rate. The cost under 32 lanes needs a lane simulation or a measurement |
+| 73 | CPU-specific alternatives to PDEP | **answered** (literature agent, uops.info and Agner) | PDEP/PEXT take 3 cycles at 1 a cycle on Intel Haswell through Alder Lake (Comet Lake by inference) and on Zen 3–5, EPYC 7763 included. They are microcoded on Zen 1, Zen+ and Zen 2: 6–7 µops and about 18–19 cycles; a data-dependent cost there is unverified. PDEP-free select: Vigna 2008, Algorithm 2, and Gog & Petri 2014 (the method as given in Petri's thesis, Fig. 3.1, about 2× Vigna's). A dispatched fallback is needed only if Zen 1/2 becomes a target |
+| 75 | Which structure predicts expensive extra loads under 32 lanes | narrowed (R34 added) | Three predictors, separated. **Prevalence** (measured): 2.03 breakpoint and 7.2 compact-Ψ slow lanes a full round. Under the independent-lane model that #74's variances support, P(≥ 1 a full round) = 1 − (1 − p)³² ≈ 87.7% and 99.97%: a model, not measured stalls. So a round-wide fallback would pay on nearly every round, and so would one per 8-wide SIMD group (1 − 0.775⁸ ≈ 87%). **Cross-lane bunching:** measured absent (#74). **Within-lane bursts:** measured (84.8% of gaps ≤ 2). The shipped walk has no round-wide fallback: its lanes are independent scalar chains. The cost of independently handled exceptions (7.2f a round) needs a measurement |
 | 76 | How much of Ψ can be rebuilt from compact information near flat-table speed? | conditionally unresolved, now quantified on the space side | N1 rebuilds all of Ψ⁸ from 1.5 MB (median) with exact semantics. The speed side is Gates B and C, with the builder's traffic modelled as adverse (§3.1(h)) |
 
 **The register's 6 conditional rows:**
@@ -1220,12 +1474,47 @@ evidence named.
 | 83 | A twin that loops inside one process (harness) | conditionally unresolved | a harness design (P130). It is measurement infrastructure, so there's no scientific uncertainty beyond whether to build it |
 | 84 | E3's fill-buffer headroom at 4–10 workers | conditionally unresolved | R12: the lane sweeps narrow it (lanes 8 and 16 measured worse). The counter verdict was never posted; it needs PMU attribution on the i9 |
 
-**After the literature rows return,** every one of the 84 questions will have a
-disposition. Answered rows stay answered. The open and conditional rows end as follows:
-- **answered (including negative and boundary-specific):** 11 open + #5 + #62 (i9);
-- **superseded:** #18, and #47 for composed records;
-- **conditionally unresolved, each with its evidence named:** the rest;
-- **the literature rows:** pending.
+**The literature rows** (the literature agent, `register/literature.md`; primary sources
+read unless marked):
+
+| # | Item | Disposition | Evidence |
+|---|---|---|---|
+| 28 | Petri "2024" | answered: not relevant | It is Matthias Petri's RMIT PhD thesis of 2013, deposited in 2024 (DOI 10.25439/rmt.27354450). Its k-BWT inverts up to 3× faster than the BWT by locality, but it is a different transform. Its select64 (§3.1.2) feeds #73 |
+| 29 | Alanko 2020 thesis | answered: not relevant | Wheeler graphs and tunnelling for compression; no LF-access engineering |
+| 30 | Navarro 2020/2021 | answered: one survey, the duplicate dropped | arXiv 2004.02781, published as ACM CSUR 54(2), Parts I and II. Inversion appears only as citations of KP 2010 and KKP 2012 |
+| 31 | KKP 2016 | answered: not relevant | "Lazy Lempel-Ziv Factorization Algorithms", ACM JEA 21 (2016). Its only transferable idea is copying, which is Precopy (rejected, P04). The CPM 2013 arXiv precursor was read, not the JEA text |
+| 32 | Kempa 2017 ×2 | answered: the same paper | arXiv 1712.04886: v1 "Closing in…", v8 "Optimal Construction…" (SODA 2019). Index construction. Its §6.1 LF-shortcuts feed T4 |
+| 33 | Bannai et al. 2019 | answered: not relevant | Inverting the bijective BWT is the ordinary LF walk over each cycle |
+| 36 | Overlooked references | answered; closed | Two added: Roth & Sohi, ISCA 1999 (jump pointers, effectively a per-row Ψᵏ for prefetching), and Chen et al., ICDE 2004 (group and software-pipelined prefetching, the origin of the lanes/AMAC idea). Neither has a mechanism mibz2 lacks |
+| T4 | N1's novelty | narrowed | The record partition is KKP 2012's s-runs, mirrored. Not found: the per-visit k-byte Ψᵏ walk with the word in the record, and its run-native doubling construction. See §3.1 after (k), and correction 3 in §1 |
+| P74 | AVX2 latencies and store forwarding | recorded, used in §3.2e | The ymm latencies on Skylake and Zen 3. `vpermb` is absent on the i9 and the EPYC 7763. A partly overlapping 32-byte load is not forwarded on either (Agner, §11.13 and §23.17) |
+
+Not read: the JEA text of the 2016 paper; Gog & Petri's journal text; Nong & Zhang
+(known only through Petri); Intel's and AMD's optimisation manuals; the code of Move-r's
+revert, libsais, bsc and Orbit.
+
+**The inventory now has a disposition for every row** (84 questions: 31 settled before
+this burn-down, 47 open and 6 conditional):
+- **the 47 open:**
+  - **19 answered:** #4, #25, #28–#33, #36, #58, #63–#66, #69, #73, #74, #78, #81;
+  - **19 conditionally unresolved, each with its measurement named:** #2, #3, #11, #15,
+    #19, #21, #37, #38, #39, #44, #45, #46, #53, #67, #68, #71, #77, #80, #82;
+  - **9 in the remaining-rows table, each conditionally unresolved with its evidence
+    named:** #20, #43, #47, #48, #51, #54, #72, #75, #76. Of these, #47 is superseded
+    for composed records, #51 is moot for N1, and #54 is answered negatively for compact
+    Ψ as built.
+- **the 6 conditional:**
+  - #5 answered (boundary-specific);
+  - #62 answered on the i9 and conditionally unresolved on low-L3 machines;
+  - #18 superseded;
+  - #12, #83 and #84 conditionally unresolved.
+- **The survivors outside the numbered rows:**
+  - **P74:** correctness answered, performance conditionally unresolved (§3.2e);
+  - **N1:** mathematics answered, Gates B and C conditionally unresolved, novelty
+    narrowed (T4).
+
+So nothing is left untouched. Every unresolved row names the measurement that would
+decide it, and none of them can be settled from the existing data or by reading.
 
 **#53's evidence is now adverse as well as positive.** The algorithm exists, but its
 modelled traffic is about 23 bytes per output byte, against the T-vector build's 5
