@@ -15,7 +15,7 @@ that would decide it, and the approval it would need.
   hypothesis and experiment since 0.1.0, with its status, measurement boundary,
   condition, failure class and sources, plus the recorded question lists and the merged
   contradictions.
-- `2026-10-30-external-report-4.md` to `-11.md`: the inputs this round, verbatim.
+- `2026-10-30-external-report-4.md` to `-14.md`: the inputs this round, verbatim.
   - Report 5 holds the researcher's and the guardian's corrections to the coordinator's
     first reading.
   - Report 6 is the researcher's study session on the algebra of inverse MTF, and their
@@ -29,6 +29,12 @@ that would decide it, and the approval it would need.
     - the traversal-gap identity and the stable-Ψ proof;
     - the run-native propagation of the boundaries;
     - the interval-join construction.
+  - Reports 12–14 hold burn-down rounds 6–9 and the researcher's summary of the day:
+    - two-view construction, with the coordinator's correction to round 7's destination
+      offsets;
+    - exactness of the join;
+    - segment caps, with the invariant checked;
+    - executed lookups.
 
 **Boundaries.** Four boundaries are kept apart throughout, and a figure is never carried
 from one to another:
@@ -432,6 +438,27 @@ Their three additions, answered where the theory allows:
    - That costs at most (k − 1) extra breakpoints per segment end. With 512 segments,
      that is ≤ 512(k − 1), against k·r ≈ 56,000k. It is negligible, and it needs no
      check in the hot loop.
+   - **Why caps, rather than masked tail stores (rounds 8–9).** The shipped room walk
+     doesn't know a segment's length: a lane finds the end by reaching a flagged row (the
+     marker audit, #100: "lengths are unknowable without walking"). A k-step jump would
+     skip that row. A capped record stores its own length, t ≤ k. On any row whose
+     trajectory reaches a segment start within 1…k−1 steps, it emits exactly t bytes and
+     lands on the flagged row. The researcher accepted this in round 9's follow-up.
+   - **The segment-terminal invariant, as the researcher stated it.** From any segment
+     start, the capped records alone must emit exactly that segment's bytes, reach its
+     terminal marker exactly once, and never go past it.
+     - **Checked by brute force:** 10,188 segments over random primitive strings with
+       random flagged starts, 0 failures.
+     - **Extra records:** at most 5 per start were observed, against a bound of
+       2(k − 1) = 14.
+     - **The fallback:** none. Ψ¹ and the T-vector are not retained.
+   - **Executed lookups are exact.** A lane reaches a capped row only on its final hop,
+     because the capped rows are those fewer than k steps before the next start. So a
+     segment of length ℓ_s takes exactly ⌈ℓ_s/k⌉ lookups, and
+     H = Σ_s ⌈ℓ_s/k⌉ < n/k + 512.
+     - This is the researcher's round-9 count, now holding under caps.
+     - At k = 8 and n = 900,000, n/H > 7.96 bytes a lookup.
+     - Checked: every one of the 10,188 walked segments took exactly ⌈ℓ/8⌉ lookups.
 3. **The gap between row-space and traversal-space regularity can be measured.**
    - This is the researcher's obstruction, deduction 3. Identity (a) turns traversal-space
      regularity into a row-space count: |B_k| is the number of adjacent row pairs whose
