@@ -9,9 +9,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.1](https://github.com/lmmx/mibz2/compare/v0.2.0...v0.2.1) - 2026-10-30
 
+The one-core inverse-BWT table build now writes each entry in one pass. The table, the
+output and the API are unchanged. Where it applies, the decoder is a few percent faster
+at slightly less CPU on the one workstation measured; on CI's 2-core runners only the
+build stage is measurably faster.
+
+### Who gets what
+
+- **Every decode that builds a block's table on one core:**
+  - the serial decoder;
+  - `Plan::Workers`, the default below 6 physical cores (4-core machines, GitHub's
+    runners) and at any thread count below 6;
+  - the cooperative kernel's fallback for blocks below `MIN_COOP`.
+- **Unchanged:** the cooperative teams that 0.2.0 plans on 6 or more physical cores build
+  with their own fused build, as before.
+
+### Measured
+
+Both measurements were registered before they ran
+([journal](https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-one-pass-build.md)).
+
+**The i9-10900K** (10 cores, 20 MiB L3, Linux): this build against `v0.2.0`, whose source
+differs by this change alone, 10 paired rounds, the bench corpus's Wikidata blocks.
+
+| threads | speed | CPU-seconds | the plan |
+|--:|--:|--:|---|
+| 1 | **1.048× (1.026–1.070)** | **0.954× (0.934–0.975)** | serial |
+| 2 | 1.025× (0.994–1.056) | 0.980× (0.953–1.006) | workers |
+| 4 | **1.035× (1.010–1.060)** | **0.971× (0.945–0.998)** | workers |
+| 6 | 0.999× (0.973–1.026) | 1.002× | teams: unchanged, the control |
+| 8 | 1.007× (0.986–1.028) | 0.994× | the control |
+| 10 | 0.998× (0.961–1.036) | 1.001× | the control |
+
+**CI** (a 2-core runner with SMT, 10 paired rounds):
+- the build stage −6.0% (−8.5%, −3.5%);
+- no thread count slower in wall time, across 21 corpus and thread-count rows;
+- no whole-decoder gain beyond noise: the Wikidata blocks +0.8% (−1.2%, +2.8%) at
+  1 thread;
+- CPU-seconds rose 1–2% in three rows whose 4 threads share SMT siblings, each interval
+  excluding no change. The two machines disagree here, and both results are kept.
+
+Every run on both machines gave the same bytes.
+
 ### <!-- 3 -->Performance
 
-- *(bwt)* the one-core build in one pass ([#114](https://github.com/lmmx/mibz2/pull/114))
+- *(bwt)* the one-core build in one pass ([#114](https://github.com/lmmx/mibz2/pull/114)).
+  Each entry is written whole, the byte read from the last column at its slot, with no
+  init pass and no read-modify-write. Each write is checked against its bucket's end, and
+  an end check proves every slot was written once. Counts that aren't the column's own
+  fall back to the two-pass build, unchanged. Its unchecked writes are tested under Miri.
 
 ### <!-- 4 -->Documentation
 
