@@ -347,6 +347,95 @@ round 4's open problem: the destinations and the words.
 - Whether the merge-and-gather costs less than 2.16 c/B is the measurement that would
   decide it. It can't be shown from counts alone.
 
+**(h) Gate A: the census on all 233 full bench blocks** (measured; read-only Python over
+the bench's own windows, rebuilt from the `bench-data` branch; 1,073 s, one core).
+
+| Quantity (min / p10 / median / p90 / max) | Value |
+|---|---|
+| n | 899,809 / 899,971 / 900,000 / 900,000 / 900,000 |
+| r (= m₁) | 47,936 / 51,108 / 56,032 / 99,380 / 179,972 |
+| \|B\| − (r − 1) | 0 on every block (round 4's identity) |
+| m₂ | 57,676 / 62,125 / 68,029 / 121,772 / 203,914 |
+| m₄ | 70,271 / 76,737 / 84,287 / 149,854 / 227,058 |
+| m₈ | 89,048 / 100,416 / 109,726 / 195,995 / 268,255 |
+| m₈ / (8\|B\|), the overlap the worst case ignores | 0.18 / 0.24 / 0.25 / 0.26 / 0.30 |
+| m₈ / d₈ (round 1's fragmentation factor) | 1.27 / 1.60 / 1.67 / 1.76 / 2.16 |
+| P⁸ resident, 12 B records + 225 KB directory, MB | 1.29 / 1.43 / 1.54 / 2.58 / 3.44 |
+| P⁴ resident, MB | 0.79 / 0.84 / 0.90 / 1.42 / 2.04 |
+| P¹⁶ resident (20 B records), MB | 2.62 / 2.97 / 3.28 / 5.50 / 7.49 |
+
+**The gap distribution along the traversal,** pooled over all blocks (mean gap 13.8):
+- 84.8% of gaps are ≤ 2 steps, 90.0% ≤ 8, 95.8% ≤ 64;
+- 93.4% of rows lie in gaps longer than 2, 91.6% in gaps longer than 8, 79.9% in gaps
+  longer than 64.
+
+So breakpoints come in tight bursts, and most rows lie in long, breakpoint-free
+stretches. That is why m₈ is about 2|B| rather than 8|B|.
+
+**Storage, the researcher's round-3 threshold:** every block fits under the T-vector's
+3.6 MB at k = 8, including the worst block at 3.44 MB. k = 16 does not fit on the
+high-r blocks.
+
+**Negative controls** (one 899,000-byte block each, built from the bench's own corpus
+definitions in `tests/common/mod.rs`):
+
+| Corpus | r | n/r | Pure 32-row groups | m₁ / m₂ / m₄ / m₈ | P⁸ MB |
+|---|--:|--:|--:|---|--:|
+| records | 896,176 | 1.0 | 0.000 | 896,176 / 898,996 / 899,001 / 899,001 | 11.0 |
+| random | 895,424 | 1.0 | 0.000 | 895,424 / 898,985 / 899,001 / 899,001 | 11.0 |
+| text (the crate's sources) | 135,801 | 6.6 | 0.292 | 135,801 / 200,487 / 277,841 / 352,169 | 4.45 |
+
+All three fail the storage gate. A P⁸ decoder needs a per-block fallback to the
+T-vector, chosen before building:
+- **The rule:** r is known after MTF, and m₈ ≤ 8r, so blocks with
+  8r·12 + 225 KB ≤ 3.6 MB pass outright.
+- **Otherwise:** a cheap bound or a partial build decides.
+
+This is the guard against #25-style regressions on random and records data.
+
+**Children per parent on doubling** (40 sampled blocks; min / p10 / median / p90 / max):
+
+| Level | Unsplit parents | Round 8's lower bound 2m_a − m_2a | 2 children | ≥ 3 children | Most children |
+|---|---|---|---|---|--:|
+| 1 → 2 | 0.899 / 0.904 / 0.906 / 0.913 / 0.936 | 0.753 / 0.767 / 0.779 / 0.798 / 0.867 | 0.055–0.073 | 0.008–0.030 | 3,161 |
+| 2 → 4 | 0.929 / 0.936 / 0.939 / 0.950 / 0.983 | 0.729 / 0.747 / 0.763 / 0.788 / 0.887 | 0.012–0.044 | 0.005–0.028 | 3,439 |
+| 4 → 8 | 0.934 / 0.936 / 0.942 / 0.950 / 0.987 | 0.668 / 0.671 / 0.689 / 0.713 / 0.838 | 0.007–0.035 | 0.005–0.032 | 2,093 |
+
+About 94% of Ψ⁴ parents pass to Ψ⁸ whole, far above round 8's 69% bound. The splitting
+concentrates in about 3% of parents, some of which split into thousands of children:
+the long intervals whose images cross a burst. So a fast unsplit path is justified, and
+the split loop's cost is dominated by a few large parents.
+
+**The construction-traffic model** (Gate B's first input; a model, not a measurement):
+- **Assumptions:**
+  - the corrected two-pass counting construction, with both views at levels 1–4 and
+    the source view only at level 8;
+  - 12 B construction records (16 B at level 8);
+  - u32 counts, plus the 225 KB directory.
+- **Results, per block:**
+
+| | min / p10 / median / p90 / max |
+|---|---|
+| Bytes moved per output byte, P⁸ build | 19.5 / 21.0 / 23.1 / 40.6 / 66.3 |
+| Bytes moved per output byte, T-vector build (L read, 4n scattered) | 5.0 |
+| Peak live MB during the P⁸ build | 3.9 / 4.3 / 4.7 / 8.2 / 12.2 |
+| Resident MB during the walk | 1.3 / 1.4 / 1.5 / 2.6 / 3.4 (T-vector 3.6, plus L's 0.9 if kept) |
+
+- **The plain reading:** the P⁸ builder moves about 4.6× the bytes of the T-vector
+  build on the median block, and about 8× on the 90th percentile.
+  - Its accesses are mostly sequential, over arrays of at most about 2.6 MB. The
+    T-vector's 4n bytes are scattered into a 3.6 MB array.
+  - Which costs fewer cycles is exactly Gate B. Bytes alone don't decide it, but they
+    make Gate B the most likely place for N1 to fail.
+- **Peak build memory** matches the T-vector's (4.7 against 4.5 MB) on the median
+  block, and is about twice that on high-r blocks. That is a laptop concern at four
+  blocks in flight.
+- **Cheaper variants,** to model before any code:
+  - fold each level's counting pass into the previous level's scatter, which removes a
+    read of both views;
+  - the researcher's indexed views, from round 6;
+  - stop at k = 4 on high-r blocks.
+
 **(d) What makes it materially different from M2.** This is the guardian's
 novelty condition:
 
@@ -836,3 +925,69 @@ register is therefore suspect, and is marked so.
 2. **Approve or decline** P1, the wikidata-pq decoder-free bench arm (measurement only).
 3. **Close #93** as superseded by #114, or keep it as the record.
 4. **The i9 queue** stays unlaunched until reviewed. Q2 and Q3 need no new code.
+
+## 9. The burn-down ledger (30 October)
+
+This is the register's 47 open questions (`2026-10-30-research-portfolio-register.md`
+§3), worked through with the researcher in reports 10–16. No question is closed by
+algebra alone where its criterion is a performance figure.
+
+**Marks:**
+- **A:** answered at the question's own level;
+- **N:** narrowed. The mechanism or mathematics is settled, and one named measurement
+  remains;
+- **O:** untouched so far.
+
+**Sources:**
+- *meas.:* the coordinator's read-only census of the bench blocks, §3.1(h);
+- *R10–R12:* the researcher's rounds, external report 16.
+
+| # | Question (short) | Mark | Evidence | What remains |
+|---|---|---|---|---|
+| 2 | Intel DDP/AOP prefetch interplay | N | R12: not attributable from timings; no design depends on it | an on/off comparison, only if a design comes to depend on it |
+| 3 | Room walk's window headroom (AMAC) | N | R12: plausible; window and memory bounds separated | PMU attribution |
+| 4 | 32 lanes = 32 misses? | A | R12: lanes bound outstanding successor requests and are not the miss count | exact occupancy (PMU), if needed |
+| 25 | Gagie 2026, Reportable Shortcuts | A | R1: the citation exists (arXiv:2609.06596, revised 12 Oct 2026); its speedups are for search, not inversion. Not independently re-read here | whether any part transfers to inversion (low) |
+| 37 | Redundancy above nH₀ | N | R11: boundary information is log₂ C(n−1, r−1) ≈ 38 KB, against N1's 225 KB directory, so the cost is in location, not storage | an access-time model per representation |
+| 38 | Run records, ψ = base + r | N | R11 with N1: the successor is arithmetic once the interval is known | lookup cycles (N1 Gate C) |
+| 39 | Alphabet-partitioned select | N | R11: Ψ(j) = select_c(L, j − C[c] + 1), with its run form | predecessor/select cost |
+| 44 | Next pointer by arithmetic | N | N1: one 8-byte jump per lookup, with n/H > 7.96 bytes a lookup under caps (§3.1(g)) | Gate C |
+| 46 | Direct select using F's intervals | N | R11: the exact select formula | whether direct indexing avoids select |
+| 53 | Ψ groups in one streaming pass | N | N1: run-native, 1 → 2 → 4 → 8, no sort, no search, no T-vector (§3.1(c′)); brute-force exact | Gate B cycles. Modelled at 23 bytes moved per output byte, against the T-vector build's 5 (§3.1(h)) |
+| 58 | Other inputs; worst-case exceptions | A (structure) | meas.: the bench's random and records blocks have 0.000 pure 32-row groups, so 100% impure is reached by valid BWTs. R11's alternating column is not a valid BWT (its Ψ has unequal cycles) | each encoding's own worst-case exception rate |
+| 63 | Run length → group occupancy | A | R10: the exact occupancy formula. meas.: corr(n/r, pure fraction) = 0.78 over 40 blocks, so a strong but imperfect predictor | none for the question |
+| 64 | Symbol-specific boundary patterns | A | meas.: breaks per row by F-bucket range from `"` 0.007 and `p` 0.006 to `0` 0.154. The digit buckets carry about 20× the break density of the structural symbols | none |
+| 65 | Breaks concentrated near mod 32? | A (no) | meas.: 3.1% of breaks fall on a group edge (uniform: 1/32 = 3.1%), and the mod-32 histogram is flat to within 1.1% | none |
+| 66 | Repetitiveness clusters breaks? | A (yes, in both spaces) | meas.: in row space, 77.9% pure groups against 15.1% if breaks were uniform, with 9.0 breaks per impure group. In traversal space, 84.8% of gaps are ≤ 2 steps. R10: neither summary determines the other | cross-block correlation of the two (optional) |
+| 67 | Choose segment starts to cheapen navigation | N | R10: a critical-path question, not total work. N1 makes starts a construction input (caps) | a gain measurement, if a scheduler change is proposed |
+| 68 | Split intervals to cut long paths | N | R10: total work separated from path length | the cost of a particular layout |
+| 69 | Amortised bound under 512 segments | A | R10: segmented work ≤ an + S·Δ_Φ. N1 counts its work directly (H = Σ⌈ℓ/8⌉) | Δ_Φ for move-structure designs only |
+| 71 | Low and high parts load independently? | N | R10: decided by the address dependencies, which can be read before benchmarking | the payoff (measurement) |
+| 74 | Slow records bunch across lanes? | N | meas.: breakpoints arrive in tight bursts along each trajectory (84.8% of gaps ≤ 2), so bunching within a lane is established | across lanes in one window (simulation) |
+| 77 | CI 2-spread amplification predicts the 10-core knee? | N | R12: A(2) does not determine A(10); no validated predictor | paired multi-concurrency curves |
+| 78 | lbzip2's 1→4 amplification a stable baseline? | A (no) | R12: the recorded spread is 1.11–1.42× across runners | none |
+| 80 | 2-core fingerprint preserves rankings? | N | R12: not guaranteed by construction | matched ranking comparisons |
+| 81 | Fingerprint: more MLP or less compute? | A (method) | R12: timings alone cannot identify the mechanism | per-machine resource counters, if needed |
+| 82 | lbzip2/pbz2 controls after #69 | N | R12: unmatched cross-run controls are not comparisons | a matched run |
+| 84 | Fill-buffer headroom | N | R12: the lane sweeps narrow it | counter attribution |
+| P132 | USL as an extrapolator | rejected | R12: three points can't validate a knee; descriptive use only | — |
+
+**The tally of the 47 open questions:**
+- **10 answered:** #4, #25, #58, #63, #64, #65, #66, #69, #78, #81;
+- **16 narrowed to a named measurement:** #2, #3, #37, #38, #39, #44, #46, #53, #67,
+  #68, #71, #74, #77, #80, #82, #84;
+- **21 not yet worked:**
+  - the front end and whole decoder: #11, #15, #19, #20, #21;
+  - the literature: #28–#33, #36;
+  - implementation-bound: #43, #45, #47, #48, #51, #54, #72, #73, #75, #76.
+
+The register's own status column is updated only when the maintainer accepts these
+dispositions.
+
+**Next, in order:**
+1. **The front end and whole-decoder cluster** (#11, #15, #19–#21; the researcher's
+   round-12 pointer). Most of these are recorded experiments whose registered runs were
+   never made.
+2. **The literature cluster:** primary-source reading, with no runs.
+3. **The implementation-bound questions,** each given a pre-registered test against
+   Gates B and C, so that none stays open without a named decider.
