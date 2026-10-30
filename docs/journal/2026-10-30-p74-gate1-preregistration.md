@@ -167,3 +167,31 @@ result):**
     only);
   - the cooperative decode's interaction with the other stages at four workers, which
     phase 2 measures.
+
+## Open points for review (added before authorisation; no rule above changed)
+
+Written for the guardian's and the maintainer's review. Settling any of them changes the
+protocol, so each is for the maintainer to decide before authorising.
+
+1. **The prediction's width.** The one-core "3–6%" above is the model's 4.6–5.8%
+   (§3.2e(h)), widened on purpose. That model assumes P74's loop runs throughput-bound
+   at 5–6 cycles a token, an estimate (15–20 instructions at about 4 IPC). The wider
+   range is the prediction tested in phase 2.
+2. **Power.** The stage runs are CI's 5 rounds × 2 passes (`STAGE_ROUNDS`,
+   `STAGE_REPEATS`). A 95% interval over 5 paired rounds has 4 degrees of freedom.
+   Raising the rounds for this PR alone would cost about 15 s a round per corpus.
+3. **The layout control's reach.**
+   - **The plain kernel is covered across binaries:** the head's unchanged `mtf_avx2`
+     against the base's.
+   - **The checkpoint kernel is not:** the base's `phases` doesn't time it. Its
+     comparison is within one binary, where the functions still differ in placement.
+   - **One option:** run the head twice, the second build with function and loop
+     alignment changed (for example `-C llvm-args=-align-all-functions=6`), and require
+     the result to hold in both builds.
+4. **The branch model.** The 16.4% misprediction rate is a 2-bit-counter model of one
+   branch in isolation, not the hardware predictor. It justifies running both arms, not
+   choosing between them.
+5. **One microarchitecture.** CI's runners are EPYC (Zen 3). The i9's Comet Lake has
+   different forwarding and misprediction penalties (Agner: about 11 against 10 extra
+   cycles for the failed forward). A Zen 3 result is not a Comet Lake result, and the
+   i9 stays out of Gate 1.
