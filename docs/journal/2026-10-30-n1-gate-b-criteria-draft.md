@@ -44,7 +44,8 @@ against the shipped walk, on the same runners, at the decoder-stage boundary.
 - every record's D and word equal the directly computed Ψ² and Ψ⁴ values, and Ψ⁸ for P^{4|8}'s
   upgraded records;
 - the upgrade is also checked against a brute-force Ψ^{2a} over every row of each upgraded
-  parent. Its correctness is so far argued, not checked;
+  parent. It has since been checked offline by brute force at small sizes
+  (`2026-10-30-n1-upgrade-correctness.md`); this repeats it on full blocks;
 - a scalar walker over the records, with caps from the same 512 starts, reproduces
   `bwt::walk`'s output byte for byte;
 - **caps:** say whether they are fused into the last pass or applied as a separate post-split
@@ -72,6 +73,10 @@ decoded byte is the primary unit, and c/B are given beside it.
 - **Primary, whole corpus:** build_N1 = Σ N1 build time / Σ decoded bytes over the corpus, in
   ns/B. It includes N1's L scan. It is reported with the control's build_T and walk_T from the
   same run, on the same boundary.
+  - **Fallback blocks are charged in full:** for a block the staged rule sends back to the
+    T-vector, build_N1 counts the N1 work already done (the L scan, level 1 and the first
+    count pass) plus the T-vector build, and its walk is the shipped walk. No block is
+    dropped from either sum. The fallback blocks' share of the total is reported apart.
   - The census's 233 full blocks hold 209,697,662 bytes of RLE1-coded text. The `wikidata`
     corpus decodes to 209,700,196 bytes. So the inverse BWT's output and the decoded bytes
     agree to 0.001% here (measured), and the boundary is the stage table's.
