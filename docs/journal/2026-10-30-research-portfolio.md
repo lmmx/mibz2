@@ -1449,7 +1449,7 @@ register is therefore suspect, and is marked so.
 complete: every question of the 84 has a disposition (§9). Two gates remain. Neither is
 authorised. In the order the researcher recommends:
 
-5. **The P74 gate, on CI only:**
+5. **The P74 gate, on CI only** (pre-registered: `2026-10-30-p74-gate1-preregistration.md`):
    - **What it builds:** a standalone kernel benchmark of the checkpoint-aware MTF loop,
      run over stored `Symbols` from the bench blocks. The production decoder is left
      unchanged.
@@ -1475,6 +1475,11 @@ No i9 run is proposed at this stage. The scratch corpus (blocks and windows, 213
 the literature sources (21 MB) are kept until the gates are reconciled.
 
 ## 9. The burn-down ledger (30 October)
+
+**Closed (30 October, external report 32):** the analytical burn-down is complete.
+Every row of the 84 has a disposition, and no further theoretical rounds are planned. The
+remaining work is performance risk: P74's Gate 1, pre-registered in
+`2026-10-30-p74-gate1-preregistration.md` and awaiting authorisation, then N1's Gate B.
 
 This is the register's 47 open questions (`2026-10-30-research-portfolio-register.md`
 §3), worked through with the researcher in reports 10–16. No question is closed by
