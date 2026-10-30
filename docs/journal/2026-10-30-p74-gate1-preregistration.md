@@ -5,8 +5,10 @@ burn-down it follows is complete: every one of the register's 84 questions has a
 disposition (`2026-10-30-research-portfolio.md` §9), and P74's correctness is
 established (§3.2e).
 
-**Status: not authorised.** Gate 1 starts only on the maintainer's explicit
-authorisation. N1's Gate B and every i9 run are outside this document.
+**Status: authorised and frozen (30 October), under the maintainer's decisions below.**
+The authorisation covers Gate 1 only: no phase 2, no N1 Gate B, no i9 run, and no
+production decoder change. The amendments below were committed before any P74 code was
+written or measured (external report 35).
 
 ## The hypothesis
 
@@ -113,9 +115,12 @@ only), the same rounds as the Wikidata stage runs.
 
 ## The figures and the decision rules
 
-**The figures:** each arm's c/B for each kernel on each corpus, from CI's existing stage
-runs (5 rounds × 2 passes, each stage's fastest pass). The paired ratio is P74 arm over
-shipped, within each round, with a 95% interval over rounds.
+**The figures:** each arm's c/B for each kernel on each corpus.
+- **The runs:** **10 rounds × 2 passes** (amended from CI's 5 rounds), each stage's
+  fastest pass in a round.
+- **The statistic:** the paired ratio of P74 arm over shipped within each round. **Rounds,
+  not passes, are the independent observations**, giving a 95% t-interval over 10 rounds
+  (9 degrees of freedom).
 
 **Positive:**
 - the better P74 arm improves the Wikidata **checkpoint** kernel by **≥ 5%**, with an
@@ -200,3 +205,29 @@ protocol, so each is for the maintainer to decide before authorising.
    validates the combined kernel and doesn't attribute it between register residency and
    fewer `memset` calls. Any causal split would need a later attribution experiment, run
    only if its answer would change an engineering decision.
+
+## The maintainer's decisions on the open points (30 October; frozen)
+
+1. **The prediction's width:** the 3–6% one-core prediction stays, marked as
+   model-based.
+2. **Power:** the stage comparison runs **10 paired rounds**, keeping 2 passes a round,
+   with rounds as the independent observations. This is applied in "The figures and the
+   decision rules" above.
+3. **Layout:**
+   - the same-binary comparison stays the primary test;
+   - the plain kernel's cross-binary layout control stays;
+   - no second alignment build is required.
+
+   The checkpoint kernel's within-binary placement effect is a documented limitation.
+   If the result lands very close to the threshold, or the arms' code differs
+   unexpectedly, that is recorded as uncertainty, not settled by changing the protocol.
+4. **The branch model:** both arms stay, neither privileged. The measurements decide.
+5. **The microarchitecture:** this gate measures Zen 3, not the i9, and the limitation
+   is accepted.
+6. **Attribution:** the limitation stays recorded, and no arm is added.
+
+**What is reported after the measurements, before any further action:**
+- the paired results and their confidence intervals;
+- the layout control's outcome;
+- the correctness and disassembly findings;
+- the verdict, by the rules above.
