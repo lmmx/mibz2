@@ -123,6 +123,20 @@ bench-level-aware-revised rounds="20":
     for c in mix39 bz3 mix93 bz6; do python3 bench/coop_decoder.py --file corpora/wikidata-$c.bz2 --rounds {{rounds}} --arms mibz2-workers,mibz2-auto,mibz2 --gate mibz2 --no-small --note "level-aware plan, revision 2: $c"; done
     python3 bench/level_aware.py $(ls -t coop-decoder-*Z.jsonl | head -4) | tee level-aware-revised-scores.md
 
+# The level-aware plan's final confirmation, on the head to be merged (the journal's
+# "The final confirmation", registered before revision 2's results): -1, -2 and the native
+# corpus, the same arms and gates, with the 4-core pass on -1 and the native corpus. Run
+# only if revision 2's validation passes. About 15 minutes. Upload each coop-decoder-*.md,
+# .json and .jsonl (the -4cores ones too), the scores and the console.
+#   just bench-level-aware-confirm 2>&1 | tee level-aware-confirm-console.log
+bench-level-aware-confirm rounds="20":
+    bash bench/corpus.sh
+    cargo build --release --example ab
+    for l in 1 2; do test -s corpora/wikidata-bz$l.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -$l > corpora/wikidata-bz$l.bz2); done
+    for c in wikidata-bz1 wikidata; do python3 bench/coop_decoder.py --file corpora/$c.bz2 --rounds {{rounds}} --arms mibz2-workers,mibz2-auto,mibz2 --gate mibz2 --note "level-aware plan, final confirmation: $c"; done
+    python3 bench/coop_decoder.py --file corpora/wikidata-bz2.bz2 --rounds {{rounds}} --arms mibz2-workers,mibz2-auto,mibz2 --gate mibz2 --no-small --note "level-aware plan, final confirmation: wikidata-bz2"
+    python3 bench/level_aware.py $(ls -t coop-decoder-*Z.jsonl | head -3) | tee level-aware-confirm-scores.md
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10

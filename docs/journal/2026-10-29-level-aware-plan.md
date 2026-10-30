@@ -338,3 +338,30 @@ nothing else running.
   that its later commits change nothing the bench measures. This revision does change
   every path's code, slightly. So whether the first run's figures stand for those corpora
   is put to the user with the results, not assumed.
+
+### The final confirmation (registered before revision 2's results; the user's condition)
+
+**The rule:** the first run's -1, -2, native and 4-core results support the change, but do
+not validate revision 2's head. **#115 merges only after a confirmation on the head to be
+merged,** run only if revision 2's focused validation passes.
+
+**The run:** `just bench-level-aware-confirm`.
+- -1, -2 and the native corpus, with the same arms, 20 rounds and threads 4–20.
+- The 4-core pass on -1 and on the native corpus.
+
+**The gates, unchanged from the first run:**
+
+| corpus | role | gate |
+|---|---|---|
+| -1, -2 | the rule | ≥ 1.05, lower bound > 1.00, RSS ≤ 1.15×, CPU ≤ 1.5× |
+| native | unchanged | lower bound ≥ 0.97, RSS ≤ 1.05× |
+| 4 cores, -1 and native | unchanged | `mibz2` against workers: lower bound ≥ 0.97 |
+| every corpus | | one output hash, no errors |
+
+**The merge decision then weighs the evidence together:**
+- the first run, recorded as not met;
+- revision 2's focused validation;
+- the -6 repeat, alone and pooled;
+- this confirmation.
+
+No single run decides it alone.
