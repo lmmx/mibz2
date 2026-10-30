@@ -766,6 +766,51 @@ exhaustively for four-instruction batches with prefix sizes two to four.
 batches of four under the ≤ 3 limit, the ceiling falls below ≈4%. Then fold N2b back
 into P74, as a design option rather than a candidate.
 
+### 3.2c T2, the MTF token census: N2 and N2b stop; P74 remains (measured)
+
+**The method:** for 20 sampled blocks, the explicit MTF ranks bzip2's encoder produces,
+over the used-symbol list, with rank 0 carried by RUNA/RUNB. They come from each block's
+own BWT, read-only.
+
+- **Explicit tokens:** median 54,795 a block, 0.061 an output byte. This matches r − 1:
+  an L-run's first byte is the only explicit token.
+  - At 2.29 c/B for the stage, that is about 38 cycles per explicit token, run expansion
+    and counting included.
+- **Rank distribution,** as a share of explicit tokens:
+
+  | Rank limit | ≤ 1 | ≤ 3 | ≤ 7 | ≤ 15 | ≤ 31 |
+  |---|--:|--:|--:|--:|--:|
+  | Share | 14.5% | 29.8% | 52.4% | 84.9% | 98.4% |
+
+  This agrees with the register's 15.2% at rank ≥ 16 and 1.52% at rank ≥ 32.
+- **N2b, small-rank batch tables:** the share of explicit tokens in aligned batches that
+  are wholly within the limit.
+
+  | Limit | Batches of 4 | Batches of 8 |
+  |---|--:|--:|
+  | ≤ 3 | 7.1% (6.0–9.0) | 5.0% |
+  | ≤ 7 | 15.6% | 9.0% |
+  | ≤ 15 | 58.5% | 41.3% |
+  | ≤ 31 | 94.7% | 91.4% |
+
+  - **§3.2b's pre-registered stop rule,** "< 50% of explicit tokens in ≤ 3 batches of
+    four", **is met: 7.1%. N2b stops.**
+  - Only the ≤ 31 limit covers most tokens. A table over four ranks of up to 31 needs
+    32⁴ ≈ 1M entries, which is no longer a table. It becomes a 32-byte list held in a
+    register and updated per token: P74 itself.
+- **N2, memoised chunk summaries** (route (ii) of §3.2):
+  - 74.8% of rank 4-grams are unique within their block (8-grams: 95.7%);
+  - the 1,000 most common 4-grams cover 14.7% of positions (8-grams: 6.1%);
+  - chunk prefixes are not small either: the max rank in a 16-token chunk has median 18
+    and p90 37, and in a 64-token chunk median 25 and p90 62.
+  - **N2 stops on Wikidata** (low ceiling, §3.2), as a measured negative. The algebra
+    stands: rank sequences repeat too little for memoisation to remove work.
+- **What remains is P74:** keep the 32-byte list front in a register across tokens,
+  breaking the store-forwarding chain, with the existing path for the 1.6% of tokens
+  above rank 31.
+  - It must differ materially from #25 and answer #25's regression on random data.
+  - Its ceiling is the chain's share of about 38 cycles a token, unmeasured.
+
 ### 3.3 Ceilings, from the current stage table
 
 All of these are models, from #114's CI run (EPYC 7763, one thread, 12.93 c/B in all).
@@ -867,8 +912,8 @@ helpers' busy, spin and park time.
 | N1 | Composed Ψ^k table, rank-indexed (§3.1) | A / I | open (structural) | 1 | 1 | 1 | inversion 23.6 → 10–18.5 instr/B (model) | ≤ 2.5× (4-core) / ≤ 2.1× (i9), scanner-capped | T1: census of exact \|B_k\| and d_k, k = 1…16, 233 blocks | §3.1(e): net > 0.67× on the median block for all k ≤ 4 |
 | N3 | Run-native pipeline: MTF → runs → P^k, no L, no T-vector | A + C / I | open, depends on N1 | 3 | 2 | 2 | one-core 12.93 → ~5–7 c/B (model) | same cap | T6: paper cost model after T1 | N1 stops, or modelled construction > 2.16 c/B + walk saving |
 | N0 | wikidata-pq decoder-free arm (the split fed decoded lines) | application | not built | 2 | — (measurement) | — | n/a | bounds every bz2 item | a bench arm in wikidata-pq (measurement-only PR) | none: it is the bound |
-| N2 | Reverse-MTF chunk composition (prefix lemma, memoisation) | C / I if memoised, II otherwise | open (structural) | 4 | 5 | 6 | ≤ list-update share of 2.29 c/B | ≤ 1.2× | T2: token census + stage attribution | §3.2 |
-| N2b | Batched small-rank MTF tables (§3.2b), a route to P74 | C / I (shortens the chain; no added work) | open (structural; algebra checked by the researcher) | 4= (shares T2 with N2) | 3= | 6= | ≤ ≈1.1 c/B of MTF+RLE2 (model) | ≤ 1.09× one core | T2: explicit-token census by rank limit and batch length | < 50% of explicit tokens in ≤ 3 batches of four |
+| N2 | Reverse-MTF chunk composition (prefix lemma, memoisation) | C / I if memoised, II otherwise | **stopped (T2, §3.2c):** rank n-grams 75–96% unique, so memoisation can't remove work | 4 | 5 | 6 | ≤ list-update share of 2.29 c/B | ≤ 1.2× | T2: token census + stage attribution | §3.2 |
+| N2b | Batched small-rank MTF tables (§3.2b), a route to P74 | C / I (shortens the chain; no added work) | **stopped by its own rule (T2, §3.2c):** 7.1% < 50%; folded into P74 | 4= (shares T2 with N2) | 3= | 6= | ≤ ≈1.1 c/B of MTF+RLE2 (model) | ≤ 1.09× one core | T2: explicit-token census by rank limit and batch length | < 50% of explicit tokens in ≤ 3 batches of four |
 | D1 | 8-thread CPU attribution in the split | D | open | 5 | 4 (thread budget) | 3 | split −4.2% wall now | application | Q2 per-role CPU | — |
 | E8 | M2 under four copies (pre-registered in #42) | A / I | conditional, never run | 6 | 7 | 5 | per #42 | per #42 | Q3 (code exists on `scratch/move-structure`) | ≥ 10% per copy at 4 copies, or closed for good |
 | B1 | Compact Ψ (24-bit link-only, #112) on a low-L3 machine | B | conditional: reopens on less L3 per core | 7 | 3 (if laptops sit past the knee at 4 workers) | 7 | i9: 1.25× inversion | i9: 1.1–1.15× | Q5: knee under restricted L3 (`/sys/fs/resctrl` CAT, if the i9 has it) or a laptop | i9-like L3 per core: closed |
