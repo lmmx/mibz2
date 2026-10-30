@@ -110,9 +110,23 @@ needing its own pre-registration and its own measurement.
 | B: scanner count | the serial scanner | none | `Symbols` gains fields | the frozen whole-block rule | unmeasured share of the scanner's per-symbol work; needs full-pipeline accounting |
 | C: online switch | the MTF stage | none | none | a prefix rule (new) | well under 0.1% (probe window only) |
 
-**The coordinator's reading:**
-- **C is the most economical architecture:** no pass, no serial-stage cost, no API
-  change. Its rule differs from the frozen one and would be tested as such.
+**The coordinator's reading** (corrected after external report 42):
+- **C has the lowest classification overhead in principle,** with no pass, no
+  serial-stage cost and no API change. Calling it "the most economical design", as the
+  first version of this note did, was premature. What C still needs:
+  - **a decision rule** with a bounded loss. A fallback-heavy block of n explicit tokens
+    pays about δ·p/n for a probe of p tokens (δ: P74's slowdown there), plus the switch's
+    fixed cost over the shipped kernel's time;
+  - **a short-block analysis,** since a block shorter than the probe pays δ in full;
+  - **an answer to prefixes that misrepresent the block,** a rank-local prefix before a
+    high-rank suffix;
+  - **an exact handoff:** switching only between explicit tokens, with no run pending,
+    keeps the output position, counts and checkpoints coherent;
+  - **E's per-token count,** which is not free, though it can stop once the decision is
+    made.
+- **A has the stronger experimental case.** It applies the same whole-block rule, with
+  continuity with Gate 1, and only its implementation changes. Its margin against the 3%
+  limit is small.
 - **A is the smallest change to what Gate 1 measured,** with its margin set by memory
   bandwidth, not by instructions.
 - **B moves the cost onto the pipeline's serial stage and changes a public struct.** Of the
