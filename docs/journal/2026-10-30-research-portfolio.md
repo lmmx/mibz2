@@ -15,13 +15,15 @@ that would decide it, and the approval it would need.
   hypothesis and experiment since 0.1.0, with its status, measurement boundary,
   condition, failure class and sources, plus the recorded question lists and the merged
   contradictions.
-- `2026-10-30-external-report-4.md` to `-8.md`: the inputs this round, verbatim.
+- `2026-10-30-external-report-4.md` to `-9.md`: the inputs this round, verbatim.
   - Report 5 holds the researcher's and the guardian's corrections to the coordinator's
     first reading.
   - Report 6 is the researcher's study session on the algebra of inverse MTF, and their
     reading of the bzip2gpu source.
   - Report 7 is their reading session II, on recency and order statistics.
   - Report 8 is their proposal of batched small-rank MTF tables (N2b, §3.2b).
+  - Report 9 returns to the BWT itself. It includes their multi-byte record theorem,
+    which converges with §3.1(c); see §3.1(g).
 
 **Boundaries.** Four boundaries are kept apart throughout, and a figure is never carried
 from one to another:
@@ -308,6 +310,51 @@ asked.
   after MTF.
 - This is the most structural candidate in the portfolio: it removes two passes and a
   3.6 MB materialisation a block.
+
+**(g) External report 9 converges on (c), and adds three questions.**
+
+The researcher's "output-word theorem" is (c), derived independently. Their bound,
+R_k ≤ 1 + k(r + σ − 2), is (b)'s upper bound with the bucket boundaries counted in B:
+|B| ≤ (r − 1) + (σ − 1). This portfolio adds two things to the bound:
+- the exact identity (a), so the census measures |B_k| itself rather than bounding it;
+- the lower bound d_k − 1, which needs no BWT. Their table shows k = 16 reaching about
+  one row a record at the upper bound. The lower bound tells us cheaply whether the
+  real block is near that.
+
+Their three additions, answered where the theory allows:
+
+1. **Variable-length records need a budget, or the oracle is trivial.**
+   - Every row lies in some interval of Ψ^k, even a singleton one. With no limit on
+     records, a k-step record exists everywhere, and an oracle removes exactly 1 − 1/k
+     of the dependent steps. The real question is lookups per byte at a given number of
+     record bytes.
+   - The structure helps: B_{k−1} ⊆ B_k, by (a). So the intervals form a refinement
+     tree: level k's intervals subdivide level k−1's.
+   - A variable-length representation is therefore a cut of that tree. Each region keeps
+     the deepest level whose subdivision stays within a record budget.
+   - **The budgeted oracle:** for candidate cuts (for example, "keep level k under a
+     parent if it splits into at most s children"), count the record bytes and simulate
+     the walk along the actual cycle. The lookups counted are exact, because each jump's
+     landing row determines the next record. This is read-only, about n steps per
+     candidate per block, and now part of T1.
+2. **The cooperative walk's segment ends are handled by construction.**
+   - The walk's start rows are fixed before it runs, so they are known before the
+     records are built.
+   - A jump must not pass over a segment's end row e. So each row j with Ψ^t(j) = e for
+     some 0 < t < k gets a record of length t at most.
+   - That costs at most (k − 1) extra breakpoints per segment end. With 512 segments,
+     that is ≤ 512(k − 1), against k·r ≈ 56,000k. It is negligible, and it needs no
+     check in the hot loop.
+3. **The gap between row-space and traversal-space regularity can be measured.**
+   - This is the researcher's obstruction, deduction 3. Identity (a) turns traversal-space
+     regularity into a row-space count: |B_k| is the number of adjacent row pairs whose
+     k-step trajectories separate.
+   - The lower bound d_k − 1 then caps how much traversal regularity the text can have,
+     by its k-gram diversity alone.
+   - So the obstruction is not hidden. T1 measures it.
+
+**Novelty** is still owed on both sides. The researcher states they have not established
+it, and T4 is unchanged.
 
 ### 3.2 Reverse MTF: what bounds composition's value on Wikidata
 
@@ -612,7 +659,7 @@ and need approval.
 
 | ID | Item | Kind | Cost | Output |
 |---|---|---|---|---|
-| T1 | Ψ^k census: exact \|B_k\| by the preimage iteration of §3.1(f), d_k from k-gram counts, the ratio \|B_k\| / (k·\|B\|), record bytes by k, best k per block, and the heuristic S of external report 4 §9 for hybrids | read-only analysis, 233 Wikidata blocks (the existing census inputs) | CPU minutes on CI or the VM | a journal entry and the N1 go or stop |
+| T1 | Ψ^k census: exact \|B_k\| by the preimage iteration of §3.1(f), d_k from k-gram counts, the ratio \|B_k\| / (k·\|B\|), record bytes by k, best k per block, the heuristic S of external report 4 §9, and the budgeted variable-length oracle of §3.1(g) (record bytes against exact lookups along the cycle, for candidate cuts of the refinement tree) | read-only analysis, 233 Wikidata blocks (the existing census inputs) | CPU minutes on CI or the VM | a journal entry and the N1 go or stop |
 | T2 | MTF token census + stage attribution (§3.2) | read-only analysis; a local profile is indicative | CPU minutes | a journal entry and the N2 go or stop |
 | T3 | Read the #116 occupancy artifacts on CI (teams at 4 threads, k = 2): helpers' spin, park and busy shares | read-only | minutes | sizes C2 and part of D1 at k = 2 |
 | T4 | Precedent checks: k-step composition in Move-r, Movi and SEA 2026; KKP 2012's implementation against libsais's construction; M2's `movest.rs` select arm against a rank-indexed k = 1 | papers and code | hours | N1's novelty conditions; closes §2.2's residue |
