@@ -231,3 +231,47 @@ protocol, so each is for the maintainer to decide before authorising.
 - the layout control's outcome;
 - the correctness and disassembly findings;
 - the verdict, by the rules above.
+
+## The selector arm (the mixed-result step; authorised 30 October, frozen before its code)
+
+Gate 1's verdict was mixed (`2026-10-30-p74-gate1-result.md`), and the maintainer
+authorised the single selector arm (external report 40). This rule was committed before
+any of its code was written.
+
+**The selection, per block:**
+- **A ≤ 32** (A is the block's used symbols: `eob − 1`): choose P74 free, without
+  scanning the ranks. Such a block has no rank ≥ 32 (§3.2e(k)).
+- **Otherwise:**
+  - E is the block's explicit (post-RLE2) MTF tokens in `Symbols.syms`, the symbols s with
+    2 ≤ s < eob;
+  - F is those with rank ≥ 32, that is s ≥ 33;
+  - choose P74 free if **E = 0 or 10·F ≤ E** (exact integers; E = 0 has no fallback),
+    otherwise the shipped kernel.
+- **The same rule for both kernels,** plain and checkpoint.
+- **The count's cost is inside the timing.** The arm's time for a block is the selection
+  plus the chosen kernel.
+
+**The measurement:**
+- **The same binary,** with the selector added as a seventh and eighth MTF line (plain,
+  checkpoints) beside the six;
+- the same rotation, the same per-block output check, 10 paired rounds × 2 passes, and the
+  same corpora;
+- **the figure:** the selector over the shipped kernel per round, with a 95% t-interval.
+
+**The rules for the selector arm, unchanged from the registered ones:**
+- **Positive:** Wikidata's checkpoint kernel ≥ 5% faster, with an interval excluding zero
+  and more than twice the layout control's noise; and random and records ≤ +3% (upper
+  bound) on both kernels.
+- **Otherwise P74 closes** as a correct design that isn't economical in general.
+- A positive result is a stage result only. Phase 2 (the full decoder at four workers, CPU-s/GB
+  and peak RSS) needs its own authorisation.
+
+**Reported with it:**
+- per block, the selection made, with each corpus's count of blocks and share of the
+  stage's output bytes (`ll`, before RLE1) sent to each kernel;
+- the ratios and intervals, the layout control, and correctness.
+
+**What isn't allowed:** threshold sweeps, further variants, fallback tuning, or any change
+to the decision rules.
+
+The iteration limit stands. This arm is one push, then one CI run, then a stop for review.
