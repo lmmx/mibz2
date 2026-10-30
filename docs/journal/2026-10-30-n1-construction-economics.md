@@ -436,6 +436,11 @@ measured 7763 base. The column is kept below as first written.
 - **It doesn't depend on the walk.** It can kill N1 at one thread without a walk being
   written, using the optimistic walk model. Only a pass needs Gate C's measured c_L.
 
+**Superseded:** the sketch below is replaced by the revised draft criteria in
+`2026-10-30-n1-gate-b-criteria-draft.md`: the primary boundary is whole-corpus build ns per
+decoded byte against the one-pass shipped build, measured in the same run, and a builder
+pass permits Gate C only. The sketch is kept as first written.
+
 **A pre-registered Gate B, sketched** (for the maintainer to decide; not proposed to run):
 - **What it builds:** a standalone kernel bench over stored L columns of the bench blocks,
   as P74's gate does with `Symbols`. The production decoder is untouched.

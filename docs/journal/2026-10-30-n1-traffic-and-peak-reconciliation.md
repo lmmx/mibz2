@@ -279,9 +279,10 @@ which they don't (source order against image order).
   - **Retained (§4.6):** the separate-buffer variant puts U in the record buffer that is dead
     at the upgrade (R0 for P^{2|4}, R1 for P^{4|8}), not in S_a's. The arena variant takes the
     upgrade phase's full live set.
-  - **No correction was needed.** The upgrade phase is never the peak on the census: the 1→2
-    merge is larger for both plans, because m₂/r ≤ 1.13 is far below the 1.67 at which
-    20m₂ would pass 20r + 8m₂.
+  - **No correction was needed.** On every one of the 233 blocks, the upgrade phase is below
+    the build's peak, which is the 1→2 merge for both plans.
+    - For P^{2|4}, the upgrade (20m₂) would pass the merge (20r + 8m₂) only if m₂/r > 1.67.
+      The census's maximum m₂/r is 1.30.
 - **The record has no field for its length** (1–8: a or 2a, or shorter at a cap), so it goes
   in D's spare bits. The check found this. D is stored as a displacement modulo n, below
   n ≤ 900,000 < 2²⁰, so a u32 has 12 spare bits; `build_one_pass` refuses n ≥ 2²⁴, which
@@ -785,7 +786,7 @@ four-copy question, and isn't a memory saving.
 
 ## 9. Files
 
-All in `/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/n1-reconcile/`:
+Read-only scripts and outputs, kept in the scratchpad's `n1-reconcile/` (not committed):
 - **`reconcile.py`:** both models reproduced, the reconciled access list, the shipped build,
   and the phase and retained peaks. `python3 -I reconcile.py data/census.json reconcile.json`,
   under a second.
@@ -794,7 +795,7 @@ All in `/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad
   from the scratchpad directory.
 - **`aggregate.py` and `aggregate.json`:** corpus-weighted against median-block elements,
   per-plan budgets, and the highest-r blocks, for the Gate B revision.
-- **`gate-b-criteria-revision.md`:** the draft replacement for C′ §6's Gate B sketch.
+- **`gate-b-criteria-revision.md`:** the draft replacement for C′ §6's Gate B sketch, committed as `2026-10-30-n1-gate-b-criteria-draft.md`.
 - **`retained.py` and `retained.json`:** retained capacity per worker and for four workers,
   every plan, arena and separate buffers (§4.6).
 - **`prealloc_rule.py` and `prealloc_rule.json`:** the before-allocation fallback rules on the
