@@ -638,9 +638,9 @@ is allowed, then stop.
 - **Shipping inequality:** with g the measured P74 stage saving and f the retained
   fraction, f·g > C_monitor + C_handoff + C_layout, with confidence intervals on complete
   decoder time, plus the independent control, CPU-s/GB and RSS gates.
-- **P74-H** (report 72, under evaluation): if it reaches its 1.1–1.3 ns per event hurdle, it
-  removes C's selector, counters and refactor, and is preferred. This draft stands only if
-  H is killed.
+- **P74-H** (report 72) is killed (`2026-10-30-p74-h-fallback.md`): its predicted saving is
+  about 0 ns per event on Zen 5, against a hurdle of 1.27–1.37 ns, because P74's excess is
+  a fixed ~7–9 cycles per fallback. This draft stands.
 
 ## 13. Limits, and what wasn't resolved
 
