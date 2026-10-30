@@ -187,10 +187,15 @@ helpers only when they can run, could remove it; it is not designed here.
   nothing else running.
 - **The scoring:** `bench/level_aware.py`, the unchanged gate as registered: `mibz2` against
   `mibz2-auto` at 20 threads, lower bound ≥ 0.97, RSS ≤ 1.05×, one output hash.
-- **The first run stays in the record as not met,** whatever the repeat shows.
-- **If the repeat meets the gate,** the first run is judged a disturbed run. The -6 control
-  then counts as met for the shipping decision, recorded as "met on the repeat, after a
-  disturbed first run".
-- **If it fails again,** the -6 path is treated as a real regression and investigated
-  before any merge, starting from what differs: the header read and the first chunk.
-- **The mixed case's cost** (above) is a separate decision, not settled by this run.
+- **The first run stays in the record as not met,** whatever the repeat shows. **Amended
+  by the user before the run:** a passing repeat adds evidence but doesn't erase the
+  failure, and a second failure doesn't by itself prove a regression in the code.
+- **Both runs are scored separately and pooled** (40 paired rounds, the same statistic),
+  and the shipping decision weighs them together. Neither is dropped, and nothing in
+  either run is excluded.
+- **If the pooled lower bound is below 0.97, or the repeat fails alone,** the -6 path is
+  investigated before any merge, starting from what differs: the header read and the
+  first chunk.
+- **The mixed case's cost** (above) is a separate decision, not settled by this run. The
+  user does not accept it before it is understood: it is investigated from the existing
+  traces and code first, with no code change and no broad new benchmark.
