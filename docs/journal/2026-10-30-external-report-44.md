@@ -9,8 +9,12 @@ said", the researcher's message, and a further assessment.
 as received below:
 - "The partially upgraded representations, and ," and "My current preference is to keep
   as the first prospective construction experiment" lost P^{2|4} and P^{4|8};
-- "P^6" and "P^12" read, from their figures (0.277 elements and about 0.296 lookups per
-  byte; 0.150 lookups per byte), as P^{2|4} and P^{4|8};
+- "P^6" and "P^12" are a rendering or transmission artefact, not a mathematical
+  identity: they are not sixth- or twelfth-power Ψ tables. Their figures (0.277 elements
+  and about 0.296 lookups per byte; 0.150 lookups per byte) identify them as the
+  partial-upgrade plans P^{2|4} (two-byte records, eligible unsplit intervals upgraded to
+  four bytes) and P^{4|8} (four-byte records, eligible unsplit intervals upgraded to eight
+  bytes). Report 46 asks for this to be recorded so;
 - "If a level- interval has displacement ," reads as level-a, d_I, J and a-byte words.
 
 **What it asks, all read-only analysis:**
