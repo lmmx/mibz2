@@ -5,6 +5,7 @@
 #   --threads 1,2,4,8   the thread counts (default 1, 2, 4, ... up to the CPUs allowed)
 #   --rounds N          rounds (default 6: each mode first twice)
 #   --slots N           the window (default 2 x threads, BzReader::parallel's)
+#   --teams K           teams of K forced (t / K teams), where the policy would plan workers
 #   --placements A/B    arms pinned to CPUs, paired by round: packed (SMT siblings first) or
 #                       spread (one CPU a core first), from this machine's sibling map, or
 #                       CPU lists; the whole process is pinned, scanner and reader included

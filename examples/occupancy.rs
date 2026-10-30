@@ -3,7 +3,7 @@
 //! pinned Wikidata corpus); CI runs the same recipe.
 //!
 //! ```text
-//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--gap SECONDS] [--out PATH] [--meta K=V]...
+//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K] [--gap SECONDS] [--out PATH] [--meta K=V]...
 //! occupancy FILE.bz2 --ledger [--threads 1,2,4,10] [--slots N]
 //! ```
 //!
@@ -13,6 +13,14 @@
 //! feeder reading the file, the output drained in 4 MiB reads into a streaming hash. The
 //! 1-thread runs are pinned to one CPU, as the benchmark's are. Every run must give the same
 //! bytes.
+//!
+//! **The plan is the decoder's** (`Plan::for_threads`, as `parallel_with` plans): t
+//! workers, or on 6 or more physical cores teams of 2. `--teams K` forces teams of K
+//! (`BzReader::parallel_planned`, t / K teams, the window scaled as the policy's), so a team
+//! plan can be traced on a machine where the policy doesn't choose one. A team's caller is
+//! traced as its worker; its helpers (`mibz2-coop-*`) record no marks, so a team's worker
+//! time is its caller's. A trace is complete when the plan's workers and the scanner have
+//! all ended, whatever the threads asked for.
 //!
 //! **Placements** (`--placements packed/spread`, or CPU lists): each an arm of its own in
 //! every round, the whole process pinned to its CPUs (the scanner, feeder and reader with
@@ -80,6 +88,7 @@ use std::io::Read;
 use std::process::Command;
 use std::time::{Duration, Instant};
 
+use mibz2::parallel::Plan;
 use mibz2::trace::{self, Kind, ThreadTrace, UNREAD};
 use mibz2::{BzReader, Kernels};
 
@@ -100,34 +109,48 @@ fn child(a: &[String]) {
     let threads: usize = a[1].parse().unwrap();
     let slots: usize = a[2].parse().unwrap();
     let level: u8 = a[3].parse().unwrap();
+    // the plan the decoder runs: the policy's, or teams of K (`--teams`)
+    let teams_of: Option<usize> = a
+        .get(4)
+        .filter(|k| *k != "auto")
+        .map(|k| k.parse().unwrap());
+    let plan = match teams_of {
+        None => Plan::for_threads(threads),
+        Some(k) => Plan::Teams {
+            teams: (threads / k).max(1),
+            k,
+        },
+    };
     trace::set_level(level);
     let mut h = Hash::new();
     let t0 = Instant::now();
     let res = std::fs::File::open(path)
         .map_err(|e| e.to_string())
         .and_then(|f| {
-            drain(
-                BzReader::parallel_with(f, threads, slots, Kernels::detect()),
-                &mut h,
-            )
+            let reader = match plan {
+                Plan::Teams { teams, .. } if teams_of.is_some() => {
+                    let window = (slots * teams / threads).max(teams);
+                    BzReader::parallel_planned(f, plan, window, Kernels::detect())
+                }
+                _ => BzReader::parallel_with(f, threads, slots, Kernels::detect()),
+            };
+            drain(reader, &mut h)
         });
     let wall = t0.elapsed().as_secs_f64();
     let mut kv = Kv::default();
     if level > 0 {
         // (the decoder's threads end once it is dropped; its last reference can be the
-        // feeder's, so wait for their marks rather than assume them)
+        // feeder's, so wait for their marks rather than assume them: the plan's workers,
+        // a team's caller each, and the scanner)
+        let want = plan.workers() + 1;
         let deadline = Instant::now() + Duration::from_secs(5);
-        while trace::finished() < threads + 1 && Instant::now() < deadline {
+        while trace::finished() < want && Instant::now() < deadline {
             std::thread::sleep(Duration::from_millis(1));
         }
         let got = trace::finished();
-        let timeout = (got < threads + 1).then(|| {
-            format!(
-                "collection timeout: {got} of {} threads' marks at the deadline",
-                threads + 1
-            )
-        });
-        summarise(&trace::take(), threads, level, timeout, &mut kv);
+        let timeout = (got < want)
+            .then(|| format!("collection timeout: {got} of {want} threads' marks at the deadline"));
+        summarise(&trace::take(), plan.workers(), level, timeout, &mut kv);
         // the decoded bytes the marks sum, against the bytes the reader read: an
         // independent anchor, its remainder shown rather than hidden
         let sum =
@@ -141,8 +164,12 @@ fn child(a: &[String]) {
     trace::set_level(0);
     let (cpu, rss) = rusage();
     let err = res.err().unwrap_or_default();
+    let plan = match plan {
+        Plan::Workers(n) => format!("workers{n}"),
+        Plan::Teams { teams, k } => format!("teams{teams}x{k}"),
+    };
     let mut line = format!(
-        "wall={wall:.6} cpu={cpu:.6} rss_kb={rss} out={} hash={} err={}",
+        "wall={wall:.6} cpu={cpu:.6} rss_kb={rss} out={} hash={} err={} plan={plan}",
         h.n,
         h.finish(),
         word(&err)
@@ -824,6 +851,7 @@ fn parent(args: &[String]) {
     let (mut threads, mut rounds, mut slots, mut out) = (None, 6usize, None, None);
     let mut gap = 0.0f64;
     let mut placements: Option<Vec<String>> = None;
+    let mut teams: Option<usize> = None;
     let mut meta: Vec<(String, String)> = Vec::new();
     let mut ledger_only = false;
     let mut it = args.iter();
@@ -869,9 +897,17 @@ fn parent(args: &[String]) {
                 let (k, v) = kv.split_once('=').expect("--meta K=V");
                 meta.push((k.into(), v.into()));
             }
+            "--teams" => {
+                let k: usize = it.next().expect("--teams K").parse().expect("a team size");
+                assert!(
+                    (2..=4).contains(&k),
+                    "--teams takes a team size of 2, 3 or 4"
+                );
+                teams = Some(k);
+            }
             "--ledger" => ledger_only = true,
             "-h" | "--help" => {
-                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
+                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
                 return;
             }
             f => file = Some(f.to_string()),
@@ -962,6 +998,7 @@ fn parent(args: &[String]) {
                         &t.to_string(),
                         &s.to_string(),
                         &level.to_string(),
+                        &teams.map_or("auto".to_string(), |k| k.to_string()),
                     ]);
                     let o = cmd.output().expect("run a child");
                     let line = String::from_utf8_lossy(&o.stdout).trim().to_string();
@@ -1144,7 +1181,11 @@ fn parent(args: &[String]) {
         if spec == specs[0] {
             ledgers.push((ls, Some(median(&mut rss.clone()) * 1024.0)));
         }
-        summary.push_str(&queue_summary(t, &spec, s, &tl, &trace::ledger(&ls)));
+        let plan = teams.map_or(Plan::for_threads(t), |k| Plan::Teams {
+            teams: (t / k).max(1),
+            k,
+        });
+        summary.push_str(&queue_summary(t, plan, &spec, s, &tl, &trace::ledger(&ls)));
         let verdict = |c: (f64, f64, f64)| {
             J::S(if !c.1.is_finite() {
                 "too few rounds".into()
@@ -1256,6 +1297,7 @@ fn parent(args: &[String]) {
                 ("rounds".into(), J::N(rounds as f64)),
                 ("gap_seconds".into(), J::N(gap)),
                 ("slots".into(), slots.map_or(J::S("2 x threads (BzReader::parallel's)".into()), |s| J::N(s as f64))),
+                ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(format!("teams of {k}, forced")))),
                 (
                     "workload".into(),
                     J::S("BzReader::parallel_with(File, t, slots, Kernels::detect()), drained in 4 MiB reads into a streaming hash: examples/ab.rs's mibz2 arm".into()),
@@ -1404,9 +1446,12 @@ fn ledger_table(ls: &[trace::Settings], rss: &[Option<f64>], blocks: usize) -> S
 }
 
 /// One thread count's queues and live structures, from its timeline medians, in at most
-/// six lines; and the ledger's bounds checked against what was measured
+/// six lines; and the ledger's bounds checked against what was measured, for the plan the
+/// decoder ran (its workers each recorded; a team's walk sizes its segments by its k, which
+/// the ledger, a model of one-core workers, doesn't, so they aren't checked under teams)
 fn queue_summary(
     t: usize,
+    plan: Plan,
     spec: &str,
     slots: usize,
     tl: &[(String, J)],
@@ -1534,6 +1579,7 @@ fn queue_summary(
             bad.push(format!("{what} {x:.0} outside {lo:.0}..={hi:?}"));
         }
     };
+    let teams = matches!(plan, Plan::Teams { .. });
     for n in [
         "ll",
         "tt",
@@ -1542,6 +1588,9 @@ fn queue_summary(
         "seg.next",
         "seg.bufs.outer",
     ] {
+        if teams && n.starts_with("seg.") {
+            continue;
+        }
         if let Some(e) = e(n) {
             check(
                 n,
@@ -1594,9 +1643,10 @@ fn queue_summary(
             f("f.decoded_unreconciled", 0)
         ));
     }
-    if g("f.w.recorded") != t as f64 {
+    let workers = plan.workers();
+    if g("f.w.recorded") != workers as f64 {
         rec.push(format!(
-            "{} of {t} workers' buffers recorded",
+            "{} of {workers} workers' buffers recorded",
             f("f.w.recorded", 0)
         ));
     }
@@ -1605,7 +1655,11 @@ fn queue_summary(
         "  worker buffers (each at its end, mean MB): {} total = {} · ledger check: {} · events reconciled: {}{}",
         f("f.w.cap_mb", 2),
         parts.join(" + "),
-        if bad.is_empty() { "ok".into() } else { format!("VIOLATED: {}", bad.join("; ")) },
+        match (bad.is_empty(), teams) {
+            (true, false) => "ok".into(),
+            (true, true) => "ok (the segment buffers not checked under teams)".into(),
+            (false, _) => format!("VIOLATED: {}", bad.join("; ")),
+        },
         if rec.is_empty() { "ok (Σ decoded = bytes read, end state empty, every worker recorded)".into() } else { format!("NO: {}", rec.join("; ")) },
         if g("q.ready_after_taken") > 0.0 { format!(" · {} blocks marked ready after taken (held 0)", f("q.ready_after_taken", 0)) } else { String::new() }
     );
