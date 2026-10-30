@@ -195,3 +195,8 @@ protocol, so each is for the maintainer to decide before authorising.
    different forwarding and misprediction penalties (Agner: about 11 against 10 extra
    cycles for the failed forward). A Zen 3 result is not a Comet Lake result, and the
    i9 stays out of Gate 1.
+6. **Attribution (a limit on interpretation, from the guardian; no arm added).** Both
+   P74 arms share the inline short runs and the blended-chunk fallback. So a win
+   validates the combined kernel and doesn't attribute it between register residency and
+   fewer `memset` calls. Any causal split would need a later attribution experiment, run
+   only if its answer would change an engineering decision.
