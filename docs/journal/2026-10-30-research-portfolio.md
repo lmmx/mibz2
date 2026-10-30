@@ -15,7 +15,7 @@ that would decide it, and the approval it would need.
   hypothesis and experiment since 0.1.0, with its status, measurement boundary,
   condition, failure class and sources, plus the recorded question lists and the merged
   contradictions.
-- `2026-10-30-external-report-4.md` to `-22.md`: the inputs this round, verbatim.
+- `2026-10-30-external-report-4.md` to `-23.md`: the inputs this round, verbatim.
   - Report 5 holds the researcher's and the guardian's corrections to the coordinator's
     first reading.
   - Report 6 is the researcher's study session on the algebra of inverse MTF, and their
@@ -899,6 +899,22 @@ the literature agent):
 - **The head:** V′ = [tail[q−32], V[0…30]]. That is a cross-lane one-byte shift
   (`vperm2i128` + `vpalignr`) plus an insert.
 - **The tail:** a memmove in memory, off the head's chain.
+
+**The full state machine is correct (rounds 23–24).**
+- **The state:** the head register H (32) plus the memory tail T (the used-symbol list's
+  remainder).
+- **For q ≥ 32:**
+  - H′ = [T[q−32], H[0…30]];
+  - T′ = [H[31]] followed by T with its element q−32 removed.
+- **Checked:** H′‖T′ matches plain MTF with 0 mismatches on:
+  - Wikidata-like, uniform 0–255, all-high and 30–33-boundary rank streams (60 × 4,000
+    tokens each);
+  - two real bench blocks' explicit-rank streams, with bzip2's own used-symbol mapping
+    (89 and 86 symbols; 51,184 and 57,506 tokens; ranks ≥ 32 at 1.51% and 0.94%), with
+    every emitted symbol and the full list compared after each token.
+
+What remains for P74 is its economics only: the confirmed chain latency, the fallback's
+cost, and the random-data guard.
 
 **Random-data guard** (#25's regression): on random data, ranks are near-uniform and only
 about 12.5% are ≤ 31.
