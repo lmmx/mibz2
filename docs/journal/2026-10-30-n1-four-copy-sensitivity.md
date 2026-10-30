@@ -97,6 +97,13 @@ The figure is from **CI run 40573190665** (`sweep.yml`, tool `sweep`, master `54
 
 ### 2.2 A second run, with every stage: the 7763 (measured)
 
+**Caveat (added on review):** this run's commit, c8f9740 (27 October, branch
+`perf/assembly-row`), predates #114 (6a341f6, 29 October), which made the one-core
+`bwt::build` one pass: each entry written whole, with no copy pass and no
+read-modify-write. So its build factor, ×1.26, is the two-pass build's. The one-pass
+build's four-copy factor is unmeasured. Every row below that uses β_T = 1.26 carries that
+dependency.
+
 **CI run 40579732655** (`sweep.yml`, tool `phases`, master `c8f9740`): an AMD EPYC 7763,
 4 CPUs, 3.2407 GHz reported, 3 passes, each stage's fastest kept. One copy ran pinned to
 CPU 1, then four copies, one a CPU.
