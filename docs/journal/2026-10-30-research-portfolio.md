@@ -15,7 +15,7 @@ that would decide it, and the approval it would need.
   hypothesis and experiment since 0.1.0, with its status, measurement boundary,
   condition, failure class and sources, plus the recorded question lists and the merged
   contradictions.
-- `2026-10-30-external-report-4.md` to `-20.md`: the inputs this round, verbatim.
+- `2026-10-30-external-report-4.md` to `-21.md`: the inputs this round, verbatim.
   - Report 5 holds the researcher's and the guardian's corrections to the coordinator's
     first reading.
   - Report 6 is the researcher's study session on the algebra of inverse MTF, and their
@@ -469,6 +469,43 @@ So "all 233 choose P⁸" holds only under the resident-size rule. Round 19 is ri
 the complete objective selects differently. At the T-vector's own peak, 69% of blocks
 take P⁸. The third constraint, build plus walk below the baseline, is Gate B/C and is
 unmeasured. It may move the choice further toward P⁴.
+
+**(j) Per-level mixed layouts, and folding the counting pass** (round 20; a model over
+the measured m_a).
+
+**Folding the counting pass is possible without a second join.**
+- Parent i's child count is one plus the number of level-a source starts strictly inside
+  its image J_i: e_i = 1 + #{starts ∈ (start J_i, end J_i)}.
+- The images tile the rows, so one sequential popcount sweep over an n-bit bitvector of
+  level-a starts, taken in image order, yields every e_i.
+- Likewise f_j comes from a bitvector of image starts, swept in source order.
+- Both bitvectors are marked during the previous level's scatter (112.5 KB each).
+
+That is layout C of (i).
+
+**All eight layout mixes,** each with both counting methods. "dup" keeps a full
+image-order view at that level; "idx" keeps a u32 permutation.
+
+| Image view at levels 1/2/4 | Counting | B/B, median | Gathers, B/B | Peak MB (median / p90 / max) |
+|---|---|--:|--:|---|
+| idx/idx/idx | bitvector | 17.0 | 2.8 | 4.23 / 7.19 / 10.12 |
+| dup/idx/idx | bitvector | 17.2 | 2.0 | 4.23 / 7.19 / 10.12 |
+| **dup/dup/idx** | **bitvector** | **17.5** | **1.1** | **4.23 / 7.19 / 11.10** |
+| dup/dup/dup | bitvector | 17.9 | 0.0 | 4.91 / 8.38 / 12.42 |
+| any mix | two-pass | 23.1 | 0.0–5.5 | 4.01–4.68 / 6.96–8.16 / 9.90–12.20 |
+
+**The reading:**
+- **The counting method sets the traffic.** Bitvector counting moves 17.0–17.9 B/B
+  against 23.1 for the two-pass, a 23–26% cut.
+- **Under two passes,** every mix moves exactly 23.1 B/B. This confirms round 20: an
+  index's saved writes are spent again on its gathers.
+- **The layout only trades gathers against peak.** Indexing the level-4 image view alone
+  takes about 0.7 MB off the median peak (4.91 → 4.23) for 1.1 B/B of gathers.
+- **The upper tail stays above the T-vector's 4.5 MB peak in every mix.** The graded
+  selector, (i), is what handles those blocks.
+- **None of this is cycles.** The comparison to make is still 17.5 bytes of mostly
+  sequential traffic plus 1.1 B/B of gathers, against the T-vector's 5 B/B of scattered
+  writes, and that is Gate B.
 
 **(d) What makes it materially different from M2.** This is the guardian's
 novelty condition:
