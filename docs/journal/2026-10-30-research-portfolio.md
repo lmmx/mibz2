@@ -1198,9 +1198,26 @@ The data is `theory/calls.py`, on the 20 T2-census blocks.
 - **What's left for the fallback** is its fixed instruction cost and the head's 5–6-cycle
   chain, as round 38 says. The tail's size is no longer an unknown.
 
+**(k) Short alphabets (round 39), checked.**
+- **The bound in the source:** the scanner's alphabet is `n_in_use + 2` (`src/block.rs`),
+  and a code whose index falls past it is rejected (libbzip2's perm-index check). So
+  every decoded symbol is ≤ eob = A + 1, and every explicit rank is 1 ≤ q ≤ A − 1. The
+  shipped kernels start the list at the identity over 256 sequence indices.
+- **The proof stands:** a rank-q update moves only positions 0…q, so H[A…31] stays at
+  A…31 by induction, and RUNA/RUNB leaves the list alone.
+- **Emulated** (`theory/p74_small.py`): A ∈ {1, 2, 5, 15, 16, 17, 31, 32, 33, 64, 128,
+  256}, with 200 sequences × 300 uniform valid ranks each.
+  - 0 mismatches against scalar MTF;
+  - the padding invariant held after every token for A ≤ 32;
+  - the paths taken were as round 39 says: one shuffle only for A ≤ 16, no fallback for
+    A ≤ 32, and no explicit updates for A = 1.
+- **Uniform ranks at A = 256 take the fallback 87.6% of the time.** That is the
+  random-data case §3.2e(g) leaves to measurement.
+
 **Disposition (P74, under the existing P74/#25 entry; no new question):**
-- **answered:** correctness (every path, real mapping, fused extraction), the lower
-  bound, the mask independence, checkpoint compatibility, the selector's exact
+- **answered:** correctness (every path, real mapping, fused extraction, every alphabet
+  size with one fixed head), the lower bound, the fallback's alphabet bound and its
+  call-free tail shift for A ≤ 128, the mask independence, checkpoint compatibility, the selector's exact
   information, and the fallback's traffic;
 - **conditionally unresolved:** the performance.
   - **The missing evidence:** a CI-measurable microbenchmark of the checkpoint-aware loop
