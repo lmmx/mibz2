@@ -520,3 +520,83 @@ i9, about 8 minutes. Each build is made from its own commit in a worktree of its
 - **No gap on master doesn't locate a cause in #115's code:** none has been found there.
 - **One run of 20 rounds.** The earlier -6 runs show how much one run can differ from
   another.
+
+## The diagnostics' results (measured, the i9, d8e08a3, 2026-10-30)
+
+**The run:** `just bench-level-aware-diagnose`. Its six files are in
+`2026-10-29-level-aware-plan/diagnostics/`. Every run gave the one output hash, with no
+errors.
+
+| question | result | reading, as fixed beforehand |
+|---|---|---|
+| Do the gated designs' wall-time losses come from blocks held in the in-order output? | no complete trace from any build | **inconclusive: no data** |
+| Did the -6 gap predate #115? | master's A/A at 20 threads: **1.006 (0.986–1.026)** | **the gap is not the arms'** |
+
+### 1. The trace: an instrument failure, not a finding
+
+- **What happened:** every traced round, in all three builds, ended in a collection
+  timeout: 6 of 21 threads' marks at the deadline. `complete_rounds` is 0 for the timeline
+  and the full modes alike, so nothing in these files bears on the hypothesis.
+- **Why:** `examples/occupancy.rs` waits for marks from `threads + 1` threads. That count is
+  right only for `Plan::Workers`, which runs a worker per thread. At 20 CPUs on the i9,
+  every build here plans teams, which run far fewer threads, so the count is never
+  reached.
+- **Why it wasn't caught:** the VM's dry run, at 4 threads, plans workers, where the count
+  holds. It checked the script's mechanics, not the tracer under a team plan. That is my
+  error in preparing the diagnostic.
+- **What stays true:** the decoder gave correct bytes in every round. The failure is the
+  tool's alone.
+- **Not repaired or re-run,** by the user's decision: another tracing run would only try to
+  salvage an explanation. The waiting hypothesis stays a hypothesis.
+
+**What the files do hold:** each build's six untraced rounds, run as processes in sequence.
+They are neither interleaved between builds nor paired, so they are weaker than the A/B,
+and they establish nothing new. They are consistent with it:
+
+| build | median wall | median CPU-s | against today's, by round |
+|---|--:|--:|--:|
+| today's plan | 0.280 s | 1.97 | — |
+| revision 1 | 0.283 s | 2.36 | 0.987 (0.962–1.013) |
+| revision 2 | 0.299 s | 2.10 | 0.930 (0.900–0.960) |
+
+These give the same order as the A/B (0.986 and 0.945): revision 1 near today's time at
+more CPU, and revision 2 slower at less extra CPU.
+
+### 2. The A/A on master
+
+| threads | master's `mibz2` / `mibz2-auto` (20 rounds) | RSS | CPU |
+|--:|--:|--:|--:|
+| 4 | 0.992 (0.918–1.071) | 1.00 | 1.00 |
+| 6 | 1.001 (0.990–1.012) | 0.99 | 1.00 |
+| 8 | 1.000 (0.985–1.015) | 1.00 | 1.01 |
+| 10 | 1.001 (0.990–1.012) | 1.00 | 1.00 |
+| 20 | **1.006 (0.986–1.026)** | 1.00 | 1.01 |
+
+- **The reading fixed beforehand:** the interval lies wholly above 0.985 and includes 1.
+  So master's arms show no gap, and the -6 gap is not the arms'. The margin is narrow:
+  0.986 against 0.985.
+- **What it establishes:** the benchmark-arm explanation of the -6 slowdown (0.983 and
+  0.985; pooled 0.984 (0.969–0.999)) loses its support. The harness's two arms decode -6
+  equally fast on master.
+- **What it doesn't establish:** that #115's code causes the slowdown. No mechanism has
+  been found in it, and one run of 20 rounds can't exclude the earlier runs having shared
+  a disturbance. The slowdown stays measured, attributed to the PR's build, and
+  unexplained.
+
+### 3. Closing #115
+
+**The shipping decision is unchanged by the diagnostics,** as registered:
+- revision 2's validation was not met (the mixed case 0.945);
+- the -6 control was not met when pooled;
+- the trace explained nothing;
+- the A/A removed the one alternative explanation of the -6 result.
+
+**The record:**
+- **The automatic level-aware scheduler is a failed shipping experiment.**
+- **The small-block speedups are a valid research result:** -3 at 1.078–1.092 under R1,
+  held out at -1 and -2 (`2026-10-29-level-policy.md`).
+- **Neither gate design handles a mixed-level concatenation well enough to ship.**
+- **Why they are slower is open.** The leading hypothesis (a taken job held at the gate,
+  so the in-order reader waits behind it) is untested.
+
+**#115 is closed unmerged, with its results archived here.**
