@@ -56,8 +56,8 @@ high end. The rank queries replace the counting pass's popcounts; they don't rem
 
 **The emit pass's random working set:** S₁ + B₁ + B₂ + directories ≈ 0.7 MB at the median.
 That is L2 (1 MB) on Zen 5 and L3 on Zen 3 and 4 (512 KB L2). There are 4–6 independent
-queries per output record, with no dependence between records, so it is MLP-bound, not
-latency-bound.
+queries per output record, with no dependence between records, so memory-level parallelism is
+permitted; the achieved parallelism is not measured.
 
 ## Break-even (deduced from the Gate B draft's ns/B thresholds)
 
@@ -66,13 +66,18 @@ latency-bound.
 - **Required IPC:** with 5.3–7.2 instructions per byte, IPC ≥ 1.4–2.2.
 - **Mispredicts:** the upgrade test is 94/6 biased, so at most about 0.07 c/B.
 - **The only measured relative,** #42's untuned run-native build, implies 16–27 cycles
-  per element. At this design's elements that is far below IPC 1.4. Its loops branched on
-  run length and divided by the cap; this design needs neither.
+  per element. This is weak comparative evidence, not an architectural limit (report 63).
+  Its instruction counts and record density are not normalised to this design's, its loops
+  branched on run length and divided by the cap, and this design needs neither.
+- **MLP is permitted, not measured:** the throughput depends on the actual outstanding
+  loads and cache locality.
 
 ## Decision
 
 - **No substantial reduction in operations:** 5.3–7.2 against 4.5–8.4 instructions per
-  byte. By report 62's rule, N1 does not earn a construction experiment on work count.
+  byte. By report 62's rule, N1 does not earn a construction experiment on work count. The
+  fused builder is not experimentally falsified: the required IPC is feasible in principle,
+  but unsupported for this rank-query workload.
 - **N1 reduces to one falsifiable number:** the achieved IPC of an L2/L3-resident,
   rank-heavy emit loop, which must be ≥ about 1.7 (1.4–2.2) on the 7763.
 - **Archived:**
