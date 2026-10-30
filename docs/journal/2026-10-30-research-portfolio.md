@@ -974,18 +974,59 @@ algebra alone where its criterion is a performance figure.
 | 80 | 2-core fingerprint preserves rankings? | N | R12: not guaranteed by construction | matched ranking comparisons |
 | 81 | Fingerprint: more MLP or less compute? | A (method) | R12: timings alone cannot identify the mechanism | per-machine resource counters, if needed |
 | 82 | lbzip2/pbz2 controls after #69 | N | R12: unmatched cross-run controls are not comparisons | a matched run |
-| 84 | Fill-buffer headroom | N | R12: the lane sweeps narrow it | counter attribution |
 | P132 | USL as an extrapolator | rejected | R12: three points can't validate a knee; descriptive use only | — |
 
-**The tally of the 47 open questions** (after rounds 10–14):
+**The tally of the 47 open questions** (after rounds 10–14; corrected: #84 is one of the
+register's 6 conditional rows, not an open one):
 - **10 answered:** #4, #25, #58, #63, #64, #65, #66, #69, #78, #81;
-- **21 narrowed to a named measurement:** #2, #3, #11, #15, #19, #21, #37, #38, #39,
-  #44, #45, #46, #53, #67, #68, #71, #74, #77, #80, #82, #84;
-- **16 not yet worked:**
-  - #20, E8, the four-copy M2 run;
-  - the literature: #28–#33, #36. A read-only literature agent is working on these,
-    together with N1's precedent check (T4);
-  - implementation-bound: #43, #47, #48, #51, #54, #72, #73, #75, #76.
+- **20 narrowed to a named measurement:** #2, #3, #11, #15, #19, #21, #37, #38, #39,
+  #44, #45, #46, #53, #67, #68, #71, #74, #77, #80, #82;
+- **17 worked below:**
+  - the ten in the next table;
+  - the literature rows, #28–#33 and #36, which are with the literature agent.
+
+**The completion standard** (the researcher's, in their burn-down status report). Every
+row ends with one of three dispositions:
+- **answered:** a proof, a counterexample, a primary source or a measurement;
+- **conditionally unresolved:** the missing evidence is named, with the reason it can't
+  be inferred from existing work;
+- **superseded:** another result subsumes it, leaving no independent uncertainty.
+
+On that standard, "narrowed" above means conditionally unresolved, with the
+evidence named.
+
+**The remaining open rows:**
+
+| # | Question (short) | Disposition | The missing evidence, and why it can't be inferred |
+|---|---|---|---|
+| 20 | E8: M2 under four copies | conditionally unresolved | The pre-registered four-copy run (the code is on `scratch/move-structure`). M2 lost at one thread because its walk was instruction-bound. Under four copies the T-vector walk's cost doubles (5.0 → 10.4 c/B, measured), so the result depends on the balance of misses against instructions at four copies, which is machine-specific. Low priority: N1 is the same family with k = 8 and a cheaper lookup |
+| 43 | 64-byte fixed record ≈ a `u32` load? | conditionally unresolved | A dependent-load microbenchmark: chained lookups at 32 lanes, with the line and extraction cost against a direct `u32`. It depends on extraction instructions against miss latency, which is not inferable. It could run on CI, since it needs no PMU |
+| 47 | A different organisation enables more MLP at more bits? | superseded for composed records; conditionally unresolved otherwise | N1 is such an organisation: about 1.5 MB, one lookup per 8 bytes. Its Gate C answers #47 for it. No other organisation is proposed |
+| 48 | The space–throughput frontier across machines | conditionally unresolved | The frontier runs of #102. The frontier is a measured map per microarchitecture, so it can't be derived |
+| 51 | Cost of non-translation payload loads | moot for N1; conditionally unresolved for compact Ψ | N1's records cover every row uniformly, so it has no exceptional payload path. For #112's formats, the #43 microbenchmark decides it |
+| 54 | Does any representation improve best-concurrency throughput? | answered negatively for compact Ψ as built; conditionally unresolved for N1 | #112: the knee moved from 4 to 6 blocks, but the best arm reached 0.687× of the shipped 4×2 teams. N1 is untested (Gates B and C) |
+| 72 | What the compiler emits for in-register select and extraction | conditionally unresolved | It needs a prototype of the format; none exists. It is cheap once code exists (read the disassembly) |
+| 73 | CPU-specific alternatives to PDEP | pending a primary-source check (with the literature agent) | instruction tables for Intel Haswell+, Zen 1/2 and Zen 3, plus PDEP-free select references |
+| 75 | Which structure predicts expensive extra loads under 32 lanes | narrowed | meas.: exceptional rows arrive in bursts along trajectories (84.8% of gaps ≤ 2), so the predictor is the burst structure rather than the mean rate. The cost under 32 lanes needs a lane simulation or a measurement |
+| 76 | How much of Ψ can be rebuilt from compact information near flat-table speed? | conditionally unresolved, now quantified on the space side | N1 rebuilds all of Ψ⁸ from 1.5 MB (median) with exact semantics. The speed side is Gates B and C, with the builder's traffic modelled as adverse (§3.1(h)) |
+
+**The register's 6 conditional rows:**
+
+| # | Question (short) | Disposition | Reason |
+|---|---|---|---|
+| 5 | Best hint or lane count, 1 against 4 threads | answered (boundary-specific) | yes on CI's four-copy walk stage, no on the i9's full decoder (P25). Both are recorded at their boundaries; no independent question remains |
+| 12 | H5: parallel scanner (speculative markers) | conditionally unresolved, with a trigger | R13: the pipeline ceiling, min(scanner, workers). The trigger is workers reaching the scanner's rate, with headroom of about 2.5× (4-core) and 2.1× (i9) (§3.3). Its value can't be measured before then |
+| 18 | E6: libsais's walk parameters in the Ψ² port | superseded | E1 failed its registered pass, so E6's precondition doesn't hold. It reopens only with E1 |
+| 62 | Can compact ψ compete with the shipped decoder on the i9? | answered (bounded) on the i9; conditionally unresolved on low-L3 machines | Modelled ≤ 1.25× for the inversion and ≤ 1.1–1.15× for the decoder (feasibility review). It reopens on a machine with less L3 per core, such as a laptop (B1) |
+| 83 | A twin that loops inside one process (harness) | conditionally unresolved | a harness design (P130). It is measurement infrastructure, so there's no scientific uncertainty beyond whether to build it |
+| 84 | E3's fill-buffer headroom at 4–10 workers | conditionally unresolved | R12: the lane sweeps narrow it (lanes 8 and 16 measured worse). The counter verdict was never posted; it needs PMU attribution on the i9 |
+
+**After the literature rows return,** every one of the 84 questions will have a
+disposition. Answered rows stay answered. The open and conditional rows end as follows:
+- **answered (including negative and boundary-specific):** 10 open + #5 + #62 (i9);
+- **superseded:** #18, and #47 for composed records;
+- **conditionally unresolved, each with its evidence named:** the rest;
+- **the literature rows:** pending.
 
 **#53's evidence is now adverse as well as positive.** The algorithm exists, but its
 modelled traffic is about 23 bytes per output byte, against the T-vector build's 5
