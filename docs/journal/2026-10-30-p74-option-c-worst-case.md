@@ -607,6 +607,41 @@ is allowed, then stop.
 - peak RSS within +1%;
 - random and records decoder figures within the registered limits.
 
+### 12a. Amendments (report 73; still a draft, not authorised)
+
+- **σ as a hard bypass.** For σ ≥ θ the *untouched standalone* shipped kernel runs, not the
+  combined function. Full random and records blocks then pay only the dispatch, and never
+  touch the resumable code.
+- **Three same-binary arms:**
+  - T₀: the original shipped kernel;
+  - T₁: the combined kernel forced to switch at token 0;
+  - T₂: the live policy.
+
+  T₁ − T₀ is the refactor and layout tax. T₂ − T₁ is the net P74 benefit, monitoring
+  included. If T₁ − T₀ is material, fix the cold handoff structure before reading T₂. The
+  shipped suffix stays out of the hot loop's instruction footprint, with no spills, checked
+  in the disassembly.
+- **Out-of-sample validation.** b = 123 was fitted on the exact Wikidata bench corpus, so
+  re-running that corpus measures performance, not selection robustness. τ, b, S₀ and θ
+  are frozen now. Acceptance needs:
+  - independent Wikidata blocks (a slice of the dump disjoint from the bench corpus, its
+    source named before the run);
+  - independently seeded mixed-distribution controls.
+
+  No retuning.
+- **Correctness before economics:**
+  - forced switches at every legal transition on small blocks, validated against shipped
+    for counts, output, checkpoints and errors;
+  - malformed streams;
+  - the adversarial suite built as real .bz2 inputs and decoded by mibz2 before any of its
+    timings are trusted.
+- **Shipping inequality:** with g the measured P74 stage saving and f the retained
+  fraction, f·g > C_monitor + C_handoff + C_layout, with confidence intervals on complete
+  decoder time, plus the independent control, CPU-s/GB and RSS gates.
+- **P74-H** (report 72, under evaluation): if it reaches its 1.1–1.3 ns per event hurdle, it
+  removes C's selector, counters and refactor, and is preferred. This draft stands only if
+  H is killed.
+
 ## 13. Limits, and what wasn't resolved
 
 - **No timing was taken.** Every R is model-based. The fit has 3 points per kernel and
