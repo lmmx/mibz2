@@ -83,7 +83,7 @@ env:
   ROUNDS: 10
   SCALE: 4 # ab gen's: corpora of 8-20 MB of output each
   SETTLE: 0.25 # seconds the harness samples the other processes' load before each run
-  STAGE_ROUNDS: 5 # bench/stages.py's rounds (each 13-17 s on the runners seen)
+  STAGE_ROUNDS: 10 # bench/stages.py's rounds (each 13-17 s on the runners seen); P74 Gate 1's 10 paired rounds, pre-registered
   STAGE_REPEATS: 2 # phases' passes a run, each a decode of the file (each stage's fastest kept)
   KERNEL_PASSES: 10 # bench/alternatives' kernels: passes of both inverse BWTs over the Wikidata blocks (about 3 s each)
   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -230,6 +230,19 @@ jobs:
           python3 bench/stages.py run stages.jsonl --rounds "$STAGE_ROUNDS" --repeats "$STAGE_REPEATS" corpora/wikidata.bz2 $arms
           echo "stages: $((SECONDS - start)) s"
 
+      # P74 Gate 1 (docs/journal/2026-10-30-p74-gate1-preregistration.md): the MTF kernels on
+      # their own on the random and records corpora (Wikidata's are the Stages step's runs),
+      # then their paired figures and the registered rules (bench/p74.py)
+      - name: P74 arms
+        if: env.MODE == 'pr'
+        run: |
+          start=$SECONDS
+          for c in random records; do
+            python3 bench/stages.py run "p74-$c.jsonl" --mtf-arms --rounds "$STAGE_ROUNDS" --repeats "$STAGE_REPEATS" "corpora/$c.bz2" head=bin/phases
+          done
+          python3 bench/p74.py stages.jsonl p74-random.jsonl p74-records.jsonl --md p74.md --json p74.json
+          echo "p74: $((SECONDS - start)) s"
+
       # The inverse BWT alone, mibz2's against bz2ngrs's phase by phase, on one CPU (master
       # and the Actions tab only: bench/alternatives' kernels binary)
       - name: Kernels
@@ -250,6 +263,7 @@ jobs:
           python3 bench/report.py summary runs.jsonl --corpora corpora --mode "$MODE" --head "$HEAD_SHA" \
             ${BASE_SHA:+--base "$BASE_SHA"} --date "$HEAD_DATE" --run "$RUN_URL" --stages stages.jsonl --env env.json --kernels kernels.jsonl \
             --out result.json --md comment.md
+          if [ -f p74.md ]; then cat p74.md >> comment.md; fi
           cat comment.md ab-summary.md >> "$GITHUB_STEP_SUMMARY"
           # (the resources section in the log too, where a dispatched run's figures can be read)
           sed -n '/^### Resources/,/^<\/details>/p' comment.md
@@ -279,6 +293,10 @@ jobs:
             result.json
             comment.md
             ab-summary.md
+            p74-random.jsonl
+            p74-records.jsonl
+            p74.md
+            p74.json
           if-no-files-found: ignore
 
       # master only: the commit's result appended to the bench-results branch, and the

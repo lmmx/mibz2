@@ -11,6 +11,11 @@ as `ab run` pins its 1-thread runs), the arms' order reversed every other round;
 line a run: the round, the arm, the run's wall seconds, and each stage's time in
 picoseconds a byte of output.
 
+P74 Gate 1 (docs/journal/2026-10-30-p74-gate1-preregistration.md): a build's "MTF arm, ..."
+lines, each MTF kernel timed on its own, are kept beside the stages in each run's record
+(`arms`: picoseconds a byte, by "KERNEL/ARM"), not as stages; `--mtf-arms` runs phases with
+MIBZ2_PHASES_MTF_ONLY set, those lines only (bench/p74.py reads them).
+
 `phases` is read by its text, by each line's label, so that a base built before any
 change to phases.rs reads the same: GHZ is given as 1000, at which its "c/B" figures are
 picoseconds a byte (cycles a byte at 1000 GHz), two decimals of them; the stage that
@@ -19,6 +24,7 @@ counts towards its total is the walk it uses, the others marked "(not in the tot
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -61,6 +67,17 @@ def parse(text: str) -> dict[str, float]:
     return out
 
 
+def mtf_arms(text: str) -> dict[str, float]:
+    """phases' "MTF arm, KERNEL, ARM" lines: each kernel's picoseconds a byte, by
+    "KERNEL/ARM" (P74 Gate 1)."""
+    out = {}
+    for line in text.splitlines():
+        if (m := LINE.match(line)) and m.group(1).startswith("MTF arm, "):
+            kernel, arm = m.group(1).removeprefix("MTF arm, ").split(", ", 1)
+            out[f"{kernel}/{arm}"] = float(m.group(2))
+    return out
+
+
 def walk_name(text: str) -> str | None:
     """The walk the build's total counts (its line's label, e.g. "walk, room (used)"): the
     stage is the same across builds, its implementation each build's own."""
@@ -77,13 +94,19 @@ def run(a: argparse.Namespace) -> None:
             order = arms if rnd % 2 == 0 else arms[::-1]
             for arm, exe in order:
                 cmd = ["taskset", "-c", a.pin, exe, a.file, str(a.repeats), str(GHZ)]
+                env = dict(os.environ, MIBZ2_PHASES_MTF_ONLY="1") if a.mtf_arms else None
                 t = time.monotonic()
-                p = subprocess.run(cmd, capture_output=True, text=True)
+                p = subprocess.run(cmd, capture_output=True, text=True, env=env)
                 wall = time.monotonic() - t
                 ps = parse(p.stdout)
                 rec = {"round": rnd, "arm": arm, "repeats": a.repeats, "wall": round(wall, 3)}
                 rec["walk"] = walk_name(p.stdout)
-                if p.returncode or not set(STAGES) - OPTIONAL <= set(ps) <= set(STAGES):
+                if kernels := mtf_arms(p.stdout):
+                    rec["arms"] = kernels
+                if a.mtf_arms:
+                    if p.returncode or len(kernels) != 6:
+                        rec["err"] = (p.stderr.strip().splitlines() or ["no arms read"])[-1][:200]
+                elif p.returncode or not set(STAGES) - OPTIONAL <= set(ps) <= set(STAGES):
                     rec["err"] = (p.stderr.strip().splitlines() or ["no stages read"])[-1][:200]
                 rec["ps_per_byte"] = ps
                 f.write(json.dumps(rec) + "\n")
@@ -103,6 +126,9 @@ def main() -> None:
     r.add_argument("--rounds", type=int, required=True)
     r.add_argument("--repeats", type=int, default=1)
     r.add_argument("--pin", default="1")
+    r.add_argument(
+        "--mtf-arms", action="store_true", help="phases' MTF arm lines only (P74 Gate 1)"
+    )
     r.add_argument("file")
     r.add_argument("arms", nargs="+", metavar="ARM=EXE")
     run(ap.parse_args())

@@ -27,13 +27,22 @@
 //! assembly timed as one, the check that timing them apart changed neither, its passes
 //! interleaved with the split ones (which goes first alternating). The pass that `decode`
 //! runs is checked against `decode`'s output.
+//!
+//! P74 Gate 1 (docs/journal/2026-10-30-p74-gate1-preregistration.md): the MTF stage's
+//! kernels timed on their own, each over every block's symbols in a pass of its own, in an
+//! order turned a step each pass, each kernel's fastest pass kept: the shipped `mtf` and
+//! `mtf_checkpoints` and the research `mtf::p74` arms of both (branch, free), every
+//! block's output checked against the shipped kernel's. With MIBZ2_PHASES_MTF_ONLY set,
+//! only these (the stages not run).
 
 use std::time::Instant;
 
+use mibz2::block::Symbols;
 use mibz2::bwt::{
     build, walk, walk_fast, walk_segments_flagged, walk_segments_room, walk_segments_room_parts,
     SegScratch, TVector,
 };
+use mibz2::mtf::p74::Arm;
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{crc, mtf, rle, Kernels};
 
@@ -116,6 +125,73 @@ fn pass(data: &[u8], k: Kernels, w: Option<Walk>, keep: bool) -> (Times, usize, 
     (tm, n, blocks, decoded)
 }
 
+/// The MTF kernels, in the order their lines print
+const ARMS: [&str; 6] = [
+    "MTF arm, plain, shipped",
+    "MTF arm, plain, P74 branch",
+    "MTF arm, plain, P74 free",
+    "MTF arm, checkpoints, shipped",
+    "MTF arm, checkpoints, P74 branch",
+    "MTF arm, checkpoints, P74 free",
+];
+
+/// Every block's symbols, in decode order
+fn symbols(data: &[u8]) -> Vec<Symbols> {
+    let mut sc = Scanner::new(SliceSource(data));
+    let mut v = Vec::new();
+    while let Event::Block { symbols, .. } = sc.next(Vec::new()).unwrap() {
+        v.push(symbols);
+    }
+    v
+}
+
+/// The shipped kernels' output for a block: its last column, counts and checkpoints
+type Want = (Vec<u8>, [u32; 256], Vec<[u32; 256]>);
+
+/// Each MTF kernel's fastest pass over every block's symbols (seconds), the kernels in an
+/// order turned a step each pass; each block's output checked against the shipped kernel's
+fn mtf_arms(blocks: &[Symbols], k: Kernels, passes: usize) -> [f64; 6] {
+    let want: Vec<Want> = blocks
+        .iter()
+        .map(|b| {
+            let (mut ll, mut c, mut cps) = (Vec::new(), [0u32; 256], Vec::new());
+            mtf::mtf_checkpoints(b, &mut ll, &mut c, &mut cps, k).unwrap();
+            (ll, c, cps)
+        })
+        .collect();
+    let mut best = [f64::INFINITY; 6];
+    let (mut ll, mut counts, mut cps) = (Vec::new(), [0u32; 256], Vec::new());
+    for i in 0..passes {
+        for j in 0..6 {
+            let arm = (i + j) % 6;
+            let mut t = 0.0;
+            for (b, (wll, wc, wcps)) in blocks.iter().zip(&want) {
+                let start = Instant::now();
+                let n = match arm {
+                    0 => mtf::mtf(b, &mut ll, &mut counts, k),
+                    1 => mtf::p74::mtf(b, &mut ll, &mut counts, Arm::Branch),
+                    2 => mtf::p74::mtf(b, &mut ll, &mut counts, Arm::Free),
+                    3 => mtf::mtf_checkpoints(b, &mut ll, &mut counts, &mut cps, k),
+                    4 => mtf::p74::mtf_checkpoints(b, &mut ll, &mut counts, &mut cps, Arm::Branch),
+                    _ => mtf::p74::mtf_checkpoints(b, &mut ll, &mut counts, &mut cps, Arm::Free),
+                }
+                .unwrap();
+                t += start.elapsed().as_secs_f64();
+                assert!(
+                    n == wll.len() && ll == *wll && counts == *wc,
+                    "{}: a block's output",
+                    ARMS[arm]
+                );
+                if arm >= 3 {
+                    assert!(cps == *wcps, "{}: a block's checkpoints", ARMS[arm]);
+                }
+            }
+            best[arm] = best[arm].min(t);
+        }
+    }
+    best
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let path = args.get(1).expect("usage: phases FILE.bz2 [PASSES] [GHZ]");
@@ -124,6 +200,25 @@ fn main() {
     assert!(passes >= 1, "PASSES: at least 1");
     let data = std::fs::read(path).unwrap();
     let k = Kernels::detect();
+    let block_syms = symbols(&data);
+    if std::env::var_os("MIBZ2_PHASES_MTF_ONLY").is_some() {
+        let n = mibz2::decode(&data).unwrap().len() as f64;
+        let arms = mtf_arms(&block_syms, k, passes);
+        println!(
+            "{path}: {} blocks, {:.1} MB -> {:.1} MB; c/B of output at {ghz} GHz, the MTF \
+             kernels only, each one's fastest of {passes} passes",
+            block_syms.len(),
+            data.len() as f64 / 1e6,
+            n / 1e6,
+        );
+        for (name, s) in ARMS.iter().zip(arms) {
+            println!(
+                "  {name:28} {:6.2} c/B  (not in the total)",
+                s * ghz * 1e9 / n
+            );
+        }
+        return;
+    }
 
     // Each stage's fastest pass; the used walk's passes first, then each other walk's
     let fastest = |a: Times, b: Times| Times {
@@ -179,6 +274,7 @@ fn main() {
             .fold(f64::INFINITY, f64::min);
         (name, best)
     });
+    let arms = mtf_arms(&block_syms, k, passes);
 
     let n = n as f64;
     let cb = |s: f64| s * ghz * 1e9 / n;
@@ -213,6 +309,9 @@ fn main() {
         cb(as_one)
     );
     for (name, s) in others {
+        println!("  {name:28} {:6.2} c/B  (not in the total)", cb(s));
+    }
+    for (name, s) in ARMS.iter().zip(arms) {
         println!("  {name:28} {:6.2} c/B  (not in the total)", cb(s));
     }
     println!(
