@@ -360,3 +360,9 @@ unsafe fn mtf_checkpoints_avx2(
     ll.set_len(n);
     result.map(|()| n)
 }
+
+// Research only; neither module participates in production dispatch.
+#[doc(hidden)]
+pub mod p74;
+#[doc(hidden)]
+pub mod p74_c;
