@@ -1445,6 +1445,35 @@ register is therefore suspect, and is marked so.
 3. **Close #93** as superseded by #114, or keep it as the record.
 4. **The i9 queue** stays unlaunched until reviewed. Q2 and Q3 need no new code.
 
+**After the burn-down (30 October; external report 31).** The analytical burn-down is
+complete: every question of the 84 has a disposition (§9). Two gates remain. Neither is
+authorised. In the order the researcher recommends:
+
+5. **The P74 gate, on CI only:**
+   - **What it builds:** a standalone kernel benchmark of the checkpoint-aware MTF loop,
+     run over stored `Symbols` from the bench blocks. The production decoder is left
+     unchanged.
+   - **Two arms**, both with runs ≤ 31 bytes written inline and the fallback's tail shift
+     as three blended chunks for A ≤ 128 (§3.2e(i), (j)):
+     - **branching:** one shuffle below rank 16, the cross-lane sequence for 16–31;
+     - **branch-free:** the cross-lane sequence for every rank below 32.
+   - **The control:** shipped `mtf_checkpoints_avx2`.
+   - **Corpora:** Wikidata, random and records blocks, with a code-layout control (the
+     same arms in builds with shifted code, per the coop journal).
+   - **Read with it:** the disassembly, for spills of V on ordinary tokens.
+   - **Screening:** the MTF+RLE2+checkpoints stage in c/B, with parity on every block.
+   - **Promotion only on the existing criteria:** full-decoder CPU-s/GB equal or lower,
+     four-worker throughput up beyond noise, no material RSS rise, and no unacceptable
+     random or records regression (#25 lost 11% on random data).
+   - The branch model can't choose between the arms in advance, so both run.
+6. **Gate B, N1's builder cycles,** after the P74 gate: the 1 → 2 → 4 → 8 builder (layout
+   C, image-order counts, caps) against the shipped T-vector build on the same blocks.
+   The modelled traffic is adverse (17.5 against 5 B/B), and a fast walk alone can't
+   establish a decoder gain.
+
+No i9 run is proposed at this stage. The scratch corpus (blocks and windows, 213 MB) and
+the literature sources (21 MB) are kept until the gates are reconciled.
+
 ## 9. The burn-down ledger (30 October)
 
 This is the register's 47 open questions (`2026-10-30-research-portfolio-register.md`
