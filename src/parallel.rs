@@ -52,8 +52,9 @@ macro_rules! mark {
     };
 }
 
-/// A block to finish: its place in the stream, its first bit, its symbols
-type Job = (u64, u64, super::block::Symbols);
+/// A block to finish: its place in the stream, its first bit, its stream's level, its
+/// symbols
+type Job = (u64, u64, u32, super::block::Symbols);
 
 struct State {
     /// decoded blocks (or errors) by their place in the stream, not yet read
@@ -73,36 +74,38 @@ struct Shared {
     state: Mutex<State>,
     cv: Condvar,
     slots: u64,
-    /// the level policy's bound on large blocks inverted at once (`Plan::for_stream`)
+    /// the level policy's bound on workers at once on large-block streams' blocks
+    /// (`Plan::for_stream`)
     gate: Option<Arc<Gate>>,
 }
 
-/// At most `permits` blocks of more than `rows` rows in their inverse BWT at once: the
-/// level policy's bound when it plans more teams than a large block's table allows
-/// (`plan_for_stream`), so a later stream of large blocks in a concatenation keeps today's
-/// live tables. A worker takes a pass after its block's MTF stage, when the block's length
-/// is known, and before its table is built; smaller blocks pass freely.
+/// At most `permits` workers at once on blocks of streams above level `above`: the level
+/// policy's bound when it plans more teams than a large block's table allows
+/// (`plan_for_stream`), so a later stream of large blocks in a concatenation runs as
+/// today's plan does. A worker takes a pass when it takes such a block's job, before any of
+/// the block's work (its MTF stage, its table, its output), and holds it until the block
+/// is done; blocks of streams at `above` or below pass freely.
 pub(crate) struct Gate {
-    rows: usize,
+    above: u32,
     permits: usize,
     inside: Mutex<usize>,
     cv: Condvar,
 }
 
 impl Gate {
-    pub(crate) fn new(rows: usize, permits: usize) -> Gate {
+    pub(crate) fn new(above: u32, permits: usize) -> Gate {
         Gate {
-            rows,
+            above,
             permits: permits.max(1),
             inside: Mutex::new(0),
             cv: Condvar::new(),
         }
     }
 
-    /// For a block of `n` rows: none if it is small, else a pass once one is free, given
-    /// back when dropped (on unwinding too)
-    pub(crate) fn enter(&self, n: usize) -> Option<GatePass<'_>> {
-        if n <= self.rows {
+    /// For a block of a stream at `level`: none if the level is at the gate's or below,
+    /// else a pass once one is free, given back when dropped (on unwinding too)
+    pub(crate) fn enter(&self, level: u32) -> Option<GatePass<'_>> {
+        if level <= self.above {
             return None;
         }
         let mut inside = self.inside.lock().unwrap_or_else(|e| e.into_inner());
@@ -184,7 +187,8 @@ impl StreamDecoder {
         Self::planned_gated(plan, slots, k, None)
     }
 
-    /// `planned`, with the large blocks inverted at once bounded by `gate` if one is given
+    /// `planned`, with the workers on large-block streams' blocks at once bounded by
+    /// `gate` if one is given
     fn planned_gated(plan: Plan, slots: usize, k: Kernels, gate: Option<Gate>) -> StreamDecoder {
         use super::bwt::{Cooperative, Segmented};
         let g = gate.map(Arc::new);
@@ -468,6 +472,7 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
             Ok(Event::Block {
                 index,
                 bit,
+                level,
                 symbols,
                 ..
             }) => {
@@ -482,7 +487,7 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
                     symbols.syms.capacity() * std::mem::size_of::<u16>()
                 );
                 debug_assert_eq!(place, index);
-                if jobs.send((place, bit, symbols)).is_err() {
+                if jobs.send((place, bit, level, symbols)).is_err() {
                     return finish(None);
                 }
                 mark!(Enqueued, place);
@@ -496,7 +501,7 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
 }
 
 fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels) {
-    let mut scratch = Scratch::<I>::default().gated(shared.gate.clone());
+    let mut scratch = Scratch::<I>::default();
     loop {
         mark!(JobLock);
         let job = {
@@ -504,7 +509,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             mark!(JobRecv);
             rx.recv()
         };
-        let Ok((place, bit, symbols)) = job else {
+        let Ok((place, bit, level, symbols)) = job else {
             // (its buffers' high-water marks, for the footprint ledger)
             #[cfg(feature = "trace")]
             if crate::trace::level() > 0 {
@@ -521,6 +526,10 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             st.free_out.pop().unwrap_or_default()
         };
         out.clear();
+        // the level policy's bound on large blocks, if this decoder has one: taken before
+        // any of the block's work, held to its end (given back on an error, and after a
+        // panic is caught, when the pass is dropped)
+        let _pass = shared.gate.as_deref().and_then(|g| g.enter(level));
         mark!(DecodeStart, place);
         let res = catch_unwind(AssertUnwindSafe(|| {
             decode_block(&symbols, k, &mut scratch, &mut out)
@@ -530,7 +539,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             Ok(Ok(_)) => Ok(out),
             Ok(Err(kind)) => Err(kind),
             Err(p) => {
-                scratch = Scratch::default().gated(shared.gate.clone());
+                scratch = Scratch::default();
                 Err(ErrorKind::Internal(panic_message(p)))
             }
         }
@@ -581,10 +590,6 @@ const FULL_TABLE: f64 = 3.6e6;
 /// docs/journal/2026-10-29-level-policy.md). Higher levels keep `Plan::for_threads`.
 pub const SMALL_LEVEL: u32 = 3;
 
-/// The rows a block of a stream at `SMALL_LEVEL` can hold (a level's blocks are at most
-/// level × 100 000 bytes before the BWT): larger blocks go through the level policy's gate
-const SMALL_ROWS: usize = SMALL_LEVEL as usize * 100_000;
-
 /// A stream header's level, from the input's first bytes (`BZh1`-`BZh9`), if they are one
 pub(crate) fn header_level(head: &[u8]) -> Option<u32> {
     match head {
@@ -611,9 +616,11 @@ impl Plan {
     /// `for_threads`, knowing the input's first stream's level (`BZh1`-`BZh9`; None: not
     /// known, and `for_threads`' plan). Where that plans teams and the level is at most
     /// `SMALL_LEVEL`, teams of 2 on all the physical cores the threads can use, with
-    /// `for_threads`' team count kept as the bound on blocks larger than `SMALL_LEVEL`'s
-    /// inverted at once, for a later stream of a concatenation with larger blocks
-    /// (`StreamDecoder::for_stream`). Levels above `SMALL_LEVEL` plan as `for_threads`.
+    /// `for_threads`' team count kept as the bound on workers at once on the blocks of
+    /// any stream above `SMALL_LEVEL`, for a later stream of a concatenation with larger
+    /// blocks: a worker waits for a pass when it takes such a block, before any of its
+    /// work (`StreamDecoder::for_stream`). Levels above `SMALL_LEVEL` plan as
+    /// `for_threads`.
     ///
     /// At levels 1 and 2 the blocks are below `bwt::MIN_COOP` rows, so each team inverts
     /// its block on one core and its helper never starts: those teams are one-core
@@ -680,7 +687,7 @@ fn plan_for_stream(
         if level <= SMALL_LEVEL && wide > teams {
             return (
                 Plan::Teams { teams: wide, k: 2 },
-                Some(Gate::new(SMALL_ROWS, teams)),
+                Some(Gate::new(SMALL_LEVEL, teams)),
             );
         }
     }
@@ -797,9 +804,9 @@ mod plan_tests {
         let i9 = (Some(10), Some(20 << 20));
         let at = |t, l| {
             let (p, g) = plan_for_stream(t, i9.0, i9.1, l);
-            (p, g.map(|g| (g.rows, g.permits)))
+            (p, g.map(|g| (g.above, g.permits)))
         };
-        let wide = (Plan::Teams { teams: 5, k: 2 }, Some((300_000, 4)));
+        let wide = (Plan::Teams { teams: 5, k: 2 }, Some((3, 4)));
         for l in 1..=3 {
             assert_eq!(at(20, Some(l)), wide);
             assert_eq!(at(10, Some(l)), wide);
@@ -839,19 +846,19 @@ mod plan_tests {
         }
     }
 
-    /// The gate admits at most its permits of blocks above its rows at once and smaller
-    /// ones freely, and a pass held through a panic is given back
+    /// The gate admits at most its permits of blocks of streams above its level at once
+    /// and the rest freely, and a pass held through a panic is given back
     #[test]
     fn the_gate() {
         use std::sync::atomic::{AtomicUsize, Ordering::SeqCst};
-        let g = Gate::new(100, 2);
-        assert!(g.enter(100).is_none());
+        let g = Gate::new(3, 2);
+        assert!(g.enter(1).is_none() && g.enter(3).is_none());
         let (now, most) = (AtomicUsize::new(0), AtomicUsize::new(0));
         std::thread::scope(|s| {
             for _ in 0..8 {
                 s.spawn(|| {
                     for _ in 0..200 {
-                        let _pass = g.enter(101).expect("a large block's pass");
+                        let _pass = g.enter(9).expect("a large block's pass");
                         let n = now.fetch_add(1, SeqCst) + 1;
                         most.fetch_max(n, SeqCst);
                         std::thread::yield_now();
@@ -867,7 +874,7 @@ mod plan_tests {
         );
         assert_eq!(*g.inside.lock().unwrap(), 0);
         let r = catch_unwind(AssertUnwindSafe(|| {
-            let _pass = g.enter(101);
+            let _pass = g.enter(4);
             panic!("a panic holding a pass");
         }));
         assert!(r.is_err());
@@ -921,9 +928,9 @@ mod plan_tests {
         })
     }
 
-    /// Concatenations of a -3 stream (blocks under 300 000 rows) and a -9 one (larger),
-    /// in both orders, decode to the serial decoder's bytes under the level policy's
-    /// bound (one permit: large blocks wait for each other) on teams and on workers, and
+    /// Concatenations of a -3 stream and a -9 one, in both orders, decode to the serial
+    /// decoder's bytes under the level policy's bound (one permit: the -9 stream's blocks
+    /// wait for each other when their workers take them) on teams and on workers, and
     /// through `BzReader::parallel`'s plan for this machine
     #[test]
     fn mixed_levels_decode_whole() {
@@ -940,7 +947,7 @@ mod plan_tests {
                     plan,
                     6,
                     Kernels::detect(),
-                    Some(Gate::new(SMALL_ROWS, 1)),
+                    Some(Gate::new(SMALL_LEVEL, 1)),
                 );
                 let got = through(dec, &data).unwrap();
                 assert!(
@@ -960,6 +967,43 @@ mod plan_tests {
                 crate::decode_parallel(&data, 20).unwrap() == want,
                 "{name}, decode_parallel"
             );
+        }
+    }
+
+    /// A bad block in a gated stream (its CRC broken, in a -9 stream after a -3 one, and
+    /// in a -9 stream first) ends the decode with the serial decoder's error, the bytes
+    /// before it the same, under a one-permit gate on teams and on workers: the passes are
+    /// given back on the error path, and the decode ends (within a minute, or the test
+    /// fails rather than hangs)
+    #[test]
+    fn gated_errors_end_the_decode() {
+        let small = compress(&words(700_000, 5), 3);
+        let mut large = compress(&words(1_100_000, 7), 9);
+        // a byte in the -9 stream's first block's Huffman-coded data, past its headers
+        let at = large.len() / 3;
+        large[at] ^= 0x55;
+        for (name, data) in [
+            ("-3 then a bad -9", [&small[..], &large[..]].concat()),
+            ("a bad -9 then -3", [&large[..], &small[..]].concat()),
+        ] {
+            let want = crate::decode(&data).expect_err("a bad stream").kind;
+            for plan in [Plan::Teams { teams: 3, k: 2 }, Plan::Workers(3)] {
+                let (tx, rx) = std::sync::mpsc::channel();
+                let d = data.clone();
+                std::thread::spawn(move || {
+                    let dec = StreamDecoder::planned_gated(
+                        plan,
+                        6,
+                        Kernels::detect(),
+                        Some(Gate::new(SMALL_LEVEL, 1)),
+                    );
+                    let _ = tx.send(through(dec, &d).map_err(|e| e.kind));
+                });
+                let got = rx
+                    .recv_timeout(std::time::Duration::from_secs(60))
+                    .unwrap_or_else(|_| panic!("{name}, {plan:?}: no end within a minute"));
+                assert_eq!(got.unwrap_err(), want, "{name}, {plan:?}");
+            }
         }
     }
 

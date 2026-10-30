@@ -268,3 +268,73 @@ its run queue, from `ab`'s sampler. -3 then -9, 20 threads, medians over 20 roun
   every control, since the gate is only built under R1.
 - **Its test:** a focused A/B of the same arms on -3 then -9, -3 alone and -9 then -3.
   The -6 repeat can run in the same session, since the change doesn't touch that path.
+
+## Revision 2: the gate taken when a worker takes the block (approved by the user, 2026-10-30)
+
+**The record so far stands:**
+- the first A/B (00e9dd6) did not meet its shipping gate, at -6;
+- the mixed case met its gate at a measured cost;
+- the investigation above.
+
+A revised design needs its own validation. A pass of it does not make the first run's
+verdict a pass.
+
+**What changed** (the smallest change the investigation pointed to):
+- **Each job carries its stream's level,** from the scanner (`Event::Block`).
+- **The gate admits at most `for_threads`' team count** (4 on the i9) of workers at once on
+  blocks of streams above level 3. A worker takes the pass when it takes such a block,
+  before any of the block's work (MTF, table, RLE1, CRC), and holds it until the block is
+  done.
+  - It is given back on an error, and after a caught panic, when the pass drops.
+  - Blocks of streams at level 3 or below pass freely.
+- **So during a large-block stream** at most 4 workers hold large blocks, as today's plan
+  runs. The fifth waits holding nothing but the job's symbols, which the scanner had made
+  anyway, and its helper parks.
+- **Removed:** the gate in `decode_block`, after MTF, and its field in `Scratch`.
+  `decode_block` is as on master again.
+
+**What is not established:** which of the two candidate causes (the extra per-block
+working data, or the extra busy threads) the first design's cost came from. The change
+addresses both. Neither is presented as proven.
+
+**Tests:**
+- all of revision 1's, updated: `the_gate` now on levels; the policy table's bound is
+  now `(level 3, 4 permits)`;
+- **`gated_errors_end_the_decode`:** a bad block in a -9 stream, after a -3 one and first,
+  under a one-permit gate on teams and on workers. It ends with the serial decoder's error,
+  within a minute, so the passes are given back on the error path and nothing deadlocks;
+- every test passes; clippy, fmt and rustdoc are clean.
+
+### Its validation (registered before it runs)
+
+**The run:** `just bench-level-aware-revised`, on the i9, at the revision's head, with
+nothing else running.
+- **Arms:** the same as before (`mibz2`, `mibz2-auto`, `mibz2-workers`), 20 rounds,
+  threads 4–20.
+- **Corpora:** -3 then -9, -3 alone, -9 then -3, and -6.
+- **Scoring:** `bench/level_aware.py`, at 20 threads:
+
+| corpus | role | gate (unchanged from the first run) |
+|---|---|---|
+| -3 then -9 | mixed | lower bound ≥ 0.97, RSS ≤ 1.15×, CPU ≤ 1.5× |
+| -3 | the rule | ≥ 1.05, lower bound > 1.00, RSS ≤ 1.15×, CPU ≤ 1.5× |
+| -9 then -3 | unchanged | lower bound ≥ 0.97, RSS ≤ 1.05× |
+| -6 | unchanged, the repeat | lower bound ≥ 0.97, RSS ≤ 1.05×; scored alone, and pooled with the first run's (`--pool`) |
+| every corpus | | one output hash, no errors |
+
+**Hypotheses** (recorded, not acceptance criteria):
+- **-3 then -9:** the -9 half runs at about today's speed and CPU. The whole file gains
+  about the -3 half's share, roughly +4%, with RSS about 1.05–1.10×.
+- **-3 alone:** close to the first run's 1.092. The change doesn't touch a level ≤ 3
+  stream's path beyond the level each job carries.
+- **-9 then -3 and -6:** about 1.00.
+
+**Not re-measured in this session** (the user's scope: no broader sweep):
+- **-1, -2, the native corpus and the 4-core pass.** Their measured results are the first
+  run's, on 00e9dd6.
+- The revision changes their path only by the level each job carries, and (-1, -2) by a
+  pass that every block of theirs is admitted without.
+- **For the merge decision:** CLAUDE.md asks that the merged head be the one measured, or
+  that its later commits change nothing the bench measures. This revision does change
+  every path's code, slightly. So whether the first run's figures stand for those corpora
+  is put to the user with the results, not assumed.

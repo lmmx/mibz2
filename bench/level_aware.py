@@ -17,7 +17,11 @@ medians. Each corpus is scored by its role, from its name:
 
 Every run must give its corpus's one output hash, with no error.
 
-    python3 bench/level_aware.py coop-decoder-*.jsonl [--new mibz2] [--old mibz2-auto]
+With `--pool`, a corpus given in several files (a repeat of a run) is also scored pooled:
+every file's paired rounds together, one statistic over them all, each run's verdict
+printed as well and none dropped.
+
+    python3 bench/level_aware.py coop-decoder-*.jsonl [--new mibz2] [--old mibz2-auto] [--pool]
 """
 
 import argparse
@@ -81,9 +85,11 @@ def main():
     ap.add_argument("files", nargs="+")
     ap.add_argument("--new", default="mibz2")
     ap.add_argument("--old", default="mibz2-auto")
+    ap.add_argument("--pool", action="store_true", help="also score each corpus's files pooled")
     a = ap.parse_args()
     verdicts = []
-    for f in a.files:
+    loaded = []
+    for i, f in enumerate(a.files):
         runs, hashes, errors, corpus = {}, set(), 0, None
         for line in open(f):
             r = json.loads(line)
@@ -93,6 +99,7 @@ def main():
                 continue
             hashes.add(r["hash"])
             runs.setdefault((r["arm"], r["threads"]), {})[r["round"]] = r
+        loaded.append((i, corpus, runs, hashes, errors))
         tag, kind = role(corpus or "?")
         threads = sorted({t for (arm, t) in runs if arm == a.new and (a.old, t) in runs})
         if not threads:
@@ -119,6 +126,38 @@ def main():
             print(f"\nAt {top} threads, the {kind} gate: **{'met' if ok else 'not met'}**\n")
         else:
             print()
+    if a.pool:
+        by_corpus = {}
+        for i, corpus, runs, hashes, errors in loaded:
+            by_corpus.setdefault(corpus, []).append((i, runs, hashes, errors))
+        for corpus, parts in by_corpus.items():
+            if len(parts) < 2:
+                continue
+            tag, kind = role(corpus or "?")
+            # every file's rounds, keyed by (file, round): pairs never cross files
+            new, old, hashes, errors = {}, {}, set(), 0
+            top = min(
+                max(t for (arm, t) in runs if arm == a.new and (a.old, t) in runs)
+                for _, runs, _, _ in parts
+            )
+            for i, runs, h, e in parts:
+                new.update({(i, r): v for r, v in runs[(a.new, top)].items()})
+                old.update({(i, r): v for r, v in runs[(a.old, top)].items()})
+                hashes |= h
+                errors += e
+            g, lo, hi, n = paired(new, old)
+            rss, cpu = ratio(new, old, "rss_kb"), ratio(new, old, "cpu")
+            clean = len(hashes) == 1 and errors == 0
+            ok = gate(kind, g, lo, rss, cpu, clean)
+            print(f"## {corpus}, pooled over {len(parts)} runs ({tag}: {kind or 'not scored'})\n")
+            print(
+                f"At {top} threads: {g:.3f} ({lo:.3f}-{hi:.3f}), {n} rounds; RSS {rss:.2f}, CPU {cpu:.2f}; {len(hashes)} hash(es), {errors} error(s)"
+            )
+            if kind:
+                print(
+                    f"\nThe {kind} gate, pooled: **{'met' if ok else 'not met'}** (the runs' own verdicts above stand)\n"
+                )
+                verdicts.append((f"{corpus} (pooled)", kind, ok))
     if verdicts:
         print("## Verdict\n")
         for corpus, kind, ok in verdicts:
