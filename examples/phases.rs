@@ -126,14 +126,22 @@ fn pass(data: &[u8], k: Kernels, w: Option<Walk>, keep: bool) -> (Times, usize, 
 }
 
 /// The MTF kernels, in the order their lines print
-const ARMS: [&str; 6] = [
+const ARMS: [&str; 8] = [
     "MTF arm, plain, shipped",
     "MTF arm, plain, P74 branch",
     "MTF arm, plain, P74 free",
     "MTF arm, checkpoints, shipped",
     "MTF arm, checkpoints, P74 branch",
     "MTF arm, checkpoints, P74 free",
+    // the selector (`mtf::p74::select`, its count timed): P74 free or the shipped kernel
+    "MTF arm, plain, P74 selector",
+    "MTF arm, checkpoints, P74 selector",
 ];
+
+/// Whether an arm is a checkpoint kernel
+fn checkpointed(arm: usize) -> bool {
+    matches!(arm, 3..=5 | 7)
+}
 
 /// Every block's symbols, in decode order
 fn symbols(data: &[u8]) -> Vec<Symbols> {
@@ -145,12 +153,36 @@ fn symbols(data: &[u8]) -> Vec<Symbols> {
     v
 }
 
+/// The selector's choices: blocks and their stage output bytes (`ll`, before RLE1) sent
+/// to P74, and the totals
+fn selection(blocks: &[Symbols], k: Kernels) -> (usize, usize, usize, usize) {
+    let (mut chosen, mut chosen_bytes, mut bytes) = (0, 0, 0);
+    let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+    for b in blocks {
+        let n = mtf::mtf(b, &mut ll, &mut counts, k).unwrap();
+        bytes += n;
+        if mtf::p74::select(b) {
+            chosen += 1;
+            chosen_bytes += n;
+        }
+    }
+    (chosen, blocks.len(), chosen_bytes, bytes)
+}
+
+/// The selector's line (bench/stages.py reads it)
+fn print_selection(blocks: &[Symbols], k: Kernels) {
+    let (chosen, all, chosen_bytes, bytes) = selection(blocks, k);
+    println!(
+        "  MTF selector: P74 for {chosen} of {all} blocks, {chosen_bytes} of {bytes} bytes of L"
+    );
+}
+
 /// The shipped kernels' output for a block: its last column, counts and checkpoints
 type Want = (Vec<u8>, [u32; 256], Vec<[u32; 256]>);
 
 /// Each MTF kernel's fastest pass over every block's symbols (seconds), the kernels in an
 /// order turned a step each pass; each block's output checked against the shipped kernel's
-fn mtf_arms(blocks: &[Symbols], k: Kernels, passes: usize) -> [f64; 6] {
+fn mtf_arms(blocks: &[Symbols], k: Kernels, passes: usize) -> [f64; 8] {
     let want: Vec<Want> = blocks
         .iter()
         .map(|b| {
@@ -159,11 +191,11 @@ fn mtf_arms(blocks: &[Symbols], k: Kernels, passes: usize) -> [f64; 6] {
             (ll, c, cps)
         })
         .collect();
-    let mut best = [f64::INFINITY; 6];
+    let mut best = [f64::INFINITY; 8];
     let (mut ll, mut counts, mut cps) = (Vec::new(), [0u32; 256], Vec::new());
     for i in 0..passes {
-        for j in 0..6 {
-            let arm = (i + j) % 6;
+        for j in 0..8 {
+            let arm = (i + j) % 8;
             let mut t = 0.0;
             for (b, (wll, wc, wcps)) in blocks.iter().zip(&want) {
                 let start = Instant::now();
@@ -173,7 +205,21 @@ fn mtf_arms(blocks: &[Symbols], k: Kernels, passes: usize) -> [f64; 6] {
                     2 => mtf::p74::mtf(b, &mut ll, &mut counts, Arm::Free),
                     3 => mtf::mtf_checkpoints(b, &mut ll, &mut counts, &mut cps, k),
                     4 => mtf::p74::mtf_checkpoints(b, &mut ll, &mut counts, &mut cps, Arm::Branch),
-                    _ => mtf::p74::mtf_checkpoints(b, &mut ll, &mut counts, &mut cps, Arm::Free),
+                    5 => mtf::p74::mtf_checkpoints(b, &mut ll, &mut counts, &mut cps, Arm::Free),
+                    6 => {
+                        if mtf::p74::select(b) {
+                            mtf::p74::mtf(b, &mut ll, &mut counts, Arm::Free)
+                        } else {
+                            mtf::mtf(b, &mut ll, &mut counts, k)
+                        }
+                    }
+                    _ => {
+                        if mtf::p74::select(b) {
+                            mtf::p74::mtf_checkpoints(b, &mut ll, &mut counts, &mut cps, Arm::Free)
+                        } else {
+                            mtf::mtf_checkpoints(b, &mut ll, &mut counts, &mut cps, k)
+                        }
+                    }
                 }
                 .unwrap();
                 t += start.elapsed().as_secs_f64();
@@ -182,7 +228,7 @@ fn mtf_arms(blocks: &[Symbols], k: Kernels, passes: usize) -> [f64; 6] {
                     "{}: a block's output",
                     ARMS[arm]
                 );
-                if arm >= 3 {
+                if checkpointed(arm) {
                     assert!(cps == *wcps, "{}: a block's checkpoints", ARMS[arm]);
                 }
             }
@@ -217,6 +263,7 @@ fn main() {
                 s * ghz * 1e9 / n
             );
         }
+        print_selection(&block_syms, k);
         return;
     }
 
@@ -314,6 +361,7 @@ fn main() {
     for (name, s) in ARMS.iter().zip(arms) {
         println!("  {name:28} {:6.2} c/B  (not in the total)", cb(s));
     }
+    print_selection(&block_syms, k);
     println!(
         "  {:28} {:6.2} c/B  = {:.0} MB/s on one thread",
         "total",

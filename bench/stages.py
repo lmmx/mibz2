@@ -78,6 +78,20 @@ def mtf_arms(text: str) -> dict[str, float]:
     return out
 
 
+SELECTION = re.compile(
+    r"^  MTF selector: P74 for (\d+) of (\d+) blocks, (\d+) of (\d+) bytes of L$"
+)
+
+
+def selection(text: str) -> dict | None:
+    """phases' selector line: the blocks and L bytes the Gate 1 selector sent to P74"""
+    for line in text.splitlines():
+        if m := SELECTION.match(line):
+            a, n, ab, nb = map(int, m.groups())
+            return {"blocks": a, "of_blocks": n, "bytes": ab, "of_bytes": nb}
+    return None
+
+
 def walk_name(text: str) -> str | None:
     """The walk the build's total counts (its line's label, e.g. "walk, room (used)"): the
     stage is the same across builds, its implementation each build's own."""
@@ -103,8 +117,10 @@ def run(a: argparse.Namespace) -> None:
                 rec["walk"] = walk_name(p.stdout)
                 if kernels := mtf_arms(p.stdout):
                     rec["arms"] = kernels
+                if sel := selection(p.stdout):
+                    rec["selection"] = sel
                 if a.mtf_arms:
-                    if p.returncode or len(kernels) != 6:
+                    if p.returncode or len(kernels) != 8:
                         rec["err"] = (p.stderr.strip().splitlines() or ["no arms read"])[-1][:200]
                 elif p.returncode or not set(STAGES) - OPTIONAL <= set(ps) <= set(STAGES):
                     rec["err"] = (p.stderr.strip().splitlines() or ["no stages read"])[-1][:200]

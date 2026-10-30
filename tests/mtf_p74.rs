@@ -301,7 +301,54 @@ fn long_and_refused_runs() {
         at_limits(&b, &format!("runs up to {runs}"));
     }
     let mut b = written(&mut rng, 4, 10, 0, &mut |r| r.below(3) as usize);
-    let too_long: Vec<u16> = std::iter::repeat_n(1u16, 22).collect();
+    let too_long: Vec<u16> = std::iter::repeat(1u16).take(22).collect();
     b.syms.splice(0..0, too_long);
     assert!(!agree(&b, "a run's weight past 2^21"));
+}
+
+/// A block of `alpha` symbols in use whose explicit symbols are `low` of rank 1 and
+/// `high` of rank 32 (or the alphabet's last rank if it is smaller), with no runs
+fn ranked(alpha: usize, low: usize, high: usize) -> Symbols {
+    let eob = alpha as u16 + 1;
+    let deep = 32.min(alpha - 1) as u16;
+    let mut syms = vec![2u16; low];
+    syms.extend(std::iter::repeat(deep + 1).take(high));
+    syms.push(eob);
+    let mut seq_to_unseq = [0u8; 256];
+    for (i, x) in seq_to_unseq.iter_mut().enumerate() {
+        *x = i as u8;
+    }
+    Symbols {
+        crc: 0,
+        orig_ptr: 0,
+        seq_to_unseq,
+        syms,
+        eob,
+        max_len: 900_000,
+    }
+}
+
+/// The Gate 1 selector's frozen rule: P74 if A <= 32, or no explicit symbol, or 10F <= E
+#[test]
+fn the_selector_rule() {
+    use mtf::p74::select;
+    // the alphabet guard: no rank of 32 or more, whatever the ranks
+    assert!(select(&ranked(32, 0, 100)));
+    assert!(select(&ranked(2, 5, 5)));
+    // the exact tenth: 10F <= E, with E = low + high
+    assert!(select(&ranked(100, 90, 10)), "10 of 100 high: chosen");
+    assert!(!select(&ranked(100, 89, 11)), "11 of 100 high: not chosen");
+    assert!(select(&ranked(100, 900, 100)));
+    assert!(!select(&ranked(100, 899, 101)));
+    // no explicit symbol: no fallback, so P74
+    assert!(select(&ranked(100, 0, 0)));
+    // the rule holds RUNA/RUNB and the end out of the count
+    let mut b = ranked(100, 90, 10);
+    b.syms.splice(0..0, [0u16, 1, 0, 1, 1]);
+    assert!(select(&b));
+    // random data: ranks uniform over 1..256, about 88% of them 32 or more
+    let mut rng = Rng(0x7474_7474_0000_0004);
+    let b = written(&mut rng, 256, 5000, 3, &mut |r| r.below(255) as usize);
+    assert!(!select(&b));
+    agree(&b, "random, the selector's block");
 }

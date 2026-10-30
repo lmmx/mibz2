@@ -19,7 +19,11 @@ import statistics
 from pathlib import Path
 
 KERNELS = ["plain", "checkpoints"]
-ARMS = ["P74 branch", "P74 free"]
+# the first measurement's arms, then the selector (the mixed-result step: the
+# pre-registration's "The selector arm", frozen before its code)
+FIRST = ["P74 branch", "P74 free"]
+SELECTOR = "P74 selector"
+ARMS = FIRST + [SELECTOR]
 # t's two-sided 95% quantile by degrees of freedom
 T95 = {
     1: 12.706,
@@ -66,7 +70,7 @@ def ratios(recs: list[dict]) -> dict:
     runs without errors"""
     out = {k: {a: [] for a in ARMS} for k in KERNELS}
     for r in recs:
-        if r.get("arm") != "head" or "err" in r or len(r.get("arms", {})) != 6:
+        if r.get("arm") != "head" or "err" in r or len(r.get("arms", {})) != 8:
             continue
         for k in KERNELS:
             for a in ARMS:
@@ -94,10 +98,36 @@ def layout(recs: list[dict]) -> dict | None:
     return interval(xs) if xs else None
 
 
+def selections(recs: list[dict]) -> dict | None:
+    """The selector's choices on a corpus (the same in every run): blocks and L bytes"""
+    return next((r["selection"] for r in recs if "selection" in r), None)
+
+
+def selector_verdict(fig: dict) -> dict:
+    """The selector arm's frozen rule, read mechanically: positive or not (P74 closes)"""
+    wd = fig["wikidata"]["checkpoints"][SELECTOR]
+    gain = 1 - wd["mean"]
+    lay = fig["layout"]
+    noise = abs(1 - lay["mean"]) if lay else math.nan
+    wiki_ok = gain >= GAIN and wd["hi"] < 1 and (lay is None or gain > 2 * noise)
+    controls = {
+        f"{c}/{k}": fig[c][k][SELECTOR]["hi"] for c in ("random", "records") for k in KERNELS
+    }
+    controls_ok = all(hi <= 1 + CONTROL for hi in controls.values())
+    return {
+        "gain": gain,
+        "layout_noise": noise,
+        "wikidata_rule": wiki_ok,
+        "controls_upper": controls,
+        "controls_rule": controls_ok,
+        "verdict": "positive" if wiki_ok and controls_ok else "negative (P74 closes)",
+    }
+
+
 def verdict(fig: dict) -> dict:
-    """The registered rules, read mechanically"""
+    """The registered rules, read mechanically (the first measurement's two arms)"""
     wd = fig["wikidata"]["checkpoints"]
-    best = min(ARMS, key=lambda a: wd[a]["mean"])
+    best = min(FIRST, key=lambda a: wd[a]["mean"])
     gain = 1 - wd[best]["mean"]
     lay = fig["layout"]
     noise = abs(1 - lay["mean"]) if lay else math.nan
@@ -125,7 +155,7 @@ def pct(x: float) -> str:
     return f"{100 * (x - 1):+.1f}%"
 
 
-def md(fig: dict, v: dict) -> str:
+def md(fig: dict, v: dict, sv: dict) -> str:
     lines = [
         "### P74 Gate 1: the MTF kernels, same binary (pre-registered)",
         "",
@@ -133,8 +163,8 @@ def md(fig: dict, v: dict) -> str:
         "round; mean and 95% t-interval over the rounds (negative: faster). "
         "`docs/journal/2026-10-30-p74-gate1-preregistration.md`.",
         "",
-        "| corpus | kernel | shipped, ns/B | P74 branch | P74 free |",
-        "|---|---|--:|--:|--:|",
+        "| corpus | kernel | shipped, ns/B | P74 branch | P74 free | P74 selector |",
+        "|---|---|--:|--:|--:|--:|",
     ]
     for c in ("wikidata", "random", "records"):
         for k in KERNELS:
@@ -166,6 +196,29 @@ def md(fig: dict, v: dict) -> str:
         + f" (rule: ≤ +{100 * CONTROL:.0f}%): **{'met' if v['controls_rule'] else 'not met'}**. "
         f"Verdict: **{v['verdict']}**.",
         "",
+        "**The selector's choices** (the frozen rule: P74 free if A ≤ 32, or E = 0, or "
+        "10·F ≤ E; else the shipped kernel; its count timed in the arm):",
+        "",
+        "| corpus | blocks to P74 | L bytes to P74 |",
+        "|---|--:|--:|",
+    ]
+    for c in ("wikidata", "random", "records"):
+        sel = fig["selections"].get(c)
+        if sel:
+            lines.append(
+                f"| {c} | {sel['blocks']} of {sel['of_blocks']} | "
+                f"{100 * sel['bytes'] / max(1, sel['of_bytes']):.1f}% |"
+            )
+    lines += [
+        "",
+        f"**The selector arm's frozen rule, read mechanically** (to be confirmed): Wikidata's "
+        f"checkpoint kernel gain {100 * sv['gain']:.1f}% (≥ {100 * GAIN:.0f}%, interval excluding "
+        f"zero, more than twice the layout noise {100 * sv['layout_noise']:.1f}%): "
+        f"**{'met' if sv['wikidata_rule'] else 'not met'}**; controls' upper bounds "
+        + ", ".join(f"{k} {pct(hi)}" for k, hi in sv["controls_upper"].items())
+        + f" (≤ +{100 * CONTROL:.0f}%): **{'met' if sv['controls_rule'] else 'not met'}**. "
+        f"Verdict: **{sv['verdict']}**.",
+        "",
     ]
     return "\n".join(lines)
 
@@ -186,10 +239,14 @@ def main() -> None:
     fig = {c: ratios(r) for c, r in runs.items()}
     fig["shipped"] = {c: shipped_cb(r) for c, r in runs.items()}
     fig["layout"] = layout(runs["wikidata"])
+    fig["selections"] = {c: selections(r) for c, r in runs.items()}
     v = verdict(fig)
-    Path(a.json).write_text(json.dumps({"figures": fig, "rules": v}, indent=1))
-    Path(a.md).write_text(md(fig, v))
-    print(md(fig, v))
+    sv = selector_verdict(fig)
+    Path(a.json).write_text(
+        json.dumps({"figures": fig, "rules": v, "selector_rules": sv}, indent=1)
+    )
+    Path(a.md).write_text(md(fig, v, sv))
+    print(md(fig, v, sv))
 
 
 if __name__ == "__main__":

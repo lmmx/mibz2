@@ -439,6 +439,23 @@ pub mod p74 {
         super::mtf_checkpoints_scalar(b, ll, counts, checkpoints)
     }
 
+    /// Gate 1's selector (frozen before its code: the pre-registration's "The selector
+    /// arm"): whether a block takes `Arm::Free`. Yes if its used alphabet (`eob - 1`) has
+    /// at most 32 symbols, which no rank of 32 or more can reach, without a count; else if
+    /// it has no explicit symbol, or a tenth or fewer of them (2 <= s < eob) are of rank 32
+    /// or more (s >= 33), by exact integers
+    pub fn select(b: &Symbols) -> bool {
+        if b.eob.saturating_sub(1) <= 32 {
+            return true;
+        }
+        let (mut explicit, mut high) = (0u64, 0u64);
+        for &s in &b.syms {
+            explicit += (s >= 2 && s < b.eob) as u64;
+            high += (s >= 33 && s < b.eob) as u64;
+        }
+        explicit == 0 || 10 * high <= explicit
+    }
+
     /// The per-rank shuffle and blend masks (index: the rank; 0 unused)
     #[repr(align(32))]
     struct Masks([[u8; 32]; 32]);
