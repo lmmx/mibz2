@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1](https://github.com/lmmx/mibz2/compare/v0.2.0...v0.2.1) - 2026-10-30
+
+### <!-- 3 -->Performance
+
+- *(bwt)* the one-core build in one pass ([#114](https://github.com/lmmx/mibz2/pull/114))
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.2.0's notes from its own tag-to-tag paired run and the i9 runs ([#109](https://github.com/lmmx/mibz2/pull/109))
+- *(frontier)* the two charts, drawn from frontier.json ([#108](https://github.com/lmmx/mibz2/pull/108))
+
 ## [0.2.0](https://github.com/lmmx/mibz2/compare/v0.1.6...v0.2.0) - 2026-10-29
 
 The parallel decoder now shares each block between two threads on machines that have the
