@@ -1214,6 +1214,27 @@ The data is `theory/calls.py`, on the 20 T2-census blocks.
 - **Uniform ranks at A = 256 take the fallback 87.6% of the time.** That is the
   random-data case §3.2e(g) leaves to measurement.
 
+**(l) Notes on the researcher's status (external report 30).** The status agrees with
+(a)–(k), with three refinements:
+- **The call counts are measured; only their cost is modelled.**
+  - 49 calls per 1,000 tokens remain with runs ≤ 31 bytes inline. That includes the
+    fallback's 16 `memmove`s.
+  - With (j)'s call-free tail shift, **32.5 per 1,000** remain (10.7–42.2 over the 20
+    blocks), all of them `memset`s for runs over 31 bytes.
+- **The one-cycle chain holds for the 84.6% of tokens on the one-shuffle path.** Whether
+  a build keeps it depends on the dispatch choice in (e):
+  - a branch at rank 16 mispredicts about 16% of the time in the model, costing about
+    2.4–3.2 cycles per token;
+  - a branch-free build runs every rank below 32 through the cross-lane sequence, at
+    5–6 cycles.
+
+  Either is well under the shipped ~15–17. The 4.6–5.8% gain assumes P74's loop becomes
+  throughput-bound at about 5–6 cycles a token, so it covers both.
+- **The compiled-code audit and the complete-loop measurement are one step.** The audit
+  needs a P74 kernel, which doesn't exist, and writing one is the new variant that waits
+  for the maintainer's approval. Once it exists, reading its disassembly costs nothing,
+  and the CI microbenchmark of the disposition below measures it.
+
 **Disposition (P74, under the existing P74/#25 entry; no new question):**
 - **answered:** correctness (every path, real mapping, fused extraction, every alphabet
   size with one fixed head), the lower bound, the fallback's alphabet bound and its
