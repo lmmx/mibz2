@@ -393,6 +393,13 @@ blocks.
 | Zen 4 | 6.6–10.0 | 9.9 (P^{2\|4}) | 21.8 (P²) | 31 |
 | Zen 5 | 4.0–5.9 | 6.1 (P^{2\|4}) | 14.2 (P²) | 19 |
 
+**Correction (`2026-10-30-n1-four-copy-sensitivity.md`):** the four-copy column is wrong.
+`model.py` divided c_e by the N1 build factor instead of multiplying (31.2 corrected alone
+is 24.0); the shipped build's four-copy factor was measured at ×1.26, not 1.14; the 5.0 →
+10.4 c/B walk figure was probably from a 9V74, not the 7763; and α_N = 1.3 is below every
+measured analogue. With measured factors, the four-copy pass needs c_e ≤ 10.3–16.0 on the
+measured 7763 base. The column is kept below as first written.
+
 **The four-copy column:**
 - **What it rests on (measured):** CI's stage walk at four concurrent copies went from 5.0
   to 10.4 c/B (P111; a different run from the one in §5.1).
