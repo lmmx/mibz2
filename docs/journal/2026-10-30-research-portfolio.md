@@ -1169,6 +1169,35 @@ The data is `theory/calls.py`, on the 20 T2-census blocks.
 - **Not settled by counting:** what a compiler does with V across these calls. That is
   read from the disassembly of a P74 kernel once one exists.
 
+**(j) The alphabet bound on the fallback (round 38), checked; the fallback's call removed.**
+- **The arithmetic holds:**
+  - P74 moves 2q − 63 bytes and the shipped kernel 2q + 1, exactly 64 more an event;
+  - q ≤ A − 1 gives at most 2A − 65, which is 93–139 bytes for A = 79–102. Those are
+    the census's d₁ over all 233 blocks, median 87.
+- **The bound is per block.** It holds for any block with A used symbols, wherever it
+  sits in the dump. Only the 79–102 figures are corpus-specific.
+- **The measured value is about 4.5× under round 38's bound,** because high ranks
+  concentrate just above 32:
+  - 0.49 B per explicit token (bound 2.224) and 0.040 B per output byte (bound 0.136);
+  - (b)'s figures, the exact Σ(2q − 63);
+  - the shipped fallback's equivalent is about 1.5 B per token, 1.0 more, which is
+    64 × 1.59%.
+- **A consequence the round doesn't draw: the fallback needs no `memmove` call** on any
+  block with A ≤ 128.
+  - Then j ≤ 95, so the j + 1 rewritten tail bytes fit in three 32-byte chunks.
+  - Each chunk is the shipped head's own trick, applied to the tail: load T[i…i+31] and
+    T[i−1…i+30], blend by i ≤ j, and store; T[0] then takes H[31].
+  - That is about 15 instructions, fixed, with no call. V stays live across the fallback
+    with no ABI save.
+  - The tail's chunk stores can stall the next fallback's loads only when two fallbacks
+    come within a few tokens. Fallbacks are 1.6% of tokens, about 60 tokens apart on
+    average.
+  - All 233 census blocks have A ≤ 102, so (i)'s 16.2 `memmove` calls per 1,000 tokens
+    drop to 0 on Wikidata. A ≥ 129 (random data, 256 symbols) keeps a call or a loop,
+    which belongs to the random-data guard.
+- **What's left for the fallback** is its fixed instruction cost and the head's 5–6-cycle
+  chain, as round 38 says. The tail's size is no longer an unknown.
+
 **Disposition (P74, under the existing P74/#25 entry; no new question):**
 - **answered:** correctness (every path, real mapping, fused extraction), the lower
   bound, the mask independence, checkpoint compatibility, the selector's exact
@@ -1178,8 +1207,8 @@ The data is `theory/calls.py`, on the 20 T2-census blocks.
     on stored `Symbols` from the bench blocks, with two arms (branchy and branchless, both
     with inline short runs), against shipped `mtf_checkpoints_avx2`. It runs on Wikidata,
     random and records blocks, with the layout control the coop journal asks for, and
-    reads the disassembly for V spills (one arm with short runs and short tail shifts
-    inline, as (i) requires).
+    reads the disassembly for V spills (short runs written inline, as (i) requires, and
+    the fallback's tail shift as three blended chunks for A ≤ 128, as in (j)).
   - **Why it can't be inferred:** the mispredict cost, the instruction throughput and
     the register allocation are compiler- and machine-specific. It is a new kernel
     variant, so it waits for the maintainer's approval.
