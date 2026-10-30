@@ -50,8 +50,10 @@ unless marked otherwise. Each figure is labelled:
      - 2→4: 0.68;
      - 4→8: 1.73.
    - **A cheaper last step:** the s = 1 cut of the refinement tree, called P^{4|8} here.
-     It upgrades each level-4 record whose interval passes to level 8 unsplit, in place,
-     and builds no level-8 children.
+     It upgrades each level-4 record whose interval passes to level 8 unsplit, into a
+     separate array, and builds no level-8 children. (Corrected: first written "in place",
+     which is wrong; no processing order makes in-place work,
+     `2026-10-30-n1-upgrade-correctness.md` §6.)
      - **Measured** on a 512-segment walk over 15 blocks: 0.150 lookups per byte, against
        0.125 for P⁸ and 0.250 for P⁴.
      - It costs 0.94 upgrades per lookup it saves.
