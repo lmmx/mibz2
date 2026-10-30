@@ -199,3 +199,72 @@ helpers only when they can run, could remove it; it is not designed here.
 - **The mixed case's cost** (above) is a separate decision, not settled by this run. The
   user does not accept it before it is understood: it is investigated from the existing
   traces and code first, with no code change and no broad new benchmark.
+
+### The mixed case's cost, investigated from the run's own records (no new run, no code change)
+
+**What the records hold:** each run's CPU by thread (`thread_cpu`), its busy threads and
+its run queue, from `ab`'s sampler. -3 then -9, 20 threads, medians over 20 rounds:
+
+| | new (5 teams) | today (4 teams) |
+|---|--:|--:|
+| per-worker CPU | 0.23–0.25 s, all five even | 0.25–0.26 s each |
+| workers, total | 1.205 s | 1.025 s |
+| per-helper CPU | 0.15–0.17 s, all five even | 0.16–0.17 s |
+| helpers, total | 0.78 s | 0.65 s |
+| busy threads | 13 | 11 |
+| wall | 0.282 s | 0.279 s |
+
+**Readings:**
+1. **No team is stuck at the gate.** The extra CPU is spread evenly over all five workers
+   and five helpers; no worker or helper stands out as idle or as waiting. So the waits
+   pass between whichever workers arrive fifth.
+2. **Spinning helpers are not the main cost.**
+   - From the code: a helper spins at most 2,000 `pause` iterations (`coop::SPINS`, about
+     75 µs) between jobs, then parks.
+   - On this file's 934 blocks over five teams, that bounds the spin at about 0.07 CPU-s,
+     against the 0.35 measured.
+   - The hypothesis that the waiting team's helper spins is not supported as the main
+     cause.
+3. **The cost is all in the -9 half** (derived: -3 alone against the mix, assuming the
+   halves add):
+
+   | | -3 half (from -3 alone) | the whole mix | so the -9 half |
+   |---|--:|--:|--:|
+   | wall, new − today | −9.7 ms | +2.9 ms | **+12.6 ms** (about +8% of today's 0.154 s) |
+   | CPU, new − today | +0.105 s | +0.354 s | **+0.25 s** (about +23% of today's 1.09 s) |
+
+   The gate admits only 4 large inversions at once, but the -9 half doesn't run as today's
+   4 teams do.
+4. **Where the code says the difference is:**
+   - A worker passes the gate after its block's MTF stage. So while four large blocks are
+     inverted, the fifth worker still runs a large block's MTF stage. That reads its
+     symbols (up to 1.8 MB) and writes its 0.9 MB last column, and the worker then holds
+     both while it waits.
+   - So the gate bounds the tables, but not the other per-block working data, nor the
+     thread count: 13 busy threads on 10 physical cores, against 11.
+   - **Two candidate causes:** extra working data beside four 3.6 MB tables, at the cache
+     knee the knee journal measured; and threads beyond the physical cores, on SMT
+     siblings. These records can't separate them; they have no counters.
+5. **The memory, accounted** (an estimate from the module's documented sizes, not
+   measured):
+   - +12 MB of peak RSS is about the fifth worker's buffers (about 7 MB a worker:
+     `parallel.rs`' module documentation) plus two more blocks in the window (10 against
+     8, about 2.8 MB each with symbols and output).
+
+**The smallest change the evidence points to** (proposed, not made):
+- Gate a large-block stream's blocks **when a worker takes the job**, before its MTF
+  stage, not before its inversion. The scanner knows each block's stream level
+  (`Event::Block`), so the job can carry it.
+- Then during a large-block stream at most 4 workers hold large blocks, as today's plan
+  runs. The fifth worker waits holding nothing, and its helper parks.
+- **It addresses both candidate causes at once:** no extra per-block working data and no
+  extra busy threads during the large blocks.
+- **Predictions if it is made:**
+  - the -9 half returns to today's speed and CPU (each within noise of 1.00);
+  - the mix's overall result becomes the -3 half's gain, about +4%;
+  - RSS stays above today's by the fifth worker's retained buffers and the window: an
+    estimated 1.05–1.10×.
+- **Unchanged by it:** -1, -2 and -3 alone, since a level ≤ 3 stream passes freely, and
+  every control, since the gate is only built under R1.
+- **Its test:** a focused A/B of the same arms on -3 then -9, -3 alone and -9 then -3.
+  The -6 repeat can run in the same session, since the change doesn't touch that path.
