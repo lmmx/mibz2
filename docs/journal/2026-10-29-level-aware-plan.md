@@ -102,3 +102,80 @@ All three can raise peak RSS on the mixed corpus.
 **The PR merges only if every gate is met.** A failure on the mixed corpus alone would
 mean redesigning the gate, not dropping R1. That outcome goes back to the user with the
 figures.
+
+## The result (measured, the i9, 00e9dd6, 2026-10-29/30): the shipping gate is not met
+
+**The run:** `just bench-level-aware`. Its 25 files are in `2026-10-29-level-aware-plan/`: seven
+`coop-decoder-*` report sets, the two `-4cores` passes, `level-aware-scores.md` and the
+console.
+- Every run of every arm gave its corpus's one output hash, with no errors or deadlocks.
+- **The base now includes #114** (the one-pass build), so today's plan at -1 is about 4%
+  faster than in the held-out run (1,357 MB/s against 1,305).
+
+**The registered gates** (`bench/level_aware.py`; `mibz2` against `mibz2-auto` at 20 threads,
+paired by round):
+
+| corpus | role | throughput | RSS | CPU | gate |
+|---|---|--:|--:|--:|---|
+| -1 | the rule | 1.092 (1.072–1.111) | 1.05 | 1.01 | **met** |
+| -2 | the rule | 1.195 (1.180–1.210) | 1.11 | 1.03 | **met** |
+| -3 | the rule | 1.092 (1.065–1.119) | 1.13 | 1.11 | **met** |
+| native | unchanged | 0.995 (0.979–1.011) | 1.00 | 1.00 | **met** |
+| -9 then -3 | unchanged | 0.997 (0.990–1.005) | 1.02 | 1.00 | **met** |
+| -3 then -9 | mixed | 0.986 (0.974–0.997) | 1.14 | 1.18 | **met** |
+| -6 | unchanged | 0.983 (0.956–1.009) | 1.00 | 1.02 | **not met** (lower bound below 0.97) |
+| 4 cores, -1 | unchanged | 1.000 (0.988–1.012), against workers | | | **met** |
+| 4 cores, native | unchanged | 1.008 (0.993–1.023), against workers | | | **met** |
+
+**Verdict, as registered: not every gate is met, so #115 does not merge on this run.**
+
+### The -6 control, investigated (the criteria unchanged)
+
+**1. What differs at -6:** the code path is today's.
+- The plan, window and kernels are `for_threads`' (pinned by `the_level_policy`), and there
+  is no gate.
+- The arm differs from `mibz2-auto` only by the 4-byte header read and its 4-byte first
+  chunk. The scanner copies every chunk into its window either way, so that costs one more
+  4-byte copy.
+- **No mechanism for a 1.7% slowdown was found in the code.**
+
+**2. The rounds (post hoc, for the record; not a verdict):**
+- One round dominates: round 12, at 0.791 (the new arm 0.157 s against its usual
+  0.128 s). The machine's other processes were busy 0.83 of the time in that run, the
+  highest of the 20 rounds; the paired `mibz2-auto` run read 0.21.
+- **Without that round:** 0.994 (0.981–1.007), n = 19.
+- **The run was noisy throughout.** Its reference intervals were wide, `mibz2-auto`
+  against workers at 4: 1.161–1.294. Even with no true difference, a lower bound of 0.97
+  is close to what this corpus's noise allows.
+- None of this changes the registered verdict. Dropping a round after the fact is not an
+  allowed analysis.
+
+**3. What would settle it** (a proposal, not yet registered; the user decides):
+- Repeat the -6 control alone (same arms, 20 rounds, same gate), with nothing else
+  running.
+- The failed run stays in the record either way.
+- **A repeat meeting the gate** would show the first as a disturbed run. **A second
+  failure** would be treated as a real regression and investigated before any merge.
+
+### The mixed case passes its gate, at measurable costs
+
+-3 then -9 meets its registered gate, but not by a wide margin, and its costs are real:
+- **Throughput:** 0.986 (0.974–0.997). The interval excludes no change: a measured 1.4%
+  slowdown. That is worse than the predicted 1.00–1.05.
+- **Peak RSS:** 1.14× (97 MB against 85), just under the 1.15 budget.
+- **CPU:** 1.18× (2.36 s against 2.01).
+
+**Expected against measured:**
+- **Expected:** the -3 half alone gains about 9%, so it predicts about +4% overall if the
+  -9 half ran as today.
+- **Measured:** −1.4%. So the -9 half ran slower than today's plan.
+
+**Hypotheses** (not measured here):
+- **The fifth team's worker waits at the gate** holding a block, while that team's
+  helper spins before it parks. That would account for the CPU.
+- **Head-of-line blocking:** the waiting block can be the reader's next.
+
+**What it means:** a file that starts with a low-level stream and goes on to large blocks
+decodes about 1% slower than today, with 14% more memory and 18% more CPU. That is rare
+input, but the rule's cost there is not nothing. A design that re-plans, or spawns
+helpers only when they can run, could remove it; it is not designed here.
