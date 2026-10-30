@@ -15,7 +15,7 @@ that would decide it, and the approval it would need.
   hypothesis and experiment since 0.1.0, with its status, measurement boundary,
   condition, failure class and sources, plus the recorded question lists and the merged
   contradictions.
-- `2026-10-30-external-report-4.md` to `-9.md`: the inputs this round, verbatim.
+- `2026-10-30-external-report-4.md` to `-11.md`: the inputs this round, verbatim.
   - Report 5 holds the researcher's and the guardian's corrections to the coordinator's
     first reading.
   - Report 6 is the researcher's study session on the algebra of inverse MTF, and their
@@ -24,6 +24,11 @@ that would decide it, and the approval it would need.
   - Report 8 is their proposal of batched small-rank MTF tables (N2b, §3.2b).
   - Report 9 returns to the BWT itself. It includes their multi-byte record theorem,
     which converges with §3.1(c); see §3.1(g).
+  - Reports 10–11 hold the researcher's review of this PR and burn-down rounds 1–5:
+    - the counterexample that corrected §3.1(a);
+    - the traversal-gap identity and the stable-Ψ proof;
+    - the run-native propagation of the boundaries;
+    - the interval-join construction.
 
 **Boundaries.** Four boundaries are kept apart throughout, and a figure is never carried
 from one to another:
@@ -204,55 +209,137 @@ question list instead, with each question's status.
 
 ## 3. Theory: new results and refinements
 
-### 3.1 Composing Ψ: an exact identity, two bounds, and free byte recovery
+### 3.1 Composing Ψ: the record partition, its exact size, and how to build it
+
+**Erratum (corrected after the researcher's review, external reports 10–11).** The
+first version of (a) claimed that Ψ^k's own breakpoints equal the union of the
+preimages. That is **false**. The researcher's counterexample is the cyclic BWT of
+`aabc`:
+- F = [a, a, b, c] and Ψ = [1, 2, 3, 0];
+- Ψ²'s translation breaks plus the bucket boundaries are {1, 2}, but the union is
+  {0, 1, 2};
+- Ψ² is a translation on rows 0–1, yet their two-byte words are `aa` and `ab`.
+
+The flawed step was the ⊇ direction: a separation at step t need not survive as a break
+of Ψ^k. Brute force confirms the failure is common: 6,829 of 22,940 random primitive
+cases.
+
+The quantity the records need was never Ψ^k's breakpoints. It is the partition on which
+both the successor and the word are constant, and for that the union is exact. The
+corrected statement follows.
 
 **Notation.**
 - Ψ maps row j to the row of the next suffix.
 - The walk at row j emits F[j], the first byte of row j's rotation.
 - Let B be the set of j such that Ψ(j+1) ≠ Ψ(j) + 1, **together with every F-bucket
-  boundary** (j the last row of its byte's bucket). The second part adds at most 255
-  positions.
-- "j ∈ B" means "a break between rows j and j+1".
-- Let B_k be the same set for Ψ^k.
+  boundary**. "j ∈ B" means "a break between rows j and j+1".
+- **Round 4's identity:** for the stable mapping, |B| = r − 1. The one-step intervals are
+  L's runs in F-bucket order. This was measured on all three checked blocks, for
+  example B = 51,183 with r = 51,184.
+- Let C_k = ⋃_{t=0}^{k−1} Ψ^{−t}(B), the union of preimages.
+- Let M_k be the **record partition**: the breaks j (j < n − 1) where the k-byte word
+  changes, or where Ψ^k(j+1) ≠ Ψ^k(j) + 1.
+- The records' intervals are M_k's intervals.
 
-**(a) An exact identity.** B_k = ⋃_{t=0}^{k−1} Ψ^{−t}(B). The researcher's "⊆" is an
-equality.
+**(a) The record partition equals the union, for a stable Ψ.** For every j < n − 1,
+j ∈ M_k exactly when j ∈ C_k. The only exception is a meaningless label on the last row,
+which has no row after it.
 
 *Proof.*
-- **⊆:** Suppose j ∈ B_k. Take the least s ≤ k with Ψ^s(j+1) ≠ Ψ^s(j) + 1. Then
-  Ψ^{s−1}(j) and Ψ^{s−1}(j+1) are adjacent and Ψ separates them, so
-  Ψ^{s−1}(j) ∈ B.
-- **⊇:** Suppose Ψ^t(j) ∈ B. Either some earlier step already separated j and j+1, or
-  they are adjacent at step t and Ψ separates them there. Either way j ∈ B_k. ∎
+1. **M ⊆ C (contrapositive).** Suppose j ∉ C_k. By induction on t < k, the trajectories
+   of j and j+1 stay adjacent and share a bucket:
+   - adjacent at t, and Ψ^t(j) ∉ B, gives the same byte at t and adjacency at t+1;
+   - so the words agree and Ψ^k(j+1) = Ψ^k(j) + 1, and j ∉ M_k.
+2. **C ⊆ M.** Suppose Ψ^t(j) ∈ B for some t < k, and the words of j and j+1 agree.
+   - Ψ is order-preserving within a bucket, so Ψ(y) − Ψ(x) ≥ y − x for x < y in one
+     bucket. The researcher states this in round 3.
+   - While the words agree, the two trajectories share a bucket at every step, so their
+     separation never shrinks.
+   - The separation becomes at least 2 at the first step where they are not adjacent,
+     and stays so through step k. So Ψ^k(j+1) ≠ Ψ^k(j) + 1.
+   - If the words differ, j ∈ M_k directly. ∎
 
-So the census quantity is exactly the overlap of the preimages of the breakpoints:
-|B_k| = |⋃_{t<k} Ψ^{−t}(B)|. This is the researcher's open question, made precise.
+The coordinator's form of step 2 counts the rows between the two trajectories: they
+share the trajectories' byte, so Ψ carries them along. The researcher's form counts the
+separation. They are the same argument, reached independently.
 
-**(b) Two bounds:**
+**Checks:**
+- **Brute force:** C_k = M_k in all 22,940 random primitive cases here, and in the
+  researcher's exhaustive 58,212 (every primitive string over three symbols up to
+  length 8).
+- **Real blocks:** explicitly, for k = 1…6, on three full bench blocks.
+- **Stability:** the decoder's Ψ is bucket-monotone by construction, since the T-vector
+  is a stable counting scatter in L order. The researcher's periodic counterexample
+  (`aaaa` with an unstable tie order) cannot arise from the decoder's Ψ. For a periodic
+  block, Ψ has several equal cycles, and the gap sum below runs over each cycle that
+  holds breakpoints.
 
-d_k − 1 ≤ |B_k| ≤ k·|B|
+**(b) The exact size, from traversal gaps** (the researcher's identity, round 2).
+- **The identity:** follow Ψ around its cycle, and let g_1, …, g_m be the distances
+  between successive rows of B. Then |C_k| = Σ_i min(k, g_i), so the records number
+  1 + Σ_i min(k, g_i).
+- **Why:** a row lies in C_k exactly when the next breakpoint along the traversal is
+  fewer than k steps ahead.
+- **Checked** explicitly on three real blocks.
+- **Slope:** |C_{k+1}| − |C_k| = #{i : g_i > k}.
+- **Bounds:** d_k − 1 ≤ |C_k| ≤ k·|B|. The rows are sorted, so equal k-words are
+  contiguous, and the word changes exactly d_k − 1 times.
+- **Decomposition:** |C_k| = (d_k − 1) + #{j : equal words but non-adjacent successors}.
+  The second term is the navigation excess behind the researcher's fragmentation factor
+  R_k / d_k.
 
-- d_k is the number of distinct cyclic k-grams in the block.
-- **Upper bound:** each preimage set has |B| elements.
-- **Lower bound:** suppose rows j and j+1 share fewer than k leading bytes, LCP < k.
-  Then within k steps they fall into different F-buckets, and a bucket boundary lies in
-  B, so j ∈ B_k. The rows with LCP(j, j+1) < k number d_k − 1.
-- The lower bound needs no BWT. It can falsify cheaply from k-gram counts alone: if d_k
-  is close to n for small k, Ψ^k has close to one interval a row, and the composed
-  representation is a per-row table. That is H1's representation-budget failure,
-  generalised.
+**(c) The bytes are free to locate, on M_k's intervals.** On each interval I of M_k,
+Ψ^k is one translation j ↦ j + D_I and the k-byte word is constant, by definition and
+by (a). A record (D_I, k bytes) recovers all k bytes with no per-row information:
+k·(|C_k| + 1) bytes of words in all.
 
-**(c) The bytes are free to locate.** This refines the researcher's "an interval
-representation of Ψ^k does not automatically recover the k output bytes".
-- Let I be an interval of Ψ^k. For every t < k, Ψ^t(I) is contiguous and lies inside one
-  interval of Ψ. Because B includes the bucket boundaries, that is inside one F-bucket.
-- So **the k bytes emitted from any row of I are the same string**, and Ψ^k on I is a
-  single translation j ↦ j + D_I.
-- A record (D_I, k bytes) recovers all k bytes with no per-row information. The
-  information cost the researcher names is real, but bounded: k bytes per interval,
-  k·|B_k| in all.
-- This is the interval analogue of how KKP and libsais recover a pair from its row's
-  `bucket2` position.
+This holds for the record partition, not for Ψ^k's translation intervals. The original
+error was to conflate the two.
+
+**(c′) Building the records without a T-vector or a search per record.** This answers
+round 4's open problem: the destinations and the words.
+
+1. **Level 1 comes from L's runs.** Each run (c, start p, length ℓ) is one record:
+   - its source rows are [C[c] + q_c, + ℓ) in F order;
+   - its displacement is D = p − (C[c] + q_c);
+   - its word is (c).
+
+   This is one pass over the run list with 256 counters. Checked: the level-1 count
+   equals L's runs in every brute-force case.
+2. **Level a + b from levels a and b, by image splitting.**
+   - Ψ^a translates each level-a interval I = [s, e) onto the contiguous range
+     [s + D_I, e + D_I).
+   - Split I wherever that image crosses a level-b boundary.
+   - Each piece's record is (D_I + D_J, word_I ‖ word_J), where J is the level-b
+     interval it lands in.
+   - Checked: built for k = 2, 3, 4, 8, this reproduces the directly computed minimal
+     records and words exactly, with 0 mismatches in 21,970 random cases.
+3. **Destination resolution needs no search.**
+   - The images of a level's intervals tile the rows: Ψ^a is a permutation that
+     translates each interval. Checked: no tiling failures in any case.
+   - So the level-a intervals, sorted by image start, merge with the level-b partition in
+     one sequential pass, which finds every J.
+   - At level 1, that image order is L's run order, which is the run stream itself. No
+     sort at all.
+   - At higher levels, the image order propagates. The pieces landing in one level-b
+     interval J appear together in the merge, and their images under Ψ^{a+b} follow J's
+     place in level b's image order. So the next level's image order is a permutation of
+     contiguous groups: a gather, not a comparison sort.
+   - The cost per level: one merge over |C_a| + |C_b| boundaries, plus a group gather of
+     about |C_a| groups. Each group is a contiguous copy of a record or two, reading
+     arrays of about 0.5–1.4 MB with independent accesses. There is no chain of dependent
+     loads.
+4. **Round 4's boundary propagation** (LF from runs, 256 sorted per-character streams,
+   and a merge) is the same machinery seen from the boundary side. Both reach C_k with
+   no T-vector.
+
+**The model** (operation counts, not timings):
+- **Building P⁸** by 1 → 2 → 4 → 8: three merges and three group gathers, over at most
+  |C_1| + |C_2| + |C_4| ≈ 51–55k + 62–68k + 76–85k ≈ 190–210k groups a block. That is
+  about 0.2–0.25 group moves an output byte, all independent.
+- **The T-vector build:** n = 900,000 scatter writes into 3.6 MB.
+- Whether the merge-and-gather costs less than 2.16 c/B is the measurement that would
+  decide it. It can't be shown from counts alone.
 
 **(d) What makes it materially different from M2.** This is the guardian's
 novelty condition:
