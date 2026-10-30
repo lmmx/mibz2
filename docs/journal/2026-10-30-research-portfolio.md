@@ -15,7 +15,7 @@ that would decide it, and the approval it would need.
   hypothesis and experiment since 0.1.0, with its status, measurement boundary,
   condition, failure class and sources, plus the recorded question lists and the merged
   contradictions.
-- `2026-10-30-external-report-4.md` to `-19.md`: the inputs this round, verbatim.
+- `2026-10-30-external-report-4.md` to `-20.md`: the inputs this round, verbatim.
   - Report 5 holds the researcher's and the guardian's corrections to the coordinator's
     first reading.
   - Report 6 is the researcher's study session on the algebra of inverse MTF, and their
@@ -435,6 +435,40 @@ the split loop's cost is dominated by a few large parents.
     read of both views;
   - the researcher's indexed views, from round 6;
   - stop at k = 4 on high-r blocks.
+
+**(i) Builder layouts, peak memory, and the per-block choice under both constraints**
+(rounds 17–19; a model over the measured m_a, with no measured cycles).
+
+| Layout | Bytes moved per output byte | of which random gathers | Peak live MB | Notes |
+|---|---|---|---|---|
+| A: two full views, two merge passes | 19.5 / 21.0 / **23.1** / 40.6 / 66.3 | 0 | 3.9 / 4.3 / **4.7** / 8.2 / 12.2 | the original model |
+| B: one descriptor array + u32 image permutation, two passes | 19.5 / 21.0 / **23.1** / 40.6 / 66.3 | 4.7 / 5.1 / **5.5** / 9.9 / 16.3 | 3.4 / 3.7 / **4.0** / 7.0 / 9.9 | the same bytes as A, because the gathers replace the second view's reads; it lowers memory, not traffic |
+| C: B, with children counted from two n-bit start bitvectors, one merge pass | 14.7 / 15.7 / **17.0** / 28.1 / 44.1 | 2.3 / 2.5 / **2.8** / 4.9 / 8.1 | 3.6 / 3.9 / **4.2** / 7.2 / 10.1 | e_i and f_j are popcounts over each image range, because the images tile the rows. 26% less traffic than A |
+
+Values are min / p10 / **median** / p90 / max over the 233 blocks. The T-vector build
+moves 5.0 bytes per output byte and peaks at 4.5 MB, with L included.
+
+- **Layout B answers round 19's question.** One descriptor store plus a permutation
+  brings the median peak under the T-vector's (4.0 against 4.5 MB), and cuts the worst
+  from 12.2 to 9.9 MB, at the cost of indexed gathers.
+- **No layout gets the upper tail under the T-vector's peak.** Those blocks are the
+  high-r ones, p90 r ≈ 99k.
+- **Round 19's split-excess identity,** Σ(e_i − 1) = m_2a − m_a, measured at the last
+  doubling: m₈ − m₄ = 17,957 / 23,551 / 26,607 / 43,212 / 67,627.
+
+**The per-block choice under resident and peak constraints together** (layout B; resident
+≤ 3.6 MB; peak ≤ the budget):
+
+| Peak budget | P⁸ | P⁴ | P² | T-vector |
+|---|--:|--:|--:|--:|
+| 4.5 MB (the T-vector's own peak) | 161 | 40 | 16 | 16 |
+| 5.0 MB | 189 | 22 | 15 | 7 |
+| 6.0 MB | 199 | 25 | 8 | 1 |
+
+So "all 233 choose P⁸" holds only under the resident-size rule. Round 19 is right that
+the complete objective selects differently. At the T-vector's own peak, 69% of blocks
+take P⁸. The third constraint, build plus walk below the baseline, is Gate B/C and is
+unmeasured. It may move the choice further toward P⁴.
 
 **(d) What makes it materially different from M2.** This is the guardian's
 novelty condition:
@@ -968,7 +1002,7 @@ algebra alone where its criterion is a performance figure.
 | 68 | Split intervals to cut long paths | N | R10: total work separated from path length | the cost of a particular layout |
 | 69 | Amortised bound under 512 segments | A | R10: segmented work ≤ an + S·Δ_Φ. N1 counts its work directly (H = Σ⌈ℓ/8⌉) | Δ_Φ for move-structure designs only |
 | 71 | Low and high parts load independently? | N | R10: decided by the address dependencies, which can be read before benchmarking | the payoff (measurement) |
-| 74 | Slow records bunch across lanes? | N | meas.: breakpoints arrive in tight bursts along each trajectory (84.8% of gaps ≤ 2), so bunching within a lane is established | across lanes in one window (simulation) |
+| 74 | Slow records bunch across lanes? | A (no) | meas.: the shipped scheduler simulated on 12 blocks (32 lanes in lockstep; r₀ plus 511 xorshift starts; next unwalked segment on hand-off), against phase-shifted lanes and iid flags (round 17's design). **Breakpoint rows:** mean 2.03 exceptional lanes a full round, variance 1.88 against binomial 1.91, P(X ≥ 8) = 0.07%. **Compact-Ψ slow rows** (impure groups): mean 7.2, variance 5.39 against 5.56. All three schedules match. Bursts lie along each lane, and the pseudo-random starts decorrelate the lanes. 77% of rounds are full width | the stall cost per exceptional lookup is a separate, hardware question |
 | 77 | CI 2-spread amplification predicts the 10-core knee? | N | R12: A(2) does not determine A(10); no validated predictor | paired multi-concurrency curves |
 | 78 | lbzip2's 1→4 amplification a stable baseline? | A (no) | R12: the recorded spread is 1.11–1.42× across runners | none |
 | 80 | 2-core fingerprint preserves rankings? | N | R12: not guaranteed by construction | matched ranking comparisons |
@@ -978,9 +1012,9 @@ algebra alone where its criterion is a performance figure.
 
 **The tally of the 47 open questions** (after rounds 10–14; corrected: #84 is one of the
 register's 6 conditional rows, not an open one):
-- **10 answered:** #4, #25, #58, #63, #64, #65, #66, #69, #78, #81;
-- **20 narrowed to a named measurement:** #2, #3, #11, #15, #19, #21, #37, #38, #39,
-  #44, #45, #46, #53, #67, #68, #71, #74, #77, #80, #82;
+- **11 answered:** #4, #25, #58, #63, #64, #65, #66, #69, #74, #78, #81;
+- **19 narrowed to a named measurement:** #2, #3, #11, #15, #19, #21, #37, #38, #39,
+  #44, #45, #46, #53, #67, #68, #71, #77, #80, #82;
 - **17 worked below:**
   - the ten in the next table;
   - the literature rows, #28–#33 and #36, which are with the literature agent.
@@ -1023,7 +1057,7 @@ evidence named.
 
 **After the literature rows return,** every one of the 84 questions will have a
 disposition. Answered rows stay answered. The open and conditional rows end as follows:
-- **answered (including negative and boundary-specific):** 10 open + #5 + #62 (i9);
+- **answered (including negative and boundary-specific):** 11 open + #5 + #62 (i9);
 - **superseded:** #18, and #47 for composed records;
 - **conditionally unresolved, each with its evidence named:** the rest;
 - **the literature rows:** pending.
