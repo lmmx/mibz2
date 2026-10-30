@@ -15,13 +15,13 @@ that would decide it, and the approval it would need.
   hypothesis and experiment since 0.1.0, with its status, measurement boundary,
   condition, failure class and sources, plus the recorded question lists and the merged
   contradictions.
-- `2026-10-30-external-report-4.md`, `-5.md`, `-6.md` and `-7.md`: the inputs this
-  round, verbatim.
+- `2026-10-30-external-report-4.md` to `-8.md`: the inputs this round, verbatim.
   - Report 5 holds the researcher's and the guardian's corrections to the coordinator's
     first reading.
   - Report 6 is the researcher's study session on the algebra of inverse MTF, and their
     reading of the bzip2gpu source.
   - Report 7 is their reading session II, on recency and order statistics.
+  - Report 8 is their proposal of batched small-rank MTF tables (N2b, §3.2b).
 
 **Boundaries.** Four boundaries are kept apart throughout, and a figure is never carried
 from one to another:
@@ -411,6 +411,77 @@ closes the hypothesis.
 - if typical chunks of ≥ 16 operations reach a max rank > 32, compact summaries fail on
   size (class II, measured).
 
+### 3.2b N2b: batched small-rank MTF tables (external report 8), checked against `src/mtf.rs`
+
+**The proposal.** Rank-limited batches of MTF instructions act only on the list's first
+few positions. One table entry gives both:
+- the emitted bytes' selectors;
+- the prefix's new order.
+
+They would be applied with `pshufb`. This is a concrete instance of route (ii): it
+produces the output, not only the state. The researcher checked the algebra
+exhaustively for four-instruction batches with prefix sizes two to four.
+
+**What the code shows** (`mtf_avx2`, master `ae942bd`):
+
+1. **Explicit tokens are never rank 0.**
+   - The scanner's tokens are RUNA (0), RUNB (1), and s ≥ 2 for rank s − 1.
+   - So the explicit ranks are 1…255. Rank 0 exists only as RUNA/RUNB runs, which
+     `write_bytes` expands (a memset of the front byte, plus one count update).
+   - A run does not change the list. So a batch is defined over consecutive explicit
+     tokens, whatever the runs between them.
+   - The emitted bytes interleave: after explicit symbol x_i, the next run repeats x_i,
+     because x_i is the new front.
+   - **Consequences:**
+     - the {0, 1} parity case reduces, on explicit tokens, to rank-1-only stretches
+       (a, b, a, b, …, with runs between);
+     - the 0–3 table indexes ranks {1, 2, 3}: 3⁴ = 81 entries for a batch of four, and
+       3⁸ = 6,561 for eight;
+     - the runs between explicit tokens still need their memsets and counts, as now.
+2. **The update is already constant-time for ranks below 32.**
+   - The step is one aligned 32-byte load, one unaligned load at `base − 1`, a compare,
+     a blend and a store.
+   - So the table does not save shifting work. What it can save is the loop-carried
+     chain.
+   - The code's own comment, citing coop journal §15, records that the next symbol's
+     32-byte list load overlaps the previous store, cannot be forwarded from it, and
+     waits for it to commit. That is a store-forwarding stall on every explicit symbol.
+   - **The register already holds this lead:** P74, "MTF store-forwarding chain; front
+     32 B in a register", open and "recorded and not started", with `mtf_cp2p`/`mtf_cp2`
+     at 1.0582 ±0.0093 on the i9 from moving a store off the chain.
+   - **N2b is one specific way of taking P74:** keep the front in a register, and take
+     several explicit tokens per dependent step.
+
+**The novelty conditions:**
+- **Against #25 (P73, rejected):** #25 held the MTF head in registers and regressed on
+  high-rank data (random +11.1% / +8.2%, records +9.7% at 4 threads). N2b must keep
+  today's path for any batch containing a rank above the limit. It must show its
+  recognition test costs less than the chain it removes, on random and records as well
+  as Wikidata.
+- **Against #8 / P78 (front-end fusion):** P78 aims at memory and the in-place T-vector.
+  N2b changes neither, so they do not overlap.
+- **Against the shipped two-symbol Huffman:** that is the scanner's stage, and N2b the
+  worker's. They are complementary.
+
+**The ceiling** (model):
+- Explicit tokens are r − 1 a block, 0.072 a byte. The stage costs ≈32 cycles per run
+  (2.29 c/B × 13.8).
+- If the store-forwarding chain were half of that, removing it entirely would save
+  ≈1.1 c/B. That is ≤ 9% of a one-core decode (12.93 c/B), and ≤ 1.09× on one core.
+- That is useful, but not a breakthrough on its own. It is a per-worker CPU reduction,
+  so it serves the 4-core target.
+
+**The census** (read-only, added to T2), over each block's explicit tokens:
+- the share of explicit tokens with rank ≤ 1, ≤ 3 and ≤ 7;
+- the share coverable by non-overlapping batches of 4 and 8 consecutive explicit tokens
+  under each limit;
+- for comparison, the same statistics on the random and records corpora (#25's
+  regressions).
+
+**The stop rule:** if fewer than half the explicit tokens on Wikidata fall in eligible
+batches of four under the ≤ 3 limit, the ceiling falls below ≈4%. Then fold N2b back
+into P74, as a design option rather than a candidate.
+
 ### 3.3 Ceilings, from the current stage table
 
 All of these are models, from #114's CI run (EPYC 7763, one thread, 12.93 c/B in all).
@@ -513,6 +584,7 @@ helpers' busy, spin and park time.
 | N3 | Run-native pipeline: MTF → runs → P^k, no L, no T-vector | A + C / I | open, depends on N1 | 3 | 2 | 2 | one-core 12.93 → ~5–7 c/B (model) | same cap | T6: paper cost model after T1 | N1 stops, or modelled construction > 2.16 c/B + walk saving |
 | N0 | wikidata-pq decoder-free arm (the split fed decoded lines) | application | not built | 2 | — (measurement) | — | n/a | bounds every bz2 item | a bench arm in wikidata-pq (measurement-only PR) | none: it is the bound |
 | N2 | Reverse-MTF chunk composition (prefix lemma, memoisation) | C / I if memoised, II otherwise | open (structural) | 4 | 5 | 6 | ≤ list-update share of 2.29 c/B | ≤ 1.2× | T2: token census + stage attribution | §3.2 |
+| N2b | Batched small-rank MTF tables (§3.2b), a route to P74 | C / I (shortens the chain; no added work) | open (structural; algebra checked by the researcher) | 4= (shares T2 with N2) | 3= | 6= | ≤ ≈1.1 c/B of MTF+RLE2 (model) | ≤ 1.09× one core | T2: explicit-token census by rank limit and batch length | < 50% of explicit tokens in ≤ 3 batches of four |
 | D1 | 8-thread CPU attribution in the split | D | open | 5 | 4 (thread budget) | 3 | split −4.2% wall now | application | Q2 per-role CPU | — |
 | E8 | M2 under four copies (pre-registered in #42) | A / I | conditional, never run | 6 | 7 | 5 | per #42 | per #42 | Q3 (code exists on `scratch/move-structure`) | ≥ 10% per copy at 4 copies, or closed for good |
 | B1 | Compact Ψ (24-bit link-only, #112) on a low-L3 machine | B | conditional: reopens on less L3 per core | 7 | 3 (if laptops sit past the knee at 4 workers) | 7 | i9: 1.25× inversion | i9: 1.1–1.15× | Q5: knee under restricted L3 (`/sys/fs/resctrl` CAT, if the i9 has it) or a laptop | i9-like L3 per core: closed |
