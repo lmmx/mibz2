@@ -1,0 +1,1519 @@
+bash bench/corpus.sh
+   Compiling mibz2 v0.2.0 (/home/louis/dev/mibz2-coop)
+    Finished `release` profile [optimized + debuginfo] target(s) in 14.32s
+cargo build --release --example ab
+   Compiling mibz2 v0.2.0 (/home/louis/dev/mibz2-coop)
+    Finished `release` profile [optimized + debuginfo] target(s) in 14.96s
+for l in 3 6 9; do test -s corpora/wikidata-bz$l.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -$l > corpora/wikidata-bz$l.bz2); done
+cat corpora/wikidata-bz3.bz2 corpora/wikidata-bz9.bz2 > corpora/wikidata-mix39.bz2
+cat corpora/wikidata-bz9.bz2 corpora/wikidata-bz3.bz2 > corpora/wikidata-mix93.bz2
+for c in mix39 bz3 mix93 bz6; do python3 bench/coop_decoder.py --file corpora/wikidata-$c.bz2 --rounds 20 --arms mibz2-workers,mibz2-auto,mibz2 --gate mibz2 --no-small --note "level-aware plan, revision 2: $c"; done
+coop-decoder: the full machine: target/release/examples/ab run coop-decoder-20261030T002527Z.jsonl --arms mibz2-workers,mibz2-auto,mibz2 --threads 4,6,8,10,20 --rounds 20 --settle 0 corpora/wikidata-mix39.bz2
+r0 wikidata-mix39 t=4 mibz2-workers    wall   0.318 cpu   1.454 rss    85MB others 0.59 steal 0.0% 
+r0 wikidata-mix39 t=4 mibz2-auto       wall   0.334 cpu   1.520 rss    83MB others 0.26 steal 0.0% 
+r0 wikidata-mix39 t=4 mibz2            wall   0.332 cpu   1.508 rss    84MB others 0.30 steal 0.0% 
+r0 wikidata-mix39 t=6 mibz2-workers    wall   0.344 cpu   2.251 rss   112MB others 0.45 steal 0.0% 
+r0 wikidata-mix39 t=6 mibz2-auto       wall   0.303 cpu   1.676 rss    71MB others 0.33 steal 0.0% 
+r0 wikidata-mix39 t=6 mibz2            wall   0.302 cpu   1.678 rss    72MB others 0.23 steal 0.0% 
+r0 wikidata-mix39 t=8 mibz2-workers    wall   0.391 cpu   3.311 rss   133MB others 0.55 steal 0.0% 
+r0 wikidata-mix39 t=8 mibz2-auto       wall   0.290 cpu   2.091 rss    84MB others 0.79 steal 0.0% 
+r0 wikidata-mix39 t=8 mibz2            wall   0.282 cpu   2.017 rss    87MB others 0.59 steal 0.0% 
+r0 wikidata-mix39 t=10 mibz2-workers    wall   0.429 cpu   4.335 rss   157MB others 0.70 steal 0.0% 
+r0 wikidata-mix39 t=10 mibz2-auto       wall   0.294 cpu   2.113 rss    85MB others 0.39 steal 0.0% 
+  waiting: others keep 422.19 cores busy, one CPU 422.19 (load 1.52)
+r0 wikidata-mix39 t=10 mibz2            wall   0.298 cpu   2.119 rss    99MB others 0.17 steal 0.0% 
+r0 wikidata-mix39 t=20 mibz2-workers    wall   0.636 cpu  10.697 rss   275MB others 1.40 steal 0.0% 
+r0 wikidata-mix39 t=20 mibz2-auto       wall   0.276 cpu   1.998 rss    85MB others 0.58 steal 0.0% 
+r0 wikidata-mix39 t=20 mibz2            wall   0.297 cpu   2.085 rss    98MB others 0.25 steal 0.0% 
+r1 wikidata-mix39 t=4 mibz2-auto       wall   0.312 cpu   1.428 rss    83MB others 0.13 steal 0.0% 
+r1 wikidata-mix39 t=4 mibz2            wall   0.314 cpu   1.435 rss    83MB others 0.23 steal 0.0% 
+r1 wikidata-mix39 t=4 mibz2-workers    wall   0.310 cpu   1.420 rss    82MB others 0.19 steal 0.0% 
+r1 wikidata-mix39 t=6 mibz2-auto       wall   0.314 cpu   1.706 rss    72MB others 0.17 steal 0.0% 
+r1 wikidata-mix39 t=6 mibz2            wall   0.299 cpu   1.662 rss    71MB others 0.12 steal 0.0% 
+r1 wikidata-mix39 t=6 mibz2-workers    wall   0.331 cpu   2.165 rss   108MB others 0.30 steal 0.0% 
+r1 wikidata-mix39 t=8 mibz2-auto       wall   0.277 cpu   1.996 rss    81MB others 0.23 steal 0.0% 
+r1 wikidata-mix39 t=8 mibz2            wall   0.278 cpu   1.990 rss    85MB others 0.14 steal 0.0% 
+r1 wikidata-mix39 t=8 mibz2-workers    wall   0.399 cpu   3.389 rss   133MB others 0.46 steal 0.0% 
+r1 wikidata-mix39 t=10 mibz2-auto       wall   0.278 cpu   2.022 rss    85MB others 0.31 steal 0.0% 
+r1 wikidata-mix39 t=10 mibz2            wall   0.302 cpu   2.159 rss    98MB others 0.13 steal 0.0% 
+r1 wikidata-mix39 t=10 mibz2-workers    wall   0.421 cpu   4.310 rss   160MB others 0.30 steal 0.0% 
+r1 wikidata-mix39 t=20 mibz2-auto       wall   0.280 cpu   2.009 rss    80MB others 0.17 steal 0.0% 
+r1 wikidata-mix39 t=20 mibz2            wall   0.301 cpu   2.108 rss    97MB others 0.17 steal 0.0% 
+r1 wikidata-mix39 t=20 mibz2-workers    wall   0.624 cpu  11.079 rss   271MB others 0.46 steal 0.0% 
+r2 wikidata-mix39 t=4 mibz2            wall   0.314 cpu   1.434 rss    83MB others 0.24 steal 0.0% 
+r2 wikidata-mix39 t=4 mibz2-workers    wall   0.318 cpu   1.454 rss    86MB others 0.14 steal 0.0% 
+r2 wikidata-mix39 t=4 mibz2-auto       wall   0.312 cpu   1.429 rss    78MB others 0.13 steal 0.0% 
+r2 wikidata-mix39 t=6 mibz2            wall   0.304 cpu   1.669 rss    72MB others 0.10 steal 0.0% 
+r2 wikidata-mix39 t=6 mibz2-workers    wall   0.347 cpu   2.267 rss   107MB others 0.29 steal 0.0% 
+r2 wikidata-mix39 t=6 mibz2-auto       wall   0.304 cpu   1.715 rss    72MB others 0.21 steal 0.0% 
+r2 wikidata-mix39 t=8 mibz2            wall   0.275 cpu   1.986 rss    85MB others 0.23 steal 0.0% 
+r2 wikidata-mix39 t=8 mibz2-workers    wall   0.396 cpu   3.433 rss   134MB others 0.56 steal 0.0% 
+r2 wikidata-mix39 t=8 mibz2-auto       wall   0.287 cpu   2.064 rss    80MB others 0.47 steal 0.0% 
+r2 wikidata-mix39 t=10 mibz2            wall   0.297 cpu   2.137 rss    98MB others 0.14 steal 0.0% 
+r2 wikidata-mix39 t=10 mibz2-workers    wall   0.433 cpu   4.360 rss   161MB others 0.42 steal 0.0% 
+r2 wikidata-mix39 t=10 mibz2-auto       wall   0.282 cpu   2.012 rss    80MB others 0.16 steal 0.0% 
+r2 wikidata-mix39 t=20 mibz2            wall   0.301 cpu   2.145 rss    98MB others 0.30 steal 0.0% 
+r2 wikidata-mix39 t=20 mibz2-workers    wall   0.622 cpu  11.140 rss   270MB others 0.47 steal 0.0% 
+r2 wikidata-mix39 t=20 mibz2-auto       wall   0.280 cpu   2.019 rss    86MB others 0.21 steal 0.0% 
+r3 wikidata-mix39 t=4 mibz2            wall   0.315 cpu   1.445 rss    83MB others 0.08 steal 0.0% 
+r3 wikidata-mix39 t=4 mibz2-auto       wall   0.326 cpu   1.484 rss    83MB others 0.41 steal 0.0% 
+r3 wikidata-mix39 t=4 mibz2-workers    wall   0.323 cpu   1.487 rss    83MB others 0.22 steal 0.0% 
+r3 wikidata-mix39 t=6 mibz2            wall   0.306 cpu   1.706 rss    72MB others 0.17 steal 0.0% 
+r3 wikidata-mix39 t=6 mibz2-auto       wall   0.305 cpu   1.685 rss    72MB others 0.21 steal 0.0% 
+r3 wikidata-mix39 t=6 mibz2-workers    wall   0.332 cpu   2.172 rss   109MB others 0.28 steal 0.0% 
+r3 wikidata-mix39 t=8 mibz2            wall   0.285 cpu   2.043 rss    84MB others 0.26 steal 0.0% 
+r3 wikidata-mix39 t=8 mibz2-auto       wall   0.280 cpu   2.029 rss    84MB others 0.24 steal 0.0% 
+r3 wikidata-mix39 t=8 mibz2-workers    wall   0.388 cpu   3.257 rss   130MB others 0.28 steal 0.0% 
+r3 wikidata-mix39 t=10 mibz2            wall   0.297 cpu   2.084 rss   100MB others 0.25 steal 0.0% 
+r3 wikidata-mix39 t=10 mibz2-auto       wall   0.273 cpu   1.960 rss    84MB others 0.21 steal 0.0% 
+r3 wikidata-mix39 t=10 mibz2-workers    wall   0.436 cpu   4.330 rss   157MB others 0.27 steal 0.0% 
+r3 wikidata-mix39 t=20 mibz2            wall   0.308 cpu   2.169 rss    97MB others 0.29 steal 0.0% 
+r3 wikidata-mix39 t=20 mibz2-auto       wall   0.276 cpu   1.984 rss    85MB others 0.27 steal 0.0% 
+r3 wikidata-mix39 t=20 mibz2-workers    wall   0.633 cpu  11.346 rss   276MB others 0.47 steal 0.0% 
+r4 wikidata-mix39 t=4 mibz2-workers    wall   0.316 cpu   1.442 rss    84MB others 0.12 steal 0.0% 
+r4 wikidata-mix39 t=4 mibz2            wall   0.310 cpu   1.422 rss    79MB others 0.18 steal 0.0% 
+r4 wikidata-mix39 t=4 mibz2-auto       wall   0.317 cpu   1.447 rss    85MB others 0.19 steal 0.0% 
+r4 wikidata-mix39 t=6 mibz2-workers    wall   0.336 cpu   2.200 rss   111MB others 0.29 steal 0.0% 
+r4 wikidata-mix39 t=6 mibz2            wall   0.307 cpu   1.705 rss    71MB others 0.15 steal 0.0% 
+r4 wikidata-mix39 t=6 mibz2-auto       wall   0.306 cpu   1.688 rss    72MB others 0.17 steal 0.0% 
+r4 wikidata-mix39 t=8 mibz2-workers    wall   0.427 cpu   3.673 rss   127MB others 1.33 steal 0.0% 
+r4 wikidata-mix39 t=8 mibz2            wall   0.280 cpu   2.027 rss    86MB others 0.22 steal 0.0% 
+r4 wikidata-mix39 t=8 mibz2-auto       wall   0.279 cpu   2.006 rss    85MB others 0.22 steal 0.0% 
+r4 wikidata-mix39 t=10 mibz2-workers    wall   0.446 cpu   4.733 rss   162MB others 0.82 steal 0.0% 
+r4 wikidata-mix39 t=10 mibz2            wall   0.304 cpu   2.166 rss    98MB others 0.27 steal 0.0% 
+r4 wikidata-mix39 t=10 mibz2-auto       wall   0.284 cpu   2.038 rss    85MB others 0.15 steal 0.0% 
+r4 wikidata-mix39 t=20 mibz2-workers    wall   0.619 cpu  10.998 rss   279MB others 0.51 steal 0.0% 
+r4 wikidata-mix39 t=20 mibz2            wall   0.294 cpu   2.109 rss    98MB others 0.20 steal 0.0% 
+r4 wikidata-mix39 t=20 mibz2-auto       wall   0.274 cpu   1.966 rss    85MB others 0.41 steal 0.0% 
+r5 wikidata-mix39 t=4 mibz2-auto       wall   0.314 cpu   1.437 rss    83MB others 0.13 steal 0.0% 
+r5 wikidata-mix39 t=4 mibz2-workers    wall   0.334 cpu   1.515 rss    84MB others 0.13 steal 0.0% 
+r5 wikidata-mix39 t=4 mibz2            wall   0.323 cpu   1.473 rss    84MB others 0.35 steal 0.0% 
+r5 wikidata-mix39 t=6 mibz2-auto       wall   0.303 cpu   1.670 rss    72MB others 0.23 steal 0.0% 
+r5 wikidata-mix39 t=6 mibz2-workers    wall   0.324 cpu   2.124 rss   108MB others 0.26 steal 0.0% 
+r5 wikidata-mix39 t=6 mibz2            wall   0.303 cpu   1.665 rss    72MB others 0.31 steal 0.0% 
+r5 wikidata-mix39 t=8 mibz2-auto       wall   0.284 cpu   2.075 rss    85MB others 0.39 steal 0.0% 
+r5 wikidata-mix39 t=8 mibz2-workers    wall   0.417 cpu   3.523 rss   138MB others 0.34 steal 0.0% 
+r5 wikidata-mix39 t=8 mibz2            wall   0.282 cpu   2.012 rss    84MB others 0.16 steal 0.0% 
+r5 wikidata-mix39 t=10 mibz2-auto       wall   0.314 cpu   2.223 rss    84MB others 1.47 steal 0.0% 
+r5 wikidata-mix39 t=10 mibz2-workers    wall   0.460 cpu   4.619 rss   158MB others 1.58 steal 0.0% 
+r5 wikidata-mix39 t=10 mibz2            wall   0.331 cpu   2.290 rss   100MB others 1.16 steal 0.0% 
+r5 wikidata-mix39 t=20 mibz2-auto       wall   0.304 cpu   2.168 rss    84MB others 1.28 steal 0.0% 
+r5 wikidata-mix39 t=20 mibz2-workers    wall   0.647 cpu  10.658 rss   280MB others 2.16 steal 0.0% 
+r5 wikidata-mix39 t=20 mibz2            wall   0.309 cpu   2.204 rss    98MB others 1.10 steal 0.0% 
+r6 wikidata-mix39 t=4 mibz2-workers    wall   0.333 cpu   1.516 rss    84MB others 0.63 steal 0.0% 
+r6 wikidata-mix39 t=4 mibz2-auto       wall   0.337 cpu   1.542 rss    83MB others 0.70 steal 0.0% 
+r6 wikidata-mix39 t=4 mibz2            wall   0.341 cpu   1.549 rss    84MB others 0.54 steal 0.0% 
+r6 wikidata-mix39 t=6 mibz2-workers    wall   0.367 cpu   2.395 rss   109MB others 1.31 steal 0.0% 
+r6 wikidata-mix39 t=6 mibz2-auto       wall   0.314 cpu   1.729 rss    72MB others 1.31 steal 0.0% 
+r6 wikidata-mix39 t=6 mibz2            wall   0.315 cpu   1.738 rss    72MB others 1.03 steal 0.0% 
+r6 wikidata-mix39 t=8 mibz2-workers    wall   0.388 cpu   3.218 rss   133MB others 1.46 steal 0.0% 
+r6 wikidata-mix39 t=8 mibz2-auto       wall   0.303 cpu   2.155 rss    81MB others 1.26 steal 0.0% 
+r6 wikidata-mix39 t=8 mibz2            wall   0.316 cpu   2.267 rss    85MB others 1.62 steal 0.0% 
+r6 wikidata-mix39 t=10 mibz2-workers    wall   0.458 cpu   4.726 rss   161MB others 1.85 steal 0.0% 
+r6 wikidata-mix39 t=10 mibz2-auto       wall   0.284 cpu   2.050 rss    85MB others 1.06 steal 0.0% 
+r6 wikidata-mix39 t=10 mibz2            wall   0.314 cpu   2.211 rss    97MB others 0.74 steal 0.0% 
+r6 wikidata-mix39 t=20 mibz2-workers    wall   0.631 cpu  10.561 rss   274MB others 1.48 steal 0.0% 
+r6 wikidata-mix39 t=20 mibz2-auto       wall   0.298 cpu   2.142 rss    85MB others 0.79 steal 0.0% 
+r6 wikidata-mix39 t=20 mibz2            wall   0.318 cpu   2.210 rss    97MB others 0.96 steal 0.0% 
+r7 wikidata-mix39 t=4 mibz2-auto       wall   0.341 cpu   1.546 rss    84MB others 0.83 steal 0.0% 
+r7 wikidata-mix39 t=4 mibz2            wall   0.317 cpu   1.449 rss    83MB others 0.61 steal 0.0% 
+r7 wikidata-mix39 t=4 mibz2-workers    wall   0.340 cpu   1.607 rss    83MB others 0.64 steal 0.0% 
+r7 wikidata-mix39 t=6 mibz2-auto       wall   0.308 cpu   1.689 rss    72MB others 0.59 steal 0.0% 
+r7 wikidata-mix39 t=6 mibz2            wall   0.328 cpu   1.813 rss    72MB others 1.48 steal 0.0% 
+r7 wikidata-mix39 t=6 mibz2-workers    wall   0.364 cpu   2.386 rss   109MB others 1.37 steal 0.0% 
+r7 wikidata-mix39 t=8 mibz2-auto       wall   0.280 cpu   2.010 rss    80MB others 0.45 steal 0.0% 
+r7 wikidata-mix39 t=8 mibz2            wall   0.288 cpu   2.046 rss    84MB others 0.38 steal 0.0% 
+r7 wikidata-mix39 t=8 mibz2-workers    wall   0.409 cpu   3.599 rss   132MB others 1.66 steal 0.0% 
+r7 wikidata-mix39 t=10 mibz2-auto       wall   0.292 cpu   2.082 rss    85MB others 0.42 steal 0.0% 
+r7 wikidata-mix39 t=10 mibz2            wall   0.321 cpu   2.178 rss   100MB others 0.16 steal 0.0% 
+r7 wikidata-mix39 t=10 mibz2-workers    wall   0.440 cpu   4.755 rss   161MB others 0.39 steal 0.0% 
+r7 wikidata-mix39 t=20 mibz2-auto       wall   0.278 cpu   1.987 rss    85MB others 0.12 steal 0.0% 
+r7 wikidata-mix39 t=20 mibz2            wall   0.306 cpu   2.191 rss    98MB others 0.31 steal 0.0% 
+r7 wikidata-mix39 t=20 mibz2-workers    wall   0.630 cpu  11.188 rss   280MB others 0.54 steal 0.0% 
+r8 wikidata-mix39 t=4 mibz2            wall   0.335 cpu   1.515 rss    83MB others 0.22 steal 0.0% 
+r8 wikidata-mix39 t=4 mibz2-workers    wall   0.319 cpu   1.460 rss    84MB others 0.15 steal 0.0% 
+r8 wikidata-mix39 t=4 mibz2-auto       wall   0.322 cpu   1.467 rss    82MB others 0.22 steal 0.0% 
+r8 wikidata-mix39 t=6 mibz2            wall   0.301 cpu   1.653 rss    72MB others 0.31 steal 0.0% 
+r8 wikidata-mix39 t=6 mibz2-workers    wall   0.343 cpu   2.222 rss   108MB others 0.30 steal 0.0% 
+r8 wikidata-mix39 t=6 mibz2-auto       wall   0.305 cpu   1.716 rss    72MB others 0.21 steal 0.0% 
+r8 wikidata-mix39 t=8 mibz2            wall   0.280 cpu   2.052 rss    85MB others 0.20 steal 0.0% 
+r8 wikidata-mix39 t=8 mibz2-workers    wall   0.400 cpu   3.422 rss   135MB others 0.33 steal 0.0% 
+r8 wikidata-mix39 t=8 mibz2-auto       wall   0.278 cpu   2.014 rss    84MB others 0.16 steal 0.0% 
+r8 wikidata-mix39 t=10 mibz2            wall   0.293 cpu   2.090 rss    98MB others 0.26 steal 0.0% 
+r8 wikidata-mix39 t=10 mibz2-workers    wall   0.436 cpu   4.578 rss   158MB others 0.56 steal 0.0% 
+r8 wikidata-mix39 t=10 mibz2-auto       wall   0.297 cpu   2.131 rss    85MB others 0.26 steal 0.0% 
+r8 wikidata-mix39 t=20 mibz2            wall   0.294 cpu   2.108 rss    99MB others 0.37 steal 0.0% 
+r8 wikidata-mix39 t=20 mibz2-workers    wall   0.623 cpu  11.196 rss   279MB others 0.49 steal 0.0% 
+r8 wikidata-mix39 t=20 mibz2-auto       wall   0.287 cpu   2.076 rss    86MB others 0.19 steal 0.0% 
+r9 wikidata-mix39 t=4 mibz2            wall   0.312 cpu   1.427 rss    83MB others 0.23 steal 0.0% 
+r9 wikidata-mix39 t=4 mibz2-auto       wall   0.310 cpu   1.418 rss    83MB others 0.23 steal 0.0% 
+r9 wikidata-mix39 t=4 mibz2-workers    wall   0.327 cpu   1.488 rss    83MB others 0.18 steal 0.0% 
+r9 wikidata-mix39 t=6 mibz2            wall   0.298 cpu   1.646 rss    72MB others 0.21 steal 0.0% 
+r9 wikidata-mix39 t=6 mibz2-auto       wall   0.302 cpu   1.663 rss    72MB others 0.25 steal 0.0% 
+r9 wikidata-mix39 t=6 mibz2-workers    wall   0.367 cpu   2.379 rss   108MB others 1.47 steal 0.0% 
+r9 wikidata-mix39 t=8 mibz2            wall   0.285 cpu   2.046 rss    86MB others 0.22 steal 0.0% 
+r9 wikidata-mix39 t=8 mibz2-auto       wall   0.279 cpu   2.001 rss    85MB others 0.17 steal 0.0% 
+r9 wikidata-mix39 t=8 mibz2-workers    wall   0.429 cpu   3.471 rss   133MB others 0.74 steal 0.0% 
+r9 wikidata-mix39 t=10 mibz2            wall   0.304 cpu   2.114 rss    97MB others 0.37 steal 0.0% 
+r9 wikidata-mix39 t=10 mibz2-auto       wall   0.291 cpu   2.073 rss    85MB others 0.26 steal 0.0% 
+r9 wikidata-mix39 t=10 mibz2-workers    wall   0.434 cpu   4.372 rss   161MB others 0.37 steal 0.0% 
+r9 wikidata-mix39 t=20 mibz2            wall   0.292 cpu   2.074 rss    97MB others 0.18 steal 0.0% 
+r9 wikidata-mix39 t=20 mibz2-auto       wall   0.282 cpu   2.055 rss    86MB others 0.29 steal 0.0% 
+r9 wikidata-mix39 t=20 mibz2-workers    wall   0.629 cpu  11.231 rss   280MB others 0.51 steal 0.0% 
+r10 wikidata-mix39 t=4 mibz2-workers    wall   0.317 cpu   1.452 rss    79MB others 0.30 steal 0.0% 
+r10 wikidata-mix39 t=4 mibz2            wall   0.319 cpu   1.459 rss    84MB others 0.19 steal 0.0% 
+r10 wikidata-mix39 t=4 mibz2-auto       wall   0.319 cpu   1.476 rss    82MB others 0.83 steal 0.0% 
+r10 wikidata-mix39 t=6 mibz2-workers    wall   0.329 cpu   2.150 rss   111MB others 0.24 steal 0.0% 
+r10 wikidata-mix39 t=6 mibz2            wall   0.307 cpu   1.696 rss    72MB others 0.26 steal 0.0% 
+r10 wikidata-mix39 t=6 mibz2-auto       wall   0.302 cpu   1.659 rss    72MB others 0.26 steal 0.0% 
+r10 wikidata-mix39 t=8 mibz2-workers    wall   0.402 cpu   3.370 rss   132MB others 0.36 steal 0.0% 
+r10 wikidata-mix39 t=8 mibz2            wall   0.278 cpu   1.998 rss    85MB others 0.21 steal 0.0% 
+r10 wikidata-mix39 t=8 mibz2-auto       wall   0.279 cpu   2.037 rss    85MB others 0.32 steal 0.0% 
+r10 wikidata-mix39 t=10 mibz2-workers    wall   0.415 cpu   4.242 rss   159MB others 0.44 steal 0.0% 
+r10 wikidata-mix39 t=10 mibz2            wall   0.293 cpu   2.105 rss    99MB others 0.21 steal 0.0% 
+  waiting: others keep 417.28 cores busy, one CPU 417.28 (load 6.23)
+r10 wikidata-mix39 t=10 mibz2-auto       wall   0.299 cpu   2.076 rss    80MB others 0.46 steal 0.0% 
+r10 wikidata-mix39 t=20 mibz2-workers    wall   0.628 cpu  10.297 rss   272MB others 1.56 steal 0.0% 
+r10 wikidata-mix39 t=20 mibz2            wall   0.321 cpu   2.284 rss    97MB others 0.91 steal 0.0% 
+r10 wikidata-mix39 t=20 mibz2-auto       wall   0.289 cpu   2.070 rss    84MB others 0.66 steal 0.0% 
+r11 wikidata-mix39 t=4 mibz2-auto       wall   0.327 cpu   1.504 rss    84MB others 0.59 steal 0.0% 
+r11 wikidata-mix39 t=4 mibz2-workers    wall   0.322 cpu   1.468 rss    84MB others 0.40 steal 0.0% 
+r11 wikidata-mix39 t=4 mibz2            wall   0.319 cpu   1.456 rss    84MB others 0.50 steal 0.0% 
+r11 wikidata-mix39 t=6 mibz2-auto       wall   0.312 cpu   1.706 rss    72MB others 0.66 steal 0.0% 
+r11 wikidata-mix39 t=6 mibz2-workers    wall   0.361 cpu   2.360 rss   109MB others 1.04 steal 0.0% 
+r11 wikidata-mix39 t=6 mibz2            wall   0.304 cpu   1.672 rss    67MB others 0.22 steal 0.0% 
+r11 wikidata-mix39 t=8 mibz2-auto       wall   0.302 cpu   2.170 rss    84MB others 0.92 steal 0.0% 
+r11 wikidata-mix39 t=8 mibz2-workers    wall   0.426 cpu   3.695 rss   138MB others 2.02 steal 0.0% 
+r11 wikidata-mix39 t=8 mibz2            wall   0.320 cpu   2.300 rss    80MB others 1.95 steal 0.0% 
+r11 wikidata-mix39 t=10 mibz2-auto       wall   0.311 cpu   2.235 rss    84MB others 1.74 steal 0.0% 
+r11 wikidata-mix39 t=10 mibz2-workers    wall   0.458 cpu   4.606 rss   159MB others 1.76 steal 0.0% 
+r11 wikidata-mix39 t=10 mibz2            wall   0.328 cpu   2.273 rss    97MB others 0.98 steal 0.0% 
+r11 wikidata-mix39 t=20 mibz2-auto       wall   0.292 cpu   2.101 rss    85MB others 0.69 steal 0.0% 
+r11 wikidata-mix39 t=20 mibz2-workers    wall   0.652 cpu  11.158 rss   279MB others 1.34 steal 0.0% 
+r11 wikidata-mix39 t=20 mibz2            wall   0.314 cpu   2.217 rss    97MB others 0.72 steal 0.0% 
+r12 wikidata-mix39 t=4 mibz2-workers    wall   0.323 cpu   1.474 rss    83MB others 0.98 steal 0.0% 
+r12 wikidata-mix39 t=4 mibz2-auto       wall   0.337 cpu   1.534 rss    83MB others 0.42 steal 0.0% 
+r12 wikidata-mix39 t=4 mibz2            wall   0.350 cpu   1.607 rss    83MB others 1.33 steal 0.0% 
+r12 wikidata-mix39 t=6 mibz2-workers    wall   0.379 cpu   2.428 rss   109MB others 1.35 steal 0.0% 
+r12 wikidata-mix39 t=6 mibz2-auto       wall   0.311 cpu   1.711 rss    71MB others 0.71 steal 0.0% 
+r12 wikidata-mix39 t=6 mibz2            wall   0.323 cpu   1.784 rss    71MB others 1.07 steal 0.0% 
+r12 wikidata-mix39 t=8 mibz2-workers    wall   0.451 cpu   3.855 rss   137MB others 2.45 steal 0.0% 
+r12 wikidata-mix39 t=8 mibz2-auto       wall   0.303 cpu   2.212 rss    84MB others 1.30 steal 0.0% 
+r12 wikidata-mix39 t=8 mibz2            wall   0.321 cpu   2.362 rss    85MB others 1.68 steal 0.0% 
+r12 wikidata-mix39 t=10 mibz2-workers    wall   0.470 cpu   4.914 rss   156MB others 2.50 steal 0.0% 
+r12 wikidata-mix39 t=10 mibz2-auto       wall   0.305 cpu   2.216 rss    84MB others 1.39 steal 0.0% 
+r12 wikidata-mix39 t=10 mibz2            wall   0.317 cpu   2.248 rss    97MB others 1.30 steal 0.0% 
+r12 wikidata-mix39 t=20 mibz2-workers    wall   0.646 cpu  10.885 rss   263MB others 1.74 steal 0.0% 
+r12 wikidata-mix39 t=20 mibz2-auto       wall   0.325 cpu   2.305 rss    84MB others 2.14 steal 0.0% 
+r12 wikidata-mix39 t=20 mibz2            wall   0.353 cpu   2.474 rss    97MB others 2.10 steal 0.0% 
+r13 wikidata-mix39 t=4 mibz2-auto       wall   0.328 cpu   1.494 rss    83MB others 0.69 steal 0.0% 
+r13 wikidata-mix39 t=4 mibz2            wall   0.340 cpu   1.542 rss    83MB others 0.73 steal 0.0% 
+r13 wikidata-mix39 t=4 mibz2-workers    wall   0.323 cpu   1.476 rss    83MB others 0.56 steal 0.0% 
+r13 wikidata-mix39 t=6 mibz2-auto       wall   0.324 cpu   1.803 rss    67MB others 0.66 steal 0.0% 
+r13 wikidata-mix39 t=6 mibz2            wall   0.305 cpu   1.688 rss    72MB others 0.62 steal 0.0% 
+r13 wikidata-mix39 t=6 mibz2-workers    wall   0.356 cpu   2.329 rss   108MB others 0.96 steal 0.0% 
+r13 wikidata-mix39 t=8 mibz2-auto       wall   0.283 cpu   2.056 rss    85MB others 0.36 steal 0.0% 
+r13 wikidata-mix39 t=8 mibz2            wall   0.282 cpu   2.060 rss    85MB others 0.38 steal 0.0% 
+r13 wikidata-mix39 t=8 mibz2-workers    wall   0.407 cpu   3.503 rss   132MB others 1.11 steal 0.0% 
+r13 wikidata-mix39 t=10 mibz2-auto       wall   0.298 cpu   2.168 rss    86MB others 0.65 steal 0.0% 
+r13 wikidata-mix39 t=10 mibz2            wall   0.309 cpu   2.175 rss    98MB others 0.63 steal 0.0% 
+r13 wikidata-mix39 t=10 mibz2-workers    wall   0.482 cpu   4.883 rss   158MB others 2.62 steal 0.0% 
+r13 wikidata-mix39 t=20 mibz2-auto       wall   0.297 cpu   2.130 rss    84MB others 1.19 steal 0.0% 
+r13 wikidata-mix39 t=20 mibz2            wall   0.287 cpu   2.070 rss    97MB others 0.17 steal 0.0% 
+r13 wikidata-mix39 t=20 mibz2-workers    wall   0.616 cpu  11.070 rss   279MB others 0.17 steal 0.0% 
+r14 wikidata-mix39 t=4 mibz2            wall   0.310 cpu   1.418 rss    83MB others 0.10 steal 0.0% 
+r14 wikidata-mix39 t=4 mibz2-workers    wall   0.320 cpu   1.460 rss    83MB others 0.24 steal 0.0% 
+r14 wikidata-mix39 t=4 mibz2-auto       wall   0.313 cpu   1.429 rss    83MB others 0.13 steal 0.0% 
+r14 wikidata-mix39 t=6 mibz2            wall   0.308 cpu   1.695 rss    72MB others 0.30 steal 0.0% 
+r14 wikidata-mix39 t=6 mibz2-workers    wall   0.315 cpu   2.070 rss   108MB others 0.16 steal 0.0% 
+r14 wikidata-mix39 t=6 mibz2-auto       wall   0.299 cpu   1.647 rss    72MB others 0.14 steal 0.0% 
+r14 wikidata-mix39 t=8 mibz2            wall   0.279 cpu   1.995 rss    81MB others 0.15 steal 0.0% 
+r14 wikidata-mix39 t=8 mibz2-workers    wall   0.368 cpu   3.149 rss   132MB others 0.16 steal 0.0% 
+r14 wikidata-mix39 t=8 mibz2-auto       wall   0.277 cpu   1.984 rss    85MB others 0.27 steal 0.0% 
+r14 wikidata-mix39 t=10 mibz2            wall   0.292 cpu   2.092 rss    93MB others 0.13 steal 0.0% 
+r14 wikidata-mix39 t=10 mibz2-workers    wall   0.414 cpu   4.324 rss   162MB others 0.20 steal 0.0% 
+r14 wikidata-mix39 t=10 mibz2-auto       wall   0.281 cpu   2.016 rss    85MB others 0.19 steal 0.0% 
+r14 wikidata-mix39 t=20 mibz2            wall   0.286 cpu   2.022 rss    94MB others 0.20 steal 0.0% 
+r14 wikidata-mix39 t=20 mibz2-workers    wall   0.609 cpu  10.815 rss   268MB others 0.18 steal 0.0% 
+r14 wikidata-mix39 t=20 mibz2-auto       wall   0.273 cpu   1.938 rss    80MB others 0.22 steal 0.0% 
+r15 wikidata-mix39 t=4 mibz2            wall   0.324 cpu   1.475 rss    83MB others 0.23 steal 0.0% 
+r15 wikidata-mix39 t=4 mibz2-auto       wall   0.317 cpu   1.446 rss    83MB others 0.13 steal 0.0% 
+r15 wikidata-mix39 t=4 mibz2-workers    wall   0.320 cpu   1.462 rss    83MB others 0.24 steal 0.0% 
+r15 wikidata-mix39 t=6 mibz2            wall   0.312 cpu   1.715 rss    71MB others 0.20 steal 0.0% 
+r15 wikidata-mix39 t=6 mibz2-auto       wall   0.301 cpu   1.654 rss    71MB others 0.18 steal 0.0% 
+r15 wikidata-mix39 t=6 mibz2-workers    wall   0.324 cpu   2.119 rss   111MB others 0.18 steal 0.0% 
+r15 wikidata-mix39 t=8 mibz2            wall   0.278 cpu   1.982 rss    85MB others 0.17 steal 0.0% 
+r15 wikidata-mix39 t=8 mibz2-auto       wall   0.275 cpu   1.974 rss    85MB others 0.20 steal 0.0% 
+r15 wikidata-mix39 t=8 mibz2-workers    wall   0.414 cpu   3.373 rss   137MB others 0.16 steal 0.0% 
+r15 wikidata-mix39 t=10 mibz2            wall   0.285 cpu   2.040 rss    97MB others 0.17 steal 0.0% 
+r15 wikidata-mix39 t=10 mibz2-auto       wall   0.280 cpu   2.042 rss    85MB others 0.33 steal 0.0% 
+r15 wikidata-mix39 t=10 mibz2-workers    wall   0.453 cpu   4.619 rss   163MB others 0.17 steal 0.0% 
+r15 wikidata-mix39 t=20 mibz2            wall   0.290 cpu   2.090 rss    98MB others 0.26 steal 0.0% 
+r15 wikidata-mix39 t=20 mibz2-auto       wall   0.280 cpu   2.040 rss    85MB others 0.17 steal 0.0% 
+r15 wikidata-mix39 t=20 mibz2-workers    wall   0.599 cpu  10.451 rss   276MB others 0.24 steal 0.0% 
+r16 wikidata-mix39 t=4 mibz2-workers    wall   0.318 cpu   1.452 rss    83MB others 0.12 steal 0.0% 
+r16 wikidata-mix39 t=4 mibz2            wall   0.314 cpu   1.464 rss    84MB others 0.20 steal 0.0% 
+r16 wikidata-mix39 t=4 mibz2-auto       wall   0.314 cpu   1.437 rss    83MB others 0.26 steal 0.0% 
+r16 wikidata-mix39 t=6 mibz2-workers    wall   0.320 cpu   2.108 rss   109MB others 0.21 steal 0.0% 
+r16 wikidata-mix39 t=6 mibz2            wall   0.305 cpu   1.678 rss    71MB others 0.20 steal 0.0% 
+r16 wikidata-mix39 t=6 mibz2-auto       wall   0.303 cpu   1.667 rss    72MB others 0.17 steal 0.0% 
+r16 wikidata-mix39 t=8 mibz2-workers    wall   0.371 cpu   3.170 rss   132MB others 0.26 steal 0.0% 
+r16 wikidata-mix39 t=8 mibz2            wall   0.284 cpu   2.043 rss    85MB others 0.09 steal 0.0% 
+r16 wikidata-mix39 t=8 mibz2-auto       wall   0.276 cpu   1.966 rss    86MB others 0.16 steal 0.0% 
+r16 wikidata-mix39 t=10 mibz2-workers    wall   0.416 cpu   4.470 rss   162MB others 0.23 steal 0.0% 
+r16 wikidata-mix39 t=10 mibz2            wall   0.305 cpu   2.118 rss    98MB others 0.29 steal 0.0% 
+r16 wikidata-mix39 t=10 mibz2-auto       wall   0.275 cpu   1.964 rss    85MB others 0.24 steal 0.0% 
+r16 wikidata-mix39 t=20 mibz2-workers    wall   0.613 cpu  10.997 rss   272MB others 0.19 steal 0.0% 
+r16 wikidata-mix39 t=20 mibz2            wall   0.292 cpu   2.106 rss    98MB others 0.21 steal 0.0% 
+r16 wikidata-mix39 t=20 mibz2-auto       wall   0.279 cpu   2.003 rss    85MB others 0.26 steal 0.0% 
+r17 wikidata-mix39 t=4 mibz2-auto       wall   0.312 cpu   1.428 rss    82MB others 0.22 steal 0.0% 
+r17 wikidata-mix39 t=4 mibz2-workers    wall   0.331 cpu   1.506 rss    83MB others 0.24 steal 0.0% 
+r17 wikidata-mix39 t=4 mibz2            wall   0.313 cpu   1.432 rss    83MB others 0.21 steal 0.0% 
+r17 wikidata-mix39 t=6 mibz2-auto       wall   0.302 cpu   1.663 rss    72MB others 0.18 steal 0.0% 
+r17 wikidata-mix39 t=6 mibz2-workers    wall   0.313 cpu   2.063 rss   109MB others 0.21 steal 0.0% 
+r17 wikidata-mix39 t=6 mibz2            wall   0.303 cpu   1.659 rss    71MB others 0.23 steal 0.0% 
+r17 wikidata-mix39 t=8 mibz2-auto       wall   0.277 cpu   1.981 rss    85MB others 0.14 steal 0.0% 
+r17 wikidata-mix39 t=8 mibz2-workers    wall   0.386 cpu   3.251 rss   131MB others 0.25 steal 0.0% 
+r17 wikidata-mix39 t=8 mibz2            wall   0.273 cpu   1.991 rss    85MB others 0.14 steal 0.0% 
+r17 wikidata-mix39 t=10 mibz2-auto       wall   0.285 cpu   2.027 rss    85MB others 0.18 steal 0.0% 
+r17 wikidata-mix39 t=10 mibz2-workers    wall   0.419 cpu   4.063 rss   155MB others 0.18 steal 0.0% 
+r17 wikidata-mix39 t=10 mibz2            wall   0.295 cpu   2.115 rss    98MB others 0.12 steal 0.0% 
+r17 wikidata-mix39 t=20 mibz2-auto       wall   0.273 cpu   1.968 rss    85MB others 0.29 steal 0.0% 
+r17 wikidata-mix39 t=20 mibz2-workers    wall   0.619 cpu  11.241 rss   271MB others 0.24 steal 0.0% 
+r17 wikidata-mix39 t=20 mibz2            wall   0.288 cpu   2.097 rss    98MB others 0.21 steal 0.0% 
+r18 wikidata-mix39 t=4 mibz2-workers    wall   0.326 cpu   1.481 rss    83MB others 0.15 steal 0.0% 
+r18 wikidata-mix39 t=4 mibz2-auto       wall   0.322 cpu   1.469 rss    83MB others 0.33 steal 0.0% 
+r18 wikidata-mix39 t=4 mibz2            wall   0.334 cpu   1.514 rss    83MB others 0.16 steal 0.0% 
+r18 wikidata-mix39 t=6 mibz2-workers    wall   0.313 cpu   2.065 rss   108MB others 0.20 steal 0.0% 
+r18 wikidata-mix39 t=6 mibz2-auto       wall   0.300 cpu   1.648 rss    72MB others 0.20 steal 0.0% 
+r18 wikidata-mix39 t=6 mibz2            wall   0.316 cpu   1.715 rss    74MB others 0.17 steal 0.0% 
+r18 wikidata-mix39 t=8 mibz2-workers    wall   0.396 cpu   3.281 rss   134MB others 0.17 steal 0.0% 
+r18 wikidata-mix39 t=8 mibz2-auto       wall   0.277 cpu   1.978 rss    85MB others 0.29 steal 0.0% 
+r18 wikidata-mix39 t=8 mibz2            wall   0.277 cpu   1.987 rss    85MB others 0.26 steal 0.0% 
+r18 wikidata-mix39 t=10 mibz2-workers    wall   0.407 cpu   4.223 rss   161MB others 0.21 steal 0.0% 
+r18 wikidata-mix39 t=10 mibz2-auto       wall   0.283 cpu   2.046 rss    85MB others 0.22 steal 0.0% 
+r18 wikidata-mix39 t=10 mibz2            wall   0.286 cpu   2.039 rss    98MB others 0.27 steal 0.0% 
+r18 wikidata-mix39 t=20 mibz2-workers    wall   0.628 cpu  11.387 rss   272MB others 0.22 steal 0.0% 
+r18 wikidata-mix39 t=20 mibz2-auto       wall   0.282 cpu   2.046 rss    85MB others 0.15 steal 0.0% 
+r18 wikidata-mix39 t=20 mibz2            wall   0.293 cpu   2.061 rss   100MB others 0.26 steal 0.0% 
+r19 wikidata-mix39 t=4 mibz2-auto       wall   0.334 cpu   1.520 rss    84MB others 0.18 steal 0.0% 
+r19 wikidata-mix39 t=4 mibz2            wall   0.314 cpu   1.441 rss    83MB others 0.15 steal 0.0% 
+r19 wikidata-mix39 t=4 mibz2-workers    wall   0.336 cpu   1.521 rss    83MB others 0.17 steal 0.0% 
+r19 wikidata-mix39 t=6 mibz2-auto       wall   0.306 cpu   1.681 rss    72MB others 0.19 steal 0.0% 
+r19 wikidata-mix39 t=6 mibz2            wall   0.313 cpu   1.710 rss    72MB others 0.22 steal 0.0% 
+r19 wikidata-mix39 t=6 mibz2-workers    wall   0.318 cpu   2.090 rss   108MB others 0.22 steal 0.0% 
+r19 wikidata-mix39 t=8 mibz2-auto       wall   0.280 cpu   2.043 rss    85MB others 0.30 steal 0.0% 
+r19 wikidata-mix39 t=8 mibz2            wall   0.288 cpu   2.067 rss    85MB others 0.31 steal 0.0% 
+r19 wikidata-mix39 t=8 mibz2-workers    wall   0.377 cpu   3.216 rss   132MB others 0.21 steal 0.0% 
+r19 wikidata-mix39 t=10 mibz2-auto       wall   0.274 cpu   1.977 rss    85MB others 0.12 steal 0.0% 
+r19 wikidata-mix39 t=10 mibz2            wall   0.287 cpu   2.051 rss    98MB others 0.20 steal 0.0% 
+r19 wikidata-mix39 t=10 mibz2-workers    wall   0.425 cpu   4.219 rss   161MB others 0.25 steal 0.0% 
+r19 wikidata-mix39 t=20 mibz2-auto       wall   0.274 cpu   1.986 rss    84MB others 0.23 steal 0.0% 
+r19 wikidata-mix39 t=20 mibz2            wall   0.289 cpu   2.048 rss    97MB others 0.21 steal 0.0% 
+r19 wikidata-mix39 t=20 mibz2-workers    wall   0.610 cpu  10.882 rss   277MB others 0.24 steal 0.0% 
+# The cooperative decoder's full-decoder A/B (20261030T002527Z)
+
+- **Build:** 2591867; **machine:** Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz, 20 CPUs; **load:** 6.65
+- **Rounds:** 20, interleaved, unpinned, back to back; corpus wikidata-mix39.bz2
+- **Note:** level-aware plan, revision 2: mix39
+
+## The gates (mibz2 at all CPUs against mibz2-workers at 4)
+
+| gate | pass | measured |
+|---|---|--:|
+| throughput: mean >= 1.15 | **no** | 1.074 |
+| throughput: 95% lower bound > 1.05 | **no** | 1.047 |
+| bytes identical, no error | yes | 1 hash(es), 0 error(s) |
+| peak RSS <= 1.15x | **no** | 1.171 |
+| CPU-seconds <= 1.5x | yes | 1.433 |
+
+Verdict: **a reproducible gain below the headline, for the user's decision**.
+
+## Every arm, against mibz2-workers at 4 (p4)
+
+| arm | T | MB/s | paired ratio (95%) | won | peak RSS | RSS ratio | CPU-s | CPU ratio |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| mibz2 | 4 | 1320 | 1.004 (0.985-1.024) | 11/20 | 83 MB | 1.00 | 1.46 | 0.99 |
+| mibz2 | 6 | 1371 | 1.051 (1.039-1.063) | 20/20 | 72 MB | 0.86 | 1.69 | 1.15 |
+| mibz2 | 8 | 1488 | 1.131 (1.105-1.157) | 20/20 | 85 MB | 1.02 | 2.04 | 1.38 |
+| mibz2 | 10 | 1396 | 1.069 (1.047-1.090) | 19/20 | 98 MB | 1.17 | 2.12 | 1.44 |
+| mibz2 | 20 | 1419 | 1.074 (1.047-1.102) | 18/20 | 97 MB | 1.17 | 2.11 | 1.43 |
+| mibz2-auto | 4 | 1310 | 1.004 (0.991-1.018) | 9/20 | 83 MB | 1.00 | 1.47 | 1.00 |
+| mibz2-auto | 6 | 1376 | 1.057 (1.042-1.072) | 18/20 | 72 MB | 0.86 | 1.68 | 1.14 |
+| mibz2-auto | 8 | 1501 | 1.143 (1.124-1.163) | 20/20 | 85 MB | 1.02 | 2.02 | 1.37 |
+| mibz2-auto | 10 | 1472 | 1.120 (1.097-1.144) | 20/20 | 85 MB | 1.02 | 2.05 | 1.39 |
+| mibz2-auto | 20 | 1498 | 1.137 (1.112-1.163) | 19/20 | 85 MB | 1.02 | 2.03 | 1.38 |
+| mibz2-workers | 4 | 1301 | 1.000 (1.000-1.000) | 0/20 | 83 MB | 1.00 | 1.47 | 1.00 |
+| mibz2-workers | 6 | 1257 | 0.956 (0.929-0.984) | 5/20 | 109 MB | 1.30 | 2.19 | 1.49 |
+| mibz2-workers | 8 | 1051 | 0.806 (0.785-0.828) | 0/20 | 133 MB | 1.60 | 3.38 | 2.30 |
+| mibz2-workers | 10 | 965 | 0.740 (0.724-0.757) | 0/20 | 160 MB | 1.93 | 4.42 | 3.00 |
+| mibz2-workers | 20 | 670 | 0.517 (0.510-0.524) | 0/20 | 275 MB | 3.30 | 11.03 | 7.50 |
+
+## Every arm, against the workers' best here (mibz2-workers at 4)
+
+| arm | T | MB/s | paired ratio (95%) | won | peak RSS | RSS ratio | CPU-s | CPU ratio |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| mibz2 | 4 | 1320 | 1.004 (0.985-1.024) | 11/20 | 83 MB | 1.00 | 1.46 | 0.99 |
+| mibz2 | 6 | 1371 | 1.051 (1.039-1.063) | 20/20 | 72 MB | 0.86 | 1.69 | 1.15 |
+| mibz2 | 8 | 1488 | 1.131 (1.105-1.157) | 20/20 | 85 MB | 1.02 | 2.04 | 1.38 |
+| mibz2 | 10 | 1396 | 1.069 (1.047-1.090) | 19/20 | 98 MB | 1.17 | 2.12 | 1.44 |
+| mibz2 | 20 | 1419 | 1.074 (1.047-1.102) | 18/20 | 97 MB | 1.17 | 2.11 | 1.43 |
+| mibz2-auto | 4 | 1310 | 1.004 (0.991-1.018) | 9/20 | 83 MB | 1.00 | 1.47 | 1.00 |
+| mibz2-auto | 6 | 1376 | 1.057 (1.042-1.072) | 18/20 | 72 MB | 0.86 | 1.68 | 1.14 |
+| mibz2-auto | 8 | 1501 | 1.143 (1.124-1.163) | 20/20 | 85 MB | 1.02 | 2.02 | 1.37 |
+| mibz2-auto | 10 | 1472 | 1.120 (1.097-1.144) | 20/20 | 85 MB | 1.02 | 2.05 | 1.39 |
+| mibz2-auto | 20 | 1498 | 1.137 (1.112-1.163) | 19/20 | 85 MB | 1.02 | 2.03 | 1.38 |
+| mibz2-workers | 4 | 1301 | 1.000 (1.000-1.000) | 0/20 | 83 MB | 1.00 | 1.47 | 1.00 |
+| mibz2-workers | 6 | 1257 | 0.956 (0.929-0.984) | 5/20 | 109 MB | 1.30 | 2.19 | 1.49 |
+| mibz2-workers | 8 | 1051 | 0.806 (0.785-0.828) | 0/20 | 133 MB | 1.60 | 3.38 | 2.30 |
+| mibz2-workers | 10 | 965 | 0.740 (0.724-0.757) | 0/20 | 160 MB | 1.93 | 4.42 | 3.00 |
+| mibz2-workers | 20 | 670 | 0.517 (0.510-0.524) | 0/20 | 275 MB | 3.30 | 11.03 | 7.50 |
+
+Files: coop-decoder-20261030T002527Z.jsonl, coop-decoder-20261030T002527Z.json
+
+coop-decoder: wrote coop-decoder-20261030T002527Z.md, .json and the .jsonl: upload them all
+coop-decoder: the full machine: target/release/examples/ab run coop-decoder-20261030T002753Z.jsonl --arms mibz2-workers,mibz2-auto,mibz2 --threads 4,6,8,10,20 --rounds 20 --settle 0 corpora/wikidata-bz3.bz2
+r0 wikidata-bz3 t=4 mibz2-workers    wall   0.136 cpu   0.632 rss    40MB others 0.81 steal 0.0% 
+r0 wikidata-bz3 t=4 mibz2-auto       wall   0.137 cpu   0.634 rss    41MB others 0.38 steal 0.0% 
+r0 wikidata-bz3 t=4 mibz2            wall   0.136 cpu   0.635 rss    39MB others 0.24 steal 0.0% 
+r0 wikidata-bz3 t=6 mibz2-workers    wall   0.105 cpu   0.706 rss    52MB others 0.21 steal 0.0% 
+r0 wikidata-bz3 t=6 mibz2-auto       wall   0.152 cpu   0.844 rss    35MB others 0.23 steal 0.0% 
+r0 wikidata-bz3 t=6 mibz2            wall   0.151 cpu   0.867 rss    35MB others 0.34 steal 0.0% 
+r0 wikidata-bz3 t=8 mibz2-workers    wall   0.114 cpu   0.791 rss    62MB others 0.54 steal 0.0% 
+r0 wikidata-bz3 t=8 mibz2-auto       wall   0.124 cpu   0.906 rss    41MB others 0.33 steal 0.0% 
+r0 wikidata-bz3 t=8 mibz2            wall   0.129 cpu   0.958 rss    40MB others 0.24 steal 0.0% 
+r0 wikidata-bz3 t=10 mibz2-workers    wall   0.113 cpu   1.117 rss    71MB others 0.37 steal 0.0% 
+r0 wikidata-bz3 t=10 mibz2-auto       wall   0.121 cpu   0.890 rss    41MB others 0.24 steal 0.0% 
+r0 wikidata-bz3 t=10 mibz2            wall   0.107 cpu   0.970 rss    45MB others 0.43 steal 0.0% 
+r0 wikidata-bz3 t=20 mibz2-workers    wall   0.180 cpu   2.651 rss   114MB others 0.26 steal 0.0% 
+r0 wikidata-bz3 t=20 mibz2-auto       wall   0.126 cpu   0.925 rss    41MB others 0.33 steal 0.0% 
+r0 wikidata-bz3 t=20 mibz2            wall   0.114 cpu   1.000 rss    46MB others 0.24 steal 0.0% 
+r1 wikidata-bz3 t=4 mibz2-auto       wall   0.148 cpu   0.679 rss    41MB others 0.26 steal 0.0% 
+r1 wikidata-bz3 t=4 mibz2            wall   0.141 cpu   0.651 rss    40MB others 0.33 steal 0.0% 
+r1 wikidata-bz3 t=4 mibz2-workers    wall   0.139 cpu   0.644 rss    41MB others 0.25 steal 0.0% 
+r1 wikidata-bz3 t=6 mibz2-auto       wall   0.148 cpu   0.838 rss    35MB others 0.21 steal 0.0% 
+r1 wikidata-bz3 t=6 mibz2            wall   0.153 cpu   0.870 rss    35MB others 0.26 steal 0.0% 
+r1 wikidata-bz3 t=6 mibz2-workers    wall   0.109 cpu   0.709 rss    51MB others 0.35 steal 0.0% 
+r1 wikidata-bz3 t=8 mibz2-auto       wall   0.124 cpu   0.912 rss    41MB others 0.43 steal 0.0% 
+r1 wikidata-bz3 t=8 mibz2            wall   0.126 cpu   0.929 rss    40MB others 0.30 steal 0.0% 
+r1 wikidata-bz3 t=8 mibz2-workers    wall   0.119 cpu   0.806 rss    61MB others 0.34 steal 0.0% 
+r1 wikidata-bz3 t=10 mibz2-auto       wall   0.123 cpu   0.914 rss    41MB others 0.33 steal 0.0% 
+r1 wikidata-bz3 t=10 mibz2            wall   0.139 cpu   1.066 rss    45MB others 0.69 steal 0.0% 
+r1 wikidata-bz3 t=10 mibz2-workers    wall   0.114 cpu   1.040 rss    70MB others 0.31 steal 0.0% 
+r1 wikidata-bz3 t=20 mibz2-auto       wall   0.122 cpu   0.902 rss    41MB others 0.31 steal 0.0% 
+r1 wikidata-bz3 t=20 mibz2            wall   0.115 cpu   1.008 rss    46MB others 0.41 steal 0.0% 
+r1 wikidata-bz3 t=20 mibz2-workers    wall   0.183 cpu   2.737 rss   114MB others 0.36 steal 0.0% 
+r2 wikidata-bz3 t=4 mibz2            wall   0.140 cpu   0.648 rss    41MB others 0.29 steal 0.0% 
+r2 wikidata-bz3 t=4 mibz2-workers    wall   0.147 cpu   0.677 rss    40MB others 0.27 steal 0.0% 
+r2 wikidata-bz3 t=4 mibz2-auto       wall   0.139 cpu   0.645 rss    41MB others 0.24 steal 0.0% 
+r2 wikidata-bz3 t=6 mibz2            wall   0.153 cpu   0.869 rss    35MB others 0.19 steal 0.0% 
+r2 wikidata-bz3 t=6 mibz2-workers    wall   0.105 cpu   0.705 rss    49MB others 0.30 steal 0.0% 
+r2 wikidata-bz3 t=6 mibz2-auto       wall   0.152 cpu   0.844 rss    35MB others 0.30 steal 0.0% 
+r2 wikidata-bz3 t=8 mibz2            wall   0.126 cpu   0.918 rss    40MB others 0.30 steal 0.0% 
+r2 wikidata-bz3 t=8 mibz2-workers    wall   0.099 cpu   0.825 rss    63MB others 0.42 steal 0.0% 
+r2 wikidata-bz3 t=8 mibz2-auto       wall   0.134 cpu   0.999 rss    40MB others 0.35 steal 0.0% 
+r2 wikidata-bz3 t=10 mibz2            wall   0.119 cpu   1.044 rss    45MB others 0.44 steal 0.0% 
+r2 wikidata-bz3 t=10 mibz2-workers    wall   0.126 cpu   1.004 rss    72MB others 0.33 steal 0.0% 
+r2 wikidata-bz3 t=10 mibz2-auto       wall   0.130 cpu   0.964 rss    41MB others 0.27 steal 0.0% 
+r2 wikidata-bz3 t=20 mibz2            wall   0.119 cpu   1.058 rss    46MB others 0.25 steal 0.0% 
+r2 wikidata-bz3 t=20 mibz2-workers    wall   0.179 cpu   2.543 rss   114MB others 0.19 steal 0.0% 
+r2 wikidata-bz3 t=20 mibz2-auto       wall   0.125 cpu   0.922 rss    41MB others 0.43 steal 0.0% 
+r3 wikidata-bz3 t=4 mibz2            wall   0.137 cpu   0.640 rss    41MB others 0.21 steal 0.0% 
+r3 wikidata-bz3 t=4 mibz2-auto       wall   0.138 cpu   0.639 rss    41MB others 0.35 steal 0.0% 
+r3 wikidata-bz3 t=4 mibz2-workers    wall   0.141 cpu   0.655 rss    40MB others 0.24 steal 0.0% 
+r3 wikidata-bz3 t=6 mibz2            wall   0.152 cpu   0.851 rss    35MB others 0.25 steal 0.0% 
+r3 wikidata-bz3 t=6 mibz2-auto       wall   0.151 cpu   0.843 rss    35MB others 0.30 steal 0.0% 
+r3 wikidata-bz3 t=6 mibz2-workers    wall   0.102 cpu   0.690 rss    50MB others 0.44 steal 0.0% 
+r3 wikidata-bz3 t=8 mibz2            wall   0.123 cpu   0.899 rss    41MB others 0.25 steal 0.0% 
+r3 wikidata-bz3 t=8 mibz2-auto       wall   0.123 cpu   0.923 rss    40MB others 0.27 steal 0.0% 
+r3 wikidata-bz3 t=8 mibz2-workers    wall   0.099 cpu   0.836 rss    61MB others 0.41 steal 0.0% 
+r3 wikidata-bz3 t=10 mibz2            wall   0.118 cpu   1.057 rss    46MB others 0.18 steal 0.0% 
+r3 wikidata-bz3 t=10 mibz2-auto       wall   0.124 cpu   0.913 rss    40MB others 0.27 steal 0.0% 
+r3 wikidata-bz3 t=10 mibz2-workers    wall   0.107 cpu   1.103 rss    73MB others 0.40 steal 0.0% 
+r3 wikidata-bz3 t=20 mibz2            wall   0.119 cpu   1.051 rss    46MB others 0.31 steal 0.0% 
+r3 wikidata-bz3 t=20 mibz2-auto       wall   0.118 cpu   0.875 rss    40MB others 0.44 steal 0.0% 
+r3 wikidata-bz3 t=20 mibz2-workers    wall   0.182 cpu   2.724 rss   116MB others 0.29 steal 0.0% 
+r4 wikidata-bz3 t=4 mibz2-workers    wall   0.144 cpu   0.663 rss    41MB others 0.36 steal 0.0% 
+r4 wikidata-bz3 t=4 mibz2            wall   0.137 cpu   0.640 rss    41MB others 0.35 steal 0.0% 
+r4 wikidata-bz3 t=4 mibz2-auto       wall   0.145 cpu   0.671 rss    40MB others 0.19 steal 0.0% 
+r4 wikidata-bz3 t=6 mibz2-workers    wall   0.105 cpu   0.702 rss    51MB others 0.33 steal 0.0% 
+r4 wikidata-bz3 t=6 mibz2            wall   0.151 cpu   0.845 rss    35MB others 0.42 steal 0.0% 
+r4 wikidata-bz3 t=6 mibz2-auto       wall   0.151 cpu   0.855 rss    35MB others 0.23 steal 0.0% 
+r4 wikidata-bz3 t=8 mibz2-workers    wall   0.097 cpu   0.780 rss    61MB others 0.37 steal 0.0% 
+r4 wikidata-bz3 t=8 mibz2            wall   0.121 cpu   0.906 rss    41MB others 0.19 steal 0.0% 
+r4 wikidata-bz3 t=8 mibz2-auto       wall   0.126 cpu   0.940 rss    40MB others 0.30 steal 0.0% 
+r4 wikidata-bz3 t=10 mibz2-workers    wall   0.107 cpu   1.097 rss    73MB others 0.20 steal 0.0% 
+r4 wikidata-bz3 t=10 mibz2            wall   0.117 cpu   1.011 rss    46MB others 0.47 steal 0.0% 
+r4 wikidata-bz3 t=10 mibz2-auto       wall   0.124 cpu   0.931 rss    40MB others 0.28 steal 0.0% 
+r4 wikidata-bz3 t=20 mibz2-workers    wall   0.183 cpu   2.743 rss   118MB others 0.56 steal 0.0% 
+r4 wikidata-bz3 t=20 mibz2            wall   0.113 cpu   1.031 rss    47MB others 0.25 steal 0.0% 
+r4 wikidata-bz3 t=20 mibz2-auto       wall   0.123 cpu   0.911 rss    42MB others 0.15 steal 0.0% 
+r5 wikidata-bz3 t=4 mibz2-auto       wall   0.137 cpu   0.633 rss    40MB others 0.26 steal 0.0% 
+r5 wikidata-bz3 t=4 mibz2-workers    wall   0.142 cpu   0.659 rss    41MB others 0.28 steal 0.0% 
+r5 wikidata-bz3 t=4 mibz2            wall   0.141 cpu   0.652 rss    41MB others 0.26 steal 0.0% 
+r5 wikidata-bz3 t=6 mibz2-auto       wall   0.151 cpu   0.848 rss    36MB others 0.34 steal 0.0% 
+r5 wikidata-bz3 t=6 mibz2-workers    wall   0.102 cpu   0.689 rss    52MB others 0.35 steal 0.0% 
+r5 wikidata-bz3 t=6 mibz2            wall   0.159 cpu   0.904 rss    35MB others 0.22 steal 0.0% 
+r5 wikidata-bz3 t=8 mibz2-auto       wall   0.135 cpu   0.973 rss    41MB others 0.25 steal 0.0% 
+r5 wikidata-bz3 t=8 mibz2-workers    wall   0.101 cpu   0.845 rss    61MB others 0.52 steal 0.0% 
+r5 wikidata-bz3 t=8 mibz2            wall   0.127 cpu   0.934 rss    41MB others 0.34 steal 0.0% 
+r5 wikidata-bz3 t=10 mibz2-auto       wall   0.129 cpu   0.959 rss    41MB others 0.23 steal 0.0% 
+r5 wikidata-bz3 t=10 mibz2-workers    wall   0.125 cpu   1.056 rss    72MB others 0.39 steal 0.0% 
+r5 wikidata-bz3 t=10 mibz2            wall   0.107 cpu   0.967 rss    46MB others 0.37 steal 0.0% 
+r5 wikidata-bz3 t=20 mibz2-auto       wall   0.122 cpu   0.905 rss    41MB others 0.28 steal 0.0% 
+r5 wikidata-bz3 t=20 mibz2-workers    wall   0.176 cpu   2.563 rss   112MB others 0.35 steal 0.0% 
+r5 wikidata-bz3 t=20 mibz2            wall   0.115 cpu   1.006 rss    46MB others 0.19 steal 0.0% 
+r6 wikidata-bz3 t=4 mibz2-workers    wall   0.143 cpu   0.663 rss    41MB others 0.36 steal 0.0% 
+r6 wikidata-bz3 t=4 mibz2-auto       wall   0.144 cpu   0.667 rss    40MB others 0.28 steal 0.0% 
+r6 wikidata-bz3 t=4 mibz2            wall   0.145 cpu   0.669 rss    41MB others 0.26 steal 0.0% 
+r6 wikidata-bz3 t=6 mibz2-workers    wall   0.103 cpu   0.693 rss    52MB others 0.41 steal 0.0% 
+r6 wikidata-bz3 t=6 mibz2-auto       wall   0.159 cpu   0.900 rss    35MB others 0.24 steal 0.0% 
+r6 wikidata-bz3 t=6 mibz2            wall   0.151 cpu   0.858 rss    35MB others 0.27 steal 0.0% 
+r6 wikidata-bz3 t=8 mibz2-workers    wall   0.105 cpu   0.841 rss    62MB others 0.50 steal 0.0% 
+r6 wikidata-bz3 t=8 mibz2-auto       wall   0.123 cpu   0.925 rss    41MB others 0.18 steal 0.0% 
+r6 wikidata-bz3 t=8 mibz2            wall   0.126 cpu   0.923 rss    41MB others 0.42 steal 0.0% 
+r6 wikidata-bz3 t=10 mibz2-workers    wall   0.113 cpu   1.055 rss    71MB others 0.38 steal 0.0% 
+r6 wikidata-bz3 t=10 mibz2-auto       wall   0.124 cpu   0.919 rss    41MB others 0.44 steal 0.0% 
+r6 wikidata-bz3 t=10 mibz2            wall   0.125 cpu   1.062 rss    45MB others 0.35 steal 0.0% 
+r6 wikidata-bz3 t=20 mibz2-workers    wall   0.180 cpu   2.656 rss   113MB others 0.23 steal 0.0% 
+r6 wikidata-bz3 t=20 mibz2-auto       wall   0.122 cpu   0.904 rss    41MB others 0.45 steal 0.0% 
+r6 wikidata-bz3 t=20 mibz2            wall   0.111 cpu   1.018 rss    46MB others 0.28 steal 0.0% 
+r7 wikidata-bz3 t=4 mibz2-auto       wall   0.145 cpu   0.670 rss    41MB others 0.32 steal 0.0% 
+r7 wikidata-bz3 t=4 mibz2            wall   0.137 cpu   0.635 rss    41MB others 0.24 steal 0.0% 
+r7 wikidata-bz3 t=4 mibz2-workers    wall   0.137 cpu   0.636 rss    40MB others 0.23 steal 0.0% 
+r7 wikidata-bz3 t=6 mibz2-auto       wall   0.151 cpu   0.845 rss    35MB others 0.16 steal 0.0% 
+r7 wikidata-bz3 t=6 mibz2            wall   0.152 cpu   0.852 rss    35MB others 0.24 steal 0.0% 
+r7 wikidata-bz3 t=6 mibz2-workers    wall   0.109 cpu   0.708 rss    51MB others 0.45 steal 0.0% 
+r7 wikidata-bz3 t=8 mibz2-auto       wall   0.127 cpu   0.945 rss    41MB others 0.33 steal 0.0% 
+r7 wikidata-bz3 t=8 mibz2            wall   0.129 cpu   0.957 rss    41MB others 0.31 steal 0.0% 
+r7 wikidata-bz3 t=8 mibz2-workers    wall   0.130 cpu   0.843 rss    63MB others 0.34 steal 0.0% 
+r7 wikidata-bz3 t=10 mibz2-auto       wall   0.123 cpu   0.918 rss    39MB others 0.46 steal 0.0% 
+r7 wikidata-bz3 t=10 mibz2            wall   0.113 cpu   1.031 rss    46MB others 0.31 steal 0.0% 
+r7 wikidata-bz3 t=10 mibz2-workers    wall   0.117 cpu   1.030 rss    72MB others 0.31 steal 0.0% 
+r7 wikidata-bz3 t=20 mibz2-auto       wall   0.119 cpu   0.880 rss    41MB others 0.47 steal 0.0% 
+r7 wikidata-bz3 t=20 mibz2            wall   0.115 cpu   1.012 rss    44MB others 0.46 steal 0.0% 
+r7 wikidata-bz3 t=20 mibz2-workers    wall   0.180 cpu   2.638 rss   115MB others 0.27 steal 0.0% 
+r8 wikidata-bz3 t=4 mibz2            wall   0.140 cpu   0.649 rss    41MB others 0.21 steal 0.0% 
+r8 wikidata-bz3 t=4 mibz2-workers    wall   0.136 cpu   0.635 rss    40MB others 0.17 steal 0.0% 
+r8 wikidata-bz3 t=4 mibz2-auto       wall   0.142 cpu   0.657 rss    41MB others 0.30 steal 0.0% 
+r8 wikidata-bz3 t=6 mibz2            wall   0.151 cpu   0.843 rss    36MB others 0.17 steal 0.0% 
+r8 wikidata-bz3 t=6 mibz2-workers    wall   0.103 cpu   0.697 rss    52MB others 0.37 steal 0.0% 
+r8 wikidata-bz3 t=6 mibz2-auto       wall   0.152 cpu   0.851 rss    35MB others 0.30 steal 0.0% 
+r8 wikidata-bz3 t=8 mibz2            wall   0.125 cpu   0.927 rss    40MB others 0.24 steal 0.0% 
+r8 wikidata-bz3 t=8 mibz2-workers    wall   0.107 cpu   0.917 rss    61MB others 0.71 steal 0.0% 
+r8 wikidata-bz3 t=8 mibz2-auto       wall   0.126 cpu   0.927 rss    40MB others 0.39 steal 0.0% 
+r8 wikidata-bz3 t=10 mibz2            wall   0.110 cpu   1.006 rss    46MB others 0.30 steal 0.0% 
+r8 wikidata-bz3 t=10 mibz2-workers    wall   0.123 cpu   1.021 rss    71MB others 0.31 steal 0.0% 
+r8 wikidata-bz3 t=10 mibz2-auto       wall   0.121 cpu   0.891 rss    41MB others 0.31 steal 0.0% 
+r8 wikidata-bz3 t=20 mibz2            wall   0.119 cpu   0.978 rss    46MB others 0.25 steal 0.0% 
+r8 wikidata-bz3 t=20 mibz2-workers    wall   0.180 cpu   2.669 rss   114MB others 0.37 steal 0.0% 
+r8 wikidata-bz3 t=20 mibz2-auto       wall   0.120 cpu   0.880 rss    41MB others 0.24 steal 0.0% 
+r9 wikidata-bz3 t=4 mibz2            wall   0.143 cpu   0.661 rss    40MB others 0.19 steal 0.0% 
+r9 wikidata-bz3 t=4 mibz2-auto       wall   0.145 cpu   0.670 rss    41MB others 0.32 steal 0.0% 
+r9 wikidata-bz3 t=4 mibz2-workers    wall   0.144 cpu   0.666 rss    40MB others 0.16 steal 0.0% 
+r9 wikidata-bz3 t=6 mibz2            wall   0.153 cpu   0.847 rss    35MB others 0.21 steal 0.0% 
+r9 wikidata-bz3 t=6 mibz2-auto       wall   0.150 cpu   0.844 rss    35MB others 0.16 steal 0.0% 
+r9 wikidata-bz3 t=6 mibz2-workers    wall   0.108 cpu   0.722 rss    53MB others 0.42 steal 0.0% 
+r9 wikidata-bz3 t=8 mibz2            wall   0.131 cpu   0.968 rss    41MB others 0.24 steal 0.0% 
+r9 wikidata-bz3 t=8 mibz2-auto       wall   0.129 cpu   0.978 rss    41MB others 0.24 steal 0.0% 
+r9 wikidata-bz3 t=8 mibz2-workers    wall   0.105 cpu   0.851 rss    60MB others 0.64 steal 0.0% 
+r9 wikidata-bz3 t=10 mibz2            wall   0.137 cpu   1.077 rss    46MB others 0.62 steal 0.0% 
+r9 wikidata-bz3 t=10 mibz2-auto       wall   0.126 cpu   0.934 rss    41MB others 0.26 steal 0.0% 
+r9 wikidata-bz3 t=10 mibz2-workers    wall   0.126 cpu   0.946 rss    70MB others 0.32 steal 0.0% 
+r9 wikidata-bz3 t=20 mibz2            wall   0.112 cpu   1.020 rss    46MB others 0.17 steal 0.0% 
+r9 wikidata-bz3 t=20 mibz2-auto       wall   0.122 cpu   0.914 rss    40MB others 0.37 steal 0.0% 
+r9 wikidata-bz3 t=20 mibz2-workers    wall   0.180 cpu   2.715 rss   114MB others 0.18 steal 0.0% 
+r10 wikidata-bz3 t=4 mibz2-workers    wall   0.138 cpu   0.642 rss    41MB others 0.33 steal 0.0% 
+r10 wikidata-bz3 t=4 mibz2            wall   0.137 cpu   0.635 rss    40MB others 0.31 steal 0.0% 
+r10 wikidata-bz3 t=4 mibz2-auto       wall   0.136 cpu   0.635 rss    40MB others 0.31 steal 0.0% 
+r10 wikidata-bz3 t=6 mibz2-workers    wall   0.108 cpu   0.703 rss    52MB others 0.58 steal 0.0% 
+r10 wikidata-bz3 t=6 mibz2            wall   0.149 cpu   0.834 rss    35MB others 0.29 steal 0.0% 
+r10 wikidata-bz3 t=6 mibz2-auto       wall   0.152 cpu   0.850 rss    35MB others 0.19 steal 0.0% 
+r10 wikidata-bz3 t=8 mibz2-workers    wall   0.114 cpu   0.798 rss    61MB others 0.41 steal 0.0% 
+r10 wikidata-bz3 t=8 mibz2            wall   0.122 cpu   0.902 rss    40MB others 0.30 steal 0.0% 
+r10 wikidata-bz3 t=8 mibz2-auto       wall   0.124 cpu   0.922 rss    41MB others 0.28 steal 0.0% 
+r10 wikidata-bz3 t=10 mibz2-workers    wall   0.112 cpu   1.050 rss    71MB others 0.42 steal 0.0% 
+r10 wikidata-bz3 t=10 mibz2            wall   0.115 cpu   1.002 rss    46MB others 0.38 steal 0.0% 
+r10 wikidata-bz3 t=10 mibz2-auto       wall   0.123 cpu   0.916 rss    41MB others 0.19 steal 0.0% 
+r10 wikidata-bz3 t=20 mibz2-workers    wall   0.182 cpu   2.747 rss   115MB others 0.38 steal 0.0% 
+r10 wikidata-bz3 t=20 mibz2            wall   0.119 cpu   1.088 rss    46MB others 0.33 steal 0.0% 
+r10 wikidata-bz3 t=20 mibz2-auto       wall   0.131 cpu   0.968 rss    41MB others 0.38 steal 0.0% 
+r11 wikidata-bz3 t=4 mibz2-auto       wall   0.145 cpu   0.667 rss    40MB others 0.21 steal 0.0% 
+r11 wikidata-bz3 t=4 mibz2-workers    wall   0.146 cpu   0.674 rss    40MB others 0.17 steal 0.0% 
+r11 wikidata-bz3 t=4 mibz2            wall   0.151 cpu   0.691 rss    40MB others 0.31 steal 0.0% 
+r11 wikidata-bz3 t=6 mibz2-auto       wall   0.155 cpu   0.860 rss    35MB others 0.18 steal 0.0% 
+r11 wikidata-bz3 t=6 mibz2-workers    wall   0.103 cpu   0.692 rss    51MB others 0.41 steal 0.0% 
+r11 wikidata-bz3 t=6 mibz2            wall   0.152 cpu   0.847 rss    35MB others 0.27 steal 0.0% 
+r11 wikidata-bz3 t=8 mibz2-auto       wall   0.123 cpu   0.905 rss    41MB others 0.26 steal 0.0% 
+r11 wikidata-bz3 t=8 mibz2-workers    wall   0.102 cpu   0.857 rss    59MB others 0.40 steal 0.0% 
+r11 wikidata-bz3 t=8 mibz2            wall   0.126 cpu   0.932 rss    41MB others 0.13 steal 0.0% 
+r11 wikidata-bz3 t=10 mibz2-auto       wall   0.126 cpu   0.954 rss    41MB others 0.19 steal 0.0% 
+r11 wikidata-bz3 t=10 mibz2-workers    wall   0.108 cpu   1.107 rss    72MB others 0.46 steal 0.0% 
+r11 wikidata-bz3 t=10 mibz2            wall   0.115 cpu   0.982 rss    46MB others 0.30 steal 0.0% 
+r11 wikidata-bz3 t=20 mibz2-auto       wall   0.130 cpu   0.951 rss    41MB others 0.21 steal 0.0% 
+r11 wikidata-bz3 t=20 mibz2-workers    wall   0.183 cpu   2.742 rss   116MB others 0.31 steal 0.0% 
+r11 wikidata-bz3 t=20 mibz2            wall   0.118 cpu   1.055 rss    46MB others 0.28 steal 0.0% 
+r12 wikidata-bz3 t=4 mibz2-workers    wall   0.147 cpu   0.681 rss    41MB others 0.25 steal 0.0% 
+r12 wikidata-bz3 t=4 mibz2-auto       wall   0.139 cpu   0.644 rss    40MB others 0.11 steal 0.0% 
+r12 wikidata-bz3 t=4 mibz2            wall   0.144 cpu   0.664 rss    41MB others 0.36 steal 0.0% 
+r12 wikidata-bz3 t=6 mibz2-workers    wall   0.103 cpu   0.694 rss    52MB others 0.40 steal 0.0% 
+r12 wikidata-bz3 t=6 mibz2-auto       wall   0.151 cpu   0.852 rss    35MB others 0.31 steal 0.0% 
+r12 wikidata-bz3 t=6 mibz2            wall   0.151 cpu   0.838 rss    35MB others 0.33 steal 0.0% 
+r12 wikidata-bz3 t=8 mibz2-workers    wall   0.105 cpu   0.893 rss    62MB others 0.49 steal 0.0% 
+r12 wikidata-bz3 t=8 mibz2-auto       wall   0.128 cpu   0.957 rss    41MB others 0.39 steal 0.0% 
+r12 wikidata-bz3 t=8 mibz2            wall   0.128 cpu   0.944 rss    40MB others 0.19 steal 0.0% 
+r12 wikidata-bz3 t=10 mibz2-workers    wall   0.107 cpu   1.086 rss    72MB others 0.46 steal 0.0% 
+r12 wikidata-bz3 t=10 mibz2-auto       wall   0.132 cpu   0.975 rss    40MB others 0.18 steal 0.0% 
+r12 wikidata-bz3 t=10 mibz2            wall   0.108 cpu   0.960 rss    46MB others 0.43 steal 0.0% 
+r12 wikidata-bz3 t=20 mibz2-workers    wall   0.178 cpu   2.594 rss   113MB others 0.29 steal 0.0% 
+r12 wikidata-bz3 t=20 mibz2-auto       wall   0.123 cpu   0.912 rss    41MB others 0.35 steal 0.0% 
+r12 wikidata-bz3 t=20 mibz2            wall   0.117 cpu   1.034 rss    45MB others 0.29 steal 0.0% 
+r13 wikidata-bz3 t=4 mibz2-auto       wall   0.141 cpu   0.653 rss    42MB others 0.39 steal 0.0% 
+r13 wikidata-bz3 t=4 mibz2            wall   0.142 cpu   0.659 rss    41MB others 0.35 steal 0.0% 
+r13 wikidata-bz3 t=4 mibz2-workers    wall   0.142 cpu   0.658 rss    40MB others 0.22 steal 0.0% 
+r13 wikidata-bz3 t=6 mibz2-auto       wall   0.156 cpu   0.874 rss    35MB others 0.28 steal 0.0% 
+r13 wikidata-bz3 t=6 mibz2            wall   0.160 cpu   0.887 rss    35MB others 0.32 steal 0.0% 
+r13 wikidata-bz3 t=6 mibz2-workers    wall   0.107 cpu   0.719 rss    52MB others 0.35 steal 0.0% 
+r13 wikidata-bz3 t=8 mibz2-auto       wall   0.124 cpu   0.912 rss    40MB others 0.28 steal 0.0% 
+r13 wikidata-bz3 t=8 mibz2            wall   0.121 cpu   0.896 rss    40MB others 0.43 steal 0.0% 
+r13 wikidata-bz3 t=8 mibz2-workers    wall   0.102 cpu   0.781 rss    63MB others 0.46 steal 0.0% 
+r13 wikidata-bz3 t=10 mibz2-auto       wall   0.126 cpu   0.930 rss    41MB others 0.29 steal 0.0% 
+r13 wikidata-bz3 t=10 mibz2            wall   0.113 cpu   0.981 rss    46MB others 0.33 steal 0.0% 
+r13 wikidata-bz3 t=10 mibz2-workers    wall   0.108 cpu   1.089 rss    70MB others 0.43 steal 0.0% 
+r13 wikidata-bz3 t=20 mibz2-auto       wall   0.124 cpu   0.930 rss    40MB others 0.22 steal 0.0% 
+r13 wikidata-bz3 t=20 mibz2            wall   0.107 cpu   0.964 rss    46MB others 0.31 steal 0.0% 
+r13 wikidata-bz3 t=20 mibz2-workers    wall   0.179 cpu   2.597 rss   114MB others 0.28 steal 0.0% 
+r14 wikidata-bz3 t=4 mibz2            wall   0.146 cpu   0.674 rss    41MB others 0.29 steal 0.0% 
+r14 wikidata-bz3 t=4 mibz2-workers    wall   0.140 cpu   0.647 rss    40MB others 0.37 steal 0.0% 
+r14 wikidata-bz3 t=4 mibz2-auto       wall   0.146 cpu   0.674 rss    41MB others 0.29 steal 0.0% 
+r14 wikidata-bz3 t=6 mibz2            wall   0.150 cpu   0.847 rss    35MB others 0.21 steal 0.0% 
+r14 wikidata-bz3 t=6 mibz2-workers    wall   0.114 cpu   0.712 rss    51MB others 0.78 steal 0.0% 
+r14 wikidata-bz3 t=6 mibz2-auto       wall   0.157 cpu   0.883 rss    36MB others 0.28 steal 0.0% 
+r14 wikidata-bz3 t=8 mibz2            wall   0.126 cpu   0.936 rss    41MB others 0.33 steal 0.0% 
+r14 wikidata-bz3 t=8 mibz2-workers    wall   0.099 cpu   0.816 rss    63MB others 0.60 steal 0.0% 
+r14 wikidata-bz3 t=8 mibz2-auto       wall   0.126 cpu   0.936 rss    41MB others 0.25 steal 0.0% 
+r14 wikidata-bz3 t=10 mibz2            wall   0.114 cpu   1.032 rss    46MB others 0.30 steal 0.0% 
+r14 wikidata-bz3 t=10 mibz2-workers    wall   0.107 cpu   1.109 rss    72MB others 0.35 steal 0.0% 
+r14 wikidata-bz3 t=10 mibz2-auto       wall   0.131 cpu   0.968 rss    41MB others 0.24 steal 0.0% 
+r14 wikidata-bz3 t=20 mibz2            wall   0.116 cpu   0.995 rss    45MB others 0.36 steal 0.0% 
+r14 wikidata-bz3 t=20 mibz2-workers    wall   0.179 cpu   2.597 rss   113MB others 0.23 steal 0.0% 
+r14 wikidata-bz3 t=20 mibz2-auto       wall   0.125 cpu   0.919 rss    41MB others 0.30 steal 0.0% 
+r15 wikidata-bz3 t=4 mibz2            wall   0.143 cpu   0.664 rss    40MB others 0.30 steal 0.0% 
+r15 wikidata-bz3 t=4 mibz2-auto       wall   0.147 cpu   0.678 rss    41MB others 0.21 steal 0.0% 
+r15 wikidata-bz3 t=4 mibz2-workers    wall   0.145 cpu   0.667 rss    40MB others 0.27 steal 0.0% 
+r15 wikidata-bz3 t=6 mibz2            wall   0.152 cpu   0.848 rss    35MB others 0.27 steal 0.0% 
+r15 wikidata-bz3 t=6 mibz2-auto       wall   0.151 cpu   0.852 rss    35MB others 0.24 steal 0.0% 
+r15 wikidata-bz3 t=6 mibz2-workers    wall   0.105 cpu   0.706 rss    52MB others 0.38 steal 0.0% 
+r15 wikidata-bz3 t=8 mibz2            wall   0.126 cpu   0.946 rss    41MB others 0.32 steal 0.0% 
+r15 wikidata-bz3 t=8 mibz2-auto       wall   0.125 cpu   0.948 rss    41MB others 0.09 steal 0.0% 
+r15 wikidata-bz3 t=8 mibz2-workers    wall   0.106 cpu   0.840 rss    62MB others 0.52 steal 0.0% 
+r15 wikidata-bz3 t=10 mibz2            wall   0.115 cpu   1.028 rss    46MB others 0.25 steal 0.0% 
+r15 wikidata-bz3 t=10 mibz2-auto       wall   0.132 cpu   0.943 rss    41MB others 0.42 steal 0.0% 
+r15 wikidata-bz3 t=10 mibz2-workers    wall   0.118 cpu   1.010 rss    71MB others 0.31 steal 0.0% 
+r15 wikidata-bz3 t=20 mibz2            wall   0.115 cpu   0.980 rss    45MB others 0.32 steal 0.0% 
+r15 wikidata-bz3 t=20 mibz2-auto       wall   0.125 cpu   0.916 rss    41MB others 0.25 steal 0.0% 
+r15 wikidata-bz3 t=20 mibz2-workers    wall   0.181 cpu   2.696 rss   114MB others 0.34 steal 0.0% 
+r16 wikidata-bz3 t=4 mibz2-workers    wall   0.143 cpu   0.661 rss    40MB others 0.38 steal 0.0% 
+r16 wikidata-bz3 t=4 mibz2            wall   0.136 cpu   0.632 rss    40MB others 0.19 steal 0.0% 
+r16 wikidata-bz3 t=4 mibz2-auto       wall   0.144 cpu   0.665 rss    41MB others 0.29 steal 0.0% 
+r16 wikidata-bz3 t=6 mibz2-workers    wall   0.104 cpu   0.698 rss    52MB others 0.45 steal 0.0% 
+r16 wikidata-bz3 t=6 mibz2            wall   0.151 cpu   0.840 rss    35MB others 0.32 steal 0.0% 
+r16 wikidata-bz3 t=6 mibz2-auto       wall   0.154 cpu   0.858 rss    35MB others 0.25 steal 0.0% 
+r16 wikidata-bz3 t=8 mibz2-workers    wall   0.103 cpu   0.844 rss    61MB others 0.48 steal 0.0% 
+r16 wikidata-bz3 t=8 mibz2            wall   0.127 cpu   0.933 rss    41MB others 0.34 steal 0.0% 
+r16 wikidata-bz3 t=8 mibz2-auto       wall   0.129 cpu   0.927 rss    41MB others 0.31 steal 0.0% 
+r16 wikidata-bz3 t=10 mibz2-workers    wall   0.108 cpu   1.103 rss    72MB others 0.39 steal 0.0% 
+r16 wikidata-bz3 t=10 mibz2            wall   0.110 cpu   0.999 rss    45MB others 0.36 steal 0.0% 
+r16 wikidata-bz3 t=10 mibz2-auto       wall   0.132 cpu   0.978 rss    41MB others 0.38 steal 0.0% 
+r16 wikidata-bz3 t=20 mibz2-workers    wall   0.178 cpu   2.554 rss   114MB others 0.40 steal 0.0% 
+r16 wikidata-bz3 t=20 mibz2            wall   0.115 cpu   0.991 rss    46MB others 0.31 steal 0.0% 
+r16 wikidata-bz3 t=20 mibz2-auto       wall   0.125 cpu   0.923 rss    42MB others 0.27 steal 0.0% 
+r17 wikidata-bz3 t=4 mibz2-auto       wall   0.138 cpu   0.638 rss    40MB others 0.36 steal 0.0% 
+r17 wikidata-bz3 t=4 mibz2-workers    wall   0.137 cpu   0.636 rss    41MB others 0.23 steal 0.0% 
+r17 wikidata-bz3 t=4 mibz2            wall   0.136 cpu   0.630 rss    40MB others 0.34 steal 0.0% 
+r17 wikidata-bz3 t=6 mibz2-auto       wall   0.154 cpu   0.860 rss    35MB others 0.18 steal 0.0% 
+r17 wikidata-bz3 t=6 mibz2-workers    wall   0.110 cpu   0.715 rss    52MB others 0.39 steal 0.0% 
+r17 wikidata-bz3 t=6 mibz2            wall   0.155 cpu   0.887 rss    35MB others 0.26 steal 0.0% 
+r17 wikidata-bz3 t=8 mibz2-auto       wall   0.126 cpu   0.924 rss    42MB others 0.41 steal 0.0% 
+r17 wikidata-bz3 t=8 mibz2-workers    wall   0.100 cpu   0.832 rss    61MB others 0.36 steal 0.0% 
+r17 wikidata-bz3 t=8 mibz2            wall   0.126 cpu   0.947 rss    41MB others 0.46 steal 0.0% 
+r17 wikidata-bz3 t=10 mibz2-auto       wall   0.133 cpu   0.978 rss    40MB others 0.36 steal 0.0% 
+r17 wikidata-bz3 t=10 mibz2-workers    wall   0.109 cpu   1.065 rss    72MB others 0.46 steal 0.0% 
+r17 wikidata-bz3 t=10 mibz2            wall   0.115 cpu   0.988 rss    46MB others 0.33 steal 0.0% 
+r17 wikidata-bz3 t=20 mibz2-auto       wall   0.123 cpu   0.907 rss    40MB others 0.39 steal 0.0% 
+r17 wikidata-bz3 t=20 mibz2-workers    wall   0.180 cpu   2.652 rss   111MB others 0.35 steal 0.0% 
+r17 wikidata-bz3 t=20 mibz2            wall   0.115 cpu   0.982 rss    46MB others 0.38 steal 0.0% 
+r18 wikidata-bz3 t=4 mibz2-workers    wall   0.143 cpu   0.660 rss    40MB others 0.26 steal 0.0% 
+r18 wikidata-bz3 t=4 mibz2-auto       wall   0.138 cpu   0.639 rss    41MB others 0.21 steal 0.0% 
+r18 wikidata-bz3 t=4 mibz2            wall   0.140 cpu   0.648 rss    41MB others 0.42 steal 0.0% 
+r18 wikidata-bz3 t=6 mibz2-workers    wall   0.104 cpu   0.703 rss    51MB others 0.32 steal 0.0% 
+r18 wikidata-bz3 t=6 mibz2-auto       wall   0.155 cpu   0.856 rss    35MB others 0.32 steal 0.0% 
+r18 wikidata-bz3 t=6 mibz2            wall   0.151 cpu   0.845 rss    35MB others 0.35 steal 0.0% 
+r18 wikidata-bz3 t=8 mibz2-workers    wall   0.101 cpu   0.845 rss    61MB others 0.42 steal 0.0% 
+r18 wikidata-bz3 t=8 mibz2-auto       wall   0.125 cpu   0.918 rss    41MB others 0.23 steal 0.0% 
+r18 wikidata-bz3 t=8 mibz2            wall   0.125 cpu   0.919 rss    41MB others 0.45 steal 0.0% 
+r18 wikidata-bz3 t=10 mibz2-workers    wall   0.107 cpu   1.092 rss    70MB others 0.40 steal 0.0% 
+r18 wikidata-bz3 t=10 mibz2-auto       wall   0.125 cpu   0.919 rss    41MB others 0.23 steal 0.0% 
+r18 wikidata-bz3 t=10 mibz2            wall   0.116 cpu   0.982 rss    47MB others 0.22 steal 0.0% 
+r18 wikidata-bz3 t=20 mibz2-workers    wall   0.182 cpu   2.743 rss   113MB others 0.30 steal 0.0% 
+r18 wikidata-bz3 t=20 mibz2-auto       wall   0.124 cpu   0.910 rss    41MB others 0.44 steal 0.0% 
+r18 wikidata-bz3 t=20 mibz2            wall   0.108 cpu   0.974 rss    46MB others 0.39 steal 0.0% 
+r19 wikidata-bz3 t=4 mibz2-auto       wall   0.139 cpu   0.647 rss    42MB others 0.43 steal 0.0% 
+r19 wikidata-bz3 t=4 mibz2            wall   0.150 cpu   0.687 rss    41MB others 0.34 steal 0.0% 
+r19 wikidata-bz3 t=4 mibz2-workers    wall   0.146 cpu   0.677 rss    41MB others 0.34 steal 0.0% 
+r19 wikidata-bz3 t=6 mibz2-auto       wall   0.150 cpu   0.845 rss    35MB others 0.22 steal 0.0% 
+r19 wikidata-bz3 t=6 mibz2            wall   0.153 cpu   0.855 rss    35MB others 0.27 steal 0.0% 
+r19 wikidata-bz3 t=6 mibz2-workers    wall   0.104 cpu   0.699 rss    52MB others 0.44 steal 0.0% 
+r19 wikidata-bz3 t=8 mibz2-auto       wall   0.121 cpu   0.895 rss    41MB others 0.20 steal 0.0% 
+r19 wikidata-bz3 t=8 mibz2            wall   0.131 cpu   0.974 rss    41MB others 0.42 steal 0.0% 
+r19 wikidata-bz3 t=8 mibz2-workers    wall   0.122 cpu   0.840 rss    61MB others 0.39 steal 0.0% 
+r19 wikidata-bz3 t=10 mibz2-auto       wall   0.131 cpu   0.960 rss    41MB others 0.37 steal 0.0% 
+r19 wikidata-bz3 t=10 mibz2            wall   0.116 cpu   1.000 rss    45MB others 0.31 steal 0.0% 
+r19 wikidata-bz3 t=10 mibz2-workers    wall   0.119 cpu   1.012 rss    72MB others 0.37 steal 0.0% 
+r19 wikidata-bz3 t=20 mibz2-auto       wall   0.127 cpu   0.942 rss    41MB others 0.28 steal 0.0% 
+r19 wikidata-bz3 t=20 mibz2            wall   0.115 cpu   1.030 rss    46MB others 0.40 steal 0.0% 
+r19 wikidata-bz3 t=20 mibz2-workers    wall   0.179 cpu   2.561 rss   115MB others 0.31 steal 0.0% 
+# The cooperative decoder's full-decoder A/B (20261030T002753Z)
+
+- **Build:** 2591867; **machine:** Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz, 20 CPUs; **load:** 7.20
+- **Rounds:** 20, interleaved, unpinned, back to back; corpus wikidata-bz3.bz2
+- **Note:** level-aware plan, revision 2: bz3
+
+## The gates (mibz2 at all CPUs against mibz2-workers at 4)
+
+| gate | pass | measured |
+|---|---|--:|
+| throughput: mean >= 1.15 | yes | 1.236 |
+| throughput: 95% lower bound > 1.05 | yes | 1.212 |
+| bytes identical, no error | yes | 1 hash(es), 0 error(s) |
+| peak RSS <= 1.15x | yes | 1.141 |
+| CPU-seconds <= 1.5x | **no** | 1.532 |
+
+Verdict: **a reproducible gain below the headline, for the user's decision**.
+
+## Every arm, against mibz2-workers at 4 (p4)
+
+| arm | T | MB/s | paired ratio (95%) | won | peak RSS | RSS ratio | CPU-s | CPU ratio |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| mibz2 | 4 | 1495 | 1.006 (0.993-1.019) | 12/20 | 41 MB | 1.00 | 0.65 | 0.99 |
+| mibz2 | 6 | 1380 | 0.930 (0.917-0.943) | 0/20 | 35 MB | 0.87 | 0.85 | 1.29 |
+| mibz2 | 8 | 1666 | 1.127 (1.110-1.144) | 20/20 | 41 MB | 1.01 | 0.93 | 1.41 |
+| mibz2 | 10 | 1823 | 1.221 (1.180-1.263) | 19/20 | 46 MB | 1.14 | 1.00 | 1.52 |
+| mibz2 | 20 | 1821 | 1.236 (1.212-1.260) | 20/20 | 46 MB | 1.14 | 1.01 | 1.53 |
+| mibz2-auto | 4 | 1481 | 1.002 (0.985-1.019) | 9/20 | 41 MB | 1.00 | 0.66 | 0.99 |
+| mibz2-auto | 6 | 1381 | 0.930 (0.916-0.944) | 0/20 | 35 MB | 0.87 | 0.85 | 1.29 |
+| mibz2-auto | 8 | 1674 | 1.126 (1.108-1.144) | 20/20 | 41 MB | 1.01 | 0.93 | 1.40 |
+| mibz2-auto | 10 | 1668 | 1.120 (1.104-1.135) | 20/20 | 41 MB | 1.01 | 0.93 | 1.41 |
+| mibz2-auto | 20 | 1698 | 1.146 (1.129-1.163) | 20/20 | 41 MB | 1.01 | 0.91 | 1.38 |
+| mibz2-workers | 4 | 1471 | 1.000 (1.000-1.000) | 0/20 | 40 MB | 1.00 | 0.66 | 1.00 |
+| mibz2-workers | 6 | 2002 | 1.344 (1.314-1.373) | 20/20 | 52 MB | 1.28 | 0.70 | 1.07 |
+| mibz2-workers | 8 | 2013 | 1.334 (1.278-1.393) | 20/20 | 61 MB | 1.52 | 0.84 | 1.27 |
+| mibz2-workers | 10 | 1870 | 1.249 (1.212-1.288) | 20/20 | 72 MB | 1.77 | 1.06 | 1.61 |
+| mibz2-workers | 20 | 1163 | 0.787 (0.776-0.797) | 0/20 | 114 MB | 2.82 | 2.65 | 4.03 |
+
+## Every arm, against the workers' best here (mibz2-workers at 8)
+
+| arm | T | MB/s | paired ratio (95%) | won | peak RSS | RSS ratio | CPU-s | CPU ratio |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| mibz2 | 4 | 1495 | 0.754 (0.724-0.785) | 0/20 | 41 MB | 0.66 | 0.65 | 0.77 |
+| mibz2 | 6 | 1380 | 0.697 (0.670-0.725) | 0/20 | 35 MB | 0.57 | 0.85 | 1.01 |
+| mibz2 | 8 | 1666 | 0.845 (0.816-0.874) | 1/20 | 41 MB | 0.66 | 0.93 | 1.11 |
+| mibz2 | 10 | 1823 | 0.915 (0.873-0.958) | 3/20 | 46 MB | 0.75 | 1.00 | 1.20 |
+| mibz2 | 20 | 1821 | 0.926 (0.891-0.963) | 4/20 | 46 MB | 0.75 | 1.01 | 1.20 |
+| mibz2-auto | 4 | 1481 | 0.751 (0.723-0.780) | 0/20 | 41 MB | 0.66 | 0.66 | 0.78 |
+| mibz2-auto | 6 | 1381 | 0.697 (0.668-0.726) | 0/20 | 35 MB | 0.57 | 0.85 | 1.01 |
+| mibz2-auto | 8 | 1674 | 0.844 (0.808-0.881) | 2/20 | 41 MB | 0.67 | 0.93 | 1.10 |
+| mibz2-auto | 10 | 1668 | 0.839 (0.803-0.877) | 1/20 | 41 MB | 0.67 | 0.93 | 1.11 |
+| mibz2-auto | 20 | 1698 | 0.859 (0.826-0.893) | 1/20 | 41 MB | 0.67 | 0.91 | 1.09 |
+| mibz2-workers | 4 | 1471 | 0.749 (0.718-0.783) | 0/20 | 40 MB | 0.66 | 0.66 | 0.78 |
+| mibz2-workers | 6 | 2002 | 1.007 (0.970-1.045) | 9/20 | 52 MB | 0.84 | 0.70 | 0.84 |
+| mibz2-workers | 8 | 2013 | 1.000 (1.000-1.000) | 0/20 | 61 MB | 1.00 | 0.84 | 1.00 |
+| mibz2-workers | 10 | 1870 | 0.936 (0.899-0.975) | 5/20 | 72 MB | 1.17 | 1.06 | 1.26 |
+| mibz2-workers | 20 | 1163 | 0.589 (0.568-0.612) | 0/20 | 114 MB | 1.86 | 2.65 | 3.16 |
+
+Files: coop-decoder-20261030T002753Z.jsonl, coop-decoder-20261030T002753Z.json
+
+coop-decoder: wrote coop-decoder-20261030T002753Z.md, .json and the .jsonl: upload them all
+coop-decoder: the full machine: target/release/examples/ab run coop-decoder-20261030T002836Z.jsonl --arms mibz2-workers,mibz2-auto,mibz2 --threads 4,6,8,10,20 --rounds 20 --settle 0 corpora/wikidata-mix93.bz2
+r0 wikidata-mix93 t=4 mibz2-workers    wall   0.317 cpu   1.456 rss    94MB others 0.22 steal 0.0% 
+r0 wikidata-mix93 t=4 mibz2-auto       wall   0.318 cpu   1.458 rss    90MB others 0.10 steal 0.0% 
+r0 wikidata-mix93 t=4 mibz2            wall   0.326 cpu   1.490 rss    92MB others 0.15 steal 0.0% 
+r0 wikidata-mix93 t=6 mibz2-workers    wall   0.305 cpu   2.022 rss   116MB others 0.21 steal 0.0% 
+r0 wikidata-mix93 t=6 mibz2-auto       wall   0.302 cpu   1.658 rss    76MB others 0.10 steal 0.0% 
+r0 wikidata-mix93 t=6 mibz2            wall   0.303 cpu   1.669 rss    77MB others 0.23 steal 0.0% 
+r0 wikidata-mix93 t=8 mibz2-workers    wall   0.391 cpu   3.248 rss   141MB others 0.15 steal 0.0% 
+r0 wikidata-mix93 t=8 mibz2-auto       wall   0.273 cpu   1.989 rss    90MB others 0.18 steal 0.0% 
+r0 wikidata-mix93 t=8 mibz2            wall   0.276 cpu   2.005 rss    89MB others 0.27 steal 0.0% 
+r0 wikidata-mix93 t=10 mibz2-workers    wall   0.400 cpu   4.159 rss   163MB others 0.15 steal 0.0% 
+r0 wikidata-mix93 t=10 mibz2-auto       wall   0.276 cpu   2.006 rss    92MB others 0.26 steal 0.0% 
+r0 wikidata-mix93 t=10 mibz2            wall   0.272 cpu   1.962 rss    94MB others 0.27 steal 0.0% 
+r0 wikidata-mix93 t=20 mibz2-workers    wall   0.605 cpu  10.741 rss   267MB others 0.22 steal 0.0% 
+r0 wikidata-mix93 t=20 mibz2-auto       wall   0.281 cpu   2.017 rss    93MB others 0.11 steal 0.0% 
+r0 wikidata-mix93 t=20 mibz2            wall   0.276 cpu   1.990 rss    91MB others 0.14 steal 0.0% 
+r1 wikidata-mix93 t=4 mibz2-auto       wall   0.332 cpu   1.517 rss    93MB others 0.18 steal 0.0% 
+r1 wikidata-mix93 t=4 mibz2            wall   0.324 cpu   1.483 rss    89MB others 0.20 steal 0.0% 
+r1 wikidata-mix93 t=4 mibz2-workers    wall   0.313 cpu   1.441 rss    91MB others 0.24 steal 0.0% 
+r1 wikidata-mix93 t=6 mibz2-auto       wall   0.301 cpu   1.647 rss    79MB others 0.20 steal 0.0% 
+r1 wikidata-mix93 t=6 mibz2            wall   0.305 cpu   1.703 rss    76MB others 0.25 steal 0.0% 
+r1 wikidata-mix93 t=6 mibz2-workers    wall   0.322 cpu   2.132 rss   116MB others 0.20 steal 0.0% 
+r1 wikidata-mix93 t=8 mibz2-auto       wall   0.278 cpu   2.027 rss    90MB others 0.21 steal 0.0% 
+r1 wikidata-mix93 t=8 mibz2            wall   0.273 cpu   1.962 rss    92MB others 0.20 steal 0.0% 
+r1 wikidata-mix93 t=8 mibz2-workers    wall   0.368 cpu   3.136 rss   139MB others 0.35 steal 0.0% 
+r1 wikidata-mix93 t=10 mibz2-auto       wall   0.276 cpu   2.003 rss    89MB others 0.20 steal 0.0% 
+r1 wikidata-mix93 t=10 mibz2            wall   0.278 cpu   2.007 rss    90MB others 0.19 steal 0.0% 
+r1 wikidata-mix93 t=10 mibz2-workers    wall   0.401 cpu   4.072 rss   167MB others 0.21 steal 0.0% 
+r1 wikidata-mix93 t=20 mibz2-auto       wall   0.277 cpu   2.000 rss    91MB others 0.28 steal 0.0% 
+r1 wikidata-mix93 t=20 mibz2            wall   0.269 cpu   1.934 rss    91MB others 0.27 steal 0.0% 
+r1 wikidata-mix93 t=20 mibz2-workers    wall   0.616 cpu  11.075 rss   270MB others 0.20 steal 0.0% 
+r2 wikidata-mix93 t=4 mibz2            wall   0.316 cpu   1.452 rss    93MB others 0.18 steal 0.0% 
+r2 wikidata-mix93 t=4 mibz2-workers    wall   0.315 cpu   1.452 rss    87MB others 0.09 steal 0.0% 
+r2 wikidata-mix93 t=4 mibz2-auto       wall   0.332 cpu   1.519 rss    92MB others 0.15 steal 0.0% 
+r2 wikidata-mix93 t=6 mibz2            wall   0.303 cpu   1.692 rss    76MB others 0.15 steal 0.0% 
+r2 wikidata-mix93 t=6 mibz2-workers    wall   0.318 cpu   2.106 rss   117MB others 0.23 steal 0.0% 
+r2 wikidata-mix93 t=6 mibz2-auto       wall   0.305 cpu   1.683 rss    80MB others 0.18 steal 0.0% 
+r2 wikidata-mix93 t=8 mibz2            wall   0.272 cpu   1.961 rss    91MB others 0.21 steal 0.0% 
+r2 wikidata-mix93 t=8 mibz2-workers    wall   0.375 cpu   3.086 rss   140MB others 0.22 steal 0.0% 
+r2 wikidata-mix93 t=8 mibz2-auto       wall   0.276 cpu   1.980 rss    92MB others 0.25 steal 0.0% 
+r2 wikidata-mix93 t=10 mibz2            wall   0.278 cpu   1.979 rss    89MB others 0.21 steal 0.0% 
+r2 wikidata-mix93 t=10 mibz2-workers    wall   0.432 cpu   4.333 rss   166MB others 0.21 steal 0.0% 
+r2 wikidata-mix93 t=10 mibz2-auto       wall   0.272 cpu   1.967 rss    91MB others 0.33 steal 0.0% 
+r2 wikidata-mix93 t=20 mibz2            wall   0.280 cpu   2.015 rss    92MB others 0.19 steal 0.0% 
+r2 wikidata-mix93 t=20 mibz2-workers    wall   0.627 cpu  11.293 rss   269MB others 0.21 steal 0.0% 
+r2 wikidata-mix93 t=20 mibz2-auto       wall   0.276 cpu   1.981 rss    91MB others 0.21 steal 0.0% 
+r3 wikidata-mix93 t=4 mibz2            wall   0.311 cpu   1.435 rss    94MB others 0.14 steal 0.0% 
+r3 wikidata-mix93 t=4 mibz2-auto       wall   0.313 cpu   1.438 rss    88MB others 0.19 steal 0.0% 
+r3 wikidata-mix93 t=4 mibz2-workers    wall   0.315 cpu   1.452 rss    91MB others 0.24 steal 0.0% 
+r3 wikidata-mix93 t=6 mibz2            wall   0.315 cpu   1.763 rss    76MB others 0.15 steal 0.0% 
+r3 wikidata-mix93 t=6 mibz2-auto       wall   0.308 cpu   1.696 rss    75MB others 0.20 steal 0.0% 
+r3 wikidata-mix93 t=6 mibz2-workers    wall   0.322 cpu   2.127 rss   115MB others 0.19 steal 0.0% 
+r3 wikidata-mix93 t=8 mibz2            wall   0.275 cpu   1.968 rss    89MB others 0.18 steal 0.0% 
+r3 wikidata-mix93 t=8 mibz2-auto       wall   0.281 cpu   2.020 rss    92MB others 0.24 steal 0.0% 
+r3 wikidata-mix93 t=8 mibz2-workers    wall   0.368 cpu   3.179 rss   145MB others 0.37 steal 0.0% 
+r3 wikidata-mix93 t=10 mibz2            wall   0.273 cpu   1.951 rss    94MB others 0.28 steal 0.0% 
+r3 wikidata-mix93 t=10 mibz2-auto       wall   0.272 cpu   1.956 rss    90MB others 0.19 steal 0.0% 
+r3 wikidata-mix93 t=10 mibz2-workers    wall   0.399 cpu   4.136 rss   166MB others 0.20 steal 0.0% 
+r3 wikidata-mix93 t=20 mibz2            wall   0.274 cpu   1.978 rss    88MB others 0.15 steal 0.0% 
+r3 wikidata-mix93 t=20 mibz2-auto       wall   0.276 cpu   2.020 rss    93MB others 0.21 steal 0.0% 
+r3 wikidata-mix93 t=20 mibz2-workers    wall   0.614 cpu  10.973 rss   269MB others 0.21 steal 0.0% 
+r4 wikidata-mix93 t=4 mibz2-workers    wall   0.311 cpu   1.432 rss    90MB others 0.21 steal 0.0% 
+r4 wikidata-mix93 t=4 mibz2            wall   0.310 cpu   1.426 rss    92MB others 0.14 steal 0.0% 
+r4 wikidata-mix93 t=4 mibz2-auto       wall   0.316 cpu   1.453 rss    89MB others 0.09 steal 0.0% 
+r4 wikidata-mix93 t=6 mibz2-workers    wall   0.311 cpu   2.065 rss   115MB others 0.14 steal 0.0% 
+r4 wikidata-mix93 t=6 mibz2            wall   0.303 cpu   1.653 rss    75MB others 0.12 steal 0.0% 
+r4 wikidata-mix93 t=6 mibz2-auto       wall   0.301 cpu   1.644 rss    75MB others 0.18 steal 0.0% 
+r4 wikidata-mix93 t=8 mibz2-workers    wall   0.367 cpu   3.030 rss   140MB others 0.24 steal 0.0% 
+r4 wikidata-mix93 t=8 mibz2            wall   0.272 cpu   1.970 rss    95MB others 0.32 steal 0.0% 
+r4 wikidata-mix93 t=8 mibz2-auto       wall   0.279 cpu   2.012 rss    91MB others 0.23 steal 0.0% 
+r4 wikidata-mix93 t=10 mibz2-workers    wall   0.425 cpu   4.465 rss   164MB others 0.19 steal 0.0% 
+r4 wikidata-mix93 t=10 mibz2            wall   0.274 cpu   1.998 rss    94MB others 0.26 steal 0.0% 
+r4 wikidata-mix93 t=10 mibz2-auto       wall   0.277 cpu   2.030 rss    92MB others 0.21 steal 0.0% 
+r4 wikidata-mix93 t=20 mibz2-workers    wall   0.612 cpu  10.939 rss   269MB others 0.22 steal 0.0% 
+r4 wikidata-mix93 t=20 mibz2            wall   0.276 cpu   1.984 rss    92MB others 0.16 steal 0.0% 
+r4 wikidata-mix93 t=20 mibz2-auto       wall   0.281 cpu   2.069 rss    93MB others 0.14 steal 0.0% 
+r5 wikidata-mix93 t=4 mibz2-auto       wall   0.335 cpu   1.528 rss    89MB others 0.18 steal 0.0% 
+r5 wikidata-mix93 t=4 mibz2-workers    wall   0.322 cpu   1.475 rss    90MB others 0.23 steal 0.0% 
+r5 wikidata-mix93 t=4 mibz2            wall   0.314 cpu   1.445 rss    88MB others 0.20 steal 0.0% 
+r5 wikidata-mix93 t=6 mibz2-auto       wall   0.309 cpu   1.695 rss    77MB others 0.20 steal 0.0% 
+r5 wikidata-mix93 t=6 mibz2-workers    wall   0.316 cpu   2.093 rss   118MB others 0.15 steal 0.0% 
+r5 wikidata-mix93 t=6 mibz2            wall   0.302 cpu   1.654 rss    80MB others 0.15 steal 0.0% 
+r5 wikidata-mix93 t=8 mibz2-auto       wall   0.273 cpu   1.964 rss    93MB others 0.13 steal 0.0% 
+r5 wikidata-mix93 t=8 mibz2-workers    wall   0.387 cpu   3.093 rss   143MB others 0.34 steal 0.0% 
+r5 wikidata-mix93 t=8 mibz2            wall   0.278 cpu   2.029 rss    93MB others 0.21 steal 0.0% 
+r5 wikidata-mix93 t=10 mibz2-auto       wall   0.275 cpu   2.001 rss    90MB others 0.24 steal 0.0% 
+r5 wikidata-mix93 t=10 mibz2-workers    wall   0.444 cpu   4.465 rss   164MB others 0.25 steal 0.0% 
+r5 wikidata-mix93 t=10 mibz2            wall   0.274 cpu   1.983 rss    93MB others 0.24 steal 0.0% 
+r5 wikidata-mix93 t=20 mibz2-auto       wall   0.274 cpu   2.015 rss    89MB others 0.19 steal 0.0% 
+r5 wikidata-mix93 t=20 mibz2-workers    wall   0.614 cpu  10.919 rss   272MB others 0.14 steal 0.0% 
+r5 wikidata-mix93 t=20 mibz2            wall   0.279 cpu   2.030 rss    91MB others 0.21 steal 0.0% 
+r6 wikidata-mix93 t=4 mibz2-workers    wall   0.316 cpu   1.451 rss    88MB others 0.18 steal 0.0% 
+r6 wikidata-mix93 t=4 mibz2-auto       wall   0.317 cpu   1.453 rss    88MB others 0.15 steal 0.0% 
+r6 wikidata-mix93 t=4 mibz2            wall   0.317 cpu   1.457 rss    93MB others 0.13 steal 0.0% 
+r6 wikidata-mix93 t=6 mibz2-workers    wall   0.310 cpu   2.061 rss   117MB others 0.24 steal 0.0% 
+r6 wikidata-mix93 t=6 mibz2-auto       wall   0.305 cpu   1.700 rss    79MB others 0.19 steal 0.0% 
+r6 wikidata-mix93 t=6 mibz2            wall   0.304 cpu   1.675 rss    79MB others 0.21 steal 0.0% 
+r6 wikidata-mix93 t=8 mibz2-workers    wall   0.357 cpu   3.011 rss   144MB others 0.19 steal 0.0% 
+r6 wikidata-mix93 t=8 mibz2-auto       wall   0.278 cpu   2.013 rss    91MB others 0.25 steal 0.0% 
+r6 wikidata-mix93 t=8 mibz2            wall   0.299 cpu   2.046 rss    91MB others 0.31 steal 0.0% 
+r6 wikidata-mix93 t=10 mibz2-workers    wall   0.416 cpu   3.741 rss   165MB others 0.21 steal 0.0% 
+r6 wikidata-mix93 t=10 mibz2-auto       wall   0.274 cpu   1.957 rss    94MB others 0.22 steal 0.0% 
+r6 wikidata-mix93 t=10 mibz2            wall   0.279 cpu   2.029 rss    93MB others 0.21 steal 0.0% 
+r6 wikidata-mix93 t=20 mibz2-workers    wall   0.611 cpu  11.115 rss   268MB others 0.20 steal 0.0% 
+r6 wikidata-mix93 t=20 mibz2-auto       wall   0.277 cpu   1.999 rss    91MB others 0.18 steal 0.0% 
+r6 wikidata-mix93 t=20 mibz2            wall   0.278 cpu   2.017 rss    95MB others 0.35 steal 0.0% 
+r7 wikidata-mix93 t=4 mibz2-auto       wall   0.324 cpu   1.487 rss    88MB others 0.25 steal 0.0% 
+r7 wikidata-mix93 t=4 mibz2            wall   0.323 cpu   1.478 rss    89MB others 0.10 steal 0.0% 
+r7 wikidata-mix93 t=4 mibz2-workers    wall   0.310 cpu   1.431 rss    92MB others 0.18 steal 0.0% 
+r7 wikidata-mix93 t=6 mibz2-auto       wall   0.311 cpu   1.702 rss    76MB others 0.09 steal 0.0% 
+r7 wikidata-mix93 t=6 mibz2            wall   0.307 cpu   1.690 rss    77MB others 0.09 steal 0.0% 
+r7 wikidata-mix93 t=6 mibz2-workers    wall   0.316 cpu   2.123 rss   117MB others 0.15 steal 0.0% 
+r7 wikidata-mix93 t=8 mibz2-auto       wall   0.275 cpu   1.990 rss    90MB others 0.25 steal 0.0% 
+r7 wikidata-mix93 t=8 mibz2            wall   0.273 cpu   1.993 rss    95MB others 0.17 steal 0.0% 
+r7 wikidata-mix93 t=8 mibz2-workers    wall   0.373 cpu   3.135 rss   142MB others 0.20 steal 0.0% 
+r7 wikidata-mix93 t=10 mibz2-auto       wall   0.274 cpu   1.995 rss    92MB others 0.26 steal 0.0% 
+r7 wikidata-mix93 t=10 mibz2            wall   0.275 cpu   1.994 rss    91MB others 0.23 steal 0.0% 
+r7 wikidata-mix93 t=10 mibz2-workers    wall   0.464 cpu   4.862 rss   165MB others 0.14 steal 0.0% 
+r7 wikidata-mix93 t=20 mibz2-auto       wall   0.276 cpu   2.007 rss    96MB others 0.19 steal 0.0% 
+r7 wikidata-mix93 t=20 mibz2            wall   0.278 cpu   2.007 rss    91MB others 0.21 steal 0.0% 
+r7 wikidata-mix93 t=20 mibz2-workers    wall   0.617 cpu  10.999 rss   270MB others 0.21 steal 0.0% 
+r8 wikidata-mix93 t=4 mibz2            wall   0.331 cpu   1.509 rss    88MB others 0.21 steal 0.0% 
+r8 wikidata-mix93 t=4 mibz2-workers    wall   0.314 cpu   1.445 rss    90MB others 0.17 steal 0.0% 
+r8 wikidata-mix93 t=4 mibz2-auto       wall   0.323 cpu   1.479 rss    91MB others 0.18 steal 0.0% 
+r8 wikidata-mix93 t=6 mibz2            wall   0.304 cpu   1.670 rss    80MB others 0.22 steal 0.0% 
+r8 wikidata-mix93 t=6 mibz2-workers    wall   0.315 cpu   2.088 rss   113MB others 0.22 steal 0.0% 
+r8 wikidata-mix93 t=6 mibz2-auto       wall   0.306 cpu   1.677 rss    77MB others 0.24 steal 0.0% 
+r8 wikidata-mix93 t=8 mibz2            wall   0.276 cpu   2.003 rss    93MB others 0.34 steal 0.0% 
+r8 wikidata-mix93 t=8 mibz2-workers    wall   0.353 cpu   2.944 rss   142MB others 0.24 steal 0.0% 
+r8 wikidata-mix93 t=8 mibz2-auto       wall   0.275 cpu   2.025 rss    87MB others 0.26 steal 0.0% 
+r8 wikidata-mix93 t=10 mibz2            wall   0.276 cpu   2.003 rss    89MB others 0.16 steal 0.0% 
+r8 wikidata-mix93 t=10 mibz2-workers    wall   0.426 cpu   4.081 rss   164MB others 0.16 steal 0.0% 
+r8 wikidata-mix93 t=10 mibz2-auto       wall   0.272 cpu   1.951 rss    91MB others 0.24 steal 0.0% 
+r8 wikidata-mix93 t=20 mibz2            wall   0.281 cpu   2.020 rss    91MB others 0.21 steal 0.0% 
+r8 wikidata-mix93 t=20 mibz2-workers    wall   0.619 cpu  11.089 rss   270MB others 0.21 steal 0.0% 
+r8 wikidata-mix93 t=20 mibz2-auto       wall   0.275 cpu   1.986 rss    92MB others 0.19 steal 0.0% 
+r9 wikidata-mix93 t=4 mibz2            wall   0.318 cpu   1.458 rss    89MB others 0.22 steal 0.0% 
+r9 wikidata-mix93 t=4 mibz2-auto       wall   0.314 cpu   1.444 rss    92MB others 0.21 steal 0.0% 
+r9 wikidata-mix93 t=4 mibz2-workers    wall   0.330 cpu   1.505 rss    88MB others 0.16 steal 0.0% 
+r9 wikidata-mix93 t=6 mibz2            wall   0.303 cpu   1.657 rss    77MB others 0.17 steal 0.0% 
+r9 wikidata-mix93 t=6 mibz2-auto       wall   0.302 cpu   1.655 rss    76MB others 0.18 steal 0.0% 
+r9 wikidata-mix93 t=6 mibz2-workers    wall   0.320 cpu   2.113 rss   115MB others 0.38 steal 0.0% 
+r9 wikidata-mix93 t=8 mibz2            wall   0.278 cpu   1.998 rss    90MB others 0.18 steal 0.0% 
+r9 wikidata-mix93 t=8 mibz2-auto       wall   0.274 cpu   1.997 rss    89MB others 0.30 steal 0.0% 
+r9 wikidata-mix93 t=8 mibz2-workers    wall   0.382 cpu   3.223 rss   140MB others 0.20 steal 0.0% 
+r9 wikidata-mix93 t=10 mibz2            wall   0.268 cpu   1.947 rss    89MB others 0.29 steal 0.0% 
+r9 wikidata-mix93 t=10 mibz2-auto       wall   0.276 cpu   2.012 rss    90MB others 0.31 steal 0.0% 
+r9 wikidata-mix93 t=10 mibz2-workers    wall   0.383 cpu   3.853 rss   165MB others 0.17 steal 0.0% 
+r9 wikidata-mix93 t=20 mibz2            wall   0.278 cpu   2.006 rss    93MB others 0.23 steal 0.0% 
+r9 wikidata-mix93 t=20 mibz2-auto       wall   0.271 cpu   1.945 rss    93MB others 0.23 steal 0.0% 
+r9 wikidata-mix93 t=20 mibz2-workers    wall   0.610 cpu  11.019 rss   272MB others 0.19 steal 0.0% 
+r10 wikidata-mix93 t=4 mibz2-workers    wall   0.315 cpu   1.443 rss    91MB others 0.15 steal 0.0% 
+r10 wikidata-mix93 t=4 mibz2            wall   0.331 cpu   1.509 rss    89MB others 0.12 steal 0.0% 
+r10 wikidata-mix93 t=4 mibz2-auto       wall   0.322 cpu   1.476 rss    89MB others 0.16 steal 0.0% 
+r10 wikidata-mix93 t=6 mibz2-workers    wall   0.317 cpu   2.099 rss   118MB others 0.13 steal 0.0% 
+r10 wikidata-mix93 t=6 mibz2            wall   0.314 cpu   1.733 rss    79MB others 0.15 steal 0.0% 
+r10 wikidata-mix93 t=6 mibz2-auto       wall   0.315 cpu   1.757 rss    75MB others 0.23 steal 0.0% 
+r10 wikidata-mix93 t=8 mibz2-workers    wall   0.357 cpu   2.991 rss   142MB others 0.19 steal 0.0% 
+r10 wikidata-mix93 t=8 mibz2            wall   0.277 cpu   2.032 rss    90MB others 0.35 steal 0.0% 
+r10 wikidata-mix93 t=8 mibz2-auto       wall   0.283 cpu   2.046 rss    92MB others 0.15 steal 0.0% 
+r10 wikidata-mix93 t=10 mibz2-workers    wall   0.411 cpu   4.096 rss   161MB others 0.22 steal 0.0% 
+  waiting: others keep 424.86 cores busy, one CPU 424.86 (load 6.73)
+r10 wikidata-mix93 t=10 mibz2            wall   0.284 cpu   2.005 rss    91MB others 0.05 steal 0.0% 
+r10 wikidata-mix93 t=10 mibz2-auto       wall   0.276 cpu   2.024 rss    92MB others 0.34 steal 0.0% 
+r10 wikidata-mix93 t=20 mibz2-workers    wall   0.603 cpu  10.688 rss   271MB others 0.19 steal 0.0% 
+r10 wikidata-mix93 t=20 mibz2            wall   0.271 cpu   1.975 rss    91MB others 0.30 steal 0.0% 
+r10 wikidata-mix93 t=20 mibz2-auto       wall   0.275 cpu   1.982 rss    93MB others 0.17 steal 0.0% 
+r11 wikidata-mix93 t=4 mibz2-auto       wall   0.318 cpu   1.487 rss    88MB others 0.22 steal 0.0% 
+r11 wikidata-mix93 t=4 mibz2-workers    wall   0.327 cpu   1.494 rss    93MB others 0.22 steal 0.0% 
+r11 wikidata-mix93 t=4 mibz2            wall   0.322 cpu   1.477 rss    89MB others 0.16 steal 0.0% 
+r11 wikidata-mix93 t=6 mibz2-auto       wall   0.306 cpu   1.675 rss    77MB others 0.15 steal 0.0% 
+r11 wikidata-mix93 t=6 mibz2-workers    wall   0.317 cpu   2.105 rss   115MB others 0.26 steal 0.0% 
+r11 wikidata-mix93 t=6 mibz2            wall   0.313 cpu   1.710 rss    76MB others 0.34 steal 0.0% 
+r11 wikidata-mix93 t=8 mibz2-auto       wall   0.274 cpu   1.983 rss    92MB others 0.24 steal 0.0% 
+r11 wikidata-mix93 t=8 mibz2-workers    wall   0.398 cpu   3.352 rss   138MB others 0.19 steal 0.0% 
+r11 wikidata-mix93 t=8 mibz2            wall   0.284 cpu   2.081 rss    94MB others 0.17 steal 0.0% 
+r11 wikidata-mix93 t=10 mibz2-auto       wall   0.276 cpu   1.990 rss    92MB others 0.21 steal 0.0% 
+r11 wikidata-mix93 t=10 mibz2-workers    wall   0.444 cpu   4.619 rss   166MB others 0.24 steal 0.0% 
+r11 wikidata-mix93 t=10 mibz2            wall   0.276 cpu   1.976 rss    92MB others 0.19 steal 0.0% 
+r11 wikidata-mix93 t=20 mibz2-auto       wall   0.282 cpu   2.029 rss    90MB others 0.24 steal 0.0% 
+r11 wikidata-mix93 t=20 mibz2-workers    wall   0.618 cpu  11.080 rss   271MB others 0.16 steal 0.0% 
+r11 wikidata-mix93 t=20 mibz2            wall   0.277 cpu   1.982 rss    94MB others 0.17 steal 0.0% 
+r12 wikidata-mix93 t=4 mibz2-workers    wall   0.314 cpu   1.444 rss    89MB others 0.17 steal 0.0% 
+r12 wikidata-mix93 t=4 mibz2-auto       wall   0.318 cpu   1.457 rss    88MB others 0.13 steal 0.0% 
+r12 wikidata-mix93 t=4 mibz2            wall   0.326 cpu   1.496 rss    87MB others 0.16 steal 0.0% 
+r12 wikidata-mix93 t=6 mibz2-workers    wall   0.317 cpu   2.096 rss   116MB others 0.17 steal 0.0% 
+r12 wikidata-mix93 t=6 mibz2-auto       wall   0.303 cpu   1.658 rss    76MB others 0.17 steal 0.0% 
+r12 wikidata-mix93 t=6 mibz2            wall   0.307 cpu   1.688 rss    79MB others 0.22 steal 0.0% 
+r12 wikidata-mix93 t=8 mibz2-workers    wall   0.375 cpu   3.230 rss   141MB others 0.15 steal 0.0% 
+r12 wikidata-mix93 t=8 mibz2-auto       wall   0.279 cpu   2.015 rss    94MB others 0.29 steal 0.0% 
+r12 wikidata-mix93 t=8 mibz2            wall   0.273 cpu   1.976 rss    90MB others 0.23 steal 0.0% 
+r12 wikidata-mix93 t=10 mibz2-workers    wall   0.400 cpu   4.157 rss   164MB others 0.25 steal 0.0% 
+r12 wikidata-mix93 t=10 mibz2-auto       wall   0.277 cpu   2.013 rss    89MB others 0.20 steal 0.0% 
+r12 wikidata-mix93 t=10 mibz2            wall   0.276 cpu   2.014 rss    93MB others 0.13 steal 0.0% 
+r12 wikidata-mix93 t=20 mibz2-workers    wall   0.622 cpu  11.172 rss   272MB others 0.21 steal 0.0% 
+r12 wikidata-mix93 t=20 mibz2-auto       wall   0.278 cpu   2.006 rss    93MB others 0.15 steal 0.0% 
+r12 wikidata-mix93 t=20 mibz2            wall   0.274 cpu   1.974 rss    93MB others 0.20 steal 0.0% 
+r13 wikidata-mix93 t=4 mibz2-auto       wall   0.321 cpu   1.478 rss    91MB others 0.16 steal 0.0% 
+r13 wikidata-mix93 t=4 mibz2            wall   0.326 cpu   1.492 rss    89MB others 0.23 steal 0.0% 
+r13 wikidata-mix93 t=4 mibz2-workers    wall   0.312 cpu   1.435 rss    89MB others 0.17 steal 0.0% 
+r13 wikidata-mix93 t=6 mibz2-auto       wall   0.305 cpu   1.692 rss    76MB others 0.31 steal 0.0% 
+r13 wikidata-mix93 t=6 mibz2            wall   0.309 cpu   1.706 rss    79MB others 0.26 steal 0.0% 
+r13 wikidata-mix93 t=6 mibz2-workers    wall   0.314 cpu   2.099 rss   118MB others 0.22 steal 0.0% 
+r13 wikidata-mix93 t=8 mibz2-auto       wall   0.280 cpu   2.052 rss    91MB others 0.30 steal 0.0% 
+r13 wikidata-mix93 t=8 mibz2            wall   0.277 cpu   1.988 rss    92MB others 0.26 steal 0.0% 
+r13 wikidata-mix93 t=8 mibz2-workers    wall   0.366 cpu   2.999 rss   143MB others 0.21 steal 0.0% 
+r13 wikidata-mix93 t=10 mibz2-auto       wall   0.278 cpu   2.006 rss    91MB others 0.15 steal 0.0% 
+r13 wikidata-mix93 t=10 mibz2            wall   0.278 cpu   1.998 rss    91MB others 0.22 steal 0.0% 
+r13 wikidata-mix93 t=10 mibz2-workers    wall   0.416 cpu   4.150 rss   166MB others 0.21 steal 0.0% 
+r13 wikidata-mix93 t=20 mibz2-auto       wall   0.272 cpu   1.974 rss    89MB others 0.27 steal 0.0% 
+r13 wikidata-mix93 t=20 mibz2            wall   0.279 cpu   2.016 rss    90MB others 0.18 steal 0.0% 
+r13 wikidata-mix93 t=20 mibz2-workers    wall   0.605 cpu  10.710 rss   270MB others 0.22 steal 0.0% 
+r14 wikidata-mix93 t=4 mibz2            wall   0.319 cpu   1.464 rss    93MB others 0.17 steal 0.0% 
+r14 wikidata-mix93 t=4 mibz2-workers    wall   0.327 cpu   1.494 rss    92MB others 0.23 steal 0.0% 
+r14 wikidata-mix93 t=4 mibz2-auto       wall   0.317 cpu   1.454 rss    91MB others 0.14 steal 0.0% 
+r14 wikidata-mix93 t=6 mibz2            wall   0.308 cpu   1.686 rss    75MB others 0.20 steal 0.0% 
+r14 wikidata-mix93 t=6 mibz2-workers    wall   0.328 cpu   2.168 rss   119MB others 0.24 steal 0.0% 
+r14 wikidata-mix93 t=6 mibz2-auto       wall   0.306 cpu   1.683 rss    76MB others 0.21 steal 0.0% 
+r14 wikidata-mix93 t=8 mibz2            wall   0.276 cpu   2.006 rss    92MB others 0.12 steal 0.0% 
+r14 wikidata-mix93 t=8 mibz2-workers    wall   0.381 cpu   3.225 rss   136MB others 0.19 steal 0.0% 
+r14 wikidata-mix93 t=8 mibz2-auto       wall   0.270 cpu   1.955 rss    92MB others 0.23 steal 0.0% 
+r14 wikidata-mix93 t=10 mibz2            wall   0.276 cpu   2.004 rss    90MB others 0.23 steal 0.0% 
+r14 wikidata-mix93 t=10 mibz2-workers    wall   0.405 cpu   4.040 rss   167MB others 0.26 steal 0.0% 
+r14 wikidata-mix93 t=10 mibz2-auto       wall   0.281 cpu   2.035 rss    90MB others 0.22 steal 0.0% 
+r14 wikidata-mix93 t=20 mibz2            wall   0.279 cpu   2.042 rss    92MB others 0.44 steal 0.0% 
+r14 wikidata-mix93 t=20 mibz2-workers    wall   0.605 cpu  10.548 rss   270MB others 0.23 steal 0.0% 
+r14 wikidata-mix93 t=20 mibz2-auto       wall   0.275 cpu   2.017 rss    89MB others 0.26 steal 0.0% 
+r15 wikidata-mix93 t=4 mibz2            wall   0.328 cpu   1.498 rss    91MB others 0.15 steal 0.0% 
+r15 wikidata-mix93 t=4 mibz2-auto       wall   0.321 cpu   1.469 rss    89MB others 0.18 steal 0.0% 
+r15 wikidata-mix93 t=4 mibz2-workers    wall   0.317 cpu   1.457 rss    95MB others 0.16 steal 0.0% 
+r15 wikidata-mix93 t=6 mibz2            wall   0.316 cpu   1.741 rss    75MB others 0.34 steal 0.0% 
+r15 wikidata-mix93 t=6 mibz2-auto       wall   0.308 cpu   1.696 rss    75MB others 0.17 steal 0.0% 
+r15 wikidata-mix93 t=6 mibz2-workers    wall   0.314 cpu   2.083 rss   116MB others 0.21 steal 0.0% 
+r15 wikidata-mix93 t=8 mibz2            wall   0.276 cpu   1.985 rss    90MB others 0.26 steal 0.0% 
+r15 wikidata-mix93 t=8 mibz2-auto       wall   0.273 cpu   1.988 rss    91MB others 0.18 steal 0.0% 
+r15 wikidata-mix93 t=8 mibz2-workers    wall   0.385 cpu   3.020 rss   139MB others 0.20 steal 0.0% 
+r15 wikidata-mix93 t=10 mibz2            wall   0.276 cpu   1.986 rss    92MB others 0.26 steal 0.0% 
+r15 wikidata-mix93 t=10 mibz2-auto       wall   0.271 cpu   1.972 rss    89MB others 0.20 steal 0.0% 
+r15 wikidata-mix93 t=10 mibz2-workers    wall   0.435 cpu   4.517 rss   163MB others 0.21 steal 0.0% 
+r15 wikidata-mix93 t=20 mibz2            wall   0.278 cpu   1.994 rss    91MB others 0.27 steal 0.0% 
+r15 wikidata-mix93 t=20 mibz2-auto       wall   0.272 cpu   1.950 rss    90MB others 0.21 steal 0.0% 
+r15 wikidata-mix93 t=20 mibz2-workers    wall   0.623 cpu  11.121 rss   269MB others 0.18 steal 0.0% 
+r16 wikidata-mix93 t=4 mibz2-workers    wall   0.322 cpu   1.472 rss    92MB others 0.23 steal 0.0% 
+r16 wikidata-mix93 t=4 mibz2            wall   0.332 cpu   1.516 rss    90MB others 0.13 steal 0.0% 
+r16 wikidata-mix93 t=4 mibz2-auto       wall   0.319 cpu   1.462 rss    92MB others 0.18 steal 0.0% 
+r16 wikidata-mix93 t=6 mibz2-workers    wall   0.331 cpu   2.183 rss   118MB others 0.14 steal 0.0% 
+r16 wikidata-mix93 t=6 mibz2            wall   0.310 cpu   1.700 rss    78MB others 0.22 steal 0.0% 
+r16 wikidata-mix93 t=6 mibz2-auto       wall   0.311 cpu   1.696 rss    79MB others 0.11 steal 0.0% 
+r16 wikidata-mix93 t=8 mibz2-workers    wall   0.378 cpu   3.166 rss   138MB others 0.21 steal 0.0% 
+r16 wikidata-mix93 t=8 mibz2            wall   0.273 cpu   1.986 rss    92MB others 0.30 steal 0.0% 
+r16 wikidata-mix93 t=8 mibz2-auto       wall   0.273 cpu   1.972 rss    92MB others 0.14 steal 0.0% 
+r16 wikidata-mix93 t=10 mibz2-workers    wall   0.423 cpu   4.182 rss   162MB others 0.27 steal 0.0% 
+r16 wikidata-mix93 t=10 mibz2            wall   0.280 cpu   2.030 rss    93MB others 0.24 steal 0.0% 
+r16 wikidata-mix93 t=10 mibz2-auto       wall   0.276 cpu   1.984 rss    92MB others 0.27 steal 0.0% 
+r16 wikidata-mix93 t=20 mibz2-workers    wall   0.619 cpu  10.958 rss   266MB others 0.18 steal 0.0% 
+r16 wikidata-mix93 t=20 mibz2            wall   0.278 cpu   2.042 rss    92MB others 0.27 steal 0.0% 
+r16 wikidata-mix93 t=20 mibz2-auto       wall   0.279 cpu   2.021 rss    90MB others 0.17 steal 0.0% 
+r17 wikidata-mix93 t=4 mibz2-auto       wall   0.317 cpu   1.455 rss    90MB others 0.17 steal 0.0% 
+r17 wikidata-mix93 t=4 mibz2-workers    wall   0.323 cpu   1.480 rss    88MB others 0.27 steal 0.0% 
+r17 wikidata-mix93 t=4 mibz2            wall   0.329 cpu   1.508 rss    92MB others 0.33 steal 0.0% 
+r17 wikidata-mix93 t=6 mibz2-auto       wall   0.301 cpu   1.670 rss    75MB others 0.26 steal 0.0% 
+r17 wikidata-mix93 t=6 mibz2-workers    wall   0.320 cpu   2.124 rss   116MB others 0.17 steal 0.0% 
+r17 wikidata-mix93 t=6 mibz2            wall   0.307 cpu   1.675 rss    79MB others 0.24 steal 0.0% 
+r17 wikidata-mix93 t=8 mibz2-auto       wall   0.279 cpu   2.044 rss    92MB others 0.19 steal 0.0% 
+r17 wikidata-mix93 t=8 mibz2-workers    wall   0.360 cpu   3.007 rss   143MB others 0.20 steal 0.0% 
+r17 wikidata-mix93 t=8 mibz2            wall   0.279 cpu   2.027 rss    92MB others 0.18 steal 0.0% 
+r17 wikidata-mix93 t=10 mibz2-auto       wall   0.284 cpu   2.092 rss    90MB others 0.23 steal 0.0% 
+r17 wikidata-mix93 t=10 mibz2-workers    wall   0.413 cpu   3.833 rss   164MB others 0.23 steal 0.0% 
+r17 wikidata-mix93 t=10 mibz2            wall   0.283 cpu   2.071 rss    91MB others 0.17 steal 0.0% 
+r17 wikidata-mix93 t=20 mibz2-auto       wall   0.278 cpu   2.049 rss    91MB others 0.24 steal 0.0% 
+r17 wikidata-mix93 t=20 mibz2-workers    wall   0.617 cpu  11.055 rss   271MB others 0.17 steal 0.0% 
+r17 wikidata-mix93 t=20 mibz2            wall   0.280 cpu   2.035 rss    93MB others 0.19 steal 0.0% 
+r18 wikidata-mix93 t=4 mibz2-workers    wall   0.323 cpu   1.483 rss    92MB others 0.14 steal 0.0% 
+r18 wikidata-mix93 t=4 mibz2-auto       wall   0.324 cpu   1.482 rss    91MB others 0.17 steal 0.0% 
+r18 wikidata-mix93 t=4 mibz2            wall   0.330 cpu   1.515 rss    88MB others 0.07 steal 0.0% 
+r18 wikidata-mix93 t=6 mibz2-workers    wall   0.329 cpu   2.172 rss   113MB others 0.23 steal 0.0% 
+r18 wikidata-mix93 t=6 mibz2-auto       wall   0.307 cpu   1.702 rss    78MB others 0.12 steal 0.0% 
+r18 wikidata-mix93 t=6 mibz2            wall   0.305 cpu   1.679 rss    79MB others 0.26 steal 0.0% 
+r18 wikidata-mix93 t=8 mibz2-workers    wall   0.369 cpu   3.091 rss   141MB others 0.26 steal 0.0% 
+r18 wikidata-mix93 t=8 mibz2-auto       wall   0.276 cpu   2.022 rss    92MB others 0.24 steal 0.0% 
+r18 wikidata-mix93 t=8 mibz2            wall   0.276 cpu   1.984 rss    91MB others 0.23 steal 0.0% 
+r18 wikidata-mix93 t=10 mibz2-workers    wall   0.434 cpu   4.514 rss   164MB others 0.17 steal 0.0% 
+r18 wikidata-mix93 t=10 mibz2-auto       wall   0.274 cpu   1.971 rss    92MB others 0.31 steal 0.0% 
+r18 wikidata-mix93 t=10 mibz2            wall   0.276 cpu   2.027 rss    90MB others 0.22 steal 0.0% 
+r18 wikidata-mix93 t=20 mibz2-workers    wall   0.605 cpu  10.779 rss   273MB others 0.21 steal 0.0% 
+r18 wikidata-mix93 t=20 mibz2-auto       wall   0.275 cpu   1.992 rss    92MB others 0.17 steal 0.0% 
+r18 wikidata-mix93 t=20 mibz2            wall   0.274 cpu   1.985 rss    92MB others 0.27 steal 0.0% 
+r19 wikidata-mix93 t=4 mibz2-auto       wall   0.325 cpu   1.486 rss    90MB others 0.25 steal 0.0% 
+r19 wikidata-mix93 t=4 mibz2            wall   0.318 cpu   1.465 rss    87MB others 0.29 steal 0.0% 
+r19 wikidata-mix93 t=4 mibz2-workers    wall   0.323 cpu   1.478 rss    91MB others 0.19 steal 0.0% 
+r19 wikidata-mix93 t=6 mibz2-auto       wall   0.315 cpu   1.740 rss    76MB others 0.06 steal 0.0% 
+r19 wikidata-mix93 t=6 mibz2            wall   0.295 cpu   1.646 rss    76MB others 0.25 steal 0.0% 
+r19 wikidata-mix93 t=6 mibz2-workers    wall   0.320 cpu   2.119 rss   117MB others 0.21 steal 0.0% 
+r19 wikidata-mix93 t=8 mibz2-auto       wall   0.275 cpu   2.003 rss    91MB others 0.24 steal 0.0% 
+r19 wikidata-mix93 t=8 mibz2            wall   0.273 cpu   1.975 rss    91MB others 0.23 steal 0.0% 
+r19 wikidata-mix93 t=8 mibz2-workers    wall   0.365 cpu   3.070 rss   143MB others 0.24 steal 0.0% 
+r19 wikidata-mix93 t=10 mibz2-auto       wall   0.274 cpu   1.955 rss    91MB others 0.20 steal 0.0% 
+r19 wikidata-mix93 t=10 mibz2            wall   0.277 cpu   2.018 rss    91MB others 0.22 steal 0.0% 
+r19 wikidata-mix93 t=10 mibz2-workers    wall   0.403 cpu   4.170 rss   164MB others 0.22 steal 0.0% 
+r19 wikidata-mix93 t=20 mibz2-auto       wall   0.277 cpu   2.047 rss    90MB others 0.22 steal 0.0% 
+r19 wikidata-mix93 t=20 mibz2            wall   0.274 cpu   1.980 rss    94MB others 0.25 steal 0.0% 
+r19 wikidata-mix93 t=20 mibz2-workers    wall   0.607 cpu  10.680 rss   271MB others 0.24 steal 0.0% 
+# The cooperative decoder's full-decoder A/B (20261030T002836Z)
+
+- **Build:** 2591867; **machine:** Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz, 20 CPUs; **load:** 5.05
+- **Rounds:** 20, interleaved, unpinned, back to back; corpus wikidata-mix93.bz2
+- **Note:** level-aware plan, revision 2: mix93
+
+## The gates (mibz2 at all CPUs against mibz2-workers at 4)
+
+| gate | pass | measured |
+|---|---|--:|
+| throughput: mean >= 1.15 | yes | 1.151 |
+| throughput: 95% lower bound > 1.05 | yes | 1.140 |
+| bytes identical, no error | yes | 1 hash(es), 0 error(s) |
+| peak RSS <= 1.15x | yes | 1.009 |
+| CPU-seconds <= 1.5x | yes | 1.375 |
+
+Verdict: **PASS**: the release gates are met.
+
+## Every arm, against mibz2-workers at 4 (p4)
+
+| arm | T | MB/s | paired ratio (95%) | won | peak RSS | RSS ratio | CPU-s | CPU ratio |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| mibz2 | 4 | 1298 | 0.987 (0.974-1.000) | 7/20 | 89 MB | 0.98 | 1.48 | 1.02 |
+| mibz2 | 6 | 1371 | 1.038 (1.026-1.051) | 20/20 | 77 MB | 0.85 | 1.69 | 1.16 |
+| mibz2 | 8 | 1520 | 1.150 (1.137-1.164) | 20/20 | 91 MB | 1.01 | 1.99 | 1.37 |
+| mibz2 | 10 | 1519 | 1.152 (1.139-1.165) | 20/20 | 91 MB | 1.00 | 2.00 | 1.38 |
+| mibz2 | 20 | 1510 | 1.151 (1.140-1.161) | 20/20 | 92 MB | 1.01 | 2.00 | 1.38 |
+| mibz2-auto | 4 | 1311 | 0.991 (0.978-1.004) | 6/20 | 90 MB | 0.99 | 1.47 | 1.01 |
+| mibz2-auto | 6 | 1370 | 1.039 (1.028-1.049) | 18/20 | 76 MB | 0.84 | 1.69 | 1.16 |
+| mibz2-auto | 8 | 1522 | 1.152 (1.138-1.167) | 20/20 | 91 MB | 1.01 | 2.01 | 1.38 |
+| mibz2-auto | 10 | 1522 | 1.156 (1.146-1.166) | 20/20 | 91 MB | 1.00 | 2.00 | 1.37 |
+| mibz2-auto | 20 | 1518 | 1.152 (1.140-1.163) | 20/20 | 91 MB | 1.00 | 2.01 | 1.38 |
+| mibz2-workers | 4 | 1325 | 1.000 (1.000-1.000) | 0/20 | 91 MB | 1.00 | 1.45 | 1.00 |
+| mibz2-workers | 6 | 1323 | 1.001 (0.992-1.010) | 9/20 | 116 MB | 1.28 | 2.11 | 1.45 |
+| mibz2-workers | 8 | 1129 | 0.854 (0.843-0.866) | 0/20 | 141 MB | 1.55 | 3.09 | 2.13 |
+| mibz2-workers | 10 | 1008 | 0.761 (0.742-0.780) | 0/20 | 164 MB | 1.81 | 4.16 | 2.86 |
+| mibz2-workers | 20 | 683 | 0.519 (0.513-0.524) | 0/20 | 270 MB | 2.97 | 10.99 | 7.55 |
+
+## Every arm, against the workers' best here (mibz2-workers at 4)
+
+| arm | T | MB/s | paired ratio (95%) | won | peak RSS | RSS ratio | CPU-s | CPU ratio |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| mibz2 | 4 | 1298 | 0.987 (0.974-1.000) | 7/20 | 89 MB | 0.98 | 1.48 | 1.02 |
+| mibz2 | 6 | 1371 | 1.038 (1.026-1.051) | 20/20 | 77 MB | 0.85 | 1.69 | 1.16 |
+| mibz2 | 8 | 1520 | 1.150 (1.137-1.164) | 20/20 | 91 MB | 1.01 | 1.99 | 1.37 |
+| mibz2 | 10 | 1519 | 1.152 (1.139-1.165) | 20/20 | 91 MB | 1.00 | 2.00 | 1.38 |
+| mibz2 | 20 | 1510 | 1.151 (1.140-1.161) | 20/20 | 92 MB | 1.01 | 2.00 | 1.38 |
+| mibz2-auto | 4 | 1311 | 0.991 (0.978-1.004) | 6/20 | 90 MB | 0.99 | 1.47 | 1.01 |
+| mibz2-auto | 6 | 1370 | 1.039 (1.028-1.049) | 18/20 | 76 MB | 0.84 | 1.69 | 1.16 |
+| mibz2-auto | 8 | 1522 | 1.152 (1.138-1.167) | 20/20 | 91 MB | 1.01 | 2.01 | 1.38 |
+| mibz2-auto | 10 | 1522 | 1.156 (1.146-1.166) | 20/20 | 91 MB | 1.00 | 2.00 | 1.37 |
+| mibz2-auto | 20 | 1518 | 1.152 (1.140-1.163) | 20/20 | 91 MB | 1.00 | 2.01 | 1.38 |
+| mibz2-workers | 4 | 1325 | 1.000 (1.000-1.000) | 0/20 | 91 MB | 1.00 | 1.45 | 1.00 |
+| mibz2-workers | 6 | 1323 | 1.001 (0.992-1.010) | 9/20 | 116 MB | 1.28 | 2.11 | 1.45 |
+| mibz2-workers | 8 | 1129 | 0.854 (0.843-0.866) | 0/20 | 141 MB | 1.55 | 3.09 | 2.13 |
+| mibz2-workers | 10 | 1008 | 0.761 (0.742-0.780) | 0/20 | 164 MB | 1.81 | 4.16 | 2.86 |
+| mibz2-workers | 20 | 683 | 0.519 (0.513-0.524) | 0/20 | 270 MB | 2.97 | 10.99 | 7.55 |
+
+Files: coop-decoder-20261030T002836Z.jsonl, coop-decoder-20261030T002836Z.json
+
+coop-decoder: wrote coop-decoder-20261030T002836Z.md, .json and the .jsonl: upload them all
+coop-decoder: the full machine: target/release/examples/ab run coop-decoder-20261030T003038Z.jsonl --arms mibz2-workers,mibz2-auto,mibz2 --threads 4,6,8,10,20 --rounds 20 --settle 0 corpora/wikidata-bz6.bz2
+  waiting: others keep 679.65 cores busy, one CPU 339.82 (load 5.05)
+r0 wikidata-bz6 t=4 mibz2-workers    wall   0.162 cpu   0.712 rss    56MB others 0.11 steal 0.0% 
+r0 wikidata-bz6 t=4 mibz2-auto       wall   0.149 cpu   0.672 rss    54MB others 0.43 steal 0.0% 
+r0 wikidata-bz6 t=4 mibz2            wall   0.152 cpu   0.682 rss    57MB others 0.37 steal 0.0% 
+r0 wikidata-bz6 t=6 mibz2-workers    wall   0.147 cpu   0.964 rss    74MB others 0.35 steal 0.0% 
+r0 wikidata-bz6 t=6 mibz2-auto       wall   0.147 cpu   0.792 rss    48MB others 0.31 steal 0.0% 
+r0 wikidata-bz6 t=6 mibz2            wall   0.146 cpu   0.780 rss    46MB others 0.26 steal 0.0% 
+r0 wikidata-bz6 t=8 mibz2-workers    wall   0.176 cpu   1.490 rss    89MB others 0.38 steal 0.0% 
+r0 wikidata-bz6 t=8 mibz2-auto       wall   0.129 cpu   0.912 rss    57MB others 0.42 steal 0.0% 
+r0 wikidata-bz6 t=8 mibz2            wall   0.128 cpu   0.901 rss    56MB others 0.43 steal 0.0% 
+r0 wikidata-bz6 t=10 mibz2-workers    wall   0.208 cpu   2.169 rss   106MB others 0.19 steal 0.0% 
+r0 wikidata-bz6 t=10 mibz2-auto       wall   0.127 cpu   0.899 rss    57MB others 0.38 steal 0.0% 
+r0 wikidata-bz6 t=10 mibz2            wall   0.127 cpu   0.891 rss    57MB others 0.43 steal 0.0% 
+r0 wikidata-bz6 t=20 mibz2-workers    wall   0.359 cpu   6.815 rss   179MB others 0.26 steal 0.0% 
+r0 wikidata-bz6 t=20 mibz2-auto       wall   0.126 cpu   0.878 rss    58MB others 0.30 steal 0.0% 
+r0 wikidata-bz6 t=20 mibz2            wall   0.129 cpu   0.903 rss    57MB others 0.42 steal 0.0% 
+r1 wikidata-bz6 t=4 mibz2-auto       wall   0.153 cpu   0.687 rss    57MB others 0.21 steal 0.0% 
+r1 wikidata-bz6 t=4 mibz2            wall   0.143 cpu   0.645 rss    56MB others 0.28 steal 0.0% 
+r1 wikidata-bz6 t=4 mibz2-workers    wall   0.194 cpu   0.861 rss    56MB others 0.30 steal 0.0% 
+r1 wikidata-bz6 t=6 mibz2-auto       wall   0.148 cpu   0.785 rss    47MB others 0.23 steal 0.0% 
+r1 wikidata-bz6 t=6 mibz2            wall   0.147 cpu   0.794 rss    47MB others 0.36 steal 0.0% 
+r1 wikidata-bz6 t=6 mibz2-workers    wall   0.145 cpu   0.943 rss    74MB others 0.36 steal 0.0% 
+r1 wikidata-bz6 t=8 mibz2-auto       wall   0.132 cpu   0.923 rss    56MB others 0.42 steal 0.0% 
+r1 wikidata-bz6 t=8 mibz2            wall   0.131 cpu   0.894 rss    55MB others 0.41 steal 0.0% 
+r1 wikidata-bz6 t=8 mibz2-workers    wall   0.179 cpu   1.499 rss    89MB others 0.21 steal 0.0% 
+r1 wikidata-bz6 t=10 mibz2-auto       wall   0.127 cpu   0.904 rss    56MB others 0.26 steal 0.0% 
+r1 wikidata-bz6 t=10 mibz2            wall   0.127 cpu   0.894 rss    57MB others 0.33 steal 0.0% 
+r1 wikidata-bz6 t=10 mibz2-workers    wall   0.207 cpu   2.135 rss   108MB others 0.25 steal 0.0% 
+r1 wikidata-bz6 t=20 mibz2-auto       wall   0.128 cpu   0.899 rss    58MB others 0.30 steal 0.0% 
+r1 wikidata-bz6 t=20 mibz2            wall   0.131 cpu   0.929 rss    56MB others 0.44 steal 0.0% 
+r1 wikidata-bz6 t=20 mibz2-workers    wall   0.358 cpu   6.762 rss   180MB others 0.21 steal 0.0% 
+r2 wikidata-bz6 t=4 mibz2            wall   0.151 cpu   0.679 rss    56MB others 0.39 steal 0.0% 
+r2 wikidata-bz6 t=4 mibz2-workers    wall   0.151 cpu   0.680 rss    56MB others 0.32 steal 0.0% 
+r2 wikidata-bz6 t=4 mibz2-auto       wall   0.153 cpu   0.688 rss    56MB others 0.31 steal 0.0% 
+r2 wikidata-bz6 t=6 mibz2            wall   0.145 cpu   0.773 rss    48MB others 0.17 steal 0.0% 
+r2 wikidata-bz6 t=6 mibz2-workers    wall   0.149 cpu   0.967 rss    73MB others 0.33 steal 0.0% 
+r2 wikidata-bz6 t=6 mibz2-auto       wall   0.145 cpu   0.773 rss    47MB others 0.24 steal 0.0% 
+r2 wikidata-bz6 t=8 mibz2            wall   0.126 cpu   0.874 rss    57MB others 0.41 steal 0.0% 
+r2 wikidata-bz6 t=8 mibz2-workers    wall   0.177 cpu   1.488 rss    91MB others 0.27 steal 0.0% 
+r2 wikidata-bz6 t=8 mibz2-auto       wall   0.130 cpu   0.931 rss    56MB others 0.50 steal 0.0% 
+r2 wikidata-bz6 t=10 mibz2            wall   0.127 cpu   0.902 rss    57MB others 0.42 steal 0.0% 
+r2 wikidata-bz6 t=10 mibz2-workers    wall   0.216 cpu   2.306 rss   106MB others 0.33 steal 0.0% 
+r2 wikidata-bz6 t=10 mibz2-auto       wall   0.133 cpu   0.941 rss    56MB others 0.43 steal 0.0% 
+r2 wikidata-bz6 t=20 mibz2            wall   0.130 cpu   0.914 rss    57MB others 0.26 steal 0.0% 
+r2 wikidata-bz6 t=20 mibz2-workers    wall   0.364 cpu   6.944 rss   181MB others 0.28 steal 0.0% 
+r2 wikidata-bz6 t=20 mibz2-auto       wall   0.129 cpu   0.928 rss    55MB others 0.30 steal 0.0% 
+r3 wikidata-bz6 t=4 mibz2            wall   0.147 cpu   0.662 rss    56MB others 0.31 steal 0.0% 
+r3 wikidata-bz6 t=4 mibz2-auto       wall   0.147 cpu   0.661 rss    56MB others 0.31 steal 0.0% 
+r3 wikidata-bz6 t=4 mibz2-workers    wall   0.143 cpu   0.646 rss    56MB others 0.22 steal 0.0% 
+r3 wikidata-bz6 t=6 mibz2            wall   0.146 cpu   0.785 rss    47MB others 0.35 steal 0.0% 
+r3 wikidata-bz6 t=6 mibz2-auto       wall   0.148 cpu   0.793 rss    49MB others 0.24 steal 0.0% 
+r3 wikidata-bz6 t=6 mibz2-workers    wall   0.142 cpu   0.924 rss    72MB others 0.31 steal 0.0% 
+r3 wikidata-bz6 t=8 mibz2            wall   0.128 cpu   0.906 rss    56MB others 0.32 steal 0.0% 
+r3 wikidata-bz6 t=8 mibz2-auto       wall   0.139 cpu   0.987 rss    57MB others 0.36 steal 0.0% 
+r3 wikidata-bz6 t=8 mibz2-workers    wall   0.179 cpu   1.510 rss    91MB others 0.26 steal 0.0% 
+r3 wikidata-bz6 t=10 mibz2            wall   0.135 cpu   0.952 rss    56MB others 0.26 steal 0.0% 
+r3 wikidata-bz6 t=10 mibz2-auto       wall   0.128 cpu   0.906 rss    57MB others 0.47 steal 0.0% 
+r3 wikidata-bz6 t=10 mibz2-workers    wall   0.211 cpu   2.214 rss   106MB others 0.25 steal 0.0% 
+r3 wikidata-bz6 t=20 mibz2            wall   0.127 cpu   0.895 rss    57MB others 0.26 steal 0.0% 
+r3 wikidata-bz6 t=20 mibz2-auto       wall   0.128 cpu   0.898 rss    56MB others 0.45 steal 0.0% 
+r3 wikidata-bz6 t=20 mibz2-workers    wall   0.362 cpu   6.865 rss   180MB others 0.25 steal 0.0% 
+r4 wikidata-bz6 t=4 mibz2-workers    wall   0.156 cpu   0.697 rss    55MB others 0.38 steal 0.0% 
+r4 wikidata-bz6 t=4 mibz2            wall   0.159 cpu   0.708 rss    57MB others 0.25 steal 0.0% 
+r4 wikidata-bz6 t=4 mibz2-auto       wall   0.146 cpu   0.659 rss    56MB others 0.20 steal 0.0% 
+r4 wikidata-bz6 t=6 mibz2-workers    wall   0.148 cpu   0.966 rss    74MB others 0.28 steal 0.0% 
+r4 wikidata-bz6 t=6 mibz2            wall   0.144 cpu   0.769 rss    47MB others 0.33 steal 0.0% 
+r4 wikidata-bz6 t=6 mibz2-auto       wall   0.143 cpu   0.765 rss    46MB others 0.35 steal 0.0% 
+r4 wikidata-bz6 t=8 mibz2-workers    wall   0.174 cpu   1.460 rss    90MB others 0.28 steal 0.0% 
+r4 wikidata-bz6 t=8 mibz2            wall   0.128 cpu   0.899 rss    56MB others 0.30 steal 0.0% 
+r4 wikidata-bz6 t=8 mibz2-auto       wall   0.131 cpu   0.928 rss    58MB others 0.24 steal 0.0% 
+r4 wikidata-bz6 t=10 mibz2-workers    wall   0.215 cpu   2.277 rss   106MB others 0.27 steal 0.0% 
+r4 wikidata-bz6 t=10 mibz2            wall   0.126 cpu   0.875 rss    57MB others 0.18 steal 0.0% 
+r4 wikidata-bz6 t=10 mibz2-auto       wall   0.126 cpu   0.872 rss    57MB others 0.50 steal 0.0% 
+r4 wikidata-bz6 t=20 mibz2-workers    wall   0.363 cpu   6.886 rss   181MB others 0.27 steal 0.0% 
+r4 wikidata-bz6 t=20 mibz2            wall   0.131 cpu   0.917 rss    57MB others 0.32 steal 0.0% 
+r4 wikidata-bz6 t=20 mibz2-auto       wall   0.123 cpu   0.863 rss    57MB others 0.20 steal 0.0% 
+r5 wikidata-bz6 t=4 mibz2-auto       wall   0.162 cpu   0.724 rss    56MB others 0.40 steal 0.0% 
+r5 wikidata-bz6 t=4 mibz2-workers    wall   0.149 cpu   0.670 rss    57MB others 0.26 steal 0.0% 
+r5 wikidata-bz6 t=4 mibz2            wall   0.158 cpu   0.709 rss    55MB others 0.37 steal 0.0% 
+r5 wikidata-bz6 t=6 mibz2-auto       wall   0.150 cpu   0.808 rss    46MB others 0.34 steal 0.0% 
+r5 wikidata-bz6 t=6 mibz2-workers    wall   0.143 cpu   0.940 rss    75MB others 0.34 steal 0.0% 
+r5 wikidata-bz6 t=6 mibz2            wall   0.148 cpu   0.796 rss    47MB others 0.28 steal 0.0% 
+r5 wikidata-bz6 t=8 mibz2-auto       wall   0.125 cpu   0.890 rss    58MB others 0.29 steal 0.0% 
+r5 wikidata-bz6 t=8 mibz2-workers    wall   0.179 cpu   1.541 rss    91MB others 0.20 steal 0.0% 
+r5 wikidata-bz6 t=8 mibz2            wall   0.127 cpu   0.885 rss    57MB others 0.47 steal 0.0% 
+r5 wikidata-bz6 t=10 mibz2-auto       wall   0.131 cpu   0.925 rss    56MB others 0.26 steal 0.0% 
+r5 wikidata-bz6 t=10 mibz2-workers    wall   0.209 cpu   2.183 rss   106MB others 0.31 steal 0.0% 
+r5 wikidata-bz6 t=10 mibz2            wall   0.129 cpu   0.901 rss    57MB others 0.21 steal 0.0% 
+r5 wikidata-bz6 t=20 mibz2-auto       wall   0.127 cpu   0.882 rss    57MB others 0.20 steal 0.0% 
+r5 wikidata-bz6 t=20 mibz2-workers    wall   0.370 cpu   7.118 rss   180MB others 0.24 steal 0.0% 
+r5 wikidata-bz6 t=20 mibz2            wall   0.129 cpu   0.907 rss    57MB others 0.53 steal 0.0% 
+r6 wikidata-bz6 t=4 mibz2-workers    wall   0.147 cpu   0.661 rss    57MB others 0.31 steal 0.0% 
+r6 wikidata-bz6 t=4 mibz2-auto       wall   0.146 cpu   0.657 rss    56MB others 0.28 steal 0.0% 
+r6 wikidata-bz6 t=4 mibz2            wall   0.154 cpu   0.693 rss    56MB others 0.22 steal 0.0% 
+r6 wikidata-bz6 t=6 mibz2-workers    wall   0.145 cpu   0.930 rss    70MB others 0.32 steal 0.0% 
+r6 wikidata-bz6 t=6 mibz2-auto       wall   0.148 cpu   0.798 rss    47MB others 0.27 steal 0.0% 
+r6 wikidata-bz6 t=6 mibz2            wall   0.146 cpu   0.780 rss    48MB others 0.38 steal 0.0% 
+r6 wikidata-bz6 t=8 mibz2-workers    wall   0.180 cpu   1.526 rss    91MB others 0.23 steal 0.0% 
+r6 wikidata-bz6 t=8 mibz2-auto       wall   0.130 cpu   0.920 rss    56MB others 0.22 steal 0.0% 
+r6 wikidata-bz6 t=8 mibz2            wall   0.127 cpu   0.888 rss    57MB others 0.23 steal 0.0% 
+r6 wikidata-bz6 t=10 mibz2-workers    wall   0.208 cpu   2.151 rss   106MB others 0.23 steal 0.0% 
+r6 wikidata-bz6 t=10 mibz2-auto       wall   0.128 cpu   0.900 rss    56MB others 0.36 steal 0.0% 
+r6 wikidata-bz6 t=10 mibz2            wall   0.131 cpu   0.930 rss    57MB others 0.37 steal 0.0% 
+r6 wikidata-bz6 t=20 mibz2-workers    wall   0.360 cpu   6.804 rss   180MB others 0.23 steal 0.0% 
+r6 wikidata-bz6 t=20 mibz2-auto       wall   0.125 cpu   0.862 rss    57MB others 0.35 steal 0.0% 
+r6 wikidata-bz6 t=20 mibz2            wall   0.131 cpu   0.940 rss    56MB others 0.22 steal 0.0% 
+r7 wikidata-bz6 t=4 mibz2-auto       wall   0.154 cpu   0.691 rss    56MB others 0.30 steal 0.0% 
+r7 wikidata-bz6 t=4 mibz2            wall   0.153 cpu   0.688 rss    57MB others 0.25 steal 0.0% 
+r7 wikidata-bz6 t=4 mibz2-workers    wall   0.149 cpu   0.670 rss    57MB others 0.32 steal 0.0% 
+r7 wikidata-bz6 t=6 mibz2-auto       wall   0.151 cpu   0.805 rss    48MB others 0.28 steal 0.0% 
+r7 wikidata-bz6 t=6 mibz2            wall   0.151 cpu   0.816 rss    48MB others 0.41 steal 0.0% 
+r7 wikidata-bz6 t=6 mibz2-workers    wall   0.148 cpu   0.968 rss    73MB others 0.33 steal 0.0% 
+r7 wikidata-bz6 t=8 mibz2-auto       wall   0.128 cpu   0.903 rss    55MB others 0.34 steal 0.0% 
+r7 wikidata-bz6 t=8 mibz2            wall   0.123 cpu   0.877 rss    56MB others 0.24 steal 0.0% 
+r7 wikidata-bz6 t=8 mibz2-workers    wall   0.176 cpu   1.527 rss    89MB others 0.35 steal 0.0% 
+r7 wikidata-bz6 t=10 mibz2-auto       wall   0.125 cpu   0.878 rss    56MB others 0.43 steal 0.0% 
+r7 wikidata-bz6 t=10 mibz2            wall   0.145 cpu   0.929 rss    57MB others 0.42 steal 0.0% 
+r7 wikidata-bz6 t=10 mibz2-workers    wall   0.299 cpu   3.010 rss   107MB others 0.41 steal 0.0% 
+r7 wikidata-bz6 t=20 mibz2-auto       wall   0.129 cpu   0.922 rss    55MB others 0.42 steal 0.0% 
+r7 wikidata-bz6 t=20 mibz2            wall   0.139 cpu   0.931 rss    57MB others 0.47 steal 0.0% 
+r7 wikidata-bz6 t=20 mibz2-workers    wall   0.354 cpu   6.580 rss   180MB others 0.32 steal 0.0% 
+r8 wikidata-bz6 t=4 mibz2            wall   0.158 cpu   0.709 rss    57MB others 0.42 steal 0.0% 
+r8 wikidata-bz6 t=4 mibz2-workers    wall   0.148 cpu   0.667 rss    57MB others 0.21 steal 0.0% 
+r8 wikidata-bz6 t=4 mibz2-auto       wall   0.143 cpu   0.649 rss    57MB others 0.26 steal 0.0% 
+r8 wikidata-bz6 t=6 mibz2            wall   0.146 cpu   0.784 rss    47MB others 0.30 steal 0.0% 
+r8 wikidata-bz6 t=6 mibz2-workers    wall   0.145 cpu   0.943 rss    74MB others 0.37 steal 0.0% 
+r8 wikidata-bz6 t=6 mibz2-auto       wall   0.151 cpu   0.806 rss    47MB others 0.22 steal 0.0% 
+r8 wikidata-bz6 t=8 mibz2            wall   0.129 cpu   0.910 rss    56MB others 0.29 steal 0.0% 
+r8 wikidata-bz6 t=8 mibz2-workers    wall   0.179 cpu   1.511 rss    89MB others 0.21 steal 0.0% 
+r8 wikidata-bz6 t=8 mibz2-auto       wall   0.129 cpu   0.935 rss    57MB others 0.33 steal 0.0% 
+r8 wikidata-bz6 t=10 mibz2            wall   0.127 cpu   0.882 rss    56MB others 0.06 steal 0.0% 
+r8 wikidata-bz6 t=10 mibz2-workers    wall   0.209 cpu   2.157 rss   107MB others 0.29 steal 0.0% 
+r8 wikidata-bz6 t=10 mibz2-auto       wall   0.128 cpu   0.898 rss    57MB others 0.16 steal 0.0% 
+r8 wikidata-bz6 t=20 mibz2            wall   0.131 cpu   0.928 rss    56MB others 0.24 steal 0.0% 
+r8 wikidata-bz6 t=20 mibz2-workers    wall   0.352 cpu   6.670 rss   179MB others 0.24 steal 0.0% 
+r8 wikidata-bz6 t=20 mibz2-auto       wall   0.128 cpu   0.910 rss    57MB others 0.51 steal 0.0% 
+r9 wikidata-bz6 t=4 mibz2            wall   0.147 cpu   0.664 rss    56MB others 0.30 steal 0.0% 
+r9 wikidata-bz6 t=4 mibz2-auto       wall   0.155 cpu   0.692 rss    56MB others 0.29 steal 0.0% 
+r9 wikidata-bz6 t=4 mibz2-workers    wall   0.150 cpu   0.679 rss    57MB others 0.39 steal 0.0% 
+r9 wikidata-bz6 t=6 mibz2            wall   0.144 cpu   0.775 rss    47MB others 0.35 steal 0.0% 
+r9 wikidata-bz6 t=6 mibz2-auto       wall   0.146 cpu   0.781 rss    48MB others 0.19 steal 0.0% 
+r9 wikidata-bz6 t=6 mibz2-workers    wall   0.145 cpu   0.951 rss    74MB others 0.37 steal 0.0% 
+r9 wikidata-bz6 t=8 mibz2            wall   0.127 cpu   0.896 rss    57MB others 0.25 steal 0.0% 
+r9 wikidata-bz6 t=8 mibz2-auto       wall   0.129 cpu   0.910 rss    55MB others 0.29 steal 0.0% 
+r9 wikidata-bz6 t=8 mibz2-workers    wall   0.178 cpu   1.519 rss    91MB others 0.21 steal 0.0% 
+r9 wikidata-bz6 t=10 mibz2            wall   0.129 cpu   0.904 rss    56MB others 0.27 steal 0.0% 
+r9 wikidata-bz6 t=10 mibz2-auto       wall   0.130 cpu   0.900 rss    55MB others 0.36 steal 0.0% 
+r9 wikidata-bz6 t=10 mibz2-workers    wall   0.210 cpu   2.187 rss   105MB others 0.23 steal 0.0% 
+r9 wikidata-bz6 t=20 mibz2            wall   0.123 cpu   0.863 rss    58MB others 0.45 steal 0.0% 
+r9 wikidata-bz6 t=20 mibz2-auto       wall   0.129 cpu   0.917 rss    56MB others 0.68 steal 0.0% 
+r9 wikidata-bz6 t=20 mibz2-workers    wall   0.368 cpu   6.945 rss   180MB others 0.30 steal 0.0% 
+r10 wikidata-bz6 t=4 mibz2-workers    wall   0.155 cpu   0.693 rss    57MB others 0.22 steal 0.0% 
+r10 wikidata-bz6 t=4 mibz2            wall   0.147 cpu   0.663 rss    57MB others 0.23 steal 0.0% 
+r10 wikidata-bz6 t=4 mibz2-auto       wall   0.146 cpu   0.660 rss    56MB others 0.45 steal 0.0% 
+r10 wikidata-bz6 t=6 mibz2-workers    wall   0.154 cpu   1.000 rss    74MB others 0.24 steal 0.0% 
+r10 wikidata-bz6 t=6 mibz2            wall   0.147 cpu   0.783 rss    47MB others 0.17 steal 0.0% 
+r10 wikidata-bz6 t=6 mibz2-auto       wall   0.153 cpu   0.823 rss    47MB others 0.30 steal 0.0% 
+r10 wikidata-bz6 t=8 mibz2-workers    wall   0.175 cpu   1.456 rss    90MB others 0.24 steal 0.0% 
+r10 wikidata-bz6 t=8 mibz2            wall   0.130 cpu   0.921 rss    57MB others 0.28 steal 0.0% 
+r10 wikidata-bz6 t=8 mibz2-auto       wall   0.127 cpu   0.905 rss    56MB others 0.40 steal 0.0% 
+r10 wikidata-bz6 t=10 mibz2-workers    wall   0.215 cpu   2.239 rss   109MB others 0.22 steal 0.0% 
+r10 wikidata-bz6 t=10 mibz2            wall   0.127 cpu   0.895 rss    55MB others 0.33 steal 0.0% 
+r10 wikidata-bz6 t=10 mibz2-auto       wall   0.128 cpu   0.894 rss    57MB others 0.26 steal 0.0% 
+r10 wikidata-bz6 t=20 mibz2-workers    wall   0.374 cpu   7.142 rss   181MB others 0.28 steal 0.0% 
+r10 wikidata-bz6 t=20 mibz2            wall   0.132 cpu   0.934 rss    57MB others 0.26 steal 0.0% 
+r10 wikidata-bz6 t=20 mibz2-auto       wall   0.136 cpu   0.969 rss    55MB others 0.35 steal 0.0% 
+r11 wikidata-bz6 t=4 mibz2-auto       wall   0.145 cpu   0.655 rss    56MB others 0.35 steal 0.0% 
+r11 wikidata-bz6 t=4 mibz2-workers    wall   0.145 cpu   0.655 rss    56MB others 0.22 steal 0.0% 
+r11 wikidata-bz6 t=4 mibz2            wall   0.152 cpu   0.684 rss    56MB others 0.23 steal 0.0% 
+r11 wikidata-bz6 t=6 mibz2-auto       wall   0.146 cpu   0.784 rss    47MB others 0.23 steal 0.0% 
+r11 wikidata-bz6 t=6 mibz2-workers    wall   0.145 cpu   0.948 rss    72MB others 0.33 steal 0.0% 
+r11 wikidata-bz6 t=6 mibz2            wall   0.148 cpu   0.789 rss    47MB others 0.20 steal 0.0% 
+r11 wikidata-bz6 t=8 mibz2-auto       wall   0.132 cpu   0.930 rss    56MB others 0.36 steal 0.0% 
+r11 wikidata-bz6 t=8 mibz2-workers    wall   0.179 cpu   1.501 rss    91MB others 0.20 steal 0.0% 
+r11 wikidata-bz6 t=8 mibz2            wall   0.130 cpu   0.907 rss    56MB others 0.31 steal 0.0% 
+r11 wikidata-bz6 t=10 mibz2-auto       wall   0.129 cpu   0.910 rss    58MB others 0.51 steal 0.0% 
+r11 wikidata-bz6 t=10 mibz2-workers    wall   0.208 cpu   2.144 rss   105MB others 0.22 steal 0.0% 
+r11 wikidata-bz6 t=10 mibz2            wall   0.129 cpu   0.918 rss    56MB others 0.38 steal 0.0% 
+r11 wikidata-bz6 t=20 mibz2-auto       wall   0.127 cpu   0.904 rss    55MB others 0.41 steal 0.0% 
+r11 wikidata-bz6 t=20 mibz2-workers    wall   0.377 cpu   7.223 rss   181MB others 0.25 steal 0.0% 
+r11 wikidata-bz6 t=20 mibz2            wall   0.126 cpu   0.890 rss    58MB others 0.29 steal 0.0% 
+r12 wikidata-bz6 t=4 mibz2-workers    wall   0.149 cpu   0.673 rss    56MB others 0.17 steal 0.0% 
+r12 wikidata-bz6 t=4 mibz2-auto       wall   0.148 cpu   0.671 rss    56MB others 0.25 steal 0.0% 
+r12 wikidata-bz6 t=4 mibz2            wall   0.156 cpu   0.694 rss    57MB others 0.21 steal 0.0% 
+r12 wikidata-bz6 t=6 mibz2-workers    wall   0.143 cpu   0.940 rss    74MB others 0.34 steal 0.0% 
+r12 wikidata-bz6 t=6 mibz2-auto       wall   0.148 cpu   0.808 rss    47MB others 0.33 steal 0.0% 
+r12 wikidata-bz6 t=6 mibz2            wall   0.147 cpu   0.787 rss    48MB others 0.21 steal 0.0% 
+r12 wikidata-bz6 t=8 mibz2-workers    wall   0.174 cpu   1.472 rss    90MB others 0.32 steal 0.0% 
+r12 wikidata-bz6 t=8 mibz2-auto       wall   0.130 cpu   0.913 rss    56MB others 0.20 steal 0.0% 
+r12 wikidata-bz6 t=8 mibz2            wall   0.133 cpu   0.931 rss    57MB others 0.29 steal 0.0% 
+r12 wikidata-bz6 t=10 mibz2-workers    wall   0.223 cpu   2.361 rss   106MB others 0.33 steal 0.0% 
+r12 wikidata-bz6 t=10 mibz2-auto       wall   0.129 cpu   0.911 rss    57MB others 0.21 steal 0.0% 
+r12 wikidata-bz6 t=10 mibz2            wall   0.133 cpu   0.913 rss    57MB others 0.35 steal 0.0% 
+r12 wikidata-bz6 t=20 mibz2-workers    wall   0.356 cpu   6.741 rss   181MB others 0.21 steal 0.0% 
+r12 wikidata-bz6 t=20 mibz2-auto       wall   0.130 cpu   0.930 rss    56MB others 0.22 steal 0.0% 
+r12 wikidata-bz6 t=20 mibz2            wall   0.132 cpu   0.933 rss    57MB others 0.27 steal 0.0% 
+r13 wikidata-bz6 t=4 mibz2-auto       wall   0.150 cpu   0.675 rss    56MB others 0.29 steal 0.0% 
+r13 wikidata-bz6 t=4 mibz2            wall   0.148 cpu   0.668 rss    57MB others 0.27 steal 0.0% 
+r13 wikidata-bz6 t=4 mibz2-workers    wall   0.145 cpu   0.659 rss    56MB others 0.26 steal 0.0% 
+r13 wikidata-bz6 t=6 mibz2-auto       wall   0.142 cpu   0.762 rss    47MB others 0.33 steal 0.0% 
+r13 wikidata-bz6 t=6 mibz2            wall   0.148 cpu   0.789 rss    47MB others 0.26 steal 0.0% 
+r13 wikidata-bz6 t=6 mibz2-workers    wall   0.143 cpu   0.937 rss    74MB others 0.22 steal 0.0% 
+r13 wikidata-bz6 t=8 mibz2-auto       wall   0.135 cpu   0.953 rss    57MB others 0.32 steal 0.0% 
+r13 wikidata-bz6 t=8 mibz2            wall   0.125 cpu   0.877 rss    57MB others 0.46 steal 0.0% 
+r13 wikidata-bz6 t=8 mibz2-workers    wall   0.174 cpu   1.463 rss    89MB others 0.32 steal 0.0% 
+r13 wikidata-bz6 t=10 mibz2-auto       wall   0.125 cpu   0.886 rss    56MB others 0.25 steal 0.0% 
+r13 wikidata-bz6 t=10 mibz2            wall   0.129 cpu   0.916 rss    56MB others 0.32 steal 0.0% 
+r13 wikidata-bz6 t=10 mibz2-workers    wall   0.213 cpu   2.203 rss   106MB others 0.43 steal 0.0% 
+r13 wikidata-bz6 t=20 mibz2-auto       wall   0.123 cpu   0.867 rss    56MB others 0.24 steal 0.0% 
+r13 wikidata-bz6 t=20 mibz2            wall   0.132 cpu   0.933 rss    56MB others 0.27 steal 0.0% 
+r13 wikidata-bz6 t=20 mibz2-workers    wall   0.360 cpu   6.811 rss   179MB others 0.29 steal 0.0% 
+r14 wikidata-bz6 t=4 mibz2            wall   0.153 cpu   0.690 rss    56MB others 0.30 steal 0.0% 
+r14 wikidata-bz6 t=4 mibz2-workers    wall   0.144 cpu   0.653 rss    57MB others 0.23 steal 0.0% 
+r14 wikidata-bz6 t=4 mibz2-auto       wall   0.143 cpu   0.647 rss    57MB others 0.36 steal 0.0% 
+r14 wikidata-bz6 t=6 mibz2            wall   0.152 cpu   0.817 rss    47MB others 0.15 steal 0.0% 
+r14 wikidata-bz6 t=6 mibz2-workers    wall   0.145 cpu   0.948 rss    74MB others 0.31 steal 0.0% 
+r14 wikidata-bz6 t=6 mibz2-auto       wall   0.248 cpu   1.312 rss    47MB others 0.34 steal 0.0% 
+r14 wikidata-bz6 t=8 mibz2            wall   0.124 cpu   0.865 rss    55MB others 0.33 steal 0.0% 
+r14 wikidata-bz6 t=8 mibz2-workers    wall   0.178 cpu   1.557 rss    88MB others 0.33 steal 0.0% 
+r14 wikidata-bz6 t=8 mibz2-auto       wall   0.129 cpu   0.918 rss    56MB others 0.30 steal 0.0% 
+r14 wikidata-bz6 t=10 mibz2            wall   0.127 cpu   0.897 rss    56MB others 0.31 steal 0.0% 
+r14 wikidata-bz6 t=10 mibz2-workers    wall   0.231 cpu   2.534 rss   105MB others 0.27 steal 0.0% 
+r14 wikidata-bz6 t=10 mibz2-auto       wall   0.135 cpu   0.933 rss    57MB others 0.39 steal 0.0% 
+r14 wikidata-bz6 t=20 mibz2            wall   0.129 cpu   0.885 rss    58MB others 0.33 steal 0.0% 
+r14 wikidata-bz6 t=20 mibz2-workers    wall   0.370 cpu   7.055 rss   180MB others 0.27 steal 0.0% 
+r14 wikidata-bz6 t=20 mibz2-auto       wall   0.128 cpu   0.893 rss    56MB others 0.27 steal 0.0% 
+r15 wikidata-bz6 t=4 mibz2            wall   0.145 cpu   0.658 rss    57MB others 0.21 steal 0.0% 
+r15 wikidata-bz6 t=4 mibz2-auto       wall   0.147 cpu   0.665 rss    57MB others 0.28 steal 0.0% 
+r15 wikidata-bz6 t=4 mibz2-workers    wall   0.148 cpu   0.668 rss    56MB others 0.39 steal 0.0% 
+r15 wikidata-bz6 t=6 mibz2            wall   0.147 cpu   0.790 rss    48MB others 0.19 steal 0.0% 
+r15 wikidata-bz6 t=6 mibz2-auto       wall   0.145 cpu   0.776 rss    48MB others 0.21 steal 0.0% 
+r15 wikidata-bz6 t=6 mibz2-workers    wall   0.150 cpu   0.976 rss    73MB others 0.28 steal 0.0% 
+r15 wikidata-bz6 t=8 mibz2            wall   0.128 cpu   0.894 rss    56MB others 0.12 steal 0.0% 
+r15 wikidata-bz6 t=8 mibz2-auto       wall   0.132 cpu   0.929 rss    56MB others 0.37 steal 0.0% 
+r15 wikidata-bz6 t=8 mibz2-workers    wall   0.175 cpu   1.484 rss    90MB others 0.31 steal 0.0% 
+r15 wikidata-bz6 t=10 mibz2            wall   0.132 cpu   0.935 rss    57MB others 0.25 steal 0.0% 
+r15 wikidata-bz6 t=10 mibz2-auto       wall   0.126 cpu   0.882 rss    57MB others 0.28 steal 0.0% 
+r15 wikidata-bz6 t=10 mibz2-workers    wall   0.223 cpu   2.396 rss   106MB others 0.31 steal 0.0% 
+r15 wikidata-bz6 t=20 mibz2            wall   0.129 cpu   0.918 rss    56MB others 0.31 steal 0.0% 
+r15 wikidata-bz6 t=20 mibz2-auto       wall   0.125 cpu   0.880 rss    56MB others 0.35 steal 0.0% 
+r15 wikidata-bz6 t=20 mibz2-workers    wall   0.417 cpu   7.316 rss   181MB others 0.35 steal 0.0% 
+r16 wikidata-bz6 t=4 mibz2-workers    wall   0.149 cpu   0.669 rss    57MB others 0.39 steal 0.0% 
+r16 wikidata-bz6 t=4 mibz2            wall   0.144 cpu   0.656 rss    57MB others 0.28 steal 0.0% 
+r16 wikidata-bz6 t=4 mibz2-auto       wall   0.152 cpu   0.683 rss    57MB others 0.23 steal 0.0% 
+r16 wikidata-bz6 t=6 mibz2-workers    wall   0.143 cpu   0.926 rss    73MB others 0.43 steal 0.0% 
+r16 wikidata-bz6 t=6 mibz2            wall   0.150 cpu   0.807 rss    47MB others 0.21 steal 0.0% 
+r16 wikidata-bz6 t=6 mibz2-auto       wall   0.146 cpu   0.779 rss    48MB others 0.25 steal 0.0% 
+r16 wikidata-bz6 t=8 mibz2-workers    wall   0.273 cpu   2.237 rss    90MB others 0.40 steal 0.0% 
+r16 wikidata-bz6 t=8 mibz2            wall   0.127 cpu   0.889 rss    56MB others 0.38 steal 0.0% 
+r16 wikidata-bz6 t=8 mibz2-auto       wall   0.127 cpu   0.887 rss    58MB others 0.46 steal 0.0% 
+r16 wikidata-bz6 t=10 mibz2-workers    wall   0.210 cpu   2.206 rss   106MB others 0.33 steal 0.0% 
+r16 wikidata-bz6 t=10 mibz2            wall   0.131 cpu   0.923 rss    57MB others 0.42 steal 0.0% 
+r16 wikidata-bz6 t=10 mibz2-auto       wall   0.127 cpu   0.890 rss    55MB others 0.29 steal 0.0% 
+r16 wikidata-bz6 t=20 mibz2-workers    wall   0.362 cpu   6.787 rss   181MB others 0.25 steal 0.0% 
+r16 wikidata-bz6 t=20 mibz2            wall   0.134 cpu   0.952 rss    57MB others 0.32 steal 0.0% 
+r16 wikidata-bz6 t=20 mibz2-auto       wall   0.130 cpu   0.927 rss    56MB others 0.39 steal 0.0% 
+r17 wikidata-bz6 t=4 mibz2-auto       wall   0.146 cpu   0.659 rss    56MB others 0.32 steal 0.0% 
+r17 wikidata-bz6 t=4 mibz2-workers    wall   0.151 cpu   0.679 rss    57MB others 0.26 steal 0.0% 
+r17 wikidata-bz6 t=4 mibz2            wall   0.148 cpu   0.664 rss    55MB others 0.36 steal 0.0% 
+r17 wikidata-bz6 t=6 mibz2-auto       wall   0.148 cpu   0.796 rss    47MB others 0.21 steal 0.0% 
+r17 wikidata-bz6 t=6 mibz2-workers    wall   0.145 cpu   0.951 rss    73MB others 0.37 steal 0.0% 
+r17 wikidata-bz6 t=6 mibz2            wall   0.146 cpu   0.778 rss    46MB others 0.33 steal 0.0% 
+r17 wikidata-bz6 t=8 mibz2-auto       wall   0.134 cpu   0.954 rss    57MB others 0.31 steal 0.0% 
+r17 wikidata-bz6 t=8 mibz2-workers    wall   0.178 cpu   1.491 rss    91MB others 0.31 steal 0.0% 
+r17 wikidata-bz6 t=8 mibz2            wall   0.134 cpu   0.955 rss    56MB others 0.38 steal 0.0% 
+r17 wikidata-bz6 t=10 mibz2-auto       wall   0.129 cpu   0.911 rss    57MB others 0.36 steal 0.0% 
+r17 wikidata-bz6 t=10 mibz2-workers    wall   0.206 cpu   2.125 rss   107MB others 0.30 steal 0.0% 
+r17 wikidata-bz6 t=10 mibz2            wall   0.121 cpu   0.846 rss    56MB others 0.43 steal 0.0% 
+r17 wikidata-bz6 t=20 mibz2-auto       wall   0.125 cpu   0.873 rss    57MB others 0.27 steal 0.0% 
+r17 wikidata-bz6 t=20 mibz2-workers    wall   0.368 cpu   7.054 rss   179MB others 0.28 steal 0.0% 
+r17 wikidata-bz6 t=20 mibz2            wall   0.125 cpu   0.874 rss    56MB others 0.33 steal 0.0% 
+r18 wikidata-bz6 t=4 mibz2-workers    wall   0.153 cpu   0.685 rss    56MB others 0.23 steal 0.0% 
+r18 wikidata-bz6 t=4 mibz2-auto       wall   0.148 cpu   0.665 rss    57MB others 0.35 steal 0.0% 
+r18 wikidata-bz6 t=4 mibz2            wall   0.152 cpu   0.686 rss    56MB others 0.34 steal 0.0% 
+r18 wikidata-bz6 t=6 mibz2-workers    wall   0.143 cpu   0.937 rss    72MB others 0.42 steal 0.0% 
+r18 wikidata-bz6 t=6 mibz2-auto       wall   0.144 cpu   0.773 rss    47MB others 0.36 steal 0.0% 
+r18 wikidata-bz6 t=6 mibz2            wall   0.142 cpu   0.760 rss    47MB others 0.28 steal 0.0% 
+r18 wikidata-bz6 t=8 mibz2-workers    wall   0.180 cpu   1.504 rss    90MB others 0.24 steal 0.0% 
+r18 wikidata-bz6 t=8 mibz2-auto       wall   0.131 cpu   0.929 rss    57MB others 0.37 steal 0.0% 
+r18 wikidata-bz6 t=8 mibz2            wall   0.129 cpu   0.910 rss    57MB others 0.37 steal 0.0% 
+r18 wikidata-bz6 t=10 mibz2-workers    wall   0.213 cpu   2.209 rss   107MB others 0.27 steal 0.0% 
+r18 wikidata-bz6 t=10 mibz2-auto       wall   0.130 cpu   0.914 rss    56MB others 0.19 steal 0.0% 
+r18 wikidata-bz6 t=10 mibz2            wall   0.129 cpu   0.894 rss    56MB others 0.26 steal 0.0% 
+r18 wikidata-bz6 t=20 mibz2-workers    wall   0.372 cpu   7.080 rss   180MB others 0.28 steal 0.0% 
+r18 wikidata-bz6 t=20 mibz2-auto       wall   0.128 cpu   0.895 rss    57MB others 0.25 steal 0.0% 
+r18 wikidata-bz6 t=20 mibz2            wall   0.125 cpu   0.863 rss    57MB others 0.35 steal 0.0% 
+r19 wikidata-bz6 t=4 mibz2-auto       wall   0.150 cpu   0.683 rss    56MB others 0.30 steal 0.0% 
+r19 wikidata-bz6 t=4 mibz2            wall   0.147 cpu   0.666 rss    56MB others 0.22 steal 0.0% 
+r19 wikidata-bz6 t=4 mibz2-workers    wall   0.148 cpu   0.667 rss    56MB others 0.27 steal 0.0% 
+r19 wikidata-bz6 t=6 mibz2-auto       wall   0.149 cpu   0.806 rss    47MB others 0.21 steal 0.0% 
+r19 wikidata-bz6 t=6 mibz2            wall   0.144 cpu   0.777 rss    47MB others 0.40 steal 0.0% 
+r19 wikidata-bz6 t=6 mibz2-workers    wall   0.144 cpu   0.944 rss    74MB others 0.29 steal 0.0% 
+r19 wikidata-bz6 t=8 mibz2-auto       wall   0.129 cpu   0.898 rss    57MB others 0.23 steal 0.0% 
+r19 wikidata-bz6 t=8 mibz2            wall   0.127 cpu   0.891 rss    56MB others 0.50 steal 0.0% 
+r19 wikidata-bz6 t=8 mibz2-workers    wall   0.176 cpu   1.483 rss    92MB others 0.35 steal 0.0% 
+r19 wikidata-bz6 t=10 mibz2-auto       wall   0.127 cpu   0.901 rss    57MB others 0.21 steal 0.0% 
+r19 wikidata-bz6 t=10 mibz2            wall   0.128 cpu   0.910 rss    56MB others 0.30 steal 0.0% 
+r19 wikidata-bz6 t=10 mibz2-workers    wall   0.207 cpu   2.133 rss   108MB others 0.31 steal 0.0% 
+r19 wikidata-bz6 t=20 mibz2-auto       wall   0.130 cpu   0.913 rss    56MB others 0.41 steal 0.0% 
+r19 wikidata-bz6 t=20 mibz2            wall   0.130 cpu   0.941 rss    57MB others 0.28 steal 0.0% 
+r19 wikidata-bz6 t=20 mibz2-workers    wall   0.361 cpu   6.861 rss   180MB others 0.29 steal 0.0% 
+# The cooperative decoder's full-decoder A/B (20261030T003038Z)
+
+- **Build:** 2591867; **machine:** Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz, 20 CPUs; **load:** 6.52
+- **Rounds:** 20, interleaved, unpinned, back to back; corpus wikidata-bz6.bz2
+- **Note:** level-aware plan, revision 2: bz6
+
+## The gates (mibz2 at all CPUs against mibz2-workers at 4)
+
+| gate | pass | measured |
+|---|---|--:|
+| throughput: mean >= 1.15 | yes | 1.169 |
+| throughput: 95% lower bound > 1.05 | yes | 1.132 |
+| bytes identical, no error | yes | 1 hash(es), 0 error(s) |
+| peak RSS <= 1.15x | yes | 1.007 |
+| CPU-seconds <= 1.5x | yes | 1.369 |
+
+Verdict: **PASS**: the release gates are met.
+
+## Every arm, against mibz2-workers at 4 (p4)
+
+| arm | T | MB/s | paired ratio (95%) | won | peak RSS | RSS ratio | CPU-s | CPU ratio |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| mibz2 | 4 | 1383 | 1.005 (0.968-1.043) | 10/20 | 56 MB | 1.00 | 0.68 | 1.02 |
+| mibz2 | 6 | 1428 | 1.032 (0.999-1.066) | 14/20 | 47 MB | 0.83 | 0.78 | 1.17 |
+| mibz2 | 8 | 1640 | 1.184 (1.150-1.219) | 20/20 | 56 MB | 1.00 | 0.90 | 1.34 |
+| mibz2 | 10 | 1630 | 1.172 (1.128-1.217) | 20/20 | 56 MB | 1.00 | 0.90 | 1.35 |
+| mibz2 | 20 | 1611 | 1.169 (1.132-1.208) | 20/20 | 57 MB | 1.01 | 0.92 | 1.37 |
+| mibz2-auto | 4 | 1418 | 1.016 (0.986-1.048) | 12/20 | 56 MB | 0.99 | 0.67 | 1.00 |
+| mibz2-auto | 6 | 1419 | 1.002 (0.936-1.072) | 12/20 | 47 MB | 0.84 | 0.79 | 1.18 |
+| mibz2-auto | 8 | 1614 | 1.161 (1.124-1.200) | 20/20 | 56 MB | 1.00 | 0.92 | 1.38 |
+| mibz2-auto | 10 | 1642 | 1.181 (1.142-1.221) | 20/20 | 57 MB | 1.00 | 0.90 | 1.35 |
+| mibz2-auto | 20 | 1643 | 1.187 (1.149-1.225) | 20/20 | 56 MB | 1.00 | 0.90 | 1.34 |
+| mibz2-workers | 4 | 1409 | 1.000 (1.000-1.000) | 0/20 | 56 MB | 1.00 | 0.67 | 1.00 |
+| mibz2-workers | 6 | 1447 | 1.041 (1.009-1.073) | 18/20 | 74 MB | 1.30 | 0.95 | 1.41 |
+| mibz2-workers | 8 | 1179 | 0.837 (0.791-0.885) | 1/20 | 90 MB | 1.59 | 1.50 | 2.24 |
+| mibz2-workers | 10 | 996 | 0.700 (0.664-0.738) | 0/20 | 106 MB | 1.88 | 2.20 | 3.29 |
+| mibz2-workers | 20 | 578 | 0.414 (0.399-0.429) | 0/20 | 180 MB | 3.19 | 6.88 | 10.26 |
+
+## Every arm, against the workers' best here (mibz2-workers at 6)
+
+| arm | T | MB/s | paired ratio (95%) | won | peak RSS | RSS ratio | CPU-s | CPU ratio |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| mibz2 | 4 | 1383 | 0.966 (0.949-0.983) | 3/20 | 56 MB | 0.77 | 0.68 | 0.72 |
+| mibz2 | 6 | 1428 | 0.992 (0.980-1.004) | 8/20 | 47 MB | 0.64 | 0.78 | 0.83 |
+| mibz2 | 8 | 1640 | 1.138 (1.122-1.154) | 20/20 | 56 MB | 0.76 | 0.90 | 0.95 |
+| mibz2 | 10 | 1630 | 1.126 (1.104-1.148) | 20/20 | 56 MB | 0.77 | 0.90 | 0.95 |
+| mibz2 | 20 | 1611 | 1.124 (1.108-1.140) | 20/20 | 57 MB | 0.77 | 0.92 | 0.97 |
+| mibz2-auto | 4 | 1418 | 0.977 (0.959-0.995) | 6/20 | 56 MB | 0.76 | 0.67 | 0.71 |
+| mibz2-auto | 6 | 1419 | 0.963 (0.911-1.018) | 5/20 | 47 MB | 0.64 | 0.79 | 0.84 |
+| mibz2-auto | 8 | 1614 | 1.116 (1.098-1.134) | 20/20 | 56 MB | 0.77 | 0.92 | 0.97 |
+| mibz2-auto | 10 | 1642 | 1.135 (1.119-1.151) | 20/20 | 57 MB | 0.77 | 0.90 | 0.95 |
+| mibz2-auto | 20 | 1643 | 1.141 (1.127-1.154) | 20/20 | 56 MB | 0.77 | 0.90 | 0.95 |
+| mibz2-workers | 4 | 1409 | 0.961 (0.932-0.991) | 2/20 | 56 MB | 0.77 | 0.67 | 0.71 |
+| mibz2-workers | 6 | 1447 | 1.000 (1.000-1.000) | 0/20 | 74 MB | 1.00 | 0.95 | 1.00 |
+| mibz2-workers | 8 | 1179 | 0.804 (0.766-0.844) | 0/20 | 90 MB | 1.22 | 1.50 | 1.59 |
+| mibz2-workers | 10 | 996 | 0.673 (0.649-0.698) | 0/20 | 106 MB | 1.44 | 2.20 | 2.33 |
+| mibz2-workers | 20 | 578 | 0.398 (0.392-0.404) | 0/20 | 180 MB | 2.45 | 6.88 | 7.27 |
+
+Files: coop-decoder-20261030T003038Z.jsonl, coop-decoder-20261030T003038Z.json
+
+coop-decoder: wrote coop-decoder-20261030T003038Z.md, .json and the .jsonl: upload them all
+python3 bench/level_aware.py $(ls -t coop-decoder-*Z.jsonl | head -4) | tee level-aware-revised-scores.md
+## wikidata-bz6 (bz6: unchanged); 1 hash(es), 0 error(s)
+
+| threads | mibz2 / mibz2-auto | rounds | peak RSS | CPU-s |
+|--:|--:|--:|--:|--:|
+| 4 | 0.989 (0.968-1.010) | 20 | 1.01 | 1.02 |
+| 6 | 1.030 (0.979-1.084) | 20 | 1.00 | 0.99 |
+| 8 | 1.019 (1.006-1.033) | 20 | 1.00 | 0.97 |
+| 10 | 0.992 (0.971-1.013) | 20 | 1.00 | 1.00 |
+| 20 | 0.985 (0.971-1.000) | 20 | 1.01 | 1.02 |
+
+At 20 threads, the unchanged gate: **met**
+
+## wikidata-mix93 (mix93: unchanged); 1 hash(es), 0 error(s)
+
+| threads | mibz2 / mibz2-auto | rounds | peak RSS | CPU-s |
+|--:|--:|--:|--:|--:|
+| 4 | 0.996 (0.983-1.009) | 20 | 0.99 | 1.01 |
+| 6 | 0.999 (0.990-1.009) | 20 | 1.01 | 1.00 |
+| 8 | 0.998 (0.987-1.010) | 20 | 1.00 | 0.99 |
+| 10 | 0.996 (0.990-1.003) | 20 | 1.01 | 1.00 |
+| 20 | 0.999 (0.991-1.007) | 20 | 1.00 | 1.00 |
+
+At 20 threads, the unchanged gate: **met**
+
+## wikidata-bz3 (bz3: rule); 1 hash(es), 0 error(s)
+
+| threads | mibz2 / mibz2-auto | rounds | peak RSS | CPU-s |
+|--:|--:|--:|--:|--:|
+| 4 | 1.004 (0.988-1.021) | 20 | 1.00 | 0.99 |
+| 6 | 1.000 (0.988-1.012) | 20 | 1.00 | 1.00 |
+| 8 | 1.001 (0.985-1.017) | 20 | 1.00 | 1.01 |
+| 10 | 1.090 (1.049-1.134) | 20 | 1.13 | 1.08 |
+| 20 | 1.078 (1.060-1.097) | 20 | 1.13 | 1.11 |
+
+At 20 threads, the rule gate: **met**
+
+## wikidata-mix39 (mix39: mixed); 1 hash(es), 0 error(s)
+
+| threads | mibz2 / mibz2-auto | rounds | peak RSS | CPU-s |
+|--:|--:|--:|--:|--:|
+| 4 | 1.000 (0.985-1.014) | 20 | 1.00 | 0.99 |
+| 6 | 0.995 (0.981-1.009) | 20 | 1.00 | 1.01 |
+| 8 | 0.989 (0.977-1.001) | 20 | 1.00 | 1.01 |
+| 10 | 0.954 (0.939-0.970) | 20 | 1.15 | 1.03 |
+| 20 | 0.945 (0.930-0.959) | 20 | 1.15 | 1.04 |
+
+At 20 threads, the mixed gate: **not met**
+
+## Verdict
+
+- wikidata-bz6 (unchanged): met
+- wikidata-mix93 (unchanged): met
+- wikidata-bz3 (rule): met
+- wikidata-mix39 (mixed): not met
+
+All met: **no**

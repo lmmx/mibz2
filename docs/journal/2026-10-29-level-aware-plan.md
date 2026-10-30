@@ -365,3 +365,82 @@ merged,** run only if revision 2's focused validation passes.
 - this confirmation.
 
 No single run decides it alone.
+
+## Revision 2's validation (measured, the i9, 2591867, 2026-10-30): not met, and the mixed case worse
+
+**The run:** `just bench-level-aware-revised`. Its 14 files are in
+`2026-10-29-level-aware-plan/revision-2/`. Every run gave one output hash, with no errors.
+
+| corpus | role | `mibz2` / `mibz2-auto`, 20 threads | RSS | CPU | gate |
+|---|---|--:|--:|--:|---|
+| -3 then -9 | mixed | **0.945 (0.930–0.959)** | 1.15 | 1.04 | **not met** |
+| -3 | the rule | 1.078 (1.060–1.097) | 1.13 | 1.11 | met |
+| -9 then -3 | unchanged | 0.999 (0.991–1.007) | 1.00 | 1.00 | met |
+| -6, the repeat | unchanged | 0.985 (0.971–1.000) | 1.01 | 1.02 | met, alone |
+| **-6, pooled with the first run** (40 rounds) | unchanged | **0.984 (0.969–0.999)** | 1.00 | 1.02 | **not met** |
+
+**Verdicts, as registered:**
+- **Revision 2's validation is not met.** The mixed case is worse than revision 1's 0.986.
+- **The -6 control is not met when pooled.** Its lower bound is 0.969, 0.001 short.
+- The first run's not-met verdict stands. **#115 does not merge.**
+
+**The hypotheses registered with it, scored:**
+- **The mixed file +4% with RSS 1.05–1.10×: wrong.** It is −5.5%, with RSS 1.15×.
+- **The -9 half back to today's: half right.** Its CPU is back; its time is worse (below).
+- **-3 alone near 1.092:** 1.078, near.
+- **-9 then -3 and -6 near 1.00:** 0.999 and 0.985.
+
+### The two analyses (from these records; no new run)
+
+**1. The mixed file, split** (-3 alone subtracted, assuming the halves add):
+
+| the -9 half, new − today | revision 1 | revision 2 |
+|---|--:|--:|
+| wall | +12.6 ms (about +8%) | **+23.9 ms (about +15%)** |
+| CPU | +0.25 s (about +23%) | **−0.02 s (about today's)** |
+
+- **The -3 half gains about as before:** −8.3 ms here, against −9.7 ms in revision 1.
+- **So the loss is still in the -9 half, and doubled,** while its CPU returned to today's.
+- **The additivity assumption is a limit:** these records can't show what happens at the
+  boundary between the streams, or whether the -3 half suffers inside the mix.
+
+**2. The five workers' CPU is now uneven:** 0.18, 0.205, 0.22, 0.23 and 0.24 s, against
+0.25–0.26 s each in today's plan and 0.23–0.25 s each in revision 1. Some workers spent much
+more of the decode not working.
+
+**3. What the code says the difference is** (a hypothesis to test, not a finding):
+- **Revision 2:** a worker takes the next job from the shared queue, then waits for a pass
+  holding it. Jobs are taken in stream order, so the waiting block is often the oldest in
+  flight.
+  - The reader takes blocks in order, so it waits on that block.
+  - That block's whole decode starts only after another block's ends.
+  - The window (10 blocks) fills behind it, and the scanner waits for a slot.
+- **Revision 1:** the waiting block had its MTF stage done before it waited, so it finished
+  sooner once admitted. That costs more CPU (the extra work, the extra busy thread) and
+  less time.
+- **Today's plan:** a worker takes a job only when it is free to start it, so no job waits.
+- **Why this is the leading hypothesis:** both gates hold a taken job they can't start. The
+  order of their time losses (revision 2 worse than 1, both worse than today) and of their
+  CPU (revision 1 above today, 2 at today's) fit it.
+- **Not shown:** that the reader's waits, rather than something else, account for the
+  +23.9 ms. These records have no per-block timeline.
+
+**4. The -6 control,** separately from the mixed case:
+- **The two runs agree:** 0.983 and 0.985. Pooled, the interval excludes no change.
+- **So the first run is not simply disturbed:** a slowdown of about 1.5% at -6 now has
+  some support.
+- **Its cause is unknown.** The code at -6 differs from today's plan only by the header
+  read, its 4-byte first chunk and the level each job carries; no mechanism was found in
+  any of them.
+- **One explanation not ruled out:** a difference between the harness's two arms that
+  predates the PR. `mibz2` decodes through `BzReader::parallel`; `mibz2-auto` decodes
+  through `parallel_planned`, with its slots set by `ab`.
+
+### What would settle each question (proposed; nothing run, nothing redesigned)
+
+- **Revision 2's waits:** one traced decode of -3 then -9 per design, with the decoder's
+  `trace` feature, on the i9. Its marks (`JobGot`, `DecodeStart`, `DecodeEnd`, `Ready`,
+  `ReadWait`, `Taken`) give each block's wait at the gate and each wait of the reader.
+  A diagnostic of seconds, not a benchmark.
+- **The -6 gap:** an A/A run on master, `mibz2` against `mibz2-auto` at -6, without this
+  PR's code. If master shows the same 0.98, the gap belongs to the arms, not to the PR.
