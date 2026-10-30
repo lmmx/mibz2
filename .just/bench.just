@@ -137,6 +137,15 @@ bench-level-aware-confirm rounds="20":
     python3 bench/coop_decoder.py --file corpora/wikidata-bz2.bz2 --rounds {{rounds}} --arms mibz2-workers,mibz2-auto,mibz2 --gate mibz2 --no-small --note "level-aware plan, final confirmation: wikidata-bz2"
     python3 bench/level_aware.py $(ls -t coop-decoder-*Z.jsonl | head -3) | tee level-aware-confirm-scores.md
 
+# The level-aware plan's two diagnostics (the journal's "The diagnostics"; not shipping
+# gates, and they reopen no decision): the decoder's traced timeline on -3 then -9 under
+# today's plan, revision 1 and revision 2, and an A/A on master (its `mibz2` against its
+# `mibz2-auto` on -6, the A/B's arms and rounds). About 8 minutes. Upload every
+# diagnose-* file it writes, and the console.
+#   just bench-level-aware-diagnose 2>&1 | tee level-aware-diagnose-console.log
+bench-level-aware-diagnose:
+    bash bench/level_aware_diagnose.sh
+
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10

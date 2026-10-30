@@ -21,7 +21,10 @@ With `--pool`, a corpus given in several files (a repeat of a run) is also score
 every file's paired rounds together, one statistic over them all, each run's verdict
 printed as well and none dropped.
 
-    python3 bench/level_aware.py coop-decoder-*.jsonl [--new mibz2] [--old mibz2-auto] [--pool]
+With `--no-gates`, the tables alone, with no gate or verdict: for a diagnostic run (the A/A
+on master), which no gate scores.
+
+    python3 bench/level_aware.py coop-decoder-*.jsonl [--new mibz2] [--old mibz2-auto] [--pool] [--no-gates]
 """
 
 import argparse
@@ -86,6 +89,7 @@ def main():
     ap.add_argument("--new", default="mibz2")
     ap.add_argument("--old", default="mibz2-auto")
     ap.add_argument("--pool", action="store_true", help="also score each corpus's files pooled")
+    ap.add_argument("--no-gates", action="store_true", help="the tables alone, no gate or verdict")
     a = ap.parse_args()
     verdicts = []
     loaded = []
@@ -101,6 +105,8 @@ def main():
             runs.setdefault((r["arm"], r["threads"]), {})[r["round"]] = r
         loaded.append((i, corpus, runs, hashes, errors))
         tag, kind = role(corpus or "?")
+        if a.no_gates:
+            kind = None
         threads = sorted({t for (arm, t) in runs if arm == a.new and (a.old, t) in runs})
         if not threads:
             print(f"{f}: no {a.new} and {a.old} runs at the same thread count", file=sys.stderr)
@@ -134,6 +140,8 @@ def main():
             if len(parts) < 2:
                 continue
             tag, kind = role(corpus or "?")
+            if a.no_gates:
+                kind = None
             # every file's rounds, keyed by (file, round): pairs never cross files
             new, old, hashes, errors = {}, {}, set(), 0
             top = min(

@@ -444,3 +444,79 @@ more of the decode not working.
   A diagnostic of seconds, not a benchmark.
 - **The -6 gap:** an A/A run on master, `mibz2` against `mibz2-auto` at -6, without this
   PR's code. If master shows the same 0.98, the gap belongs to the arms, not to the PR.
+
+## The diagnostics (the user's decision, 2026-10-30; not shipping gates)
+
+**Their standing:**
+- **#115's shipping decision is made:** the automatic level-aware plan is a failed shipping
+  experiment, and #115 does not merge. The small-block speedups stay a valid research
+  result.
+- **These two runs are diagnostic.** Neither is a gate, neither is scored against one, and
+  neither reopens the decision, whatever it shows. A plausible explanation of a failure
+  does not make the failed design pass.
+- **Nothing else is run:** no gate is redesigned, no new optimisation is tried, no further
+  sweep is made.
+
+**The run:** `just bench-level-aware-diagnose` (`bench/level_aware_diagnose.sh`), on the
+i9, about 8 minutes. Each build is made from its own commit in a worktree of its own.
+
+### 1. The traced decode of -3 then -9 (`examples/occupancy.rs`, the `trace` feature)
+
+- **The builds:** today's plan (master), revision 1 (00e9dd6: the gate before the
+  inversion) and revision 2 (this branch: the gate when a worker takes the block).
+- **The run:** `wikidata-mix39` at all CPUs, 6 rounds per build. Each round runs the
+  decode untraced, with the timeline, and with full tracing, in rotated order.
+- **The question:** do the gated designs' extra wall times come from blocks held in the
+  in-order output: a worker holding a job it can't start, so the reader waits behind it?
+
+**What the records can show:**
+- **Revision 2's gate wait:** the share of the span its workers spend between taking a job
+  and starting its decode (the `buffer` state, which today's plan keeps near zero).
+- **Revision 1's gate wait:** inside the decode, so in each block's off-CPU time (`full`:
+  elapsed less CPU per block).
+- **The in-order output:** the reader's waiting share (`r.waiting`, and `next_ready`, its
+  waits with the next block ready); the bytes held behind the head of the line
+  (`q.ready_mb_mean.head_of_line`) and the longest hold (`q.hold_ms_max`); the scanner
+  waiting for a slot whose earliest block is still decoding (`s.slot_earliest_decoding`).
+- **The workers' idle time,** by cause (`w.idle.*`).
+
+**How it will be read (fixed now):**
+- **The hypothesis has support** if both gated designs show their gate wait (revision 2 in
+  `buffer`, revision 1 off-CPU), and the reader's waits or the head-of-line holds rise
+  over today's in the same order as their wall-time losses (revision 2 above revision 1,
+  both above today's).
+- **It is weakened** if the gate waits are small against the span, or if the reader's waits
+  and the holds don't rise over today's. The loss would then lie elsewhere (cache sharing
+  among more teams, say), and is left unexplained.
+
+**What it can't establish:**
+- **The tracer's records are whole-file:** they don't split the -3 half from the -9 half,
+  in which alone the gate engages.
+- **Tracing perturbs timing.** The tool reports its own perturbation against the untraced
+  rounds; a design's reading counts only where that perturbation is small.
+- **Six rounds give a mechanism's direction and rough size, not a measured effect.** They
+  are no substitute for the A/B, which stands as measured.
+
+### 2. The A/A on master (`ab` built from master)
+
+- **The run:** master's `mibz2` (`BzReader::parallel`) against its `mibz2-auto`
+  (`parallel_planned`, with its slots set by `ab`) on -6 at 4, 6, 8, 10 and all threads,
+  20 rounds, the A/B's arms and settings. No code of #115's is in the build.
+- **The question:** did the -6 gap (0.983 and 0.985, pooled 0.984 (0.969–0.999)) predate
+  #115?
+- **Scored without gates** (`bench/level_aware.py --no-gates`): the tables only.
+
+**How it will be read (fixed now):**
+- **The gap predates #115** if master's ratio at all CPUs has its interval wholly below 1,
+  near 0.98. The gap would then lie between the harness's two arms, not in the PR.
+- **The gap is not the arms'** if master's interval lies wholly above 0.985 (above the
+  pooled point) and includes 1. It would then stay with #115, unexplained.
+- **Otherwise, inconclusive.** An interval of about ±1.5%, like those of the earlier runs,
+  can include both 0.984 and 1.
+
+**What it can't establish:**
+- **A gap on master explains the -6 result only as the arms' difference.** It doesn't say
+  which part of that difference (the slots, the reader or the call path) is responsible.
+- **No gap on master doesn't locate a cause in #115's code:** none has been found there.
+- **One run of 20 rounds.** The earlier -6 runs show how much one run can differ from
+  another.
