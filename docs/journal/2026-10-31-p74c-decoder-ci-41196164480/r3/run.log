@@ -1,0 +1,207 @@
+p74c-decoder: label=gha-ubuntu-24.04-exploratory-r3-41196164480 head=4acf46fc85640e8139e968930fe0469b9daea67c pin=535296c68e43db54990af88bb0e05087198c583e out=/home/runner/work/_temp/p74c-decoder-results/gha-ubuntu-24.04-exploratory-r3-41196164480 dry_run=0
+p74c-decoder: 25 harness sources match the frozen hashes
+info: syncing channel updates for 1.90.0-x86_64-unknown-linux-gnu
+info: latest update on 2025-09-18 for version 1.90.0 (1159e78c4 2025-09-14)
+info: downloading 3 components
+
+  1.90.0-x86_64-unknown-linux-gnu installed - rustc 1.90.0 (1159e78c4 2025-09-14)
+
+p74c-decoder: CARGO_TARGET_DIR=/home/runner/work/mibz2/mibz2/target; rustc 1.90.0 (1159e78c4 2025-09-14)
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded unicode-ident v1.0.27
+  Downloaded thiserror-impl v2.0.21
+  Downloaded thiserror v2.0.21
+  Downloaded find-msvc-tools v0.1.15
+  Downloaded proc-macro2 v1.0.107
+  Downloaded pbz2-core v0.2.0
+  Downloaded bzip2 v0.4.4
+  Downloaded shlex v2.0.1
+  Downloaded libm v0.2.16
+  Downloaded cc v1.10.0
+  Downloaded quote v1.0.47
+  Downloaded pkg-config v0.3.34
+  Downloaded pbz2 v0.2.0
+  Downloaded bytemuck v1.25.2
+  Downloaded syn v3.0.9
+  Downloaded bzip2-sys v0.1.13+1.0.8
+  Downloaded fearless_simd v1.2.0
+  Downloaded libc v0.2.191
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling libm v0.2.16
+   Compiling cc v1.10.0
+   Compiling pkg-config v0.3.34
+   Compiling thiserror v2.0.21
+   Compiling syn v3.0.9
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling fearless_simd v1.2.0
+   Compiling mibz2 v0.2.1 (/home/runner/work/mibz2/mibz2)
+   Compiling thiserror-impl v2.0.21
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+   Compiling bzip2 v0.4.4
+    Finished `release` profile [optimized + debuginfo] target(s) in 27.35s
+From https://github.com/lmmx/mibz2
+ * branch            bench-data -> FETCH_HEAD
+fetch: x00 at 6468043581: 18dcea8b845d634a79e047a9eb52c449c494d98413e05b959d3c934db97d6d22
+fetch: x01 at 15092101691: 5bb88c606354832669e2930c0f665c8865d52510f3ca4234aea824bfcfdb0ba6
+fetch: x02 at 23716159800: b08d4e8601f8726752d78c2e4f8c52da713450d4093127cf6bb3febd6fcef9d2
+fetch: x03 at 32340217909: b80a2b8b621470169758171d8d5f3c79357931a9a58493cfb87b344ce8ed1228
+fetch: x04 at 40964276018: 67deb9de775f6076218adc6b0f7465afc02302c2dac44831a0642a3c348c590c
+fetch: x05 at 49588334128: f33268a4982c87ebc92acd9a6e65e61656bfd866566925cb80ccbc970a04709e
+fetch: x06 at 58212392237: 2d751e527859a4ae5e978f72c98ee2facb428400d4f3718c5bfbadac29434831
+fetch: x07 at 66836450346: 88d000afe5d373921fc5aa588304f0cf95003ad296eac88cf3085f5f69785463
+fetch: x08 at 75460508455: 73dc94cdf050653e8081eba538854cac92e1b4e3b150e86a4995d5fbdf548d99
+fetch: x09 at 84084566565: 6a80b79841df2766d1b9a4ba5fdee35d5c1a12a7b3b362d6d95f6d646e92c489
+fetch: x10 at 92708624674: 038d5e004d1913ed68095c5c08d322ac4b72aba1eaed8b78e4160b0a7574ac23
+fetch: x11 at 101332682783: 74cb6b870275e5990210fdd45bab4da57297b45cee3bbf33c9e4e25d9f170621
+fetch: d00 at 4315233985: d18e5fdb8c62d0f88b675792400a724e63ed9acdb066418865232e895d6a8d35
+fetch: d01 at 12945701956: 1c5f95e476fa75c20bc2c851d5859ebf872a789d54a4133a7318a737fb33f341
+fetch: d02 at 21576169927: fdeeece0d748018d3c6a6181f5a002c6d691cdd37ca91fffbafaaa4cc362f311
+fetch: d03 at 30206637898: 316b4ff073dd3b6df716052f49d7a4e49553a24b23f0973ffe1c917ecd6551f4
+fetch: d04 at 38837105869: db63631fcfdf3931b10db29f8ba7b561526f65918a89f163fa4cdbd257f2e5b8
+fetch: d05 at 47467573840: 28e768be80ed3c586f02a012a5b40d0b7e154670ffdb4c9356b98a0c8cfcceaf
+fetch: d06 at 56098041812: d42380ff1c24ac0e1fc6b2caed5030760a986b3d1ca7bfe93c0fd844ed02197c
+fetch: d07 at 64728509783: 7b01785f0bc84bb81a020b890ac11b93a0cab18bfc73d29ae281cf1ed05da234
+fetch: d08 at 73358977754: bfd50cf980b2ee8cefc6ffd65cb33d572aa895ba72b4259ec98e7b957cda8a88
+fetch: d09 at 81989445725: 744d5b2c376b0bb5836c148a68b2a6bdfdc139a40bdf06114c8105223a57bbcc
+fetch: d10 at 90619913696: 4ff35590fa356a09cca858790957daa00fb2e817f707faf3f509f2b6cae562e4
+fetch: d11 at 99250381667: 3f4173b86106519998798324e5dde1c30cc995bdd2969f795c9af1480b710fd6
+manifest: 34 corpora match the frozen SHA-256
+p74c-decoder: bzip2 -t and bzip2 -dc match the frozen output hashes
+p74c-decoder: allocation CPUs 0,2; workers 1,2
+p74c-decoder: the selector audit matches the frozen one
+   Compiling mibz2 v0.2.1 (/home/runner/work/mibz2/mibz2)
+    Finished `release` profile [optimized + debuginfo] target(s) in 16.98s
+     Running unittests src/lib.rs (target/release/deps/mibz2-b04643a34f3a8e25)
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (target/release/deps/mibz2-b04643a34f3a8e25)
+   Compiling mibz2 v0.2.1 (/home/runner/work/mibz2/mibz2)
+    Finished `release` profile [optimized + debuginfo] target(s) in 13.09s
+     Running tests/mtf_p74_c.rs (target/release/deps/mtf_p74_c-40d27f1937e47c08)
+     Running tests/p74c_decoder.rs (target/release/deps/p74c_decoder-9facbbb7e0decee5)
+     Running tests/p74c_selection.rs (target/release/deps/p74c_selection-a92e77c1f5819aa7)
+p74c-decoder: the P74-C tests pass
+plain: combined 38 instr/6 jcc/0 rmw (pin 38/6/0; Free reference 37/6/0); gates {'G1_branches': True, 'G2_no_ymm_stack': True, 'G3_rmw': True, 'G3_head_chain': True, 'G4_monitor_off_cycle': True}
+checkpoints: combined 37 instr/6 jcc/2 rmw (pin 39/6/0; Free reference 38/6/2); gates {'G1_branches': True, 'G2_no_ymm_stack': True, 'G3_rmw': True, 'G3_head_chain': True, 'G4_monitor_off_cycle': True}
+STRUCTURAL AUDIT PASS
+p74c-decoder: harness self-test (synthetic times) passed
+{
+ "overall": "NOT APPLICABLE (no w = 4: exploratory host)",
+ "correctness": {
+  "all_sha_ok": true,
+  "all_workers_plan": true,
+  "all_threads_within_allocation": true,
+  "selections_match_arm": true
+ },
+ "gates": {
+  "2_secondary_flags": {
+   "wikidata-fitted": {
+    "by_w": {
+     "1": {
+      "ratio": 1.0460293644853718,
+      "lower95": 1.0376280899717552,
+      "upper95": 1.0544986608790197
+     },
+     "2": {
+      "ratio": 1.0333301283511735,
+      "lower95": 1.0208302247443284,
+      "upper95": 1.0459830912879575
+     }
+    },
+    "material_deterioration": null
+   },
+   "wikidata-heldout": {
+    "by_w": {
+     "1": {
+      "ratio": 1.0411032817119348,
+      "lower95": 1.0353475954901898,
+      "upper95": 1.0468909648437295
+     },
+     "2": {
+      "ratio": 1.031014709806802,
+      "lower95": 1.0183048096448555,
+      "upper95": 1.0438832476974491
+     }
+    },
+    "material_deterioration": null
+   }
+  },
+  "3_controls": {
+   "rows": {
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "records w=1": "PASS",
+    "records w=2": "INCONCLUSIVE",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "INCONCLUSIVE",
+    "text w=1": "PASS",
+    "text w=2": "PASS"
+   },
+   "outcome": "INCONCLUSIVE"
+  },
+  "5_rss": {
+   "rows": {
+    "wikidata-20261026 w=1": "PASS",
+    "wikidata-20261026 w=2": "PASS",
+    "wikidata-fitted w=1": "PASS",
+    "wikidata-fitted w=2": "PASS",
+    "wikidata-heldout w=1": "PASS",
+    "wikidata-heldout w=2": "PASS",
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "records w=1": "PASS",
+    "records w=2": "PASS",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "NEGATIVE",
+    "text w=1": "PASS",
+    "text w=2": "PASS"
+   },
+   "outcome": "NEGATIVE"
+  },
+  "6_aa": {
+   "rows": 28,
+   "excluding_one": 1,
+   "threshold": 4,
+   "outcome": "PASS"
+  }
+ },
+ "host": {
+  "0": {
+   "role": "allocated",
+   "ticks": 73894,
+   "busy": 0.5898043142880343,
+   "irq": 0.00023005927409532574,
+   "steal": 0.0
+  },
+  "1": {
+   "role": "idle sibling",
+   "ticks": 74295,
+   "busy": 0.003984117369944142,
+   "irq": 0.0003634161114476075,
+   "steal": 0.0
+  },
+  "2": {
+   "role": "allocated",
+   "ticks": 73951,
+   "busy": 0.5994239428810969,
+   "irq": 5.408987031953591e-05,
+   "steal": 0.0
+  },
+  "3": {
+   "role": "idle sibling",
+   "ticks": 74298,
+   "busy": 0.003485961937064255,
+   "irq": 4.037793749495276e-05,
+   "steal": 0.0
+  }
+ }
+}
+p74c-decoder: results: /home/runner/work/_temp/p74c-decoder-results/gha-ubuntu-24.04-exploratory-r3-41196164480
+p74c-decoder: archive: /home/runner/work/_temp/p74c-decoder-results/gha-ubuntu-24.04-exploratory-r3-41196164480.tar.gz

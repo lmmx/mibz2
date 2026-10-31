@@ -1,0 +1,181 @@
+{
+ "shipped_symbols": {
+  "mtf_avx2": "mibz2::mtf::mtf_avx2@56090",
+  "mtf_checkpoints_avx2": "mibz2::mtf::mtf_checkpoints_avx2@5e400",
+  "mtf_scalar": "mibz2::mtf::mtf_scalar@55cc0",
+  "mtf_checkpoints_scalar": "mibz2::mtf::mtf_checkpoints_scalar@5ee30"
+ },
+ "reference": {
+  "plain": {
+   "free": {
+    "instructions": 37,
+    "conditional_branches": 6,
+    "stack_rmw_slots": 0
+   },
+   "combined_at_pin": {
+    "instructions": 38,
+    "conditional_branches": 6,
+    "stack_rmw_slots": 0
+   }
+  },
+  "checkpoints": {
+   "free": {
+    "instructions": 38,
+    "conditional_branches": 6,
+    "stack_rmw_slots": 2
+   },
+   "combined_at_pin": {
+    "instructions": 39,
+    "conditional_branches": 6,
+    "stack_rmw_slots": 0
+   }
+  }
+ },
+ "plain": {
+  "combined": {
+   "symbol": "mibz2::mtf::p74_c::combined@563c0",
+   "instructions": 38,
+   "conditional_branches": 6,
+   "ymm_stack_accesses": [],
+   "stack_rmw_slots": [],
+   "stack_loads": 3,
+   "stack_stores": 0,
+   "head_chain": {
+    "vpermq": 1,
+    "vpshufb": 2,
+    "vmovdqa": 1,
+    "vpblendvb": 1
+   },
+   "monitor_on_cycle": [],
+   "listing": [
+    "5675b: movzx eax,al",
+    "5675e: movzx eax,BYTE PTR [r9+rax*1+0x18]",
+    "56764: mov rcx,QWORD PTR [rsp+0x40]",
+    "56769: inc DWORD PTR [rcx+rax*4]",
+    "5676c: mov BYTE PTR [r10+r13*1],al",
+    "56770: inc r13",
+    "56773: mov rdi,r13",
+    "56776: cmp rbx,r15",
+    "56779: jne 56512 <mibz2::mtf::p74_c::combined+0x152>",
+    "56512: xor eax,eax",
+    "56514: data16 data16 cs nop WORD PTR [rax+rax*1+0x0]",
+    "56520: movzx r12d,WORD PTR [rbx]",
+    "56524: add rbx,0x2",
+    "56528: cmp r12d,0x2",
+    "5652c: jae 56560 <mibz2::mtf::p74_c::combined+0x1a0>",
+    "56560: test eax,eax",
+    "56562: je 565bf <mibz2::mtf::p74_c::combined+0x1ff>",
+    "565bf: mov r13,rdi",
+    "565c2: cmp r12w,r8w",
+    "565c6: jne 56628 <mibz2::mtf::p74_c::combined+0x268>",
+    "56628: cmp r13,QWORD PTR [rsp+0x48]",
+    "5662d: jae 569ab <mibz2::mtf::p74_c::combined+0x5eb>",
+    "56633: mov eax,r12d",
+    "56636: dec eax",
+    "56638: movzx edx,ax",
+    "5663b: cmp r12w,0x21",
+    "56640: jae 5667e <mibz2::mtf::p74_c::combined+0x2be>",
+    "56642: shl edx,0x5",
+    "56645: vpermq ymm0,ymm2,0x4e",
+    "5664b: vpshufb ymm1,ymm2,YMMWORD PTR [rdx+r11*1]",
+    "56651: lea rax,[rip+0xfffffffffffbd868]",
+    "56658: vpshufb ymm0,ymm0,YMMWORD PTR [rdx+rax*1]",
+    "5665e: lea rax,[rip+0xfffffffffffbdc5b]",
+    "56665: vmovdqa ymm2,YMMWORD PTR [rdx+rax*1]",
+    "5666a: vpblendvb ymm2,ymm1,ymm0,ymm2",
+    "56670: vmovd eax,xmm2",
+    "56674: mov r12,QWORD PTR [rsp+0x28]",
+    "56679: jmp 5675b <mibz2::mtf::p74_c::combined+0x39b>"
+   ]
+  },
+  "gates": {
+   "G1_branches": true,
+   "G2_no_ymm_stack": true,
+   "G3_rmw": true,
+   "G3_head_chain": true,
+   "G4_monitor_off_cycle": true
+  },
+  "instructions_vs_pin": 0,
+  "instructions_vs_free_reference": 1,
+  "same_as_pin": {
+   "instructions": true,
+   "branches": true,
+   "rmw": true
+  }
+ },
+ "checkpoints": {
+  "combined": {
+   "symbol": "mibz2::mtf::p74_c::combined@5efb0",
+   "instructions": 37,
+   "conditional_branches": 6,
+   "ymm_stack_accesses": [],
+   "stack_rmw_slots": [
+    "[rsp+0x28]",
+    "[rsp+0x70]"
+   ],
+   "stack_loads": 4,
+   "stack_stores": 2,
+   "head_chain": {
+    "vpermq": 1,
+    "vpshufb": 2,
+    "vmovdqa": 1,
+    "vpblendvb": 1
+   },
+   "monitor_on_cycle": [],
+   "listing": [
+    "5f3cc: movzx eax,al",
+    "5f3cf: movzx eax,BYTE PTR [r9+rax*1+0x18]",
+    "5f3d5: mov rcx,QWORD PTR [rsp+0x30]",
+    "5f3da: inc DWORD PTR [rcx+rax*4]",
+    "5f3dd: mov rcx,QWORD PTR [rsp+0x28]",
+    "5f3e2: mov rdx,QWORD PTR [rsp+0x70]",
+    "5f3e7: mov BYTE PTR [rdx+rcx*1],al",
+    "5f3ea: inc rcx",
+    "5f3ed: cmp r14,r13",
+    "5f3f0: jne 5f17c <mibz2::mtf::p74_c::combined+0x1cc>",
+    "5f17c: xor eax,eax",
+    "5f180: movzx r15d,WORD PTR [r14]",
+    "5f184: add r14,0x2",
+    "5f188: cmp r15d,0x2",
+    "5f18c: jae 5f1c0 <mibz2::mtf::p74_c::combined+0x210>",
+    "5f1c0: test eax,eax",
+    "5f1c2: mov QWORD PTR [rsp+0x70],rdx",
+    "5f1c7: je 5f292 <mibz2::mtf::p74_c::combined+0x2e2>",
+    "5f292: cmp r15w,si",
+    "5f296: je 5fede <mibz2::mtf::p74_c::combined+0xf2e>",
+    "5f29c: cmp rcx,QWORD PTR [rsp+0x50]",
+    "5f2a1: mov QWORD PTR [rsp+0x28],rcx",
+    "5f2a6: jae 5f3fb <mibz2::mtf::p74_c::combined+0x44b>",
+    "5f2ac: mov eax,r15d",
+    "5f2af: dec eax",
+    "5f2b1: movzx edx,ax",
+    "5f2b4: cmp r15w,0x21",
+    "5f2b9: jae 5f2eb <mibz2::mtf::p74_c::combined+0x33b>",
+    "5f2bb: shl edx,0x5",
+    "5f2be: vpermq ymm0,ymm2,0x4e",
+    "5f2c4: vpshufb ymm1,ymm2,YMMWORD PTR [rdx+r10*1]",
+    "5f2ca: vpshufb ymm0,ymm0,YMMWORD PTR [rdx+r11*1]",
+    "5f2d0: lea rax,[rip+0xfffffffffffb4fe9]",
+    "5f2d7: vmovdqa ymm2,YMMWORD PTR [rdx+rax*1]",
+    "5f2dc: vpblendvb ymm2,ymm1,ymm0,ymm2",
+    "5f2e2: vmovd eax,xmm2",
+    "5f2e6: jmp 5f3cc <mibz2::mtf::p74_c::combined+0x41c>"
+   ]
+  },
+  "gates": {
+   "G1_branches": true,
+   "G2_no_ymm_stack": true,
+   "G3_rmw": true,
+   "G3_head_chain": true,
+   "G4_monitor_off_cycle": true
+  },
+  "instructions_vs_pin": -2,
+  "instructions_vs_free_reference": -1,
+  "same_as_pin": {
+   "instructions": false,
+   "branches": true,
+   "rmw": false
+  }
+ },
+ "pass": true
+}
