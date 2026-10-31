@@ -25,8 +25,21 @@ The c/B figures are at the reported clock: 3.244, 3.242 and 3.767 GHz.
 
 ## Registered verdict (§6, mechanical): **PASS**
 
-- **Correctness (§3):** passes. Structure (§4, amendment 1): passes on every job's
-  binary.
+- **Correctness (§3):** passes.
+- **Structure as registered (§4):** **STRUCTURAL STOP.** S3 (stores 2.16 against ≤ 2.1)
+  and S5 failed as written, and `audit.md` records that verdict unchanged.
+- **The timing ran under amendment 1** (`b145e14`, committed before any timing, as the
+  maintainer authorised). It did two things:
+  - **S3:** it accepts 2.16 stores a lane-step as a structural deviation, caused by
+    5 register-spill stores a round. It does not claim the 2.1 limit was met.
+  - **S5:** it counts both walks' stack-resident lane state alike, including the
+    shipped walk's row accesses through `r11`.
+- **Under amendment 1,** every job's binary showed the intended transformation:
+  - 32 T loads a round, and every lane-step keeping its core;
+  - 25 steps of exactly 10 instructions;
+  - no lane-loop bookkeeping, no calls, and one prefetch a step.
+- **Unchanged by the amendment:** the performance criteria, inputs, correctness
+  requirements, paired schedule and stop rules.
 - **The counted Zen 3 job (r3):** the B/A upper 95% bound is 0.891, below 0.95.
 - **r1 is void.** Its A/A null interval ends at 0.99998, so it excludes 1 by
   2 × 10⁻⁵, which makes the job void by the registered rule. Its B/A of
