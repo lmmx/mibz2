@@ -200,10 +200,10 @@
   "src/mtf.rs": "88fadff30a234537d72a4a6614cdddf85ea1d677aae7bbc8c83fb5cbe1ec31e1",
   "src/parallel.rs": "cd541345707bd0661312dd8506ac6b5c3bbeb441a10094c946a9ea48b459c8c5",
   "src/bwt.rs": "c23e30d560ec0bd10c401613bd94238dfd0f7b0dc8776e33e981ea2fbea75afa",
-  "examples/walk_decoder.rs": "f698d9aa6f8ce69033366530900404e2077762e6287d4a26954d588c3b756c3c",
+  "examples/walk_decoder.rs": "91e0240b6e5e9684b933e2bf094afed806fd1cc7a4ba5a8c81540b71d9e97632",
   "tests/common/mod.rs": "3aeb98175100dd760d5b3c16ac617be78e44ce9e0ec459bd2f7c4a6b85cdc491",
   "tests/segmented_unrolled.rs": "fbfee4ccb65d01156d31a7f83a9f09c85344e53a4ec9e6a7f8f60a170ad98fbb",
-  "bench/walk_decoder.py": "e749790324a34352c922a3d8a02de1c1f4456eb6068684b7e9dddbd8f6ce9c19",
+  "bench/walk_decoder.py": "2d0fbe7c2aef33d07696ed8ef2a2501c3c077abf1682c8627363868397d98c52",
   "bench/walk_decoder_audit.py": "e950a2cc2b38d3463163eec1c2a02b9ed06b8fc6b6822a36ff118fec4ef8f709",
   "bench/walk_unroll_gates.py": "f66a2d6c02ecbddd7d4756a035c9b428745a87e3e3a2b47f3c9a398f2797b226",
   "bench/walk_asm_audit.py": "0acb3174486c2072d6ed6a56bd17bc139dfc77c63d89153e6b2599879900b6fa",
@@ -230,6 +230,7 @@
   "zeros": "short-block fallback control: below MIN_SEGMENTED after bzip2's RLE1, so both arms run the plain walk (amendment 1 section 4; the corpus and hash unchanged)"
  },
  "amendments": [
-  "docs/journal/2026-10-31-walk-unroll-decoder/amendment-1.md"
+  "docs/journal/2026-10-31-walk-unroll-decoder/amendment-1.md",
+  "docs/journal/2026-10-31-walk-unroll-decoder/amendment-2.md"
  ]
 }

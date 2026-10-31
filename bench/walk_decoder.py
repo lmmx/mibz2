@@ -319,11 +319,23 @@ def summary(a):
     assert set(obs) == want, "incomplete or extra observations: no summary"
     # correctness and confinement, re-checked from the raw rows
     correctness = dict(all_sha_ok=all(r["sha_ok"] for r in rows), all_workers_plan=all(r["plan"] == f"Workers({r['w']})" for r in rows))
-    def threads_of(lst):
-        return [t.split("|") for t in lst.split(";") if t]
+    def threads_of(lst, allow_exited):
+        # the lifecycle fix: EXITED: only in the end snapshot; UNRESOLVED: never
+        nonlocal_flags["exited"] += sum(1 for t in lst.split(";") if t.startswith("EXITED:"))
+        out = []
+        for t in (t for t in lst.split(";") if t):
+            if t.startswith("EXITED:"):
+                nonlocal_flags["ok"] &= allow_exited
+                continue
+            if t.startswith("UNRESOLVED:") or len(t.split("|")) < 3 or not t.split("|")[1]:
+                nonlocal_flags["ok"] = False
+                continue
+            out.append(t.split("|"))
+        return out
+    nonlocal_flags = dict(ok=True, exited=0)
     confined, names_seen, psr = True, {}, {}
     for r in rows:
-        for t in threads_of(r["threads_spawned_list"]) + threads_of(r["threads_end_list"]):
+        for t in threads_of(r["threads_spawned_list"], False) + threads_of(r["threads_end_list"], True):
             cpus = set()
             for part in t[1].split(","):
                 x, _, y = part.partition("-")
@@ -334,7 +346,8 @@ def summary(a):
             if t[2]:
                 psr.setdefault(kind, {}).setdefault(t[2], 0)
                 psr[kind][t[2]] += 1
-    correctness["all_threads_within_allocation"] = confined
+    correctness["all_threads_within_allocation"] = confined and nonlocal_flags["ok"]
+    exited_in_end = nonlocal_flags["exited"]  # reported with the threads, not a correctness flag
     out_rows = []
     for n in names:
         for w in workers:
@@ -424,7 +437,7 @@ def summary(a):
         verdict["host"] = host
     Path(a.out).write_text(json.dumps(dict(protocol="2026-10-31-walk-unroll-decoder-protocol", rounds=ROUNDS, workers=workers,
         allocation=sorted(alloc), verdict=verdict, rows=out_rows, host=host,
-        threads=dict(names=names_seen, psr_by_kind=psr)), indent=1) + "\n")
+        threads=dict(names=names_seen, psr_by_kind=psr, exited_in_end_snapshots=exited_in_end)), indent=1) + "\n")
     print(json.dumps(verdict, indent=1))
 
 
