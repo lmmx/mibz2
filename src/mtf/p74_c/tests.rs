@@ -368,6 +368,157 @@ fn errors_and_truncated_symbols_preserve_partial_state() {
     }
 }
 
+// The two readings of the guard, written independently of the kernel (plain division
+// rather than `>> 5`, an index rather than pointer distance). Both return the switching
+// token's position counted INCLUDING it, so the two are comparable. `back` = 0 is the
+// implemented rule (S_incl), `back` = 1 the draft's §12 wording (S_before = S_incl - 1).
+fn reading(b: &Symbols, back: usize) -> Option<usize> {
+    let mut previous = 0usize;
+    for (i, &s) in b.syms.iter().enumerate() {
+        if s == b.eob {
+            return None;
+        }
+        if s >= 33 {
+            if previous + 1 > (i + 1 - back) / 32 + 123 {
+                return Some(i + 1);
+            }
+            previous += 1;
+        }
+    }
+    None
+}
+
+/// `len` symbols then EOB (alphabet 256): high-rank events (ranks 32..=254, varied) at
+/// exactly the given 1-based consumed positions, low filler elsewhere: rank-1 tokens,
+/// with a one-digit run (RUNA) at every 7th position, so S also counts run digits.
+fn events_at(len: usize, events: &[usize]) -> Symbols {
+    let mut syms: Vec<u16> = (1..=len).map(|p| if p % 7 == 0 { 0 } else { 2 }).collect();
+    for &p in events {
+        syms[p - 1] = 33 + (p * 37 % 222) as u16;
+    }
+    syms.push(257);
+    let b = block(256, syms, 900_000);
+    assert!(!bypass(b.syms.len(), b.max_len));
+    b
+}
+
+/// The boundary-hugging stream: a burst of k0 + 122 events ending before 32*k0 (at the
+/// front, feasible only for k0 = 4, or immediately before 32*k0), then one event at every S = 32k, k >= k0, so that
+/// at each, F + 1 = k + 123 = floor(S_incl/32) + 123 exactly.
+fn hugging(len: usize, k0: usize, front: bool) -> Vec<usize> {
+    let burst = k0 + 122;
+    let first = if front { 1 } else { 32 * k0 - burst };
+    assert!(first >= 1 && first + burst <= 32 * k0);
+    let mut events: Vec<usize> = (first..first + burst).collect();
+    events.extend((k0..).map(|k| 32 * k).take_while(|&p| p <= len));
+    events
+}
+
+#[test]
+fn inclusive_trigger_boundary_counterexample() {
+    if !avx2() {
+        return;
+    }
+    for (k0, front) in [(4, true), (5, false), (50, false), (300, false)] {
+        for continue_after in [false, true] {
+            let mut events = hugging(20_000, k0, front);
+            if !continue_after {
+                events.retain(|&p| p <= 32 * k0);
+            }
+            let b = events_at(20_000, &events);
+            // Implemented rule: F + 1 = k0 + 123 is not > floor(32k0/32) + 123.
+            assert_eq!(reading(&b, 0), None, "k0={k0}");
+            // Draft rule: F + 1 = k0 + 123 > floor((32k0 - 1)/32) + 123 = k0 + 122.
+            assert_eq!(reading(&b, 1), Some(32 * k0), "k0={k0}");
+            for c in [
+                check::<0>(&b, None, false),
+                check::<CHECKPOINT>(&b, None, false),
+            ] {
+                assert_eq!(c.at, None, "kernel switched, k0={k0}");
+            }
+            // The draft's switch point is itself a correct handoff of this kernel.
+            for c in [
+                check::<0>(&b, Some(32 * k0), false),
+                check::<CHECKPOINT>(&b, Some(32 * k0), false),
+            ] {
+                assert_eq!((c.at, c.fallbacks), (Some(32 * k0), k0 + 122));
+            }
+        }
+    }
+}
+
+#[test]
+fn inclusive_trigger_perpetual_boundary_evasion() {
+    if !avx2() {
+        return;
+    }
+    // The longest stream a level-9 block can carry without the 2S >= N_max bypass.
+    const LEN: usize = 449_998;
+    for (k0, front) in [(4, true), (10, false), (1_000, false)] {
+        let events = hugging(LEN, k0, front);
+        let b = events_at(LEN, &events);
+        // The construction: exactly at the boundary at every periodic event.
+        let mut f = 0;
+        for (i, &s) in b.syms.iter().enumerate() {
+            if s >= 33 && s < b.eob {
+                f += 1;
+                if i + 1 >= 32 * k0 {
+                    assert_eq!((i + 1) % 32, 0);
+                    assert_eq!(f, (i + 1) / 32 + 123);
+                }
+            }
+        }
+        assert_eq!(f, k0 + 122 + LEN / 32 - k0 + 1);
+        assert_eq!(reading(&b, 0), None);
+        assert_eq!(reading(&b, 1), Some(32 * k0));
+        for c in [
+            check::<0>(&b, None, false),
+            check::<CHECKPOINT>(&b, None, false),
+        ] {
+            assert_eq!(c.at, None, "kernel switched, k0={k0}");
+        }
+    }
+}
+
+#[test]
+fn inclusive_trigger_one_event_past_boundary() {
+    if !avx2() {
+        return;
+    }
+    const LEN: usize = 100_000;
+    for (k0, front) in [(4, true), (10, false)] {
+        for m in [k0 + 1, 100, 2_000] {
+            // An extra event inside (32m, 32m + 32): F + 1 = m + 124 > m + 123.
+            for j in [1, 17, 31] {
+                let mut events = hugging(LEN, k0, front);
+                events.push(32 * m + j);
+                let b = events_at(LEN, &events);
+                let want = Some(32 * m + j);
+                assert_eq!(reading(&b, 0), want);
+                for c in [
+                    check::<0>(&b, None, false),
+                    check::<CHECKPOINT>(&b, None, false),
+                ] {
+                    assert_eq!((c.at, c.fallbacks), (want, m + 123), "m={m} j={j}");
+                }
+            }
+            // The event at 32m moved one symbol earlier: F + 1 = m + 123 > m + 122.
+            let mut events = hugging(LEN, k0, front);
+            let i = events.iter().position(|&p| p == 32 * m).unwrap();
+            events[i] -= 1;
+            let b = events_at(LEN, &events);
+            let want = Some(32 * m - 1);
+            assert_eq!(reading(&b, 0), want);
+            for c in [
+                check::<0>(&b, None, false),
+                check::<CHECKPOINT>(&b, None, false),
+            ] {
+                assert_eq!((c.at, c.fallbacks), (want, m + 122), "m={m} early");
+            }
+        }
+    }
+}
+
 /// Untimed audit through the existing actual handoff hook, absent from release code.
 #[test]
 #[ignore = "requires explicit P74_AUDIT_FILES list; correctness only"]

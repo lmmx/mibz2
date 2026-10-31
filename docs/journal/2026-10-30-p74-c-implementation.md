@@ -228,3 +228,48 @@ The suffix/layout costs also remain unmeasured. No speedup, regression bound, or
 production integration is claimed. Other compilers/targets and the crate's MSRV were
 not tested; scalar dispatch was tested on this x86_64 host. As with shipped MTF, direct
 `Symbols` inputs must respect the scanner's symbol-value invariant (rank <=255).
+
+## Correction (2026-10-31): the inclusive trigger is a distinct policy
+
+The section "Specification and provenance" above calls S_consumed-including-the-trigger
+a *reading* of the draft. It is a **different policy**, not an equivalent one.
+
+| | Rule at a rank ≥ 32 token, before its list update | Source |
+|---|---|---|
+| Implemented, frozen | switch iff F + 1 > ⌊S_incl/32⌋ + 123 | `p74_c.rs` |
+| Draft §12 | switch iff F + 1 > ⌊S_before/32⌋ + 123, S_before = S_incl − 1 | draft wording |
+
+F = high-rank events already processed in P74; S counts every consumed symbol,
+RUNA/RUNB digits included.
+
+**Counterexample [D].** Let the high-rank events sit at S_incl = 32k with F + 1 = k + 123 at
+each of them. The implemented threshold is ⌊32k/32⌋ + 123 = k + 123, so F + 1 is not
+greater and it never fires. The draft's is ⌊(32k − 1)/32⌋ + 123 = k + 122, so it fires at
+the first such event. Such a stream exists: a burst of k₀ + 122 events before 32k₀ (front
+burst at positions 1..126 for k₀ = 4; for k₀ ≥ 5 placed immediately before 32k₀), then
+one event at every S = 32k. After the burst its density is exactly 1/32, and it evades the
+implemented rule indefinitely.
+
+**Deduced:**
+- The two rules differ only at events with S_incl ≡ 0 (mod 32). The implemented rule
+  never switches earlier, and switches at the same event or later.
+- The regret bound of the draft (§6.4) still holds with b → b + 1. The implemented rule
+  maintains F ≤ ⌊S_incl/32⌋ + 123 ≤ ⌊S_before/32⌋ + 124 before any switch.
+- **The set of switched streams differs.** A stream exactly at density 1/32 at the
+  boundary is switched by the draft rule and never by the implemented one.
+- No reported switch changes: fitted Wikidata and the held-out windows have none; the
+  text (consumed 15025, F = 592) and mixed (177, 128) switches fire under both rules.
+
+**Regression tests [M]** (`src/mtf/p74_c/tests.rs`). They test exact switch positions of
+`p74_c`, against an independent oracle (`reading`, plain division and an index) that
+computes both rules. They also test decoder equivalence through the existing `check`.
+
+| Test | Streams | Asserted |
+|---|---|---|
+| `inclusive_trigger_boundary_counterexample` | k₀ ∈ {4 front, 5, 50, 300}; one boundary event, or 1/32 continuation; 20,000 symbols | implemented: no switch (kernel and oracle); draft oracle: switch at 32k₀; a forced switch there is a correct handoff with F = k₀ + 122 |
+| `inclusive_trigger_perpetual_boundary_evasion` | k₀ ∈ {4 front, 10, 1000}; 449,998 symbols (the longest without the 2S ≥ N_max bypass); every periodic event at equality | the construction's equality at every event; no switch under the implemented rule; the draft would switch at 32k₀ |
+| `inclusive_trigger_one_event_past_boundary` | the hugging stream with one extra event at 32m + j, j ∈ {1, 17, 31}, or the event at 32m moved to 32m − 1; m ∈ {k₀ + 1, 100, 2000} | switch at exactly that consumed position, with F = m + 123 or m + 122 |
+
+Filler is rank-1 tokens with a one-digit run at every 7th position, so S counts run digits.
+All three pass (rustc 1.97.0, release test profile, AVX2 host, both CP = 0 and
+CP = 16384).
