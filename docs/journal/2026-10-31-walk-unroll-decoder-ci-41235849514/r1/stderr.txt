@@ -1,0 +1,4 @@
+
+thread 'main' (10042) panicked at examples/walk_decoder.rs:580:9:
+text-l5: thread |||| outside the allocation [0, 2]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
