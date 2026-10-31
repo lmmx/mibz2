@@ -178,7 +178,26 @@ fn main() {
             "explicit runner approval required"
         );
         if let Ok(quota) = std::fs::read_to_string("/sys/fs/cgroup/cpu.max") {
-            assert!(quota.starts_with("max "), "quota-limited hosts excluded");
+            let exploratory = std::env::var("P74_EXPLORATORY_HOST_EXCEPTION")
+                .is_ok_and(|v| v == "codex-epyc9v74-single-core-2026-10-31");
+            if exploratory {
+                assert_eq!(
+                    quota.trim(),
+                    "200000 100000",
+                    "exploratory host quota changed"
+                );
+                assert!(
+                    std::fs::read_to_string("/proc/cpuinfo")
+                        .unwrap()
+                        .contains("AMD EPYC 9V74"),
+                    "exploratory host model changed"
+                );
+                eprintln!(
+                    "EXPLORATORY host exception: Codex EPYC 9V74, two-CPU quota; not qualification"
+                );
+            } else {
+                assert!(quota.starts_with("max "), "quota-limited hosts excluded");
+            }
         }
     }
     assert!(
