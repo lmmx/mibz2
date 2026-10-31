@@ -360,3 +360,55 @@ unsafe fn mtf_checkpoints_avx2(
     ll.set_len(n);
     result.map(|()| n)
 }
+
+// P74's list operations, used only by P74-C's combined kernel
+mod p74;
+/// P74-C (`MtfKernel::P74c`): experimental, off by default; see the module's notes
+#[doc(hidden)]
+pub mod p74_c;
+
+/// How many blocks took each MTF path, process-wide (one relaxed increment a block, outside
+/// the token loop): which kernel ran, for the P74-C trial's arm-identity record. The
+/// indices: `decode_block`'s four selections (kernel × plain or checkpoints), and within
+/// P74-C's entries, its bypass, its combined kernel, or the shipped kernel without AVX2.
+#[doc(hidden)]
+pub mod selections {
+    use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
+
+    pub const NAMES: [&str; 10] = [
+        "shipped_plain",
+        "shipped_checkpoints",
+        "p74c_plain",
+        "p74c_checkpoints",
+        "p74c_plain_bypass",
+        "p74c_plain_combined",
+        "p74c_plain_no_avx2",
+        "p74c_checkpoints_bypass",
+        "p74c_checkpoints_combined",
+        "p74c_checkpoints_no_avx2",
+    ];
+    pub(crate) const SHIPPED_PLAIN: usize = 0;
+    pub(crate) const SHIPPED_CHECKPOINTS: usize = 1;
+    pub(crate) const P74C_PLAIN: usize = 2;
+    pub(crate) const P74C_CHECKPOINTS: usize = 3;
+    pub(crate) const PLAIN_BYPASS: usize = 4;
+    pub(crate) const PLAIN_COMBINED: usize = 5;
+    pub(crate) const PLAIN_NO_AVX2: usize = 6;
+    pub(crate) const CHECKPOINTS_BYPASS: usize = 7;
+    pub(crate) const CHECKPOINTS_COMBINED: usize = 8;
+    pub(crate) const CHECKPOINTS_NO_AVX2: usize = 9;
+
+    #[allow(clippy::declare_interior_mutable_const)]
+    const ZERO: AtomicU64 = AtomicU64::new(0);
+    static COUNTS: [AtomicU64; 10] = [ZERO; 10];
+
+    #[inline]
+    pub(crate) fn note(i: usize) {
+        COUNTS[i].fetch_add(1, Relaxed);
+    }
+
+    /// The counts so far, by `NAMES`
+    pub fn snapshot() -> [u64; 10] {
+        std::array::from_fn(|i| COUNTS[i].load(Relaxed))
+    }
+}

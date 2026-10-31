@@ -77,6 +77,10 @@
 //! - a block whose **compressed form passes 64 MiB** is an error (a real block is at most
 //!   about 4.2 MB; only a code-length table padded with no-op steps could be longer).
 
+// (so the unit tests can share tests/common, which names the crate `mibz2`)
+#[cfg(test)]
+extern crate self as mibz2;
+
 pub mod bits;
 pub mod block;
 pub mod bwt;
@@ -107,6 +111,23 @@ pub struct Kernels {
     pub avx2: bool,
     /// PCLMULQDQ (with SSE4.1 and SSSE3): the CRC
     pub clmul: bool,
+    /// The move-to-front kernel: `MtfKernel::Shipped` unless set by `with_mtf`
+    /// (experimental)
+    #[doc(hidden)]
+    pub mtf: MtfKernel,
+}
+
+/// Which move-to-front kernel a block's phase 2 runs, chosen once per block. Experimental:
+/// `P74c` is under trial (docs/journal/2026-10-31-p74c-decoder-protocol.md) and is never
+/// chosen by default; `Kernels::detect` and `Kernels::scalar` give `Shipped`.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum MtfKernel {
+    /// `mtf::mtf` and `mtf::mtf_checkpoints`, as shipped
+    #[default]
+    Shipped,
+    /// `mtf::p74_c`: the frozen P74-C policy (the shipped kernel where it bypasses)
+    P74c,
 }
 
 impl Kernels {
@@ -115,7 +136,14 @@ impl Kernels {
         Kernels {
             avx2: false,
             clmul: false,
+            mtf: MtfKernel::Shipped,
         }
+    }
+
+    /// These kernels with the move-to-front kernel `mtf` (experimental)
+    #[doc(hidden)]
+    pub const fn with_mtf(self, mtf: MtfKernel) -> Self {
+        Kernels { mtf, ..self }
     }
 
     /// The fastest kernels this CPU has
@@ -128,6 +156,7 @@ impl Kernels {
                 clmul: std::is_x86_feature_detected!("pclmulqdq")
                     && std::is_x86_feature_detected!("sse4.1")
                     && std::is_x86_feature_detected!("ssse3"),
+                mtf: MtfKernel::Shipped,
             }
         }
         #[cfg(not(target_arch = "x86_64"))]
@@ -314,10 +343,26 @@ pub fn decode_block<I: bwt::InverseBwt>(
     out: &mut Vec<u8>,
 ) -> Result<u32, ErrorKind> {
     let cooperative = s.inverse.wants_checkpoints();
-    let n = if cooperative {
-        mtf::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?
-    } else {
-        mtf::mtf(b, &mut s.ll, &mut s.counts, k)?
+    // (the MTF kernel, chosen once a block: the shipped one unless `k.mtf` says otherwise)
+    // (each counted in `mtf::selections`, one relaxed increment a block)
+    use mtf::selections as sel;
+    let n = match (cooperative, k.mtf) {
+        (true, MtfKernel::Shipped) => {
+            sel::note(sel::SHIPPED_CHECKPOINTS);
+            mtf::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?
+        }
+        (true, MtfKernel::P74c) => {
+            sel::note(sel::P74C_CHECKPOINTS);
+            mtf::p74_c::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?
+        }
+        (false, MtfKernel::Shipped) => {
+            sel::note(sel::SHIPPED_PLAIN);
+            mtf::mtf(b, &mut s.ll, &mut s.counts, k)?
+        }
+        (false, MtfKernel::P74c) => {
+            sel::note(sel::P74C_PLAIN);
+            mtf::p74_c::mtf(b, &mut s.ll, &mut s.counts, k)?
+        }
     };
     if b.orig_ptr as usize >= n {
         return Err(ErrorKind::BadOrigPtr);
