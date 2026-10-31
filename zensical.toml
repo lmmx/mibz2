@@ -48,6 +48,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "32 lanes, 8.6 chains" = "blog/2026-10-31-room-walk-overlap.md" },
     { "Compact navigation tables for the inverse BWT" = "blog/2026-10-29-compact-navigation-tables.md" },
   ] },
   { "Maintainers" = [
