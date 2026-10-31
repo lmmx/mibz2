@@ -82,6 +82,7 @@ fn check<const CP: usize>(b: &Symbols, force: Option<usize>, start: bool) -> Tes
             assert_eq!(next, (n / CP + 1) * CP);
         }
         let mut prefix = block(b.eob as usize - 1, b.syms[..at - 1].to_vec(), b.max_len);
+        prefix.seq_to_unseq = b.seq_to_unseq;
         prefix.syms.push(b.eob); // flush a run immediately before the trigger
         let mut ll = Vec::new();
         assert_eq!(
@@ -363,6 +364,67 @@ fn errors_and_truncated_symbols_preserve_partial_state() {
                 check::<0>(&b, at, start);
                 check::<CHECKPOINT>(&b, at, start);
             }
+        }
+    }
+}
+
+/// Untimed audit through the existing actual handoff hook, absent from release code.
+#[test]
+#[ignore = "requires explicit P74_AUDIT_FILES list; correctness only"]
+fn audit_manifest_corpora() {
+    use crate::stream::{Event, Scanner, SliceSource};
+    assert!(avx2());
+    let list = std::fs::read_to_string(std::env::var("P74_AUDIT_FILES").unwrap()).unwrap();
+    for (file, path) in list.lines().enumerate() {
+        let z = std::fs::read(path).unwrap();
+        let mut sc = Scanner::new(SliceSource(&z));
+        let mut block = 0;
+        while let Event::Block { symbols: b, .. } = sc.next(Vec::new()).unwrap() {
+            let bypassed = bypass(b.syms.len(), b.max_len);
+            let mut explicit = 0usize;
+            let mut high = 0usize;
+            for &s in &b.syms {
+                if s == b.eob {
+                    break;
+                }
+                if s > 1 {
+                    explicit += 1;
+                }
+                if s >= 33 {
+                    high += 1;
+                }
+            }
+            // floor((i+1)/32), deliberately independent spelling of the guard.
+            let mut f = 0usize;
+            let want = b.syms.iter().enumerate().find_map(|(i, &s)| {
+                if s >= 33 && s < b.eob {
+                    f += 1;
+                    if !bypassed && f > 123 && 32 * (f - 123) > i + 1 {
+                        return Some(i + 1);
+                    }
+                }
+                None
+            });
+            // Audit checks the actual frame's observed handoff.
+            for cp in [0, CHECKPOINT] {
+                let c = if cp == 0 {
+                    check::<0>(&b, None, bypassed)
+                } else {
+                    check::<CHECKPOINT>(&b, None, bypassed)
+                };
+                assert_eq!(c.at, want);
+                let state = c.state.unwrap_or((0, 0, 1, 0));
+                println!(
+                    "AUDIT\t{file}\t{block}\t{cp}\t{}\t{explicit}\t{high}\t{}\t{}\t{}\t{}\t{}",
+                    b.syms.len(),
+                    usize::from(bypassed),
+                    c.at.unwrap_or(0),
+                    state.0,
+                    c.fallbacks,
+                    b.syms.iter().filter(|&&s| s <= 1).count()
+                );
+            }
+            block += 1;
         }
     }
 }
