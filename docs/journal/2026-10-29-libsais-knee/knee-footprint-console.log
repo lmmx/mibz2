@@ -1,0 +1,235 @@
+bash bench/corpus.sh
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.03s
+bash bench/coop.sh --build-only > /dev/null
+   Compiling mibz2 v0.2.0 (/home/louis/dev/mibz2-coop)
+    Finished `release` profile [optimized + debuginfo] target(s) in 5.75s
+CARGO_TARGET_DIR=target/coop cargo build --release --example dram
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling libm v0.2.16
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling pkg-config v0.3.34
+   Compiling thiserror v2.0.21
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling mibz2 v0.2.0 (/home/louis/dev/mibz2-coop)
+   Compiling cc v1.10.0
+   Compiling syn v3.0.9
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 11.50s
+test -s corpora/wikidata-bz9.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -9 > corpora/wikidata-bz9.bz2)
+test -s corpora/wikidata-bz3.bz2 || (bzip2 -dc corpora/wikidata.bz2 | bzip2 -3 > corpora/wikidata-bz3.bz2)
+for f in corpora/wikidata.bz2 corpora/wikidata-l9.bz2 corpora/wikidata-bz9.bz2 corpora/wikidata-bz3.bz2; do test -s $f && echo "== $f" && target/coop/release/examples/coop sizes $f; done
+== corpora/wikidata.bz2
+time-weighted table a worker holds: 899952 rows, 3.600 MB; N workers: 4 -> 14.4 MB, 6 -> 21.6 MB, 8 -> 28.8 MB
+ 2 workers, simulated: live tables 7.2 MB on average over time, p90 7.2 MB
+ 4 workers, simulated: live tables 14.4 MB on average over time, p90 14.4 MB
+ 6 workers, simulated: live tables 21.6 MB on average over time, p90 21.6 MB
+ 8 workers, simulated: live tables 28.8 MB on average over time, p90 28.8 MB
+10 workers, simulated: live tables 36.0 MB on average over time, p90 36.0 MB
+431 blocks, 209706557 rows; rows a block: min 1, p10 10, median 899938, mean 486558, p90 900000, max 900000
+at bzip2's ceiling (>= 899,000 rows): 233 (54.1%); mean table a live block: 1.946 MB
+    0-100 K rows: 198
+  100-200 K rows: 0
+  200-300 K rows: 0
+  300-400 K rows: 0
+  400-500 K rows: 0
+  500-600 K rows: 0
+  600-700 K rows: 0
+  700-800 K rows: 0
+  800-900 K rows: 45
+  900-1000 K rows: 188
+== corpora/wikidata-l9.bz2
+time-weighted table a worker holds: 899952 rows, 3.600 MB; N workers: 4 -> 14.4 MB, 6 -> 21.6 MB, 8 -> 28.8 MB
+ 2 workers, simulated: live tables 7.2 MB on average over time, p90 7.2 MB
+ 4 workers, simulated: live tables 14.4 MB on average over time, p90 14.4 MB
+ 6 workers, simulated: live tables 21.6 MB on average over time, p90 21.6 MB
+ 8 workers, simulated: live tables 28.8 MB on average over time, p90 28.8 MB
+10 workers, simulated: live tables 36.0 MB on average over time, p90 36.0 MB
+421 blocks, 209706556 rows; rows a block: min 1, p10 10, median 899967, mean 498115, p90 900000, max 900000
+at bzip2's ceiling (>= 899,000 rows): 233 (55.3%); mean table a live block: 1.992 MB
+    0-100 K rows: 188
+  100-200 K rows: 0
+  200-300 K rows: 0
+  300-400 K rows: 0
+  400-500 K rows: 0
+  500-600 K rows: 0
+  600-700 K rows: 0
+  700-800 K rows: 0
+  800-900 K rows: 45
+  900-1000 K rows: 188
+== corpora/wikidata-bz9.bz2
+time-weighted table a worker holds: 899934 rows, 3.600 MB; N workers: 4 -> 14.4 MB, 6 -> 21.6 MB, 8 -> 28.8 MB
+ 2 workers, simulated: live tables 7.2 MB on average over time, p90 7.2 MB
+ 4 workers, simulated: live tables 14.4 MB on average over time, p90 14.4 MB
+ 6 workers, simulated: live tables 21.6 MB on average over time, p90 21.6 MB
+ 8 workers, simulated: live tables 28.8 MB on average over time, p90 28.8 MB
+10 workers, simulated: live tables 36.0 MB on average over time, p90 36.0 MB
+234 blocks, 209706557 rows; rows a block: min 10979, p10 899981, median 899981, mean 896182, p90 899981, max 899983
+at bzip2's ceiling (>= 899,000 rows): 233 (99.6%); mean table a live block: 3.585 MB
+    0-100 K rows: 1
+  100-200 K rows: 0
+  200-300 K rows: 0
+  300-400 K rows: 0
+  400-500 K rows: 0
+  500-600 K rows: 0
+  600-700 K rows: 0
+  700-800 K rows: 0
+  800-900 K rows: 233
+  900-1000 K rows: 0
+== corpora/wikidata-bz3.bz2
+time-weighted table a worker holds: 299955 rows, 1.200 MB; N workers: 4 -> 4.8 MB, 6 -> 7.2 MB, 8 -> 9.6 MB
+ 2 workers, simulated: live tables 2.4 MB on average over time, p90 2.4 MB
+ 4 workers, simulated: live tables 4.8 MB on average over time, p90 4.8 MB
+ 6 workers, simulated: live tables 7.2 MB on average over time, p90 7.2 MB
+ 8 workers, simulated: live tables 9.6 MB on average over time, p90 9.6 MB
+10 workers, simulated: live tables 12.0 MB on average over time, p90 12.0 MB
+700 blocks, 209706557 rows; rows a block: min 19821, p10 299981, median 299981, mean 299581, p90 299981, max 299983
+at bzip2's ceiling (>= 899,000 rows): 0 (0.0%); mean table a live block: 1.198 MB
+    0-100 K rows: 1
+  100-200 K rows: 0
+  200-300 K rows: 699
+  300-400 K rows: 0
+  400-500 K rows: 0
+  500-600 K rows: 0
+  600-700 K rows: 0
+  700-800 K rows: 0
+  800-900 K rows: 0
+  900-1000 K rows: 0
+bash bench/coop.sh --grid-only --file corpora/wikidata-bz9.bz2 --rounds 10 --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1
+   Compiling mibz2 v0.2.0 (/home/louis/dev/mibz2-coop)
+    Finished `release` profile [optimized + debuginfo] target(s) in 8.84s
+# The cooperative inversion pilot (0eeeab4, 2026-10-29T20:30:34Z)
+
+- **Machine:** Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz; 20 CPUs on 10 physical cores used (0,1,2,3,4,5,6,7,8,9); L3 20480K shared by CPUs 0-19
+- **libsais:** 2.12.1 at c284ba8, OpenMP
+- **Load:** 0.92 0.73 1.31
+- **Corpus:** corpora/wikidata-bz9.bz2 (11863758 bytes, sha256 817e6d89f4ab7df8...)
+- **Build:** 0eeeab47c8780bfa9551cfa8a21faa97f9964572; **timing boundary:** the T-vector phase only, build + walk (the MTF outside the timing)
+
+## One block on k cores (block)
+
+
+## N blocks in flight on k cores each (grid, 10 rounds)
+
+234 blocks, 209.7 MB, 10 timed rounds; the T-vector phase only (build + walk), not the decoder; each thread pinned to its own CPU, checked
+| arm | blocks live | cores | MB/s, median | vs p4, paired: mean ±95% (min-max) | build MB/s | walk MB/s | walk vs p4, paired | walk: busiest thread's bytes / mean, median | walk: last start, end spread (µs a block), medians | rounds misplaced |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| p4 | 4 | 4 | 1479 | 1.000 ±0.000 (1.000-1.000) | 5626 | 2019 | 1.000 |  |  | 0 |
+| p1 | 1 | 1 | 542 | 0.367 ±0.002 (0.362-0.374) | 1812 | 773 | 0.384 |  |  | 0 |
+| p2 | 2 | 2 | 1065 | 0.722 ±0.007 (0.707-0.737) | 3497 | 1542 | 0.763 |  |  | 0 |
+| p3 | 3 | 3 | 1283 | 0.866 ±0.011 (0.848-0.889) | 4730 | 1771 | 0.875 |  |  | 0 |
+| p5 | 5 | 5 | 1309 | 0.891 ±0.017 (0.869-0.936) | 4856 | 1809 | 0.902 |  |  | 0 |
+| p6 | 6 | 6 | 1113 | 0.748 ±0.007 (0.733-0.763) | 3854 | 1572 | 0.775 |  |  | 0 |
+| p8 | 8 | 8 | 706 | 0.477 ±0.007 (0.460-0.491) | 2828 | 951 | 0.467 |  |  | 0 |
+| p10 | 10 | 10 | 570 | 0.384 ±0.007 (0.360-0.394) | 2417 | 752 | 0.369 |  |  | 0 |
+| s1x1 | 1 | 1 | 563 | 0.377 ±0.007 (0.360-0.391) | (in walk) | 563 | 0.276 |  |  | 0 |
+| s2x1 | 2 | 2 | 1052 | 0.712 ±0.008 (0.699-0.728) | (in walk) | 1055 | 0.522 |  |  | 0 |
+| s3x1 | 3 | 3 | 1364 | 0.921 ±0.011 (0.897-0.944) | (in walk) | 1369 | 0.677 |  |  | 0 |
+| s4x1 | 4 | 4 | 1608 | 1.091 ±0.015 (1.043-1.114) | (in walk) | 1621 | 0.803 |  |  | 0 |
+| s5x1 | 5 | 5 | 1566 | 1.059 ±0.012 (1.028-1.085) | (in walk) | 1575 | 0.779 |  |  | 0 |
+| s6x1 | 6 | 6 | 1373 | 0.930 ±0.011 (0.903-0.960) | (in walk) | 1384 | 0.684 |  |  | 0 |
+| s8x1 | 8 | 8 | 999 | 0.677 ±0.008 (0.663-0.702) | (in walk) | 1006 | 0.498 |  |  | 0 |
+| s10x1 | 10 | 10 | 836 | 0.561 ±0.009 (0.542-0.577) | (in walk) | 840 | 0.413 |  |  | 0 |
+checked p4: every block's output the room walk's
+checked p1: every block's output the room walk's
+checked p2: every block's output the room walk's
+checked p3: every block's output the room walk's
+checked p5: every block's output the room walk's
+checked p6: every block's output the room walk's
+checked p8: every block's output the room walk's
+checked p10: every block's output the room walk's
+checked s1x1: every block's output the room walk's
+checked s2x1: every block's output the room walk's
+checked s3x1: every block's output the room walk's
+checked s4x1: every block's output the room walk's
+checked s5x1: every block's output the room walk's
+checked s6x1: every block's output the room walk's
+checked s8x1: every block's output the room walk's
+checked s10x1: every block's output the room walk's
+wrote coop-20261029T203034Z.md and coop-20261029T203034Z.jsonl
+bash bench/coop.sh --grid-only --file corpora/wikidata-bz3.bz2 --rounds 10 --arms p4,p1,p2,p3,p5,p6,p8,p10,s1x1,s2x1,s3x1,s4x1,s5x1,s6x1,s8x1,s10x1
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.01s
+# The cooperative inversion pilot (0eeeab4, 2026-10-29T20:31:14Z)
+
+- **Machine:** Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz; 20 CPUs on 10 physical cores used (0,1,2,3,4,5,6,7,8,9); L3 20480K shared by CPUs 0-19
+- **libsais:** 2.12.1 at c284ba8, OpenMP
+- **Load:** 3.09 1.31 1.48
+- **Corpus:** corpora/wikidata-bz3.bz2 (14417759 bytes, sha256 380cbfda616222f8...)
+- **Build:** 0eeeab47c8780bfa9551cfa8a21faa97f9964572; **timing boundary:** the T-vector phase only, build + walk (the MTF outside the timing)
+
+## One block on k cores (block)
+
+
+## N blocks in flight on k cores each (grid, 10 rounds)
+
+700 blocks, 209.7 MB, 10 timed rounds; the T-vector phase only (build + walk), not the decoder; each thread pinned to its own CPU, checked
+| arm | blocks live | cores | MB/s, median | vs p4, paired: mean ±95% (min-max) | build MB/s | walk MB/s | walk vs p4, paired | walk: busiest thread's bytes / mean, median | walk: last start, end spread (µs a block), medians | rounds misplaced |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| p4 | 4 | 4 | 1855 | 1.000 ±0.000 (1.000-1.000) | 6053 | 2677 | 1.000 |  |  | 0 |
+| p1 | 1 | 1 | 539 | 0.291 ±0.002 (0.287-0.297) | 1652 | 800 | 0.298 |  |  | 0 |
+| p2 | 2 | 2 | 1084 | 0.584 ±0.004 (0.576-0.590) | 3264 | 1616 | 0.603 |  |  | 0 |
+| p3 | 3 | 3 | 1403 | 0.757 ±0.005 (0.745-0.767) | 4582 | 2028 | 0.756 |  |  | 0 |
+| p5 | 5 | 5 | 2119 | 1.146 ±0.010 (1.126-1.170) | 7126 | 3029 | 1.134 |  |  | 0 |
+| p6 | 6 | 6 | 2615 | 1.412 ±0.009 (1.392-1.432) | 8618 | 3777 | 1.409 |  |  | 0 |
+| p8 | 8 | 8 | 3279 | 1.763 ±0.011 (1.738-1.788) | 10683 | 4759 | 1.770 |  |  | 0 |
+| p10 | 10 | 10 | 3077 | 1.672 ±0.015 (1.641-1.702) | 9520 | 4641 | 1.732 |  |  | 0 |
+| s1x1 | 1 | 1 | 520 | 0.279 ±0.003 (0.271-0.284) | (in walk) | 520 | 0.193 |  |  | 0 |
+| s2x1 | 2 | 2 | 1009 | 0.542 ±0.009 (0.522-0.563) | (in walk) | 1009 | 0.375 |  |  | 0 |
+| s3x1 | 3 | 3 | 1414 | 0.759 ±0.009 (0.740-0.776) | (in walk) | 1416 | 0.526 |  |  | 0 |
+| s4x1 | 4 | 4 | 1855 | 1.003 ±0.010 (0.966-1.014) | (in walk) | 1862 | 0.696 |  |  | 0 |
+| s5x1 | 5 | 5 | 2212 | 1.197 ±0.012 (1.168-1.217) | (in walk) | 2222 | 0.831 |  |  | 0 |
+| s6x1 | 6 | 6 | 2669 | 1.443 ±0.007 (1.428-1.458) | (in walk) | 2683 | 1.003 |  |  | 0 |
+| s8x1 | 8 | 8 | 3386 | 1.832 ±0.010 (1.810-1.853) | (in walk) | 3412 | 1.275 |  |  | 0 |
+| s10x1 | 10 | 10 | 3596 | 1.942 ±0.017 (1.904-1.977) | (in walk) | 3616 | 1.353 |  |  | 0 |
+checked p4: every block's output the room walk's
+checked p1: every block's output the room walk's
+checked p2: every block's output the room walk's
+checked p3: every block's output the room walk's
+checked p5: every block's output the room walk's
+checked p6: every block's output the room walk's
+checked p8: every block's output the room walk's
+checked p10: every block's output the room walk's
+checked s1x1: every block's output the room walk's
+checked s2x1: every block's output the room walk's
+checked s3x1: every block's output the room walk's
+checked s4x1: every block's output the room walk's
+checked s5x1: every block's output the room walk's
+checked s6x1: every block's output the room walk's
+checked s8x1: every block's output the room walk's
+checked s10x1: every block's output the room walk's
+wrote coop-20261029T203114Z.md and coop-20261029T203114Z.jsonl
+python3 bench/coop_counters.py --file corpora/wikidata-bz9.bz2 --arms p2,p4,p6,p8,p10,s4x1,s8x1 --groups reads,llc_all --reps 2 --no-record
+bench-coop-counters: 10 cores (0,1,2,3,4,5,6,7,8,9), libsais built
+bench-coop-counters: perf needs sudo for the memory controller's events
+bench-coop-counters: 7 arms x 3 passes x 2 repeats x (1 and 21 rounds) = 84 runs
+bench-coop-counters: 20/84 runs, about 4 min left
+bench-coop-counters: 40/84 runs, about 3 min left
+bench-coop-counters: 60/84 runs, about 1 min left
+bench-coop-counters: 80/84 runs, about 0 min left
+bench-coop-counters: wrote coop-counters-20261029T203142Z.md and coop-counters-20261029T203142Z.jsonl
+python3 bench/coop_counters.py --file corpora/wikidata-bz3.bz2 --arms p2,p4,p6,p8,p10,s4x1,s8x1 --groups reads,llc_all --reps 2 --no-record
+bench-coop-counters: 10 cores (0,1,2,3,4,5,6,7,8,9), libsais built
+bench-coop-counters: perf needs sudo for the memory controller's events
+bench-coop-counters: 7 arms x 3 passes x 2 repeats x (1 and 21 rounds) = 84 runs
+bench-coop-counters: 20/84 runs, about 3 min left
+bench-coop-counters: 40/84 runs, about 2 min left
+bench-coop-counters: 60/84 runs, about 1 min left
+bench-coop-counters: 80/84 runs, about 0 min left
+bench-coop-counters: wrote coop-counters-20261029T203650Z.md and coop-counters-20261029T203650Z.jsonl
+python3 bench/dram.py
+Traceback (most recent call last):
+  File "/home/louis/dev/mibz2-coop/bench/dram.py", line 125, in <module>
+    main()
+  File "/home/louis/dev/mibz2-coop/bench/dram.py", line 84, in main
+    secs = float(probe["secs"])
+                 ~~~~~^^^^^^^^
+KeyError: 'secs'
+error: Recipe `bench-libsais-knee-footprint` failed on line 164 with exit code 1
