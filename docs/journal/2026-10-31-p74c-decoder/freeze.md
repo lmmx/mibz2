@@ -180,3 +180,36 @@ the selection counters at the entries, and the imports.
   block's selection is the arm's kernel's.
 - **`bzip2 -t`:** passes on all 34.
 
+
+## The dry run [M] (`P74C_STOP_BEFORE_TIMING=1 just bench-p74c-decoder prep-vm`, at 6bb6759)
+
+Run at `6bb6759` (pin `62896ba`), on the preparation VM, untimed. Every step passed:
+- the pin and the clean tree;
+- 25 harness sources against `frozen.json`;
+- the build with rustc 1.90.0;
+- every corpus against its frozen hash (fitted from `bench-data`, same-dump and
+  different-dump held-out from their windows, the controls and the 27-file suite
+  regenerated);
+- `bzip2 -t` and `bzip2 -dc` against the frozen output hashes;
+- `--check` at w = 1–4, under `taskset -c 0-3`;
+- the selector audit against the frozen one;
+- the actual-handoff audit (`audit_manifest_corpora`, 2,802 rows, every block of all 34
+  corpora at CP = 0 and 16384), oracle equal;
+- the P74-C tests (lib 18 + 1 ignored, decoder 6, public entries 5, selection 1);
+- the structural audit of the exact binary (SHA-256 `2ea2d4bc…`; plain 38/6/0,
+  checkpoints 37/6/2, all gates true);
+- the environment record;
+- the harness self-test: 2,016 synthetic-time children, w = 1–4, every thread within
+  the allocation, every SHA-256 equal, every block's selection its arm's, every plan
+  `Workers(w)`.
+
+It stopped before timing. The allocation here is CPUs 0–3: 4 cores, no SMT, so CPU 0's
+core is included by the rule.
+
+**Found in the self-test (memory, not time) [M].** The RSS max rule (protocol §8.5) is
+noisy on small inputs. On the self-test's small files (7–11 MB peak RSS), A′/A
+max-over-rounds ratios ran from 0.937 to 1.030. Four of 28 B/A rows failed the 1.01 rule
+by noise alone.
+- [E] The real controls are a few times larger (2–12 MB decoded). Their RSS rows may
+  therefore come out INCONCLUSIVE by noise.
+- Recorded here before the timed run. The rule is unchanged.
