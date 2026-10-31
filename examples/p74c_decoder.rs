@@ -319,6 +319,11 @@ fn status_field(status: &str, key: &str) -> String {
 /// A thread's record from its /proc directory: `name|allowed|psr|vcs|nvcs`
 fn thread_record(dir: &Path) -> String {
     let status = std::fs::read_to_string(dir.join("status")).unwrap_or_default();
+    record_of(dir, &status)
+}
+
+/// The record of a thread whose status has been read
+fn record_of(dir: &Path, status: &str) -> String {
     let stat = std::fs::read_to_string(dir.join("stat")).unwrap_or_default();
     // fields after the command: state is field 3, processor (psr) field 39
     let psr = stat
@@ -327,12 +332,36 @@ fn thread_record(dir: &Path) -> String {
         .unwrap_or_default();
     format!(
         "{}|{}|{}|{}|{}",
-        status_field(&status, "Name:"),
-        status_field(&status, "Cpus_allowed_list:"),
+        status_field(status, "Name:"),
+        status_field(status, "Cpus_allowed_list:"),
         psr,
-        status_field(&status, "voluntary_ctxt_switches:"),
-        status_field(&status, "nonvoluntary_ctxt_switches:"),
+        status_field(status, "voluntary_ctxt_switches:"),
+        status_field(status, "nonvoluntary_ctxt_switches:"),
     )
+}
+
+/// A thread listed in /proc/self/task, told apart three ways (the lifecycle fix): alive,
+/// its status readable with a CPU list: its record (`name|allowed|psr|vcs|nvcs`, the same
+/// two reads as before); exited, its directory gone (a joined thread released while the
+/// snapshot was read): `EXITED:<tid>`; unresolved, its directory still there but no
+/// readable CPU list after about 10 ms of retries: `UNRESOLVED:<tid>`
+fn listed_record(dir: &Path) -> String {
+    let tid = dir
+        .file_name()
+        .map(|t| t.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    for _ in 0..100 {
+        if let Ok(status) = std::fs::read_to_string(dir.join("status")) {
+            if !status_field(&status, "Cpus_allowed_list:").is_empty() {
+                return record_of(dir, &status);
+            }
+        }
+        if !dir.exists() {
+            return format!("EXITED:{tid}");
+        }
+        std::thread::sleep(std::time::Duration::from_micros(100));
+    }
+    format!("UNRESOLVED:{tid}")
 }
 
 /// The calling thread's record
@@ -346,7 +375,7 @@ fn threads() -> (usize, String) {
     let mut v = Vec::new();
     if let Ok(dir) = std::fs::read_dir("/proc/self/task") {
         for e in dir.flatten() {
-            v.push(thread_record(&e.path()));
+            v.push(listed_record(&e.path()));
         }
     }
     (v.len(), v.join(";"))
@@ -576,9 +605,22 @@ fn child(args: &[String]) {
     );
 }
 
-/// Every thread's allowed CPUs within `alloc` (`name|allowed|...;...`)
-fn assert_confined(snapshot: &str, alloc: &[usize], what: &str) {
+/// Every thread's allowed CPUs within `alloc` (`name|allowed|...;...`). An `EXITED:`
+/// entry is accepted only where `allow_exited` (the end snapshot, taken after the joins);
+/// an `UNRESOLVED:` entry, an empty CPU list or a CPU outside `alloc` always fails
+fn assert_confined(snapshot: &str, alloc: &[usize], what: &str, allow_exited: bool) {
     for t in snapshot.split(';').filter(|t| !t.is_empty()) {
+        if t.starts_with("EXITED:") {
+            assert!(
+                allow_exited,
+                "{what}: thread {t} exited in a snapshot that must list only live threads"
+            );
+            continue;
+        }
+        assert!(
+            !t.starts_with("UNRESOLVED:"),
+            "{what}: thread {t}: its status could not be resolved"
+        );
         let allowed = t.split('|').nth(1).unwrap_or("");
         let cpus = cpu_list(allowed);
         assert!(
@@ -662,8 +704,10 @@ fn trial(args: &[String]) {
             .find(|l| l.starts_with("CHILD\t"))
             .expect("the child's row");
         let f: Vec<&str> = line.split('\t').collect();
-        assert_confined(f[12], &alloc, &corpus.name);
-        assert_confined(f[14], &alloc, &corpus.name);
+        // the spawn snapshot (every decoder thread alive): live threads only
+        assert_confined(f[12], &alloc, &corpus.name, false);
+        // the end snapshot, after the joins: a released thread is exited, not a violation
+        assert_confined(f[14], &alloc, &corpus.name, true);
         writeln!(
             out,
             "ROW\t{round}\t{cell_pos}\t{c}\t{}\t{w}\t{arm}\t{position}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{life_ns}",
@@ -858,5 +902,77 @@ fn main() {
             eprintln!("usage: see the header of examples/p74c_decoder.rs");
             std::process::exit(2);
         }
+    }
+}
+
+#[cfg(test)]
+mod lifecycle_tests {
+    //! The lifecycle fix's three cases, and the race it handles reproduced
+    use super::*;
+
+    fn tmp(name: &str) -> std::path::PathBuf {
+        let d = std::env::temp_dir().join(format!("lifecycle-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        d
+    }
+
+    #[test]
+    fn a_vanished_directory_is_exited() {
+        let d = tmp("gone").join("4242");
+        assert_eq!(listed_record(&d), "EXITED:4242");
+    }
+
+    #[test]
+    fn a_directory_without_a_readable_cpu_list_is_unresolved() {
+        let d = tmp("noread").join("4243");
+        std::fs::create_dir_all(&d).unwrap();
+        assert_eq!(listed_record(&d), "UNRESOLVED:4243");
+        std::fs::write(d.join("status"), "Name:\tx\nCpus_allowed_list:\t\n").unwrap();
+        assert_eq!(listed_record(&d), "UNRESOLVED:4243", "an empty CPU list");
+        std::fs::write(d.join("status"), "Name:\tx\nCpus_allowed_list:\t0-1\n").unwrap();
+        assert!(
+            listed_record(&d).starts_with("x|0-1|"),
+            "readable: its record"
+        );
+    }
+
+    #[test]
+    fn the_checks_three_ways() {
+        let alloc = [0, 2];
+        assert_confined("main|0,2|0|1|0;EXITED:7", &alloc, "end", true);
+        for (snap, allow) in [
+            ("main|0,2|0|1|0;EXITED:7", false),
+            ("main|0,2|0|1|0;UNRESOLVED:7", true),
+            ("main|0,2|0|1|0;w||||", true),
+            ("main|0-3|0|1|0", true),
+        ] {
+            let r = std::panic::catch_unwind(|| assert_confined(snap, &alloc, "t", allow));
+            assert!(r.is_err(), "{snap} (allow_exited {allow}) must fail");
+        }
+    }
+
+    /// Threads joined and the process's tasks listed at once, many times: every listed task
+    /// is alive with a CPU list or exited; never unresolved, never an empty record
+    #[test]
+    fn joined_threads_are_never_unresolved() {
+        let mut exited = 0;
+        for _ in 0..3000 {
+            let hs: Vec<_> = (0..3).map(|_| std::thread::spawn(|| ())).collect();
+            for h in hs {
+                h.join().unwrap();
+            }
+            let (_, snap) = threads();
+            for t in snap.split(';') {
+                assert!(!t.starts_with("UNRESOLVED:"), "{t}");
+                assert!(
+                    t.starts_with("EXITED:") || !t.split('|').nth(1).unwrap_or("").is_empty(),
+                    "{t}"
+                );
+                exited += usize::from(t.starts_with("EXITED:"));
+            }
+        }
+        eprintln!(
+            "lifecycle: {exited} records exited across 3000 snapshots taken right after joins"
+        );
     }
 }
