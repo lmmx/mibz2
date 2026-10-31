@@ -1,9 +1,10 @@
 //! Preparation/checking by default. Timing requires explicit --measure-approved.
+//! `--schedule` prints the registered 20-round, five-arm order (no timing).
 #[path = "../tests/common/mod.rs"]
 mod common;
 use mibz2::bits::Bits;
 use mibz2::block::{read_item, Item, Symbols, BLOCK_MAGIC};
-use mibz2::mtf::{self, p74_c, p74_c::Arm};
+use mibz2::mtf::{self, p74, p74_c, p74_c::Arm};
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::Kernels;
 use std::{hint::black_box, path::Path, time::Instant};
@@ -81,7 +82,28 @@ struct Oracle {
     counts: [u32; 256],
     cps: Vec<[u32; 256]>,
 }
-fn apply(b: &Symbols, o: &mut Oracle, cp: bool, arm: Arm, k: Kernels) -> usize {
+/// The five arms of the confirmatory protocol, by index (the raw TSV's arm column):
+/// 0 T0 standalone shipped, 1 T1 combined in shipped mode, 2 T2 frozen policy,
+/// 3 Free (Gate 1's P74 kernel, never switches), 4 A/A (T0 again, a separate label).
+const ARMS: [&str; 5] = ["T0", "T1", "T2", "Free", "AA"];
+
+fn apply(b: &Symbols, o: &mut Oracle, cp: bool, arm: usize, k: Kernels) -> usize {
+    if arm == 3 {
+        let r = if cp {
+            p74::mtf_checkpoints(
+                black_box(b),
+                &mut o.ll,
+                &mut o.counts,
+                &mut o.cps,
+                p74::Arm::Free,
+            )
+        } else {
+            p74::mtf(black_box(b), &mut o.ll, &mut o.counts, p74::Arm::Free)
+        };
+        return black_box(r.unwrap());
+    }
+    // A/A (4) is exactly T0's call: same function, same arguments, another label.
+    let arm = [Arm::T0, Arm::T1, Arm::T2, Arm::T0, Arm::T0][arm];
     let r = if cp {
         p74_c::mtf_checkpoints(
             black_box(b),
@@ -102,7 +124,9 @@ fn apply(b: &Symbols, o: &mut Oracle, cp: bool, arm: Arm, k: Kernels) -> usize {
     };
     black_box(r.unwrap())
 }
-fn pass(blocks: &[Symbols], refs: &[Oracle], cp: bool, arm: Arm, timed: bool) -> u128 {
+/// One complete corpus pass; every block's output, counts and checkpoints are checked
+/// against the shipped kernel's, untimed. Returns each block's elapsed ns.
+fn pass(blocks: &[Symbols], refs: &[Oracle], cp: bool, arm: usize, timed: bool) -> Vec<u128> {
     let mut o = Oracle {
         ll: Vec::new(),
         counts: [0; 256],
@@ -113,12 +137,12 @@ fn pass(blocks: &[Symbols], refs: &[Oracle], cp: bool, arm: Arm, timed: bool) ->
     o.ll.reserve(max + 32);
     o.cps.reserve(max / mtf::CHECKPOINT + 2);
     let k = Kernels::detect();
-    let mut ns = 0;
+    let mut ns = Vec::with_capacity(blocks.len());
     for (b, want) in blocks.iter().zip(refs) {
         let n = if timed {
             let start = Instant::now();
             let n = apply(b, &mut o, cp, arm, k);
-            ns += start.elapsed().as_nanos();
+            ns.push(start.elapsed().as_nanos());
             n
         } else {
             apply(b, &mut o, cp, arm, k)
@@ -133,6 +157,30 @@ fn pass(blocks: &[Symbols], refs: &[Oracle], cp: bool, arm: Arm, timed: bool) ->
     }
     ns
 }
+/// The registered paired schedule: the Williams design for five arms (ten orders; each
+/// arm twice in each position, each ordered adjacent pair twice), twice, each copy's
+/// rows shuffled by xorshift Fisher-Yates from seed 0x74c0202610310003: 20 rounds.
+fn schedule() -> Vec<[usize; 5]> {
+    let first = [0, 1, 4, 2, 3];
+    let mut square: Vec<[usize; 5]> = (0..5)
+        .map(|i| std::array::from_fn(|p| (first[p] + i) % 5))
+        .collect();
+    square.extend(square.clone().into_iter().map(|mut r| {
+        r.reverse();
+        r
+    }));
+    let mut rng = common::Rng(0x74c0_2026_1031_0003);
+    let mut rounds = Vec::new();
+    for _ in 0..2 {
+        let mut copy = square.clone();
+        for i in (1..copy.len()).rev() {
+            copy.swap(i, rng.below(i as u64 + 1) as usize);
+        }
+        rounds.extend(copy);
+    }
+    rounds
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
@@ -160,6 +208,12 @@ fn main() {
                 common::compress(&data, 9),
             )
             .unwrap();
+            return;
+        }
+        Some("--schedule") => {
+            for (round, order) in schedule().iter().enumerate() {
+                println!("{round}\t{order:?}");
+            }
             return;
         }
         Some("--windows") => {
@@ -236,39 +290,33 @@ fn main() {
         for cp in [false, true] {
             // Both check-only and measured invocation validate/warm every arm twice.
             for _ in 0..2 {
-                for arm in [Arm::T0, Arm::T1, Arm::T2] {
+                for arm in 0..ARMS.len() {
                     pass(&blocks, &refs, cp, arm, false);
                 }
             }
             if !timed {
                 continue;
             }
-            // All six orders twice, shuffled once with a registered fixed seed.
-            let mut orders = [
-                [0, 1, 2],
-                [0, 2, 1],
-                [1, 0, 2],
-                [1, 2, 0],
-                [2, 0, 1],
-                [2, 1, 0],
-            ]
-            .repeat(2);
-            let mut rng = common::Rng(0x74c0_2026_1031_0002);
-            for i in (1..orders.len()).rev() {
-                orders.swap(i, rng.below(i as u64 + 1) as usize);
-            }
-            for (round, order) in orders.iter().enumerate() {
+            for (round, order) in schedule().iter().enumerate() {
                 for (position, &a) in order.iter().enumerate() {
-                    let arm = [Arm::T0, Arm::T1, Arm::T2][a];
-                    let mut ns = 0;
+                    let mut per = vec![0u128; blocks.len()];
                     for _ in 0..2 {
-                        ns += pass(&blocks, &refs, cp, arm, true);
+                        for (t, ns) in per.iter_mut().zip(pass(&blocks, &refs, cp, a, true)) {
+                            *t += ns;
+                        }
                     }
+                    let ns: u128 = per.iter().sum();
                     println!(
                         "ROW\t{file}\t{}\t{round}\t{position}\t{a}\t{ns}\t{}",
                         usize::from(cp),
                         bytes * 2
                     );
+                    for (block, ns) in per.iter().enumerate() {
+                        println!(
+                            "BLOCK\t{file}\t{}\t{round}\t{a}\t{block}\t{ns}",
+                            usize::from(cp)
+                        );
+                    }
                 }
             }
         }

@@ -211,3 +211,11 @@ bench-compete *args:
 [positional-arguments]
 bench-pmu-probe *args:
     python3 bench/pmu_probe.py "$@"
+
+# The P74-C confirmatory stage benchmark (docs/journal/2026-10-31-p74-c-confirmatory-protocol.md):
+# pinned clean checkout, rustc 1.90.0, every corpus reproduced and hash-checked, untimed
+# correctness and audits, then ONE timed five-arm run on one pinned CPU. It writes
+# ~/p74c-results/LABEL.tar.gz, the file to share. Refuses a second run into the same label.
+#   just bench-p74c i9-10900K
+bench-p74c label:
+    bash bench/p74c_run.sh {{label}}

@@ -1,0 +1,1833 @@
+{
+ "generator": "examples/p74_suite.rs",
+ "base_seed": "0x74c0202610310100",
+ "command": "cargo +1.90.0 run --locked --release --example p74_suite -- DIR",
+ "files": [
+  {
+   "name": "split-q05",
+   "compressed_sha256": "080cb116c1b08c168cf5c5834d1703c8f2801c651d4eed26041a0a1cfd8d520c",
+   "compressed_bytes": 389556,
+   "decoded_sha256": "3a685aa59cc92d14dd0004988528563e88c9f64b16bd38aaa138c831c0520321",
+   "decoded_bytes": 780000,
+   "intent": {
+    "name": "split-q05",
+    "seed": "0x74c0202610310101",
+    "level": 9,
+    "design": {
+     "family": "split",
+     "q_percent": 5,
+     "letters": 20000,
+     "pairs": 380000,
+     "pool": 255,
+     "expect": "switch in suffix"
+    },
+    "symbols": 399842,
+    "bypass": false,
+    "l_bytes": 780000,
+    "suffix_output_start": 400000,
+    "suffix_symbol_start": 19845,
+    "high_before_suffix": 9,
+    "high_in_suffix": 332368,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 116,
+    "suffix_high_by_class": [
+     47757,
+     47798,
+     47899,
+     47491,
+     47361,
+     47816,
+     46246
+    ],
+    "boundary_equalities": 1,
+    "oracle_switch": {
+     "consumed": 20705,
+     "output": 400859,
+     "f_before": 770
+    },
+    "draft_rule_switch": 20704
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 399842,
+     "bypass": false,
+     "switch_consumed": 20705,
+     "output_before_switch": 400859,
+     "f_before": 770
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 399842,
+     "bypass": false,
+     "switch_consumed": 20705,
+     "output_before_switch": 400859,
+     "f_before": 770
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "split-q25",
+   "compressed_sha256": "03c2b03861bdef0e53b864b391df6c7fcf3c7cd6afd317531cf97ebfecaad3b0",
+   "compressed_bytes": 340198,
+   "decoded_sha256": "3055b43ac3063635c1418b5ec5815b44a0b7e18eed57e38f91e20626242aef5d",
+   "decoded_bytes": 700000,
+   "intent": {
+    "name": "split-q25",
+    "seed": "0x74c0202610310102",
+    "level": 9,
+    "design": {
+     "family": "split",
+     "q_percent": 25,
+     "letters": 100000,
+     "pairs": 300000,
+     "pool": 255,
+     "expect": "switch in suffix"
+    },
+    "symbols": 398792,
+    "bypass": false,
+    "l_bytes": 700000,
+    "suffix_output_start": 400000,
+    "suffix_symbol_start": 98793,
+    "high_before_suffix": 9,
+    "high_in_suffix": 262366,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 76,
+    "suffix_high_by_class": [
+     37854,
+     37721,
+     37821,
+     37573,
+     37433,
+     37688,
+     36276
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 102610,
+     "output": 403816,
+     "f_before": 3329
+    },
+    "draft_rule_switch": 102610
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 398792,
+     "bypass": false,
+     "switch_consumed": 102610,
+     "output_before_switch": 403816,
+     "f_before": 3329
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 398792,
+     "bypass": false,
+     "switch_consumed": 102610,
+     "output_before_switch": 403816,
+     "f_before": 3329
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "split-q50",
+   "compressed_sha256": "6de093665bdb104a4596e7fbce4cfe63c1561adf30b89082f8fff56172803c20",
+   "compressed_bytes": 278254,
+   "decoded_sha256": "55951d28b8e5597ef0322166791957dceed14564b54ba900d705a914abde63bc",
+   "decoded_bytes": 600000,
+   "intent": {
+    "name": "split-q50",
+    "seed": "0x74c0202610310103",
+    "level": 9,
+    "design": {
+     "family": "split",
+     "q_percent": 50,
+     "letters": 200000,
+     "pairs": 200000,
+     "pool": 255,
+     "expect": "switch in suffix"
+    },
+    "symbols": 397252,
+    "bypass": false,
+    "l_bytes": 600000,
+    "suffix_output_start": 400000,
+    "suffix_symbol_start": 197254,
+    "high_before_suffix": 9,
+    "high_in_suffix": 174850,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 64,
+    "suffix_high_by_class": [
+     25075,
+     25108,
+     25011,
+     25013,
+     24995,
+     25266,
+     24382
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 204712,
+     "output": 407457,
+     "f_before": 6520
+    },
+    "draft_rule_switch": 204712
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 397252,
+     "bypass": false,
+     "switch_consumed": 204712,
+     "output_before_switch": 407457,
+     "f_before": 6520
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 397252,
+     "bypass": false,
+     "switch_consumed": 204712,
+     "output_before_switch": 407457,
+     "f_before": 6520
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "split-q75",
+   "compressed_sha256": "90f2a6659ab93e419e338daf34e812f850b1b0e83885832a58e51453c19edd38",
+   "compressed_bytes": 216684,
+   "decoded_sha256": "6088df249839df3cb1cc3c694be9199816ab3bc670400d13cfa0ba989e0033e3",
+   "decoded_bytes": 500000,
+   "intent": {
+    "name": "split-q75",
+    "seed": "0x74c0202610310104",
+    "level": 9,
+    "design": {
+     "family": "split",
+     "q_percent": 75,
+     "letters": 300000,
+     "pairs": 100000,
+     "pool": 255,
+     "expect": "switch in suffix"
+    },
+    "symbols": 395920,
+    "bypass": false,
+    "l_bytes": 500000,
+    "suffix_output_start": 400000,
+    "suffix_symbol_start": 295920,
+    "high_before_suffix": 9,
+    "high_in_suffix": 87243,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 188,
+    "suffix_high_by_class": [
+     12394,
+     12535,
+     12635,
+     12555,
+     12505,
+     12484,
+     12135
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 307120,
+     "output": 411199,
+     "f_before": 9720
+    },
+    "draft_rule_switch": 307120
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 395920,
+     "bypass": false,
+     "switch_consumed": 307120,
+     "output_before_switch": 411199,
+     "f_before": 9720
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 395920,
+     "bypass": false,
+     "switch_consumed": 307120,
+     "output_before_switch": 411199,
+     "f_before": 9720
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "split-q90",
+   "compressed_sha256": "8d7e00b6c6b48f9bb7d949988fd27420466776b49eaaee5734a0677d2baa268e",
+   "compressed_bytes": 179724,
+   "decoded_sha256": "d78c6f9037e66b3ef6ce58ee245e403d6b9b56e3de53b7450e487878be6161e5",
+   "decoded_bytes": 440000,
+   "intent": {
+    "name": "split-q90",
+    "seed": "0x74c0202610310105",
+    "level": 9,
+    "design": {
+     "family": "split",
+     "q_percent": 90,
+     "letters": 360000,
+     "pairs": 40000,
+     "pool": 255,
+     "expect": "switch in suffix"
+    },
+    "symbols": 394991,
+    "bypass": false,
+    "l_bytes": 440000,
+    "suffix_output_start": 400000,
+    "suffix_symbol_start": 354991,
+    "high_before_suffix": 9,
+    "high_in_suffix": 35005,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 193,
+    "suffix_high_by_class": [
+     5023,
+     4907,
+     5061,
+     4983,
+     5040,
+     5039,
+     4952
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 368274,
+     "output": 413283,
+     "f_before": 11631
+    },
+    "draft_rule_switch": 368274
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 394991,
+     "bypass": false,
+     "switch_consumed": 368274,
+     "output_before_switch": 413283,
+     "f_before": 11631
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 394991,
+     "bypass": false,
+     "switch_consumed": 368274,
+     "output_before_switch": 413283,
+     "f_before": 11631
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "hug-eq-p32",
+   "compressed_sha256": "ced189b9752de23b8724832b89b0702cc2ed54b59cd86cc0be5404f72ffdafd9",
+   "compressed_bytes": 59176,
+   "decoded_sha256": "d8c09c5b91175e2b39428c149e5ad06ec3e12d8dd9aa2ad21921aa21329d649c",
+   "decoded_bytes": 380000,
+   "intent": {
+    "name": "hug-eq-p32",
+    "seed": "0x74c0202610310106",
+    "level": 9,
+    "design": {
+     "family": "boundary",
+     "letters": 20000,
+     "units": 60000,
+     "pool": 64,
+     "delta": 0,
+     "period": 32,
+     "perturb": null,
+     "first_boundary_S": 257568,
+     "periodic_events": 1621,
+     "expect": "no switch; draft rule switches at 32k*"
+    },
+    "symbols": 309415,
+    "bypass": false,
+    "l_bytes": 380000,
+    "suffix_output_start": 320000,
+    "suffix_symbol_start": 249414,
+    "high_before_suffix": 41,
+    "high_in_suffix": 9751,
+    "suffix_rank_min": 63,
+    "suffix_rank_max": 137,
+    "suffix_rank_mode": 63,
+    "suffix_high_by_class": [
+     8062,
+     1647,
+     32,
+     10,
+     0,
+     0,
+     0
+    ],
+    "boundary_equalities": 1621,
+    "oracle_switch": null,
+    "draft_rule_switch": 257568
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 309415,
+     "bypass": false,
+     "switch_consumed": null,
+     "output_before_switch": 0,
+     "f_before": 0
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 309415,
+     "bypass": false,
+     "switch_consumed": null,
+     "output_before_switch": 0,
+     "f_before": 0
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "hug-eq-p32-extra",
+   "compressed_sha256": "74c5805d157cf8c35a6c91ae9cdd9b7fc972b9302e1079421a94b40e09156827",
+   "compressed_bytes": 66237,
+   "decoded_sha256": "8375e14b1144fde72af9bd79299848807396b3e9b7120ed42c79908346128a97",
+   "decoded_bytes": 380003,
+   "intent": {
+    "name": "hug-eq-p32-extra",
+    "seed": "0x74c0202610310107",
+    "level": 9,
+    "design": {
+     "family": "boundary",
+     "letters": 20003,
+     "units": 60000,
+     "pool": 64,
+     "delta": 0,
+     "period": 32,
+     "perturb": [
+      1000,
+      17
+     ],
+     "first_boundary_S": 257824,
+     "periodic_events": 1621,
+     "expect": "switch at S_1000 + 17"
+    },
+    "symbols": 309670,
+    "bypass": false,
+    "l_bytes": 380003,
+    "suffix_output_start": 320003,
+    "suffix_symbol_start": 249669,
+    "high_before_suffix": 41,
+    "high_in_suffix": 9760,
+    "suffix_rank_min": 63,
+    "suffix_rank_max": 137,
+    "suffix_rank_mode": 63,
+    "suffix_high_by_class": [
+     8070,
+     1648,
+     32,
+     10,
+     0,
+     0,
+     0
+    ],
+    "boundary_equalities": 1001,
+    "oracle_switch": {
+     "consumed": 289841,
+     "output": 360174,
+     "f_before": 9180
+    },
+    "draft_rule_switch": 257824
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 309670,
+     "bypass": false,
+     "switch_consumed": 289841,
+     "output_before_switch": 360174,
+     "f_before": 9180
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 309670,
+     "bypass": false,
+     "switch_consumed": 289841,
+     "output_before_switch": 360174,
+     "f_before": 9180
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "hug-eq-p32-early",
+   "compressed_sha256": "9ee8e9c855465fe5de3afc0647b2f4dc801527665d1563194d2dfe96a1a4b959",
+   "compressed_bytes": 59048,
+   "decoded_sha256": "69631166e402ca98a22103eac6cc8923d69e686892644bdb29cce67755a5466b",
+   "decoded_bytes": 380003,
+   "intent": {
+    "name": "hug-eq-p32-early",
+    "seed": "0x74c0202610310108",
+    "level": 9,
+    "design": {
+     "family": "boundary",
+     "letters": 20003,
+     "units": 60000,
+     "pool": 64,
+     "delta": 0,
+     "period": 32,
+     "perturb": [
+      1000,
+      -1
+     ],
+     "first_boundary_S": 257568,
+     "periodic_events": 1621,
+     "expect": "switch at S_1000 - 1"
+    },
+    "symbols": 309409,
+    "bypass": false,
+    "l_bytes": 380003,
+    "suffix_output_start": 320003,
+    "suffix_symbol_start": 249408,
+    "high_before_suffix": 41,
+    "high_in_suffix": 9751,
+    "suffix_rank_min": 63,
+    "suffix_rank_max": 137,
+    "suffix_rank_mode": 63,
+    "suffix_high_by_class": [
+     8062,
+     1647,
+     32,
+     10,
+     0,
+     0,
+     0
+    ],
+    "boundary_equalities": 1620,
+    "oracle_switch": {
+     "consumed": 289567,
+     "output": 360161,
+     "f_before": 9171
+    },
+    "draft_rule_switch": 257568
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 309409,
+     "bypass": false,
+     "switch_consumed": 289567,
+     "output_before_switch": 360161,
+     "f_before": 9171
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 309409,
+     "bypass": false,
+     "switch_consumed": 289567,
+     "output_before_switch": 360161,
+     "f_before": 9171
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "hug-under-p33",
+   "compressed_sha256": "d7c2218c361946f881777e49c13ffda37de859e0f3e135ae4d6f26ee5a09bd71",
+   "compressed_bytes": 80891,
+   "decoded_sha256": "7fcf7ca508b640b45ee44ee8475dcdae92e7c4d25c461c02731e7ba4d58c7c7c",
+   "decoded_bytes": 380000,
+   "intent": {
+    "name": "hug-under-p33",
+    "seed": "0x74c0202610310109",
+    "level": 9,
+    "design": {
+     "family": "boundary",
+     "letters": 20000,
+     "units": 60000,
+     "pool": 64,
+     "delta": 0,
+     "period": 33,
+     "perturb": null,
+     "first_boundary_S": 258976,
+     "periodic_events": 1571,
+     "expect": "no switch"
+    },
+    "symbols": 310798,
+    "bypass": false,
+    "l_bytes": 380000,
+    "suffix_output_start": 320000,
+    "suffix_symbol_start": 250797,
+    "high_before_suffix": 41,
+    "high_in_suffix": 9745,
+    "suffix_rank_min": 63,
+    "suffix_rank_max": 137,
+    "suffix_rank_mode": 63,
+    "suffix_high_by_class": [
+     8106,
+     1597,
+     32,
+     10,
+     0,
+     0,
+     0
+    ],
+    "boundary_equalities": 1,
+    "oracle_switch": null,
+    "draft_rule_switch": 258976
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 310798,
+     "bypass": false,
+     "switch_consumed": null,
+     "output_before_switch": 0,
+     "f_before": 0
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 310798,
+     "bypass": false,
+     "switch_consumed": null,
+     "output_before_switch": 0,
+     "f_before": 0
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "hug-over-p31",
+   "compressed_sha256": "df64a161cc9d8ef4795ca42899ef5695da6e1ccc8e6389fc80857dc2e75d437f",
+   "compressed_bytes": 69176,
+   "decoded_sha256": "4bd0d417efef121384a3a20f7dad4fd8e61060c8385f252fe47695d3ed9aaf62",
+   "decoded_bytes": 380000,
+   "intent": {
+    "name": "hug-over-p31",
+    "seed": "0x74c020261031010a",
+    "level": 9,
+    "design": {
+     "family": "boundary",
+     "letters": 20000,
+     "units": 60000,
+     "pool": 64,
+     "delta": 4,
+     "period": 31,
+     "perturb": null,
+     "first_boundary_S": 258848,
+     "periodic_events": 1672,
+     "expect": "switch after the slack erodes"
+    },
+    "symbols": 310678,
+    "bypass": false,
+    "l_bytes": 380000,
+    "suffix_output_start": 320000,
+    "suffix_symbol_start": 250677,
+    "high_before_suffix": 41,
+    "high_in_suffix": 9838,
+    "suffix_rank_min": 63,
+    "suffix_rank_max": 137,
+    "suffix_rank_mode": 63,
+    "suffix_high_by_class": [
+     8098,
+     1698,
+     32,
+     10,
+     0,
+     0,
+     0
+    ],
+    "boundary_equalities": 1,
+    "oracle_switch": {
+     "consumed": 262847,
+     "output": 332169,
+     "f_before": 8336
+    },
+    "draft_rule_switch": 262816
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 310678,
+     "bypass": false,
+     "switch_consumed": 262847,
+     "output_before_switch": 332169,
+     "f_before": 8336
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 310678,
+     "bypass": false,
+     "switch_consumed": 262847,
+     "output_before_switch": 332169,
+     "f_before": 8336
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "rank-032",
+   "compressed_sha256": "26690df8f667b759fdf5c7874a9cd87995bbee8c6f866bb56c00b89eb690423a",
+   "compressed_bytes": 14088,
+   "decoded_sha256": "7b57bc928922a0482193911d1fefa96a0b11aad479c9538e27225eb02551a858",
+   "decoded_bytes": 68012,
+   "intent": {
+    "name": "rank-032",
+    "seed": "0x74c020261031010b",
+    "level": 9,
+    "design": {
+     "family": "rank-class",
+     "letters": 20000,
+     "units": 8002,
+     "pool": 33,
+     "steady_rank": 32,
+     "rank_class": 1,
+     "expect": "switch in suffix"
+    },
+    "symbols": 59546,
+    "bypass": false,
+    "l_bytes": 68012,
+    "suffix_output_start": 60010,
+    "suffix_symbol_start": 51543,
+    "high_before_suffix": 29,
+    "high_in_suffix": 8002,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 93,
+    "suffix_rank_mode": 32,
+    "suffix_high_by_class": [
+     7972,
+     30,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 53303,
+     "output": 61769,
+     "f_before": 1788
+    },
+    "draft_rule_switch": 53303
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 59546,
+     "bypass": false,
+     "switch_consumed": 53303,
+     "output_before_switch": 61769,
+     "f_before": 1788
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 59546,
+     "bypass": false,
+     "switch_consumed": 53303,
+     "output_before_switch": 61769,
+     "f_before": 1788
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "rank-063",
+   "compressed_sha256": "4d059055c22f985b088ba9632124b5c7455201fb15b1f35fdde90ee927dbef72",
+   "compressed_bytes": 12717,
+   "decoded_sha256": "12fe5613739aa51e2b33d6ab5dbcdbae9b77c338775ff504172df50887433745",
+   "decoded_bytes": 68012,
+   "intent": {
+    "name": "rank-063",
+    "seed": "0x74c020261031010c",
+    "level": 9,
+    "design": {
+     "family": "rank-class",
+     "letters": 20000,
+     "units": 8002,
+     "pool": 64,
+     "steady_rank": 63,
+     "rank_class": 1,
+     "expect": "switch in suffix"
+    },
+    "symbols": 52016,
+    "bypass": false,
+    "l_bytes": 68012,
+    "suffix_output_start": 60010,
+    "suffix_symbol_start": 44013,
+    "high_before_suffix": 32,
+    "high_in_suffix": 8002,
+    "suffix_rank_min": 59,
+    "suffix_rank_max": 124,
+    "suffix_rank_mode": 63,
+    "suffix_high_by_class": [
+     7941,
+     32,
+     29,
+     0,
+     0,
+     0,
+     0
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 45527,
+     "output": 61523,
+     "f_before": 1545
+    },
+    "draft_rule_switch": 45527
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 52016,
+     "bypass": false,
+     "switch_consumed": 45527,
+     "output_before_switch": 61523,
+     "f_before": 1545
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 52016,
+     "bypass": false,
+     "switch_consumed": 45527,
+     "output_before_switch": 61523,
+     "f_before": 1545
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "rank-064",
+   "compressed_sha256": "173371a5440bbf753ed6e23e57ac2f12d0900b92fed09e625c5c4d80720bef90",
+   "compressed_bytes": 15236,
+   "decoded_sha256": "1d5b00ae06714deab05cb0ae49d64e349cd0ac1d558877d84041cf486f69c826",
+   "decoded_bytes": 68012,
+   "intent": {
+    "name": "rank-064",
+    "seed": "0x74c020261031010d",
+    "level": 9,
+    "design": {
+     "family": "rank-class",
+     "letters": 20000,
+     "units": 8002,
+     "pool": 65,
+     "steady_rank": 64,
+     "rank_class": 2,
+     "expect": "switch in suffix"
+    },
+    "symbols": 59446,
+    "bypass": false,
+    "l_bytes": 68012,
+    "suffix_output_start": 60010,
+    "suffix_symbol_start": 51443,
+    "high_before_suffix": 35,
+    "high_in_suffix": 8002,
+    "suffix_rank_min": 59,
+    "suffix_rank_max": 125,
+    "suffix_rank_mode": 64,
+    "suffix_high_by_class": [
+     5,
+     7967,
+     30,
+     0,
+     0,
+     0,
+     0
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 53194,
+     "output": 61760,
+     "f_before": 1785
+    },
+    "draft_rule_switch": 53194
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 59446,
+     "bypass": false,
+     "switch_consumed": 53194,
+     "output_before_switch": 61760,
+     "f_before": 1785
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 59446,
+     "bypass": false,
+     "switch_consumed": 53194,
+     "output_before_switch": 61760,
+     "f_before": 1785
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "rank-127",
+   "compressed_sha256": "ffb2fe1f43136878aa7fafe171cf1d261d44f9c7f65f8331f0958e28c4c08156",
+   "compressed_bytes": 13040,
+   "decoded_sha256": "60d2ff3c7e224ca854000b2bd3ec1876c090298bb68a61d075a8047a3ce0527b",
+   "decoded_bytes": 68012,
+   "intent": {
+    "name": "rank-127",
+    "seed": "0x74c020261031010e",
+    "level": 9,
+    "design": {
+     "family": "rank-class",
+     "letters": 20000,
+     "units": 8002,
+     "pool": 128,
+     "steady_rank": 127,
+     "rank_class": 3,
+     "expect": "switch in suffix"
+    },
+    "symbols": 52330,
+    "bypass": false,
+    "l_bytes": 68012,
+    "suffix_output_start": 60010,
+    "suffix_symbol_start": 44327,
+    "high_before_suffix": 29,
+    "high_in_suffix": 8002,
+    "suffix_rank_min": 59,
+    "suffix_rank_max": 188,
+    "suffix_rank_mode": 127,
+    "suffix_high_by_class": [
+     4,
+     32,
+     7904,
+     32,
+     30,
+     0,
+     0
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 45854,
+     "output": 61536,
+     "f_before": 1555
+    },
+    "draft_rule_switch": 45854
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 52330,
+     "bypass": false,
+     "switch_consumed": 45854,
+     "output_before_switch": 61536,
+     "f_before": 1555
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 52330,
+     "bypass": false,
+     "switch_consumed": 45854,
+     "output_before_switch": 61536,
+     "f_before": 1555
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "rank-128",
+   "compressed_sha256": "38ca09d08afa733679d9bb91d71ba0f347d271acecb0be2638aba79935181bce",
+   "compressed_bytes": 14465,
+   "decoded_sha256": "6750513c0ae035d242cc69d17fab587710b5af54a41edf168d99365776dceaae",
+   "decoded_bytes": 68012,
+   "intent": {
+    "name": "rank-128",
+    "seed": "0x74c020261031010f",
+    "level": 9,
+    "design": {
+     "family": "rank-class",
+     "letters": 20000,
+     "units": 8002,
+     "pool": 129,
+     "steady_rank": 128,
+     "rank_class": 4,
+     "expect": "switch in suffix"
+    },
+    "symbols": 59533,
+    "bypass": false,
+    "l_bytes": 68012,
+    "suffix_output_start": 60010,
+    "suffix_symbol_start": 51530,
+    "high_before_suffix": 30,
+    "high_in_suffix": 8002,
+    "suffix_rank_min": 59,
+    "suffix_rank_max": 189,
+    "suffix_rank_mode": 128,
+    "suffix_high_by_class": [
+     3,
+     32,
+     32,
+     7903,
+     32,
+     0,
+     0
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 53289,
+     "output": 61768,
+     "f_before": 1788
+    },
+    "draft_rule_switch": 53289
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 59533,
+     "bypass": false,
+     "switch_consumed": 53289,
+     "output_before_switch": 61768,
+     "f_before": 1788
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 59533,
+     "bypass": false,
+     "switch_consumed": 53289,
+     "output_before_switch": 61768,
+     "f_before": 1788
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "rank-191",
+   "compressed_sha256": "0ecca8ea6922886a083c1e5e8479ca6d50a90f2dba9a7d8696e9480e0def4e6e",
+   "compressed_bytes": 13424,
+   "decoded_sha256": "93b959f1987a362c5d84c4afff6636a153f4ae7f5d165b94b16f1c53b1c2fbbd",
+   "decoded_bytes": 68012,
+   "intent": {
+    "name": "rank-191",
+    "seed": "0x74c0202610310110",
+    "level": 9,
+    "design": {
+     "family": "rank-class",
+     "letters": 20000,
+     "units": 8002,
+     "pool": 192,
+     "steady_rank": 191,
+     "rank_class": 5,
+     "expect": "switch in suffix"
+    },
+    "symbols": 52713,
+    "bypass": false,
+    "l_bytes": 68012,
+    "suffix_output_start": 60010,
+    "suffix_symbol_start": 44710,
+    "high_before_suffix": 40,
+    "high_in_suffix": 8002,
+    "suffix_rank_min": 60,
+    "suffix_rank_max": 242,
+    "suffix_rank_mode": 191,
+    "suffix_high_by_class": [
+     2,
+     0,
+     12,
+     32,
+     7843,
+     72,
+     41
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 46238,
+     "output": 61537,
+     "f_before": 1567
+    },
+    "draft_rule_switch": 46238
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 52713,
+     "bypass": false,
+     "switch_consumed": 46238,
+     "output_before_switch": 61537,
+     "f_before": 1567
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 52713,
+     "bypass": false,
+     "switch_consumed": 46238,
+     "output_before_switch": 61537,
+     "f_before": 1567
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "rank-192",
+   "compressed_sha256": "2edfc79736fada8619a385ab1a97492560b06d4c24a7a79629460f7ad285aed7",
+   "compressed_bytes": 17705,
+   "decoded_sha256": "422b4b54b0c1b48eb2e8c7696f8a62fa150303bb1168c7ee246d75b0d628bc83",
+   "decoded_bytes": 68012,
+   "intent": {
+    "name": "rank-192",
+    "seed": "0x74c0202610310111",
+    "level": 9,
+    "design": {
+     "family": "rank-class",
+     "letters": 20000,
+     "units": 8002,
+     "pool": 193,
+     "steady_rank": 192,
+     "rank_class": 6,
+     "expect": "switch in suffix"
+    },
+    "symbols": 59569,
+    "bypass": false,
+    "l_bytes": 68012,
+    "suffix_output_start": 60010,
+    "suffix_symbol_start": 51566,
+    "high_before_suffix": 67,
+    "high_in_suffix": 8002,
+    "suffix_rank_min": 61,
+    "suffix_rank_max": 243,
+    "suffix_rank_mode": 192,
+    "suffix_high_by_class": [
+     2,
+     0,
+     11,
+     32,
+     34,
+     7879,
+     44
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 53288,
+     "output": 61731,
+     "f_before": 1788
+    },
+    "draft_rule_switch": 53288
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 59569,
+     "bypass": false,
+     "switch_consumed": 53288,
+     "output_before_switch": 61731,
+     "f_before": 1788
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 59569,
+     "bypass": false,
+     "switch_consumed": 53288,
+     "output_before_switch": 61731,
+     "f_before": 1788
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "rank-224",
+   "compressed_sha256": "2ca82aa2d7f245b1fd06c5d2af54a8853dbf660c4e71d83f7739360bc8c0fc0a",
+   "compressed_bytes": 16850,
+   "decoded_sha256": "c8338c7d19f315bc9f701337322476e1f4a931a6d2da3522d18faa5bc5e21a79",
+   "decoded_bytes": 68012,
+   "intent": {
+    "name": "rank-224",
+    "seed": "0x74c0202610310112",
+    "level": 9,
+    "design": {
+     "family": "rank-class",
+     "letters": 20000,
+     "units": 8002,
+     "pool": 225,
+     "steady_rank": 224,
+     "rank_class": 7,
+     "expect": "switch in suffix"
+    },
+    "symbols": 59560,
+    "bypass": false,
+    "l_bytes": 68012,
+    "suffix_output_start": 60010,
+    "suffix_symbol_start": 51557,
+    "high_before_suffix": 73,
+    "high_in_suffix": 8002,
+    "suffix_rank_min": 73,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 224,
+    "suffix_high_by_class": [
+     0,
+     2,
+     0,
+     31,
+     32,
+     62,
+     7875
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 53272,
+     "output": 61724,
+     "f_before": 1787
+    },
+    "draft_rule_switch": 53272
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 59560,
+     "bypass": false,
+     "switch_consumed": 53272,
+     "output_before_switch": 61724,
+     "f_before": 1787
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 59560,
+     "bypass": false,
+     "switch_consumed": 53272,
+     "output_before_switch": 61724,
+     "f_before": 1787
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "rank-252",
+   "compressed_sha256": "42800b168f416f0924e0bb9ec33377eec9d6525e97fd75705f3529401822e150",
+   "compressed_bytes": 16385,
+   "decoded_sha256": "9261449ddb591a2f5009dab080bc3a7e9dab5e605136efe4040a5cb3f92e2b5f",
+   "decoded_bytes": 68012,
+   "intent": {
+    "name": "rank-252",
+    "seed": "0x74c0202610310113",
+    "level": 9,
+    "design": {
+     "family": "rank-class",
+     "letters": 20000,
+     "units": 8002,
+     "pool": 253,
+     "steady_rank": 252,
+     "rank_class": 7,
+     "expect": "switch in suffix"
+    },
+    "symbols": 59592,
+    "bypass": false,
+    "l_bytes": 68012,
+    "suffix_output_start": 60010,
+    "suffix_symbol_start": 51589,
+    "high_before_suffix": 57,
+    "high_in_suffix": 8002,
+    "suffix_rank_min": 73,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 252,
+    "suffix_high_by_class": [
+     0,
+     2,
+     0,
+     31,
+     32,
+     62,
+     7875
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 53322,
+     "output": 61742,
+     "f_before": 1789
+    },
+    "draft_rule_switch": 53322
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 59592,
+     "bypass": false,
+     "switch_consumed": 53322,
+     "output_before_switch": 61742,
+     "f_before": 1789
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 59592,
+     "bypass": false,
+     "switch_consumed": 53322,
+     "output_before_switch": 61742,
+     "f_before": 1789
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "rank-255",
+   "compressed_sha256": "b394f05d26c50271c94146ee50260463207dff5795228ebf561dc999af1330d9",
+   "compressed_bytes": 17102,
+   "decoded_sha256": "9c398cf0b07b626e7e701df6236ce8e2ac91bea66cac57b351472d2c51268032",
+   "decoded_bytes": 68012,
+   "intent": {
+    "name": "rank-255",
+    "seed": "0x74c0202610310114",
+    "level": 9,
+    "design": {
+     "family": "rank-class",
+     "letters": 20000,
+     "units": 8002,
+     "pool": 254,
+     "steady_rank": 255,
+     "rank_class": 7,
+     "expect": "switch in suffix"
+    },
+    "symbols": 59559,
+    "bypass": false,
+    "l_bytes": 68012,
+    "suffix_output_start": 59995,
+    "suffix_symbol_start": 51541,
+    "high_before_suffix": 57,
+    "high_in_suffix": 4006,
+    "suffix_rank_min": 73,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 255,
+    "suffix_high_by_class": [
+     0,
+     2,
+     0,
+     31,
+     32,
+     66,
+     3875
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 55116,
+     "output": 63569,
+     "f_before": 1845
+    },
+    "draft_rule_switch": 55116
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 59559,
+     "bypass": false,
+     "switch_consumed": 55116,
+     "output_before_switch": 63569,
+     "f_before": 1845
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 59559,
+     "bypass": false,
+     "switch_consumed": 55116,
+     "output_before_switch": 63569,
+     "f_before": 1845
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "edge-l9-s16383",
+   "compressed_sha256": "eac7822fdf57edb6560a7a316b117192a37e7d68a753f350980be1427abe6b17",
+   "compressed_bytes": 8753,
+   "decoded_sha256": "0a546e1a05ffab9a410189f8505f784446d72d9367ca333c4fc802625801459a",
+   "decoded_bytes": 19498,
+   "intent": {
+    "name": "edge-l9-s16383",
+    "seed": "0x74c0202610310115",
+    "level": 9,
+    "design": {
+     "family": "edge",
+     "target_symbols": 16383,
+     "letters": 13498,
+     "pairs": 3000,
+     "pool": 255,
+     "expect": "bypass (S < 16384)"
+    },
+    "symbols": 16383,
+    "bypass": true,
+    "l_bytes": 19498,
+    "suffix_output_start": 16498,
+    "suffix_symbol_start": 13382,
+    "high_before_suffix": 9,
+    "high_in_suffix": 2613,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 198,
+    "suffix_high_by_class": [
+     380,
+     371,
+     355,
+     409,
+     372,
+     354,
+     372
+    ],
+    "boundary_equalities": 1,
+    "oracle_switch": null,
+    "draft_rule_switch": null
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 16383,
+     "bypass": true,
+     "switch_consumed": null,
+     "output_before_switch": 0,
+     "f_before": 0
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 16383,
+     "bypass": true,
+     "switch_consumed": null,
+     "output_before_switch": 0,
+     "f_before": 0
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "edge-l9-s16384",
+   "compressed_sha256": "1e9f3968a3023f174b22973c2d04a6d27cfe557221ed5eb2c69ea0e90ab84c28",
+   "compressed_bytes": 8705,
+   "decoded_sha256": "37f09e9f7083cdb031e7fbe62ffac97aa8a46d856f5a8f54d457856dc00f5bde",
+   "decoded_bytes": 19515,
+   "intent": {
+    "name": "edge-l9-s16384",
+    "seed": "0x74c0202610310116",
+    "level": 9,
+    "design": {
+     "family": "edge",
+     "target_symbols": 16384,
+     "letters": 13515,
+     "pairs": 3000,
+     "pool": 255,
+     "expect": "switch"
+    },
+    "symbols": 16384,
+    "bypass": false,
+    "l_bytes": 19515,
+    "suffix_output_start": 16515,
+    "suffix_symbol_start": 13383,
+    "high_before_suffix": 9,
+    "high_in_suffix": 2602,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 139,
+    "suffix_high_by_class": [
+     375,
+     347,
+     355,
+     412,
+     384,
+     350,
+     379
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 14007,
+     "output": 17138,
+     "f_before": 560
+    },
+    "draft_rule_switch": 14007
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 16384,
+     "bypass": false,
+     "switch_consumed": 14007,
+     "output_before_switch": 17138,
+     "f_before": 560
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 16384,
+     "bypass": false,
+     "switch_consumed": 14007,
+     "output_before_switch": 17138,
+     "f_before": 560
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "edge-l9-s16385",
+   "compressed_sha256": "2ed065e53a8c7e09bf2c2353aa5e8da20ed7df507ecd1437bc1cbdb6397cba8d",
+   "compressed_bytes": 8766,
+   "decoded_sha256": "9d3273443daae5f45745af295c611dca89f848c363ee85cb9096828e01df9cc4",
+   "decoded_bytes": 19504,
+   "intent": {
+    "name": "edge-l9-s16385",
+    "seed": "0x74c0202610310117",
+    "level": 9,
+    "design": {
+     "family": "edge",
+     "target_symbols": 16385,
+     "letters": 13504,
+     "pairs": 3000,
+     "pool": 255,
+     "expect": "switch"
+    },
+    "symbols": 16385,
+    "bypass": false,
+    "l_bytes": 19504,
+    "suffix_output_start": 16504,
+    "suffix_symbol_start": 13384,
+    "high_before_suffix": 9,
+    "high_in_suffix": 2640,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 98,
+    "suffix_high_by_class": [
+     360,
+     371,
+     394,
+     398,
+     388,
+     359,
+     370
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 14015,
+     "output": 17134,
+     "f_before": 560
+    },
+    "draft_rule_switch": 14015
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 16385,
+     "bypass": false,
+     "switch_consumed": 14015,
+     "output_before_switch": 17134,
+     "f_before": 560
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 16385,
+     "bypass": false,
+     "switch_consumed": 14015,
+     "output_before_switch": 17134,
+     "f_before": 560
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "edge-l1-s49999",
+   "compressed_sha256": "bb4a53a67276adb8d9469aa454f2bbe5ef7c680ff9890aac5fda22536ee976d6",
+   "compressed_bytes": 38363,
+   "decoded_sha256": "080851eb1de0e45587d4f78fb0111d27508959b8dd42e60379a396732bce2937",
+   "decoded_bytes": 80214,
+   "intent": {
+    "name": "edge-l1-s49999",
+    "seed": "0x74c0202610310118",
+    "level": 1,
+    "design": {
+     "family": "edge",
+     "target_symbols": 49999,
+     "letters": 20214,
+     "pairs": 30000,
+     "pool": 255,
+     "expect": "switch"
+    },
+    "symbols": 49999,
+    "bypass": false,
+    "l_bytes": 80214,
+    "suffix_output_start": 50214,
+    "suffix_symbol_start": 19998,
+    "high_before_suffix": 9,
+    "high_in_suffix": 26188,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 77,
+    "suffix_high_by_class": [
+     3736,
+     3878,
+     3657,
+     3750,
+     3804,
+     3734,
+     3629
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 20882,
+     "output": 51097,
+     "f_before": 775
+    },
+    "draft_rule_switch": 20882
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 49999,
+     "bypass": false,
+     "switch_consumed": 20882,
+     "output_before_switch": 51097,
+     "f_before": 775
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 49999,
+     "bypass": false,
+     "switch_consumed": 20882,
+     "output_before_switch": 51097,
+     "f_before": 775
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "edge-l1-s50000",
+   "compressed_sha256": "7cc49ca5f6d2e32dfaed3a5425084a2266647a1380d57b24e780a38d294f2630",
+   "compressed_bytes": 38365,
+   "decoded_sha256": "c8b2030dec9ec29d13146e168eaf3f38186981c919a587665f0d01332a428790",
+   "decoded_bytes": 80208,
+   "intent": {
+    "name": "edge-l1-s50000",
+    "seed": "0x74c0202610310119",
+    "level": 1,
+    "design": {
+     "family": "edge",
+     "target_symbols": 50000,
+     "letters": 20206,
+     "pairs": 30001,
+     "pool": 255,
+     "expect": "bypass (2S >= N_max)"
+    },
+    "symbols": 50000,
+    "bypass": true,
+    "l_bytes": 80208,
+    "suffix_output_start": 50207,
+    "suffix_symbol_start": 19999,
+    "high_before_suffix": 9,
+    "high_in_suffix": 26210,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 190,
+    "suffix_high_by_class": [
+     3773,
+     3762,
+     3750,
+     3613,
+     3858,
+     3825,
+     3629
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": null,
+    "draft_rule_switch": null
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 50000,
+     "bypass": true,
+     "switch_consumed": null,
+     "output_before_switch": 0,
+     "f_before": 0
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 50000,
+     "bypass": true,
+     "switch_consumed": null,
+     "output_before_switch": 0,
+     "f_before": 0
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "edge-l9-s449999",
+   "compressed_sha256": "6bb04521d7c048582bb87fbc71645001c701eda479f38730060775324cf58273",
+   "compressed_bytes": 298961,
+   "decoded_sha256": "84f8c1521ea66952324de29cb29d1a5f54b52d619df37a66b72fec5a1e26749f",
+   "decoded_bytes": 653418,
+   "intent": {
+    "name": "edge-l9-s449999",
+    "seed": "0x74c020261031011a",
+    "level": 9,
+    "design": {
+     "family": "edge",
+     "target_symbols": 449999,
+     "letters": 253418,
+     "pairs": 200000,
+     "pool": 255,
+     "expect": "switch"
+    },
+    "symbols": 449999,
+    "bypass": false,
+    "l_bytes": 653418,
+    "suffix_output_start": 453418,
+    "suffix_symbol_start": 249998,
+    "high_before_suffix": 9,
+    "high_in_suffix": 174722,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 170,
+    "suffix_high_by_class": [
+     25092,
+     24970,
+     25144,
+     24935,
+     25035,
+     25121,
+     24425
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": {
+     "consumed": 259391,
+     "output": 462810,
+     "f_before": 8228
+    },
+    "draft_rule_switch": 259391
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 449999,
+     "bypass": false,
+     "switch_consumed": 259391,
+     "output_before_switch": 462810,
+     "f_before": 8228
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 449999,
+     "bypass": false,
+     "switch_consumed": 259391,
+     "output_before_switch": 462810,
+     "f_before": 8228
+    }
+   ],
+   "handoff_verified": true
+  },
+  {
+   "name": "edge-l9-s450000",
+   "compressed_sha256": "df50de7f82e5d8ab7c911274a1756a4887b0a3ee0002ef6defc3667d307f612e",
+   "compressed_bytes": 298956,
+   "decoded_sha256": "efb933a60de5b8455710732162c4b77a71de922a90b60a9c4ca76e0c8aaabf57",
+   "decoded_bytes": 653433,
+   "intent": {
+    "name": "edge-l9-s450000",
+    "seed": "0x74c020261031011b",
+    "level": 9,
+    "design": {
+     "family": "edge",
+     "target_symbols": 450000,
+     "letters": 253431,
+     "pairs": 200001,
+     "pool": 255,
+     "expect": "bypass (2S >= N_max)"
+    },
+    "symbols": 450000,
+    "bypass": true,
+    "l_bytes": 653433,
+    "suffix_output_start": 453432,
+    "suffix_symbol_start": 250002,
+    "high_before_suffix": 9,
+    "high_in_suffix": 174685,
+    "suffix_rank_min": 32,
+    "suffix_rank_max": 255,
+    "suffix_rank_mode": 218,
+    "suffix_high_by_class": [
+     24860,
+     24783,
+     25232,
+     25214,
+     25000,
+     25116,
+     24480
+    ],
+    "boundary_equalities": 0,
+    "oracle_switch": null,
+    "draft_rule_switch": null
+   },
+   "audit": [
+    {
+     "block": 0,
+     "checkpoint_interval": 0,
+     "symbols": 450000,
+     "bypass": true,
+     "switch_consumed": null,
+     "output_before_switch": 0,
+     "f_before": 0
+    },
+    {
+     "block": 0,
+     "checkpoint_interval": 16384,
+     "symbols": 450000,
+     "bypass": true,
+     "switch_consumed": null,
+     "output_before_switch": 0,
+     "f_before": 0
+    }
+   ],
+   "handoff_verified": true
+  }
+ ],
+ "failures": []
+}
