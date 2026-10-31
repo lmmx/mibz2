@@ -48,9 +48,13 @@ registered.
 
 ## Risks and what each step does about them
 
-- **Separate monomorphisations, so layout differences outside the walk:** W4. If the
-  instantiations differ beyond the inverse call, the run stops, and the alternative (a
-  runtime switch inside one instantiation) is proposed for review rather than tried.
+- **Separate monomorphisations, so layout differences outside the walk:** W4, as revised
+  at registration.
+  - It requires functional equivalence (the same stage functions and data flow), and
+    reports every surrounding machine-code difference.
+  - It stops for review only if a difference changes execution semantics, or plausibly
+    introduces a material uncontrolled benchmark difference. Identical machine code is
+    not required.
 - **SMT sharing reduces the gain:** the primary is on the i9 with idle siblings. CI is
   exploratory only.
 - **Short-segment inputs stress the 32 duplicated cold paths:** the walk-structure

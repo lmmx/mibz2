@@ -1,9 +1,16 @@
-# Room walk, constant-index 32-lane round: full-decoder trial protocol (DRAFT for review)
+# Room walk, constant-index 32-lane round: full-decoder trial protocol (registered)
 
 **Status:**
-- A draft for the maintainer's review. Nothing is implemented, built for timing or timed.
-- On approval, with any changes, it is committed as registered before the harness exists.
-- After that, only an amendment committed before any timing can change it.
+- **Registered.** The maintainer reviewed the draft at `ea19199` and approved it with one
+  refinement: §9 W4, revised here before any implementation.
+- Nothing is implemented, built for timing or timed at this commit.
+- After this, only an amendment committed before any timing can change it.
+
+**Authorised now:** the research kernel, the correctness tests, the harness, the freeze
+and a local dry run up to timing.
+
+**Not authorised:** CI timing, the i9 trial, merging, or enabling the kernel by default.
+Each needs a separate authorisation.
 
 **Independence:**
 - The branch is `research/walk-unroll` (master `45b366d` plus the arm). It contains no
@@ -172,7 +179,7 @@ authorises it.
 | W1 | the walk-unroll amendment-1 gates (`bench/walk_unroll_gates.py`) on `room_segments_unrolled::<32, 1>` in this binary: 32 cores, ≤ 11.0 instructions, S3′, S4, S5′ |
 | W2 | `room_segments::<32, 1>` (shipped) is present, and its hot step is unchanged: 16 instructions, 3 loads, 2 stores, 1 prefetch |
 | W3 | B's worker reaches `room_segments_unrolled` and never `room_segments::<32, 1>` on segmented blocks; A's the reverse. Shown by each instantiation's call graph. |
-| W4 | `decode_block::<Segmented>` and `decode_block::<SegmentedUnrolled>` (or the worker loops they are inlined into) call the same MTF, build, RLE1 and CRC symbols. Normalised for addresses, their machine code differs only in the inverse calls; any other difference is reported and stops the run. |
+| W4 | **Functional equivalence of everything but the walk.** (a) **Source level:** `git diff` from master touches `src/` only by insertions in `src/bwt.rs`. `SegmentedUnrolled` differs from `Segmented` only in the walk it calls: same `build`, `TVector`, `SegScratch` and `wants_checkpoints` (false), so the same plain MTF in `decode_block`. Scheduling, slots, RLE1, CRC and buffering run the same generic code, `with_inverse::<I>`, `worker::<I>`, `decode_block::<I>`. (b) **Exact binary:** both arms' instantiations reach the same MTF, build, RLE1 and CRC functions, where those are separate symbols; where they are inlined, the audit records it. The audit also **reports** every machine-code difference between the two instantiations outside the inverse call: sizes, call targets, instruction-mix deltas. Identical machine code is **not** required, because separate monomorphisations can legitimately differ in layout and register allocation. (c) **Stop for review** if a difference changes execution semantics: a different stage function or kernel, an extra call or copy, different buffer handling. Also stop if it plausibly introduces a material uncontrolled benchmark difference, for example a stage kernel inlined in one arm and called in the other. |
 
 **The registered history stays as it is:** the arm's structural STRUCTURAL STOP as
 written, and amendment 1's gates and their rationale.
