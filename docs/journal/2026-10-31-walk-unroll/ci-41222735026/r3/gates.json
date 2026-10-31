@@ -1,0 +1,71 @@
+{
+ "arm": {
+  "totals": {
+   "instructions": 334,
+   "macro_ops": 305,
+   "loads": 98,
+   "stores": 69,
+   "prefetches": 32,
+   "stack_loads": 66,
+   "stack_stores": 37,
+   "conditional_branches": 33,
+   "unconditional_jumps": 3,
+   "calls": 0,
+   "t_loads": 32
+  },
+  "per_lane_step": {
+   "instructions": 10.438,
+   "macro_ops": 9.531,
+   "loads": 3.062,
+   "stores": 2.156,
+   "prefetches": 1.0,
+   "stack_loads": 2.062,
+   "stack_stores": 1.156,
+   "conditional_branches": 1.031,
+   "unconditional_jumps": 0.094,
+   "calls": 0.0
+  },
+  "steps_with_core": 32,
+  "steps_exactly_10": 25
+ },
+ "shipped": {
+  "totals": {
+   "instructions": 16,
+   "macro_ops": 14,
+   "loads": 3,
+   "stores": 2,
+   "prefetches": 1,
+   "stack_loads": 1,
+   "stack_stores": 0,
+   "conditional_branches": 2,
+   "unconditional_jumps": 0,
+   "calls": 0,
+   "t_loads": 1
+  },
+  "per_lane_step": {
+   "instructions": 16.0,
+   "macro_ops": 14.0,
+   "loads": 3.0,
+   "stores": 2.0,
+   "prefetches": 1.0,
+   "stack_loads": 1.0,
+   "stack_stores": 0.0,
+   "conditional_branches": 2.0,
+   "unconditional_jumps": 0.0,
+   "calls": 0.0
+  },
+  "stack_counted_alike": {
+   "loads": 2.0,
+   "stores": 1.0312
+  }
+ },
+ "gates": {
+  "S1_unrolled": true,
+  "S2_instructions": true,
+  "S3p_memory": true,
+  "S4_branches": true,
+  "S5p_calls_stack": true,
+  "S6_step_cores": true
+ },
+ "pass_": true
+}
