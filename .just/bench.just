@@ -211,3 +211,15 @@ bench-compete *args:
 [positional-arguments]
 bench-pmu-probe *args:
     python3 bench/pmu_probe.py "$@"
+
+# The unrolled room walk's full-decoder trial
+# (docs/journal/2026-10-31-walk-unroll-decoder-protocol.md): the pinned clean checkout,
+# rustc 1.97.0, every corpus reproduced and hash-checked (the shared ones identical to the
+# P74-C trial's), untimed correctness and the W1-W4 structural audit, a synthetic-times
+# harness self-test, then ONE timed trial with the whole process tree in a 4-physical-core
+# allocation. It writes the git-ignored bench/results/walk-decoder/LABEL/ and LABEL.tar.gz
+# (WALK_RESULTS_DIR to change it) and refuses a second run into the same label.
+# WALK_STOP_BEFORE_TIMING=1: a dry run. Timing needs the maintainer's authorisation.
+#   just bench-walk-decoder i9-10900K
+bench-walk-decoder label:
+    bash bench/walk_decoder_run.sh {{label}}

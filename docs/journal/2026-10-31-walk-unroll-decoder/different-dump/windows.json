@@ -1,0 +1,80 @@
+{
+ "about": "Different-dump held-out windows for the P74-C decoder trial: 12 windows of 1 MiB at floor((2i+1)/24 * dump_bytes), i = 0..11 (the fitted corpus's rule, applied to a later dump). Positions frozen and committed before any byte of the dump was fetched; per-window SHA-256 values are added at the freeze, after fetching, and nothing is tuned on them.",
+ "dump": "wikidata-20261026-all.json.bz2",
+ "url": "https://dumps.wikimedia.org/wikidatawiki/entities/20261026/wikidata-20261026-all.json.bz2",
+ "dump_bytes": 103565615653,
+ "windows": [
+  {
+   "name": "d00",
+   "offset": 4315233985,
+   "length": 1048576,
+   "sha256": "d18e5fdb8c62d0f88b675792400a724e63ed9acdb066418865232e895d6a8d35"
+  },
+  {
+   "name": "d01",
+   "offset": 12945701956,
+   "length": 1048576,
+   "sha256": "1c5f95e476fa75c20bc2c851d5859ebf872a789d54a4133a7318a737fb33f341"
+  },
+  {
+   "name": "d02",
+   "offset": 21576169927,
+   "length": 1048576,
+   "sha256": "fdeeece0d748018d3c6a6181f5a002c6d691cdd37ca91fffbafaaa4cc362f311"
+  },
+  {
+   "name": "d03",
+   "offset": 30206637898,
+   "length": 1048576,
+   "sha256": "316b4ff073dd3b6df716052f49d7a4e49553a24b23f0973ffe1c917ecd6551f4"
+  },
+  {
+   "name": "d04",
+   "offset": 38837105869,
+   "length": 1048576,
+   "sha256": "db63631fcfdf3931b10db29f8ba7b561526f65918a89f163fa4cdbd257f2e5b8"
+  },
+  {
+   "name": "d05",
+   "offset": 47467573840,
+   "length": 1048576,
+   "sha256": "28e768be80ed3c586f02a012a5b40d0b7e154670ffdb4c9356b98a0c8cfcceaf"
+  },
+  {
+   "name": "d06",
+   "offset": 56098041812,
+   "length": 1048576,
+   "sha256": "d42380ff1c24ac0e1fc6b2caed5030760a986b3d1ca7bfe93c0fd844ed02197c"
+  },
+  {
+   "name": "d07",
+   "offset": 64728509783,
+   "length": 1048576,
+   "sha256": "7b01785f0bc84bb81a020b890ac11b93a0cab18bfc73d29ae281cf1ed05da234"
+  },
+  {
+   "name": "d08",
+   "offset": 73358977754,
+   "length": 1048576,
+   "sha256": "bfd50cf980b2ee8cefc6ffd65cb33d572aa895ba72b4259ec98e7b957cda8a88"
+  },
+  {
+   "name": "d09",
+   "offset": 81989445725,
+   "length": 1048576,
+   "sha256": "744d5b2c376b0bb5836c148a68b2a6bdfdc139a40bdf06114c8105223a57bbcc"
+  },
+  {
+   "name": "d10",
+   "offset": 90619913696,
+   "length": 1048576,
+   "sha256": "4ff35590fa356a09cca858790957daa00fb2e817f707faf3f509f2b6cae562e4"
+  },
+  {
+   "name": "d11",
+   "offset": 99250381667,
+   "length": 1048576,
+   "sha256": "3f4173b86106519998798324e5dde1c30cc995bdd2969f795c9af1480b710fd6"
+  }
+ ]
+}

@@ -44,3 +44,6 @@ target/
 # just bench-compete's result files
 /compete-*.md
 /compete-*.jsonl
+
+# trial results (bench/walk_decoder_run.sh): never committed
+bench/results/

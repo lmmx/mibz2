@@ -1,0 +1,218 @@
+{
+ "protocol": "docs/journal/2026-10-31-walk-unroll-decoder-protocol.md",
+ "order": [
+  "wikidata-fitted",
+  "wikidata-heldout",
+  "wikidata-20261026",
+  "random",
+  "records",
+  "mixed-independent",
+  "text",
+  "text-l1",
+  "text-l5",
+  "zeros",
+  "period-3"
+ ],
+ "corpora": {
+  "wikidata-fitted": {
+   "role": "secondary",
+   "compressed_sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915",
+   "compressed_bytes": 11854933,
+   "decoded_sha256": "3f075e30f4f8c73414150655afbf57caa2647c7927e743fc0635b4912d65cdaf",
+   "decoded_bytes": 209700196,
+   "same_as_p74c_decoder_trial": true
+  },
+  "wikidata-heldout": {
+   "role": "secondary",
+   "compressed_sha256": "7f5c9a0044e5a30589bf343b9b31e698849b2acc69461a55c97b550193128b45",
+   "compressed_bytes": 11965711,
+   "decoded_sha256": "cfda21b10a7f289844f8e5b20045f9826f6fba87798b19b47cbde2e668a05bc0",
+   "decoded_bytes": 235800351,
+   "same_as_p74c_decoder_trial": true
+  },
+  "wikidata-20261026": {
+   "role": "primary",
+   "compressed_sha256": "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe",
+   "compressed_bytes": 11953225,
+   "decoded_sha256": "47a2971ccc4a91e958c5c8797f45ff7a50ae0d7e7cfac31152c8018d994b7a81",
+   "decoded_bytes": 207000624,
+   "same_as_p74c_decoder_trial": true
+  },
+  "random": {
+   "role": "control",
+   "compressed_sha256": "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18",
+   "compressed_bytes": 7097921,
+   "decoded_sha256": "00e14e00981a39705bb0f8c6150bde65df1185d68632e9d5e1ddd66d8204f4b0",
+   "decoded_bytes": 8000000,
+   "same_as_p74c_decoder_trial": true
+  },
+  "records": {
+   "role": "control",
+   "compressed_sha256": "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c",
+   "compressed_bytes": 9587840,
+   "decoded_sha256": "ff2de2d9a8112fa22c0c74691d1f99cd59bd35b3094d940507373499cab886bd",
+   "decoded_bytes": 9600000,
+   "same_as_p74c_decoder_trial": true
+  },
+  "mixed-independent": {
+   "role": "control",
+   "compressed_sha256": "11639f3599a85391b5ac97447bd06a26481806cfb8e79e909c1ad5a25d0778db",
+   "compressed_bytes": 1370149,
+   "decoded_sha256": "10bb5815c99a132bef26ee2cbdf05490b3489366c356ccd0e1476f772023f682",
+   "decoded_bytes": 2000000,
+   "same_as_p74c_decoder_trial": true
+  },
+  "text": {
+   "role": "control",
+   "compressed_sha256": "59236f2dff3afbd477d8cf4030055c301a9911e2ce26eb3bdbe26c39a26c695a",
+   "compressed_bytes": 1788393,
+   "decoded_sha256": "53eefeed43ec0469bff691dcd95ec0654b25553914db960fc142955272ede355",
+   "decoded_bytes": 12278087,
+   "same_as_p74c_decoder_trial": true
+  },
+  "text-l1": {
+   "role": "walk-control",
+   "compressed_sha256": "d4778f8d965bb4b105b2b63f8899a0f95159687c260b438e13ff1a584b60be94",
+   "compressed_bytes": 3057229,
+   "decoded_sha256": "53eefeed43ec0469bff691dcd95ec0654b25553914db960fc142955272ede355",
+   "decoded_bytes": 12278087
+  },
+  "text-l5": {
+   "role": "walk-control",
+   "compressed_sha256": "61498135ae2a358542022a77b1e7feedbaac40d8706bbb7c8baa5bd1bf04e660",
+   "compressed_bytes": 2621068,
+   "decoded_sha256": "53eefeed43ec0469bff691dcd95ec0654b25553914db960fc142955272ede355",
+   "decoded_bytes": 12278087
+  },
+  "zeros": {
+   "role": "walk-control",
+   "compressed_sha256": "07dca4a334909c5f5bb3c88a380d760f40d7ec4481e6f5aff632a625e14add7b",
+   "compressed_bytes": 49,
+   "decoded_sha256": "a96f642b0a1ad9fe9f42639aa66d786101ded2485490aaf700ada252133893b8",
+   "decoded_bytes": 2700000
+  },
+  "period-3": {
+   "role": "walk-control",
+   "compressed_sha256": "69893044ae8bff40453cf535878880aa97044e91f488a7f73a8a58df3716c4fe",
+   "compressed_bytes": 150,
+   "decoded_sha256": "17f4c37381c64331d2483c01a9b3381c2d05dcece91069ca8706d9842c7e87e3",
+   "decoded_bytes": 2700000
+  }
+ },
+ "different_dump": {
+  "about": "Different-dump held-out windows for the P74-C decoder trial: 12 windows of 1 MiB at floor((2i+1)/24 * dump_bytes), i = 0..11 (the fitted corpus's rule, applied to a later dump). Positions frozen and committed before any byte of the dump was fetched; per-window SHA-256 values are added at the freeze, after fetching, and nothing is tuned on them.",
+  "dump": "wikidata-20261026-all.json.bz2",
+  "url": "https://dumps.wikimedia.org/wikidatawiki/entities/20261026/wikidata-20261026-all.json.bz2",
+  "dump_bytes": 103565615653,
+  "windows": [
+   {
+    "name": "d00",
+    "offset": 4315233985,
+    "length": 1048576,
+    "sha256": "d18e5fdb8c62d0f88b675792400a724e63ed9acdb066418865232e895d6a8d35"
+   },
+   {
+    "name": "d01",
+    "offset": 12945701956,
+    "length": 1048576,
+    "sha256": "1c5f95e476fa75c20bc2c851d5859ebf872a789d54a4133a7318a737fb33f341"
+   },
+   {
+    "name": "d02",
+    "offset": 21576169927,
+    "length": 1048576,
+    "sha256": "fdeeece0d748018d3c6a6181f5a002c6d691cdd37ca91fffbafaaa4cc362f311"
+   },
+   {
+    "name": "d03",
+    "offset": 30206637898,
+    "length": 1048576,
+    "sha256": "316b4ff073dd3b6df716052f49d7a4e49553a24b23f0973ffe1c917ecd6551f4"
+   },
+   {
+    "name": "d04",
+    "offset": 38837105869,
+    "length": 1048576,
+    "sha256": "db63631fcfdf3931b10db29f8ba7b561526f65918a89f163fa4cdbd257f2e5b8"
+   },
+   {
+    "name": "d05",
+    "offset": 47467573840,
+    "length": 1048576,
+    "sha256": "28e768be80ed3c586f02a012a5b40d0b7e154670ffdb4c9356b98a0c8cfcceaf"
+   },
+   {
+    "name": "d06",
+    "offset": 56098041812,
+    "length": 1048576,
+    "sha256": "d42380ff1c24ac0e1fc6b2caed5030760a986b3d1ca7bfe93c0fd844ed02197c"
+   },
+   {
+    "name": "d07",
+    "offset": 64728509783,
+    "length": 1048576,
+    "sha256": "7b01785f0bc84bb81a020b890ac11b93a0cab18bfc73d29ae281cf1ed05da234"
+   },
+   {
+    "name": "d08",
+    "offset": 73358977754,
+    "length": 1048576,
+    "sha256": "bfd50cf980b2ee8cefc6ffd65cb33d572aa895ba72b4259ec98e7b957cda8a88"
+   },
+   {
+    "name": "d09",
+    "offset": 81989445725,
+    "length": 1048576,
+    "sha256": "744d5b2c376b0bb5836c148a68b2a6bdfdc139a40bdf06114c8105223a57bbcc"
+   },
+   {
+    "name": "d10",
+    "offset": 90619913696,
+    "length": 1048576,
+    "sha256": "4ff35590fa356a09cca858790957daa00fb2e817f707faf3f509f2b6cae562e4"
+   },
+   {
+    "name": "d11",
+    "offset": 99250381667,
+    "length": 1048576,
+    "sha256": "3f4173b86106519998798324e5dde1c30cc995bdd2969f795c9af1480b710fd6"
+   }
+  ]
+ },
+ "schedule": {
+  "rounds": 20,
+  "arms": [
+   "A shipped (Segmented)",
+   "B SegmentedUnrolled",
+   "A2 shipped, second label"
+  ],
+  "design": "per cell: the 6 permutations x3 + (A,B,A2), (B,A,A2), Fisher-Yates; cell order shuffled per round; xorshift seed 0x74c0202610310201 (the P74-C trial's)",
+  "warmups": "one untimed child per arm per cell"
+ },
+ "toolchain": "rustc 1.90.0, --locked, release profile, empty RUSTFLAGS",
+ "text_source_commit": "535296c68e43db54990af88bb0e05087198c583e",
+ "source_base": "45b366d1455a487f1655def689ebd8c87a31f135",
+ "arm": "research/walk-unroll room_segments_unrolled (CI run 41222735026, registered stage PASS) as bwt::SegmentedUnrolled",
+ "sources_sha256": {
+  "Cargo.toml": "dfe099e267050ece0c224492974fe85d9058030eda3c371c767c7278c8a41079",
+  "Cargo.lock": "80f7c98d6c27a66ae05346afa482f7e6586f61f6f7239885aa882d1217300f57",
+  "src/lib.rs": "7034480f3088fa0051354b6573961b4ceffdef99ddcf1c29ad9fc85e4ddb9b33",
+  "src/mtf.rs": "88fadff30a234537d72a4a6614cdddf85ea1d677aae7bbc8c83fb5cbe1ec31e1",
+  "src/parallel.rs": "cd541345707bd0661312dd8506ac6b5c3bbeb441a10094c946a9ea48b459c8c5",
+  "src/bwt.rs": "c23e30d560ec0bd10c401613bd94238dfd0f7b0dc8776e33e981ea2fbea75afa",
+  "examples/walk_decoder.rs": "f698d9aa6f8ce69033366530900404e2077762e6287d4a26954d588c3b756c3c",
+  "tests/common/mod.rs": "3aeb98175100dd760d5b3c16ac617be78e44ce9e0ec459bd2f7c4a6b85cdc491",
+  "tests/segmented_unrolled.rs": "fbfee4ccb65d01156d31a7f83a9f09c85344e53a4ec9e6a7f8f60a170ad98fbb",
+  "bench/walk_decoder.py": "e749790324a34352c922a3d8a02de1c1f4456eb6068684b7e9dddbd8f6ce9c19",
+  "bench/walk_decoder_audit.py": "e950a2cc2b38d3463163eec1c2a02b9ed06b8fc6b6822a36ff118fec4ef8f709",
+  "bench/walk_unroll_gates.py": "f66a2d6c02ecbddd7d4756a035c9b428745a87e3e3a2b47f3c9a398f2797b226",
+  "bench/walk_asm_audit.py": "0acb3174486c2072d6ed6a56bd17bc139dfc77c63d89153e6b2599879900b6fa",
+  "bench/walk_decoder_run.sh": "91171bc6e2308af82834efa243215946ca9b65a9f871be4065abe2aef596af6e",
+  ".just/bench.just": "c6527035392c922299daa4d8851de0c4e5ebc89b0d42c67ba84249c57547ea1d",
+  "bench/wikidata.json": "42cec876c3a424b8e81a1de062f38b8eb8488908b4c71c3e6fed2c43231445f5",
+  "docs/journal/2026-10-31-walk-unroll-decoder-protocol.md": "95ee4ca78d862fbbf82266a0f853bba947d86e39bce6b2d7ef983725668fd63f",
+  "docs/journal/2026-10-31-walk-unroll-decoder/heldout-spec.json": "8d5806f2bc7249cef6e08ec5e6f307dcf102439c658799c0cc4003120b961894",
+  "docs/journal/2026-10-31-walk-unroll-decoder/different-dump/windows.json": "14bdfed2333114a268cf00cc7bb83d74ad2161f74bab8c86dfdb3af08bbd0f9b",
+  "docs/journal/2026-10-31-walk-unroll-decoder/reference-p74c-decoder-frozen.json": "cc34eb52123eef155071689f05dd58a0257e5d24db8a39056606aea5cee89378"
+ }
+}

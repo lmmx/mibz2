@@ -1,0 +1,86 @@
+{
+ "about": "Out-of-sample windows: 12 windows of 1 MiB at floor((4i+3)/48 * dump_bytes), midway between the fitted windows at (2i+1)/24; frozen before fetching, before any measurement",
+ "dump": "wikidata-20261019-all.json.bz2",
+ "url": "https://dumps.wikimedia.org/wikidatawiki/entities/20261019/wikidata-20261019-all.json.bz2",
+ "dump_bytes": 103488697311,
+ "windows": [
+  {
+   "name": "x00",
+   "offset": 6468043581,
+   "length": 1048576,
+   "sha256": "18dcea8b845d634a79e047a9eb52c449c494d98413e05b959d3c934db97d6d22"
+  },
+  {
+   "name": "x01",
+   "offset": 15092101691,
+   "length": 1048576,
+   "sha256": "5bb88c606354832669e2930c0f665c8865d52510f3ca4234aea824bfcfdb0ba6"
+  },
+  {
+   "name": "x02",
+   "offset": 23716159800,
+   "length": 1048576,
+   "sha256": "b08d4e8601f8726752d78c2e4f8c52da713450d4093127cf6bb3febd6fcef9d2"
+  },
+  {
+   "name": "x03",
+   "offset": 32340217909,
+   "length": 1048576,
+   "sha256": "b80a2b8b621470169758171d8d5f3c79357931a9a58493cfb87b344ce8ed1228"
+  },
+  {
+   "name": "x04",
+   "offset": 40964276018,
+   "length": 1048576,
+   "sha256": "67deb9de775f6076218adc6b0f7465afc02302c2dac44831a0642a3c348c590c"
+  },
+  {
+   "name": "x05",
+   "offset": 49588334128,
+   "length": 1048576,
+   "sha256": "f33268a4982c87ebc92acd9a6e65e61656bfd866566925cb80ccbc970a04709e"
+  },
+  {
+   "name": "x06",
+   "offset": 58212392237,
+   "length": 1048576,
+   "sha256": "2d751e527859a4ae5e978f72c98ee2facb428400d4f3718c5bfbadac29434831"
+  },
+  {
+   "name": "x07",
+   "offset": 66836450346,
+   "length": 1048576,
+   "sha256": "88d000afe5d373921fc5aa588304f0cf95003ad296eac88cf3085f5f69785463"
+  },
+  {
+   "name": "x08",
+   "offset": 75460508455,
+   "length": 1048576,
+   "sha256": "73dc94cdf050653e8081eba538854cac92e1b4e3b150e86a4995d5fbdf548d99"
+  },
+  {
+   "name": "x09",
+   "offset": 84084566565,
+   "length": 1048576,
+   "sha256": "6a80b79841df2766d1b9a4ba5fdee35d5c1a12a7b3b362d6d95f6d646e92c489"
+  },
+  {
+   "name": "x10",
+   "offset": 92708624674,
+   "length": 1048576,
+   "sha256": "038d5e004d1913ed68095c5c08d322ac4b72aba1eaed8b78e4160b0a7574ac23"
+  },
+  {
+   "name": "x11",
+   "offset": 101332682783,
+   "length": 1048576,
+   "sha256": "74cb6b870275e5990210fdd45bab4da57297b45cee3bbf33c9e4e25d9f170621"
+  }
+ ],
+ "corpus": "wikidata-independent.bz2",
+ "corpus_sha256": "7f5c9a0044e5a30589bf343b9b31e698849b2acc69461a55c97b550193128b45",
+ "corpus_bytes": 11965711,
+ "blocks": 473,
+ "decoded_bytes_L": 235800351,
+ "selector_audit": "bb17a24 frozen policy, untimed: 211 bypassed, 262 P74 to block end, 0 handoffs (plain and checkpoint)"
+}
