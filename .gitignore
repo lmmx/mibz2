@@ -44,3 +44,6 @@ target/
 # just bench-compete's result files
 /compete-*.md
 /compete-*.jsonl
+
+# The P74-C trials' results (bench/p74c_decoder_run.sh)
+/bench/results/

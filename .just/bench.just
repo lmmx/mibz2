@@ -211,3 +211,13 @@ bench-compete *args:
 [positional-arguments]
 bench-pmu-probe *args:
     python3 bench/pmu_probe.py "$@"
+
+# The P74-C full-decoder trial (docs/journal/2026-10-31-p74c-decoder-protocol.md): the
+# pinned clean checkout, rustc 1.90.0, every corpus reproduced and hash-checked, untimed
+# correctness and audits, a synthetic-times harness self-test, then ONE timed trial with the
+# whole process tree in a 4-physical-core allocation. It writes the git-ignored
+# bench/results/p74c-decoder/LABEL/ and LABEL.tar.gz (P74C_RESULTS_DIR to change it) and
+# refuses a second run into the same label. P74C_STOP_BEFORE_TIMING=1: a dry run.
+#   just bench-p74c-decoder i9-10900K
+bench-p74c-decoder label:
+    bash bench/p74c_decoder_run.sh {{label}}

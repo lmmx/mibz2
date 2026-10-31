@@ -95,8 +95,8 @@ process of that executable.
     actual affinity) is also `Workers(w)`, so the measured path is the one `new` and
     `decode_parallel` would take.
   - It also asserts that `threads()` is w.
-  - It records the process's thread count (`/proc/self/task`) after the first read:
-    w workers + scanner + feeder + main = w + 3.
+  - It records the process's threads and asserts there are w + 3: w workers, the scanner,
+    main and the feeder (§4a).
 
 **What is measured, per child:**
 - the input file read before timing;
@@ -118,6 +118,35 @@ process of that executable.
 preallocated decoded output, both identical across arms. The RSS ratio is therefore a
 ratio of totals, diluted towards 1. The decoder's own buffers (≈ 7 MB a worker,
 2·w slots) are a minority of it on Wikidata.
+
+### 3a. Arm identity (added before the freeze, at the reviewer's request)
+
+The arms differ only in the MTF choice:
+- **One binary.** A, B and A′ are the same executable, `examples/p74c_decoder.rs`.
+- **One code path.** In `child`, `decode_once(&z, w, arm_kernels(arm), bytes)` is the
+  same call for every arm. `arm_kernels` is the only arm-dependent code:
+  - it returns `Kernels::detect()` for A and A′;
+  - it returns `Kernels::detect().with_mtf(MtfKernel::P74c)` for B.
+- **The same machinery.** `decode_once` builds the same
+  `StreamDecoder::planned(Plan::Workers(w), 2·w, k)`, with the same feeder and reader.
+  `planned` → `with_inverse::<Segmented>` spawns the same scanner and workers
+  (`src/parallel.rs`). `k` reaches `decode_block` unchanged.
+- **The only branch on the choice** is `decode_block`'s per-block `match (cooperative,
+  k.mtf)` (`src/lib.rs`). `Shipped` calls `mtf::mtf` or `mtf::mtf_checkpoints`, as before
+  the integration. `P74c` calls `mtf::p74_c::mtf` or `mtf_checkpoints`.
+  - The P74-C entries take the bypass to the same shipped functions, or enter the frozen
+    `combined`.
+  - The rest of `decode_block` (inverse BWT, RLE1, CRC) does not read `k.mtf`.
+- **Which kernel ran, recorded per block.** `mtf::selections` counts each block's path:
+  one relaxed atomic increment a block, outside the token loop, in both arms.
+  - Every child records its counts, and asserts: for A and A′, every block
+    `shipped_plain` and nothing else; for B, every block `p74c_plain`, split into
+    bypass and combined, and nothing else.
+  - `tests/p74c_selection.rs` checks the same for the default constructors and every
+    setting: `decode`, `decode_parallel`, `StreamDecoder::new` and `Shipped` reach exactly
+    `mtf::mtf` (plain) and `mtf::mtf_checkpoints` (cooperative).
+- **The counter's cost [D]:** the same in all three arms. It is a change to the default
+  path's code, counting only; behaviour is unchanged.
 
 ## 4. CPU allocation
 
@@ -152,6 +181,31 @@ On a host with P < 4 physical cores, ALLOC is all P cores and w ranges over 1..P
 - each child's `Cpus_allowed_list`, its physical-core count, and the default plan it saw.
 
 A child whose default plan would not be `Workers(w)` aborts the trial.
+
+### 4a. Affinity proof, per measurement (added before the freeze)
+
+**At spawn.** Each child reads `/proc/self/task/*/status` and `stat` right after the
+decoder is built and before any input is written. Every decoder thread then exists and is
+blocked, so none can have ended: w workers, the scanner and main.
+- **Recorded per thread:** its name, `Cpus_allowed_list`, last CPU (`psr`) and context
+  switches.
+- **The feeder** records its own entry as it starts (`/proc/thread-self`).
+- **The cost:** this is inside the timed interval, the same for every arm, about 0.1 ms
+  [E].
+- **Names can lag:** a thread that has not started yet can still carry the parent's name.
+  Its allowed set is the inherited one, which is what is checked.
+
+**At the end, untimed.** The surviving threads are read again, after the read that
+returns 0 and before exit.
+
+**Checks:**
+- the child asserts w + 3 threads at spawn;
+- the parent asserts that every recorded thread's allowed set is non-empty and ⊆ ALLOC;
+- the parent itself asserts its own affinity equals ALLOC.
+
+**Recorded:** the raw rows keep every snapshot. The summary reports confinement, the
+thread names seen, and the `psr` histogram per thread kind. Migrations are not counted
+(`/proc/*/sched` needs `CONFIG_SCHED_DEBUG`).
 
 ## 5. Corpora (order frozen)
 
@@ -430,4 +484,11 @@ Head chain in all four: {vpermq 1, vpshufb 2, vmovdqa 1, vpblendvb 1}.
 - **The one command:** `just bench-p74c-decoder LABEL` (→ `bench/p74c_decoder_run.sh`).
   It writes to the git-ignored `bench/results/p74c-decoder/LABEL/` and `LABEL.tar.gz`
   (`P74C_RESULTS_DIR` to override), with the input cache under `target/p74c-decoder/work`.
-- **`P74C_STOP_BEFORE_TIMING=1`** runs everything up to the timed run and stops.
+- **The harness self-test, before the timed run:** the whole trial path (children,
+  `wait4`, affinity checks, summary) runs on small files placed under the gated corpora's
+  names. Every time and CPU figure in it is a fixed synthetic value
+  (`P74C_SYNTHETIC_TIMES=1`). It proves the plumbing on the host and measures nothing.
+- **`P74C_STOP_BEFORE_TIMING=1`** runs everything up to the timed run and stops. It
+  writes to `LABEL.dry-run`, so the label stays free for the one timed run.
+- **The freeze record:** `2026-10-31-p74c-decoder/freeze.md` holds the hashes, the audits
+  and the dry run's evidence.
