@@ -32,11 +32,12 @@ COND = re.compile(r"^j(?!mp)[a-z]+$")
 def functions(binary):
     text = subprocess.check_output(
         ["objdump", "-d", "-C", "-Mintel", "--no-show-raw-insn", "-w", binary], text=True)
+    # Keyed by "name@address": legacy demangling gives both instantiations one name.
     funcs, cur = {}, None
     for line in text.splitlines():
         m = FUNC.match(line)
         if m:
-            cur = funcs.setdefault(m.group(2), [])
+            cur = funcs.setdefault(f"{m.group(2)}@{m.group(1).lstrip('0')}", [])
             continue
         m = LINE.match(line)
         if m and cur is not None:
@@ -48,8 +49,8 @@ def pick(funcs):
     """The four kernels by demangled name (legacy or v0 mangling)."""
     def named(pattern):
         return [k for k in funcs if re.search(pattern, k)]
-    free_plain = named(r"mtf::p74::avx2::mtf(::<true[^>]*>)?$")
-    free_cp = named(r"mtf::p74::avx2::mtf_checkpoints(::<true[^>]*>)?$")
+    free_plain = named(r"mtf::p74::avx2::mtf(::<true[^>]*>)?@")
+    free_cp = named(r"mtf::p74::avx2::mtf_checkpoints(::<true[^>]*>)?@")
     comb = named(r"mtf::p74_c::combined")
     assert len(free_plain) == 1 and len(free_cp) == 1, (free_plain, free_cp, "Free must be linked once")
     assert len(comb) == 2, comb

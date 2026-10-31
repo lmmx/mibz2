@@ -97,7 +97,11 @@ NOPs excluded) through the block holding P74's head update (`vpermq 0x4e`, two `
 
 Instruction-count differences are reported, not gated. [M] On rustc 1.97.0 (this
 preparation host): plain Free 37 / C 36 instructions, 6 / 6 branches, 0 / 0 RMW slots;
-checkpoints 36 / 37, 6 / 6, 2 / 1; all gates pass. The 1.90.0 result is the runner's.
+checkpoints 36 / 37, 6 / 6, 2 / 1; all gates pass. On rustc 1.90.0 (the pinned
+toolchain, this host's dry run of the runner): plain Free 37 / C 38, checkpoints 38 / 39 —
+the documented +1 / +1, from the same cycles as the manual listings — with 6 / 6
+branches, RMW slots 0 / 0 and 2 / 0, no YMM stack access, the same head chain and no
+monitor: all gates pass. The timing host's binary is audited again by the runner.
 
 ## 5. Schedule
 
