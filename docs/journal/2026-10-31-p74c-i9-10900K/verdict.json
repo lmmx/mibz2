@@ -1,0 +1,19 @@
+{
+ "calibrated": true,
+ "aa_rows_excluding_one": 1,
+ "aa_threshold": 7,
+ "primary": {
+  "wikidata-fitted": {
+   "T2_T0_upper95": 0.7978896862755658,
+   "noise": 0.058733016506714475,
+   "passes": true
+  },
+  "wikidata-heldout": {
+   "T2_T0_upper95": 0.8106192112806087,
+   "noise": 0.05977102529534739,
+   "passes": true
+  }
+ },
+ "controls_joint": false,
+ "adversarial_joint": false
+}

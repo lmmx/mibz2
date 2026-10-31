@@ -82,12 +82,22 @@ through the bypass. They are tested against the +1% limit:
   | records | 0.93–0.97 | 1.13–1.18 |
 
   On Zen 4, then, the protection comes from the σ bypass, not the online guard.
-- **Where the guard fires** (22 suite files, mixed, text), T2 is slower than Free. For
-  `rank-255` checkpoints on 9V74, T2/T0 is 0.446 against Free/T0 0.430.
-  - On every switching block measured, staying in P74 would have been faster.
-  - The run has no block that reaches the guard and on which P74 is slower than the
-    shipped kernel. The guard's protective value is therefore unobserved, and its cost
-    where it fires is a measured loss against Free.
+- **Where the guard fires**, the result depends on the block. *(Corrected on review: a
+  first version said staying in P74 was faster on every switching block. That is wrong
+  for the split files.)*
+  - **Split files on Zen 4: the guard protects.** These are low-rank prefixes with
+    high-rank suffixes, the case the guard was designed for. Across r2 and r3:
+
+    | File | Free/T0 | T2/T0 |
+    |---|--:|--:|
+    | `split-q05` | 1.11–1.17 | 0.98–0.99 |
+    | `split-q25` | 1.02–1.07 | 0.91–0.92 |
+
+  - **The 7763:** P74 alone isn't slower on the split files (Free/T0 0.88–0.97), so
+    nothing needs protecting there.
+  - **Run-heavy hug and rank files: the guard costs.** It switches, but staying in P74
+    would have been faster. For example, `rank-255` checkpoints on 9V74: T2/T0 0.446
+    against Free/T0 0.430.
 - **The suite's "rank" and "hug" files** are run-heavy. P74 wins on them by 2–3× (Free/T0
   0.34–0.50 on 9V74, 0.62–0.74 on 7763), so they don't stress P74.
 
@@ -97,8 +107,8 @@ through the bypass. They are tested against the +1% limit:
    checkpoints and −27% to −28% on plain, out of sample (held-out) as well as in sample.
 2. **The registered negative** comes from about 1% dispatch overhead on small bypassed
    blocks, not from P74's kernel or the guard.
-3. **Within the tested inputs,** the σ bypass alone provides all the observed protection,
-   and the guard only costs.
+3. **Within the tested inputs,** the σ bypass protects the controls. The guard protects
+   on within-block shifts (the Zen 4 split files) and costs on run-heavy files.
 
    A policy change, such as dropping the guard or changing what the bypass does on small
    blocks, would be a new hypothesis. It would need its own pre-registration and new

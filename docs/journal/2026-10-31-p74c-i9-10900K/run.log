@@ -1,0 +1,73 @@
+p74c: label=i9-10900K head=8b6caf1e48eb4dc605abe3eb97de680891340ff9 pin=3b666e64ed6c72515a655acddeb02e29277b7f52 out=/home/louis/p74c-results/i9-10900K
+p74c: harness sources match the frozen hashes
+info: syncing channel updates for 1.90.0-x86_64-unknown-linux-gnu
+info: latest update on 2025-09-18 for version 1.90.0 (1159e78c4 2025-09-14)
+info: downloading 3 components
+
+  1.90.0-x86_64-unknown-linux-gnu installed - rustc 1.90.0 (1159e78c4 2025-09-14)
+
+info: checking for self-update (current version: 1.29.1)
+info: downloading self-update (new version: 1.29.2)
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling libm v0.2.16
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling pkg-config v0.3.34
+   Compiling thiserror v2.0.21
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling mibz2 v0.2.1 (/home/louis/dev/mibz2)
+   Compiling cc v1.10.0
+   Compiling syn v3.0.9
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 13.21s
+From github.com:lmmx/mibz2
+ * branch            bench-data -> FETCH_HEAD
+p74c: 33 corpora match the frozen SHA-256
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling libm v0.2.16
+   Compiling thiserror v2.0.21
+   Compiling libc v0.2.191
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling syn v3.0.9
+   Compiling fearless_simd v1.2.0
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+   Compiling mibz2 v0.2.1 (/home/louis/dev/mibz2)
+    Finished `release` profile [optimized + debuginfo] target(s) in 21.65s
+     Running unittests src/lib.rs (target/release/deps/mibz2-456c1472b6736fb7)
+{"files": 27, "failures": []}
+plain: Free 37 instr/6 jcc/0 rmw; C 38/6/0; gates {'G1_branches': True, 'G2_no_ymm_stack': True, 'G3_rmw': True, 'G3_head_chain': True, 'G4_monitor_off_cycle': True}
+checkpoints: Free 38 instr/6 jcc/2 rmw; C 39/6/0; gates {'G1_branches': True, 'G2_no_ymm_stack': True, 'G3_rmw': True, 'G3_head_chain': True, 'G4_monitor_off_cycle': True}
+STRUCTURAL AUDIT PASS
+p74c: timing CPU 1 (siblings 1,11)
+{"manifest": "/home/louis/p74c-results/i9-10900K/manifest.json", "sha256": "6c3b5d5c76dd3f51efa858b43dd02ef583954c3e5465d69b8aadba2bb5af9e75", "corpora": 33}
+{
+ "calibrated": true,
+ "aa_rows_excluding_one": 1,
+ "aa_threshold": 7,
+ "primary": {
+  "wikidata-fitted": {
+   "T2_T0_upper95": 0.7978896862755658,
+   "noise": 0.058733016506714475,
+   "passes": true
+  },
+  "wikidata-heldout": {
+   "T2_T0_upper95": 0.8106192112806087,
+   "noise": 0.05977102529534739,
+   "passes": true
+  }
+ },
+ "controls_joint": false,
+ "adversarial_joint": false
+}
