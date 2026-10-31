@@ -1,0 +1,82 @@
+p74c-decoder: label=gha-ubuntu-24.04-exploratory-v1.1-r3-41198123877 head=c4f5fa7044b690d2b4b5026aa573ecdc258b66ed pin=6d22929ac168c87666043ba83465752980021161 out=/home/runner/work/_temp/p74c-decoder-results/gha-ubuntu-24.04-exploratory-v1.1-r3-41198123877 dry_run=0
+p74c-decoder: 25 harness sources match the frozen hashes
+info: syncing channel updates for 1.90.0-x86_64-unknown-linux-gnu
+info: latest update on 2025-09-18 for version 1.90.0 (1159e78c4 2025-09-14)
+info: downloading 3 components
+
+  1.90.0-x86_64-unknown-linux-gnu installed - rustc 1.90.0 (1159e78c4 2025-09-14)
+
+p74c-decoder: CARGO_TARGET_DIR=/home/runner/work/mibz2/mibz2/target; rustc 1.90.0 (1159e78c4 2025-09-14)
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded thiserror-impl v2.0.21
+  Downloaded unicode-ident v1.0.27
+  Downloaded proc-macro2 v1.0.107
+  Downloaded pbz2-core v0.2.0
+  Downloaded bytemuck v1.25.2
+  Downloaded find-msvc-tools v0.1.15
+  Downloaded libm v0.2.16
+  Downloaded bzip2 v0.4.4
+  Downloaded cc v1.10.0
+  Downloaded thiserror v2.0.21
+  Downloaded shlex v2.0.1
+  Downloaded quote v1.0.47
+  Downloaded pkg-config v0.3.34
+  Downloaded pbz2 v0.2.0
+  Downloaded syn v3.0.9
+  Downloaded fearless_simd v1.2.0
+  Downloaded bzip2-sys v0.1.13+1.0.8
+  Downloaded libc v0.2.191
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling shlex v2.0.1
+   Compiling libm v0.2.16
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.10.0
+   Compiling thiserror v2.0.21
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling syn v3.0.9
+   Compiling bytemuck v1.25.2
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling fearless_simd v1.2.0
+   Compiling mibz2 v0.2.1 (/home/runner/work/mibz2/mibz2)
+   Compiling thiserror-impl v2.0.21
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+   Compiling bzip2 v0.4.4
+    Finished `release` profile [optimized + debuginfo] target(s) in 22.70s
+From https://github.com/lmmx/mibz2
+ * branch            bench-data -> FETCH_HEAD
+fetch: x00 at 6468043581: 18dcea8b845d634a79e047a9eb52c449c494d98413e05b959d3c934db97d6d22
+fetch: x01 at 15092101691: 5bb88c606354832669e2930c0f665c8865d52510f3ca4234aea824bfcfdb0ba6
+fetch: x02 at 23716159800: b08d4e8601f8726752d78c2e4f8c52da713450d4093127cf6bb3febd6fcef9d2
+fetch: x03 at 32340217909: b80a2b8b621470169758171d8d5f3c79357931a9a58493cfb87b344ce8ed1228
+fetch: x04 at 40964276018: 67deb9de775f6076218adc6b0f7465afc02302c2dac44831a0642a3c348c590c
+fetch: x05 at 49588334128: f33268a4982c87ebc92acd9a6e65e61656bfd866566925cb80ccbc970a04709e
+fetch: x06 at 58212392237: 2d751e527859a4ae5e978f72c98ee2facb428400d4f3718c5bfbadac29434831
+fetch: x07 at 66836450346: 88d000afe5d373921fc5aa588304f0cf95003ad296eac88cf3085f5f69785463
+fetch: x08 at 75460508455: 73dc94cdf050653e8081eba538854cac92e1b4e3b150e86a4995d5fbdf548d99
+fetch: x09 at 84084566565: 6a80b79841df2766d1b9a4ba5fdee35d5c1a12a7b3b362d6d95f6d646e92c489
+fetch: x10 at 92708624674: 038d5e004d1913ed68095c5c08d322ac4b72aba1eaed8b78e4160b0a7574ac23
+fetch: x11 at 101332682783: 74cb6b870275e5990210fdd45bab4da57297b45cee3bbf33c9e4e25d9f170621
+fetch: d00 at 4315233985: d18e5fdb8c62d0f88b675792400a724e63ed9acdb066418865232e895d6a8d35
+fetch: d01 at 12945701956: 1c5f95e476fa75c20bc2c851d5859ebf872a789d54a4133a7318a737fb33f341
+fetch: d02 at 21576169927: fdeeece0d748018d3c6a6181f5a002c6d691cdd37ca91fffbafaaa4cc362f311
+fetch: d03 at 30206637898: 316b4ff073dd3b6df716052f49d7a4e49553a24b23f0973ffe1c917ecd6551f4
+fetch: d04 at 38837105869: db63631fcfdf3931b10db29f8ba7b561526f65918a89f163fa4cdbd257f2e5b8
+fetch: d05 at 47467573840: 28e768be80ed3c586f02a012a5b40d0b7e154670ffdb4c9356b98a0c8cfcceaf
+fetch: d06 at 56098041812: d42380ff1c24ac0e1fc6b2caed5030760a986b3d1ca7bfe93c0fd844ed02197c
+fetch: d07 at 64728509783: 7b01785f0bc84bb81a020b890ac11b93a0cab18bfc73d29ae281cf1ed05da234
+fetch: d08 at 73358977754: bfd50cf980b2ee8cefc6ffd65cb33d572aa895ba72b4259ec98e7b957cda8a88
+fetch: d09 at 81989445725: 744d5b2c376b0bb5836c148a68b2a6bdfdc139a40bdf06114c8105223a57bbcc
+fetch: d10 at 90619913696: 4ff35590fa356a09cca858790957daa00fb2e817f707faf3f509f2b6cae562e4
+fetch: d11 at 99250381667: 3f4173b86106519998798324e5dde1c30cc995bdd2969f795c9af1480b710fd6
+Traceback (most recent call last):
+  File "/home/runner/work/mibz2/mibz2/bench/p74c_decoder.py", line 466, in <module>
+    dict(fetch=fetch, allocation=allocation, manifest=manifest, freeze=freeze, summary=summary)[a.mode](a)
+  File "/home/runner/work/mibz2/mibz2/bench/p74c_decoder.py", line 128, in manifest
+    assert sha(p) == c["compressed_sha256"], f"{name}: compressed hash"
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: text: compressed hash

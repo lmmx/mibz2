@@ -1,0 +1,111 @@
+{
+ "overall": "NOT APPLICABLE (no w = 4: exploratory host)",
+ "correctness": {
+  "all_sha_ok": true,
+  "all_workers_plan": true,
+  "all_threads_within_allocation": true,
+  "selections_match_arm": true
+ },
+ "gates": {
+  "2_secondary_flags": {
+   "wikidata-fitted": {
+    "by_w": {
+     "1": {
+      "ratio": 1.0470987101073481,
+      "lower95": 1.0397672243580691,
+      "upper95": 1.0544818907764444
+     },
+     "2": {
+      "ratio": 1.0447676185326578,
+      "lower95": 1.0317443944183342,
+      "upper95": 1.0579552286782985
+     }
+    },
+    "material_deterioration": null
+   },
+   "wikidata-heldout": {
+    "by_w": {
+     "1": {
+      "ratio": 1.0404411829031426,
+      "lower95": 1.0271764509818313,
+      "upper95": 1.053877212669898
+     },
+     "2": {
+      "ratio": 1.0371464629790048,
+      "lower95": 1.0266126262401143,
+      "upper95": 1.047788385001093
+     }
+    },
+    "material_deterioration": null
+   }
+  },
+  "3_controls": {
+   "rows": {
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "records w=1": "PASS",
+    "records w=2": "PASS",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "INCONCLUSIVE",
+    "text w=1": "PASS",
+    "text w=2": "PASS"
+   },
+   "outcome": "INCONCLUSIVE"
+  },
+  "5_rss": {
+   "rows": {
+    "wikidata-20261026 w=1": "PASS",
+    "wikidata-20261026 w=2": "PASS",
+    "wikidata-fitted w=1": "PASS",
+    "wikidata-fitted w=2": "PASS",
+    "wikidata-heldout w=1": "PASS",
+    "wikidata-heldout w=2": "PASS",
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "records w=1": "PASS",
+    "records w=2": "PASS",
+    "mixed-independent w=1": "INCONCLUSIVE",
+    "mixed-independent w=2": "NEGATIVE",
+    "text w=1": "INCONCLUSIVE",
+    "text w=2": "PASS"
+   },
+   "outcome": "NEGATIVE"
+  },
+  "6_aa": {
+   "rows": 28,
+   "excluding_one": 0,
+   "threshold": 4,
+   "outcome": "PASS"
+  }
+ },
+ "host": {
+  "0": {
+   "role": "allocated",
+   "ticks": 71271,
+   "busy": 0.6010719647542478,
+   "irq": 0.00035077380701828236,
+   "steal": 0.0
+  },
+  "1": {
+   "role": "idle sibling",
+   "ticks": 71819,
+   "busy": 0.003856918085743327,
+   "irq": 0.0010303680084657264,
+   "steal": 0.0
+  },
+  "2": {
+   "role": "allocated",
+   "ticks": 71296,
+   "busy": 0.5858252917414721,
+   "irq": 9.81822262118492e-05,
+   "steal": 0.0
+  },
+  "3": {
+   "role": "idle sibling",
+   "ticks": 71770,
+   "busy": 0.0031489480284241328,
+   "irq": 5.573359342343598e-05,
+   "steal": 0.0
+  }
+ }
+}

@@ -1,0 +1,76 @@
+{
+ "label": "gha-ubuntu-24.04-exploratory-v1.1-r2-41198956443",
+ "allocation": {
+  "alloc": [
+   0,
+   2
+  ],
+  "idle_siblings": [
+   1,
+   3
+  ],
+  "physical_cores_allowed": 2,
+  "cores": [
+   [
+    2,
+    3
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "includes_cpu0_core": true,
+  "smt": true
+ },
+ "cpus": {
+  "0": {
+   "siblings": "0-1",
+   "governor": "schedutil",
+   "driver": "intel_cpufreq",
+   "cur_khz": "2997940",
+   "max_khz": "2300000"
+  },
+  "2": {
+   "siblings": "2-3",
+   "governor": "schedutil",
+   "driver": "intel_cpufreq",
+   "cur_khz": "2924998",
+   "max_khz": "2300000"
+  },
+  "1": {
+   "siblings": "0-1",
+   "governor": "schedutil",
+   "driver": "intel_cpufreq",
+   "cur_khz": "2999607",
+   "max_khz": "2300000"
+  },
+  "3": {
+   "siblings": "2-3",
+   "governor": "schedutil",
+   "driver": "intel_cpufreq",
+   "cur_khz": "2987112",
+   "max_khz": "2300000"
+  }
+ },
+ "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 57 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              INTEL(R) XEON(R) PLATINUM 8573C\nCPU family:                              6\nModel:                                   207\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                2\nCPU(s) scaling MHz:                      131%\nCPU max MHz:                             2300.0000\nCPU min MHz:                             800.0000\nBogoMIPS:                                4599.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch tpr_shadow ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves vnmi avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq la57 rdpid fsrm arch_capabilities\nVirtualization:                          VT-x\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               96 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                4 MiB (2 instances)\nL3 cache:                                260 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Vulnerable\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Retpoline\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Vmscape:                   Not affected",
+ "topology": "CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE    MAXMHZ   MINMHZ       MHZ\n  0    0      0    0 0:0:0:0          yes 2300.0000 800.0000 2997.9399\n  1    0      0    0 0:0:0:0          yes 2300.0000 800.0000 2997.1609\n  2    0      0    1 1:1:1:0          yes 2300.0000 800.0000 2924.9980\n  3    0      0    1 1:1:1:0          yes 2300.0000 800.0000 2999.4880",
+ "smt_control": "on",
+ "intel_no_turbo": "0",
+ "boost": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpufreq/boost'",
+ "cgroup": "/system.slice/hosted-compute-agent.service",
+ "cpu_max": "max 100000",
+ "root_cpu_max": "unavailable: [Errno 2] No such file or directory: '/sys/fs/cgroup/cpu.max'",
+ "kernel": {
+  "system": "Linux",
+  "node": "runnervm48cm3",
+  "release": "7.0.0-1017-azure",
+  "version": "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+  "machine": "x86_64",
+  "processor": "x86_64"
+ },
+ "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8",
+ "head": "3870c1225d4cfb1a87ade57651eb1165ce451692",
+ "loadavg": "1.92 0.94 0.38 1/252 18787",
+ "ps": "PID PSR %CPU COMMAND\n  18777   2 40.0 python3\n   2174   1  1.5 Runner.Worker\n   2085   3  0.6 provjobd2754467\n   2155   0  0.5 Runner.Listener\n      1   3  0.5 systemd\n   1498   0  0.2 python3\n     15   3  0.1 pr/ttyS0\n   1108   2  0.0 containerd\n   1049   3  0.0 python3\n    163   1  0.0 systemd-journal\n   1340   2  0.0 dockerd\n    598   0  0.0 haveged\n     12   0  0.0 kworker/u16:0-events_power_efficient\n   1214   3  0.0 systemd\n    232   1  0.0 systemd-udevd\n   1030   3  0.0 php-fpm8.3\n   1144   0  0.0 chronyd\n   2070   1  0.0 hosted-compute-\n   1023   0  0.0 dbus-daemon\n     49   1  0.0 kworker/u16:2-events_unbound\n    559   3  0.0 systemd-resolve\n     16   1  0.0 rcu_sched\n   1027   0  0.0 networkd-dispat\n    408   0  0.0 hv_kvp_daemon\n     60   1  0.0 kworker/1:1-events\n   1042   3  0.0 systemd-logind\n     93   0  0.0 kworker/u16:4-events_unbound\n     88   2  0.0 kworker/u16:3-events_power_efficient\n   1219   3  0.0 kworker/3:3-events\n   1237   0  0.0 ModemManager\n   1224   0  0.0 rsyslogd\n   1048   1  0.0 udisksd\n   1035   0  0.0 polkitd\n     11   0  0.0 kworker/0:1-events\n    226   0  0.0 multipathd\n     27   2  0.0 kworker/2:0-cgwb_release\n    382   0  0.0 kworker/0:3-events\n    740   3  0.0 systemd-network\n    205   2  0.0 kworker/2:3-events\n    110   2  0.0 jbd2/sda1-8\n   2337   2  0.0 bash\n     96   2  0.0 hv_balloon\n     95   2  0.0 kworker/u16:6-events_power_efficient\n     52   2  0.0 kcompactd0\n     14   0  0.0 ksoftirqd/0\n      2   3  0.0 kthreadd\n      3   1  0.0 pool_workqueue_release\n      4   0  0.0 kworker/R-rcu_gp\n      5   0  0.0 kworker/R-sync_wq\n      6   0  0.0 kworker/R-kvfree_rcu_reclaim\n      7   0  0.0 kworker/R-slub_flushwq\n      8   0  0.0 kworker/R-netns\n     10   0  0.0 kworker/0:0H-kblockd\n     13   0  0.0 kworker/R-mm_percpu_wq\n     17   0  0.0 rcu_exp_par_gp_kthread_worker/0\n     18   2  0.0 rcu_exp_gp_kthread_worker\n     19   0  0.0 migration/0\n     20   0  0.0 kprobe-optimizer\n     21   0  0.0 idle_inject/0\n     22   0  0.0 cpuhp/0\n     23   2  0.0 cpuhp/2\n     24   2  0.0 idle_inject/2\n     25   2  0.0 migration/2\n     26   2  0.0 ksoftirqd/2\n     28   2  0.0 kworker/2:0H-kblockd\n     29   1  0.0 cpuhp/1\n     30   1  0.0 idle_inject/1\n     31   1  0.0 migration/1\n     32   1  0.0 ksoftirqd/1\n     34   1  0.0 kworker/1:0H-kblockd\n     35   3  0.0 cpuhp/3\n     36   3  0.0 idle_inject/3\n     37   3  0.0 migration/3\n     38   3  0.0 ksoftirqd/3\n     40   3  0.0 kworker/3:0H-kblockd\n     41   3  0.0 kdevtmpfs\n     42   3  0.0 kworker/R-inet_frag_wq\n     43   2  0.0 rcu_tasks_kthread\n     44   2  0.0 rcu_tasks_rude_kthread\n     45   3  0.0 kauditd\n     46   2  0.0 khungtaskd\n     48   3  0.0 oom_reaper\n     51   2  0.0 kworker/R-writeback\n     53   2  0.0 ksmd\n     54   2  0.0 khugepaged\n     55   2  0.0 kworker/R-kblockd\n     56   2  0.0 kworker/R-blkcg_punt_bio\n     57   2  0.0 kworker/R-kintegrityd\n     59   0  0.0 irq/9-acpi\n     61   2  0.0 kworker/R-tpm_dev_wq\n     62   2  0.0 kworker/R-ata_sff\n     63   2  0.0 kworker/R-md_bitmap\n     64   2  0.0 kworker/R-md_llbitmap_io\n     65   2  0.0 kworker/R-md_llbitmap_unplug\n     66   2  0.0 kworker/R-edac-poller\n     67   3  0.0 kworker/R-hv_vmbus_con\n     68   3  0.0 kworker/R-hv_vmbus_rescind\n     69   3  0.0 kworker/R-hv_pri_chan\n     70   3  0.0 kworker/R-hv_sub_chan\n     71   3  0.0 kworker/R-devfreq_wq\n     72   3  0.0 watchdogd\n     73   0  0.0 kworker/R-quota_events_unbound\n     74   3  0.0 kswapd0\n     75   2  0.0 ecryptfs-kthread\n     76   2  0.0 kworker/R-kthrotld\n     77   0  0.0 kworker/R-acpi_thermal_pm\n     78   1  0.0 kworker/R-nfit\n     79   2  0.0 scsi_eh_1\n     80   2  0.0 scsi_eh_0\n     81   2  0.0 kworker/R-nvme-wq\n     82   2  0.0 kworker/R-scsi_tmf_0\n     83   3  0.0 kworker/R-scsi_tmf_1\n     84   3  0.0 kworker/R-nvme-reset-wq\n     85   3  0.0 kworker/R-nvme-delete-wq\n     86   1  0.0 kworker/R-nvme-auth-wq\n     90   3  0.0 kworker/R-mld\n     91   2  0.0 kworker/R-ipv6_addrconf\n     92   3  0.0 kworker/R-kstrp\n     94   3  0.0 kworker/u16:5\n     98   3  0.0 kworker/u17:0\n    109   1  0.0 kworker/R-charger_manager\n    111   3  0.0 kworker/R-ext4-rsv-conversion\n    140   0  0.0 kworker/0:1H-kblockd\n    193   3  0.0 kworker/3:2-inode_switch_wbs\n    196   0  0.0 kworker/R-kmpathd\n    198   1  0.0 kworker/R-kmpath_handlerd\n    231   3  0.0 kworker/3:1H-kblockd\n    234   1  0.0 kworker/1:1H-kblockd\n    245   3  0.0 psimon\n    303   1  0.0 card1-crtc0\n    381   3  0.0 kworker/R-mana_per_port_queue_reset_wq\n    393   2  0.0 kworker/R-ib-comp-wq\n    394   2  0.0 kworker/R-ib-comp-unb-wq\n    395   0  0.0 kworker/R-ib_mcast\n    396   3  0.0 kworker/R-ib_nl_sa_wq\n    397   3  0.0 kworker/R-ib_mad1\n    416   2  0.0 kworker/2:1H-kblockd\n    424   0  0.0 jbd2/sda16-8\n    425   1  0.0 kworker/R-ext4-rsv-conversion\n    657   1  0.0 kworker/R-cfg80211\n   1070   3  0.0 cron\n   1099   1  0.0 kworker/1:4-mm_percpu_wq\n   1132   2  0.0 agetty\n   1150   2  0.0 chronyd\n   1152   2  0.0 agetty\n   1225   3  0.0 kworker/3:4-events\n   1234   1  0.0 (sd-pam)\n   1346   0  0.0 php-fpm8.3\n   1348   0  0.0 php-fpm8.3\n   1383   1  0.0 kworker/R-tls-strp\n   2068   3  0.0 psimon\n   2083   2  0.0 sudo\n   2333   2  0.0 bash\n   2334   1  0.0 just\n   2336   2  0.0 sh\n   2345   3  0.0 tee\n   3029   2  0.0 kworker/2:1-inode_switch_wbs\n   3521   1  0.0 kworker/1:0-events\n   3573   2  0.0 kworker/2:2-events\n  10647   0  0.0 kworker/0:0-mm_percpu_wq\n  18788   1  0.0 ps"
+}
