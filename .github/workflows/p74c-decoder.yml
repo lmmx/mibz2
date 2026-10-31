@@ -26,22 +26,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # the pinned checkout: bench/p74c-decoder-pin's child on research/p74c-decoder
-          ref: 4acf46fc85640e8139e968930fe0469b9daea67c
+          ref: c4f5fa7044b690d2b4b5026aa573ecdc258b66ed
           fetch-depth: 0
       - uses: extractions/setup-just@v2
       - name: Check the pinned checkout
-        run: test "$(git rev-parse HEAD)" = 4acf46fc85640e8139e968930fe0469b9daea67c
+        run: test "$(git rev-parse HEAD)" = c4f5fa7044b690d2b4b5026aa573ecdc258b66ed
       - name: Run the trial (exploratory; workers 1, 2 on the runner's 2 physical cores)
         env:
           P74C_RESULTS_DIR: ${{ runner.temp }}/p74c-decoder-results
           P74C_WORK: ${{ runner.temp }}/p74c-decoder-work
           P74C_WORKERS: "1,2"
-        run: just bench-p74c-decoder gha-ubuntu-24.04-exploratory-r${{ matrix.replicate }}-${{ github.run_id }}
+        run: just bench-p74c-decoder gha-ubuntu-24.04-exploratory-v1.1-r${{ matrix.replicate }}-${{ github.run_id }}
       - name: Upload the results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: p74c-decoder-exploratory-r${{ matrix.replicate }}-${{ github.run_id }}
+          name: p74c-decoder-exploratory-v1.1-r${{ matrix.replicate }}-${{ github.run_id }}
           path: ${{ runner.temp }}/p74c-decoder-results/
           retention-days: 30
           if-no-files-found: warn
