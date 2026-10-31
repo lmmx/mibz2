@@ -1,0 +1,80 @@
+p74c: label=gha-ubuntu-24.04-r2-41190706676 head=8b6caf1e48eb4dc605abe3eb97de680891340ff9 pin=3b666e64ed6c72515a655acddeb02e29277b7f52 out=/home/runner/work/_temp/p74c-results/gha-ubuntu-24.04-r2-41190706676
+p74c: harness sources match the frozen hashes
+info: syncing channel updates for 1.90.0-x86_64-unknown-linux-gnu
+info: latest update on 2025-09-18 for version 1.90.0 (1159e78c4 2025-09-14)
+info: downloading 3 components
+
+  1.90.0-x86_64-unknown-linux-gnu installed - rustc 1.90.0 (1159e78c4 2025-09-14)
+
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded find-msvc-tools v0.1.15
+  Downloaded bzip2 v0.4.4
+  Downloaded thiserror-impl v2.0.21
+  Downloaded unicode-ident v1.0.27
+  Downloaded proc-macro2 v1.0.107
+  Downloaded pbz2-core v0.2.0
+  Downloaded shlex v2.0.1
+  Downloaded libm v0.2.16
+  Downloaded quote v1.0.47
+  Downloaded cc v1.10.0
+  Downloaded pkg-config v0.3.34
+  Downloaded thiserror v2.0.21
+  Downloaded bytemuck v1.25.2
+  Downloaded syn v3.0.9
+  Downloaded fearless_simd v1.2.0
+  Downloaded bzip2-sys v0.1.13+1.0.8
+  Downloaded libc v0.2.191
+  Downloaded pbz2 v0.2.0
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling libm v0.2.16
+   Compiling cc v1.10.0
+   Compiling thiserror v2.0.21
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling syn v3.0.9
+   Compiling bytemuck v1.25.2
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling mibz2 v0.2.1 (/home/runner/work/mibz2/mibz2)
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 16.78s
+From https://github.com/lmmx/mibz2
+ * branch            bench-data -> FETCH_HEAD
+p74c: 33 corpora match the frozen SHA-256
+   Compiling mibz2 v0.2.1 (/home/runner/work/mibz2/mibz2)
+    Finished `release` profile [optimized + debuginfo] target(s) in 13.14s
+     Running unittests src/lib.rs (target/release/deps/mibz2-b04643a34f3a8e25)
+{"files": 27, "failures": []}
+plain: Free 37 instr/6 jcc/0 rmw; C 38/6/0; gates {'G1_branches': True, 'G2_no_ymm_stack': True, 'G3_rmw': True, 'G3_head_chain': True, 'G4_monitor_off_cycle': True}
+checkpoints: Free 38 instr/6 jcc/2 rmw; C 39/6/0; gates {'G1_branches': True, 'G2_no_ymm_stack': True, 'G3_rmw': True, 'G3_head_chain': True, 'G4_monitor_off_cycle': True}
+STRUCTURAL AUDIT PASS
+p74c: timing CPU 2 (siblings 2-3)
+{"manifest": "/home/runner/work/_temp/p74c-results/gha-ubuntu-24.04-r2-41190706676/manifest.json", "sha256": "3d8d3f62b5957de5f207fd643eaf05c9d8007d109a6e75b5d5a390784d9378f7", "corpora": 33}
+{
+ "calibrated": true,
+ "aa_rows_excluding_one": 2,
+ "aa_threshold": 7,
+ "primary": {
+  "wikidata-fitted": {
+   "T2_T0_upper95": 0.7481585556302293,
+   "noise": 0.027099449771288642,
+   "passes": true
+  },
+  "wikidata-heldout": {
+   "T2_T0_upper95": 0.7608142507823143,
+   "noise": 0.03281093901605203,
+   "passes": true
+  }
+ },
+ "controls_joint": true,
+ "adversarial_joint": false
+}
+p74c: done: /home/runner/work/_temp/p74c-results/gha-ubuntu-24.04-r2-41190706676.tar.gz
