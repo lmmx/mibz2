@@ -341,7 +341,7 @@
   "tests/common/mod.rs": "3aeb98175100dd760d5b3c16ac617be78e44ce9e0ec459bd2f7c4a6b85cdc491",
   "bench/p74_experiment.py": "66372ecf422a6cfd7a175e93f97571ae1eb13eec8bda211be6b51404d7476fdc",
   "bench/p74c_asm_audit.py": "81583eb35e91807725dc05034b38af4241ee943e05253068d31b34031c6b5ff7",
-  "bench/p74c_run.sh": "3b39f90531639d18157ce7fa2c9acbc7d5826447bf8657586ed2f41be281b9aa",
+  "bench/p74c_run.sh": "e0dc7001cdbb93a07382a19318a2e7e440a7482bf0002bb005b98c86115bec9d",
   ".just/bench.just": "10961632050ad3c08d4ff83e6530da9df856ae4246b0e7771d1a46bf69bb3881",
   ".github/workflows/p74c-validation.yml": "20270319f75bfa3de92a1b8ffac760fdbb9bb3be30b664ca77cb825cb97217f1",
   "bench/wikidata.json": "42cec876c3a424b8e81a1de062f38b8eb8488908b4c71c3e6fed2c43231445f5",

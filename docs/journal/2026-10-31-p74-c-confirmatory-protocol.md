@@ -64,7 +64,9 @@ is unchanged from the [validation protocol](2026-10-31-p74-c-validation-protocol
 | 6 | `text` | descriptive | `c06f9591…edf882` | `--prepare` (this crate's sources at the pinned commit) |
 | 7–33 | adversarial suite, 27 files | own family | [suite.json](2026-10-31-p74-c-confirmatory/suite.json) | `examples/p74_suite.rs`, seeds recorded |
 
-Full hashes: `frozen.json`. Random, records and mixed reproduce the earlier frozen hashes
+Full hashes: `frozen.json`. **Correction to the held-out registration [M]:** its
+"235,800,351 MTF L bytes" is the *decoded* size; `--check` gives L = 235,773,776 bytes
+(25,475,087 symbols, 14,621 checkpoint records). The registration is copied unchanged. Random, records and mixed reproduce the earlier frozen hashes
 exactly [M]; text differs from the earlier manifest because the crate's sources changed,
 and is pinned here. The [suite record](2026-10-31-p74-c-confirmatory/suite.md) gives each
 file's design, symbols, suffix start, and its audited switch (consumed, output, F):

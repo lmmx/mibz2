@@ -47,6 +47,7 @@ if ! command -v rustup >/dev/null; then
     . "$HOME/.cargo/env"
 fi
 rustup toolchain list | grep -q '^1\.90\.0' || rustup toolchain install 1.90.0 --profile minimal
+export RUSTUP_TOOLCHAIN=1.90.0   # every rustc/cargo below, including the manifest's record
 cargo="cargo +1.90.0"
 $cargo build --locked --release --example p74_experiment --example p74_suite
 bin=$CARGO_TARGET_DIR/release/examples/p74_experiment
