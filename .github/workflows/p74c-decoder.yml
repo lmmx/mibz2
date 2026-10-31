@@ -1,0 +1,47 @@
+# The P74-C full-decoder trial on GitHub-hosted runners: EXPLORATORY replication of the
+# protocol in docs/journal/2026-10-31-p74c-decoder-protocol.md (shared virtual hosts, 2
+# physical cores: w = 1, 2 only; never pooled with the i9's registered run, and no overall
+# outcome or stop rule applies). Started by a push to research/p74c-decoder-ci-trigger
+# (a workflow_dispatch workflow must be on the default branch). Each job checks out the
+# pinned commit and runs `just bench-p74c-decoder` once.
+name: p74c-decoder
+
+on:
+  push:
+    branches: [research/p74c-decoder-ci-trigger]
+
+permissions:
+  contents: read
+
+jobs:
+  trial:
+    name: p74c-decoder exploratory r${{ matrix.replicate }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        replicate: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # the pinned checkout: bench/p74c-decoder-pin's child on research/p74c-decoder
+          ref: 4acf46fc85640e8139e968930fe0469b9daea67c
+          fetch-depth: 0
+      - uses: extractions/setup-just@v2
+      - name: Check the pinned checkout
+        run: test "$(git rev-parse HEAD)" = 4acf46fc85640e8139e968930fe0469b9daea67c
+      - name: Run the trial (exploratory; workers 1, 2 on the runner's 2 physical cores)
+        env:
+          P74C_RESULTS_DIR: ${{ runner.temp }}/p74c-decoder-results
+          P74C_WORK: ${{ runner.temp }}/p74c-decoder-work
+          P74C_WORKERS: "1,2"
+        run: just bench-p74c-decoder gha-ubuntu-24.04-exploratory-r${{ matrix.replicate }}-${{ github.run_id }}
+      - name: Upload the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p74c-decoder-exploratory-r${{ matrix.replicate }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/p74c-decoder-results/
+          retention-days: 30
+          if-no-files-found: warn
