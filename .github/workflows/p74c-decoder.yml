@@ -26,22 +26,25 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # the pinned checkout: bench/p74c-decoder-pin's child on research/p74c-decoder
-          ref: 3870c1225d4cfb1a87ade57651eb1165ce451692
+          ref: 33e0618b1e70190f4e8390eb69ebe2778142fc77
           fetch-depth: 0
       - uses: extractions/setup-just@v2
       - name: Check the pinned checkout
-        run: test "$(git rev-parse HEAD)" = 3870c1225d4cfb1a87ade57651eb1165ce451692
-      - name: Run the trial (exploratory; workers 1, 2 on the runner's 2 physical cores)
+        run: test "$(git rev-parse HEAD)" = 33e0618b1e70190f4e8390eb69ebe2778142fc77
+      - name: Harness v1.2 integrity (no timing; workers 1, 2 on the runner's 2 physical cores)
         env:
           P74C_RESULTS_DIR: ${{ runner.temp }}/p74c-decoder-results
           P74C_WORK: ${{ runner.temp }}/p74c-decoder-work
           P74C_WORKERS: "1,2"
-        run: just bench-p74c-decoder gha-ubuntu-24.04-exploratory-v1.1-r${{ matrix.replicate }}-${{ github.run_id }}
+          # harness v1.2 integrity check (amendment 2): every check and the synthetic
+          # self-test's full trial path, no timing
+          P74C_STOP_BEFORE_TIMING: "1"
+        run: just bench-p74c-decoder gha-ubuntu-24.04-integrity-v1.2-r${{ matrix.replicate }}-${{ github.run_id }}
       - name: Upload the results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: p74c-decoder-exploratory-v1.1-r${{ matrix.replicate }}-${{ github.run_id }}
+          name: p74c-decoder-integrity-v1.2-r${{ matrix.replicate }}-${{ github.run_id }}
           path: ${{ runner.temp }}/p74c-decoder-results/
           retention-days: 30
           if-no-files-found: warn
