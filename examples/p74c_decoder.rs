@@ -662,6 +662,26 @@ fn trial(args: &[String]) {
     }
 }
 
+/// `--check` decodes many times in one process. A joined thread can stay listed in
+/// /proc/self/task briefly after `join` returns (the kernel wakes the joiner when it
+/// clears the thread's tid, before it releases the task), and the next decode's snapshot
+/// would count it. Wait, bounded, until only main is listed. Untimed, `--check` only: a
+/// timed child makes one decode in a fresh process.
+fn settle_threads() {
+    let t0 = Instant::now();
+    loop {
+        let n = std::fs::read_dir("/proc/self/task").map_or(0, |d| d.count());
+        if n == 1 {
+            return;
+        }
+        assert!(
+            t0.elapsed() < std::time::Duration::from_secs(5),
+            "{n} threads listed 5 s after the last decode was joined"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
+}
+
 fn check(args: &[String]) {
     assert!(
         Kernels::detect().avx2,
@@ -681,6 +701,7 @@ fn check(args: &[String]) {
             let k = arm_kernels(arm);
             for &w in &workers {
                 plan_and_cpus(w);
+                settle_threads();
                 let d = decode_once(&z, w, k, c.bytes);
                 assert_eq!(d.out.len(), c.bytes, "{} arm {} w {w}", c.name, ARMS[arm]);
                 assert_eq!(
