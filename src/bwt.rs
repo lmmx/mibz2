@@ -104,6 +104,44 @@ impl InverseBwt for Segmented {
     }
 }
 
+/// `Segmented` with the constant-index room walk (`room_segments_unrolled`): a research
+/// kernel for the full-decoder trial (docs/journal/2026-10-31-walk-unroll-decoder-protocol.md),
+/// selected only through `StreamDecoder::with_inverse` and `decode_with`; no decoder default
+/// uses it. The same build, table, scratch and plain MTF (`wants_checkpoints` false) as
+/// `Segmented`; only the walk differs.
+#[doc(hidden)]
+#[derive(Default)]
+pub struct SegmentedUnrolled {
+    tt: TVector,
+    seg: SegScratch,
+}
+impl InverseBwt for SegmentedUnrolled {
+    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
+        build(ll, counts, &mut self.tt);
+        walk_segments_room_unrolled(&mut self.tt, orig_ptr, out, &mut self.seg);
+    }
+    #[cfg(any(test, feature = "trace"))]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        use crate::trace::Buffer;
+        let s = &self.seg;
+        let mut v = vec![Buffer::of("tt", &self.tt.0)];
+        if s.bufs.capacity() > 0 {
+            v.push(Buffer {
+                name: "seg.bufs",
+                len: s.bufs.iter().map(Vec::len).sum(),
+                cap: s.bufs.iter().map(Vec::capacity).sum(),
+            });
+            v.push(Buffer::of("seg.bufs.outer", &s.bufs));
+            v.push(Buffer::of("seg.starts", &s.starts));
+            v.push(Buffer::of("seg.next", &s.next));
+        }
+        if s.bitmap.capacity() > 0 {
+            v.push(Buffer::of("seg.bitmap", &s.bitmap));
+        }
+        v
+    }
+}
+
 /// The cooperative inverse BWT: a block's table built and walked by K cores that share it
 /// (`coop::build_fused`, then `coop::walk_room`, its threads kept for the kernel's life:
 /// the coop journal, docs/journal/2026-10-28-cooperative-inversion.md). N workers on this
@@ -786,6 +824,36 @@ pub fn walk_segments_room_parts(
         return false;
     }
     room_segments::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    true
+}
+
+/// `walk_segments_room` through the constant-index room walk (`SegmentedUnrolled`'s walk):
+/// the same short-block fallback to `walk` and the same assembly
+#[doc(hidden)]
+pub fn walk_segments_room_unrolled(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+) {
+    if walk_segments_room_unrolled_parts(tt, orig_ptr, out, s) {
+        s.assemble(out);
+    }
+}
+
+/// `walk_segments_room_parts` through the constant-index room walk
+#[doc(hidden)]
+pub fn walk_segments_room_unrolled_parts(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+) -> bool {
+    if tt.len() < MIN_SEGMENTED {
+        walk(tt, orig_ptr, out);
+        return false;
+    }
+    room_segments_unrolled::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
     true
 }
 
@@ -1943,6 +2011,49 @@ pub(crate) mod tests {
                     unrolled_case::<8, PF_L1>(&mut tt, orig_ptr, segments, &plain, &what);
                 }
             }
+        }
+    }
+
+    /// `SegmentedUnrolled` through the kernel trait equals `Segmented` and `Plain`, below
+    /// MIN_SEGMENTED (the plain walk) and above it, on one kernel kept from block to block
+    #[test]
+    fn segmented_unrolled_kernel_equals_segmented() {
+        let mut x = 0x5eed_u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        let (mut a, mut b, mut c) = (
+            Segmented::default(),
+            SegmentedUnrolled::default(),
+            Plain::default(),
+        );
+        let (mut oa, mut ob, mut oc) = (Vec::new(), Vec::new(), Vec::new());
+        for case in 0..40 {
+            let n = match case % 4 {
+                0 => 1 + rnd(1000) as usize,
+                1 => MIN_SEGMENTED - 1,
+                2 => MIN_SEGMENTED,
+                _ => MIN_SEGMENTED + rnd(300_000) as usize,
+            };
+            let alphabet = 1 + rnd(if case % 2 == 0 { 4 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 3) as u8).collect();
+            let mut counts = [0u32; 256];
+            for &v in &ll {
+                counts[v as usize] += 1;
+            }
+            let orig_ptr = rnd(n as u64) as u32;
+            a.invert(&ll, &counts, orig_ptr, &mut oa);
+            b.invert(&ll, &counts, orig_ptr, &mut ob);
+            c.invert(&ll, &counts, orig_ptr, &mut oc);
+            assert!(oa == oc, "case {case}: Segmented against Plain");
+            assert!(
+                ob == oa,
+                "case {case} n {n}: SegmentedUnrolled against Segmented"
+            );
+            assert!(!b.wants_checkpoints());
         }
     }
 
