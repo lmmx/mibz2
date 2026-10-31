@@ -1,0 +1,46 @@
+# The unrolled room walk's full-decoder trial on GitHub-hosted runners: EXPLORATORY
+# (docs/journal/2026-10-31-walk-unroll-decoder-protocol.md, amendment 1; shared virtual
+# hosts, 2 physical cores: w = 1, 2 only; never pooled with an i9 run). Started by a push
+# to research/walk-unroll-decoder-ci-trigger. Each job checks out the pinned commit and
+# runs `just bench-walk-decoder` once; the exact timed binary is in its results.
+name: walk-decoder
+
+on:
+  push:
+    branches: [research/walk-unroll-decoder-ci-trigger]
+
+permissions:
+  contents: read
+
+jobs:
+  trial:
+    name: walk-decoder exploratory r${{ matrix.replicate }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        replicate: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # the pinned checkout: bench/walk-decoder-pin's child on research/walk-unroll-decoder
+          ref: 14f731a2d738c6183ceea2a2a18031507b1272d1
+          fetch-depth: 0
+      - uses: extractions/setup-just@v2
+      - name: Check the pinned checkout
+        run: test "$(git rev-parse HEAD)" = 14f731a2d738c6183ceea2a2a18031507b1272d1
+      - name: Run the trial (exploratory; workers 1, 2 on the runner's 2 physical cores)
+        env:
+          WALK_RESULTS_DIR: ${{ runner.temp }}/walk-decoder-results
+          WALK_WORK: ${{ runner.temp }}/walk-decoder-work
+          WALK_WORKERS: "1,2"
+        run: just bench-walk-decoder gha-ubuntu-24.04-exploratory-r${{ matrix.replicate }}-${{ github.run_id }}
+      - name: Upload the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: walk-decoder-exploratory-r${{ matrix.replicate }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/walk-decoder-results/
+          retention-days: 30
+          if-no-files-found: warn
