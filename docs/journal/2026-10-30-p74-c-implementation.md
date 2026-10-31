@@ -1,5 +1,9 @@
 # P74-C implementation: correctness passes, generated-code gate blocked
 
+Follow-up: [the 2026-10-31 assembly correction](2026-10-31-p74-c-assembly-correction.md)
+reduces the residual instruction differences to +1 plain / +1 checkpoint. The results
+below describe the original prototype commit and are retained as historical evidence.
+
 This research branch is based on master `ae942bdb135569224473116ffaa706f1c9e389ed`.
 It implements the frozen Option C policy, but **is not ready for the frozen stage
 benchmark**: extra low-rank instructions remain after the one allowed codegen fix.

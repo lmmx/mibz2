@@ -124,7 +124,9 @@ unsafe fn combined<const CP: usize>(
     let (mut run, mut weight) = (0u32, 1u32);
     let out = ll.as_mut_ptr();
     let mut n = 0usize;
-    let mut result = Ok(());
+    // Only these two errors can arise in the loops. Construct the full ErrorKind
+    // after decoding so its heap-capable enum representation is not live there.
+    let mut error = 0u8;
     let mut next = CP;
     let mut syms = b.syms.iter();
     // Keep monitor-only state out of the low-rank loop's register allocation.
@@ -176,7 +178,7 @@ unsafe fn combined<const CP: usize>(
                     while let Some(&s) = syms.next() {
                         if s <= 1 {
                             if weight >= MAX_RUN_WEIGHT {
-                                result = Err(ErrorKind::RunTooLong);
+                                error = 1;
                                 break 'done;
                             }
                             run += (s as u32 + 1) * weight;
@@ -206,7 +208,7 @@ unsafe fn combined<const CP: usize>(
                     let Some(s) = at else { break 'done };
                     if run != 0 {
                         if n + run as usize > max {
-                            result = Err(ErrorKind::BlockTooLong);
+                            error = 2;
                             break 'done;
                         }
                         let c = s2u[$front as usize];
@@ -229,12 +231,12 @@ unsafe fn combined<const CP: usize>(
                             break 'done;
                         }
                         if n >= max {
-                            result = Err(ErrorKind::BlockTooLong);
+                            error = 2;
                             break 'done;
                         }
                     } else {
                         if n >= max {
-                            result = Err(ErrorKind::BlockTooLong);
+                            error = 2;
                             break 'done;
                         }
                         if CP != 0 {
@@ -297,12 +299,16 @@ unsafe fn combined<const CP: usize>(
         }
         decode_loop!(shipped_byte, *base, shipped_fill);
     }
-    if CP != 0 && result.is_ok() && n == next {
+    if CP != 0 && error == 0 && n == next {
         checkpoints.push(*counts);
     }
     // All published bytes are initialized and n <= max <= capacity, also on errors.
     ll.set_len(n);
-    result.map(|()| n)
+    match error {
+        0 => Ok(n),
+        1 => Err(ErrorKind::RunTooLong),
+        _ => Err(ErrorKind::BlockTooLong),
+    }
 }
 
 #[cfg(all(test, target_arch = "x86_64"))]

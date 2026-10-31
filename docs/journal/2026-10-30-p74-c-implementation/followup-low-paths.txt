@@ -1,0 +1,159 @@
+Free plain: 37 instructions, 6 conditional branches
+297a5: xor    ecx,ecx
+297b0: movzx  r14d,WORD PTR [rbx]
+297b4: add    rbx,0x2
+297b8: cmp    r14d,0x2
+297bc: jae    297e0 <mibz2::mtf::p74::avx2::mtf+0x170>
+297e0: test   ecx,ecx
+297e2: je     29821 <mibz2::mtf::p74::avx2::mtf+0x1b1>
+29821: mov    r13,rdi
+29824: jmp    29877 <mibz2::mtf::p74::avx2::mtf+0x207>
+29877: cmp    r14w,r11w
+2987b: je     299b3 <mibz2::mtf::p74::avx2::mtf+0x343>
+29881: cmp    r13,QWORD PTR [rsp+0x38]
+29886: jae    299e8 <mibz2::mtf::p74::avx2::mtf+0x378>
+2988c: mov    ecx,r14d
+2988f: dec    ecx
+29891: movzx  edx,cx
+29894: cmp    r14w,0x21
+29899: jae    298d0 <mibz2::mtf::p74::avx2::mtf+0x260>
+2989b: shl    edx,0x5
+2989e: vpermq ymm0,ymm2,0x4e
+298a4: vpshufb ymm1,ymm2,YMMWORD PTR [rdx+r8*1]
+298aa: vpshufb ymm0,ymm0,YMMWORD PTR [rdx+rsi*1]
+298b0: lea    rcx,[rip+0xfffffffffffe25c9]        # be80 <mibz2::mtf::p74::BLEND>
+298b7: vmovdqa ymm2,YMMWORD PTR [rdx+rcx*1]
+298bc: vpblendvb ymm2,ymm1,ymm0,ymm2
+298c2: vmovd  ecx,xmm2
+298c6: mov    r14,QWORD PTR [rsp+0x18]
+298cb: jmp    29970 <mibz2::mtf::p74::avx2::mtf+0x300>
+29970: movzx  ecx,cl
+29973: movzx  ecx,BYTE PTR [r12+rcx*1+0x18]
+29979: mov    rdx,QWORD PTR [rsp+0x30]
+2997e: inc    DWORD PTR [rdx+rcx*4]
+29981: mov    BYTE PTR [r10+r13*1],cl
+29985: inc    r13
+29988: mov    rdi,r13
+2998b: cmp    rbx,r15
+2998e: jne    297a5 <mibz2::mtf::p74::avx2::mtf+0x135>
+
+C plain attempt: 38 instructions, 6 conditional branches
+2a795: xor    eax,eax
+2a7a0: movzx  r12d,WORD PTR [r15]
+2a7a4: add    r15,0x2
+2a7a8: cmp    r12d,0x2
+2a7ac: jae    2a7d2 <mibz2::mtf::p74_c::combined+0x352>
+2a7d2: test   eax,eax
+2a7d4: je     2a813 <mibz2::mtf::p74_c::combined+0x393>
+2a813: mov    r14,rdi
+2a816: jmp    2a871 <mibz2::mtf::p74_c::combined+0x3f1>
+2a871: cmp    r12w,r8w
+2a875: je     2aa05 <mibz2::mtf::p74_c::combined+0x585>
+2a87b: cmp    r14,QWORD PTR [rsp+0x60]
+2a880: jae    2aa0f <mibz2::mtf::p74_c::combined+0x58f>
+2a886: mov    eax,r12d
+2a889: dec    eax
+2a88b: movzx  edx,ax
+2a88e: cmp    r12w,0x21
+2a893: jae    2a8d1 <mibz2::mtf::p74_c::combined+0x451>
+2a895: shl    edx,0x5
+2a898: vpermq ymm0,ymm2,0x4e
+2a89e: vpshufb ymm1,ymm2,YMMWORD PTR [rdx+rsi*1]
+2a8a4: lea    rax,[rip+0xfffffffffffe11d5]        # ba80 <mibz2::mtf::p74::SWAPPED>
+2a8ab: vpshufb ymm0,ymm0,YMMWORD PTR [rdx+rax*1]
+2a8b1: lea    rax,[rip+0xfffffffffffe15c8]        # be80 <mibz2::mtf::p74::BLEND>
+2a8b8: vmovdqa ymm2,YMMWORD PTR [rdx+rax*1]
+2a8bd: vpblendvb ymm2,ymm1,ymm0,ymm2
+2a8c3: vmovd  eax,xmm2
+2a8c7: mov    r12,QWORD PTR [rsp+0x38]
+2a8cc: jmp    2a9aa <mibz2::mtf::p74_c::combined+0x52a>
+2a9aa: movzx  eax,al
+2a9ad: movzx  eax,BYTE PTR [r9+rax*1+0x18]
+2a9b3: mov    rcx,QWORD PTR [rsp+0x58]
+2a9b8: inc    DWORD PTR [rcx+rax*4]
+2a9bb: mov    BYTE PTR [r11+r14*1],al
+2a9bf: inc    r14
+2a9c2: mov    rdi,r14
+2a9c5: cmp    r15,rbx
+2a9c8: jne    2a795 <mibz2::mtf::p74_c::combined+0x315>
+
+Free checkpoint: 38 instructions, 6 conditional branches
+29be9: xor    eax,eax
+29bf0: movzx  r15d,WORD PTR [r14]
+29bf4: add    r14,0x2
+29bf8: cmp    r15d,0x2
+29bfc: jae    29c30 <mibz2::mtf::p74::avx2::mtf_checkpoints+0x210>
+29c30: test   eax,eax
+29c32: mov    QWORD PTR [rsp+0x18],rcx
+29c37: mov    WORD PTR [rsp+0x6],di
+29c3c: je     29d1a <mibz2::mtf::p74::avx2::mtf_checkpoints+0x2fa>
+29d1a: cmp    r15w,di
+29d1e: je     2a338 <mibz2::mtf::p74::avx2::mtf_checkpoints+0x918>
+29d24: mov    rax,QWORD PTR [rsp+0x30]
+29d29: cmp    QWORD PTR [rsp+0x8],rax
+29d2e: jae    29e4d <mibz2::mtf::p74::avx2::mtf_checkpoints+0x42d>
+29d34: mov    eax,r15d
+29d37: dec    eax
+29d39: movzx  ecx,ax
+29d3c: cmp    r15w,0x21
+29d41: jae    29d6c <mibz2::mtf::p74::avx2::mtf_checkpoints+0x34c>
+29d43: shl    ecx,0x5
+29d46: vpermq ymm0,ymm2,0x4e
+29d4c: vpshufb ymm1,ymm2,YMMWORD PTR [rcx+r11*1]
+29d52: vpshufb ymm0,ymm0,YMMWORD PTR [rcx+rsi*1]
+29d58: vmovdqa ymm2,YMMWORD PTR [rcx+rdx*1]
+29d5d: vpblendvb ymm2,ymm1,ymm0,ymm2
+29d63: vmovd  eax,xmm2
+29d67: jmp    29e19 <mibz2::mtf::p74::avx2::mtf_checkpoints+0x3f9>
+29e19: movzx  eax,al
+29e1c: mov    rcx,QWORD PTR [rsp+0x58]
+29e21: movzx  eax,BYTE PTR [rcx+rax*1+0x18]
+29e26: inc    DWORD PTR [rbx+rax*4]
+29e29: mov    rcx,QWORD PTR [rsp+0x8]
+29e2e: mov    BYTE PTR [r10+rcx*1],al
+29e32: inc    rcx
+29e35: mov    QWORD PTR [rsp+0x8],rcx
+29e3a: cmp    r14,r12
+29e3d: mov    rcx,QWORD PTR [rsp+0x18]
+29e42: jne    29be9 <mibz2::mtf::p74::avx2::mtf_checkpoints+0x1c9>
+
+C checkpoint attempt: 39 instructions, 6 conditional branches
+2b23e: xor    eax,eax
+2b240: movzx  r15d,WORD PTR [r14]
+2b244: add    r14,0x2
+2b248: cmp    r15d,0x2
+2b24c: jae    2b272 <mibz2::mtf::p74_c::combined+0x772>
+2b272: test   eax,eax
+2b274: je     2b322 <mibz2::mtf::p74_c::combined+0x822>
+2b322: cmp    r15w,r11w
+2b326: je     2ba19 <mibz2::mtf::p74_c::combined+0xf19>
+2b32c: cmp    r8,rcx
+2b32f: jae    2b49f <mibz2::mtf::p74_c::combined+0x99f>
+2b335: mov    ebx,r11d
+2b338: mov    r11,rcx
+2b33b: mov    eax,r15d
+2b33e: dec    eax
+2b340: movzx  edx,ax
+2b343: cmp    r15w,0x21
+2b348: jae    2b388 <mibz2::mtf::p74_c::combined+0x888>
+2b34a: shl    edx,0x5
+2b34d: vpermq ymm0,ymm2,0x4e
+2b353: lea    rax,[rip+0xfffffffffffe0326]        # b680 <mibz2::mtf::p74::SHIFT>
+2b35a: vpshufb ymm1,ymm2,YMMWORD PTR [rdx+rax*1]
+2b360: lea    rax,[rip+0xfffffffffffe0719]        # ba80 <mibz2::mtf::p74::SWAPPED>
+2b367: vpshufb ymm0,ymm0,YMMWORD PTR [rdx+rax*1]
+2b36d: lea    rax,[rip+0xfffffffffffe0b0c]        # be80 <mibz2::mtf::p74::BLEND>
+2b374: vmovdqa ymm2,YMMWORD PTR [rdx+rax*1]
+2b379: vpblendvb ymm2,ymm1,ymm0,ymm2
+2b37f: vmovd  eax,xmm2
+2b383: jmp    2b473 <mibz2::mtf::p74_c::combined+0x973>
+2b473: movzx  eax,al
+2b476: movzx  eax,BYTE PTR [r9+rax*1+0x18]
+2b47c: mov    rcx,QWORD PTR [rsp+0x18]
+2b481: inc    DWORD PTR [rcx+rax*4]
+2b484: mov    BYTE PTR [rdi+r8*1],al
+2b488: inc    r8
+2b48b: cmp    r14,r13
+2b48e: mov    rcx,r11
+2b491: mov    r11d,ebx
+2b494: jne    2b23e <mibz2::mtf::p74_c::combined+0x73e>
