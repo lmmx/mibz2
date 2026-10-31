@@ -583,7 +583,7 @@
   "src/mtf/p74_c/tests/gate1.rs": "51b551d11ceda0f98cd108e9e0757109c76c90da4e60bbc36921c12c509e7bb3",
   "src/parallel.rs": "cd541345707bd0661312dd8506ac6b5c3bbeb441a10094c946a9ea48b459c8c5",
   "src/bwt.rs": "9be0f1da4737b8151d447c1de1e5e2662fb92c331062e54ddb4030fa27afdce9",
-  "examples/p74c_decoder.rs": "b87b00ef1a5519bb2c4f785af7fe065406ae69a4e75cb4d94e681690f3841990",
+  "examples/p74c_decoder.rs": "ea8725a7cad2dcc32c3f3056daf0ca62e7327215f4f43c135518fe6d34d4f0b7",
   "examples/p74_suite.rs": "7d08a5c94b33120948937ace85af0feb58ceee0646418dde4630f97976a5d8a3",
   "tests/common/mod.rs": "3aeb98175100dd760d5b3c16ac617be78e44ce9e0ec459bd2f7c4a6b85cdc491",
   "tests/p74c_decoder.rs": "2011e6e4a82cc6cc2bc756897d24060f106dab0ed2d4815a524e7a035e0a2a89",
@@ -591,12 +591,13 @@
   "tests/mtf_p74_c.rs": "c7cfa17ba175f112c90747f54dbc00ea498bbb45d62d4f04184d3ebbd1501488",
   "bench/p74c_decoder.py": "1da8d912ca6b48d85513e39081375ec53d794712d36c71205c579ead6df5bd82",
   "bench/p74c_decoder_asm_audit.py": "8b9b779113d2a625dcd66d3f3be1d947ec143acdf51f6cfe951b5a94eb94d00e",
-  "bench/p74c_decoder_run.sh": "8b4c88a3259862d4a3f020c60040b89de597a6079e1bb355105740e097e689e1",
+  "bench/p74c_decoder_run.sh": "d7cf12063a19e493fe6beb3ef58d17d3aaa2036c56be2f1ecb49535cd15d2243",
   ".just/bench.just": "2a09289ea000911671852af0d6247113e0f2ae31058190516157e02278b65fe2",
   "bench/wikidata.json": "42cec876c3a424b8e81a1de062f38b8eb8488908b4c71c3e6fed2c43231445f5",
   "docs/journal/2026-10-31-p74c-decoder-protocol.md": "d3a08b272b76f8a88cceb3843d1d99a0033fb4df0cfe5e4a18e36658e0bee7f3",
   "docs/journal/2026-10-31-p74c-decoder/heldout-spec.json": "8d5806f2bc7249cef6e08ec5e6f307dcf102439c658799c0cc4003120b961894",
   "docs/journal/2026-10-31-p74c-decoder/different-dump/spec.json": "9f541c107860084ee26327d24912be2ba27ef927b6e749f6f30570ca389c3f91",
   "docs/journal/2026-10-31-p74c-decoder/different-dump/windows.json": "14bdfed2333114a268cf00cc7bb83d74ad2161f74bab8c86dfdb3af08bbd0f9b"
- }
+ },
+ "text_source_commit": "535296c68e43db54990af88bb0e05087198c583e"
 }

@@ -86,7 +86,11 @@ if rebuild wikidata-20261026; then
     python3 -I bench/p74c_decoder.py fetch --spec $dir/different-dump/windows.json --dir "$work/diffdump"
     "$bin" --windows "$c/wikidata-20261026.bz2" "$work"/diffdump/d*.bin
 fi
-"$bin" --prepare "$c"
+# text: from the v1.0 pin's sources (amendment 1), so harness edits leave it unchanged
+text_src=$work/text-src
+rm -rf "$text_src" && mkdir -p "$text_src"
+git archive "$(want '["text_source_commit"]')" src tests examples README.md | tar -x -C "$text_src"
+"$bin" --prepare "$c" "$text_src"
 rm -rf "$c/suite"
 "$CARGO_TARGET_DIR/release/examples/p74_suite" "$c/suite" 2> "$out/suite-generation.log"
 {

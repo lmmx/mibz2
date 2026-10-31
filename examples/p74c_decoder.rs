@@ -2,8 +2,10 @@
 //! executable, both MTF settings, every measurement its own child process. Preparation
 //! and checking by default; timing only with `--trial`, under the runner's approval.
 //!
-//! - `--prepare DIR`: the controls (random, records, text, mixed-independent), as the
-//!   stage trial's `examples/p74_experiment.rs --prepare` wrote them.
+//! - `--prepare DIR TEXT_ROOT`: the controls (random, records, text, mixed-independent), as
+//!   the stage trial's `examples/p74_experiment.rs --prepare` wrote them; `text` from the
+//!   sources under TEXT_ROOT (amendment 1: the v1.0 pin's tree, so that harness edits
+//!   leave the corpus unchanged).
 //! - `--windows OUT WINDOWS...`: the stage trial's window tool, unchanged: each window's
 //!   whole blocks, their bits untouched, as a stream of its own; the streams one after
 //!   another.
@@ -108,13 +110,45 @@ fn windows(out: &str, paths: &[String]) {
 }
 
 /// The controls, exactly as the stage trial's `--prepare` wrote them
-fn prepare(dir: &Path) {
+/// `common::corpora`'s text corpus, built from the sources under `root` instead of this
+/// checkout's: the top-level files of `src`, `tests` and `examples` in sorted order, then
+/// `README.md`, repeated with a separator up to 3,000,000 × `scale` bytes
+fn text_at(root: &Path, scale: usize) -> Vec<u8> {
+    let mut text = Vec::new();
+    for dir in ["src", "tests", "examples"] {
+        let mut files: Vec<_> = std::fs::read_dir(root.join(dir))
+            .unwrap()
+            .flatten()
+            .map(|e| e.path())
+            .collect();
+        files.sort();
+        for f in files.into_iter().filter(|f| f.is_file()) {
+            text.extend(std::fs::read(f).unwrap());
+        }
+    }
+    text.extend(std::fs::read(root.join("README.md")).unwrap());
+    let one = text.clone();
+    let mut i = 0;
+    while text.len() < 3_000_000 * scale {
+        text.extend(format!("\n-- copy {i} --\n").bytes());
+        text.extend(&one);
+        i += 1;
+    }
+    text
+}
+
+fn prepare(dir: &Path, text_root: &Path) {
     std::fs::create_dir_all(dir).unwrap();
     for (name, data) in common::corpora(4) {
-        if ["random", "records", "text"].contains(&name) {
+        if ["random", "records"].contains(&name) {
             std::fs::write(dir.join(format!("{name}.bz2")), common::compress(&data, 9)).unwrap();
         }
     }
+    std::fs::write(
+        dir.join("text.bz2"),
+        common::compress(&text_at(text_root, 4), 9),
+    )
+    .unwrap();
     let mut rng = common::Rng(0x74c0_2026_1031_0001);
     let data: Vec<u8> = (0..2_000_000)
         .map(|i| {
@@ -794,7 +828,7 @@ fn main() {
         std::process::exit(2);
     }
     match args.first().map(String::as_str) {
-        Some("--prepare") => prepare(Path::new(&args[1])),
+        Some("--prepare") => prepare(Path::new(&args[1]), Path::new(&args[2])),
         Some("--windows") => windows(&args[1], &args[2..]),
         Some("--schedule") => {
             let cells = manifest(&args[1]).len() * list(&args[2]).len();

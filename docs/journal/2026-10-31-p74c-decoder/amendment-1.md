@@ -45,8 +45,9 @@
     before;
   - the thread assertion (w + 3) is the same;
   - the protocol, corpora, schedule, gates and kernel are unchanged.
-- The only frozen hash that changes is `examples/p74c_decoder.rs` in `frozen.json`,
-  `5dc69a49…` → `b87b00ef…`.
+- The frozen source hashes that change are `examples/p74c_decoder.rs` and
+  `bench/p74c_decoder_run.sh`, plus the new `text_source_commit` field. No corpus hash
+  changes.
 - The binary's SHA-256 changes with it. The structural audit runs on the exact timed binary
   as before.
 
@@ -54,6 +55,24 @@
 - The exploratory figures from r3 (`../2026-10-31-p74c-decoder-ci-41196164480/`) used
   the frozen binary. They are not affected, since the check passed there.
 - No confirmatory (i9, w = 4) timing has been made at either pin.
+
+**A second defect, exposed by the first fix (measured):**
+- The first v1.1 validation run (CI 41198123877) stopped on all three jobs before timing,
+  on `AssertionError: text: compressed hash`.
+- The `text` control is built from this crate's own top-level files in `src`, `tests` and
+  `examples`, plus `README.md`. That is why the protocol says "at the pinned commit". So
+  editing `examples/p74c_decoder.rs` changed a control corpus, and the frozen hash check
+  stopped the run, as designed.
+- **The correction keeps the corpus, not the hash check:**
+  - `--prepare DIR TEXT_ROOT` builds `text` from a source tree. The algorithm is
+    `common::corpora`'s, copied into the harness.
+  - The runner extracts that tree with
+    `git archive <text_source_commit> src tests examples README.md`.
+  - `frozen.json` gains `text_source_commit` = `535296c` (the v1.0 pin).
+  - **Checked on the preparation VM:** `--prepare` reproduces all four controls'
+    frozen compressed SHA-256 exactly: random `10d444e6…`, records `ff8b5f6e…`,
+    mixed-independent `11639f35…`, text `59236f2d…`.
+- So the `text` corpus is byte-identical to v1.0's, and no corpus hash changes.
 
 **Versions and records:**
 - **Harness v1.0**, the original frozen harness, is pin `535296c` (head `4acf46f`). It
@@ -63,7 +82,7 @@
 - CI run 41196164480 stays recorded as **2 of 3 jobs stopped in `--check`**. It isn't
   relabelled.
 - **Validation:**
-  - v1.1 is validated by a new exploratory CI run of three jobs, with `--check` and timing
+  - v1.1 is validated by a local dry run up to timing, then a new exploratory CI run of three jobs, with `--check` and timing
     at w = 1 and 2. It must complete all three before the i9 run.
   - The MTF kernel, the selector, the thresholds, the corpora and the primary corpus are
     unchanged.
