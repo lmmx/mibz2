@@ -190,6 +190,11 @@ authorization. If the stage criteria are met, propose a separate experiment at 1
 2 and 4 verified physical cores, reporting wall throughput, CPU-seconds/GB and peak
 RSS. No such decoder run is authorized or executed here.
 
+A [clean manifest](2026-10-31-p74-c-validation/clean-preparation-manifest.json)
+records preparation commit `eccf1cec2ae401e80090f929e2fbb2c26a10cc8a` with an empty
+working tree; subsequent artifact-only documentation does not change harness or kernel.
+Its SHA-256 is `99c90edf8dd9c8774d43928ed05632f68d23507f6afd23da1d0617d1f63f6d83`.
+
 The companion [preparation manifest](2026-10-31-p74-c-validation/preparation-manifest.json)
 records the honest dirty preparation snapshot and all five source hashes before commit;
 [actual switch results](2026-10-31-p74-c-validation/switches.md) and
