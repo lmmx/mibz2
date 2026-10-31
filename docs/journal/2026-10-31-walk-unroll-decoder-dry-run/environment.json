@@ -1,0 +1,79 @@
+{
+ "label": "vm-prep",
+ "allocation": {
+  "alloc": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "idle_siblings": [],
+  "physical_cores_allowed": 4,
+  "cores": [
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ],
+   [
+    0
+   ]
+  ],
+  "includes_cpu0_core": true,
+  "smt": false
+ },
+ "cpus": {
+  "0": {
+   "siblings": "0",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver'",
+   "cur_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq'"
+  },
+  "1": {
+   "siblings": "1",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_driver'",
+   "cur_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq'"
+  },
+  "2": {
+   "siblings": "2",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_driver'",
+   "cur_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_cur_freq'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq'"
+  },
+  "3": {
+   "siblings": "3",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_driver'",
+   "cur_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_cur_freq'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq'"
+  }
+ },
+ "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Processor @ 2.80GHz\nCPU family:                              6\nModel:                                   85\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                7\nBogoMIPS:                                5599.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves arat umip avx512_vnni md_clear arch_capabilities\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               128 KiB (4 instances)\nL1i cache:                               128 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                33 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Mitigation; Enhanced IBRS\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI Vulnerable\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Vmscape:                   Not affected",
+ "topology": "CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE\n  0    0      0    0 0:0:0:0          yes\n  1    0      0    1 1:1:1:0          yes\n  2    0      0    2 2:2:2:0          yes\n  3    0      0    3 3:3:3:0          yes",
+ "smt_control": "notsupported",
+ "intel_no_turbo": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/intel_pstate/no_turbo'",
+ "boost": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpufreq/boost'",
+ "cgroup": "/",
+ "cpu_max": "unavailable: [Errno 2] No such file or directory: '/sys/fs/cgroup//cpu.max'",
+ "root_cpu_max": "unavailable: [Errno 2] No such file or directory: '/sys/fs/cgroup/cpu.max'",
+ "kernel": {
+  "system": "Linux",
+  "node": "vm",
+  "release": "6.18.44-fc-v185",
+  "version": "#1 SMP PREEMPT_DYNAMIC @0",
+  "machine": "x86_64",
+  "processor": "x86_64"
+ },
+ "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)\nbinary: rustc\ncommit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3\ncommit-date: 2026-07-07\nhost: x86_64-unknown-linux-gnu\nrelease: 1.97.0\nLLVM version: 22.1.6",
+ "head": "c647c8dbf221c88e5d55e870a95116349fea2e78",
+ "loadavg": "1.17 0.75 0.51 1/109 5563",
+ "ps": "PID PSR %CPU COMMAND\n 5553   1 33.3 python3\n  106   0  2.8 claude\n    1   0  0.1 process_api\n   89   3  0.1 environment-man\n 4356   0  0.0 uv\n   31   3  0.0 migration/3\n   21   1  0.0 migration/1\n   26   2  0.0 migration/2\n   43   1  0.0 kworker/u16:1-events_unbound\n   85   2  0.0 6\n   51   3  0.0 kworker/3:1-mm_percpu_wq\n   15   2  0.0 rcu_preempt\n   12   1  0.0 kworker/u16:0-kvfree_rcu_reclaim\n 4368   3  0.0 bash\n 4006   0  0.0 kworker/0:0-events\n   77   1  0.0 kworker/1:2-events\n   53   2  0.0 kworker/2:1-events\n   46   3  0.0 kcompactd0\n   86   1  0.0 sh\n   67   3  0.0 kworker/3:1H-kblockd\n   18   0  0.0 migration/0\n    2   2  0.0 kthreadd\n   65   0  0.0 kworker/0:1H-kblockd\n   62   0  0.0 irq/24-ACPI:Ged\n    3   1  0.0 pool_workqueue_release\n    4   0  0.0 kworker/R-rcu_gp\n    5   0  0.0 kworker/R-sync_wq\n    6   0  0.0 kworker/R-kvfree_rcu_reclaim\n    7   0  0.0 kworker/R-slub_flushwq\n    8   0  0.0 kworker/R-netns\n   10   0  0.0 kworker/0:0H-events_highpri\n   13   0  0.0 kworker/R-mm_percpu_wq\n   14   0  0.0 ksoftirqd/0\n   16   0  0.0 rcu_exp_par_gp_kthread_worker/0\n   17   1  0.0 rcu_exp_gp_kthread_worker\n   19   0  0.0 cpuhp/0\n   20   1  0.0 cpuhp/1\n   22   1  0.0 ksoftirqd/1\n   23   1  0.0 kworker/1:0-slub_flushwq\n   24   1  0.0 kworker/1:0H-events_highpri\n   25   2  0.0 cpuhp/2\n   27   2  0.0 ksoftirqd/2\n   28   2  0.0 kworker/2:0-events\n   29   2  0.0 kworker/2:0H-events_highpri\n   30   3  0.0 cpuhp/3\n   32   3  0.0 ksoftirqd/3\n   34   3  0.0 kworker/3:0H-events_highpri\n   35   2  0.0 kdevtmpfs\n   36   3  0.0 kworker/R-inet_frag_wq\n   37   3  0.0 rcu_tasks_kthread\n   38   3  0.0 rcu_tasks_rude_kthread\n   39   3  0.0 rcu_tasks_trace_kthread\n   40   3  0.0 kauditd\n   41   1  0.0 khungtaskd\n   42   1  0.0 oom_reaper\n   44   3  0.0 kworker/R-writeback\n   45   3  0.0 kworker/u16:2\n   47   3  0.0 ksmd\n   48   0  0.0 khugepaged\n   49   3  0.0 kworker/R-kblockd\n   50   0  0.0 kworker/R-blkcg_punt_bio\n   54   3  0.0 watchdogd\n   55   3  0.0 kworker/R-quota_events_unbound\n   56   2  0.0 kworker/2:1H-kblockd\n   57   2  0.0 kswapd0\n   58   2  0.0 kworker/R-xfsalloc\n   59   2  0.0 kworker/R-xfs_mru_cache\n   60   2  0.0 kworker/u17:0\n   61   2  0.0 kworker/R-kthrotld\n   63   1  0.0 irq/25-ACPI:Ged\n   64   2  0.0 hwrng\n   66   2  0.0 kworker/R-kstrp\n   70   1  0.0 kworker/1:1H-kblockd\n   76   3  0.0 kworker/3:2-mm_percpu_wq\n   78   0  0.0 kworker/0:2-events\n   80   0  0.0 kworker/R-ext4-rsv-conversion\n   82   1  0.0 kworker/R-ext4-rsv-conversion\n   83   0  0.0 kworker/R-ext4-rsv-conversion\n 4275   3  0.0 kworker/3:0\n 4352   2  0.0 bash\n 4355   0  0.0 timeout\n 4365   1  0.0 just\n 4367   0  0.0 sh\n 4377   2  0.0 tee\n 5564   0  0.0 ps"
+}

@@ -1,0 +1,102 @@
+walk-decoder: label=vm-prep head=c647c8dbf221c88e5d55e870a95116349fea2e78 pin=30018dec9ba96b49fd0f3e75353f2a95088f43f3 out=<scratch> dry_run=1
+walk-decoder: 20 harness sources match the frozen hashes
+walk-decoder: CARGO_TARGET_DIR=<scratch> rustc 1.97.0 (2d8144b78 2026-07-07)
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.03s
+manifest: 11 corpora match the frozen SHA-256
+walk-decoder: bzip2 -t and bzip2 -dc match the frozen output hashes
+walk-decoder: allocation CPUs 0,1,2,3; workers 1,2,3,4
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (<scratch>
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.02s
+     Running tests/segmented_unrolled.rs (<scratch>
+walk-decoder: the arm's tests pass
+{
+ "gates": {
+  "W1_arm_gates": true,
+  "W2_shipped_walk_unchanged": true,
+  "W3_each_arm_its_walk": true,
+  "W4a_src_insertions_only_in_bwt": true,
+  "W4b_same_stage_functions": true
+ },
+ "pass_": true,
+ "w3": {
+  "shipped_walk_callers": [
+   "<mibz2::bwt::Segmented as mibz2::bwt::InverseBwt>::invert",
+   "mibz2::decode_block::<mibz2::bwt::Segmented>"
+  ],
+  "arm_walk_callers": [
+   "<mibz2::bwt::SegmentedUnrolled as mibz2::bwt::InverseBwt>::invert"
+  ]
+ },
+ "w4a": [
+  {
+   "file": "src/bwt.rs",
+   "added": 545,
+   "deleted": 0
+  }
+ ],
+ "w4b": {
+  "stage_functions": {
+   "A": [
+    "mibz2::bwt::build",
+    "mibz2::crc::clmul_update",
+    "mibz2::crc::crc32",
+    "mibz2::mtf::mtf_avx2",
+    "mibz2::mtf::mtf_scalar",
+    "mibz2::rle::unrle_avx2",
+    "mibz2::rle::unrle_scalar"
+   ],
+   "B": [
+    "mibz2::bwt::build",
+    "mibz2::crc::clmul_update",
+    "mibz2::crc::crc32",
+    "mibz2::mtf::mtf_avx2",
+    "mibz2::mtf::mtf_scalar",
+    "mibz2::rle::unrle_avx2",
+    "mibz2::rle::unrle_scalar"
+   ]
+  },
+  "stage_functions_differ": [],
+  "walk_functions": {
+   "A": [
+    "<mibz2::bwt::SegScratch>::assemble",
+    "mibz2::bwt::room_segments::<32, 1>"
+   ],
+   "B": [
+    "mibz2::bwt::room_segments_unrolled::<32, 1>"
+   ]
+  },
+  "driver_out_of_line": {
+   "A": [
+    "<mibz2::bwt::SegScratch>::assemble",
+    "mibz2::decode_block::<mibz2::bwt::Segmented>"
+   ],
+   "B": [
+    "<mibz2::bwt::SegmentedUnrolled as mibz2::bwt::InverseBwt>::invert"
+   ]
+  },
+  "worker_body_instructions": {
+   "A": 1665,
+   "B": 2892
+  },
+  "inlining_differences": [
+   "<mibz2::bwt::SegScratch>::assemble",
+   "<mibz2::bwt::Segmented as mibz2::bwt::InverseBwt>::invert",
+   "mibz2::decode_block::<mibz2::bwt::Segmented>"
+  ]
+ },
+ "w4c": {
+  "required": true,
+  "signature": {
+   "inlining_differences": [
+    "<mibz2::bwt::SegScratch>::assemble",
+    "<mibz2::bwt::Segmented as mibz2::bwt::InverseBwt>::invert",
+    "mibz2::decode_block::<mibz2::bwt::Segmented>"
+   ]
+  }
+ }
+}
+walk-decoder: W4 (c): REVIEW REQUIRED before any timing: {'inlining_differences': ['<mibz2::bwt::SegScratch>::assemble', '<mibz2::bwt::Segmented as mibz2::bwt::InverseBwt>::invert', 'mibz2::decode_block::<mibz2::bwt::Segmented>']}
+walk-decoder: harness self-test (synthetic times) passed
+walk-decoder: WALK_STOP_BEFORE_TIMING=1: preparation and checks only, no timing
+walk-decoder: results: <scratch>
