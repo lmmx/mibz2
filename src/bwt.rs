@@ -745,6 +745,9 @@ thread_local! {
     static MID_PASS_TAKES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static FULL_PHASE_ENDS_MID_PASS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static TAIL_ENTERED_FULL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // the unrolled arm's mid-pass takes and mid-pass ends, by the lane index they hit
+    static UNROLLED_TAKE_AT: std::cell::Cell<[usize; 64]> = const { std::cell::Cell::new([0; 64]) };
+    static UNROLLED_END_AT: std::cell::Cell<[usize; 64]> = const { std::cell::Cell::new([0; 64]) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -1009,6 +1012,235 @@ fn room_segments<const L: usize, const PF: u8>(
     }
     s.first = seg_of(r0);
     s.n = n;
+}
+
+/// `room_segments` with its full-lane pass's lane loop expanded into constant-index steps
+/// (lanes 0..L in order, each the shipped body), so a round has no lane counter, pointer
+/// or bound: a research arm (docs/journal/2026-10-31-walk-unroll-protocol.md), not used
+/// by any decoder. Supports L <= 64; never inlined, as `room_segments`
+#[inline(never)]
+fn room_segments_unrolled<const L: usize, const PF: u8>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    s: &mut SegScratch,
+    segments: usize,
+) {
+    let n = tt.0.len();
+    let r0 = tt.0[orig_ptr as usize] >> 8;
+    random_rows(n, segments - 1, &mut s.starts);
+    s.starts.push(r0);
+    s.starts.sort_unstable();
+    s.starts.dedup();
+    let ns = s.starts.len();
+    for &r in &s.starts {
+        tt.0[r as usize] |= START;
+    }
+    let cap = 2 * n / ns + 64;
+    s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
+    for b in &mut s.bufs[..ns] {
+        b.clear();
+        b.reserve(cap);
+    }
+    s.next.clear();
+    s.next.resize(ns, usize::MAX);
+    let starts = &s.starts;
+    let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let t = tt.0.as_ptr();
+    let bufs = &mut s.bufs;
+    let next = &mut s.next;
+
+    let take = |seg: usize, bufs: &mut Vec<Vec<u8>>| -> Lane {
+        let b = &mut bufs[seg];
+        let base = b.as_mut_ptr();
+        // SAFETY: the starts are rows below n; the buffer has `cap` > 0 spare bytes
+        let q = unsafe { *t.add(starts[seg] as usize) } & LINK;
+        unsafe { *base = q as u8 };
+        Lane {
+            row: q >> 8,
+            seg,
+            p: unsafe { base.add(1) },
+            end: unsafe { base.add(b.capacity()) },
+        }
+    };
+    let finish = |l: &Lane, bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| {
+        let b = &mut bufs[l.seg];
+        // SAFETY: p is within b's allocation, every byte below it written
+        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+        next[l.seg] = seg_of(l.row);
+    };
+    let grow = |l: &mut Lane, bufs: &mut Vec<Vec<u8>>| {
+        transition!(GROWS);
+        let b = &mut bufs[l.seg];
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
+        b.reserve(b.capacity());
+        l.p = unsafe { b.as_mut_ptr().add(len) };
+        l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
+    };
+
+    let mut queued = 0;
+    let mut lanes: [Lane; L] = std::array::from_fn(|_| Lane {
+        row: 0,
+        seg: usize::MAX,
+        p: std::ptr::null_mut(),
+        end: std::ptr::null_mut(),
+    });
+    let mut active = 0;
+    while active < L && queued < ns {
+        lanes[active] = take(queued, bufs);
+        if PF != PF_OFF {
+            prefetch::<PF>(t, lanes[active].row);
+        }
+        queued += 1;
+        active += 1;
+    }
+    if active == L {
+        'full: loop {
+            // The pass's room: what every lane has spare, and no more than a buffer taken
+            // mid-pass has after its first byte (`cap` - 1)
+            let mut room = cap - 1;
+            for l in lanes.iter_mut() {
+                if l.p == l.end {
+                    grow(l, bufs);
+                }
+                room = room.min(unsafe { l.end.offset_from(l.p) } as usize);
+            }
+            debug_assert!(room > 0);
+            if lanes
+                .iter()
+                .any(|l| unsafe { l.end.offset_from(l.p) } as usize == room)
+            {
+                transition!(PASS_ENDS_FULL);
+            }
+            let mut base: [*mut u8; L] = std::array::from_fn(|k| lanes[k].p);
+            for off in 0..room {
+                // The lane loop as constant-index steps, lanes 0..L in order, each step
+                // the shipped body (`continue` leaves its step): no lane counter, pointer
+                // or bound in the round; every lane advanced once before any lane again
+                macro_rules! step {
+                    ($k:literal) => {
+                        if $k < L {
+                            #[allow(clippy::identity_op)]
+                            let k: usize = $k;
+                            'step: {
+                            let l = &mut lanes[k];
+                            // SAFETY: rows are below n (TVector), with the flag masked off below
+                            let q = unsafe { *t.add(l.row as usize) };
+                            if q & START != 0 {
+                                l.p = base[k].wrapping_add(off);
+                                finish(l, bufs, next);
+                                if queued == ns {
+                                    // the lanes before this one wrote at `off`, those after it not yet
+                                    for (j, lj) in lanes.iter_mut().enumerate() {
+                                        if j < k {
+                                            lj.p = base[j].wrapping_add(off + 1);
+                                        } else if j > k {
+                                            lj.p = base[j].wrapping_add(off);
+                                        }
+                                    }
+                                    transition!(FULL_PHASE_ENDS_MID_PASS);
+#[cfg(test)]
+UNROLLED_END_AT.with(|c| { let mut v = c.get(); v[k] += 1; c.set(v) });
+                                    break 'full;
+                                }
+                                transition!(MID_PASS_TAKES);
+#[cfg(test)]
+UNROLLED_TAKE_AT.with(|c| { let mut v = c.get(); v[k] += 1; c.set(v) });
+                                *l = take(queued, bufs);
+                                if PF != PF_OFF {
+                                    prefetch::<PF>(t, l.row);
+                                }
+                                queued += 1;
+                                // its next byte, at offset off + 1, goes at its p
+                                base[k] = l.p.wrapping_sub(off + 1);
+                                break 'step;
+                            }
+                            l.row = q >> 8;
+                            if PF != PF_OFF {
+                                prefetch::<PF>(t, l.row);
+                            }
+                            // SAFETY: base + off is below the lane's end: room is at most its spare
+                            // at the pass's start (or, for a buffer taken mid-pass, its capacity
+                            // after its first byte)
+                            debug_assert!(base[k].wrapping_add(off) < l.end);
+                            unsafe { *base[k].wrapping_add(off) = q as u8 };
+                            }
+                        }
+                    };
+                }
+                macro_rules! steps {
+                    ($($k:literal)*) => { $( step!($k); )* };
+                }
+                steps!(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63);
+            }
+            for (l, b) in lanes.iter_mut().zip(base) {
+                l.p = b.wrapping_add(room);
+            }
+        }
+    }
+    let mut live: Vec<Lane> = lanes[..active]
+        .iter()
+        .copied()
+        .filter(|l| next_unset(l, next))
+        .collect();
+    // A pass can end with a lane's buffer exactly full (its room was all its spare): the
+    // tail writes before it tests, so each lane comes into it with a byte to spare
+    for l in live.iter_mut() {
+        if l.p == l.end {
+            transition!(TAIL_ENTERED_FULL);
+            grow(l, bufs);
+        }
+        debug_assert!(l.p < l.end);
+    }
+    while !live.is_empty() {
+        let mut i = 0;
+        while i < live.len() {
+            let l = &mut live[i];
+            let q = unsafe { *t.add(l.row as usize) };
+            if q & START != 0 {
+                finish(l, bufs, next);
+                live.swap_remove(i);
+                continue;
+            }
+            l.row = q >> 8;
+            if PF != PF_OFF {
+                prefetch::<PF>(t, l.row);
+            }
+            unsafe {
+                *l.p = q as u8;
+                l.p = l.p.add(1);
+            }
+            if l.p == l.end {
+                grow(l, bufs);
+            }
+            i += 1;
+        }
+    }
+    for &r in starts {
+        tt.0[r as usize] &= LINK;
+    }
+    s.first = seg_of(r0);
+    s.n = n;
+}
+
+/// `walk_segments_room_with_prefetch` through `room_segments_unrolled`: the research arm
+/// of docs/journal/2026-10-31-walk-unroll-protocol.md, for its harness, tests and the
+/// sweep; no decoder uses it
+#[doc(hidden)]
+pub fn walk_segments_room_unrolled_with_prefetch<const L: usize, const PF: u8>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    segments: usize,
+) {
+    assert!(L <= 64, "room_segments_unrolled: at most 64 lanes");
+    out.clear();
+    if tt.0.is_empty() {
+        return;
+    }
+    room_segments_unrolled::<L, PF>(tt, orig_ptr, s, segments);
+    s.assemble(out);
 }
 
 /// `walk_segments_flagged_with_prefetch` with 0.1.5's switch: `PF` prefetches each lane's
@@ -1543,6 +1775,208 @@ pub(crate) mod tests {
                 assert!(tt.0.iter().all(|&e| e & START == 0));
             }
         }
+    }
+
+    /// The counts of the handoff transitions now, to show a later run reached each again
+    fn transitions() -> [usize; 5] {
+        [
+            count(&GROWS),
+            count(&PASS_ENDS_FULL),
+            count(&MID_PASS_TAKES),
+            count(&FULL_PHASE_ENDS_MID_PASS),
+            count(&TAIL_ENTERED_FULL),
+        ]
+    }
+
+    /// Asserts that every handoff transition was reached again since `before`
+    fn reached_since(before: [usize; 5], what: &str) {
+        let names = [
+            "a buffer grown",
+            "a pass ending with a buffer full",
+            "a segment taken mid-pass",
+            "the full phase ending mid-pass",
+            "a lane coming into the tail full",
+        ];
+        for (i, now) in transitions().into_iter().enumerate() {
+            assert!(now > before[i], "{what}: never reached: {}", names[i]);
+        }
+    }
+
+    /// One block through the unrolled arm at L lanes, checked against the plain walk and
+    /// the safe segment oracle
+    fn unrolled_case<const L: usize, const PF: u8>(
+        tt: &mut TVector,
+        orig_ptr: u32,
+        segments: usize,
+        plain: &[u8],
+        what: &str,
+    ) {
+        let (mut out, mut seg) = (Vec::new(), SegScratch::default());
+        walk_segments_room_unrolled_with_prefetch::<L, PF>(
+            tt, orig_ptr, &mut out, &mut seg, segments,
+        );
+        assert!(plain == out, "unrolled room walk, {L} lanes, {what}");
+        check_segments(tt, &seg, what);
+        assert!(
+            tt.0.iter().all(|&e| e & START == 0),
+            "{what}: flags left set"
+        );
+    }
+
+    /// The unrolled research arm (docs/journal/2026-10-31-walk-unroll-protocol.md §3)
+    /// equals the plain walk on the crafted permutations, every length edge and the
+    /// degenerate columns, at 32, 8, 5 and 64 lanes; its handoffs are all reached by the
+    /// arm alone; and at 32 and at 8 lanes a segment is taken mid-pass at every lane index
+    /// of a round
+    #[test]
+    fn unrolled_room_walk_equals_plain() {
+        UNROLLED_TAKE_AT.with(|c| c.set([0; 64]));
+        UNROLLED_END_AT.with(|c| c.set([0; 64]));
+        let before = transitions();
+        let mut x = 99u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        let mut plain = Vec::new();
+        for case in 0..120 {
+            let n = MIN_SEGMENTED + rnd(200_000) as usize;
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let mut ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            if case % 5 == 0 {
+                let p = 1 + rnd(5) as usize;
+                for i in p..n {
+                    ll[i] = ll[i % p];
+                }
+            }
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            walk(&tt, orig_ptr, &mut plain);
+            let what = format!("case {case} n {n} alphabet {alphabet}");
+            unrolled_case::<32, PF_L1>(&mut tt, orig_ptr, FLAGGED_SEGMENTS, &plain, &what);
+            unrolled_case::<8, PF_OFF>(&mut tt, orig_ptr, FLAGGED_SEGMENTS, &plain, &what);
+            if case % 4 == 0 {
+                unrolled_case::<5, PF_L2>(&mut tt, orig_ptr, 256, &plain, &what);
+                unrolled_case::<64, PF_L1>(&mut tt, orig_ptr, 2048, &plain, &what);
+            }
+        }
+        reached_since(before, "crafted permutations");
+        let takes = UNROLLED_TAKE_AT.with(|c| c.get());
+        for (k, &t) in takes.iter().enumerate().take(32) {
+            assert!(t > 0, "no mid-pass take at lane {k}");
+        }
+        let ends = UNROLLED_END_AT.with(|c| c.get());
+        assert!(
+            ends.iter().any(|&e| e > 0),
+            "the full phase never ended mid-pass"
+        );
+
+        // every length edge, with segment counts below, at and above the lanes (ns < L
+        // never enters the full-lane pass)
+        let mut x = 7u64;
+        for n in [
+            1,
+            2,
+            3,
+            7,
+            8,
+            9,
+            31,
+            32,
+            33,
+            63,
+            64,
+            65,
+            100,
+            1000,
+            MIN_SEGMENTED + 1,
+        ] {
+            let ll: Vec<u8> = (0..n)
+                .map(|_| {
+                    x ^= x << 13;
+                    x ^= x >> 7;
+                    x ^= x << 17;
+                    (x % 3) as u8
+                })
+                .collect();
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            for orig_ptr in [0, n as u32 / 2, n as u32 - 1] {
+                walk(&tt, orig_ptr, &mut plain);
+                for segments in [1, 2, 7, 8, 9, 31, 32, 33, 256] {
+                    let what = format!("n {n}, orig_ptr {orig_ptr}, {segments} segments");
+                    unrolled_case::<32, PF_L1>(&mut tt, orig_ptr, segments, &plain, &what);
+                    unrolled_case::<8, PF_OFF>(&mut tt, orig_ptr, segments, &plain, &what);
+                    unrolled_case::<5, PF_OFF>(&mut tt, orig_ptr, segments, &plain, &what);
+                }
+            }
+        }
+
+        // the degenerate columns (segments of one and two bytes)
+        let n = MIN_SEGMENTED + 77;
+        for ll in [
+            vec![3u8; n],
+            (0..n).map(|i| (i % 2) as u8).collect::<Vec<u8>>(),
+        ] {
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            for orig_ptr in [0, 1, n as u32 / 2, n as u32 - 1] {
+                walk(&tt, orig_ptr, &mut plain);
+                for segments in [33, 64, 512, 4096] {
+                    let what = format!("degenerate, orig_ptr {orig_ptr}, {segments} segments");
+                    unrolled_case::<32, PF_L1>(&mut tt, orig_ptr, segments, &plain, &what);
+                    unrolled_case::<8, PF_L1>(&mut tt, orig_ptr, segments, &plain, &what);
+                }
+            }
+        }
+    }
+
+    /// For Miri: the unrolled arm's unsafe code on the Miri handoff blocks below (32 lanes,
+    /// 256 segments, seeds 170,778 and 8,824), and at 8 lanes; asserting the arm alone
+    /// reached every handoff transition
+    #[test]
+    fn miri_room_walk_unrolled_handoffs() {
+        let before = transitions();
+        for seed in [170_778u64, 8_824] {
+            let mut x = seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1;
+            let mut rnd = move |m: u64| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                x % m
+            };
+            let n = 200 + rnd(4000) as usize;
+            let alphabet = 1 + rnd(if seed % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let mut plain = Vec::new();
+            walk(&tt, orig_ptr, &mut plain);
+            let what = format!("seed {seed}");
+            unrolled_case::<32, PF_L1>(&mut tt, orig_ptr, 256, &plain, &what);
+            unrolled_case::<8, PF_OFF>(&mut tt, orig_ptr, 64, &plain, &what);
+        }
+        reached_since(before, "the unrolled arm on the Miri blocks");
     }
 
     /// For Miri (`cargo +nightly miri test --lib -- miri_`): the segmented walks' unsafe
