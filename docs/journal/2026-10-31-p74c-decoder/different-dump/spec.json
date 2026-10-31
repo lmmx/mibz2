@@ -1,0 +1,68 @@
+{
+ "about": "Different-dump held-out windows for the P74-C decoder trial: 12 windows of 1 MiB at floor((2i+1)/24 * dump_bytes), i = 0..11 (the fitted corpus's rule, applied to a later dump). Positions frozen and committed before any byte of the dump was fetched; per-window SHA-256 values are added at the freeze, after fetching, and nothing is tuned on them.",
+ "dump": "wikidata-20261026-all.json.bz2",
+ "url": "https://dumps.wikimedia.org/wikidatawiki/entities/20261026/wikidata-20261026-all.json.bz2",
+ "dump_bytes": 103565615653,
+ "windows": [
+  {
+   "name": "d00",
+   "offset": 4315233985,
+   "length": 1048576
+  },
+  {
+   "name": "d01",
+   "offset": 12945701956,
+   "length": 1048576
+  },
+  {
+   "name": "d02",
+   "offset": 21576169927,
+   "length": 1048576
+  },
+  {
+   "name": "d03",
+   "offset": 30206637898,
+   "length": 1048576
+  },
+  {
+   "name": "d04",
+   "offset": 38837105869,
+   "length": 1048576
+  },
+  {
+   "name": "d05",
+   "offset": 47467573840,
+   "length": 1048576
+  },
+  {
+   "name": "d06",
+   "offset": 56098041812,
+   "length": 1048576
+  },
+  {
+   "name": "d07",
+   "offset": 64728509783,
+   "length": 1048576
+  },
+  {
+   "name": "d08",
+   "offset": 73358977754,
+   "length": 1048576
+  },
+  {
+   "name": "d09",
+   "offset": 81989445725,
+   "length": 1048576
+  },
+  {
+   "name": "d10",
+   "offset": 90619913696,
+   "length": 1048576
+  },
+  {
+   "name": "d11",
+   "offset": 99250381667,
+   "length": 1048576
+  }
+ ]
+}
