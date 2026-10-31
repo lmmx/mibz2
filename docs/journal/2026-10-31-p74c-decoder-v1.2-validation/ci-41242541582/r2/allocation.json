@@ -1,0 +1,1 @@
+{"alloc": [0, 2], "idle_siblings": [1, 3], "physical_cores_allowed": 2, "cores": [[2, 3], [0, 1]], "includes_cpu0_core": true, "smt": true}
