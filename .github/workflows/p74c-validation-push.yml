@@ -1,0 +1,43 @@
+# P74-C confirmatory stage benchmark on GitHub-hosted runners: exploratory replication of
+# the protocol in docs/journal/2026-10-31-p74-c-confirmatory-protocol.md. Manual dispatch
+# only; three independent jobs, each one complete run of `just bench-p74c`.
+# Push-triggered copy on its own branch: a workflow_dispatch workflow must exist on the
+# default branch, so this branch's push starts the same jobs. Each job checks out the
+# pinned commit itself, so the run's tree is exactly the frozen one.
+name: p74c-validation-push
+
+on:
+  push:
+    branches: [research/p74c-ci-trigger]
+
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    name: p74c run ${{ matrix.replicate }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        replicate: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 8b6caf1e48eb4dc605abe3eb97de680891340ff9
+          fetch-depth: 0
+      - uses: extractions/setup-just@v2
+      - name: Run the benchmark
+        env:
+          P74C_OUT: ${{ runner.temp }}/p74c-results
+          P74C_WORK: ${{ runner.temp }}/p74c-work
+        run: just bench-p74c gha-ubuntu-24.04-r${{ matrix.replicate }}-${{ github.run_id }}
+      - name: Upload the results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p74c-r${{ matrix.replicate }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/p74c-results/
+          retention-days: 30
+          if-no-files-found: warn
