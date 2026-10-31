@@ -26,11 +26,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # the pinned checkout: bench/p74c-decoder-pin's child on research/p74c-decoder
-          ref: c4f5fa7044b690d2b4b5026aa573ecdc258b66ed
+          ref: 3870c1225d4cfb1a87ade57651eb1165ce451692
           fetch-depth: 0
       - uses: extractions/setup-just@v2
       - name: Check the pinned checkout
-        run: test "$(git rev-parse HEAD)" = c4f5fa7044b690d2b4b5026aa573ecdc258b66ed
+        run: test "$(git rev-parse HEAD)" = 3870c1225d4cfb1a87ade57651eb1165ce451692
       - name: Run the trial (exploratory; workers 1, 2 on the runner's 2 physical cores)
         env:
           P74C_RESULTS_DIR: ${{ runner.temp }}/p74c-decoder-results
