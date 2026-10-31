@@ -1,0 +1,93 @@
+# The room walk's constant-index 32-lane round trial (docs/journal/2026-10-31-walk-unroll-protocol.md,
+# amendment 1), at its pinned commit: each job builds once, audits that exact binary against the
+# structural gates (stopping before any timing if one fails), then runs the paired harness
+# (examples/walk_arm.rs: A shipped, B arm, A2 shipped again; 20 rounds) on one CPU, then a copy on
+# every CPU (secondary). Research only: on this trigger branch, never on master.
+name: walk-unroll trial
+
+on:
+  push:
+    branches: [research/walk-unroll-ci-trigger]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: never
+  PIN: b145e14f8b093e314fc12ab3eaf6459a08378792
+
+jobs:
+  trial:
+    name: walk-unroll r${{ matrix.replicate }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        replicate: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: b145e14f8b093e314fc12ab3eaf6459a08378792
+          fetch-depth: 0
+
+      - name: Check the pinned checkout
+        run: test "$(git rev-parse HEAD)" = "$PIN"
+
+      - name: Toolchain (rustc 1.97.0, pinned) and lbzip2
+        run: |
+          sudo apt-get install -y -qq lbzip2 > /dev/null
+          rustup toolchain install 1.97.0 --profile minimal
+          echo "RUSTUP_TOOLCHAIN=1.97.0" >> "$GITHUB_ENV"
+
+      - name: Build (once; the audited binary is the timed one)
+        run: |
+          unset RUSTFLAGS
+          cargo build --locked --release --example walk_arm --example windows
+          mkdir -p results
+          cp target/release/examples/walk_arm results/walk_arm
+          sha256sum results/walk_arm | cut -d' ' -f1 > results/binary.sha256
+          { rustc --version; lscpu; } > results/environment.txt
+          cat results/binary.sha256
+
+      - name: Structural gates (stop before timing on failure)
+        run: python3 bench/walk_unroll_gates.py results/walk_arm --out results/gates.json
+
+      - name: Wikidata windows (cache)
+        uses: actions/cache@v4
+        with:
+          path: windows
+          key: bench-wikidata-${{ hashFiles('bench/wikidata.json') }}
+
+      - name: Wikidata corpus
+        run: |
+          mkdir -p corpora
+          dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+          if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ] && git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null; then
+            git archive origin/bench-data "$dir" | tar -x || true
+          fi
+          python3 bench/wikidata.py fetch bench/wikidata.json "$dir"
+          python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows corpora/wikidata.bz2
+
+      - name: Trial (one copy on CPU 1, then a copy on every CPU)
+        run: |
+          mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
+          ghz=$(python3 -c "print(round($mhz / 1000, 4))")
+          echo "$ghz" > results/ghz.txt
+          cat /proc/stat > results/stat-before.txt
+          taskset -c 1 results/walk_arm corpora/wikidata.bz2 20 "$ghz" | tee results/one-copy.txt
+          cat /proc/stat > results/stat-after.txt
+          cpus=$(nproc)
+          for c in $(seq 0 $((cpus - 1))); do
+            taskset -c "$c" results/walk_arm corpora/wikidata.bz2 20 "$ghz" > "results/all-cpu$c.txt" &
+          done
+          wait
+          grep SUMMARY results/one-copy.txt
+
+      - name: Results
+        if: "!cancelled()"
+        uses: actions/upload-artifact@v4
+        with:
+          name: walk-unroll-r${{ matrix.replicate }}-${{ github.run_id }}
+          path: results/
+          retention-days: 30
