@@ -207,12 +207,29 @@
   "bench/walk_decoder_audit.py": "e950a2cc2b38d3463163eec1c2a02b9ed06b8fc6b6822a36ff118fec4ef8f709",
   "bench/walk_unroll_gates.py": "f66a2d6c02ecbddd7d4756a035c9b428745a87e3e3a2b47f3c9a398f2797b226",
   "bench/walk_asm_audit.py": "0acb3174486c2072d6ed6a56bd17bc139dfc77c63d89153e6b2599879900b6fa",
-  "bench/walk_decoder_run.sh": "91171bc6e2308af82834efa243215946ca9b65a9f871be4065abe2aef596af6e",
+  "bench/walk_decoder_run.sh": "0dd5b5aca8dde8f70b7b5f96a28b360521e5f80c19e9f12a374e0471e538fa88",
   ".just/bench.just": "c6527035392c922299daa4d8851de0c4e5ebc89b0d42c67ba84249c57547ea1d",
   "bench/wikidata.json": "42cec876c3a424b8e81a1de062f38b8eb8488908b4c71c3e6fed2c43231445f5",
   "docs/journal/2026-10-31-walk-unroll-decoder-protocol.md": "95ee4ca78d862fbbf82266a0f853bba947d86e39bce6b2d7ef983725668fd63f",
   "docs/journal/2026-10-31-walk-unroll-decoder/heldout-spec.json": "8d5806f2bc7249cef6e08ec5e6f307dcf102439c658799c0cc4003120b961894",
   "docs/journal/2026-10-31-walk-unroll-decoder/different-dump/windows.json": "14bdfed2333114a268cf00cc7bb83d74ad2161f74bab8c86dfdb3af08bbd0f9b",
   "docs/journal/2026-10-31-walk-unroll-decoder/reference-p74c-decoder-frozen.json": "cc34eb52123eef155071689f05dd58a0257e5d24db8a39056606aea5cee89378"
- }
+ },
+ "w4_review": {
+  "signature": {
+   "inlining_differences": [
+    "<mibz2::bwt::SegScratch>::assemble",
+    "<mibz2::bwt::Segmented as mibz2::bwt::InverseBwt>::invert",
+    "mibz2::decode_block::<mibz2::bwt::Segmented>"
+   ]
+  },
+  "record": "docs/journal/2026-10-31-walk-unroll-decoder/amendment-1.md",
+  "accepted": "by the maintainer, before any timing, as a documented integration-level code-generation difference (a performance confounder, not a correctness problem)"
+ },
+ "corpus_notes": {
+  "zeros": "short-block fallback control: below MIN_SEGMENTED after bzip2's RLE1, so both arms run the plain walk (amendment 1 section 4; the corpus and hash unchanged)"
+ },
+ "amendments": [
+  "docs/journal/2026-10-31-walk-unroll-decoder/amendment-1.md"
+ ]
 }

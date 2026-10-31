@@ -166,7 +166,8 @@ json.dump(dict(label=label, allocation=a, cpus=cpus, lscpu=sh("lscpu"), topology
     cgroup=cg, cpu_max=rd(f"/sys/fs/cgroup{cg}/cpu.max"), root_cpu_max=rd("/sys/fs/cgroup/cpu.max"),
     kernel=platform.uname()._asdict(), rustc=sh("rustc", "+1.97.0", "-vV"),
     head=sh("git", "rev-parse", "HEAD"), loadavg=rd("/proc/loadavg"),
-    ps=sh("ps", "-eo", "pid,psr,pcpu,comm", "--sort=-pcpu")), open(out, "w"), indent=1)
+    # numbers only (amendment 1): which CPUs are busy and how much, no process names
+    ps=sh("ps", "-eo", "pid,psr,pcpu", "--sort=-pcpu")), open(out, "w"), indent=1)
 EOF
 
 # 7. The harness self-test: the whole trial path (children, wait4, affinity, summary) on
