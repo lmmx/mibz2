@@ -1,0 +1,69 @@
+{
+  "code_commit": "4cd54371b5efffcd45fa1b7bd8672f244f203b5c",
+  "working_tree_before": "",
+  "compiler": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8",
+  "cpu": "{\n   \"lscpu\": [\n      {\n         \"field\": \"Architecture:\",\n         \"data\": \"x86_64\"\n      },{\n         \"field\": \"CPU op-mode(s):\",\n         \"data\": \"32-bit, 64-bit\"\n      },{\n         \"field\": \"Address sizes:\",\n         \"data\": \"46 bits physical, 48 bits virtual\"\n      },{\n         \"field\": \"Byte Order:\",\n         \"data\": \"Little Endian\"\n      },{\n         \"field\": \"CPU(s):\",\n         \"data\": \"3\"\n      },{\n         \"field\": \"On-line CPU(s) list:\",\n         \"data\": \"0-2\"\n      },{\n         \"field\": \"Vendor ID:\",\n         \"data\": \"AuthenticAMD\"\n      },{\n         \"field\": \"Model name:\",\n         \"data\": \"AMD EPYC 9V74 80-Core Processor\"\n      },{\n         \"field\": \"CPU family:\",\n         \"data\": \"25\"\n      },{\n         \"field\": \"Model:\",\n         \"data\": \"17\"\n      },{\n         \"field\": \"Thread(s) per core:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Core(s) per socket:\",\n         \"data\": \"3\"\n      },{\n         \"field\": \"Socket(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"Stepping:\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"BogoMIPS:\",\n         \"data\": \"5192.30\"\n      },{\n         \"field\": \"Flags:\",\n         \"data\": \"fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm arch_capabilities\"\n      },{\n         \"field\": \"Hypervisor vendor:\",\n         \"data\": \"KVM\"\n      },{\n         \"field\": \"Virtualization type:\",\n         \"data\": \"full\"\n      },{\n         \"field\": \"L1d cache:\",\n         \"data\": \"64 KiB (2 instances)\"\n      },{\n         \"field\": \"L1i cache:\",\n         \"data\": \"64 KiB (2 instances)\"\n      },{\n         \"field\": \"L2 cache:\",\n         \"data\": \"2 MiB (2 instances)\"\n      },{\n         \"field\": \"L3 cache:\",\n         \"data\": \"32 MiB (1 instance)\"\n      },{\n         \"field\": \"NUMA node(s):\",\n         \"data\": \"1\"\n      },{\n         \"field\": \"NUMA node0 CPU(s):\",\n         \"data\": \"0-2\"\n      },{\n         \"field\": \"Vulnerability Gather data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Ghostwrite:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Indirect target selection:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Itlb multihit:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability L1tf:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Meltdown:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Mmio stale data:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Old microcode:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Reg file data sampling:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Retbleed:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Spec rstack overflow:\",\n         \"data\": \"Vulnerable\"\n      },{\n         \"field\": \"Vulnerability Spec store bypass:\",\n         \"data\": \"Vulnerable\"\n      },{\n         \"field\": \"Vulnerability Spectre v1:\",\n         \"data\": \"Vulnerable: __user pointer sanitization and usercopy barriers only; no swapgs barriers\"\n      },{\n         \"field\": \"Vulnerability Spectre v2:\",\n         \"data\": \"Vulnerable; STIBP: disabled; PBRSB-eIBRS: Not affected; BHI: Not affected\"\n      },{\n         \"field\": \"Vulnerability Srbds:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Tsa:\",\n         \"data\": \"Vulnerable\"\n      },{\n         \"field\": \"Vulnerability Tsx async abort:\",\n         \"data\": \"Not affected\"\n      },{\n         \"field\": \"Vulnerability Vmscape:\",\n         \"data\": \"Not affected\"\n      }\n   ]\n}",
+  "topology": "CPU CORE SOCKET NODE\n  0    0      0    0\n  1    1      0    0\n  2    2      0    0",
+  "parent_affinity": [
+    0,
+    1,
+    2
+  ],
+  "child_affinity": [
+    0
+  ],
+  "host": "1467f8be7a15",
+  "binary_sha256": "e770d1581fc80b404add689a430e44ee66f6c0349f7935481dade0c239dbe313",
+  "guard_exception": "codex-epyc9v74-single-core-2026-10-31",
+  "frozen_manifest_sha256": "99c90edf8dd9c8774d43928ed05632f68d23507f6afd23da1d0617d1f63f6d83",
+  "processes_before": "PID    PPID COMMAND         PSR %CPU\n      1       0 tail              0  0.0\n      2       1 cloud-agent-log   1  0.0\n      3       2 caas-prefix-tra   2  0.0\n    190       1 dockerd           2  0.0\n    237     190 containerd        1  0.0\n    498       0 codex             0  0.0\n    594       1 git               1  0.0\n    664       1 git               0  0.0\n   5063       1 git               2  0.0\n   7378       1 git               2  0.0\n   7388       1 git               1  0.0\n   9439       1 git               1  0.0\n  11695       1 git               2  0.0\n  13349       1 git               2  0.0\n  13396       1 git               1  0.0\n  13826       1 git               0  0.0\n  13846     498 codex-linux-san   0  9.0\n  13848   13846 bwrap             2  0.0\n  13849   13848 codex             1  0.0\n  13850   13849 python            2 37.5\n  13863   13850 ps                0  0.0",
+  "corpora": [
+    {
+      "path": "/workspace/work/p74/experiment/corpora/wikidata-fitted.bz2",
+      "sha256": "82f65ace0731962d04443bbda4cebfdccd336106049751060f477941c2c29915"
+    },
+    {
+      "path": "/workspace/work/p74/experiment/corpora/random.bz2",
+      "sha256": "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18"
+    },
+    {
+      "path": "/workspace/work/p74/experiment/corpora/records.bz2",
+      "sha256": "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c"
+    },
+    {
+      "path": "/workspace/work/p74/experiment/corpora/mixed-independent.bz2",
+      "sha256": "11639f3599a85391b5ac97447bd06a26481806cfb8e79e909c1ad5a25d0778db"
+    },
+    {
+      "path": "/workspace/work/p74/experiment/corpora/text.bz2",
+      "sha256": "020b5bdaf836e3fafc7200026040ae591dffc1d9902c57a1818900846a3c2b47"
+    }
+  ],
+  "command": [
+    "taskset",
+    "-c",
+    "0",
+    "/workspace/mibz2/target/release/examples/p74_experiment",
+    "--measure-approved",
+    "/workspace/work/p74/experiment/corpora/wikidata-fitted.bz2",
+    "/workspace/work/p74/experiment/corpora/random.bz2",
+    "/workspace/work/p74/experiment/corpora/records.bz2",
+    "/workspace/work/p74/experiment/corpora/mixed-independent.bz2",
+    "/workspace/work/p74/experiment/corpora/text.bz2"
+  ],
+  "before": {
+    "cpu_stat": "usage_usec 585373650\nuser_usec 537059873\nsystem_usec 48313776\nnice_usec 0\nnr_periods 22311\nnr_throttled 873\nthrottled_usec 59690617\nnr_bursts 0\nburst_usec 0\n",
+    "quota": "200000 100000\n",
+    "proc_stat": "cpu  51028 0 5235 3063302 64 0 329 3804 0 0\ncpu0 18400 0 1738 1019748 19 0 129 1275 0 0\ncpu1 19159 0 1597 1019125 12 0 98 1301 0 0\ncpu2 13468 0 1900 1024427 32 0 102 1226 0 0\nintr 1330275 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 135 0 182 0 7405 0 0 0 16 16 0 20201 15836 0 1857 3390 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\nctxt 1637654\nbtime 1793402722\nprocesses 14406\nprocs_running 1\nprocs_blocked 0\nsoftirq 706392 0 150395 103 35805 7443 0 2190 390277 17 120162\n",
+    "cpu_pressure": "unavailable"
+  },
+  "wall_ns": 62757443095,
+  "after": {
+    "cpu_stat": "usage_usec 648634776\nuser_usec 599370495\nsystem_usec 49264280\nnice_usec 0\nnr_periods 22938\nnr_throttled 873\nthrottled_usec 59690617\nnr_bursts 0\nburst_usec 0\n",
+    "quota": "200000 100000\n",
+    "proc_stat": "cpu  56850 0 5326 3075782 64 0 334 4235 0 0\ncpu0 24201 0 1792 1019749 19 0 129 1696 0 0\ncpu1 19168 0 1622 1025360 12 0 100 1307 0 0\ncpu2 13481 0 1911 1030672 32 0 104 1231 0 0\nintr 1355141 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 143 0 183 0 7411 0 0 0 16 16 0 20432 16018 0 1922 3505 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\nctxt 1648597\nbtime 1793402722\nprocesses 14501\nprocs_running 1\nprocs_blocked 0\nsoftirq 713678 0 151845 104 36212 7449 0 2212 394153 17 121686\n",
+    "cpu_pressure": "unavailable"
+  },
+  "exit_code": 0,
+  "processes_after": "PID    PPID COMMAND         PSR %CPU\n      1       0 tail              0  0.0\n      2       1 cloud-agent-log   1  0.0\n      3       2 caas-prefix-tra   2  0.0\n    190       1 dockerd           2  0.0\n    237     190 containerd        1  0.0\n    498       0 codex             0  0.0\n    594       1 git               1  0.0\n    664       1 git               0  0.0\n   5063       1 git               2  0.0\n   7378       1 git               2  0.0\n   7388       1 git               1  0.0\n   9439       1 git               1  0.0\n  11695       1 git               2  0.0\n  13349       1 git               2  0.0\n  13396       1 git               1  0.0\n  13826       1 git               0  0.0\n  13846     498 codex-linux-san   0  0.0\n  13848   13846 bwrap             2  0.0\n  13849   13848 codex             1  0.0\n  13850   13849 python            2  0.0\n  13944   13850 ps                1  0.0"
+}

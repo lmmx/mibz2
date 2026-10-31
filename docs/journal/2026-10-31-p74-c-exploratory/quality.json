@@ -1,0 +1,43 @@
+{
+  "scope": "exploratory only",
+  "wall_seconds": 62.757443095,
+  "observations": 360,
+  "cpu_stat_delta": {
+    "usage_usec": 63261126,
+    "user_usec": 62310622,
+    "system_usec": 950504,
+    "nice_usec": 0,
+    "nr_periods": 627,
+    "nr_throttled": 0,
+    "throttled_usec": 0,
+    "nr_bursts": 0,
+    "burst_usec": 0
+  },
+  "throttled_wall_percent": 0.0,
+  "throttled_period_percent": 0.0,
+  "pinned_cpu0_proc_stat_delta": [
+    5801,
+    0,
+    54,
+    1,
+    0,
+    0,
+    0,
+    421,
+    0,
+    0
+  ],
+  "pinned_cpu0_steal_percent": 6.707025649195475,
+  "pressure": "unavailable",
+  "predeclared_noise_flags_triggered": true,
+  "qualification": false,
+  "remaining_limitations": [
+    "shared KVM host",
+    "virtual topology, no dedicated core guarantee",
+    "pressure unavailable",
+    "steal can be hidden by hypervisor",
+    "nominal intervals, temporal dependence unquantified",
+    "no independent Wikidata",
+    "one run only"
+  ]
+}
