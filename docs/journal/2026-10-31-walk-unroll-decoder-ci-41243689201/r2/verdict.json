@@ -1,0 +1,126 @@
+{
+ "overall": "NOT APPLICABLE (no w = 4: exploratory host)",
+ "correctness": {
+  "all_sha_ok": true,
+  "all_workers_plan": true,
+  "all_threads_within_allocation": true
+ },
+ "gates": {
+  "2_secondary_flags": {
+   "wikidata-fitted": {
+    "by_w": {
+     "1": {
+      "ratio": 1.2074020884253798,
+      "lower95": 1.1832023374604819,
+      "upper95": 1.2320967910382097
+     },
+     "2": {
+      "ratio": 1.1796447680506232,
+      "lower95": 1.1443207641259836,
+      "upper95": 1.2160591876107958
+     }
+    },
+    "material_deterioration": null
+   },
+   "wikidata-heldout": {
+    "by_w": {
+     "1": {
+      "ratio": 1.2384938773310867,
+      "lower95": 1.2126178131706868,
+      "upper95": 1.2649221110944404
+     },
+     "2": {
+      "ratio": 1.190616234126486,
+      "lower95": 1.1738116871720832,
+      "upper95": 1.207661358680711
+     }
+    },
+    "material_deterioration": null
+   }
+  },
+  "3_controls": {
+   "rows": {
+    "random w=1": "PASS",
+    "random w=2": "INCONCLUSIVE",
+    "records w=1": "PASS",
+    "records w=2": "PASS",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "INCONCLUSIVE",
+    "text w=1": "PASS",
+    "text w=2": "PASS",
+    "text-l1 w=1": "PASS",
+    "text-l1 w=2": "PASS",
+    "text-l5 w=1": "PASS",
+    "text-l5 w=2": "PASS",
+    "zeros w=1": "INCONCLUSIVE",
+    "zeros w=2": "PASS",
+    "period-3 w=1": "PASS",
+    "period-3 w=2": "INCONCLUSIVE"
+   },
+   "outcome": "INCONCLUSIVE"
+  },
+  "5_rss": {
+   "rows": {
+    "wikidata-20261026 w=1": "PASS",
+    "wikidata-20261026 w=2": "PASS",
+    "wikidata-fitted w=1": "PASS",
+    "wikidata-fitted w=2": "PASS",
+    "wikidata-heldout w=1": "PASS",
+    "wikidata-heldout w=2": "PASS",
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "records w=1": "PASS",
+    "records w=2": "PASS",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "PASS",
+    "text w=1": "PASS",
+    "text w=2": "PASS",
+    "text-l1 w=1": "PASS",
+    "text-l1 w=2": "PASS",
+    "text-l5 w=1": "PASS",
+    "text-l5 w=2": "PASS",
+    "zeros w=1": "PASS",
+    "zeros w=2": "PASS",
+    "period-3 w=1": "PASS",
+    "period-3 w=2": "INCONCLUSIVE"
+   },
+   "outcome": "INCONCLUSIVE"
+  },
+  "6_aa": {
+   "rows": 44,
+   "excluding_one": 0,
+   "threshold": 6,
+   "outcome": "PASS"
+  }
+ },
+ "host": {
+  "0": {
+   "role": "allocated",
+   "ticks": 47540,
+   "busy": 0.5812999579301641,
+   "irq": 0.00018931426167437948,
+   "steal": 0.0
+  },
+  "1": {
+   "role": "idle sibling",
+   "ticks": 47881,
+   "busy": 0.004135251978864268,
+   "irq": 0.0008562895511789645,
+   "steal": 0.0
+  },
+  "2": {
+   "role": "allocated",
+   "ticks": 47531,
+   "busy": 0.6020912667522249,
+   "irq": 6.311670278344659e-05,
+   "steal": 0.0
+  },
+  "3": {
+   "role": "idle sibling",
+   "ticks": 47861,
+   "busy": 0.0030087127306157413,
+   "irq": 2.089383840705376e-05,
+   "steal": 0.0
+  }
+ }
+}

@@ -1,0 +1,76 @@
+{
+ "label": "gha-ubuntu-24.04-exploratory2-r1-41243689201",
+ "allocation": {
+  "alloc": [
+   0,
+   2
+  ],
+  "idle_siblings": [
+   1,
+   3
+  ],
+  "physical_cores_allowed": 2,
+  "cores": [
+   [
+    2,
+    3
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "includes_cpu0_core": true,
+  "smt": true
+ },
+ "cpus": {
+  "0": {
+   "siblings": "0-1",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver'",
+   "cur_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq'"
+  },
+  "2": {
+   "siblings": "2-3",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_driver'",
+   "cur_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_cur_freq'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq'"
+  },
+  "1": {
+   "siblings": "0-1",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_driver'",
+   "cur_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq'"
+  },
+  "3": {
+   "siblings": "2-3",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_driver'",
+   "cur_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_cur_freq'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq'"
+  }
+ },
+ "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               AuthenticAMD\nModel name:                              AMD EPYC 7763 64-Core Processor\nCPU family:                              25\nModel:                                   1\nThread(s) per core:                      2\nCore(s) per socket:                      2\nSocket(s):                               1\nStepping:                                1\nBogoMIPS:                                4890.86\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves user_shstk clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload umip vaes vpclmulqdq rdpid fsrm\nVirtualization:                          AMD-V\nHypervisor vendor:                       Microsoft\nVirtualization type:                     full\nL1d cache:                               64 KiB (2 instances)\nL1i cache:                               64 KiB (2 instances)\nL2 cache:                                1 MiB (2 instances)\nL3 cache:                                32 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode\nVulnerability Spec store bypass:         Vulnerable\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Vulnerable: No microcode\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Not affected",
+ "topology": "CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE\n  0    0      0    0 0:0:0:0          yes\n  1    0      0    0 0:0:0:0          yes\n  2    0      0    1 1:1:1:0          yes\n  3    0      0    1 1:1:1:0          yes",
+ "smt_control": "on",
+ "intel_no_turbo": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/intel_pstate/no_turbo'",
+ "boost": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpufreq/boost'",
+ "cgroup": "/system.slice/hosted-compute-agent.service",
+ "cpu_max": "max 100000",
+ "root_cpu_max": "unavailable: [Errno 2] No such file or directory: '/sys/fs/cgroup/cpu.max'",
+ "kernel": {
+  "system": "Linux",
+  "node": "runnervm48cm3",
+  "release": "7.0.0-1017-azure",
+  "version": "#17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026",
+  "machine": "x86_64",
+  "processor": "x86_64"
+ },
+ "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)\nbinary: rustc\ncommit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3\ncommit-date: 2026-07-07\nhost: x86_64-unknown-linux-gnu\nrelease: 1.97.0\nLLVM version: 22.1.6",
+ "head": "f5c492d0005d2f1e6bbc15762c5beb742ce433f0",
+ "loadavg": "1.22 0.63 0.26 2/263 3830",
+ "ps": "PID PSR %CPU\n   3820   3 33.3\n   2186   0  1.8\n      1   0  0.7\n   2167   1  0.7\n   2070   3  0.4\n   1348   1  0.2\n     58   2  0.2\n     15   0  0.2\n    163   3  0.1\n    398   2  0.1\n   1130   0  0.1\n   1319   1  0.0\n   1057   1  0.0\n     89   0  0.0\n     47   1  0.0\n    232   3  0.0\n   1236   3  0.0\n    591   1  0.0\n   1015   0  0.0\n   1023   3  0.0\n    562   1  0.0\n   2055   3  0.0\n   1053   3  0.0\n      9   0  0.0\n   1135   2  0.0\n   1020   2  0.0\n   1201   3  0.0\n   1205   1  0.0\n   1125   2  0.0\n   1055   3  0.0\n     90   2  0.0\n   1027   2  0.0\n    111   1  0.0\n     49   3  0.0\n     16   1  0.0\n    225   0  0.0\n    221   3  0.0\n    732   0  0.0\n     11   0  0.0\n   2349   2  0.0\n    109   3  0.0\n     12   1  0.0\n   1146   3  0.0\n    405   1  0.0\n     92   0  0.0\n     60   1  0.0\n     52   3  0.0\n     25   2  0.0\n     39   3  0.0\n     18   1  0.0\n     19   0  0.0\n      2   1  0.0\n      3   2  0.0\n      4   0  0.0\n      5   0  0.0\n      6   0  0.0\n      7   0  0.0\n      8   0  0.0\n     10   0  0.0\n     13   0  0.0\n     14   0  0.0\n     17   0  0.0\n     20   0  0.0\n     21   0  0.0\n     22   0  0.0\n     23   2  0.0\n     24   2  0.0\n     26   2  0.0\n     28   2  0.0\n     29   1  0.0\n     30   1  0.0\n     31   1  0.0\n     32   1  0.0\n     34   1  0.0\n     35   3  0.0\n     36   3  0.0\n     37   3  0.0\n     38   3  0.0\n     40   3  0.0\n     41   0  0.0\n     42   3  0.0\n     43   3  0.0\n     44   3  0.0\n     45   0  0.0\n     46   2  0.0\n     48   3  0.0\n     51   2  0.0\n     53   2  0.0\n     54   2  0.0\n     55   2  0.0\n     56   2  0.0\n     57   2  0.0\n     59   0  0.0\n     61   2  0.0\n     62   2  0.0\n     63   2  0.0\n     64   2  0.0\n     65   2  0.0\n     66   2  0.0\n     67   3  0.0\n     68   3  0.0\n     69   3  0.0\n     70   3  0.0\n     71   3  0.0\n     72   3  0.0\n     73   0  0.0\n     74   2  0.0\n     75   3  0.0\n     76   2  0.0\n     77   3  0.0\n     78   2  0.0\n     79   1  0.0\n     80   1  0.0\n     81   3  0.0\n     82   2  0.0\n     83   3  0.0\n     84   2  0.0\n     85   3  0.0\n     86   2  0.0\n     91   3  0.0\n     93   3  0.0\n     94   3  0.0\n     95   3  0.0\n     97   2  0.0\n    108   2  0.0\n    110   3  0.0\n    140   2  0.0\n    184   2  0.0\n    185   3  0.0\n    186   2  0.0\n    231   3  0.0\n    244   0  0.0\n    346   3  0.0\n    407   0  0.0\n    414   3  0.0\n    415   0  0.0\n    650   3  0.0\n   1085   2  0.0\n   1136   0  0.0\n   1243   3  0.0\n   1307   2  0.0\n   1318   0  0.0\n   1322   3  0.0\n   2053   2  0.0\n   2068   1  0.0\n   2130   2  0.0\n   2133   0  0.0\n   2134   0  0.0\n   2135   1  0.0\n   2136   1  0.0\n   2137   2  0.0\n   2138   0  0.0\n   2139   2  0.0\n   2140   0  0.0\n   2152   0  0.0\n   2153   0  0.0\n   2154   2  0.0\n   2155   1  0.0\n   2156   2  0.0\n   2345   1  0.0\n   2346   3  0.0\n   2348   2  0.0\n   2357   3  0.0\n   3007   1  0.0\n   3031   3  0.0\n   3101   0  0.0\n   3831   2  0.0"
+}

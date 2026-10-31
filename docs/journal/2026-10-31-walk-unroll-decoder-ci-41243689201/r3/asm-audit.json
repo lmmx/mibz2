@@ -1,0 +1,173 @@
+{
+ "gates": {
+  "W1_arm_gates": true,
+  "W2_shipped_walk_unchanged": true,
+  "W3_each_arm_its_walk": true,
+  "W4a_src_insertions_only_in_bwt": true,
+  "W4b_same_stage_functions": true
+ },
+ "pass_": true,
+ "report": {
+  "W1": {
+   "arm": {
+    "totals": {
+     "instructions": 334,
+     "macro_ops": 305,
+     "loads": 98,
+     "stores": 69,
+     "prefetches": 32,
+     "stack_loads": 66,
+     "stack_stores": 37,
+     "conditional_branches": 33,
+     "unconditional_jumps": 3,
+     "calls": 0,
+     "t_loads": 32
+    },
+    "per_lane_step": {
+     "instructions": 10.438,
+     "macro_ops": 9.531,
+     "loads": 3.062,
+     "stores": 2.156,
+     "prefetches": 1.0,
+     "stack_loads": 2.062,
+     "stack_stores": 1.156,
+     "conditional_branches": 1.031,
+     "unconditional_jumps": 0.094,
+     "calls": 0.0
+    },
+    "steps_with_core": 32,
+    "steps_exactly_10": 25
+   },
+   "shipped": {
+    "totals": {
+     "instructions": 16,
+     "macro_ops": 14,
+     "loads": 3,
+     "stores": 2,
+     "prefetches": 1,
+     "stack_loads": 1,
+     "stack_stores": 0,
+     "conditional_branches": 2,
+     "unconditional_jumps": 0,
+     "calls": 0,
+     "t_loads": 1
+    },
+    "per_lane_step": {
+     "instructions": 16.0,
+     "macro_ops": 14.0,
+     "loads": 3.0,
+     "stores": 2.0,
+     "prefetches": 1.0,
+     "stack_loads": 1.0,
+     "stack_stores": 0.0,
+     "conditional_branches": 2.0,
+     "unconditional_jumps": 0.0,
+     "calls": 0.0
+    },
+    "stack_counted_alike": {
+     "loads": 2.0,
+     "stores": 1.0312
+    }
+   },
+   "gates": {
+    "S1_unrolled": true,
+    "S2_instructions": true,
+    "S3p_memory": true,
+    "S4_branches": true,
+    "S5p_calls_stack": true,
+    "S6_step_cores": true
+   },
+   "pass_": true
+  },
+  "W2": {
+   "per_lane_step": {
+    "instructions": 16.0,
+    "macro_ops": 14.0,
+    "loads": 3.0,
+    "stores": 2.0,
+    "prefetches": 1.0,
+    "stack_loads": 1.0,
+    "stack_stores": 0.0,
+    "conditional_branches": 2.0,
+    "unconditional_jumps": 0.0,
+    "calls": 0.0
+   }
+  },
+  "W3": {
+   "shipped_walk_callers": [
+    "<mibz2::bwt::Segmented as mibz2::bwt::InverseBwt>::invert",
+    "mibz2::decode_block::<mibz2::bwt::Segmented>"
+   ],
+   "arm_walk_callers": [
+    "<mibz2::bwt::SegmentedUnrolled as mibz2::bwt::InverseBwt>::invert"
+   ]
+  },
+  "W4a_source_diff": [
+   {
+    "file": "src/bwt.rs",
+    "added": 545,
+    "deleted": 0
+   }
+  ],
+  "W4b": {
+   "stage_functions": {
+    "A": [
+     "mibz2::bwt::build",
+     "mibz2::crc::clmul_update",
+     "mibz2::crc::crc32",
+     "mibz2::mtf::mtf_avx2",
+     "mibz2::mtf::mtf_scalar",
+     "mibz2::rle::unrle_avx2",
+     "mibz2::rle::unrle_scalar"
+    ],
+    "B": [
+     "mibz2::bwt::build",
+     "mibz2::crc::clmul_update",
+     "mibz2::crc::crc32",
+     "mibz2::mtf::mtf_avx2",
+     "mibz2::mtf::mtf_scalar",
+     "mibz2::rle::unrle_avx2",
+     "mibz2::rle::unrle_scalar"
+    ]
+   },
+   "stage_functions_differ": [],
+   "walk_functions": {
+    "A": [
+     "<mibz2::bwt::SegScratch>::assemble",
+     "mibz2::bwt::room_segments::<32, 1>"
+    ],
+    "B": [
+     "mibz2::bwt::room_segments_unrolled::<32, 1>"
+    ]
+   },
+   "driver_out_of_line": {
+    "A": [
+     "<mibz2::bwt::SegScratch>::assemble",
+     "mibz2::decode_block::<mibz2::bwt::Segmented>"
+    ],
+    "B": [
+     "<mibz2::bwt::SegmentedUnrolled as mibz2::bwt::InverseBwt>::invert"
+    ]
+   },
+   "worker_body_instructions": {
+    "A": 1665,
+    "B": 2892
+   },
+   "inlining_differences": [
+    "<mibz2::bwt::SegScratch>::assemble",
+    "<mibz2::bwt::Segmented as mibz2::bwt::InverseBwt>::invert",
+    "mibz2::decode_block::<mibz2::bwt::Segmented>"
+   ]
+  },
+  "W4c_review_required": {
+   "required": true,
+   "signature": {
+    "inlining_differences": [
+     "<mibz2::bwt::SegScratch>::assemble",
+     "<mibz2::bwt::Segmented as mibz2::bwt::InverseBwt>::invert",
+     "mibz2::decode_block::<mibz2::bwt::Segmented>"
+    ]
+   }
+  }
+ }
+}
