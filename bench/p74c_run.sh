@@ -5,8 +5,9 @@
 # Steps: pinned clean checkout; rustc 1.90.0; build; reproduce and hash-check every corpus;
 # --check (all five arms); the handoff audit; the structural assembly audit of the exact
 # binary; topology; one timed five-arm run pinned to one CPU; summary; tarball.
-# Env: P74C_WORK (input cache, default ~/.cache/mibz2-p74c), P74C_OUT (results root,
-# default ~/p74c-results), P74C_CPU (override the chosen CPU; recorded),
+# Env: P74C_WORK (input cache, default target/p74c/work), P74C_OUT (results root,
+# default target/p74c/results; both inside the git-ignored target/ of this checkout),
+# P74C_CPU (override the chosen CPU; recorded),
 # P74C_STOP_BEFORE_TIMING=1 (preparation and checks only).
 set -euo pipefail
 label=${1:?usage: p74c_run.sh HOST_LABEL}
@@ -14,8 +15,8 @@ label=${1:?usage: p74c_run.sh HOST_LABEL}
 repo=$(git rev-parse --show-toplevel)
 cd "$repo"
 frozen=docs/journal/2026-10-31-p74-c-confirmatory/frozen.json
-work=${P74C_WORK:-${XDG_CACHE_HOME:-$HOME/.cache}/mibz2-p74c}
-out=${P74C_OUT:-$HOME/p74c-results}/$label
+work=${P74C_WORK:-$repo/target/p74c/work}
+out=${P74C_OUT:-$repo/target/p74c/results}/$label
 die() { echo "p74c: $*" >&2; exit 1; }
 hash_of() { sha256sum "$1" | cut -d' ' -f1; }
 want() { python3 -c "import json,sys; print(json.load(open('$frozen'))$1)"; }
