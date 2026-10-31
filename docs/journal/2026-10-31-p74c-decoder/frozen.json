@@ -583,7 +583,7 @@
   "src/mtf/p74_c/tests/gate1.rs": "51b551d11ceda0f98cd108e9e0757109c76c90da4e60bbc36921c12c509e7bb3",
   "src/parallel.rs": "cd541345707bd0661312dd8506ac6b5c3bbeb441a10094c946a9ea48b459c8c5",
   "src/bwt.rs": "9be0f1da4737b8151d447c1de1e5e2662fb92c331062e54ddb4030fa27afdce9",
-  "examples/p74c_decoder.rs": "d238c9e4f909d77d8431ae56832ad670c81f688a80119ec4b56fae6c0fe6117f",
+  "examples/p74c_decoder.rs": "b87b00ef1a5519bb2c4f785af7fe065406ae69a4e75cb4d94e681690f3841990",
   "examples/p74_suite.rs": "7d08a5c94b33120948937ace85af0feb58ceee0646418dde4630f97976a5d8a3",
   "tests/common/mod.rs": "3aeb98175100dd760d5b3c16ac617be78e44ce9e0ec459bd2f7c4a6b85cdc491",
   "tests/p74c_decoder.rs": "2011e6e4a82cc6cc2bc756897d24060f106dab0ed2d4815a524e7a035e0a2a89",

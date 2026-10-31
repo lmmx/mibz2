@@ -1,4 +1,4 @@
-# P74-C full-decoder trial: amendment 1 (harness defect in `--check`; before any confirmatory timing)
+# P74-C full-decoder trial: amendment 1, harness v1.1 (a defect in `--check`; before any confirmatory timing)
 
 **What failed (measured):**
 - In the exploratory CI run 41196164480, jobs r1 and r2 stopped in `--check`, untimed and
@@ -8,14 +8,32 @@
   `hug-over-p31` in r2).
 - r3 passed `--check` and the whole timed run.
 
-**The cause (deduced, then reproduced):**
-- `--check` makes many decodes in one process. `pthread_join` returns once the kernel
-  clears the exiting thread's tid. That happens before the kernel releases the task, so a
-  joined thread can still be listed in `/proc/self/task` for a moment.
-- The next decode's thread snapshot can then count it.
-- **Reproduction:** on the preparation VM, with 30 one-block files, workers 1, 2 and 4, and
-  45 runs of `--check` per binary:
-  - the frozen binary failed 3 times, each time at line 701;
+**The cause (measured: the extra thread identified):**
+- An instrumented scratch build of the frozen harness (not committed) printed every listed
+  thread's tid, state and record on a mismatch. It ran 40 `--check` runs on 30 one-block
+  files, at w = 1, 2 and 4.
+- In both captured mismatches, the extra thread is **the previous decode's feeder**:
+  - `t1a`, arm A, w = 2: `19813:R:p74c-feeder|0-3|…` is still running (state R). Its tid
+    sits between main (19810) and the new decoder's workers (19814, 19815). The new
+    scanner (19816) still carries the parent's name, as it hasn't started yet. The new
+    feeder's own record is the separate `thread-self` entry, added after the snapshot.
+  - `t6b`, arm B, w = 2: `6011::||||` is a task directory still listed whose `status` and
+    `stat` were already gone: a task being released.
+- **Why it can still be listed:**
+  - The feeder runs inside `std::thread::scope`. `scope` returns when every scoped closure
+    has finished, not when the OS threads have exited; a handle not joined explicitly is
+    dropped and its thread detached.
+  - So the feeder can still be exiting, or being released, when the next decode takes its
+    snapshot.
+  - The decoder's own threads are joined (`dec.join()`) and never appeared extra.
+- **Not a scheduling discrepancy:**
+  - every captured record was within its allowed CPUs;
+  - r3's timed children all passed the allocation check (`all_threads_within_allocation`);
+  - a timed child snapshots before it spawns its feeder, in a fresh process, so no previous
+    feeder exists there.
+- **Reproduction:** on the preparation VM, with the same manifest and 45 runs of `--check`
+  per binary:
+  - the frozen binary failed 3 times, each at line 701;
   - the amended binary failed 0 times.
 
 **The change:**
@@ -28,7 +46,7 @@
   - the thread assertion (w + 3) is the same;
   - the protocol, corpora, schedule, gates and kernel are unchanged.
 - The only frozen hash that changes is `examples/p74c_decoder.rs` in `frozen.json`,
-  `5dc69a49…` → `d238c9e4…`.
+  `5dc69a49…` → `b87b00ef…`.
 - The binary's SHA-256 changes with it. The structural audit runs on the exact timed binary
   as before.
 
@@ -36,3 +54,16 @@
 - The exploratory figures from r3 (`../2026-10-31-p74c-decoder-ci-41196164480/`) used
   the frozen binary. They are not affected, since the check passed there.
 - No confirmatory (i9, w = 4) timing has been made at either pin.
+
+**Versions and records:**
+- **Harness v1.0**, the original frozen harness, is pin `535296c` (head `4acf46f`). It
+  stays in history unchanged, with the failed jobs' artifacts in
+  `../2026-10-31-p74c-decoder-ci-41196164480/r1`, `r2` and `r3`.
+- **Harness v1.1** is this amendment, pinned by `bench/p74c-decoder-pin`.
+- CI run 41196164480 stays recorded as **2 of 3 jobs stopped in `--check`**. It isn't
+  relabelled.
+- **Validation:**
+  - v1.1 is validated by a new exploratory CI run of three jobs, with `--check` and timing
+    at w = 1 and 2. It must complete all three before the i9 run.
+  - The MTF kernel, the selector, the thresholds, the corpora and the primary corpus are
+    unchanged.

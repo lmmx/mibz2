@@ -662,11 +662,11 @@ fn trial(args: &[String]) {
     }
 }
 
-/// `--check` decodes many times in one process. A joined thread can stay listed in
-/// /proc/self/task briefly after `join` returns (the kernel wakes the joiner when it
-/// clears the thread's tid, before it releases the task), and the next decode's snapshot
-/// would count it. Wait, bounded, until only main is listed. Untimed, `--check` only: a
-/// timed child makes one decode in a fresh process.
+/// `--check` decodes many times in one process. The previous decode's feeder ran in
+/// `std::thread::scope`, which returns when the closure has finished, not when the OS
+/// thread has exited, so it can still be listed in /proc/self/task (amendment 1), and the
+/// next decode's snapshot would count it. Wait, bounded, until only main is listed.
+/// Untimed, `--check` only: a timed child makes one decode in a fresh process.
 fn settle_threads() {
     let t0 = Instant::now();
     loop {
