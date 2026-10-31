@@ -5,8 +5,9 @@
 # Steps: pinned clean checkout; rustc 1.90.0; build; reproduce and hash-check every corpus;
 # --check (all five arms); the handoff audit; the structural assembly audit of the exact
 # binary; topology; one timed five-arm run pinned to one CPU; summary; tarball.
-# Env: P74C_WORK (input cache, default target/p74c/work), P74C_OUT (results root,
-# default target/p74c/results; both inside the git-ignored target/ of this checkout),
+# Env: P74C_RESULTS_DIR (results root, default bench/results/p74c in this checkout,
+# git-ignored; P74C_OUT is accepted as an older alias), P74C_WORK (input cache, default
+# target/p74c/work, git-ignored),
 # P74C_CPU (override the chosen CPU; recorded),
 # P74C_STOP_BEFORE_TIMING=1 (preparation and checks only).
 set -euo pipefail
@@ -16,7 +17,8 @@ repo=$(git rev-parse --show-toplevel)
 cd "$repo"
 frozen=docs/journal/2026-10-31-p74-c-confirmatory/frozen.json
 work=${P74C_WORK:-$repo/target/p74c/work}
-out=${P74C_OUT:-$repo/target/p74c/results}/$label
+results_dir=${P74C_RESULTS_DIR:-${P74C_OUT:-$repo/bench/results/p74c}}
+out=$results_dir/$label
 die() { echo "p74c: $*" >&2; exit 1; }
 hash_of() { sha256sum "$1" | cut -d' ' -f1; }
 want() { python3 -c "import json,sys; print(json.load(open('$frozen'))$1)"; }
@@ -199,4 +201,5 @@ echo "{\"wall_s\": $(python3 -c "print($end - $start)"), \"cpu\": $cpu}" > "$out
 python3 bench/p74_experiment.py confirm --manifest "$out/manifest.json" --raw "$out/raw.tsv" \
     --out "$out/summary.json" | tee "$out/verdict.json"
 tar -czf "$out.tar.gz" -C "$(dirname "$out")" "$label"
-echo "p74c: done: $out.tar.gz"
+echo "p74c: results: $out"
+echo "p74c: archive: $out.tar.gz"

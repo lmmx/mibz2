@@ -44,3 +44,5 @@ target/
 # just bench-compete's result files
 /compete-*.md
 /compete-*.jsonl
+# Benchmark runner outputs (bench/p74c_run.sh)
+bench/results/
