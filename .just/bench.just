@@ -211,3 +211,20 @@ bench-compete *args:
 [positional-arguments]
 bench-pmu-probe *args:
     python3 bench/pmu_probe.py "$@"
+
+# The minimal real-T-vector walker diagnostic (docs/journal/2026-11-01-walker-ladder-protocol.md):
+# its counter availability audit only, the step the guardian asked for before any capture
+# (report 135). It checks the corpus's hash, builds the ladder, runs its correctness check
+# (every rung at every lane count against the shipped walk's output), then asks perf which
+# of the protocol's events exist, count, and count unmultiplexed in their groups. No
+# figure is kept. About a minute; needs sudo for the counters. Upload walker-audit-*.json,
+# walker-audit-*.md and the console.
+#   sudo -v && just walker-counter-audit 2>&1 | tee walker-audit-console.log
+walker-counter-audit corpora="target/walk-decoder/work/corpora":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    f=$(realpath "{{corpora}}")/wikidata-20261026.bz2
+    echo "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe  $f" | sha256sum -c -
+    cargo build --release --example walker_ladder
+    target/release/examples/walker_ladder "$f" check
+    WALKER_PERF="sudo perf" python3 bench/walker_ladder.py audit "$f"
