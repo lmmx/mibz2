@@ -1,4 +1,4 @@
-# External research reports 74–131: index
+# External research reports 74–134: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -71,6 +71,9 @@ verbatim. They are not findings of this repository.
 | 129 | 2026-11-01 | the guardian | on the addendum: keep the two records separate | `2026-11-01-external-report-129.md` |
 | 130 | 2026-11-01 | the maintainer | the brief to a new Astra session: a research-architecture review for the next throughput breakthrough (after the P87 i9 result) | `2026-11-01-external-report-130.md` |
 | 131 | 2026-11-01 | Astra | the research-architecture memorandum: fixed 64-byte navigation records (P40/P38/P84) first, capped; R2 and R1 bounded | `2026-11-01-external-report-131.md` |
+| 132 | 2026-11-01 | the researcher (with the maintainer's prompts) | the last contribution: a walkthrough of the pipeline, then a minimal real-T-vector walker ladder to find the hardware ceiling, with literature (Kärkkäinen–Kempa–Puglisi, AMAC, Beamer) and counter methods | `2026-11-01-external-report-132.md` |
+| 133 | 2026-11-01 | the guardian | on Astra's memorandum: authorize Stage 1 of FOR-14/raw, VM-side only, capped at three engineer-days | `2026-11-01-external-report-133.md` |
+| 134 | 2026-11-01 | the guardian | on report 132: plan (do not build) a bounded minimal-walker diagnostic beside FOR-14, with a stopping rule | `2026-11-01-external-report-134.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
