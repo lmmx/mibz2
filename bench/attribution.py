@@ -293,6 +293,9 @@ def analyse_marks(path, w, cpus_alloc):
     started, ready = set(), set()
     last_enq = max((r[0] for r in rows if r[2] == "Enqueued"), default=0)
     idle = collections.defaultdict(float)
+    # the instrument's own split, for the validity check only: idle by the scanner's state,
+    # whether or not a job sat in the queue (the instrument reports the handoff apart)
+    idle_by_scan = collections.defaultdict(float)
     reading_s = slot_s = input_s = hol_later_s = 0.0
     prev = span0
     i = 0
@@ -309,6 +312,7 @@ def analyse_marks(path, w, cpus_alloc):
             elif scan == "input":
                 input_s += dt
             if n_idle > 0:
+                idle_by_scan[scan] += n_idle * dt
                 if enq_unclaimed > 0:
                     cause = "handoff"
                 elif scan == "done":
@@ -366,6 +370,7 @@ def analyse_marks(path, w, cpus_alloc):
     idle_total = sum(idle.values())
     res = dict(file=Path(path).name, w=w, span_s=span, out_bytes=out_bytes, worker_time_s=worker_time,
                idle_s=idle_total, idle={f"{k[0]}.{k[1]}": v for k, v in sorted(idle.items())},
+               idle_by_scanner_state=dict(idle_by_scan),
                startup_s=(t_s - span0) / 1e9, drain_s=(span1 - t_d) / 1e9,
                scanner=dict(reading_s=reading_s, slot_s=slot_s, input_s=input_s,
                             cap_MBps=out_bytes / reading_s / 1e6 if reading_s > 0 else None),
@@ -506,8 +511,8 @@ def validity(occ, occ_dir, cpus, stat_j, rec_j, name):
         if k.get("t.complete") != "yes":
             diffs.append(dict(run=f.name, problem=k.get("t.problem")))
             continue
-        mine = lambda c: sum(v for x, v in m["idle"].items() if x.endswith("." + c)) / m["worker_time_s"]  # noqa: E731
-        for c, key in (("scanner_reading", "t.w.idle.reading"), ("input_wait", "t.w.idle.input")):
+        mine = lambda c: m["idle_by_scanner_state"].get(c, 0.0) / m["worker_time_s"]  # noqa: E731
+        for c, key in (("reading", "t.w.idle.reading"), ("input", "t.w.idle.input")):
             diffs.append(dict(run=f.name, cause=c, mine=mine(c), instrument=float(k[key]), diff=abs(mine(c) - float(k[key]))))
     agree = all(d.get("diff", 1) <= 0.02 for d in diffs) and bool(diffs)
     walls = lambda xs: mean([x["wall_s"] for x in xs])  # noqa: E731
