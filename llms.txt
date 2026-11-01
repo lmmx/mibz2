@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Inverse-BWT memory interference](<https://lmmx.github.io/mibz2/blog/2026-11-01-inverse-bwt-memory-interference/index.md>): Four workers make mibz2 faster, but each decoded byte more expensive. Two experiments to find out why, and why buffer reuse comes first.
 - [Block dispatch in mibz2](<https://lmmx.github.io/mibz2/blog/2026-11-01-block-dispatch/index.md>): How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay.
 - [32 lanes, 8.6 chains](<https://lmmx.github.io/mibz2/blog/2026-10-31-room-walk-overlap/index.md>): The decoder's 32-lane walk runs 8.6 times faster than one chain. That figure may not mean what it seems: the walk may already hide memory latency, and spend too many instructions on each byte.
 - [Compact navigation tables for the inverse BWT](<https://lmmx.github.io/mibz2/blog/2026-10-29-compact-navigation-tables/index.md>): Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.
