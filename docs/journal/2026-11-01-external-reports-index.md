@@ -1,4 +1,4 @@
-# External research reports 74–129: index
+# External research reports 74–130: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
