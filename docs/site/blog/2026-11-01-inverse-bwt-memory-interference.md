@@ -1,5 +1,5 @@
 ---
-title: "The extra CPU cost of four-worker bzip2 decoding"
+title: "Investigating inverse-BWT memory interference in mibz2"
 image: assets/social/blog-2026-11-01-inverse-bwt-memory-interference.png
 description: "Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible."
 ---
@@ -11,7 +11,7 @@ description: "Four workers finish decompression sooner, but together spend 32% m
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# The extra CPU cost of four-worker bzip2 decoding
+# Investigating inverse-BWT memory interference in mibz2
 
 Four workers finish decompression sooner, but together spend 32% more processor time per
 byte. We're testing whether competition for shared memory is responsible.
