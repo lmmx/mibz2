@@ -1,4 +1,4 @@
-# External research reports 74–124: index
+# External research reports 74–129: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -64,6 +64,11 @@ verbatim. They are not findings of this repository.
 | 122 | 2026-11-01 | the guardian | on agentic choreography: decision readiness as the stopping condition | `2026-11-01-external-report-122.md` |
 | 123 | 2026-11-01 | the guardian | the message to the coordinator: dispatch closed, one inverse-BWT memory proposal | `2026-11-01-external-report-123.md` |
 | 124 | 2026-11-01 | the guardian | using Astra for an independent architectural proposal in parallel | `2026-11-01-external-report-124.md` |
+| 125 | 2026-11-01 | the guardian (with the independent audit's clarification) | P87 selected: the decision and the instruction to the coordinator | `2026-11-01-external-report-125.md` |
+| 126 | 2026-11-01 | the guardian | progress report and status: serial work on P87 | `2026-11-01-external-report-126.md` |
+| 127 | 2026-11-01 | the guardian | the consolidated technical history, from the four-core slowdown to P87 (evidence cutoff 1 November) | `2026-11-01-external-report-127.md` |
+| 128 | 2026-11-01 | the researcher | the independent addendum: the standards of evidence behind selecting P87 | `2026-11-01-external-report-128.md` |
+| 129 | 2026-11-01 | the guardian | on the addendum: keep the two records separate | `2026-11-01-external-report-129.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
