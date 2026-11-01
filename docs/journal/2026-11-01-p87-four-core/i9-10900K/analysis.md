@@ -226,3 +226,53 @@ The reviews agree on the order of what comes next. None of it is authorised here
    deserves careful interpretation first. It stays relevant, as the independent researcher
    notes: P87's saving is much smaller than the four-worker penalty, and the 24× DRAM figure
    suggests the per-worker footprint as a whole is worth understanding.
+
+## 6. Closure (after the guardian's and the researcher's reviews of this record)
+
+The diagnostic is **closed**. The registered verdict stands as emitted. The corrected traffic
+analysis is preserved beside the frozen one. The three readings (the maintainer's from the
+i9 output, this replay, and the researcher's audit of the archive) agree on the facts. The
+record keeps three layers apart:
+
+**The statistical result (measured).**
+- **Primary, four workers:** on Wikidata, B improves throughput by +1.35% [+0.29, +2.41] and
+  CPU per GB by −1.71% [−2.37, −1.06].
+- **Mechanism:** D = +0.078 CPU-s/GB [+0.042, +0.114]. The interval excludes zero, so a
+  positive concurrency interaction is supported, but it crosses the 0.10 materiality
+  threshold.
+- **The five other no-harm cells:** all inconclusive, and none demonstrates a regression.
+  For example, `records` at four workers has throughput 0.990, interval 0.962 to 1.019:
+  consistent with a small regression, no effect, or a small improvement.
+- **Steps (separately instrumented):** the assembly saving is resolved; the traversal
+  saving is not.
+- **DRAM at four workers (after the unit correction):** reads −10%, writes −13%.
+
+**The physical interpretation (proposed, not identified).**
+- **What the results fit:** changing the assembly destination changes the four-worker
+  memory environment. The earlier steps' savings point to cross-worker or persistent
+  effects.
+- **What they don't show** is that the traffic reduction mediates the CPU saving. Both were
+  observed under the intervention, and the counters are machine-wide. "P87 improves
+  performance by reducing DRAM traffic" is not a claim this record makes.
+- **What remains of the penalty:** the larger inverse-BWT penalty is untouched, and its
+  physical cause is not isolated.
+
+**The engineering decision (registered).**
+- **No promotion:** engineering is NOT DEMONSTRATED. That is a failure to establish every
+  required condition, not evidence of a regression.
+- **Diagnostic, not production:** the arms were compared on one diagnostic binary, both
+  through the diagnostic path. The +1.35% is a diagnostic A/B improvement, not a measured
+  improvement over the shipped decoder.
+
+**Disposition.** P87 is a credible optimisation candidate with a genuine positive primary
+result. It is not yet a production-ready optimisation.
+- **Next:** a production-shaped validation, under its own protocol registered before it
+  runs. Its controls must be powered for their gates, and its tolerances must not be
+  loosened because the Wikidata result was encouraging.
+- **Still open:** P87's historical bar at 6–10 workers, unevaluated.
+- **Preserved:** the calibrated neighbour experiment, as the broader follow-up.
+
+**The design lesson.** This protocol worked out precision only for the primary comparison,
+not for every mandatory criterion. The controls' throughput noise per round was 6–8% at
+four workers: decodes of about 50 ms are dominated by fixed per-run jitter. A gate needs
+its precision checked when it is designed, not after the run.
