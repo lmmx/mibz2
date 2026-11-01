@@ -202,6 +202,9 @@ for ((r = 0; r < w1reps; r++)); do pair 1 "$r" "$tier"; done
 if quality "$out/quality.json"; then
     echo "dispatch: the quality checks pass on the first $initial: expanding to $total"
     for ((r = initial; r < total; r++)); do pair 4 "$r" "$tier"; done
+elif [[ $dry == 1 ]]; then
+    echo "dispatch: DRY RUN: a quality check fails on the first $initial; the expansion forced to exercise its path (a real run stops here)"
+    for ((r = initial; r < total; r++)); do pair 4 "$r" "$tier"; done
 else
     echo "dispatch: a quality check fails on the first $initial: not expanded (quality.json says which)"
 fi
