@@ -73,3 +73,5 @@ and no threshold change.
    within their intervals).
 4. **Consistent with the exploratory CI runs,** which gave +2.3% to +5.7% at w ≤ 2 on AMD
    and Intel, and with the stage measurement (an i9 plain-MTF stage ratio of 0.819).
+
+**Postmortem (read-only, descriptive):** `postmortem.md`. The engineering lesson from the RSS NEGATIVE: `../2026-11-01-buffer-capacity-contract.md`.
