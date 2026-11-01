@@ -1778,7 +1778,11 @@ impl Inv {
                 (m, s.elapsed().as_secs_f64() - m)
             }
             Inv::Compact('h', c) => {
-                c.load_h(b.records.get().expect("h's records, made before the rounds"));
+                c.load_h(
+                    b.records
+                        .get()
+                        .expect("h's records, made before the rounds"),
+                );
                 let m = s.elapsed().as_secs_f64();
                 c.walk('h', &b.ll, b.orig_ptr, out);
                 (m, s.elapsed().as_secs_f64() - m)
@@ -2044,7 +2048,10 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
     if arms.iter().any(|a| a.kind == 'h') {
         // (an h arm's records are made from the harness's last column, outside the timing:
         // no MTF stage in it)
-        assert!(!with_mtf, "h arms take their records made, not COOP_WITH_MTF=1");
+        assert!(
+            !with_mtf,
+            "h arms take their records made, not COOP_WITH_MTF=1"
+        );
         make_records(bs, 0);
     }
     if arms.iter().any(|a| a.kind == 'l') {
@@ -2550,12 +2557,14 @@ fn h_check(bs: &[Block], permille: &[u32]) {
                     })
                 })
                 .collect();
-            hs.into_iter().map(|h| h.join().unwrap()).fold([0usize; 9], |mut a, t| {
-                for (x, v) in a.iter_mut().zip(t) {
-                    *x += v;
-                }
-                a
-            })
+            hs.into_iter()
+                .map(|h| h.join().unwrap())
+                .fold([0usize; 9], |mut a, t| {
+                    for (x, v) in a.iter_mut().zip(t) {
+                        *x += v;
+                    }
+                    a
+                })
         });
         let [run, for14, rawg, crossing, forced, rec, raw, full_rows, full_raw] = tot;
         let groups = run + for14 + rawg;

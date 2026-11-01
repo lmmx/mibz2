@@ -1,0 +1,44 @@
+== wikidata-20261026
+permille 0: 434 blocks, 207006515 rows: exact output and CRC on every block; groups 6469082: RUN 4968098 (76.80%), FOR 1377587 (21.29%), RAW 123397 (1.91%; crossing 18663, forced 0); 2.076 bytes a row (2.000 records + 0.076 raw); full blocks' raw row
+permille 50: 434 blocks, 207006515 rows: exact output and CRC on every block; groups 6469082: RUN 4713732 (72.87%), FOR 1307767 (20.22%), RAW 447583 (6.92%; crossing 18663, forced 324186); 2.277 bytes a row (2.000 records + 0.277 raw); full blocks' r
+permille 1000: 434 blocks, 207006515 rows: exact output and CRC on every block; groups 6469082: RUN 0 (0.00%), FOR 0 (0.00%), RAW 6469082 (100.00%; crossing 18663, forced 6345685); 6.000 bytes a row (2.000 records + 4.000 raw); full blocks' raw rows 
+== wikidata-fitted
+permille 0: 431 blocks, 209706557 rows: exact output and CRC on every block; groups 6553457: RUN 5071195 (77.38%), FOR 1358355 (20.73%), RAW 123907 (1.89%; crossing 18813, forced 0); 2.076 bytes a row (2.000 records + 0.076 raw); full blocks' raw row
+permille 50: 431 blocks, 209706557 rows: exact output and CRC on every block; groups 6553457: RUN 4811079 (73.41%), FOR 1289916 (19.68%), RAW 452462 (6.90%; crossing 18813, forced 328555); 2.276 bytes a row (2.000 records + 0.276 raw); full blocks' r
+permille 1000: 431 blocks, 209706557 rows: exact output and CRC on every block; groups 6553457: RUN 0 (0.00%), FOR 0 (0.00%), RAW 6553457 (100.00%; crossing 18813, forced 6429550); 6.000 bytes a row (2.000 records + 4.000 raw); full blocks' raw rows 
+== wikidata-heldout
+permille 0: 473 blocks, 235773776 rows: exact output and CRC on every block; groups 7368065: RUN 5789546 (78.58%), FOR 1439663 (19.54%), RAW 138856 (1.88%; crossing 21038, forced 0); 2.076 bytes a row (2.000 records + 0.075 raw); full blocks' raw row
+permille 50: 473 blocks, 235773776 rows: exact output and CRC on every block; groups 7368065: RUN 5493068 (74.55%), FOR 1366532 (18.55%), RAW 508465 (6.90%; crossing 21038, forced 369609); 2.276 bytes a row (2.000 records + 0.276 raw); full blocks' r
+permille 1000: 473 blocks, 235773776 rows: exact output and CRC on every block; groups 7368065: RUN 0 (0.00%), FOR 0 (0.00%), RAW 7368065 (100.00%; crossing 21038, forced 7229209); 6.000 bytes a row (2.000 records + 4.000 raw); full blocks' raw rows 
+== mixed-independent
+permille 0: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 34 (0.05%), FOR 58078 (92.89%), RAW 4411 (7.06%; crossing 738, forced 0); 2.282 bytes a row (2.000 records + 0.282 raw); full blocks' raw rows 6.51%
+permille 50: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 32 (0.05%), FOR 55095 (88.12%), RAW 7396 (11.83%; crossing 738, forced 2985); 2.473 bytes a row (2.000 records + 0.473 raw); full blocks' raw rows 11.28%
+permille 1000: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 0 (0.00%), FOR 0 (0.00%), RAW 62523 (100.00%; crossing 738, forced 58112); 6.000 bytes a row (2.000 records + 4.000 raw); full blocks' raw rows 100.00%
+== random
+permille 0: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00%), FOR 247784 (99.11%), RAW 2221 (0.89%; crossing 2216, forced 0); 2.036 bytes a row (2.000 records + 0.036 raw); full blocks' raw rows 0.88%
+permille 50: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00%), FOR 235124 (94.05%), RAW 14881 (5.95%; crossing 2216, forced 12660); 2.238 bytes a row (2.000 records + 0.238 raw); full blocks' raw rows 5.94%
+permille 1000: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00%), FOR 0 (0.00%), RAW 250005 (100.00%; crossing 2216, forced 247784); 6.000 bytes a row (2.000 records + 4.000 raw); full blocks' raw rows 100.00%
+== records
+permille 0: 11 blocks, 9600002 rows: exact output and CRC on every block; groups 300006: RUN 0 (0.00%), FOR 297295 (99.10%), RAW 2711 (0.90%; crossing 2711, forced 0); 2.036 bytes a row (2.000 records + 0.036 raw); full blocks' raw rows 0.88%
+permille 50: 11 blocks, 9600002 rows: exact output and CRC on every block; groups 300006: RUN 0 (0.00%), FOR 282082 (94.03%), RAW 17924 (5.97%; crossing 2711, forced 15213); 2.239 bytes a row (2.000 records + 0.239 raw); full blocks' raw rows 5.95%
+permille 1000: 11 blocks, 9600002 rows: exact output and CRC on every block; groups 300006: RUN 0 (0.00%), FOR 0 (0.00%), RAW 300006 (100.00%; crossing 2711, forced 297295); 6.000 bytes a row (2.000 records + 4.000 raw); full blocks' raw rows 100.00%
+== text
+permille 0: 13 blocks, 11036297 rows: exact output and CRC on every block; groups 344892: RUN 96897 (28.09%), FOR 237051 (68.73%), RAW 10944 (3.17%; crossing 1432, forced 0); 2.127 bytes a row (2.000 records + 0.127 raw); full blocks' raw rows 3.15%
+permille 50: 13 blocks, 11036297 rows: exact output and CRC on every block; groups 344892: RUN 92083 (26.70%), FOR 224788 (65.18%), RAW 28021 (8.12%; crossing 1432, forced 17077); 2.325 bytes a row (2.000 records + 0.325 raw); full blocks' raw rows 8
+permille 1000: 13 blocks, 11036297 rows: exact output and CRC on every block; groups 344892: RUN 0 (0.00%), FOR 0 (0.00%), RAW 344892 (100.00%; crossing 1432, forced 333948); 6.000 bytes a row (2.000 records + 4.000 raw); full blocks' raw rows 100.00
+== text-l1
+permille 0: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 59562 (17.27%), FOR 269052 (78.00%), RAW 16335 (4.74%; crossing 10392, forced 0); 2.190 bytes a row (2.001 records + 0.189 raw); full blocks' raw rows 0.00
+permille 50: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 56569 (16.40%), FOR 253758 (73.56%), RAW 34622 (10.04%; crossing 10392, forced 18287); 2.403 bytes a row (2.001 records + 0.402 raw); full blocks' raw row
+permille 1000: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 0 (0.00%), FOR 0 (0.00%), RAW 344949 (100.00%; crossing 10392, forced 328614); 6.002 bytes a row (2.001 records + 4.001 raw); full blocks' raw rows 0.00
+== text-l5
+permille 0: 23 blocks, 11036297 rows: exact output and CRC on every block; groups 344898: RUN 78178 (22.67%), FOR 254259 (73.72%), RAW 12461 (3.61%; crossing 2431, forced 0); 2.145 bytes a row (2.000 records + 0.145 raw); full blocks' raw rows 0.00%
+permille 50: 23 blocks, 11036297 rows: exact output and CRC on every block; groups 344898: RUN 73981 (21.45%), FOR 240979 (69.87%), RAW 29938 (8.68%; crossing 2431, forced 17477); 2.347 bytes a row (2.000 records + 0.347 raw); full blocks' raw rows 0
+permille 1000: 23 blocks, 11036297 rows: exact output and CRC on every block; groups 344898: RUN 0 (0.00%), FOR 0 (0.00%), RAW 344898 (100.00%; crossing 2431, forced 332437); 6.000 bytes a row (2.000 records + 4.000 raw); full blocks' raw rows 0.00%
+== period-3
+permille 0: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 84369 (99.99%), FOR 0 (0.00%), RAW 8 (0.01%; crossing 8, forced 0); 2.001 bytes a row (2.000 records + 0.000 raw); full blocks' raw rows 0.01%
+permille 50: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 80055 (94.88%), FOR 0 (0.00%), RAW 4322 (5.12%; crossing 8, forced 4314); 2.205 bytes a row (2.000 records + 0.205 raw); full blocks' raw rows 5.12%
+permille 1000: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 0 (0.00%), FOR 0 (0.00%), RAW 84377 (100.00%; crossing 8, forced 84369); 6.000 bytes a row (2.000 records + 4.000 raw); full blocks' raw rows 100.00%
+== zeros
+permille 0: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 1654 (99.94%), FOR 0 (0.00%), RAW 1 (0.06%; crossing 1, forced 0); 2.004 bytes a row (2.002 records + 0.002 raw); full blocks' raw rows 0.00%
+permille 50: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 1559 (94.20%), FOR 0 (0.00%), RAW 96 (5.80%; crossing 1, forced 95); 2.234 bytes a row (2.002 records + 0.232 raw); full blocks' raw rows 0.00%
+permille 1000: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 0 (0.00%), FOR 0 (0.00%), RAW 1655 (100.00%; crossing 1, forced 1654); 6.003 bytes a row (2.002 records + 4.001 raw); full blocks' raw rows 0.00%

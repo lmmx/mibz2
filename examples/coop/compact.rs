@@ -612,13 +612,24 @@ impl Compact {
 //   - bits 20..28: F, the group's one byte (FOR; zero for RAW);
 //   - bit 28: RAW;
 //   - bits 29..32: zero;
-//   - bits 32..64: the start mask, bit 32 + i set while row 32 g + i starts a segment
-//     (set by the walk, as production sets its START bit, and cleared after).
-// A group is FOR when its 32 rows lie in one F bucket and its ψ span (max − min) is below
-// 2^14: ψ(j) = base + offset, F[j] = F. RUN groups (ψ consecutive) are FOR with offsets
+//   - bits 32..64: the start mask, bit 32 + i set while row 32 g + i starts a segment.
+//
+// A group is FOR when its 32 rows lie in one F bucket and its ψ span (max − min) is at most
+// 2^14 − 2: ψ(j) = base + offset, F[j] = F. RUN groups (ψ consecutive) are FOR with offsets
 // 0..31: one format, so the common path has no format branch. Every other group is RAW:
-// its payload is zero and its 32 entries are in the raw area, 128 bytes (two lines) a raw
-// group, entry i a u32: ψ(j) in bits 0..20, F[j] in bits 20..28.
+// its 32 entries are in the raw area, 128 bytes (two lines) a raw group, entry i a u32:
+// ψ(j) in bits 0..20, F[j] in bits 20..28.
+//
+// **The sentinel.** Offset 2^14 − 1 (S) means "not an ordinary step": every offset of a RAW
+// record is S, and the walk writes S over a start row's offset while it runs (restoring it
+// after). So an ordinary step tests one value, the offset it needs anyway; only at S does
+// it read the start mask, to tell a start from a raw row.
+//
+// **The parking record.** One more record, after the block's, whose offsets are all S and
+// whose mask is empty. A lane at a raw row prefetches the row's raw entry, writes nothing,
+// and moves to the parking record's first row (PARK); at its next turn the ordinary step
+// lands on S again (an L1 hit), sees PARK, and takes ψ and F from the entry. So no
+// ordinary step tests whether its lane is waiting on a raw entry.
 //
 // The header is at the end of the line so that every offset's 4-byte load, at byte
 // floor(14 i / 8) <= 54, ends inside it: an ordinary step reads one line, at an address
@@ -632,12 +643,24 @@ pub struct Line(pub [u8; 64]);
 
 const H_RAW: u64 = 1 << 28;
 const H_MASK20: u64 = 0xf_ffff;
-/// a lane's `pend` when it waits on no raw entry
-const NO_RAW: u32 = u32::MAX;
+/// the sentinel offset
+const H_S: u32 = 0x3fff;
+/// a record whose every offset is S, mask empty, RAW: the parking record, and a RAW
+/// record's payload before its header is written
+const H_ALL_S: Line = {
+    let mut l = [0xffu8; 64];
+    let mut i = 56;
+    while i < 64 {
+        l[i] = 0;
+        i += 1;
+    }
+    Line(l)
+};
 
 /// A block's FOR-14/raw records, made offline from its full T-vector (the oracle)
 #[derive(Default)]
 pub struct Records {
+    /// the block's records and, last, the parking record
     pub rec: Vec<Line>,
     pub raw: Vec<Line>,
     pub n: usize,
@@ -658,8 +681,10 @@ impl Records {
     pub fn from_block(ll: &[u8], counts: &[u32; 256], force_permille: u32) -> Records {
         let n = ll.len();
         assert!(n < 1 << 20, "ψ and the raw index are 20 bits");
-        let mut c = Compact::default();
-        c.n = n;
+        let mut c = Compact {
+            n,
+            ..Default::default()
+        };
         c.build_o(ll, counts);
         let t = &c.t32[..n];
         // F and ψ, checked: T's byte is L's, and L[ψ(j)] = F[j] (the carried byte's
@@ -689,32 +714,24 @@ impl Records {
             let (mn, mx) = psi[lo..hi]
                 .iter()
                 .fold((u32::MAX, 0), |(a, b), &x| (a.min(x), b.max(x)));
-            let mut h = 0u64;
             let mut x = (g as u64 ^ 0x9e37_79b9_7f4a_7c15).wrapping_mul(0xbf58_476d_1ce4_e5b9);
             x ^= x >> 31;
             let force = (x % 1000) < force_permille as u64;
-            if one && mx - mn < 1 << 14 && !force {
-                h |= mn as u64 | (f[lo] as u64) << 20;
+            let fits = one && mx - mn < H_S;
+            let h = if fits && !force {
                 let line = &mut r.rec[g].0;
                 for (i, &p) in psi[lo..hi].iter().enumerate() {
-                    let v = (p - mn) as u64;
-                    let at = 14 * i;
-                    // OR the 14 bits into bytes at / 8 .. at / 8 + 3 (bytes 0..56)
-                    let w = v << (at % 8);
-                    for k in 0..3 {
-                        if at / 8 + k < 56 {
-                            line[at / 8 + k] |= (w >> (8 * k)) as u8;
-                        }
-                    }
+                    put14(line, i, p - mn);
                 }
                 if (lo..hi).all(|j| psi[j] == mn + (j - lo) as u32) {
                     r.run += 1;
                 } else {
                     r.for14 += 1;
                 }
+                mn as u64 | (f[lo] as u64) << 20
             } else {
                 let idx = r.raw_groups;
-                h |= idx as u64 | H_RAW;
+                r.rec[g] = H_ALL_S;
                 r.raw.push(Line([0; 64]));
                 r.raw.push(Line([0; 64]));
                 for (i, j) in (lo..hi).enumerate() {
@@ -724,33 +741,52 @@ impl Records {
                 }
                 r.raw_groups += 1;
                 r.crossing += !one as usize;
-                r.forced += (one && mx - mn < 1 << 14) as usize;
-            }
+                r.forced += fits as usize;
+                idx as u64 | H_RAW
+            };
             r.rec[g].0[56..64].copy_from_slice(&h.to_le_bytes());
         }
+        let mut park = H_ALL_S;
+        park.0[56..64].copy_from_slice(&H_RAW.to_le_bytes());
+        r.rec.push(park);
         // every row decodes to its ψ and F (the decoder below, against the oracle)
         for j in 0..n {
             let (p, b) = unsafe { h_next(r.rec.as_ptr(), r.raw.as_ptr(), j as u32) };
-            assert!(p == psi[j] && b == f[j], "row {j}'s record decodes to its ψ and F");
+            assert!(
+                p == psi[j] && b == f[j],
+                "row {j}'s record decodes to its ψ and F"
+            );
         }
         r
     }
 
-    /// The records' bytes and raw area's
+    /// The records' bytes (the parking record's line included) and raw area's
     pub fn bytes(&self) -> (usize, usize) {
         (64 * self.rec.len(), 64 * self.raw.len())
     }
 }
 
-/// Row `row`'s header
-///
-/// SAFETY (all four): `row` is below n, `rec` a block's records
-#[inline(always)]
-unsafe fn h_header(rec: *const Line, row: u32) -> u64 {
-    unsafe { u64::from_le(((rec.add((row >> 5) as usize) as *const u8).add(56) as *const u64).read()) }
+/// Offset i's 14 bits in the payload, set to `v` (the others kept)
+fn put14(line: &mut [u8; 64], i: usize, v: u32) {
+    debug_assert!(v <= H_S);
+    let at = 14 * i;
+    let mut w = u32::from_le_bytes(line[at / 8..at / 8 + 4].try_into().unwrap());
+    w = (w & !(H_S << (at % 8))) | v << (at % 8);
+    line[at / 8..at / 8 + 4].copy_from_slice(&w.to_le_bytes());
 }
 
-/// Row `row`'s 14-bit offset (meaningless in a RAW record, whose payload is zero)
+/// Row `row`'s header
+///
+/// SAFETY (all three): `row` is below 32 × the records' count, `rec` a block's records
+#[inline(always)]
+unsafe fn h_header(rec: *const Line, row: u32) -> u64 {
+    unsafe {
+        u64::from_le(((rec.add((row >> 5) as usize) as *const u8).add(56) as *const u64).read())
+    }
+}
+
+/// Row `row`'s 14-bit offset (S in a RAW record, at a start row while the walk runs, and in
+/// the parking record)
 #[inline(always)]
 unsafe fn h_offset(rec: *const Line, row: u32) -> u32 {
     let at = 14 * (row & 31);
@@ -758,16 +794,11 @@ unsafe fn h_offset(rec: *const Line, row: u32) -> u32 {
         ((rec.add((row >> 5) as usize) as *const u8).add((at >> 3) as usize) as *const u32)
             .read_unaligned()
     };
-    (u32::from_le(w) >> (at & 7)) & 0x3fff
+    (u32::from_le(w) >> (at & 7)) & H_S
 }
 
-/// Row `row`'s raw entry's index (in u32s) in the raw area, from its RAW header
-#[inline(always)]
-fn h_raw_index(h: u64, row: u32) -> u32 {
-    32 * (h & H_MASK20) as u32 + (row & 31)
-}
-
-/// ψ(row) and F[row], either format: the walk's starts and the plain walk
+/// ψ(row) and F[row], either format, from the records with no start marked: the walk's
+/// starts (made before it marks them) and the plain walk
 #[inline(always)]
 unsafe fn h_next(rec: *const Line, raw: *const Line, row: u32) -> (u32, u8) {
     unsafe {
@@ -779,6 +810,12 @@ unsafe fn h_next(rec: *const Line, raw: *const Line, row: u32) -> (u32, u8) {
             ((h & H_MASK20) as u32 + h_offset(rec, row), (h >> 20) as u8)
         }
     }
+}
+
+/// Row `row`'s raw entry's index (in u32s) in the raw area, from its RAW header
+#[inline(always)]
+fn h_raw_index(h: u64, row: u32) -> u32 {
+    32 * (h & H_MASK20) as u32 + (row & 31)
 }
 
 #[inline(always)]
@@ -795,14 +832,25 @@ fn prefetch_at(p: *const u8) {
 /// `h`'s lane: `Lane` and the raw entry it waits on
 #[derive(Clone, Copy)]
 struct LaneH {
+    /// a row, or PARK while the lane waits on its raw entry
     row: u32,
-    /// NO_RAW, or the raw entry (u32 index) of `row`, prefetched at the lane's last turn
+    /// the raw entry (u32 index) the lane waits on (read only while `row` is PARK)
     pend: u32,
     /// the byte the lane writes at its next step: L of `row`
     b: u8,
     seg: usize,
     p: *mut u8,
     end: *mut u8,
+}
+
+/// What a lane's step found
+enum Slow {
+    /// a byte to write (the lane moved on)
+    Byte(u8),
+    /// the lane reached a start: its segment ends
+    Start,
+    /// the lane reached a raw row: it waits a turn, writing nothing
+    Wait,
 }
 
 impl Compact {
@@ -818,7 +866,7 @@ impl Compact {
     }
 
     fn walk_h(&mut self, ll: &[u8], orig_ptr: u32, out: &mut Vec<u8>) {
-        assert_eq!(self.hrec.len(), self.n.div_ceil(32), "load_h first");
+        assert_eq!(self.hrec.len(), self.n.div_ceil(32) + 1, "load_h first");
         if self.n < MIN_SEGMENTED {
             self.plain_h(orig_ptr, out);
         } else {
@@ -845,20 +893,21 @@ impl Compact {
         }
     }
 
-    /// `room` on records: the same starts, passes, handoffs and tail. A lane at a RAW row
-    /// prefetches the row's raw entry and writes nothing that turn (its base moved back a
-    /// byte); at its next turn it takes ψ and F from the entry, then goes on. So a raw
-    /// successor costs one turn and one line, and no ordinary step reads anything but its
-    /// record's line.
+    /// `room` on records: the same starts, passes, handoffs and tail. An ordinary step
+    /// reads its record's line and tests its offset against S; the sentinel's three cases
+    /// (`slow`) are a start, a raw row (the lane prefetches the entry, writes nothing this
+    /// turn and parks: its base moves back a byte) and a parked lane (it takes ψ and F
+    /// from the entry). So a raw successor costs one turn and one line.
     #[inline(never)]
     fn room_h(&mut self, ll: &[u8], orig_ptr: u32) {
         let n = self.n;
+        let park = 32 * (self.hrec.len() as u32 - 1);
         let recm = self.hrec.as_mut_ptr();
         let (rec, raw) = (recm as *const Line, self.hraw.as_ptr());
         let rawu = raw as *const u32;
         let s = &mut self.s;
-        // SAFETY (every record and raw access below): every row is below n, the starts
-        // being rows and every ψ coming from the oracle's records
+        // SAFETY (every record and raw access below): every row is below n or is PARK, the
+        // starts being rows and every ψ coming from the oracle's records
         let r0 = unsafe { h_next(rec, raw, orig_ptr) }.0;
         random_rows(n, SEGMENTS - 1, &mut s.starts);
         s.starts.push(r0);
@@ -866,13 +915,25 @@ impl Compact {
         s.starts.sort_unstable();
         s.starts.dedup();
         let ns = s.starts.len();
-        let set = |r: u32, on: bool| unsafe {
-            let h = (recm.add((r >> 5) as usize) as *mut u8).add(56) as *mut u64;
+        // each start's ψ and F (read before it is marked), and its offset, to restore
+        let succ: Vec<(u32, u8, u32)> = s
+            .starts
+            .iter()
+            .map(|&r| unsafe {
+                let (p, b) = h_next(rec, raw, r);
+                (p, b, h_offset(rec, r))
+            })
+            .collect();
+        let mark = |r: u32, v: u32, on: bool| unsafe {
+            let line = &mut (*recm.add((r >> 5) as usize)).0;
+            put14(line, (r & 31) as usize, v);
             let bit = 1u64 << (32 + (r & 31));
-            *h = if on { *h | bit.to_le() } else { *h & !bit.to_le() };
+            let h = u64::from_le_bytes(line[56..64].try_into().unwrap());
+            let h = if on { h | bit } else { h & !bit };
+            line[56..64].copy_from_slice(&h.to_le_bytes());
         };
         for &r in &s.starts {
-            set(r, true);
+            mark(r, H_S, true);
         }
         let cap = 2 * n / ns + 64;
         s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
@@ -891,13 +952,12 @@ impl Compact {
         let take = |seg: usize, bufs: &mut Vec<Vec<u8>>| -> LaneH {
             let b = &mut bufs[seg];
             let base = b.as_mut_ptr();
-            let st = starts[seg];
-            let (r, f) = unsafe { h_next(rec, raw, st) };
+            let (r, f, _) = succ[seg];
             // SAFETY: the buffer has `cap` > 0 spare bytes
-            unsafe { *base = ll[st as usize] };
+            unsafe { *base = ll[starts[seg] as usize] };
             LaneH {
                 row: r,
-                pend: NO_RAW,
+                pend: 0,
                 b: f,
                 seg,
                 p: unsafe { base.add(1) },
@@ -918,11 +978,29 @@ impl Compact {
             l.p = unsafe { b.as_mut_ptr().add(len) };
             l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
         };
+        // the sentinel's cases, off the common path
+        let slow = |l: &mut LaneH, h: u64| -> Slow {
+            if l.row == park {
+                let e = u32::from_le(unsafe { *rawu.add(l.pend as usize) });
+                let byte = l.b;
+                l.b = (e >> 20) as u8;
+                l.row = e & 0xf_ffff;
+                Slow::Byte(byte)
+            } else if (h >> (32 + (l.row & 31))) & 1 != 0 {
+                Slow::Start
+            } else {
+                debug_assert!(h & H_RAW != 0);
+                l.pend = h_raw_index(h, l.row);
+                prefetch_at(unsafe { rawu.add(l.pend as usize) } as *const u8);
+                l.row = park;
+                Slow::Wait
+            }
+        };
 
         let mut queued = 0;
         let mut lanes: [LaneH; LANES] = std::array::from_fn(|_| LaneH {
             row: 0,
-            pend: NO_RAW,
+            pend: 0,
             b: 0,
             seg: usize::MAX,
             p: std::ptr::null_mut(),
@@ -949,48 +1027,43 @@ impl Compact {
                 for off in 0..room {
                     for k in 0..LANES {
                         let l = &mut lanes[k];
-                        let byte;
-                        if l.pend != NO_RAW {
-                            // the raw entry, prefetched a turn ago
-                            let e = u32::from_le(unsafe { *rawu.add(l.pend as usize) });
-                            l.pend = NO_RAW;
-                            byte = l.b;
-                            l.b = (e >> 20) as u8;
-                            l.row = e & 0xf_ffff;
-                        } else {
-                            let h = unsafe { h_header(rec, l.row) };
-                            let o = unsafe { h_offset(rec, l.row) };
-                            if (h >> (32 + (l.row & 31))) & 1 != 0 {
-                                l.p = base[k].wrapping_add(off);
-                                finish_h(l, &finish, bufs, next);
-                                if queued == ns {
-                                    for (j, lj) in lanes.iter_mut().enumerate() {
-                                        if j < k {
-                                            lj.p = base[j].wrapping_add(off + 1);
-                                        } else if j > k {
-                                            lj.p = base[j].wrapping_add(off);
-                                        }
-                                    }
-                                    break 'full;
-                                }
-                                *l = take(queued, bufs);
-                                prefetch_at(line(l.row));
-                                queued += 1;
-                                base[k] = l.p.wrapping_sub(off + 1);
-                                continue;
-                            }
-                            if h & H_RAW != 0 {
-                                l.pend = h_raw_index(h, l.row);
-                                prefetch_at(unsafe { rawu.add(l.pend as usize) } as *const u8);
-                                // nothing written this turn: the lane's next byte goes
-                                // where this one would have
-                                base[k] = base[k].wrapping_sub(1);
-                                continue;
-                            }
-                            byte = l.b;
+                        let h = unsafe { h_header(rec, l.row) };
+                        let o = unsafe { h_offset(rec, l.row) };
+                        let byte = if o != H_S {
+                            let byte = l.b;
                             l.b = (h >> 20) as u8;
                             l.row = (h & H_MASK20) as u32 + o;
-                        }
+                            byte
+                        } else {
+                            match slow(l, h) {
+                                Slow::Byte(b) => b,
+                                Slow::Start => {
+                                    l.p = base[k].wrapping_add(off);
+                                    finish(l, bufs, next);
+                                    if queued == ns {
+                                        for (j, lj) in lanes.iter_mut().enumerate() {
+                                            if j < k {
+                                                lj.p = base[j].wrapping_add(off + 1);
+                                            } else if j > k {
+                                                lj.p = base[j].wrapping_add(off);
+                                            }
+                                        }
+                                        break 'full;
+                                    }
+                                    *l = take(queued, bufs);
+                                    prefetch_at(line(l.row));
+                                    queued += 1;
+                                    base[k] = l.p.wrapping_sub(off + 1);
+                                    continue;
+                                }
+                                Slow::Wait => {
+                                    // nothing written this turn: the lane's next byte
+                                    // goes where this one would have
+                                    base[k] = base[k].wrapping_sub(1);
+                                    continue;
+                                }
+                            }
+                        };
                         prefetch_at(line(l.row));
                         debug_assert!(base[k].wrapping_add(off) < l.end);
                         unsafe { *base[k].wrapping_add(off) = byte };
@@ -1016,30 +1089,27 @@ impl Compact {
             let mut i = 0;
             while i < live.len() {
                 let l = &mut live[i];
-                let byte;
-                if l.pend != NO_RAW {
-                    let e = u32::from_le(unsafe { *rawu.add(l.pend as usize) });
-                    l.pend = NO_RAW;
-                    byte = l.b;
-                    l.b = (e >> 20) as u8;
-                    l.row = e & 0xf_ffff;
-                } else {
-                    let h = unsafe { h_header(rec, l.row) };
-                    if (h >> (32 + (l.row & 31))) & 1 != 0 {
-                        finish_h(l, &finish, bufs, next);
-                        live.swap_remove(i);
-                        continue;
-                    }
-                    if h & H_RAW != 0 {
-                        l.pend = h_raw_index(h, l.row);
-                        prefetch_at(unsafe { rawu.add(l.pend as usize) } as *const u8);
-                        i += 1;
-                        continue;
-                    }
-                    byte = l.b;
+                let h = unsafe { h_header(rec, l.row) };
+                let o = unsafe { h_offset(rec, l.row) };
+                let byte = if o != H_S {
+                    let byte = l.b;
                     l.b = (h >> 20) as u8;
-                    l.row = (h & H_MASK20) as u32 + unsafe { h_offset(rec, l.row) };
-                }
+                    l.row = (h & H_MASK20) as u32 + o;
+                    byte
+                } else {
+                    match slow(l, h) {
+                        Slow::Byte(b) => b,
+                        Slow::Start => {
+                            finish(l, bufs, next);
+                            live.swap_remove(i);
+                            continue;
+                        }
+                        Slow::Wait => {
+                            i += 1;
+                            continue;
+                        }
+                    }
+                };
                 prefetch_at(line(l.row));
                 unsafe {
                     *l.p = byte;
@@ -1051,25 +1121,12 @@ impl Compact {
                 i += 1;
             }
         }
-        for &r in starts {
-            set(r, false);
+        for (&r, &(_, _, o)) in starts.iter().zip(&succ) {
+            mark(r, o, false);
         }
         s.first = seg_of(r0);
         s.n = n;
     }
-}
-
-/// a lane ends its segment at a start row: it never waits on a raw entry there, since a
-/// start is detected from the header before the RAW test
-#[inline(always)]
-fn finish_h<F: Fn(&LaneH, &mut Vec<Vec<u8>>, &mut Vec<usize>)>(
-    l: &LaneH,
-    finish: &F,
-    bufs: &mut Vec<Vec<u8>>,
-    next: &mut Vec<usize>,
-) {
-    debug_assert_eq!(l.pend, NO_RAW);
-    finish(l, bufs, next);
 }
 
 /// COOP_H_STARTS=1 (checks only, never a timed run): segment starts the random ones rarely
