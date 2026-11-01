@@ -1,0 +1,1107 @@
+{
+ "protocol": "docs/journal/2026-11-01-dispatch-causality-protocol.md",
+ "runs_w4": 10,
+ "runs_w1": 3,
+ "perturbation": {
+  "1": {
+   "throughput": 1.010151323754259,
+   "cpu_per_byte": 0.9992877635229542,
+   "rss": 1.0081683566714952
+  },
+  "4": {
+   "throughput": 1.0060810799738957,
+   "cpu_per_byte": 1.013355502134211,
+   "rss": 1.0023189611054248
+  }
+ },
+ "validity": {
+  "runs_present": true,
+  "coverage_all": true,
+  "perturbation": true,
+  "alignment_all": true,
+  "complete_all": true,
+  "threads_in_sched_all": true,
+  "sched_coverage_all": true,
+  "trace_complete_all": true
+ },
+ "receiver_obstruction": {
+  "mean_share": 0.01895729141275524,
+  "per_run": [
+   0.016869935612324496,
+   0.01390348805327534,
+   0.019882520042950984,
+   0.016913923644784685,
+   0.022193600016626822,
+   0.017224409463246475,
+   0.021489806442988143,
+   0.02586650669691617,
+   0.016198900312432696,
+   0.019029823842006573
+  ],
+  "runs_at_or_above_5pct": 0.0,
+  "cpu_idle_share_mean": 0.017932962984098903
+ },
+ "queued_nondecoding_ranked": [
+  [
+   "runnable",
+   0.8024113555638854
+  ],
+  [
+   "receiver",
+   0.16543672542862192
+  ],
+  [
+   "unresolved",
+   0.015590825875487055
+  ],
+  [
+   "notify",
+   0.007276760996995289
+  ],
+  [
+   "recv",
+   0.003936287206173314
+  ],
+  [
+   "release",
+   0.002563315193644831
+  ],
+  [
+   "rx_other",
+   0.0020745652672167986
+  ],
+  [
+   "state_lock",
+   0.0003377628956502147
+  ],
+  [
+   "publish",
+   0.00021826384927344615
+  ],
+  [
+   "post",
+   0.00010526758047003176
+  ],
+  [
+   "buffer",
+   4.887014258139397e-05
+  ]
+ ],
+ "classes_s": {
+  "buffer.running": 5.29e-05,
+  "notify.running": 0.0078768065,
+  "post.running": 0.000113948,
+  "publish.running": 0.000236262,
+  "recv.running": 0.0042550255,
+  "release.running": 0.0027746875,
+  "runnable.mutex_wait.cpu_idle": 0.5328888104999999,
+  "runnable.mutex_wait.cpus_busy": 0.2258817925,
+  "runnable.notify.cpu_idle": 0.0021174139999999998,
+  "runnable.notify.cpus_busy": 0.007482634499999999,
+  "runnable.recv.cpu_idle": 0.079781292,
+  "runnable.recv.cpus_busy": 0.0200635385,
+  "rx.acquiring.cpu_idle": 0.0006199709999999999,
+  "rx.acquiring.cpus_busy": 0.0016256640000000002,
+  "rx.blocked_by_owner.cpu_idle": 0.11297264700000001,
+  "rx.blocked_by_owner.cpus_busy": 0.0045328865000000005,
+  "rx.handoff_asleep.cpu_idle": 0.056108728000000004,
+  "rx.handoff_asleep.cpus_busy": 0.0048893825,
+  "rx.running_owner_held.cpu_idle": 0.00034131799999999996,
+  "rx.running_owner_held.cpus_busy": 0.00023376199999999996,
+  "state_lock.running": 0.00036480800000000005,
+  "unresolved.clock": 0.0064691405,
+  "unresolved.send_bracket": 0.010407313,
+  "runnable.release.cpus_busy": 5.902e-06,
+  "recv.asleep": 5.85e-06,
+  "runnable.buf_lock.cpus_busy": 0.000355454,
+  "runnable.pub_lock.cpus_busy": 1.776e-06,
+  "state_lock.blocked": 8.07e-07
+ },
+ "decision": "do not proceed to MPMC: receiver obstruction below the materiality threshold, or not repeatable",
+ "interpreted": true,
+ "outcome": "do not proceed",
+ "run_checks": {
+  "w4-r00": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": true,
+   "trace_complete": true,
+   "coverage": true
+  },
+  "w4-r01": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": true,
+   "trace_complete": true,
+   "coverage": true
+  },
+  "w4-r02": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": true,
+   "trace_complete": true,
+   "coverage": true
+  },
+  "w4-r03": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": true,
+   "trace_complete": true,
+   "coverage": true
+  },
+  "w4-r04": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": true,
+   "trace_complete": true,
+   "coverage": true
+  },
+  "w4-r05": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": true,
+   "trace_complete": true,
+   "coverage": true
+  },
+  "w4-r06": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": true,
+   "trace_complete": true,
+   "coverage": true
+  },
+  "w4-r07": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": true,
+   "trace_complete": true,
+   "coverage": true
+  },
+  "w4-r08": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": true,
+   "trace_complete": true,
+   "coverage": true
+  },
+  "w4-r09": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": true,
+   "trace_complete": true,
+   "coverage": true
+  }
+ },
+ "trace_problems": {
+  "w4-r00": [],
+  "w4-r01": [],
+  "w4-r02": [],
+  "w4-r03": [],
+  "w4-r04": [],
+  "w4-r05": [],
+  "w4-r06": [],
+  "w4-r07": [],
+  "w4-r08": [],
+  "w4-r09": []
+ },
+ "receiver_associated_exploratory": {
+  "note": "not a pass criterion: the registered obstruction plus runnable time in the receiver mutex's wait phase",
+  "mean_share": 0.09945104545137515,
+  "per_run": [
+   0.09098689203155065,
+   0.10061076751977516,
+   0.09075302756615053,
+   0.1070863218676642,
+   0.0948786717298202,
+   0.10289414295897222,
+   0.1032830464405591,
+   0.10396017727229999,
+   0.08965438276765778,
+   0.11040302435930176
+  ]
+ },
+ "w1_reference": [
+  {
+   "receiver_obstruction_share": 0.0,
+   "coverage": 0.9419739452198637,
+   "checks": {
+    "complete": true,
+    "alignment": true,
+    "threads_in_sched": true,
+    "sched_coverage": true,
+    "trace_complete": true,
+    "coverage": true
+   }
+  },
+  {
+   "receiver_obstruction_share": 0.0,
+   "coverage": 0.9114442869869152,
+   "checks": {
+    "complete": true,
+    "alignment": true,
+    "threads_in_sched": true,
+    "sched_coverage": true,
+    "trace_complete": true,
+    "coverage": true
+   }
+  },
+  {
+   "receiver_obstruction_share": 0.0,
+   "coverage": 0.9157697709114352,
+   "checks": {
+    "complete": true,
+    "alignment": true,
+    "threads_in_sched": true,
+    "sched_coverage": true,
+    "trace_complete": true,
+    "coverage": true
+   }
+  }
+ ],
+ "reader": [
+  {
+   "publish_to_wakeup": {
+    "n": 100,
+    "sum_ms": 0.22142,
+    "median_us": 2.1275
+   },
+   "wakeup_to_running": {
+    "n": 100,
+    "sum_ms": 10.212758,
+    "median_us": 40.3065
+   },
+   "running_to_relocked": {
+    "n": 100,
+    "sum_ms": 0.213137,
+    "median_us": 2.2585
+   },
+   "relocked_to_taken": {
+    "n": 100,
+    "sum_ms": 0.183447,
+    "median_us": 1.1685
+   },
+   "total": {
+    "n": 100,
+    "sum_ms": 10.830762,
+    "median_us": 45.779
+   },
+   "unresolved": {
+    "n": 29,
+    "sum_ms": 33.750801,
+    "median_us": 1063.588
+   }
+  },
+  {
+   "publish_to_wakeup": {
+    "n": 111,
+    "sum_ms": 0.2652475,
+    "median_us": 2.0425
+   },
+   "wakeup_to_running": {
+    "n": 111,
+    "sum_ms": 9.814614,
+    "median_us": 42.455
+   },
+   "running_to_relocked": {
+    "n": 111,
+    "sum_ms": 0.2549375,
+    "median_us": 2.1715
+   },
+   "relocked_to_taken": {
+    "n": 111,
+    "sum_ms": 0.178763,
+    "median_us": 1.22
+   },
+   "total": {
+    "n": 111,
+    "sum_ms": 10.513562,
+    "median_us": 48.067
+   },
+   "unresolved": {
+    "n": 27,
+    "sum_ms": 31.230935,
+    "median_us": 1129.67
+   }
+  },
+  {
+   "publish_to_wakeup": {
+    "n": 74,
+    "sum_ms": 0.175296,
+    "median_us": 2.1285
+   },
+   "wakeup_to_running": {
+    "n": 74,
+    "sum_ms": 13.067555,
+    "median_us": 44.7085
+   },
+   "running_to_relocked": {
+    "n": 74,
+    "sum_ms": 0.212322,
+    "median_us": 2.4335
+   },
+   "relocked_to_taken": {
+    "n": 74,
+    "sum_ms": 0.165399,
+    "median_us": 1.3065
+   },
+   "total": {
+    "n": 74,
+    "sum_ms": 13.620572,
+    "median_us": 51.7805
+   },
+   "unresolved": {
+    "n": 44,
+    "sum_ms": 35.145634,
+    "median_us": 448.759
+   }
+  },
+  {
+   "publish_to_wakeup": {
+    "n": 86,
+    "sum_ms": 0.192331,
+    "median_us": 1.988
+   },
+   "wakeup_to_running": {
+    "n": 86,
+    "sum_ms": 11.165071,
+    "median_us": 45.8715
+   },
+   "running_to_relocked": {
+    "n": 86,
+    "sum_ms": 0.221863,
+    "median_us": 2.343
+   },
+   "relocked_to_taken": {
+    "n": 86,
+    "sum_ms": 0.137637,
+    "median_us": 1.3235
+   },
+   "total": {
+    "n": 86,
+    "sum_ms": 11.716902,
+    "median_us": 52.157
+   },
+   "unresolved": {
+    "n": 40,
+    "sum_ms": 37.801447,
+    "median_us": 965.452
+   }
+  },
+  {
+   "unresolved": {
+    "n": 34,
+    "sum_ms": 25.126116,
+    "median_us": 568.8565
+   },
+   "publish_to_wakeup": {
+    "n": 95,
+    "sum_ms": 0.2403355,
+    "median_us": 2.1665
+   },
+   "wakeup_to_running": {
+    "n": 95,
+    "sum_ms": 18.905382,
+    "median_us": 44.192
+   },
+   "running_to_relocked": {
+    "n": 95,
+    "sum_ms": 0.2598535,
+    "median_us": 2.4055
+   },
+   "relocked_to_taken": {
+    "n": 95,
+    "sum_ms": 0.164448,
+    "median_us": 1.214
+   },
+   "total": {
+    "n": 95,
+    "sum_ms": 19.570019,
+    "median_us": 51.161
+   }
+  },
+  {
+   "publish_to_wakeup": {
+    "n": 96,
+    "sum_ms": 0.222962,
+    "median_us": 2.0885
+   },
+   "wakeup_to_running": {
+    "n": 96,
+    "sum_ms": 14.697082,
+    "median_us": 43.867
+   },
+   "running_to_relocked": {
+    "n": 96,
+    "sum_ms": 0.257571,
+    "median_us": 2.3775
+   },
+   "relocked_to_taken": {
+    "n": 96,
+    "sum_ms": 0.169136,
+    "median_us": 1.401
+   },
+   "total": {
+    "n": 96,
+    "sum_ms": 15.346751,
+    "median_us": 49.532
+   },
+   "unresolved": {
+    "n": 35,
+    "sum_ms": 30.419171,
+    "median_us": 803.602
+   }
+  },
+  {
+   "publish_to_wakeup": {
+    "n": 111,
+    "sum_ms": 0.2537955,
+    "median_us": 2.1185
+   },
+   "wakeup_to_running": {
+    "n": 111,
+    "sum_ms": 13.423662,
+    "median_us": 41.044
+   },
+   "running_to_relocked": {
+    "n": 111,
+    "sum_ms": 0.2895625,
+    "median_us": 2.3365
+   },
+   "relocked_to_taken": {
+    "n": 111,
+    "sum_ms": 0.200394,
+    "median_us": 1.23
+   },
+   "total": {
+    "n": 111,
+    "sum_ms": 14.167414,
+    "median_us": 47.472
+   },
+   "unresolved": {
+    "n": 27,
+    "sum_ms": 28.089061,
+    "median_us": 1041.301
+   }
+  },
+  {
+   "publish_to_wakeup": {
+    "n": 94,
+    "sum_ms": 0.226823,
+    "median_us": 2.1605
+   },
+   "wakeup_to_running": {
+    "n": 94,
+    "sum_ms": 15.389646,
+    "median_us": 40.8765
+   },
+   "running_to_relocked": {
+    "n": 94,
+    "sum_ms": 0.249459,
+    "median_us": 2.335
+   },
+   "relocked_to_taken": {
+    "n": 94,
+    "sum_ms": 0.152966,
+    "median_us": 1.27
+   },
+   "total": {
+    "n": 94,
+    "sum_ms": 16.018894,
+    "median_us": 47.6325
+   },
+   "unresolved": {
+    "n": 26,
+    "sum_ms": 27.000387,
+    "median_us": 911.619
+   }
+  },
+  {
+   "publish_to_wakeup": {
+    "n": 113,
+    "sum_ms": 0.273374,
+    "median_us": 2.193
+   },
+   "wakeup_to_running": {
+    "n": 113,
+    "sum_ms": 15.193841,
+    "median_us": 43.724
+   },
+   "running_to_relocked": {
+    "n": 113,
+    "sum_ms": 0.245637,
+    "median_us": 2.189
+   },
+   "relocked_to_taken": {
+    "n": 113,
+    "sum_ms": 0.181055,
+    "median_us": 1.192
+   },
+   "total": {
+    "n": 113,
+    "sum_ms": 15.893907,
+    "median_us": 49.504
+   },
+   "unresolved": {
+    "n": 27,
+    "sum_ms": 21.570445,
+    "median_us": 572.136
+   }
+  },
+  {
+   "publish_to_wakeup": {
+    "n": 82,
+    "sum_ms": 0.18843,
+    "median_us": 2.1015
+   },
+   "wakeup_to_running": {
+    "n": 82,
+    "sum_ms": 12.509364,
+    "median_us": 45.5475
+   },
+   "running_to_relocked": {
+    "n": 82,
+    "sum_ms": 0.204305,
+    "median_us": 2.3255
+   },
+   "relocked_to_taken": {
+    "n": 82,
+    "sum_ms": 0.138907,
+    "median_us": 1.2075
+   },
+   "total": {
+    "n": 82,
+    "sum_ms": 13.041006,
+    "median_us": 52.073
+   },
+   "unresolved": {
+    "n": 42,
+    "sum_ms": 36.493571,
+    "median_us": 664.8145
+   }
+  }
+ ],
+ "futex": [
+  {
+   "channel": {
+    "waits": 153,
+    "addresses": 5,
+    "dominant": "0x5f6c82b21298",
+    "dominant_share": 0.28104575163398693
+   },
+   "scanner.other": {
+    "waits": 22,
+    "addresses": 3,
+    "dominant": "0x5f6c82b213f0",
+    "dominant_share": 0.9090909090909091
+   },
+   "receiver_mutex": {
+    "waits": 176,
+    "addresses": 1,
+    "dominant": "0x5f6c82b20a90",
+    "dominant_share": 1.0
+   },
+   "reader.condvar": {
+    "waits": 138,
+    "addresses": 1,
+    "dominant": "0x5f6c82b213f0",
+    "dominant_share": 1.0
+   },
+   "reader.other": {
+    "waits": 70,
+    "addresses": 2,
+    "dominant": "0x5f6c82b213f0",
+    "dominant_share": 0.9857142857142858
+   },
+   "scanner.condvar": {
+    "waits": 151,
+    "addresses": 2,
+    "dominant": "0x5f6c82b213f0",
+    "dominant_share": 0.9668874172185431
+   },
+   "decoding": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x78a6b8000030",
+    "dominant_share": 1.0
+   },
+   "end": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x78a6bc000030",
+    "dominant_share": 1.0
+   }
+  },
+  {
+   "scanner.other": {
+    "waits": 24,
+    "addresses": 2,
+    "dominant": "0x60a2cc86b3f0",
+    "dominant_share": 0.9583333333333334
+   },
+   "channel": {
+    "waits": 137,
+    "addresses": 5,
+    "dominant": "0x60a2cc86b298",
+    "dominant_share": 0.30656934306569344
+   },
+   "receiver_mutex": {
+    "waits": 162,
+    "addresses": 1,
+    "dominant": "0x60a2cc86aa90",
+    "dominant_share": 1.0
+   },
+   "reader.condvar": {
+    "waits": 112,
+    "addresses": 1,
+    "dominant": "0x60a2cc86b3f0",
+    "dominant_share": 1.0
+   },
+   "scanner.condvar": {
+    "waits": 140,
+    "addresses": 2,
+    "dominant": "0x60a2cc86b3f0",
+    "dominant_share": 0.9714285714285714
+   },
+   "reader.other": {
+    "waits": 102,
+    "addresses": 1,
+    "dominant": "0x60a2cc86b3f0",
+    "dominant_share": 1.0
+   },
+   "decoding": {
+    "waits": 2,
+    "addresses": 2,
+    "dominant": "0x7352cc000030",
+    "dominant_share": 0.5
+   },
+   "state_lock": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x60a2cc86b370",
+    "dominant_share": 1.0
+   }
+  },
+  {
+   "reader.condvar": {
+    "waits": 87,
+    "addresses": 1,
+    "dominant": "0x5c6c605f23f0",
+    "dominant_share": 1.0
+   },
+   "scanner.other": {
+    "waits": 26,
+    "addresses": 2,
+    "dominant": "0x5c6c605f23f0",
+    "dominant_share": 0.9615384615384616
+   },
+   "channel": {
+    "waits": 152,
+    "addresses": 4,
+    "dominant": "0x5c6c605f26b8",
+    "dominant_share": 0.27631578947368424
+   },
+   "receiver_mutex": {
+    "waits": 181,
+    "addresses": 1,
+    "dominant": "0x5c6c605f1a90",
+    "dominant_share": 1.0
+   },
+   "reader.other": {
+    "waits": 104,
+    "addresses": 2,
+    "dominant": "0x5c6c605f23f0",
+    "dominant_share": 0.9903846153846154
+   },
+   "scanner.condvar": {
+    "waits": 132,
+    "addresses": 2,
+    "dominant": "0x5c6c605f23f0",
+    "dominant_share": 0.9696969696969697
+   },
+   "decoding": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x7314a8000030",
+    "dominant_share": 1.0
+   }
+  },
+  {
+   "channel": {
+    "waits": 146,
+    "addresses": 6,
+    "dominant": "0x64e909b52088",
+    "dominant_share": 0.2671232876712329
+   },
+   "reader.condvar": {
+    "waits": 91,
+    "addresses": 1,
+    "dominant": "0x64e909b523f0",
+    "dominant_share": 1.0
+   },
+   "scanner.other": {
+    "waits": 9,
+    "addresses": 2,
+    "dominant": "0x64e909b523f0",
+    "dominant_share": 0.8888888888888888
+   },
+   "receiver_mutex": {
+    "waits": 173,
+    "addresses": 1,
+    "dominant": "0x64e909b51a90",
+    "dominant_share": 1.0
+   },
+   "reader.other": {
+    "waits": 97,
+    "addresses": 1,
+    "dominant": "0x64e909b523f0",
+    "dominant_share": 1.0
+   },
+   "scanner.condvar": {
+    "waits": 138,
+    "addresses": 1,
+    "dominant": "0x64e909b523f0",
+    "dominant_share": 1.0
+   },
+   "decoding": {
+    "waits": 2,
+    "addresses": 1,
+    "dominant": "0x7c1e5c000030",
+    "dominant_share": 1.0
+   },
+   "end": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x7c1e5c000030",
+    "dominant_share": 1.0
+   }
+  },
+  {
+   "channel": {
+    "waits": 144,
+    "addresses": 5,
+    "dominant": "0x5df06c65fe78",
+    "dominant_share": 0.2708333333333333
+   },
+   "receiver_mutex": {
+    "waits": 172,
+    "addresses": 1,
+    "dominant": "0x5df06c65fa90",
+    "dominant_share": 1.0
+   },
+   "scanner.other": {
+    "waits": 37,
+    "addresses": 3,
+    "dominant": "0x5df06c6603f0",
+    "dominant_share": 0.9459459459459459
+   },
+   "reader.condvar": {
+    "waits": 75,
+    "addresses": 1,
+    "dominant": "0x5df06c6603f0",
+    "dominant_share": 1.0
+   },
+   "reader.other": {
+    "waits": 123,
+    "addresses": 2,
+    "dominant": "0x5df06c6603f0",
+    "dominant_share": 0.991869918699187
+   },
+   "scanner.condvar": {
+    "waits": 121,
+    "addresses": 2,
+    "dominant": "0x5df06c6603f0",
+    "dominant_share": 0.9834710743801653
+   },
+   "decoding": {
+    "waits": 3,
+    "addresses": 3,
+    "dominant": "0x7dac30000030",
+    "dominant_share": 0.3333333333333333
+   },
+   "state_lock": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x5df06c660370",
+    "dominant_share": 1.0
+   },
+   "post": {
+    "waits": 2,
+    "addresses": 1,
+    "dominant": "0x5df06c65fa90",
+    "dominant_share": 1.0
+   },
+   "release": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x7dac40000030",
+    "dominant_share": 1.0
+   }
+  },
+  {
+   "reader.condvar": {
+    "waits": 69,
+    "addresses": 1,
+    "dominant": "0x5a6b1ff9e3f0",
+    "dominant_share": 1.0
+   },
+   "channel": {
+    "waits": 145,
+    "addresses": 4,
+    "dominant": "0x5a6b1ff9e6b8",
+    "dominant_share": 0.2620689655172414
+   },
+   "receiver_mutex": {
+    "waits": 163,
+    "addresses": 1,
+    "dominant": "0x5a6b1ff9da90",
+    "dominant_share": 1.0
+   },
+   "scanner.other": {
+    "waits": 35,
+    "addresses": 2,
+    "dominant": "0x5a6b1ff9e3f0",
+    "dominant_share": 0.9714285714285714
+   },
+   "reader.other": {
+    "waits": 121,
+    "addresses": 1,
+    "dominant": "0x5a6b1ff9e3f0",
+    "dominant_share": 1.0
+   },
+   "scanner.condvar": {
+    "waits": 140,
+    "addresses": 2,
+    "dominant": "0x5a6b1ff9e3f0",
+    "dominant_share": 0.95
+   },
+   "decoding": {
+    "waits": 2,
+    "addresses": 1,
+    "dominant": "0x7f9bb8000030",
+    "dominant_share": 1.0
+   },
+   "post": {
+    "waits": 14,
+    "addresses": 1,
+    "dominant": "0x5a6b1ff9da90",
+    "dominant_share": 1.0
+   },
+   "release": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x7f9bc0000030",
+    "dominant_share": 1.0
+   }
+  },
+  {
+   "channel": {
+    "waits": 148,
+    "addresses": 5,
+    "dominant": "0x5b189bd80298",
+    "dominant_share": 0.2905405405405405
+   },
+   "reader.condvar": {
+    "waits": 87,
+    "addresses": 1,
+    "dominant": "0x5b189bd803f0",
+    "dominant_share": 1.0
+   },
+   "receiver_mutex": {
+    "waits": 170,
+    "addresses": 1,
+    "dominant": "0x5b189bd7fa90",
+    "dominant_share": 1.0
+   },
+   "scanner.other": {
+    "waits": 28,
+    "addresses": 2,
+    "dominant": "0x5b189bd803f0",
+    "dominant_share": 0.9642857142857143
+   },
+   "scanner.condvar": {
+    "waits": 143,
+    "addresses": 2,
+    "dominant": "0x5b189bd803f0",
+    "dominant_share": 0.965034965034965
+   },
+   "reader.other": {
+    "waits": 128,
+    "addresses": 2,
+    "dominant": "0x5b189bd803f0",
+    "dominant_share": 0.9921875
+   },
+   "post": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x5b189bd7fa90",
+    "dominant_share": 1.0
+   },
+   "decoding": {
+    "waits": 4,
+    "addresses": 1,
+    "dominant": "0x7650fc000030",
+    "dominant_share": 1.0
+   }
+  },
+  {
+   "channel": {
+    "waits": 149,
+    "addresses": 5,
+    "dominant": "0x57d608bd5088",
+    "dominant_share": 0.28187919463087246
+   },
+   "receiver_mutex": {
+    "waits": 188,
+    "addresses": 1,
+    "dominant": "0x57d608bd4a90",
+    "dominant_share": 1.0
+   },
+   "reader.condvar": {
+    "waits": 181,
+    "addresses": 1,
+    "dominant": "0x57d608bd53f0",
+    "dominant_share": 1.0
+   },
+   "scanner.other": {
+    "waits": 11,
+    "addresses": 2,
+    "dominant": "0x57d608bd53f0",
+    "dominant_share": 0.9090909090909091
+   },
+   "scanner.condvar": {
+    "waits": 137,
+    "addresses": 2,
+    "dominant": "0x57d608bd53f0",
+    "dominant_share": 0.9927007299270073
+   },
+   "decoding": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x741e10000030",
+    "dominant_share": 1.0
+   },
+   "reader.other": {
+    "waits": 32,
+    "addresses": 1,
+    "dominant": "0x57d608bd53f0",
+    "dominant_share": 1.0
+   },
+   "state_lock": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x57d608bd5370",
+    "dominant_share": 1.0
+   }
+  },
+  {
+   "channel": {
+    "waits": 155,
+    "addresses": 5,
+    "dominant": "0x63d680277e78",
+    "dominant_share": 0.2709677419354839
+   },
+   "reader.condvar": {
+    "waits": 79,
+    "addresses": 1,
+    "dominant": "0x63d6802783f0",
+    "dominant_share": 1.0
+   },
+   "receiver_mutex": {
+    "waits": 172,
+    "addresses": 1,
+    "dominant": "0x63d680277a90",
+    "dominant_share": 1.0
+   },
+   "scanner.other": {
+    "waits": 30,
+    "addresses": 2,
+    "dominant": "0x63d6802783f0",
+    "dominant_share": 0.9666666666666667
+   },
+   "reader.other": {
+    "waits": 151,
+    "addresses": 3,
+    "dominant": "0x63d6802783f0",
+    "dominant_share": 0.9867549668874173
+   },
+   "decoding": {
+    "waits": 2,
+    "addresses": 2,
+    "dominant": "0x78a708000030",
+    "dominant_share": 0.5
+   },
+   "scanner.condvar": {
+    "waits": 139,
+    "addresses": 2,
+    "dominant": "0x63d6802783f0",
+    "dominant_share": 0.9928057553956835
+   },
+   "state_lock": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x63d680278370",
+    "dominant_share": 1.0
+   }
+  },
+  {
+   "channel": {
+    "waits": 143,
+    "addresses": 5,
+    "dominant": "0x556a83e636b8",
+    "dominant_share": 0.2727272727272727
+   },
+   "scanner.other": {
+    "waits": 22,
+    "addresses": 2,
+    "dominant": "0x556a83e633f0",
+    "dominant_share": 0.9545454545454546
+   },
+   "reader.condvar": {
+    "waits": 63,
+    "addresses": 1,
+    "dominant": "0x556a83e633f0",
+    "dominant_share": 1.0
+   },
+   "receiver_mutex": {
+    "waits": 180,
+    "addresses": 1,
+    "dominant": "0x556a83e62a90",
+    "dominant_share": 1.0
+   },
+   "reader.other": {
+    "waits": 118,
+    "addresses": 2,
+    "dominant": "0x556a83e633f0",
+    "dominant_share": 0.9915254237288136
+   },
+   "scanner.condvar": {
+    "waits": 123,
+    "addresses": 2,
+    "dominant": "0x556a83e633f0",
+    "dominant_share": 0.975609756097561
+   },
+   "decoding": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x7a6ed8000030",
+    "dominant_share": 1.0
+   },
+   "state_lock": {
+    "waits": 1,
+    "addresses": 1,
+    "dominant": "0x556a83e63370",
+    "dominant_share": 1.0
+   }
+  }
+ ]
+}

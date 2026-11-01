@@ -1,0 +1,196 @@
+{
+ "marks": "/home/louis/dev/mibz2/target/dispatch-results/i9-10900K/capture/w4-r06.tsv",
+ "workers": 4,
+ "cpus": [
+  1,
+  2,
+  3,
+  4
+ ],
+ "alignment": {
+  "ok": true,
+  "offsets_ns": [
+   -3028,
+   -3073
+  ],
+  "read_to_syscall_ns": [
+   237,
+   175
+  ],
+  "correction_ns": -3050.5,
+  "uncertainty_ns": 259.5
+ },
+ "complete": true,
+ "threads_in_sched": true,
+ "missing_wakeups": 0,
+ "span_s": 0.237904737,
+ "worker_time_s": 0.951618948,
+ "queued_nondecoding_s": 0.109345669,
+ "classes_s": {
+  "buffer.running": 1.1201e-05,
+  "notify.running": 0.000774086,
+  "post.running": 1.2076e-05,
+  "publish.running": 2.4631e-05,
+  "recv.running": 0.000431094,
+  "release.running": 0.000254602,
+  "runnable.mutex_wait.cpu_idle": 0.054457666,
+  "runnable.mutex_wait.cpus_busy": 0.023378331,
+  "runnable.notify.cpu_idle": 2.19e-06,
+  "runnable.notify.cpus_busy": 0.0003512245,
+  "runnable.recv.cpu_idle": 0.006261962,
+  "runnable.recv.cpus_busy": 0.000997445,
+  "rx.acquiring.cpu_idle": 8.9196e-05,
+  "rx.acquiring.cpus_busy": 0.000152004,
+  "rx.blocked_by_owner.cpu_idle": 0.010239754,
+  "rx.blocked_by_owner.cpus_busy": 0.0003030225,
+  "rx.handoff_asleep.cpu_idle": 0.0093185655,
+  "rx.handoff_asleep.cpus_busy": 0.0005086765,
+  "rx.running_owner_held.cpu_idle": 6.7839e-05,
+  "rx.running_owner_held.cpus_busy": 1.22495e-05,
+  "state_lock.running": 5.1347e-05,
+  "unresolved.clock": 0.0006805525,
+  "unresolved.send_bracket": 0.000965954
+ },
+ "no_job_s": {
+  "no_job.Q": 0.009788143,
+  "no_job.R": 0.0036903525,
+  "no_job.S": 0.1634415805,
+  "no_job.unknown": 0.000478515
+ },
+ "backlog_all_decoding_job_s": 0.065382501,
+ "runnable_cpu_occupants_s": {
+  "idle": 0.069441292,
+  "feeder": 5.30945e-05,
+  "scanner": 0.0322880415,
+  "worker": 0.2346775985,
+  "reader": 0.0053225965,
+  "foreign": 1.2651e-05
+ },
+ "coverage": 0.9849421882452427,
+ "sched_coverage": 1.0,
+ "receiver_obstruction_share": 0.021489806442988143,
+ "receiver_obstruction_cpu_idle_share": 0.020623967756472204,
+ "reader": {
+  "publish_to_wakeup": {
+   "n": 111,
+   "sum_ms": 0.2537955,
+   "median_us": 2.1185
+  },
+  "wakeup_to_running": {
+   "n": 111,
+   "sum_ms": 13.423662,
+   "median_us": 41.044
+  },
+  "running_to_relocked": {
+   "n": 111,
+   "sum_ms": 0.2895625,
+   "median_us": 2.3365
+  },
+  "relocked_to_taken": {
+   "n": 111,
+   "sum_ms": 0.200394,
+   "median_us": 1.23
+  },
+  "total": {
+   "n": 111,
+   "sum_ms": 14.167414,
+   "median_us": 47.472
+  },
+  "unresolved": {
+   "n": 27,
+   "sum_ms": 28.089061,
+   "median_us": 1041.301
+  }
+ },
+ "futex": {
+  "channel": {
+   "waits": 148,
+   "addresses": 5,
+   "dominant": "0x5b189bd80298",
+   "dominant_share": 0.2905405405405405
+  },
+  "reader.condvar": {
+   "waits": 87,
+   "addresses": 1,
+   "dominant": "0x5b189bd803f0",
+   "dominant_share": 1.0
+  },
+  "receiver_mutex": {
+   "waits": 170,
+   "addresses": 1,
+   "dominant": "0x5b189bd7fa90",
+   "dominant_share": 1.0
+  },
+  "scanner.other": {
+   "waits": 28,
+   "addresses": 2,
+   "dominant": "0x5b189bd803f0",
+   "dominant_share": 0.9642857142857143
+  },
+  "scanner.condvar": {
+   "waits": 143,
+   "addresses": 2,
+   "dominant": "0x5b189bd803f0",
+   "dominant_share": 0.965034965034965
+  },
+  "reader.other": {
+   "waits": 128,
+   "addresses": 2,
+   "dominant": "0x5b189bd803f0",
+   "dominant_share": 0.9921875
+  },
+  "post": {
+   "waits": 1,
+   "addresses": 1,
+   "dominant": "0x5b189bd7fa90",
+   "dominant_share": 1.0
+  },
+  "decoding": {
+   "waits": 4,
+   "addresses": 1,
+   "dominant": "0x7650fc000030",
+   "dominant_share": 1.0
+  }
+ },
+ "trace": {
+  "ok": true,
+  "problems": [],
+  "futex_ok": true,
+  "lost_by_event": {},
+  "lost_records": 0,
+  "lost_events": 0,
+  "unparsed": 0,
+  "unparsed_examples": [],
+  "unattributed": {
+   "sched:sched_switch": 6
+  },
+  "stream": {
+   "missing_wakeups": 0,
+   "missed_switch_in": 0,
+   "missed_switch_out": 0,
+   "idle_pairing": {
+    "1": {
+     "to": 177,
+     "out": 177,
+     "ok": true
+    },
+    "2": {
+     "to": 352,
+     "out": 352,
+     "ok": true
+    },
+    "3": {
+     "to": 167,
+     "out": 167,
+     "ok": true
+    },
+    "4": {
+     "to": 187,
+     "out": 187,
+     "ok": true
+    }
+   },
+   "idle_pairing_ok": true
+  }
+ }
+}

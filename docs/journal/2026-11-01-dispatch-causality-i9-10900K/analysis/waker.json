@@ -1,0 +1,10 @@
+{
+ "long_runnable_ms": {
+  "placed on the waker's CPU": 682.3,
+  "placed elsewhere": 99.3
+ },
+ "by_phase_and_waker_ms": {
+  "mutex_wait / woken by worker": 751.3,
+  "recv / woken by scanner": 30.3
+ }
+}

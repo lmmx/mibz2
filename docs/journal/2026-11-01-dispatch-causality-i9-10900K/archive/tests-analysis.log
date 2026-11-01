@@ -1,0 +1,29 @@
+test_counts_loss_unattributed_and_unreadable (__main__.Parse.test_counts_loss_unattributed_and_unreadable) ... ok
+test_stats (__main__.Parse.test_stats) ... ok
+test_expands_on_complete_evidence (__main__.Quality.test_expands_on_complete_evidence) ... ok
+test_no_runs_never_expand (__main__.Quality.test_no_runs_never_expand) ... ok
+test_trace_loss_stops_the_expansion (__main__.Quality.test_trace_loss_stops_the_expansion) ... ok
+test_refused (__main__.RealCapture.test_refused) ... ok
+test_complete_stream (__main__.Reconstruct.test_complete_stream) ... ok
+test_missed_switch_in_is_unknown_not_runnable (__main__.Reconstruct.test_missed_switch_in_is_unknown_not_runnable) ... ok
+test_missed_switch_out (__main__.Reconstruct.test_missed_switch_out) ... ok
+test_missing_wakeup (__main__.Reconstruct.test_missing_wakeup) ... ok
+test_unpaired_idle (__main__.Reconstruct.test_unpaired_idle) ... ok
+test_a_thread_unseen_by_the_kernel (__main__.Summary.test_a_thread_unseen_by_the_kernel) ... ok
+test_an_expansion_run_without_scheduler_coverage (__main__.Summary.test_an_expansion_run_without_scheduler_coverage) ... ok
+test_complete_evidence_negative (__main__.Summary.test_complete_evidence_negative) ... ok
+test_complete_evidence_positive (__main__.Summary.test_complete_evidence_positive) ... ok
+test_no_runs (__main__.Summary.test_no_runs) ... ok
+test_the_associated_share_is_exploratory (__main__.Summary.test_the_associated_share_is_exploratory) ... ok
+test_trace_loss (__main__.Summary.test_trace_loss) ... ok
+test_clean (__main__.Trace.test_clean) ... ok
+test_futex_loss_alone_spares_the_scheduler (__main__.Trace.test_futex_loss_alone_spares_the_scheduler) ... ok
+test_loss_the_script_did_not_show (__main__.Trace.test_loss_the_script_did_not_show) ... ok
+test_missing_statistics (__main__.Trace.test_missing_statistics) ... ok
+test_scheduler_loss_is_unsound (__main__.Trace.test_scheduler_loss_is_unsound) ... ok
+test_unreadable_lines (__main__.Trace.test_unreadable_lines) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.173s
+
+OK

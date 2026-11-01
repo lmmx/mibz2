@@ -1,0 +1,1 @@
+{"epoch_monotonic_ns": 234257761170075, "marks_cap": 32768, "threads": [{"thread": 0, "name": "mibz2-read", "tid": 770411, "dropped": 0}, {"thread": 1, "name": "mibz2-scan", "tid": 770410, "dropped": 0}, {"thread": 2, "name": "mibz2-0", "tid": 770409, "dropped": 0}, {"thread": 3, "name": "main", "tid": 770407, "dropped": 0}]}

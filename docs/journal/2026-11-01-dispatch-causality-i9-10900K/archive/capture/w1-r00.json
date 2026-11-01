@@ -1,0 +1,160 @@
+{
+ "marks": "/home/louis/dev/mibz2/target/dispatch-results/i9-10900K/capture/w1-r00.tsv",
+ "workers": 1,
+ "cpus": [
+  1,
+  2,
+  3,
+  4
+ ],
+ "alignment": {
+  "ok": true,
+  "offsets_ns": [
+   -2637,
+   -2668
+  ],
+  "read_to_syscall_ns": [
+   216,
+   155
+  ],
+  "correction_ns": -2652.5,
+  "uncertainty_ns": 231.5
+ },
+ "complete": true,
+ "threads_in_sched": true,
+ "missing_wakeups": 0,
+ "span_s": 0.538601572,
+ "worker_time_s": 0.538601572,
+ "queued_nondecoding_s": 0.013862178,
+ "classes_s": {
+  "buffer.running": 4.685e-06,
+  "notify.running": 0.000445175,
+  "post.running": 6.91e-06,
+  "publish.running": 7.906e-06,
+  "recv.running": 0.000429949,
+  "release.running": 5.9725e-06,
+  "runnable.recv.cpu_idle": 0.0121396185,
+  "rx.acquiring.cpu_idle": 6.086e-06,
+  "state_lock.running": 1.15085e-05,
+  "unresolved.clock": 0.0003011995,
+  "unresolved.send_bracket": 0.000503168
+ },
+ "no_job_s": {
+  "no_job.Q": 4.0955e-05,
+  "no_job.R": 0.000943853,
+  "no_job.S": 0.0609978935,
+  "no_job.unknown": 8.02855e-05
+ },
+ "backlog_all_decoding_job_s": 0.450889977,
+ "runnable_cpu_occupants_s": {
+  "idle": 0.045287313,
+  "scanner": 0.0029035405,
+  "feeder": 7.6643e-05,
+  "reader": 0.0002882015,
+  "foreign": 2.776e-06
+ },
+ "coverage": 0.9419739452198637,
+ "sched_coverage": 1.0,
+ "receiver_obstruction_share": 0.0,
+ "receiver_obstruction_cpu_idle_share": 0.0,
+ "reader": {
+  "publish_to_wakeup": {
+   "n": 237,
+   "sum_ms": 0.2790055,
+   "median_us": 1.1485
+  },
+  "wakeup_to_running": {
+   "n": 237,
+   "sum_ms": 12.248274,
+   "median_us": 46.157
+  },
+  "running_to_relocked": {
+   "n": 237,
+   "sum_ms": 0.5981625,
+   "median_us": 2.3165
+  },
+  "relocked_to_taken": {
+   "n": 237,
+   "sum_ms": 0.330739,
+   "median_us": 1.137
+  },
+  "total": {
+   "n": 237,
+   "sum_ms": 13.456181,
+   "median_us": 50.508
+  }
+ },
+ "futex": {
+  "reader.condvar": {
+   "waits": 169,
+   "addresses": 1,
+   "dominant": "0x57f0d73c23f0",
+   "dominant_share": 1.0
+  },
+  "channel": {
+   "waits": 205,
+   "addresses": 1,
+   "dominant": "0x57f0d73c26f8",
+   "dominant_share": 1.0
+  },
+  "scanner.other": {
+   "waits": 6,
+   "addresses": 2,
+   "dominant": "0x57f0d73c23f0",
+   "dominant_share": 0.8333333333333334
+  },
+  "scanner.condvar": {
+   "waits": 323,
+   "addresses": 2,
+   "dominant": "0x57f0d73c23f0",
+   "dominant_share": 0.9969040247678018
+  },
+  "reader.other": {
+   "waits": 69,
+   "addresses": 2,
+   "dominant": "0x57f0d73c23f0",
+   "dominant_share": 0.9855072463768116
+  }
+ },
+ "trace": {
+  "ok": true,
+  "problems": [],
+  "futex_ok": true,
+  "lost_by_event": {},
+  "lost_records": 0,
+  "lost_events": 0,
+  "unparsed": 0,
+  "unparsed_examples": [],
+  "unattributed": {
+   "sched:sched_switch": 3
+  },
+  "stream": {
+   "missing_wakeups": 0,
+   "missed_switch_in": 0,
+   "missed_switch_out": 0,
+   "idle_pairing": {
+    "1": {
+     "to": 244,
+     "out": 244,
+     "ok": true
+    },
+    "2": {
+     "to": 208,
+     "out": 208,
+     "ok": true
+    },
+    "3": {
+     "to": 298,
+     "out": 298,
+     "ok": true
+    },
+    "4": {
+     "to": 10,
+     "out": 10,
+     "ok": true
+    }
+   },
+   "idle_pairing_ok": true
+  }
+ }
+}

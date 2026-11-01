@@ -1,0 +1,32 @@
+
+Aggregated stats:
+           TOTAL events:      16098
+            MMAP events:        172  ( 1.1%)
+            COMM events:        773  ( 4.8%)
+            EXIT events:          4  ( 0.0%)
+            FORK events:        770  ( 4.8%)
+          SAMPLE events:       8440  (52.4%)
+           MMAP2 events:       5896  (36.6%)
+         KSYMBOL events:         16  ( 0.1%)
+       BPF_EVENT events:         15  ( 0.1%)
+  FINISHED_ROUND events:          8  ( 0.0%)
+        ID_INDEX events:          1  ( 0.0%)
+      THREAD_MAP events:          1  ( 0.0%)
+         CPU_MAP events:          1  ( 0.0%)
+   FINISHED_INIT events:          1  ( 0.0%)
+sched:sched_switch stats:
+          SAMPLE events:       1480
+sched:sched_wakeup stats:
+          SAMPLE events:        734
+sched:sched_wakeup_new stats:
+          SAMPLE events:          3
+sched:sched_waking stats:
+          SAMPLE events:        739
+syscalls:sys_enter_sched_yield stats:
+          SAMPLE events:          4
+syscalls:sys_enter_futex stats:
+          SAMPLE events:       1820
+syscalls:sys_exit_futex stats:
+          SAMPLE events:       1820
+power:cpu_idle stats:
+          SAMPLE events:       1840

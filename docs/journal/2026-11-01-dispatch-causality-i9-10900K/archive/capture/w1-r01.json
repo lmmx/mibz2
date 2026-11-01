@@ -1,0 +1,159 @@
+{
+ "marks": "/home/louis/dev/mibz2/target/dispatch-results/i9-10900K/capture/w1-r01.tsv",
+ "workers": 1,
+ "cpus": [
+  1,
+  2,
+  3,
+  4
+ ],
+ "alignment": {
+  "ok": true,
+  "offsets_ns": [
+   -3510,
+   -3563
+  ],
+  "read_to_syscall_ns": [
+   232,
+   161
+  ],
+  "correction_ns": -3536.5,
+  "uncertainty_ns": 258.5
+ },
+ "complete": true,
+ "threads_in_sched": true,
+ "missing_wakeups": 0,
+ "span_s": 0.531702879,
+ "worker_time_s": 0.531702879,
+ "queued_nondecoding_s": 0.009189074,
+ "classes_s": {
+  "buffer.running": 8.329e-06,
+  "notify.running": 0.00045528,
+  "post.running": 6.949e-06,
+  "publish.running": 7.76e-06,
+  "recv.running": 0.000456432,
+  "release.running": 2.406e-06,
+  "runnable.recv.cpu_idle": 0.007417622,
+  "rx.acquiring.cpu_idle": 6.785e-06,
+  "state_lock.running": 1.3766e-05,
+  "unresolved.clock": 0.000322939,
+  "unresolved.send_bracket": 0.000490806
+ },
+ "no_job_s": {
+  "no_job.Q": 4.1675e-05,
+  "no_job.R": 0.000809951,
+  "no_job.S": 0.0643167255,
+  "no_job.unknown": 7.96055e-05
+ },
+ "backlog_all_decoding_job_s": 0.444173007,
+ "runnable_cpu_occupants_s": {
+  "feeder": 5.097e-06,
+  "idle": 0.0273049425,
+  "scanner": 0.002175229,
+  "reader": 0.0001852195
+ },
+ "coverage": 0.9114442869869152,
+ "sched_coverage": 1.0,
+ "receiver_obstruction_share": 0.0,
+ "receiver_obstruction_cpu_idle_share": 0.0,
+ "reader": {
+  "publish_to_wakeup": {
+   "n": 236,
+   "sum_ms": 0.299133,
+   "median_us": 1.189
+  },
+  "wakeup_to_running": {
+   "n": 236,
+   "sum_ms": 14.130329,
+   "median_us": 46.135
+  },
+  "running_to_relocked": {
+   "n": 236,
+   "sum_ms": 0.597457,
+   "median_us": 2.0045
+  },
+  "relocked_to_taken": {
+   "n": 236,
+   "sum_ms": 0.286867,
+   "median_us": 1.0545
+  },
+  "total": {
+   "n": 236,
+   "sum_ms": 15.313786,
+   "median_us": 51.4155
+  }
+ },
+ "futex": {
+  "reader.condvar": {
+   "waits": 54,
+   "addresses": 1,
+   "dominant": "0x629fb4eb63f0",
+   "dominant_share": 1.0
+  },
+  "channel": {
+   "waits": 205,
+   "addresses": 1,
+   "dominant": "0x629fb4eb66f8",
+   "dominant_share": 1.0
+  },
+  "scanner.other": {
+   "waits": 16,
+   "addresses": 2,
+   "dominant": "0x629fb4eb63f0",
+   "dominant_share": 0.9375
+  },
+  "scanner.condvar": {
+   "waits": 278,
+   "addresses": 2,
+   "dominant": "0x629fb4eb63f0",
+   "dominant_share": 0.9892086330935251
+  },
+  "reader.other": {
+   "waits": 183,
+   "addresses": 2,
+   "dominant": "0x629fb4eb63f0",
+   "dominant_share": 0.994535519125683
+  }
+ },
+ "trace": {
+  "ok": true,
+  "problems": [],
+  "futex_ok": true,
+  "lost_by_event": {},
+  "lost_records": 0,
+  "lost_events": 0,
+  "unparsed": 0,
+  "unparsed_examples": [],
+  "unattributed": {
+   "sched:sched_switch": 3
+  },
+  "stream": {
+   "missing_wakeups": 0,
+   "missed_switch_in": 0,
+   "missed_switch_out": 0,
+   "idle_pairing": {
+    "1": {
+     "to": 10,
+     "out": 10,
+     "ok": true
+    },
+    "2": {
+     "to": 240,
+     "out": 240,
+     "ok": true
+    },
+    "3": {
+     "to": 209,
+     "out": 209,
+     "ok": true
+    },
+    "4": {
+     "to": 279,
+     "out": 279,
+     "ok": true
+    }
+   },
+   "idle_pairing_ok": true
+  }
+ }
+}

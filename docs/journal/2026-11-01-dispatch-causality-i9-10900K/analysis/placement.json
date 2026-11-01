@@ -1,0 +1,35 @@
+{
+ "intervals": {
+  "short": 2821,
+  "long (>500 \u00b5s)": 405
+ },
+ "runnable_ms": {
+  "long (>500 \u00b5s) / all four busy": 232.8,
+  "long (>500 \u00b5s) / with an allocated CPU idle": 548.8,
+  "short / all four busy": 55.4,
+  "short / with an allocated CPU idle": 112.8
+ },
+ "waited_behind_ms": {
+  "long (>500 \u00b5s) / worker": 416.3,
+  "long (>500 \u00b5s) / scanner": 334.1,
+  "short / idle": 97.3,
+  "short / scanner": 49.4,
+  "long (>500 \u00b5s) / reader": 26.6,
+  "short / worker": 11.3,
+  "short / reader": 9.0,
+  "long (>500 \u00b5s) / idle": 3.5,
+  "short / feeder": 1.2,
+  "long (>500 \u00b5s) / feeder": 1.1
+ },
+ "placement_ms": {
+  "long (>500 \u00b5s) / migrated": 425.5,
+  "long (>500 \u00b5s) / ran on its wakeup target": 356.0,
+  "short / ran on its wakeup target": 126.5,
+  "short / migrated": 41.4,
+  "short / target unknown": 0.3
+ },
+ "long_mostly_idle": {
+  "n": 305,
+  "median_us": 2363
+ }
+}

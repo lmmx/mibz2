@@ -1,0 +1,142 @@
+dispatch: label=i9-10900K head=64483e8b4855b119469ab5fc338b63fd43740e94 pin=48f8cda32fe3580f87e49c6cd68242cf8a81c996 out=/home/louis/dev/mibz2/target/dispatch-results/i9-10900K dry_run=0
+dispatch: 29 sources match the frozen hashes
+dispatch: rustc 1.97.0 (2d8144b78 2026-07-07); CARGO_TARGET_DIR=/home/louis/dev/mibz2/target
+   Compiling mibz2 v0.2.1 (/home/louis/dev/mibz2)
+    Finished `release` profile [optimized + debuginfo] target(s) in 13.04s
+   Compiling mibz2 v0.2.1 (/home/louis/dev/mibz2)
+    Finished `release` profile [optimized + debuginfo] target(s) in 6.89s
+dispatch: the dispatch and phase marks' tests, the instrument's and the analysis's, pass
+Preparing worktree (detached HEAD 45b366d)
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling libm v0.2.16
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.15
+   Compiling thiserror v2.0.21
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling mibz2 v0.2.1 (/home/louis/dev/mibz2/target/dispatch-work/base)
+   Compiling cc v1.10.0
+   Compiling syn v3.0.9
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 12.29s
+same code: yes: 104 mibz2 functions, 32298 instructions
+dispatch: 3 corpora match their frozen hashes and decode to them at w = 1 and 4
+dispatch: allocation CPUs 1,2,3,4
+dispatch: the scheduler tracepoints need root: sudo, once
+dispatch: perf = sudo -n perf (perf version 6.8.12)
+dispatch: the kernel's scheduling stream is complete on CPUs 1,2,3,4 (idle switches paired, nothing lost)
+dispatch: tracepoints: 8 supported, 0 unavailable
+dispatch: the quality checks pass on the first 3: expanding to 10
+{
+ "decision": "do not proceed to MPMC: receiver obstruction below the materiality threshold, or not repeatable",
+ "outcome": "do not proceed",
+ "validity": {
+  "runs_present": true,
+  "coverage_all": true,
+  "perturbation": true,
+  "alignment_all": true,
+  "complete_all": true,
+  "threads_in_sched_all": true,
+  "sched_coverage_all": true,
+  "trace_complete_all": true
+ },
+ "perturbation": {
+  "1": {
+   "throughput": 1.010151323754259,
+   "cpu_per_byte": 0.9992877635229542,
+   "rss": 1.0081683566714952
+  },
+  "4": {
+   "throughput": 1.0060810799738957,
+   "cpu_per_byte": 1.013355502134211,
+   "rss": 1.0023189611054248
+  }
+ },
+ "receiver_obstruction": {
+  "mean_share": 0.01895729141275524,
+  "per_run": [
+   0.016869935612324496,
+   0.01390348805327534,
+   0.019882520042950984,
+   0.016913923644784685,
+   0.022193600016626822,
+   0.017224409463246475,
+   0.021489806442988143,
+   0.02586650669691617,
+   0.016198900312432696,
+   0.019029823842006573
+  ],
+  "runs_at_or_above_5pct": 0.0,
+  "cpu_idle_share_mean": 0.017932962984098903
+ },
+ "receiver_associated_exploratory": {
+  "note": "not a pass criterion: the registered obstruction plus runnable time in the receiver mutex's wait phase",
+  "mean_share": 0.09945104545137515,
+  "per_run": [
+   0.09098689203155065,
+   0.10061076751977516,
+   0.09075302756615053,
+   0.1070863218676642,
+   0.0948786717298202,
+   0.10289414295897222,
+   0.1032830464405591,
+   0.10396017727229999,
+   0.08965438276765778,
+   0.11040302435930176
+  ]
+ },
+ "queued_nondecoding_ranked": [
+  [
+   "runnable",
+   0.8024113555638854
+  ],
+  [
+   "receiver",
+   0.16543672542862192
+  ],
+  [
+   "unresolved",
+   0.015590825875487055
+  ],
+  [
+   "notify",
+   0.007276760996995289
+  ],
+  [
+   "recv",
+   0.003936287206173314
+  ],
+  [
+   "release",
+   0.002563315193644831
+  ],
+  [
+   "rx_other",
+   0.0020745652672167986
+  ],
+  [
+   "state_lock",
+   0.0003377628956502147
+  ],
+  [
+   "publish",
+   0.00021826384927344615
+  ],
+  [
+   "post",
+   0.00010526758047003176
+  ],
+  [
+   "buffer",
+   4.887014258139397e-05
+  ]
+ ]
+}

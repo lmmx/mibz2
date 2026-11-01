@@ -1,0 +1,219 @@
+{
+ "wake_to_run": {
+  "reader / preempted another worker": {
+   "n": 998,
+   "median_us": 9.4,
+   "p90_us": 2575.5,
+   "sum_ms": 506.57
+  },
+  "mutex_wait / preempted another worker": {
+   "n": 361,
+   "median_us": 14.6,
+   "p90_us": 2984.3,
+   "sum_ms": 388.94
+  },
+  "mutex_wait / behind another thread": {
+   "n": 492,
+   "median_us": 416.1,
+   "p90_us": 2363.4,
+   "sum_ms": 387.07
+  },
+  "reader / behind another thread": {
+   "n": 374,
+   "median_us": 203.9,
+   "p90_us": 2716.0,
+   "sum_ms": 265.32
+  },
+  "reader / from idle": {
+   "n": 759,
+   "median_us": 45.3,
+   "p90_us": 133.0,
+   "sum_ms": 126.44
+  },
+  "mutex_wait / from idle": {
+   "n": 901,
+   "median_us": 42.2,
+   "p90_us": 62.3,
+   "sum_ms": 71.42
+  },
+  "decoding / behind another thread": {
+   "n": 319,
+   "median_us": 69.1,
+   "p90_us": 546.2,
+   "sum_ms": 70.33
+  },
+  "recv / from idle": {
+   "n": 1303,
+   "median_us": 42.3,
+   "p90_us": 57.1,
+   "sum_ms": 59.44
+  },
+  "decoding / preempted another worker": {
+   "n": 33,
+   "median_us": 14.4,
+   "p90_us": 2892.2,
+   "sum_ms": 31.41
+  },
+  "recv / behind another thread": {
+   "n": 142,
+   "median_us": 35.6,
+   "p90_us": 514.9,
+   "sum_ms": 27.14
+  },
+  "recv / preempted another worker": {
+   "n": 27,
+   "median_us": 6.3,
+   "p90_us": 2283.4,
+   "sum_ms": 15.75
+  },
+  "notify / behind another thread": {
+   "n": 184,
+   "median_us": 4.4,
+   "p90_us": 165.7,
+   "sum_ms": 13.39
+  },
+  "decoding / from idle": {
+   "n": 1122,
+   "median_us": 0.7,
+   "p90_us": 2.8,
+   "sum_ms": 5.61
+  },
+  "start / from idle": {
+   "n": 157,
+   "median_us": 3.2,
+   "p90_us": 75.7,
+   "sum_ms": 4.29
+  },
+  "start / behind another thread": {
+   "n": 18,
+   "median_us": 12.9,
+   "p90_us": 30.3,
+   "sum_ms": 0.54
+  },
+  "start / preempted another worker": {
+   "n": 5,
+   "median_us": 25.0,
+   "p90_us": 56.6,
+   "sum_ms": 0.4
+  },
+  "buf_lock / behind another thread": {
+   "n": 1,
+   "median_us": 356.6,
+   "p90_us": 356.6,
+   "sum_ms": 0.36
+  },
+  "release / from idle": {
+   "n": 15,
+   "median_us": 6.2,
+   "p90_us": 41.7,
+   "sum_ms": 0.27
+  },
+  "notify / preempted another worker": {
+   "n": 7,
+   "median_us": 5.3,
+   "p90_us": 10.1,
+   "sum_ms": 0.06
+  },
+  "release / behind another thread": {
+   "n": 4,
+   "median_us": 9.5,
+   "p90_us": 9.6,
+   "sum_ms": 0.04
+  },
+  "release / preempted another worker": {
+   "n": 3,
+   "median_us": 2.5,
+   "p90_us": 2.5,
+   "sum_ms": 0.01
+  },
+  "end / from idle": {
+   "n": 6,
+   "median_us": 1.8,
+   "p90_us": 2.6,
+   "sum_ms": 0.01
+  },
+  "pub_lock / preempted another worker": {
+   "n": 1,
+   "median_us": 7.6,
+   "p90_us": 7.6,
+   "sum_ms": 0.01
+  },
+  "pub_lock / from idle": {
+   "n": 2,
+   "median_us": 1.1,
+   "p90_us": 0.8,
+   "sum_ms": 0.0
+  },
+  "buf_lock / from idle": {
+   "n": 1,
+   "median_us": 1.5,
+   "p90_us": 1.5,
+   "sum_ms": 0.0
+  }
+ },
+ "idle_exit_cstate_counts": {
+  "3": 2317,
+  "1": 1398,
+  "2": 519,
+  "0": 32
+ },
+ "wake_to_run_by_cstate": {
+  "3": {
+   "n": 2317,
+   "median_us": 43.2,
+   "p90_us": 57.5,
+   "sum_ms": 109.83
+  },
+  "2": {
+   "n": 519,
+   "median_us": 42.8,
+   "p90_us": 254.2,
+   "sum_ms": 92.09
+  },
+  "1": {
+   "n": 1398,
+   "median_us": 1.7,
+   "p90_us": 4.0,
+   "sum_ms": 65.5
+  },
+  "0": {
+   "n": 32,
+   "median_us": 2.0,
+   "p90_us": 2.5,
+   "sum_ms": 0.05
+  }
+ },
+ "window_full_share": 0.595581708354054,
+ "scanner_time_share": {
+  "slot wait / Q": 0.3576,
+  "slot wait / S": 0.3283,
+  "scanning / R": 0.2725,
+  "scanning / S": 0.0205,
+  "sending / Q": 0.0082,
+  "slot wait / R": 0.0046,
+  "scanning / Q": 0.0041,
+  "sending / R": 0.0021,
+  "start / None": 0.0009,
+  "start / S": 0.0006,
+  "start / Q": 0.0004,
+  "start / R": 0.0003
+ },
+ "nojob_worker_time_by_scanner": {
+  "scanning / R / window open": 0.4368,
+  "slot wait / Q / window full": 0.2316,
+  "slot wait / Q / window open": 0.1922,
+  "slot wait / S / window full": 0.0724,
+  "scanning / S / window open": 0.0388,
+  "sending / Q / window open": 0.0072,
+  "scanning / Q / window open": 0.0055,
+  "sending / R / window open": 0.0054,
+  "sending / Q / window full": 0.0027,
+  "slot wait / R / window open": 0.0026,
+  "slot wait / R / window full": 0.002,
+  "start / S / window open": 0.0012,
+  "sending / R / window full": 0.0006,
+  "start / Q / window open": 0.0006,
+  "start / R / window open": 0.0004,
+  "slot wait / S / window open": 0.0
+ }
+}

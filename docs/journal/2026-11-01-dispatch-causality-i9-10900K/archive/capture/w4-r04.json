@@ -1,0 +1,209 @@
+{
+ "marks": "/home/louis/dev/mibz2/target/dispatch-results/i9-10900K/capture/w4-r04.tsv",
+ "workers": 4,
+ "cpus": [
+  1,
+  2,
+  3,
+  4
+ ],
+ "alignment": {
+  "ok": true,
+  "offsets_ns": [
+   -2573,
+   -2562
+  ],
+  "read_to_syscall_ns": [
+   223,
+   216
+  ],
+  "correction_ns": -2567.5,
+  "uncertainty_ns": 228.5
+ },
+ "complete": true,
+ "threads_in_sched": true,
+ "missing_wakeups": 0,
+ "span_s": 0.234031483,
+ "worker_time_s": 0.936125932,
+ "queued_nondecoding_s": 0.108405489,
+ "classes_s": {
+  "buffer.running": 4.119e-06,
+  "notify.running": 0.0007953655,
+  "post.running": 2.0237e-05,
+  "publish.running": 1.9716e-05,
+  "recv.running": 0.0004321875,
+  "release.running": 0.0003063075,
+  "runnable.mutex_wait.cpu_idle": 0.047569046,
+  "runnable.mutex_wait.cpus_busy": 0.0204733345,
+  "runnable.notify.cpu_idle": 0.0019796405,
+  "runnable.notify.cpus_busy": 0.0017817335,
+  "runnable.recv.cpu_idle": 0.0101267005,
+  "runnable.recv.cpus_busy": 0.0021253355,
+  "runnable.release.cpus_busy": 1.139e-06,
+  "rx.acquiring.cpu_idle": 6.2184e-05,
+  "rx.acquiring.cpus_busy": 0.000156652,
+  "rx.blocked_by_owner.cpu_idle": 0.01480107,
+  "rx.blocked_by_owner.cpus_busy": 0.0007684925,
+  "rx.handoff_asleep.cpu_idle": 0.0045700465,
+  "rx.handoff_asleep.cpus_busy": 0.0005348175,
+  "rx.running_owner_held.cpu_idle": 3.8103e-05,
+  "rx.running_owner_held.cpus_busy": 6.3475e-05,
+  "state_lock.running": 4.8178e-05,
+  "unresolved.clock": 0.0006424125,
+  "unresolved.send_bracket": 0.001085196
+ },
+ "no_job_s": {
+  "no_job.Q": 0.01074204,
+  "no_job.R": 0.003767372,
+  "no_job.S": 0.147168625,
+  "no_job.unknown": 0.000436571
+ },
+ "backlog_all_decoding_job_s": 0.080109092,
+ "runnable_cpu_occupants_s": {
+  "feeder": 0.0002562535,
+  "idle": 0.066510399,
+  "scanner": 0.0339104145,
+  "worker": 0.229678854,
+  "reader": 0.005846753,
+  "foreign": 2.5044e-05
+ },
+ "coverage": 0.9840634591851709,
+ "sched_coverage": 1.0,
+ "receiver_obstruction_share": 0.022193600016626822,
+ "receiver_obstruction_cpu_idle_share": 0.020733556070317256,
+ "reader": {
+  "unresolved": {
+   "n": 34,
+   "sum_ms": 25.126116,
+   "median_us": 568.8565
+  },
+  "publish_to_wakeup": {
+   "n": 95,
+   "sum_ms": 0.2403355,
+   "median_us": 2.1665
+  },
+  "wakeup_to_running": {
+   "n": 95,
+   "sum_ms": 18.905382,
+   "median_us": 44.192
+  },
+  "running_to_relocked": {
+   "n": 95,
+   "sum_ms": 0.2598535,
+   "median_us": 2.4055
+  },
+  "relocked_to_taken": {
+   "n": 95,
+   "sum_ms": 0.164448,
+   "median_us": 1.214
+  },
+  "total": {
+   "n": 95,
+   "sum_ms": 19.570019,
+   "median_us": 51.161
+  }
+ },
+ "futex": {
+  "channel": {
+   "waits": 144,
+   "addresses": 5,
+   "dominant": "0x5df06c65fe78",
+   "dominant_share": 0.2708333333333333
+  },
+  "receiver_mutex": {
+   "waits": 172,
+   "addresses": 1,
+   "dominant": "0x5df06c65fa90",
+   "dominant_share": 1.0
+  },
+  "scanner.other": {
+   "waits": 37,
+   "addresses": 3,
+   "dominant": "0x5df06c6603f0",
+   "dominant_share": 0.9459459459459459
+  },
+  "reader.condvar": {
+   "waits": 75,
+   "addresses": 1,
+   "dominant": "0x5df06c6603f0",
+   "dominant_share": 1.0
+  },
+  "reader.other": {
+   "waits": 123,
+   "addresses": 2,
+   "dominant": "0x5df06c6603f0",
+   "dominant_share": 0.991869918699187
+  },
+  "scanner.condvar": {
+   "waits": 121,
+   "addresses": 2,
+   "dominant": "0x5df06c6603f0",
+   "dominant_share": 0.9834710743801653
+  },
+  "decoding": {
+   "waits": 3,
+   "addresses": 3,
+   "dominant": "0x7dac30000030",
+   "dominant_share": 0.3333333333333333
+  },
+  "state_lock": {
+   "waits": 1,
+   "addresses": 1,
+   "dominant": "0x5df06c660370",
+   "dominant_share": 1.0
+  },
+  "post": {
+   "waits": 2,
+   "addresses": 1,
+   "dominant": "0x5df06c65fa90",
+   "dominant_share": 1.0
+  },
+  "release": {
+   "waits": 1,
+   "addresses": 1,
+   "dominant": "0x7dac40000030",
+   "dominant_share": 1.0
+  }
+ },
+ "trace": {
+  "ok": true,
+  "problems": [],
+  "futex_ok": true,
+  "lost_by_event": {},
+  "lost_records": 0,
+  "lost_events": 0,
+  "unparsed": 0,
+  "unparsed_examples": [],
+  "unattributed": {
+   "sched:sched_switch": 6
+  },
+  "stream": {
+   "missing_wakeups": 0,
+   "missed_switch_in": 0,
+   "missed_switch_out": 0,
+   "idle_pairing": {
+    "1": {
+     "to": 97,
+     "out": 97,
+     "ok": true
+    },
+    "2": {
+     "to": 117,
+     "out": 117,
+     "ok": true
+    },
+    "3": {
+     "to": 102,
+     "out": 102,
+     "ok": true
+    },
+    "4": {
+     "to": 96,
+     "out": 96,
+     "ok": true
+    }
+   },
+   "idle_pairing_ok": true
+  }
+ }
+}
