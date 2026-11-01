@@ -156,7 +156,7 @@ CPU-s/GB:
 | Fill buffer full (events per 1,000 cycles) | 146 | 177 | +22% |
 | DRAM reads per output byte (machine-wide, less the idle pair) | 1.6 B | 9.8 B | |
 | DRAM writes per output byte | 0.6 B | 6.9 B | |
-| DRAM traffic during the decode | 0.8 GiB/s | 12.1 GiB/s | |
+| DRAM traffic during the decode (reads + writes) | 0.8 GiB/s | 11.8 GiB/s | |
 | Top-down: retiring / back end | 0.56 / 0.29 | 0.44 / 0.44 | |
 
 **The three stall counters are nested** (l3_miss ⊂ mem_any ⊂ total). They are never added.
@@ -177,7 +177,7 @@ Of the 4.05 added cycles per byte:
   many demand loads miss L3.
 
 **What it doesn't establish:**
-- **DRAM bandwidth saturation is unlikely.** About 12 GiB/s is under half the 26–27 GiB/s
+- **DRAM bandwidth saturation is unlikely.** About 11.8 GiB/s is under half the 26–27 GiB/s
   this machine sustained in `2026-10-28-workstation-scaling.md` §2. Saturation isn't
   shown.
 - **Demand misses in flight don't rise** (2.2 at both w), while fill-buffer-full events
