@@ -1,4 +1,4 @@
-# External research reports 74–135: index
+# External research reports 74–139: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -75,6 +75,10 @@ verbatim. They are not findings of this repository.
 | 133 | 2026-11-01 | the guardian | on Astra's memorandum: authorize Stage 1 of FOR-14/raw, VM-side only, capped at three engineer-days | `2026-11-01-external-report-133.md` |
 | 134 | 2026-11-01 | the guardian | on report 132: plan (do not build) a bounded minimal-walker diagnostic beside FOR-14, with a stopping rule | `2026-11-01-external-report-134.md` |
 | 135 | 2026-11-01 | the guardian (with the maintainer's question) | on FOR-14 stage 1: the stop accepted with its bounds qualified as conditional; one frozen i9 confirmation; a bounded BMI2 code-generation test first; then the minimal-walker diagnostic | `2026-11-01-external-report-135.md` |
+| 136 | 2026-11-01 | the guardian | on the FOR-14 i9 confirmation (a decisive loss; the four-core regression measured directly) and the counter audit; a four-core validation gap in the ladder's driver | `2026-11-01-external-report-136.md` |
+| 137 | 2026-11-01 | Astra | the five explanations as a feedback loop; test buffer-lifetime reuse (P87) first, with a 0.10 CPU-s/GB materiality threshold | `2026-11-01-external-report-137.md` |
+| 138 | 2026-11-01 | a new researcher | a packed lane token (row \| carry << 20) and simpler addressing for FOR-14; a measurement-boundary defect and interpretation limits in the walker ladder | `2026-11-01-external-report-138.md` |
+| 139 | 2026-11-01 | the guardian | on report 138: one compile-and-correctness check of the packed token, the ladder repaired first; no capture | `2026-11-01-external-report-139.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
