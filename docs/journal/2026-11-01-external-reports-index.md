@@ -1,4 +1,4 @@
-# External research reports 74–112: index
+# External research reports 74–124: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -52,10 +52,23 @@ verbatim. They are not findings of this repository.
 | 110 | 2026-11-01 | the guardian | approving the dispatch-causality capture; questions (a)-(c) answered | `2026-11-01-external-report-110.md` |
 | 111 | 2026-11-01 | the researcher | the summary's validity omits the scheduler checks; trace loss must not pass silently | `2026-11-01-external-report-111.md` |
 | 112 | 2026-11-01 | the guardian | adopting the researcher's validation fix; the capture's authorisation stands once it passes | `2026-11-01-external-report-112.md` |
+| 113 | 2026-11-01 | the researcher | the i9 dispatch archive: do not proceed; scheduling delay larger than obstruction | `2026-11-01-external-report-113.md` |
+| 114 | 2026-11-01 | the guardian | the MPMC hypothesis did not pass; close dispatch, turn to inverse-BWT memory | `2026-11-01-external-report-114.md` |
+| 115 | 2026-11-01 | the guardian | agreeing with 113; the five memory hypotheses to distinguish | `2026-11-01-external-report-115.md` |
+| 116 | 2026-11-01 | the researcher | causal discrimination, and the 0.68-0.72 CPU-s/GB opportunity budget | `2026-11-01-external-report-116.md` |
+| 117 | 2026-11-01 | the guardian | the consolidated prompt: close dispatch, one discriminating inverse-BWT memory experiment | `2026-11-01-external-report-117.md` |
+| 118 | 2026-11-01 | the guardian | on the coordinator's postmortem: wake-affine placement is new evidence | `2026-11-01-external-report-118.md` |
+| 119 | 2026-11-01 | the researcher | on the postmortem: MPMC parked, wake placement a credible lead; the scanner's window-open share | `2026-11-01-external-report-119.md` |
+| 120 | 2026-11-01 | the guardian | two tracks; the research-register line | `2026-11-01-external-report-120.md` |
+| 121 | 2026-11-01 | the researcher | MPMC failed its test, wake placement is untested; let the BWT proposal decide | `2026-11-01-external-report-121.md` |
+| 122 | 2026-11-01 | the guardian | on agentic choreography: decision readiness as the stopping condition | `2026-11-01-external-report-122.md` |
+| 123 | 2026-11-01 | the guardian | the message to the coordinator: dispatch closed, one inverse-BWT memory proposal | `2026-11-01-external-report-123.md` |
+| 124 | 2026-11-01 | the guardian | using Astra for an independent architectural proposal in parallel | `2026-11-01-external-report-124.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
 - `docs/walk-unroll-decoder-records`;
 - `docs/decoder-attribution-records`;
 - `research/dispatch-causality` (amendment 1 answers reports 110-112);
+- `docs/dispatch-causality-records` (the i9 result and its closure, reports 113-121);
 - the research branches named in each message.
