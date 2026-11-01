@@ -80,6 +80,23 @@ pub enum Kind {
     /// the scanner: its window once a chunk is appended (`len`: the bytes not yet
     /// released, which it will still read; `cap`: the window's capacity)
     Window,
+    /// a worker: `recv` returned, the receiver's mutex still held (released before `JobGot`)
+    RecvDone,
+    /// a worker: the shared state's lock acquired to take an output buffer (after `JobGot`)
+    BufLockGot,
+    /// a worker: the shared state's lock acquired to publish its block (after `DecodeEnd`),
+    /// and the condition variable notified (after `Ready`)
+    PubLockGot,
+    Notified,
+    /// the reader: before it takes the shared state's lock to look for its next block
+    ReadLock,
+    /// the reader or the scanner: about to wait on the shared condition variable, and
+    /// woken from it with the lock reacquired
+    CvWait,
+    CvWoke,
+    /// a clock anchor (`anchor`): `len` holds CLOCK_MONOTONIC in nanoseconds, read just
+    /// before a `sched_yield` system call the kernel's tracer records on the same clock
+    ClockAnchor,
 }
 
 /// No block: the place of a mark that has none
@@ -109,9 +126,19 @@ pub struct Mark {
 /// One thread's marks, in its order, and the buffers it recorded (`buffers`)
 pub struct ThreadTrace {
     pub name: String,
+    /// the OS thread id (Linux; `UNREAD` elsewhere), to join the kernel's scheduler events
+    pub tid: u64,
+    /// marks not recorded because the thread's buffer was full (`MARKS_CAP`)
+    pub dropped: u64,
     pub marks: Vec<Mark>,
     pub buffers: Vec<Buffer>,
 }
+
+/// Each thread's marks are held in one buffer allocated once, at its first mark, of this
+/// many marks: bounded (about 2.4 MB a thread), never reallocated while the thread runs; a
+/// mark past it is counted (`ThreadTrace::dropped`) instead of recorded, and the thread's
+/// end mark always has its slot
+pub const MARKS_CAP: usize = 32_768;
 
 /// A buffer's size: bytes in use (`len`) and reserved (`cap`)
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -134,6 +161,9 @@ impl Buffer {
 }
 
 static LEVEL: AtomicU8 = AtomicU8::new(0);
+/// CLOCK_MONOTONIC at the epoch (`set_level`), so a mark's `ns` plus it is the kernel
+/// tracer's clock (`perf record -k CLOCK_MONOTONIC`); `Instant` is CLOCK_MONOTONIC on Linux
+static EPOCH_MONO: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 static EPOCH: OnceLock<Mutex<Instant>> = OnceLock::new();
 static DONE: Mutex<Vec<ThreadTrace>> = Mutex::new(Vec::new());
 
@@ -141,10 +171,75 @@ static DONE: Mutex<Vec<ThreadTrace>> = Mutex::new(Vec::new());
 pub fn set_level(level: u8) {
     if level > 0 {
         *epoch().lock().unwrap_or_else(|e| e.into_inner()) = Instant::now();
+        EPOCH_MONO.store(monotonic_ns(), Ordering::Relaxed);
         DONE.lock().unwrap_or_else(|e| e.into_inner()).clear();
         BUF.with(|b| b.borrow_mut().take());
     }
     LEVEL.store(level.min(2), Ordering::Release);
+}
+
+/// CLOCK_MONOTONIC at the epoch, in nanoseconds (`UNREAD` if it couldn't be read)
+pub fn epoch_monotonic_ns() -> u64 {
+    EPOCH_MONO.load(Ordering::Relaxed)
+}
+
+/// A clock anchor on this thread's timeline (nothing at level 0): a `ClockAnchor` mark
+/// carrying CLOCK_MONOTONIC, then a `sched_yield` system call, whose entry the kernel's
+/// tracer timestamps; their difference is the two clocks' alignment, measured
+pub fn anchor() {
+    if LEVEL.load(Ordering::Relaxed) == 0 {
+        return;
+    }
+    let m = monotonic_ns();
+    mark_sized(Kind::ClockAnchor, NONE, m, UNREAD);
+    #[cfg(target_os = "linux")]
+    {
+        extern "C" {
+            fn sched_yield() -> i32;
+        }
+        // SAFETY: no arguments, no memory: it only yields the CPU
+        unsafe { sched_yield() };
+    }
+}
+
+/// CLOCK_MONOTONIC, in nanoseconds (`UNREAD` where it can't be read)
+pub fn monotonic_ns() -> u64 {
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    {
+        #[repr(C)]
+        struct Timespec {
+            sec: i64,
+            nsec: i64,
+        }
+        extern "C" {
+            fn clock_gettime(clock: i32, tp: *mut Timespec) -> i32;
+        }
+        #[cfg(target_os = "linux")]
+        const CLOCK_MONOTONIC: i32 = 1;
+        #[cfg(target_os = "macos")]
+        const CLOCK_MONOTONIC: i32 = 6;
+        let mut t = Timespec { sec: 0, nsec: 0 };
+        // SAFETY: as in `thread_cpu_ns`
+        if unsafe { clock_gettime(CLOCK_MONOTONIC, &mut t) } == 0 {
+            return t.sec as u64 * 1_000_000_000 + t.nsec as u64;
+        }
+    }
+    UNREAD
+}
+
+/// This thread's OS id (Linux, from /proc/thread-self: read once, as its buffer is made)
+fn os_tid() -> u64 {
+    #[cfg(target_os = "linux")]
+    if let Ok(p) = std::fs::read_link("/proc/thread-self") {
+        if let Some(t) = p
+            .file_name()
+            .and_then(|s| s.to_str())
+            .and_then(|s| s.parse().ok())
+        {
+            return t;
+        }
+    }
+    UNREAD
 }
 
 pub fn level() -> u8 {
@@ -175,6 +270,8 @@ fn epoch() -> &'static Mutex<Instant> {
 
 struct Buf {
     name: String,
+    tid: u64,
+    dropped: u64,
     marks: Vec<Mark>,
     buffers: Vec<Buffer>,
     start: Instant,
@@ -187,7 +284,9 @@ impl Buf {
     fn new(level: u8) -> Buf {
         let mut b = Buf {
             name: std::thread::current().name().unwrap_or("?").to_string(),
-            marks: Vec::with_capacity(4096),
+            tid: os_tid(),
+            dropped: 0,
+            marks: Vec::with_capacity(MARKS_CAP),
             buffers: Vec::new(),
             start: *epoch().lock().unwrap_or_else(|e| e.into_inner()),
             level,
@@ -204,6 +303,11 @@ impl Buf {
 
     #[inline]
     fn push(&mut self, kind: Kind, place: u64, clocks: bool, len: u64, cap: u64) {
+        // bounded: the last slot is kept for the thread's end mark
+        if self.marks.len() + (kind != Kind::ThreadEnd) as usize >= MARKS_CAP {
+            self.dropped += 1;
+            return;
+        }
         let ns = self.start.elapsed().as_nanos() as u64;
         let (mut cpu_ns, mut run_ns, mut wait_ns, mut slices) = (UNREAD, UNREAD, UNREAD, UNREAD);
         if clocks && self.level >= 2 {
@@ -232,6 +336,8 @@ impl Drop for Buf {
         self.push(Kind::ThreadEnd, NONE, true, UNREAD, UNREAD);
         let t = ThreadTrace {
             name: std::mem::take(&mut self.name),
+            tid: self.tid,
+            dropped: self.dropped,
             marks: std::mem::take(&mut self.marks),
             buffers: std::mem::take(&mut self.buffers),
         };

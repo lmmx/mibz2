@@ -220,3 +220,12 @@ bench-pmu-probe *args:
 #   just bench-attribution i9-10900K
 bench-attribution label:
     bash bench/attribution_run.sh {{label}}
+
+# The dispatch-causality diagnostic (docs/journal/2026-11-01-dispatch-causality-protocol.md):
+# the shipped decoder's dispatch marks joined with the kernel's scheduler, futex and idle
+# events, on four physical cores, on the frozen Wikidata corpus; paired with uninstrumented
+# runs for the perturbation; the registered classes and decision; one archive. Needs root
+# for the tracepoints: it asks for sudo once. DISPATCH_DRY_RUN=1 checks the machinery only.
+#   just bench-dispatch i9-10900K
+bench-dispatch label:
+    bash bench/dispatch_run.sh {{label}}

@@ -126,6 +126,10 @@ fn child(a: &[String]) {
         },
     };
     trace::set_level(level);
+    // the clocks' alignment, measured at the run's start and end (trace::anchor): two
+    // each, the first making this thread's buffer, so the second is the one measured
+    trace::anchor();
+    trace::anchor();
     let mut h = Hash::new();
     let t0 = Instant::now();
     let res = std::fs::File::open(path)
@@ -154,11 +158,31 @@ fn child(a: &[String]) {
         let got = trace::finished();
         let timeout = (got < want)
             .then(|| format!("collection timeout: {got} of {want} threads' marks at the deadline"));
+        trace::anchor();
+        trace::anchor();
         let traces = trace::take();
         // every mark, raw, for an analysis outside this instrument (OCCUPANCY_MARKS, set
         // by the parent when it is given OCCUPANCY_MARKS_DIR)
         if let Ok(path) = std::env::var("OCCUPANCY_MARKS") {
             dump_marks(&path, &traces);
+            // each thread's OS id and dropped marks, and the epoch on CLOCK_MONOTONIC
+            let mut m = format!(
+                "{{\"epoch_monotonic_ns\": {}, \"marks_cap\": {}, \"threads\": [",
+                trace::epoch_monotonic_ns(),
+                trace::MARKS_CAP
+            );
+            for (i, t) in traces.iter().enumerate() {
+                let _ = write!(
+                    m,
+                    "{}{{\"thread\": {i}, \"name\": \"{}\", \"tid\": {}, \"dropped\": {}}}",
+                    if i > 0 { ", " } else { "" },
+                    t.name,
+                    t.tid,
+                    t.dropped
+                );
+            }
+            m.push_str("]}\n");
+            std::fs::write(format!("{path}.meta.json"), m).expect("write the marks' sidecar");
         }
         summarise(&traces, plan.workers(), level, timeout, &mut kv);
         // the decoded bytes the marks sum, against the bytes the reader read: an
@@ -2154,6 +2178,8 @@ mod tests {
         let mb = |x: u64| if x == UNREAD { x } else { x * 1_000_000 };
         ThreadTrace {
             name: name.into(),
+            tid: UNREAD,
+            dropped: 0,
             marks: marks
                 .iter()
                 .map(|&(ms, k, p, l, c)| mk(ms * 1_000_000, k, p, mb(l), mb(c)))

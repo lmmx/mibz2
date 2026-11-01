@@ -243,6 +243,7 @@ impl StreamDecoder {
             if r.done || buf.is_empty() {
                 return Ok(0);
             }
+            mark!(ReadLock);
             let mut st = self.shared.lock();
             let spent = std::mem::take(&mut r.cur);
             if spent.capacity() != 0 && st.free_out.len() < self.shared.slots as usize {
@@ -270,7 +271,9 @@ impl StreamDecoder {
                     r.done = true;
                     break;
                 }
+                mark!(CvWait);
                 st = self.shared.cv.wait(st).unwrap_or_else(|e| e.into_inner());
+                mark!(CvWoke);
             }
         }
     }
@@ -370,7 +373,9 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
         let syms = {
             let mut st = shared.lock();
             while !st.cancelled && st.issued - st.taken >= shared.slots {
+                mark!(CvWait);
                 st = shared.cv.wait(st).unwrap_or_else(|e| e.into_inner());
+                mark!(CvWoke);
             }
             if st.cancelled {
                 drop(st);
@@ -419,7 +424,9 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
         let job = {
             let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());
             mark!(JobRecv);
-            rx.recv()
+            let job = rx.recv();
+            mark!(RecvDone);
+            job
         };
         let Ok((place, bit, symbols)) = job else {
             // (its buffers' high-water marks, for the footprint ledger)
@@ -432,6 +439,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
         mark!(JobGot, place);
         let mut out = {
             let mut st = shared.lock();
+            mark!(BufLockGot);
             if st.cancelled {
                 continue; // (drain the queue, so the scanner never waits on it)
             }
@@ -457,6 +465,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
             bit: Some(bit),
         });
         let mut st = shared.lock();
+        mark!(PubLockGot);
         if !st.cancelled {
             st.ready.insert(place, res);
         }
@@ -466,6 +475,7 @@ fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>
         drop(st);
         mark!(Ready, place);
         shared.cv.notify_all();
+        mark!(Notified, place);
     }
 }
 
