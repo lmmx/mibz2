@@ -1,0 +1,110 @@
+{
+ "protocol": "docs/journal/2026-11-01-decoder-attribution-protocol.md",
+ "amendments": [
+  "docs/journal/2026-11-01-decoder-attribution/amendment-1.md"
+ ],
+ "source_base": "45b366d1455a487f1655def689ebd8c87a31f135",
+ "toolchain": "rustc 1.97.0 (2d8144b78 2026-07-07), --locked, release profile, empty RUSTFLAGS",
+ "order": [
+  "wikidata-20261026",
+  "records",
+  "random"
+ ],
+ "corpora": {
+  "wikidata-20261026": {
+   "role": "primary",
+   "compressed_sha256": "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe",
+   "decoded_sha256": "47a2971ccc4a91e958c5c8797f45ff7a50ae0d7e7cfac31152c8018d994b7a81",
+   "compressed_bytes": 11953225,
+   "decoded_bytes": 207000624
+  },
+  "records": {
+   "role": "control",
+   "compressed_sha256": "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c",
+   "decoded_sha256": "ff2de2d9a8112fa22c0c74691d1f99cd59bd35b3094d940507373499cab886bd",
+   "compressed_bytes": 9587840,
+   "decoded_bytes": 9600000
+  },
+  "random": {
+   "role": "control",
+   "compressed_sha256": "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18",
+   "decoded_sha256": "00e14e00981a39705bb0f8c6150bde65df1185d68632e9d5e1ddd66d8204f4b0",
+   "compressed_bytes": 7097921,
+   "decoded_bytes": 8000000
+  }
+ },
+ "corpora_from": {
+  "branch": "research/walk-unroll-decoder",
+  "head": "f5c492d0005d2f1e6bbc15762c5beb742ce433f0",
+  "note": "the walk trial's frozen corpora (docs/journal/2026-10-31-walk-unroll-decoder/frozen.json), byte-identical"
+ },
+ "schedule": {
+  "workers": [
+   1,
+   4
+  ],
+  "rounds": 10,
+  "modes": [
+   "off",
+   "timeline",
+   "full"
+  ],
+  "stat_reps": 5,
+  "record_reps": 3,
+  "sampling_periods": {
+   "cycles": 2000003,
+   "cycle_activity.stalls_l3_miss": 200003
+  }
+ },
+ "allocation": "the first four physical cores by lowest CPU, not cpu0's; one CPU each; siblings idle (i9-10900K: CPUs 1-4, siblings 11-14)",
+ "thresholds": {
+  "R1": 0.5,
+  "R2": "cycles ratio - 1 <= (CPU ratio - 1) / 3",
+  "R3": {
+   "stall_share": 0.5,
+   "instructions": 0.05
+  },
+  "R4": {
+   "binding": 1.5,
+   "demoted": 2.0,
+   "reading_idle": 0.1
+  },
+  "R5": 0.25,
+  "R6": 0.5,
+  "R7": {
+   "decoding": 0.1,
+   "unused": 0.25
+  },
+  "Q2_owner": 0.25,
+  "validity": {
+   "instrument_agreement": 0.02,
+   "sampling_overhead": 0.03,
+   "sibling_busy": 0.02
+  }
+ },
+ "sources_sha256": {
+  ".just/bench.just": "89c59a18a5149367b7e97f3bbf63e89089a561786f833aaf2207ea9b2a5e7ffc",
+  "Cargo.lock": "80f7c98d6c27a66ae05346afa482f7e6586f61f6f7239885aa882d1217300f57",
+  "Cargo.toml": "dfe099e267050ece0c224492974fe85d9058030eda3c371c767c7278c8a41079",
+  "bench/attribution.py": "9d600c42eef4a44450a1d0feb5b972845865532c02aba7c43b0231e634c9052f",
+  "bench/attribution_fakeperf.py": "8d058b9dc3ada409b48518d2689bc0f2616d4bd9b029545d06542d5ae10dd01c",
+  "bench/attribution_run.sh": "912cb3a70edad3860715272926be3995a46637077d02503155ae0a5a7d1444db",
+  "bench/attribution_same_code.py": "b5db32b8756c225e7d25846a0633c182c995163fa6e4a967c29e2fc9f0f50080",
+  "examples/attribution_decode.rs": "0b8af776cfa5b8b730d59510f8ea7e8b8b8005c0f198403be93f19ab9c5d6ae7",
+  "examples/occupancy.rs": "ff2997b23029522d7dc7c8aa8c4c365a66b85db453340a5f955b879591c9b966",
+  "src/bits.rs": "5a358ced36cd6d6e0371dbee8790798f586ecad21a53d13b2a44918d7e8868ab",
+  "src/block.rs": "f6d800350a29d2c2b6a0c77d33745dc14556721fd4e4ef8fa7715f219339801d",
+  "src/bwt.rs": "24948c3c3b4306b0602c841432bf60107837660ead6ff07e2012eb7fdea43e0b",
+  "src/coop.rs": "0f68e2f72b73c267ca80980b6cf314d681084ca148d22b940777a9416ab6b2a0",
+  "src/crc.rs": "c99ce53c160f63bce5ab52089dd25c83297c9167cdefb7b3f1438e3720eea0ba",
+  "src/lib.rs": "7034480f3088fa0051354b6573961b4ceffdef99ddcf1c29ad9fc85e4ddb9b33",
+  "src/mtf.rs": "88fadff30a234537d72a4a6614cdddf85ea1d677aae7bbc8c83fb5cbe1ec31e1",
+  "src/parallel.rs": "cd541345707bd0661312dd8506ac6b5c3bbeb441a10094c946a9ea48b459c8c5",
+  "src/python.rs": "d349557946295eefaadbef8a1f4ac0dad355abaa7c7bc88c228953eacbba4b85",
+  "src/read.rs": "2a028b7739754309dcde350db5c156b3d55358da864e71b414e982e73c9d2177",
+  "src/rle.rs": "3c326bf34a2b3518e1cf3c73a0fa47e747938ba29c67a39de987417cca35bfb8",
+  "src/stream.rs": "ee9c5d3115e451ae929a53fb64a0c116f98095efefe7a1feed8eb601b4218aea",
+  "src/trace.rs": "ff877a612870f3fa55c9f9c1315cbd050cc5fa65a0deac11be134adf69a8cdb2",
+  "tests/trace_phases.rs": "6d147a1702957fd7a87b26c49f115a49f31c98342a2bbf668c9809785fabe428"
+ }
+}
