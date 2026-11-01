@@ -1,6 +1,6 @@
 {
  "protocol": "docs/journal/2026-11-01-dispatch-causality-protocol.md",
- "pin": "382fde1cfb0bfb1f2145e35cfb11fbc3e68fbcb6",
+ "pin": "48f8cda32fe3580f87e49c6cd68242cf8a81c996",
  "source_base": "45b366d1455a487f1655def689ebd8c87a31f135",
  "toolchain": "rustc 1.97.0 (2d8144b78 2026-07-07), --locked, release profile, empty RUSTFLAGS",
  "order": [
@@ -73,15 +73,23 @@
   "src/trace.rs": "06f500a580dc3d460c0937c50b9621d4242898c4895e946acda53cf4a30d72ea",
   "examples/occupancy.rs": "0d8ace1d06b5dd46d72763457790676c9854615b7dce7f23b5d76b75c562012e",
   "examples/attribution_decode.rs": "0b8af776cfa5b8b730d59510f8ea7e8b8b8005c0f198403be93f19ab9c5d6ae7",
-  "bench/dispatch.py": "93cbe368db6f3f7a2d3581fc59a858d8b39ebd7902412acc621eaff962044b2c",
+  "bench/dispatch.py": "cf814e42499a81825f26a10f4cc671012c0b92a958ba635a01a22f49afa49e02",
   "bench/dispatch_reproduce.py": "8b625417ae0b48724269822bf189543d996c545fb8e771f7ce9aabacc444045c",
-  "bench/dispatch_run.sh": "9a32243da5aa5953b10cba8bf9e03ffd391fbd7313540f38b098d904b9b1fd51",
+  "bench/dispatch_run.sh": "9207e86ca9399fec0a0cef253a6c90093f937eb1a274e62e35c04c8e69b8da1c",
   "bench/attribution.py": "8ef10ee13bdc110d19886ade743cd0b7edd795b92cdad143decd0d5b5fc94942",
   "bench/attribution_same_code.py": "b5db32b8756c225e7d25846a0633c182c995163fa6e4a967c29e2fc9f0f50080",
   "tests/trace_dispatch.rs": "b7ae04c0fba0b303471d6cb6a5930d59cff405db58ad5fc5607df707534827a6",
   "tests/trace_phases.rs": "6d147a1702957fd7a87b26c49f115a49f31c98342a2bbf668c9809785fabe428",
   ".just/bench.just": "6446b9f0a2d819ba66247e3b0fb0f3e80eaa87c3d0d1634372aabdd0a8872d3b",
   "Cargo.toml": "dfe099e267050ece0c224492974fe85d9058030eda3c371c767c7278c8a41079",
-  "Cargo.lock": "80f7c98d6c27a66ae05346afa482f7e6586f61f6f7239885aa882d1217300f57"
- }
+  "Cargo.lock": "80f7c98d6c27a66ae05346afa482f7e6586f61f6f7239885aa882d1217300f57",
+  "bench/test_dispatch.py": "573cccba8d752773d0f712459891de0c6ae7c079f581ee449266c2df8088bbaf",
+  "bench/fixtures/dispatch/vm-w4.tsv.gz": "9476dff0f548ba2049da278855659d66da6914dd5d627a95cffd4ee2b9ecddd5",
+  "bench/fixtures/dispatch/vm-w4.tsv.meta.json": "b8c3423459a73e97963fbe0ef634e34efd655d98eca3f6de517a6ea1badb5176",
+  "bench/fixtures/dispatch/vm-w4.perf.txt.gz": "42cfb5f135d2bea242a5485656e613d88fe7f4c03600cca6043c0632b84608ad"
+ },
+ "amendments": [
+  "docs/journal/2026-11-01-dispatch-causality/amendment-1.md"
+ ],
+ "validity_amendment_1": "every w = 4 run in the decision: complete, aligned, threads_in_sched, sched_coverage >= 0.99, trace complete (no scheduler or anchor loss, loss counts agree, statistics present, no unreadable lines, idle switches paired); coverage >= 0.90; perturbation; at least one run"
 }
