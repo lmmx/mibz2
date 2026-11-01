@@ -35,7 +35,7 @@
     
     
       
-        <title>The extra CPU cost of four-worker bzip2 decoding - mibz2</title>
+        <title>Investigating inverse-BWT memory interference in mibz2 - mibz2</title>
       
     
     
@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=9bb7234a1d21">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=5a4cf7822f29">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=9bb7234a1d21">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=5a4cf7822f29">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=9bb7234a1d21">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=5a4cf7822f29">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=9bb7234a1d21">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=5a4cf7822f29">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=9bb7234a1d21">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=5a4cf7822f29">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -87,19 +87,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="The extra CPU cost of four-worker bzip2 decoding">
+  <meta property="og:title" content="Investigating inverse-BWT memory interference in mibz2">
   <meta property="og:description" content="Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/blog/2026-11-01-inverse-bwt-memory-interference/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/assets/social/blog-2026-11-01-inverse-bwt-memory-interference.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="The extra CPU cost of four-worker bzip2 decoding">
+  <meta property="og:image:alt" content="Investigating inverse-BWT memory interference in mibz2">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="The extra CPU cost of four-worker bzip2 decoding">
+  <meta name="twitter:title" content="Investigating inverse-BWT memory interference in mibz2">
   <meta name="twitter:description" content="Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/assets/social/blog-2026-11-01-inverse-bwt-memory-interference.png">
-  <meta name="twitter:image:alt" content="The extra CPU cost of four-worker bzip2 decoding">
+  <meta name="twitter:image:alt" content="Investigating inverse-BWT memory interference in mibz2">
 
   </head>
   
@@ -152,7 +152,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The extra CPU cost of four-worker bzip2 decoding
+              Investigating inverse-BWT memory interference in mibz2
             
           </span>
         </div>
@@ -1108,7 +1108,7 @@
   <span class="md-ellipsis">
     
   
-  The extra CPU cost of four workers
+  Inverse-BWT memory interference
 
     
   </span>
@@ -1125,7 +1125,7 @@
   <span class="md-ellipsis">
     
   
-  The extra CPU cost of four workers
+  Inverse-BWT memory interference
 
     
   </span>
@@ -1742,7 +1742,7 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="the-extra-cpu-cost-of-four-worker-bzip2-decoding">The extra CPU cost of four-worker bzip2 decoding<a class="headerlink" href="#the-extra-cpu-cost-of-four-worker-bzip2-decoding" title="Permanent link">&para;</a></h1>
+<h1 id="investigating-inverse-bwt-memory-interference-in-mibz2">Investigating inverse-BWT memory interference in mibz2<a class="headerlink" href="#investigating-inverse-bwt-memory-interference-in-mibz2" title="Permanent link">&para;</a></h1>
 <p class="post-dek">Four workers finish decompression sooner, but together spend 32% more processor time per
 byte. We're testing whether competition for shared memory is responsible.</p>
 <p class="post-meta">1 November 2026 · 14 min read · By the independent researcher · <a href="#7-where-things-stand">Research in progress</a></p>
@@ -2278,17 +2278,17 @@ cheaper, without touching the traversal itself?</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=9bb7234a1d21"></script>
+        <script src="../../assets/javascripts/bench.js?v=5a4cf7822f29"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=9bb7234a1d21"></script>
+        <script src="../../assets/javascripts/couriers.js?v=5a4cf7822f29"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=9bb7234a1d21"></script>
+        <script src="../../assets/javascripts/blog.js?v=5a4cf7822f29"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=9bb7234a1d21"></script>
+        <script src="../../assets/javascripts/frontier.js?v=5a4cf7822f29"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=9bb7234a1d21"></script>
+        <script src="../../assets/javascripts/katex.js?v=5a4cf7822f29"></script>
       
     
   </body>

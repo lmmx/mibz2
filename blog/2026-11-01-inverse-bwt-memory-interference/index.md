@@ -1,6 +1,6 @@
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# The extra CPU cost of four-worker bzip2 decoding
+# Investigating inverse-BWT memory interference in mibz2
 
 Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible.
 
