@@ -187,8 +187,11 @@ pair() { # w rep tier: the order alternates by repetition
 cat /proc/stat > "$out/stat-before.txt"
 tier=A
 for ((r = 0; r < initial; r++)); do pair 4 "$r" A; done
-if ! python3 -I bench/dispatch.py quality --runs "$caps" --pairs "$pairs" > "$out/quality-A.json" \
-    && ! python3 -I -c "import json,sys; sys.exit(0 if json.load(open('$out/quality-A.json'))['perturbation']['ok'] else 1)"; then
+# quality: exit 0 (every check holds), 3 (a check fails); anything else is the analysis failing
+quality() { local rc=0; python3 -I bench/dispatch.py quality --runs "$caps" --pairs "$pairs" > "$1" || rc=$?
+    (( rc == 0 || rc == 3 )) || die "the quality analysis failed (exit $rc)"; return "$rc"; }
+quality "$out/quality-A.json" || true
+if ! python3 -I -c "import json,sys; sys.exit(0 if json.load(open('$out/quality-A.json'))['perturbation']['ok'] else 1)"; then
     echo "dispatch: tier A perturbs by more than 3%: tier B (no futex events), from the start"
     mkdir -p "$out/tier-A" && mv "$caps" "$pairs" "$out/tier-A/" && mkdir -p "$caps"
     echo -e "# w\trep\tmode\twall\tcpu\tout\trss_kb\ttier" > "$pairs"
@@ -196,7 +199,7 @@ if ! python3 -I bench/dispatch.py quality --runs "$caps" --pairs "$pairs" > "$ou
     for ((r = 0; r < initial; r++)); do pair 4 "$r" B; done
 fi
 for ((r = 0; r < w1reps; r++)); do pair 1 "$r" "$tier"; done
-if python3 -I bench/dispatch.py quality --runs "$caps" --pairs "$pairs" > "$out/quality.json"; then
+if quality "$out/quality.json"; then
     echo "dispatch: the quality checks pass on the first $initial: expanding to $total"
     for ((r = initial; r < total; r++)); do pair 4 "$r" "$tier"; done
 else

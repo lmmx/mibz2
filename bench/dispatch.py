@@ -354,8 +354,8 @@ def quality(r, pert):
 
 
 def summary(a):
-    runs = [json.loads(p.read_text()) for p in sorted(Path(a.runs).glob("w4-r*.json"))]
-    ref = [json.loads(p.read_text()) for p in sorted(Path(a.runs).glob("w1-r*.json"))]
+    runs = [json.loads(p.read_text()) for p in sorted(Path(a.runs).glob("w4-r[0-9][0-9].json"))]
+    ref = [json.loads(p.read_text()) for p in sorted(Path(a.runs).glob("w1-r[0-9][0-9].json"))]
     pairs = [l.split("\t") for l in Path(a.pairs).read_text().splitlines() if l and not l.startswith("#")]
     # pairs: w, rep, mode(off|instr), wall, cpu, out, rss_kb, tier
     def ratio(w, key):
@@ -396,7 +396,7 @@ def summary(a):
 
 def quality_cmd(a):
     """the expansion decision after the first three repetitions (§6), printed for the runner"""
-    runs = [json.loads(p.read_text()) for p in sorted(Path(a.runs).glob("w4-r*.json"))]
+    runs = [json.loads(p.read_text()) for p in sorted(Path(a.runs).glob("w4-r[0-9][0-9].json"))]
     pairs = [l.split("\t") for l in Path(a.pairs).read_text().splitlines() if l and not l.startswith("#")]
     x = [p for p in pairs if p[0] == "4"]
     f = lambda m, g: statistics.fmean([g(p) for p in x if p[2] == m])  # noqa: E731
