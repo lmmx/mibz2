@@ -7,6 +7,87 @@ comes from earlier records, cited below.
   model.
 - **Machine:** the i9-10900K (20 MB L3) unless stated; four workers on four physical cores.
 
+## Corrections after review (read these first)
+
+The guardian and the independent researcher reviewed this plan. They found five places
+where it moved too fast from observations to large projected gains. All five corrections
+are accepted. **The ranking in §2 is superseded by the revised ranking at the end of this
+section.**
+
+1. **R1's ceiling is about parity, not 1.15–1.2×.**
+   - During a team's serial MTF (22–28% of its round), one of its two cores is idle, so the
+     idle core-time is about half of that: 11–14%.
+   - Filling it perfectly, with inversion unchanged, gives 1/(1 − 0.11…0.14) = 1.12–1.16×
+     the team's throughput: 891 → about 998–1034 MB/s, against the reference's 1007.
+   - The plan's "1.15–1.2× over four workers" applied the gain to the wrong base. At best R1
+     is the same throughput at about 13% less CPU: an efficiency result, not a throughput
+     one.
+   - Those figures come from the cooperative decoder's own comparison (reference 1007 MB/s).
+     They don't combine with the attribution baseline (869–870 MB/s).
+2. **R2 is P85, and P85's bound stands.** The register already holds this idea, and its
+   record is not a "no prior negatives" case:
+   - **P85, "Remove the segment-assembly copy",** was rejected because assembly was 1.4% of
+     a decode (stage, CI) and 3% of time per byte even at 13.6× under a 10-copy i9 proxy:
+     "a few percent".
+   - **P87's S2 agrees:** assembly is 0.147 of 3.843 CPU-s/GB at w4 (3.8%).
+   - **So removing it saves at most 0.147 CPU-s/GB directly,** less whatever a
+     segment-aware RLE1 costs: the AVX2 run scan over 512 segments a block, with run state
+     carried across each boundary.
+   - **The 0.2–0.35 range has no defensible model.** It extrapolated P87's indirect savings,
+     which were measured for a different intervention, and it is withdrawn.
+   - **The 44% figure measures something narrower.** `memmove`'s 44% is a share of sampled
+     demand-L3-miss stall events. The walk's prefetches hide its misses from that event, so
+     it isn't a share of removable time.
+   - **Revised (I):** R2 is a small engineering candidate of about the size of P87, not an
+     architectural one. Its ceiling is below the 0.25 threshold unless a separate model of
+     indirect effects is established.
+3. **Closing compact navigation was premature.** The negative evidence is against the
+   *dense* compact tables (`u`, `v`) and ψ². It does not reach P40, P38 or P84, which are
+   untimed:
+   - **P40:** fixed 64-byte records, 16.16 bits a row, 1.818 MB a block, against 3.6. Its
+     census: RUN 77.39%, FOR 20.73%, EF 1.40%, exceptions 0.49%.
+   - **P40's own model is not `u`'s failure mode.** It predicts about 45 cycles a step
+     against 43, with about 25 instructions against 17, one line a step, and the byte
+     recovered inside the record (P38's "the byte from the same load as the link").
+   - **`u` failed on step cost,** with the byte recovered by a second dependent access
+     (u1/o1 0.681). It did move the knee from 4 to 6.
+   - **#130's `h` (P40 records) and `e` (embedded byte) arms are designed and never built.**
+     They are the cheapest falsification of the largest-footprint direction.
+   - **Construction (P84) is the open risk.** The fused build is the baseline to beat:
+     "writing fewer bytes need not be less work".
+4. **The -9 against -3 neighbour contrast doesn't isolate footprint.** Smaller blocks change
+   the block cadence, the build and assembly rates, and the request rate per second, not
+   just the table size. Matching a synthetic load's L2-miss rate doesn't match its L3
+   request mix or its occupancy. The §3 harness is **deferred**. If it is ever built, its
+   rules must be read modestly ("consistent with"), with the neighbours' rates reported as
+   covariates. A cleaner footprint intervention is the target's own representation (item 3,
+   and the revised ranking): the same algorithm and neighbours, with the table halved.
+5. **The utilisation claim was wrong.** "18.9% of worker time has no job behind a serial
+   scanner" is not established.
+   - **What the attribution and dispatch records actually show:**
+     - handoff and reader wake-ups, about 17% of worker time;
+     - 18.9% with no job (17.4% asleep);
+     - 11.5% with work queued;
+     - direct receiver obstruction 1.90%, so MPMC was rejected;
+     - 5.65% of worker time runnable but not running with an allocated CPU idle.
+   - **The scanner's measured ceiling is about 3.1 GB/s,** well above a 1.5× target.
+   - **What can realistically be recovered:** the wake-placement and slot-wait share, a
+     few percent to about 6% of worker time (I), not a scanner rewrite.
+
+**Revised ranking (I; to be challenged by the Astra review before any implementation):**
+
+| | Direction | Cheapest decisive falsification | Ceiling | Status |
+| --- | --- | --- | --- | --- |
+| 1 | **Record-based navigation (P40 records with P38's in-record byte; P84 build later)** | #130's `h` and `e` arms in the existing compact-Ψ grid harness (`examples/coop`), pinned, at 1 and 4 blocks. Stop if h1/o1 < 0.90 (`u` failed at 0.681), or if h4 isn't above o4 by more than h1's deficit. A difference-in-differences across blocks, as in P87, with the neighbours unchanged | If footprint dominates, a large share of the walk's +0.548 at w4 (I, unbounded until measured); the build is the risk | open; the strongest untested lever |
+| 2 | R2: RLE1 from the segments (P85) | design-only feasibility note; then the assembly + RLE1 stage at w1 and w4 against a segment-aware RLE1 | ≤0.147 CPU-s/GB direct | small engineering; competes with P87, not with 1 |
+| 3 | R1: teams of 2 with the MTF overlapped | an explicit core-time schedule showing it beats parity | parity throughput at −13% CPU | deprioritised for throughput |
+| 4 | R3: requests in flight / prefetch | the prefetch-distance sweep | ≤0.1–0.2 | measurement only |
+| — | R4: phase scheduling | — | needs idle cores | closed |
+| — | the neighbour harness (§3) | — | — | deferred; footprint is better varied in the target itself |
+
+Nothing is implemented until the Astra review has challenged this ranking and its cost
+models.
+
 ## 0. The budget
 
 | | CPU-s/GB |
@@ -27,7 +108,7 @@ So **1.5× at four cores needs both levers.** For example, recovering 0.6 CPU-s/
 and going from 3.15 to 3.9 busy cores (×1.24) gives 1.49×. **2× needs more than four
 cores' worth of work**, or a cheaper single-worker kernel; the cooperative policy already
 gives 1.26× at 20 threads (M). This plan addresses the efficiency half. The utilisation
-half (the serial scanner, idle workers) is named in §6, not solved here.
+half (idle worker time; see correction 5) is named in §6, not solved here.
 
 ## 1. What the record says about where the penalty is
 
@@ -80,6 +161,7 @@ the unrolled walker.
   and fewer of them are live.
 - **Ceiling (I).** Up to about 0.45 CPU-s/GB-equivalent (−13%), at a throughput between
   0.89× and about 1.15–1.2×, depending on how much of the 22–28% the overlap hides.
+  **[Corrected: about parity at best; see correction 1.]**
 - **Cost.** High: pipelining inside the cooperative scheduler, and one more `ll` per team.
 - **Risk.** Coordination overhead, the second core's idle time, memory.
 
@@ -99,7 +181,8 @@ the unrolled walker.
 - **Ceiling (I).**
   - **Direct:** up to 0.147 CPU-s/GB (the assembly) plus part of RLE1's 0.195.
   - **Indirect:** P87's ratio of indirect to direct savings (about 2.7) suggests more.
-  - **Planning range:** 0.2–0.35 CPU-s/GB.
+  - **Planning range:** 0.2–0.35 CPU-s/GB. **[Withdrawn: R2 is P85, bounded at ≤0.147
+    direct; see correction 2.]**
 - **Cost.** Moderate. RLE1 across segment boundaries needs careful tests (a run straddling
   a boundary, a 4-byte prefix at a segment's end); it is otherwise local.
 - **Relation to P87.** R2 subsumes P87's production trial: with no assembled copy, there is
@@ -137,12 +220,12 @@ None of these has a new mechanism for why it would now behave differently:
 
 | Idea | Why it stays closed (M) |
 | --- | --- |
-| Compact Ψ | `u` moved the knee from 4 to 6 but ran at u1/o1 0.681 and u4/p4 0.899: per-step byte recovery costs more than the footprint saves |
+| Compact Ψ (the dense `u` and `v` tables only) | `u` moved the knee from 4 to 6 but ran at u1/o1 0.681 and u4/p4 0.899: per-step byte recovery costs more than the footprint saves. **[Corrected: this does not cover P40, P38 or P84, which are untimed; see correction 3.]** |
 | ψ² / pair walk | +40.6% / +24.3% wall: a costlier build, and the walk is bound by instructions per step |
 | Unrolled walker | NEGATIVE on the i9 |
 | Precopy | 18% / 6% slower |
 
-## 3. The discriminating experiment (design only)
+## 3. The discriminating experiment (design only) [deferred; see correction 4]
 
 **Question.** At four workers, is the target walk's slowdown mainly residency (footprint)
 pressure, or request pressure in the shared L3? The answer decides between R1/R2 and R3.
@@ -230,7 +313,7 @@ R3 are the options the experiment discriminates between.
 
 ## 6. Beyond efficiency: the other half of 1.5–2×
 
-At four workers, 18.9% of worker time has no job (M), and the scanner (the Huffman pass)
+**[Corrected; see correction 5: the idle time is not shown to be the scanner's, and the scanner's ceiling is about 3.1 GB/s.]** At four workers, 18.9% of worker time has no job (M), and the scanner (the Huffman pass)
 is serial. Any route to 1.5× needs a utilisation lever too, such as a faster or parallel
 scan, or a feeder that keeps the workers supplied. That is a separate investigation, listed
 here so the efficiency work isn't mistaken for the whole path.
