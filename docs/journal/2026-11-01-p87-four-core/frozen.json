@@ -1,0 +1,133 @@
+{
+ "protocol": "docs/journal/2026-11-01-p87-four-core-protocol.md",
+ "pin": "6463e443360c6ad77d866edaadbe9253eb47a847",
+ "source_base": "45b366d1455a487f1655def689ebd8c87a31f135",
+ "toolchain": "rustc 1.97.0 (2d8144b78 2026-07-07), --locked, release profile, empty RUSTFLAGS",
+ "order": [
+  "wikidata-20261026",
+  "records",
+  "random"
+ ],
+ "corpora": {
+  "wikidata-20261026": {
+   "role": "primary",
+   "compressed_sha256": "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe",
+   "decoded_sha256": "47a2971ccc4a91e958c5c8797f45ff7a50ae0d7e7cfac31152c8018d994b7a81",
+   "compressed_bytes": 11953225,
+   "decoded_bytes": 207000624
+  },
+  "records": {
+   "role": "control",
+   "compressed_sha256": "ff8b5f6ed3dd44459908a01a588f6979b2544c6a444c9520741a2aa96c391f8c",
+   "decoded_sha256": "ff2de2d9a8112fa22c0c74691d1f99cd59bd35b3094d940507373499cab886bd",
+   "compressed_bytes": 9587840,
+   "decoded_bytes": 9600000
+  },
+  "random": {
+   "role": "control",
+   "compressed_sha256": "10d444e6204289af739688e54a348940d7915957172ea65035b08b72dfdc3f18",
+   "decoded_sha256": "00e14e00981a39705bb0f8c6150bde65df1185d68632e9d5e1ddd66d8204f4b0",
+   "compressed_bytes": 7097921,
+   "decoded_bytes": 8000000
+  }
+ },
+ "corpora_from": {
+  "record": "docs/journal/2026-11-01-dispatch-causality/frozen.json",
+  "branch": "research/walk-unroll-decoder",
+  "head": "f5c492d0005d2f1e6bbc15762c5beb742ce433f0",
+  "note": "the walk trial's frozen corpora (docs/journal/2026-10-31-walk-unroll-decoder/frozen.json), byte-identical"
+ },
+ "schedule": {
+  "S1": {
+   "rounds": 20,
+   "warmups": "one untimed child per arm per cell (round -1)",
+   "workers": [
+    1,
+    4
+   ],
+   "arms": [
+    "A: assembly into rle",
+    "B: assembly into ll",
+    "A2: A again, a second label"
+   ],
+   "design": "per cell: the 6 permutations of (A, B, A2) x3 + (A,B,A2), (B,A,A2), Fisher-Yates; cell order shuffled per round; xorshift seed 0x8720261101_0001",
+   "placement": "the round's parity: 0 (ll allocated first) in even rounds, 1 (rle first) in odd; the warm-ups 0"
+  },
+  "S2": {
+   "reps": 6,
+   "corpus": "wikidata-20261026",
+   "workers": [
+    1,
+    4
+   ],
+   "arms": [
+    "A",
+    "B"
+   ],
+   "modes": [
+    "off (level 0)",
+    "full (level 2)"
+   ],
+   "order": "per rep: w = 1 then 4; arm order AB on even reps, BA on odd; mode order off-full on even, full-off on odd; placement the rep's parity"
+  },
+  "S3": {
+   "reps": 6,
+   "corpus": "wikidata-20261026",
+   "workers": [
+    1,
+    4
+   ],
+   "arms": [
+    "A",
+    "B"
+   ],
+   "passes": [
+    "IMC machine-wide (an idle reading as long, just before)",
+    "core: cycles, ref-cycles, instructions (the process)"
+   ],
+   "order": "as S2"
+  }
+ },
+ "thresholds": {
+  "D": 0.1,
+  "practical": [
+   1.02,
+   0.98
+  ],
+  "no_harm": [
+   1.01,
+   0.99
+  ],
+  "rss_max": 1.01,
+  "instructions_w1": 0.005,
+  "instructions_w4": 0.01,
+  "perturbation": 0.03
+ },
+ "sources_sha256": {
+  "Cargo.toml": "50dbec8f71de37b104034d9067f35ebae1d5c698a5c3dad1a770e0d9894a1d69",
+  "Cargo.lock": "80f7c98d6c27a66ae05346afa482f7e6586f61f6f7239885aa882d1217300f57",
+  "src/lib.rs": "ff17d552182c5b02add85f1470dfac9ac223677f7e9b90ba2108ec10f182e639",
+  "src/p87.rs": "d08ded31de6a8ba2b8ade2f22f08b8b50febee62503fe2bccf1a620fe7b92bfa",
+  "src/bwt.rs": "c305ad3600fd17c24034ee7625bef6c03c26053e7dd6242265a449f4ffc99dc5",
+  "src/trace.rs": "7e34dd65d675664765072c8e730ecf5d89c4a5992522ff5b536c65cd0fe7068b",
+  "src/mtf.rs": "88fadff30a234537d72a4a6614cdddf85ea1d677aae7bbc8c83fb5cbe1ec31e1",
+  "src/parallel.rs": "31e77d5c1f819deb99c3f128617ed8cfbd1d1cb622f8886127e9ee3d811e0466",
+  "src/rle.rs": "3c326bf34a2b3518e1cf3c73a0fa47e747938ba29c67a39de987417cca35bfb8",
+  "src/crc.rs": "c99ce53c160f63bce5ab52089dd25c83297c9167cdefb7b3f1438e3720eea0ba",
+  "src/read.rs": "2a028b7739754309dcde350db5c156b3d55358da864e71b414e982e73c9d2177",
+  "examples/p87_decoder.rs": "c300aab76a652ffdb723e4be3a8ee8f140e9d1d76b6124bc1e3b255f3d72479e",
+  "examples/occupancy.rs": "0d8ace1d06b5dd46d72763457790676c9854615b7dce7f23b5d76b75c562012e",
+  "examples/attribution_decode.rs": "0b8af776cfa5b8b730d59510f8ea7e8b8b8005c0f198403be93f19ab9c5d6ae7",
+  "tests/common/mod.rs": "3aeb98175100dd760d5b3c16ac617be78e44ce9e0ec459bd2f7c4a6b85cdc491",
+  "tests/p87.rs": "d91cc4fbcb2e6e40b6ce982b4f877900a7e8ff4033b6f9825b4b51f4fcc0dccb",
+  "tests/p87_parallel.rs": "91497e0b294289f34a19546ca72da09235f801d207b209cad99093df7ba56f70",
+  "bench/p87.py": "907ff716090d6cbca8754e40e488198c8ef71ebfedf549c55038540e38d68b31",
+  "bench/test_p87.py": "18bffe5f3af160e01f1d4d1cc6da7cfc25790e51e8f300ed7f8c075c6bde0650",
+  "bench/p87_code_audit.py": "7eee9d708ef423ae5f04db61741cdd61d96136d696a47302ebbea38464559add",
+  "bench/attribution_same_code.py": "b5db32b8756c225e7d25846a0633c182c995163fa6e4a967c29e2fc9f0f50080",
+  "bench/attribution.py": "8ef10ee13bdc110d19886ade743cd0b7edd795b92cdad143decd0d5b5fc94942",
+  "bench/p87_run.sh": "5c0cdad03473eb3b884c3ca0ae34caae040718ba4af8aef7232a858dec350b61",
+  ".just/bench.just": "47fd39545986a1c25c5d968a26d42608f3bd6a79730eacc38060fff21974afe0",
+  "docs/journal/2026-11-01-p87-four-core-protocol.md": "285b623e7629cc73599d884dc8c9be6fba61a5ce9bff974c5db86398f3cbc395"
+ }
+}
