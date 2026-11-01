@@ -1,4 +1,4 @@
-# External research reports 74–105: index
+# External research reports 74–109: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -45,6 +45,10 @@ verbatim. They are not findings of this repository.
 | 103 | 2026-11-01 | unattributed in the relay (the guardian's register) | approve the attribution diagnostic's implementation; three refinements | `2026-11-01-external-report-103.md` |
 | 104 | 2026-11-01 | unattributed in the relay (the guardian's register) | approve the real i9 attribution run | `2026-11-01-external-report-104.md` |
 | 105 | 2026-11-01 | the researcher (an independent assessment), and the guardian's reviews of it | the attribution archive: a receiver-ownership convoy, and the PMU populations | `2026-11-01-external-report-105.md` |
+| 106 | 2026-11-01 | Astra | measure receiver ownership and scheduling before any MPMC prototype | `2026-11-01-external-report-106.md` |
+| 107 | 2026-11-01 | the guardian | adopting Astra's dispatch-causality diagnostic; the instruction to the coordinator | `2026-11-01-external-report-107.md` |
+| 108 | 2026-11-01 | the researcher | agreeing with Astra; three refinements (clock alignment, CPU availability, nonselective stopping) | `2026-11-01-external-report-108.md` |
+| 109 | 2026-11-01 | the guardian | the consolidated instruction for the dispatch-causality diagnostic | `2026-11-01-external-report-109.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
