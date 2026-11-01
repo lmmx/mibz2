@@ -307,3 +307,33 @@ The same direction as the primary, at half the inflation.
 - **Before engineering it, one narrow measurement would settle whether it is software or
   power state:** the timeline alone, rerun with C-states limited (`/dev/cpu_dma_latency`
   held at 0). That isn't authorised here and isn't run.
+
+## Erratum (after an independent review: external report 105, PR #120)
+
+The registered results and every value above stand. Four readings in §§4–5 were
+overstated, and are corrected here:
+
+1. **"The same requests take longer" overstates the counters.**
+   - `offcore_requests.all_data_rd` counts demand **and** prefetch data reads past L2.
+   - So 41 → 58 cycles per request is an occupancy proxy over that mixed population. It is
+     not a measured rise in demand-load latency.
+2. **The L3 hit share (0.989 → 0.811) is of retired demand loads.** Those come from
+   `mem_load_retired`: about 0.019 events per output byte at w4. The 1.42 requests per
+   output byte past L2 are a population about 74× larger. The share says nothing about
+   that larger population.
+3. **"Four 3.6 MB T-vectors" was the peak, not the typical state.** The four-worker trace
+   holds 2.19 T-vectors live on average (7.9 MB) and 4 at most (14.4 MB), against the
+   20 MB L3. So capacity alone is not shown. Prefetch traffic, dirty-line eviction and
+   phase overlap are equally consistent with the counters. The DRAM writes' source buffers
+   are unidentified.
+4. **The handoff's mechanism is more specific than wake latency.**
+   - The worker holds the jobs' `Mutex<Receiver<Job>>` across the blocking `recv()`
+     (`src/parallel.rs`, `worker`).
+   - Only one worker waits on the channel at a time; the others wait for the mutex.
+   - The reader and the scanner share one condition variable for different predicates
+     (ready output, a free slot), and it is notified with `notify_all` at four sites.
+   - **The review's conditional delay table reproduces from the raw marks:** with three
+     workers decoding at enqueue, the median claim delay is about 980 µs (per-round 590 to
+     1,256 µs); with two decoding, about 62 µs.
+   - That fits a receiver-ownership convoy. It doesn't prove it: a worker outside
+     `decode_block` may be publishing, taking a buffer, or descheduled.
