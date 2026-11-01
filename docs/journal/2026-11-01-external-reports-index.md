@@ -1,4 +1,4 @@
-# External research reports 74–134: index
+# External research reports 74–135: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -74,6 +74,7 @@ verbatim. They are not findings of this repository.
 | 132 | 2026-11-01 | the researcher (with the maintainer's prompts) | the last contribution: a walkthrough of the pipeline, then a minimal real-T-vector walker ladder to find the hardware ceiling, with literature (Kärkkäinen–Kempa–Puglisi, AMAC, Beamer) and counter methods | `2026-11-01-external-report-132.md` |
 | 133 | 2026-11-01 | the guardian | on Astra's memorandum: authorize Stage 1 of FOR-14/raw, VM-side only, capped at three engineer-days | `2026-11-01-external-report-133.md` |
 | 134 | 2026-11-01 | the guardian | on report 132: plan (do not build) a bounded minimal-walker diagnostic beside FOR-14, with a stopping rule | `2026-11-01-external-report-134.md` |
+| 135 | 2026-11-01 | the guardian (with the maintainer's question) | on FOR-14 stage 1: the stop accepted with its bounds qualified as conditional; one frozen i9 confirmation; a bounded BMI2 code-generation test first; then the minimal-walker diagnostic | `2026-11-01-external-report-135.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
