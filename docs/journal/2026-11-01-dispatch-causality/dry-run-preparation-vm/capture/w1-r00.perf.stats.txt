@@ -1,0 +1,26 @@
+
+Aggregated stats:
+           TOTAL events:       3028
+            MMAP events:          1  ( 0.0%)
+            COMM events:        106  ( 3.5%)
+            EXIT events:          4  ( 0.1%)
+            FORK events:        103  ( 3.4%)
+          SAMPLE events:       2708  (89.4%)
+           MMAP2 events:        100  ( 3.3%)
+  FINISHED_ROUND events:          2  ( 0.1%)
+        ID_INDEX events:          1  ( 0.0%)
+      THREAD_MAP events:          1  ( 0.0%)
+         CPU_MAP events:          1  ( 0.0%)
+   FINISHED_INIT events:          1  ( 0.0%)
+sched:sched_switch stats:
+          SAMPLE events:       1119
+sched:sched_wakeup stats:
+          SAMPLE events:        224
+sched:sched_wakeup_new stats:
+          SAMPLE events:          3
+sched:sched_waking stats:
+          SAMPLE events:        850
+syscalls:sys_enter_sched_yield stats:
+          SAMPLE events:          4
+power:cpu_idle stats:
+          SAMPLE events:        508

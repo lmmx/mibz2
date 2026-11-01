@@ -4,181 +4,223 @@
  "runs_w1": 1,
  "perturbation": {
   "1": {
-   "throughput": 0.8519945222270506,
-   "cpu_per_byte": 1.1837906957730358,
-   "rss": 1.0072748956469886
+   "throughput": 0.9554645317445543,
+   "cpu_per_byte": 1.0521565660766459,
+   "rss": 1.004300561462191
   },
   "4": {
-   "throughput": 0.9887119845553716,
-   "cpu_per_byte": 1.0422247933142281,
-   "rss": 0.9798012442433546
+   "throughput": 0.9750177068394081,
+   "cpu_per_byte": 0.9847503485464537,
+   "rss": 1.0610456247399807
   }
  },
  "validity": {
-  "coverage_all": true,
+  "runs_present": true,
+  "coverage_all": false,
   "perturbation": false,
   "alignment_all": true,
-  "complete_all": true
+  "complete_all": true,
+  "threads_in_sched_all": true,
+  "sched_coverage_all": false,
+  "trace_complete_all": false
  },
  "receiver_obstruction": {
-  "mean_share": 0.018674573087555,
+  "mean_share": 0.017489008673842812,
   "per_run": [
-   0.025225088813464618,
-   0.012124057361645383
+   0.01899092002696673,
+   0.015987097320718895
   ],
   "runs_at_or_above_5pct": 0.0,
-  "cpu_idle_share_mean": 0.018670723894602663
+  "cpu_idle_share_mean": 0.017486983434782354
  },
  "queued_nondecoding_ranked": [
   [
    "runnable",
-   0.6275568520976342
+   0.5483049036699047
   ],
   [
    "receiver",
-   0.2771945906236447
+   0.2733218055946137
   ],
   [
    "unresolved",
-   0.056143080566926316
+   0.1450027694536105
   ],
   [
    "notify",
-   0.028790874897760742
+   0.022984183037438547
   ],
   [
    "release",
-   0.0050588443689757005
+   0.00510453733395642
   ],
   [
    "recv",
-   0.002954068313722568
+   0.002796390301734902
   ],
   [
    "rx_other",
-   0.0014158295911034266
+   0.0016674571250604904
   ],
   [
    "publish",
-   0.00042573682609762896
+   0.00039953611652024265
   ],
   [
    "state_lock",
-   0.0003408565703139181
+   0.0002280708545412873
   ],
   [
    "post",
-   8.370497426612493e-05
+   0.00011917167693957304
   ],
   [
    "buffer",
-   3.556116955483374e-05
+   7.117483567969633e-05
   ]
  ],
  "classes_s": {
-  "notify.blocked": 0.000103454,
-  "notify.running": 0.007980557,
-  "post.running": 2.3503e-05,
-  "publish.blocked": 6.34e-07,
-  "publish.running": 0.000118906,
-  "recv.asleep": 8.4e-08,
-  "recv.running": 0.0008293705,
-  "release.running": 0.0014204414999999999,
-  "runnable.buf_lock.cpu_idle": 4.7600000000000005e-05,
-  "runnable.buffer.cpu_idle": 6.2983e-05,
-  "runnable.mutex_wait.cpu_idle": 0.10830300500000001,
-  "runnable.mutex_wait.cpus_busy": 2.31e-06,
-  "runnable.notify.cpu_idle": 0.017891279,
-  "runnable.notify.cpus_busy": 0.0013723965,
-  "runnable.pub_lock.cpu_idle": 1.581e-05,
-  "runnable.publish.cpu_idle": 1.855e-06,
-  "runnable.recv.cpu_idle": 0.0464464645,
-  "runnable.recv.cpus_busy": 0.00089986,
-  "runnable.release.cpu_idle": 0.001148944,
-  "runnable.release.cpus_busy": 1.037e-06,
-  "rx.acquiring.cpu_idle": 0.00039754199999999997,
-  "rx.blocked_by_owner.cpu_idle": 0.0429853845,
-  "rx.blocked_by_owner.cpus_busy": 1.4232e-05,
-  "rx.handoff_asleep.cpu_idle": 0.034617214,
-  "rx.running_owner_held.cpu_idle": 0.0002142155,
-  "rx.running_owner_held.cpus_busy": 7.02e-07,
-  "state_lock.blocked": 6.332899999999999e-05,
-  "state_lock.running": 3.2377999999999994e-05,
-  "unresolved.clock": 0.002855471,
-  "unresolved.send_bracket": 0.012908596,
-  "buffer.running": 9.985e-06,
-  "runnable.post.cpu_idle": 1.4248e-05
+  "buffer.running": 1.8652e-05,
+  "notify.running": 0.00602321,
+  "post.running": 3.123e-05,
+  "publish.running": 0.000104702,
+  "recv.running": 0.000732819,
+  "release.running": 0.0013376895,
+  "runnable.buf_lock.cpu_idle": 0.00038625149999999995,
+  "runnable.mutex_wait.cpu_idle": 0.0942165955,
+  "runnable.notify.cpu_idle": 0.0122970005,
+  "runnable.notify.cpus_busy": 2.2883e-05,
+  "runnable.pub_lock.cpu_idle": 0.0014122805,
+  "runnable.recv.cpu_idle": 0.033804345,
+  "runnable.recv.cpus_busy": 0.0015361265,
+  "runnable.release.cpu_idle": 9.764e-06,
+  "runnable.release.cpus_busy": 2.94e-06,
+  "rx.acquiring.cpu_idle": 0.000421399,
+  "rx.acquiring.cpus_busy": 1.5572999999999998e-05,
+  "rx.blocked_by_owner.cpu_idle": 0.029994951,
+  "rx.handoff_asleep.cpu_idle": 0.0414935035,
+  "rx.running_owner_held.cpu_idle": 0.0001294655,
+  "rx.running_owner_held.cpus_busy": 2.538e-06,
+  "state_lock.running": 5.9768e-05,
+  "unresolved.clock": 0.002560625,
+  "unresolved.sched": 0.020940581,
+  "unresolved.send_bracket": 0.014498061999999999,
+  "rx.blocked_by_owner.cpus_busy": 5.957e-06
  },
- "decision": "not interpreted (validity: ['perturbation']); provisional: do not proceed to MPMC: receiver obstruction below the materiality threshold, or not repeatable",
+ "decision": "not interpreted (validity: ['coverage_all', 'perturbation', 'sched_coverage_all', 'trace_complete_all']); provisional: do not proceed to MPMC: receiver obstruction below the materiality threshold, or not repeatable",
+ "interpreted": false,
+ "outcome": "invalid evidence",
+ "run_checks": {
+  "w4-r00": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": false,
+   "trace_complete": false,
+   "coverage": false
+  },
+  "w4-r01": {
+   "complete": true,
+   "alignment": true,
+   "threads_in_sched": true,
+   "sched_coverage": false,
+   "trace_complete": false,
+   "coverage": false
+  }
+ },
+ "trace_problems": {
+  "w4-r00": [
+   "switches into and out of idle unpaired on CPUs [1, 2, 3]: the kernel's stream is incomplete"
+  ],
+  "w4-r01": [
+   "switches into and out of idle unpaired on CPUs [1, 2, 3]: the kernel's stream is incomplete"
+  ]
+ },
+ "receiver_associated_exploratory": {
+  "note": "not a pass criterion: the registered obstruction plus runnable time in the receiver mutex's wait phase",
+  "mean_share": 0.04063876801355438,
+  "per_run": [
+   0.0467747847097604,
+   0.034502751317348354
+  ]
+ },
  "w1_reference": [
   {
    "receiver_obstruction_share": 0.0,
-   "coverage": 0.7721186550586909
+   "coverage": 0.7765242749405481,
+   "checks": {
+    "complete": true,
+    "alignment": true,
+    "threads_in_sched": true,
+    "sched_coverage": true,
+    "trace_complete": false,
+    "coverage": false
+   }
   }
  ],
  "reader": [
   {
    "publish_to_wakeup": {
-    "n": 102,
-    "sum_ms": 0.943507,
-    "median_us": 4.8175
+    "n": 81,
+    "sum_ms": 0.6123225,
+    "median_us": 4.6075
    },
    "wakeup_to_running": {
-    "n": 102,
-    "sum_ms": 19.723154,
-    "median_us": 43.034
+    "n": 81,
+    "sum_ms": 17.283475,
+    "median_us": 42.873
    },
    "running_to_relocked": {
-    "n": 102,
-    "sum_ms": 0.563374,
-    "median_us": 4.093
+    "n": 81,
+    "sum_ms": 0.3522345,
+    "median_us": 3.5905
    },
    "relocked_to_taken": {
-    "n": 102,
-    "sum_ms": 0.547178,
-    "median_us": 1.5395
+    "n": 81,
+    "sum_ms": 0.444861,
+    "median_us": 1.502
    },
    "total": {
-    "n": 102,
-    "sum_ms": 21.777213,
-    "median_us": 59.143
+    "n": 81,
+    "sum_ms": 18.692893,
+    "median_us": 58.339
    },
    "unresolved": {
-    "n": 36,
-    "sum_ms": 25.743005,
-    "median_us": 93.3345
+    "n": 50,
+    "sum_ms": 30.476829,
+    "median_us": 79.1915
    }
   },
   {
-   "unresolved": {
-    "n": 33,
-    "sum_ms": 12.4405,
-    "median_us": 93.442
-   },
    "publish_to_wakeup": {
-    "n": 124,
-    "sum_ms": 3.731786,
-    "median_us": 5.763
+    "n": 101,
+    "sum_ms": 1.008017,
+    "median_us": 5.122
    },
    "wakeup_to_running": {
-    "n": 124,
-    "sum_ms": 25.341518,
-    "median_us": 50.883
+    "n": 101,
+    "sum_ms": 11.155578,
+    "median_us": 44.753
    },
    "running_to_relocked": {
-    "n": 124,
-    "sum_ms": 0.78653,
-    "median_us": 5.6725
+    "n": 101,
+    "sum_ms": 0.90302,
+    "median_us": 4.801
    },
    "relocked_to_taken": {
-    "n": 124,
-    "sum_ms": 0.786328,
-    "median_us": 1.8735
+    "n": 101,
+    "sum_ms": 0.724273,
+    "median_us": 1.713
    },
    "total": {
-    "n": 124,
-    "sum_ms": 30.646162,
-    "median_us": 68.6355
+    "n": 101,
+    "sum_ms": 13.790888,
+    "median_us": 60.267
+   },
+   "unresolved": {
+    "n": 49,
+    "sum_ms": 34.34909,
+    "median_us": 102.705
    }
   }
  ],

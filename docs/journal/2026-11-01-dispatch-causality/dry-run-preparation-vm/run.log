@@ -1,94 +1,145 @@
-dispatch: label=preparation-vm head=45fff19f2fef45fd2b831c539e6576b665627860 pin=382fde1cfb0bfb1f2145e35cfb11fbc3e68fbcb6 out=<scratch>/disp-results/preparation-vm.dry-run dry_run=1
-dispatch: 25 sources match the frozen hashes
+dispatch: label=preparation-vm head=10919a59fd2f8f0d21529f81e5740f7640b75a73 pin=48f8cda32fe3580f87e49c6cd68242cf8a81c996 out=<scratch>/disp-results/preparation-vm.dry-run dry_run=1
+dispatch: 29 sources match the frozen hashes
 dispatch: rustc 1.97.0 (2d8144b78 2026-07-07); CARGO_TARGET_DIR=<scratch>/disp-target
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling shlex v2.0.1
+   Compiling libm v0.2.16
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.10.0
+   Compiling pkg-config v0.3.34
+   Compiling thiserror v2.0.21
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling syn v3.0.9
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling fearless_simd v1.2.0
    Compiling mibz2 v0.2.1 (<scratch>/wt-disp)
-    Finished `release` profile [optimized + debuginfo] target(s) in 17.42s
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 45.43s
    Compiling mibz2 v0.2.1 (<scratch>/wt-disp)
-    Finished `release` profile [optimized + debuginfo] target(s) in 12.41s
-dispatch: the dispatch and phase marks' tests, and the instrument's, pass
+    Finished `release` profile [optimized + debuginfo] target(s) in 13.93s
+dispatch: the dispatch and phase marks' tests, the instrument's and the analysis's, pass
 Preparing worktree (detached HEAD 45b366d)
+Updating files:  77% (178/231)Updating files:  78% (181/231)Updating files:  79% (183/231)Updating files:  80% (185/231)Updating files:  81% (188/231)Updating files:  82% (190/231)Updating files:  83% (192/231)Updating files:  84% (195/231)Updating files:  85% (197/231)Updating files:  86% (199/231)Updating files:  87% (201/231)Updating files:  88% (204/231)Updating files:  89% (206/231)Updating files:  90% (208/231)Updating files:  91% (211/231)Updating files:  92% (213/231)Updating files:  93% (215/231)Updating files:  94% (218/231)Updating files:  95% (220/231)Updating files:  96% (222/231)Updating files:  97% (225/231)Updating files:  98% (227/231)Updating files:  99% (229/231)Updating files: 100% (231/231)Updating files: 100% (231/231), done.
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling find-msvc-tools v0.1.15
+   Compiling libm v0.2.16
+   Compiling shlex v2.0.1
+   Compiling pkg-config v0.3.34
+   Compiling thiserror v2.0.21
+   Compiling cc v1.10.0
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling syn v3.0.9
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
    Compiling mibz2 v0.2.1 (<scratch>/disp-work/base)
-    Finished `release` profile [optimized + debuginfo] target(s) in 13.33s
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 24.94s
 same code: yes: 104 mibz2 functions, 32298 instructions
 dispatch: 3 corpora match their frozen hashes and decode to them at w = 1 and 4
 dispatch: allocation CPUs 0,1,2,3
 dispatch: perf = /usr/lib/linux-tools/6.8.0-147-generic/perf (perf version 6.8.12)
+dispatch: DRY RUN: the kernel's scheduling stream is incomplete ({"ok": false, "problems": ["switches into and out of idle unpaired on CPUs [1, 2, 3]: the kernel's stream is incomplete"], "idle_pairing": {"0": {"to": 3, "out": 3, "ok": true}, "1": {"to": 33, "out": 0, "ok": false}, "2": {"to": 18, "out": 0, "ok": false}, "3": {"to": 15, "out": 0, "ok": false}}, "lost_by_event": {}}); continuing to exercise the path, every run will be refused (a real run stops here)
 dispatch: tracepoints: 8 supported, 0 unavailable
 dispatch: tier A perturbs by more than 3%: tier B (no futex events), from the start
 dispatch: DRY RUN: a quality check fails on the first 1; the expansion forced to exercise its path (a real run stops here)
 {
- "decision": "not interpreted (validity: ['perturbation']); provisional: do not proceed to MPMC: receiver obstruction below the materiality threshold, or not repeatable",
+ "decision": "not interpreted (validity: ['coverage_all', 'perturbation', 'sched_coverage_all', 'trace_complete_all']); provisional: do not proceed to MPMC: receiver obstruction below the materiality threshold, or not repeatable",
+ "outcome": "invalid evidence",
  "validity": {
-  "coverage_all": true,
+  "runs_present": true,
+  "coverage_all": false,
   "perturbation": false,
   "alignment_all": true,
-  "complete_all": true
+  "complete_all": true,
+  "threads_in_sched_all": true,
+  "sched_coverage_all": false,
+  "trace_complete_all": false
  },
  "perturbation": {
   "1": {
-   "throughput": 0.8519945222270506,
-   "cpu_per_byte": 1.1837906957730358,
-   "rss": 1.0072748956469886
+   "throughput": 0.9554645317445543,
+   "cpu_per_byte": 1.0521565660766459,
+   "rss": 1.004300561462191
   },
   "4": {
-   "throughput": 0.9887119845553716,
-   "cpu_per_byte": 1.0422247933142281,
-   "rss": 0.9798012442433546
+   "throughput": 0.9750177068394081,
+   "cpu_per_byte": 0.9847503485464537,
+   "rss": 1.0610456247399807
   }
  },
  "receiver_obstruction": {
-  "mean_share": 0.018674573087555,
+  "mean_share": 0.017489008673842812,
   "per_run": [
-   0.025225088813464618,
-   0.012124057361645383
+   0.01899092002696673,
+   0.015987097320718895
   ],
   "runs_at_or_above_5pct": 0.0,
-  "cpu_idle_share_mean": 0.018670723894602663
+  "cpu_idle_share_mean": 0.017486983434782354
+ },
+ "receiver_associated_exploratory": {
+  "note": "not a pass criterion: the registered obstruction plus runnable time in the receiver mutex's wait phase",
+  "mean_share": 0.04063876801355438,
+  "per_run": [
+   0.0467747847097604,
+   0.034502751317348354
+  ]
  },
  "queued_nondecoding_ranked": [
   [
    "runnable",
-   0.6275568520976342
+   0.5483049036699047
   ],
   [
    "receiver",
-   0.2771945906236447
+   0.2733218055946137
   ],
   [
    "unresolved",
-   0.056143080566926316
+   0.1450027694536105
   ],
   [
    "notify",
-   0.028790874897760742
+   0.022984183037438547
   ],
   [
    "release",
-   0.0050588443689757005
+   0.00510453733395642
   ],
   [
    "recv",
-   0.002954068313722568
+   0.002796390301734902
   ],
   [
    "rx_other",
-   0.0014158295911034266
+   0.0016674571250604904
   ],
   [
    "publish",
-   0.00042573682609762896
+   0.00039953611652024265
   ],
   [
    "state_lock",
-   0.0003408565703139181
+   0.0002280708545412873
   ],
   [
    "post",
-   8.370497426612493e-05
+   0.00011917167693957304
   ],
   [
    "buffer",
-   3.556116955483374e-05
+   7.117483567969633e-05
   ]
  ]
 }

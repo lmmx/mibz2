@@ -1,21 +1,25 @@
-# Dispatch causality: the freeze, and the preparation VM's dry run (untimed)
+# Dispatch causality: the freeze, and the preparation VM's dry runs (untimed)
 
-**Status:** frozen and dry-run. The real i9 capture waits for the maintainer's
-authorisation. Nothing here is a finding.
+**Status:**
+- Frozen with amendment 1 (validation only) and dry-run.
+- The maintainer authorised the single real i9 capture once amendment 1's checks pass
+  (report 112). They pass: see the last section.
+- Nothing here is a finding.
 
 ## The freeze
 
 | | |
 |---|---|
-| Protocol | `docs/journal/2026-11-01-dispatch-causality-protocol.md` |
+| Protocol | `docs/journal/2026-11-01-dispatch-causality-protocol.md`, with `amendment-1.md` |
 | Branch | `research/dispatch-causality` |
-| Pin (`bench/dispatch-pin`) | `382fde1cfb0bfb1f2145e35cfb11fbc3e68fbcb6` |
+| Pin (`bench/dispatch-pin`) | `48f8cda32fe3580f87e49c6cd68242cf8a81c996` |
 | Source base (C6) | `45b366d1455a487f1655def689ebd8c87a31f135` |
 | Toolchain | rustc 1.97.0 (2d8144b78 2026-07-07), `--locked`, release, empty RUSTFLAGS |
-| Frozen sources | 25 files, hashed in `frozen.json` (`src/*.rs`, the two examples, the dispatch and attribution scripts, the two trace tests, `.just/bench.just`, `Cargo.toml`, `Cargo.lock`) |
+| Frozen sources | 29 files, hashed in `frozen.json` (`src/*.rs`, the two examples, the dispatch and attribution scripts, the analysis's tests and fixture, the two trace tests, `.just/bench.just`, `Cargo.toml`, `Cargo.lock`) |
+| Binaries (VM build) | `occupancy` `2d28fca5…`, `attribution_decode` `45463aa9…`: unchanged by amendment 1 |
 | Corpora | the walk trial's frozen files, byte-identical; `wikidata-20261026` primary (`cf13f439…`, 207,000,624 decoded bytes), `records` and `random` for correctness |
 | Schedule | 3 w = 4 pairs, 3 w = 1 pairs, expansion to 10 w = 4 pairs on the quality checks alone |
-| Thresholds | materiality 5% of aggregate worker time, repeatability 80% of runs, coverage 90%, perturbation 3%, alignment 20 µs, scheduler state known 99% |
+| Thresholds | materiality 5% of aggregate worker time, repeatability 80% of runs, coverage 90%, perturbation 3%, alignment 20 µs, scheduler state known 99%: all unchanged |
 | Mark buffers | 32,768 marks a thread, preallocated |
 
 **The runner refuses to start** in any of these cases:
@@ -25,134 +29,112 @@ authorisation. Nothing here is a finding.
 - a corpus's hash differs;
 - the label has been used before.
 
-**The commits:**
-- `21cc812`: the implementation;
-- `0f7e3ac`: two fixes the first dry run found (below);
-- `382fde1`: the dry run forces the expansion;
-- the freeze commits after each.
+**On a real run, it stops before capturing** if:
+- an essential tracepoint is missing;
+- the kernel's scheduling stream is incomplete on the allocated CPUs (amendment 1's
+  preflight probe).
 
-## What the first dry run found, and the fixes
+## History
 
-1. **The analysis globbed its run files as `w4-r*.json`.** That also matches the marks'
-   sidecars (`w4-r00.tsv.meta.json`), so the quality step crashed with
-   `KeyError: 'complete'`.
-   - **Fix:** the globs are exact, `w[14]-r[0-9][0-9].json`.
-2. **The runner read a crashed quality step as a failed check.** It then moved to tier B
-   and stopped the expansion: it failed open, into a smaller capture.
-   - **Fix:** exit 0 means every check holds and 3 means a check fails. Any other exit
-     stops the run.
-3. **A dry run whose quality checks fail never ran the expansion.** The VM's noise makes
-   that the likely case.
-   - **Fix:** a dry run now forces the expansion, logged as forced: "a real run stops
-     here".
-   - A real run never forces it. The code path is `[[ $dry == 1 ]]` only.
+1. **`21cc812`: the implementation.** The first dry run found:
+   - the analysis's run globs caught the marks' sidecars;
+   - the runner read a crashed quality step as a failed check, failing open into tier B.
 
-## The second dry run (`preparation-vm`, untimed; `dry-run-preparation-vm/`)
+   Both were fixed in `0f7e3ac`.
+2. **`382fde1`: dry runs force the expansion,** logged as forced. A real run never does.
+3. **The researcher's review (reports 111–112)** found that the summary omitted the
+   scheduler checks the expansion required. Checking whether trace loss could pass
+   silently found three more gaps:
+   - perf's loss records were invisible to the script;
+   - events whose tid perf could not resolve were dropped;
+   - the VM's kernel emits no switches out of idle on CPUs 1–3, which turned running time
+     into "runnable".
 
-On this 4-vCPU VM, as root, the dry run holds one w = 4 pair at tier A, then one each at
-tier B for w = 4 and w = 1, then one forced expansion pair. In order:
+   All are corrected in **amendment 1, `48f8cda`**, with 24 tests. The details are in
+   `amendment-1.md`.
+
+## The maintainer's decisions (report 112), recorded
+
+- **(a)** The registered 5% receiver-obstruction rule is unchanged.
+  - Runnable time in the receiver mutex's wait phase is reported apart, as
+    `receiver_associated_exploratory`. It is never added to the obstruction.
+- **(b)** There is no third capture tier. If tier B cannot meet 3%, the registered
+  provisional outcome stands.
+- **(c)** No condition-variable split is pre-registered or implemented. The reader path
+  stays observational.
+
+## The amended dry run (`preparation-vm`, untimed; `dry-run-preparation-vm/`)
+
+On the 4-vCPU VM, as root, the steps in order:
 
 | Step | Result |
 |---|---|
-| Sources | 25 match the frozen hashes |
-| Tests | `trace_dispatch`, `trace_phases` and the instrument's tests pass |
+| Sources | 29 match the frozen hashes |
+| Tests | `trace_dispatch`, `trace_phases`, the instrument's, and **the analysis's 24** pass |
 | C6 | **same code: 104 `mibz2` functions, 32,298 instructions,** identical to the base |
 | Corpora | 3 match their frozen hashes and decode to them at w = 1 and 4; every capture's output hash checked |
 | Allocation | CPUs 0–3 (the VM has no SMT; the i9 gets CPUs 1–4, siblings 11–14 idle) |
+| **Stream probe** | **incomplete:** switches into idle on CPUs 1, 2, 3 = 33, 18, 15, and out = 0, 0, 0; CPU 0 paired (3, 3). A real run stops here; the dry run continues |
 | Tracepoints | 8 supported, 0 unavailable |
-| Tier choice | tier A's single pair perturbed CPU-s/GB by +14%, so the run moved to tier B (the path exercised) |
-| Expansion | forced, as a dry run; one pair |
-| Summary, archive | written; `perf.data` deleted after scripting; 3.2 MB `tar.gz` |
+| Tier choice | tier A's single pair over 3%, so tier B (the path exercised) |
+| Expansion | forced, as a dry run |
+| Summary | **`outcome: invalid evidence`**. Failing checks: `trace_complete_all`, `sched_coverage_all`, `coverage_all` and `perturbation`. Each run's checks and trace problems are listed |
+| Archive | `perf.data` deleted after scripting; each run keeps its `perf.stats.txt` and `perf.err` |
 
-**The per-run quality checks** (both w = 4 runs at tier B, and tier A's):
-- every thread starts and ends, with 0 marks dropped;
-- every TID was seen by the kernel;
-- scheduler state known for 100% of queued-work nondecoding time;
-- one sleep a run had no wake recorded, so it is counted as unresolved;
-- alignment uncertainty 0.57–0.59 µs, against the 20 µs limit;
-- coverage 94.3% and 94.5%, against 90%.
+**Per run** (the w = 4 runs at tier B):
+- 0 loss records, 0 lost events, 0 unreadable lines;
+- 6 unresolved-tid `sched_switch` events, which are kept: our threads' exit switches;
+- 306 and 290 missed switch-ins, now unknown and not runnable;
+- scheduler coverage 0.929 and 0.909, below 0.99;
+- trace unsound for idle pairing on CPUs 1–3.
 
-**The futex mapping** (tier A's run) shows each address where the protocol expects it:
+The figures are not interpreted. Receiver obstruction reads 1.6–1.9% and the exploratory
+associated share 3.5–4.7%, but on this kernel neither means anything.
 
-| Phase | Waits | Addresses | Dominant share |
-|---|---|---|---|
-| receiver mutex | 100 | 1 | 100% |
-| reader's condvar wait | 272 | 2 | 99.6%, the same address as the scanner's |
-| scanner's condvar wait | 305 | 2 | 96.1%, the same address (the shared `cv`) |
-| state lock | 6 | 1 | 100% |
-| channel | 161 | 5 | per-thread parkers, as std's channel parks each thread on its own address |
+## Limitations the maintainer should know
 
-**Not interpreted:**
-- **The VM's perturbation** reads 0.85–1.18 between single pairs.
-- **A 5-repetition split of the overhead** (medians, not frozen) gives:
-
-  | Configuration | Wall | CPU |
-  |---|---|---|
-  | marks alone | −4.1% | −2.1% |
-  | tier B | +0.6% | +2.5% |
-  | tier A | +5.1% | +0.9% |
-
-  Marks alone measuring faster than uninstrumented means the VM's noise is about ±4%, so
-  the i9's pairs decide the tier and the gate.
-- **The shares of this VM's runs** (receiver obstruction 1.2–2.5%, the class ranking) are
-  a check that the arithmetic runs. They say nothing about the i9.
-
-## Limitations the maintainer should know before authorising
-
-1. **Perturbation may fail on the i9 at 3%.**
-   - If tier B also moves throughput or CPU-s/GB by more than 3% over the first three
-     w = 4 pairs, the registered rules say:
-     - the run stops at three, with no expansion;
-     - the decision is reported as provisional, naming perturbation.
-   - Nothing lowers the bar.
-   - The futex tracepoints are the costliest part on the VM.
-2. **`runnable.mutex_wait` is not counted as receiver obstruction (D1).** This is the time
-   a worker has been woken from the receiver mutex but isn't yet running.
-   - By the registered classification, it is scheduling (D2).
-   - It appears in `result.json`'s `classes_s`, beside the D1 share, but the ranked groups
-     fold it into `runnable`.
-   - On the VM it was the largest single class. Whether it should count toward MPMC
-     promotion is a question for the maintainer, not one this freeze answers.
+1. **The i9's kernel is the first thing tested.** If its scheduling stream fails the probe
+   (switches into and out of idle unpaired, or anything lost), the run stops before any
+   capture. It records why in `stream-probe.json`.
+   - The VM's guest kernel fails it. A standard distribution kernel is expected to pass,
+     but it hasn't been verified on the i9.
+2. **Perturbation may fail on the i9 at 3%.** By decision (b), the outcome is then
+   provisional, the run stops at three, and nothing is added or lowered.
 3. **The reader's path** is split into segments only when the reader is asleep in its
    wait at `Ready` and wakes after it.
-   - For 21–26% of the blocks the reader takes next on the VM, the chain wake → run →
-     relock → take is not ordered after `Ready`. That fits the reader having already been
-     woken by another notification on the condition variable it shares with the scanner,
-     but this freeze has not verified it.
-   - These are counted as `unresolved` in the reader's table. They are reported, not
-     decisional.
-4. **The w = 1 reference's coverage is 77%** on the VM. With one worker, queued-work
-   nondecoding time is small (31 ms), and much of it falls inside the scanner's send
-   bracket.
-   - It is a reference, not one of the gated w = 4 runs.
-5. **The futex addresses** are identified by the phase they occur in, not by symbol.
-   Std's channel parks per thread.
+   - On the VM, 21–26% of the reader's next blocks did not fit that order. This fits the
+     shared condition variable having already woken the reader, but it hasn't been
+     verified.
+   - The reader path is observational, by decision (c).
+4. **The w = 1 reference's coverage** is low on the VM, at 0.78. It has little queued-work
+   time, much of it inside the send bracket. It is a reference, not gated.
+5. **The futex addresses** are identified by phase, not symbol. Std's channel parks per
+   thread.
 6. **CPU occupancy is seen only on the allocated CPUs** (perf `-C`). Our threads are pinned
    there.
 7. **At trace level ≥ 1, the `RecvDone` mark inside the receiver guard lengthens the hold
    by one mark's time.** Level 0 and default builds are unchanged, by C6.
-8. **This was validated on the VM only.** The i9's kernel, perf and PMU-independent
-   tracepoints are probed at the start of the real run, and a missing essential one
-   stops it.
 
-## The command (after authorisation only)
+## The command (authorised: report 112)
 
-On the i9, in the mibz2 checkout:
+On the i9, in the mibz2 checkout, with the desktop quiet:
 
 ```
-git fetch origin research/dispatch-causality && git switch research/dispatch-causality
+git fetch origin research/dispatch-causality && git switch research/dispatch-causality && git pull --ff-only
+cat bench/dispatch-pin    # 48f8cda32fe3580f87e49c6cd68242cf8a81c996
 just bench-dispatch i9-10900K
 ```
 
-- **Privileges:** `sudo` once, prompted at the tracepoint step and kept alive for the
-  run. Needed for perf's tracepoints and `-C`.
+- **Privileges:** `sudo` once, prompted at the tracepoint step and kept alive for the run.
 - **Data:** the walk trial's corpora in `target/walk-decoder/work/corpora`, hash-checked.
-  `DISPATCH_CORPORA` points elsewhere.
 - **The archive:** `target/dispatch-results/i9-10900K.tar.gz`. It holds:
-  - the run log, the binaries' hashes, C6's report, the manifest, the allocation and a
-    numbers-only environment;
-  - `tracepoints.tsv`, `pairs.tsv` and `quality-A.json` / `quality.json`;
-  - for each instrumented run, its marks with their sidecar and its `perf script` text
-    (gzipped), and its analysis JSON;
+  - the run log, the binaries' hashes, C6's report, the analysis's tests, the manifest,
+    the allocation and a numbers-only environment;
+  - `tracepoints.tsv`, `stream-probe.json`, `pairs.tsv`, and `quality-A.json` /
+    `quality.json`;
+  - for each instrumented run:
+    - its marks with their sidecar;
+    - its `perf script` text (gzipped), with `perf.stats.txt` and `perf.err`;
+    - its analysis JSON;
   - `tier-A/`, if tier B was chosen;
   - `result.json`.

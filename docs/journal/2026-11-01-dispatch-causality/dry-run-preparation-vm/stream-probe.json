@@ -1,0 +1,1 @@
+{"ok": false, "problems": ["switches into and out of idle unpaired on CPUs [1, 2, 3]: the kernel's stream is incomplete"], "idle_pairing": {"0": {"to": 3, "out": 3, "ok": true}, "1": {"to": 33, "out": 0, "ok": false}, "2": {"to": 18, "out": 0, "ok": false}, "3": {"to": 15, "out": 0, "ok": false}}, "lost_by_event": {}}

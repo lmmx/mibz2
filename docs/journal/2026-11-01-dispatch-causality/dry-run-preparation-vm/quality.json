@@ -1,1 +1,1 @@
-{"expand": false, "perturbation": {"throughput": 1.0525033517378584, "cpu_per_byte": 0.9612844086001807, "ok": false}, "runs": [{"complete": true, "alignment": true, "threads_in_sched": true, "sched_coverage": true, "perturbation": false}]}
+{"expand": false, "perturbation": {"throughput": 0.9636049275100119, "cpu_per_byte": 0.9952458188199634, "ok": false}, "runs": [{"complete": true, "alignment": true, "threads_in_sched": true, "sched_coverage": false, "trace_complete": false, "perturbation": false}]}

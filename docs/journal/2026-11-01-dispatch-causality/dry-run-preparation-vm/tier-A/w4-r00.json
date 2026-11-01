@@ -10,152 +10,182 @@
  "alignment": {
   "ok": true,
   "offsets_ns": [
-   -2455,
-   -2493
+   -758,
+   -775
   ],
   "read_to_syscall_ns": [
-   284,
-   190
+   247,
+   217
   ],
-  "correction_ns": -2474.0,
-  "uncertainty_ns": 303.0
+  "correction_ns": -766.5,
+  "uncertainty_ns": 255.5
  },
  "complete": true,
  "threads_in_sched": true,
- "missing_wakeups": 2,
- "span_s": 0.627252183,
- "worker_time_s": 2.509008732,
- "queued_nondecoding_s": 0.163694504,
+ "missing_wakeups": 0,
+ "span_s": 0.478292109,
+ "worker_time_s": 1.913168436,
+ "queued_nondecoding_s": 0.10437606,
  "classes_s": {
-  "buffer.running": 6.394e-06,
-  "notify.running": 0.004609958,
-  "post.running": 9.939e-06,
-  "publish.running": 0.0001046,
-  "recv.running": 0.000463341,
-  "release.running": 0.000887362,
-  "runnable.buf_lock.cpu_idle": 0.00060262,
-  "runnable.buffer.cpu_idle": 6.285e-06,
-  "runnable.mutex_wait.cpu_idle": 0.040652969,
-  "runnable.mutex_wait.cpus_busy": 0.000158378,
-  "runnable.notify.cpu_idle": 0.010758608,
-  "runnable.notify.cpus_busy": 1.5173e-05,
-  "runnable.post.cpu_idle": 7.988e-06,
-  "runnable.pub_lock.cpu_idle": 3.4518e-05,
-  "runnable.publish.cpu_idle": 2.0265e-05,
-  "runnable.recv.cpu_idle": 0.037353764,
-  "runnable.recv.cpus_busy": 0.000432016,
-  "runnable.release.cpu_idle": 0.000630778,
-  "runnable.release.cpus_busy": 2.63e-06,
-  "rx.acquiring.cpu_idle": 0.000179615,
-  "rx.acquiring.cpus_busy": 2.2452e-05,
-  "rx.blocked_by_owner.cpu_idle": 0.039692268,
-  "rx.blocked_by_owner.cpus_busy": 1.7433e-05,
-  "rx.handoff_asleep.cpu_idle": 0.019652089,
-  "rx.running_owner_held.cpu_idle": 2.3754e-05,
-  "rx.running_owner_held.cpus_busy": 1.913e-06,
-  "state_lock.blocked": 2.2233e-05,
-  "state_lock.running": 8.2056e-05,
-  "unresolved.clock": 0.00103991,
-  "unresolved.send_bracket": 0.006203195
+  "buffer.running": 5.02e-07,
+  "notify.running": 0.003126536,
+  "post.running": 1.0319e-05,
+  "publish.running": 2.9524e-05,
+  "recv.running": 0.000329882,
+  "release.running": 0.000594137,
+  "runnable.buf_lock.cpu_idle": 0.00039796,
+  "runnable.mutex_wait.cpu_idle": 0.0306136005,
+  "runnable.notify.cpu_idle": 0.003955136,
+  "runnable.notify.cpus_busy": 0.000122436,
+  "runnable.pub_lock.cpu_idle": 0.001408498,
+  "runnable.recv.cpu_idle": 0.0141775035,
+  "runnable.release.cpu_idle": 0.000130756,
+  "rx.acquiring.cpu_idle": 0.000146544,
+  "rx.blocked_by_owner.cpu_idle": 0.020623344,
+  "rx.handoff_asleep.cpu_idle": 0.007534448,
+  "rx.running_owner_held.cpu_idle": 2.5089e-05,
+  "state_lock.blocked": 2.4611e-05,
+  "state_lock.running": 3.0422e-05,
+  "unresolved.clock": 0.0008452345,
+  "unresolved.sched": 0.0143674265,
+  "unresolved.send_bracket": 0.005882151
  },
  "no_job_s": {
-  "no_job.Q": 0.036010035,
-  "no_job.R": 0.010762493,
-  "no_job.S": 0.292925356,
-  "no_job.unknown": 0.001271121
+  "no_job.Q": 0.019362031,
+  "no_job.R": 0.005186728,
+  "no_job.S": 0.277727962,
+  "no_job.unknown": 0.008648085
  },
- "backlog_all_decoding_job_s": 0.386033549,
+ "backlog_all_decoding_job_s": 0.265617558,
  "runnable_cpu_occupants_s": {
-  "idle": 0.212245716,
-  "worker": 0.111515576,
-  "reader": 0.008842536,
-  "scanner": 0.029644542,
-  "foreign": 0.000455598
+  "scanner": 0.021054375,
+  "idle": 0.1240117995,
+  "worker": 0.051614475,
+  "feeder": 0.0004530785,
+  "reader": 0.00608778,
+  "foreign": 2.052e-06
  },
- "coverage": 0.9557523018610325,
- "sched_coverage": 1.0,
- "receiver_obstruction_share": 0.02366968924522659,
- "receiver_obstruction_cpu_idle_share": 0.023661978630371703,
+ "coverage": 0.797896069271057,
+ "sched_coverage": 0.8623494075173943,
+ "receiver_obstruction_share": 0.014730998311326939,
+ "receiver_obstruction_cpu_idle_share": 0.014730998311326939,
  "reader": {
   "publish_to_wakeup": {
-   "n": 118,
-   "sum_ms": 1.907553,
-   "median_us": 10.266
+   "n": 128,
+   "sum_ms": 1.400219,
+   "median_us": 6.9675
   },
   "wakeup_to_running": {
-   "n": 118,
-   "sum_ms": 10.053584,
-   "median_us": 47.556
+   "n": 128,
+   "sum_ms": 18.875446,
+   "median_us": 42.951
   },
   "running_to_relocked": {
-   "n": 118,
-   "sum_ms": 0.879976,
-   "median_us": 6.963
+   "n": 128,
+   "sum_ms": 0.763871,
+   "median_us": 4.896
   },
   "relocked_to_taken": {
-   "n": 118,
-   "sum_ms": 0.935225,
-   "median_us": 3.4345
+   "n": 128,
+   "sum_ms": 0.967223,
+   "median_us": 2.4805
   },
   "total": {
-   "n": 118,
-   "sum_ms": 13.776338,
-   "median_us": 72.4185
+   "n": 128,
+   "sum_ms": 22.006759,
+   "median_us": 61.056
   },
   "unresolved": {
-   "n": 35,
-   "sum_ms": 23.902559,
-   "median_us": 147.557
+   "n": 22,
+   "sum_ms": 20.482868,
+   "median_us": 253.626
   }
  },
  "futex": {
   "channel": {
-   "waits": 161,
+   "waits": 171,
    "addresses": 5,
-   "dominant": "0x5619d1c282e8",
-   "dominant_share": 0.2484472049689441
-  },
-  "scanner.other": {
-   "waits": 3,
-   "addresses": 3,
-   "dominant": "0x5619d1c28a68",
-   "dominant_share": 0.3333333333333333
+   "dominant": "0x564b15dda7b8",
+   "dominant_share": 0.27485380116959063
   },
   "receiver_mutex": {
-   "waits": 100,
+   "waits": 111,
    "addresses": 1,
-   "dominant": "0x5619d1c27ac0",
+   "dominant": "0x564b15dd9ac0",
    "dominant_share": 1.0
   },
+  "scanner.other": {
+   "waits": 8,
+   "addresses": 3,
+   "dominant": "0x564b15dda3a0",
+   "dominant_share": 0.5
+  },
   "reader.condvar": {
-   "waits": 272,
-   "addresses": 2,
-   "dominant": "0x5619d1c28420",
-   "dominant_share": 0.9963235294117647
+   "waits": 240,
+   "addresses": 1,
+   "dominant": "0x564b15dda420",
+   "dominant_share": 1.0
   },
   "scanner.condvar": {
-   "waits": 305,
+   "waits": 262,
    "addresses": 2,
-   "dominant": "0x5619d1c28420",
-   "dominant_share": 0.9606557377049181
+   "dominant": "0x564b15dda420",
+   "dominant_share": 0.9656488549618321
   },
   "reader.other": {
-   "waits": 12,
+   "waits": 50,
    "addresses": 2,
-   "dominant": "0x5619d1c28420",
-   "dominant_share": 0.9166666666666666
-  },
-  "decoding": {
-   "waits": 3,
-   "addresses": 2,
-   "dominant": "0x7f84b8000030",
-   "dominant_share": 0.6666666666666666
+   "dominant": "0x564b15dda420",
+   "dominant_share": 0.98
   },
   "state_lock": {
    "waits": 6,
    "addresses": 1,
-   "dominant": "0x5619d1c283a0",
+   "dominant": "0x564b15dda3a0",
    "dominant_share": 1.0
+  }
+ },
+ "trace": {
+  "ok": false,
+  "problems": [
+   "switches into and out of idle unpaired on CPUs [1, 2, 3]: the kernel's stream is incomplete"
+  ],
+  "futex_ok": true,
+  "lost_by_event": {},
+  "lost_records": 0,
+  "lost_events": 0,
+  "unparsed": 0,
+  "unparsed_examples": [],
+  "unattributed": {
+   "sched:sched_switch": 6
+  },
+  "stream": {
+   "missing_wakeups": 0,
+   "missed_switch_in": 280,
+   "missed_switch_out": 0,
+   "idle_pairing": {
+    "0": {
+     "to": 97,
+     "out": 97,
+     "ok": true
+    },
+    "1": {
+     "to": 89,
+     "out": 0,
+     "ok": false
+    },
+    "2": {
+     "to": 99,
+     "out": 0,
+     "ok": false
+    },
+    "3": {
+     "to": 109,
+     "out": 0,
+     "ok": false
+    }
+   },
+   "idle_pairing_ok": false
   }
  }
 }
