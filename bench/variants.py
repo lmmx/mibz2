@@ -40,6 +40,8 @@ from imc import CORPUS, run
 from scaling import AB, summarise
 
 RELEASES = ["v0.1.1", "v0.1.2", "v0.1.3", "v0.1.4", "v0.1.5"]
+# later releases a variant may name, outside the default set (the knee study's releases)
+LATER = ["v0.2.0"]
 # kept research branches, by commit (not in the default set): `pairwalk` is the pair walk
 # (psi^2, two bytes a step: libsais's symbol-rows decode ported, #6), v0.1.4 and one commit,
 # so `--variants v0.1.4,pairwalk` is that one change on the i9, and v0.1.5 beside them is
@@ -80,7 +82,7 @@ static WALK_GATE: (std::sync::Mutex<usize>, std::sync::Condvar) =
 const WALK_PERMITS: usize = {k};
 """
 DEFAULT = ",".join([*RELEASES, *SETTINGS])
-KNOWN = ",".join([*RELEASES, *SETTINGS, *GATES, *COMMITS])
+KNOWN = ",".join([*RELEASES, *LATER, *SETTINGS, *GATES, *COMMITS])
 
 
 def build(name, root, out):
@@ -89,7 +91,7 @@ def build(name, root, out):
     if os.path.exists(tree):
         run(["git", "worktree", "remove", "--force", tree])
         shutil.rmtree(tree, ignore_errors=True)
-    ref = name if name in RELEASES else COMMITS.get(name, "HEAD")
+    ref = name if name in RELEASES or name in LATER else COMMITS.get(name, "HEAD")
     run(["git", "worktree", "add", "--detach", tree, ref], check=True)
     try:
         if name in GATES:
@@ -148,7 +150,11 @@ def main():
     unknown = [
         v
         for v in names
-        if v not in RELEASES and v not in SETTINGS and v not in GATES and v not in COMMITS
+        if v not in RELEASES
+        and v not in LATER
+        and v not in SETTINGS
+        and v not in GATES
+        and v not in COMMITS
     ]
     if unknown:
         sys.exit(f"bench-variants: unknown variants {unknown}; any of {KNOWN}")
@@ -188,7 +194,7 @@ def main():
             "ref_threads": a.ref,
             "variants": {
                 n: {
-                    "ref": n if n in RELEASES else COMMITS.get(n, "HEAD"),
+                    "ref": n if n in RELEASES or n in LATER else COMMITS.get(n, "HEAD"),
                     "setting": SETTINGS.get(n),
                     "walk_permits": GATES.get(n),
                 }

@@ -83,9 +83,33 @@ jobs:
             | tee occupancy.txt
           { echo '```text'; cat occupancy.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
+      # The trace under a team plan, forced: CI's runners are below the policy's 6 physical
+      # cores, so it plans workers here. Every traced round must be complete, every run must
+      # have run the plan forced, and the summary's reconciliation and ledger checks must pass
+      - name: Occupancy, teams of 2 (the trace's completeness)
+        run: |
+          just bench-occupancy --threads 4 --teams 2 --rounds 2 --out occupancy-teams.json | tee occupancy-teams.txt
+          python3 - <<'PY'
+          import json
+          d = json.load(open("occupancy-teams.json"))
+          rounds = d["settings"]["rounds"]
+          for r in d["results"]:
+              for mode in ("timeline", "full"):
+                  got = r[mode]["complete_rounds"]
+                  assert got == rounds, f"{r['threads']} threads, {mode}: {got} complete rounds of {rounds}"
+          plans = {w.split("=", 1)[1] for run in d["runs"] for w in run["line"].split() if w.startswith("plan=")}
+          assert plans == {"teams2x2"}, f"the runs' plans: {plans}"
+          text = open("occupancy-teams.txt").read()
+          assert "events reconciled: ok" in text, "the events don't reconcile under teams"
+          assert "ledger check: VIOLATED" not in text, "the ledger check fails under teams"
+          print(f"teams of 2: every traced round complete ({rounds} of {rounds}), every run on teams2x2, the events reconciled")
+          PY
+
       - uses: actions/upload-artifact@v4
         with:
           name: occupancy-${{ github.sha }}
           path: |
             occupancy.json
             occupancy.txt
+            occupancy-teams.json
+            occupancy-teams.txt
