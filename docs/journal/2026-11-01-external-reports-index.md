@@ -1,4 +1,4 @@
-# External research reports 74–109: index
+# External research reports 74–112: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -49,9 +49,13 @@ verbatim. They are not findings of this repository.
 | 107 | 2026-11-01 | the guardian | adopting Astra's dispatch-causality diagnostic; the instruction to the coordinator | `2026-11-01-external-report-107.md` |
 | 108 | 2026-11-01 | the researcher | agreeing with Astra; three refinements (clock alignment, CPU availability, nonselective stopping) | `2026-11-01-external-report-108.md` |
 | 109 | 2026-11-01 | the guardian | the consolidated instruction for the dispatch-causality diagnostic | `2026-11-01-external-report-109.md` |
+| 110 | 2026-11-01 | the guardian | approving the dispatch-causality capture; questions (a)-(c) answered | `2026-11-01-external-report-110.md` |
+| 111 | 2026-11-01 | the researcher | the summary's validity omits the scheduler checks; trace loss must not pass silently | `2026-11-01-external-report-111.md` |
+| 112 | 2026-11-01 | the guardian | adopting the researcher's validation fix; the capture's authorisation stands once it passes | `2026-11-01-external-report-112.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
 - `docs/walk-unroll-decoder-records`;
 - `docs/decoder-attribution-records`;
+- `research/dispatch-causality` (amendment 1 answers reports 110-112);
 - the research branches named in each message.
