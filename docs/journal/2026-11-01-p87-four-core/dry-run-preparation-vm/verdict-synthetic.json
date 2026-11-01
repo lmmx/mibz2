@@ -1,0 +1,82 @@
+{
+ "protocol": "2026-11-01-p87-four-core-protocol",
+ "decisions": {
+  "mechanism": "NOT MATERIAL",
+  "engineering": "NOT DEMONSTRATED",
+  "practical": false,
+  "matrix": "No material cross-worker term and no shown gain: P87's four-core diagnostic closes negative."
+ },
+ "instructions_check": "not measured",
+ "historical_P87_criterion": "not evaluated: registered at 6-10 workers (occupancy curve >= 1.03x, with DRAM write bytes per output byte); this diagnostic runs four",
+ "mechanism": {
+  "mean": 0.0,
+  "se": 0.0,
+  "df": 19,
+  "rho1": 0.0,
+  "n_eff": 20,
+  "lower95": 0.0,
+  "upper95": 0.0
+ },
+ "mechanism_AA": {
+  "mean": 0.0,
+  "se": 0.0,
+  "df": 19,
+  "rho1": 0.0,
+  "n_eff": 20,
+  "lower95": 0.0,
+  "upper95": 0.0
+ },
+ "delta_w1": {
+  "mean": 0.0,
+  "se": 0.0,
+  "df": 19,
+  "rho1": 0.0,
+  "n_eff": 20,
+  "lower95": 0.0,
+  "upper95": 0.0
+ },
+ "delta_w4": {
+  "mean": 0.0,
+  "se": 0.0,
+  "df": 19,
+  "rho1": 0.0,
+  "n_eff": 20,
+  "lower95": 0.0,
+  "upper95": 0.0
+ },
+ "engineering_primary_w4": {
+  "X": {
+   "mean_log": 0.0,
+   "se": 0.0,
+   "df": 19,
+   "rho1": 0.0,
+   "n_eff": 20,
+   "ratio": 1.0,
+   "lower95": 1.0,
+   "upper95": 1.0
+  },
+  "CPU": {
+   "mean_log": 0.0,
+   "se": 0.0,
+   "df": 19,
+   "rho1": 0.0,
+   "n_eff": 20,
+   "ratio": 1.0,
+   "lower95": 1.0,
+   "upper95": 1.0
+  },
+  "improves": false,
+  "worse": false,
+  "practical": false
+ },
+ "phases": {
+  "interpretable": false,
+  "traversal_direction": {
+   "single_worker_A_minus_B": 0.6412597867337833,
+   "four_worker_A_minus_B": -0.15548927765551124,
+   "cross_worker_part": -0.7967490643892945,
+   "note": "a block's traversal precedes its own assembly: a traversal difference at w = 1 can only be persistent (an earlier block's assembly leaving a different cache state); the part that grows from w = 1 to 4 is cross-worker"
+  }
+ },
+ "dram": {}
+}
