@@ -1,0 +1,20 @@
+== mixed-independent
+permille 0: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 34 (0.05%
+permille 50: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 32 (0.05
+permille 1000: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 0 (0.0
+== text-l1
+permille 0: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 59562
+permille 50: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 5656
+permille 1000: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 0 
+== period-3
+permille 0: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 84369 (99
+permille 50: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 80055 (9
+permille 1000: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 0 (0.0
+== zeros
+permille 0: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 1654 (99.94%
+permille 50: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 1559 (94.20
+permille 1000: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 0 (0.00%)
+== random
+permille 0: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00%
+permille 50: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00
+permille 1000: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.

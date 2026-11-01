@@ -1690,7 +1690,7 @@ impl Inv {
         };
         match kind {
             'p' => Inv::Prod(TVector::new(), SegScratch::default()),
-            'o' | 'v' | 'u' | 'h' | 'b' => {
+            'o' | 'v' | 'u' | 'h' | 'b' | 'k' | 'j' => {
                 assert_eq!(k, 1, "compact arms take one core a block");
                 Inv::Compact(kind, Box::default())
             }
@@ -1777,7 +1777,7 @@ impl Inv {
                 }
                 (m, s.elapsed().as_secs_f64() - m)
             }
-            Inv::Compact(kind @ ('h' | 'b'), c) => {
+            Inv::Compact(kind @ ('h' | 'b' | 'k' | 'j'), c) => {
                 c.load_h(
                     b.records
                         .get()
@@ -2010,6 +2010,8 @@ fn parse_arm(s: &str) -> Arm {
         b'u' => ('u', &s[1..]),
         b'h' => ('h', &s[1..]),
         b'b' => ('b', &s[1..]),
+        b'k' => ('k', &s[1..]),
+        b'j' => ('j', &s[1..]),
         _ => ('c', s),
     };
     let (rest, segments) = match rest.split_once('@') {
@@ -2046,7 +2048,7 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
     if arms.iter().any(|a| matches!(a.kind, 'x' | 'y' | 'g')) {
         fused_check(bs);
     }
-    if arms.iter().any(|a| matches!(a.kind, 'h' | 'b')) {
+    if arms.iter().any(|a| matches!(a.kind, 'h' | 'b' | 'k' | 'j')) {
         // (an h arm's records are made from the harness's last column, outside the timing:
         // no MTF stage in it)
         assert!(
@@ -2519,7 +2521,7 @@ fn h_check(bs: &[Block], permille: &[u32]) {
     println!(
         "h-check: the h walk{}",
         if bmi2 {
-            " and the b walk (BMI2)"
+            " and the b, k and j walks (BMI2)"
         } else {
             " (no BMI2: b not checked)"
         }
@@ -2541,13 +2543,15 @@ fn h_check(bs: &[Block], permille: &[u32]) {
                             let r = compact::Records::from_block(&b.ll, &b.counts, pm);
                             c.load_h(&r);
                             if bmi2 {
-                                c.walk('b', &b.ll, b.orig_ptr, &mut out);
-                                assert_eq!(
-                                    fnv(&out),
-                                    want[i],
-                                    "permille {pm}: b: block {i} differs"
-                                );
-                                c.load_h(&r);
+                                for arm in ['b', 'k', 'j'] {
+                                    c.walk(arm, &b.ll, b.orig_ptr, &mut out);
+                                    assert_eq!(
+                                        fnv(&out),
+                                        want[i],
+                                        "permille {pm}: {arm}: block {i} differs"
+                                    );
+                                    c.load_h(&r);
+                                }
                             }
                             c.walk('h', &b.ll, b.orig_ptr, &mut out);
                             assert_eq!(fnv(&out), want[i], "permille {pm}: block {i} differs");

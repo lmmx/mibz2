@@ -207,6 +207,8 @@ impl Compact {
             'u' => self.walk_k::<U>(ll, orig_ptr, out),
             'h' => self.walk_h(ll, orig_ptr, out, false),
             'b' => self.walk_h(ll, orig_ptr, out, true),
+            'k' => self.walk_hp(ll, orig_ptr, out, false),
+            'j' => self.walk_hp(ll, orig_ptr, out, true),
             _ => unreachable!("compact arms are o, v, u and h"),
         }
     }
@@ -1186,5 +1188,345 @@ fn h_extra_starts(n: usize, rec: *const Line, starts: &mut Vec<u32>) {
                 break;
             }
         }
+    }
+}
+
+// ---------------------------------------------------------------------------------------
+// `k` and `j`: the same records, the lane's state packed into one token (report 138, the
+// compile-and-correctness check report 139 authorizes; never timed under this authority)
+//
+// The lane holds q = row | carry << 20 (row < 2^20, carry the byte it writes next). An
+// ordinary FOR record's low header word is base | F << 20 (RAW and bits 29-31 zero), and
+// base + offset = ψ(j) < 2^20, so the next token is that word plus the offset, with no
+// carry into the byte field: q' = h32 + offset. The record's address is
+// 64 (row >> 5) = 2 (q & 0x000f_ffe0), the byte bits masked off. The sentinel's three
+// cases keep `room_h`'s meaning:
+// - a parked lane (row PARK): it writes its token's byte and takes the raw entry, whose
+//   encoding (ψ | F << 20) is already a token;
+// - a start (the mask bit): its segment ends at row q & 0xfffff;
+// - a raw row: the lane prefetches the entry and parks, keeping its carried byte:
+//   q = (q & 0x0ff0_0000) | PARK.
+// `j` is `k` with 14 × slot as one `imul` (inline assembly), so the multiply's
+// latency/throughput trade can be read apart from the token's state saving. Both are
+// compiled for BMI2, as `b` is, so `b` is their baseline.
+// ---------------------------------------------------------------------------------------
+
+/// `k`'s and `j`'s lane: the packed token, the raw entry it waits on, its segment and
+/// output pointers (32 bytes, against `LaneH`'s 40)
+#[derive(Clone, Copy)]
+struct LaneP {
+    q: u32,
+    pend: u32,
+    seg: usize,
+    p: *mut u8,
+    end: *mut u8,
+}
+
+const P_ROW: u32 = 0x000f_ffff;
+const P_GROUP: u32 = 0x000f_ffe0;
+const P_CARRY: u32 = 0x0ff0_0000;
+
+#[inline(always)]
+fn mul14<const IMUL: bool>(x: u32) -> u32 {
+    if IMUL {
+        #[cfg(target_arch = "x86_64")]
+        {
+            let r: u32;
+            // SAFETY: a register multiply; it clobbers flags, so no preserves_flags
+            unsafe {
+                core::arch::asm!("imul {r:e}, {x:e}, 14", r = lateout(reg) r, x = in(reg) x,
+                                 options(pure, nomem, nostack));
+            }
+            return r;
+        }
+    }
+    14 * x
+}
+
+/// The record line of the token `q` (the byte bits masked off)
+///
+/// SAFETY (both): q's row is below 32 × the records' count
+#[inline(always)]
+unsafe fn p_line(rec: *const Line, q: u32) -> *const u8 {
+    unsafe { (rec as *const u8).add(2 * (q & P_GROUP) as usize) }
+}
+
+/// The slot's 14-bit offset in `line`
+#[inline(always)]
+unsafe fn p_offset<const IMUL: bool>(line: *const u8, slot: u32) -> u32 {
+    let at = mul14::<IMUL>(slot);
+    let w = unsafe { (line.add((at >> 3) as usize) as *const u32).read_unaligned() };
+    (u32::from_le(w) >> (at & 7)) & H_S
+}
+
+/// What a packed lane's slow step found
+enum SlowP {
+    Byte(u8),
+    Start,
+    Wait,
+}
+
+macro_rules! room_hp_body {
+    ($this:ident, $ll:ident, $orig_ptr:ident, $imul:expr) => {{
+        let n = $this.n;
+        let park = 32 * ($this.hrec.len() as u32 - 1);
+        assert!(park <= P_ROW, "PARK fits the token's 20-bit row");
+        let recm = $this.hrec.as_mut_ptr();
+        let (rec, raw) = (recm as *const Line, $this.hraw.as_ptr());
+        let rawu = raw as *const u32;
+        let s = &mut $this.s;
+        // SAFETY (every record and raw access): rows are below n or are PARK
+        let r0 = unsafe { h_next(rec, raw, $orig_ptr) }.0;
+        random_rows(n, SEGMENTS - 1, &mut s.starts);
+        s.starts.push(r0);
+        h_extra_starts(n, rec, &mut s.starts);
+        s.starts.sort_unstable();
+        s.starts.dedup();
+        let ns = s.starts.len();
+        // each start's first token (its successor and F) and true offset, before marking
+        let succ: Vec<(u32, u32)> = s
+            .starts
+            .iter()
+            .map(|&r| unsafe {
+                let (p, b) = h_next(rec, raw, r);
+                (p | (b as u32) << 20, h_offset(rec, r))
+            })
+            .collect();
+        let mark = |r: u32, v: u32, on: bool| unsafe {
+            let line = &mut (*recm.add((r >> 5) as usize)).0;
+            put14(line, (r & 31) as usize, v);
+            let bit = 1u64 << (32 + (r & 31));
+            let h = u64::from_le_bytes(line[56..64].try_into().unwrap());
+            let h = if on { h | bit } else { h & !bit };
+            line[56..64].copy_from_slice(&h.to_le_bytes());
+        };
+        for &r in &s.starts {
+            mark(r, H_S, true);
+        }
+        let cap = 2 * n / ns + 64;
+        s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
+        for b in &mut s.bufs[..ns] {
+            b.clear();
+            b.reserve(cap);
+        }
+        s.next.clear();
+        s.next.resize(ns, usize::MAX);
+        let starts = &s.starts;
+        let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+        let bufs = &mut s.bufs;
+        let next = &mut s.next;
+
+        let take = |seg: usize, bufs: &mut Vec<Vec<u8>>| -> LaneP {
+            let b = &mut bufs[seg];
+            let base = b.as_mut_ptr();
+            // SAFETY: the buffer has `cap` > 0 spare bytes
+            unsafe { *base = $ll[starts[seg] as usize] };
+            LaneP {
+                q: succ[seg].0,
+                pend: 0,
+                seg,
+                p: unsafe { base.add(1) },
+                end: unsafe { base.add(b.capacity()) },
+            }
+        };
+        let finish = |l: &LaneP, bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| {
+            let b = &mut bufs[l.seg];
+            // SAFETY: p is within b's allocation, every byte below it written
+            unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+            next[l.seg] = seg_of(l.q & P_ROW);
+        };
+        let grow = |l: &mut LaneP, bufs: &mut Vec<Vec<u8>>| {
+            let b = &mut bufs[l.seg];
+            let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+            unsafe { b.set_len(len) };
+            b.reserve(b.capacity());
+            l.p = unsafe { b.as_mut_ptr().add(len) };
+            l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
+        };
+        let slow = |l: &mut LaneP, line: *const u8| -> SlowP {
+            let row = l.q & P_ROW;
+            if row == park {
+                let e = u32::from_le(unsafe { *rawu.add(l.pend as usize) });
+                let byte = (l.q >> 20) as u8;
+                l.q = e;
+                SlowP::Byte(byte)
+            } else {
+                let h = u64::from_le(unsafe { (line.add(56) as *const u64).read() });
+                if (h >> (32 + (row & 31))) & 1 != 0 {
+                    SlowP::Start
+                } else {
+                    debug_assert!(h & H_RAW != 0);
+                    l.pend = h_raw_index(h, row);
+                    prefetch_at(unsafe { rawu.add(l.pend as usize) } as *const u8);
+                    l.q = (l.q & P_CARRY) | park;
+                    SlowP::Wait
+                }
+            }
+        };
+
+        let mut queued = 0;
+        let mut lanes: [LaneP; LANES] = std::array::from_fn(|_| LaneP {
+            q: 0,
+            pend: 0,
+            seg: usize::MAX,
+            p: std::ptr::null_mut(),
+            end: std::ptr::null_mut(),
+        });
+        let mut active = 0;
+        while active < LANES && queued < ns {
+            lanes[active] = take(queued, bufs);
+            prefetch_at(unsafe { p_line(rec, lanes[active].q) });
+            queued += 1;
+            active += 1;
+        }
+        if active == LANES {
+            'full: loop {
+                let mut room = cap - 1;
+                for l in lanes.iter_mut() {
+                    if l.p == l.end {
+                        grow(l, bufs);
+                    }
+                    room = room.min(unsafe { l.end.offset_from(l.p) } as usize);
+                }
+                debug_assert!(room > 0);
+                let mut base: [*mut u8; LANES] = std::array::from_fn(|k| lanes[k].p);
+                for off in 0..room {
+                    for k in 0..LANES {
+                        let l = &mut lanes[k];
+                        let q = l.q;
+                        let line = unsafe { p_line(rec, q) };
+                        let h32 = u32::from_le(unsafe { (line.add(56) as *const u32).read() });
+                        let o = unsafe { p_offset::<{ $imul }>(line, q & 31) };
+                        let byte = if o != H_S {
+                            l.q = h32 + o;
+                            (q >> 20) as u8
+                        } else {
+                            match slow(l, line) {
+                                SlowP::Byte(b) => b,
+                                SlowP::Start => {
+                                    l.p = base[k].wrapping_add(off);
+                                    finish(l, bufs, next);
+                                    if queued == ns {
+                                        for (j, lj) in lanes.iter_mut().enumerate() {
+                                            if j < k {
+                                                lj.p = base[j].wrapping_add(off + 1);
+                                            } else if j > k {
+                                                lj.p = base[j].wrapping_add(off);
+                                            }
+                                        }
+                                        break 'full;
+                                    }
+                                    *l = take(queued, bufs);
+                                    prefetch_at(unsafe { p_line(rec, l.q) });
+                                    queued += 1;
+                                    base[k] = l.p.wrapping_sub(off + 1);
+                                    continue;
+                                }
+                                SlowP::Wait => {
+                                    base[k] = base[k].wrapping_sub(1);
+                                    continue;
+                                }
+                            }
+                        };
+                        prefetch_at(unsafe { p_line(rec, l.q) });
+                        debug_assert!(base[k].wrapping_add(off) < l.end);
+                        unsafe { *base[k].wrapping_add(off) = byte };
+                    }
+                }
+                for (l, b) in lanes.iter_mut().zip(base) {
+                    l.p = b.wrapping_add(room);
+                }
+            }
+        }
+        let mut live: Vec<LaneP> = lanes[..active]
+            .iter()
+            .copied()
+            .filter(|l| l.seg != usize::MAX && next[l.seg] == usize::MAX)
+            .collect();
+        for l in live.iter_mut() {
+            if l.p == l.end {
+                grow(l, bufs);
+            }
+            debug_assert!(l.p < l.end);
+        }
+        while !live.is_empty() {
+            let mut i = 0;
+            while i < live.len() {
+                let l = &mut live[i];
+                let q = l.q;
+                let line = unsafe { p_line(rec, q) };
+                let h32 = u32::from_le(unsafe { (line.add(56) as *const u32).read() });
+                let o = unsafe { p_offset::<{ $imul }>(line, q & 31) };
+                let byte = if o != H_S {
+                    l.q = h32 + o;
+                    (q >> 20) as u8
+                } else {
+                    match slow(l, line) {
+                        SlowP::Byte(b) => b,
+                        SlowP::Start => {
+                            finish(l, bufs, next);
+                            live.swap_remove(i);
+                            continue;
+                        }
+                        SlowP::Wait => {
+                            i += 1;
+                            continue;
+                        }
+                    }
+                };
+                prefetch_at(unsafe { p_line(rec, l.q) });
+                unsafe {
+                    *l.p = byte;
+                    l.p = l.p.add(1);
+                }
+                if l.p == l.end {
+                    grow(l, bufs);
+                }
+                i += 1;
+            }
+        }
+        for (&r, &(_, o)) in starts.iter().zip(&succ) {
+            mark(r, o, false);
+        }
+        s.first = seg_of(r0);
+        s.n = n;
+    }};
+}
+
+impl Compact {
+    /// `k` (`imul` false) and `j` (true): the packed-token walk, compiled for BMI2
+    fn walk_hp(&mut self, ll: &[u8], orig_ptr: u32, out: &mut Vec<u8>, imul: bool) {
+        assert_eq!(self.hrec.len(), self.n.div_ceil(32) + 1, "load_h first");
+        if self.n < MIN_SEGMENTED {
+            self.plain_h(orig_ptr, out);
+            return;
+        }
+        assert!(
+            std::arch::is_x86_feature_detected!("bmi2"),
+            "k and j arms need BMI2"
+        );
+        // SAFETY: the CPU has BMI2 (checked above)
+        unsafe {
+            if imul {
+                self.room_hj_bmi2(ll, orig_ptr)
+            } else {
+                self.room_hk_bmi2(ll, orig_ptr)
+            }
+        }
+        self.s.assemble(out);
+    }
+
+    /// SAFETY: the CPU has BMI2
+    #[target_feature(enable = "bmi2")]
+    #[inline(never)]
+    unsafe fn room_hk_bmi2(&mut self, ll: &[u8], orig_ptr: u32) {
+        room_hp_body!(self, ll, orig_ptr, false)
+    }
+
+    /// SAFETY: the CPU has BMI2
+    #[target_feature(enable = "bmi2")]
+    #[inline(never)]
+    unsafe fn room_hj_bmi2(&mut self, ll: &[u8], orig_ptr: u32) {
+        room_hp_body!(self, ll, orig_ptr, true)
     }
 }
