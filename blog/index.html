@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=4baee5ad608c">
+      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=9bb7234a1d21">
     
-      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=4baee5ad608c">
+      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=9bb7234a1d21">
     
-      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=4baee5ad608c">
+      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=9bb7234a1d21">
     
-      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=4baee5ad608c">
+      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=9bb7234a1d21">
     
-      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=4baee5ad608c">
+      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=9bb7234a1d21">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1099,7 +1099,7 @@
   <span class="md-ellipsis">
     
   
-  Inverse-BWT memory interference
+  The extra CPU cost of four workers
 
     
   </span>
@@ -1405,7 +1405,7 @@
 <p>What mibz2's experiments are finding, and where they go next. The evidence behind each
 post is in the <a href="../background/journals/">journals</a> and the pull requests they link.</p>
 <div class="post-list">
-<a class="post-card" href="2026-11-01-inverse-bwt-memory-interference/"><img src="../assets/social/blog-2026-11-01-inverse-bwt-memory-interference.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">1 November 2026 · Research in progress</span><span class="post-card-title">Investigating inverse-BWT memory interference in mibz2</span><span class="post-card-dek">Four workers make mibz2 faster, but each decoded byte more expensive. Two experiments to find out why, and why buffer reuse comes first.</span></span></a>
+<a class="post-card" href="2026-11-01-inverse-bwt-memory-interference/"><img src="../assets/social/blog-2026-11-01-inverse-bwt-memory-interference.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">1 November 2026 · Research in progress</span><span class="post-card-title">The extra CPU cost of four-worker bzip2 decoding</span><span class="post-card-dek">Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible.</span></span></a>
 <a class="post-card" href="2026-11-01-block-dispatch/"><img src="../assets/social/blog-2026-11-01-block-dispatch.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">1 November 2026 · Investigation in progress</span><span class="post-card-title">Block dispatch in mibz2: mutexes, futexes and the scheduler</span><span class="post-card-dek">How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay.</span></span></a>
 <a class="post-card" href="2026-10-31-room-walk-overlap/"><img src="../assets/social/blog-2026-10-31-room-walk-overlap.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">31 October 2026 · Open question</span><span class="post-card-title">32 lanes, 8.6 chains: where the inverse BWT walk spends its cycles</span><span class="post-card-dek">The decoder's 32-lane walk runs 8.6 times faster than one chain. That figure may not mean what it seems: the walk may already hide memory latency, and spend too many instructions on each byte.</span></span></a>
 <a class="post-card" href="2026-10-29-compact-navigation-tables/"><img src="../assets/social/blog-2026-10-29-compact-navigation-tables.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">29 October 2026 · Work in progress</span><span class="post-card-title">Compact navigation tables for the inverse BWT: early findings</span><span class="post-card-dek">Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next.</span></span></a>
@@ -1469,13 +1469,13 @@ post is in the <a href="../background/journals/">journals</a> and the pull reque
         
         
           
-          <a href="./2026-11-01-inverse-bwt-memory-interference/" class="md-footer__link md-footer__link--next" aria-label="Next: Inverse-BWT memory interference">
+          <a href="./2026-11-01-inverse-bwt-memory-interference/" class="md-footer__link md-footer__link--next" aria-label="Next: The extra CPU cost of four workers">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Inverse-BWT memory interference
+                The extra CPU cost of four workers
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1554,17 +1554,17 @@ post is in the <a href="../background/journals/">journals</a> and the pull reque
     
       <script src="../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../assets/javascripts/bench.js?v=4baee5ad608c"></script>
+        <script src="../assets/javascripts/bench.js?v=9bb7234a1d21"></script>
       
-        <script src="../assets/javascripts/couriers.js?v=4baee5ad608c"></script>
+        <script src="../assets/javascripts/couriers.js?v=9bb7234a1d21"></script>
       
-        <script src="../assets/javascripts/blog.js?v=4baee5ad608c"></script>
+        <script src="../assets/javascripts/blog.js?v=9bb7234a1d21"></script>
       
-        <script src="../assets/javascripts/frontier.js?v=4baee5ad608c"></script>
+        <script src="../assets/javascripts/frontier.js?v=9bb7234a1d21"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../assets/javascripts/katex.js?v=4baee5ad608c"></script>
+        <script src="../assets/javascripts/katex.js?v=9bb7234a1d21"></script>
       
     
   </body>
