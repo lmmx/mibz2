@@ -1,0 +1,189 @@
+{
+ "protocol": "docs/journal/2026-11-01-dispatch-causality-protocol.md",
+ "runs_w4": 2,
+ "runs_w1": 1,
+ "perturbation": {
+  "1": {
+   "throughput": 0.8519945222270506,
+   "cpu_per_byte": 1.1837906957730358,
+   "rss": 1.0072748956469886
+  },
+  "4": {
+   "throughput": 0.9887119845553716,
+   "cpu_per_byte": 1.0422247933142281,
+   "rss": 0.9798012442433546
+  }
+ },
+ "validity": {
+  "coverage_all": true,
+  "perturbation": false,
+  "alignment_all": true,
+  "complete_all": true
+ },
+ "receiver_obstruction": {
+  "mean_share": 0.018674573087555,
+  "per_run": [
+   0.025225088813464618,
+   0.012124057361645383
+  ],
+  "runs_at_or_above_5pct": 0.0,
+  "cpu_idle_share_mean": 0.018670723894602663
+ },
+ "queued_nondecoding_ranked": [
+  [
+   "runnable",
+   0.6275568520976342
+  ],
+  [
+   "receiver",
+   0.2771945906236447
+  ],
+  [
+   "unresolved",
+   0.056143080566926316
+  ],
+  [
+   "notify",
+   0.028790874897760742
+  ],
+  [
+   "release",
+   0.0050588443689757005
+  ],
+  [
+   "recv",
+   0.002954068313722568
+  ],
+  [
+   "rx_other",
+   0.0014158295911034266
+  ],
+  [
+   "publish",
+   0.00042573682609762896
+  ],
+  [
+   "state_lock",
+   0.0003408565703139181
+  ],
+  [
+   "post",
+   8.370497426612493e-05
+  ],
+  [
+   "buffer",
+   3.556116955483374e-05
+  ]
+ ],
+ "classes_s": {
+  "notify.blocked": 0.000103454,
+  "notify.running": 0.007980557,
+  "post.running": 2.3503e-05,
+  "publish.blocked": 6.34e-07,
+  "publish.running": 0.000118906,
+  "recv.asleep": 8.4e-08,
+  "recv.running": 0.0008293705,
+  "release.running": 0.0014204414999999999,
+  "runnable.buf_lock.cpu_idle": 4.7600000000000005e-05,
+  "runnable.buffer.cpu_idle": 6.2983e-05,
+  "runnable.mutex_wait.cpu_idle": 0.10830300500000001,
+  "runnable.mutex_wait.cpus_busy": 2.31e-06,
+  "runnable.notify.cpu_idle": 0.017891279,
+  "runnable.notify.cpus_busy": 0.0013723965,
+  "runnable.pub_lock.cpu_idle": 1.581e-05,
+  "runnable.publish.cpu_idle": 1.855e-06,
+  "runnable.recv.cpu_idle": 0.0464464645,
+  "runnable.recv.cpus_busy": 0.00089986,
+  "runnable.release.cpu_idle": 0.001148944,
+  "runnable.release.cpus_busy": 1.037e-06,
+  "rx.acquiring.cpu_idle": 0.00039754199999999997,
+  "rx.blocked_by_owner.cpu_idle": 0.0429853845,
+  "rx.blocked_by_owner.cpus_busy": 1.4232e-05,
+  "rx.handoff_asleep.cpu_idle": 0.034617214,
+  "rx.running_owner_held.cpu_idle": 0.0002142155,
+  "rx.running_owner_held.cpus_busy": 7.02e-07,
+  "state_lock.blocked": 6.332899999999999e-05,
+  "state_lock.running": 3.2377999999999994e-05,
+  "unresolved.clock": 0.002855471,
+  "unresolved.send_bracket": 0.012908596,
+  "buffer.running": 9.985e-06,
+  "runnable.post.cpu_idle": 1.4248e-05
+ },
+ "decision": "not interpreted (validity: ['perturbation']); provisional: do not proceed to MPMC: receiver obstruction below the materiality threshold, or not repeatable",
+ "w1_reference": [
+  {
+   "receiver_obstruction_share": 0.0,
+   "coverage": 0.7721186550586909
+  }
+ ],
+ "reader": [
+  {
+   "publish_to_wakeup": {
+    "n": 102,
+    "sum_ms": 0.943507,
+    "median_us": 4.8175
+   },
+   "wakeup_to_running": {
+    "n": 102,
+    "sum_ms": 19.723154,
+    "median_us": 43.034
+   },
+   "running_to_relocked": {
+    "n": 102,
+    "sum_ms": 0.563374,
+    "median_us": 4.093
+   },
+   "relocked_to_taken": {
+    "n": 102,
+    "sum_ms": 0.547178,
+    "median_us": 1.5395
+   },
+   "total": {
+    "n": 102,
+    "sum_ms": 21.777213,
+    "median_us": 59.143
+   },
+   "unresolved": {
+    "n": 36,
+    "sum_ms": 25.743005,
+    "median_us": 93.3345
+   }
+  },
+  {
+   "unresolved": {
+    "n": 33,
+    "sum_ms": 12.4405,
+    "median_us": 93.442
+   },
+   "publish_to_wakeup": {
+    "n": 124,
+    "sum_ms": 3.731786,
+    "median_us": 5.763
+   },
+   "wakeup_to_running": {
+    "n": 124,
+    "sum_ms": 25.341518,
+    "median_us": 50.883
+   },
+   "running_to_relocked": {
+    "n": 124,
+    "sum_ms": 0.78653,
+    "median_us": 5.6725
+   },
+   "relocked_to_taken": {
+    "n": 124,
+    "sum_ms": 0.786328,
+    "median_us": 1.8735
+   },
+   "total": {
+    "n": 124,
+    "sum_ms": 30.646162,
+    "median_us": 68.6355
+   }
+  }
+ ],
+ "futex": [
+  {},
+  {}
+ ]
+}

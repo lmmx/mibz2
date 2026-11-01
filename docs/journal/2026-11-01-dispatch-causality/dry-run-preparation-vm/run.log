@@ -1,0 +1,96 @@
+dispatch: label=preparation-vm head=45fff19f2fef45fd2b831c539e6576b665627860 pin=382fde1cfb0bfb1f2145e35cfb11fbc3e68fbcb6 out=<scratch>/disp-results/preparation-vm.dry-run dry_run=1
+dispatch: 25 sources match the frozen hashes
+dispatch: rustc 1.97.0 (2d8144b78 2026-07-07); CARGO_TARGET_DIR=<scratch>/disp-target
+   Compiling mibz2 v0.2.1 (<scratch>/wt-disp)
+    Finished `release` profile [optimized + debuginfo] target(s) in 17.42s
+   Compiling mibz2 v0.2.1 (<scratch>/wt-disp)
+    Finished `release` profile [optimized + debuginfo] target(s) in 12.41s
+dispatch: the dispatch and phase marks' tests, and the instrument's, pass
+Preparing worktree (detached HEAD 45b366d)
+   Compiling mibz2 v0.2.1 (<scratch>/disp-work/base)
+    Finished `release` profile [optimized + debuginfo] target(s) in 13.33s
+same code: yes: 104 mibz2 functions, 32298 instructions
+dispatch: 3 corpora match their frozen hashes and decode to them at w = 1 and 4
+dispatch: allocation CPUs 0,1,2,3
+dispatch: perf = /usr/lib/linux-tools/6.8.0-147-generic/perf (perf version 6.8.12)
+dispatch: tracepoints: 8 supported, 0 unavailable
+dispatch: tier A perturbs by more than 3%: tier B (no futex events), from the start
+dispatch: DRY RUN: a quality check fails on the first 1; the expansion forced to exercise its path (a real run stops here)
+{
+ "decision": "not interpreted (validity: ['perturbation']); provisional: do not proceed to MPMC: receiver obstruction below the materiality threshold, or not repeatable",
+ "validity": {
+  "coverage_all": true,
+  "perturbation": false,
+  "alignment_all": true,
+  "complete_all": true
+ },
+ "perturbation": {
+  "1": {
+   "throughput": 0.8519945222270506,
+   "cpu_per_byte": 1.1837906957730358,
+   "rss": 1.0072748956469886
+  },
+  "4": {
+   "throughput": 0.9887119845553716,
+   "cpu_per_byte": 1.0422247933142281,
+   "rss": 0.9798012442433546
+  }
+ },
+ "receiver_obstruction": {
+  "mean_share": 0.018674573087555,
+  "per_run": [
+   0.025225088813464618,
+   0.012124057361645383
+  ],
+  "runs_at_or_above_5pct": 0.0,
+  "cpu_idle_share_mean": 0.018670723894602663
+ },
+ "queued_nondecoding_ranked": [
+  [
+   "runnable",
+   0.6275568520976342
+  ],
+  [
+   "receiver",
+   0.2771945906236447
+  ],
+  [
+   "unresolved",
+   0.056143080566926316
+  ],
+  [
+   "notify",
+   0.028790874897760742
+  ],
+  [
+   "release",
+   0.0050588443689757005
+  ],
+  [
+   "recv",
+   0.002954068313722568
+  ],
+  [
+   "rx_other",
+   0.0014158295911034266
+  ],
+  [
+   "publish",
+   0.00042573682609762896
+  ],
+  [
+   "state_lock",
+   0.0003408565703139181
+  ],
+  [
+   "post",
+   8.370497426612493e-05
+  ],
+  [
+   "buffer",
+   3.556116955483374e-05
+  ]
+ ]
+}
+dispatch: results: <scratch>/disp-results/preparation-vm.dry-run
+dispatch: archive: <scratch>/disp-results/preparation-vm.dry-run.tar.gz

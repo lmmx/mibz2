@@ -1,0 +1,97 @@
+{
+ "marks": "<scratch>/disp-results/preparation-vm.dry-run/capture/w1-r00.tsv",
+ "workers": 1,
+ "cpus": [
+  0,
+  1,
+  2,
+  3
+ ],
+ "alignment": {
+  "ok": true,
+  "offsets_ns": [
+   -4435,
+   -4545
+  ],
+  "read_to_syscall_ns": [
+   472,
+   293
+  ],
+  "correction_ns": -4490.0,
+  "uncertainty_ns": 527.0
+ },
+ "complete": true,
+ "threads_in_sched": true,
+ "missing_wakeups": 1,
+ "span_s": 1.73161646,
+ "worker_time_s": 1.73161646,
+ "queued_nondecoding_s": 0.031482147,
+ "classes_s": {
+  "notify.running": 0.003470686,
+  "publish.running": 0.000131984,
+  "recv.running": 0.0002494,
+  "runnable.buf_lock.cpu_idle": 1.991e-05,
+  "runnable.buffer.cpu_idle": 9.962e-06,
+  "runnable.mutex_wait.cpu_idle": 1.5059e-05,
+  "runnable.notify.cpu_idle": 0.011101886,
+  "runnable.post.cpu_idle": 4.4556e-05,
+  "runnable.pub_lock.cpu_idle": 7.9234e-05,
+  "runnable.publish.cpu_idle": 0.000117554,
+  "runnable.recv.cpu_idle": 0.008940647,
+  "runnable.release.cpu_idle": 5.2016e-05,
+  "rx.acquiring.cpu_idle": 2.5808e-05,
+  "state_lock.running": 4.9251e-05,
+  "unresolved.clock": 0.001326351,
+  "unresolved.send_bracket": 0.005847843
+ },
+ "no_job_s": {
+  "no_job.Q": 0.002817573,
+  "no_job.R": 0.000552874,
+  "no_job.S": 0.132446246,
+  "no_job.unknown": 0.000326058
+ },
+ "backlog_all_decoding_job_s": 1.532376857,
+ "runnable_cpu_occupants_s": {
+  "idle": 0.079247628,
+  "reader": 0.000118652,
+  "foreign": 0.002141269,
+  "scanner": 1.5747e-05
+ },
+ "coverage": 0.7721186550586909,
+ "sched_coverage": 1.0,
+ "receiver_obstruction_share": 0.0,
+ "receiver_obstruction_cpu_idle_share": 0.0,
+ "reader": {
+  "publish_to_wakeup": {
+   "n": 46,
+   "sum_ms": 0.611415,
+   "median_us": 9.232
+  },
+  "wakeup_to_running": {
+   "n": 46,
+   "sum_ms": 4.853845,
+   "median_us": 104.062
+  },
+  "running_to_relocked": {
+   "n": 46,
+   "sum_ms": 0.421742,
+   "median_us": 8.2105
+  },
+  "relocked_to_taken": {
+   "n": 46,
+   "sum_ms": 0.485575,
+   "median_us": 2.6905
+  },
+  "total": {
+   "n": 46,
+   "sum_ms": 6.372577,
+   "median_us": 131.207
+  },
+  "unresolved": {
+   "n": 185,
+   "sum_ms": 29.727079,
+   "median_us": 145.017
+  }
+ },
+ "futex": {}
+}

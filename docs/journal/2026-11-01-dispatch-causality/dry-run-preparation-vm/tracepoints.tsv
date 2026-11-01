@@ -1,0 +1,8 @@
+sched:sched_switch	supported
+sched:sched_wakeup	supported
+sched:sched_wakeup_new	supported
+sched:sched_waking	supported
+syscalls:sys_enter_sched_yield	supported
+syscalls:sys_enter_futex	supported
+syscalls:sys_exit_futex	supported
+power:cpu_idle	supported

@@ -1,0 +1,161 @@
+{
+ "marks": "<scratch>/disp-results/preparation-vm.dry-run/capture/w4-r00.tsv",
+ "workers": 4,
+ "cpus": [
+  0,
+  1,
+  2,
+  3
+ ],
+ "alignment": {
+  "ok": true,
+  "offsets_ns": [
+   -2455,
+   -2493
+  ],
+  "read_to_syscall_ns": [
+   284,
+   190
+  ],
+  "correction_ns": -2474.0,
+  "uncertainty_ns": 303.0
+ },
+ "complete": true,
+ "threads_in_sched": true,
+ "missing_wakeups": 2,
+ "span_s": 0.627252183,
+ "worker_time_s": 2.509008732,
+ "queued_nondecoding_s": 0.163694504,
+ "classes_s": {
+  "buffer.running": 6.394e-06,
+  "notify.running": 0.004609958,
+  "post.running": 9.939e-06,
+  "publish.running": 0.0001046,
+  "recv.running": 0.000463341,
+  "release.running": 0.000887362,
+  "runnable.buf_lock.cpu_idle": 0.00060262,
+  "runnable.buffer.cpu_idle": 6.285e-06,
+  "runnable.mutex_wait.cpu_idle": 0.040652969,
+  "runnable.mutex_wait.cpus_busy": 0.000158378,
+  "runnable.notify.cpu_idle": 0.010758608,
+  "runnable.notify.cpus_busy": 1.5173e-05,
+  "runnable.post.cpu_idle": 7.988e-06,
+  "runnable.pub_lock.cpu_idle": 3.4518e-05,
+  "runnable.publish.cpu_idle": 2.0265e-05,
+  "runnable.recv.cpu_idle": 0.037353764,
+  "runnable.recv.cpus_busy": 0.000432016,
+  "runnable.release.cpu_idle": 0.000630778,
+  "runnable.release.cpus_busy": 2.63e-06,
+  "rx.acquiring.cpu_idle": 0.000179615,
+  "rx.acquiring.cpus_busy": 2.2452e-05,
+  "rx.blocked_by_owner.cpu_idle": 0.039692268,
+  "rx.blocked_by_owner.cpus_busy": 1.7433e-05,
+  "rx.handoff_asleep.cpu_idle": 0.019652089,
+  "rx.running_owner_held.cpu_idle": 2.3754e-05,
+  "rx.running_owner_held.cpus_busy": 1.913e-06,
+  "state_lock.blocked": 2.2233e-05,
+  "state_lock.running": 8.2056e-05,
+  "unresolved.clock": 0.00103991,
+  "unresolved.send_bracket": 0.006203195
+ },
+ "no_job_s": {
+  "no_job.Q": 0.036010035,
+  "no_job.R": 0.010762493,
+  "no_job.S": 0.292925356,
+  "no_job.unknown": 0.001271121
+ },
+ "backlog_all_decoding_job_s": 0.386033549,
+ "runnable_cpu_occupants_s": {
+  "idle": 0.212245716,
+  "worker": 0.111515576,
+  "reader": 0.008842536,
+  "scanner": 0.029644542,
+  "foreign": 0.000455598
+ },
+ "coverage": 0.9557523018610325,
+ "sched_coverage": 1.0,
+ "receiver_obstruction_share": 0.02366968924522659,
+ "receiver_obstruction_cpu_idle_share": 0.023661978630371703,
+ "reader": {
+  "publish_to_wakeup": {
+   "n": 118,
+   "sum_ms": 1.907553,
+   "median_us": 10.266
+  },
+  "wakeup_to_running": {
+   "n": 118,
+   "sum_ms": 10.053584,
+   "median_us": 47.556
+  },
+  "running_to_relocked": {
+   "n": 118,
+   "sum_ms": 0.879976,
+   "median_us": 6.963
+  },
+  "relocked_to_taken": {
+   "n": 118,
+   "sum_ms": 0.935225,
+   "median_us": 3.4345
+  },
+  "total": {
+   "n": 118,
+   "sum_ms": 13.776338,
+   "median_us": 72.4185
+  },
+  "unresolved": {
+   "n": 35,
+   "sum_ms": 23.902559,
+   "median_us": 147.557
+  }
+ },
+ "futex": {
+  "channel": {
+   "waits": 161,
+   "addresses": 5,
+   "dominant": "0x5619d1c282e8",
+   "dominant_share": 0.2484472049689441
+  },
+  "scanner.other": {
+   "waits": 3,
+   "addresses": 3,
+   "dominant": "0x5619d1c28a68",
+   "dominant_share": 0.3333333333333333
+  },
+  "receiver_mutex": {
+   "waits": 100,
+   "addresses": 1,
+   "dominant": "0x5619d1c27ac0",
+   "dominant_share": 1.0
+  },
+  "reader.condvar": {
+   "waits": 272,
+   "addresses": 2,
+   "dominant": "0x5619d1c28420",
+   "dominant_share": 0.9963235294117647
+  },
+  "scanner.condvar": {
+   "waits": 305,
+   "addresses": 2,
+   "dominant": "0x5619d1c28420",
+   "dominant_share": 0.9606557377049181
+  },
+  "reader.other": {
+   "waits": 12,
+   "addresses": 2,
+   "dominant": "0x5619d1c28420",
+   "dominant_share": 0.9166666666666666
+  },
+  "decoding": {
+   "waits": 3,
+   "addresses": 2,
+   "dominant": "0x7f84b8000030",
+   "dominant_share": 0.6666666666666666
+  },
+  "state_lock": {
+   "waits": 6,
+   "addresses": 1,
+   "dominant": "0x5619d1c283a0",
+   "dominant_share": 1.0
+  }
+ }
+}
