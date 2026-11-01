@@ -686,11 +686,11 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 Four workers make mibz2 faster, but each decoded byte more expensive. Two experiments to find out why, and why buffer reuse comes first.
 
-1 November 2026 · 9 min read · By the independent researcher · [Research in progress](<#6-where-the-investigation-stands>)
+1 November 2026 · 10 min read · By the independent researcher · [Research in progress](<#6-where-the-investigation-stands>)
 
 Four workers make `mibz2` decompress data much faster than one. But they also make each byte more expensive to decode.
 
-On an Intel i9-10900K, the four-worker decoder consumes 32% more aggregate CPU time per output byte than the one-worker decoder, despite executing almost the same number of instructions. The additional cost is concentrated in inverse BWT, where several workers reconstruct different blocks while sharing the processor's memory hierarchy.
+Measured on four physical cores, the four-worker decoder consumes 32% more aggregate CPU time per output byte than the one-worker decoder, despite executing almost the same number of instructions. The additional cost is concentrated in inverse BWT, where several workers reconstruct different blocks while sharing the processor's memory hierarchy.
 
 We have measured where much of that extra CPU time appears. We have not yet established which physical interaction causes it.
 
@@ -706,7 +706,7 @@ The proposals answer different questions. One tests an available optimization; t
 
 `mibz2` exploits parallelism in two places. It assigns separate bzip2 blocks to different workers, and within each block it follows 32 independent traversal chains through the inverse Burrows–Wheeler transform (BWT).
 
-The second technique is particularly important. Inverse BWT follows a sequence of links through a table called the T-vector. Each entry identifies the next row and the byte to reconstruct. Because the next address depends on the current lookup, a single traversal chain spends much of its time waiting for memory.
+The second technique is particularly important. Inverse BWT follows a sequence of links through a table called the T-vector (an [earlier post](<https://lmmx.github.io/mibz2/blog/2026-10-29-compact-navigation-tables/index.md>) introduces the transform and its table). Each entry identifies the next row and the byte to reconstruct. Because the next address depends on the current lookup, a single traversal chain spends much of its time waiting for memory.
 
 The 32-lane walker hides some of that latency by advancing other chains while one waits. Our earlier article, [32 lanes, 8.6 chains](<https://lmmx.github.io/mibz2/blog/2026-10-31-room-walk-overlap/index.md>), explains the technique.
 
@@ -716,13 +716,15 @@ The performance measurements show why that matters.
 
 The concurrency penalty
 
-Figure 1. The concurrency penalty, measured on four allocated physical cores of an i9-10900K. The left comparison covers the full decoder; the right uses 197 matched full-sized blocks. These are CPU-efficiency measurements, not a comparison of wall-clock throughput.
+Figure 1. The concurrency penalty, measured on four physical cores. The left comparison covers the full decoder; the right uses 197 matched full-sized blocks. These are CPU-efficiency measurements, not a comparison of wall-clock throughput.
+
+The left-hand figures are in CPU-seconds per gigabyte of decoded output (CPU-s/GB): the processor time of all the workers added together, per GB produced. It measures efficiency, not speed. Four workers finish a file much sooner than one, while spending more CPU-seconds on it in total.
 
 The original attribution experiment measured an increase from 2.707 to 3.579 CPU-s/GB. Retired instructions per byte rose by only about 1.3%, while cycles per byte rose by approximately 30%.
 
 In other words, the decoder is doing nearly the same logical work, but spending considerably more processor time doing it.
 
-A subsequent analysis of the archived block traces narrowed the increase further:
+A subsequent analysis of the archived block traces narrowed the increase further, to the four stages each block passes through: move-to-front decoding (MTF), T-vector construction, the traversal with its segment assembly, and the final expansion of repeated-byte runs (RLE1) with the block's checksum (CRC). Section 3 describes what each stage hands to the next.
 
 | Decoding phase | One worker, ns/row | Four workers, ns/row | Increase |
 | --- | --- | --- | --- |
@@ -743,21 +745,21 @@ That is an observational association, not a controlled result. Longer walks may 
 
 The memory counters present several clues, but no unique explanation.
 
-On the i9, data requests leaving L2 remain approximately stable per decoded byte between one and four workers. A mixed outstanding-request residence proxy, however, increases from approximately 39 to 58 cycles per request.
+The number of data requests that miss each core's private caches stays roughly constant per decoded byte between one and four workers. But each request appears to stay outstanding for longer: by an approximate measure that mixes ordinary loads with prefetches, from about 39 processor cycles to about 58.
 
-Memory-controller traffic also rises substantially, especially writes.
+Traffic at the memory controller, between the processor and main memory (DRAM), also rises substantially, especially writes.
 
 One interpretation is that concurrent workers displace each other's T-vector cache lines, forcing more lookups to be served from DRAM.
 
-Another is that requests still reach the shared last-level cache, but queue longer because several cores are accessing it at once.
+Another is that requests still reach the last-level cache (the L3, shared by all the cores), but queue longer because several cores are accessing it at once.
 
-Intermediate-buffer stores may also contribute. Writing output can require cache-line ownership, generate writebacks, displace useful data and occupy hardware resources that loads and prefetches need.
+Intermediate-buffer stores may also contribute. To write a cache line, a core must first take exclusive ownership of it; the modified line must later be written back to memory. Writes can also displace useful data, and occupy hardware resources that loads and prefetches need.
 
 These effects are not independent. A little additional displacement can make prefetches later; later requests can keep hardware resources occupied longer; that can make subsequent requests more expensive.
 
 The existing counters cannot tell us which interaction starts the problem.
 
-For example, `OFFCORE_REQUESTS.ALL_DATA_RD` includes demand and prefetch activity. Its outstanding-request ratio is useful evidence of changed memory behaviour, but it is not a direct measurement of the service latency of an individual T-vector lookup.
+For example, the request-duration measure above counts prefetches together with the T-vector lookups the traversal actually waits for. It is useful evidence that memory behaviour changed, but it is not a direct measurement of how long an individual lookup waited. The [research record](<https://github.com/lmmx/mibz2/blob/docs/bwt-memory-proposal/docs/journal/2026-11-01-bwt-memory-proposal.md>) has the counters in detail.
 
 Nor does a rise in DRAM writes prove that those writes are delaying the traversal. They could be a consequence of the same cache pressure that makes traversal slower.
 
@@ -767,26 +769,34 @@ Astra and Claude independently proposed one experiment of each kind.
 
 ## 3\. Astra's proposal: reuse an intermediate buffer
 
-Astra's experiment concerns an existing, untested research direction called P87.
+Astra's experiment concerns an existing, untested research direction called P87. The name is its entry in our [research register](<https://github.com/lmmx/mibz2/blob/9723f06847b88a10ba93d07c3f35680e58766015/docs/journal/2026-10-30-research-portfolio-register.md>): a list of about 165 ideas for speeding up the decoder, gathered from the project's journals, research branches, issues and pull requests, each recorded with its status and what would test it. P87, "walk output in L's freed buffer", had been recorded there but never run.
 
-The current decoder uses separate byte arrays for the BWT's last column and its reconstructed output:
+To see what it changes, follow one block through the decoder's working buffers. Each worker keeps a few byte buffers that it reuses from block to block. Two of them matter here, and each is named after the data it holds:
+
+1. **`ll` holds the BWT's last column.** Move-to-front (MTF) decoding, the stage before the inverse BWT, turns the block's compressed symbols back into the output of the Burrows–Wheeler transform: the block's bytes, but still in the transform's scrambled order (the last column of its sorted table).
+2. **The T-vector is built from `ll`.** Construction reads each byte of `ll` once, to make the links that undo the transform.
+3. **The traversal writes temporary segments.** Each of the [32 lanes](<https://lmmx.github.io/mibz2/blog/2026-10-31-room-walk-overlap/index.md>) reconstructs a separate stretch of the block, in its original order, into a segment buffer of its own.
+4. **Assembly joins the segments into `rle`.** The pieces are copied, in order, into one contiguous buffer. The block is now back in its original order, except for one last encoding: before the transform, bzip2 shortened each run of four or more identical bytes into a few bytes and a count, and those runs are still in that short form.
+5. **RLE1 expands those runs** into the final decoded bytes, and the block's checksum (CRC) is checked over them.
+
+What each buffer holds
+
+Figure 2. One block through the current decoder. P87 changes where the third stage's bytes are stored, not what those bytes are.
+
+So `ll` and `rle` aren't two algorithms. They are two areas of reusable storage, holding two different representations of the block: `ll` the transformed bytes, which only T-vector construction reads, and `rle` the reconstructed sequence, waiting for its runs to be expanded. In the code they are two fields of each worker's scratch space:
 
 ```rust
-ll: Vec<u8>,   // Last column, produced by MTF
-rle: Vec<u8>,  // Contiguous output of inverse BWT
+ll: Vec<u8>,   // The BWT's last column, written by MTF
+rle: Vec<u8>,  // The assembled sequence, before RLE1 expands its runs
 ```
 
-MTF writes the last column into `ll`. The T-vector builder reads `ll` and constructs the navigation table. The 32-lane walker then uses that table to reconstruct the text into a collection of segment buffers.
+The decoder needs both today because the assembly writes into `rle` while `ll` still exists. But once T-vector construction has finished, the **contents** of `ll` are no longer needed: the segmented traversal reads only the T-vector. Its **storage**, about 0.9 MB for a full block, remains allocated, and the next block's MTF output will fill it again.
 
-Finally, segment assembly copies the completed segments into `rle`, which the RLE1 decoder consumes.
-
-Once T-vector construction has finished, the original contents of `ll` are no longer needed by the ordinary segmented inverse-BWT path.
-
-P87 proposes using that allocation as the assembly destination.
+P87 proposes writing the assembly into that storage instead. The assembled bytes are exactly the same; only where they are written changes. P87 doesn't remove the assembly copy or skip a stage, and it doesn't by itself mean less traffic to main memory. It changes which memory the copy writes into.
 
 The proposed P87 comparison
 
-Figure 2. The proposed P87 comparison. Both arms construct and traverse the same T-vector, produce the same segments and perform the same assembly copy. Only the byte arena receiving that copy differs.
+Figure 3. The proposed P87 comparison. Both arms construct and traverse the same T-vector, produce the same segments and perform the same assembly copy, so the assembled bytes are identical. Only the storage receiving them differs.
 
 The distinction from an ordinary copy-elimination optimization is deliberate.
 
@@ -816,7 +826,7 @@ By the time assembly begins, the intervening traversal may have evicted much of 
 
 The proposed experiment changes those access histories and measures whether the difference matters. It does not assume that one is better.
 
-For the diagnostic, both allocations would remain allocated and prefaulted in both experimental arms. That prevents an apparent benefit from being explained merely by fewer allocations or page faults. A later production implementation could separately test whether the unused arena can be removed to save memory.
+For the diagnostic, both buffers would be allocated at full size, with their memory touched once in advance, in both experimental arms. That prevents an apparent benefit from being explained merely by fewer allocations, or by the operating system mapping fewer fresh pages of memory. A later production implementation could separately test whether the unused arena can be removed to save memory.
 
 ## 4\. Claude's proposal: change the competing workloads
 
@@ -830,7 +840,7 @@ Three neighbouring cores then run one selected type of workload at a time.
 
 One measured walker, three controlled neighbours
 
-Figure 3. Claude's proposed experimental topology. The target is held fixed while the three neighbouring cores run controlled workloads. The diagram shows the shared resources, not an assumption that individual resources can be varied independently.
+Figure 4. Claude's proposed experimental topology. The target is held fixed while the three neighbouring cores run controlled workloads. The diagram shows the shared resources, not an assumption that individual resources can be varied independently.
 
 The neighbour workloads are chosen to exercise different aspects of the memory system.
 
