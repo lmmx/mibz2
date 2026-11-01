@@ -121,9 +121,13 @@ impl<R: Read + Send + 'static> BzReader<R> {
                         break;
                     }
                     buf.truncate(n);
+                    #[cfg(feature = "trace")]
+                    crate::trace::mark(crate::trace::Kind::FeedWrite, crate::trace::NONE);
                     if d.write(buf).is_err() {
                         return;
                     }
+                    #[cfg(feature = "trace")]
+                    crate::trace::mark(crate::trace::Kind::FeedWritten, crate::trace::NONE);
                 }
                 d.close();
             })

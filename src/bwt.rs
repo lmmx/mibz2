@@ -59,6 +59,8 @@ pub struct Plain {
 impl InverseBwt for Plain {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         build(ll, counts, &mut self.tt);
+        #[cfg(feature = "trace")]
+        crate::trace::mark(crate::trace::Kind::WalkStart, crate::trace::NONE);
         walk(&self.tt, orig_ptr, out);
     }
 
@@ -79,6 +81,8 @@ pub struct Segmented {
 impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         build(ll, counts, &mut self.tt);
+        #[cfg(feature = "trace")]
+        crate::trace::mark(crate::trace::Kind::WalkStart, crate::trace::NONE);
         walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
     }
 
@@ -148,6 +152,8 @@ impl<const K: usize> Default for Cooperative<K> {
 impl<const K: usize> InverseBwt for Cooperative<K> {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         build(ll, counts, &mut self.tt);
+        #[cfg(feature = "trace")]
+        crate::trace::mark(crate::trace::Kind::WalkStart, crate::trace::NONE);
         walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
     }
 

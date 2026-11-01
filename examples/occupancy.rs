@@ -74,6 +74,10 @@
 //! the arithmetic alone, without a run. Reserved is `Vec` capacity, RSS is resident pages,
 //! and neither is cache residency.
 //!
+//! **Raw marks** (for an analysis outside this instrument, bench/attribution.py): with
+//! `OCCUPANCY_MARKS_DIR` set, each traced run also writes every thread's marks to
+//! `DIR/rNN-tT-MODE.tsv` (a row a mark: thread, name, time, kind, place, clocks, sizes).
+//!
 //! A trace is used only if complete: every thread's start and end, every block's start
 //! matched by its end (and its inverse BWT inside it), and the blocks decoded, published
 //! and taken the same.
@@ -141,8 +145,8 @@ fn child(a: &[String]) {
     if level > 0 {
         // (the decoder's threads end once it is dropped; its last reference can be the
         // feeder's, so wait for their marks rather than assume them: the plan's workers,
-        // a team's caller each, and the scanner)
-        let want = plan.workers() + 1;
+        // a team's caller each, the scanner, and the feeder, which marks its hand-offs)
+        let want = plan.workers() + 2;
         let deadline = Instant::now() + Duration::from_secs(5);
         while trace::finished() < want && Instant::now() < deadline {
             std::thread::sleep(Duration::from_millis(1));
@@ -150,7 +154,13 @@ fn child(a: &[String]) {
         let got = trace::finished();
         let timeout = (got < want)
             .then(|| format!("collection timeout: {got} of {want} threads' marks at the deadline"));
-        summarise(&trace::take(), plan.workers(), level, timeout, &mut kv);
+        let traces = trace::take();
+        // every mark, raw, for an analysis outside this instrument (OCCUPANCY_MARKS, set
+        // by the parent when it is given OCCUPANCY_MARKS_DIR)
+        if let Ok(path) = std::env::var("OCCUPANCY_MARKS") {
+            dump_marks(&path, &traces);
+        }
+        summarise(&traces, plan.workers(), level, timeout, &mut kv);
         // the decoded bytes the marks sum, against the bytes the reader read: an
         // independent anchor, its remainder shown rather than hidden
         let sum =
@@ -178,6 +188,39 @@ fn child(a: &[String]) {
         let _ = write!(line, " {k}={v}");
     }
     println!("{line}");
+}
+
+/// Every thread's marks as one TSV (a row a mark, in each thread's order): `-` for a
+/// place or clock not read
+fn dump_marks(path: &str, traces: &[ThreadTrace]) {
+    let n = |x: u64| {
+        if x == u64::MAX {
+            "-".to_string()
+        } else {
+            x.to_string()
+        }
+    };
+    let mut s =
+        String::from("thread\tname\tns\tkind\tplace\tcpu_ns\trun_ns\twait_ns\tslices\tlen\tcap\n");
+    for (i, t) in traces.iter().enumerate() {
+        for m in &t.marks {
+            let _ = writeln!(
+                s,
+                "{i}\t{}\t{}\t{:?}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                t.name,
+                m.ns,
+                m.kind,
+                n(m.place),
+                n(m.cpu_ns),
+                n(m.run_ns),
+                n(m.wait_ns),
+                n(m.slices),
+                n(m.len),
+                n(m.cap)
+            );
+        }
+    }
+    std::fs::write(path, s).expect("write the marks (OCCUPANCY_MARKS)");
 }
 
 #[derive(Default)]
@@ -992,6 +1035,9 @@ fn parent(args: &[String]) {
                         }
                         None => Command::new(&exe),
                     };
+                    if let (Ok(dir), true) = (std::env::var("OCCUPANCY_MARKS_DIR"), level > 0) {
+                        cmd.env("OCCUPANCY_MARKS", format!("{dir}/r{r:02}-t{t}-{mode}.tsv"));
+                    }
                     cmd.args([
                         "--child",
                         &file,

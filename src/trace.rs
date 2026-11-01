@@ -6,9 +6,10 @@
 //! - 0, off: each mark is one relaxed atomic load;
 //! - 1, the timeline: each mark a timestamp, its kind and its block's place, pushed to a
 //!   buffer of the thread's own (no lock shared between threads while decoding);
-//! - 2, full: also, at `decode_block`'s start and end only, the thread's CPU time and (on
+//! - 2, full: also, at `decode_block`'s start and end and at its inverse BWT's start, walk
+//!   start and end (`InvertStart`, `WalkStart`, `InvertEnd`), the thread's CPU time and (on
 //!   Linux) its scheduler counters (`/proc/thread-self/schedstat`: time on a CPU, time
-//!   runnable but waiting for one, timeslices), so a block's elapsed time, CPU time and
+//!   runnable but waiting for one, timeslices), so each phase's elapsed time, CPU time and
 //!   run-queue wait cover the same interval.
 //!
 //! A thread's buffer goes to a shared list when the thread ends, and `take` collects them
@@ -67,6 +68,15 @@ pub enum Kind {
     /// length in rows (`len`)
     InvertStart,
     InvertEnd,
+    /// a worker, inside the inverse BWT: the T-vector built, the walk starting (marked by
+    /// the kernels that build then walk: `Segmented`, `Plain`, and `Cooperative`'s one-core
+    /// path)
+    WalkStart,
+    /// the feeder (`BzReader::parallel`'s reader of the compressed input): before it hands
+    /// a chunk to the decoder (`write`, which waits while the channel is full), and once
+    /// the decoder has it; between a `FeedWritten` and the next `FeedWrite` it reads input
+    FeedWrite,
+    FeedWritten,
     /// the scanner: its window once a chunk is appended (`len`: the bytes not yet
     /// released, which it will still read; `cap`: the window's capacity)
     Window,
@@ -84,7 +94,8 @@ pub struct Mark {
     pub kind: Kind,
     pub place: u64,
     /// the thread's CPU time, and its schedstat fields, at the mark: level 2 only, at
-    /// `ThreadStart`, `ThreadEnd`, `DecodeStart` and `DecodeEnd` (else `UNREAD`)
+    /// `ThreadStart`, `ThreadEnd`, `DecodeStart`, `DecodeEnd`, `InvertStart`, `WalkStart`
+    /// and `InvertEnd` (else `UNREAD`)
     pub cpu_ns: u64,
     pub run_ns: u64,
     pub wait_ns: u64,
@@ -232,8 +243,8 @@ thread_local! {
     static BUF: RefCell<Option<Buf>> = const { RefCell::new(None) };
 }
 
-/// A mark on this thread's timeline (nothing at level 0); `DecodeStart` and `DecodeEnd`
-/// also read the clocks at level 2
+/// A mark on this thread's timeline (nothing at level 0); `DecodeStart`, `DecodeEnd`,
+/// `InvertStart`, `WalkStart` and `InvertEnd` also read the clocks at level 2
 #[inline]
 pub fn mark(kind: Kind, place: u64) {
     mark_sized(kind, place, UNREAD, UNREAD);
@@ -246,7 +257,10 @@ pub fn mark_sized(kind: Kind, place: u64, len: u64, cap: u64) {
     if level == 0 {
         return;
     }
-    let clocks = matches!(kind, Kind::DecodeStart | Kind::DecodeEnd);
+    let clocks = matches!(
+        kind,
+        Kind::DecodeStart | Kind::DecodeEnd | Kind::InvertStart | Kind::WalkStart | Kind::InvertEnd
+    );
     // (a thread ending while its buffer is dropped marks nothing more)
     let _ = BUF.try_with(|b| {
         b.borrow_mut()

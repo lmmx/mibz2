@@ -211,3 +211,12 @@ bench-compete *args:
 [positional-arguments]
 bench-pmu-probe *args:
     python3 bench/pmu_probe.py "$@"
+
+# The shipped decoder's one-to-four-worker resource attribution
+# (docs/journal/2026-11-01-decoder-attribution-protocol.md): the occupancy timeline (with
+# trace), counters and samples of the uninstrumented decode, at 1 and 4 workers on four
+# physical cores, on the walk trial's frozen corpora; the registered rules; one archive.
+# The counters need root: it asks for sudo once. ATTR_DRY_RUN=1 checks the machinery only.
+#   just bench-attribution i9-10900K
+bench-attribution label:
+    bash bench/attribution_run.sh {{label}}
