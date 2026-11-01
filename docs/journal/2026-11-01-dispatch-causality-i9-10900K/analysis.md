@@ -191,3 +191,69 @@ about 40 µs, with a long tail.
   explained.
 - **Instrumented runs** add a mark inside the receiver guard. Perturbation stayed within
   1.4%.
+
+## 8. Closure (after the reviews: external reports 113–124)
+
+The investigation is closed. No further dispatch experiment is planned. **Two distinct
+conclusions are preserved, and neither is to be read as the other:**
+
+1. **MPMC receiver replacement failed its registered test.**
+   - Direct receiver obstruction was 1.90% of aggregate worker time, against 5%, and
+     0 of 10 runs reached it.
+   - No MPMC implementation is authorised.
+   - The exploratory receiver-associated share (9.95%) includes runnable time. It is not
+     direct obstruction, and it is not a second criterion.
+2. **Wake-affine placement remains an untested hypothesis.**
+   - The long runnable waits on the waker's CPU, with another allocated CPU idle (§4),
+     are credible evidence of a scheduling interaction.
+   - They do not establish recoverable throughput.
+   - The negative MPMC result is **not** evidence against every dispatch-related
+     improvement.
+
+**For the research register:** *MPMC rejected under the registered direct-obstruction
+criterion; wake-affine placement remains an unresolved, independently testable
+hypothesis.*
+
+**Parked:** MPMC, the split of the condition variable, and worker or thread affinity. If
+affinity is revisited:
+- the whole system (scanner, feeder, reader and workers) must fit the same four physical
+  cores;
+- one worker rigidly pinned per core is not automatically better;
+- success is full-decoder throughput and CPU-s/GB, never wake latency alone.
+
+A fifth core for the scanner changes the hardware budget, so it can't show better
+four-core efficiency.
+
+### The reviewers' exploratory figures, checked against the raw traces
+
+| Figure (the reviews) | Checked | Notes |
+|---|---|---|
+| Runnable in the receiver-acquisition phase, 8.05% of W | **8.05%** (5.65 + 2.40) | `result.json` classes |
+| …of which with an allocated CPU idle, 5.65 points | **5.65** | `runnable.mutex_wait.cpu_idle` |
+| Runnable in the receive phase, 1.06% of W | **1.06%** | |
+| Worker wake-ups matched to their next switch-in, 4,523 | **4,529** | `analysis/wake_occupancy.py`; a second `sched_waking` before the same switch-in is counted once |
+| Median wake-to-run, a CPU idle at the wake / all busy | **39.9 / 10.5 µs** | |
+| Over 100 µs, CPU idle / all busy | **3.7% / 37.6%** (reviews: 37.4%) | |
+| p90 wake-to-run, all busy | **2.41 ms** | |
+| Reader handoffs reconstructed / unresolved | **962 / 331** | §6 |
+| Reader, publication to wake / relock / take | 2.3 / 2.4 / 1.7 ms in all; wake-to-running **134.4 ms** | §6 |
+| Scanner runnable with the window open, during workers' no-job time | **19.2%** of no-job time, so **3.6% of W** | §5 |
+
+**How the two views reconcile:**
+- The reviews split wake-ups by occupancy *at the wake*.
+- §4 measures the long waits that follow: a CPU often goes idle during such a wait, and
+  the waiting worker isn't moved to it.
+- Both hold. The long tail is the waits that start with all four CPUs busy and outlast the
+  moment one of them frees.
+
+**How to read the scanner:**
+- Only the 19.2% with the window open (3.6% of W) is plausibly actionable starvation.
+- Waking the scanner sooner while the window is full (23.2%) may accomplish nothing until
+  a slot is freed.
+
+**What none of these figures shows:**
+- **Runnable but not running is not wasted capacity.** It becomes recoverable only if
+  another allocated CPU was idle *and* a schedule exists that uses it without costing
+  more elsewhere: cache locality, or the scanner and reader's own access to a core.
+- **`target_cpu` equal to the waker's CPU shows where the kernel placed the thread, not
+  why.**

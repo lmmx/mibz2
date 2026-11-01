@@ -1,0 +1,15 @@
+{
+ "an allocated CPU idle": {
+  "n": 2922,
+  "median_us": 39.9,
+  "over_100us": 0.037,
+  "p90_us": 54.3
+ },
+ "all four busy": {
+  "n": 1607,
+  "median_us": 10.5,
+  "over_100us": 0.376,
+  "p90_us": 2409.8
+ },
+ "total": 4529
+}
