@@ -1,0 +1,168 @@
+attribution: label=i9-10900K head=b8cc07010c776c4ffea477fd26ad73ecc4d3df5e pin=68956ca9e65168181dbaca8802a3b37b5b25e601 out=<repo>/target/attribution-results/i9-10900K dry_run=0
+attribution: 23 sources match the frozen hashes
+attribution: rustc 1.97.0 (2d8144b78 2026-07-07); CARGO_TARGET_DIR=<repo>/target
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 14.07s
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 7.62s
+attribution: the trace's phase and feeder tests, and the instrument's, pass
+Preparing worktree (detached HEAD 45b366d)
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling libm v0.2.16
+   Compiling pkg-config v0.3.34
+   Compiling thiserror v2.0.21
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling mibz2 v0.2.1 (<repo>/target/attribution-work/base)
+   Compiling cc v1.10.0
+   Compiling syn v3.0.9
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 12.83s
+same code: yes: 104 mibz2 functions, 32298 instructions
+attribution: 3 corpora match the frozen SHA-256 (<repo>/target/walk-decoder/work/corpora)
+attribution: every corpus decodes to its frozen hash at w = 1 and 4
+attribution: allocation CPUs 1,2,3,4
+attribution: the counters need root (machine-wide memory-controller counts): sudo, once
+attribution: perf = sudo -n perf (perf version 6.8.12)
+events: 18 countable without multiplexing (7 whole groups, 0 alone); unavailable: none; sampled: ['cycles', 'cycle_activity.stalls_l3_miss']
+attribution: the analysis's self-test (synthetic counts) passed
+stat: 240 passes, 0 incomplete (recorded, not interpreted)
+record: 36 sampled runs
+{
+ "primary": "wikidata-20261026",
+ "rules": {
+  "R2": {
+   "cpu_ratio": 1.3223540246954122,
+   "cycles_ratio": 1.300837264892419,
+   "effective_GHz": [
+    4.973902292482499,
+    4.892969154372563
+   ],
+   "share_from_frequency": 0.05871367439847471,
+   "share_from_cycles": 0.9412863256015258,
+   "instructions_ratio": 1.0132034256249582,
+   "clock_explains_two_thirds": false
+  },
+  "R1": {
+   "share": 0.6645657973614463,
+   "share_with_memcpy": 0.7750249614257346,
+   "owners": {
+    "rle_crc": 0.058428200556650635,
+    "memcpy": 0.110459164064288,
+    "feeder": 0.0015569489047861545,
+    "walk": 0.5656378588883229,
+    "scanner": 0.010445516156895656,
+    "worker_other": 0.02143669169379786,
+    "kernel": 0.09445039903139847,
+    "mtf": 0.01109842786796893,
+    "build": 0.0989279384731236,
+    "reader": 0.03512987973688294
+   },
+   "falsified": false,
+   "straddles": false,
+   "cross_check_trace": 0.8324759403926573,
+   "resolved": true
+  },
+  "R3": {
+   "bw_stall_cycles_per_byte_added": 0.16696124425441347,
+   "bw_cycles_per_byte_added": 2.703480820871439,
+   "stall_share_of_added": 0.061757880050576884,
+   "instructions_within_5pct": true,
+   "in_flight": [
+    3.593635336094446,
+    11.245505097607822
+   ],
+   "fb_full": [
+    1.9631255372447571,
+    3.106626427367678
+   ]
+  },
+  "R4": {
+   "scanner_cap_MBps": 3092.957637773993,
+   "throughput_MBps": 869.412515588561,
+   "cap_over_target": 2.371684006780274,
+   "worker_idle_while_scanner_reads": 0.07401061045351921,
+   "binding_for_1_5x": false,
+   "demoted": true
+  },
+  "R5": {
+   "hol_share_of_idle": 0.10381762361689964,
+   "hol_with_a_later_block_ready_share": 0.09850796073822723,
+   "promoted": false
+  },
+  "R6": {
+   "startup_drain_share_of_idle": 0.06889529099359072,
+   "startup_s": 0.0037812892000000002,
+   "drain_s": 0.0031773259,
+   "span_s": 0.2384251338,
+   "rejects_sustained": false
+  },
+  "R7": {
+   "runq_share_of_decoding": 0.02677037192183033,
+   "runq_share_of_unused": 0.08726448556658352,
+   "cores_busy": 3.1386589886610015,
+   "unused_core_s": 0.20542185270000002,
+   "promoted": false
+  },
+  "Q2_account": {
+   "shares": {
+    "startup": 0.04881211005642034,
+    "drain": 0.016011201144379095,
+    "steady.scanner_reading": 0.2327177344350917,
+    "steady.slot_head_of_line": 0.09768159807136627,
+    "steady.slot_reader_binds": 0.19852815851903724,
+    "steady.slot_other": 0.00038172931447706145,
+    "steady.input_wait": 2.6069650349199034e-06,
+    "steady.handoff": 0.3467609701532001,
+    "steady.scanner_done": 0.0,
+    "runq_wait": 0.05910389134099331
+   },
+   "largest": "steady.handoff"
+  },
+  "hypotheses": {
+   "H0": {
+    "status": "not supported",
+    "share": 0.05871367439847471,
+    "question": "Q1"
+   },
+   "H1": {
+    "status": "attribution holds (R1), memory signature not shown (R3)",
+    "share": 0.6645657973614463,
+    "question": "Q1"
+   },
+   "H2": {
+    "status": "not supported (demoted)",
+    "share": 0.2473362704908706,
+    "question": "Q2"
+   },
+   "H3": {
+    "status": "not supported",
+    "share": 0.10381762361689964,
+    "question": "Q2"
+   },
+   "H4": {
+    "status": "not supported",
+    "share": 0.06889529099359072,
+    "question": "Q2"
+   },
+   "H5": {
+    "status": "not supported",
+    "share": 0.08726448556658352,
+    "question": "Q2"
+   }
+  },
+  "ranking_supported": {
+   "Q1": [],
+   "Q2": []
+  }
+ }
+}

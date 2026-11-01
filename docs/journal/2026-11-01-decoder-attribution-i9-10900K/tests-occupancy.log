@@ -1,0 +1,10 @@
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 6.87s
+     Running unittests examples/occupancy.rs (target/release/examples/occupancy-be40e056759926a3)
+
+running 2 tests
+test tests::unbalanced_inverse_is_incomplete ... ok
+test tests::queue_definitions ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,5 @@
+# started on Sun Nov  1 10:55:40 2026
+
+102123625,,idq_uops_not_delivered.core,127166222,100.00,,
+1689277258,,uops_issued.any,127166222,100.00,,
+1426386071,,uops_retired.retire_slots,127166222,100.00,,

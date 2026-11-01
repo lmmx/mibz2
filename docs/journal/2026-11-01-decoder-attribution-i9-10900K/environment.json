@@ -1,0 +1,105 @@
+{
+ "label": "i9-10900K",
+ "allocation": {
+  "alloc": [
+   1,
+   2,
+   3,
+   4
+  ],
+  "idle_siblings": [
+   11,
+   12,
+   13,
+   14
+  ],
+  "cores": [
+   [
+    1,
+    11
+   ],
+   [
+    2,
+    12
+   ],
+   [
+    3,
+    13
+   ],
+   [
+    4,
+    14
+   ]
+  ],
+  "physical_cores_allowed": 10,
+  "includes_cpu0_core": false
+ },
+ "cpus": {
+  "1": {
+   "siblings": "1,11",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "max_khz": "5300000"
+  },
+  "2": {
+   "siblings": "2,12",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "max_khz": "5300000"
+  },
+  "3": {
+   "siblings": "3,13",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "max_khz": "5300000"
+  },
+  "4": {
+   "siblings": "4,14",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "max_khz": "5300000"
+  },
+  "11": {
+   "siblings": "1,11",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "max_khz": "5300000"
+  },
+  "12": {
+   "siblings": "2,12",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "max_khz": "5300000"
+  },
+  "13": {
+   "siblings": "3,13",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "max_khz": "5300000"
+  },
+  "14": {
+   "siblings": "4,14",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "max_khz": "5300000"
+  }
+ },
+ "lscpu": "Architecture:                         x86_64\nCPU op-mode(s):                       32-bit, 64-bit\nAddress sizes:                        39 bits physical, 48 bits virtual\nByte Order:                           Little Endian\nCPU(s):                               20\nOn-line CPU(s) list:                  0-19\nVendor ID:                            GenuineIntel\nModel name:                           Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\nCPU family:                           6\nModel:                                165\nThread(s) per core:                   2\nCore(s) per socket:                   10\nSocket(s):                            1\nStepping:                             5\nCPU(s) scaling MHz:                   54%\nCPU max MHz:                          5300.0000\nCPU min MHz:                          800.0000\nBogoMIPS:                             7399.70\nFlags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp vnmi pku ospke md_clear flush_l1d arch_capabilities\nVirtualisation:                       VT-x\nL1d cache:                            320 KiB (10 instances)\nL1i cache:                            320 KiB (10 instances)\nL2 cache:                             2.5 MiB (10 instances)\nL3 cache:                             20 MiB (1 instance)\nNUMA node(s):                         1\nNUMA node0 CPU(s):                    0-19\nVulnerability Gather data sampling:   Mitigation; Microcode\nVulnerability Itlb multihit:          KVM: Mitigation: VMX disabled\nVulnerability L1tf:                   Not affected\nVulnerability Mds:                    Not affected\nVulnerability Meltdown:               Not affected\nVulnerability Mmio stale data:        Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Reg file data sampling: Not affected\nVulnerability Retbleed:               Mitigation; Enhanced IBRS\nVulnerability Spec rstack overflow:   Not affected\nVulnerability Spec store bypass:      Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:             Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:             Mitigation; Enhanced / Automatic IBRS; IBPB conditional; RSB filling; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop\nVulnerability Srbds:                  Mitigation; Microcode\nVulnerability Tsx async abort:        Not affected",
+ "topology": "CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE    MAXMHZ   MINMHZ       MHZ\n  0    0      0    0 0:0:0:0          yes 5300.0000 800.0000 4900.1792\n  1    0      0    1 1:1:1:0          yes 5300.0000 800.0000 4900.0210\n  2    0      0    2 2:2:2:0          yes 5300.0000 800.0000  800.0000\n  3    0      0    3 3:3:3:0          yes 5300.0000 800.0000 4900.0239\n  4    0      0    4 4:4:4:0          yes 5300.0000 800.0000 4900.3730\n  5    0      0    5 5:5:5:0          yes 5300.0000 800.0000 4902.1558\n  6    0      0    6 6:6:6:0          yes 5300.0000 800.0000  800.0000\n  7    0      0    7 7:7:7:0          yes 5300.0000 800.0000  800.0000\n  8    0      0    8 8:8:8:0          yes 5300.0000 800.0000  800.0000\n  9    0      0    9 9:9:9:0          yes 5300.0000 800.0000  800.0000\n 10    0      0    0 0:0:0:0          yes 5300.0000 800.0000 4900.6660\n 11    0      0    1 1:1:1:0          yes 5300.0000 800.0000  800.0000\n 12    0      0    2 2:2:2:0          yes 5300.0000 800.0000 4900.0142\n 13    0      0    3 3:3:3:0          yes 5300.0000 800.0000 4900.3711\n 14    0      0    4 4:4:4:0          yes 5300.0000 800.0000  800.0000\n 15    0      0    5 5:5:5:0          yes 5300.0000 800.0000  800.0000\n 16    0      0    6 6:6:6:0          yes 5300.0000 800.0000  800.0000\n 17    0      0    7 7:7:7:0          yes 5300.0000 800.0000 4900.1172\n 18    0      0    8 8:8:8:0          yes 5300.0000 800.0000  800.0000\n 19    0      0    9 9:9:9:0          yes 5300.0000 800.0000  800.0000",
+ "smt_control": "on",
+ "intel_no_turbo": "0",
+ "nmi_watchdog": "1",
+ "perf_event_paranoid": "4",
+ "kernel": {
+  "system": "Linux",
+  "node": "louis-3xs",
+  "release": "6.8.0-57-generic",
+  "version": "#59-Ubuntu SMP PREEMPT_DYNAMIC Sat Mar 15 17:40:59 UTC 2025",
+  "machine": "x86_64",
+  "processor": "x86_64"
+ },
+ "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)\nbinary: rustc\ncommit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3\ncommit-date: 2026-07-07\nhost: x86_64-unknown-linux-gnu\nrelease: 1.97.0\nLLVM version: 22.1.6",
+ "head": "b8cc07010c776c4ffea477fd26ad73ecc4d3df5e",
+ "loadavg": "1.52 0.94 0.92 1/1175 752871",
+ "ps": "PID PSR %CPU\n 752857   4 33.3\n 517062  17 26.5\n   1423  17  4.1\n 715703  14  2.3\n   2570   1  1.2\n 517417  11  1.0\n 636991   9  1.0\n 637069   3  0.4\n   3219  19  0.2\n 517228   6  0.1\n   2636   4  0.1\n    776  16  0.1\n 517306   6  0.0\n   1398   5  0.0\n   2912  19  0.0\n   2156  14  0.0\n 517166   3  0.0\n 517137   8  0.0\n   2152  14  0.0\n 751650   6  0.0\n 751731   2  0.0\n     17  13  0.0\n   2945  13  0.0\n 750379   7  0.0\n 751485   8  0.0\n   1057  18  0.0\n   2651   6  0.0\n   2428   3  0.0\n 751863   2  0.0\n   1676  13  0.0\n 750127   6  0.0\n   1065  17  0.0\n   1186  18  0.0\n 517134  17  0.0\n   9059   4  0.0\n 716332   9  0.0\n    422   7  0.0\n 750126  18  0.0\n   1092   0  0.0\n   1096   6  0.0\n   2489   4  0.0\n   1099  14  0.0\n 736219   2  0.0\n   2958   0  0.0\n   1097   6  0.0\n   2555   9  0.0\n 701545   0  0.0\n   2917  10  0.0\n   2429  14  0.0\n   1060   4  0.0\n   1699  15  0.0\n   1685   8  0.0\n   2509   8  0.0\n    146   3  0.0\n   2632  17  0.0\n   2642   5  0.0\n   2403  13  0.0\n   1046  18  0.0\n   2419  18  0.0\n   2163  12  0.0\n      1  17  0.0\n   2398  14  0.0\n   1634  18  0.0\n   1080   7  0.0\n   2395  15  0.0\n 605698   4  0.0\n    855  11  0.0\n   1055  15  0.0\n 716193   3  0.0\n    857   8  0.0\n    859  10  0.0\n    854   5  0.0\n 717715  10  0.0\n 716329  17  0.0\n 716326  13  0.0\n 716322   8  0.0\n 716673  15  0.0\n    484   5  0.0\n 638771  19  0.0\n 716325  12  0.0\n 716321   7  0.0\n 716324  11  0.0\n    514   3  0.0\n   2760   9  0.0\n 716204  15  0.0\n   2777  15  0.0\n     30   2  0.0\n 697700   1  0.0\n   2525  13  0.0\n   2154  18  0.0\n   1565   2  0.0\n   2624   2  0.0\n   3189   2  0.0\n 715760  10  0.0\n   2496   6  0.0\n 517176   0  0.0\n 638849   7  0.0\n     16   0  0.0\n 671714   9  0.0\n 637220   5  0.0\n   3142  10  0.0\n     71   9  0.0\n    113  16  0.0\n     65   8  0.0\n     47   5  0.0\n     53   6  0.0\n    131  19  0.0\n     59   7  0.0\n 636533  16  0.0\n     23   1  0.0\n     35   3  0.0\n 637887  14  0.0\n     41   4  0.0\n    119  17  0.0\n    125  18  0.0\n     29   2  0.0\n    107  15  0.0\n    101  14  0.0\n   1095  13  0.0\n     95  13  0.0\n     89  12  0.0\n     83  11  0.0\n     77  10  0.0\n   2408   5  0.0\n 631701   7  0.0\n   2606  16  0.0\n   2625  11  0.0\n   2404   4  0.0\n     18   0  0.0\n   2650  12  0.0\n   2430   4  0.0\n   1198   1  0.0\n   2623  19  0.0\n   1047   5  0.0\n   2396   4  0.0\n   2415  15  0.0\n   6116   1  0.0\n     24   1  0.0\n 716064  11  0.0\n   1256   8  0.0\n   2188  19  0.0\n   2534   5  0.0\n     90  12  0.0\n   2936  19  0.0\n   2467  15  0.0\n   2132  19  0.0\n     42   4  0.0\n   2158  10  0.0\n   6126   8  0.0\n   2922   5  0.0\n     36   3  0.0\n     66   8  0.0\n   2963  16  0.0\n   2439  18  0.0\n    132  19  0.0\n    142  19  0.0\n  10122   2  0.0\n    102  14  0.0\n     54   6  0.0\n     72   9  0.0\n    287  10  0.0\n    237   0  0.0\n    114  16  0.0\n    126  18  0.0\n     48   5  0.0\n    120  17  0.0\n     96  13  0.0\n    274   2  0.0\n    258  19  0.0\n 638846   8  0.0\n    291  11  0.0\n    277   9  0.0\n    162   1  0.0\n    108  15  0.0\n     60   7  0.0\n     78  10  0.0\n     84  11  0.0\n   1059   5  0.0\n    275  13  0.0\n    276  12  0.0\n    292  14  0.0\n    259  18  0.0\n 637898  11  0.0\n    288   7  0.0\n    290   6  0.0\n    293   4  0.0\n    281   8  0.0\n    241  17  0.0\n    285  15  0.0\n   2926  12  0.0\n    286  16  0.0\n   6134   6  0.0\n    289   5  0.0\n    284   3  0.0\n 637223  12  0.0\n   2855   1  0.0\n    779  16  0.0\n 517133   3  0.0\n   1250   7  0.0\n 517275  18  0.0\n    148  18  0.0\n  32092  10  0.0\n   2727  17  0.0\n   2559  12  0.0\n   1406   2  0.0\n      2  15  0.0\n   2488   6  0.0\n   2427   2  0.0\n   1643  18  0.0\n    315   2  0.0\n   2541   8  0.0\n   2520   7  0.0\n   2515   6  0.0\n   2409   6  0.0\n   2410  17  0.0\n   2397  13  0.0\n     21   1  0.0\n      3   0  0.0\n      4   0  0.0\n      5   0  0.0\n      6   0  0.0\n      7   0  0.0\n      9   0  0.0\n     12   0  0.0\n     13   0  0.0\n     14   0  0.0\n     15   0  0.0\n     19   0  0.0\n     20   0  0.0\n     22   1  0.0\n     26   1  0.0\n     27   2  0.0\n     28   2  0.0\n     32   2  0.0\n     33   3  0.0\n     34   3  0.0\n     38   3  0.0\n     39   4  0.0\n     40   4  0.0\n     44   4  0.0\n     45   5  0.0\n     46   5  0.0\n     50   5  0.0\n     51   6  0.0\n     52   6  0.0\n     56   6  0.0\n     57   7  0.0\n     58   7  0.0\n     62   7  0.0\n     63   8  0.0\n     64   8  0.0\n     68   8  0.0\n     69   9  0.0\n     70   9  0.0\n     74   9  0.0\n     75  10  0.0\n     76  10  0.0\n     80  10  0.0\n     81  11  0.0\n     82  11  0.0\n     86  11  0.0\n     87  12  0.0\n     88  12  0.0\n     92  12  0.0\n     93  13  0.0\n     94  13  0.0\n     98  13  0.0\n     99  14  0.0\n    100  14  0.0\n    104  14  0.0\n    105  15  0.0\n    106  15  0.0\n    110  15  0.0\n    111  16  0.0\n    112  16  0.0\n    116  16  0.0\n    117  17  0.0\n    118  17  0.0\n    122  17  0.0\n    123  18  0.0\n    124  18  0.0\n    128  18  0.0\n    129  19  0.0\n    130  19  0.0\n    134  19  0.0\n    135   0  0.0\n    136   2  0.0\n    138   7  0.0\n    144  12  0.0\n    145  14  0.0\n    147   5  0.0\n    149   7  0.0\n    150   6  0.0\n    151   7  0.0\n    152   0  0.0\n    154   8  0.0\n    155   9  0.0\n    156   5  0.0\n    157   6  0.0\n    158   7  0.0\n    159  13  0.0\n    160  12  0.0\n    163  12  0.0\n    164  14  0.0\n    165  18  0.0\n    166   2  0.0\n    167   5  0.0\n    168   5  0.0\n    169   6  0.0\n    170   6  0.0\n    171  19  0.0\n    173  15  0.0\n    174  16  0.0\n    181  14  0.0\n    194  17  0.0\n    199  18  0.0\n    211   1  0.0\n    305  12  0.0\n    306  12  0.0\n    307   4  0.0\n    308   3  0.0\n    313   4  0.0\n    314   6  0.0\n    316  17  0.0\n    317  10  0.0\n    318   1  0.0\n    319   0  0.0\n    320  10  0.0\n    321   5  0.0\n    322   6  0.0\n    323   1  0.0\n    324   6  0.0\n    375  19  0.0\n    423   1  0.0\n    544  11  0.0\n    734  16  0.0\n    772  18  0.0\n    773  12  0.0\n    774  10  0.0\n    777  11  0.0\n    781   5  0.0\n    834   5  0.0\n    835   5  0.0\n    836  13  0.0\n    848   2  0.0\n    849  18  0.0\n    850   4  0.0\n    851   1  0.0\n    852   6  0.0\n    853   7  0.0\n    856   1  0.0\n    858   3  0.0\n   1087   2  0.0\n   1094  12  0.0\n   1134   5  0.0\n   1386  13  0.0\n   1408  11  0.0\n   1426   4  0.0\n   1514   4  0.0\n   2134   7  0.0\n   2153  12  0.0\n   2411   5  0.0\n   2476   4  0.0\n   2593  17  0.0\n   2630  16  0.0\n   2797  10  0.0\n   2866  16  0.0\n   2933  17  0.0\n   2956   1  0.0\n 517069  12  0.0\n 517217   5  0.0\n 517513   8  0.0\n 638939  16  0.0\n 701544  17  0.0\n 715785   8  0.0\n 716318   0  0.0\n 716319   5  0.0\n 716320   4  0.0\n 716323  10  0.0\n 716327  14  0.0\n 716338   1  0.0\n 716374   5  0.0\n 716451  13  0.0\n 717033   3  0.0\n 750165   1  0.0\n 750303   2  0.0\n 750385  15  0.0\n 750391  16  0.0\n 750396  18  0.0\n 750449  19  0.0\n 750451   6  0.0\n 750539  13  0.0\n 751797  18  0.0\n 751804   2  0.0\n 751806   7  0.0\n 751939   8  0.0\n 751941  13  0.0\n 751942   5  0.0\n 751950  16  0.0\n 752872  16  0.0"
+}

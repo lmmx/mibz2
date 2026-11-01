@@ -1,0 +1,5 @@
+# started on Sun Nov  1 10:55:41 2026
+
+86289133,,l1d_pend_miss.pending,100279780,100.00,,
+37158576,,l1d_pend_miss.pending_cycles,100279780,100.00,,
+17640129,,l1d_pend_miss.fb_full,100279780,100.00,,

@@ -1,0 +1,9 @@
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 10.82s
+     Running tests/trace_phases.rs (target/release/deps/trace_phases-dd10688411d1a52c)
+
+running 1 test
+test phase_and_feeder_marks ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+

@@ -1,0 +1,196 @@
+{
+ "runs": [
+  {
+   "corpus": "wikidata-20261026",
+   "w": 1,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.09428284599562176,
+   "shares": {
+    "build": 0.1375,
+    "walk": 0.4125,
+    "mtf": 0.225,
+    "memcpy": 0.045,
+    "scanner": 0.135,
+    "reader": 0.045
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.094439937005518,
+   "shares": {
+    "build": 0.2,
+    "walk": 0.6,
+    "mtf": 0.1,
+    "memcpy": 0.02,
+    "scanner": 0.06,
+    "reader": 0.02
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 4,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.062337281997315586,
+   "shares": {
+    "build": 0.175,
+    "walk": 0.525,
+    "mtf": 0.15,
+    "memcpy": 0.03,
+    "scanner": 0.09,
+    "reader": 0.03
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.06214557998464443,
+   "shares": {
+    "build": 0.225,
+    "walk": 0.675,
+    "mtf": 0.05,
+    "memcpy": 0.01,
+    "scanner": 0.03,
+    "reader": 0.01
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 1,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.09532920099445619,
+   "shares": {
+    "build": 0.1375,
+    "walk": 0.4125,
+    "mtf": 0.225,
+    "memcpy": 0.045,
+    "scanner": 0.135,
+    "reader": 0.045
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.09304458199767396,
+   "shares": {
+    "build": 0.2,
+    "walk": 0.6,
+    "mtf": 0.1,
+    "memcpy": 0.02,
+    "scanner": 0.06,
+    "reader": 0.02
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 4,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.06485136999981478,
+   "shares": {
+    "build": 0.175,
+    "walk": 0.525,
+    "mtf": 0.15,
+    "memcpy": 0.03,
+    "scanner": 0.09,
+    "reader": 0.03
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.06677719499566592,
+   "shares": {
+    "build": 0.225,
+    "walk": 0.675,
+    "mtf": 0.05,
+    "memcpy": 0.01,
+    "scanner": 0.03,
+    "reader": 0.01
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 1,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.09716187498997897,
+   "shares": {
+    "build": 0.1375,
+    "walk": 0.4125,
+    "mtf": 0.225,
+    "memcpy": 0.045,
+    "scanner": 0.135,
+    "reader": 0.045
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.09494213000289164,
+   "shares": {
+    "build": 0.2,
+    "walk": 0.6,
+    "mtf": 0.1,
+    "memcpy": 0.02,
+    "scanner": 0.06,
+    "reader": 0.02
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 4,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.06242072200984694,
+   "shares": {
+    "build": 0.175,
+    "walk": 0.525,
+    "mtf": 0.15,
+    "memcpy": 0.03,
+    "scanner": 0.09,
+    "reader": 0.03
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 0.06297012898721732,
+   "shares": {
+    "build": 0.225,
+    "walk": 0.675,
+    "mtf": 0.05,
+    "memcpy": 0.01,
+    "scanner": 0.03,
+    "reader": 0.01
+   }
+  }
+ ]
+}

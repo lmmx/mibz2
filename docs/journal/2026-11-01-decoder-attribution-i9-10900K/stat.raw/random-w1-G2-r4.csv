@@ -1,0 +1,4 @@
+# started on Sun Nov  1 10:55:52 2026
+
+25430,,mem_load_retired.l3_miss,100120195,100.00,,
+288343,,mem_load_retired.l3_hit,100120195,100.00,,

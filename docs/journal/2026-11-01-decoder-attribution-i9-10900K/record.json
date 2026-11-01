@@ -1,0 +1,697 @@
+{
+ "runs": [
+  {
+   "corpus": "wikidata-20261026",
+   "w": 1,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.2749770359951071,
+   "shares": {
+    "walk": 0.43179999999999996,
+    "build": 0.1766,
+    "mtf": 0.16149999999999998,
+    "scanner": 0.11440000000000004,
+    "rle_crc": 0.044700000000000004,
+    "memcpy": 0.0317,
+    "reader": 0.017099999999999994,
+    "feeder": 0.0071,
+    "worker_other": 0.0014000000000000002,
+    "kernel": 0.012599999999999997
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 1,
+   "event": "cycles",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.2679317670117598,
+   "shares": {
+    "walk": 0.43520000000000003,
+    "build": 0.17809999999999998,
+    "mtf": 0.1624,
+    "scanner": 0.11250000000000004,
+    "rle_crc": 0.047700000000000006,
+    "memcpy": 0.0292,
+    "reader": 0.015599999999999996,
+    "feeder": 0.0071,
+    "worker_other": 0.0021000000000000003,
+    "kernel": 0.0098
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 1,
+   "event": "cycles",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.2625394109927583,
+   "shares": {
+    "walk": 0.4279,
+    "build": 0.1796,
+    "mtf": 0.1512,
+    "scanner": 0.11210000000000009,
+    "rle_crc": 0.0554,
+    "memcpy": 0.0305,
+    "reader": 0.016899999999999995,
+    "worker_other": 0.0042,
+    "feeder": 0.007700000000000001,
+    "kernel": 0.013999999999999995
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.2648878729960416,
+   "shares": {
+    "memcpy": 0.1782,
+    "feeder": 0.24750000000000003,
+    "scanner": 0.3267,
+    "reader": 0.16829999999999998,
+    "rle_crc": 0.039599999999999996,
+    "kernel": 0.039599999999999996
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.268729292001808,
+   "shares": {
+    "feeder": 0.23579999999999995,
+    "memcpy": 0.14150000000000001,
+    "scanner": 0.2828,
+    "rle_crc": 0.0943,
+    "reader": 0.16959999999999995,
+    "build": 0.009399999999999999,
+    "mtf": 0.009399999999999999,
+    "worker_other": 0.009399999999999999,
+    "kernel": 0.04699999999999999
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.2668617799936328,
+   "shares": {
+    "feeder": 0.2264,
+    "scanner": 0.3113000000000001,
+    "memcpy": 0.0943,
+    "reader": 0.18849999999999995,
+    "rle_crc": 0.0944,
+    "mtf": 0.028300000000000002,
+    "kernel": 0.0377,
+    "worker_other": 0.0189
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 4,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.264808890002314,
+   "shares": {
+    "walk": 0.4643,
+    "scanner": 0.08840000000000006,
+    "build": 0.1573,
+    "mtf": 0.12439999999999998,
+    "memcpy": 0.051199999999999996,
+    "reader": 0.018,
+    "rle_crc": 0.053700000000000005,
+    "feeder": 0.0057,
+    "kernel": 0.03640000000000002,
+    "worker_other": 0.005999999999999999
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 4,
+   "event": "cycles",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.260841076989891,
+   "shares": {
+    "walk": 0.466,
+    "scanner": 0.08499999999999999,
+    "build": 0.1585,
+    "mtf": 0.12610000000000002,
+    "reader": 0.021400000000000006,
+    "rle_crc": 0.049300000000000004,
+    "memcpy": 0.0455,
+    "feeder": 0.005700000000000002,
+    "kernel": 0.03350000000000002,
+    "worker_other": 0.0046
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 4,
+   "event": "cycles",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.263879754988011,
+   "shares": {
+    "walk": 0.46259999999999996,
+    "scanner": 0.09060000000000006,
+    "build": 0.16060000000000002,
+    "mtf": 0.1169,
+    "reader": 0.0238,
+    "memcpy": 0.0532,
+    "rle_crc": 0.05149999999999999,
+    "worker_other": 0.0109,
+    "kernel": 0.026699999999999995,
+    "feeder": 0.0063
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.2684502910124138,
+   "shares": {
+    "memcpy": 0.4434,
+    "reader": 0.11819999999999994,
+    "build": 0.12140000000000001,
+    "rle_crc": 0.09760000000000002,
+    "scanner": 0.04990000000000004,
+    "feeder": 0.022799999999999997,
+    "walk": 0.033,
+    "kernel": 0.06970000000000004,
+    "mtf": 0.0186,
+    "worker_other": 0.019899999999999994
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.2653688160062302,
+   "shares": {
+    "memcpy": 0.4353,
+    "reader": 0.14520000000000016,
+    "build": 0.10300000000000001,
+    "rle_crc": 0.0946,
+    "scanner": 0.04639999999999998,
+    "feeder": 0.0223,
+    "walk": 0.042699999999999995,
+    "mtf": 0.018000000000000002,
+    "kernel": 0.07539999999999993,
+    "worker_other": 0.02310000000000001
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.265534365986241,
+   "shares": {
+    "memcpy": 0.4353,
+    "reader": 0.1330000000000001,
+    "build": 0.09870000000000001,
+    "rle_crc": 0.1006,
+    "scanner": 0.05239999999999998,
+    "walk": 0.04699999999999999,
+    "feeder": 0.026600000000000006,
+    "kernel": 0.0812999999999999,
+    "mtf": 0.0129,
+    "worker_other": 0.0175
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 1,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.2578723740007263,
+   "shares": {
+    "mtf": 0.276,
+    "scanner": 0.2821999999999999,
+    "memcpy": 0.1883,
+    "walk": 0.0909,
+    "build": 0.08439999999999999,
+    "reader": 0.0161,
+    "kernel": 0.032100000000000004,
+    "rle_crc": 0.0032,
+    "worker_other": 0.0032,
+    "feeder": 0.022400000000000003
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 1,
+   "event": "cycles",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.2681384379975498,
+   "shares": {
+    "mtf": 0.239,
+    "scanner": 0.2734,
+    "memcpy": 0.2075,
+    "walk": 0.0975,
+    "build": 0.08810000000000001,
+    "reader": 0.0187,
+    "rle_crc": 0.0063,
+    "feeder": 0.025099999999999997,
+    "worker_other": 0.0093,
+    "kernel": 0.03409999999999999
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 1,
+   "event": "cycles",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.262365056987619,
+   "shares": {
+    "mtf": 0.2516,
+    "scanner": 0.27009999999999995,
+    "memcpy": 0.177,
+    "build": 0.1211,
+    "walk": 0.087,
+    "rle_crc": 0.0217,
+    "reader": 0.0186,
+    "worker_other": 0.0031,
+    "kernel": 0.024799999999999996,
+    "feeder": 0.024799999999999996
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.2622574660053942,
+   "shares": {
+    "feeder": 0.30879999999999996,
+    "scanner": 0.3675,
+    "reader": 0.17639999999999997,
+    "mtf": 0.0588,
+    "memcpy": 0.0294,
+    "build": 0.0147,
+    "kernel": 0.0441
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.2616550090024248,
+   "shares": {
+    "feeder": 0.325,
+    "scanner": 0.2875,
+    "reader": 0.2375000000000001,
+    "mtf": 0.0375,
+    "build": 0.025,
+    "walk": 0.0125,
+    "rle_crc": 0.025,
+    "memcpy": 0.0125,
+    "kernel": 0.037500000000000006
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.2678361739963293,
+   "shares": {
+    "reader": 0.2672,
+    "feeder": 0.24419999999999997,
+    "scanner": 0.30229999999999996,
+    "mtf": 0.0698,
+    "build": 0.0349,
+    "memcpy": 0.0233,
+    "kernel": 0.0465,
+    "rle_crc": 0.0116
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 4,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.261346710001817,
+   "shares": {
+    "scanner": 0.2574000000000001,
+    "mtf": 0.2069,
+    "memcpy": 0.2012,
+    "walk": 0.102,
+    "build": 0.1021,
+    "reader": 0.025300000000000003,
+    "feeder": 0.025400000000000002,
+    "rle_crc": 0.0085,
+    "kernel": 0.06729999999999997,
+    "worker_other": 0.0028000000000000004
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 4,
+   "event": "cycles",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.2625375599891413,
+   "shares": {
+    "scanner": 0.2568000000000001,
+    "mtf": 0.2033,
+    "memcpy": 0.2005,
+    "walk": 0.1102,
+    "build": 0.10729999999999999,
+    "feeder": 0.0225,
+    "rle_crc": 0.011200000000000002,
+    "kernel": 0.05319999999999998,
+    "reader": 0.028000000000000004,
+    "worker_other": 0.005600000000000001
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 4,
+   "event": "cycles",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.2627293280093,
+   "shares": {
+    "scanner": 0.2553,
+    "mtf": 0.23569999999999997,
+    "memcpy": 0.18180000000000002,
+    "build": 0.1022,
+    "walk": 0.0937,
+    "reader": 0.028100000000000003,
+    "rle_crc": 0.011300000000000001,
+    "kernel": 0.06459999999999998,
+    "feeder": 0.022500000000000003,
+    "worker_other": 0.0028000000000000004
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.26503966000746,
+   "shares": {
+    "reader": 0.26450000000000007,
+    "build": 0.316,
+    "feeder": 0.11399999999999998,
+    "scanner": 0.14,
+    "kernel": 0.07259999999999998,
+    "mtf": 0.0363,
+    "walk": 0.0156,
+    "worker_other": 0.0208,
+    "memcpy": 0.0208
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.2642109120206442,
+   "shares": {
+    "build": 0.32439999999999997,
+    "reader": 0.17289999999999994,
+    "feeder": 0.12430000000000002,
+    "scanner": 0.1566,
+    "kernel": 0.10800000000000003,
+    "memcpy": 0.048600000000000004,
+    "mtf": 0.032400000000000005,
+    "walk": 0.0054,
+    "worker_other": 0.0108,
+    "rle_crc": 0.0162
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.259839908016147,
+   "shares": {
+    "reader": 0.22380000000000008,
+    "build": 0.3177,
+    "feeder": 0.10929999999999998,
+    "scanner": 0.1458,
+    "kernel": 0.11959999999999997,
+    "mtf": 0.026,
+    "walk": 0.0156,
+    "memcpy": 0.0312,
+    "worker_other": 0.0104
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 1,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.2594187809736468,
+   "shares": {
+    "mtf": 0.2932,
+    "scanner": 0.29300000000000004,
+    "memcpy": 0.14859999999999998,
+    "walk": 0.10039999999999999,
+    "build": 0.07629999999999999,
+    "kernel": 0.04000000000000001,
+    "reader": 0.02,
+    "rle_crc": 0.004,
+    "feeder": 0.024
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 1,
+   "event": "cycles",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.263989240018418,
+   "shares": {
+    "mtf": 0.2789,
+    "scanner": 0.28700000000000003,
+    "memcpy": 0.1673,
+    "build": 0.09960000000000001,
+    "walk": 0.0876,
+    "feeder": 0.02,
+    "reader": 0.024,
+    "rle_crc": 0.004,
+    "kernel": 0.032
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 1,
+   "event": "cycles",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.2652330709970556,
+   "shares": {
+    "mtf": 0.2948,
+    "scanner": 0.28690000000000004,
+    "memcpy": 0.1474,
+    "walk": 0.09960000000000001,
+    "build": 0.0876,
+    "rle_crc": 0.012,
+    "reader": 0.02,
+    "worker_other": 0.004,
+    "kernel": 0.024,
+    "feeder": 0.024
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.2624953939812258,
+   "shares": {
+    "reader": 0.32349999999999995,
+    "feeder": 0.2646,
+    "memcpy": 0.0588,
+    "scanner": 0.2646,
+    "build": 0.0441,
+    "kernel": 0.0294,
+    "worker_other": 0.0147
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.2657745410106145,
+   "shares": {
+    "feeder": 0.30490000000000006,
+    "reader": 0.2539,
+    "scanner": 0.28780000000000006,
+    "mtf": 0.0678,
+    "kernel": 0.0508,
+    "build": 0.0339
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 1,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.2626898469752632,
+   "shares": {
+    "reader": 0.3000999999999999,
+    "feeder": 0.22860000000000003,
+    "kernel": 0.1286,
+    "mtf": 0.0571,
+    "scanner": 0.22850000000000004,
+    "build": 0.0286,
+    "rle_crc": 0.0143,
+    "memcpy": 0.0143
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 4,
+   "event": "cycles",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.2618847569974605,
+   "shares": {
+    "scanner": 0.26230000000000003,
+    "mtf": 0.2551,
+    "memcpy": 0.1295,
+    "walk": 0.0945,
+    "build": 0.1015,
+    "reader": 0.038500000000000006,
+    "kernel": 0.07700000000000004,
+    "feeder": 0.020999999999999998,
+    "worker_other": 0.013999999999999999,
+    "rle_crc": 0.006999999999999999
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 4,
+   "event": "cycles",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.264656343992101,
+   "shares": {
+    "scanner": 0.2648,
+    "mtf": 0.2932,
+    "walk": 0.1096,
+    "build": 0.09540000000000001,
+    "memcpy": 0.099,
+    "feeder": 0.021099999999999997,
+    "reader": 0.031599999999999996,
+    "kernel": 0.08090000000000004,
+    "worker_other": 0.0034999999999999996
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 4,
+   "event": "cycles",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.2654741909937002,
+   "shares": {
+    "scanner": 0.2648,
+    "mtf": 0.2545,
+    "walk": 0.11660000000000001,
+    "build": 0.099,
+    "memcpy": 0.1343,
+    "reader": 0.035199999999999995,
+    "kernel": 0.05970000000000002,
+    "feeder": 0.0212,
+    "rle_crc": 0.006999999999999999,
+    "worker_other": 0.006999999999999999
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 0,
+   "rc": 0,
+   "wall_s": 1.2588963099988177,
+   "shares": {
+    "reader": 0.2025000000000001,
+    "build": 0.34059999999999996,
+    "kernel": 0.1156,
+    "feeder": 0.1159,
+    "scanner": 0.12299999999999998,
+    "memcpy": 0.043399999999999994,
+    "mtf": 0.0216,
+    "rle_crc": 0.0216,
+    "walk": 0.0072,
+    "worker_other": 0.0072
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 1,
+   "rc": 0,
+   "wall_s": 1.2600997349945828,
+   "shares": {
+    "reader": 0.24429999999999993,
+    "build": 0.3408,
+    "feeder": 0.1184,
+    "scanner": 0.1332,
+    "memcpy": 0.037000000000000005,
+    "kernel": 0.07400000000000001,
+    "worker_other": 0.0074,
+    "mtf": 0.0296,
+    "walk": 0.0074,
+    "rle_crc": 0.0074
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 4,
+   "event": "cycle_activity.stalls_l3_miss",
+   "rep": 2,
+   "rc": 0,
+   "wall_s": 1.2612979270052165,
+   "shares": {
+    "reader": 0.22320000000000007,
+    "build": 0.37689999999999996,
+    "feeder": 0.1231,
+    "scanner": 0.1463,
+    "kernel": 0.0462,
+    "mtf": 0.023100000000000002,
+    "memcpy": 0.0308,
+    "worker_other": 0.0077,
+    "walk": 0.0077,
+    "rle_crc": 0.0154
+   }
+  }
+ ]
+}

@@ -1,0 +1,50 @@
+{
+ "machine": "Architecture:                         x86_64\nCPU op-mode(s):                       32-bit, 64-bit\nAddress sizes:                        39 bits physical, 48 bits virtual\nByte Order:                           Little Endian\nCPU(s):                               20\nOn-line CPU(s) list:                  0-19\nVendor ID:                            GenuineIntel\nModel name:                           Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\nCPU family:                           6\nModel:                                165\nThread(s) per core:                   2\nCore(s) per socket:                   10\nSocket(s):                            1\nStepping:                             5\nCPU(s) scaling MHz:                   53%\nCPU max MHz:                          5300.0000\nCPU min MHz:                          800.0000\nBogoMIPS:                             7399.70\nFlags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp vnmi pku ospke md_clear flush_l1d arch_capabilities\nVirtualisation:                       VT-x\nL1d cache:                            320 KiB (10 instances)\nL1i cache:                            320 KiB (10 instances)\nL2 cache:                             2.5 MiB (10 instances)\nL3 cache:                             20 MiB (1 instance)\nNUMA node(s):                         1\nNUMA node0 CPU(s):                    0-19\nVulnerability Gather data sampling:   Mitigation; Microcode\nVulnerability Itlb multihit:          KVM: Mitigation: VMX disabled\nVulnerability L1tf:                   Not affected\nVulnerability Mds:                    Not affected\nVulnerability Meltdown:               Not affected\nVulnerability Mmio stale data:        Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Reg file data sampling: Not affected\nVulnerability Retbleed:               Mitigation; Enhanced IBRS\nVulnerability Spec rstack overflow:   Not affected\nVulnerability Spec store bypass:      Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:             Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:             Mitigation; Enhanced / Automatic IBRS; IBPB conditional; RSB filling; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop\nVulnerability Srbds:                  Mitigation; Microcode\nVulnerability Tsx async abort:        Not affected",
+ "perf": "perf version SYNTHETIC (bench/attribution_fakeperf.py)",
+ "nmi_watchdog": "1",
+ "paranoid": "4",
+ "groups": {
+  "G0": [
+   "cycles",
+   "ref-cycles",
+   "instructions",
+   "task-clock"
+  ],
+  "G1": [
+   "cycle_activity.stalls_l3_miss",
+   "cycle_activity.stalls_mem_any",
+   "cycle_activity.stalls_total"
+  ],
+  "G2": [
+   "mem_load_retired.l3_miss",
+   "mem_load_retired.l3_hit"
+  ],
+  "G3": [
+   "l1d_pend_miss.pending",
+   "l1d_pend_miss.pending_cycles",
+   "l1d_pend_miss.fb_full"
+  ],
+  "G4": [
+   "offcore_requests.all_data_rd",
+   "offcore_requests_outstanding.all_data_rd"
+  ],
+  "G5": [
+   "idq_uops_not_delivered.core",
+   "uops_issued.any",
+   "uops_retired.retire_slots"
+  ],
+  "G6": [
+   "int_misc.recovery_cycles"
+  ]
+ },
+ "unavailable": {},
+ "singletons": [],
+ "imc": [
+  "uncore_imc/data_reads/",
+  "uncore_imc/data_writes/"
+ ],
+ "sampled": [
+  "cycles",
+  "cycle_activity.stalls_l3_miss"
+ ]
+}
