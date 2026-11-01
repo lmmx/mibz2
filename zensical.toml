@@ -10,12 +10,16 @@ extra_css = [
   "assets/stylesheets/couriers.css?v=dev",
   "assets/stylesheets/blog.css?v=dev",
   "assets/stylesheets/frontier.css?v=dev",
+  # KaTeX, for the maths pymdownx.arithmatex marks (pinned; assets/javascripts/katex.js)
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css",
 ]
 extra_javascript = [
   "assets/javascripts/bench.js?v=dev",
   "assets/javascripts/couriers.js?v=dev",
   "assets/javascripts/blog.js?v=dev",
   "assets/javascripts/frontier.js?v=dev",
+  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js",
+  "assets/javascripts/katex.js?v=dev",
 ]
 nav = [
   { "Home" = "index.md" },
@@ -75,6 +79,9 @@ site_url = "https://lmmx.github.io/mibz2/"
 [project.markdown_extensions.tables]
 [project.markdown_extensions.toc]
 permalink = true
+# maths: $...$ inline, $$...$$ displayed, rendered by KaTeX (assets/javascripts/katex.js)
+[project.markdown_extensions.pymdownx.arithmatex]
+generic = true
 [project.markdown_extensions.pymdownx.details]
 [project.markdown_extensions.pymdownx.highlight]
 pygments_lang_class = true
