@@ -1,0 +1,50 @@
+{
+ "n": 1970,
+ "walk_ratio_median": 1.454,
+ "mean_others": {
+  "build": 0.36,
+  "walk": 1.44,
+  "mtf": 0.22,
+  "post": 0.12
+ },
+ "ols": {
+  "intercept": 1.165,
+  "per_other_building": 0.029,
+  "per_other_walking": 0.173,
+  "per_other_in_mtf": 0.031,
+  "per_other_in_post": 0.424,
+  "r2": 0.234
+ },
+ "by_others_building": {
+  "0": [
+   1426,
+   1.475
+  ],
+  "1": [
+   530,
+   1.418
+  ],
+  "2": [
+   14,
+   1.227
+  ]
+ },
+ "by_others_walking": {
+  "0": [
+   81,
+   1.294
+  ],
+  "1": [
+   878,
+   1.408
+  ],
+  "2": [
+   982,
+   1.535
+  ],
+  "3": [
+   29,
+   1.658
+  ]
+ }
+}
