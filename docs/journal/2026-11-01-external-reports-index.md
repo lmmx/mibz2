@@ -69,6 +69,7 @@ verbatim. They are not findings of this repository.
 | 127 | 2026-11-01 | the guardian | the consolidated technical history, from the four-core slowdown to P87 (evidence cutoff 1 November) | `2026-11-01-external-report-127.md` |
 | 128 | 2026-11-01 | the researcher | the independent addendum: the standards of evidence behind selecting P87 | `2026-11-01-external-report-128.md` |
 | 129 | 2026-11-01 | the guardian | on the addendum: keep the two records separate | `2026-11-01-external-report-129.md` |
+| 130 | 2026-11-01 | the maintainer | the brief to a new Astra session: a research-architecture review for the next throughput breakthrough (after the P87 i9 result) | `2026-11-01-external-report-130.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
