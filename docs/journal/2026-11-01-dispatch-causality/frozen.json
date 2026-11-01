@@ -1,6 +1,6 @@
 {
  "protocol": "docs/journal/2026-11-01-dispatch-causality-protocol.md",
- "pin": "0f7e3ac5a9cebbd02d903de68fa294e5c55364ad",
+ "pin": "382fde1cfb0bfb1f2145e35cfb11fbc3e68fbcb6",
  "source_base": "45b366d1455a487f1655def689ebd8c87a31f135",
  "toolchain": "rustc 1.97.0 (2d8144b78 2026-07-07), --locked, release profile, empty RUSTFLAGS",
  "order": [
@@ -75,7 +75,7 @@
   "examples/attribution_decode.rs": "0b8af776cfa5b8b730d59510f8ea7e8b8b8005c0f198403be93f19ab9c5d6ae7",
   "bench/dispatch.py": "93cbe368db6f3f7a2d3581fc59a858d8b39ebd7902412acc621eaff962044b2c",
   "bench/dispatch_reproduce.py": "8b625417ae0b48724269822bf189543d996c545fb8e771f7ce9aabacc444045c",
-  "bench/dispatch_run.sh": "3f362b15cf6849e8de945784214c718f23c80a42b91a4cce82ea85e2bfd96de6",
+  "bench/dispatch_run.sh": "9a32243da5aa5953b10cba8bf9e03ffd391fbd7313540f38b098d904b9b1fd51",
   "bench/attribution.py": "8ef10ee13bdc110d19886ade743cd0b7edd795b92cdad143decd0d5b5fc94942",
   "bench/attribution_same_code.py": "b5db32b8756c225e7d25846a0633c182c995163fa6e4a967c29e2fc9f0f50080",
   "tests/trace_dispatch.rs": "b7ae04c0fba0b303471d6cb6a5930d59cff405db58ad5fc5607df707534827a6",
