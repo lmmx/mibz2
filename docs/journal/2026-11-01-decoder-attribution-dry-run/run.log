@@ -1,0 +1,107 @@
+attribution: label=preparation-vm head=1b915e5f537e715a5e8f9b29916f65a612a43d62 pin=68956ca9e65168181dbaca8802a3b37b5b25e601 out=<scratch>/attr-results/preparation-vm.dry-run dry_run=1
+attribution: 23 sources match the frozen hashes
+attribution: rustc 1.97.0 (2d8144b78 2026-07-07); CARGO_TARGET_DIR=<scratch>/attr-target
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 18.76s
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 13.48s
+attribution: the trace's phase and feeder tests, and the instrument's, pass
+Preparing worktree (detached HEAD 45b366d)
+   Compiling mibz2 v0.2.1 (<scratch>/attr-work/base)
+    Finished `release` profile [optimized + debuginfo] target(s) in 12.43s
+same code: yes: 104 mibz2 functions, 32298 instructions
+attribution: 3 corpora match the frozen SHA-256 (<scratch>/walk-freeze/corpora)
+attribution: every corpus decodes to its frozen hash at w = 1 and 4
+attribution: allocation CPUs 0,1,2,3
+attribution: perf = /usr/lib/linux-tools/6.8.0-147-generic/perf (perf version 6.8.12)
+events: 1 countable without multiplexing (0 whole groups, 1 alone); unavailable: ['cycle_activity.stalls_l3_miss', 'cycle_activity.stalls_mem_any', 'cycle_activity.stalls_total', 'cycles', 'idq_uops_not_delivered.core', 'instructions', 'int_misc.recovery_cycles', 'l1d_pend_miss.fb_full', 'l1d_pend_miss.pending', 'l1d_pend_miss.pending_cycles', 'mem_load_retired.l3_hit', 'mem_load_retired.l3_miss', 'offcore_requests.all_data_rd', 'offcore_requests_outstanding.all_data_rd', 'ref-cycles', 'uncore_imc', 'uops_issued.any', 'uops_retired.retire_slots']; sampled: none
+attribution: the analysis's self-test (synthetic counts) passed
+stat: 6 passes, 0 incomplete (recorded, not interpreted)
+record: 0 sampled runs
+{
+ "primary": "wikidata-20261026",
+ "rules": {
+  "R4": {
+   "scanner_cap_MBps": 1430.1207875490486,
+   "throughput_MBps": 398.1867967422031,
+   "cap_over_target": 2.3943884281610126,
+   "worker_idle_while_scanner_reads": 0.06154125895877967,
+   "binding_for_1_5x": false,
+   "demoted": true
+  },
+  "R5": {
+   "hol_share_of_idle": 0.2101828873175878,
+   "hol_with_a_later_block_ready_share": 0.20642088768501518,
+   "promoted": false
+  },
+  "R6": {
+   "startup_drain_share_of_idle": 0.10062386785255907,
+   "startup_s": 0.0098275965,
+   "drain_s": 0.0053618115,
+   "span_s": 0.519708898,
+   "rejects_sustained": false
+  },
+  "R7": {
+   "runq_share_of_decoding": 0.0998545945456902,
+   "runq_share_of_unused": 0.34724470556733433,
+   "cores_busy": 3.1150873478604915,
+   "unused_core_s": 0.4651677820000001,
+   "promoted": true
+  },
+  "Q2_account": {
+   "shares": {
+    "startup": 0.0606539074259867,
+    "drain": 0.013562043661898369,
+    "steady.scanner_reading": 0.21025906486386234,
+    "steady.slot_head_of_line": 0.15502209582650067,
+    "steady.slot_reader_binds": 0.10666209458604778,
+    "steady.slot_other": 0.0,
+    "steady.input_wait": 4.6058928403791486e-06,
+    "steady.handoff": 0.19139431059927506,
+    "steady.scanner_done": 0.0,
+    "runq_wait": 0.26244187714358863
+   },
+   "largest": "runq_wait"
+  },
+  "hypotheses": {
+   "H0": {
+    "status": "unresolved: cycles, the task clock or the clock unavailable",
+    "share": null,
+    "question": "Q1"
+   },
+   "H1": {
+    "status": "unresolved: no cycle samples",
+    "share": 1.004264604531071,
+    "question": "Q1"
+   },
+   "H2": {
+    "status": "not supported (demoted)",
+    "share": 0.28507457019057986,
+    "question": "Q2"
+   },
+   "H3": {
+    "status": "not supported",
+    "share": 0.2101828873175878,
+    "question": "Q2"
+   },
+   "H4": {
+    "status": "not supported",
+    "share": 0.10062386785255907,
+    "question": "Q2"
+   },
+   "H5": {
+    "status": "supported",
+    "share": 0.34724470556733433,
+    "question": "Q2"
+   }
+  },
+  "ranking_supported": {
+   "Q1": [],
+   "Q2": [
+    "H5"
+   ]
+  }
+ }
+}
+attribution: results: <scratch>/attr-results/preparation-vm.dry-run
+attribution: archive: <scratch>/attr-results/preparation-vm.dry-run.tar.gz

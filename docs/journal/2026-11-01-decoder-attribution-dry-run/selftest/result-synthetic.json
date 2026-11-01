@@ -1,0 +1,1073 @@
+{
+ "protocol": "docs/journal/2026-11-01-decoder-attribution-protocol.md",
+ "corpora": {
+  "wikidata-20261026": {
+   "role": "primary",
+   "by_w": {
+    "1": {
+     "perturbation": {
+      "timeline": "no perturbation shown (interval includes no change)",
+      "full": "no perturbation shown (interval includes no change)"
+     },
+     "off": {
+      "throughput_MBps": 36.914372679994585,
+      "cpu_s_per_GB": 34.2650625
+     },
+     "counters": {
+      "cpu_s_per_GB": 2.0573851023753433,
+      "cycles_per_byte": 9.258129917521408,
+      "instructions_per_byte": 4.800511809085174,
+      "effective_GHz": 4.499949915469147,
+      "cycles_per_ref_cycle": 1.2162162162162162,
+      "per_byte": {
+       "cycle_activity.stalls_l3_miss": 1.3887194876282112,
+       "cycle_activity.stalls_mem_any": 3.7032519670085633,
+       "cycle_activity.stalls_total": 5.554877950512845,
+       "mem_load_retired.l3_miss": 0.00685787401297882,
+       "mem_load_retired.l3_hit": 0.034289370064894104,
+       "l1d_pend_miss.pending": 27.774389752564225,
+       "l1d_pend_miss.pending_cycles": 4.629064958760704,
+       "l1d_pend_miss.fb_full": 0.09258129917521407,
+       "offcore_requests.all_data_rd": 0.034289370064894104,
+       "offcore_requests_outstanding.all_data_rd": 3.4289370064894102,
+       "idq_uops_not_delivered.core": 2.7774389752564224,
+       "uops_issued.any": 11.10975590102569,
+       "uops_retired.retire_slots": 10.183942909273549,
+       "int_misc.recovery_cycles": 0.09258129917521407
+      }
+     },
+     "samples": {
+      "cycles": {
+       "build": 0.1375,
+       "walk": 0.4125,
+       "mtf": 0.225,
+       "rle_crc": 0.0,
+       "memcpy": 0.045,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.135,
+       "feeder": 0.0,
+       "reader": 0.045
+      },
+      "cycle_activity.stalls_l3_miss": {
+       "build": 0.2,
+       "walk": 0.6,
+       "mtf": 0.1,
+       "rle_crc": 0.0,
+       "memcpy": 0.02,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.06,
+       "feeder": 0.0,
+       "reader": 0.02
+      }
+     },
+     "timeline": {
+      "runs": 2,
+      "interpretable": true,
+      "span_s": 0.2085372485,
+      "worker_time_s": 0.2085372485,
+      "idle_s": 0.0162242555,
+      "startup_s": 0.015668217499999998,
+      "drain_s": 0.031106311499999997,
+      "hol_s": 0.0,
+      "hol_later_ready_s": 0.0,
+      "scanner_cap_MBps": 141.56418069346893,
+      "idle": {
+       "drain.handoff": 5.6646499999999994e-05,
+       "drain.scanner_done": 0.000105967,
+       "startup.handoff": 3.46095e-05,
+       "startup.input_wait": 0.0048609155,
+       "startup.scanner_reading": 0.010771643000000001,
+       "startup.slot_other": 1.0494999999999999e-06,
+       "steady.handoff": 0.0003908490000000001,
+       "steady.slot_reader_binds": 2.5755e-06
+      }
+     },
+     "full": {
+      "runs": 2,
+      "interpretable": true,
+      "cpu_total_s": 0.248104209,
+      "cores_busy": 1.262916201551813,
+      "unused_core_s": 0.537871635,
+      "runq_wait_decode_s": 4.0895e-05,
+      "decode_elapsed_s": 0.1821557195,
+      "span_s": 0.196493961,
+      "cpu_by_role_s": {
+       "worker": 0.1826401255,
+       "scanner": 0.0570159405,
+       "feeder": 0.0054916554999999995,
+       "reader": 0.0029564875
+      },
+      "cpu_by_phase_s": {
+       "mtf": 0.08342540999999999,
+       "build": 0.0504983695,
+       "walk": 0.044248214,
+       "rle_crc": 0.0034446994999999996,
+       "worker_other": 0.0010234325000000044,
+       "decode_unsplit": 0.0
+      }
+     }
+    },
+    "4": {
+     "perturbation": {
+      "timeline": "no perturbation shown (interval includes no change)",
+      "full": "no perturbation shown (interval includes no change)"
+     },
+     "off": {
+      "throughput_MBps": 74.32969582232525,
+      "cpu_s_per_GB": 37.2969375
+     },
+     "counters": {
+      "cpu_s_per_GB": 2.6745813094747,
+      "cycles_per_byte": 11.233197633259309,
+      "instructions_per_byte": 4.800511809085174,
+      "effective_GHz": 4.199983598728415,
+      "cycles_per_ref_cycle": 1.135135135135135,
+      "per_byte": {
+       "cycle_activity.stalls_l3_miss": 3.3699592899777926,
+       "cycle_activity.stalls_mem_any": 4.4932790533037235,
+       "cycle_activity.stalls_total": 6.739918579955585,
+       "mem_load_retired.l3_miss": 0.02743149605191528,
+       "mem_load_retired.l3_hit": 0.034289370064894104,
+       "l1d_pend_miss.pending": 56.16598816629654,
+       "l1d_pend_miss.pending_cycles": 5.616598816629654,
+       "l1d_pend_miss.fb_full": 0.5616598816629654,
+       "offcore_requests.all_data_rd": 0.034289370064894104,
+       "offcore_requests_outstanding.all_data_rd": 3.4289370064894102,
+       "idq_uops_not_delivered.core": 3.3699592899777926,
+       "uops_issued.any": 13.47983715991117,
+       "uops_retired.retire_slots": 12.35651739658524,
+       "int_misc.recovery_cycles": 0.11233197635191669
+      }
+     },
+     "samples": {
+      "cycles": {
+       "build": 0.175,
+       "walk": 0.525,
+       "mtf": 0.15,
+       "rle_crc": 0.0,
+       "memcpy": 0.03,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.09,
+       "feeder": 0.0,
+       "reader": 0.03
+      },
+      "cycle_activity.stalls_l3_miss": {
+       "build": 0.225,
+       "walk": 0.675,
+       "mtf": 0.05,
+       "rle_crc": 0.0,
+       "memcpy": 0.01,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.03,
+       "feeder": 0.0,
+       "reader": 0.01
+      }
+     },
+     "timeline": {
+      "runs": 2,
+      "interpretable": true,
+      "span_s": 0.0956726675,
+      "worker_time_s": 0.38269067,
+      "idle_s": 0.16102502400000002,
+      "startup_s": 0.0422744,
+      "drain_s": 0.0267115245,
+      "hol_s": 2.215e-07,
+      "hol_later_ready_s": 0.0,
+      "scanner_cap_MBps": 122.0377340435983,
+      "idle": {
+       "drain.handoff": 5.18165e-05,
+       "drain.scanner_done": 0.030416225500000005,
+       "drain.scanner_reading": 1.2263e-05,
+       "startup.handoff": 0.002790802,
+       "startup.input_wait": 0.012833179000000002,
+       "startup.scanner_reading": 0.101807656,
+       "startup.slot_head_of_line": 2.215e-07,
+       "startup.slot_other": 1.3600000000000001e-06,
+       "steady.handoff": 0.0012785295000000002,
+       "steady.scanner_reading": 0.011832971000000001
+      }
+     },
+     "full": {
+      "runs": 2,
+      "interpretable": true,
+      "cpu_total_s": 0.2729822635,
+      "cores_busy": 2.899022996247758,
+      "unused_core_s": 0.10398821050000001,
+      "runq_wait_decode_s": 0.0301165405,
+      "decode_elapsed_s": 0.240471773,
+      "span_s": 0.0942426185,
+      "cpu_by_role_s": {
+       "worker": 0.20685125799999998,
+       "scanner": 0.058073786,
+       "feeder": 0.0053584159999999995,
+       "reader": 0.0026988035000000002
+      },
+      "cpu_by_phase_s": {
+       "mtf": 0.09204824400000002,
+       "build": 0.05416119850000001,
+       "walk": 0.0532854195,
+       "rle_crc": 0.0056785379999999995,
+       "worker_other": 0.0016778579999999765,
+       "decode_unsplit": 0.0
+      }
+     }
+    }
+   },
+   "rules": {
+    "R2": {
+     "cpu_ratio": 1.2999906076829155,
+     "cycles_ratio": 1.2133333333333334,
+     "effective_GHz": [
+      4.499949915469147,
+      4.199983598728415
+     ],
+     "share_from_frequency": 0.26294566637679134,
+     "share_from_cycles": 0.7370543336232093,
+     "instructions_ratio": 1.0,
+     "clock_explains_two_thirds": false
+    },
+    "R1": {
+     "share": 1.2000156543519092,
+     "share_with_memcpy": 1.1800140889167186,
+     "owners": {
+      "memcpy": -0.020001565435190948,
+      "rle_crc": 0.0,
+      "build": 0.3000039135879773,
+      "mtf": -0.10000782717595486,
+      "walk": 0.9000117407639322,
+      "reader": -0.020001565435190948,
+      "feeder": 0.0,
+      "scanner": -0.06000469630557296,
+      "kernel": 0.0,
+      "worker_other": 0.0
+     },
+     "falsified": false,
+     "straddles": false,
+     "cross_check_trace": 0.5104914654801493,
+     "resolved": true
+    },
+    "R3": {
+     "bw_stall_cycles_per_byte_added": 1.9219877708774444,
+     "bw_cycles_per_byte_added": 2.77126688864474,
+     "stall_share_of_added": 0.6935412026726062,
+     "instructions_within_5pct": true,
+     "in_flight": [
+      27.774389752564225,
+      56.16598816629654
+     ],
+     "fb_full": [
+      0.09258129917521407,
+      0.5616598816629654
+     ]
+    },
+    "R4": {
+     "scanner_cap_MBps": 122.0377340435983,
+     "throughput_MBps": 74.32969582232525,
+     "cap_over_target": 1.094562388051136,
+     "worker_idle_while_scanner_reads": 0.030920458552072882,
+     "binding_for_1_5x": false,
+     "demoted": false
+    },
+    "R5": {
+     "hol_share_of_idle": 1.375562595786354e-06,
+     "hol_with_a_later_block_ready_share": 0.0,
+     "promoted": false
+    },
+    "R6": {
+     "startup_drain_share_of_idle": 0.9185747645036836,
+     "startup_s": 0.0422744,
+     "drain_s": 0.0267115245,
+     "span_s": 0.0956726675,
+     "rejects_sustained": true
+    },
+    "R7": {
+     "runq_share_of_decoding": 0.12523939971948392,
+     "runq_share_of_unused": 0.2896149511102511,
+     "cores_busy": 2.899022996247758,
+     "unused_core_s": 0.10398821050000001,
+     "promoted": true
+    },
+    "Q2_account": {
+     "shares": {
+      "startup": 0.6129128559564663,
+      "drain": 0.15908420995865122,
+      "steady.scanner_reading": 0.0617591865632129,
+      "steady.slot_head_of_line": 0.0,
+      "steady.slot_reader_binds": 0.0,
+      "steady.slot_other": 0.0,
+      "steady.input_wait": 0.0,
+      "steady.handoff": 0.0066729599791186265,
+      "steady.scanner_done": 0.0,
+      "runq_wait": 0.15957078754255102
+     },
+     "largest": "startup"
+    },
+    "hypotheses": {
+     "H0": {
+      "status": "not supported",
+      "share": 0.26294566637679134,
+      "question": "Q1"
+     },
+     "H1": {
+      "status": "supported",
+      "share": 1.2000156543519092,
+      "question": "Q1"
+     },
+     "H2": {
+      "status": "bounded, not binding",
+      "share": 0.07348529257166886,
+      "question": "Q2"
+     },
+     "H3": {
+      "status": "not supported",
+      "share": 1.375562595786354e-06,
+      "question": "Q2"
+     },
+     "H4": {
+      "status": "supported",
+      "share": 0.9185747645036836,
+      "question": "Q2"
+     },
+     "H5": {
+      "status": "supported",
+      "share": 0.2896149511102511,
+      "question": "Q2"
+     }
+    },
+    "ranking_supported": {
+     "Q1": [
+      "H1"
+     ],
+     "Q2": [
+      "H4",
+      "H5"
+     ]
+    }
+   },
+   "validity": {
+    "parity": true,
+    "analysis_agrees_with_instrument": true,
+    "worst_disagreement": 0.00867845683435059,
+    "sampling_wall_over_counting": {
+     "1": 1.2602452997288127,
+     "4": 1.0548187214660252
+    },
+    "sampling_overhead_over_3pct": [
+     1,
+     4
+    ]
+   }
+  },
+  "records": {
+   "role": "control",
+   "by_w": {
+    "1": {
+     "perturbation": {
+      "timeline": "no perturbation shown (interval includes no change)",
+      "full": "no perturbation shown (interval includes no change)"
+     },
+     "off": {
+      "throughput_MBps": 33.36717256042368,
+      "cpu_s_per_GB": 36.7560625
+     },
+     "counters": {
+      "cpu_s_per_GB": 44.362500000000004,
+      "cycles_per_byte": 199.629028125,
+      "instructions_per_byte": 103.51134791666667,
+      "effective_GHz": 4.499949915469147,
+      "cycles_per_ref_cycle": 1.2162162162162162,
+      "per_byte": {
+       "cycle_activity.stalls_l3_miss": 29.94435421875,
+       "cycle_activity.stalls_mem_any": 79.85161125,
+       "cycle_activity.stalls_total": 119.777416875,
+       "mem_load_retired.l3_miss": 0.14787335416666667,
+       "mem_load_retired.l3_hit": 0.7393667708333334,
+       "l1d_pend_miss.pending": 598.887084375,
+       "l1d_pend_miss.pending_cycles": 99.8145140625,
+       "l1d_pend_miss.fb_full": 1.9962902812499999,
+       "offcore_requests.all_data_rd": 0.7393667708333334,
+       "offcore_requests_outstanding.all_data_rd": 73.93667708333334,
+       "idq_uops_not_delivered.core": 59.8887084375,
+       "uops_issued.any": 239.55483375,
+       "uops_retired.retire_slots": 219.5919309375,
+       "int_misc.recovery_cycles": 1.9962902812499999
+      }
+     },
+     "samples": {
+      "cycles": {
+       "build": 0.1375,
+       "walk": 0.4125,
+       "mtf": 0.225,
+       "rle_crc": 0.0,
+       "memcpy": 0.045,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.135,
+       "feeder": 0.0,
+       "reader": 0.045
+      },
+      "cycle_activity.stalls_l3_miss": {
+       "build": 0.2,
+       "walk": 0.6,
+       "mtf": 0.1,
+       "rle_crc": 0.0,
+       "memcpy": 0.02,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.06,
+       "feeder": 0.0,
+       "reader": 0.02
+      }
+     },
+     "timeline": {
+      "runs": 2,
+      "interpretable": true,
+      "span_s": 0.19175976449999999,
+      "worker_time_s": 0.19175976449999999,
+      "idle_s": 0.013361532499999999,
+      "startup_s": 0.012811629,
+      "drain_s": 0.0268374475,
+      "hol_s": 0.0,
+      "hol_later_ready_s": 0.0,
+      "scanner_cap_MBps": 135.1774304171775,
+      "idle": {
+       "drain.handoff": 6.255799999999999e-05,
+       "drain.scanner_done": 9.312200000000001e-05,
+       "startup.handoff": 4.48745e-05,
+       "startup.input_wait": 0.0029152674999999998,
+       "startup.scanner_reading": 0.0098511555,
+       "startup.slot_other": 3.315e-07,
+       "steady.handoff": 0.0003918680000000001,
+       "steady.slot_reader_binds": 2.3554999999999997e-06
+      }
+     },
+     "full": {
+      "runs": 2,
+      "interpretable": true,
+      "cpu_total_s": 0.2755563845,
+      "cores_busy": 1.2315120312966785,
+      "unused_core_s": 0.6195838555000001,
+      "runq_wait_decode_s": 2.0725000000000002e-05,
+      "decode_elapsed_s": 0.2100881565,
+      "span_s": 0.22378506,
+      "cpu_by_role_s": {
+       "worker": 0.208955782,
+       "scanner": 0.057513775999999996,
+       "feeder": 0.0059316825,
+       "reader": 0.003155144
+      },
+      "cpu_by_phase_s": {
+       "mtf": 0.0972033245,
+       "build": 0.057493593999999995,
+       "walk": 0.049902823,
+       "rle_crc": 0.0035038679999999994,
+       "worker_other": 0.0008521725000000119,
+       "decode_unsplit": 0.0
+      }
+     }
+    },
+    "4": {
+     "perturbation": {
+      "timeline": "no perturbation shown (interval includes no change)",
+      "full": "no perturbation shown (interval includes no change)"
+     },
+     "off": {
+      "throughput_MBps": 87.16788982770696,
+      "cpu_s_per_GB": 34.2459375
+     },
+     "counters": {
+      "cpu_s_per_GB": 57.67083333333334,
+      "cycles_per_byte": 242.216554125,
+      "instructions_per_byte": 103.51134791666667,
+      "effective_GHz": 4.199983598728415,
+      "cycles_per_ref_cycle": 1.135135135135135,
+      "per_byte": {
+       "cycle_activity.stalls_l3_miss": 72.6649662375,
+       "cycle_activity.stalls_mem_any": 96.88662165000001,
+       "cycle_activity.stalls_total": 145.329932475,
+       "mem_load_retired.l3_miss": 0.5914934166666667,
+       "mem_load_retired.l3_hit": 0.7393667708333334,
+       "l1d_pend_miss.pending": 1211.082770625,
+       "l1d_pend_miss.pending_cycles": 121.1082770625,
+       "l1d_pend_miss.fb_full": 12.110827706250001,
+       "offcore_requests.all_data_rd": 0.7393667708333334,
+       "offcore_requests_outstanding.all_data_rd": 73.93667708333334,
+       "idq_uops_not_delivered.core": 72.6649662375,
+       "uops_issued.any": 290.65986495,
+       "uops_retired.retire_slots": 266.4382095375,
+       "int_misc.recovery_cycles": 2.4221655416666668
+      }
+     },
+     "samples": {
+      "cycles": {
+       "build": 0.175,
+       "walk": 0.525,
+       "mtf": 0.15,
+       "rle_crc": 0.0,
+       "memcpy": 0.03,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.09,
+       "feeder": 0.0,
+       "reader": 0.03
+      },
+      "cycle_activity.stalls_l3_miss": {
+       "build": 0.225,
+       "walk": 0.675,
+       "mtf": 0.05,
+       "rle_crc": 0.0,
+       "memcpy": 0.01,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.03,
+       "feeder": 0.0,
+       "reader": 0.01
+      }
+     },
+     "timeline": {
+      "runs": 2,
+      "interpretable": true,
+      "span_s": 0.0946261875,
+      "worker_time_s": 0.37850475,
+      "idle_s": 0.12925701,
+      "startup_s": 0.0363398325,
+      "drain_s": 0.0277914035,
+      "hol_s": 0.0,
+      "hol_later_ready_s": 0.0,
+      "scanner_cap_MBps": 126.3702263932245,
+      "idle": {
+       "drain.handoff": 3.4435e-05,
+       "drain.scanner_done": 0.0268417235,
+       "startup.handoff": 0.000707035,
+       "startup.input_wait": 0.013145848000000002,
+       "startup.scanner_reading": 0.0832710925,
+       "startup.slot_other": 0.00027670799999999997,
+       "steady.handoff": 9.594749999999999e-05,
+       "steady.scanner_reading": 0.0048842205000000005
+      }
+     },
+     "full": {
+      "runs": 2,
+      "interpretable": true,
+      "cpu_total_s": 0.264158055,
+      "cores_busy": 2.9071234191994337,
+      "unused_core_s": 0.09918923499999999,
+      "runq_wait_decode_s": 0.030919974,
+      "decode_elapsed_s": 0.23240851899999998,
+      "span_s": 0.0908368225,
+      "cpu_by_role_s": {
+       "worker": 0.1999362635,
+       "scanner": 0.055408377,
+       "feeder": 0.005947892,
+       "reader": 0.0028655225000000003
+      },
+      "cpu_by_phase_s": {
+       "mtf": 0.088069872,
+       "build": 0.052844943000000005,
+       "walk": 0.05273093400000001,
+       "rle_crc": 0.004488946000000001,
+       "worker_other": 0.0018015684999999892,
+       "decode_unsplit": 0.0
+      }
+     }
+    }
+   },
+   "rules": {
+    "R2": {
+     "cpu_ratio": 1.2999906076829155,
+     "cycles_ratio": 1.2133333333333334,
+     "effective_GHz": [
+      4.499949915469147,
+      4.199983598728415
+     ],
+     "share_from_frequency": 0.26294566637679134,
+     "share_from_cycles": 0.7370543336232093,
+     "instructions_ratio": 1.0,
+     "clock_explains_two_thirds": false
+    },
+    "R1": {
+     "share": 1.2000156543519096,
+     "share_with_memcpy": 1.1800140889167186,
+     "owners": {
+      "memcpy": -0.02000156543519098,
+      "rle_crc": 0.0,
+      "build": 0.3000039135879774,
+      "mtf": -0.10000782717595483,
+      "walk": 0.9000117407639325,
+      "reader": -0.02000156543519098,
+      "feeder": 0.0,
+      "scanner": -0.060004696305573,
+      "kernel": 0.0,
+      "worker_other": 0.0
+     },
+     "falsified": false,
+     "straddles": false,
+     "cross_check_trace": 0.15971989579700996,
+     "resolved": false
+    },
+    "R4": {
+     "scanner_cap_MBps": 126.3702263932245,
+     "throughput_MBps": 87.16788982770696,
+     "cap_over_target": 0.9664891253189948,
+     "worker_idle_while_scanner_reads": 0.012903987334372952,
+     "binding_for_1_5x": true,
+     "demoted": false
+    },
+    "R5": {
+     "hol_share_of_idle": 0.0,
+     "hol_with_a_later_block_ready_share": 0.0,
+     "promoted": false
+    },
+    "R6": {
+     "startup_drain_share_of_idle": 0.961470809204081,
+     "startup_s": 0.0363398325,
+     "drain_s": 0.0277914035,
+     "span_s": 0.0946261875,
+     "rejects_sustained": true
+    },
+    "R7": {
+     "runq_share_of_decoding": 0.13304148287266526,
+     "runq_share_of_unused": 0.31172711433856715,
+     "cores_busy": 2.9071234191994337,
+     "unused_core_s": 0.09918923499999999,
+     "promoted": true
+    },
+    "Q2_account": {
+     "shares": {
+      "startup": 0.6032240378586272,
+      "drain": 0.16645001112849958,
+      "steady.scanner_reading": 0.030249060950397578,
+      "steady.slot_head_of_line": 0.0,
+      "steady.slot_reader_binds": 0.0,
+      "steady.slot_other": 0.0,
+      "steady.input_wait": 0.0,
+      "steady.handoff": 0.0005942241501050722,
+      "steady.scanner_done": 0.0,
+      "runq_wait": 0.19948266591237043
+     },
+     "largest": "startup"
+    },
+    "hypotheses": {
+     "H0": {
+      "status": "not supported",
+      "share": 0.26294566637679134,
+      "question": "Q1"
+     },
+     "H1": {
+      "status": "unresolved: the copies straddle 0.5, the samples and the trace disagree about it, or the trace is not interpretable",
+      "share": 1.2000156543519096,
+      "question": "Q1"
+     },
+     "H2": {
+      "status": "supported",
+      "share": 0.037786890629761594,
+      "question": "Q2"
+     },
+     "H3": {
+      "status": "not supported",
+      "share": 0.0,
+      "question": "Q2"
+     },
+     "H4": {
+      "status": "supported",
+      "share": 0.961470809204081,
+      "question": "Q2"
+     },
+     "H5": {
+      "status": "supported",
+      "share": 0.31172711433856715,
+      "question": "Q2"
+     }
+    },
+    "ranking_supported": {
+     "Q1": [],
+     "Q2": [
+      "H4",
+      "H5",
+      "H2"
+     ]
+    }
+   },
+   "validity": {
+    "parity": true,
+    "analysis_agrees_with_instrument": true,
+    "worst_disagreement": 0.017283152224143727,
+    "sampling_wall_over_counting": {
+     "1": 0.9242291476803944,
+     "4": 1.0726109296584736
+    },
+    "sampling_overhead_over_3pct": [
+     4
+    ]
+   }
+  },
+  "random": {
+   "role": "control",
+   "by_w": {
+    "1": {
+     "perturbation": {
+      "timeline": "no perturbation shown (interval includes no change)",
+      "full": "no perturbation shown (interval includes no change)"
+     },
+     "off": {
+      "throughput_MBps": 44.322288489474275,
+      "cpu_s_per_GB": 30.003999999999998
+     },
+     "counters": {
+      "cpu_s_per_GB": 53.235,
+      "cycles_per_byte": 239.55483375,
+      "instructions_per_byte": 124.2136175,
+      "effective_GHz": 4.499949915469147,
+      "cycles_per_ref_cycle": 1.2162162162162162,
+      "per_byte": {
+       "cycle_activity.stalls_l3_miss": 35.9332250625,
+       "cycle_activity.stalls_mem_any": 95.8219335,
+       "cycle_activity.stalls_total": 143.73290025,
+       "mem_load_retired.l3_miss": 0.17744802499999998,
+       "mem_load_retired.l3_hit": 0.887240125,
+       "l1d_pend_miss.pending": 718.66450125,
+       "l1d_pend_miss.pending_cycles": 119.777416875,
+       "l1d_pend_miss.fb_full": 2.3955483374999997,
+       "offcore_requests.all_data_rd": 0.887240125,
+       "offcore_requests_outstanding.all_data_rd": 88.7240125,
+       "idq_uops_not_delivered.core": 71.866450125,
+       "uops_issued.any": 287.4658005,
+       "uops_retired.retire_slots": 263.510317125,
+       "int_misc.recovery_cycles": 2.3955483374999997
+      }
+     },
+     "samples": {
+      "cycles": {
+       "build": 0.1375,
+       "walk": 0.4125,
+       "mtf": 0.225,
+       "rle_crc": 0.0,
+       "memcpy": 0.045,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.135,
+       "feeder": 0.0,
+       "reader": 0.045
+      },
+      "cycle_activity.stalls_l3_miss": {
+       "build": 0.2,
+       "walk": 0.6,
+       "mtf": 0.1,
+       "rle_crc": 0.0,
+       "memcpy": 0.02,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.06,
+       "feeder": 0.0,
+       "reader": 0.02
+      }
+     },
+     "timeline": {
+      "runs": 2,
+      "interpretable": true,
+      "span_s": 0.185676721,
+      "worker_time_s": 0.185676721,
+      "idle_s": 0.0147590265,
+      "startup_s": 0.0142018635,
+      "drain_s": 0.026045264999999998,
+      "hol_s": 0.0,
+      "hol_later_ready_s": 0.0,
+      "scanner_cap_MBps": 137.35832404144853,
+      "idle": {
+       "drain.handoff": 4.8582000000000003e-05,
+       "drain.scanner_done": 8.61015e-05,
+       "startup.handoff": 4.62e-05,
+       "startup.input_wait": 0.0030990665,
+       "startup.scanner_reading": 0.011056103000000001,
+       "startup.slot_other": 4.940000000000001e-07,
+       "steady.handoff": 0.0004196095,
+       "steady.slot_reader_binds": 2.8699999999999996e-06
+      }
+     },
+     "full": {
+      "runs": 2,
+      "interpretable": true,
+      "cpu_total_s": 0.2392354895,
+      "cores_busy": 1.26247198316074,
+      "unused_core_s": 0.5198930605000001,
+      "runq_wait_decode_s": 8.417e-06,
+      "decode_elapsed_s": 0.1754102605,
+      "span_s": 0.1897821375,
+      "cpu_by_role_s": {
+       "worker": 0.173055872,
+       "scanner": 0.056699456499999995,
+       "feeder": 0.005893415,
+       "reader": 0.003586746
+      },
+      "cpu_by_phase_s": {
+       "mtf": 0.079220514,
+       "build": 0.048295923,
+       "walk": 0.0415913415,
+       "rle_crc": 0.0030946485,
+       "worker_other": 0.0008534449999999943,
+       "decode_unsplit": 0.0
+      }
+     }
+    },
+    "4": {
+     "perturbation": {
+      "timeline": "no perturbation shown (interval includes no change)",
+      "full": "no perturbation shown (interval includes no change)"
+     },
+     "off": {
+      "throughput_MBps": 88.69253797082476,
+      "cpu_s_per_GB": 32.792375
+     },
+     "counters": {
+      "cpu_s_per_GB": 69.205,
+      "cycles_per_byte": 290.65986495,
+      "instructions_per_byte": 124.2136175,
+      "effective_GHz": 4.199983598728415,
+      "cycles_per_ref_cycle": 1.135135135135135,
+      "per_byte": {
+       "cycle_activity.stalls_l3_miss": 87.197959485,
+       "cycle_activity.stalls_mem_any": 116.26394598,
+       "cycle_activity.stalls_total": 174.39591897,
+       "mem_load_retired.l3_miss": 0.7097920999999999,
+       "mem_load_retired.l3_hit": 0.887240125,
+       "l1d_pend_miss.pending": 1453.29932475,
+       "l1d_pend_miss.pending_cycles": 145.329932475,
+       "l1d_pend_miss.fb_full": 14.5329932475,
+       "offcore_requests.all_data_rd": 0.887240125,
+       "offcore_requests_outstanding.all_data_rd": 88.7240125,
+       "idq_uops_not_delivered.core": 87.197959485,
+       "uops_issued.any": 348.79183794,
+       "uops_retired.retire_slots": 319.725851445,
+       "int_misc.recovery_cycles": 2.90659865
+      }
+     },
+     "samples": {
+      "cycles": {
+       "build": 0.175,
+       "walk": 0.525,
+       "mtf": 0.15,
+       "rle_crc": 0.0,
+       "memcpy": 0.03,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.09,
+       "feeder": 0.0,
+       "reader": 0.03
+      },
+      "cycle_activity.stalls_l3_miss": {
+       "build": 0.225,
+       "walk": 0.675,
+       "mtf": 0.05,
+       "rle_crc": 0.0,
+       "memcpy": 0.01,
+       "worker_other": 0.0,
+       "kernel": 0.0,
+       "scanner": 0.03,
+       "feeder": 0.0,
+       "reader": 0.01
+      }
+     },
+     "timeline": {
+      "runs": 2,
+      "interpretable": true,
+      "span_s": 0.08378028100000001,
+      "worker_time_s": 0.33512112400000005,
+      "idle_s": 0.13424236099999998,
+      "startup_s": 0.035265839,
+      "drain_s": 0.0208413215,
+      "hol_s": 0.0,
+      "hol_later_ready_s": 0.0,
+      "scanner_cap_MBps": 133.35046616714035,
+      "idle": {
+       "drain.handoff": 4.3447e-05,
+       "drain.scanner_done": 0.022716765499999996,
+       "startup.handoff": 0.0045658274999999995,
+       "startup.input_wait": 0.008636538,
+       "startup.scanner_reading": 0.08660317949999999,
+       "startup.slot_other": 1.338e-06,
+       "steady.handoff": 0.0014147590000000005,
+       "steady.scanner_reading": 0.010260506499999999
+      }
+     },
+     "full": {
+      "runs": 2,
+      "interpretable": true,
+      "cpu_total_s": 0.253543309,
+      "cores_busy": 2.8821296150072757,
+      "unused_core_s": 0.10002637700000001,
+      "runq_wait_decode_s": 0.032586664,
+      "decode_elapsed_s": 0.2239196885,
+      "span_s": 0.0883924215,
+      "cpu_by_role_s": {
+       "worker": 0.1914162575,
+       "scanner": 0.054083680499999995,
+       "feeder": 0.005617979,
+       "reader": 0.002425392
+      },
+      "cpu_by_phase_s": {
+       "mtf": 0.084981275,
+       "build": 0.050656628999999995,
+       "walk": 0.048615069,
+       "rle_crc": 0.0050616375000000005,
+       "worker_other": 0.002101646999999998,
+       "decode_unsplit": 0.0
+      }
+     }
+    }
+   },
+   "rules": {
+    "R2": {
+     "cpu_ratio": 1.2999906076829153,
+     "cycles_ratio": 1.2133333333333334,
+     "effective_GHz": [
+      4.499949915469147,
+      4.199983598728415
+     ],
+     "share_from_frequency": 0.2629456663767915,
+     "share_from_cycles": 0.7370543336232097,
+     "instructions_ratio": 1.0,
+     "clock_explains_two_thirds": false
+    },
+    "R1": {
+     "share": 1.2000156543519094,
+     "share_with_memcpy": 1.1800140889167186,
+     "owners": {
+      "memcpy": -0.020001565435191004,
+      "rle_crc": 0.0,
+      "build": 0.30000391358797734,
+      "mtf": -0.10000782717595504,
+      "walk": 0.9000117407639324,
+      "reader": -0.020001565435191004,
+      "feeder": 0.0,
+      "scanner": -0.06000469630557298,
+      "kernel": 0.0,
+      "worker_other": 0.0
+     },
+     "falsified": false,
+     "straddles": false,
+     "cross_check_trace": 0.655895435359665,
+     "resolved": true
+    },
+    "R3": {
+     "bw_stall_cycles_per_byte_added": 49.7315834865,
+     "bw_cycles_per_byte_added": 71.70674690249996,
+     "stall_share_of_added": 0.6935412026726062,
+     "instructions_within_5pct": true,
+     "in_flight": [
+      718.66450125,
+      1453.29932475
+     ],
+     "fb_full": [
+      2.3955483374999997,
+      14.5329932475
+     ]
+    },
+    "R4": {
+     "scanner_cap_MBps": 133.35046616714035,
+     "throughput_MBps": 88.69253797082476,
+     "cap_over_target": 1.0023426188044948,
+     "worker_idle_while_scanner_reads": 0.030617307490291176,
+     "binding_for_1_5x": false,
+     "demoted": false
+    },
+    "R5": {
+     "hol_share_of_idle": 0.0,
+     "hol_with_a_later_block_ready_share": 0.0,
+     "promoted": false
+    },
+    "R6": {
+     "startup_drain_share_of_idle": 0.9130284553025703,
+     "startup_s": 0.035265839,
+     "drain_s": 0.0208413215,
+     "span_s": 0.08378028100000001,
+     "rejects_sustained": true
+    },
+    "R7": {
+     "runq_share_of_decoding": 0.14552835535942613,
+     "runq_share_of_unused": 0.3257807088224339,
+     "cores_busy": 2.8821296150072757,
+     "unused_core_s": 0.10002637700000001,
+     "promoted": true
+    },
+    "Q2_account": {
+     "shares": {
+      "startup": 0.6044186883058792,
+      "drain": 0.1378331571061394,
+      "steady.scanner_reading": 0.062136414780972045,
+      "steady.slot_head_of_line": 0.0,
+      "steady.slot_reader_binds": 0.0,
+      "steady.slot_other": 0.0,
+      "steady.input_wait": 0.0,
+      "steady.handoff": 0.008567613308281931,
+      "steady.scanner_done": 0.0,
+      "runq_wait": 0.18704412649872756
+     },
+     "largest": "startup"
+    },
+    "hypotheses": {
+     "H0": {
+      "status": "not supported",
+      "share": 0.2629456663767915,
+      "question": "Q1"
+     },
+     "H1": {
+      "status": "supported",
+      "share": 1.2000156543519094,
+      "question": "Q1"
+     },
+     "H2": {
+      "status": "bounded, not binding",
+      "share": 0.07643270293793478,
+      "question": "Q2"
+     },
+     "H3": {
+      "status": "not supported",
+      "share": 0.0,
+      "question": "Q2"
+     },
+     "H4": {
+      "status": "supported",
+      "share": 0.9130284553025703,
+      "question": "Q2"
+     },
+     "H5": {
+      "status": "supported",
+      "share": 0.3257807088224339,
+      "question": "Q2"
+     }
+    },
+    "ranking_supported": {
+     "Q1": [
+      "H1"
+     ],
+     "Q2": [
+      "H4",
+      "H5"
+     ]
+    }
+   },
+   "validity": {
+    "parity": true,
+    "analysis_agrees_with_instrument": false,
+    "worst_disagreement": 0.048837024179929966,
+    "sampling_wall_over_counting": {
+     "1": 1.1385766464293188,
+     "4": 1.0533142733733296
+    },
+    "sampling_overhead_over_3pct": [
+     1,
+     4
+    ]
+   }
+  }
+ },
+ "unavailable_events": [],
+ "sampled_events": [
+  "cycles",
+  "cycle_activity.stalls_l3_miss"
+ ]
+}

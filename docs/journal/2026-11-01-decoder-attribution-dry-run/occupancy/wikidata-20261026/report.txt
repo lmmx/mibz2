@@ -1,0 +1,45 @@
+occupancy: Intel(R) Xeon(R) Processor @ 2.80GHz · 4 CPUs allowed (0-3) · physical cores 4 · SMT siblings 0 | 1 | 2 | 3 · parity ok
+schedstat run-queue counter: {"status":"validated","selftest_threads":8,"selftest_off_cpu_ms_mean":97.036446,"selftest_runq_wait_ms_mean":96.353349}
+
+ thr      MB/s     speedup (95%)    timeline cost        full cost |    dec   idle i:sl-d i:sl-r   i:in   i:rd    i:q |   s:in r:wait |  blk ms  cpu ms runq ms slices
+1 0,1,2,3 [0,1,2,3]     149.3                 1 -5.6% (-37.6,+42.7) +2.5% (-73.5,+296.0) |    88%    11%     2%     1%     0%     8%     1% |     0%    97% |    2.79    2.73   0.000    0.0
+4 0,1,2,3 [0,1,2,3]     398.2 2.67× (1.78,4.01) +0.1% (-60.3,+152.7) -1.0% (-63.6,+169.4) |    78%    20%     6%     3%     0%    10%     5% |     0%    90% |    3.73    3.30   0.372    0.9
+
+MB/s and speedup: the off mode (median; speedup paired by round against 1 thread). Costs: each traced mode's throughput against off's, paired; an interval excluding 0 means that mode perturbs and its trace is not interpreted.
+Timeline (medians of complete traces; shares of the workers' time): dec = decoding; idle = on the jobs' lock or waiting in recv; i:sl-d, i:sl-r = idle while the scanner waited for a slot and the earliest block not taken was still decoding / ready for the reader (reader backpressure); i:in, i:rd = idle while the scanner waited for input / read a block; i:q = idle while jobs sat in the queue (handoff). s:in = the scanner waiting for input, a share of the span; r:wait = the reader waiting for its next block. Idle during slot waits, in worker-seconds, is in the file: an upper bound on what a wider window could recover.
+Full, per block over decode_block: elapsed, CPU, run-queue wait and timeslices (Linux). CPU counts memory stalls as running: CPU up with little run-queue wait is an on-CPU cost, not by itself contention. * = more threads than physical cores.
+
+Footprint ledger (src/trace.rs, docs/ledger.md): level 9 (434 blocks; at most 900000 rows a block), longest block 900000 rows, largest decoded 0.90 MB, input chunks of 4 MiB. Each buffer:
+  owner    buffer          how many           reserved    ≤ bound     live ≤       hot*  allocated 
+  worker   ll              threads             0.90 MB    0.90 MB    0.90 MB          –  once      
+  worker   tt              threads             3.60 MB    7.20 MB    3.60 MB    3.60 MB  once      
+  worker   rle             threads             0.90 MB    1.80 MB    0.90 MB          –  once      
+  worker   counts          threads              1.0 KB     1.0 KB     1.0 KB     1.0 KB  once      
+  worker   seg.bufs        threads             1.83 MB   ratchets    0.90 MB          –  once      
+  worker   seg.bufs.outer  threads             12.3 KB    24.6 KB    12.3 KB          –  once      
+  worker   seg.starts      threads              4.1 KB     4.1 KB     2.0 KB     2.0 KB  once      
+  worker   seg.next        threads              4.1 KB     8.2 KB     4.1 KB          –  once      
+  slot     symbols         slots               1.80 MB    1.80 MB    1.80 MB          –  once      
+  slot     out             slots + 1           0.90 MB    1.80 MB    0.90 MB          –  once      
+  input    chunks          INPUT_QUEUE + 2     4.19 MB    4.19 MB    4.19 MB          –  per chunk 
+  input    window          1                   4.19 MB   20.97 MB    6.29 MB          –  once      
+  decoder  block tables    1                   46.8 KB    46.8 KB    46.8 KB          –  per block 
+  decoder  stacks          threads + 2         2.10 MB    2.10 MB        0 B          –  once      
+    1 threads, window   2: reserved ≥  34.57 MB, ≤  56.73 MB + the segment buffers (they ratchet: measured below) · live ≤  35.73 MB (each buffer's maximum, summed) · hot*  3.60 MB · peak RSS (off, median) 34.3 MB
+    4 threads, window   8: reserved ≥  72.54 MB, ≤ 108.15 MB + the segment buffers (they ratchet: measured below) · live ≤  70.89 MB (each buffer's maximum, summed) · hot* 14.41 MB · peak RSS (off, median) 74.6 MB
+  * hot: a model of what the T-vector phase reads at random (each worker's T-vector), not a measured cache residency. Reserved is Vec capacity: pages never written are not resident, so RSS can be below it; RSS is resident pages, not cache residency.
+
+Queues and live structures (timeline medians; docs/ledger.md has the exact definitions):
+1 threads 0,1,2,3, window 2: reader waiting 96.7% (starved, the next block not ready, 94.8%; the handoff, ready and the reader not yet woken, 1.9%) · scanner backpressured (slot wait, the earliest untaken block ready: the reader binds) 2.3% (1.8% of it in the handoff) · slot wait, the earliest untaken still decoding (the workers bind) 88.3% · input wait 0.2%  [of the span]
+  workers: decoding 88.5% · idle, no job queued 10.0% · idle, a job queued (handoff) 0.6%  [of worker time] · mean decoding 0.88 of 1
+  T-vector phase (build and walk): mean 0.71 blocks, max 1 · live T-vectors mean 2.5 MB, max 3.6 MB (the hot model)
+  window: mean 1.9, max 2 of 2 · ready, not taken: max 2 blocks, 0.9 MB; mean 0.02 MB = 0.00 head of line (an earlier block decoding) + 0.00 reader busy + 0.02 handoff · ready→taken mean 0.19 ms, max 1.6 ms (decode mean 3.0 ms)
+  held: symbols mean 0.2 MB, 0.2 MB of it dead (read by MTF, not yet returned) · output buffers reserved/used 2.77×, largest 1.80 MB · window live ≤ 6.2 MB, reserved ≤ 8.4 MB
+  worker buffers (each at its end, mean MB): 13.26 total = seg.bufs 7.82 + tt 3.60 + ll 0.90 + rle 0.90 · ledger check: ok · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+4 threads 0,1,2,3, window 8: reader waiting 90.3% (starved, the next block not ready, 81.2%; the handoff, ready and the reader not yet woken, 9.1%) · scanner backpressured (slot wait, the earliest untaken block ready: the reader binds) 11.3% (7.4% of it in the handoff) · slot wait, the earliest untaken still decoding (the workers bind) 59.3% · input wait 0.3%  [of the span]
+  workers: decoding 78.3% · idle, no job queued 14.5% · idle, a job queued (handoff) 5.3%  [of worker time] · mean decoding 3.13 of 4
+  T-vector phase (build and walk): mean 2.57 blocks, max 4 · live T-vectors mean 9.2 MB, max 14.4 MB (the hot model)
+  window: mean 7.2, max 8 of 8 · ready, not taken: max 8 blocks, 3.6 MB; mean 0.36 MB = 0.18 head of line (an earlier block decoding) + 0.05 reader busy + 0.13 handoff · ready→taken mean 3.56 ms, max 17.5 ms (decode mean 3.8 ms)
+  held: symbols mean 0.8 MB, 0.6 MB of it dead (read by MTF, not yet returned) · output buffers reserved/used 2.37×, largest 1.80 MB · window live ≤ 6.2 MB, reserved ≤ 8.4 MB
+  worker buffers (each at its end, mean MB): 13.76 total = seg.bufs 6.08 + tt 5.40 + rle 1.35 + ll 0.90 · ledger check: ok · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+Written: <scratch>/attr-results/preparation-vm.dry-run/occupancy/wikidata-20261026/occupancy.json

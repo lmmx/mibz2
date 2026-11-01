@@ -1,0 +1,72 @@
+{
+ "label": "preparation-vm",
+ "allocation": {
+  "alloc": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "idle_siblings": [],
+  "cores": [
+   [
+    0
+   ],
+   [
+    1
+   ],
+   [
+    2
+   ],
+   [
+    3
+   ]
+  ],
+  "physical_cores_allowed": 4,
+  "includes_cpu0_core": true
+ },
+ "cpus": {
+  "0": {
+   "siblings": "0",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_driver'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq'"
+  },
+  "1": {
+   "siblings": "1",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_driver'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq'"
+  },
+  "2": {
+   "siblings": "2",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_driver'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq'"
+  },
+  "3": {
+   "siblings": "3",
+   "governor": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_governor'",
+   "driver": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_driver'",
+   "max_khz": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq'"
+  }
+ },
+ "lscpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Processor @ 2.80GHz\nCPU family:                              6\nModel:                                   85\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                7\nBogoMIPS:                                5599.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves arat umip avx512_vnni md_clear arch_capabilities\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               128 KiB (4 instances)\nL1i cache:                               128 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                33 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Mitigation; Enhanced IBRS\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI Vulnerable\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Vmscape:                   Not affected",
+ "topology": "CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE\n  0    0      0    0 0:0:0:0          yes\n  1    0      0    1 1:1:1:0          yes\n  2    0      0    2 2:2:2:0          yes\n  3    0      0    3 3:3:3:0          yes",
+ "smt_control": "notsupported",
+ "intel_no_turbo": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/intel_pstate/no_turbo'",
+ "nmi_watchdog": "0",
+ "perf_event_paranoid": "2",
+ "kernel": {
+  "system": "Linux",
+  "node": "vm",
+  "release": "6.18.44-fc-v185",
+  "version": "#1 SMP PREEMPT_DYNAMIC @0",
+  "machine": "x86_64",
+  "processor": "x86_64"
+ },
+ "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)\nbinary: rustc\ncommit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3\ncommit-date: 2026-07-07\nhost: x86_64-unknown-linux-gnu\nrelease: 1.97.0\nLLVM version: 22.1.6",
+ "head": "1b915e5f537e715a5e8f9b29916f65a612a43d62",
+ "loadavg": "0.99 0.74 0.49 1/105 6456",
+ "ps": "PID PSR %CPU\n 6446   1 37.5\n  100   0  1.6\n    1   2  0.0\n   87   1  0.0\n   31   3  0.0\n   21   1  0.0\n   26   2  0.0\n 6166   3  0.0\n   83   1  0.0\n   15   1  0.0\n   11   0  0.0\n 4246   2  0.0\n  155   1  0.0\n   53   2  0.0\n   51   3  0.0\n   45   1  0.0\n   46   3  0.0\n   67   3  0.0\n   65   0  0.0\n   18   0  0.0\n   84   2  0.0\n   70   1  0.0\n   56   2  0.0\n   32   3  0.0\n    2   3  0.0\n    3   1  0.0\n    4   0  0.0\n    5   0  0.0\n    6   0  0.0\n    7   0  0.0\n    8   0  0.0\n   10   0  0.0\n   13   0  0.0\n   14   0  0.0\n   16   0  0.0\n   17   1  0.0\n   19   0  0.0\n   20   1  0.0\n   22   1  0.0\n   23   1  0.0\n   24   1  0.0\n   25   2  0.0\n   27   2  0.0\n   29   2  0.0\n   30   3  0.0\n   33   3  0.0\n   34   3  0.0\n   35   2  0.0\n   36   3  0.0\n   37   3  0.0\n   38   3  0.0\n   39   3  0.0\n   40   3  0.0\n   41   0  0.0\n   42   1  0.0\n   44   3  0.0\n   47   3  0.0\n   48   0  0.0\n   49   3  0.0\n   50   0  0.0\n   54   3  0.0\n   55   3  0.0\n   57   2  0.0\n   58   2  0.0\n   59   2  0.0\n   60   2  0.0\n   61   2  0.0\n   62   0  0.0\n   63   1  0.0\n   64   1  0.0\n   66   2  0.0\n   76   2  0.0\n   78   0  0.0\n   80   2  0.0\n   81   0  0.0\n 1044   0  0.0\n 1896   3  0.0\n 6164   1  0.0\n 6165   2  0.0\n 6175   2  0.0\n 6457   2  0.0"
+}

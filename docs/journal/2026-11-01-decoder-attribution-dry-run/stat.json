@@ -1,0 +1,240 @@
+{
+ "plan": {
+  "machine": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  4\nOn-line CPU(s) list:                     0-3\nVendor ID:                               GenuineIntel\nModel name:                              Intel(R) Xeon(R) Processor @ 2.80GHz\nCPU family:                              6\nModel:                                   85\nThread(s) per core:                      1\nCore(s) per socket:                      4\nSocket(s):                               1\nStepping:                                7\nBogoMIPS:                                5599.99\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault ssbd ibrs ibpb stibp ibrs_enhanced fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm avx512f avx512dq rdseed adx smap clflushopt clwb avx512cd avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves arat umip avx512_vnni md_clear arch_capabilities\nHypervisor vendor:                       KVM\nVirtualization type:                     full\nL1d cache:                               128 KiB (4 instances)\nL1i cache:                               128 KiB (4 instances)\nL2 cache:                                4 MiB (4 instances)\nL3 cache:                                33 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-3\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Mitigation; Aligned branch/return thunks\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Mitigation; Enhanced IBRS\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI Vulnerable\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown\nVulnerability Vmscape:                   Not affected",
+  "perf": "perf version 6.8.12",
+  "nmi_watchdog": "0",
+  "paranoid": "2",
+  "groups": {},
+  "unavailable": {
+   "cycles": [
+    [
+     null,
+     100.0
+    ],
+    ""
+   ],
+   "ref-cycles": [
+    [
+     null,
+     100.0
+    ],
+    ""
+   ],
+   "instructions": [
+    [
+     null,
+     100.0
+    ],
+    ""
+   ],
+   "cycle_activity.stalls_l3_miss": [
+    [
+     null,
+     null
+    ],
+    "ctivity.stalls_l3_miss'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'cycle_activity.stalls_l3_miss'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "cycle_activity.stalls_mem_any": [
+    [
+     null,
+     null
+    ],
+    "ctivity.stalls_mem_any'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'cycle_activity.stalls_mem_any'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "cycle_activity.stalls_total": [
+    [
+     null,
+     null
+    ],
+    "le_activity.stalls_total'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'cycle_activity.stalls_total'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "mem_load_retired.l3_miss": [
+    [
+     null,
+     null
+    ],
+    ": 'mem_load_retired.l3_miss'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'mem_load_retired.l3_miss'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "mem_load_retired.l3_hit": [
+    [
+     null,
+     null
+    ],
+    "or: 'mem_load_retired.l3_hit'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'mem_load_retired.l3_hit'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "l1d_pend_miss.pending": [
+    [
+     null,
+     null
+    ],
+    " error: 'l1d_pend_miss.pending'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'l1d_pend_miss.pending'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "l1d_pend_miss.pending_cycles": [
+    [
+     null,
+     null
+    ],
+    "end_miss.pending_cycles'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'l1d_pend_miss.pending_cycles'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "l1d_pend_miss.fb_full": [
+    [
+     null,
+     null
+    ],
+    " error: 'l1d_pend_miss.fb_full'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'l1d_pend_miss.fb_full'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "offcore_requests.all_data_rd": [
+    [
+     null,
+     null
+    ],
+    "re_requests.all_data_rd'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'offcore_requests.all_data_rd'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "offcore_requests_outstanding.all_data_rd": [
+    [
+     null,
+     null
+    ],
+    "all_data_rd'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'offcore_requests_outstanding.all_data_rd'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "idq_uops_not_delivered.core": [
+    [
+     null,
+     null
+    ],
+    "_uops_not_delivered.core'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'idq_uops_not_delivered.core'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "uops_issued.any": [
+    [
+     null,
+     null
+    ],
+    "event syntax error: 'uops_issued.any'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'uops_issued.any'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "uops_retired.retire_slots": [
+    [
+     null,
+     null
+    ],
+    "'uops_retired.retire_slots'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'uops_retired.retire_slots'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "int_misc.recovery_cycles": [
+    [
+     null,
+     null
+    ],
+    ": 'int_misc.recovery_cycles'\n                     \\___ Bad event name\n\nUnable to find event on a PMU of 'int_misc.recovery_cycles'\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ],
+   "uncore_imc": [
+    null,
+    "{uncore_imc/data_reads/,uncore_imc/data_writes/}'\n                      \\___ Cannot find PMU `uncore_imc'. Missing kernel support?\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+   ]
+  },
+  "singletons": [
+   {
+    "group": "G0",
+    "event": "task-clock"
+   }
+  ],
+  "imc": null,
+  "sampled": [],
+  "unsampled": {
+   "cycles": "recorded 'task-clock'",
+   "cycle_activity.stalls_l3_miss": " name\n\nUnable to find event on a PMU of 'cycle_activity.stalls_l3_miss'\nRun 'perf list' for a list of valid events\n\n Usage: perf record [<options>] [<command>]\n    or: perf record [<options>] -- <command> [<options>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events"
+  }
+ },
+ "cpus": "0,1,2,3",
+ "reps": 1,
+ "runs": [
+  {
+   "corpus": "wikidata-20261026",
+   "w": 1,
+   "rep": 0,
+   "group": "G0:task-clock",
+   "rc": 0,
+   "wall_s": 1.4753966329999457,
+   "complete": true,
+   "values": {
+    "task-clock": 1490.98
+   },
+   "pct": {
+    "task-clock": 100.0
+   }
+  },
+  {
+   "corpus": "wikidata-20261026",
+   "w": 4,
+   "rep": 0,
+   "group": "G0:task-clock",
+   "rc": 0,
+   "wall_s": 0.520978997000384,
+   "complete": true,
+   "values": {
+    "task-clock": 1664.26
+   },
+   "pct": {
+    "task-clock": 100.0
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 1,
+   "rep": 0,
+   "group": "G0:task-clock",
+   "rc": 0,
+   "wall_s": 0.2534091940001417,
+   "complete": true,
+   "values": {
+    "task-clock": 316.49
+   },
+   "pct": {
+    "task-clock": 100.0
+   }
+  },
+  {
+   "corpus": "records",
+   "w": 4,
+   "rep": 0,
+   "group": "G0:task-clock",
+   "rc": 0,
+   "wall_s": 0.10917180000024018,
+   "complete": true,
+   "values": {
+    "task-clock": 275.3
+   },
+   "pct": {
+    "task-clock": 100.0
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 1,
+   "rep": 0,
+   "group": "G0:task-clock",
+   "rc": 0,
+   "wall_s": 0.17920141500007958,
+   "complete": true,
+   "values": {
+    "task-clock": 223.79
+   },
+   "pct": {
+    "task-clock": 100.0
+   }
+  },
+  {
+   "corpus": "random",
+   "w": 4,
+   "rep": 0,
+   "group": "G0:task-clock",
+   "rc": 0,
+   "wall_s": 0.09442804699983753,
+   "complete": true,
+   "values": {
+    "task-clock": 244.14
+   },
+   "pct": {
+    "task-clock": 100.0
+   }
+  }
+ ]
+}
