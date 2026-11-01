@@ -17,7 +17,7 @@ Four workers make mibz2 faster, but each decoded byte more expensive. Two experi
 find out why, and why buffer reuse comes first.
 {: .post-dek }
 
-1 November 2026 · 9 min read · By the independent researcher · [Research in progress](#6-where-the-investigation-stands)
+1 November 2026 · 10 min read · By the independent researcher · [Research in progress](#6-where-the-investigation-stands)
 {: .post-meta }
 
 </div>
@@ -28,7 +28,7 @@ find out why, and why buffer reuse comes first.
 
 Four workers make `mibz2` decompress data much faster than one. But they also make each byte more expensive to decode.
 
-On an Intel i9-10900K, the four-worker decoder consumes 32% more aggregate CPU time per output byte than the one-worker decoder, despite executing almost the same number of instructions. The additional cost is concentrated in inverse BWT, where several workers reconstruct different blocks while sharing the processor's memory hierarchy.
+Measured on four physical cores, the four-worker decoder consumes 32% more aggregate CPU time per output byte than the one-worker decoder, despite executing almost the same number of instructions. The additional cost is concentrated in inverse BWT, where several workers reconstruct different blocks while sharing the processor's memory hierarchy.
 
 We have measured where much of that extra CPU time appears. We have not yet established which physical interaction causes it.
 
@@ -44,7 +44,7 @@ The proposals answer different questions. One tests an available optimization; t
 
 `mibz2` exploits parallelism in two places. It assigns separate bzip2 blocks to different workers, and within each block it follows 32 independent traversal chains through the inverse Burrows–Wheeler transform (BWT).
 
-The second technique is particularly important. Inverse BWT follows a sequence of links through a table called the T-vector. Each entry identifies the next row and the byte to reconstruct. Because the next address depends on the current lookup, a single traversal chain spends much of its time waiting for memory.
+The second technique is particularly important. Inverse BWT follows a sequence of links through a table called the T-vector (an [earlier post](2026-10-29-compact-navigation-tables.md) introduces the transform and its table). Each entry identifies the next row and the byte to reconstruct. Because the next address depends on the current lookup, a single traversal chain spends much of its time waiting for memory.
 
 The 32-lane walker hides some of that latency by advancing other chains while one waits. Our earlier article, [32 lanes, 8.6 chains](2026-10-31-room-walk-overlap.md), explains the technique.
 
@@ -55,14 +55,16 @@ The performance measurements show why that matters.
 <figure class="bf-fig">
 <p class="bf-title">The concurrency penalty</p>
 <svg viewBox="0 0 720 236" role="img" aria-label="Full decoder CPU cost: 2.707 CPU-seconds per GB at one worker, 3.579 at four, 32.2% more CPU time per byte. Walk plus assembly: 1.234 CPU nanoseconds per BWT row at one worker, 1.806 at four, 1.46 times the cost."><rect x="0" y="0" width="352" height="236" rx="10" class="bf-card"/><text x="18" y="30" class="bf-ts">Full decoder CPU cost</text><text x="18" y="49" class="bf-tm">CPU-seconds per GB of decoded output</text><text x="18" y="85" class="bf-t">1 worker</text><rect x="88" y="70" width="196" height="22" rx="4" class="bf-track"/><rect x="88" y="70" width="148.2" height="22" rx="4" class="bf-steel"/><text x="296" y="86" class="bf-t-strong">2.707</text><text x="18" y="121" class="bf-t">4 workers</text><rect x="88" y="106" width="196" height="22" rx="4" class="bf-track"/><rect x="88" y="106" width="196.0" height="22" rx="4" class="bf-green"/><text x="296" y="122" class="bf-t-strong">3.579</text><text x="18" y="174" class="bf-big-green">+32.2%</text><text x="18" y="194" class="bf-tm">CPU time per byte</text><text x="18" y="220" class="bf-tm">More workers still increase throughput.</text><rect x="368" y="0" width="352" height="236" rx="10" class="bf-card"/><text x="386" y="30" class="bf-ts">Walk + assembly</text><text x="386" y="49" class="bf-tm">CPU nanoseconds per BWT row · full blocks</text><text x="386" y="85" class="bf-t">1 worker</text><rect x="456" y="70" width="196" height="22" rx="4" class="bf-track"/><rect x="456" y="70" width="133.9" height="22" rx="4" class="bf-steel"/><text x="664" y="86" class="bf-t-strong">1.234</text><text x="386" y="121" class="bf-t">4 workers</text><rect x="456" y="106" width="196" height="22" rx="4" class="bf-track"/><rect x="456" y="106" width="196.0" height="22" rx="4" class="bf-green"/><text x="664" y="122" class="bf-t-strong">1.806</text><text x="386" y="174" class="bf-big-green">1.46×</text><text x="386" y="194" class="bf-tm">CPU cost in this phase</text><text x="386" y="220" class="bf-tm">Includes the segment-assembly copy.</text></svg>
-<figcaption>Figure 1. The concurrency penalty, measured on four allocated physical cores of an i9-10900K. The left comparison covers the full decoder; the right uses 197 matched full-sized blocks. These are CPU-efficiency measurements, not a comparison of wall-clock throughput.</figcaption>
+<figcaption>Figure 1. The concurrency penalty, measured on four physical cores. The left comparison covers the full decoder; the right uses 197 matched full-sized blocks. These are CPU-efficiency measurements, not a comparison of wall-clock throughput.</figcaption>
 </figure>
+
+The left-hand figures are in CPU-seconds per gigabyte of decoded output (CPU-s/GB): the processor time of all the workers added together, per GB produced. It measures efficiency, not speed. Four workers finish a file much sooner than one, while spending more CPU-seconds on it in total.
 
 The original attribution experiment measured an increase from 2.707 to 3.579 CPU-s/GB. Retired instructions per byte rose by only about 1.3%, while cycles per byte rose by approximately 30%.
 
 In other words, the decoder is doing nearly the same logical work, but spending considerably more processor time doing it.
 
-A subsequent analysis of the archived block traces narrowed the increase further:
+A subsequent analysis of the archived block traces narrowed the increase further, to the four stages each block passes through: move-to-front decoding (MTF), T-vector construction, the traversal with its segment assembly, and the final expansion of repeated-byte runs (RLE1) with the block's checksum (CRC). Section 3 describes what each stage hands to the next.
 
 | Decoding phase        | One worker, ns/row | Four workers, ns/row | Increase |
 | --------------------- | ------------------ | -------------------- | -------- |
@@ -83,21 +85,21 @@ That is an observational association, not a controlled result. Longer walks may 
 
 The memory counters present several clues, but no unique explanation.
 
-On the i9, data requests leaving L2 remain approximately stable per decoded byte between one and four workers. A mixed outstanding-request residence proxy, however, increases from approximately 39 to 58 cycles per request.
+The number of data requests that miss each core's private caches stays roughly constant per decoded byte between one and four workers. But each request appears to stay outstanding for longer: by an approximate measure that mixes ordinary loads with prefetches, from about 39 processor cycles to about 58.
 
-Memory-controller traffic also rises substantially, especially writes.
+Traffic at the memory controller, between the processor and main memory (DRAM), also rises substantially, especially writes.
 
 One interpretation is that concurrent workers displace each other's T-vector cache lines, forcing more lookups to be served from DRAM.
 
-Another is that requests still reach the shared last-level cache, but queue longer because several cores are accessing it at once.
+Another is that requests still reach the last-level cache (the L3, shared by all the cores), but queue longer because several cores are accessing it at once.
 
-Intermediate-buffer stores may also contribute. Writing output can require cache-line ownership, generate writebacks, displace useful data and occupy hardware resources that loads and prefetches need.
+Intermediate-buffer stores may also contribute. To write a cache line, a core must first take exclusive ownership of it; the modified line must later be written back to memory. Writes can also displace useful data, and occupy hardware resources that loads and prefetches need.
 
 These effects are not independent. A little additional displacement can make prefetches later; later requests can keep hardware resources occupied longer; that can make subsequent requests more expensive.
 
 The existing counters cannot tell us which interaction starts the problem.
 
-For example, `OFFCORE_REQUESTS.ALL_DATA_RD` includes demand and prefetch activity. Its outstanding-request ratio is useful evidence of changed memory behaviour, but it is not a direct measurement of the service latency of an individual T-vector lookup.
+For example, the request-duration measure above counts prefetches together with the T-vector lookups the traversal actually waits for. It is useful evidence that memory behaviour changed, but it is not a direct measurement of how long an individual lookup waited. The [research record](https://github.com/lmmx/mibz2/blob/docs/bwt-memory-proposal/docs/journal/2026-11-01-bwt-memory-proposal.md) has the counters in detail.
 
 Nor does a rise in DRAM writes prove that those writes are delaying the traversal. They could be a consequence of the same cache pressure that makes traversal slower.
 
@@ -107,27 +109,37 @@ Astra and Claude independently proposed one experiment of each kind.
 
 ## 3. Astra's proposal: reuse an intermediate buffer
 
-Astra's experiment concerns an existing, untested research direction called P87.
+Astra's experiment concerns an existing, untested research direction called P87. The name is its entry in our [research register](https://github.com/lmmx/mibz2/blob/9723f06847b88a10ba93d07c3f35680e58766015/docs/journal/2026-10-30-research-portfolio-register.md): a list of about 165 ideas for speeding up the decoder, gathered from the project's journals, research branches, issues and pull requests, each recorded with its status and what would test it. P87, "walk output in L's freed buffer", had been recorded there but never run.
 
-The current decoder uses separate byte arrays for the BWT's last column and its reconstructed output:
+To see what it changes, follow one block through the decoder's working buffers. Each worker keeps a few byte buffers that it reuses from block to block. Two of them matter here, and each is named after the data it holds:
+
+1. **`ll` holds the BWT's last column.** Move-to-front (MTF) decoding, the stage before the inverse BWT, turns the block's compressed symbols back into the output of the Burrows–Wheeler transform: the block's bytes, but still in the transform's scrambled order (the last column of its sorted table).
+2. **The T-vector is built from `ll`.** Construction reads each byte of `ll` once, to make the links that undo the transform.
+3. **The traversal writes temporary segments.** Each of the [32 lanes](2026-10-31-room-walk-overlap.md) reconstructs a separate stretch of the block, in its original order, into a segment buffer of its own.
+4. **Assembly joins the segments into `rle`.** The pieces are copied, in order, into one contiguous buffer. The block is now back in its original order, except for one last encoding: before the transform, bzip2 shortened each run of four or more identical bytes into a few bytes and a count, and those runs are still in that short form.
+5. **RLE1 expands those runs** into the final decoded bytes, and the block's checksum (CRC) is checked over them.
+
+<figure class="bf-fig">
+<p class="bf-title">What each buffer holds</p>
+<svg viewBox="0 0 720 334" role="img" aria-label="One block through the current decoder. MTF decoding writes ll, the BWT last-column bytes in scrambled order. T-vector construction reads ll once, and the 32-lane traversal writes temporary segment buffers, each a stretch of the block in original order. Segment assembly copies the pieces in order into rle: the whole block in original order, with runs of repeated bytes still encoded. RLE1 expands the runs into the decoded output, whose checksum is checked."><rect x="0" y="0" width="720" height="58" rx="8" class="bf-card"/><text x="18" y="24" class="bf-ts">ll · the BWT's last column</text><text x="18" y="44" class="bf-tm">Written by move-to-front (MTF) decoding: the block's bytes, still in the transform's scrambled order</text><path d="M40 62V88m-5-5 5 5 5-5" class="bf-arrow"/><text x="60" y="80" class="bf-t">T-vector construction reads ll once; the 32-lane traversal then follows the T-vector</text><rect x="0" y="92" width="720" height="58" rx="8" class="bf-card"/><text x="18" y="116" class="bf-ts">Segment buffers · temporary pieces</text><text x="18" y="136" class="bf-tm">Each of the 32 lanes reconstructs its own stretch of the block, in the original order</text><path d="M40 154V180m-5-5 5 5 5-5" class="bf-arrow"/><text x="60" y="172" class="bf-t">Segment assembly copies the pieces, in order, into one buffer</text><rect x="0" y="184" width="720" height="58" rx="8" class="bf-slot"/><text x="18" y="208" class="bf-ts">rle · the assembled sequence, before RLE1</text><text x="18" y="228" class="bf-tm">The whole block back in its original order; runs of repeated bytes still in their short encoded form</text><path d="M40 246V272m-5-5 5 5 5-5" class="bf-arrow"/><text x="60" y="264" class="bf-t">RLE1 expands each encoded run back into the repeated bytes</text><rect x="0" y="276" width="720" height="58" rx="8" class="bf-card-hi"/><text x="18" y="300" class="bf-t-green">Decoded output</text><text x="18" y="320" class="bf-tm">The block's original bytes, and its checksum (CRC) checked over them</text></svg>
+<figcaption>Figure 2. One block through the current decoder. P87 changes where the third stage's bytes are stored, not what those bytes are.</figcaption>
+</figure>
+
+So `ll` and `rle` aren't two algorithms. They are two areas of reusable storage, holding two different representations of the block: `ll` the transformed bytes, which only T-vector construction reads, and `rle` the reconstructed sequence, waiting for its runs to be expanded. In the code they are two fields of each worker's scratch space:
 
 ```rust
-ll: Vec<u8>,   // Last column, produced by MTF
-rle: Vec<u8>,  // Contiguous output of inverse BWT
+ll: Vec<u8>,   // The BWT's last column, written by MTF
+rle: Vec<u8>,  // The assembled sequence, before RLE1 expands its runs
 ```
 
-MTF writes the last column into `ll`. The T-vector builder reads `ll` and constructs the navigation table. The 32-lane walker then uses that table to reconstruct the text into a collection of segment buffers.
+The decoder needs both today because the assembly writes into `rle` while `ll` still exists. But once T-vector construction has finished, the **contents** of `ll` are no longer needed: the segmented traversal reads only the T-vector. Its **storage**, about 0.9 MB for a full block, remains allocated, and the next block's MTF output will fill it again.
 
-Finally, segment assembly copies the completed segments into `rle`, which the RLE1 decoder consumes.
-
-Once T-vector construction has finished, the original contents of `ll` are no longer needed by the ordinary segmented inverse-BWT path.
-
-P87 proposes using that allocation as the assembly destination.
+P87 proposes writing the assembly into that storage instead. The assembled bytes are exactly the same; only where they are written changes. P87 doesn't remove the assembly copy or skip a stage, and it doesn't by itself mean less traffic to main memory. It changes which memory the copy writes into.
 
 <figure class="bf-fig">
 <p class="bf-title">The proposed P87 comparison</p>
-<svg viewBox="0 0 720 452" role="img" aria-label="Both arms: MTF writes ll, the four-byte T-vector is built, the same 32-lane traversal produces segment buffers. Arm A assembles into rle, a separate persistent allocation, which RLE1 reads; arm B assembles into ll, overwriting the now-dead last column, which RLE1 then reads."><rect x="0" y="0" width="352" height="54" rx="8" class="bf-panel"/><text x="18" y="24" class="bf-ts">A · Existing layout</text><text x="18" y="43" class="bf-tm">Distinct assembly destination</text><rect x="16" y="74" width="320" height="56" rx="8" class="bf-card"/><text x="176" y="98" class="bf-ts" text-anchor="middle">MTF writes ll</text><text x="176" y="117" class="bf-tm" text-anchor="middle">Last-column bytes · about 0.9 MB</text><path d="M176 134V150m-5-5 5 5 5-5" class="bf-arrow"/><rect x="16" y="154" width="320" height="56" rx="8" class="bf-card"/><text x="176" y="178" class="bf-ts" text-anchor="middle">Build four-byte T-vector</text><text x="176" y="197" class="bf-tm" text-anchor="middle">Last read of the original ll contents</text><path d="M176 214V230m-5-5 5 5 5-5" class="bf-arrow"/><rect x="16" y="234" width="320" height="56" rx="8" class="bf-card"/><text x="176" y="258" class="bf-ts" text-anchor="middle">32-lane T-vector traversal</text><text x="176" y="277" class="bf-tm" text-anchor="middle">Produces segment buffers</text><path d="M176 294V310m-5-5 5 5 5-5" class="bf-arrow"/><rect x="16" y="314" width="320" height="56" rx="8" class="bf-slot"/><text x="176" y="338" class="bf-ts" text-anchor="middle">Assemble into rle</text><text x="176" y="357" class="bf-tm" text-anchor="middle">A separate, persistent byte allocation</text><path d="M176 374V390m-5-5 5 5 5-5" class="bf-arrow"/><text x="176" y="410" class="bf-t-strong" text-anchor="middle">RLE1 reads rle</text><rect x="368" y="0" width="352" height="54" rx="8" class="bf-cell-hi"/><text x="386" y="24" class="bf-t-green">B · P87 reuse</text><text x="386" y="43" class="bf-tm">The last-column allocation is reused</text><rect x="384" y="74" width="320" height="56" rx="8" class="bf-card"/><text x="544" y="98" class="bf-ts" text-anchor="middle">MTF writes ll</text><text x="544" y="117" class="bf-tm" text-anchor="middle">Last-column bytes · about 0.9 MB</text><path d="M544 134V150m-5-5 5 5 5-5" class="bf-arrow"/><rect x="384" y="154" width="320" height="56" rx="8" class="bf-card"/><text x="544" y="178" class="bf-ts" text-anchor="middle">Build four-byte T-vector</text><text x="544" y="197" class="bf-tm" text-anchor="middle">Original ll contents are now dead</text><path d="M544 214V230m-5-5 5 5 5-5" class="bf-arrow"/><rect x="384" y="234" width="320" height="56" rx="8" class="bf-card"/><text x="544" y="258" class="bf-ts" text-anchor="middle">Same 32-lane traversal</text><text x="544" y="277" class="bf-tm" text-anchor="middle">Same segment buffers and prefetches</text><path d="M544 294V310m-5-5 5 5 5-5" class="bf-arrow"/><rect x="384" y="314" width="320" height="56" rx="8" class="bf-card-hi"/><text x="544" y="338" class="bf-t-green" text-anchor="middle">Assemble into ll</text><text x="544" y="357" class="bf-tm" text-anchor="middle">Overwrite the now-dead last column</text><path d="M544 374V390m-5-5 5 5 5-5" class="bf-arrow"/><text x="544" y="410" class="bf-t-strong" text-anchor="middle">RLE1 reads reused ll</text><path d="M0 418H720" class="bf-rule"/><text x="360" y="442" class="bf-tm" text-anchor="middle">Same traversal. Same logical assembly copy. Different destination history.</text></svg>
-<figcaption>Figure 2. The proposed P87 comparison. Both arms construct and traverse the same T-vector, produce the same segments and perform the same assembly copy. Only the byte arena receiving that copy differs.</figcaption>
+<svg viewBox="0 0 720 452" role="img" aria-label="Both arms: MTF writes ll, the BWT last-column bytes; T-vector construction reads ll, its last use; the same 32-lane traversal produces temporary segments. Arm A, the current decoder, assembles them into separate rle storage, which RLE1 expands into the final output. Arm B, P87, assembles the same bytes into ll storage, whose old contents are no longer needed, and RLE1 expands them from there. The assembled bytes are identical; only the storage differs."><rect x="0" y="0" width="352" height="54" rx="8" class="bf-panel"/><text x="18" y="24" class="bf-ts">A · Current decoder</text><text x="18" y="43" class="bf-tm">Assembled bytes go to separate storage</text><rect x="16" y="74" width="320" height="56" rx="8" class="bf-card"/><text x="176" y="98" class="bf-ts" text-anchor="middle">ll: BWT last-column bytes</text><text x="176" y="117" class="bf-tm" text-anchor="middle">Written by MTF · about 0.9 MB</text><path d="M176 134V150m-5-5 5 5 5-5" class="bf-arrow"/><rect x="16" y="154" width="320" height="56" rx="8" class="bf-card"/><text x="176" y="178" class="bf-ts" text-anchor="middle">T-vector construction reads ll</text><text x="176" y="197" class="bf-tm" text-anchor="middle">The last use of ll's contents</text><path d="M176 214V230m-5-5 5 5 5-5" class="bf-arrow"/><rect x="16" y="234" width="320" height="56" rx="8" class="bf-card"/><text x="176" y="258" class="bf-ts" text-anchor="middle">Traversal: temporary segments</text><text x="176" y="277" class="bf-tm" text-anchor="middle">32 lanes, each a stretch of the block</text><path d="M176 294V310m-5-5 5 5 5-5" class="bf-arrow"/><rect x="16" y="314" width="320" height="56" rx="8" class="bf-slot"/><text x="176" y="338" class="bf-ts" text-anchor="middle">Assemble into separate rle</text><text x="176" y="357" class="bf-tm" text-anchor="middle">Its own storage, written every block</text><path d="M176 374V390m-5-5 5 5 5-5" class="bf-arrow"/><text x="176" y="410" class="bf-t-strong" text-anchor="middle">RLE1 expands rle into the final output</text><rect x="368" y="0" width="352" height="54" rx="8" class="bf-cell-hi"/><text x="386" y="24" class="bf-t-green">B · P87</text><text x="386" y="43" class="bf-tm">Assembled bytes reuse ll's storage</text><rect x="384" y="74" width="320" height="56" rx="8" class="bf-card"/><text x="544" y="98" class="bf-ts" text-anchor="middle">ll: BWT last-column bytes</text><text x="544" y="117" class="bf-tm" text-anchor="middle">Written by MTF · about 0.9 MB</text><path d="M544 134V150m-5-5 5 5 5-5" class="bf-arrow"/><rect x="384" y="154" width="320" height="56" rx="8" class="bf-card"/><text x="544" y="178" class="bf-ts" text-anchor="middle">T-vector construction reads ll</text><text x="544" y="197" class="bf-tm" text-anchor="middle">Now ll's contents are no longer needed</text><path d="M544 214V230m-5-5 5 5 5-5" class="bf-arrow"/><rect x="384" y="234" width="320" height="56" rx="8" class="bf-card"/><text x="544" y="258" class="bf-ts" text-anchor="middle">Traversal: temporary segments</text><text x="544" y="277" class="bf-tm" text-anchor="middle">The same lanes, the same segments</text><path d="M544 294V310m-5-5 5 5 5-5" class="bf-arrow"/><rect x="384" y="314" width="320" height="56" rx="8" class="bf-card-hi"/><text x="544" y="338" class="bf-t-green" text-anchor="middle">Assemble into reusable ll</text><text x="544" y="357" class="bf-tm" text-anchor="middle">The same bytes, over the dead contents</text><path d="M544 374V390m-5-5 5 5 5-5" class="bf-arrow"/><text x="544" y="410" class="bf-t-strong" text-anchor="middle">RLE1 expands ll into the final output</text><path d="M0 418H720" class="bf-rule"/><text x="360" y="442" class="bf-tm" text-anchor="middle">The assembled bytes are identical in both arms. Only the storage they are written into changes.</text></svg>
+<figcaption>Figure 3. The proposed P87 comparison. Both arms construct and traverse the same T-vector, produce the same segments and perform the same assembly copy, so the assembled bytes are identical. Only the storage receiving them differs.</figcaption>
 </figure>
 
 The distinction from an ordinary copy-elimination optimization is deliberate.
@@ -158,7 +170,7 @@ By the time assembly begins, the intervening traversal may have evicted much of 
 
 The proposed experiment changes those access histories and measures whether the difference matters. It does not assume that one is better.
 
-For the diagnostic, both allocations would remain allocated and prefaulted in both experimental arms. That prevents an apparent benefit from being explained merely by fewer allocations or page faults. A later production implementation could separately test whether the unused arena can be removed to save memory.
+For the diagnostic, both buffers would be allocated at full size, with their memory touched once in advance, in both experimental arms. That prevents an apparent benefit from being explained merely by fewer allocations, or by the operating system mapping fewer fresh pages of memory. A later production implementation could separately test whether the unused arena can be removed to save memory.
 
 ## 4. Claude's proposal: change the competing workloads
 
@@ -173,7 +185,7 @@ Three neighbouring cores then run one selected type of workload at a time.
 <figure class="bf-fig">
 <p class="bf-title">One measured walker, three controlled neighbours</p>
 <svg viewBox="0 0 720 300" role="img" aria-label="Core 1 runs the target walker, the same decoding work measured in every arm; cores 2 to 4 run controlled neighbour workloads that change between arms. All four share the last-level cache, which sits in front of the memory controller and DRAM."><text x="0" y="14" class="bf-tm">Four physical cores on the same processor</text><rect x="0" y="28" width="168" height="96" rx="10" class="bf-card-hi"/><text x="14" y="50" class="bf-tm">CORE 1</text><text x="14" y="74" class="bf-t-green">Target walker</text><text x="14" y="94" class="bf-tm">Same decoding work</text><text x="14" y="111" class="bf-tm">Measured every arm</text><path d="M84 128V150m-5-5 5 5 5-5" class="bf-arrow"/><rect x="184" y="28" width="168" height="96" rx="10" class="bf-card"/><text x="198" y="50" class="bf-tm">CORE 2</text><text x="198" y="74" class="bf-ts">Neighbour</text><text x="198" y="94" class="bf-tm">Controlled workload</text><text x="198" y="111" class="bf-tm">Changes between arms</text><path d="M268 128V150m-5-5 5 5 5-5" class="bf-arrow"/><rect x="368" y="28" width="168" height="96" rx="10" class="bf-card"/><text x="382" y="50" class="bf-tm">CORE 3</text><text x="382" y="74" class="bf-ts">Neighbour</text><text x="382" y="94" class="bf-tm">Controlled workload</text><text x="382" y="111" class="bf-tm">Changes between arms</text><path d="M452 128V150m-5-5 5 5 5-5" class="bf-arrow"/><rect x="552" y="28" width="168" height="96" rx="10" class="bf-card"/><text x="566" y="50" class="bf-tm">CORE 4</text><text x="566" y="74" class="bf-ts">Neighbour</text><text x="566" y="94" class="bf-tm">Controlled workload</text><text x="566" y="111" class="bf-tm">Changes between arms</text><path d="M636 128V150m-5-5 5 5 5-5" class="bf-arrow"/><rect x="0" y="156" width="720" height="62" rx="10" class="bf-slot"/><text x="360" y="182" class="bf-ts" text-anchor="middle">Shared last-level cache</text><text x="360" y="203" class="bf-tm" text-anchor="middle">Capacity, line replacement, requests and shared-cache contention</text><path d="M360 222V246m-5-5 5 5 5-5" class="bf-arrow"/><rect x="190" y="250" width="340" height="48" rx="8" class="bf-pill"/><text x="360" y="279" class="bf-ts" text-anchor="middle">Memory controller and DRAM</text></svg>
-<figcaption>Figure 3. Claude's proposed experimental topology. The target is held fixed while the three neighbouring cores run controlled workloads. The diagram shows the shared resources, not an assumption that individual resources can be varied independently.</figcaption>
+<figcaption>Figure 4. Claude's proposed experimental topology. The target is held fixed while the three neighbouring cores run controlled workloads. The diagram shows the shared resources, not an assumption that individual resources can be varied independently.</figcaption>
 </figure>
 
 The neighbour workloads are chosen to exercise different aspects of the memory system.
