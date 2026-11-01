@@ -1,0 +1,141 @@
+{
+ "protocol": "2026-11-01-p87-four-core-protocol",
+ "decisions": {
+  "mechanism": "INCONCLUSIVE",
+  "engineering": "NOT DEMONSTRATED",
+  "practical": false,
+  "matrix": "Neither decision reached: nothing changes; the record says which interval crossed which bound."
+ },
+ "instructions_check": "pass",
+ "historical_P87_criterion": "not evaluated: registered at 6-10 workers (occupancy curve >= 1.03x, with DRAM write bytes per output byte); this diagnostic runs four",
+ "mechanism": {
+  "mean": 0.07798768761199482,
+  "se": 0.017297797699757117,
+  "df": 19,
+  "rho1": -0.010507673333453737,
+  "n_eff": 20,
+  "lower95": 0.041782980938114486,
+  "upper95": 0.11419239428587515
+ },
+ "mechanism_AA": {
+  "mean": 0.0023538576386127772,
+  "se": 0.01240089120644645,
+  "df": 19,
+  "rho1": -0.23924803423019508,
+  "n_eff": 20,
+  "lower95": -0.02360150595258009,
+  "upper95": 0.028309221229805646
+ },
+ "delta_w1": {
+  "mean": -0.012095374166601447,
+  "se": 0.01359589023039469,
+  "df": 19,
+  "rho1": -0.014220146511386655,
+  "n_eff": 20,
+  "lower95": -0.04055189945991243,
+  "upper95": 0.01636115112670954
+ },
+ "delta_w4": {
+  "mean": 0.06589231344539337,
+  "se": 0.012171073528152845,
+  "df": 19,
+  "rho1": -0.3369635770284231,
+  "n_eff": 20,
+  "lower95": 0.04041796378299728,
+  "upper95": 0.09136666310778946
+ },
+ "engineering_primary_w4": {
+  "X": {
+   "mean_log": 0.013389328112910373,
+   "se": 0.0049924113387527684,
+   "df": 19,
+   "rho1": -0.19949785811490237,
+   "n_eff": 20,
+   "ratio": 1.0134793665692696,
+   "lower95": 1.0029444173980857,
+   "upper95": 1.024124975067246
+  },
+  "CPU": {
+   "mean_log": -0.01728696588713348,
+   "se": 0.003191579912933793,
+   "df": 19,
+   "rho1": -0.33695552202540585,
+   "n_eff": 20,
+   "ratio": 0.9828615964120531,
+   "lower95": 0.9763179087612769,
+   "upper95": 0.9894491425721188
+  },
+  "improves": true,
+  "worse": false,
+  "practical": false
+ },
+ "phases": {
+  "interpretable": true,
+  "traversal_direction": {
+   "single_worker_A_minus_B": 0.001284657963156688,
+   "four_worker_A_minus_B": 0.03589124365795793,
+   "cross_worker_part": 0.03460658569480124,
+   "note": "a block's traversal precedes its own assembly: a traversal difference at w = 1 can only be persistent (an earlier block's assembly leaving a different cache state); the part that grows from w = 1 to 4 is cross-worker"
+  }
+ },
+ "dram": {
+  "w=1": {
+   "reps": 6,
+   "uncore_imc/data_reads/": {
+    "A": 2.3269784833854183e-05,
+    "B": 2.215932961223023e-05,
+    "B_minus_A": {
+     "mean": -1.110455221623955e-06,
+     "se": 2.414260808515005e-06,
+     "df": 5,
+     "rho1": 0.0,
+     "n_eff": 6,
+     "lower95": -7.316510202481265e-06,
+     "upper95": 5.0955997592333555e-06
+    }
+   },
+   "uncore_imc/data_writes/": {
+    "A": 1.653980246679263e-05,
+    "B": 1.5267796578051633e-05,
+    "B_minus_A": {
+     "mean": -1.2720058887409957e-06,
+     "se": 9.014994262693736e-07,
+     "df": 5,
+     "rho1": 0.0,
+     "n_eff": 6,
+     "lower95": -3.589383938745605e-06,
+     "upper95": 1.0453721612636137e-06
+    }
+   }
+  },
+  "w=4": {
+   "reps": 6,
+   "uncore_imc/data_reads/": {
+    "A": 0.0005497854088914022,
+    "B": 0.0004949850075735992,
+    "B_minus_A": {
+     "mean": -5.4800401317803097e-05,
+     "se": 5.725144264416818e-06,
+     "df": 5,
+     "rho1": 0.0,
+     "n_eff": 6,
+     "lower95": -6.951735317031038e-05,
+     "upper95": -4.00834494652958e-05
+    }
+   },
+   "uncore_imc/data_writes/": {
+    "A": 0.00040808056556419363,
+    "B": 0.0003549422745812592,
+    "B_minus_A": {
+     "mean": -5.31382909829344e-05,
+     "se": 2.382185325368841e-06,
+     "df": 5,
+     "rho1": 0.0,
+     "n_eff": 6,
+     "lower95": -5.926189330944692e-05,
+     "upper95": -4.701468865642188e-05
+    }
+   }
+  }
+ }
+}

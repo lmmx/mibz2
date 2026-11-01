@@ -1,0 +1,3 @@
+CHECK	wikidata-20261026	primary	434	Aw1:threads=4	Aw4:threads=7	Bw1:threads=4	Bw4:threads=7	shippedw1:threads=4	shippedw4:threads=7	ok
+CHECK	records	control	11	Aw1:threads=4	Aw4:threads=7	Bw1:threads=4	Bw4:threads=7	shippedw1:threads=4	shippedw4:threads=7	ok
+CHECK	random	control	9	Aw1:threads=4	Aw4:threads=7	Bw1:threads=4	Bw4:threads=7	shippedw1:threads=4	shippedw4:threads=7	ok
