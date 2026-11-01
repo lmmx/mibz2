@@ -1,0 +1,11 @@
+<repo>/target/walk-decoder/work/corpora/wikidata-fitted.bz2
+<repo>/target/walk-decoder/work/corpora/wikidata-heldout.bz2
+<repo>/target/walk-decoder/work/corpora/wikidata-20261026.bz2
+<repo>/target/walk-decoder/work/corpora/random.bz2
+<repo>/target/walk-decoder/work/corpora/records.bz2
+<repo>/target/walk-decoder/work/corpora/mixed-independent.bz2
+<repo>/target/walk-decoder/work/corpora/text.bz2
+<repo>/target/walk-decoder/work/corpora/text-l1.bz2
+<repo>/target/walk-decoder/work/corpora/text-l5.bz2
+<repo>/target/walk-decoder/work/corpora/zeros.bz2
+<repo>/target/walk-decoder/work/corpora/period-3.bz2

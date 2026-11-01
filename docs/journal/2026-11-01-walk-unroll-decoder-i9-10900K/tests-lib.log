@@ -1,0 +1,8 @@
+
+running 3 tests
+test bwt::tests::miri_room_walk_unrolled_handoffs ... ok
+test bwt::tests::segmented_unrolled_kernel_equals_segmented ... ok
+test bwt::tests::unrolled_room_walk_equals_plain ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 32 filtered out; finished in 0.93s
+

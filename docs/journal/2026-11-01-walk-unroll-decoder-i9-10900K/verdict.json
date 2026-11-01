@@ -1,0 +1,311 @@
+{
+ "overall": "NEGATIVE",
+ "correctness": {
+  "all_sha_ok": true,
+  "all_workers_plan": true,
+  "all_threads_within_allocation": true
+ },
+ "gates": {
+  "1_primary": {
+   "row": {
+    "mean_log": -0.0003769590804309923,
+    "se": 0.005890169428818932,
+    "df": 19,
+    "rho1": -0.0857164416600748,
+    "n_eff": 20,
+    "ratio": 0.9996231119597164,
+    "lower95": 0.9873751452607096,
+    "upper95": 1.0120230094511684
+   },
+   "outcome": "NEGATIVE",
+   "demonstrated_harm": false,
+   "lower_above_1": false
+  },
+  "2_secondary_flags": {
+   "wikidata-fitted": {
+    "by_w": {
+     "1": {
+      "ratio": 1.0181077971829142,
+      "lower95": 1.0046935275083666,
+      "upper95": 1.0317011688681492
+     },
+     "2": {
+      "ratio": 1.0198046221608548,
+      "lower95": 0.9853969603341465,
+      "upper95": 1.0554137157354138
+     },
+     "3": {
+      "ratio": 1.0037185131893365,
+      "lower95": 0.9951612174226127,
+      "upper95": 1.0123493923208027
+     },
+     "4": {
+      "ratio": 1.0076269606543,
+      "lower95": 0.9946859707722963,
+      "upper95": 1.0207363144461676
+     }
+    },
+    "material_deterioration": false
+   },
+   "wikidata-heldout": {
+    "by_w": {
+     "1": {
+      "ratio": 1.007500285378369,
+      "lower95": 0.993867238410897,
+      "upper95": 1.0213203391838113
+     },
+     "2": {
+      "ratio": 1.0009850041444643,
+      "lower95": 0.9824341575577935,
+      "upper95": 1.0198861377263853
+     },
+     "3": {
+      "ratio": 1.0083077763976012,
+      "lower95": 0.992337891017293,
+      "upper95": 1.0245346682284024
+     },
+     "4": {
+      "ratio": 1.0124823529171993,
+      "lower95": 0.995632516437675,
+      "upper95": 1.029617351828343
+     }
+    },
+    "material_deterioration": false
+   }
+  },
+  "3_controls": {
+   "rows": {
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "random w=3": "PASS",
+    "random w=4": "PASS",
+    "records w=1": "INCONCLUSIVE",
+    "records w=2": "INCONCLUSIVE",
+    "records w=3": "PASS",
+    "records w=4": "INCONCLUSIVE",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "PASS",
+    "mixed-independent w=3": "PASS",
+    "mixed-independent w=4": "PASS",
+    "text w=1": "PASS",
+    "text w=2": "PASS",
+    "text w=3": "PASS",
+    "text w=4": "PASS",
+    "text-l1 w=1": "PASS",
+    "text-l1 w=2": "PASS",
+    "text-l1 w=3": "PASS",
+    "text-l1 w=4": "INCONCLUSIVE",
+    "text-l5 w=1": "PASS",
+    "text-l5 w=2": "PASS",
+    "text-l5 w=3": "PASS",
+    "text-l5 w=4": "INCONCLUSIVE",
+    "zeros w=1": "PASS",
+    "zeros w=2": "INCONCLUSIVE",
+    "zeros w=3": "PASS",
+    "zeros w=4": "INCONCLUSIVE",
+    "period-3 w=1": "PASS",
+    "period-3 w=2": "PASS",
+    "period-3 w=3": "PASS",
+    "period-3 w=4": "INCONCLUSIVE"
+   },
+   "outcome": "INCONCLUSIVE"
+  },
+  "4_cpu": {
+   "rows": {
+    "wikidata-20261026": "PASS",
+    "wikidata-fitted": "PASS",
+    "wikidata-heldout": "PASS",
+    "random": "PASS",
+    "records": "NEGATIVE",
+    "mixed-independent": "INCONCLUSIVE",
+    "text": "PASS",
+    "text-l1": "PASS",
+    "text-l5": "INCONCLUSIVE",
+    "zeros": "INCONCLUSIVE",
+    "period-3": "PASS"
+   },
+   "outcome": "NEGATIVE",
+   "sensitivity_descriptive": {
+    "wikidata-20261026": {
+     "ratio": 0.9944757051710394,
+     "upper95": 1.0001189895083011,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "wikidata-fitted": {
+     "ratio": 0.9892590219324126,
+     "upper95": 0.9992089084761201,
+     "upper_le_1_00": true,
+     "upper_le_1_02": true
+    },
+    "wikidata-heldout": {
+     "ratio": 0.988309729366825,
+     "upper95": 0.9998698629178966,
+     "upper_le_1_00": true,
+     "upper_le_1_02": true
+    },
+    "random": {
+     "ratio": 0.9988257645015861,
+     "upper95": 1.0061480459448127,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "records": {
+     "ratio": 1.0179410995997915,
+     "upper95": 1.025692753901356,
+     "upper_le_1_00": false,
+     "upper_le_1_02": false
+    },
+    "mixed-independent": {
+     "ratio": 0.9973797096347287,
+     "upper95": 1.018533624954212,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "text": {
+     "ratio": 0.9893409897348806,
+     "upper95": 1.0025236348858009,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "text-l1": {
+     "ratio": 0.9888426426479915,
+     "upper95": 0.9994667163397818,
+     "upper_le_1_00": true,
+     "upper_le_1_02": true
+    },
+    "text-l5": {
+     "ratio": 0.9939858227595488,
+     "upper95": 1.0118405207117998,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "zeros": {
+     "ratio": 1.0004957641025154,
+     "upper95": 1.0781277743895121,
+     "upper_le_1_00": false,
+     "upper_le_1_02": false
+    },
+    "period-3": {
+     "ratio": 0.9665430041245772,
+     "upper95": 1.0030627342376393,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    }
+   }
+  },
+  "5_rss": {
+   "rows": {
+    "wikidata-20261026 w=1": "PASS",
+    "wikidata-20261026 w=2": "PASS",
+    "wikidata-20261026 w=3": "PASS",
+    "wikidata-20261026 w=4": "PASS",
+    "wikidata-fitted w=1": "PASS",
+    "wikidata-fitted w=2": "PASS",
+    "wikidata-fitted w=3": "PASS",
+    "wikidata-fitted w=4": "PASS",
+    "wikidata-heldout w=1": "PASS",
+    "wikidata-heldout w=2": "PASS",
+    "wikidata-heldout w=3": "PASS",
+    "wikidata-heldout w=4": "PASS",
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "random w=3": "PASS",
+    "random w=4": "INCONCLUSIVE",
+    "records w=1": "PASS",
+    "records w=2": "PASS",
+    "records w=3": "PASS",
+    "records w=4": "PASS",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "PASS",
+    "mixed-independent w=3": "PASS",
+    "mixed-independent w=4": "PASS",
+    "text w=1": "PASS",
+    "text w=2": "PASS",
+    "text w=3": "INCONCLUSIVE",
+    "text w=4": "PASS",
+    "text-l1 w=1": "PASS",
+    "text-l1 w=2": "PASS",
+    "text-l1 w=3": "PASS",
+    "text-l1 w=4": "PASS",
+    "text-l5 w=1": "PASS",
+    "text-l5 w=2": "PASS",
+    "text-l5 w=3": "PASS",
+    "text-l5 w=4": "INCONCLUSIVE",
+    "zeros w=1": "PASS",
+    "zeros w=2": "PASS",
+    "zeros w=3": "PASS",
+    "zeros w=4": "PASS",
+    "period-3 w=1": "INCONCLUSIVE",
+    "period-3 w=2": "INCONCLUSIVE",
+    "period-3 w=3": "PASS",
+    "period-3 w=4": "PASS"
+   },
+   "outcome": "INCONCLUSIVE"
+  },
+  "6_aa": {
+   "rows": 88,
+   "excluding_one": 2,
+   "threshold": 9,
+   "outcome": "PASS"
+  }
+ },
+ "host": {
+  "1": {
+   "role": "allocated",
+   "ticks": 93620,
+   "busy": 0.3589297158726768,
+   "irq": 1.0681478316599017e-05,
+   "steal": 0.0
+  },
+  "2": {
+   "role": "allocated",
+   "ticks": 93619,
+   "busy": 0.3612941817366133,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "3": {
+   "role": "allocated",
+   "ticks": 93617,
+   "busy": 0.3270559834218144,
+   "irq": 1.0681820609504685e-05,
+   "steal": 0.0
+  },
+  "4": {
+   "role": "allocated",
+   "ticks": 93595,
+   "busy": 0.3356055344836797,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "11": {
+   "role": "idle sibling",
+   "ticks": 93679,
+   "busy": 0.005668292787070741,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "12": {
+   "role": "idle sibling",
+   "ticks": 93682,
+   "busy": 0.006628808095471916,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "13": {
+   "role": "idle sibling",
+   "ticks": 93664,
+   "busy": 0.007644345746498121,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "14": {
+   "role": "idle sibling",
+   "ticks": 93655,
+   "busy": 0.005691100314985853,
+   "irq": 0.0,
+   "steal": 0.0
+  }
+ }
+}

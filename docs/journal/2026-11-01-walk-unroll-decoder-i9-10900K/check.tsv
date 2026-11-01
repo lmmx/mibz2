@@ -1,0 +1,11 @@
+CHECK	wikidata-fitted	secondary	431	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok
+CHECK	wikidata-heldout	secondary	473	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok
+CHECK	wikidata-20261026	primary	434	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok
+CHECK	random	control	9	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok
+CHECK	records	control	11	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok
+CHECK	mixed-independent	control	3	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok
+CHECK	text	control	13	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok
+CHECK	text-l1	walk-control	111	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok
+CHECK	text-l5	walk-control	23	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok
+CHECK	zeros	walk-control	1	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok
+CHECK	period-3	walk-control	4	Aw1:threads=4	Aw2:threads=5	Aw3:threads=6	Aw4:threads=7	Bw1:threads=4	Bw2:threads=5	Bw3:threads=6	Bw4:threads=7	ok

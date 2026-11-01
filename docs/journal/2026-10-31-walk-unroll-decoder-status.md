@@ -30,3 +30,19 @@
 
 **Next decision, after the P74-C i9 result:** run the registered i9 walker trial, or define
 a new, explicit research hypothesis.
+
+## 2026-11-01: closed under its registered NEGATIVE verdict
+
+- **The registered i9-10900K run** is NEGATIVE: the primary, wikidata-20261026 at w = 4,
+  is B/A 1.000 [0.987, 1.012], and the CPU gate fails on `records` (1.018 [1.010, 1.026]).
+  Correctness, the structural audit, affinity and A/A all pass.
+  - Records: `2026-11-01-walk-unroll-decoder-i9-10900K/`, with the results, the
+    read-only analysis, the exact binary and the raw data.
+- **The arm is archived at decoder level.** No rerun, tuning, threshold change, default
+  change, merge or combination with P74-C.
+- **Kept as research evidence:**
+  - the implementation (`research/walk-unroll`, `research/walk-unroll-decoder`);
+  - Astra's pack;
+  - the fidelity comparison (`2026-11-01-walk-unroll-astra-fidelity/`);
+  - both exploratory CI runs;
+  - the i9 archive.
