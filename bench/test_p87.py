@@ -227,5 +227,37 @@ class Counters(unittest.TestCase):
         self.assertTrue(res["instructions_w1_ok"])
 
 
+    def test_imc_mib_readings_are_bytes(self):
+        # the i9 run's own lines (counters/w4-A-r00-imc*.csv): perf scales the memory
+        # controller's events to MiB; 2^20 bytes each, not 64 (the frozen analysis's error)
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            (d / "run.csv").write_text("# started\n\n1776.47,MiB,uncore_imc/data_reads/,248155404,100.00,,\n"
+                                       "1323.93,MiB,uncore_imc/data_writes/,248155734,100.00,,\n")
+            (d / "idle.csv").write_text("# started\n\n8.33,MiB,uncore_imc/data_reads/,232988491,100.00,,\n"
+                                        "3.82,MiB,uncore_imc/data_writes/,232990668,100.00,,\n")
+            runs = []
+            for w in p87.WORKERS:
+                for rep in range(2):
+                    for arm in ("A", "B"):
+                        runs.append(dict(w=w, rep=rep, arm=arm, **{"pass": "imc"}, csv="run.csv", idle_csv="idle.csv",
+                                         rc=0, wall_s=0.25, idle_wall_s=0.25, out=207_000_624))
+            (d / "runs.jsonl").write_text("".join(json.dumps(r) + "\n" for r in runs))
+            (d / "probe.json").write_text("{}")
+            a = argparse.Namespace(runs=str(d / "runs.jsonl"), dir=str(d), probe=str(d / "probe.json"), out=str(d / "c.json"))
+            with contextlib.redirect_stdout(io.StringIO()):
+                p87.counters(a)
+            r = json.loads((d / "c.json").read_text())["result"]["imc"]["w=4"]
+        self.assertAlmostEqual(r["uncore_imc/data_reads/"]["A"], (1776.47 - 8.33) * 2**20 / 207_000_624)
+        self.assertAlmostEqual(r["uncore_imc/data_writes/"]["A"], (1323.93 - 3.82) * 2**20 / 207_000_624)
+        self.assertGreater(r["uncore_imc/data_reads/"]["A"], 8.9)  # bytes per decoded byte, not 1/16,384 of them
+
+    def test_imc_unit_handling(self):
+        self.assertEqual(p87.imc_bytes(2.0, "MiB"), 2 * 2**20)
+        self.assertEqual(p87.imc_bytes(10.0, ""), 640)
+        with self.assertRaises(ValueError):
+            p87.imc_bytes(1.0, "GB")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

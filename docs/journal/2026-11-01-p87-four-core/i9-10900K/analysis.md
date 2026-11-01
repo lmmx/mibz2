@@ -7,6 +7,27 @@ siblings idle. The runner's own output is `run.log`; the frozen analysis's outpu
 **Reproduced.** The frozen `bench/p87.py` at the pin, run again on `raw.tsv` here, gives a
 `trial.json` and `verdict.json` identical to the run's. The binaries match `binaries.sha256`.
 
+**In short.** P87 is a credible optimisation candidate, not yet promotable. The capture is
+valid. On the primary Wikidata workload at four workers, the diagnostic binary is measurably
+faster and cheaper with B: throughput +1.35% [+0.29%, +2.41%], CPU per GB −1.71%
+[−2.37%, −1.06%]. Both registered decisions stay as emitted. The mechanism is INCONCLUSIVE:
+the concurrency-specific saving is positive, but its interval crosses the 0.10 materiality
+threshold. Engineering is NOT DEMONSTRATED: five no-harm controls are inconclusive, and none
+shows harm. A detected primary improvement and a failed promotion gate are not
+contradictory. This is a valid experimental result, not a production decision (§5). The
+guardian's and the independent researcher's reviews of this run agree with that reading.
+
+**As emitted** (`verdict.json`, unedited):
+
+```json
+"decisions": {
+ "mechanism": "INCONCLUSIVE",
+ "engineering": "NOT DEMONSTRATED",
+ "practical": false,
+ "matrix": "Neither decision reached: nothing changes; the record says which interval crossed which bound."
+}
+```
+
 ## 1. Validity
 
 Every precondition held:
@@ -90,14 +111,19 @@ excludes zero, but its size relative to the registered 0.10 is undetermined.
 - **The new mark splits the old interval.** Traversal is 1.162 → 1.710 ns per segmented row
   from one worker to four (A), and assembly 0.041 → 0.147. So assembly grows 3.5× under
   concurrency, against the traversal's 1.47×. It is still a small share of the step.
+- **What is resolved and what isn't.** At four workers, the assembly saving is clearly
+  resolved: 0.147 → 0.120, interval +0.020 to +0.033. The traversal estimate, +0.036, is
+  positive but its interval, −0.004 to +0.076, includes zero. So P87 measurably improved the
+  whole four-worker decoder and its assembly step. It has not independently been shown to
+  speed up the dependent traversal, though the difference is in the expected direction.
 - **At four workers, B is cheaper in every step, including MTF and the table build.** Those
   run before the assembly they could be affected by, within the same block. A saving there
   can only come indirectly, from other workers or from cache state left by earlier blocks,
   and at one worker there is none. Following the guardian's caution, this is evidence of
   an indirect, concurrency-specific effect. It is not by itself proof of cross-worker cache
   interference: changed scheduling or step overlap could contribute.
-- The step savings sum to 0.098 (instrumented thread CPU); S1's Δ4 is 0.066 (uninstrumented
-  process CPU). The two are reported side by side, not reconciled.
+- These are separately instrumented measurements. Their sum (0.098, thread CPU) is not a
+  decomposition of S1's uninstrumented Δ4 (0.066, process CPU), and isn't presented as one.
 
 ### DRAM traffic (S3, 6 repetitions, bytes per decoded byte, corrected; see §4)
 
@@ -139,15 +165,30 @@ magnitudes are not.
 - **Affected:** S3's DRAM figures only, which are descriptive.
 - **Not affected:** both decisions, which never read them; the instruction check, which uses
   the unscaled core counters; and every S1 and S2 figure.
-- **The correction:** `dram.py` recomputes them from the raw CSVs, with the same idle
-  subtraction and interval, into `dram.json`. That is the source of the table in §3.
-- **The frozen files are left as produced.** The VM dry run couldn't catch this: its perf
-  had no memory-controller counters.
+- **The parser, corrected (post-capture).** `parse_stat` now keeps perf's unit, and
+  `imc_bytes` converts by it: MiB × 2²⁰, a unitless count × 64; any other unit is refused.
+- **Two regression tests in `bench/test_p87.py`:** one uses this run's own MiB lines, the
+  other covers the unit handling. Both fail on the frozen `p87.py` and pass on the corrected
+  one.
+- **The replay.** The corrected `counters` over this archive's raw CSVs gives
+  `counters-corrected.json`. A verdict over it gives `verdict-corrected-s3.json`: the
+  decisions and every non-DRAM figure are identical to `verdict.json`, and the DRAM figures
+  are exactly 16,384× the frozen ones. `dram.py`, written separately from the raw CSVs into
+  `dram.json`, agrees to the last digit. The §3 table comes from them.
+- **The frozen files are left as produced:** `counters.json` and `verdict.json`, and the raw
+  perf output in `counters/`.
+- **The branch no longer runs.** Its `bench/p87.py` and `bench/test_p87.py` now differ from
+  `frozen.json`'s hashes, so the branch's runner will refuse to start. That's intended: the
+  code that ran is the pin, `6463e44`, and this label has had its one run.
+- **Why the dry run missed it:** the VM's perf had no memory-controller counters, so the
+  path never saw a MiB line.
 
 ## 5. Where this leaves P87
 
 Under its registered rules, the four-core diagnostic reached neither decision. It doesn't
-close P87 negative, and it doesn't license a production change.
+close P87 negative, and it doesn't license a production change. It is a valid experiment
+with a positive primary result and an inconclusive registered decision, not an
+unsuccessful one.
 
 The descriptive picture is consistent and one-directional:
 
@@ -161,14 +202,27 @@ The descriptive picture is consistent and one-directional:
 The larger finding is the 24-fold rise in DRAM traffic from one worker to four. It bears
 on the whole four-worker penalty, not just on P87.
 
-Options, for the maintainer and reviewers to choose between (none is authorised here):
+What remains uncertain:
+- whether the primary improvement holds up across the project's controls and other
+  workloads;
+- how much of it comes from interference in the traversal itself, rather than from local or
+  persistent effects of the assembly;
+- which of the traffic reductions, if any, causes the CPU saving. The counters are
+  machine-wide, and a change in how the decoder's steps overlap could also change traffic.
 
-1. **A production-shaped P87 trial.** Reuse `ll` and also drop `rle`, which saves memory as
-   well. Register it with controls able to meet their no-harm band: larger control corpora
-   or more rounds, sized from this run's variances.
-2. **P87's historical bar, at 6–10 workers.** That is where crowding of this kind should
-   bite hardest.
-3. **Footprint as the main lead.** If the 24× DRAM figure reflects working sets that don't
-   fit in L3, the bigger opportunities are the other per-worker buffers (the segments, the
-   output) and the T-vector's size. The neighbour experiment's capacity arms are well placed
-   to confirm or reject that.
+The reviews agree on the order of what comes next. None of it is authorised here.
+
+1. **Preserve and verify this result first.** No i9 rerun, no retuning, and no change to
+   the frozen trial. This record, the corrected replay and the regression tests are that
+   step.
+2. **Any follow-up is a separately registered trial, not a repeat of this one.** If the
+   maintainer wants one, the natural candidate is a production-oriented validation: reuse
+   `ll` and also drop `rle`, which saves memory too. Its controls should be sized from this
+   run's variances so that they can actually meet their no-harm band (larger control
+   corpora, or more rounds). Its tolerances must be set before it runs, not loosened after
+   seeing these results.
+3. **P87's historical bar, at 6–10 workers,** remains separate and unevaluated.
+4. **The neighbour experiment isn't the next step.** The guardian's view is that P87's result
+   deserves careful interpretation first. It stays relevant, as the independent researcher
+   notes: P87's saving is much smaller than the four-worker penalty, and the 24× DRAM figure
+   suggests the per-worker footprint as a whole is worth understanding.

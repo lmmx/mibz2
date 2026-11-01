@@ -546,8 +546,10 @@ CORE = ["cycles", "ref-cycles", "instructions"]
 
 
 def parse_stat(path):
-    """perf stat -x, output: {event: (value or None, percent running)}; the IMC's
-    per-controller lines summed (perf prints one per PMU instance unless aggregated)"""
+    """perf stat -x, output: {event: (value or None, percent running, unit)}; the IMC's
+    per-controller lines summed (perf prints one per PMU instance unless aggregated). The unit
+    is perf's own (the CSV's second field): perf scales the memory controller's events to MiB
+    and says so there."""
     out = {}
     for line in Path(path).read_text().splitlines():
         if not line or line.startswith("#"):
@@ -555,7 +557,7 @@ def parse_stat(path):
         f = line.split(",")
         if len(f) < 5:
             continue
-        val, ev, pct = f[0], f[2], f[4]
+        val, unit, ev, pct = f[0], f[1], f[2], f[4]
         try:
             v = float(val)
         except ValueError:
@@ -565,10 +567,23 @@ def parse_stat(path):
         except ValueError:
             p = None
         if ev in out and out[ev][0] is not None and v is not None:
-            out[ev] = (out[ev][0] + v, min(p or 100, out[ev][1] or 100))
+            assert out[ev][2] == unit, f"{path}: {ev} in both {out[ev][2]!r} and {unit!r}"
+            out[ev] = (out[ev][0] + v, min(p or 100, out[ev][1] or 100), unit)
         else:
-            out[ev] = (v, p)
+            out[ev] = (v, p, unit)
     return out
+
+
+def imc_bytes(value, unit):
+    """A memory-controller reading in bytes: perf's MiB (its scaled uncore_imc events), or a
+    raw count of 64-byte lines where perf gives no unit. Any other unit is refused.
+    (Erratum: the frozen analysis multiplied every reading by 64, so MiB readings came out
+    2^20 / 64 = 16,384 times too small; i9-10900K/analysis.md section 4.)"""
+    if unit == "MiB":
+        return value * 2**20
+    if unit == "":
+        return value * 64
+    raise ValueError(f"memory-controller unit {unit!r}")
 
 
 def counted(vals, events):
@@ -593,9 +608,10 @@ def counters(a):
                     continue
                 v = {e: vals[e][0] for e in evs}
                 if kind == "imc":
-                    # 64-byte lines; the idle reading scaled to the run's length, subtracted
+                    # in bytes (imc_bytes, by perf's unit); the idle reading scaled to the run's
+                    # length, subtracted; per decoded byte
                     scale = r["wall_s"] / r["idle_wall_s"] if r["idle_wall_s"] > 0 else 1
-                    v = {e: (vals[e][0] - idle[e][0] * scale) * 64 / r["out"] for e in evs}  # bytes per decoded byte
+                    v = {e: (imc_bytes(*vals[e][::2]) - imc_bytes(*idle[e][::2]) * scale) / r["out"] for e in evs}
                 per.setdefault(r["arm"], {})[r["rep"]] = v
             reps = sorted(set(per.get("A", {})) & set(per.get("B", {})))
             if not reps:
