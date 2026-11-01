@@ -205,7 +205,8 @@ impl Compact {
             'o' => self.walk_k::<O>(ll, orig_ptr, out),
             'v' => self.walk_k::<V>(ll, orig_ptr, out),
             'u' => self.walk_k::<U>(ll, orig_ptr, out),
-            'h' => self.walk_h(ll, orig_ptr, out),
+            'h' => self.walk_h(ll, orig_ptr, out, false),
+            'b' => self.walk_h(ll, orig_ptr, out, true),
             _ => unreachable!("compact arms are o, v, u and h"),
         }
     }
@@ -843,72 +844,20 @@ struct LaneH {
     end: *mut u8,
 }
 
-/// What a lane's step found
-enum Slow {
-    /// a byte to write (the lane moved on)
-    Byte(u8),
-    /// the lane reached a start: its segment ends
-    Start,
-    /// the lane reached a raw row: it waits a turn, writing nothing
-    Wait,
-}
-
-impl Compact {
-    /// `h`'s build: a copy of the block's precomputed records into the worker's own,
-    /// reused buffers, as a direct builder would leave them (written just before the
-    /// walk). The optimistic stand-in for a builder (stage 1 measures traversal only).
-    pub fn load_h(&mut self, r: &Records) {
-        self.n = r.n;
-        self.hrec.clear();
-        self.hrec.extend_from_slice(&r.rec);
-        self.hraw.clear();
-        self.hraw.extend_from_slice(&r.raw);
-    }
-
-    fn walk_h(&mut self, ll: &[u8], orig_ptr: u32, out: &mut Vec<u8>) {
-        assert_eq!(self.hrec.len(), self.n.div_ceil(32) + 1, "load_h first");
-        if self.n < MIN_SEGMENTED {
-            self.plain_h(orig_ptr, out);
-        } else {
-            self.room_h(ll, orig_ptr);
-            self.s.assemble(out);
-        }
-    }
-
-    /// production's plain walk, on records
-    fn plain_h(&mut self, orig_ptr: u32, out: &mut Vec<u8>) {
-        let n = self.n;
-        let (rec, raw) = (self.hrec.as_ptr(), self.hraw.as_ptr());
-        out.clear();
-        out.reserve(n);
-        // SAFETY: every ψ is below n, as is orig_ptr (checked by the stream's parser)
-        unsafe {
-            let (mut r, mut b) = h_next(rec, raw, orig_ptr);
-            for _ in 0..n {
-                out.push(b);
-                let (r2, b2) = h_next(rec, raw, r);
-                r = r2;
-                b = b2;
-            }
-        }
-    }
-
-    /// `room` on records: the same starts, passes, handoffs and tail. An ordinary step
-    /// reads its record's line and tests its offset against S; the sentinel's three cases
-    /// (`slow`) are a start, a raw row (the lane prefetches the entry, writes nothing this
-    /// turn and parks: its base moves back a byte) and a parked lane (it takes ψ and F
-    /// from the entry). So a raw successor costs one turn and one line.
-    #[inline(never)]
-    fn room_h(&mut self, ll: &[u8], orig_ptr: u32) {
-        let n = self.n;
-        let park = 32 * (self.hrec.len() as u32 - 1);
-        let recm = self.hrec.as_mut_ptr();
-        let (rec, raw) = (recm as *const Line, self.hraw.as_ptr());
+/// `room_h`'s body, one source for both of its compilations (`room_h`, the frozen `h` arm,
+/// whose code this leaves exactly as frozen; and `room_h_bmi2`, the `b` arm): a macro, not
+/// an inlined function, so `room_h` expands to the tokens it was frozen with
+macro_rules! room_h_body {
+    ($this:ident, $ll:ident, $orig_ptr:ident) => {{
+        let n = $this.n;
+        let park = 32 * ($this.hrec.len() as u32 - 1);
+        let recm = $this.hrec.as_mut_ptr();
+        let (rec, raw) = (recm as *const Line, $this.hraw.as_ptr());
         let rawu = raw as *const u32;
-        let s = &mut self.s;
+        let s = &mut $this.s;
         // SAFETY (every record and raw access below): every row is below n or is PARK, the
         // starts being rows and every ψ coming from the oracle's records
-        let r0 = unsafe { h_next(rec, raw, orig_ptr) }.0;
+        let r0 = unsafe { h_next(rec, raw, $orig_ptr) }.0;
         random_rows(n, SEGMENTS - 1, &mut s.starts);
         s.starts.push(r0);
         h_extra_starts(n, rec, &mut s.starts);
@@ -954,7 +903,7 @@ impl Compact {
             let base = b.as_mut_ptr();
             let (r, f, _) = succ[seg];
             // SAFETY: the buffer has `cap` > 0 spare bytes
-            unsafe { *base = ll[starts[seg] as usize] };
+            unsafe { *base = $ll[starts[seg] as usize] };
             LaneH {
                 row: r,
                 pend: 0,
@@ -1126,6 +1075,88 @@ impl Compact {
         }
         s.first = seg_of(r0);
         s.n = n;
+    }};
+}
+
+/// What a lane's step found
+enum Slow {
+    /// a byte to write (the lane moved on)
+    Byte(u8),
+    /// the lane reached a start: its segment ends
+    Start,
+    /// the lane reached a raw row: it waits a turn, writing nothing
+    Wait,
+}
+
+impl Compact {
+    /// `h`'s build: a copy of the block's precomputed records into the worker's own,
+    /// reused buffers, as a direct builder would leave them (written just before the
+    /// walk). The optimistic stand-in for a builder (stage 1 measures traversal only).
+    pub fn load_h(&mut self, r: &Records) {
+        self.n = r.n;
+        self.hrec.clear();
+        self.hrec.extend_from_slice(&r.rec);
+        self.hraw.clear();
+        self.hraw.extend_from_slice(&r.raw);
+    }
+
+    /// `bmi2`: the `b` arm, `room_h`'s body compiled with BMI2 (`room_h_bmi2`); the
+    /// short blocks' plain walk is shared
+    fn walk_h(&mut self, ll: &[u8], orig_ptr: u32, out: &mut Vec<u8>, bmi2: bool) {
+        assert_eq!(self.hrec.len(), self.n.div_ceil(32) + 1, "load_h first");
+        if self.n < MIN_SEGMENTED {
+            self.plain_h(orig_ptr, out);
+        } else {
+            if bmi2 {
+                assert!(
+                    std::arch::is_x86_feature_detected!("bmi2"),
+                    "b arms need BMI2"
+                );
+                // SAFETY: the CPU has BMI2 (checked above)
+                unsafe { self.room_h_bmi2(ll, orig_ptr) };
+            } else {
+                self.room_h(ll, orig_ptr);
+            }
+            self.s.assemble(out);
+        }
+    }
+
+    /// production's plain walk, on records
+    fn plain_h(&mut self, orig_ptr: u32, out: &mut Vec<u8>) {
+        let n = self.n;
+        let (rec, raw) = (self.hrec.as_ptr(), self.hraw.as_ptr());
+        out.clear();
+        out.reserve(n);
+        // SAFETY: every ψ is below n, as is orig_ptr (checked by the stream's parser)
+        unsafe {
+            let (mut r, mut b) = h_next(rec, raw, orig_ptr);
+            for _ in 0..n {
+                out.push(b);
+                let (r2, b2) = h_next(rec, raw, r);
+                r = r2;
+                b = b2;
+            }
+        }
+    }
+
+    /// `room` on records: the same starts, passes, handoffs and tail. An ordinary step
+    /// reads its record's line and tests its offset against S; the sentinel's three cases
+    /// (`slow`) are a start, a raw row (the lane prefetches the entry, writes nothing this
+    /// turn and parks: its base moves back a byte) and a parked lane (it takes ψ and F
+    /// from the entry). So a raw successor costs one turn and one line.
+    #[inline(never)]
+    fn room_h(&mut self, ll: &[u8], orig_ptr: u32) {
+        room_h_body!(self, ll, orig_ptr)
+    }
+
+    /// `b`: the same walk, the same source, compiled for BMI2 (`shrx` for the offset's
+    /// variable shift): the code-generation test of report 135, a separate candidate
+    ///
+    /// SAFETY: the CPU has BMI2
+    #[target_feature(enable = "bmi2")]
+    #[inline(never)]
+    unsafe fn room_h_bmi2(&mut self, ll: &[u8], orig_ptr: u32) {
+        room_h_body!(self, ll, orig_ptr)
     }
 }
 

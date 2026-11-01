@@ -1690,7 +1690,7 @@ impl Inv {
         };
         match kind {
             'p' => Inv::Prod(TVector::new(), SegScratch::default()),
-            'o' | 'v' | 'u' | 'h' => {
+            'o' | 'v' | 'u' | 'h' | 'b' => {
                 assert_eq!(k, 1, "compact arms take one core a block");
                 Inv::Compact(kind, Box::default())
             }
@@ -1777,14 +1777,14 @@ impl Inv {
                 }
                 (m, s.elapsed().as_secs_f64() - m)
             }
-            Inv::Compact('h', c) => {
+            Inv::Compact(kind @ ('h' | 'b'), c) => {
                 c.load_h(
                     b.records
                         .get()
                         .expect("h's records, made before the rounds"),
                 );
                 let m = s.elapsed().as_secs_f64();
-                c.walk('h', &b.ll, b.orig_ptr, out);
+                c.walk(*kind, &b.ll, b.orig_ptr, out);
                 (m, s.elapsed().as_secs_f64() - m)
             }
             Inv::Compact(kind, c) => {
@@ -2009,6 +2009,7 @@ fn parse_arm(s: &str) -> Arm {
         b'v' => ('v', &s[1..]),
         b'u' => ('u', &s[1..]),
         b'h' => ('h', &s[1..]),
+        b'b' => ('b', &s[1..]),
         _ => ('c', s),
     };
     let (rest, segments) = match rest.split_once('@') {
@@ -2045,7 +2046,7 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
     if arms.iter().any(|a| matches!(a.kind, 'x' | 'y' | 'g')) {
         fused_check(bs);
     }
-    if arms.iter().any(|a| a.kind == 'h') {
+    if arms.iter().any(|a| matches!(a.kind, 'h' | 'b')) {
         // (an h arm's records are made from the harness's last column, outside the timing:
         // no MTF stage in it)
         assert!(
@@ -2513,6 +2514,16 @@ fn h_check(bs: &[Block], permille: &[u32]) {
     }
     let rows: usize = bs.iter().map(|b| b.ll.len()).sum();
     let threads = std::thread::available_parallelism().map_or(1, |n| n.get());
+    // the b arm's walk (h's, compiled for BMI2) is checked too, where the CPU has BMI2
+    let bmi2 = std::arch::is_x86_feature_detected!("bmi2");
+    println!(
+        "h-check: the h walk{}",
+        if bmi2 {
+            " and the b walk (BMI2)"
+        } else {
+            " (no BMI2: b not checked)"
+        }
+    );
     for &pm in permille {
         let next = AtomicUsize::new(0);
         // run, for14, raw groups, crossing, forced, record bytes, raw bytes, full blocks'
@@ -2529,6 +2540,15 @@ fn h_check(bs: &[Block], permille: &[u32]) {
                             let Some(b) = bs.get(i) else { break t };
                             let r = compact::Records::from_block(&b.ll, &b.counts, pm);
                             c.load_h(&r);
+                            if bmi2 {
+                                c.walk('b', &b.ll, b.orig_ptr, &mut out);
+                                assert_eq!(
+                                    fnv(&out),
+                                    want[i],
+                                    "permille {pm}: b: block {i} differs"
+                                );
+                                c.load_h(&r);
+                            }
                             c.walk('h', &b.ll, b.orig_ptr, &mut out);
                             assert_eq!(fnv(&out), want[i], "permille {pm}: block {i} differs");
                             dec.clear();

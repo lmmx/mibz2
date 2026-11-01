@@ -175,19 +175,35 @@ bench-compact-psi rounds="20":
     bash bench/coop.sh --grid-only --rounds {{rounds}} --arms p4,p1,p2,p5,p6,p8,p10,o1,o4,v1,v4,v6,u1,u2,u4,u5,u6,u8,u10,l4x2,l5x2
     python3 bench/coop_counters.py --arms p4,p6,p8,u4,u6,u8,u10,v6 --groups reads,llc_all --reps 2 --no-record
 
-# FOR-14/raw records, stage 1 (docs/journal/2026-11-01-for14-stage1.md, frozen): an
-# optional confirmation of the stage's stop decision, to be run only if it is authorized.
-# The traversal-only comparison: production (p), its copy (o) and the FOR-14/raw records
-# (h, built offline from each block's T-vector; its build phase a copy of them) at one and
-# four blocks, pinned, on the P87 corpus (the walk trial's frozen file, checked by its
-# hash), every arm's every block checked in round -1, then bench/for14.py's frozen gates.
-# About 3 minutes; no sudo. Upload coop-*.md, coop-*.jsonl, for14-analysis.json and the
-# console.
+# FOR-14/raw records, stage 1 (docs/journal/2026-11-01-for14-stage1.md, frozen at
+# 7d7962f): the authorized confirmation of the stage's stop decision (report 135). The
+# traversal-only comparison: production (p), its copy (o) and the FOR-14/raw records (h,
+# built offline from each block's T-vector; its build phase a copy of them) at one and four
+# blocks, pinned, on the P87 corpus (the walk trial's frozen file, checked by its hash),
+# every arm's every block checked in round -1, then bench/for14.py's frozen gates. It runs
+# the frozen commit itself, checked out in its own worktree (target/for14-pin): the arms
+# added after it (b) change the h walk's register allocation, so this branch's own binary
+# is not the frozen one. About 3 minutes; no sudo. Upload for14-coop-*.md, for14-coop-*.jsonl,
+# for14-analysis.json and the console.
 #   just bench-for14 2>&1 | tee for14-console.log
 bench-for14 corpora="target/walk-decoder/work/corpora" rounds="20":
-    echo "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe  {{corpora}}/wikidata-20261026.bz2" | sha256sum -c -
-    bash bench/coop.sh --grid-only --no-libsais --file {{corpora}}/wikidata-20261026.bz2 --rounds {{rounds}} --arms p1,o1,h1,p4,o4,h4
-    python3 bench/for14.py "$(ls -t coop-*.jsonl | head -1)" --json for14-analysis.json
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pin=7d7962fce96b4009a30ee85fa935a0a20bfa0607
+    corpora=$(realpath "{{corpora}}")
+    echo "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe  $corpora/wikidata-20261026.bz2" | sha256sum -c -
+    git cat-file -e "$pin^{commit}" 2> /dev/null || git fetch -q origin research/for14-records
+    wt=target/for14-pin
+    [ -d "$wt" ] || git worktree add -q --detach "$wt" "$pin"
+    [ "$(git -C "$wt" rev-parse HEAD)" = "$pin" ] || { echo "for14: $wt is not at the pin"; exit 1; }
+    git -C "$wt" diff --quiet HEAD || { echo "for14: $wt has local changes"; exit 1; }
+    echo "for14: the frozen commit $pin, corpus checked"
+    here=$PWD
+    (cd "$wt" && bash bench/coop.sh --grid-only --no-libsais --file "$corpora/wikidata-20261026.bz2" --rounds {{rounds}} --arms p1,o1,h1,p4,o4,h4)
+    run=$(ls -t "$wt"/coop-*.jsonl | head -1)
+    cp "$run" "$here/for14-$(basename "$run")"
+    cp "${run%.jsonl}.md" "$here/for14-$(basename "${run%.jsonl}").md"
+    python3 "$wt/bench/for14.py" "$run" --json "$here/for14-analysis.json"
 
 # The memory ceiling alone: the last stage of bench-libsais-knee-footprint, rerun without the
 # sweeps and counters before it (bench/dram.py; a walk-shaped random probe and a sequential
