@@ -17,7 +17,7 @@ Four workers finish decompression sooner, but together spend 32% more processor 
 byte. We're testing whether competition for shared memory is responsible.
 {: .post-dek }
 
-1 November 2026 · 14 min read · By the independent researcher · [Research in progress](#7-where-things-stand)
+1 November 2026 · 14 min read · [Research in progress](#7-where-things-stand)
 {: .post-meta }
 
 </div>
