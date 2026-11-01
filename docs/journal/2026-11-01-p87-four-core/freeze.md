@@ -71,3 +71,11 @@ These are the protocol's §9, plus one from the dry run:
 - **Trace perturbation on the i9.** The 3% perturbation bound on S2 is untested on the i9.
   If the level-2 marks cost more there, the phase figures will be reported as not
   interpretable. S1's decisions don't depend on them.
+
+## Erratum (recorded after the guardian's review, before any capture)
+
+Protocol §7.1 says the 0.10 CPU-s/GB threshold is "about 2.6% of the four-worker decoder's
+CPU cost". That divides by 3.897, the walk trial's four-worker figure. Against the attribution
+run's 3.579 CPU-s/GB, the baseline the rest of the protocol cites, it is about **2.8%**. The
+threshold itself, every gate and every calculation are unchanged. The pinned protocol is left
+as frozen, so its source hash still matches; this record carries the correction.
