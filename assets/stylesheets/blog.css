@@ -363,10 +363,3 @@
 .bf-fig .bf-cut { stroke: var(--bf-green); stroke-width: 2; fill: none; }
 .bf-fig .bf-chip-on { fill: var(--bf-green); }
 .bf-fig .bf-chip-off { fill: var(--bf-track); }
-
-/* a displayed formula in a post's text */
-.md-typeset .post-formula {
-  margin: 1rem 0;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}

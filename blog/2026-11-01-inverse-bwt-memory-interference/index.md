@@ -213,11 +213,11 @@ A positive result would identify a useful decoder modification that preserves th
 
 Astra proposed comparing the current layout (A) and the reused-buffer layout (B) at both one and four workers.
 
-Let *C*<sub>X,w</sub> denote CPU-seconds per GB for layout *X* at worker count *w*.
+Let \\(C\_{X,w}\\) denote CPU-seconds per GB for layout \\(X\\) at worker count \\(w\\).
 
 The concurrency-specific saving would be:
 
-*D* = (*C*<sub>A,4</sub> − *C*<sub>B,4</sub>) − (*C*<sub>A,1</sub> − *C*<sub>B,1</sub>)
+\\\[ D = (C\_{A,4} - C\_{B,4}) - (C\_{A,1} - C\_{B,1}) \\\]
 
 Astra suggested a threshold of 0.10 CPU-s/GB for a material concurrency-specific improvement.
 
@@ -225,7 +225,7 @@ This subtracts any saving that also occurs in the one-worker decoder. It asks wh
 
 But that statistic needs a separate engineering test.
 
-A positive *D* does not guarantee that B is faster at four workers. It is possible for a change to make both configurations slower while reducing the *difference* between them.
+A positive \\(D\\) does not guarantee that B is faster at four workers. It is possible for a change to make both configurations slower while reducing the *difference* between them.
 
 The reverse distinction also matters. Reuse might improve assembly or RLE1 similarly at one and four workers. That could be a worthwhile local optimization, but it would not establish a substantial concurrency-specific memory effect.
 
@@ -239,7 +239,7 @@ The earlier P87 research register also contains a separate criterion concerning 
 
 Neither experiment has yet established a performance improvement.
 
-P87 has been selected for protocol design and isolated diagnostic preparation. The experimental controls and decision thresholds still require freezing before an i9 capture. The neighbour-interference investigation remains available as a broader follow-up.
+P87 has been selected, and its diagnostic is being prepared. The neighbour-interference investigation remains available as a broader follow-up.
 
 There are several informative outcomes.
 

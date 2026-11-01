@@ -66,15 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=829e4c51ed26">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c2f2a21a8b6a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=829e4c51ed26">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c2f2a21a8b6a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=829e4c51ed26">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c2f2a21a8b6a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=829e4c51ed26">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c2f2a21a8b6a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=829e4c51ed26">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c2f2a21a8b6a">
+    
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -1935,10 +1937,11 @@ find out why, and why buffer reuse comes first.</p>
 <p>A positive result would identify a useful decoder modification that preserves the current four-byte T-vector and 32-lane traversal. A negative result would prevent further effort on this particular buffer-reuse idea, without requiring a complete explanation of the memory hierarchy.</p>
 <h3 id="what-counts-as-success">What counts as success?<a class="headerlink" href="#what-counts-as-success" title="Permanent link">&para;</a></h3>
 <p>Astra proposed comparing the current layout (A) and the reused-buffer layout (B) at both one and four workers.</p>
-<p>Let <em>C</em><sub>X,w</sub> denote CPU-seconds per GB for layout <em>X</em> at worker count <em>w</em>.</p>
+<p>Let <span class="arithmatex">\(C_{X,w}\)</span> denote CPU-seconds per GB for layout <span class="arithmatex">\(X\)</span> at worker count <span class="arithmatex">\(w\)</span>.</p>
 <p>The concurrency-specific saving would be:</p>
-<p class="post-formula"><em>D</em> = (<em>C</em><sub>A,4</sub> − <em>C</em><sub>B,4</sub>) − (<em>C</em><sub>A,1</sub> − <em>C</em><sub>B,1</sub>)</p>
-
+<div class="arithmatex">\[
+D = (C_{A,4} - C_{B,4}) - (C_{A,1} - C_{B,1})
+\]</div>
 <p>Astra suggested a threshold of 0.10 CPU-s/GB for a material concurrency-specific improvement.</p>
 <p>This subtracts any saving that also occurs in the one-worker decoder. It asks whether reuse provides an additional benefit specifically under concurrency.</p>
 <p>But that statistic needs a separate engineering test.</p>
@@ -1946,14 +1949,14 @@ find out why, and why buffer reuse comes first.</p>
 <svg viewBox="0 0 720 176" role="img" aria-label="Mechanism: does buffer reuse materially reduce the additional CPU cost associated with concurrency? Measured by the proposed difference-in-differences statistic and its uncertainty. Engineering: is the actual four-worker decoder faster and more CPU-efficient, without compromising correctness or memory requirements? Measured at the full-decoder boundary."><rect x="0" y="0" width="352" height="176" rx="10" class="bf-card"/><path d="M22 18h10M24 18v7l-5 9a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-5-9v-7M21 31h12" class="bf-icon"/><text x="46" y="33" class="bf-ts">Mechanism</text><text x="18" y="64" class="bf-t">Does buffer reuse materially reduce the</text><text x="18" y="84" class="bf-t">additional CPU cost associated with</text><text x="18" y="104" class="bf-t">concurrency?</text><text x="18" y="146" class="bf-tm">Measured by the proposed difference-in-differences</text><text x="18" y="162" class="bf-tm">statistic and its uncertainty.</text><rect x="368" y="0" width="352" height="176" rx="10" class="bf-card"/><path d="M387 34a10 10 0 0 1 20 0M397 34l5-6" class="bf-icon"/><path d="M386 37h22" class="bf-icon"/><text x="414" y="33" class="bf-ts">Engineering</text><text x="386" y="64" class="bf-t">Is the actual four-worker decoder faster</text><text x="386" y="84" class="bf-t">and more CPU-efficient, without</text><text x="386" y="104" class="bf-t">compromising correctness or memory</text><text x="386" y="124" class="bf-t">requirements?</text><text x="386" y="146" class="bf-tm">Measured at the full-decoder boundary.</text></svg>
 </figure>
 
-<p>A positive <em>D</em> does not guarantee that B is faster at four workers. It is possible for a change to make both configurations slower while reducing the <em>difference</em> between them.</p>
+<p>A positive <span class="arithmatex">\(D\)</span> does not guarantee that B is faster at four workers. It is possible for a change to make both configurations slower while reducing the <em>difference</em> between them.</p>
 <p>The reverse distinction also matters. Reuse might improve assembly or RLE1 similarly at one and four workers. That could be a worthwhile local optimization, but it would not establish a substantial concurrency-specific memory effect.</p>
 <p>To interpret the results, the proposed diagnostic must separately time construction, traversal, assembly and RLE1. It must also preserve the construction and traversal machine code as closely as possible, equalize allocation conditions and leave worker scheduling unchanged.</p>
 <p>These controls ensure that we're testing buffer lifetime, rather than accidentally testing a different walker or thread-placement policy.</p>
 <p>The earlier P87 research register also contains a separate criterion concerning performance at six to ten workers. That historical test remains distinct from this proposed four-core diagnostic.</p>
 <h2 id="6-where-the-investigation-stands">6. Where the investigation stands<a class="headerlink" href="#6-where-the-investigation-stands" title="Permanent link">&para;</a></h2>
 <p>Neither experiment has yet established a performance improvement.</p>
-<p>P87 has been selected for protocol design and isolated diagnostic preparation. The experimental controls and decision thresholds still require freezing before an i9 capture. The neighbour-interference investigation remains available as a broader follow-up.</p>
+<p>P87 has been selected, and its diagnostic is being prepared. The neighbour-interference investigation remains available as a broader follow-up.</p>
 <p>There are several informative outcomes.</p>
 <table>
 <thead>
@@ -2149,13 +2152,17 @@ find out why, and why buffer reuse comes first.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=829e4c51ed26"></script>
+        <script src="../../assets/javascripts/bench.js?v=c2f2a21a8b6a"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=829e4c51ed26"></script>
+        <script src="../../assets/javascripts/couriers.js?v=c2f2a21a8b6a"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=829e4c51ed26"></script>
+        <script src="../../assets/javascripts/blog.js?v=c2f2a21a8b6a"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=829e4c51ed26"></script>
+        <script src="../../assets/javascripts/frontier.js?v=c2f2a21a8b6a"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+      
+        <script src="../../assets/javascripts/katex.js?v=c2f2a21a8b6a"></script>
       
     
   </body>

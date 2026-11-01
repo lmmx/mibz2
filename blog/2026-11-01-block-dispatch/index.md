@@ -178,7 +178,7 @@ These interact. Better dispatch keeps more inverse-BWT walks running at once, wh
 
 ## 8\. What happens next
 
-The diagnostic is built, frozen and checked, and the capture on the i9 comes next. It ends in one of two places:
+The measurement comes next. It ends in one of two places:
 
 - **If receiver ownership really does keep free workers from available jobs,** at least 5% of their time in at least 80% of runs, a multi-consumer queue becomes a justified, isolated experiment.
 - **If the receiver is usually free and the delay is scheduling or backlog,** that hypothesis is retired, and the effort goes to the larger problem: the inverse BWT's memory behaviour.
