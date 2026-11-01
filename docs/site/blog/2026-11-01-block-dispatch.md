@@ -1,5 +1,5 @@
 ---
-title: "Block dispatch in mibz2: the receiver mutex, futexes and the scheduler"
+title: "Block dispatch in mibz2: mutexes, futexes and the scheduler"
 image: assets/social/blog-2026-11-01-block-dispatch.png
 description: "How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay."
 ---
@@ -11,7 +11,7 @@ description: "How mibz2's parallel decoder hands blocks to its workers, why some
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Block dispatch in mibz2: the receiver mutex, futexes and the scheduler
+# Block dispatch in mibz2: mutexes, futexes and the scheduler
 
 How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond
 to be picked up, and how to tell lock contention from scheduling delay.
