@@ -48,6 +48,16 @@ pub trait InverseBwt: Default + Send {
     fn buffers(&self) -> Vec<crate::trace::Buffer> {
         Vec::new()
     }
+
+    /// `invert` with `ll` as both its input and its output, for a kernel that reads `ll`
+    /// only while building its table: the block's bytes are then written over `ll`, so the
+    /// decoder needs no separate output buffer (about one block a worker). Returns false,
+    /// having changed nothing, where the kernel doesn't support it; the decoder then calls
+    /// `invert` with a buffer of its own.
+    fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], orig_ptr: u32) -> bool {
+        let _ = (ll, counts, orig_ptr);
+        false
+    }
 }
 
 /// The plain walk: one chain of dependent loads (lbzip2's and libbzip2's)
@@ -80,6 +90,15 @@ impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         build(ll, counts, &mut self.tt);
         walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+    }
+
+    // The build is `ll`'s last read: the walk (segmented, or plain for a short block) reads
+    // only the table, so its output can go over `ll`, whose capacity (the block size, from
+    // MTF) already holds it
+    fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], orig_ptr: u32) -> bool {
+        build(ll, counts, &mut self.tt);
+        walk_segments_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
+        true
     }
 
     #[cfg(any(test, feature = "trace"))]
