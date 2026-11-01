@@ -1,8 +1,8 @@
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-121/blog/index.md>)
 
-# The job is ready. Where is the worker?
+# Block dispatch in mibz2: mutexes, futexes and the scheduler
 
-A decoded block's job can sit in the queue for a millisecond while a worker is free. Is a mutex in the way, or the scheduler? How mibz2 hands out work, what a futex is, and why waking up is not the same as running.
+How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay.
 
 1 November 2026 · 12 min read · [Investigation in progress](<#8-what-happens-next>)
 

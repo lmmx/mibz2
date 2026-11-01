@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A decoded block's job can sit in the queue for a millisecond while a worker is free. Is a mutex in the way, or the scheduler? How mibz2 hands out work, what a futex is, and why waking up is not the same as running.">
+        <meta name="description" content="How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay.">
       
       
         <meta name="author" content="Louis Maddox">
       
       
-        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-121/blog/2026-11-01-where-is-the-worker/">
+        <link rel="canonical" href="https://lmmx.github.io/mibz2/pr-preview/pr-121/blog/2026-11-01-block-dispatch/">
       
       
         <link rel="describedby" href="../../llms.txt">
@@ -35,7 +35,7 @@
     
     
       
-        <title>The job is ready. Where is the worker? - mibz2</title>
+        <title>Block dispatch in mibz2: mutexes, futexes and the scheduler - mibz2</title>
       
     
     
@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=696d9cb6764c">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=efb93b45ede6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=696d9cb6764c">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=efb93b45ede6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=696d9cb6764c">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=efb93b45ede6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=696d9cb6764c">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=efb93b45ede6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=696d9cb6764c">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=efb93b45ede6">
     
     <script>__md_scope=new URL("../..",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
@@ -85,19 +85,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="The job is ready. Where is the worker?">
-  <meta property="og:description" content="A decoded block's job can sit in the queue for a millisecond while a worker is free. Is a mutex in the way, or the scheduler? How mibz2 hands out work, what a futex is, and why waking up is not the same as running.">
-  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-121/blog/2026-11-01-where-is-the-worker/">
-  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-121/assets/social/blog-2026-11-01-where-is-the-worker.png">
+  <meta property="og:title" content="Block dispatch in mibz2: mutexes, futexes and the scheduler">
+  <meta property="og:description" content="How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay.">
+  <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-121/blog/2026-11-01-block-dispatch/">
+  <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-121/assets/social/blog-2026-11-01-block-dispatch.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="The job is ready. Where is the worker?">
+  <meta property="og:image:alt" content="Block dispatch in mibz2: mutexes, futexes and the scheduler">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="The job is ready. Where is the worker?">
-  <meta name="twitter:description" content="A decoded block's job can sit in the queue for a millisecond while a worker is free. Is a mutex in the way, or the scheduler? How mibz2 hands out work, what a futex is, and why waking up is not the same as running.">
-  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-121/assets/social/blog-2026-11-01-where-is-the-worker.png">
-  <meta name="twitter:image:alt" content="The job is ready. Where is the worker?">
+  <meta name="twitter:title" content="Block dispatch in mibz2: mutexes, futexes and the scheduler">
+  <meta name="twitter:description" content="How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay.">
+  <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-121/assets/social/blog-2026-11-01-block-dispatch.png">
+  <meta name="twitter:image:alt" content="Block dispatch in mibz2: mutexes, futexes and the scheduler">
 
   </head>
   
@@ -150,7 +150,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The job is ready. Where is the worker?
+              Block dispatch in mibz2: mutexes, futexes and the scheduler
             
           </span>
         </div>
@@ -1104,7 +1104,7 @@
   <span class="md-ellipsis">
     
   
-  The job is ready. Where is the worker?
+  Block dispatch in mibz2
 
     
   </span>
@@ -1121,7 +1121,7 @@
   <span class="md-ellipsis">
     
   
-  The job is ready. Where is the worker?
+  Block dispatch in mibz2
 
     
   </span>
@@ -1666,7 +1666,7 @@
 
 
   
-    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-01-where-is-the-worker.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/lmmx/mibz2/edit/master/docs/site/blog/2026-11-01-block-dispatch.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-file-pen" viewBox="0 0 24 24"><path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/><path d="M14 2v5a1 1 0 0 0 1 1h5M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></svg>
     </a>
@@ -1677,10 +1677,9 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="the-job-is-ready-where-is-the-worker">The job is ready. Where is the worker?<a class="headerlink" href="#the-job-is-ready-where-is-the-worker" title="Permanent link">&para;</a></h1>
-<p class="post-dek">A decoded block's job can sit in the queue for a millisecond while a worker is free. Is a
-mutex in the way, or the scheduler? How mibz2 hands out work, what a futex is, and why
-waking up is not the same as running.</p>
+<h1 id="block-dispatch-in-mibz2-mutexes-futexes-and-the-scheduler">Block dispatch in mibz2: mutexes, futexes and the scheduler<a class="headerlink" href="#block-dispatch-in-mibz2-mutexes-futexes-and-the-scheduler" title="Permanent link">&para;</a></h1>
+<p class="post-dek">How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond
+to be picked up, and how to tell lock contention from scheduling delay.</p>
 <p class="post-meta">1 November 2026 · 12 min read · <a href="#8-what-happens-next">Investigation in progress</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
@@ -2147,13 +2146,13 @@ the evidence.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=696d9cb6764c"></script>
+        <script src="../../assets/javascripts/bench.js?v=efb93b45ede6"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=696d9cb6764c"></script>
+        <script src="../../assets/javascripts/couriers.js?v=efb93b45ede6"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=696d9cb6764c"></script>
+        <script src="../../assets/javascripts/blog.js?v=efb93b45ede6"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=696d9cb6764c"></script>
+        <script src="../../assets/javascripts/frontier.js?v=efb93b45ede6"></script>
       
     
   </body>
