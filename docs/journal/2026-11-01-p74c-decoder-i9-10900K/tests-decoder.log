@@ -1,0 +1,27 @@
+
+running 5 tests
+test public_errors_before_and_after_live_switch ... ok
+test adversarial_symbols_as_real_bzip2 ... ok
+test initial_dispatch_edges_and_short_blocks ... ok
+test all_alphabets_with_live_policy ... ok
+test real_bzip2_corpora_and_independent_decode ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.03s
+
+
+running 6 tests
+test the_default_selects_the_shipped_kernel ... ok
+test mtf_errors_in_long_blocks ... ok
+test several_streams_one_after_another ... ok
+test corpora_through_every_path ... ok
+test samples_at_levels_1_and_9 ... ok
+test truncated_and_corrupted_streams ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.14s
+
+
+running 1 test
+test each_setting_reaches_its_kernel_only ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.35s
+

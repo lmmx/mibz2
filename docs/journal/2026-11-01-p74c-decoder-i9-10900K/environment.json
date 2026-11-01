@@ -1,0 +1,117 @@
+{
+ "label": "i9-10900K",
+ "allocation": {
+  "alloc": [
+   1,
+   2,
+   3,
+   4
+  ],
+  "idle_siblings": [
+   11,
+   12,
+   13,
+   14
+  ],
+  "physical_cores_allowed": 10,
+  "cores": [
+   [
+    1,
+    11
+   ],
+   [
+    2,
+    12
+   ],
+   [
+    3,
+    13
+   ],
+   [
+    4,
+    14
+   ]
+  ],
+  "includes_cpu0_core": false,
+  "smt": true
+ },
+ "cpus": {
+  "1": {
+   "siblings": "1,11",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "cur_khz": "5007411",
+   "max_khz": "5300000"
+  },
+  "2": {
+   "siblings": "2,12",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "cur_khz": "5008178",
+   "max_khz": "5300000"
+  },
+  "3": {
+   "siblings": "3,13",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "cur_khz": "800000",
+   "max_khz": "5300000"
+  },
+  "4": {
+   "siblings": "4,14",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "cur_khz": "800000",
+   "max_khz": "5300000"
+  },
+  "11": {
+   "siblings": "1,11",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "cur_khz": "800000",
+   "max_khz": "5300000"
+  },
+  "12": {
+   "siblings": "2,12",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "cur_khz": "800000",
+   "max_khz": "5300000"
+  },
+  "13": {
+   "siblings": "3,13",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "cur_khz": "4999906",
+   "max_khz": "5300000"
+  },
+  "14": {
+   "siblings": "4,14",
+   "governor": "powersave",
+   "driver": "intel_pstate",
+   "cur_khz": "800000",
+   "max_khz": "5300000"
+  }
+ },
+ "lscpu": "Architecture:                         x86_64\nCPU op-mode(s):                       32-bit, 64-bit\nAddress sizes:                        39 bits physical, 48 bits virtual\nByte Order:                           Little Endian\nCPU(s):                               20\nOn-line CPU(s) list:                  0-19\nVendor ID:                            GenuineIntel\nModel name:                           Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz\nCPU family:                           6\nModel:                                165\nThread(s) per core:                   2\nCore(s) per socket:                   10\nSocket(s):                            1\nStepping:                             5\nCPU(s) scaling MHz:                   51%\nCPU max MHz:                          5300.0000\nCPU min MHz:                          800.0000\nBogoMIPS:                             7399.70\nFlags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid mpx rdseed adx smap clflushopt intel_pt xsaveopt xsavec xgetbv1 xsaves dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp vnmi pku ospke md_clear flush_l1d arch_capabilities\nVirtualisation:                       VT-x\nL1d cache:                            320 KiB (10 instances)\nL1i cache:                            320 KiB (10 instances)\nL2 cache:                             2.5 MiB (10 instances)\nL3 cache:                             20 MiB (1 instance)\nNUMA node(s):                         1\nNUMA node0 CPU(s):                    0-19\nVulnerability Gather data sampling:   Mitigation; Microcode\nVulnerability Itlb multihit:          KVM: Mitigation: VMX disabled\nVulnerability L1tf:                   Not affected\nVulnerability Mds:                    Not affected\nVulnerability Meltdown:               Not affected\nVulnerability Mmio stale data:        Mitigation; Clear CPU buffers; SMT vulnerable\nVulnerability Reg file data sampling: Not affected\nVulnerability Retbleed:               Mitigation; Enhanced IBRS\nVulnerability Spec rstack overflow:   Not affected\nVulnerability Spec store bypass:      Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:             Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:             Mitigation; Enhanced / Automatic IBRS; IBPB conditional; RSB filling; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop\nVulnerability Srbds:                  Mitigation; Microcode\nVulnerability Tsx async abort:        Not affected",
+ "topology": "CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE    MAXMHZ   MINMHZ       MHZ\n  0    0      0    0 0:0:0:0          yes 5300.0000 800.0000 5001.2461\n  1    0      0    1 1:1:1:0          yes 5300.0000 800.0000 5007.4111\n  2    0      0    2 2:2:2:0          yes 5300.0000 800.0000 5002.6880\n  3    0      0    3 3:3:3:0          yes 5300.0000 800.0000  800.0000\n  4    0      0    4 4:4:4:0          yes 5300.0000 800.0000  800.0000\n  5    0      0    5 5:5:5:0          yes 5300.0000 800.0000 4996.9878\n  6    0      0    6 6:6:6:0          yes 5300.0000 800.0000  800.0000\n  7    0      0    7 7:7:7:0          yes 5300.0000 800.0000  800.0000\n  8    0      0    8 8:8:8:0          yes 5300.0000 800.0000 4999.1001\n  9    0      0    9 9:9:9:0          yes 5300.0000 800.0000 4998.9971\n 10    0      0    0 0:0:0:0          yes 5300.0000 800.0000  800.0000\n 11    0      0    1 1:1:1:0          yes 5300.0000 800.0000  800.0000\n 12    0      0    2 2:2:2:0          yes 5300.0000 800.0000  800.0000\n 13    0      0    3 3:3:3:0          yes 5300.0000 800.0000 4999.9058\n 14    0      0    4 4:4:4:0          yes 5300.0000 800.0000  800.0000\n 15    0      0    5 5:5:5:0          yes 5300.0000 800.0000  800.0000\n 16    0      0    6 6:6:6:0          yes 5300.0000 800.0000 4998.6001\n 17    0      0    7 7:7:7:0          yes 5300.0000 800.0000 5004.3750\n 18    0      0    8 8:8:8:0          yes 5300.0000 800.0000  800.0000\n 19    0      0    9 9:9:9:0          yes 5300.0000 800.0000 4990.0449",
+ "smt_control": "on",
+ "intel_no_turbo": "0",
+ "boost": "unavailable: [Errno 2] No such file or directory: '/sys/devices/system/cpu/cpufreq/boost'",
+ "cgroup": "/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.gnome.Terminal.slice/tmux-spawn-1f71634b-3456-4a94-8631-e2121c22c6c1.scope",
+ "cpu_max": "unavailable: [Errno 2] No such file or directory: '/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/app-org.gnome.Terminal.slice/tmux-spawn-1f71634b-3456-4a94-8631-e2121c22c6c1.scope/cpu.max'",
+ "root_cpu_max": "unavailable: [Errno 2] No such file or directory: '/sys/fs/cgroup/cpu.max'",
+ "kernel": {
+  "system": "Linux",
+  "node": "louis-3xs",
+  "release": "6.8.0-57-generic",
+  "version": "#59-Ubuntu SMP PREEMPT_DYNAMIC Sat Mar 15 17:40:59 UTC 2025",
+  "machine": "x86_64",
+  "processor": "x86_64"
+ },
+ "rustc": "rustc 1.90.0 (1159e78c4 2025-09-14)\nbinary: rustc\ncommit-hash: 1159e78c4747b02ef996e55082b704c09b970588\ncommit-date: 2025-09-14\nhost: x86_64-unknown-linux-gnu\nrelease: 1.90.0\nLLVM version: 20.1.8",
+ "head": "33e0618b1e70190f4e8390eb69ebe2778142fc77",
+ "loadavg": "1.90 1.22 1.04 1/1223 655742",
+ "ps": "PID PSR %CPU\n655728 17 33.3\n517062 13 30.6\n1423 16 4.3\n2570 1 1.2\n517417 10 1.1\n634068 15 0.6\n618128 15 0.3\n3219 16 0.2\n517228 13 0.2\n2636 8 0.1\n776 19 0.1\n638849 13 0.1\n517306 14 0.0\n1398 5 0.0\n2912 4 0.0\n2156 14 0.0\n638304 5 0.0\n517166 18 0.0\n517137 8 0.0\n2152 19 0.0\n637922 9 0.0\n2945 14 0.0\n17 0 0.0\n638846 0 0.0\n1057 19 0.0\n2651 0 0.0\n637919 12 0.0\n2428 8 0.0\n1676 13 0.0\n637921 17 0.0\n1065 2 0.0\n517134 17 0.0\n1186 14 0.0\n638348 5 0.0\n9059 15 0.0\n637994 6 0.0\n637949 9 0.0\n637920 13 0.0\n422 5 0.0\n1092 0 0.0\n1096 1 0.0\n2489 9 0.0\n1099 12 0.0\n1097 8 0.0\n2958 10 0.0\n2555 15 0.0\n620725 3 0.0\n2917 19 0.0\n2429 11 0.0\n1060 10 0.0\n1699 15 0.0\n2509 5 0.0\n1685 3 0.0\n146 13 0.0\n2632 13 0.0\n2642 17 0.0\n2403 4 0.0\n1046 8 0.0\n2419 7 0.0\n2163 16 0.0\n1 10 0.0\n2398 12 0.0\n608637 6 0.0\n1634 9 0.0\n1080 13 0.0\n2395 15 0.0\n517903 13 0.0\n855 12 0.0\n608115 9 0.0\n1055 5 0.0\n857 12 0.0\n859 2 0.0\n854 15 0.0\n605698 4 0.0\n484 14 0.0\n514 13 0.0\n2760 14 0.0\n2777 0 0.0\n30 2 0.0\n637868 13 0.0\n2525 12 0.0\n637683 10 0.0\n1565 13 0.0\n630755 14 0.0\n2624 16 0.0\n2154 8 0.0\n3189 0 0.0\n2496 2 0.0\n637261 8 0.0\n16 0 0.0\n3142 10 0.0\n636583 11 0.0\n631701 7 0.0\n71 9 0.0\n113 16 0.0\n65 8 0.0\n637232 0 0.0\n47 5 0.0\n53 6 0.0\n35 3 0.0\n59 7 0.0\n131 19 0.0\n23 1 0.0\n41 4 0.0\n29 2 0.0\n119 17 0.0\n125 18 0.0\n1095 6 0.0\n107 15 0.0\n101 14 0.0\n95 13 0.0\n89 12 0.0\n2408 16 0.0\n83 11 0.0\n77 10 0.0\n637259 16 0.0\n2606 15 0.0\n2625 18 0.0\n2404 6 0.0\n2650 2 0.0\n2430 9 0.0\n18 0 0.0\n1198 8 0.0\n2623 9 0.0\n2396 18 0.0\n2415 10 0.0\n1047 16 0.0\n6116 3 0.0\n1256 19 0.0\n24 1 0.0\n2188 10 0.0\n2534 14 0.0\n90 12 0.0\n2936 4 0.0\n2132 13 0.0\n2467 14 0.0\n6126 8 0.0\n2158 11 0.0\n42 4 0.0\n66 8 0.0\n637069 13 0.0\n2922 12 0.0\n2439 2 0.0\n102 14 0.0\n132 19 0.0\n142 12 0.0\n72 9 0.0\n126 18 0.0\n48 5 0.0\n54 6 0.0\n2963 13 0.0\n287 10 0.0\n114 16 0.0\n96 13 0.0\n237 0 0.0\n120 17 0.0\n36 3 0.0\n637882 16 0.0\n274 2 0.0\n258 19 0.0\n108 15 0.0\n60 7 0.0\n78 10 0.0\n84 11 0.0\n637550 2 0.0\n277 9 0.0\n162 1 0.0\n636991 10 0.0\n10122 16 0.0\n291 11 0.0\n635874 10 0.0\n1059 6 0.0\n292 14 0.0\n259 18 0.0\n275 13 0.0\n276 12 0.0\n288 7 0.0\n290 6 0.0\n293 4 0.0\n281 8 0.0\n241 17 0.0\n285 15 0.0\n6134 4 0.0\n2926 14 0.0\n286 16 0.0\n289 5 0.0\n284 3 0.0\n637873 5 0.0\n637879 6 0.0\n637222 8 0.0\n636704 9 0.0\n636620 14 0.0\n636533 16 0.0\n635169 1 0.0\n2855 14 0.0\n517275 15 0.0\n517176 8 0.0\n517133 15 0.0\n779 16 0.0\n1250 15 0.0\n148 18 0.0\n637220 5 0.0\n637216 1 0.0\n637214 10 0.0\n637189 17 0.0\n637182 18 0.0\n637135 11 0.0\n636009 12 0.0\n635854 11 0.0\n632811 5 0.0\n32092 4 0.0\n2727 6 0.0\n2559 9 0.0\n637901 17 0.0\n637892 3 0.0\n637887 14 0.0\n637862 1 0.0\n637225 15 0.0\n637221 6 0.0\n637215 7 0.0\n1406 12 0.0\n2 15 0.0\n2427 16 0.0\n2488 15 0.0\n1643 12 0.0\n2541 19 0.0\n2520 9 0.0\n2515 0 0.0\n2409 8 0.0\n2410 11 0.0\n2397 14 0.0\n315 6 0.0\n21 1 0.0\n3 0 0.0\n4 0 0.0\n5 0 0.0\n6 0 0.0\n7 0 0.0\n9 0 0.0\n12 0 0.0\n13 0 0.0\n14 0 0.0\n15 0 0.0\n19 0 0.0\n20 0 0.0\n22 1 0.0\n26 1 0.0\n27 2 0.0\n28 2 0.0\n32 2 0.0\n33 3 0.0\n34 3 0.0\n38 3 0.0\n39 4 0.0\n40 4 0.0\n44 4 0.0\n45 5 0.0\n46 5 0.0\n50 5 0.0\n51 6 0.0\n52 6 0.0\n56 6 0.0\n57 7 0.0\n58 7 0.0\n62 7 0.0\n63 8 0.0\n64 8 0.0\n68 8 0.0\n69 9 0.0\n70 9 0.0\n74 9 0.0\n75 10 0.0\n76 10 0.0\n80 10 0.0\n81 11 0.0\n82 11 0.0\n86 11 0.0\n87 12 0.0\n88 12 0.0\n92 12 0.0\n93 13 0.0\n94 13 0.0\n98 13 0.0\n99 14 0.0\n100 14 0.0\n104 14 0.0\n105 15 0.0\n106 15 0.0\n110 15 0.0\n111 16 0.0\n112 16 0.0\n116 16 0.0\n117 17 0.0\n118 17 0.0\n122 17 0.0\n123 18 0.0\n124 18 0.0\n128 18 0.0\n129 19 0.0\n130 19 0.0\n134 19 0.0\n135 0 0.0\n136 2 0.0\n138 7 0.0\n144 12 0.0\n145 14 0.0\n147 5 0.0\n149 7 0.0\n150 6 0.0\n151 7 0.0\n152 0 0.0\n154 8 0.0\n155 9 0.0\n156 5 0.0\n157 6 0.0\n158 7 0.0\n159 13 0.0\n160 12 0.0\n163 12 0.0\n164 14 0.0\n165 18 0.0\n166 2 0.0\n167 5 0.0\n168 5 0.0\n169 6 0.0\n170 6 0.0\n171 19 0.0\n173 15 0.0\n174 16 0.0\n181 14 0.0\n194 17 0.0\n199 18 0.0\n211 1 0.0\n305 12 0.0\n306 12 0.0\n307 4 0.0\n308 3 0.0\n313 4 0.0\n314 6 0.0\n316 17 0.0\n317 7 0.0\n318 1 0.0\n319 19 0.0\n320 10 0.0\n321 6 0.0\n322 6 0.0\n323 1 0.0\n324 6 0.0\n375 19 0.0\n423 1 0.0\n544 11 0.0\n734 16 0.0\n772 18 0.0\n773 12 0.0\n774 10 0.0\n777 11 0.0\n781 5 0.0\n834 5 0.0\n835 5 0.0\n836 13 0.0\n848 2 0.0\n849 18 0.0\n850 4 0.0\n851 1 0.0\n852 6 0.0\n853 7 0.0\n856 1 0.0\n858 3 0.0\n1087 2 0.0\n1094 8 0.0\n1134 5 0.0\n1386 13 0.0\n1408 2 0.0\n1426 5 0.0\n1514 4 0.0\n2134 7 0.0\n2153 9 0.0\n2411 16 0.0\n2476 4 0.0\n2593 17 0.0\n2630 16 0.0\n2797 9 0.0\n2866 10 0.0\n2933 17 0.0\n2956 13 0.0\n517069 10 0.0\n517217 5 0.0\n517513 8 0.0\n635599 17 0.0\n636532 15 0.0\n637196 0 0.0\n637218 3 0.0\n637219 4 0.0\n637223 12 0.0\n637626 18 0.0\n637627 8 0.0\n637682 13 0.0\n637684 19 0.0\n637755 2 0.0\n637773 16 0.0\n637779 19 0.0\n637781 0 0.0\n637869 8 0.0\n637870 2 0.0\n637871 6 0.0\n637872 18 0.0\n637874 12 0.0\n637875 0 0.0\n637876 7 0.0\n637877 14 0.0\n637878 9 0.0\n637880 8 0.0\n637881 15 0.0\n637883 3 0.0\n637884 17 0.0\n637885 14 0.0\n637886 19 0.0\n637888 12 0.0\n637889 5 0.0\n637890 7 0.0\n637891 2 0.0\n637893 4 0.0\n637894 6 0.0\n637895 8 0.0\n637896 9 0.0\n637897 10 0.0\n637898 11 0.0\n637899 13 0.0\n637900 15 0.0\n637902 18 0.0\n637903 9 0.0\n637904 1 0.0\n637905 12 0.0\n637906 14 0.0\n637907 1 0.0\n637908 15 0.0\n637909 7 0.0\n637910 10 0.0\n637911 3 0.0\n637912 8 0.0\n637913 9 0.0\n637914 12 0.0\n637915 5 0.0\n637916 4 0.0\n637917 0 0.0\n637918 7 0.0\n637923 12 0.0\n637924 6 0.0\n637925 4 0.0\n637926 1 0.0\n637927 3 0.0\n637928 10 0.0\n637929 8 0.0\n637930 15 0.0\n637931 12 0.0\n637932 16 0.0\n637933 15 0.0\n637934 3 0.0\n637935 9 0.0\n637943 4 0.0\n637951 9 0.0\n637952 9 0.0\n638022 0 0.0\n638023 13 0.0\n638605 6 0.0\n638607 18 0.0\n638608 2 0.0\n638616 18 0.0\n638771 19 0.0\n638847 7 0.0\n638939 5 0.0\n655743 8 0.0",
+ "ps_note": "the committed copy keeps PID, PSR and %CPU only; command names removed (the run's own archive has them)"
+}

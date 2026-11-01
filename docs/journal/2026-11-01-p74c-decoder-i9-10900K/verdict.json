@@ -1,0 +1,252 @@
+{
+ "overall": "NEGATIVE",
+ "correctness": {
+  "all_sha_ok": true,
+  "all_workers_plan": true,
+  "all_threads_within_allocation": true,
+  "selections_match_arm": true
+ },
+ "gates": {
+  "1_primary": {
+   "row": {
+    "mean_log": 0.03508768570595434,
+    "se": 0.011115294719585016,
+    "df": 19,
+    "rho1": -0.04632217365075234,
+    "n_eff": 20,
+    "ratio": 1.0357105218263336,
+    "lower95": 1.0118932756761068,
+    "upper95": 1.0600883618927532
+   },
+   "outcome": "INCONCLUSIVE",
+   "demonstrated_harm": false,
+   "lower_above_1": true
+  },
+  "2_secondary_flags": {
+   "wikidata-fitted": {
+    "by_w": {
+     "1": {
+      "ratio": 1.0316985786721162,
+      "lower95": 1.0211437066257483,
+      "upper95": 1.0423625492941224
+     },
+     "2": {
+      "ratio": 1.0206195379888932,
+      "lower95": 0.9777438293514186,
+      "upper95": 1.065375418442318
+     },
+     "3": {
+      "ratio": 1.0181765033178893,
+      "lower95": 1.0068482334961826,
+      "upper95": 1.0296322299825285
+     },
+     "4": {
+      "ratio": 1.0127276427426304,
+      "lower95": 1.00365693054589,
+      "upper95": 1.0218803329711585
+     }
+    },
+    "material_deterioration": false
+   },
+   "wikidata-heldout": {
+    "by_w": {
+     "1": {
+      "ratio": 1.0308153740037387,
+      "lower95": 1.0221851878254629,
+      "upper95": 1.0395184238023825
+     },
+     "2": {
+      "ratio": 1.0114232671928178,
+      "lower95": 0.984828979266808,
+      "upper95": 1.0387357063564344
+     },
+     "3": {
+      "ratio": 1.018234846484125,
+      "lower95": 1.0000684345218747,
+      "upper95": 1.0367312543868434
+     },
+     "4": {
+      "ratio": 1.018610476716528,
+      "lower95": 1.0055691556916622,
+      "upper95": 1.0318209318612215
+     }
+    },
+    "material_deterioration": false
+   }
+  },
+  "3_controls": {
+   "rows": {
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "random w=3": "PASS",
+    "random w=4": "INCONCLUSIVE",
+    "records w=1": "PASS",
+    "records w=2": "PASS",
+    "records w=3": "PASS",
+    "records w=4": "INCONCLUSIVE",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "PASS",
+    "mixed-independent w=3": "PASS",
+    "mixed-independent w=4": "PASS",
+    "text w=1": "PASS",
+    "text w=2": "PASS",
+    "text w=3": "PASS",
+    "text w=4": "PASS"
+   },
+   "outcome": "INCONCLUSIVE"
+  },
+  "4_cpu": {
+   "rows": {
+    "wikidata-20261026": "PASS",
+    "wikidata-fitted": "PASS",
+    "wikidata-heldout": "PASS",
+    "random": "INCONCLUSIVE",
+    "records": "INCONCLUSIVE",
+    "mixed-independent": "PASS",
+    "text": "PASS"
+   },
+   "outcome": "INCONCLUSIVE",
+   "sensitivity_descriptive": {
+    "wikidata-20261026": {
+     "ratio": 0.9840380399392181,
+     "upper95": 1.001491618037991,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "wikidata-fitted": {
+     "ratio": 0.9772718734479394,
+     "upper95": 0.9829951709985727,
+     "upper_le_1_00": true,
+     "upper_le_1_02": true
+    },
+    "wikidata-heldout": {
+     "ratio": 0.9820429777849338,
+     "upper95": 0.9894536879060961,
+     "upper_le_1_00": true,
+     "upper_le_1_02": true
+    },
+    "random": {
+     "ratio": 1.0005349689516316,
+     "upper95": 1.0074086684992514,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "records": {
+     "ratio": 1.0061907699732582,
+     "upper95": 1.0175659969284716,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "mixed-independent": {
+     "ratio": 0.983908261995636,
+     "upper95": 1.0082248398742855,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "text": {
+     "ratio": 0.9658564400238765,
+     "upper95": 0.9782477111251012,
+     "upper_le_1_00": true,
+     "upper_le_1_02": true
+    }
+   }
+  },
+  "5_rss": {
+   "rows": {
+    "wikidata-20261026 w=1": "PASS",
+    "wikidata-20261026 w=2": "PASS",
+    "wikidata-20261026 w=3": "PASS",
+    "wikidata-20261026 w=4": "PASS",
+    "wikidata-fitted w=1": "PASS",
+    "wikidata-fitted w=2": "PASS",
+    "wikidata-fitted w=3": "PASS",
+    "wikidata-fitted w=4": "PASS",
+    "wikidata-heldout w=1": "PASS",
+    "wikidata-heldout w=2": "PASS",
+    "wikidata-heldout w=3": "PASS",
+    "wikidata-heldout w=4": "PASS",
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "random w=3": "PASS",
+    "random w=4": "INCONCLUSIVE",
+    "records w=1": "PASS",
+    "records w=2": "PASS",
+    "records w=3": "PASS",
+    "records w=4": "PASS",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "NEGATIVE",
+    "mixed-independent w=3": "PASS",
+    "mixed-independent w=4": "PASS",
+    "text w=1": "PASS",
+    "text w=2": "PASS",
+    "text w=3": "INCONCLUSIVE",
+    "text w=4": "PASS"
+   },
+   "outcome": "NEGATIVE"
+  },
+  "6_aa": {
+   "rows": 56,
+   "excluding_one": 4,
+   "threshold": 7,
+   "outcome": "PASS"
+  }
+ },
+ "host": {
+  "1": {
+   "role": "allocated",
+   "ticks": 90175,
+   "busy": 0.3584918214582756,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "2": {
+   "role": "allocated",
+   "ticks": 90191,
+   "busy": 0.3545808340078278,
+   "irq": 3.3262742402235256e-05,
+   "steal": 0.0
+  },
+  "3": {
+   "role": "allocated",
+   "ticks": 90169,
+   "busy": 0.3601237675919662,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "4": {
+   "role": "allocated",
+   "ticks": 90188,
+   "busy": 0.31286867432474386,
+   "irq": 1.1087949616356943e-05,
+   "steal": 0.0
+  },
+  "11": {
+   "role": "idle sibling",
+   "ticks": 90258,
+   "busy": 0.005439961000686919,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "12": {
+   "role": "idle sibling",
+   "ticks": 90244,
+   "busy": 0.009252692699791676,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "13": {
+   "role": "idle sibling",
+   "ticks": 90248,
+   "busy": 0.006703749667582661,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "14": {
+   "role": "idle sibling",
+   "ticks": 90260,
+   "busy": 0.008553068912031907,
+   "irq": 0.0,
+   "steal": 0.0
+  }
+ }
+}

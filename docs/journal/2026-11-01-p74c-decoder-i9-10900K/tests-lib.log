@@ -1,0 +1,24 @@
+
+running 19 tests
+test mtf::p74_c::tests::audit_manifest_corpora ... ignored, requires explicit P74_AUDIT_FILES list; correctness only
+test mtf::p74_c::tests::dispatch_boundaries ... ok
+test mtf::p74_c::tests::gate1::avx2_is_what_is_tested ... ok
+test mtf::p74_c::tests::exact_guard_includes_trigger_and_run_digits ... ok
+test mtf::p74_c::tests::inclusive_trigger_boundary_counterexample ... ok
+test mtf::p74_c::tests::gate1::runs_on_checkpoints ... ok
+test mtf::p74_c::tests::gate1::long_and_refused_runs ... ok
+test mtf::p74_c::tests::inclusive_trigger_perpetual_boundary_evasion ... ok
+test mtf::p74_c::tests::inclusive_trigger_one_event_past_boundary ... ok
+test mtf::p74_c::tests::runs_adjacent_to_handoff_and_checkpoint_edges ... ok
+test mtf::p74_c::tests::errors_and_truncated_symbols_preserve_partial_state ... ok
+test mtf::p74_c::tests::exhaustive_small_streams_and_legal_boundaries ... ok
+test mtf::p74_c::tests::gate1::each_rank_path_and_crossing ... ok
+test mtf::p74_c::tests::gate1::every_alphabet_size ... ok
+test mtf::p74_c::tests::sampled_large_streams ... ok
+test mtf::p74_c::tests::gate1::edge_cases_at_every_limit ... ok
+test mtf::p74_c::tests::all_alphabets_and_all_ranks ... ok
+test mtf::p74_c::tests::gate1::every_shape ... ok
+test mtf::p74_c::tests::gate1::every_corpus ... ok
+
+test result: ok. 18 passed; 0 failed; 1 ignored; 0 measured; 32 filtered out; finished in 3.68s
+

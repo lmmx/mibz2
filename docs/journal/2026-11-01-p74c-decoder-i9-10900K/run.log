@@ -1,0 +1,302 @@
+p74c-decoder: label=i9-10900K head=33e0618b1e70190f4e8390eb69ebe2778142fc77 pin=b406a3bcfcd61d8189e56143c9e48b565ad06688 out=<repo>/bench/results/p74c-decoder/i9-10900K dry_run=0
+p74c-decoder: 25 harness sources match the frozen hashes
+p74c-decoder: CARGO_TARGET_DIR=<repo>/target; rustc 1.90.0 (1159e78c4 2025-09-14)
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 9.95s
+From github.com:lmmx/mibz2
+ * branch            bench-data -> FETCH_HEAD
+fetch: x00 at 6468043581: 18dcea8b845d634a79e047a9eb52c449c494d98413e05b959d3c934db97d6d22
+fetch: x01 at 15092101691: 5bb88c606354832669e2930c0f665c8865d52510f3ca4234aea824bfcfdb0ba6
+fetch: x02 at 23716159800: b08d4e8601f8726752d78c2e4f8c52da713450d4093127cf6bb3febd6fcef9d2
+fetch: x03 at 32340217909: b80a2b8b621470169758171d8d5f3c79357931a9a58493cfb87b344ce8ed1228
+fetch: x04 at 40964276018: 67deb9de775f6076218adc6b0f7465afc02302c2dac44831a0642a3c348c590c
+fetch: x05 at 49588334128: f33268a4982c87ebc92acd9a6e65e61656bfd866566925cb80ccbc970a04709e
+fetch: x06 at 58212392237: 2d751e527859a4ae5e978f72c98ee2facb428400d4f3718c5bfbadac29434831
+fetch: x07 at 66836450346: 88d000afe5d373921fc5aa588304f0cf95003ad296eac88cf3085f5f69785463
+fetch: x08 at 75460508455: 73dc94cdf050653e8081eba538854cac92e1b4e3b150e86a4995d5fbdf548d99
+fetch: x09 at 84084566565: 6a80b79841df2766d1b9a4ba5fdee35d5c1a12a7b3b362d6d95f6d646e92c489
+fetch: x10 at 92708624674: 038d5e004d1913ed68095c5c08d322ac4b72aba1eaed8b78e4160b0a7574ac23
+fetch: x11 at 101332682783: 74cb6b870275e5990210fdd45bab4da57297b45cee3bbf33c9e4e25d9f170621
+fetch: d00 at 4315233985: d18e5fdb8c62d0f88b675792400a724e63ed9acdb066418865232e895d6a8d35
+fetch: d01 at 12945701956: 1c5f95e476fa75c20bc2c851d5859ebf872a789d54a4133a7318a737fb33f341
+fetch: d02 at 21576169927: fdeeece0d748018d3c6a6181f5a002c6d691cdd37ca91fffbafaaa4cc362f311
+fetch: d03 at 30206637898: 316b4ff073dd3b6df716052f49d7a4e49553a24b23f0973ffe1c917ecd6551f4
+fetch: d04 at 38837105869: db63631fcfdf3931b10db29f8ba7b561526f65918a89f163fa4cdbd257f2e5b8
+fetch: d05 at 47467573840: 28e768be80ed3c586f02a012a5b40d0b7e154670ffdb4c9356b98a0c8cfcceaf
+fetch: d06 at 56098041812: d42380ff1c24ac0e1fc6b2caed5030760a986b3d1ca7bfe93c0fd844ed02197c
+fetch: d07 at 64728509783: 7b01785f0bc84bb81a020b890ac11b93a0cab18bfc73d29ae281cf1ed05da234
+fetch: d08 at 73358977754: bfd50cf980b2ee8cefc6ffd65cb33d572aa895ba72b4259ec98e7b957cda8a88
+fetch: d09 at 81989445725: 744d5b2c376b0bb5836c148a68b2a6bdfdc139a40bdf06114c8105223a57bbcc
+fetch: d10 at 90619913696: 4ff35590fa356a09cca858790957daa00fb2e817f707faf3f509f2b6cae562e4
+fetch: d11 at 99250381667: 3f4173b86106519998798324e5dde1c30cc995bdd2969f795c9af1480b710fd6
+manifest: 34 corpora match the frozen SHA-256
+p74c-decoder: bzip2 -t and bzip2 -dc match the frozen output hashes
+p74c-decoder: allocation CPUs 1,2,3,4; workers 1,2,3,4
+p74c-decoder: the selector audit matches the frozen one
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 13.54s
+     Running unittests src/lib.rs (target/release/deps/mibz2-456c1472b6736fb7)
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (target/release/deps/mibz2-456c1472b6736fb7)
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 8.53s
+     Running tests/mtf_p74_c.rs (target/release/deps/mtf_p74_c-8e34298c8140f01f)
+     Running tests/p74c_decoder.rs (target/release/deps/p74c_decoder-5fcfcd630e625f59)
+     Running tests/p74c_selection.rs (target/release/deps/p74c_selection-7360e8fe9168e3b2)
+p74c-decoder: the P74-C tests pass
+plain: combined 38 instr/6 jcc/0 rmw (pin 38/6/0; Free reference 37/6/0); gates {'G1_branches': True, 'G2_no_ymm_stack': True, 'G3_rmw': True, 'G3_head_chain': True, 'G4_monitor_off_cycle': True}
+checkpoints: combined 37 instr/6 jcc/2 rmw (pin 39/6/0; Free reference 38/6/2); gates {'G1_branches': True, 'G2_no_ymm_stack': True, 'G3_rmw': True, 'G3_head_chain': True, 'G4_monitor_off_cycle': True}
+STRUCTURAL AUDIT PASS
+p74c-decoder: harness self-test (synthetic times) passed
+{
+ "overall": "NEGATIVE",
+ "correctness": {
+  "all_sha_ok": true,
+  "all_workers_plan": true,
+  "all_threads_within_allocation": true,
+  "selections_match_arm": true
+ },
+ "gates": {
+  "1_primary": {
+   "row": {
+    "mean_log": 0.03508768570595434,
+    "se": 0.011115294719585016,
+    "df": 19,
+    "rho1": -0.04632217365075234,
+    "n_eff": 20,
+    "ratio": 1.0357105218263336,
+    "lower95": 1.0118932756761068,
+    "upper95": 1.0600883618927532
+   },
+   "outcome": "INCONCLUSIVE",
+   "demonstrated_harm": false,
+   "lower_above_1": true
+  },
+  "2_secondary_flags": {
+   "wikidata-fitted": {
+    "by_w": {
+     "1": {
+      "ratio": 1.0316985786721162,
+      "lower95": 1.0211437066257483,
+      "upper95": 1.0423625492941224
+     },
+     "2": {
+      "ratio": 1.0206195379888932,
+      "lower95": 0.9777438293514186,
+      "upper95": 1.065375418442318
+     },
+     "3": {
+      "ratio": 1.0181765033178893,
+      "lower95": 1.0068482334961826,
+      "upper95": 1.0296322299825285
+     },
+     "4": {
+      "ratio": 1.0127276427426304,
+      "lower95": 1.00365693054589,
+      "upper95": 1.0218803329711585
+     }
+    },
+    "material_deterioration": false
+   },
+   "wikidata-heldout": {
+    "by_w": {
+     "1": {
+      "ratio": 1.0308153740037387,
+      "lower95": 1.0221851878254629,
+      "upper95": 1.0395184238023825
+     },
+     "2": {
+      "ratio": 1.0114232671928178,
+      "lower95": 0.984828979266808,
+      "upper95": 1.0387357063564344
+     },
+     "3": {
+      "ratio": 1.018234846484125,
+      "lower95": 1.0000684345218747,
+      "upper95": 1.0367312543868434
+     },
+     "4": {
+      "ratio": 1.018610476716528,
+      "lower95": 1.0055691556916622,
+      "upper95": 1.0318209318612215
+     }
+    },
+    "material_deterioration": false
+   }
+  },
+  "3_controls": {
+   "rows": {
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "random w=3": "PASS",
+    "random w=4": "INCONCLUSIVE",
+    "records w=1": "PASS",
+    "records w=2": "PASS",
+    "records w=3": "PASS",
+    "records w=4": "INCONCLUSIVE",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "PASS",
+    "mixed-independent w=3": "PASS",
+    "mixed-independent w=4": "PASS",
+    "text w=1": "PASS",
+    "text w=2": "PASS",
+    "text w=3": "PASS",
+    "text w=4": "PASS"
+   },
+   "outcome": "INCONCLUSIVE"
+  },
+  "4_cpu": {
+   "rows": {
+    "wikidata-20261026": "PASS",
+    "wikidata-fitted": "PASS",
+    "wikidata-heldout": "PASS",
+    "random": "INCONCLUSIVE",
+    "records": "INCONCLUSIVE",
+    "mixed-independent": "PASS",
+    "text": "PASS"
+   },
+   "outcome": "INCONCLUSIVE",
+   "sensitivity_descriptive": {
+    "wikidata-20261026": {
+     "ratio": 0.9840380399392181,
+     "upper95": 1.001491618037991,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "wikidata-fitted": {
+     "ratio": 0.9772718734479394,
+     "upper95": 0.9829951709985727,
+     "upper_le_1_00": true,
+     "upper_le_1_02": true
+    },
+    "wikidata-heldout": {
+     "ratio": 0.9820429777849338,
+     "upper95": 0.9894536879060961,
+     "upper_le_1_00": true,
+     "upper_le_1_02": true
+    },
+    "random": {
+     "ratio": 1.0005349689516316,
+     "upper95": 1.0074086684992514,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "records": {
+     "ratio": 1.0061907699732582,
+     "upper95": 1.0175659969284716,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "mixed-independent": {
+     "ratio": 0.983908261995636,
+     "upper95": 1.0082248398742855,
+     "upper_le_1_00": false,
+     "upper_le_1_02": true
+    },
+    "text": {
+     "ratio": 0.9658564400238765,
+     "upper95": 0.9782477111251012,
+     "upper_le_1_00": true,
+     "upper_le_1_02": true
+    }
+   }
+  },
+  "5_rss": {
+   "rows": {
+    "wikidata-20261026 w=1": "PASS",
+    "wikidata-20261026 w=2": "PASS",
+    "wikidata-20261026 w=3": "PASS",
+    "wikidata-20261026 w=4": "PASS",
+    "wikidata-fitted w=1": "PASS",
+    "wikidata-fitted w=2": "PASS",
+    "wikidata-fitted w=3": "PASS",
+    "wikidata-fitted w=4": "PASS",
+    "wikidata-heldout w=1": "PASS",
+    "wikidata-heldout w=2": "PASS",
+    "wikidata-heldout w=3": "PASS",
+    "wikidata-heldout w=4": "PASS",
+    "random w=1": "PASS",
+    "random w=2": "PASS",
+    "random w=3": "PASS",
+    "random w=4": "INCONCLUSIVE",
+    "records w=1": "PASS",
+    "records w=2": "PASS",
+    "records w=3": "PASS",
+    "records w=4": "PASS",
+    "mixed-independent w=1": "PASS",
+    "mixed-independent w=2": "NEGATIVE",
+    "mixed-independent w=3": "PASS",
+    "mixed-independent w=4": "PASS",
+    "text w=1": "PASS",
+    "text w=2": "PASS",
+    "text w=3": "INCONCLUSIVE",
+    "text w=4": "PASS"
+   },
+   "outcome": "NEGATIVE"
+  },
+  "6_aa": {
+   "rows": 56,
+   "excluding_one": 4,
+   "threshold": 7,
+   "outcome": "PASS"
+  }
+ },
+ "host": {
+  "1": {
+   "role": "allocated",
+   "ticks": 90175,
+   "busy": 0.3584918214582756,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "2": {
+   "role": "allocated",
+   "ticks": 90191,
+   "busy": 0.3545808340078278,
+   "irq": 3.3262742402235256e-05,
+   "steal": 0.0
+  },
+  "3": {
+   "role": "allocated",
+   "ticks": 90169,
+   "busy": 0.3601237675919662,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "4": {
+   "role": "allocated",
+   "ticks": 90188,
+   "busy": 0.31286867432474386,
+   "irq": 1.1087949616356943e-05,
+   "steal": 0.0
+  },
+  "11": {
+   "role": "idle sibling",
+   "ticks": 90258,
+   "busy": 0.005439961000686919,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "12": {
+   "role": "idle sibling",
+   "ticks": 90244,
+   "busy": 0.009252692699791676,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "13": {
+   "role": "idle sibling",
+   "ticks": 90248,
+   "busy": 0.006703749667582661,
+   "irq": 0.0,
+   "steal": 0.0
+  },
+  "14": {
+   "role": "idle sibling",
+   "ticks": 90260,
+   "busy": 0.008553068912031907,
+   "irq": 0.0,
+   "steal": 0.0
+  }
+ }
+}
