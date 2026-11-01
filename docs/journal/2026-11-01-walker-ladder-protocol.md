@@ -1,4 +1,4 @@
-# The minimal real-T-vector walker diagnostic: preparation and draft protocol (for review)
+# The minimal real-T-vector walker diagnostic: preparation, counter audit and frozen protocol (for review)
 
 - **Research only:** `examples/walker_ladder.rs` and `bench/walker_ladder.py`. The decoder is
   unchanged.
@@ -16,9 +16,9 @@
 |---|---|
 | source pin | the commit that adds this file (PR description) |
 | correctness evidence | §3 |
-| counter availability audit | §4: a recipe for the i9, not yet run; the VM has no PMU |
-| protocol | §5, a draft: its event groups are fixed only after the audit |
-| stopping rules | §6 |
+| counter availability audit | §4: **run on the i9** (2026-11-01 23:21 UTC): all 22 events exist and count; every group of four multiplexed, so the groups are now of three |
+| protocol | §5, **frozen** after the audit (event groups, preflight, recipe `bench-walker-ladder`); not authorized |
+| stopping rules | §6, frozen |
 
 ## 1. The question
 
@@ -116,7 +116,7 @@ shared 4-vCPU VM with a 260 MB L3; no counters; not the i9's figures):
 These are hypotheses for the i9 to test, not findings. The VM's cache keeps the whole
 table resident, which the i9's 20 MB L3 under four cores may not.
 
-## 4. The counter availability audit (the i9; recipe ready, not run)
+## 4. The counter availability audit (run on the i9)
 
 ```
 sudo -v && just walker-counter-audit 2>&1 | tee walker-audit-console.log
@@ -142,7 +142,29 @@ at most four events.
 missing, one unsupported and one group multiplexed. The audit reported all three correctly.
 The real VM has no PMU, so it was a parsing check only.
 
-**The candidate events** (Skylake-derived names, for the i9's Comet Lake core):
+**The result** (`2026-11-01-walker-ladder/i9-10900K/`: `walker-audit-20261101T232121Z.json`
+and `.md`, and the console):
+- **Environment:** CPU family 6, model 165, stepping 5; 20 logical CPUs on 10 physical
+  cores, 2 threads a core; `perf_event_paranoid` 4; `nmi_watchdog` 1.
+- **The ladder's correctness check passed on the i9:** every rung at every lane count, and
+  the output fnv `27d7635e0e1a9555`, as on the VM.
+- **Every one of the 22 events** (20 candidates, plus cycles and instructions) is in
+  `perf list` and counts on a run.
+- **Every group of four (with cycles and instructions) multiplexed.** The programmable
+  events ran 82–86% of the time, cycles 65–66%.
+- **The likely cause:** the NMI watchdog. On Intel it holds the fixed cycles counter, so
+  perf's `cycles` takes one of the four programmable counters. Four events plus cycles is
+  five for four.
+
+**The fix, with no change to the machine's settings:**
+- Groups of at most three events, so with cycles they fit four programmable counters.
+- The alternative, disabling the watchdog for the capture (`kernel.nmi_watchdog=0`), is the
+  maintainer's to choose. It is not needed.
+- **A preflight** (below) checks the fix on the i9 itself, before the capture spends any
+  time. It is exercised on the VM with the stand-in `perf`, both failing and passing.
+
+**The candidate events as audited, in their original groups of four** (superseded by §5's
+groups of three):
 
 | group | events, each with cycles and instructions | for |
 |---|---|---|
@@ -152,21 +174,45 @@ The real VM has no PMU, so it was a parsing check only.
 | pf_tlb | `dtlb_load_misses.walk_active`, `sw_prefetch_access.t0`, `load_hit_pre.sw_pf`, `mem_load_retired.l1_miss` | page walks; whether the prefetches arrive before the demand load |
 | loads | `mem_load_retired.fb_hit`, `mem_load_retired.l2_miss`, `mem_load_retired.l3_miss`, `resource_stalls.any` | where demand loads are served |
 
-After the audit, events that are missing or don't count are dropped, and groups that
-multiplex are split. The groups are then frozen with the protocol.
+After the audit: no event was dropped, since all count. Every group was split to at most
+three events. The `l1d_pend_miss` MLP pair stays in one group, with fb_full.
 
 **What the audit cannot show:** demand MLP misses MLP that software prefetch has already
 supplied. A low demand MLP with prefetch on does not mean low overlap (the researcher's
 point). So the protocol reads `load_hit_pre.sw_pf` and `mem_load_retired.fb_hit` beside it,
 and compares B with A.
 
-## 5. The capture (draft; frozen after the audit; not authorized)
+## 5. The capture (frozen after the audit; not authorized)
 
 ```
-python3 bench/walker_ladder.py run FILE --rounds 3 --reps 100     (with WALKER_PERF="sudo perf")
+sudo -v && just bench-walker-ladder 2>&1 | tee walker-ladder-console.log
 ```
 
-A recipe will be added when the protocol is frozen.
+**What the recipe does:**
+1. Checks the corpus's hash.
+2. Builds the ladder, and runs its correctness check.
+3. Runs `bench/walker_ladder.py run FILE --rounds 3 --reps 100` with
+   `WALKER_PERF="sudo perf"`.
+
+Upload `walker-ladder-*.jsonl`, `walker-ladder-*-summary.json` and the console.
+
+**The frozen event groups**, each with cycles and instructions:
+
+| group | events | for |
+|---|---|---|
+| exec | `uops_issued.any`, `uops_retired.retire_slots`, `idq_uops_not_delivered.core` | issue-width share (D3), the front end |
+| branch_sb | `br_misp_retired.all_branches`, `resource_stalls.sb`, `resource_stalls.any` | mispredicts; the store buffer (rung D's stores) |
+| mlp | `l1d_pend_miss.pending`, `l1d_pend_miss.pending_cycles`, `l1d_pend_miss.fb_full` | demand MLP and fill-buffer exhaustion (D4) |
+| stalls_l1 | `cycle_activity.stalls_l1d_miss`, `cycle_activity.stalls_total` | the share of stalls on an L1 miss |
+| stalls_l2 | `cycle_activity.stalls_l2_miss`, `cycle_activity.stalls_l3_miss`, `dtlb_load_misses.walk_active` | deeper misses; page walks |
+| pf | `sw_prefetch_access.t0`, `load_hit_pre.sw_pf`, `mem_load_retired.l1_miss` | whether the prefetches arrive before the demand loads |
+| loads | `mem_load_retired.fb_hit`, `mem_load_retired.l2_miss`, `mem_load_retired.l3_miss` | where demand loads are served |
+
+**The preflight:**
+- Before any figure, each group runs once on a short walk.
+- If any event is uncounted, or runs less than 99.9% of the time, the capture stops there.
+  It makes no figures, and prints which event and group failed.
+- So a grouping the i9 cannot count unmultiplexed costs seconds, not a void capture.
 
 **One core:**
 - Every config (A–D and P at 1, 8, 16 and 32 lanes, and S32) is run once per event group,
@@ -181,11 +227,11 @@ A recipe will be added when the protocol is frozen.
 builds its own T-vector, so there are four tables, as four workers keep. Groups exec and
 mlp; 3 rounds.
 
-**About 5 minutes in all.** The output is `walker-ladder-<time>.jsonl` and a summary.
+**About 7 minutes in all** (seven groups). The output is `walker-ladder-<time>.jsonl` and a summary.
 `--no-perf` runs the same plan timed only. That is the VM's dry run: it completed, and
 with too few walks it was void by G1, as it should be.
 
-## 6. Gates, decisions and stopping rules (draft)
+## 6. Gates, decisions and stopping rules (frozen)
 
 All figures are medians over the rounds.
 - c(X, k) is cycles a row, rung X, k lanes.
@@ -220,14 +266,24 @@ bottleneck (report 135), after review.
 **What the decisions rest on:**
 - The 1.15 and 1.5 bands are judgement, set before any measurement.
 - D3's 4-wide issue is the core's documented width.
-- D4 needs the audit to confirm `l1d_pend_miss.fb_full`. Without it, D4 is read from MLP
-  alone, and says so.
+- D4 needs `l1d_pend_miss.fb_full`, which the audit confirmed counts.
+
+**A prior from FOR-14's i9 confirmation** (2026-11-01-for14-stage1.md §7a, not a
+prediction this protocol gates on):
+- At one block, h's 22 extra instructions a step cost about 1.40 ns a row, about 7 cycles,
+  over o's 1.275 ns.
+- So the shipped walk had little idle issue capacity to absorb added work. That favours
+  D3, or an instruction-window limit (the researcher's second row), over spare miss
+  capacity.
+- At four blocks, o's walk lost 56% a row and the half-sized table's only 8%. So D5's
+  four-core check is where the memory side should show.
 
 ## 7. Cost so far
 
-About half the authorized engineer-day:
+About two-thirds of the authorized engineer-day:
 - the ladder, its checks, the driver, the audit, this draft;
 - one VM sweep;
-- the dry runs (no-perf, and a stand-in `perf` to exercise the parsing).
+- the dry runs (no-perf, and a stand-in `perf` to exercise the parsing);
+- the regrouping and preflight after the audit.
 
-No i9 time has been used.
+**i9 time used:** the one-minute counter audit. No capture.

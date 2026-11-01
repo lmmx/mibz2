@@ -31,19 +31,20 @@ BIN = "target/release/examples/walker_ladder"
 RUNGS = ["A", "B", "C", "D", "P"]
 LANES = [1, 8, 16, 32]
 
-# the events, in groups of at most four programmable counters (the i9 with SMT on), each
-# with the fixed cycles and instructions; the audit confirms each group counts unmultiplexed
+# the events, frozen after the i9's audit (walker-audit-20261101T232121Z): every event
+# exists and counts, but groups of four multiplexed (about 82% running, cycles 65%), as the
+# NMI watchdog (on there) holds the fixed cycles counter and cycles takes a programmable
+# one. So each group has at most three events, cycles and instructions beside them: four
+# programmable counters with SMT on. The MLP pair stays together, alone with fb_full.
 GROUPS = {
-    "exec": ["uops_issued.any", "uops_retired.retire_slots", "br_misp_retired.all_branches",
-             "idq_uops_not_delivered.core"],
-    "mlp": ["l1d_pend_miss.pending", "l1d_pend_miss.pending_cycles", "l1d_pend_miss.fb_full",
-            "cycle_activity.stalls_l1d_miss"],
-    "stalls": ["cycle_activity.stalls_l2_miss", "cycle_activity.stalls_l3_miss",
-               "cycle_activity.stalls_total", "resource_stalls.sb"],
-    "pf_tlb": ["dtlb_load_misses.walk_active", "sw_prefetch_access.t0", "load_hit_pre.sw_pf",
-               "mem_load_retired.l1_miss"],
-    "loads": ["mem_load_retired.fb_hit", "mem_load_retired.l2_miss", "mem_load_retired.l3_miss",
-              "resource_stalls.any"],
+    "exec": ["uops_issued.any", "uops_retired.retire_slots", "idq_uops_not_delivered.core"],
+    "branch_sb": ["br_misp_retired.all_branches", "resource_stalls.sb", "resource_stalls.any"],
+    "mlp": ["l1d_pend_miss.pending", "l1d_pend_miss.pending_cycles", "l1d_pend_miss.fb_full"],
+    "stalls_l1": ["cycle_activity.stalls_l1d_miss", "cycle_activity.stalls_total"],
+    "stalls_l2": ["cycle_activity.stalls_l2_miss", "cycle_activity.stalls_l3_miss",
+                  "dtlb_load_misses.walk_active"],
+    "pf": ["sw_prefetch_access.t0", "load_hit_pre.sw_pf", "mem_load_retired.l1_miss"],
+    "loads": ["mem_load_retired.fb_hit", "mem_load_retired.l2_miss", "mem_load_retired.l3_miss"],
 }
 FIXED = ["cycles", "instructions"]
 # how perf is invoked: WALKER_PERF="sudo perf" where counting needs root (the i9, as P87)
@@ -161,9 +162,26 @@ def audit(args):
     print(f"\nwrote walker-audit-{t}.json and walker-audit-{t}.md")
 
 
+def preflight(file, cpu):
+    """each group once, on a short run: abort before the capture if any event is missing,
+    uncounted or multiplexed (G0 would void the capture)"""
+    bad = []
+    for name, evs in GROUPS.items():
+        _, c = ladder(file, "A", 32, 3, cpu, FIXED + evs)
+        for e in FIXED + evs:
+            got = c.get(e, {})
+            if got.get("status") != "counted" or (got.get("running_pct") or 0) < 99.9:
+                bad.append(f"{name}: {e} {got.get('status')} {got.get('running_pct')}%")
+    if bad:
+        raise SystemExit("walker_ladder: preflight failed, no capture made:\n  " + "\n  ".join(bad))
+    print(f"preflight: all {len(GROUPS)} groups counted, unmultiplexed")
+
+
 def run(args):
     cpus = physical_cpus()
     cpu = cpus[0]
+    if not args.no_perf:
+        preflight(args.file, cpu)
     t = stamp()
     jl = open(f"walker-ladder-{t}.jsonl", "w")
     configs = [(r, k) for r in RUNGS for k in LANES] + [("S", 32)]
@@ -195,7 +213,7 @@ def run(args):
     if len(cpus) >= 4:
         for rnd in range(args.rounds):
             for rung in ["A", "B", "P"]:
-                for g in ([None] if args.no_perf else ["exec", "mlp"]):
+                for g in ([None] if args.no_perf else ["exec", "mlp"]):  # (the frozen groups' names)
                     evs = None if g is None else FIXED + GROUPS[g]
                     procs = []
                     for cc in cpus[:4]:
