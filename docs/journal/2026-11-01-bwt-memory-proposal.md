@@ -5,6 +5,61 @@ run or timed. The read-only analyses in §2 use only archived data:
 `docs/decoder-attribution-records`, `occupancy/`, `stat.json` and `record.json`. Their scripts
 and outputs are in `2026-11-01-bwt-memory-proposal/`.
 
+## Corrections after review (reports 125–129); read these first
+
+The guardian, the independent researcher and Astra reviewed this note. **P87 was selected
+first.** The neighbour matrix (§5) is kept as a later research lead. It is **not to be
+built now**, and its calibration rule is corrected below. The figures in the rest of this
+note stand as originally written, **qualified as follows.**
+
+1. **The "walk" is walk plus assembly.**
+   - The `WalkStart` → `InvertEnd` bracket includes `SegScratch::assemble()`: joining the
+     segments into the block's bytes.
+   - So 1.234 → 1.806 ns per row (+0.572), and its share of the increase, belong to
+     **traversal plus assembly**, not dependent pointer-chasing alone.
+   - The archive has no mark between the two.
+2. **Two denominators, both kept.**
+   - +0.572 ns per BWT row is the 197 full 900k-row blocks, paired (`phases.py`).
+   - Over **all 434 blocks** per run, divided by **decoded bytes**: 1.236 → 1.847 CPU-s/GB,
+     **+0.611** (`whole_corpus.py`; the researcher's aggregation gives 0.609).
+   - **The decoder-level opportunity accounting uses the whole-corpus figure, ≈ 0.61
+     CPU-s/GB.** BWT rows and decoded bytes differ by RLE1.
+3. **The concurrent-walk association (§2.2) is observational.**
+   - Reverse causation: a longer walk overlaps more walks.
+   - The 1,970 walks are repeated observations of 197 blocks, not independent replicates.
+   - The extreme bins are sparse (81 and 29 walks).
+   - R² is 0.23.
+   - It supports investigating traversal interference. It does not establish that
+     walk-on-walk interference is the cause, or that concurrent builds are harmless.
+4. **"About 6 in flight at constant MLP" (Summary §3, §2.3) is an inferred model, not a
+   measurement.**
+   - The 0.93 walker requests per row is assumed.
+   - The 38.6 → 57.5 occupancy is a process-wide mixed-population proxy, not demand-load
+     service latency.
+   - The time includes assembly.
+   - The overlap was inferred from the same quantities it then "explains", so the fit is
+     partly by construction.
+   - **The permissible statement:** the increase is *consistent with* slower request
+     service at roughly unchanged overlap. Walker-specific request rates, useful overlap
+     and prefetch lead time have not been measured.
+5. **"About 98% of the walk's traffic is prefetch" is withdrawn.** Retired demand loads
+   reaching L3 and all offcore data reads are different populations. The `PF_L1D_AND_SW`
+   category also combines L1 hardware prefetch with software prefetch. The walk is
+   prefetch-heavy by design. The share is unmeasured.
+6. **The neighbour matrix's calibration rule (§5.5 Q2) is corrected.**
+   - If real-decoder neighbours reproduce less than 70% of the decoder's penalty, the
+     conclusion is **"the harness is not yet representative"**. It is not "memory
+     interference is disproved", and not "in-process owners take precedence".
+   - A future version starts smaller:
+     1. a production-like target and real neighbours, with representativeness checks
+        (stage costs, request rates and types, buffer lifetimes, the distribution of
+        concurrent T-vector exposure, the walk-cost distribution, the scanner and reader
+        activity);
+     2. then walk-only neighbours against clean-footprint pressure against
+        small-footprint request pressure.
+   - Its results are sensitivities to controlled interference, not additive fractions of
+     the production slowdown.
+
 ## Summary
 
 1. **The penalty is in the walk.** Per row, paired block by block across the attribution

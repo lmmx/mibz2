@@ -1,0 +1,26 @@
+{
+ "1": {
+  "mtf": 0.4718,
+  "build": 0.501,
+  "walk_and_assembly": 1.2362,
+  "rle1_crc": 0.1369,
+  "blocks_per_run": [
+   434
+  ]
+ },
+ "4": {
+  "mtf": 0.5053,
+  "build": 0.5917,
+  "walk_and_assembly": 1.8469,
+  "rle1_crc": 0.1962,
+  "blocks_per_run": [
+   434
+  ]
+ },
+ "increase_cpu_s_per_gb": {
+  "mtf": 0.0335,
+  "build": 0.0907,
+  "walk_and_assembly": 0.6107,
+  "rle1_crc": 0.0593
+ }
+}
