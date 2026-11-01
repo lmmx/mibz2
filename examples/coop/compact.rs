@@ -54,6 +54,9 @@ pub struct Compact {
     /// each byte's first row in F, and n (257 entries)
     cstart: Vec<u32>,
     s: Scratch,
+    /// `h`'s records and raw entries, the worker's own copy of a block's (`load_h`)
+    hrec: Vec<Line>,
+    hraw: Vec<Line>,
 }
 
 /// The room walk's segments (production's `SegScratch`)
@@ -192,7 +195,7 @@ impl Compact {
                 self.build_u(ll, counts);
                 self.f_tables(counts);
             }
-            _ => unreachable!("compact arms are o, v and u"),
+            _ => unreachable!("compact arms are o, v and u (h: `load_h`)"),
         }
     }
 
@@ -202,7 +205,8 @@ impl Compact {
             'o' => self.walk_k::<O>(ll, orig_ptr, out),
             'v' => self.walk_k::<V>(ll, orig_ptr, out),
             'u' => self.walk_k::<U>(ll, orig_ptr, out),
-            _ => unreachable!("compact arms are o, v and u"),
+            'h' => self.walk_h(ll, orig_ptr, out),
+            _ => unreachable!("compact arms are o, v, u and h"),
         }
     }
 
@@ -593,5 +597,506 @@ impl Compact {
         }
         s.first = seg_of(r0);
         s.n = n;
+    }
+}
+
+// ---------------------------------------------------------------------------------------
+// `h`: FOR-14/raw records (P40/P38/P84 stage 1; docs/journal/2026-11-01-for14-stage1.md)
+//
+// One 64-byte record, cache-line aligned, holds 32 consecutive rows j = 32 g .. 32 g + 31:
+// - bytes 0..56: the payload, 32 offsets of 14 bits, offset i at bits 14 i .. 14 i + 13
+//   (little-endian bit order across the 56 bytes);
+// - bytes 56..64: the header, a little-endian u64:
+//   - bits 0..20: FOR, the group's base (its smallest ψ); RAW, the group's index in the raw
+//     area;
+//   - bits 20..28: F, the group's one byte (FOR; zero for RAW);
+//   - bit 28: RAW;
+//   - bits 29..32: zero;
+//   - bits 32..64: the start mask, bit 32 + i set while row 32 g + i starts a segment
+//     (set by the walk, as production sets its START bit, and cleared after).
+// A group is FOR when its 32 rows lie in one F bucket and its ψ span (max − min) is below
+// 2^14: ψ(j) = base + offset, F[j] = F. RUN groups (ψ consecutive) are FOR with offsets
+// 0..31: one format, so the common path has no format branch. Every other group is RAW:
+// its payload is zero and its 32 entries are in the raw area, 128 bytes (two lines) a raw
+// group, entry i a u32: ψ(j) in bits 0..20, F[j] in bits 20..28.
+//
+// The header is at the end of the line so that every offset's 4-byte load, at byte
+// floor(14 i / 8) <= 54, ends inside it: an ordinary step reads one line, at an address
+// known from the row alone (header and offset loads independent of each other).
+// ---------------------------------------------------------------------------------------
+
+/// A cache line
+#[derive(Clone, Copy)]
+#[repr(C, align(64))]
+pub struct Line(pub [u8; 64]);
+
+const H_RAW: u64 = 1 << 28;
+const H_MASK20: u64 = 0xf_ffff;
+/// a lane's `pend` when it waits on no raw entry
+const NO_RAW: u32 = u32::MAX;
+
+/// A block's FOR-14/raw records, made offline from its full T-vector (the oracle)
+#[derive(Default)]
+pub struct Records {
+    pub rec: Vec<Line>,
+    pub raw: Vec<Line>,
+    pub n: usize,
+    /// the groups by class: RUN (a FOR group with offsets 0..31), FOR (other), RAW, and of
+    /// the RAW ones those crossing a bucket boundary, and those forced (`force_permille`)
+    pub run: usize,
+    pub for14: usize,
+    pub raw_groups: usize,
+    pub crossing: usize,
+    pub forced: usize,
+}
+
+impl Records {
+    /// The records of the block whose last column is `ll` (its byte counts `counts`), from
+    /// the T-vector production builds (the `o` arm's copy of `bwt::build`): ψ(j) = T[j] >>
+    /// 8. `force_permille` of the FOR groups (chosen by a hash of the group's index) are
+    /// made RAW too: a check of the raw path, 0 for every timed run.
+    pub fn from_block(ll: &[u8], counts: &[u32; 256], force_permille: u32) -> Records {
+        let n = ll.len();
+        assert!(n < 1 << 20, "ψ and the raw index are 20 bits");
+        let mut c = Compact::default();
+        c.n = n;
+        c.build_o(ll, counts);
+        let t = &c.t32[..n];
+        // F and ψ, checked: T's byte is L's, and L[ψ(j)] = F[j] (the carried byte's
+        // orientation: a lane that reaches ψ(j) from j writes F[j] there)
+        let mut f = vec![0u8; n];
+        let mut j = 0;
+        for (b, &k) in counts.iter().enumerate() {
+            f[j..j + k as usize].fill(b as u8);
+            j += k as usize;
+        }
+        assert_eq!(j, n, "the counts are the block's");
+        let psi: Vec<u32> = t.iter().map(|&q| q >> 8).collect();
+        for j in 0..n {
+            assert_eq!(t[j] as u8, ll[j], "T's byte is L's");
+            assert!((psi[j] as usize) < n);
+            assert_eq!(ll[psi[j] as usize], f[j], "L[ψ(j)] = F[j]");
+        }
+        let groups = n.div_ceil(32);
+        let mut r = Records {
+            rec: vec![Line([0; 64]); groups],
+            n,
+            ..Default::default()
+        };
+        for g in 0..groups {
+            let (lo, hi) = (32 * g, (32 * g + 32).min(n));
+            let one = f[lo] == f[hi - 1];
+            let (mn, mx) = psi[lo..hi]
+                .iter()
+                .fold((u32::MAX, 0), |(a, b), &x| (a.min(x), b.max(x)));
+            let mut h = 0u64;
+            let mut x = (g as u64 ^ 0x9e37_79b9_7f4a_7c15).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+            x ^= x >> 31;
+            let force = (x % 1000) < force_permille as u64;
+            if one && mx - mn < 1 << 14 && !force {
+                h |= mn as u64 | (f[lo] as u64) << 20;
+                let line = &mut r.rec[g].0;
+                for (i, &p) in psi[lo..hi].iter().enumerate() {
+                    let v = (p - mn) as u64;
+                    let at = 14 * i;
+                    // OR the 14 bits into bytes at / 8 .. at / 8 + 3 (bytes 0..56)
+                    let w = v << (at % 8);
+                    for k in 0..3 {
+                        if at / 8 + k < 56 {
+                            line[at / 8 + k] |= (w >> (8 * k)) as u8;
+                        }
+                    }
+                }
+                if (lo..hi).all(|j| psi[j] == mn + (j - lo) as u32) {
+                    r.run += 1;
+                } else {
+                    r.for14 += 1;
+                }
+            } else {
+                let idx = r.raw_groups;
+                h |= idx as u64 | H_RAW;
+                r.raw.push(Line([0; 64]));
+                r.raw.push(Line([0; 64]));
+                for (i, j) in (lo..hi).enumerate() {
+                    let e = psi[j] | (f[j] as u32) << 20;
+                    let line = &mut r.raw[2 * idx + i / 16].0;
+                    line[4 * (i % 16)..4 * (i % 16) + 4].copy_from_slice(&e.to_le_bytes());
+                }
+                r.raw_groups += 1;
+                r.crossing += !one as usize;
+                r.forced += (one && mx - mn < 1 << 14) as usize;
+            }
+            r.rec[g].0[56..64].copy_from_slice(&h.to_le_bytes());
+        }
+        // every row decodes to its ψ and F (the decoder below, against the oracle)
+        for j in 0..n {
+            let (p, b) = unsafe { h_next(r.rec.as_ptr(), r.raw.as_ptr(), j as u32) };
+            assert!(p == psi[j] && b == f[j], "row {j}'s record decodes to its ψ and F");
+        }
+        r
+    }
+
+    /// The records' bytes and raw area's
+    pub fn bytes(&self) -> (usize, usize) {
+        (64 * self.rec.len(), 64 * self.raw.len())
+    }
+}
+
+/// Row `row`'s header
+///
+/// SAFETY (all four): `row` is below n, `rec` a block's records
+#[inline(always)]
+unsafe fn h_header(rec: *const Line, row: u32) -> u64 {
+    unsafe { u64::from_le(((rec.add((row >> 5) as usize) as *const u8).add(56) as *const u64).read()) }
+}
+
+/// Row `row`'s 14-bit offset (meaningless in a RAW record, whose payload is zero)
+#[inline(always)]
+unsafe fn h_offset(rec: *const Line, row: u32) -> u32 {
+    let at = 14 * (row & 31);
+    let w = unsafe {
+        ((rec.add((row >> 5) as usize) as *const u8).add((at >> 3) as usize) as *const u32)
+            .read_unaligned()
+    };
+    (u32::from_le(w) >> (at & 7)) & 0x3fff
+}
+
+/// Row `row`'s raw entry's index (in u32s) in the raw area, from its RAW header
+#[inline(always)]
+fn h_raw_index(h: u64, row: u32) -> u32 {
+    32 * (h & H_MASK20) as u32 + (row & 31)
+}
+
+/// ψ(row) and F[row], either format: the walk's starts and the plain walk
+#[inline(always)]
+unsafe fn h_next(rec: *const Line, raw: *const Line, row: u32) -> (u32, u8) {
+    unsafe {
+        let h = h_header(rec, row);
+        if h & H_RAW != 0 {
+            let e = u32::from_le(*(raw as *const u32).add(h_raw_index(h, row) as usize));
+            (e & 0xf_ffff, (e >> 20) as u8)
+        } else {
+            ((h & H_MASK20) as u32 + h_offset(rec, row), (h >> 20) as u8)
+        }
+    }
+}
+
+#[inline(always)]
+fn prefetch_at(p: *const u8) {
+    #[cfg(target_arch = "x86_64")]
+    // SAFETY: a prefetch never faults
+    unsafe {
+        core::arch::x86_64::_mm_prefetch::<{ core::arch::x86_64::_MM_HINT_T0 }>(p as *const i8)
+    }
+    #[cfg(not(target_arch = "x86_64"))]
+    let _ = p;
+}
+
+/// `h`'s lane: `Lane` and the raw entry it waits on
+#[derive(Clone, Copy)]
+struct LaneH {
+    row: u32,
+    /// NO_RAW, or the raw entry (u32 index) of `row`, prefetched at the lane's last turn
+    pend: u32,
+    /// the byte the lane writes at its next step: L of `row`
+    b: u8,
+    seg: usize,
+    p: *mut u8,
+    end: *mut u8,
+}
+
+impl Compact {
+    /// `h`'s build: a copy of the block's precomputed records into the worker's own,
+    /// reused buffers, as a direct builder would leave them (written just before the
+    /// walk). The optimistic stand-in for a builder (stage 1 measures traversal only).
+    pub fn load_h(&mut self, r: &Records) {
+        self.n = r.n;
+        self.hrec.clear();
+        self.hrec.extend_from_slice(&r.rec);
+        self.hraw.clear();
+        self.hraw.extend_from_slice(&r.raw);
+    }
+
+    fn walk_h(&mut self, ll: &[u8], orig_ptr: u32, out: &mut Vec<u8>) {
+        assert_eq!(self.hrec.len(), self.n.div_ceil(32), "load_h first");
+        if self.n < MIN_SEGMENTED {
+            self.plain_h(orig_ptr, out);
+        } else {
+            self.room_h(ll, orig_ptr);
+            self.s.assemble(out);
+        }
+    }
+
+    /// production's plain walk, on records
+    fn plain_h(&mut self, orig_ptr: u32, out: &mut Vec<u8>) {
+        let n = self.n;
+        let (rec, raw) = (self.hrec.as_ptr(), self.hraw.as_ptr());
+        out.clear();
+        out.reserve(n);
+        // SAFETY: every ψ is below n, as is orig_ptr (checked by the stream's parser)
+        unsafe {
+            let (mut r, mut b) = h_next(rec, raw, orig_ptr);
+            for _ in 0..n {
+                out.push(b);
+                let (r2, b2) = h_next(rec, raw, r);
+                r = r2;
+                b = b2;
+            }
+        }
+    }
+
+    /// `room` on records: the same starts, passes, handoffs and tail. A lane at a RAW row
+    /// prefetches the row's raw entry and writes nothing that turn (its base moved back a
+    /// byte); at its next turn it takes ψ and F from the entry, then goes on. So a raw
+    /// successor costs one turn and one line, and no ordinary step reads anything but its
+    /// record's line.
+    #[inline(never)]
+    fn room_h(&mut self, ll: &[u8], orig_ptr: u32) {
+        let n = self.n;
+        let recm = self.hrec.as_mut_ptr();
+        let (rec, raw) = (recm as *const Line, self.hraw.as_ptr());
+        let rawu = raw as *const u32;
+        let s = &mut self.s;
+        // SAFETY (every record and raw access below): every row is below n, the starts
+        // being rows and every ψ coming from the oracle's records
+        let r0 = unsafe { h_next(rec, raw, orig_ptr) }.0;
+        random_rows(n, SEGMENTS - 1, &mut s.starts);
+        s.starts.push(r0);
+        h_extra_starts(n, rec, &mut s.starts);
+        s.starts.sort_unstable();
+        s.starts.dedup();
+        let ns = s.starts.len();
+        let set = |r: u32, on: bool| unsafe {
+            let h = (recm.add((r >> 5) as usize) as *mut u8).add(56) as *mut u64;
+            let bit = 1u64 << (32 + (r & 31));
+            *h = if on { *h | bit.to_le() } else { *h & !bit.to_le() };
+        };
+        for &r in &s.starts {
+            set(r, true);
+        }
+        let cap = 2 * n / ns + 64;
+        s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
+        for b in &mut s.bufs[..ns] {
+            b.clear();
+            b.reserve(cap);
+        }
+        s.next.clear();
+        s.next.resize(ns, usize::MAX);
+        let starts = &s.starts;
+        let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+        let bufs = &mut s.bufs;
+        let next = &mut s.next;
+        let line = |row: u32| unsafe { rec.add((row >> 5) as usize) as *const u8 };
+
+        let take = |seg: usize, bufs: &mut Vec<Vec<u8>>| -> LaneH {
+            let b = &mut bufs[seg];
+            let base = b.as_mut_ptr();
+            let st = starts[seg];
+            let (r, f) = unsafe { h_next(rec, raw, st) };
+            // SAFETY: the buffer has `cap` > 0 spare bytes
+            unsafe { *base = ll[st as usize] };
+            LaneH {
+                row: r,
+                pend: NO_RAW,
+                b: f,
+                seg,
+                p: unsafe { base.add(1) },
+                end: unsafe { base.add(b.capacity()) },
+            }
+        };
+        let finish = |l: &LaneH, bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| {
+            let b = &mut bufs[l.seg];
+            // SAFETY: p is within b's allocation, every byte below it written
+            unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+            next[l.seg] = seg_of(l.row);
+        };
+        let grow = |l: &mut LaneH, bufs: &mut Vec<Vec<u8>>| {
+            let b = &mut bufs[l.seg];
+            let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+            unsafe { b.set_len(len) };
+            b.reserve(b.capacity());
+            l.p = unsafe { b.as_mut_ptr().add(len) };
+            l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
+        };
+
+        let mut queued = 0;
+        let mut lanes: [LaneH; LANES] = std::array::from_fn(|_| LaneH {
+            row: 0,
+            pend: NO_RAW,
+            b: 0,
+            seg: usize::MAX,
+            p: std::ptr::null_mut(),
+            end: std::ptr::null_mut(),
+        });
+        let mut active = 0;
+        while active < LANES && queued < ns {
+            lanes[active] = take(queued, bufs);
+            prefetch_at(line(lanes[active].row));
+            queued += 1;
+            active += 1;
+        }
+        if active == LANES {
+            'full: loop {
+                let mut room = cap - 1;
+                for l in lanes.iter_mut() {
+                    if l.p == l.end {
+                        grow(l, bufs);
+                    }
+                    room = room.min(unsafe { l.end.offset_from(l.p) } as usize);
+                }
+                debug_assert!(room > 0);
+                let mut base: [*mut u8; LANES] = std::array::from_fn(|k| lanes[k].p);
+                for off in 0..room {
+                    for k in 0..LANES {
+                        let l = &mut lanes[k];
+                        let byte;
+                        if l.pend != NO_RAW {
+                            // the raw entry, prefetched a turn ago
+                            let e = u32::from_le(unsafe { *rawu.add(l.pend as usize) });
+                            l.pend = NO_RAW;
+                            byte = l.b;
+                            l.b = (e >> 20) as u8;
+                            l.row = e & 0xf_ffff;
+                        } else {
+                            let h = unsafe { h_header(rec, l.row) };
+                            let o = unsafe { h_offset(rec, l.row) };
+                            if (h >> (32 + (l.row & 31))) & 1 != 0 {
+                                l.p = base[k].wrapping_add(off);
+                                finish_h(l, &finish, bufs, next);
+                                if queued == ns {
+                                    for (j, lj) in lanes.iter_mut().enumerate() {
+                                        if j < k {
+                                            lj.p = base[j].wrapping_add(off + 1);
+                                        } else if j > k {
+                                            lj.p = base[j].wrapping_add(off);
+                                        }
+                                    }
+                                    break 'full;
+                                }
+                                *l = take(queued, bufs);
+                                prefetch_at(line(l.row));
+                                queued += 1;
+                                base[k] = l.p.wrapping_sub(off + 1);
+                                continue;
+                            }
+                            if h & H_RAW != 0 {
+                                l.pend = h_raw_index(h, l.row);
+                                prefetch_at(unsafe { rawu.add(l.pend as usize) } as *const u8);
+                                // nothing written this turn: the lane's next byte goes
+                                // where this one would have
+                                base[k] = base[k].wrapping_sub(1);
+                                continue;
+                            }
+                            byte = l.b;
+                            l.b = (h >> 20) as u8;
+                            l.row = (h & H_MASK20) as u32 + o;
+                        }
+                        prefetch_at(line(l.row));
+                        debug_assert!(base[k].wrapping_add(off) < l.end);
+                        unsafe { *base[k].wrapping_add(off) = byte };
+                    }
+                }
+                for (l, b) in lanes.iter_mut().zip(base) {
+                    l.p = b.wrapping_add(room);
+                }
+            }
+        }
+        let mut live: Vec<LaneH> = lanes[..active]
+            .iter()
+            .copied()
+            .filter(|l| l.seg != usize::MAX && next[l.seg] == usize::MAX)
+            .collect();
+        for l in live.iter_mut() {
+            if l.p == l.end {
+                grow(l, bufs);
+            }
+            debug_assert!(l.p < l.end);
+        }
+        while !live.is_empty() {
+            let mut i = 0;
+            while i < live.len() {
+                let l = &mut live[i];
+                let byte;
+                if l.pend != NO_RAW {
+                    let e = u32::from_le(unsafe { *rawu.add(l.pend as usize) });
+                    l.pend = NO_RAW;
+                    byte = l.b;
+                    l.b = (e >> 20) as u8;
+                    l.row = e & 0xf_ffff;
+                } else {
+                    let h = unsafe { h_header(rec, l.row) };
+                    if (h >> (32 + (l.row & 31))) & 1 != 0 {
+                        finish_h(l, &finish, bufs, next);
+                        live.swap_remove(i);
+                        continue;
+                    }
+                    if h & H_RAW != 0 {
+                        l.pend = h_raw_index(h, l.row);
+                        prefetch_at(unsafe { rawu.add(l.pend as usize) } as *const u8);
+                        i += 1;
+                        continue;
+                    }
+                    byte = l.b;
+                    l.b = (h >> 20) as u8;
+                    l.row = (h & H_MASK20) as u32 + unsafe { h_offset(rec, l.row) };
+                }
+                prefetch_at(line(l.row));
+                unsafe {
+                    *l.p = byte;
+                    l.p = l.p.add(1);
+                }
+                if l.p == l.end {
+                    grow(l, bufs);
+                }
+                i += 1;
+            }
+        }
+        for &r in starts {
+            set(r, false);
+        }
+        s.first = seg_of(r0);
+        s.n = n;
+    }
+}
+
+/// a lane ends its segment at a start row: it never waits on a raw entry there, since a
+/// start is detected from the header before the RAW test
+#[inline(always)]
+fn finish_h<F: Fn(&LaneH, &mut Vec<Vec<u8>>, &mut Vec<usize>)>(
+    l: &LaneH,
+    finish: &F,
+    bufs: &mut Vec<Vec<u8>>,
+    next: &mut Vec<usize>,
+) {
+    debug_assert_eq!(l.pend, NO_RAW);
+    finish(l, bufs, next);
+}
+
+/// COOP_H_STARTS=1 (checks only, never a timed run): segment starts the random ones rarely
+/// give, added to them: rows 0, 1, n − 1, adjacent pairs, a run of 40 consecutive rows
+/// (one-byte segments), and the first two rows of the first 16 RAW groups (a segment
+/// that starts, or ends, at a raw row)
+fn h_extra_starts(n: usize, rec: *const Line, starts: &mut Vec<u32>) {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    if !*ON.get_or_init(|| std::env::var("COOP_H_STARTS").is_ok_and(|v| v == "1")) {
+        return;
+    }
+    let n32 = n as u32;
+    starts.extend([0, 1, n32 - 1, n32 / 2, n32 / 2 + 1, n32 / 3, n32 / 3 + 1]);
+    starts.extend((0..40).map(|i| (n32 / 5 + i).min(n32 - 1)));
+    let mut found = 0;
+    for g in 0..n.div_ceil(32) {
+        // SAFETY: g is a record of the block's
+        let h = unsafe { h_header(rec, 32 * g as u32) };
+        if h & H_RAW != 0 {
+            starts.push(32 * g as u32);
+            if 32 * g + 1 < n {
+                starts.push(32 * g as u32 + 1);
+            }
+            found += 1;
+            if found == 16 {
+                break;
+            }
+        }
     }
 }

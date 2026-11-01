@@ -1070,6 +1070,8 @@ struct Block {
     checkpoints: Vec<[u32; 256]>,
     /// its MTF/RLE2 symbols, for the arms that time the MTF stage (COOP_WITH_MTF, `mtf`)
     symbols: Symbols,
+    /// its FOR-14/raw records (`h` arms), made from its T-vector outside every timing
+    records: std::sync::OnceLock<compact::Records>,
 }
 
 fn blocks(data: &[u8]) -> Vec<Block> {
@@ -1096,6 +1098,7 @@ fn blocks(data: &[u8]) -> Vec<Block> {
             orig_ptr: symbols.orig_ptr,
             checkpoints,
             symbols,
+            records: Default::default(),
         });
     }
     v
@@ -1687,7 +1690,7 @@ impl Inv {
         };
         match kind {
             'p' => Inv::Prod(TVector::new(), SegScratch::default()),
-            'o' | 'v' | 'u' => {
+            'o' | 'v' | 'u' | 'h' => {
                 assert_eq!(k, 1, "compact arms take one core a block");
                 Inv::Compact(kind, Box::default())
             }
@@ -1772,6 +1775,12 @@ impl Inv {
                 } else {
                     coop_walk(b.orig_ptr, pool, c, out);
                 }
+                (m, s.elapsed().as_secs_f64() - m)
+            }
+            Inv::Compact('h', c) => {
+                c.load_h(b.records.get().expect("h's records, made before the rounds"));
+                let m = s.elapsed().as_secs_f64();
+                c.walk('h', &b.ll, b.orig_ptr, out);
                 (m, s.elapsed().as_secs_f64() - m)
             }
             Inv::Compact(kind, c) => {
@@ -1995,6 +2004,7 @@ fn parse_arm(s: &str) -> Arm {
         b'o' => ('o', &s[1..]),
         b'v' => ('v', &s[1..]),
         b'u' => ('u', &s[1..]),
+        b'h' => ('h', &s[1..]),
         _ => ('c', s),
     };
     let (rest, segments) = match rest.split_once('@') {
@@ -2030,6 +2040,12 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
     let arms: Vec<Arm> = specs.iter().map(|s| parse_arm(s)).collect();
     if arms.iter().any(|a| matches!(a.kind, 'x' | 'y' | 'g')) {
         fused_check(bs);
+    }
+    if arms.iter().any(|a| a.kind == 'h') {
+        // (an h arm's records are made from the harness's last column, outside the timing:
+        // no MTF stage in it)
+        assert!(!with_mtf, "h arms take their records made, not COOP_WITH_MTF=1");
+        make_records(bs, 0);
     }
     if arms.iter().any(|a| a.kind == 'l') {
         // the checkpoints an l arm is given (MTF outside the timing) are exactly the ones
@@ -2143,6 +2159,7 @@ fn grid_mode(bs: &[Block], rounds: usize, specs: &[String], cpus: Option<&[usize
                                 orig_ptr: 0,
                                 checkpoints: Vec::new(),
                                 symbols: empty_symbols(),
+                                records: Default::default(),
                             };
                             go.wait();
                             loop {
@@ -2445,6 +2462,117 @@ fn sizes_mode(bs: &[Block]) {
     }
 }
 
+/// Every block's FOR-14/raw records from its T-vector (the oracle), on every CPU, outside
+/// every timing; `force_permille` of the FOR groups made RAW (0 for a timed run)
+fn make_records(bs: &[Block], force_permille: u32) -> (usize, usize) {
+    let threads = std::thread::available_parallelism().map_or(1, |n| n.get());
+    let next = AtomicUsize::new(0);
+    std::thread::scope(|sc| {
+        for _ in 0..threads {
+            sc.spawn(|| loop {
+                let i = next.fetch_add(1, Ordering::Relaxed);
+                let Some(b) = bs.get(i) else { break };
+                let r = compact::Records::from_block(&b.ll, &b.counts, force_permille);
+                b.records.set(r).ok().expect("one set a block");
+            });
+        }
+    });
+    let (rec, raw) = bs
+        .iter()
+        .map(|b| b.records.get().unwrap().bytes())
+        .fold((0, 0), |(a, c), (x, y)| (a + x, c + y));
+    eprintln!(
+        "h: records made from each block's T-vector and checked row by row: {:.1} MB of records, {:.2} MB raw",
+        rec as f64 / 1e6,
+        raw as f64 / 1e6
+    );
+    (rec, raw)
+}
+
+/// `coop h-check FILE [PERMILLE,...]`: the h arm's output, untimed, at each share of FOR
+/// groups forced RAW: every block byte for byte against production's room walk, then
+/// through RLE1 to the block's stored CRC; and the records' census (groups by class, bytes
+/// a row). With COOP_H_STARTS=1 the walk adds the starts `h_extra_starts` names. The
+/// records are made and walked by `Records::from_block`, `load_h` and `walk('h')`, the
+/// grid's h arm's calls.
+fn h_check(bs: &[Block], permille: &[u32]) {
+    let kern = Kernels::detect();
+    let mut want = Vec::with_capacity(bs.len());
+    let mut inv = Inv::new('p', 1, None, None);
+    for b in bs {
+        let mut out = Vec::new();
+        inv.invert(b, &mut out);
+        want.push(fnv(&out));
+    }
+    let rows: usize = bs.iter().map(|b| b.ll.len()).sum();
+    let threads = std::thread::available_parallelism().map_or(1, |n| n.get());
+    for &pm in permille {
+        let next = AtomicUsize::new(0);
+        // run, for14, raw groups, crossing, forced, record bytes, raw bytes, full blocks'
+        // rows and raw rows
+        let tot = std::thread::scope(|sc| {
+            let hs: Vec<_> = (0..threads)
+                .map(|_| {
+                    sc.spawn(|| {
+                        let mut c = compact::Compact::default();
+                        let (mut out, mut dec) = (Vec::new(), Vec::new());
+                        let mut t = [0usize; 9];
+                        loop {
+                            let i = next.fetch_add(1, Ordering::Relaxed);
+                            let Some(b) = bs.get(i) else { break t };
+                            let r = compact::Records::from_block(&b.ll, &b.counts, pm);
+                            c.load_h(&r);
+                            c.walk('h', &b.ll, b.orig_ptr, &mut out);
+                            assert_eq!(fnv(&out), want[i], "permille {pm}: block {i} differs");
+                            dec.clear();
+                            mibz2::rle::unrle(&out, &mut dec, kern).expect("RLE1 decodes");
+                            assert_eq!(
+                                mibz2::crc::crc32(&dec, kern),
+                                b.symbols.crc,
+                                "permille {pm}: block {i}'s CRC"
+                            );
+                            let (rb, wb) = r.bytes();
+                            let full = b.ll.len() >= 899_000;
+                            for (x, v) in t.iter_mut().zip([
+                                r.run,
+                                r.for14,
+                                r.raw_groups,
+                                r.crossing,
+                                r.forced,
+                                rb,
+                                wb,
+                                if full { b.ll.len() } else { 0 },
+                                if full { 32 * r.raw_groups } else { 0 },
+                            ]) {
+                                *x += v;
+                            }
+                        }
+                    })
+                })
+                .collect();
+            hs.into_iter().map(|h| h.join().unwrap()).fold([0usize; 9], |mut a, t| {
+                for (x, v) in a.iter_mut().zip(t) {
+                    *x += v;
+                }
+                a
+            })
+        });
+        let [run, for14, rawg, crossing, forced, rec, raw, full_rows, full_raw] = tot;
+        let groups = run + for14 + rawg;
+        println!(
+            "permille {pm}: {} blocks, {rows} rows: exact output and CRC on every block; groups {groups}: RUN {run} ({:.2}%), FOR {for14} ({:.2}%), RAW {rawg} ({:.2}%; crossing {crossing}, forced {forced}); {:.3} bytes a row ({:.3} records + {:.3} raw); full blocks' raw rows {:.2}%",
+            bs.len(),
+            100.0 * run as f64 / groups as f64,
+            100.0 * for14 as f64 / groups as f64,
+            100.0 * rawg as f64 / groups as f64,
+            (rec + raw) as f64 / rows as f64,
+            rec as f64 / rows as f64,
+            raw as f64 / rows as f64,
+            100.0 * full_raw as f64 / full_rows.max(1) as f64,
+        );
+    }
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let mode = args.get(1).map(String::as_str).unwrap_or("");
@@ -2482,6 +2610,15 @@ fn main() {
             grid_mode(&bs, rounds, &specs, cpus.as_deref());
         }
         "sizes" => sizes_mode(&bs),
-        _ => panic!("coop block|mtf|grid|sizes FILE.bz2 ..."),
+        "h-check" => {
+            let permille: Vec<u32> = args
+                .get(3)
+                .map_or("0,50,300,1000", |s| s)
+                .split(',')
+                .map(|s| s.parse().unwrap())
+                .collect();
+            h_check(&bs, &permille);
+        }
+        _ => panic!("coop block|mtf|grid|sizes|h-check FILE.bz2 ..."),
     }
 }
