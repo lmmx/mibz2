@@ -3,14 +3,23 @@ It joins one run's trace marks (examples/occupancy.rs's raw dump and its sidecar
 kernel's scheduler, futex and idle events (`perf script --ns` of a `perf record -k
 CLOCK_MONOTONIC -C <allocation>` capture), and classifies the workers' time.
 
-    dispatch.py run     --marks M.tsv --perf P.txt --workers W --cpus 1,2,3,4 --out run.json
+    dispatch.py run     --marks M.tsv --perf P.txt --stats S.txt --workers W --cpus 1,2,3,4 --out run.json
+    dispatch.py quality --runs DIR --pairs pairs.tsv
     dispatch.py summary --runs DIR --pairs pairs.tsv --out result.json
+    dispatch.py probe   --perf P.txt --stats S.txt --cpus 1,2,3,4
+
+P.txt is `perf script --show-lost-events`; S.txt is `perf report --stats` of the same data.
+Amendment 1 (validation only, 2026-11-01-dispatch-causality/amendment-1.md): the kernel's
+own trace loss, lines the parser cannot read, an incomplete scheduling stream (switches into
+idle without switches out, a thread switched out while not known to be running) and the
+scheduler checks of every run are enforced in the summary, not only before the expansion.
 
 Nothing here is a timing comparison. Every class and threshold is the protocol's (§§5-6).
 """
 import argparse
 import bisect
 import collections
+import gzip
 import json
 import re
 import statistics
@@ -22,12 +31,23 @@ MATERIAL = 0.05                  # §5 D1: receiver obstruction, a share of aggr
 REPEATABLE = 0.8                 # §5 D1: the share of runs that must each reach it
 COVERAGE = 0.90                  # §6: the classified share of queued-work nondecoding time
 PERTURBATION = 0.03              # §6: throughput and CPU-s/GB, instrumented against not
+SCHED_COVERAGE = 0.99            # §6: scheduler state known for this share of queued-work nondecoding time
+SCHED_EVENTS = ("sched:sched_switch", "sched:sched_wakeup", "sched:sched_wakeup_new", "sched:sched_waking")
+ANCHOR_EVENTS = ("syscalls:sys_enter_sched_yield",)
+FUTEX_EVENTS = ("syscalls:sys_enter_futex", "syscalls:sys_exit_futex")
 PHASE_OF = {"DecodeStart": "decoding", "InvertStart": "decoding", "WalkStart": "decoding", "InvertEnd": "decoding",
             "DecodeEnd": "pub_lock", "PubLockGot": "publish", "Ready": "notify", "Notified": "post",
             "JobLock": "mutex_wait", "JobRecv": "recv", "RecvDone": "release", "JobGot": "buf_lock",
             "BufLockGot": "buffer", "ThreadStart": "start", "ThreadEnd": "end"}
-PERF_LINE = re.compile(r"^\s*(?P<comm>.*?)\s+(?P<tid>\d+)\s+\[(?P<cpu>\d+)\]\s+(?P<s>\d+)\.(?P<ns>\d{9}):\s+(?P<ev>[\w:]+):\s*(?P<rest>.*)$")
+PERF_LINE = re.compile(r"^\s*(?P<comm>.*?)\s+(?P<tid>-?\d+)\s+\[(?P<cpu>\d+)\]\s+(?P<s>\d+)\.(?P<ns>\d{9}):\s+(?P<ev>[\w:]+):\s*(?P<rest>.*)$")
 KV = re.compile(r"(\w+)=(\S+)")
+LOST_LINE = re.compile(r"PERF_RECORD_LOST\S*\s+lost:?\s*(\d+)")
+STAT_LINE = re.compile(r"^\s*(\w+) events:\s+(\d+)")
+
+
+def opener(path):
+    path = str(path)
+    return gzip.open(path, "rt") if path.endswith(".gz") else open(path)
 
 
 def role_of(name):
@@ -37,12 +57,12 @@ def role_of(name):
 
 
 def load_marks(path):
-    meta = json.loads(Path(str(path) + ".meta.json").read_text())
+    meta = json.loads(Path(str(path).removesuffix(".gz") + ".meta.json").read_text())
     names = {t["thread"]: t["name"] for t in meta["threads"]}
     tids = {t["thread"]: t["tid"] for t in meta["threads"]}
     marks = collections.defaultdict(list)  # thread -> [(ns, kind, place, len)]
     val = lambda x: None if x == "-" else int(x)  # noqa: E731
-    with open(path) as f:
+    with opener(path) as f:
         next(f)
         for l in f:
             th, name, ns, kind, place, cpu, runq, wait, slices, ln, cap = l.rstrip("\n").split("\t")
@@ -51,16 +71,152 @@ def load_marks(path):
 
 
 def load_perf(path):
+    """the events, and what the parse saw: the kernel's loss records (`--show-lost-events`),
+    events whose sample tid perf could not resolve (-1: kept, their payload still names the
+    tasks), and lines it could not read at all (never silently dropped: counted)"""
     ev = []
-    with open(path) as f:
+    rep = dict(lines=0, events=0, lost_records=0, lost_events=0, unparsed=0, unparsed_examples=[],
+               unattributed=collections.Counter())
+    with opener(path) as f:
         for l in f:
+            rep["lines"] += 1
             m = PERF_LINE.match(l)
             if not m:
+                lm = LOST_LINE.search(l)
+                if lm:
+                    rep["lost_records"] += 1
+                    rep["lost_events"] += int(lm[1])
+                elif l.strip():
+                    rep["unparsed"] += 1
+                    if len(rep["unparsed_examples"]) < 3:
+                        rep["unparsed_examples"].append(l.rstrip()[:200])
                 continue
             t = int(m["s"]) * 1_000_000_000 + int(m["ns"])
-            ev.append((t, int(m["cpu"]), int(m["tid"]), m["ev"], m["rest"]))
+            tid = int(m["tid"])
+            if tid < 0:
+                rep["unattributed"][m["ev"]] += 1
+            ev.append((t, int(m["cpu"]), tid, m["ev"], m["rest"]))
     ev.sort(key=lambda e: e[0])
-    return ev
+    rep["events"] = len(ev)
+    rep["unattributed"] = dict(rep["unattributed"])
+    return ev, rep
+
+
+def load_stats(path):
+    """`perf report --stats`: the loss records in all, and the samples lost and kept by event
+    (perf attributes each loss record to its event, so the two must agree with the script)"""
+    out = dict(available=False, lost_records=0, per_event={})
+    try:
+        with opener(path) as f:
+            text = f.read()
+    except (OSError, TypeError):
+        return out
+    section = None
+    for l in text.splitlines():
+        h = re.match(r"^(\S.*?) stats:\s*$", l)
+        if h:
+            section = h[1]
+            out["available"] = True
+            continue
+        m = STAT_LINE.match(l)
+        if not m or section is None:
+            continue
+        name, n = m[1], int(m[2])
+        if section == "Aggregated":
+            if name == "LOST":
+                out["lost_records"] = n
+        else:
+            e = out["per_event"].setdefault(section, dict(samples=0, lost=0))
+            if name == "SAMPLE":
+                e["samples"] = n
+            elif name == "LOST_SAMPLES":
+                e["lost"] = n
+    return out
+
+
+def sched_reconstruct(perf, ours, cpus):
+    """per-thread scheduler states [(t, R|Q|S|None)] and the allocated CPUs' occupants, with
+    the stream's own consistency. A state the stream contradicts becomes unknown (None), so
+    it is unresolved, never assigned: a switch in from sleep with no wake recorded (the
+    sleep's end unknown); one of our threads switched out while not known to be running (a
+    switch in missed: its whole interval since the last transition unknown); switched in
+    while already running (a switch out missed: likewise). Per allocated CPU, switches into
+    idle and out of it must pair (within one, for the capture's edges)."""
+    sched = collections.defaultdict(list)
+    occupant = {c: [] for c in cpus}
+    idle = {c: dict(to=0, out=0) for c in cpus}
+    last = {}
+    missing_wakeups = missed_in = missed_out = 0
+
+    def unknown(pid):
+        if sched[pid]:
+            sched[pid][-1] = (sched[pid][-1][0], None)
+
+    for t, cpu, tid, ev, rest in perf:
+        if ev == "sched:sched_switch":
+            kv = dict(KV.findall(rest))
+            prev, nxt, ps = int(kv["prev_pid"]), int(kv["next_pid"]), kv.get("prev_state", "")
+            if cpu in idle:
+                idle[cpu]["to"] += nxt == 0
+                idle[cpu]["out"] += prev == 0
+            if prev in ours and last.get(prev, "R") != "R":
+                missed_in += 1
+                unknown(prev)
+            st = "Q" if ps.startswith("R") else "S"
+            sched[prev].append((t, st))
+            last[prev] = st
+            if last.get(nxt) == "S":
+                missing_wakeups += 1
+                for k in range(len(sched[nxt]) - 1, -1, -1):
+                    if sched[nxt][k][1] == "S":
+                        sched[nxt][k] = (sched[nxt][k][0], None)
+                        break
+            elif nxt in ours and last.get(nxt) == "R":
+                missed_out += 1
+                unknown(nxt)
+            sched[nxt].append((t, "R"))
+            last[nxt] = "R"
+            if cpu in occupant:
+                occupant[cpu].append((t, nxt))
+        elif ev in ("sched:sched_wakeup", "sched:sched_wakeup_new", "sched:sched_waking"):
+            pid = int(dict(KV.findall(rest)).get("pid", -1))
+            # runnable from the first of sched_waking and sched_wakeup
+            if last.get(pid) not in ("R", "Q"):
+                sched[pid].append((t, "Q"))
+                last[pid] = "Q"
+    pairing = {c: v | dict(ok=abs(v["to"] - v["out"]) <= 1) for c, v in idle.items()}
+    stream = dict(missing_wakeups=missing_wakeups, missed_switch_in=missed_in, missed_switch_out=missed_out,
+                  idle_pairing=pairing, idle_pairing_ok=all(v["ok"] for v in pairing.values()))
+    return sched, occupant, stream
+
+
+def trace_report(parse, stats, stream):
+    """whether the kernel's trace can reconstruct the scheduler (ok), and what it lost.
+    Scheduler and anchor events lost, lines unread, loss counts that disagree between the
+    script and perf's own statistics, missing statistics, or unpaired idle switches make
+    the scheduler's reconstruction unsound: not ok. Futex loss affects only the futex
+    mapping (futex_ok); power:cpu_idle is recorded but feeds nothing."""
+    per = stats.get("per_event", {})
+    lost = {e: v["lost"] for e, v in per.items() if v.get("lost")}
+    sched_lost = sum(lost.get(e, 0) for e in SCHED_EVENTS + ANCHOR_EVENTS)
+    consistent = stats.get("available", False) and parse["lost_records"] == stats.get("lost_records", 0) \
+        and parse["lost_events"] == sum(v.get("lost", 0) for v in per.values())
+    problems = []
+    if not stats.get("available"):
+        problems.append("perf's statistics unavailable: loss cannot be ruled out")
+    if parse["unparsed"]:
+        problems.append(f"{parse['unparsed']} perf script lines unread")
+    if sched_lost:
+        problems.append(f"{sched_lost} scheduler or anchor events lost")
+    if stats.get("available") and not consistent:
+        problems.append("loss records disagree between perf script and perf's statistics")
+    if not stream["idle_pairing_ok"]:
+        bad = [c for c, v in stream["idle_pairing"].items() if not v["ok"]]
+        problems.append(f"switches into and out of idle unpaired on CPUs {bad}: the kernel's stream is incomplete")
+    futex_lost = sum(lost.get(e, 0) for e in FUTEX_EVENTS)
+    return dict(ok=not problems, problems=problems, futex_ok=futex_lost == 0 and consistent, lost_by_event=lost,
+                lost_records=parse["lost_records"], lost_events=parse["lost_events"], unparsed=parse["unparsed"],
+                unparsed_examples=parse["unparsed_examples"], unattributed=parse["unattributed"], stream=stream)
 
 
 def align(marks, names, tids, epoch, perf):
@@ -101,7 +257,8 @@ class Step:
 
 def run(a):
     meta, names, tids, marks = load_marks(a.marks)
-    perf = load_perf(a.perf)
+    perf, parse = load_perf(a.perf)
+    stats = load_stats(a.stats)
     cpus = [int(c) for c in a.cpus.split(",")]
     epoch = meta["epoch_monotonic_ns"]
     al = align(marks, names, tids, epoch, perf)
@@ -117,36 +274,11 @@ def run(a):
     seen_tids = {e[2] for e in perf} | {int(x) for e in perf if e[3] == "sched:sched_switch" for x in re.findall(r"(?:prev|next)_pid=(\d+)", e[4])}
     complete = all(marks[th][0][1] == "ThreadStart" and marks[th][-1][1] == "ThreadEnd" for th in names) and all(t["dropped"] == 0 for t in meta["threads"])
 
-    # scheduler states per thread: R running, Q runnable (woken, or preempted), S sleeping
-    sched = collections.defaultdict(list)
-    occupant = {c: [] for c in cpus}
-    missing_wakeups = 0
-    last_state = {}
-    for t, cpu, tid, ev, rest in perf:
-        if ev == "sched:sched_switch":
-            kv = dict(KV.findall(rest))
-            prev, nxt, ps = int(kv["prev_pid"]), int(kv["next_pid"]), kv.get("prev_state", "")
-            st = "Q" if ps.startswith("R") else "S"
-            sched[prev].append((t, st))
-            last_state[prev] = st
-            if last_state.get(nxt) == "S":
-                # switched in from sleep with no wake recorded: when it became runnable is
-                # unknown, so that whole sleep is unresolved rather than counted as asleep
-                missing_wakeups += 1
-                for k in range(len(sched[nxt]) - 1, -1, -1):
-                    if sched[nxt][k][1] == "S":
-                        sched[nxt][k] = (sched[nxt][k][0], None)
-                        break
-            sched[nxt].append((t, "R"))
-            last_state[nxt] = "R"
-            if cpu in occupant:
-                occupant[cpu].append((t, nxt))
-        elif ev in ("sched:sched_wakeup", "sched:sched_wakeup_new", "sched:sched_waking"):
-            pid = int(dict(KV.findall(rest)).get("pid", -1))
-            # runnable from the first of sched_waking and sched_wakeup
-            if last_state.get(pid) not in ("R", "Q"):
-                sched[pid].append((t, "Q"))
-                last_state[pid] = "Q"
+    # scheduler states per thread: R running, Q runnable (woken, or preempted), S sleeping,
+    # None unknown (the stream contradicts itself there)
+    sched, occupant, stream = sched_reconstruct(perf, set(tid_of.values()), cpus)
+    missing_wakeups = stream["missing_wakeups"]
+    trace = trace_report(parse, stats, stream)
     st_of = {th: Step(list(sched.get(tid_of[th], []))) for th in names}
     occ = {c: Step(list(v)) for c, v in occupant.items()}
 
@@ -342,20 +474,44 @@ def run(a):
                runnable_cpu_occupants_s={k: v / 1e9 for k, v in occ_runnable.items()},
                coverage=(1 - unresolved / Tq) if Tq else None, sched_coverage=sched_cover,
                receiver_obstruction_share=R / W if W else None, receiver_obstruction_cpu_idle_share=R_idle / W if W else None,
-               reader=reader, futex=futex)
+               reader=reader, futex=futex, trace=trace)
     Path(a.out).write_text(json.dumps(out, indent=1) + "\n")
-    print(json.dumps({k: out[k] for k in ("complete", "coverage", "sched_coverage", "receiver_obstruction_share", "queued_nondecoding_s", "worker_time_s")} | dict(alignment_us=al.get("uncertainty_ns", 0) / 1e3)))
+    print(json.dumps({k: out[k] for k in ("complete", "coverage", "sched_coverage", "receiver_obstruction_share", "queued_nondecoding_s", "worker_time_s")}
+                     | dict(alignment_us=al.get("uncertainty_ns", 0) / 1e3, trace_ok=trace["ok"], trace_problems=trace["problems"])))
+
+
+def run_checks(r):
+    """one run's data-quality checks (§6, with amendment 1's trace completeness): the same
+    for the expansion and for the final decision, never on the findings"""
+    return dict(complete=bool(r["complete"]), alignment=bool(r["alignment"].get("ok", False)),
+                threads_in_sched=bool(r["threads_in_sched"]), sched_coverage=(r["sched_coverage"] or 0) >= SCHED_COVERAGE,
+                trace_complete=bool(r.get("trace", {}).get("ok", False)), coverage=(r["coverage"] or 0) >= COVERAGE)
 
 
 def quality(r, pert):
     """§6's expansion conditions, on data quality alone (never on the findings)"""
-    return dict(complete=r["complete"], alignment=r["alignment"].get("ok", False), threads_in_sched=r["threads_in_sched"],
-                sched_coverage=(r["sched_coverage"] or 0) >= 0.99, perturbation=pert)
+    c = run_checks(r)
+    return dict(complete=c["complete"], alignment=c["alignment"], threads_in_sched=c["threads_in_sched"],
+                sched_coverage=c["sched_coverage"], trace_complete=c["trace_complete"], perturbation=pert)
+
+
+def run_files(d, w):
+    return sorted(Path(d).glob(f"w{w}-r[0-9][0-9].json"))
+
+
+def receiver_associated(r):
+    """exploratory, never a pass criterion: the registered receiver obstruction plus the
+    time runnable in the receiver mutex's wait phase (woken from it, or preempted in it,
+    not yet running), as a share of aggregate worker time"""
+    w = r["worker_time_s"]
+    extra = sum(v for k, v in r["classes_s"].items() if k.startswith("runnable.mutex_wait."))
+    return (r["receiver_obstruction_share"] or 0) + extra / w if w else None
 
 
 def summary(a):
-    runs = [json.loads(p.read_text()) for p in sorted(Path(a.runs).glob("w4-r[0-9][0-9].json"))]
-    ref = [json.loads(p.read_text()) for p in sorted(Path(a.runs).glob("w1-r[0-9][0-9].json"))]
+    files = run_files(a.runs, 4)
+    runs = [json.loads(p.read_text()) for p in files]
+    ref = [json.loads(p.read_text()) for p in run_files(a.runs, 1)]
     pairs = [l.split("\t") for l in Path(a.pairs).read_text().splitlines() if l and not l.startswith("#")]
     # pairs: w, rep, mode(off|instr), wall, cpu, out, rss_kb, tier
     def ratio(w, key):
@@ -379,24 +535,36 @@ def summary(a):
         g = k.split(".")[0] if not k.startswith("rx.") else ("receiver" if k.split(".")[1] in ("blocked_by_owner", "handoff_asleep", "running_owner_held") else "rx_other")
         groups[g] += v
     ranked = sorted(((g, v / tq) for g, v in groups.items()), key=lambda x: -x[1]) if tq else []
-    valid = dict(coverage_all=all((r["coverage"] or 0) >= COVERAGE for r in runs), perturbation=pert_ok,
-                 alignment_all=all(r["alignment"].get("ok") for r in runs + ref), complete_all=all(r["complete"] for r in runs + ref))
+    # every w = 4 run in the decision, the expansion's included, meets every check (amendment 1)
+    checks = {p.stem: run_checks(r) for p, r in zip(files, runs)}
+    valid = dict(runs_present=bool(runs), coverage_all=all(c["coverage"] for c in checks.values()), perturbation=pert_ok,
+                 alignment_all=all(r["alignment"].get("ok") for r in runs + ref), complete_all=all(r["complete"] for r in runs + ref),
+                 threads_in_sched_all=all(c["threads_in_sched"] for c in checks.values()),
+                 sched_coverage_all=all(c["sched_coverage"] for c in checks.values()),
+                 trace_complete_all=all(c["trace_complete"] for c in checks.values()))
+    interpreted = all(valid.values())
+    assoc = [receiver_associated(r) for r in runs]
     decision = ("promote an MPMC experiment" if mean_R is not None and mean_R >= MATERIAL and reps >= REPEATABLE
                 else "do not proceed to MPMC: receiver obstruction below the materiality threshold, or not repeatable")
     out = dict(protocol="docs/journal/2026-11-01-dispatch-causality-protocol.md", runs_w4=len(runs), runs_w1=len(ref),
                perturbation=pert, validity=valid, receiver_obstruction=dict(mean_share=mean_R, per_run=shares, runs_at_or_above_5pct=reps,
                cpu_idle_share_mean=statistics.fmean([r["receiver_obstruction_cpu_idle_share"] for r in runs]) if runs else None),
                queued_nondecoding_ranked=ranked, classes_s=dict(classes),
-               decision=decision if all(valid.values()) else f"not interpreted (validity: {[k for k, v in valid.items() if not v]}); provisional: {decision}",
-               w1_reference=[dict(receiver_obstruction_share=r["receiver_obstruction_share"], coverage=r["coverage"]) for r in ref],
+               decision=decision if interpreted else f"not interpreted (validity: {[k for k, v in valid.items() if not v]}); provisional: {decision}",
+               interpreted=interpreted,
+               outcome=("promote" if decision.startswith("promote") else "do not proceed") if interpreted else "invalid evidence",
+               run_checks=checks, trace_problems={p.stem: r.get("trace", {}).get("problems", ["no trace report"]) for p, r in zip(files, runs)},
+               receiver_associated_exploratory=dict(note="not a pass criterion: the registered obstruction plus runnable time in the receiver mutex's wait phase",
+                                                    mean_share=statistics.fmean(assoc) if assoc and None not in assoc else None, per_run=assoc),
+               w1_reference=[dict(receiver_obstruction_share=r["receiver_obstruction_share"], coverage=r["coverage"], checks=run_checks(r)) for r in ref],
                reader=[r["reader"] for r in runs], futex=[r["futex"] for r in runs])
     Path(a.out).write_text(json.dumps(out, indent=1) + "\n")
-    print(json.dumps({k: out[k] for k in ("decision", "validity", "perturbation", "receiver_obstruction", "queued_nondecoding_ranked")}, indent=1))
+    print(json.dumps({k: out[k] for k in ("decision", "outcome", "validity", "perturbation", "receiver_obstruction", "receiver_associated_exploratory", "queued_nondecoding_ranked")}, indent=1))
 
 
 def quality_cmd(a):
     """the expansion decision after the first three repetitions (§6), printed for the runner"""
-    runs = [json.loads(p.read_text()) for p in sorted(Path(a.runs).glob("w4-r[0-9][0-9].json"))]
+    runs = [json.loads(p.read_text()) for p in run_files(a.runs, 4)]
     pairs = [l.split("\t") for l in Path(a.pairs).read_text().splitlines() if l and not l.startswith("#")]
     x = [p for p in pairs if p[0] == "4"]
     f = lambda m, g: statistics.fmean([g(p) for p in x if p[2] == m])  # noqa: E731
@@ -404,18 +572,32 @@ def quality_cmd(a):
     cpu = f("instr", lambda p: float(p[4]) / float(p[5])) / f("off", lambda p: float(p[4]) / float(p[5]))
     pert = abs(thr - 1) <= PERTURBATION and abs(cpu - 1) <= PERTURBATION
     q = [quality(r, pert) for r in runs]
-    ok = all(all(v.values()) for v in q)
+    ok = bool(q) and all(all(v.values()) for v in q)
     print(json.dumps(dict(expand=ok, perturbation=dict(throughput=thr, cpu_per_byte=cpu, ok=pert), runs=q)))
     sys.exit(0 if ok else 3)
+
+
+def probe(a):
+    """before any capture: does this kernel's stream let the scheduler be reconstructed on
+    the allocated CPUs (switches into and out of idle paired, nothing lost)? Exit 0, else 4."""
+    perf, parse = load_perf(a.perf)
+    cpus = [int(c) for c in a.cpus.split(",")]
+    _, _, stream = sched_reconstruct(perf, set(), cpus)
+    t = trace_report(parse, load_stats(a.stats), stream)
+    print(json.dumps(dict(ok=t["ok"], problems=t["problems"], idle_pairing=stream["idle_pairing"], lost_by_event=t["lost_by_event"])))
+    sys.exit(0 if t["ok"] else 4)
 
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="mode", required=True)
     r = s.add_parser("run")
-    for n in ("marks", "perf", "cpus", "out"):
+    for n in ("marks", "perf", "stats", "cpus", "out"):
         r.add_argument("--" + n, required=True)
     r.add_argument("--workers", type=int, required=True)
+    pr = s.add_parser("probe")
+    for n in ("perf", "stats", "cpus"):
+        pr.add_argument("--" + n, required=True)
     for n in ("summary", "quality"):
         q = s.add_parser(n)
         q.add_argument("--runs", required=True)
@@ -423,4 +605,4 @@ if __name__ == "__main__":
         if n == "summary":
             q.add_argument("--out", required=True)
     a = p.parse_args()
-    dict(run=run, summary=summary, quality=quality_cmd)[a.mode](a)
+    dict(run=run, summary=summary, quality=quality_cmd, probe=probe)[a.mode](a)

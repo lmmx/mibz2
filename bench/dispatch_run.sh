@@ -68,7 +68,8 @@ cp "$CARGO_TARGET_DIR/release/examples/attribution_decode" "$out/bin/attribution
 occ=$out/bin/occupancy; dec=$out/bin/attribution_decode
 $cargo test --locked --release --features trace --test trace_dispatch --test trace_phases > "$out/tests-trace.log" 2>&1
 $cargo test --locked --release --features trace --example occupancy > "$out/tests-occupancy.log" 2>&1
-echo "dispatch: the dispatch and phase marks' tests, and the instrument's, pass"
+python3 -I bench/test_dispatch.py > "$out/tests-analysis.log" 2>&1 || die "the analysis's tests fail (tests-analysis.log)"
+echo "dispatch: the dispatch and phase marks' tests, the instrument's and the analysis's, pass"
 
 # 4. C6: the default-feature decoder is the base commit's; the run stops on any difference.
 base=$(want '["source_base"]')
@@ -154,6 +155,23 @@ for e in $essential $optional; do
         [[ " $essential " == *" $e "* ]] && die "essential tracepoint $e unavailable"
     fi
 done
+# The stream's completeness on this kernel (amendment 1): a short uninstrumented decode at
+# w = 1 under sched_switch alone; every allocated CPU's switches into idle must pair with its
+# switches out, and nothing may be lost. A kernel that fails cannot reconstruct the scheduler.
+records=$(awk -F'\t' '$1=="records"{print $3}' "$out/manifest.tsv")
+$PERF record -q -k CLOCK_MONOTONIC -C "$alloc" -e sched:sched_switch -o "$work/idle.data" -- \
+    taskset -c "$alloc" "$occ" --child "$records" 1 2 0 auto > /dev/null
+[[ -n ${CHOWN:-} ]] && $CHOWN "$work/idle.data"
+"$perf1" script -f -i "$work/idle.data" --ns -F comm,tid,cpu,time,event,trace --show-lost-events 2> /dev/null > "$work/idle.txt"
+"$perf1" report -i "$work/idle.data" --stats > "$work/idle.stats.txt" 2> /dev/null || true
+if python3 -I bench/dispatch.py probe --perf "$work/idle.txt" --stats "$work/idle.stats.txt" --cpus "$alloc" > "$out/stream-probe.json"; then
+    echo "dispatch: the kernel's scheduling stream is complete on CPUs $alloc (idle switches paired, nothing lost)"
+elif [[ $dry == 1 ]]; then
+    echo "dispatch: DRY RUN: the kernel's scheduling stream is incomplete ($(cat "$out/stream-probe.json")); continuing to exercise the path, every run will be refused (a real run stops here)"
+else
+    die "the kernel's scheduling stream is incomplete on CPUs $alloc: $(cat "$out/stream-probe.json")"
+fi
+rm -f "$work/idle.data" "$work/idle.txt" "$work/idle.stats.txt"
 tierA=$have
 tierB=$(tr ' ' '\n' <<< "$have" | grep -v futex | tr '\n' ' ')
 echo "dispatch: tracepoints: $(grep -c supported "$out/tracepoints.tsv") supported, $(grep -c unavailable "$out/tracepoints.tsv") unavailable"
@@ -175,8 +193,9 @@ one() { # w rep mode tier
         line=$($PERF record -q -k CLOCK_MONOTONIC -C "$alloc" $evs -o "$m.data" -- \
             env OCCUPANCY_MARKS="$m.tsv" taskset -c "$alloc" "$occ" --child "$primary" "$w" $((2 * w)) 1 auto)
         [[ -n ${CHOWN:-} ]] && $CHOWN "$m.data" "$m.tsv" "$m.tsv.meta.json"
-        "$perf1" script -f -i "$m.data" --ns -F comm,tid,cpu,time,event,trace 2> /dev/null > "$m.perf.txt"
-        python3 -I bench/dispatch.py run --marks "$m.tsv" --perf "$m.perf.txt" --workers "$w" --cpus "$alloc" --out "$m.json" > /dev/null
+        "$perf1" script -f -i "$m.data" --ns -F comm,tid,cpu,time,event,trace --show-lost-events 2> "$m.perf.err" > "$m.perf.txt"
+        "$perf1" report -i "$m.data" --stats > "$m.perf.stats.txt" 2> /dev/null || true
+        python3 -I bench/dispatch.py run --marks "$m.tsv" --perf "$m.perf.txt" --stats "$m.perf.stats.txt" --workers "$w" --cpus "$alloc" --out "$m.json" > /dev/null
     fi
     [[ $(kv "$line" err) == "-" && $(kv "$line" hash) != "" ]] || die "w=$w rep=$rep $mode: the decode failed: $line"
     echo -e "$w\t$rep\t$mode\t$(kv "$line" wall)\t$(kv "$line" cpu)\t$(kv "$line" out)\t$(kv "$line" rss_kb)\t$tier" >> "$pairs"
