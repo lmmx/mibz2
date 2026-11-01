@@ -288,8 +288,7 @@ isolation.
 
 ## 8. What happens next
 
-The diagnostic is built, frozen and checked, and the capture on the i9 comes next. It ends
-in one of two places:
+The measurement comes next. It ends in one of two places:
 
 - **If receiver ownership really does keep free workers from available jobs,** at least 5%
   of their time in at least 80% of runs, a multi-consumer queue becomes a justified,

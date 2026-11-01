@@ -239,11 +239,13 @@ A positive result would identify a useful decoder modification that preserves th
 
 Astra proposed comparing the current layout (A) and the reused-buffer layout (B) at both one and four workers.
 
-Let *C*<sub>X,w</sub> denote CPU-seconds per GB for layout *X* at worker count *w*.
+Let $C_{X,w}$ denote CPU-seconds per GB for layout $X$ at worker count $w$.
 
 The concurrency-specific saving would be:
 
-<p class="post-formula"><em>D</em> = (<em>C</em><sub>A,4</sub> − <em>C</em><sub>B,4</sub>) − (<em>C</em><sub>A,1</sub> − <em>C</em><sub>B,1</sub>)</p>
+$$
+D = (C_{A,4} - C_{B,4}) - (C_{A,1} - C_{B,1})
+$$
 
 Astra suggested a threshold of 0.10 CPU-s/GB for a material concurrency-specific improvement.
 
@@ -255,7 +257,7 @@ But that statistic needs a separate engineering test.
 <svg viewBox="0 0 720 176" role="img" aria-label="Mechanism: does buffer reuse materially reduce the additional CPU cost associated with concurrency? Measured by the proposed difference-in-differences statistic and its uncertainty. Engineering: is the actual four-worker decoder faster and more CPU-efficient, without compromising correctness or memory requirements? Measured at the full-decoder boundary."><rect x="0" y="0" width="352" height="176" rx="10" class="bf-card"/><path d="M22 18h10M24 18v7l-5 9a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-5-9v-7M21 31h12" class="bf-icon"/><text x="46" y="33" class="bf-ts">Mechanism</text><text x="18" y="64" class="bf-t">Does buffer reuse materially reduce the</text><text x="18" y="84" class="bf-t">additional CPU cost associated with</text><text x="18" y="104" class="bf-t">concurrency?</text><text x="18" y="146" class="bf-tm">Measured by the proposed difference-in-differences</text><text x="18" y="162" class="bf-tm">statistic and its uncertainty.</text><rect x="368" y="0" width="352" height="176" rx="10" class="bf-card"/><path d="M387 34a10 10 0 0 1 20 0M397 34l5-6" class="bf-icon"/><path d="M386 37h22" class="bf-icon"/><text x="414" y="33" class="bf-ts">Engineering</text><text x="386" y="64" class="bf-t">Is the actual four-worker decoder faster</text><text x="386" y="84" class="bf-t">and more CPU-efficient, without</text><text x="386" y="104" class="bf-t">compromising correctness or memory</text><text x="386" y="124" class="bf-t">requirements?</text><text x="386" y="146" class="bf-tm">Measured at the full-decoder boundary.</text></svg>
 </figure>
 
-A positive *D* does not guarantee that B is faster at four workers. It is possible for a change to make both configurations slower while reducing the *difference* between them.
+A positive $D$ does not guarantee that B is faster at four workers. It is possible for a change to make both configurations slower while reducing the *difference* between them.
 
 The reverse distinction also matters. Reuse might improve assembly or RLE1 similarly at one and four workers. That could be a worthwhile local optimization, but it would not establish a substantial concurrency-specific memory effect.
 
@@ -269,7 +271,7 @@ The earlier P87 research register also contains a separate criterion concerning 
 
 Neither experiment has yet established a performance improvement.
 
-P87 has been selected for protocol design and isolated diagnostic preparation. The experimental controls and decision thresholds still require freezing before an i9 capture. The neighbour-interference investigation remains available as a broader follow-up.
+P87 has been selected, and its diagnostic is being prepared. The neighbour-interference investigation remains available as a broader follow-up.
 
 There are several informative outcomes.
 
