@@ -42,6 +42,10 @@ python = ["dep:pyo3"]
 # The parallel decoder's own timeline (src/trace.rs), for examples/occupancy.rs (#39); off
 # by default, and each mark a relaxed load when compiled in and not turned on
 trace = []
+# P87's four-core diagnostic (src/p87.rs, docs/journal/2026-11-01-p87-four-core-protocol.md): the
+# inverse BWT's assembly into `rle` (arm A) or into the dead `ll` (arm B), chosen at run time; off
+# by default, and never in a default build
+p87 = []
 
 [dev-dependencies]
 # The oracle and the test streams' encoder: libbzip2 1.0.8, built from its bundled source
@@ -82,3 +86,7 @@ unexpected_cfgs = { check-cfg = ["cfg(mibz2_alternatives)"], level = "warn" }
 [[example]]
 name = "occupancy"
 required-features = ["trace"]
+
+[[example]]
+name = "p87_decoder"
+required-features = ["p87"]

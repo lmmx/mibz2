@@ -1,0 +1,27 @@
+{
+ "stage": "S3",
+ "result": {
+  "imc": {},
+  "core": {},
+  "unavailable": {
+   "imc": {
+    "rc": 129,
+    "values": {
+     "uncore_imc/data_reads/": null,
+     "uncore_imc/data_writes/": null
+    },
+    "stderr": " 'uncore_imc/data_reads/,uncore_imc/data_writes/'\n                     \\___ Cannot find PMU `uncore_imc'. Missing kernel support?\nRun 'perf list' for a list of valid events\n\n Usage: perf stat [<options>] [<command>]\n\n    -e, --event <event>   event selector. use 'perf list' to list available events\n"
+   },
+   "core": {
+    "rc": 255,
+    "values": {
+     "cycles": null,
+     "ref-cycles": null,
+     "instructions": null
+    },
+    "stderr": "Error:\nThe cycles event is not supported.\n"
+   }
+  },
+  "instructions_w1_ok": null
+ }
+}

@@ -48,6 +48,36 @@ pub trait InverseBwt: Default + Send {
     fn buffers(&self) -> Vec<crate::trace::Buffer> {
         Vec::new()
     }
+
+    /// P87's diagnostic (feature `p87` only: docs/journal/2026-11-01-p87-four-core-protocol.md):
+    /// whether `invert` comes in the three steps below, so that the assembly can write into a
+    /// buffer the build no longer reads. A kernel without them is inverted by `invert`.
+    #[cfg(feature = "p87")]
+    fn p87_steps(&self) -> bool {
+        false
+    }
+
+    /// The build, `invert`'s first step (its only read of `ll`)
+    #[cfg(feature = "p87")]
+    fn p87_build(&mut self, ll: &[u8], counts: &[u32; 256]) {
+        let _ = (ll, counts);
+        unreachable!("p87_steps is false")
+    }
+
+    /// The walk, `invert`'s second step: true if it left segments to assemble; false if the
+    /// block was too short to segment and its bytes are already in `out`
+    #[cfg(feature = "p87")]
+    fn p87_walk(&mut self, orig_ptr: u32, out: &mut Vec<u8>) -> bool {
+        let _ = (orig_ptr, out);
+        unreachable!("p87_steps is false")
+    }
+
+    /// The assembly, `invert`'s last step: the segments joined into `out`
+    #[cfg(feature = "p87")]
+    fn p87_assemble(&self, out: &mut Vec<u8>) {
+        let _ = out;
+        unreachable!("p87_steps is false")
+    }
 }
 
 /// The plain walk: one chain of dependent loads (lbzip2's and libbzip2's)
@@ -84,6 +114,28 @@ impl InverseBwt for Segmented {
         #[cfg(feature = "trace")]
         crate::trace::mark(crate::trace::Kind::WalkStart, crate::trace::NONE);
         walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+    }
+
+    // `invert`'s own calls, in its order (`walk_segments_room` is the walk's parts, then
+    // the assembly when there are segments)
+    #[cfg(feature = "p87")]
+    fn p87_steps(&self) -> bool {
+        true
+    }
+
+    #[cfg(feature = "p87")]
+    fn p87_build(&mut self, ll: &[u8], counts: &[u32; 256]) {
+        build(ll, counts, &mut self.tt);
+    }
+
+    #[cfg(feature = "p87")]
+    fn p87_walk(&mut self, orig_ptr: u32, out: &mut Vec<u8>) -> bool {
+        walk_segments_room_parts(&mut self.tt, orig_ptr, out, &mut self.seg)
+    }
+
+    #[cfg(feature = "p87")]
+    fn p87_assemble(&self, out: &mut Vec<u8>) {
+        self.seg.assemble(out);
     }
 
     #[cfg(any(test, feature = "trace"))]

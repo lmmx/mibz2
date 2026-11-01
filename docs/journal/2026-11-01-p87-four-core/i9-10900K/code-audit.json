@@ -1,0 +1,90 @@
+{
+ "ok": true,
+ "E1_one_compiled_path": {
+  "worker_bodies": 1,
+  "worker_instructions": 2178,
+  "arm_calls": 1,
+  "kernel_call_sites": {
+   "mibz2::bwt::build": 2,
+   "mibz2::bwt::room_segments::<32, 1>": 2,
+   "<mibz2::bwt::SegScratch>::assemble": 2,
+   "mibz2::mtf::mtf_avx2": 2,
+   "mibz2::rle::unrle_avx2": 2
+  },
+  "out_of_line_p87_decode_block": 0,
+  "ok": true
+ },
+ "E2_shipped_kernels": {
+  "ok": true,
+  "functions": {
+   "mibz2::bwt::build": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 823
+   },
+   "mibz2::bwt::room_segments::<32, 1>": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 1493
+   },
+   "<mibz2::bwt::SegScratch>::assemble": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 103
+   },
+   "mibz2::mtf::mtf_avx2": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 185
+   },
+   "mibz2::rle::unrle_avx2": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 241
+   },
+   "mibz2::mtf::mtf_scalar": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 207
+   },
+   "mibz2::rle::unrle_scalar": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 165
+   },
+   "mibz2::crc::crc32": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 117
+   },
+   "mibz2::crc::clmul_update": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 330
+   },
+   "mibz2::block::read_item": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 1575
+   },
+   "<mibz2::block::Huff>::new": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 545
+   },
+   "<mibz2::block::Huff>::decode_slow": {
+    "copies": 1,
+    "same_as_default_build": true,
+    "instructions": 129
+   }
+  }
+ },
+ "E3_production_default": {
+  "ok": true,
+  "same": true,
+  "functions": 104,
+  "differ": [],
+  "only_in_base": [],
+  "only_in_head": []
+ }
+}

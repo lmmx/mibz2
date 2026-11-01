@@ -1,0 +1,18 @@
+test_imc_idle_subtracted_per_decoded_byte (__main__.Counters.test_imc_idle_subtracted_per_decoded_byte) ... ok
+test_D_crossing_the_threshold_is_inconclusive (__main__.Decisions.test_D_crossing_the_threshold_is_inconclusive) ... ok
+test_D_material_but_B_slower_at_four_workers (__main__.Decisions.test_D_material_but_B_slower_at_four_workers) ... ok
+test_a_correctness_failure (__main__.Decisions.test_a_correctness_failure) ... ok
+test_a_cross_worker_improvement (__main__.Decisions.test_a_cross_worker_improvement) ... ok
+test_a_harmed_control_or_grown_rss_is_negative (__main__.Decisions.test_a_harmed_control_or_grown_rss_is_negative) ... ok
+test_a_local_improvement_is_not_the_mechanism (__main__.Decisions.test_a_local_improvement_is_not_the_mechanism) ... ok
+test_an_aa_failure_decides_nothing (__main__.Decisions.test_an_aa_failure_decides_nothing) ... ok
+test_an_unbalanced_placement_aborts (__main__.Decisions.test_an_unbalanced_placement_aborts) ... ok
+test_no_effect (__main__.Decisions.test_no_effect) ... ok
+test_the_instruction_check_only_withholds_the_mechanism (__main__.Decisions.test_the_instruction_check_only_withholds_the_mechanism) ... ok
+test_out_of_order_marks_are_errors (__main__.Phases.test_out_of_order_marks_are_errors) ... ok
+test_phase_totals (__main__.Phases.test_phase_totals) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 1.258s
+
+OK

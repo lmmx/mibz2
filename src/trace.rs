@@ -97,6 +97,11 @@ pub enum Kind {
     /// a clock anchor (`anchor`): `len` holds CLOCK_MONOTONIC in nanoseconds, read just
     /// before a `sched_yield` system call the kernel's tracer records on the same clock
     ClockAnchor,
+    /// a worker, inside the inverse BWT (P87's diagnostic path only, feature `p87`): the
+    /// walk's segments written, their assembly into the block's bytes starting (so
+    /// `WalkStart` to `AssembleStart` is the traversal, `AssembleStart` to `InvertEnd` the
+    /// assembly)
+    AssembleStart,
 }
 
 /// No block: the place of a mark that has none
@@ -111,8 +116,8 @@ pub struct Mark {
     pub kind: Kind,
     pub place: u64,
     /// the thread's CPU time, and its schedstat fields, at the mark: level 2 only, at
-    /// `ThreadStart`, `ThreadEnd`, `DecodeStart`, `DecodeEnd`, `InvertStart`, `WalkStart`
-    /// and `InvertEnd` (else `UNREAD`)
+    /// `ThreadStart`, `ThreadEnd`, `DecodeStart`, `DecodeEnd`, `InvertStart`, `WalkStart`,
+    /// `AssembleStart` and `InvertEnd` (else `UNREAD`)
     pub cpu_ns: u64,
     pub run_ns: u64,
     pub wait_ns: u64,
@@ -350,7 +355,8 @@ thread_local! {
 }
 
 /// A mark on this thread's timeline (nothing at level 0); `DecodeStart`, `DecodeEnd`,
-/// `InvertStart`, `WalkStart` and `InvertEnd` also read the clocks at level 2
+/// `InvertStart`, `WalkStart`, `AssembleStart` (P87's path only) and `InvertEnd` also read
+/// the clocks at level 2
 #[inline]
 pub fn mark(kind: Kind, place: u64) {
     mark_sized(kind, place, UNREAD, UNREAD);
@@ -365,7 +371,12 @@ pub fn mark_sized(kind: Kind, place: u64, len: u64, cap: u64) {
     }
     let clocks = matches!(
         kind,
-        Kind::DecodeStart | Kind::DecodeEnd | Kind::InvertStart | Kind::WalkStart | Kind::InvertEnd
+        Kind::DecodeStart
+            | Kind::DecodeEnd
+            | Kind::InvertStart
+            | Kind::WalkStart
+            | Kind::AssembleStart
+            | Kind::InvertEnd
     );
     // (a thread ending while its buffer is dropped marks nothing more)
     let _ = BUF.try_with(|b| {

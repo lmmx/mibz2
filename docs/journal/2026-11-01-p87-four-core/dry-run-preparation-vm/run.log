@@ -1,0 +1,26 @@
+p87: label=preparation-vm head=c697f53cae64bcb15e0b9d4a649f7c9457d6c7ba pin=6463e443360c6ad77d866edaadbe9253eb47a847 out=<scratch>/p87-results/preparation-vm.dry-run dry_run=1
+p87: 25 sources match the frozen hashes
+p87: rustc 1.97.0 (2d8144b78 2026-07-07); CARGO_TARGET_DIR=<scratch>/p87-target
+    Finished `release` profile [optimized + debuginfo] target(s) in 26.61s
+    Finished `release` profile [optimized + debuginfo] target(s) in 22.68s
+    Finished `release` profile [optimized + debuginfo] target(s) in 11.38s
+p87: the arms', the harness's, the trace's and the analysis's tests pass
+Preparing worktree (detached HEAD 45b366d)
+    Finished `release` profile [optimized + debuginfo] target(s) in 25.28s
+same code: yes: 104 mibz2 functions, 32298 instructions
+p87 audit: pass: E1 ok (arm calls 1, kernel call sites {'mibz2::bwt::build': 2, 'mibz2::bwt::room_segments::<32, 1>': 2, '<mibz2::bwt::SegScratch>::assemble': 2, 'mibz2::mtf::mtf_avx2': 2, 'mibz2::rle::unrle_avx2': 2}); E2 ok; E3 ok
+p87 audit: pass: E1 ok (arm calls 1, kernel call sites {'mibz2::bwt::build': 2, 'mibz2::bwt::room_segments::<32, 1>': 2, '<mibz2::bwt::SegScratch>::assemble': 2, 'mibz2::mtf::mtf_avx2': 2, 'mibz2::rle::unrle_avx2': 2}); E2 ok; E3 ok
+manifest: 3 corpora match the frozen SHA-256
+p87: 3 corpora decode to their frozen hashes in arms A and B and the shipped path, at w = 1 and 4 and sequentially
+p87: allocation CPUs 0,1,2,3
+p87: harness self-test (synthetic figures) passed
+p87: perf = /usr/lib/linux-tools/6.8.0-147-generic/perf (perf version 6.8.12)
+p87: counters available: none; unavailable: ['core', 'imc']
+p87: DRY RUN: S1's timed trial not run (its path is the self-test's, above)
+p87: S2 done (16 runs)
+p87: S3 done (0 passes)
+phases: interpretable=False; perturbation w=1 A cpu 1.150 wall 1.145, w=1 B cpu 0.940 wall 0.925, w=4 A cpu 1.034 wall 0.992, w=4 B cpu 1.115 wall 1.096
+counters: imc [], core []; instructions at w = 1 equivalent: None
+p87: DRY RUN: the verdict's path checked on the synthetic trial (verdict-synthetic.json, not a result)
+p87: results: <scratch>/p87-results/preparation-vm.dry-run
+p87: archive: <scratch>/p87-results/preparation-vm.dry-run.tar.gz

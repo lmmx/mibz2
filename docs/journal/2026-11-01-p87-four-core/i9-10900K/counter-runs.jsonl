@@ -1,0 +1,48 @@
+{"w": 1, "rep": 0, "arm": "A", "pass": "imc", "csv": "w1-A-r00-imc.csv", "idle_csv": "w1-A-r00-imc-idle.csv", "rc": 0, "wall_s": 0.5596323013305664, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 0, "arm": "A", "pass": "core", "csv": "w1-A-r00-core.csv", "rc": 0, "wall_s": 0.544844, "out": 207000624}
+{"w": 1, "rep": 0, "arm": "B", "pass": "imc", "csv": "w1-B-r00-imc.csv", "idle_csv": "w1-B-r00-imc-idle.csv", "rc": 0, "wall_s": 0.5592119693756104, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 0, "arm": "B", "pass": "core", "csv": "w1-B-r00-core.csv", "rc": 0, "wall_s": 0.551649, "out": 207000624}
+{"w": 4, "rep": 0, "arm": "A", "pass": "imc", "csv": "w4-A-r00-imc.csv", "idle_csv": "w4-A-r00-imc-idle.csv", "rc": 0, "wall_s": 0.2914083003997803, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 0, "arm": "A", "pass": "core", "csv": "w4-A-r00-core.csv", "rc": 0, "wall_s": 0.237612, "out": 207000624}
+{"w": 4, "rep": 0, "arm": "B", "pass": "imc", "csv": "w4-B-r00-imc.csv", "idle_csv": "w4-B-r00-imc-idle.csv", "rc": 0, "wall_s": 0.27742910385131836, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 0, "arm": "B", "pass": "core", "csv": "w4-B-r00-core.csv", "rc": 0, "wall_s": 0.243480, "out": 207000624}
+{"w": 1, "rep": 1, "arm": "B", "pass": "imc", "csv": "w1-B-r01-imc.csv", "idle_csv": "w1-B-r01-imc-idle.csv", "rc": 0, "wall_s": 0.5792615413665771, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 1, "arm": "B", "pass": "core", "csv": "w1-B-r01-core.csv", "rc": 0, "wall_s": 0.540000, "out": 207000624}
+{"w": 1, "rep": 1, "arm": "A", "pass": "imc", "csv": "w1-A-r01-imc.csv", "idle_csv": "w1-A-r01-imc-idle.csv", "rc": 0, "wall_s": 0.5732035636901855, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 1, "arm": "A", "pass": "core", "csv": "w1-A-r01-core.csv", "rc": 0, "wall_s": 0.541182, "out": 207000624}
+{"w": 4, "rep": 1, "arm": "B", "pass": "imc", "csv": "w4-B-r01-imc.csv", "idle_csv": "w4-B-r01-imc-idle.csv", "rc": 0, "wall_s": 0.2552492618560791, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 1, "arm": "B", "pass": "core", "csv": "w4-B-r01-core.csv", "rc": 0, "wall_s": 0.229397, "out": 207000624}
+{"w": 4, "rep": 1, "arm": "A", "pass": "imc", "csv": "w4-A-r01-imc.csv", "idle_csv": "w4-A-r01-imc-idle.csv", "rc": 0, "wall_s": 0.2889130115509033, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 1, "arm": "A", "pass": "core", "csv": "w4-A-r01-core.csv", "rc": 0, "wall_s": 0.236477, "out": 207000624}
+{"w": 1, "rep": 2, "arm": "A", "pass": "imc", "csv": "w1-A-r02-imc.csv", "idle_csv": "w1-A-r02-imc-idle.csv", "rc": 0, "wall_s": 0.5656712055206299, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 2, "arm": "A", "pass": "core", "csv": "w1-A-r02-core.csv", "rc": 0, "wall_s": 0.539051, "out": 207000624}
+{"w": 1, "rep": 2, "arm": "B", "pass": "imc", "csv": "w1-B-r02-imc.csv", "idle_csv": "w1-B-r02-imc-idle.csv", "rc": 0, "wall_s": 0.5597209930419922, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 2, "arm": "B", "pass": "core", "csv": "w1-B-r02-core.csv", "rc": 0, "wall_s": 0.554676, "out": 207000624}
+{"w": 4, "rep": 2, "arm": "A", "pass": "imc", "csv": "w4-A-r02-imc.csv", "idle_csv": "w4-A-r02-imc-idle.csv", "rc": 0, "wall_s": 0.2805163860321045, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 2, "arm": "A", "pass": "core", "csv": "w4-A-r02-core.csv", "rc": 0, "wall_s": 0.232346, "out": 207000624}
+{"w": 4, "rep": 2, "arm": "B", "pass": "imc", "csv": "w4-B-r02-imc.csv", "idle_csv": "w4-B-r02-imc-idle.csv", "rc": 0, "wall_s": 0.2501535415649414, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 2, "arm": "B", "pass": "core", "csv": "w4-B-r02-core.csv", "rc": 0, "wall_s": 0.231113, "out": 207000624}
+{"w": 1, "rep": 3, "arm": "B", "pass": "imc", "csv": "w1-B-r03-imc.csv", "idle_csv": "w1-B-r03-imc-idle.csv", "rc": 0, "wall_s": 0.5579566955566406, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 3, "arm": "B", "pass": "core", "csv": "w1-B-r03-core.csv", "rc": 0, "wall_s": 0.543611, "out": 207000624}
+{"w": 1, "rep": 3, "arm": "A", "pass": "imc", "csv": "w1-A-r03-imc.csv", "idle_csv": "w1-A-r03-imc-idle.csv", "rc": 0, "wall_s": 0.5621340274810791, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 3, "arm": "A", "pass": "core", "csv": "w1-A-r03-core.csv", "rc": 0, "wall_s": 0.560129, "out": 207000624}
+{"w": 4, "rep": 3, "arm": "B", "pass": "imc", "csv": "w4-B-r03-imc.csv", "idle_csv": "w4-B-r03-imc-idle.csv", "rc": 0, "wall_s": 0.2519383430480957, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 3, "arm": "B", "pass": "core", "csv": "w4-B-r03-core.csv", "rc": 0, "wall_s": 0.230424, "out": 207000624}
+{"w": 4, "rep": 3, "arm": "A", "pass": "imc", "csv": "w4-A-r03-imc.csv", "idle_csv": "w4-A-r03-imc-idle.csv", "rc": 0, "wall_s": 0.2821958065032959, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 3, "arm": "A", "pass": "core", "csv": "w4-A-r03-core.csv", "rc": 0, "wall_s": 0.240271, "out": 207000624}
+{"w": 1, "rep": 4, "arm": "A", "pass": "imc", "csv": "w1-A-r04-imc.csv", "idle_csv": "w1-A-r04-imc-idle.csv", "rc": 0, "wall_s": 0.563148021697998, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 4, "arm": "A", "pass": "core", "csv": "w1-A-r04-core.csv", "rc": 0, "wall_s": 0.537988, "out": 207000624}
+{"w": 1, "rep": 4, "arm": "B", "pass": "imc", "csv": "w1-B-r04-imc.csv", "idle_csv": "w1-B-r04-imc-idle.csv", "rc": 0, "wall_s": 0.5615863800048828, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 4, "arm": "B", "pass": "core", "csv": "w1-B-r04-core.csv", "rc": 0, "wall_s": 0.546933, "out": 207000624}
+{"w": 4, "rep": 4, "arm": "A", "pass": "imc", "csv": "w4-A-r04-imc.csv", "idle_csv": "w4-A-r04-imc-idle.csv", "rc": 0, "wall_s": 0.26190876960754395, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 4, "arm": "A", "pass": "core", "csv": "w4-A-r04-core.csv", "rc": 0, "wall_s": 0.241911, "out": 207000624}
+{"w": 4, "rep": 4, "arm": "B", "pass": "imc", "csv": "w4-B-r04-imc.csv", "idle_csv": "w4-B-r04-imc-idle.csv", "rc": 0, "wall_s": 0.3326425552368164, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 4, "arm": "B", "pass": "core", "csv": "w4-B-r04-core.csv", "rc": 0, "wall_s": 0.244686, "out": 207000624}
+{"w": 1, "rep": 5, "arm": "B", "pass": "imc", "csv": "w1-B-r05-imc.csv", "idle_csv": "w1-B-r05-imc-idle.csv", "rc": 0, "wall_s": 0.5502240657806396, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 5, "arm": "B", "pass": "core", "csv": "w1-B-r05-core.csv", "rc": 0, "wall_s": 0.542271, "out": 207000624}
+{"w": 1, "rep": 5, "arm": "A", "pass": "imc", "csv": "w1-A-r05-imc.csv", "idle_csv": "w1-A-r05-imc-idle.csv", "rc": 0, "wall_s": 0.5675644874572754, "idle_wall_s": 0.538, "out": 207000624}
+{"w": 1, "rep": 5, "arm": "A", "pass": "core", "csv": "w1-A-r05-core.csv", "rc": 0, "wall_s": 0.545368, "out": 207000624}
+{"w": 4, "rep": 5, "arm": "B", "pass": "imc", "csv": "w4-B-r05-imc.csv", "idle_csv": "w4-B-r05-imc-idle.csv", "rc": 0, "wall_s": 0.2779121398925781, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 5, "arm": "B", "pass": "core", "csv": "w4-B-r05-core.csv", "rc": 0, "wall_s": 0.234634, "out": 207000624}
+{"w": 4, "rep": 5, "arm": "A", "pass": "imc", "csv": "w4-A-r05-imc.csv", "idle_csv": "w4-A-r05-imc-idle.csv", "rc": 0, "wall_s": 0.31280946731567383, "idle_wall_s": 0.232, "out": 207000624}
+{"w": 4, "rep": 5, "arm": "A", "pass": "core", "csv": "w4-A-r05-core.csv", "rc": 0, "wall_s": 0.240735, "out": 207000624}
