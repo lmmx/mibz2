@@ -107,6 +107,14 @@ an incomplete pass is not interpreted.
 - **This analysis against the instrument:** on every timeline run, the idle shares this
   analysis computes (while the scanner reads; while it waits for input) must be within
   0.02 of worker time of the instrument's own.
+  - **The comparison uses the instrument's definition.** It splits idle time by the
+    scanner's state alone, and reports idle time with a job queued separately, overlapping.
+  - **The rules use this analysis's own split.** A worker idle while a job is already
+    queued (the handoff: woken but not yet running) is its own owner there, before the
+    scanner's state.
+  - **Found in the dry run:** on the preparation VM, 7 threads on 4 CPUs make the handoff
+    large. Before the definitions were aligned, the shares differed by 0.03–0.036; after,
+    by at most 0.019.
 - **The samples' overhead:** the `perf record` runs' wall time against the counting
   passes'. Above 3% is reported per w.
 - **The idle siblings:** each is under 2% busy over M1–M3, from `/proc/stat` around them.
