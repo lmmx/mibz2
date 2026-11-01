@@ -92,6 +92,9 @@ pub mod stream;
 #[cfg(any(test, feature = "trace"))]
 pub mod trace;
 
+#[cfg(feature = "p87")]
+pub mod p87;
+
 #[cfg(feature = "python")]
 mod python;
 
@@ -269,6 +272,9 @@ pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     checkpoints: Vec<[u32; 256]>,
     inverse: I,
     rle: Vec<u8>,
+    /// P87's diagnostic: `ll` and `rle` prefaulted to one capacity (`p87::decode_block`)
+    #[cfg(feature = "p87")]
+    p87_ready: bool,
 }
 
 impl<I: bwt::InverseBwt> Scratch<I> {
@@ -301,6 +307,8 @@ impl<I: bwt::InverseBwt> Default for Scratch<I> {
             checkpoints: Vec::new(),
             inverse: I::default(),
             rle: Vec::new(),
+            #[cfg(feature = "p87")]
+            p87_ready: false,
         }
     }
 }
@@ -313,6 +321,14 @@ pub fn decode_block<I: bwt::InverseBwt>(
     s: &mut Scratch<I>,
     out: &mut Vec<u8>,
 ) -> Result<u32, ErrorKind> {
+    // P87's diagnostic arms (feature `p87` only; unset, this is the shipped path below)
+    #[cfg(feature = "p87")]
+    {
+        let (arm, rle_first) = p87::arm();
+        if arm != p87::Arm::Shipped && !s.inverse.wants_checkpoints() && s.inverse.p87_steps() {
+            return p87::decode_block(b, k, s, out, arm == p87::Arm::IntoLl, rle_first);
+        }
+    }
     let cooperative = s.inverse.wants_checkpoints();
     let n = if cooperative {
         mtf::mtf_checkpoints(b, &mut s.ll, &mut s.counts, &mut s.checkpoints, k)?

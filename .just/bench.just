@@ -229,3 +229,14 @@ bench-attribution label:
 #   just bench-dispatch i9-10900K
 bench-dispatch label:
     bash bench/dispatch_run.sh {{label}}
+
+# P87's four-core diagnostic (docs/journal/2026-11-01-p87-four-core-protocol.md): the
+# inverse BWT's assembly into `rle` (arm A, as shipped) or into the MTF stage's dead `ll`
+# (arm B), one compiled path, on four physical cores, on the walk trial's frozen corpora:
+# S1 the uninstrumented paired trial at 1 and 4 workers (the mechanism D and the
+# engineering gate), S2 the phases from the trace, S3 DRAM traffic and core counters; one
+# archive. The counters need root: it asks for sudo once. P87_DRY_RUN=1 checks the
+# machinery only (no timed trial).
+#   just bench-p87 i9-10900K
+bench-p87 label:
+    bash bench/p87_run.sh {{label}}
