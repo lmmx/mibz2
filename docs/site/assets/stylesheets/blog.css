@@ -364,13 +364,28 @@
 .bf-fig .bf-chip-on { fill: var(--bf-green); }
 .bf-fig .bf-chip-off { fill: var(--bf-track); }
 
-/* screenshots inside a figure (the MLP post): full width up to their pixel size, never inverted */
+/* screenshots (the MLP post): one excerpt at a readable size, the rest as thumbnails that open
+   at full size; never inverted in the dark theme */
 .md-typeset .bf-shots img {
   display: block;
   width: 100%;
-  max-width: 691px;
+  max-width: 22rem;
   height: auto;
-  margin: 0 auto 0.6rem;
+  margin: 0 auto;
   border: 1px solid var(--bf-frame);
   border-radius: 0.4rem;
+}
+.md-typeset .bf-shot-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.6rem;
+  align-items: start;
+  margin: 0.6rem 0 1rem;
+}
+.md-typeset .bf-shot-row img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.3rem;
 }
