@@ -1,4 +1,4 @@
-# External research reports 74–150: index
+# External research reports 74–151: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -90,6 +90,7 @@ verbatim. They are not findings of this repository.
 | 148 | 2026-11-02 | the guardian | the walker capture valid; D1; the four-copy penalty in A, B and P (+38–45% cycles a row); the physical cause unresolved | `2026-11-02-external-report-148.md` |
 | 149 | 2026-11-02 | the researcher of report 138 | the four copies execute the same instructions a row (±0.03%) in 37–43% more cycles; the clock falls 5.30 → 4.95 cycles/ns | `2026-11-02-external-report-149.md` |
 | 150 | 2026-11-02 | the guardian | on report 149: tighten §8 (eight lines in flight is a model, D3 classifies nothing, D5 is P/B, P–M is net); hypotheses kept apart from measurements | `2026-11-02-external-report-150.md` |
+| 151 | 2026-11-02 | the guardian | the amended interpretation accepted; the matched-`exec` comparison reproduced (same capture, not a replication); the exclusion stated narrowly; the diagnostic at its endpoint | `2026-11-02-external-report-151.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
