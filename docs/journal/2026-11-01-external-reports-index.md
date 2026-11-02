@@ -1,4 +1,4 @@
-# External research reports 74–165: index
+# External research reports 74–166: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -105,6 +105,7 @@ verbatim. They are not findings of this repository.
 | 163 | 2026-11-02 | the same session | a guided walkthrough of its MLP and assembly techniques, with a copyable brief for a coding agent | `2026-11-02-external-report-163.md` |
 | 164 | 2026-11-02 | the guardian | on the BLAKE3 study: known versus discovered addresses; compact30's access path the target; assembly to be justified; a fork of BLAKE3-team, the AVX2 technique upstream; the Granite Rapids PMU link corrected | `2026-11-02-external-report-164.md` |
 | 165 | 2026-11-02 | Astra (the existing Codex conversation, Max reasoning) | compact30 review: Option 2, one compile-and-correctness prototype, refined to current-row F emission with F in the header's low byte; RAW bound verified; row total 707,949,378; alignment; a direct constructor without staging | `2026-11-02-external-report-165.md` |
+| 166 | 2026-11-02 | the guardian | Astra's Option 2 approved: one compile-and-correctness prototype of refined compact30 (current-row F, `(B ≪ 8) \| F`); no timing, no constructor, no integration | `2026-11-02-external-report-166.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
