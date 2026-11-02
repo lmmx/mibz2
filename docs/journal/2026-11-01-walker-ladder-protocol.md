@@ -1,4 +1,4 @@
-# The minimal real-T-vector walker diagnostic: protocol, revision 3 (for review; no capture authorized)
+# The minimal real-T-vector walker diagnostic: protocol, revision 3, frozen after the i9 probe (no capture authorized)
 
 - **Research only:** `examples/walker_ladder.rs`, `bench/walker_ladder.py` and
   `bench/test_walker_ladder.py`. The decoder is unchanged.
@@ -294,7 +294,35 @@ and count. But every comma-list of four, with cycles and instructions, multiplex
   so. That decision is then not read. Its ratios are never built across runs.
 - The probe is exercised on the VM with the stand-in perf. Its real figures need the i9.
 
-## 6. Gates and decisions (revised; frozen after the probe)
+## 5a. The probe's result (the i9, 902a911, 2026-11-02 00:35 UTC): every group counts
+
+**The archive:** `i9-10900K/walker-probe-20261102T003547Z.tar.gz`, SHA-256 `44f02155…`, as
+uploaded.
+- Its manifest: commit `902a911`, no tracked changes, exit status 0, corpus `cf13f439…`.
+- All three files' checksums verify. perf is 6.8.12.
+
+**What perf's raw output shows**, read directly, not only through the probe's summary:
+- **The control path held.** All 60 runs printed `Events enabled`: each group's 20-walk
+  window and its 0-walk control.
+- **Every event counted.** All 210 event lines were counted (no `<not counted>`, no
+  `<not supported>`), every one at 100.00% running with a non-zero run time.
+- **Each group was scheduled together.** Within every run, all of its events report one
+  identical run time: one perf group, counting as one.
+- **The control overhead is small.** A 0-walk window's cycles are at most 0.058% of a
+  20-walk window's (the gate is 1%). Such a window runs about 18 µs, the
+  acknowledgement's round trip.
+- **The NMI watchdog was on** (1). Three events with cycles and instructions fit beside
+  it, as §5 expected, without changing the machine's settings.
+
+**So the seven groups in §5 are frozen as they stand.** No fallback is needed:
+- the mlp trio (`pending`, `pending_cycles`, `fb_full`) counts together, so D4 is
+  readable;
+- the exec trio counts together, so D3 is readable.
+
+The probe's counts are kept as perf printed them. They are not analysed: it is an
+availability probe, and its windows are not the capture's.
+
+## 6. Gates and decisions (frozen)
 
 **Notation:** c(X, k) is cycles a row, rung X, k lanes, the median over its runs. Each run's
 cycles come from its own window.
@@ -334,11 +362,38 @@ cycles come from its own window.
 The diagnostic ends with its summary. The next architecture is chosen from the measured
 bottleneck, after review.
 
+## 6a. Deferred: an in-process counter backend (reports 144–145)
+
+**The idea:** the walker could open, enable, disable and read its own counter group through
+`perf_event_open` (for example the `perf-event2` crate). That would remove the control
+FIFO, the acknowledgements and the CSV parsing that caused revision 2's failure.
+
+**What it would not remove:**
+- the access permissions;
+- the counters' number and constraints;
+- the duty to define each Intel event exactly. Raw encodings are CPU-specific.
+
+**The guardian's ruling:** it is the likely direction if this harness becomes reusable
+infrastructure. It is not an interruption of this diagnostic, and not a second system.
+
+**A migration would replace only the counters' configuration, control and reading.** It
+would have to show agreement on:
+- event encodings, group membership and leader;
+- thread and CPU scope, and the user/kernel policy;
+- checks for unscheduled events;
+- a measured control overhead.
+
+Its results would be cross-checked against perf within measurement variability.
+
 ## 7. Cost so far
 
 About the authorized engineer-day: the ladder, M, the checks, the driver, the measurement
 repair, the tests, the stand-in runs and this revision.
 
-**i9 time used:** the one-minute audit. No capture. Next on the i9, once reviewed, is the
-two-minute probe, which makes no figure. The capture would follow only after the probe's
-groups are frozen and the capture is authorized.
+**i9 time used:**
+- the one-minute audit;
+- the failed probe (a245a45);
+- the revised probe (902a911), well under the two minutes estimated.
+
+No capture. **The capture, `sudo -v && just bench-walker-ladder`, is frozen at the commit
+that records this section, and is not authorized.** It would need its own authorization.
