@@ -75,6 +75,10 @@ PERF = os.environ.get("WALKER_PERF", "perf").split()
 OVERLAP_MIN = 0.95
 RUNNING_MIN = 99.9
 OVERHEAD_MAX = 0.01
+# report 146: an event whose control-only count is at least this share of a window's count
+# is "comparable": reported beside it and qualified, never subtracted, never a basis for a
+# bottleneck classification
+COMPARABLE = 0.10
 
 
 def stamp():
@@ -432,6 +436,40 @@ def run(args):
     summarise(path)
 
 
+def control_comparison(recs, configs):
+    """each event's control-only count beside its measured-window count, at each config:
+    the median over rounds of (the round's 0-walk control for the group) / (the config's
+    window in that round), with both medians. Both zero: "zero" (a valid count, nothing to
+    compare). Control above zero against a zero window: comparable."""
+    over = {(r["round"], r["group"]): r for r in recs if r["kind"] == "overhead" and r.get("group")}
+    table = {}
+    for rung, k in configs:
+        for g, evs in GROUPS.items():
+            for e in FIXED + evs:
+                ws, cs, ratios = [], [], []
+                for x in recs:
+                    if x["kind"] != "one" or (x["rung"], x["lanes"], x["group"]) != (rung, k, g):
+                        continue
+                    o = over.get((x["round"], g))
+                    if o is None:
+                        continue
+                    w = (x["counts"].get(e) or {}).get("value")
+                    c = (o["counts"].get(e) or {}).get("value")
+                    if w is None or c is None:
+                        continue
+                    ws.append(w)
+                    cs.append(c)
+                    ratios.append(c / w if w else (0.0 if c == 0 else math.inf))
+                if not ratios:
+                    continue
+                rmed = med(ratios)
+                state = ("zero" if med(ws) == 0 and med(cs) == 0 else
+                         "comparable" if rmed >= COMPARABLE else "small")
+                table[f"{rung}{k} {g} {e}"] = {"window": med(ws), "control": med(cs),
+                                               "control_over_window": rmed, "state": state}
+    return table
+
+
 def med(xs):
     xs = [x for x in xs if x is not None]
     return statistics.median(xs) if xs else None
@@ -530,6 +568,27 @@ def summarise(path):
                          "no plateau with rising fill-buffer pressure"}
         else:
             out["D4"] = "not read: the mlp group's members were not all counted together"
+    if counted:
+        # report 146: control-only counts beside every event at the decision configs
+        cmp_ = control_comparison(recs, [("P", 32), ("B", 16), ("B", 32), ("A", 32), ("M", 32)])
+        out["control_vs_window"] = cmp_
+        flagged = {k: v for k, v in cmp_.items() if v["state"] == "comparable"}
+        if flagged:
+            print(f"\nevents whose control-only count is at least {COMPARABLE:.0%} of the window's "
+                  "(reported, qualified, not subtracted):")
+            for k, v in sorted(flagged.items()):
+                print(f"  {k}: window {v['window']:.0f}, control {v['control']:.0f} "
+                      f"({v['control_over_window']:.3f})")
+
+        def qualify(key, cfg_events):
+            hit = [f"{c} {e}" for c, e in cfg_events
+                   if cmp_.get(f"{c} {e}", {}).get("state") == "comparable"]
+            if hit and isinstance(out.get(key), dict):
+                out[key]["qualified"] = ("control-only counts comparable to the window's for "
+                                         + ", ".join(hit) + ": reported, not read as a "
+                                         "classification")
+        qualify("D3", [("P32", f"exec {e}") for e in FIXED + GROUPS["exec"]])
+        qualify("D4", [(c, f"mlp {e}") for c in ("B16", "B32") for e in FIXED + GROUPS["mlp"]])
     if fourc:
         def q(rung):
             return med([x["ns_a_row"] for x in fourc if x["rung"] == rung])

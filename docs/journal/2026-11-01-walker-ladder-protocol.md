@@ -345,6 +345,30 @@ cycles come from its own window.
 | **D4** | from the mlp group's simultaneous counts on B16 and B32 | demand MLP (pending ÷ pending cycles) rising less than 10% from 16 lanes to 32, **and** fb_full events a cycle at least doubling **and** at least 0.01 at 32: **consistent with** a miss-capacity constraint, not an exclusive diagnosis. Not read if the mlp group was not counted whole |
 | **D5** | r = (P32 ÷ B32, four cores) ÷ (P32 ÷ B32, one core) | \|r − 1\| > 0.15: the isolated-core conclusions do not transfer; report and stop |
 
+**Event-specific control overhead** (the guardian, report 146):
+- A small control overhead in cycles does not make every event's control count small.
+- In the probe, `cycle_activity.stalls_l3_miss` counted 17,636 in a 0-walk control against
+  28,608 in a 20-walk window: a ratio of 0.62. `dtlb_load_misses.walk_active` (0.70),
+  `mem_load_retired.l3_miss` (0.67) and `idq_uops_not_delivered.core` (0.10) were also
+  comparable.
+
+**So the summary does three things:**
+- It reports every event's control-only count beside its window count at each decision
+  config (P32, B16, B32, A32, M32), as medians over the rounds, with their ratio.
+- It marks an event **comparable** when its control count is at least 10% of the
+  window's, or when a zero window has a non-zero control.
+- Any decision whose events are comparable is **qualified**: reported, but not read as a
+  classification.
+
+**What it does not do:**
+- It never subtracts the control. The two are separate windows, not an exact accounting of
+  the same overhead.
+- Both counts zero is a valid zero, not a comparison. Rung A, for example, issues no
+  prefetches.
+
+The capture's windows are 100 walks (25 at one lane), against the probe's 20, so its
+ratios should be smaller. They are reported either way.
+
 **How the counters are read:**
 - **Demand MLP excludes overlap that software prefetch supplied earlier.** A buffer
   allocated by a prefetch enters `pending` only when a demand load meets it. So better
@@ -396,4 +420,8 @@ repair, the tests, the stand-in runs and this revision.
 - the revised probe (902a911), well under the two minutes estimated.
 
 No capture. **The capture, `sudo -v && just bench-walker-ladder`, is frozen at the commit
-that records this section, and is not authorized.** It would need its own authorization.
+that adds report 146's safeguard, and is not authorized.** It would need its own
+authorization.
+- Since the probed `902a911`, only the analysis changed: the summary's control
+  comparison, and its tests.
+- The collection code, the launcher, the walker and the event groups are as probed.

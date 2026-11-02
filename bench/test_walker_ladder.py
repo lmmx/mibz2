@@ -107,6 +107,37 @@ class Validity(unittest.TestCase):
         self.assertEqual(wl.validity([r]), [])
 
 
+class ControlComparison(unittest.TestCase):
+    """report 146: a control-only count comparable to a window's count is flagged, never
+    subtracted"""
+
+    def recs(self, window, control, event="cycle_activity.stalls_l3_miss", group="stalls_l2"):
+        w = rec(group=group, rung="P", lanes=32)
+        w["counts"][event]["value"] = window
+        o = rec("overhead", group=group, rung="A", lanes=32, reps=0)
+        o["counts"][event]["value"] = control
+        return [w, o], f"P32 {group} {event}"
+
+    def test_the_probes_stalls_l3_miss_is_comparable(self):
+        recs, key = self.recs(28608.0, 17636.0)
+        t = wl.control_comparison(recs, [("P", 32)])
+        self.assertEqual(t[key]["state"], "comparable")
+        self.assertAlmostEqual(t[key]["control_over_window"], 17636 / 28608)
+        self.assertEqual(t[key]["window"], 28608.0, "the window's count is kept, not subtracted")
+
+    def test_small_control_is_small(self):
+        recs, key = self.recs(1_000_000.0, 500.0)
+        self.assertEqual(wl.control_comparison(recs, [("P", 32)])[key]["state"], "small")
+
+    def test_both_zero_is_zero(self):
+        recs, key = self.recs(0.0, 0.0, "sw_prefetch_access.t0", "pf")
+        self.assertEqual(wl.control_comparison(recs, [("P", 32)])[key]["state"], "zero")
+
+    def test_control_against_zero_window_is_comparable(self):
+        recs, key = self.recs(0.0, 5.0, "sw_prefetch_access.t0", "pf")
+        self.assertEqual(wl.control_comparison(recs, [("P", 32)])[key]["state"], "comparable")
+
+
 class Parse(unittest.TestCase):
     def test_perf_csv(self):
         err = ("Events disabled\nEvents enabled\n1234,,cycles,100,100.00,,\n"
