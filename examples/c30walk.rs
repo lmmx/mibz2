@@ -1124,6 +1124,74 @@ fn cpu_now() -> i64 {
     }
 }
 
+/// The calling thread's consumed CPU time, in ns (`CLOCK_THREAD_CPUTIME_ID`): it advances
+/// only while the thread runs
+fn thread_cpu_ns() -> u64 {
+    #[cfg(target_os = "linux")]
+    {
+        #[repr(C)]
+        struct Timespec {
+            sec: i64,
+            nsec: i64,
+        }
+        extern "C" {
+            fn clock_gettime(clock: i32, tp: *mut Timespec) -> i32;
+        }
+        const CLOCK_THREAD_CPUTIME_ID: i32 = 3;
+        let mut t = Timespec { sec: 0, nsec: 0 };
+        if unsafe { clock_gettime(CLOCK_THREAD_CPUTIME_ID, &mut t) } != 0 {
+            fail(
+                "clock",
+                "clock_gettime(CLOCK_THREAD_CPUTIME_ID) failed".into(),
+            );
+        }
+        t.sec as u64 * 1_000_000_000 + t.nsec as u64
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        0
+    }
+}
+
+/// Where a failure's evidence goes: the run's records file
+static FAIL_PATH: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+static FAIL_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn json_str(s: &str) -> String {
+    let mut o = String::from("\"");
+    for c in s.chars() {
+        match c {
+            '"' => o.push_str("\\\""),
+            '\\' => o.push_str("\\\\"),
+            c if (c as u32) < 0x20 => o.push_str(&format!("\\u{:04x}", c as u32)),
+            c => o.push(c),
+        }
+    }
+    o.push('"');
+    o
+}
+
+/// Ends the run at once, from any thread. The failure is appended to the records file as
+/// its last line and printed, then the process exits with status 3, so no worker is left
+/// waiting at a barrier for one that has stopped. The records of every finished round are
+/// already in the file.
+fn fail(what: &str, detail: String) -> ! {
+    let _g = FAIL_LOCK.lock();
+    let line = format!(
+        "{{\"kind\":\"failure\",\"what\":{},\"detail\":{}}}",
+        json_str(what),
+        json_str(&detail)
+    );
+    eprintln!("grid: FAILED: {line}");
+    if let Some(p) = FAIL_PATH.get() {
+        if let Ok(mut f) = std::fs::OpenOptions::new().append(true).open(p) {
+            let _ = writeln!(f, "{line}");
+            let _ = f.sync_all();
+        }
+    }
+    std::process::exit(3)
+}
+
 /// A block's compact30 oracle image, copied into a worker's arena before C's walk
 struct Image {
     rec: Vec<Rec>,
@@ -1145,7 +1213,8 @@ enum Arm {
     C,
 }
 
-/// One walk's record
+/// One walk's record. Every field is filled in after the step's completion barrier.
+#[derive(Clone, Copy)]
 struct Walk {
     round: i64,
     w4: bool,
@@ -1154,24 +1223,37 @@ struct Walk {
     step: usize,
     block: usize,
     rows: usize,
-    cpu: i64,
+    /// sched_getcpu before the start barrier and after the completion barrier
+    cpu: (i64, i64),
+    /// monotonic ns since the epoch: the table's preparation
     prep: (u64, u64),
-    walk: (u64, u64),
+    /// monotonic ns since the epoch: the traversal window
+    wall: (u64, u64),
+    /// the thread's CPU ns: the traversal window, nested inside `wall`
+    tcpu: (u64, u64),
+    /// monotonic ns since the epoch: the output's check
+    check: (u64, u64),
+}
+
+/// The traversal window around `f`. The clock calls, in order: the monotonic clock, the
+/// thread CPU clock, `f`, the thread CPU clock, the monotonic clock. So the CPU window
+/// lies inside the monotonic one, and each holds the part of its clock calls between the
+/// two readings, which the calibration's empty windows measure.
+#[inline(always)]
+fn timed(epoch: std::time::Instant, f: impl FnOnce()) -> ((u64, u64), (u64, u64)) {
+    let w0 = std::time::Instant::now();
+    let c0 = thread_cpu_ns();
+    f();
+    let c1 = thread_cpu_ns();
+    let w1 = std::time::Instant::now();
+    let ns = |t: std::time::Instant| t.duration_since(epoch).as_nanos() as u64;
+    ((ns(w0), ns(w1)), (c0, c1))
 }
 
 impl Worker {
-    /// Prepare block `i`'s table for `arm` (untimed), walk it (timed), check it (untimed)
-    fn run(
-        &mut self,
-        arm: Arm,
-        b: &Block,
-        img: &Image,
-        epoch: std::time::Instant,
-        barrier: Option<&std::sync::Barrier>,
-    ) -> ((u64, u64), (u64, u64)) {
-        let (ll, counts, op, want) = b;
-        let ns = |t: std::time::Instant| t.duration_since(epoch).as_nanos() as u64;
-        let p0 = std::time::Instant::now();
+    /// Write block's table for `arm` (untimed)
+    fn prepare(&mut self, arm: Arm, b: &Block, img: &Image) {
+        let (ll, counts, _, _) = b;
         match arm {
             Arm::P => mibz2::bwt::build(ll, counts, &mut self.tt),
             Arm::C => {
@@ -1182,36 +1264,158 @@ impl Worker {
                 self.c.n = ll.len();
             }
         }
-        let p1 = std::time::Instant::now();
-        if let Some(b) = barrier {
-            b.wait();
+    }
+
+    /// Walk the prepared table: the traversal and assembly, timed
+    fn walk(&mut self, arm: Arm, op: u32, epoch: std::time::Instant) -> ((u64, u64), (u64, u64)) {
+        let mut d = Counts::default();
+        let (tt, seg, c, out) = (&mut self.tt, &mut self.seg, &mut self.c, &mut self.out);
+        timed(epoch, || match arm {
+            Arm::P => mibz2::bwt::walk_segments_room(tt, op, out, seg),
+            Arm::C => c.walk::<false>(op, false, out, &mut d),
+        })
+    }
+
+    /// The first byte where the output differs from production's, if any (untimed)
+    fn check(&self, want: &[u8]) -> Option<usize> {
+        if self.out == want {
+            return None;
         }
-        let t0 = std::time::Instant::now();
-        match arm {
-            Arm::P => {
-                mibz2::bwt::walk_segments_room(&mut self.tt, *op, &mut self.out, &mut self.seg)
-            }
-            Arm::C => {
-                let mut d = Counts::default();
-                self.c.walk::<false>(*op, false, &mut self.out, &mut d)
-            }
-        }
-        let t1 = std::time::Instant::now();
-        assert!(
-            &self.out == want,
-            "arm {} walked a block wrongly",
-            if arm == Arm::P { "P" } else { "C" }
-        );
-        ((ns(p0), ns(p1)), (ns(t0), ns(t1)))
+        Some(
+            self.out
+                .iter()
+                .zip(want)
+                .position(|(a, b)| a != b)
+                .unwrap_or(self.out.len().min(want.len())),
+        )
     }
 }
 
+/// A fault injected on purpose, to test the failure path (dry runs only)
+#[derive(Clone, Copy, PartialEq)]
+enum Inject {
+    None,
+    /// flip the first output byte of this worker's first walk in round −1, after the
+    /// completion barrier and before the check
+    Output {
+        w4: bool,
+        arm: Arm,
+        worker: usize,
+    },
+    /// pin this worker to a CPU that does not exist, in round −1
+    Pin {
+        w4: bool,
+        worker: usize,
+    },
+}
+
+fn parse_inject(s: &str) -> Inject {
+    let p: Vec<&str> = s.split(':').collect();
+    let w4 = |m: &str| match m {
+        "w1" => false,
+        "w4" => true,
+        _ => panic!("--inject: mode w1 or w4"),
+    };
+    match p.as_slice() {
+        ["output", m, a, k] => Inject::Output {
+            w4: w4(m),
+            arm: if *a == "P" { Arm::P } else { Arm::C },
+            worker: k.parse().unwrap(),
+        },
+        ["pin", m, k] => Inject::Pin {
+            w4: w4(m),
+            worker: k.parse().unwrap(),
+        },
+        _ => panic!("--inject output:MODE:ARM:WORKER or pin:MODE:WORKER"),
+    }
+}
+
+const NO_SUCH_CPU: usize = 1023;
+
+/// Pin the calling thread to `cpu`, or end the run
+fn pin_or_fail(cpu: usize, what: &str) {
+    if !pin(cpu) {
+        fail("pin", format!("{what}: could not pin to CPU {cpu}"));
+    }
+}
+
+/// The clock calls' own cost inside a traversal window: `n` empty windows on each CPU,
+/// pinned, with the same calls in the same order as a walk's. Untimed by the analysis's
+/// figures; it reads them only to bound the overhead (G5).
+fn calibrate(cpus: &[usize], n: usize, epoch: std::time::Instant) -> String {
+    let mut parts = Vec::new();
+    for &cpu in cpus {
+        let (mut cw, mut ww): (Vec<u64>, Vec<u64>) = std::thread::scope(|sc| {
+            sc.spawn(|| {
+                pin_or_fail(cpu, "calibration");
+                let mut cw = Vec::with_capacity(n);
+                let mut ww = Vec::with_capacity(n);
+                for _ in 0..n {
+                    let (w, c) = timed(epoch, || {});
+                    cw.push(c.1 - c.0);
+                    ww.push(w.1 - w.0);
+                }
+                (cw, ww)
+            })
+            .join()
+            .unwrap()
+        });
+        cw.sort_unstable();
+        ww.sort_unstable();
+        let q = |v: &[u64], f: f64| v[((v.len() - 1) as f64 * f) as usize];
+        parts.push(format!(
+            "{{\"cpu\":{cpu},\"n\":{n},\"cpu_ns\":[{},{},{},{},{}],\"wall_ns\":[{},{},{},{},{}]}}",
+            q(&cw, 0.0),
+            q(&cw, 0.5),
+            q(&cw, 0.9),
+            q(&cw, 0.99),
+            q(&cw, 1.0),
+            q(&ww, 0.0),
+            q(&ww, 0.5),
+            q(&ww, 0.9),
+            q(&ww, 0.99),
+            q(&ww, 1.0),
+        ));
+    }
+    parts.join(",")
+}
+
+fn write_walks(jl: &mut std::fs::File, recs: &[Walk]) {
+    for r in recs {
+        writeln!(
+            jl,
+            "{{\"kind\":\"walk\",\"round\":{},\"mode\":\"{}\",\"arm\":\"{}\",\"worker\":{},\"step\":{},\"block\":{},\"rows\":{},\"cpu_before\":{},\"cpu_after\":{},\"prep_start\":{},\"prep_end\":{},\"start\":{},\"end\":{},\"cpu_start\":{},\"cpu_end\":{},\"check_start\":{},\"check_end\":{},\"exact\":true}}",
+            r.round,
+            if r.w4 { "w4" } else { "w1" },
+            if r.arm == Arm::P { "P" } else { "C" },
+            r.worker,
+            r.step,
+            r.block,
+            r.rows,
+            r.cpu.0,
+            r.cpu.1,
+            r.prep.0,
+            r.prep.1,
+            r.wall.0,
+            r.wall.1,
+            r.tcpu.0,
+            r.tcpu.1,
+            r.check.0,
+            r.check.1
+        )
+        .unwrap();
+    }
+}
+
+/// The registered comparison (docs/journal/2026-11-02-compact30-traversal-protocol.md)
 fn grid(args: &[String]) {
     let out_path = &args[0];
     let file = &args[1];
     let mut rounds = 20i64;
     let mut cpus: Vec<usize> = Vec::new();
     let mut dry = false;
+    let mut inject = Inject::None;
+    let mut inject_arg = String::new();
     let mut i = 2;
     while i < args.len() {
         match args[i].as_str() {
@@ -1224,16 +1428,25 @@ fn grid(args: &[String]) {
                 i += 1;
             }
             "--dry-run" => dry = true,
+            "--inject" => {
+                inject = parse_inject(&args[i + 1]);
+                inject_arg = args[i + 1].clone();
+                i += 1;
+            }
             a => panic!("unknown argument {a}"),
         }
         i += 1;
     }
+    assert!(
+        inject == Inject::None || dry,
+        "--inject is for dry runs only"
+    );
     if dry {
         rounds = 2;
     }
     assert!(
-        cpus.len() >= 4,
-        "--cpus needs four CPUs, one a physical core"
+        cpus.len() == 4,
+        "--cpus needs four CPUs, each a physical core"
     );
     let data = std::fs::read(file).unwrap();
     let bs = blocks(&data);
@@ -1265,6 +1478,8 @@ fn grid(args: &[String]) {
         .map(|l| l.iter().map(|&b| bs[b].0.len()).sum())
         .collect();
     let mut jl = std::fs::File::create(out_path).unwrap();
+    FAIL_PATH.set(out_path.clone()).unwrap();
+    std::panic::set_hook(Box::new(|info| fail("panic", info.to_string())));
     let name = std::path::Path::new(file)
         .file_name()
         .unwrap()
@@ -1275,53 +1490,98 @@ fn grid(args: &[String]) {
     let braw: Vec<usize> = imgs.iter().map(|m| m.raw.len()).collect();
     writeln!(
         jl,
-        "{{\"kind\":\"meta\",\"corpus\":{name:?},\"blocks\":{},\"rows\":{total},\"full_blocks\":{},\"rounds\":{rounds},\"dry_run\":{dry},\"cpus\":{cpus:?},\"w4_lists\":{lists:?},\"w4_rows\":{wrows:?},\"block_rows\":{brows:?},\"block_raw_groups\":{braw:?}}}",
+        "{{\"kind\":\"meta\",\"corpus\":{name:?},\"blocks\":{},\"rows\":{total},\"full_blocks\":{},\"rounds\":{rounds},\"dry_run\":{dry},\"inject\":{},\"cpus\":{cpus:?},\"w4_lists\":{lists:?},\"w4_rows\":{wrows:?},\"block_rows\":{brows:?},\"block_raw_groups\":{braw:?}}}",
         bs.len(),
         bs.iter().filter(|b| b.0.len() >= 899_000).count(),
+        if inject == Inject::None { "null".to_string() } else { json_str(&inject_arg) },
+    )
+    .unwrap();
+    let epoch = std::time::Instant::now();
+    let calib = calibrate(&cpus, 20_000, epoch);
+    writeln!(
+        jl,
+        "{{\"kind\":\"calibration\",\"when\":\"before\",\"cpus\":[{calib}]}}"
     )
     .unwrap();
     let mut ws: Vec<Worker> = (0..4).map(|_| Worker::default()).collect();
-    let epoch = std::time::Instant::now();
-    let arm_name = |a: Arm| if a == Arm::P { "P" } else { "C" };
+    let steps = lists.iter().map(|l| l.len()).max().unwrap();
+    let blank = Walk {
+        round: 0,
+        w4: false,
+        arm: Arm::P,
+        worker: 0,
+        step: 0,
+        block: 0,
+        rows: 0,
+        cpu: (0, 0),
+        prep: (0, 0),
+        wall: (0, 0),
+        tcpu: (0, 0),
+        check: (0, 0),
+    };
+    let ns = |t: std::time::Instant| t.duration_since(epoch).as_nanos() as u64;
+    let mut recs: Vec<Walk> = Vec::with_capacity(4 * bs.len());
     for round in -1..rounds {
         let arms = if round.rem_euclid(2) == 0 {
             [Arm::P, Arm::C]
         } else {
             [Arm::C, Arm::P]
         };
-        let mut recs: Vec<Walk> = Vec::new();
-        // W1
+        recs.clear();
+        // W1: one worker, every block in order: prepare, walk, check
         for &arm in &arms {
             let w = &mut ws[0];
-            let r: Vec<Walk> = std::thread::scope(|sc| {
+            let mut v: Vec<Walk> = Vec::with_capacity(bs.len());
+            let v = &mut v;
+            std::thread::scope(|sc| {
                 sc.spawn(|| {
-                    assert!(pin(cpus[0]), "could not pin to CPU {}", cpus[0]);
-                    (0..bs.len())
-                        .map(|i| {
-                            let (prep, walk) = w.run(arm, &bs[i], &imgs[i], epoch, None);
-                            Walk {
-                                round,
-                                w4: false,
-                                arm,
-                                worker: 0,
-                                step: i,
-                                block: i,
-                                rows: bs[i].0.len(),
-                                cpu: cpu_now(),
-                                prep,
-                                walk,
-                            }
-                        })
-                        .collect()
+                    let cpu = match inject {
+                        Inject::Pin { w4: false, .. } if round == -1 => NO_SUCH_CPU,
+                        _ => cpus[0],
+                    };
+                    pin_or_fail(cpu, "W1 worker 0");
+                    for (i, b) in bs.iter().enumerate() {
+                        let c0 = cpu_now();
+                        let p0 = std::time::Instant::now();
+                        w.prepare(arm, b, &imgs[i]);
+                        let p1 = std::time::Instant::now();
+                        let (wall, tcpu) = w.walk(arm, b.2, epoch);
+                        if inject == (Inject::Output { w4: false, arm, worker: 0 })
+                            && round == -1
+                            && i == 0
+                        {
+                            w.out[0] ^= 1;
+                        }
+                        let k0 = std::time::Instant::now();
+                        if let Some(at) = w.check(&b.3) {
+                            fail("output", format!("round {round} w1 arm {} worker 0 step {i} block {i}: the output differs from production's at byte {at}", if arm == Arm::P { "P" } else { "C" }));
+                        }
+                        let k1 = std::time::Instant::now();
+                        v.push(Walk {
+                            round,
+                            w4: false,
+                            arm,
+                            worker: 0,
+                            step: i,
+                            block: i,
+                            rows: b.0.len(),
+                            cpu: (c0, cpu_now()),
+                            prep: (ns(p0), ns(p1)),
+                            wall,
+                            tcpu,
+                            check: (ns(k0), ns(k1)),
+                        });
+                    }
                 })
                 .join()
                 .unwrap()
             });
-            recs.extend(r);
+            recs.extend_from_slice(v);
         }
-        // W4
+        // W4: four workers in lockstep by block. Each step: prepare (untimed), the start
+        // barrier, the walk (timed), the completion barrier, then the check and the record.
+        // So no check, record or next preparation runs while any walk of the step does.
         for &arm in &arms {
-            let steps = lists.iter().map(|l| l.len()).max().unwrap();
             let barrier = std::sync::Barrier::new(4);
             let r: Vec<Vec<Walk>> = std::thread::scope(|sc| {
                 let hs: Vec<_> = ws
@@ -1331,31 +1591,52 @@ fn grid(args: &[String]) {
                         let (list, barrier, cpus, bs, imgs) =
                             (&lists[k], &barrier, &cpus, &bs, &imgs);
                         sc.spawn(move || {
-                            assert!(pin(cpus[k]), "could not pin to CPU {}", cpus[k]);
-                            let mut v = Vec::new();
-                            for step in 0..steps {
-                                match list.get(step) {
-                                    Some(&i) => {
-                                        let (prep, walk) =
-                                            w.run(arm, &bs[i], &imgs[i], epoch, Some(barrier));
-                                        v.push(Walk {
-                                            round,
-                                            w4: true,
-                                            arm,
-                                            worker: k,
-                                            step,
-                                            block: i,
-                                            rows: bs[i].0.len(),
-                                            cpu: cpu_now(),
-                                            prep,
-                                            walk,
-                                        });
-                                    }
-                                    None => {
-                                        barrier.wait();
-                                    }
+                            let mut v: Vec<Walk> = vec![blank; list.len()];
+                            let cpu = match inject {
+                                Inject::Pin { w4: true, worker } if worker == k && round == -1 => {
+                                    NO_SUCH_CPU
                                 }
+                                _ => cpus[k],
+                            };
+                            pin_or_fail(cpu, &format!("W4 worker {k}"));
+                            for step in 0..steps {
+                                let item = list.get(step).map(|&i| {
+                                    let c0 = cpu_now();
+                                    let p0 = std::time::Instant::now();
+                                    w.prepare(arm, &bs[i], &imgs[i]);
+                                    let p1 = std::time::Instant::now();
+                                    (i, c0, (ns(p0), ns(p1)))
+                                });
                                 barrier.wait();
+                                let walked = item.map(|(i, ..)| w.walk(arm, bs[i].2, epoch));
+                                barrier.wait();
+                                if let (Some((i, c0, prep)), Some((wall, tcpu))) = (item, walked) {
+                                    if inject == (Inject::Output { w4: true, arm, worker: k })
+                                        && round == -1
+                                        && step == 0
+                                    {
+                                        w.out[0] ^= 1;
+                                    }
+                                    let k0 = std::time::Instant::now();
+                                    if let Some(at) = w.check(&bs[i].3) {
+                                        fail("output", format!("round {round} w4 arm {} worker {k} step {step} block {i}: the output differs from production's at byte {at}", if arm == Arm::P { "P" } else { "C" }));
+                                    }
+                                    let k1 = std::time::Instant::now();
+                                    *v.get_mut(step).unwrap() = Walk {
+                                        round,
+                                        w4: true,
+                                        arm,
+                                        worker: k,
+                                        step,
+                                        block: i,
+                                        rows: bs[i].0.len(),
+                                        cpu: (c0, cpu_now()),
+                                        prep,
+                                        wall,
+                                        tcpu,
+                                        check: (ns(k0), ns(k1)),
+                                    };
+                                }
                             }
                             v
                         })
@@ -1363,32 +1644,22 @@ fn grid(args: &[String]) {
                     .collect();
                 hs.into_iter().map(|h| h.join().unwrap()).collect()
             });
-            recs.extend(r.into_iter().flatten());
+            for v in &r {
+                recs.extend_from_slice(v);
+            }
         }
-        for r in &recs {
-            writeln!(
-                jl,
-                "{{\"kind\":\"walk\",\"round\":{},\"mode\":\"{}\",\"arm\":\"{}\",\"worker\":{},\"step\":{},\"block\":{},\"rows\":{},\"cpu\":{},\"prep_start\":{},\"prep_end\":{},\"start\":{},\"end\":{},\"exact\":true}}",
-                r.round,
-                if r.w4 { "w4" } else { "w1" },
-                arm_name(r.arm),
-                r.worker,
-                r.step,
-                r.block,
-                r.rows,
-                r.cpu,
-                r.prep.0,
-                r.prep.1,
-                r.walk.0,
-                r.walk.1
-            )
-            .unwrap();
-        }
+        write_walks(&mut jl, &recs);
         println!(
             "grid: round {round} done{}",
             if dry { " (dry run)" } else { "" }
         );
     }
+    let calib = calibrate(&cpus, 20_000, epoch);
+    writeln!(
+        jl,
+        "{{\"kind\":\"calibration\",\"when\":\"after\",\"cpus\":[{calib}]}}"
+    )
+    .unwrap();
 }
 
 fn main() {

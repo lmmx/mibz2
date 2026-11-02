@@ -1,30 +1,33 @@
-# Compact30 against the shipped walk: a traversal-comparison protocol (revision 2, for approval)
+# Compact30 against the shipped walk: a traversal-comparison protocol (revision 3, for approval)
 
-- **Status:** revised as report 174 asks, with the minimum harness and recipe written and
-  checked on the VM without timing. Nothing has been timed, and nothing below is a
-  performance figure.
-- **Not authorised:** the capture itself. The i9 command in §9 runs only once the guardian
-  approves it.
+- **Status:** the harness repaired as report 176 authorises, after the researcher's review
+  (report 175). Checked on the VM without timing. Nothing has been timed, and nothing below
+  is a performance figure.
+- **Not authorised:** the capture. The i9 command in §9 runs only once the guardian approves
+  it.
 - **The candidate:** the refined compact30 walker (`examples/c30walk.rs`, `room::<false>`),
   unchanged at its reviewed 21-instruction ordinary path. Its validation is in the walker
-  journal's §8. The harness adds a `grid` mode around it and changes nothing in the walker:
-  the function's listing is checked against the reviewed one, instruction by instruction
-  (§5, G3).
-- **What changed from the draft (`38b9a81`):**
-  1. 0.865 is stated as an investment screen, not a proof, and the constructor budget is
-     reported across the whole interval (§6).
-  2. Four-core completed-work time (e4) is measured beside the worker cost (w4), with a
-     no-harm rule (§4, §6).
-  3. The four-worker allocation is fixed and recorded, and the cache-state limitation is
-     stated (§3, §7).
-  4. The four-worker design is lockstep by block, so both arms always walk four at once.
-     G2 checks the simultaneous start instead of the windows' overlap.
+  journal's §8. The harness around it changes nothing in the walker: the function's listing
+  is checked against the reviewed one, instruction by instruction (§5, G3).
+
+**What revision 3 changes (report 176):**
+
+| item | revision 2 (`b12b49b`) | revision 3 |
+|---|---|---|
+| the output check | inside each worker's run, before the completion barrier, so an early finisher read ~1.8 MB while its neighbours walked | after the completion barrier; records go into storage allocated before the step loop |
+| a failure | an assertion panicked one worker and could strand the others at a barrier | a failure record is appended to the records file and the process exits at once; tested by injection |
+| the worker cost | summed monotonic windows: elapsed time, named as CPU cost | the thread's CPU time (`CLOCK_THREAD_CPUTIME_ID`); the monotonic windows give completion time and ordering |
+| the record checks | the parts checked separately; the round count taken from the records | the records checked against the whole registered schedule before any ratio (§5, S); 20 measured rounds enforced |
+| the sample | one round gave a zero-width interval | anything but 20 measured rounds is refused |
+
+The design is unchanged: the arms, the lockstep workload, the allocation, the 0.865 screen
+and the 1.02 tolerance.
 
 ## 1. The question
 
-At four cores, does compact30's whole traversal cost enough less than the shipped walk's
-to justify the investment in a direct constructor, without making completed four-core work
-slower?
+At four cores, does compact30's whole traversal cost enough less CPU than the shipped
+walk's to justify the investment in a direct constructor, without making lockstep traversal
+completion more than 2% slower?
 
 **The traversal, on each side:**
 - start selection;
@@ -33,8 +36,8 @@ slower?
 - assembly.
 
 **What decides it, and what doesn't:**
-- The decision is on the absolute ratios against the shipped walk at four cores: the worker
-  cost w4 and the completed-work time e4.
+- The decision reads two ratios against the shipped walk at four cores: the CPU cost w4
+  and the completion time e4.
 - The one-core ratio w1 is reported but does not decide.
 - Beating FOR-14, or scaling better from one core to four, decides nothing (report 173).
 
@@ -60,13 +63,16 @@ This is the function the decoder calls (`Segmented::invert` is `build` then
 - the room walk with RAW parking and resumption;
 - the tail and assembly.
 
-**The matched boundary:** each arm's timing starts after its table is written and ends
+**The matched boundary:** each arm's window opens after its table is written and closes
 when the block's inverse-BWT output is assembled.
-- **Excluded from both arms:** P's build, C's oracle build and copy, MTF, RLE1, CRC and the
-  scanner.
+- **Excluded from both arms:**
+  - P's build, and C's oracle build and copy;
+  - the barrier waits;
+  - the output check;
+  - MTF, RLE1, CRC and the scanner.
 - **Each worker keeps its own table, arena and scratch** across blocks and rounds, as a
-  decoder's worker does, so neither arm's timing includes first-use allocation after round
-  −1.
+  decoder's worker does. So after round −1 neither arm's window includes first-use
+  allocation.
 
 **The interpretation's limit (report 174's wording):**
 
@@ -81,42 +87,79 @@ when the block's inverse-BWT output is assembled.
 - A direct constructor would leave yet another state. Nothing here measures construction
   cost, or how a constructor's writes would warm or cool the walk.
 
-**The output** is the same inverse-BWT bytes, by production's convention. Every walk, in
-every round, both arms, is asserted equal to production's own `Segmented::invert` output
-for that block, outside the timed window. A wrong walk aborts the run.
+**The output** is the same inverse-BWT bytes, by production's convention.
+- Every walk, in every round, both arms, is compared with production's own
+  `Segmented::invert` output for that block.
+- The comparison runs after the step's completion barrier (§3).
+- A difference ends the run as a failure (§3).
 
-## 3. The workload and the conditions
+## 3. The workload, the order of work, and failure
 
 **The corpus:** the primary `wikidata-20261026.bz2` (SHA-256 `cf13f439…`), decoded once to
 each block's last column and counts, before any timing.
 - 434 blocks; 207,006,515 rows.
-- 230 full blocks (at least 899,000 rows); the short ones use each arm's plain walk.
+- 230 full blocks (at least 899,000 rows).
+- The 204 short blocks hold 8,324 rows between them (0.004% of the rows; median 23 rows).
+  They are 47% of the walk windows, which matters for the clock calls' cost (§4).
 
-**One core (W1):**
-- one worker, pinned to the first listed CPU;
-- every block in order, under one arm, then every block under the other.
+**One core (W1):** one worker, pinned to the first listed CPU. Every block in order, under
+one arm, then every block under the other. For each block it:
+1. prepares the table;
+2. walks it (timed);
+3. checks the output;
+4. records the walk.
 
-**Four cores (W4), lockstep by block:**
-- four workers, each pinned to its own physical core;
-- for each step, every worker:
-  1. prepares its next block's table (untimed);
-  2. waits at a barrier;
-  3. walks the block (timed);
-  4. waits at a barrier.
-- So every timed walk starts with the other three workers' walks, of the same arm, and no
-  build or copy overlaps a timed walk.
+**Four cores (W4), lockstep by block:** four workers, each pinned to its own physical core.
+Before its first step, each allocates storage for all its records in the pass. Then, for
+each step, every worker:
+1. prepares its next block's table (untimed);
+2. waits at the start barrier;
+3. walks the block (timed);
+4. waits at the completion barrier;
+5. checks its output and writes its record into the preallocated slot;
+6. goes on to step 1 of the next step.
+
+**What that order guarantees:**
+- No check, record or next preparation runs while any walk of the step runs. An early
+  finisher waits at the completion barrier.
+- No walk starts until every worker has prepared.
 - A worker with no block left in a step still waits at both barriers.
+- The records file is written between rounds, when no walk runs.
+
+**Uneven finishes are a result.** The four walks start together, but the faster ones end
+first, and the slower ones finish with fewer neighbours walking. So a measured window is
+not a window spent beside three other walks throughout. The overlap is reported, and
+decides nothing.
+
+**Failure, from any worker or the main thread:**
+- **Triggers:** an output difference, a pinning failure, a clock failure or any panic
+  (through a panic hook).
+- **What it does:** it appends a `failure` record, naming the round, mode, arm, worker,
+  step, block and the first differing byte, to the records file. It prints it, and the
+  process exits with status 3.
+- **Why exit:** no worker can be left waiting at a barrier for one that has stopped. This
+  needs no new concurrency machinery.
+- **What remains:** the records of every finished round stay in the file.
+- **What the recipe does after:** it still runs the analysis, which reports the failure
+  and rejects the run. It archives everything, and exits with the run's status. A timeout
+  (one hour) kills a run that hangs for any reason, and the archive still follows.
+
+**Fault injection,** dry runs only (the harness refuses it otherwise; the analysis rejects
+a capture carrying it):
+- `--inject output:MODE:ARM:WORKER` flips the first byte of that worker's first output in
+  round −1. It acts after the completion barrier and before the check.
+- `--inject pin:MODE:WORKER` pins that worker to CPU 1023, which doesn't exist, in round
+  −1.
 
 **The allocation, deterministic and recorded:**
 - The blocks are sorted by rows, descending, ties by index.
 - They are dealt four at a time, one to each worker, the direction reversing each step (a
   snake). Step s holds the blocks ranked 4s to 4s+3.
-- So the four walks of a step are of near-equal size, and every worker gets the same mix
-  of full and short blocks.
 - The harness writes the four lists, each block's rows and each block's RAW-group count
-  into the run's meta record.
+  into the meta record. The analysis re-derives the lists from the rows and requires them
+  equal (S1).
 
-**The allocation on the primary corpus** (from the dry run; corpus facts, not timing):
+**The allocation on the primary corpus** (corpus facts, not timing):
 
 | worker | blocks | full blocks | rows | RAW groups | RAW groups a million rows |
 |--:|--:|--:|--:|--:|--:|
@@ -125,76 +168,138 @@ each block's last column and counts, before any timing.
 | 2 | 108 | 58 | 52,201,043 | 12,576 | 240.9 |
 | 3 | 108 | 58 | 52,201,543 | 12,509 | 239.6 |
 
-- Blocks are indivisible, and 230 full blocks don't divide by four. So two workers carry one
-  full block more: the rows' max ÷ min is 1.0175, and their difference (899,605) is less
-  than one block.
-- That difference falls in step 57, where two workers walk a full block and two a short
-  one. In every other step, the walks are all full or all short; the last step, 108,
-  holds two short blocks.
-- The candidate's exceptional path (RAW groups a million rows) is within 0.6% of its mean
-  on every worker.
+- Blocks are indivisible, and 230 full blocks don't divide by four. So two workers carry
+  one full block more: the rows' max ÷ min is 1.0175, and their difference (899,605) is
+  less than one block.
+- Step 57 holds two full blocks and two short ones; every other step is all full or all
+  short. The last step, 108, holds two short blocks (workers 0 and 1).
+- The RAW groups a million rows are within 0.6% of their mean on every worker.
 
-**Rounds:** 20 paired rounds plus an untimed round −1.
-- **A round** is W1 under each arm, then W4 under each arm, in the same arm order. The
-  order alternates by round: even rounds are P first, odd rounds are C first.
-- **Round −1** warms the binary, the workers' tables and scratch, and checks every output.
-  It is not used.
+**Rounds:** 20 measured paired rounds plus an untimed round −1.
+- **A round** is W1 under each arm, then W4 under each arm, in the same arm order.
+- **The order alternates:** even rounds are P first, odd rounds (round −1 included) C
+  first.
+- **Round −1** warms the binary and the workers' tables and scratch, and checks every
+  output. It is not used.
+- **The clock calibration** runs before round −1 and after round 19 (§4).
 - No timing change rides on any other run, and no workstation setting is changed.
 
 ## 4. The measures
 
+**Three clocks, three uses:**
+
+| quantity | clock | use |
+|---|---|---|
+| a walk's CPU time | `CLOCK_THREAD_CPUTIME_ID`, the calling thread's consumed CPU | w1 and w4, the CPU-cost ratios, and the constructor budget |
+| a walk's start and end, and every preparation and check window | `std::time::Instant`, monotonic | e4, the start skew, the overlap and every ordering check |
+| a walk's CPU identity | `sched_getcpu`, before the start barrier and after the completion barrier | placement (S4) |
+
+**The window's clock calls, in order:**
+1. the monotonic clock;
+2. the thread CPU clock;
+3. the walk;
+4. the thread CPU clock;
+5. the monotonic clock.
+
+The CPU window lies inside the monotonic one. Each holds the part of its two clock calls
+between the readings. The barrier waits, the preparation and the check are outside both.
+
+**The clock calls' cost (G5):**
+- **The calibration:** before round −1 and after round 19, each of the four CPUs runs
+  20,000 empty windows: the same calls in the same order, around nothing. Their quantiles
+  are recorded.
+- **What is kept:** the raw walk windows. Nothing is subtracted from the figures.
+- **The bound:** the larger calibration median, times the windows in a pass, must be at
+  most 0.5% of that pass's summed walk CPU time, in every arm, mode and round.
+- **Why 0.5%:**
+  - Both arms have the same number of windows, so the calls add about the same CPU time
+    to each.
+  - That pulls the ratio toward 1 by about that share: at most 0.005, against the 0.135
+    the screen asks for.
+- **Reported, deciding nothing:**
+  - the same share over the short blocks alone. The calls may be a large part of a
+    23-row walk, but those walks hold 0.004% of the rows;
+  - w4 with the median subtracted from every window, labelled a sensitivity figure.
+
 **Per arm and round** (rounds 0–19):
-- **W1 cost:** Σ walk ns ÷ Σ rows.
-- **W4 worker cost:** Σ over the four workers of walk ns ÷ Σ rows. This is aggregate worker
-  traversal time.
-- **W4 elapsed:** Σ over steps of (latest end − earliest start). This is each step's time
-  from the barrier's release to its last completion, summed: the completed-work time of
-  the whole corpus at four workers.
+- **W1 cost:** Σ walk CPU ns ÷ Σ rows.
+- **W4 cost:** Σ over the four workers of walk CPU ns ÷ Σ rows. This is the aggregate worker
+  traversal CPU time.
+- **W4 completion time:** Σ over steps of (latest traversal end − earliest traversal start),
+  on the monotonic clock.
+  - It is the summed lockstep traversal completion time.
+  - It starts at each step's earliest recorded traversal start, not at the barrier's
+    release, which isn't recorded.
+  - It leaves out the preparations, checks and barrier waits between steps. So it is not
+    the capture's wall time, nor a decoder's throughput.
 
 **The ratios,** paired by round, C ÷ P:
-- **w1:** one-core cost (reported).
-- **w4:** four-core worker cost. The construction-budget screen reads this one.
-- **e4:** four-core completed-work time. Above 1 is slower.
+- **w1:** one-core CPU cost (reported).
+- **w4:** four-core CPU cost. The construction-budget screen reads this one.
+- **e4:** four-core lockstep completion time. Above 1 is slower.
 
 **The estimate:** the geometric mean of the 20 round ratios, with a 95% interval from a
-t interval (19 degrees of freedom) on their logs.
+t interval (19 degrees of freedom) on their logs. The analysis computes no interval from any
+other number of rounds.
 
 **Reported, deciding nothing:**
-- each arm's ns a row at W1 and W4, and its W4 ÷ W1 scaling;
-- each worker's summed walk time per round and arm;
-- the four walks' common overlap in each all-full step;
-- every walk's preparation and walk window, in the records.
+- each arm's CPU ns a row at W1 and W4, and its W4 ÷ W1 scaling;
+- the elapsed-window versions of w1 and w4 (`w1_wall`, `w4_wall`);
+- the running fraction, CPU ÷ elapsed, per arm, mode and round. Well below 1 means a
+  worker lost the CPU during its walks;
+- each worker's summed CPU time;
+- the start skew and the common overlap of the four walks in the all-full steps.
 
 **Why e4 can differ from w4:**
-- e4 counts each step's slowest walk; w4 counts the mean.
+- e4 counts each step's slowest walk; w4 counts all four.
 - A candidate whose walk time varies more between blocks of the same size raises e4 above
   w4. RAW-heavy blocks would do that.
-- So a candidate can cost less CPU and still finish four-core work no sooner.
+- So a candidate can cost less CPU and still complete lockstep traversal no sooner.
 
-## 5. Validity gates and measurement-path checks (read before any decision)
+## 5. The checks, in order
 
-| gate | condition | if it fails |
-|---|---|---|
-| G0 output | every walk exact (asserted in the harness, so a finished run has none wrong), and every (round, mode, arm, block) present exactly once | invalid: no decision |
-| G1 stability | P's per-round figure, max ÷ min ≤ 1.05, for the W1 cost, the W4 cost and the W4 elapsed time | invalid: no decision |
-| G2 simultaneous start | in every all-full W4 step, the start skew (latest start − earliest start) over the step's span, row-weighted per arm and round, ≤ 0.02, every arm and round | invalid: no decision |
-| G3 identity | the corpus hash matches, and `room::<false>`'s listing in the built binary is the reviewed one (`bench/asm_listing.py`: every instruction in order with its operands; branch targets relative, callees by symbol, RIP displacements masked) | no run |
-| G4 allocation | every block in exactly one W4 list; per-worker rows differ by at most the largest block; full-block counts by at most one | invalid: no decision |
+The analysis runs three stages, and a stage runs only if the one before it passed.
 
-**The measurement-path checks** (all must hold, or the run is invalid):
-- every walk's preparation ends before its walk starts;
-- in every W4 step, every walk starts after all four workers' preparations end (the
-  barrier);
-- every walk ran on its worker's listed CPU (read after the walk);
-- no W4 step holds two walks of one worker.
+### Stage 1: the schedule (S), before any figure
 
-**G2 checks the barrier, not the walks' lengths.**
-- The draft's overlap gate would have made a candidate's uneven walks an invalid run. That
-  unevenness is a result, which e4 carries.
-- So G2 asks only that the four walks start together.
+The expected record set is derived from the protocol and the corpus's block rows alone,
+not taken from the records.
+
+| check | condition |
+|---|---|
+| S0 | no `failure` record, and no unknown record kind |
+| S1 | the meta record agrees with itself and the protocol: the block count, rows and full blocks from `block_rows`; the four lists equal to the snake re-derived from `block_rows`; the per-worker rows; four distinct CPUs |
+| S2 | the labels: a capture has 20 measured rounds and no injection; a dry run has 2 |
+| S3 | the record set is exactly the expected one. Each (round, mode, arm, worker, step) appears once, with its registered block and that block's rows; nothing is missing, extra or duplicated; each W4 step holds exactly its declared workers (only step 108 is partial, with workers 0 and 1) |
+| S4 | every walk's CPU, before and after, is its worker's listed CPU (W1: the first) |
+| S5 | in each walk: preparation ≤ walk ≤ check, in that order, and its CPU window is no longer than its monotonic window (2 µs of clock noise allowed) |
+| S6 | W1: each check ends before the next preparation starts |
+| S7 | W4: in each step, every preparation ends before any walk starts (the start barrier); every walk ends before any check starts (the completion barrier); every walk of a step ends before any preparation of the next starts; each worker's check ends before its next preparation |
+| S8 | the passes run in the registered order (rounds in turn; in each, W1 then W4, each in the round's arm order) and don't overlap |
+
+If any S check fails, the run is invalid and no ratio is computed. An invalid record set
+never reaches an ADVANCE, STOP or INCONCLUSIVE decision.
+
+### Stage 2: the validity gates (G), on a schedule that passed
+
+| gate | condition |
+|---|---|
+| G1 stability | P's per-round figure, max ÷ min ≤ 1.05, for the W1 CPU cost, the W4 CPU cost and the W4 completion time |
+| G2 simultaneous start | in every all-full W4 step, the start skew (latest start − earliest start) over the step's span, row-weighted per arm and round, ≤ 0.02, in every arm and round |
+| G3 identity | the corpus hash matches, and `room::<false>`'s listing in the built binary is the reviewed one (`bench/asm_listing.py`). Every instruction is compared in order with its operands; branch targets are taken relative to the function, callees by symbol, and RIP displacements are masked. If G3 fails, there is no run |
+| G4 allocation | per-worker rows differ by at most the largest block, and full-block counts by at most one |
+| G5 clock calls | §4: both calibrations present, and the calls' share ≤ 0.5% in every arm, mode and round |
+
+**G2 checks the barrier, not the walks' lengths.** Uneven walks are a result, which e4
+carries.
 
 **The binary's own hash** is recorded in the manifest. It is not a gate: the line tables
 hold build paths, so two builds of one tree differ in bytes. The listing is the identity.
+
+### Stage 3: the figures and the decision (§6), on a valid run only
+
+**A dry run** (rounds −1, 0 and 1) runs stage 1, G3 and G4. It suppresses every timing
+figure, G1, G2, G5 and the decision.
 
 ## 6. The construction budget and the decision rules (fixed before any run)
 
@@ -203,7 +308,7 @@ hold build paths, so two builds of one tree differ in bytes. The listing is the 
 > S ≈ 0.592(1 − b) + 1.847(1 − w) CPU-s per decoded GB
 
 - **b** is a direct constructor's cost relative to production's build.
-- **w** is the traversal-plus-assembly cost relative to the shipped walk's.
+- **w** is the traversal-plus-assembly CPU cost relative to the shipped walk's.
 - **Its assumptions:**
   - the coefficients are approximate phase costs, not constants;
   - the rest of the decoder is unchanged;
@@ -224,47 +329,48 @@ cost, and smaller than the 1.5–2× aim.
 | 0.70 | 1.51 |
 | 0.75 | 1.36 |
 | 0.80 | 1.20 |
-| 0.865 | 1.00 |
+| 0.8646 (exact) | 1.000 |
+| 0.865 (the screen) | 0.999 |
 | 0.90 | 0.89 |
 | 1.00 | 0.58 |
 
 **What 0.865 is, and what it isn't:**
-- 0.865 is the registered **minimum-investment screen.** It is derived from the 0.25
-  CPU-s/GB target with an unchanged constructor (b = 1).
-- Below it, compact30 meets the target with a constructor no costlier than production's
-  build.
+- 0.865 is the registered **minimum-investment screen**, rounded. Exactly, an unchanged
+  constructor (b = 1) meets the target at w = 1 − 0.25/1.847 = 0.86465. At 0.865 itself
+  the budget is 0.9989.
+- Below the screen, compact30 meets the target with a constructor about as costly as
+  production's build. The budget at the interval's ends is reported, not assumed to be 1.
 - Above it, meeting the target needs a constructor faster than production's build. That
   is not impossible or inherently incredible, but it is a larger, less certain investment.
 - **Missing the screen may justify STOP as an engineering investment decision. It is not a
   proof of architectural impossibility.**
 
-**The constructor budget, reported in every outcome:** b_max at w4's lower end, point and
-upper end. This includes STOP and INCONCLUSIVE.
+**The constructor budget, reported in every outcome** (STOP and INCONCLUSIVE included): b_max
+at w4's lower end, point and upper end.
 
-**The throughput no-harm rule:** e4's upper end ≤ 1.02.
-- **What it asks:** the candidate's completed four-core work is no slower than the
-  control's, within 2%.
+**The completion-time tolerance:** e4's upper end ≤ 1.02.
+- **What it permits:** up to 2% more lockstep traversal completion time than the control. It
+  is a predeclared regression allowance, not a proof that the candidate trades no speed
+  for CPU.
 - **Why 2%:**
-  - A strict 1.00 would turn an equal-throughput candidate into INCONCLUSIVE on noise
-    alone.
-  - 2% is well inside the 13.5% worker-cost saving the screen asks for. So a candidate
-    passing both rules saves CPU and doesn't trade it for completed work.
-  - It is set before any i9 timing of these arms, from the design, not fitted to a
-    result.
+  - A strict 1.00 would turn an equal-time candidate into INCONCLUSIVE on noise alone.
+  - 2% is well inside the 13.5% CPU saving the screen asks for.
+  - It was set from the design, before any i9 timing of these arms.
 
 **The decision rules,** on the 95% intervals [w4−, w4+] and [e4−, e4+]:
 
 1. **ADVANCE:** w4+ ≤ 0.865 and e4+ ≤ 1.02.
-   - Even at the interval's worst, the traversal leaves a constructor a budget of at least
-     production's build cost (b_max(w4+) ≥ 1), and completed four-core work is not harmed.
+   - Even at the interval's worst, the traversal's CPU saving leaves a constructor a budget
+     of b_max(w4+), at least 0.9989 of production's build cost.
+   - Lockstep completion time is no more than 2% worse.
    - This authorises a separately registered constructor design, with budget
      b ≤ b_max(w4+). It does not authorise integration.
 2. **STOP:** w4− > 0.865, or e4− > 1.02.
    - **On cost:** even at the interval's best, meeting the target needs a constructor
      cheaper than production's build. Compact30 stops at this checkpoint as an investment
-     decision. The record states the budget it would have needed, b_max(w4−) < 1, and that a
+     decision. The record states the budget it would have needed, b_max(w4−), and that a
      faster constructor is not ruled out.
-   - **On throughput:** completed four-core work is slower by more than 2% even at the
+   - **On completion time:** lockstep completion is slower by more than 2% even at the
      interval's best, whatever the CPU saving.
    - The record and the code stay, with no further compact30 work.
 3. **INCONCLUSIVE:** otherwise, when either interval straddles its threshold and neither
@@ -272,56 +378,28 @@ upper end. This includes STOP and INCONCLUSIVE.
    - No automatic rerun and no extra rounds.
    - Report w4, e4, both intervals, b_max at w4's ends and point, and w1. The guardian
      decides.
-4. **INVALID:** any gate or measurement-path check fails. No decision is read; the
-   figures are reported as an invalid run's.
+4. **INVALID:** any S check, gate or failure.
+   - S failures or a failure record: no figure is computed.
+   - A gate failure: the figures are reported as an invalid run's, with no decision.
 
-**Read in every outcome, deciding nothing:**
-- w1, with its interval;
-- each arm's ns a row at W1 and W4;
-- each arm's W4 ÷ W1 scaling;
-- the per-worker times and the overlaps.
+**Read in every outcome, deciding nothing:** the figures listed in §4.
 
 ## 7. What it cannot show
 
 - **A production-decoder result:** MTF, RLE1, CRC, the scanner and the pipeline are absent.
 - **Construction cost**, and **the cache state a direct constructor would leave** (§2).
-- **The decoder's four-core mix:** lockstep puts four walks side by side. A decoder's free
+- **The decoder's four-core mix:** lockstep puts walks side by side. A decoder's free
   workers overlap one worker's build with another's walk, which this design excludes.
+- **Sustained four-way contention:** within a step the faster walks end first (§3).
 - **Peak RSS** or any memory measure.
 - **Other machines or corpora.**
 - **Whether a better compact30 schedule exists.** The code is fixed at the reviewed listing.
 - **Why a result came out as it did.** No counters are collected. A counter capture would
   be a separate registration.
 
-## 8. The VM checks done (no timing)
+## 8. The VM checks (no timing)
 
-**Correctness:**
-- The analysis's 14 tests pass (`bench/test_c30_traversal.py`, synthetic records). They
-  cover:
-  - each decision: ADVANCE; STOP on cost; STOP on throughput harm; INCONCLUSIVE straddling
-    the screen; INCONCLUSIVE on throughput;
-  - each gate: an unstable control, a staggered start, a missing walk, a listing mismatch,
-    an allocation beyond one block, a barrier violation;
-  - uneven walks being a valid result;
-  - a dry run suppressing every timing figure;
-  - the b_max table.
-- The listing check passes on this tree's binary and fails on a reference with one operand
-  changed.
-
-**The untimed dry run** (`c30walk grid … --dry-run`, VM CPUs 0–3, rounds −1, 0 and 1):
-- every one of the 5,208 walks was exact (asserted);
-- G0, G3 and G4 hold;
-- every measurement-path check holds: preparation before walk, the barrier, the CPUs, one
-  walk per worker per step;
-- the analysis suppressed every timing figure, G1, G2 and the decision, by design. None was
-  read.
-
-**The source identity:**
-- the toolchain of the walker journal's §8: rustc 1.97.0 (`2d8144b78`), LLVM 22.1.6;
-- baseline x86-64 (fxsr, sse, sse2), no RUSTFLAGS;
-- the release profile (codegen-units = 1, fat LTO, line tables).
-- `room::<false>` in this tree's binary is identical to the reviewed listing
-  (`2026-11-02-compact30-walker/room-false.asm`) under the normalisation of G3.
+Filled in by the commit that pins the recipe, from the recipe's own runs at the pin.
 
 ## 9. The records and the command
 
@@ -329,32 +407,37 @@ upper end. This includes STOP and INCONCLUSIVE.
 (`target/c30-traversal-pin`):
 1. the corpus hash;
 2. the build;
-3. the analysis's tests;
+3. the analysis's regression tests;
 4. G3, and no run if it fails;
 5. the CPUs: the second to fifth physical cores (the first takes more interrupts), or the
    first four where there are only four;
-6. the capture;
-7. the analysis.
+6. the capture, under a one-hour timeout;
+7. the analysis, whether the capture passed or failed;
+8. the archive, whether the run passed or failed.
 
-**Records:** `target/c30-traversal-<UTC time>/`, archived as
-`target/c30-traversal-<UTC time>.tar.gz` with a `MANIFEST.json` by the convention of report
-142 (commit, corpus and binary hashes, the command and its exit status, every file's
-checksum). It holds:
+**Records:** `target/c30-traversal-<UTC time>[-mode]/`, archived as
+`target/c30-traversal-<UTC time>[-mode].tar.gz` with a `MANIFEST.json` by the convention of
+report 142: the commit, the corpus and binary hashes, the command and its exit status, and
+every file's checksum. It holds:
 - the console;
 - the toolchain;
 - the listing and its diff;
-- the records: the meta line with the assignment, each block's rows and RAW groups, and
-  one line per walk with its preparation and walk windows and CPU;
+- the records:
+  - the meta line, with the assignment, each block's rows and RAW groups, and any
+    injection;
+  - both calibrations;
+  - one line per walk, with its preparation, walk (monotonic and CPU) and check windows
+    and its CPUs;
+  - a failure line, if any;
 - the analysis JSON.
 
 **i9 time:** a rough estimate, not a measurement. About five minutes:
 - each round walks the corpus's 207 M rows once per arm at W1 and once at W4;
-- each walk follows its untimed build or copy;
+- each walk follows its untimed build or copy and precedes its untimed check;
 - the oracle images are built once.
 
-**The dry-run mode:** `just bench-c30-traversal CORPORA 20 dry-run` runs every step but
-forces rounds −1, 0 and 1, marks the records a dry run, and the analysis reads no timing
-from them. This is how the recipe itself was checked on the VM.
+**The modes:** `capture`, `dry-run`, and the injected failures `fail-output` and
+`fail-pin` (§3).
 
 **The command for approval:**
 
