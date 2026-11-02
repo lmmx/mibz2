@@ -1,40 +1,20 @@
 ---
-title: "Memory-level parallelism: measurement notes and source record"
-description: "Methodology behind the memory-level parallelism post: the 2022 benchmark in detail, throughput models, Intel counter definitions and their populations, a measurement programme for mibz2, and the full source register."
+title: "Technical appendix: MLP, ILP and the measurements"
+description: "Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register."
 ---
 
-<div class="post-hero" markdown>
+← [Memory-level parallelism in mibz2](2026-11-02-memory-level-parallelism.md)
 
-<div class="post-hero-text" markdown>
+# Technical appendix: MLP, ILP and the measurements
 
-[mibz2 · Research blog](index.md)
-{: .post-kicker }
-
-# Memory-level parallelism: measurement notes and source record
-
-The detail behind [Memory-level parallelism in
-mibz2](2026-11-02-memory-level-parallelism.md): the 2022 exchange claim by claim, the
-benchmark, throughput models, counter definitions, a measurement programme for mibz2, a
-reading list and the full source register.
-{: .post-dek }
-
-2 November 2026 · 23 min read · [Source register](#11-source-register-and-revision-pins)
-{: .post-meta }
-
-</div>
-
-<div class="post-hero-art"><img src="../assets/images/hero.svg" alt=""></div>
-
-</div>
-
-These notes are for readers who want the qualifications and definitions that [the main
-post](2026-11-02-memory-level-parallelism.md) leaves out to keep its argument moving. They can
-be read in any order. Nothing new was measured for either page: every result is attributed to
+This appendix is for readers who want the qualifications and definitions that [the main
+post](2026-11-02-memory-level-parallelism.md) leaves out to keep its argument moving. Its
+sections can be read in any order. Nothing new was measured for either page: every result is attributed to
 the experiment that produced it, and repository sources are pinned to the revisions in the
 [source register](#11-source-register-and-revision-pins), inspected on 2 November 2026.
 Numbers in square brackets refer to the register.
 
-## 1. The 2022 exchange, claim by claim
+## 1. The disagreement about ILP and MLP
 
 The main post reproduces the replies to Lemire's post [1] and explains the mechanism they
 argue about. Taking the claims one at a time:
@@ -83,9 +63,9 @@ exploit independence on its own; it isn't what defines MLP.
 
 ## 3. The historical benchmark in detail
 
-The linked repository is `lemire/testingmlp`. Its last published revision before the article
-is `23569032cd784366247c0381e4d532c9a82f3263`, from January 2021. That establishes the public
-implementation available at the time; it doesn't prove the author's exact local checkout or
+The linked repository is `lemire/testingmlp`. Its [last published revision before the
+article](https://github.com/lemire/testingmlp/tree/23569032cd784366247c0381e4d532c9a82f3263)
+dates from January 2021. That establishes the public implementation available at the time; it doesn't prove the author's exact local checkout or
 command line. Reading today's changed benchmark as if it were the 2022 implementation would be
 unsafe. A later post by the same author [29] uses the evolved benchmark, and its settings
 shouldn't be conflated with the 2022 test. The 2022 post reports approximately:
@@ -131,7 +111,7 @@ hardware prefetches, page-table reads and other memory activity. Eight 64-bit en
 with several lanes, the ns/hit column is elapsed time divided by aggregate accesses: the
 reciprocal of throughput, not the service latency of one request.
 
-### What a stricter review would ask
+### Questions the benchmark leaves open
 
 The design deliberately makes long-latency dependent loads dominant and uses independent chains
 to expose overlap. That's a sensible microbenchmark. A stricter review would also ask how much
@@ -542,8 +522,8 @@ contents.
 - **[20]** [`src/bwt.rs`](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs), master at `13e9854805eed8944ecdd7c9330e30971b6bf52d`.
 - **[21]** [32 lanes, 8.6 chains: where the inverse BWT walk spends its cycles](2026-10-31-room-walk-overlap.md), 31 October 2026 ([at `13e9854`](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/docs/site/blog/2026-10-31-room-walk-overlap.md)).
 - **[22]** [The unrolled room walk against the assembly-level prescription](https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-astra-fidelity/README.md), archive `270333c2d32fe16dc24ae7ab64f3697d87939418`.
-- **[23]** [The unrolled room walk's full-decoder trial on the i9-10900K: results](https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md), same archive.
-- **[24]** [Decoder attribution on the i9-10900K: analysis and final erratum](https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md), archive `33e0e4ebac554bae03795bfb76e86440b33bae6b`.
+- **[23]** [The unrolled room walk's full-decoder trial on the test workstation: results](https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md), same archive.
+- **[24]** [Decoder attribution, one worker against four: analysis and final erratum](https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md), archive `33e0e4ebac554bae03795bfb76e86440b33bae6b`.
 - **[25]** [Inverse-BWT memory proposal, with its corrections](https://github.com/lmmx/mibz2/blob/0156e1dad5ce4ebca78b4cb3d00276d3b6d64611/docs/journal/2026-11-01-bwt-memory-proposal.md), archive `0156e1dad5ce4ebca78b4cb3d00276d3b6d64611`.
 - **[26]** [`examples/sweep.rs`](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/examples/sweep.rs), master at `13e9854`.
 - **[27]** [`examples/phases.rs`](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/examples/phases.rs), same revision.
