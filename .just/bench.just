@@ -216,7 +216,10 @@ bench-pmu-probe *args:
 # frozen at the pin below): the shipped walk (P) against the compact30 walk (C), on one core
 # and on four in lockstep, 20 paired rounds and an untimed round -1, on the primary corpus
 # (checked by its hash). It runs the frozen commit itself, in its own worktree
-# (target/c30-traversal-pin), and stops before any timing if the analysis's tests fail or
+# (target/c30-traversal-pin), built with the reviewed toolchain, rustc 1.97.0 (LLVM 22.1.6),
+# selected through rustup without touching the default (install it once with
+# `rustup toolchain install 1.97.0 --profile minimal`), and stops before any timing if that
+# toolchain is missing or not the reviewed build, if the analysis's tests fail, or if
 # room::<false> is not the reviewed listing. The workers go on the second to fifth physical
 # cores (the first takes more interrupts), or the first four where there are only four.
 # No sudo, no counters, no setting changed. Every file goes to
@@ -235,6 +238,11 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
     #!/usr/bin/env bash
     set -uo pipefail
     pin=9267433661f4a440c92831a4f1b38b6af61e4726
+    # the reviewed toolchain (the walker journal's section 8): selected with rustup run, so the
+    # machine's default and any rust-toolchain file are left alone; rustflags forced empty
+    tc=1.97.0
+    tc_commit=2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+    tc_llvm=22.1.6
     case "{{run}}" in
       capture) flags=() ;;
       dry-run) flags=(--dry-run) ;;
@@ -255,9 +263,22 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
       [ "$(git -C "$wt" rev-parse HEAD)" = "$pin" ] || { echo "c30: $wt is not at the pin"; exit 1; }
       git -C "$wt" diff --quiet HEAD || { echo "c30: $wt has local changes"; exit 1; }
       echo "c30: the frozen commit $pin, corpus checked, mode {{run}}"
-      rustc -vV
-      (cd "$wt" && cargo build --release --example c30walk)
-      bin="$wt/target/release/examples/c30walk"
+      if ! command -v rustup > /dev/null; then
+        echo "c30: rustup is needed to select the reviewed toolchain, rustc $tc; install rustup, then: rustup toolchain install $tc --profile minimal"
+        exit 1
+      fi
+      if ! rustup toolchain list | grep -q "^$tc-"; then
+        echo "c30: the reviewed toolchain, rustc $tc (LLVM $tc_llvm), is not installed. Install it beside your default, which stays as it is:"
+        echo "      rustup toolchain install $tc --profile minimal"
+        exit 1
+      fi
+      RUSTUP_AUTO_INSTALL=0 rustup run "$tc" rustc -vV | tee "$out/rustc-vV.txt"
+      grep -qx "release: $tc" "$out/rustc-vV.txt" && grep -qx "commit-hash: $tc_commit" "$out/rustc-vV.txt" && grep -qx "LLVM version: $tc_llvm" "$out/rustc-vV.txt" \
+        || { echo "c30: rustup's $tc is not the reviewed build (want commit $tc_commit, LLVM $tc_llvm); no run"; exit 1; }
+      RUSTUP_AUTO_INSTALL=0 rustup run "$tc" cargo -V | tee -a "$out/rustc-vV.txt"
+      echo "c30: building with the reviewed toolchain rustc $tc, LLVM $tc_llvm, no rustflags"
+      (cd "$wt" && CARGO_TARGET_DIR="$wt/target/rust-$tc" CARGO_ENCODED_RUSTFLAGS= RUSTUP_AUTO_INSTALL=0 rustup run "$tc" cargo build --locked --release --example c30walk)
+      bin="$wt/target/rust-$tc/release/examples/c30walk"
       python3 "$wt/bench/test_c30_traversal.py" | tail -1
       listing=$(python3 "$wt/bench/asm_listing.py" "$bin" "$wt/docs/journal/2026-11-02-compact30-walker/room-false.asm" "$out")
       echo "c30: room::<false> is the reviewed listing: $listing"
@@ -280,7 +301,7 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
     status=${PIPESTATUS[0]}
     cmd="just bench-c30-traversal {{corpora}} {{rounds}} {{run}}"
     if [ -d "$wt" ]; then
-      (cd "$wt" && python3 bench/archive.py "$out" --corpus "$f" --binary "$wt/target/release/examples/c30walk" --command "$cmd" --status "$status")
+      (cd "$wt" && python3 bench/archive.py "$out" --corpus "$f" --binary "$wt/target/rust-$tc/release/examples/c30walk" --command "$cmd" --status "$status")
     else
       python3 bench/archive.py "$out" --corpus "$f" --command "$cmd" --status "$status"
     fi

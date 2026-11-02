@@ -515,19 +515,49 @@ the manifests); the analyser, its tests and this text changed.
 
 - **`room::<false>`** is the reviewed listing in every run.
 
+### The first i9 attempt, and the toolchain repair (report 180)
+
+- **The attempt:** the approved capture was run on the i9 with the recipe at `515ab5c`.
+  - The corpus check, the source pin and the 37 tests passed.
+  - The workstation's default toolchain, rustc 1.98.0 with LLVM 22.1.8, built a different
+    `room::<false>`, with changed register choices and branch layout.
+  - G3 stopped the run before any timing.
+- **What it is:** a G3 preflight failure, not a compact30 result. Its archive
+  (`c30-traversal-20261102T170319Z.tar.gz`, sha256 `81545030…`) is kept by the maintainer.
+- **The cause:** the recipe recorded the reviewed toolchain but didn't select it.
+- **The repair:** the recipe now selects rustc 1.97.0 explicitly (§9, step 2). Nothing else
+  changes:
+  - the source pin stays `9267433`;
+  - G3, the walker, the collector, the design, the thresholds and the corpus are as they
+    were.
+- **Checked on the VM, no timing read** (`runs-9267433-toolchain/`):
+  - **The reviewed toolchain is used even when it isn't the default.** The dry run was made
+    with `RUSTUP_TOOLCHAIN=1.98.1` set, imitating a machine whose default is newer. It still
+    built with 1.97.0 / LLVM 22.1.6, G3 passed, and every schedule check passed.
+  - **A missing toolchain is refused before building,** with the install command.
+  - **A toolchain named 1.97.0 that is really 1.98.1 is refused before building,** with the
+    reported identity.
+  - Both refusals are archived.
+
 ## 9. The records and the command
 
 **The recipe** (`just bench-c30-traversal`) runs the frozen commit in its own worktree
 (`target/c30-traversal-pin`):
 1. the corpus hash;
-2. the build;
-3. the analysis's regression tests;
-4. G3, and no run if it fails;
-5. the CPUs: the second to fifth physical cores (the first takes more interrupts), or the
+2. the toolchain: rustc 1.97.0 (commit `2d8144b78`, LLVM 22.1.6), selected with
+   `rustup run 1.97.0`, so the machine's default and any `rust-toolchain` file are left
+   alone. The recipe stops before building if rustup or that toolchain is missing (with the
+   install command), or if the toolchain it finds doesn't report that commit and LLVM;
+3. the build, with that toolchain, rustflags forced empty (`CARGO_ENCODED_RUSTFLAGS=`, so no
+   `target-cpu` or other flag from a cargo config applies), `--locked`, into
+   `target/rust-1.97.0/`;
+4. the analysis's regression tests;
+5. G3, and no run if it fails;
+6. the CPUs: the second to fifth physical cores (the first takes more interrupts), or the
    first four where there are only four;
-6. the capture, under a one-hour timeout;
-7. the analysis, whether the capture passed or failed;
-8. the archive, whether the run passed or failed.
+7. the capture, under a one-hour timeout;
+8. the analysis, whether the capture passed or failed;
+9. the archive, whether the run passed or failed.
 
 **Records:** `target/c30-traversal-<UTC time>[-mode]/`, archived as
 `target/c30-traversal-<UTC time>[-mode].tar.gz` with a `MANIFEST.json` by the convention of
