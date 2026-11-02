@@ -612,6 +612,27 @@ the manifests); the analyser, its tests and this text changed.
     - every schedule check passed, and G4 held.
   - **A worktree with a local change is still refused,** before building (archived).
 
+### The third i9 attempt: complete, and INVALID on G2 (report 183)
+
+- **The run:** the recipe at `b476030`, source pin `4635e2c`, rustc 1.97.0 / LLVM 22.1.6.
+  The worktree moved from `9267433` to the pin, as intended, and G3 passed on the i9's own
+  symbol size, 0x20aa.
+- **What it completed:** all 20 measured rounds. Every schedule check (S0–S9) passed, as did
+  G1, G3, G4 and G5.
+- **The outcome:** G2 failed in 38 of 40 arm-rounds (largest 0.0796), so the registered
+  outcome is INVALID, with no decision. The ratios it printed are descriptive, not a result.
+- **Its files:** `i9-attempt-3/`. The full archive (`c30-traversal-20261102T191057Z.tar.gz`,
+  sha256 `3d6667c9…`) is kept with report 183.
+- **The audit** (`i9-attempt-3/g2-audit.md`, from the archive only):
+  - the start barrier's release is near-instant: 1.4 µs from the last arrival to its walk;
+  - the skew is the three sleeping workers' wake-up through `std::sync::Barrier`, often
+    tens of µs, against 39 µs for 2% of a step;
+  - the first arm of each round is worse, after the W1 passes leave three cores idle;
+  - w4 is unaffected by the skew; e4 depends on the order through it.
+- **The recommendation:** one separately registered correction, a spinning W4 start barrier,
+  with G2's threshold unchanged and a prediction that can fail. It needs its own
+  authorisation, and this capture stays INVALID.
+
 ## 9. The records and the command
 
 **The recipe** (`just bench-c30-traversal`) runs the frozen commit in its own worktree
