@@ -1,4 +1,4 @@
-# The minimal real-T-vector walker diagnostic: protocol, revision 3, frozen after the i9 probe (no capture authorized)
+# The minimal real-T-vector walker diagnostic: protocol (revision 3, frozen) and its i9 result
 
 - **Research only:** `examples/walker_ladder.rs`, `bench/walker_ladder.py` and
   `bench/test_walker_ladder.py`. The decoder is unchanged.
@@ -408,6 +408,135 @@ would have to show agreement on:
 - a measured control overhead.
 
 Its results would be cross-checked against perf within measurement variability.
+
+## 8. The result (measured, the i9, 29a0215, 2026-11-02 00:45 UTC)
+
+**The run:** `just bench-walker-ladder`, from the frozen commit `29a0215`.
+- **The archive:** `i9-10900K/walker-ladder-20261102T004501Z.tar.gz`, SHA-256 `bd1768a0…`,
+  as uploaded.
+- **Its manifest:** commit `29a0215`, no tracked changes, exit status 0, corpus
+  `cf13f439…`. All three files' checksums verify. The summary is kept beside it.
+- **Before the capture:** the Rust and Python tests, the ladder's correctness check, and
+  the preflight (all seven groups counted, unmultiplexed, bounded by the FIFO) all passed.
+
+### 8.1 The registered gates and decisions
+
+| | measured | registered reading |
+|---|---|---|
+| G0 | no failures. That covers every record (checked, FIFO-bounded, counted, unmultiplexed, no result-vector growth), the four-core overlap and the control overhead | holds |
+| G1 | P32's ns a row over its 21 runs: max ÷ min 1.026 | holds (≤ 1.05): **the run is valid** |
+| **D1** | c(P, 32) = 6.90 cycles a row; bare32 = c(M, 32) = 6.29; ratio **1.096** | **D1: no walker scheduling rewrite** (report 134's stopping rule) |
+| D3 | P32 issues 0.57 of 4 µops a cycle (retired slots 0.54, undelivered front end 0.01) | below 0.70: no classification follows |
+| D4 | B's demand MLP 1.35 at 16 lanes, 1.61 at 32 (+19%); `fb_full` 0.12 → 0.16 events a cycle (×1.34) | no plateau with rising fill-buffer pressure, by the rule |
+| D5 | (P32 ÷ B32, four cores) ÷ (the same, one core) = **1.055** | transfers (\|r − 1\| ≤ 0.15) |
+
+**No decision is qualified by report 146's safeguard.** Fourteen config-event pairs were
+comparable, all in events no decision reads:
+- `mem_load_retired.l3_miss`, about 120 counts a window against 64 in the control;
+- `cycle_activity.stalls_l3_miss`, 0.46–0.63;
+- `dtlb_load_misses.walk_active`, 0.28–0.47.
+
+They are reported in the summary, not read.
+
+### 8.2 Cycles a row (one core, medians)
+
+| rung | 1 lane | 8 | 16 | 32 |
+|---|--:|--:|--:|--:|
+| A (bare, no prefetch) | 51.71 | 9.64 | 9.78 | 9.76 |
+| B (+ prefetch) | 53.76 | 9.99 | 6.53 | 6.66 |
+| C (flag end) | 54.41 | 9.73 | 6.49 | 6.36 |
+| D (+ stores) | 54.36 | 10.07 | 6.65 | 6.84 |
+| M (shipped step, no store) | 54.49 | 9.44 | 6.21 | 6.29 |
+| P (shipped walk) | 54.79 | 10.26 | 6.76 | 6.90 |
+
+**The net contrasts at 32 lanes, in cycles a row:**
+- A→B: −3.10;
+- B→C: −0.30;
+- C→D: +0.48;
+- **M→P: +0.60** (the output store and the room pass's bookkeeping);
+- D→P: +0.06.
+
+### 8.3 What the counters describe (descriptive, not registered decisions)
+
+**At 32 lanes, one core, per row:**
+
+| | cycles | instructions | IPC | issued ÷ 4c | stall cycles | L1-miss stalls | demand L1 misses | demand MLP | `fb_full` a cycle |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| A | 9.78 | 19.4 | 1.99 | 0.45 | 0.26 | 0.25 | 0.978 | 5.06 | 0.000 |
+| B | 6.70 | 20.4 | 3.05 | 0.69 | 0.15 | 0.05 | 0.004 | 1.60 | 0.165 |
+| M | 6.29 | 13.3 | 2.12 | 0.45 | 0.34 | 0.08 | 0.005 | 1.85 | 0.603 |
+| D | 6.85 | 19.6 | 2.86 | 0.64 | 0.17 | 0.05 | 0.005 | 1.60 | 0.254 |
+| P | 6.90 | 17.0 | 2.46 | 0.57 | 0.23 | 0.07 | 0.018 | 2.45 | 0.377 |
+
+**Read from that table:**
+- **Without prefetch, every step misses.**
+  - A misses L1 on 0.98 of rows and L2 on 0.91: the table comes from L3.
+  - A demand miss is outstanding 99% of the time, with 5.06 outstanding on average. This is
+    the demand MLP the historical 8.6× ratio could not measure.
+- **With prefetch, the demand loads hit.** Demand L1 misses fall to 0.004–0.018 a row, and
+  L1-miss stall cycles to 5–8%.
+  - So the prefetched walks are not waiting on their demand loads.
+  - They are not near the issue width either (0.45–0.69).
+- **Fill-buffer pressure rises as the walk gets faster.**
+  - `fb_full`, requests blocked for want of a fill buffer, runs 0.17–0.60 events a cycle in
+    the prefetched rungs. It is highest in M, the fastest.
+  - The prefetched walks reach their speed by 16 lanes: 16 and 32 differ by 0.1–0.3 cycles
+    a row. A's speed is reached by 8.
+- **A Little's-law reading** (proposed, not identified):
+  - one chain takes 52–55 cycles a row, about an L3 hit and a step;
+  - 32 lanes take 6.3–6.9;
+  - so about eight lines are in flight on average. That is near the Skylake-family core's
+    L1 fill-buffer count.
+  - With the counters above (demand loads hitting, issue under 70%, fill buffers often
+    full), the prefetched walk at one core is consistent with being limited by how many L1
+    misses the core can hold in flight, not by its instructions.
+- **This reading is not D4.** D4's registered rule reads demand MLP. Demand MLP does not
+  count the buffers software prefetch holds until a demand load meets them. So D4's "no
+  plateau" says nothing against it, and nothing for it. Establishing it would take a
+  registered test of the prefetch-held occupancy.
+
+**Four cores** (A32, B32 and P32 as four copies, released together to a deadline):
+
+| | ns a row, one core | four cores | ratio |
+|---|--:|--:|--:|
+| A | 1.856 | 2.744 | 1.479 |
+| B | 1.265 | 1.856 | 1.467 |
+| P | 1.306 | 2.021 | 1.548 |
+
+- The windows overlapped (G0), with 110–205 walks a copy, inside the cap.
+- In cycles, four-core P32 takes 9.89 a row against one core's 6.90: +43% for four
+  independent tables (14.4 MB) in a 20 MB L3.
+
+### 8.4 What it means
+
+1. **The walker is not the place for a scheduling rewrite.** This is the registered
+   stopping rule, D1.
+   - The shipped walk is within 10% of a minimal walk of the same table at 32 lanes.
+   - The remaining 0.6 cycles a row is the output store and its room-pass bookkeeping.
+2. **More lanes would not help,** at one core or four. The prefetched walks reach their
+   speed by 16 lanes.
+3. **FOR-14's premise is not supported as stated.** Its calibration said about half the
+   one-worker walk scales with instructions.
+   - The shipped walk issues at 57% of width, so it is not issue-bound.
+   - Yet FOR-14's extra instructions cost nearly their full time.
+   - So the cost of added work is not explained by issue width. A longer per-step
+     dependency chain, which delays each lane's next prefetch, is one candidate; it is
+     untested here.
+   - The FOR-14 stop stands on its own measurement (§7a of its record), not on this.
+4. **The four-core penalty is in the memory system, and it transfers (D5).**
+   - Every prefetched rung, and the shipped walk, loses about 47–55% a row at four cores.
+   - The proposed one-core limiter, L1 misses in flight, says where the time goes at one
+     core, but it is not the four-core penalty itself. That penalty is the L3 and memory
+     service behind those misses.
+   - **The architecture choice now rests on reducing the bytes or lines each row must
+     fetch, or the service time of each, not on the walker's scheduling.** This was the
+     question report 135 left for this diagnostic.
+
+**What it does not establish:**
+- **The fill-buffer limit is a reading, not a test.**
+- **This is one block, its table L3-resident at one core.** The decoder's other phases are
+  not in it.
+- **The four-core runs are four copies of one block, not the decoder at four workers.**
 
 ## 7. Cost so far
 
