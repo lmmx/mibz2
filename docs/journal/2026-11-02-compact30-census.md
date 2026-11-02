@@ -84,8 +84,13 @@ smaller blocks of levels 1 and 5.
   the worst block uses 19.8% of its bound. Of the RAW groups:
   - 62% are too wide: a homogeneous group whose 30 successors span more than 65,533 labels;
   - 38% cross an F bucket.
-- **RAW rows:** 0.714% of full blocks' rows. In one pass of the walk, every row is visited
-  exactly once, so the share of visits that take the RAW path is the same.
+- **RAW rows:** 0.714% of full blocks' rows. This is a storage frequency, counted while
+  encoding.
+  - In this census's single-chain reference walk, each row is visited once, so there it is
+    also the share of steps that took the RAW path.
+  - It is not a measured slow-path frequency for an optimised multi-lane segmented walker.
+    Parking, waits and re-checks, lane turns and starts can make that walker's dynamic
+    rate differ (report 159).
 - **Short blocks:** 204 blocks of 1–307 rows. Together they hold 86,400 bytes of 448 MB.
 - **The partial-group overhead:** 3,865 unused fields over all 434 blocks.
 
