@@ -1,4 +1,4 @@
-# External research reports 74–179: index
+# External research reports 74–180: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -119,6 +119,7 @@ verbatim. They are not findings of this repository.
 | 177 | 2026-11-02 | the guardian | approves one compact30 traversal capture at `c0f8d38` (branch `1a15542`); the blog bundle as separate docs-only work (capture held by 179 until the G5 repair) | `2026-11-02-external-report-177.md` |
 | 178 | 2026-11-02 | the researcher | accepts the repaired harness; G5 accepts incomplete or malformed calibration batches (deleting one CPU's calibration turned INVALID into ADVANCE); wording limits (attachments not relayed) | `2026-11-02-external-report-178.md` |
 | 179 | 2026-11-02 | the guardian | accepts the G5 gap; authorises the analyser-only repair and re-pin; an unstarted capture waits, a finished one is replayed offline | `2026-11-02-external-report-179.md` |
+| 180 | 2026-11-02 | the guardian | the approved i9 capture stopped at G3 before timing: rustc 1.98.0 / LLVM 22.1.8 built a different `room::<false>`; a G3 preflight failure, not a result; authorises selecting the reviewed rustc 1.97.0 explicitly in the recipe | `2026-11-02-external-report-180.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
