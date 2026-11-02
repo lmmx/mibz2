@@ -255,3 +255,6 @@ archive: /home/louis/dev/mibz2/target/c30-traversal-20261102T191057Z.tar.gz (193
 error: Recipe `bench-c30-traversal` failed with exit code 1
 louis 🌟 ~/dev/mibz2 $
 `````
+
+The relay began with the archive upload and an unrelated instruction about the blog; both
+were left out when filing. Nothing else differs from the console as relayed.
