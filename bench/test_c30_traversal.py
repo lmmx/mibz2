@@ -224,9 +224,93 @@ def test_clock_overhead_bound():
     assert r["gates"]["G5_clock_overhead"] and r["clock"]["short_blocks_share_max"] > 0.1
 
 
-def test_missing_calibration_is_invalid():
-    m, w, c = make()
-    assert not run(m, w, c[:1])["gates"]["G5_clock_overhead"]
+# the calibration evidence (report 178): checked complete before any median is read
+
+
+def expensive_cpu(c, cpu=4, ns=7500, base=125):
+    """Each batch's CPU `cpu` with a larger empty-window median than the others"""
+    for k in c:
+        for e in k["cpus"]:
+            q = ns if e["cpu"] == cpu else base
+            e["cpu_ns"] = [q] * 5
+            e["wall_ns"] = [q + 20] * 5
+    return c
+
+
+def test_r178_deleting_the_expensive_cpu_rejected():
+    # complete: the expensive CPU's estimate fails G5. Deleted from both batches, the
+    # pinned c0f8d38 analyser passed G5 and gave ADVANCE; now the evidence is rejected
+    m, w, c = make(c_cost=0.8, noise=0.002)
+    c = expensive_cpu(c)
+    r = run(m, w, c)
+    assert r["schedule"]["S9_calibration"] and not r["gates"]["G5_clock_overhead"]
+    assert r["clock"]["share_max"] > t.CLOCK_SHARE and r["decision"].startswith("INVALID")
+    for k in c:
+        k["cpus"] = [e for e in k["cpus"] if e["cpu"] != 4]
+    r = run(m, w, c)
+    assert not r["schedule"]["S9_calibration"] and rejected(r)
+
+
+def calib_case(f):
+    m, w, c = make(c_cost=0.8, noise=0.002)
+    f(m, c)
+    return run(m, w, c)
+
+
+def test_r178_malformed_calibration_rejected():
+    def set_(i, cpu, key, value):
+        def f(m, c):
+            c[i]["cpus"][cpu][key] = value
+
+        return f
+
+    def drop_key(i, cpu, key):
+        def f(m, c):
+            del c[i]["cpus"][cpu][key]
+
+        return f
+
+    cases = {
+        "missing batch": lambda m, c: c.pop(1),
+        "empty after batch": lambda m, c: c[1].update(cpus=[]),
+        "three batches": lambda m, c: c.append(copy.deepcopy(c[0])),
+        "two before batches": lambda m, c: c[1].update(when="before"),
+        "unknown when": lambda m, c: c[1].update(when="later"),
+        "cpus not a list": lambda m, c: c[0].update(cpus={"cpu": 2}),
+        "one CPU missing": lambda m, c: c[0]["cpus"].pop(2),
+        "a CPU twice": lambda m, c: c[0]["cpus"].__setitem__(3, copy.deepcopy(c[0]["cpus"][0])),
+        "an extra CPU": lambda m, c: c[1]["cpus"].append(dict(c[1]["cpus"][0], cpu=9)),
+        "a wrong CPU": set_(0, 1, "cpu", 9),
+        "wrong n": set_(1, 2, "n", 2000),
+        "n as bool": set_(1, 2, "n", True),
+        "four quantiles": set_(0, 0, "cpu_ns", [1, 2, 3, 4]),
+        "negative": set_(0, 0, "cpu_ns", [-1, 2, 3, 4, 5]),
+        "NaN": set_(0, 0, "wall_ns", [1, float("nan"), 3, 4, 5]),
+        "infinite": set_(1, 3, "cpu_ns", [1, 2, 3, 4, float("inf")]),
+        "unordered": set_(1, 3, "wall_ns", [1, 5, 3, 4, 6]),
+        "a string": set_(0, 2, "cpu_ns", [1, 2, "3", 4, 5]),
+        "a bool": set_(0, 2, "cpu_ns", [0, 1, True, 4, 5]),
+        "no cpu_ns": drop_key(0, 0, "cpu_ns"),
+        "no wall_ns": drop_key(1, 1, "wall_ns"),
+        "no cpu id": drop_key(1, 1, "cpu"),
+        "an entry not a dict": lambda m, c: c[0]["cpus"].__setitem__(0, [2, 20000]),
+        "a batch not a dict": lambda m, c: c.__setitem__(0, ["before"]),
+    }
+    for name, f in cases.items():
+        r = calib_case(f)
+        assert not r["schedule"]["S9_calibration"] and rejected(r), name
+
+
+def test_calibration_in_any_cpu_order_accepted():
+    r = calib_case(lambda m, c: c[1]["cpus"].reverse())
+    assert r["schedule"]["S9_calibration"] and r["valid"] and r["decision"] == "ADVANCE"
+
+
+def test_dry_run_checks_calibration_too():
+    m, w, c = make(rounds=2, dry=True)
+    c[0]["cpus"].pop()
+    r = run(m, w, c)
+    assert not r["schedule"]["S9_calibration"] and rejected(r)
 
 
 def test_dry_run_suppresses_timing():

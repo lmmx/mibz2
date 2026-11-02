@@ -7,14 +7,16 @@ It reads `c30walk grid`'s records in three stages, and a stage runs only if the 
 before it passed:
 
 1. **The schedule (S).** The records must be exactly the registered experiment's. The
-   expected record set is derived from the protocol and the corpus's block rows alone: the
+   expected record set is derived from the protocol and the block rows recorded in the
+   meta record (not re-read from the corpus, whose hash the recipe checks): the
    snake assignment, the round count, every (round, mode, arm, worker, step) with its block
    and rows, the arm order, the barriers' ordering and the CPUs. Missing, extra,
    duplicated or misassigned records, a wrong denominator, an unregistered round count, an
-   ordering violation or a failure record make the run invalid, and no ratio is computed.
+   ordering violation, a failure record, or calibration evidence that is incomplete or
+   malformed (S9) make the run invalid, and no ratio is computed.
 2. **The validity gates (G)**, on a schedule that passed: control stability (G1),
-   simultaneous start (G2), the listing (G3), the allocation (G4) and the clock overhead
-   (G5).
+   simultaneous start (G2), the listing (G3), the allocation (G4) and the calibration-based
+   clock-overhead estimate (G5).
 3. **The figures and the decision,** on a valid run only.
 
 A dry run (`dry_run` in the meta record, rounds −1, 0 and 1) runs stage 1, G3 and G4, and
@@ -213,6 +215,49 @@ def check_schedule(meta, walks, failures, other):
     return c
 
 
+CALIBRATION_N = 20_000  # empty windows a CPU, in each calibration
+
+
+def _quantiles(q):
+    """Five finite, nonnegative, non-decreasing numbers (min, p50, p90, p99, max)"""
+    return (
+        isinstance(q, list)
+        and len(q) == 5
+        and all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in q)
+        and all(math.isfinite(x) and x >= 0 for x in q)
+        and all(a <= b for a, b in zip(q, q[1:]))
+    )
+
+
+def check_calibration(meta, calib):
+    """Whether the calibration evidence is complete and well formed, before any median is
+    read: exactly one `before` and one `after` batch; in each, exactly the CPUs of
+    `meta["cpus"]`, once each; 20,000 windows a CPU; five well-formed quantiles for both
+    the CPU and the monotonic clock. Never raises on malformed records."""
+    try:
+        cpus = meta.get("cpus")
+        if not isinstance(cpus, list) or not isinstance(calib, (list, tuple)):
+            return False
+        if sorted(str(k.get("when")) for k in calib) != ["after", "before"]:
+            return False
+        for k in calib:
+            v = k.get("cpus")
+            if not isinstance(v, list) or len(v) != len(cpus):
+                return False
+            ids = [c.get("cpu") for c in v]
+            if sorted(ids, key=str) != sorted(cpus, key=str) or len(set(map(str, ids))) != len(ids):
+                return False
+            for c in v:
+                n = c.get("n")
+                if isinstance(n, bool) or n != CALIBRATION_N:
+                    return False
+                if not (_quantiles(c.get("cpu_ns")) and _quantiles(c.get("wall_ns"))):
+                    return False
+        return True
+    except (AttributeError, TypeError, ValueError):
+        return False
+
+
 def analyse(meta, walks, listing_ok=None, calib=(), failures=(), other=()):
     out = {"dry_run": bool(meta and meta.get("dry_run")), "schedule": {}, "gates": {}}
     if failures:
@@ -223,6 +268,7 @@ def analyse(meta, walks, listing_ok=None, calib=(), failures=(), other=()):
         out["decision"] = "INVALID: no meta record"
         return out
     sch = out["schedule"] = check_schedule(meta, walks, failures, other)
+    sch["S9_calibration"] = check_calibration(meta, calib)
     g = out["gates"]
     g["G3_identity"] = listing_ok
     br = meta.get("block_rows") or []
@@ -248,7 +294,7 @@ def analyse(meta, walks, listing_ok=None, calib=(), failures=(), other=()):
     if not schedule_ok:
         out["valid"] = False
         out["decision"] = (
-            "INVALID: the records are not the registered schedule; no figures computed"
+            "INVALID: the records or their calibration are not the registered schedule; no figures computed"
         )
         return out
     if meta["dry_run"]:
@@ -308,34 +354,32 @@ def analyse(meta, walks, listing_ok=None, calib=(), failures=(), other=()):
     sks = [per[r][a]["w4_start_skew"] for r in per for a in ("P", "C")]
     g["G2_simultaneous_start"] = all(x <= START_SKEW for x in sks)
     out["start_skew_max"] = max(sks)
-    # G5: the clock calls' cost inside each window, from the empty windows of both
-    # calibrations (the larger median on any CPU), against each arm's summed CPU time
+    # G5: a calibration-based estimate of the clock calls' cost inside each window: the
+    # largest median of the empty windows on any CPU, in either calibration (S9 has
+    # checked both are complete), against each pass's summed CPU time. An estimate from
+    # typical costs, not a bound on every call.
     meds = [c["cpu_ns"][1] for k in calib for c in k["cpus"]]
-    whens = sorted(k.get("when") for k in calib)
+    o = max(meds)
     out["clock"] = {
-        "calibrations": whens,
-        "empty_window_cpu_ns_median_max": max(meds) if meds else None,
+        "calibrations": sorted(k["when"] for k in calib),
+        "empty_window_cpu_ns_median_max": o,
     }
-    if whens != ["after", "before"] or not meds:
-        g["G5_clock_overhead"] = False
-    else:
-        o = max(meds)
-        shares, short = [], []
-        for r in range(rounds):
-            for m in ("w1", "w4"):
-                for a in ("P", "C"):
-                    v = by[(r, m, a)]
-                    shares.append(len(v) * o / sum(cpu(x) for x in v))
-                    s = [x for x in v if x["rows"] < FULL]
-                    if s:
-                        short.append(len(s) * o / max(sum(cpu(x) for x in s), 1))
-        g["G5_clock_overhead"] = max(shares) <= CLOCK_SHARE
-        out["clock"].update(
-            {
-                "share_max": max(shares),
-                "short_blocks_share_max": max(short) if short else None,
-            }
-        )
+    shares, short = [], []
+    for r in range(rounds):
+        for m in ("w1", "w4"):
+            for a in ("P", "C"):
+                v = by[(r, m, a)]
+                shares.append(len(v) * o / sum(cpu(x) for x in v))
+                s = [x for x in v if x["rows"] < FULL]
+                if s:
+                    short.append(len(s) * o / max(sum(cpu(x) for x in s), 1))
+    g["G5_clock_overhead"] = max(shares) <= CLOCK_SHARE
+    out["clock"].update(
+        {
+            "share_max": max(shares),
+            "short_blocks_share_max": max(short) if short else None,
+        }
+    )
     rat = {}
     for name, key in (
         ("w1", "w1_cpu_ns_row"),
@@ -346,15 +390,14 @@ def analyse(meta, walks, listing_ok=None, calib=(), failures=(), other=()):
     ):
         pt, lo, hi = interval([per[r]["C"][key] / per[r]["P"][key] for r in per])
         rat[name] = {"point": pt, "lo": lo, "hi": hi}
-    if g.get("G5_clock_overhead") is not None and meds:
-        o = max(meds)
-        adj = []
-        for r in per:
-            cp = sum(max(cpu(x) - o, 0) for x in by[(r, "w4", "C")])
-            pp = sum(max(cpu(x) - o, 0) for x in by[(r, "w4", "P")])
-            adj.append(cp / pp)
-        pt, lo, hi = interval(adj)
-        out["clock"]["w4_less_median_overhead_sensitivity_only"] = {"point": pt, "lo": lo, "hi": hi}
+    # sensitivity only, deciding nothing: w4 with the estimate subtracted from every window
+    adj = []
+    for r in per:
+        cp = sum(max(cpu(x) - o, 0) for x in by[(r, "w4", "C")])
+        pp = sum(max(cpu(x) - o, 0) for x in by[(r, "w4", "P")])
+        adj.append(cp / pp)
+    pt, lo, hi = interval(adj)
+    out["clock"]["w4_less_median_overhead_sensitivity_only"] = {"point": pt, "lo": lo, "hi": hi}
     out["ratios"] = rat
     w4, e4 = rat["w4"], rat["e4"]
     out["constructor_budget"] = {

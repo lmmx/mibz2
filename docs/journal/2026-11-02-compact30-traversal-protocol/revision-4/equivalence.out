@@ -1,0 +1,4 @@
+50 valid-calibration variants: identical results, decisions included
+decisions covered: {'ADVANCE': 15, 'STOP': 27, 'INCONCLUSIVE': 4, 'INVALID: a validity gate failed; no decision': 3, 'dry': 1}
+expensive CPU deleted: c0f8d38 -> ADVANCE G5 True | repaired -> INVALID: the records or their calibration are not the registered schedule; no figures computed
+complete with the expensive CPU: both -> INVALID: a validity gate failed; no decision / INVALID: a validity gate failed; no decision

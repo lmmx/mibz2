@@ -1,8 +1,16 @@
-# Compact30 against the shipped walk: a traversal-comparison protocol (revision 3, for approval)
+# Compact30 against the shipped walk: a traversal-comparison protocol (revision 4, for approval)
 
-- **Status:** the harness repaired as report 176 authorises, after the researcher's review
-  (report 175). Checked on the VM without timing. Nothing has been timed, and nothing below
-  is a performance figure.
+- **Status:**
+  - Revision 3 repaired the harness as report 176 authorises, after the researcher's review
+    (report 175).
+  - Revision 4 is an analyser-only repair (reports 178 and 179). The calibration evidence
+    G5 reads is now checked complete and well formed (S9) before any median is read. G5
+    is worded as a calibration-based estimate, and two reporting limits are stated.
+  - Checked on the VM without timing. Nothing has been timed, and nothing below is a
+    performance figure.
+- **The collector is unchanged** from `c0f8d38`: the Rust source, the walker, the
+  synchronisation and the timing windows. Only `bench/c30_traversal.py`, its tests and this
+  text differ at the new pin (§8).
 - **Not authorised:** the capture. The i9 command in §9 runs only once the guardian approves
   it.
 - **The candidate:** the refined compact30 walker (`examples/c30walk.rs`, `room::<false>`),
@@ -132,8 +140,11 @@ not a window spent beside three other walks throughout. The overlap is reported,
 decides nothing.
 
 **Failure, from any worker or the main thread:**
-- **Triggers:** an output difference, a pinning failure, a clock failure or any panic
-  (through a panic hook).
+- **Triggers:** the explicit harness failures (an output difference, a pinning failure, a
+  clock failure) and Rust panics, through a panic hook.
+- **Not covered:** a process abort, a signal, an out-of-memory kill or any other
+  termination from outside. Such a run leaves no failure record. Its records file is
+  incomplete, so S3 rejects it, and the recipe still analyses and archives it.
 - **What it does:** it appends a `failure` record, naming the round, mode, arm, worker,
   step, block and the first differing byte, to the records file. It prints it, and the
   process exits with status 3.
@@ -204,13 +215,24 @@ a capture carrying it):
 The CPU window lies inside the monotonic one. Each holds the part of its two clock calls
 between the readings. The barrier waits, the preparation and the check are outside both.
 
-**The clock calls' cost (G5):**
+**The clock calls' cost (G5), a calibration-based estimate:**
 - **The calibration:** before round −1 and after round 19, each of the four CPUs runs
   20,000 empty windows: the same calls in the same order, around nothing. Their quantiles
   are recorded.
 - **What is kept:** the raw walk windows. Nothing is subtracted from the figures.
-- **The bound:** the larger calibration median, times the windows in a pass, must be at
-  most 0.5% of that pass's summed walk CPU time, in every arm, mode and round.
+- **The evidence, checked first (S9):**
+  - exactly one `before` and one `after` batch;
+  - in each, exactly the four CPUs of the run, once each;
+  - 20,000 windows a CPU;
+  - for both the CPU and the monotonic clock, five finite, nonnegative, non-decreasing
+    quantiles.
+
+  Missing, duplicated, misidentified or malformed calibration makes the run invalid
+  before any median is read. It can never yield a smaller estimate.
+- **The estimate:** the largest median on any CPU, in either batch. That is a typical cost
+  of the calls, not a bound on every call or on the perturbation of any one walk.
+- **The screen:** that estimate, times the windows in a pass, must be at most 0.5% of the
+  pass's summed walk CPU time, in every arm, mode and round.
 - **Why 0.5%:**
   - Both arms have the same number of windows, so the calls add about the same CPU time
     to each.
@@ -262,8 +284,12 @@ The analysis runs three stages, and a stage runs only if the one before it passe
 
 ### Stage 1: the schedule (S), before any figure
 
-The expected record set is derived from the protocol and the corpus's block rows alone,
-not taken from the records.
+The expected record set is derived from the protocol and the block rows the meta record
+holds, not from the walk records.
+- **Its limit:** `block_rows` is the collector's own reading of the corpus. It is not
+  re-derived by decompressing the corpus again.
+- **What it rests on:** the pinned collector and the corpus hash, which the recipe checks
+  before the run.
 
 | check | condition |
 |---|---|
@@ -276,6 +302,7 @@ not taken from the records.
 | S6 | W1: each check ends before the next preparation starts |
 | S7 | W4: in each step, every preparation ends before any walk starts (the start barrier); every walk ends before any check starts (the completion barrier); every walk of a step ends before any preparation of the next starts; each worker's check ends before its next preparation |
 | S8 | the passes run in the registered order (rounds in turn; in each, W1 then W4, each in the round's arm order) and don't overlap |
+| S9 | the calibration evidence is complete and well formed (§4): one `before` and one `after` batch; in each, the run's four CPUs once each, 20,000 windows a CPU, and five finite, nonnegative, non-decreasing quantiles for each clock |
 
 If any S check fails, the run is invalid and no ratio is computed. An invalid record set
 never reaches an ADVANCE, STOP or INCONCLUSIVE decision.
@@ -288,7 +315,7 @@ never reaches an ADVANCE, STOP or INCONCLUSIVE decision.
 | G2 simultaneous start | in every all-full W4 step, the start skew (latest start − earliest start) over the step's span, row-weighted per arm and round, ≤ 0.02, in every arm and round |
 | G3 identity | the corpus hash matches, and `room::<false>`'s listing in the built binary is the reviewed one (`bench/asm_listing.py`). Every instruction is compared in order with its operands; branch targets are taken relative to the function, callees by symbol, and RIP displacements are masked. If G3 fails, there is no run |
 | G4 allocation | per-worker rows differ by at most the largest block, and full-block counts by at most one |
-| G5 clock calls | §4: both calibrations present, and the calls' share ≤ 0.5% in every arm, mode and round |
+| G5 clock calls | §4, on calibration S9 has checked: the calibration-based estimate of the calls' share ≤ 0.5% in every arm, mode and round |
 
 **G2 checks the barrier, not the walks' lengths.** Uneven walks are a result, which e4
 carries.
