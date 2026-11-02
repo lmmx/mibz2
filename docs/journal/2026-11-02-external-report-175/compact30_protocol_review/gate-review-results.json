@@ -1,0 +1,237 @@
+{
+  "source_pin": "b12b49b44e27b96c8e16e0ccab4e348c1ba56bba",
+  "scope": "Synthetic analysis records only; no decoder or timing execution",
+  "verified_git_blobs": {
+    "c30_traversal.py": "3c560a96f0f6a807f45aa1c55805bb260a85572f",
+    "test_c30_traversal.py": "a0fb65cebc59028073ad05d97670ac11cac7906f"
+  },
+  "existing_tests_passed": [
+    "test_advance",
+    "test_allocation_bound_is_one_block",
+    "test_b_max_table",
+    "test_barrier_violation_detected",
+    "test_dry_run_suppresses_timing",
+    "test_inconclusive_straddles_screen",
+    "test_inconclusive_throughput",
+    "test_listing_mismatch_is_invalid",
+    "test_missing_walk_is_invalid",
+    "test_staggered_start_is_invalid",
+    "test_stop_on_cost",
+    "test_stop_on_throughput_harm",
+    "test_uneven_walks_are_a_result_not_invalid",
+    "test_unstable_control_is_invalid"
+  ],
+  "cases": [
+    {
+      "case": "one_pair_accepted",
+      "note": "Non-dry run contains only one measured pair, although the protocol requires 20.",
+      "valid": true,
+      "decision": "ADVANCE",
+      "ratios": {
+        "w1": {
+          "point": 0.8,
+          "lo": 0.8,
+          "hi": 0.8
+        },
+        "w4": {
+          "point": 0.8,
+          "lo": 0.8,
+          "hi": 0.8
+        },
+        "e4": {
+          "point": 0.8,
+          "lo": 0.8,
+          "hi": 0.8
+        }
+      },
+      "gates": {
+        "G0_outputs": true,
+        "G4_allocation": true,
+        "G3_identity": true,
+        "G1_w1_ns_row": true,
+        "G1_w4_cost_ns_row": true,
+        "G1_w4_elapsed_ns": true,
+        "G2_simultaneous_start": true
+      },
+      "path": {
+        "prep_before_walk": true,
+        "barrier": true,
+        "cpus": true,
+        "w4_steps_lockstep": true
+      }
+    },
+    {
+      "case": "assignment_mismatch_accepted",
+      "note": "Every W4 walk is attributed to a worker other than its declared list owner.",
+      "valid": true,
+      "decision": "ADVANCE",
+      "ratios": {
+        "w1": {
+          "point": 0.8,
+          "lo": 0.8,
+          "hi": 0.8
+        },
+        "w4": {
+          "point": 0.8,
+          "lo": 0.8,
+          "hi": 0.8
+        },
+        "e4": {
+          "point": 0.8,
+          "lo": 0.8,
+          "hi": 0.8
+        }
+      },
+      "gates": {
+        "G0_outputs": true,
+        "G4_allocation": true,
+        "G3_identity": true,
+        "G1_w1_ns_row": true,
+        "G1_w4_cost_ns_row": true,
+        "G1_w4_elapsed_ns": true,
+        "G2_simultaneous_start": true
+      },
+      "path": {
+        "prep_before_walk": true,
+        "barrier": true,
+        "cpus": true,
+        "w4_steps_lockstep": true
+      }
+    },
+    {
+      "case": "row_denominator_corruption_accepted",
+      "note": "Candidate W4 row counts are doubled; block_rows and allocation metadata are unchanged.",
+      "valid": true,
+      "decision": "ADVANCE",
+      "ratios": {
+        "w1": {
+          "point": 0.95,
+          "lo": 0.95,
+          "hi": 0.95
+        },
+        "w4": {
+          "point": 0.475,
+          "lo": 0.475,
+          "hi": 0.475
+        },
+        "e4": {
+          "point": 0.95,
+          "lo": 0.95,
+          "hi": 0.95
+        }
+      },
+      "gates": {
+        "G0_outputs": true,
+        "G4_allocation": true,
+        "G3_identity": true,
+        "G1_w1_ns_row": true,
+        "G1_w4_cost_ns_row": true,
+        "G1_w4_elapsed_ns": true,
+        "G2_simultaneous_start": true
+      },
+      "path": {
+        "prep_before_walk": true,
+        "barrier": true,
+        "cpus": true,
+        "w4_steps_lockstep": true
+      },
+      "uncorrupted_decision": "STOP",
+      "uncorrupted_ratios": {
+        "w1": {
+          "point": 0.95,
+          "lo": 0.95,
+          "hi": 0.95
+        },
+        "w4": {
+          "point": 0.95,
+          "lo": 0.95,
+          "hi": 0.95
+        },
+        "e4": {
+          "point": 0.95,
+          "lo": 0.95,
+          "hi": 0.95
+        }
+      }
+    },
+    {
+      "case": "split_full_step_accepted",
+      "note": "Each candidate round has one scheduled full quartet relabelled as three workers plus a singleton step; another valid quartet remains.",
+      "valid": true,
+      "decision": "ADVANCE",
+      "ratios": {
+        "w1": {
+          "point": 0.6,
+          "lo": 0.6,
+          "hi": 0.6
+        },
+        "w4": {
+          "point": 0.6,
+          "lo": 0.6,
+          "hi": 0.6
+        },
+        "e4": {
+          "point": 0.8999500083319447,
+          "lo": 0.8999500083319447,
+          "hi": 0.8999500083319447
+        }
+      },
+      "gates": {
+        "G0_outputs": true,
+        "G4_allocation": true,
+        "G3_identity": true,
+        "G1_w1_ns_row": true,
+        "G1_w4_cost_ns_row": true,
+        "G1_w4_elapsed_ns": true,
+        "G2_simultaneous_start": true
+      },
+      "path": {
+        "prep_before_walk": true,
+        "barrier": true,
+        "cpus": true,
+        "w4_steps_lockstep": true
+      }
+    },
+    {
+      "case": "next_preparation_overlaps_prior_walk_accepted",
+      "note": "One next-step preparation occurs during a prior timed walk; per-step checks do not detect cross-step overlap.",
+      "valid": true,
+      "decision": "ADVANCE",
+      "ratios": {
+        "w1": {
+          "point": 0.8,
+          "lo": 0.8,
+          "hi": 0.8
+        },
+        "w4": {
+          "point": 0.8,
+          "lo": 0.8,
+          "hi": 0.8
+        },
+        "e4": {
+          "point": 0.8,
+          "lo": 0.8,
+          "hi": 0.8
+        }
+      },
+      "gates": {
+        "G0_outputs": true,
+        "G4_allocation": true,
+        "G3_identity": true,
+        "G1_w1_ns_row": true,
+        "G1_w4_cost_ns_row": true,
+        "G1_w4_elapsed_ns": true,
+        "G2_simultaneous_start": true
+      },
+      "path": {
+        "prep_before_walk": true,
+        "barrier": true,
+        "cpus": true,
+        "w4_steps_lockstep": true
+      }
+    }
+  ],
+  "exact_screen_for_b_equal_one": 0.8646453708716838,
+  "b_max_at_rounded_screen": 0.9988935810810811,
+  "saving_at_rounded_screen_and_b_one": 0.249345
+}

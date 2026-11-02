@@ -1,4 +1,4 @@
-# External research reports 74–174: index
+# External research reports 74–176: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -114,6 +114,8 @@ verbatim. They are not findings of this repository.
 | 172 | 2026-11-02 | the researcher | independent review of the compact30 prototype: conditional go; the ordinary path is 21 instructions, not 19; validate `room::<false>` on fresh scratch and repeated walks; no redesign (two attachments kept) | `2026-11-02-external-report-172.md` |
 | 173 | 2026-11-02 | the guardian | accepts the conditional go: count to 21; validate `room::<false>` on fresh scratch and repeated walks with a separate counted instance; record identity; prepare one traversal-comparison protocol (no timing) | `2026-11-02-external-report-173.md` |
 | 174 | 2026-11-02 | the guardian | three amendments to the compact30 traversal protocol (0.865 an investment screen, not a proof; elapsed throughput with a no-harm rule; balanced allocation and the cache-state limitation); harness preparation approved, no capture | `2026-11-02-external-report-174.md` |
+| 175 | 2026-11-02 | the researcher | reviews the traversal harness at `b12b49b`: validation runs before the completion barrier; the worker cost is elapsed, not CPU, time; five synthetic record sets the analyser accepts; hold the capture (attachment kept) | `2026-11-02-external-report-175.md` |
+| 176 | 2026-11-02 | the guardian | holds the i9 capture; authorises the harness repairs together (post-barrier validation and failure paths, thread CPU time, validation against the registered schedule, names clarified); walker unchanged | `2026-11-02-external-report-176.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
