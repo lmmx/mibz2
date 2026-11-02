@@ -1,4 +1,4 @@
-# External research reports 74–142: index
+# External research reports 74–145: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -82,6 +82,9 @@ verbatim. They are not findings of this repository.
 | 140 | 2026-11-02 | the researcher of report 138 | the failed walker probe explained: sudo strips WALKER_CTL/ACK, so the counters never ran; perf 6.8.12's ACK is `ack\n\0`; `100.00%` beside `<not counted>` is not "unmultiplexed"; four-core result-vector growth | `2026-11-02-external-report-140.md` |
 | 141 | 2026-11-02 | the guardian | on report 140: five narrow repairs (handoff, ACK framing, probe validity, transport tests, vector growth); no i9 run until ready | `2026-11-02-external-report-141.md` |
 | 142 | 2026-11-02 | unattributed (reads as the guardian) | per-run results under `target/<experiment>/`, one tarball with a manifest, as the default for i9 diagnostics | `2026-11-02-external-report-142.md` |
+| 143 | 2026-11-02 | the guardian | revision 3's repairs checked at 902a911; run the counter probe only | `2026-11-02-external-report-143.md` |
+| 144 | 2026-11-02 | the researcher of report 138 (with the maintainer's question) | an in-process Rust counter backend (`perf_event_open`, `perf-event2`): what it would remove, what it would not, and the migration's equivalence obligations | `2026-11-02-external-report-144.md` |
+| 145 | 2026-11-02 | the guardian | on report 144: the likely longer-term direction if the harness becomes reusable; finish the probe first, no second system | `2026-11-02-external-report-145.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
