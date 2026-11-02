@@ -6,7 +6,11 @@
 //! - at block sizes from short (the plain walk) to full;
 //! - with one scratch reused across streams of different levels;
 //! - through the parallel decoder, including corrupt input and a decode cancelled mid-stream;
-//! - on the error paths, ending in the same error after the same output.
+//! - on the error paths, ending in the same error after the same output, and with a
+//!   scratch reused after an error;
+//! - against `Segmented::invert` into a buffer of its own, block by block (the algorithm
+//!   held fixed, only the output's storage changed), with `ll`'s buffer unmoved;
+//! - for a kernel that falls back (`Plain`, `Cooperative`): false, and nothing changed.
 //!
 //! With the `trace` feature, they also check from the scratch's own buffers that `rle` is
 //! never allocated, and how `ll` grows across levels.
@@ -175,6 +179,117 @@ fn the_parallel_decoder_in_place() {
         assert!(dec.read(&mut buf).is_err(), "a read after cancel");
     });
     dec.join();
+}
+
+/// Every block of `z`, as the decoder sees it after MTF: its last column (with the capacity
+/// MTF reserved), its counts and its primary index
+fn last_columns(z: &[u8]) -> Vec<(Vec<u8>, [u32; 256], u32)> {
+    let k = Kernels::detect();
+    let mut sc = Scanner::new(SliceSource(z));
+    let mut v = Vec::new();
+    let mut syms = Vec::new();
+    while let Event::Block { symbols, .. } = sc.next(syms).unwrap() {
+        let (mut ll, mut counts) = (Vec::new(), [0u32; 256]);
+        let n = mibz2::mtf::mtf(&symbols, &mut ll, &mut counts, k).unwrap();
+        assert_eq!(n, ll.len());
+        assert!((symbols.orig_ptr as usize) < n);
+        v.push((ll, counts, symbols.orig_ptr));
+        syms = symbols.syms;
+    }
+    v
+}
+
+/// The transformation itself, the algorithm held fixed: `Segmented::invert` into a buffer of
+/// its own against `Segmented::invert_in_place` over `ll`, block by block. One kernel of
+/// each is reused throughout, as a worker reuses its scratch. On every block in place must
+/// succeed, give exactly the separate buffer's bytes, and leave `ll`'s buffer where it was
+/// (same pointer and capacity: no reallocation, the success contract)
+#[test]
+fn segmented_in_place_equals_segmented_into_its_own_buffer() {
+    let mut rng = Rng(0x87_13);
+    let (mut sep, mut inp) = (Segmented::default(), Segmented::default());
+    let mut out = Vec::new();
+    let (mut blocks, mut short) = (0, 0);
+    for (name, data) in common::samples(&mut rng) {
+        for level in [1, 9] {
+            for (i, (mut ll, counts, orig_ptr)) in last_columns(&compress(&data, level))
+                .into_iter()
+                .enumerate()
+            {
+                sep.invert(&ll, &counts, orig_ptr, &mut out);
+                let (ptr, cap, n) = (ll.as_ptr(), ll.capacity(), ll.len());
+                assert!(
+                    inp.invert_in_place(&mut ll, &counts, orig_ptr),
+                    "{name} -{level} block {i}: Segmented fell back"
+                );
+                assert!(ll == out, "{name} -{level} block {i}: the bytes differ");
+                assert_eq!(ll.len(), n, "{name} -{level} block {i}: the length");
+                assert_eq!(ll.as_ptr(), ptr, "{name} -{level} block {i}: ll moved");
+                assert_eq!(
+                    ll.capacity(),
+                    cap,
+                    "{name} -{level} block {i}: ll's capacity"
+                );
+                blocks += 1;
+                short += (n < 1 << 16) as usize; // bwt::MIN_SEGMENTED: the plain walk below it
+            }
+        }
+    }
+    // both walks were exercised: the segmented one and the plain one for short blocks
+    assert!(
+        short > 0 && blocks > short,
+        "{blocks} blocks, {short} short"
+    );
+}
+
+/// The fallback contract: a kernel that doesn't invert in place returns false and changes
+/// nothing (`ll`'s bytes, length, buffer and capacity), and its next `invert` is unaffected
+#[test]
+fn a_kernel_that_falls_back_changes_nothing() {
+    let mut rng = Rng(0x87_14);
+    let samples = common::samples(&mut rng);
+    let text = &samples.iter().find(|(n, _)| n == "text").unwrap().1;
+    let (mut plain, mut coop) = (Plain::default(), Cooperative::<2>::default());
+    let (mut want, mut got) = (Vec::new(), Vec::new());
+    for (mut ll, counts, orig_ptr) in last_columns(&compress(&text[..1_000_000], 9)) {
+        let before = ll.clone();
+        let (ptr, cap) = (ll.as_ptr(), ll.capacity());
+        assert!(!plain.invert_in_place(&mut ll, &counts, orig_ptr), "Plain");
+        assert!(
+            !coop.invert_in_place(&mut ll, &counts, orig_ptr),
+            "Cooperative"
+        );
+        assert!(ll == before, "ll's bytes changed on fallback");
+        assert_eq!(
+            (ll.as_ptr(), ll.capacity()),
+            (ptr, cap),
+            "ll's buffer changed"
+        );
+        // the separate-buffer call that follows gives what a fresh kernel gives
+        plain.invert(&ll, &counts, orig_ptr, &mut got);
+        Plain::default().invert(&ll, &counts, orig_ptr, &mut want);
+        assert!(got == want, "Plain after a fallback");
+    }
+}
+
+/// A scratch reused after a failed block (a wrong CRC, then a primary index past the
+/// block): the next stream still decodes exactly, in place
+#[test]
+fn a_scratch_reused_after_an_error_decodes_exactly() {
+    let mut rng = Rng(0x87_15);
+    let good: Vec<u8> = rng.bytes(300_000);
+    let good_z = compress(&good, 9);
+    let ll: Vec<u8> = (0..100_000u32).map(|i| (i * 7 % 251) as u8).collect();
+    let mut bad_crc = Spec::of(ll.clone(), 17);
+    bad_crc.crc = Some(0x1234_5678);
+    let mut s = Scratch::<Segmented>::default();
+    for spec in [bad_crc, Spec::of(ll.clone(), ll.len() as u32)] {
+        let (_, err) = run(&craft(9, &[spec], None), &mut s);
+        assert!(err.is_some(), "the bad block decoded");
+        let (out, err) = run(&good_z, &mut s);
+        assert_eq!(err, None);
+        assert!(out == good, "after an error, one scratch");
+    }
 }
 
 /// The scratch's `ll` and `rle` capacities (the footprint ledger's, `trace` feature)

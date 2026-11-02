@@ -35,9 +35,9 @@ buffers never shrink.
 
 | owner | buffer | how many | reserved each | at most | live each | hot |
 |---|---|--:|--:|--:|--:|--:|
-| worker | `ll`, the last column | t | M | M | n, until the build has read it | – |
+| worker | `ll`, the last column, then the walk's output over it | t | M | M | n, until RLE1 has read it | – |
 | worker | `tt`, the T-vector | t | 4n | 4(2n − 1) | 4n, in the T-vector phase | 4n |
-| worker | `rle`, the walk's output | t | n | 2n − 1 | n | – |
+| worker | `rle`, the walk's output for a kernel that doesn't invert in place | t | 0 (n) | 0 (2n − 1) | 0 (n) | – |
 | worker | `seg.bufs`, the walk's segments | t | 512 (2n/512 + 64) | ratchets | n | – |
 | worker | `seg.starts`, `.next`, `.bufs.outer`, `counts` | t | 21.5 KB | 37.9 KB | 21.5 KB | 3 KB |
 | slot | `symbols` | s | 1,800,200 | same | 2(n + 1); the corpus's ≈ 0.2 MB | – |
@@ -75,10 +75,16 @@ Where the counts and bounds come from:
 
 | threads | reserved at least | at most, before the segments' ratchet | hot (model) |
 |--:|--:|--:|--:|
-| 1 | 34.6 MB | 56.7 MB | 3.6 MB |
-| 2 | 47.2 MB | 73.9 MB | 7.2 MB |
-| 4 | 72.5 MB | 108.2 MB | 14.4 MB |
-| 10 | 148.5 MB | 211.0 MB | 36.0 MB |
+| 1 | 33.7 MB | 54.9 MB | 3.6 MB |
+| 2 | 45.4 MB | 70.3 MB | 7.2 MB |
+| 4 | 68.9 MB | 101.0 MB | 14.4 MB |
+| 10 | 139.5 MB | 193.0 MB | 36.0 MB |
+
+These are for the segmented kernel, the default, which inverts in place
+(`InverseBwt::invert_in_place`): its walk writes over `ll`, so `rle` is never allocated.
+For a kernel that inverts into `rle` (`Plain`; `Settings::in_place` false), the parenthesised
+`rle` figures apply. That adds n reserved and 2n − 1 at most per worker: at -9, 0.9 MB and
+1.8 MB.
 
 The segment buffers add at least 1.83 MB a worker (measured: 6–8 MB). A block of runs
 only, which decodes to 46.6 MB at -9, would raise each output buffer's bound to 93 MB. No
@@ -87,7 +93,8 @@ real text does that.
 The tests (`trace::tests`) decode a two-stream synthetic file, a short block and then a
 longer one, through the decoder's own calls. They check each of a worker's buffers'
 capacities against the ledger: exactly where it is exact (`ll`, `seg.starts`, `symbols`,
-and `tt`, `rle` and `out` by the growth rule), within its bounds elsewhere. They also
+and `tt` and `out` by the growth rule; `rle` unallocated in place, and by the growth rule for the
+separate-buffer kernel, `Plain`, in a test of its own), within its bounds elsewhere. They also
 check that every buffer a worker has is in the ledger.
 
 ## The measurements (the occupancy instrument's summary)
