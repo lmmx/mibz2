@@ -1,4 +1,4 @@
-# External research reports 74–161: index
+# External research reports 74–163: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -101,6 +101,8 @@ verbatim. They are not findings of this repository.
 | 159 | 2026-11-02 | the guardian | on report 158's three results: the census strengthens the 30-entry design; RAW rows a storage frequency; P87 and the dispatch addendum at their boundaries; the Astra handoff | `2026-11-02-external-report-159.md` |
 | 160 | 2026-11-02 | the maintainer's prompt to Astra, written with the guardian | part 1: an architectural review of the 30-entry design (one bounded prototype, `k`/`j` first, or stop) | `2026-11-02-external-report-160.md` |
 | 161 | 2026-11-02 | the maintainer's prompt to Astra, written with the guardian | part 2: invention and improvement, then falsification; one design and one bounded next step | `2026-11-02-external-report-161.md` |
+| 162 | 2026-11-02 | a ChatGPT session (MLP analysis; not the guardian, researcher or Astra) | memory-level parallelism in johnservil/BLAKE3: independent input streams, lookahead prefetch, SME2 load–compute pipelining | `2026-11-02-external-report-162.md` |
+| 163 | 2026-11-02 | the same session | a guided walkthrough of its MLP and assembly techniques (**reply pending**; the question recorded) | `2026-11-02-external-report-163.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
