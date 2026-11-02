@@ -4,6 +4,8 @@
 //!
 //!     cargo run --release --example c30walk -- check OUT.jsonl FILE.bz2 [FILE.bz2 ...]
 //!     cargo run --release --example c30walk -- adversarial OUT.jsonl
+//!     cargo run --release --example c30walk -- audit OUT.jsonl FILE.bz2 [FILE.bz2 ...]
+//!     cargo run --release --example c30walk -- audit-adversarial OUT.jsonl
 //!
 //! **The representation:**
 //! - **Records:** one 64-byte, 64-aligned record per 30 rows in F order (`Rec`): 30 `u16`
@@ -887,6 +889,121 @@ fn check(name: &str, data: &[u8], jl: &mut std::fs::File) {
     }
 }
 
+/// The audited walk's own validation (reports 172–173), separate from `check`:
+/// - for every block, a **fresh** `C30` (fresh records and scratch) runs `walk::<false>`;
+/// - its output is compared with production's, and its records with a snapshot taken
+///   after the build (every marker restored);
+/// - it then runs `walk::<false>` **again on the same records, without rebuilding**, with
+///   both checks repeated.
+///
+/// Segment-buffer growth inside the audited walk is read from the scratch afterwards,
+/// with no counter in the walk: a fresh segment buffer is reserved exactly `cap` bytes
+/// (2n/ns + 64, the walk's own reserve on an empty `Vec`), so a capacity above `cap`
+/// after the cold walk means the audited walk grew it. In the repeated walk, a capacity
+/// above its value before the walk means it grew again.
+///
+/// The counted transition audit runs on a **separate** instance per thread (as in
+/// `check`), so it can't prepare the audited instance's scratch.
+fn audit(name: &str, data: &[u8], jl: &mut std::fs::File) {
+    let bs = blocks(data);
+    for &(pm, extra) in &CONFIGS {
+        let next = AtomicUsize::new(0);
+        let threads = 3usize;
+        // (segmented blocks, cold-grown segments, cold blocks with growth, warm-grown
+        // segments, restoration checks, output checks, counted RAW arrivals)
+        let results: Vec<[u64; 7]> = std::thread::scope(|sc| {
+            let hs: Vec<_> = (0..threads)
+                .map(|_| {
+                    sc.spawn(|| {
+                        let mut counted = C30::default();
+                        let mut out = Vec::new();
+                        let mut t = [0u64; 7];
+                        loop {
+                            let i = next.fetch_add(1, Ordering::Relaxed);
+                            let Some((ll, counts, op, want)) = bs.get(i) else { break };
+                            // the audited walk, on fresh records and scratch
+                            let mut a = C30::default();
+                            a.build(ll, counts, pm);
+                            let snap = a.rec.clone();
+                            let mut d = Counts::default();
+                            a.walk::<false>(*op, extra, &mut out, &mut d);
+                            assert!(&out == want, "{name} pm {pm} extra {extra} block {i}: cold audited walk differs");
+                            assert!(a.rec == snap, "{name} pm {pm} extra {extra} block {i}: cold audited walk left a marker");
+                            t[4] += 1;
+                            t[5] += 1;
+                            let segmented = ll.len() >= MIN_SEGMENTED;
+                            let ns = a.s.starts.len();
+                            let caps: Vec<usize> = if segmented {
+                                let cap = 2 * ll.len() / ns + 64;
+                                let caps: Vec<usize> =
+                                    a.s.bufs[..ns].iter().map(|b| b.capacity()).collect();
+                                let grown = caps.iter().filter(|&&c| c > cap).count() as u64;
+                                t[0] += 1;
+                                t[1] += grown;
+                                t[2] += (grown > 0) as u64;
+                                caps
+                            } else {
+                                Vec::new()
+                            };
+                            // again on the same records, without rebuilding
+                            a.walk::<false>(*op, extra, &mut out, &mut d);
+                            assert!(&out == want, "{name} pm {pm} extra {extra} block {i}: repeated audited walk differs");
+                            assert!(a.rec == snap, "{name} pm {pm} extra {extra} block {i}: repeated audited walk left a marker");
+                            t[4] += 1;
+                            t[5] += 1;
+                            if segmented {
+                                assert_eq!(a.s.starts.len(), ns, "the same starts");
+                                t[3] += a.s.bufs[..ns]
+                                    .iter()
+                                    .zip(&caps)
+                                    .filter(|(b, &c)| b.capacity() > c)
+                                    .count() as u64;
+                            }
+                            // the counted audit, on its own instance
+                            counted.build(ll, counts, pm);
+                            let mut c = Counts::default();
+                            counted.walk::<true>(*op, extra, &mut out, &mut c);
+                            assert!(&out == want, "{name} pm {pm} extra {extra} block {i}: counted walk differs");
+                            t[6] += c.raw_arrivals;
+                        }
+                        t
+                    })
+                })
+                .collect();
+            hs.into_iter().map(|h| h.join().unwrap()).collect()
+        });
+        let mut t = [0u64; 7];
+        for r in results {
+            for (x, y) in t.iter_mut().zip(r) {
+                *x += y;
+            }
+        }
+        writeln!(
+            jl,
+            "{{\"input\":{name:?},\"permille\":{pm},\"extra_starts\":{extra},\"blocks\":{},\"segmented_blocks\":{},\"audited_cold_grown_segments\":{},\"audited_cold_blocks_with_growth\":{},\"audited_warm_grown_segments\":{},\"restoration_checks\":{},\"output_checks\":{},\"counted_raw_arrivals\":{}}}",
+            bs.len(),
+            t[0],
+            t[1],
+            t[2],
+            t[3],
+            t[4],
+            t[5],
+            t[6]
+        )
+        .unwrap();
+        println!(
+            "{name}: permille {pm}, extra starts {extra}: {} blocks ({} segmented); audited walk on fresh scratch then repeated: {} outputs and {} restorations checked; cold growth in {} segments ({} blocks), warm growth in {} segments: exact",
+            bs.len(),
+            t[0],
+            t[5],
+            t[4],
+            t[1],
+            t[2],
+            t[3]
+        );
+    }
+}
+
 fn compress(data: &[u8], level: u32) -> Vec<u8> {
     let mut e = bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(level));
     e.write_all(data).unwrap();
@@ -966,6 +1083,25 @@ fn main() {
                 for level in [1, 9] {
                     let z = compress(&data, level);
                     check(&format!("{name} -{level}"), &z, &mut jl);
+                }
+            }
+        }
+        "audit" => {
+            for file in &args[3..] {
+                let data = std::fs::read(file).unwrap();
+                let name = std::path::Path::new(file)
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .into_owned();
+                audit(&name, &data, &mut jl);
+            }
+        }
+        "audit-adversarial" => {
+            for (name, data) in adversarial() {
+                for level in [1, 9] {
+                    let z = compress(&data, level);
+                    audit(&format!("{name} -{level}"), &z, &mut jl);
                 }
             }
         }

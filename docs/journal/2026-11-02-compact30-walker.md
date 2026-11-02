@@ -16,6 +16,21 @@
   `examples/c30walk.rs`.
 - **Records:** `2026-11-02-compact30-walker/`.
 
+> **Correction (report 172, accepted in report 173): the ordinary step is 21 instructions,
+> not 19.** The listing in §5 always held 21: 8 at `15f5b`–`15f78` and 13 at
+> `15f30`–`15f59`. The first wording miscounted the second part as 11. The four loads, two
+> stores and one prefetch were right. This corrects a count, not the binary, and it is not
+> a performance result. Against the shipped step's 16, the gap is 5 instructions, not 3.
+> The 21 is still within Astra's 19–21 expectation, and nothing is being changed to reach
+> 19.
+>
+> The two instructions beyond Astra's sketch (report 172) are:
+> - `mov ecx,esi`, which keeps the header for the byte store while the successor is formed
+>   and prefetched first;
+> - the redundant `mov ecx,ecx`.
+>
+> **The strengthened validation of the audited walk** (reports 172–173) is in §8.
+
 ## 1. What was built
 
 **The representation** (`Rec`, `RawG`):
@@ -246,8 +261,12 @@ Its registers:
 15f59  jae    15f00                        ; end of the 32 lanes → the next offset
 ```
 
-**19 instructions, four data loads, two stores and one prefetch.** That matches Astra's
-proposed sequence. Its expectation was 19–21, an expectation to check, not a threshold.
+**21 instructions** (8 at `15f5b`–`15f78`, 13 at `15f30`–`15f59`), **four data loads,
+two stores and one prefetch.** The first wording said 19, a miscount corrected after
+report 172. Astra's expectation was 19–21, an expectation to check, not a threshold. Its
+19-instruction sketch wrote the byte before shifting the header. The compiled code
+instead copies the header (`mov ecx,esi`), forms and prefetches the successor first, and
+carries the redundant `mov ecx,ecx`.
 
 **Absent:** packed-field extraction, an F-directory lookup, carried-byte state and token
 masks. The only mask is `and ecx,-32`, which forms the header's address. It is part of the
@@ -258,7 +277,7 @@ design and is independent of the field load.
 | `o`, the shipped entry (reference) | 16 | 3 | 2 | FOR-14 `disassembly-kj.md` |
 | `k`, packed token | 31 | 4 | 2 | same |
 | `j`, packed token with `imul` | 27 | 4 | 2 | same |
-| **refined compact30** | **19** | **4** | **2** | this listing |
+| **refined compact30** | **21** | **4** | **2** | this listing (first reported as 19) |
 
 **The dependency audit** (report 167). This is static analysis of the listing, not a
 measurement.
@@ -379,7 +398,7 @@ restored.
 ## 7. What this establishes, and what it doesn't
 
 **It establishes:**
-- **The refined design compiles to the intended ordinary step.** 19 instructions, with four
+- **The refined design compiles to the intended ordinary step.** 21 instructions, with four
   loads, two stores and one prefetch. The field and header are addressed independently
   from the row. There is no extraction and no carried-byte state, and no spills.
 - **The new byte ownership is correct** through production's segmented machinery: starts,
@@ -402,3 +421,73 @@ restored.
 
 The next decision, whether this candidate earns a separately frozen performance
 experiment, is the guardian's.
+
+## 8. The audited walk validated on its own (reports 172–173)
+
+**The gap the researcher found** (report 172), confirmed:
+- In `check`, every block's counted walk ran before the audited `room::<false>`, on the
+  same scratch. So the audited walk always started with buffers the counted walk had
+  already grown.
+- The complete record-restoration check ran only after the counted walk.
+- Neither shows a failure. Both left the audited implementation's own cold-growth and
+  restoration paths untested.
+
+**The repair** is a new harness mode, `audit` and `audit-adversarial` (`audit()` in
+`examples/c30walk.rs`). The walk, the format and the loop are unchanged, and so is `check`.
+Its original results in this directory are kept as they were.
+
+**For every block of every input, under the same four configurations:**
+1. **A fresh `C30`** (fresh records and fresh scratch) builds the block and snapshots its
+   records.
+2. **`walk::<false>` runs cold.** Its output is compared with production's, and its records
+   with the snapshot.
+3. **`walk::<false>` runs again** on the same records, without rebuilding, and both checks
+   repeat.
+4. **The counted walk** (`walk::<true>`, the transition audit) runs on a separate,
+   per-thread instance. It never shares scratch with the audited one.
+
+**Growth in the audited walk is read from its own scratch afterwards,** with no counter
+in the walk:
+- A fresh segment buffer is reserved exactly `cap` = 2n/ns + 64 bytes (an empty `Vec`'s
+  reserve is exact), so a buffer above `cap` after the cold walk was grown by that walk.
+- In the repeated walk, a buffer above its own capacity before the walk was grown again.
+- The counted walk's growth totals are not used.
+
+**The results** (`2026-11-02-compact30-walker/validation-2/`, `summary.md`):
+
+| run | build | configs | blocks (segmented) | outputs = restorations checked | segments the audited cold walk grew (blocks) | grown again when repeated |
+|---|---|--:|--:|--:|---|--:|
+| 11 corpora | release | 44 | 6,052 (3,584) | 12,104 | 275,763 (all 3,584) | 0 |
+| adversarial, levels 1 and 9 | release | 200 | 528 (372) | 1,056 | 17,639 (288) | 0 |
+| 8 corpora, including the primary | debug | 32 | 2,344 (1,516) | 4,688 | 111,243 (all 1,516) | 0 |
+| adversarial, levels 1 and 9 | debug | 200 | 528 (372) | 1,056 | 17,639 (288) | 0 |
+
+**What these show:**
+- **Every check was exact,** and every record array was restored after every audited walk,
+  cold and repeated.
+- **Debug builds** ran the physical-access assertions of §3 throughout.
+- **On the corpora,** every segmented block's audited cold walk grew segment buffers
+  itself, so its growth path was exercised.
+- **The repeated walks grew none.** They reuse the same starts, so the capacity the cold
+  walk left suffices. That is the reuse case.
+- **In the adversarial set,** 84 segmented blocks grew nothing. These are periodic inputs
+  (`ab`, `abc` and others), whose segments stay under `cap`. Their outputs and
+  restorations are still checked.
+
+**The final identity** (`validation-2/provenance-final.txt`):
+- rustc 1.97.0 (`2d8144b78`), LLVM 22.1.6;
+- baseline x86-64 (fxsr, sse, sse2), no `RUSTFLAGS`, the repository's release profile;
+- binary SHA-256 `db7feaac…`.
+
+**The harness change left the audited walk unchanged.** Against the reviewed binary:
+- the same 1,565-line listing;
+- every instruction identical in order;
+- only RIP-relative displacements differ (66 lines, `asm.diff`), because the function
+  moved from 0x14ed0 to 0x15aa0.
+
+The ordinary path is now at `16b2b`–`16b48` and `16b00`–`16b29`: the same 8 + 13 = 21
+instructions, four loads, two stores and one prefetch. The exceptional paths are the same
+instructions at the shifted addresses.
+
+**The next step:** the draft traversal-comparison protocol is in
+`2026-11-02-compact30-traversal-protocol.md`, for review. Nothing has been timed.

@@ -1,0 +1,122 @@
+244c244
+< call   QWORD PTR [rip+0x65ec4]        # ADDR 
+---
+> call   QWORD PTR [rip+0x69494]        # ADDR 
+1117c1117
+< call   QWORD PTR [rip+0x649c1]        # ADDR 
+---
+> call   QWORD PTR [rip+0x67f91]        # ADDR 
+1185c1185
+< lea    rax,[rip+0x62322]        # ADDR 
+---
+> lea    rax,[rip+0x657a2]        # ADDR 
+1369,1372c1369,1372
+< lea    rcx,[rip+0x61dfe]        # ADDR 
+< lea    r8,[rip+0x61e0f]        # ADDR 
+< lea    r9,[rip+0x61e20]        # ADDR 
+< lea    rdx,[rip+0x61e31]        # ADDR 
+---
+> lea    rcx,[rip+0x6525e]        # ADDR 
+> lea    r8,[rip+0x6526f]        # ADDR 
+> lea    r9,[rip+0x65280]        # ADDR 
+> lea    rdx,[rip+0x65291]        # ADDR 
+1433c1433
+< call   QWORD PTR [rip+0x64474]        # ADDR 
+---
+> call   QWORD PTR [rip+0x67a44]        # ADDR 
+1442c1442
+< lea    rcx,[rip+0x61d33]        # ADDR 
+---
+> lea    rcx,[rip+0x65193]        # ADDR 
+1453c1453
+< lea    rdx,[rip+0x61d7b]        # ADDR 
+---
+> lea    rdx,[rip+0x651db]        # ADDR 
+1456c1456
+< lea    rdx,[rip+0x6219c]        # ADDR 
+---
+> lea    rdx,[rip+0x6576c]        # ADDR 
+1460c1460
+< lea    rdx,[rip+0x62170]        # ADDR 
+---
+> lea    rdx,[rip+0x65740]        # ADDR 
+1463c1463
+< lea    rdx,[rip+0x61d31]        # ADDR 
+---
+> lea    rdx,[rip+0x65191]        # ADDR 
+1465c1465
+< lea    rdx,[rip+0x61d0d]        # ADDR 
+---
+> lea    rdx,[rip+0x6516d]        # ADDR 
+1469c1469
+< lea    rdx,[rip+0x61ce1]        # ADDR 
+---
+> lea    rdx,[rip+0x65141]        # ADDR 
+1472c1472
+< lea    rdx,[rip+0x61cba]        # ADDR 
+---
+> lea    rdx,[rip+0x6511a]        # ADDR 
+1474c1474
+< lea    rdx,[rip+0x61e26]        # ADDR 
+---
+> lea    rdx,[rip+0x652a6]        # ADDR 
+1476c1476
+< lea    rdx,[rip+0x61e02]        # ADDR 
+---
+> lea    rdx,[rip+0x65282]        # ADDR 
+1490c1490
+< lea    rdx,[rip+0x61e2f]        # ADDR 
+---
+> lea    rdx,[rip+0x652af]        # ADDR 
+1492c1492
+< lea    rdx,[rip+0x6210b]        # ADDR 
+---
+> lea    rdx,[rip+0x656db]        # ADDR 
+1495c1495
+< lea    rdx,[rip+0x61dfc]        # ADDR 
+---
+> lea    rdx,[rip+0x6527c]        # ADDR 
+1497c1497
+< lea    rdx,[rip+0x61dd8]        # ADDR 
+---
+> lea    rdx,[rip+0x65258]        # ADDR 
+1499c1499
+< lea    rdx,[rip+0x61db4]        # ADDR 
+---
+> lea    rdx,[rip+0x65234]        # ADDR 
+1502c1502
+< lea    rdx,[rip+0x61d8d]        # ADDR 
+---
+> lea    rdx,[rip+0x6520d]        # ADDR 
+1505c1505
+< lea    rax,[rip+0x61dc6]        # ADDR 
+---
+> lea    rax,[rip+0x65246]        # ADDR 
+1507c1507
+< lea    rax,[rip+0x61da5]        # ADDR 
+---
+> lea    rax,[rip+0x65225]        # ADDR 
+1513c1513
+< lea    rdx,[rip+0x61dd0]        # ADDR 
+---
+> lea    rdx,[rip+0x65250]        # ADDR 
+1516c1516
+< lea    rdx,[rip+0x61dc1]        # ADDR 
+---
+> lea    rdx,[rip+0x65241]        # ADDR 
+1520c1520
+< lea    rdi,[rip+0x61b30]        # ADDR 
+---
+> lea    rdi,[rip+0x64f90]        # ADDR 
+1525,1527c1525,1527
+< lea    rdi,[rip+0xffffffffffff2ce5]        # 9be8 
+< lea    rcx,[rip+0x6200e]        # ADDR 
+< lea    r8,[rip+0x61b1f]        # ADDR 
+---
+> lea    rdi,[rip+0xffffffffffff27fa]        # a2cd 
+> lea    rcx,[rip+0x655de]        # ADDR 
+> lea    r8,[rip+0x64f7f]        # ADDR 
+1550c1550
+< call   QWORD PTR [rip+0x6425e]        # ADDR 
+---
+> call   QWORD PTR [rip+0x6782e]        # ADDR 
