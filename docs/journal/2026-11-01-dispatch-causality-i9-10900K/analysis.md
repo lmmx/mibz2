@@ -257,3 +257,12 @@ four-core efficiency.
   more elsewhere: cache locality, or the scanner and reader's own access to a core.
 - **`target_cpu` equal to the waker's CPU shows where the kernel placed the thread, not
   why.**
+
+## 9. Addendum (2 November 2026; descriptive, post hoc)
+
+`addendum-capacity.md` caps the 5.65% class by idle CPUs and queued jobs, on the recorded schedule (reports 155, 158):
+- capped, E is 0.225 average cores (5.63%), against 0.226 uncapped;
+- with the scanner, reader and feeder's competing demand taken out, 0.178 cores (4.45%).
+
+These are opportunity estimates on the recorded schedule. They are not a simulation of any affinity policy, not a
+guaranteed range and not a throughput prediction. Nothing in §1–§8 changes.
