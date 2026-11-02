@@ -605,7 +605,7 @@ They are reported in the summary, not read.
   reusable infrastructure, or if the rare events need cleaner isolation.
 - This archive is the reference any replacement must reproduce.
 
-### 8.6 The interpretation amendment (reports 148–150), and the four-copy comparison reproduced
+### 8.6 The interpretation amendment (reports 148–151), and the matched four-copy comparison
 
 **The guardian's instruction (report 150):** accept and close the capture under its
 registered decisions; keep the repaired perf backend; tighten the descriptive conclusions;
@@ -625,20 +625,36 @@ counters or collector migration. §8.1–§8.4 above are amended accordingly.
 **The four-copy comparison, reproduced from the raw records**
 (`walker-ladder-20261102T004502Z.jsonl`). One core → four copies, 32 lanes:
 
-| rung | cycles a row, all groups pooled | cycles a row, `exec` group only | instructions a row, `exec` group | retired slots a row | cycles ÷ ns |
-|---|---|---|---|---|---|
-| A (no prefetch, no output) | 9.763 → 13.594 (+39.2%) | 9.779 → 13.526 (+38.3%) | 19.4381 → 19.4432 (+0.026%) | +0.065% | 5.27 → 4.95 |
-| B (prefetch, no output) | 6.659 → 9.196 (+38.1%) | 6.696 → 9.146 (+36.6%) | 20.4347 → 20.4376 (+0.014%) | +0.045% | 5.29 → 4.96 |
-| P (shipped walk) | 6.897 → 10.000 (+45.0%) | 6.900 → 9.891 (+43.3%) | 16.9915 → 16.9956 (+0.024%) | +0.095% | 5.29 → 4.95 |
+| rung | cycles a row, all groups pooled | cycles a row, `exec` group only | instructions a row, `exec` group | issued µops a row | retired slots a row | cycles ÷ ns |
+|---|---|---|---|---|---|---|
+| A (no prefetch, no output) | 9.763 → 13.594 (+39.2%) | 9.779 → 13.526 (+38.3%) | 19.4381 → 19.4432 (+0.026%) | +0.26% | +0.065% | 5.27 → 4.95 |
+| B (prefetch, no output) | 6.659 → 9.196 (+38.1%) | 6.696 → 9.146 (+36.6%) | 20.4347 → 20.4376 (+0.014%) | +0.15% | +0.045% | 5.29 → 4.96 |
+| P (shipped walk) | 6.897 → 10.000 (+45.0%) | 6.900 → 9.891 (+43.3%) | 16.9915 → 16.9956 (+0.024%) | +0.51% | +0.095% | 5.29 → 4.95 |
 
-These agree with reports 148 and 149. Pooled and `exec`-only cycles differ because the
-first pools every group's cycle count. Elapsed time a row rises more, by about 47–55%.
+These agree with reports 148 and 149.
+- **The matched comparison is the `exec`-group columns.** There, cycles, instructions,
+  issued µops and retired slots are counted together in the same runs.
+- **It was computed three times** from the same archived records: by the researcher
+  (report 149), by the guardian (report 151) and here. It is a stronger analysis of one
+  capture, not an independent replication.
+- **Pooled and `exec`-only cycles differ** because the pooled figure takes every group's
+  cycle count. Elapsed time a row rises more, by about 47–55%.
 These are per-copy costs. Four copies together still do more total work than one.
 
-**The demonstrated finding:**
-- Four concurrent copies of A, B and P each take 37–45% more cycles a row.
-- They retire essentially the same instructions per row: within 0.03%, and retired slots
-  within 0.1%.
+**The demonstrated finding, stated narrowly:**
+
+> These simplified traversals show a substantial concurrency cost without materially more
+> instruction work. The production queue, decoded-output work and software prefetch are
+> not necessary for it to appear. This does not identify the physical bottleneck. It does
+> not imply that cutting instructions or state traffic cannot help a different
+> implementation.
+
+- Four concurrent copies of A, B and P each take 37–45% more cycles a row. That is
+  +38.3%, +36.6% and +43.3% in the matched `exec` group.
+- They do essentially the same work a row:
+  - instructions within 0.03%;
+  - issued µops within 0.51%;
+  - retired slots within 0.1%.
 - The ratio of counted cycles to elapsed ns falls from about 5.29 to 4.95. That is
   consistent with a lower effective clock, and it is why elapsed time rises more than
   cycles. It is not a dedicated frequency measurement. A lower clock alone, with the same
@@ -649,11 +665,31 @@ These are per-copy costs. Four copies together still do more total work than one
   - software prefetch (A has none).
 - A and B still keep lane state: each lane's position and remaining work are updated
   every step. They are reduced walkers, not kernels without bookkeeping or stores.
-- The finding does not say those mechanisms add nothing to P's cost. It does not show the
-  full decoder's four-worker penalty has the same cause.
+- "Not necessary" is the whole claim. It does not say those mechanisms add nothing to
+  P's or the decoder's cost. It does not show the full decoder's four-worker penalty has
+  the same cause.
+- **"Concurrency adds almost no instructions" is not "fewer instructions cannot help."**
+  The two questions are separate:
+  - Why does the current kernel slow under concurrency? This capture does not support an
+    increase in instruction count as the answer.
+  - Could a different implementation run faster? Possibly. Fewer loads, stores, address
+    calculations or dependencies could still help. So closing the generic
+    scheduling-rewrite question is compatible with continuing the bounded `k`/`j`
+    assessment. The packed token removes explicit state traffic from the compact walk.
+    It does not try to remove bookkeeping added between one core and four. Its payoff
+    is unmeasured.
 
 **For the ongoing Astra/researcher assessment of `k` and `j`:** this capture predicts
 neither their success nor their failure. They were not measured.
+- The question it leaves (report 151): can the traversal's representation or access
+  pattern change so that concurrent execution gets cheaper, without adding more
+  extraction and state-management cost than it saves?
+- The frozen FOR-14 implementation answered no, for that implementation. `k` and `j` have
+  not answered it.
+- Two readings are unsupported:
+  - "the smaller table must eventually win";
+  - "the shipped loop is close to M, so representation research is exhausted".
+  The ladder limits one class of improvement. It does not establish a hardware optimum.
 - The frozen FOR-14 loss stands. The packed token's reduction in compiled work (§8a of
   the FOR-14 record) is separate evidence.
 - Neither the 27-instruction listing nor the 0.57 issue share predicts their speed.
@@ -663,7 +699,8 @@ neither their success nor their failure. They were not measured.
 **Closed:**
 - The diagnostic is closed under D1.
 - The perf backend is kept. The in-process collector stays deferred (§6a).
-- No further i9 run is requested.
+- No further i9 run is requested. This is the diagnostic's endpoint: the next substantive
+  decision belongs to the compact-candidate assessment (report 151).
 
 ## 7. Cost so far
 
