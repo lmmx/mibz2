@@ -2,7 +2,7 @@
 
 # Memory-level parallelism in mibz2: instructions, overlap and evidence
 
-What does interleaving independent pointer chases really demonstrate? A 2022 exchange about Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk.
+Interleaving pointer chases lets memory waits overlap. The speedup shows that this pays, but not what limits it: a 2022 exchange about Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk.
 
 2 November 2026 · 15 min read · [Research synthesis](<#5-the-bottleneck-isnt-an-instruction-count>)
 
@@ -20,7 +20,11 @@ So mibz2 doesn't walk one chain at a time. It picks about 500 [starting rows](<h
 
 What made it faster? It's tempting to say we'd found how many memory requests the CPU can keep in flight at once, its *memory-level parallelism* (MLP). But the same change also handed the CPU's scheduler far more independent instructions, which is *instruction-level parallelism* (ILP). Which of the two explains the speedup, and does the answer change what we should try to make faster?
 
-The same question came up in 2022, in replies to Daniel Lemire's post [Memory-level parallelism: Intel Ice Lake versus Amazon Graviton 3](<https://lemire.me/blog/2022/06/07/memory-level-parallelism-intel-ice-lake-versus-amazon-graviton-3/>). Lemire measures MLP with a benchmark much like our walk: a long pointer chase through a large array, then the same accesses shared among more and more independent chains. Ivica Bogosavljevic replied that the speedup comes from ILP as well; Lemire, that the waits are memory loads, not instructions. To see why they could both be right, start with why one chain is slow.
+The same question came up in 2022, in replies to Daniel Lemire's post [Memory-level parallelism: Intel Ice Lake versus Amazon Graviton 3](<https://lemire.me/blog/2022/06/07/memory-level-parallelism-intel-ice-lake-versus-amazon-graviton-3/>). Lemire measures MLP with a benchmark much like our walk: a long pointer chase through a large array, then the same accesses shared among more and more independent chains. Ivica Bogosavljevic replied that the speedup comes from ILP as well; Lemire, that the waits are memory loads, not instructions.
+
+They were both right, because ILP and MLP aren't rival explanations here: the independent instructions are what let the memory requests overlap, so the two names describe one mechanism from its two ends. The more useful question is what a speedup like our 8.6 can tell you about the part of the machine that limits it. It shows that overlapping the chains pays, but not what stops the gain from growing, and so not what to make faster next. We found that out on our own walk: removing a third of its instructions made it about 12% faster on its own, and left the decoder no faster with four workers.
+
+The sections below take that argument in order: why one chain stalls; how ILP and MLP fit together; what Lemire's curve can and can't measure; what happened when we cut the walk's instructions; and where the four-worker decoder's extra time goes instead.
 
 ## 1\. Why a pointer chase stalls
 
@@ -105,7 +109,7 @@ Both of them are describing the same event from different ends. In the interleav
 3. their memory requests overlap;
 4. more steps complete per second.
 
-The first two steps are ILP and the last two are MLP, but they aren't two separate speedups to be added up. The independence of the instructions is what lets the memory requests overlap. Work on MLP treats them together for that reason: how far ahead the instruction window reaches, and how scheduling and branches behave, decide how much memory concurrency a core can actually achieve ([Chou, Fahs and Abraham, ISCA 2004](<https://pages.cs.wisc.edu/~markhill/restricted/isca04_mlp.pdf>)).
+The first two steps are ILP and the last two are MLP: the opportunity, and what the memory system makes of it. They aren't two separate speedups to be added up. The independence of the instructions is what lets the memory requests overlap. Work on MLP treats them together for that reason: how far ahead the instruction window reaches, and how scheduling and branches behave, decide how much memory concurrency a core can actually achieve ([Chou, Fahs and Abraham, ISCA 2004](<https://pages.cs.wisc.edu/~markhill/restricted/isca04_mlp.pdf>)).
 
 Each side's wording is a little loose. Interleaving doesn't "break" any dependency, as Ivica put it: each chain keeps all of its own, and independent chains are added alongside. And loads are instructions, so "memory loads, not instructions" really means that the delay on the critical path is the memory system's, not arithmetic's. Neither claim about processors is universal either. A core doesn't have to be superscalar or out of order to keep several misses in flight: Berkeley's single-issue, in-order Rocket core has a nonblocking data cache, and Arm documents three outstanding misses, under some conditions, on the in-order Cortex-A55 (the [appendix](<https://lmmx.github.io/mibz2/blog/2026-11-02-memory-level-parallelism-notes/#2-what-a-core-needs-to-keep-several-loads-in-flight>) has the sources). An in-order core is simply much more sensitive to the order in which the loads appear.
 
@@ -126,7 +130,7 @@ Figures like those come from where the curve stops rising; the benchmark's code,
 - bandwidth runs out;
 - or noise lands near the 1% threshold.
 
-The curve alone can't tell these apart. As Travis Downs pointed out in an [earlier discussion of the same benchmark](<https://lemire.me/blog/2019/01/01/memory-level-parallelism-intel-skylake-versus-intel-cannonlake/>), every queue between the core and DRAM affects the plateau, and what matters is not only how many entries a queue has but how long each request holds one. Changing the page size moved the plateau too. A 256 MiB array spans 65,536 pages of 4 KiB, so translation is part of what the benchmark measures.
+The curve alone can't tell these apart. So "about 25 loads at once" is safest read as a statement about the whole machine running this workload: around the 25th lane, another chain stopped buying more overlap. It needn't be the size of any one queue. As Travis Downs pointed out in an [earlier discussion of the same benchmark](<https://lemire.me/blog/2019/01/01/memory-level-parallelism-intel-skylake-versus-intel-cannonlake/>), every queue between the core and DRAM affects the plateau, and what matters is not only how many entries a queue has but how long each request holds one. Changing the page size moved the plateau too. A 256 MiB array spans 65,536 pages of 4 KiB, so translation is part of what the benchmark measures.
 
 ### How big is the read?
 
@@ -174,7 +178,7 @@ A rough model shows why instructions might matter once the lanes are there. The 
 
 \\\[ c\_{\\text{step}} \\gtrsim \\max\\left( \\frac{L}{K},\\ \\frac{u}{P},\\ \\frac{b}{B} \\right) \\\]
 
-Here \\(L/K\\) is the memory latency shared among \\(K\\) independent chains, \\(u/P\\) the instruction work per step over the rate the core can execute it, and \\(b/B\\) the bytes per step over the available bandwidth. It's optimistic and leaves a great deal out, but it captures the turn in the story. With one chain, \\(L/K\\) dominates and trimming instructions barely helps. Add enough chains and \\(L/K\\) falls until the instruction work, or the traffic, takes over. At that point fewer instructions should mean a faster walk: they shorten the work per step, they free load and address-generation slots, and they let the instruction window reach more loads.
+Here \\(L/K\\) is the memory latency shared among \\(K\\) independent chains, \\(u/P\\) the instruction work per step over the rate the core can execute it, and \\(b/B\\) the bytes per step over the available bandwidth. It's optimistic and leaves a great deal out, but it captures the turn in the story, because shrinking one term helps only while that term is the largest. With one chain, \\(L/K\\) dominates and trimming instructions barely helps. Add enough chains and \\(L/K\\) falls until the instruction work, or the traffic, takes over. At that point fewer instructions should mean a faster walk: they shorten the work per step, they free load and address-generation slots, and they let the instruction window reach more loads.
 
 So we tried it. An experiment unrolled all 32 lane steps so that each used fixed offsets, removing most of the walk's bookkeeping ([assembly comparison](<https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-astra-fidelity/README.md>)):
 
@@ -198,6 +202,8 @@ With four workers, the configuration that matters, the gain was nothing. A contr
 
 The two results come from different processors, so together they don't isolate one cause. A plausible reading is that the removed instructions weren't using the resource that limits the four-worker decoder: the archive's own explanation, pressure on the workstation's load and address ports, comes from a static model, not a measurement. What the pair does establish is the point of Ivica's objection. Cutting instructions can make a loop faster in isolation and make no difference to the program it lives in.
 
+For optimisation, a bottleneck is the resource whose relief improves the figure you care about. The walk's extra instructions were real work, but removing them didn't improve four-worker throughput, so for that figure they weren't the bottleneck. In the model's terms, the instruction term \\(u/P\\) wasn't the largest one when four workers shared the machine, and shrinking a term that isn't the largest changes nothing.
+
 ## 5\. The bottleneck isn't an instruction count
 
 If not instructions, then what? Our earlier attribution of the whole decoder ([analysis](<https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md>)) compared one worker with four:
@@ -214,7 +220,7 @@ Much of that extra time is in the inverse-BWT step. On 197 matched full-sized bl
 
 ### Counters can mislead in the same way
 
-Hardware counters are the obvious way to find out, but they need the same care as Lemire's curve. Intel defines an "MLP" metric as the number of pending L1 demand misses summed over cycles, divided by the number of cycles in which any such miss was pending. Between one worker and four, that figure barely moved, staying near 2.18. That sounds like nothing changed. But the share of cycles with a miss pending rose from about 12% to about 30%, so averaged over *all* cycles the occupancy rose from roughly \\(2.18 \\times 0.12 \\approx 0.26\\) to \\(2.18 \\times 0.30 \\approx 0.65\\). The metric was answering a narrower question than its name suggests.
+Hardware counters are the obvious way to find out, but they need the same care as Lemire's curve. Intel defines an "MLP" metric as the number of pending L1 demand misses summed over cycles, divided by the number of cycles in which any such miss was pending. Between one worker and four, that figure hardly changed, staying near 2.18. That sounds like nothing changed. But the share of cycles with a miss pending rose from about 12% to about 30%, so averaged over *all* cycles the occupancy rose from roughly \\(2.18 \\times 0.12 \\approx 0.26\\) to \\(2.18 \\times 0.30 \\approx 0.65\\). The metric was answering a narrower question than its name suggests.
 
 One occupancy trace, three ratios
 
@@ -224,7 +230,12 @@ The same caution applies to every counter we read: what it counts, over which cy
 
 ### Exposing work isn't the same as completing it
 
-ILP describes the freedom a program gives the processor: independent instructions it could run. MLP describes what the hardware manages to do with that freedom in the memory system: requests that actually overlap. Lemire's benchmark shows that turning the first into the second pays, and Ivica was right that the speedup alone can't tell you which resource it ran into. mibz2's walk shows the same thing from the other side. Removing a third of its instructions sped up the walk on its own and left the four-worker decoder where it was. And the four-worker decoder's extra cost was never in its instruction count: it retires the same instructions as one worker, and takes longer to complete them.
+Put together, the argument runs:
+
+1. A dependent pointer chase waits on memory at every step, because each load's address is the value the previous load returned.
+2. Independent chains give the processor loads it can issue together (ILP), and their requests overlap in the memory system (MLP). Throughput rises though no load gets faster.
+3. The speedup, and the lane count where it levels off, show that the overlap pays. They don't show which resource stops it, because many different limits produce the same curve.
+4. So a cost that looks large isn't necessarily the one to cut. Removing a third of mibz2's walk instructions made the walk faster on its own and left the four-worker decoder where it was. Four workers retire the same instructions per byte as one, and take longer to complete them.
 
 So the next gain won't come from counting instructions, or from counting requests in flight. It will come from finding which resource the traversal is actually waiting on when four workers share the machine, and changing whatever consumes it.
 

@@ -31,7 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [Instructions, overlap and evidence](<https://lmmx.github.io/mibz2/blog/2026-11-02-memory-level-parallelism/index.md>): What does interleaving independent pointer chases really demonstrate? A 2022 exchange about Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk.
+- [Instructions, overlap and evidence](<https://lmmx.github.io/mibz2/blog/2026-11-02-memory-level-parallelism/index.md>): Interleaved pointer chases overlap their memory waits. The speedup shows that this pays, but not what limits it, and so not what to make faster next.
 - [Technical appendix](<https://lmmx.github.io/mibz2/blog/2026-11-02-memory-level-parallelism-notes/index.md>): Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register.
 - [Inverse-BWT memory interference](<https://lmmx.github.io/mibz2/blog/2026-11-01-inverse-bwt-memory-interference/index.md>): Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible.
 - [Block dispatch in mibz2](<https://lmmx.github.io/mibz2/blog/2026-11-01-block-dispatch/index.md>): How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay.
