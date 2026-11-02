@@ -24,7 +24,7 @@
         <link rel="prev" href="../background/journals/">
       
       
-        <link rel="next" href="./2026-11-02-memory-level-parallelism/">
+        <link rel="next" href="./2026-11-02-smaller-table-four-workers/">
       
       
         
@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=9b4214d1e1a7">
+      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=f384fb424b19">
     
-      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=9b4214d1e1a7">
+      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=f384fb424b19">
     
-      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=9b4214d1e1a7">
+      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=f384fb424b19">
     
-      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=9b4214d1e1a7">
+      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=f384fb424b19">
     
-      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=9b4214d1e1a7">
+      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=f384fb424b19">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1039,6 +1039,8 @@
       
         
       
+        
+      
     
     
     
@@ -1093,6 +1095,33 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="./2026-11-02-smaller-table-four-workers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  A smaller table, four workers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
     
     
       
@@ -1108,10 +1137,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_3" >
         
           
-          <label class="md-nav__link" for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_3" id="__nav_7_3_label" tabindex="0">
             
   
   
@@ -1129,8 +1158,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_2">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_3_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_3">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -1522,6 +1551,7 @@
 <p>What mibz2's experiments are finding, and where they go next. The evidence behind each
 post is in the <a href="../background/journals/">journals</a> and the pull requests they link.</p>
 <div class="post-list">
+<a class="post-card" href="2026-11-02-smaller-table-four-workers/"><img src="../assets/social/blog-2026-11-02-smaller-table-four-workers.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">2 November 2026 · Research result</span><span class="post-card-title">A smaller inverse-BWT table wins with four workers</span><span class="post-card-dek">A compressed navigation table for the inverse BWT costs 15% more CPU time on one core, and saves 16% when four workers traverse at once. We can now measure the advantage; we still have to explain it, and to build the table cheaply.</span></span></a>
 <a class="post-card" href="2026-11-02-memory-level-parallelism/"><img src="../assets/social/blog-2026-11-02-memory-level-parallelism.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">2 November 2026 · Research synthesis</span><span class="post-card-title">Memory-level parallelism in mibz2: instructions, overlap and evidence</span><span class="post-card-dek">Interleaving pointer chases lets memory waits overlap. The speedup shows that this pays, but not what limits it: a 2022 exchange about Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk.</span></span></a>
 <a class="post-card" href="2026-11-01-inverse-bwt-memory-interference/"><img src="../assets/social/blog-2026-11-01-inverse-bwt-memory-interference.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">1 November 2026 · Research in progress</span><span class="post-card-title">Investigating inverse-BWT memory interference in mibz2</span><span class="post-card-dek">Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible.</span></span></a>
 <a class="post-card" href="2026-11-01-block-dispatch/"><img src="../assets/social/blog-2026-11-01-block-dispatch.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">1 November 2026 · Investigation in progress</span><span class="post-card-title">Block dispatch in mibz2: mutexes, futexes and the scheduler</span><span class="post-card-dek">How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay.</span></span></a>
@@ -1587,13 +1617,13 @@ post is in the <a href="../background/journals/">journals</a> and the pull reque
         
         
           
-          <a href="./2026-11-02-memory-level-parallelism/" class="md-footer__link md-footer__link--next" aria-label="Next: Instructions, overlap and evidence">
+          <a href="./2026-11-02-smaller-table-four-workers/" class="md-footer__link md-footer__link--next" aria-label="Next: A smaller table, four workers">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Instructions, overlap and evidence
+                A smaller table, four workers
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1672,17 +1702,17 @@ post is in the <a href="../background/journals/">journals</a> and the pull reque
     
       <script src="../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../assets/javascripts/bench.js?v=9b4214d1e1a7"></script>
+        <script src="../assets/javascripts/bench.js?v=f384fb424b19"></script>
       
-        <script src="../assets/javascripts/couriers.js?v=9b4214d1e1a7"></script>
+        <script src="../assets/javascripts/couriers.js?v=f384fb424b19"></script>
       
-        <script src="../assets/javascripts/blog.js?v=9b4214d1e1a7"></script>
+        <script src="../assets/javascripts/blog.js?v=f384fb424b19"></script>
       
-        <script src="../assets/javascripts/frontier.js?v=9b4214d1e1a7"></script>
+        <script src="../assets/javascripts/frontier.js?v=f384fb424b19"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../assets/javascripts/katex.js?v=9b4214d1e1a7"></script>
+        <script src="../assets/javascripts/katex.js?v=f384fb424b19"></script>
       
     
   </body>
