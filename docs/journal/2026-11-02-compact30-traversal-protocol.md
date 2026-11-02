@@ -11,6 +11,10 @@
 - **The collector is unchanged** from `c0f8d38`: the Rust source, the walker, the
   synchronisation and the timing windows. Only `bench/c30_traversal.py`, its tests and this
   text differ at the new pin (§8).
+- **Since revision 4, two preflight repairs (§8):** the recipe selects the reviewed
+  toolchain (report 180), and G3 compares the function's own extent, leaving out the
+  linker's alignment fill after it (report 182). Neither changes the collector or the
+  analysis.
 - **Not authorised:** the capture. The i9 command in §9 runs only once the guardian approves
   it.
 - **The candidate:** the refined compact30 walker (`examples/c30walk.rs`, `room::<false>`),
@@ -313,7 +317,7 @@ never reaches an ADVANCE, STOP or INCONCLUSIVE decision.
 |---|---|
 | G1 stability | P's per-round figure, max ÷ min ≤ 1.05, for the W1 CPU cost, the W4 CPU cost and the W4 completion time |
 | G2 simultaneous start | in every all-full W4 step, the start skew (latest start − earliest start) over the step's span, row-weighted per arm and round, ≤ 0.02, in every arm and round |
-| G3 identity | the corpus hash matches, and `room::<false>`'s listing in the built binary is the reviewed one (`bench/asm_listing.py`). Every instruction is compared in order with its operands; branch targets are taken relative to the function, callees by symbol, and RIP displacements are masked. If G3 fails, there is no run |
+| G3 identity | the corpus hash matches, and `room::<false>`'s listing in the built binary is the reviewed one (`bench/asm_listing.py`). The function is its symbol's extent, start to start + size (the symbol table's size, which must be the reviewed 0x20aa). Every instruction in it is compared in order with its operands, the function's own alignment NOPs included; branch targets are taken relative to the function, callees by symbol, and RIP displacements are masked. The bytes from the function's end to the next symbol are the linker's alignment fill: they are not compared, and each must be `int3`, a `nop` or `xchg ax,ax`, or G3 fails (report 182). If G3 fails, there is no run |
 | G4 allocation | per-worker rows differ by at most the largest block, and full-block counts by at most one |
 | G5 clock calls | §4, on calibration S9 has checked: the calibration-based estimate of the calls' share ≤ 0.5% in every arm, mode and round |
 
@@ -539,6 +543,60 @@ the manifests); the analyser, its tests and this text changed.
     reported identity.
   - Both refusals are archived.
 
+### The second i9 attempt, and the G3 boundary repair (report 182)
+
+- **The attempt:** the approved capture was run on the i9 with the recipe at `0d85566`.
+  - The corpus check, the source pin, the toolchain identity (rustc 1.97.0, `2d8144b78`,
+    LLVM 22.1.6) and the 37 tests passed.
+  - G3 stopped the run before any timing.
+- **What G3 found:** the same function, followed by different linker fill. Its files are
+  kept in `i9-attempt-2/`.
+  - The first 1,552 normalised instructions match the reference exactly, the 21-instruction
+    ordinary path included. Both end with the call to `_Unwind_Resume`.
+  - After that call, the reference has six `int3` and the i9's binary one 6-byte `nop`.
+    Those are the bytes from the function's end to the next symbol's 16-byte alignment,
+    filled differently by the two machines' linkers.
+  - G3 took the function to end at the next symbol, so it compared the fill:
+    `1552: reference 'int3' / this binary 'nop WORD PTR [rax+rax*1+0x0]'` and lengths
+    1,558 against 1,553.
+- **What it is:** a G3 preflight failure, not a compact30 result. Its archive
+  (`c30-traversal-20261102T184101Z.tar.gz`, sha256 `fe6ad4e5…`) is kept.
+- **The evidence for the boundary:** the symbol table gives `room::<false>` a size of 0x20aa
+  in the VM's 1.97.0 build of the pin. That build is byte-identical to the one in the
+  toolchain repair's dry run (binary sha256 `82c3a685…`), and its listing is the
+  reference's. 0x20aa from each function's start lands exactly on the first fill byte:
+  - the reference: 0x14ed0 + 0x20aa = 0x16f7a, the first `int3`;
+  - the i9: 0xcbd0 + 0x20aa = 0xec7a, the `nop`;
+  - the VM: 0x18b40 + 0x20aa = 0x1abea, the first of its six `int3`.
+- **The repair** (`bench/asm_listing.py`), G3 only:
+  - the function is the symbol's extent, start to start + size, with the size from the
+    binary's own symbol table (`nm -S`). That size must equal the reviewed 0x20aa;
+  - every instruction in the extent is compared as before, with the same normalisation.
+    On the reference's 1,552 instructions it gives the same text as the old one;
+  - the bytes after the extent, up to the next symbol, are not compared. Each must be
+    `int3`, a `nop` of any width or prefix, or `xchg ax,ax`. Anything else there fails G3,
+    as does an elided run (`...`) or the lack of an instruction boundary at the function's
+    end. The reference's own fill is held to the same rule;
+  - the function's internal alignment NOPs are part of the function and stay compared;
+  - each run also keeps `room-false.bounds`: the extent and the fill on both sides.
+- **Its tests** (`bench/test_asm_listing.py`, 15, run by the recipe before G3):
+  - the regression: the archived i9 listing passes, with its one `nop` reported as fill;
+  - the old boundary reproduces the archived `room-false.diff` line for line;
+  - the i9's 21 ordinary-path instructions normalise to the reference's;
+  - G3 still fails when:
+    - any one of the 21 ordinary-path instructions is replaced, by a `nop` or by a real
+      instruction;
+    - the ordinary step's closing branch targets another offset;
+    - the last call is changed, or replaced by a `nop`;
+    - one of the function's own alignment NOPs is changed, swapped or dropped;
+    - a real instruction (`ret`, `jmp`, `push`, `ud2`, `int 0x3`, `mov`) is in the fill;
+    - the fill has an elided run, or an unrecognised line is inside the function;
+    - the size is anything but 0x20aa, or ends inside an instruction;
+    - the reference's size would leave its last call in the fill;
+  - the fill pattern accepts objdump's alignment forms and rejects other instructions.
+- **Unchanged:** the walker, the collector, the analysis and its 37 tests, the design, the
+  thresholds, the corpus and the pinned toolchain.
+
 ## 9. The records and the command
 
 **The recipe** (`just bench-c30-traversal`) runs the frozen commit in its own worktree
@@ -551,7 +609,7 @@ the manifests); the analyser, its tests and this text changed.
 3. the build, with that toolchain, rustflags forced empty (`CARGO_ENCODED_RUSTFLAGS=`, so no
    `target-cpu` or other flag from a cargo config applies), `--locked`, into
    `target/rust-1.97.0/`;
-4. the analysis's regression tests;
+4. the analysis's regression tests, and G3's (`bench/test_asm_listing.py`);
 5. G3, and no run if it fails;
 6. the CPUs: the second to fifth physical cores (the first takes more interrupts), or the
    first four where there are only four;
@@ -565,7 +623,7 @@ report 142: the commit, the corpus and binary hashes, the command and its exit s
 every file's checksum. It holds:
 - the console;
 - the toolchain;
-- the listing and its diff;
+- the listing, its diff, and its bounds (the function's extent and the fill after it);
 - the records:
   - the meta line, with the assignment, each block's rows and RAW groups, and any
     injection;

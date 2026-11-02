@@ -1,0 +1,44 @@
+{
+ "run": "c30-traversal-20261102T184101Z",
+ "archived": "2026-11-02T18:41:15+00:00",
+ "source": {
+  "commit": "9267433661f4a440c92831a4f1b38b6af61e4726",
+  "branch": "HEAD",
+  "tracked_changes": []
+ },
+ "corpora": [
+  {
+   "path": "/home/louis/dev/mibz2/target/walk-decoder/work/corpora/wikidata-20261026.bz2",
+   "bytes": 11953225,
+   "sha256": "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe"
+  }
+ ],
+ "binary": {
+  "path": "/home/louis/dev/mibz2/target/c30-traversal-pin/target/rust-1.97.0/release/examples/c30walk",
+  "sha256": "062b89bb2a0ece3e304328ea4eebea54bd625821aecec539cef9f74169260a2c"
+ },
+ "command": "just bench-c30-traversal target/walk-decoder/work/corpora 20 capture",
+ "exit_status": 1,
+ "files": [
+  {
+   "path": "console.log",
+   "bytes": 1287,
+   "sha256": "9ce74b8c2c437904a06bfe3b4af47ec5b9f8f1cbdc6cfe82a65d797305e34ff4"
+  },
+  {
+   "path": "room-false.asm",
+   "bytes": 68781,
+   "sha256": "7a85376dc49e1488971e24cd379db7e276f6c6f474058d82038a600d5bc4fc52"
+  },
+  {
+   "path": "room-false.diff",
+   "bytes": 126,
+   "sha256": "6939d497a87a862f7e088551ef5965aa53dbb7c9f9c62a1cec4530f6b4abe942"
+  },
+  {
+   "path": "rustc-vV.txt",
+   "bytes": 232,
+   "sha256": "856e4cad4242f859dad88fe7929dff8608f2654344342ee3135d52fa3a75cac7"
+  }
+ ]
+}
