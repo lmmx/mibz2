@@ -6,6 +6,7 @@
 //!     cargo run --release --example c30walk -- adversarial OUT.jsonl
 //!     cargo run --release --example c30walk -- audit OUT.jsonl FILE.bz2 [FILE.bz2 ...]
 //!     cargo run --release --example c30walk -- audit-adversarial OUT.jsonl
+//!     cargo run --release --example c30walk -- grid OUT.jsonl CORPUS.bz2 --rounds R --cpus A,B,C,D [--dry-run]
 //!
 //! **The representation:**
 //! - **Records:** one 64-byte, 64-aligned record per 30 rows in F order (`Rec`): 30 `u16`
@@ -1063,8 +1064,338 @@ fn adversarial() -> Vec<(String, Vec<u8>)> {
     v
 }
 
+// ---------------------------------------------------------------------------------------
+// The traversal comparison's harness (docs/journal/2026-11-02-compact30-traversal-protocol.md)
+//
+//     c30walk grid OUT.jsonl CORPUS.bz2 --rounds R --cpus A,B,C,D [--dry-run]
+//
+// Two arms walk every block of the corpus, both in this one binary:
+// - **P**, production's `bwt::walk_segments_room`, its table written by `bwt::build` just
+//   before;
+// - **C**, compact30's `walk::<false>`, its records copied from the block's oracle image
+//   into the worker's arena just before.
+// Only the walk, from table to assembled output, is inside the timer. Every walk's output
+// is compared with production's (`bwt::Segmented`), outside the timer.
+//
+// - **W1:** one worker, pinned to the first CPU, walks the blocks in corpus order.
+// - **W4:** four workers, each pinned to its own CPU, walk in lockstep steps. At each step,
+//   all four prepare their tables, meet at a barrier, walk one block each, and meet again.
+//   The blocks are dealt from the corpus sorted by rows, four to a step, snaking
+//   (worker 0→3, then 3→0), so each step's four blocks are of nearly equal size and the
+//   per-worker rows balance. The assignment is deterministic and recorded.
+// - **Rounds:** round −1 is untimed (warm and check); rounds 0..R alternate the arm order
+//   (even: P then C; odd: C then P), with W1 before W4 in each.
+//
+// Every walk is one JSON line: its round, mode, arm, worker, step, block and rows; the CPU
+// it ran on; its preparation's start and end; its walk's start and end (ns from a shared
+// monotonic epoch). With --dry-run (two rounds), the records are marked as a dry run, and
+// bench/c30_traversal.py checks the measurement path and suppresses every timing figure.
+// ---------------------------------------------------------------------------------------
+
+/// The calling thread pinned to `cpu` (sched_setaffinity on itself): false if refused
+fn pin(cpu: usize) -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        extern "C" {
+            fn sched_setaffinity(pid: i32, size: usize, mask: *const u64) -> i32;
+        }
+        let mut mask = [0u64; 16];
+        mask[cpu / 64] |= 1 << (cpu % 64);
+        unsafe { sched_setaffinity(0, std::mem::size_of_val(&mask), mask.as_ptr()) == 0 }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = cpu;
+        false
+    }
+}
+
+fn cpu_now() -> i64 {
+    #[cfg(target_os = "linux")]
+    {
+        extern "C" {
+            fn sched_getcpu() -> i32;
+        }
+        unsafe { sched_getcpu() as i64 }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        -1
+    }
+}
+
+/// A block's compact30 oracle image, copied into a worker's arena before C's walk
+struct Image {
+    rec: Vec<Rec>,
+    raw: Vec<RawG>,
+}
+
+/// A worker's state, kept across rounds: each arm's table arena and walk scratch
+#[derive(Default)]
+struct Worker {
+    tt: mibz2::bwt::TVector,
+    seg: mibz2::bwt::SegScratch,
+    c: C30,
+    out: Vec<u8>,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum Arm {
+    P,
+    C,
+}
+
+/// One walk's record
+struct Walk {
+    round: i64,
+    w4: bool,
+    arm: Arm,
+    worker: usize,
+    step: usize,
+    block: usize,
+    rows: usize,
+    cpu: i64,
+    prep: (u64, u64),
+    walk: (u64, u64),
+}
+
+impl Worker {
+    /// Prepare block `i`'s table for `arm` (untimed), walk it (timed), check it (untimed)
+    fn run(
+        &mut self,
+        arm: Arm,
+        b: &Block,
+        img: &Image,
+        epoch: std::time::Instant,
+        barrier: Option<&std::sync::Barrier>,
+    ) -> ((u64, u64), (u64, u64)) {
+        let (ll, counts, op, want) = b;
+        let ns = |t: std::time::Instant| t.duration_since(epoch).as_nanos() as u64;
+        let p0 = std::time::Instant::now();
+        match arm {
+            Arm::P => mibz2::bwt::build(ll, counts, &mut self.tt),
+            Arm::C => {
+                self.c.rec.clear();
+                self.c.rec.extend_from_slice(&img.rec);
+                self.c.raw.clear();
+                self.c.raw.extend_from_slice(&img.raw);
+                self.c.n = ll.len();
+            }
+        }
+        let p1 = std::time::Instant::now();
+        if let Some(b) = barrier {
+            b.wait();
+        }
+        let t0 = std::time::Instant::now();
+        match arm {
+            Arm::P => {
+                mibz2::bwt::walk_segments_room(&mut self.tt, *op, &mut self.out, &mut self.seg)
+            }
+            Arm::C => {
+                let mut d = Counts::default();
+                self.c.walk::<false>(*op, false, &mut self.out, &mut d)
+            }
+        }
+        let t1 = std::time::Instant::now();
+        assert!(
+            &self.out == want,
+            "arm {} walked a block wrongly",
+            if arm == Arm::P { "P" } else { "C" }
+        );
+        ((ns(p0), ns(p1)), (ns(t0), ns(t1)))
+    }
+}
+
+fn grid(args: &[String]) {
+    let out_path = &args[0];
+    let file = &args[1];
+    let mut rounds = 20i64;
+    let mut cpus: Vec<usize> = Vec::new();
+    let mut dry = false;
+    let mut i = 2;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--rounds" => {
+                rounds = args[i + 1].parse().unwrap();
+                i += 1;
+            }
+            "--cpus" => {
+                cpus = args[i + 1].split(',').map(|c| c.parse().unwrap()).collect();
+                i += 1;
+            }
+            "--dry-run" => dry = true,
+            a => panic!("unknown argument {a}"),
+        }
+        i += 1;
+    }
+    if dry {
+        rounds = 2;
+    }
+    assert!(
+        cpus.len() >= 4,
+        "--cpus needs four CPUs, one a physical core"
+    );
+    let data = std::fs::read(file).unwrap();
+    let bs = blocks(&data);
+    // the oracle images (untimed, once)
+    let imgs: Vec<Image> = bs
+        .iter()
+        .map(|(ll, counts, _, _)| {
+            let mut w = C30::default();
+            w.build(ll, counts, 0);
+            Image {
+                rec: w.rec,
+                raw: w.raw,
+            }
+        })
+        .collect();
+    // the four-worker assignment: sorted by rows (descending, then index), dealt four to a
+    // step, snaking
+    let mut order: Vec<usize> = (0..bs.len()).collect();
+    order.sort_by_key(|&i| (std::cmp::Reverse(bs[i].0.len()), i));
+    let mut lists: [Vec<usize>; 4] = Default::default();
+    for (k, chunk) in order.chunks(4).enumerate() {
+        for (j, &b) in chunk.iter().enumerate() {
+            let w = if k % 2 == 0 { j } else { 3 - j };
+            lists[w].push(b);
+        }
+    }
+    let wrows: Vec<usize> = lists
+        .iter()
+        .map(|l| l.iter().map(|&b| bs[b].0.len()).sum())
+        .collect();
+    let mut jl = std::fs::File::create(out_path).unwrap();
+    let name = std::path::Path::new(file)
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned();
+    let total: usize = bs.iter().map(|b| b.0.len()).sum();
+    let brows: Vec<usize> = bs.iter().map(|b| b.0.len()).collect();
+    let braw: Vec<usize> = imgs.iter().map(|m| m.raw.len()).collect();
+    writeln!(
+        jl,
+        "{{\"kind\":\"meta\",\"corpus\":{name:?},\"blocks\":{},\"rows\":{total},\"full_blocks\":{},\"rounds\":{rounds},\"dry_run\":{dry},\"cpus\":{cpus:?},\"w4_lists\":{lists:?},\"w4_rows\":{wrows:?},\"block_rows\":{brows:?},\"block_raw_groups\":{braw:?}}}",
+        bs.len(),
+        bs.iter().filter(|b| b.0.len() >= 899_000).count(),
+    )
+    .unwrap();
+    let mut ws: Vec<Worker> = (0..4).map(|_| Worker::default()).collect();
+    let epoch = std::time::Instant::now();
+    let arm_name = |a: Arm| if a == Arm::P { "P" } else { "C" };
+    for round in -1..rounds {
+        let arms = if round.rem_euclid(2) == 0 {
+            [Arm::P, Arm::C]
+        } else {
+            [Arm::C, Arm::P]
+        };
+        let mut recs: Vec<Walk> = Vec::new();
+        // W1
+        for &arm in &arms {
+            let w = &mut ws[0];
+            let r: Vec<Walk> = std::thread::scope(|sc| {
+                sc.spawn(|| {
+                    assert!(pin(cpus[0]), "could not pin to CPU {}", cpus[0]);
+                    (0..bs.len())
+                        .map(|i| {
+                            let (prep, walk) = w.run(arm, &bs[i], &imgs[i], epoch, None);
+                            Walk {
+                                round,
+                                w4: false,
+                                arm,
+                                worker: 0,
+                                step: i,
+                                block: i,
+                                rows: bs[i].0.len(),
+                                cpu: cpu_now(),
+                                prep,
+                                walk,
+                            }
+                        })
+                        .collect()
+                })
+                .join()
+                .unwrap()
+            });
+            recs.extend(r);
+        }
+        // W4
+        for &arm in &arms {
+            let steps = lists.iter().map(|l| l.len()).max().unwrap();
+            let barrier = std::sync::Barrier::new(4);
+            let r: Vec<Vec<Walk>> = std::thread::scope(|sc| {
+                let hs: Vec<_> = ws
+                    .iter_mut()
+                    .enumerate()
+                    .map(|(k, w)| {
+                        let (list, barrier, cpus, bs, imgs) =
+                            (&lists[k], &barrier, &cpus, &bs, &imgs);
+                        sc.spawn(move || {
+                            assert!(pin(cpus[k]), "could not pin to CPU {}", cpus[k]);
+                            let mut v = Vec::new();
+                            for step in 0..steps {
+                                match list.get(step) {
+                                    Some(&i) => {
+                                        let (prep, walk) =
+                                            w.run(arm, &bs[i], &imgs[i], epoch, Some(barrier));
+                                        v.push(Walk {
+                                            round,
+                                            w4: true,
+                                            arm,
+                                            worker: k,
+                                            step,
+                                            block: i,
+                                            rows: bs[i].0.len(),
+                                            cpu: cpu_now(),
+                                            prep,
+                                            walk,
+                                        });
+                                    }
+                                    None => {
+                                        barrier.wait();
+                                    }
+                                }
+                                barrier.wait();
+                            }
+                            v
+                        })
+                    })
+                    .collect();
+                hs.into_iter().map(|h| h.join().unwrap()).collect()
+            });
+            recs.extend(r.into_iter().flatten());
+        }
+        for r in &recs {
+            writeln!(
+                jl,
+                "{{\"kind\":\"walk\",\"round\":{},\"mode\":\"{}\",\"arm\":\"{}\",\"worker\":{},\"step\":{},\"block\":{},\"rows\":{},\"cpu\":{},\"prep_start\":{},\"prep_end\":{},\"start\":{},\"end\":{},\"exact\":true}}",
+                r.round,
+                if r.w4 { "w4" } else { "w1" },
+                arm_name(r.arm),
+                r.worker,
+                r.step,
+                r.block,
+                r.rows,
+                r.cpu,
+                r.prep.0,
+                r.prep.1,
+                r.walk.0,
+                r.walk.1
+            )
+            .unwrap();
+        }
+        println!(
+            "grid: round {round} done{}",
+            if dry { " (dry run)" } else { "" }
+        );
+    }
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if args[1] == "grid" {
+        return grid(&args[2..]);
+    }
     let mut jl = std::fs::File::create(&args[2]).unwrap();
     match args[1].as_str() {
         "check" => {
