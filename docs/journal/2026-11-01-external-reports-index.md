@@ -1,4 +1,4 @@
-# External research reports 74–184: index
+# External research reports 74–185: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -124,6 +124,7 @@ verbatim. They are not findings of this repository.
 | 182 | 2026-11-02 | the guardian | the second i9 attempt (rustc 1.97.0 passing) stopped at G3 on trailing linker alignment padding only: six `int3` against one multi-byte `nop` after the last call, the first 1,552 instructions identical; authorises a narrow G3 boundary repair (symbol size, padding-only tail) with a regression on the archived mismatch and a real-instruction negative test | `2026-11-02-external-report-182.md` (archive in `2026-11-02-external-report-182/`) |
 | 183 | 2026-11-02 | unattributed in the relay (the guardian's register) | the third i9 capture completes all 20 rounds but is INVALID: G2 (simultaneous start) fails, with more skew in each round's first W4 arm; the descriptive ratios are not a result; authorises a G2 audit from the archive alone, with one recommendation | `2026-11-02-external-report-183.md` (archive in `2026-11-02-external-report-183/`) |
 | 184 | 2026-11-02 | unattributed in the relay (the guardian's register) | accepts the G2 diagnosis; authorises one repair, a spinning W4 start barrier, with the completion barrier, walker, windows, rounds and G2's 2% unchanged; registers the prediction and a stop rule; asks for the pin, tests, VM dry run and i9 recipe, with no workstation run | `2026-11-02-external-report-184.md` |
+| 185 | 2026-11-02 | unattributed in the relay (the guardian's register) | approves one final registered capture at branch head `5e2888f` (pin `f1dafa3`, spinning start barrier); if G2 passes, the full decision on w4 and e4; if it fails, INVALID and the comparison stops | `2026-11-02-external-report-185.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
