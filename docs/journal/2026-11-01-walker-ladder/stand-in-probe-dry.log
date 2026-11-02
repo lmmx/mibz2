@@ -1,0 +1,66 @@
+<corpora>/wikidata-20261026.bz2: OK
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 6.02s
+   Compiling mibz2 v0.2.1 (<repo>)
+    Finished `release` profile [optimized + debuginfo] target(s) in 7.55s
+     Running unittests examples/walker_ladder.rs (target/release/examples/walker_ladder-1a8806f6612e0453)
+
+running 8 tests
+test tests::deadline_loop_walks_at_least_once ... ok
+test tests::deadline_loop_is_capped_by_reps ... ok
+test tests::fixed_loop_walks_reps ... ok
+test tests::malformed_acks_are_rejected ... ok
+test tests::mixed_framing ... ok
+test tests::reads_no_further_than_its_frame ... ok
+test tests::two_acks_plain ... ok
+test tests::two_acks_with_perf_6_8_nul_framing ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+.........................
+----------------------------------------------------------------------
+Ran 25 tests in 0.070s
+
+OK
+check: block 1 (900000 rows, 511 segments): rungs A-D, M and P at 1, 8, 16 and 32 lanes, and S: every walk visits every row once, M's every segment reaches its successor's start, and D's and P's outputs are the shipped walk's (fnv 27d7635e0e1a9555)
+# Walker counter probe (20261102T002447Z)
+
+Environment (numbers only): cpu_family 6, cpu_model 207, cpu_stepping 2, logical_cpus 4, physical_cores 4, threads_per_core 1, perf_event_paranoid 2, nmi_watchdog 0; perf version 6.8.fake
+
+The control path holds: cycles and instructions counted, bounded by the FIFO, in the 3-walk window and its 0-walk control.
+
+| group | valid (window and control) | multiplexed | events' states | cycles, 20 walks | cycles, control only |
+|---|---|---|---|--:|--:|
+| exec | False | unassessed | <not supported> | 209717675.0 | 830090.0 |
+| branch_sb | True | False | all valid | 194117470.0 | 571725.0 |
+| mlp | True | False | all valid | 224790585.0 | 480115.0 |
+| stalls_l1 | True | False | all valid | 256002505.0 | 589210.0 |
+| stalls_l2 | True | False | all valid | 204515995.0 | 569370.0 |
+| pf | True | False | all valid | 231698135.0 | 867325.0 |
+| loads | False | True | multiplexed | 194367240.0 | 570820.0 |
+| exec_pair | True | False | all valid | 209558430.0 | 531215.0 |
+| mlp_pair | True | False | all valid | 197559100.0 | 793770.0 |
+| fb_full | True | False | all valid | 212299195.0 | 554885.0 |
+| single:uops_issued.any | True | False | all valid | 199138180.0 | 575620.0 |
+| single:uops_retired.retire_slots | True | False | all valid | 202391635.0 | 575440.0 |
+| single:idq_uops_not_delivered.core | False | unassessed | <not supported> | 186000920.0 | 384335.0 |
+| single:br_misp_retired.all_branches | True | False | all valid | 208546515.0 | 526755.0 |
+| single:resource_stalls.sb | True | False | all valid | 216294195.0 | 586520.0 |
+| single:resource_stalls.any | True | False | all valid | 211927525.0 | 567645.0 |
+| single:l1d_pend_miss.pending | True | False | all valid | 208397305.0 | 541170.0 |
+| single:l1d_pend_miss.pending_cycles | True | False | all valid | 190879535.0 | 576585.0 |
+| single:l1d_pend_miss.fb_full | True | False | all valid | 199266890.0 | 544830.0 |
+| single:cycle_activity.stalls_l1d_miss | True | False | all valid | 207181855.0 | 673675.0 |
+| single:cycle_activity.stalls_total | True | False | all valid | 223157415.0 | 549730.0 |
+| single:cycle_activity.stalls_l2_miss | True | False | all valid | 214255500.0 | 519980.0 |
+| single:cycle_activity.stalls_l3_miss | True | False | all valid | 215832800.0 | 545890.0 |
+| single:dtlb_load_misses.walk_active | True | False | all valid | 311380620.0 | 513600.0 |
+| single:sw_prefetch_access.t0 | True | False | all valid | 203645260.0 | 360315.0 |
+| single:load_hit_pre.sw_pf | True | False | all valid | 203948185.0 | 869755.0 |
+| single:mem_load_retired.l1_miss | True | False | all valid | 216099635.0 | 599015.0 |
+| single:mem_load_retired.fb_hit | False | True | multiplexed | 213292940.0 | 546550.0 |
+| single:mem_load_retired.l2_miss | True | False | all valid | 195254745.0 | 697195.0 |
+| single:mem_load_retired.l3_miss | True | False | all valid | 205141305.0 | 1007375.0 |
+
+wrote target/walker-probe-20261102T002431Z/walker-probe-20261102T002447Z.json and target/walker-probe-20261102T002431Z/walker-probe-20261102T002447Z.md (perf's raw output in the .json)
+archive: target/walker-probe-20261102T002431Z.tar.gz (7656 bytes, sha256 29fb743bd9e7e211d0afcde3136544c7809149569ac20048e5c964030a414fbf): 3 files and MANIFEST.json, commit a245a4550fc44d6d3f7884a6d966ed369a66acff, WITH tracked changes

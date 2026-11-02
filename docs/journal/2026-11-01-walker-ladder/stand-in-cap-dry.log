@@ -1,0 +1,234 @@
+preflight: all 7 groups counted as perf groups, unmultiplexed, bounded by the control FIFO
+round 0 D8 stalls_l2: 4.441 ns a row
+round 0 M8 stalls_l1: 4.012 ns a row
+round 0 C16 stalls_l1: 2.333 ns a row
+round 0 D32 mlp: 2.001 ns a row
+round 0 A8 mlp: 4.040 ns a row
+round 0 A1 stalls_l1: 18.119 ns a row
+round 0 P16 branch_sb: 2.648 ns a row
+round 0 M8 branch_sb: 3.812 ns a row
+round 0 S32 pf: 0.044 ns a row
+round 0 P32 loads: 1.818 ns a row
+round 0 B1 stalls_l1: 17.278 ns a row
+round 0 D8 stalls_l1: 4.306 ns a row
+round 0 B8 exec: 4.159 ns a row
+round 0 P1 stalls_l2: 22.633 ns a row
+round 0 D8 mlp: 4.281 ns a row
+round 0 A16 loads: 2.810 ns a row
+round 0 M8 exec: 3.969 ns a row
+round 0 C1 branch_sb: 27.706 ns a row
+round 0 C32 mlp: 1.515 ns a row
+round 0 P1 pf: 22.425 ns a row
+round 0 D16 pf: 2.348 ns a row
+round 0 D1 mlp: 18.986 ns a row
+round 0 A16 mlp: 3.459 ns a row
+round 0 B8 mlp: 3.906 ns a row
+round 0 D32 stalls_l2: 2.006 ns a row
+round 0 M16 stalls_l2: 2.190 ns a row
+round 0 B8 stalls_l2: 3.999 ns a row
+round 0 M32 exec: 1.442 ns a row
+round 0 A32 stalls_l1: 2.650 ns a row
+round 0 M16 stalls_l1: 2.299 ns a row
+round 0 D16 exec: 2.195 ns a row
+round 0 B16 exec: 2.315 ns a row
+round 0 S32 mlp: 0.042 ns a row
+round 0 P8 loads: 4.247 ns a row
+round 0 B32 pf: 1.599 ns a row
+round 0 P8 exec: 4.337 ns a row
+round 0 A16 stalls_l1: 2.702 ns a row
+round 0 M1 stalls_l2: 23.744 ns a row
+round 0 C8 stalls_l1: 3.752 ns a row
+round 0 M1 stalls_l1: 19.780 ns a row
+round 0 B32 mlp: 1.579 ns a row
+round 0 B1 mlp: 18.524 ns a row
+round 0 C8 branch_sb: 4.137 ns a row
+round 0 M16 mlp: 2.152 ns a row
+round 0 A1 pf: 18.218 ns a row
+round 0 M32 mlp: 1.508 ns a row
+round 0 C8 mlp: 4.288 ns a row
+round 0 A8 stalls_l1: 4.169 ns a row
+round 0 A1 mlp: 19.069 ns a row
+round 0 B32 stalls_l1: 1.586 ns a row
+round 0 P8 mlp: 4.259 ns a row
+round 0 M8 pf: 3.762 ns a row
+round 0 B1 pf: 21.578 ns a row
+round 0 C32 exec: 1.840 ns a row
+round 0 C32 stalls_l1: 1.400 ns a row
+round 0 D8 loads: 4.274 ns a row
+round 0 B1 exec: 18.483 ns a row
+round 0 A8 branch_sb: 4.309 ns a row
+round 0 M8 mlp: 3.817 ns a row
+round 0 C8 loads: 3.893 ns a row
+round 0 P16 stalls_l2: 2.656 ns a row
+round 0 D32 pf: 2.821 ns a row
+round 0 M1 loads: 18.469 ns a row
+round 0 A32 stalls_l2: 2.087 ns a row
+round 0 B16 stalls_l1: 2.083 ns a row
+round 0 B32 exec: 1.458 ns a row
+round 0 D1 pf: 17.603 ns a row
+round 0 M32 branch_sb: 1.401 ns a row
+round 0 B32 loads: 1.493 ns a row
+round 0 S32 stalls_l2: 0.046 ns a row
+round 0 C16 branch_sb: 2.086 ns a row
+round 0 B16 mlp: 2.591 ns a row
+round 0 M32 pf: 1.378 ns a row
+round 0 C16 mlp: 2.290 ns a row
+round 0 P8 stalls_l1: 4.197 ns a row
+round 0 B8 loads: 4.005 ns a row
+round 0 B8 stalls_l1: 4.416 ns a row
+round 0 P32 stalls_l1: 1.941 ns a row
+round 0 M8 stalls_l2: 4.151 ns a row
+round 0 M16 pf: 2.228 ns a row
+round 0 P1 mlp: 24.595 ns a row
+round 0 B16 branch_sb: 2.247 ns a row
+round 0 C32 pf: 1.417 ns a row
+round 0 B32 stalls_l2: 2.378 ns a row
+round 0 D32 branch_sb: 2.458 ns a row
+round 0 B32 branch_sb: 1.694 ns a row
+round 0 P32 mlp: 1.891 ns a row
+round 0 P8 stalls_l2: 4.456 ns a row
+round 0 A32 exec: 2.705 ns a row
+round 0 A1 stalls_l2: 22.108 ns a row
+round 0 C8 stalls_l2: 4.160 ns a row
+round 0 P8 branch_sb: 3.970 ns a row
+round 0 A32 branch_sb: 2.196 ns a row
+round 0 C1 stalls_l1: 19.891 ns a row
+round 0 P1 exec: 24.173 ns a row
+round 0 P8 pf: 4.393 ns a row
+round 0 C1 stalls_l2: 21.640 ns a row
+round 0 C16 pf: 2.359 ns a row
+round 0 M1 exec: 22.038 ns a row
+round 0 C8 pf: 4.295 ns a row
+round 0 D8 pf: 5.057 ns a row
+round 0 A16 pf: 2.661 ns a row
+round 0 M32 stalls_l2: 1.674 ns a row
+round 0 A16 exec: 3.650 ns a row
+round 0 D1 stalls_l2: 26.357 ns a row
+round 0 P16 stalls_l1: 2.453 ns a row
+round 0 P16 mlp: 2.718 ns a row
+round 0 D8 branch_sb: 4.563 ns a row
+round 0 C32 stalls_l2: 1.487 ns a row
+round 0 C16 stalls_l2: 2.374 ns a row
+round 0 D32 loads: 2.292 ns a row
+round 0 P16 exec: 2.704 ns a row
+round 0 D16 stalls_l1: 2.457 ns a row
+round 0 M32 loads: 1.510 ns a row
+round 0 S32 exec: 0.048 ns a row
+round 0 M16 branch_sb: 2.457 ns a row
+round 0 A16 stalls_l2: 2.560 ns a row
+round 0 D32 stalls_l1: 2.503 ns a row
+round 0 B16 loads: 2.256 ns a row
+round 0 A8 loads: 4.323 ns a row
+round 0 C1 mlp: 19.787 ns a row
+round 0 D8 exec: 4.367 ns a row
+round 0 M32 stalls_l1: 1.633 ns a row
+round 0 P16 pf: 2.490 ns a row
+round 0 D16 stalls_l2: 2.355 ns a row
+round 0 C1 loads: 18.943 ns a row
+round 0 P32 exec: 2.025 ns a row
+round 0 D1 branch_sb: 19.563 ns a row
+round 0 P1 branch_sb: 24.029 ns a row
+round 0 M1 branch_sb: 21.019 ns a row
+round 0 P32 branch_sb: 1.770 ns a row
+round 0 S32 stalls_l1: 0.053 ns a row
+round 0 S32 branch_sb: 0.042 ns a row
+round 0 M16 loads: 2.314 ns a row
+round 0 D16 loads: 2.883 ns a row
+round 0 M1 pf: 21.302 ns a row
+round 0 P1 loads: 23.369 ns a row
+round 0 D1 stalls_l1: 22.371 ns a row
+round 0 C16 loads: 2.466 ns a row
+round 0 D32 exec: 2.403 ns a row
+round 0 C1 pf: 19.568 ns a row
+round 0 B8 pf: 4.387 ns a row
+round 0 A8 exec: 4.122 ns a row
+round 0 C32 loads: 1.458 ns a row
+round 0 C32 branch_sb: 1.804 ns a row
+round 0 B16 stalls_l2: 2.755 ns a row
+round 0 C8 exec: 4.230 ns a row
+round 0 P32 stalls_l2: 2.107 ns a row
+round 0 A32 loads: 3.807 ns a row
+round 0 B16 pf: 2.591 ns a row
+round 0 A1 branch_sb: 26.428 ns a row
+round 0 M16 exec: 2.534 ns a row
+round 0 A32 pf: 2.516 ns a row
+round 0 D16 branch_sb: 2.375 ns a row
+round 0 P16 loads: 2.776 ns a row
+round 0 A1 loads: 21.281 ns a row
+round 0 D1 loads: 23.083 ns a row
+round 0 A1 exec: 21.669 ns a row
+round 0 B1 loads: 23.897 ns a row
+round 0 S32 loads: 0.056 ns a row
+round 0 M8 loads: 4.123 ns a row
+round 0 P1 stalls_l1: 25.838 ns a row
+round 0 M1 mlp: 26.459 ns a row
+round 0 B8 branch_sb: 4.811 ns a row
+round 0 B1 stalls_l2: 23.713 ns a row
+round 0 D1 exec: 23.788 ns a row
+round 0 C16 exec: 2.525 ns a row
+round 0 C1 exec: 19.180 ns a row
+round 0 P32 pf: 2.082 ns a row
+round 0 A8 pf: 4.422 ns a row
+round 0 A8 stalls_l2: 4.280 ns a row
+round 0 A16 branch_sb: 3.549 ns a row
+round 0 D16 mlp: 2.495 ns a row
+round 0 B1 branch_sb: 23.155 ns a row
+round 0 A32 mlp: 3.025 ns a row
+round 0 four-core A32 exec
+round 0 four-core A32 mlp
+round 0 four-core B32 exec
+round 0 four-core B32 mlp
+round 0 four-core P32 exec
+round 0 four-core P32 mlp
+wrote ../ladder/cap-dry/walker-ladder-20261102T002524Z.jsonl
+G0: 1 failures, e.g. overhead round 0 loads: 5563945 cycles, more than 1% of A32's 515414155
+G1: P32's ns a row, max / min over its 7 runs: 1.190 (fails)
+
+cycles a row, medians over runs (one core)
+| rung | 1 lanes | 8 lanes | 16 lanes | 32 lanes |
+|---|--:|--:|--:|--:|
+| A | 106.637 | 21.476 | 14.178 | 13.292 |
+| B | 109.027 | 20.843 | 11.619 | 7.969 |
+| C | 99.141 | 20.854 | 11.849 | 7.482 |
+| D | 112.048 | 21.897 | 11.929 | 12.065 |
+| M | 106.745 | 19.890 | 11.525 | 7.583 |
+| P | 120.330 | 21.340 | 13.344 | 9.743 |
+
+{
+ "unit": "cycles a row",
+ "G0_failures": [
+  "overhead round 0 loads: 5563945 cycles, more than 1% of A32's 515414155"
+ ],
+ "G1_spread": 1.190250240072304,
+ "valid": false,
+ "bare32": 7.582695185185186,
+ "P32": 9.743118333333333,
+ "P32_over_bare32": 1.2849149405832783,
+ "best_bare_any_lanes": 7.582695185185186,
+ "contrasts_32": {
+  "A->B": -5.3228859259259265,
+  "B->C": -0.48718740740740696,
+  "C->D": 4.5832724074074065,
+  "M->P": 2.1604231481481477,
+  "D->P": -2.321967777777777
+ },
+ "D1_D2": "between 1.15 and 1.5: reported, no rewrite on this evidence",
+ "D3": {
+  "issued_share": 0.3,
+  "retired_share": 0.325,
+  "front_end_undelivered_share": 0.35,
+  "reading": "issue pressure below 0.70 of 4 a cycle: no classification follows"
+ },
+ "D4": {
+  "demand_mlp_B16": 0.923076923076923,
+  "demand_mlp_B32": 0.9230769230769231,
+  "fb_full_events_a_cycle_B16": 1.4,
+  "fb_full_events_a_cycle_B32": 1.4,
+  "reading": "no plateau with rising fill-buffer pressure"
+ },
+ "D5": {
+  "ratio_of_ratios": 1.1180683194786751,
+  "reading": "transfers: |r - 1| <= 0.15"
+ },
+ "read": "VOID: G0 or G1 failed, so none of the decisions above is read"
+}

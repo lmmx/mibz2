@@ -16,6 +16,10 @@ outside both. A run at 0 walks counts the enable/disable pair alone: the control
 members are scheduled together or not at all; a ratio is formed only from members of one
 group, one run.
 
+**The handoff.** The ladder's control FIFOs and its barrier are given on its own command
+line after perf's `--` (`--ctl CTL --ack ACK`, `--barrier`), never through the environment,
+which `sudo` filters (report 140); a run asked for control that cannot open it fails.
+
 **Four cores.** Four copies, one a physical core, each with its own table, set up and walk
 once, print "ready", and wait; the driver releases them together with a common deadline
 (--four-ms after the release), and each walks until it, recording its walks and its
@@ -117,7 +121,9 @@ def environment():
 
 
 def parse_perf(stderr):
-    """perf stat -x, lines: {event: {value, status, running_pct}}; other lines ignored"""
+    """perf stat -x, lines: {event: {value, status, run_time, running_pct}}; other lines
+    (`Events disabled`, `Events enabled`, warnings) ignored. The fields are perf's: value,
+    unit, event, counter run time (ns), percentage running."""
     counts = {}
     for line in stderr.splitlines():
         f = line.split(",")
@@ -128,46 +134,75 @@ def parse_perf(stderr):
             running = float(f[4]) if f[4] else None
         except ValueError:
             running = None
+        try:
+            run_time = int(f[3]) if f[3] else None
+        except ValueError:
+            run_time = None
         if value.startswith("<"):
-            counts[event] = {"value": None, "status": value, "running_pct": running}
+            counts[event] = {"value": None, "status": value, "run_time": run_time,
+                             "running_pct": running}
         else:
             try:
                 counts[event] = {"value": float(value), "status": "counted",
-                                 "running_pct": running}
+                                 "run_time": run_time, "running_pct": running}
             except ValueError:
                 pass
     return counts
 
 
-def command(file, rung, lanes, reps, cpu, events, fifo_dir):
-    """the ladder under perf (counters enabled only around its walks), or alone"""
-    cmd = [BIN, file, rung, str(lanes), str(reps)]
-    if cpu is not None:
-        cmd = ["taskset", "-c", str(cpu)] + cmd
-    env = dict(os.environ)
+def event_state(c):
+    """an event's measurement: "valid" (counted, its counter ran, not multiplexed),
+    "multiplexed" (counted, ran, under RUNNING_MIN), or why it is no measurement at all
+    (missing, <not counted>, <not supported>, counted with zero run time). perf prints
+    100.00% for a counter that never ran, so the percentage is read only for counters
+    that ran; a zero count from a counter that ran is a valid count."""
+    if c is None:
+        return "missing"
+    if c.get("status") != "counted":
+        return c.get("status") or "missing"
+    if not c.get("run_time"):
+        return "never ran (zero run time)"
+    if c.get("running_pct") is None or c["running_pct"] < RUNNING_MIN:
+        return "multiplexed"
+    return "valid"
+
+
+def command(file, rung, lanes, reps, cpu, events, fifo_dir, barrier=False, binary=None):
+    """the ladder under perf (counters enabled only around its walks), or alone. Its
+    control FIFOs and barrier are passed on its own command line, after perf's `--`, so
+    they reach it through `sudo perf` (which filters the environment): report 140."""
+    cmd = [binary or BIN, file, rung, str(lanes), str(reps)]
+    if barrier:
+        cmd += ["--barrier"]
     if events:
         ctl, ack = os.path.join(fifo_dir, "ctl"), os.path.join(fifo_dir, "ack")
         for p in (ctl, ack):
             if not os.path.exists(p):
                 os.mkfifo(p)
-        env["WALKER_CTL"], env["WALKER_ACK"] = ctl, ack
+        cmd += ["--ctl", ctl, "--ack", ack]
+    if cpu is not None:
+        cmd = ["taskset", "-c", str(cpu)] + cmd
+    if events:
         cmd = PERF + ["stat", "-x", ",", "--control", f"fifo:{ctl},{ack}", "-D", "-1",
                       "-e", "{" + ",".join(events) + "}", "--"] + cmd
-    return cmd, env
+    return cmd, dict(os.environ)
 
 
-def ladder(file, rung, lanes, reps, cpu=None, events=None):
-    """one run: its JSON line, its counts, and perf's raw output"""
+def ladder(file, rung, lanes, reps, cpu=None, events=None, allow_fail=False):
+    """one run: its JSON line, its counts, and perf's raw output (with allow_fail, a
+    failed run returns None for its JSON, and its raw output)"""
     with tempfile.TemporaryDirectory() as d:
         cmd, env = command(file, rung, lanes, reps, cpu, events, d)
         p = subprocess.run(cmd, capture_output=True, text=True, env=env)
     if p.returncode != 0:
+        if allow_fail:
+            return None, parse_perf(p.stderr), p.stderr + p.stdout
         raise SystemExit(f"walker_ladder: {' '.join(cmd)} failed:\n{p.stderr[-2000:]}")
     out = json.loads(p.stdout.strip().splitlines()[-1])
     return out, parse_perf(p.stderr) if events else {}, p.stderr if events else ""
 
 
-def four(file, rung, ms, cpus, events):
+def four(file, rung, ms, cpus, events, cap=4096):
     """four copies, released together after their setup, each walking until a common
     deadline `ms` after the release: [(cpu, JSON, counts, raw)]"""
     with tempfile.TemporaryDirectory() as d:
@@ -175,8 +210,8 @@ def four(file, rung, ms, cpus, events):
         for i, c in enumerate(cpus[:4]):
             sub = os.path.join(d, str(i))
             os.mkdir(sub)
-            cmd, env = command(file, rung, 32, 1, c, events, sub)
-            env["WALKER_BARRIER"] = "1"
+            # REPS caps the walks (the result vector is reserved for it); the deadline ends them
+            cmd, env = command(file, rung, 32, cap, c, events, sub, barrier=True)
             procs.append((c, subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                               stderr=subprocess.PIPE, text=True, env=env)))
         for _, p in procs:
@@ -198,15 +233,19 @@ def four(file, rung, ms, cpus, events):
         return res
 
 
-def record(kind, rnd, rung, lanes, group, cpu, out, counts, raw, reps):
-    events = FIXED + GROUPS[group] if group else []
+def record(kind, rnd, rung, lanes, group, cpu, out, counts, raw, reps, events=None):
+    if events is None:
+        events = FIXED + GROUPS[group] if group else []
+    out = out or {"rows": 0, "ns_a_row": None, "checked": False, "controlled": False}
     return {"kind": kind, "round": rnd, "rung": rung, "lanes": lanes, "group": group,
             "cpu": cpu, "reps": reps, "rows": out["rows"], "ns_a_row": out["ns_a_row"],
             "checked": out["checked"], "controlled": out.get("controlled", False),
+            "capacity_unchanged": out.get("result_capacity_unchanged"),
             "window": [out.get("window_start_ns"), out.get("window_end_ns")],
             "events": events, "counts": counts, "perf_raw": raw,
             "per_row": {e: (counts[e]["value"] / (reps * out["rows"])
-                            if reps and counts.get(e, {}).get("value") is not None else None)
+                            if reps and out["rows"] and event_state(counts.get(e)) == "valid"
+                            else None)
                         for e in events}}
 
 
@@ -217,15 +256,18 @@ def validity(recs):
         tag = f"{r['kind']} round {r['round']} {r['rung']}{r['lanes']} {r['group']} cpu {r['cpu']}"
         if not r.get("checked"):
             bad.append(f"{tag}: unchecked")
-        if r.get("group"):
+        if r.get("capacity_unchanged") is False:
+            bad.append(f"{tag}: the result vector grew inside the window")
+        if r.get("events"):
             if not r.get("controlled"):
                 bad.append(f"{tag}: counters not bounded by the control FIFO")
             for e in r["events"]:
-                c = r["counts"].get(e)
-                if c is None or c.get("status") != "counted":
-                    bad.append(f"{tag}: {e} {None if c is None else c.get('status')}")
-                elif c.get("running_pct") is None or c["running_pct"] < RUNNING_MIN:
-                    bad.append(f"{tag}: {e} running {c.get('running_pct')}% (multiplexed)")
+                st = event_state(r["counts"].get(e))
+                if st == "multiplexed":
+                    bad.append(f"{tag}: {e} running {r['counts'][e].get('running_pct')}% "
+                               "(multiplexed)")
+                elif st != "valid":
+                    bad.append(f"{tag}: {e} {st}")
     # the four-core windows of one release overlap
     sets = {}
     for r in recs:
@@ -243,7 +285,7 @@ def validity(recs):
             bad.append(f"four {k}: windows overlap {worst:.3f} of a window (< {OVERLAP_MIN})")
     # the control overhead is small against the walks it brackets
     for r in recs:
-        if r["kind"] == "overhead" and r.get("group"):
+        if r["kind"] == "overhead" and r.get("events"):
             peers = [x for x in recs if x["kind"] == "one" and x["group"] == r["group"]
                      and x["round"] == r["round"] and (x["rung"], x["lanes"]) == ("A", 32)]
             oc = (r["counts"].get("cycles") or {}).get("value")
@@ -255,43 +297,79 @@ def validity(recs):
     return bad
 
 
+def probe_pair(rec20, rec0):
+    """one candidate group's probe: the 20-walk window and its 0-walk control, each through
+    validity(). Multiplexing is assessed only from counters that ran."""
+    bad = validity([rec20]) + validity([rec0])
+    states = {e: event_state(rec20["counts"].get(e)) for e in rec20["events"]}
+    ran = [s for s in states.values() if s in ("valid", "multiplexed")]
+    return {"valid": not bad, "failures": bad, "states": states,
+            "controlled": bool(rec20.get("controlled")) and bool(rec0.get("controlled")),
+            "multiplexed": ("unassessed" if len(ran) < len(states)
+                            else any(s == "multiplexed" for s in states.values()))}
+
+
 def probe(args):
-    """the revised availability probe: control mode, every group as a perf group, raw output"""
+    """the revised availability probe: first the control path itself, then every candidate
+    group as one perf group, bounded by the control FIFO, each with its 0-walk control;
+    perf's raw output kept for every run"""
     env = environment()
     if not shutil.which(PERF[-1]):
         raise SystemExit(f"walker_ladder: {PERF[-1]} is not on PATH")
     ver = subprocess.run(PERF + ["--version"], capture_output=True, text=True).stdout.strip()
     cpu = physical_cpus()[0]
+    t = stamp()
+    base = os.path.join(args.out, f"walker-probe-{t}")
+    res = {"time": t, "environment": env, "perf_version": ver,
+           "note": "availability only: counts kept as perf printed them, not analysed"}
+
+    def finish(md):
+        json.dump(res, open(base + ".json", "w"), indent=1)
+        open(base + ".md", "w").write("\n".join(md) + "\n")
+        print("\n".join(md))
+        print(f"\nwrote {base}.json and {base}.md (perf's raw output in the .json)")
+
+    md = [f"# Walker counter probe ({t})", "", "Environment (numbers only): " +
+          ", ".join(f"{k} {v}" for k, v in env.items()) + f"; {ver}", ""]
+    # the control path first: one run of cycles and instructions, 3 walks, and its control
+    ev = list(FIXED)
+    o3, c3, raw3 = ladder(args.file, "A", 32, 3, cpu, ev, allow_fail=True)
+    o0, c0, raw0 = ladder(args.file, "A", 32, 0, cpu, ev, allow_fail=True)
+    ctl = probe_pair(record("probe", 0, "A", 32, None, cpu, o3, c3, raw3, 3, ev),
+                     record("probe", 0, "A", 32, None, cpu, o0, c0, raw0, 0, ev))
+    ctl.update({"perf_raw": raw3, "perf_raw_control_only": raw0})
+    res["control_path"] = ctl
+    if not ctl["valid"]:
+        md += ["**The control path failed: no group was probed.** The counters were not "
+               "enabled and counted around the walks, so no availability can be read.", "",
+               "Failures:", ""] + [f"- {f}" for f in ctl["failures"]]
+        finish(md)
+        raise SystemExit(1)
+    md += ["The control path holds: cycles and instructions counted, bounded by the FIFO, "
+           "in the 3-walk window and its 0-walk control.", "",
+           "| group | valid (window and control) | multiplexed | events' states | "
+           "cycles, 20 walks | cycles, control only |", "|---|---|---|---|--:|--:|"]
     rows = []
     for name, evs in list(GROUPS.items()) + list(FALLBACKS.items()) + \
             [(f"single:{e}", [e]) for g in GROUPS.values() for e in g]:
-        out, c, raw = ladder(args.file, "A", 32, 20, cpu, FIXED + evs)
-        o0, c0, raw0 = ladder(args.file, "A", 32, 0, cpu, FIXED + evs)
-        r = record("probe", 0, "A", 32, None, cpu, out, c, raw, 20)
-        r["events"] = FIXED + evs
-        ok = all(c.get(e, {}).get("status") == "counted" for e in FIXED + evs)
-        mux = any((c.get(e, {}).get("running_pct") or 0) < RUNNING_MIN for e in FIXED + evs)
-        cyc, cyc0 = (c.get("cycles") or {}).get("value"), (c0.get("cycles") or {}).get("value")
-        rows.append({"group": name, "events": FIXED + evs, "all_counted": ok, "multiplexed": mux,
-                     "controlled": out.get("controlled"),
-                     "running_pct": {e: c.get(e, {}).get("running_pct") for e in FIXED + evs},
-                     "status": {e: c.get(e, {}).get("status") for e in FIXED + evs},
-                     "cycles_20_walks": cyc, "cycles_control_only": cyc0,
-                     "perf_raw": raw, "perf_raw_control_only": raw0})
-    t = stamp()
-    res = {"time": t, "environment": env, "perf_version": ver, "groups": rows,
-           "note": "availability only: the counts are kept as perf printed them, not analysed"}
-    json.dump(res, open(f"walker-probe-{t}.json", "w"), indent=1)
-    md = [f"# Walker counter probe ({t})", "", "Environment (numbers only): " +
-          ", ".join(f"{k} {v}" for k, v in env.items()), "",
-          "| group | as one perf group: all counted | multiplexed | bounded by the FIFO | "
-          "cycles, 20 walks | cycles, control only |", "|---|---|---|---|--:|--:|"]
-    for r in rows:
-        md.append(f"| {r['group']} | {r['all_counted']} | {r['multiplexed']} | {r['controlled']}"
-                  f" | {r['cycles_20_walks']} | {r['cycles_control_only']} |")
-    open(f"walker-probe-{t}.md", "w").write("\n".join(md) + "\n")
-    print("\n".join(md))
-    print(f"\nwrote walker-probe-{t}.json and walker-probe-{t}.md (perf's raw output in the .json)")
+        ev = FIXED + evs
+        o20, c20, r20 = ladder(args.file, "A", 32, 20, cpu, ev, allow_fail=True)
+        o0, c0, r0 = ladder(args.file, "A", 32, 0, cpu, ev, allow_fail=True)
+        pr = probe_pair(record("probe", 0, "A", 32, None, cpu, o20, c20, r20, 20, ev),
+                        record("probe", 0, "A", 32, None, cpu, o0, c0, r0, 0, ev))
+        pr.update({"group": name, "events": ev,
+                   "running_pct": {e: (c20.get(e) or {}).get("running_pct") for e in ev},
+                   "run_time": {e: (c20.get(e) or {}).get("run_time") for e in ev},
+                   "cycles_20_walks": (c20.get("cycles") or {}).get("value"),
+                   "cycles_control_only": (c0.get("cycles") or {}).get("value"),
+                   "perf_raw": r20, "perf_raw_control_only": r0})
+        rows.append(pr)
+        bad_states = sorted({v for v in pr["states"].values() if v != "valid"})
+        md.append(f"| {name} | {pr['valid']} | {pr['multiplexed']} | "
+                  f"{', '.join(bad_states) or 'all valid'} | {pr['cycles_20_walks']} | "
+                  f"{pr['cycles_control_only']} |")
+    res["groups"] = rows
+    finish(md)
 
 
 def reps_for(lanes, reps):
@@ -319,7 +397,7 @@ def run(args):
     if not args.no_perf:
         preflight(args.file, cpu)
     t = stamp()
-    path = f"walker-ladder-{t}.jsonl"
+    path = os.path.join(args.out, f"walker-ladder-{t}.jsonl")
     jl = open(path, "w")
     configs = [(r, k) for r in RUNGS for k in LANES] + [("S", 32)]
     groups = [None] if args.no_perf else list(GROUPS)
@@ -345,7 +423,8 @@ def run(args):
             for rung in ["A", "B", "P"]:
                 for g in ([None] if args.no_perf else ["exec", "mlp"]):
                     for c, out, cnt, raw in four(args.file, rung, args.four_ms, cpus,
-                                                 FIXED + GROUPS[g] if g else None):
+                                                 FIXED + GROUPS[g] if g else None,
+                                                 args.four_cap):
                         emit(record("four", rnd, rung, 32, g, c, out, cnt, raw, out["reps"]))
                     print(f"round {rnd} four-core {rung}32 {g or 'time'}")
     jl.close()
@@ -471,16 +550,21 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("probe")
     a.add_argument("file")
+    a.add_argument("--out", default=".")
     r = sub.add_parser("run")
     r.add_argument("file")
     r.add_argument("--rounds", type=int, default=3)
     r.add_argument("--reps", type=int, default=100)
     r.add_argument("--seed", type=int, default=20261101)
     r.add_argument("--four-ms", type=float, default=300.0)
+    r.add_argument("--four-cap", type=int, default=4096)
+    r.add_argument("--out", default=".")
     r.add_argument("--no-perf", action="store_true")
     s = sub.add_parser("summarise")
     s.add_argument("jsonl")
     args = ap.parse_args()
+    if getattr(args, "out", None):
+        os.makedirs(args.out, exist_ok=True)
     if args.cmd != "summarise" and not os.path.exists(BIN):
         sys.exit("walker_ladder: build it first (cargo build --release --example walker_ladder)")
     {"probe": probe, "run": run, "summarise": lambda a: summarise(a.jsonl)}[args.cmd](args)

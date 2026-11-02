@@ -402,36 +402,87 @@ fn setup(data: &[u8], want: Option<usize>) -> Setup {
     }
 }
 
-/// perf's control FIFOs (`perf stat --control fifo:CTL,ACK -D -1`), named by WALKER_CTL
-/// and WALKER_ACK: the counters run only between "enable" and "disable", which bracket the
-/// timed walks exactly as the clock does
+/// perf's control FIFOs (`perf stat --control fifo:CTL,ACK -D -1`), named on the ladder's
+/// own command line (`--ctl CTL --ack ACK`), so they reach it through any `sudo` (which
+/// filters the environment): the counters run only between "enable" and "disable", which
+/// bracket the timed walks exactly as the clock does
 struct Ctl {
     w: std::fs::File,
-    r: std::io::BufReader<std::fs::File>,
+    r: std::fs::File,
 }
 
 impl Ctl {
-    fn open() -> Option<Ctl> {
-        let (c, a) = (
-            std::env::var("WALKER_CTL").ok()?,
-            std::env::var("WALKER_ACK").ok()?,
-        );
+    /// Both FIFOs, or a hard error: a run asked for control never proceeds without it
+    fn open(ctl: &str, ack: &str) -> Ctl {
         let w = std::fs::OpenOptions::new()
             .write(true)
-            .open(c)
-            .expect("perf's ctl FIFO");
-        let r = std::io::BufReader::new(std::fs::File::open(a).expect("perf's ack FIFO"));
-        Some(Ctl { w, r })
+            .open(ctl)
+            .unwrap_or_else(|e| panic!("perf's ctl FIFO {ctl}: {e}"));
+        let r = std::fs::File::open(ack).unwrap_or_else(|e| panic!("perf's ack FIFO {ack}: {e}"));
+        Ctl { w, r }
     }
 
     fn cmd(&mut self, c: &str) {
-        use std::io::{BufRead, Write};
+        use std::io::Write;
         writeln!(self.w, "{c}").unwrap();
         self.w.flush().unwrap();
-        let mut l = String::new();
-        self.r.read_line(&mut l).unwrap();
-        assert!(l.starts_with("ack"), "perf did not acknowledge {c}: {l:?}");
+        read_ack(&mut self.r).unwrap_or_else(|e| panic!("perf did not acknowledge {c}: {e}"));
     }
+}
+
+/// One acknowledgement from perf's ack FIFO, read byte by byte (no read-ahead past it).
+/// perf 6.8 writes `sizeof("ack\n")` bytes, so each frame is `ack\n\0`: the NUL is left
+/// for the next read, which skips leading NULs. Exactly `ack` before the newline is
+/// accepted; anything else, or the end of the stream, is an error.
+fn read_ack<R: std::io::Read>(r: &mut R) -> Result<(), String> {
+    let (mut line, mut b) = (Vec::new(), [0u8]);
+    loop {
+        match r.read(&mut b) {
+            Ok(0) => return Err(format!("end of stream after {line:?}")),
+            Ok(_) => {}
+            Err(e) => return Err(e.to_string()),
+        }
+        if b[0] == 0 && line.is_empty() {
+            continue;
+        }
+        if b[0] == b'\n' {
+            break;
+        }
+        line.push(b[0]);
+        if line.len() > 16 {
+            return Err(format!("not an ack: {line:?}"));
+        }
+    }
+    if line == b"ack" {
+        Ok(())
+    } else {
+        Err(format!("not an ack: {line:?}"))
+    }
+}
+
+/// The measured loop: REPS walks; or, with a deadline (the four-core copies), walks until
+/// it, at least one and at most REPS, so a result vector reserved for REPS never grows
+/// inside the window
+fn walk_loop(reps: usize, deadline: Option<u128>, mut step: impl FnMut()) -> usize {
+    let mut walks = 0;
+    match deadline {
+        None => {
+            for _ in 0..reps {
+                step();
+            }
+            walks = reps;
+        }
+        Some(d) => {
+            while walks < reps.max(1) {
+                step();
+                walks += 1;
+                if now_ns() >= d {
+                    break;
+                }
+            }
+        }
+    }
+    walks
 }
 
 fn now_ns() -> u128 {
@@ -457,7 +508,7 @@ struct Run {
 /// Outside it, in order:
 /// - one warm-up walk, checked in full (so every window starts from a walked table's cache
 ///   state, the same for every rung);
-/// - with WALKER_BARRIER=1, "ready" on stdout, then a wait for a line on stdin, "go
+/// - with `--barrier`, "ready" on stdout, then a wait for a line on stdin, "go
 ///   DEADLINE_NS": the four-core copies start their windows together, after every copy's
 ///   setup, and each walks until the common deadline (wall clock), at least once, so all
 ///   four walk throughout each other's windows; the walks made are reported.
@@ -467,11 +518,18 @@ struct Run {
 /// reserved beforehand; no output is hashed. After it: every A-C walk's result is checked,
 /// and D's, P's and S's last output is hashed against the shipped walk's (each of their
 /// walks writes the whole output afresh, and the warm-up walk was checked in full).
-fn run(s: &mut Setup, rung: char, lanes: usize, reps: usize, ctl: &mut Option<Ctl>) -> Run {
+fn run(
+    s: &mut Setup,
+    rung: char,
+    lanes: usize,
+    reps: usize,
+    ctl: &mut Option<Ctl>,
+    barrier: bool,
+) -> Run {
     let n = s.t.len();
-    let barrier = std::env::var("WALKER_BARRIER").is_ok_and(|v| v == "1");
     let mut out = vec![0u8; n];
     let mut res: Vec<(u64, u64)> = Vec::with_capacity(reps + 1);
+    let cap0 = res.capacity();
     let (mut o, mut sc) = (Vec::new(), SegScratch::default());
     // S assembles the segments a shipped walk left
     if rung == 'S' {
@@ -524,27 +582,18 @@ fn run(s: &mut Setup, rung: char, lanes: usize, reps: usize, ctl: &mut Option<Ct
     }
     let start_ns = now_ns();
     let c0 = Instant::now();
-    let mut walks = 0;
-    match deadline {
-        None => {
-            for _ in 0..reps {
-                walk(&mut res, &mut out, &mut o);
-            }
-            walks = reps;
-        }
-        Some(d) => loop {
-            walk(&mut res, &mut out, &mut o);
-            walks += 1;
-            if now_ns() >= d {
-                break;
-            }
-        },
-    }
+    let walks = walk_loop(reps, deadline, || walk(&mut res, &mut out, &mut o));
     let secs = c0.elapsed().as_secs_f64();
     let end_ns = now_ns();
     if let Some(c) = ctl.as_mut() {
         c.cmd("disable");
     }
+    // (after the window) the result vector held every walk without growing
+    assert_eq!(
+        res.capacity(),
+        cap0,
+        "the result vector grew inside the window"
+    );
     if walks > 0 {
         ok &= check(&res, &out, &o);
     }
@@ -567,11 +616,14 @@ fn main() {
         let mut none = None;
         for rung in ['A', 'B', 'C', 'D', 'M', 'P'] {
             for lanes in [1, 8, 16, 32] {
-                let r = run(&mut s, rung, lanes, 2, &mut none);
+                let r = run(&mut s, rung, lanes, 2, &mut none, false);
                 assert!(r.ok, "rung {rung} at {lanes} lanes fails its check");
             }
         }
-        assert!(run(&mut s, 'S', 32, 2, &mut none).ok, "S fails its check");
+        assert!(
+            run(&mut s, 'S', 32, 2, &mut none, false).ok,
+            "S fails its check"
+        );
         println!(
             "check: block {} ({n} rows, {} segments): rungs A-D, M and P at 1, 8, 16 and 32 lanes, and S: every walk visits every row once, M's every segment reaches its successor's start, and D's and P's outputs are the shipped walk's (fnv {:016x})",
             s.index,
@@ -583,14 +635,31 @@ fn main() {
     let rung = mode.chars().next().unwrap();
     let lanes: usize = args.get(3).expect("LANES").parse().unwrap();
     let reps: usize = args.get(4).expect("REPS").parse().unwrap();
-    let mut s = setup(&data, args.get(5).map(|b| b.parse().unwrap()));
+    // flags after the positionals: --block B, --ctl CTL --ack ACK (both or neither),
+    // --barrier
+    let (mut block, mut ctl_path, mut ack_path, mut barrier) = (None, None, None, false);
+    let mut it = args[5..].iter();
+    while let Some(a) = it.next() {
+        match a.as_str() {
+            "--block" => block = Some(it.next().expect("--block B").parse().unwrap()),
+            "--ctl" => ctl_path = Some(it.next().expect("--ctl PATH").clone()),
+            "--ack" => ack_path = Some(it.next().expect("--ack PATH").clone()),
+            "--barrier" => barrier = true,
+            x => panic!("walker_ladder: unknown argument {x}"),
+        }
+    }
+    let mut ctl = match (ctl_path, ack_path) {
+        (Some(c), Some(a)) => Some(Ctl::open(&c, &a)),
+        (None, None) => None,
+        _ => panic!("walker_ladder: --ctl and --ack go together"),
+    };
+    let mut s = setup(&data, block);
     let n = s.t.len();
-    let mut ctl = Ctl::open();
-    let r = run(&mut s, rung, lanes, reps, &mut ctl);
+    let r = run(&mut s, rung, lanes, reps, &mut ctl, barrier);
     let reps = r.walks;
     assert!(r.ok, "rung {rung} at {lanes} lanes fails its check");
     println!(
-        "{{\"rung\": \"{rung}\", \"lanes\": {lanes}, \"reps\": {reps}, \"block\": {}, \"rows\": {n}, \"segments\": {}, \"seconds\": {:.6}, \"ns_a_row\": {:.4}, \"checked\": true, \"controlled\": {}, \"window_start_ns\": {}, \"window_end_ns\": {}, \"output_fnv\": \"{:016x}\"}}",
+        "{{\"rung\": \"{rung}\", \"lanes\": {lanes}, \"reps\": {reps}, \"block\": {}, \"rows\": {n}, \"segments\": {}, \"seconds\": {:.6}, \"ns_a_row\": {:.4}, \"checked\": true, \"result_capacity_unchanged\": true, \"barrier\": {barrier}, \"controlled\": {}, \"window_start_ns\": {}, \"window_end_ns\": {}, \"output_fnv\": \"{:016x}\"}}",
         s.index,
         s.sg.starts.len(),
         r.secs,
@@ -600,4 +669,81 @@ fn main() {
         r.end_ns,
         s.want
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn two_acks_plain() {
+        let mut r = Cursor::new(b"ack\nack\n".to_vec());
+        assert!(read_ack(&mut r).is_ok());
+        assert!(read_ack(&mut r).is_ok());
+        assert!(read_ack(&mut r).is_err(), "no third ack");
+    }
+
+    #[test]
+    fn two_acks_with_perf_6_8_nul_framing() {
+        let mut r = Cursor::new(b"ack\n\0ack\n\0".to_vec());
+        assert!(read_ack(&mut r).is_ok());
+        assert!(read_ack(&mut r).is_ok(), "the first frame's NUL is skipped");
+        assert!(read_ack(&mut r).is_err());
+    }
+
+    #[test]
+    fn mixed_framing() {
+        let mut r = Cursor::new(b"ack\n\0ack\n".to_vec());
+        assert!(read_ack(&mut r).is_ok());
+        assert!(read_ack(&mut r).is_ok());
+    }
+
+    #[test]
+    fn malformed_acks_are_rejected() {
+        for bad in [
+            &b"nak\n"[..],
+            b"ack",
+            b"ackk\n",
+            b"ac\0k\n",
+            b"ack\0\n",
+            b"\n",
+            b"",
+        ] {
+            assert!(read_ack(&mut Cursor::new(bad.to_vec())).is_err(), "{bad:?}");
+        }
+    }
+
+    #[test]
+    fn reads_no_further_than_its_frame() {
+        let mut r = Cursor::new(b"ack\nrest".to_vec());
+        read_ack(&mut r).unwrap();
+        assert_eq!(r.position(), 4);
+    }
+
+    #[test]
+    fn deadline_loop_is_capped_by_reps() {
+        let far = now_ns() + 60_000_000_000;
+        let mut v: Vec<u32> = Vec::with_capacity(5 + 1);
+        let cap = v.capacity();
+        let walks = walk_loop(5, Some(far), || v.push(1));
+        assert_eq!(walks, 5);
+        assert_eq!(v.capacity(), cap, "no growth");
+    }
+
+    #[test]
+    fn deadline_loop_walks_at_least_once() {
+        let past = now_ns() - 1;
+        let mut n = 0;
+        assert_eq!(walk_loop(100, Some(past), || n += 1), 1);
+        assert_eq!(n, 1);
+    }
+
+    #[test]
+    fn fixed_loop_walks_reps() {
+        let mut n = 0;
+        assert_eq!(walk_loop(7, None, || n += 1), 7);
+        assert_eq!(walk_loop(0, None, || n += 1), 0);
+        assert_eq!(n, 7);
+    }
 }

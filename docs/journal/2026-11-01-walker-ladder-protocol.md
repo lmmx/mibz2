@@ -1,4 +1,4 @@
-# The minimal real-T-vector walker diagnostic: protocol, revision 2 (for review; no capture authorized)
+# The minimal real-T-vector walker diagnostic: protocol, revision 3 (for review; no capture authorized)
 
 - **Research only:** `examples/walker_ladder.rs`, `bench/walker_ladder.py` and
   `bench/test_walker_ladder.py`. The decoder is unchanged.
@@ -20,6 +20,77 @@
 | the revised event plan, and the probe to confirm it on the i9 | §5 |
 | the rungs' compiled contrasts | §2 |
 | the gates and decisions, narrowed to what the counters support | §6 |
+
+## 0a. What revision 2's probe got wrong (fixed in revision 3)
+
+**The probe on the i9 (2026-11-02 00:06 UTC, at a245a45) measured nothing**
+(`i9-10900K/walker-probe-20261102T000606Z-console.log`; the researcher's analysis of its
+JSON, report 140).
+- All 60 perf runs printed `Events disabled` and none `Events enabled`.
+- All 210 event lines were `<not counted>` with zero run time.
+- Every walker record said `controlled: false`.
+
+**The causes, and the repairs** (the researcher, report 140; the guardian, report 141):
+
+1. **`sudo` filtered the environment.**
+   - perf was told its FIFOs on its command line; the walker was told them through
+     `WALKER_CTL` and `WALKER_ACK`, which `sudo perf` stripped.
+   - So the walker never sent `enable`, and `-D -1` kept the counters off.
+   - **Repair:** the walker's FIFOs and barrier are now its own command-line arguments,
+     after perf's `--` (`--ctl CTL --ack ACK`, `--barrier`). Arguments survive `sudo`
+     unchanged.
+   - A run given `--ctl` that cannot open its FIFOs, or given one path without the other,
+     is a hard error. It is never a silent `controlled: false`.
+2. **perf 6.8's acknowledgement is `ack\n\0`** (it writes `sizeof("ack\n")`).
+   - A line reader passes the first ACK and then reads `\0ack\n` as the second, failing.
+     That failure was latent: the run failed before it.
+   - **Repair:** the walker reads the ACK FIFO byte by byte, skips leading NULs, and accepts
+     exactly `ack`.
+   - Rust tests: two consecutive ACKs in both framings, mixed framing, malformed ACKs, and
+     no read past the frame.
+3. **`100.00%` beside `<not counted>` was read as "not multiplexed".**
+   - perf prints 100.00 for a counter that never ran.
+   - **Repair:** an event's state is now "valid" only if it is counted and its counter's
+     run time is non-zero; multiplexing is assessed only then. A zero count from a counter
+     that ran is still a count.
+   - The probe validates both halves of each pair (20 walks, and the 0-walk control)
+     through `validity()`.
+   - It **tests the control path first**, with cycles and instructions around 3 walks. If
+     that fails it stops, records the raw output and the failures, and reports no group
+     availability, rather than thirty misleading rows.
+4. **The four-core result vector could grow inside the window.**
+   - The deadline copies were launched with REPS 1, reserving two results.
+   - **Repair:** REPS now caps the deadline loop (4096 by default, against about 150 walks
+     in 300 ms), so the reserved vector never grows.
+   - The walker asserts this after the window, the record carries it, and `validity()`
+     rejects growth.
+
+**The tests that would have caught it** (`bench/test_walker_ladder.py`, 26; the walker's
+own, 8):
+- **The real command constructor, run through an environment-filtering wrapper** (`env -i`,
+  as sudo's default policy) with a perf stand-in and an inert child. The FIFOs and the
+  barrier reach the child as arguments, with no WALKER variable left.
+- **The exact failed CSV shape**, which stays invalid and "unassessed", controlled or not.
+- **A good 20-walk window paired with a failed control**, which is rejected.
+- **A counter with zero run time**, which is invalid.
+- **A zero count that ran**, which is valid.
+
+**End to end on the VM, through the exact recipe** (`stand-in-probe-dry*.log`):
+- The recipe ran with an environment-stripping `sudo` stand-in and a perf stand-in that
+  emits perf 6.8's `ack\n\0` frames and counts only between `enable` and `disable`.
+- The control path held, and the groups were probed. The stand-in's one planted
+  unsupported event was reported invalid and unassessed.
+- With the counters acknowledged but never enabled, the probe stopped after the
+  control-path test, reported it, archived the run and exited 1.
+
+**Archives** (report 142's convention, now the default for i9 diagnostics):
+- Every file of a run goes under `target/<experiment>-<UTC time>/`, the console included.
+- `bench/archive.py` adds `MANIFEST.json`: the commit, its branch, any tracked changes,
+  the corpus's SHA-256, the binary's SHA-256, the command, its exit status, and every
+  file's size and SHA-256.
+- It then writes one `target/<experiment>-<UTC time>.tar.gz` holding that directory
+  alone. The run's own files are not rewritten.
+- The archive is made even when the run fails.
 
 ## 0. What revision 1 got wrong (fixed here)
 
@@ -212,7 +283,8 @@ and count. But every comma-list of four, with cycles and instructions, multiplex
 | pf | `sw_prefetch_access.t0`, `load_hit_pre.sw_pf`, `mem_load_retired.l1_miss` | prefetches executed; demand loads meeting an in-flight software prefetch |
 | loads | `mem_load_retired.fb_hit`, `mem_load_retired.l2_miss`, `mem_load_retired.l3_miss` | where demand loads are served |
 
-**The revised probe** (`sudo -v && just walker-counter-probe`, about two minutes):
+**The revised probe** (`sudo -v && just walker-counter-probe`, about two minutes; revision
+3's repairs in §0a):
 - It checks the corpus's hash and runs the ladder's check.
 - It runs each candidate group above as one perf group, bounded by the control FIFO around
   20 walks and once around none. The candidates include the fallbacks `exec_pair`,
