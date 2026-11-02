@@ -1,289 +1,272 @@
-# The minimal real-T-vector walker diagnostic: preparation, counter audit and frozen protocol (for review)
+# The minimal real-T-vector walker diagnostic: protocol, revision 2 (for review; no capture authorized)
 
-- **Research only:** `examples/walker_ladder.rs` and `bench/walker_ladder.py`. The decoder is
-  unchanged.
+- **Research only:** `examples/walker_ladder.rs`, `bench/walker_ladder.py` and
+  `bench/test_walker_ladder.py`. The decoder is unchanged.
 - **From:**
-  - the researcher's last contribution (report 132);
-  - bounded by the guardian (report 134);
-  - authorized for VM preparation by report 135, within one engineer-day.
+  - the researcher's last contribution (report 132), bounded by the guardian (report 134);
+  - VM preparation authorized by report 135;
+  - this revision, made after the i9's counter audit and the reviews in reports 136, 138
+    and 139.
 - **Its job:** to separate execution overhead from memory-request limits in the shipped
   walk. It is not a lane-count optimization project.
-- **Branch:** `research/walker-ladder`, from master. **Records:** `2026-11-01-walker-ladder/` (the checks, the VM sweep, the recipe's VM dry run, the stand-in audit).
+- **Branch:** `research/walker-ladder`. **Records:** `2026-11-01-walker-ladder/`.
 
-**Returned for review before any i9 capture** (report 135):
+**Returned for review before any capture** (report 139):
 
 | item | where |
 |---|---|
-| source pin | the commit that adds this file (PR description) |
-| correctness evidence | §3 |
-| counter availability audit | §4: **run on the i9** (2026-11-01 23:21 UTC): all 22 events exist and count; every group of four multiplexed, so the groups are now of three |
-| protocol | §5, **frozen** after the audit (event groups, preflight, recipe `bench-walker-ladder`); not authorized |
-| stopping rules | §6, frozen |
+| the repaired measurement design | §3 |
+| the validation results | §4 |
+| the revised event plan, and the probe to confirm it on the i9 | §5 |
+| the rungs' compiled contrasts | §2 |
+| the gates and decisions, narrowed to what the counters support | §6 |
+
+## 0. What revision 1 got wrong (fixed here)
+
+**1. Its counters measured work its clock did not** (the researcher, report 138; confirmed
+by the guardian, report 139).
+- Revision 1 timed the walks inside the ladder but ran `perf stat` around the whole
+  process.
+- D, P and S hashed the whole output after every walk, outside the clock but inside the
+  counters.
+- Subtracting a zero-walk run does not remove that: counts(N) − counts(0) ≈ N × (walk +
+  hash).
+- So D, P and S would have carried validation work that A–C did not. That could have
+  manufactured an apparent store or production-overhead cost.
+- **Fixed (§3):** counters and clock now bracket the same walks, and validation is outside
+  both.
+
+**2. Its four-core counts escaped validation** (the guardian, report 136).
+- The four-core path kept neither the counters' running percentages nor any check of them.
+- The summary tested multiplexing only on one-core records.
+- **Fixed (§4):** one validity function covers every record that enters the analysis, with
+  tests that reject a multiplexed four-core capture.
+
+**3. Its "groups" were comma-separated lists, not perf event groups.**
+- Their members could be scheduled at different times.
+- **Fixed:** each group is now one perf group, `{cycles,instructions,…}`.
+
+**4. Its contrasts and decisions said more than they measured** (report 138):
+- "the cost of stores" for a contrast that changes three things;
+- D3's "execution-bound" read from issued µops;
+- D4's fallback to MLP alone;
+- D2 comparing a best-over-lanes reference with 32-lane steps;
+- D5's prose and code disagreeing.
+
+All are revised (§2, §6). None of this touches the FOR-14 confirmation, a separate
+binary and harness.
 
 ## 1. The question
 
 Is the shipped 32-lane walk limited by miss concurrency, by instruction throughput, or by
-its bookkeeping (lane state, flags, stores, buffers)? And does the answer from one isolated
-core hold when four cores compete?
+its bookkeeping? And does the answer from one isolated core hold when four cores compete?
 
-**Why now:** FOR-14's stop rests on a calibration from stage A: about half of the
-one-worker walk's time scales with its instructions (2026-11-01-for14-stage1.md §6). This
-diagnostic measures that directly, with counters, on the real table.
+- **What it does not use:** the historical 38.55 and 4.49 cycles a byte. Every figure is
+  measured fresh, in one binary on one machine.
+- **The guardian's caveat (report 135):** a reduced-semantics walk is an optimistic
+  reference, not an attainable decoder. The quantity of interest is where the gap opens as
+  the shipped walk's work returns.
 
-**What it does not use:** the historical 38.55 and 4.49 cycles a byte. They come from
-different contexts, and the researcher warned against dividing them. Every figure here is
-measured fresh, one binary, one machine.
-
-**The guardian's caveat (report 135):** the bare chase is an optimistic reference, not an
-attainable decoder. It drops the output and termination work a walk must do. The quantity
-of interest is where the gap opens as those costs return, not how fast the bare loop runs.
-
-## 2. The ladder
+## 2. The ladder, and what each contrast changes
 
 **The workload:**
-- One real T-vector: the first full block (900,000 rows) of the P87 corpus,
-  `wikidata-20261026.bz2` (SHA-256 `cf13f439…`).
-- Its last column comes from the library's scanner and MTF.
-- Its T-vector is built twice, outside every timing:
-  - by the library's `bwt::build`, for rung P;
-  - by the example's plain copy of the same build, for the other rungs. Its entry is the
-    library's, `link << 8 | byte`.
-- The segment starts are the shipped walk's: production's 511 xorshift rows (copied) and
-  the row the output begins in. That gives 511 segments on this block.
-- The reference is the shipped walk's output: fnv `27d7635e0e1a9555` on this block.
+- the first full block (900,000 rows) of the P87 corpus, `wikidata-20261026.bz2`
+  (SHA-256 `cf13f439…`);
+- its last column from the library's scanner and MTF;
+- its T-vector built by the library (for P) and by the example's copy of the same build
+  (for the others);
+- the shipped walk's segment starts: 511 segments;
+- the reference output fnv `27d7635e0e1a9555`.
 
-**The rungs, each adding one cost to the one before** (`examples/walker_ladder.rs`):
+**The rungs, with their compiled ordinary steps at 32 lanes** (`rungs-disassembly.md`; data
+loads and stores, the prefetch apart):
 
-| rung | what a lane does a step | adds |
+| rung | instructions | loads | stores | what changes from the rung before |
+|---|--:|--:|--:|---|
+| A | 19 | 3: count, row, entry | 2: count, row | — : counter termination, the byte summed into one register |
+| B | 20 | 3 | 2 | + the shipped prefetch |
+| C | 17 | 2: row, entry | 1: row | flag termination replaces the counter (its load, decrement and store) |
+| D | 19 | 3: row, entry, output pointer | 3: row, byte, pointer | + the byte stored through a per-lane pointer; − the sum |
+| **M** (new) | **13** | 2: row, entry | 1: row | C without the sum or the step count: **the shipped step without its output store** |
+| P | 16 | 3: row, entry, room base | 2: row, byte | M + the output store at base + offset (the room pass); outside the step, buffers, growth and assembly |
+| S | — | — | — | the shipped assembly alone (`SegScratch::assemble`) |
+
+**Why M:**
+- Revision 1's "bare" chase, A, is not minimal: its counter and summation make its step
+  (19) longer than the shipped one (16).
+- M is the shipped step with only the output store removed. So M → P is the cleanest
+  contrast here: the output store, the room base and the room pass's bookkeeping.
+
+**The contrasts are net, not isolated costs:**
+- each changes the instructions shown, not one thing;
+- they need not add up, because added work can overlap memory waits;
+- **P − S is not exact traversal**: assembly after a walk and assembly alone run in
+  different cache contexts.
+
+A–C's sum is a one-register add, a 1-cycle recurrence. It is far shorter than the step,
+but it is a dependency that P does not have. M has none.
+
+**Lanes:** 1, 8, 16 and 32 for every rung (S at 32 only).
+
+**Every walk is checked:**
+- A–C: by rows stepped and the bytes' sum;
+- M: by each segment arriving at its precomputed successor's start, checked only where
+  segments end;
+- D and P: by the output's hash against the shipped walk's.
+
+## 3. The repaired measurement boundary
+
+**One window holds the counters and the clock, and the walks only.**
+
+**Before the window:**
+- the setup (decode one block, build its tables);
+- one warm-up walk, checked in full. So every window starts from a walked table's cache
+  state, the same for every rung.
+
+**The window:**
+- The ladder writes `enable` to perf's control FIFO and waits for `ack`.
+- It reads the clock, runs REPS walks, reads the clock again.
+- It writes `disable` and waits for `ack`.
+- perf runs with `--control fifo:CTL,ACK -D -1`, so nothing is counted before `enable`.
+- Inside, A–C and M append each walk's two result words to a vector reserved beforehand.
+  Nothing is hashed.
+
+**After the window:**
+- every A–C and M walk's result is checked;
+- D's, P's and S's last output is hashed.
+- Every walk of theirs writes the whole output afresh, and the warm-up was checked in full.
+
+**The control overhead:**
+- Each round, each group also runs a 0-walk window: an `enable` and a `disable` around
+  nothing.
+- Its counts must be under 1% of the same group's A32 window.
+- This replaces revision 1's subtraction, which no longer exists.
+
+**Four cores:**
+- Four copies, one per physical core, each with its own table, set up and warm up.
+- Each prints `ready` and waits. The driver releases all four with one `go DEADLINE`, and
+  each walks until that common deadline (300 ms; at least one walk).
+- So all four walk throughout each other's windows, and every copy's counts are its own
+  bounded window.
+- Each copy records its walks and its window's wall-clock bounds.
+- A fixed number of walks is not used: copies running at different speeds would then end
+  at different times, and the late ones would run uncontended. A VM test showed this:
+  overlap 0.74–0.92 with fixed walks, 0.99 or more with a deadline.
+
+## 4. Validation (G0), and its tests
+
+**`validity()` checks every record that enters the analysis:** one-core, four-core and
+control-overhead runs alike, the preflight's included. A record fails if:
+- it is unchecked;
+- it was counted but not bounded by the control FIFO;
+- any event of its group is missing or not counted (a zero count is a count);
+- any event ran less than 99.9% of its enabled time (multiplexed).
+
+**Across records:**
+- a four-core release without exactly four copies fails;
+- one whose windows overlap less than 0.95 of any copy's window fails;
+- a control overhead above 1% fails.
+
+**`bench/test_walker_ladder.py` (17 tests, all passing)** covers each rule on synthetic
+records:
+- a multiplexed four-core capture is rejected;
+- so is a single multiplexed four-core copy;
+- so are multiplexed control-overhead and one-core runs;
+- so are uncounted and missing events, unchecked runs, uncontrolled counts,
+  non-overlapping windows, an incomplete four-core set, and excessive control overhead;
+- a zero count passes;
+- perf's CSV parsing is tested, including `:u` names and `<not counted>`;
+- each group's size and the decision pairs' co-membership are tested.
+
+**End to end on the VM, with a stand-in perf** (the VM has no PMU; `stand-in-*.log`):
+- **A clean capture:** every group counted as a perf group, bounded by the FIFO, with the
+  preflight passing and G0 holding. G1 failed on the shared VM's noise, as it should.
+- **The same with only the four-core copies multiplexed:** rejected, VOID with 120 G0
+  failures.
+
+**The ladder's own checks** pass in release and debug (`check-release.log`,
+`check-debug.log`):
+- blocks of 900,000, 899,828, 99,981 and 10 rows;
+- Wikidata, text, random and periodic data;
+- every rung at every lane count.
+
+## 5. The event plan, and the revised probe (the i9; recipe ready)
+
+**The audit's finding (`i9-10900K/walker-audit-20261101T232121Z.*`):** all 22 events exist
+and count. But every comma-list of four, with cycles and instructions, multiplexed, at
+82–86% (cycles at 65%).
+- **Likely cause:** the NMI watchdog (`nmi_watchdog` 1) holds the fixed cycles counter, so
+  perf's cycles takes one of the four programmable counters (SMT on).
+- **The machine's settings are not changed.** Disabling the watchdog remains the
+  maintainer's option, not a requirement.
+
+**The groups** (each one perf group with cycles and instructions; three events at most):
+
+| group | events | read for |
 |---|---|---|
-| A | load T[row]; row = entry ≫ 8; sum the byte; count the segment down | — (the bare chase; termination by a known length) |
-| B | A, and prefetch the next entry into L1 | the shipped prefetch, one lane turn ahead |
-| C | B, but end the segment at a START-flagged row | the shipped termination test, instead of a counter |
-| D | C, and store the byte into the output at the segment's known place | output stores, with nothing to grow or assemble |
-| P | the shipped walk, `walk_segments_room_with_prefetch::<k, PF_L1>` | production's lanes, room passes, buffers, growth and assembly |
-| S | the shipped walk's assembly alone (`SegScratch::assemble`) | — (to take from P) |
-
-**Lanes:** 1, 8, 16 and 32 for every rung (S at 32 only). More lane counts are added only if
-a decision in §6 depends on it.
-
-**Scheduling:**
-- Every rung's lanes take segments in order, from one queue.
-- When the queue is empty, the lanes still walking finish theirs one turn each, as the
-  shipped tail does.
-- So A–D differ from each other only in the cost each rung adds.
-
-## 3. Correctness (VM, done)
-
-**Every walk is checked after its clock stops:**
-- A–C: the rows stepped equal n, and the bytes' sum equals L's sum. Each row is visited
-  exactly once.
-- D and P: the output's hash equals the shipped walk's.
-- S: the assembled output's hash.
-
-A failed check aborts the run. The capture cannot report a figure from a wrong walk.
-
-**`walker_ladder FILE check [BLOCK]`** runs every rung at every lane count, two walks each,
-plus S. It passes on all of these (`check-release.log`, `check-debug.log`):
-
-| input | block | rows | segments | builds |
-|---|---|--:|--:|---|
-| wikidata-20261026 | 1 (the protocol's) | 900,000 | 511 | release, debug |
-| wikidata-20261026 | 3, 101 | 899,828 and 900,000 | 511 | release |
-| wikidata-20261026 | 433 (a stream's tail) | 10 | 10 | release, debug |
-| text-l1 (bzip2 -1) | 0 | 99,981 | 512 | release, debug |
-| random, period-3 | 0 | 899,981 | 512 | release |
-
-The debug build runs with debug assertions and overflow checks on.
-
-**A VM sweep, indicative only** (`vm-sweep.txt`: 20 walks a config, one pinned vCPU of a
-shared 4-vCPU VM with a 260 MB L3; no counters; not the i9's figures):
-
-| ns a row | 1 lane | 8 | 16 | 32 |
-|---|--:|--:|--:|--:|
-| A (bare) | 20.0 | 4.50 | 2.36 | 2.26 |
-| B (+ prefetch) | 17.6 | 3.76 | 2.23 | 1.47 |
-| C (+ flag test) | 19.0 | 4.16 | 2.25 | 1.57 |
-| D (+ stores) | 19.4 | 4.10 | 2.35 | 1.99 |
-| P (shipped) | 21.6 | 4.29 | 2.37 | 2.05 |
-| S (assembly) | | | | 0.056 |
-
-**What the VM suggests:**
-- At 32 lanes, prefetch is worth 35% (A→B).
-- The flag test costs about 7% (B→C).
-- The stores cost 27% (C→D).
-- Production's bookkeeping beyond D costs 3% (D→P), of which assembly is about 3 points.
-
-These are hypotheses for the i9 to test, not findings. The VM's cache keeps the whole
-table resident, which the i9's 20 MB L3 under four cores may not.
-
-## 4. The counter availability audit (run on the i9)
-
-```
-sudo -v && just walker-counter-audit 2>&1 | tee walker-audit-console.log
-```
-
-About a minute. Upload `walker-audit-*.json`, `walker-audit-*.md` and the console.
-
-**What it does:**
-1. Checks the corpus's hash.
-2. Builds the ladder, and runs its correctness check (§3).
-3. Records the environment, as numbers only: CPU family, model and stepping; logical
-   CPUs, physical cores and threads a core; `perf_event_paranoid`; `nmi_watchdog`.
-4. For each event below, records whether `perf list` has it and whether it counts (non-zero)
-   on a short ladder run.
-5. Runs each event group with cycles and instructions, and records whether every member
-   counts and whether any is multiplexed.
-
-**No figure from these runs is kept;** they exist only to give the events something to
-count. With SMT on, the i9 has four programmable counters a logical CPU, so each group has
-at most four events.
-
-**The plumbing was exercised on the VM** with a stand-in `perf` that reports one event
-missing, one unsupported and one group multiplexed. The audit reported all three correctly.
-The real VM has no PMU, so it was a parsing check only.
-
-**The result** (`2026-11-01-walker-ladder/i9-10900K/`: `walker-audit-20261101T232121Z.json`
-and `.md`, and the console):
-- **Environment:** CPU family 6, model 165, stepping 5; 20 logical CPUs on 10 physical
-  cores, 2 threads a core; `perf_event_paranoid` 4; `nmi_watchdog` 1.
-- **The ladder's correctness check passed on the i9:** every rung at every lane count, and
-  the output fnv `27d7635e0e1a9555`, as on the VM.
-- **Every one of the 22 events** (20 candidates, plus cycles and instructions) is in
-  `perf list` and counts on a run.
-- **Every group of four (with cycles and instructions) multiplexed.** The programmable
-  events ran 82–86% of the time, cycles 65–66%.
-- **The likely cause:** the NMI watchdog. On Intel it holds the fixed cycles counter, so
-  perf's `cycles` takes one of the four programmable counters. Four events plus cycles is
-  five for four.
-
-**The fix, with no change to the machine's settings:**
-- Groups of at most three events, so with cycles they fit four programmable counters.
-- The alternative, disabling the watchdog for the capture (`kernel.nmi_watchdog=0`), is the
-  maintainer's to choose. It is not needed.
-- **A preflight** (below) checks the fix on the i9 itself, before the capture spends any
-  time. It is exercised on the VM with the stand-in `perf`, both failing and passing.
-
-**The candidate events as audited, in their original groups of four** (superseded by §5's
-groups of three):
-
-| group | events, each with cycles and instructions | for |
-|---|---|---|
-| exec | `uops_issued.any`, `uops_retired.retire_slots`, `br_misp_retired.all_branches`, `idq_uops_not_delivered.core` | issue-width share, front end, mispredicts |
-| mlp | `l1d_pend_miss.pending`, `l1d_pend_miss.pending_cycles`, `l1d_pend_miss.fb_full`, `cycle_activity.stalls_l1d_miss` | demand MLP (Intel's: pending ÷ pending_cycles), fill-buffer exhaustion |
-| stalls | `cycle_activity.stalls_l2_miss`, `cycle_activity.stalls_l3_miss`, `cycle_activity.stalls_total`, `resource_stalls.sb` | where loads stall; the store buffer |
-| pf_tlb | `dtlb_load_misses.walk_active`, `sw_prefetch_access.t0`, `load_hit_pre.sw_pf`, `mem_load_retired.l1_miss` | page walks; whether the prefetches arrive before the demand load |
-| loads | `mem_load_retired.fb_hit`, `mem_load_retired.l2_miss`, `mem_load_retired.l3_miss`, `resource_stalls.any` | where demand loads are served |
-
-After the audit: no event was dropped, since all count. Every group was split to at most
-three events. The `l1d_pend_miss` MLP pair stays in one group, with fb_full.
-
-**What the audit cannot show:** demand MLP misses MLP that software prefetch has already
-supplied. A low demand MLP with prefetch on does not mean low overlap (the researcher's
-point). So the protocol reads `load_hit_pre.sw_pf` and `mem_load_retired.fb_hit` beside it,
-and compares B with A.
-
-## 5. The capture (frozen after the audit; not authorized)
-
-```
-sudo -v && just bench-walker-ladder 2>&1 | tee walker-ladder-console.log
-```
-
-**What the recipe does:**
-1. Checks the corpus's hash.
-2. Builds the ladder, and runs its correctness check.
-3. Runs `bench/walker_ladder.py run FILE --rounds 3 --reps 100` with
-   `WALKER_PERF="sudo perf"`.
-
-Upload `walker-ladder-*.jsonl`, `walker-ladder-*-summary.json` and the console.
-
-**The frozen event groups**, each with cycles and instructions:
-
-| group | events | for |
-|---|---|---|
-| exec | `uops_issued.any`, `uops_retired.retire_slots`, `idq_uops_not_delivered.core` | issue-width share (D3), the front end |
-| branch_sb | `br_misp_retired.all_branches`, `resource_stalls.sb`, `resource_stalls.any` | mispredicts; the store buffer (rung D's stores) |
-| mlp | `l1d_pend_miss.pending`, `l1d_pend_miss.pending_cycles`, `l1d_pend_miss.fb_full` | demand MLP and fill-buffer exhaustion (D4) |
-| stalls_l1 | `cycle_activity.stalls_l1d_miss`, `cycle_activity.stalls_total` | the share of stalls on an L1 miss |
+| exec | `uops_issued.any`, `uops_retired.retire_slots`, `idq_uops_not_delivered.core` | issue and retirement pressure; undelivered front-end slots (D3) |
+| branch_sb | `br_misp_retired.all_branches`, `resource_stalls.sb`, `resource_stalls.any` | mispredicts; store-buffer stalls |
+| mlp | `l1d_pend_miss.pending`, `l1d_pend_miss.pending_cycles`, `l1d_pend_miss.fb_full` | demand MLP and fill-buffer pressure, together (D4) |
+| stalls_l1 | `cycle_activity.stalls_l1d_miss`, `cycle_activity.stalls_total` | stall cycles with an L1 miss outstanding |
 | stalls_l2 | `cycle_activity.stalls_l2_miss`, `cycle_activity.stalls_l3_miss`, `dtlb_load_misses.walk_active` | deeper misses; page walks |
-| pf | `sw_prefetch_access.t0`, `load_hit_pre.sw_pf`, `mem_load_retired.l1_miss` | whether the prefetches arrive before the demand loads |
+| pf | `sw_prefetch_access.t0`, `load_hit_pre.sw_pf`, `mem_load_retired.l1_miss` | prefetches executed; demand loads meeting an in-flight software prefetch |
 | loads | `mem_load_retired.fb_hit`, `mem_load_retired.l2_miss`, `mem_load_retired.l3_miss` | where demand loads are served |
 
-**The preflight:**
-- Before any figure, each group runs once on a short walk.
-- If any event is uncounted, or runs less than 99.9% of the time, the capture stops there.
-  It makes no figures, and prints which event and group failed.
-- So a grouping the i9 cannot count unmultiplexed costs seconds, not a void capture.
+**The revised probe** (`sudo -v && just walker-counter-probe`, about two minutes):
+- It checks the corpus's hash and runs the ladder's check.
+- It runs each candidate group above as one perf group, bounded by the control FIFO around
+  20 walks and once around none. The candidates include the fallbacks `exec_pair`,
+  `mlp_pair` and `fb_full`, and every event alone.
+- It keeps perf's **raw output and running percentages** for every run.
+- If a group the decisions need, mlp or exec, cannot be scheduled whole, the protocol says
+  so. That decision is then not read. Its ratios are never built across runs.
+- The probe is exercised on the VM with the stand-in perf. Its real figures need the i9.
 
-**One core:**
-- Every config (A–D and P at 1, 8, 16 and 32 lanes, and S32) is run once per event group,
-  pinned to one CPU of the first physical core.
-- The order is shuffled by round, with a fixed seed. There are 3 rounds.
-- **The walks:** 100 a run, 25 at one lane, where a walk is about ten times slower.
-- **Counts a row:** each config also runs at 0 walks, the setup alone (decoding one block
-  and building its tables). The counts are (at REPS − at 0) ÷ (REPS × rows).
-- Times come from the ladder's own clock around the walks.
+## 6. Gates and decisions (revised; frozen after the probe)
 
-**Four cores:** A32, B32 and P32 as four copies at once, one per physical core. Each copy
-builds its own T-vector, so there are four tables, as four workers keep. Groups exec and
-mlp; 3 rounds.
-
-**About 7 minutes in all** (seven groups). The output is `walker-ladder-<time>.jsonl` and a summary.
-`--no-perf` runs the same plan timed only. That is the VM's dry run: it completed, and
-with too few walks it was void by G1, as it should be.
-
-## 6. Gates, decisions and stopping rules (frozen)
-
-All figures are medians over the rounds.
-- c(X, k) is cycles a row, rung X, k lanes.
-- bare = the least of c(A, k) and c(B, k) over k: the best bare chase, prefetch or not.
+**Notation:** c(X, k) is cycles a row, rung X, k lanes, the median over its runs. Each run's
+cycles come from its own window.
 
 **The gates:**
 
 | gate | rule | if it fails |
 |---|---|---|
-| G0 | every walk checked; every run pinned; no counted group multiplexed | void |
+| G0 | `validity()` returns no failures (§4) | void |
 | G1 | P32's ns a row, max ÷ min over its runs, at most 1.05 | void |
 
 **The decisions:**
 
-| | rule | decision |
+| | rule | reading |
 |---|---|---|
-| **D1** | c(P, 32) ≤ 1.15 × bare | the shipped walk's scheduling and bookkeeping are not the limit: **no walker scheduling rewrite** (the stopping rule of report 134) |
-| **D2** | c(P, 32) ≥ 1.5 × bare | name the step, from B→C, C→D and D→P at 32 lanes, where most of the gap opens; any rewrite is of that step only, with its own budget, after review |
+| **D1** | c(P, 32) ≤ 1.15 × bare32, where bare32 = min(c(A, 32), c(B, 32), c(M, 32)) | the shipped walk is within 15% of the best reduced walk at the same lane count: **no walker scheduling rewrite** (report 134's stopping rule) |
+| **D2** | c(P, 32) ≥ 1.5 × bare32 | report the net contrasts at 32 lanes (A→B, B→C, C→D, M→P, D→P) and name the largest; any rewrite would be of that contrast's code only, with its own budget, after review |
 | between | 1.15 < ratio < 1.5 | reported; no rewrite on this evidence |
-| **D3** | P32's uops issued a row ÷ 4 is at least 0.70 × c(P, 32) | execution-bound: any compact format must be nearly instruction-neutral (this would confirm FOR-14's premise) |
-| **D4** | demand MLP of B rises less than 10% from 16 lanes to 32, while fb_full's share of cycles at least doubles | miss capacity is the limit: no more lanes |
-| **D5** | four-core P32/B32 differs from one-core P32/B32 by more than 15 points | the isolated-core conclusions do not transfer: report it and stop |
+| **D3** | from the exec group's simultaneous counts on P32 | **issue pressure**, the issued µops ÷ (4 × cycles), with the retired-slot and undelivered shares beside it. At 0.70 or more: added instructions are unlikely to be absorbed. That is a planning signal for FOR-14-like work, **not a bottleneck classification**; below 0.70, nothing is concluded |
+| **D4** | from the mlp group's simultaneous counts on B16 and B32 | demand MLP (pending ÷ pending cycles) rising less than 10% from 16 lanes to 32, **and** fb_full events a cycle at least doubling **and** at least 0.01 at 32: **consistent with** a miss-capacity constraint, not an exclusive diagnosis. Not read if the mlp group was not counted whole |
+| **D5** | r = (P32 ÷ B32, four cores) ÷ (P32 ÷ B32, one core) | \|r − 1\| > 0.15: the isolated-core conclusions do not transfer; report and stop |
+
+**How the counters are read:**
+- **Demand MLP excludes overlap that software prefetch supplied earlier.** A buffer
+  allocated by a prefetch enters `pending` only when a demand load meets it. So better
+  prefetching can lower demand MLP while raising throughput.
+- `load_hit_pre.sw_pf` and `mem_load_retired.fb_hit` are read beside it, and B is compared
+  with A.
+- `fb_full` is an event count. It is reported per row and per cycle, never as a share of
+  cycles full.
 
 **What none of them licenses:**
 - no lane-count sweep beyond 1, 8, 16 and 32;
-- no new walker variant;
+- no production walker change;
 - no format work.
 
 The diagnostic ends with its summary. The next architecture is chosen from the measured
-bottleneck (report 135), after review.
-
-**What the decisions rest on:**
-- The 1.15 and 1.5 bands are judgement, set before any measurement.
-- D3's 4-wide issue is the core's documented width.
-- D4 needs `l1d_pend_miss.fb_full`, which the audit confirmed counts.
-
-**A prior from FOR-14's i9 confirmation** (2026-11-01-for14-stage1.md §7a, not a
-prediction this protocol gates on):
-- At one block, h's 22 extra instructions a step cost about 1.40 ns a row, about 7 cycles,
-  over o's 1.275 ns.
-- So the shipped walk had little idle issue capacity to absorb added work. That favours
-  D3, or an instruction-window limit (the researcher's second row), over spare miss
-  capacity.
-- At four blocks, o's walk lost 56% a row and the half-sized table's only 8%. So D5's
-  four-core check is where the memory side should show.
+bottleneck, after review.
 
 ## 7. Cost so far
 
-About two-thirds of the authorized engineer-day:
-- the ladder, its checks, the driver, the audit, this draft;
-- one VM sweep;
-- the dry runs (no-perf, and a stand-in `perf` to exercise the parsing);
-- the regrouping and preflight after the audit.
+About the authorized engineer-day: the ladder, M, the checks, the driver, the measurement
+repair, the tests, the stand-in runs and this revision.
 
-**i9 time used:** the one-minute counter audit. No capture.
+**i9 time used:** the one-minute audit. No capture. Next on the i9, once reviewed, is the
+two-minute probe, which makes no figure. The capture would follow only after the probe's
+groups are frozen and the capture is authorized.
