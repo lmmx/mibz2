@@ -1,4 +1,4 @@
-# External research reports 74–168: index
+# External research reports 74–169: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -108,6 +108,7 @@ verbatim. They are not findings of this repository.
 | 166 | 2026-11-02 | the guardian | Astra's Option 2 approved: one compile-and-correctness prototype of refined compact30 (current-row F, `(B ≪ 8) \| F`); no timing, no constructor, no integration | `2026-11-02-external-report-166.md` |
 | 167 | 2026-11-02 | the guardian | on the BLAKE3 walkthrough: three audits for the compact30 prototype (dependency, state, physical access); no prefetch distances, widening or sweeps | `2026-11-02-external-report-167.md` |
 | 168 | 2026-11-02 | the guardian | the explicit authorisation of the one refined compact30 prototype (beyond report 158); traversal from the candidate's records only; the 2.5-cycle load model a lower-bound assumption | `2026-11-02-external-report-168.md` |
+| 169 | 2026-11-02 | the guardian | routing the BLAKE3 ideas: Claude's prototype first, then the researcher on the machine code (cross-lane overlap), Astra only for a concrete obstacle | `2026-11-02-external-report-169.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
