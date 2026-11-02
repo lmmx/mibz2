@@ -1,4 +1,4 @@
-# External research reports 74–147: index
+# External research reports 74–150: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -87,6 +87,9 @@ verbatim. They are not findings of this repository.
 | 145 | 2026-11-02 | the guardian | on report 144: the likely longer-term direction if the harness becomes reusable; finish the probe first, no second system | `2026-11-02-external-report-145.md` |
 | 146 | 2026-11-02 | the guardian | the i9 probe verified; a safeguard: a control-only count can be comparable to a low-count event's window count (stalls_l3_miss 62%), so report it beside, qualify, never subtract | `2026-11-02-external-report-146.md` |
 | 147 | 2026-11-02 | the researcher of report 138 | the walker capture checked independently (618 records, 3,012 readings, overlap ≥ 99.44%): perf kept for this diagnostic; D1 accepted; rare-event counters qualified; D5 compares P with B only | `2026-11-02-external-report-147.md` |
+| 148 | 2026-11-02 | the guardian | the walker capture valid; D1; the four-copy penalty in A, B and P (+38–45% cycles a row); the physical cause unresolved | `2026-11-02-external-report-148.md` |
+| 149 | 2026-11-02 | the researcher of report 138 | the four copies execute the same instructions a row (±0.03%) in 37–43% more cycles; the clock falls 5.30 → 4.95 cycles/ns | `2026-11-02-external-report-149.md` |
+| 150 | 2026-11-02 | the guardian | on report 149: tighten §8 (eight lines in flight is a model, D3 classifies nothing, D5 is P/B, P–M is net); hypotheses kept apart from measurements | `2026-11-02-external-report-150.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
