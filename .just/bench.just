@@ -220,19 +220,32 @@ bench-pmu-probe *args:
 # room::<false> is not the reviewed listing. The workers go on the second to fifth physical
 # cores (the first takes more interrupts), or the first four where there are only four.
 # No sudo, no counters, no setting changed. Every file goes to
-# target/c30-traversal-<UTC time>/, the console included, archived as
-# target/c30-traversal-<UTC time>.tar.gz with a manifest: upload that one file.
-# `dry-run` as the third argument checks the whole path untimed: rounds -1, 0 and 1, the
-# records marked a dry run, and no timing figure read.
+# target/c30-traversal-<UTC time>[-mode]/, the console included, archived as
+# target/c30-traversal-<UTC time>[-mode].tar.gz with a manifest, whether the run passed or
+# failed: upload that one file.
+# The third argument is the mode:
+# - capture: the registered run;
+# - dry-run: the whole path untimed (rounds -1, 0 and 1, the records marked a dry run, no
+#   timing figure read);
+# - fail-output, fail-pin: a dry run with a fault injected in round -1 (W4 worker 2's first
+#   C output corrupted after the completion barrier, or W4 worker 1 pinned to a CPU that
+#   does not exist), to show the run ends at once, with its failure recorded and archived.
 #   just bench-c30-traversal
 bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="capture":
     #!/usr/bin/env bash
     set -uo pipefail
-    pin=b12b49b44e27b96c8e16e0ccab4e348c1ba56bba
-    case "{{run}}" in capture) dry= ;; dry-run) dry=--dry-run ;; *) echo "c30: run is capture or dry-run"; exit 2 ;; esac
+    pin=c0f8d3832b442dde6f2908a1c80e328641bc6e3e
+    case "{{run}}" in
+      capture) flags=() ;;
+      dry-run) flags=(--dry-run) ;;
+      fail-output) flags=(--dry-run --inject output:w4:C:2) ;;
+      fail-pin) flags=(--dry-run --inject pin:w4:1) ;;
+      *) echo "c30: the mode is capture, dry-run, fail-output or fail-pin"; exit 2 ;;
+    esac
     f=$(realpath "{{corpora}}")/wikidata-20261026.bz2
     wt=$(realpath -m target/c30-traversal-pin)
-    out=$(realpath -m target)/c30-traversal-$(date -u +%Y%m%dT%H%M%SZ)${dry:+-dry}
+    suffix=$([ "{{run}}" = capture ] || echo "-{{run}}")
+    out=$(realpath -m target)/c30-traversal-$(date -u +%Y%m%dT%H%M%SZ)$suffix
     mkdir -p "$out"
     (
       set -e
@@ -241,12 +254,11 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
       [ -d "$wt" ] || git worktree add -q --detach "$wt" "$pin"
       [ "$(git -C "$wt" rev-parse HEAD)" = "$pin" ] || { echo "c30: $wt is not at the pin"; exit 1; }
       git -C "$wt" diff --quiet HEAD || { echo "c30: $wt has local changes"; exit 1; }
-      echo "c30: the frozen commit $pin, corpus checked"
+      echo "c30: the frozen commit $pin, corpus checked, mode {{run}}"
       rustc -vV
       (cd "$wt" && cargo build --release --example c30walk)
       bin="$wt/target/release/examples/c30walk"
-      python3 "$wt/bench/test_c30_traversal.py" > /dev/null
-      echo "c30: the analysis's tests passed"
+      python3 "$wt/bench/test_c30_traversal.py" | tail -1
       listing=$(python3 "$wt/bench/asm_listing.py" "$bin" "$wt/docs/journal/2026-11-02-compact30-walker/room-false.asm" "$out")
       echo "c30: room::<false> is the reviewed listing: $listing"
       [ "$listing" = yes ] || { echo "c30: G3 fails (see room-false.diff); no run"; exit 1; }
@@ -257,9 +269,19 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
       [ "$n" -ge 4 ] || { echo "c30: $n physical cores; four are needed"; exit 1; }
       if [ "$n" -ge 5 ]; then cpus=$(echo "$phys" | sed -n 2,5p | paste -sd,); else cpus=$(echo "$phys" | head -4 | paste -sd,); fi
       echo "c30: workers on CPUs $cpus (W1 on the first)"
-      "$bin" grid "$out/c30-traversal.jsonl" "$f" --rounds {{rounds}} --cpus "$cpus" $dry
-      python3 "$wt/bench/c30_traversal.py" "$out/c30-traversal.jsonl" --listing-ok "$listing" --json "$out/c30-analysis.json"
+      g=0
+      timeout --kill-after=30 3600 "$bin" grid "$out/c30-traversal.jsonl" "$f" --rounds {{rounds}} --cpus "$cpus" "${flags[@]}" || g=$?
+      echo "c30: the grid exited with status $g"
+      a=0
+      python3 "$wt/bench/c30_traversal.py" "$out/c30-traversal.jsonl" --listing-ok "$listing" --json "$out/c30-analysis.json" || a=$?
+      [ "$g" = 0 ] || exit "$g"
+      exit "$a"
     ) 2>&1 | tee "$out/console.log"
     status=${PIPESTATUS[0]}
-    (cd "$wt" && python3 bench/archive.py "$out" --corpus "$f" --binary "$wt/target/release/examples/c30walk" --command "just bench-c30-traversal {{corpora}} {{rounds}} {{run}}" --status "$status")
+    cmd="just bench-c30-traversal {{corpora}} {{rounds}} {{run}}"
+    if [ -d "$wt" ]; then
+      (cd "$wt" && python3 bench/archive.py "$out" --corpus "$f" --binary "$wt/target/release/examples/c30walk" --command "$cmd" --status "$status")
+    else
+      python3 bench/archive.py "$out" --corpus "$f" --command "$cmd" --status "$status"
+    fi
     exit "$status"

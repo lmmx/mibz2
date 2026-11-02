@@ -399,7 +399,63 @@ at w4's lower end, point and upper end.
 
 ## 8. The VM checks (no timing)
 
-Filled in by the commit that pins the recipe, from the recipe's own runs at the pin.
+All at the pin `c0f8d38`, through the recipe itself, on the VM's four CPUs. No timing figure
+was read or is reported.
+
+**Correctness and the regression suite:**
+- The analysis's 34 regression tests pass, on synthetic records. They cover:
+  - each decision, on a valid run: ADVANCE; STOP on cost; STOP on completion time;
+    INCONCLUSIVE on either;
+  - each gate: an unstable control (G1), a staggered start (G2), a listing mismatch (G3),
+    the clock calls' share and a missing calibration (G5);
+  - report 175's five cases, each now rejected before any ratio: one measured pair;
+    workers shifted off their lists; the candidate's rows doubled (that set's unaltered
+    version is a STOP); a full step split; a next preparation inside a prior walk;
+  - the measurement boundary: a check inside a peer's walk; a preparation after a peer's
+    start; a W1 check overlapping the next preparation; a CPU window longer than its walk;
+  - the record set: a missing, duplicated or unexpected walk; lists other than the snake; a
+    wrong CPU; the arm order swapped; a capture's or dry run's wrong labels; an injected
+    capture;
+  - failures: a failure record, and a failed run's leftover records;
+  - an uneven schedule (one worker finishing far earlier) being valid, with its checks
+    after the step's last walk;
+  - the cost being CPU time: a descheduled candidate's stretched elapsed windows leave w4
+    unchanged and show in `w4_wall` and the running fraction;
+  - the interval refusing every sample size but 20.
+- **Each schedule check is load-bearing.** With each S check forced to pass in turn, the
+  tests aimed at it fail:
+  - S3 is caught by seven tests;
+  - S2 by two;
+  - every other S check by one.
+- **The listing check** passes on the pin's binary and fails on a reference with one
+  operand changed (revision 2). G3 held in every run below.
+
+**The three runs** (`docs/journal/2026-11-02-compact30-traversal-protocol/runs-c0f8d38/`):
+
+| mode | grid exit | what the analysis found | archive |
+|---|--:|---|---|
+| `dry-run` | 0 | every S check passes (all 5,208 walks are the expected records, the barriers' and passes' order holds, placement holds); G3 and G4 hold | yes |
+| `fail-output` | 3 | the failure: round −1, W4, arm C, worker 2, step 0, block 7, differing at byte 0. INVALID, no figures | yes |
+| `fail-pin` | 3 | the failure: W4 worker 1 could not pin to CPU 1023. INVALID, no figures | yes |
+
+- **Each failed run ended at once.** The process exited while the other three workers
+  waited at a barrier. The failure was the records file's last line, and the recipe still
+  analysed and archived it.
+- **What is kept for each run:**
+  - the console;
+  - the analysis JSON (no timing in any of them);
+  - the listing diff (empty);
+  - the manifest, naming the pin, the corpus and binary hashes, the command, the exit
+    status and every file's checksum.
+- **Not kept:** the records files. They hold VM timestamps and calibration figures.
+
+**The source identity:**
+- the pin `c0f8d38`, with no tracked changes at any run;
+- rustc 1.97.0 (`2d8144b78`), LLVM 22.1.6;
+- baseline x86-64 (fxsr, sse, sse2), no RUSTFLAGS;
+- the release profile (codegen-units = 1, fat LTO, line tables).
+- `room::<false>` in the pin's binary is identical to the reviewed listing
+  (`2026-11-02-compact30-walker/room-false.asm`) under G3's normalisation.
 
 ## 9. The records and the command
 
