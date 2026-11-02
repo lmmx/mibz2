@@ -1,0 +1,74 @@
+bash bench/corpus.sh
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.02s
+bash bench/coop.sh --grid-only --rounds 20 --arms p4,p1,p2,p5,p6,p8,p10,o1,o4,v1,v4,v6,u1,u2,u4,u5,u6,u8,u10,l4x2,l5x2
+   Compiling mibz2 v0.2.0 (/home/louis/dev/mibz2-coop)
+    Finished `release` profile [optimized + debuginfo] target(s) in 9.27s
+# The cooperative inversion pilot (b99b92b, 2026-10-29T21:51:36Z)
+
+- **Machine:** Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz; 20 CPUs on 10 physical cores used (0,1,2,3,4,5,6,7,8,9); L3 20480K shared by CPUs 0-19
+- **libsais:** 2.12.1 at c284ba8, OpenMP
+- **Load:** 3.13 1.68 1.25
+- **Corpus:** corpora/wikidata.bz2 (11854933 bytes, sha256 82f65ace0731962d...)
+- **Build:** b99b92bcd89f43c22003018231e866f631ae57c3; **timing boundary:** the T-vector phase only, build + walk (the MTF outside the timing)
+
+## One block on k cores (block)
+
+
+## N blocks in flight on k cores each (grid, 20 rounds)
+
+431 blocks, 209.7 MB, 20 timed rounds; the T-vector phase only (build + walk), not the decoder; each thread pinned to its own CPU, checked
+| arm | blocks live | cores | MB/s, median | vs p4, paired: mean ±95% (min-max) | build MB/s | walk MB/s | walk vs p4, paired | walk: busiest thread's bytes / mean, median | walk: last start, end spread (µs a block), medians | rounds misplaced |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| p4 | 4 | 4 | 1461 | 1.000 ±0.000 (1.000-1.000) | 5528 | 2000 | 1.000 |  |  | 0 |
+| p1 | 1 | 1 | 544 | 0.370 ±0.002 (0.358-0.377) | 1831 | 775 | 0.386 |  |  | 0 |
+| p2 | 2 | 2 | 1072 | 0.731 ±0.005 (0.698-0.744) | 3539 | 1542 | 0.768 |  |  | 0 |
+| p5 | 5 | 5 | 1300 | 0.885 ±0.008 (0.849-0.909) | 4808 | 1804 | 0.894 |  |  | 0 |
+| p6 | 6 | 6 | 1102 | 0.753 ±0.007 (0.715-0.780) | 3867 | 1560 | 0.777 |  |  | 0 |
+| p8 | 8 | 8 | 697 | 0.474 ±0.005 (0.443-0.486) | 2813 | 931 | 0.462 |  |  | 0 |
+| p10 | 10 | 10 | 565 | 0.383 ±0.005 (0.354-0.397) | 2423 | 743 | 0.367 |  |  | 0 |
+| o1 | 1 | 1 | 545 | 0.372 ±0.003 (0.359-0.377) | 1822 | 778 | 0.387 |  |  | 0 |
+| o4 | 4 | 4 | 1467 | 1.005 ±0.010 (0.962-1.047) | 5533 | 2011 | 1.004 |  |  | 0 |
+| v1 | 1 | 1 | 455 | 0.308 ±0.005 (0.290-0.322) | 2317 | 564 | 0.280 |  |  | 0 |
+| v4 | 4 | 4 | 1401 | 0.954 ±0.008 (0.923-0.985) | 8226 | 1699 | 0.843 |  |  | 0 |
+| v6 | 6 | 6 | 1204 | 0.824 ±0.010 (0.773-0.865) | 7559 | 1442 | 0.720 |  |  | 0 |
+| u1 | 1 | 1 | 371 | 0.253 ±0.001 (0.245-0.257) | 1828 | 465 | 0.232 |  |  | 0 |
+| u2 | 2 | 2 | 742 | 0.505 ±0.004 (0.485-0.515) | 3653 | 932 | 0.464 |  |  | 0 |
+| u4 | 4 | 4 | 1313 | 0.896 ±0.005 (0.865-0.912) | 6801 | 1637 | 0.817 |  |  | 0 |
+| u5 | 5 | 5 | 1479 | 1.010 ±0.007 (0.983-1.029) | 8227 | 1827 | 0.910 |  |  | 0 |
+| u6 | 6 | 6 | 1615 | 1.100 ±0.008 (1.070-1.129) | 9506 | 1965 | 0.977 |  |  | 0 |
+| u8 | 8 | 8 | 1213 | 0.826 ±0.010 (0.783-0.868) | 7977 | 1441 | 0.717 |  |  | 0 |
+| u10 | 10 | 10 | 805 | 0.552 ±0.008 (0.525-0.587) | 6323 | 924 | 0.465 |  |  | 0 |
+| l4x2 | 4 | 8 | 2346 | 1.601 ±0.018 (1.531-1.659) | (in walk) | 2363 | 1.175 |  |  | 0 |
+| l5x2 | 5 | 10 | 1753 | 1.195 ±0.018 (1.123-1.254) | (in walk) | 1758 | 0.876 |  |  | 0 |
+checked: the library's checkpoints are the harness's on every block
+checked p4: every block's output the room walk's
+checked p1: every block's output the room walk's
+checked p2: every block's output the room walk's
+checked p5: every block's output the room walk's
+checked p6: every block's output the room walk's
+checked p8: every block's output the room walk's
+checked p10: every block's output the room walk's
+checked o1: every block's output the room walk's
+checked o4: every block's output the room walk's
+checked v1: every block's output the room walk's
+checked v4: every block's output the room walk's
+checked v6: every block's output the room walk's
+checked u1: every block's output the room walk's
+checked u2: every block's output the room walk's
+checked u4: every block's output the room walk's
+checked u5: every block's output the room walk's
+checked u6: every block's output the room walk's
+checked u8: every block's output the room walk's
+checked u10: every block's output the room walk's
+checked l4x2: every block's output the room walk's
+checked l5x2: every block's output the room walk's
+wrote coop-20261029T215136Z.md and coop-20261029T215136Z.jsonl
+python3 bench/coop_counters.py --arms p4,p6,p8,u4,u6,u8,u10,v6 --groups reads,llc_all --reps 2 --no-record
+bench-coop-counters: 10 cores (0,1,2,3,4,5,6,7,8,9), libsais built
+bench-coop-counters: perf needs sudo for the memory controller's events
+bench-coop-counters: 8 arms x 3 passes x 2 repeats x (1 and 21 rounds) = 96 runs
+bench-coop-counters: 20/96 runs, about 4 min left
+bench-coop-counters: 40/96 runs, about 3 min left
+bench-coop-counters: 60/96 runs, about 2 min left
+bench-coop-counters: 80/96 runs, about 1 min left
+bench-coop-counters: wrote coop-counters-20261029T215323Z.md and coop-counters-20261029T215323Z.jsonl
