@@ -363,3 +363,14 @@
 .bf-fig .bf-cut { stroke: var(--bf-green); stroke-width: 2; fill: none; }
 .bf-fig .bf-chip-on { fill: var(--bf-green); }
 .bf-fig .bf-chip-off { fill: var(--bf-track); }
+
+/* screenshots inside a figure (the MLP post): full width up to their pixel size, never inverted */
+.md-typeset .bf-shots img {
+  display: block;
+  width: 100%;
+  max-width: 691px;
+  height: auto;
+  margin: 0 auto 0.6rem;
+  border: 1px solid var(--bf-frame);
+  border-radius: 0.4rem;
+}
