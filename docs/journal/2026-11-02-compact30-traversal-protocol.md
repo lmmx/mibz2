@@ -11,6 +11,14 @@
 - **The collector is unchanged** from `c0f8d38`: the Rust source, the walker, the
   synchronisation and the timing windows. Only `bench/c30_traversal.py`, its tests and this
   text differ at the new pin (§8).
+- **Closed: VALID, ADVANCE (reports 185–186).** The fourth i9 capture, under revision 5,
+  passed every schedule check and gate, G2 included.
+  - w4 = 0.84047 [0.83781, 0.84313]: under the 0.865 screen.
+  - e4 = 0.85601 [0.85239, 0.85965]: under the 1.02 tolerance.
+  - w1 = 1.14845 [1.14743, 1.14948]: compact30 costs 14.85% more on one core.
+  - The guardian and the researcher each verified it independently from the raw records
+    (§8). This authorises direct-constructor design work, not integration or a claim about
+    the full decoder.
 - **Revision 5 changes one thing (reports 183–184): the W4 start barrier spins instead of
   sleeping.**
   - The third i9 capture completed but was INVALID on G2. Its start skew was the operating
@@ -713,6 +721,62 @@ with a fresh pair of barriers per arm, in 3 rounds × 2 arms.
   - 300,000 steps pinned: pass;
   - 12,000 steps unpinned: pass;
   - both faults fail with exit 101.
+
+### The fourth i9 attempt: VALID, ADVANCE (reports 185–186)
+
+- **The run:**
+  - recipe `5e2888f`, source pin `f1dafa3`, rustc 1.97.0 / LLVM 22.1.6;
+  - the worktree moved from `4635e2c` to the pin;
+  - G3 passed;
+  - `barrier-test` passed on CPUs 1–4;
+  - binary sha256 `ccaf37ad…`.
+- **Every schedule check (S0–S9) and every gate (G1–G5) passed.** The decision is
+  **ADVANCE**:
+
+| C / P | point | 95% interval | rule |
+|---|--:|---|---|
+| w4, four-core CPU cost | 0.84047 | 0.83781–0.84313 | upper bound < 0.865: passes |
+| e4, four-core completion | 0.85601 | 0.85239–0.85965 | upper bound < 1.02: passes |
+| w1, one-core CPU cost (reported) | 1.14845 | 1.14743–1.14948 | compact30 is 14.85% slower on one core |
+
+- **Revision 5's prediction held:**
+
+| | attempt 3 | attempt 4 |
+|---|---|---|
+| per-step skew ratio, median (first arm / second) | 0.0394 / 0.0248 | 0.0001 / 0.0001 |
+| row-weighted, worst arm-round | 0.0796 | 0.00023 |
+| sleepers' release-to-start | median 26 µs, p90 155 µs | median 0.2 µs, p90 0.2 µs |
+
+  - No step had a slow wake-up.
+  - The first-arm penalty is gone.
+  - e4's order effect shrank from 0.832/0.882 to 0.852/0.860.
+  - w4 barely changed from attempt 3's descriptive 0.8419, as the audit expected.
+  - Source: `i9-attempt-4/g2-check.txt`.
+- **Verification:**
+  - **Here:** the archive's sha256 (`4764393e…`) and all eight manifest checksums match,
+    and the pinned analyser, rerun on the raw records, reproduces the archived analysis
+    exactly.
+  - **By the guardian:** from the raw records.
+  - **By the researcher:** from the raw records (`i9-attempt-4/researcher-review/`). Its
+    `recheck.py`, rerun here with only its paths changed, reproduces its
+    `independent_stats.json` exactly.
+- **What the researcher's review adds (descriptive):**
+  - all 230 full-sized blocks are faster with C at W4, averaged over rounds;
+  - 1,138 of 1,140 full-sized W4 steps use less CPU;
+  - the 204 short blocks (8,324 rows) are slower with C;
+  - from one core to four, P's CPU cost per row rises 1.684× and C's 1.232×;
+  - the compact table's logical size is 2.164 bytes a row, against 4.
+  - None of this isolates the cause.
+- **What it authorises (report 186):** direct-constructor design review, then, if the design
+  survives it, a constructor prototype checked for exact table equivalence. It does not
+  authorise integration, a decoder speedup claim, or further traversal captures or
+  changes.
+- **The constructor budget:** with the planning model, the conservative bound is 1.06714×
+  production's build cost (from w4's upper bound).
+  - The model is S ≈ 0.592(1 − b) + 1.847(1 − w), with a target S of 0.25 CPU-s/GB.
+  - It is a planning screen, not a decoder prediction.
+- **The files:** `i9-attempt-4/`, with the full archive
+  (`c30-traversal-20261102T200732Z.tar.gz`) and the researcher's review.
 
 ## 9. The records and the command
 

@@ -1,0 +1,64 @@
+{
+ "run": "c30-traversal-20261102T200732Z",
+ "archived": "2026-11-02T20:08:07+00:00",
+ "source": {
+  "commit": "f1dafa31d88d7351a98afb005a84f23d5a2312bd",
+  "branch": "HEAD",
+  "tracked_changes": []
+ },
+ "corpora": [
+  {
+   "path": "/home/louis/dev/mibz2/target/walk-decoder/work/corpora/wikidata-20261026.bz2",
+   "bytes": 11953225,
+   "sha256": "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe"
+  }
+ ],
+ "binary": {
+  "path": "/home/louis/dev/mibz2/target/c30-traversal-pin/target/rust-1.97.0/release/examples/c30walk",
+  "sha256": "ccaf37ad21fb4c171caaa39304f815b795ddad8e4fa85a9922ee7aaa867dc9ae"
+ },
+ "command": "just bench-c30-traversal target/walk-decoder/work/corpora 20 capture",
+ "exit_status": 0,
+ "files": [
+  {
+   "path": "barrier-test.txt",
+   "bytes": 146,
+   "sha256": "d3ea30ddfa7e166ed825b2420f8529704394fb905bba49c9a0314c7e46bdb39e"
+  },
+  {
+   "path": "c30-analysis.json",
+   "bytes": 21819,
+   "sha256": "455adafdb814dae6bb76c493e68e99c6864bf5c6a8205131bf63c0e7951a6b7c"
+  },
+  {
+   "path": "c30-traversal.jsonl",
+   "bytes": 11320702,
+   "sha256": "cfd3744901aa60178b190785937a3a8490004ae20dbd4108e6e06a6e3f7a7bf0"
+  },
+  {
+   "path": "console.log",
+   "bytes": 3257,
+   "sha256": "fb30bed399d1cd77931fc6ed4e1a503bac9d2fe13ec1bd14d55569e94c95c2c2"
+  },
+  {
+   "path": "room-false.asm",
+   "bytes": 68781,
+   "sha256": "cf7241c1b5ba1d11c833e59321968083be2c54cab76b5ba283bb825dfc0bd8a3"
+  },
+  {
+   "path": "room-false.bounds",
+   "bytes": 328,
+   "sha256": "681deac53dde9df22fdba19690b9f70134f1baeeb4833f08e9d4e7c2935eb484"
+  },
+  {
+   "path": "room-false.diff",
+   "bytes": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+   "path": "rustc-vV.txt",
+   "bytes": 232,
+   "sha256": "856e4cad4242f859dad88fe7929dff8608f2654344342ee3135d52fa3a75cac7"
+  }
+ ]
+}
