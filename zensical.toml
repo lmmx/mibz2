@@ -52,8 +52,10 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "Memory-level parallelism in mibz2" = "blog/2026-11-02-memory-level-parallelism.md" },
-    { "MLP: measurement notes" = "blog/2026-11-02-memory-level-parallelism-notes.md" },
+    { "Memory-level parallelism in mibz2" = [
+      { "Instructions, overlap and evidence" = "blog/2026-11-02-memory-level-parallelism.md" },
+      { "Technical appendix" = "blog/2026-11-02-memory-level-parallelism-notes.md" },
+    ] },
     { "Inverse-BWT memory interference" = "blog/2026-11-01-inverse-bwt-memory-interference.md" },
     { "Block dispatch in mibz2" = "blog/2026-11-01-block-dispatch.md" },
     { "32 lanes, 8.6 chains" = "blog/2026-10-31-room-walk-overlap.md" },
@@ -221,7 +223,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
   { "blog/2026-11-02-memory-level-parallelism.md" = "What does interleaving independent pointer chases really demonstrate? A 2022 exchange about Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk." },
-  { "blog/2026-11-02-memory-level-parallelism-notes.md" = "Methodology behind the memory-level parallelism post: the 2022 benchmark in detail, throughput models, Intel counter definitions and their populations, a measurement programme for mibz2, and the full source register." },
+  { "blog/2026-11-02-memory-level-parallelism-notes.md" = "Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register." },
   { "blog/2026-11-01-inverse-bwt-memory-interference.md" = "Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible." },
   { "blog/2026-11-01-block-dispatch.md" = "How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay." },
   { "blog/2026-10-31-room-walk-overlap.md" = "The decoder's 32-lane walk runs 8.6 times faster than one chain. That figure may not mean what it seems: the walk may already hide memory latency, and spend too many instructions on each byte." },

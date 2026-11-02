@@ -17,7 +17,7 @@ What does interleaving independent pointer chases really demonstrate? A 2022 exc
 Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk.
 {: .post-dek }
 
-2 November 2026 · 14 min read · [Research synthesis](#5-the-bottleneck-isnt-an-instruction-count)
+2 November 2026 · 15 min read · [Research synthesis](#5-the-bottleneck-isnt-an-instruction-count)
 {: .post-meta }
 
 </div>
@@ -26,23 +26,27 @@ Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk.
 
 </div>
 
-To decode a bzip2 block, mibz2 eventually performs an odd kind of memory access. It reads an
-entry from a table, and the value it gets back says which entry to read next:
+To decode a bzip2 block, mibz2 [eventually](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs#L927-L961) performs an odd kind of memory
+access. It reads an entry from a table, and the value it gets back says which entry to read
+next. Each 4-byte entry packs two things: its low 8 bits are one decoded byte, and the bits
+above them are the number of the next row to read.
 
 ```rust
-let q = t[row];
-row = q >> 8;      // the next row to read
-out.push(q as u8); // and one decoded byte
+let q = t[row];    // read this row's entry
+row = q >> 8;      // the upper bits: the next row to read
+out.push(q as u8); // the low 8 bits: one decoded byte
 ```
 
-Each step depends on the one before. The CPU can't know the next address until the current
-load returns, so however many instructions it could run per cycle, this chain moves one load
-at a time. When the entry isn't in a nearby cache, every step waits for memory.
+Suppose the walk is at row 7, and row 7's entry says that row 12 comes next. Only once that
+entry has arrived does the CPU know to read row 12, whose entry might point to row 4, and so
+on. The CPU isn't short of instructions it could run. It's short of an address. And when the
+entry isn't in a nearby cache, every step waits for memory.
 
-So mibz2 doesn't walk one chain. It starts the walk from many points along the chain, which
-cuts it into segments, and advances 32 of those segments in turn, so that while one lane waits
-for its load the others can issue theirs. In one recorded
-comparison the 32-lane walk ran about 8.6 times faster than a single chain.
+So mibz2 doesn't walk one chain at a time. It picks about 500 [starting rows](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs#L450-L471)
+spread across the table, which cuts the traversal into segments, and advances 32 of those
+segments in turn, so that while one lane waits for its load the others can issue theirs. In
+[32 lanes, 8.6 chains](2026-10-31-room-walk-overlap.md) we measured what that buys: the
+32-lane walk runs about 8.6 times as fast as a single chain.
 
 What made it faster? It's tempting to say we'd found how many memory requests the CPU can
 keep in flight at once, its *memory-level parallelism* (MLP). But the same change also handed
@@ -61,28 +65,29 @@ is slow.
 
 ## 1. Why a pointer chase stalls
 
-Here is the chase in its simplest form:
-
-```c
-for (size_t i = 0; i < count; ++i)
-    p = next[p];
-```
-
-The value one load returns is the address of the next. An out-of-order CPU can look far ahead
-in the instruction stream, but it can't issue a load whose address it doesn't know yet, and
-register renaming can't remove a dependency on a value that hasn't arrived.
-
-Unrolling the loop doesn't help:
+Stripped of the decoding, the walk is the classic pointer chase. Written in C, with `next`
+standing for the table, each step is
 
 ```c
 p = next[p];
+```
+
+and the value each load returns is the address of the next. An out-of-order CPU looks far
+ahead in the instruction stream for work it can start early, but it can't issue a load whose
+address it doesn't know yet, and no amount of lookahead can supply a value that hasn't
+arrived.
+
+Unrolling the loop, writing the step out four times, doesn't change that:
+
+```c
+p = next[p];
 p = next[p];
 p = next[p];
 p = next[p];
 ```
 
-That saves some loop control, but the four loads still form one chain. Giving the loop four
-independent states does help:
+That saves a little loop bookkeeping, but the four loads are still one chain, each waiting for
+the last. What does help is giving the loop four independent chains:
 
 ```c
 p0 = next[p0];
@@ -105,23 +110,35 @@ lanes can share one array. mibz2's table of row numbers is exactly this kind of 
 
 ### Faster, without any load getting quicker
 
-Suppose, as an illustration, that each dependent load takes 80 ns to come back from memory.
+Suppose, with made-up round numbers, that each dependent load takes 80 ns to come back from
+memory.
 One chain then completes 12.5 million steps a second. If eight chains overlap perfectly, eight
 loads are in flight at once and the walk completes 100 million steps a second: one every
 10 ns on average, even though each load still takes 80 ns.
 
-That has a consequence for the instruction count. At 3 GHz, 80 ns is 240 cycles. If each step
-retires three instructions, one chain manages
+That changes how busy the CPU looks. A common measure of busyness is *instructions per cycle*
+(IPC): how many instructions the processor completes, on average, in one tick of its clock. A
+modern core can complete several per cycle when it has independent work and its data close at
+hand. An IPC of 1 means one instruction per cycle; an IPC of 0.1 means one every ten cycles. A
+core that spends most of its time waiting for memory has a low IPC, even when it's doing
+exactly what we want.
+
+In the example, at 3 GHz an 80 ns wait is 240 cycles. If each step runs three instructions,
+one chain completes three instructions every 240 cycles:
 
 $$
 \mathrm{IPC}_{\text{1 chain}} \approx \frac{3}{240} = 0.0125
 $$
 
-instructions per cycle, and eight overlapping chains manage about 0.1. The walk got eight
-times faster and its IPC is still far below one. That was the force of Lemire's reply that, in
-his benchmark, IPC is "small (much less than one)": a loop can speed up enormously while the
-CPU still spends nearly all its time waiting. It doesn't follow that instruction execution
-plays no part. That's the other half of the argument.
+With eight chains overlapping, eight steps' worth complete in the same 240 cycles, an IPC of
+about 0.1. The walk is eight times faster, and the CPU still completes only one instruction
+every ten cycles.
+
+That's the situation Lemire described when he replied that IPC in his benchmark is "small
+(much less than one)". A low IPC fits a loop that mostly waits for memory, and it shows that a
+large speedup doesn't need the core to look any busier. It doesn't say which part of the
+machine the loop is waiting on, and it doesn't show that the extra independent instructions
+played no part. That's the other half of the argument.
 
 ## 2. ILP exposes the work; MLP lets it overlap
 
@@ -200,8 +217,8 @@ the critical path is the memory system's, not arithmetic's. Neither claim about 
 universal either. A core doesn't have to be superscalar or out of order to keep several misses
 in flight: Berkeley's single-issue, in-order Rocket core has a nonblocking data cache, and Arm
 documents three outstanding misses, under some conditions, on the in-order Cortex-A55 (the
-[notes](2026-11-02-memory-level-parallelism-notes.md#2-what-a-core-needs-to-keep-several-loads-in-flight)
-have the sources). An in-order core is simply much more sensitive to the order in which the
+[appendix](2026-11-02-memory-level-parallelism-notes.md#2-what-a-core-needs-to-keep-several-loads-in-flight)
+has the sources). An in-order core is simply much more sensitive to the order in which the
 loads appear.
 
 Ivica's request for instruction counts and IPC is still a good one, and he has since shown
@@ -275,10 +292,10 @@ dependent chains pays, which is what Lemire defended. What its curve can't do is
 resource that stops it rising. That gap matters as soon as you try to make such a loop faster
 by changing its instructions, which is what we did next.
 
-## 4. We removed instructions. The decoder barely moved.
+## 4. Cutting instructions helped the walk, but not four-worker throughput
 
-mibz2's walk (as of [`13e9854`](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs))
-runs 32 lanes over up to 512 segments. Each ordinary step is close to the loop we started
+In [the version of mibz2 examined here](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs#L829-L968), the inverse-BWT walk runs 32 lanes
+over up to 512 segments. Each ordinary step is close to the loop we started
 with, plus a prefetch:
 
 ```rust
@@ -298,13 +315,14 @@ away. It then serves the other lanes before coming back.
 </figure>
 
 Our table is also much smaller than Lemire's array. A full block of 900,000 rows of 4-byte
-entries is 3.6 MB, against his 256 MiB. That's far bigger than a core's private L2 but can
-fit in the 20 MiB shared L3 of the i9 we test on, so many of these loads can be served by the
-last-level cache rather than DRAM. Overlapping them still pays, but the boundary is different.
+entries is 3.6 MB, against his 256 MiB. That's far bigger than a core's private L2 but small
+enough to fit, on its own, in the 20 MiB shared L3 of [the workstation we test
+on](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/docs/journal/2026-10-28-workstation-scaling.md).
+Fitting isn't the same as hitting: capacity alone doesn't tell us how often its accesses are
+served from L3 while four workers decode at once.
 
 The 8.6 from the introduction is the ratio of two measured costs, 38.55 cycles per byte for
-one chain and 4.49 for the 32-lane walk ([31 October
-post](2026-10-31-room-walk-overlap.md)). It's a throughput factor, not a count of requests in
+one chain and 4.49 for the 32-lane walk. It's a throughput factor, not a count of requests in
 flight. All 32 lanes can do useful work even if only some have a request outstanding at any
 instant.
 
@@ -340,7 +358,7 @@ About 36% of the instructions went, while the memory operations stayed. On its o
 EPYC 7763, the unrolled walk took 0.877 of the original's time (95% interval 0.863 to
 0.891): about 12% less.
 
-Then it went into the whole decoder, in a registered trial on our i9-10900K
+Then it went into the whole decoder, in a registered trial on our test workstation
 ([results](https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md)):
 
 | Decoder throughput, unrolled ÷ original | Point | 95% interval |
@@ -353,14 +371,14 @@ CPU cost got worse, and the trial's verdict was negative.
 
 The two results come from different processors, so together they don't isolate one cause. A
 plausible reading is that the removed instructions weren't using the resource that limits the
-four-worker decoder: the archive's own explanation, pressure on the i9's load and address
-ports, comes from a static model, not a measurement. What the pair does establish is the
+four-worker decoder: the archive's own explanation, pressure on the workstation's load and
+address ports, comes from a static model, not a measurement. What the pair does establish is the
 point of Ivica's objection. Cutting instructions can make a loop faster in isolation and make
 no difference to the program it lives in.
 
 ## 5. The bottleneck isn't an instruction count
 
-If not instructions, then what? Our earlier attribution of the whole decoder on the i9
+If not instructions, then what? Our earlier attribution of the whole decoder
 ([analysis](https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md))
 compared one worker with four:
 
@@ -371,7 +389,7 @@ compared one worker with four:
 | IPC | 2.42 | 1.89 |
 
 With four workers the decoder retires almost exactly the same instructions per byte (1.3%
-more) but needs 30% more cycles to do it. The work hasn't grown; it's taking longer. Note too
+more) but needs 30% more cycles to complete them. Note too
 that IPC is above one in both columns, so "IPC below one means memory-bound" wouldn't have
 classified this workload either way. IPC is a ratio of two things that can each change, and a
 change that cuts instructions can lower IPC and still save cycles.
@@ -379,7 +397,7 @@ change that cuts instructions can lower IPC and still save cycles.
 Much of that extra time is in the inverse-BWT step. On 197 matched full-sized blocks,
 traversal plus assembly rises from 1.234 to 1.806 CPU ns per row with four workers
 ([corrected proposal](https://github.com/lmmx/mibz2/blob/0156e1dad5ce4ebca78b4cb3d00276d3b6d64611/docs/journal/2026-11-01-bwt-memory-proposal.md)).
-Four full tables take 14.4 MB of the i9's 20 MiB L3 before any other buffer, so the workers
+Four full tables take 14.4 MB of the workstation's 20 MiB L3 before any other buffer, so the workers
 are plausibly competing for cache and for the path to memory, but the arithmetic alone doesn't
 prove it. [The previous post](2026-11-01-inverse-bwt-memory-interference.md) describes the
 experiments designed to test it.
@@ -401,7 +419,7 @@ occupancy rose from roughly $2.18 \times 0.12 \approx 0.26$ to $2.18 \times 0.30
 </figure>
 
 The same caution applies to every counter we read: what it counts, over which cycles, for
-which requests. The [measurement notes](2026-11-02-memory-level-parallelism-notes.md) go
+which requests. The [technical appendix](2026-11-02-memory-level-parallelism-notes.md) goes
 through the counters behind these figures, two earlier readings of them that we've withdrawn,
 and the measurements that would separate the remaining explanations.
 
@@ -414,7 +432,7 @@ second pays, and Ivica was right that the speedup alone can't tell you which res
 into. mibz2's walk shows the same thing from the other side. Removing a third of its
 instructions sped up the walk on its own and left the four-worker decoder where it was. And
 the four-worker decoder's extra cost was never in its instruction count: it retires the same
-instructions as one worker, and takes longer over them.
+instructions as one worker, and takes longer to complete them.
 
 So the next gain won't come from counting instructions, or from counting requests in flight.
 It will come from finding which resource the traversal is actually waiting on when four
@@ -422,4 +440,4 @@ workers share the machine, and changing whatever consumes it.
 
 ---
 
-**Research records:** [Measurement notes, reading list and source register](2026-11-02-memory-level-parallelism-notes.md) · [Unrolled walk: assembly comparison](https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-astra-fidelity/README.md) · [Unrolled walk: i9 decoder results](https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md) · [Decoder attribution on the i9](https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md) · [Inverse-BWT memory proposal, with corrections](https://github.com/lmmx/mibz2/blob/0156e1dad5ce4ebca78b4cb3d00276d3b6d64611/docs/journal/2026-11-01-bwt-memory-proposal.md).
+**Research records:** [Technical appendix, reading list and source register](2026-11-02-memory-level-parallelism-notes.md) · [Unrolled walk: assembly comparison](https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-astra-fidelity/README.md) · [Unrolled walk: four-worker decoder results](https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md) · [Decoder attribution, one worker against four](https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md) · [Inverse-BWT memory proposal, with corrections](https://github.com/lmmx/mibz2/blob/0156e1dad5ce4ebca78b4cb3d00276d3b6d64611/docs/journal/2026-11-01-bwt-memory-proposal.md).
