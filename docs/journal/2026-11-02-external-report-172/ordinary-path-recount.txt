@@ -1,0 +1,28 @@
+PINNED COMPACT30 ORDINARY PATH — IN EXECUTION ORDER
+Source: https://github.com/lmmx/mibz2/blob/85b87fb4f21bf52fe9f327dcb2a371ddeddc983d/docs/journal/2026-11-02-compact30-walker/room-false.asm
+Manually transcribed from the retrieved listing, then numbered; not a new disassembly.
+Excludes per-round/per-pass setup and exceptional paths. Does not subtract fusion or move elimination.
+
+ 1. 15f5b: lea r9,[rdx+0x1]
+ 2. 15f5f: mov r11d,DWORD PTR [r10]
+ 3. 15f62: movzx edi,WORD PTR [r14+r11*2]
+ 4. 15f67: mov ecx,r11d
+ 5. 15f6a: and ecx,0xffffffe0
+ 6. 15f6d: mov esi,DWORD PTR [r14+rcx*2+0x3c]
+ 7. 15f72: cmp edi,0xfffe
+ 8. 15f78: jb 15f30
+ 9. 15f30: mov ecx,esi
+10. 15f32: shr ecx,0x8
+11. 15f35: add ecx,edi
+12. 15f37: mov DWORD PTR [r10],ecx
+13. 15f3a: mov ecx,ecx
+14. 15f3c: prefetcht0 BYTE PTR [r14+rcx*2]
+15. 15f41: mov rcx,QWORD PTR [rsp+rdx*8+0x48]
+16. 15f46: mov BYTE PTR [rcx+rax*1],sil
+17. 15f4a: lea rcx,[r9-0x1]
+18. 15f4e: add r10,0x20
+19. 15f52: mov rdx,r9
+20. 15f55: cmp rcx,0x1f
+21. 15f59: jae 15f00
+
+Total: 21 machine instructions; 4 data loads, 2 stores, 1 prefetch.
