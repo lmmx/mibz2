@@ -1,4 +1,4 @@
-# External research reports 74–173: index
+# External research reports 74–174: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -113,6 +113,7 @@ verbatim. They are not findings of this repository.
 | 171 | 2026-11-02 | the guardian | the compact30 prototype a significant milestone; code frozen at `85b87fb`; the researcher's independent review next; a frozen i9 traversal comparison possible afterwards | `2026-11-02-external-report-171.md` |
 | 172 | 2026-11-02 | the researcher | independent review of the compact30 prototype: conditional go; the ordinary path is 21 instructions, not 19; validate `room::<false>` on fresh scratch and repeated walks; no redesign (two attachments kept) | `2026-11-02-external-report-172.md` |
 | 173 | 2026-11-02 | the guardian | accepts the conditional go: count to 21; validate `room::<false>` on fresh scratch and repeated walks with a separate counted instance; record identity; prepare one traversal-comparison protocol (no timing) | `2026-11-02-external-report-173.md` |
+| 174 | 2026-11-02 | the guardian | three amendments to the compact30 traversal protocol (0.865 an investment screen, not a proof; elapsed throughput with a no-harm rule; balanced allocation and the cache-state limitation); harness preparation approved, no capture | `2026-11-02-external-report-174.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
