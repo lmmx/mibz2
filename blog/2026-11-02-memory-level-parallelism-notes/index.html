@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Methodology behind the memory-level parallelism post: the 2022 benchmark in detail, throughput models, Intel counter definitions and their populations, a measurement programme for mibz2, and the full source register.">
+        <meta name="description" content="Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -35,7 +35,7 @@
     
     
       
-        <title>Memory-level parallelism: measurement notes and source record - mibz2</title>
+        <title>Technical appendix: MLP, ILP and the measurements - mibz2</title>
       
     
     
@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c74f5e24b1eb">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=bafa6eb5fc80">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c74f5e24b1eb">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=bafa6eb5fc80">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c74f5e24b1eb">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=bafa6eb5fc80">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c74f5e24b1eb">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=bafa6eb5fc80">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c74f5e24b1eb">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=bafa6eb5fc80">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -87,19 +87,19 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="Memory-level parallelism: measurement notes and source record">
-  <meta property="og:description" content="Methodology behind the memory-level parallelism post: the 2022 benchmark in detail, throughput models, Intel counter definitions and their populations, a measurement programme for mibz2, and the full source register.">
+  <meta property="og:title" content="Technical appendix: MLP, ILP and the measurements">
+  <meta property="og:description" content="Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/blog/2026-11-02-memory-level-parallelism-notes/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/assets/social/default.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Memory-level parallelism: measurement notes and source record">
+  <meta property="og:image:alt" content="Technical appendix: MLP, ILP and the measurements">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Memory-level parallelism: measurement notes and source record">
-  <meta name="twitter:description" content="Methodology behind the memory-level parallelism post: the 2022 benchmark in detail, throughput models, Intel counter definitions and their populations, a measurement programme for mibz2, and the full source register.">
+  <meta name="twitter:title" content="Technical appendix: MLP, ILP and the measurements">
+  <meta name="twitter:description" content="Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/assets/social/default.png">
-  <meta name="twitter:image:alt" content="Memory-level parallelism: measurement notes and source record">
+  <meta name="twitter:image:alt" content="Technical appendix: MLP, ILP and the measurements">
 
   </head>
   
@@ -152,7 +152,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Memory-level parallelism: measurement notes and source record
+              Technical appendix: MLP, ILP and the measurements
             
           </span>
         </div>
@@ -1039,8 +1039,6 @@
       
         
       
-        
-      
     
     
     
@@ -1093,6 +1091,60 @@
                   
   
   
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7_2" id="__nav_7_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Memory-level parallelism in mibz2
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_2_label" aria-expanded="true">
+            <label class="md-nav__title" for="__nav_7_2">
+              <span class="md-nav__icon md-icon"></span>
+              
+  
+  Memory-level parallelism in mibz2
+
+            </label>
+            <ul class="md-nav__list" data-md-scrollfix>
+              
+                
+                  
+  
+  
   
   
     <li class="md-nav__item">
@@ -1103,7 +1155,7 @@
   <span class="md-ellipsis">
     
   
-  Memory-level parallelism in mibz2
+  Instructions, overlap and evidence
 
     
   </span>
@@ -1139,7 +1191,7 @@
   <span class="md-ellipsis">
     
   
-  MLP: measurement notes
+  Technical appendix
 
     
   </span>
@@ -1156,7 +1208,7 @@
   <span class="md-ellipsis">
     
   
-  MLP: measurement notes
+  Technical appendix
 
     
   </span>
@@ -1182,15 +1234,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-the-2022-exchange-claim-by-claim" class="md-nav__link">
+  <a href="#1-the-disagreement-about-ilp-and-mlp" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. The 2022 exchange, claim by claim
+        1. The disagreement about ILP and MLP
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. The 2022 exchange, claim by claim">
+    <nav class="md-nav" aria-label="1. The disagreement about ILP and MLP">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1255,10 +1307,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#what-a-stricter-review-would-ask" class="md-nav__link">
+  <a href="#questions-the-benchmark-leaves-open" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        What a stricter review would ask
+        Questions the benchmark leaves open
       </span>
     </span>
   </a>
@@ -1639,6 +1691,15 @@
 
                 
               
+            </ul>
+          </nav>
+        
+      
+    </li>
+  
+
+                
+              
                 
                   
   
@@ -1939,15 +2000,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-the-2022-exchange-claim-by-claim" class="md-nav__link">
+  <a href="#1-the-disagreement-about-ilp-and-mlp" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. The 2022 exchange, claim by claim
+        1. The disagreement about ILP and MLP
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. The 2022 exchange, claim by claim">
+    <nav class="md-nav" aria-label="1. The disagreement about ILP and MLP">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -2012,10 +2073,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#what-a-stricter-review-would-ask" class="md-nav__link">
+  <a href="#questions-the-benchmark-leaves-open" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        What a stricter review would ask
+        Questions the benchmark leaves open
       </span>
     </span>
   </a>
@@ -2417,25 +2478,15 @@
   
 
 
-<div class="post-hero">
-<div class="post-hero-text">
-<p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="memory-level-parallelism-measurement-notes-and-source-record">Memory-level parallelism: measurement notes and source record<a class="headerlink" href="#memory-level-parallelism-measurement-notes-and-source-record" title="Permanent link">&para;</a></h1>
-<p class="post-dek">The detail behind <a href="../2026-11-02-memory-level-parallelism/">Memory-level parallelism in
-mibz2</a>: the 2022 exchange claim by claim, the
-benchmark, throughput models, counter definitions, a measurement programme for mibz2, a
-reading list and the full source register.</p>
-<p class="post-meta">2 November 2026 · 23 min read · <a href="#11-source-register-and-revision-pins">Source register</a></p>
-</div>
-<div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
-</div>
-<p>These notes are for readers who want the qualifications and definitions that <a href="../2026-11-02-memory-level-parallelism/">the main
-post</a> leaves out to keep its argument moving. They can
-be read in any order. Nothing new was measured for either page: every result is attributed to
+<p>← <a href="../2026-11-02-memory-level-parallelism/">Memory-level parallelism in mibz2</a></p>
+<h1 id="technical-appendix-mlp-ilp-and-the-measurements">Technical appendix: MLP, ILP and the measurements<a class="headerlink" href="#technical-appendix-mlp-ilp-and-the-measurements" title="Permanent link">&para;</a></h1>
+<p>This appendix is for readers who want the qualifications and definitions that <a href="../2026-11-02-memory-level-parallelism/">the main
+post</a> leaves out to keep its argument moving. Its
+sections can be read in any order. Nothing new was measured for either page: every result is attributed to
 the experiment that produced it, and repository sources are pinned to the revisions in the
 <a href="#11-source-register-and-revision-pins">source register</a>, inspected on 2 November 2026.
 Numbers in square brackets refer to the register.</p>
-<h2 id="1-the-2022-exchange-claim-by-claim">1. The 2022 exchange, claim by claim<a class="headerlink" href="#1-the-2022-exchange-claim-by-claim" title="Permanent link">&para;</a></h2>
+<h2 id="1-the-disagreement-about-ilp-and-mlp">1. The disagreement about ILP and MLP<a class="headerlink" href="#1-the-disagreement-about-ilp-and-mlp" title="Permanent link">&para;</a></h2>
 <p>The main post reproduces the replies to Lemire's post [1] and explains the mechanism they
 argue about. Taking the claims one at a time:</p>
 <table>
@@ -2523,9 +2574,9 @@ independent load is reached, the independence can't help, so grouping independen
 before their uses matters. Out-of-order execution widens the processor's ability to find and
 exploit independence on its own; it isn't what defines MLP.</p>
 <h2 id="3-the-historical-benchmark-in-detail">3. The historical benchmark in detail<a class="headerlink" href="#3-the-historical-benchmark-in-detail" title="Permanent link">&para;</a></h2>
-<p>The linked repository is <code>lemire/testingmlp</code>. Its last published revision before the article
-is <code>23569032cd784366247c0381e4d532c9a82f3263</code>, from January 2021. That establishes the public
-implementation available at the time; it doesn't prove the author's exact local checkout or
+<p>The linked repository is <code>lemire/testingmlp</code>. Its <a href="https://github.com/lemire/testingmlp/tree/23569032cd784366247c0381e4d532c9a82f3263">last published revision before the
+article</a>
+dates from January 2021. That establishes the public implementation available at the time; it doesn't prove the author's exact local checkout or
 command line. Reading today's changed benchmark as if it were the 2022 implementation would be
 unsafe. A later post by the same author [29] uses the evolved benchmark, and its settings
 shouldn't be conflated with the 2022 test. The 2022 post reports approximately:</p>
@@ -2582,7 +2633,7 @@ hardware prefetches, page-table reads and other memory activity. Eight 64-bit en
 64-byte line, so a large random array doesn't guarantee a DRAM transaction for every load. And
 with several lanes, the ns/hit column is elapsed time divided by aggregate accesses: the
 reciprocal of throughput, not the service latency of one request.</p>
-<h3 id="what-a-stricter-review-would-ask">What a stricter review would ask<a class="headerlink" href="#what-a-stricter-review-would-ask" title="Permanent link">&para;</a></h3>
+<h3 id="questions-the-benchmark-leaves-open">Questions the benchmark leaves open<a class="headerlink" href="#questions-the-benchmark-leaves-open" title="Permanent link">&para;</a></h3>
 <p>The design deliberately makes long-latency dependent loads dominant and uses independent chains
 to expose overlap. That's a sensible microbenchmark. A stricter review would also ask how much
 work the compiler adds, where requests are served, whether translation limits the result, how
@@ -3012,8 +3063,8 @@ contents.</p>
 <li><strong>[20]</strong> <a href="https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs"><code>src/bwt.rs</code></a>, master at <code>13e9854805eed8944ecdd7c9330e30971b6bf52d</code>.</li>
 <li><strong>[21]</strong> <a href="../2026-10-31-room-walk-overlap/">32 lanes, 8.6 chains: where the inverse BWT walk spends its cycles</a>, 31 October 2026 (<a href="https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/docs/site/blog/2026-10-31-room-walk-overlap.md">at <code>13e9854</code></a>).</li>
 <li><strong>[22]</strong> <a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-astra-fidelity/README.md">The unrolled room walk against the assembly-level prescription</a>, archive <code>270333c2d32fe16dc24ae7ab64f3697d87939418</code>.</li>
-<li><strong>[23]</strong> <a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md">The unrolled room walk's full-decoder trial on the i9-10900K: results</a>, same archive.</li>
-<li><strong>[24]</strong> <a href="https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md">Decoder attribution on the i9-10900K: analysis and final erratum</a>, archive <code>33e0e4ebac554bae03795bfb76e86440b33bae6b</code>.</li>
+<li><strong>[23]</strong> <a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md">The unrolled room walk's full-decoder trial on the test workstation: results</a>, same archive.</li>
+<li><strong>[24]</strong> <a href="https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md">Decoder attribution, one worker against four: analysis and final erratum</a>, archive <code>33e0e4ebac554bae03795bfb76e86440b33bae6b</code>.</li>
 <li><strong>[25]</strong> <a href="https://github.com/lmmx/mibz2/blob/0156e1dad5ce4ebca78b4cb3d00276d3b6d64611/docs/journal/2026-11-01-bwt-memory-proposal.md">Inverse-BWT memory proposal, with its corrections</a>, archive <code>0156e1dad5ce4ebca78b4cb3d00276d3b6d64611</code>.</li>
 <li><strong>[26]</strong> <a href="https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/examples/sweep.rs"><code>examples/sweep.rs</code></a>, master at <code>13e9854</code>.</li>
 <li><strong>[27]</strong> <a href="https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/examples/phases.rs"><code>examples/phases.rs</code></a>, same revision.</li>
@@ -3067,7 +3118,7 @@ contents.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../2026-11-02-memory-level-parallelism/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Memory-level parallelism in mibz2">
+          <a href="../2026-11-02-memory-level-parallelism/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Instructions, overlap and evidence">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -3077,7 +3128,7 @@ contents.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Memory-level parallelism in mibz2
+                Instructions, overlap and evidence
               </div>
             </div>
           </a>
@@ -3169,17 +3220,17 @@ contents.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=c74f5e24b1eb"></script>
+        <script src="../../assets/javascripts/bench.js?v=bafa6eb5fc80"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=c74f5e24b1eb"></script>
+        <script src="../../assets/javascripts/couriers.js?v=bafa6eb5fc80"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=c74f5e24b1eb"></script>
+        <script src="../../assets/javascripts/blog.js?v=bafa6eb5fc80"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=c74f5e24b1eb"></script>
+        <script src="../../assets/javascripts/frontier.js?v=bafa6eb5fc80"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=c74f5e24b1eb"></script>
+        <script src="../../assets/javascripts/katex.js?v=bafa6eb5fc80"></script>
       
     
   </body>
