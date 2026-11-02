@@ -700,6 +700,19 @@ with a fresh pair of barriers per arm, in 3 rounds × 2 arms.
   - A violation exits at once, so neither control leaves a thread at a barrier.
 - **The recipe** runs `barrier-test` on the capture's own CPUs before the capture, and stops
   if it fails (§9).
+- **The pin** is `f1dafa3`; the recipe is at the next commit.
+- **Checked on the VM, no timing read** (`runs-f1dafa3/`):
+
+| recipe run | grid exit | result |
+|---|--:|---|
+| `dry-run`, `RUSTUP_TOOLCHAIN=1.98.1` set, worktree left at `4635e2c` | 0 | the worktree moved to the pin; rustc 1.97.0 / LLVM 22.1.6; 37 + 15 tests pass; G3 passes (0x20aa); `barrier-test` passes on the capture's CPUs; every S check passes, S7's start and completion barriers included; G4 holds |
+| `fail-output` (round −1, W4, C, worker 2, step 0) | 3 | the failure recorded; the other three workers, spinning at step 1's start barrier, end with the process; INVALID, no figures; 8 s in all |
+| `fail-pin` (W4 worker 1, CPU 1023) | 3 | the failure recorded before any walk; the others, at the start barrier, end with the process; INVALID, no figures; 7 s in all |
+
+- **The barrier test's runs and controls** are in `barrier-test-controls.console`:
+  - 300,000 steps pinned: pass;
+  - 12,000 steps unpinned: pass;
+  - both faults fail with exit 101.
 
 ## 9. The records and the command
 

@@ -237,7 +237,7 @@ bench-pmu-probe *args:
 bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="capture":
     #!/usr/bin/env bash
     set -uo pipefail
-    pin=4635e2cb9f7b61315314c51affaebe843cd8ef36
+    pin=f1dafa31d88d7351a98afb005a84f23d5a2312bd
     # the reviewed toolchain (the walker journal's section 8): selected with rustup run, so the
     # machine's default and any rust-toolchain file are left alone; rustflags forced empty
     tc=1.97.0
@@ -296,6 +296,8 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
       [ "$n" -ge 4 ] || { echo "c30: $n physical cores; four are needed"; exit 1; }
       if [ "$n" -ge 5 ]; then cpus=$(echo "$phys" | sed -n 2,5p | paste -sd,); else cpus=$(echo "$phys" | head -4 | paste -sd,); fi
       echo "c30: workers on CPUs $cpus (W1 on the first)"
+      # revision 5: the spinning start barrier's own checks, untimed, on the capture's CPUs
+      "$bin" barrier-test --cpus "$cpus" | tee "$out/barrier-test.txt"
       g=0
       timeout --kill-after=30 3600 "$bin" grid "$out/c30-traversal.jsonl" "$f" --rounds {{rounds}} --cpus "$cpus" "${flags[@]}" || g=$?
       echo "c30: the grid exited with status $g"
