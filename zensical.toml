@@ -53,7 +53,7 @@ nav = [
   { "Blog" = [
     "blog/index.md",
     { "Memory-level parallelism in mibz2" = [
-      { "The post" = "blog/2026-11-02-memory-level-parallelism.md" },
+      { "Instructions, overlap and evidence" = "blog/2026-11-02-memory-level-parallelism.md" },
       { "Technical appendix" = "blog/2026-11-02-memory-level-parallelism-notes.md" },
     ] },
     { "Inverse-BWT memory interference" = "blog/2026-11-01-inverse-bwt-memory-interference.md" },
