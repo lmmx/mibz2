@@ -393,7 +393,9 @@ no difference to the program it lives in.
 
 For optimisation, a bottleneck is the resource whose relief improves the figure you care
 about. The walk's extra instructions were real work, but removing them didn't improve
-four-worker throughput, so for that figure they weren't the bottleneck.
+four-worker throughput, so for that figure they weren't the bottleneck. In the model's
+terms, the instruction term $u/P$ wasn't the largest one when four workers shared the
+machine, and shrinking a term that isn't the largest changes nothing.
 
 ## 5. The bottleneck isn't an instruction count
 
