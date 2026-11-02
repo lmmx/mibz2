@@ -1,4 +1,4 @@
-# External research reports 74–157: index
+# External research reports 74–158: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -97,6 +97,7 @@ verbatim. They are not findings of this repository.
 | 155 | 2026-11-02 | the researcher | wake placement in theory: fixed per-worker CPUs with movable support threads; capacity-aware opportunity; the scanner/reader notification split | `2026-11-02-external-report-155.md` |
 | 156 | 2026-11-02 | the researcher | compact navigation in theory: a 30-halfword record with a four-byte header and relabelled rows; a worst-case storage bound; a bounded-staging direct constructor | `2026-11-02-external-report-156.md` |
 | 157 | 2026-11-02 | the guardian | on reports 154–156: the 30-entry layout first for Astra; P87's ledger-test failure; wake placement as one testable policy; two coordinator readings too strong | `2026-11-02-external-report-157.md` |
+| 158 | 2026-11-02 | the guardian | three bounded VM-side tasks authorised: preserve the capacity-aware dispatch replay, P87's integration cleanup, a census of the 30-entry layout; the Astra paragraph corrected | `2026-11-02-external-report-158.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
