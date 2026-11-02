@@ -1,4 +1,4 @@
-# External research reports 74–145: index
+# External research reports 74–146: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -85,6 +85,7 @@ verbatim. They are not findings of this repository.
 | 143 | 2026-11-02 | the guardian | revision 3's repairs checked at 902a911; run the counter probe only | `2026-11-02-external-report-143.md` |
 | 144 | 2026-11-02 | the researcher of report 138 (with the maintainer's question) | an in-process Rust counter backend (`perf_event_open`, `perf-event2`): what it would remove, what it would not, and the migration's equivalence obligations | `2026-11-02-external-report-144.md` |
 | 145 | 2026-11-02 | the guardian | on report 144: the likely longer-term direction if the harness becomes reusable; finish the probe first, no second system | `2026-11-02-external-report-145.md` |
+| 146 | 2026-11-02 | the guardian | the i9 probe verified; a safeguard: a control-only count can be comparable to a low-count event's window count (stalls_l3_miss 62%), so report it beside, qualify, never subtract | `2026-11-02-external-report-146.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
