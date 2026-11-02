@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=17be4df3b0b7">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=d124f2fe2980">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=17be4df3b0b7">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=d124f2fe2980">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=17be4df3b0b7">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=d124f2fe2980">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=17be4df3b0b7">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=d124f2fe2980">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=17be4df3b0b7">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=d124f2fe2980">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1155,22 +1155,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-what-the-two-sides-are-saying" class="md-nav__link">
+  <a href="#1-why-a-pointer-chase-stalls" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. What the two sides are saying
+        1. Why a pointer chase stalls
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. What the two sides are saying">
+    <nav class="md-nav" aria-label="1. Why a pointer chase stalls">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#reviewing-reproducing-and-explaining-are-different-questions" class="md-nav__link">
+  <a href="#faster-without-any-load-getting-quicker" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Reviewing, reproducing and explaining are different questions
+        Faster, without any load getting quicker
       </span>
     </span>
   </a>
@@ -1183,22 +1183,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-why-one-chain-is-slow-and-several-help" class="md-nav__link">
+  <a href="#2-ilp-exposes-the-work-mlp-lets-it-overlap" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Why one chain is slow and several help
+        2. ILP exposes the work; MLP lets it overlap
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2. Why one chain is slow and several help">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-what-lemires-speedup-really-measures" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. What Lemire's speedup really measures
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. What Lemire&#x27;s speedup really measures">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#latency-and-throughput-are-different-quantities" class="md-nav__link">
+  <a href="#how-big-is-the-read" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Latency and throughput are different quantities
+        How big is the read?
       </span>
     </span>
   </a>
@@ -1206,10 +1217,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#superscalar-out-of-order-and-nonblocking-are-distinct" class="md-nav__link">
+  <a href="#four-things-called-mlp" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Superscalar, out-of-order and nonblocking are distinct
+        Four things called MLP
       </span>
     </span>
   </a>
@@ -1222,44 +1233,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-what-the-2022-benchmark-measures" class="md-nav__link">
+  <a href="#4-we-removed-instructions-the-decoder-barely-moved" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. What the 2022 benchmark measures
+        4. We removed instructions. The decoder barely moved.
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. What the 2022 benchmark measures">
+    <nav class="md-nav" aria-label="4. We removed instructions. The decoder barely moved.">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#the-data-structure-is-more-specific-than-a-linked-list" class="md-nav__link">
+  <a href="#when-instructions-become-the-limit" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        The data structure is more specific than "a linked list"
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#its-bandwidth-is-inferred-not-measured-dram-traffic" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Its bandwidth is inferred, not measured DRAM traffic
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#its-saturation-point-needs-interpretation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Its saturation point needs interpretation
+        When instructions become the limit
       </span>
     </span>
   </a>
@@ -1272,22 +1261,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-four-different-things-called-mlp" class="md-nav__link">
+  <a href="#5-the-bottleneck-isnt-an-instruction-count" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. Four different things called MLP
+        5. The bottleneck isn't an instruction count
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="4. Four different things called MLP">
+    <nav class="md-nav" aria-label="5. The bottleneck isn&#x27;t an instruction count">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#littles-law-connects-them-under-strict-conditions" class="md-nav__link">
+  <a href="#counters-can-mislead-in-the-same-way" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Little's law connects them, under strict conditions
+        Counters can mislead in the same way
       </span>
     </span>
   </a>
@@ -1295,32 +1284,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#why-the-smallest-queue-size-isnt-the-answer" class="md-nav__link">
+  <a href="#exposing-work-isnt-the-same-as-completing-it" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Why the smallest queue size isn't the answer
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#translation-is-part-of-the-experiment" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Translation is part of the experiment
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-question-about-read-size-is-legitimate-too" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The question about read size is legitimate too
+        Exposing work isn't the same as completing it
       </span>
     </span>
   </a>
@@ -1329,416 +1296,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-why-instructions-matter-and-when-counting-them-misleads" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5. Why instructions matter, and when counting them misleads
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5. Why instructions matter, and when counting them misleads">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#fewer-instructions-can-help-in-several-distinct-ways" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Fewer instructions can help in several distinct ways
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ipc-is-a-ratio-not-a-score" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        IPC is a ratio, not a score
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#instructions-arent-execution-resource-demand" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Instructions aren't execution-resource demand
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#normalise-memory-events-to-useful-work-too" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Normalise memory events to useful work too
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-what-mibz2s-walk-does" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6. What mibz2's walk does
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="6. What mibz2&#x27;s walk does">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#our-table-is-very-different-from-lemires-array" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Our table is very different from Lemire's array
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-prefetch-changes-how-to-read-the-counters" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The prefetch changes how to read the counters
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-bwt-literature-is-directly-relevant" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The BWT literature is directly relevant
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-our-unrolling-experiment" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        7. Our unrolling experiment
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="7. Our unrolling experiment">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-86-figure-is-a-throughput-factor" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The 8.6 figure is a throughput factor
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#then-we-cut-the-instruction-stream-substantially" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Then we cut the instruction stream substantially
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-target-machine-decoder-result-was-much-smaller" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The target-machine decoder result was much smaller
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#what-is-established-and-what-is-still-a-hypothesis" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        What is established, and what is still a hypothesis
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#8-one-worker-against-four" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        8. One worker against four
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="8. One worker against four">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-stage-boundary-matters" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The stage boundary matters
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cache-capacity-explanations-need-arithmetic-and-controls" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Cache-capacity explanations need arithmetic and controls
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#9-counters-and-their-denominators" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        9. Counters and their denominators
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="9. Counters and their denominators">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#why-mlp-stayed-at-218-settles-nothing" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why "MLP stayed at 2.18" settles nothing
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-l1-event-isnt-the-number-of-independent-bwt-chains" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The L1 event isn't "the number of independent BWT chains"
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-offcore-ratio-is-latency-like" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The offcore ratio is latency-like
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#demand-only-counts-cant-classify-all-the-traffic" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Demand-only counts can't classify all the traffic
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#aggregating-workers-adds-another-distinction" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Aggregating workers adds another distinction
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#10-what-the-next-experiment-needs-to-distinguish" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        10. What the next experiment needs to distinguish
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="10. What the next experiment needs to distinguish">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#choose-the-objective-explicitly" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Choose the objective explicitly
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#isolate-the-phases-without-losing-production-behaviour" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Isolate the phases without losing production behaviour
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#keep-the-axes-separate" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Keep the axes separate
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#collect-a-small-set-of-phase-matched-measurements" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Collect a small set of phase-matched measurements
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#write-the-predictions-before-reading-the-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Write the predictions before reading the results
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#respect-what-the-existing-harnesses-measure" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Respect what the existing harnesses measure
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#use-counters-in-small-meaningful-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Use counters in small, meaningful groups
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#11-what-the-tools-can-and-cant-establish" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11. What the tools can and can't establish
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#12-where-this-leaves-the-instruction-work" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12. Where this leaves the instruction work
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#further-reading" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Further reading
-      </span>
-    </span>
-  </a>
   
 </li>
       
@@ -2078,22 +1635,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-what-the-two-sides-are-saying" class="md-nav__link">
+  <a href="#1-why-a-pointer-chase-stalls" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        1. What the two sides are saying
+        1. Why a pointer chase stalls
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="1. What the two sides are saying">
+    <nav class="md-nav" aria-label="1. Why a pointer chase stalls">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#reviewing-reproducing-and-explaining-are-different-questions" class="md-nav__link">
+  <a href="#faster-without-any-load-getting-quicker" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Reviewing, reproducing and explaining are different questions
+        Faster, without any load getting quicker
       </span>
     </span>
   </a>
@@ -2106,22 +1663,33 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-why-one-chain-is-slow-and-several-help" class="md-nav__link">
+  <a href="#2-ilp-exposes-the-work-mlp-lets-it-overlap" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        2. Why one chain is slow and several help
+        2. ILP exposes the work; MLP lets it overlap
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2. Why one chain is slow and several help">
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-what-lemires-speedup-really-measures" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        3. What Lemire's speedup really measures
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. What Lemire&#x27;s speedup really measures">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#latency-and-throughput-are-different-quantities" class="md-nav__link">
+  <a href="#how-big-is-the-read" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Latency and throughput are different quantities
+        How big is the read?
       </span>
     </span>
   </a>
@@ -2129,10 +1697,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#superscalar-out-of-order-and-nonblocking-are-distinct" class="md-nav__link">
+  <a href="#four-things-called-mlp" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Superscalar, out-of-order and nonblocking are distinct
+        Four things called MLP
       </span>
     </span>
   </a>
@@ -2145,44 +1713,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-what-the-2022-benchmark-measures" class="md-nav__link">
+  <a href="#4-we-removed-instructions-the-decoder-barely-moved" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. What the 2022 benchmark measures
+        4. We removed instructions. The decoder barely moved.
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="3. What the 2022 benchmark measures">
+    <nav class="md-nav" aria-label="4. We removed instructions. The decoder barely moved.">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#the-data-structure-is-more-specific-than-a-linked-list" class="md-nav__link">
+  <a href="#when-instructions-become-the-limit" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        The data structure is more specific than "a linked list"
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#its-bandwidth-is-inferred-not-measured-dram-traffic" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Its bandwidth is inferred, not measured DRAM traffic
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#its-saturation-point-needs-interpretation" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Its saturation point needs interpretation
+        When instructions become the limit
       </span>
     </span>
   </a>
@@ -2195,22 +1741,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-four-different-things-called-mlp" class="md-nav__link">
+  <a href="#5-the-bottleneck-isnt-an-instruction-count" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. Four different things called MLP
+        5. The bottleneck isn't an instruction count
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="4. Four different things called MLP">
+    <nav class="md-nav" aria-label="5. The bottleneck isn&#x27;t an instruction count">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#littles-law-connects-them-under-strict-conditions" class="md-nav__link">
+  <a href="#counters-can-mislead-in-the-same-way" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Little's law connects them, under strict conditions
+        Counters can mislead in the same way
       </span>
     </span>
   </a>
@@ -2218,32 +1764,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#why-the-smallest-queue-size-isnt-the-answer" class="md-nav__link">
+  <a href="#exposing-work-isnt-the-same-as-completing-it" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Why the smallest queue size isn't the answer
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#translation-is-part-of-the-experiment" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Translation is part of the experiment
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-question-about-read-size-is-legitimate-too" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The question about read size is legitimate too
+        Exposing work isn't the same as completing it
       </span>
     </span>
   </a>
@@ -2252,416 +1776,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#5-why-instructions-matter-and-when-counting-them-misleads" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        5. Why instructions matter, and when counting them misleads
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="5. Why instructions matter, and when counting them misleads">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#fewer-instructions-can-help-in-several-distinct-ways" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Fewer instructions can help in several distinct ways
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ipc-is-a-ratio-not-a-score" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        IPC is a ratio, not a score
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#instructions-arent-execution-resource-demand" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Instructions aren't execution-resource demand
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#normalise-memory-events-to-useful-work-too" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Normalise memory events to useful work too
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#6-what-mibz2s-walk-does" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        6. What mibz2's walk does
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="6. What mibz2&#x27;s walk does">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#our-table-is-very-different-from-lemires-array" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Our table is very different from Lemire's array
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-prefetch-changes-how-to-read-the-counters" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The prefetch changes how to read the counters
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-bwt-literature-is-directly-relevant" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The BWT literature is directly relevant
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7-our-unrolling-experiment" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        7. Our unrolling experiment
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="7. Our unrolling experiment">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-86-figure-is-a-throughput-factor" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The 8.6 figure is a throughput factor
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#then-we-cut-the-instruction-stream-substantially" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Then we cut the instruction stream substantially
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-target-machine-decoder-result-was-much-smaller" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The target-machine decoder result was much smaller
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#what-is-established-and-what-is-still-a-hypothesis" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        What is established, and what is still a hypothesis
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#8-one-worker-against-four" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        8. One worker against four
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="8. One worker against four">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-stage-boundary-matters" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The stage boundary matters
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cache-capacity-explanations-need-arithmetic-and-controls" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Cache-capacity explanations need arithmetic and controls
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#9-counters-and-their-denominators" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        9. Counters and their denominators
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="9. Counters and their denominators">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#why-mlp-stayed-at-218-settles-nothing" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Why "MLP stayed at 2.18" settles nothing
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-l1-event-isnt-the-number-of-independent-bwt-chains" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The L1 event isn't "the number of independent BWT chains"
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#the-offcore-ratio-is-latency-like" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        The offcore ratio is latency-like
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#demand-only-counts-cant-classify-all-the-traffic" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Demand-only counts can't classify all the traffic
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#aggregating-workers-adds-another-distinction" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Aggregating workers adds another distinction
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#10-what-the-next-experiment-needs-to-distinguish" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        10. What the next experiment needs to distinguish
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="10. What the next experiment needs to distinguish">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#choose-the-objective-explicitly" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Choose the objective explicitly
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#isolate-the-phases-without-losing-production-behaviour" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Isolate the phases without losing production behaviour
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#keep-the-axes-separate" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Keep the axes separate
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#collect-a-small-set-of-phase-matched-measurements" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Collect a small set of phase-matched measurements
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#write-the-predictions-before-reading-the-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Write the predictions before reading the results
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#respect-what-the-existing-harnesses-measure" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Respect what the existing harnesses measure
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#use-counters-in-small-meaningful-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Use counters in small, meaningful groups
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#11-what-the-tools-can-and-cant-establish" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        11. What the tools can and can't establish
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#12-where-this-leaves-the-instruction-work" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        12. Where this leaves the instruction work
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#further-reading" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Further reading
-      </span>
-    </span>
-  </a>
   
 </li>
       
@@ -2701,40 +1815,97 @@
 <h1 id="memory-level-parallelism-in-mibz2-instructions-overlap-and-evidence">Memory-level parallelism in mibz2: instructions, overlap and evidence<a class="headerlink" href="#memory-level-parallelism-in-mibz2-instructions-overlap-and-evidence" title="Permanent link">&para;</a></h1>
 <p class="post-dek">What does interleaving independent pointer chases really demonstrate? A 2022 exchange about
 Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk.</p>
-<p class="post-meta">2 November 2026 · 33 min read · <a href="#12-where-this-leaves-the-instruction-work">Research synthesis</a></p>
+<p class="post-meta">2 November 2026 · 14 min read · <a href="#5-the-bottleneck-isnt-an-instruction-count">Research synthesis</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p>In June 2022 Daniel Lemire published <a href="https://lemire.me/blog/2022/06/07/memory-level-parallelism-intel-ice-lake-versus-amazon-graviton-3/">Memory-level parallelism: Intel Ice Lake versus Amazon
-Graviton 3</a>.
-His benchmark walks a large random array as a chain of dependent loads, then walks it as
-several independent chains at once, and reads the speedup as a measure of how many memory
-accesses a core can keep in flight.</p>
-<p>Ivica Bogosavljevic replied that the speedup isn't only memory-level parallelism (MLP): by
-interleaving work, the benchmark also raises instruction-level parallelism (ILP), and a
-fuller account would report instructions per cycle, instruction counts and where the loads
-are served from. Denis Yaroshevskiy asked how large each read is. Lemire answered that the
-data is out of cache, that IPC is far below one, that the source is available, and that he
-welcomes criticism and better measures.</p>
-<p>The question matters to mibz2 because its inverse-BWT decoder works the same way: it
-advances 32 independent traversals of one table so that their lookups overlap. Our recent
-work has looked closely at the instructions in that loop. So we want to know what such a
-speedup does and doesn't establish, and which measurements would tell the explanations apart.</p>
-<p>One point first. Lemire isn't saying the benchmark can't be reviewed. In the replies below he
-says the source is fully available, that he is happy to receive criticism, and asks for an
-alternative measure. That is a defence of the benchmark's usefulness, not a claim that
-scrutiny is impossible. A reviewer can ask for supporting measurements without having to
-invent a replacement benchmark.</p>
+<p>To decode a bzip2 block, mibz2 eventually performs an odd kind of memory access. It reads an
+entry from a table, and the value it gets back says which entry to read next:</p>
+<div class="language-rust highlight"><pre><span></span><code><span class="kd">let</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">[</span><span class="n">row</span><span class="p">];</span>
+<span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span><span class="w">      </span><span class="c1">// the next row to read</span>
+<span class="n">out</span><span class="p">.</span><span class="n">push</span><span class="p">(</span><span class="n">q</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">u8</span><span class="p">);</span><span class="w"> </span><span class="c1">// and one decoded byte</span>
+</code></pre></div>
+<p>Each step depends on the one before. The CPU can't know the next address until the current
+load returns, so however many instructions it could run per cycle, this chain moves one load
+at a time. When the entry isn't in a nearby cache, every step waits for memory.</p>
+<p>So mibz2 doesn't walk one chain. It starts the walk from many points along the chain, which
+cuts it into segments, and advances 32 of those segments in turn, so that while one lane waits
+for its load the others can issue theirs. In one recorded
+comparison the 32-lane walk ran about 8.6 times faster than a single chain.</p>
+<p>What made it faster? It's tempting to say we'd found how many memory requests the CPU can
+keep in flight at once, its <em>memory-level parallelism</em> (MLP). But the same change also handed
+the CPU's scheduler far more independent instructions, which is <em>instruction-level
+parallelism</em> (ILP). Which of the two explains the speedup, and does the answer change what we
+should try to make faster?</p>
+<p>The same question came up in 2022, in replies to Daniel Lemire's post <a href="https://lemire.me/blog/2022/06/07/memory-level-parallelism-intel-ice-lake-versus-amazon-graviton-3/">Memory-level
+parallelism: Intel Ice Lake versus Amazon Graviton
+3</a>.
+Lemire measures MLP with a benchmark much like our walk: a long pointer chase through a large
+array, then the same accesses shared among more and more independent chains. Ivica
+Bogosavljevic replied that the speedup comes from ILP as well; Lemire, that the waits are
+memory loads, not instructions. To see why they could both be right, start with why one chain
+is slow.</p>
+<h2 id="1-why-a-pointer-chase-stalls">1. Why a pointer chase stalls<a class="headerlink" href="#1-why-a-pointer-chase-stalls" title="Permanent link">&para;</a></h2>
+<p>Here is the chase in its simplest form:</p>
+<div class="language-c highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p</span><span class="p">];</span>
+</code></pre></div>
+<p>The value one load returns is the address of the next. An out-of-order CPU can look far ahead
+in the instruction stream, but it can't issue a load whose address it doesn't know yet, and
+register renaming can't remove a dependency on a value that hasn't arrived.</p>
+<p>Unrolling the loop doesn't help:</p>
+<div class="language-c highlight"><pre><span></span><code><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p</span><span class="p">];</span>
+<span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p</span><span class="p">];</span>
+<span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p</span><span class="p">];</span>
+<span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p</span><span class="p">];</span>
+</code></pre></div>
+<p>That saves some loop control, but the four loads still form one chain. Giving the loop four
+independent states does help:</p>
+<div class="language-c highlight"><pre><span></span><code><span class="n">p0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p0</span><span class="p">];</span>
+<span class="n">p1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p1</span><span class="p">];</span>
+<span class="n">p2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p2</span><span class="p">];</span>
+<span class="n">p3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p3</span><span class="p">];</span>
+</code></pre></div>
+<p>Each lane still waits on itself from one round to the next. Within a round, though, all four
+addresses are known, so all four loads can be issued without waiting for one another.</p>
+<figure class="bf-fig">
+<p class="bf-title">Unrolling one chain, and interleaving four</p>
+<svg viewBox="0 0 720 356" role="img" aria-label="Top: one chain unrolled into four loads, each joined by an arrow to the next. Bottom: four lanes over three rounds; each lane's loads are joined across rounds, but the lanes are not joined to each other, and the first round's four loads are highlighted."><text x="0" y="14" class="bf-ts">One chain, unrolled four times</text><rect x="0" y="28" width="150" height="34" rx="7" class="bf-cell"/><text x="75" y="50" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p = next[p]</text><path d="M154 45H172m-5-5 5 5-5 5" class="bf-arrow"/><rect x="176" y="28" width="150" height="34" rx="7" class="bf-cell"/><text x="251" y="50" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p = next[p]</text><path d="M330 45H348m-5-5 5 5-5 5" class="bf-arrow"/><rect x="352" y="28" width="150" height="34" rx="7" class="bf-cell"/><text x="427" y="50" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p = next[p]</text><path d="M506 45H524m-5-5 5 5-5 5" class="bf-arrow"/><rect x="528" y="28" width="150" height="34" rx="7" class="bf-cell"/><text x="603" y="50" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p = next[p]</text><text x="0" y="84" class="bf-tm">Each load’s address is the value the load before it returned.</text><text x="0" y="124" class="bf-ts">Four chains, interleaved</text><text x="149" y="146" class="bf-tm" text-anchor="middle">round 1</text><text x="361" y="146" class="bf-tm" text-anchor="middle">round 2</text><text x="573" y="146" class="bf-tm" text-anchor="middle">round 3</text><text x="0" y="177" class="bf-ts">lane 0</text><rect x="64" y="156" width="170" height="32" rx="7" class="bf-cell-hi"/><text x="149" y="177" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p0 = next[p0]</text><path d="M238 172H270m-5-5 5 5-5 5" class="bf-arrow"/><rect x="276" y="156" width="170" height="32" rx="7" class="bf-cell"/><text x="361" y="177" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p0 = next[p0]</text><path d="M450 172H482m-5-5 5 5-5 5" class="bf-arrow"/><rect x="488" y="156" width="170" height="32" rx="7" class="bf-cell"/><text x="573" y="177" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p0 = next[p0]</text><path d="M662 172H688m-5-5 5 5-5 5" class="bf-arrow"/><text x="712" y="177" class="bf-tm" text-anchor="end">…</text><text x="0" y="219" class="bf-ts">lane 1</text><rect x="64" y="198" width="170" height="32" rx="7" class="bf-cell-hi"/><text x="149" y="219" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p1 = next[p1]</text><path d="M238 214H270m-5-5 5 5-5 5" class="bf-arrow"/><rect x="276" y="198" width="170" height="32" rx="7" class="bf-cell"/><text x="361" y="219" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p1 = next[p1]</text><path d="M450 214H482m-5-5 5 5-5 5" class="bf-arrow"/><rect x="488" y="198" width="170" height="32" rx="7" class="bf-cell"/><text x="573" y="219" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p1 = next[p1]</text><path d="M662 214H688m-5-5 5 5-5 5" class="bf-arrow"/><text x="712" y="219" class="bf-tm" text-anchor="end">…</text><text x="0" y="261" class="bf-ts">lane 2</text><rect x="64" y="240" width="170" height="32" rx="7" class="bf-cell-hi"/><text x="149" y="261" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p2 = next[p2]</text><path d="M238 256H270m-5-5 5 5-5 5" class="bf-arrow"/><rect x="276" y="240" width="170" height="32" rx="7" class="bf-cell"/><text x="361" y="261" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p2 = next[p2]</text><path d="M450 256H482m-5-5 5 5-5 5" class="bf-arrow"/><rect x="488" y="240" width="170" height="32" rx="7" class="bf-cell"/><text x="573" y="261" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p2 = next[p2]</text><path d="M662 256H688m-5-5 5 5-5 5" class="bf-arrow"/><text x="712" y="261" class="bf-tm" text-anchor="end">…</text><text x="0" y="303" class="bf-ts">lane 3</text><rect x="64" y="282" width="170" height="32" rx="7" class="bf-cell-hi"/><text x="149" y="303" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p3 = next[p3]</text><path d="M238 298H270m-5-5 5 5-5 5" class="bf-arrow"/><rect x="276" y="282" width="170" height="32" rx="7" class="bf-cell"/><text x="361" y="303" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p3 = next[p3]</text><path d="M450 298H482m-5-5 5 5-5 5" class="bf-arrow"/><rect x="488" y="282" width="170" height="32" rx="7" class="bf-cell"/><text x="573" y="303" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p3 = next[p3]</text><path d="M662 298H688m-5-5 5 5-5 5" class="bf-arrow"/><text x="712" y="303" class="bf-tm" text-anchor="end">…</text><text x="0" y="346" class="bf-tm">Arrows join each lane’s rounds. No arrow joins one lane to another, so a round’s four addresses are known together.</text></svg>
+<figcaption>Arrows mean "needs the result of". Unrolling lays one chain's loads out in the source, but each still waits for the last. Interleaving gives every round four loads whose addresses are known together. Whether they actually overlap is up to the processor and the memory system.</figcaption>
+</figure>
+
+<p>Nothing here needs real pointers. A chain of integer indices behaves the same way, and the
+lanes can share one array. mibz2's table of row numbers is exactly this kind of chain.</p>
+<h3 id="faster-without-any-load-getting-quicker">Faster, without any load getting quicker<a class="headerlink" href="#faster-without-any-load-getting-quicker" title="Permanent link">&para;</a></h3>
+<p>Suppose, as an illustration, that each dependent load takes 80 ns to come back from memory.
+One chain then completes 12.5 million steps a second. If eight chains overlap perfectly, eight
+loads are in flight at once and the walk completes 100 million steps a second: one every
+10 ns on average, even though each load still takes 80 ns.</p>
+<p>That has a consequence for the instruction count. At 3 GHz, 80 ns is 240 cycles. If each step
+retires three instructions, one chain manages</p>
+<div class="arithmatex">\[
+\mathrm{IPC}_{\text{1 chain}} \approx \frac{3}{240} = 0.0125
+\]</div>
+<p>instructions per cycle, and eight overlapping chains manage about 0.1. The walk got eight
+times faster and its IPC is still far below one. That was the force of Lemire's reply that, in
+his benchmark, IPC is "small (much less than one)": a loop can speed up enormously while the
+CPU still spends nearly all its time waiting. It doesn't follow that instruction execution
+plays no part. That's the other half of the argument.</p>
+<h2 id="2-ilp-exposes-the-work-mlp-lets-it-overlap">2. ILP exposes the work; MLP lets it overlap<a class="headerlink" href="#2-ilp-exposes-the-work-mlp-lets-it-overlap" title="Permanent link">&para;</a></h2>
+<p>Ivica's objection was that the interleaved loop isn't only demonstrating memory-level
+parallelism:</p>
 <figure class="bf-fig bf-shots">
-<p class="bf-title">The exchange, June 2022</p>
-<img src="../../assets/images/mlp-ilp/mlp-2022-critique.png" width="691" height="920" loading="lazy" alt="Four replies from Ivica Bogosavljevic, 8 June 2022: the overall idea is good but misses some things; point 1 on ILP, in two parts; point 2 asking for IPC or CPI and instruction counts.">
-<img src="../../assets/images/mlp-ilp/mlp-2022-memory-questions.png" width="691" height="353" loading="lazy" alt="Ivica Bogosavljevic's point 3 on allocation and cache level, 8 June 2022, and Denis Yaroshevskiy's question about read size, 9 June 2022.">
-<img src="../../assets/images/mlp-ilp/mlp-2022-lemire-replies.png" width="691" height="890" loading="lazy" alt="Daniel Lemire's replies of 9 June 2022: parts 1 and 2 of his answer, and a further note that the hard dependencies are memory loads.">
-<figcaption>Screenshots of the replies to Lemire's post, cropped to remove the phone's interface. Top: Ivica Bogosavljevic, 8 June 2022, agreeing with the overall idea, arguing that interleaving raises ILP, and asking for IPC or CPI and instruction counts. Middle: his question about allocation and cache level, and Denis Yaroshevskiy's about read size, 8–9 June 2022. Bottom: Lemire's two-part reply and his clarification, 9 June 2022. Fuller context: <a href="../../assets/images/mlp-ilp/mlp-2022-thread-1.png">first excerpt</a>, <a href="../../assets/images/mlp-ilp/mlp-2022-thread-2.png">second excerpt</a>.</figcaption>
+<a href="../../assets/images/mlp-ilp/mlp-2022-critique.png"><img src="../../assets/images/mlp-ilp/mlp-2022-critique.png" width="691" height="920" loading="lazy" alt="Four replies from Ivica Bogosavljevic, 8 June 2022: the overall idea of the post is good but misses some things; point 1, that the speedup also comes from instruction-level parallelism and would not appear on an in-order CPU; point 2, that IPC or CPI and instruction counts should have been measured."></a>
+<figcaption>Ivica Bogosavljevic's reply to Lemire's post, 8 June 2022.</figcaption>
 </figure>
 
 <details>
-<summary>Transcript of the screenshots</summary>
+<summary>Read the whole exchange</summary>
+<div class="bf-shot-row">
+<a href="../../assets/images/mlp-ilp/mlp-2022-critique.png"><img src="../../assets/images/mlp-ilp/mlp-2022-critique.png" width="691" height="920" loading="lazy" alt="Ivica Bogosavljevic's first four replies."></a>
+<a href="../../assets/images/mlp-ilp/mlp-2022-memory-questions.png"><img src="../../assets/images/mlp-ilp/mlp-2022-memory-questions.png" width="691" height="353" loading="lazy" alt="Ivica Bogosavljevic's point 3 and Denis Yaroshevskiy's question."></a>
+<a href="../../assets/images/mlp-ilp/mlp-2022-lemire-replies.png"><img src="../../assets/images/mlp-ilp/mlp-2022-lemire-replies.png" width="691" height="890" loading="lazy" alt="Daniel Lemire's replies."></a>
+</div>
 <p><strong>Ivica Bogosavljevic</strong>, 8 June 2022: I read the post, the overall idea of the post is good,
 but I think it misses a few important things to make the whole picture more clear:</p>
 <p><strong>Ivica Bogosavljevic</strong>, 8 June 2022: (1) You use the term memory-level parallelism, but the
@@ -2762,560 +1933,155 @@ measure of a core's memory-level parallelism, please share. 2/2</p>
 instructions… the instructions are mostly just out-of-cache memory loads. Please refer to
 the post for link to source code.</p>
 </details>
-<p>Here is what the rest of this post finds:</p>
-<ul>
-<li>ILP and MLP are connected mechanisms here. Treating them as rival explanations creates much
-  of the apparent disagreement.</li>
-<li>The benchmark is useful, but its saturation point isn't a direct measurement of a hardware
-  queue's capacity.</li>
-<li>Instruction count and IPC are valuable diagnostics, and neither is enough as an
-  optimisation target.</li>
-<li>Our repository already holds the experiment a superficial answer would recommend: a large
-  cut in instructions helped an isolated inverse-BWT walk, but gave essentially no measured
-  throughput gain in the registered four-worker decoder test.</li>
-<li>Several similar-looking "MLP" numbers in our investigations measure different things.
-  Their denominators matter.</li>
-</ul>
-<p>The performance results below come from the cited experiments. This review adds no new
-native benchmark of mibz2; what it adds is source inspection, reconstruction and
-interpretation. A longer <a href="../2026-11-02-memory-level-parallelism-notes/">companion page</a> holds
-the detailed methodology, counter definitions and the full source register.</p>
-<h2 id="1-what-the-two-sides-are-saying">1. What the two sides are saying<a class="headerlink" href="#1-what-the-two-sides-are-saying" title="Permanent link">&para;</a></h2>
-<p>Lemire's position, approximately:</p>
-<blockquote>
-<p>This loop spends most of its time waiting for dependent, long-latency memory loads. Giving
-it independent chains lets several requests overlap. Measuring the resulting throughput is
-a useful way to characterise memory-level parallelism.</p>
-</blockquote>
-<p>Ivica's, approximately:</p>
-<blockquote>
-<p>Interleaving changes the instruction dependency structure too. To understand the
-improvement, show instruction counts, IPC and where the loads are served from.</p>
-</blockquote>
-<p>Both contain something important. The questionable step is treating "more ILP" and "more
-MLP" as separate contributions to the speedup. In this workload the causal sequence can be:</p>
+<p>Both of them are describing the same event from different ends. In the interleaved loop:</p>
 <ol>
-<li>The program exposes independent load instructions.</li>
-<li>The processor issues those loads before earlier ones finish.</li>
-<li>Several memory requests overlap.</li>
-<li>More useful traversals complete per second.</li>
+<li>the program exposes independent load instructions;</li>
+<li>the processor issues them before the earlier ones finish;</li>
+<li>their memory requests overlap;</li>
+<li>more steps complete per second.</li>
 </ol>
-<p>The instruction-level independence enables the memory-level overlap. Calling the first part
-ILP and the second MLP doesn't mean two separately measurable speedups have happened. Work on
-MLP studies exactly how the instruction window, scheduling, branches and other
-instruction-side limits determine how much memory concurrency a core can achieve
-(<a href="https://pages.cs.wisc.edu/~markhill/restricted/isca04_mlp.pdf">Chou, Fahs and Abraham, ISCA 2004</a>).</p>
-<p>Here is how we'd assess the specific claims in the screenshots:</p>
-<table>
-<thead>
-<tr>
-<th>Claim</th>
-<th>Assessment</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Interleaving increases available ILP.</td>
-<td>Yes. Independent loads are independent instructions.</td>
-</tr>
-<tr>
-<td>It "breaks" the hard dependencies.</td>
-<td>Imprecise: the dependencies within each chain remain. The program supplies independent chains alongside them.</td>
-</tr>
-<tr>
-<td>IPC and instruction count should be measured.</td>
-<td>Sensible. They help characterise the change, but don't by themselves prove its cause.</td>
-</tr>
-<tr>
-<td>Allocation and cache residency matter.</td>
-<td>Yes. A random workload hitting L2 and one going to DRAM can give very different curves.</td>
-</tr>
-<tr>
-<td>The dependencies are "memory loads, not instructions".</td>
-<td>Loose: loads are instructions. The useful distinction is whether the critical delay is a memory access or ordinary computation.</td>
-</tr>
-<tr>
-<td>Superscalar execution is a prerequisite for several outstanding loads.</td>
-<td>Too strong as a general statement about processors.</td>
-</tr>
-<tr>
-<td>An in-order processor can't benefit this way.</td>
-<td>Also too strong. It depends on the design and on the order of the instructions.</td>
-</tr>
-</tbody>
-</table>
-<p>There is useful context on Ivica's side too. In a later article he shows interleaved
-memory-access code that executes more instructions and still runs faster
-(<a href="https://johnnysswlab.com/instruction-level-parallelism-in-practice-speeding-up-memory-bound-programs-with-low-ilp/">Johnny's Software Lab</a>).
-His broader argument isn't "minimise instruction count at all costs"; it's that exposing
-parallelism can justify extra instructions.</p>
-<h3 id="reviewing-reproducing-and-explaining-are-different-questions">Reviewing, reproducing and explaining are different questions<a class="headerlink" href="#reviewing-reproducing-and-explaining-are-different-questions" title="Permanent link">&para;</a></h3>
-<p><strong>Review:</strong> can we inspect the algorithm, source, measurement method and interpretation? Yes.</p>
-<p><strong>Historical reproduction:</strong> can we recreate the exact 2022 executable, machine state, page
-mappings, compiler output and run conditions? That needs more provenance than source code.</p>
-<p><strong>Causal attribution:</strong> does the observed speedup establish the mechanism claimed, and rule
-out plausible alternatives? That needs suitable measurements or interventions.</p>
-<p>Open source helps a great deal, but it doesn't settle all three. A fair assessment: the
-benchmark is a legitimate way to characterise overlapping dependent traversals, and some of
-the stronger readings of its output need more evidence.</p>
-<h2 id="2-why-one-chain-is-slow-and-several-help">2. Why one chain is slow and several help<a class="headerlink" href="#2-why-one-chain-is-slow-and-several-help" title="Permanent link">&para;</a></h2>
-<p>Consider:</p>
-<div class="language-c highlight"><pre><span></span><code><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
-<span class="w">    </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p</span><span class="p">];</span>
-</code></pre></div>
-<p>The next address depends on the value the current load returns:</p>
-<div class="language-text highlight"><pre><span></span><code>current index → load next index → compute next address → load next index
-</code></pre></div>
-<p>An out-of-order CPU can't issue the next ordinary demand load until it knows that address.
-Register renaming can't remove a true producer–consumer dependency.</p>
-<p>Now unroll the loop:</p>
-<div class="language-c highlight"><pre><span></span><code><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p</span><span class="p">];</span>
-<span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p</span><span class="p">];</span>
-<span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p</span><span class="p">];</span>
-<span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p</span><span class="p">];</span>
-</code></pre></div>
-<p>That may cut loop-control overhead. It doesn't make the four loads independent. Compare four
-states:</p>
-<div class="language-c highlight"><pre><span></span><code><span class="n">p0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p0</span><span class="p">];</span>
-<span class="n">p1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p1</span><span class="p">];</span>
-<span class="n">p2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p2</span><span class="p">];</span>
-<span class="n">p3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">[</span><span class="n">p3</span><span class="p">];</span>
-</code></pre></div>
-<p>Each lane still has a serial dependency from round to round. Within a round, though, the
-four addresses can be available independently. That is the central transformation.</p>
-<figure class="bf-fig">
-<p class="bf-title">Unrolling one chain, and interleaving four</p>
-<svg viewBox="0 0 720 356" role="img" aria-label="Top: one chain unrolled into four loads, each joined by an arrow to the next. Bottom: four lanes over three rounds; each lane's loads are joined across rounds, but the lanes are not joined to each other, and the first round's four loads are highlighted."><text x="0" y="14" class="bf-ts">One chain, unrolled four times</text><rect x="0" y="28" width="150" height="34" rx="7" class="bf-cell"/><text x="75" y="50" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p = next[p]</text><path d="M154 45H172m-5-5 5 5-5 5" class="bf-arrow"/><rect x="176" y="28" width="150" height="34" rx="7" class="bf-cell"/><text x="251" y="50" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p = next[p]</text><path d="M330 45H348m-5-5 5 5-5 5" class="bf-arrow"/><rect x="352" y="28" width="150" height="34" rx="7" class="bf-cell"/><text x="427" y="50" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p = next[p]</text><path d="M506 45H524m-5-5 5 5-5 5" class="bf-arrow"/><rect x="528" y="28" width="150" height="34" rx="7" class="bf-cell"/><text x="603" y="50" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p = next[p]</text><text x="0" y="84" class="bf-tm">Each load’s address is the value the load before it returned.</text><text x="0" y="124" class="bf-ts">Four chains, interleaved</text><text x="149" y="146" class="bf-tm" text-anchor="middle">round 1</text><text x="361" y="146" class="bf-tm" text-anchor="middle">round 2</text><text x="573" y="146" class="bf-tm" text-anchor="middle">round 3</text><text x="0" y="177" class="bf-ts">lane 0</text><rect x="64" y="156" width="170" height="32" rx="7" class="bf-cell-hi"/><text x="149" y="177" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p0 = next[p0]</text><path d="M238 172H270m-5-5 5 5-5 5" class="bf-arrow"/><rect x="276" y="156" width="170" height="32" rx="7" class="bf-cell"/><text x="361" y="177" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p0 = next[p0]</text><path d="M450 172H482m-5-5 5 5-5 5" class="bf-arrow"/><rect x="488" y="156" width="170" height="32" rx="7" class="bf-cell"/><text x="573" y="177" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p0 = next[p0]</text><path d="M662 172H688m-5-5 5 5-5 5" class="bf-arrow"/><text x="712" y="177" class="bf-tm" text-anchor="end">…</text><text x="0" y="219" class="bf-ts">lane 1</text><rect x="64" y="198" width="170" height="32" rx="7" class="bf-cell-hi"/><text x="149" y="219" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p1 = next[p1]</text><path d="M238 214H270m-5-5 5 5-5 5" class="bf-arrow"/><rect x="276" y="198" width="170" height="32" rx="7" class="bf-cell"/><text x="361" y="219" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p1 = next[p1]</text><path d="M450 214H482m-5-5 5 5-5 5" class="bf-arrow"/><rect x="488" y="198" width="170" height="32" rx="7" class="bf-cell"/><text x="573" y="219" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p1 = next[p1]</text><path d="M662 214H688m-5-5 5 5-5 5" class="bf-arrow"/><text x="712" y="219" class="bf-tm" text-anchor="end">…</text><text x="0" y="261" class="bf-ts">lane 2</text><rect x="64" y="240" width="170" height="32" rx="7" class="bf-cell-hi"/><text x="149" y="261" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p2 = next[p2]</text><path d="M238 256H270m-5-5 5 5-5 5" class="bf-arrow"/><rect x="276" y="240" width="170" height="32" rx="7" class="bf-cell"/><text x="361" y="261" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p2 = next[p2]</text><path d="M450 256H482m-5-5 5 5-5 5" class="bf-arrow"/><rect x="488" y="240" width="170" height="32" rx="7" class="bf-cell"/><text x="573" y="261" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p2 = next[p2]</text><path d="M662 256H688m-5-5 5 5-5 5" class="bf-arrow"/><text x="712" y="261" class="bf-tm" text-anchor="end">…</text><text x="0" y="303" class="bf-ts">lane 3</text><rect x="64" y="282" width="170" height="32" rx="7" class="bf-cell-hi"/><text x="149" y="303" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p3 = next[p3]</text><path d="M238 298H270m-5-5 5 5-5 5" class="bf-arrow"/><rect x="276" y="282" width="170" height="32" rx="7" class="bf-cell"/><text x="361" y="303" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p3 = next[p3]</text><path d="M450 298H482m-5-5 5 5-5 5" class="bf-arrow"/><rect x="488" y="282" width="170" height="32" rx="7" class="bf-cell"/><text x="573" y="303" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12.5px">p3 = next[p3]</text><path d="M662 298H688m-5-5 5 5-5 5" class="bf-arrow"/><text x="712" y="303" class="bf-tm" text-anchor="end">…</text><text x="0" y="346" class="bf-tm">Arrows join each lane’s rounds. No arrow joins one lane to another, so a round’s four addresses are known together.</text></svg>
-<figcaption>A dependency diagram, not a timing trace: an arrow means "needs the result of". Unrolling lays one chain's loads out in the source, but each still waits for the last. Interleaving gives each round four loads whose addresses are known together. Whether they actually overlap depends on the processor and the memory system, and four lanes don't mean four cache misses.</figcaption>
-</figure>
-
-<p>Two details matter for mibz2:</p>
+<p>The first two steps are ILP and the last two are MLP, but they aren't two separate speedups
+to be added up. The independence of the instructions is what lets the memory requests
+overlap. Work on MLP treats them together for that reason: how far ahead the instruction
+window reaches, and how scheduling and branches behave, decide how much memory concurrency a
+core can actually achieve (<a href="https://pages.cs.wisc.edu/~markhill/restricted/isca04_mlp.pdf">Chou, Fahs and Abraham, ISCA
+2004</a>).</p>
+<p>Each side's wording is a little loose. Interleaving doesn't "break" any dependency, as Ivica
+put it: each chain keeps all of its own, and independent chains are added alongside. And
+loads are instructions, so "memory loads, not instructions" really means that the delay on
+the critical path is the memory system's, not arithmetic's. Neither claim about processors is
+universal either. A core doesn't have to be superscalar or out of order to keep several misses
+in flight: Berkeley's single-issue, in-order Rocket core has a nonblocking data cache, and Arm
+documents three outstanding misses, under some conditions, on the in-order Cortex-A55 (the
+<a href="../2026-11-02-memory-level-parallelism-notes/#2-what-a-core-needs-to-keep-several-loads-in-flight">notes</a>
+have the sources). An in-order core is simply much more sensitive to the order in which the
+loads appear.</p>
+<p>Ivica's request for instruction counts and IPC is still a good one, and he has since shown
+interleaved code that executes <em>more</em> instructions and runs faster
+(<a href="https://johnnysswlab.com/instruction-level-parallelism-in-practice-speeding-up-memory-bound-programs-with-low-ilp/">Johnny's Software
+Lab</a>).
+His point isn't that instructions must be minimised. It's that once the loads are exposed,
+something decides how fast they complete, and the speedup curve alone doesn't say what.</p>
+<h2 id="3-what-lemires-speedup-really-measures">3. What Lemire's speedup really measures<a class="headerlink" href="#3-what-lemires-speedup-really-measures" title="Permanent link">&para;</a></h2>
+<p>Lemire's benchmark is a careful version of the loop above
+(<a href="https://github.com/lemire/testingmlp/tree/23569032cd784366247c0381e4d532c9a82f3263">source</a>,
+as published before the 2022 post). It fills a 256 MiB array of 64-bit indices with a random
+permutation that forms one long cycle, starts each lane at a different point on the cycle,
+and keeps the total number of accesses fixed as lanes are added, so more lanes reschedule the
+same work rather than doing more of it. The 2022 post reports about 90 ns for a single lane on
+the Ice Lake machine and 120 ns on Graviton 3, and describes the two as sustaining about 25 and
+19 loads at once.</p>
+<p>Figures like those come from where the curve stops rising; the benchmark's code, for
+instance, reports the lane count at which one more lane improves the time by less than 1%. A
+plateau like that can have many causes:</p>
 <ul>
-<li>A chain of integer indices is a pointer chase for performance purposes. It doesn't need
-  language-level pointers.</li>
-<li>Independent traversal states can share one allocation. They don't need separately
-  allocated lists.</li>
+<li>the core runs out of slots for outstanding misses;</li>
+<li>the instruction window fills before it reaches more loads;</li>
+<li>address generation or load throughput saturates;</li>
+<li>the TLB and page walker can't keep up;</li>
+<li>registers spill as lanes are added;</li>
+<li>requests take longer once many are queued;</li>
+<li>bandwidth runs out;</li>
+<li>or noise lands near the 1% threshold.</li>
 </ul>
-<p>So our inverse-BWT table belongs to this family of workloads.</p>
-<h3 id="latency-and-throughput-are-different-quantities">Latency and throughput are different quantities<a class="headerlink" href="#latency-and-throughput-are-different-quantities" title="Permanent link">&para;</a></h3>
-<p>Suppose, purely as an illustration, that a dependent access takes 80 ns, that each access
-needs a 64-byte line not yet in cache, and that nothing else limits it yet:</p>
-<table>
-<thead>
-<tr>
-<th>Configuration</th>
-<th style="text-align: right;">Aggregate completion rate</th>
-<th style="text-align: right;">Time per completed step</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>One chain</td>
-<td style="text-align: right;">12.5 million steps/s</td>
-<td style="text-align: right;">80 ns</td>
-</tr>
-<tr>
-<td>Eight perfectly overlapping chains</td>
-<td style="text-align: right;">100 million steps/s</td>
-<td style="text-align: right;">10 ns</td>
-</tr>
-</tbody>
-</table>
-<p>In the second case an individual request can still take 80 ns. Eight requests overlap, so one
-completes every 10 ns on average.</p>
-<p>At 3 GHz, 80 ns is 240 cycles. If each useful step retires three instructions:</p>
-<div class="arithmatex">\[
-\mathrm{IPC}_{\text{1 chain}} \approx \frac{3}{240} = 0.0125
-\]</div>
-<p>With ideal eight-way overlap:</p>
-<div class="arithmatex">\[
-\mathrm{IPC}_{\text{8 chains}} \approx 0.1
-\]</div>
-<p>That's an eightfold speedup with IPC still far below one. So Lemire's "IPC is much less than
-one" is consistent with his reading. It doesn't establish that instruction execution
-contributes nothing, or that another bottleneck can't appear as concurrency grows.</p>
-<h3 id="superscalar-out-of-order-and-nonblocking-are-distinct">Superscalar, out-of-order and nonblocking are distinct<a class="headerlink" href="#superscalar-out-of-order-and-nonblocking-are-distinct" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Property</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Superscalar issue</td>
-<td>More than one instruction can start in a cycle.</td>
-</tr>
-<tr>
-<td>Out-of-order issue</td>
-<td>A later ready instruction can start before an earlier one that isn't ready.</td>
-</tr>
-<tr>
-<td>Nonblocking memory machinery</td>
-<td>Another memory operation can progress while an earlier miss is unresolved.</td>
-</tr>
-</tbody>
-</table>
-<p>A processor can issue one instruction per cycle and still keep several long-lived requests
-outstanding across many cycles. There are concrete counterexamples to the universal claims in
-the replies:</p>
-<ul>
-<li>Berkeley's original Rocket paper describes a single-issue, in-order pipeline with a
-  nonblocking data cache that supports MLP
-  (<a href="https://people.eecs.berkeley.edu/~krste/papers/eos18-esscirc2014.pdf">Lee et al., ESSCIRC 2014</a>).</li>
-<li>Arm documents three outstanding data-cache misses on the in-order Cortex-A55, under
-  particular pipeline-spacing conditions
-  (<a href="https://documentation-service.arm.com/static/5f1fe66bbb903e39c84d7d75">Cortex-A55 Software Optimization Guide</a>).</li>
-</ul>
-<p>That doesn't mean an arbitrary in-order processor gets the same result as an aggressive
-out-of-order core. Software ordering matters more there: if a dependent use blocks progress
-before the next independent load is reached, the independence can't help. Out-of-order
-execution usually makes available independence much easier to exploit; it isn't what defines
-MLP.</p>
-<h2 id="3-what-the-2022-benchmark-measures">3. What the 2022 benchmark measures<a class="headerlink" href="#3-what-the-2022-benchmark-measures" title="Permanent link">&para;</a></h2>
-<p>The original article reports approximately:</p>
-<table>
-<thead>
-<tr>
-<th>Reported quantity</th>
-<th style="text-align: right;">Ice Lake system</th>
-<th style="text-align: right;">Graviton 3 system</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Single-lane access time</td>
-<td style="text-align: right;">90 ns</td>
-<td style="text-align: right;">120 ns</td>
-</tr>
-<tr>
-<td>Peak implied bandwidth</td>
-<td style="text-align: right;">12 GB/s</td>
-<td style="text-align: right;">9 GB/s</td>
-</tr>
-<tr>
-<td>Described simultaneous loads</td>
-<td style="text-align: right;">about 25</td>
-<td style="text-align: right;">about 19</td>
-</tr>
-</tbody>
-</table>
-<p>The stated environment is Ubuntu 22.04, GCC 11 and 4 KiB pages. These are measurements of
-those configurations, not permanent limits attached to the processor names.</p>
-<p>The public benchmark revision available before the article is
-<a href="https://github.com/lemire/testingmlp/tree/23569032cd784366247c0381e4d532c9a82f3263"><code>lemire/testingmlp</code> at <code>2356903</code></a>.
-That establishes the historical public implementation. It doesn't prove the exact local
-checkout or command line used for the post.</p>
-<h3 id="the-data-structure-is-more-specific-than-a-linked-list">The data structure is more specific than "a linked list"<a class="headerlink" href="#the-data-structure-is-more-specific-than-a-linked-list" title="Permanent link">&para;</a></h3>
-<p>The historical default uses:</p>
-<ul>
-<li>33,554,432 <code>uint64_t</code> entries: 256 MiB;</li>
-<li>a random permutation forming one long cycle, built with Sattolo's algorithm;</li>
-<li>several traversal states starting at positions along that cycle;</li>
-<li>a second array used during setup, outside the timed traversal.</li>
-</ul>
-<p>So it is an array-index pointer chase with several states, not a list of separately
-allocated nodes. That matters for allocation, translation and cache-line sharing
-(<a href="https://github.com/lemire/testingmlp/blob/23569032cd784366247c0381e4d532c9a82f3263/testingmlp.cpp">benchmark source</a>).</p>
-<p>The <a href="https://github.com/lemire/testingmlp/blob/23569032cd784366247c0381e4d532c9a82f3263/gen.py">generator</a>
-emits a separate function for each lane count, with a local state variable for each lane. It
-keeps the total useful access count approximately fixed:</p>
-<div class="arithmatex">\[
-H(K) = K\left\lfloor \frac{H}{K} \right\rfloor
-\]</div>
-<p>Going from one lane to <span class="arithmatex">\(K\)</span> lanes changes the schedule of roughly the same work; it doesn't do
-<span class="arithmatex">\(K\)</span> times as much.</p>
-<p>The historical timing takes the fastest of five wall-clock trials. The code doesn't collect
-instruction counts, actual CPU cycles, cache-source information, page walks or
-memory-controller traffic.</p>
-<h3 id="its-bandwidth-is-inferred-not-measured-dram-traffic">Its bandwidth is inferred, not measured DRAM traffic<a class="headerlink" href="#its-bandwidth-is-inferred-not-measured-dram-traffic" title="Permanent link">&para;</a></h3>
-<p>The program multiplies logical accesses by 64 bytes per access and divides by elapsed time.
-But the architectural load reads eight bytes. The 64-byte figure models a cache-line transfer
-per access, and actual traffic can differ:</p>
-<ul>
-<li>a line may already be cached;</li>
-<li>several logical accesses can touch the same line;</li>
-<li>requests can merge;</li>
-<li>prefetching can generate or anticipate traffic;</li>
-<li>translation can add memory accesses of its own.</li>
-</ul>
-<p>So the benchmark's bandwidth is an implied cache-line bandwidth under its model, not a
-measurement at the memory controller. Likewise, its multi-lane ns/hit is</p>
-<div class="arithmatex">\[
-\frac{\text{elapsed time}}{\text{aggregate completed accesses}}
-\]</div>
-<p>which is reciprocal aggregate throughput, not the service latency of one request.</p>
-<h3 id="its-saturation-point-needs-interpretation">Its saturation point needs interpretation<a class="headerlink" href="#its-saturation-point-needs-interpretation" title="Permanent link">&para;</a></h3>
-<p>The historical code looks for the point where another lane improves performance by less than
-about 1%. A flattening curve could come from:</p>
-<ul>
-<li>a memory-request resource saturating;</li>
-<li>too little instruction-window space;</li>
-<li>load or address-generation throughput;</li>
-<li>translation limits;</li>
-<li>register spills as lanes are added;</li>
-<li>longer service latency under load;</li>
-<li>a bandwidth limit;</li>
-<li>noise around the chosen threshold.</li>
-</ul>
-<p>The benchmark is useful because it gives a reproducible workload and a revealing curve. The
-curve alone doesn't say which of these caused the plateau.</p>
-<h2 id="4-four-different-things-called-mlp">4. Four different things called MLP<a class="headerlink" href="#4-four-different-things-called-mlp" title="Permanent link">&para;</a></h2>
-<p>This is probably the most important conceptual point for our own investigations.</p>
+<p>The curve alone can't tell these apart. As Travis Downs pointed out in an <a href="https://lemire.me/blog/2019/01/01/memory-level-parallelism-intel-skylake-versus-intel-cannonlake/">earlier discussion
+of the same
+benchmark</a>,
+every queue between the core and DRAM affects the plateau, and what matters is not only how
+many entries a queue has but how long each request holds one. Changing the page size moved the
+plateau too. A 256 MiB array spans 65,536 pages of 4 KiB, so translation is part of what the
+benchmark measures.</p>
+<h3 id="how-big-is-the-read">How big is the read?<a class="headerlink" href="#how-big-is-the-read" title="Permanent link">&para;</a></h3>
+<p>Denis Yaroshevskiy's question, how big each read is and whether it matters, turns out to go
+to the heart of the bandwidth figures. Each load reads 8 bytes, but the program reports
+bandwidth by counting 64 bytes per access, one cache line. That's a model of the traffic, not
+a measurement of it: a line may already be cached, two accesses may share a line, prefetches
+add traffic of their own, and page walks add more. The size of an instruction's operand, the
+line it pulls in, the useful bytes it delivers and the page it translates through are four
+different things. That distinction matters for mibz2, whose table entries are 4 bytes.</p>
+<h3 id="four-things-called-mlp">Four things called MLP<a class="headerlink" href="#four-things-called-mlp" title="Permanent link">&para;</a></h3>
+<p>By this point "memory-level parallelism" has been used for at least four different
+quantities:</p>
 <table>
 <thead>
 <tr>
 <th>Quantity</th>
-<th>What it asks</th>
+<th>The question it answers</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Available software independence</td>
-<td>How many chains or tasks can advance independently?</td>
+<td>Independence in the software</td>
+<td>How many chains can advance at once?</td>
 </tr>
 <tr>
-<td>Hardware capacity</td>
-<td>How many entries does a particular queue or tracking structure have?</td>
+<td>Capacity in the hardware</td>
+<td>How many entries does a particular queue have?</td>
 </tr>
 <tr>
 <td>Achieved occupancy</td>
-<td>How many qualifying requests are outstanding on average?</td>
+<td>How many requests are outstanding, on average?</td>
 </tr>
 <tr>
-<td>Effective speedup or saturation knee</td>
-<td>How much faster does the workload run, or when does another lane stop helping?</td>
+<td>Speedup, or the knee of the curve</td>
+<td>How much faster is it, and when does another lane stop helping?</td>
 </tr>
 </tbody>
 </table>
-<p>A program can have 32 active lanes without keeping 32 requests outstanding. A ten-entry
-structure doesn't mean every measurement called "MLP" must peak at ten. An eightfold speedup
-doesn't prove that eight DRAM requests were outstanding on average. And two processors with
-the same measured occupancy can differ in throughput if their requests take different times
-to service.</p>
-<h3 id="littles-law-connects-them-under-strict-conditions">Little's law connects them, under strict conditions<a class="headerlink" href="#littles-law-connects-them-under-strict-conditions" title="Permanent link">&para;</a></h3>
-<p>For a consistently measured population of requests over a suitable interval:</p>
-<div class="arithmatex">\[
-\overline{N} = \lambda \overline{W}
-\]</div>
-<p>where <span class="arithmatex">\(\overline{N}\)</span> is the average number of outstanding requests, <span class="arithmatex">\(\lambda\)</span> the request
-completion rate and <span class="arithmatex">\(\overline{W}\)</span> the average time a request is resident. If each matching
-request transfers a line of <span class="arithmatex">\(S\)</span> bytes:</p>
-<div class="arithmatex">\[
-\text{line bandwidth} \approx \frac{\overline{N} S}{\overline{W}}
-\]</div>
-<p>The hard part isn't the algebra but choosing matching quantities. A retired load, a
-fill-buffer allocation, an L2-miss transaction and a DRAM read aren't necessarily the same
-population. Nor is the latency of a serial, lightly loaded chain necessarily the latency in a
-heavily loaded multi-chain test: queueing, where the line is found and prefetching can all
-change it.</p>
-<p>Higher occupancy can mean more useful requests are overlapping. It can also mean the requests
-are taking longer.</p>
-<h3 id="why-the-smallest-queue-size-isnt-the-answer">Why the smallest queue size isn't the answer<a class="headerlink" href="#why-the-smallest-queue-size-isnt-the-answer" title="Permanent link">&para;</a></h3>
-<p>Suppose a request holds resource <span class="arithmatex">\(j\)</span> for <span class="arithmatex">\(W_j\)</span> seconds, the resource has <span class="arithmatex">\(Q_j\)</span> entries, and
-each useful step needs <span class="arithmatex">\(m_j\)</span> such requests. Then:</p>
-<div class="arithmatex">\[
-R \le \frac{Q_j}{m_j W_j}
-\]</div>
-<p>The time an entry is held matters as much as the number of entries. A small queue passed
-through quickly can sustain more throughput than a large one whose entries stay occupied.</p>
-<p>Travis Downs makes this point in the
-<a href="https://lemire.me/blog/2019/01/01/memory-level-parallelism-intel-skylake-versus-intel-cannonlake/">earlier discussion of the same benchmark</a>:
-the core, the uncore, the memory controller and the memory itself all affect the observed
-limit, and the page configuration changes it too.</p>
-<h3 id="translation-is-part-of-the-experiment">Translation is part of the experiment<a class="headerlink" href="#translation-is-part-of-the-experiment" title="Permanent link">&para;</a></h3>
-<p>A 256 MiB array occupies 65,536 pages at 4 KiB, or 128 pages at 2 MiB: radically different
-translation working sets. A TLB miss can need page-table accesses before the intended data
-access can go ahead. The historical
-<a href="https://github.com/lemire/testingmlp/blob/23569032cd784366247c0381e4d532c9a82f3263/README.md">README</a>
-already warns about this.</p>
-<p>The code's <code>MADV_HUGEPAGE</code> request and the article's statement that the test used small pages
-don't contradict each other. A huge-page request doesn't establish what backing the program
-got: Linux can fall back to ordinary pages, and the actual mapping has to be checked
-(<a href="https://docs.kernel.org/admin-guide/mm/transhuge.html">Transparent Hugepage Support</a>).</p>
-<p>If the question is "how does this workload behave under the machine's normal configuration?",
-translation is part of the answer. If it's "what is the core's data-request capacity apart
-from translation?", translation needs to be controlled or measured separately.</p>
-<h3 id="the-question-about-read-size-is-legitimate-too">The question about read size is legitimate too<a class="headerlink" href="#the-question-about-read-size-is-legitimate-too" title="Permanent link">&para;</a></h3>
-<p>There are several granularities:</p>
-<ol>
-<li>the operand an instruction loads;</li>
-<li>the cache line transferred;</li>
-<li>the useful payload consumed;</li>
-<li>the page translated.</li>
-</ol>
-<p>A four-byte lookup can need a 64-byte fill. A second nearby four-byte lookup may reuse that
-line. A wider load may cost no extra fill, or may cross a line boundary. So "bytes the
-instruction reads" and "bytes moved through memory" are different accounts. That distinction
-matters for our packed <code>u32</code> navigation table.</p>
-<h2 id="5-why-instructions-matter-and-when-counting-them-misleads">5. Why instructions matter, and when counting them misleads<a class="headerlink" href="#5-why-instructions-matter-and-when-counting-them-misleads" title="Permanent link">&para;</a></h2>
-<p>A simplified model:</p>
-<div class="arithmatex">\[
-c_{\text{step}} \gtrsim \max\left( \frac{L_{\text{dep}}}{K},\ \frac{u}{P},\ \frac{b}{B} \right)
-\]</div>
-<p>where <span class="arithmatex">\(L_{\text{dep}}\)</span> is the recurrence latency in cycles, <span class="arithmatex">\(K\)</span> the number of effective
-independent chains, <span class="arithmatex">\(u\)</span> the execution work per useful step, <span class="arithmatex">\(P\)</span> the sustainable execution
-rate, <span class="arithmatex">\(b\)</span> the bytes transferred per useful step and <span class="arithmatex">\(B\)</span> the sustainable bandwidth in bytes
-per cycle.</p>
-<p>It's an optimistic aid to reasoning, not a calibrated model of a processor; real resource
-limits need more detail than a single <span class="arithmatex">\(P\)</span>. It does capture the transition that matters here.
-With one chain, <span class="arithmatex">\(L_{\text{dep}}/K\)</span> may dominate, and removing bookkeeping that overlaps the
-wait may do little. Adding independence lowers that latency-limited floor, until instruction
-execution, address generation, traffic, translation or something else becomes the limit. At
-that point, cutting instructions can become very valuable.</p>
-<h3 id="fewer-instructions-can-help-in-several-distinct-ways">Fewer instructions can help in several distinct ways<a class="headerlink" href="#fewer-instructions-can-help-in-several-distinct-ways" title="Permanent link">&para;</a></h3>
-<p>An instruction change may:</p>
-<ul>
-<li>shorten the dependency that produces the next address;</li>
-<li>reduce load/store or address-generation pressure;</li>
-<li>reduce front-end work;</li>
-<li>reduce register pressure and spills;</li>
-<li>fit more useful independent loads into the finite instruction window;</li>
-<li>reduce branch or bookkeeping overhead;</li>
-<li>change prefetch timing.</li>
-</ul>
-<p>These are different mechanisms. The finite window is particularly relevant: even with many
-independent chains in the source, the processor has to reach their loads before its tracking
-resources fill. Removing intervening work can raise the MLP achieved without changing the
-memory hierarchy's physical capacity. This interaction is central to the ISCA MLP work and
-to <a href="https://people.csail.mit.edu/rinard/paper/pact18.pdf">Cimple</a>, whose subject is
-exploiting instruction- and memory-level parallelism together.</p>
-<h3 id="ipc-is-a-ratio-not-a-score">IPC is a ratio, not a score<a class="headerlink" href="#ipc-is-a-ratio-not-a-score" title="Permanent link">&para;</a></h3>
-<p>Over the same interval:</p>
-<div class="arithmatex">\[
-\mathrm{IPC} = \frac{I}{C}
-\qquad\text{and}\qquad
-\frac{C}{B} = \frac{I/B}{\mathrm{IPC}}
-\]</div>
-<p>where <span class="arithmatex">\(B\)</span> is useful output. A hypothetical change:</p>
-<table>
-<thead>
-<tr>
-<th>Version</th>
-<th style="text-align: right;">Instructions/byte</th>
-<th style="text-align: right;">IPC</th>
-<th style="text-align: right;">Cycles/byte</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>A</td>
-<td style="text-align: right;">12</td>
-<td style="text-align: right;">3.0</td>
-<td style="text-align: right;">4.0</td>
-</tr>
-<tr>
-<td>B</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">2.5</td>
-<td style="text-align: right;">3.2</td>
-</tr>
-</tbody>
-</table>
-<p>Version B uses 20% fewer cycles per byte despite lower IPC. Conversely, extra easy work can
-raise IPC without raising useful throughput. The practical objective is closer to: minimise
-elapsed time or CPU cycles per useful row or output byte, under the conditions that matter.
-Instruction count and IPC explain parts of the result; neither substitutes for it.</p>
-<p>A rule like "IPC below one means memory-bound, above one means instruction-bound" is too
-crude. Intel's and Arm's methodologies use several categories and follow-up measurements
-because one ratio can't establish the cause
-(<a href="https://www.intel.com/content/www/us/en/docs/vtune-profiler/cookbook/2024-0/top-down-microarchitecture-analysis-method.html">Intel's top-down method</a>).</p>
-<h3 id="instructions-arent-execution-resource-demand">Instructions aren't execution-resource demand<a class="headerlink" href="#instructions-arent-execution-resource-demand" title="Permanent link">&para;</a></h3>
-<p>One instruction can expand into several back-end operations, and fusion can change some of
-the accounting without removing all of the work. Two sequences with similar instruction
-counts can put very different demands on load ports, store machinery, address generation or
-the front end. So for our loop the useful questions are:</p>
-<ul>
-<li>Which instructions delay the next table address?</li>
-<li>Which consume the resource that currently limits us?</li>
-<li>Which make memory accesses just to maintain lane state?</li>
-<li>Which occupy the window while more useful loads wait to become visible?</li>
-</ul>
-<p>Those discriminate better than "can I remove three instructions?"</p>
-<h3 id="normalise-memory-events-to-useful-work-too">Normalise memory events to useful work too<a class="headerlink" href="#normalise-memory-events-to-useful-work-too" title="Permanent link">&para;</a></h3>
-<p>Misses per thousand instructions can mislead during an instruction optimisation. Halve the
-instructions while misses per output byte stay the same, and MPKI doubles: the memory work per
-useful byte hasn't changed. We track misses and requests per BWT row or per final output byte
-alongside instruction-normalised figures.</p>
-<h2 id="6-what-mibz2s-walk-does">6. What mibz2's walk does<a class="headerlink" href="#6-what-mibz2s-walk-does" title="Permanent link">&para;</a></h2>
-<p>The source examined for this review is master at
-<a href="https://github.com/lmmx/mibz2/tree/13e9854805eed8944ecdd7c9330e30971b6bf52d"><code>13e9854</code></a>.
-The README still describes an earlier 12-lane, 256-start configuration; the current
-<code>Segmented</code> path dispatches to the room walk, with 32 lanes, 512 candidate starts and <code>PF_L1</code>
-prefetching. Starts are deduplicated, and blocks below 65,536 rows take the serial path
-(<a href="https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs"><code>src/bwt.rs</code></a>).</p>
-<p>The ordinary step is approximately:</p>
+<p>They needn't agree. A program can run 32 lanes and keep eight requests outstanding. An
+eightfold speedup doesn't prove that eight DRAM requests were in flight on average. And
+occupancy can rise for a bad reason as well as a good one: if each request takes longer to
+complete, more of them are outstanding at any moment even though no more work gets done.</p>
+<p>None of this makes the benchmark wrong. It's a sound, open way to show that overlapping
+dependent chains pays, which is what Lemire defended. What its curve can't do is name the
+resource that stops it rising. That gap matters as soon as you try to make such a loop faster
+by changing its instructions, which is what we did next.</p>
+<h2 id="4-we-removed-instructions-the-decoder-barely-moved">4. We removed instructions. The decoder barely moved.<a class="headerlink" href="#4-we-removed-instructions-the-decoder-barely-moved" title="Permanent link">&para;</a></h2>
+<p>mibz2's walk (as of <a href="https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs"><code>13e9854</code></a>)
+runs 32 lanes over up to 512 segments. Each ordinary step is close to the loop we started
+with, plus a prefetch:</p>
 <div class="language-rust highlight"><pre><span></span><code><span class="kd">let</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">t</span><span class="p">[</span><span class="n">lane</span><span class="p">.</span><span class="n">row</span><span class="p">];</span>
 <span class="n">lane</span><span class="p">.</span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">8</span><span class="p">;</span>
 <span class="n">prefetch</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="n">lane</span><span class="p">.</span><span class="n">row</span><span class="p">);</span>
 <span class="n">output_for_lane</span><span class="p">[</span><span class="n">offset</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">q</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="kt">u8</span><span class="p">;</span>
 </code></pre></div>
-<p>This leaves out segment boundaries and the start flag, but captures the recurrence:</p>
-<ol>
-<li>Load the packed table entry.</li>
-<li>Extract the next row.</li>
-<li>Start fetching it.</li>
-<li>Emit the current byte.</li>
-<li>Work on other lanes before coming back.</li>
-</ol>
-<p>The room arrangement batches output writes using known spare capacity and a shared offset,
-which avoids some per-byte pointer and capacity bookkeeping. The segments' outputs are then
-assembled in final traversal order.</p>
+<p>As soon as a lane's entry arrives, its next row is known, and the walk asks for it straight
+away. It then serves the other lanes before coming back.</p>
 <figure class="bf-fig">
-<p class="bf-title">The prefetch's lead time in the room walk</p>
+<p class="bf-title">The prefetch's lead time in the 32-lane walk</p>
 <svg viewBox="0 0 720 230" role="img" aria-label="Lane 0 loads its entry, computes the next row, prefetches it and writes its byte; lanes 1, 2 and 3 then take their own steps before lane 0 loads the prefetched row. A bracket from the prefetch to lane 0's next load marks the lead time."><text x="100" y="16" class="bf-tm" text-anchor="middle">lane 0</text><rect x="0" y="26" width="200" height="104" rx="8" class="bf-slot"/><text x="14" y="50" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 12.5px">q = t[row]</text><text x="14" y="72" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 12.5px">row = q &gt;&gt; 8</text><text x="14" y="94" class="bf-t-green" style="font-family: var(--md-code-font-family); font-size: 12.5px">prefetch(t, row)</text><text x="14" y="116" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 12.5px">out[i] = q as u8</text><text x="265" y="16" class="bf-tm" text-anchor="middle">lane 1</text><rect x="220" y="26" width="90" height="104" rx="8" class="bf-cell"/><text x="265" y="74" class="bf-t" text-anchor="middle">its own</text><text x="265" y="92" class="bf-t" text-anchor="middle">step</text><text x="375" y="16" class="bf-tm" text-anchor="middle">lane 2</text><rect x="330" y="26" width="90" height="104" rx="8" class="bf-cell"/><text x="375" y="74" class="bf-t" text-anchor="middle">its own</text><text x="375" y="92" class="bf-t" text-anchor="middle">step</text><text x="485" y="16" class="bf-tm" text-anchor="middle">lane 3</text><rect x="440" y="26" width="90" height="104" rx="8" class="bf-cell"/><text x="485" y="74" class="bf-t" text-anchor="middle">its own</text><text x="485" y="92" class="bf-t" text-anchor="middle">step</text><text x="630" y="16" class="bf-tm" text-anchor="middle">lane 0 again</text><rect x="550" y="26" width="160" height="104" rx="8" class="bf-slot"/><text x="564" y="72" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 12.5px">q = t[row]</text><text x="564" y="96" class="bf-tm">the prefetched row</text><path d="M204 78H216m-5-5 5 5-5 5" class="bf-arrow"/><path d="M314 78H326m-5-5 5 5-5 5" class="bf-arrow"/><path d="M424 78H436m-5-5 5 5-5 5" class="bf-arrow"/><path d="M534 78H546m-5-5 5 5-5 5" class="bf-arrow"/><path d="M150 146V156H630V146" class="bf-icon-green"/><text x="390" y="178" class="bf-t-green" text-anchor="middle">the prefetch’s lead time: the work on lanes 1 to 3</text><path d="M0 204H706m-5-5 5 5-5 5" class="bf-arrow"/><text x="0" y="222" class="bf-tm">order of execution, not to scale</text></svg>
-<figcaption>Execution order for four of the 32 lanes, with no durations. Once lane 0's entry arrives, its next row is known and the prefetch can start; the walk then serves the other lanes before coming back. That intervening work is the prefetch's lead time. If it's shorter than the memory latency, lane 0's next load still waits. The prefetch can't reach a second hop: that address isn't known until the next entry arrives.</figcaption>
+<figcaption>Four of the 32 lanes, in execution order, with no durations. The work on the other lanes is the time the prefetch has to arrive. If it's shorter than the memory latency, lane 0's next load still waits. A prefetch can't reach a second hop: that address isn't known until the next entry arrives.</figcaption>
 </figure>
 
-<h3 id="our-table-is-very-different-from-lemires-array">Our table is very different from Lemire's array<a class="headerlink" href="#our-table-is-very-different-from-lemires-array" title="Permanent link">&para;</a></h3>
-<p>A full 900,000-row table of <code>u32</code> entries is</p>
+<p>Our table is also much smaller than Lemire's array. A full block of 900,000 rows of 4-byte
+entries is 3.6 MB, against his 256 MiB. That's far bigger than a core's private L2 but can
+fit in the 20 MiB shared L3 of the i9 we test on, so many of these loads can be served by the
+last-level cache rather than DRAM. Overlapping them still pays, but the boundary is different.</p>
+<p>The 8.6 from the introduction is the ratio of two measured costs, 38.55 cycles per byte for
+one chain and 4.49 for the 32-lane walk (<a href="../2026-10-31-room-walk-overlap/">31 October
+post</a>). It's a throughput factor, not a count of requests in
+flight. All 32 lanes can do useful work even if only some have a request outstanding at any
+instant.</p>
+<h3 id="when-instructions-become-the-limit">When instructions become the limit<a class="headerlink" href="#when-instructions-become-the-limit" title="Permanent link">&para;</a></h3>
+<p>A rough model shows why instructions might matter once the lanes are there. The time per step
+can't be shorter than the slowest of three limits:</p>
 <div class="arithmatex">\[
-900{,}000 \times 4 = 3{,}600{,}000 \text{ bytes}
+c_{\text{step}} \gtrsim \max\left( \frac{L}{K},\ \frac{u}{P},\ \frac{b}{B} \right)
 \]</div>
-<p>That's 3.6 MB, against the historical benchmark's 256 MiB. On the i9 host in our records, it
-is much larger than the private L2 but can fit in the shared L3, depending on other live data
-and concurrent activity. A very large compressed input doesn't mean each table access goes to
-DRAM: the stage's active working set is what matters. MLP can still help for accesses served
-by the last-level cache or elsewhere beyond L1; we just need to say which boundary we mean.</p>
-<h3 id="the-prefetch-changes-how-to-read-the-counters">The prefetch changes how to read the counters<a class="headerlink" href="#the-prefetch-changes-how-to-read-the-counters" title="Permanent link">&para;</a></h3>
-<p>After <code>q</code> returns, the next row is known, and the prefetch can start that request while the
-program serves other lanes. It can't discover arbitrary future links: the one after that is
-still unknown until the next entry is read.</p>
-<p>A prefetch can also leave the ordinary retirement path before its data arrives, which lets
-the program keep memory work ahead of demand while still being limited by address discovery,
-issue resources, translation and request queues. That has a consequence for measurement: a
-demand load that hits in cache may be consuming a line whose expensive retrieval a prefetch
-started earlier. Counting only demand loads that miss in L3 can leave out much of the
-expensive traffic the walk causes.</p>
-<h3 id="the-bwt-literature-is-directly-relevant">The BWT literature is directly relevant<a class="headerlink" href="#the-bwt-literature-is-directly-relevant" title="Permanent link">&para;</a></h3>
-<p>Kärkkäinen, Kempa and Puglisi's
-<a href="https://www.cs.helsinki.fi/u/tpkarkka/publications/dcc2012.pdf">Slashing the Time for BWT Inversion</a>
-studies both reducing costly accesses and overlapping the work of several starting
-positions. It's a direct algorithmic antecedent of our problem, not an analogy with hash
-tables or trees. It also points to two separate axes: make the existing accesses overlap
-better, or change how much costly access work there is. It's worth keeping them apart when
-deciding what an instruction optimisation is meant to achieve.</p>
-<h2 id="7-our-unrolling-experiment">7. Our unrolling experiment<a class="headerlink" href="#7-our-unrolling-experiment" title="Permanent link">&para;</a></h2>
-<p>A generic answer might advise exposing more lanes or unrolling the loop. Our records already
-go well beyond that.</p>
-<h3 id="the-86-figure-is-a-throughput-factor">The 8.6 figure is a throughput factor<a class="headerlink" href="#the-86-figure-is-a-throughput-factor" title="Permanent link">&para;</a></h3>
-<p><a href="../2026-10-31-room-walk-overlap/">The October 31 post</a> compares 38.55 cycles per byte for one
-chain with 4.49 for the room walk:</p>
-<div class="arithmatex">\[
-38.55 / 4.49 \approx 8.59
-\]</div>
-<p>That is a throughput ratio under that experiment's timing conventions, not a count of
-outstanding requests, as the post itself says. A model assuming unchanged latency can turn
-such a ratio into "effective chains", but prefetching, different instruction costs and
-changed service conditions make that an approximation. All 32 lanes can do useful work even
-if only some of them have a request outstanding at a given boundary at any instant.</p>
-<h3 id="then-we-cut-the-instruction-stream-substantially">Then we cut the instruction stream substantially<a class="headerlink" href="#then-we-cut-the-instruction-stream-substantially" title="Permanent link">&para;</a></h3>
-<p>The archived assembly comparison reports approximately:</p>
+<p>Here <span class="arithmatex">\(L/K\)</span> is the memory latency shared among <span class="arithmatex">\(K\)</span> independent chains, <span class="arithmatex">\(u/P\)</span> the instruction
+work per step over the rate the core can execute it, and <span class="arithmatex">\(b/B\)</span> the bytes per step over the
+available bandwidth. It's optimistic and leaves a great deal out, but it captures the turn
+in the story. With one chain, <span class="arithmatex">\(L/K\)</span> dominates and trimming instructions barely helps. Add
+enough chains and <span class="arithmatex">\(L/K\)</span> falls until the instruction work, or the traffic, takes over. At that
+point fewer instructions should mean a faster walk: they shorten the work per step, they free
+load and address-generation slots, and they let the instruction window reach more loads.</p>
+<p>So we tried it. An experiment unrolled all 32 lane steps so that each used fixed offsets,
+removing most of the walk's bookkeeping
+(<a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-astra-fidelity/README.md">assembly comparison</a>):</p>
 <table>
 <thead>
 <tr>
-<th>Static hot path, per ordinary lane step</th>
+<th>Per ordinary lane step, hot loop</th>
 <th style="text-align: right;">Original</th>
 <th style="text-align: right;">Unrolled</th>
 </tr>
@@ -3343,24 +2109,17 @@ if only some of them have a request outstanding at a given boundary at any insta
 </tr>
 </tbody>
 </table>
-<p>The function grew to about 30 KB. These are static hot-path counts, not dynamic whole-decoder
-instructions per output byte. They show that much bookkeeping disappeared while the demand
-for memory operations didn't fall
-(<a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-astra-fidelity/README.md">assembly-fidelity analysis</a>).</p>
-<p>On the recorded EPYC 7763 stage test, the time ratio of the unrolled walk to the original was</p>
-<div class="arithmatex">\[
-0.877 \quad [0.863,\ 0.891]
-\]</div>
-<p>about a 12.3% time reduction, or roughly 14% more throughput at the point estimate. So an
-instruction-stream transformation did materially help the isolated stage in that experiment.</p>
-<h3 id="the-target-machine-decoder-result-was-much-smaller">The target-machine decoder result was much smaller<a class="headerlink" href="#the-target-machine-decoder-result-was-much-smaller" title="Permanent link">&para;</a></h3>
-<p>The registered full-decoder test on the i9-10900K reported:</p>
+<p>About 36% of the instructions went, while the memory operations stayed. On its own, on an
+EPYC 7763, the unrolled walk took 0.877 of the original's time (95% interval 0.863 to
+0.891): about 12% less.</p>
+<p>Then it went into the whole decoder, in a registered trial on our i9-10900K
+(<a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md">results</a>):</p>
 <table>
 <thead>
 <tr>
-<th>Configuration</th>
-<th style="text-align: right;">Throughput, unrolled ÷ original</th>
-<th style="text-align: right;">Interval</th>
+<th>Decoder throughput, unrolled ÷ original</th>
+<th style="text-align: right;">Point</th>
+<th style="text-align: right;">95% interval</th>
 </tr>
 </thead>
 <tbody>
@@ -3376,407 +2135,88 @@ instruction-stream transformation did materially help the isolated stage in that
 </tr>
 </tbody>
 </table>
-<p>A control workload's CPU cost regressed. The registered verdict was negative, and the
-decoder-level experiment was archived
-(<a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md">full-decoder results</a>).</p>
-<p>This bears directly on the 2022 exchange: cutting instructions can improve a local
-implementation and give little or nothing under the conditions that matter for the product.
-The stage and full-decoder tests also ran on different processors, so together they aren't a
-controlled measurement of one architectural variable.</p>
-<h3 id="what-is-established-and-what-is-still-a-hypothesis">What is established, and what is still a hypothesis<a class="headerlink" href="#what-is-established-and-what-is-still-a-hypothesis" title="Permanent link">&para;</a></h3>
-<p>Established:</p>
-<ul>
-<li>the transformation substantially cut the static instruction stream;</li>
-<li>it improved the recorded isolated stage;</li>
-<li>the registered four-worker decoder test showed no throughput improvement at the point
-  estimate.</li>
-</ul>
-<p>Not established:</p>
-<ul>
-<li>that total instruction count alone caused the isolated gain;</li>
-<li>that address-generation pressure caused the target-machine result;</li>
-<li>that memory bandwidth alone erased the gain;</li>
-<li>that the larger code caused a regression.</li>
-</ul>
-<p>The archive proposes load and address-port pressure on Comet Lake as a plausible
-explanation, and labels it a static model, which is the right status. The stronger next
-question is: which resource reduction would help under the target conditions, beyond cutting
-bookkeeping that may already overlap other work?</p>
-<h2 id="8-one-worker-against-four">8. One worker against four<a class="headerlink" href="#8-one-worker-against-four" title="Permanent link">&para;</a></h2>
-<p>The corrected
-<a href="https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md">decoder-attribution analysis</a>
-gives approximately these arithmetic means:</p>
+<p>With four workers, the configuration that matters, the gain was nothing. A control workload's
+CPU cost got worse, and the trial's verdict was negative.</p>
+<p>The two results come from different processors, so together they don't isolate one cause. A
+plausible reading is that the removed instructions weren't using the resource that limits the
+four-worker decoder: the archive's own explanation, pressure on the i9's load and address
+ports, comes from a static model, not a measurement. What the pair does establish is the
+point of Ivica's objection. Cutting instructions can make a loop faster in isolation and make
+no difference to the program it lives in.</p>
+<h2 id="5-the-bottleneck-isnt-an-instruction-count">5. The bottleneck isn't an instruction count<a class="headerlink" href="#5-the-bottleneck-isnt-an-instruction-count" title="Permanent link">&para;</a></h2>
+<p>If not instructions, then what? Our earlier attribution of the whole decoder on the i9
+(<a href="https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md">analysis</a>)
+compared one worker with four:</p>
 <table>
 <thead>
 <tr>
-<th>Quantity</th>
+<th>Per decoded byte</th>
 <th style="text-align: right;">One worker</th>
 <th style="text-align: right;">Four workers</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Retired instructions per final output byte</td>
+<td>Instructions retired</td>
 <td style="text-align: right;">32.63</td>
 <td style="text-align: right;">33.06</td>
 </tr>
 <tr>
-<td>CPU cycles per final output byte</td>
+<td>CPU cycles</td>
 <td style="text-align: right;">13.46</td>
 <td style="text-align: right;">17.51</td>
 </tr>
 <tr>
-<td>IPC, derived</td>
+<td>IPC</td>
 <td style="text-align: right;">2.42</td>
 <td style="text-align: right;">1.89</td>
 </tr>
-<tr>
-<td>CPU-seconds per GB</td>
-<td style="text-align: right;">2.707</td>
-<td style="text-align: right;">3.579</td>
-</tr>
-<tr>
-<td>Effective frequency</td>
-<td style="text-align: right;">about 4.97 GHz</td>
-<td style="text-align: right;">about 4.89 GHz</td>
-</tr>
 </tbody>
 </table>
-<p>Retired work rises about 1.3%, cycle cost about 30% and CPU time about 32%. That makes a large
-rise in retired instruction work a poor explanation of the efficiency loss: almost the same
-retired work is taking substantially more cycles. It doesn't identify the cause, since cache
-behaviour, request service time, speculation, synchronisation and the mix of phases can all
-matter, but it narrows the search.</p>
-<p>Both IPC values are above one, which shows again why an IPC threshold can't declare a
-workload instruction-bound. And four workers can raise aggregate wall-clock throughput while
-worsening CPU-seconds per GB: those are different objectives.</p>
-<h3 id="the-stage-boundary-matters">The stage boundary matters<a class="headerlink" href="#the-stage-boundary-matters" title="Permanent link">&para;</a></h3>
-<p>The <a href="https://github.com/lmmx/mibz2/blob/0156e1dad5ce4ebca78b4cb3d00276d3b6d64611/docs/journal/2026-11-01-bwt-memory-proposal.md">corrected proposal</a>
-separates two results:</p>
-<ul>
-<li>on 197 matched full-sized blocks, traversal plus assembly rises from 1.234 to 1.806 CPU ns
-  per BWT row;</li>
-<li>across all 434 blocks, that interval adds about 0.61 CPU-seconds per GB of final decoded
-  output.</li>
-</ul>
-<p>These are different populations and denominators. The old trace also combines traversal and
-assembly, so blaming the whole increase on pointer chasing would overstate it.</p>
-<h3 id="cache-capacity-explanations-need-arithmetic-and-controls">Cache-capacity explanations need arithmetic and controls<a class="headerlink" href="#cache-capacity-explanations-need-arithmetic-and-controls" title="Permanent link">&para;</a></h3>
-<p>Four maximum-sized tables occupy 14.4 MB before any other buffer. The host has a 20 MiB L3,
-and the trace estimates fewer than four live tables on average. So "four workers necessarily
-overflow L3 with their tables" isn't established; other live data, write traffic,
-replacement behaviour and queueing can still make shared-memory interference important. And
-the trace's association between longer walks and more overlapping walks is suggestive, not
-conclusive, because a longer interval has more opportunity to overlap another. That's one
-reason controlled interference experiments are useful, as
-<a href="../2026-11-01-inverse-bwt-memory-interference/">the previous post</a> describes.</p>
-<h2 id="9-counters-and-their-denominators">9. Counters and their denominators<a class="headerlink" href="#9-counters-and-their-denominators" title="Permanent link">&para;</a></h2>
-<p>This is where we'd spend the most care in future analysis. Let:</p>
-<ul>
-<li><span class="arithmatex">\(O\)</span> be an occupancy counter that adds the number of qualifying outstanding requests each
-  cycle;</li>
-<li><span class="arithmatex">\(A\)</span> the number of matching requests;</li>
-<li><span class="arithmatex">\(P\)</span> the cycles with at least one matching request outstanding;</li>
-<li><span class="arithmatex">\(C\)</span> all relevant cycles.</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>Ratio</th>
-<th>Units</th>
-<th>Meaning</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><span class="arithmatex">\(O/A\)</span></td>
-<td>cycles per request</td>
-<td>Average residence time</td>
-</tr>
-<tr>
-<td><span class="arithmatex">\(O/P\)</span></td>
-<td>requests</td>
-<td>Average occupancy, given that a request is pending</td>
-</tr>
-<tr>
-<td><span class="arithmatex">\(O/C\)</span></td>
-<td>requests</td>
-<td>Average occupancy over all measured cycles</td>
-</tr>
-</tbody>
-</table>
+<p>With four workers the decoder retires almost exactly the same instructions per byte (1.3%
+more) but needs 30% more cycles to do it. The work hasn't grown; it's taking longer. Note too
+that IPC is above one in both columns, so "IPC below one means memory-bound" wouldn't have
+classified this workload either way. IPC is a ratio of two things that can each change, and a
+change that cuts instructions can lower IPC and still save cycles.</p>
+<p>Much of that extra time is in the inverse-BWT step. On 197 matched full-sized blocks,
+traversal plus assembly rises from 1.234 to 1.806 CPU ns per row with four workers
+(<a href="https://github.com/lmmx/mibz2/blob/0156e1dad5ce4ebca78b4cb3d00276d3b6d64611/docs/journal/2026-11-01-bwt-memory-proposal.md">corrected proposal</a>).
+Four full tables take 14.4 MB of the i9's 20 MiB L3 before any other buffer, so the workers
+are plausibly competing for cache and for the path to memory, but the arithmetic alone doesn't
+prove it. <a href="../2026-11-01-inverse-bwt-memory-interference/">The previous post</a> describes the
+experiments designed to test it.</p>
+<h3 id="counters-can-mislead-in-the-same-way">Counters can mislead in the same way<a class="headerlink" href="#counters-can-mislead-in-the-same-way" title="Permanent link">&para;</a></h3>
+<p>Hardware counters are the obvious way to find out, but they need the same care as Lemire's
+curve. Intel defines an "MLP" metric as the number of pending L1 demand misses summed over
+cycles, divided by the number of cycles in which any such miss was pending. Between one worker
+and four, that figure barely moved, staying near 2.18. That sounds like nothing changed. But the share of
+cycles with a miss pending rose from about 12% to about 30%, so averaged over <em>all</em> cycles the
+occupancy rose from roughly <span class="arithmatex">\(2.18 \times 0.12 \approx 0.26\)</span> to <span class="arithmatex">\(2.18 \times 0.30 \approx
+0.65\)</span>. The metric was answering a narrower question than its name suggests.</p>
 <figure class="bf-fig">
 <p class="bf-title">One occupancy trace, three ratios</p>
 <svg viewBox="0 0 720 270" role="img" aria-label="Two requests on a six-cycle timeline: A outstanding in cycles 1 to 3, B in cycles 2 to 4. Outstanding per cycle: 0, 1, 2, 2, 1, 0. O is 6, A is 2, P is 4, C is 6; O over A is 3 cycles per request, O over P is 1.5 requests, O over C is 1.0 request."><text x="185" y="14" class="bf-tm" text-anchor="middle">cycle 0</text><text x="275" y="14" class="bf-tm" text-anchor="middle">cycle 1</text><text x="365" y="14" class="bf-tm" text-anchor="middle">cycle 2</text><text x="455" y="14" class="bf-tm" text-anchor="middle">cycle 3</text><text x="545" y="14" class="bf-tm" text-anchor="middle">cycle 4</text><text x="635" y="14" class="bf-tm" text-anchor="middle">cycle 5</text><path d="M140 22V132" class="bf-grid"/><path d="M230 22V132" class="bf-grid"/><path d="M320 22V132" class="bf-grid"/><path d="M410 22V132" class="bf-grid"/><path d="M500 22V132" class="bf-grid"/><path d="M590 22V132" class="bf-grid"/><path d="M680 22V132" class="bf-grid"/><text x="0" y="46" class="bf-ts">request A</text><rect x="234" y="28" width="262" height="26" rx="6" class="bf-slot"/><text x="365" y="46" class="bf-t" text-anchor="middle">outstanding 3 cycles</text><text x="0" y="80" class="bf-ts">request B</text><rect x="324" y="62" width="262" height="26" rx="6" class="bf-cell-hi"/><text x="455" y="80" class="bf-t" text-anchor="middle">outstanding 3 cycles</text><text x="0" y="120" class="bf-ts">outstanding</text><rect x="144" y="100" width="82" height="28" rx="6" class="bf-cell"/><text x="185" y="119" class="bf-t-strong" text-anchor="middle">0</text><rect x="234" y="100" width="82" height="28" rx="6" class="bf-cell"/><text x="275" y="119" class="bf-t-strong" text-anchor="middle">1</text><rect x="324" y="100" width="82" height="28" rx="6" class="bf-cell"/><text x="365" y="119" class="bf-t-strong" text-anchor="middle">2</text><rect x="414" y="100" width="82" height="28" rx="6" class="bf-cell"/><text x="455" y="119" class="bf-t-strong" text-anchor="middle">2</text><rect x="504" y="100" width="82" height="28" rx="6" class="bf-cell"/><text x="545" y="119" class="bf-t-strong" text-anchor="middle">1</text><rect x="594" y="100" width="82" height="28" rx="6" class="bf-cell"/><text x="635" y="119" class="bf-t-strong" text-anchor="middle">0</text><path d="M0 148H720" class="bf-rule"/><text x="0" y="172" class="bf-t-strong">O = 6 request-cycles</text><text x="180" y="172" class="bf-t-strong">A = 2 requests</text><text x="360" y="172" class="bf-t-strong">P = 4 pending cycles</text><text x="540" y="172" class="bf-t-strong">C = 6 cycles</text><text x="0" y="206" class="bf-ts">O ÷ A = 3 cycles per request</text><text x="300" y="206" class="bf-t">how long a request stays outstanding</text><text x="0" y="234" class="bf-ts">O ÷ P = 1.5 requests</text><text x="300" y="234" class="bf-t">occupancy while anything is pending</text><text x="0" y="262" class="bf-ts">O ÷ C = 1.0 request</text><text x="300" y="262" class="bf-t">occupancy over the whole window</text></svg>
-<figcaption>A made-up trace, not mibz2 data. Two requests, each outstanding for three cycles, fall inside a six-cycle window, so no boundary correction is needed. The two idle cycles count in C but not in P, which is why O/P and O/C differ.</figcaption>
+<figcaption>A made-up trace, not mibz2 data. Dividing the same total by requests, by busy cycles or by all cycles gives three different answers: how long requests last, how many overlap while any are pending, and how many are pending on average.</figcaption>
 </figure>
 
-<p>All three are useful, and they answer different questions. They are only valid if the
-numerator and denominator cover the same requests, interval, privilege filters and hardware
-scope, and short phase windows need care with requests already outstanding at the start or
-still outstanding at the end.</p>
-<h3 id="why-mlp-stayed-at-218-settles-nothing">Why "MLP stayed at 2.18" settles nothing<a class="headerlink" href="#why-mlp-stayed-at-218-settles-nothing" title="Permanent link">&para;</a></h3>
-<p>Intel's derived MLP metric is</p>
-<div class="language-text highlight"><pre><span></span><code>L1D_PEND_MISS.PENDING / L1D_PEND_MISS.PENDING_CYCLES
-</code></pre></div>
-<p>which is conditional on cycles with a qualifying miss pending
-(<a href="https://github.com/intel/perfmon/blob/main/SKL/events/skylake_core.json">event definitions</a>,
-<a href="https://github.com/intel/perfmon/blob/main/SKL/metrics/skylake_metrics.json">derived metrics</a>).
-In our archive the conditional value stays around 2.18 while the fraction of cycles with a
-pending demand miss rises from about 12% to 30%. As an illustration:</p>
-<div class="arithmatex">\[
-2.18 \times 0.12 \approx 0.26
-\qquad
-2.18 \times 0.30 \approx 0.65
-\]</div>
-<p>So an unchanged conditional average can sit beside a large rise in occupancy over all cycles.
-The products are only illustrative; exact aggregation should use the matching raw totals.
-The point is the denominator. There's a further limit: these are process-wide measurements,
-so a change in how long the process spends in each phase also moves them. They aren't
-automatically measurements of the inverse-BWT walk alone.</p>
-<h3 id="the-l1-event-isnt-the-number-of-independent-bwt-chains">The L1 event isn't "the number of independent BWT chains"<a class="headerlink" href="#the-l1-event-isnt-the-number-of-independent-bwt-chains" title="Permanent link">&para;</a></h3>
-<p>Intel's definition concerns demand-associated fill-buffer occupancy. A fill a prefetch
-started can begin to count once a demand access joins it, and page-walk reads and split
-accesses complicate the mapping to source-level loads. So this metric isn't the software lane
-count, total prefetch concurrency, the number of DRAM reads or the number of chains making
-progress. A lane count, a throughput ratio and this counter ratio should never be equated,
-and some of the values we have quoted come from different experiments and processors.</p>
-<h3 id="the-offcore-ratio-is-latency-like">The offcore ratio is latency-like<a class="headerlink" href="#the-offcore-ratio-is-latency-like" title="Permanent link">&para;</a></h3>
-<p>For the relevant Intel event family,</p>
-<div class="language-text highlight"><pre><span></span><code>OFFCORE_REQUESTS_OUTSTANDING.ALL_DATA_RD / OFFCORE_REQUESTS.ALL_DATA_RD
-</code></pre></div>
-<p>has units of cycles per request. Its occupancy runs from an L2 miss until the transaction
-completes at the superqueue boundary, and its population includes demand and prefetch
-traffic and can include requests served by the LLC. It isn't automatically DRAM latency.</p>
-<p>Our archived median rises from roughly 39 to 58 cycles per request (an arithmetic mean gives
-about 41 to 58). That's consistent with a longer average residence for the counted
-population. It doesn't prove that an unchanged set of useful BWT requests each became slower
-by that amount: the source mix, the phase mix and the request mix can all change.</p>
-<h3 id="demand-only-counts-cant-classify-all-the-traffic">Demand-only counts can't classify all the traffic<a class="headerlink" href="#demand-only-counts-cant-classify-all-the-traffic" title="Permanent link">&para;</a></h3>
-<p>Suppose a prefetch starts fetching a line. Later, a demand access either finds the line in L1
-or joins the fill still in flight. The demand event describes the eventual demand access, not
-necessarily the whole history of the line. Likewise, <code>MEM_LOAD_RETIRED.FB_HIT</code> records a load
-joining an existing fill; the request that started it could have been a demand or a
-prefetch. It isn't a "prefetch supplied this fraction" counter.</p>
-<p>That's why the corrected proposal withdraws two earlier readings:</p>
-<ol>
-<li>the estimate that about 98% of walk traffic was prefetch, which came from comparing unlike
-   event populations;</li>
-<li>treating an inferred value of around six outstanding requests as directly measured,
-   constant walk MLP. That figure combined an assumed number of requests per row, mixed
-   process-wide residence data and stage timing, and their agreement was partly built in by
-   the assumptions.</li>
-</ol>
-<h3 id="aggregating-workers-adds-another-distinction">Aggregating workers adds another distinction<a class="headerlink" href="#aggregating-workers-adds-another-distinction" title="Permanent link">&para;</a></h3>
-<p>Summing occupancy counts and cycle counts across threads, then dividing, gives a
-cycle-weighted average per logical processor. It doesn't give the total number of requests
-outstanding at once across the machine. An unweighted average of per-thread ratios, on the
-other hand, can give short-lived or lightly loaded threads too much weight. Counter
-arithmetic is part of the definition of the measurement, not a last step in a spreadsheet.</p>
-<h2 id="10-what-the-next-experiment-needs-to-distinguish">10. What the next experiment needs to distinguish<a class="headerlink" href="#10-what-the-next-experiment-needs-to-distinguish" title="Permanent link">&para;</a></h2>
-<p>Our work is already past "try more lanes and see whether it gets faster". The next
-experiments should tell specific explanations apart.</p>
-<h3 id="choose-the-objective-explicitly">Choose the objective explicitly<a class="headerlink" href="#choose-the-objective-explicitly" title="Permanent link">&para;</a></h3>
-<p>For the production decoder: wall-clock decoded throughput, CPU-seconds per GB, behaviour
-across blocks, and memory footprint. For understanding the walk: actual cycles per BWT row,
-nanoseconds per row, and requests, instructions and traffic per row. A stage improvement and
-a decoder improvement are separate results, and both are worth recording.</p>
-<h3 id="isolate-the-phases-without-losing-production-behaviour">Isolate the phases without losing production behaviour<a class="headerlink" href="#isolate-the-phases-without-losing-production-behaviour" title="Permanent link">&para;</a></h3>
-<p>Measure table construction, traversal, segment assembly and the later output processing
-separately, and keep the whole-decoder test. Use the production sequence of blocks and buffer
-lifetimes: a prebuilt table traversed over and over can be much warmer than one met during
-real decoding, and the surrounding phases may be what creates the shared-memory conditions
-that slow the production walk.</p>
-<h3 id="keep-the-axes-separate">Keep the axes separate<a class="headerlink" href="#keep-the-axes-separate" title="Permanent link">&para;</a></h3>
-<p>These are distinct changes:</p>
-<ul>
-<li>more lanes within one core;</li>
-<li>more segment starts;</li>
-<li>a different prefetch policy;</li>
-<li>more worker threads;</li>
-<li>a different layout for lane state;</li>
-<li>different output-buffer lifetimes.</li>
-</ul>
-<p>More lanes try to improve overlap within a core. More workers add cores, and also add
-pressure on shared resources. Calling both "more parallelism" hides an important difference.</p>
-<h3 id="collect-a-small-set-of-phase-matched-measurements">Collect a small set of phase-matched measurements<a class="headerlink" href="#collect-a-small-set-of-phase-matched-measurements" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Measurement</th>
-<th>What it helps answer</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Actual cycles and ns per BWT row</td>
-<td>Did useful service improve, and did the frequency change?</td>
-</tr>
-<tr>
-<td>Retired instructions per row</td>
-<td>Did dynamic instruction work fall?</td>
-</tr>
-<tr>
-<td>Branch misses per row</td>
-<td>Did recovery costs change?</td>
-</tr>
-<tr>
-<td>Load/store and resource-pressure evidence</td>
-<td>Did the change reduce the resource that matters?</td>
-</tr>
-<tr>
-<td>Requests and supplier information per row</td>
-<td>How much counted traffic is there, and where is it served?</td>
-</tr>
-<tr>
-<td>Conditional occupancy</td>
-<td>How many requests overlap when any is pending?</td>
-</tr>
-<tr>
-<td>Pending-cycle fraction and unconditional occupancy</td>
-<td>How much of the time is that activity going on?</td>
-</tr>
-<tr>
-<td>Matching residence-time estimate</td>
-<td>Are requests taking longer to finish?</td>
-</tr>
-<tr>
-<td>Whole-decoder throughput and CPU cost</td>
-<td>Does the change improve the actual program?</td>
-</tr>
-</tbody>
-</table>
-<p>No single row is a verdict. The combination should support or contradict a prediction.</p>
-<h3 id="write-the-predictions-before-reading-the-results">Write the predictions before reading the results<a class="headerlink" href="#write-the-predictions-before-reading-the-results" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Hypothesis</th>
-<th>Result that would support it</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Too few independent loads become visible</td>
-<td>Better scheduling raises the useful request rate and cuts stage time, without extra traffic.</td>
-</tr>
-<tr>
-<td>Lane bookkeeping consumes a limiting resource</td>
-<td>A controlled layout or instruction change reduces that resource and the native stage cycles, with similar request behaviour.</td>
-</tr>
-<tr>
-<td>Translation is significant</td>
-<td>Verified mapping changes move page-walk activity and stage time together.</td>
-</tr>
-<tr>
-<td>LLC residency deteriorates</td>
-<td>Supplier and replacement evidence changes with a controlled live footprint.</td>
-</tr>
-<tr>
-<td>Shared request service is congested</td>
-<td>Residence time and slowdown respond to request pressure even with the footprint controlled.</td>
-</tr>
-<tr>
-<td>Output traffic interferes with traversal</td>
-<td>A targeted change to output lifetime or write traffic improves the affected stage and the production decoder.</td>
-</tr>
-</tbody>
-</table>
-<p>None of these interventions is pure. Changing instructions changes request timing; changing
-page size can change placement; changing traffic changes queueing. The experiment should
-record those consequences rather than assume them away.</p>
-<h3 id="respect-what-the-existing-harnesses-measure">Respect what the existing harnesses measure<a class="headerlink" href="#respect-what-the-existing-harnesses-measure" title="Permanent link">&para;</a></h3>
-<p><a href="https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/examples/sweep.rs"><code>examples/sweep.rs</code></a>
-already explores lane counts, prefetch hints and walker variants, keeps decode order, and has
-an optional separate PMU pass. Two normalisations need keeping in view:</p>
-<ul>
-<li>the sweep's byte denominator is BWT rows, while
-  <a href="https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/examples/phases.rs"><code>examples/phases.rs</code></a>
-  uses final decoded output;</li>
-<li>both report c/B by converting elapsed seconds with a supplied nominal clock, which isn't an
-  actual CPU-cycle count.</li>
-</ul>
-<p>A fixed nominal multiplier cancels in a time ratio, so comparisons remain useful. Those values
-just shouldn't be mixed with PMU cycles, or across different byte definitions.</p>
-<h3 id="use-counters-in-small-meaningful-groups">Use counters in small, meaningful groups<a class="headerlink" href="#use-counters-in-small-meaningful-groups" title="Permanent link">&para;</a></h3>
-<p>For phase measurements, use matching intervals and filters, keep the enabled and running
-times, and quantify the instrumentation's own cost. Avoid collecting so many events at once
-that multiplexing makes short, changing phases hard to read. If you take interval deltas with
-<code>perf_event_open</code>, handle the time-accounting baselines as well as the counter baselines:
-resetting the counts doesn't reset all the timing metadata
-(<a href="https://man7.org/linux/man-pages/man1/perf-stat.1.html">perf-stat</a>,
-<a href="https://man7.org/linux/man-pages/man2/perf_event_open.2.html">perf_event_open</a>).</p>
-<p>The next experiment should fill a specific gap, such as phase-specific request populations or
-actual traversal cycles, rather than reopen the already-negative unrolling experiment without
-a new hypothesis.</p>
-<h2 id="11-what-the-tools-can-and-cant-establish">11. What the tools can and can't establish<a class="headerlink" href="#11-what-the-tools-can-and-cant-establish" title="Permanent link">&para;</a></h2>
-<p><strong>Disassembly</strong> is essential for instruction questions. It shows whether independent loads
-stay visible, whether lane state is reloaded, whether bounds checks or spills remain, whether
-the intended simplification happened, and where code grew. It can't show the cache residency
-or service time a run experiences. Keep the binary that produced the measured result: a small
-source change can alter register allocation well beyond the lines you meant to change.</p>
-<p><strong>LLVM-MCA</strong> helps investigate dependencies and execution-resource pressure. Its
-documentation limits its memory model explicitly: it doesn't predict a workload's actual cache
-behaviour, and its default load latencies are optimistic
-(<a href="https://llvm.org/docs/CommandGuide/llvm-mca.html">llvm-mca</a>). "This sequence creates
-address-port pressure under this model" can be useful. "This proves the production walk has
-reached its real MLP limit" isn't justified, and neither is "this proves the prefetch arrives
-in time". Treat it as a source of candidate explanations and lower bounds.</p>
-<p><strong>Cachegrind</strong>'s reproducible instruction counts make instruction regressions easier to catch,
-but its manual cautions that the cache and branch simulations are basic
-(<a href="https://valgrind.org/docs/manual/cg-manual.html">Cachegrind</a>). A deterministic
-instruction-count improvement is real evidence of less work executed under that tool. It isn't
-a measurement of native out-of-order overlap, prefetch timeliness or contention.</p>
-<p><strong>Hardware counters</strong> observe defined events; they don't label causes. The CPU model, the
-event definition, filtering and errata all matter, and Intel and Arm events with similar names
-needn't count equivalent things. For Neoverse V1, Arm's own
-<a href="https://armkeil.blob.core.windows.net/developer/Files/pdf/white-paper/neoverse-v1-core-performance-analysis.pdf">performance-analysis methodology</a>
-is the right reference, not Intel's formulas. And stall events can overlap, so several of them
-can't simply be added into an exclusive account of elapsed time.</p>
-<h2 id="12-where-this-leaves-the-instruction-work">12. Where this leaves the instruction work<a class="headerlink" href="#12-where-this-leaves-the-instruction-work" title="Permanent link">&para;</a></h2>
-<p>Keep inspecting instructions: our evidence supports it. The isolated unrolling result shows
-that changing the instruction stream can materially improve the walk. But the evidence also
-supports a more specific objective than cutting instruction count:</p>
-<blockquote>
-<p>Find the dependency or resource that limits useful rows per cycle under the production
-workload, then change the instructions, state layout or memory traffic that consume it.</p>
-</blockquote>
-<p>For the four-worker decoder, the strongest current observation is that roughly the same
-retired work takes substantially more cycles. The open task is to attribute that increase
-across traversal, assembly, request service and the interaction with the other workers.</p>
-<p>Lemire's benchmark explains why independently advancing chains are valuable. It doesn't give
-us a universal concurrency number to aim for, prove that our 32-lane walker is saturated for
-the same reason, or settle whether the next profitable change is in bookkeeping, address
-generation, cache behaviour or traffic. Our own controlled results and their corrections are
-now the more specific evidence. The next step is to make those measurements phase-specific
-and consistent in their populations, with the complete decoder still the test of whether an
-optimisation earns its place.</p>
-<h2 id="further-reading">Further reading<a class="headerlink" href="#further-reading" title="Permanent link">&para;</a></h2>
-<p><strong><a href="https://www.cs.helsinki.fi/u/tpkarkka/publications/dcc2012.pdf">Slashing the Time for BWT Inversion</a></strong>,
-Kärkkäinen, Kempa and Puglisi, DCC 2012. Start here for the algorithm itself: it covers
-reducing costly accesses and overlapping inversions from several starting positions, which
-helps separate how much expensive work there is from how it's scheduled.</p>
-<p><strong><a href="https://pages.cs.wisc.edu/~markhill/restricted/isca04_mlp.pdf">Microarchitecture Optimizations for Exploiting Memory-Level Parallelism</a></strong>,
-Chou, Fahs and Abraham, ISCA 2004. Why finite instruction windows, execution structure,
-branches and other microarchitectural limits bound the memory overlap a core can expose: a
-firmer basis than treating MLP as a cache parameter.</p>
-<p><strong><a href="https://www.vldb.org/pvldb/vol9/p252-kocberber.pdf">Asynchronous Memory Access Chaining</a></strong>,
-Kocberber, Falsafi and Grot, PVLDB 2015. Suspended memory-bound tasks, uneven progress and the
-cost of scheduling them: the trade-off between keeping useful requests in flight and paying
-to manage their state. Its speedups aren't predictions for BWT.</p>
-<p><strong><a href="https://people.csail.mit.edu/rinard/paper/pact18.pdf">Cimple: Instruction and Memory Level Parallelism</a></strong>,
-Kiriansky et al., PACT 2018. The clearest treatment of ILP and MLP as working together rather
-than as competing explanations, including the limits from intervening instructions and
-execution windows.</p>
-<p><strong><a href="https://lemire.me/blog/2019/01/01/memory-level-parallelism-intel-skylake-versus-intel-cannonlake/">Travis Downs on the earlier benchmark</a></strong>.
-The measurement complications for this same benchmark family: several resources along the
-path, different occupancy times, and translation.</p>
-<p><strong>Intel's <a href="https://github.com/intel/perfmon/blob/main/SKL/events/skylake_core.json">event</a>
-and <a href="https://github.com/intel/perfmon/blob/main/SKL/metrics/skylake_metrics.json">metric</a>
-definitions.</strong> For the i9 investigations, the authority on what each ratio counts. Reading the
-exact numerator and denominator is worth more than any secondary article's name for a metric.</p>
+<p>The same caution applies to every counter we read: what it counts, over which cycles, for
+which requests. The <a href="../2026-11-02-memory-level-parallelism-notes/">measurement notes</a> go
+through the counters behind these figures, two earlier readings of them that we've withdrawn,
+and the measurements that would separate the remaining explanations.</p>
+<h3 id="exposing-work-isnt-the-same-as-completing-it">Exposing work isn't the same as completing it<a class="headerlink" href="#exposing-work-isnt-the-same-as-completing-it" title="Permanent link">&para;</a></h3>
+<p>ILP describes the freedom a program gives the processor: independent instructions it could
+run. MLP describes what the hardware manages to do with that freedom in the memory system:
+requests that actually overlap. Lemire's benchmark shows that turning the first into the
+second pays, and Ivica was right that the speedup alone can't tell you which resource it ran
+into. mibz2's walk shows the same thing from the other side. Removing a third of its
+instructions sped up the walk on its own and left the four-worker decoder where it was. And
+the four-worker decoder's extra cost was never in its instruction count: it retires the same
+instructions as one worker, and takes longer over them.</p>
+<p>So the next gain won't come from counting instructions, or from counting requests in flight.
+It will come from finding which resource the traversal is actually waiting on when four
+workers share the machine, and changing whatever consumes it.</p>
 <hr />
-<p><strong>Research records:</strong> <a href="../2026-11-02-memory-level-parallelism-notes/">Measurement notes and source register</a> · <a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-astra-fidelity/README.md">Unrolled walk: assembly comparison</a> · <a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md">Unrolled walk: i9 full-decoder results</a> · <a href="https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md">Decoder attribution on the i9</a> · <a href="https://github.com/lmmx/mibz2/blob/0156e1dad5ce4ebca78b4cb3d00276d3b6d64611/docs/journal/2026-11-01-bwt-memory-proposal.md">Inverse-BWT memory proposal, with corrections</a>.</p>
+<p><strong>Research records:</strong> <a href="../2026-11-02-memory-level-parallelism-notes/">Measurement notes, reading list and source register</a> · <a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-astra-fidelity/README.md">Unrolled walk: assembly comparison</a> · <a href="https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md">Unrolled walk: i9 decoder results</a> · <a href="https://github.com/lmmx/mibz2/blob/33e0e4ebac554bae03795bfb76e86440b33bae6b/docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md">Decoder attribution on the i9</a> · <a href="https://github.com/lmmx/mibz2/blob/0156e1dad5ce4ebca78b4cb3d00276d3b6d64611/docs/journal/2026-11-01-bwt-memory-proposal.md">Inverse-BWT memory proposal, with corrections</a>.</p>
 
 
 
@@ -3921,17 +2361,17 @@ exact numerator and denominator is worth more than any secondary article's name 
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=17be4df3b0b7"></script>
+        <script src="../../assets/javascripts/bench.js?v=d124f2fe2980"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=17be4df3b0b7"></script>
+        <script src="../../assets/javascripts/couriers.js?v=d124f2fe2980"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=17be4df3b0b7"></script>
+        <script src="../../assets/javascripts/blog.js?v=d124f2fe2980"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=17be4df3b0b7"></script>
+        <script src="../../assets/javascripts/frontier.js?v=d124f2fe2980"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=17be4df3b0b7"></script>
+        <script src="../../assets/javascripts/katex.js?v=d124f2fe2980"></script>
       
     
   </body>

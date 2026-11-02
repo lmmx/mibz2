@@ -2,15 +2,54 @@
 
 # Memory-level parallelism: measurement notes and source record
 
-The methodology behind [Memory-level parallelism in mibz2](<https://lmmx.github.io/mibz2/pr-preview/pr-135/blog/2026-11-02-memory-level-parallelism/index.md>): the 2022 benchmark in detail, throughput models, counter definitions and their populations, a measurement programme for mibz2, and the full source register.
+The detail behind [Memory-level parallelism in mibz2](<https://lmmx.github.io/mibz2/pr-preview/pr-135/blog/2026-11-02-memory-level-parallelism/index.md>): the 2022 exchange claim by claim, the benchmark, throughput models, counter definitions, a measurement programme for mibz2, a reading list and the full source register.
 
-2 November 2026 · 16 min read · [Source register](<#8-source-register-and-revision-pins>)
+2 November 2026 · 23 min read · [Source register](<#11-source-register-and-revision-pins>)
 
-These notes accompany [the main post](<https://lmmx.github.io/mibz2/pr-preview/pr-135/blog/2026-11-02-memory-level-parallelism/index.md>). Where the post already explains something fully, they link back to it rather than repeat it. They examine the screenshots reproduced in the post, the historical benchmark behind Daniel Lemire's June 2022 article, primary architecture literature, vendor counter documentation, and the source and archived experiments in `lmmx/mibz2`. Repository inspection is pinned to the revisions in the [source register](<#8-source-register-and-revision-pins>); sources were inspected on 2 November 2026. Performance results are attributed to their original experiments; no new native benchmark of mibz2 was run for these notes. Numbers in square brackets refer to the register.
+These notes are for readers who want the qualifications and definitions that [the main post](<https://lmmx.github.io/mibz2/pr-preview/pr-135/blog/2026-11-02-memory-level-parallelism/index.md>) leaves out to keep its argument moving. They can be read in any order. Nothing new was measured for either page: every result is attributed to the experiment that produced it, and repository sources are pinned to the revisions in the [source register](<#11-source-register-and-revision-pins>), inspected on 2 November 2026. Numbers in square brackets refer to the register.
 
-## 1\. The historical benchmark in detail
+## 1\. The 2022 exchange, claim by claim
 
-The linked repository is `lemire/testingmlp`. Its last published revision before the article is `23569032cd784366247c0381e4d532c9a82f3263`, from January 2021. That establishes the public implementation available at the time; it doesn't prove the author's exact local checkout or command line. Reading today's changed benchmark as if it were the 2022 implementation would be unsafe. A later post by the same author, \[29\], uses the evolved benchmark, and its settings shouldn't be conflated with the 2022 test.
+The main post reproduces the replies to Lemire's post \[1\] and explains the mechanism they argue about. Taking the claims one at a time:
+
+| Claim | Assessment |
+| --- | --- |
+| Interleaving increases available ILP. | Yes. Independent loads are independent instructions. |
+| It "breaks" the hard dependencies. | Imprecise: every dependency within each chain remains. Independent chains are supplied alongside them. |
+| IPC and instruction count should be measured. | Sensible. They characterise the change but don't by themselves prove its cause. |
+| Allocation and cache residency matter. | Yes. A random workload hitting L2 and one going to DRAM can give very different curves. |
+| The dependencies are "memory loads, not instructions". | Loose: loads are instructions. The useful distinction is whether the critical delay is a memory access or ordinary computation. |
+| Superscalar execution is a prerequisite for several outstanding loads. | Too strong as a general statement (section 2). |
+| An in-order processor can't benefit this way. | Also too strong. It depends on the design and on the order of the instructions. |
+
+### Reviewing, reproducing and explaining
+
+Three questions are easily run together. Review asks whether the algorithm, source, method and interpretation can be inspected; here they can, as Lemire said. Historical reproduction asks whether the exact 2022 executable, machine state, page mappings, compiler output and run conditions can be recreated, which needs more provenance than source code. Causal attribution asks whether the speedup establishes the mechanism claimed and rules out the alternatives, which needs suitable measurements or interventions. Open source helps with all three and settles only the first. A fair summary: the benchmark is a legitimate way to characterise overlapping dependent traversals, and the stronger readings of its output need more evidence.
+
+## 2\. What a core needs to keep several loads in flight
+
+| Property | What it describes |
+| --- | --- |
+| Superscalar issue | Starting more than one instruction in a cycle |
+| Out-of-order issue | Starting a later ready instruction before an earlier unready one |
+| Nonblocking memory machinery | Letting another request progress while an earlier miss is unresolved |
+| Memory-level parallelism | Memory operations overlapping in time, at a stated level and for a stated population |
+
+A core can issue one instruction per cycle and still keep several long-lived requests outstanding across many cycles. Berkeley's original Rocket paper describes a single-issue, in-order scalar pipeline with a nonblocking data cache that supports MLP \[9\]. Arm's Cortex-A55 optimisation guide documents three outstanding data-cache misses under particular pipeline-spacing conditions, despite in-order issue \[8\].
+
+That doesn't mean any in-order core matches an aggressive out-of-order one. An in-order design is much more sensitive to software ordering: if a dependent use blocks issue before the next independent load is reached, the independence can't help, so grouping independent loads before their uses matters. Out-of-order execution widens the processor's ability to find and exploit independence on its own; it isn't what defines MLP.
+
+## 3\. The historical benchmark in detail
+
+The linked repository is `lemire/testingmlp`. Its last published revision before the article is `23569032cd784366247c0381e4d532c9a82f3263`, from January 2021. That establishes the public implementation available at the time; it doesn't prove the author's exact local checkout or command line. Reading today's changed benchmark as if it were the 2022 implementation would be unsafe. A later post by the same author \[29\] uses the evolved benchmark, and its settings shouldn't be conflated with the 2022 test. The 2022 post reports approximately:
+
+| Reported quantity | Ice Lake system | Graviton 3 system |
+| --- | ---: | ---: |
+| Single-lane access time | 90 ns | 120 ns |
+| Peak implied bandwidth | 12 GB/s | 9 GB/s |
+| Described simultaneous loads | about 25 | about 19 |
+
+with Ubuntu 22.04, GCC 11 and 4 KiB pages. These are measurements of those configurations, not permanent limits attached to the processor names.
 
 ### Construction
 
@@ -26,13 +65,13 @@ The program computes an implied bandwidth: completed logical accesses times 64 b
 
 Actual traffic differs with cache hits, several entries sharing a line, merged requests, hardware prefetches, page-table reads and other memory activity. Eight 64-bit entries fit in one 64-byte line, so a large random array doesn't guarantee a DRAM transaction for every load. And with several lanes, the ns/hit column is elapsed time divided by aggregate accesses: the reciprocal of throughput, not the service latency of one request.
 
-### What a fair review asks
+### What a stricter review would ask
 
-The design deliberately makes long-latency dependent loads dominant and uses independent chains to expose overlap. That's a sensible microbenchmark. A stricter review would also ask how much work the compiler adds, where requests are served, whether translation limits the result, how stable the curve is, and how loaded latency changes as lanes are added. The appropriate conclusion is neither that the method is invalid nor that other measurements are unnecessary: it's a useful characterisation with a well-defined workload and limits to its interpretation.
+The design deliberately makes long-latency dependent loads dominant and uses independent chains to expose overlap. That's a sensible microbenchmark. A stricter review would also ask how much work the compiler adds, where requests are served, whether translation limits the result, how stable the curve is, and how loaded latency changes as lanes are added.
 
-## 2\. Saturation, translation and read size
+## 4\. Saturation, translation and read size
 
-The historical code reports a possible number of parallel paths when another lane improves time by less than one percent. A noisy point, a spill threshold or a different resource limit can produce such a knee, so a plateau is an observation that needs interpreting \[2\]. The main post lists [the four quantities often called MLP](<https://lmmx.github.io/mibz2/pr-preview/pr-135/blog/2026-11-02-memory-level-parallelism/#4-four-different-things-called-mlp>), which need not be equal: a program may have 32 active lanes and eight outstanding requests on average; a ten-entry resource may contribute to a system that supports a different count at another boundary; and demand loads, hardware prefetches and page walks may occupy overlapping but different resources.
+The historical code reports a possible number of parallel paths when another lane improves time by less than one percent. A noisy point, a spill threshold or a different resource limit can produce such a knee, so a plateau is an observation that needs interpreting \[2\]. The four quantities often called MLP (software independence, hardware capacity, achieved occupancy, speedup) need not be equal: a program may have 32 active lanes and eight outstanding requests on average; a ten-entry resource may contribute to a system that supports a different count at another boundary; and demand loads, hardware prefetches and page walks may occupy overlapping but different resources.
 
 Travis Downs, a collaborator on the benchmark, explains in the 2019 discussion that the core, the uncore, the memory controller and DRAM all affect the observed overlap. Taking the smallest queue capacity is insufficient because a request holds each resource for a different time. The same discussion shows page-size changes materially moving the saturation point \[10\].
 
@@ -46,11 +85,11 @@ For an application comparison, default page behaviour can legitimately be part o
 
 ### Read size
 
-The exchange's question about how large each read is matters because there are several granularities: the operand size, the cache-line fill, the useful payload consumed, and the page used for translation. A four-byte lookup can need a 64-byte fill, two adjacent four-byte values may share that line, and an access crossing a line boundary may need two. Widening an operand from four to eight bytes doesn't automatically double the memory cost, while growing a node from one line to two can matter a great deal.
+There are several granularities: the operand size, the cache-line fill, the useful payload consumed, and the page used for translation. A four-byte lookup can need a 64-byte fill, two adjacent four-byte values may share that line, and an access crossing a line boundary may need two. Widening an operand from four to eight bytes doesn't automatically double the memory cost, while growing a node from one line to two can matter a great deal.
 
 The right bandwidth denominator depends on the question. Useful decoded bytes describe the application's productivity; transferred cache lines describe a memory interface; retired loads describe instructions. None substitutes for the others.
 
-## 3\. Throughput models
+## 5\. Throughput models
 
 ### A lower-bound envelope
 
@@ -64,45 +103,72 @@ For a specific resource \\(j\\), if a useful step needs \\(m\_j\\) requests that
 
 \\\[ \\text{useful steps per second} \\le \\frac{Q\_j}{m\_j W\_j} \\\]
 
-That is why taking \\(\\min(Q\_j)\\) across unrelated queues is wrong: their occupancy times and request populations differ.
+That is why taking \\(\\min(Q\_j)\\) across unrelated queues is wrong: their occupancy times and request populations differ. A small queue passed through quickly can sustain more throughput than a large one whose entries stay occupied.
 
-### The bottleneck moves
+### How fewer instructions can help
 
-With one chain, \\(L/K\\) may dominate, and removing independent bookkeeping can do little because the core is waiting for the next address. More chains lower that floor until something else dominates. The main post lists [the distinct ways fewer instructions can then help](<https://lmmx.github.io/mibz2/pr-preview/pr-135/blog/2026-11-02-memory-level-parallelism/#5-why-instructions-matter-and-when-counting-them-misleads>).
+Once enough chains are exposed that \\(L/K\\) no longer dominates, an instruction change may:
 
-More lanes can also make things worse. Lane state may spill to memory, code may grow, output streams may take cache space and write buffers, scheduling can get more expensive, and more concurrency may raise memory queueing and so \\(L\\) itself. AMAC and Cimple arrange independent memory-bound tasks within one thread and confront exactly these scheduling costs and window limits. Their value here is the mechanism and the experimental framing, not their headline speedups or optimal group sizes \[6, 7\].
+- shorten the dependency that produces the next address;
+- reduce load/store or address-generation pressure;
+- reduce front-end work;
+- reduce register pressure and spills;
+- fit more useful independent loads into the finite instruction window;
+- reduce branch or bookkeeping overhead;
+- change prefetch timing.
+
+These are different mechanisms. The finite window is the most relevant here: with many independent chains in the source, the processor still has to reach their loads before its tracking resources fill, so removing intervening work can raise the MLP achieved without changing the memory hierarchy. This interaction is central to the ISCA MLP work and to Cimple \[5, 7\].
+
+More lanes can also make things worse. Lane state may spill to memory, code may grow, output streams may take cache space and write buffers, scheduling can get more expensive, and more concurrency may raise memory queueing and so \\(L\\) itself. AMAC and Cimple arrange independent memory-bound tasks within one thread and confront exactly these costs. Their value here is the mechanism and the experimental framing, not their headline speedups or optimal group sizes \[6, 7\].
+
+### IPC is a ratio, not a score
+
+Over one interval, \\(\\mathrm{IPC} = I/C\\), and cycles per useful byte \\(= (I/B)/\\mathrm{IPC}\\), where \\(B\\) is useful output. A hypothetical change:
+
+| Version | Instructions/byte | IPC | Cycles/byte |
+| --- | ---: | ---: | ---: |
+| A | 12 | 3.0 | 4.0 |
+| B | 8 | 2.5 | 3.2 |
+
+B uses 20% fewer cycles per byte with lower IPC. Conversely, extra easy work can raise IPC without raising useful throughput. A rule like "IPC below one means memory-bound" is too crude; Intel's and Arm's methodologies use several categories and follow-up measurements \[14, 31\].
+
+An instruction can expand into several back-end operations, and fusion can change some of the accounting without removing all of the work, so two sequences with similar instruction counts can load the ports, store machinery and front end quite differently. For the walk, the useful questions are which instructions delay the next table address, which consume the resource that currently limits it, which make memory accesses only to maintain lane state, and which occupy the window while more useful loads wait to become visible.
+
+Misses per thousand instructions can mislead during an instruction optimisation: halve the instructions with misses per output byte unchanged, and MPKI doubles. Track misses and requests per BWT row or per final output byte as well.
 
 ### Little's law needs a boundary and a population
 
-For a stable, consistently measured request population:
+For a stable, consistently measured request population, \\(\\overline{N} = \\lambda \\overline{W}\\): average outstanding requests equal the completion rate times the average residence time. If each counted request transfers one line of \\(S\\) bytes, line bandwidth is about \\(\\overline{N} S / \\overline{W}\\). But a retired load, a fill-buffer allocation, an L2-miss transaction and a DRAM read needn't be the same population, and the latency of a lightly loaded serial chain needn't be the latency of a heavily loaded multi-chain test: queueing, the source of the line and prefetching all change it. Higher occupancy can mean more useful overlap, or slower service.
 
-```text
-average outstanding requests = completed requests per second × average seconds per request
-```
+## 6\. Counter definitions and their populations
 
-If each counted request transfers one line of \\(S\\) bytes, the line bandwidth is about outstanding × \\(S\\) ÷ latency. But an application load, a fill-buffer allocation and an offcore transaction needn't correspond one to one.
+Let \\(O\\) be an occupancy counter that adds the number of qualifying outstanding requests every cycle, \\(A\\) the number of matching requests, \\(P\\) the cycles with at least one pending, and \\(C\\) all relevant cycles.
 
-Time-weighted occupancy needs no CPU-specific assumption. Count the outstanding requests on every cycle and add the counts: a request present for 50 cycles contributes 50. Dividing the sum by total cycles gives average occupancy; dividing it by the number of matching requests gives average residence time, with the boundaries handled appropriately. The main post's [figure](<https://lmmx.github.io/mibz2/pr-preview/pr-135/blog/2026-11-02-memory-level-parallelism/#9-counters-and-their-denominators>) works one small trace through all three ratios.
+| Ratio | Units | Meaning |
+| --- | --- | --- |
+| \\(O/A\\) | cycles per request | Average residence time |
+| \\(O/P\\) | requests | Average occupancy, given that a request is pending |
+| \\(O/C\\) | requests | Average occupancy over all measured cycles |
 
-Substituting unloaded serial latency for loaded multi-chain latency is only an approximation: queueing, the source of the line and prefetching can all change latency. A higher outstanding count can mean slower service rather than more useful progress, so occupancy should be read together with throughput and residence time.
-
-## 4\. Counter definitions and their populations
-
-The main post covers [the three denominators](<https://lmmx.github.io/mibz2/pr-preview/pr-135/blog/2026-11-02-memory-level-parallelism/#9-counters-and-their-denominators>), the conditional L1 metric, the offcore ratio and `FB_HIT`. These notes add the definitions and the cases that need most care.
+These follow from what is accumulated. Before applying them, check that numerator and denominator cover the same requests, interval, privilege filters and hardware scope, and handle requests already outstanding at the start of a short window or still outstanding at its end.
 
 ### The L1 demand-associated metric
 
-Intel defines an MLP metric as `L1D_PEND_MISS.PENDING` divided by `L1D_PEND_MISS.PENDING_CYCLES`. Its event definition concerns demand-associated fill buffers. A fill a prefetch started may begin to count once a demand access joins it, and page-walk reads and split accesses complicate the correspondence with source-level loads. It isn't a direct count of independent BWT chains or of DRAM requests \[11, 12\].
+Intel defines an MLP metric as `L1D_PEND_MISS.PENDING` divided by `L1D_PEND_MISS.PENDING_CYCLES` \[11, 12\]. Its event definition concerns demand-associated fill buffers. A fill a prefetch started may begin to count once a demand access joins it, and page-walk reads and split accesses complicate the correspondence with source-level loads. It isn't a count of independent BWT chains, of total prefetch concurrency or of DRAM requests.
 
-When comparing workers, sum the numerators and denominators before forming a weighted aggregate. That gives a cycle-weighted average per logical processor, not the total number of requests outstanding at once across the machine. An unweighted average of per-thread ratios can hide the fact that some threads or phases account for much more of the time.
+In our archive the conditional value stays near 2.18 from one worker to four while the share of cycles with a pending demand miss rises from about 12% to 30% \[24\]. As an illustration, \\(2.18 \\times 0.12 \\approx 0.26\\) and \\(2.18 \\times 0.30 \\approx 0.65\\): an unchanged conditional average beside a large rise in occupancy over all cycles. Exact aggregation should use the matching raw totals, and because these are process-wide figures, a shift in the time spent in each phase moves them too.
+
+When comparing workers, sum the numerators and denominators before forming a weighted aggregate. That gives a cycle-weighted average per logical processor, not the total number of requests outstanding at once across the machine. An unweighted average of per-thread ratios can give short-lived or lightly loaded threads too much weight.
 
 ### The offcore ratio
 
 For the relevant Intel event family, `OFFCORE_REQUESTS_OUTSTANDING.ALL_DATA_RD` integrates outstanding data reads from an L2 miss to completion at the superqueue boundary. Divided by `OFFCORE_REQUESTS.ALL_DATA_RD`, it gives cycles per request. The population mixes demand reads, prefetches and relevant page-walk reads, and can include requests served by the LLC, so it isn't automatically DRAM latency \[11\].
 
+Our archived median rises from roughly 39 to 58 cycles per request with four workers (an arithmetic mean gives about 41 to 58) \[24, 25\]. That's consistent with a longer average residence for the counted population. It doesn't prove that an unchanged set of useful BWT requests each became slower by that amount: the source mix, phase mix and request mix can all change.
+
 ### Prefetch and demand-only counts
 
-A line can arrive before its demand use, or a demand access can join a fill already in flight. A retired demand-load classification describes that load's encounter with the hierarchy, not necessarily the line's full history or where it ultimately came from. `MEM_LOAD_RETIRED.FB_HIT` says a load merged into a still-pending fill for the same line; the initiating request may have been demand or prefetch, so it doesn't show that the corresponding share of useful work was supplied by prefetch \[11\].
+A line can arrive before its demand use, or a demand access can join a fill already in flight. A retired demand-load classification describes that load's encounter with the hierarchy, not necessarily the line's full history. `MEM_LOAD_RETIRED.FB_HIT` says a load merged into a still-pending fill for the same line; the initiating request may have been demand or prefetch, so it doesn't show that the corresponding share of work was supplied by prefetch \[11\]. For the walk, which prefetches every next row, counting only demand loads that miss in L3 can leave out much of the expensive traffic.
 
 ### Two withdrawn readings
 
@@ -110,61 +176,92 @@ The corrected mibz2 memory proposal withdraws an earlier estimate that about 98%
 
 ### Counter values need causal context
 
-More outstanding requests might mean more useful parallel work, or slower service. More DRAM writes might cause contention, or result from evicting dirty data. Fewer retired demand misses might reflect effective prefetching while total traffic grows. A high cache-hit fraction may describe a small, unrepresentative subset of all requests.
+More outstanding requests might mean more useful parallel work, or slower service. More DRAM writes might cause contention, or result from evicting dirty data. Fewer retired demand misses might reflect effective prefetching while total traffic grows. Events can also overlap or nest, so adding several stall counts is invalid when one cycle belongs to more than one; and sampling has different semantics from counting. A coherent set of counters is evidence for distinguishing hypotheses, not a self-interpreting explanation.
 
-Events can also overlap or nest: adding several stall counts is invalid when one cycle belongs to more than one event. Sampling has different semantics from counting, and a sampled instruction address may not identify every contributing cause. A coherent set of counters is evidence for distinguishing hypotheses, not a self-interpreting explanation.
+## 7\. A measurement programme for mibz2
 
-## 5\. A measurement programme for mibz2
+The aim is to resolve the remaining ambiguity without repeating experiments that are already closed, such as the 32-lane unroll.
 
-The aim is to resolve the remaining ambiguity without repeating experiments the repository has already closed. There are two tracks: a synthetic characterisation to understand a machine, and a production-shaped stage investigation to understand this decoder. The main post gives [the measurement sheet and the predictions](<https://lmmx.github.io/mibz2/pr-preview/pr-135/blog/2026-11-02-memory-level-parallelism/#10-what-the-next-experiment-needs-to-distinguish>); these notes add how each track would be run.
+### Objectives, phases and axes
+
+For the production decoder the objectives are wall-clock decoded throughput, CPU-seconds per GB, behaviour across blocks and memory footprint; for understanding the walk, actual cycles, nanoseconds, requests, instructions and traffic per BWT row. A stage improvement and a decoder improvement are separate results.
+
+Measure table construction, traversal, segment assembly and the later RLE and CRC work separately, and keep the whole-decoder test, using the production sequence of blocks and buffer lifetimes: a prebuilt table traversed repeatedly can be much warmer than one met during real decoding. Keep lane count, segment count, prefetch policy, worker count, lane-state layout and output-buffer lifetimes as separate axes. More lanes try to improve overlap within a core; more workers add cores and pressure on shared resources.
+
+### What to collect
+
+| Measurement | What it helps answer |
+| --- | --- |
+| Actual cycles and ns per BWT row | Did useful service improve, and did the frequency change? |
+| Retired instructions per row | Did dynamic instruction work fall? |
+| Branch misses per row | Did recovery costs change? |
+| Load/store and resource-pressure evidence | Did the change reduce the resource that matters? |
+| Requests and supplier information per row | How much counted traffic is there, and where is it served? |
+| Conditional occupancy | How many requests overlap when any is pending? |
+| Pending-cycle fraction and unconditional occupancy | How much of the time is that activity going on? |
+| Matching residence-time estimate | Are requests taking longer to finish? |
+| Whole-decoder throughput and CPU cost | Does the change improve the actual program? |
+
+No single row is a verdict; the combination should support or contradict a prediction written down beforehand:
+
+| Hypothesis | Result that would support it |
+| --- | --- |
+| Too few independent loads become visible | Better scheduling raises the useful request rate and cuts stage time, without extra traffic. |
+| Lane bookkeeping consumes a limiting resource | A controlled layout or instruction change reduces that resource and the native stage cycles, with similar request behaviour. |
+| Translation is significant | Verified mapping changes move page-walk activity and stage time together. |
+| LLC residency deteriorates | Supplier and replacement evidence changes with a controlled live footprint. |
+| Shared request service is congested | Residence time and slowdown respond to request pressure even with the footprint controlled. |
+| Output traffic interferes with traversal | A targeted change to output lifetime or write traffic improves the affected stage and the decoder. |
+
+None of these interventions is pure: changing instructions changes request timing, changing page size can change placement, and changing traffic changes queueing. Record those consequences rather than assume them away.
 
 ### Track A: the machine and the method
 
-Compare a single chain, an unrolled version of that same chain, and several interleaved independent chains, holding useful accesses fixed. That separates amortised loop control from inter-chain overlap more cleanly than comparing one chain only with many.
-
-Sweep the active working set through the cache levels and beyond the LLC, and say whether total footprint or footprint per chain is held fixed. Vary node spacing independently of payload size. Compare verified page mappings, not just allocation requests. Establish single-core behaviour before adding physical cores.
-
-Inspect the generated loop at each important lane count, recording spills, branches, instruction size and memory-operation counts. Keep the executable, compiler flags, the input permutation or its hash, affinity, page backing and raw timings. These controls make a knee easier to interpret without pretending to isolate one hardware structure perfectly.
+Compare a single chain, an unrolled version of that same chain, and several interleaved independent chains, holding useful accesses fixed. That separates amortised loop control from inter-chain overlap more cleanly than comparing one chain only with many. Sweep the active working set through the cache levels and beyond the LLC, saying whether total footprint or footprint per chain is held fixed; vary node spacing independently of payload size; compare verified page mappings, not just allocation requests; and establish single-core behaviour before adding cores. Inspect the generated loop at each important lane count, and keep the executable, compiler flags, the input permutation or its hash, affinity, page backing and raw timings.
 
 ### Track B: the decoder's limiting work
 
-Use the production sequence of blocks and buffer lifetimes. A prebuilt table traversed repeatedly can be much warmer than one met during decoding; keep cold and warm microbenchmarks if useful, label the conditions, and use the production workload for the shipping decision. Separate table construction, traversal, segment assembly and the later RLE and CRC work, and keep the whole-decoder benchmark, because removing a copy, changing a buffer or growing the code can affect another phase or the other workers. Keep lane count, segment count, prefetch policy and worker count as separate axes.
+Use the production workload for any shipping decision, keep cold and warm microbenchmarks if useful and label them, and keep the whole-decoder benchmark beside every stage measurement, because removing a copy, changing a buffer or growing the code can affect another phase or the other workers.
 
-### Measurement mechanics
+### Counter mechanics and the existing harnesses
 
-Small Linux perf event groups can collect matching counters together. For per-thread phase measurements, bracket a substantial block or batch, use consistent filters, keep the enabled and running times, and reject unscheduled groups. Subtract the time metadata as well as the counts when taking interval deltas: resetting counts doesn't reset all the time accounting. Measure the cost of an empty bracket, and keep the original uninstrumented timing \[17, 18\].
+Small Linux perf event groups can collect matching counters together. For per-thread phase measurements, bracket a substantial block or batch, use consistent filters, keep the enabled and running times, and reject unscheduled groups. Subtract the time metadata as well as the counts when taking interval deltas: resetting counts doesn't reset all the time accounting. Measure the cost of an empty bracket and keep the uninstrumented timing \[17, 18\]. Prefer a few purpose-built groups to one oversized collection that multiplexes heavily, since a scaled count assumes the scheduled intervals represent the whole interval.
 
-Prefer a few purpose-built groups to one oversized collection that multiplexes heavily. A scaled count assumes the scheduled intervals represent the whole interval, which becomes fragile for short or changing phases. Weigh any gain in precision against the instrumentation's cost and its effect on code layout.
+The current sweep covers several lane counts, prefetch hints, and room against flagged walkers; it keeps decode order and has an optional separate PMU pass, and its byte denominator is BWT rows. The phases example reports per final decoded byte. Both report c/B by converting elapsed seconds with a supplied nominal clock, which isn't a PMU cycle count; a fixed multiplier cancels in a ratio, but those values shouldn't be mixed with PMU cycles or across byte definitions \[26, 27\].
 
-The current sweep covers several lane counts, prefetch hints, and room against flagged walkers; it keeps decode order and has an optional separate PMU pass. Its byte denominator is BWT rows. The phases example reports per final decoded byte, and its c/B column is a nominal-clock conversion \[26, 27\]. Those distinctions should be recorded beside every result.
+## 8\. What the tools can establish
 
-## 6\. Tools: further notes
+**Disassembly** shows whether independent loads stay visible, whether lane state is reloaded, whether bounds checks or spills remain, and where code grew. It can't show the cache residency or service time a run experiences. Static intuition from the source is especially unreliable for a compiler-managed array of lane state, so archive the binary behind each timed result.
 
-The main post covers [what each tool can establish](<https://lmmx.github.io/mibz2/pr-preview/pr-135/blog/2026-11-02-memory-level-parallelism/#11-what-the-tools-can-and-cant-establish>). Three further points:
+**LLVM-MCA** helps investigate dependencies and execution-resource pressure, but it doesn't predict a workload's cache behaviour and its default load latencies are optimistic \[15\]. Treat it as a source of candidate explanations and lower bounds; a prediction that disagrees with measured time tells you about the model's assumptions.
 
-- Static intuition from the source is especially unreliable for a compiler-managed array of lane state. A high-level refactor may produce identical machine code, or a small change may alter register allocation across the loop. Archive the binary that produced each timed result.
-- An LLVM-MCA prediction that disagrees with measured time tells you about missing assumptions in the model; it doesn't show that the measurement must be wrong \[15\].
-- Cross-ISA IPC is unsuitable as a standalone score: x86 and AArch64 can express the same useful computation in different instruction sequences. Compare useful work per unit time, then use each ISA's own counters to explain the result \[13, 14\].
+**Cachegrind** gives reproducible instruction counts that make regressions easy to catch, but its cache and branch simulations are basic \[16\]. A deterministic instruction-count improvement is evidence of less work executed under that tool, not of native overlap, prefetch timeliness or contention.
 
-Top-down categories narrow a problem; they don't replace studying the useful work and the intervention. A lower-level metric may overlap another or rest on an approximation, and a high retiring fraction can still include avoidable work \[31\].
+**Hardware counters** observe defined events; they don't label causes. The CPU model, event definition, filtering and errata all matter, and Intel and Arm events with similar names needn't count equivalent things \[13, 14\]. Cross-ISA IPC is unsuitable as a standalone score, since x86 and AArch64 express the same work in different instruction sequences. Top-down categories narrow a problem without replacing a study of the useful work and the intervention \[31\].
 
-## 7\. Open questions
+## 9\. Open questions
 
-### Prefetch lead time is coupled to everything else
+**Prefetch lead time is coupled to everything else.** The walk prefetches one link ahead, but the time before demand returns to a lane depends on the lane count and on the time spent advancing the other lanes. Removing bookkeeping shortens that interval, so an optimisation may consume a prefetched line sooner and expose more of its latency even while cutting instructions. That is a hypothesis drawn from the schedule, not a claim that it caused the archived unrolling result; testing it needs timing and request-population evidence. A second unknown hop can't be prefetched by adding another hint: its address has to be discovered first, or a representation has to precompute a shortcut, with its own build cost, footprint and cache behaviour.
 
-The walk prefetches one link ahead, but the time before demand returns to a lane depends on the lane count and on the time spent advancing the other lanes. Removing bookkeeping can shorten that interval, so an optimisation may consume a prefetched line sooner and expose more of its latency, even while cutting instructions. That is a hypothesis drawn from the schedule, not a claim that it caused the archived unrolling result; testing it needs timing and request-population evidence. It is also why lane count and instruction cost shouldn't be tuned independently.
+**Local and end-to-end objectives diverge.** For a phase taking fraction \\(f\\) of total time, speeding it up by \\(s\\) gives an idealised whole-program speedup of \\(1 / ((1 - f) + f/s)\\), if nothing else changes, and in a concurrent decoder something else usually does. Wall throughput and CPU cost can also diverge: four workers finish sooner while using more CPU-seconds per GB.
 
-A second unknown pointer hop usually can't be prefetched by adding another hint: its address has to be discovered first, or a representation has to precompute a shortcut. Shortcuts change build cost, footprint and cache behaviour, and their full cost has to be counted.
+**What remains unknown.** The public article doesn't establish the exact 2022 binary and runtime configuration, and its measured knee can't identify a hardware queue's capacity. For mibz2, the archived evidence doesn't yet divide the four-worker penalty among LLC capacity, request congestion, writeback interference, prefetch timing and translation, and the static address-port model alone doesn't establish the limiting resource of the unrolled candidate.
 
-### Local and end-to-end objectives
+## 10\. Further reading
 
-For a phase taking fraction \\(f\\) of total time, speeding it up by \\(s\\) gives an idealised whole-program speedup of \\(1 / ((1 - f) + f/s)\\), if nothing else changes. In a concurrent decoder that condition matters: changing one phase can alter shared-memory pressure, scheduling and its overlap with other phases. Wall throughput and CPU cost can also diverge: four workers may finish sooner while using more CPU-seconds per GB, and a small CPU saving may barely change a saturated pipeline's elapsed time.
+**Kärkkäinen, Kempa and Puglisi, Slashing the Time for BWT Inversion** \[19\]. The algorithm itself: reducing costly accesses and overlapping inversions from several starting positions, which separates how much expensive work there is from how it's scheduled.
 
-### What remains unknown
+**Chou, Fahs and Abraham, Microarchitecture Optimizations for Exploiting Memory-Level Parallelism** \[5\]. Why finite instruction windows, execution structure and branches bound the memory overlap a core can expose.
 
-The public article doesn't establish the exact 2022 binary and full runtime configuration, and its measured knee can't uniquely identify a hardware queue's capacity. For mibz2, the archived evidence doesn't yet divide the four-worker penalty among LLC capacity, request congestion, writeback interference, prefetch timing and translation; nor does the static address-port model alone establish the limiting resource of the unrolled candidate. These are bounded, testable uncertainties.
+**Kocberber, Falsafi and Grot, Asynchronous Memory Access Chaining** \[6\]. Suspended memory-bound tasks, uneven progress and the cost of scheduling them. Its speedups aren't predictions for BWT.
 
-## 8\. Source register and revision pins
+**Kiriansky et al., Cimple: Instruction and Memory Level Parallelism** \[7\]. ILP and MLP as working together, including the limits from intervening instructions and execution windows.
+
+**Travis Downs on the earlier benchmark** \[10\]. Several resources along the path, different occupancy times, and translation, for this same benchmark family.
+
+**Intel's event and metric definitions** \[11, 12\]. What each ratio counts. Reading the exact numerator and denominator is worth more than any secondary name for a metric.
+
+## 11\. Source register and revision pins
 
 Primary publications, original benchmark implementations, manufacturer and tool documentation, and the repository's own experimental records. Publication dates follow the documents' own contents.
 
