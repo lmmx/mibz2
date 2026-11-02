@@ -1,7 +1,7 @@
 ---
-title: "A smaller inverse-BWT table wins with four workers"
+title: "Revisiting the space–time tradeoff in BWT inversion"
 image: assets/social/blog-2026-11-02-smaller-table-four-workers.png
-description: "Its compressed records cost 15% more CPU time on one core and 16% less with four workers. Next: can it be built cheaply enough?"
+description: "A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result."
 ---
 
 <div class="post-hero" markdown>
@@ -11,14 +11,14 @@ description: "Its compressed records cost 15% more CPU time on one core and 16% 
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# A smaller inverse-BWT table wins with four workers
+# Revisiting the space–⁠time tradeoff in BWT inversion
 
-A compressed navigation table for the inverse BWT costs 15% more CPU time on one core, and
-saves 16% when four workers traverse at once. We can now measure the advantage; we still
-have to explain it, and to build the table cheaply.
+Our first compact navigation table saved memory but made each lookup too costly. A
+redesigned record gives up a little density to make navigation cheaper—and the compact
+traversal is now faster under contention. Building it for the full decoder is the next test.
 {: .post-dek }
 
-2 November 2026 · 10 min read · [Traversal result](#the-four-worker-reversal)
+2 November 2026 · 12 min read · [Research result](#the-first-positive-traversal-result)
 {: .post-meta }
 
 </div>
@@ -27,107 +27,199 @@ have to explain it, and to build the table cheaply.
 
 </div>
 
-When bzip2 compresses a block, it rearranges the bytes with the Burrows–Wheeler transform
-(BWT). Putting them back in order means following a chain of row numbers: each lookup in a
-table says which row to visit next, and until that entry arrives the next address is
-unknown. mibz2's decoder [walks that chain](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs#L927-L961)
-for every block it decodes.
+In 2001, Julian Seward published *[Space-time Tradeoffs in the Inverse B-W
+Transform](https://doi.org/10.1109/DCC.2001.917175)*. The problem is still recognisable in a
+modern bzip2 decoder. The Burrows–Wheeler transform (BWT) rearranges a block’s characters to
+make them easier to compress. To recover their original order, the decoder repeatedly looks
+up a row in a navigation table; the value it finds tells it which row to visit next. Keeping
+the information readily available makes each step quick, but consumes memory. Representing
+it more compactly saves space and usually makes each lookup more involved.
 
-It already hides some of the waiting. As [32 lanes, 8.6 chains](2026-10-31-room-walk-overlap.md)
-describes, the walk advances 32 separate pieces of the chain in turn, so the processor can
-work on one while another waits for its entry. The next problem appears when four cores
-each walk a different block. [Investigating inverse-BWT memory interference](2026-11-01-inverse-bwt-memory-interference.md)
-found that decoding with four workers costs more CPU time per byte than decoding with one:
-the workers finish sooner together, but compete for the shared memory system on the way.
+Seward investigated several implementations of that exchange. In a merged representation,
+the next-row information and the output character are kept together for fast traversal. An
+alternative, *indexF*, retrieves the character from the sorted first column rather than
+storing it beside every link. It saves working memory at the cost of more work during
+inversion. He also argued that inversion speed is limited by how fast cache misses can be
+serviced. Our [frontier page](../benchmarks/frontier.md) sets out the `mergedTL`/`indexF`
+distinction and where mibz2 sits on it. This is not merely a theoretical concern: [bzip2's
+own manual](https://sourceware.org/bzip2/manual/manual.html) records that a single-array
+inverse BWT "significantly speeds up decompression, presumably because it reduces the number
+of cache misses". Later research, including [Kärkkäinen, Kempa and Puglisi
+(2012)](https://www.cs.helsinki.fi/u/tpkarkka/publications/dcc2012.pdf), attacked the number
+and cost of those misses more directly.
 
-A full block has up to 900,000 rows, and mibz2's navigation table stores 4 bytes for each:
-3.6 MB per block, or 14.4 MB for four blocks at once, before any of the workers' other
-buffers. Could the same links be stored in much less space, and would the lighter memory
-load make up for the extra work of reading a compressed entry?
+But the trade-off looks different when we change what is competing for memory.
 
-The first valid comparison answers both ways at once. The compact walk costs 14.85% more
-CPU time on one core and 15.95% less with four workers walking together. That result is
-about this traversal, measured on its own; what it means for the whole decoder is still
-open.
+In a [29 October journal
+entry](https://github.com/lmmx/mibz2/blob/f384fb424b19e5e5e1c5e27559dd0eb916e98123/docs/journal/2026-10-29-frontier.md),
+we asked whether a navigation structure that was slower for one isolated block might be
+faster when several blocks were being decoded concurrently. Four workers have four
+navigation tables, all using the same shared cache and the hardware behind it. A smaller
+representation might relieve that competition enough to pay for the additional instructions
+needed to read it.
 
-## A smaller table, a busier lookup
+The hope was not simply to choose another point along a space-for-speed compromise. It was
+to improve the [machine-level throughput–memory trade-off](../benchmarks/frontier.md): to
+see whether less navigation storage and greater completed throughput could coexist under the
+same workload. The difference is important. A faster traversal on a prebuilt table is
+evidence for this possibility; a faster *complete decoder* with lower measured memory use
+would be the stronger result.
 
-The [census of the navigation table](2026-10-29-compact-navigation-tables.md) found that
-most of its links follow simple patterns. An earlier format built on that,
-[FOR-14](https://github.com/lmmx/mibz2/pull/130), packed 14-bit offsets into fixed records.
-It halved the table, but extracting the packed bits made each step so much longer that the
-walk lost even with four workers, where it took 1.45 times as long as the ordinary walk.
+Our earlier [investigation of memory
+interference](2026-11-01-inverse-bwt-memory-interference.md) made that question concrete.
+Four-worker decoding finished sooner than one-worker decoding but used substantially more
+total CPU time per decoded byte, despite retiring nearly the same instructions. We had a
+reason to suspect a shared-memory penalty. We did not yet know whether a compact
+representation could reduce it.
 
-Compact30 keeps each offset directly addressable instead. Its name means thirty rows per
-record, not thirty-bit pointers. A 64-byte record, aligned to a cache line, holds thirty
-16-bit offsets and a 4-byte header. In an ordinary record the header carries a base position
-and the byte the thirty rows all output, and a row's next position is the base plus its
-offset. A group of rows that start with different bytes, or whose next positions are too far
-apart for 16-bit offsets, is stored instead as a RAW group: thirty full 4-byte entries,
-padded to 128 bytes.
+## The problem was never just storing fewer bytes
+
+The conventional mibz2 navigation table, or *T-vector*, stores a next-row position and an
+output byte in a 32-bit entry. [The production
+traversal](https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/src/bwt.rs#L927-L955)
+advances through those entries by dependent loads. A maximum-sized block has 900,000 rows,
+so its table occupies 3.6 MB. Four such tables account for 14.4 MB before output buffers or
+other live data. The workstation used in the experiment has a 20 MiB last-level cache shared
+by its cores. That makes the table footprint worth investigating—but cache capacity alone
+cannot establish where individual loads are served.
+
+In [*Compact navigation tables for the inverse BWT: early
+findings*](2026-10-29-compact-navigation-tables.md), we started with a simpler question: why
+four bytes for every row? The next-row mapping is not arbitrary. Within each group of rows
+beginning with the same character, successor positions are ordered, because construction
+preserves the order of equal characters. If thirty successive rows point to positions such
+as 1,000, 1,002 and 1,005, storing one base and the small differences may cost much less
+than storing every absolute position.
+
+The first corpus census found substantial regularity. That made compression plausible, but
+we still needed a structure with random access to an individual successor. The decoder
+cannot decompress a whole group of pointers every time it wants to follow one: the next
+address is unknown until the current lookup completes. Our [32-lane
+walk](2026-10-31-room-walk-overlap.md) already overlaps work from independent segments to
+hide some of that wait. A compressed format must preserve that ability, not introduce
+another dependent search before each step.
+
+The first attempt tested that constraint directly. FOR-14 packed thirty-two 14-bit offsets
+into each 64-byte record, with separate full-width entries for exceptions. Its [frozen
+experiment](https://github.com/lmmx/mibz2/blob/7d7962f/docs/journal/2026-11-01-for14-stage1.md)
+found just 2.076 logical bytes per row, a little over half the conventional table's size.
+That was good news for storage; it wasn't good news for traversal.
+
+Each lookup now needed to find a fourteen-bit field within a packed record, reconstruct the
+next position and maintain a carried output byte. The compiled ordinary path contained 38
+instructions, five data loads and three stores, against the conventional walk's 16
+instructions, three loads and two stores. These are static hot-path counts, not the number
+of instructions retired per decoded byte. But they show why compactness cannot be judged on
+bytes alone: the decoder pays the cost of retrieving a *single* successor at every step.
+
+And the first measurement went the wrong way. With one block, FOR-14's traversal took 2.676
+ns per row against 1.275 ns for its control. With four blocks traversed concurrently, it
+took 2.899 ns against 1.991 ns. The smaller representation's cost rose by only about 8% from
+one block to four, while the conventional control's rose by 56%. This was the behaviour we
+had hoped a smaller table might show under contention—but FOR-14 started 1.40 ns per row
+behind. It still finished the four-block work about 1.45 times slower than its control. The
+experimental format was stopped, even though the broader hypothesis survived.
+
+Rather than rush into another timing campaign, the subsequent [packed-token
+variants](https://github.com/lmmx/mibz2/pull/130) attacked the decoding overhead. Two
+alternatives compiled to 31 and 27 instructions per ordinary step, each with four loads and
+two stores. Their outputs were checked for correctness, but neither was timed. They
+established that some of the machinery could be removed; they did not establish another
+performance result.
+
+The next design made a different space–time choice, not just a different instruction
+schedule. Instead of tightly packing thirty-two 14-bit fields, compact30 puts thirty
+directly addressable 16-bit offsets into sixty bytes and uses the remaining four bytes of a
+64-byte cache-line record for a shared header. The header holds the base successor label and
+the character for rows in that group. The ordinary step adds the selected offset to the
+base. Groups crossing a character boundary, or too wide for the offsets, use a separate RAW
+representation with full entries in groups padded to 128 bytes.
+
+Two details remove work that FOR-14 had carried into every step. First, an ordinary 16-bit
+field needs no packed-bit extraction. Second, the walker carries only its current row: the
+emitted character comes from that row's header, not from an output-byte token carried
+between lookups. Both the header and the chosen offset can be addressed from the current
+row, without waiting for one load to discover the other's address. The compiled step still
+performs more work than the conventional walk, but far less than the first packed version.
+The [annotated machine-code
+review](https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/docs/journal/2026-11-02-compact30-walker.md)
+records the final path.
 
 <figure class="bf-fig">
-<p class="bf-title">One ordinary compact30 record</p>
-<svg viewBox="0 0 720 138" role="img" aria-label="A 64-byte record: sixty bytes hold thirty 16-bit row offsets, and four bytes hold the header with the shared base and output byte. The next position is the base plus the row's offset.">
+<p class="bf-title">A compact record leaves four bytes for the base and output byte</p>
+<svg viewBox="0 0 720 138" role="img" aria-label="A 64-byte record: sixty bytes hold thirty 16-bit row offsets, and four bytes hold the shared base and output byte. The next position is the base plus the row's offset.">
 <rect x="4" y="24" width="666" height="50" rx="8" class="bf-cell"/><rect x="629" y="24" width="41" height="50" rx="4" class="bf-cell-hi"/>
-<text x="312" y="45" class="bf-ts" text-anchor="middle">30 offsets, one per row</text><text x="312" y="62" class="bf-tm" text-anchor="middle">30 × 2 bytes = 60 bytes</text>
+<text x="312" y="45" class="bf-ts" text-anchor="middle">30 directly addressed offsets</text><text x="312" y="62" class="bf-tm" text-anchor="middle">30 × 2 bytes = 60 bytes</text>
 <text x="650" y="45" class="bf-ts" text-anchor="middle" style="font-size: 10px">H</text><text x="650" y="62" class="bf-tm" text-anchor="middle" style="font-size: 10px">4 B</text>
-<text x="4" y="96" class="bf-t">Next position = the base in H + this row's offset</text>
-<text x="4" y="120" class="bf-tm">H also holds the byte the record's rows output.</text>
+<text x="4" y="96" class="bf-t">Ordinary step: next position = base from H + this row's offset</text>
+<text x="4" y="120" class="bf-tm">H also supplies the output byte; exceptional groups use separate RAW entries.</text>
 </svg>
-<figcaption>Thirty rows in one cache line. RAW groups, segment starts and parking are handled outside this ordinary case.</figcaption>
+<figcaption>Sixty-four bytes encode thirty ordinary row transitions. Exceptional groups have a separate representation. This shows only the common case; segment starts and parking are handled by the walker.</figcaption>
 </figure>
 
-On the measured corpus that brings the table from 4 bytes per row to 2.164, 45.9% less:
-about 1.95 MB for a full block instead of 3.6 MB, and 7.79 MB instead of 14.4 MB for four
-blocks at once.
+The engineering progression can be read in the compiled ordinary paths:
 
-The step costs more, though. An ordinary compact30 step compiles to 21 instructions and four
-data loads; the conventional step is 16 instructions and three loads. Two of compact30's
-loads, the offset and the header, are both addressed from the current row, so neither waits
-for the other, but they are still two loads where the conventional step needs one. The
-[walker's journal](https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/docs/journal/2026-11-02-compact30-walker.md)
-has the annotated disassembly.
+| Navigation layout | Instructions | Data loads | Stores | Evidence |
+| --- | ---: | ---: | ---: | --- |
+| Conventional 32-bit table | **16** | 3 | 2 | Production baseline |
+| FOR-14, packed offsets | **38** (37 with BMI2) | 5 | 3 | Measured; rejected |
+| FOR-14 token variants | **31 / 27** | 4 | 2 | Correct and compiled; **not timed** |
+| Refined 30-row, 16-bit offsets | **21** | 4 | 2 | Measured; the first to pass |
 
-So the question is which matters more when several cores share the machine: the extra
-instructions, or the smaller table.
+The designs did not share an identical encoding or experimental protocol; the instruction
+counts are not points on a controlled timing curve. The FOR-14 trial's reported time ratios
+and compact30's later thread-CPU ratios are separate measurements, each against its own
+control. In particular, we have no performance measurements for the intermediate 31- and
+27-instruction variants. What the sequence does show is the sustained effort to make compact
+*navigation* practical, instead of optimising storage in isolation.
 
-## The four-worker reversal
+We deliberately allowed the final record to grow a little: 2.164 logical bytes per row,
+about 4.2% larger than FOR-14's 2.076, while retaining a 45.9% reduction from the shipped
+four-byte entry. The [30-row reference
+census](https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-census.md)
+established exact reconstruction of 1,513 blocks across eleven corpora. Its original token
+packing and alignment were subsequently refined, and the finished [experimental
+walker](https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/docs/journal/2026-11-02-compact30-walker.md)
+passed separate correctness and machine-code reviews. The census was not a timing result for
+that final walker.
 
-The comparison times two versions of the same traversal and assembly. The control walks
-mibz2's 4-byte table; compact30 walks its records with the same 32-lane walk. Every walk's
-output was checked byte for byte against the decoder's.
+At 21 instructions and four data loads, the compact30 common step is still more expensive
+than production's 16-instruction, three-load step when considered by itself. The question
+was whether lowering the table's shared-memory cost could more than compensate for that
+extra work as several cores traversed at once.
 
-Only the walk is timed. Before each walk, the control builds its table with the decoder's
-own builder, while compact30 copies in records made beforehand by a reference builder, so
-the comparison measures how fast each prepared table is walked, not what it costs to build.
-The two preparations may also leave different data in cache.
+## The first positive traversal result
 
-The [protocol](https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-traversal-protocol.md)
-used one corpus of 434 blocks (207 million rows) and 20 paired rounds, on one pinned core
-or four. With four, each worker prepared its next block, all four started walking together,
-and none checked its output until all had finished, with blocks dealt so that each worker
-had about the same number of rows. CPU cost is the threads' own CPU time, summed, per row.
-Completion time is the time from the first walk's start to the last walk's end in each step,
-summed over the steps. Neither is the decoder's elapsed time.
+We compared the shipped T-vector traversal with the frozen compact30 walker on the
+established 434-block Wikidata corpus, covering 207 million inverse-BWT rows. Each output
+was checked against the production decoder's result. The [registered
+protocol](https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-traversal-protocol.md)
+paired the two implementations across twenty measured rounds, first with one pinned physical
+core and then with four workers starting their traversals together.
 
-| | Conventional | Compact30 | Compact30 ÷ conventional (95% interval) |
+The timed interval includes traversal and assembly of the decoded BWT block, not table
+construction. Before each walk, production builds its actual table; compact30 instead copies
+a reference-built compact image into its arena. Those preparation operations are excluded
+from the timer and may leave different cache states. What this experiment can tell us is how
+the two *prepared* implementations behave under its stated conditions—not the eventual cost
+or cache state of a direct compact30 builder.
+
+The CPU-time figures add up how long the walking threads actually spent executing and divide
+by BWT rows. The completion figure instead measures the earliest start to the latest finish
+in each synchronized step, summed across the corpus. Neither includes table preparation or
+output validation. The 95% intervals describe paired variation across the twenty rounds, not
+a guarantee for other machines or workloads.
+
+| Prepared-table traversal | Conventional | Compact30 | Compact ÷ conventional (95% interval) |
 | --- | ---: | ---: | ---: |
-| CPU time per row, one core | 1.221 ns | 1.402 ns | 1.148 (1.147–1.149) |
-| CPU time per row, four workers | 2.055 ns | 1.727 ns | 0.840 (0.838–0.843) |
-| Completion time per pass, four workers | 114.45 ms | 97.97 ms | 0.856 (0.852–0.860) |
-
-The intervals describe variation across the twenty rounds, on one machine and one corpus.
-Before the run, the protocol fixed what would justify building a direct constructor: the
-upper end of the four-worker CPU ratio at most 0.865, and of the completion ratio at most
-1.02. The upper ends were 0.843 and 0.860. The [analysis](https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-traversal-protocol/i9-attempt-4/c30-analysis.json)
-and an [independent reconstruction from the individual walks](https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-traversal-protocol/i9-attempt-4/researcher-review/independent_review.md)
-agree on every figure.
+| CPU time per BWT row, one core | 1.221 ns | 1.402 ns | **1.148** (1.147–1.149) |
+| CPU time per BWT row, four concurrent workers | 2.055 ns | 1.727 ns | **0.840** (0.838–0.843) |
+| Four-worker lockstep completion, one corpus pass | 114.45 ms | 97.97 ms | **0.856** (0.852–0.860) |
 
 <figure class="bf-fig">
-<p class="bf-title">CPU time per row, one core and four workers</p>
-<svg viewBox="0 0 720 265" role="img" aria-label="CPU nanoseconds per row, lower is better. On one core the conventional walk costs 1.221 and compact30 1.402. With four workers the conventional walk costs 2.055 and compact30 1.727.">
-<text x="154" y="20" class="bf-tm">CPU nanoseconds per row · lower is better</text>
+<p class="bf-title">Extra lookup work is repaid under concurrent traversal</p>
+<svg viewBox="0 0 720 265" role="img" aria-label="CPU nanoseconds per BWT row, lower is better. On one core the conventional walker costs 1.221 and compact30 1.402. With four concurrent workers the conventional walker costs 2.055 and compact30 1.727.">
+<text x="154" y="20" class="bf-tm">CPU nanoseconds per BWT row · lower is better</text>
 <path d="M156 37V218M266 37V218M376 37V218M486 37V218M596 37V218" class="bf-grid"/>
 <text x="156" y="234" class="bf-tm" text-anchor="middle">0</text><text x="266" y="234" class="bf-tm" text-anchor="middle">0.5</text><text x="376" y="234" class="bf-tm" text-anchor="middle">1.0</text><text x="486" y="234" class="bf-tm" text-anchor="middle">1.5</text><text x="596" y="234" class="bf-tm" text-anchor="middle">2.0</text>
 <text x="8" y="77" class="bf-ts">One core</text><text x="8" y="163" class="bf-ts">Four workers</text>
@@ -136,97 +228,102 @@ agree on every figure.
 <text x="431" y="65" class="bf-t-strong">1.221</text><text x="471" y="96" class="bf-t-strong">1.402</text><text x="615" y="151" class="bf-t-strong">2.055</text><text x="543" y="182" class="bf-t-strong">1.727</text>
 <rect x="158" y="247" width="14" height="10" rx="2" class="bf-slot"/><text x="180" y="256" class="bf-tm">Conventional</text><rect x="312" y="247" width="14" height="10" rx="2" class="bf-cell-hi"/><text x="334" y="256" class="bf-tm">Compact30</text>
 </svg>
-<figcaption>Each walking thread's CPU time, summed and divided by rows. Building the tables is not included.</figcaption>
+<figcaption>CPU time per row is measured for each walking thread and summed. Compact30 is slower alone but faster with four workers. The chart shows the reversal, not its cause; construction is excluded.</figcaption>
 </figure>
 
-The gain is spread across the workload. All 230 full-sized blocks were cheaper with compact30
-at four workers, taking each block's average over the rounds, and compact30 used less CPU in
-1,138 of the 1,140 full-sized four-worker steps. These are checks within one experiment, on
-blocks that repeat each round, not independent trials. The 204 short blocks were slower with
-compact30, but together they hold 8,324 rows, 0.004% of the total.
+The reversal repays the design effort in a very specific setting. On one core the compact
+walker spends 14.85% more CPU time per row. With four concurrent walkers it spends 15.95%
+less, and their summed lockstep completion time is 14.40% lower. That completion measure is
+not a measurement of whole-file decoding speed.
 
-The run also had to show that the four walks started together, within 2% of each step's
-length. An earlier complete run failed that check, because waking sleeping workers delayed
-some walks by tens of microseconds, and it doesn't count. This run used a spinning start
-barrier instead, with nothing else changed; its worst start skew was 0.023%.
+The absolute times help explain the crossover without pretending to identify its cause. On
+one core, compact30 starts with an extra 0.181 ns per row of traversal cost. When the
+workload changes to four concurrent walkers, the conventional walk's cost increases by 0.834
+ns per row, against 0.325 ns for compact30. The difference between those increases is 0.509
+ns—larger than compact30's initial 0.181 ns disadvantage—leaving it about 0.328 ns per row
+ahead in the four-worker measurement. That is arithmetic on the two measured conditions. It
+does not isolate cache misses, memory traffic or instruction execution as the cause of the
+different increases.
 
-## Four workers cost the conventional walk far more
+This was not a result carried by a few convenient blocks. Of the 230 full-sized blocks, all
+230 had lower four-worker traversal CPU cost with compact30 when averaged over rounds. In
+1,138 of the 1,140 full-sized four-worker steps, the total CPU time was lower as well. The
+204 short blocks were slower, but accounted for just 8,324 of the corpus's 207 million rows.
+The same blocks recurred in each round, so these counts are robustness checks within one
+experiment, not hundreds of independent replications. The complete [capture and independent
+reconstruction](https://github.com/lmmx/mibz2/tree/f567817/docs/journal/2026-11-02-compact30-traversal-protocol/i9-attempt-4)
+are preserved.
 
-From one core to four workers, the conventional walk's CPU cost per row rises from 1.221 ns
-to 2.055 ns, 68% more. Compact30's rises from 1.402 ns to 1.727 ns, 23% more. Both run under
-the same four-worker conditions, and the conventional table pays much more for them.
+It took some care to obtain a trustworthy comparison. Earlier attempts were stopped by
+toolchain and disassembly checks, and one complete capture was invalid because the four
+walks were not starting sufficiently close together. A subsequent, separately registered
+change to the start barrier corrected that condition without changing the walker or relaxing
+the threshold. In the valid capture every registered check passed. By the decision rule
+fixed before the run, that was enough, for the first time with a compact table, to justify
+building a real constructor. It was not a case for putting the experimental walker into the
+decoder.
 
-FOR-14 showed the same pattern earlier: from one block to four, the conventional walk's cost
-per row rose 56% and FOR-14's only 8%. Its smaller table removed most of the four-worker
-penalty, but each of its steps started 1.40 ns per row behind, three times what it saved.
-Compact30's step is cheap enough to come out ahead.
+## A promising traversal is not yet a better decoder
 
-The obvious explanation is the table's size. Four conventional tables take about 14.4 MB,
-four compact30 tables about 7.79 MB, and the test machine's four cores share a 20 MiB
-last-level cache with everything else the workers use. Smaller tables could mean fewer
-evictions and less contention for memory, and they could also change address-translation
-costs.
+The measured crossover is the one we had asked about in October: a table that loses when
+traversed in isolation can become favourable when multiple workers compete for the machine's
+memory resources. What the experiment does not tell us is why their costs increase so
+differently.
 
-<figure class="bf-fig">
-<p class="bf-title">Navigation tables for four full blocks</p>
-<svg viewBox="0 0 720 155" role="img" aria-label="Four conventional navigation tables total 14.4 MB; four compact30 tables total about 7.79 MB. These are table sizes, not measured cache occupancy or memory traffic.">
-<text x="5" y="34" class="bf-ts">Conventional</text><rect x="150" y="16" width="474" height="28" rx="5" class="bf-slot"/><text x="634" y="35" class="bf-t-strong">14.4 MB</text>
-<text x="5" y="89" class="bf-ts">Compact30</text><rect x="150" y="71" width="256.4" height="28" rx="5" class="bf-cell-hi"/><text x="417" y="90" class="bf-t-strong">7.79 MB</text>
-<text x="5" y="129" class="bf-tm">One full-sized block per worker · table sizes, not cache occupancy</text>
-</svg>
-<figcaption>The tables' sizes on the measured corpus. How much of each stays in cache, and how much memory traffic each causes, was not measured.</figcaption>
-</figure>
+A smaller shared navigation footprint is the leading hypothesis: approximately 7.79 MB for
+four full compact30 tables rather than 14.4 MB for four conventional tables. But this figure
+is calculated logical table storage, not measured cache occupancy, peak process memory or
+DRAM traffic. The experiment did not collect the counters needed to distinguish fewer
+evictions from translation effects, request-service pressure or the differing cache state
+left by table preparation. The contention-related advantage is observed; its precise
+hardware cause is not isolated.
 
-That explanation hasn't been tested. The run recorded no cache-miss or memory-controller
-counters, and the two arms prepared their tables differently before each walk, which by
-itself could change what is in cache when the walk starts. The size difference makes the
-cache explanation credible; it doesn't measure it.
+This result is therefore narrower, and more valuable, than simply saying that compression
+made decompression faster. At a fixed concurrent traversal workload, we have measured a
+representation that uses fewer logical table bytes and completes the traversal with less CPU
+time. That is a new favourable point for this stage of the computation, despite more work
+per lookup. We have *not* yet demonstrated an outward shift in the full decoder's
+throughput–memory frontier—the set of complete-decoder configurations that are not beaten on
+both speed and measured memory use.
 
-The result also stops short of the decoder. A decoding worker doesn't spend all its time
-walking tables: it also reads input, reconstructs the last column, builds the table,
-assembles segments and writes output. Some of its walks run alone, and others overlap two or
-three neighbours rather than all four. So compact30's 14.85% loss on one core matters as
-much as its gain at four, and how much of a whole decode runs under four-way contention
-hasn't been measured.
+There is one more reason not to conflate the two. A real decoding worker also reconstructs
+the last column, builds the navigation table, assembles output and performs further
+processing. Workers are not guaranteed to be traversing at the same time. The 14.85%
+isolated traversal penalty could matter whenever only one or two are walking. The
+four-worker saving cannot be multiplied through the whole program without measuring that
+mixture.
 
-## The table still has to be built
+The next necessary piece is construction. The current reference builder first creates a full
+temporary successor table, then converts it to compact30 records. A production builder must
+generate the frozen records directly from the block's last column, competing with the
+[current single-pass counting-sort
+builder](https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/src/bwt.rs#L253-L318).
+In the [registered planning
+model](https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-traversal-protocol.md#6-the-construction-budget-and-the-decision-rules-fixed-before-any-run),
+retaining the measured four-worker traversal advantage would permit a direct builder costing
+at most about 6.7% more than production's, using the conservative confidence-interval
+endpoint. That allowance is conditional on the gain surviving construction and the decoder's
+natural concurrency; it is not a prediction that the final decoder will meet its target.
 
-The records in this comparison came from a reference builder that first computes every
-row's successor in a full-sized temporary array, then converts the result into compact30
-records. That kept construction out of the measurement, but a decoder can't afford it. A
-direct builder has to produce the records from the block's last column and its byte counts,
-without the temporary array.
+So we have passed the first difficult test of the idea, not finished it. The
+[direct-constructor design
+brief](https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-constructor-brief.md)
+now asks whether the same representation can be built affordably, without the full temporary
+table. If it can, the decisive comparison will return to the original question: does compact
+navigation give the complete decoder more throughput for less measured memory, against the
+best conventional configuration?
 
-It also has to compete with the [decoder's current builder](https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/src/bwt.rs#L253-L318),
-which places every row in one counting-sort pass and writes runs of sixteen equal bytes
-sixteen entries at a time. Compact30's builder has to write group headers, check offsets
-against the 16-bit limit, and move groups to RAW, and still stay close to that.
-
-The traversal result sets the budget. A rough planning model puts the decoder's current
-table building at 0.592 CPU-seconds per decoded GB, and the traversal with its assembly at
-1.847. If b and w are compact30's building and traversal costs as fractions of today's, the
-saving is about 0.592 × (1 − b) + 1.847 × (1 − w) CPU-seconds per GB, and the target is at
-least 0.25.
-
-If the four-worker traversal ratio carried over to the decoder, a builder costing the same
-as today's would save about 0.295 CPU-seconds per GB. The builder could be up to 7.5% slower
-than today's at the central estimate, or 6.7% using the conservative end of the interval.
-That is a budget conditional on the traversal gain surviving inside the decoder, built on
-approximate phase costs; meeting it would justify the next test, not settle the question.
-
-The next step is a design for that builder, set out in the
-[constructor brief](https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-constructor-brief.md).
-Its main difficulty is already clear. Groups that straddle two bytes' rows can be found from
-the byte counts before any row is placed, but a group whose offsets turn out too wide is
-only known when its last row lands, and has to move to RAW then. The builder has to produce
-exactly the records tested here, and the first measurements will be whether it does and what
-it costs. After that, a whole-decoder comparison can show how much of the four-worker gain
-survives in practice.
-
-For now, a smaller navigation table has beaten the conventional one in a controlled
-four-worker traversal while losing on a single core. That is a strong reason to study the
-memory contention behind it, and a concrete budget for building the table.
+The original gamble was that reduced navigation storage could outweigh the instructions
+needed to read it, once several BWT traversals had to share a memory system. For
+prepared-table traversal under controlled contention, it has. FOR-14 showed that a small
+table could still be too costly to navigate; the refined, less densely packed design has now
+shown a positive result. The direct constructor and the complete decoder remain the tests of
+whether that progress becomes a practical improvement.
 
 ---
 
-**Research records:** [Traversal protocol and the runs behind it](https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-traversal-protocol.md) · [This result's records](https://github.com/lmmx/mibz2/tree/f567817/docs/journal/2026-11-02-compact30-traversal-protocol/i9-attempt-4) · [Independent reconstruction](https://github.com/lmmx/mibz2/tree/f567817/docs/journal/2026-11-02-compact30-traversal-protocol/i9-attempt-4/researcher-review) · [Compact30 walker](https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/examples/c30walk.rs) · [FOR-14 trial](https://github.com/lmmx/mibz2/pull/130).
+Research state, 2 November 2026: the prepared-table traversal comparison is valid, and
+justified the constructor work. Direct-constructor cost, full-decoder throughput and peak
+memory, and the cause of the contention advantage have not yet been established. New results
+should be added with their own dates and measurement boundaries; this result and its source
+archive remain unchanged.
