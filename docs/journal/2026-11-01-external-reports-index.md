@@ -1,4 +1,4 @@
-# External research reports 74–139: index
+# External research reports 74–142: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -79,6 +79,9 @@ verbatim. They are not findings of this repository.
 | 137 | 2026-11-01 | Astra | the five explanations as a feedback loop; test buffer-lifetime reuse (P87) first, with a 0.10 CPU-s/GB materiality threshold | `2026-11-01-external-report-137.md` |
 | 138 | 2026-11-01 | a new researcher | a packed lane token (row \| carry << 20) and simpler addressing for FOR-14; a measurement-boundary defect and interpretation limits in the walker ladder | `2026-11-01-external-report-138.md` |
 | 139 | 2026-11-01 | the guardian | on report 138: one compile-and-correctness check of the packed token, the ladder repaired first; no capture | `2026-11-01-external-report-139.md` |
+| 140 | 2026-11-02 | the researcher of report 138 | the failed walker probe explained: sudo strips WALKER_CTL/ACK, so the counters never ran; perf 6.8.12's ACK is `ack\n\0`; `100.00%` beside `<not counted>` is not "unmultiplexed"; four-core result-vector growth | `2026-11-02-external-report-140.md` |
+| 141 | 2026-11-02 | the guardian | on report 140: five narrow repairs (handoff, ACK framing, probe validity, transport tests, vector growth); no i9 run until ready | `2026-11-02-external-report-141.md` |
+| 142 | 2026-11-02 | unattributed (reads as the guardian) | per-run results under `target/<experiment>/`, one tarball with a manifest, as the default for i9 diagnostics | `2026-11-02-external-report-142.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
