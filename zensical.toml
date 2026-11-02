@@ -52,8 +52,10 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "Memory-level parallelism in mibz2" = "blog/2026-11-02-memory-level-parallelism.md" },
-    { "Technical appendix (MLP)" = "blog/2026-11-02-memory-level-parallelism-notes.md" },
+    { "Memory-level parallelism in mibz2" = [
+      { "The post" = "blog/2026-11-02-memory-level-parallelism.md" },
+      { "Technical appendix" = "blog/2026-11-02-memory-level-parallelism-notes.md" },
+    ] },
     { "Inverse-BWT memory interference" = "blog/2026-11-01-inverse-bwt-memory-interference.md" },
     { "Block dispatch in mibz2" = "blog/2026-11-01-block-dispatch.md" },
     { "32 lanes, 8.6 chains" = "blog/2026-10-31-room-walk-overlap.md" },
