@@ -212,30 +212,31 @@ bench-compete *args:
 bench-pmu-probe *args:
     python3 bench/pmu_probe.py "$@"
 
-# The minimal real-T-vector walker diagnostic (docs/journal/2026-11-01-walker-ladder-protocol.md):
-# its counter availability audit only, the step the guardian asked for before any capture
-# (report 135). It checks the corpus's hash, builds the ladder, runs its correctness check
-# (every rung at every lane count against the shipped walk's output), then asks perf which
-# of the protocol's events exist, count, and count unmultiplexed in their groups. No
-# figure is kept. About a minute; needs sudo for the counters. Upload walker-audit-*.json,
-# walker-audit-*.md and the console.
-#   sudo -v && just walker-counter-audit 2>&1 | tee walker-audit-console.log
-walker-counter-audit corpora="target/walk-decoder/work/corpora":
+# The minimal real-T-vector walker diagnostic (docs/journal/2026-11-01-walker-ladder-protocol.md),
+# its revised availability probe (reports 136, 139): no capture. It checks the corpus's hash,
+# builds the ladder, runs its correctness check, then runs every candidate event group as
+# one perf group (`{cycles,instructions,...}`), its counters bounded by perf's control FIFO
+# around 20 walks, and once around none (the control overhead), keeping perf's raw output
+# and running percentages. Needs sudo; about two minutes; no setting is changed. Upload
+# walker-probe-*.json, walker-probe-*.md and the console.
+#   sudo -v && just walker-counter-probe 2>&1 | tee walker-probe-console.log
+walker-counter-probe corpora="target/walk-decoder/work/corpora":
     #!/usr/bin/env bash
     set -euo pipefail
     f=$(realpath "{{corpora}}")/wikidata-20261026.bz2
     echo "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe  $f" | sha256sum -c -
     cargo build --release --example walker_ladder
     target/release/examples/walker_ladder "$f" check
-    WALKER_PERF="sudo perf" python3 bench/walker_ladder.py audit "$f"
+    WALKER_PERF="sudo perf" python3 bench/walker_ladder.py probe "$f"
 
-# The minimal real-T-vector walker diagnostic's capture (docs/journal/2026-11-01-walker-ladder-protocol.md
-# §5-6, frozen after the i9's counter audit): run it only once it is authorized. The
-# corpus's hash, the ladder's correctness check, a preflight of every event group (it
-# stops before the capture if any event is uncounted or multiplexed), then every rung at
-# 1, 8, 16 and 32 lanes on one core, 3 rounds, and the four-core check; its gates and
-# decisions printed at the end. About 7 minutes; needs sudo for the counters. Upload
-# walker-ladder-*.jsonl, walker-ladder-*-summary.json and the console.
+# The walker diagnostic's capture (the protocol's §5-6): run it only once it is authorized,
+# after the probe's groups are frozen. The corpus's hash, the ladder's check, a preflight
+# of every group (it stops before the capture if any event is uncounted, multiplexed or
+# not bounded by the control FIFO), then every rung at 1, 8, 16 and 32 lanes on one core
+# (3 rounds), the control-overhead runs, and the four-core check (copies released
+# together, walking to a common deadline); its gates and decisions printed at the end.
+# About 5 minutes; needs sudo. Upload walker-ladder-*.jsonl, walker-ladder-*-summary.json
+# and the console.
 #   sudo -v && just bench-walker-ladder 2>&1 | tee walker-ladder-console.log
 bench-walker-ladder corpora="target/walk-decoder/work/corpora":
     #!/usr/bin/env bash
@@ -244,4 +245,5 @@ bench-walker-ladder corpora="target/walk-decoder/work/corpora":
     echo "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe  $f" | sha256sum -c -
     cargo build --release --example walker_ladder
     target/release/examples/walker_ladder "$f" check
+    python3 -m unittest bench/test_walker_ladder.py
     WALKER_PERF="sudo perf" python3 bench/walker_ladder.py run "$f" --rounds 3 --reps 100
