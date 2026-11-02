@@ -1,4 +1,4 @@
-# External research reports 74–152: index
+# External research reports 74–156: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -92,6 +92,10 @@ verbatim. They are not findings of this repository.
 | 150 | 2026-11-02 | the guardian | on report 149: tighten §8 (eight lines in flight is a model, D3 classifies nothing, D5 is P/B, P–M is net); hypotheses kept apart from measurements | `2026-11-02-external-report-150.md` |
 | 151 | 2026-11-02 | the guardian | the amended interpretation accepted; the matched-`exec` comparison reproduced (same capture, not a replication); the exclusion stated narrowly; the diagnostic at its endpoint | `2026-11-02-external-report-151.md` |
 | 152 | 2026-11-02 | the researcher of reports 138–149 | the top tier after the walker ladder: P87 production follow-up, wake placement, packed-state compact navigation (`k`, `j`); P117 as a supporting question | `2026-11-02-external-report-152.md` |
+| 153 | 2026-11-02 | the researcher of reports 138–152 | which top-tier questions theory can answer; the order of work: P87, wake placement, compact navigation | `2026-11-02-external-report-153.md` |
+| 154 | 2026-11-02 | the researcher | P87 in theory: the in-place correctness argument, memory accounting, the existing CI production timing, the stage-table caveat, validation sizing | `2026-11-02-external-report-154.md` |
+| 155 | 2026-11-02 | the researcher | wake placement in theory: fixed per-worker CPUs with movable support threads; capacity-aware opportunity; the scanner/reader notification split | `2026-11-02-external-report-155.md` |
+| 156 | 2026-11-02 | the researcher | compact navigation in theory: a 30-halfword record with a four-byte header and relabelled rows; a worst-case storage bound; a bounded-staging direct constructor | `2026-11-02-external-report-156.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
