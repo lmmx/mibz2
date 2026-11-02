@@ -211,3 +211,55 @@ bench-compete *args:
 [positional-arguments]
 bench-pmu-probe *args:
     python3 bench/pmu_probe.py "$@"
+
+# The compact30 traversal comparison (docs/journal/2026-11-02-compact30-traversal-protocol.md,
+# frozen at the pin below): the shipped walk (P) against the compact30 walk (C), on one core
+# and on four in lockstep, 20 paired rounds and an untimed round -1, on the primary corpus
+# (checked by its hash). It runs the frozen commit itself, in its own worktree
+# (target/c30-traversal-pin), and stops before any timing if the analysis's tests fail or
+# room::<false> is not the reviewed listing. The workers go on the second to fifth physical
+# cores (the first takes more interrupts), or the first four where there are only four.
+# No sudo, no counters, no setting changed. Every file goes to
+# target/c30-traversal-<UTC time>/, the console included, archived as
+# target/c30-traversal-<UTC time>.tar.gz with a manifest: upload that one file.
+# `dry-run` as the third argument checks the whole path untimed: rounds -1, 0 and 1, the
+# records marked a dry run, and no timing figure read.
+#   just bench-c30-traversal
+bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="capture":
+    #!/usr/bin/env bash
+    set -uo pipefail
+    pin=b12b49b44e27b96c8e16e0ccab4e348c1ba56bba
+    case "{{run}}" in capture) dry= ;; dry-run) dry=--dry-run ;; *) echo "c30: run is capture or dry-run"; exit 2 ;; esac
+    f=$(realpath "{{corpora}}")/wikidata-20261026.bz2
+    wt=$(realpath -m target/c30-traversal-pin)
+    out=$(realpath -m target)/c30-traversal-$(date -u +%Y%m%dT%H%M%SZ)${dry:+-dry}
+    mkdir -p "$out"
+    (
+      set -e
+      echo "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe  $f" | sha256sum -c -
+      git cat-file -e "$pin^{commit}" 2> /dev/null || git fetch -q origin research/compact30-walker
+      [ -d "$wt" ] || git worktree add -q --detach "$wt" "$pin"
+      [ "$(git -C "$wt" rev-parse HEAD)" = "$pin" ] || { echo "c30: $wt is not at the pin"; exit 1; }
+      git -C "$wt" diff --quiet HEAD || { echo "c30: $wt has local changes"; exit 1; }
+      echo "c30: the frozen commit $pin, corpus checked"
+      rustc -vV
+      (cd "$wt" && cargo build --release --example c30walk)
+      bin="$wt/target/release/examples/c30walk"
+      python3 "$wt/bench/test_c30_traversal.py" > /dev/null
+      echo "c30: the analysis's tests passed"
+      listing=$(python3 "$wt/bench/asm_listing.py" "$bin" "$wt/docs/journal/2026-11-02-compact30-walker/room-false.asm" "$out")
+      echo "c30: room::<false> is the reviewed listing: $listing"
+      [ "$listing" = yes ] || { echo "c30: G3 fails (see room-false.diff); no run"; exit 1; }
+      phys=$(for c in $(taskset -pc $$ | sed 's/.*: //' | tr ',' '\n' | while IFS=- read a b; do seq "$a" "${b:-$a}"; done); do
+        cut -d, -f1 /sys/devices/system/cpu/cpu$c/topology/thread_siblings_list | cut -d- -f1
+      done | sort -nu)
+      n=$(echo "$phys" | wc -l)
+      [ "$n" -ge 4 ] || { echo "c30: $n physical cores; four are needed"; exit 1; }
+      if [ "$n" -ge 5 ]; then cpus=$(echo "$phys" | sed -n 2,5p | paste -sd,); else cpus=$(echo "$phys" | head -4 | paste -sd,); fi
+      echo "c30: workers on CPUs $cpus (W1 on the first)"
+      "$bin" grid "$out/c30-traversal.jsonl" "$f" --rounds {{rounds}} --cpus "$cpus" $dry
+      python3 "$wt/bench/c30_traversal.py" "$out/c30-traversal.jsonl" --listing-ok "$listing" --json "$out/c30-analysis.json"
+    ) 2>&1 | tee "$out/console.log"
+    status=${PIPESTATUS[0]}
+    (cd "$wt" && python3 bench/archive.py "$out" --corpus "$f" --binary "$wt/target/release/examples/c30walk" --command "just bench-c30-traversal {{corpora}} {{rounds}} {{run}}" --status "$status")
+    exit "$status"
