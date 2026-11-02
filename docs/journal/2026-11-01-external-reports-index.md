@@ -1,4 +1,4 @@
-# External research reports 74–158: index
+# External research reports 74–161: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -98,6 +98,9 @@ verbatim. They are not findings of this repository.
 | 156 | 2026-11-02 | the researcher | compact navigation in theory: a 30-halfword record with a four-byte header and relabelled rows; a worst-case storage bound; a bounded-staging direct constructor | `2026-11-02-external-report-156.md` |
 | 157 | 2026-11-02 | the guardian | on reports 154–156: the 30-entry layout first for Astra; P87's ledger-test failure; wake placement as one testable policy; two coordinator readings too strong | `2026-11-02-external-report-157.md` |
 | 158 | 2026-11-02 | the guardian | three bounded VM-side tasks authorised: preserve the capacity-aware dispatch replay, P87's integration cleanup, a census of the 30-entry layout; the Astra paragraph corrected | `2026-11-02-external-report-158.md` |
+| 159 | 2026-11-02 | the guardian | on report 158's three results: the census strengthens the 30-entry design; RAW rows a storage frequency; P87 and the dispatch addendum at their boundaries; the Astra handoff | `2026-11-02-external-report-159.md` |
+| 160 | 2026-11-02 | the maintainer's prompt to Astra, written with the guardian | part 1: an architectural review of the 30-entry design (one bounded prototype, `k`/`j` first, or stop) | `2026-11-02-external-report-160.md` |
+| 161 | 2026-11-02 | the maintainer's prompt to Astra, written with the guardian | part 2: invention and improvement, then falsification; one design and one bounded next step | `2026-11-02-external-report-161.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
