@@ -1,4 +1,4 @@
-# External research reports 74–164: index
+# External research reports 74–165: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -102,8 +102,9 @@ verbatim. They are not findings of this repository.
 | 160 | 2026-11-02 | the maintainer's prompt to Astra, written with the guardian | part 1: an architectural review of the 30-entry design (one bounded prototype, `k`/`j` first, or stop) | `2026-11-02-external-report-160.md` |
 | 161 | 2026-11-02 | the maintainer's prompt to Astra, written with the guardian | part 2: invention and improvement, then falsification; one design and one bounded next step | `2026-11-02-external-report-161.md` |
 | 162 | 2026-11-02 | a ChatGPT session (MLP analysis; not the guardian, researcher or Astra) | memory-level parallelism in johnservil/BLAKE3: independent input streams, lookahead prefetch, SME2 load–compute pipelining | `2026-11-02-external-report-162.md` |
-| 163 | 2026-11-02 | the same session | a guided walkthrough of its MLP and assembly techniques (**reply pending**; the question recorded) | `2026-11-02-external-report-163.md` |
+| 163 | 2026-11-02 | the same session | a guided walkthrough of its MLP and assembly techniques, with a copyable brief for a coding agent | `2026-11-02-external-report-163.md` |
 | 164 | 2026-11-02 | the guardian | on the BLAKE3 study: known versus discovered addresses; compact30's access path the target; assembly to be justified; a fork of BLAKE3-team, the AVX2 technique upstream; the Granite Rapids PMU link corrected | `2026-11-02-external-report-164.md` |
+| 165 | 2026-11-02 | Astra (the existing Codex conversation, Max reasoning) | compact30 review: Option 2, one compile-and-correctness prototype, refined to current-row F emission with F in the header's low byte; RAW bound verified; row total 707,949,378; alignment; a direct constructor without staging | `2026-11-02-external-report-165.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
