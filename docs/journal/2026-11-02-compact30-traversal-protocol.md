@@ -484,6 +484,37 @@ was read or is reported.
 - `room::<false>` in the pin's binary is identical to the reviewed listing
   (`2026-11-02-compact30-walker/room-false.asm`) under G3's normalisation.
 
+### Revision 4, at the pin `9267433`
+
+The collector is the same source as at `c0f8d38` (no change under `examples/`, `src/` or
+the manifests); the analyser, its tests and this text changed.
+
+- **The regression suite:** 37 tests pass. Beyond revision 3's 34:
+  - report 178's case is rejected: one CPU's calibration is far above the others', and
+    deleting it from both batches made the pinned analyser pass G5 and give ADVANCE;
+  - 24 malformed-calibration cases are rejected, none raising:
+    - a missing, extra, doubled or mislabelled batch;
+    - an empty batch, or `cpus` not a list;
+    - a missing, doubled, extra or wrong CPU;
+    - a wrong `n`, or `n` as a bool;
+    - quantiles too few, negative, NaN, infinite, unordered, a string or a bool;
+    - a missing key, or an entry or batch not an object;
+  - any CPU order is accepted;
+  - a dry run checks calibration too.
+- **S9 is load-bearing:** with it forced to pass, the three calibration tests fail.
+- **Unchanged on complete calibration:** in 50 fixture variants the results equal the
+  `c0f8d38` analyser's, apart from the added S9 entry. The variants cover ADVANCE, STOP,
+  INCONCLUSIVE, gate failures and a dry run (`revision-4/`).
+- **The recipe's three runs** (`runs-9267433/`):
+
+| mode | grid exit | what the analysis found | archive |
+|---|--:|---|---|
+| `dry-run` | 0 | every S check passes, S9 included, on the real calibration; G3 and G4 hold | yes |
+| `fail-output` | 3 | the failure recorded (round −1, W4, C, worker 2, block 7); S0, S3 and S9 fail (only the `before` calibration exists); INVALID, no figures | yes |
+| `fail-pin` | 3 | the failure recorded (W4 worker 1, CPU 1023); S0, S3 and S9 fail; INVALID, no figures | yes |
+
+- **`room::<false>`** is the reviewed listing in every run.
+
 ## 9. The records and the command
 
 **The recipe** (`just bench-c30-traversal`) runs the frozen commit in its own worktree

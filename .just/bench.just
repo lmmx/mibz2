@@ -234,7 +234,7 @@ bench-pmu-probe *args:
 bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="capture":
     #!/usr/bin/env bash
     set -uo pipefail
-    pin=c0f8d3832b442dde6f2908a1c80e328641bc6e3e
+    pin=9267433661f4a440c92831a4f1b38b6af61e4726
     case "{{run}}" in
       capture) flags=() ;;
       dry-run) flags=(--dry-run) ;;
