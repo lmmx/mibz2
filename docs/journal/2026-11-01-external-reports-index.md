@@ -1,4 +1,4 @@
-# External research reports 74–163: index
+# External research reports 74–164: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -103,6 +103,7 @@ verbatim. They are not findings of this repository.
 | 161 | 2026-11-02 | the maintainer's prompt to Astra, written with the guardian | part 2: invention and improvement, then falsification; one design and one bounded next step | `2026-11-02-external-report-161.md` |
 | 162 | 2026-11-02 | a ChatGPT session (MLP analysis; not the guardian, researcher or Astra) | memory-level parallelism in johnservil/BLAKE3: independent input streams, lookahead prefetch, SME2 load–compute pipelining | `2026-11-02-external-report-162.md` |
 | 163 | 2026-11-02 | the same session | a guided walkthrough of its MLP and assembly techniques (**reply pending**; the question recorded) | `2026-11-02-external-report-163.md` |
+| 164 | 2026-11-02 | the guardian | on the BLAKE3 study: known versus discovered addresses; compact30's access path the target; assembly to be justified; a fork of BLAKE3-team, the AVX2 technique upstream; the Granite Rapids PMU link corrected | `2026-11-02-external-report-164.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;

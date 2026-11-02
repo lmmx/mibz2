@@ -15,6 +15,17 @@ inspected that code. The maintainer was not sure whether the repository is a for
 **Follow-up:** report 163, a guided walkthrough. Its reply was pending when this was
 recorded.
 
+**Provenance, checked later by the guardian (report 164).** These notes sit beside the
+transcript, which is unchanged:
+- **The repository** is a fork of `BLAKE3-team/BLAKE3`, with `servil` as its default branch.
+- **The AVX2 mechanism also appears upstream.** The eight-stream loads, and the lookahead
+  prefetch at `rdx + 128` against the current block at `rdx - 64`, are established upstream
+  techniques, not this fork's additions.
+- **The wide AVX-512 kernel and the SME2 path** are as the reply describes. They are not
+  runnable on the i9-10900K, which has AVX2 but not AVX-512.
+- **The closing PMU link is for Granite Rapids.** The i9-10900K (Comet Lake, model A5) uses
+  the Skylake-family event definitions.
+
 It is kept exactly as received (rendered text, cards flattened, tracking parameters
 included).
 
