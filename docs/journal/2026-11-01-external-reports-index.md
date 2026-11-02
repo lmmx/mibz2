@@ -1,4 +1,4 @@
-# External research reports 74–186: index
+# External research reports 74–187: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -126,6 +126,7 @@ verbatim. They are not findings of this repository.
 | 184 | 2026-11-02 | unattributed in the relay (the guardian's register) | accepts the G2 diagnosis; authorises one repair, a spinning W4 start barrier, with the completion barrier, walker, windows, rounds and G2's 2% unchanged; registers the prediction and a stop rule; asks for the pin, tests, VM dry run and i9 recipe, with no workstation run | `2026-11-02-external-report-184.md` |
 | 185 | 2026-11-02 | unattributed in the relay (the guardian's register) | approves one final registered capture at branch head `5e2888f` (pin `f1dafa3`, spinning start barrier); if G2 passes, the full decision on w4 and e4; if it fails, INVALID and the comparison stops | `2026-11-02-external-report-185.md` |
 | 186 | 2026-11-02 | the guardian and the researcher | the fourth i9 capture is VALID, ADVANCE (w4 0.84047, e4 0.85601; w1 1.14845), verified independently from the raw records; authorises archiving and a bounded direct-constructor design brief for Astra, no implementation before review | `2026-11-02-external-report-186.md` (attachments in `i9-attempt-4/researcher-review/` on `research/compact30-walker`) |
+| 187 | 2026-11-02 | unattributed in the relay (the guardian's register) | approves sending the direct-constructor brief (`f567817`) to Astra Max as written; byte-identical `rec` and `raw`, RAW-group order included; no implementation before the design is reviewed | `2026-11-02-external-report-187.md` |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
