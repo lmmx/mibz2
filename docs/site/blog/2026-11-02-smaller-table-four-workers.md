@@ -1,7 +1,7 @@
 ---
-title: "Compact30: a smaller table wins with four workers"
-image: assets/social/blog-2026-11-02-compact30-four-workers.png
-description: "A compact inverse-BWT table costs 15% more CPU time on one core and 16% less with four workers. Next: can it be built cheaply enough?"
+title: "A smaller inverse-BWT table wins with four workers"
+image: assets/social/blog-2026-11-02-smaller-table-four-workers.png
+description: "Its compressed records cost 15% more CPU time on one core and 16% less with four workers. Next: can it be built cheaply enough?"
 ---
 
 <div class="post-hero" markdown>
@@ -11,7 +11,7 @@ description: "A compact inverse-BWT table costs 15% more CPU time on one core an
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Compact30: a smaller table wins with four workers
+# A smaller inverse-BWT table wins with four workers
 
 A compressed navigation table for the inverse BWT costs 15% more CPU time on one core, and
 saves 16% when four workers traverse at once. We can now measure the advantage; we still
