@@ -237,7 +237,7 @@ bench-pmu-probe *args:
 bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="capture":
     #!/usr/bin/env bash
     set -uo pipefail
-    pin=9267433661f4a440c92831a4f1b38b6af61e4726
+    pin=4635e2cb9f7b61315314c51affaebe843cd8ef36
     # the reviewed toolchain (the walker journal's section 8): selected with rustup run, so the
     # machine's default and any rust-toolchain file are left alone; rustflags forced empty
     tc=1.97.0
@@ -260,8 +260,13 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
       echo "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe  $f" | sha256sum -c -
       git cat-file -e "$pin^{commit}" 2> /dev/null || git fetch -q origin research/compact30-walker
       [ -d "$wt" ] || git worktree add -q --detach "$wt" "$pin"
-      [ "$(git -C "$wt" rev-parse HEAD)" = "$pin" ] || { echo "c30: $wt is not at the pin"; exit 1; }
       git -C "$wt" diff --quiet HEAD || { echo "c30: $wt has local changes"; exit 1; }
+      if [ "$(git -C "$wt" rev-parse HEAD)" != "$pin" ]; then
+        # an earlier pin's worktree, unchanged: moved to this pin (its build directory is kept)
+        echo "c30: $wt moved from $(git -C "$wt" rev-parse --short HEAD) to the pin"
+        git -C "$wt" checkout -q --detach "$pin"
+      fi
+      [ "$(git -C "$wt" rev-parse HEAD)" = "$pin" ] || { echo "c30: $wt is not at the pin"; exit 1; }
       echo "c30: the frozen commit $pin, corpus checked, mode {{run}}"
       if ! command -v rustup > /dev/null; then
         echo "c30: rustup is needed to select the reviewed toolchain, rustc $tc; install rustup, then: rustup toolchain install $tc --profile minimal"
@@ -280,6 +285,7 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
       (cd "$wt" && CARGO_TARGET_DIR="$wt/target/rust-$tc" CARGO_ENCODED_RUSTFLAGS= RUSTUP_AUTO_INSTALL=0 rustup run "$tc" cargo build --locked --release --example c30walk)
       bin="$wt/target/rust-$tc/release/examples/c30walk"
       python3 "$wt/bench/test_c30_traversal.py" | tail -1
+      python3 "$wt/bench/test_asm_listing.py" | tail -1
       listing=$(python3 "$wt/bench/asm_listing.py" "$bin" "$wt/docs/journal/2026-11-02-compact30-walker/room-false.asm" "$out")
       echo "c30: room::<false> is the reviewed listing: $listing"
       [ "$listing" = yes ] || { echo "c30: G3 fails (see room-false.diff); no run"; exit 1; }

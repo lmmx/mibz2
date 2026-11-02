@@ -596,11 +596,27 @@ the manifests); the analyser, its tests and this text changed.
   - the fill pattern accepts objdump's alignment forms and rejects other instructions.
 - **Unchanged:** the walker, the collector, the analysis and its 37 tests, the design, the
   thresholds, the corpus and the pinned toolchain.
+- **The pin** is `4635e2c`. It differs from `9267433` only in `bench/asm_listing.py`, its
+  tests, the i9 files and this text; nothing compiled changed.
+- **The recipe** at the new pin also moves an earlier pin's worktree, if it has no local
+  changes, to the new pin. The i9 still holds `target/c30-traversal-pin` at `9267433`, which
+  the old recipe would have refused as "not at the pin".
+- **Checked on the VM, no timing read** (`runs-4635e2c/`):
+  - **The dry run**, with `RUSTUP_TOOLCHAIN=1.98.1` set and the worktree left at `9267433`
+    as on the i9:
+    - the worktree moved to the pin;
+    - the build used 1.97.0 / LLVM 22.1.6 and produced the same binary as before (sha256
+      `82c3a685…`);
+    - the 37 analysis tests and the 15 G3 tests passed;
+    - G3 passed: 0x18b40 + 0x20aa, 1,552 instructions compared, then six `int3` of fill;
+    - every schedule check passed, and G4 held.
+  - **A worktree with a local change is still refused,** before building (archived).
 
 ## 9. The records and the command
 
 **The recipe** (`just bench-c30-traversal`) runs the frozen commit in its own worktree
-(`target/c30-traversal-pin`):
+(`target/c30-traversal-pin`). A worktree left at an earlier pin is moved to this one if it
+has no local changes, and refused if it has any:
 1. the corpus hash;
 2. the toolchain: rustc 1.97.0 (commit `2d8144b78`, LLVM 22.1.6), selected with
    `rustup run 1.97.0`, so the machine's default and any `rust-toolchain` file are left
