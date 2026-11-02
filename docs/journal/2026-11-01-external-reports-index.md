@@ -1,4 +1,4 @@
-# External research reports 74–181: index
+# External research reports 74–182: index
 
 Research inputs relayed by the maintainer from 30 October to 1 November 2026, recorded
 verbatim. They are not findings of this repository.
@@ -121,6 +121,7 @@ verbatim. They are not findings of this repository.
 | 179 | 2026-11-02 | the guardian | accepts the G5 gap; authorises the analyser-only repair and re-pin; an unstarted capture waits, a finished one is replayed offline | `2026-11-02-external-report-179.md` |
 | 180 | 2026-11-02 | the guardian | the approved i9 capture stopped at G3 before timing: rustc 1.98.0 / LLVM 22.1.8 built a different `room::<false>`; a G3 preflight failure, not a result; authorises selecting the reviewed rustc 1.97.0 explicitly in the recipe | `2026-11-02-external-report-180.md` |
 | 181 | 2026-11-02 | the guardian | approves the capture at branch head `0d85566` with rustc 1.97.0 installed beside the default; 1.97 for this frozen measurement only, development stays on the newer toolchain | `2026-11-02-external-report-181.md` |
+| 182 | 2026-11-02 | the guardian | the second i9 attempt (rustc 1.97.0 passing) stopped at G3 on trailing linker alignment padding only: six `int3` against one multi-byte `nop` after the last call, the first 1,552 instructions identical; authorises a narrow G3 boundary repair (symbol size, padding-only tail) with a regression on the archived mismatch and a real-instruction negative test | `2026-11-02-external-report-182.md` (archive in `2026-11-02-external-report-182/`) |
 
 **The records these bear on:**
 - `docs/p74c-decoder-validation-records`;
