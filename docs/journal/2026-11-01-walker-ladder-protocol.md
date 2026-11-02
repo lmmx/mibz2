@@ -523,7 +523,9 @@ They are reported in the summary, not read.
      dependency chain, which delays each lane's next prefetch, is one candidate; it is
      untested here.
    - The FOR-14 stop stands on its own measurement (§7a of its record), not on this.
-4. **The four-core penalty is in the memory system, and it transfers (D5).**
+   - Report 147 narrows this point: 57% issue is not 43% spare capacity (§8.5).
+4. **The four-core penalty is in the memory system, and the P/B relation transfers (D5,
+   scoped in §8.5).**
    - Every prefetched rung, and the shipped walk, loses about 47–55% a row at four cores.
    - The proposed one-core limiter, L1 misses in flight, says where the time goes at one
      core, but it is not the four-core penalty itself. That penalty is the L3 and memory
@@ -537,6 +539,55 @@ They are reported in the summary, not read.
 - **This is one block, its table L3-resident at one core.** The decoder's other phases are
   not in it.
 - **The four-core runs are four copies of one block, not the decoder at four workers.**
+
+### 8.5 The independent review (report 147), and what it narrows
+
+**The researcher re-checked the archive from its raw records, not the summary:**
+- 618 records: 525 one-core, 21 control-only and 72 four-core;
+- 3,012 event readings, all matching their parsed values;
+- every record enabled between disables, every event at 100% running with a positive run
+  time, and one run time per group;
+- all 18 four-core releases with four copies, the worst overlap 99.44%;
+- 110–205 walks a copy;
+- G1 at 1.0258.
+
+**Its conclusions:**
+- The repaired perf collection is trusted for this diagnostic's main comparison.
+- D1 is accepted: P32 ÷ M32 = 1.096 in cycles, and 1.096 by the clock as well.
+
+**Its qualifications, adopted here:**
+1. **The counters' window slightly encloses the clock's.**
+   - The walker starts its clock after perf acknowledges `enable`, and sends `disable`
+     after stopping it.
+   - The 0-walk controls measure that margin: at most 0.012% of an A32 window's cycles and
+     0.017% of a P32 window's. P32's issued µops and retired slots are at 0.004% and
+     0.003%.
+   - That is negligible for cycles and the execution and MLP counters.
+2. **The rare-event counters are not isolated well enough for fine claims.**
+   - For P32, the controls are 62% of `cycle_activity.stalls_l3_miss` and 47% of
+     `mem_load_retired.l3_miss`. Several page-walk counts are comparable too.
+   - Nothing here rests on them, and they are not subtracted. If they ever became
+     central, an in-process collector might narrow that margin. That benefit is possible,
+     not shown.
+3. **Issue share is not spare capacity.**
+   - P32's 0.57 of 4 µops a cycle, 2.29 a cycle, does not mean 43% of execution capacity
+     is free for added work.
+   - The issued count measures µops sent to the scheduler, not each resource's headroom.
+   - So §8.4's point 3 says only that the shipped walk does not meet the registered
+     issue-pressure condition. Why FOR-14's added work cost what it did remains open.
+4. **D5's scope is P against B.**
+   - There are no four-core M runs. D5 shows that the P/B relation holds under four
+     copies; it does not show that the 9.6% P/M gap does.
+   - These are repeated walks of one warmed 900,000-row block. They are not the decoder.
+5. **The low demand MLP of the prefetched rungs** (about 1.6 against A's 5.0) is not a
+   count of total requests in flight. Prefetch-allocated buffers enter it only when a
+   demand load meets them.
+
+**On the collector (reports 144–145):**
+- Keep the repaired perf backend for this diagnostic.
+- An in-process Rust backend stays deferred. It becomes a candidate if the harness becomes
+  reusable infrastructure, or if the rare events need cleaner isolation.
+- This archive is the reference any replacement must reproduce.
 
 ## 7. Cost so far
 
