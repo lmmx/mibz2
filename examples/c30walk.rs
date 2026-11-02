@@ -7,6 +7,7 @@
 //!     cargo run --release --example c30walk -- audit OUT.jsonl FILE.bz2 [FILE.bz2 ...]
 //!     cargo run --release --example c30walk -- audit-adversarial OUT.jsonl
 //!     cargo run --release --example c30walk -- grid OUT.jsonl CORPUS.bz2 --rounds R --cpus A,B,C,D [--dry-run]
+//!     cargo run --release --example c30walk -- barrier-test [--cpus A,B,C,D] [--steps N]
 //!
 //! **The representation:**
 //! - **Records:** one 64-byte, 64-aligned record per 30 rows in F order (`Rec`): 30 `u16`
@@ -1408,6 +1409,201 @@ fn write_walks(jl: &mut std::fs::File, recs: &[Walk]) {
 }
 
 /// The registered comparison (docs/journal/2026-11-02-compact30-traversal-protocol.md)
+/// The W4 start barrier (protocol revision 5, report 184): four participants, reusable
+/// across steps, spinning instead of sleeping.
+///
+/// The third i9 capture's start skew was the operating system waking workers that
+/// `std::sync::Barrier` had put to sleep, not the barrier's release (report 183). Here a
+/// worker that arrives early spins on the generation until the last arrives. The last
+/// arrival resets the count, then publishes the next generation, which releases the others.
+///
+/// **Correctness:**
+/// - A waiter reads the generation before it counts itself in. The generation can't
+///   change before that waiter's own arrival completes the count, so its snapshot is the
+///   generation it waits on.
+/// - While it waits, the generation advances exactly once: the next release needs all four
+///   participants, itself included. So there is no ABA, and no wrap-around in practice
+///   (usize).
+/// - The count is reset before the release store. A thread leaving the barrier has
+///   acquired that store, so when it arrives for the next step it sees the reset count.
+///
+/// **Where it spins:**
+/// - Only inside `wait`, before a walk, after the worker's own check and preparation.
+/// - The completion barrier (still `std::sync::Barrier`) holds every worker until all four
+///   walks of the step have ended. So no worker can be spinning here while a peer's timed
+///   walk runs.
+/// - The walk reads its clocks only after `wait` returns, as before.
+///
+/// **On failure:** `fail` exits the process, which ends spinning workers with it.
+struct SpinBarrier {
+    n: usize,
+    count: AtomicUsize,
+    generation: AtomicUsize,
+}
+
+impl SpinBarrier {
+    fn new(n: usize) -> Self {
+        SpinBarrier {
+            n,
+            count: AtomicUsize::new(0),
+            generation: AtomicUsize::new(0),
+        }
+    }
+
+    /// Returns once all `n` participants have arrived; returns the generation passed.
+    fn wait(&self) -> usize {
+        let g = self.generation.load(Ordering::Acquire);
+        if self.count.fetch_add(1, Ordering::AcqRel) + 1 == self.n {
+            self.count.store(0, Ordering::Relaxed);
+            self.generation.store(g.wrapping_add(1), Ordering::Release);
+        } else {
+            while self.generation.load(Ordering::Acquire) == g {
+                std::hint::spin_loop();
+            }
+        }
+        g
+    }
+}
+
+/// `barrier-test [--cpus A,B,C,D] [--steps N]`: the W4 synchronisation, without walks or
+/// timing. Four workers, the spinning start barrier and the sleeping completion barrier, in
+/// grid's order. Each step:
+/// - the workers arrive unevenly: one rotating worker is delayed by a long busy wait, the
+///   others by a short one;
+/// - the workers' lists are uneven, so the final steps are partial;
+/// - a fresh pair of barriers is used for each of two arms per round, as grid does.
+///
+/// It checks, and panics (exit 101) on any violation:
+/// - no worker enters the start barrier while a peer is inside its "walk";
+/// - no worker leaves the start barrier before all four have arrived for that step;
+/// - every worker passes the same generation at the same step;
+/// - no worker leaves the completion barrier while a peer is still walking.
+///
+/// It prints the steps and generations checked.
+///
+/// `--fault early-release` (a start barrier that releases at three arrivals) and
+/// `--fault no-completion` (no completion barrier) are negative controls: each must fail
+/// its check. A violation prints and exits with status 101 at once, so no worker is left
+/// at a barrier.
+fn barrier_test(args: &[String]) {
+    std::panic::set_hook(Box::new(|info| {
+        eprintln!("barrier-test: FAILED: {info}");
+        std::process::exit(101)
+    }));
+    let mut cpus: Vec<usize> = Vec::new();
+    let mut steps = 2_000usize;
+    let mut fault = String::new();
+    let mut i = 0;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--cpus" => {
+                cpus = args[i + 1].split(',').map(|c| c.parse().unwrap()).collect();
+                i += 1;
+            }
+            "--steps" => {
+                steps = args[i + 1].parse().unwrap();
+                i += 1;
+            }
+            "--fault" => {
+                fault = args[i + 1].clone();
+                assert!(
+                    fault == "early-release" || fault == "no-completion",
+                    "--fault is early-release or no-completion"
+                );
+                i += 1;
+            }
+            a => panic!("unknown argument {a}"),
+        }
+        i += 1;
+    }
+    // uneven lists: the last two workers have three and seven fewer items, so the final
+    // steps are partial, as in grid's snake (whose lists differ by at most one)
+    let lens = [steps, steps, steps - 3, steps - 7];
+    let spin = |n: u64| {
+        let t = std::time::Instant::now();
+        while (t.elapsed().as_nanos() as u64) < n {
+            std::hint::spin_loop();
+        }
+    };
+    let mut checked = 0usize;
+    for round in 0..3usize {
+        for arm in 0..2usize {
+            let start = SpinBarrier::new(if fault == "early-release" { 3 } else { 4 });
+            let done = std::sync::Barrier::new(4);
+            let skip_done = fault == "no-completion";
+            let arrived = AtomicUsize::new(0);
+            let walking = AtomicUsize::new(0);
+            let gens: Vec<Vec<usize>> = std::thread::scope(|sc| {
+                let hs: Vec<_> = (0..4)
+                    .map(|k| {
+                        let (start, done, arrived, walking, cpus) =
+                            (&start, &done, &arrived, &walking, &cpus);
+                        sc.spawn(move || {
+                            if let Some(&c) = cpus.get(k) {
+                                assert!(pin(c), "barrier-test: could not pin to CPU {c}");
+                            }
+                            let mut seen = Vec::with_capacity(steps);
+                            for step in 0..steps {
+                                // the uneven arrival: a rotating latecomer, a short wait otherwise
+                                let late = (step + round + arm) % 4 == k;
+                                spin(if late { 20_000 + 997 * (step as u64 % 13) } else { 300 * k as u64 });
+                                assert_eq!(
+                                    walking.load(Ordering::SeqCst),
+                                    0,
+                                    "worker {k} step {step}: entered the start barrier during a peer's walk"
+                                );
+                                arrived.fetch_add(1, Ordering::SeqCst);
+                                let g = start.wait();
+                                let a = arrived.load(Ordering::SeqCst);
+                                assert!(
+                                    a >= 4 * (step + 1),
+                                    "worker {k} step {step}: left the start barrier after {a} arrivals"
+                                );
+                                seen.push(g);
+                                if step < lens[k] {
+                                    walking.fetch_add(1, Ordering::SeqCst);
+                                    spin(2_000 + 50 * k as u64);
+                                    walking.fetch_sub(1, Ordering::SeqCst);
+                                }
+                                if !skip_done {
+                                    done.wait();
+                                }
+                                assert_eq!(
+                                    walking.load(Ordering::SeqCst),
+                                    0,
+                                    "worker {k} step {step}: left the completion barrier during a peer's walk"
+                                );
+                            }
+                            seen
+                        })
+                    })
+                    .collect();
+                hs.into_iter().map(|h| h.join().unwrap()).collect()
+            });
+            for step in 0..steps {
+                let g = gens[0][step];
+                assert_eq!(
+                    g, step,
+                    "round {round} arm {arm} step {step}: generation {g}"
+                );
+                for (k, v) in gens.iter().enumerate() {
+                    assert_eq!(
+                        v[step], g,
+                        "round {round} arm {arm} step {step}: worker {k} passed generation {}",
+                        v[step]
+                    );
+                }
+            }
+            assert_eq!(arrived.load(Ordering::SeqCst), 4 * steps);
+            checked += steps;
+        }
+    }
+    println!(
+        "barrier-test: {checked} steps in 3 rounds x 2 arms, 4 workers, uneven arrivals and lists (partial final steps), cpus {:?}: every check passed",
+        cpus
+    );
+}
+
 fn grid(args: &[String]) {
     let out_path = &args[0];
     let file = &args[1];
@@ -1582,14 +1778,16 @@ fn grid(args: &[String]) {
         // barrier, the walk (timed), the completion barrier, then the check and the record.
         // So no check, record or next preparation runs while any walk of the step does.
         for &arm in &arms {
-            let barrier = std::sync::Barrier::new(4);
+            // the start barrier spins (protocol revision 5); the completion barrier sleeps
+            let start = SpinBarrier::new(4);
+            let done = std::sync::Barrier::new(4);
             let r: Vec<Vec<Walk>> = std::thread::scope(|sc| {
                 let hs: Vec<_> = ws
                     .iter_mut()
                     .enumerate()
                     .map(|(k, w)| {
-                        let (list, barrier, cpus, bs, imgs) =
-                            (&lists[k], &barrier, &cpus, &bs, &imgs);
+                        let (list, start, done, cpus, bs, imgs) =
+                            (&lists[k], &start, &done, &cpus, &bs, &imgs);
                         sc.spawn(move || {
                             let mut v: Vec<Walk> = vec![blank; list.len()];
                             let cpu = match inject {
@@ -1607,9 +1805,9 @@ fn grid(args: &[String]) {
                                     let p1 = std::time::Instant::now();
                                     (i, c0, (ns(p0), ns(p1)))
                                 });
-                                barrier.wait();
+                                start.wait();
                                 let walked = item.map(|(i, ..)| w.walk(arm, bs[i].2, epoch));
-                                barrier.wait();
+                                done.wait();
                                 if let (Some((i, c0, prep)), Some((wall, tcpu))) = (item, walked) {
                                     if inject == (Inject::Output { w4: true, arm, worker: k })
                                         && round == -1
@@ -1666,6 +1864,9 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     if args[1] == "grid" {
         return grid(&args[2..]);
+    }
+    if args[1] == "barrier-test" {
+        return barrier_test(&args[2..]);
     }
     let mut jl = std::fs::File::create(&args[2]).unwrap();
     match args[1].as_str() {

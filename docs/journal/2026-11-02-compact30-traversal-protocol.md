@@ -1,4 +1,4 @@
-# Compact30 against the shipped walk: a traversal-comparison protocol (revision 4, for approval)
+# Compact30 against the shipped walk: a traversal-comparison protocol (revision 5, for approval)
 
 - **Status:**
   - Revision 3 repaired the harness as report 176 authorises, after the researcher's review
@@ -11,6 +11,14 @@
 - **The collector is unchanged** from `c0f8d38`: the Rust source, the walker, the
   synchronisation and the timing windows. Only `bench/c30_traversal.py`, its tests and this
   text differ at the new pin (§8).
+- **Revision 5 changes one thing (reports 183–184): the W4 start barrier spins instead of
+  sleeping.**
+  - The third i9 capture completed but was INVALID on G2. Its start skew was the operating
+    system waking workers that the sleeping barrier had parked (§8).
+  - The completion barrier, the walker, the preparation, the timing windows, the 20 rounds,
+    G2's 2% threshold, the decision rules and every other gate are unchanged.
+  - The third capture stays INVALID. Its ratios are descriptive and change no threshold.
+  - The prediction and the stop rule are in §5.
 - **Since revision 4, two preflight repairs (§8):** the recipe selects the reviewed
   toolchain (report 180), and G3 compares the function's own extent, leaving out the
   linker's alignment fill after it (report 182). Neither changes the collector or the
@@ -125,7 +133,7 @@ one arm, then every block under the other. For each block it:
 Before its first step, each allocates storage for all its records in the pass. Then, for
 each step, every worker:
 1. prepares its next block's table (untimed);
-2. waits at the start barrier;
+2. waits at the start barrier, spinning (revision 5);
 3. walks the block (timed);
 4. waits at the completion barrier;
 5. checks its output and writes its record into the preallocated slot;
@@ -137,6 +145,22 @@ each step, every worker:
 - No walk starts until every worker has prepared.
 - A worker with no block left in a step still waits at both barriers.
 - The records file is written between rounds, when no walk runs.
+
+**The start barrier (revision 5, report 184):**
+- It is a four-participant spinning barrier (`SpinBarrier` in `examples/c30walk.rs`): an
+  atomic arrival count and an atomic generation.
+- Early arrivals spin on the generation. The last arrival resets the count, then publishes
+  the next generation, which releases all four.
+- It is reusable across steps, with no ABA: while a worker waits, the generation can advance
+  only once, because the next release needs that worker too.
+- Workers spin only inside the start barrier, before a walk. Every walk of the previous step
+  ended before the completion barrier released, so no worker spins during a peer's timed
+  walk.
+- The walk reads its clocks only after the barrier returns, so G2 still measures the actual
+  start of each walk.
+- The completion barrier is still `std::sync::Barrier`, so an early finisher sleeps while
+  its peers walk, as before.
+- A failure exits the process, which ends any spinning worker.
 
 **Uneven finishes are a result.** The four walks start together, but the faster ones end
 first, and the slower ones finish with fewer neighbours walking. So a measured window is
@@ -323,6 +347,18 @@ never reaches an ADVANCE, STOP or INCONCLUSIVE decision.
 
 **G2 checks the barrier, not the walks' lengths.** Uneven walks are a result, which e4
 carries.
+
+**Revision 5's registered prediction (report 184):**
+- **The test:** the change addresses the third capture's start skew, which was a sleeping
+  barrier's wake-up path.
+- **The prediction:** under the spinning start barrier, the start skew falls substantially
+  from the third capture, and G2 holds at its unchanged 2% in every measured arm-round.
+- **Reported, deciding nothing:** the per-step skew ratio's median in each arm position,
+  against the third capture's 0.0394 (first arm) and 0.0248 (second arm).
+- **The stop rule:** if the capture fails G2 again, the outcome is INVALID and the
+  comparison stops. There is no further barrier change.
+- **Why G2 stays:** a spinning barrier can't stop a thread being descheduled just after it
+  is released.
 
 **The binary's own hash** is recorded in the manifest. It is not a gate: the line tables
 hold build paths, so two builds of one tree differ in bytes. The listing is the identity.
@@ -633,6 +669,38 @@ the manifests); the analyser, its tests and this text changed.
   with G2's threshold unchanged and a prediction that can fail. It needs its own
   authorisation, and this capture stays INVALID.
 
+### Revision 5: the spinning start barrier (report 184)
+
+**The change:** in `examples/c30walk.rs`, the W4 start barrier is a `SpinBarrier`. Nothing
+else changes:
+- the completion barrier is still `std::sync::Barrier`;
+- the walker, the preparation, the walk's timing windows and the records are as they were;
+- G3 passes on the new binary: `room::<false>` is the reviewed listing.
+
+**`barrier-test`** (a new mode of the example, untimed) runs grid's synchronisation without
+walks. It uses four workers, the spinning start barrier and the sleeping completion barrier,
+with a fresh pair of barriers per arm, in 3 rounds × 2 arms.
+- **The arrivals are uneven:** a rotating worker arrives 20–32 µs late, the others 0–0.9 µs.
+- **The lists are uneven:** two workers have 3 and 7 fewer items, so the final steps are
+  partial.
+- **It checks, at every step:**
+  - no worker enters the start barrier while a peer is inside its "walk";
+  - no worker leaves the start barrier before all four have arrived;
+  - all four pass the same generation;
+  - no worker leaves the completion barrier while a peer is still walking.
+- **Its results on the VM:**
+  - 12,000 steps pinned to four CPUs: pass;
+  - 12,000 steps unpinned: pass;
+  - 300,000 steps pinned: pass.
+- **Negative controls,** each of which must fail:
+  - `--fault early-release` (a start barrier releasing at three arrivals) fails: "left the
+    start barrier after 3 arrivals";
+  - `--fault no-completion` (no completion barrier) fails: "left the completion barrier
+    during a peer's walk".
+  - A violation exits at once, so neither control leaves a thread at a barrier.
+- **The recipe** runs `barrier-test` on the capture's own CPUs before the capture, and stops
+  if it fails (§9).
+
 ## 9. The records and the command
 
 **The recipe** (`just bench-c30-traversal`) runs the frozen commit in its own worktree
@@ -650,9 +718,10 @@ has no local changes, and refused if it has any:
 5. G3, and no run if it fails;
 6. the CPUs: the second to fifth physical cores (the first takes more interrupts), or the
    first four where there are only four;
-7. the capture, under a one-hour timeout;
-8. the analysis, whether the capture passed or failed;
-9. the archive, whether the run passed or failed.
+7. `barrier-test` on those CPUs (untimed), and no run if it fails (revision 5);
+8. the capture, under a one-hour timeout;
+9. the analysis, whether the capture passed or failed;
+10. the archive, whether the run passed or failed.
 
 **Records:** `target/c30-traversal-<UTC time>[-mode]/`, archived as
 `target/c30-traversal-<UTC time>[-mode].tar.gz` with a `MANIFEST.json` by the convention of
@@ -661,6 +730,7 @@ every file's checksum. It holds:
 - the console;
 - the toolchain;
 - the listing, its diff, and its bounds (the function's extent and the fill after it);
+- the barrier test's output (revision 5);
 - the records:
   - the meta line, with the assignment, each block's rows and RAW groups, and any
     injection;
