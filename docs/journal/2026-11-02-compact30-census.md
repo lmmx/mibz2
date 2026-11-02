@@ -51,7 +51,8 @@ trial's frozen file.
 
 **The run:**
 - every check passed;
-- both round trips were exact on all 1,513 blocks (about 690 M rows);
+- both round trips were exact on all 1,513 blocks: 707,949,378 rows (the first wording,
+  "about 690 M", was an undercount, corrected after report 165);
 - 39 s, one thread.
 
 ## 2. The result
@@ -123,6 +124,10 @@ on both ordinary and RAW rows round-tripped.
   occur, not what they cost.
 - **Construction.** The records are built from a full Ψ as an oracle. No direct builder
   was written.
+- **Alignment.** The census's records are a `Vec<u16>`, which is not guaranteed 64-byte
+  aligned. This doesn't affect the counts or the round trips. But a walker that relies on
+  each record occupying one cache line needs an explicitly aligned 64-byte record type
+  (report 165).
 - **The segmented walk in its production shape:** lanes, parking and segment ends. The
   START sentinel's restoration was exercised on one chain only.
 
