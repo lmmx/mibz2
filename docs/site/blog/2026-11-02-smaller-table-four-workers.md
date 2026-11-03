@@ -379,15 +379,48 @@ L[T[k]] \text{ immediately precedes } L[k] \text{ in } S.
 
 $L[I]$ is the last byte of $S$, so starting at $I$ and following $T$ gives $S$ from the end:
 
-```text
-rows visited:  3 → 0 → 4 → 1 → 5 → 2
-bytes read:    a   n   a   n   a   b
-```
-
 <figure class="bf-fig">
 <p class="bf-title">Decoding banana by following T</p>
-<svg viewBox="0 0 720 300" role="img" aria-label="An animation of the inverse transform on banana. Starting at row 3, the decoder reads L at the current row and writes it into the output from the end, then moves to the row T names: rows 3, 0, 4, 1, 5, 2, emitting a, n, a, n, a, b, which fill the output right to left as banana.">
-<style>@keyframes wk-row0 { 0%, 0.00% { opacity: 0 } 0.00%, 13.75% { opacity: 1 } 13.76%, 100% { opacity: 0 } } @keyframes wk-row1 { 0%, 13.74% { opacity: 0 } 13.75%, 27.50% { opacity: 1 } 27.51%, 100% { opacity: 0 } } @keyframes wk-row2 { 0%, 27.49% { opacity: 0 } 27.50%, 41.25% { opacity: 1 } 41.26%, 100% { opacity: 0 } } @keyframes wk-row3 { 0%, 41.24% { opacity: 0 } 41.25%, 55.00% { opacity: 1 } 55.01%, 100% { opacity: 0 } } @keyframes wk-row4 { 0%, 54.99% { opacity: 0 } 55.00%, 68.75% { opacity: 1 } 68.76%, 100% { opacity: 0 } } @keyframes wk-row5 { 0%, 68.74% { opacity: 0 } 68.75%, 82.50% { opacity: 1 } 82.51%, 100% { opacity: 0 } } @keyframes wk-out0 { 0%, 3.74% { opacity: 0 } 3.75%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt0 { 0%, 0.00% { opacity: 0 } 0.00%, 13.75% { opacity: 1 } 13.76%, 100% { opacity: 0 } } @keyframes wk-out1 { 0%, 17.49% { opacity: 0 } 17.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt1 { 0%, 13.74% { opacity: 0 } 13.75%, 27.50% { opacity: 1 } 27.51%, 100% { opacity: 0 } } @keyframes wk-out2 { 0%, 31.24% { opacity: 0 } 31.25%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt2 { 0%, 27.49% { opacity: 0 } 27.50%, 41.25% { opacity: 1 } 41.26%, 100% { opacity: 0 } } @keyframes wk-out3 { 0%, 44.99% { opacity: 0 } 45.00%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt3 { 0%, 41.24% { opacity: 0 } 41.25%, 55.00% { opacity: 1 } 55.01%, 100% { opacity: 0 } } @keyframes wk-out4 { 0%, 58.74% { opacity: 0 } 58.75%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt4 { 0%, 54.99% { opacity: 0 } 55.00%, 68.75% { opacity: 1 } 68.76%, 100% { opacity: 0 } } @keyframes wk-out5 { 0%, 72.49% { opacity: 0 } 72.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt5 { 0%, 68.74% { opacity: 0 } 68.75%, 82.50% { opacity: 1 } 82.51%, 100% { opacity: 0 } } @keyframes wk-done { 0%, 82.49% { opacity: 0 } 82.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg [style*="animation"] { animation: none !important; opacity: 0 } svg .wk-out { opacity: 1 !important } }</style>
+<svg viewBox="0 0 720 400" role="img" aria-label="An animation of the inverse transform on banana. Starting at row 3, the decoder reads L at the current row and writes it into the output from the end, then moves to the row T names: rows 3, 0, 4, 1, 5, 2, emitting a, n, a, n, a, b, which fill the output right to left as banana.">
+<style>@keyframes wk-row0 { 0%, 0.00% { opacity: 0 } 0.00%, 13.75% { opacity: 1 } 13.76%, 100% { opacity: 0 } } @keyframes wk-row1 { 0%, 13.74% { opacity: 0 } 13.75%, 27.50% { opacity: 1 } 27.51%, 100% { opacity: 0 } } @keyframes wk-row2 { 0%, 27.49% { opacity: 0 } 27.50%, 41.25% { opacity: 1 } 41.26%, 100% { opacity: 0 } } @keyframes wk-row3 { 0%, 41.24% { opacity: 0 } 41.25%, 55.00% { opacity: 1 } 55.01%, 100% { opacity: 0 } } @keyframes wk-row4 { 0%, 54.99% { opacity: 0 } 55.00%, 68.75% { opacity: 1 } 68.76%, 100% { opacity: 0 } } @keyframes wk-row5 { 0%, 68.74% { opacity: 0 } 68.75%, 82.50% { opacity: 1 } 82.51%, 100% { opacity: 0 } } @keyframes wk-out0 { 0%, 3.74% { opacity: 0 } 3.75%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt0 { 0%, 0.00% { opacity: 0 } 0.00%, 13.75% { opacity: 1 } 13.76%, 100% { opacity: 0 } } @keyframes wk-out1 { 0%, 17.49% { opacity: 0 } 17.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt1 { 0%, 13.74% { opacity: 0 } 13.75%, 27.50% { opacity: 1 } 27.51%, 100% { opacity: 0 } } @keyframes wk-out2 { 0%, 31.24% { opacity: 0 } 31.25%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt2 { 0%, 27.49% { opacity: 0 } 27.50%, 41.25% { opacity: 1 } 41.26%, 100% { opacity: 0 } } @keyframes wk-out3 { 0%, 44.99% { opacity: 0 } 45.00%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt3 { 0%, 41.24% { opacity: 0 } 41.25%, 55.00% { opacity: 1 } 55.01%, 100% { opacity: 0 } } @keyframes wk-out4 { 0%, 58.74% { opacity: 0 } 58.75%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt4 { 0%, 54.99% { opacity: 0 } 55.00%, 68.75% { opacity: 1 } 68.76%, 100% { opacity: 0 } } @keyframes wk-out5 { 0%, 72.49% { opacity: 0 } 72.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt5 { 0%, 68.74% { opacity: 0 } 68.75%, 82.50% { opacity: 1 } 82.51%, 100% { opacity: 0 } } @keyframes wk-done { 0%, 82.49% { opacity: 0 } 82.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col0 { 0%, 0.00% { opacity: 0 } 0.00%, 13.75% { opacity: 1 } 13.76%, 100% { opacity: 0 } } @keyframes wk-byte0 { 0%, 3.74% { opacity: 0 } 3.75%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col1 { 0%, 13.74% { opacity: 0 } 13.75%, 27.50% { opacity: 1 } 27.51%, 100% { opacity: 0 } } @keyframes wk-byte1 { 0%, 17.49% { opacity: 0 } 17.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col2 { 0%, 27.49% { opacity: 0 } 27.50%, 41.25% { opacity: 1 } 41.26%, 100% { opacity: 0 } } @keyframes wk-byte2 { 0%, 31.24% { opacity: 0 } 31.25%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col3 { 0%, 41.24% { opacity: 0 } 41.25%, 55.00% { opacity: 1 } 55.01%, 100% { opacity: 0 } } @keyframes wk-byte3 { 0%, 44.99% { opacity: 0 } 45.00%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col4 { 0%, 54.99% { opacity: 0 } 55.00%, 68.75% { opacity: 1 } 68.76%, 100% { opacity: 0 } } @keyframes wk-byte4 { 0%, 58.74% { opacity: 0 } 58.75%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col5 { 0%, 68.74% { opacity: 0 } 68.75%, 82.50% { opacity: 1 } 82.51%, 100% { opacity: 0 } } @keyframes wk-byte5 { 0%, 72.49% { opacity: 0 } 72.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg [style*="animation"] { animation: none !important; opacity: 0 } svg .wk-out { opacity: 1 !important } }</style>
+<text x="130" y="34" class="bf-tm" text-anchor="end">row visited</text>
+<text x="130" y="74" class="bf-tm" text-anchor="end">byte read</text>
+<rect x="144" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col0 16.0s linear infinite"/>
+<rect x="150" y="14" width="40" height="30" rx="4" class="bf-cell"/>
+<text x="170.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">3</text>
+<rect x="150" y="54" width="40" height="30" rx="4" class="bf-cell"/>
+<g class="wk-out" style="animation: wk-byte0 16.0s linear infinite"><rect x="150" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="170.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text></g>
+<text x="201" y="34" class="bf-tm" text-anchor="middle">→</text>
+<rect x="218" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col1 16.0s linear infinite"/>
+<rect x="224" y="14" width="40" height="30" rx="4" class="bf-cell"/>
+<text x="244.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">0</text>
+<rect x="224" y="54" width="40" height="30" rx="4" class="bf-cell"/>
+<g class="wk-out" style="animation: wk-byte1 16.0s linear infinite"><rect x="224" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="244.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text></g>
+<text x="275" y="34" class="bf-tm" text-anchor="middle">→</text>
+<rect x="292" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col2 16.0s linear infinite"/>
+<rect x="298" y="14" width="40" height="30" rx="4" class="bf-cell"/>
+<text x="318.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">4</text>
+<rect x="298" y="54" width="40" height="30" rx="4" class="bf-cell"/>
+<g class="wk-out" style="animation: wk-byte2 16.0s linear infinite"><rect x="298" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="318.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text></g>
+<text x="349" y="34" class="bf-tm" text-anchor="middle">→</text>
+<rect x="366" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col3 16.0s linear infinite"/>
+<rect x="372" y="14" width="40" height="30" rx="4" class="bf-cell"/>
+<text x="392.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">1</text>
+<rect x="372" y="54" width="40" height="30" rx="4" class="bf-cell"/>
+<g class="wk-out" style="animation: wk-byte3 16.0s linear infinite"><rect x="372" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="392.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text></g>
+<text x="423" y="34" class="bf-tm" text-anchor="middle">→</text>
+<rect x="440" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col4 16.0s linear infinite"/>
+<rect x="446" y="14" width="40" height="30" rx="4" class="bf-cell"/>
+<text x="466.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">5</text>
+<rect x="446" y="54" width="40" height="30" rx="4" class="bf-cell"/>
+<g class="wk-out" style="animation: wk-byte4 16.0s linear infinite"><rect x="446" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="466.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text></g>
+<text x="497" y="34" class="bf-tm" text-anchor="middle">→</text>
+<rect x="514" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col5 16.0s linear infinite"/>
+<rect x="520" y="14" width="40" height="30" rx="4" class="bf-cell"/>
+<text x="540.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">2</text>
+<rect x="520" y="54" width="40" height="30" rx="4" class="bf-cell"/>
+<g class="wk-out" style="animation: wk-byte5 16.0s linear infinite"><rect x="520" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="540.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text></g>
+<g transform="translate(0 100)">
 <text x="70" y="44" class="bf-ts" text-anchor="middle">j</text>
 <text x="132" y="44" class="bf-ts" text-anchor="middle">L[j]</text>
 <text x="202" y="44" class="bf-ts" text-anchor="middle">T[j]</text>
@@ -453,8 +486,9 @@ bytes read:    a   n   a   n   a   b
 <g class="wk-out" style="animation: wk-out5 16.0s linear infinite"><rect x="330" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="355.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">b</text></g>
 <text x="330" y="254" class="bf-t" style="animation: wk-txt5 16.0s linear infinite">Step 6: row 2, emit L[2] = b into S[0]; done</text>
 <text x="330" y="254" class="bf-t-strong" style="animation: wk-done 16.0s linear infinite">S = banana, recovered by following T from row I = 3</text>
+</g>
 </svg>
-<figcaption>Each step reads the byte in L at the current row, writes it into S from the end, and moves to the row T names. Every jump depends on the entry just read, which is why the walk is one dependent load after another.</figcaption>
+<figcaption>Across the top, the rows the walk visits and the byte it reads at each. Below, each step reads the byte in L at the current row, writes it into S from the end, and moves to the row T names. Every jump depends on the entry just read, which is why the walk is one dependent load after another.</figcaption>
 </figure>
 
 That is `banana` backwards, and it is the whole inner loop of the inverse transform: load the
