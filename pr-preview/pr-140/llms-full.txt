@@ -744,7 +744,7 @@ So the decoder is given \\(L\\) and \\(I\\) and must produce \\(S\\). It never h
 
 Stepping backwards round the word
 
-banana written round a circle, positions numbered from the top. Every row of the square reads the word clockwise from one letter, so its last letter is the one just before its first. Moving that last letter to the front starts the reading one letter earlier: the walk steps anticlockwise.
+banana written round a circle, positions numbered from the top. Every row of the square reads the word clockwise from one letter (green), so its last letter (blue) is the one just before its first. Moving that last letter to the front starts the reading one letter earlier, so the walk steps anticlockwise: rows 3, 0, 4, 1, 5, 2.
 
 | Row | Move its last letter to the front | Lands on row |
 | --- | --- | --- |
