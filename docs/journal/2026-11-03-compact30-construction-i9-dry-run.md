@@ -53,10 +53,34 @@ Run on the i9-10900K on 2026-11-03 at 17:21 UTC, in the checkout `~/dev/mibz2` a
 The checkout's untracked files (earlier i9 outputs) don't affect the run: the recipe builds
 from its own clean worktree of the pin.
 
-Not yet done: the archive itself isn't in the repository. If the file is relayed, it can be
-committed here beside this record, as the traversal captures were. `verify-evidence` on
-the archive has to run on the i9, because it checks the machine and binary identity there;
-it builds nothing and times nothing, and wasn't part of the authorised dry run.
+**The archives**, relayed and kept in
+[2026-11-03-compact30-construction-i9-dry-run/](2026-11-03-compact30-construction-i9-dry-run/):
+- `c30-construction-20261103T172121Z-dry-run.tar.gz`, sha256 `f75b00e8…40f9f9`, matching
+  the console. The pinned analyser (`bench/c30_construction.py` at `14d9ecb`), replayed here
+  on its own records and RSS files, reproduces its `c30-analysis.json` exactly.
+- `c30-construction-20261103T172410Z-verify-evidence.tar.gz`, sha256 `0fded68c…053573`:
+  `verify-evidence` run on the i9 against the dry run's archive. The preconditions held as in
+  the dry run (corpus, pin, toolchain, 94 + 6 tests, G3 yes, CPUs 1–4, barrier test), and the
+  collector verified the evidence and built nothing (exit 0).
+
+## Report 200: the guardian's GO (as relayed)
+
+**Guardian disposition: VALID DRY RUN. One registered 20-round i9 construction-cost capture
+is now authorized**, using that exact archive (sha256 `f75b00e8…40f9f9`) as verified
+evidence:
+
+    just bench-c30-construction target/walk-decoder/work/corpora 20 capture target/c30-construction-20261103T172121Z-dry-run.tar.gz
+
+One capture only. No changes to the source, walker, constructor, protocol, thresholds,
+corpus, CPU selection or allocation regimes. If evidence verification, start
+synchronization, clock calibration, stability, correctness or any other registered gate
+fails, the failure archive is preserved, with no automatic rerun or threshold adjustment.
+The warm four-core decision stays fixed: `b4` upper 95% CI ≤ 1.06714 and `e4` upper 95% CI
+≤ 1.02 for PASS. After the capture: independent analysis and archiving of the complete
+results (both warm deciding ratios with their intervals, the cold and one-core diagnostics,
+the validity gates, memory and fault records, and the implied construction economics),
+returned for guardian review. No integration into production on the strength of this
+experiment alone.
 
 ## Report 198: the guardian's decision (as relayed)
 
