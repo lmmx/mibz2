@@ -304,9 +304,28 @@ square:
 <figcaption>The square of sorted rotations again, with each symbol pointing at what it names. In bzip2, N can be up to 900,000.</figcaption>
 </figure>
 
-Decoding builds two more things of its own, which the rest of this section explains: $C$, a
-count of each letter, and $T$, which Seward calls the *"transformation vector"*. The
-decoder's whole path, from what is stored back to the word:
+So the decoder is given $L$ and $I$ and must produce $S$. It never holds $M$: the inverse
+transform recovers just enough of it, from $L$, to read off row $I$.
+
+**Why the first and last columns.** Every row of $M$ is $S$ read round from some starting point,
+so in every row the last byte comes just before the first, going round $S$. Row 3 ends in `a`
+and starts with `b`, and the final `a` of `banana` comes, going round, before its opening
+`b`. That is the relation the whole paper builds on: $L[i]$ comes just before $F[i]$ in $S$. The
+two columns carry different information:
+
+- **$F$** is the bytes of $S$ in sorted order, so the counts alone fix it. A decoder holding $L$
+  can rebuild $F$ by counting, so it is never sent.
+- **$L$** holds the byte that precedes each row's opening context, with the rows sorted by
+  context. Bytes before similar contexts tend to repeat (in English, `he ` is often preceded
+  by `t`), so $L$ has long runs, which bzip2's later stages compress.
+
+$F$ and $L$ aren't two unrelated strings, though. They are columns of the same sorted square, and
+that ties them together: each letter's occurrences come in the same order in both. The first
+`a` in $L$ matches the first `a` in $F$, the second matches the second, and so on; why comes
+below. That matching is what the decoder
+needs and doesn't have. Seward records it in the *"transformation vector"* $T$, and builds $T$
+from $C$, a count of each letter. The decoder's whole path, from what is stored back to the
+word:
 
 <figure class="bf-fig">
 <p class="bf-title">What the decoder rebuilds</p>
@@ -339,24 +358,6 @@ decoder's whole path, from what is stored back to the word:
 </svg>
 <figcaption>Each arrow is a step explained in the rest of this section: counting, expanding the counts into F, matching occurrences to get T, and the walk.</figcaption>
 </figure>
-
-So the decoder is given $L$ and $I$ and must produce $S$. It never holds $M$: the inverse
-transform recovers just enough of it, from $L$, to read off row $I$.
-
-**Why the first and last columns.** Every row of $M$ is $S$ read round from some starting point,
-so in every row the last byte comes just before the first, going round $S$. Row 3 ends in `a`
-and starts with `b`, and the final `a` of `banana` comes, going round, before its opening
-`b`. That is the relation the whole paper builds on: $L[i]$ comes just before $F[i]$ in $S$. The
-two columns carry different information:
-
-- **$F$** is the bytes of $S$ in sorted order, so the counts alone fix it. A decoder holding $L$
-  can rebuild $F$ by counting, so it is never sent.
-- **$L$** holds the byte that precedes each row's opening context, with the rows sorted by
-  context. Bytes before similar contexts tend to repeat (in English, `he ` is often preceded
-  by `t`), so $L$ has long runs, which bzip2's later stages compress.
-
-So a bzip2 block carries $L$, with $I$ to say which row is $S$, and the decoder rebuilds the order
-of $S$ from them with $T$.
 
 **Defining $T$.** Seward's theory section is *"a more detailed exposition of Algorithm D in §2
 of [1]"*, Burrows and Wheeler's decompression algorithm, because *"the increased detail
