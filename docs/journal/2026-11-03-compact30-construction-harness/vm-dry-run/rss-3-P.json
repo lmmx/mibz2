@@ -1,0 +1,1 @@
+{"kind":"rss","arm":"P","corpus":"wikidata-20261026.bz2","blocks":434,"cpus":[0, 1, 2, 3],"baseline_rss":211886080,"hwm_after_load":223805440,"hwm_reset":true,"hwm_after_reset":211886080,"hwm_after_pass":226586624,"growth_over_baseline":14700544,"arena_capacity_bytes":14400000}

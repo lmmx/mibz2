@@ -314,3 +314,118 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
       python3 bench/archive.py "$out" --corpus "$f" --command "$cmd" --status "$status"
     fi
     exit "$status"
+
+# The compact30 construction-cost comparison (docs/journal/2026-11-03-compact30-construction-
+# protocol.md, draft 3; the harness's journal 2026-11-03-compact30-construction-harness.md):
+# production's public bwt::build (P) against compact30's direct constructor,
+# Ctor::build::<false> (C), warm and cold, on one core and on four in lockstep, 20 paired
+# rounds and an untimed round -1, on the primary corpus (checked by its hash). It runs the
+# frozen harness commit in its own worktree (target/c30-construction-pin), built with the
+# reviewed toolchain, rustc 1.97.0 (LLVM 22.1.6), selected through rustup without touching
+# the default, and stops before any timing if that toolchain is missing or not the reviewed
+# build, if the analysis's or the listing check's tests fail, or if the timed path's machine
+# code is not the reviewed listings (G3). Workers go on the second to fifth physical cores,
+# or the first four where there are only four. No sudo, no counters, no setting changed.
+# Every file goes to target/c30-construction-<UTC time>[-mode]/, the console included,
+# archived as target/c30-construction-<UTC time>[-mode].tar.gz with a manifest, whether the
+# run passed or failed.
+# The third argument is the mode:
+# - dry-run: the whole path untimed (rounds -1, 0 and 1, the records marked a dry run, no
+#   timing figure read), then the six peak-RSS processes; its analysis records the capture
+#   process's peak RSS (postflight VmHWM) beside the computed estimate;
+# - capture: the registered run. It needs the fourth argument, the dry run's peak RSS in
+#   bytes (the analysis's memory.peak_rss_vm_hwm), so the preflight requires
+#   max(estimate, peak) plus max(2 GiB, 25%);
+# - fail-output, fail-output-p, fail-pin, fail-reject, fail-preflight: a dry run with a fault
+#   injected (C's first table of W4 worker 2 corrupted after the completion barrier; P's first
+#   W1 table likewise; W4 worker 1 pinned to a CPU that does not exist; C given counts that
+#   are not L's own; the memory preflight failed), to show the run ends at once, with its
+#   failure recorded and archived.
+#   just bench-c30-construction target/walk-decoder/work/corpora 20 dry-run
+#   just bench-c30-construction target/walk-decoder/work/corpora 20 capture <peak-bytes>
+bench-c30-construction corpora="target/walk-decoder/work/corpora" rounds="20" run="dry-run" peak_rss="0":
+    #!/usr/bin/env bash
+    set -uo pipefail
+    pin=e264eed7e1a1c2f1d456d40207ff302811df2eae
+    tc=1.97.0
+    tc_commit=2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+    tc_llvm=22.1.6
+    rss=yes
+    case "{{run}}" in
+      capture) flags=(--peak-rss "{{peak_rss}}")
+        [ "{{peak_rss}}" -gt 0 ] 2> /dev/null || { echo "c30: a capture needs the dry run's peak RSS (bytes) as its fourth argument"; exit 2; } ;;
+      dry-run) flags=(--dry-run) ;;
+      fail-output) flags=(--dry-run --inject output:w4:C:2); rss=no ;;
+      fail-output-p) flags=(--dry-run --inject output:w1:P:0); rss=no ;;
+      fail-pin) flags=(--dry-run --inject pin:w4:1); rss=no ;;
+      fail-reject) flags=(--dry-run --inject reject:w4:3); rss=no ;;
+      fail-preflight) flags=(--dry-run --inject preflight); rss=no ;;
+      *) echo "c30: the mode is dry-run, capture, fail-output, fail-output-p, fail-pin, fail-reject or fail-preflight"; exit 2 ;;
+    esac
+    f=$(realpath "{{corpora}}")/wikidata-20261026.bz2
+    wt=$(realpath -m target/c30-construction-pin)
+    suffix=$([ "{{run}}" = capture ] || echo "-{{run}}")
+    out=$(realpath -m target)/c30-construction-$(date -u +%Y%m%dT%H%M%SZ)$suffix
+    mkdir -p "$out"
+    (
+      set -e
+      echo "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe  $f" | sha256sum -c -
+      git cat-file -e "$pin^{commit}" 2> /dev/null || git fetch -q origin research/compact30-constructor
+      [ -d "$wt" ] || git worktree add -q --detach "$wt" "$pin"
+      git -C "$wt" diff --quiet HEAD || { echo "c30: $wt has local changes"; exit 1; }
+      if [ "$(git -C "$wt" rev-parse HEAD)" != "$pin" ]; then
+        echo "c30: $wt moved from $(git -C "$wt" rev-parse --short HEAD) to the pin"
+        git -C "$wt" checkout -q --detach "$pin"
+      fi
+      [ "$(git -C "$wt" rev-parse HEAD)" = "$pin" ] || { echo "c30: $wt is not at the pin"; exit 1; }
+      echo "c30: the frozen commit $pin, corpus checked, mode {{run}}"
+      if ! command -v rustup > /dev/null || ! rustup toolchain list | grep -q "^$tc-"; then
+        echo "c30: the reviewed toolchain, rustc $tc (LLVM $tc_llvm), is needed: rustup toolchain install $tc --profile minimal"
+        exit 1
+      fi
+      RUSTUP_AUTO_INSTALL=0 rustup run "$tc" rustc -vV | tee "$out/rustc-vV.txt"
+      grep -qx "release: $tc" "$out/rustc-vV.txt" && grep -qx "commit-hash: $tc_commit" "$out/rustc-vV.txt" && grep -qx "LLVM version: $tc_llvm" "$out/rustc-vV.txt" \
+        || { echo "c30: rustup's $tc is not the reviewed build (want commit $tc_commit, LLVM $tc_llvm); no run"; exit 1; }
+      RUSTUP_AUTO_INSTALL=0 rustup run "$tc" cargo -V | tee -a "$out/rustc-vV.txt"
+      echo "c30: building with the reviewed toolchain rustc $tc, LLVM $tc_llvm, no rustflags"
+      (cd "$wt" && CARGO_TARGET_DIR="$wt/target/rust-$tc" CARGO_ENCODED_RUSTFLAGS= RUSTUP_AUTO_INSTALL=0 rustup run "$tc" cargo build --locked --release --example c30walk)
+      bin="$wt/target/rust-$tc/release/examples/c30walk"
+      python3 -I "$wt/bench/test_c30_construction.py" | tail -1
+      python3 -I "$wt/bench/test_c30_build_listing.py" | tail -1
+      mkdir -p "$out/listing"
+      ident=$(python3 -I "$wt/bench/c30_build_listing.py" "$bin" "$out/listing" "$wt/docs/journal/2026-11-03-compact30-construction-harness/listings")
+      echo "c30: the timed path's machine code is the reviewed listings: $ident"
+      [ "$ident" = yes ] || { echo "c30: G3 fails (see listing/*.diff); no run"; exit 1; }
+      phys=$(for c in $(taskset -pc $$ | sed 's/.*: //' | tr ',' '\n' | while IFS=- read a b; do seq "$a" "${b:-$a}"; done); do
+        cut -d, -f1 /sys/devices/system/cpu/cpu$c/topology/thread_siblings_list | cut -d- -f1
+      done | sort -nu)
+      n=$(echo "$phys" | wc -l)
+      [ "$n" -ge 4 ] || { echo "c30: $n physical cores; four are needed"; exit 1; }
+      if [ "$n" -ge 5 ]; then cpus=$(echo "$phys" | sed -n 2,5p | paste -sd,); else cpus=$(echo "$phys" | head -4 | paste -sd,); fi
+      echo "c30: workers on CPUs $cpus (W1 on the first)"
+      "$bin" barrier-test --cpus "$cpus" | tee "$out/barrier-test.txt"
+      g=0
+      timeout --kill-after=30 7200 "$bin" cbuild "$out/c30-construction.jsonl" "$f" --rounds {{rounds}} --cpus "$cpus" "${flags[@]}" || g=$?
+      echo "c30: the collector exited with status $g"
+      rfiles=()
+      if [ "$g" = 0 ] && [ "$rss" = yes ]; then
+        for k in 1 2 3; do
+          for arm in P C; do
+            "$bin" cbuild-rss "$out/rss-$k-$arm.json" "$f" --arm "$arm" --cpus "$cpus"
+            rfiles+=("$out/rss-$k-$arm.json")
+          done
+        done
+      fi
+      a=0
+      python3 -I "$wt/bench/c30_construction.py" "$out/c30-construction.jsonl" --identity-ok "$ident" --json "$out/c30-analysis.json" --rss "${rfiles[@]}" || a=$?
+      [ "$g" = 0 ] || exit "$g"
+      exit "$a"
+    ) 2>&1 | tee "$out/console.log"
+    status=${PIPESTATUS[0]}
+    cmd="just bench-c30-construction {{corpora}} {{rounds}} {{run}} {{peak_rss}}"
+    if [ -d "$wt" ]; then
+      (cd "$wt" && python3 bench/archive.py "$out" --corpus "$f" --binary "$wt/target/rust-$tc/release/examples/c30walk" --command "$cmd" --status "$status")
+    else
+      python3 bench/archive.py "$out" --corpus "$f" --command "$cmd" --status "$status"
+    fi
+    exit "$status"
