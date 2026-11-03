@@ -700,18 +700,18 @@ The post has two halves: how Seward's algorithms work and what he measured, then
 
 Seward's paper, 2001
 
-1. [1How does a decoder get `banana` back?By a chain of table lookups, each depending on the last](<#1-from-sorted-rotations-to-the-transformation-vector>)
-2. [2Making inversion fastbasis, bw94 and mergedTL: byte and link in one word](<#2-making-inversion-fast-basis-bw94-and-mergedtl>)
-3. [3Spending less memoryindexF and the count trees: recompute instead of store](<#3-spending-less-memory-indexf-and-the-trees>)
+1. [1From sorted rotations to the transformation vectorHow a decoder gets `banana` back: a chain of lookups, each depending on the last](<#1-from-sorted-rotations-to-the-transformation-vector>)
+2. [2Making inversion fast: basis, bw94 and mergedTLKeeping the byte and the link in one word](<#2-making-inversion-fast-basis-bw94-and-mergedtl>)
+3. [3Spending less memory: indexF and the treesRecomputing what the fast algorithms store](<#3-spending-less-memory-indexf-and-the-trees>)
 4. [4What Seward measuredMemory against speed: the space–time tradeoff](<#4-what-seward-measured>)
 
 mibz2, 2026
 
-1. [5Four blocks, one cacheWhy the tradeoff changes when blocks decode at once](<#5-the-same-tradeoff-with-four-blocks-live>)
+1. [5The same tradeoff, with four blocks liveWhy it changes when blocks decode at once and share a cache](<#5-the-same-tradeoff-with-four-blocks-live>)
 2. [6A smaller table, a busier lookupA little over half the space, more work per lookup](<#6-a-smaller-table-a-busier-lookup>)
 3. [7The four-worker reversalThe walk alone: slower on one core, faster on four](<#7-the-four-worker-reversal>)
-4. [8Why four workers cost moreThe usual table pays far more for sharing the cache](<#8-four-workers-cost-the-conventional-walk-far-more>)
-5. [9Still to buildA cheap way to construct the table for the decoder](<#9-the-table-still-has-to-be-built>)
+4. [8Four workers cost the conventional walk far moreWhy the usual table pays more for sharing the cache](<#8-four-workers-cost-the-conventional-walk-far-more>)
+5. [9The table still has to be builtA cheap way to construct it for the decoder](<#9-the-table-still-has-to-be-built>)
 
 ## 1\. From sorted rotations to the transformation vector
 
@@ -820,40 +820,28 @@ The tree for byte a over L = nnbaaa, padded to 8 positions. Counting the a's up 
 
 ## 4\. What Seward measured
 
-The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-level cache. Each block, at most 10⁶ bytes, was inverted ten times. How much memory each algorithm needs for a 10⁶-byte block:
+The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-level cache. Blocks were at most 10⁶ bytes, 1 MB, and each was inverted ten times. He tested six files of at least a megabyte, four of them from the [Canterbury Corpus](<https://corpus.canterbury.ac.nz/descriptions/>). The last column says what each shares with mibz2's own [benchmark corpora](<https://lmmx.github.io/mibz2/pr-preview/pr-140/benchmarks/index.md>):
 
-| Algorithm | Memory | Seward's description |
-| --- | ---: | --- |
-| `basis` | 5000 kB | Straightforward derivation from theory |
-| `bw94` | 5000 kB | As per \[1\], does 2 passes, not 3 |
-| `mergedTL` | 4000 kB | As bw94 but more cache-friendly |
-| `indexF` | 2500 kB | Indexes into \\(F\\) rather than \\(L\\) |
-| `tree-1M` | 2000 kB | Computes \\(T\\) incrementally; 1 megabyte extra space |
-| `treeopt-1M` | 2000 kB | More space-economical version of tree-1M |
-| `treeopt-500k` | 1500 kB | As treeopt-1M but with only 500k auxiliary space |
-
-He tested them on six files of at least a megabyte, four from the [Canterbury Corpus](<https://corpus.canterbury.ac.nz/descriptions/>). The last column names the nearest of mibz2's [benchmark corpora](<https://lmmx.github.io/mibz2/pr-preview/pr-140/benchmarks/index.md>), loosely:
-
-| File | kB | What it is | Nearest in mibz2's corpora |
+| File | MB | What it is | Closest in mibz2's corpora |
 | --- | ---: | --- | --- |
-| bible | 4047.4 | The King James Bible | `text`, though ours is source code, repeated |
-| world192 | 2473.4 | The CIA World Factbook, 1992 | none: Wikidata's subject matter, not its format |
-| ecoli | 4638.7 | The *E. coli* genome, in four letters | none |
-| kennedy | 1029.7 | An Excel spreadsheet | `runs`, and at the extreme `onebyte` |
-| netscape | 7678.8 | Netscape Navigator 4.75, an x86 executable | `records`, binary |
-| bashtgz | 1708.8 | bash 2.04's source, gzipped | `random` |
+| bible | 4.05 | The King James Bible: English prose | `text`, though ours is the crate's own source code, repeated, so more redundant |
+| world192 | 2.47 | The CIA World Factbook, 1992: an English record per country | Wikidata's subject matter, though not its JSON format |
+| ecoli | 4.64 | The *E. coli* genome: four letters, a, c, g and t, and notoriously hard to compress | No counterpart. Its tiny alphabet is the case the tree algorithms handle best |
+| kennedy | 1.03 | An Excel spreadsheet, full of long runs of one byte | `runs`, and at the extreme `onebyte` |
+| netscape | 7.68 | Netscape Navigator 4.75: x86 machine code | `records`, binary and structured |
+| bashtgz | 1.71 | bash 2.04's source, gzipped: already compressed, so close to random | `random` |
 
-How fast each algorithm inverted each file, in MB/s, with the fastest in bold. mergedTL is the fastest on every one:
+Each algorithm's memory for a 1 MB block, and how fast it inverted each file, in MB/s. The fastest on each file is in bold, and mergedTL is the fastest on every one:
 
-|  | bashtgz | bible | ecoli | kennedy | netscape | world192 | Mean |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| basis | 1.54 | 1.72 | 1.53 | 2.46 | 2.32 | 1.65 | 1.86 |
-| bw94 | 1.58 | 1.77 | 1.57 | 2.54 | 2.41 | 1.69 | 1.93 |
-| mergedTL | **2.49** | **2.76** | **2.48** | **4.72** | **3.51** | **2.65** | **3.10** |
-| indexF | 1.20 | 1.36 | 1.30 | 1.71 | 1.67 | 1.31 | 1.43 |
-| tree-1M | 0.032 | 0.211 | 0.325 | 0.099 | 0.044 | 0.207 | 0.153 |
-| treeopt-1M | 0.059 | 0.301 | 0.342 | 0.167 | 0.099 | 0.298 | 0.211 |
-| treeopt-500k | 0.032 | 0.218 | 0.339 | 0.100 | 0.036 | 0.198 | 0.154 |
+|  | MB | bashtgz | bible | ecoli | kennedy | netscape | world192 | Mean |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| basis | 5.0 | 1.54 | 1.72 | 1.53 | 2.46 | 2.32 | 1.65 | 1.86 |
+| bw94 | 5.0 | 1.58 | 1.77 | 1.57 | 2.54 | 2.41 | 1.69 | 1.93 |
+| mergedTL | 4.0 | **2.49** | **2.76** | **2.48** | **4.72** | **3.51** | **2.65** | **3.10** |
+| indexF | 2.5 | 1.20 | 1.36 | 1.30 | 1.71 | 1.67 | 1.31 | 1.43 |
+| tree-1M | 2.0 | 0.032 | 0.211 | 0.325 | 0.099 | 0.044 | 0.207 | 0.153 |
+| treeopt-1M | 2.0 | 0.059 | 0.301 | 0.342 | 0.167 | 0.099 | 0.298 | 0.211 |
+| treeopt-500k | 1.5 | 0.032 | 0.218 | 0.339 | 0.100 | 0.036 | 0.198 | 0.154 |
 
 The paper gives these numbers only as tables. Plotting each algorithm's average speed against its memory shows the space–time tradeoff between them:
 
@@ -863,20 +851,9 @@ Each algorithm's average rate over the six files against its memory, from Seward
 
 It isn't a smooth curve on which each saved byte costs speed. mergedTL is *"on average 61% and 67% faster than bw94 and basis respectively, at the same time using less memory"*: it beats both on both axes, by changing how the next link is read. indexF runs at 46% of its speed in 62.5% of its memory. Below that, half a byte a row less costs a factor of seven.
 
-Seward then asks why. Simulating the K6-III's cache with cacheprof, his own profiler, he counted per byte of bible:
-
-|  | instructions | memory references | misses |
-| --- | ---: | ---: | ---: |
-| bw94 | 18.00 | 9.00 | 1.63 |
-| mergedTL | 20.00 | 8.00 | 0.88 |
-
-mergedTL runs 11% more instructions and takes 54% as many misses. 89.4% of those misses are the walk's reads of \\(U\[p\]\\), and 78.6% of those reads miss, because \\(T\\) holds *"a completely arbitrary permutation"* that the decoder *"is obliged to traverse"*. So *"there appears to be no way to avoid a miss rate approaching one per \\(L\\)-byte"*, and mergedTL is *"a realistic upper bound on inversion performance"*.
+Seward then asks why. Simulating the K6-III's cache with cacheprof, his own profiler, he counted what each does per byte of bible. bw94 runs 18 instructions, with 9 memory references and 1.63 cache misses; mergedTL runs 20 instructions, with 8 references and 0.88 misses. So mergedTL does 11% more work and takes 54% as many misses. 89.4% of those misses are the walk's reads of \\(U\[p\]\\), and 78.6% of those reads miss, because \\(T\\) holds *"a completely arbitrary permutation"* that the decoder *"is obliged to traverse"*. Seward concludes that *"there appears to be no way to avoid a miss rate approaching one per \\(L\\)-byte"*, and mergedTL is *"a realistic upper bound on inversion performance"*.
 
 kennedy inverts nearly twice as fast as bashtgz because its long runs make \\(T\\) point each row at its neighbour, which is usually already cached; random input sets the floor near 2.5 MB/s. And the tree algorithms vary 10:1 across files, against mergedTL's 1.9:1, because a small alphabet such as ecoli's four letters lets a few deep trees shorten every scan.
-
-Why the walk misses, and why runs help
-
-An illustration, not data. Through an arbitrary permutation each step lands somewhere new; through a run of equal bytes, as in kennedy, T points next door.
 
 bzip2 itself decompresses bible at 67% of mergedTL's inversion rate, while also doing its Huffman and move-to-front decoding, so *"no amount of re-engineering of bzip2 can increase its decompression speed much further"*. The paper ends on a caveat:
 
@@ -886,7 +863,13 @@ bzip2 itself decompresses bible at 67% of mergedTL's inversion rate, while also 
 
 The K6-III's cache held 256 KB, against mergedTL's 4 MB for one block. Our workstation has a 20 MiB last-level cache, and a full bzip2 block, up to 900,000 rows at 4 bytes each, needs a 3.6 MB table. Read literally, the caveat has come true.
 
-Two things kept Seward's sentence true anyway. A modern core keeps many misses in flight if it is given independent loads, so mibz2's [walk](<https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs#L927-L961>) advances 32 separate pieces of the chain in turn and [runs 8.6 times as fast as one chain](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-10-31-room-walk-overlap/index.md>). And a decoder doesn't invert one block at a time. Four workers keep four tables live, 14.4 MB before any of their other buffers, in one cache they all share, and [decoding with four costs more CPU time per byte than decoding with one](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-01-inverse-bwt-memory-interference/index.md>): the workers finish sooner together, but compete for the memory system on the way. With the cache divided between blocks, caches are again much smaller than the tables being walked.
+Caches against tables, then and now
+
+One scale, in megabytes. In 2001 one block's table was far larger than the cache; today one fits several times over, but four take most of it. Table sizes are computed for full blocks, not measured cache occupancy.
+
+Two things kept Seward's sentence true anyway. A modern core keeps many misses in flight if it is given independent loads, so mibz2's [walk](<https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs#L927-L961>) advances 32 separate pieces of the chain in turn and [runs 8.6 times as fast as one chain](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-10-31-room-walk-overlap/index.md>).
+
+And a decoder doesn't invert one block at a time. Four workers keep four tables live, 14.4 MB before any of their other buffers, in one cache they all share, and [decoding with four costs more CPU time per byte than decoding with one](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-01-inverse-bwt-memory-interference/index.md>): the workers finish sooner together, but compete for the memory system on the way. With the cache divided between blocks, caches are again much smaller than the tables being walked.
 
 On Seward's axes a smaller table is a step down in speed. With four blocks sharing a cache, it also leaves more of the cache to the other three. Could the same links be stored in much less space, and would the lighter memory load make up for the extra work of reading a compressed entry? The first valid comparison answers both ways at once. The compact walk costs 14.85% more CPU time on one core and 15.95% less with four workers walking together. That result is about this traversal, measured on its own; what it means for the whole decoder is still open.
 
