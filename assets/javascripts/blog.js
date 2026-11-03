@@ -3,9 +3,10 @@
 // - .bf-chain: the pointer chain. "Follow pointer" moves from the current card to the card
 //   it names, until every card has been visited; "Reset" goes back to card 0. Without
 //   JavaScript the figure shows the whole path instead.
-// - .bf-anim-controls: replay and pause buttons under an animated figure. Pause freezes the
-//   animation where it is; replay starts it from the beginning. With reduced motion the
-//   figure starts as a still picture, and either button runs the animation on request.
+// - .bf-anim-controls: replay and pause buttons on an animated figure, which plays once and
+//   holds its last frame. Pause freezes it where it is; replay starts it from the beginning.
+//   With reduced motion the figure starts as a still picture, and either button runs the
+//   animation on request.
 //
 // Runs on load and on each instant navigation, as bench.js does.
 (() => {
@@ -77,6 +78,13 @@
       });
       playing = true;
       draw();
+    });
+    // When the play ends, the button offers to play it again.
+    svg.addEventListener("animationend", () => {
+      if (playing && svg.getAnimations({ subtree: true }).every((a) => a.playState === "finished")) {
+        playing = false;
+        draw();
+      }
     });
     box.hidden = false;
     draw();

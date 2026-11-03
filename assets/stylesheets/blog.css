@@ -153,7 +153,9 @@
   font-size: 0.8rem;
 }
 .bf-chain .bf-count { color: var(--bf-muted); font-size: 0.62rem; }
-.bf-anim-controls { display: flex; justify-content: flex-end; gap: 0.3rem; margin-top: 0.3rem; }
+.md-typeset .bf-fig:has(.bf-anim-controls) { position: relative; }
+.md-typeset .bf-fig:has(.bf-anim-controls) .bf-title { padding-right: 4.5rem; }
+.bf-anim-controls { position: absolute; top: 0.55rem; right: 0.7rem; display: flex; gap: 0.3rem; }
 .bf-anim-controls[hidden] { display: none; }
 .md-typeset .bf-fig .bf-anim-btn {
   display: inline-grid;
