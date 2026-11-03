@@ -316,6 +316,8 @@ the frozen source stay unchanged.
 
 ## A descriptive decomposition of the completion ratio (from the archived records)
 
+> **Correction, 2026-11-03:** the step-class rows below use an "all-full" class of exactly 900,000 rows, not the registered `FULL = 899_000`. See [the correction](2026-11-03-compact30-constructor-v2-reassessment.md#a-correction-to-claudes-appendix): with the registered partition, genuinely short-only steps are about 0.25% of production's completion time.
+
 This was computed while the decisions above were being made: a description of existing
 evidence, not a new verification cycle and not a registered result. It is offered to Astra
 as an optional appendix to the request, to be checked against the raw records.
