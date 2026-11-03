@@ -19,7 +19,7 @@ ask whether a smaller navigation table could do more work per step and still com
 under contention. A first measurement of ours shows it doing so.
 {: .post-dek }
 
-2 November 2026 · 21 min read · [Result](#the-four-worker-reversal)
+2 November 2026 · 22 min read · [Result](#the-four-worker-reversal)
 {: .post-meta }
 
 </div>
@@ -63,9 +63,10 @@ mibz2's table on one core, faster with four.
 
 ## From sorted rotations to the transformation vector
 
-Imagine bzip2 compressing the six bytes `banana`. The transform turns them into `nnbaaa` and
-the number 3, which bzip2's later stages then compress further, and decoding has to get
-`banana` back from those two. Seward's notation, which he takes from Burrows and Wheeler's
+Imagine bzip2 compressing the six bytes `banana`. The transform doesn't shrink them: it
+reorders them into `nnbaaa` and records the number 3. bzip2's later stages compress that
+output, and decoding, once it has undone those stages, has to get `banana` back from
+`nnbaaa` and 3. Seward's notation, which he takes from Burrows and Wheeler's
 1994 report *[A Block-sorting Lossless Data Compression
 Algorithm](https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf)*, names every
 piece:
@@ -79,7 +80,7 @@ piece:
 | F | the first column of M | `aaabnn` |
 | I | the row of M that holds S, also transmitted | 3 |
 | T | the *"transformation vector"*: N integers, each in 0..N−1 | 4 5 3 0 1 2 |
-| C | 256 byte counts, or their running totals | a 3, b 1, n 2 |
+| C | a count per byte value, or, as used below, where each byte's run starts in F | counts a 3, b 1, n 2; starts a 0, b 3, n 4 |
 
 The decoder is given L and I, and must produce S: from `nnbaaa` and 3, it must get back to
 `banana`.
@@ -249,7 +250,8 @@ doesn't, which a footnote calls *"a design flaw"*; by the manual's account, *"th
 was frozen before I properly and fully understood the performance consequences"*. Its decoder
 builds the links the other way instead, writing i into slot s where Seward would set
 T[i] = s (`tt[cftab[uc]++] |= i << 8`), and following that T⁻¹ emits S forwards. mibz2
-does the same.
+does the same, so its navigation table holds T⁻¹: each entry points forwards, to the row
+whose string starts one byte later in S.
 
 **Building T from counts.** The rows of M are sorted, and two rows ending in the same byte
 keep their order when that byte moves to the front, since the rest of each row decides it.
