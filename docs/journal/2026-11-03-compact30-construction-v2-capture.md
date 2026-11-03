@@ -800,3 +800,25 @@ Computed from the archive's raw build records, warm four-worker builds, rounds 0
   - the harness assigns blocks to workers in fixed lists, so step imbalance partly reflects that schedule;
   - round 5's production anomaly is included except where stated;
   - correlation with bulk share is not within-block cost attribution, which the records cannot give.
+
+## Report 223: the guardian approves the Astra request as assembled
+
+Summarised from the relay. Report 223:
+- **approves the request above as prepared, including the descriptive appendix**, and has it
+  sent to Astra in full;
+- keeps the record at `603d8c9` as the current disposition: formal INVALID, a HOLD on
+  unchanged v2, and the v2-derived architecture still open.
+
+**Its one caution for Astra:** the harness's fixed worker assignment contributes to the
+observed imbalance. Astra should distinguish a block's intrinsic construction cost from how
+blocks happen to be grouped into synchronised steps. The arithmetic decomposition also
+doesn't prove that changing the constructor would remove all of the imbalance. The request
+already asks Astra to verify the appendix and avoid unsupported causal claims, which the
+guardian judges sufficient.
+
+**What it asks of Astra:** one strongest architectural proposal or a reasoned NO-GO. Of
+particular interest: whether the cost of low-bulk blocks can fall without harming the
+bulk-path gains.
+
+No implementation, benchmark, i9 measurement or protocol revision is authorised. The user
+sent the request to Astra on 2026-11-03.
