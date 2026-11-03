@@ -322,55 +322,77 @@ letter backwards through the word, treating its end as joined to its beginning, 
 
 <figure class="bf-fig">
 <p class="bf-title">Stepping backwards round the word</p>
-<svg viewBox="0 0 720 330" role="img" aria-label="banana written round a circle, positions 0 to 5 clockwise from the top. Each row of the square reads the word clockwise from one letter. Row 3 starts at the b, position 0. Moving its last letter to the front starts the reading one letter earlier: row 0 starts at position 5, row 4 at position 4, row 1 at position 3. Arrows step anticlockwise from each start to the next.">
-<path d="M168.5 37.9A124 124 0 0 0 95.0 80.3" class="bf-link" style="stroke-width: 2"/>
-<path d="M95.0 80.3L97.0 70.2" class="bf-link" style="stroke-width: 2"/>
-<path d="M95.0 80.3L104.6 76.6" class="bf-link" style="stroke-width: 2"/>
-<path d="M73.5 117.6A124 124 0 0 0 73.5 202.4" class="bf-link" style="stroke-width: 2"/>
-<path d="M73.5 202.4L65.7 195.7" class="bf-link" style="stroke-width: 2"/>
-<path d="M73.5 202.4L75.1 192.2" class="bf-link" style="stroke-width: 2"/>
-<path d="M95.0 239.7A124 124 0 0 0 168.5 282.1" class="bf-link" style="stroke-width: 2"/>
-<path d="M168.5 282.1L158.7 285.5" class="bf-link" style="stroke-width: 2"/>
-<path d="M168.5 282.1L160.5 275.6" class="bf-link" style="stroke-width: 2"/>
-<path d="M153.6 139.0A42 42 0 0 1 226.4 139.0" class="bf-grid" style="stroke-width: 1.5"/>
-<path d="M226.4 139.0l-8 -2M226.4 139.0l-1 -8" class="bf-grid" style="stroke-width: 1.5"/>
-<text x="190" y="168" class="bf-tm" text-anchor="middle">each row</text>
-<text x="190" y="184" class="bf-tm" text-anchor="middle">reads clockwise</text>
-<circle cx="190.0" cy="72.0" r="20" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
-<text x="190.0" y="78.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<circle cx="266.2" cy="116.0" r="20" class="bf-cell" style="stroke: var(--bf-frame)"/>
-<text x="266.2" y="122.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<circle cx="266.2" cy="204.0" r="20" class="bf-cell" style="stroke: var(--bf-frame)"/>
-<text x="266.2" y="210.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<circle cx="190.0" cy="248.0" r="20" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
-<text x="190.0" y="254.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<circle cx="113.8" cy="204.0" r="20" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
-<text x="113.8" y="210.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<circle cx="113.8" cy="116.0" r="20" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
-<text x="113.8" y="122.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<text x="190.0" y="15.0" class="bf-t-strong" text-anchor="middle">row 3</text>
-<text x="60.1" y="90.0" class="bf-t-strong" text-anchor="end">row 0</text>
-<text x="60.1" y="240.0" class="bf-t-strong" text-anchor="end">row 4</text>
-<text x="190.0" y="315.0" class="bf-t-strong" text-anchor="middle">row 1</text>
-<text x="190.0" y="110.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">0</text>
-<text x="236.8" y="137.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">1</text>
-<text x="236.8" y="191.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">2</text>
-<text x="190.0" y="218.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">3</text>
-<text x="143.2" y="191.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">4</text>
-<text x="143.2" y="137.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">5</text>
-<text x="410" y="78" class="bf-t-strong">Each move starts the reading one letter earlier</text>
-<text x="410" y="110" class="bf-tm">row 3 reads from position 0</text>
-<text x="610" y="110" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">banana</text>
-<text x="410" y="136" class="bf-tm">row 0 reads from position 5</text>
-<text x="610" y="136" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">abanan</text>
-<text x="410" y="162" class="bf-tm">row 4 reads from position 4</text>
-<text x="610" y="162" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">nabana</text>
-<text x="410" y="188" class="bf-tm">row 1 reads from position 3</text>
-<text x="610" y="188" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">anaban</text>
-<text x="410" y="230" class="bf-tm">The letter moved to the front each time is the</text>
-<text x="410" y="248" class="bf-tm">row's last letter, in L: a, then n, then a.</text>
+<svg class="rg-fig" viewBox="0 0 720 350" role="img" aria-label="An animation on banana written round a circle. Each row of the square reads the word clockwise from one letter. Starting from row 3, which reads from position 0, each move of the last letter to the front starts the reading one letter earlier: row 0 from position 5, row 4 from 4, row 1 from 3, row 5 from 2, row 2 from 1. Each step lights the starting letter and the letter just before it, the row's last letter.">
+<style>@keyframes rg-s0 { 0%, 0.00% { opacity: 0 } 2.84%, 10.80% { opacity: 1 } 13.64%, 100% { opacity: 0 } } @keyframes rg-l0 { 0%, 0.00% { opacity: 0 } 2.84%, 10.80% { opacity: 1 } 13.64%, 100% { opacity: 0 } } @keyframes rg-r0 { 0%, 0.00% { opacity: 0 } 2.84%, 10.80% { opacity: 1 } 13.64%, 100% { opacity: 0 } } @keyframes rg-a0 { 0%, 5.11% { opacity: 0 } 7.95%, 13.64% { opacity: 1 } 16.48%, 100% { opacity: 0 } } @keyframes rg-s1 { 0%, 13.64% { opacity: 0 } 16.48%, 24.43% { opacity: 1 } 27.27%, 100% { opacity: 0 } } @keyframes rg-l1 { 0%, 13.64% { opacity: 0 } 16.48%, 24.43% { opacity: 1 } 27.27%, 100% { opacity: 0 } } @keyframes rg-r1 { 0%, 13.64% { opacity: 0 } 16.48%, 24.43% { opacity: 1 } 27.27%, 100% { opacity: 0 } } @keyframes rg-a1 { 0%, 18.75% { opacity: 0 } 21.59%, 27.27% { opacity: 1 } 30.11%, 100% { opacity: 0 } } @keyframes rg-s2 { 0%, 27.27% { opacity: 0 } 30.11%, 38.07% { opacity: 1 } 40.91%, 100% { opacity: 0 } } @keyframes rg-l2 { 0%, 27.27% { opacity: 0 } 30.11%, 38.07% { opacity: 1 } 40.91%, 100% { opacity: 0 } } @keyframes rg-r2 { 0%, 27.27% { opacity: 0 } 30.11%, 38.07% { opacity: 1 } 40.91%, 100% { opacity: 0 } } @keyframes rg-a2 { 0%, 32.39% { opacity: 0 } 35.23%, 40.91% { opacity: 1 } 43.75%, 100% { opacity: 0 } } @keyframes rg-s3 { 0%, 40.91% { opacity: 0 } 43.75%, 51.70% { opacity: 1 } 54.55%, 100% { opacity: 0 } } @keyframes rg-l3 { 0%, 40.91% { opacity: 0 } 43.75%, 51.70% { opacity: 1 } 54.55%, 100% { opacity: 0 } } @keyframes rg-r3 { 0%, 40.91% { opacity: 0 } 43.75%, 51.70% { opacity: 1 } 54.55%, 100% { opacity: 0 } } @keyframes rg-a3 { 0%, 46.02% { opacity: 0 } 48.86%, 54.55% { opacity: 1 } 57.39%, 100% { opacity: 0 } } @keyframes rg-s4 { 0%, 54.55% { opacity: 0 } 57.39%, 65.34% { opacity: 1 } 68.18%, 100% { opacity: 0 } } @keyframes rg-l4 { 0%, 54.55% { opacity: 0 } 57.39%, 65.34% { opacity: 1 } 68.18%, 100% { opacity: 0 } } @keyframes rg-r4 { 0%, 54.55% { opacity: 0 } 57.39%, 65.34% { opacity: 1 } 68.18%, 100% { opacity: 0 } } @keyframes rg-a4 { 0%, 59.66% { opacity: 0 } 62.50%, 68.18% { opacity: 1 } 71.02%, 100% { opacity: 0 } } @keyframes rg-s5 { 0%, 68.18% { opacity: 0 } 71.02%, 93.75% { opacity: 1 } 96.59%, 100% { opacity: 0 } } @keyframes rg-l5 { 0%, 68.18% { opacity: 0 } 71.02%, 93.75% { opacity: 1 } 96.59%, 100% { opacity: 0 } } @keyframes rg-r5 { 0%, 68.18% { opacity: 0 } 71.02%, 93.75% { opacity: 1 } 96.59%, 100% { opacity: 0 } } @keyframes rg-b0 { 0%, 0.00% { opacity: 0 } 2.84%, 10.80% { opacity: 1 } 13.64%, 100% { opacity: 0 } } @keyframes rg-b1 { 0%, 13.64% { opacity: 0 } 16.48%, 24.43% { opacity: 1 } 27.27%, 100% { opacity: 0 } } @keyframes rg-b2 { 0%, 27.27% { opacity: 0 } 30.11%, 38.07% { opacity: 1 } 40.91%, 100% { opacity: 0 } } @keyframes rg-b3 { 0%, 40.91% { opacity: 0 } 43.75%, 51.70% { opacity: 1 } 54.55%, 100% { opacity: 0 } } @keyframes rg-b4 { 0%, 54.55% { opacity: 0 } 57.39%, 65.34% { opacity: 1 } 68.18%, 100% { opacity: 0 } } @keyframes rg-b5 { 0%, 68.18% { opacity: 0 } 71.02%, 93.75% { opacity: 1 } 96.59%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg.rg-fig .rg-hl { animation: none !important; opacity: 0 } svg.rg-fig .rg-keep { animation: none !important; opacity: 1 } }</style>
+<path d="M153.6 149.0A42 42 0 0 1 226.4 149.0" class="bf-grid" style="stroke-width: 1.5"/>
+<path d="M226.4 149.0l-8 -2M226.4 149.0l-1 -8" class="bf-grid" style="stroke-width: 1.5"/>
+<text x="190" y="178" class="bf-tm" text-anchor="middle">each row</text>
+<text x="190" y="194" class="bf-tm" text-anchor="middle">reads clockwise</text>
+<circle cx="190.0" cy="82.0" r="20" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<circle cx="266.2" cy="126.0" r="20" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<circle cx="266.2" cy="214.0" r="20" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<circle cx="190.0" cy="258.0" r="20" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<circle cx="113.8" cy="214.0" r="20" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<circle cx="113.8" cy="126.0" r="20" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="190.0" y="120.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">0</text>
+<text x="236.8" y="147.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">1</text>
+<text x="236.8" y="201.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">2</text>
+<text x="190.0" y="228.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">3</text>
+<text x="143.2" y="201.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">4</text>
+<text x="143.2" y="147.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">5</text>
+<circle cx="190.0" cy="82.0" r="20" class="bf-cell-hi rg-hl" style="stroke: var(--bf-green); animation: rg-s0 8.80s linear infinite"/>
+<circle cx="113.8" cy="126.0" r="20" class="bf-slot rg-hl" style="stroke: var(--bf-steel); animation: rg-l0 8.80s linear infinite"/>
+<text x="190.0" y="25.0" class="bf-t-strong rg-keep" text-anchor="middle" style="animation: rg-r0 8.80s linear infinite">row 3</text>
+<path d="M168.5 47.9A124 124 0 0 0 95.0 90.3M95.0 90.3L97.0 80.2M95.0 90.3L104.6 86.6" class="bf-link rg-keep" style="stroke-width: 2; animation: rg-a0 8.80s linear infinite"/>
+<circle cx="113.8" cy="126.0" r="20" class="bf-cell-hi rg-hl" style="stroke: var(--bf-green); animation: rg-s1 8.80s linear infinite"/>
+<circle cx="113.8" cy="214.0" r="20" class="bf-slot rg-hl" style="stroke: var(--bf-steel); animation: rg-l1 8.80s linear infinite"/>
+<text x="60.1" y="100.0" class="bf-t-strong rg-keep" text-anchor="end" style="animation: rg-r1 8.80s linear infinite">row 0</text>
+<path d="M73.5 127.6A124 124 0 0 0 73.5 212.4M73.5 212.4L65.7 205.7M73.5 212.4L75.1 202.2" class="bf-link rg-keep" style="stroke-width: 2; animation: rg-a1 8.80s linear infinite"/>
+<circle cx="113.8" cy="214.0" r="20" class="bf-cell-hi rg-hl" style="stroke: var(--bf-green); animation: rg-s2 8.80s linear infinite"/>
+<circle cx="190.0" cy="258.0" r="20" class="bf-slot rg-hl" style="stroke: var(--bf-steel); animation: rg-l2 8.80s linear infinite"/>
+<text x="60.1" y="250.0" class="bf-t-strong rg-keep" text-anchor="end" style="animation: rg-r2 8.80s linear infinite">row 4</text>
+<path d="M95.0 249.7A124 124 0 0 0 168.5 292.1M168.5 292.1L158.7 295.5M168.5 292.1L160.5 285.6" class="bf-link rg-keep" style="stroke-width: 2; animation: rg-a2 8.80s linear infinite"/>
+<circle cx="190.0" cy="258.0" r="20" class="bf-cell-hi rg-hl" style="stroke: var(--bf-green); animation: rg-s3 8.80s linear infinite"/>
+<circle cx="266.2" cy="214.0" r="20" class="bf-slot rg-hl" style="stroke: var(--bf-steel); animation: rg-l3 8.80s linear infinite"/>
+<text x="190.0" y="325.0" class="bf-t-strong rg-keep" text-anchor="middle" style="animation: rg-r3 8.80s linear infinite">row 1</text>
+<path d="M211.5 292.1A124 124 0 0 0 285.0 249.7M285.0 249.7L283.0 259.8M285.0 249.7L275.4 253.4" class="bf-link rg-keep" style="stroke-width: 2; animation: rg-a3 8.80s linear infinite"/>
+<circle cx="266.2" cy="214.0" r="20" class="bf-cell-hi rg-hl" style="stroke: var(--bf-green); animation: rg-s4 8.80s linear infinite"/>
+<circle cx="266.2" cy="126.0" r="20" class="bf-slot rg-hl" style="stroke: var(--bf-steel); animation: rg-l4 8.80s linear infinite"/>
+<text x="319.9" y="250.0" class="bf-t-strong rg-keep" text-anchor="start" style="animation: rg-r4 8.80s linear infinite">row 5</text>
+<path d="M306.5 212.4A124 124 0 0 0 306.5 127.6M306.5 127.6L314.3 134.3M306.5 127.6L304.9 137.8" class="bf-link rg-keep" style="stroke-width: 2; animation: rg-a4 8.80s linear infinite"/>
+<circle cx="266.2" cy="126.0" r="20" class="bf-cell-hi rg-hl" style="stroke: var(--bf-green); animation: rg-s5 8.80s linear infinite"/>
+<circle cx="190.0" cy="82.0" r="20" class="bf-slot rg-hl" style="stroke: var(--bf-steel); animation: rg-l5 8.80s linear infinite"/>
+<text x="319.9" y="100.0" class="bf-t-strong rg-keep" text-anchor="start" style="animation: rg-r5 8.80s linear infinite">row 2</text>
+<text x="190.0" y="88.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<text x="266.2" y="132.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="266.2" y="220.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="190.0" y="264.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="113.8" y="220.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="113.8" y="132.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="410" y="60" class="bf-t-strong">Each move starts the reading one letter earlier</text>
+<rect x="402" y="75" width="290" height="24" rx="5" class="bf-cell-hi rg-hl" style="animation: rg-b0 8.80s linear infinite"/>
+<text x="410" y="92" class="bf-tm">row 3 reads from position 0</text>
+<text x="610" y="92" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">banan<tspan style="fill: var(--bf-steel); font-weight: 700">a</tspan></text>
+<rect x="402" y="103" width="290" height="24" rx="5" class="bf-cell-hi rg-hl" style="animation: rg-b1 8.80s linear infinite"/>
+<text x="410" y="120" class="bf-tm">row 0 reads from position 5</text>
+<text x="610" y="120" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">abana<tspan style="fill: var(--bf-steel); font-weight: 700">n</tspan></text>
+<rect x="402" y="131" width="290" height="24" rx="5" class="bf-cell-hi rg-hl" style="animation: rg-b2 8.80s linear infinite"/>
+<text x="410" y="148" class="bf-tm">row 4 reads from position 4</text>
+<text x="610" y="148" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">naban<tspan style="fill: var(--bf-steel); font-weight: 700">a</tspan></text>
+<rect x="402" y="159" width="290" height="24" rx="5" class="bf-cell-hi rg-hl" style="animation: rg-b3 8.80s linear infinite"/>
+<text x="410" y="176" class="bf-tm">row 1 reads from position 3</text>
+<text x="610" y="176" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">anaba<tspan style="fill: var(--bf-steel); font-weight: 700">n</tspan></text>
+<rect x="402" y="187" width="290" height="24" rx="5" class="bf-cell-hi rg-hl" style="animation: rg-b4 8.80s linear infinite"/>
+<text x="410" y="204" class="bf-tm">row 5 reads from position 2</text>
+<text x="610" y="204" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">nanab<tspan style="fill: var(--bf-steel); font-weight: 700">a</tspan></text>
+<rect x="402" y="215" width="290" height="24" rx="5" class="bf-cell-hi rg-hl" style="animation: rg-b5 8.80s linear infinite"/>
+<text x="410" y="232" class="bf-tm">row 2 reads from position 1</text>
+<text x="610" y="232" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">anana<tspan style="fill: var(--bf-steel); font-weight: 700">b</tspan></text>
+<text x="410" y="272" class="bf-tm">Each row's last letter, in L, is the letter just</text>
+<text x="410" y="290" class="bf-tm">before its start: a, n, a, n, a, b, which is</text>
+<text x="410" y="308" class="bf-tm">banana read backwards.</text>
 </svg>
-<figcaption>banana written round a circle, positions numbered from the top. Every row of the square reads the word clockwise from one letter, so its last letter is the one just before its first. Moving that last letter to the front starts the reading one letter earlier: the walk steps anticlockwise.</figcaption>
+<figcaption>banana written round a circle, positions numbered from the top. Every row of the square reads the word clockwise from one letter (green), so its last letter (blue) is the one just before its first. Moving that last letter to the front starts the reading one letter earlier, so the walk steps anticlockwise: rows 3, 0, 4, 1, 5, 2.</figcaption>
 </figure>
 
 | Row | Move its last letter to the front | Lands on row |
@@ -453,8 +475,8 @@ $L[I]$ is the last byte of $S$, so starting at $I$ and following $T$ gives $S$ f
 
 <figure class="bf-fig">
 <p class="bf-title">Decoding banana by following T</p>
-<svg viewBox="0 0 720 400" role="img" aria-label="An animation of the inverse transform on banana. Starting at row 3, the decoder reads L at the current row and writes it into the output from the end, then moves to the row T names: rows 3, 0, 4, 1, 5, 2, emitting a, n, a, n, a, b, which fill the output right to left as banana.">
-<style>.wk2-move { transform-box: view-box; } @keyframes wk2-col { 0.00%, 8.14% { transform: translate(0px, 0px) } 11.63%, 19.77% { transform: translate(74px, 0px) } 23.26%, 31.40% { transform: translate(148px, 0px) } 34.88%, 43.02% { transform: translate(222px, 0px) } 46.51%, 54.65% { transform: translate(296px, 0px) } 58.14%, 66.28% { transform: translate(370px, 0px) } 100% { transform: translate(370px, 0px) } } @keyframes wk2-col-o { 0% { opacity: 1 } 66.86% { opacity: 1 } 69.77% { opacity: 0 } 97.09% { opacity: 0 } 100% { opacity: 1 } } @keyframes wk2-b0 { 0%, 4.07% { opacity: 0 } 6.98%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b1 { 0%, 15.70% { opacity: 0 } 18.60%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b2 { 0%, 27.33% { opacity: 0 } 30.23%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b3 { 0%, 38.95% { opacity: 0 } 41.86%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b4 { 0%, 50.58% { opacity: 0 } 53.49%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b5 { 0%, 62.21% { opacity: 0 } 65.12%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-r0 { 0%, 0.00% { opacity: 0 } 2.91%, 11.63% { opacity: 1 } 14.53%, 100% { opacity: 0 } } @keyframes wk2-r1 { 0%, 11.63% { opacity: 0 } 14.53%, 23.26% { opacity: 1 } 26.16%, 100% { opacity: 0 } } @keyframes wk2-r2 { 0%, 23.26% { opacity: 0 } 26.16%, 34.88% { opacity: 1 } 37.79%, 100% { opacity: 0 } } @keyframes wk2-r3 { 0%, 34.88% { opacity: 0 } 37.79%, 46.51% { opacity: 1 } 49.42%, 100% { opacity: 0 } } @keyframes wk2-r4 { 0%, 46.51% { opacity: 0 } 49.42%, 58.14% { opacity: 1 } 61.05%, 100% { opacity: 0 } } @keyframes wk2-r5 { 0%, 58.14% { opacity: 0 } 61.05%, 73.84% { opacity: 1 } 76.74%, 100% { opacity: 0 } } @keyframes wk2-o0 { 0%, 4.07% { opacity: 0 } 6.98%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t0 { 0%, 0.00% { opacity: 0 } 2.91%, 8.72% { opacity: 1 } 11.63%, 100% { opacity: 0 } } @keyframes wk2-o1 { 0%, 15.70% { opacity: 0 } 18.60%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t1 { 0%, 11.63% { opacity: 0 } 14.53%, 20.35% { opacity: 1 } 23.26%, 100% { opacity: 0 } } @keyframes wk2-o2 { 0%, 27.33% { opacity: 0 } 30.23%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t2 { 0%, 23.26% { opacity: 0 } 26.16%, 31.98% { opacity: 1 } 34.88%, 100% { opacity: 0 } } @keyframes wk2-o3 { 0%, 38.95% { opacity: 0 } 41.86%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t3 { 0%, 34.88% { opacity: 0 } 37.79%, 43.60% { opacity: 1 } 46.51%, 100% { opacity: 0 } } @keyframes wk2-o4 { 0%, 50.58% { opacity: 0 } 53.49%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t4 { 0%, 46.51% { opacity: 0 } 49.42%, 55.23% { opacity: 1 } 58.14%, 100% { opacity: 0 } } @keyframes wk2-o5 { 0%, 62.21% { opacity: 0 } 65.12%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t5 { 0%, 58.14% { opacity: 0 } 61.05%, 66.86% { opacity: 1 } 69.77%, 100% { opacity: 0 } } @keyframes wk2-done { 0%, 69.77% { opacity: 0 } 72.67%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg [style*="animation"] { animation: none !important; opacity: 0 } svg .wk-out { opacity: 1 !important } }</style>
+<svg class="wk-fig" viewBox="0 0 720 400" role="img" aria-label="An animation of the inverse transform on banana. Starting at row 3, the decoder reads L at the current row and writes it into the output from the end, then moves to the row T names: rows 3, 0, 4, 1, 5, 2, emitting a, n, a, n, a, b, which fill the output right to left as banana.">
+<style>.wk2-move { transform-box: view-box; } @keyframes wk2-col { 0.00%, 8.14% { transform: translate(0px, 0px) } 11.63%, 19.77% { transform: translate(74px, 0px) } 23.26%, 31.40% { transform: translate(148px, 0px) } 34.88%, 43.02% { transform: translate(222px, 0px) } 46.51%, 54.65% { transform: translate(296px, 0px) } 58.14%, 66.28% { transform: translate(370px, 0px) } 100% { transform: translate(370px, 0px) } } @keyframes wk2-col-o { 0% { opacity: 1 } 66.86% { opacity: 1 } 69.77% { opacity: 0 } 97.09% { opacity: 0 } 100% { opacity: 1 } } @keyframes wk2-b0 { 0%, 4.07% { opacity: 0 } 6.98%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b1 { 0%, 15.70% { opacity: 0 } 18.60%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b2 { 0%, 27.33% { opacity: 0 } 30.23%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b3 { 0%, 38.95% { opacity: 0 } 41.86%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b4 { 0%, 50.58% { opacity: 0 } 53.49%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b5 { 0%, 62.21% { opacity: 0 } 65.12%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-r0 { 0%, 0.00% { opacity: 0 } 2.91%, 11.63% { opacity: 1 } 14.53%, 100% { opacity: 0 } } @keyframes wk2-r1 { 0%, 11.63% { opacity: 0 } 14.53%, 23.26% { opacity: 1 } 26.16%, 100% { opacity: 0 } } @keyframes wk2-r2 { 0%, 23.26% { opacity: 0 } 26.16%, 34.88% { opacity: 1 } 37.79%, 100% { opacity: 0 } } @keyframes wk2-r3 { 0%, 34.88% { opacity: 0 } 37.79%, 46.51% { opacity: 1 } 49.42%, 100% { opacity: 0 } } @keyframes wk2-r4 { 0%, 46.51% { opacity: 0 } 49.42%, 58.14% { opacity: 1 } 61.05%, 100% { opacity: 0 } } @keyframes wk2-r5 { 0%, 58.14% { opacity: 0 } 61.05%, 73.84% { opacity: 1 } 76.74%, 100% { opacity: 0 } } @keyframes wk2-o0 { 0%, 4.07% { opacity: 0 } 6.98%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t0 { 0%, 0.00% { opacity: 0 } 2.91%, 8.72% { opacity: 1 } 11.63%, 100% { opacity: 0 } } @keyframes wk2-o1 { 0%, 15.70% { opacity: 0 } 18.60%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t1 { 0%, 11.63% { opacity: 0 } 14.53%, 20.35% { opacity: 1 } 23.26%, 100% { opacity: 0 } } @keyframes wk2-o2 { 0%, 27.33% { opacity: 0 } 30.23%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t2 { 0%, 23.26% { opacity: 0 } 26.16%, 31.98% { opacity: 1 } 34.88%, 100% { opacity: 0 } } @keyframes wk2-o3 { 0%, 38.95% { opacity: 0 } 41.86%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t3 { 0%, 34.88% { opacity: 0 } 37.79%, 43.60% { opacity: 1 } 46.51%, 100% { opacity: 0 } } @keyframes wk2-o4 { 0%, 50.58% { opacity: 0 } 53.49%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t4 { 0%, 46.51% { opacity: 0 } 49.42%, 55.23% { opacity: 1 } 58.14%, 100% { opacity: 0 } } @keyframes wk2-o5 { 0%, 62.21% { opacity: 0 } 65.12%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t5 { 0%, 58.14% { opacity: 0 } 61.05%, 66.86% { opacity: 1 } 69.77%, 100% { opacity: 0 } } @keyframes wk2-done { 0%, 69.77% { opacity: 0 } 72.67%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg.wk-fig [style*="animation"] { animation: none !important; opacity: 0 } svg.wk-fig .wk-out { opacity: 1 !important } }</style>
 <text x="130" y="34" class="bf-tm" text-anchor="end">row visited</text>
 <text x="130" y="74" class="bf-tm" text-anchor="end">byte read</text>
 <rect x="144" y="8" width="52" height="84" rx="7" class="bf-box wk2-move" style="animation: wk2-col 8.60s ease-in-out infinite, wk2-col-o 8.60s linear infinite; stroke-width: 2"/>
