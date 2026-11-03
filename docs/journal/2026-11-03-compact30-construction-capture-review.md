@@ -169,3 +169,51 @@ measurements.
 >
 > The Guardian will review your assessment before deciding whether even one bounded
 > correctness prototype is justified.
+
+## Report 204: the researcher's independent review of the capture (as relayed)
+
+The researcher independently inspected the capture archive and agrees with the guardian's
+distinction: **formally INVALID**, and strongly against further investment in this
+particular direct constructor (constructor version 1).
+
+**Verified independently:**
+- the archive's sha256 `47c61c87…bfed5f3`, and all 69 manifest-listed files' checksums;
+- the six construction ratios, recomputed from the raw JSONL records rather than the
+  supplied analysis: warm four-worker CPU cost C ÷ P 1.316 (precisely 1.315827), completion
+  1.364; full blocks only 1.315.
+
+**How much the failed gates undermine the finding, in the researcher's assessment:**
+- **G1** is a real stability failure, concentrated in a non-deciding measure: production's
+  warm one-worker cost ranged from 0.443 to 0.544 ns/row, while its four-worker cost varied
+  by only 2.54% across rounds. Every paired round's four-worker ratio was above the 1.06714
+  ceiling.
+- **G2** was a genuine isolated breach: one of 4,560 full four-worker steps, a 35.1 µs start
+  gap, 4.125% of that step's completion time. **The second-highest skew anywhere in the
+  capture was 1.964%,** just below the threshold. The 35.1 µs gap is about 0.11% of that
+  round's total production four-worker completion time, so removing it cannot plausibly
+  bridge a 1.364 completion ratio to the 1.02 budget.
+
+**The technical lesson** (warm, CPU time per row, means over the rounds):
+
+| | production | compact30 | C ÷ P |
+|---|---:|---:|---:|
+| one worker | 0.505 ns | 0.730 ns | 1.45 |
+| four workers | 0.592 ns | 0.779 ns | 1.32 |
+
+Production's constructor slowed more under four-worker contention than compact30's did:
+contention narrowed compact30's disadvantage, but nowhere near enough. The memory-footprint
+advantage and the validated traversal improvement remain real; constructing the smaller
+table, with this implementation, costs enough extra work to overwhelm the anticipated
+benefit. In the earlier planning model the recorded ratio gives about 0.108 CPU-seconds
+saved per decoded GB against the 0.25 target: a diagnostic projection from an invalid
+capture, not a measured decoder result.
+
+**The researcher's recommendation:** preserve the guardian's decision, INVALID and STOP for
+this constructor, without an automatic rerun. Don't retrospectively weaken G1 or G2 to
+obtain a formal FAIL, and don't insist on another capture just to give a registered name to
+a large, consistent adverse signal: formal validity and the decision about further effort
+are different questions. The outcome is a publishable boundary, with the invalid status
+and the evidence's limits kept explicit: saving navigation-table memory can make traversal
+faster under contention, but a viable decoder needs a construction method cheap enough to
+preserve that gain. (This review concerns constructor version 1; report 203's design
+request to Astra, for a fundamentally cheaper constructor, is unaffected.)
