@@ -188,8 +188,8 @@ in a different order. Then sort the six rotations alphabetically and stack them 
 <figcaption>The rotations of banana in alphabetical order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.</figcaption>
 </figure>
 
-Read down the last column of the sorted rows, and it spells `nnbaaa`. The original `banana` is
-in row 3, counting from zero. The transform keeps just those two things, the last column and
+Read down the last column of the sorted rows, and it spells `nnbaaa`. The original `banana`, the
+rotation by nothing, is in row 3, counting from zero. The transform keeps just those two things, the last column and
 the row number, and stores nothing else. It doesn't make the block smaller; the reordered
 letters compress better in bzip2's later stages, for a reason that comes below.
 
@@ -307,25 +307,69 @@ square:
 So the decoder is given $L$ and $I$ and must produce $S$. It never holds $M$: the inverse
 transform recovers just enough of it, from $L$, to read off row $I$.
 
-**Why the first and last columns.** Every row of $M$ is $S$ read round from some starting point,
-so in every row the last byte comes just before the first, going round $S$. Row 3 ends in `a`
-and starts with `b`, and the final `a` of `banana` comes, going round, before its opening
-`b`. That is the relation the whole paper builds on: $L[i]$ comes just before $F[i]$ in $S$. The
-two columns carry different information:
+**Why the first and last columns matter.** Each row of $M$ is the word read from a different
+starting letter, carrying on round to the beginning when it reaches the end. Row 1, `anaban`,
+starts at the second `a` of `banana` (position 3), reads `an` to the end, then wraps round to
+read `ban`. So its last letter, `n`, is the letter at position 2: the one just before where
+the row started.
 
-- **$F$** is the bytes of $S$ in sorted order, so the counts alone fix it. A decoder holding $L$
-  can rebuild $F$ by counting, so it is never sent.
-- **$L$** holds the byte that precedes each row's opening context, with the rows sorted by
-  context. Bytes before similar contexts tend to repeat (in English, `he ` is often preceded
-  by `t`), so $L$ has long runs, which bzip2's later stages compress.
+<figure class="bf-fig">
+<p class="bf-title">Each row wraps round the word</p>
+<svg viewBox="0 0 720 300" role="img" aria-label="The word banana written round a circle. Row 1 of the sorted square, anaban, is the word read clockwise from the second a, at position 3, round past the end and back to the start, finishing on the n at position 2. So the row's last letter, n, is the letter just before its first letter, a.">
+<path d="M135.3 271.1A126 126 0 1 1 292.3 180.5" class="bf-link"/>
+<path d="M292.3 180.5L299.3 173.0" class="bf-link"/>
+<path d="M292.3 180.5L289.6 170.5" class="bf-link"/>
+<circle cx="170.0" cy="58.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="170.0" y="64.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<text x="170.0" y="102.0" class="bf-tm" text-anchor="middle">0</text>
+<circle cx="249.7" cy="104.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="249.7" y="110.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="215.0" y="128.0" class="bf-tm" text-anchor="middle">1</text>
+<circle cx="249.7" cy="196.0" r="21" class="bf-slot" style="stroke: var(--bf-frame)"/>
+<text x="249.7" y="202.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="215.0" y="180.0" class="bf-tm" text-anchor="middle">2</text>
+<circle cx="170.0" cy="242.0" r="21" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
+<text x="170.0" y="248.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="170.0" y="206.0" class="bf-tm" text-anchor="middle">3</text>
+<circle cx="90.3" cy="196.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="90.3" y="202.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="125.0" y="180.0" class="bf-tm" text-anchor="middle">4</text>
+<circle cx="90.3" cy="104.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="90.3" y="110.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="125.0" y="128.0" class="bf-tm" text-anchor="middle">5</text>
+<path d="M194.0 242.0H380" class="bf-grid" style="stroke-dasharray: 3 3"/>
+<path d="M273.7 196.0H380" class="bf-grid" style="stroke-dasharray: 3 3"/>
+<text x="392" y="192.0" class="bf-t-strong">ends here: n, its last letter, in L</text>
+<text x="392" y="211.0" class="bf-tm">the letter just before where it started</text>
+<text x="392" y="238.0" class="bf-t-strong">row 1, anaban, starts here: a, in F</text>
+<text x="392" y="257.0" class="bf-tm">and reads clockwise, round past the end</text>
+</svg>
+<figcaption>banana written round a circle, positions numbered. Every row of the sorted square starts somewhere on the circle and reads all the way round, so its last letter is always the one just before its first.</figcaption>
+</figure>
+
+The same holds for every row. Its last letter, in $L$, is the letter that comes just before
+its first letter, in $F$, in the original word. That gives a decoder a way to go backwards:
+for any row, $L$ says which letter comes before that row's first letter. If the decoder also
+knew which row *starts* with that earlier letter, it could jump there and repeat, reading the
+word back one letter at a time.
+
+Of the two columns, only $L$ is stored:
+
+- **$F$** is the letters of the word in sorted order, so the counts alone fix it. A decoder
+  holding $L$ can rebuild $F$ by counting, so it is never sent.
+- **$L$** holds the letter that comes before each row's opening, with the rows sorted by what
+  follows. Letters before similar text tend to repeat (in English, `he ` is often preceded by
+  `t`), so $L$ has long runs, which bzip2's later stages compress well.
 
 $F$ and $L$ aren't two unrelated strings, though. They are columns of the same sorted square, and
 that ties them together: each letter's occurrences come in the same order in both. The first
 `a` in $L$ matches the first `a` in $F$, the second matches the second, and so on; why comes
-below. That matching is what the decoder
-needs and doesn't have. Seward records it in the *"transformation vector"* $T$, and builds $T$
-from $C$, a count of each letter. The decoder's whole path, from what is stored back to the
-word:
+below. That matching is exactly what the decoder needs in order to jump: it says which row
+starts with each letter of $L$. Seward records it in the *"transformation vector"* $T$, and
+builds $T$ from $C$, a count of each letter. Because $F$ is sorted, it is one run of each
+letter, so these counts are simply $F$'s [run-length
+encoding](https://en.wikipedia.org/wiki/Run-length_encoding): `a` 3, `b` 1, `n` 2. The
+decoder's whole path, from what is stored back to the word:
 
 <figure class="bf-fig">
 <p class="bf-title">What the decoder rebuilds</p>
