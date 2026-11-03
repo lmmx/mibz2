@@ -497,7 +497,8 @@ halves the scans. With L, tree-1M and treeopt-1M take 2N bytes and treeopt-500k 
 ## What Seward measured
 
 The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-level cache.
-Each block, at most 10⁶ bytes, was inverted ten times. His first table gives the memory:
+Each block, at most 10⁶ bytes, was inverted ten times. How much memory each algorithm needs
+for a 10⁶-byte block:
 
 | Algorithm | Memory | Seward's description |
 |---|--:|---|
@@ -509,7 +510,7 @@ Each block, at most 10⁶ bytes, was inverted ten times. His first table gives t
 | `treeopt-1M` | 2000 kB | More space-economical version of tree-1M |
 | `treeopt-500k` | 1500 kB | As treeopt-1M but with only 500k auxiliary space |
 
-His second lists six test files of at least a megabyte, four from the [Canterbury
+He tested them on six files of at least a megabyte, four from the [Canterbury
 Corpus](https://corpus.canterbury.ac.nz/descriptions/). The last column names the nearest of
 mibz2's [benchmark corpora](../benchmarks/index.md), loosely:
 
@@ -522,7 +523,7 @@ mibz2's [benchmark corpora](../benchmarks/index.md), loosely:
 | netscape | 7678.8 | Netscape Navigator 4.75, an x86 executable | `records`, binary |
 | bashtgz | 1708.8 | bash 2.04's source, gzipped | `random` |
 
-His third gives the inversion rates in MB/s. mergedTL is the fastest on every file:
+How fast each algorithm inverted each file, in MB/s. mergedTL is the fastest on every one:
 
 | | basis | bw94 | mergedTL | indexF | tree-1M | treeopt-1M | treeopt-500k |
 |---|--:|--:|--:|--:|--:|--:|--:|
@@ -534,8 +535,8 @@ His third gives the inversion rates in MB/s. mergedTL is the fastest on every fi
 | world192 | 1.65 | 1.69 | 2.65 | 1.31 | 0.207 | 0.298 | 0.198 |
 | Average | 1.86 | 1.93 | 3.10 | 1.43 | 0.153 | 0.211 | 0.154 |
 
-The paper has no figure. Plotting the averages against the memory draws the tradeoff of its
-title:
+The paper gives these numbers only as tables. Plotting each algorithm's average speed against
+its memory shows the space–time tradeoff between them:
 
 <figure class="bf-fig">
 <p class="bf-title">Seward's measured speed–memory choices</p>
