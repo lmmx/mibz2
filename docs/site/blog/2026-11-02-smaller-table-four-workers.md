@@ -80,10 +80,10 @@ it: a way to build the table cheaply.
 
 ## 1. From sorted rotations to the transformation vector
 
-Imagine bzip2 compressing the six bytes `banana`. The transform doesn't shrink them: it
-reorders them into `nnbaaa` and records the number 3. bzip2's later stages compress that
-output, and decoding, once it has undone those stages, has to get `banana` back from
-`nnbaaa` and 3. Seward's notation, which he takes from Burrows and Wheeler's
+Suppose you want to compress the word `banana` with bzip2. At bzip2's core is the BWT,
+which doesn't shrink the six bytes: it reorders them into `nnbaaa` and records the number 3.
+bzip2's later stages then compress that. Decompressing undoes the stages in reverse order,
+and near the end comes the inverse transform: getting `banana` back from `nnbaaa` and 3. Seward's notation, which he takes from Burrows and Wheeler's
 1994 report *[A Block-sorting Lossless Data Compression
 Algorithm](https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf)*, names every
 piece:
@@ -495,8 +495,8 @@ because it reduces the number of cache misses."*
 ## 3. Spending less memory: indexF and the trees
 
 *"Can we reduce memory use whilst retaining useful decompression speed? Interestingly, yes."*
-The relation in $F$, $F[T[i]]$ precedes $F[i]$, needs only $T$ to walk. Read the output bytes from $F$
-instead of $L$, and $L$ is needed only while $T$ is built, so $T$ can be written over it. $F$ needn't
+The relation in $F$, $F[T[i]]$ precedes $F[i]$, needs only $T$ to walk. If the decoder reads the output bytes
+from $F$ instead of $L$, it needs $L$ only while it builds $T$, so $T$ can be written over it. $F$ needn't
 be stored either: it is sorted, so the 256 running totals in $C$ describe it, and $F[p]$ is the
 byte whose bucket contains $p$. *"No free lunch, alas"*: finding it is a binary search in $C$.
 
