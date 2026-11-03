@@ -147,7 +147,10 @@ DEFAULT_DESCRIPTION = (
 def cards(root=Path(".")):
     """Every card to draw: its PNG path (relative to the site) and the text it shows."""
     config = tomllib.loads((root / "zensical.toml").read_text())["project"]
-    host = re.sub(r"^https?://|/$", "", config["site_url"])
+    # A card shows the published address: a PR preview build rewrites site_url to its
+    # pr-preview/pr-<n>/ path, which no card should carry.
+    site_url = re.sub(r"pr-preview/pr-\d+/$", "", config["site_url"])
+    host = re.sub(r"^https?://|/$", "", site_url)
     out = {
         "assets/social/default.png": dict(
             section="", title=config["site_description"], description=DEFAULT_DESCRIPTION, foot=host
