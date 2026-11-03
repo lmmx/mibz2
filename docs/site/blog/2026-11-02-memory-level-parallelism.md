@@ -1,7 +1,7 @@
 ---
 title: "Memory-level parallelism in mibz2: instructions, overlap and evidence"
 image: assets/social/blog-2026-11-02-memory-level-parallelism.png
-description: "Interleaved pointer chases overlap their memory waits. The speedup shows that this pays, but not what limits it, and so not what to make faster next."
+description: "Interleaving pointer chases lets memory waits overlap. The speedup shows that this pays, but not what limits it: a 2022 exchange about Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk."
 ---
 
 <div class="post-hero" markdown>
