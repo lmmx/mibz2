@@ -19,7 +19,7 @@ ask whether a smaller navigation table could do more work per step and still com
 under contention. A first measurement of ours shows it doing so.
 {: .post-dek }
 
-2 November 2026 · 23 min read · [Result](#7-timing-the-walk-on-one-core-and-on-four)
+2 November 2026 · 24 min read · [Result](#7-timing-the-walk-on-one-core-and-on-four)
 {: .post-meta }
 
 </div>
@@ -307,53 +307,7 @@ square:
 So the decoder is given $L$ and $I$ and must produce $S$. It never holds $M$: the inverse
 transform recovers just enough of it, from $L$, to read off row $I$.
 
-**Why the first and last columns matter.** Each row of $M$ is the word read from a different
-starting letter, carrying on round to the beginning when it reaches the end. Row 1, `anaban`,
-starts at the second `a` of `banana` (position 3), reads `an` to the end, then wraps round to
-read `ban`. So its last letter, `n`, is the letter at position 2: the one just before where
-the row started.
-
-<figure class="bf-fig">
-<p class="bf-title">Each row wraps round the word</p>
-<svg viewBox="0 0 720 300" role="img" aria-label="The word banana written round a circle. Row 1 of the sorted square, anaban, is the word read clockwise from the second a, at position 3, round past the end and back to the start, finishing on the n at position 2. So the row's last letter, n, is the letter just before its first letter, a.">
-<path d="M135.3 271.1A126 126 0 1 1 292.3 180.5" class="bf-link"/>
-<path d="M292.3 180.5L299.3 173.0" class="bf-link"/>
-<path d="M292.3 180.5L289.6 170.5" class="bf-link"/>
-<circle cx="170.0" cy="58.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
-<text x="170.0" y="64.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<text x="170.0" y="102.0" class="bf-tm" text-anchor="middle">0</text>
-<circle cx="249.7" cy="104.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
-<text x="249.7" y="110.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<text x="215.0" y="128.0" class="bf-tm" text-anchor="middle">1</text>
-<circle cx="249.7" cy="196.0" r="21" class="bf-slot" style="stroke: var(--bf-frame)"/>
-<text x="249.7" y="202.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<text x="215.0" y="180.0" class="bf-tm" text-anchor="middle">2</text>
-<circle cx="170.0" cy="242.0" r="21" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
-<text x="170.0" y="248.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<text x="170.0" y="206.0" class="bf-tm" text-anchor="middle">3</text>
-<circle cx="90.3" cy="196.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
-<text x="90.3" y="202.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<text x="125.0" y="180.0" class="bf-tm" text-anchor="middle">4</text>
-<circle cx="90.3" cy="104.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
-<text x="90.3" y="110.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<text x="125.0" y="128.0" class="bf-tm" text-anchor="middle">5</text>
-<path d="M194.0 242.0H380" class="bf-grid" style="stroke-dasharray: 3 3"/>
-<path d="M273.7 196.0H380" class="bf-grid" style="stroke-dasharray: 3 3"/>
-<text x="392" y="192.0" class="bf-t-strong">ends here: n, its last letter, in L</text>
-<text x="392" y="211.0" class="bf-tm">the letter just before where it started</text>
-<text x="392" y="238.0" class="bf-t-strong">row 1, anaban, starts here: a, in F</text>
-<text x="392" y="257.0" class="bf-tm">and reads clockwise, round past the end</text>
-</svg>
-<figcaption>banana written round a circle, positions numbered. Every row of the sorted square starts somewhere on the circle and reads all the way round, so its last letter is always the one just before its first.</figcaption>
-</figure>
-
-The same holds for every row. Its last letter, in $L$, is the letter that comes just before
-its first letter, in $F$, in the original word. That gives a decoder a way to go backwards:
-for any row, $L$ says which letter comes before that row's first letter. If the decoder also
-knew which row *starts* with that earlier letter, it could jump there and repeat, reading the
-word back one letter at a time.
-
-Of the two columns, only $L$ is stored:
+**Why only $L$ is stored.** Of the square's two outer columns, bzip2 keeps only the last:
 
 - **$F$** is the letters of the word in sorted order, so the counts alone fix it. A decoder
   holding $L$ can rebuild $F$ by counting, so it is never sent.
@@ -361,15 +315,99 @@ Of the two columns, only $L$ is stored:
   follows. Letters before similar text tend to repeat (in English, `he ` is often preceded by
   `t`), so $L$ has long runs, which bzip2's later stages compress well.
 
-$F$ and $L$ aren't two unrelated strings, though. They are columns of the same sorted square, and
-that ties them together: each letter's occurrences come in the same order in both. The first
-`a` in $L$ matches the first `a` in $F$, the second matches the second, and so on; why comes
-below. That matching is exactly what the decoder needs in order to jump: it says which row
-starts with each letter of $L$. Seward records it in the *"transformation vector"* $T$, and
-builds $T$ from $C$, a count of each letter. Because $F$ is sorted, it is one run of each
-letter, so these counts are simply $F$'s [run-length
-encoding](https://en.wikipedia.org/wiki/Run-length_encoding): `a` 3, `b` 1, `n` 2. The
-decoder's whole path, from what is stored back to the word:
+**Moving backwards through the word.** Look again at row 3, `banana`. Move its last letter to
+the front and you get `abanan`. That is another rotation of the word, so it is already in the
+square, at row 0. Do the same to `abanan` and you get `nabana`, at row 4. Each move steps one
+letter backwards through the word, treating its end as joined to its beginning, as on a ring:
+
+<figure class="bf-fig">
+<p class="bf-title">Stepping backwards round the word</p>
+<svg viewBox="0 0 720 330" role="img" aria-label="banana written round a circle, positions 0 to 5 clockwise from the top. Each row of the square reads the word clockwise from one letter. Row 3 starts at the b, position 0. Moving its last letter to the front starts the reading one letter earlier: row 0 starts at position 5, row 4 at position 4, row 1 at position 3. Arrows step anticlockwise from each start to the next.">
+<path d="M168.5 37.9A124 124 0 0 0 95.0 80.3" class="bf-link" style="stroke-width: 2"/>
+<path d="M95.0 80.3L97.0 70.2" class="bf-link" style="stroke-width: 2"/>
+<path d="M95.0 80.3L104.6 76.6" class="bf-link" style="stroke-width: 2"/>
+<path d="M73.5 117.6A124 124 0 0 0 73.5 202.4" class="bf-link" style="stroke-width: 2"/>
+<path d="M73.5 202.4L65.7 195.7" class="bf-link" style="stroke-width: 2"/>
+<path d="M73.5 202.4L75.1 192.2" class="bf-link" style="stroke-width: 2"/>
+<path d="M95.0 239.7A124 124 0 0 0 168.5 282.1" class="bf-link" style="stroke-width: 2"/>
+<path d="M168.5 282.1L158.7 285.5" class="bf-link" style="stroke-width: 2"/>
+<path d="M168.5 282.1L160.5 275.6" class="bf-link" style="stroke-width: 2"/>
+<path d="M153.6 139.0A42 42 0 0 1 226.4 139.0" class="bf-grid" style="stroke-width: 1.5"/>
+<path d="M226.4 139.0l-8 -2M226.4 139.0l-1 -8" class="bf-grid" style="stroke-width: 1.5"/>
+<text x="190" y="168" class="bf-tm" text-anchor="middle">each row</text>
+<text x="190" y="184" class="bf-tm" text-anchor="middle">reads clockwise</text>
+<circle cx="190.0" cy="72.0" r="20" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
+<text x="190.0" y="78.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<circle cx="266.2" cy="116.0" r="20" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="266.2" y="122.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<circle cx="266.2" cy="204.0" r="20" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="266.2" y="210.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<circle cx="190.0" cy="248.0" r="20" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
+<text x="190.0" y="254.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<circle cx="113.8" cy="204.0" r="20" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
+<text x="113.8" y="210.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<circle cx="113.8" cy="116.0" r="20" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
+<text x="113.8" y="122.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="190.0" y="15.0" class="bf-t-strong" text-anchor="middle">row 3</text>
+<text x="60.1" y="90.0" class="bf-t-strong" text-anchor="end">row 0</text>
+<text x="60.1" y="240.0" class="bf-t-strong" text-anchor="end">row 4</text>
+<text x="190.0" y="315.0" class="bf-t-strong" text-anchor="middle">row 1</text>
+<text x="190.0" y="110.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">0</text>
+<text x="236.8" y="137.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">1</text>
+<text x="236.8" y="191.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">2</text>
+<text x="190.0" y="218.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">3</text>
+<text x="143.2" y="191.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">4</text>
+<text x="143.2" y="137.0" class="bf-ttiny" text-anchor="middle" style="fill: var(--bf-muted)">5</text>
+<text x="410" y="78" class="bf-t-strong">Each move starts the reading one letter earlier</text>
+<text x="410" y="110" class="bf-tm">row 3 reads from position 0</text>
+<text x="610" y="110" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">banana</text>
+<text x="410" y="136" class="bf-tm">row 0 reads from position 5</text>
+<text x="610" y="136" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">abanan</text>
+<text x="410" y="162" class="bf-tm">row 4 reads from position 4</text>
+<text x="610" y="162" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">nabana</text>
+<text x="410" y="188" class="bf-tm">row 1 reads from position 3</text>
+<text x="610" y="188" class="bf-t" style="font-family: var(--md-code-font-family); font-size: 15px">anaban</text>
+<text x="410" y="230" class="bf-tm">The letter moved to the front each time is the</text>
+<text x="410" y="248" class="bf-tm">row's last letter, in L: a, then n, then a.</text>
+</svg>
+<figcaption>banana written round a circle, positions numbered from the top. Every row of the square reads the word clockwise from one letter, so its last letter is the one just before its first. Moving that last letter to the front starts the reading one letter earlier: the walk steps anticlockwise.</figcaption>
+</figure>
+
+| Row | Move its last letter to the front | Lands on row |
+|---|---|---|
+| 3: `banana` | `a` + `banan` | 0: `abanan` |
+| 0: `abanan` | `n` + `abana` | 4: `nabana` |
+| 4: `nabana` | `a` + `naban` | 1: `anaban` |
+
+The letters moved, `a`, `n`, `a`, are each row's last letter, in $L$, and they spell `banana`
+backwards from its end. So a decoder could recover the whole word from $L$ alone, starting at
+row $I$, if it knew where each move lands. Seward records the landing rows in $T$, the
+*"transformation vector"*: here $T[3] = 0$, $T[0] = 4$ and $T[4] = 1$. His theory section, *"a
+more detailed exposition of Algorithm D in §2 of [1]"*, puts it in symbols:
+
+\[
+M[j, N-1]\; M[j, 0..N-2] = M[i, 0..N-1] \quad\Longrightarrow\quad T[j] = i.
+\]
+
+The left-hand side is row $j$ with its last letter moved to the front; $T[j]$ is the row where
+that lands.
+
+**Which row to land on.** The moved letter becomes the first letter of the landing row, so
+the landing row is one of those that start with it in $F$. But `banana` has three `a`s, so
+three rows start with `a`. Moving the `a` off the end of row 3 lands on row 0, not row 1 or 2;
+how could a decoder know that without the square?
+
+Because each letter's occurrences keep their order between the two columns. The first `a` in
+$L$ (row 3's) lands on the first row starting with `a` (row 0), the second `a` in $L$ on the
+second, and so on, for every letter. The sorting guarantees it: two rows that end in the same
+letter keep their order when that letter moves to the front, because the rest of each row,
+already in sorted order, still decides which comes first.
+
+So the matching can be worked out from $L$ and a count of each letter. Because $F$ is sorted,
+its letters occur in runs, three `a`s, one `b` and two `n`s, and those counts describe it
+completely, much like [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding).
+Seward calls the count table $C$; once the counts are accumulated, it says where each letter's
+run begins in $F$. The decoder's whole path, from what is stored back to the word:
 
 <figure class="bf-fig">
 <p class="bf-title">What the decoder rebuilds</p>
@@ -402,21 +440,6 @@ decoder's whole path, from what is stored back to the word:
 </svg>
 <figcaption>Each arrow is a step explained in the rest of this section: counting, expanding the counts into F, matching occurrences to get T, and the walk.</figcaption>
 </figure>
-
-**Defining $T$.** Seward's theory section is *"a more detailed exposition of Algorithm D in §2
-of [1]"*, Burrows and Wheeler's decompression algorithm, because *"the increased detail
-exposes a range of possible implementations"*. Everything rests on *"establishing the
-relationship between the $F$ and $L$ vectors, and recording this in the 'transformation vector'
-$T$"*:
-
-\[
-M[j, N-1]\; M[j, 0..N-2] = M[i, 0..N-1] \quad\Longrightarrow\quad T[j] = i.
-\]
-
-Take row $j$ and move its last byte to the front. That is another rotation of $S$, so it is some
-row $i$ of $M$, and $T[j]$ records which. Row 0, `abanan`, becomes `nabana`, row 4, so $T[0] = 4$.
-Moving the last byte to the front starts the string one byte earlier in $S$, so following $T$
-walks $S$ backwards.
 
 **Walking $T$.** Row $T[j]$ starts with the byte row $j$ ends with, which comes just before row $j$'s
 first byte in $S$. So $F[T[i]]$ precedes $F[i]$. The decoder has $L$, not $F$, but $L[k] = F[T[k]]$, and
@@ -548,9 +571,8 @@ $T[i] = s$ (`tt[cftab[uc]++] |= i << 8`), and following that $T^{-1}$ emits $S$ 
 does the same, so its navigation table holds $T^{-1}$: each entry points forwards, to the row
 whose string starts one byte later in $S$.
 
-**Building $T$ from counts.** The rows of $M$ are sorted, and two rows ending in the same byte
-keep their order when that byte moves to the front, since the rest of each row decides it.
-So the $k$-th $c$ in $L$ rotates into the $k$-th row starting with $c$: *"if $c$ occurs $k$ times in
+**Building $T$ from counts.** Since the $k$-th $c$ in $L$ lands on the $k$-th row starting with
+$c$, Seward can state the rule directly: *"if $c$ occurs $k$ times in
 $L[0..j]$ and $L[j] = c$, then $T[j]$ must be $i$, where $i$ is the position of the $k$-th $c$ in $F$."*
 
 <figure class="bf-fig">
