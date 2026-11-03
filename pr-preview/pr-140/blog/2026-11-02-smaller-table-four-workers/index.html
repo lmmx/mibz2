@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result.">
+        <meta name="description" content="A compact inverse-BWT table that costs more per step but wins with four cores, read against Julian Seward's 2001 paper on the tradeoff.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -24,7 +24,7 @@
         <link rel="prev" href="../">
       
       
-        <link rel="next" href="../2026-11-02-memory-level-parallelism/">
+        <link rel="next" href="../2026-11-02-seward-bwt-space-time-tradeoff/">
       
       
         
@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=eafb8f76fd23">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=7f7ffe0bfb4d">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=eafb8f76fd23">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=7f7ffe0bfb4d">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=eafb8f76fd23">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=7f7ffe0bfb4d">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=eafb8f76fd23">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=7f7ffe0bfb4d">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=eafb8f76fd23">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=7f7ffe0bfb4d">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -88,7 +88,7 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
   <meta property="og:title" content="Revisiting the space–time tradeoff in BWT inversion">
-  <meta property="og:description" content="A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result.">
+  <meta property="og:description" content="A compact inverse-BWT table that costs more per step but wins with four cores, read against Julian Seward's 2001 paper on the tradeoff.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-02-smaller-table-four-workers/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-140/assets/social/blog-2026-11-02-smaller-table-four-workers.png">
   <meta property="og:image:type" content="image/png">
@@ -97,7 +97,7 @@
   <meta property="og:image:alt" content="Revisiting the space–time tradeoff in BWT inversion">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Revisiting the space–time tradeoff in BWT inversion">
-  <meta name="twitter:description" content="A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result.">
+  <meta name="twitter:description" content="A compact inverse-BWT table that costs more per step but wins with four cores, read against Julian Seward's 2001 paper on the tradeoff.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-140/assets/social/blog-2026-11-02-smaller-table-four-workers.png">
   <meta name="twitter:image:alt" content="Revisiting the space–time tradeoff in BWT inversion">
 
@@ -1041,6 +1041,8 @@
       
         
       
+        
+      
     
     
     
@@ -1155,10 +1157,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-problem-was-never-just-storing-fewer-bytes" class="md-nav__link">
+  <a href="#the-question-seward-1" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        The problem was never just storing fewer bytes
+        The question (Seward §1)
       </span>
     </span>
   </a>
@@ -1166,10 +1168,38 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-first-positive-traversal-result" class="md-nav__link">
+  <a href="#the-notation-on-a-six-byte-block-11" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        The first positive traversal result
+        The notation, on a six-byte block (§1.1)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The notation, on a six-byte block (§1.1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-the-first-and-last-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why the first and last columns
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-transformation-vector-t-21" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The transformation vector T (§2.1)
       </span>
     </span>
   </a>
@@ -1177,10 +1207,154 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#a-promising-traversal-is-not-yet-a-better-decoder" class="md-nav__link">
+  <a href="#walking-t-back-to-the-text-22" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        A promising traversal is not yet a better decoder
+        Walking T back to the text (§2.2)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Walking T back to the text (§2.2)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backwards-and-bzip2s-design-flaw" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Backwards, and bzip2's "design flaw"
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-t-from-counts-alone-23" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Building T from counts alone (§2.3)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#as-fast-as-possible-basis-bw94-and-mergedtl-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        As fast as possible: basis, bw94 and mergedTL (§3)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#less-memory-t-overwrites-l-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Less memory: T overwrites L (§4)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Less memory: T overwrites L (§4)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-indexf-gives-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What indexF gives up
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-least-memory-no-t-at-all-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The least memory: no T at all (§5)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-measurements-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The measurements (§6)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#three-anomalies-and-a-bound-63" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Three anomalies, and a bound (§6.3)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-changed-since-2001" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What changed since 2001
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-table-between-mergedtl-and-indexf" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A table between mergedTL and indexF
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-comparison-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What the comparison found
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-doesnt-show-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What it doesn't show yet
       </span>
     </span>
   </a>
@@ -1191,6 +1365,33 @@
   
 </nav>
       
+    </li>
+  
+
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2026-11-02-seward-bwt-space-time-tradeoff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  BWT space–time tradeoff (alternative draft)
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1217,10 +1418,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_4" >
         
           
-          <label class="md-nav__link" for="__nav_7_3" id="__nav_7_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_4" id="__nav_7_4_label" tabindex="0">
             
   
   
@@ -1238,8 +1439,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_3_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_3">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_4_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_4">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -1611,10 +1812,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-problem-was-never-just-storing-fewer-bytes" class="md-nav__link">
+  <a href="#the-question-seward-1" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        The problem was never just storing fewer bytes
+        The question (Seward §1)
       </span>
     </span>
   </a>
@@ -1622,10 +1823,38 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-first-positive-traversal-result" class="md-nav__link">
+  <a href="#the-notation-on-a-six-byte-block-11" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        The first positive traversal result
+        The notation, on a six-byte block (§1.1)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The notation, on a six-byte block (§1.1)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-the-first-and-last-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why the first and last columns
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-transformation-vector-t-21" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The transformation vector T (§2.1)
       </span>
     </span>
   </a>
@@ -1633,10 +1862,154 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#a-promising-traversal-is-not-yet-a-better-decoder" class="md-nav__link">
+  <a href="#walking-t-back-to-the-text-22" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        A promising traversal is not yet a better decoder
+        Walking T back to the text (§2.2)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Walking T back to the text (§2.2)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#backwards-and-bzip2s-design-flaw" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Backwards, and bzip2's "design flaw"
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-t-from-counts-alone-23" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Building T from counts alone (§2.3)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#as-fast-as-possible-basis-bw94-and-mergedtl-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        As fast as possible: basis, bw94 and mergedTL (§3)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#less-memory-t-overwrites-l-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Less memory: T overwrites L (§4)
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Less memory: T overwrites L (§4)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-indexf-gives-up" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What indexF gives up
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-least-memory-no-t-at-all-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The least memory: no T at all (§5)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-measurements-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The measurements (§6)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#three-anomalies-and-a-bound-63" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Three anomalies, and a bound (§6.3)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-changed-since-2001" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What changed since 2001
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-table-between-mergedtl-and-indexf" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        A table between mergedTL and indexF
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-comparison-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What the comparison found
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-doesnt-show-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What it doesn't show yet
       </span>
     </span>
   </a>
@@ -1677,238 +2050,1302 @@
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
 <h1 id="revisiting-the-spacetime-tradeoff-in-bwt-inversion">Revisiting the space–⁠time tradeoff in BWT inversion<a class="headerlink" href="#revisiting-the-spacetime-tradeoff-in-bwt-inversion" title="Permanent link">&para;</a></h1>
-<p class="post-dek">Our first compact navigation table saved memory but made each lookup too costly. A
-redesigned record gives up a little density to make navigation cheaper—and the compact
-traversal is now faster under contention. Building it for the full decoder is the next test.</p>
-<p class="post-meta">2 November 2026 · 12 min read · <a href="#the-first-positive-traversal-result">Research result</a></p>
+<p class="post-dek">In 2001 Julian Seward set out how much memory the inverse Burrows–Wheeler transform needs
+against how fast it can run. Read closely, his paper explains why a compact table that costs
+more per step could still win once four cores share a cache, and a first measurement of ours
+shows it doing so.</p>
+<p class="post-meta">2 November 2026 · 30 min read · <a href="#what-the-comparison-found">Research result</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p>In 2001, Julian Seward published <em><a href="https://doi.org/10.1109/DCC.2001.917175">Space-time Tradeoffs in the Inverse B-W
-Transform</a></em>. The problem is still recognisable in a
-modern bzip2 decoder. The Burrows–Wheeler transform (BWT) rearranges a block’s characters to
-make them easier to compress. To recover their original order, the decoder repeatedly looks
-up a row in a navigation table; the value it finds tells it which row to visit next. Keeping
-the information readily available makes each step quick, but consumes memory. Representing
-it more compactly saves space and usually makes each lookup more involved.</p>
-<p>Seward investigated several implementations of that exchange. In a merged representation,
-the next-row information and the output character are kept together for fast traversal. An
-alternative, <em>indexF</em>, retrieves the character from the sorted first column rather than
-storing it beside every link. It saves working memory at the cost of more work during
-inversion. He also argued that inversion speed is limited by how fast cache misses can be
-serviced. Our <a href="../../benchmarks/frontier/">frontier page</a> sets out the <code>mergedTL</code>/<code>indexF</code>
-distinction and where mibz2 sits on it. This is not merely a theoretical concern: <a href="https://sourceware.org/bzip2/manual/manual.html">bzip2's
-own manual</a> records that a single-array
-inverse BWT "significantly speeds up decompression, presumably because it reduces the number
-of cache misses". Later research, including <a href="https://www.cs.helsinki.fi/u/tpkarkka/publications/dcc2012.pdf">Kärkkäinen, Kempa and Puglisi
-(2012)</a>, attacked the number
-and cost of those misses more directly.</p>
-<p>But the trade-off looks different when we change what is competing for memory.</p>
-<p>In a <a href="https://github.com/lmmx/mibz2/blob/f384fb424b19e5e5e1c5e27559dd0eb916e98123/docs/journal/2026-10-29-frontier.md">29 October journal
-entry</a>,
-we asked whether a navigation structure that was slower for one isolated block might be
-faster when several blocks were being decoded concurrently. Four workers have four
-navigation tables, all using the same shared cache and the hardware behind it. A smaller
-representation might relieve that competition enough to pay for the additional instructions
-needed to read it.</p>
-<p>The hope was not simply to choose another point along a space-for-speed compromise. It was
-to improve the <a href="../../benchmarks/frontier/">machine-level throughput–memory trade-off</a>: to
-see whether less navigation storage and greater completed throughput could coexist under the
-same workload. The difference is important. A faster traversal on a prebuilt table is
-evidence for this possibility; a faster <em>complete decoder</em> with lower measured memory use
-would be the stronger result.</p>
-<p>Our earlier <a href="../2026-11-01-inverse-bwt-memory-interference/">investigation of memory
-interference</a> made that question concrete.
-Four-worker decoding finished sooner than one-worker decoding but used substantially more
-total CPU time per decoded byte, despite retiring nearly the same instructions. We had a
-reason to suspect a shared-memory penalty. We did not yet know whether a compact
-representation could reduce it.</p>
-<h2 id="the-problem-was-never-just-storing-fewer-bytes">The problem was never just storing fewer bytes<a class="headerlink" href="#the-problem-was-never-just-storing-fewer-bytes" title="Permanent link">&para;</a></h2>
-<p>The conventional mibz2 navigation table, or <em>T-vector</em>, stores a next-row position and an
-output byte in a 32-bit entry. <a href="https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/src/bwt.rs#L927-L955">The production
-traversal</a>
-advances through those entries by dependent loads. A maximum-sized block has 900,000 rows,
-so its table occupies 3.6 MB. Four such tables account for 14.4 MB before output buffers or
-other live data. The workstation used in the experiment has a 20 MiB last-level cache shared
-by its cores. That makes the table footprint worth investigating—but cache capacity alone
-cannot establish where individual loads are served.</p>
-<p>In <a href="../2026-10-29-compact-navigation-tables/"><em>Compact navigation tables for the inverse BWT: early
-findings</em></a>, we started with a simpler question: why
-four bytes for every row? The next-row mapping is not arbitrary. Within each group of rows
-beginning with the same character, successor positions are ordered, because construction
-preserves the order of equal characters. If thirty successive rows point to positions such
-as 1,000, 1,002 and 1,005, storing one base and the small differences may cost much less
-than storing every absolute position.</p>
-<p>The first corpus census found substantial regularity. That made compression plausible, but
-we still needed a structure with random access to an individual successor. The decoder
-cannot decompress a whole group of pointers every time it wants to follow one: the next
-address is unknown until the current lookup completes. Our <a href="../2026-10-31-room-walk-overlap/">32-lane
-walk</a> already overlaps work from independent segments to
-hide some of that wait. A compressed format must preserve that ability, not introduce
-another dependent search before each step.</p>
-<p>The first attempt tested that constraint directly. FOR-14 packed thirty-two 14-bit offsets
-into each 64-byte record, with separate full-width entries for exceptions. Its <a href="https://github.com/lmmx/mibz2/blob/7d7962f/docs/journal/2026-11-01-for14-stage1.md">frozen
-experiment</a>
-found just 2.076 logical bytes per row, a little over half the conventional table's size.
-That was good news for storage; it wasn't good news for traversal.</p>
-<p>Each lookup now needed to find a fourteen-bit field within a packed record, reconstruct the
-next position and maintain a carried output byte. The compiled ordinary path contained 38
-instructions, five data loads and three stores, against the conventional walk's 16
-instructions, three loads and two stores. These are static hot-path counts, not the number
-of instructions retired per decoded byte. But they show why compactness cannot be judged on
-bytes alone: the decoder pays the cost of retrieving a <em>single</em> successor at every step.</p>
-<p>And the first measurement went the wrong way. With one block, FOR-14's traversal took 2.676
-ns per row against 1.275 ns for its control. With four blocks traversed concurrently, it
-took 2.899 ns against 1.991 ns. The smaller representation's cost rose by only about 8% from
-one block to four, while the conventional control's rose by 56%. This was the behaviour we
-had hoped a smaller table might show under contention—but FOR-14 started 1.40 ns per row
-behind. It still finished the four-block work about 1.45 times slower than its control. The
-experimental format was stopped, even though the broader hypothesis survived.</p>
-<p>Rather than rush into another timing campaign, the subsequent <a href="https://github.com/lmmx/mibz2/pull/130">packed-token
-variants</a> attacked the decoding overhead. Two
-alternatives compiled to 31 and 27 instructions per ordinary step, each with four loads and
-two stores. Their outputs were checked for correctness, but neither was timed. They
-established that some of the machinery could be removed; they did not establish another
-performance result.</p>
-<p>The next design made a different space–time choice, not just a different instruction
-schedule. Instead of tightly packing thirty-two 14-bit fields, compact30 puts thirty
-directly addressable 16-bit offsets into sixty bytes and uses the remaining four bytes of a
-64-byte cache-line record for a shared header. The header holds the base successor label and
-the character for rows in that group. The ordinary step adds the selected offset to the
-base. Groups crossing a character boundary, or too wide for the offsets, use a separate RAW
-representation with full entries in groups padded to 128 bytes.</p>
-<p>Two details remove work that FOR-14 had carried into every step. First, an ordinary 16-bit
-field needs no packed-bit extraction. Second, the walker carries only its current row: the
-emitted character comes from that row's header, not from an output-byte token carried
-between lookups. Both the header and the chosen offset can be addressed from the current
-row, without waiting for one load to discover the other's address. The compiled step still
-performs more work than the conventional walk, but far less than the first packed version.
-The <a href="https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/docs/journal/2026-11-02-compact30-walker.md">annotated machine-code
-review</a>
-records the final path.</p>
+<p><a href="https://en.wikipedia.org/wiki/Julian_Seward">Julian Seward</a> wrote
+<a href="https://en.wikipedia.org/wiki/Bzip2">bzip2</a>, first released in 1996, and was the original
+designer and author of <a href="https://valgrind.org/info/developers.html">Valgrind</a>.
+In 2001, while at Microsoft Research in Cambridge, he presented a ten-page paper at the IEEE
+Data Compression Conference: <em><a href="https://doi.org/10.1109/DCC.2001.917175">Space-time tradeoffs in the Inverse B-W
+Transform</a></em>. bzip2 compresses with the
+<a href="https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform">Burrows–Wheeler transform</a>
+(BWT), and decompressing means undoing it. The paper asks what the undoing costs in memory
+and in time, and lays out a family of algorithms that trade one for the other, from five
+bytes of working memory per byte of block down to one.</p>
+<p>Its introduction contains the sentence that most of our work on mibz2's decoder has turned
+out to be about:</p>
+<blockquote>
+<p>At the other extreme, we argue that the maximum speed of BWT decompression is unavoidably
+constrained by the rate at which cache misses are serviced.</p>
+</blockquote>
+<p>mibz2 is our bzip2 decoder, written to decompress the Wikidata dumps, and its inverse BWT
+has been the subject of most of this blog:</p>
+<ul>
+<li><a href="../2026-10-31-room-walk-overlap/">32 lanes</a> that keep many misses in flight at once;</li>
+<li><a href="../2026-11-02-memory-level-parallelism/">memory-level parallelism</a>, on what limits how
+  many can overlap;</li>
+<li><a href="../2026-11-01-inverse-bwt-memory-interference/">memory interference</a>, on what happens
+  when four workers share the memory system;</li>
+<li><a href="../2026-10-29-compact-navigation-tables/">compact navigation tables</a>, on taking fewer
+  misses by making the table smaller.</li>
+</ul>
+<p>Those are the parts of one rate: how many misses a decoded byte costs, how many can be
+serviced at once, and what else is asking. We came to them one experiment at a time, and
+Seward's sentence names what they share. On 29 October we wrote down the question this post
+returns to, in a <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-frontier.md">journal entry on the throughput–memory
+frontier</a>
+and the <a href="../../benchmarks/frontier/">benchmark page</a> that grew from it. His tradeoff was drawn
+for one block decoded alone. Ours decodes several blocks at once, in one shared cache.</p>
+<p>Seward left the same thought in <a href="https://sourceware.org/bzip2/manual/manual.html">bzip2's
+manual</a>, among its performance notes:
+"performance, both for compressing and decompressing, is largely determined by the speed at
+which your machine can service cache misses. … I imagine bzip2 will perform best on machines
+with very large caches."</p>
+<p>This post is about a compact table of ours that revisits that tradeoff, and the result it
+has given so far. The table only makes sense against the paper, so the post reads the paper
+first, in order, sections 1 to 6. It works a six-byte example by hand, reproduces his
+tables, and plots his results as the tradeoff they describe. Then it places our table on
+that tradeoff, and reports what changed when four cores walked their tables at once.</p>
+<h2 id="the-question-seward-1">The question (Seward §1)<a class="headerlink" href="#the-question-seward-1" title="Permanent link">&para;</a></h2>
+<p>The introduction notes that the compression side of the BWT had been well studied:
+move-to-front coding, encoding its output, and fast sorting, on which Seward had published
+the year before. "Decompression-time issues remain underinvestigated." He gives two reasons
+they matter, and they pull in opposite directions. Booting a Linux kernel from a compressed
+image has to decompress in limited memory, while on-the-fly disk compressors need it to be
+fast. So the paper offers a range of algorithms rather than one: "We show that, at one
+extreme, it is possible to invert the BWT, slowly, using just one byte per block-byte. At
+the other extreme," the sentence above.</p>
+<h2 id="the-notation-on-a-six-byte-block-11">The notation, on a six-byte block (§1.1)<a class="headerlink" href="#the-notation-on-a-six-byte-block-11" title="Permanent link">&para;</a></h2>
+<p>Seward takes his notation from §2 of Burrows and Wheeler's 1994 report, <em><a href="https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf">A Block-sorting
+Lossless Data Compression
+Algorithm</a></em>,
+and assumes the reader knows it. Here it is, with <code>banana</code> as the block:</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Seward's definition</th>
+<th>For <code>banana</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>N</td>
+<td>the number of bytes in the block, "typically in the range of one million"</td>
+<td>6</td>
+</tr>
+<tr>
+<td>S</td>
+<td>the block itself, S[0..N−1]</td>
+<td><code>banana</code></td>
+</tr>
+<tr>
+<td>M</td>
+<td>an N × N matrix of bytes: every rotation of S, sorted</td>
+<td>the six rows below</td>
+</tr>
+<tr>
+<td>L</td>
+<td>the last column of M: L[i] = M[i, N−1]</td>
+<td><code>nnbaaa</code></td>
+</tr>
+<tr>
+<td>F</td>
+<td>the first column of M: F[i] = M[i, 0]</td>
+<td><code>aaabnn</code></td>
+</tr>
+<tr>
+<td>I</td>
+<td>the row of M that holds S: S = M[I, 0..N−1]</td>
+<td>3</td>
+</tr>
+<tr>
+<td>T</td>
+<td>a vector of N integers, each in 0..N−1, the "transformation vector"</td>
+<td>4 5 3 0 1 2</td>
+</tr>
+<tr>
+<td>C</td>
+<td>256 counts of the byte values, or their running totals</td>
+<td>a 3, b 1, n 2</td>
+</tr>
+</tbody>
+</table>
+<p>The decoder is given N, L and I, and must produce S. The paper writes sequences by
+concatenation, so S[1..N−1]S[0] is S rotated left by one place.</p>
 <figure class="bf-fig">
-<p class="bf-title">A compact record leaves four bytes for the base and output byte</p>
-<svg viewBox="0 0 720 138" role="img" aria-label="A 64-byte record: sixty bytes hold thirty 16-bit row offsets, and four bytes hold the shared base and output byte. The next position is the base plus the row's offset.">
-<rect x="4" y="24" width="666" height="50" rx="8" class="bf-cell"/><rect x="629" y="24" width="41" height="50" rx="4" class="bf-cell-hi"/>
-<text x="312" y="45" class="bf-ts" text-anchor="middle">30 directly addressed offsets</text><text x="312" y="62" class="bf-tm" text-anchor="middle">30 × 2 bytes = 60 bytes</text>
-<text x="650" y="45" class="bf-ts" text-anchor="middle" style="font-size: 10px">H</text><text x="650" y="62" class="bf-tm" text-anchor="middle" style="font-size: 10px">4 B</text>
-<text x="4" y="96" class="bf-t">Ordinary step: next position = base from H + this row's offset</text>
-<text x="4" y="120" class="bf-tm">H also supplies the output byte; exceptional groups use separate RAW entries.</text>
+<p class="bf-title">The six rotations of banana, sorted</p>
+<svg viewBox="0 0 720 300" role="img" aria-label="The six rotations of banana, sorted: abanan, anaban, ananab, banana, nabana, nanaba. The first column F reads a a a b n n; the last column L reads n n b a a a; the original string is row 3, marked I.">
+<text x="141.0" y="32" class="bf-ts" text-anchor="middle">F</text>
+<text x="371.0" y="32" class="bf-ts" text-anchor="middle">L</text>
+<text x="104" y="68" class="bf-tm" text-anchor="end">row 0</text>
+<rect x="120" y="46" width="42" height="30" rx="4" class="bf-cell-hi"/>
+<text x="141.0" y="67" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="166" y="46" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="187.0" y="67" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="212" y="46" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="233.0" y="67" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="258" y="46" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="279.0" y="67" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="304" y="46" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="325.0" y="67" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="350" y="46" width="42" height="30" rx="4" class="bf-slot"/>
+<text x="371.0" y="67" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="104" y="102" class="bf-tm" text-anchor="end">row 1</text>
+<rect x="120" y="80" width="42" height="30" rx="4" class="bf-cell-hi"/>
+<text x="141.0" y="101" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="166" y="80" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="187.0" y="101" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="212" y="80" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="233.0" y="101" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="258" y="80" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="279.0" y="101" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="304" y="80" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="325.0" y="101" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="350" y="80" width="42" height="30" rx="4" class="bf-slot"/>
+<text x="371.0" y="101" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="104" y="136" class="bf-tm" text-anchor="end">row 2</text>
+<rect x="120" y="114" width="42" height="30" rx="4" class="bf-cell-hi"/>
+<text x="141.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="166" y="114" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="187.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="212" y="114" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="233.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="258" y="114" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="279.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="304" y="114" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="325.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="350" y="114" width="42" height="30" rx="4" class="bf-slot"/>
+<text x="371.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<text x="104" y="170" class="bf-tm" text-anchor="end">row 3</text>
+<rect x="120" y="148" width="42" height="30" rx="4" class="bf-cell-hi"/>
+<text x="141.0" y="169" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="166" y="148" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="187.0" y="169" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="212" y="148" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="233.0" y="169" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="258" y="148" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="279.0" y="169" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="304" y="148" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="325.0" y="169" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="350" y="148" width="42" height="30" rx="4" class="bf-slot"/>
+<text x="371.0" y="169" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="104" y="204" class="bf-tm" text-anchor="end">row 4</text>
+<rect x="120" y="182" width="42" height="30" rx="4" class="bf-cell-hi"/>
+<text x="141.0" y="203" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="166" y="182" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="187.0" y="203" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="212" y="182" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="233.0" y="203" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="258" y="182" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="279.0" y="203" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="304" y="182" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="325.0" y="203" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="350" y="182" width="42" height="30" rx="4" class="bf-slot"/>
+<text x="371.0" y="203" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="104" y="238" class="bf-tm" text-anchor="end">row 5</text>
+<rect x="120" y="216" width="42" height="30" rx="4" class="bf-cell-hi"/>
+<text x="141.0" y="237" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="166" y="216" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="187.0" y="237" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="212" y="216" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="233.0" y="237" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="258" y="216" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="279.0" y="237" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="304" y="216" width="42" height="30" rx="4" class="bf-cell"/>
+<text x="325.0" y="237" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="350" y="216" width="42" height="30" rx="4" class="bf-slot"/>
+<text x="371.0" y="237" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="116" y="144" width="280" height="38" rx="6" class="bf-box" style="stroke-width: 2"/>
+<text x="410" y="169" class="bf-t-strong">I = 3: the original block S</text>
+<text x="410" y="67" class="bf-tm">sorted, so F lists the</text>
+<text x="410" y="84" class="bf-tm">bytes of S in order</text>
+<text x="410" y="222" class="bf-tm">each L byte comes just before</text>
+<text x="410" y="239" class="bf-tm">its row's F byte in S</text>
+<text x="120" y="270" class="bf-tm">What a bzip2 block carries: L = n n b a a a, and I = 3. Nothing else of M.</text>
 </svg>
-<figcaption>Sixty-four bytes encode thirty ordinary row transitions. Exceptional groups have a separate representation. This shows only the common case; segment starts and parking are handled by the walker.</figcaption>
+<figcaption>M for S = banana. F, highlighted, is the bytes of S sorted; L is the column a bzip2 block carries. I = 3 is the row holding S.</figcaption>
 </figure>
 
-<p>The engineering progression can be read in the compiled ordinary paths:</p>
+<p>A rotation moves some bytes from the front of a string to its back. Write out every rotation
+of <code>banana</code> and sort the six strings, and the result is M. Row 3 is <code>banana</code> itself, so
+I = 3. A decoder never holds M. The inverse transform recovers just enough of it, from L, to
+read off row I.</p>
+<h3 id="why-the-first-and-last-columns">Why the first and last columns<a class="headerlink" href="#why-the-first-and-last-columns" title="Permanent link">&para;</a></h3>
+<p>Every row of M is S read round from some starting point, so in every row the last byte is
+the one that comes just before the first, going round S. Row 3, <code>banana</code>, ends in <code>a</code> and
+starts with <code>b</code>, and going round, the final <code>a</code> comes before the opening <code>b</code>. Row 0,
+<code>abanan</code>, starts at that final <code>a</code> and ends in the <code>n</code> before it. This is the one relation
+between the columns that the whole paper builds on: L[i] comes just before F[i] in S.</p>
+<p>The two columns carry different information:
+- <strong>F</strong> is the bytes of S in sorted order, <code>aaabnn</code>, so it is fixed by the counts alone:
+  three <code>a</code>, one <code>b</code>, two <code>n</code>. A decoder holding L can rebuild F by counting, so it is never
+  sent.
+- <strong>L</strong> holds, for each row, the byte that precedes that row's opening context, with the
+  rows sorted by context. Bytes that precede similar contexts tend to repeat (in English,
+  the context <code>he</code> is often preceded by <code>t</code>), so L has long runs of equal bytes. bzip2's
+  later stages compress those runs.</p>
+<p>So L is what a bzip2 block carries, with I to say which row is S. What the decoder needs is
+a way from "each L byte comes before its F byte" to the order of S, and that is the vector T.</p>
+<h2 id="the-transformation-vector-t-21">The transformation vector T (§2.1)<a class="headerlink" href="#the-transformation-vector-t-21" title="Permanent link">&para;</a></h2>
+<p>Seward's §2 is, in his words, "a more detailed exposition of Algorithm D in §2 of [1]".
+Algorithm D is the decompression half of Burrows and Wheeler's report. He gives his reason
+for the extra detail: "The increased detail exposes a range of possible implementations of
+the inverse transformation." Every algorithm in sections 3 to 5 is one of them.</p>
+<p>"Undoing the BWT hinges on establishing the relationship between the F and L vectors, and
+recording this in the 'transformation vector' T." The definition is his equation (1):</p>
+<div class="language-text highlight"><pre><span></span><code>(1)   M[j, N−1] M[j, 0..N−2] = M[i, 0..N−1],   and then T[j] = i
+</code></pre></div>
+<p>Read the left-hand side as: take row j and move its last byte to the front. A rotation of a
+rotation of S is another rotation of S, so the result is some row i of M, and T[j] records
+which. Row 0, <code>abanan</code>, becomes <code>nabana</code>, which is row 4, so T[0] = 4. Row 3, <code>banana</code>,
+becomes <code>abanan</code>, row 0, so T[3] = 0. In full, T = 4 5 3 0 1 2.</p>
+<p>Moving the last byte to the front starts the string one byte earlier in S. So T[j] is the
+row whose string starts one byte before row j's, and following T walks S backwards.</p>
+<h2 id="walking-t-back-to-the-text-22">Walking T back to the text (§2.2)<a class="headerlink" href="#walking-t-back-to-the-text-22" title="Permanent link">&para;</a></h2>
+<p>Row T[j] starts with the byte that row j ends with. That byte comes just before row j's
+first byte in S, which in columns is the paper's second result:</p>
+<div class="language-text highlight"><pre><span></span><code>(2)   F[T[i]] immediately precedes F[i] in S, for every i
+</code></pre></div>
+<p>The decoder has L, not F, so Seward restates (2) in terms of L. The relation just used says
+L[k] = F[T[k]] for every k: row k's last byte is row T[k]'s first. Put T[k] in place of i in
+(2), and both sides become L:</p>
+<div class="language-text highlight"><pre><span></span><code>F[T[T[k]]] immediately precedes F[T[k]]   ⇒   L[T[k]] immediately precedes L[k]
+</code></pre></div>
+<p>Every term is now something the decoder holds. Row I is S itself, so L[I] is the last byte
+of S. Starting there and following T gives S from the end:</p>
+<div class="language-text highlight"><pre><span></span><code>S[0, 1, .., N−2, N−1] = [ L[T^(N−1)[I]], L[T^(N−2)[I]], .., L[T[I]], L[I] ]
+</code></pre></div>
+<p>For <code>banana</code>, starting at p = I = 3:</p>
 <table>
 <thead>
 <tr>
-<th>Navigation layout</th>
-<th style="text-align: right;">Instructions</th>
-<th style="text-align: right;">Data loads</th>
-<th style="text-align: right;">Stores</th>
-<th>Evidence</th>
+<th style="text-align: right;">step</th>
+<th style="text-align: right;">p</th>
+<th style="text-align: center;">emit L[p]</th>
+<th style="text-align: right;">next p = T[p]</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Conventional 32-bit table</td>
-<td style="text-align: right;"><strong>16</strong></td>
+<td style="text-align: right;">0</td>
 <td style="text-align: right;">3</td>
-<td style="text-align: right;">2</td>
-<td>Production baseline</td>
+<td style="text-align: center;"><code>a</code></td>
+<td style="text-align: right;">0</td>
 </tr>
 <tr>
-<td>FOR-14, packed offsets</td>
-<td style="text-align: right;"><strong>38</strong> (37 with BMI2)</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: center;"><code>n</code></td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: center;"><code>a</code></td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: center;"><code>n</code></td>
 <td style="text-align: right;">5</td>
-<td style="text-align: right;">3</td>
-<td>Measured; rejected</td>
 </tr>
 <tr>
-<td>FOR-14 token variants</td>
-<td style="text-align: right;"><strong>31 / 27</strong></td>
 <td style="text-align: right;">4</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: center;"><code>a</code></td>
 <td style="text-align: right;">2</td>
-<td>Correct and compiled; <strong>not timed</strong></td>
 </tr>
 <tr>
-<td>Refined 30-row, 16-bit offsets</td>
-<td style="text-align: right;"><strong>21</strong></td>
-<td style="text-align: right;">4</td>
+<td style="text-align: right;">5</td>
 <td style="text-align: right;">2</td>
-<td>Measured; the first to pass</td>
+<td style="text-align: center;"><code>b</code></td>
+<td style="text-align: right;"></td>
 </tr>
 </tbody>
 </table>
-<p>The designs did not share an identical encoding or experimental protocol; the instruction
-counts are not points on a controlled timing curve. The FOR-14 trial's reported time ratios
-and compact30's later thread-CPU ratios are separate measurements, each against its own
-control. In particular, we have no performance measurements for the intermediate 31- and
-27-instruction variants. What the sequence does show is the sustained effort to make compact
-<em>navigation</em> practical, instead of optimising storage in isolation.</p>
-<p>We deliberately allowed the final record to grow a little: 2.164 logical bytes per row,
-about 4.2% larger than FOR-14's 2.076, while retaining a 45.9% reduction from the shipped
-four-byte entry. The <a href="https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-census.md">30-row reference
-census</a>
-established exact reconstruction of 1,513 blocks across eleven corpora. Its original token
-packing and alignment were subsequently refined, and the finished <a href="https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/docs/journal/2026-11-02-compact30-walker.md">experimental
-walker</a>
-passed separate correctness and machine-code reviews. The census was not a timing result for
-that final walker.</p>
-<p>At 21 instructions and four data loads, the compact30 common step is still more expensive
-than production's 16-instruction, three-load step when considered by itself. The question
-was whether lowering the table's shared-memory cost could more than compensate for that
-extra work as several cores traversed at once.</p>
-<h2 id="the-first-positive-traversal-result">The first positive traversal result<a class="headerlink" href="#the-first-positive-traversal-result" title="Permanent link">&para;</a></h2>
-<p>We compared the shipped T-vector traversal with the frozen compact30 walker on the
-established 434-block Wikidata corpus, covering 207 million inverse-BWT rows. Each output
-was checked against the production decoder's result. The <a href="https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-traversal-protocol.md">registered
-protocol</a>
-paired the two implementations across twenty measured rounds, first with one pinned physical
-core and then with four workers starting their traversals together.</p>
-<p>The timed interval includes traversal and assembly of the decoded BWT block, not table
-construction. Before each walk, production builds its actual table; compact30 instead copies
-a reference-built compact image into its arena. Those preparation operations are excluded
-from the timer and may leave different cache states. What this experiment can tell us is how
-the two <em>prepared</em> implementations behave under its stated conditions—not the eventual cost
-or cache state of a direct compact30 builder.</p>
-<p>The CPU-time figures add up how long the walking threads actually spent executing and divide
-by BWT rows. The completion figure instead measures the earliest start to the latest finish
-in each synchronized step, summed across the corpus. Neither includes table preparation or
-output validation. The 95% intervals describe paired variation across the twenty rounds, not
-a guarantee for other machines or workloads.</p>
+<p>The walk emits <code>ananab</code>: <code>banana</code>, backwards.</p>
+<p>This walk is the whole of the inverse transform's inner loop: load the entry at p, emit a
+byte, jump to the position it names. Where each jump lands depends on the content of S, not
+on where the last one landed. In a block of a million bytes that is a million loads from
+places the cache has no particular reason to hold. Section 6 measures what that costs.</p>
+<h3 id="backwards-and-bzip2s-design-flaw">Backwards, and bzip2's "design flaw"<a class="headerlink" href="#backwards-and-bzip2s-design-flaw" title="Permanent link">&para;</a></h3>
+<p>"Generating S backwards increases the decompressor's storage requirements since the whole
+of S has to be created before any of it can be output. The obvious solution is to reverse S
+in the compressor, before sorting." Peter Fenwick had measured no consistent loss or gain in
+compression from doing so. The rest of the paper assumes it, so each algorithm's walk starts
+at p = I and writes S forwards.</p>
+<p>bzip2 doesn't reverse its blocks, and a footnote in §4 says so: "As is the case with the
+bzip2 compressor – a design flaw." The bzip2 manual says how that came about: "It would be
+fair to say that the bzip2 format was frozen before I properly and fully understood the
+performance consequences of doing so." Its decoder compensates by building the links the
+other way round. In <code>decompress.c</code>, the fast path does this after counting:</p>
+<div class="language-c highlight"><pre><span></span><code><span class="cm">/*-- compute the T^(-1) vector --*/</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nblock</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="n">uc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">UChar</span><span class="p">)(</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">tt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xff</span><span class="p">);</span>
+<span class="w">   </span><span class="n">s</span><span class="o">-&gt;</span><span class="n">tt</span><span class="p">[</span><span class="n">s</span><span class="o">-&gt;</span><span class="n">cftab</span><span class="p">[</span><span class="n">uc</span><span class="p">]]</span><span class="w"> </span><span class="o">|=</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
+<span class="w">   </span><span class="n">s</span><span class="o">-&gt;</span><span class="n">cftab</span><span class="p">[</span><span class="n">uc</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Where §2.3 below would set T[i] = s, this writes i into slot s, so slot s records where it
+came from. That is T⁻¹, and following T⁻¹ emits S forwards. For <code>banana</code>, T⁻¹ = 3 4 5 2 0 1.
+Starting from T⁻¹[I] = 2, the walk reads L[2], L[5], L[1], L[4], L[0], L[3]: <code>banana</code>.
+mibz2's builder does the same, writing <code>ll[s] | i &lt;&lt; 8</code> into slot s.</p>
+<h2 id="building-t-from-counts-alone-23">Building T from counts alone (§2.3)<a class="headerlink" href="#building-t-from-counts-alone-23" title="Permanent link">&para;</a></h2>
+<p>A decoder can't compute T from M, which it doesn't have. §2.3 shows T comes from L with one
+counting pass and one scan. It rests on two observations:
+1. The rows of M are sorted.
+2. Two rows that end in the same byte keep their order when that byte moves to the front.
+   They now start with the same byte, so the rest of each original row decides their
+   order, and those rows were already sorted.</p>
+<p>So if L[j] is the k-th occurrence of byte c in L, the row it rotates into is the k-th row
+starting with c: the k-th c in F. "In short, if c occurs k times in L[0..j] and L[j] = c,
+then T[j] must be i, where i is the position of the k-th c in F."</p>
+<figure class="bf-fig">
+<p class="bf-title">T matches each L byte to the same occurrence in F</p>
+<svg viewBox="0 0 720 300" role="img" aria-label="T joins each position j of L to a position T[j] of F holding the same byte: the k-th n in L to the k-th n in F, and likewise for a and b. T is 4, 5, 3, 0, 1, 2.">
+<text x="190" y="26" class="bf-ts" text-anchor="middle">L[j]</text>
+<text x="490" y="26" class="bf-ts" text-anchor="middle">F[i]</text>
+<text x="156" y="62" class="bf-tm" text-anchor="end">j = 0</text>
+<rect x="170" y="40" width="40" height="30" rx="4" class="bf-slot"/>
+<text x="190" y="61" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="470" y="40" width="40" height="30" rx="4" class="bf-cell-hi"/>
+<text x="490" y="61" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="524" y="62" class="bf-tm">i = 0</text>
+<text x="156" y="100" class="bf-tm" text-anchor="end">j = 1</text>
+<rect x="170" y="78" width="40" height="30" rx="4" class="bf-slot"/>
+<text x="190" y="99" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="470" y="78" width="40" height="30" rx="4" class="bf-cell-hi"/>
+<text x="490" y="99" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="524" y="100" class="bf-tm">i = 1</text>
+<text x="156" y="138" class="bf-tm" text-anchor="end">j = 2</text>
+<rect x="170" y="116" width="40" height="30" rx="4" class="bf-slot"/>
+<text x="190" y="137" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="470" y="116" width="40" height="30" rx="4" class="bf-cell-hi"/>
+<text x="490" y="137" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="524" y="138" class="bf-tm">i = 2</text>
+<text x="156" y="176" class="bf-tm" text-anchor="end">j = 3</text>
+<rect x="170" y="154" width="40" height="30" rx="4" class="bf-slot"/>
+<text x="190" y="175" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="470" y="154" width="40" height="30" rx="4" class="bf-cell-hi"/>
+<text x="490" y="175" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<text x="524" y="176" class="bf-tm">i = 3</text>
+<text x="156" y="214" class="bf-tm" text-anchor="end">j = 4</text>
+<rect x="170" y="192" width="40" height="30" rx="4" class="bf-slot"/>
+<text x="190" y="213" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="470" y="192" width="40" height="30" rx="4" class="bf-cell-hi"/>
+<text x="490" y="213" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="524" y="214" class="bf-tm">i = 4</text>
+<text x="156" y="252" class="bf-tm" text-anchor="end">j = 5</text>
+<rect x="170" y="230" width="40" height="30" rx="4" class="bf-slot"/>
+<text x="190" y="251" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="470" y="230" width="40" height="30" rx="4" class="bf-cell-hi"/>
+<text x="490" y="251" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="524" y="252" class="bf-tm">i = 5</text>
+<path d="M214 55 C320 55 360 207 464 207" class="bf-link"/>
+<text x="222" y="51" class="bf-ttiny">T[0] = 4</text>
+<path d="M214 93 C320 93 360 245 464 245" class="bf-link"/>
+<text x="222" y="89" class="bf-ttiny">T[1] = 5</text>
+<path d="M214 131 C320 131 360 169 464 169" class="bf-link"/>
+<text x="222" y="127" class="bf-ttiny">T[2] = 3</text>
+<path d="M214 169 C320 169 360 55 464 55" class="bf-link"/>
+<text x="222" y="165" class="bf-ttiny">T[3] = 0</text>
+<path d="M214 207 C320 207 360 93 464 93" class="bf-link"/>
+<text x="222" y="203" class="bf-ttiny">T[4] = 1</text>
+<path d="M214 245 C320 245 360 131 464 131" class="bf-link"/>
+<text x="222" y="241" class="bf-ttiny">T[5] = 2</text>
+<text x="110" y="290" class="bf-tm">The k-th a in L is the k-th a in F, and so for every byte: the links never cross within one byte.</text>
+</svg>
+<figcaption>The k-th a in L goes to the k-th a in F, and likewise for n and b. That is §2.3's observation, and it gives T = 4 5 3 0 1 2 from counts and one scan.</figcaption>
+</figure>
+
+<p>F is sorted, so the c's in F form one contiguous bucket. It starts at C[c], the number of
+bytes in the block smaller than c: for <code>banana</code>, C[a] = 0, C[b] = 3 and C[n] = 4. Then
+T[j] = C[c] + k − 1. Scan L once, keeping a running count for each byte value, and each
+byte's next free slot in its bucket is its T entry.</p>
+<p>Within one byte value, the links increase with j: the k-th c in L goes to the k-th slot of
+c's bucket. Every BWT has this ordering, and it comes back at the end of this post.</p>
+<h2 id="as-fast-as-possible-basis-bw94-and-mergedtl-3">As fast as possible: basis, bw94 and mergedTL (§3)<a class="headerlink" href="#as-fast-as-possible-basis-bw94-and-mergedtl-3" title="Permanent link">&para;</a></h2>
+<p>"Newcomers to BWT-based compression are often delighted at the improvement in compression
+ratio over LZ77/78 schemes, but dismayed at the speed, especially the speed of
+decompression. How fast can inversion be?" §3 answers with three algorithms, each refining
+the last.</p>
+<p><strong>basis</strong> is §2 written out:
+1. Count each byte value in L, turn the counts into running totals, and shift them right by
+   one, so that C[c] is where c's bucket starts in F.
+2. For each i, set T[i] = C[L[i]] and increment C[L[i]].
+3. Start with p = I. For each i, set S[i] = L[p] and p = T[p].</p>
+<p>It reads L three times, and keeps L (one byte a row) and T (four) alive: 5N bytes.</p>
+<p><strong>bw94</strong> takes its name from Burrows and Wheeler's 1994 report, whose §4.2 merges the first
+two passes. While counting, it records how many of each byte it has seen so far, so
+T′[i] = the number of earlier occurrences of L[i]. That is T without its bucket's starting
+point, T[i] = T′[i] + C[L[i]]: in Seward's words, "displacements relative to the start of
+each character run in F". The walk adds the start back: S[i] = L[p], then
+p = T′[p] + C[L[p]]. Two passes, and still 5N bytes.</p>
+<p><strong>mergedTL</strong> comes from looking at bw94's walk: "Each iteration indexes both L and T′ at
+some arbitrary point, but both at the same index p. Unless both T and L fit in the machine's
+cache, this could cause two (capacity) misses per iteration." The fix puts both in one 32-bit
+word, limiting N to 2²⁴:</p>
+<div class="language-text highlight"><pre><span></span><code>U[i] = 256 · T′[i] + L[i]
+</code></pre></div>
+<p>The name is literal: T (as T′) and L, merged into one array. The walk becomes:</p>
+<div class="language-text highlight"><pre><span></span><code>u = U[p];   c = u mod 256;   S[i] = c;   p = u div 256 + C[c]
+</code></pre></div>
+<p>The mod and div are a mask and a shift. Unpacking costs some instructions, "but the
+near-halving of the cache miss rate is potentially valuable". The table is also a byte a
+row smaller: 4N.</p>
+<figure class="bf-fig">
+<p class="bf-title">What one row costs, bit by bit</p>
+<svg viewBox="0 0 720 300" role="img" aria-label="What each algorithm stores per row, drawn to scale in bits. bw94: a 32-bit T prime in one array and the byte L in a second array. mergedTL: one 32-bit word, T prime in the top 24 bits and L in the low 8. indexF: T alone in 20 bits, a 16-bit array plus a 4-bit nibble, with the byte found by a binary search in the counts C. bzip2 and mibz2: one 32-bit word holding the reversed link in 24 bits and the byte in 8.">
+<path d="M150 32V260" class="bf-grid"/>
+<text x="150" y="26" class="bf-tm" text-anchor="middle">0 bits</text>
+<path d="M246 32V260" class="bf-grid"/>
+<text x="246" y="26" class="bf-tm" text-anchor="middle">8</text>
+<path d="M342 32V260" class="bf-grid"/>
+<text x="342" y="26" class="bf-tm" text-anchor="middle">16</text>
+<path d="M438 32V260" class="bf-grid"/>
+<text x="438" y="26" class="bf-tm" text-anchor="middle">24</text>
+<path d="M534 32V260" class="bf-grid"/>
+<text x="534" y="26" class="bf-tm" text-anchor="middle">32 bits</text>
+<text x="86" y="60" class="bf-ts" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 13px">bw94</text>
+<text x="140" y="60" class="bf-tm" text-anchor="end">T′[i]</text>
+<rect x="150" y="40" width="381" height="30" rx="4" class="bf-cell-hi"/>
+<text x="340.5" y="60" class="bf-t" text-anchor="middle" style="font-size: 12px">T′[i], displacement in its bucket</text>
+<text x="546" y="60" class="bf-tm">array 1</text>
+<text x="140" y="106" class="bf-tm" text-anchor="end">L[i]</text>
+<rect x="150" y="86" width="93" height="30" rx="4" class="bf-slot"/>
+<text x="196.5" y="106" class="bf-t" text-anchor="middle" style="font-size: 12px">L[i]</text>
+<text x="546" y="106" class="bf-tm">array 2: a second line</text>
+<text x="86" y="152" class="bf-ts" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 13px">mergedTL</text>
+<text x="140" y="152" class="bf-tm" text-anchor="end">U[i]</text>
+<rect x="150" y="132" width="285" height="30" rx="4" class="bf-cell-hi"/>
+<text x="292.5" y="152" class="bf-t" text-anchor="middle" style="font-size: 12px">T′[i], 24 bits</text>
+<rect x="438" y="132" width="93" height="30" rx="4" class="bf-slot"/>
+<text x="484.5" y="152" class="bf-t" text-anchor="middle" style="font-size: 12px">L[i]</text>
+<text x="546" y="152" class="bf-tm">one word: U = 256·T′ + L</text>
+<text x="86" y="198" class="bf-ts" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 13px">indexF</text>
+<text x="140" y="198" class="bf-tm" text-anchor="end">A[i]</text>
+<rect x="150" y="178" width="189" height="30" rx="4" class="bf-cell-hi"/>
+<text x="244.5" y="198" class="bf-t" text-anchor="middle" style="font-size: 12px">low 16 bits of T[i]</text>
+<rect x="342" y="178" width="45" height="30" rx="4" class="bf-cell-hi"/>
+<text x="364.5" y="198" class="bf-t" text-anchor="middle" style="font-size: 12px">4</text>
+<text x="546" y="198" class="bf-tm">byte: binary search in C</text>
+<text x="86" y="244" class="bf-ts" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 13px">bzip2, mibz2</text>
+<text x="140" y="244" class="bf-tm" text-anchor="end">tt[s]</text>
+<rect x="150" y="224" width="285" height="30" rx="4" class="bf-cell-hi"/>
+<text x="292.5" y="244" class="bf-t" text-anchor="middle" style="font-size: 12px">i such that T[i] = s, 24 bits</text>
+<rect x="438" y="224" width="93" height="30" rx="4" class="bf-slot"/>
+<text x="484.5" y="244" class="bf-t" text-anchor="middle" style="font-size: 12px">L[s]</text>
+<text x="546" y="244" class="bf-tm">the link reversed</text>
+<text x="86" y="282" class="bf-tm">indexF's 20 bits sit in two arrays: 16 in one, and a 4-bit nibble packed two to a byte in another.</text>
+</svg>
+<figcaption>bw94 keeps T′ and L in separate arrays, so a step can miss twice. mergedTL packs both into one word. indexF keeps only T, in 20 bits, and finds the byte from the counts. bzip2 and mibz2 pack the byte with the reversed link.</figcaption>
+</figure>
+
+<p>Seward notes that mergedTL is "employed in bzip2", in the form adapted to an unreversed
+block. bzip2's word at slot s holds L[s] in its low 8 bits and the reversed link above it.
+The link is an absolute position, so the walk needs no C[c] addition. The manual lists the
+change among the improvements in bzip2 0.9.0: "Single array implementation of the inverse
+BWT. This significantly speeds up decompression, presumably because it reduces the number
+of cache misses."</p>
+<h2 id="less-memory-t-overwrites-l-4">Less memory: T overwrites L (§4)<a class="headerlink" href="#less-memory-t-overwrites-l-4" title="Permanent link">&para;</a></h2>
+<p>"Algorithm mergedTL aims for maximum speed by packing T and L into the same array of 32-bit
+words. Can we reduce memory use whilst retaining useful decompression speed? Interestingly,
+yes."</p>
+<p>The way in is to go back to equation (2), which is about F: F[T[i]] precedes F[i]. The §3
+algorithms use its derived form, L[T[i]] precedes L[i], only because L is what the decoder
+holds, and that obliges them to keep L alive through the whole walk. Indexing F instead
+means L is needed only while T is built, so T can be written over it: hence §4's title.</p>
+<p>F needn't be stored either. It is sorted, so the 256 running totals in C describe it, and
+F[p] is the byte whose bucket contains p. "No free lunch, alas: subscripting F then becomes
+a binary search in the cumulative frequency table, rather than a cheap array indexing
+operation."</p>
+<p><strong>indexF</strong> keeps one array, A, of N 20-bit words, so N ≤ 2²⁰:
+1. A[i] starts out holding L[i] in its low 8 bits. (Seward numbers this step 0.)
+2. Count as in basis, reading the bytes from A.
+3. Copy C to C′.
+4. For each i, increment C′[A[i]] and then set A[i] = C′[A[i]] − 1. A[i] is now T[i],
+   written over L[i].
+5. Start with p = A[I]. For each i, set S[i] = indexF(p) and p = A[p].</p>
+<p>indexF(p) is the binary search: it finds the byte whose bucket in C contains p. "Since C has
+256 entries this search always completes in nine steps." The name is the operation, and
+Table 1 describes the whole algorithm as "Indexes into F rather than L".</p>
+<p>The walk starts at p = A[I] = T[I], not at I. Indexing L, the first byte out is L[I].
+Indexing F, the same byte is F[T[I]], since L[k] = F[T[k]], so p is "stepped backwards once
+before the loop".</p>
+<p>If the block wasn't reversed, as with bzip2, Seward adds a pass between the last two steps.
+It reverses the pointers in A, turning T into T⁻¹ in place, with no second array. His
+20-bit words are a 16-bit array of N entries plus a byte array of ⌈N/2⌉ entries holding the
+top 4 bits, two to a byte: 2.5N bytes in all.</p>
+<p>bzip2 ships this as its <code>-s</code> option, documented as "a modified algorithm which only
+requires 2.5 bytes per block byte … albeit at about half the normal speed". Its source has
+§4's pieces:
+- the 16-bit array <code>ll16</code> and the nibble array <code>ll4</code>;
+- the reversal: "Compute T^(-1) by pointer reversal on T";
+- the search itself, <code>BZ2_indexIntoF</code>:</p>
+<div class="language-c highlight"><pre><span></span><code><span class="n">Int32</span><span class="w"> </span><span class="nf">BZ2_indexIntoF</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">Int32</span><span class="w"> </span><span class="n">indx</span><span class="p">,</span><span class="w"> </span><span class="n">Int32</span><span class="w"> </span><span class="o">*</span><span class="n">cftab</span><span class="w"> </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="n">Int32</span><span class="w"> </span><span class="n">nb</span><span class="p">,</span><span class="w"> </span><span class="n">na</span><span class="p">,</span><span class="w"> </span><span class="n">mid</span><span class="p">;</span>
+<span class="w">   </span><span class="n">nb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">   </span><span class="n">na</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">256</span><span class="p">;</span>
+<span class="w">   </span><span class="k">do</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">mid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">nb</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">na</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">indx</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">cftab</span><span class="p">[</span><span class="n">mid</span><span class="p">])</span><span class="w"> </span><span class="n">nb</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mid</span><span class="p">;</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="n">na</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mid</span><span class="p">;</span>
+<span class="w">   </span><span class="p">}</span>
+<span class="w">   </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">na</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">nb</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="n">nb</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="what-indexf-gives-up">What indexF gives up<a class="headerlink" href="#what-indexf-gives-up" title="Permanent link">&para;</a></h3>
+<p>Seward presents the cost as one trade, a search for memory. It has several parts:
+- <strong>A block-size cap</strong> of 2²⁰ bytes (1,048,576). bzip2's largest block, 900,000 bytes,
+  fits.
+- <strong>A search per output byte:</strong> eight or nine dependent comparisons, where mergedTL has one
+  mask. The search runs over 1 KB of counts, which stays in cache, so it costs instructions
+  and not misses.
+- <strong>The search is off the chain.</strong> In mergedTL the next position, u div 256 + C[c], depends
+  on the byte just unpacked. In indexF it is p = A[p], the link alone. A processor that runs
+  ahead can overlap the search for one byte with the load for the next.
+- <strong>Two arrays again.</strong> The 20-bit entry is split, 16 bits in one array and the nibble in
+  another, so a step can touch two cache lines: the cost mergedTL was built to remove. Both
+  arrays are smaller than mergedTL's, though, at 2N and N/2 bytes against 4N, so more of
+  each stays in cache.
+- <strong>An extra pass</strong> over A, the pointer reversal, for a block that wasn't reversed.</p>
+<p>Section 6 prices the bundle: indexF runs at 46% of mergedTL's speed, in 62.5% of its memory.</p>
+<h2 id="the-least-memory-no-t-at-all-5">The least memory: no T at all (§5)<a class="headerlink" href="#the-least-memory-no-t-at-all-5" title="Permanent link">&para;</a></h2>
+<p>"It is instructive to ask just how little storage we can get away with, and the answer is
+surprising: only L and the 'compressed' frequency-count version of F are actually needed."</p>
+<p>T needn't be stored, since any entry can be computed when it's needed: with c = L[j],
+T[j] = C[c] + the number of c's in L[0..j−1]. (The printed text says L[j] can be calculated
+this way; T[j] is meant.) Counting means scanning L up to j, so each step costs O(N) and the
+walk O(N²). Seward calls it "absurdly inefficient", but it is the minimal-storage baseline:
+N bytes of L, plus the counts. The rest of §5 buys speed back with memory.</p>
+<p>Two tables of counts, one for each half of L, would halve the average scan. More tables
+shorten it further but waste space: the shorter the segment, the more of its 256 counts are
+zero. Instead, Seward grows 256 binary trees, one per byte value:
+- <strong>A node</strong> holds a count and two child pointers, and covers a segment of L. An empty
+  subtree means that byte doesn't occur in its segment, and costs nothing to store.
+- <strong>Segments are aligned powers of two.</strong> With Q the least power of two ≥ N, each root
+  covers L[0..Q−1], its children the two halves, and so on.
+- <strong>A node budget, K_max,</strong> sets how deep the trees grow, and so the trade between memory
+  and scan length. The trees can stop at any depth and still answer correctly.</p>
+<p>Building the trees one at a time would scan L up to 256 times per level. Instead, each
+deepening pass scans L once, in steps of Δ = Q/2^(d−1). At each step it counts every byte
+value in the step's two halves, and gives each tree's node for that segment its two
+children.</p>
+<p>To answer "how many c's are in L[0..j]?", descend c's tree from the root with a running
+count. When j is in the left half, go left. When it is in the right half, add the left
+child's count and go right. On falling off the bottom, scan L from the start of the last
+segment to j.</p>
+<figure class="bf-fig">
+<p class="bf-title">A count tree answers a rank query</p>
+<svg viewBox="0 0 720 330" role="img" aria-label="The count tree for byte a over L = n n b a a a, padded to 8 positions. The root covers positions 0 to 7 and counts 3 a's; its left child covers 0 to 3 with 1, its right child 4 to 7 with 2. Below them, 2 to 3 holds 1 and 4 to 5 holds 2; 0 to 1 and 6 to 7 hold none and are left empty. To count the a's in L positions 0 to 4: go right at the root, adding the left child's 1; go left to the node for 4 to 5; it has no children, so scan L position 4, which is an a. The count is 2.">
+<path d="M387 62L267 100" class="bf-link"/>
+<path d="M387 62L507 100" class="bf-link"/>
+<path d="M267 132L207 166" class="bf-link"/>
+<path d="M267 132L327 166" class="bf-link"/>
+<path d="M507 132L447 166" class="bf-link"/>
+<path d="M507 132L567 166" class="bf-link"/>
+<rect x="341" y="30" width="92" height="32" rx="6" class="bf-cell-hi"/>
+<text x="387" y="51" class="bf-t" text-anchor="middle" style="font-size: 13px">[0, 8) · 3</text>
+<rect x="221" y="100" width="92" height="32" rx="6" class="bf-cell"/>
+<text x="267" y="121" class="bf-t" text-anchor="middle" style="font-size: 13px">[0, 4) · 1</text>
+<rect x="461" y="100" width="92" height="32" rx="6" class="bf-cell-hi"/>
+<text x="507" y="121" class="bf-t" text-anchor="middle" style="font-size: 13px">[4, 8) · 2</text>
+<rect x="281" y="166" width="92" height="32" rx="6" class="bf-cell"/>
+<text x="327" y="187" class="bf-t" text-anchor="middle" style="font-size: 13px">[2, 4) · 1</text>
+<rect x="401" y="166" width="92" height="32" rx="6" class="bf-cell-hi"/>
+<text x="447" y="187" class="bf-t" text-anchor="middle" style="font-size: 13px">[4, 6) · 2</text>
+<text x="207" y="187" class="bf-tm" text-anchor="middle">[0, 2) · none</text>
+<text x="567" y="187" class="bf-tm" text-anchor="middle">[6, 8) · none</text>
+<rect x="150" y="236" width="54" height="32" rx="4" class="bf-slot"/>
+<text x="177.0" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="177.0" y="286" class="bf-tm" text-anchor="middle">0</text>
+<rect x="210" y="236" width="54" height="32" rx="4" class="bf-slot"/>
+<text x="237.0" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="237.0" y="286" class="bf-tm" text-anchor="middle">1</text>
+<rect x="270" y="236" width="54" height="32" rx="4" class="bf-slot"/>
+<text x="297.0" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<text x="297.0" y="286" class="bf-tm" text-anchor="middle">2</text>
+<rect x="330" y="236" width="54" height="32" rx="4" class="bf-slot"/>
+<text x="357.0" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="357.0" y="286" class="bf-tm" text-anchor="middle">3</text>
+<rect x="390" y="236" width="54" height="32" rx="4" class="bf-slot-hi"/>
+<text x="417.0" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="417.0" y="286" class="bf-tm" text-anchor="middle">4</text>
+<rect x="450" y="236" width="54" height="32" rx="4" class="bf-slot"/>
+<text x="477.0" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="477.0" y="286" class="bf-tm" text-anchor="middle">5</text>
+<rect x="510" y="236" width="54" height="32" rx="4" class="bf-cell"/>
+<text x="537.0" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px"></text>
+<text x="537.0" y="286" class="bf-tm" text-anchor="middle">6</text>
+<rect x="570" y="236" width="54" height="32" rx="4" class="bf-cell"/>
+<text x="597.0" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px"></text>
+<text x="597.0" y="286" class="bf-tm" text-anchor="middle">7</text>
+<text x="136" y="257" class="bf-ts" text-anchor="end">L</text>
+<text x="564" y="257" class="bf-tm" text-anchor="middle">padding</text>
+<text x="30" y="318" class="bf-tm">How many a's in L[0..4]? Right at the root (+1 from [0, 4)), left to [4, 6), off the tree: scan L[4..4] (+1). Two.</text>
+</svg>
+<figcaption>The tree for byte a over L = nnbaaa, padded to 8 positions. A count of a's up to position 4 takes one left-child count and a one-byte scan. With the 2 a's before it, the a at L[4] goes to T[4] = C[a] + 2 − 1 = 1.</figcaption>
+</figure>
+
+<p><strong>tree</strong> stores a node as three 32-bit words, 12 bytes, so 1 MB holds 83,333 nodes.</p>
+<p><strong>treeopt</strong> fits nearly twice as many in the same space, in two ways:
+- <strong>Packed nodes.</strong> With N ≤ 2²⁰ and about 10⁶/12 nodes, a node needs
+  ⌈log₂(10⁶/12)⌉ + 20 + ⌈log₂(10⁶/12)⌉ = 17 + 20 + 17 = 54 bits: two 17-bit child indices
+  and a 20-bit count. That fits in two words.
+- <strong>One-word leaves.</strong> A leaf has no children, so it needs no pointers.</p>
+<p>treeopt keeps interior nodes at the left of one array and leaves at the right. After each
+deepening pass, it turns the new leaves into interior nodes. "Scanning is much more
+expensive than tree-building", so the doubled node count, which halves the average scan, is
+worth the complication.</p>
+<p>The versions tested were:
+- tree-1M, with 1 MB of nodes: 2N in all, with L;
+- treeopt-1M, also 2N;
+- treeopt-500k, 1.5N.</p>
+<h2 id="the-measurements-6">The measurements (§6)<a class="headerlink" href="#the-measurements-6" title="Permanent link">&para;</a></h2>
+<p>The experiments ran on a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB
+second-level cache, under Linux 2.0.36, cleared of other processes. Blocks were capped at
+10⁶ bytes, and each file's L vectors were prepared in advance. Once read from disk, each
+block was inverted ten times into an array that was never written out, with CPU use of at
+least 99%.</p>
+<p><strong>Table 1</strong> gives each algorithm's memory for a 10⁶-byte block, not counting the at most
+2 kB of C and C′:</p>
 <table>
 <thead>
 <tr>
-<th>Prepared-table traversal</th>
-<th style="text-align: right;">Conventional</th>
-<th style="text-align: right;">Compact30</th>
-<th style="text-align: right;">Compact ÷ conventional (95% interval)</th>
+<th>Algorithm</th>
+<th style="text-align: right;">Memory</th>
+<th>Seward's description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>CPU time per BWT row, one core</td>
-<td style="text-align: right;">1.221 ns</td>
-<td style="text-align: right;">1.402 ns</td>
-<td style="text-align: right;"><strong>1.148</strong> (1.147–1.149)</td>
+<td><code>basis</code></td>
+<td style="text-align: right;">5000 kB</td>
+<td>Straightforward derivation from theory</td>
 </tr>
 <tr>
-<td>CPU time per BWT row, four concurrent workers</td>
-<td style="text-align: right;">2.055 ns</td>
-<td style="text-align: right;">1.727 ns</td>
-<td style="text-align: right;"><strong>0.840</strong> (0.838–0.843)</td>
+<td><code>bw94</code></td>
+<td style="text-align: right;">5000 kB</td>
+<td>As per [1], does 2 passes, not 3</td>
 </tr>
 <tr>
-<td>Four-worker lockstep completion, one corpus pass</td>
-<td style="text-align: right;">114.45 ms</td>
-<td style="text-align: right;">97.97 ms</td>
-<td style="text-align: right;"><strong>0.856</strong> (0.852–0.860)</td>
+<td><code>mergedTL</code></td>
+<td style="text-align: right;">4000 kB</td>
+<td>As bw94 but more cache-friendly</td>
+</tr>
+<tr>
+<td><code>indexF</code></td>
+<td style="text-align: right;">2500 kB</td>
+<td>Indexes into F rather than L</td>
+</tr>
+<tr>
+<td><code>tree-1M</code></td>
+<td style="text-align: right;">2000 kB</td>
+<td>Computes T incrementally; 1 megabyte extra space</td>
+</tr>
+<tr>
+<td><code>treeopt-1M</code></td>
+<td style="text-align: right;">2000 kB</td>
+<td>More space-economical version of tree-1M</td>
+</tr>
+<tr>
+<td><code>treeopt-500k</code></td>
+<td style="text-align: right;">1500 kB</td>
+<td>As treeopt-1M but with only 500k auxiliary space</td>
 </tr>
 </tbody>
 </table>
 <figure class="bf-fig">
-<p class="bf-title">Extra lookup work is repaid under concurrent traversal</p>
+<p class="bf-title">Seward's Table 1: memory per block byte</p>
+<svg viewBox="0 0 720 300" role="img" aria-label="Bytes of working storage per byte of block: basis and bw94 5 (L plus a 32-bit T); mergedTL 4 (T prime and L packed in one 32-bit word); indexF 2.5 (T alone in 20 bits); tree-1M 2 (L plus one megabyte of trees); treeopt-500k 1.5.">
+<path d="M130 26V274" class="bf-grid"/>
+<text x="130" y="20" class="bf-tm" text-anchor="middle">0</text>
+<path d="M234 26V274" class="bf-grid"/>
+<text x="234" y="20" class="bf-tm" text-anchor="middle">1</text>
+<path d="M338 26V274" class="bf-grid"/>
+<text x="338" y="20" class="bf-tm" text-anchor="middle">2</text>
+<path d="M442 26V274" class="bf-grid"/>
+<text x="442" y="20" class="bf-tm" text-anchor="middle">3</text>
+<path d="M546 26V274" class="bf-grid"/>
+<text x="546" y="20" class="bf-tm" text-anchor="middle">4</text>
+<path d="M650 26V274" class="bf-grid"/>
+<text x="650" y="20" class="bf-tm" text-anchor="middle">5</text>
+<text x="118" y="54" class="bf-ts" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 13px">basis</text>
+<rect x="130" y="34" width="101" height="28" rx="4" class="bf-slot"/>
+<text x="180.5" y="53" class="bf-t" text-anchor="middle" style="font-size: 12px">L</text>
+<rect x="234" y="34" width="413" height="28" rx="4" class="bf-cell-hi"/>
+<text x="440.5" y="53" class="bf-t" text-anchor="middle" style="font-size: 12px">T, 32-bit</text>
+<text x="658" y="53" class="bf-t-strong">5N</text>
+<text x="118" y="94" class="bf-ts" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 13px">bw94</text>
+<rect x="130" y="74" width="101" height="28" rx="4" class="bf-slot"/>
+<text x="180.5" y="93" class="bf-t" text-anchor="middle" style="font-size: 12px">L</text>
+<rect x="234" y="74" width="413" height="28" rx="4" class="bf-cell-hi"/>
+<text x="440.5" y="93" class="bf-t" text-anchor="middle" style="font-size: 12px">T′, 32-bit</text>
+<text x="658" y="93" class="bf-t-strong">5N</text>
+<text x="118" y="134" class="bf-ts" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 13px">mergedTL</text>
+<rect x="130" y="114" width="309" height="28" rx="4" class="bf-cell-hi"/>
+<text x="284.5" y="133" class="bf-t" text-anchor="middle" style="font-size: 12px">T′ (24 bits)</text>
+<rect x="442" y="114" width="101" height="28" rx="4" class="bf-slot"/>
+<text x="492.5" y="133" class="bf-t" text-anchor="middle" style="font-size: 12px">L</text>
+<rect x="128" y="112" width="417" height="32" rx="5" class="bf-box" style="stroke-width: 2"/>
+<text x="554" y="133" class="bf-t-strong">4N</text>
+<text x="118" y="174" class="bf-ts" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 13px">indexF</text>
+<rect x="130" y="154" width="257.0" height="28" rx="4" class="bf-cell-hi"/>
+<text x="258.5" y="173" class="bf-t" text-anchor="middle" style="font-size: 12px">A: T in 20 bits</text>
+<text x="398.0" y="173" class="bf-t-strong">2.5N</text>
+<text x="118" y="214" class="bf-ts" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 13px">tree-1M</text>
+<rect x="130" y="194" width="101" height="28" rx="4" class="bf-slot"/>
+<text x="180.5" y="213" class="bf-t" text-anchor="middle" style="font-size: 12px">L</text>
+<rect x="234" y="194" width="101" height="28" rx="4" class="bf-cell"/>
+<text x="284.5" y="213" class="bf-t" text-anchor="middle" style="font-size: 12px">trees</text>
+<text x="346" y="213" class="bf-t-strong">2N</text>
+<text x="118" y="254" class="bf-ts" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 13px">treeopt-500k</text>
+<rect x="130" y="234" width="101" height="28" rx="4" class="bf-slot"/>
+<text x="180.5" y="253" class="bf-t" text-anchor="middle" style="font-size: 12px">L</text>
+<rect x="234" y="234" width="49.0" height="28" rx="4" class="bf-cell"/>
+<text x="258.5" y="253" class="bf-t" text-anchor="middle" style="font-size: 12px">trees</text>
+<text x="294.0" y="253" class="bf-t-strong">1.5N</text>
+<text x="130" y="294" class="bf-tm">Bytes per block byte, for a block of N = 10⁶ bytes (Seward's Table 1). mergedTL's outline is one 32-bit word.</text>
+</svg>
+<figcaption>Working storage for a 10⁶-byte block, in bytes per block byte. treeopt-1M, not drawn, also takes 2N. Output and the count tables are excluded.</figcaption>
+</figure>
+
+<p><strong>Table 2</strong> lists six test files. They are all at least a megabyte, since smaller files
+"don't stress algorithms or memory systems realistically". Four come from the <a href="https://corpus.canterbury.ac.nz/descriptions/">Canterbury
+Corpus</a>. mibz2's
+<a href="../../benchmarks/">benchmark</a> has its own corpora, and the last column names the
+nearest of them, loosely.</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th style="text-align: right;">kB</th>
+<th>What it is</th>
+<th>Nearest in mibz2's corpora</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bible</td>
+<td style="text-align: right;">4047.4</td>
+<td>The King James Bible</td>
+<td><code>text</code>, though ours is the crate's own sources repeated, and more redundant</td>
+</tr>
+<tr>
+<td>world192</td>
+<td style="text-align: right;">2473.4</td>
+<td>The CIA World Factbook, 1992</td>
+<td>none. Country records in English: Wikidata's subject matter, not its format</td>
+</tr>
+<tr>
+<td>ecoli</td>
+<td style="text-align: right;">4638.7</td>
+<td>The <em>E. coli</em> genome, in four letters</td>
+<td>none</td>
+</tr>
+<tr>
+<td>kennedy</td>
+<td style="text-align: right;">1029.7</td>
+<td>An Excel spreadsheet</td>
+<td><code>runs</code>, and at the extreme <code>onebyte</code> and <code>pattern</code></td>
+</tr>
+<tr>
+<td>netscape</td>
+<td style="text-align: right;">7678.8</td>
+<td>Netscape Navigator 4.75, an x86 executable</td>
+<td><code>records</code>, binary</td>
+</tr>
+<tr>
+<td>bashtgz</td>
+<td style="text-align: right;">1708.8</td>
+<td>bash 2.04's source, gzipped</td>
+<td><code>random</code>: gzip's output is close to random bytes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Table 3</strong> gives the inversion rates, in MB/s (of L in, or of S out). mergedTL is the
+fastest on every file:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: right;">basis</th>
+<th style="text-align: right;">bw94</th>
+<th style="text-align: right;">mergedTL</th>
+<th style="text-align: right;">indexF</th>
+<th style="text-align: right;">tree-1M</th>
+<th style="text-align: right;">treeopt-1M</th>
+<th style="text-align: right;">treeopt-500k</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bashtgz</td>
+<td style="text-align: right;">1.54</td>
+<td style="text-align: right;">1.58</td>
+<td style="text-align: right;">2.49</td>
+<td style="text-align: right;">1.20</td>
+<td style="text-align: right;">0.032</td>
+<td style="text-align: right;">0.059</td>
+<td style="text-align: right;">0.032</td>
+</tr>
+<tr>
+<td>bible</td>
+<td style="text-align: right;">1.72</td>
+<td style="text-align: right;">1.77</td>
+<td style="text-align: right;">2.76</td>
+<td style="text-align: right;">1.36</td>
+<td style="text-align: right;">0.211</td>
+<td style="text-align: right;">0.301</td>
+<td style="text-align: right;">0.218</td>
+</tr>
+<tr>
+<td>ecoli</td>
+<td style="text-align: right;">1.53</td>
+<td style="text-align: right;">1.57</td>
+<td style="text-align: right;">2.48</td>
+<td style="text-align: right;">1.30</td>
+<td style="text-align: right;">0.325</td>
+<td style="text-align: right;">0.342</td>
+<td style="text-align: right;">0.339</td>
+</tr>
+<tr>
+<td>kennedy</td>
+<td style="text-align: right;">2.46</td>
+<td style="text-align: right;">2.54</td>
+<td style="text-align: right;">4.72</td>
+<td style="text-align: right;">1.71</td>
+<td style="text-align: right;">0.099</td>
+<td style="text-align: right;">0.167</td>
+<td style="text-align: right;">0.100</td>
+</tr>
+<tr>
+<td>netscape</td>
+<td style="text-align: right;">2.32</td>
+<td style="text-align: right;">2.41</td>
+<td style="text-align: right;">3.51</td>
+<td style="text-align: right;">1.67</td>
+<td style="text-align: right;">0.044</td>
+<td style="text-align: right;">0.099</td>
+<td style="text-align: right;">0.036</td>
+</tr>
+<tr>
+<td>world192</td>
+<td style="text-align: right;">1.65</td>
+<td style="text-align: right;">1.69</td>
+<td style="text-align: right;">2.65</td>
+<td style="text-align: right;">1.31</td>
+<td style="text-align: right;">0.207</td>
+<td style="text-align: right;">0.298</td>
+<td style="text-align: right;">0.198</td>
+</tr>
+<tr>
+<td>Average</td>
+<td style="text-align: right;">1.86</td>
+<td style="text-align: right;">1.93</td>
+<td style="text-align: right;">3.10</td>
+<td style="text-align: right;">1.43</td>
+<td style="text-align: right;">0.153</td>
+<td style="text-align: right;">0.211</td>
+<td style="text-align: right;">0.154</td>
+</tr>
+</tbody>
+</table>
+<p>"mergedTL is the clear speed winner, on average 61% and 67% faster than bw94 and basis
+respectively, at the same time using less memory." indexF averages 46% of mergedTL's speed.
+It "still inverts well over a megabyte per second on this platform, which may be an
+acceptable tradeoff given the 2.5N bytes memory use."</p>
+<p>The tree algorithms run at 5–7% of mergedTL's rate, and Seward expects them "to remain no
+more than proof-of-concept implementations". Even so, treeopt-500k matches tree-1M with half
+its node memory: the packed tree representation does what it was designed to do.</p>
+<p>The paper has no figure. Plotting Table 3's averages against Table 1's memory draws the
+tradeoff of its title:</p>
+<figure class="bf-fig">
+<p class="bf-title">Seward's Tables 1 and 3, plotted</p>
+<svg viewBox="0 0 720 370" role="img" aria-label="Average inversion rate against memory per block byte, from Seward's Tables 1 and 3, on a logarithmic rate axis. mergedTL: 4 bytes, 3.10 MB/s. bw94 and basis: 5 bytes, 1.93 and 1.86. indexF: 2.5 bytes, 1.43. treeopt-1M: 2 bytes, 0.211. tree-1M: 2 bytes, 0.153. treeopt-500k: 1.5 bytes, 0.154. The nondominated points, treeopt-500k, treeopt-1M, indexF and mergedTL, are joined by a step line.">
+<path d="M100 300.0H680" class="bf-grid"/>
+<text x="92" y="304.0" class="bf-tm" text-anchor="end">0.1</text>
+<path d="M100 252.2H680" class="bf-grid"/>
+<text x="92" y="256.2" class="bf-tm" text-anchor="end">0.2</text>
+<path d="M100 188.9H680" class="bf-grid"/>
+<text x="92" y="192.9" class="bf-tm" text-anchor="end">0.5</text>
+<path d="M100 141.1H680" class="bf-grid"/>
+<text x="92" y="145.1" class="bf-tm" text-anchor="end">1</text>
+<path d="M100 93.2H680" class="bf-grid"/>
+<text x="92" y="97.2" class="bf-tm" text-anchor="end">2</text>
+<path d="M100 30.0H680" class="bf-grid"/>
+<text x="92" y="34.0" class="bf-tm" text-anchor="end">5</text>
+<path d="M100.0 300V306" class="bf-axis"/>
+<text x="100.0" y="322" class="bf-tm" text-anchor="middle">1</text>
+<path d="M228.9 300V306" class="bf-axis"/>
+<text x="228.9" y="322" class="bf-tm" text-anchor="middle">2</text>
+<path d="M357.8 300V306" class="bf-axis"/>
+<text x="357.8" y="322" class="bf-tm" text-anchor="middle">3</text>
+<path d="M486.7 300V306" class="bf-axis"/>
+<text x="486.7" y="322" class="bf-tm" text-anchor="middle">4</text>
+<path d="M615.6 300V306" class="bf-axis"/>
+<text x="615.6" y="322" class="bf-tm" text-anchor="middle">5</text>
+<path d="M100 300H680" class="bf-axis"/>
+<text x="390.0" y="344" class="bf-tm" text-anchor="middle">memory, bytes per block byte (Table 1)</text>
+<text x="18" y="165.0" class="bf-tm" text-anchor="middle" transform="rotate(-90 18 165.0)">average rate, MB/s, log scale (Table 3)</text>
+<path d="M164.4 270.2 H228.9V248.5 H293.3V116.4 H486.7V63.0" class="bf-link"/>
+<circle cx="615.6" cy="98.2" r="6" class="bf-dot"/>
+<text x="623.6" y="114.2" class="bf-t" text-anchor="start" style="font-family: var(--md-code-font-family); font-size: 12px">basis 1.86</text>
+<circle cx="615.6" cy="95.7" r="6" class="bf-dot"/>
+<text x="623.6" y="87.7" class="bf-t" text-anchor="start" style="font-family: var(--md-code-font-family); font-size: 12px">bw94 1.93</text>
+<circle cx="486.7" cy="63.0" r="6" class="bf-dot-hi"/>
+<text x="476.7" y="51.0" class="bf-t" text-anchor="end" style="font-family: var(--md-code-font-family); font-size: 12px">mergedTL 3.10</text>
+<circle cx="293.3" cy="116.4" r="6" class="bf-dot-hi"/>
+<text x="303.3" y="108.4" class="bf-t" text-anchor="start" style="font-family: var(--md-code-font-family); font-size: 12px">indexF 1.43</text>
+<circle cx="228.9" cy="270.6" r="6" class="bf-dot"/>
+<text x="238.9" y="286.6" class="bf-t" text-anchor="start" style="font-family: var(--md-code-font-family); font-size: 12px">tree-1M 0.153</text>
+<circle cx="228.9" cy="248.5" r="6" class="bf-dot-hi"/>
+<text x="238.9" y="240.5" class="bf-t" text-anchor="start" style="font-family: var(--md-code-font-family); font-size: 12px">treeopt-1M 0.211</text>
+<circle cx="164.4" cy="270.2" r="6" class="bf-dot-hi"/>
+<text x="164.4" y="296.2" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 12px">treeopt-500k 0.154</text>
+</svg>
+<figcaption>Each algorithm's average rate over the six files against its memory, on a 400 MHz K6-III in 2001. Highlighted points are beaten on neither axis. The paper prints the numbers as tables; this plot is ours.</figcaption>
+</figure>
+
+<p>Four points are beaten on neither axis: treeopt-500k, treeopt-1M, indexF and mergedTL.
+mergedTL beats basis and bw94 on both, and treeopt-1M beats tree-1M. From indexF to
+treeopt-1M, half a byte a row less costs a factor of seven in rate. The rate axis is
+logarithmic, so that step is much steeper than it looks.</p>
+<h2 id="three-anomalies-and-a-bound-63">Three anomalies, and a bound (§6.3)<a class="headerlink" href="#three-anomalies-and-a-bound-63" title="Permanent link">&para;</a></h2>
+<p>Seward ends the results with three questions that Table 3 raises. His answers carry the
+paper's argument about cache misses.</p>
+<p><strong>Why is mergedTL so much faster than bw94, when it does more work to unpack?</strong> Seward
+inverted bible under cacheprof, his own cache profiler, simulating the K6-III's 256 KB L2.
+It counted per byte of L:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: right;">instructions</th>
+<th style="text-align: right;">memory references</th>
+<th style="text-align: right;">misses</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bw94</td>
+<td style="text-align: right;">18.00</td>
+<td style="text-align: right;">9.00</td>
+<td style="text-align: right;">1.63</td>
+</tr>
+<tr>
+<td>mergedTL</td>
+<td style="text-align: right;">20.00</td>
+<td style="text-align: right;">8.00</td>
+<td style="text-align: right;">0.88</td>
+</tr>
+</tbody>
+</table>
+<p>mergedTL executes 11% more instructions, takes 54% as many misses, and runs 56% faster on
+bible. Of mergedTL's misses, 89.4% come from the walk's reads of U[p], one read per byte,
+and 78.6% of those reads miss.</p>
+<p>They miss for the reason §2.2 showed. T "effectively contains the inverse permutation to
+that created by the BWT's sorting operation", and nothing ties the sorted order of the
+rotations to their order in S. So "T will in general hold a completely arbitrary
+permutation of 0..N−1. Since the decompressor is obliged to traverse this permutation, there
+appears to be no way to avoid a miss rate approaching one per L-byte" once N is much larger
+than the cache. Hence "it is plausible to argue that algorithm mergedTL represents a
+realistic upper bound on inversion performance": the introduction's sentence, now with
+numbers under it.</p>
+<p><strong>If misses set the rate, why does kennedy invert nearly twice as fast as bashtgz?</strong> Runs.
+kennedy contains long runs of one byte. Following Burrows and Wheeler's own analysis, a
+stretch such as <code>ccc…ccc</code> followed by something unique sorts in order (or in reverse order),
+so T maps each of its rows to the next (or previous) one. A walk through such a stretch moves
+to the neighbouring entry, which is usually already in the cache. Random input has nothing
+like this and should set the floor. The table bears that out: bashtgz, ecoli and world192
+invert at 2.49, 2.48 and 2.65 MB/s.</p>
+<figure class="bf-fig">
+<p class="bf-title">Why the walk misses, and why runs help</p>
+<svg viewBox="0 0 720 300" role="img" aria-label="Two walks through a 24-entry table. Above, the links form an arbitrary permutation, so each step jumps far across the table. Below, a run of equal bytes makes each entry point at its neighbour, so steps stay within a few entries.">
+<text x="30" y="36" class="bf-ts">An arbitrary permutation: every step lands somewhere new</text>
+<rect x="30" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="57" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="84" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="111" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="138" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="165" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="192" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="219" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="246" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="273" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="300" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="327" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="354" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="381" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="408" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="435" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="462" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="489" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="516" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="543" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="570" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="597" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="624" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="651" y="100" width="23" height="22" rx="3" class="bf-cell"/>
+<path d="M122.5 98Q284.5 -14 446.5 98" class="bf-link"/>
+<rect x="111" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M446.5 98Q392.5 46 338.5 98" class="bf-link"/>
+<rect x="435" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M338.5 98Q406.0 38 473.5 98" class="bf-link"/>
+<rect x="327" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M473.5 98Q298.0 -14 122.5 98" class="bf-link"/>
+<rect x="462" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M122.5 98Q284.5 -14 446.5 98" class="bf-link"/>
+<rect x="111" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M446.5 98Q392.5 46 338.5 98" class="bf-link"/>
+<rect x="435" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M338.5 98Q406.0 38 473.5 98" class="bf-link"/>
+<rect x="327" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M473.5 98Q298.0 -14 122.5 98" class="bf-link"/>
+<rect x="462" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<rect x="111" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<text x="30" y="168" class="bf-ts">A run of equal bytes: each step lands next door</text>
+<rect x="30" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="57" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="84" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="111" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="138" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="165" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="192" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="219" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="246" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="273" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="300" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="327" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="354" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="381" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="408" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="435" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="462" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="489" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="516" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="543" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="570" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="597" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="624" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<rect x="651" y="232" width="23" height="22" rx="3" class="bf-cell"/>
+<path d="M257.5 230Q271.0 202 284.5 230" class="bf-link"/>
+<rect x="246" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M284.5 230Q298.0 202 311.5 230" class="bf-link"/>
+<rect x="273" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M311.5 230Q325.0 202 338.5 230" class="bf-link"/>
+<rect x="300" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M338.5 230Q352.0 202 365.5 230" class="bf-link"/>
+<rect x="327" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M365.5 230Q379.0 202 392.5 230" class="bf-link"/>
+<rect x="354" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M392.5 230Q406.0 202 419.5 230" class="bf-link"/>
+<rect x="381" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M419.5 230Q433.0 202 446.5 230" class="bf-link"/>
+<rect x="408" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<path d="M446.5 230Q460.0 202 473.5 230" class="bf-link"/>
+<rect x="435" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<rect x="462" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
+<text x="30" y="276" class="bf-tm">Each cell is one table entry; arcs are successive steps of the walk. With a block much larger than the cache, the upper walk misses on almost every step.</text>
+</svg>
+<figcaption>An illustration, not data. Following T through an arbitrary permutation lands somewhere new each step. Through a run of equal bytes, as in kennedy, T points next door.</figcaption>
+</figure>
+
+<p><strong>Why do the tree algorithms vary 10:1 across the files, against 1.9:1 for mergedTL?</strong>
+Alphabet size. ecoli has four distinct bytes, so the node budget goes to four deep trees with
+small leaves and short scans, and it is the tree algorithms' best file. bashtgz uses all 256
+byte values almost uniformly. Each tree can then be only a 64th the size, giving "much longer
+L scans and lower throughput".</p>
+<p>Then the bound is put to use. bzip2 decompresses bible at 1.86 MB/s, 67% of mergedTL's
+inversion rate, and the same on kennedy, while also doing its Huffman and move-to-front
+decoding. "These measurements, though crude, are interesting, since they suggest that no
+amount of re-engineering of bzip2 can increase its decompression speed much further."</p>
+<p>The paper's last paragraph is two sentences:</p>
+<blockquote>
+<p>Such observations only hold true whilst cache sizes are much smaller than block sizes.
+Future growth in cache sizes may invalidate such findings.</p>
+</blockquote>
+<h2 id="what-changed-since-2001">What changed since 2001<a class="headerlink" href="#what-changed-since-2001" title="Permanent link">&para;</a></h2>
+<p>The K6-III's cache held 256 KB, against mergedTL's 4 MB for one block: about a sixteenth of
+the table. The workstation behind our measurements has a 20 MiB last-level cache, and a
+900,000-byte bzip2 block needs a 3.6 MB table. Read literally, the caveat has come true: one
+block's table fits in the cache several times over.</p>
+<p>Two things kept the sentence from the introduction relevant anyway.</p>
+<p><strong>A miss is no longer a fixed price.</strong> A modern core keeps many misses in flight at once,
+if the program gives it independent loads to issue. One chain through T gives it none,
+since each address comes from the load before. mibz2's walk follows 32 chains at once,
+independent segments of the same block, and runs <a href="../2026-10-31-room-walk-overlap/">8.6 times as fast as one
+chain</a>. Kärkkäinen, Kempa and Puglisi's <em><a href="https://www.cs.helsinki.fi/u/tpkarkka/publications/dcc2012.pdf">Slashing the time
+for BWT inversion</a></em>
+(DCC 2012) attacked the same rate from the other side, with fewer and cheaper misses. Our
+<a href="../2026-11-02-memory-level-parallelism/">memory-level parallelism post</a> looks at what limits
+the overlap.</p>
+<p><strong>A decoder doesn't invert one block at a time.</strong> mibz2 runs a worker per core, and four
+workers keep four tables live: 14.4 MB, in a cache all four cores share. On the
+workstation, throughput falls off at <a href="../../benchmarks/frontier/">about 14.4 MB of live
+tables</a>, 0.7 of its L3 (<a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-28-workstation-scaling.md">workstation journal
+§9</a>).
+Four workers on four cores spend <a href="../2026-11-01-inverse-bwt-memory-interference/">32% more CPU time per decoded
+byte</a> than one does, on nearly the same
+instructions. With the cache divided between blocks, Seward's condition, caches much smaller
+than the tables being walked, holds again.</p>
+<p>That reopens his tradeoff in a form the paper had no reason to consider. His axes are one
+block's rate and one block's memory, and on them a smaller table is a step down in speed.
+With four blocks sharing a cache, a smaller table also leaves more of the cache to the other
+three. Its rate with four workers could then beat what its single-block rate predicts, and
+perhaps mergedTL's own. The <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-frontier.md">journal entry of 29
+October</a> asked
+whether a table that is slower for one block could move the tradeoff outward for the
+machine, rather than along it.</p>
+<h2 id="a-table-between-mergedtl-and-indexf">A table between mergedTL and indexF<a class="headerlink" href="#a-table-between-mergedtl-and-indexf" title="Permanent link">&para;</a></h2>
+<p>mibz2's production table is bzip2's: one 32-bit word per row, the byte in the low 8 bits and
+the reversed link above it, 4N bytes. In Seward's terms it is mergedTL. Read against the
+paper, our compact table combines three of its ideas.</p>
+<p><strong>From §2.3, the ordering.</strong> Within one byte value's bucket, the links increase with the
+row. A group of consecutive rows in one bucket can therefore store its links as one base and
+small non-negative offsets. The offsets are smallest when the byte's occurrences in L are
+close together, as in kennedy's runs. In Wikidata's blocks they usually are: in our census,
+about 77% of a full block's rows fall in 32-row groups that each come from a single run in L,
+from 63.7% to 88.0% per block (<a href="../2026-10-29-compact-navigation-tables/">early findings</a>). To
+Seward, runs gave locality. Here they also give compressibility.</p>
+<p><strong>From §4, the emitted byte.</strong> As in indexF, the walk emits F, so L isn't needed once the
+table is built. Instead of a binary search through C for every byte, F is stored once per
+group, in the group's header. Every row of an ordinary group is in one bucket, so they all
+share it.</p>
+<p><strong>From §3, the cache line.</strong> As in mergedTL, an ordinary step finds everything it needs in
+one place: the header and the row's offset are in the same 64-byte record.</p>
+<figure class="bf-fig">
+<p class="bf-title">A 64-byte record for thirty rows</p>
+<svg viewBox="0 0 720 138" role="img" aria-label="A 64-byte record: sixty bytes hold thirty 16-bit row offsets, and four bytes hold the header with the shared base and the rows' F byte. The next position is the base plus the row's offset.">
+<rect x="4" y="24" width="666" height="50" rx="8" class="bf-cell"/><rect x="629" y="24" width="41" height="50" rx="4" class="bf-cell-hi"/>
+<text x="312" y="45" class="bf-ts" text-anchor="middle">30 offsets, one per row</text><text x="312" y="62" class="bf-tm" text-anchor="middle">30 × 2 bytes = 60 bytes</text>
+<text x="650" y="45" class="bf-ts" text-anchor="middle" style="font-size: 10px">H</text><text x="650" y="62" class="bf-tm" text-anchor="middle" style="font-size: 10px">4 B</text>
+<text x="4" y="96" class="bf-t">Next position = the base in H + this row's offset</text>
+<text x="4" y="120" class="bf-tm">H also holds the F byte the thirty rows share.</text>
+</svg>
+<figcaption>An ordinary group: thirty 16-bit offsets and a 4-byte header with the base link and the F byte the rows share. Groups that straddle a bucket or span too far are stored separately in full.</figcaption>
+</figure>
+
+<p>Each 64-byte record holds thirty 16-bit offsets in 60 bytes, and a 4-byte header with the
+group's base link and its F byte. The ordinary step adds the row's offset to the base. Some
+groups are stored separately in full, four bytes a row in 128-byte groups:
+- groups that straddle a bucket boundary;
+- groups whose links span more than the offsets can hold.</p>
+<p>On our corpus the whole table averages 2.164 bytes a row. That is about 2.16N, below
+indexF's 2.5N and a little over half of mergedTL's 4N. On Seward's memory axis it sits
+between treeopt-1M and indexF, and it aims at mergedTL's speed.</p>
+<p>It was not the first design:
+- <strong>FOR-14</strong> packed thirty-two 14-bit offsets into each record, for 2.076 bytes a row.
+  Finding and unpacking a 14-bit field cost 38 instructions a step (37 with BMI2), against
+  production's 16.
+  - On one block it took 2.676 ns a row, against 1.275 for its control.
+  - With four blocks its cost rose only 8% while the control's rose 56%: the effect we were
+    looking for.
+  - But it started too far behind, and still finished the four-block work 1.45 times
+    slower.
+- <strong>Two variants with packed tokens</strong> came to 31 and 27 instructions. They were checked for
+  correctness but never timed.
+- <strong>The 30-row record above,</strong> which we call compact30, gives up a little density for whole
+  16-bit fields and an F byte read from the header. It comes to 21 instructions.</p>
+<table>
+<thead>
+<tr>
+<th>Table</th>
+<th style="text-align: right;">Bytes a row</th>
+<th style="text-align: right;">Instructions a step</th>
+<th style="text-align: right;">Loads</th>
+<th style="text-align: right;">Stores</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>production, bzip2's mergedTL</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td>the baseline</td>
+</tr>
+<tr>
+<td>FOR-14, packed 14-bit offsets</td>
+<td style="text-align: right;">2.076</td>
+<td style="text-align: right;">38 (37 with BMI2)</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">3</td>
+<td>measured; rejected</td>
+</tr>
+<tr>
+<td>packed-token variants</td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;">31 / 27</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td>correct; not timed</td>
+</tr>
+<tr>
+<td>compact30, 16-bit offsets</td>
+<td style="text-align: right;">2.164</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+<td>measured</td>
+</tr>
+</tbody>
+</table>
+<p>The instruction counts are for each design's compiled ordinary path, from the <a href="https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/docs/journal/2026-11-02-compact30-walker.md">annotated
+machine code</a>.
+They are static counts, not instructions retired per byte. The designs were also measured in
+separate experiments, each against its own control, so the column traces a lineage rather
+than a timing curve.</p>
+<h2 id="what-the-comparison-found">What the comparison found<a class="headerlink" href="#what-the-comparison-found" title="Permanent link">&para;</a></h2>
+<p>The comparison walked both tables over 434 blocks of the Wikidata dump, 207 million rows,
+checking every output against the production decoder's. It ran twenty paired rounds, first on
+one pinned core and then with four workers on four cores starting each step together.</p>
+<p>The timed interval is the walk and the assembly of the block, not the building of the
+table. Production builds its table before each walk, while compact30 copies a prebuilt
+image, and both happen outside the timer. Those preparations may leave the caches in
+different states. The comparison's design, checks and decision rule were <a href="https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-traversal-protocol.md">registered before
+it
+ran</a>,
+and every check passed. The rule was to go on to a builder if the upper 95% bound of the
+four-worker CPU ratio was at most 0.865 and that of the completion ratio at most 1.02. They
+came to 0.843 and 0.860.</p>
+<p>The CPU-time figures sum the time the walking threads spent running, divided by the rows
+walked. The completion figure runs from the earliest start to the latest finish of each
+four-worker step, summed over the corpus. The 95% intervals describe paired variation across
+the twenty rounds on this machine and workload.</p>
+<table>
+<thead>
+<tr>
+<th>Walk over a prepared table</th>
+<th style="text-align: right;">Production</th>
+<th style="text-align: right;">Compact30</th>
+<th style="text-align: right;">Compact30 ÷ production (95% interval)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU time per row, one core</td>
+<td style="text-align: right;">1.221 ns</td>
+<td style="text-align: right;">1.402 ns</td>
+<td style="text-align: right;">1.148 (1.147–1.149)</td>
+</tr>
+<tr>
+<td>CPU time per row, four workers</td>
+<td style="text-align: right;">2.055 ns</td>
+<td style="text-align: right;">1.727 ns</td>
+<td style="text-align: right;">0.840 (0.838–0.843)</td>
+</tr>
+<tr>
+<td>Four-worker completion, one corpus pass</td>
+<td style="text-align: right;">114.45 ms</td>
+<td style="text-align: right;">97.97 ms</td>
+<td style="text-align: right;">0.856 (0.852–0.860)</td>
+</tr>
+</tbody>
+</table>
+<figure class="bf-fig">
+<p class="bf-title">Slower alone, faster with four workers</p>
 <svg viewBox="0 0 720 265" role="img" aria-label="CPU nanoseconds per BWT row, lower is better. On one core the conventional walker costs 1.221 and compact30 1.402. With four concurrent workers the conventional walker costs 2.055 and compact30 1.727.">
 <text x="154" y="20" class="bf-tm">CPU nanoseconds per BWT row · lower is better</text>
 <path d="M156 37V218M266 37V218M376 37V218M486 37V218M596 37V218" class="bf-grid"/>
@@ -1917,94 +3354,68 @@ a guarantee for other machines or workloads.</p>
 <rect x="156" y="48" width="268.5" height="24" rx="4" class="bf-slot"/><rect x="156" y="79" width="308.4" height="24" rx="4" class="bf-cell-hi"/>
 <rect x="156" y="134" width="452.1" height="24" rx="4" class="bf-slot"/><rect x="156" y="165" width="380.0" height="24" rx="4" class="bf-cell-hi"/>
 <text x="431" y="65" class="bf-t-strong">1.221</text><text x="471" y="96" class="bf-t-strong">1.402</text><text x="615" y="151" class="bf-t-strong">2.055</text><text x="543" y="182" class="bf-t-strong">1.727</text>
-<rect x="158" y="247" width="14" height="10" rx="2" class="bf-slot"/><text x="180" y="256" class="bf-tm">Conventional</text><rect x="312" y="247" width="14" height="10" rx="2" class="bf-cell-hi"/><text x="334" y="256" class="bf-tm">Compact30</text>
+<rect x="158" y="247" width="14" height="10" rx="2" class="bf-slot"/><text x="180" y="256" class="bf-tm">Production</text><rect x="312" y="247" width="14" height="10" rx="2" class="bf-cell-hi"/><text x="334" y="256" class="bf-tm">Compact30</text>
 </svg>
-<figcaption>CPU time per row is measured for each walking thread and summed. Compact30 is slower alone but faster with four workers. The chart shows the reversal, not its cause; construction is excluded.</figcaption>
+<figcaption>CPU time per row, summed over the walking threads, from the comparison above. Lower is better. Table construction is excluded, and the chart shows the reversal, not its cause.</figcaption>
 </figure>
 
-<p>The reversal repays the design effort in a very specific setting. On one core the compact
-walker spends 14.85% more CPU time per row. With four concurrent walkers it spends 15.95%
-less, and their summed lockstep completion time is 14.40% lower. That completion measure is
-not a measurement of whole-file decoding speed.</p>
-<p>The absolute times help explain the crossover without pretending to identify its cause. On
-one core, compact30 starts with an extra 0.181 ns per row of traversal cost. When the
-workload changes to four concurrent walkers, the conventional walk's cost increases by 0.834
-ns per row, against 0.325 ns for compact30. The difference between those increases is 0.509
-ns—larger than compact30's initial 0.181 ns disadvantage—leaving it about 0.328 ns per row
-ahead in the four-worker measurement. That is arithmetic on the two measured conditions. It
-does not isolate cache misses, memory traffic or instruction execution as the cause of the
-different increases.</p>
-<p>This was not a result carried by a few convenient blocks. Of the 230 full-sized blocks, all
-230 had lower four-worker traversal CPU cost with compact30 when averaged over rounds. In
-1,138 of the 1,140 full-sized four-worker steps, the total CPU time was lower as well. The
-204 short blocks were slower, but accounted for just 8,324 of the corpus's 207 million rows.
-The same blocks recurred in each round, so these counts are robustness checks within one
-experiment, not hundreds of independent replications. The complete <a href="https://github.com/lmmx/mibz2/tree/f567817/docs/journal/2026-11-02-compact30-traversal-protocol/i9-attempt-4">capture and independent
+<p>On one core, compact30 costs 14.85% more CPU time per row. One block's table fits in the
+cache with room to spare, so the extra instructions have nothing to pay for them. That is
+the outcome Seward's paper predicts for a table that does more work per step. With four
+workers it costs 15.95% less, and the four-worker completion time is 14.40% lower.</p>
+<p>The absolute times show the crossover's arithmetic, though not its cause:
+- On one core, compact30 starts 0.181 ns a row behind.
+- With four workers, production's cost rises by 0.834 ns a row and compact30's by 0.325.
+- That is a 68% rise for production and 23% for compact30.
+- The difference between the rises, 0.509 ns, exceeds the starting gap, which leaves
+  compact30 0.328 ns a row ahead.</p>
+<p>The comparison didn't isolate why the rises differ. The leading explanation is the smaller
+shared footprint: about 7.79 MB for four full compact30 tables, against 14.4 MB for four
+production tables. That is computed table size, not measured cache occupancy or memory
+traffic, and the counters that would separate fewer evictions from other effects weren't
+collected.</p>
+<p>The result doesn't rest on a few blocks:
+- <strong>Full blocks:</strong> all 230 full-sized blocks had lower four-worker CPU cost with compact30,
+  averaged over rounds.
+- <strong>Steps:</strong> in 1,138 of the 1,140 full-sized four-worker steps, total CPU time was lower.
+- <strong>Short blocks:</strong> the 204 short blocks were slower, but they hold 8,324 of the corpus's
+  207 million rows.</p>
+<p>The same blocks recur in every round, so these are robustness checks within one experiment,
+not hundreds of independent replications. The <a href="https://github.com/lmmx/mibz2/tree/f567817/docs/journal/2026-11-02-compact30-traversal-protocol/i9-attempt-4">records and their
 reconstruction</a>
-are preserved.</p>
-<p>It took some care to obtain a trustworthy comparison. Earlier attempts were stopped by
-toolchain and disassembly checks, and one complete capture was invalid because the four
-walks were not starting sufficiently close together. A subsequent, separately registered
-change to the start barrier corrected that condition without changing the walker or relaxing
-the threshold. In the valid capture every registered check passed. By the decision rule
-fixed before the run, that was enough, for the first time with a compact table, to justify
-building a real constructor. It was not a case for putting the experimental walker into the
-decoder.</p>
-<h2 id="a-promising-traversal-is-not-yet-a-better-decoder">A promising traversal is not yet a better decoder<a class="headerlink" href="#a-promising-traversal-is-not-yet-a-better-decoder" title="Permanent link">&para;</a></h2>
-<p>The measured crossover is the one we had asked about in October: a table that loses when
-traversed in isolation can become favourable when multiple workers compete for the machine's
-memory resources. What the experiment does not tell us is why their costs increase so
-differently.</p>
-<p>A smaller shared navigation footprint is the leading hypothesis: approximately 7.79 MB for
-four full compact30 tables rather than 14.4 MB for four conventional tables. But this figure
-is calculated logical table storage, not measured cache occupancy, peak process memory or
-DRAM traffic. The experiment did not collect the counters needed to distinguish fewer
-evictions from translation effects, request-service pressure or the differing cache state
-left by table preparation. The contention-related advantage is observed; its precise
-hardware cause is not isolated.</p>
-<p>This result is therefore narrower, and more valuable, than simply saying that compression
-made decompression faster. At a fixed concurrent traversal workload, we have measured a
-representation that uses fewer logical table bytes and completes the traversal with less CPU
-time. That is a new favourable point for this stage of the computation, despite more work
-per lookup. We have <em>not</em> yet demonstrated an outward shift in the full decoder's
-throughput–memory frontier—the set of complete-decoder configurations that are not beaten on
-both speed and measured memory use.</p>
-<p>There is one more reason not to conflate the two. A real decoding worker also reconstructs
-the last column, builds the navigation table, assembles output and performs further
-processing. Workers are not guaranteed to be traversing at the same time. The 14.85%
-isolated traversal penalty could matter whenever only one or two are walking. The
-four-worker saving cannot be multiplied through the whole program without measuring that
-mixture.</p>
-<p>The next necessary piece is construction. The current reference builder first creates a full
-temporary successor table, then converts it to compact30 records. A production builder must
-generate the frozen records directly from the block's last column, competing with the
-<a href="https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/src/bwt.rs#L253-L318">current single-pass counting-sort
-builder</a>.
-In the <a href="https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-traversal-protocol.md#6-the-construction-budget-and-the-decision-rules-fixed-before-any-run">registered planning
-model</a>,
-retaining the measured four-worker traversal advantage would permit a direct builder costing
-at most about 6.7% more than production's, using the conservative confidence-interval
-endpoint. That allowance is conditional on the gain surviving construction and the decoder's
-natural concurrency; it is not a prediction that the final decoder will meet its target.</p>
-<p>So we have passed the first difficult test of the idea, not finished it. The
-<a href="https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-constructor-brief.md">direct-constructor design
+are kept.</p>
+<h2 id="what-it-doesnt-show-yet">What it doesn't show yet<a class="headerlink" href="#what-it-doesnt-show-yet" title="Permanent link">&para;</a></h2>
+<p>This is a faster walk over a prepared table, under controlled contention. It isn't yet a
+faster decoder.</p>
+<p><strong>The table has to be built.</strong> The reference builder makes a full temporary successor table
+and converts it. A real builder must produce the records directly from L, at a cost close to
+production's <a href="https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/src/bwt.rs#L253-L318">single counting
+pass</a>,
+which is §2.3 in Rust. In the <a href="https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-traversal-protocol.md#6-the-construction-budget-and-the-decision-rules-fixed-before-any-run">planning
+model</a>
+fixed before the comparison, keeping the measured four-worker gain allows a builder costing at
+most about 6.7% more than production's. That allowance assumes the gain survives everything
+else. The <a href="https://github.com/lmmx/mibz2/blob/f567817/docs/journal/2026-11-02-compact30-constructor-brief.md">constructor design
 brief</a>
-now asks whether the same representation can be built affordably, without the full temporary
-table. If it can, the decisive comparison will return to the original question: does compact
-navigation give the complete decoder more throughput for less measured memory, against the
-best conventional configuration?</p>
-<p>The original gamble was that reduced navigation storage could outweigh the instructions
-needed to read it, once several BWT traversals had to share a memory system. For
-prepared-table traversal under controlled contention, it has. FOR-14 showed that a small
-table could still be too costly to navigate; the refined, less densely packed design has now
-shown a positive result. The direct constructor and the complete decoder remain the tests of
-whether that progress becomes a practical improvement.</p>
+asks whether one can be built within it.</p>
+<p><strong>A decoder isn't always four walks in lockstep.</strong> Its workers also read and decode the
+compressed stream, build tables and assemble output, and they don't all walk at once. When
+only one or two are walking, the one-core penalty applies.</p>
+<p><strong>The frontier claim is reserved for the whole decoder.</strong> A table that uses less memory and
+walks faster under contention is a new point for one stage of the computation. Moving the
+<a href="../../benchmarks/frontier/">decoder's throughput–memory frontier</a> means beating the best
+production configuration on throughput and measured peak memory together, on the same
+machine and workload.</p>
+<p>Seward closed by allowing that bigger caches might one day make his findings obsolete.
+Twenty-five years on, the caches are eighty times larger, and the tables still don't fit:
+there are four of them, sharing. So far, in a walk with four tables live, a smaller table
+that costs more per step has given back more than it costs.</p>
 <hr />
-<p>Research state, 2 November 2026: the prepared-table traversal comparison is valid, and
-justified the constructor work. Direct-constructor cost, full-decoder throughput and peak
-memory, and the cause of the contention advantage have not yet been established. New results
-should be added with their own dates and measurement boundaries; this result and its source
-archive remain unchanged.</p>
+<p>Research state, 2 November 2026: the comparison of walks over prepared tables is valid, and
+it justified the work on a builder. The builder's cost, the full decoder's throughput and
+peak memory, and the cause of the four-worker advantage are not yet established. New
+results will be added with their own dates and measurement boundaries, and this result and
+its records stay as they are.</p>
 
 
 
@@ -2064,13 +3475,13 @@ archive remain unchanged.</p>
         
         
           
-          <a href="../2026-11-02-memory-level-parallelism/" class="md-footer__link md-footer__link--next" aria-label="Next: Instructions, overlap and evidence">
+          <a href="../2026-11-02-seward-bwt-space-time-tradeoff/" class="md-footer__link md-footer__link--next" aria-label="Next: BWT space–time tradeoff (alternative draft)">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Instructions, overlap and evidence
+                BWT space–time tradeoff (alternative draft)
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -2149,17 +3560,17 @@ archive remain unchanged.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=eafb8f76fd23"></script>
+        <script src="../../assets/javascripts/bench.js?v=7f7ffe0bfb4d"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=eafb8f76fd23"></script>
+        <script src="../../assets/javascripts/couriers.js?v=7f7ffe0bfb4d"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=eafb8f76fd23"></script>
+        <script src="../../assets/javascripts/blog.js?v=7f7ffe0bfb4d"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=eafb8f76fd23"></script>
+        <script src="../../assets/javascripts/frontier.js?v=7f7ffe0bfb4d"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=eafb8f76fd23"></script>
+        <script src="../../assets/javascripts/katex.js?v=7f7ffe0bfb4d"></script>
       
     
   </body>
