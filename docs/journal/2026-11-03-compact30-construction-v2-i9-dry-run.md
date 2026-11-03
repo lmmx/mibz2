@@ -37,8 +37,60 @@ The recipe builds the frozen harness at `fa21f33`, in its own pinned worktree
 the researcher requires merging it into the frozen harness, and no further Miri work is
 needed.
 
-**Result:** pending. The archive, its checksum and the analysis will be recorded here when
-they arrive.
+## The result: the i9 dry run passed
+
+**Every check a dry run makes passed.** The i9 dry run ran on 2026-11-03 at 22:20 UTC and
+exited with status 0:
+- the dry-run schedule: S0–S10, plus S1_protocol;
+- G3 machine-code identity, G4 allocation, G6 exact output, G7 round −1, G8 one-pass,
+  G9 memory and G10 major faults.
+
+Its timing records are not performance evidence. G1, G2, G5, every timing figure and the
+decision were suppressed, as registered. No capture was run.
+
+**The archive:** `c30-construction-v2-20261103T222051Z-dry-run.tar.gz`, 644,678 bytes, sha256
+`65689a5800cd93b272b04d6c5a89822e561a5a10a8ab95aab20308cee4b02b27`. It is kept in
+[2026-11-03-compact30-construction-v2-i9-dry-run/](2026-11-03-compact30-construction-v2-i9-dry-run/)
+as received, and its contents are listed below.
+
+**Checked here:**
+- The checksum matches the console.
+- All 33 manifest entries match their files.
+- Replaying the pinned analyser (`bench/c30_construction.py` at `fa21f33`, unchanged at
+  `1dc2edf`) on the archived records gives the same results as the archive. It was run with
+  `--protocol v2 --identity-ok yes --rss rss-*.json`, under `python3 -I`, from a separate
+  scripts directory. The JSON analysis is identical, and the console is identical to the
+  archive's analysis section (`replay.console`).
+
+| item | value |
+|---|---|
+| source | `fa21f33`, no tracked changes; the recipe at `1dc2edf` |
+| toolchain | rustc 1.97.0 (`2d8144b78`), LLVM 22.1.6, cargo 1.97.0 |
+| tests in the pinned worktree | 94 (draft 4); 89 under v2 with 5 replaced, plus 30 v2 tests; 6 (listings) |
+| machine | louis-3xs, i9-10900K, 20 CPUs online, 125.7 GiB |
+| placement | workers on CPUs 1–4, W1 on the first |
+| barrier test | 12,000 steps, 3 rounds × 2 arms, 4 workers: every check passed |
+| records | 10,416 builds; 868 `check0`; 434 each of `onepass`, `counters` and `poisoncheck`; 2 calibration; preflight, meta and postflight |
+| protocol, candidate | `c30-construction-v2`, `ctor2` |
+| corpus | `wikidata-20261026.bz2`, sha256 `cf13f439…`: 434 blocks, 207,006,515 rows, 230 full blocks |
+| allocation (W4) | rows 51,301,938 / 51,301,991 / 52,201,043 / 52,201,543; blocks 109/109/108/108; full blocks 57/57/58/58 |
+| machine code (G3) | every listing diff is empty: P's `p_build` and `bwt::build`; C's `c2_build`, `Ctor2::build::<false>` (1,431 instructions), `W<false>::finish` (379) and `W<false>::refill`; the shared canonicaliser |
+| poison coverage | poison pass 434/434 blocks; round −1 432/434 (the same as the VM dry run) |
+| memory | estimate 1,855,391,770 B; peak VmHWM 1,770,512,384 B (0.954 of the estimate); about 130.8 GB available; no swap used; PSI 0 |
+| faults | major 0 in measured builds and in round −1; minor by regime and arm: warm P 0, warm C 10, cold P 1,654, cold C 145 |
+| RSS processes | P median 13.9 MB, C median 7.9 MB (three each) |
+
+The harness binary's sha256 (`a55755db…`) differs from the VM build's (`ea2662dc…`). That is
+expected, because the binary embeds machine-specific build paths. Binary identity for this
+protocol rests on G3's comparison of the timed functions' machine code with the frozen
+listings, and every one of those comparisons is identical.
+
+**What follows.** The archive goes to the guardian for review. The measured 20-round capture
+needs a separate decision. If authorised, it would be:
+
+    just bench-c30-construction-v2 target/walk-decoder/work/corpora 20 capture target/c30-construction-v2-20261103T222051Z-dry-run.tar.gz
+
+That command is not authorised and has not been run.
 
 ## Report 213: the guardian's approval, as relayed
 
