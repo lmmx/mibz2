@@ -31,7 +31,6 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/index.md>): What mibz2's experiments are finding, and where they go next.
-- [BWT space–time tradeoff (alternative draft)](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-02-seward-bwt-space-time-tradeoff/index.md>): From Seward's 2001 inverse-BWT algorithms to a compact navigation table that finally passes a four-core traversal test: why more work per lookup can mean less work for the machine.
 - [BWT space–time tradeoff](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-02-smaller-table-four-workers/index.md>): A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result.
 - [Instructions, overlap and evidence](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-02-memory-level-parallelism/index.md>): Interleaved pointer chases overlap their memory waits. The speedup shows that this pays, but not what limits it, and so not what to make faster next.
 - [Technical appendix](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-02-memory-level-parallelism-notes/index.md>): Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register.
