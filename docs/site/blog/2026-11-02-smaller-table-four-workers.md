@@ -35,7 +35,9 @@ Cambridge. That year he presented a paper at the IEEE Data Compression Conferenc
 *[Space-time tradeoffs in the Inverse B-W
 Transform](https://doi.org/10.1109/DCC.2001.917175)*, on what it costs to undo the
 [Burrows–Wheeler transform](https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform)
-(BWT) that bzip2 is built on. Compression with the BWT had been studied closely, but
+(BWT) that bzip2 is built on.
+
+Compression with the BWT had been studied closely, but
 *"decompression-time issues remain underinvestigated"*. He had two uses in mind that pull in opposite directions: booting a
 Linux kernel from a compressed image needs little memory, and an on-the-fly disk compressor
 needs speed. So he offers a family of algorithms
