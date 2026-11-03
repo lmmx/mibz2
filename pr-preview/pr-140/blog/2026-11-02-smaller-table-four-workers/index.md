@@ -84,11 +84,11 @@ The left-hand side is row \\(j\\) with its last letter moved to the front; \\(T\
 
 **Which row to land on.** The moved letter becomes the first letter of the landing row, so the landing row is one of those that start with it in \\(F\\). But `banana` has three `a`s, so three rows start with `a`. Moving the `a` off the end of row 3 lands on row 0, not row 1 or 2; how could a decoder know that without the square?
 
-Up to now the three `a`s have looked identical. To tell them apart, label each by where it falls in the word: `b a₁ n₁ a₂ n₂ a₃`. The labels are only for following the letters; nothing in bzip2 stores them. Labelling and counting occurrences this way comes from Ben Langmead's [lecture slides on the transform](<https://www.cs.jhu.edu/~langmea/resources/lecture_notes/bwt_and_fm_index.pdf>); he relies on the same counting in [Bowtie](<https://genomebiology.biomedcentral.com/articles/10.1186/gb-2009-10-3-r25>), his DNA read aligner, which searches a genome through its Burrows–Wheeler transform. Rows 3, 4 and 5 end in `a₃`, `a₂` and `a₁`, and rows 0, 1 and 2 start with `a₃`, `a₂` and `a₁`: the same occurrences, in the same order. This preserved order is what makes inversion possible, and the sort is why it holds. Rows 3, 4 and 5 are in that order because of what comes before their last `a`: `banan` \< `naban` \< `nanab`. Moving the `a` to the front puts those same letters right behind it, where they decide the order again:
+Up to now the three `a`s have looked identical. To tell them apart, label each by where it falls in the word: \\(\\mathtt{b}\\;\\mathtt{a}\_1\\;\\mathtt{n}\_1\\;\\mathtt{a}\_2\\;\\mathtt{n}\_2\\;\\mathtt{a}\_3\\). The labels are only for following the letters; nothing in bzip2 stores them. This way of making the matching visible is borrowed from Ben Langmead's [lecture slides on the transform](<https://www.cs.jhu.edu/~langmea/resources/lecture_notes/bwt_and_fm_index.pdf#page=9>). Langmead also wrote [Bowtie](<https://genomebiology.biomedcentral.com/articles/10.1186/gb-2009-10-3-r25>), a DNA read aligner that uses the same correspondence to search a genome rather than to decompress it. Rows 3, 4 and 5 end in \\(\\mathtt{a}\_3\\), \\(\\mathtt{a}\_2\\) and \\(\\mathtt{a}\_1\\), and rows 0, 1 and 2 start with \\(\\mathtt{a}\_3\\), \\(\\mathtt{a}\_2\\) and \\(\\mathtt{a}\_1\\): the same occurrences, in the same order. This preserved order is what makes inversion possible, and the sort is why it holds. Rows 3, 4 and 5 are in that order because of what comes before their last `a`: `banan` \< `naban` \< `nanab`. Moving the `a` to the front puts those same letters right behind it, where they decide the order again:
 
 Why the a’s keep their order
 
-The square twice, its a’s and n’s labelled by where they fall in banana. Left, rows 3, 4 and 5 end in a; what comes before that a (tinted) puts them in order. Each moves its a to the front, carrying the tinted letters one place right, and lands on rows 0, 1 and 2 on the right, in the same order. So the a’s run a₃, a₂, a₁ down both L and F.
+The square twice, its a’s and n’s labelled by where they fall in banana. Left, rows 3, 4 and 5 end in a; what comes before that a (tinted) puts them in order. Each moves its a to the front, carrying the tinted letters one place right, and lands on rows 0, 1 and 2 on the right, in the same order. So the a’s run a<sub>3</sub>, a<sub>2</sub>, a<sub>1</sub> down both L and F.
 
 The same goes for the two `n`s, and for every letter of any block: the first `a` in \\(L\\) (row 3's) lands on the first row starting with `a` (row 0), the second on the second, and so on.
 
@@ -116,7 +116,7 @@ To write \\(S\\) forwards, Seward assumes the compressor reverses each block bef
 
 T matches each L byte to the same occurrence in F
 
-With the occurrences labelled, each link joins a letter in L to itself in F: L\[3\] is a₃, which is F\[0\], so T\[3\] = 0. The links never cross within one letter, which is why counts are enough to rebuild T.
+With the occurrences labelled, each link joins a letter in L to itself in F: L\[3\] is a<sub>3</sub>, which is F\[0\], so T\[3\] = 0. The links never cross within one letter, which is why counts are enough to rebuild T.
 
 The \\(c\\)'s in \\(F\\) form one bucket. Turning the counts in \\(C\\) into running totals gives where each bucket starts: \\(C\[c\]\\) becomes the number of bytes smaller than \\(c\\) (for `banana`, a 0, b 3, n 4). So
 

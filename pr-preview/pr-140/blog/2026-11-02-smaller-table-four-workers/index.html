@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=28bed33d3e82">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=ce2498f5925e">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=28bed33d3e82">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=ce2498f5925e">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=28bed33d3e82">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=ce2498f5925e">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=28bed33d3e82">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=ce2498f5925e">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=28bed33d3e82">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=ce2498f5925e">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2469,12 +2469,13 @@ the landing row is one of those that start with it in <span class="arithmatex">\
 three rows start with <code>a</code>. Moving the <code>a</code> off the end of row 3 lands on row 0, not row 1 or 2;
 how could a decoder know that without the square?</p>
 <p>Up to now the three <code>a</code>s have looked identical. To tell them apart, label each by where it
-falls in the word: <code>b a₁ n₁ a₂ n₂ a₃</code>. The labels are only for following the letters; nothing
-in bzip2 stores them. Labelling and counting occurrences this way comes from Ben Langmead's
-<a href="https://www.cs.jhu.edu/~langmea/resources/lecture_notes/bwt_and_fm_index.pdf">lecture slides on the transform</a>;
-he relies on the same counting in <a href="https://genomebiology.biomedcentral.com/articles/10.1186/gb-2009-10-3-r25">Bowtie</a>,
-his DNA read aligner, which searches a genome through its Burrows–Wheeler transform. Rows 3, 4 and 5 end in <code>a₃</code>, <code>a₂</code> and <code>a₁</code>, and rows 0, 1 and 2 start
-with <code>a₃</code>, <code>a₂</code> and <code>a₁</code>: the same occurrences, in the same order. This preserved order is what
+falls in the word: <span class="arithmatex">\(\mathtt{b}\;\mathtt{a}_1\;\mathtt{n}_1\;\mathtt{a}_2\;\mathtt{n}_2\;\mathtt{a}_3\)</span>. The labels are only for following the letters; nothing
+in bzip2 stores them. This way of making the matching visible is borrowed from Ben Langmead's
+<a href="https://www.cs.jhu.edu/~langmea/resources/lecture_notes/bwt_and_fm_index.pdf#page=9">lecture slides on the transform</a>.
+Langmead also wrote <a href="https://genomebiology.biomedcentral.com/articles/10.1186/gb-2009-10-3-r25">Bowtie</a>,
+a DNA read aligner that uses the same correspondence to search a genome rather than to
+decompress it. Rows 3, 4 and 5 end in <span class="arithmatex">\(\mathtt{a}_3\)</span>, <span class="arithmatex">\(\mathtt{a}_2\)</span> and <span class="arithmatex">\(\mathtt{a}_1\)</span>, and rows 0, 1 and 2 start
+with <span class="arithmatex">\(\mathtt{a}_3\)</span>, <span class="arithmatex">\(\mathtt{a}_2\)</span> and <span class="arithmatex">\(\mathtt{a}_1\)</span>: the same occurrences, in the same order. This preserved order is what
 makes inversion possible, and the sort is why it holds. Rows 3, 4 and 5 are in that order
 because of what comes before their last <code>a</code>: <code>banan</code> &lt; <code>naban</code> &lt; <code>nanab</code>. Moving the <code>a</code> to
 the front puts those same letters right behind it, where they decide the order again:</p>
@@ -2755,11 +2756,11 @@ the front puts those same letters right behind it, where they decide the order a
 <text x="432.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
 <rect x="420" y="152" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
 <text x="432.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="50" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4"> </tspan></tspan> down L</text>
-<text x="420" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4"> </tspan></tspan> down F</text>
+<text x="50" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4">&#160;</tspan></tspan>down L</text>
+<text x="420" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4">&#160;</tspan></tspan>down F</text>
 </g>
 </svg>
-<figcaption>The square twice, its a’s and n’s labelled by where they fall in banana. Left, rows 3, 4 and 5 end in a; what comes before that a (tinted) puts them in order. Each moves its a to the front, carrying the tinted letters one place right, and lands on rows 0, 1 and 2 on the right, in the same order. So the a’s run a₃, a₂, a₁ down both L and F.</figcaption>
+<figcaption>The square twice, its a’s and n’s labelled by where they fall in banana. Left, rows 3, 4 and 5 end in a; what comes before that a (tinted) puts them in order. Each moves its a to the front, carrying the tinted letters one place right, and lands on rows 0, 1 and 2 on the right, in the same order. So the a’s run a<sub>3</sub>, a<sub>2</sub>, a<sub>1</sub> down both L and F.</figcaption>
 </figure>
 
 <p>The same goes for the two <code>n</code>s, and for every letter of any block: the first <code>a</code> in <span class="arithmatex">\(L\)</span> (row
@@ -2983,7 +2984,7 @@ whose string starts one byte later in <span class="arithmatex">\(S\)</span>.</p>
 <path d="M214 245 C320 245 360 131 464 131" class="bf-link"/>
 <text x="222" y="241" class="bf-ttiny">T[5] = 2</text>
 </svg>
-<figcaption>With the occurrences labelled, each link joins a letter in L to itself in F: L[3] is a₃, which is F[0], so T[3] = 0. The links never cross within one letter, which is why counts are enough to rebuild T.</figcaption>
+<figcaption>With the occurrences labelled, each link joins a letter in L to itself in F: L[3] is a<sub>3</sub>, which is F[0], so T[3] = 0. The links never cross within one letter, which is why counts are enough to rebuild T.</figcaption>
 </figure>
 
 <p>The <span class="arithmatex">\(c\)</span>'s in <span class="arithmatex">\(F\)</span> form one bucket. Turning the counts in <span class="arithmatex">\(C\)</span> into running totals gives where each
@@ -3751,17 +3752,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=28bed33d3e82"></script>
+        <script src="../../assets/javascripts/bench.js?v=ce2498f5925e"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=28bed33d3e82"></script>
+        <script src="../../assets/javascripts/couriers.js?v=ce2498f5925e"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=28bed33d3e82"></script>
+        <script src="../../assets/javascripts/blog.js?v=ce2498f5925e"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=28bed33d3e82"></script>
+        <script src="../../assets/javascripts/frontier.js?v=ce2498f5925e"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=28bed33d3e82"></script>
+        <script src="../../assets/javascripts/katex.js?v=ce2498f5925e"></script>
       
     
   </body>
