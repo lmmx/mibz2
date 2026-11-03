@@ -435,3 +435,172 @@ This is a meaningful opportunity to improve construction without changing the pa
 Only Claude needs the implementation handoff. Astra has completed this design assignment, and the researcher needn't be involved until there is new code to review.
 
 The critical discipline is to prove the new algorithm and inspect its compiled structure before committing to another i9 capture.
+## Report 207: the researcher's review of the v2 design, as relayed
+
+Kept as received. The researcher's checks are of the mathematics, done with an independent
+counting-scatter model, not tests of a Rust constructor. Two of its requirements became
+explicit prototype obligations in report 208:
+- SIMD finalisation must stay inside a record's field bytes 0–59, because the header starts
+  at byte 60.
+- A group must be classified as wide or ordinary from its fully reconstructed labels before
+  any modular subtraction. The exact boundary cases are source positions 3 → 61,440
+  (ordinary) and 2 → 61,440 (RAW).
+
+### My assessment of Astra's second design
+
+This is a substantially better research proposal than simply tuning the first constructor. I think it merits consideration for one bounded correctness-and-compilation prototype, although I would not yet authorize another performance capture.
+
+The distinction is that Astra is proposing to eliminate work, rather than make the existing work a little cheaper.
+
+The first constructor calculates the final representation as it scans each byte. That forces it to repeatedly inspect record headers, calculate offsets and decide whether a group has become too wide.
+
+Astra's new idea is to write a simpler intermediate value into the final record, then finish each group once its contents are known.
+
+#### The mathematical idea checks out
+
+The key identity is:
+
+\\[ \phi(i)=65536\left\lfloor\frac{i}{61440}\right\rfloor+\phi(i\bmod61440). \\]
+
+Because 61,440 is exactly \\(30\times2048\\), the encoded successor label advances by exactly 65,536 at each boundary.
+
+Consequently, storing its low 16 bits loses only one piece of information: which 61,440-row epoch it came from.
+
+Astra proposes recovering that epoch from snapshots of each character's destination cursor. This works because occurrences of the same character are scattered into their destination bucket in their original order.
+
+I independently checked the reconstruction against a counting-scatter oracle on several synthetic patterns, including the maximum permitted block size of 983,010 rows, absent characters across multiple epochs, random alphabets and runs crossing epoch boundaries. The reconstructed successor labels matched throughout.
+
+These are mathematical/model checks, not tests of an implemented Rust constructor.
+
+An important detail is that Astra correctly specifies the greatest qualifying epoch. When a character is absent for several epochs, its cursor snapshot repeats. Choosing the earliest matching snapshot would reconstruct the wrong successor.
+
+So the central idea is not hand-waving. It exploits a genuine arithmetic property of compact30's frozen representation.
+
+#### The two technical risks I'd take most seriously
+
+1\. The temporary fields must be completely finalized before the record becomes readable.
+
+The existing [`Rec`](https://github.com/lmmx/mibz2/blob/e003a32/examples/c30walk.rs?utm_source=chatgpt.com#L73-L84)[ layout](https://github.com/lmmx/mibz2/blob/e003a32/examples/c30walk.rs?utm_source=chatgpt.com#L73-L84) has 30 `u16` fields occupying 60 bytes, followed by a four-byte header.
+
+Astra mentions overlapping SIMD loads, but I'd require a more explicit rule here: a straightforward fourth 16-byte load starting at byte 48 would also read the header, which may still be uninitialized. A corresponding store would overwrite it.
+
+The implementation must either handle the final 12 bytes separately or use an overlapping load/store confined to bytes 0–59, with the necessary inputs loaded before overlapping stores modify them.
+
+This isn't merely a vectorization detail. Given the constructor's unsafe arena initialization, it's a memory-safety obligation.
+
+There is also a useful property: the temporary low-16-bit labels never equal `0xFFFE` or `0xFFFF`, because they range only from 0 to 65,533. Those two reserved values therefore cannot be confused with a legitimate temporary label.
+
+2\. Wide-group detection must use full recovered labels, not modular subtraction.
+
+I checked an exact boundary case, with an ordinary group's first source row at position 3 and last at 61,440:
+
+| First source position | Last position | Encoded span | Classification |
+| --------------------- | ------------- | ------------ | -------------- |
+| 3                     | 61,440        | 65,533       | Ordinary       |
+| 2                     | 61,440        | 65,534       | RAW            |
+
+Both cross a 16-bit epoch boundary.
+
+The modular subtraction gives the correct final field offsets only after the constructor has established that the full span is at most 65,533. If it first subtracts and then classifies by the truncated result, it could misclassify a much wider group.
+
+Astra's proposed order gets this right. The implementation and tests must preserve it.
+
+#### The performance case is plausible, not proven
+
+The source confirms Astra's structural figures:
+
+### 74.34%
+
+Complete-record rows retained
+
+### 18.50%
+
+Scalar rows targeted
+
+### 7.16%
+
+Fragment rows targeted
+
+I also inspected the cited assembly around `23c99–23d1d`. It does contain the repeated cursor arithmetic, header load, RAW classification and offset computation that Astra identifies. So the proposed optimization targets a real dependency chain in the generated code.
+
+But there's an important tradeoff.
+
+The new algorithm postpones classification and normalization; it does not make those operations disappear altogether.
+
+For the roughly 25.66% of rows not handled by the bulk emitter, temporary labels must subsequently be read and rewritten. That's approximately another 1.03 bytes of explicit record reads and writes per input row, before any other finalization overhead. It isn't necessarily DRAM traffic, but it is additional work and can revisit cache lines that have been evicted.
+
+That is especially relevant because the harder requirement is not the 18.9% CPU reduction but the 25.2% completion-time reduction under four-worker contention.
+
+So I broadly agree with Astra's judgment: the instruction-count saving is credible, but the four-worker completion target is significantly less certain.
+
+#### What I would ask the guardian to authorize
+
+I'd support one bounded, untimed correctness-and-compilation prototype, with four conditions:
+
+1\. Preserve the existing compact30 record format, walker, bulk emitter and final RAW ordering. Verify complete byte-for-byte equivalence with the oracle, including forced RAW, malformed counts, reused allocations, partial records and both wide-offset boundaries.
+
+2\. Require a source-level initialization proof for temporary fields and headers. Include targeted tests above 61,440 rows, where the new epoch logic actually operates. The previous 942-case Miri quick suite is insufficient coverage of this design.
+
+3\. Inspect the compiled ordinary scalar append path. It should genuinely eliminate the per-row header load, RAW test, offset subtraction and span check. If those dependencies return in another form, the architectural rationale weakens considerably.
+
+4\. Inspect finalization as carefully as the append path: vectorized subtraction must not read uninitialized header bytes or normalize overlapping fields twice. The finalizer must not become another expensive scalar walk.
+
+No timing yet. First establish that the proposed savings survive compilation without introducing a costly finalization path.
+
+#### Verdict
+
+I would advance Astra's second design to one correctness-and-compilation prototype, not to a benchmark.
+
+The mathematical insight is valid, the proposed workspace is small and bounded, and the design attacks the specific repeated work visible in the first constructor's machine code.
+
+That is materially different from trying another five-store-to-four-store optimization.
+
+But I would not describe the performance target as likely to be met. This architecture trades immediate per-row computation for deferred record processing, and that trade may not pay under four-worker contention.
+
+The right next question is therefore very specific:
+
+Can we turn the expensive scalar scatter into a genuinely short temporary-label append, without paying the saved cost back when the groups are finalized?
+
+That's worth one carefully bounded prototype. It is not yet a reason to reopen the i9 measurement campaign.
+
+## Report 208: the guardian's addendum, as relayed
+
+The researcher's review strengthens the case for constructor v2. I agree with their assessment, and my earlier authorization stands: one correctness-and-compilation prototype, with no benchmarking.
+
+The important point is that Astra and the researcher have independently arrived at the same conclusion: the epoch-snapshot arithmetic is sound, and the proposed design targets genuine repeated work in constructor v1. Neither claims the required performance improvement is guaranteed.
+
+I also checked the frozen `Rec` layout on GitHub. The header begins at byte 60, so the researcher's SIMD warning is valid: a 16-byte load beginning at byte 48 would read four header bytes, potentially before initialization.
+
+#### Two details to emphasize to Claude
+
+The original prototype brief already covers most of the researcher's concerns. I'd send Claude just this short addendum, rather than another complete specification.
+
+The independent researcher has reviewed Astra's constructor-v2 design and supports the Guardian's existing authorization for one untimed correctness-and-compilation prototype.
+
+Two implementation-critical requirements deserve explicit emphasis:
+
+**1. SIMD finalization must never read an uninitialized header or process fields twice.** In the frozen 64-byte `Rec`, the 30 `u16` fields occupy bytes 0–59 and the header starts at byte 60. A 16-byte load at byte 48 crosses into the header. Use bounded finalization, or overlapping field-only loads with all overlapping source values captured before modifying them. Partial records must never read uninitialized fields or normalize padding.
+
+**2. Wide-group classification must use fully reconstructed successor labels before modular subtraction.** Include these exact epoch-crossing boundary tests:
+
+- Source positions 3 → 61,440: encoded span 65,533, ordinary.
+- Source positions 2 → 61,440: encoded span 65,534, RAW.
+
+The researcher also independently verified the greatest-qualifying-epoch rule, including duplicate snapshots and absent characters across epochs, up to the maximum supported block size.
+
+Retain the original compile-only structural gates: a genuinely shorter scalar append path, bounded vectorized finalization, preserved bulk emission and exact oracle byte equality.
+
+No new algorithm, timing, i9 work or additional experimental variants are authorized. These are clarifications to the already-approved v2 prototype.
+
+### Current status
+
+| Work                    | Status                             |
+| ----------------------- | ---------------------------------- |
+| Compact30 traversal     | VALID ADVANCE                      |
+| Direct constructor v1   | STOP                               |
+| Astra constructor v2    | Approved for one untimed prototype |
+| New performance capture | Not authorized                     |
+
+No further message to Astra or the researcher is needed. Claude can implement the already-approved design with these two safety requirements made explicit.
+
+The next meaningful decision will be based on v2's actual correctness results and compiled scalar/finalization paths—not another theoretical performance prediction.
