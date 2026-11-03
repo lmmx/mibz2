@@ -19,7 +19,7 @@ ask whether a smaller navigation table could do more work per step and still com
 under contention. A first measurement of ours shows it doing so.
 {: .post-dek }
 
-2 November 2026 · 23 min read · [Result](#7-the-four-worker-reversal)
+2 November 2026 · 23 min read · [Result](#7-timing-the-walk-on-one-core-and-on-four)
 {: .post-meta }
 
 </div>
@@ -69,16 +69,16 @@ decoder.
 <ol>
 <li><a href="#1-from-sorted-rotations-to-the-transformation-vector"><span class="rm-n">1</span><span class="rm-text"><span class="rm-t">From sorted rotations to the transformation vector</span><span class="rm-d">How a decoder gets <code>banana</code> back: a chain of lookups, each depending on the last</span></span></a></li>
 <li><a href="#2-making-inversion-fast-basis-bw94-and-mergedtl"><span class="rm-n">2</span><span class="rm-text"><span class="rm-t">Making inversion fast: basis, bw94 and mergedTL</span><span class="rm-d">Keeping the byte and the link in one word</span></span></a></li>
-<li><a href="#3-spending-less-memory-indexf-and-the-trees"><span class="rm-n">3</span><span class="rm-text"><span class="rm-t">Spending less memory: indexF and the trees</span><span class="rm-d">Recomputing what the fast algorithms store</span></span></a></li>
-<li><a href="#4-what-seward-measured"><span class="rm-n">4</span><span class="rm-text"><span class="rm-t">What Seward measured</span><span class="rm-d">Memory against speed: the space–time tradeoff</span></span></a></li>
+<li><a href="#3-spending-less-memory-indexf-and-the-count-trees"><span class="rm-n">3</span><span class="rm-text"><span class="rm-t">Spending less memory: indexF and the count trees</span><span class="rm-d">Recomputing what the fast algorithms store</span></span></a></li>
+<li><a href="#4-the-spacetime-tradeoff"><span class="rm-n">4</span><span class="rm-text"><span class="rm-t">The space–time tradeoff</span><span class="rm-d">Seward's measurements of memory against speed</span></span></a></li>
 </ol>
 </div>
 <div class="rm-half">
 <p class="post-roadmap-part">mibz2, 2026</p>
 <ol class="rm-ours">
-<li><a href="#5-the-same-tradeoff-with-four-blocks-live"><span class="rm-n">5</span><span class="rm-text"><span class="rm-t">The same tradeoff, with four blocks live</span><span class="rm-d">Why it changes when blocks decode at once and share a cache</span></span></a></li>
+<li><a href="#5-four-blocks-sharing-one-cache"><span class="rm-n">5</span><span class="rm-text"><span class="rm-t">Four blocks sharing one cache</span><span class="rm-d">Why Seward's tradeoff changes when blocks decode at once</span></span></a></li>
 <li><a href="#6-a-smaller-table-a-busier-lookup"><span class="rm-n">6</span><span class="rm-text"><span class="rm-t">A smaller table, a busier lookup</span><span class="rm-d">A little over half the space, more work per lookup</span></span></a></li>
-<li><a href="#7-the-four-worker-reversal"><span class="rm-n">7</span><span class="rm-text"><span class="rm-t">The four-worker reversal</span><span class="rm-d">The walk alone: slower on one core, faster on four</span></span></a></li>
+<li><a href="#7-timing-the-walk-on-one-core-and-on-four"><span class="rm-n">7</span><span class="rm-text"><span class="rm-t">Timing the walk on one core and on four</span><span class="rm-d">The walk alone: slower on one core, faster on four</span></span></a></li>
 <li><a href="#8-four-workers-cost-the-conventional-walk-far-more"><span class="rm-n">8</span><span class="rm-text"><span class="rm-t">Four workers cost the conventional walk far more</span><span class="rm-d">Why the usual table pays more for sharing the cache</span></span></a></li>
 <li><a href="#9-the-table-still-has-to-be-built"><span class="rm-n">9</span><span class="rm-text"><span class="rm-t">The table still has to be built</span><span class="rm-d">A cheap way to construct it for the decoder</span></span></a></li>
 </ol>
@@ -654,7 +654,7 @@ needs no $C[c]$ addition. Its manual credits the change with a real gain: *"Sing
 implementation of the inverse BWT. This significantly speeds up decompression, presumably
 because it reduces the number of cache misses."*
 
-## 3. Spending less memory: indexF and the trees
+## 3. Spending less memory: indexF and the count trees
 
 *"Can we reduce memory use whilst retaining useful decompression speed? Interestingly, yes."*
 The relation in $F$, $F[T[i]]$ precedes $F[i]$, needs only $T$ to walk. If the decoder reads the output bytes
@@ -739,7 +739,7 @@ left child's count whenever $j$ lies to the right, and scan $L$ only for the las
 words, and a leaf into one, fitting nearly twice as many nodes in the same space, which
 halves the scans. With $L$, tree-1M and treeopt-1M take $2N$ bytes and treeopt-500k $1.5N$.
 
-## 4. What Seward measured
+## 4. The space–time tradeoff
 
 The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-level cache.
 Blocks were at most 10⁶ bytes, 1 MB, and each was inverted ten times. He tested six files of
@@ -846,7 +846,7 @@ decompression speed much further"*. The paper ends on a caveat:
 > Such observations only hold true whilst cache sizes are much smaller than block sizes.
 > Future growth in cache sizes may invalidate such findings.
 
-## 5. The same tradeoff, with four blocks live
+## 5. Four blocks sharing one cache
 
 The K6-III's cache held 256 KB, against mergedTL's 4 MB for one block. Our workstation has a
 20 MiB last-level cache, and a full bzip2 block, up to 900,000 rows at 4 bytes each, needs a
@@ -958,7 +958,7 @@ has the annotated disassembly.
 So the question is which matters more when several cores share the machine: the extra
 instructions, or the smaller table.
 
-## 7. The four-worker reversal
+## 7. Timing the walk on one core and on four
 
 The comparison times two versions of the same traversal and assembly. The control walks
 mibz2's 4-byte table; compact30 walks its records with the same 32-lane walk. Every walk's
