@@ -11,6 +11,8 @@
 //!     cargo run --release --example c30walk -- ctor-check OUT.jsonl FILE.bz2 [FILE.bz2 ...]
 //!     cargo run --release --example c30walk -- ctor-adversarial OUT.jsonl
 //!     cargo run --release --example c30walk -- ctor-synthetic [--quick]
+//!     cargo run --release --example c30walk -- cbuild OUT.jsonl CORPUS.bz2 --rounds R --cpus A,B,C,D [--dry-run]
+//!     cargo run --release --example c30walk -- cbuild-rss OUT.json CORPUS.bz2 --arm P|C --cpus A,B,C,D
 //!
 //! The `ctor-` modes check the direct constructor (`c30walk/ctor.rs`, report 188) against
 //! the oracle.
@@ -59,6 +61,10 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 /// The direct constructor and its correctness harness (report 188)
 #[path = "c30walk/ctor.rs"]
 mod ctor;
+
+/// The construction-cost collector (docs/journal/2026-11-03-compact30-construction-protocol.md)
+#[path = "c30walk/cbuild.rs"]
+mod cbuild;
 
 const LANES: usize = 32;
 const SEGMENTS: usize = 512;
@@ -1880,6 +1886,12 @@ fn main() {
     }
     if let Some(m) = args[1].strip_prefix("ctor-") {
         return ctor::main(m, &args[2..]);
+    }
+    if args[1] == "cbuild" {
+        return cbuild::main(&args[2..]);
+    }
+    if args[1] == "cbuild-rss" {
+        return cbuild::rss(&args[2..]);
     }
     let mut jl = std::fs::File::create(&args[2]).unwrap();
     match args[1].as_str() {
