@@ -66,6 +66,10 @@ mod ctor;
 #[path = "c30walk/cbuild.rs"]
 mod cbuild;
 
+/// Constructor v2, deferred offsets (report 205), and its correctness harness
+#[path = "c30walk/ctor2.rs"]
+mod ctor2;
+
 const LANES: usize = 32;
 const SEGMENTS: usize = 512;
 const MIN_SEGMENTED: usize = 1 << 16;
@@ -1886,6 +1890,9 @@ fn main() {
     }
     if let Some(m) = args[1].strip_prefix("ctor-") {
         return ctor::main(m, &args[2..]);
+    }
+    if let Some(m) = args[1].strip_prefix("ctor2-") {
+        return ctor2::main(m, &args[2..]);
     }
     if args[1] == "cbuild" {
         return cbuild::main(&args[2..]);
