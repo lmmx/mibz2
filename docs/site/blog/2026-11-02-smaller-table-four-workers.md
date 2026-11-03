@@ -19,7 +19,7 @@ ask whether a smaller navigation table could do more work per step and still com
 under contention. A first measurement of ours shows it doing so.
 {: .post-dek }
 
-2 November 2026 · 23 min read · [Result](#7-the-four-worker-reversal)
+2 November 2026 · 22 min read · [Result](#7-the-four-worker-reversal)
 {: .post-meta }
 
 </div>
@@ -58,51 +58,46 @@ table. Seward said as much in [bzip2's manual](https://sourceware.org/bzip2/manu
 *"performance, both for compressing and decompressing, is largely determined by the speed at
 which your machine can service cache misses."*
 
-The post has two halves. The first works through how Seward's algorithms undo the transform.
-[Section 1](#1-from-sorted-rotations-to-the-transformation-vector) starts from a small
-puzzle: how does a decoder get the word `banana` back once the BWT has rearranged its
-letters? The answer is a chain of table lookups, each depending on the one before, and that
-chain is where the cache misses come from. Seward's algorithms are different ways of storing
-the chain, each choosing what to keep in memory and what to recompute while decoding
-([sections 2](#2-making-inversion-fast-basis-bw94-and-mergedtl) and
-[3](#3-spending-less-memory-indexf-and-the-trees)). [Section 4](#4-what-seward-measured)
-compares the memory each needs with the speed he measured in 2001: the space–time tradeoff of
-his title.
+The post has two halves: how Seward's algorithms work and what he measured, then what happens
+to his tradeoff in mibz2, where several blocks decode at once and share one cache. The
+result in the second half is a controlled test of the walk alone, not yet of the whole
+decoder.
 
-The second half asks what happens to that tradeoff in mibz2, where several blocks decode at
-once and their tables compete for one shared cache
-([section 5](#5-the-same-tradeoff-with-four-blocks-live)). Our first compact table made each
-lookup too expensive; a refined one stores the chain in a little over half the space, at a
-modest cost per lookup ([section 6](#6-a-smaller-table-a-busier-lookup)). Walked by one core,
-it is slower than mibz2's usual table, as Seward's tradeoff predicts; walked by four cores at
-once, it is faster ([sections 7](#7-the-four-worker-reversal) and
-[8](#8-four-workers-cost-the-conventional-walk-far-more)). That was a controlled test of the
-walk alone, and [section 9](#9-the-table-still-has-to-be-built) sets out what remains before
-the whole decoder could use it, starting with a cheap way to build the table.
+<figure class="bf-fig">
+<p class="bf-title">The post in nine sections</p>
+<svg viewBox="0 0 720 568" role="img" aria-label="The post in nine sections. Seward's paper, 2001: 1, how a decoder gets banana back; 2, making inversion fast; 3, spending less memory; 4, what Seward measured. mibz2, 2026: 5, four blocks sharing one cache; 6, a smaller table; 7, the four-worker reversal; 8, why four workers cost more; 9, the table still to build.">
+<path d="M22 77V101" class="bf-link"/>
+<path d="M22 127V151" class="bf-link"/>
+<path d="M22 177V201" class="bf-link"/>
+<path d="M22 323V347" class="bf-link"/>
+<path d="M22 373V397" class="bf-link"/>
+<path d="M22 423V447" class="bf-link"/>
+<path d="M22 473V497" class="bf-link"/>
+<text x="0" y="30" class="bf-tm" style="text-transform: uppercase; letter-spacing: 0.06em">Seward's paper, 2001</text>
+<a href="#1-from-sorted-rotations-to-the-transformation-vector" style="text-decoration: none"><circle cx="22" cy="64" r="13" class="bf-dot"/><text x="22" y="69" class="bf-t-strong" text-anchor="middle">1</text><text x="50" y="62" class="bf-ts">How does a decoder get banana back?</text><text x="50" y="80" class="bf-tm">By a chain of table lookups, each depending on the last</text></a>
+<a href="#2-making-inversion-fast-basis-bw94-and-mergedtl" style="text-decoration: none"><circle cx="22" cy="114" r="13" class="bf-dot"/><text x="22" y="119" class="bf-t-strong" text-anchor="middle">2</text><text x="50" y="112" class="bf-ts">Making inversion fast</text><text x="50" y="130" class="bf-tm">basis, bw94 and mergedTL: byte and link in one word</text></a>
+<a href="#3-spending-less-memory-indexf-and-the-trees" style="text-decoration: none"><circle cx="22" cy="164" r="13" class="bf-dot"/><text x="22" y="169" class="bf-t-strong" text-anchor="middle">3</text><text x="50" y="162" class="bf-ts">Spending less memory</text><text x="50" y="180" class="bf-tm">indexF and the count trees: recompute instead of store</text></a>
+<a href="#4-what-seward-measured" style="text-decoration: none"><circle cx="22" cy="214" r="13" class="bf-dot"/><text x="22" y="219" class="bf-t-strong" text-anchor="middle">4</text><text x="50" y="212" class="bf-ts">What Seward measured</text><text x="50" y="230" class="bf-tm">memory against speed: the space–time tradeoff</text></a>
+<text x="0" y="276" class="bf-tm" style="text-transform: uppercase; letter-spacing: 0.06em">mibz2, 2026</text>
+<a href="#5-the-same-tradeoff-with-four-blocks-live" style="text-decoration: none"><circle cx="22" cy="310" r="13" class="bf-dot-hi"/><text x="22" y="315" class="bf-t-strong" text-anchor="middle">5</text><text x="50" y="308" class="bf-ts">Four blocks, one cache</text><text x="50" y="326" class="bf-tm">why the tradeoff changes when blocks decode at once</text></a>
+<a href="#6-a-smaller-table-a-busier-lookup" style="text-decoration: none"><circle cx="22" cy="360" r="13" class="bf-dot-hi"/><text x="22" y="365" class="bf-t-strong" text-anchor="middle">6</text><text x="50" y="358" class="bf-ts">A smaller table, a busier lookup</text><text x="50" y="376" class="bf-tm">a little over half the space, more work per lookup</text></a>
+<a href="#7-the-four-worker-reversal" style="text-decoration: none"><circle cx="22" cy="410" r="13" class="bf-dot-hi"/><text x="22" y="415" class="bf-t-strong" text-anchor="middle">7</text><text x="50" y="408" class="bf-ts">The four-worker reversal</text><text x="50" y="426" class="bf-tm">the walk alone: slower on one core, faster on four</text></a>
+<a href="#8-four-workers-cost-the-conventional-walk-far-more" style="text-decoration: none"><circle cx="22" cy="460" r="13" class="bf-dot-hi"/><text x="22" y="465" class="bf-t-strong" text-anchor="middle">8</text><text x="50" y="458" class="bf-ts">Why four workers cost more</text><text x="50" y="476" class="bf-tm">the usual table pays far more for sharing the cache</text></a>
+<a href="#9-the-table-still-has-to-be-built" style="text-decoration: none"><circle cx="22" cy="510" r="13" class="bf-dot-hi"/><text x="22" y="515" class="bf-t-strong" text-anchor="middle">9</text><text x="50" y="508" class="bf-ts">Still to build</text><text x="50" y="526" class="bf-tm">a cheap way to construct the table for the decoder</text></a>
+</svg>
+<figcaption>Seward's paper first, then what happens to his tradeoff in mibz2. Select a section to go to it.</figcaption>
+</figure>
 
 ## 1. From sorted rotations to the transformation vector
 
-Suppose you want to compress the word `banana` with bzip2. At bzip2's core is the BWT,
-which doesn't shrink the six bytes: it reorders them into `nnbaaa` and records the number 3.
-bzip2's later stages then compress that. Decompressing undoes the stages in reverse order,
-and near the end comes the inverse transform: getting `banana` back from `nnbaaa` and 3. Seward's notation, which he takes from Burrows and Wheeler's
-1994 report *[A Block-sorting Lossless Data Compression
-Algorithm](https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf)*, names every
-piece:
+Take the word `banana` as a toy example of a block for bzip2 to compress. At the heart of
+bzip2 is the BWT, which doesn't make the block smaller. It rearranges the bytes into an order
+that bzip2's later stages compress better, and keeps one number so that the rearrangement can
+be undone.
 
-| Symbol | Meaning | In the example |
-|---|---|---|
-| $N$ | the number of bytes in the block, *"typically in the range of one million"* | 6 |
-| $S$ | the original block, which decoding recovers | `banana` |
-| $M$ | an $N \times N$ matrix: every rotation of $S$, sorted | the six rows below |
-| $L$ | the last column of $M$, which bzip2 transmits | `nnbaaa` |
-| $F$ | the first column of $M$ | `aaabnn` |
-| $I$ | the row of $M$ that holds $S$, also transmitted | 3 |
-| $T$ | the *"transformation vector"*: $N$ integers, each in $0..N-1$ | 4 5 3 0 1 2 |
-| $C$ | a count per byte value, or, as used below, where each byte's run starts in $F$ | counts a 3, b 1, n 2; starts a 0, b 3, n 4 |
-
-The decoder is given $L$ and $I$, and must produce $S$: from `nnbaaa` and 3, it must get back to
-`banana`.
+The rearrangement works like this. A rotation of a string moves some bytes from its front to
+its back: `banana`, `ananab`, `nanaba` and so on, six in all. Sorting the six rotations
+alphabetically and stacking them as rows gives a square of letters:
 
 <figure class="bf-fig">
 <p class="bf-title">The six rotations of banana, sorted</p>
@@ -207,12 +202,31 @@ The decoder is given $L$ and $I$, and must produce $S$: from `nnbaaa` and 3, it 
 <text x="34" y="314" class="bf-tm">Row 3 is banana itself. In every row, the L byte comes just before the F byte, going round the string.</text>
 <text x="34" y="334" class="bf-tm">A bzip2 block carries L = nnbaaa and I = 3, and nothing else of M; T is rebuilt from them.</text>
 </svg>
-<figcaption>M for S = banana, with F in green, L in blue and T beside each row. Row 3, outlined, is S itself.</figcaption>
+<figcaption>The six rotations of banana, sorted. In Seward's notation the first column, in green, is F and the last, in blue, is L; row 3, outlined, is banana itself. The T column is explained below.</figcaption>
 </figure>
 
-A rotation moves some bytes from the front of a string to its back. Sort every rotation of
-`banana` and the result is $M$. Row 3 is `banana` itself, so $I = 3$. A decoder never holds $M$:
-the inverse transform recovers just enough of it, from $L$, to read off row $I$.
+Reading down the last column gives `nnbaaa`. That column, with the number of the row where
+`banana` itself ended up, row 3, is all the BWT outputs. Decompressing undoes bzip2's stages in
+reverse order, and near the end comes the inverse transform: getting `banana` back from
+`nnbaaa` and 3, without the rest of the square.
+
+Seward's notation, which he takes from Burrows and Wheeler's 1994 report *[A Block-sorting
+Lossless Data Compression Algorithm](https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf)*,
+names each of these pieces:
+
+| Symbol | Meaning | In the example |
+|---|---|---|
+| $N$ | the number of bytes in the block, *"typically in the range of one million"* | 6 |
+| $S$ | the original block, which decoding recovers | `banana` |
+| $M$ | an $N \times N$ matrix: every rotation of $S$, sorted | the six rows above |
+| $L$ | the last column of $M$, which bzip2 transmits | `nnbaaa` |
+| $F$ | the first column of $M$ | `aaabnn` |
+| $I$ | the row of $M$ that holds $S$, also transmitted | 3 |
+| $T$ | the *"transformation vector"*: $N$ integers, each in $0..N-1$ | 4 5 3 0 1 2 |
+| $C$ | a count per byte value, or, as used below, where each byte's run starts in $F$ | counts a 3, b 1, n 2; starts a 0, b 3, n 4 |
+
+In these terms, the decoder is given $L$ and $I$ and must produce $S$. It never holds $M$: the
+inverse transform recovers just enough of it, from $L$, to read off row $I$.
 
 **Why the first and last columns.** Every row of $M$ is $S$ read round from some starting point,
 so in every row the last byte comes just before the first, going round $S$. Row 3 ends in `a`
