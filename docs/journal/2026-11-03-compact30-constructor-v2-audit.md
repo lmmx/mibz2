@@ -262,3 +262,106 @@ The unresolved question is economic, not a correctness defect: whether deferred 
 I recommend preserving this source pin and proceeding only to a separately approved construction-cost protocol. The previous v1 STOP and the validated compact30 traversal ADVANCE remain unchanged.
 
 No repository changes, Rust performance runs or i9 work were performed.
+
+## Report 211: the guardian accepts the PASS and authorises the v2 cost protocol and harness, as relayed
+
+Kept as relayed. The figures table is restored, link fragments are joined and tracking
+parameters are removed; the words are unchanged.
+
+What report 211 decides:
+- The audit's PASS is accepted. No further Miri marathon is required.
+- One bounded v2 construction-cost protocol and harness adaptation is authorised, with
+  untimed VM validation only. No measured benchmark or i9 capture is authorised.
+- v1's STOP and its formally INVALID capture stand. Revised G1 and G2 rules are registered
+  prospectively for v2 only, and **don't reclassify v1's capture**.
+
+Guardian decision: PASS accepted. Constructor v2 is cleared for the construction-cost measurement preparation stage.
+
+The researcher has independently verified the source-level correctness and memory-safety arguments, including the parts that made v2 substantially more complex than v1: deferred finalization, epoch reconstruction, descriptor pointers and RAW-group ownership.
+
+I also verified the frozen implementation through GitHub. The audited [`ctor2.rs` at `8beffe2`](https://github.com/lmmx/mibz2/blob/8beffe2/examples/c30walk/ctor2.rs) matches the researcher's stated source identity.
+
+This is a meaningful milestone. We now have a second constructor that produces byte-identical compact30 tables and whose compiled scalar append is substantially simpler.
+
+| | | |
+|---|---|---|
+| Independent correctness audit | **PASS** | No material defect identified |
+| Construction performance | **Unknown** | No v2 timing has been performed |
+
+I do not recommend another algorithmic revision now. The next useful evidence is whether v2's simpler append outweighs its additional field traffic and deferred finalization.
+
+### One important lesson from v1
+
+Before adapting the benchmark, we should address why v1's capture became INVALID.
+
+Its one-worker production control was unstable even though the deciding four-worker control was stable. Separately, one isolated scheduling interruption invalidated an otherwise well-synchronized capture.
+
+For v2, we can preregister more robust validity checks before seeing any v2 timing data, without changing the economic thresholds. This would not retrospectively change v1's INVALID status.
+
+I recommend restricting the stability gate to the deciding warm four-worker regime, while reporting one-worker and cold-regime variability. For synchronization, retain the 2% target for ordinary full-worker steps but tolerate a very small number of isolated interruptions, with a strict maximum-skew guard. The protocol must spell out those rules and test them before capture.
+
+### Send Claude this
+
+The independent researcher has completed the source-level audit of compact30 constructor v2 at `8beffe2`.
+
+**Guardian disposition: PASS.**
+
+No material correctness or memory-safety defect was identified. The audit covers deferred finalization, pointer and bounds invariants, epoch reconstruction, crossing and wide RAW groups, canonical ordering, SIMD field/header isolation, and the correctness harness.
+
+The 473 completed Miri cases are partial supporting evidence, not exhaustive verification. No additional Miri marathon is required for this gate.
+
+**I authorize one bounded v2 construction-cost protocol and harness adaptation, with untimed VM validation only.**
+
+First archive the complete independent PASS report and evidence. Keep constructor v2 frozen at `8beffe2`. Constructor v1's STOP, its formally INVALID capture and the closed traversal VALID ADVANCE remain unchanged.
+
+Adapt the existing validated construction-cost machinery rather than designing a new benchmark from scratch.
+
+**Comparison:**
+
+- P: production's public `bwt::build`.
+- C: `Ctor2::build::<false>` at the frozen v2 source, natural configuration.
+- Use the same primary Wikidata corpus, 20 paired rounds, four physical workers, frozen compiler recipe and matched full-construction boundaries.
+- Include descriptor and snapshot initialization, temporary writes, deferred finalization, normalization, RAW work, allocation, padding and publication in C's timed boundary.
+- Keep warm four-core CPU cost and construction-step completion as the deciding measures; one-core, cold allocation, memory and structural counters remain diagnostics.
+- Preserve the registered economic limits: b4 upper 95% CI ≤ 1.06714 and e4 upper 95% CI ≤ 1.02 for PASS.
+
+**Validity-gate revisions to preregister before any v2 performance timing:**
+
+G1 should gate the production control's **warm W4 CPU cost and warm W4 completion stability** at the existing max/min ≤ 1.05. Report W1 and cold stability without making those nondeciding measurements invalidate the capture.
+
+For G2, apply the following to each arm's warm W4 full-block steps across the 20 rounds:
+
+- Row-weighted aggregate start skew ≤ 2%.
+- No more than 0.1% of all-full steps may individually exceed 2%.
+- No individual step may exceed 10% skew.
+
+Report the maximum, aggregate, number of outliers and their locations. Test isolated moderate scheduling interruptions, widespread staggered starts and a 33.3% single-step outlier. The latter must be INVALID.
+
+These are prospective v2 protocol rules motivated by v1's validity experience, **not permission to reinterpret or reclassify v1's capture**. Document and justify them transparently.
+
+Retain the remaining correctness, memory, clock-calibration, binary-identity, evidence-provenance and archiving safeguards.
+
+Use the existing safe `TVector` observation API. Ensure the compiled production builder is identical to its reviewed listing and inspect the v2 constructor, including its scalar append, finalizer, refill and canonicalizer. Do not infer runtime performance from static instructions.
+
+Prefer reusing the existing collector and analysis infrastructure, with a clearly distinguished v2 mode and frozen reference listings. Avoid duplicating the entire harness unnecessarily.
+
+Implement synthetic validity-gate regression tests, compile with rustc 1.97.0, and conduct untimed VM dry-run and failure-injection validation. Preserve all evidence.
+
+Return the revised protocol, implementation pin, machine-code comparisons, tests and VM dry-run report for Guardian review.
+
+**No measured benchmark, i9 capture, constructor tuning, walker changes or production integration is authorized.** The next approval concerns the actual workstation experiment only.
+
+### Where this leaves compact30
+
+| Research component                          | Status                                     |
+| ------------------------------------------- | ------------------------------------------ |
+| Compact30 traversal                         | VALID ADVANCE                              |
+| Constructor v1                              | Engineering STOP; capture formally INVALID |
+| Constructor v2 correctness and source audit | PASS                                       |
+| Constructor v2 economic comparison          | Authorized to prepare, not to measure      |
+
+The previous investment screen still matters. V2 needs to recover a substantial construction-cost disadvantage; a 12-instruction scalar path alone doesn't establish that it will.
+
+But we now have enough independent correctness evidence to prepare a fair measurement of that question.
+
+Only Claude needs the handoff. The researcher has finished this audit, and Astra has finished its design assignment.
