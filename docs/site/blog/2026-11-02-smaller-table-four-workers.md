@@ -95,108 +95,228 @@ round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `a
 in a different order. (As permutations of the positions, they are the six powers of one, $\sigma = (0\;1\;2\;3\;4\;5)$
 in [cycle notation](https://en.wikipedia.org/wiki/Permutation#Cycle_notation): $\sigma^0$, the identity, is the word itself, and $\sigma^k$ starts it $k$
 letters in. Stacked in
-the order $\sigma^0, \sigma^5, \sigma^4, \ldots$, each the one above moved one place to the
-right, they form a [circulant matrix](https://en.wikipedia.org/wiki/Circulant_matrix). The
-sorted square $M$ is not circulant: sorting shuffles those rows, and the $\sigma$ labels below
-record the shuffle.) Then sort the six rotations alphabetically and stack them as rows:
+the order $\sigma^0$ to $\sigma^5$, each row is the one above shifted one letter: a [circulant
+matrix](https://en.wikipedia.org/wiki/Circulant_matrix), strictly its mirror image, since a
+circulant matrix shifts each row to the right. Sorting those same rows alphabetically
+shuffles them into what is called the Burrows–Wheeler matrix, which Seward's square is.) Then sort the six rotations alphabetically and stack them as rows:
 
 <figure class="bf-fig">
-<p class="bf-title">The six rotations of banana, sorted</p>
-<svg viewBox="0 0 720 375" role="img" aria-label="The six rotations of banana, sorted alphabetically into rows 0 to 5: abanan, anaban, ananab, banana, nabana, nanaba, which are sigma to the powers 5, 3, 1, 0, 4 and 2. The first column reads a a a b n n; the last column reads n n b a a a. Row 3 is banana itself, sigma to the power 0.">
-<text x="157.0" y="26" class="bf-ts" text-anchor="middle">first</text>
-<text x="457.0" y="26" class="bf-ts" text-anchor="middle">last</text>
-<text x="108" y="63" class="bf-tm" text-anchor="middle">0</text>
-<rect x="130" y="40" width="54" height="34" rx="5" class="bf-cell-hi"/>
-<text x="157.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="190" y="40" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="217.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="250" y="40" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="277.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="310" y="40" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="337.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="370" y="40" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="397.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="430" y="40" width="54" height="34" rx="5" class="bf-slot"/>
-<text x="457.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<text x="508" y="63" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">5</tspan></text>
-<text x="108" y="103" class="bf-tm" text-anchor="middle">1</text>
-<rect x="130" y="80" width="54" height="34" rx="5" class="bf-cell-hi"/>
-<text x="157.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="190" y="80" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="217.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="250" y="80" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="277.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="310" y="80" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="337.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="370" y="80" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="397.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="430" y="80" width="54" height="34" rx="5" class="bf-slot"/>
-<text x="457.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<text x="508" y="103" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">3</tspan></text>
-<text x="108" y="143" class="bf-tm" text-anchor="middle">2</text>
-<rect x="130" y="120" width="54" height="34" rx="5" class="bf-cell-hi"/>
-<text x="157.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="190" y="120" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="217.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="250" y="120" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="277.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="310" y="120" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="337.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="370" y="120" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="397.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="430" y="120" width="54" height="34" rx="5" class="bf-slot"/>
-<text x="457.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<text x="508" y="143" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">1</tspan></text>
-<text x="108" y="183" class="bf-tm" text-anchor="middle">3</text>
-<rect x="130" y="160" width="54" height="34" rx="5" class="bf-cell-hi"/>
-<text x="157.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="190" y="160" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="217.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="250" y="160" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="277.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="310" y="160" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="337.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="370" y="160" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="397.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="430" y="160" width="54" height="34" rx="5" class="bf-slot"/>
-<text x="457.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<text x="508" y="183" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">0</tspan></text>
-<text x="108" y="223" class="bf-tm" text-anchor="middle">4</text>
-<rect x="130" y="200" width="54" height="34" rx="5" class="bf-cell-hi"/>
-<text x="157.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="190" y="200" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="217.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="250" y="200" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="277.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="310" y="200" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="337.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="370" y="200" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="397.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="430" y="200" width="54" height="34" rx="5" class="bf-slot"/>
-<text x="457.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<text x="508" y="223" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">4</tspan></text>
-<text x="108" y="263" class="bf-tm" text-anchor="middle">5</text>
-<rect x="130" y="240" width="54" height="34" rx="5" class="bf-cell-hi"/>
-<text x="157.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="190" y="240" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="217.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="250" y="240" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="277.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="310" y="240" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="337.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="370" y="240" width="54" height="34" rx="5" class="bf-cell"/>
-<text x="397.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="430" y="240" width="54" height="34" rx="5" class="bf-slot"/>
-<text x="457.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<text x="508" y="263" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">2</tspan></text>
-<rect x="90" y="155" width="464" height="44" rx="7" class="bf-box" style="stroke-width: 2"/>
-<text x="566" y="183" class="bf-t-strong">the original word</text>
-<path d="M457.0 278V292M452.0 287L457.0 292L462.0 287" class="bf-link"/>
-<text x="457.0" y="310" class="bf-t-strong" text-anchor="middle">nnbaaa</text>
-<text x="90" y="342" class="bf-tm">The transform keeps the last column, nnbaaa, and the number of the row holding banana, 3.</text>
-<text x="90" y="362" class="bf-tm">Nothing else of the square is stored.</text>
+<p class="bf-title">Sorting the rotations into the Burrows–Wheeler matrix</p>
+<svg class="rs2-fig" viewBox="0 0 720 360" role="img" aria-label="An animation of sorting the six rotations of banana. On the left they are stacked in their natural order, sigma 0 to sigma 5, each row shifted one letter from the one above. One at a time, in alphabetical order, each row moves to the right-hand stack: abanan (sigma 5) to row 0, anaban (sigma 3) to row 1, ananab (sigma 1) to row 2, banana (sigma 0) to row 3, nabana (sigma 4) to row 4, nanaba (sigma 2) to row 5. Then the sorted stack's first and last columns are shaded, and banana is outlined in row 3.">
+<style>.rs2-fly { transform-box: view-box; } @keyframes rs2-dim0 { 0%, 39.51% { opacity: 1 } 42.44%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-dim1 { 0%, 34.15% { opacity: 1 } 37.07%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-dim2 { 0%, 50.24% { opacity: 1 } 53.17%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-dim3 { 0%, 28.78% { opacity: 1 } 31.71%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-dim4 { 0%, 44.88% { opacity: 1 } 47.80%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-dim5 { 0%, 23.41% { opacity: 1 } 26.34%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-shade { 0%, 59.02% { opacity: 0 } 61.95%, 92.20% { opacity: 1 } 95.12%, 100% { opacity: 0 } } @keyframes rs2-f0 { 0%, 23.32% { opacity: 0; transform: translate(-370px, 190px) } 23.41% { opacity: 1; transform: translate(-370px, 190px) } 30.24%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-f1 { 0%, 28.68% { opacity: 0; transform: translate(-370px, 76px) } 28.78% { opacity: 1; transform: translate(-370px, 76px) } 35.61%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-f2 { 0%, 34.05% { opacity: 0; transform: translate(-370px, -38px) } 34.15% { opacity: 1; transform: translate(-370px, -38px) } 40.98%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-f3 { 0%, 39.41% { opacity: 0; transform: translate(-370px, -114px) } 39.51% { opacity: 1; transform: translate(-370px, -114px) } 46.34%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-f4 { 0%, 44.78% { opacity: 0; transform: translate(-370px, 0px) } 44.88% { opacity: 1; transform: translate(-370px, 0px) } 51.71%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-f5 { 0%, 50.15% { opacity: 0; transform: translate(-370px, -114px) } 50.24% { opacity: 1; transform: translate(-370px, -114px) } 57.07%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-out { 0%, 60.98% { opacity: 0 } 63.90%, 92.20% { opacity: 1 } 95.12%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg.rs2-fig [style*="animation"] { animation: none !important; opacity: 1 !important; transform: none !important } }</style>
+<text x="50" y="36" class="bf-t-strong">In order</text>
+<text x="50" y="54" class="bf-tm">each row shifted one letter</text>
+<text x="420" y="36" class="bf-t-strong">Sorted alphabetically</text>
+<text x="420" y="54" class="bf-tm">the Burrows–Wheeler matrix</text>
+<g class="rs2-left" style="animation: rs2-dim0 10.25s linear infinite">
+<rect x="50" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="65.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="84" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="99.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="118" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="133.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="152" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="167.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="186" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="201.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="220" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="235.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<text x="260" y="97" class="bf-t-strong" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">0</tspan></text>
+</g>
+<g class="rs2-left" style="animation: rs2-dim1 10.25s linear infinite">
+<rect x="50" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="65.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="84" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="99.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="118" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="133.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="152" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="167.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="186" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="201.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="220" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="235.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="260" y="135" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">1</tspan></text>
+</g>
+<g class="rs2-left" style="animation: rs2-dim2 10.25s linear infinite">
+<rect x="50" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="65.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="84" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="99.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="118" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="133.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="152" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="167.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="186" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="201.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="220" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="235.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<text x="260" y="173" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">2</tspan></text>
+</g>
+<g class="rs2-left" style="animation: rs2-dim3 10.25s linear infinite">
+<rect x="50" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="65.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="84" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="99.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="118" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="133.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="152" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="167.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="186" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="201.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="220" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="235.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<text x="260" y="211" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">3</tspan></text>
+</g>
+<g class="rs2-left" style="animation: rs2-dim4 10.25s linear infinite">
+<rect x="50" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="65.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="84" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="99.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="118" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="133.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="152" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="167.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="186" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="201.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="220" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="235.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<text x="260" y="249" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">4</tspan></text>
+</g>
+<g class="rs2-left" style="animation: rs2-dim5 10.25s linear infinite">
+<rect x="50" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="65.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="84" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="99.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="118" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="133.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="152" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="167.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="186" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="201.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="220" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="235.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<text x="260" y="287" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">5</tspan></text>
+</g>
+<text x="404" y="97" class="bf-tm" text-anchor="middle">0</text>
+<rect x="420" y="76" width="200" height="32" rx="4" class="bf-grid" style="fill: none; stroke-dasharray: 3 3"/>
+<text x="404" y="135" class="bf-tm" text-anchor="middle">1</text>
+<rect x="420" y="114" width="200" height="32" rx="4" class="bf-grid" style="fill: none; stroke-dasharray: 3 3"/>
+<text x="404" y="173" class="bf-tm" text-anchor="middle">2</text>
+<rect x="420" y="152" width="200" height="32" rx="4" class="bf-grid" style="fill: none; stroke-dasharray: 3 3"/>
+<text x="404" y="211" class="bf-tm" text-anchor="middle">3</text>
+<rect x="420" y="190" width="200" height="32" rx="4" class="bf-grid" style="fill: none; stroke-dasharray: 3 3"/>
+<text x="404" y="249" class="bf-tm" text-anchor="middle">4</text>
+<rect x="420" y="228" width="200" height="32" rx="4" class="bf-grid" style="fill: none; stroke-dasharray: 3 3"/>
+<text x="404" y="287" class="bf-tm" text-anchor="middle">5</text>
+<rect x="420" y="266" width="200" height="32" rx="4" class="bf-grid" style="fill: none; stroke-dasharray: 3 3"/>
+<g class="rs2-fly" style="animation: rs2-f0 10.25s ease-in-out infinite">
+<rect x="420" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="420" y="76" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="435.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="454" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="469.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="488" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="503.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="522" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="537.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="556" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="571.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="590" y="76" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="590" y="76" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="605.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<text x="630" y="97" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">5</tspan></text>
+</g>
+<g class="rs2-fly" style="animation: rs2-f1 10.25s ease-in-out infinite">
+<rect x="420" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="420" y="114" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="435.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="454" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="469.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="488" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="503.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="522" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="537.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="556" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="571.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="590" y="114" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="590" y="114" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="605.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<text x="630" y="135" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">3</tspan></text>
+</g>
+<g class="rs2-fly" style="animation: rs2-f2 10.25s ease-in-out infinite">
+<rect x="420" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="420" y="152" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="435.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="454" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="469.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="488" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="503.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="522" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="537.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="556" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="571.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="590" y="152" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="590" y="152" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="605.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="630" y="173" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">1</tspan></text>
+</g>
+<g class="rs2-fly" style="animation: rs2-f3 10.25s ease-in-out infinite">
+<rect x="420" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="420" y="190" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="435.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="454" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="469.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="488" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="503.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="522" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="537.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="556" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="571.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="590" y="190" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="590" y="190" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="605.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<text x="630" y="211" class="bf-t-strong" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">0</tspan></text>
+</g>
+<g class="rs2-fly" style="animation: rs2-f4 10.25s ease-in-out infinite">
+<rect x="420" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="420" y="228" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="435.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="454" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="469.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="488" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="503.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="522" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="537.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="556" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="571.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="590" y="228" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="590" y="228" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="605.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<text x="630" y="249" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">4</tspan></text>
+</g>
+<g class="rs2-fly" style="animation: rs2-f5 10.25s ease-in-out infinite">
+<rect x="420" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="420" y="266" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="435.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="454" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="469.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="488" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="503.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="522" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="537.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="556" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<text x="571.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="590" y="266" width="30" height="32" rx="4" class="bf-cell"/>
+<rect x="590" y="266" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<text x="605.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<text x="630" y="287" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">2</tspan></text>
+</g>
+<rect x="390" y="186" width="268" height="40" rx="6" class="bf-box rs2-b" style="stroke-width: 2; animation: rs2-out 10.25s linear infinite"/>
+<text x="420" y="326" class="bf-tm rs2-b" style="animation: rs2-out 10.25s linear infinite">banana, σ⁰, lands in row 3</text>
+<text x="50" y="326" class="bf-tm">a circulant matrix, mirrored</text>
 </svg>
-<figcaption>The rotations of banana in alphabetical order, numbered down the left and labelled on the right with the power of σ each one is. Sorting scrambles their order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.</figcaption>
+<figcaption>Left, the rotations of banana in their natural order, σ⁰ to σ⁵, each row shifted one letter from the one above. Right, the same rows sorted alphabetically: each moves across in turn, keeping its label, so the powers end up shuffled, 5, 3, 1, 0, 4, 2. The sorted square's first column is shaded green and its last blue; banana, σ⁰, lands in row 3.</figcaption>
 </figure>
 
 Each row now has two numbers. Its row number, on the left, says where sorting put it; its power
@@ -431,9 +551,9 @@ rows, $T = (3\;0\;4\;1\;5\;2)$: one cycle through all six, so following it from 
 every row once before coming back, reading the whole word on the way.
 
 The $\sigma$ labels on the square show why: rows 3, 0, 4, 1, 5, 2 hold $\sigma^0, \sigma^5, \sigma^4, \sigma^3, \sigma^2,
-\sigma^1$, so each step of $T$ counts the power down by one. That is exactly the circulant order
-from before, `banana`, `abanan`, `nabana`, …: following $T$ rebuilds the circulant matrix row
-by row, undoing the sort. $T$ is the one-letter step back,
+\sigma^1$, so each step of $T$ counts the power down by one. Stacked in that order,
+`banana`, `abanan`, `nabana`, …, each row is the one above shifted one letter to the right: a
+circulant matrix in the strict sense. Following $T$ rebuilds it row by row, undoing the sort. $T$ is the one-letter step back,
 $\sigma^{-1}$, written in row numbers instead of powers ([conjugated](https://en.wikipedia.org/wiki/Conjugacy_class)
 by the sort, in group-theory terms). (Read down the square, those
 powers, 5 3 1 0 4 2, are what string algorithms call the [suffix
