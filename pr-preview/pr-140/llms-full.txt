@@ -696,7 +696,7 @@ Compression with the BWT had been studied closely, but *"decompression-time issu
 
 mibz2 is our bzip2 decoder, written for the Wikidata dumps, and that sentence could stand over most of what we have written about it. Our posts on [32 lanes](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-10-31-room-walk-overlap/index.md>) and [memory-level parallelism](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-02-memory-level-parallelism/index.md>) are about keeping many misses in flight at once; [memory interference](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-01-inverse-bwt-memory-interference/index.md>) is about four workers' misses competing for one memory system; [compact navigation tables](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-10-29-compact-navigation-tables/index.md>) is about taking fewer misses with a smaller table. Seward said as much in [bzip2's manual](<https://sourceware.org/bzip2/manual/manual.html>): *"performance, both for compressing and decompressing, is largely determined by the speed at which your machine can service cache misses."*
 
-We work through his paper first, with a six-byte example done by hand, his three tables, and his results plotted as the tradeoff they describe. Then we show a compact table of ours that, for the walk on its own, beats that tradeoff once four cores share a cache: slower than mibz2's table on one core, faster with four.
+The post has two halves. The first works through how Seward's algorithms undo the transform. We decode a toy example by hand, recovering the word `banana`, to show that the decoder rebuilds the text by following a permutation of the block's positions, one lookup at a time, and that this chain of lookups is where the cache misses come from. His algorithms are different ways of storing that permutation, and we plot the speed and memory he measured for each, which shows the space–time tradeoff between them. The second half is ours: a compact way of storing the permutation that costs more per lookup. When one core walks it alone, it is slower than mibz2's usual table, as Seward's tradeoff would predict. When four cores walk their tables at once, sharing one cache, it is faster.
 
 ## From sorted rotations to the transformation vector
 
@@ -801,7 +801,7 @@ The tree for byte a over L = nnbaaa, padded to 8 positions. Counting the a's up 
 
 ## What Seward measured
 
-The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-level cache. Each block, at most 10⁶ bytes, was inverted ten times. His first table gives the memory:
+The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-level cache. Each block, at most 10⁶ bytes, was inverted ten times. How much memory each algorithm needs for a 10⁶-byte block:
 
 | Algorithm | Memory | Seward's description |
 | --- | ---: | --- |
@@ -813,7 +813,7 @@ The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-l
 | `treeopt-1M` | 2000 kB | More space-economical version of tree-1M |
 | `treeopt-500k` | 1500 kB | As treeopt-1M but with only 500k auxiliary space |
 
-His second lists six test files of at least a megabyte, four from the [Canterbury Corpus](<https://corpus.canterbury.ac.nz/descriptions/>). The last column names the nearest of mibz2's [benchmark corpora](<https://lmmx.github.io/mibz2/pr-preview/pr-140/benchmarks/index.md>), loosely:
+He tested them on six files of at least a megabyte, four from the [Canterbury Corpus](<https://corpus.canterbury.ac.nz/descriptions/>). The last column names the nearest of mibz2's [benchmark corpora](<https://lmmx.github.io/mibz2/pr-preview/pr-140/benchmarks/index.md>), loosely:
 
 | File | kB | What it is | Nearest in mibz2's corpora |
 | --- | ---: | --- | --- |
@@ -824,7 +824,7 @@ His second lists six test files of at least a megabyte, four from the [Canterbur
 | netscape | 7678.8 | Netscape Navigator 4.75, an x86 executable | `records`, binary |
 | bashtgz | 1708.8 | bash 2.04's source, gzipped | `random` |
 
-His third gives the inversion rates in MB/s. mergedTL is the fastest on every file:
+How fast each algorithm inverted each file, in MB/s. mergedTL is the fastest on every one:
 
 |  | basis | bw94 | mergedTL | indexF | tree-1M | treeopt-1M | treeopt-500k |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -836,7 +836,7 @@ His third gives the inversion rates in MB/s. mergedTL is the fastest on every fi
 | world192 | 1.65 | 1.69 | 2.65 | 1.31 | 0.207 | 0.298 | 0.198 |
 | Average | 1.86 | 1.93 | 3.10 | 1.43 | 0.153 | 0.211 | 0.154 |
 
-The paper has no figure. Plotting the averages against the memory draws the tradeoff of its title:
+The paper gives these numbers only as tables. Plotting each algorithm's average speed against its memory shows the space–time tradeoff between them:
 
 Seward's measured speed–memory choices
 

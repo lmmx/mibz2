@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=525f93ce09b4">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=4f533aec0d47">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=525f93ce09b4">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=4f533aec0d47">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=525f93ce09b4">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=4f533aec0d47">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=525f93ce09b4">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=4f533aec0d47">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=525f93ce09b4">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=4f533aec0d47">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1845,10 +1845,15 @@ tables</a> is about taking fewer misses with a smaller
 table. Seward said as much in <a href="https://sourceware.org/bzip2/manual/manual.html">bzip2's manual</a>:
 <em>"performance, both for compressing and decompressing, is largely determined by the speed at
 which your machine can service cache misses."</em></p>
-<p>We work through his paper first, with a six-byte example done by hand, his three tables,
-and his results plotted as the tradeoff they describe. Then we show a compact table of ours
-that, for the walk on its own, beats that tradeoff once four cores share a cache: slower than
-mibz2's table on one core, faster with four.</p>
+<p>The post has two halves. The first works through how Seward's algorithms undo the
+transform. We decode a toy example by hand, recovering the word <code>banana</code>, to show that the
+decoder rebuilds the text by following a permutation of the block's positions, one lookup at
+a time, and that this chain of lookups is where the cache misses come from. His algorithms
+are different ways of storing that permutation, and we plot the speed and memory he measured
+for each, which shows the space–time tradeoff between them. The second half is ours: a
+compact way of storing the permutation that costs more per lookup. When one core walks it
+alone, it is slower than mibz2's usual table, as Seward's tradeoff would predict. When four
+cores walk their tables at once, sharing one cache, it is faster.</p>
 <h2 id="from-sorted-rotations-to-the-transformation-vector">From sorted rotations to the transformation vector<a class="headerlink" href="#from-sorted-rotations-to-the-transformation-vector" title="Permanent link">&para;</a></h2>
 <p>Imagine bzip2 compressing the six bytes <code>banana</code>. The transform doesn't shrink them: it
 reorders them into <code>nnbaaa</code> and records the number 3. bzip2's later stages compress that
@@ -2286,7 +2291,8 @@ words, and a leaf into one, fitting nearly twice as many nodes in the same space
 halves the scans. With L, tree-1M and treeopt-1M take 2N bytes and treeopt-500k 1.5N.</p>
 <h2 id="what-seward-measured">What Seward measured<a class="headerlink" href="#what-seward-measured" title="Permanent link">&para;</a></h2>
 <p>The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-level cache.
-Each block, at most 10⁶ bytes, was inverted ten times. His first table gives the memory:</p>
+Each block, at most 10⁶ bytes, was inverted ten times. How much memory each algorithm needs
+for a 10⁶-byte block:</p>
 <table>
 <thead>
 <tr>
@@ -2333,7 +2339,7 @@ Each block, at most 10⁶ bytes, was inverted ten times. His first table gives t
 </tr>
 </tbody>
 </table>
-<p>His second lists six test files of at least a megabyte, four from the <a href="https://corpus.canterbury.ac.nz/descriptions/">Canterbury
+<p>He tested them on six files of at least a megabyte, four from the <a href="https://corpus.canterbury.ac.nz/descriptions/">Canterbury
 Corpus</a>. The last column names the nearest of
 mibz2's <a href="../../benchmarks/">benchmark corpora</a>, loosely:</p>
 <table>
@@ -2384,7 +2390,7 @@ mibz2's <a href="../../benchmarks/">benchmark corpora</a>, loosely:</p>
 </tr>
 </tbody>
 </table>
-<p>His third gives the inversion rates in MB/s. mergedTL is the fastest on every file:</p>
+<p>How fast each algorithm inverted each file, in MB/s. mergedTL is the fastest on every one:</p>
 <table>
 <thead>
 <tr>
@@ -2471,8 +2477,8 @@ mibz2's <a href="../../benchmarks/">benchmark corpora</a>, loosely:</p>
 </tr>
 </tbody>
 </table>
-<p>The paper has no figure. Plotting the averages against the memory draws the tradeoff of its
-title:</p>
+<p>The paper gives these numbers only as tables. Plotting each algorithm's average speed against
+its memory shows the space–time tradeoff between them:</p>
 <figure class="bf-fig">
 <p class="bf-title">Seward's measured speed–memory choices</p>
 <svg viewBox="0 0 720 350" role="img" aria-label="Average inversion rate against memory for a one-megabyte block, from Seward's Tables 1 and 3. mergedTL: 4 MB, 3.10 MB/s. basis and bw94: 5 MB, 1.86 and 1.93. indexF: 2.5 MB, 1.43. The three tree variants: 1.5 to 2 MB, 0.15 to 0.21.">
@@ -3001,17 +3007,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=525f93ce09b4"></script>
+        <script src="../../assets/javascripts/bench.js?v=4f533aec0d47"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=525f93ce09b4"></script>
+        <script src="../../assets/javascripts/couriers.js?v=4f533aec0d47"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=525f93ce09b4"></script>
+        <script src="../../assets/javascripts/blog.js?v=4f533aec0d47"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=525f93ce09b4"></script>
+        <script src="../../assets/javascripts/frontier.js?v=4f533aec0d47"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=525f93ce09b4"></script>
+        <script src="../../assets/javascripts/katex.js?v=4f533aec0d47"></script>
       
     
   </body>
