@@ -723,7 +723,7 @@ The six rotations of banana, sorted
 
 The rotations of banana in alphabetical order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.
 
-Read down the last column of the sorted rows, and it spells `nnbaaa`. The original `banana` is in row 3, counting from zero. The transform keeps just those two things, the last column and the row number, and stores nothing else. It doesn't make the block smaller; the reordered letters compress better in bzip2's later stages, for a reason that comes below.
+Read down the last column of the sorted rows, and it spells `nnbaaa`. The original `banana`, the rotation by nothing, is in row 3, counting from zero. The transform keeps just those two things, the last column and the row number, and stores nothing else. It doesn't make the block smaller; the reordered letters compress better in bzip2's later stages, for a reason that comes below.
 
 How can a decoder get `banana` back from only `nnbaaa` and 3? Each of Seward's algorithms answers that question in a different way.
 
@@ -735,12 +735,20 @@ The square of sorted rotations again, with each symbol pointing at what it names
 
 So the decoder is given \\(L\\) and \\(I\\) and must produce \\(S\\). It never holds \\(M\\): the inverse transform recovers just enough of it, from \\(L\\), to read off row \\(I\\).
 
-**Why the first and last columns.** Every row of \\(M\\) is \\(S\\) read round from some starting point, so in every row the last byte comes just before the first, going round \\(S\\). Row 3 ends in `a` and starts with `b`, and the final `a` of `banana` comes, going round, before its opening `b`. That is the relation the whole paper builds on: \\(L\[i\]\\) comes just before \\(F\[i\]\\) in \\(S\\). The two columns carry different information:
+**Why the first and last columns matter.** Each row of \\(M\\) is the word read from a different starting letter, carrying on round to the beginning when it reaches the end. Row 1, `anaban`, starts at the second `a` of `banana` (position 3), reads `an` to the end, then wraps round to read `ban`. So its last letter, `n`, is the letter at position 2: the one just before where the row started.
 
-- **\\(F\\)** is the bytes of \\(S\\) in sorted order, so the counts alone fix it. A decoder holding \\(L\\) can rebuild \\(F\\) by counting, so it is never sent.
-- **\\(L\\)** holds the byte that precedes each row's opening context, with the rows sorted by context. Bytes before similar contexts tend to repeat (in English, `he` is often preceded by `t`), so \\(L\\) has long runs, which bzip2's later stages compress.
+Each row wraps round the word
 
-\\(F\\) and \\(L\\) aren't two unrelated strings, though. They are columns of the same sorted square, and that ties them together: each letter's occurrences come in the same order in both. The first `a` in \\(L\\) matches the first `a` in \\(F\\), the second matches the second, and so on; why comes below. That matching is what the decoder needs and doesn't have. Seward records it in the *"transformation vector"* \\(T\\), and builds \\(T\\) from \\(C\\), a count of each letter. The decoder's whole path, from what is stored back to the word:
+banana written round a circle, positions numbered. Every row of the sorted square starts somewhere on the circle and reads all the way round, so its last letter is always the one just before its first.
+
+The same holds for every row. Its last letter, in \\(L\\), is the letter that comes just before its first letter, in \\(F\\), in the original word. That gives a decoder a way to go backwards: for any row, \\(L\\) says which letter comes before that row's first letter. If the decoder also knew which row *starts* with that earlier letter, it could jump there and repeat, reading the word back one letter at a time.
+
+Of the two columns, only \\(L\\) is stored:
+
+- **\\(F\\)** is the letters of the word in sorted order, so the counts alone fix it. A decoder holding \\(L\\) can rebuild \\(F\\) by counting, so it is never sent.
+- **\\(L\\)** holds the letter that comes before each row's opening, with the rows sorted by what follows. Letters before similar text tend to repeat (in English, `he` is often preceded by `t`), so \\(L\\) has long runs, which bzip2's later stages compress well.
+
+\\(F\\) and \\(L\\) aren't two unrelated strings, though. They are columns of the same sorted square, and that ties them together: each letter's occurrences come in the same order in both. The first `a` in \\(L\\) matches the first `a` in \\(F\\), the second matches the second, and so on; why comes below. That matching is exactly what the decoder needs in order to jump: it says which row starts with each letter of \\(L\\). Seward records it in the *"transformation vector"* \\(T\\), and builds \\(T\\) from \\(C\\), a count of each letter. Because \\(F\\) is sorted, it is one run of each letter, so these counts are simply \\(F\\)'s [run-length encoding](<https://en.wikipedia.org/wiki/Run-length_encoding>): `a` 3, `b` 1, `n` 2. The decoder's whole path, from what is stored back to the word:
 
 What the decoder rebuilds
 

@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=90c494e243a8">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=dc3ed6d28360">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=90c494e243a8">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=dc3ed6d28360">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=90c494e243a8">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=dc3ed6d28360">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=90c494e243a8">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=dc3ed6d28360">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=90c494e243a8">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=dc3ed6d28360">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1971,8 +1971,8 @@ in a different order. Then sort the six rotations alphabetically and stack them 
 <figcaption>The rotations of banana in alphabetical order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.</figcaption>
 </figure>
 
-<p>Read down the last column of the sorted rows, and it spells <code>nnbaaa</code>. The original <code>banana</code> is
-in row 3, counting from zero. The transform keeps just those two things, the last column and
+<p>Read down the last column of the sorted rows, and it spells <code>nnbaaa</code>. The original <code>banana</code>, the
+rotation by nothing, is in row 3, counting from zero. The transform keeps just those two things, the last column and
 the row number, and stores nothing else. It doesn't make the block smaller; the reordered
 letters compress better in bzip2's later stages, for a reason that comes below.</p>
 <p>How can a decoder get <code>banana</code> back from only <code>nnbaaa</code> and 3? Each of Seward's algorithms
@@ -2086,25 +2086,67 @@ square:</p>
 
 <p>So the decoder is given <span class="arithmatex">\(L\)</span> and <span class="arithmatex">\(I\)</span> and must produce <span class="arithmatex">\(S\)</span>. It never holds <span class="arithmatex">\(M\)</span>: the inverse
 transform recovers just enough of it, from <span class="arithmatex">\(L\)</span>, to read off row <span class="arithmatex">\(I\)</span>.</p>
-<p><strong>Why the first and last columns.</strong> Every row of <span class="arithmatex">\(M\)</span> is <span class="arithmatex">\(S\)</span> read round from some starting point,
-so in every row the last byte comes just before the first, going round <span class="arithmatex">\(S\)</span>. Row 3 ends in <code>a</code>
-and starts with <code>b</code>, and the final <code>a</code> of <code>banana</code> comes, going round, before its opening
-<code>b</code>. That is the relation the whole paper builds on: <span class="arithmatex">\(L[i]\)</span> comes just before <span class="arithmatex">\(F[i]\)</span> in <span class="arithmatex">\(S\)</span>. The
-two columns carry different information:</p>
+<p><strong>Why the first and last columns matter.</strong> Each row of <span class="arithmatex">\(M\)</span> is the word read from a different
+starting letter, carrying on round to the beginning when it reaches the end. Row 1, <code>anaban</code>,
+starts at the second <code>a</code> of <code>banana</code> (position 3), reads <code>an</code> to the end, then wraps round to
+read <code>ban</code>. So its last letter, <code>n</code>, is the letter at position 2: the one just before where
+the row started.</p>
+<figure class="bf-fig">
+<p class="bf-title">Each row wraps round the word</p>
+<svg viewBox="0 0 720 300" role="img" aria-label="The word banana written round a circle. Row 1 of the sorted square, anaban, is the word read clockwise from the second a, at position 3, round past the end and back to the start, finishing on the n at position 2. So the row's last letter, n, is the letter just before its first letter, a.">
+<path d="M135.3 271.1A126 126 0 1 1 292.3 180.5" class="bf-link"/>
+<path d="M292.3 180.5L299.3 173.0" class="bf-link"/>
+<path d="M292.3 180.5L289.6 170.5" class="bf-link"/>
+<circle cx="170.0" cy="58.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="170.0" y="64.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<text x="170.0" y="102.0" class="bf-tm" text-anchor="middle">0</text>
+<circle cx="249.7" cy="104.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="249.7" y="110.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="215.0" y="128.0" class="bf-tm" text-anchor="middle">1</text>
+<circle cx="249.7" cy="196.0" r="21" class="bf-slot" style="stroke: var(--bf-frame)"/>
+<text x="249.7" y="202.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="215.0" y="180.0" class="bf-tm" text-anchor="middle">2</text>
+<circle cx="170.0" cy="242.0" r="21" class="bf-cell-hi" style="stroke: var(--bf-frame)"/>
+<text x="170.0" y="248.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="170.0" y="206.0" class="bf-tm" text-anchor="middle">3</text>
+<circle cx="90.3" cy="196.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="90.3" y="202.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="125.0" y="180.0" class="bf-tm" text-anchor="middle">4</text>
+<circle cx="90.3" cy="104.0" r="21" class="bf-cell" style="stroke: var(--bf-frame)"/>
+<text x="90.3" y="110.0" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="125.0" y="128.0" class="bf-tm" text-anchor="middle">5</text>
+<path d="M194.0 242.0H380" class="bf-grid" style="stroke-dasharray: 3 3"/>
+<path d="M273.7 196.0H380" class="bf-grid" style="stroke-dasharray: 3 3"/>
+<text x="392" y="192.0" class="bf-t-strong">ends here: n, its last letter, in L</text>
+<text x="392" y="211.0" class="bf-tm">the letter just before where it started</text>
+<text x="392" y="238.0" class="bf-t-strong">row 1, anaban, starts here: a, in F</text>
+<text x="392" y="257.0" class="bf-tm">and reads clockwise, round past the end</text>
+</svg>
+<figcaption>banana written round a circle, positions numbered. Every row of the sorted square starts somewhere on the circle and reads all the way round, so its last letter is always the one just before its first.</figcaption>
+</figure>
+
+<p>The same holds for every row. Its last letter, in <span class="arithmatex">\(L\)</span>, is the letter that comes just before
+its first letter, in <span class="arithmatex">\(F\)</span>, in the original word. That gives a decoder a way to go backwards:
+for any row, <span class="arithmatex">\(L\)</span> says which letter comes before that row's first letter. If the decoder also
+knew which row <em>starts</em> with that earlier letter, it could jump there and repeat, reading the
+word back one letter at a time.</p>
+<p>Of the two columns, only <span class="arithmatex">\(L\)</span> is stored:</p>
 <ul>
-<li><strong><span class="arithmatex">\(F\)</span></strong> is the bytes of <span class="arithmatex">\(S\)</span> in sorted order, so the counts alone fix it. A decoder holding <span class="arithmatex">\(L\)</span>
-  can rebuild <span class="arithmatex">\(F\)</span> by counting, so it is never sent.</li>
-<li><strong><span class="arithmatex">\(L\)</span></strong> holds the byte that precedes each row's opening context, with the rows sorted by
-  context. Bytes before similar contexts tend to repeat (in English, <code>he</code> is often preceded
-  by <code>t</code>), so <span class="arithmatex">\(L\)</span> has long runs, which bzip2's later stages compress.</li>
+<li><strong><span class="arithmatex">\(F\)</span></strong> is the letters of the word in sorted order, so the counts alone fix it. A decoder
+  holding <span class="arithmatex">\(L\)</span> can rebuild <span class="arithmatex">\(F\)</span> by counting, so it is never sent.</li>
+<li><strong><span class="arithmatex">\(L\)</span></strong> holds the letter that comes before each row's opening, with the rows sorted by what
+  follows. Letters before similar text tend to repeat (in English, <code>he</code> is often preceded by
+  <code>t</code>), so <span class="arithmatex">\(L\)</span> has long runs, which bzip2's later stages compress well.</li>
 </ul>
 <p><span class="arithmatex">\(F\)</span> and <span class="arithmatex">\(L\)</span> aren't two unrelated strings, though. They are columns of the same sorted square, and
 that ties them together: each letter's occurrences come in the same order in both. The first
 <code>a</code> in <span class="arithmatex">\(L\)</span> matches the first <code>a</code> in <span class="arithmatex">\(F\)</span>, the second matches the second, and so on; why comes
-below. That matching is what the decoder
-needs and doesn't have. Seward records it in the <em>"transformation vector"</em> <span class="arithmatex">\(T\)</span>, and builds <span class="arithmatex">\(T\)</span>
-from <span class="arithmatex">\(C\)</span>, a count of each letter. The decoder's whole path, from what is stored back to the
-word:</p>
+below. That matching is exactly what the decoder needs in order to jump: it says which row
+starts with each letter of <span class="arithmatex">\(L\)</span>. Seward records it in the <em>"transformation vector"</em> <span class="arithmatex">\(T\)</span>, and
+builds <span class="arithmatex">\(T\)</span> from <span class="arithmatex">\(C\)</span>, a count of each letter. Because <span class="arithmatex">\(F\)</span> is sorted, it is one run of each
+letter, so these counts are simply <span class="arithmatex">\(F\)</span>'s <a href="https://en.wikipedia.org/wiki/Run-length_encoding">run-length
+encoding</a>: <code>a</code> 3, <code>b</code> 1, <code>n</code> 2. The
+decoder's whole path, from what is stored back to the word:</p>
 <figure class="bf-fig">
 <p class="bf-title">What the decoder rebuilds</p>
 <svg viewBox="0 0 720 150" role="img" aria-label="What the decoder rebuilds, from left to right: counting the bytes of L gives C; expanding the counts gives F; matching each byte of L to the same occurrence in F gives T; walking T from row I gives S.">
@@ -3098,17 +3140,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=90c494e243a8"></script>
+        <script src="../../assets/javascripts/bench.js?v=dc3ed6d28360"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=90c494e243a8"></script>
+        <script src="../../assets/javascripts/couriers.js?v=dc3ed6d28360"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=90c494e243a8"></script>
+        <script src="../../assets/javascripts/blog.js?v=dc3ed6d28360"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=90c494e243a8"></script>
+        <script src="../../assets/javascripts/frontier.js?v=dc3ed6d28360"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=90c494e243a8"></script>
+        <script src="../../assets/javascripts/katex.js?v=dc3ed6d28360"></script>
       
     
   </body>
