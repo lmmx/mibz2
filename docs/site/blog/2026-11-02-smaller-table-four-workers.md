@@ -28,17 +28,17 @@ under contention. A first measurement of ours shows it doing so.
 
 </div>
 
-[Julian Seward](https://en.wikipedia.org/wiki/Julian_Seward) wrote
-[bzip2](https://en.wikipedia.org/wiki/Bzip2), first released in 1996, and was the original
-designer and author of [Valgrind](https://valgrind.org/info/developers.html). In 2001, while
-at Microsoft Research in Cambridge, he presented a ten-page paper at the IEEE Data
-Compression Conference: *[Space-time tradeoffs in the Inverse B-W
-Transform](https://doi.org/10.1109/DCC.2001.917175)*. bzip2 compresses with the
+In 2001, [Julian Seward](https://en.wikipedia.org/wiki/Julian_Seward), the author of
+[bzip2](https://en.wikipedia.org/wiki/Bzip2) and the original designer of
+[Valgrind](https://valgrind.org/info/developers.html), was working at Microsoft Research in
+Cambridge. That year he presented a paper at the IEEE Data Compression Conference,
+*[Space-time tradeoffs in the Inverse B-W
+Transform](https://doi.org/10.1109/DCC.2001.917175)*, on what it costs to undo the
 [Burrows–Wheeler transform](https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform)
-(BWT), and decompressing means undoing it. Work on the BWT had concentrated on compression,
-and *"decompression-time issues remain underinvestigated"*. Seward had two uses in mind that
-pull in opposite directions: booting a Linux kernel from a compressed image needs little
-memory, and an on-the-fly disk compressor needs speed. So he offers a family of algorithms
+(BWT) that bzip2 is built on. Compression with the BWT had been studied closely, but
+*"decompression-time issues remain underinvestigated"*. He had two uses in mind that pull in opposite directions: booting a
+Linux kernel from a compressed image needs little memory, and an on-the-fly disk compressor
+needs speed. So he offers a family of algorithms
 that trade one for the other. At one extreme, the BWT can be inverted, slowly, in one byte of
 memory per byte of block. At the other:
 
