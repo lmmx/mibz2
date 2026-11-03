@@ -361,6 +361,16 @@ def test_v1_records_are_refused_by_v2():
     assert invalid(r) and r["schedule"] == {"S1_protocol": False} and "ratios" not in r
 
 
+def test_a_failure_before_the_meta_record_is_reported_as_such():
+    # the preflight's failure comes before any meta record: draft 4's verdict, no figures
+    rc = make(rounds=2, dry=True)
+    rc["meta"] = []
+    rc["failure"] = [{"kind": "failure", "what": "preflight", "detail": "injected"}]
+    r = run(rc)
+    assert invalid(r) and r["decision"] == "INVALID: no meta record" and "ratios" not in r
+    assert r["schedule"]["S1_protocol"] is False and r["failures"][0]["what"] == "preflight"
+
+
 def test_another_candidate_is_refused():
     rc = big()
     rc["meta"][0]["candidate"] = "ctor"

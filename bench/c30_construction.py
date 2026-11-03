@@ -831,8 +831,14 @@ def analyse_v2(recs, other=(), identity_ok=None, rss=(), evidence=None):
     the protocol checks, v2's diagnostics and draft 4's decision table"""
     metas = recs["meta"]
     meta = metas[0] if metas else None
-    if meta is None or meta.get("protocol") != PROTOCOL_V2 or meta.get("candidate") != CANDIDATE_V2:
-        out = {"protocol": PROTOCOL_V2, "dry_run": bool(meta and meta.get("dry_run")),
+    if meta is None:
+        # no meta record (a run that failed before writing it): draft 4's verdict, as such
+        out = {"protocol": PROTOCOL_V2}
+        out.update(analyse(recs, other, identity_ok, rss, evidence))
+        out["schedule"]["S1_protocol"] = False
+        return out
+    if meta.get("protocol") != PROTOCOL_V2 or meta.get("candidate") != CANDIDATE_V2:
+        out = {"protocol": PROTOCOL_V2, "dry_run": bool(meta.get("dry_run")),
                "schedule": {"S1_protocol": False}, "gates": {}, "valid": False,
                "decision": "INVALID: the records are not protocol v2's (constructor v2); "
                            "no figures computed"}  # fmt: skip
