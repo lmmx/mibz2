@@ -4,12 +4,18 @@ check, before the decode or any build, or (the positive control) stops after ver
 with --verify-evidence-only.
 
     python3 -I bench/test_c30_construction_evidence.py BINARY CORPUS DRY_RUN_DIR CPUS WORK_DIR
+        [SUBCOMMAND]
 
 DRY_RUN_DIR is a completed dry run's directory, as the recipe leaves it (its records,
 analysis and manifest). Each case runs `cbuild ... --rounds 20` (a capture's arguments) on
 a copy of it, mutated, and requires exit status 3, a final `failure` record whose `what` is
 `evidence`, and no build record. Mutations marked "resealed" also recompute the manifest's
-checksums, as a consistent forger would."""
+checksums, as a consistent forger would.
+
+SUBCOMMAND is `cbuild` (draft 4, the default) or `cbuild-v2` (constructor v2's protocol,
+report 211), whose DRY_RUN_DIR is a v2 dry run's. With `cbuild-v2`, three more cases: the
+dry run's records or analysis without v2's identifier, and another protocol's, must each be
+refused (a v1-mode dry run of the same binary is not v2's evidence)."""
 
 import hashlib
 import json
@@ -19,6 +25,7 @@ import subprocess
 import sys
 
 BINARY, CORPUS, DRY, CPUS, WORK = sys.argv[1:6]
+SUB = sys.argv[6] if len(sys.argv) > 6 else "cbuild"
 JL, AN, MF = "c30-construction.jsonl", "c30-analysis.json", "MANIFEST.json"
 
 
@@ -31,7 +38,7 @@ def records(path):
 
 def run(name, evidence, extra=(), cpus=CPUS, corpus=CORPUS, capture=True):
     out = os.path.join(WORK, f"{name}.jsonl")
-    args = [BINARY, "cbuild", out, corpus, "--rounds", "20", "--cpus", cpus, *extra]
+    args = [BINARY, SUB, out, corpus, "--rounds", "20", "--cpus", cpus, *extra]
     if not capture:
         args.append("--dry-run")
     if evidence is not None:
@@ -199,6 +206,25 @@ def main():
     open(os.path.join(d, AN), "w").write("{not json")
     reseal(d)
     rejected("malformed (resealed)", d)
+
+    if SUB == "cbuild-v2":
+        d = copy("v1-records")
+        edit_jsonl(
+            d, lambda r: ({k: v for k, v in r.items() if k not in ("protocol", "candidate")}
+                          if r["kind"] == "meta" else r)
+        )  # fmt: skip
+        reseal(d)
+        rejected("v1-records (resealed)", d)
+
+        d = copy("v1-analysis")
+        edit_json(d, AN, lambda v: v.pop("protocol"))
+        reseal(d)
+        rejected("v1-analysis (resealed)", d)
+
+        d = copy("other-protocol")
+        edit_jsonl(d, set_kind("meta", protocol="c30-construction-v1"))
+        reseal(d)
+        rejected("other-protocol (resealed)", d)
 
     print("evidence tests passed")
 

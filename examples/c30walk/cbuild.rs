@@ -59,8 +59,21 @@
 //! directory of a completed dry run, which the collector verifies before anything else
 //! (`verify_evidence`). The capture's memory requirement is max(estimate, the verified
 //! peak), plus the registered margin.
+//!
+//! **Constructor v2's mode** (`cbuild-v2`, `cbuild-rss-v2`;
+//! docs/journal/2026-11-03-compact30-construction-protocol-v2.md, report 211): the same
+//! schedule, window, checks and records, with the C arm `c2_build`, which calls
+//! `Ctor2::build::<false>` (`ctor2.rs` at `8beffe2`, unchanged), natural configuration. Its
+//! meta and RSS records carry the protocol identifier `c30-construction-v2`, and a v2
+//! capture accepts only a v2 dry run's evidence. The schedule is generic over the candidate
+//! (`Candidate`); v1's instantiation (`cbuild`, `cbuild-rss`) writes draft 4's records as
+//! reviewed.
+//!
+//!     c30walk cbuild-v2 OUT.jsonl CORPUS.bz2 --rounds R --cpus A,B,C,D [--dry-run] ...
+//!     c30walk cbuild-rss-v2 OUT.json CORPUS.bz2 --arm P|C --cpus A,B,C,D
 
 use super::ctor::{Ctor, Stats};
+use super::ctor2::{Ctor2, Stats2};
 use super::{
     blocks, cpu_now, fail, json_str, phi, pin, thread_cpu_ns, Counts, Image, RawG, Rec,
     SpinBarrier, C30, FAIL_PATH, ROWS,
@@ -95,6 +108,195 @@ fn c_build(
     raw: &mut Vec<RawG>,
 ) -> bool {
     ctor.build::<false>(ll, counts, 0, rec, raw)
+}
+
+/// The v2 C arm's timed call: constructor v2 (`ctor2.rs` at `8beffe2`, unchanged), natural
+/// configuration
+#[inline(never)]
+fn c2_build(
+    ctor: &mut Ctor2,
+    ll: &[u8],
+    counts: &[u32; 256],
+    rec: &mut Vec<Rec>,
+    raw: &mut Vec<RawG>,
+) -> bool {
+    ctor.build::<false>(ll, counts, 0, rec, raw)
+}
+
+/// The candidate arm: v1 (`Ctor`, protocol draft 4) or v2 (`Ctor2`, protocol v2). The rest
+/// of the schedule is shared.
+trait Candidate: Default + Send {
+    /// The protocol identifier the meta and RSS records carry and the dry run's evidence must
+    /// match. None for v1, whose records are draft 4's as reviewed.
+    const PROTOCOL: Option<&'static str>;
+    /// The candidate's name in the meta record (v2)
+    const NAME: &'static str;
+    /// The heap scratch the candidate keeps beyond `rec` and `raw`, at most, in bytes (the
+    /// memory estimate): none counted for v1, as reviewed; v2's epoch snapshots
+    const SCRATCH: u64;
+    /// The timed call: the arm's `#[inline(never)]` wrapper, and nothing else
+    fn timed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        rec: &mut Vec<Rec>,
+        raw: &mut Vec<RawG>,
+    ) -> bool;
+    /// `build::<false>`, untimed (the poison pass)
+    fn untimed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        rec: &mut Vec<Rec>,
+        raw: &mut Vec<RawG>,
+    ) -> bool;
+    /// `build::<true>` from zeroed counters, untimed: whether it accepted, and the block's
+    /// counter record's fields from `"rows"` on
+    fn counted(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        rec: &mut Vec<Rec>,
+        raw: &mut Vec<RawG>,
+    ) -> (bool, String);
+}
+
+impl Candidate for Ctor {
+    const PROTOCOL: Option<&'static str> = None;
+    const NAME: &'static str = "ctor";
+    const SCRATCH: u64 = 0;
+    #[inline(always)]
+    fn timed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        rec: &mut Vec<Rec>,
+        raw: &mut Vec<RawG>,
+    ) -> bool {
+        c_build(self, ll, counts, rec, raw)
+    }
+    fn untimed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        rec: &mut Vec<Rec>,
+        raw: &mut Vec<RawG>,
+    ) -> bool {
+        self.build::<false>(ll, counts, 0, rec, raw)
+    }
+    fn counted(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        rec: &mut Vec<Rec>,
+        raw: &mut Vec<RawG>,
+    ) -> (bool, String) {
+        self.st = Stats::default();
+        let ok = self.build::<true>(ll, counts, 0, rec, raw);
+        let s = &self.st;
+        (
+            ok,
+            format!(
+                "\"rows\":{},\"rows_complete\":{},\"rows_fragment\":{},\"rows_scalar\":{},\"runs\":{},\"run_rows\":{},\"wide_promotions\":{},\"reconstructed_fields\":{},\"raw_groups\":{},\"raw_moved\":{},\"raw_cycles\":{}",
+                s.rows,
+                s.rows_complete,
+                s.rows_fragment,
+                s.rows_scalar,
+                s.runs,
+                s.run_rows,
+                s.wide_promotions,
+                s.reconstructed_fields,
+                s.raw_groups,
+                s.raw_moved,
+                s.raw_cycles
+            ),
+        )
+    }
+}
+
+/// v2's epoch snapshots: `Ctor2` reserves 16 of 256 `u32` (983,010 rows ÷ 61,440, rounded
+/// up); its 256 descriptors live on the stack
+const CTOR2_SNAPSHOTS: u64 = 16 * 256 * 4;
+
+impl Candidate for Ctor2 {
+    const PROTOCOL: Option<&'static str> = Some("c30-construction-v2");
+    const NAME: &'static str = "ctor2";
+    const SCRATCH: u64 = CTOR2_SNAPSHOTS;
+    #[inline(always)]
+    fn timed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        rec: &mut Vec<Rec>,
+        raw: &mut Vec<RawG>,
+    ) -> bool {
+        c2_build(self, ll, counts, rec, raw)
+    }
+    fn untimed(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        rec: &mut Vec<Rec>,
+        raw: &mut Vec<RawG>,
+    ) -> bool {
+        self.build::<false>(ll, counts, 0, rec, raw)
+    }
+    fn counted(
+        &mut self,
+        ll: &[u8],
+        counts: &[u32; 256],
+        rec: &mut Vec<Rec>,
+        raw: &mut Vec<RawG>,
+    ) -> (bool, String) {
+        self.st = Stats2::default();
+        let ok = self.build::<true>(ll, counts, 0, rec, raw);
+        let s = &self.st;
+        (
+            ok,
+            format!(
+                "\"rows\":{},\"rows_bulk\":{},\"rows_bulk_raw\":{},\"rows_fragment\":{},\"rows_scalar\":{},\"runs\":{},\"run_rows\":{},\"complete_groups\":{},\"fin_fast\":{},\"fin_ordinary\":{},\"fin_wide\":{},\"fin_crossing\":{},\"fin_forced\":{},\"norm_full\":{},\"norm_partial\":{},\"norm_fields\":{},\"raw_fields_read\":{},\"raw_entries_written\":{},\"fields_restored\":{},\"epoch_searches\":{},\"epochs\":{},\"runs_split_at_epoch\":{},\"multi_epoch_portions\":{},\"raw_groups\":{},\"raw_moved\":{},\"raw_cycles\":{},\"max_ordinary_span\":{},\"min_wide_span\":{}",
+                s.rows,
+                s.rows_bulk,
+                s.rows_bulk_raw,
+                s.rows_fragment,
+                s.rows_scalar,
+                s.runs,
+                s.run_rows,
+                s.complete_groups,
+                s.fin_fast,
+                s.fin_ordinary,
+                s.fin_wide,
+                s.fin_crossing,
+                s.fin_forced,
+                s.norm_full,
+                s.norm_partial,
+                s.norm_fields,
+                s.raw_fields_read,
+                s.raw_entries_written,
+                s.fields_restored,
+                s.epoch_searches,
+                s.epochs,
+                s.runs_split_at_epoch,
+                s.multi_epoch_portions,
+                s.raw_groups,
+                s.raw_moved,
+                s.raw_cycles,
+                s.max_ordinary_span,
+                s.min_wide_span
+            ),
+        )
+    }
+}
+
+/// The meta record's protocol fields: none for v1 (draft 4's record as reviewed)
+fn protocol_fields<K: Candidate>() -> String {
+    K::PROTOCOL.map_or(String::new(), |p| {
+        format!(
+            ",\"protocol\":\"{p}\",\"candidate\":\"{}\",\"candidate_scratch_bytes\":{}",
+            K::NAME,
+            K::SCRATCH
+        )
+    })
 }
 
 /// The calling thread's (minor, major) faults so far (`getrusage(RUSAGE_THREAD)`)
@@ -344,8 +546,9 @@ fn raw_bound(n: usize, counts: &[u32; 256]) -> usize {
 }
 
 /// The capture process's estimated peak memory, from the blocks' sizes and counts, and its
-/// parts (§3)
-fn estimate(sizes: &[(usize, [u32; 256])]) -> (u64, String) {
+/// parts (§3). The candidate's own scratch (`Candidate::SCRATCH`, none for v1) is added to
+/// each of its arenas.
+fn estimate<K: Candidate>(sizes: &[(usize, [u32; 256])]) -> (u64, String) {
     let c_bytes = |n: usize, c: &[u32; 256]| -> u64 {
         let g = n.div_ceil(ROWS) as u64;
         64 * (g + 1) + 128 * raw_bound(n, c) as u64 + 8 * g.div_ceil(64)
@@ -357,7 +560,7 @@ fn estimate(sizes: &[(usize, [u32; 256])]) -> (u64, String) {
     let images: u64 = sizes.iter().map(|(n, c)| c_bytes(*n, c)).sum();
     let references = 4 * total;
     // per worker: warm P, warm C, one cold arena at a time
-    let workers = 4 * (4 * nmax + cmax + (4 * nmax).max(cmax));
+    let workers = 4 * (4 * nmax + cmax + K::SCRATCH + (4 * nmax).max(cmax + K::SCRATCH));
     // worker 0's round -1 walks: the walkers' segment buffers and outputs
     let walk_scratch = 3 * (2 * nmax + (64 << 10)) + 2 * nmax;
     // the oracle's transient (Ψ, F, classes, its own arrays) and the counter pass's arena
@@ -487,19 +690,20 @@ fn regime_name(r: Regime) -> &'static str {
     }
 }
 
-/// One arm's arenas
+/// One arm's arenas; `ctor` is the candidate's own scratch
 #[derive(Default)]
-struct Arenas {
+struct Arenas<K> {
     tt: TVector,
-    ctor: Ctor,
+    ctor: K,
     rec: Vec<Rec>,
     raw: Vec<RawG>,
 }
 
-impl Arenas {
+impl<K> Arenas<K> {
     /// (capacity bytes, allocator usable bytes) of the arm's table. P: the T-vector. C:
     /// `rec` + `raw` only; the constructor's bitmap is private to it and is not observed
-    /// (its requested size is recorded separately).
+    /// (its requested size is recorded separately; so are v2's epoch snapshots, in the meta
+    /// record).
     fn caps(&self, arm: Arm) -> (u64, u64) {
         match arm {
             Arm::P => (
@@ -517,9 +721,9 @@ impl Arenas {
 /// A worker: its warm arenas (kept across blocks and rounds), its cold arenas (fresh for
 /// each build), and the round −1 walkers' scratch
 #[derive(Default)]
-struct Worker {
-    warm: Arenas,
-    cold: Arenas,
+struct Worker<K> {
+    warm: Arenas<K>,
+    cold: Arenas<K>,
     walk: C30,
     seg: SegScratch,
     out: Vec<u8>,
@@ -608,7 +812,7 @@ struct Step {
     block: usize,
 }
 
-impl Worker {
+impl<K: Candidate> Worker<K> {
     /// The untimed preparation before the start barrier. Cold: the previous arenas are
     /// dropped. Round −1's W1 warm C build: its record arena is poisoned (G7a).
     fn prepare(&mut self, s: &Step) {
@@ -650,7 +854,7 @@ impl Worker {
                 (true, w)
             }
             Arm::C => window(e.epoch, || {
-                c_build(&mut a.ctor, ll, &counts, &mut a.rec, &mut a.raw)
+                a.ctor.timed(ll, &counts, &mut a.rec, &mut a.raw)
             }),
         }
     }
@@ -843,8 +1047,8 @@ fn pin_or_fail(cpu: usize, what: &str) {
 }
 
 /// One W1 pass: worker 0 on the first CPU, every block in corpus order
-fn pass_w1(
-    w: &mut Worker,
+fn pass_w1<K: Candidate>(
+    w: &mut Worker<K>,
     round: i64,
     regime: Regime,
     arm: Arm,
@@ -906,8 +1110,8 @@ fn pass_w1(
 }
 
 /// One W4 pass: four pinned workers in lockstep by step
-fn pass_w4(
-    ws: &mut [Worker],
+fn pass_w4<K: Candidate>(
+    ws: &mut [Worker<K>],
     lists: &[Vec<usize>; 4],
     round: i64,
     regime: Regime,
@@ -1319,8 +1523,10 @@ struct Evidence {
 
 /// Verify a completed dry run's directory (report 197): its records, its analysis and its
 /// manifest, against each other and against this capture. Every condition is required;
-/// the first that fails is returned.
-fn verify_evidence(dir: &str, own: &Own) -> Result<Evidence, String> {
+/// the first that fails is returned. With a `protocol` (v2), the dry run's records and its
+/// analysis must also carry that identifier, after every draft 4 condition; v1 (None) checks
+/// exactly draft 4's conditions.
+fn verify_evidence(dir: &str, own: &Own, protocol: Option<&str>) -> Result<Evidence, String> {
     let path = |f: &str| format!("{dir}/{f}");
     let read = |f: &str| -> Result<String, String> {
         std::fs::read_to_string(path(f)).map_err(|e| format!("{f}: {e}"))
@@ -1486,6 +1692,16 @@ fn verify_evidence(dir: &str, own: &Own) -> Result<Evidence, String> {
     // a plausibility floor: a dry run held every block's last column and production's
     // output, two bytes a row, so a smaller peak cannot be a real measurement
     need(peak >= 2 * own.rows, &format!("the dry run's peak RSS, {peak} bytes, is below the 2 bytes a row its inputs alone need"))?;
+    if let Some(p) = protocol {
+        need(
+            meta.get("protocol").and_then(J::str) == Some(p),
+            &format!("the dry run's records are not protocol {p}'s"),
+        )?;
+        need(
+            ana.get("protocol").and_then(J::str) == Some(p),
+            &format!("the dry run's analysis is not protocol {p}'s"),
+        )?;
+    }
     Ok(Evidence {
         peak,
         commit,
@@ -1495,8 +1711,17 @@ fn verify_evidence(dir: &str, own: &Own) -> Result<Evidence, String> {
     })
 }
 
-/// `cbuild`: the registered schedule (§3), or its dry run
+/// `cbuild`: the registered schedule (§3), or its dry run, with constructor v1 (draft 4)
 pub fn main(args: &[String]) {
+    run::<Ctor>(args)
+}
+
+/// `cbuild-v2`: the same schedule with constructor v2 (protocol v2, report 211)
+pub fn main_v2(args: &[String]) {
+    run::<Ctor2>(args)
+}
+
+fn run<K: Candidate>(args: &[String]) {
     let out = args[0].clone();
     let file = &args[1];
     let (mut rounds, mut cpus, mut dry) = (20i64, Vec::new(), false);
@@ -1576,7 +1801,7 @@ pub fn main(args: &[String]) {
                 machine: machine.clone(),
                 rows: total_rows,
             };
-            match verify_evidence(d, &own) {
+            match verify_evidence(d, &own, K::PROTOCOL) {
                 Ok(e) => Some((d.clone(), e)),
                 Err(why) => fail("evidence", format!("{d}: {why}")),
             }
@@ -1596,7 +1821,7 @@ pub fn main(args: &[String]) {
     });
 
     // the memory preflight
-    let (est, parts) = estimate(&sizes);
+    let (est, parts) = estimate::<K>(&sizes);
     let required = est.max(peak);
     let margin = (2 * GIB).max(required / 4);
     let m0 = MemState::read();
@@ -1685,29 +1910,15 @@ pub fn main(args: &[String]) {
     let mut braw = Vec::with_capacity(n_blocks);
     let mut ctrs = Vec::with_capacity(n_blocks);
     {
-        let mut ctor = Ctor::default();
+        let mut ctor = K::default();
         let (mut rec, mut raw) = (Vec::new(), Vec::new());
         for b in 0..n_blocks {
             let mut o = C30::default();
             o.build(&ll[b], &counts[b], 0);
-            ctor.st = Stats::default();
-            assert!(ctor.build::<true>(&ll[b], &counts[b], 0, &mut rec, &mut raw));
+            let (ok, fields) = ctor.counted(&ll[b], &counts[b], &mut rec, &mut raw);
+            assert!(ok);
             assert!(bytes(&rec) == bytes(&o.rec) && bytes(&raw) == bytes(&o.raw));
-            let s = &ctor.st;
-            ctrs.push(format!(
-                "{{\"kind\":\"counters\",\"block\":{b},\"rows\":{},\"rows_complete\":{},\"rows_fragment\":{},\"rows_scalar\":{},\"runs\":{},\"run_rows\":{},\"wide_promotions\":{},\"reconstructed_fields\":{},\"raw_groups\":{},\"raw_moved\":{},\"raw_cycles\":{}}}",
-                s.rows,
-                s.rows_complete,
-                s.rows_fragment,
-                s.rows_scalar,
-                s.runs,
-                s.run_rows,
-                s.wide_promotions,
-                s.reconstructed_fields,
-                s.raw_groups,
-                s.raw_moved,
-                s.raw_cycles
-            ));
+            ctrs.push(format!("{{\"kind\":\"counters\",\"block\":{b},{fields}}}"));
             braw.push(o.raw.len());
             imgs.push(Image {
                 rec: o.rec,
@@ -1722,12 +1933,12 @@ pub fn main(args: &[String]) {
     let mut poisoned = Vec::with_capacity(n_blocks);
     {
         let gmax = rows.iter().map(|n| n.div_ceil(ROWS)).max().unwrap_or(0);
-        let mut ctor = Ctor::default();
+        let mut ctor = K::default();
         let (mut rec, mut raw): (Vec<Rec>, Vec<RawG>) = (Vec::with_capacity(gmax + 1), Vec::new());
         for b in 0..n_blocks {
             poison(&mut rec);
             let (cap, ptr) = (rec.capacity(), rec.as_ptr() as usize);
-            let ok = ctor.build::<false>(&ll[b], &counts[b], 0, &mut rec, &mut raw);
+            let ok = ctor.untimed(&ll[b], &counts[b], &mut rec, &mut raw);
             let survived = rec.as_ptr() as usize == ptr && cap >= rec.len();
             let exact =
                 ok && bytes(&rec) == bytes(&imgs[b].rec) && bytes(&raw) == bytes(&imgs[b].raw);
@@ -1755,9 +1966,10 @@ pub fn main(args: &[String]) {
     append(
         &out,
         &[format!(
-            "{{\"kind\":\"meta\",\"corpus\":{name:?},\"blocks\":{n_blocks},\"rows\":{total},\"full_blocks\":{},\"rounds\":{rounds},\"dry_run\":{dry},\"inject\":{},\"cpus\":{cpus:?},\"regimes\":[\"warm\",\"cold\"],\"w4_lists\":{lists:?},\"w4_rows\":{wrows:?},\"block_rows\":{rows:?},\"block_raw_groups\":{braw:?},\"memory_estimate\":{est},\"corpus_sha256\":\"{corpus_sha256}\",\"binary_sha256\":\"{binary_sha256}\",\"machine\":{machine}}}",
+            "{{\"kind\":\"meta\",\"corpus\":{name:?},\"blocks\":{n_blocks},\"rows\":{total},\"full_blocks\":{},\"rounds\":{rounds},\"dry_run\":{dry},\"inject\":{},\"cpus\":{cpus:?},\"regimes\":[\"warm\",\"cold\"],\"w4_lists\":{lists:?},\"w4_rows\":{wrows:?},\"block_rows\":{rows:?},\"block_raw_groups\":{braw:?},\"memory_estimate\":{est},\"corpus_sha256\":\"{corpus_sha256}\",\"binary_sha256\":\"{binary_sha256}\",\"machine\":{machine}{}}}",
             rows.iter().filter(|&&n| n >= FULL).count(),
             if inject == Inject::None { "null".to_string() } else { json_str(&inject_arg) },
+            protocol_fields::<K>(),
         )],
     );
     append(&out, &pre);
@@ -1785,7 +1997,7 @@ pub fn main(args: &[String]) {
         inject,
         check0: &check0,
     };
-    let mut ws: Vec<Worker> = (0..4).map(|_| Worker::default()).collect();
+    let mut ws: Vec<Worker<K>> = (0..4).map(|_| Worker::default()).collect();
     for round in -1..rounds {
         let arms = if round.rem_euclid(2) == 0 {
             [Arm::P, Arm::C]
@@ -1848,6 +2060,15 @@ fn delta(a: Option<u64>, b: Option<u64>) -> String {
 /// `cbuild-rss`: one arm's W4 warm pass in a fresh process holding only the last columns
 /// and counts; the growth of the peak RSS over the post-load baseline (§5)
 pub fn rss(args: &[String]) {
+    rss_with::<Ctor>(args)
+}
+
+/// `cbuild-rss-v2`: the same with constructor v2; the record carries the protocol
+pub fn rss_v2(args: &[String]) {
+    rss_with::<Ctor2>(args)
+}
+
+fn rss_with<K: Candidate>(args: &[String]) {
     let out = &args[0];
     let file = &args[1];
     let (mut arm, mut cpus) = (None, Vec::new());
@@ -1884,7 +2105,7 @@ pub fn rss(args: &[String]) {
     let start = SpinBarrier::new(4);
     let done = std::sync::Barrier::new(4);
     let steps = lists.iter().map(|l| l.len()).max().unwrap();
-    let mut ws: Vec<Arenas> = (0..4).map(|_| Arenas::default()).collect();
+    let mut ws: Vec<Arenas<K>> = (0..4).map(|_| Arenas::default()).collect();
     std::thread::scope(|sc| {
         for (k, a) in ws.iter_mut().enumerate() {
             let (list, start, done, cols, cpus) = (&lists[k], &start, &done, &cols, &cpus);
@@ -1897,7 +2118,7 @@ pub fn rss(args: &[String]) {
                         match arm {
                             Arm::P => p_build(ll, counts, &mut a.tt),
                             Arm::C => {
-                                assert!(c_build(&mut a.ctor, ll, counts, &mut a.rec, &mut a.raw))
+                                assert!(a.ctor.timed(ll, counts, &mut a.rec, &mut a.raw))
                             }
                         }
                     }
@@ -1915,7 +2136,7 @@ pub fn rss(args: &[String]) {
     std::fs::write(
         out,
         format!(
-            "{{\"kind\":\"rss\",\"arm\":\"{}\",\"corpus\":{:?},\"corpus_sha256\":\"{corpus_sha256}\",\"blocks\":{},\"cpus\":{cpus:?},\"pid\":{},\"started_unix_ns\":{started},\"baseline_rss\":{},\"hwm_after_load\":{},\"hwm_reset\":{reset},\"hwm_after_reset\":{},\"hwm_after_pass\":{},\"growth_over_baseline\":{growth},\"arena_capacity_bytes\":{caps},\"capacity_scope\":\"{}\"}}\n",
+            "{{\"kind\":\"rss\",\"arm\":\"{}\",\"corpus\":{:?},\"corpus_sha256\":\"{corpus_sha256}\",\"blocks\":{},\"cpus\":{cpus:?},\"pid\":{},\"started_unix_ns\":{started},\"baseline_rss\":{},\"hwm_after_load\":{},\"hwm_reset\":{reset},\"hwm_after_reset\":{},\"hwm_after_pass\":{},\"growth_over_baseline\":{growth},\"arena_capacity_bytes\":{caps},\"capacity_scope\":\"{}\"{}}}\n",
             arm_name(arm),
             std::path::Path::new(file).file_name().unwrap().to_string_lossy(),
             rows.len(),
@@ -1924,7 +2145,8 @@ pub fn rss(args: &[String]) {
             opt(hwm_load),
             opt(hwm_reset),
             opt(hwm),
-            if arm == Arm::P { "tt" } else { "rec+raw" }
+            if arm == Arm::P { "tt" } else { "rec+raw" },
+            K::PROTOCOL.map_or(String::new(), |p| format!(",\"protocol\":\"{p}\""))
         ),
     )
     .unwrap();

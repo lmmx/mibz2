@@ -3,7 +3,11 @@
 (docs/journal/2026-11-03-compact30-construction-protocol.md, draft 4).
 
     python3 bench/c30_construction.py RUN.jsonl [--json OUT.json] [--identity-ok yes|no]
-        [--rss RSS.json ...] [--dry-run-evidence DIR]
+        [--rss RSS.json ...] [--dry-run-evidence DIR] [--protocol v1|v2]
+
+`--protocol v2` analyses constructor v2's records under its own protocol
+(docs/journal/2026-11-03-compact30-construction-protocol-v2.md, report 211; `analyse_v2`
+below). The default, v1, is draft 4's analysis as reviewed, and refuses v2's records.
 
 Draft 4's repairs (report 197):
 - G2 holds every all-full W4 step to the 2% start skew, not only the row-weighted
@@ -734,6 +738,230 @@ def analyse(recs, other=(), identity_ok=None, rss=(), evidence=None):
     return out
 
 
+# ---------------------------------------------------------------------------------------
+# Constructor v2's protocol (docs/journal/2026-11-03-compact30-construction-protocol-v2.md,
+# report 211). Everything above is draft 4's analysis, unchanged; v2 runs it on v2's records
+# and then applies v2's registered differences:
+# - the records must carry v2's identifier (S1_protocol), and so must a capture's dry-run
+#   evidence and its peak-RSS records;
+# - G1 gates P's warm W4 cost and warm W4 completion time only; the other stability ratios
+#   are reported;
+# - G2 is three conditions on each arm's warm W4 all-full steps over the measured rounds:
+#   the row-weighted aggregate, the outlier allowance and the maximum step; cold steps are
+#   reported.
+# The economic limits and the decision table are draft 4's.
+# ---------------------------------------------------------------------------------------
+
+PROTOCOL_V2 = "c30-construction-v2"
+CANDIDATE_V2 = "ctor2"
+G2_AGGREGATE = 0.02  # v2 G2(a): each arm's row-weighted aggregate start skew
+G2_STEP = 0.02  # v2 G2(b): a step above this is an outlier
+G2_ALLOWANCE_PER_MILLE = 1  # v2 G2(b): at most ⌊N / 1000⌋ outliers among an arm's N steps
+G2_MAX = 0.10  # v2 G2(c): no step above this
+V2_G1 = ("w4_cpu_ns_row", "w4_completion_ns")  # v2 G1: P's warm W4 measures
+
+
+def step_skews(builds, meta, regime, rounds):
+    """Draft 4's per-step start skew of every all-full W4 step of `regime` in the measured
+    rounds: (latest start − earliest start) ÷ (latest end − earliest start) over the step's
+    four builds, all of full blocks. Returns {arm: [(round, step, rows, skew)]}."""
+    lists = meta["w4_lists"]
+    nsteps = max(len(l) for l in lists)
+    by = {}
+    for w in builds:
+        if w["regime"] == regime and w["mode"] == "w4" and 0 <= w["round"] < rounds:
+            by.setdefault((w["arm"], w["round"], w["step"]), []).append(w)
+    out = {}
+    for a in ("P", "C"):
+        v = []
+        for r in range(rounds):
+            for s in range(nsteps):
+                x = by.get((a, r, s), [])
+                if len(x) == 4 and all(y["rows"] >= FULL for y in x):
+                    st = min(y["start"] for y in x)
+                    span = max(y["end"] for y in x) - st
+                    sk = (max(y["start"] for y in x) - st) / span
+                    v.append((r, s, sum(y["rows"] for y in x), sk))
+        out[a] = v
+    return out
+
+
+def g2_summary(steps):
+    """One arm's v2 G2 figures from its steps: N, the row-weighted aggregate (the rows-weighted
+    mean of draft 4's per-step skew, Σ rows·skew ÷ Σ rows, pooled over the measured rounds),
+    the outliers (> 2%) with their locations, the integer allowance ⌊N/1000⌋, the maximum"""
+    n = len(steps)
+    rows = sum(x[2] for x in steps)
+    agg = sum(x[2] * x[3] for x in steps) / rows if rows else None
+    over = [{"round": r, "step": s, "skew": k} for r, s, _, k in steps if k > G2_STEP]
+    return {
+        "steps": n,
+        "row_weighted_aggregate": agg,
+        "max_step_skew": max((x[3] for x in steps), default=None),
+        "outliers_over_2pct": len(over),
+        "outlier_allowance": n * G2_ALLOWANCE_PER_MILLE // 1000,
+        "outliers": over,
+        "steps_over_10pct": sum(x[3] > G2_MAX for x in steps),
+    }
+
+
+def _v2_evidence_problems(evidence):
+    """A capture's dry-run evidence must be v2's: its analysis and its meta record carry the
+    identifier (draft 4's conditions are checked by `analyse`)"""
+    if evidence is None:
+        return []
+    probs = []
+    try:
+        ana = json.loads(evidence["c30-analysis.json"][0])
+        recs = [
+            json.loads(x) for x in evidence["c30-construction.jsonl"][0].splitlines() if x.strip()
+        ]
+    except (ValueError, UnicodeDecodeError, KeyError):
+        return ["evidence: unreadable for the protocol check"]
+    if ana.get("protocol") != PROTOCOL_V2:
+        probs.append("evidence: the dry run's analysis is not protocol v2's")
+    dmeta = next((r for r in recs if r.get("kind") == "meta"), {})
+    if dmeta.get("protocol") != PROTOCOL_V2 or dmeta.get("candidate") != CANDIDATE_V2:
+        probs.append("evidence: the dry run's records are not protocol v2's")
+    return probs
+
+
+def analyse_v2(recs, other=(), identity_ok=None, rss=(), evidence=None):
+    """Constructor v2's analysis: draft 4's `analyse` on v2's records, then v2's G1 and G2,
+    the protocol checks, v2's diagnostics and draft 4's decision table"""
+    metas = recs["meta"]
+    meta = metas[0] if metas else None
+    if meta is None or meta.get("protocol") != PROTOCOL_V2 or meta.get("candidate") != CANDIDATE_V2:
+        out = {"protocol": PROTOCOL_V2, "dry_run": bool(meta and meta.get("dry_run")),
+               "schedule": {"S1_protocol": False}, "gates": {}, "valid": False,
+               "decision": "INVALID: the records are not protocol v2's (constructor v2); "
+                           "no figures computed"}  # fmt: skip
+        if recs["failure"]:
+            out["failures"] = list(recs["failure"])
+        return out
+    v = dict(recs)
+    # draft 4's slow-path table reads `wide_promotions`: v2's wide groups promoted to RAW at
+    # their finish (`fin_wide`)
+    v["counters"] = [dict(o, wide_promotions=o.get("fin_wide")) for o in recs["counters"]]
+    rss = list(rss)
+    rss_bad = [r for r in rss if r.get("protocol") != PROTOCOL_V2]
+    out = {"protocol": PROTOCOL_V2, "candidate": CANDIDATE_V2}
+    out.update(analyse(v, other, identity_ok, rss, evidence))
+    out["schedule"]["S1_protocol"] = True
+    if rss_bad and "peak_rss_processes" in out and not out["peak_rss_processes"].get("unavailable"):
+        out["peak_rss_processes"] = {
+            "unavailable": True,
+            "problems": [f"{len(rss_bad)} records are not protocol v2's"],
+        }
+    sch = out["schedule"]
+    if not all(x is True for x in sch.values()):
+        return out
+    g = out["gates"]
+    ev_probs = [] if meta.get("dry_run") else _v2_evidence_problems(evidence)
+    if ev_probs:
+        g["G9_memory"] = False
+        out["memory"]["dry_run_evidence_ok"] = False
+        why = list(out["memory"]["problems"]) + ev_probs
+        out["memory"]["problems"] = why + (
+            [] if "dry-run evidence" in why else ["dry-run evidence"]
+        )
+    if meta["dry_run"]:
+        return out
+    rounds = meta["rounds"]
+    per = out["rounds"]
+    # G1 (v2): P's warm W4 cost and completion time gate; the rest is reported
+    stab = {}
+    for rg in REGIMES:
+        for a in ("P", "C"):
+            for key in ("w1_cpu_ns_row", "w4_cpu_ns_row", "w4_completion_ns"):
+                xs = [per[r][rg][a][key] for r in per]
+                stab[f"{rg}_{a}_{key}"] = {
+                    "max_over_min": max(xs) / min(xs),
+                    "min_round": min(per, key=lambda r: per[r][rg][a][key]),
+                    "max_round": max(per, key=lambda r: per[r][rg][a][key]),
+                    "gates": rg == "warm" and a == "P" and key in V2_G1,
+                }
+    for k in [k for k in g if k.startswith("G1_") or k == "G2_simultaneous_start"]:
+        del g[k]
+    for key in V2_G1:
+        g[f"G1_warm_{key}"] = stab[f"warm_P_{key}"]["max_over_min"] <= STABILITY
+    out["stability"] = stab
+    # G2 (v2): each arm's warm W4 all-full steps over the measured rounds
+    warm = step_skews(recs["build"], meta, "warm", rounds)
+    cold = step_skews(recs["build"], meta, "cold", rounds)
+    sw = {a: g2_summary(warm[a]) for a in ("P", "C")}
+    sc = {a: g2_summary(cold[a]) for a in ("P", "C")}
+    for a in ("P", "C"):
+        for o in sw[a]["outliers"] + sc[a]["outliers"]:
+            o["arm"] = a
+    g["G2_aggregate"] = all(
+        sw[a]["steps"] > 0 and sw[a]["row_weighted_aggregate"] <= G2_AGGREGATE for a in ("P", "C")
+    )
+    g["G2_outlier_allowance"] = all(
+        sw[a]["steps"] > 0 and sw[a]["outliers_over_2pct"] <= sw[a]["outlier_allowance"]
+        for a in ("P", "C")
+    )
+    g["G2_max_step"] = all(
+        sw[a]["steps"] > 0 and sw[a]["max_step_skew"] <= G2_MAX for a in ("P", "C")
+    )
+    out["start_skew"] = {
+        "warm_gated": sw,
+        "cold_reported": sc,
+        "per_round_aggregate_max": {
+            f"{rg}_{a}": max(per[r][rg][a]["w4_start_skew"] for r in per)
+            for rg in REGIMES
+            for a in ("P", "C")
+        },
+    }
+    # v2's slow paths: the per-block warm W1 ratio by deciles of the one-row share, with
+    # v2's finishing classes (reported only)
+    by = {}
+    for w in recs["build"]:
+        if w["round"] >= 0 and w["regime"] == "warm" and w["mode"] == "w1":
+            by[(w["arm"], w["round"], w["block"])] = w
+    cpu = lambda w: w["cpu_end"] - w["cpu_start"]  # noqa: E731
+    br = meta["block_rows"]
+    ctr = {o["block"]: o for o in recs["counters"]}
+    pb = []
+    for b in range(len(br)):
+        if br[b] < FULL:
+            continue
+        rs = [cpu(by[("C", r, b)]) / max(cpu(by[("P", r, b)]), 1) for r in range(rounds)]
+        c = ctr[b]
+        pb.append((c["rows_scalar"] / br[b], c["rows_fragment"] / br[b],
+                   c.get("fin_ordinary", 0), c.get("fin_wide", 0), c.get("fin_crossing", 0),
+                   c.get("norm_fields", 0) / br[b], statistics.median(rs)))  # fmt: skip
+    pb.sort()
+    dec = []
+    for d in range(10):
+        part = pb[d * len(pb) // 10 : (d + 1) * len(pb) // 10]
+        if part:
+            dec.append({
+                "one_row_share_max": part[-1][0],
+                "fragment_share_mean": statistics.fmean(x[1] for x in part),
+                "nonfast_ordinary_finishes_mean": statistics.fmean(x[2] for x in part),
+                "wide_finishes_mean": statistics.fmean(x[3] for x in part),
+                "crossing_portions_mean": statistics.fmean(x[4] for x in part),
+                "normalised_fields_per_row_mean": statistics.fmean(x[5] for x in part),
+                "warm_w1_ratio_median": statistics.median(x[6] for x in part),
+                "blocks": len(part),
+            })  # fmt: skip
+    out["slow_paths_v2_by_one_row_decile"] = dec
+    rat = out["ratios"]
+    b4, e4 = rat["warm_b4"], rat["warm_e4"]
+    valid = all(x is True for x in g.values())
+    out["valid"] = valid
+    if not valid:
+        out["decision"] = "INVALID: a validity gate failed; no decision"
+    elif b4["hi"] <= CEILING and e4["hi"] <= COMPLETION_TOL:
+        out["decision"] = "PASS"
+    elif b4["lo"] > CEILING or e4["lo"] > COMPLETION_TOL:
+        out["decision"] = "FAIL"
+    else:
+        out["decision"] = "INCONCLUSIVE"
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("run")
@@ -741,8 +969,13 @@ def main():
     ap.add_argument("--identity-ok", choices=["yes", "no"])
     ap.add_argument("--rss", nargs="*", default=[])
     ap.add_argument("--dry-run-evidence", help="a capture's dry-run evidence directory")
+    ap.add_argument("--protocol", choices=["v1", "v2"], default="v1",
+                    help="v1: draft 4 (constructor v1); v2: constructor v2 (report 211)")  # fmt: skip
     a = ap.parse_args()
     recs, other = load(a.run)
+    if a.protocol == "v1" and any(m.get("protocol") for m in recs["meta"]):
+        print("c30_construction: these records are protocol v2's; analyse them with --protocol v2")
+        return 2
     rss = []
     for p in a.rss:
         try:
@@ -751,12 +984,14 @@ def main():
             rss.append({"unreadable": p})
     ident = None if a.identity_ok is None else a.identity_ok == "yes"
     ev = load_evidence(a.dry_run_evidence) if a.dry_run_evidence else None
-    res = analyse(recs, other, ident, rss, ev)
+    res = (analyse_v2 if a.protocol == "v2" else analyse)(recs, other, ident, rss, ev)
     if a.json:
         with open(a.json, "w") as f:
             json.dump(res, f, indent=1)
     for fl in res.get("failures", []):
         print("FAILED RUN:", fl.get("what"), "-", fl.get("detail"))
+    if a.protocol == "v2":
+        print("protocol:", res["protocol"])
     print("schedule:", json.dumps(res["schedule"]))
     print("gates:", json.dumps(res["gates"]))
     for k in ("allocation", "memory", "faults"):
@@ -771,6 +1006,11 @@ def main():
     if "ratios" in res:
         print("ratios (C / P):", json.dumps(res["ratios"]))
         print("clock:", json.dumps(res["clock"]))
+    if a.protocol == "v2" and "stability" in res:
+        print("start skew (warm, gated):", json.dumps(
+            {k: {x: y for x, y in v.items() if x != "outliers"} for k, v in res["start_skew"]["warm_gated"].items()}))  # fmt: skip
+        print("start-skew outliers (warm):", json.dumps(
+            [o for v in res["start_skew"]["warm_gated"].values() for o in v["outliers"]]))  # fmt: skip
     print("decision:", res["decision"])
     return 0 if res["valid"] else 1
 

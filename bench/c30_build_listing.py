@@ -3,6 +3,7 @@
 (docs/journal/2026-11-03-compact30-construction-protocol.md, §6).
 
     python3 bench/c30_build_listing.py BINARY OUT_DIR REFERENCE_DIR [--record KEY,...]
+        [--protocol v1|v2]
 
 Disassembles the timed path's functions from BINARY (objdump, AT&T syntax, demangled, no
 raw bytes), each over its own symbol extent [start, start + nm -S size):
@@ -35,6 +36,19 @@ Also checked on the binary itself:
 Writes OUT_DIR/<key>.asm (and <key>-lines.asm, with source lines, for review),
 OUT_DIR/<key>.diff (empty when identical) and OUT_DIR/listing.json, and prints `yes` when
 every comparison and check passes, otherwise `no`.
+
+**`--protocol v2`** (constructor v2's cost protocol, report 211) checks v2's timed path
+instead (`FUNCS_V2`), against its own frozen references
+(docs/journal/2026-11-03-compact30-construction-v2-harness/listings):
+- `<c30walk::ctor2::Ctor2>::build::<false>` and its out-of-line callees `W<false>::finish`,
+  `W<false>::refill` and `c30walk::ctor::canonicalise` (v1's, shared);
+- `c30walk::cbuild::c2_build`, v2's timed wrapper;
+- `c30walk::cbuild::p_build` and `mibz2::bwt::build`, against the same reviewed listings as
+  v1's (copied unchanged into v2's reference directory).
+
+Its checks: `p_build` only transfers to `mibz2::bwt::build`; `c2_build` only calls
+`Ctor2::build::<false>`; `bwt::build` inlines both passes; and every `c30walk::` function the
+checked constructor functions call is itself checked (the timed path's closure).
 """
 
 import json
@@ -52,6 +66,18 @@ FUNCS = {
     "p-build": "c30walk::cbuild::p_build",
     "bwt-build": "mibz2::bwt::build",
 }
+
+FUNCS_V2 = {
+    "ctor2-build-false": "<c30walk::ctor2::Ctor2>::build::<false>",
+    "ctor2-finish-false": "<c30walk::ctor2::W<false>>::finish",
+    "ctor2-refill-false": "<c30walk::ctor2::W<false>>::refill",
+    "ctor-canonicalise": "c30walk::ctor::canonicalise",
+    "c2-build": "c30walk::cbuild::c2_build",
+    "p-build": "c30walk::cbuild::p_build",
+    "bwt-build": "mibz2::bwt::build",
+}
+V2_CONSTRUCTOR = ("ctor2-build-false", "ctor2-finish-false", "ctor2-refill-false",
+                  "ctor-canonicalise")  # fmt: skip
 
 INSN = re.compile(r"^ *([0-9a-f]+):\t(.*)$")
 TARGET = re.compile(r"\b([0-9a-f]+) <(.+)>$")
@@ -126,12 +152,23 @@ def main():
         i = argv.index("--record")
         record = set(argv[i + 1].split(","))
         del argv[i : i + 2]
+    protocol = "v1"
+    if "--protocol" in argv:
+        i = argv.index("--protocol")
+        protocol = argv[i + 1]
+        del argv[i : i + 2]
+        if protocol not in ("v1", "v2"):
+            print("c30_build_listing: --protocol v1 or v2", file=sys.stderr)
+            return 2
+    funcs = FUNCS_V2 if protocol == "v2" else FUNCS
     binary, out_dir, ref_dir = argv[:3]
     syms = symbols(binary)
     res = {"functions": {}, "checks": {}}
+    if protocol == "v2":
+        res["protocol"] = "c30-construction-v2"
     ok = True
     texts = {}
-    for key, name in FUNCS.items():
+    for key, name in funcs.items():
         hits = [s for s in syms if s[2] == name]
         if len(hits) != 1:
             if record:
@@ -164,7 +201,7 @@ def main():
         with open(os.path.join(out_dir, f"{key}.diff"), "w") as f:
             f.write("".join(d + "\n" for d in diff))
         res["functions"][key] = info
-    if record and len(texts) < len(FUNCS):
+    if record and len(texts) < len(funcs):
         print("recorded", ",".join(sorted(k for k in record if k in texts)))
         return 0
 
@@ -178,6 +215,8 @@ def main():
         ]
 
     c = res["checks"]
+    if protocol == "v2":
+        return finish_v2(res, c, calls, syms, out_dir)
     c["p_build_transfers_only_to_bwt_build"] = set(calls("p-build")) == {"mibz2::bwt::build"}
     c["c_build_calls_only_ctor_build_false"] = set(calls("c-build")) == {FUNCS["ctor-build-false"]}
     bwt_calls = calls("bwt-build")
@@ -187,6 +226,35 @@ def main():
     ) and not any("build_one_pass" in s[2] or "build_two_pass" in s[2] for s in syms)
     for k in ("p_build_transfers_only_to_bwt_build", "c_build_calls_only_ctor_build_false",
               "bwt_build_inlines_one_and_two_pass"):  # fmt: skip
+        ok &= c[k]
+    res["identical"] = ok
+    with open(os.path.join(out_dir, "listing.json"), "w") as f:
+        json.dump(res, f, indent=1)
+    print("yes" if ok else "no")
+    return 0
+
+
+def finish_v2(res, c, calls, syms, out_dir):
+    """v2's checks on the binary, after the comparisons (`res["identical"]` so far)"""
+    ok = all(f.get("identical") for f in res["functions"].values())
+    c["p_build_transfers_only_to_bwt_build"] = set(calls("p-build")) == {"mibz2::bwt::build"}
+    c["c2_build_calls_only_ctor2_build_false"] = set(calls("c2-build")) == {
+        FUNCS_V2["ctor2-build-false"]
+    }
+    bwt_calls = calls("bwt-build")
+    c["bwt_build_callees"] = sorted(set(bwt_calls))
+    c["bwt_build_inlines_one_and_two_pass"] = not any(
+        "build_one_pass" in s or "build_two_pass" in s for s in bwt_calls
+    ) and not any("build_one_pass" in s[2] or "build_two_pass" in s[2] for s in syms)
+    checked = {FUNCS_V2[k] for k in V2_CONSTRUCTOR}
+    # the harness's own functions (a library generic over a c30walk type, such as
+    # RawVec<RawG>::grow_one, is not one)
+    own = sorted({s for k in V2_CONSTRUCTOR for s in calls(k)
+                  if s.startswith("c30walk::") or s.startswith("<c30walk::")})  # fmt: skip
+    c["v2_constructor_callees"] = own
+    c["v2_constructor_callees_all_checked"] = set(own) <= checked
+    for k in ("p_build_transfers_only_to_bwt_build", "c2_build_calls_only_ctor2_build_false",
+              "bwt_build_inlines_one_and_two_pass", "v2_constructor_callees_all_checked"):  # fmt: skip
         ok &= c[k]
     res["identical"] = ok
     with open(os.path.join(out_dir, "listing.json"), "w") as f:
