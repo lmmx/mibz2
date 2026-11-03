@@ -19,7 +19,7 @@ ask whether a smaller navigation table could do more work per step and still com
 under contention. A first measurement of ours shows it doing so.
 {: .post-dek }
 
-2 November 2026 · 22 min read · [Result](#7-the-four-worker-reversal)
+2 November 2026 · 23 min read · [Result](#7-the-four-worker-reversal)
 {: .post-meta }
 
 </div>
@@ -58,25 +58,27 @@ table. Seward said as much in [bzip2's manual](https://sourceware.org/bzip2/manu
 *"performance, both for compressing and decompressing, is largely determined by the speed at
 which your machine can service cache misses."*
 
-The post has two halves. The first works through how Seward's algorithms undo the
-transform. In [section 1](#1-from-sorted-rotations-to-the-transformation-vector) we decode a
-toy example by hand, recovering the word `banana`, to show that the decoder rebuilds the text
-by following a permutation of the block's positions, one lookup at a time, and that this
-chain of lookups is where the cache misses come from. [Sections
-2](#2-making-inversion-fast-basis-bw94-and-mergedtl) and
-[3](#3-spending-less-memory-indexf-and-the-trees) cover his algorithms, which are different
-ways of storing that permutation, and [section 4](#4-what-seward-measured) plots the speed and
-memory he measured for each, which shows the space–time tradeoff between them.
+The post has two halves. The first works through how Seward's algorithms undo the transform.
+[Section 1](#1-from-sorted-rotations-to-the-transformation-vector) starts from a small
+puzzle: how does a decoder get the word `banana` back once the BWT has rearranged its
+letters? The answer is a chain of table lookups, each depending on the one before, and that
+chain is where the cache misses come from. Seward's algorithms are different ways of storing
+the chain, each choosing what to keep in memory and what to recompute while decoding
+([sections 2](#2-making-inversion-fast-basis-bw94-and-mergedtl) and
+[3](#3-spending-less-memory-indexf-and-the-trees)). [Section 4](#4-what-seward-measured)
+compares the memory each needs with the speed he measured in 2001: the space–time tradeoff of
+his title.
 
-The second half is ours. [Section 5](#5-the-same-tradeoff-with-four-blocks-live) explains why
-four cores sharing one cache change the picture. [Section
-6](#6-a-smaller-table-a-busier-lookup) describes a compact way of storing the permutation that
-costs more per lookup, and [sections 7](#7-the-four-worker-reversal) and
-[8](#8-four-workers-cost-the-conventional-walk-far-more) measure it: when one core walks it
-alone, it is slower than mibz2's usual table, as Seward's tradeoff would predict, and when
-four cores walk their tables at once, it is faster. [Section
-9](#9-the-table-still-has-to-be-built) sets out what a decoder still needs before it could use
-it: a way to build the table cheaply.
+The second half asks what happens to that tradeoff in mibz2, where several blocks decode at
+once and their tables compete for one shared cache
+([section 5](#5-the-same-tradeoff-with-four-blocks-live)). Our first compact table made each
+lookup too expensive; a refined one stores the chain in a little over half the space, at a
+modest cost per lookup ([section 6](#6-a-smaller-table-a-busier-lookup)). Walked by one core,
+it is slower than mibz2's usual table, as Seward's tradeoff predicts; walked by four cores at
+once, it is faster ([sections 7](#7-the-four-worker-reversal) and
+[8](#8-four-workers-cost-the-conventional-walk-far-more)). That was a controlled test of the
+walk alone, and [section 9](#9-the-table-still-has-to-be-built) sets out what remains before
+the whole decoder could use it, starting with a cheap way to build the table.
 
 ## 1. From sorted rotations to the transformation vector
 
