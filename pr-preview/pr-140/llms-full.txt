@@ -760,14 +760,9 @@ Take row \\(j\\) and move its last byte to the front. That is another rotation o
 
 \\(L\[I\]\\) is the last byte of \\(S\\), so starting at \\(I\\) and following \\(T\\) gives \\(S\\) from the end:
 
-```text
-rows visited:  3 → 0 → 4 → 1 → 5 → 2
-bytes read:    a   n   a   n   a   b
-```
-
 Decoding banana by following T
 
-Each step reads the byte in L at the current row, writes it into S from the end, and moves to the row T names. Every jump depends on the entry just read, which is why the walk is one dependent load after another.
+Across the top, the rows the walk visits and the byte it reads at each. Below, each step reads the byte in L at the current row, writes it into S from the end, and moves to the row T names. Every jump depends on the entry just read, which is why the walk is one dependent load after another.
 
 That is `banana` backwards, and it is the whole inner loop of the inverse transform: load the entry at \\(p\\), emit a byte, jump where it says. Where each jump lands depends on the content of \\(S\\), not on the last jump. In a million-byte block that is a million loads from places the cache has no reason to hold.
 
