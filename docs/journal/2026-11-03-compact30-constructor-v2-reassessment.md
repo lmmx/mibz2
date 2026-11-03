@@ -986,3 +986,214 @@ A GO does not authorize implementation or measurement. The Guardian will make th
 Keep examining the next significant source of unnecessary work until you can defend either a concrete implementation candidate or a well-supported conclusion that the practical execution-cost floor is already too high.
 
 Take the time and reasoning depth necessary. I want a technical report that can be independently challenged against the frozen assembly and structural census—not a quick collection of optimization suggestions.
+
+## Report 226: the follow-up sent to the Ultra session, as relayed
+
+The user sent the message below to the Ultra session after it had started. It contains:
+- the guardian's factual correction (the registered `FULL = 899_000` partition);
+- the guardian's and researcher's commentary on running both investigations.
+
+**Anchoring note for whoever compares the two reports.** This message names Astra Max's
+design-only NO-GO (report 224), its fused ordinary-group completion candidate, and its
+6.6 ns-per-finish requirement. So the Ultra session's conclusions are not fully independent of
+report 224 from this point on.
+
+In its progress notes, Ultra reported having found the 900,000-row partition issue itself
+before its final report. It also noted, correctly, that the appendix's slowest-to-mean
+imbalance is time-weighted (the sum of each step's slowest-worker time divided by the sum of
+its mean-worker time), not a simple average over steps.
+
+Kept as relayed:
+
+My ChatGPT (Sol Extra High) guardian chatbot said:
+
+```
+No. I don't think Astra Max's NO-GO endangers the Ultra investigation at all. In fact, I'm glad we're running both.
+
+They are answering different questions.
+
+Astra Max asked: Is there one sufficiently credible optimization to justify implementing another constructor?
+
+Its answer was NO-GO. The proposed fused group-completion optimization might remove 40–50 instructions per completion, but Max couldn't justify the roughly 6.6 ns saving per event needed to clear the completion target.
+
+Astra Ultra is asking something more ambitious: How much unnecessary machine-level work remains across the entire constructor, and what happens when we systematically eliminate it?
+
+Ultra could reach the same NO-GO conclusion. But it could also identify several independent savings that collectively matter, even though none would justify a prototype alone.
+
+That distinction is central to what you wanted.
+
+### One thing I would correct immediately
+
+Claude caught a genuine analytical mistake in the workload partition. Tiny blocks matter far less than we thought.
+
+The registered threshold is 899,000 rows, not exactly 900,000. With that definition, all-full steps account for approximately 98.2% of production's completion time, while genuinely short-only steps account for just 0.25%.
+
+That means Ultra should concentrate on removing instructions from the large-block construction paths, especially those prominent on low-bulk-coverage blocks.
+
+Here's the correction I'd send.
+
+Important factual correction to the evidence supplied in my instruction-minimization prompt:
+
+The step-class table in Section 8 used "all-full" to mean four blocks of exactly 900,000 rows. The registered analyzer actually defines `FULL = 899_000`.
+
+Under the registered definition:
+
+- All-full steps account for approximately **98.2%** of production's warm four-worker completion time.
+- Those steps contribute approximately **0.109** of the overall **0.113** descriptive completion-ratio excess.
+- Genuinely short-only steps account for just **0.25%** of production's completion time and approximately **0.003** of the excess.
+
+Therefore, optimizing tiny-block initialization is not a credible primary route to the economic target.
+
+The aggregate CPU and completion ratios, worker-imbalance decomposition and association between bulk coverage and per-block cost remain unaffected.
+
+Please incorporate this correction into your cumulative execution-cost ledger. Focus on the substantial, frequently executed paths in large blocks.
+
+The objective remains unchanged: systematically account for and eliminate avoidable instructions, dependent operations and memory work across the **whole constructor**. Evaluate cumulative, non-overlapping savings rather than stopping after finding or rejecting one local optimization.
+
+No implementation or benchmarking is authorized.
+
+One practical caution: If Ultra is actively generating its response and sending another message would interrupt it, don't cancel the investigation. Give it this correction as a follow-up afterward and request any necessary revision.
+
+### I would preserve Ultra's independence
+
+There's one part of Claude's proposed message I would not send yet: the previous Astra instance's NO-GO verdict.
+
+Not because it's wrong, but because we deliberately started Ultra to perform an independent, deeper accounting. Telling it another instance has already rejected the strongest candidate risks anchoring its conclusions.
+
+Let Ultra independently discover which costs are removable, whether savings overlap, and how far the cumulative budget can fall.
+
+When both investigations are complete, we can compare them:
+
+- Did Ultra identify the same 40–50 removable instructions?
+- Did it discover other substantial opportunities Max overlooked?
+- Can those opportunities coexist without reintroducing work elsewhere?
+- Does their combined cost argument approach the required completion improvement?
+
+My position remains that the project is not finished simply because Max issued a NO-GO. A NO-GO on one bounded transformation is useful evidence, not proof that we've found the global or practical instruction floor.
+
+And your instinct is still the one I want driving this: keep eliminating unnecessary machine instructions, systematically, until there's nothing substantial left to eliminate.
+```
+
+and my researcher chatbot said:
+
+```
+No. I think the Ultra investigation is entirely worth continuing, and the Max NO-GO doesn't undermine its purpose. In fact, it gives us a useful hypothesis for Ultra to challenge.
+
+The two investigations are answering different questions.
+
+| Astra Max                                                                                           | Astra Ultra                                                                                                                            |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Can one specialized ordinary-group completion mechanism plausibly close the remaining economic gap? | How much unnecessary machine-level work remains across the entire constructor, and what is the cumulative opportunity to eliminate it? |
+| Conclusion: insufficient evidence to justify that individual optimization.                          | Still investigating the practical execution-cost floor.                                                                                |
+
+Max's conclusion is reasonable within its scope. But it has not proved that v2 is near the minimum possible construction cost.
+
+#### Why I wouldn't accept NO-GO as the final answer yet
+
+Max identified several concrete inefficiencies:
+
+- Approximately 143 instructions around a common ordinary scalar rollover, including `refill` and `finish`.
+- A redundant pointer read in the 12-instruction scalar path, executed across roughly 38 million scalar rows.
+- Repeated group-level dispatch and descriptor reconstruction.
+- Approximately 1.72 million normalizations that read and rewrite record fields.
+- Additional bookkeeping and initialization work.
+
+These are real optimization opportunities, even though we don't know their runtime contributions.
+
+Max's estimated requirement of 6.64 ns saved per fast ordinary finish is particularly useful. It tells us how demanding one proposed optimization would be.
+
+But it is not a lower bound on what the constructor can achieve through several compatible transformations.
+
+Ultra was specifically asked to explore those transformations, account for their combined effects without double-counting, and establish which costs are unavoidable.
+
+That is a more fundamental investigation.
+
+#### One thing I'd do differently from Claude's suggestion
+
+I would send Ultra the factual correction, but not tell it that another Astra instance has already recommended NO-GO.
+
+We deliberately started a fresh Ultra session to obtain an independent examination. Introducing another model's conclusion prematurely creates an unnecessary risk of anchoring.
+
+Ultra should arrive at GO or NO-GO from its own cost ledger.
+
+Here is exactly what I'd send:
+
+**Correction to the supplied capture analysis — please incorporate this into your ongoing investigation.**
+
+The step-class partition in Section 8 of my prompt used an incorrect definition of a full block: exactly 900,000 rows.
+
+The registered analyzer actually uses `FULL = 899_000`.
+
+Under that registered definition:
+
+- All-full steps account for approximately 98.2% of production's warm four-worker completion time and approximately 0.109 of the observed 0.113 completion excess.
+- Genuinely short-only steps account for approximately 0.25% of production's completion time and approximately 0.003 of the excess.
+- Therefore, optimizing tiny-block initialization or fixed per-block overhead cannot explain or eliminate a substantial fraction of the observed completion disadvantage.
+
+The aggregate construction ratios, per-worker imbalance factors and association with bulk-emitter coverage remain unchanged.
+
+**Please use the corrected partition throughout your analysis and prioritize expensive large blocks and critical-path workers.**
+
+One further emphasis: your objective is still the cumulative practical instruction-cost floor, not whether any one local optimization can independently close the remaining gap.
+
+Evaluate compatible eliminations together, subtract their added costs, prevent double-counting and determine whether the combined machine-level opportunity is sufficient.
+
+Do not let an initially disappointing individual optimization end the broader investigation prematurely. Equally, do not manufacture additive savings or a favorable conclusion.
+
+Please continue the original assignment unchanged in all other respects.
+
+#### What I'm most interested in from Ultra
+
+I want to see whether it can establish a credible whole-constructor instruction budget.
+
+For instance, if ordinary-group completion is expensive, descriptor updates are unnecessarily dependent, and finalization repeats work that could be avoided, there may be an opportunity to change several parts of the same computation coherently.
+
+Alternatively, it might establish that these costs cannot be eliminated simultaneously, or that eliminating them increases memory traffic enough to cancel the benefit.
+
+Either conclusion would be valuable.
+
+And there's an important distinction between saying:
+
+“I cannot justify expecting this optimization to save 6.6 ns per event.”
+
+and saying:
+
+“No plausible combination of transformations can remove enough critical-path work to make this constructor viable.”
+
+Max established the former, not the latter.
+
+Ultra has been tasked with investigating the latter.
+
+So my recommendation is straightforward: send the correction, keep Ultra independent, and let it complete the investigation.
+
+We have a genuinely useful NO-GO assessment for one candidate. We do not yet have a demonstrated execution-cost floor for compact30 construction.
+```
+
+
+```
+I agree with the guardian here. In fact, our assessments have converged almost completely.
+
+I'd use the guardian's correction verbatim. It's concise, technically specific, and doesn't introduce Astra Max's NO-GO conclusion into the independent Ultra investigation.
+
+The guardian also makes one practical point I should have emphasized: don't interrupt Ultra if it's already generating its report. The correction can be supplied afterward, with a request to revisit any affected analysis.
+
+What I particularly like is that the guardian preserves three distinctions:
+
+- Max's NO-GO is a judgment about one bounded optimization, not a proof that the constructor has reached its practical execution-cost floor.
+- Ultra's job is cumulative elimination, including investigating whether several changes can coexist without double-counting savings.
+- The corrected block classification changes our priorities, directing attention away from tiny-block overhead and toward the large-block paths that dominate construction completion.
+
+There's one further point I'd keep in mind when Ultra returns.
+
+We shouldn't require Ultra to demonstrate a convincing runtime improvement purely from assembly inspection. That may be impossible without measurement, particularly when memory stalls and multicore contention are involved.
+
+What I want Ultra to establish is whether there's enough demonstrably removable machine-level work to justify another bounded correctness-and-compilation prototype, with precise criteria for rejecting it if the compiler doesn't produce the expected improvement.
+
+That's a demanding but achievable research objective.
+
+And I would not let the 6.6 ns per-finish estimate become an artificial constraint. It's a useful calculation for Max's proposed optimization, not a requirement that every alternative must save time through ordinary finishes.
+
+So I'd leave Ultra to complete its investigation. Send the factual correction afterward if necessary, preserve its independence, and then compare both reports critically.
+
+We have a credible NO-GO for one idea, but we haven't established that the larger instruction-minimization campaign has run out of worthwhile opportunities.
+```
