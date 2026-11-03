@@ -1,0 +1,320 @@
+random-1 -1: permille 0, extra starts false: 1 blocks (0 segmented), 1 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 0 (moved 0)
+random-1 -1: permille 0, extra starts true: 1 blocks (0 segmented), 1 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 0 (moved 0)
+random-1 -1: permille 50, extra starts true: 1 blocks (0 segmented), 1 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 0 (moved 0)
+random-1 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 1 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-1 -9: permille 0, extra starts false: 1 blocks (0 segmented), 1 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 0 (moved 0)
+random-1 -9: permille 0, extra starts true: 1 blocks (0 segmented), 1 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 0 (moved 0)
+random-1 -9: permille 50, extra starts true: 1 blocks (0 segmented), 1 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 0 (moved 0)
+random-1 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 1 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-2 -1: permille 0, extra starts false: 1 blocks (0 segmented), 2 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-2 -1: permille 0, extra starts true: 1 blocks (0 segmented), 2 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-2 -1: permille 50, extra starts true: 1 blocks (0 segmented), 2 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-2 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 2 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-2 -9: permille 0, extra starts false: 1 blocks (0 segmented), 2 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-2 -9: permille 0, extra starts true: 1 blocks (0 segmented), 2 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-2 -9: permille 50, extra starts true: 1 blocks (0 segmented), 2 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-2 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 2 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-3 -1: permille 0, extra starts false: 1 blocks (0 segmented), 3 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-3 -1: permille 0, extra starts true: 1 blocks (0 segmented), 3 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-3 -1: permille 50, extra starts true: 1 blocks (0 segmented), 3 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-3 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 3 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-3 -9: permille 0, extra starts false: 1 blocks (0 segmented), 3 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-3 -9: permille 0, extra starts true: 1 blocks (0 segmented), 3 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-3 -9: permille 50, extra starts true: 1 blocks (0 segmented), 3 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-3 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 3 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-29 -1: permille 0, extra starts false: 1 blocks (0 segmented), 29 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-29 -1: permille 0, extra starts true: 1 blocks (0 segmented), 29 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-29 -1: permille 50, extra starts true: 1 blocks (0 segmented), 29 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-29 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 29 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-29 -9: permille 0, extra starts false: 1 blocks (0 segmented), 29 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-29 -9: permille 0, extra starts true: 1 blocks (0 segmented), 29 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-29 -9: permille 50, extra starts true: 1 blocks (0 segmented), 29 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-29 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 29 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-30 -1: permille 0, extra starts false: 1 blocks (0 segmented), 30 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-30 -1: permille 0, extra starts true: 1 blocks (0 segmented), 30 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-30 -1: permille 50, extra starts true: 1 blocks (0 segmented), 30 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-30 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 30 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-30 -9: permille 0, extra starts false: 1 blocks (0 segmented), 30 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-30 -9: permille 0, extra starts true: 1 blocks (0 segmented), 30 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-30 -9: permille 50, extra starts true: 1 blocks (0 segmented), 30 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-30 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 30 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-31 -1: permille 0, extra starts false: 1 blocks (0 segmented), 31 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-31 -1: permille 0, extra starts true: 1 blocks (0 segmented), 31 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-31 -1: permille 50, extra starts true: 1 blocks (0 segmented), 31 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-31 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 31 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-31 -9: permille 0, extra starts false: 1 blocks (0 segmented), 31 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-31 -9: permille 0, extra starts true: 1 blocks (0 segmented), 31 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-31 -9: permille 50, extra starts true: 1 blocks (0 segmented), 31 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1 (moved 0)
+random-31 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 31 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-59 -1: permille 0, extra starts false: 1 blocks (0 segmented), 59 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-59 -1: permille 0, extra starts true: 1 blocks (0 segmented), 59 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-59 -1: permille 50, extra starts true: 1 blocks (0 segmented), 59 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-59 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 59 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-59 -9: permille 0, extra starts false: 1 blocks (0 segmented), 59 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-59 -9: permille 0, extra starts true: 1 blocks (0 segmented), 59 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-59 -9: permille 50, extra starts true: 1 blocks (0 segmented), 59 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-59 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 59 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-60 -1: permille 0, extra starts false: 1 blocks (0 segmented), 60 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-60 -1: permille 0, extra starts true: 1 blocks (0 segmented), 60 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-60 -1: permille 50, extra starts true: 1 blocks (0 segmented), 60 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-60 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 60 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-60 -9: permille 0, extra starts false: 1 blocks (0 segmented), 60 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-60 -9: permille 0, extra starts true: 1 blocks (0 segmented), 60 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-60 -9: permille 50, extra starts true: 1 blocks (0 segmented), 60 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-60 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 60 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-61 -1: permille 0, extra starts false: 1 blocks (0 segmented), 61 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-61 -1: permille 0, extra starts true: 1 blocks (0 segmented), 61 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-61 -1: permille 50, extra starts true: 1 blocks (0 segmented), 61 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-61 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 61 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 3 (moved 0)
+random-61 -9: permille 0, extra starts false: 1 blocks (0 segmented), 61 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-61 -9: permille 0, extra starts true: 1 blocks (0 segmented), 61 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-61 -9: permille 50, extra starts true: 1 blocks (0 segmented), 61 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2 (moved 0)
+random-61 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 61 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 3 (moved 0)
+random-1000 -1: permille 0, extra starts false: 1 blocks (0 segmented), 1000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 34 (moved 0)
+random-1000 -1: permille 0, extra starts true: 1 blocks (0 segmented), 1000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 34 (moved 0)
+random-1000 -1: permille 50, extra starts true: 1 blocks (0 segmented), 1000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 34 (moved 0)
+random-1000 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 1000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 34 (moved 0)
+random-1000 -9: permille 0, extra starts false: 1 blocks (0 segmented), 1000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 34 (moved 0)
+random-1000 -9: permille 0, extra starts true: 1 blocks (0 segmented), 1000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 34 (moved 0)
+random-1000 -9: permille 50, extra starts true: 1 blocks (0 segmented), 1000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 34 (moved 0)
+random-1000 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 1000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 34 (moved 0)
+random-65535 -1: permille 0, extra starts false: 1 blocks (0 segmented), 65535 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 246 (moved 0)
+random-65535 -1: permille 0, extra starts true: 1 blocks (0 segmented), 65535 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 246 (moved 0)
+random-65535 -1: permille 50, extra starts true: 1 blocks (0 segmented), 65535 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 323 (moved 319)
+random-65535 -1: permille 1000, extra starts true: 1 blocks (0 segmented), 65535 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2185 (moved 2177)
+random-65535 -9: permille 0, extra starts false: 1 blocks (0 segmented), 65535 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 246 (moved 0)
+random-65535 -9: permille 0, extra starts true: 1 blocks (0 segmented), 65535 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 246 (moved 0)
+random-65535 -9: permille 50, extra starts true: 1 blocks (0 segmented), 65535 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 323 (moved 319)
+random-65535 -9: permille 1000, extra starts true: 1 blocks (0 segmented), 65535 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2185 (moved 2177)
+random-65536 -1: permille 0, extra starts false: 1 blocks (1 segmented), 65536 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 252 (moved 0)
+random-65536 -1: permille 0, extra starts true: 1 blocks (1 segmented), 65536 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 252 (moved 0)
+random-65536 -1: permille 50, extra starts true: 1 blocks (1 segmented), 65536 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 346 (moved 342)
+random-65536 -1: permille 1000, extra starts true: 1 blocks (1 segmented), 65536 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2185 (moved 2177)
+random-65536 -9: permille 0, extra starts false: 1 blocks (1 segmented), 65536 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 252 (moved 0)
+random-65536 -9: permille 0, extra starts true: 1 blocks (1 segmented), 65536 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 252 (moved 0)
+random-65536 -9: permille 50, extra starts true: 1 blocks (1 segmented), 65536 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 346 (moved 342)
+random-65536 -9: permille 1000, extra starts true: 1 blocks (1 segmented), 65536 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2185 (moved 2177)
+random-65537 -1: permille 0, extra starts false: 1 blocks (1 segmented), 65537 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 247 (moved 0)
+random-65537 -1: permille 0, extra starts true: 1 blocks (1 segmented), 65537 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 247 (moved 0)
+random-65537 -1: permille 50, extra starts true: 1 blocks (1 segmented), 65537 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 344 (moved 343)
+random-65537 -1: permille 1000, extra starts true: 1 blocks (1 segmented), 65537 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2185 (moved 2176)
+random-65537 -9: permille 0, extra starts false: 1 blocks (1 segmented), 65537 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 247 (moved 0)
+random-65537 -9: permille 0, extra starts true: 1 blocks (1 segmented), 65537 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 247 (moved 0)
+random-65537 -9: permille 50, extra starts true: 1 blocks (1 segmented), 65537 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 344 (moved 343)
+random-65537 -9: permille 1000, extra starts true: 1 blocks (1 segmented), 65537 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2185 (moved 2176)
+random-99999 -1: permille 0, extra starts false: 2 blocks (1 segmented), 99999 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 247 (moved 0)
+random-99999 -1: permille 0, extra starts true: 2 blocks (1 segmented), 99999 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 247 (moved 0)
+random-99999 -1: permille 50, extra starts true: 2 blocks (1 segmented), 99999 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 402 (moved 401)
+random-99999 -1: permille 1000, extra starts true: 2 blocks (1 segmented), 99999 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 3334 (moved 3308)
+random-99999 -9: permille 0, extra starts false: 1 blocks (1 segmented), 99999 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 246 (moved 0)
+random-99999 -9: permille 0, extra starts true: 1 blocks (1 segmented), 99999 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 246 (moved 0)
+random-99999 -9: permille 50, extra starts true: 1 blocks (1 segmented), 99999 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 402 (moved 400)
+random-99999 -9: permille 1000, extra starts true: 1 blocks (1 segmented), 99999 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 3334 (moved 3321)
+random-300000 -1: permille 0, extra starts false: 4 blocks (3 segmented), 300000 rows: 8 array comparisons, 12 walk outputs, 8 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 741 (moved 0)
+random-300000 -1: permille 0, extra starts true: 4 blocks (3 segmented), 300000 rows: 8 array comparisons, 12 walk outputs, 8 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 741 (moved 0)
+random-300000 -1: permille 50, extra starts true: 4 blocks (3 segmented), 300000 rows: 8 array comparisons, 12 walk outputs, 8 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1204 (moved 1202)
+random-300000 -1: permille 1000, extra starts true: 4 blocks (3 segmented), 300000 rows: 8 array comparisons, 12 walk outputs, 8 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 10001 (moved 9960)
+random-300000 -9: permille 0, extra starts false: 1 blocks (1 segmented), 300000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 245 (moved 0)
+random-300000 -9: permille 0, extra starts true: 1 blocks (1 segmented), 300000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 245 (moved 0)
+random-300000 -9: permille 50, extra starts true: 1 blocks (1 segmented), 300000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 703 (moved 700)
+random-300000 -9: permille 1000, extra starts true: 1 blocks (1 segmented), 300000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 10000 (moved 9923)
+random-899990 -1: permille 0, extra starts false: 10 blocks (9 segmented), 899990 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2222 (moved 0)
+random-899990 -1: permille 0, extra starts true: 10 blocks (9 segmented), 899990 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 2222 (moved 0)
+random-899990 -1: permille 50, extra starts true: 10 blocks (9 segmented), 899990 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 3616 (moved 3610)
+random-899990 -1: permille 1000, extra starts true: 10 blocks (9 segmented), 899990 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 30003 (moved 29880)
+random-899990 -9: permille 0, extra starts false: 2 blocks (1 segmented), 899990 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 249 (moved 0)
+random-899990 -9: permille 0, extra starts true: 2 blocks (1 segmented), 899990 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 249 (moved 0)
+random-899990 -9: permille 50, extra starts true: 2 blocks (1 segmented), 899990 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 1684 (moved 1677)
+random-899990 -9: permille 1000, extra starts true: 2 blocks (1 segmented), 899990 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.00%, one-row 100.00%; runs 0, promotions 0, RAW 30001 (moved 29881)
+zeros-200k -1: permille 0, extra starts false: 1 blocks (0 segmented), 3925 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 97.83%, fragment 1.63%, one-row 0.54%; runs 2, promotions 0, RAW 1 (moved 0)
+zeros-200k -1: permille 0, extra starts true: 1 blocks (0 segmented), 3925 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 97.83%, fragment 1.63%, one-row 0.54%; runs 2, promotions 0, RAW 1 (moved 0)
+zeros-200k -1: permille 50, extra starts true: 1 blocks (0 segmented), 3925 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 87.90%, fragment 1.63%, one-row 0.54%; runs 2, promotions 0, RAW 14 (moved 12)
+zeros-200k -1: permille 1000, extra starts true: 1 blocks (0 segmented), 3925 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 1.63%, one-row 0.54%; runs 2, promotions 0, RAW 131 (moved 105)
+zeros-200k -9: permille 0, extra starts false: 1 blocks (0 segmented), 3925 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 97.83%, fragment 1.63%, one-row 0.54%; runs 2, promotions 0, RAW 1 (moved 0)
+zeros-200k -9: permille 0, extra starts true: 1 blocks (0 segmented), 3925 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 97.83%, fragment 1.63%, one-row 0.54%; runs 2, promotions 0, RAW 1 (moved 0)
+zeros-200k -9: permille 50, extra starts true: 1 blocks (0 segmented), 3925 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 87.90%, fragment 1.63%, one-row 0.54%; runs 2, promotions 0, RAW 14 (moved 12)
+zeros-200k -9: permille 1000, extra starts true: 1 blocks (0 segmented), 3925 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 1.63%, one-row 0.54%; runs 2, promotions 0, RAW 131 (moved 105)
+ab-600k -1: permille 0, extra starts false: 7 blocks (6 segmented), 600000 rows: 14 array comparisons, 21 walk outputs, 14 restorations exact; complete 99.88%, fragment 0.09%, one-row 0.03%; runs 14, promotions 0, RAW 7 (moved 0)
+ab-600k -1: permille 0, extra starts true: 7 blocks (6 segmented), 600000 rows: 14 array comparisons, 21 walk outputs, 14 restorations exact; complete 99.88%, fragment 0.09%, one-row 0.03%; runs 14, promotions 0, RAW 7 (moved 0)
+ab-600k -1: permille 50, extra starts true: 7 blocks (6 segmented), 600000 rows: 14 array comparisons, 21 walk outputs, 14 restorations exact; complete 94.89%, fragment 0.09%, one-row 0.03%; runs 14, promotions 0, RAW 1003 (moved 486)
+ab-600k -1: permille 1000, extra starts true: 7 blocks (6 segmented), 600000 rows: 14 array comparisons, 21 walk outputs, 14 restorations exact; complete 0.00%, fragment 0.09%, one-row 0.03%; runs 14, promotions 0, RAW 20002 (moved 10004)
+ab-600k -9: permille 0, extra starts false: 1 blocks (1 segmented), 600000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 100.00%, fragment 0.00%, one-row 0.00%; runs 2, promotions 0, RAW 0 (moved 0)
+ab-600k -9: permille 0, extra starts true: 1 blocks (1 segmented), 600000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 100.00%, fragment 0.00%, one-row 0.00%; runs 2, promotions 0, RAW 0 (moved 0)
+ab-600k -9: permille 50, extra starts true: 1 blocks (1 segmented), 600000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 95.05%, fragment 0.00%, one-row 0.00%; runs 2, promotions 0, RAW 991 (moved 0)
+ab-600k -9: permille 1000, extra starts true: 1 blocks (1 segmented), 600000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.00%, one-row 0.00%; runs 2, promotions 0, RAW 20000 (moved 0)
+abc-1.2M -1: permille 0, extra starts false: 13 blocks (12 segmented), 1200000 rows: 26 array comparisons, 39 walk outputs, 26 restorations exact; complete 99.88%, fragment 0.07%, one-row 0.05%; runs 39, promotions 0, RAW 26 (moved 0)
+abc-1.2M -1: permille 0, extra starts true: 13 blocks (12 segmented), 1200000 rows: 26 array comparisons, 39 walk outputs, 26 restorations exact; complete 99.88%, fragment 0.07%, one-row 0.05%; runs 39, promotions 0, RAW 26 (moved 0)
+abc-1.2M -1: permille 50, extra starts true: 13 blocks (12 segmented), 1200000 rows: 26 array comparisons, 39 walk outputs, 26 restorations exact; complete 94.90%, fragment 0.07%, one-row 0.05%; runs 39, promotions 0, RAW 2018 (moved 1248)
+abc-1.2M -1: permille 1000, extra starts true: 13 blocks (12 segmented), 1200000 rows: 26 array comparisons, 39 walk outputs, 26 restorations exact; complete 0.00%, fragment 0.07%, one-row 0.05%; runs 39, promotions 0, RAW 40004 (moved 26670)
+abc-1.2M -9: permille 0, extra starts false: 2 blocks (2 segmented), 1200000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 99.98%, fragment 0.02%, one-row 0.01%; runs 6, promotions 1, RAW 5 (moved 0)
+abc-1.2M -9: permille 0, extra starts true: 2 blocks (2 segmented), 1200000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 99.98%, fragment 0.02%, one-row 0.01%; runs 6, promotions 1, RAW 5 (moved 0)
+abc-1.2M -9: permille 50, extra starts true: 2 blocks (2 segmented), 1200000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 95.21%, fragment 0.02%, one-row 0.01%; runs 6, promotions 1, RAW 1913 (moved 1285)
+abc-1.2M -9: permille 1000, extra starts true: 2 blocks (2 segmented), 1200000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.02%, one-row 0.01%; runs 6, promotions 0, RAW 40001 (moved 26668)
+period7-700k -1: permille 0, extra starts false: 8 blocks (7 segmented), 700000 rows: 16 array comparisons, 24 walk outputs, 16 restorations exact; complete 99.69%, fragment 0.19%, one-row 0.12%; runs 51, promotions 0, RAW 46 (moved 0)
+period7-700k -1: permille 0, extra starts true: 8 blocks (7 segmented), 700000 rows: 16 array comparisons, 24 walk outputs, 16 restorations exact; complete 99.69%, fragment 0.19%, one-row 0.12%; runs 51, promotions 0, RAW 46 (moved 0)
+period7-700k -1: permille 50, extra starts true: 8 blocks (7 segmented), 700000 rows: 16 array comparisons, 24 walk outputs, 16 restorations exact; complete 94.71%, fragment 0.19%, one-row 0.12%; runs 51, promotions 0, RAW 1208 (moved 1036)
+period7-700k -1: permille 1000, extra starts true: 8 blocks (7 segmented), 700000 rows: 16 array comparisons, 24 walk outputs, 16 restorations exact; complete 0.00%, fragment 0.19%, one-row 0.12%; runs 51, promotions 0, RAW 23336 (moved 19999)
+period7-700k -9: permille 0, extra starts false: 1 blocks (1 segmented), 700000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 99.98%, fragment 0.02%, one-row 0.00%; runs 7, promotions 0, RAW 4 (moved 0)
+period7-700k -9: permille 0, extra starts true: 1 blocks (1 segmented), 700000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 99.98%, fragment 0.02%, one-row 0.00%; runs 7, promotions 0, RAW 4 (moved 0)
+period7-700k -9: permille 50, extra starts true: 1 blocks (1 segmented), 700000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 95.02%, fragment 0.02%, one-row 0.00%; runs 7, promotions 0, RAW 1161 (moved 848)
+period7-700k -9: permille 1000, extra starts true: 1 blocks (1 segmented), 700000 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 0.02%, one-row 0.00%; runs 7, promotions 0, RAW 23334 (moved 16667)
+period30-900k -1: permille 0, extra starts false: 10 blocks (9 segmented), 900000 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 98.68%, fragment 0.84%, one-row 0.48%; runs 270, promotions 1, RAW 252 (moved 10)
+period30-900k -1: permille 0, extra starts true: 10 blocks (9 segmented), 900000 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 98.68%, fragment 0.84%, one-row 0.48%; runs 270, promotions 1, RAW 252 (moved 10)
+period30-900k -1: permille 50, extra starts true: 10 blocks (9 segmented), 900000 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 93.78%, fragment 0.84%, one-row 0.48%; runs 270, promotions 1, RAW 1728 (moved 1693)
+period30-900k -1: permille 1000, extra starts true: 10 blocks (9 segmented), 900000 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 0.00%, fragment 0.84%, one-row 0.48%; runs 270, promotions 0, RAW 30003 (moved 28998)
+period30-900k -9: permille 0, extra starts false: 2 blocks (1 segmented), 900000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 99.87%, fragment 0.10%, one-row 0.04%; runs 30, promotions 1, RAW 20 (moved 19)
+period30-900k -9: permille 0, extra starts true: 2 blocks (1 segmented), 900000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 99.87%, fragment 0.10%, one-row 0.04%; runs 30, promotions 1, RAW 20 (moved 19)
+period30-900k -9: permille 50, extra starts true: 2 blocks (1 segmented), 900000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 95.05%, fragment 0.10%, one-row 0.04%; runs 30, promotions 1, RAW 1465 (moved 1410)
+period30-900k -9: permille 1000, extra starts true: 2 blocks (1 segmented), 900000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.10%, one-row 0.04%; runs 30, promotions 0, RAW 30001 (moved 29000)
+period31-900k -1: permille 0, extra starts false: 10 blocks (9 segmented), 900000 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 98.57%, fragment 0.94%, one-row 0.49%; runs 279, promotions 0, RAW 231 (moved 0)
+period31-900k -1: permille 0, extra starts true: 10 blocks (9 segmented), 900000 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 98.57%, fragment 0.94%, one-row 0.49%; runs 279, promotions 0, RAW 231 (moved 0)
+period31-900k -1: permille 50, extra starts true: 10 blocks (9 segmented), 900000 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 93.68%, fragment 0.94%, one-row 0.49%; runs 279, promotions 0, RAW 1710 (moved 1677)
+period31-900k -1: permille 1000, extra starts true: 10 blocks (9 segmented), 900000 rows: 20 array comparisons, 30 walk outputs, 20 restorations exact; complete 0.00%, fragment 0.94%, one-row 0.49%; runs 279, promotions 0, RAW 30003 (moved 29034)
+period31-900k -9: permille 0, extra starts false: 2 blocks (1 segmented), 900000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 99.86%, fragment 0.10%, one-row 0.04%; runs 31, promotions 0, RAW 30 (moved 0)
+period31-900k -9: permille 0, extra starts true: 2 blocks (1 segmented), 900000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 99.86%, fragment 0.10%, one-row 0.04%; runs 31, promotions 0, RAW 30 (moved 0)
+period31-900k -9: permille 50, extra starts true: 2 blocks (1 segmented), 900000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 95.05%, fragment 0.10%, one-row 0.04%; runs 31, promotions 0, RAW 1475 (moved 1424)
+period31-900k -9: permille 1000, extra starts true: 2 blocks (1 segmented), 900000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 0.10%, one-row 0.04%; runs 31, promotions 0, RAW 30001 (moved 29032)
+allbytes-1M -1: permille 0, extra starts false: 11 blocks (10 segmented), 1000000 rows: 22 array comparisons, 33 walk outputs, 22 restorations exact; complete 88.82%, fragment 7.36%, one-row 3.82%; runs 2560, promotions 0, RAW 2257 (moved 0)
+allbytes-1M -1: permille 0, extra starts true: 11 blocks (10 segmented), 1000000 rows: 22 array comparisons, 33 walk outputs, 22 restorations exact; complete 88.82%, fragment 7.36%, one-row 3.82%; runs 2560, promotions 0, RAW 2257 (moved 0)
+allbytes-1M -1: permille 50, extra starts true: 11 blocks (10 segmented), 1000000 rows: 22 array comparisons, 33 walk outputs, 22 restorations exact; complete 84.39%, fragment 7.36%, one-row 3.82%; runs 2560, promotions 0, RAW 3797 (moved 3790)
+allbytes-1M -1: permille 1000, extra starts true: 11 blocks (10 segmented), 1000000 rows: 22 array comparisons, 33 walk outputs, 22 restorations exact; complete 0.00%, fragment 7.36%, one-row 3.82%; runs 2560, promotions 0, RAW 33337 (moved 33200)
+allbytes-1M -9: permille 0, extra starts false: 2 blocks (2 segmented), 1000000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 97.75%, fragment 1.53%, one-row 0.72%; runs 512, promotions 1, RAW 478 (moved 116)
+allbytes-1M -9: permille 0, extra starts true: 2 blocks (2 segmented), 1000000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 97.75%, fragment 1.53%, one-row 0.72%; runs 512, promotions 1, RAW 478 (moved 116)
+allbytes-1M -9: permille 50, extra starts true: 2 blocks (2 segmented), 1000000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 92.91%, fragment 1.53%, one-row 0.72%; runs 512, promotions 1, RAW 2107 (moved 2099)
+allbytes-1M -9: permille 1000, extra starts true: 2 blocks (2 segmented), 1000000 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 1.53%, one-row 0.72%; runs 512, promotions 0, RAW 33334 (moved 33204)
+runs-1.2M -1: permille 0, extra starts false: 1 blocks (0 segmented), 24278 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 87.24%, fragment 5.82%, one-row 6.94%; runs 47, promotions 0, RAW 38 (moved 0)
+runs-1.2M -1: permille 0, extra starts true: 1 blocks (0 segmented), 24278 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 87.24%, fragment 5.82%, one-row 6.94%; runs 47, promotions 0, RAW 38 (moved 0)
+runs-1.2M -1: permille 50, extra starts true: 1 blocks (0 segmented), 24278 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 82.54%, fragment 5.82%, one-row 6.94%; runs 47, promotions 0, RAW 80 (moved 72)
+runs-1.2M -1: permille 1000, extra starts true: 1 blocks (0 segmented), 24278 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 5.82%, one-row 6.94%; runs 47, promotions 0, RAW 810 (moved 651)
+runs-1.2M -9: permille 0, extra starts false: 1 blocks (0 segmented), 24278 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 87.24%, fragment 5.82%, one-row 6.94%; runs 47, promotions 0, RAW 38 (moved 0)
+runs-1.2M -9: permille 0, extra starts true: 1 blocks (0 segmented), 24278 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 87.24%, fragment 5.82%, one-row 6.94%; runs 47, promotions 0, RAW 38 (moved 0)
+runs-1.2M -9: permille 50, extra starts true: 1 blocks (0 segmented), 24278 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 82.54%, fragment 5.82%, one-row 6.94%; runs 47, promotions 0, RAW 80 (moved 72)
+runs-1.2M -9: permille 1000, extra starts true: 1 blocks (0 segmented), 24278 rows: 2 array comparisons, 3 walk outputs, 2 restorations exact; complete 0.00%, fragment 5.82%, one-row 6.94%; runs 47, promotions 0, RAW 810 (moved 651)
+few-1M -1: permille 0, extra starts false: 11 blocks (10 segmented), 999886 rows: 22 array comparisons, 33 walk outputs, 22 restorations exact; complete 24.24%, fragment 1.87%, one-row 73.89%; runs 941, promotions 0, RAW 98 (moved 0)
+few-1M -1: permille 0, extra starts true: 11 blocks (10 segmented), 999886 rows: 22 array comparisons, 33 walk outputs, 22 restorations exact; complete 24.24%, fragment 1.87%, one-row 73.89%; runs 941, promotions 0, RAW 98 (moved 0)
+few-1M -1: permille 50, extra starts true: 11 blocks (10 segmented), 999886 rows: 22 array comparisons, 33 walk outputs, 22 restorations exact; complete 22.90%, fragment 1.87%, one-row 73.89%; runs 941, promotions 0, RAW 1746 (moved 923)
+few-1M -1: permille 1000, extra starts true: 11 blocks (10 segmented), 999886 rows: 22 array comparisons, 33 walk outputs, 22 restorations exact; complete 0.00%, fragment 1.87%, one-row 73.89%; runs 941, promotions 0, RAW 33333 (moved 17730)
+few-1M -9: permille 0, extra starts false: 2 blocks (2 segmented), 999886 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 24.89%, fragment 1.60%, one-row 73.51%; runs 882, promotions 12, RAW 34 (moved 19)
+few-1M -9: permille 0, extra starts true: 2 blocks (2 segmented), 999886 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 24.89%, fragment 1.60%, one-row 73.51%; runs 882, promotions 12, RAW 34 (moved 19)
+few-1M -9: permille 50, extra starts true: 2 blocks (2 segmented), 999886 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 23.66%, fragment 1.60%, one-row 73.51%; runs 882, promotions 11, RAW 1726 (moved 1647)
+few-1M -9: permille 1000, extra starts true: 2 blocks (2 segmented), 999886 rows: 4 array comparisons, 6 walk outputs, 4 restorations exact; complete 0.00%, fragment 1.60%, one-row 73.51%; runs 882, promotions 0, RAW 33331 (moved 17727)
+
+the natural configuration (permille 0):
+
+| input | blocks | rows | complete | fragment | one-row | runs | run rows | wide promotions | reconstructed | RAW groups | moved | cycles |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| random-1 -1 | 1 | 1 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 0 | 0 | 0 |
+| random-1 -9 | 1 | 1 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 0 | 0 | 0 |
+| random-2 -1 | 1 | 2 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-2 -9 | 1 | 2 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-3 -1 | 1 | 3 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-3 -9 | 1 | 3 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-29 -1 | 1 | 29 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-29 -9 | 1 | 29 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-30 -1 | 1 | 30 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-30 -9 | 1 | 30 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-31 -1 | 1 | 31 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-31 -9 | 1 | 31 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-59 -1 | 1 | 59 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-59 -9 | 1 | 59 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-60 -1 | 1 | 60 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-60 -9 | 1 | 60 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-61 -1 | 1 | 61 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-61 -9 | 1 | 61 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-1000 -1 | 1 | 1000 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 34 | 0 | 0 |
+| random-1000 -9 | 1 | 1000 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 34 | 0 | 0 |
+| random-65535 -1 | 1 | 65535 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 246 | 0 | 0 |
+| random-65535 -9 | 1 | 65535 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 246 | 0 | 0 |
+| random-65536 -1 | 1 | 65536 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 252 | 0 | 0 |
+| random-65536 -9 | 1 | 65536 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 252 | 0 | 0 |
+| random-65537 -1 | 1 | 65537 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 247 | 0 | 0 |
+| random-65537 -9 | 1 | 65537 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 247 | 0 | 0 |
+| random-99999 -1 | 2 | 99999 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 247 | 0 | 0 |
+| random-99999 -9 | 1 | 99999 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 246 | 0 | 0 |
+| random-300000 -1 | 4 | 300000 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 741 | 0 | 0 |
+| random-300000 -9 | 1 | 300000 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 245 | 0 | 0 |
+| random-899990 -1 | 10 | 899990 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2222 | 0 | 0 |
+| random-899990 -9 | 2 | 899990 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 249 | 0 | 0 |
+| zeros-200k -1 | 1 | 3925 | 97.834% | 1.631% | 0.535% | 2 | 99.465% | 0 | 0 | 1 | 0 | 0 |
+| zeros-200k -9 | 1 | 3925 | 97.834% | 1.631% | 0.535% | 2 | 99.465% | 0 | 0 | 1 | 0 | 0 |
+| ab-600k -1 | 7 | 600000 | 99.875% | 0.093% | 0.032% | 14 | 99.968% | 0 | 0 | 7 | 0 | 0 |
+| ab-600k -9 | 1 | 600000 | 100.000% | 0.000% | 0.000% | 2 | 100.000% | 0 | 0 | 0 | 0 | 0 |
+| abc-1.2M -1 | 13 | 1200000 | 99.877% | 0.074% | 0.048% | 39 | 99.952% | 0 | 0 | 26 | 0 | 0 |
+| abc-1.2M -9 | 2 | 1200000 | 99.978% | 0.016% | 0.007% | 6 | 99.993% | 1 | 18 | 5 | 0 | 0 |
+| period7-700k -1 | 8 | 700000 | 99.690% | 0.187% | 0.123% | 51 | 99.877% | 0 | 0 | 46 | 0 | 0 |
+| period7-700k -9 | 1 | 700000 | 99.981% | 0.019% | 0.000% | 7 | 100.000% | 0 | 0 | 4 | 0 | 0 |
+| period30-900k -1 | 10 | 900000 | 98.683% | 0.840% | 0.476% | 270 | 99.524% | 1 | 1 | 252 | 10 | 1 |
+| period30-900k -9 | 2 | 900000 | 99.867% | 0.098% | 0.036% | 30 | 99.964% | 1 | 1 | 20 | 19 | 1 |
+| period31-900k -1 | 10 | 900000 | 98.573% | 0.941% | 0.485% | 279 | 99.515% | 0 | 0 | 231 | 0 | 0 |
+| period31-900k -9 | 2 | 900000 | 99.863% | 0.098% | 0.039% | 31 | 99.961% | 0 | 0 | 30 | 0 | 0 |
+| allbytes-1M -1 | 11 | 1000000 | 88.821% | 7.361% | 3.818% | 2560 | 96.182% | 0 | 0 | 2257 | 0 | 0 |
+| allbytes-1M -9 | 2 | 1000000 | 97.752% | 1.530% | 0.718% | 512 | 99.282% | 1 | 1 | 478 | 116 | 1 |
+| runs-1.2M -1 | 1 | 24278 | 87.239% | 5.816% | 6.945% | 47 | 93.055% | 0 | 0 | 38 | 0 | 0 |
+| runs-1.2M -9 | 1 | 24278 | 87.239% | 5.816% | 6.945% | 47 | 93.055% | 0 | 0 | 38 | 0 | 0 |
+| few-1M -1 | 11 | 999886 | 24.243% | 1.871% | 73.887% | 941 | 26.113% | 0 | 0 | 98 | 0 | 0 |
+| few-1M -9 | 2 | 999886 | 24.888% | 1.605% | 73.507% | 882 | 26.493% | 12 | 187 | 34 | 19 | 3 |
+| **total** | 132 | 15651924 | 70.120% | 0.942% | 28.938% | 5722 | 71.062% | 16 | 208 | 9096 | 164 | 6 |
+
+run-length histogram, all inputs (natural): bins (upper bound) [16, 32, 48, 64, 128, 256, 512, 1024, 4096, 65536]
+runs [1425, 196, 29, 9, 20, 78, 2841, 62, 870, 176, 16]
+rows [22800, 6272, 1392, 576, 1728, 18112, 1067424, 45792, 2847168, 4526864, 2584464]
+complete-record rows [0, 420, 510, 330, 1050, 15870, 984990, 43890, 2821890, 4522050, 2584110]
+
+the forced configuration (permille 1000):
+
+| input | blocks | rows | complete | fragment | one-row | runs | run rows | wide promotions | reconstructed | RAW groups | moved | cycles |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| random-1 -1 | 1 | 1 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-1 -9 | 1 | 1 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-2 -1 | 1 | 2 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-2 -9 | 1 | 2 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-3 -1 | 1 | 3 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-3 -9 | 1 | 3 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-29 -1 | 1 | 29 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-29 -9 | 1 | 29 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-30 -1 | 1 | 30 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-30 -9 | 1 | 30 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 1 | 0 | 0 |
+| random-31 -1 | 1 | 31 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-31 -9 | 1 | 31 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-59 -1 | 1 | 59 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-59 -9 | 1 | 59 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-60 -1 | 1 | 60 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-60 -9 | 1 | 60 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2 | 0 | 0 |
+| random-61 -1 | 1 | 61 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 3 | 0 | 0 |
+| random-61 -9 | 1 | 61 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 3 | 0 | 0 |
+| random-1000 -1 | 1 | 1000 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 34 | 0 | 0 |
+| random-1000 -9 | 1 | 1000 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 34 | 0 | 0 |
+| random-65535 -1 | 1 | 65535 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2185 | 2177 | 5 |
+| random-65535 -9 | 1 | 65535 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2185 | 2177 | 5 |
+| random-65536 -1 | 1 | 65536 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2185 | 2177 | 4 |
+| random-65536 -9 | 1 | 65536 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2185 | 2177 | 4 |
+| random-65537 -1 | 1 | 65537 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2185 | 2176 | 6 |
+| random-65537 -9 | 1 | 65537 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 2185 | 2176 | 6 |
+| random-99999 -1 | 2 | 99999 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 3334 | 3308 | 6 |
+| random-99999 -9 | 1 | 99999 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 3334 | 3321 | 5 |
+| random-300000 -1 | 4 | 300000 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 10001 | 9960 | 30 |
+| random-300000 -9 | 1 | 300000 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 10000 | 9923 | 6 |
+| random-899990 -1 | 10 | 899990 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 30003 | 29880 | 55 |
+| random-899990 -9 | 2 | 899990 | 0.000% | 0.000% | 100.000% | 0 | 0.000% | 0 | 0 | 30001 | 29881 | 8 |
+| zeros-200k -1 | 1 | 3925 | 0.000% | 1.631% | 0.535% | 2 | 99.465% | 0 | 0 | 131 | 105 | 1 |
+| zeros-200k -9 | 1 | 3925 | 0.000% | 1.631% | 0.535% | 2 | 99.465% | 0 | 0 | 131 | 105 | 1 |
+| ab-600k -1 | 7 | 600000 | 0.000% | 0.093% | 0.032% | 14 | 99.968% | 0 | 0 | 20002 | 10004 | 7 |
+| ab-600k -9 | 1 | 600000 | 0.000% | 0.000% | 0.000% | 2 | 100.000% | 0 | 0 | 20000 | 0 | 0 |
+| abc-1.2M -1 | 13 | 1200000 | 0.000% | 0.074% | 0.048% | 39 | 99.952% | 0 | 0 | 40004 | 26670 | 26 |
+| abc-1.2M -9 | 2 | 1200000 | 0.000% | 0.016% | 0.007% | 6 | 99.993% | 0 | 0 | 40001 | 26668 | 2 |
+| period7-700k -1 | 8 | 700000 | 0.000% | 0.187% | 0.123% | 51 | 99.877% | 0 | 0 | 23336 | 19999 | 14 |
+| period7-700k -9 | 1 | 700000 | 0.000% | 0.019% | 0.000% | 7 | 100.000% | 0 | 0 | 23334 | 16667 | 3 |
+| period30-900k -1 | 10 | 900000 | 0.000% | 0.840% | 0.476% | 270 | 99.524% | 0 | 0 | 30003 | 28998 | 32 |
+| period30-900k -9 | 2 | 900000 | 0.000% | 0.098% | 0.036% | 30 | 99.964% | 0 | 0 | 30001 | 29000 | 1 |
+| period31-900k -1 | 10 | 900000 | 0.000% | 0.941% | 0.485% | 279 | 99.515% | 0 | 0 | 30003 | 29034 | 37 |
+| period31-900k -9 | 2 | 900000 | 0.000% | 0.098% | 0.039% | 31 | 99.961% | 0 | 0 | 30001 | 29032 | 3 |
+| allbytes-1M -1 | 11 | 1000000 | 0.000% | 7.361% | 3.818% | 2560 | 96.182% | 0 | 0 | 33337 | 33200 | 60 |
+| allbytes-1M -9 | 2 | 1000000 | 0.000% | 1.530% | 0.718% | 512 | 99.282% | 0 | 0 | 33334 | 33204 | 11 |
+| runs-1.2M -1 | 1 | 24278 | 0.000% | 5.816% | 6.945% | 47 | 93.055% | 0 | 0 | 810 | 651 | 2 |
+| runs-1.2M -9 | 1 | 24278 | 0.000% | 5.816% | 6.945% | 47 | 93.055% | 0 | 0 | 810 | 651 | 2 |
+| few-1M -1 | 11 | 999886 | 0.000% | 1.871% | 73.887% | 941 | 26.113% | 0 | 0 | 33333 | 17730 | 33 |
+| few-1M -9 | 2 | 999886 | 0.000% | 1.605% | 73.507% | 882 | 26.493% | 0 | 0 | 33331 | 17727 | 4 |
+| **total** | 132 | 15651924 | 0.000% | 0.942% | 28.938% | 5722 | 71.062% | 0 | 0 | 521781 | 418778 | 379 |
+
+totals (natural): {"blocks":132,"rows":15651924,"rows_complete":10975110,"rows_complete_raw":0,"rows_fragment":147482,"rows_fragment_raw":58258,"rows_scalar":4529332,"rows_scalar_raw":214134,"runs":5722,"run_rows":11122592,"run_bins_upper":[16,32,48,64,128,256,512,1024,4096,65536,null],"run_hist":[1425, 196, 29, 9, 20, 78, 2841, 62, 870, 176, 16],"run_hist_rows":[22800, 6272, 1392, 576, 1728, 18112, 1067424, 45792, 2847168, 4526864, 2584464],"run_hist_complete_rows":[0, 420, 510, 330, 1050, 15870, 984990, 43890, 2821890, 4522050, 2584110],"complete_groups":365837,"complete_batches":4103,"prefix_fragments":5505,"suffix_fragments":4888,"wide_promotions":16,"promotions_partway":0,"reconstructed_fields":208,"raw_crossing_created":9080,"raw_forced_created":0,"raw_groups":9096,"raw_moved":164,"raw_cycles":6,"raw_max_cycle":116,"max_rec_req":30001,"max_rec_cap":30001,"max_raw_req":3839,"max_raw_cap":3839,"max_raw_len":252,"max_bitmap_cap":469,"rec_allocs":75,"raw_allocs":76,"raw_overflows":0,"max_rec_usable_bytes":1920072,"max_raw_usable_bytes":491400}
+exit 0

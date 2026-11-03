@@ -1,0 +1,14 @@
+ctor-synthetic: small blocks, n 0..=130: 520 cases exact
+ctor-synthetic: bucket boundary at every offset: 270 cases exact
+ctor-synthetic: source phase x destination slot x run length: 36 cases exact
+ctor-synthetic: equal-run lengths 1..=200: 44 cases exact
+ctor-synthetic: repeated construction with changing sizes: 14 cases exact
+ctor-synthetic: malformed counts: 40 rejected, 0 accepted (counts equal to ll's own after the change)
+ctor-synthetic: malformed counts and sizes: 40 cases exact
+ctor-synthetic: canonical ordering: 55 groups moved in 17 cycles, all in exact order, every padding word zero
+ctor-synthetic: RAW canonical ordering, independently: 18 cases exact
+ctor-synthetic coverage: complete-group source phases 7/30; run fragments (start slot, length), ordinary 55/71 reachable (55 shapes seen), RAW 62/71 reachable (62 seen); one-row slots ordinary 30/30, RAW 30/30; promotion prefix lengths through a fragment 0/29, through one row 0/29; partway promotions 0
+ctor-synthetic: reachable fragments not covered: ordinary [(0, 5), (0, 8), (0, 11), (16, 14), (17, 13), (19, 11), (20, 10), (21, 9), (22, 8), (23, 7), (24, 6), (25, 5), (26, 4), (27, 3), (28, 2), (29, 1)], RAW [(0, 19), (0, 21), (0, 22), (0, 23), (0, 25), (0, 26), (0, 27), (0, 28), (0, 29)]
+ctor-synthetic: 942 cases, 1748 array comparisons, 2622 walk outputs, 1748 restorations: every check exact (quick)
+ctor-synthetic counters: {"blocks":874,"rows":38052,"rows_complete":6270,"rows_complete_raw":60,"rows_fragment":11974,"rows_fragment_raw":4918,"rows_scalar":19748,"rows_scalar_raw":11809,"runs":692,"run_rows":18304,"run_bins_upper":[16,32,48,64,128,256,512,1024,4096,65536,null],"run_hist":[377, 191, 118, 4, 1, 1, 0, 0, 0, 0, 0],"run_hist_rows":[6032, 6112, 5664, 256, 80, 160, 0, 0, 0, 0, 0],"run_hist_complete_rows":[0, 3300, 2610, 180, 60, 120, 0, 0, 0, 0, 0],"complete_groups":209,"complete_batches":202,"prefix_fragments":336,"suffix_fragments":530,"wide_promotions":0,"promotions_partway":0,"reconstructed_fields":0,"raw_crossing_created":607,"raw_forced_created":8,"raw_groups":615,"raw_moved":6,"raw_cycles":3,"raw_max_cycle":2,"max_rec_req":8,"max_rec_cap":8,"max_raw_req":5,"max_raw_cap":5,"max_raw_len":5,"max_bitmap_cap":4,"rec_allocs":7,"raw_allocs":5,"raw_overflows":0,"max_rec_usable_bytes":520,"max_raw_usable_bytes":648}
+exit 0
