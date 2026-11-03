@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=f0ebc4c075d2">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=90c494e243a8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=f0ebc4c075d2">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=90c494e243a8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=f0ebc4c075d2">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=90c494e243a8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=f0ebc4c075d2">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=90c494e243a8">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=f0ebc4c075d2">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=90c494e243a8">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1177,10 +1177,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-spending-less-memory-indexf-and-the-trees" class="md-nav__link">
+  <a href="#3-spending-less-memory-indexf-and-the-count-trees" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. Spending less memory: indexF and the trees
+        3. Spending less memory: indexF and the count trees
       </span>
     </span>
   </a>
@@ -1188,10 +1188,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-what-seward-measured" class="md-nav__link">
+  <a href="#4-the-spacetime-tradeoff" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. What Seward measured
+        4. The space–time tradeoff
       </span>
     </span>
   </a>
@@ -1199,10 +1199,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-the-same-tradeoff-with-four-blocks-live" class="md-nav__link">
+  <a href="#5-four-blocks-sharing-one-cache" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. The same tradeoff, with four blocks live
+        5. Four blocks sharing one cache
       </span>
     </span>
   </a>
@@ -1221,10 +1221,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-the-four-worker-reversal" class="md-nav__link">
+  <a href="#7-timing-the-walk-on-one-core-and-on-four" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7. The four-worker reversal
+        7. Timing the walk on one core and on four
       </span>
     </span>
   </a>
@@ -1699,10 +1699,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-spending-less-memory-indexf-and-the-trees" class="md-nav__link">
+  <a href="#3-spending-less-memory-indexf-and-the-count-trees" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        3. Spending less memory: indexF and the trees
+        3. Spending less memory: indexF and the count trees
       </span>
     </span>
   </a>
@@ -1710,10 +1710,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-what-seward-measured" class="md-nav__link">
+  <a href="#4-the-spacetime-tradeoff" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        4. What Seward measured
+        4. The space–time tradeoff
       </span>
     </span>
   </a>
@@ -1721,10 +1721,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#5-the-same-tradeoff-with-four-blocks-live" class="md-nav__link">
+  <a href="#5-four-blocks-sharing-one-cache" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        5. The same tradeoff, with four blocks live
+        5. Four blocks sharing one cache
       </span>
     </span>
   </a>
@@ -1743,10 +1743,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-the-four-worker-reversal" class="md-nav__link">
+  <a href="#7-timing-the-walk-on-one-core-and-on-four" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7. The four-worker reversal
+        7. Timing the walk on one core and on four
       </span>
     </span>
   </a>
@@ -1813,7 +1813,7 @@
 instructions but less memory traffic. Twenty-five years later, that observation led us to
 ask whether a smaller navigation table could do more work per step and still come out ahead
 under contention. A first measurement of ours shows it doing so.</p>
-<p class="post-meta">2 November 2026 · 23 min read · <a href="#7-the-four-worker-reversal">Result</a></p>
+<p class="post-meta">2 November 2026 · 23 min read · <a href="#7-timing-the-walk-on-one-core-and-on-four">Result</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
@@ -1855,16 +1855,16 @@ decoder.</p>
 <ol>
 <li><a href="#1-from-sorted-rotations-to-the-transformation-vector"><span class="rm-n">1</span><span class="rm-text"><span class="rm-t">From sorted rotations to the transformation vector</span><span class="rm-d">How a decoder gets <code>banana</code> back: a chain of lookups, each depending on the last</span></span></a></li>
 <li><a href="#2-making-inversion-fast-basis-bw94-and-mergedtl"><span class="rm-n">2</span><span class="rm-text"><span class="rm-t">Making inversion fast: basis, bw94 and mergedTL</span><span class="rm-d">Keeping the byte and the link in one word</span></span></a></li>
-<li><a href="#3-spending-less-memory-indexf-and-the-trees"><span class="rm-n">3</span><span class="rm-text"><span class="rm-t">Spending less memory: indexF and the trees</span><span class="rm-d">Recomputing what the fast algorithms store</span></span></a></li>
-<li><a href="#4-what-seward-measured"><span class="rm-n">4</span><span class="rm-text"><span class="rm-t">What Seward measured</span><span class="rm-d">Memory against speed: the space–time tradeoff</span></span></a></li>
+<li><a href="#3-spending-less-memory-indexf-and-the-count-trees"><span class="rm-n">3</span><span class="rm-text"><span class="rm-t">Spending less memory: indexF and the count trees</span><span class="rm-d">Recomputing what the fast algorithms store</span></span></a></li>
+<li><a href="#4-the-spacetime-tradeoff"><span class="rm-n">4</span><span class="rm-text"><span class="rm-t">The space–time tradeoff</span><span class="rm-d">Seward's measurements of memory against speed</span></span></a></li>
 </ol>
 </div>
 <div class="rm-half">
 <p class="post-roadmap-part">mibz2, 2026</p>
 <ol class="rm-ours">
-<li><a href="#5-the-same-tradeoff-with-four-blocks-live"><span class="rm-n">5</span><span class="rm-text"><span class="rm-t">The same tradeoff, with four blocks live</span><span class="rm-d">Why it changes when blocks decode at once and share a cache</span></span></a></li>
+<li><a href="#5-four-blocks-sharing-one-cache"><span class="rm-n">5</span><span class="rm-text"><span class="rm-t">Four blocks sharing one cache</span><span class="rm-d">Why Seward's tradeoff changes when blocks decode at once</span></span></a></li>
 <li><a href="#6-a-smaller-table-a-busier-lookup"><span class="rm-n">6</span><span class="rm-text"><span class="rm-t">A smaller table, a busier lookup</span><span class="rm-d">A little over half the space, more work per lookup</span></span></a></li>
-<li><a href="#7-the-four-worker-reversal"><span class="rm-n">7</span><span class="rm-text"><span class="rm-t">The four-worker reversal</span><span class="rm-d">The walk alone: slower on one core, faster on four</span></span></a></li>
+<li><a href="#7-timing-the-walk-on-one-core-and-on-four"><span class="rm-n">7</span><span class="rm-text"><span class="rm-t">Timing the walk on one core and on four</span><span class="rm-d">The walk alone: slower on one core, faster on four</span></span></a></li>
 <li><a href="#8-four-workers-cost-the-conventional-walk-far-more"><span class="rm-n">8</span><span class="rm-text"><span class="rm-t">Four workers cost the conventional walk far more</span><span class="rm-d">Why the usual table pays more for sharing the cache</span></span></a></li>
 <li><a href="#9-the-table-still-has-to-be-built"><span class="rm-n">9</span><span class="rm-text"><span class="rm-t">The table still has to be built</span><span class="rm-d">A cheap way to construct it for the decoder</span></span></a></li>
 </ol>
@@ -2084,9 +2084,27 @@ square:</p>
 <figcaption>The square of sorted rotations again, with each symbol pointing at what it names. In bzip2, N can be up to 900,000.</figcaption>
 </figure>
 
-<p>Decoding builds two more things of its own, which the rest of this section explains: <span class="arithmatex">\(C\)</span>, a
-count of each letter, and <span class="arithmatex">\(T\)</span>, which Seward calls the <em>"transformation vector"</em>. The
-decoder's whole path, from what is stored back to the word:</p>
+<p>So the decoder is given <span class="arithmatex">\(L\)</span> and <span class="arithmatex">\(I\)</span> and must produce <span class="arithmatex">\(S\)</span>. It never holds <span class="arithmatex">\(M\)</span>: the inverse
+transform recovers just enough of it, from <span class="arithmatex">\(L\)</span>, to read off row <span class="arithmatex">\(I\)</span>.</p>
+<p><strong>Why the first and last columns.</strong> Every row of <span class="arithmatex">\(M\)</span> is <span class="arithmatex">\(S\)</span> read round from some starting point,
+so in every row the last byte comes just before the first, going round <span class="arithmatex">\(S\)</span>. Row 3 ends in <code>a</code>
+and starts with <code>b</code>, and the final <code>a</code> of <code>banana</code> comes, going round, before its opening
+<code>b</code>. That is the relation the whole paper builds on: <span class="arithmatex">\(L[i]\)</span> comes just before <span class="arithmatex">\(F[i]\)</span> in <span class="arithmatex">\(S\)</span>. The
+two columns carry different information:</p>
+<ul>
+<li><strong><span class="arithmatex">\(F\)</span></strong> is the bytes of <span class="arithmatex">\(S\)</span> in sorted order, so the counts alone fix it. A decoder holding <span class="arithmatex">\(L\)</span>
+  can rebuild <span class="arithmatex">\(F\)</span> by counting, so it is never sent.</li>
+<li><strong><span class="arithmatex">\(L\)</span></strong> holds the byte that precedes each row's opening context, with the rows sorted by
+  context. Bytes before similar contexts tend to repeat (in English, <code>he</code> is often preceded
+  by <code>t</code>), so <span class="arithmatex">\(L\)</span> has long runs, which bzip2's later stages compress.</li>
+</ul>
+<p><span class="arithmatex">\(F\)</span> and <span class="arithmatex">\(L\)</span> aren't two unrelated strings, though. They are columns of the same sorted square, and
+that ties them together: each letter's occurrences come in the same order in both. The first
+<code>a</code> in <span class="arithmatex">\(L\)</span> matches the first <code>a</code> in <span class="arithmatex">\(F\)</span>, the second matches the second, and so on; why comes
+below. That matching is what the decoder
+needs and doesn't have. Seward records it in the <em>"transformation vector"</em> <span class="arithmatex">\(T\)</span>, and builds <span class="arithmatex">\(T\)</span>
+from <span class="arithmatex">\(C\)</span>, a count of each letter. The decoder's whole path, from what is stored back to the
+word:</p>
 <figure class="bf-fig">
 <p class="bf-title">What the decoder rebuilds</p>
 <svg viewBox="0 0 720 150" role="img" aria-label="What the decoder rebuilds, from left to right: counting the bytes of L gives C; expanding the counts gives F; matching each byte of L to the same occurrence in F gives T; walking T from row I gives S.">
@@ -2119,22 +2137,6 @@ decoder's whole path, from what is stored back to the word:</p>
 <figcaption>Each arrow is a step explained in the rest of this section: counting, expanding the counts into F, matching occurrences to get T, and the walk.</figcaption>
 </figure>
 
-<p>So the decoder is given <span class="arithmatex">\(L\)</span> and <span class="arithmatex">\(I\)</span> and must produce <span class="arithmatex">\(S\)</span>. It never holds <span class="arithmatex">\(M\)</span>: the inverse
-transform recovers just enough of it, from <span class="arithmatex">\(L\)</span>, to read off row <span class="arithmatex">\(I\)</span>.</p>
-<p><strong>Why the first and last columns.</strong> Every row of <span class="arithmatex">\(M\)</span> is <span class="arithmatex">\(S\)</span> read round from some starting point,
-so in every row the last byte comes just before the first, going round <span class="arithmatex">\(S\)</span>. Row 3 ends in <code>a</code>
-and starts with <code>b</code>, and the final <code>a</code> of <code>banana</code> comes, going round, before its opening
-<code>b</code>. That is the relation the whole paper builds on: <span class="arithmatex">\(L[i]\)</span> comes just before <span class="arithmatex">\(F[i]\)</span> in <span class="arithmatex">\(S\)</span>. The
-two columns carry different information:</p>
-<ul>
-<li><strong><span class="arithmatex">\(F\)</span></strong> is the bytes of <span class="arithmatex">\(S\)</span> in sorted order, so the counts alone fix it. A decoder holding <span class="arithmatex">\(L\)</span>
-  can rebuild <span class="arithmatex">\(F\)</span> by counting, so it is never sent.</li>
-<li><strong><span class="arithmatex">\(L\)</span></strong> holds the byte that precedes each row's opening context, with the rows sorted by
-  context. Bytes before similar contexts tend to repeat (in English, <code>he</code> is often preceded
-  by <code>t</code>), so <span class="arithmatex">\(L\)</span> has long runs, which bzip2's later stages compress.</li>
-</ul>
-<p>So a bzip2 block carries <span class="arithmatex">\(L\)</span>, with <span class="arithmatex">\(I\)</span> to say which row is <span class="arithmatex">\(S\)</span>, and the decoder rebuilds the order
-of <span class="arithmatex">\(S\)</span> from them with <span class="arithmatex">\(T\)</span>.</p>
 <p><strong>Defining <span class="arithmatex">\(T\)</span>.</strong> Seward's theory section is <em>"a more detailed exposition of Algorithm D in §2
 of [1]"</em>, Burrows and Wheeler's decompression algorithm, because <em>"the increased detail
 exposes a range of possible implementations"</em>. Everything rests on <em>"establishing the
@@ -2411,7 +2413,7 @@ potentially valuable"</em>. The table is also a byte a row smaller: <span class=
 needs no <span class="arithmatex">\(C[c]\)</span> addition. Its manual credits the change with a real gain: <em>"Single array
 implementation of the inverse BWT. This significantly speeds up decompression, presumably
 because it reduces the number of cache misses."</em></p>
-<h2 id="3-spending-less-memory-indexf-and-the-trees">3. Spending less memory: indexF and the trees<a class="headerlink" href="#3-spending-less-memory-indexf-and-the-trees" title="Permanent link">&para;</a></h2>
+<h2 id="3-spending-less-memory-indexf-and-the-count-trees">3. Spending less memory: indexF and the count trees<a class="headerlink" href="#3-spending-less-memory-indexf-and-the-count-trees" title="Permanent link">&para;</a></h2>
 <p><em>"Can we reduce memory use whilst retaining useful decompression speed? Interestingly, yes."</em>
 The relation in <span class="arithmatex">\(F\)</span>, <span class="arithmatex">\(F[T[i]]\)</span> precedes <span class="arithmatex">\(F[i]\)</span>, needs only <span class="arithmatex">\(T\)</span> to walk. If the decoder reads the output bytes
 from <span class="arithmatex">\(F\)</span> instead of <span class="arithmatex">\(L\)</span>, it needs <span class="arithmatex">\(L\)</span> only while it builds <span class="arithmatex">\(T\)</span>, so <span class="arithmatex">\(T\)</span> can be written over it. <span class="arithmatex">\(F\)</span> needn't
@@ -2492,7 +2494,7 @@ left child's count whenever <span class="arithmatex">\(j\)</span> lies to the ri
 <p><strong>tree</strong> stores a node in three 32-bit words. <strong>treeopt</strong> packs a node into 54 bits, two
 words, and a leaf into one, fitting nearly twice as many nodes in the same space, which
 halves the scans. With <span class="arithmatex">\(L\)</span>, tree-1M and treeopt-1M take <span class="arithmatex">\(2N\)</span> bytes and treeopt-500k <span class="arithmatex">\(1.5N\)</span>.</p>
-<h2 id="4-what-seward-measured">4. What Seward measured<a class="headerlink" href="#4-what-seward-measured" title="Permanent link">&para;</a></h2>
+<h2 id="4-the-spacetime-tradeoff">4. The space–time tradeoff<a class="headerlink" href="#4-the-spacetime-tradeoff" title="Permanent link">&para;</a></h2>
 <p>The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-level cache.
 Blocks were at most 10⁶ bytes, 1 MB, and each was inverted ten times. He tested six files of
 at least a megabyte, four of them from the <a href="https://corpus.canterbury.ac.nz/descriptions/">Canterbury
@@ -2711,7 +2713,7 @@ decompression speed much further"</em>. The paper ends on a caveat:</p>
 <p>Such observations only hold true whilst cache sizes are much smaller than block sizes.
 Future growth in cache sizes may invalidate such findings.</p>
 </blockquote>
-<h2 id="5-the-same-tradeoff-with-four-blocks-live">5. The same tradeoff, with four blocks live<a class="headerlink" href="#5-the-same-tradeoff-with-four-blocks-live" title="Permanent link">&para;</a></h2>
+<h2 id="5-four-blocks-sharing-one-cache">5. Four blocks sharing one cache<a class="headerlink" href="#5-four-blocks-sharing-one-cache" title="Permanent link">&para;</a></h2>
 <p>The K6-III's cache held 256 KB, against mergedTL's 4 MB for one block. Our workstation has a
 20 MiB last-level cache, and a full bzip2 block, up to 900,000 rows at 4 bytes each, needs a
 3.6 MB table. Read literally, the caveat has come true.</p>
@@ -2811,7 +2813,7 @@ for the other, but they are still two loads where the conventional step needs on
 has the annotated disassembly.</p>
 <p>So the question is which matters more when several cores share the machine: the extra
 instructions, or the smaller table.</p>
-<h2 id="7-the-four-worker-reversal">7. The four-worker reversal<a class="headerlink" href="#7-the-four-worker-reversal" title="Permanent link">&para;</a></h2>
+<h2 id="7-timing-the-walk-on-one-core-and-on-four">7. Timing the walk on one core and on four<a class="headerlink" href="#7-timing-the-walk-on-one-core-and-on-four" title="Permanent link">&para;</a></h2>
 <p>The comparison times two versions of the same traversal and assembly. The control walks
 mibz2's 4-byte table; compact30 walks its records with the same 32-lane walk. Every walk's
 output was checked byte for byte against the decoder's.</p>
@@ -3096,17 +3098,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=f0ebc4c075d2"></script>
+        <script src="../../assets/javascripts/bench.js?v=90c494e243a8"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=f0ebc4c075d2"></script>
+        <script src="../../assets/javascripts/couriers.js?v=90c494e243a8"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=f0ebc4c075d2"></script>
+        <script src="../../assets/javascripts/blog.js?v=90c494e243a8"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=f0ebc4c075d2"></script>
+        <script src="../../assets/javascripts/frontier.js?v=90c494e243a8"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=f0ebc4c075d2"></script>
+        <script src="../../assets/javascripts/katex.js?v=90c494e243a8"></script>
       
     
   </body>
