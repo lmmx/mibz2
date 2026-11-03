@@ -1,8 +1,9 @@
-# Compact30's direct constructor against production's build: a construction-cost protocol (draft 2)
+# Compact30's direct constructor against production's build: a construction-cost protocol (draft 3)
 
 - **Status: provisionally accepted** (report 191,
   [2026-11-03-compact30-construction-protocol-review.md](2026-11-03-compact30-construction-protocol-review.md)).
-  Draft 2 applies the guardian's eight decisions to draft 1 (`6a097d8`); §10 records them.
+  Draft 2 applies the guardian's eight decisions to draft 1 (`6a097d8`); draft 3 applies
+  the guardian's answers to draft 2's two open questions (report 192). §10 records both.
   Nothing has been timed. Nothing below is a performance figure.
 - **Not authorised:** the timing harness, any timing (local or remote), and any i9 or
   workstation run. The harness waits for the independent code review of the constructor
@@ -177,16 +178,25 @@ other eight, contribute correctness evidence only (§0); they are not part of th
   - eight workers' arenas at the largest block (four per arm);
   - the oracle's own build scratch.
 
-  On the primary corpus that is about 8.2 bytes a row, about 1.7 GB; the harness's own sum
-  is the one recorded.
-- **Free memory:** `MemAvailable` (`/proc/meminfo`) must be at least the required total plus
-  the margin in §10's open question.
+  On the primary corpus that is estimated at about 8.2 bytes a row, about 1.7 GB; the
+  harness's own sum is the one recorded. **The estimate must be verified before capture:**
+  the dry run (§9) records the capture process's actual peak RSS beside the computed sum,
+  and the preflight uses whichever is larger.
+- **Free memory:** `MemAvailable` (`/proc/meminfo`) must be at least the required total
+  plus a margin of max(2 GiB, 25% of the required total) (report 192). The required total,
+  the margin and `MemAvailable` are all recorded.
 - **No swap in use:** `SwapTotal − SwapFree` must be 0, or there is no swap.
 - **No memory pressure:** where `/proc/pressure/memory` exists, its `some avg10` and
   `full avg10` must be 0.00. If it doesn't exist, that is recorded.
+- **No swap activity:** `pswpin` and `pswpout` (`/proc/vmstat`) are recorded at the
+  preflight and after the last round; any increase between them makes the run INVALID (G9).
 - **Repeated after the last round** and recorded. Swap in use or nonzero memory pressure at
-  that point makes the run INVALID (G9). The process's major faults over the measured rounds
-  (`getrusage(RUSAGE_SELF)`) are recorded too.
+  that point makes the run INVALID (G9).
+- **Major faults inside the windows:** every measured build records its own major and minor
+  faults (§5). Any major fault in a measured build, in either regime, makes the run INVALID
+  (G10, report 192): anonymous allocation normally causes only minor faults, and a major
+  fault could put disk-I/O latency into the comparison. Minor faults are reported
+  separately and decide nothing.
 - **If the preflight fails, the run doesn't proceed.** A failure record is written and the
   recipe archives it. The corpus, the regimes and either arm's allocation policy are never
   changed to fit the machine; any such change would be a new registration.
@@ -235,10 +245,11 @@ its builds:
 | a build's CPU time | `CLOCK_THREAD_CPUTIME_ID`, the calling thread's consumed CPU | b1, b4 (§7) |
 | a build's start and end; every check window | `std::time::Instant`, monotonic | e4, the start skew, every ordering check |
 | a build's CPU identity | `sched_getcpu` before the start barrier and after the completion barrier | placement (S4) |
-| a cold build's minor faults | `getrusage(RUSAGE_THREAD)` | reported only |
+| a build's major and minor faults | `getrusage(RUSAGE_THREAD)`, `ru_majflt` and `ru_minflt` | major: G10 (any is INVALID); minor: reported only |
 
-- **The window's calls,** in order: monotonic, CPU (and rusage in the cold regime), the build,
-  then CPU (and rusage), monotonic.
+- **The window's calls,** in order: monotonic, CPU, rusage, the build, then rusage, CPU,
+  monotonic, in both regimes. The rusage calls' cost is part of the measured clock overhead
+  (G5).
 - **CPU time and completion time are separate measurements.** The CPU window lies inside the
   monotonic one, and each is recorded and reported on its own.
 
@@ -342,7 +353,8 @@ The analysis runs three stages; each runs only if the one before it passed.
 | G6 | exact output | in every round and regime, every build of both arms passed its check, run after the completion barrier, outside the window. **C:** the call returned true, and `rec` and `raw` equal the block's oracle image (`C30::build`, permille 0, built before round −1) in length and every byte. **P:** `tt` equals the block's reference T-vector in length and every byte (P's own round −1 table, accepted only after G7b) |
 | G7 | walker output and complete initialisation | round −1 only, untimed. **(a)** Before C's build, the record arena's spare capacity is filled with the 0xA5A5 poison, and the arrays must still equal the oracle's. **(b)** The unchanged walker (`C30::walk::<false>`) on C's arrays, and `walk_segments_room` on P's table, each give production's `Segmented::invert` output for the block. **(c)** C's arrays are compared with the oracle's again after the walk |
 | G8 | production's one-pass path | every block satisfies the one-pass condition (n < 2²⁴ and `counts` equal to `ll`'s histogram), checked before round −1 (§2); and C accepted every block in every round (G6) |
-| G9 | memory | the preflight passed (§3), and after the last round no swap is in use and no memory pressure is recorded |
+| G9 | memory | the preflight passed (§3), including the max(2 GiB, 25%) margin; after the last round no swap is in use and no memory pressure is recorded; and `pswpin`/`pswpout` did not increase over the run |
+| G10 | major faults | no measured build, in either arm, regime or mode, recorded a major fault inside its window (§3, §5) |
 
 **What G6 and G7 rest on:**
 - Equivalence and walker exactness were established by the prototype's suites (re-run
@@ -369,7 +381,7 @@ corpus**:
 | **PASS** | b4+ ≤ 1.06714 **and** e4+ ≤ 1.02 |
 | **FAIL** | b4− > 1.06714 **or** e4− > 1.02 |
 | **INCONCLUSIVE** | neither PASS nor FAIL. No automatic extra rounds or rerun; the guardian decides |
-| **INVALID** | any schedule (S), correctness (G6, G7, G8), identity (G3), stability (G1), calibration (G5), start (G2), allocation (G4) or memory (G9) check fails, or a failure record exists. On an S failure or a failure record no figure is computed; on a gate failure the figures are reported as an invalid run's, with no decision |
+| **INVALID** | any schedule (S), correctness (G6, G7, G8), identity (G3), stability (G1), calibration (G5), start (G2), allocation (G4), memory (G9) or major-fault (G10) check fails, or a failure record exists. On an S failure or a failure record no figure is computed; on a gate failure the figures are reported as an invalid run's, with no decision |
 
 **The two thresholds:**
 - **1.06714** is the construction CPU ceiling (§1), unchanged.
@@ -463,7 +475,7 @@ the guardian approves (§0):
 **Not authorised now:** writing the collector or the analysis, any VM dry run, and every step
 on the i9 or any workstation.
 
-## 10. The guardian's decisions (report 191), and what remains open
+## 10. The guardian's decisions (reports 191 and 192)
 
 **Decided** (report 191, on draft 1's open questions):
 
@@ -478,12 +490,20 @@ on the i9 or any workstation.
 | 7. Re-review a changed constructor? | Yes: freeze, re-review the listing and redo the suites first | §0 |
 | 8. Is the input memory acceptable? | Conditionally: record a preflight (free memory, no swap, no pressure); never change the corpus or allocation policy to fit | §3, G9 |
 
-**New open questions raised by this revision:**
-1. **The preflight's margin.** The draft requires `MemAvailable` ≥ the computed requirement
-   plus a margin, and leaves the margin's size to the guardian. A fixed 2 GB, or a fraction
-   such as 25% of the requirement, are the obvious choices.
-2. **Major faults during the measured rounds.** G9 checks swap and pressure only at the
-   preflight and the postflight. Should a nonzero count of the process's major faults during
-   the measured rounds also make the run INVALID? The draft records them without gating:
-   file-backed faults from the binary itself could make such a gate fire without real memory
-   pressure.
+**Decided** (report 192, on draft 2's open questions):
+
+| draft 2 question | decision | where applied |
+|---|---|---|
+| 1. The preflight's margin | `MemAvailable` ≥ the estimated peak plus max(2 GiB, 25% of the estimate); record the actual values and check for swap activity; verify the 1.7 GB estimate before capture | §3, §9, G9 |
+| 2. Major faults during the measured rounds | Any major fault in a measured build makes the run INVALID; minor faults are reported separately | §3, §5, G10 |
+
+Report 192, as relayed: *"Memory preflight: Require estimated peak memory plus the larger
+of 2 GiB or 25% of that estimate, using Linux `MemAvailable`. Record the actual values and
+check for swap activity. The 1.7 GB estimate must be verified before capture. Major page
+faults: Since these are recorded inside the timed construction windows, I would make any
+major fault in a measured build an INVALID condition. Anonymous allocation normally causes
+minor faults; a major fault could introduce disk-I/O latency into the comparison. Report
+minor faults separately. These are protocol decisions, not permission to implement or run
+the benchmark."*
+
+No question remains open. The harness waits for the independent code review (§0).
