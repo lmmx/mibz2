@@ -3,6 +3,9 @@
 // - .bf-chain: the pointer chain. "Follow pointer" moves from the current card to the card
 //   it names, until every card has been visited; "Reset" goes back to card 0. Without
 //   JavaScript the figure shows the whole path instead.
+// - .bf-anim-controls: replay and pause buttons under an animated figure. Pause freezes the
+//   animation where it is; replay starts it from the beginning. With reduced motion the
+//   figure starts as a still picture, and either button runs the animation on request.
 //
 // Runs on load and on each instant navigation, as bench.js does.
 (() => {
@@ -44,7 +47,45 @@
     draw();
   };
 
-  const init = () => document.querySelectorAll(".bf-chain").forEach(chain);
+  const animated = (box) => {
+    if (box.dataset.ready) return;
+    box.dataset.ready = "1";
+    const svg = box.closest("figure").querySelector(":scope > svg");
+    const toggle = box.querySelector('[data-act="toggle"]');
+    const replay = box.querySelector('[data-act="replay"]');
+    let playing = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // A reader who asks for the animation gets it, whatever their motion setting.
+    const animations = () => {
+      svg.classList.add("is-manual");
+      return svg.getAnimations({ subtree: true });
+    };
+    const draw = () => {
+      toggle.dataset.state = playing ? "playing" : "paused";
+      const label = playing ? "Pause" : "Play";
+      toggle.setAttribute("aria-label", label);
+      toggle.title = label;
+    };
+    toggle.addEventListener("click", () => {
+      playing = !playing;
+      animations().forEach((a) => (playing ? a.play() : a.pause()));
+      draw();
+    });
+    replay.addEventListener("click", () => {
+      animations().forEach((a) => {
+        a.currentTime = 0;
+        a.play();
+      });
+      playing = true;
+      draw();
+    });
+    box.hidden = false;
+    draw();
+  };
+
+  const init = () => {
+    document.querySelectorAll(".bf-chain").forEach(chain);
+    document.querySelectorAll(".bf-anim-controls").forEach(animated);
+  };
   if (window.document$ && typeof window.document$.subscribe === "function") window.document$.subscribe(init);
   else if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();

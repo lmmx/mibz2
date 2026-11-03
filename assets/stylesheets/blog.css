@@ -153,6 +153,25 @@
   font-size: 0.8rem;
 }
 .bf-chain .bf-count { color: var(--bf-muted); font-size: 0.62rem; }
+.bf-anim-controls { display: flex; justify-content: flex-end; gap: 0.3rem; margin-top: 0.3rem; }
+.bf-anim-controls[hidden] { display: none; }
+.md-typeset .bf-fig .bf-anim-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  border: 1px solid var(--bf-frame);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bf-muted);
+  cursor: pointer;
+}
+.md-typeset .bf-fig .bf-anim-btn:hover,
+.md-typeset .bf-fig .bf-anim-btn:focus-visible { color: var(--bf-ink); border-color: var(--bf-muted); }
+.md-typeset .bf-fig .bf-anim-btn svg { display: block; width: 0.75rem; height: 0.75rem; fill: currentColor; }
+.md-typeset .bf-fig .bf-anim-btn[data-state="playing"] .i-play,
+.md-typeset .bf-fig .bf-anim-btn[data-state="paused"] .i-pause { display: none; }
 .bf-chain .bf-buttons { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
 .bf-chain .bf-btn {
   padding: 0.5rem 1.1rem;
