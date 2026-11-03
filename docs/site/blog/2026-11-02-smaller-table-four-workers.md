@@ -63,22 +63,26 @@ mibz2's table on one core, faster with four.
 
 ## From sorted rotations to the transformation vector
 
-Seward takes his notation from Burrows and Wheeler's 1994 report, *[A Block-sorting Lossless
-Data Compression Algorithm](https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf)*.
-With `banana` as the block:
+Imagine bzip2 compressing the six bytes `banana`. The transform turns them into `nnbaaa` and
+the number 3, which bzip2's later stages then compress further, and decoding has to get
+`banana` back from those two. Seward's notation, which he takes from Burrows and Wheeler's
+1994 report *[A Block-sorting Lossless Data Compression
+Algorithm](https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf)*, names every
+piece:
 
-| Symbol | Meaning | For `banana` |
+| Symbol | Meaning | In the example |
 |---|---|---|
 | N | the number of bytes in the block, *"typically in the range of one million"* | 6 |
-| S | the block itself, S[0..N−1] | `banana` |
+| S | the original block, which decoding recovers | `banana` |
 | M | an N × N matrix: every rotation of S, sorted | the six rows below |
-| L | the last column of M | `nnbaaa` |
+| L | the last column of M, which bzip2 transmits | `nnbaaa` |
 | F | the first column of M | `aaabnn` |
-| I | the row of M that holds S | 3 |
+| I | the row of M that holds S, also transmitted | 3 |
 | T | the *"transformation vector"*: N integers, each in 0..N−1 | 4 5 3 0 1 2 |
 | C | 256 byte counts, or their running totals | a 3, b 1, n 2 |
 
-The decoder is given N, L and I, and must produce S.
+The decoder is given L and I, and must produce S: from `nnbaaa` and 3, it must get back to
+`banana`.
 
 <figure class="bf-fig">
 <p class="bf-title">The six rotations of banana, sorted</p>
