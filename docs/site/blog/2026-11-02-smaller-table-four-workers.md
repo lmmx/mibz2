@@ -90,143 +90,261 @@ decoder.
 
 ## 1. From sorted rotations to the transformation vector
 
-Take the word `banana` as a toy example of a block for bzip2 to compress. At the heart of
-bzip2 is the BWT, which doesn't make the block smaller. It rearranges the bytes into an order
-that bzip2's later stages compress better, and keeps one number so that the rearrangement can
-be undone.
+Start with the word `banana` and see what the Burrows–Wheeler transform does to it.
 
-The rearrangement works like this. A rotation of a string moves some bytes from its front to
-its back: `banana`, `ananab`, `nanaba` and so on, six in all. Sorting the six rotations
-alphabetically and stacking them as rows gives a square of letters:
+First, write out six versions of the word, each starting at a different letter and wrapping
+round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`,
+`nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time
+in a different order. Then sort the six rotations alphabetically and stack them as rows:
 
 <figure class="bf-fig">
 <p class="bf-title">The six rotations of banana, sorted</p>
-<svg viewBox="0 0 720 360" role="img" aria-label="The six rotations of banana, sorted into rows 0 to 5: abanan, anaban, ananab, banana, nabana, nanaba. The first column F reads a a a b n n; the last column L reads n n b a a a. Row 3 is banana itself, so I = 3. The T column reads 4, 5, 3, 0, 1, 2.">
-<text x="60" y="36" class="bf-ts" text-anchor="middle">j</text>
-<text x="139.0" y="36" class="bf-ts" text-anchor="middle">F</text>
-<text x="270.0" y="36" class="bf-tm" text-anchor="middle">the sorted rotations, M</text>
-<text x="459.0" y="36" class="bf-ts" text-anchor="middle">L</text>
-<text x="588" y="36" class="bf-ts" text-anchor="middle">T[j]</text>
-<text x="60" y="75" class="bf-t" text-anchor="middle">0</text>
-<rect x="110" y="52" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="139.0" y="75" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="174" y="52" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="203.0" y="75" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="238" y="52" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="267.0" y="75" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="302" y="52" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="331.0" y="75" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="366" y="52" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="395.0" y="75" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="430" y="52" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="459.0" y="75" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="564" y="52" width="48" height="34" rx="5" class="bf-cell"/>
-<text x="588" y="75" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">4</text>
-<text x="60" y="115" class="bf-t" text-anchor="middle">1</text>
-<rect x="110" y="92" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="139.0" y="115" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="174" y="92" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="203.0" y="115" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="238" y="92" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="267.0" y="115" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="302" y="92" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="331.0" y="115" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="366" y="92" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="395.0" y="115" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="430" y="92" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="459.0" y="115" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="564" y="92" width="48" height="34" rx="5" class="bf-cell"/>
-<text x="588" y="115" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">5</text>
-<text x="60" y="155" class="bf-t" text-anchor="middle">2</text>
-<rect x="110" y="132" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="139.0" y="155" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="174" y="132" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="203.0" y="155" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="238" y="132" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="267.0" y="155" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="302" y="132" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="331.0" y="155" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="366" y="132" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="395.0" y="155" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="430" y="132" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="459.0" y="155" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="564" y="132" width="48" height="34" rx="5" class="bf-cell"/>
-<text x="588" y="155" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">3</text>
-<text x="60" y="195" class="bf-t" text-anchor="middle">3</text>
-<rect x="110" y="172" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="139.0" y="195" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="174" y="172" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="203.0" y="195" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="238" y="172" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="267.0" y="195" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="302" y="172" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="331.0" y="195" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="366" y="172" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="395.0" y="195" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="430" y="172" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="459.0" y="195" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="564" y="172" width="48" height="34" rx="5" class="bf-cell"/>
-<text x="588" y="195" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">0</text>
-<text x="60" y="235" class="bf-t" text-anchor="middle">4</text>
-<rect x="110" y="212" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="139.0" y="235" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="174" y="212" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="203.0" y="235" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="238" y="212" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="267.0" y="235" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="302" y="212" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="331.0" y="235" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="366" y="212" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="395.0" y="235" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="430" y="212" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="459.0" y="235" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="564" y="212" width="48" height="34" rx="5" class="bf-cell"/>
-<text x="588" y="235" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">1</text>
-<text x="60" y="275" class="bf-t" text-anchor="middle">5</text>
-<rect x="110" y="252" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="139.0" y="275" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="174" y="252" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="203.0" y="275" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="238" y="252" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="267.0" y="275" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="302" y="252" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="331.0" y="275" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="366" y="252" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="395.0" y="275" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="430" y="252" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="459.0" y="275" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="564" y="252" width="48" height="34" rx="5" class="bf-cell"/>
-<text x="588" y="275" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">2</text>
-<rect x="34" y="167" width="586" height="44" rx="7" class="bf-box" style="stroke-width: 2"/>
-<text x="634" y="195" class="bf-t-strong">I = 3</text>
-<text x="34" y="314" class="bf-tm">Row 3 is banana itself. In every row, the L byte comes just before the F byte, going round the string.</text>
-<text x="34" y="334" class="bf-tm">A bzip2 block carries L = nnbaaa and I = 3, and nothing else of M; T is rebuilt from them.</text>
+<svg viewBox="0 0 720 350" role="img" aria-label="The six rotations of banana, sorted alphabetically into rows 0 to 5: abanan, anaban, ananab, banana, nabana, nanaba. The first column reads a a a b n n; the last column reads n n b a a a. Row 3 is banana itself.">
+<text x="96" y="38" class="bf-ts" text-anchor="middle">row</text>
+<text x="179.0" y="38" class="bf-ts" text-anchor="middle">first</text>
+<text x="499.0" y="38" class="bf-ts" text-anchor="middle">last</text>
+<text x="96" y="79" class="bf-t" text-anchor="middle">0</text>
+<rect x="150" y="56" width="58" height="34" rx="5" class="bf-cell-hi"/>
+<text x="179.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="214" y="56" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="243.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="278" y="56" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="307.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="342" y="56" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="371.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="406" y="56" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="435.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="470" y="56" width="58" height="34" rx="5" class="bf-slot"/>
+<text x="499.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="96" y="119" class="bf-t" text-anchor="middle">1</text>
+<rect x="150" y="96" width="58" height="34" rx="5" class="bf-cell-hi"/>
+<text x="179.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="214" y="96" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="243.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="278" y="96" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="307.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="342" y="96" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="371.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="406" y="96" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="435.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="470" y="96" width="58" height="34" rx="5" class="bf-slot"/>
+<text x="499.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="96" y="159" class="bf-t" text-anchor="middle">2</text>
+<rect x="150" y="136" width="58" height="34" rx="5" class="bf-cell-hi"/>
+<text x="179.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="214" y="136" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="243.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="278" y="136" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="307.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="342" y="136" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="371.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="406" y="136" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="435.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="470" y="136" width="58" height="34" rx="5" class="bf-slot"/>
+<text x="499.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<text x="96" y="199" class="bf-t" text-anchor="middle">3</text>
+<rect x="150" y="176" width="58" height="34" rx="5" class="bf-cell-hi"/>
+<text x="179.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="214" y="176" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="243.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="278" y="176" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="307.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="342" y="176" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="371.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="406" y="176" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="435.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="470" y="176" width="58" height="34" rx="5" class="bf-slot"/>
+<text x="499.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="96" y="239" class="bf-t" text-anchor="middle">4</text>
+<rect x="150" y="216" width="58" height="34" rx="5" class="bf-cell-hi"/>
+<text x="179.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="214" y="216" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="243.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="278" y="216" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="307.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="342" y="216" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="371.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="406" y="216" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="435.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="470" y="216" width="58" height="34" rx="5" class="bf-slot"/>
+<text x="499.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="96" y="279" class="bf-t" text-anchor="middle">5</text>
+<rect x="150" y="256" width="58" height="34" rx="5" class="bf-cell-hi"/>
+<text x="179.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="214" y="256" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="243.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="278" y="256" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="307.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="342" y="256" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="371.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="406" y="256" width="58" height="34" rx="5" class="bf-cell"/>
+<text x="435.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="470" y="256" width="58" height="34" rx="5" class="bf-slot"/>
+<text x="499.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="70" y="171" width="468" height="44" rx="7" class="bf-box" style="stroke-width: 2"/>
+<text x="554" y="199" class="bf-t-strong">the original word</text>
+<text x="554" y="279" class="bf-t-strong">nnbaaa, read down</text>
+<path d="M530 274H548" class="bf-link"/>
+<text x="70" y="318" class="bf-tm">The transform keeps the last column, nnbaaa, and the number of the row holding banana, 3.</text>
+<text x="70" y="338" class="bf-tm">Nothing else of the square is stored.</text>
 </svg>
-<figcaption>The six rotations of banana, sorted. In Seward's notation the first column, in green, is F and the last, in blue, is L; row 3, outlined, is banana itself. The T column is explained below.</figcaption>
+<figcaption>The rotations of banana in alphabetical order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.</figcaption>
 </figure>
 
-Reading down the last column gives `nnbaaa`. That column, with the number of the row where
-`banana` itself ended up, row 3, is all the BWT outputs. Decompressing undoes bzip2's stages in
-reverse order, and near the end comes the inverse transform: getting `banana` back from
-`nnbaaa` and 3, without the rest of the square.
+Read down the last column of the sorted rows, and it spells `nnbaaa`. The original `banana` is
+in row 3, counting from zero. The transform keeps just those two things, the last column and
+the row number, and stores nothing else. It doesn't make the block smaller; the reordered
+letters compress better in bzip2's later stages, for a reason that comes below.
 
-Seward's notation, which he takes from Burrows and Wheeler's 1994 report *[A Block-sorting
-Lossless Data Compression Algorithm](https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf)*,
-names each of these pieces:
+How can a decoder get `banana` back from only `nnbaaa` and 3? Each of Seward's algorithms
+answers that question in a different way.
 
-| Symbol | Meaning | In the example |
-|---|---|---|
-| $N$ | the number of bytes in the block, *"typically in the range of one million"* | 6 |
-| $S$ | the original block, which decoding recovers | `banana` |
-| $M$ | an $N \times N$ matrix: every rotation of $S$, sorted | the six rows above |
-| $L$ | the last column of $M$, which bzip2 transmits | `nnbaaa` |
-| $F$ | the first column of $M$ | `aaabnn` |
-| $I$ | the row of $M$ that holds $S$, also transmitted | 3 |
-| $T$ | the *"transformation vector"*: $N$ integers, each in $0..N-1$ | 4 5 3 0 1 2 |
-| $C$ | a count per byte value, or, as used below, where each byte's run starts in $F$ | counts a 3, b 1, n 2; starts a 0, b 3, n 4 |
+Seward names the pieces with letters, following Burrows and Wheeler's 1994 report *[A
+Block-sorting Lossless Data Compression
+Algorithm](https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf)*. On the same
+square:
 
-In these terms, the decoder is given $L$ and $I$ and must produce $S$. It never holds $M$: the
-inverse transform recovers just enough of it, from $L$, to read off row $I$.
+<figure class="bf-fig">
+<p class="bf-title">Seward's names for the pieces</p>
+<svg viewBox="0 0 720 360" role="img" aria-label="The same sorted square, labelled with Seward's symbols. M is the whole square of sorted rotations, N by N with N = 6. F is its first column, aaabnn. L is its last column, nnbaaa. S is the original block, banana, which sits in row I = 3.">
+<text x="238" y="113" class="bf-tm" text-anchor="end">0</text>
+<rect x="250" y="92" width="49" height="31" rx="4" class="bf-cell-hi"/>
+<text x="274.5" y="113" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="304" y="92" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="328.5" y="113" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="358" y="92" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="382.5" y="113" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="412" y="92" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="436.5" y="113" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="466" y="92" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="490.5" y="113" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="520" y="92" width="49" height="31" rx="4" class="bf-slot"/>
+<text x="544.5" y="113" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="238" y="149" class="bf-tm" text-anchor="end">1</text>
+<rect x="250" y="128" width="49" height="31" rx="4" class="bf-cell-hi"/>
+<text x="274.5" y="149" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="304" y="128" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="328.5" y="149" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="358" y="128" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="382.5" y="149" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="412" y="128" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="436.5" y="149" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="466" y="128" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="490.5" y="149" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="520" y="128" width="49" height="31" rx="4" class="bf-slot"/>
+<text x="544.5" y="149" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="238" y="185" class="bf-tm" text-anchor="end">2</text>
+<rect x="250" y="164" width="49" height="31" rx="4" class="bf-cell-hi"/>
+<text x="274.5" y="185" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="304" y="164" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="328.5" y="185" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="358" y="164" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="382.5" y="185" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="412" y="164" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="436.5" y="185" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="466" y="164" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="490.5" y="185" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="520" y="164" width="49" height="31" rx="4" class="bf-slot"/>
+<text x="544.5" y="185" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<text x="238" y="221" class="bf-tm" text-anchor="end">3</text>
+<rect x="250" y="200" width="49" height="31" rx="4" class="bf-cell-hi"/>
+<text x="274.5" y="221" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="304" y="200" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="328.5" y="221" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="358" y="200" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="382.5" y="221" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="412" y="200" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="436.5" y="221" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="466" y="200" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="490.5" y="221" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="520" y="200" width="49" height="31" rx="4" class="bf-slot"/>
+<text x="544.5" y="221" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="238" y="257" class="bf-tm" text-anchor="end">4</text>
+<rect x="250" y="236" width="49" height="31" rx="4" class="bf-cell-hi"/>
+<text x="274.5" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="304" y="236" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="328.5" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="358" y="236" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="382.5" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="412" y="236" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="436.5" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="466" y="236" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="490.5" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="520" y="236" width="49" height="31" rx="4" class="bf-slot"/>
+<text x="544.5" y="257" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="238" y="293" class="bf-tm" text-anchor="end">5</text>
+<rect x="250" y="272" width="49" height="31" rx="4" class="bf-cell-hi"/>
+<text x="274.5" y="293" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="304" y="272" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="328.5" y="293" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="358" y="272" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="382.5" y="293" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="412" y="272" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="436.5" y="293" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="466" y="272" width="49" height="31" rx="4" class="bf-cell"/>
+<text x="490.5" y="293" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="520" y="272" width="49" height="31" rx="4" class="bf-slot"/>
+<text x="544.5" y="293" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="246" y="196" width="327" height="39" rx="6" class="bf-box" style="stroke-width: 2"/>
+<text x="274.5" y="34" class="bf-t-strong" text-anchor="middle" style="font-style: italic; font-size: 20px">F</text>
+<text x="274.5" y="54" class="bf-tm" text-anchor="middle">first column: aaabnn</text>
+<path d="M274.5 61V88" class="bf-link"/>
+<text x="544.5" y="34" class="bf-t-strong" text-anchor="middle" style="font-style: italic; font-size: 20px">L</text>
+<text x="544.5" y="54" class="bf-tm" text-anchor="middle">last column: nnbaaa</text>
+<path d="M544.5 61V88" class="bf-link"/>
+<path d="M224 92H216V303H224" class="bf-link"/>
+<text x="204" y="168" class="bf-t-strong" text-anchor="end" style="font-style: italic; font-size: 20px">M</text>
+<text x="204" y="190" class="bf-tm" text-anchor="end">every rotation of S,</text>
+<text x="204" y="207" class="bf-tm" text-anchor="end">sorted: N × N</text>
+<text x="204" y="224" class="bf-tm" text-anchor="end">letters, N = 6</text>
+<path d="M576 214H604" class="bf-link"/>
+<text x="612" y="208" class="bf-t-strong" style="font-style: italic; font-size: 20px">S</text>
+<text x="632" y="208" class="bf-tm">the block: banana</text>
+<text x="612" y="232" class="bf-t-strong" style="font-style: italic; font-size: 20px">I</text>
+<text x="632" y="232" class="bf-tm">its row: 3</text>
+<text x="204" y="334" class="bf-tm">Stored by bzip2: L and I. Everything else here, the decoder has to work out.</text>
+</svg>
+<figcaption>The square of sorted rotations again, with each symbol pointing at what it names. In bzip2, N can be up to 900,000.</figcaption>
+</figure>
+
+Decoding builds two more things of its own, which the rest of this section explains: $C$, a
+count of each letter, and $T$, which Seward calls the *"transformation vector"*. The
+decoder's whole path, from what is stored back to the word:
+
+<figure class="bf-fig">
+<p class="bf-title">What the decoder rebuilds</p>
+<svg viewBox="0 0 720 150" role="img" aria-label="What the decoder rebuilds, from left to right: counting the bytes of L gives C; expanding the counts gives F; matching each byte of L to the same occurrence in F gives T; walking T from row I gives S.">
+<rect x="10" y="30" width="100" height="52" rx="6" class="bf-slot"/>
+<text x="60.0" y="51" class="bf-t-strong" text-anchor="middle" style="font-style: italic">L</text>
+<text x="60.0" y="70" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 13px">nnbaaa</text>
+<rect x="155" y="30" width="100" height="52" rx="6" class="bf-cell"/>
+<text x="205.0" y="51" class="bf-t-strong" text-anchor="middle" style="font-style: italic">C</text>
+<text x="205.0" y="70" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 13px">a3 b1 n2</text>
+<rect x="300" y="30" width="100" height="52" rx="6" class="bf-cell-hi"/>
+<text x="350.0" y="51" class="bf-t-strong" text-anchor="middle" style="font-style: italic">F</text>
+<text x="350.0" y="70" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 13px">aaabnn</text>
+<rect x="445" y="30" width="100" height="52" rx="6" class="bf-cell"/>
+<text x="495.0" y="51" class="bf-t-strong" text-anchor="middle" style="font-style: italic">T</text>
+<text x="495.0" y="70" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 13px">4 5 3 0 1 2</text>
+<rect x="590" y="30" width="120" height="52" rx="6" class="bf-cell"/>
+<text x="650.0" y="51" class="bf-t-strong" text-anchor="middle" style="font-style: italic">S</text>
+<text x="650.0" y="70" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 13px">banana</text>
+<path d="M112 56L152 56M145 51L152 56L145 61" class="bf-link"/>
+<text x="132.0" y="44" class="bf-tm" text-anchor="middle">count</text>
+<path d="M257 56L297 56M290 51L297 56L290 61" class="bf-link"/>
+<text x="277.0" y="44" class="bf-tm" text-anchor="middle">expand</text>
+<path d="M402 56L442 56M435 51L442 56L435 61" class="bf-link"/>
+<text x="422.0" y="44" class="bf-tm" text-anchor="middle">match</text>
+<path d="M547 56L587 56M580 51L587 56L580 61" class="bf-link"/>
+<text x="567.0" y="44" class="bf-tm" text-anchor="middle">walk</text>
+<path d="M60 82V104H495V84M490 91L495 84L500 91" class="bf-link" style="stroke-dasharray: 4 3"/>
+<text x="282" y="122" class="bf-tm" text-anchor="middle">L is used again to match each byte to its occurrence in F; the walk starts at row I = 3</text>
+</svg>
+<figcaption>Each arrow is a step explained in the rest of this section: counting, expanding the counts into F, matching occurrences to get T, and the walk.</figcaption>
+</figure>
+
+So the decoder is given $L$ and $I$ and must produce $S$. It never holds $M$: the inverse
+transform recovers just enough of it, from $L$, to read off row $I$.
 
 **Why the first and last columns.** Every row of $M$ is $S$ read round from some starting point,
 so in every row the last byte comes just before the first, going round $S$. Row 3 ends in `a`
@@ -422,7 +540,9 @@ $L[0..j]$ and $L[j] = c$, then $T[j]$ must be $i$, where $i$ is the position of 
 <figcaption>The k-th a in L goes to the k-th a in F, and likewise for n and b: T = 4 5 3 0 1 2, from counts and one scan.</figcaption>
 </figure>
 
-The $c$'s in $F$ form one bucket, starting at $C[c]$, the number of bytes smaller than $c$, so
+The $c$'s in $F$ form one bucket. Turning the counts in $C$ into running totals gives where each
+bucket starts: $C[c]$ becomes the number of bytes smaller than $c$ (for `banana`, a 0, b 3,
+n 4). So
 
 \[
 T[j] = C[c] + k - 1, \qquad c = L[j],
