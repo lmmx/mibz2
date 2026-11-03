@@ -2,7 +2,6 @@
 //! thread or block-parallel; and `scan`, the blocks of a .bz2 in memory without decoding
 //! them past their Huffman symbols (for a caller that splits the work itself).
 
-use crate::parallel::Plan;
 use crate::stream::{Event, Scanner, SliceSource, Source};
 use crate::{decode_block, Error, ErrorKind, Kernels, Scratch, StreamDecoder};
 use std::io::{self, Read};
@@ -81,27 +80,16 @@ impl<R: Read> BzReader<R> {
 }
 
 impl<R: Read + Send + 'static> BzReader<R> {
-    /// Decode on `threads` threads (at least 1), with at most 2 x `threads` blocks in
-    /// flight, spent as `StreamDecoder::new` plans them (a block a worker, or teams of 2
-    /// sharing each block on 6 or more physical cores: `Plan::for_threads`)
+    /// Decode on `threads` worker threads (at least 1), with at most 2 x `threads` blocks
+    /// in flight
     pub fn parallel(r: R, threads: usize) -> Self {
         Self::parallel_with(r, threads, 2 * threads.max(1), Kernels::detect())
     }
 
-    /// `parallel`, with the blocks in flight (`slots`, at least `threads`; scaled to the
-    /// teams where it plans teams) and the kernels given
-    pub fn parallel_with(r: R, threads: usize, slots: usize, kernels: Kernels) -> Self {
-        Self::on(r, StreamDecoder::new(threads, slots, kernels))
-    }
-
-    /// Decode as `plan` says (production's workers, or cooperative teams: `Plan`), with
-    /// `slots` blocks in flight and the kernels given
-    pub fn parallel_planned(r: R, plan: Plan, slots: usize, kernels: Kernels) -> Self {
-        Self::on(r, StreamDecoder::planned(plan, slots, kernels))
-    }
-
-    fn on(mut r: R, dec: StreamDecoder) -> Self {
-        let dec = Arc::new(dec);
+    /// `parallel`, with the blocks in flight (`slots`, at least `threads`) and the
+    /// kernels given
+    pub fn parallel_with(mut r: R, threads: usize, slots: usize, kernels: Kernels) -> Self {
+        let dec = Arc::new(StreamDecoder::new(threads, slots, kernels));
         let read_error = Arc::new(Mutex::new(None));
         let (d, e) = (dec.clone(), read_error.clone());
         let feeder = std::thread::Builder::new()

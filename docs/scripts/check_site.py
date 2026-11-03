@@ -6,17 +6,10 @@
 - Every page under docs/site/ is in the nav of zensical.toml, and every nav entry exists.
 - Every internal link, image and stylesheet in the built site (default: site/) resolves to
   a file of the build, with its #anchor present, as served under the base path of
-  site_url (/mibz2/ on GitHub Pages). This includes the absolute URLs of the link-preview
-  tags (og:image, og:url, twitter:image), so a social card that names a missing image fails.
+  site_url (/mibz2/ on GitHub Pages).
 - Every nav page has a front-matter description, and is listed once in the llmstxt sections
   of zensical.toml with that same description; the built site has llms.txt, llms-full.txt
   and the page's Markdown copy, and no Markdown copy of any other page.
-- Blog posts: a post's front-matter description (the text of its link previews, llms.txt
-  and social card) is its dek, word for word; its H1 is its front-matter title; and its card
-  on the blog index repeats that title and dek.
-- Social cards: every card image exists and was drawn from the text its page has now, as
-  recorded in assets/social/cards.json by social_cards.py (rerun it after changing a
-  post's title, description or date).
 - API coverage: every public module of python/mibz2/ has a reference page with its `:::`
   directive, and every name in each public module's `__all__` (read statically with ast)
   is documented: the built reference has an anchor for it, under that module or, for a
@@ -27,9 +20,6 @@ Exits with 1 and lists every problem found.
 
 import argparse
 import ast
-import html
-import importlib.util
-import json
 import re
 import sys
 import tomllib
@@ -51,12 +41,8 @@ def nav_pages(nav):
                 yield from nav_pages([value] if isinstance(value, str) else value)
 
 
-# Link-preview tags whose content is a URL on the site: the card image and the page itself.
-PREVIEW_URLS = {"og:image", "og:url", "twitter:image"}
-
-
 class Links(HTMLParser):
-    """Collect an HTML page's link targets (including link-preview URLs) and its element ids."""
+    """Collect an HTML page's link targets and its element ids."""
 
     def __init__(self):
         super().__init__()
@@ -69,9 +55,6 @@ class Links(HTMLParser):
             self.ids.add(attrs["id"])
         if tag == "a" and attrs.get("name"):
             self.ids.add(attrs["name"])
-        if tag == "meta" and (attrs.get("property") or attrs.get("name")) in PREVIEW_URLS:
-            if attrs.get("content"):
-                self.links.append(attrs["content"])
         for key in ("href", "src"):
             value = attrs.get(key)
             if value and not (tag == "link" and attrs.get("rel") in ("preconnect", "dns-prefetch")):
@@ -167,76 +150,6 @@ def check_llms(config, site, problems):
             problems.append(f"Markdown copy of a page not in the llmstxt sections: {page}")
 
 
-def plain(text):
-    """Text compared as read: entities decoded, word joiners dropped, whitespace collapsed."""
-    return " ".join(html.unescape(text).replace("\u2060", "").split())
-
-
-def social_cards():
-    """The card script, whose `cards()` says what each card should show."""
-    path = Path(__file__).resolve().parent / "social_cards.py"
-    spec = importlib.util.spec_from_file_location("social_cards", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def check_posts(config, problems):
-    """Each post's description is its dek, and the blog index repeats its title and dek."""
-    blog = ROOT / config["project"]["docs_dir"] / "blog"
-    cards = {
-        href: (plain(title), plain(dek))
-        for href, title, dek in re.findall(
-            r'<a class="post-card" href="([^"]+)".*?post-card-title">(.*?)</span>'
-            r'.*?post-card-dek">(.*?)</span>',
-            (blog / "index.md").read_text(),
-            re.S,
-        )
-    }
-    front_matter = social_cards().front_matter
-    for post in sorted(blog.glob("*.md")):
-        if post.name == "index.md":
-            continue
-        meta, h1 = front_matter(post)
-        title = plain(meta.get("title", ""))
-        if h1 and plain(h1) != title:
-            problems.append(f"blog/{post.name}: the H1 differs from the front-matter title")
-        m = re.search(r"^# .+\n\n((?:.+\n)+?)\{: \.post-dek \}", post.read_text(), re.M)
-        if not m:
-            continue  # no dek, as on an appendix
-        dek = plain(m.group(1))
-        if plain(meta.get("description", "")) != dek:
-            problems.append(f"blog/{post.name}: the front-matter description differs from the dek")
-        if post.name not in cards:
-            problems.append(f"blog/index.md has no card for {post.name}")
-        else:
-            card_title, card_dek = cards[post.name]
-            if card_title != title:
-                problems.append(
-                    f"blog/index.md: the card title for {post.name} differs from its title"
-                )
-            if card_dek != dek:
-                problems.append(f"blog/index.md: the card dek for {post.name} differs from its dek")
-
-
-def check_cards(config, problems):
-    """Every card image exists and was drawn from the text its page has now."""
-    docs = ROOT / config["project"]["docs_dir"]
-    manifest_path = docs / "assets/social/cards.json"
-    drawn = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
-    expected = social_cards().cards(ROOT)
-    for image, fields in expected.items():
-        if not (docs / image).exists():
-            problems.append(f"no card image at {image}: run docs/scripts/social_cards.py")
-        elif drawn.get(image) != fields:
-            problems.append(
-                f"{image} was drawn from other text than its page has now: "
-                "run docs/scripts/social_cards.py"
-            )
-    for image in sorted(set(drawn) - set(expected)):
-        problems.append(f"assets/social/cards.json records {image}, which no page uses")
-
-
 def md_copy(site, page):
     """Where the llmstxt plugin writes the Markdown copy of a page."""
     if page == "index.md" or page.endswith("/index.md"):
@@ -311,8 +224,6 @@ def main():
     else:
         problems.append(f"no built site at {site} (zensical build)")
     check_llms(config, site, problems)
-    check_posts(config, problems)
-    check_cards(config, problems)
     if (site / "index.html").exists():
         check_api(config, site, problems)
     for problem in problems:

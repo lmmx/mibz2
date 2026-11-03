@@ -2,24 +2,14 @@
 copyright = "mibz2 is licensed under MIT OR Apache-2.0"
 docs_dir = "docs/site"
 edit_uri = "edit/master/docs/site/"
-# The site's own stylesheets and scripts carry ?v=dev, which the site workflow replaces
-# with the commit it builds, so a browser fetches each deploy's copy and not a cached one.
 extra_css = [
-  "assets/stylesheets/extra.css?v=dev",
-  "assets/stylesheets/bench.css?v=dev",
-  "assets/stylesheets/couriers.css?v=dev",
-  "assets/stylesheets/blog.css?v=dev",
-  "assets/stylesheets/frontier.css?v=dev",
-  # KaTeX, for the maths pymdownx.arithmatex marks (pinned; assets/javascripts/katex.js)
-  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css",
+  "assets/stylesheets/extra.css",
+  "assets/stylesheets/bench.css",
+  "assets/stylesheets/couriers.css",
 ]
 extra_javascript = [
-  "assets/javascripts/bench.js?v=dev",
-  "assets/javascripts/couriers.js?v=dev",
-  "assets/javascripts/blog.js?v=dev",
-  "assets/javascripts/frontier.js?v=dev",
-  "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js",
-  "assets/javascripts/katex.js?v=dev",
+  "assets/javascripts/bench.js",
+  "assets/javascripts/couriers.js",
 ]
 nav = [
   { "Home" = "index.md" },
@@ -38,7 +28,6 @@ nav = [
     "benchmarks/index.md",
     { "History" = "benchmarks/history.md" },
     { "Alternatives" = "benchmarks/alternatives.md" },
-    { "Throughput–memory frontier" = "benchmarks/frontier.md" },
   ] },
   { "Reference" = [
     "reference/index.md",
@@ -47,20 +36,7 @@ nav = [
   ] },
   { "Background" = [
     "background/history.md",
-    "background/status.md",
     "background/journals.md",
-  ] },
-  { "Blog" = [
-    "blog/index.md",
-    { "BWT space–time tradeoff" = "blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md" },
-    { "Memory-level parallelism in mibz2" = [
-      { "Instructions, overlap and evidence" = "blog/2026-11-02-memory-level-parallelism.md" },
-      { "Technical appendix" = "blog/2026-11-02-memory-level-parallelism-notes.md" },
-    ] },
-    { "Inverse-BWT memory interference" = "blog/2026-11-01-inverse-bwt-memory-interference.md" },
-    { "Block dispatch in mibz2" = "blog/2026-11-01-block-dispatch.md" },
-    { "32 lanes, 8.6 chains" = "blog/2026-10-31-room-walk-overlap.md" },
-    { "Compact navigation tables for the inverse BWT" = "blog/2026-10-29-compact-navigation-tables.md" },
   ] },
   { "Maintainers" = [
     "maintainers/development.md",
@@ -84,9 +60,6 @@ site_url = "https://lmmx.github.io/mibz2/"
 [project.markdown_extensions.tables]
 [project.markdown_extensions.toc]
 permalink = true
-# maths: $...$ inline, $$...$$ displayed, rendered by KaTeX (assets/javascripts/katex.js)
-[project.markdown_extensions.pymdownx.arithmatex]
-generic = true
 [project.markdown_extensions.pymdownx.details]
 [project.markdown_extensions.pymdownx.highlight]
 pygments_lang_class = true
@@ -155,7 +128,6 @@ language = "en"
 # the home page's illustration without its shadows (docs/scripts/hero.py mark), as PNG
 logo = "assets/logo-header.png"
 variant = "modern"
-custom_dir = "docs/overrides"
 
 [project.theme.icon]
 repo = "fontawesome/brands/github"
@@ -208,7 +180,6 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
   { "benchmarks/index.md" = "How mibz2's CI benchmark measures the decoder: the corpora, the rounds, the paired ratios and the modelled full-dump figure." },
   { "benchmarks/history.md" = "mibz2's decoding speed, CPU time and peak memory over master's commits, per corpus and thread count." },
   { "benchmarks/alternatives.md" = "mibz2 beside other bzip2 decoders on master's latest benchmark run: paired ratios with 95% intervals, per corpus and thread count." },
-  { "benchmarks/frontier.md" = "Whether mibz2 can decode faster with less memory when blocks share the cache: the question, the method, and what has been measured so far." },
 ]
 "Concepts" = [
   { "concepts/index.md" = "What mibz2 decodes, what it checks, and how it decodes in parallel." },
@@ -222,16 +193,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
   { "getting-started/quickstart.md" = "Decode a .bz2 file with mibz2 from Python and from Rust." },
 ]
 "Optional" = [
-  { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md" = "A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result." },
-  { "blog/2026-11-02-memory-level-parallelism.md" = "Interleaving pointer chases lets memory waits overlap. The speedup shows that this pays, but not what limits it: a 2022 exchange about Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk." },
-  { "blog/2026-11-02-memory-level-parallelism-notes.md" = "Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register." },
-  { "blog/2026-11-01-inverse-bwt-memory-interference.md" = "Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible." },
-  { "blog/2026-11-01-block-dispatch.md" = "How mibz2's parallel decoder hands blocks to its workers, why some take up to a millisecond to be picked up, and how to tell lock contention from scheduling delay." },
-  { "blog/2026-10-31-room-walk-overlap.md" = "The decoder's 32-lane walk runs 8.6 times faster than one chain. That figure may not mean what it seems: the walk may already hide memory latency, and spend too many instructions on each byte." },
-  { "blog/2026-10-29-compact-navigation-tables.md" = "Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next." },
   { "background/history.md" = "Where mibz2 came from: written in wikidata-pq to decode the Wikidata dump, then moved to a repository of its own." },
-  { "background/status.md" = "Where mibz2's research stands: the cooperative inverse BWT found, confirmed and explained on a 10-core workstation, and what comes next." },
   { "background/journals.md" = "mibz2's development journals: where they are and what each one records." },
   { "maintainers/development.md" = "The repository's layout, how to build, test and benchmark mibz2, and the commit conventions." },
   { "maintainers/documentation.md" = "How the documentation site and its benchmark pages are built, checked, tested and published to GitHub Pages." },
