@@ -1,0 +1,26 @@
+{
+  "canonical_permutation_cases": 50,
+  "cursor_equalities": 9405,
+  "events": {
+    "complete": 32933,
+    "header_reads": 3368377,
+    "new_raw": 9435,
+    "promotions": 21
+  },
+  "frozen": "e003a32",
+  "large_and_reuse_cases": 10,
+  "malformed_equal_total_rejections": 110,
+  "result": "all independent model assertions passed",
+  "small_paired_oracle_cases": 1092,
+  "span_boundary_cases": {
+    "65530": 6,
+    "65531": 5,
+    "65532": 5,
+    "65533": 6,
+    "65534": 5,
+    "65535": 5,
+    "65536": 6,
+    "65538": 5
+  },
+  "tests_are": "Python independent instrumented model, not Rust or Miri"
+}
