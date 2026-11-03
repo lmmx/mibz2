@@ -33,13 +33,13 @@ mibz2, 2026
 
 ## 1\. From sorted rotations to the transformation vector
 
-Start with the word `banana` and see what the Burrows–Wheeler transform does to it.
+Let's start with the word `banana` and see what the Burrows–Wheeler transform does to it.
 
 First, write out six versions of the word, each starting at a different letter and wrapping round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`, `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time in a different order. (As permutations of the positions, they are the six powers of one, \\(\\sigma = (0\\;1\\;2\\;3\\;4\\;5)\\) in [cycle notation](<https://en.wikipedia.org/wiki/Permutation#Cycle_notation>): \\(\\sigma^0\\), the identity, is the word itself, and \\(\\sigma^k\\) starts it \\(k\\) letters in. Stacked in the order \\(\\sigma^0\\) to \\(\\sigma^5\\), each row is the one above shifted one letter: a [circulant matrix](<https://en.wikipedia.org/wiki/Circulant_matrix>), strictly its mirror image, since a circulant matrix shifts each row to the right. Sorting those same rows alphabetically shuffles them into what is called the Burrows–Wheeler matrix, which Seward's square is.) Then sort the six rotations alphabetically and stack them as rows:
 
 Sorting the rotations into the Burrows–Wheeler matrix
 
-Left, the rotations of banana in their natural order, σ⁰ to σ⁵, each row shifted one letter from the one above. Right, the same rows sorted alphabetically: each moves across in turn, keeping its label, so the powers end up shuffled, 5, 3, 1, 0, 4, 2. The sorted square's first column is shaded green and its last blue; banana, σ⁰, lands in row 3.
+Left, the rotations of banana built in their natural order: each row, σ¹ to σ⁵, is a copy of the one above with its first letter moved to the end. Right, the same rows sorted alphabetically. Before each row moves, the letters it shares with its closest rivals are tinted and the letter that settles the order is outlined: abanan goes first because after a, b comes before n. Each row keeps its label, so the powers end up shuffled, 5, 3, 1, 0, 4, 2. The sorted square's first column is shaded green and its last blue; banana, σ⁰, lands in row 3.
 
 Each row now has two numbers. Its row number, on the left, says where sorting put it; its power of \\(\\sigma\\), on the right, says which rotation it is. Sorting scrambled the first but not the second: \\(\\sigma^5\\) and \\(\\sigma^4\\) are still one letter apart round the word, even though they now sit in rows 0 and 4. Recovering that relationship from the row numbers alone is what decoding comes down to.
 

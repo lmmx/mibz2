@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=f33bbb031d39">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=d88c40846722">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=f33bbb031d39">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=d88c40846722">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=f33bbb031d39">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=d88c40846722">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=f33bbb031d39">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=d88c40846722">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=f33bbb031d39">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=d88c40846722">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1872,7 +1872,7 @@ decoder.</p>
 </nav>
 
 <h2 id="1-from-sorted-rotations-to-the-transformation-vector">1. From sorted rotations to the transformation vector<a class="headerlink" href="#1-from-sorted-rotations-to-the-transformation-vector" title="Permanent link">&para;</a></h2>
-<p>Start with the word <code>banana</code> and see what the Burrows–Wheeler transform does to it.</p>
+<p>Let's start with the word <code>banana</code> and see what the Burrows–Wheeler transform does to it.</p>
 <p>First, write out six versions of the word, each starting at a different letter and wrapping
 round to the beginning when it reaches the end: <code>banana</code>, <code>ananab</code>, <code>nanaba</code>, <code>anaban</code>,
 <code>nabana</code>, <code>abanan</code>. These are the word's <em>cyclic rotations</em>: the same six letters, each time
@@ -1885,13 +1885,14 @@ circulant matrix shifts each row to the right. Sorting those same rows alphabeti
 shuffles them into what is called the Burrows–Wheeler matrix, which Seward's square is.) Then sort the six rotations alphabetically and stack them as rows:</p>
 <figure class="bf-fig">
 <p class="bf-title">Sorting the rotations into the Burrows–Wheeler matrix</p>
-<svg class="rs2-fig" viewBox="0 0 720 360" role="img" aria-label="An animation of sorting the six rotations of banana. On the left they are stacked in their natural order, sigma 0 to sigma 5, each row shifted one letter from the one above. One at a time, in alphabetical order, each row moves to the right-hand stack: abanan (sigma 5) to row 0, anaban (sigma 3) to row 1, ananab (sigma 1) to row 2, banana (sigma 0) to row 3, nabana (sigma 4) to row 4, nanaba (sigma 2) to row 5. Then the sorted stack's first and last columns are shaded, and banana is outlined in row 3.">
-<style>.rs2-fly { transform-box: view-box; } @keyframes rs2-dim0 { 0%, 39.51% { opacity: 1 } 42.44%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-dim1 { 0%, 34.15% { opacity: 1 } 37.07%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-dim2 { 0%, 50.24% { opacity: 1 } 53.17%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-dim3 { 0%, 28.78% { opacity: 1 } 31.71%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-dim4 { 0%, 44.88% { opacity: 1 } 47.80%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-dim5 { 0%, 23.41% { opacity: 1 } 26.34%, 92.20% { opacity: 0.3 } 95.12%, 100% { opacity: 1 } } @keyframes rs2-shade { 0%, 59.02% { opacity: 0 } 61.95%, 92.20% { opacity: 1 } 95.12%, 100% { opacity: 0 } } @keyframes rs2-f0 { 0%, 23.32% { opacity: 0; transform: translate(-370px, 190px) } 23.41% { opacity: 1; transform: translate(-370px, 190px) } 30.24%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-f1 { 0%, 28.68% { opacity: 0; transform: translate(-370px, 76px) } 28.78% { opacity: 1; transform: translate(-370px, 76px) } 35.61%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-f2 { 0%, 34.05% { opacity: 0; transform: translate(-370px, -38px) } 34.15% { opacity: 1; transform: translate(-370px, -38px) } 40.98%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-f3 { 0%, 39.41% { opacity: 0; transform: translate(-370px, -114px) } 39.51% { opacity: 1; transform: translate(-370px, -114px) } 46.34%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-f4 { 0%, 44.78% { opacity: 0; transform: translate(-370px, 0px) } 44.88% { opacity: 1; transform: translate(-370px, 0px) } 51.71%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-f5 { 0%, 50.15% { opacity: 0; transform: translate(-370px, -114px) } 50.24% { opacity: 1; transform: translate(-370px, -114px) } 57.07%, 92.20% { opacity: 1; transform: translate(0px, 0px) } 95.12%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-out { 0%, 60.98% { opacity: 0 } 63.90%, 92.20% { opacity: 1 } 95.12%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg.rs2-fig [style*="animation"] { animation: none !important; opacity: 1 !important; transform: none !important } }</style>
+<svg class="rs2-fig" viewBox="0 0 720 384" role="img" aria-label="An animation of building and sorting the six rotations of banana. On the left, starting from banana, sigma 0, each new row is a copy of the one above with its first letter moved to the end, giving sigma 1 to sigma 5: a mirrored circulant matrix. One at a time, the alphabetically first remaining row is picked: its letters that tie with its closest rivals glow, then the letter that decides it, and it moves to the right-hand stack. abanan beats ananab and anaban because after a, b comes before n; anaban beats ananab because after ana, b comes before n; ananab beats the rest on its first letter; banana beats the two n rows; nabana beats nanaba because after na, b comes before n; nanaba is last. Then the sorted stack's first and last columns are shaded, and banana is outlined in row 3.">
+<style>.rs2-fly { transform-box: view-box; } .bf-fig .rs2-tie { fill: var(--bf-amber-tint); } .bf-fig .rs2-win { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 2; } .bf-fig .rs2-lose { fill: var(--bf-surface); stroke: var(--bf-amber); stroke-width: 1.5; stroke-dasharray: 3 2; } .bf-fig .rs2-amb { fill: var(--bf-amber); font-weight: 600; } @keyframes rs2-dim0 { 0%, 60.79% { opacity: 1 } 60.83%, 67.50% { opacity: 0 } 68.75%, 96.67% { opacity: 0.3 } 97.92%, 100% { opacity: 1 } } @keyframes rs2-dim1 { 0%, 51.21% { opacity: 1 } 51.25%, 57.92% { opacity: 0 } 59.17%, 96.67% { opacity: 0.3 } 97.92%, 100% { opacity: 1 } } @keyframes rs2-bc1 { 0%, 4.17% { opacity: 0 } 4.79%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-bd1 { 0%, 3.29% { opacity: 0; transform: translate(0px, -38px) } 3.33% { opacity: 1; transform: translate(0px, -38px) } 4.79%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-bl1_0 { 0%, 4.79% { transform: translate(34px, 0px) } 5.83% { transform: translate(17.0px, 0px) } 6.87%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl1_1 { 0%, 4.79% { transform: translate(34px, 0px) } 5.83% { transform: translate(17.0px, 0px) } 6.87%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl1_2 { 0%, 4.79% { transform: translate(34px, 0px) } 5.83% { transform: translate(17.0px, 0px) } 6.87%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl1_3 { 0%, 4.79% { transform: translate(34px, 0px) } 5.83% { transform: translate(17.0px, 0px) } 6.87%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl1_4 { 0%, 4.79% { transform: translate(34px, 0px) } 5.83% { transform: translate(17.0px, 0px) } 6.87%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl1_5 { 0%, 4.79% { transform: translate(-170px, 0px) } 5.83% { transform: translate(-85.0px, -14px) } 6.87%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bs1 { 0%, 6.87% { opacity: 0 } 7.71%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-dim2 { 0%, 79.96% { opacity: 1 } 80.00%, 86.67% { opacity: 0 } 87.92%, 96.67% { opacity: 0.3 } 97.92%, 100% { opacity: 1 } } @keyframes rs2-bc2 { 0%, 8.75% { opacity: 0 } 9.37%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-bd2 { 0%, 7.87% { opacity: 0; transform: translate(0px, -38px) } 7.92% { opacity: 1; transform: translate(0px, -38px) } 9.37%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-bl2_0 { 0%, 9.37% { transform: translate(34px, 0px) } 10.42% { transform: translate(17.0px, 0px) } 11.46%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl2_1 { 0%, 9.37% { transform: translate(34px, 0px) } 10.42% { transform: translate(17.0px, 0px) } 11.46%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl2_2 { 0%, 9.37% { transform: translate(34px, 0px) } 10.42% { transform: translate(17.0px, 0px) } 11.46%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl2_3 { 0%, 9.37% { transform: translate(34px, 0px) } 10.42% { transform: translate(17.0px, 0px) } 11.46%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl2_4 { 0%, 9.37% { transform: translate(34px, 0px) } 10.42% { transform: translate(17.0px, 0px) } 11.46%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl2_5 { 0%, 9.37% { transform: translate(-170px, 0px) } 10.42% { transform: translate(-85.0px, -14px) } 11.46%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bs2 { 0%, 11.46% { opacity: 0 } 12.29%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-dim3 { 0%, 41.62% { opacity: 1 } 41.67%, 48.33% { opacity: 0 } 49.58%, 96.67% { opacity: 0.3 } 97.92%, 100% { opacity: 1 } } @keyframes rs2-bc3 { 0%, 13.33% { opacity: 0 } 13.96%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-bd3 { 0%, 12.46% { opacity: 0; transform: translate(0px, -38px) } 12.50% { opacity: 1; transform: translate(0px, -38px) } 13.96%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-bl3_0 { 0%, 13.96% { transform: translate(34px, 0px) } 15.00% { transform: translate(17.0px, 0px) } 16.04%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl3_1 { 0%, 13.96% { transform: translate(34px, 0px) } 15.00% { transform: translate(17.0px, 0px) } 16.04%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl3_2 { 0%, 13.96% { transform: translate(34px, 0px) } 15.00% { transform: translate(17.0px, 0px) } 16.04%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl3_3 { 0%, 13.96% { transform: translate(34px, 0px) } 15.00% { transform: translate(17.0px, 0px) } 16.04%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl3_4 { 0%, 13.96% { transform: translate(34px, 0px) } 15.00% { transform: translate(17.0px, 0px) } 16.04%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl3_5 { 0%, 13.96% { transform: translate(-170px, 0px) } 15.00% { transform: translate(-85.0px, -14px) } 16.04%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bs3 { 0%, 16.04% { opacity: 0 } 16.87%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-dim4 { 0%, 70.37% { opacity: 1 } 70.42%, 77.08% { opacity: 0 } 78.33%, 96.67% { opacity: 0.3 } 97.92%, 100% { opacity: 1 } } @keyframes rs2-bc4 { 0%, 17.92% { opacity: 0 } 18.54%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-bd4 { 0%, 17.04% { opacity: 0; transform: translate(0px, -38px) } 17.08% { opacity: 1; transform: translate(0px, -38px) } 18.54%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-bl4_0 { 0%, 18.54% { transform: translate(34px, 0px) } 19.58% { transform: translate(17.0px, 0px) } 20.62%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl4_1 { 0%, 18.54% { transform: translate(34px, 0px) } 19.58% { transform: translate(17.0px, 0px) } 20.62%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl4_2 { 0%, 18.54% { transform: translate(34px, 0px) } 19.58% { transform: translate(17.0px, 0px) } 20.62%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl4_3 { 0%, 18.54% { transform: translate(34px, 0px) } 19.58% { transform: translate(17.0px, 0px) } 20.62%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl4_4 { 0%, 18.54% { transform: translate(34px, 0px) } 19.58% { transform: translate(17.0px, 0px) } 20.62%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl4_5 { 0%, 18.54% { transform: translate(-170px, 0px) } 19.58% { transform: translate(-85.0px, -14px) } 20.62%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bs4 { 0%, 20.62% { opacity: 0 } 21.46%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-dim5 { 0%, 32.04% { opacity: 1 } 32.08%, 38.75% { opacity: 0 } 40.00%, 96.67% { opacity: 0.3 } 97.92%, 100% { opacity: 1 } } @keyframes rs2-bc5 { 0%, 22.50% { opacity: 0 } 23.12%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-bd5 { 0%, 21.62% { opacity: 0; transform: translate(0px, -38px) } 21.67% { opacity: 1; transform: translate(0px, -38px) } 23.12%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-bl5_0 { 0%, 23.12% { transform: translate(34px, 0px) } 24.17% { transform: translate(17.0px, 0px) } 25.21%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl5_1 { 0%, 23.12% { transform: translate(34px, 0px) } 24.17% { transform: translate(17.0px, 0px) } 25.21%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl5_2 { 0%, 23.12% { transform: translate(34px, 0px) } 24.17% { transform: translate(17.0px, 0px) } 25.21%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl5_3 { 0%, 23.12% { transform: translate(34px, 0px) } 24.17% { transform: translate(17.0px, 0px) } 25.21%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl5_4 { 0%, 23.12% { transform: translate(34px, 0px) } 24.17% { transform: translate(17.0px, 0px) } 25.21%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bl5_5 { 0%, 23.12% { transform: translate(-170px, 0px) } 24.17% { transform: translate(-85.0px, -14px) } 25.21%, 100% { transform: translate(0px, 0px) } } @keyframes rs2-bs5 { 0%, 25.21% { opacity: 0 } 26.04%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-bcap { 0%, 2.50% { opacity: 0 } 3.75%, 25.83% { opacity: 1 } 26.67%, 100% { opacity: 0 } } @keyframes rs2-r0_1 { 0%, 32.50% { opacity: 0 } 33.75%, 38.33% { opacity: 1 } 39.37%, 100% { opacity: 0 } } @keyframes rs2-r0_3 { 0%, 32.50% { opacity: 0 } 33.75%, 38.33% { opacity: 1 } 39.37%, 100% { opacity: 0 } } @keyframes rs2-r1_1 { 0%, 42.08% { opacity: 0 } 43.33%, 47.92% { opacity: 1 } 48.96%, 100% { opacity: 0 } } @keyframes rs2-r2_0 { 0%, 51.67% { opacity: 0 } 52.92%, 57.50% { opacity: 1 } 58.54%, 100% { opacity: 0 } } @keyframes rs2-r2_2 { 0%, 51.67% { opacity: 0 } 52.92%, 57.50% { opacity: 1 } 58.54%, 100% { opacity: 0 } } @keyframes rs2-r2_4 { 0%, 51.67% { opacity: 0 } 52.92%, 57.50% { opacity: 1 } 58.54%, 100% { opacity: 0 } } @keyframes rs2-r3_2 { 0%, 61.25% { opacity: 0 } 62.50%, 67.08% { opacity: 1 } 68.12%, 100% { opacity: 0 } } @keyframes rs2-r3_4 { 0%, 61.25% { opacity: 0 } 62.50%, 67.08% { opacity: 1 } 68.12%, 100% { opacity: 0 } } @keyframes rs2-r4_2 { 0%, 70.83% { opacity: 0 } 72.08%, 76.67% { opacity: 1 } 77.71%, 100% { opacity: 0 } } @keyframes rs2-shade { 0%, 83.33% { opacity: 0 } 84.58%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-f0 { 0%, 32.04% { opacity: 0; transform: translate(-370px, 190px) } 32.08%, 38.33% { opacity: 1; transform: translate(-370px, 190px) } 40.83%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-w0 { 0%, 32.50% { opacity: 0 } 33.75%, 40.83% { opacity: 1 } 42.29%, 100% { opacity: 0 } } @keyframes rs2-c0 { 0%, 32.50% { opacity: 0 } 33.75%, 40.62% { opacity: 1 } 41.46%, 100% { opacity: 0 } } @keyframes rs2-f1 { 0%, 41.62% { opacity: 0; transform: translate(-370px, 76px) } 41.67%, 47.92% { opacity: 1; transform: translate(-370px, 76px) } 50.42%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-w1 { 0%, 42.08% { opacity: 0 } 43.33%, 50.42% { opacity: 1 } 51.87%, 100% { opacity: 0 } } @keyframes rs2-c1 { 0%, 42.08% { opacity: 0 } 43.33%, 50.21% { opacity: 1 } 51.04%, 100% { opacity: 0 } } @keyframes rs2-f2 { 0%, 51.21% { opacity: 0; transform: translate(-370px, -38px) } 51.25%, 57.50% { opacity: 1; transform: translate(-370px, -38px) } 60.00%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-w2 { 0%, 51.67% { opacity: 0 } 52.92%, 60.00% { opacity: 1 } 61.46%, 100% { opacity: 0 } } @keyframes rs2-c2 { 0%, 51.67% { opacity: 0 } 52.92%, 59.79% { opacity: 1 } 60.62%, 100% { opacity: 0 } } @keyframes rs2-f3 { 0%, 60.79% { opacity: 0; transform: translate(-370px, -114px) } 60.83%, 67.08% { opacity: 1; transform: translate(-370px, -114px) } 69.58%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-w3 { 0%, 61.25% { opacity: 0 } 62.50%, 69.58% { opacity: 1 } 71.04%, 100% { opacity: 0 } } @keyframes rs2-c3 { 0%, 61.25% { opacity: 0 } 62.50%, 69.38% { opacity: 1 } 70.21%, 100% { opacity: 0 } } @keyframes rs2-f4 { 0%, 70.37% { opacity: 0; transform: translate(-370px, 0px) } 70.42%, 76.67% { opacity: 1; transform: translate(-370px, 0px) } 79.17%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-w4 { 0%, 70.83% { opacity: 0 } 72.08%, 79.17% { opacity: 1 } 80.62%, 100% { opacity: 0 } } @keyframes rs2-c4 { 0%, 70.83% { opacity: 0 } 72.08%, 78.96% { opacity: 1 } 79.79%, 100% { opacity: 0 } } @keyframes rs2-f5 { 0%, 79.96% { opacity: 0; transform: translate(-370px, -114px) } 80.00%, 86.25% { opacity: 1; transform: translate(-370px, -114px) } 88.75%, 96.67% { opacity: 1; transform: translate(0px, 0px) } 97.92%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes rs2-c5 { 0%, 80.42% { opacity: 0 } 81.67%, 88.54% { opacity: 1 } 89.38%, 100% { opacity: 0 } } @keyframes rs2-out { 0%, 84.17% { opacity: 0 } 85.42%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @keyframes rs2-circ { 0%, 26.25% { opacity: 0 } 27.50%, 96.67% { opacity: 1 } 97.92%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg.rs2-fig [style*="animation"] { animation: none !important; opacity: 1 !important; transform: none !important } svg.rs2-fig .rs2-cmp { display: none !important } }</style>
+<defs><filter id="rs2-glow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="3" style="flood-color: var(--bf-amber); flood-opacity: 0.9"/></filter></defs>
 <text x="50" y="36" class="bf-t-strong">In order</text>
 <text x="50" y="54" class="bf-tm">each row shifted one letter</text>
 <text x="420" y="36" class="bf-t-strong">Sorted alphabetically</text>
 <text x="420" y="54" class="bf-tm">the Burrows–Wheeler matrix</text>
-<g class="rs2-left" style="animation: rs2-dim0 10.25s linear infinite">
+<g style="animation: rs2-dim0 24.00s linear infinite">
 <rect x="50" y="76" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="65.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 <rect x="84" y="76" width="30" height="32" rx="4" class="bf-cell"/>
@@ -1906,81 +1907,102 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <text x="235.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <text x="260" y="97" class="bf-t-strong" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">0</tspan></text>
 </g>
-<g class="rs2-left" style="animation: rs2-dim1 10.25s linear infinite">
+<g style="animation: rs2-dim1 24.00s linear infinite">
+<g style="animation: rs2-bc1 24.00s linear infinite">
 <rect x="50" y="114" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="65.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="84" y="114" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="99.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="118" y="114" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="133.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="152" y="114" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="167.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="186" y="114" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="201.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="220" y="114" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="235.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="260" y="135" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">1</tspan></text>
 </g>
-<g class="rs2-left" style="animation: rs2-dim2 10.25s linear infinite">
+<g style="animation: rs2-bd1 24.00s ease-in-out infinite">
+<g style="animation: rs2-bl1_0 24.00s ease-in-out infinite"><text x="65.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl1_1 24.00s ease-in-out infinite"><text x="99.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text></g>
+<g style="animation: rs2-bl1_2 24.00s ease-in-out infinite"><text x="133.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl1_3 24.00s ease-in-out infinite"><text x="167.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text></g>
+<g style="animation: rs2-bl1_4 24.00s ease-in-out infinite"><text x="201.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl1_5 24.00s ease-in-out infinite"><text x="235.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
+</g>
+<text x="260" y="135" class="bf-t" style="font-style: italic; animation: rs2-bs1 24.00s linear infinite">σ<tspan dy="-7" style="font-size: 10px">1</tspan></text>
+</g>
+<g style="animation: rs2-dim2 24.00s linear infinite">
+<g style="animation: rs2-bc2 24.00s linear infinite">
 <rect x="50" y="152" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="65.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="84" y="152" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="99.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="118" y="152" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="133.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="152" y="152" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="167.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="186" y="152" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="201.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 <rect x="220" y="152" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="235.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
-<text x="260" y="173" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">2</tspan></text>
 </g>
-<g class="rs2-left" style="animation: rs2-dim3 10.25s linear infinite">
+<g style="animation: rs2-bd2 24.00s ease-in-out infinite">
+<g style="animation: rs2-bl2_0 24.00s ease-in-out infinite"><text x="65.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text></g>
+<g style="animation: rs2-bl2_1 24.00s ease-in-out infinite"><text x="99.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl2_2 24.00s ease-in-out infinite"><text x="133.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text></g>
+<g style="animation: rs2-bl2_3 24.00s ease-in-out infinite"><text x="167.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl2_4 24.00s ease-in-out infinite"><text x="201.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
+<g style="animation: rs2-bl2_5 24.00s ease-in-out infinite"><text x="235.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+</g>
+<text x="260" y="173" class="bf-t" style="font-style: italic; animation: rs2-bs2 24.00s linear infinite">σ<tspan dy="-7" style="font-size: 10px">2</tspan></text>
+</g>
+<g style="animation: rs2-dim3 24.00s linear infinite">
+<g style="animation: rs2-bc3 24.00s linear infinite">
 <rect x="50" y="190" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="65.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="84" y="190" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="99.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="118" y="190" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="133.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="152" y="190" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="167.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 <rect x="186" y="190" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="201.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="220" y="190" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="235.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
-<text x="260" y="211" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">3</tspan></text>
 </g>
-<g class="rs2-left" style="animation: rs2-dim4 10.25s linear infinite">
+<g style="animation: rs2-bd3 24.00s ease-in-out infinite">
+<g style="animation: rs2-bl3_0 24.00s ease-in-out infinite"><text x="65.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl3_1 24.00s ease-in-out infinite"><text x="99.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text></g>
+<g style="animation: rs2-bl3_2 24.00s ease-in-out infinite"><text x="133.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl3_3 24.00s ease-in-out infinite"><text x="167.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
+<g style="animation: rs2-bl3_4 24.00s ease-in-out infinite"><text x="201.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl3_5 24.00s ease-in-out infinite"><text x="235.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text></g>
+</g>
+<text x="260" y="211" class="bf-t" style="font-style: italic; animation: rs2-bs3 24.00s linear infinite">σ<tspan dy="-7" style="font-size: 10px">3</tspan></text>
+</g>
+<g style="animation: rs2-dim4 24.00s linear infinite">
+<g style="animation: rs2-bc4 24.00s linear infinite">
 <rect x="50" y="228" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="65.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="84" y="228" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="99.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="118" y="228" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="133.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 <rect x="152" y="228" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="167.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="186" y="228" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="201.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="220" y="228" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="235.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
-<text x="260" y="249" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">4</tspan></text>
 </g>
-<g class="rs2-left" style="animation: rs2-dim5 10.25s linear infinite">
+<g style="animation: rs2-bd4 24.00s ease-in-out infinite">
+<g style="animation: rs2-bl4_0 24.00s ease-in-out infinite"><text x="65.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text></g>
+<g style="animation: rs2-bl4_1 24.00s ease-in-out infinite"><text x="99.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl4_2 24.00s ease-in-out infinite"><text x="133.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
+<g style="animation: rs2-bl4_3 24.00s ease-in-out infinite"><text x="167.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl4_4 24.00s ease-in-out infinite"><text x="201.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text></g>
+<g style="animation: rs2-bl4_5 24.00s ease-in-out infinite"><text x="235.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+</g>
+<text x="260" y="249" class="bf-t" style="font-style: italic; animation: rs2-bs4 24.00s linear infinite">σ<tspan dy="-7" style="font-size: 10px">4</tspan></text>
+</g>
+<g style="animation: rs2-dim5 24.00s linear infinite">
+<g style="animation: rs2-bc5 24.00s linear infinite">
 <rect x="50" y="266" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="65.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="84" y="266" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="99.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 <rect x="118" y="266" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="133.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="152" y="266" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="167.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="186" y="266" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="201.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="220" y="266" width="30" height="32" rx="4" class="bf-cell"/>
-<text x="235.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
-<text x="260" y="287" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">5</tspan></text>
 </g>
+<g style="animation: rs2-bd5 24.00s ease-in-out infinite">
+<g style="animation: rs2-bl5_0 24.00s ease-in-out infinite"><text x="65.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl5_1 24.00s ease-in-out infinite"><text x="99.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
+<g style="animation: rs2-bl5_2 24.00s ease-in-out infinite"><text x="133.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl5_3 24.00s ease-in-out infinite"><text x="167.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text></g>
+<g style="animation: rs2-bl5_4 24.00s ease-in-out infinite"><text x="201.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text></g>
+<g style="animation: rs2-bl5_5 24.00s ease-in-out infinite"><text x="235.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text></g>
+</g>
+<text x="260" y="287" class="bf-t" style="font-style: italic; animation: rs2-bs5 24.00s linear infinite">σ<tspan dy="-7" style="font-size: 10px">5</tspan></text>
+</g>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-bcap 24.00s linear infinite">each row is the one above with its first letter moved to the end</text>
 <text x="404" y="97" class="bf-tm" text-anchor="middle">0</text>
 <rect x="420" y="76" width="200" height="32" rx="4" class="bf-grid" style="fill: none; stroke-dasharray: 3 3"/>
 <text x="404" y="135" class="bf-tm" text-anchor="middle">1</text>
@@ -1993,9 +2015,59 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <rect x="420" y="228" width="200" height="32" rx="4" class="bf-grid" style="fill: none; stroke-dasharray: 3 3"/>
 <text x="404" y="287" class="bf-tm" text-anchor="middle">5</text>
 <rect x="420" y="266" width="200" height="32" rx="4" class="bf-grid" style="fill: none; stroke-dasharray: 3 3"/>
-<g class="rs2-fly" style="animation: rs2-f0 10.25s ease-in-out infinite">
+<g class="rs2-cmp" style="animation: rs2-r0_1 24.00s linear infinite">
+<rect x="50" y="114" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="65.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="84" y="114" width="30" height="32" rx="4" class="rs2-lose"/>
+<text x="99.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+</g>
+<g class="rs2-cmp" style="animation: rs2-r0_3 24.00s linear infinite">
+<rect x="50" y="190" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="65.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="84" y="190" width="30" height="32" rx="4" class="rs2-lose"/>
+<text x="99.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+</g>
+<g class="rs2-cmp" style="animation: rs2-r1_1 24.00s linear infinite">
+<rect x="50" y="114" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="65.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="84" y="114" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="99.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="118" y="114" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="133.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="152" y="114" width="30" height="32" rx="4" class="rs2-lose"/>
+<text x="167.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+</g>
+<g class="rs2-cmp" style="animation: rs2-r2_0 24.00s linear infinite">
+<rect x="50" y="76" width="30" height="32" rx="4" class="rs2-lose"/>
+<text x="65.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+</g>
+<g class="rs2-cmp" style="animation: rs2-r2_2 24.00s linear infinite">
+<rect x="50" y="152" width="30" height="32" rx="4" class="rs2-lose"/>
+<text x="65.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+</g>
+<g class="rs2-cmp" style="animation: rs2-r2_4 24.00s linear infinite">
+<rect x="50" y="228" width="30" height="32" rx="4" class="rs2-lose"/>
+<text x="65.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+</g>
+<g class="rs2-cmp" style="animation: rs2-r3_2 24.00s linear infinite">
+<rect x="50" y="152" width="30" height="32" rx="4" class="rs2-lose"/>
+<text x="65.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+</g>
+<g class="rs2-cmp" style="animation: rs2-r3_4 24.00s linear infinite">
+<rect x="50" y="228" width="30" height="32" rx="4" class="rs2-lose"/>
+<text x="65.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+</g>
+<g class="rs2-cmp" style="animation: rs2-r4_2 24.00s linear infinite">
+<rect x="50" y="152" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="65.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="84" y="152" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="99.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="118" y="152" width="30" height="32" rx="4" class="rs2-lose"/>
+<text x="133.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+</g>
+<g class="rs2-fly" style="animation: rs2-f0 24.00s ease-in-out infinite">
 <rect x="420" y="76" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="420" y="76" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="420" y="76" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="435.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="454" y="76" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="469.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
@@ -2006,13 +2078,20 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <rect x="556" y="76" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="571.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="590" y="76" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="590" y="76" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="590" y="76" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="605.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <text x="630" y="97" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">5</tspan></text>
+<g class="rs2-cmp" style="animation: rs2-w0 24.00s linear infinite">
+<rect x="420" y="76" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="435.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="454" y="76" width="30" height="32" rx="4" class="rs2-win" filter="url(#rs2-glow)"/>
+<text x="469.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
-<g class="rs2-fly" style="animation: rs2-f1 10.25s ease-in-out infinite">
+</g>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c0 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">ab</tspan>… comes before <tspan style="font-family: var(--md-code-font-family)">an</tspan>… — <tspan style="font-family: var(--md-code-font-family)">a</tspan> ties, then b &lt; n</text>
+<g class="rs2-fly" style="animation: rs2-f1 24.00s ease-in-out infinite">
 <rect x="420" y="114" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="420" y="114" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="420" y="114" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="435.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="454" y="114" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="469.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
@@ -2023,13 +2102,24 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <rect x="556" y="114" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="571.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="590" y="114" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="590" y="114" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="590" y="114" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="605.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <text x="630" y="135" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">3</tspan></text>
+<g class="rs2-cmp" style="animation: rs2-w1 24.00s linear infinite">
+<rect x="420" y="114" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="435.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="454" y="114" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="469.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="488" y="114" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="503.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="522" y="114" width="30" height="32" rx="4" class="rs2-win" filter="url(#rs2-glow)"/>
+<text x="537.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
-<g class="rs2-fly" style="animation: rs2-f2 10.25s ease-in-out infinite">
+</g>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c1 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">anab</tspan>… comes before <tspan style="font-family: var(--md-code-font-family)">anan</tspan>… — <tspan style="font-family: var(--md-code-font-family)">ana</tspan> ties, then b &lt; n</text>
+<g class="rs2-fly" style="animation: rs2-f2 24.00s ease-in-out infinite">
 <rect x="420" y="152" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="420" y="152" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="420" y="152" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="435.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="454" y="152" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="469.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
@@ -2040,13 +2130,18 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <rect x="556" y="152" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="571.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <rect x="590" y="152" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="590" y="152" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="590" y="152" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="605.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 <text x="630" y="173" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">1</tspan></text>
+<g class="rs2-cmp" style="animation: rs2-w2 24.00s linear infinite">
+<rect x="420" y="152" width="30" height="32" rx="4" class="rs2-win" filter="url(#rs2-glow)"/>
+<text x="435.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 </g>
-<g class="rs2-fly" style="animation: rs2-f3 10.25s ease-in-out infinite">
+</g>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c2 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">a</tspan>… comes before <tspan style="font-family: var(--md-code-font-family)">b</tspan>…, <tspan style="font-family: var(--md-code-font-family)">n</tspan>…</text>
+<g class="rs2-fly" style="animation: rs2-f3 24.00s ease-in-out infinite">
 <rect x="420" y="190" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="420" y="190" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="420" y="190" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="435.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 <rect x="454" y="190" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="469.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
@@ -2057,13 +2152,18 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <rect x="556" y="190" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="571.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="590" y="190" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="590" y="190" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="590" y="190" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="605.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <text x="630" y="211" class="bf-t-strong" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">0</tspan></text>
+<g class="rs2-cmp" style="animation: rs2-w3 24.00s linear infinite">
+<rect x="420" y="190" width="30" height="32" rx="4" class="rs2-win" filter="url(#rs2-glow)"/>
+<text x="435.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
-<g class="rs2-fly" style="animation: rs2-f4 10.25s ease-in-out infinite">
+</g>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c3 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">b</tspan>… comes before <tspan style="font-family: var(--md-code-font-family)">n</tspan>…</text>
+<g class="rs2-fly" style="animation: rs2-f4 24.00s ease-in-out infinite">
 <rect x="420" y="228" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="420" y="228" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="420" y="228" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="435.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="454" y="228" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="469.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
@@ -2074,13 +2174,22 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <rect x="556" y="228" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="571.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="590" y="228" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="590" y="228" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="590" y="228" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="605.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <text x="630" y="249" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">4</tspan></text>
+<g class="rs2-cmp" style="animation: rs2-w4 24.00s linear infinite">
+<rect x="420" y="228" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="435.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
+<rect x="454" y="228" width="30" height="32" rx="4" class="rs2-tie"/>
+<text x="469.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
+<rect x="488" y="228" width="30" height="32" rx="4" class="rs2-win" filter="url(#rs2-glow)"/>
+<text x="503.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
-<g class="rs2-fly" style="animation: rs2-f5 10.25s ease-in-out infinite">
+</g>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c4 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">nab</tspan>… comes before <tspan style="font-family: var(--md-code-font-family)">nan</tspan>… — <tspan style="font-family: var(--md-code-font-family)">na</tspan> ties, then b &lt; n</text>
+<g class="rs2-fly" style="animation: rs2-f5 24.00s ease-in-out infinite">
 <rect x="420" y="266" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="420" y="266" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="420" y="266" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="435.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text>
 <rect x="454" y="266" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="469.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
@@ -2091,15 +2200,16 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <rect x="556" y="266" width="30" height="32" rx="4" class="bf-cell"/>
 <text x="571.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 <rect x="590" y="266" width="30" height="32" rx="4" class="bf-cell"/>
-<rect x="590" y="266" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 10.25s linear infinite"/>
+<rect x="590" y="266" width="30" height="32" rx="4" class="bf-slot rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
 <text x="605.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 <text x="630" y="287" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 10px">2</tspan></text>
 </g>
-<rect x="390" y="186" width="268" height="40" rx="6" class="bf-box rs2-b" style="stroke-width: 2; animation: rs2-out 10.25s linear infinite"/>
-<text x="420" y="326" class="bf-tm rs2-b" style="animation: rs2-out 10.25s linear infinite">banana, σ⁰, lands in row 3</text>
-<text x="50" y="326" class="bf-tm">a circulant matrix, mirrored</text>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c5 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)">nanaba</tspan>, the last one left</text>
+<rect x="390" y="186" width="268" height="40" rx="6" class="bf-box rs2-b" style="stroke-width: 2; animation: rs2-out 24.00s linear infinite"/>
+<text x="420" y="326" class="bf-tm rs2-b" style="animation: rs2-out 24.00s linear infinite">banana, σ⁰, lands in row 3</text>
+<text x="50" y="326" class="bf-tm" style="animation: rs2-circ 24.00s linear infinite">a circulant matrix, mirrored</text>
 </svg>
-<figcaption>Left, the rotations of banana in their natural order, σ⁰ to σ⁵, each row shifted one letter from the one above. Right, the same rows sorted alphabetically: each moves across in turn, keeping its label, so the powers end up shuffled, 5, 3, 1, 0, 4, 2. The sorted square's first column is shaded green and its last blue; banana, σ⁰, lands in row 3.</figcaption>
+<figcaption>Left, the rotations of banana built in their natural order: each row, σ¹ to σ⁵, is a copy of the one above with its first letter moved to the end. Right, the same rows sorted alphabetically. Before each row moves, the letters it shares with its closest rivals are tinted and the letter that settles the order is outlined: abanan goes first because after a, b comes before n. Each row keeps its label, so the powers end up shuffled, 5, 3, 1, 0, 4, 2. The sorted square's first column is shaded green and its last blue; banana, σ⁰, lands in row 3.</figcaption>
 </figure>
 
 <p>Each row now has two numbers. Its row number, on the left, says where sorting put it; its power
@@ -3356,17 +3466,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=f33bbb031d39"></script>
+        <script src="../../assets/javascripts/bench.js?v=d88c40846722"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=f33bbb031d39"></script>
+        <script src="../../assets/javascripts/couriers.js?v=d88c40846722"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=f33bbb031d39"></script>
+        <script src="../../assets/javascripts/blog.js?v=d88c40846722"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=f33bbb031d39"></script>
+        <script src="../../assets/javascripts/frontier.js?v=d88c40846722"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=f33bbb031d39"></script>
+        <script src="../../assets/javascripts/katex.js?v=d88c40846722"></script>
       
     
   </body>
