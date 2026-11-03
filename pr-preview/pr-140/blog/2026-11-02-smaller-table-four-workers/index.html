@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=a31c87ab9c6f">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=82b44a42b012">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=a31c87ab9c6f">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=82b44a42b012">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=a31c87ab9c6f">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=82b44a42b012">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=a31c87ab9c6f">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=82b44a42b012">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=a31c87ab9c6f">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=82b44a42b012">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1877,102 +1877,107 @@ decoder.</p>
 round to the beginning when it reaches the end: <code>banana</code>, <code>ananab</code>, <code>nanaba</code>, <code>anaban</code>,
 <code>nabana</code>, <code>abanan</code>. These are the word's <em>cyclic rotations</em>: the same six letters, each time
 in a different order. (As permutations of the positions, they are the six powers of one, <span class="arithmatex">\(\sigma = (0\;1\;2\;3\;4\;5)\)</span>
-in cycle notation: <span class="arithmatex">\(\sigma^0\)</span>, the identity, is the word itself, and <span class="arithmatex">\(\sigma^k\)</span> starts it <span class="arithmatex">\(k\)</span>
+in <a href="https://en.wikipedia.org/wiki/Permutation#Cycle_notation">cycle notation</a>: <span class="arithmatex">\(\sigma^0\)</span>, the identity, is the word itself, and <span class="arithmatex">\(\sigma^k\)</span> starts it <span class="arithmatex">\(k\)</span>
 letters in. Stacked
 so that each is the one above shifted one place to the right, they would form a <a href="https://en.wikipedia.org/wiki/Circulant_matrix">circulant
 matrix</a>; sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:</p>
 <figure class="bf-fig">
 <p class="bf-title">The six rotations of banana, sorted</p>
-<svg viewBox="0 0 720 350" role="img" aria-label="The six rotations of banana, sorted alphabetically into rows 0 to 5: abanan, anaban, ananab, banana, nabana, nanaba. The first column reads a a a b n n; the last column reads n n b a a a. Row 3 is banana itself.">
-<text x="96" y="38" class="bf-ts" text-anchor="middle">row</text>
-<text x="179.0" y="38" class="bf-ts" text-anchor="middle">first</text>
-<text x="499.0" y="38" class="bf-ts" text-anchor="middle">last</text>
-<text x="96" y="79" class="bf-t" text-anchor="middle">0</text>
-<rect x="150" y="56" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="179.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="214" y="56" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="243.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="278" y="56" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="307.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="342" y="56" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="371.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="406" y="56" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="435.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="470" y="56" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="499.0" y="79" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<text x="96" y="119" class="bf-t" text-anchor="middle">1</text>
-<rect x="150" y="96" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="179.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="214" y="96" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="243.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="278" y="96" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="307.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="342" y="96" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="371.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="406" y="96" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="435.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="470" y="96" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="499.0" y="119" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<text x="96" y="159" class="bf-t" text-anchor="middle">2</text>
-<rect x="150" y="136" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="179.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="214" y="136" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="243.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="278" y="136" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="307.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="342" y="136" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="371.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="406" y="136" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="435.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="470" y="136" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="499.0" y="159" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<text x="96" y="199" class="bf-t" text-anchor="middle">3</text>
-<rect x="150" y="176" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="179.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="214" y="176" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="243.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="278" y="176" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="307.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="342" y="176" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="371.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="406" y="176" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="435.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="470" y="176" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="499.0" y="199" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<text x="96" y="239" class="bf-t" text-anchor="middle">4</text>
-<rect x="150" y="216" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="179.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="214" y="216" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="243.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="278" y="216" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="307.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="342" y="216" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="371.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="406" y="216" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="435.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="470" y="216" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="499.0" y="239" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<text x="96" y="279" class="bf-t" text-anchor="middle">5</text>
-<rect x="150" y="256" width="58" height="34" rx="5" class="bf-cell-hi"/>
-<text x="179.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="214" y="256" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="243.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="278" y="256" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="307.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
-<rect x="342" y="256" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="371.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="406" y="256" width="58" height="34" rx="5" class="bf-cell"/>
-<text x="435.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
-<rect x="470" y="256" width="58" height="34" rx="5" class="bf-slot"/>
-<text x="499.0" y="279" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
-<rect x="70" y="171" width="468" height="44" rx="7" class="bf-box" style="stroke-width: 2"/>
-<text x="554" y="199" class="bf-t-strong">the original word</text>
-<text x="554" y="279" class="bf-t-strong">nnbaaa, read down</text>
-<path d="M530 274H548" class="bf-link"/>
-<text x="70" y="318" class="bf-tm">The transform keeps the last column, nnbaaa, and the number of the row holding banana, 3.</text>
-<text x="70" y="338" class="bf-tm">Nothing else of the square is stored.</text>
+<svg viewBox="0 0 720 375" role="img" aria-label="The six rotations of banana, sorted alphabetically into rows 0 to 5: abanan, anaban, ananab, banana, nabana, nanaba, which are sigma to the powers 5, 3, 1, 0, 4 and 2. The first column reads a a a b n n; the last column reads n n b a a a. Row 3 is banana itself, sigma to the power 0.">
+<text x="157.0" y="26" class="bf-ts" text-anchor="middle">first</text>
+<text x="457.0" y="26" class="bf-ts" text-anchor="middle">last</text>
+<text x="108" y="63" class="bf-tm" text-anchor="middle">0</text>
+<rect x="130" y="40" width="54" height="34" rx="5" class="bf-cell-hi"/>
+<text x="157.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="190" y="40" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="217.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="250" y="40" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="277.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="310" y="40" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="337.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="370" y="40" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="397.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="430" y="40" width="54" height="34" rx="5" class="bf-slot"/>
+<text x="457.0" y="63" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="508" y="63" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">5</tspan></text>
+<text x="108" y="103" class="bf-tm" text-anchor="middle">1</text>
+<rect x="130" y="80" width="54" height="34" rx="5" class="bf-cell-hi"/>
+<text x="157.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="190" y="80" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="217.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="250" y="80" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="277.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="310" y="80" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="337.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="370" y="80" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="397.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="430" y="80" width="54" height="34" rx="5" class="bf-slot"/>
+<text x="457.0" y="103" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="508" y="103" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">3</tspan></text>
+<text x="108" y="143" class="bf-tm" text-anchor="middle">2</text>
+<rect x="130" y="120" width="54" height="34" rx="5" class="bf-cell-hi"/>
+<text x="157.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="190" y="120" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="217.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="250" y="120" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="277.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="310" y="120" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="337.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="370" y="120" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="397.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="430" y="120" width="54" height="34" rx="5" class="bf-slot"/>
+<text x="457.0" y="143" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<text x="508" y="143" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">1</tspan></text>
+<text x="108" y="183" class="bf-tm" text-anchor="middle">3</text>
+<rect x="130" y="160" width="54" height="34" rx="5" class="bf-cell-hi"/>
+<text x="157.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="190" y="160" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="217.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="250" y="160" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="277.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="310" y="160" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="337.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="370" y="160" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="397.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="430" y="160" width="54" height="34" rx="5" class="bf-slot"/>
+<text x="457.0" y="183" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="508" y="183" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">0</tspan></text>
+<text x="108" y="223" class="bf-tm" text-anchor="middle">4</text>
+<rect x="130" y="200" width="54" height="34" rx="5" class="bf-cell-hi"/>
+<text x="157.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="190" y="200" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="217.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="250" y="200" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="277.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="310" y="200" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="337.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="370" y="200" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="397.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="430" y="200" width="54" height="34" rx="5" class="bf-slot"/>
+<text x="457.0" y="223" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="508" y="223" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">4</tspan></text>
+<text x="108" y="263" class="bf-tm" text-anchor="middle">5</text>
+<rect x="130" y="240" width="54" height="34" rx="5" class="bf-cell-hi"/>
+<text x="157.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="190" y="240" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="217.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="250" y="240" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="277.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<rect x="310" y="240" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="337.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<rect x="370" y="240" width="54" height="34" rx="5" class="bf-cell"/>
+<text x="397.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
+<rect x="430" y="240" width="54" height="34" rx="5" class="bf-slot"/>
+<text x="457.0" y="263" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="508" y="263" class="bf-t" style="font-style: italic">σ<tspan dy="-7" style="font-size: 11px">2</tspan></text>
+<rect x="90" y="155" width="464" height="44" rx="7" class="bf-box" style="stroke-width: 2"/>
+<text x="566" y="183" class="bf-t-strong">the original word</text>
+<path d="M457.0 278V292M452.0 287L457.0 292L462.0 287" class="bf-link"/>
+<text x="457.0" y="310" class="bf-t-strong" text-anchor="middle">nnbaaa</text>
+<text x="90" y="342" class="bf-tm">The transform keeps the last column, nnbaaa, and the number of the row holding banana, 3.</text>
+<text x="90" y="362" class="bf-tm">Nothing else of the square is stored.</text>
 </svg>
-<figcaption>The rotations of banana in alphabetical order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.</figcaption>
+<figcaption>The rotations of banana in alphabetical order, numbered down the left and labelled on the right with the power of σ each one is. Sorting scrambles their order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.</figcaption>
 </figure>
 
 <p>Read down the last column of the sorted rows, and it spells <code>nnbaaa</code>. The original <code>banana</code>,
@@ -2213,7 +2218,12 @@ backwards from its end. So a decoder could recover the whole word from <span cla
 row <span class="arithmatex">\(I\)</span>, if it knew where each move lands. Seward records the landing rows in <span class="arithmatex">\(T\)</span>, the
 <em>"transformation vector"</em>: here <span class="arithmatex">\(T[3] = 0\)</span>, <span class="arithmatex">\(T[0] = 4\)</span> and <span class="arithmatex">\(T[4] = 1\)</span>. As a permutation of the
 rows, <span class="arithmatex">\(T = (3\;0\;4\;1\;5\;2)\)</span>: one cycle through all six, so following it from row 3 visits
-every row once before coming back, reading the whole word on the way. His theory section, <em>"a
+every row once before coming back, reading the whole word on the way. The <span class="arithmatex">\(\sigma\)</span> labels on the
+square show why: rows 3, 0, 4, 1, 5, 2 hold <span class="arithmatex">\(\sigma^0, \sigma^5, \sigma^4, \sigma^3, \sigma^2,
+\sigma^1\)</span>, so each step of <span class="arithmatex">\(T\)</span> counts the power down by one. (Read down the square, those
+powers, 5 3 1 0 4 2, are what string algorithms call the <a href="https://en.wikipedia.org/wiki/Suffix_array">suffix
+array</a>: the compressor computes it by sorting, and
+the decoder never has it.) His theory section, <em>"a
 more detailed exposition of Algorithm D in §2 of [1]"</em>, puts it in symbols:</p>
 <div class="arithmatex">\[
 M[j, N-1]\; M[j, 0..N-2] = M[i, 0..N-1] \quad\Longrightarrow\quad T[j] = i.
@@ -3214,17 +3224,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=a31c87ab9c6f"></script>
+        <script src="../../assets/javascripts/bench.js?v=82b44a42b012"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=a31c87ab9c6f"></script>
+        <script src="../../assets/javascripts/couriers.js?v=82b44a42b012"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=a31c87ab9c6f"></script>
+        <script src="../../assets/javascripts/blog.js?v=82b44a42b012"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=a31c87ab9c6f"></script>
+        <script src="../../assets/javascripts/frontier.js?v=82b44a42b012"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=a31c87ab9c6f"></script>
+        <script src="../../assets/javascripts/katex.js?v=82b44a42b012"></script>
       
     
   </body>
