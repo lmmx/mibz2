@@ -420,7 +420,12 @@ backwards from its end. So a decoder could recover the whole word from $L$ alone
 row $I$, if it knew where each move lands. Seward records the landing rows in $T$, the
 *"transformation vector"*: here $T[3] = 0$, $T[0] = 4$ and $T[4] = 1$. As a permutation of the
 rows, $T = (3\;0\;4\;1\;5\;2)$: one cycle through all six, so following it from row 3 visits
-every row once before coming back, reading the whole word on the way. His theory section, *"a
+every row once before coming back, reading the whole word on the way. The $\sigma$ labels on the
+square show why: rows 3, 0, 4, 1, 5, 2 hold $\sigma^0, \sigma^5, \sigma^4, \sigma^3, \sigma^2,
+\sigma^1$, so each step of $T$ counts the power down by one. (Read down the square, those
+powers, 5 3 1 0 4 2, are what string algorithms call the [suffix
+array](https://en.wikipedia.org/wiki/Suffix_array): the compressor computes it by sorting, and
+the decoder never has it.) His theory section, *"a
 more detailed exposition of Algorithm D in §2 of [1]"*, puts it in symbols:
 
 \[
