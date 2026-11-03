@@ -92,7 +92,9 @@ Start with the word `banana` and see what the Burrows–Wheeler transform does t
 First, write out six versions of the word, each starting at a different letter and wrapping
 round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`,
 `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time
-in a different order. Then sort the six rotations alphabetically and stack them as rows:
+in a different order. (Stacked so that each is the one above shifted one place to the right,
+they would form a [circulant matrix](https://en.wikipedia.org/wiki/Circulant_matrix); sorting
+only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:
 
 <figure class="bf-fig">
 <p class="bf-title">The six rotations of banana, sorted</p>
