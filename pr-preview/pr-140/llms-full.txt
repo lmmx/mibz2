@@ -686,7 +686,7 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so.
 
-2 November 2026 · 22 min read · [Result](<#7-the-four-worker-reversal>)
+2 November 2026 · 23 min read · [Result](<#7-the-four-worker-reversal>)
 
 In 2001, [Julian Seward](<https://en.wikipedia.org/wiki/Julian_Seward>), the author of [bzip2](<https://en.wikipedia.org/wiki/Bzip2>) and the original designer of [Valgrind](<https://valgrind.org/info/developers.html>), was working at Microsoft Research in Cambridge. That year he presented a paper at the IEEE Data Compression Conference, *[Space-time tradeoffs in the Inverse B-W Transform](<https://doi.org/10.1109/DCC.2001.917175>)*, on what it costs to undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT) that bzip2 is built on.
 
@@ -698,9 +698,20 @@ mibz2 is our bzip2 decoder, written for the Wikidata dumps, and that sentence co
 
 The post has two halves: how Seward's algorithms work and what he measured, then what happens to his tradeoff in mibz2, where several blocks decode at once and share one cache. The result in the second half is a controlled test of the walk alone, not yet of the whole decoder.
 
-The post in nine sections
+Seward's paper, 2001
 
-Seward's paper first, then what happens to his tradeoff in mibz2. Select a section to go to it.
+1. [1How does a decoder get `banana` back?By a chain of table lookups, each depending on the last](<#1-from-sorted-rotations-to-the-transformation-vector>)
+2. [2Making inversion fastbasis, bw94 and mergedTL: byte and link in one word](<#2-making-inversion-fast-basis-bw94-and-mergedtl>)
+3. [3Spending less memoryindexF and the count trees: recompute instead of store](<#3-spending-less-memory-indexf-and-the-trees>)
+4. [4What Seward measuredMemory against speed: the space–time tradeoff](<#4-what-seward-measured>)
+
+mibz2, 2026
+
+1. [5Four blocks, one cacheWhy the tradeoff changes when blocks decode at once](<#5-the-same-tradeoff-with-four-blocks-live>)
+2. [6A smaller table, a busier lookupA little over half the space, more work per lookup](<#6-a-smaller-table-a-busier-lookup>)
+3. [7The four-worker reversalThe walk alone: slower on one core, faster on four](<#7-the-four-worker-reversal>)
+4. [8Why four workers cost moreThe usual table pays far more for sharing the cache](<#8-four-workers-cost-the-conventional-walk-far-more>)
+5. [9Still to buildA cheap way to construct the table for the decoder](<#9-the-table-still-has-to-be-built>)
 
 ## 1\. From sorted rotations to the transformation vector
 
