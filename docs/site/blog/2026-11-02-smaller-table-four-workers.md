@@ -692,7 +692,7 @@ the front puts those same letters right behind it, where they decide the order a
 <figure class="bf-fig">
 <p class="bf-title">Why the a’s keep their order</p>
 <svg class="kp-fig" viewBox="0 0 720 384" role="img" aria-label="Two copies of the Burrows–Wheeler matrix of banana, with its three a's labelled a1, a2, a3 and its two n's n1, n2 by where they fall in the word. On the left, rows 3, 4 and 5 end in a3, a2, a1; their first five letters, banan, naban, nanab, are tinted, and are in sorted order. Each of those rows has its last a moved to the front, carrying the tinted letters one place right unchanged, and moves to the right-hand copy, where it is rows 0, 1 and 2, in the same order. Then the a's are outlined: a3, a2, a1 down L on the left, and a3, a2, a1 down F on the right.">
-<style>.kp-fig [style*="translate"], .kp-fig g { transform-box: view-box; } .bf-fig .kp-tie { fill: var(--bf-amber-tint); } .bf-fig .kp-moved { fill: var(--bf-surface); } .bf-fig .kp-win { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 2; } @keyframes kp-lo3 { 0%, 25.98% { opacity: 1 } 26.09%, 37.50% { opacity: 0 } 40.76%, 100% { opacity: 1 } } @keyframes kp-lo4 { 0%, 25.98% { opacity: 1 } 26.09%, 37.50% { opacity: 0 } 40.76%, 100% { opacity: 1 } } @keyframes kp-lo5 { 0%, 25.98% { opacity: 1 } 26.09%, 37.50% { opacity: 0 } 40.76%, 100% { opacity: 1 } } @keyframes kp-ro0 { 0%, 46.63% { opacity: 1 } 46.74%, 92.39% { opacity: 0 } 95.65%, 100% { opacity: 1 } } @keyframes kp-ro1 { 0%, 46.63% { opacity: 1 } 46.74%, 92.39% { opacity: 0 } 95.65%, 100% { opacity: 1 } } @keyframes kp-ro2 { 0%, 46.63% { opacity: 1 } 46.74%, 92.39% { opacity: 0 } 95.65%, 100% { opacity: 1 } } @keyframes kp-tint { 0%, 6.52% { opacity: 0 } 9.78%, 26.09% { opacity: 1 } 26.20%, 100% { opacity: 0 } } @keyframes kp-cap1 { 0%, 6.52% { opacity: 0 } 9.78%, 46.74% { opacity: 1 } 48.91%, 100% { opacity: 0 } } @keyframes kp-fly3 { 0%, 25.98% { opacity: 0; transform: translate(-370px, 114px) } 26.09%, 36.96% { opacity: 1; transform: translate(-370px, 114px) } 45.65%, 92.39% { opacity: 1; transform: translate(0px, 0px) } 95.65%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes kp-l3_1 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_2 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_3 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_4 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_5 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_0 { 0%, 28.26% { transform: translate(170px, 0px) } 32.07% { transform: translate(85.0px, -16px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-fly4 { 0%, 25.98% { opacity: 0; transform: translate(-370px, 114px) } 26.09%, 36.96% { opacity: 1; transform: translate(-370px, 114px) } 45.65%, 92.39% { opacity: 1; transform: translate(0px, 0px) } 95.65%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes kp-l4_1 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_2 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_3 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_4 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_5 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_0 { 0%, 28.26% { transform: translate(170px, 0px) } 32.07% { transform: translate(85.0px, -16px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-fly5 { 0%, 25.98% { opacity: 0; transform: translate(-370px, 114px) } 26.09%, 36.96% { opacity: 1; transform: translate(-370px, 114px) } 45.65%, 92.39% { opacity: 1; transform: translate(0px, 0px) } 95.65%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes kp-l5_1 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_2 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_3 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_4 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_5 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_0 { 0%, 28.26% { transform: translate(170px, 0px) } 32.07% { transform: translate(85.0px, -16px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-glow { 0%, 47.83% { opacity: 0 } 51.09%, 92.39% { opacity: 1 } 95.65%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg.kp-fig [style*="animation"] { animation: none !important; opacity: 1 !important; transform: none !important } svg.kp-fig .kp-cmp { display: none !important } }</style>
+<style>.kp-fig [style*="translate"], .kp-fig g { transform-box: view-box; } .bf-fig .kp-tie { fill: var(--bf-amber-tint); } .bf-fig .kp-idx { fill: var(--bf-muted); font-size: 9.5px; } .bf-fig .kp-moved { fill: var(--bf-surface); } .bf-fig .kp-win { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 2; } @keyframes kp-lo3 { 0%, 25.98% { opacity: 1 } 26.09%, 37.50% { opacity: 0 } 40.76%, 100% { opacity: 1 } } @keyframes kp-lo4 { 0%, 25.98% { opacity: 1 } 26.09%, 37.50% { opacity: 0 } 40.76%, 100% { opacity: 1 } } @keyframes kp-lo5 { 0%, 25.98% { opacity: 1 } 26.09%, 37.50% { opacity: 0 } 40.76%, 100% { opacity: 1 } } @keyframes kp-ro0 { 0%, 46.63% { opacity: 1 } 46.74%, 92.39% { opacity: 0 } 95.65%, 100% { opacity: 1 } } @keyframes kp-ro1 { 0%, 46.63% { opacity: 1 } 46.74%, 92.39% { opacity: 0 } 95.65%, 100% { opacity: 1 } } @keyframes kp-ro2 { 0%, 46.63% { opacity: 1 } 46.74%, 92.39% { opacity: 0 } 95.65%, 100% { opacity: 1 } } @keyframes kp-tint { 0%, 6.52% { opacity: 0 } 9.78%, 26.09% { opacity: 1 } 26.20%, 100% { opacity: 0 } } @keyframes kp-cap1 { 0%, 6.52% { opacity: 0 } 9.78%, 46.74% { opacity: 1 } 48.91%, 100% { opacity: 0 } } @keyframes kp-fly3 { 0%, 25.98% { opacity: 0; transform: translate(-370px, 114px) } 26.09%, 36.96% { opacity: 1; transform: translate(-370px, 114px) } 45.65%, 92.39% { opacity: 1; transform: translate(0px, 0px) } 95.65%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes kp-l3_1 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_2 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_3 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_4 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_5 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_0 { 0%, 28.26% { transform: translate(170px, 0px) } 32.07% { transform: translate(85.0px, -16px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-fly4 { 0%, 25.98% { opacity: 0; transform: translate(-370px, 114px) } 26.09%, 36.96% { opacity: 1; transform: translate(-370px, 114px) } 45.65%, 92.39% { opacity: 1; transform: translate(0px, 0px) } 95.65%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes kp-l4_1 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_2 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_3 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_4 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_5 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_0 { 0%, 28.26% { transform: translate(170px, 0px) } 32.07% { transform: translate(85.0px, -16px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-fly5 { 0%, 25.98% { opacity: 0; transform: translate(-370px, 114px) } 26.09%, 36.96% { opacity: 1; transform: translate(-370px, 114px) } 45.65%, 92.39% { opacity: 1; transform: translate(0px, 0px) } 95.65%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes kp-l5_1 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_2 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_3 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_4 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_5 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_0 { 0%, 28.26% { transform: translate(170px, 0px) } 32.07% { transform: translate(85.0px, -16px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-glow { 0%, 47.83% { opacity: 0 } 51.09%, 92.39% { opacity: 1 } 95.65%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg.kp-fig [style*="animation"] { animation: none !important; opacity: 1 !important; transform: none !important } svg.kp-fig .kp-cmp { display: none !important } }</style>
 <defs><filter id="kp-glow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="3" style="flood-color: var(--bf-amber); flood-opacity: 0.9"/></filter></defs>
 <text x="50" y="36" class="bf-t-strong">Rows ending in a</text>
 <text x="50" y="54" class="bf-tm">the Burrows–Wheeler matrix, last column L</text>
@@ -706,12 +706,12 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="152" y="76" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="186" y="76" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="220" y="76" width="30" height="32" rx="4" class="bf-cell" />
-<text x="62.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="65.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="70.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <text x="99.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="130.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="164.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="198.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="232.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="133.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="138.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="167.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="172.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="201.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="206.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="235.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="240.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 </g>
 <text x="34" y="135" class="bf-tm" text-anchor="middle">1</text>
 <g opacity="0.35">
@@ -721,12 +721,12 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="152" y="114" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="186" y="114" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="220" y="114" width="30" height="32" rx="4" class="bf-cell" />
-<text x="62.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="96.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="130.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="65.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="70.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="99.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="104.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="133.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="138.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <text x="167.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="198.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="232.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="201.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="206.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="235.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="240.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
 </g>
 <text x="34" y="173" class="bf-tm" text-anchor="middle">2</text>
 <g opacity="0.35">
@@ -736,11 +736,11 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="152" y="152" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="186" y="152" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="220" y="152" width="30" height="32" rx="4" class="bf-cell" />
-<text x="62.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="96.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="130.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="164.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="198.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="65.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="70.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="99.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="104.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="133.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="138.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="167.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="172.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="201.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="206.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <text x="235.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
 <text x="34" y="211" class="bf-tm" text-anchor="middle">3</text>
@@ -752,11 +752,11 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="186" y="190" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="220" y="190" width="30" height="32" rx="4" class="bf-cell" />
 <text x="65.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="96.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="130.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="164.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="198.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="232.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="99.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="104.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="133.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="138.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="167.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="172.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="201.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="206.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="235.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="240.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 </g>
 <text x="34" y="249" class="bf-tm" text-anchor="middle">4</text>
 <g style="animation: kp-lo4 9.20s linear infinite">
@@ -766,12 +766,12 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="152" y="228" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="186" y="228" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="220" y="228" width="30" height="32" rx="4" class="bf-cell" />
-<text x="62.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="96.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="65.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="70.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="99.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="104.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <text x="133.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="164.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="198.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="232.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="167.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="172.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="201.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="206.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="235.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="240.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 </g>
 <text x="34" y="287" class="bf-tm" text-anchor="middle">5</text>
 <g style="animation: kp-lo5 9.20s linear infinite">
@@ -781,12 +781,12 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="152" y="266" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="186" y="266" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="220" y="266" width="30" height="32" rx="4" class="bf-cell" />
-<text x="62.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="96.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="130.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="164.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="65.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="70.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="99.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="104.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="133.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="138.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="167.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="172.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <text x="201.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="232.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="235.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="240.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
 </g>
 <text x="404" y="97" class="bf-tm" text-anchor="middle">0</text>
 <g style="animation: kp-ro0 9.20s linear infinite">
@@ -796,12 +796,12 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="522" y="76" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="556" y="76" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="590" y="76" width="30" height="32" rx="4" class="bf-cell" />
-<text x="432.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="435.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="440.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <text x="469.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="500.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="534.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="568.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="602.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="503.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="508.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="537.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="542.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="571.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="576.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="605.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="610.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 </g>
 <text x="404" y="135" class="bf-tm" text-anchor="middle">1</text>
 <g style="animation: kp-ro1 9.20s linear infinite">
@@ -811,12 +811,12 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="522" y="114" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="556" y="114" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="590" y="114" width="30" height="32" rx="4" class="bf-cell" />
-<text x="432.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="466.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="500.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="435.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="440.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="469.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="474.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="503.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="508.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <text x="537.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="568.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="602.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="571.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="576.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="605.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="610.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
 </g>
 <text x="404" y="173" class="bf-tm" text-anchor="middle">2</text>
 <g style="animation: kp-ro2 9.20s linear infinite">
@@ -826,11 +826,11 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="522" y="152" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="556" y="152" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="590" y="152" width="30" height="32" rx="4" class="bf-cell" />
-<text x="432.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="466.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="500.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="534.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="568.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="435.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="440.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="469.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="474.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="503.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="508.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="537.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="542.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="571.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="576.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <text x="605.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
 <text x="404" y="211" class="bf-tm" text-anchor="middle">3</text>
@@ -842,11 +842,11 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="556" y="190" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="590" y="190" width="30" height="32" rx="4" class="bf-cell" />
 <text x="435.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="466.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="500.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="534.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="568.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="602.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="469.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="474.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="503.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="508.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="537.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="542.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="571.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="576.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="605.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="610.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 </g>
 <text x="404" y="249" class="bf-tm" text-anchor="middle">4</text>
 <g opacity="0.35">
@@ -856,12 +856,12 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="522" y="228" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="556" y="228" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="590" y="228" width="30" height="32" rx="4" class="bf-cell" />
-<text x="432.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="466.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="435.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="440.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="469.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="474.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <text x="503.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="534.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="568.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="602.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="537.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="542.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="571.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="576.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="605.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="610.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 </g>
 <text x="404" y="287" class="bf-tm" text-anchor="middle">5</text>
 <g opacity="0.35">
@@ -871,42 +871,42 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="522" y="266" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="556" y="266" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="590" y="266" width="30" height="32" rx="4" class="bf-cell" />
-<text x="432.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="466.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="500.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
-<text x="534.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="435.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="440.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="469.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="474.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="503.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="508.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
+<text x="537.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="542.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <text x="571.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
-<text x="602.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="605.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="610.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
 </g>
 <g class="kp-cmp" style="animation: kp-tint 9.20s linear infinite">
 <rect x="50" y="190" width="30" height="32" rx="4" class="kp-tie" />
 <text x="65.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 <rect x="84" y="190" width="30" height="32" rx="4" class="kp-tie" />
-<text x="96.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="99.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="104.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
 <rect x="118" y="190" width="30" height="32" rx="4" class="kp-tie" />
-<text x="130.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="133.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="138.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
 <rect x="152" y="190" width="30" height="32" rx="4" class="kp-tie" />
-<text x="164.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="167.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="172.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 <rect x="186" y="190" width="30" height="32" rx="4" class="kp-tie" />
-<text x="198.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="201.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="206.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 <rect x="50" y="228" width="30" height="32" rx="4" class="kp-tie" />
-<text x="62.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="65.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="70.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 <rect x="84" y="228" width="30" height="32" rx="4" class="kp-tie" />
-<text x="96.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="99.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="104.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <rect x="118" y="228" width="30" height="32" rx="4" class="kp-tie" />
 <text x="133.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 <rect x="152" y="228" width="30" height="32" rx="4" class="kp-tie" />
-<text x="164.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="167.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="172.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
 <rect x="186" y="228" width="30" height="32" rx="4" class="kp-tie" />
-<text x="198.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="201.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="206.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
 <rect x="50" y="266" width="30" height="32" rx="4" class="kp-tie" />
-<text x="62.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="65.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="70.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
 <rect x="84" y="266" width="30" height="32" rx="4" class="kp-tie" />
-<text x="96.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="99.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="104.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 <rect x="118" y="266" width="30" height="32" rx="4" class="kp-tie" />
-<text x="130.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="133.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="138.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 <rect x="152" y="266" width="30" height="32" rx="4" class="kp-tie" />
-<text x="164.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="167.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="172.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <rect x="186" y="266" width="30" height="32" rx="4" class="kp-tie" />
 <text x="201.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
@@ -919,11 +919,11 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="556" y="76" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="590" y="76" width="30" height="32" rx="4" class="bf-cell" />
 <g style="animation: kp-l3_1 9.20s ease-in-out infinite"><rect x="454" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="469.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
-<g style="animation: kp-l3_2 9.20s ease-in-out infinite"><rect x="488" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="500.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
-<g style="animation: kp-l3_3 9.20s ease-in-out infinite"><rect x="522" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="534.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
-<g style="animation: kp-l3_4 9.20s ease-in-out infinite"><rect x="556" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="568.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
-<g style="animation: kp-l3_5 9.20s ease-in-out infinite"><rect x="590" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="602.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
-<g style="animation: kp-l3_0 9.20s ease-in-out infinite"><rect x="420" y="76" width="30" height="32" rx="4" class="kp-moved" /><text x="432.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text></g>
+<g style="animation: kp-l3_2 9.20s ease-in-out infinite"><rect x="488" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="503.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="508.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text></g>
+<g style="animation: kp-l3_3 9.20s ease-in-out infinite"><rect x="522" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="537.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="542.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text></g>
+<g style="animation: kp-l3_4 9.20s ease-in-out infinite"><rect x="556" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="571.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="576.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text></g>
+<g style="animation: kp-l3_5 9.20s ease-in-out infinite"><rect x="590" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="605.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="610.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text></g>
+<g style="animation: kp-l3_0 9.20s ease-in-out infinite"><rect x="420" y="76" width="30" height="32" rx="4" class="kp-moved" /><text x="435.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="440.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text></g>
 </g>
 <g class="kp-cmp" style="animation: kp-fly4 9.20s ease-in-out infinite">
 <rect x="420" y="114" width="30" height="32" rx="4" class="bf-cell" />
@@ -932,12 +932,12 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="522" y="114" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="556" y="114" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="590" y="114" width="30" height="32" rx="4" class="bf-cell" />
-<g style="animation: kp-l4_1 9.20s ease-in-out infinite"><rect x="454" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="466.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
-<g style="animation: kp-l4_2 9.20s ease-in-out infinite"><rect x="488" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="500.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text></g>
+<g style="animation: kp-l4_1 9.20s ease-in-out infinite"><rect x="454" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="469.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="474.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text></g>
+<g style="animation: kp-l4_2 9.20s ease-in-out infinite"><rect x="488" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="503.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="508.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text></g>
 <g style="animation: kp-l4_3 9.20s ease-in-out infinite"><rect x="522" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="537.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
-<g style="animation: kp-l4_4 9.20s ease-in-out infinite"><rect x="556" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="568.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
-<g style="animation: kp-l4_5 9.20s ease-in-out infinite"><rect x="590" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="602.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
-<g style="animation: kp-l4_0 9.20s ease-in-out infinite"><rect x="420" y="114" width="30" height="32" rx="4" class="kp-moved" /><text x="432.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
+<g style="animation: kp-l4_4 9.20s ease-in-out infinite"><rect x="556" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="571.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="576.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text></g>
+<g style="animation: kp-l4_5 9.20s ease-in-out infinite"><rect x="590" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="605.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="610.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text></g>
+<g style="animation: kp-l4_0 9.20s ease-in-out infinite"><rect x="420" y="114" width="30" height="32" rx="4" class="kp-moved" /><text x="435.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="440.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text></g>
 </g>
 <g class="kp-cmp" style="animation: kp-fly5 9.20s ease-in-out infinite">
 <rect x="420" y="152" width="30" height="32" rx="4" class="bf-cell" />
@@ -946,28 +946,28 @@ the front puts those same letters right behind it, where they decide the order a
 <rect x="522" y="152" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="556" y="152" width="30" height="32" rx="4" class="bf-cell" />
 <rect x="590" y="152" width="30" height="32" rx="4" class="bf-cell" />
-<g style="animation: kp-l5_1 9.20s ease-in-out infinite"><rect x="454" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="466.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
-<g style="animation: kp-l5_2 9.20s ease-in-out infinite"><rect x="488" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="500.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
-<g style="animation: kp-l5_3 9.20s ease-in-out infinite"><rect x="522" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="534.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
-<g style="animation: kp-l5_4 9.20s ease-in-out infinite"><rect x="556" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="568.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text></g>
+<g style="animation: kp-l5_1 9.20s ease-in-out infinite"><rect x="454" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="469.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="474.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text></g>
+<g style="animation: kp-l5_2 9.20s ease-in-out infinite"><rect x="488" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="503.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="508.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text></g>
+<g style="animation: kp-l5_3 9.20s ease-in-out infinite"><rect x="522" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="537.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n</text><text x="542.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text></g>
+<g style="animation: kp-l5_4 9.20s ease-in-out infinite"><rect x="556" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="571.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="576.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text></g>
 <g style="animation: kp-l5_5 9.20s ease-in-out infinite"><rect x="590" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="605.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
-<g style="animation: kp-l5_0 9.20s ease-in-out infinite"><rect x="420" y="152" width="30" height="32" rx="4" class="kp-moved" /><text x="432.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
+<g style="animation: kp-l5_0 9.20s ease-in-out infinite"><rect x="420" y="152" width="30" height="32" rx="4" class="kp-moved" /><text x="435.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="440.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text></g>
 </g>
 <g style="animation: kp-glow 9.20s linear infinite">
 <rect x="220" y="190" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
-<text x="232.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="235.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="240.0" y="215" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <rect x="220" y="228" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
-<text x="232.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="235.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="240.0" y="253" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 <rect x="220" y="266" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
-<text x="232.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="235.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="240.0" y="291" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
 <rect x="420" y="76" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
-<text x="432.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="435.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="440.0" y="101" class="kp-idx" style="font-family: var(--md-code-font-family)">3</text>
 <rect x="420" y="114" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
-<text x="432.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="435.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="440.0" y="139" class="kp-idx" style="font-family: var(--md-code-font-family)">2</text>
 <rect x="420" y="152" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
-<text x="432.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="50" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4">&#160;</tspan></tspan>down L</text>
-<text x="420" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4">&#160;</tspan></tspan>down F</text>
+<text x="435.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text><text x="440.0" y="177" class="kp-idx" style="font-family: var(--md-code-font-family)">1</text>
+<text x="50" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dx="1" dy="4" class="kp-idx">3</tspan><tspan dy="-4">, </tspan>a<tspan dx="1" dy="4" class="kp-idx">2</tspan><tspan dy="-4">, </tspan>a<tspan dx="1" dy="4" class="kp-idx">1</tspan><tspan dy="-4">&#160;</tspan></tspan>down L</text>
+<text x="420" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dx="1" dy="4" class="kp-idx">3</tspan><tspan dy="-4">, </tspan>a<tspan dx="1" dy="4" class="kp-idx">2</tspan><tspan dy="-4">, </tspan>a<tspan dx="1" dy="4" class="kp-idx">1</tspan><tspan dy="-4">&#160;</tspan></tspan>down F</text>
 </g>
 </svg>
 <figcaption>The square twice, its a’s and n’s labelled by where they fall in banana. Left, rows 3, 4 and 5 end in a; what comes before that a (tinted) puts them in order. Each moves its a to the front, carrying the tinted letters one place right, and lands on rows 0, 1 and 2 on the right, in the same order. So the a’s run a<sub>3</sub>, a<sub>2</sub>, a<sub>1</sub> down both L and F.</figcaption>
@@ -1155,39 +1155,39 @@ $L[0..j]$ and $L[j] = c$, then $T[j]$ must be $i$, where $i$ is the position of 
 <text x="490" y="26" class="bf-ts" text-anchor="middle">F[i]</text>
 <text x="156" y="62" class="bf-tm" text-anchor="end">j = 0</text>
 <rect x="170" y="40" width="40" height="30" rx="4" class="bf-slot"/>
-<text x="187" y="61" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="190" y="61" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text><text x="195.5" y="65" style="font-family: var(--md-code-font-family); font-size: 10px; fill: var(--bf-muted)">2</text>
 <rect x="470" y="40" width="40" height="30" rx="4" class="bf-cell-hi"/>
-<text x="487" y="61" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="490" y="61" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text><text x="495.5" y="65" style="font-family: var(--md-code-font-family); font-size: 10px; fill: var(--bf-muted)">3</text>
 <text x="524" y="62" class="bf-tm">i = 0</text>
 <text x="156" y="100" class="bf-tm" text-anchor="end">j = 1</text>
 <rect x="170" y="78" width="40" height="30" rx="4" class="bf-slot"/>
-<text x="187" y="99" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="190" y="99" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text><text x="195.5" y="103" style="font-family: var(--md-code-font-family); font-size: 10px; fill: var(--bf-muted)">1</text>
 <rect x="470" y="78" width="40" height="30" rx="4" class="bf-cell-hi"/>
-<text x="487" y="99" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="490" y="99" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text><text x="495.5" y="103" style="font-family: var(--md-code-font-family); font-size: 10px; fill: var(--bf-muted)">2</text>
 <text x="524" y="100" class="bf-tm">i = 1</text>
 <text x="156" y="138" class="bf-tm" text-anchor="end">j = 2</text>
 <rect x="170" y="116" width="40" height="30" rx="4" class="bf-slot"/>
 <text x="190" y="137" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
 <rect x="470" y="116" width="40" height="30" rx="4" class="bf-cell-hi"/>
-<text x="487" y="137" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="490" y="137" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text><text x="495.5" y="141" style="font-family: var(--md-code-font-family); font-size: 10px; fill: var(--bf-muted)">1</text>
 <text x="524" y="138" class="bf-tm">i = 2</text>
 <text x="156" y="176" class="bf-tm" text-anchor="end">j = 3</text>
 <rect x="170" y="154" width="40" height="30" rx="4" class="bf-slot"/>
-<text x="187" y="175" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="190" y="175" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text><text x="195.5" y="179" style="font-family: var(--md-code-font-family); font-size: 10px; fill: var(--bf-muted)">3</text>
 <rect x="470" y="154" width="40" height="30" rx="4" class="bf-cell-hi"/>
 <text x="490" y="175" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
 <text x="524" y="176" class="bf-tm">i = 3</text>
 <text x="156" y="214" class="bf-tm" text-anchor="end">j = 4</text>
 <rect x="170" y="192" width="40" height="30" rx="4" class="bf-slot"/>
-<text x="187" y="213" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="190" y="213" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text><text x="195.5" y="217" style="font-family: var(--md-code-font-family); font-size: 10px; fill: var(--bf-muted)">2</text>
 <rect x="470" y="192" width="40" height="30" rx="4" class="bf-cell-hi"/>
-<text x="487" y="213" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="490" y="213" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text><text x="495.5" y="217" style="font-family: var(--md-code-font-family); font-size: 10px; fill: var(--bf-muted)">2</text>
 <text x="524" y="214" class="bf-tm">i = 4</text>
 <text x="156" y="252" class="bf-tm" text-anchor="end">j = 5</text>
 <rect x="170" y="230" width="40" height="30" rx="4" class="bf-slot"/>
-<text x="187" y="251" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="190" y="251" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text><text x="195.5" y="255" style="font-family: var(--md-code-font-family); font-size: 10px; fill: var(--bf-muted)">1</text>
 <rect x="470" y="230" width="40" height="30" rx="4" class="bf-cell-hi"/>
-<text x="487" y="251" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="490" y="251" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text><text x="495.5" y="255" style="font-family: var(--md-code-font-family); font-size: 10px; fill: var(--bf-muted)">1</text>
 <text x="524" y="252" class="bf-tm">i = 5</text>
 <path d="M214 55 C320 55 360 207 464 207" class="bf-link"/>
 <text x="222" y="51" class="bf-ttiny">T[0] = 4</text>
