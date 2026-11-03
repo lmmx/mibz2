@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c04157a7b6b1">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=a31c87ab9c6f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c04157a7b6b1">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=a31c87ab9c6f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c04157a7b6b1">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=a31c87ab9c6f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c04157a7b6b1">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=a31c87ab9c6f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c04157a7b6b1">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=a31c87ab9c6f">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1876,8 +1876,9 @@ decoder.</p>
 <p>First, write out six versions of the word, each starting at a different letter and wrapping
 round to the beginning when it reaches the end: <code>banana</code>, <code>ananab</code>, <code>nanaba</code>, <code>anaban</code>,
 <code>nabana</code>, <code>abanan</code>. These are the word's <em>cyclic rotations</em>: the same six letters, each time
-in a different order. (As permutations of the six positions, they are the powers of one
-cycle, <span class="arithmatex">\((0\;1\;2\;3\;4\;5)\)</span>, and the zeroth power, the identity, is the word itself. Stacked
+in a different order. (As permutations of the positions, they are the six powers of one, <span class="arithmatex">\(\sigma = (0\;1\;2\;3\;4\;5)\)</span>
+in cycle notation: <span class="arithmatex">\(\sigma^0\)</span>, the identity, is the word itself, and <span class="arithmatex">\(\sigma^k\)</span> starts it <span class="arithmatex">\(k\)</span>
+letters in. Stacked
 so that each is the one above shifted one place to the right, they would form a <a href="https://en.wikipedia.org/wiki/Circulant_matrix">circulant
 matrix</a>; sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:</p>
 <figure class="bf-fig">
@@ -1974,8 +1975,8 @@ matrix</a>; sorting only reorders those rows.) Then sort the six rotations alpha
 <figcaption>The rotations of banana in alphabetical order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.</figcaption>
 </figure>
 
-<p>Read down the last column of the sorted rows, and it spells <code>nnbaaa</code>. The original <code>banana</code>, the
-rotation by nothing, is in row 3, counting from zero. The transform keeps just those two things, the last column and
+<p>Read down the last column of the sorted rows, and it spells <code>nnbaaa</code>. The original <code>banana</code>,
+<span class="arithmatex">\(\sigma^0\)</span>, is in row 3, counting from zero. The transform keeps just those two things, the last column and
 the row number, and stores nothing else. It doesn't make the block smaller; the reordered
 letters compress better in bzip2's later stages, for a reason that comes below.</p>
 <p>How can a decoder get <code>banana</code> back from only <code>nnbaaa</code> and 3? Each of Seward's algorithms
@@ -3213,17 +3214,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=c04157a7b6b1"></script>
+        <script src="../../assets/javascripts/bench.js?v=a31c87ab9c6f"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=c04157a7b6b1"></script>
+        <script src="../../assets/javascripts/couriers.js?v=a31c87ab9c6f"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=c04157a7b6b1"></script>
+        <script src="../../assets/javascripts/blog.js?v=a31c87ab9c6f"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=c04157a7b6b1"></script>
+        <script src="../../assets/javascripts/frontier.js?v=a31c87ab9c6f"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=c04157a7b6b1"></script>
+        <script src="../../assets/javascripts/katex.js?v=a31c87ab9c6f"></script>
       
     
   </body>

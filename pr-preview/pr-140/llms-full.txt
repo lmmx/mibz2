@@ -717,13 +717,13 @@ mibz2, 2026
 
 Start with the word `banana` and see what the Burrows–Wheeler transform does to it.
 
-First, write out six versions of the word, each starting at a different letter and wrapping round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`, `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time in a different order. (As permutations of the six positions, they are the powers of one cycle, \\((0\\;1\\;2\\;3\\;4\\;5)\\), and the zeroth power, the identity, is the word itself. Stacked so that each is the one above shifted one place to the right, they would form a [circulant matrix](<https://en.wikipedia.org/wiki/Circulant_matrix>); sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:
+First, write out six versions of the word, each starting at a different letter and wrapping round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`, `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time in a different order. (As permutations of the positions, they are the six powers of one, \\(\\sigma = (0\\;1\\;2\\;3\\;4\\;5)\\) in cycle notation: \\(\\sigma^0\\), the identity, is the word itself, and \\(\\sigma^k\\) starts it \\(k\\) letters in. Stacked so that each is the one above shifted one place to the right, they would form a [circulant matrix](<https://en.wikipedia.org/wiki/Circulant_matrix>); sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:
 
 The six rotations of banana, sorted
 
 The rotations of banana in alphabetical order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.
 
-Read down the last column of the sorted rows, and it spells `nnbaaa`. The original `banana`, the rotation by nothing, is in row 3, counting from zero. The transform keeps just those two things, the last column and the row number, and stores nothing else. It doesn't make the block smaller; the reordered letters compress better in bzip2's later stages, for a reason that comes below.
+Read down the last column of the sorted rows, and it spells `nnbaaa`. The original `banana`, \\(\\sigma^0\\), is in row 3, counting from zero. The transform keeps just those two things, the last column and the row number, and stores nothing else. It doesn't make the block smaller; the reordered letters compress better in bzip2's later stages, for a reason that comes below.
 
 How can a decoder get `banana` back from only `nnbaaa` and 3? Each of Seward's algorithms answers that question in a different way.
 
