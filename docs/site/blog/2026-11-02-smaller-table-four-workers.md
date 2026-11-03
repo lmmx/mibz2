@@ -19,7 +19,7 @@ ask whether a smaller navigation table could do more work per step and still com
 under contention. A first measurement of ours shows it doing so.
 {: .post-dek }
 
-2 November 2026 · 22 min read · [Result](#7-the-four-worker-reversal)
+2 November 2026 · 23 min read · [Result](#7-the-four-worker-reversal)
 {: .post-meta }
 
 </div>
@@ -63,30 +63,23 @@ to his tradeoff in mibz2, where several blocks decode at once and share one cach
 result in the second half is a controlled test of the walk alone, not yet of the whole
 decoder.
 
-<figure class="bf-fig">
-<p class="bf-title">The post in nine sections</p>
-<svg viewBox="0 0 720 568" role="img" aria-label="The post in nine sections. Seward's paper, 2001: 1, how a decoder gets banana back; 2, making inversion fast; 3, spending less memory; 4, what Seward measured. mibz2, 2026: 5, four blocks sharing one cache; 6, a smaller table; 7, the four-worker reversal; 8, why four workers cost more; 9, the table still to build.">
-<path d="M22 77V101" class="bf-link"/>
-<path d="M22 127V151" class="bf-link"/>
-<path d="M22 177V201" class="bf-link"/>
-<path d="M22 323V347" class="bf-link"/>
-<path d="M22 373V397" class="bf-link"/>
-<path d="M22 423V447" class="bf-link"/>
-<path d="M22 473V497" class="bf-link"/>
-<text x="0" y="30" class="bf-tm" style="text-transform: uppercase; letter-spacing: 0.06em">Seward's paper, 2001</text>
-<a href="#1-from-sorted-rotations-to-the-transformation-vector" style="text-decoration: none"><circle cx="22" cy="64" r="13" class="bf-dot"/><text x="22" y="69" class="bf-t-strong" text-anchor="middle">1</text><text x="50" y="62" class="bf-ts">How does a decoder get banana back?</text><text x="50" y="80" class="bf-tm">By a chain of table lookups, each depending on the last</text></a>
-<a href="#2-making-inversion-fast-basis-bw94-and-mergedtl" style="text-decoration: none"><circle cx="22" cy="114" r="13" class="bf-dot"/><text x="22" y="119" class="bf-t-strong" text-anchor="middle">2</text><text x="50" y="112" class="bf-ts">Making inversion fast</text><text x="50" y="130" class="bf-tm">basis, bw94 and mergedTL: byte and link in one word</text></a>
-<a href="#3-spending-less-memory-indexf-and-the-trees" style="text-decoration: none"><circle cx="22" cy="164" r="13" class="bf-dot"/><text x="22" y="169" class="bf-t-strong" text-anchor="middle">3</text><text x="50" y="162" class="bf-ts">Spending less memory</text><text x="50" y="180" class="bf-tm">indexF and the count trees: recompute instead of store</text></a>
-<a href="#4-what-seward-measured" style="text-decoration: none"><circle cx="22" cy="214" r="13" class="bf-dot"/><text x="22" y="219" class="bf-t-strong" text-anchor="middle">4</text><text x="50" y="212" class="bf-ts">What Seward measured</text><text x="50" y="230" class="bf-tm">memory against speed: the space–time tradeoff</text></a>
-<text x="0" y="276" class="bf-tm" style="text-transform: uppercase; letter-spacing: 0.06em">mibz2, 2026</text>
-<a href="#5-the-same-tradeoff-with-four-blocks-live" style="text-decoration: none"><circle cx="22" cy="310" r="13" class="bf-dot-hi"/><text x="22" y="315" class="bf-t-strong" text-anchor="middle">5</text><text x="50" y="308" class="bf-ts">Four blocks, one cache</text><text x="50" y="326" class="bf-tm">why the tradeoff changes when blocks decode at once</text></a>
-<a href="#6-a-smaller-table-a-busier-lookup" style="text-decoration: none"><circle cx="22" cy="360" r="13" class="bf-dot-hi"/><text x="22" y="365" class="bf-t-strong" text-anchor="middle">6</text><text x="50" y="358" class="bf-ts">A smaller table, a busier lookup</text><text x="50" y="376" class="bf-tm">a little over half the space, more work per lookup</text></a>
-<a href="#7-the-four-worker-reversal" style="text-decoration: none"><circle cx="22" cy="410" r="13" class="bf-dot-hi"/><text x="22" y="415" class="bf-t-strong" text-anchor="middle">7</text><text x="50" y="408" class="bf-ts">The four-worker reversal</text><text x="50" y="426" class="bf-tm">the walk alone: slower on one core, faster on four</text></a>
-<a href="#8-four-workers-cost-the-conventional-walk-far-more" style="text-decoration: none"><circle cx="22" cy="460" r="13" class="bf-dot-hi"/><text x="22" y="465" class="bf-t-strong" text-anchor="middle">8</text><text x="50" y="458" class="bf-ts">Why four workers cost more</text><text x="50" y="476" class="bf-tm">the usual table pays far more for sharing the cache</text></a>
-<a href="#9-the-table-still-has-to-be-built" style="text-decoration: none"><circle cx="22" cy="510" r="13" class="bf-dot-hi"/><text x="22" y="515" class="bf-t-strong" text-anchor="middle">9</text><text x="50" y="508" class="bf-ts">Still to build</text><text x="50" y="526" class="bf-tm">a cheap way to construct the table for the decoder</text></a>
-</svg>
-<figcaption>Seward's paper first, then what happens to his tradeoff in mibz2. Select a section to go to it.</figcaption>
-</figure>
+<nav class="post-roadmap" aria-label="The post in nine sections">
+<p class="post-roadmap-part">Seward's paper, 2001</p>
+<ol>
+<li><a href="#1-from-sorted-rotations-to-the-transformation-vector"><span class="rm-n">1</span><span class="rm-t">How does a decoder get <code>banana</code> back?</span><span class="rm-d">By a chain of table lookups, each depending on the last</span></a></li>
+<li><a href="#2-making-inversion-fast-basis-bw94-and-mergedtl"><span class="rm-n">2</span><span class="rm-t">Making inversion fast</span><span class="rm-d">basis, bw94 and mergedTL: byte and link in one word</span></a></li>
+<li><a href="#3-spending-less-memory-indexf-and-the-trees"><span class="rm-n">3</span><span class="rm-t">Spending less memory</span><span class="rm-d">indexF and the count trees: recompute instead of store</span></a></li>
+<li><a href="#4-what-seward-measured"><span class="rm-n">4</span><span class="rm-t">What Seward measured</span><span class="rm-d">Memory against speed: the space–time tradeoff</span></a></li>
+</ol>
+<p class="post-roadmap-part">mibz2, 2026</p>
+<ol class="rm-ours">
+<li><a href="#5-the-same-tradeoff-with-four-blocks-live"><span class="rm-n">5</span><span class="rm-t">Four blocks, one cache</span><span class="rm-d">Why the tradeoff changes when blocks decode at once</span></a></li>
+<li><a href="#6-a-smaller-table-a-busier-lookup"><span class="rm-n">6</span><span class="rm-t">A smaller table, a busier lookup</span><span class="rm-d">A little over half the space, more work per lookup</span></a></li>
+<li><a href="#7-the-four-worker-reversal"><span class="rm-n">7</span><span class="rm-t">The four-worker reversal</span><span class="rm-d">The walk alone: slower on one core, faster on four</span></a></li>
+<li><a href="#8-four-workers-cost-the-conventional-walk-far-more"><span class="rm-n">8</span><span class="rm-t">Why four workers cost more</span><span class="rm-d">The usual table pays far more for sharing the cache</span></a></li>
+<li><a href="#9-the-table-still-has-to-be-built"><span class="rm-n">9</span><span class="rm-t">Still to build</span><span class="rm-d">A cheap way to construct the table for the decoder</span></a></li>
+</ol>
+</nav>
 
 ## 1. From sorted rotations to the transformation vector
 
