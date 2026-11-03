@@ -50,8 +50,8 @@ No rerun was made, and nothing was changed. The guardian decides what follows.
   | G2 | every all-full W4 step's start skew ≤ 2% | 1 of 4,560 steps over: round 7, warm, P, step 1, 4.12%; the next largest in that pass 0.11%; the row-weighted aggregate's largest 0.09% |
 
 - **What G1's failure looks like:** P's warm W1 cost is bimodal across rounds, at about
-  0.521 ns/row in most rounds and 0.443–0.468 in rounds 6, 8, 12, 13, 14, 16 and 18, with
-  intermediate values in others. The cold W1 pattern is similar. C's W1 cost varies by 1.054
+  0.521–0.544 ns/row in thirteen rounds, 0.443–0.468 in rounds 6, 8, 12, 14 and 16, and
+  0.494–0.497 in rounds 13 and 18. The cold W1 pattern is similar. C's W1 cost varies by 1.054
   (warm) and 1.042 (cold), and both arms' W4 cost and completion time by 1.022–1.028. G1 as
   registered tests P only. The cause is not established here.
 - **Memory:** estimate 1,855,326,234 bytes; verified dry-run peak 1,769,914,368; required
