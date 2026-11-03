@@ -58,10 +58,15 @@ table. Seward said as much in [bzip2's manual](https://sourceware.org/bzip2/manu
 *"performance, both for compressing and decompressing, is largely determined by the speed at
 which your machine can service cache misses."*
 
-We work through his paper first, with a six-byte example done by hand, his three tables,
-and his results plotted as the tradeoff they describe. Then we show a compact table of ours
-that, for the walk on its own, beats that tradeoff once four cores share a cache: slower than
-mibz2's table on one core, faster with four.
+The post has two halves. The first works through how Seward's algorithms undo the
+transform. We decode a toy example by hand, recovering the word `banana`, to show that the
+decoder rebuilds the text by following a permutation of the block's positions, one lookup at
+a time, and that this chain of lookups is where the cache misses come from. His algorithms
+are different ways of storing that permutation, and we plot the speed and memory he measured
+for each, which shows the space–time tradeoff between them. The second half is ours: a
+compact way of storing the permutation that costs more per lookup. When one core walks it
+alone, it is slower than mibz2's usual table, as Seward's tradeoff would predict. When four
+cores walk their tables at once, sharing one cache, it is faster.
 
 ## From sorted rotations to the transformation vector
 
