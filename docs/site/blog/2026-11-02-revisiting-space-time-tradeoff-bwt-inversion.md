@@ -1,7 +1,7 @@
 ---
 title: "Revisiting the space–time tradeoff in BWT inversion"
 image: assets/social/blog-2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.png
-description: "In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so."
+description: "A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result."
 ---
 
 <div class="post-hero" markdown>
@@ -13,10 +13,8 @@ description: "In 2001, Seward showed why the fastest way to undo a Burrows–Whe
 
 # Revisiting the space–⁠time tradeoff in BWT inversion
 
-In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more
-instructions but less memory traffic. Twenty-five years later, that observation led us to
-ask whether a smaller navigation table could do more work per step and still come out ahead
-under contention. A first measurement of ours shows it doing so.
+A packed table saved memory but cost too much to read. A cheaper compact lookup gives the
+first positive traversal result.
 {: .post-dek }
 
 2 November 2026 · 27 min read · [Result](#7-timing-the-walk-on-one-core-and-on-four)
@@ -28,14 +26,21 @@ under contention. A first measurement of ours shows it doing so.
 
 </div>
 
-In 2001, [Julian Seward](https://en.wikipedia.org/wiki/Julian_Seward), the author of
-[bzip2](https://en.wikipedia.org/wiki/Bzip2) and the original designer of
-[Valgrind](https://valgrind.org/info/developers.html), was working at Microsoft Research in
-Cambridge. That year he presented a paper at the IEEE Data Compression Conference,
-*[Space-time tradeoffs in the Inverse B-W
-Transform](https://doi.org/10.1109/DCC.2001.917175)*, on what it costs to undo the
+A smaller navigation table has given our first positive traversal result. Walking it takes
+15% more CPU time per row than mibz2's conventional table on one core, and 16% less when four
+workers walk at once. The result is for the walk alone: what the table costs to build, and
+what it does for a whole decompression, are still to be measured.
+
+The question behind it goes back to 2001. [Julian Seward](https://en.wikipedia.org/wiki/Julian_Seward),
+the author of [bzip2](https://en.wikipedia.org/wiki/Bzip2) and the original designer of
+[Valgrind](https://valgrind.org/info/developers.html), was then at Microsoft Research in
+Cambridge, and that year presented *[Space-time tradeoffs in the Inverse B-W
+Transform](https://doi.org/10.1109/DCC.2001.917175)* at the IEEE Data Compression Conference.
+It showed why the fastest way to undo the
 [Burrows–Wheeler transform](https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform)
-(BWT) that bzip2 is built on.
+(BWT), which bzip2 is built on, could use more instructions but less memory traffic. Twenty-five
+years later, that observation led us to ask whether a smaller navigation table could do more
+work per step and still come out ahead under contention.
 
 Compression with the BWT had been studied closely, but
 *"decompression-time issues remain underinvestigated"*. He had two uses in mind that pull in opposite directions: booting a
@@ -59,9 +64,8 @@ table. Seward said as much in [bzip2's manual](https://sourceware.org/bzip2/manu
 which your machine can service cache misses."*
 
 The post has two halves: how Seward's algorithms work and what he measured, then what happens
-to his tradeoff in mibz2, where several blocks decode at once and share one cache. The
-result in the second half is a controlled test of the walk alone, not yet of the whole
-decoder.
+to his tradeoff in mibz2, where several blocks decode at once and share one cache. Readers who
+know how BWT inversion works can go straight to [the compact table](#6-a-smaller-table-a-busier-lookup).
 
 <nav class="post-roadmap" aria-label="The post in nine sections">
 <div class="rm-half">

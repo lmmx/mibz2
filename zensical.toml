@@ -223,7 +223,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md" = "In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so." },
+  { "blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md" = "A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result." },
   { "blog/2026-11-02-memory-level-parallelism.md" = "Interleaving pointer chases lets memory waits overlap. The speedup shows that this pays, but not what limits it: a 2022 exchange about Daniel Lemire's benchmark, read against mibz2's inverse-BWT walk." },
   { "blog/2026-11-02-memory-level-parallelism-notes.md" = "Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register." },
   { "blog/2026-11-01-inverse-bwt-memory-interference.md" = "Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible." },
