@@ -4,7 +4,7 @@
 
 In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so.
 
-2 November 2026 · 22 min read · [Result](<#the-four-worker-reversal>)
+2 November 2026 · 22 min read · [Result](<#7-the-four-worker-reversal>)
 
 In 2001, [Julian Seward](<https://en.wikipedia.org/wiki/Julian_Seward>), the author of [bzip2](<https://en.wikipedia.org/wiki/Bzip2>) and the original designer of [Valgrind](<https://valgrind.org/info/developers.html>), was working at Microsoft Research in Cambridge. That year he presented a paper at the IEEE Data Compression Conference, *[Space-time tradeoffs in the Inverse B-W Transform](<https://doi.org/10.1109/DCC.2001.917175>)*, on what it costs to undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT) that bzip2 is built on.
 
@@ -14,110 +14,116 @@ Compression with the BWT had been studied closely, but *"decompression-time issu
 
 mibz2 is our bzip2 decoder, written for the Wikidata dumps, and that sentence could stand over most of what we have written about it. Our posts on [32 lanes](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-10-31-room-walk-overlap/index.md>) and [memory-level parallelism](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-02-memory-level-parallelism/index.md>) are about keeping many misses in flight at once; [memory interference](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-01-inverse-bwt-memory-interference/index.md>) is about four workers' misses competing for one memory system; [compact navigation tables](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-10-29-compact-navigation-tables/index.md>) is about taking fewer misses with a smaller table. Seward said as much in [bzip2's manual](<https://sourceware.org/bzip2/manual/manual.html>): *"performance, both for compressing and decompressing, is largely determined by the speed at which your machine can service cache misses."*
 
-The post has two halves. The first works through how Seward's algorithms undo the transform. We decode a toy example by hand, recovering the word `banana`, to show that the decoder rebuilds the text by following a permutation of the block's positions, one lookup at a time, and that this chain of lookups is where the cache misses come from. His algorithms are different ways of storing that permutation, and we plot the speed and memory he measured for each, which shows the space–time tradeoff between them. The second half is ours: a compact way of storing the permutation that costs more per lookup. When one core walks it alone, it is slower than mibz2's usual table, as Seward's tradeoff would predict. When four cores walk their tables at once, sharing one cache, it is faster.
+The post has two halves. The first works through how Seward's algorithms undo the transform. In [section 1](<#1-from-sorted-rotations-to-the-transformation-vector>) we decode a toy example by hand, recovering the word `banana`, to show that the decoder rebuilds the text by following a permutation of the block's positions, one lookup at a time, and that this chain of lookups is where the cache misses come from. [Sections 2](<#2-making-inversion-fast-basis-bw94-and-mergedtl>) and [3](<#3-spending-less-memory-indexf-and-the-trees>) cover his algorithms, which are different ways of storing that permutation, and [section 4](<#4-what-seward-measured>) plots the speed and memory he measured for each, which shows the space–time tradeoff between them.
 
-## From sorted rotations to the transformation vector
+The second half is ours. [Section 5](<#5-the-same-tradeoff-with-four-blocks-live>) explains why four cores sharing one cache change the picture. [Section 6](<#6-a-smaller-table-a-busier-lookup>) describes a compact way of storing the permutation that costs more per lookup, and [sections 7](<#7-the-four-worker-reversal>) and [8](<#8-four-workers-cost-the-conventional-walk-far-more>) measure it: when one core walks it alone, it is slower than mibz2's usual table, as Seward's tradeoff would predict, and when four cores walk their tables at once, it is faster. [Section 9](<#9-the-table-still-has-to-be-built>) sets out what a decoder still needs before it could use it: a way to build the table cheaply.
+
+## 1\. From sorted rotations to the transformation vector
 
 Imagine bzip2 compressing the six bytes `banana`. The transform doesn't shrink them: it reorders them into `nnbaaa` and records the number 3. bzip2's later stages compress that output, and decoding, once it has undone those stages, has to get `banana` back from `nnbaaa` and 3. Seward's notation, which he takes from Burrows and Wheeler's 1994 report *[A Block-sorting Lossless Data Compression Algorithm](<https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf>)*, names every piece:
 
 | Symbol | Meaning | In the example |
 | --- | --- | --- |
-| N | the number of bytes in the block, *"typically in the range of one million"* | 6 |
-| S | the original block, which decoding recovers | `banana` |
-| M | an N × N matrix: every rotation of S, sorted | the six rows below |
-| L | the last column of M, which bzip2 transmits | `nnbaaa` |
-| F | the first column of M | `aaabnn` |
-| I | the row of M that holds S, also transmitted | 3 |
-| T | the *"transformation vector"*: N integers, each in 0..N−1 | 4 5 3 0 1 2 |
-| C | a count per byte value, or, as used below, where each byte's run starts in F | counts a 3, b 1, n 2; starts a 0, b 3, n 4 |
+| \\(N\\) | the number of bytes in the block, *"typically in the range of one million"* | 6 |
+| \\(S\\) | the original block, which decoding recovers | `banana` |
+| \\(M\\) | an \\(N \\times N\\) matrix: every rotation of \\(S\\), sorted | the six rows below |
+| \\(L\\) | the last column of \\(M\\), which bzip2 transmits | `nnbaaa` |
+| \\(F\\) | the first column of \\(M\\) | `aaabnn` |
+| \\(I\\) | the row of \\(M\\) that holds \\(S\\), also transmitted | 3 |
+| \\(T\\) | the *"transformation vector"*: \\(N\\) integers, each in \\(0..N-1\\) | 4 5 3 0 1 2 |
+| \\(C\\) | a count per byte value, or, as used below, where each byte's run starts in \\(F\\) | counts a 3, b 1, n 2; starts a 0, b 3, n 4 |
 
-The decoder is given L and I, and must produce S: from `nnbaaa` and 3, it must get back to `banana`.
+The decoder is given \\(L\\) and \\(I\\), and must produce \\(S\\): from `nnbaaa` and 3, it must get back to `banana`.
 
 The six rotations of banana, sorted
 
 M for S = banana, with F in green, L in blue and T beside each row. Row 3, outlined, is S itself.
 
-A rotation moves some bytes from the front of a string to its back. Sort every rotation of `banana` and the result is M. Row 3 is `banana` itself, so I = 3. A decoder never holds M: the inverse transform recovers just enough of it, from L, to read off row I.
+A rotation moves some bytes from the front of a string to its back. Sort every rotation of `banana` and the result is \\(M\\). Row 3 is `banana` itself, so \\(I = 3\\). A decoder never holds \\(M\\): the inverse transform recovers just enough of it, from \\(L\\), to read off row \\(I\\).
 
-**Why the first and last columns.** Every row of M is S read round from some starting point, so in every row the last byte comes just before the first, going round S. Row 3 ends in `a` and starts with `b`, and the final `a` of `banana` comes, going round, before its opening `b`. That is the relation the whole paper builds on: L\[i\] comes just before F\[i\] in S. The two columns carry different information:
+**Why the first and last columns.** Every row of \\(M\\) is \\(S\\) read round from some starting point, so in every row the last byte comes just before the first, going round \\(S\\). Row 3 ends in `a` and starts with `b`, and the final `a` of `banana` comes, going round, before its opening `b`. That is the relation the whole paper builds on: \\(L\[i\]\\) comes just before \\(F\[i\]\\) in \\(S\\). The two columns carry different information:
 
-- **F** is the bytes of S in sorted order, so the counts alone fix it. A decoder holding L can rebuild F by counting, so it is never sent.
-- **L** holds the byte that precedes each row's opening context, with the rows sorted by context. Bytes before similar contexts tend to repeat (in English, `he` is often preceded by `t`), so L has long runs, which bzip2's later stages compress.
+- **\\(F\\)** is the bytes of \\(S\\) in sorted order, so the counts alone fix it. A decoder holding \\(L\\) can rebuild \\(F\\) by counting, so it is never sent.
+- **\\(L\\)** holds the byte that precedes each row's opening context, with the rows sorted by context. Bytes before similar contexts tend to repeat (in English, `he` is often preceded by `t`), so \\(L\\) has long runs, which bzip2's later stages compress.
 
-So a bzip2 block carries L, with I to say which row is S, and the decoder rebuilds the order of S from them with T.
+So a bzip2 block carries \\(L\\), with \\(I\\) to say which row is \\(S\\), and the decoder rebuilds the order of \\(S\\) from them with \\(T\\).
 
-**Defining T.** Seward's theory section is *"a more detailed exposition of Algorithm D in §2 of \[1\]"*, Burrows and Wheeler's decompression algorithm, because *"the increased detail exposes a range of possible implementations"*. Everything rests on *"establishing the relationship between the F and L vectors, and recording this in the 'transformation vector' T"*:
+**Defining \\(T\\).** Seward's theory section is *"a more detailed exposition of Algorithm D in §2 of \[1\]"*, Burrows and Wheeler's decompression algorithm, because *"the increased detail exposes a range of possible implementations"*. Everything rests on *"establishing the relationship between the \\(F\\) and \\(L\\) vectors, and recording this in the 'transformation vector' \\(T\\)"*:
 
 \\\[ M\[j, N-1\]\\; M\[j, 0..N-2\] = M\[i, 0..N-1\] \\quad\\Longrightarrow\\quad T\[j\] = i. \\\]
 
-Take row j and move its last byte to the front. That is another rotation of S, so it is some row i of M, and T\[j\] records which. Row 0, `abanan`, becomes `nabana`, row 4, so T\[0\] = 4. Moving the last byte to the front starts the string one byte earlier in S, so following T walks S backwards.
+Take row \\(j\\) and move its last byte to the front. That is another rotation of \\(S\\), so it is some row \\(i\\) of \\(M\\), and \\(T\[j\]\\) records which. Row 0, `abanan`, becomes `nabana`, row 4, so \\(T\[0\] = 4\\). Moving the last byte to the front starts the string one byte earlier in \\(S\\), so following \\(T\\) walks \\(S\\) backwards.
 
-**Walking T.** Row T\[j\] starts with the byte row j ends with, which comes just before row j's first byte in S. So F\[T\[i\]\] precedes F\[i\]. The decoder has L, not F, but L\[k\] = F\[T\[k\]\], and substituting gives a relation in L alone:
+**Walking \\(T\\).** Row \\(T\[j\]\\) starts with the byte row \\(j\\) ends with, which comes just before row \\(j\\)'s first byte in \\(S\\). So \\(F\[T\[i\]\]\\) precedes \\(F\[i\]\\). The decoder has \\(L\\), not \\(F\\), but \\(L\[k\] = F\[T\[k\]\]\\), and substituting gives a relation in \\(L\\) alone:
 
 \\\[ L\[T\[k\]\] \\text{ immediately precedes } L\[k\] \\text{ in } S. \\\]
 
-L\[I\] is the last byte of S, so starting at I and following T gives S from the end:
+\\(L\[I\]\\) is the last byte of \\(S\\), so starting at \\(I\\) and following \\(T\\) gives \\(S\\) from the end:
 
 ```text
 rows visited:  3 → 0 → 4 → 1 → 5 → 2
 bytes read:    a   n   a   n   a   b
 ```
 
-That is `banana` backwards, and it is the whole inner loop of the inverse transform: load the entry at p, emit a byte, jump where it says. Where each jump lands depends on the content of S, not on the last jump. In a million-byte block that is a million loads from places the cache has no reason to hold.
+Decoding banana by following T
 
-To write S forwards, Seward assumes the compressor reverses each block before sorting. bzip2 doesn't, which a footnote calls *"a design flaw"*; by the manual's account, *"the bzip2 format was frozen before I properly and fully understood the performance consequences"*. Its decoder builds the links the other way instead, writing i into slot s where Seward would set T\[i\] = s (`tt[cftab[uc]++] |= i << 8`), and following that T⁻¹ emits S forwards. mibz2 does the same, so its navigation table holds T⁻¹: each entry points forwards, to the row whose string starts one byte later in S.
+Each step reads the byte in L at the current row, writes it into S from the end, and moves to the row T names. Every jump depends on the entry just read, which is why the walk is one dependent load after another.
 
-**Building T from counts.** The rows of M are sorted, and two rows ending in the same byte keep their order when that byte moves to the front, since the rest of each row decides it. So the k-th c in L rotates into the k-th row starting with c: *"if c occurs k times in L\[0..j\] and L\[j\] = c, then T\[j\] must be i, where i is the position of the k-th c in F."*
+That is `banana` backwards, and it is the whole inner loop of the inverse transform: load the entry at \\(p\\), emit a byte, jump where it says. Where each jump lands depends on the content of \\(S\\), not on the last jump. In a million-byte block that is a million loads from places the cache has no reason to hold.
+
+To write \\(S\\) forwards, Seward assumes the compressor reverses each block before sorting. bzip2 doesn't, which a footnote calls *"a design flaw"*; by the manual's account, *"the bzip2 format was frozen before I properly and fully understood the performance consequences"*. Its decoder builds the links the other way instead, writing \\(i\\) into slot \\(s\\) where Seward would set \\(T\[i\] = s\\) (`tt[cftab[uc]++] |= i << 8`), and following that \\(T^{-1}\\) emits \\(S\\) forwards. mibz2 does the same, so its navigation table holds \\(T^{-1}\\): each entry points forwards, to the row whose string starts one byte later in \\(S\\).
+
+**Building \\(T\\) from counts.** The rows of \\(M\\) are sorted, and two rows ending in the same byte keep their order when that byte moves to the front, since the rest of each row decides it. So the \\(k\\)-th \\(c\\) in \\(L\\) rotates into the \\(k\\)-th row starting with \\(c\\): *"if \\(c\\) occurs \\(k\\) times in \\(L\[0..j\]\\) and \\(L\[j\] = c\\), then \\(T\[j\]\\) must be \\(i\\), where \\(i\\) is the position of the \\(k\\)-th \\(c\\) in \\(F\\)."*
 
 T matches each L byte to the same occurrence in F
 
 The k-th a in L goes to the k-th a in F, and likewise for n and b: T = 4 5 3 0 1 2, from counts and one scan.
 
-The c's in F form one bucket, starting at C\[c\], the number of bytes smaller than c, so
+The \\(c\\)'s in \\(F\\) form one bucket, starting at \\(C\[c\]\\), the number of bytes smaller than \\(c\\), so
 
 \\\[ T\[j\] = C\[c\] + k - 1, \\qquad c = L\[j\], \\\]
 
-and one scan of L with a running count per byte value builds T. Within each byte value the links increase with j. Every BWT has this ordering, and our compact table depends on it.
+and one scan of \\(L\\) with a running count per byte value builds \\(T\\). Within each byte value the links increase with \\(j\\). Every BWT has this ordering, and our compact table depends on it.
 
-## Making inversion fast: basis, bw94 and mergedTL
+## 2\. Making inversion fast: basis, bw94 and mergedTL
 
 *"How fast can inversion be?"* Three algorithms, each refining the last, answer it.
 
-**basis** is the theory written out: count, build T, walk. It reads L three times and keeps L (one byte a row) and T (four) alive: 5N bytes.
+**basis** is the theory written out: count, build \\(T\\), walk. It reads \\(L\\) three times and keeps \\(L\\) (one byte a row) and \\(T\\) (four) alive: \\(5N\\) bytes.
 
-**bw94**, named for Burrows and Wheeler's report, merges the first two passes by recording T′\[i\], the number of earlier occurrences of L\[i\], while counting. That is T without its bucket's start, T\[i\] = T′\[i\] + C\[L\[i\]\], and the walk adds the start back. Two passes, still 5N bytes.
+**bw94**, named for Burrows and Wheeler's report, merges the first two passes by recording \\(T'\[i\]\\), the number of earlier occurrences of \\(L\[i\]\\), while counting. That is \\(T\\) without its bucket's start, \\(T\[i\] = T'\[i\] + C\[L\[i\]\]\\), and the walk adds the start back. Two passes, still \\(5N\\) bytes.
 
-**mergedTL** comes from looking at bw94's walk, which reads L\[p\] and T′\[p\] at the same arbitrary index: *"Unless both T and L fit in the machine's cache, this could cause two (capacity) misses per iteration."* So it packs both into one 32-bit word, limiting N to 2²⁴:
+**mergedTL** comes from looking at bw94's walk, which reads \\(L\[p\]\\) and \\(T'\[p\]\\) at the same arbitrary index: *"Unless both \\(T\\) and \\(L\\) fit in the machine's cache, this could cause two (capacity) misses per iteration."* So it packs both into one 32-bit word, limiting \\(N\\) to \\(2^{24}\\):
 
 \\\[ U\[i\] = 256 \\cdot T'\[i\] + L\[i\]. \\\]
 
-The name is literal: T and L, merged. Each step unpacks the byte with a mask and the link with a shift, which costs instructions, *"but the near-halving of the cache miss rate is potentially valuable"*. The table is also a byte a row smaller: 4N.
+The name is literal: \\(T\\) and \\(L\\), merged. Each step unpacks the byte with a mask and the link with a shift, which costs instructions, *"but the near-halving of the cache miss rate is potentially valuable"*. The table is also a byte a row smaller: \\(4N\\).
 
 What one row costs, bit by bit
 
 bw94 keeps T′ and L in separate arrays, so a step can miss twice. mergedTL packs both into one word. indexF keeps only T, in 20 bits, and finds the byte from the counts. bzip2 and mibz2 pack the byte with the reversed link.
 
-bzip2 uses mergedTL, with the reversed link stored as an absolute position, so its walk needs no C\[c\] addition. Its manual credits the change with a real gain: *"Single array implementation of the inverse BWT. This significantly speeds up decompression, presumably because it reduces the number of cache misses."*
+bzip2 uses mergedTL, with the reversed link stored as an absolute position, so its walk needs no \\(C\[c\]\\) addition. Its manual credits the change with a real gain: *"Single array implementation of the inverse BWT. This significantly speeds up decompression, presumably because it reduces the number of cache misses."*
 
-## Spending less memory: indexF and the trees
+## 3\. Spending less memory: indexF and the trees
 
-*"Can we reduce memory use whilst retaining useful decompression speed? Interestingly, yes."* The relation in F, F\[T\[i\]\] precedes F\[i\], needs only T to walk. Read the output bytes from F instead of L, and L is needed only while T is built, so T can be written over it. F needn't be stored either: it is sorted, so the 256 running totals in C describe it, and F\[p\] is the byte whose bucket contains p. *"No free lunch, alas"*: finding it is a binary search in C.
+*"Can we reduce memory use whilst retaining useful decompression speed? Interestingly, yes."* The relation in \\(F\\), \\(F\[T\[i\]\]\\) precedes \\(F\[i\]\\), needs only \\(T\\) to walk. Read the output bytes from \\(F\\) instead of \\(L\\), and \\(L\\) is needed only while \\(T\\) is built, so \\(T\\) can be written over it. \\(F\\) needn't be stored either: it is sorted, so the 256 running totals in \\(C\\) describe it, and \\(F\[p\]\\) is the byte whose bucket contains \\(p\\). *"No free lunch, alas"*: finding it is a binary search in \\(C\\).
 
-**indexF**, named for indexing into F, keeps T alone in N 20-bit words (so N ≤ 2²⁰): a 16-bit array plus a nibble array, 2.5N bytes. It starts the walk at T\[I\], because reading F, the byte L\[I\] is found at F\[T\[I\]\]. bzip2 ships it as `-s`, *"a modified algorithm which only requires 2.5 bytes per block byte … albeit at about half the normal speed"*, with the search as `BZ2_indexIntoF`. What it gives up:
+**indexF**, named for indexing into \\(F\\), keeps \\(T\\) alone in \\(N\\) 20-bit words (so \\(N \\le 2^{20}\\)): a 16-bit array plus a nibble array, \\(2.5N\\) bytes. It starts the walk at \\(T\[I\]\\), because reading \\(F\\), the byte \\(L\[I\]\\) is found at \\(F\[T\[I\]\]\\). bzip2 ships it as `-s`, *"a modified algorithm which only requires 2.5 bytes per block byte … albeit at about half the normal speed"*, with the search as `BZ2_indexIntoF`. What it gives up:
 
-- **A search per byte,** eight or nine comparisons where mergedTL has a mask. The 1 KB of counts stays in cache, so the search costs instructions, not misses, and since the next position is A\[p\] alone, a processor can overlap it with the next load.
+- **A search per byte,** eight or nine comparisons where mergedTL has a mask. The 1 KB of counts stays in cache, so the search costs instructions, not misses, and since the next position is \\(A\[p\]\\) alone, a processor can overlap it with the next load.
 - **Two arrays again.** The 20-bit entry is split between the 16-bit array and the nibbles, so a step can touch two cache lines, the cost mergedTL removed.
-- **A cap of 2²⁰ bytes per block,** which bzip2's 900,000-byte maximum fits.
+- **A cap of \\(2^{20}\\) bytes per block,** which bzip2's 900,000-byte maximum fits.
 
-**The trees.** *"It is instructive to ask just how little storage we can get away with"*: L and the counts alone. Any T\[j\] is C\[c\] plus the number of c's before j in L, but counting them means scanning L, O(N) a step and O(N²) in all: *"absurdly inefficient"*. Seward buys speed back with 256 binary trees of partial counts, one per byte value. Each node counts its byte in an aligned power-of-two segment of L, an empty subtree costs nothing, and a node budget sets how deep the trees grow. To count the c's up to j, descend c's tree, adding the left child's count whenever j lies to the right, and scan L only for the last segment.
+**The trees.** *"It is instructive to ask just how little storage we can get away with"*: \\(L\\) and the counts alone. Any \\(T\[j\]\\) is \\(C\[c\]\\) plus the number of \\(c\\)'s before \\(j\\) in \\(L\\), but counting them means scanning \\(L\\), \\(O(N)\\) a step and \\(O(N^2)\\) in all: *"absurdly inefficient"*. Seward buys speed back with 256 binary trees of partial counts, one per byte value. Each node counts its byte in an aligned power-of-two segment of \\(L\\), an empty subtree costs nothing, and a node budget sets how deep the trees grow. To count the \\(c\\)'s up to \\(j\\), descend \\(c\\)'s tree, adding the left child's count whenever \\(j\\) lies to the right, and scan \\(L\\) only for the last segment.
 
 A count tree answers a rank query
 
 The tree for byte a over L = nnbaaa, padded to 8 positions. Counting the a's up to position 4 takes one left-child count and a one-byte scan, so T\[4\] = C\[a\] + 2 − 1 = 1.
 
-**tree** stores a node in three 32-bit words. **treeopt** packs a node into 54 bits, two words, and a leaf into one, fitting nearly twice as many nodes in the same space, which halves the scans. With L, tree-1M and treeopt-1M take 2N bytes and treeopt-500k 1.5N.
+**tree** stores a node in three 32-bit words. **treeopt** packs a node into 54 bits, two words, and a leaf into one, fitting nearly twice as many nodes in the same space, which halves the scans. With \\(L\\), tree-1M and treeopt-1M take \\(2N\\) bytes and treeopt-500k \\(1.5N\\).
 
-## What Seward measured
+## 4\. What Seward measured
 
 The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-level cache. Each block, at most 10⁶ bytes, was inverted ten times. How much memory each algorithm needs for a 10⁶-byte block:
 
@@ -126,8 +132,8 @@ The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-l
 | `basis` | 5000 kB | Straightforward derivation from theory |
 | `bw94` | 5000 kB | As per \[1\], does 2 passes, not 3 |
 | `mergedTL` | 4000 kB | As bw94 but more cache-friendly |
-| `indexF` | 2500 kB | Indexes into F rather than L |
-| `tree-1M` | 2000 kB | Computes T incrementally; 1 megabyte extra space |
+| `indexF` | 2500 kB | Indexes into \\(F\\) rather than \\(L\\) |
+| `tree-1M` | 2000 kB | Computes \\(T\\) incrementally; 1 megabyte extra space |
 | `treeopt-1M` | 2000 kB | More space-economical version of tree-1M |
 | `treeopt-500k` | 1500 kB | As treeopt-1M but with only 500k auxiliary space |
 
@@ -169,9 +175,9 @@ Seward then asks why. Simulating the K6-III's cache with cacheprof, his own prof
 | bw94 | 18.00 | 9.00 | 1.63 |
 | mergedTL | 20.00 | 8.00 | 0.88 |
 
-mergedTL runs 11% more instructions and takes 54% as many misses. 89.4% of those misses are the walk's reads of U\[p\], and 78.6% of those reads miss, because T holds *"a completely arbitrary permutation"* that the decoder *"is obliged to traverse"*. So *"there appears to be no way to avoid a miss rate approaching one per L-byte"*, and mergedTL is *"a realistic upper bound on inversion performance"*.
+mergedTL runs 11% more instructions and takes 54% as many misses. 89.4% of those misses are the walk's reads of \\(U\[p\]\\), and 78.6% of those reads miss, because \\(T\\) holds *"a completely arbitrary permutation"* that the decoder *"is obliged to traverse"*. So *"there appears to be no way to avoid a miss rate approaching one per \\(L\\)-byte"*, and mergedTL is *"a realistic upper bound on inversion performance"*.
 
-kennedy inverts nearly twice as fast as bashtgz because its long runs make T point each row at its neighbour, which is usually already cached; random input sets the floor near 2.5 MB/s. And the tree algorithms vary 10:1 across files, against mergedTL's 1.9:1, because a small alphabet such as ecoli's four letters lets a few deep trees shorten every scan.
+kennedy inverts nearly twice as fast as bashtgz because its long runs make \\(T\\) point each row at its neighbour, which is usually already cached; random input sets the floor near 2.5 MB/s. And the tree algorithms vary 10:1 across files, against mergedTL's 1.9:1, because a small alphabet such as ecoli's four letters lets a few deep trees shorten every scan.
 
 Why the walk misses, and why runs help
 
@@ -181,7 +187,7 @@ bzip2 itself decompresses bible at 67% of mergedTL's inversion rate, while also 
 
 > Such observations only hold true whilst cache sizes are much smaller than block sizes. Future growth in cache sizes may invalidate such findings.
 
-## The same tradeoff, with four blocks live
+## 5\. The same tradeoff, with four blocks live
 
 The K6-III's cache held 256 KB, against mergedTL's 4 MB for one block. Our workstation has a 20 MiB last-level cache, and a full bzip2 block, up to 900,000 rows at 4 bytes each, needs a 3.6 MB table. Read literally, the caveat has come true.
 
@@ -189,7 +195,7 @@ Two things kept Seward's sentence true anyway. A modern core keeps many misses i
 
 On Seward's axes a smaller table is a step down in speed. With four blocks sharing a cache, it also leaves more of the cache to the other three. Could the same links be stored in much less space, and would the lighter memory load make up for the extra work of reading a compressed entry? The first valid comparison answers both ways at once. The compact walk costs 14.85% more CPU time on one core and 15.95% less with four workers walking together. That result is about this traversal, measured on its own; what it means for the whole decoder is still open.
 
-## A smaller table, a busier lookup
+## 6\. A smaller table, a busier lookup
 
 The [census of the navigation table](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-10-29-compact-navigation-tables/index.md>) found that most of its links follow simple patterns. An earlier format built on that, [FOR-14](<https://github.com/lmmx/mibz2/pull/130>), packed 14-bit offsets into fixed records. It halved the table, but extracting the packed bits made each step so much longer that the walk lost even with four workers, where it took 1.45 times as long as the ordinary walk.
 
@@ -201,13 +207,13 @@ Thirty rows in one cache line. RAW groups, segment starts and parking are handle
 
 On the measured corpus that brings the table from 4 bytes per row to 2.164, 45.9% less: about 1.95 MB for a full block instead of 3.6 MB, and 7.79 MB instead of 14.4 MB for four blocks at once.
 
-Read against Seward's paper, the record combines three of its ideas. Its offsets rest on the ordering that makes T cheap to build: within one byte's bucket the links increase with the row, so a group's links are a base plus small offsets, smallest where the byte's occurrences in L sit close together, as in kennedy's runs. In Wikidata's blocks they usually do: about 77% of a full block's rows fall in 32-row groups that each come from a single run in L. The header's byte is indexF's idea, emitting from F so that the walk needs no L, with one byte stored per group in place of a search. And keeping the header and the offset in one cache line is mergedTL's. At 2.164 bytes a row, the record sits between treeopt-1M and indexF on Seward's memory axis, and aims at mergedTL's speed.
+Read against Seward's paper, the record combines three of its ideas. Its offsets rest on the ordering that makes \\(T\\) cheap to build: within one byte's bucket the links increase with the row, so a group's links are a base plus small offsets, smallest where the byte's occurrences in \\(L\\) sit close together, as in kennedy's runs. In Wikidata's blocks they usually do: about 77% of a full block's rows fall in 32-row groups that each come from a single run in \\(L\\). The header's byte is indexF's idea, emitting from \\(F\\) so that the walk needs no \\(L\\), with one byte stored per group in place of a search. And keeping the header and the offset in one cache line is mergedTL's. At 2.164 bytes a row, the record sits between treeopt-1M and indexF on Seward's memory axis, and aims at mergedTL's speed.
 
 The step costs more, though. An ordinary compact30 step compiles to 21 instructions and four data loads; the conventional step is 16 instructions and three loads. Two of compact30's loads, the offset and the header, are both addressed from the current row, so neither waits for the other, but they are still two loads where the conventional step needs one. The [walker's journal](<https://github.com/lmmx/mibz2/blob/f1dafa31d88d7351a98afb005a84f23d5a2312bd/docs/journal/2026-11-02-compact30-walker.md>) has the annotated disassembly.
 
 So the question is which matters more when several cores share the machine: the extra instructions, or the smaller table.
 
-## The four-worker reversal
+## 7\. The four-worker reversal
 
 The comparison times two versions of the same traversal and assembly. The control walks mibz2's 4-byte table; compact30 walks its records with the same 32-lane walk. Every walk's output was checked byte for byte against the decoder's.
 
@@ -231,7 +237,7 @@ The gain is spread across the workload. All 230 full-sized blocks were cheaper w
 
 The run also had to show that the four walks started together, within 2% of each step's length. An earlier complete run failed that check, because waking sleeping workers delayed some walks by tens of microseconds, and it doesn't count. This run used a spinning start barrier instead, with nothing else changed; its worst start skew was 0.023%.
 
-## Four workers cost the conventional walk far more
+## 8\. Four workers cost the conventional walk far more
 
 From one core to four workers, the conventional walk's CPU cost per row rises from 1.221 ns to 2.055 ns, 68% more. Compact30's rises from 1.402 ns to 1.727 ns, 23% more. Both run under the same four-worker conditions, and the conventional table pays much more for them.
 
@@ -247,7 +253,7 @@ That explanation hasn't been tested. The run recorded no cache-miss or memory-co
 
 The result also stops short of the decoder. A decoding worker doesn't spend all its time walking tables: it also reads input, reconstructs the last column, builds the table, assembles segments and writes output. Some of its walks run alone, and others overlap two or three neighbours rather than all four. So compact30's 14.85% loss on one core matters as much as its gain at four, and how much of a whole decode runs under four-way contention hasn't been measured.
 
-## The table still has to be built
+## 9\. The table still has to be built
 
 The records in this comparison came from a reference builder that first computes every row's successor in a full-sized temporary array, then converts the result into compact30 records. That kept construction out of the measurement, but a decoder can't afford it. A direct builder has to produce the records from the block's last column and its byte counts, without the temporary array.
 
