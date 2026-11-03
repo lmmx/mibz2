@@ -678,12 +678,13 @@ three rows start with `a`. Moving the `a` off the end of row 3 lands on row 0, n
 how could a decoder know that without the square?
 
 Up to now the three `a`s have looked identical. To tell them apart, label each by where it
-falls in the word: `b a₁ n₁ a₂ n₂ a₃`. The labels are only for following the letters; nothing
-in bzip2 stores them. Labelling and counting occurrences this way comes from Ben Langmead's
-[lecture slides on the transform](https://www.cs.jhu.edu/~langmea/resources/lecture_notes/bwt_and_fm_index.pdf);
-he relies on the same counting in [Bowtie](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2009-10-3-r25),
-his DNA read aligner, which searches a genome through its Burrows–Wheeler transform. Rows 3, 4 and 5 end in `a₃`, `a₂` and `a₁`, and rows 0, 1 and 2 start
-with `a₃`, `a₂` and `a₁`: the same occurrences, in the same order. This preserved order is what
+falls in the word: $\mathtt{b}\;\mathtt{a}_1\;\mathtt{n}_1\;\mathtt{a}_2\;\mathtt{n}_2\;\mathtt{a}_3$. The labels are only for following the letters; nothing
+in bzip2 stores them. This way of making the matching visible is borrowed from Ben Langmead's
+[lecture slides on the transform](https://www.cs.jhu.edu/~langmea/resources/lecture_notes/bwt_and_fm_index.pdf#page=9).
+Langmead also wrote [Bowtie](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2009-10-3-r25),
+a DNA read aligner that uses the same correspondence to search a genome rather than to
+decompress it. Rows 3, 4 and 5 end in $\mathtt{a}_3$, $\mathtt{a}_2$ and $\mathtt{a}_1$, and rows 0, 1 and 2 start
+with $\mathtt{a}_3$, $\mathtt{a}_2$ and $\mathtt{a}_1$: the same occurrences, in the same order. This preserved order is what
 makes inversion possible, and the sort is why it holds. Rows 3, 4 and 5 are in that order
 because of what comes before their last `a`: `banan` < `naban` < `nanab`. Moving the `a` to
 the front puts those same letters right behind it, where they decide the order again:
@@ -965,11 +966,11 @@ the front puts those same letters right behind it, where they decide the order a
 <text x="432.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
 <rect x="420" y="152" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
 <text x="432.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
-<text x="50" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4"> </tspan></tspan> down L</text>
-<text x="420" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4"> </tspan></tspan> down F</text>
+<text x="50" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4">&#160;</tspan></tspan>down L</text>
+<text x="420" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4">, </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4">&#160;</tspan></tspan>down F</text>
 </g>
 </svg>
-<figcaption>The square twice, its a’s and n’s labelled by where they fall in banana. Left, rows 3, 4 and 5 end in a; what comes before that a (tinted) puts them in order. Each moves its a to the front, carrying the tinted letters one place right, and lands on rows 0, 1 and 2 on the right, in the same order. So the a’s run a₃, a₂, a₁ down both L and F.</figcaption>
+<figcaption>The square twice, its a’s and n’s labelled by where they fall in banana. Left, rows 3, 4 and 5 end in a; what comes before that a (tinted) puts them in order. Each moves its a to the front, carrying the tinted letters one place right, and lands on rows 0, 1 and 2 on the right, in the same order. So the a’s run a<sub>3</sub>, a<sub>2</sub>, a<sub>1</sub> down both L and F.</figcaption>
 </figure>
 
 The same goes for the two `n`s, and for every letter of any block: the first `a` in $L$ (row
@@ -1201,7 +1202,7 @@ $L[0..j]$ and $L[j] = c$, then $T[j]$ must be $i$, where $i$ is the position of 
 <path d="M214 245 C320 245 360 131 464 131" class="bf-link"/>
 <text x="222" y="241" class="bf-ttiny">T[5] = 2</text>
 </svg>
-<figcaption>With the occurrences labelled, each link joins a letter in L to itself in F: L[3] is a₃, which is F[0], so T[3] = 0. The links never cross within one letter, which is why counts are enough to rebuild T.</figcaption>
+<figcaption>With the occurrences labelled, each link joins a letter in L to itself in F: L[3] is a<sub>3</sub>, which is F[0], so T[3] = 0. The links never cross within one letter, which is why counts are enough to rebuild T.</figcaption>
 </figure>
 
 The $c$'s in $F$ form one bucket. Turning the counts in $C$ into running totals gives where each
