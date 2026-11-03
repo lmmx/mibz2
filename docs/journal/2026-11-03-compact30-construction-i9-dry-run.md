@@ -8,8 +8,55 @@ recipe (`.just/bench.just` at `e4ffc8d`, harness pin `14d9ecb`, protocol draft 4
 **Not authorised:** the 20-round capture, any retry after a failure, and any change to
 thresholds, CPU selection, the harness, the constructor (`e003a32`) or the walker.
 
-The archive's path and sha256 are recorded here when the run returns, for the guardian's
-go/no-go decision on the capture. The recorded clock readings are not performance results.
+The recorded clock readings are not performance results.
+
+## The result: the dry run passed
+
+Run on the i9-10900K on 2026-11-03 at 17:21 UTC, in the checkout `~/dev/mibz2` at
+`e4ffc8d`, as relayed from its console:
+
+- **The archive**, the evidence a capture on this machine needs:
+  `/home/louis/dev/mibz2/target/c30-construction-20261103T172121Z-dry-run.tar.gz`,
+  633,111 bytes, sha256
+  `f75b00e81b95b14559005cd57b1428a990de00547ddcbed48e4b71f7b240f9f9`, 33 files and
+  `MANIFEST.json`, commit `14d9ecb`.
+- **The preconditions, checked by the recipe before any build:**
+  - the corpus `wikidata-20261026.bz2`, sha256 `cf13f439…16b8fe`: OK;
+  - the frozen commit `14d9ecb` in its own worktree;
+  - rustc 1.97.0 (`2d8144b78`, 2026-07-07), LLVM 22.1.6, cargo 1.97.0, no rustflags;
+  - the analysis tests (94 passed) and the listing tests (6 passed);
+  - the timed path's machine code is the reviewed listings (G3: yes).
+- **CPU placement:** workers on CPUs 1, 2, 3 and 4, one per physical core (the second to
+  fifth of ten), W1 on CPU 1. The recipe's selection matched the read-only preview run
+  beforehand. The barrier test passed: 12,000 steps in 3 rounds × 2 arms, 4 workers, uneven
+  arrivals and partial final steps, every check passed.
+- **The collector** ran rounds −1, 0 and 1 as a dry run and exited 0. The six peak-RSS
+  processes ran (three per arm).
+- **Schedule:** S0–S10 all true (no failure, no unknown records, meta, rounds, record set,
+  placement, windows, W1 sequence, start and completion barriers, cross-step, pass order,
+  calibration, preamble).
+- **Gates:** G3 identity, G4 allocation, G6 exact output, G7 round −1, G8 one-pass, G9 memory
+  and G10 major faults all true. G1, G2, G5 and the decision are suppressed in a dry run, as
+  registered.
+- **Allocation (W4):** rows 51,301,938 / 51,301,991 / 52,201,043 / 52,201,543; blocks
+  109 / 109 / 108 / 108; full blocks 57 / 57 / 58 / 58.
+- **Memory:**
+  - estimate 1,855,326,234 bytes, required 1,855,326,234, margin 2,147,483,648 (2 GiB);
+  - `MemAvailable` at the preflight 121,943,801,856 bytes;
+  - peak RSS (VmHWM) 1,769,914,368 bytes, 0.954 of the estimate;
+  - preflight and postflight OK, no problems recorded.
+  
+  `verified_peak` is 0 because a dry run consumes no evidence.
+- **Faults:** no major faults, in the measured builds or in round −1. Minor faults, reported
+  only, are 0 in warm P and C, 1,658 in cold P and 102 in cold C.
+
+The checkout's untracked files (earlier i9 outputs) don't affect the run: the recipe builds
+from its own clean worktree of the pin.
+
+Not yet done: the archive itself isn't in the repository. If the file is relayed, it can be
+committed here beside this record, as the traversal captures were. `verify-evidence` on
+the archive has to run on the i9, because it checks the machine and binary identity there;
+it builds nothing and times nothing, and wasn't part of the authorised dry run.
 
 ## Report 198: the guardian's decision (as relayed)
 
