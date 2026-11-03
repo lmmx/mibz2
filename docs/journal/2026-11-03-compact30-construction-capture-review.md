@@ -63,3 +63,26 @@ as authorised, and not repeated.
 
 No i9 run, constructor change, walker tuning, gate change, production integration, or claim
 of a measured end-to-end decoder result. No further experiment is authorised.
+
+## Report 202: the guardian's final disposition (as relayed)
+
+The guardian reviewed the archived capture report at `4adabf1`, and closes this line of work:
+
+| | Conclusion |
+|---|---|
+| Formal experimental outcome | INVALID — G1 stability and G2 synchronization failed |
+| Engineering investment decision | STOP — the observed construction overhead is far beyond the economic budget |
+
+The distinction matters. We must not relabel INVALID as FAIL. Equally, an invalid capture doesn't oblige us to spend more workstation time pursuing a formal FAIL when the directional evidence is this consistent.
+
+The warm four-worker cost ratio was 1.316×, against an allowable 1.067×. Completion was 1.364×, against 1.02×. Every measured round showed a substantial disadvantage, including the full-block workload. The isolated G2 interruption and unexplained one-worker production variability are worth documenting, but neither provides a compelling reason to expect the four-worker construction disadvantage to disappear.
+
+The results that remain, kept separate:
+
+- **Compact30 traversal: VALID ADVANCE.** Its four-worker advantage is real within the frozen traversal experiment.
+- **Direct compact30 constructor:** correct, independently audited, but economically unpromising on the measured workload.
+- **Whole-decoder performance:** not established.
+
+**Final disposition:** Formal outcome INVALID. Engineering decision: STOP this direct-constructor investment. The archived evidence and its reported validity failures are accepted, and the capture is not relabelled as FAIL. The observed four-worker construction disadvantage is sufficiently large and consistent that another capture is not justified for this candidate. The closed VALID ADVANCE traversal result and the audited constructor are preserved as research evidence.
+
+**Not authorised:** further i9 runs, investigation of the W1 bimodality for this investment, constructor tuning, walker changes or production integration. No new experiment is requested. This line of work is closed.
