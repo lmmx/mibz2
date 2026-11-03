@@ -1,0 +1,87 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling libm v0.2.16
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling pkg-config v0.3.34
+   Compiling thiserror v2.0.21
+   Compiling cc v1.10.0
+   Compiling syn v3.0.9
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling mibz2 v0.2.1 (/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/wt-c2miri)
+   Compiling bzip2 v0.4.4
+   Compiling thiserror-impl v2.0.21
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 14.12s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk c2miri small`
+c2miri: forced RAW, runs n 61 (n 61, pm 50): exact; finished fast 1 ordinary 0 wide 0 crossing 2 forced 0; epochs 1
+c2miri: forced RAW, runs n 61 (n 61, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 2 forced 1; epochs 1
+c2miri: forced RAW, random n 61 (n 61, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 6 forced 1; epochs 1
+c2miri: forced RAW, runs n 95 (n 95, pm 50): exact; finished fast 1 ordinary 0 wide 0 crossing 2 forced 0; epochs 1
+c2miri: forced RAW, runs n 95 (n 95, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 2 forced 1; epochs 1
+c2miri: forced RAW, random n 95 (n 95, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 7 forced 1; epochs 1
+c2miri: forced RAW, runs n 150 (n 150, pm 50): exact; finished fast 1 ordinary 0 wide 0 crossing 6 forced 0; epochs 1
+c2miri: forced RAW, runs n 150 (n 150, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 6 forced 1; epochs 1
+c2miri: forced RAW, random n 150 (n 150, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 8 forced 1; epochs 1
+c2miri: forced RAW, runs n 200 (n 200, pm 50): exact; finished fast 3 ordinary 0 wide 0 crossing 6 forced 0; epochs 1
+c2miri: forced RAW, runs n 200 (n 200, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 6 forced 3; epochs 1
+c2miri: forced RAW, random n 200 (n 200, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 8 forced 3; epochs 1
+c2miri: forced RAW with a crossing group (n 61, pm 50): exact; finished fast 1 ordinary 0 wide 0 crossing 4 forced 0; epochs 1
+c2miri: forced RAW, one symbol (n 61, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 0 forced 2; epochs 1
+c2miri: malformed counts kind 0 (n 1, pm 0): rejected, arrays empty
+c2miri: valid build after a malformed one (n 1, pm 0): exact; finished fast 1 ordinary 0 wide 0 crossing 0 forced 0; epochs 1
+c2miri: malformed counts kind 1 (n 29, pm 50): rejected, arrays empty
+c2miri: valid build after a malformed one (n 29, pm 50): exact; finished fast 1 ordinary 0 wide 0 crossing 0 forced 0; epochs 1
+c2miri: malformed counts kind 2 (n 31, pm 1000): rejected, arrays empty
+c2miri: valid build after a malformed one (n 31, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 2 forced 1; epochs 1
+c2miri: malformed counts kind 3 (n 61, pm 0): rejected, arrays empty
+c2miri: valid build after a malformed one (n 61, pm 0): exact; finished fast 3 ordinary 0 wide 0 crossing 0 forced 0; epochs 1
+c2miri: malformed counts kind 4 (n 90, pm 50): rejected, arrays empty
+c2miri: valid build after a malformed one (n 90, pm 50): exact; finished fast 1 ordinary 0 wide 0 crossing 2 forced 0; epochs 1
+c2miri: malformed counts kind 0 (n 1, pm 1000): rejected, arrays empty
+c2miri: valid build after a malformed one (n 1, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 0 forced 1; epochs 1
+c2miri: malformed counts kind 1 (n 29, pm 0): rejected, arrays empty
+c2miri: valid build after a malformed one (n 29, pm 0): exact; finished fast 1 ordinary 0 wide 0 crossing 0 forced 0; epochs 1
+c2miri: malformed counts kind 2 (n 31, pm 50): rejected, arrays empty
+c2miri: valid build after a malformed one (n 31, pm 50): exact; finished fast 1 ordinary 0 wide 0 crossing 2 forced 0; epochs 1
+c2miri: malformed counts kind 3 (n 61, pm 1000): rejected, arrays empty
+c2miri: valid build after a malformed one (n 61, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 0 forced 3; epochs 1
+c2miri: malformed counts kind 4 (n 90, pm 0): rejected, arrays empty
+c2miri: valid build after a malformed one (n 90, pm 0): exact; finished fast 2 ordinary 0 wide 0 crossing 2 forced 0; epochs 1
+c2miri: malformed counts kind 0 (n 1, pm 50): rejected, arrays empty
+c2miri: valid build after a malformed one (n 1, pm 50): exact; finished fast 1 ordinary 0 wide 0 crossing 0 forced 0; epochs 1
+c2miri: malformed counts kind 1 (n 29, pm 1000): rejected, arrays empty
+c2miri: valid build after a malformed one (n 29, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 0 forced 1; epochs 1
+c2miri: malformed counts kind 2 (n 31, pm 0): rejected, arrays empty
+c2miri: valid build after a malformed one (n 31, pm 0): exact; finished fast 2 ordinary 0 wide 0 crossing 0 forced 0; epochs 1
+c2miri: malformed counts kind 3 (n 61, pm 50): rejected, arrays empty
+c2miri: valid build after a malformed one (n 61, pm 50): exact; finished fast 2 ordinary 0 wide 0 crossing 0 forced 0; epochs 1
+c2miri: malformed counts kind 4 (n 90, pm 1000): rejected, arrays empty
+c2miri: valid build after a malformed one (n 90, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 2 forced 1; epochs 1
+c2miri: pending to the end, count 1 (n 200, pm 0): exact; finished fast 4 ordinary 0 wide 0 crossing 6 forced 0; epochs 1
+c2miri: pending to the end, count 1 (n 200, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 6 forced 4; epochs 1
+c2miri: pending to the end, count 29 (n 200, pm 0): exact; finished fast 4 ordinary 0 wide 0 crossing 6 forced 0; epochs 1
+c2miri: pending to the end, count 29 (n 200, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 6 forced 4; epochs 1
+c2miri: pending to the end, count 30 (n 200, pm 0): exact; finished fast 5 ordinary 0 wide 0 crossing 4 forced 0; epochs 1
+c2miri: pending to the end, count 30 (n 200, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 4 forced 5; epochs 1
+c2miri: pending to the end, count 31 (n 200, pm 0): exact; finished fast 4 ordinary 0 wide 0 crossing 6 forced 0; epochs 1
+c2miri: pending to the end, count 31 (n 200, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 6 forced 4; epochs 1
+c2miri: reuse step 0 size 1 (n 1, pm 0): exact; finished fast 1 ordinary 0 wide 0 crossing 0 forced 0; epochs 1
+c2miri: reuse step 1 size 0 (n 0, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 0 forced 0; epochs 0
+c2miri: reuse step 2 size 31 (n 31, pm 50): exact; finished fast 1 ordinary 0 wide 0 crossing 2 forced 0; epochs 1
+c2miri: reuse step 3 size 200 (n 200, pm 0): exact; finished fast 3 ordinary 0 wide 0 crossing 7 forced 0; epochs 1
+c2miri: reuse step 4 size 95 (n 95, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 4 forced 1; epochs 1
+c2miri: reuse step 5 size 0 (n 0, pm 50): exact; finished fast 0 ordinary 0 wide 0 crossing 0 forced 0; epochs 0
+c2miri: reuse step 6 size 150 (n 150, pm 0): exact; finished fast 1 ordinary 0 wide 0 crossing 5 forced 0; epochs 1
+c2miri: reuse step 7 size 1 (n 1, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 0 forced 1; epochs 1
+c2miri: reuse step 8 size 230 (n 230, pm 50): exact; finished fast 1 ordinary 0 wide 0 crossing 8 forced 1; epochs 1
+c2miri small: 61 cases, every check exact
+
+real	0m48.708s
+user	0m49.419s
+sys	0m4.966s

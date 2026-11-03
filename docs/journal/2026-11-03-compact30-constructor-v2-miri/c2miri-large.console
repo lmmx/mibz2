@@ -1,0 +1,13 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk c2miri large`
+c2miri: pending to the end across an epoch, count 1 (n 61500, pm 0): exact; finished fast 2045 ordinary 2 wide 0 crossing 6 forced 0; epochs 2
+c2miri: pending to the end across an epoch, count 31 (n 61500, pm 0): exact; finished fast 2045 ordinary 2 wide 0 crossing 6 forced 0; epochs 2
+c2miri: forced RAW across an epoch (n 61500, pm 1000): exact; finished fast 0 ordinary 0 wide 0 crossing 10 forced 1604; epochs 2
+c2miri: reuse: shrink to 31 after an epoch-scale build (n 31, pm 0): exact; finished fast 2 ordinary 0 wide 0 crossing 0 forced 0; epochs 1
+c2miri: reuse: grow again across an epoch (n 61500, pm 50): exact; finished fast 1515 ordinary 3 wide 0 crossing 10 forced 86; epochs 2
+c2miri: far wide: 0 -> 2 epochs + 1 (n 123081, pm 0): exact; finished fast 4097 ordinary 4 wide 1 crossing 2 forced 0; epochs 3
+c2miri large: 6 cases, every check exact
+
+real	13m0.719s
+user	12m53.209s
+sys	0m0.919s

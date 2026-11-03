@@ -1,0 +1,9 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk c2miri span`
+c2miri: span 3 -> 61440 (65,533, ordinary) (n 61640, pm 0): exact; finished fast 2051 ordinary 3 wide 0 crossing 2 forced 0; epochs 2
+c2miri: span 2 -> 61440 (65,534, RAW) (n 61640, pm 0): exact; finished fast 2051 ordinary 2 wide 1 crossing 2 forced 0; epochs 2
+c2miri span: 2 cases, every check exact
+
+real	4m15.974s
+user	4m12.888s
+sys	0m0.437s
