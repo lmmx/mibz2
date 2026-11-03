@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=4cf63a734d70">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=1fcf9e718d1a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=4cf63a734d70">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=1fcf9e718d1a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=4cf63a734d70">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=1fcf9e718d1a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=4cf63a734d70">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=1fcf9e718d1a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=4cf63a734d70">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=1fcf9e718d1a">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1813,7 +1813,7 @@
 instructions but less memory traffic. Twenty-five years later, that observation led us to
 ask whether a smaller navigation table could do more work per step and still come out ahead
 under contention. A first measurement of ours shows it doing so.</p>
-<p class="post-meta">2 November 2026 · 22 min read · <a href="#7-the-four-worker-reversal">Result</a></p>
+<p class="post-meta">2 November 2026 · 23 min read · <a href="#7-the-four-worker-reversal">Result</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
@@ -1845,29 +1845,31 @@ tables</a> is about taking fewer misses with a smaller
 table. Seward said as much in <a href="https://sourceware.org/bzip2/manual/manual.html">bzip2's manual</a>:
 <em>"performance, both for compressing and decompressing, is largely determined by the speed at
 which your machine can service cache misses."</em></p>
-<p>The post has two halves. The first works through how Seward's algorithms undo the
-transform. In <a href="#1-from-sorted-rotations-to-the-transformation-vector">section 1</a> we decode a
-toy example by hand, recovering the word <code>banana</code>, to show that the decoder rebuilds the text
-by following a permutation of the block's positions, one lookup at a time, and that this
-chain of lookups is where the cache misses come from. <a href="#2-making-inversion-fast-basis-bw94-and-mergedtl">Sections
-2</a> and
-<a href="#3-spending-less-memory-indexf-and-the-trees">3</a> cover his algorithms, which are different
-ways of storing that permutation, and <a href="#4-what-seward-measured">section 4</a> plots the speed and
-memory he measured for each, which shows the space–time tradeoff between them.</p>
-<p>The second half is ours. <a href="#5-the-same-tradeoff-with-four-blocks-live">Section 5</a> explains why
-four cores sharing one cache change the picture. <a href="#6-a-smaller-table-a-busier-lookup">Section
-6</a> describes a compact way of storing the permutation that
-costs more per lookup, and <a href="#7-the-four-worker-reversal">sections 7</a> and
-<a href="#8-four-workers-cost-the-conventional-walk-far-more">8</a> measure it: when one core walks it
-alone, it is slower than mibz2's usual table, as Seward's tradeoff would predict, and when
-four cores walk their tables at once, it is faster. <a href="#9-the-table-still-has-to-be-built">Section
-9</a> sets out what a decoder still needs before it could use
-it: a way to build the table cheaply.</p>
+<p>The post has two halves. The first works through how Seward's algorithms undo the transform.
+<a href="#1-from-sorted-rotations-to-the-transformation-vector">Section 1</a> starts from a small
+puzzle: how does a decoder get the word <code>banana</code> back once the BWT has rearranged its
+letters? The answer is a chain of table lookups, each depending on the one before, and that
+chain is where the cache misses come from. Seward's algorithms are different ways of storing
+the chain, each choosing what to keep in memory and what to recompute while decoding
+(<a href="#2-making-inversion-fast-basis-bw94-and-mergedtl">sections 2</a> and
+<a href="#3-spending-less-memory-indexf-and-the-trees">3</a>). <a href="#4-what-seward-measured">Section 4</a>
+compares the memory each needs with the speed he measured in 2001: the space–time tradeoff of
+his title.</p>
+<p>The second half asks what happens to that tradeoff in mibz2, where several blocks decode at
+once and their tables compete for one shared cache
+(<a href="#5-the-same-tradeoff-with-four-blocks-live">section 5</a>). Our first compact table made each
+lookup too expensive; a refined one stores the chain in a little over half the space, at a
+modest cost per lookup (<a href="#6-a-smaller-table-a-busier-lookup">section 6</a>). Walked by one core,
+it is slower than mibz2's usual table, as Seward's tradeoff predicts; walked by four cores at
+once, it is faster (<a href="#7-the-four-worker-reversal">sections 7</a> and
+<a href="#8-four-workers-cost-the-conventional-walk-far-more">8</a>). That was a controlled test of the
+walk alone, and <a href="#9-the-table-still-has-to-be-built">section 9</a> sets out what remains before
+the whole decoder could use it, starting with a cheap way to build the table.</p>
 <h2 id="1-from-sorted-rotations-to-the-transformation-vector">1. From sorted rotations to the transformation vector<a class="headerlink" href="#1-from-sorted-rotations-to-the-transformation-vector" title="Permanent link">&para;</a></h2>
-<p>Imagine bzip2 compressing the six bytes <code>banana</code>. The transform doesn't shrink them: it
-reorders them into <code>nnbaaa</code> and records the number 3. bzip2's later stages compress that
-output, and decoding, once it has undone those stages, has to get <code>banana</code> back from
-<code>nnbaaa</code> and 3. Seward's notation, which he takes from Burrows and Wheeler's
+<p>Suppose you want to compress the word <code>banana</code> with bzip2. At bzip2's core is the BWT,
+which doesn't shrink the six bytes: it reorders them into <code>nnbaaa</code> and records the number 3.
+bzip2's later stages then compress that. Decompressing undoes the stages in reverse order,
+and near the end comes the inverse transform: getting <code>banana</code> back from <code>nnbaaa</code> and 3. Seward's notation, which he takes from Burrows and Wheeler's
 1994 report <em><a href="https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf">A Block-sorting Lossless Data Compression
 Algorithm</a></em>, names every
 piece:</p>
@@ -2292,8 +2294,8 @@ implementation of the inverse BWT. This significantly speeds up decompression, p
 because it reduces the number of cache misses."</em></p>
 <h2 id="3-spending-less-memory-indexf-and-the-trees">3. Spending less memory: indexF and the trees<a class="headerlink" href="#3-spending-less-memory-indexf-and-the-trees" title="Permanent link">&para;</a></h2>
 <p><em>"Can we reduce memory use whilst retaining useful decompression speed? Interestingly, yes."</em>
-The relation in <span class="arithmatex">\(F\)</span>, <span class="arithmatex">\(F[T[i]]\)</span> precedes <span class="arithmatex">\(F[i]\)</span>, needs only <span class="arithmatex">\(T\)</span> to walk. Read the output bytes from <span class="arithmatex">\(F\)</span>
-instead of <span class="arithmatex">\(L\)</span>, and <span class="arithmatex">\(L\)</span> is needed only while <span class="arithmatex">\(T\)</span> is built, so <span class="arithmatex">\(T\)</span> can be written over it. <span class="arithmatex">\(F\)</span> needn't
+The relation in <span class="arithmatex">\(F\)</span>, <span class="arithmatex">\(F[T[i]]\)</span> precedes <span class="arithmatex">\(F[i]\)</span>, needs only <span class="arithmatex">\(T\)</span> to walk. If the decoder reads the output bytes
+from <span class="arithmatex">\(F\)</span> instead of <span class="arithmatex">\(L\)</span>, it needs <span class="arithmatex">\(L\)</span> only while it builds <span class="arithmatex">\(T\)</span>, so <span class="arithmatex">\(T\)</span> can be written over it. <span class="arithmatex">\(F\)</span> needn't
 be stored either: it is sorted, so the 256 running totals in <span class="arithmatex">\(C\)</span> describe it, and <span class="arithmatex">\(F[p]\)</span> is the
 byte whose bucket contains <span class="arithmatex">\(p\)</span>. <em>"No free lunch, alas"</em>: finding it is a binary search in <span class="arithmatex">\(C\)</span>.</p>
 <p><strong>indexF</strong>, named for indexing into <span class="arithmatex">\(F\)</span>, keeps <span class="arithmatex">\(T\)</span> alone in <span class="arithmatex">\(N\)</span> 20-bit words (so <span class="arithmatex">\(N \le 2^{20}\)</span>): a 16-bit
@@ -3089,17 +3091,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=4cf63a734d70"></script>
+        <script src="../../assets/javascripts/bench.js?v=1fcf9e718d1a"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=4cf63a734d70"></script>
+        <script src="../../assets/javascripts/couriers.js?v=1fcf9e718d1a"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=4cf63a734d70"></script>
+        <script src="../../assets/javascripts/blog.js?v=1fcf9e718d1a"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=4cf63a734d70"></script>
+        <script src="../../assets/javascripts/frontier.js?v=1fcf9e718d1a"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=4cf63a734d70"></script>
+        <script src="../../assets/javascripts/katex.js?v=1fcf9e718d1a"></script>
       
     
   </body>
