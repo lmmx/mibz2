@@ -4,7 +4,7 @@
 
 In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so.
 
-2 November 2026 · 23 min read · [Result](<#7-the-four-worker-reversal>)
+2 November 2026 · 22 min read · [Result](<#7-the-four-worker-reversal>)
 
 In 2001, [Julian Seward](<https://en.wikipedia.org/wiki/Julian_Seward>), the author of [bzip2](<https://en.wikipedia.org/wiki/Bzip2>) and the original designer of [Valgrind](<https://valgrind.org/info/developers.html>), was working at Microsoft Research in Cambridge. That year he presented a paper at the IEEE Data Compression Conference, *[Space-time tradeoffs in the Inverse B-W Transform](<https://doi.org/10.1109/DCC.2001.917175>)*, on what it costs to undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT) that bzip2 is built on.
 
@@ -14,32 +14,38 @@ Compression with the BWT had been studied closely, but *"decompression-time issu
 
 mibz2 is our bzip2 decoder, written for the Wikidata dumps, and that sentence could stand over most of what we have written about it. Our posts on [32 lanes](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-10-31-room-walk-overlap/index.md>) and [memory-level parallelism](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-02-memory-level-parallelism/index.md>) are about keeping many misses in flight at once; [memory interference](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-11-01-inverse-bwt-memory-interference/index.md>) is about four workers' misses competing for one memory system; [compact navigation tables](<https://lmmx.github.io/mibz2/pr-preview/pr-140/blog/2026-10-29-compact-navigation-tables/index.md>) is about taking fewer misses with a smaller table. Seward said as much in [bzip2's manual](<https://sourceware.org/bzip2/manual/manual.html>): *"performance, both for compressing and decompressing, is largely determined by the speed at which your machine can service cache misses."*
 
-The post has two halves. The first works through how Seward's algorithms undo the transform. [Section 1](<#1-from-sorted-rotations-to-the-transformation-vector>) starts from a small puzzle: how does a decoder get the word `banana` back once the BWT has rearranged its letters? The answer is a chain of table lookups, each depending on the one before, and that chain is where the cache misses come from. Seward's algorithms are different ways of storing the chain, each choosing what to keep in memory and what to recompute while decoding ([sections 2](<#2-making-inversion-fast-basis-bw94-and-mergedtl>) and [3](<#3-spending-less-memory-indexf-and-the-trees>)). [Section 4](<#4-what-seward-measured>) compares the memory each needs with the speed he measured in 2001: the space–time tradeoff of his title.
+The post has two halves: how Seward's algorithms work and what he measured, then what happens to his tradeoff in mibz2, where several blocks decode at once and share one cache. The result in the second half is a controlled test of the walk alone, not yet of the whole decoder.
 
-The second half asks what happens to that tradeoff in mibz2, where several blocks decode at once and their tables compete for one shared cache ([section 5](<#5-the-same-tradeoff-with-four-blocks-live>)). Our first compact table made each lookup too expensive; a refined one stores the chain in a little over half the space, at a modest cost per lookup ([section 6](<#6-a-smaller-table-a-busier-lookup>)). Walked by one core, it is slower than mibz2's usual table, as Seward's tradeoff predicts; walked by four cores at once, it is faster ([sections 7](<#7-the-four-worker-reversal>) and [8](<#8-four-workers-cost-the-conventional-walk-far-more>)). That was a controlled test of the walk alone, and [section 9](<#9-the-table-still-has-to-be-built>) sets out what remains before the whole decoder could use it, starting with a cheap way to build the table.
+The post in nine sections
+
+Seward's paper first, then what happens to his tradeoff in mibz2. Select a section to go to it.
 
 ## 1\. From sorted rotations to the transformation vector
 
-Suppose you want to compress the word `banana` with bzip2. At bzip2's core is the BWT, which doesn't shrink the six bytes: it reorders them into `nnbaaa` and records the number 3. bzip2's later stages then compress that. Decompressing undoes the stages in reverse order, and near the end comes the inverse transform: getting `banana` back from `nnbaaa` and 3. Seward's notation, which he takes from Burrows and Wheeler's 1994 report *[A Block-sorting Lossless Data Compression Algorithm](<https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf>)*, names every piece:
+Take the word `banana` as a toy example of a block for bzip2 to compress. At the heart of bzip2 is the BWT, which doesn't make the block smaller. It rearranges the bytes into an order that bzip2's later stages compress better, and keeps one number so that the rearrangement can be undone.
+
+The rearrangement works like this. A rotation of a string moves some bytes from its front to its back: `banana`, `ananab`, `nanaba` and so on, six in all. Sorting the six rotations alphabetically and stacking them as rows gives a square of letters:
+
+The six rotations of banana, sorted
+
+The six rotations of banana, sorted. In Seward's notation the first column, in green, is F and the last, in blue, is L; row 3, outlined, is banana itself. The T column is explained below.
+
+Reading down the last column gives `nnbaaa`. That column, with the number of the row where `banana` itself ended up, row 3, is all the BWT outputs. Decompressing undoes bzip2's stages in reverse order, and near the end comes the inverse transform: getting `banana` back from `nnbaaa` and 3, without the rest of the square.
+
+Seward's notation, which he takes from Burrows and Wheeler's 1994 report *[A Block-sorting Lossless Data Compression Algorithm](<https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf>)*, names each of these pieces:
 
 | Symbol | Meaning | In the example |
 | --- | --- | --- |
 | \\(N\\) | the number of bytes in the block, *"typically in the range of one million"* | 6 |
 | \\(S\\) | the original block, which decoding recovers | `banana` |
-| \\(M\\) | an \\(N \\times N\\) matrix: every rotation of \\(S\\), sorted | the six rows below |
+| \\(M\\) | an \\(N \\times N\\) matrix: every rotation of \\(S\\), sorted | the six rows above |
 | \\(L\\) | the last column of \\(M\\), which bzip2 transmits | `nnbaaa` |
 | \\(F\\) | the first column of \\(M\\) | `aaabnn` |
 | \\(I\\) | the row of \\(M\\) that holds \\(S\\), also transmitted | 3 |
 | \\(T\\) | the *"transformation vector"*: \\(N\\) integers, each in \\(0..N-1\\) | 4 5 3 0 1 2 |
 | \\(C\\) | a count per byte value, or, as used below, where each byte's run starts in \\(F\\) | counts a 3, b 1, n 2; starts a 0, b 3, n 4 |
 
-The decoder is given \\(L\\) and \\(I\\), and must produce \\(S\\): from `nnbaaa` and 3, it must get back to `banana`.
-
-The six rotations of banana, sorted
-
-M for S = banana, with F in green, L in blue and T beside each row. Row 3, outlined, is S itself.
-
-A rotation moves some bytes from the front of a string to its back. Sort every rotation of `banana` and the result is \\(M\\). Row 3 is `banana` itself, so \\(I = 3\\). A decoder never holds \\(M\\): the inverse transform recovers just enough of it, from \\(L\\), to read off row \\(I\\).
+In these terms, the decoder is given \\(L\\) and \\(I\\) and must produce \\(S\\). It never holds \\(M\\): the inverse transform recovers just enough of it, from \\(L\\), to read off row \\(I\\).
 
 **Why the first and last columns.** Every row of \\(M\\) is \\(S\\) read round from some starting point, so in every row the last byte comes just before the first, going round \\(S\\). Row 3 ends in `a` and starts with `b`, and the final `a` of `banana` comes, going round, before its opening `b`. That is the relation the whole paper builds on: \\(L\[i\]\\) comes just before \\(F\[i\]\\) in \\(S\\). The two columns carry different information:
 
