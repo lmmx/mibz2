@@ -1,7 +1,7 @@
 ---
 title: "Revisiting the space–time tradeoff in BWT inversion"
 image: assets/social/blog-2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.png
-description: "In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so."
+description: "A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result."
 ---
 
 <div class="post-hero" markdown>
@@ -13,10 +13,8 @@ description: "In 2001, Seward showed why the fastest way to undo a Burrows–Whe
 
 # Revisiting the space–⁠time tradeoff in BWT inversion
 
-In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more
-instructions but less memory traffic. Twenty-five years later, that observation led us to
-ask whether a smaller navigation table could do more work per step and still come out ahead
-under contention. A first measurement of ours shows it doing so.
+A packed table saved memory but cost too much to read. A cheaper compact lookup gives the
+first positive traversal result.
 {: .post-dek }
 
 2 November 2026 · 27 min read · [Result](#7-timing-the-walk-on-one-core-and-on-four)
@@ -61,7 +59,8 @@ which your machine can service cache misses."*
 The post has two halves: how Seward's algorithms work and what he measured, then what happens
 to his tradeoff in mibz2, where several blocks decode at once and share one cache. The
 result in the second half is a controlled test of the walk alone, not yet of the whole
-decoder.
+decoder. Readers who know how BWT inversion works can go straight to [the compact
+table](#6-a-smaller-table-a-busier-lookup).
 
 <nav class="post-roadmap" aria-label="The post in nine sections">
 <div class="rm-half">
