@@ -305,7 +305,7 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <text x="469.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
 </g>
-<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c0 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">ab</tspan> &lt; <tspan style="font-family: var(--md-code-font-family)">an</tspan>…</text>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c0 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">ab…</tspan> &lt; <tspan style="font-family: var(--md-code-font-family)">an…</tspan></text>
 <g class="rs2-fly" style="animation: rs2-f1 24.00s ease-in-out infinite">
 <rect x="420" y="114" width="30" height="32" rx="4" class="bf-cell"/>
 <rect x="420" y="114" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
@@ -333,7 +333,7 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <text x="537.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
 </g>
-<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c1 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">anab</tspan> &lt; <tspan style="font-family: var(--md-code-font-family)">anan</tspan>…</text>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c1 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">anab…</tspan> &lt; <tspan style="font-family: var(--md-code-font-family)">anan…</tspan></text>
 <g class="rs2-fly" style="animation: rs2-f2 24.00s ease-in-out infinite">
 <rect x="420" y="152" width="30" height="32" rx="4" class="bf-cell"/>
 <rect x="420" y="152" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
@@ -355,7 +355,7 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <text x="435.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a</text>
 </g>
 </g>
-<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c2 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">a</tspan> &lt; <tspan style="font-family: var(--md-code-font-family)">b</tspan>, <tspan style="font-family: var(--md-code-font-family)">n</tspan>…</text>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c2 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">a…</tspan> &lt; <tspan style="font-family: var(--md-code-font-family)">b…</tspan>, <tspan style="font-family: var(--md-code-font-family)">n…</tspan></text>
 <g class="rs2-fly" style="animation: rs2-f3 24.00s ease-in-out infinite">
 <rect x="420" y="190" width="30" height="32" rx="4" class="bf-cell"/>
 <rect x="420" y="190" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
@@ -377,7 +377,7 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <text x="435.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
 </g>
-<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c3 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">b</tspan> &lt; <tspan style="font-family: var(--md-code-font-family)">n</tspan>…</text>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c3 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">b…</tspan> &lt; <tspan style="font-family: var(--md-code-font-family)">n…</tspan></text>
 <g class="rs2-fly" style="animation: rs2-f4 24.00s ease-in-out infinite">
 <rect x="420" y="228" width="30" height="32" rx="4" class="bf-cell"/>
 <rect x="420" y="228" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
@@ -403,7 +403,7 @@ shuffles them into what is called the Burrows–Wheeler matrix, which Seward's s
 <text x="503.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
 </g>
 </g>
-<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c4 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">nab</tspan> &lt; <tspan style="font-family: var(--md-code-font-family)">nan</tspan>…</text>
+<text x="50" y="354" class="bf-t rs2-cmp" style="animation: rs2-c4 24.00s linear infinite"><tspan style="font-family: var(--md-code-font-family)" class="rs2-amb">nab…</tspan> &lt; <tspan style="font-family: var(--md-code-font-family)">nan…</tspan></text>
 <g class="rs2-fly" style="animation: rs2-f5 24.00s ease-in-out infinite">
 <rect x="420" y="266" width="30" height="32" rx="4" class="bf-cell"/>
 <rect x="420" y="266" width="30" height="32" rx="4" class="bf-cell-hi rs2-b" style="animation: rs2-shade 24.00s linear infinite"/>
