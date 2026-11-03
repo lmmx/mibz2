@@ -75,22 +75,6 @@ bench-scaling *args:
     cargo build --release --example ab
     python3 bench/scaling.py "$@"
 
-# bench/coop_decoder.py: the cooperative decoder's full-decoder A/B against its release
-# gates. examples/ab.rs runs the Wikidata corpus from disk to hashed output (every CRC
-# checked): today's decoder, cooperative teams of 2 and 3, and the policy the release would
-# make the default (mibz2-auto), at 4, 6, 8 and 10 threads and all CPUs, 20 rounds
-# interleaved, unpinned; then a pass limited to 4 physical cores, where the policy must
-# pick today's decoder and be no slower. About 10 minutes; close the browser and other
-# busy programs first. Upload coop-decoder-*.md, coop-decoder-*.json and the .jsonl files.
-#   just bench-coop-decoder
-
-# The cooperative decoder against today's, end to end, with its release gates
-[positional-arguments]
-bench-coop-decoder *args:
-    bash bench/corpus.sh
-    cargo build --release --example ab
-    python3 bench/coop_decoder.py "$@"
-
 # bench/variants.py: released versions (v0.1.1-v0.1.5) and walk settings on this build
 # (16 or 8 lanes; prefetch off, into L2, non-temporal), each built in its own worktree,
 # checked to give this build's bytes, then run beside this build at 2, 4, 6, 8 and 10
@@ -99,16 +83,6 @@ bench-coop-decoder *args:
 #   just bench-variants
 #   just bench-variants --variants v0.1.2,v0.1.3,lanes8,pf-off --rounds 8
 #   just bench-variants --variants v0.1.4,pairwalk,v0.1.5 --threads 1,4,6,8,10 --rounds 10
-
-# The one-pass build (docs/journal/2026-10-29-one-pass-build.md, pre-registered): this
-# build against v0.2.0, whose source differs from it by that change alone, at 1-10 threads,
-# paired by round. At 1-4 threads the default plan is a block a worker (`bwt::build`); from
-# 6 it plans teams, whose fused build is untouched, so those rows are the control. About
-# 5 minutes. Upload variants-*.json, its .jsonl and the console.
-#   just bench-one-pass 2>&1 | tee one-pass-console.log
-bench-one-pass rounds="10":
-    git rev-parse -q --verify 'v0.2.0^{commit}' > /dev/null || git fetch origin tag v0.2.0 --no-tags
-    just bench-variants --variants v0.2.0 --threads 1,2,4,6,8,10 --rounds {{rounds}} --note "one-pass build against v0.2.0"
 
 # Which of mibz2's own changes moved its scaling knee: versions and walk settings (#39, #52)
 [positional-arguments]
@@ -200,14 +174,3 @@ bench-fingerprint *args:
 bench-compete *args:
     bash bench/corpus.sh
     bash bench/compete.sh "$@"
-
-# bench/pmu_probe.py, as the PMU probe workflow runs it on CI: the CPU, its caches and
-# quota, perf's permissions and the PMUs registered, then each candidate counter tried on
-# its own over a short busy loop. Needs perf and sudo. It writes pmu-probe.json to share.
-#   just bench-pmu-probe
-#   just bench-pmu-probe --out pmu-probe-i9.json
-
-# What this machine's performance counters can measure (diagnostic only)
-[positional-arguments]
-bench-pmu-probe *args:
-    python3 bench/pmu_probe.py "$@"

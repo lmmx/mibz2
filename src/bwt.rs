@@ -23,25 +23,6 @@
 pub trait InverseBwt: Default + Send {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>);
 
-    /// Whether this kernel reads the MTF stage's count checkpoints (`mtf::mtf_checkpoints`,
-    /// `mtf::CHECKPOINT` rows apart); if so the decoder calls `invert_checkpointed`
-    fn wants_checkpoints(&self) -> bool {
-        false
-    }
-
-    /// `invert`, given `checkpoints[i]`, the counts of `ll[..i * mtf::CHECKPOINT]`
-    fn invert_checkpointed(
-        &mut self,
-        ll: &[u8],
-        counts: &[u32; 256],
-        checkpoints: &[[u32; 256]],
-        orig_ptr: u32,
-        out: &mut Vec<u8>,
-    ) {
-        let _ = checkpoints;
-        self.invert(ll, counts, orig_ptr, out)
-    }
-
     /// Its buffers' sizes, for the footprint ledger (src/trace.rs): tests and the `trace`
     /// feature only
     #[cfg(any(test, feature = "trace"))]
@@ -104,122 +85,10 @@ impl InverseBwt for Segmented {
     }
 }
 
-/// The cooperative inverse BWT: a block's table built and walked by K cores that share it
-/// (`coop::build_fused`, then `coop::walk_room`, its threads kept for the kernel's life:
-/// the coop journal, docs/journal/2026-10-28-cooperative-inversion.md). N workers on this
-/// kernel keep N tables live on N × K cores, where production's keep N × K. Exactly
-/// `walk`'s output.
-///
-/// It runs the one-core kernel (`Segmented`) where cooperation can't help or can't run: a
-/// block below `MIN_COOP` rows, a call without checkpoints, or a pool whose threads
-/// couldn't be spawned. If the cooperative build refuses the checkpoints, a bug in their
-/// maker, the block is built on one core instead, so its output is still right (and a
-/// debug build stops at the assertion).
-pub struct Cooperative<const K: usize> {
-    /// None until the first cooperative block; an Err if its threads couldn't be spawned
-    pool: Option<std::io::Result<crate::coop::Pool>>,
-    tt: TVector,
-    seg: SegScratch,
-}
-
-/// The rows below which `Cooperative` runs the one-core kernel: 16 checkpoints, 4 ×
-/// `MIN_SEGMENTED`, the ranges' rounding then at most 1/32 of a range (to be tuned by the
-/// decoder A/B)
-pub const MIN_COOP: usize = 16 * crate::mtf::CHECKPOINT;
-
-impl<const K: usize> Cooperative<K> {
-    /// Whether a block has been inverted on the team (its threads spawned)
-    #[cfg(test)]
-    pub(crate) fn engaged(&self) -> bool {
-        matches!(self.pool, Some(Ok(_)))
-    }
-}
-
-impl<const K: usize> Default for Cooperative<K> {
-    fn default() -> Self {
-        Cooperative {
-            pool: None,
-            tt: TVector::new(),
-            seg: SegScratch::default(),
-        }
-    }
-}
-
-impl<const K: usize> InverseBwt for Cooperative<K> {
-    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
-        build(ll, counts, &mut self.tt);
-        walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
-    }
-
-    fn wants_checkpoints(&self) -> bool {
-        K > 1
-    }
-
-    fn invert_checkpointed(
-        &mut self,
-        ll: &[u8],
-        counts: &[u32; 256],
-        checkpoints: &[[u32; 256]],
-        orig_ptr: u32,
-        out: &mut Vec<u8>,
-    ) {
-        if K < 2 || ll.len() < MIN_COOP {
-            return self.invert(ll, counts, orig_ptr, out);
-        }
-        let pool = match self.pool.get_or_insert_with(|| crate::coop::Pool::new(K)) {
-            Ok(p) => p,
-            Err(_) => return self.invert(ll, counts, orig_ptr, out),
-        };
-        let built = crate::coop::build_fused(
-            ll,
-            counts,
-            checkpoints,
-            crate::mtf::CHECKPOINT,
-            pool,
-            &mut self.tt,
-        );
-        if let Err(e) = built {
-            debug_assert!(
-                false,
-                "the cooperative build refused its checkpoints: {}",
-                e.0
-            );
-            build(ll, counts, &mut self.tt);
-        }
-        crate::coop::walk_room::<FLAGGED_LANES>(
-            &mut self.tt,
-            orig_ptr,
-            &mut self.seg,
-            pool,
-            FLAGGED_SEGMENTS * K,
-        );
-        self.seg.assemble(out);
-    }
-
-    #[cfg(any(test, feature = "trace"))]
-    fn buffers(&self) -> Vec<crate::trace::Buffer> {
-        use crate::trace::Buffer;
-        let s = &self.seg;
-        let mut v = vec![Buffer::of("tt", &self.tt.0)];
-        if s.bufs.capacity() > 0 {
-            v.push(Buffer {
-                name: "seg.bufs",
-                len: s.bufs.iter().map(Vec::len).sum(),
-                cap: s.bufs.iter().map(Vec::capacity).sum(),
-            });
-            v.push(Buffer::of("seg.bufs.outer", &s.bufs));
-            v.push(Buffer::of("seg.starts", &s.starts));
-            v.push(Buffer::of("seg.next", &s.next));
-        }
-        v
-    }
-}
-
-/// A block's T-vector. Built only by `build`, or by `coop::build_fused` once its end check
-/// has passed, so every link in it is below its length, which the walks rely on to read
-/// it unchecked.
+/// A block's T-vector. Built only by `build`, so every link in it is below its length,
+/// which the walks rely on to read it unchecked.
 #[derive(Default)]
-pub struct TVector(pub(crate) Vec<u32>);
+pub struct TVector(Vec<u32>);
 
 impl TVector {
     pub fn new() -> Self {
@@ -233,94 +102,9 @@ impl TVector {
     }
 }
 
-/// The T-vector of the last column `ll`, whose bytes `counts` counts.
-///
-/// Built in one pass (`build_one_pass`) when the counts are `ll`'s own, as the decoder's
-/// always are; otherwise by `build_two_pass`, whose table is defined for any counts that
-/// keep its writes in bounds. Both give the same table where both apply.
+/// The T-vector of the last column `ll`, whose bytes `counts` counts
 pub fn build(ll: &[u8], counts: &[u32; 256], tt: &mut TVector) {
-    if !build_one_pass(ll, counts, &mut tt.0) {
-        build_two_pass(ll, counts, &mut tt.0);
-    }
-}
-
-/// `build` in one pass, as `coop::build_fused` builds at one core: each entry written whole,
-/// `ll[s] | i << 8` at slot s, with no pass first copying the last column in and no
-/// read-modify-write of each entry. Each write is checked against its bucket's end, and
-/// after the scatter every bucket's cursor must have reached its end, which proves every
-/// slot below n written exactly once. Only then is the table's length set; otherwise it
-/// is left empty and false returned (the counts are not `ll`'s own, or don't sum to n).
-fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
-    let n = ll.len();
-    tt.clear();
-    if n >= 1 << 24 || counts.iter().map(|&c| c as usize).sum::<usize>() != n {
-        return false;
-    }
-    let (mut ftab, mut lim) = ([0u32; 256], [0u32; 256]);
-    let mut cum = 0u32;
-    for b in 0..256 {
-        ftab[b] = cum;
-        cum += counts[b];
-        lim[b] = cum;
-    }
-    tt.reserve(n);
-    let t = tt.as_mut_ptr();
-    // the one-row step: row i's link at its byte's next slot, inside the bucket
-    let one = |i: usize, ftab: &mut [u32; 256]| -> bool {
-        let c = ll[i] as usize;
-        let s = ftab[c];
-        if s >= lim[c] {
-            return false;
-        }
-        // SAFETY: s is below its bucket's end, at most n, within tt's reserved capacity
-        unsafe { *t.add(s as usize) = ll[s as usize] as u32 | (i as u32) << 8 };
-        ftab[c] = s + 1;
-        true
-    };
-    // 16 rows at a time, as `build_two_pass` (its comment)
-    let mut i = 0;
-    while i + 16 <= n {
-        let (a, b) = (read_u64(ll, i), read_u64(ll, i + 8));
-        if a == b && a == a.rotate_left(8) {
-            let c = ll[i] as usize;
-            let s = ftab[c] as usize;
-            if s + 16 > lim[c] as usize {
-                return false;
-            }
-            let base = (i as u32) << 8;
-            for (j, &l) in ll[s..s + 16].iter().enumerate() {
-                // SAFETY: s..s + 16 is below its bucket's end, as above
-                unsafe { *t.add(s + j) = l as u32 | (base + ((j as u32) << 8)) };
-            }
-            ftab[c] += 16;
-        } else {
-            for i in i..i + 16 {
-                if !one(i, &mut ftab) {
-                    return false;
-                }
-            }
-        }
-        i += 16;
-    }
-    for i in i..n {
-        if !one(i, &mut ftab) {
-            return false;
-        }
-    }
-    if ftab != lim {
-        return false;
-    }
-    // SAFETY: every slot below n was written exactly once: each bucket's slots by its own
-    // cursor, which rose one a write from the bucket's start to its end (the check above),
-    // and the buckets tile [0, n)
-    unsafe { tt.set_len(n) };
-    true
-}
-
-/// The two-pass build: the last column copied into the table, then each row's link added
-/// to its byte's next slot. `build` takes it when the counts are not `ll`'s own, so that
-/// its table stays what it always was for any counts that keep the writes in bounds
-fn build_two_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) {
+    let tt = &mut tt.0;
     tt.clear();
     tt.extend(ll.iter().map(|&c| c as u32));
     let mut ftab = [0u32; 256];
@@ -366,7 +150,7 @@ fn link(ll: &[u8], tt: &mut [u32], ftab: &mut [u32; 256], rows: std::ops::Range<
 }
 
 #[inline(always)]
-pub(crate) fn read_u64(b: &[u8], i: usize) -> u64 {
+fn read_u64(b: &[u8], i: usize) -> u64 {
     u64::from_ne_bytes(b[i..i + 8].try_into().unwrap())
 }
 
@@ -411,13 +195,13 @@ pub(crate) const MIN_SEGMENTED: usize = 1 << 16;
 /// The segment walk's buffers, kept from block to block
 #[derive(Default)]
 pub struct SegScratch {
-    pub(crate) starts: Vec<u32>,
+    starts: Vec<u32>,
     bitmap: Vec<u64>,
-    pub(crate) bufs: Vec<Vec<u8>>,
-    pub(crate) next: Vec<usize>,
+    bufs: Vec<Vec<u8>>,
+    next: Vec<usize>,
     /// the room walk's last block: its length and the segment its output starts in
-    pub(crate) n: usize,
-    pub(crate) first: usize,
+    n: usize,
+    first: usize,
 }
 
 impl SegScratch {
@@ -533,8 +317,8 @@ pub fn walk_segments(tt: &TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mut Seg
 
 /// The flag marking a segment start in its own T-vector entry (links are below 2^20, so
 /// bit 31 is free), and the mask that takes it off a link
-pub(crate) const START: u32 = 1 << 31;
-pub(crate) const LINK: u32 = !START;
+const START: u32 = 1 << 31;
+const LINK: u32 = !START;
 
 /// One lane's state in `walk_segments_flagged`: the row it reads next, and where its
 /// segment's bytes go (`p` up to `end`, the segment's buffer's spare capacity)
@@ -561,21 +345,14 @@ pub fn walk_segments_flagged(
     if tt.len() < MIN_SEGMENTED {
         return walk(tt, orig_ptr, out);
     }
-    walk_segments_flagged_with_prefetch::<FLAGGED_LANES, PREFETCH>(
-        tt,
-        orig_ptr,
-        out,
-        s,
-        FLAGGED_SEGMENTS,
-    )
+    walk_segments_flagged_with::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, out, s, FLAGGED_SEGMENTS)
 }
 
 /// `walk_segments_flagged` with `L` lanes and `segments` segments, each lane's next entry
-/// prefetched as soon as its row is known, at the level `PF` names (`PF_OFF` for none,
-/// `PF_L1`, `PF_L2`, `PF_NTA`): each configuration exactly `walk`'s output, so they can be
-/// measured side by side. It segments a block of any length (the tests walk small ones;
-/// `walk_segments_flagged` leaves those below MIN_SEGMENTED to `walk`).
-pub fn walk_segments_flagged_with_prefetch<const L: usize, const PF: u8>(
+/// prefetched as soon as its row is known if `PF`: each configuration exactly `walk`'s
+/// output, so they can be measured side by side. It segments a block of any length (the
+/// tests walk small ones; `walk_segments_flagged` leaves those below MIN_SEGMENTED to `walk`).
+pub fn walk_segments_flagged_with<const L: usize, const PF: u8>(
     tt: &mut TVector,
     orig_ptr: u32,
     out: &mut Vec<u8>,
@@ -786,10 +563,9 @@ pub fn walk_segments_room_parts(
     true
 }
 
-/// `walk_segments_room` with `L` lanes and `segments` segments, each lane's next entry
-/// prefetched at the level `PF` names (`PF_OFF` for none, `PF_L1`, `PF_L2`, `PF_NTA`), on a
-/// block of any length (the tests walk small ones; `walk_segments_room` leaves those below
-/// MIN_SEGMENTED to `walk`).
+/// `walk_segments_room` with `L` lanes and `segments` segments, on a block of any length
+/// (the tests walk small ones; `walk_segments_room` leaves those below MIN_SEGMENTED to
+/// `walk`).
 ///
 /// What its unchecked writes rely on (the walks' contract, which the tests check
 /// against a safe reference of the segments, `tests::segment_oracle`):
@@ -806,7 +582,7 @@ pub fn walk_segments_room_parts(
 /// - **Lifetimes:** a buffer grows only at a pass's start or in the tail, and its lane's
 ///   p and end (and base, from p) are taken from the grown buffer; `bufs` itself is not
 ///   resized during the walk, so no other buffer moves.
-pub fn walk_segments_room_with_prefetch<const L: usize, const PF: u8>(
+pub fn walk_segments_room_with<const L: usize, const PF: u8>(
     tt: &mut TVector,
     orig_ptr: u32,
     out: &mut Vec<u8>,
@@ -1011,47 +787,11 @@ fn room_segments<const L: usize, const PF: u8>(
     s.n = n;
 }
 
-/// `walk_segments_flagged_with_prefetch` with 0.1.5's switch: `PF` prefetches each lane's
-/// next entry into L1 (`PF_L1`, 0.1.5's prefetch) or not at all (`PF_OFF`). Kept so that
-/// 0.1.5's callers build unchanged.
-#[inline]
-pub fn walk_segments_flagged_with<const L: usize, const PF: bool>(
-    tt: &mut TVector,
-    orig_ptr: u32,
-    out: &mut Vec<u8>,
-    s: &mut SegScratch,
-    segments: usize,
-) {
-    if PF {
-        walk_segments_flagged_with_prefetch::<L, PF_L1>(tt, orig_ptr, out, s, segments)
-    } else {
-        walk_segments_flagged_with_prefetch::<L, PF_OFF>(tt, orig_ptr, out, s, segments)
-    }
-}
-
-/// `walk_segments_room_with_prefetch` with 0.1.5's switch: `PF` prefetches each lane's next
-/// entry into L1 (`PF_L1`, 0.1.5's prefetch) or not at all (`PF_OFF`). Kept so that 0.1.5's
-/// callers build unchanged.
-#[inline]
-pub fn walk_segments_room_with<const L: usize, const PF: bool>(
-    tt: &mut TVector,
-    orig_ptr: u32,
-    out: &mut Vec<u8>,
-    s: &mut SegScratch,
-    segments: usize,
-) {
-    if PF {
-        walk_segments_room_with_prefetch::<L, PF_L1>(tt, orig_ptr, out, s, segments)
-    } else {
-        walk_segments_room_with_prefetch::<L, PF_OFF>(tt, orig_ptr, out, s, segments)
-    }
-}
-
 /// A hint that the T-vector entry at `row` (below its length) is read soon: a software
 /// prefetch at the level `H` names (`PF_L1`, `PF_L2`, `PF_NTA`) where the target has one,
 /// else nothing. A hint only: it changes no value read.
 #[inline(always)]
-pub(crate) fn prefetch<const H: u8>(t: *const u32, row: u32) {
+fn prefetch<const H: u8>(t: *const u32, row: u32) {
     let p = t.wrapping_add(row as usize);
     #[cfg(target_arch = "x86_64")]
     // SAFETY: SSE is in x86_64's baseline; a prefetch never faults
@@ -1088,7 +828,7 @@ fn next_unset(l: &Lane, next: &[usize]) -> bool {
 }
 
 /// `m` pseudo-random rows below `n` (xorshift, seeded by n: the same rows every time)
-pub(crate) fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
+fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
     rows.clear();
     let mut x = 0x2545_f491_4f6c_dd1du64 ^ n as u64;
     rows.extend((0..m).map(|_| {
@@ -1100,14 +840,14 @@ pub(crate) fn random_rows(n: usize, m: usize, rows: &mut Vec<u32>) {
 }
 
 #[cfg(test)]
-pub(crate) mod tests {
+mod tests {
     use super::*;
 
     /// The segments' reference, safe and slow: from each start, the walks' own steps (its
     /// first byte from its own entry, then a row's byte at a time until the next start),
     /// giving each segment's bytes and its successor. Every segment, on every cycle of the
     /// list, not only those the output joins: a walk writes them all.
-    pub(crate) fn segment_oracle(tt: &TVector, starts: &[u32]) -> Vec<(Vec<u8>, usize)> {
+    fn segment_oracle(tt: &TVector, starts: &[u32]) -> Vec<(Vec<u8>, usize)> {
         let t = &tt.0;
         let mut index = vec![usize::MAX; t.len()];
         for (i, &r) in starts.iter().enumerate() {
@@ -1162,7 +902,7 @@ pub(crate) mod tests {
             }
             assert!(tt.0.iter().all(|&e| e & START == 0));
             for segments in [2, 40, 512, 4096] {
-                walk_segments_room_with_prefetch::<32, PF_L1>(
+                walk_segments_room_with::<32, PF_L1>(
                     &mut tt,
                     orig_ptr,
                     &mut flagged,
@@ -1170,7 +910,7 @@ pub(crate) mod tests {
                     segments,
                 );
                 assert!(plain == flagged, "room walk, {segments} segments");
-                walk_segments_room_with_prefetch::<5, PF_OFF>(
+                walk_segments_room_with::<5, PF_OFF>(
                     &mut tt,
                     orig_ptr,
                     &mut flagged,
@@ -1183,7 +923,7 @@ pub(crate) mod tests {
             assert!(tt.0.iter().all(|&e| e & START == 0));
             // other lane and segment counts, with and without the prefetch
             for segments in [1, 256, 1024] {
-                walk_segments_flagged_with_prefetch::<12, PF_OFF>(
+                walk_segments_flagged_with::<12, PF_OFF>(
                     &mut tt,
                     orig_ptr,
                     &mut flagged,
@@ -1191,7 +931,7 @@ pub(crate) mod tests {
                     segments,
                 );
                 assert!(plain == flagged, "12 lanes, {segments} segments");
-                walk_segments_flagged_with_prefetch::<7, PF_L1>(
+                walk_segments_flagged_with::<7, PF_L1>(
                     &mut tt,
                     orig_ptr,
                     &mut flagged,
@@ -1259,119 +999,6 @@ pub(crate) mod tests {
         }
     }
 
-    /// Columns for the builds' tests: lengths 0 to 40 of one byte, runs of every length
-    /// around 16 at every alignment among other bytes, random bytes, and a run to the end
-    fn build_inputs(rounds: usize, len: usize) -> Vec<Vec<u8>> {
-        let mut x = 0x9e37_79b9_7f4a_7c15u64;
-        let mut rnd = move || {
-            x ^= x << 13;
-            x ^= x >> 7;
-            x ^= x << 17;
-            x
-        };
-        let mut inputs: Vec<Vec<u8>> = (0..=40).map(|n| vec![3u8; n]).collect();
-        for _ in 0..rounds {
-            let mut ll = Vec::new();
-            while ll.len() < len {
-                let c = (rnd() % 5) as u8;
-                let run = [1, 2, 15, 16, 17, 31, 32, 33][(rnd() % 8) as usize];
-                ll.extend(std::iter::repeat_n(c, run));
-            }
-            ll.truncate(len - (rnd() % 16) as usize);
-            inputs.push(ll);
-        }
-        inputs.push((0..len).map(|_| rnd() as u8).collect());
-        inputs.push(
-            (0..len)
-                .map(|i| if i < len / 3 { (i % 3) as u8 } else { 9 })
-                .collect(),
-        );
-        inputs
-    }
-
-    fn counts_of(ll: &[u8]) -> [u32; 256] {
-        let mut counts = [0u32; 256];
-        for &c in ll {
-            counts[c as usize] += 1;
-        }
-        counts
-    }
-
-    /// On its own counts, a column's one-pass build is taken and is the two-pass table
-    fn one_pass_matches(ll: &[u8]) {
-        let counts = counts_of(ll);
-        let (mut one, mut two) = (Vec::new(), Vec::new());
-        assert!(
-            build_one_pass(ll, &counts, &mut one),
-            "length {}: refused",
-            ll.len()
-        );
-        build_two_pass(ll, &counts, &mut two);
-        assert!(one == two, "length {}", ll.len());
-    }
-
-    /// Counts that are not the column's own but keep the two-pass build's writes in bounds
-    /// (one count moved from the first byte present to the last, so the first bucket
-    /// overflows into the next; or one count short, so the counts sum to n - 1): the one-pass
-    /// build refuses them, and `build` gives the two-pass table, as before the one-pass build
-    fn wrong_counts_fall_back(ll: &[u8]) {
-        let counts = counts_of(ll);
-        let present: Vec<usize> = (0..256).filter(|&c| counts[c] > 0).collect();
-        let (Some(&lo), Some(&hi)) = (present.first(), present.last()) else {
-            return;
-        };
-        let mut moved = counts;
-        let mut short = counts;
-        short[hi] -= 1;
-        let mut cases = vec![short];
-        if lo != hi {
-            moved[lo] -= 1;
-            moved[hi] += 1;
-            cases.push(moved);
-        }
-        for wrong in cases {
-            let mut one = Vec::new();
-            assert!(
-                !build_one_pass(ll, &wrong, &mut one),
-                "length {}: accepted",
-                ll.len()
-            );
-            assert!(one.is_empty(), "a refused build leaves the table empty");
-            let (mut tt, mut want) = (TVector::new(), Vec::new());
-            build(ll, &wrong, &mut tt);
-            build_two_pass(ll, &wrong, &mut want);
-            assert!(tt.0 == want, "length {}: not the two-pass table", ll.len());
-        }
-    }
-
-    #[test]
-    fn one_pass_build_is_the_two_pass_build() {
-        for ll in build_inputs(40, 3000) {
-            one_pass_matches(&ll);
-        }
-    }
-
-    #[test]
-    fn wrong_counts_take_the_two_pass_build() {
-        for ll in build_inputs(10, 3000).iter().filter(|ll| !ll.is_empty()) {
-            wrong_counts_fall_back(ll);
-        }
-    }
-
-    /// The one-pass build's unchecked writes and its `set_len` under Miri, on small columns:
-    /// accepted, refused before the scatter (counts not summing to n) and refused mid-scatter
-    /// (an overflowing bucket). With counts summing to n and every write inside its bucket,
-    /// no bucket can end short, so the end check is the safety argument's step, not a path
-    #[test]
-    fn miri_build_one_pass() {
-        for ll in build_inputs(3, 80).iter().filter(|ll| ll.len() <= 80) {
-            one_pass_matches(ll);
-            if !ll.is_empty() {
-                wrong_counts_fall_back(ll);
-            }
-        }
-    }
-
     /// The room walk on degenerate columns (cycles of one and two rows: segments of one or
     /// two bytes, ending in every round of a pass), at every lane count's edge
     #[test]
@@ -1391,7 +1018,7 @@ pub(crate) mod tests {
             for orig_ptr in [0, 1, n as u32 / 2, n as u32 - 1] {
                 walk(&tt, orig_ptr, &mut plain);
                 for segments in [33, 64, 512, 4096] {
-                    walk_segments_room_with_prefetch::<32, PF_L1>(
+                    walk_segments_room_with::<32, PF_L1>(
                         &mut tt, orig_ptr, &mut room, &mut seg, segments,
                     );
                     assert!(plain == room, "orig_ptr {orig_ptr}, {segments} segments");
@@ -1519,22 +1146,22 @@ pub(crate) mod tests {
                 assert!(plain == out, "flagged walk, n {n}");
                 for segments in [1, 2, 33, 256] {
                     let what = format!("n {n}, {segments} segments");
-                    walk_segments_room_with_prefetch::<32, PF_L1>(
+                    walk_segments_room_with::<32, PF_L1>(
                         &mut tt, orig_ptr, &mut out, &mut seg, segments,
                     );
                     assert!(plain == out, "room walk, {what}");
                     check_segments(&tt, &seg, &what);
-                    walk_segments_room_with_prefetch::<5, PF_OFF>(
+                    walk_segments_room_with::<5, PF_OFF>(
                         &mut tt, orig_ptr, &mut out, &mut seg, segments,
                     );
                     assert!(plain == out, "room walk, 5 lanes, {what}");
                     check_segments(&tt, &seg, &what);
-                    walk_segments_flagged_with_prefetch::<32, PF_L1>(
+                    walk_segments_flagged_with::<32, PF_L1>(
                         &mut tt, orig_ptr, &mut out, &mut seg, segments,
                     );
                     assert!(plain == out, "flagged walk, {what}");
                     check_segments(&tt, &seg, &what);
-                    walk_segments_flagged_with_prefetch::<7, PF_OFF>(
+                    walk_segments_flagged_with::<7, PF_OFF>(
                         &mut tt, orig_ptr, &mut out, &mut seg, segments,
                     );
                     assert!(plain == out, "flagged walk, 7 lanes, {what}");
@@ -1574,41 +1201,14 @@ pub(crate) mod tests {
             build(&ll, &counts, &mut tt);
             let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
             walk(&tt, orig_ptr, &mut plain);
-            walk_segments_room_with_prefetch::<32, PF_L1>(
-                &mut tt, orig_ptr, &mut out, &mut seg, 256,
-            );
+            walk_segments_room_with::<32, PF_L1>(&mut tt, orig_ptr, &mut out, &mut seg, 256);
             assert!(plain == out, "room walk, seed {seed}");
             check_segments(&tt, &seg, "room walk");
-            walk_segments_flagged_with_prefetch::<32, PF_L1>(
-                &mut tt, orig_ptr, &mut out, &mut seg, 256,
-            );
+            walk_segments_flagged_with::<32, PF_L1>(&mut tt, orig_ptr, &mut out, &mut seg, 256);
             assert!(plain == out, "flagged walk, seed {seed}");
             check_segments(&tt, &seg, "flagged walk");
         }
         assert_reached();
-        // 0.1.5's signatures (a bool switch) still build and give walk's output
-        {
-            let ll: Vec<u8> = (0..5000u32).map(|i| (i * 7 % 13) as u8).collect();
-            let mut counts = [0u32; 256];
-            for &c in &ll {
-                counts[c as usize] += 1;
-            }
-            let mut tt = TVector::new();
-            build(&ll, &counts, &mut tt);
-            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
-            walk(&tt, 17, &mut plain);
-            walk_segments_room_with::<32, true>(&mut tt, 17, &mut out, &mut seg, 64);
-            assert!(plain == out, "room walk, 0.1.5's signature, prefetch on");
-            walk_segments_room_with::<5, false>(&mut tt, 17, &mut out, &mut seg, 64);
-            assert!(plain == out, "room walk, 0.1.5's signature, prefetch off");
-            walk_segments_flagged_with::<32, true>(&mut tt, 17, &mut out, &mut seg, 64);
-            assert!(plain == out, "flagged walk, 0.1.5's signature, prefetch on");
-            walk_segments_flagged_with::<7, false>(&mut tt, 17, &mut out, &mut seg, 64);
-            assert!(
-                plain == out,
-                "flagged walk, 0.1.5's signature, prefetch off"
-            );
-        }
         // and the degenerate columns (segments of one and two bytes), on a smaller block
         let n = 600;
         for ll in [vec![3u8; n], (0..n).map(|i| (i % 2) as u8).collect()] {
@@ -1621,14 +1221,10 @@ pub(crate) mod tests {
             let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
             walk(&tt, 1, &mut plain);
             for segments in [33, 256] {
-                walk_segments_room_with_prefetch::<32, PF_L1>(
-                    &mut tt, 1, &mut out, &mut seg, segments,
-                );
+                walk_segments_room_with::<32, PF_L1>(&mut tt, 1, &mut out, &mut seg, segments);
                 assert!(plain == out, "room walk, {segments} segments");
                 check_segments(&tt, &seg, "room walk");
-                walk_segments_flagged_with_prefetch::<32, PF_L1>(
-                    &mut tt, 1, &mut out, &mut seg, segments,
-                );
+                walk_segments_flagged_with::<32, PF_L1>(&mut tt, 1, &mut out, &mut seg, segments);
                 assert!(plain == out, "flagged walk, {segments} segments");
                 check_segments(&tt, &seg, "flagged walk");
             }
