@@ -89,8 +89,9 @@ The results that remain, kept separate:
 
 ## Report 203: the guardian narrows the STOP and reopens construction for Astra (as relayed)
 
-**This supersedes report 202's closure of the whole line of work.** The guardian retracts
-the recommendation to close compact30 construction entirely:
+**Report 202 stands as the closure of constructor version 1; it does not close compact30
+construction as a whole.** The guardian retracts only the wider reading, that the line of
+work was over:
 
 - **Still stopped:** the current direct-constructor implementation (`ctor.rs` at `e003a32`).
   It remains preserved as correct, audited research evidence. No further i9 capture, tuning
