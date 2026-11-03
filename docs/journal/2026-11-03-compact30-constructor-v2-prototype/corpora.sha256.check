@@ -1,0 +1,11 @@
+corpora/mixed-independent.bz2: OK
+corpora/period-3.bz2: OK
+corpora/random.bz2: OK
+corpora/records.bz2: OK
+corpora/text-l1.bz2: OK
+corpora/text-l5.bz2: OK
+corpora/text.bz2: OK
+corpora/wikidata-20261026.bz2: OK
+corpora/wikidata-fitted.bz2: OK
+corpora/wikidata-heldout.bz2: OK
+corpora/zeros.bz2: OK
