@@ -4,7 +4,7 @@
 
 In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so.
 
-2 November 2026 · 25 min read · [Result](<#7-timing-the-walk-on-one-core-and-on-four>)
+2 November 2026 · 26 min read · [Result](<#7-timing-the-walk-on-one-core-and-on-four>)
 
 In 2001, [Julian Seward](<https://en.wikipedia.org/wiki/Julian_Seward>), the author of [bzip2](<https://en.wikipedia.org/wiki/Bzip2>) and the original designer of [Valgrind](<https://valgrind.org/info/developers.html>), was working at Microsoft Research in Cambridge. That year he presented a paper at the IEEE Data Compression Conference, *[Space-time tradeoffs in the Inverse B-W Transform](<https://doi.org/10.1109/DCC.2001.917175>)*, on what it costs to undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT) that bzip2 is built on.
 
@@ -35,7 +35,7 @@ mibz2, 2026
 
 Start with the word `banana` and see what the Burrows–Wheeler transform does to it.
 
-First, write out six versions of the word, each starting at a different letter and wrapping round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`, `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time in a different order. (As permutations of the positions, they are the six powers of one, \\(\\sigma = (0\\;1\\;2\\;3\\;4\\;5)\\) in [cycle notation](<https://en.wikipedia.org/wiki/Permutation#Cycle_notation>): \\(\\sigma^0\\), the identity, is the word itself, and \\(\\sigma^k\\) starts it \\(k\\) letters in. Stacked so that each is the one above shifted one place to the right, they would form a [circulant matrix](<https://en.wikipedia.org/wiki/Circulant_matrix>); sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:
+First, write out six versions of the word, each starting at a different letter and wrapping round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`, `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time in a different order. (As permutations of the positions, they are the six powers of one, \\(\\sigma = (0\\;1\\;2\\;3\\;4\\;5)\\) in [cycle notation](<https://en.wikipedia.org/wiki/Permutation#Cycle_notation>): \\(\\sigma^0\\), the identity, is the word itself, and \\(\\sigma^k\\) starts it \\(k\\) letters in. Stacked in the order \\(\\sigma^0, \\sigma^5, \\sigma^4, \\ldots\\), each the one above moved one place to the right, they form a [circulant matrix](<https://en.wikipedia.org/wiki/Circulant_matrix>). The sorted square \\(M\\) is not circulant: sorting shuffles those rows, and the \\(\\sigma\\) labels below record the shuffle.) Then sort the six rotations alphabetically and stack them as rows:
 
 The six rotations of banana, sorted
 
@@ -72,7 +72,11 @@ banana written round a circle, positions numbered from the top. Every row of the
 | 0: `abanan` | `n` + `abana` | 4: `nabana` |
 | 4: `nabana` | `a` + `naban` | 1: `anaban` |
 
-The letters moved, `a`, `n`, `a`, are each row's last letter, in \\(L\\), and they spell `banana` backwards from its end. So a decoder could recover the whole word from \\(L\\) alone, starting at row \\(I\\), if it knew where each move lands. Seward records the landing rows in \\(T\\), the *"transformation vector"*: here \\(T\[3\] = 0\\), \\(T\[0\] = 4\\) and \\(T\[4\] = 1\\). As a permutation of the rows, \\(T = (3\\;0\\;4\\;1\\;5\\;2)\\): one cycle through all six, so following it from row 3 visits every row once before coming back, reading the whole word on the way. The \\(\\sigma\\) labels on the square show why: rows 3, 0, 4, 1, 5, 2 hold \\(\\sigma^0, \\sigma^5, \\sigma^4, \\sigma^3, \\sigma^2, \\sigma^1\\), so each step of \\(T\\) counts the power down by one. \\(T\\) is the one-letter step back, \\(\\sigma^{-1}\\), written in row numbers instead of powers ([conjugated](<https://en.wikipedia.org/wiki/Conjugacy_class>) by the sort, in group-theory terms). (Read down the square, those powers, 5 3 1 0 4 2, are what string algorithms call the [suffix array](<https://en.wikipedia.org/wiki/Suffix_array>): the compressor computes it by sorting, and the decoder never has it.) His theory section, *"a more detailed exposition of Algorithm D in §2 of \[1\]"*, puts it in symbols:
+The letters moved, `a`, `n`, `a`, are each row's last letter, in \\(L\\), and they spell `banana` backwards from its end. So a decoder could recover the whole word from \\(L\\) alone, starting at row \\(I\\), if it knew where each move lands. Seward records the landing rows in \\(T\\), the *"transformation vector"*: here \\(T\[3\] = 0\\), \\(T\[0\] = 4\\) and \\(T\[4\] = 1\\). As a permutation of the rows, \\(T = (3\\;0\\;4\\;1\\;5\\;2)\\): one cycle through all six, so following it from row 3 visits every row once before coming back, reading the whole word on the way.
+
+The \\(\\sigma\\) labels on the square show why: rows 3, 0, 4, 1, 5, 2 hold \\(\\sigma^0, \\sigma^5, \\sigma^4, \\sigma^3, \\sigma^2, \\sigma^1\\), so each step of \\(T\\) counts the power down by one. That is exactly the circulant order from before, `banana`, `abanan`, `nabana`, …: following \\(T\\) rebuilds the circulant matrix row by row, undoing the sort. \\(T\\) is the one-letter step back, \\(\\sigma^{-1}\\), written in row numbers instead of powers ([conjugated](<https://en.wikipedia.org/wiki/Conjugacy_class>) by the sort, in group-theory terms). (Read down the square, those powers, 5 3 1 0 4 2, are what string algorithms call the [suffix array](<https://en.wikipedia.org/wiki/Suffix_array>): the compressor computes it by sorting, and the decoder never has it.)
+
+His theory section, *"a more detailed exposition of Algorithm D in §2 of \[1\]"*, puts it in symbols:
 
 \\\[ M\[j, N-1\]\\; M\[j, 0..N-2\] = M\[i, 0..N-1\] \\quad\\Longrightarrow\\quad T\[j\] = i. \\\]
 

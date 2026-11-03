@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=68e457829467">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=426796afe4d5">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=68e457829467">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=426796afe4d5">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=68e457829467">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=426796afe4d5">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=68e457829467">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=426796afe4d5">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=68e457829467">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=426796afe4d5">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1813,7 +1813,7 @@
 instructions but less memory traffic. Twenty-five years later, that observation led us to
 ask whether a smaller navigation table could do more work per step and still come out ahead
 under contention. A first measurement of ours shows it doing so.</p>
-<p class="post-meta">2 November 2026 · 25 min read · <a href="#7-timing-the-walk-on-one-core-and-on-four">Result</a></p>
+<p class="post-meta">2 November 2026 · 26 min read · <a href="#7-timing-the-walk-on-one-core-and-on-four">Result</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
@@ -1878,9 +1878,11 @@ round to the beginning when it reaches the end: <code>banana</code>, <code>anana
 <code>nabana</code>, <code>abanan</code>. These are the word's <em>cyclic rotations</em>: the same six letters, each time
 in a different order. (As permutations of the positions, they are the six powers of one, <span class="arithmatex">\(\sigma = (0\;1\;2\;3\;4\;5)\)</span>
 in <a href="https://en.wikipedia.org/wiki/Permutation#Cycle_notation">cycle notation</a>: <span class="arithmatex">\(\sigma^0\)</span>, the identity, is the word itself, and <span class="arithmatex">\(\sigma^k\)</span> starts it <span class="arithmatex">\(k\)</span>
-letters in. Stacked
-so that each is the one above shifted one place to the right, they would form a <a href="https://en.wikipedia.org/wiki/Circulant_matrix">circulant
-matrix</a>; sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:</p>
+letters in. Stacked in
+the order <span class="arithmatex">\(\sigma^0, \sigma^5, \sigma^4, \ldots\)</span>, each the one above moved one place to the
+right, they form a <a href="https://en.wikipedia.org/wiki/Circulant_matrix">circulant matrix</a>. The
+sorted square <span class="arithmatex">\(M\)</span> is not circulant: sorting shuffles those rows, and the <span class="arithmatex">\(\sigma\)</span> labels below
+record the shuffle.) Then sort the six rotations alphabetically and stack them as rows:</p>
 <figure class="bf-fig">
 <p class="bf-title">The six rotations of banana, sorted</p>
 <svg viewBox="0 0 720 375" role="img" aria-label="The six rotations of banana, sorted alphabetically into rows 0 to 5: abanan, anaban, ananab, banana, nabana, nanaba, which are sigma to the powers 5, 3, 1, 0, 4 and 2. The first column reads a a a b n n; the last column reads n n b a a a. Row 3 is banana itself, sigma to the power 0.">
@@ -2223,14 +2225,17 @@ backwards from its end. So a decoder could recover the whole word from <span cla
 row <span class="arithmatex">\(I\)</span>, if it knew where each move lands. Seward records the landing rows in <span class="arithmatex">\(T\)</span>, the
 <em>"transformation vector"</em>: here <span class="arithmatex">\(T[3] = 0\)</span>, <span class="arithmatex">\(T[0] = 4\)</span> and <span class="arithmatex">\(T[4] = 1\)</span>. As a permutation of the
 rows, <span class="arithmatex">\(T = (3\;0\;4\;1\;5\;2)\)</span>: one cycle through all six, so following it from row 3 visits
-every row once before coming back, reading the whole word on the way. The <span class="arithmatex">\(\sigma\)</span> labels on the
-square show why: rows 3, 0, 4, 1, 5, 2 hold <span class="arithmatex">\(\sigma^0, \sigma^5, \sigma^4, \sigma^3, \sigma^2,
-\sigma^1\)</span>, so each step of <span class="arithmatex">\(T\)</span> counts the power down by one. <span class="arithmatex">\(T\)</span> is the one-letter step back,
+every row once before coming back, reading the whole word on the way.</p>
+<p>The <span class="arithmatex">\(\sigma\)</span> labels on the square show why: rows 3, 0, 4, 1, 5, 2 hold <span class="arithmatex">\(\sigma^0, \sigma^5, \sigma^4, \sigma^3, \sigma^2,
+\sigma^1\)</span>, so each step of <span class="arithmatex">\(T\)</span> counts the power down by one. That is exactly the circulant order
+from before, <code>banana</code>, <code>abanan</code>, <code>nabana</code>, …: following <span class="arithmatex">\(T\)</span> rebuilds the circulant matrix row
+by row, undoing the sort. <span class="arithmatex">\(T\)</span> is the one-letter step back,
 <span class="arithmatex">\(\sigma^{-1}\)</span>, written in row numbers instead of powers (<a href="https://en.wikipedia.org/wiki/Conjugacy_class">conjugated</a>
 by the sort, in group-theory terms). (Read down the square, those
 powers, 5 3 1 0 4 2, are what string algorithms call the <a href="https://en.wikipedia.org/wiki/Suffix_array">suffix
 array</a>: the compressor computes it by sorting, and
-the decoder never has it.) His theory section, <em>"a
+the decoder never has it.)</p>
+<p>His theory section, <em>"a
 more detailed exposition of Algorithm D in §2 of [1]"</em>, puts it in symbols:</p>
 <div class="arithmatex">\[
 M[j, N-1]\; M[j, 0..N-2] = M[i, 0..N-1] \quad\Longrightarrow\quad T[j] = i.
@@ -3231,17 +3236,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=68e457829467"></script>
+        <script src="../../assets/javascripts/bench.js?v=426796afe4d5"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=68e457829467"></script>
+        <script src="../../assets/javascripts/couriers.js?v=426796afe4d5"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=68e457829467"></script>
+        <script src="../../assets/javascripts/blog.js?v=426796afe4d5"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=68e457829467"></script>
+        <script src="../../assets/javascripts/frontier.js?v=426796afe4d5"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=68e457829467"></script>
+        <script src="../../assets/javascripts/katex.js?v=426796afe4d5"></script>
       
     
   </body>
