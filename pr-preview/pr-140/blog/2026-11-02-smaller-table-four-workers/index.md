@@ -4,7 +4,7 @@
 
 In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so.
 
-2 November 2026 · 23 min read · [Result](<#7-timing-the-walk-on-one-core-and-on-four>)
+2 November 2026 · 24 min read · [Result](<#7-timing-the-walk-on-one-core-and-on-four>)
 
 In 2001, [Julian Seward](<https://en.wikipedia.org/wiki/Julian_Seward>), the author of [bzip2](<https://en.wikipedia.org/wiki/Bzip2>) and the original designer of [Valgrind](<https://valgrind.org/info/developers.html>), was working at Microsoft Research in Cambridge. That year he presented a paper at the IEEE Data Compression Conference, *[Space-time tradeoffs in the Inverse B-W Transform](<https://doi.org/10.1109/DCC.2001.917175>)*, on what it costs to undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT) that bzip2 is built on.
 
@@ -53,30 +53,38 @@ The square of sorted rotations again, with each symbol pointing at what it names
 
 So the decoder is given \\(L\\) and \\(I\\) and must produce \\(S\\). It never holds \\(M\\): the inverse transform recovers just enough of it, from \\(L\\), to read off row \\(I\\).
 
-**Why the first and last columns matter.** Each row of \\(M\\) is the word read from a different starting letter, carrying on round to the beginning when it reaches the end. Row 1, `anaban`, starts at the second `a` of `banana` (position 3), reads `an` to the end, then wraps round to read `ban`. So its last letter, `n`, is the letter at position 2: the one just before where the row started.
-
-Each row wraps round the word
-
-banana written round a circle, positions numbered. Every row of the sorted square starts somewhere on the circle and reads all the way round, so its last letter is always the one just before its first.
-
-The same holds for every row. Its last letter, in \\(L\\), is the letter that comes just before its first letter, in \\(F\\), in the original word. That gives a decoder a way to go backwards: for any row, \\(L\\) says which letter comes before that row's first letter. If the decoder also knew which row *starts* with that earlier letter, it could jump there and repeat, reading the word back one letter at a time.
-
-Of the two columns, only \\(L\\) is stored:
+**Why only \\(L\\) is stored.** Of the square's two outer columns, bzip2 keeps only the last:
 
 - **\\(F\\)** is the letters of the word in sorted order, so the counts alone fix it. A decoder holding \\(L\\) can rebuild \\(F\\) by counting, so it is never sent.
 - **\\(L\\)** holds the letter that comes before each row's opening, with the rows sorted by what follows. Letters before similar text tend to repeat (in English, `he` is often preceded by `t`), so \\(L\\) has long runs, which bzip2's later stages compress well.
 
-\\(F\\) and \\(L\\) aren't two unrelated strings, though. They are columns of the same sorted square, and that ties them together: each letter's occurrences come in the same order in both. The first `a` in \\(L\\) matches the first `a` in \\(F\\), the second matches the second, and so on; why comes below. That matching is exactly what the decoder needs in order to jump: it says which row starts with each letter of \\(L\\). Seward records it in the *"transformation vector"* \\(T\\), and builds \\(T\\) from \\(C\\), a count of each letter. Because \\(F\\) is sorted, it is one run of each letter, so these counts are simply \\(F\\)'s [run-length encoding](<https://en.wikipedia.org/wiki/Run-length_encoding>): `a` 3, `b` 1, `n` 2. The decoder's whole path, from what is stored back to the word:
+**Moving backwards through the word.** Look again at row 3, `banana`. Move its last letter to the front and you get `abanan`. That is another rotation of the word, so it is already in the square, at row 0. Do the same to `abanan` and you get `nabana`, at row 4. Each move steps one letter backwards through the word, treating its end as joined to its beginning, as on a ring:
+
+Stepping backwards round the word
+
+banana written round a circle, positions numbered from the top. Every row of the square reads the word clockwise from one letter, so its last letter is the one just before its first. Moving that last letter to the front starts the reading one letter earlier: the walk steps anticlockwise.
+
+| Row | Move its last letter to the front | Lands on row |
+| --- | --- | --- |
+| 3: `banana` | `a` + `banan` | 0: `abanan` |
+| 0: `abanan` | `n` + `abana` | 4: `nabana` |
+| 4: `nabana` | `a` + `naban` | 1: `anaban` |
+
+The letters moved, `a`, `n`, `a`, are each row's last letter, in \\(L\\), and they spell `banana` backwards from its end. So a decoder could recover the whole word from \\(L\\) alone, starting at row \\(I\\), if it knew where each move lands. Seward records the landing rows in \\(T\\), the *"transformation vector"*: here \\(T\[3\] = 0\\), \\(T\[0\] = 4\\) and \\(T\[4\] = 1\\). His theory section, *"a more detailed exposition of Algorithm D in §2 of \[1\]"*, puts it in symbols:
+
+\\\[ M\[j, N-1\]\\; M\[j, 0..N-2\] = M\[i, 0..N-1\] \\quad\\Longrightarrow\\quad T\[j\] = i. \\\]
+
+The left-hand side is row \\(j\\) with its last letter moved to the front; \\(T\[j\]\\) is the row where that lands.
+
+**Which row to land on.** The moved letter becomes the first letter of the landing row, so the landing row is one of those that start with it in \\(F\\). But `banana` has three `a`s, so three rows start with `a`. Moving the `a` off the end of row 3 lands on row 0, not row 1 or 2; how could a decoder know that without the square?
+
+Because each letter's occurrences keep their order between the two columns. The first `a` in \\(L\\) (row 3's) lands on the first row starting with `a` (row 0), the second `a` in \\(L\\) on the second, and so on, for every letter. The sorting guarantees it: two rows that end in the same letter keep their order when that letter moves to the front, because the rest of each row, already in sorted order, still decides which comes first.
+
+So the matching can be worked out from \\(L\\) and a count of each letter. Because \\(F\\) is sorted, its letters occur in runs, three `a`s, one `b` and two `n`s, and those counts describe it completely, much like [run-length encoding](<https://en.wikipedia.org/wiki/Run-length_encoding>). Seward calls the count table \\(C\\); once the counts are accumulated, it says where each letter's run begins in \\(F\\). The decoder's whole path, from what is stored back to the word:
 
 What the decoder rebuilds
 
 Each arrow is a step explained in the rest of this section: counting, expanding the counts into F, matching occurrences to get T, and the walk.
-
-**Defining \\(T\\).** Seward's theory section is *"a more detailed exposition of Algorithm D in §2 of \[1\]"*, Burrows and Wheeler's decompression algorithm, because *"the increased detail exposes a range of possible implementations"*. Everything rests on *"establishing the relationship between the \\(F\\) and \\(L\\) vectors, and recording this in the 'transformation vector' \\(T\\)"*:
-
-\\\[ M\[j, N-1\]\\; M\[j, 0..N-2\] = M\[i, 0..N-1\] \\quad\\Longrightarrow\\quad T\[j\] = i. \\\]
-
-Take row \\(j\\) and move its last byte to the front. That is another rotation of \\(S\\), so it is some row \\(i\\) of \\(M\\), and \\(T\[j\]\\) records which. Row 0, `abanan`, becomes `nabana`, row 4, so \\(T\[0\] = 4\\). Moving the last byte to the front starts the string one byte earlier in \\(S\\), so following \\(T\\) walks \\(S\\) backwards.
 
 **Walking \\(T\\).** Row \\(T\[j\]\\) starts with the byte row \\(j\\) ends with, which comes just before row \\(j\\)'s first byte in \\(S\\). So \\(F\[T\[i\]\]\\) precedes \\(F\[i\]\\). The decoder has \\(L\\), not \\(F\\), but \\(L\[k\] = F\[T\[k\]\]\\), and substituting gives a relation in \\(L\\) alone:
 
@@ -92,7 +100,7 @@ That is `banana` backwards, and it is the whole inner loop of the inverse transf
 
 To write \\(S\\) forwards, Seward assumes the compressor reverses each block before sorting. bzip2 doesn't, which a footnote calls *"a design flaw"*; by the manual's account, *"the bzip2 format was frozen before I properly and fully understood the performance consequences"*. Its decoder builds the links the other way instead, writing \\(i\\) into slot \\(s\\) where Seward would set \\(T\[i\] = s\\) (`tt[cftab[uc]++] |= i << 8`), and following that \\(T^{-1}\\) emits \\(S\\) forwards. mibz2 does the same, so its navigation table holds \\(T^{-1}\\): each entry points forwards, to the row whose string starts one byte later in \\(S\\).
 
-**Building \\(T\\) from counts.** The rows of \\(M\\) are sorted, and two rows ending in the same byte keep their order when that byte moves to the front, since the rest of each row decides it. So the \\(k\\)-th \\(c\\) in \\(L\\) rotates into the \\(k\\)-th row starting with \\(c\\): *"if \\(c\\) occurs \\(k\\) times in \\(L\[0..j\]\\) and \\(L\[j\] = c\\), then \\(T\[j\]\\) must be \\(i\\), where \\(i\\) is the position of the \\(k\\)-th \\(c\\) in \\(F\\)."*
+**Building \\(T\\) from counts.** Since the \\(k\\)-th \\(c\\) in \\(L\\) lands on the \\(k\\)-th row starting with \\(c\\), Seward can state the rule directly: *"if \\(c\\) occurs \\(k\\) times in \\(L\[0..j\]\\) and \\(L\[j\] = c\\), then \\(T\[j\]\\) must be \\(i\\), where \\(i\\) is the position of the \\(k\\)-th \\(c\\) in \\(F\\)."*
 
 T matches each L byte to the same occurrence in F
 
