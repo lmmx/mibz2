@@ -1,5 +1,10 @@
 # Compact30: the construction-cost harness, and its untimed VM validation
 
+> **Superseded in part:** reports 195–197 found validation weaknesses in this harness (A1,
+> G2, G9, G7, the memory diagnostics). They are repaired at `14d9ecb`; see
+> [2026-11-03-compact30-construction-harness-repair.md](2026-11-03-compact30-construction-harness-repair.md).
+> This note is kept as it was for `e264eed`.
+
 The measurement harness that report 194 authorises, for protocol draft 3
 ([2026-11-03-compact30-construction-protocol.md](2026-11-03-compact30-construction-protocol.md)).
 This covers implementation and untimed validation on the VM only.

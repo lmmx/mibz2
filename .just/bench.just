@@ -316,12 +316,12 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
     exit "$status"
 
 # The compact30 construction-cost comparison (docs/journal/2026-11-03-compact30-construction-
-# protocol.md, draft 3; the harness's journal 2026-11-03-compact30-construction-harness.md):
-# production's public bwt::build (P) against compact30's direct constructor,
-# Ctor::build::<false> (C), warm and cold, on one core and on four in lockstep, 20 paired
-# rounds and an untimed round -1, on the primary corpus (checked by its hash). It runs the
-# frozen harness commit in its own worktree (target/c30-construction-pin), built with the
-# reviewed toolchain, rustc 1.97.0 (LLVM 22.1.6), selected through rustup without touching
+# protocol.md, draft 4; the harness's journals 2026-11-03-compact30-construction-harness.md and
+# -harness-repair.md): production's public bwt::build (P) against compact30's direct
+# constructor, Ctor::build::<false> (C), warm and cold, on one core and on four in lockstep,
+# 20 paired rounds and an untimed round -1, on the primary corpus (checked by its hash). It
+# runs the frozen harness commit in its own worktree (target/c30-construction-pin), built with
+# the reviewed toolchain, rustc 1.97.0 (LLVM 22.1.6), selected through rustup without touching
 # the default, and stops before any timing if that toolchain is missing or not the reviewed
 # build, if the analysis's or the listing check's tests fail, or if the timed path's machine
 # code is not the reviewed listings (G3). Workers go on the second to fifth physical cores,
@@ -331,37 +331,49 @@ bench-c30-traversal corpora="target/walk-decoder/work/corpora" rounds="20" run="
 # run passed or failed.
 # The third argument is the mode:
 # - dry-run: the whole path untimed (rounds -1, 0 and 1, the records marked a dry run, no
-#   timing figure read), then the six peak-RSS processes; its analysis records the capture
-#   process's peak RSS (postflight VmHWM) beside the computed estimate;
-# - capture: the registered run. It needs the fourth argument, the dry run's peak RSS in
-#   bytes (the analysis's memory.peak_rss_vm_hwm), so the preflight requires
-#   max(estimate, peak) plus max(2 GiB, 25%);
-# - fail-output, fail-output-p, fail-pin, fail-reject, fail-preflight: a dry run with a fault
-#   injected (C's first table of W4 worker 2 corrupted after the completion barrier; P's first
-#   W1 table likewise; W4 worker 1 pinned to a CPU that does not exist; C given counts that
-#   are not L's own; the memory preflight failed), to show the run ends at once, with its
-#   failure recorded and archived.
+#   timing figure read), then the six peak-RSS processes. Its archive is the evidence a
+#   capture on the same machine needs;
+# - verify-evidence: the fourth argument is a dry run's archive (.tar.gz). The collector
+#   verifies it as a capture would (G9, report 197) and stops before decoding anything;
+# - capture: the registered run. The fourth argument is a dry run's archive (.tar.gz) from
+#   this machine, this binary, this corpus and these CPUs: the collector refuses anything
+#   else. The archive and its checksum are kept in the capture's own;
+# - fail-output, fail-output-p, fail-output-p0, fail-pin, fail-reject, fail-preflight: a dry
+#   run with a fault injected (C's first table of W4 worker 2 corrupted after the completion
+#   barrier; a copy of P's expected table corrupted for W4 worker 2, G6, or for W1's first
+#   block, G7; W4 worker 1 pinned to a CPU that does not exist; C given counts that are not
+#   L's own; the memory preflight failed), to show the run ends at once, with its failure
+#   recorded and archived.
 #   just bench-c30-construction target/walk-decoder/work/corpora 20 dry-run
-#   just bench-c30-construction target/walk-decoder/work/corpora 20 capture <peak-bytes>
-bench-c30-construction corpora="target/walk-decoder/work/corpora" rounds="20" run="dry-run" peak_rss="0":
+#   just bench-c30-construction target/walk-decoder/work/corpora 20 capture target/c30-construction-<stamp>-dry-run.tar.gz
+bench-c30-construction corpora="target/walk-decoder/work/corpora" rounds="20" run="dry-run" evidence="":
     #!/usr/bin/env bash
     set -uo pipefail
-    pin=e264eed7e1a1c2f1d456d40207ff302811df2eae
+    pin=14d9ecb016a1b6d05748d795e30802e8aae31e06
     tc=1.97.0
     tc_commit=2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
     tc_llvm=22.1.6
     rss=yes
+    analyse=yes
+    needs_evidence=no
     case "{{run}}" in
-      capture) flags=(--peak-rss "{{peak_rss}}")
-        [ "{{peak_rss}}" -gt 0 ] 2> /dev/null || { echo "c30: a capture needs the dry run's peak RSS (bytes) as its fourth argument"; exit 2; } ;;
+      capture) flags=(); needs_evidence=yes ;;
+      verify-evidence) flags=(--verify-evidence-only); needs_evidence=yes; rss=no; analyse=no ;;
       dry-run) flags=(--dry-run) ;;
       fail-output) flags=(--dry-run --inject output:w4:C:2); rss=no ;;
-      fail-output-p) flags=(--dry-run --inject output:w1:P:0); rss=no ;;
+      fail-output-p) flags=(--dry-run --inject output:w4:P:2); rss=no ;;
+      fail-output-p0) flags=(--dry-run --inject output:w1:P:0); rss=no ;;
       fail-pin) flags=(--dry-run --inject pin:w4:1); rss=no ;;
       fail-reject) flags=(--dry-run --inject reject:w4:3); rss=no ;;
       fail-preflight) flags=(--dry-run --inject preflight); rss=no ;;
-      *) echo "c30: the mode is dry-run, capture, fail-output, fail-output-p, fail-pin, fail-reject or fail-preflight"; exit 2 ;;
+      *) echo "c30: the mode is dry-run, verify-evidence, capture, fail-output, fail-output-p, fail-output-p0, fail-pin, fail-reject or fail-preflight"; exit 2 ;;
     esac
+    if [ "$needs_evidence" = yes ]; then
+      case "{{evidence}}" in
+        *.tar.gz) [ -f "{{evidence}}" ] || { echo "c30: no dry-run archive at {{evidence}}"; exit 2; } ;;
+        *) echo "c30: {{run}} needs a dry run's archive (target/c30-construction-<stamp>-dry-run.tar.gz) as its fourth argument"; exit 2 ;;
+      esac
+    fi
     f=$(realpath "{{corpora}}")/wikidata-20261026.bz2
     wt=$(realpath -m target/c30-construction-pin)
     suffix=$([ "{{run}}" = capture ] || echo "-{{run}}")
@@ -403,9 +415,21 @@ bench-c30-construction corpora="target/walk-decoder/work/corpora" rounds="20" ru
       [ "$n" -ge 4 ] || { echo "c30: $n physical cores; four are needed"; exit 1; }
       if [ "$n" -ge 5 ]; then cpus=$(echo "$phys" | sed -n 2,5p | paste -sd,); else cpus=$(echo "$phys" | head -4 | paste -sd,); fi
       echo "c30: workers on CPUs $cpus (W1 on the first)"
+      ev=()
+      if [ "$needs_evidence" = yes ]; then
+        # the dry run's archive, kept in this run's own with its checksum, then unpacked
+        mkdir -p "$out/dry-run-evidence"
+        cp "{{evidence}}" "$out/dry-run-evidence/"
+        (cd "$(dirname "{{evidence}}")" && sha256sum "$(basename "{{evidence}}")") > "$out/dry-run-evidence/archive.sha256"
+        tar -xzf "{{evidence}}" -C "$out/dry-run-evidence"
+        evdir="$out/dry-run-evidence/$(basename "{{evidence}}" .tar.gz)"
+        [ -f "$evdir/MANIFEST.json" ] || { echo "c30: the archive holds no $(basename "$evdir")/MANIFEST.json"; exit 1; }
+        ev=(--dry-run-evidence "$evdir")
+        echo "c30: the dry run's evidence: $(cat "$out/dry-run-evidence/archive.sha256")"
+      fi
       "$bin" barrier-test --cpus "$cpus" | tee "$out/barrier-test.txt"
       g=0
-      timeout --kill-after=30 7200 "$bin" cbuild "$out/c30-construction.jsonl" "$f" --rounds {{rounds}} --cpus "$cpus" "${flags[@]}" || g=$?
+      timeout --kill-after=30 7200 "$bin" cbuild "$out/c30-construction.jsonl" "$f" --rounds {{rounds}} --cpus "$cpus" "${flags[@]}" "${ev[@]}" || g=$?
       echo "c30: the collector exited with status $g"
       rfiles=()
       if [ "$g" = 0 ] && [ "$rss" = yes ]; then
@@ -417,12 +441,14 @@ bench-c30-construction corpora="target/walk-decoder/work/corpora" rounds="20" ru
         done
       fi
       a=0
-      python3 -I "$wt/bench/c30_construction.py" "$out/c30-construction.jsonl" --identity-ok "$ident" --json "$out/c30-analysis.json" --rss "${rfiles[@]}" || a=$?
+      if [ "$analyse" = yes ]; then
+        python3 -I "$wt/bench/c30_construction.py" "$out/c30-construction.jsonl" --identity-ok "$ident" --json "$out/c30-analysis.json" --rss "${rfiles[@]}" "${ev[@]}" || a=$?
+      fi
       [ "$g" = 0 ] || exit "$g"
       exit "$a"
     ) 2>&1 | tee "$out/console.log"
     status=${PIPESTATUS[0]}
-    cmd="just bench-c30-construction {{corpora}} {{rounds}} {{run}} {{peak_rss}}"
+    cmd="just bench-c30-construction {{corpora}} {{rounds}} {{run}} {{evidence}}"
     if [ -d "$wt" ]; then
       (cd "$wt" && python3 bench/archive.py "$out" --corpus "$f" --binary "$wt/target/rust-$tc/release/examples/c30walk" --command "$cmd" --status "$status")
     else

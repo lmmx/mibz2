@@ -1,0 +1,16 @@
+{
+ "dry_run": false,
+ "schedule": {
+  "S1_meta": false
+ },
+ "gates": {},
+ "failures": [
+  {
+   "kind": "failure",
+   "what": "preflight",
+   "detail": "MemAvailable 16231280640 against required 1855326234 + margin 2147483648; swap used 0; pressure Read(0.0, 0.0); sources readable true (injected)"
+  }
+ ],
+ "valid": false,
+ "decision": "INVALID: no meta record"
+}

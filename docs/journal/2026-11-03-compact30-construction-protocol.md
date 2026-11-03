@@ -1,15 +1,20 @@
-# Compact30's direct constructor against production's build: a construction-cost protocol (draft 3)
+# Compact30's direct constructor against production's build: a construction-cost protocol (draft 4)
 
-- **Status: provisionally accepted** (report 191,
-  [2026-11-03-compact30-construction-protocol-review.md](2026-11-03-compact30-construction-protocol-review.md)).
-  Draft 2 applies the guardian's eight decisions to draft 1 (`6a097d8`); draft 3 applies
-  the guardian's answers to draft 2's two open questions (report 192). §10 records both.
-  Nothing has been timed. Nothing below is a performance figure.
-- **Not authorised:** the timing harness, any timing (local or remote), and any i9 or
-  workstation run. The harness waits for the independent code review of the constructor
-  ([2026-11-03-compact30-constructor-review-handoff.md](2026-11-03-compact30-constructor-review-handoff.md)),
-  because the review may change the source and so the measurement pin (§0). The recipe in §9
-  is how a run would execute once approved.
+- **Status: draft 3 accepted (report 194); draft 4 amends it before any construction
+  timing** (reports 195–197,
+  [2026-11-03-compact30-harness-review.md](2026-11-03-compact30-harness-review.md)).
+  - Draft 2 applied the guardian's eight decisions to draft 1 (`6a097d8`), and draft 3 the
+    answers to draft 2's two open questions (report 192).
+  - Draft 4 makes G2 a per-step condition, requires a capture to consume a verified dry
+    run's evidence (G9), records the poison's actual coverage (G7), validates the memory
+    diagnostics, reports the mixed step apart (A7), and reads production's table through
+    read-only accessors (A1).
+  - §10 records every decision. Nothing has been timed. Nothing below is a performance
+    figure.
+- **Not authorised:** any construction timing, and any i9 or workstation run. The harness
+  exists ([2026-11-03-compact30-construction-harness.md](2026-11-03-compact30-construction-harness.md),
+  repaired in [-harness-repair.md](2026-11-03-compact30-construction-harness-repair.md)).
+  The recipe in §9 is how a run would execute once approved.
 - **The model:** the traversal protocol
   ([2026-11-02-compact30-traversal-protocol.md](2026-11-02-compact30-traversal-protocol.md),
   revision 5, closed VALID ADVANCE). This protocol keeps its structure:
@@ -80,6 +85,11 @@ than 2% slower to complete?
 - **A second, independent confirmation:** C's own acceptance condition is the same (counts
   equal to L's histogram, n < 2²⁴) plus n ≤ 983,010. So C returning true on a block, which G6
   requires in every round, also implies P's one-pass path on that block.
+- **Reading production's table** (A1, report 195): through two read-only accessors added to
+  `src/bwt.rs`, `TVector::as_slice` and `TVector::capacity`. They change observation only,
+  not the builder: G3 checks that `bwt::build`'s machine code is unchanged. There is no
+  mutable access. An injected P fault corrupts a copy of the expected values, never
+  production's table.
 - **Why output equality can't show it:** `build_two_pass` would produce the same table, so
   the path is shown by its precondition, not by the output. The analysis also confirms from
   G3's reviewed listing that `bwt::build` calls the one-pass code first and the two-pass
@@ -181,13 +191,36 @@ other eight, contribute correctness evidence only (§0); they are not part of th
   On the primary corpus that is estimated at about 8.2 bytes a row, about 1.7 GB; the
   harness's own sum is the one recorded. **The estimate must be verified before capture:**
   the dry run (§9) records the capture process's actual peak RSS beside the computed sum,
-  and the preflight uses whichever is larger.
+  and the capture's preflight uses whichever is larger.
+- **The capture consumes a verified dry run (draft 4, report 197).** A capture takes the
+  directory of a completed dry run on the same machine (the recipe unpacks it from the dry
+  run's archive), not a number. Before the sizing pass, the collector verifies that:
+  - its manifest shows exit status 0, a clean source, **this binary's** sha256 (so the
+    same pin and toolchain), and **this corpus's** sha256;
+  - its records file and analysis match the manifest's checksums;
+  - its analysis is a dry run's, with every schedule check and G3, G4 and G6–G10 passed,
+    and no failure;
+  - its records are a completed, uninjected dry run of the same corpus, rows, binary,
+    **CPU selection and machine identity** (hostname, machine-id, kernel, CPU model, online
+    CPUs, installed memory);
+  - its peak RSS (the postflight VmHWM) is present, equals the analysis's, and is at least
+    2 bytes a row (the decoded inputs alone), so a fabricated tiny value is refused.
+
+  Anything missing, stale, mismatched or implausible stops the capture with a failure
+  record, before any decode or build, whether the collector is run by the recipe or
+  directly. The capture's required memory is max(estimate, verified peak) plus the
+  registered margin. The analyser re-verifies the evidence from its files, and the recipe
+  keeps the dry run's archive and its checksum in the capture's own.
 - **Free memory:** `MemAvailable` (`/proc/meminfo`) must be at least the required total
   plus a margin of max(2 GiB, 25% of the required total) (report 192). The required total,
   the margin and `MemAvailable` are all recorded.
 - **No swap in use:** `SwapTotal − SwapFree` must be 0, or there is no swap.
 - **No memory pressure:** where `/proc/pressure/memory` exists, its `some avg10` and
-  `full avg10` must be 0.00. If it doesn't exist, that is recorded.
+  `full avg10` must be 0.00. If it doesn't exist, that is recorded as absent.
+- **Every memory source is read or the preflight fails** (draft 4). A `/proc/pressure/memory`
+  that exists but can't be read or parsed, and a missing `MemAvailable`, `SwapTotal`,
+  `SwapFree`, `pswpin` or `pswpout`, are recorded as unreadable (null). They never count as
+  zero or as absent.
 - **No swap activity:** `pswpin` and `pswpout` (`/proc/vmstat`) are recorded at the
   preflight and after the last round; any increase between them makes the run INVALID (G9).
 - **Repeated after the last round** and recorded. Swap in use or nonzero memory pressure at
@@ -286,16 +319,18 @@ of rounds.
 **Full-block and short-block economics (reported, deciding nothing):**
 - b4, b1 and e4 are recomputed over the 230 full blocks and over the 204 short blocks alone.
   - For b4 and b1 the sums run over each subset's builds.
-  - For e4 they run over each subset's steps, with step 57, which mixes the two, reported
-    apart.
+  - For e4 they run over each subset's steps. A step mixing the two (step 57 on the
+    primary corpus) belongs to neither subset, and its e4 is reported on its own (A7).
 - Also reported per subset: each arm's CPU ns a row and ns a block. Short builds are
   dominated by fixed costs (256-entry cursor setup; C's bitmap and RAW bound).
 - **The decision reads the complete primary corpus** (§7).
 
 **Memory (never inside a timed window):**
 - **Actual capacities,** per worker and block, read after the completion barrier:
-  - P: `tt`'s capacity × 4 bytes;
-  - C: `rec` × 64, `raw` × 128, the bitmap × 8;
+  - P: `tt`'s capacity × 4 bytes (`TVector::capacity`);
+  - C: `rec` × 64 + `raw` × 128, labelled **rec + raw**. The constructor's bitmap is private
+    to the accepted `ctor.rs`, so it is not observed; its requested size, 8·⌈G/64⌉ bytes, is
+    recorded beside it;
   - each also with glibc `malloc_usable_size`.
 
   Reported per regime: the maximum, and the sum over four workers at the largest step.
@@ -309,6 +344,15 @@ of rounds.
   Three processes per arm, alternating P, C, P, C, P, C, each fresh: the median and range,
   deciding nothing. The oracle's arrays and every reference stay out of the candidate's
   memory figure.
+
+  **The records are validated before any summary (draft 4).** There must be:
+  - six records, three distinct processes (pid and start time) per arm;
+  - each of the capture's corpus (name and sha256), block count and CPUs;
+  - the high-water mark reset accepted;
+  - nonnegative readings, a positive baseline and capacity, and the peak after the pass at
+    least the reset value.
+
+  Otherwise the diagnostic is reported as unavailable, with the reasons.
 
 **The slow paths, interpreted, not timed:**
 - A separate untimed pass before round −1 runs `build::<true>` on every block, in its own
@@ -330,7 +374,7 @@ The analysis runs three stages; each runs only if the one before it passed.
 | check | condition |
 |---|---|
 | S0 | no failure record and no unknown record kind |
-| S1 | the meta record agrees with itself and the protocol: the block count, rows and full blocks from the block rows; the four lists equal to the snake re-derived from them; the per-worker rows; four distinct CPUs; the preflight record present |
+| S1 | the meta record agrees with itself and the protocol: the block count, rows and full blocks from the block rows; the four lists equal to the snake re-derived from them; the per-worker rows; four distinct CPUs; the preflight and postflight records present; the corpus's and the binary's sha256 and the machine identity recorded (draft 4) |
 | S2 | a capture has 20 measured rounds and no injection; a dry run has 2 |
 | S3 | the record set is exactly the expected one: each (round, regime, mode, arm, worker, step) once, with its registered block and rows; nothing missing, extra or duplicated; each W4 step holds exactly its declared workers |
 | S4 | every build's CPU, before and after, is its worker's listed CPU (W1: the first) |
@@ -339,33 +383,35 @@ The analysis runs three stages; each runs only if the one before it passed.
 | S7 | W4: in each step, every build ends before any check starts, and every check ends before the next step's builds start |
 | S8 | the passes run in the registered order (rounds in turn; in each, W1 warm, W4 warm, W1 cold, W4 cold, each in the round's arm order) and don't overlap |
 | S9 | the calibration evidence is complete and well formed (the traversal protocol's S9) |
-| S10 | the one-pass precondition records, the untimed counter pass and the round −1 correctness records are complete: one per block |
+| S10 | the one-pass precondition records, the untimed counter and poison passes, and the round −1 correctness records are complete: one per block (one per block and arm for round −1's) |
 
 ### Stage 2: the gates (G), on a schedule that passed
 
 | gate | kind | condition |
 |---|---|---|
 | G1 | stability | P's per-round W1 cost, W4 cost and W4 completion time, max ÷ min ≤ 1.05, in each regime |
-| G2 | simultaneous start | in every all-full W4 step, the start skew over the step's span, row-weighted per arm, regime and round, ≤ 0.02 |
+| G2 | simultaneous start | **every** all-full W4 step's own start skew (latest start − earliest start, over the step's span) ≤ 0.02, in every arm, regime and measured round (draft 4, report 197). The row-weighted aggregate per arm, regime and round, draft 3's measure, is reported beside the per-step maximum and decides nothing |
 | G3 | identity | the corpus hash; the toolchain (rustc 1.97.0, `2d8144b78`, LLVM 22.1.6); the pin with no tracked changes; and the listings of both timed functions, compared with the reviewed listings by the traversal protocol's normalisation (`bench/asm_listing.py`). For C: `<c30walk::ctor::Ctor>::build::<false>`, reviewed at 0x1b5e bytes at `446a3b2` (re-reviewed if §0.2 applies). For P: the function the `bwt::build` call compiles to at the pin, with `build_one_pass` inlined, its extent recorded and reviewed at the dry run. The binary's sha256 is recorded but is not an identity (its line tables hold build paths). No run if G3 fails |
 | G4 | allocation | per-worker rows differ by at most the largest block, and full-block counts by at most one |
 | G5 | calibration | the clock calls' estimated share ≤ 0.5% in every arm, regime, mode and round (§5) |
 | G6 | exact output | in every round and regime, every build of both arms passed its check, run after the completion barrier, outside the window. **C:** the call returned true, and `rec` and `raw` equal the block's oracle image (`C30::build`, permille 0, built before round −1) in length and every byte. **P:** `tt` equals the block's reference T-vector in length and every byte (P's own round −1 table, accepted only after G7b) |
-| G7 | walker output and complete initialisation | round −1 only, untimed. **(a)** Before C's build, the record arena's spare capacity is filled with the 0xA5A5 poison, and the arrays must still equal the oracle's. **(b)** The unchanged walker (`C30::walk::<false>`) on C's arrays, and `walk_segments_room` on P's table, each give production's `Segmented::invert` output for the block. **(c)** C's arrays are compared with the oracle's again after the walk |
+| G7 | walker output and complete initialisation | round −1 and the untimed preamble only. **(a)** In round −1's W1 warm pass, C's record arena's spare capacity is filled with the 0xA5A5 poison before its build, and the arrays must still equal the oracle's. The record states the capacity poisoned, the records needed, and whether the poisoned allocation survived the build: it doesn't for the first block or when the constructor grows, and then no coverage is claimed (draft 4). **(a′)** For universal coverage, an untimed poison pass before round −1 builds every block with `build::<false>` into one arena preallocated for the largest block and poisoned. Every block's poison must survive and its arrays equal the oracle's. The measured arms are never preallocated or altered. **(b)** The unchanged walker (`C30::walk::<false>`) on C's arrays, and `walk_segments_room` on P's table, each give production's `Segmented::invert` output for the block. **(c)** C's arrays are compared with the oracle's again after the walk |
 | G8 | production's one-pass path | every block satisfies the one-pass condition (n < 2²⁴ and `counts` equal to `ll`'s histogram), checked before round −1 (§2); and C accepted every block in every round (G6) |
-| G9 | memory | the preflight passed (§3), including the max(2 GiB, 25%) margin; after the last round no swap is in use and no memory pressure is recorded; and `pswpin`/`pswpout` did not increase over the run |
+| G9 | memory | the preflight passed (§3), every source read, with required = max(estimate, verified peak) and the max(2 GiB, 25%) margin. A capture must carry the verified dry run's evidence, which the analyser re-verifies from its files; a dry run carries none. After the last round no swap is in use and no memory pressure is recorded, every source read, and `pswpin`/`pswpout` did not increase over the run |
 | G10 | major faults | no measured build, in either arm, regime or mode, recorded a major fault inside its window (§3, §5) |
 
 **What G6 and G7 rest on:**
 - Equivalence and walker exactness were established by the prototype's suites (re-run
   under §0 if the source changes), and are re-checked here on the measured corpus and build.
-- Complete initialisation is shown on every block in round −1 by the poison (G7a). In
-  measured rounds the warm arena holds the previous block's data, so a field left unwritten
-  would almost surely differ from the oracle (G6).
+- Complete initialisation is shown on every block by the poison pass (G7a′). It is also
+  shown in round −1's warm pass wherever the poisoned allocation survived (G7a, recorded per
+  block). In measured rounds the warm arena holds the previous block's data, so a field left
+  unwritten would almost surely differ from the oracle (G6).
 - No memory-safety tool runs during the capture.
 
-**The dry run** (rounds −1, 0 and 1) runs the preflight, S, G3, G4, G6, G7 and G8. It
-suppresses every timing figure, G1, G2, G5 and the decision.
+**The dry run** (rounds −1, 0 and 1) runs the preflight, S, G3, G4 and G6–G10 (A4). It
+suppresses every timing figure, G1, G2, G5 and the decision. Its archive is the evidence a
+capture on the same machine consumes (G9).
 
 ### Stage 3: the figures and the decision (§7), on a valid run only
 
@@ -408,7 +454,7 @@ corpus**:
 - each arm's CPU ns a row at W1 and W4, warm and cold;
 - the running fraction (CPU ÷ elapsed);
 - the clock-call overhead shares;
-- the start skew;
+- the start skew: the per-step maximum and the row-weighted aggregate;
 - the capacities and peak RSS;
 - the slow-path tables;
 - the preflight and postflight memory records.
@@ -429,53 +475,54 @@ corpus**:
 
 ## 9. The VM checks, the records and the command (not authorised)
 
-**What would be built,** after the code review and the guardian's approval, as its own
-reviewed change (not written by this draft):
-- a `cbuild` mode and a `cbuild-rss` mode in the c30walk example, beside `grid`. They reuse
-  `grid`'s pinning, `SpinBarrier`, clocks, calibration, failure path and record format, and
-  add the preflight and the one-pass precondition check;
-- `bench/c30_construction.py`, the analysis, on the traversal analyser's pattern.
-
-Neither the constructor nor the walker changes.
+**What is built** (the harness journals): `c30walk cbuild` and `c30walk cbuild-rss`;
+`bench/c30_construction.py` and its tests; `bench/c30_build_listing.py` (G3);
+`bench/test_c30_construction_evidence.py`, the collector's own evidence rejections. Neither
+the constructor nor the walker changes. The only `src/` change is the two read-only accessors
+(A1).
 
 **VM checks before any capture (untimed):**
 - the analysis's regression tests on synthetic record files: every S check and gate failing
-  on purpose, and the decision table at each boundary;
-- a dry run on the primary corpus;
-- the failure path by injection: a corrupted output byte in each arm (G6), a pinning failure,
-  a forced C rejection, a forced preflight failure;
-- G3's listing review of both timed functions;
+  on purpose, the decision table at each boundary, and the single staggered step (G2);
+- the collector's evidence rejections, run directly on the binary;
+- a dry run on the primary corpus, and a `verify-evidence` run consuming its archive;
+- the failure path by injection:
+  - a corrupted output in C;
+  - a corrupted expected copy for P, in G6 and in G7;
+  - a pinning failure;
+  - a forced C rejection;
+  - a forced preflight failure;
+- G3's listing review of every timed-path function;
 - `barrier-test`, unchanged.
 
-**The recipe** (`just bench-c30-construction`, modelled on `bench-c30-traversal`), at a pin
-the guardian approves (§0):
+**The recipe** (`just bench-c30-construction`), at a pin the guardian approves (§0):
 1. the corpus hash;
 2. the toolchain, rustc 1.97.0 (`2d8144b78`, LLVM 22.1.6), selected with `rustup run 1.97.0`;
    stop if it is missing or misidentified;
 3. the build, `CARGO_ENCODED_RUSTFLAGS=`, `--locked`, the release profile (codegen-units 1,
    fat LTO, line tables), baseline x86-64, into `target/rust-1.97.0/`;
 4. the analysis's regression tests and G3's;
-5. G3 on both timed functions; no run if it fails;
+5. G3 on every timed-path function; no run if it fails;
 6. the CPUs: the second to fifth physical cores (the first four where there are only four);
-7. `barrier-test` on those CPUs;
-8. the capture, `c30walk cbuild OUT.jsonl wikidata-20261026.bz2 --rounds 20 --cpus A,B,C,D`,
-   under a two-hour timeout. It starts with the memory preflight, then:
-   - the one-pass precondition;
-   - the untimed counter pass;
-   - the oracle images;
-   - rounds −1 to 19;
-   - the postflight;
-9. the six `cbuild-rss` processes;
-10. the analysis, **whether the capture passed or failed**;
-11. the archive, **whether the capture passed or failed**: `target/c30-construction-<UTC
-    time>.tar.gz`, with a `MANIFEST.json` by report 142's convention. It names the pin, the
-    corpus and binary hashes, the toolchain, the commands and their exit statuses, and every
-    file's checksum.
+7. for a capture, the dry run's archive: kept, with its checksum, in the capture's directory,
+   then unpacked for the collector;
+8. `barrier-test` on those CPUs;
+9. the collector, under a two-hour timeout. For a capture: the evidence verification, then
+   the sizing pass and memory preflight, the decode, the one-pass precondition, the oracle
+   images, the counter and poison passes, rounds −1 to 19, and the postflight;
+10. the six `cbuild-rss` processes;
+11. the analysis (with the evidence, for a capture), **whether the run passed or failed**;
+12. the archive, **whether the run passed or failed**: `target/c30-construction-<UTC
+    time>[-mode].tar.gz`, with a `MANIFEST.json` by report 142's convention.
 
-**Not authorised now:** writing the collector or the analysis, any VM dry run, and every step
-on the i9 or any workstation.
+**The sequence on a workstation,** once authorised:
+1. `just bench-c30-construction <corpora> 20 dry-run`;
+2. `just bench-c30-construction <corpora> 20 capture <that dry run's .tar.gz>`.
 
-## 10. The guardian's decisions (reports 191 and 192)
+**Not authorised now:** any construction timing, and every step on the i9 or any
+workstation.
+
+## 10. The guardian's decisions (reports 191, 192, 195 and 197)
 
 **Decided** (report 191, on draft 1's open questions):
 
@@ -506,4 +553,28 @@ minor faults; a major fault could introduce disk-I/O latency into the comparison
 minor faults separately. These are protocol decisions, not permission to implement or run
 the benchmark."*
 
-No question remains open. The harness waits for the independent code review (§0).
+**Decided** (reports 195 and 197, on the harness at `e264eed`):
+
+| finding | decision | where applied |
+|---|---|---|
+| A1: production's table read by reinterpreting `&TVector` | Repair: two read-only accessors in `src/bwt.rs` (`as_slice`, `capacity`), no mutable access; a P fault injected into a copy of the expected values; `bwt::build`'s machine code checked unchanged | §2, §5, G3, G6 |
+| A2: thin timing wrappers | Accept, their differing overhead documented | §2 |
+| A3: frozen machine-code references | Accept; recheck after the accessor change | G3 |
+| A4: G9 and G10 in dry runs | Accept | §6 |
+| A5: the P reference checked against the counting-scatter definition | Accept | G7 |
+| A6: the dry run's peak required for capture | Accept, and strengthened: the capture consumes the dry run's verified evidence (G9 below) | §3, §9 |
+| A7: the mixed step | Report it separately | §5 |
+| A8: failure wording | Accept | — |
+| G2: one badly staggered step can pass the aggregate | Every all-full W4 step must meet the unchanged 2%; report the maximum and the aggregate. This is stricter than the traversal experiment's gate, and may reject a run with one isolated scheduling interruption | G2 |
+| G9: the dry-run peak unverified | The capture consumes verified evidence of a successful dry run on the capture machine; the collector and analyser reject missing or inconsistent evidence, including by direct invocation | §3, G9 |
+| G7: poison coverage overstated | Record the actual coverage; universal coverage only by a separate untimed pass; the measured arms unaltered | G7 |
+| RSS records | Validate before summarising; otherwise unavailable | §5 |
+| Memory sources | An unreadable source never becomes zero or absent | §3, G9 |
+
+**What stays unchanged:**
+- the constructor at `e003a32`, and the walker;
+- the timed boundaries, the paired design and the 20 rounds;
+- the statistical rules and both thresholds;
+- no cache flushing.
+
+No question remains open.
