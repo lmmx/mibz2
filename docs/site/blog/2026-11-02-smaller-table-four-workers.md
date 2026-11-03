@@ -64,21 +64,25 @@ result in the second half is a controlled test of the walk alone, not yet of the
 decoder.
 
 <nav class="post-roadmap" aria-label="The post in nine sections">
+<div class="rm-half">
 <p class="post-roadmap-part">Seward's paper, 2001</p>
 <ol>
-<li><a href="#1-from-sorted-rotations-to-the-transformation-vector"><span class="rm-n">1</span><span class="rm-t">How does a decoder get <code>banana</code> back?</span><span class="rm-d">By a chain of table lookups, each depending on the last</span></a></li>
-<li><a href="#2-making-inversion-fast-basis-bw94-and-mergedtl"><span class="rm-n">2</span><span class="rm-t">Making inversion fast</span><span class="rm-d">basis, bw94 and mergedTL: byte and link in one word</span></a></li>
-<li><a href="#3-spending-less-memory-indexf-and-the-trees"><span class="rm-n">3</span><span class="rm-t">Spending less memory</span><span class="rm-d">indexF and the count trees: recompute instead of store</span></a></li>
-<li><a href="#4-what-seward-measured"><span class="rm-n">4</span><span class="rm-t">What Seward measured</span><span class="rm-d">Memory against speed: the space–time tradeoff</span></a></li>
+<li><a href="#1-from-sorted-rotations-to-the-transformation-vector"><span class="rm-n">1</span><span class="rm-text"><span class="rm-t">From sorted rotations to the transformation vector</span><span class="rm-d">How a decoder gets <code>banana</code> back: a chain of lookups, each depending on the last</span></span></a></li>
+<li><a href="#2-making-inversion-fast-basis-bw94-and-mergedtl"><span class="rm-n">2</span><span class="rm-text"><span class="rm-t">Making inversion fast: basis, bw94 and mergedTL</span><span class="rm-d">Keeping the byte and the link in one word</span></span></a></li>
+<li><a href="#3-spending-less-memory-indexf-and-the-trees"><span class="rm-n">3</span><span class="rm-text"><span class="rm-t">Spending less memory: indexF and the trees</span><span class="rm-d">Recomputing what the fast algorithms store</span></span></a></li>
+<li><a href="#4-what-seward-measured"><span class="rm-n">4</span><span class="rm-text"><span class="rm-t">What Seward measured</span><span class="rm-d">Memory against speed: the space–time tradeoff</span></span></a></li>
 </ol>
+</div>
+<div class="rm-half">
 <p class="post-roadmap-part">mibz2, 2026</p>
 <ol class="rm-ours">
-<li><a href="#5-the-same-tradeoff-with-four-blocks-live"><span class="rm-n">5</span><span class="rm-t">Four blocks, one cache</span><span class="rm-d">Why the tradeoff changes when blocks decode at once</span></a></li>
-<li><a href="#6-a-smaller-table-a-busier-lookup"><span class="rm-n">6</span><span class="rm-t">A smaller table, a busier lookup</span><span class="rm-d">A little over half the space, more work per lookup</span></a></li>
-<li><a href="#7-the-four-worker-reversal"><span class="rm-n">7</span><span class="rm-t">The four-worker reversal</span><span class="rm-d">The walk alone: slower on one core, faster on four</span></a></li>
-<li><a href="#8-four-workers-cost-the-conventional-walk-far-more"><span class="rm-n">8</span><span class="rm-t">Why four workers cost more</span><span class="rm-d">The usual table pays far more for sharing the cache</span></a></li>
-<li><a href="#9-the-table-still-has-to-be-built"><span class="rm-n">9</span><span class="rm-t">Still to build</span><span class="rm-d">A cheap way to construct the table for the decoder</span></a></li>
+<li><a href="#5-the-same-tradeoff-with-four-blocks-live"><span class="rm-n">5</span><span class="rm-text"><span class="rm-t">The same tradeoff, with four blocks live</span><span class="rm-d">Why it changes when blocks decode at once and share a cache</span></span></a></li>
+<li><a href="#6-a-smaller-table-a-busier-lookup"><span class="rm-n">6</span><span class="rm-text"><span class="rm-t">A smaller table, a busier lookup</span><span class="rm-d">A little over half the space, more work per lookup</span></span></a></li>
+<li><a href="#7-the-four-worker-reversal"><span class="rm-n">7</span><span class="rm-text"><span class="rm-t">The four-worker reversal</span><span class="rm-d">The walk alone: slower on one core, faster on four</span></span></a></li>
+<li><a href="#8-four-workers-cost-the-conventional-walk-far-more"><span class="rm-n">8</span><span class="rm-text"><span class="rm-t">Four workers cost the conventional walk far more</span><span class="rm-d">Why the usual table pays more for sharing the cache</span></span></a></li>
+<li><a href="#9-the-table-still-has-to-be-built"><span class="rm-n">9</span><span class="rm-text"><span class="rm-t">The table still has to be built</span><span class="rm-d">A cheap way to construct it for the decoder</span></span></a></li>
 </ol>
+</div>
 </nav>
 
 ## 1. From sorted rotations to the transformation vector
@@ -382,54 +386,49 @@ $L[I]$ is the last byte of $S$, so starting at $I$ and following $T$ gives $S$ f
 <figure class="bf-fig">
 <p class="bf-title">Decoding banana by following T</p>
 <svg viewBox="0 0 720 400" role="img" aria-label="An animation of the inverse transform on banana. Starting at row 3, the decoder reads L at the current row and writes it into the output from the end, then moves to the row T names: rows 3, 0, 4, 1, 5, 2, emitting a, n, a, n, a, b, which fill the output right to left as banana.">
-<style>@keyframes wk-row0 { 0%, 0.00% { opacity: 0 } 0.00%, 13.75% { opacity: 1 } 13.76%, 100% { opacity: 0 } } @keyframes wk-row1 { 0%, 13.74% { opacity: 0 } 13.75%, 27.50% { opacity: 1 } 27.51%, 100% { opacity: 0 } } @keyframes wk-row2 { 0%, 27.49% { opacity: 0 } 27.50%, 41.25% { opacity: 1 } 41.26%, 100% { opacity: 0 } } @keyframes wk-row3 { 0%, 41.24% { opacity: 0 } 41.25%, 55.00% { opacity: 1 } 55.01%, 100% { opacity: 0 } } @keyframes wk-row4 { 0%, 54.99% { opacity: 0 } 55.00%, 68.75% { opacity: 1 } 68.76%, 100% { opacity: 0 } } @keyframes wk-row5 { 0%, 68.74% { opacity: 0 } 68.75%, 82.50% { opacity: 1 } 82.51%, 100% { opacity: 0 } } @keyframes wk-out0 { 0%, 3.74% { opacity: 0 } 3.75%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt0 { 0%, 0.00% { opacity: 0 } 0.00%, 13.75% { opacity: 1 } 13.76%, 100% { opacity: 0 } } @keyframes wk-out1 { 0%, 17.49% { opacity: 0 } 17.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt1 { 0%, 13.74% { opacity: 0 } 13.75%, 27.50% { opacity: 1 } 27.51%, 100% { opacity: 0 } } @keyframes wk-out2 { 0%, 31.24% { opacity: 0 } 31.25%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt2 { 0%, 27.49% { opacity: 0 } 27.50%, 41.25% { opacity: 1 } 41.26%, 100% { opacity: 0 } } @keyframes wk-out3 { 0%, 44.99% { opacity: 0 } 45.00%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt3 { 0%, 41.24% { opacity: 0 } 41.25%, 55.00% { opacity: 1 } 55.01%, 100% { opacity: 0 } } @keyframes wk-out4 { 0%, 58.74% { opacity: 0 } 58.75%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt4 { 0%, 54.99% { opacity: 0 } 55.00%, 68.75% { opacity: 1 } 68.76%, 100% { opacity: 0 } } @keyframes wk-out5 { 0%, 72.49% { opacity: 0 } 72.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-txt5 { 0%, 68.74% { opacity: 0 } 68.75%, 82.50% { opacity: 1 } 82.51%, 100% { opacity: 0 } } @keyframes wk-done { 0%, 82.49% { opacity: 0 } 82.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col0 { 0%, 0.00% { opacity: 0 } 0.00%, 13.75% { opacity: 1 } 13.76%, 100% { opacity: 0 } } @keyframes wk-byte0 { 0%, 3.74% { opacity: 0 } 3.75%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col1 { 0%, 13.74% { opacity: 0 } 13.75%, 27.50% { opacity: 1 } 27.51%, 100% { opacity: 0 } } @keyframes wk-byte1 { 0%, 17.49% { opacity: 0 } 17.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col2 { 0%, 27.49% { opacity: 0 } 27.50%, 41.25% { opacity: 1 } 41.26%, 100% { opacity: 0 } } @keyframes wk-byte2 { 0%, 31.24% { opacity: 0 } 31.25%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col3 { 0%, 41.24% { opacity: 0 } 41.25%, 55.00% { opacity: 1 } 55.01%, 100% { opacity: 0 } } @keyframes wk-byte3 { 0%, 44.99% { opacity: 0 } 45.00%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col4 { 0%, 54.99% { opacity: 0 } 55.00%, 68.75% { opacity: 1 } 68.76%, 100% { opacity: 0 } } @keyframes wk-byte4 { 0%, 58.74% { opacity: 0 } 58.75%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @keyframes wk-col5 { 0%, 68.74% { opacity: 0 } 68.75%, 82.50% { opacity: 1 } 82.51%, 100% { opacity: 0 } } @keyframes wk-byte5 { 0%, 72.49% { opacity: 0 } 72.50%, 96.25% { opacity: 1 } 96.26%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg [style*="animation"] { animation: none !important; opacity: 0 } svg .wk-out { opacity: 1 !important } }</style>
+<style>.wk2-move { transform-box: view-box; } @keyframes wk2-col { 0.00%, 8.14% { transform: translate(0px, 0px) } 11.63%, 19.77% { transform: translate(74px, 0px) } 23.26%, 31.40% { transform: translate(148px, 0px) } 34.88%, 43.02% { transform: translate(222px, 0px) } 46.51%, 54.65% { transform: translate(296px, 0px) } 58.14%, 66.28% { transform: translate(370px, 0px) } 100% { transform: translate(370px, 0px) } } @keyframes wk2-col-o { 0% { opacity: 1 } 66.86% { opacity: 1 } 69.77% { opacity: 0 } 97.09% { opacity: 0 } 100% { opacity: 1 } } @keyframes wk2-b0 { 0%, 4.07% { opacity: 0 } 6.98%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b1 { 0%, 15.70% { opacity: 0 } 18.60%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b2 { 0%, 27.33% { opacity: 0 } 30.23%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b3 { 0%, 38.95% { opacity: 0 } 41.86%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b4 { 0%, 50.58% { opacity: 0 } 53.49%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-b5 { 0%, 62.21% { opacity: 0 } 65.12%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-r0 { 0%, 0.00% { opacity: 0 } 2.91%, 11.63% { opacity: 1 } 14.53%, 100% { opacity: 0 } } @keyframes wk2-r1 { 0%, 11.63% { opacity: 0 } 14.53%, 23.26% { opacity: 1 } 26.16%, 100% { opacity: 0 } } @keyframes wk2-r2 { 0%, 23.26% { opacity: 0 } 26.16%, 34.88% { opacity: 1 } 37.79%, 100% { opacity: 0 } } @keyframes wk2-r3 { 0%, 34.88% { opacity: 0 } 37.79%, 46.51% { opacity: 1 } 49.42%, 100% { opacity: 0 } } @keyframes wk2-r4 { 0%, 46.51% { opacity: 0 } 49.42%, 58.14% { opacity: 1 } 61.05%, 100% { opacity: 0 } } @keyframes wk2-r5 { 0%, 58.14% { opacity: 0 } 61.05%, 73.84% { opacity: 1 } 76.74%, 100% { opacity: 0 } } @keyframes wk2-o0 { 0%, 4.07% { opacity: 0 } 6.98%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t0 { 0%, 0.00% { opacity: 0 } 2.91%, 8.72% { opacity: 1 } 11.63%, 100% { opacity: 0 } } @keyframes wk2-o1 { 0%, 15.70% { opacity: 0 } 18.60%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t1 { 0%, 11.63% { opacity: 0 } 14.53%, 20.35% { opacity: 1 } 23.26%, 100% { opacity: 0 } } @keyframes wk2-o2 { 0%, 27.33% { opacity: 0 } 30.23%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t2 { 0%, 23.26% { opacity: 0 } 26.16%, 31.98% { opacity: 1 } 34.88%, 100% { opacity: 0 } } @keyframes wk2-o3 { 0%, 38.95% { opacity: 0 } 41.86%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t3 { 0%, 34.88% { opacity: 0 } 37.79%, 43.60% { opacity: 1 } 46.51%, 100% { opacity: 0 } } @keyframes wk2-o4 { 0%, 50.58% { opacity: 0 } 53.49%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t4 { 0%, 46.51% { opacity: 0 } 49.42%, 55.23% { opacity: 1 } 58.14%, 100% { opacity: 0 } } @keyframes wk2-o5 { 0%, 62.21% { opacity: 0 } 65.12%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @keyframes wk2-t5 { 0%, 58.14% { opacity: 0 } 61.05%, 66.86% { opacity: 1 } 69.77%, 100% { opacity: 0 } } @keyframes wk2-done { 0%, 69.77% { opacity: 0 } 72.67%, 97.09% { opacity: 1 } 100.00%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg [style*="animation"] { animation: none !important; opacity: 0 } svg .wk-out { opacity: 1 !important } }</style>
 <text x="130" y="34" class="bf-tm" text-anchor="end">row visited</text>
 <text x="130" y="74" class="bf-tm" text-anchor="end">byte read</text>
-<rect x="144" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col0 16.0s linear infinite"/>
+<rect x="144" y="8" width="52" height="84" rx="7" class="bf-box wk2-move" style="animation: wk2-col 8.60s ease-in-out infinite, wk2-col-o 8.60s linear infinite; stroke-width: 2"/>
 <rect x="150" y="14" width="40" height="30" rx="4" class="bf-cell"/>
 <text x="170.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">3</text>
 <rect x="150" y="54" width="40" height="30" rx="4" class="bf-cell"/>
-<g class="wk-out" style="animation: wk-byte0 16.0s linear infinite"><rect x="150" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="170.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text></g>
+<g class="wk-out" style="animation: wk2-b0 8.60s linear infinite"><rect x="150" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="170.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text></g>
 <text x="201" y="34" class="bf-tm" text-anchor="middle">→</text>
-<rect x="218" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col1 16.0s linear infinite"/>
 <rect x="224" y="14" width="40" height="30" rx="4" class="bf-cell"/>
 <text x="244.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">0</text>
 <rect x="224" y="54" width="40" height="30" rx="4" class="bf-cell"/>
-<g class="wk-out" style="animation: wk-byte1 16.0s linear infinite"><rect x="224" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="244.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text></g>
+<g class="wk-out" style="animation: wk2-b1 8.60s linear infinite"><rect x="224" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="244.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text></g>
 <text x="275" y="34" class="bf-tm" text-anchor="middle">→</text>
-<rect x="292" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col2 16.0s linear infinite"/>
 <rect x="298" y="14" width="40" height="30" rx="4" class="bf-cell"/>
 <text x="318.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">4</text>
 <rect x="298" y="54" width="40" height="30" rx="4" class="bf-cell"/>
-<g class="wk-out" style="animation: wk-byte2 16.0s linear infinite"><rect x="298" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="318.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text></g>
+<g class="wk-out" style="animation: wk2-b2 8.60s linear infinite"><rect x="298" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="318.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text></g>
 <text x="349" y="34" class="bf-tm" text-anchor="middle">→</text>
-<rect x="366" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col3 16.0s linear infinite"/>
 <rect x="372" y="14" width="40" height="30" rx="4" class="bf-cell"/>
 <text x="392.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">1</text>
 <rect x="372" y="54" width="40" height="30" rx="4" class="bf-cell"/>
-<g class="wk-out" style="animation: wk-byte3 16.0s linear infinite"><rect x="372" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="392.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text></g>
+<g class="wk-out" style="animation: wk2-b3 8.60s linear infinite"><rect x="372" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="392.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text></g>
 <text x="423" y="34" class="bf-tm" text-anchor="middle">→</text>
-<rect x="440" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col4 16.0s linear infinite"/>
 <rect x="446" y="14" width="40" height="30" rx="4" class="bf-cell"/>
 <text x="466.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">5</text>
 <rect x="446" y="54" width="40" height="30" rx="4" class="bf-cell"/>
-<g class="wk-out" style="animation: wk-byte4 16.0s linear infinite"><rect x="446" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="466.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text></g>
+<g class="wk-out" style="animation: wk2-b4 8.60s linear infinite"><rect x="446" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="466.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text></g>
 <text x="497" y="34" class="bf-tm" text-anchor="middle">→</text>
-<rect x="514" y="8" width="52" height="84" rx="7" class="bf-box" style="stroke-width: 2; animation: wk-col5 16.0s linear infinite"/>
 <rect x="520" y="14" width="40" height="30" rx="4" class="bf-cell"/>
 <text x="540.0" y="34" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">2</text>
 <rect x="520" y="54" width="40" height="30" rx="4" class="bf-cell"/>
-<g class="wk-out" style="animation: wk-byte5 16.0s linear infinite"><rect x="520" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="540.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text></g>
+<g class="wk-out" style="animation: wk2-b5 8.60s linear infinite"><rect x="520" y="54" width="40" height="30" rx="4" class="bf-slot"/><text x="540.0" y="74" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text></g>
 <g transform="translate(0 100)">
 <text x="70" y="44" class="bf-ts" text-anchor="middle">j</text>
 <text x="132" y="44" class="bf-ts" text-anchor="middle">L[j]</text>
 <text x="202" y="44" class="bf-ts" text-anchor="middle">T[j]</text>
-<rect x="44" y="166" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk-row0 16.0s linear infinite"/>
-<rect x="44" y="58" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk-row1 16.0s linear infinite"/>
-<rect x="44" y="202" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk-row2 16.0s linear infinite"/>
-<rect x="44" y="94" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk-row3 16.0s linear infinite"/>
-<rect x="44" y="238" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk-row4 16.0s linear infinite"/>
-<rect x="44" y="130" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk-row5 16.0s linear infinite"/>
+<rect x="44" y="166" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk2-r0 8.60s linear infinite"/>
+<rect x="44" y="58" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk2-r1 8.60s linear infinite"/>
+<rect x="44" y="202" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk2-r2 8.60s linear infinite"/>
+<rect x="44" y="94" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk2-r3 8.60s linear infinite"/>
+<rect x="44" y="238" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk2-r4 8.60s linear infinite"/>
+<rect x="44" y="130" width="210" height="36" rx="6" class="bf-cell-hi" style="animation: wk2-r5 8.60s linear infinite"/>
 <text x="70" y="81" class="bf-t" text-anchor="middle">0</text>
 <rect x="110" y="62" width="44" height="28" rx="4" class="bf-slot"/>
 <text x="132" y="81" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
@@ -473,19 +472,19 @@ $L[I]$ is the last byte of $S$, so starting at $I$ and following $T$ gives $S$ f
 <text x="587.0" y="214" class="bf-tm" text-anchor="middle">4</text>
 <rect x="620" y="150" width="50" height="44" rx="5" class="bf-cell"/>
 <text x="645.0" y="214" class="bf-tm" text-anchor="middle">5</text>
-<g class="wk-out" style="animation: wk-out0 16.0s linear infinite"><rect x="620" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="645.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">a</text></g>
-<text x="330" y="254" class="bf-t" style="animation: wk-txt0 16.0s linear infinite">Step 1: row 3, emit L[3] = a into S[5]; next row T[3] = 0</text>
-<g class="wk-out" style="animation: wk-out1 16.0s linear infinite"><rect x="562" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="587.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">n</text></g>
-<text x="330" y="254" class="bf-t" style="animation: wk-txt1 16.0s linear infinite">Step 2: row 0, emit L[0] = n into S[4]; next row T[0] = 4</text>
-<g class="wk-out" style="animation: wk-out2 16.0s linear infinite"><rect x="504" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="529.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">a</text></g>
-<text x="330" y="254" class="bf-t" style="animation: wk-txt2 16.0s linear infinite">Step 3: row 4, emit L[4] = a into S[3]; next row T[4] = 1</text>
-<g class="wk-out" style="animation: wk-out3 16.0s linear infinite"><rect x="446" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="471.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">n</text></g>
-<text x="330" y="254" class="bf-t" style="animation: wk-txt3 16.0s linear infinite">Step 4: row 1, emit L[1] = n into S[2]; next row T[1] = 5</text>
-<g class="wk-out" style="animation: wk-out4 16.0s linear infinite"><rect x="388" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="413.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">a</text></g>
-<text x="330" y="254" class="bf-t" style="animation: wk-txt4 16.0s linear infinite">Step 5: row 5, emit L[5] = a into S[1]; next row T[5] = 2</text>
-<g class="wk-out" style="animation: wk-out5 16.0s linear infinite"><rect x="330" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="355.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">b</text></g>
-<text x="330" y="254" class="bf-t" style="animation: wk-txt5 16.0s linear infinite">Step 6: row 2, emit L[2] = b into S[0]; done</text>
-<text x="330" y="254" class="bf-t-strong" style="animation: wk-done 16.0s linear infinite">S = banana, recovered by following T from row I = 3</text>
+<g class="wk-out" style="animation: wk2-o0 8.60s linear infinite"><rect x="620" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="645.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">a</text></g>
+<text x="330" y="254" class="bf-t" style="animation: wk2-t0 8.60s linear infinite">Step 1: row 3, emit L[3] = a into S[5]; next row T[3] = 0</text>
+<g class="wk-out" style="animation: wk2-o1 8.60s linear infinite"><rect x="562" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="587.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">n</text></g>
+<text x="330" y="254" class="bf-t" style="animation: wk2-t1 8.60s linear infinite">Step 2: row 0, emit L[0] = n into S[4]; next row T[0] = 4</text>
+<g class="wk-out" style="animation: wk2-o2 8.60s linear infinite"><rect x="504" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="529.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">a</text></g>
+<text x="330" y="254" class="bf-t" style="animation: wk2-t2 8.60s linear infinite">Step 3: row 4, emit L[4] = a into S[3]; next row T[4] = 1</text>
+<g class="wk-out" style="animation: wk2-o3 8.60s linear infinite"><rect x="446" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="471.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">n</text></g>
+<text x="330" y="254" class="bf-t" style="animation: wk2-t3 8.60s linear infinite">Step 4: row 1, emit L[1] = n into S[2]; next row T[1] = 5</text>
+<g class="wk-out" style="animation: wk2-o4 8.60s linear infinite"><rect x="388" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="413.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">a</text></g>
+<text x="330" y="254" class="bf-t" style="animation: wk2-t4 8.60s linear infinite">Step 5: row 5, emit L[5] = a into S[1]; next row T[5] = 2</text>
+<g class="wk-out" style="animation: wk2-o5 8.60s linear infinite"><rect x="330" y="150" width="50" height="44" rx="5" class="bf-slot"/><text x="355.0" y="179" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 20px">b</text></g>
+<text x="330" y="254" class="bf-t" style="animation: wk2-t5 8.60s linear infinite">Step 6: row 2, emit L[2] = b into S[0]; done</text>
+<text x="330" y="254" class="bf-t-strong" style="animation: wk2-done 8.60s linear infinite">S = banana, recovered by following T from row I = 3</text>
 </g>
 </svg>
 <figcaption>Across the top, the rows the walk visits and the byte it reads at each. Below, each step reads the byte in L at the current row, writes it into S from the end, and moves to the row T names. Every jump depends on the entry just read, which is why the walk is one dependent load after another.</figcaption>
@@ -743,46 +742,38 @@ halves the scans. With $L$, tree-1M and treeopt-1M take $2N$ bytes and treeopt-5
 ## 4. What Seward measured
 
 The machine was a 400 MHz AMD K6-III with 128 MB of memory and a 256 KB second-level cache.
-Each block, at most 10⁶ bytes, was inverted ten times. How much memory each algorithm needs
-for a 10⁶-byte block:
+Blocks were at most 10⁶ bytes, 1 MB, and each was inverted ten times. He tested six files of
+at least a megabyte, four of them from the [Canterbury
+Corpus](https://corpus.canterbury.ac.nz/descriptions/). The last column says what each shares
+with mibz2's own [benchmark corpora](../benchmarks/index.md):
 
-| Algorithm | Memory | Seward's description |
-|---|--:|---|
-| `basis` | 5000 kB | Straightforward derivation from theory |
-| `bw94` | 5000 kB | As per [1], does 2 passes, not 3 |
-| `mergedTL` | 4000 kB | As bw94 but more cache-friendly |
-| `indexF` | 2500 kB | Indexes into $F$ rather than $L$ |
-| `tree-1M` | 2000 kB | Computes $T$ incrementally; 1 megabyte extra space |
-| `treeopt-1M` | 2000 kB | More space-economical version of tree-1M |
-| `treeopt-500k` | 1500 kB | As treeopt-1M but with only 500k auxiliary space |
+<div class="bf-data" markdown>
 
-He tested them on six files of at least a megabyte, four from the [Canterbury
-Corpus](https://corpus.canterbury.ac.nz/descriptions/). The last column names the nearest of
-mibz2's [benchmark corpora](../benchmarks/index.md), loosely:
-
-| File | kB | What it is | Nearest in mibz2's corpora |
+| File | MB | What it is | Closest in mibz2's corpora |
 |---|--:|---|---|
-| bible | 4047.4 | The King James Bible | `text`, though ours is source code, repeated |
-| world192 | 2473.4 | The CIA World Factbook, 1992 | none: Wikidata's subject matter, not its format |
-| ecoli | 4638.7 | The *E. coli* genome, in four letters | none |
-| kennedy | 1029.7 | An Excel spreadsheet | `runs`, and at the extreme `onebyte` |
-| netscape | 7678.8 | Netscape Navigator 4.75, an x86 executable | `records`, binary |
-| bashtgz | 1708.8 | bash 2.04's source, gzipped | `random` |
+| bible | 4.05 | The King James Bible: English prose | `text`, though ours is the crate's own source code, repeated, so more redundant |
+| world192 | 2.47 | The CIA World Factbook, 1992: an English record per country | Wikidata's subject matter, though not its JSON format |
+| ecoli | 4.64 | The *E. coli* genome: four letters, a, c, g and t, and notoriously hard to compress | No counterpart. Its tiny alphabet is the case the tree algorithms handle best |
+| kennedy | 1.03 | An Excel spreadsheet, full of long runs of one byte | `runs`, and at the extreme `onebyte` |
+| netscape | 7.68 | Netscape Navigator 4.75: x86 machine code | `records`, binary and structured |
+| bashtgz | 1.71 | bash 2.04's source, gzipped: already compressed, so close to random | `random` |
 
-How fast each algorithm inverted each file, in MB/s, with the fastest in bold. mergedTL is the
-fastest on every one:
+</div>
+
+Each algorithm's memory for a 1 MB block, and how fast it inverted each file, in MB/s. The
+fastest on each file is in bold, and mergedTL is the fastest on every one:
 
 <div class="bf-rates" markdown>
 
-| | bashtgz | bible | ecoli | kennedy | netscape | world192 | Mean |
-|---|--:|--:|--:|--:|--:|--:|--:|
-| basis | 1.54 | 1.72 | 1.53 | 2.46 | 2.32 | 1.65 | 1.86 |
-| bw94 | 1.58 | 1.77 | 1.57 | 2.54 | 2.41 | 1.69 | 1.93 |
-| mergedTL | **2.49** | **2.76** | **2.48** | **4.72** | **3.51** | **2.65** | **3.10** |
-| indexF | 1.20 | 1.36 | 1.30 | 1.71 | 1.67 | 1.31 | 1.43 |
-| tree-1M | 0.032 | 0.211 | 0.325 | 0.099 | 0.044 | 0.207 | 0.153 |
-| treeopt-1M | 0.059 | 0.301 | 0.342 | 0.167 | 0.099 | 0.298 | 0.211 |
-| treeopt-500k | 0.032 | 0.218 | 0.339 | 0.100 | 0.036 | 0.198 | 0.154 |
+| | MB | bashtgz | bible | ecoli | kennedy | netscape | world192 | Mean |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| basis | 5.0 | 1.54 | 1.72 | 1.53 | 2.46 | 2.32 | 1.65 | 1.86 |
+| bw94 | 5.0 | 1.58 | 1.77 | 1.57 | 2.54 | 2.41 | 1.69 | 1.93 |
+| mergedTL | 4.0 | **2.49** | **2.76** | **2.48** | **4.72** | **3.51** | **2.65** | **3.10** |
+| indexF | 2.5 | 1.20 | 1.36 | 1.30 | 1.71 | 1.67 | 1.31 | 1.43 |
+| tree-1M | 2.0 | 0.032 | 0.211 | 0.325 | 0.099 | 0.044 | 0.207 | 0.153 |
+| treeopt-1M | 2.0 | 0.059 | 0.301 | 0.342 | 0.167 | 0.099 | 0.298 | 0.211 |
+| treeopt-500k | 1.5 | 0.032 | 0.218 | 0.339 | 0.100 | 0.036 | 0.198 | 0.154 |
 
 </div>
 
@@ -834,16 +825,11 @@ both on both axes, by changing how the next link is read. indexF runs at 46% of 
 62.5% of its memory. Below that, half a byte a row less costs a factor of seven.
 
 Seward then asks why. Simulating the K6-III's cache with cacheprof, his own profiler, he
-counted per byte of bible:
-
-| | instructions | memory references | misses |
-|---|--:|--:|--:|
-| bw94 | 18.00 | 9.00 | 1.63 |
-| mergedTL | 20.00 | 8.00 | 0.88 |
-
-mergedTL runs 11% more instructions and takes 54% as many misses. 89.4% of those misses are
+counted what each does per byte of bible. bw94 runs 18 instructions, with 9 memory
+references and 1.63 cache misses; mergedTL runs 20 instructions, with 8 references and 0.88
+misses. So mergedTL does 11% more work and takes 54% as many misses. 89.4% of those misses are
 the walk's reads of $U[p]$, and 78.6% of those reads miss, because $T$ holds *"a completely
-arbitrary permutation"* that the decoder *"is obliged to traverse"*. So *"there appears to be
+arbitrary permutation"* that the decoder *"is obliged to traverse"*. Seward concludes that *"there appears to be
 no way to avoid a miss rate approaching one per $L$-byte"*, and mergedTL is *"a realistic upper
 bound on inversion performance"*.
 
@@ -852,98 +838,6 @@ runs make $T$ point each row at its neighbour, which is usually already cached; 
 sets the floor near 2.5 MB/s. And the tree algorithms vary 10:1 across files, against mergedTL's
 1.9:1, because a small alphabet such as ecoli's four letters lets a few deep trees shorten
 every scan.
-
-<figure class="bf-fig">
-<p class="bf-title">Why the walk misses, and why runs help</p>
-<svg viewBox="0 0 720 300" role="img" aria-label="Two walks through a 24-entry table. Above, the links form an arbitrary permutation, so each step jumps far across the table. Below, a run of equal bytes makes each entry point at its neighbour, so steps stay within a few entries.">
-<text x="30" y="36" class="bf-ts">An arbitrary permutation: every step lands somewhere new</text>
-<rect x="30" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="57" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="84" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="111" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="138" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="165" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="192" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="219" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="246" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="273" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="300" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="327" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="354" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="381" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="408" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="435" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="462" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="489" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="516" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="543" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="570" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="597" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="624" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="651" y="100" width="23" height="22" rx="3" class="bf-cell"/>
-<path d="M122.5 98Q284.5 -14 446.5 98" class="bf-link"/>
-<rect x="111" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M446.5 98Q392.5 46 338.5 98" class="bf-link"/>
-<rect x="435" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M338.5 98Q406.0 38 473.5 98" class="bf-link"/>
-<rect x="327" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M473.5 98Q298.0 -14 122.5 98" class="bf-link"/>
-<rect x="462" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M122.5 98Q284.5 -14 446.5 98" class="bf-link"/>
-<rect x="111" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M446.5 98Q392.5 46 338.5 98" class="bf-link"/>
-<rect x="435" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M338.5 98Q406.0 38 473.5 98" class="bf-link"/>
-<rect x="327" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M473.5 98Q298.0 -14 122.5 98" class="bf-link"/>
-<rect x="462" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<rect x="111" y="100" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<text x="30" y="168" class="bf-ts">A run of equal bytes: each step lands next door</text>
-<rect x="30" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="57" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="84" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="111" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="138" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="165" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="192" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="219" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="246" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="273" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="300" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="327" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="354" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="381" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="408" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="435" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="462" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="489" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="516" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="543" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="570" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="597" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="624" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<rect x="651" y="232" width="23" height="22" rx="3" class="bf-cell"/>
-<path d="M257.5 230Q271.0 202 284.5 230" class="bf-link"/>
-<rect x="246" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M284.5 230Q298.0 202 311.5 230" class="bf-link"/>
-<rect x="273" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M311.5 230Q325.0 202 338.5 230" class="bf-link"/>
-<rect x="300" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M338.5 230Q352.0 202 365.5 230" class="bf-link"/>
-<rect x="327" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M365.5 230Q379.0 202 392.5 230" class="bf-link"/>
-<rect x="354" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M392.5 230Q406.0 202 419.5 230" class="bf-link"/>
-<rect x="381" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M419.5 230Q433.0 202 446.5 230" class="bf-link"/>
-<rect x="408" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<path d="M446.5 230Q460.0 202 473.5 230" class="bf-link"/>
-<rect x="435" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<rect x="462" y="232" width="23" height="22" rx="3" class="bf-cell-hi"/>
-<text x="30" y="276" class="bf-tm">Each cell is one table entry; arcs are successive steps of the walk. With a block much larger than the cache, the upper walk misses on almost every step.</text>
-</svg>
-<figcaption>An illustration, not data. Through an arbitrary permutation each step lands somewhere new; through a run of equal bytes, as in kennedy, T points next door.</figcaption>
-</figure>
 
 bzip2 itself decompresses bible at 67% of mergedTL's inversion rate, while also doing its
 Huffman and move-to-front decoding, so *"no amount of re-engineering of bzip2 can increase its
@@ -958,10 +852,46 @@ The K6-III's cache held 256 KB, against mergedTL's 4 MB for one block. Our works
 20 MiB last-level cache, and a full bzip2 block, up to 900,000 rows at 4 bytes each, needs a
 3.6 MB table. Read literally, the caveat has come true.
 
+<figure class="bf-fig">
+<p class="bf-title">Caches against tables, then and now</p>
+<svg viewBox="0 0 720 300" role="img" aria-label="Cache size against navigation table size, to one scale in megabytes. In 2001 the K6-III had a 256 KB cache and one block's mergedTL table took 4 MB, about sixteen times the cache. On our workstation the last-level cache is 20 MiB; one block's table is 3.6 MB, but four blocks' tables take 14.4 MB, 0.7 of the cache.">
+<path d="M210 20V272" class="bf-grid"/>
+<text x="210" y="290" class="bf-tm" text-anchor="middle">0 MB</text>
+<path d="M330 20V272" class="bf-grid"/>
+<text x="330" y="290" class="bf-tm" text-anchor="middle">5 MB</text>
+<path d="M450 20V272" class="bf-grid"/>
+<text x="450" y="290" class="bf-tm" text-anchor="middle">10 MB</text>
+<path d="M570 20V272" class="bf-grid"/>
+<text x="570" y="290" class="bf-tm" text-anchor="middle">15 MB</text>
+<path d="M690 20V272" class="bf-grid"/>
+<text x="690" y="290" class="bf-tm" text-anchor="middle">20 MB</text>
+<text x="0" y="34" class="bf-tm" style="text-transform: uppercase; letter-spacing: 0.06em">2001</text>
+<text x="200" y="62" class="bf-t" text-anchor="end">K6-III cache</text>
+<rect x="210" y="47" width="6.1" height="22" rx="4" class="bf-box" style="stroke-width: 2"/>
+<text x="224.1" y="63" class="bf-tm">256 KB</text>
+<text x="200" y="96" class="bf-t" text-anchor="end">one block's table</text>
+<rect x="210" y="81" width="96.0" height="22" rx="4" class="bf-slot"/>
+<text x="314.0" y="97" class="bf-tm">4 MB: about 16 times the cache</text>
+<text x="0" y="128" class="bf-tm" style="text-transform: uppercase; letter-spacing: 0.06em">2026</text>
+<text x="200" y="156" class="bf-t" text-anchor="end">workstation cache</text>
+<rect x="210" y="141" width="503.3" height="22" rx="4" class="bf-box" style="stroke-width: 2"/>
+<text x="703.3" y="157" class="bf-tm" text-anchor="end">20 MiB</text>
+<text x="200" y="190" class="bf-t" text-anchor="end">one block's table</text>
+<rect x="210" y="175" width="86.4" height="22" rx="4" class="bf-slot"/>
+<text x="304.4" y="191" class="bf-tm">3.6 MB</text>
+<text x="200" y="224" class="bf-t" text-anchor="end">four blocks' tables</text>
+<rect x="210" y="209" width="345.6" height="22" rx="4" class="bf-slot"/>
+<text x="563.6" y="225" class="bf-tm">14.4 MB: 0.7 of the cache</text>
+</svg>
+<figcaption>One scale, in megabytes. In 2001 one block's table was far larger than the cache; today one fits several times over, but four take most of it. Table sizes are computed for full blocks, not measured cache occupancy.</figcaption>
+</figure>
+
 Two things kept Seward's sentence true anyway. A modern core keeps many misses in flight if
 it is given independent loads, so mibz2's [walk](https://github.com/lmmx/mibz2/blob/13e9854805eed8944ecdd7c9330e30971b6bf52d/src/bwt.rs#L927-L961)
 advances 32 separate pieces of the chain in turn and [runs 8.6 times as fast as one
-chain](2026-10-31-room-walk-overlap.md). And a decoder doesn't invert one block at a time.
+chain](2026-10-31-room-walk-overlap.md).
+
+And a decoder doesn't invert one block at a time.
 Four workers keep four tables live, 14.4 MB before any of their other buffers, in one cache
 they all share, and [decoding with four costs more CPU time per byte than decoding with
 one](2026-11-01-inverse-bwt-memory-interference.md): the workers finish sooner together, but
