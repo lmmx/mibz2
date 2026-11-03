@@ -1,6 +1,6 @@
 ---
 title: "Revisiting the space–time tradeoff in BWT inversion"
-image: assets/social/blog-2026-11-02-smaller-table-four-workers.png
+image: assets/social/blog-2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.png
 description: "A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result."
 ---
 
