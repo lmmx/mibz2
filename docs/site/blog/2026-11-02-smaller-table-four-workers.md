@@ -19,7 +19,7 @@ ask whether a smaller navigation table could do more work per step and still com
 under contention. A first measurement of ours shows it doing so.
 {: .post-dek }
 
-2 November 2026 · 26 min read · [Result](#7-timing-the-walk-on-one-core-and-on-four)
+2 November 2026 · 27 min read · [Result](#7-timing-the-walk-on-one-core-and-on-four)
 {: .post-meta }
 
 </div>
@@ -677,11 +677,303 @@ the landing row is one of those that start with it in $F$. But `banana` has thre
 three rows start with `a`. Moving the `a` off the end of row 3 lands on row 0, not row 1 or 2;
 how could a decoder know that without the square?
 
-Because each letter's occurrences keep their order between the two columns. The first `a` in
-$L$ (row 3's) lands on the first row starting with `a` (row 0), the second `a` in $L$ on the
-second, and so on, for every letter. The sorting guarantees it: two rows that end in the same
-letter keep their order when that letter moves to the front, because the rest of each row,
-already in sorted order, still decides which comes first.
+Up to now the three `a`s have looked identical. To tell them apart, label each by where it
+falls in the word: `b a₁ n₁ a₂ n₂ a₃`. The labels are only for following the letters; nothing
+in bzip2 stores them. Labelling and counting occurrences this way comes from Ben Langmead's
+[lecture slides on the transform](https://www.cs.jhu.edu/~langmea/resources/lecture_notes/bwt_and_fm_index.pdf);
+he relies on the same counting in [Bowtie](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2009-10-3-r25),
+his DNA read aligner, which searches a genome through its Burrows–Wheeler transform. Rows 3, 4 and 5 end in `a₃`, `a₂` and `a₁`, and rows 0, 1 and 2 start
+with `a₃`, `a₂` and `a₁`: the same occurrences, in the same order. This preserved order is what
+makes inversion possible, and the sort is why it holds. Rows 3, 4 and 5 are in that order
+because of what comes before their last `a`: `banan` < `naban` < `nanab`. Moving the `a` to
+the front puts those same letters right behind it, where they decide the order again:
+
+<figure class="bf-fig">
+<p class="bf-title">Why the a’s keep their order</p>
+<svg class="kp-fig" viewBox="0 0 720 384" role="img" aria-label="Two copies of the Burrows–Wheeler matrix of banana, with its three a's labelled a1, a2, a3 and its two n's n1, n2 by where they fall in the word. On the left, rows 3, 4 and 5 end in a3, a2, a1; their first five letters, banan, naban, nanab, are tinted, and are in sorted order. Each of those rows has its last a moved to the front, carrying the tinted letters one place right unchanged, and moves to the right-hand copy, where it is rows 0, 1 and 2, in the same order. Then the a's are outlined: a3, a2, a1 down L on the left, and a3, a2, a1 down F on the right.">
+<style>.kp-fig [style*="translate"], .kp-fig g { transform-box: view-box; } .bf-fig .kp-tie { fill: var(--bf-amber-tint); } .bf-fig .kp-moved { fill: var(--bf-surface); } .bf-fig .kp-win { fill: var(--bf-amber-tint); stroke: var(--bf-amber); stroke-width: 2; } @keyframes kp-lo3 { 0%, 25.98% { opacity: 1 } 26.09%, 37.50% { opacity: 0 } 40.76%, 100% { opacity: 1 } } @keyframes kp-lo4 { 0%, 25.98% { opacity: 1 } 26.09%, 37.50% { opacity: 0 } 40.76%, 100% { opacity: 1 } } @keyframes kp-lo5 { 0%, 25.98% { opacity: 1 } 26.09%, 37.50% { opacity: 0 } 40.76%, 100% { opacity: 1 } } @keyframes kp-ro0 { 0%, 46.63% { opacity: 1 } 46.74%, 92.39% { opacity: 0 } 95.65%, 100% { opacity: 1 } } @keyframes kp-ro1 { 0%, 46.63% { opacity: 1 } 46.74%, 92.39% { opacity: 0 } 95.65%, 100% { opacity: 1 } } @keyframes kp-ro2 { 0%, 46.63% { opacity: 1 } 46.74%, 92.39% { opacity: 0 } 95.65%, 100% { opacity: 1 } } @keyframes kp-tint { 0%, 6.52% { opacity: 0 } 9.78%, 26.09% { opacity: 1 } 26.20%, 100% { opacity: 0 } } @keyframes kp-cap1 { 0%, 6.52% { opacity: 0 } 9.78%, 46.74% { opacity: 1 } 48.91%, 100% { opacity: 0 } } @keyframes kp-fly3 { 0%, 25.98% { opacity: 0; transform: translate(-370px, 114px) } 26.09%, 36.96% { opacity: 1; transform: translate(-370px, 114px) } 45.65%, 92.39% { opacity: 1; transform: translate(0px, 0px) } 95.65%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes kp-l3_1 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_2 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_3 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_4 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_5 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l3_0 { 0%, 28.26% { transform: translate(170px, 0px) } 32.07% { transform: translate(85.0px, -16px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-fly4 { 0%, 25.98% { opacity: 0; transform: translate(-370px, 114px) } 26.09%, 36.96% { opacity: 1; transform: translate(-370px, 114px) } 45.65%, 92.39% { opacity: 1; transform: translate(0px, 0px) } 95.65%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes kp-l4_1 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_2 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_3 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_4 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_5 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l4_0 { 0%, 28.26% { transform: translate(170px, 0px) } 32.07% { transform: translate(85.0px, -16px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-fly5 { 0%, 25.98% { opacity: 0; transform: translate(-370px, 114px) } 26.09%, 36.96% { opacity: 1; transform: translate(-370px, 114px) } 45.65%, 92.39% { opacity: 1; transform: translate(0px, 0px) } 95.65%, 100% { opacity: 0; transform: translate(0px, 0px) } } @keyframes kp-l5_1 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_2 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_3 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_4 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_5 { 0%, 28.26% { transform: translate(-34px, 0px) } 32.07% { transform: translate(-17.0px, 0px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-l5_0 { 0%, 28.26% { transform: translate(170px, 0px) } 32.07% { transform: translate(85.0px, -16px) } 35.87%, 100% { transform: translate(0px, 0px) } } @keyframes kp-glow { 0%, 47.83% { opacity: 0 } 51.09%, 92.39% { opacity: 1 } 95.65%, 100% { opacity: 0 } } @media (prefers-reduced-motion: reduce) { svg.kp-fig [style*="animation"] { animation: none !important; opacity: 1 !important; transform: none !important } svg.kp-fig .kp-cmp { display: none !important } }</style>
+<defs><filter id="kp-glow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="0" stdDeviation="3" style="flood-color: var(--bf-amber); flood-opacity: 0.9"/></filter></defs>
+<text x="50" y="36" class="bf-t-strong">Rows ending in a</text>
+<text x="50" y="54" class="bf-tm">the Burrows–Wheeler matrix, last column L</text>
+<text x="420" y="36" class="bf-t-strong">Rows starting with a</text>
+<text x="420" y="54" class="bf-tm">the same matrix, first column F</text>
+<text x="34" y="97" class="bf-tm" text-anchor="middle">0</text>
+<g opacity="0.35">
+<rect x="50" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="84" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="118" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="152" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="186" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="220" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<text x="62.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="99.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="130.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="164.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="198.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="232.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+</g>
+<text x="34" y="135" class="bf-tm" text-anchor="middle">1</text>
+<g opacity="0.35">
+<rect x="50" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="84" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="118" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="152" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="186" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="220" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<text x="62.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="96.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="130.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="167.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="198.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="232.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+</g>
+<text x="34" y="173" class="bf-tm" text-anchor="middle">2</text>
+<g opacity="0.35">
+<rect x="50" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="84" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="118" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="152" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="186" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="220" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<text x="62.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="96.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="130.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="164.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="198.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="235.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+</g>
+<text x="34" y="211" class="bf-tm" text-anchor="middle">3</text>
+<g style="animation: kp-lo3 9.20s linear infinite">
+<rect x="50" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="84" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="118" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="152" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="186" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="220" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<text x="65.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="96.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="130.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="164.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="198.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="232.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+</g>
+<text x="34" y="249" class="bf-tm" text-anchor="middle">4</text>
+<g style="animation: kp-lo4 9.20s linear infinite">
+<rect x="50" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="84" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="118" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="152" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="186" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="220" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<text x="62.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="96.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="133.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="164.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="198.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="232.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+</g>
+<text x="34" y="287" class="bf-tm" text-anchor="middle">5</text>
+<g style="animation: kp-lo5 9.20s linear infinite">
+<rect x="50" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="84" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="118" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="152" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="186" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="220" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<text x="62.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="96.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="130.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="164.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="201.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="232.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+</g>
+<text x="404" y="97" class="bf-tm" text-anchor="middle">0</text>
+<g style="animation: kp-ro0 9.20s linear infinite">
+<rect x="420" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="454" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="488" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="522" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="556" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="590" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<text x="432.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="469.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="500.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="534.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="568.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="602.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+</g>
+<text x="404" y="135" class="bf-tm" text-anchor="middle">1</text>
+<g style="animation: kp-ro1 9.20s linear infinite">
+<rect x="420" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="454" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="488" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="522" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="556" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="590" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<text x="432.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="466.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="500.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="537.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="568.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="602.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+</g>
+<text x="404" y="173" class="bf-tm" text-anchor="middle">2</text>
+<g style="animation: kp-ro2 9.20s linear infinite">
+<rect x="420" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="454" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="488" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="522" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="556" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="590" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<text x="432.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="466.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="500.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="534.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="568.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="605.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+</g>
+<text x="404" y="211" class="bf-tm" text-anchor="middle">3</text>
+<g opacity="0.35">
+<rect x="420" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="454" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="488" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="522" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="556" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="590" y="190" width="30" height="32" rx="4" class="bf-cell" />
+<text x="435.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="466.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="500.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="534.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="568.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="602.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+</g>
+<text x="404" y="249" class="bf-tm" text-anchor="middle">4</text>
+<g opacity="0.35">
+<rect x="420" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="454" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="488" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="522" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="556" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="590" y="228" width="30" height="32" rx="4" class="bf-cell" />
+<text x="432.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="466.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="503.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="534.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="568.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="602.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+</g>
+<text x="404" y="287" class="bf-tm" text-anchor="middle">5</text>
+<g opacity="0.35">
+<rect x="420" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="454" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="488" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="522" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="556" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="590" y="266" width="30" height="32" rx="4" class="bf-cell" />
+<text x="432.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="466.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="500.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<text x="534.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<text x="571.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<text x="602.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+</g>
+<g class="kp-cmp" style="animation: kp-tint 9.20s linear infinite">
+<rect x="50" y="190" width="30" height="32" rx="4" class="kp-tie" />
+<text x="65.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="84" y="190" width="30" height="32" rx="4" class="kp-tie" />
+<text x="96.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<rect x="118" y="190" width="30" height="32" rx="4" class="kp-tie" />
+<text x="130.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<rect x="152" y="190" width="30" height="32" rx="4" class="kp-tie" />
+<text x="164.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<rect x="186" y="190" width="30" height="32" rx="4" class="kp-tie" />
+<text x="198.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<rect x="50" y="228" width="30" height="32" rx="4" class="kp-tie" />
+<text x="62.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<rect x="84" y="228" width="30" height="32" rx="4" class="kp-tie" />
+<text x="96.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<rect x="118" y="228" width="30" height="32" rx="4" class="kp-tie" />
+<text x="133.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+<rect x="152" y="228" width="30" height="32" rx="4" class="kp-tie" />
+<text x="164.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<rect x="186" y="228" width="30" height="32" rx="4" class="kp-tie" />
+<text x="198.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<rect x="50" y="266" width="30" height="32" rx="4" class="kp-tie" />
+<text x="62.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<rect x="84" y="266" width="30" height="32" rx="4" class="kp-tie" />
+<text x="96.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<rect x="118" y="266" width="30" height="32" rx="4" class="kp-tie" />
+<text x="130.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<rect x="152" y="266" width="30" height="32" rx="4" class="kp-tie" />
+<text x="164.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<rect x="186" y="266" width="30" height="32" rx="4" class="kp-tie" />
+<text x="201.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text>
+</g>
+<text x="50" y="334" class="bf-t kp-cmp" style="animation: kp-cap1 9.20s linear infinite"><tspan style="font-family: var(--md-code-font-family)">banan</tspan>… &lt; <tspan style="font-family: var(--md-code-font-family)">naban</tspan>… &lt; <tspan style="font-family: var(--md-code-font-family)">nanab</tspan>…</text>
+<g class="kp-cmp" style="animation: kp-fly3 9.20s ease-in-out infinite">
+<rect x="420" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="454" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="488" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="522" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="556" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="590" y="76" width="30" height="32" rx="4" class="bf-cell" />
+<g style="animation: kp-l3_1 9.20s ease-in-out infinite"><rect x="454" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="469.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
+<g style="animation: kp-l3_2 9.20s ease-in-out infinite"><rect x="488" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="500.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
+<g style="animation: kp-l3_3 9.20s ease-in-out infinite"><rect x="522" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="534.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
+<g style="animation: kp-l3_4 9.20s ease-in-out infinite"><rect x="556" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="568.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
+<g style="animation: kp-l3_5 9.20s ease-in-out infinite"><rect x="590" y="76" width="30" height="32" rx="4" class="kp-tie" /><text x="602.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
+<g style="animation: kp-l3_0 9.20s ease-in-out infinite"><rect x="420" y="76" width="30" height="32" rx="4" class="kp-moved" /><text x="432.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text></g>
+</g>
+<g class="kp-cmp" style="animation: kp-fly4 9.20s ease-in-out infinite">
+<rect x="420" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="454" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="488" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="522" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="556" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="590" y="114" width="30" height="32" rx="4" class="bf-cell" />
+<g style="animation: kp-l4_1 9.20s ease-in-out infinite"><rect x="454" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="466.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
+<g style="animation: kp-l4_2 9.20s ease-in-out infinite"><rect x="488" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="500.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text></g>
+<g style="animation: kp-l4_3 9.20s ease-in-out infinite"><rect x="522" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="537.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
+<g style="animation: kp-l4_4 9.20s ease-in-out infinite"><rect x="556" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="568.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
+<g style="animation: kp-l4_5 9.20s ease-in-out infinite"><rect x="590" y="114" width="30" height="32" rx="4" class="kp-tie" /><text x="602.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
+<g style="animation: kp-l4_0 9.20s ease-in-out infinite"><rect x="420" y="114" width="30" height="32" rx="4" class="kp-moved" /><text x="432.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
+</g>
+<g class="kp-cmp" style="animation: kp-fly5 9.20s ease-in-out infinite">
+<rect x="420" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="454" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="488" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="522" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="556" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<rect x="590" y="152" width="30" height="32" rx="4" class="bf-cell" />
+<g style="animation: kp-l5_1 9.20s ease-in-out infinite"><rect x="454" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="466.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
+<g style="animation: kp-l5_2 9.20s ease-in-out infinite"><rect x="488" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="500.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
+<g style="animation: kp-l5_3 9.20s ease-in-out infinite"><rect x="522" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="534.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">n<tspan dy="4" style="font-size: 10px">2</tspan></text></g>
+<g style="animation: kp-l5_4 9.20s ease-in-out infinite"><rect x="556" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="568.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text></g>
+<g style="animation: kp-l5_5 9.20s ease-in-out infinite"><rect x="590" y="152" width="30" height="32" rx="4" class="kp-tie" /><text x="605.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">b</text></g>
+<g style="animation: kp-l5_0 9.20s ease-in-out infinite"><rect x="420" y="152" width="30" height="32" rx="4" class="kp-moved" /><text x="432.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text></g>
+</g>
+<g style="animation: kp-glow 9.20s linear infinite">
+<rect x="220" y="190" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
+<text x="232.0" y="211" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<rect x="220" y="228" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
+<text x="232.0" y="249" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<rect x="220" y="266" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
+<text x="232.0" y="287" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<rect x="420" y="76" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
+<text x="432.0" y="97" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
+<rect x="420" y="114" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
+<text x="432.0" y="135" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
+<rect x="420" y="152" width="30" height="32" rx="4" class="kp-win" filter="url(#kp-glow)"/>
+<text x="432.0" y="173" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 14px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
+<text x="50" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4"> </tspan></tspan> down L</text>
+<text x="420" y="334" class="bf-t"><tspan style="font-family: var(--md-code-font-family)">a<tspan dy="4" style="font-size: 10px">3</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">2</tspan><tspan dy="-4"> </tspan>a<tspan dy="4" style="font-size: 10px">1</tspan><tspan dy="-4"> </tspan></tspan> down F</text>
+</g>
+</svg>
+<figcaption>The square twice, its a’s and n’s labelled by where they fall in banana. Left, rows 3, 4 and 5 end in a; what comes before that a (tinted) puts them in order. Each moves its a to the front, carrying the tinted letters one place right, and lands on rows 0, 1 and 2 on the right, in the same order. So the a’s run a₃, a₂, a₁ down both L and F.</figcaption>
+</figure>
+
+The same goes for the two `n`s, and for every letter of any block: the first `a` in $L$ (row
+3's) lands on the first row starting with `a` (row 0), the second on the second, and so on.
 
 So the matching can be worked out from $L$ and a count of each letter. Because $F$ is sorted,
 its letters occur in runs, three `a`s, one `b` and two `n`s, and those counts describe it
@@ -857,44 +1149,44 @@ $L[0..j]$ and $L[j] = c$, then $T[j]$ must be $i$, where $i$ is the position of 
 
 <figure class="bf-fig">
 <p class="bf-title">T matches each L byte to the same occurrence in F</p>
-<svg viewBox="0 0 720 300" role="img" aria-label="T joins each position j of L to a position T[j] of F holding the same byte: the k-th n in L to the k-th n in F, and likewise for a and b. T is 4, 5, 3, 0, 1, 2.">
+<svg viewBox="0 0 720 272" role="img" aria-label="T joins each position j of L to the position T[j] of F holding the same occurrence of the same letter: L is n2 n1 b a3 a2 a1 and F is a3 a2 a1 b n2 n1, so T is 4, 5, 3, 0, 1, 2.">
 <text x="190" y="26" class="bf-ts" text-anchor="middle">L[j]</text>
 <text x="490" y="26" class="bf-ts" text-anchor="middle">F[i]</text>
 <text x="156" y="62" class="bf-tm" text-anchor="end">j = 0</text>
 <rect x="170" y="40" width="40" height="30" rx="4" class="bf-slot"/>
-<text x="190" y="61" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="187" y="61" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
 <rect x="470" y="40" width="40" height="30" rx="4" class="bf-cell-hi"/>
-<text x="490" y="61" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="487" y="61" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
 <text x="524" y="62" class="bf-tm">i = 0</text>
 <text x="156" y="100" class="bf-tm" text-anchor="end">j = 1</text>
 <rect x="170" y="78" width="40" height="30" rx="4" class="bf-slot"/>
-<text x="190" y="99" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="187" y="99" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
 <rect x="470" y="78" width="40" height="30" rx="4" class="bf-cell-hi"/>
-<text x="490" y="99" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="487" y="99" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
 <text x="524" y="100" class="bf-tm">i = 1</text>
 <text x="156" y="138" class="bf-tm" text-anchor="end">j = 2</text>
 <rect x="170" y="116" width="40" height="30" rx="4" class="bf-slot"/>
 <text x="190" y="137" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
 <rect x="470" y="116" width="40" height="30" rx="4" class="bf-cell-hi"/>
-<text x="490" y="137" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="487" y="137" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
 <text x="524" y="138" class="bf-tm">i = 2</text>
 <text x="156" y="176" class="bf-tm" text-anchor="end">j = 3</text>
 <rect x="170" y="154" width="40" height="30" rx="4" class="bf-slot"/>
-<text x="190" y="175" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="187" y="175" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">3</tspan></text>
 <rect x="470" y="154" width="40" height="30" rx="4" class="bf-cell-hi"/>
 <text x="490" y="175" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">b</text>
 <text x="524" y="176" class="bf-tm">i = 3</text>
 <text x="156" y="214" class="bf-tm" text-anchor="end">j = 4</text>
 <rect x="170" y="192" width="40" height="30" rx="4" class="bf-slot"/>
-<text x="190" y="213" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="187" y="213" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">2</tspan></text>
 <rect x="470" y="192" width="40" height="30" rx="4" class="bf-cell-hi"/>
-<text x="490" y="213" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="487" y="213" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n<tspan dy="4" style="font-size: 10px">2</tspan></text>
 <text x="524" y="214" class="bf-tm">i = 4</text>
 <text x="156" y="252" class="bf-tm" text-anchor="end">j = 5</text>
 <rect x="170" y="230" width="40" height="30" rx="4" class="bf-slot"/>
-<text x="190" y="251" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a</text>
+<text x="187" y="251" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">a<tspan dy="4" style="font-size: 10px">1</tspan></text>
 <rect x="470" y="230" width="40" height="30" rx="4" class="bf-cell-hi"/>
-<text x="490" y="251" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n</text>
+<text x="487" y="251" class="bf-t" text-anchor="middle" style="font-family: var(--md-code-font-family); font-size: 15px">n<tspan dy="4" style="font-size: 10px">1</tspan></text>
 <text x="524" y="252" class="bf-tm">i = 5</text>
 <path d="M214 55 C320 55 360 207 464 207" class="bf-link"/>
 <text x="222" y="51" class="bf-ttiny">T[0] = 4</text>
@@ -908,9 +1200,8 @@ $L[0..j]$ and $L[j] = c$, then $T[j]$ must be $i$, where $i$ is the position of 
 <text x="222" y="203" class="bf-ttiny">T[4] = 1</text>
 <path d="M214 245 C320 245 360 131 464 131" class="bf-link"/>
 <text x="222" y="241" class="bf-ttiny">T[5] = 2</text>
-<text x="110" y="290" class="bf-tm">The k-th a in L is the k-th a in F, and so for every byte: the links never cross within one byte.</text>
 </svg>
-<figcaption>The k-th a in L goes to the k-th a in F, and likewise for n and b: T = 4 5 3 0 1 2, from counts and one scan.</figcaption>
+<figcaption>With the occurrences labelled, each link joins a letter in L to itself in F: L[3] is a₃, which is F[0], so T[3] = 0. The links never cross within one letter, which is why counts are enough to rebuild T.</figcaption>
 </figure>
 
 The $c$'s in $F$ form one bucket. Turning the counts in $C$ into running totals gives where each
@@ -1029,6 +1320,9 @@ speed back with 256 binary trees of partial counts, one per byte value. Each nod
 byte in an aligned power-of-two segment of $L$, an empty subtree costs nothing, and a node
 budget sets how deep the trees grow. To count the $c$'s up to $j$, descend $c$'s tree, adding the
 left child's count whenever $j$ lies to the right, and scan $L$ only for the last segment.
+The [FM-index](https://en.wikipedia.org/wiki/FM-index), published the year before, asks the
+same question of $L$ to search text without decompressing it, and answers it with counts
+stored every so many rows and a scan between them.
 
 <figure class="bf-fig">
 <p class="bf-title">A count tree answers a rank query</p>
