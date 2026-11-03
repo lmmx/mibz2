@@ -197,6 +197,12 @@ matrix](https://en.wikipedia.org/wiki/Circulant_matrix); sorting only reorders t
 <figcaption>The rotations of banana in alphabetical order, numbered down the left and labelled on the right with the power of σ each one is. Sorting scrambles their order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.</figcaption>
 </figure>
 
+Each row now has two numbers. Its row number, on the left, says where sorting put it; its power
+of $\sigma$, on the right, says which rotation it is. Sorting scrambled the first but not the
+second: $\sigma^5$ and $\sigma^4$ are still one letter apart round the word, even though they
+now sit in rows 0 and 4. Recovering that relationship from the row numbers alone is what
+decoding comes down to.
+
 Read down the last column of the sorted rows, and it spells `nnbaaa`. The original `banana`,
 $\sigma^0$, is in row 3, counting from zero. The transform keeps just those two things, the last column and
 the row number, and stores nothing else. It doesn't make the block smaller; the reordered
@@ -422,7 +428,9 @@ row $I$, if it knew where each move lands. Seward records the landing rows in $T
 rows, $T = (3\;0\;4\;1\;5\;2)$: one cycle through all six, so following it from row 3 visits
 every row once before coming back, reading the whole word on the way. The $\sigma$ labels on the
 square show why: rows 3, 0, 4, 1, 5, 2 hold $\sigma^0, \sigma^5, \sigma^4, \sigma^3, \sigma^2,
-\sigma^1$, so each step of $T$ counts the power down by one. (Read down the square, those
+\sigma^1$, so each step of $T$ counts the power down by one. $T$ is the one-letter step back,
+$\sigma^{-1}$, written in row numbers instead of powers ([conjugated](https://en.wikipedia.org/wiki/Conjugacy_class)
+by the sort, in group-theory terms). (Read down the square, those
 powers, 5 3 1 0 4 2, are what string algorithms call the [suffix
 array](https://en.wikipedia.org/wiki/Suffix_array): the compressor computes it by sorting, and
 the decoder never has it.) His theory section, *"a
