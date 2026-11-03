@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=82b44a42b012">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=68e457829467">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=82b44a42b012">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=68e457829467">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=82b44a42b012">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=68e457829467">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=82b44a42b012">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=68e457829467">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=82b44a42b012">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=68e457829467">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1980,6 +1980,11 @@ matrix</a>; sorting only reorders those rows.) Then sort the six rotations alpha
 <figcaption>The rotations of banana in alphabetical order, numbered down the left and labelled on the right with the power of σ each one is. Sorting scrambles their order. The first column is shaded green and the last blue; row 3, outlined, is banana itself.</figcaption>
 </figure>
 
+<p>Each row now has two numbers. Its row number, on the left, says where sorting put it; its power
+of <span class="arithmatex">\(\sigma\)</span>, on the right, says which rotation it is. Sorting scrambled the first but not the
+second: <span class="arithmatex">\(\sigma^5\)</span> and <span class="arithmatex">\(\sigma^4\)</span> are still one letter apart round the word, even though they
+now sit in rows 0 and 4. Recovering that relationship from the row numbers alone is what
+decoding comes down to.</p>
 <p>Read down the last column of the sorted rows, and it spells <code>nnbaaa</code>. The original <code>banana</code>,
 <span class="arithmatex">\(\sigma^0\)</span>, is in row 3, counting from zero. The transform keeps just those two things, the last column and
 the row number, and stores nothing else. It doesn't make the block smaller; the reordered
@@ -2220,7 +2225,9 @@ row <span class="arithmatex">\(I\)</span>, if it knew where each move lands. Sew
 rows, <span class="arithmatex">\(T = (3\;0\;4\;1\;5\;2)\)</span>: one cycle through all six, so following it from row 3 visits
 every row once before coming back, reading the whole word on the way. The <span class="arithmatex">\(\sigma\)</span> labels on the
 square show why: rows 3, 0, 4, 1, 5, 2 hold <span class="arithmatex">\(\sigma^0, \sigma^5, \sigma^4, \sigma^3, \sigma^2,
-\sigma^1\)</span>, so each step of <span class="arithmatex">\(T\)</span> counts the power down by one. (Read down the square, those
+\sigma^1\)</span>, so each step of <span class="arithmatex">\(T\)</span> counts the power down by one. <span class="arithmatex">\(T\)</span> is the one-letter step back,
+<span class="arithmatex">\(\sigma^{-1}\)</span>, written in row numbers instead of powers (<a href="https://en.wikipedia.org/wiki/Conjugacy_class">conjugated</a>
+by the sort, in group-theory terms). (Read down the square, those
 powers, 5 3 1 0 4 2, are what string algorithms call the <a href="https://en.wikipedia.org/wiki/Suffix_array">suffix
 array</a>: the compressor computes it by sorting, and
 the decoder never has it.) His theory section, <em>"a
@@ -3224,17 +3231,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=82b44a42b012"></script>
+        <script src="../../assets/javascripts/bench.js?v=68e457829467"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=82b44a42b012"></script>
+        <script src="../../assets/javascripts/couriers.js?v=68e457829467"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=82b44a42b012"></script>
+        <script src="../../assets/javascripts/blog.js?v=68e457829467"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=82b44a42b012"></script>
+        <script src="../../assets/javascripts/frontier.js?v=68e457829467"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=82b44a42b012"></script>
+        <script src="../../assets/javascripts/katex.js?v=68e457829467"></script>
       
     
   </body>
