@@ -87,11 +87,11 @@ decoder.
 
 ## 1. From sorted rotations to the transformation vector
 
-Let's start with the word `banana` and see what the Burrows–Wheeler transform does to it.
+Let's start with the word $\mathtt{banana}$ and see what the Burrows–Wheeler transform does to it.
 
 First, write out six versions of the word, each starting at a different letter and wrapping
-round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`,
-`nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time
+round to the beginning when it reaches the end: $\mathtt{banana}$, $\mathtt{ananab}$, $\mathtt{nanaba}$, $\mathtt{anaban}$,
+$\mathtt{nabana}$, $\mathtt{abanan}$. These are the word's *cyclic rotations*: the same six letters, each time
 in a different order. (As permutations of the positions, they are the six powers of one, $\sigma = (0\;1\;2\;3\;4\;5)$
 in [cycle notation](https://en.wikipedia.org/wiki/Permutation#Cycle_notation): $\sigma^0$, the identity, is the word itself, and $\sigma^k$ starts it $k$
 letters in. Stacked in
@@ -427,12 +427,12 @@ second: $\sigma^5$ and $\sigma^4$ are still one letter apart round the word, eve
 now sit in rows 0 and 4. Recovering that relationship from the row numbers alone is what
 decoding comes down to.
 
-Read down the last column of the sorted rows, and it spells `nnbaaa`. The original `banana`,
+Read down the last column of the sorted rows, and it spells $\mathtt{nnbaaa}$. The original $\mathtt{banana}$,
 $\sigma^0$, is in row 3, counting from zero. The transform keeps just those two things, the last column and
 the row number, and stores nothing else. It doesn't make the block smaller; the reordered
 letters compress better in bzip2's later stages, for a reason that comes below.
 
-How can a decoder get `banana` back from only `nnbaaa` and 3? Each of Seward's algorithms
+How can a decoder get $\mathtt{banana}$ back from only $\mathtt{nnbaaa}$ and 3? Each of Seward's algorithms
 answers that question in a different way.
 
 Seward names the pieces with letters, following Burrows and Wheeler's 1994 report *[A
@@ -556,12 +556,12 @@ space–time tradeoff.
 - **$F$** is the letters of the word in sorted order, so the counts alone fix it. A decoder
   holding $L$ can rebuild $F$ by counting, so it is never sent.
 - **$L$** holds the letter that comes before each row's opening, with the rows sorted by what
-  follows. Letters before similar text tend to repeat (in English, `he ` is often preceded by
-  `t`), so $L$ has long runs, which bzip2's later stages compress well.
+  follows. Letters before similar text tend to repeat (in English, $\mathtt{he}$ is often preceded by
+  $\mathtt{t}$), so $L$ has long runs, which bzip2's later stages compress well.
 
-**Moving backwards through the word.** Look again at row 3, `banana`. Move its last letter to
-the front and you get `abanan`. That is another rotation of the word, so it is already in the
-square, at row 0. Do the same to `abanan` and you get `nabana`, at row 4. Each move steps one
+**Moving backwards through the word.** Look again at row 3, $\mathtt{banana}$. Move its last letter to
+the front and you get $\mathtt{abanan}$. That is another rotation of the word, so it is already in the
+square, at row 0. Do the same to $\mathtt{abanan}$ and you get $\mathtt{nabana}$, at row 4. Each move steps one
 letter backwards through the word, treating its end as joined to its beginning, as on a ring:
 
 <figure class="bf-fig">
@@ -641,11 +641,11 @@ letter backwards through the word, treating its end as joined to its beginning, 
 
 | Row | Move its last letter to the front | Lands on row |
 |---|---|---|
-| 3: `banana` | `a` + `banan` | 0: `abanan` |
-| 0: `abanan` | `n` + `abana` | 4: `nabana` |
-| 4: `nabana` | `a` + `naban` | 1: `anaban` |
+| 3: $\mathtt{banana}$ | $\mathtt{a} + \mathtt{banan}$ | 0: $\mathtt{abanan}$ |
+| 0: $\mathtt{abanan}$ | $\mathtt{n} + \mathtt{abana}$ | 4: $\mathtt{nabana}$ |
+| 4: $\mathtt{nabana}$ | $\mathtt{a} + \mathtt{naban}$ | 1: $\mathtt{anaban}$ |
 
-The letters moved, `a`, `n`, `a`, are each row's last letter, in $L$, and they spell `banana`
+The letters moved, $\mathtt{a}$, $\mathtt{n}$, $\mathtt{a}$, are each row's last letter, in $L$, and they spell $\mathtt{banana}$
 backwards from its end. So a decoder could recover the whole word from $L$ alone, starting at
 row $I$, if it knew where each move lands. Seward records the landing rows in $T$, the
 *"transformation vector"*: here $T[3] = 0$, $T[0] = 4$ and $T[4] = 1$. As a permutation of the
@@ -654,7 +654,7 @@ every row once before coming back, reading the whole word on the way.
 
 The $\sigma$ labels on the square show why: rows 3, 0, 4, 1, 5, 2 hold $\sigma^0, \sigma^5, \sigma^4, \sigma^3, \sigma^2,
 \sigma^1$, so each step of $T$ counts the power down by one. Stacked in that order,
-`banana`, `abanan`, `nabana`, …, each row is the one above shifted one letter to the right: a
+$\mathtt{banana}$, $\mathtt{abanan}$, $\mathtt{nabana}$, …, each row is the one above shifted one letter to the right: a
 circulant matrix in the strict sense. Following $T$ rebuilds it row by row, undoing the sort. $T$ is the one-letter step back,
 $\sigma^{-1}$, written in row numbers instead of powers ([conjugated](https://en.wikipedia.org/wiki/Conjugacy_class)
 by the sort, in group-theory terms). (Read down the square, those
@@ -673,11 +673,11 @@ The left-hand side is row $j$ with its last letter moved to the front; $T[j]$ is
 that lands.
 
 **Which row to land on.** The moved letter becomes the first letter of the landing row, so
-the landing row is one of those that start with it in $F$. But `banana` has three `a`s, so
-three rows start with `a`. Moving the `a` off the end of row 3 lands on row 0, not row 1 or 2;
+the landing row is one of those that start with it in $F$. But $\mathtt{banana}$ has three $\mathtt{a}$s, so
+three rows start with $\mathtt{a}$. Moving the $\mathtt{a}$ off the end of row 3 lands on row 0, not row 1 or 2;
 how could a decoder know that without the square?
 
-Up to now the three `a`s have looked identical. To tell them apart, label each by where it
+Up to now the three $\mathtt{a}$s have looked identical. To tell them apart, label each by where it
 falls in the word: $\mathtt{b}\;\mathtt{a}_1\;\mathtt{n}_1\;\mathtt{a}_2\;\mathtt{n}_2\;\mathtt{a}_3$. The labels are only for following the letters; nothing
 in bzip2 stores them. This way of making the matching visible is borrowed from Ben Langmead's
 [lecture slides on the transform](https://www.cs.jhu.edu/~langmea/resources/lecture_notes/bwt_and_fm_index.pdf#page=9).
@@ -686,7 +686,7 @@ a DNA read aligner that uses the same correspondence to search a genome rather t
 decompress it. Rows 3, 4 and 5 end in $\mathtt{a}_3$, $\mathtt{a}_2$ and $\mathtt{a}_1$, and rows 0, 1 and 2 start
 with $\mathtt{a}_3$, $\mathtt{a}_2$ and $\mathtt{a}_1$: the same occurrences, in the same order. This preserved order is what
 makes inversion possible, and the sort is why it holds. Rows 3, 4 and 5 are in that order
-because of what comes before their last `a`: `banan` < `naban` < `nanab`. Moving the `a` to
+because of what comes before their last $\mathtt{a}$: $\mathtt{banan} < \mathtt{naban} < \mathtt{nanab}$. Moving the $\mathtt{a}$ to
 the front puts those same letters right behind it, where they decide the order again:
 
 <figure class="bf-fig">
@@ -973,11 +973,11 @@ the front puts those same letters right behind it, where they decide the order a
 <figcaption>The square twice, its a’s and n’s labelled by where they fall in banana. Left, rows 3, 4 and 5 end in a; what comes before that a (tinted) puts them in order. Each moves its a to the front, carrying the tinted letters one place right, and lands on rows 0, 1 and 2 on the right, in the same order. So the a’s run a<sub>3</sub>, a<sub>2</sub>, a<sub>1</sub> down both L and F.</figcaption>
 </figure>
 
-The same goes for the two `n`s, and for every letter of any block: the first `a` in $L$ (row
-3's) lands on the first row starting with `a` (row 0), the second on the second, and so on.
+The same goes for the two $\mathtt{n}$s, and for every letter of any block: the first $\mathtt{a}$ in $L$ (row
+3's) lands on the first row starting with $\mathtt{a}$ (row 0), the second on the second, and so on.
 
 So the matching can be worked out from $L$ and a count of each letter. Because $F$ is sorted,
-its letters occur in runs, three `a`s, one `b` and two `n`s, and those counts describe it
+its letters occur in runs, three $\mathtt{a}$s, one $\mathtt{b}$ and two $\mathtt{n}$s, and those counts describe it
 completely, much like [run-length encoding](https://en.wikipedia.org/wiki/Run-length_encoding).
 Seward calls the count table $C$; once the counts are accumulated, it says where each letter's
 run begins in $F$. The decoder's whole path, from what is stored back to the word:
@@ -1131,7 +1131,7 @@ $L[I]$ is the last byte of $S$, so starting at $I$ and following $T$ gives $S$ f
 <figcaption>Across the top, the rows the walk visits and the byte it reads at each. Below, each step reads the byte in L at the current row, writes it into S from the end, and moves to the row T names. Every jump depends on the entry just read, which is why the walk is one dependent load after another.</figcaption>
 </figure>
 
-That is `banana` backwards, and it is the whole inner loop of the inverse transform: load the
+That is $\mathtt{banana}$ backwards, and it is the whole inner loop of the inverse transform: load the
 entry at $p$, emit a byte, jump where it says. Where each jump lands depends on the content of
 $S$, not on the last jump. In a million-byte block that is a million loads from places the
 cache has no reason to hold.
@@ -1206,7 +1206,7 @@ $L[0..j]$ and $L[j] = c$, then $T[j]$ must be $i$, where $i$ is the position of 
 </figure>
 
 The $c$'s in $F$ form one bucket. Turning the counts in $C$ into running totals gives where each
-bucket starts: $C[c]$ becomes the number of bytes smaller than $c$ (for `banana`, a 0, b 3,
+bucket starts: $C[c]$ becomes the number of bytes smaller than $c$ (for $\mathtt{banana}$, a 0, b 3,
 n 4). So
 
 \[
