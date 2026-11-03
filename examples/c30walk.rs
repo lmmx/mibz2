@@ -8,6 +8,12 @@
 //!     cargo run --release --example c30walk -- audit-adversarial OUT.jsonl
 //!     cargo run --release --example c30walk -- grid OUT.jsonl CORPUS.bz2 --rounds R --cpus A,B,C,D [--dry-run]
 //!     cargo run --release --example c30walk -- barrier-test [--cpus A,B,C,D] [--steps N]
+//!     cargo run --release --example c30walk -- ctor-check OUT.jsonl FILE.bz2 [FILE.bz2 ...]
+//!     cargo run --release --example c30walk -- ctor-adversarial OUT.jsonl
+//!     cargo run --release --example c30walk -- ctor-synthetic [--quick]
+//!
+//! The `ctor-` modes check the direct constructor (`c30walk/ctor.rs`, report 188) against
+//! the oracle.
 //!
 //! **The representation:**
 //! - **Records:** one 64-byte, 64-aligned record per 30 rows in F order (`Rec`): 30 `u16`
@@ -49,6 +55,10 @@ use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::Kernels;
 use std::io::Write;
 use std::sync::atomic::{AtomicUsize, Ordering};
+
+/// The direct constructor and its correctness harness (report 188)
+#[path = "c30walk/ctor.rs"]
+mod ctor;
 
 const LANES: usize = 32;
 const SEGMENTS: usize = 512;
@@ -1867,6 +1877,9 @@ fn main() {
     }
     if args[1] == "barrier-test" {
         return barrier_test(&args[2..]);
+    }
+    if let Some(m) = args[1].strip_prefix("ctor-") {
+        return ctor::main(m, &args[2..]);
     }
     let mut jl = std::fs::File::create(&args[2]).unwrap();
     match args[1].as_str() {
