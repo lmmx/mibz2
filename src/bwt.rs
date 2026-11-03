@@ -231,6 +231,15 @@ impl TVector {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+    /// The table's entries, read-only: for harnesses that check a built table. There is no
+    /// mutable access, since the walks rely on every link being below the length.
+    pub fn as_slice(&self) -> &[u32] {
+        &self.0
+    }
+    /// The table's allocated capacity, in entries
+    pub fn capacity(&self) -> usize {
+        self.0.capacity()
+    }
 }
 
 /// The T-vector of the last column `ll`, whose bytes `counts` counts.

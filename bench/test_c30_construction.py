@@ -7,6 +7,8 @@ yield PASS, FAIL or INCONCLUSIVE. The positive fixtures reach PASS, FAIL and INC
 at the frozen thresholds (b4 1.06714, e4 1.02)."""
 
 import copy
+import hashlib
+import json
 import math
 import os
 import sys
@@ -16,10 +18,12 @@ import c30_construction as t  # noqa: E402
 
 FULL = 900_000
 SIZES = [FULL] * 8 + [300, 40]
+MACHINE = {"hostname": "vm", "machine_id": "abc", "kernel": "6", "cpu_model": "x",
+           "cpus_online": "0-5", "mem_total": 1 << 34}  # fmt: skip
 
 
 def make(c_cost=1.0, c_imbalance=1.0, cold_cost=None, rounds=20, noise=0.0, dry=False,
-         skew=0.0, p_drift=0.0, clock_ns=100, p_imbalance=1.0):  # fmt: skip
+         skew=0.0, p_drift=0.0, clock_ns=100, p_imbalance=1.0, sizes=None, skew_step=None):  # fmt: skip
     """The registered schedule on 8 full blocks and 2 short ones, as `c30walk cbuild`
     writes it. P builds at 1 ns a row of CPU time; C at `c_cost` (warm) or `cold_cost`
     (cold), with its own per-round noise. In each all-full W4 step C's first worker takes
@@ -27,6 +31,7 @@ def make(c_cost=1.0, c_imbalance=1.0, cold_cost=None, rounds=20, noise=0.0, dry=
     stays c_cost. `p_imbalance` does the same to P's steps, so e4 = c_cost × c_imbalance /
     p_imbalance. `skew` delays worker k's start by skew × k / 3 of its build."""
     cold_cost = c_cost if cold_cost is None else cold_cost
+    SIZES = list(sizes or globals()["SIZES"])  # noqa: N806
     lists = t.snake(SIZES)
     cpus = [2, 3, 4, 5]
     meta = {
@@ -35,26 +40,32 @@ def make(c_cost=1.0, c_imbalance=1.0, cold_cost=None, rounds=20, noise=0.0, dry=
         "inject": None, "cpus": cpus, "regimes": ["warm", "cold"], "w4_lists": lists,
         "w4_rows": [sum(SIZES[b] for b in l) for l in lists], "block_rows": SIZES,
         "block_raw_groups": [7] * len(SIZES), "memory_estimate": 10 << 30,
+        "corpus_sha256": "c" * 64, "binary_sha256": "b" * 64, "machine": dict(MACHINE),
     }  # fmt: skip
     est = 10 << 30
+    peak = 0 if dry else est + (1 << 28)  # a capture's verified dry-run peak, above the estimate
+    req = max(est, peak)
     pre = {
-        "kind": "preflight", "estimate": est, "required": est, "margin": max(2 << 30, est // 4),
-        "mem_available": est + max(2 << 30, est // 4) + 1, "swap_used": 0, "psi_present": True,
-        "psi_some_avg10": 0.0, "psi_full_avg10": 0.0, "pswpin": 0, "pswpout": 0,
-        "injected": False, "passed": True,
+        "kind": "preflight", "estimate": est, "required": req, "margin": max(2 << 30, req // 4),
+        "verified_peak": peak, "dry_run_evidence": None, "readable": True,
+        "mem_available": req + max(2 << 30, req // 4) + 1, "swap_used": 0, "psi_status": "read",
+        "psi_present": True, "psi_some_avg10": 0.0, "psi_full_avg10": 0.0, "pswpin": 0,
+        "pswpout": 0, "injected": False, "passed": True,
     }  # fmt: skip
     post = {
-        "kind": "postflight", "estimate": est, "required": est, "vm_hwm": est // 2,
-        "swap_used": 0, "psi_present": True, "psi_some_avg10": 0.0, "psi_full_avg10": 0.0,
-        "pswpin_delta": 0, "pswpout_delta": 0,
+        "kind": "postflight", "estimate": est, "required": req, "vm_hwm": est // 2,
+        "readable": True, "swap_used": 0, "psi_status": "read", "psi_present": True,
+        "psi_some_avg10": 0.0, "psi_full_avg10": 0.0, "pswpin_delta": 0, "pswpout_delta": 0,
     }  # fmt: skip
     onepass = [{"kind": "onepass", "block": b, "rows": n, "histogram_equal": True,
                 "below_2_24": True} for b, n in enumerate(SIZES)]  # fmt: skip
     counters = [{"kind": "counters", "block": b, "rows": n, "rows_complete": n // 2,
                  "rows_fragment": n // 10, "rows_scalar": n - n // 2 - n // 10,
                  "wide_promotions": b} for b, n in enumerate(SIZES)]  # fmt: skip
-    check0 = [{"kind": "check0", "arm": "C", "block": b, "poisoned": True, "exact": True,
-               "walk": True, "restored": True} for b in range(len(SIZES))] + [
+    need = lambda n: (n + 29) // 30 + 1  # noqa: E731
+    check0 = [{"kind": "check0", "arm": "C", "block": b, "poisoned_capacity": 0 if b == 0 else 30001,
+               "needed": need(n), "poison_survived": b != 0, "exact": True,
+               "walk": True, "restored": True} for b, n in enumerate(SIZES)] + [
               {"kind": "check0", "arm": "P", "block": b, "definition": True, "walk": True,
                "restored": True} for b in range(len(SIZES))]  # fmt: skip
     calib = [
@@ -103,7 +114,10 @@ def make(c_cost=1.0, c_imbalance=1.0, cold_cost=None, rounds=20, noise=0.0, dry=
                         if full:
                             m = imb if k == 0 else (4 - imb) / 3
                         d = max(int(n * scale * m), 1)
-                        durs[k] = (d, start + int(skew * n * k / 3))
+                        sk = skew
+                        if skew_step is not None:
+                            sk = skew_step[1] if step == skew_step[0] else 0.0
+                        durs[k] = (d, start + int(sk * n * k / 3))
                     last = max(s + d for d, s in durs.values())
                     for k in active:
                         d, s = durs[k]
@@ -117,13 +131,64 @@ def make(c_cost=1.0, c_imbalance=1.0, cold_cost=None, rounds=20, noise=0.0, dry=
     recs["onepass"] = onepass
     recs["counters"] = counters
     recs["check0"] = check0
+    recs["poisoncheck"] = [{"kind": "poisoncheck", "block": b, "rows": n, "poisoned_capacity": 30001,
+                            "needed": need(n), "poison_survived": True, "exact": True}
+                           for b, n in enumerate(SIZES)]  # fmt: skip
     recs["calibration"] = calib
     recs["build"] = builds
+    if not dry:
+        recs["_evidence"] = make_evidence(recs, peak)
     return recs
 
 
-def run(recs, identity=True, other=()):
-    return t.analyse(recs, list(other), identity)
+def make_evidence(recs, peak):
+    """A completed, passing dry run's evidence directory's three files, consistent with
+    the capture `recs`, and the capture's preflight record pointing at them"""
+    meta = dict(recs["meta"][0], dry_run=True, rounds=2)
+    jl = "\n".join(json.dumps(r) for r in [
+        meta, {"kind": "postflight", "vm_hwm": peak}]).encode() + b"\n"  # fmt: skip
+    ana = json.dumps({
+        "dry_run": True, "schedule": {"S0_no_failure": True, "S1_meta": True},
+        "gates": {k: True for k in t.DRY_GATES}, "memory": {"peak_rss_vm_hwm": peak},
+    }).encode()  # fmt: skip
+    sha = lambda b: hashlib.sha256(b).hexdigest()  # noqa: E731
+    man = json.dumps({
+        "exit_status": 0, "source": {"commit": "d" * 40, "tracked_changes": []},
+        "binary": {"sha256": meta["binary_sha256"]},
+        "corpora": [{"sha256": meta["corpus_sha256"]}],
+        "files": [{"path": "c30-construction.jsonl", "sha256": sha(jl)},
+                  {"path": "c30-analysis.json", "sha256": sha(ana)}],
+    }).encode()  # fmt: skip
+    recs["preflight"][0]["dry_run_evidence"] = {
+        "dir": "dry", "peak_rss": peak, "commit": "d" * 40, "jsonl_sha256": sha(jl),
+        "analysis_sha256": sha(ana), "manifest_sha256": sha(man),
+    }  # fmt: skip
+    return {"c30-construction.jsonl": (jl, sha(jl)), "c30-analysis.json": (ana, sha(ana)),
+            "MANIFEST.json": (man, sha(man))}  # fmt: skip
+
+
+def reseal(recs):
+    """After editing the evidence files' contents in place, recompute the manifest's and
+    the preflight's checksums, as a consistent forger would"""
+    ev = recs["_evidence"]
+    sha = lambda b: hashlib.sha256(b).hexdigest()  # noqa: E731
+    jl, ana = ev["c30-construction.jsonl"][0], ev["c30-analysis.json"][0]
+    man = json.loads(ev["MANIFEST.json"][0])
+    man["files"] = [{"path": "c30-construction.jsonl", "sha256": sha(jl)},
+                    {"path": "c30-analysis.json", "sha256": sha(ana)}]  # fmt: skip
+    man = json.dumps(man).encode()
+    ev["c30-construction.jsonl"] = (jl, sha(jl))
+    ev["c30-analysis.json"] = (ana, sha(ana))
+    ev["MANIFEST.json"] = (man, sha(man))
+    recs["preflight"][0]["dry_run_evidence"].update(
+        jsonl_sha256=sha(jl), analysis_sha256=sha(ana), manifest_sha256=sha(man)
+    )
+
+
+def run(recs, identity=True, other=(), rss=(), evidence="auto"):
+    ev = recs.get("_evidence") if evidence == "auto" else evidence
+    r = {k: v for k, v in recs.items() if k != "_evidence"}
+    return t.analyse(r, list(other), identity, list(rss), ev)
 
 
 def invalid(r):
@@ -600,6 +665,303 @@ def test_unstable_control_invalid():
 def test_staggered_start_invalid():
     r = run(make(c_cost=1.0, noise=0.002, skew=0.1))
     assert invalid(r) and r["gates"]["G2_simultaneous_start"] is False
+
+
+# the repair (report 197): G2 per step
+
+
+BIG = [FULL] * 228 + [300, 40]  # 57 all-full W4 steps and one partial
+
+
+def test_big_fixture_passes_without_the_outlier():
+    r = run(make(c_cost=1.0, noise=0.002, sizes=BIG))
+    assert r["decision"] == "PASS" and r["start_skew"]["steps_checked"] == 57 * 2 * 2 * 20
+
+
+def test_single_staggered_step_invalid():
+    # one all-full step at 33.3% skew (worker 3 starts half a build late) among 56 clean
+    # ones: the row-weighted aggregate stays under 2%, the step does not
+    r = run(make(c_cost=1.0, noise=0.002, sizes=BIG, skew_step=(10, 0.5)))
+    sk = r["start_skew"]
+    assert invalid(r) and r["gates"]["G2_simultaneous_start"] is False, r["gates"]
+    assert abs(sk["per_step_max"] - 1 / 3) < 0.001
+    assert sk["row_weighted_aggregate_max"] < t.START_SKEW
+    assert all(v is True for k, v in r["gates"].items() if k != "G2_simultaneous_start")
+
+
+def test_single_staggered_step_invalid_at_a_fail_base():
+    r = run(make(c_cost=1.2, noise=0.002, sizes=BIG, skew_step=(30, 0.5)))
+    assert invalid(r) and r["gates"]["G2_simultaneous_start"] is False
+
+
+def test_step_just_under_the_threshold_passes():
+    # frac 0.02 gives a per-step skew of 0.0196
+    r = run(make(c_cost=1.0, noise=0.002, sizes=BIG, skew_step=(10, 0.02)))
+    assert r["decision"] == "PASS" and r["start_skew"]["per_step_max"] < t.START_SKEW
+
+
+# the repair: G9's verified dry-run evidence
+
+
+def _forged(change, reseal_after=True, base=None, evidence_flag=True):
+    for rc in base() if base else _bases():
+        change(rc)
+        if reseal_after:
+            reseal(rc)
+        r = run(rc)
+        assert invalid(r) and r["gates"]["G9_memory"] is False, (
+            r["gates"],
+            r["memory"]["problems"],
+        )
+        if evidence_flag:
+            assert r["memory"]["dry_run_evidence_ok"] is False
+
+
+def _edit_jsonl(rc, fn):
+    ev = rc["_evidence"]
+    lines = [json.loads(x) for x in ev["c30-construction.jsonl"][0].decode().splitlines()]
+    for x in lines:
+        fn(x)
+    ev["c30-construction.jsonl"] = ("\n".join(json.dumps(x) for x in lines).encode() + b"\n", "")
+
+
+def _edit_json(rc, f, fn):
+    ev = rc["_evidence"]
+    d = json.loads(ev[f][0])
+    fn(d)
+    ev[f] = (json.dumps(d).encode(), "")
+
+
+def test_capture_without_evidence_files_invalid():
+    for rc in _bases():
+        r = run(rc, evidence=None)
+        assert invalid(r) and r["gates"]["G9_memory"] is False
+
+
+def test_capture_without_recorded_evidence_invalid():
+    _forged(lambda rc: rc["preflight"][0].update(dry_run_evidence=None), reseal_after=False)
+
+
+def test_capture_with_a_zero_peak_invalid():
+    def f(rc):
+        p = rc["preflight"][0]
+        p.update(verified_peak=0, required=p["estimate"])
+
+    _forged(f, reseal_after=False)
+
+
+def test_fabricated_tiny_peak_invalid():
+    # a consistent forgery: the peak set to 1 byte in every file, checksums recomputed
+    def f(rc):
+        _edit_jsonl(rc, lambda x: x.update(vm_hwm=1) if x["kind"] == "postflight" else None)
+        _edit_json(rc, "c30-analysis.json", lambda d: d["memory"].update(peak_rss_vm_hwm=1))
+        p = rc["preflight"][0]
+        p.update(verified_peak=1, required=p["estimate"])
+        p["margin"] = max(2 << 30, p["required"] // 4)
+        p["dry_run_evidence"]["peak_rss"] = 1
+
+    _forged(f)
+
+
+def test_required_not_max_of_estimate_and_peak_invalid():
+    _forged(lambda rc: rc["preflight"][0].update(required=rc["preflight"][0]["estimate"]),
+            reseal_after=False, evidence_flag=False)  # fmt: skip
+
+
+def test_peak_disagreeing_with_the_records_invalid():
+    _forged(lambda rc: _edit_json(rc, "c30-analysis.json",
+                                  lambda d: d["memory"].update(peak_rss_vm_hwm=12345678901)))  # fmt: skip
+
+
+def test_stale_binary_invalid():
+    def f(rc):
+        _edit_jsonl(rc, lambda x: x.update(binary_sha256="e" * 64) if x["kind"] == "meta" else None)
+        _edit_json(rc, "MANIFEST.json", lambda d: d["binary"].update(sha256="e" * 64))
+
+    _forged(f)
+
+
+def test_other_corpus_invalid():
+    def f(rc):
+        _edit_jsonl(rc, lambda x: x.update(corpus_sha256="f" * 64) if x["kind"] == "meta" else None)
+        _edit_json(rc, "MANIFEST.json", lambda d: d["corpora"][0].update(sha256="f" * 64))
+
+    _forged(f)
+
+
+def test_other_machine_invalid():
+    _forged(lambda rc: _edit_jsonl(
+        rc, lambda x: x["machine"].update(hostname="i9") if x["kind"] == "meta" else None))  # fmt: skip
+
+
+def test_other_cpus_invalid():
+    _forged(lambda rc: _edit_jsonl(
+        rc, lambda x: x.update(cpus=[0, 1, 2, 3]) if x["kind"] == "meta" else None))  # fmt: skip
+
+
+def test_injected_dry_run_invalid():
+    _forged(lambda rc: _edit_jsonl(
+        rc, lambda x: x.update(inject="pin:w4:1") if x["kind"] == "meta" else None))  # fmt: skip
+
+
+def test_dry_run_with_a_failed_gate_invalid():
+    _forged(lambda rc: _edit_json(rc, "c30-analysis.json",
+                                  lambda d: d["gates"].update(G7_round_minus_one=False)))  # fmt: skip
+
+
+def test_dry_run_with_a_failed_schedule_invalid():
+    _forged(lambda rc: _edit_json(rc, "c30-analysis.json",
+                                  lambda d: d["schedule"].update(S3_record_set=False)))  # fmt: skip
+
+
+def test_dry_run_with_a_failure_record_invalid():
+    def f(rc):
+        ev = rc["_evidence"]
+        jl = ev["c30-construction.jsonl"][0] + json.dumps({"kind": "failure"}).encode() + b"\n"
+        ev["c30-construction.jsonl"] = (jl, "")
+
+    _forged(f)
+
+
+def test_dry_run_exit_nonzero_invalid():
+    _forged(lambda rc: _edit_json(rc, "MANIFEST.json", lambda d: d.update(exit_status=3)))
+
+
+def test_dry_run_with_tracked_changes_invalid():
+    _forged(lambda rc: _edit_json(
+        rc, "MANIFEST.json", lambda d: d["source"].update(tracked_changes=["M src/bwt.rs"])))  # fmt: skip
+
+
+def test_evidence_edited_after_verification_invalid():
+    # the records changed without the checksums the collector recorded
+    _forged(lambda rc: _edit_jsonl(
+        rc, lambda x: x.update(vm_hwm=x["vm_hwm"] + 1) if x["kind"] == "postflight" else None),
+        reseal_after=False)  # fmt: skip
+
+
+def test_dry_run_carrying_evidence_invalid():
+    rc = make(rounds=2, dry=True)
+    rc["preflight"][0]["dry_run_evidence"] = {"dir": "x"}
+    r = run(rc)
+    assert r["gates"]["G9_memory"] is False
+
+
+def test_unreadable_memory_sources_invalid():
+    for change, where in (
+        (lambda p: p.update(psi_status="unreadable", psi_some_avg10=None), "preflight"),
+        (lambda p: p.update(psi_status="unreadable"), "postflight"),
+        (lambda p: p.update(readable=False), "preflight"),
+        (lambda p: p.update(readable=False), "postflight"),
+        (lambda p: p.update(pswpout_delta=None), "postflight"),
+        (lambda p: p.update(swap_used=None), "preflight"),
+    ):
+        _memory(change, where)
+
+
+def test_absent_psi_is_accepted_and_recorded():
+    for rc in _bases()[:1]:
+        for w in ("preflight", "postflight"):
+            rc[w][0].update(psi_status="absent", psi_present=False, psi_some_avg10=None,
+                            psi_full_avg10=None)  # fmt: skip
+        assert run(rc)["decision"] == "PASS"
+
+
+# the repair: G7's recorded poison coverage
+
+
+def test_poison_claimed_without_capacity_invalid():
+    for rc in _bases():
+        c = next(o for o in rc["check0"] if o["arm"] == "C" and o["block"] == 0)
+        c["poison_survived"] = True  # with poisoned_capacity 0
+        r = run(rc)
+        assert invalid(r) and r["gates"]["G7_round_minus_one"] is False
+
+
+def test_old_unqualified_poison_flag_invalid():
+    for rc in _bases():
+        for o in rc["check0"]:
+            if o["arm"] == "C":
+                for k in ("poisoned_capacity", "needed", "poison_survived"):
+                    del o[k]
+                o["poisoned"] = True
+        r = run(rc)
+        assert invalid(r) and r["gates"]["G7_round_minus_one"] is False
+
+
+def test_poison_pass_not_surviving_invalid():
+    for rc in _bases():
+        rc["poisoncheck"][4]["poison_survived"] = False
+        r = run(rc)
+        assert invalid(r) and r["gates"]["G7_round_minus_one"] is False
+
+
+def test_poison_pass_missing_rejected():
+    for rc in _bases():
+        rc["poisoncheck"] = rc["poisoncheck"][1:]
+        assert before_figures(run(rc))
+
+
+def test_poison_coverage_reported():
+    r = run(base_pass())
+    pc = r["poison_coverage"]
+    assert pc["round_minus_one_blocks_poison_survived"] == len(SIZES) - 1
+    assert pc["poison_pass_blocks_survived"] == len(SIZES)
+
+
+# the repair: the peak-RSS records
+
+
+def rss_records(meta):
+    out = []
+    for k in range(3):
+        for a in ("P", "C"):
+            out.append({"kind": "rss", "arm": a, "corpus": meta["corpus"],
+                        "corpus_sha256": meta["corpus_sha256"], "blocks": meta["blocks"],
+                        "cpus": meta["cpus"], "pid": 100 + 2 * k + (a == "C"),
+                        "started_unix_ns": 10**18 + k, "baseline_rss": 1 << 20,
+                        "hwm_after_load": 1 << 21, "hwm_reset": True, "hwm_after_reset": 1 << 20,
+                        "hwm_after_pass": 1 << 22, "growth_over_baseline": 3 << 20,
+                        "arena_capacity_bytes": 1 << 21})  # fmt: skip
+    return out
+
+
+def test_rss_records_summarised_when_valid():
+    rc = base_pass()
+    r = run(rc, rss=rss_records(rc["meta"][0]))
+    assert r["peak_rss_processes"]["P"]["n"] == 3 and r["decision"] == "PASS"
+
+
+def test_rss_records_invalid_are_unavailable_and_decide_nothing():
+    for change in (
+        lambda v: v.pop(),
+        lambda v: v[1].update(pid=v[0]["pid"], started_unix_ns=v[0]["started_unix_ns"]),
+        lambda v: v[2].update(hwm_reset=False),
+        lambda v: v[3].update(corpus="other.bz2"),
+        lambda v: v[4].update(cpus=[0, 1, 2, 3]),
+        lambda v: v[5].update(growth_over_baseline=-1),
+        lambda v: v[0].update(arm="C"),
+        lambda v: v[1].update(hwm_after_pass=None),
+    ):
+        rc = base_pass()
+        v = rss_records(rc["meta"][0])
+        change(v)
+        r = run(rc, rss=v)
+        assert r["peak_rss_processes"].get("unavailable") is True, change
+        assert r["decision"] == "PASS"
+
+
+def test_no_rss_records_are_unavailable():
+    assert run(base_pass())["peak_rss_processes"]["unavailable"] is True
+
+
+# the repair: A7, the mixed step reported apart
+
+
+def test_mixed_step_reported_separately():
+    r = run(make(c_cost=1.0, noise=0.002, sizes=[FULL] * 9 + [300, 40, 20]))
+    econ = r["block_economics"]
+    assert econ["mixed_steps"]["steps"] and "e4" in econ["mixed_steps"]
+    assert r["decision"] == "PASS"
 
 
 if __name__ == "__main__":

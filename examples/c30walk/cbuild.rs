@@ -41,17 +41,24 @@
 //! - **G6, every build:** C returned true and its arrays equal the oracle image byte for
 //!   byte; P's table equals its reference.
 //! - **G7, round −1's W1 warm pass:**
-//!   - C's arena is poisoned before its build;
+//!   - C's record arena's spare capacity is poisoned before its build, and the record says
+//!     how much was poisoned and whether the poisoned allocation survived the build (it
+//!     doesn't when the constructor had to grow it); a separate untimed pass before round −1
+//!     builds every block into a preallocated, poisoned arena, for universal coverage;
 //!   - P's table is checked against the counting-scatter definition, then becomes the
 //!     block's reference;
 //!   - both arms' tables are walked by their unchanged walkers against production's output,
 //!     and checked again after the walk.
 //!
-//! **Reading production's table:** production's `TVector` is a newtype over `Vec<u32>`
-//! with no public accessor, and `src/` may not change. The harness reads it through a
-//! layout reinterpretation (`tv`), guarded at compile time (size and alignment) and at
-//! every read (the length). That relies on the newtype's layout, which Rust doesn't
-//! guarantee; the write-up records it. It is used only outside every timed window.
+//! **Reading production's table:** through `TVector::as_slice` and `TVector::capacity`,
+//! the two read-only accessors report 195 authorises in `src/bwt.rs`. Nothing writes to
+//! production's table outside its builder: an injected P fault corrupts a copy of the
+//! expected values instead.
+//!
+//! **A capture consumes a dry run's evidence** (`--dry-run-evidence DIR`, report 197): the
+//! directory of a completed dry run, which the collector verifies before anything else
+//! (`verify_evidence`). The capture's memory requirement is max(estimate, the verified
+//! peak), plus the registered margin.
 
 use super::ctor::{Ctor, Stats};
 use super::{
@@ -71,34 +78,6 @@ const NO_SUCH_CPU: usize = 1023;
 const GIB: u64 = 1 << 30;
 /// What the estimate adds for the binary, stacks, threads and allocator slack
 const FIXED_OVERHEAD: u64 = 64 << 20;
-
-const _: () = {
-    assert!(std::mem::size_of::<TVector>() == std::mem::size_of::<Vec<u32>>());
-    assert!(std::mem::align_of::<TVector>() == std::mem::align_of::<Vec<u32>>());
-};
-
-/// Production's table as a slice (harness only, untimed; see the module comment)
-fn tv(t: &TVector) -> &Vec<u32> {
-    // SAFETY: TVector is `struct TVector(pub(crate) Vec<u32>)`, a single-field newtype of the
-    // same size and alignment (checked above); its length is checked against the public
-    // `len()` on every read
-    let v = unsafe { &*(t as *const TVector as *const Vec<u32>) };
-    assert_eq!(
-        v.len(),
-        t.len(),
-        "the T-vector reinterpretation disagrees with len()"
-    );
-    v
-}
-
-/// The same, mutable: used only by a dry run's injected fault
-fn tv_mut(t: &mut TVector) -> &mut Vec<u32> {
-    let n = t.len();
-    // SAFETY: as `tv`
-    let v = unsafe { &mut *(t as *mut TVector as *mut Vec<u32>) };
-    assert_eq!(v.len(), n);
-    v
-}
 
 /// The P arm's timed call: production's public builder
 #[inline(never)]
@@ -253,62 +232,103 @@ fn proc_kv(path: &str, key: &str) -> Option<u64> {
     None
 }
 
-/// /proc/pressure/memory's (some avg10, full avg10), if the file exists
-fn psi() -> Option<(f64, f64)> {
-    let s = std::fs::read_to_string("/proc/pressure/memory").ok()?;
+/// /proc/pressure/memory: absent (no file), read, or unreadable (the file exists but can't
+/// be read or parsed). Unreadable never counts as no pressure.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Psi {
+    Absent,
+    Read(f64, f64),
+    Unreadable,
+}
+
+fn psi() -> Psi {
+    let path = std::path::Path::new("/proc/pressure/memory");
+    if !path.exists() {
+        return Psi::Absent;
+    }
+    let Ok(s) = std::fs::read_to_string(path) else {
+        return Psi::Unreadable;
+    };
     let get = |kind: &str| -> Option<f64> {
         let l = s.lines().find(|l| l.starts_with(kind))?;
         let f = l.split_whitespace().find(|f| f.starts_with("avg10="))?;
         f["avg10=".len()..].parse().ok()
     };
-    Some((get("some")?, get("full")?))
+    match (get("some"), get("full")) {
+        (Some(a), Some(b)) => Psi::Read(a, b),
+        _ => Psi::Unreadable,
+    }
 }
 
-/// The memory state, as a JSON fragment, and whether it shows swap in use or pressure
+/// The memory state. Every source that Linux always has (/proc/meminfo's three fields,
+/// /proc/vmstat's pswpin and pswpout) is required: a missing or unparseable one is
+/// recorded as null and makes the state unreadable, never zero.
 struct MemState {
-    available: u64,
-    swap_total: u64,
-    swap_free: u64,
-    psi: Option<(f64, f64)>,
-    pswpin: u64,
-    pswpout: u64,
-    rss: u64,
-    hwm: u64,
+    available: Option<u64>,
+    swap_total: Option<u64>,
+    swap_free: Option<u64>,
+    psi: Psi,
+    pswpin: Option<u64>,
+    pswpout: Option<u64>,
+    rss: Option<u64>,
+    hwm: Option<u64>,
+}
+
+fn opt(v: Option<u64>) -> String {
+    v.map_or("null".into(), |x| x.to_string())
 }
 
 impl MemState {
     fn read() -> MemState {
         MemState {
-            available: proc_kv("/proc/meminfo", "MemAvailable").unwrap_or(0),
-            swap_total: proc_kv("/proc/meminfo", "SwapTotal").unwrap_or(0),
-            swap_free: proc_kv("/proc/meminfo", "SwapFree").unwrap_or(0),
+            available: proc_kv("/proc/meminfo", "MemAvailable"),
+            swap_total: proc_kv("/proc/meminfo", "SwapTotal"),
+            swap_free: proc_kv("/proc/meminfo", "SwapFree"),
             psi: psi(),
-            pswpin: proc_kv("/proc/vmstat", "pswpin").unwrap_or(0),
-            pswpout: proc_kv("/proc/vmstat", "pswpout").unwrap_or(0),
-            rss: proc_kv("/proc/self/status", "VmRSS").unwrap_or(0),
-            hwm: proc_kv("/proc/self/status", "VmHWM").unwrap_or(0),
+            pswpin: proc_kv("/proc/vmstat", "pswpin"),
+            pswpout: proc_kv("/proc/vmstat", "pswpout"),
+            rss: proc_kv("/proc/self/status", "VmRSS"),
+            hwm: proc_kv("/proc/self/status", "VmHWM"),
         }
     }
-    fn swap_used(&self) -> u64 {
-        self.swap_total.saturating_sub(self.swap_free)
+    /// Whether every required source was read
+    fn readable(&self) -> bool {
+        self.available.is_some()
+            && self.swap_total.is_some()
+            && self.swap_free.is_some()
+            && self.pswpin.is_some()
+            && self.pswpout.is_some()
+            && self.psi != Psi::Unreadable
     }
+    fn swap_used(&self) -> Option<u64> {
+        Some(self.swap_total?.saturating_sub(self.swap_free?))
+    }
+    /// No pressure: PSI read as zero, or absent (recorded as such)
     fn pressure_free(&self) -> bool {
-        self.psi.is_none_or(|(s, f)| s == 0.0 && f == 0.0)
+        match self.psi {
+            Psi::Absent => true,
+            Psi::Read(a, b) => a == 0.0 && b == 0.0,
+            Psi::Unreadable => false,
+        }
     }
     fn json(&self) -> String {
+        let (status, some, full) = match self.psi {
+            Psi::Absent => ("absent", "null".to_string(), "null".to_string()),
+            Psi::Read(a, b) => ("read", a.to_string(), b.to_string()),
+            Psi::Unreadable => ("unreadable", "null".to_string(), "null".to_string()),
+        };
         format!(
-            "\"mem_available\":{},\"swap_total\":{},\"swap_free\":{},\"swap_used\":{},\"psi_present\":{},\"psi_some_avg10\":{},\"psi_full_avg10\":{},\"pswpin\":{},\"pswpout\":{},\"vm_rss\":{},\"vm_hwm\":{}",
-            self.available,
-            self.swap_total,
-            self.swap_free,
-            self.swap_used(),
-            self.psi.is_some(),
-            self.psi.map_or("null".into(), |p| p.0.to_string()),
-            self.psi.map_or("null".into(), |p| p.1.to_string()),
-            self.pswpin,
-            self.pswpout,
-            self.rss,
-            self.hwm
+            "\"readable\":{},\"mem_available\":{},\"swap_total\":{},\"swap_free\":{},\"swap_used\":{},\"psi_status\":\"{status}\",\"psi_present\":{},\"psi_some_avg10\":{some},\"psi_full_avg10\":{full},\"pswpin\":{},\"pswpout\":{},\"vm_rss\":{},\"vm_hwm\":{}",
+            self.readable(),
+            opt(self.available),
+            opt(self.swap_total),
+            opt(self.swap_free),
+            opt(self.swap_used()),
+            self.psi != Psi::Absent,
+            opt(self.pswpin),
+            opt(self.pswpout),
+            opt(self.rss),
+            opt(self.hwm)
         )
     }
 }
@@ -399,23 +419,29 @@ fn bytes<T>(v: &[T]) -> &[u8] {
     unsafe { std::slice::from_raw_parts(v.as_ptr() as *const u8, std::mem::size_of_val(v)) }
 }
 
-fn usable<T>(v: &Vec<T>) -> u64 {
+/// The allocator's usable size behind an allocation of `cap` elements at `p` (0 when
+/// there is none, or off glibc)
+fn usable_at<T>(p: *const T, cap: usize) -> u64 {
     #[cfg(all(target_os = "linux", target_env = "gnu"))]
     {
         extern "C" {
             fn malloc_usable_size(p: *mut std::ffi::c_void) -> usize;
         }
-        if v.capacity() == 0 {
+        if cap == 0 || std::mem::size_of::<T>() == 0 {
             return 0;
         }
-        // SAFETY: a live allocation of the system allocator
-        unsafe { malloc_usable_size(v.as_ptr() as *mut std::ffi::c_void) as u64 }
+        // SAFETY: the pointer of a live, nonempty allocation of the system allocator
+        unsafe { malloc_usable_size(p as *mut std::ffi::c_void) as u64 }
     }
     #[cfg(not(all(target_os = "linux", target_env = "gnu")))]
     {
-        let _ = v;
+        let _ = (p, cap);
         0
     }
+}
+
+fn usable<T>(v: &Vec<T>) -> u64 {
+    usable_at(v.as_ptr(), v.capacity())
 }
 
 /// Poison a record arena's spare capacity (G7a)
@@ -471,13 +497,15 @@ struct Arenas {
 }
 
 impl Arenas {
-    /// (capacity bytes, allocator usable bytes) of the arm's table
+    /// (capacity bytes, allocator usable bytes) of the arm's table. P: the T-vector. C:
+    /// `rec` + `raw` only; the constructor's bitmap is private to it and is not observed
+    /// (its requested size is recorded separately).
     fn caps(&self, arm: Arm) -> (u64, u64) {
         match arm {
-            Arm::P => {
-                let v = tv(&self.tt);
-                (4 * v.capacity() as u64, usable(v))
-            }
+            Arm::P => (
+                4 * self.tt.capacity() as u64,
+                usable_at(self.tt.as_slice().as_ptr(), self.tt.capacity()),
+            ),
             Arm::C => (
                 64 * self.rec.capacity() as u64 + 128 * self.raw.capacity() as u64,
                 usable(&self.rec) + usable(&self.raw),
@@ -495,6 +523,9 @@ struct Worker {
     walk: C30,
     seg: SegScratch,
     out: Vec<u8>,
+    /// round −1's G7 poison: the records of capacity poisoned, and the allocation's address
+    poison_cap: usize,
+    poison_ptr: usize,
 }
 
 /// A fault injected on purpose (dry runs only)
@@ -585,6 +616,8 @@ impl Worker {
             self.cold = Arenas::default();
         } else if s.round == -1 && !s.w4 && s.arm == Arm::C {
             poison(&mut self.warm.rec);
+            self.poison_cap = self.warm.rec.capacity();
+            self.poison_ptr = self.warm.rec.as_ptr() as usize;
         }
     }
 
@@ -635,6 +668,10 @@ impl Worker {
             s.worker,
             s.step
         );
+        // an injected fault (dry runs only): C's own table is corrupted (the harness owns
+        // it); for P, a copy of the expected values is, since production's table has no
+        // mutable access
+        let mut corrupt_expected = false;
         if let Inject::Output { w4, arm, worker } = e.inject {
             if s.round == -1
                 && s.regime == Regime::Warm
@@ -645,7 +682,7 @@ impl Worker {
             {
                 match arm {
                     Arm::C => self.warm.rec[0].f[0] ^= 1,
-                    Arm::P => tv_mut(&mut self.warm.tt)[0] ^= 1 << 8,
+                    Arm::P => corrupt_expected = true,
                 }
             }
         }
@@ -688,15 +725,22 @@ impl Worker {
                             format!("{what}: walker output {walk_ok}, restored {restored}"),
                         );
                     }
+                    // what the poison actually covered: the capacity poisoned, and whether that
+                    // allocation survived the build (a growing constructor replaces it)
+                    let survived = self.poison_cap > 0
+                        && a.rec.as_ptr() as usize == self.poison_ptr
+                        && self.poison_cap >= a.rec.len();
                     e.check0.lock().unwrap().push(format!(
-                        "{{\"kind\":\"check0\",\"arm\":\"C\",\"block\":{b},\"poisoned\":true,\"exact\":true,\"walk\":true,\"restored\":true}}"
+                        "{{\"kind\":\"check0\",\"arm\":\"C\",\"block\":{b},\"poisoned_capacity\":{},\"needed\":{},\"poison_survived\":{survived},\"exact\":true,\"walk\":true,\"restored\":true}}",
+                        self.poison_cap,
+                        a.rec.len()
                     ));
                 }
             }
             Arm::P => {
                 if g7 {
                     // the counting-scatter definition, independently of production's code
-                    let t = tv(&a.tt);
+                    let t = a.tt.as_slice();
                     let ll = &e.ll[b];
                     let mut ftab = [0usize; 256];
                     let mut cum = 0;
@@ -708,12 +752,16 @@ impl Worker {
                     for (i, &c) in ll.iter().enumerate() {
                         let sl = ftab[c as usize];
                         ftab[c as usize] += 1;
-                        def &= t.get(sl) == Some(&(ll[sl] as u32 | (i as u32) << 8));
+                        let mut expected = ll[sl] as u32 | (i as u32) << 8;
+                        if corrupt_expected && i == 0 {
+                            expected ^= 1 << 8;
+                        }
+                        def &= t.get(sl) == Some(&expected);
                     }
-                    let reference = t.clone();
+                    let reference = t.to_vec();
                     walk_segments(&mut a.tt, e.op[b], &mut self.out, &mut self.seg);
                     let walk_ok = self.out == e.want[b];
-                    let restored = *tv(&a.tt) == reference;
+                    let restored = a.tt.as_slice() == reference.as_slice();
                     if !(def && walk_ok && restored) {
                         fail(
                             "output",
@@ -726,7 +774,14 @@ impl Worker {
                     ));
                 } else {
                     let refs = e.refs.lock().unwrap();
-                    if refs[b].len() != a.tt.len() || *tv(&a.tt) != refs[b] {
+                    let differs = if corrupt_expected {
+                        let mut expected = refs[b].clone();
+                        expected[0] ^= 1 << 8;
+                        a.tt.as_slice() != expected.as_slice()
+                    } else {
+                        a.tt.as_slice() != refs[b].as_slice()
+                    };
+                    if refs[b].len() != a.tt.len() || differs {
                         fail(
                             "output",
                             format!("{what}: production's table differs from its reference"),
@@ -754,7 +809,7 @@ fn record(
     caps: (u64, u64),
 ) -> String {
     format!(
-        "{{\"kind\":\"build\",\"round\":{},\"regime\":\"{}\",\"mode\":\"{}\",\"arm\":\"{}\",\"worker\":{},\"step\":{},\"block\":{},\"rows\":{rows},\"cpu_before\":{},\"cpu_after\":{},\"prep_start\":{},\"prep_end\":{},\"start\":{},\"end\":{},\"cpu_start\":{},\"cpu_end\":{},\"minflt\":{},\"majflt\":{},\"check_start\":{},\"check_end\":{},\"cap_bytes\":{},\"usable_bytes\":{},\"exact\":true}}",
+        "{{\"kind\":\"build\",\"round\":{},\"regime\":\"{}\",\"mode\":\"{}\",\"arm\":\"{}\",\"worker\":{},\"step\":{},\"block\":{},\"rows\":{rows},\"cpu_before\":{},\"cpu_after\":{},\"prep_start\":{},\"prep_end\":{},\"start\":{},\"end\":{},\"cpu_start\":{},\"cpu_end\":{},\"minflt\":{},\"majflt\":{},\"check_start\":{},\"check_end\":{},\"cap_bytes\":{},\"usable_bytes\":{},\"cap_scope\":\"{}\",\"bitmap_req_bytes\":{},\"exact\":true}}",
         s.round,
         regime_name(s.regime),
         if s.w4 { "w4" } else { "w1" },
@@ -775,7 +830,9 @@ fn record(
         check.0,
         check.1,
         caps.0,
-        caps.1
+        caps.1,
+        if s.arm == Arm::P { "tt" } else { "rec+raw" },
+        if s.arm == Arm::P { 0 } else { 8 * rows.div_ceil(ROWS).div_ceil(64) }
     )
 }
 
@@ -941,12 +998,510 @@ fn arg_cpus(s: &str) -> Vec<usize> {
     s.split(',').map(|c| c.parse().unwrap()).collect()
 }
 
+// ---------------------------------------------------------------------------------------
+// Identity: SHA-256, the machine, and a minimal JSON reader for the dry run's evidence
+// ---------------------------------------------------------------------------------------
+
+/// SHA-256 (FIPS 180-4), for the corpus, this binary and the evidence files
+fn sha256(data: &[u8]) -> String {
+    const K: [u32; 64] = [
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4,
+        0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe,
+        0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f,
+        0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+        0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc,
+        0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
+        0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116,
+        0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7,
+        0xc67178f2,
+    ];
+    let mut h: [u32; 8] = [
+        0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
+        0x5be0cd19,
+    ];
+    let mut msg = data.to_vec();
+    let bits = (data.len() as u64).wrapping_mul(8);
+    msg.push(0x80);
+    while msg.len() % 64 != 56 {
+        msg.push(0);
+    }
+    msg.extend_from_slice(&bits.to_be_bytes());
+    for chunk in msg.chunks(64) {
+        let mut w = [0u32; 64];
+        for (t, word) in chunk.chunks(4).enumerate() {
+            w[t] = u32::from_be_bytes(word.try_into().unwrap());
+        }
+        for t in 16..64 {
+            let s0 = w[t - 15].rotate_right(7) ^ w[t - 15].rotate_right(18) ^ (w[t - 15] >> 3);
+            let s1 = w[t - 2].rotate_right(17) ^ w[t - 2].rotate_right(19) ^ (w[t - 2] >> 10);
+            w[t] = w[t - 16]
+                .wrapping_add(s0)
+                .wrapping_add(w[t - 7])
+                .wrapping_add(s1);
+        }
+        let mut v = h;
+        for t in 0..64 {
+            let s1 = v[4].rotate_right(6) ^ v[4].rotate_right(11) ^ v[4].rotate_right(25);
+            let ch = (v[4] & v[5]) ^ (!v[4] & v[6]);
+            let t1 = v[7]
+                .wrapping_add(s1)
+                .wrapping_add(ch)
+                .wrapping_add(K[t])
+                .wrapping_add(w[t]);
+            let s0 = v[0].rotate_right(2) ^ v[0].rotate_right(13) ^ v[0].rotate_right(22);
+            let maj = (v[0] & v[1]) ^ (v[0] & v[2]) ^ (v[1] & v[2]);
+            let t2 = s0.wrapping_add(maj);
+            v = [
+                t1.wrapping_add(t2),
+                v[0],
+                v[1],
+                v[2],
+                v[3].wrapping_add(t1),
+                v[4],
+                v[5],
+                v[6],
+            ];
+        }
+        for (x, y) in h.iter_mut().zip(v) {
+            *x = x.wrapping_add(y);
+        }
+    }
+    h.iter().map(|x| format!("{x:08x}")).collect()
+}
+
+fn sha256_file(path: &str) -> Option<String> {
+    std::fs::read(path).ok().map(|d| sha256(&d))
+}
+
+fn read_trim(path: &str) -> String {
+    std::fs::read_to_string(path).map_or_else(|_| "unreadable".into(), |s| s.trim().to_string())
+}
+
+/// The machine's identity, as a canonical JSON object: hostname, machine-id, kernel, the
+/// CPU model, the online CPUs and the installed memory. A capture must match its dry run's.
+fn machine() -> String {
+    let model = std::fs::read_to_string("/proc/cpuinfo")
+        .ok()
+        .and_then(|s| {
+            s.lines()
+                .find(|l| l.starts_with("model name"))
+                .and_then(|l| l.split(':').nth(1))
+                .map(|m| m.trim().to_string())
+        })
+        .unwrap_or_else(|| "unreadable".into());
+    format!(
+        "{{\"hostname\":{},\"machine_id\":{},\"kernel\":{},\"cpu_model\":{},\"cpus_online\":{},\"mem_total\":{}}}",
+        json_str(&read_trim("/proc/sys/kernel/hostname")),
+        json_str(&read_trim("/etc/machine-id")),
+        json_str(&read_trim("/proc/sys/kernel/osrelease")),
+        json_str(&model),
+        json_str(&read_trim("/sys/devices/system/cpu/online")),
+        opt(proc_kv("/proc/meminfo", "MemTotal"))
+    )
+}
+
+/// A JSON value, as the evidence files hold them
+#[derive(Clone, Debug, PartialEq)]
+enum J {
+    Null,
+    Bool(bool),
+    Num(f64, String),
+    Str(String),
+    Arr(Vec<J>),
+    Obj(Vec<(String, J)>),
+}
+
+impl J {
+    fn get(&self, k: &str) -> Option<&J> {
+        match self {
+            J::Obj(v) => v.iter().find(|(x, _)| x == k).map(|(_, y)| y),
+            _ => None,
+        }
+    }
+    fn u64(&self) -> Option<u64> {
+        match self {
+            J::Num(_, raw) => raw.parse().ok(),
+            _ => None,
+        }
+    }
+    fn str(&self) -> Option<&str> {
+        match self {
+            J::Str(s) => Some(s),
+            _ => None,
+        }
+    }
+    /// The canonical text of a value (objects in their order), for equality across files
+    fn canon(&self) -> String {
+        match self {
+            J::Null => "null".into(),
+            J::Bool(b) => b.to_string(),
+            J::Num(_, raw) => raw.clone(),
+            J::Str(s) => json_str(s),
+            J::Arr(v) => format!("[{}]", v.iter().map(J::canon).collect::<Vec<_>>().join(",")),
+            J::Obj(v) => format!(
+                "{{{}}}",
+                v.iter()
+                    .map(|(k, x)| format!("{}:{}", json_str(k), x.canon()))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+        }
+    }
+}
+
+/// A strict JSON parser (RFC 8259 values; no trailing input)
+fn parse_json(s: &str) -> Result<J, String> {
+    fn ws(b: &[u8], i: &mut usize) {
+        while *i < b.len() && matches!(b[*i], b' ' | b'\t' | b'\n' | b'\r') {
+            *i += 1;
+        }
+    }
+    fn val(b: &[u8], i: &mut usize, depth: usize) -> Result<J, String> {
+        if depth > 64 {
+            return Err("too deep".into());
+        }
+        ws(b, i);
+        match b.get(*i) {
+            Some(b'{') => {
+                *i += 1;
+                let mut v = Vec::new();
+                ws(b, i);
+                if b.get(*i) == Some(&b'}') {
+                    *i += 1;
+                    return Ok(J::Obj(v));
+                }
+                loop {
+                    ws(b, i);
+                    let J::Str(k) = string(b, i)? else {
+                        return Err("key".into());
+                    };
+                    ws(b, i);
+                    if b.get(*i) != Some(&b':') {
+                        return Err("colon".into());
+                    }
+                    *i += 1;
+                    v.push((k, val(b, i, depth + 1)?));
+                    ws(b, i);
+                    match b.get(*i) {
+                        Some(b',') => *i += 1,
+                        Some(b'}') => {
+                            *i += 1;
+                            return Ok(J::Obj(v));
+                        }
+                        _ => return Err("object".into()),
+                    }
+                }
+            }
+            Some(b'[') => {
+                *i += 1;
+                let mut v = Vec::new();
+                ws(b, i);
+                if b.get(*i) == Some(&b']') {
+                    *i += 1;
+                    return Ok(J::Arr(v));
+                }
+                loop {
+                    v.push(val(b, i, depth + 1)?);
+                    ws(b, i);
+                    match b.get(*i) {
+                        Some(b',') => *i += 1,
+                        Some(b']') => {
+                            *i += 1;
+                            return Ok(J::Arr(v));
+                        }
+                        _ => return Err("array".into()),
+                    }
+                }
+            }
+            Some(b'"') => string(b, i),
+            Some(b't') if b[*i..].starts_with(b"true") => {
+                *i += 4;
+                Ok(J::Bool(true))
+            }
+            Some(b'f') if b[*i..].starts_with(b"false") => {
+                *i += 5;
+                Ok(J::Bool(false))
+            }
+            Some(b'n') if b[*i..].starts_with(b"null") => {
+                *i += 4;
+                Ok(J::Null)
+            }
+            Some(c) if *c == b'-' || c.is_ascii_digit() => {
+                let st = *i;
+                *i += 1;
+                while *i < b.len()
+                    && matches!(b[*i], b'0'..=b'9' | b'.' | b'e' | b'E' | b'+' | b'-')
+                {
+                    *i += 1;
+                }
+                let raw = std::str::from_utf8(&b[st..*i]).map_err(|_| "number")?;
+                let f: f64 = raw.parse().map_err(|_| format!("number {raw}"))?;
+                Ok(J::Num(f, raw.to_string()))
+            }
+            _ => Err(format!("unexpected input at {}", *i)),
+        }
+    }
+    fn string(b: &[u8], i: &mut usize) -> Result<J, String> {
+        if b.get(*i) != Some(&b'"') {
+            return Err("string".into());
+        }
+        *i += 1;
+        let mut out = String::new();
+        loop {
+            let c = *b.get(*i).ok_or("unterminated string")?;
+            *i += 1;
+            match c {
+                b'"' => return Ok(J::Str(out)),
+                b'\\' => {
+                    let e = *b.get(*i).ok_or("escape")?;
+                    *i += 1;
+                    match e {
+                        b'"' => out.push('"'),
+                        b'\\' => out.push('\\'),
+                        b'/' => out.push('/'),
+                        b'n' => out.push('\n'),
+                        b't' => out.push('\t'),
+                        b'r' => out.push('\r'),
+                        b'b' => out.push('\u{8}'),
+                        b'f' => out.push('\u{c}'),
+                        b'u' => {
+                            let h = std::str::from_utf8(b.get(*i..*i + 4).ok_or("escape")?)
+                                .map_err(|_| "escape")?;
+                            let cp = u32::from_str_radix(h, 16).map_err(|_| "escape")?;
+                            *i += 4;
+                            out.push(char::from_u32(cp).unwrap_or('\u{fffd}'));
+                        }
+                        _ => return Err("escape".into()),
+                    }
+                }
+                _ => {
+                    // the rest of a UTF-8 sequence is copied byte for byte
+                    let st = *i - 1;
+                    let mut en = *i;
+                    while en < b.len() && b[en] != b'"' && b[en] != b'\\' {
+                        en += 1;
+                    }
+                    out.push_str(std::str::from_utf8(&b[st..en]).map_err(|_| "utf-8")?);
+                    *i = en;
+                }
+            }
+        }
+    }
+    let b = s.as_bytes();
+    let mut i = 0;
+    let v = val(b, &mut i, 0)?;
+    ws(b, &mut i);
+    if i != b.len() {
+        return Err("trailing input".into());
+    }
+    Ok(v)
+}
+
+/// What this capture is, for comparison with its dry run's evidence
+struct Own {
+    corpus: String,
+    corpus_sha256: String,
+    binary_sha256: String,
+    cpus: Vec<usize>,
+    machine: String,
+    rows: u64,
+}
+
+/// A verified dry run
+struct Evidence {
+    peak: u64,
+    commit: String,
+    jsonl_sha256: String,
+    analysis_sha256: String,
+    manifest_sha256: String,
+}
+
+/// Verify a completed dry run's directory (report 197): its records, its analysis and its
+/// manifest, against each other and against this capture. Every condition is required;
+/// the first that fails is returned.
+fn verify_evidence(dir: &str, own: &Own) -> Result<Evidence, String> {
+    let path = |f: &str| format!("{dir}/{f}");
+    let read = |f: &str| -> Result<String, String> {
+        std::fs::read_to_string(path(f)).map_err(|e| format!("{f}: {e}"))
+    };
+    let (jl, an, mf) = (
+        read("c30-construction.jsonl")?,
+        read("c30-analysis.json")?,
+        read("MANIFEST.json")?,
+    );
+    let (jl_sha, an_sha, mf_sha) = (
+        sha256(jl.as_bytes()),
+        sha256(an.as_bytes()),
+        sha256(mf.as_bytes()),
+    );
+    let man = parse_json(&mf).map_err(|e| format!("MANIFEST.json: {e}"))?;
+    let ana = parse_json(&an).map_err(|e| format!("c30-analysis.json: {e}"))?;
+    let need = |c: bool, what: &str| -> Result<(), String> {
+        if c {
+            Ok(())
+        } else {
+            Err(what.to_string())
+        }
+    };
+    // the manifest: a passed run of a clean commit, these files, this binary, this corpus
+    need(
+        man.get("exit_status").and_then(J::u64) == Some(0),
+        "the dry run's exit status is not 0",
+    )?;
+    let src = man.get("source").ok_or("the manifest has no source")?;
+    let commit = src
+        .get("commit")
+        .and_then(J::str)
+        .ok_or("the manifest has no commit")?
+        .to_string();
+    need(
+        src.get("tracked_changes") == Some(&J::Arr(vec![])),
+        "the dry run's source had tracked changes",
+    )?;
+    need(
+        man.get("binary")
+            .and_then(|b| b.get("sha256"))
+            .and_then(J::str)
+            == Some(own.binary_sha256.as_str()),
+        "the dry run's binary is not this binary (a stale or different build)",
+    )?;
+    let corpora = match man.get("corpora") {
+        Some(J::Arr(v)) => v.clone(),
+        _ => vec![],
+    };
+    need(
+        corpora.len() == 1
+            && corpora[0].get("sha256").and_then(J::str) == Some(own.corpus_sha256.as_str()),
+        "the dry run's corpus is not this corpus",
+    )?;
+    let files = match man.get("files") {
+        Some(J::Arr(v)) => v.clone(),
+        _ => vec![],
+    };
+    for (f, sha) in [
+        ("c30-construction.jsonl", &jl_sha),
+        ("c30-analysis.json", &an_sha),
+    ] {
+        need(
+            files.iter().any(|x| {
+                x.get("path").and_then(J::str) == Some(f)
+                    && x.get("sha256").and_then(J::str) == Some(sha.as_str())
+            }),
+            &format!("{f} does not match the manifest's checksum"),
+        )?;
+    }
+    // the analysis: a dry run whose schedule and every gate it checks passed
+    need(
+        ana.get("dry_run") == Some(&J::Bool(true)),
+        "the analysis is not a dry run's",
+    )?;
+    let all_true = |o: Option<&J>| match o {
+        Some(J::Obj(v)) => !v.is_empty() && v.iter().all(|(_, x)| *x == J::Bool(true)),
+        _ => false,
+    };
+    need(
+        all_true(ana.get("schedule")),
+        "the dry run's schedule checks did not all pass",
+    )?;
+    let gates = ana.get("gates");
+    for g in [
+        "G3_identity",
+        "G4_allocation",
+        "G6_exact_output",
+        "G7_round_minus_one",
+        "G8_one_pass",
+        "G9_memory",
+        "G10_major_faults",
+    ] {
+        need(
+            gates.and_then(|x| x.get(g)) == Some(&J::Bool(true)),
+            &format!("the dry run's {g} did not pass"),
+        )?;
+    }
+    need(
+        ana.get("failures").is_none(),
+        "the dry run recorded a failure",
+    )?;
+    // the records: a dry run of this corpus, binary, machine and CPU selection, completed,
+    // with its peak
+    let mut meta = None;
+    let mut post = None;
+    for line in jl.lines() {
+        let r = parse_json(line).map_err(|e| format!("c30-construction.jsonl: {e}"))?;
+        match r.get("kind").and_then(J::str) {
+            Some("meta") => meta = Some(r),
+            Some("postflight") => post = Some(r),
+            Some("failure") => return Err("the dry run's records hold a failure".into()),
+            _ => {}
+        }
+    }
+    let meta = meta.ok_or("the dry run's records have no meta record")?;
+    let post = post.ok_or("the dry run's records have no postflight (it did not complete)")?;
+    need(
+        meta.get("dry_run") == Some(&J::Bool(true)),
+        "the records are not a dry run's",
+    )?;
+    need(
+        meta.get("inject") == Some(&J::Null),
+        "the dry run carried an injected fault",
+    )?;
+    need(
+        meta.get("corpus").and_then(J::str) == Some(own.corpus.as_str()),
+        "the dry run's corpus name differs",
+    )?;
+    need(
+        meta.get("corpus_sha256").and_then(J::str) == Some(own.corpus_sha256.as_str()),
+        "the dry run's corpus hash differs",
+    )?;
+    need(
+        meta.get("binary_sha256").and_then(J::str) == Some(own.binary_sha256.as_str()),
+        "the dry run's recorded binary differs",
+    )?;
+    need(
+        meta.get("rows").and_then(J::u64) == Some(own.rows),
+        "the dry run's rows differ",
+    )?;
+    let cpus = format!("{:?}", own.cpus).replace(' ', "");
+    need(
+        meta.get("cpus").map(J::canon) == Some(cpus),
+        "the dry run's CPU selection differs from this capture's",
+    )?;
+    let mine = parse_json(&own.machine).map_err(|e| format!("own machine identity: {e}"))?;
+    need(
+        meta.get("machine") == Some(&mine),
+        "the dry run ran on another machine (or one since changed)",
+    )?;
+    let peak = post
+        .get("vm_hwm")
+        .and_then(J::u64)
+        .ok_or("the dry run's peak RSS is missing")?;
+    need(
+        ana.get("memory")
+            .and_then(|m| m.get("peak_rss_vm_hwm"))
+            .and_then(J::u64)
+            == Some(peak),
+        "the analysis's peak RSS is not the records' postflight peak",
+    )?;
+    // a plausibility floor: a dry run held every block's last column and production's
+    // output, two bytes a row, so a smaller peak cannot be a real measurement
+    need(peak >= 2 * own.rows, &format!("the dry run's peak RSS, {peak} bytes, is below the 2 bytes a row its inputs alone need"))?;
+    Ok(Evidence {
+        peak,
+        commit,
+        jsonl_sha256: jl_sha,
+        analysis_sha256: an_sha,
+        manifest_sha256: mf_sha,
+    })
+}
+
 /// `cbuild`: the registered schedule (§3), or its dry run
 pub fn main(args: &[String]) {
     let out = args[0].clone();
     let file = &args[1];
     let (mut rounds, mut cpus, mut dry) = (20i64, Vec::new(), false);
-    let (mut inject, mut inject_arg, mut peak_rss) = (Inject::None, String::new(), 0u64);
+    let (mut inject, mut inject_arg) = (Inject::None, String::new());
+    let (mut evidence_dir, mut verify_only) = (None::<String>, false);
     let mut i = 2;
     while i < args.len() {
         match args[i].as_str() {
@@ -959,10 +1514,11 @@ pub fn main(args: &[String]) {
                 i += 1;
             }
             "--dry-run" => dry = true,
-            "--peak-rss" => {
-                peak_rss = args[i + 1].parse().unwrap();
+            "--dry-run-evidence" => {
+                evidence_dir = Some(args[i + 1].clone());
                 i += 1;
             }
+            "--verify-evidence-only" => verify_only = true,
             "--inject" => {
                 inject = parse_inject(&args[i + 1]);
                 inject_arg = args[i + 1].clone();
@@ -992,25 +1548,68 @@ pub fn main(args: &[String]) {
         .to_string_lossy()
         .into_owned();
     let data = std::fs::read(file).unwrap();
+    let corpus_sha256 = sha256(&data);
+    let binary_sha256 = sha256_file("/proc/self/exe").unwrap_or_else(|| "unreadable".into());
+    let machine = machine();
 
-    // the sizing pass and the memory preflight, before any large allocation
+    // the sizing pass, before any large allocation
     let sizes: Vec<(usize, [u32; 256])> = last_columns(&data, false)
         .into_iter()
         .map(|(_, c)| (c.iter().map(|&x| x as usize).sum(), c))
         .collect();
+    let total_rows: u64 = sizes.iter().map(|(n, _)| *n as u64).sum();
+
+    // a capture consumes a verified dry run (G9, report 197); a dry run takes none
+    let evidence = match (dry, &evidence_dir) {
+        (true, Some(_)) => fail("evidence", "a dry run takes no --dry-run-evidence".into()),
+        (true, None) => None,
+        (false, None) => fail(
+            "evidence",
+            "a capture needs --dry-run-evidence DIR, a completed dry run's directory".into(),
+        ),
+        (false, Some(d)) => {
+            let own = Own {
+                corpus: name.clone(),
+                corpus_sha256: corpus_sha256.clone(),
+                binary_sha256: binary_sha256.clone(),
+                cpus: cpus.clone(),
+                machine: machine.clone(),
+                rows: total_rows,
+            };
+            match verify_evidence(d, &own) {
+                Ok(e) => Some((d.clone(), e)),
+                Err(why) => fail("evidence", format!("{d}: {why}")),
+            }
+        }
+    };
+    let peak = evidence.as_ref().map_or(0, |(_, e)| e.peak);
+    let evidence_json = evidence.as_ref().map_or("null".to_string(), |(d, e)| {
+        format!(
+            "{{\"dir\":{},\"peak_rss\":{},\"commit\":{},\"jsonl_sha256\":\"{}\",\"analysis_sha256\":\"{}\",\"manifest_sha256\":\"{}\"}}",
+            json_str(d),
+            e.peak,
+            json_str(&e.commit),
+            e.jsonl_sha256,
+            e.analysis_sha256,
+            e.manifest_sha256
+        )
+    });
+
+    // the memory preflight
     let (est, parts) = estimate(&sizes);
-    let required = est.max(peak_rss);
+    let required = est.max(peak);
     let margin = (2 * GIB).max(required / 4);
     let m0 = MemState::read();
     let majflt0 = self_majflt();
     let passed = inject != Inject::Preflight
-        && m0.available >= required + margin
-        && m0.swap_used() == 0
+        && m0.readable()
+        && m0.available.is_some_and(|a| a >= required + margin)
+        && m0.swap_used() == Some(0)
         && m0.pressure_free();
     append(
         &out,
         &[format!(
-            "{{\"kind\":\"preflight\",\"estimate\":{est},\"estimate_parts\":{parts},\"peak_rss_arg\":{peak_rss},\"required\":{required},\"margin\":{margin},{},\"self_majflt\":{majflt0},\"injected\":{},\"passed\":{passed}}}",
+            "{{\"kind\":\"preflight\",\"estimate\":{est},\"estimate_parts\":{parts},\"dry_run_evidence\":{evidence_json},\"verified_peak\":{peak},\"required\":{required},\"margin\":{margin},{},\"self_majflt\":{majflt0},\"injected\":{},\"passed\":{passed}}}",
             m0.json(),
             inject == Inject::Preflight
         )],
@@ -1019,13 +1618,24 @@ pub fn main(args: &[String]) {
         fail(
             "preflight",
             format!(
-                "MemAvailable {} against required {required} + margin {margin}; swap used {}; pressure {:?}{}",
-                m0.available,
-                m0.swap_used(),
+                "MemAvailable {} against required {required} + margin {margin}; swap used {}; pressure {:?}; sources readable {}{}",
+                opt(m0.available),
+                opt(m0.swap_used()),
                 m0.psi,
+                m0.readable(),
                 if inject == Inject::Preflight { " (injected)" } else { "" }
             ),
         );
+    }
+    if verify_only {
+        append(
+            &out,
+            &[format!(
+                "{{\"kind\":\"evidence_verified\",\"dry_run_evidence\":{evidence_json},\"required\":{required}}}"
+            )],
+        );
+        println!("cbuild: the dry run's evidence is verified; nothing was built (--verify-evidence-only)");
+        return;
     }
 
     // the inputs and production's output (untimed, once)
@@ -1106,6 +1716,36 @@ pub fn main(args: &[String]) {
         }
     }
 
+    // the untimed poison pass (G7): every block built by `build::<false>` into one arena
+    // preallocated for the largest block and filled with poison, so that every record's
+    // initialisation is shown, apart from the measured arms (which are not preallocated)
+    let mut poisoned = Vec::with_capacity(n_blocks);
+    {
+        let gmax = rows.iter().map(|n| n.div_ceil(ROWS)).max().unwrap_or(0);
+        let mut ctor = Ctor::default();
+        let (mut rec, mut raw): (Vec<Rec>, Vec<RawG>) = (Vec::with_capacity(gmax + 1), Vec::new());
+        for b in 0..n_blocks {
+            poison(&mut rec);
+            let (cap, ptr) = (rec.capacity(), rec.as_ptr() as usize);
+            let ok = ctor.build::<false>(&ll[b], &counts[b], 0, &mut rec, &mut raw);
+            let survived = rec.as_ptr() as usize == ptr && cap >= rec.len();
+            let exact =
+                ok && bytes(&rec) == bytes(&imgs[b].rec) && bytes(&raw) == bytes(&imgs[b].raw);
+            poisoned.push(format!(
+                "{{\"kind\":\"poisoncheck\",\"block\":{b},\"rows\":{},\"poisoned_capacity\":{cap},\"needed\":{},\"poison_survived\":{survived},\"exact\":{exact}}}",
+                rows[b],
+                rec.len()
+            ));
+            if !(survived && exact) {
+                append(&out, &poisoned);
+                fail(
+                    "output",
+                    format!("block {b}: the poison pass: survived {survived}, exact {exact}"),
+                );
+            }
+        }
+    }
+
     let lists = snake(&rows);
     let wrows: Vec<usize> = lists
         .iter()
@@ -1115,13 +1755,14 @@ pub fn main(args: &[String]) {
     append(
         &out,
         &[format!(
-            "{{\"kind\":\"meta\",\"corpus\":{name:?},\"blocks\":{n_blocks},\"rows\":{total},\"full_blocks\":{},\"rounds\":{rounds},\"dry_run\":{dry},\"inject\":{},\"cpus\":{cpus:?},\"regimes\":[\"warm\",\"cold\"],\"w4_lists\":{lists:?},\"w4_rows\":{wrows:?},\"block_rows\":{rows:?},\"block_raw_groups\":{braw:?},\"memory_estimate\":{est}}}",
+            "{{\"kind\":\"meta\",\"corpus\":{name:?},\"blocks\":{n_blocks},\"rows\":{total},\"full_blocks\":{},\"rounds\":{rounds},\"dry_run\":{dry},\"inject\":{},\"cpus\":{cpus:?},\"regimes\":[\"warm\",\"cold\"],\"w4_lists\":{lists:?},\"w4_rows\":{wrows:?},\"block_rows\":{rows:?},\"block_raw_groups\":{braw:?},\"memory_estimate\":{est},\"corpus_sha256\":\"{corpus_sha256}\",\"binary_sha256\":\"{binary_sha256}\",\"machine\":{machine}}}",
             rows.iter().filter(|&&n| n >= FULL).count(),
             if inject == Inject::None { "null".to_string() } else { json_str(&inject_arg) },
         )],
     );
     append(&out, &pre);
     append(&out, &ctrs);
+    append(&out, &poisoned);
 
     let epoch = Instant::now();
     append(
@@ -1190,10 +1831,18 @@ pub fn main(args: &[String]) {
             "{{\"kind\":\"postflight\",\"estimate\":{est},\"required\":{required},{},\"self_majflt\":{},\"pswpin_delta\":{},\"pswpout_delta\":{}}}",
             m1.json(),
             self_majflt(),
-            m1.pswpin as i64 - m0.pswpin as i64,
-            m1.pswpout as i64 - m0.pswpout as i64
+            delta(m0.pswpin, m1.pswpin),
+            delta(m0.pswpout, m1.pswpout)
         )],
     );
+}
+
+/// A counter's increase as JSON, or null when either reading is missing
+fn delta(a: Option<u64>, b: Option<u64>) -> String {
+    match (a, b) {
+        (Some(a), Some(b)) => (b as i64 - a as i64).to_string(),
+        _ => "null".into(),
+    }
 }
 
 /// `cbuild-rss`: one arm's W4 warm pass in a fresh process holding only the last columns
@@ -1219,15 +1868,19 @@ pub fn rss(args: &[String]) {
     }
     let arm = arm.expect("--arm P or C");
     assert!(cpus.len() == 4);
+    let started = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
     let data = std::fs::read(file).unwrap();
+    let corpus_sha256 = sha256(&data);
     let cols = last_columns(&data, true);
     drop(data);
     let rows: Vec<usize> = cols.iter().map(|(l, _)| l.len()).collect();
     let lists = snake(&rows);
-    let base_rss = proc_kv("/proc/self/status", "VmRSS").unwrap_or(0);
-    let hwm_load = proc_kv("/proc/self/status", "VmHWM").unwrap_or(0);
+    let base_rss = proc_kv("/proc/self/status", "VmRSS");
+    let hwm_load = proc_kv("/proc/self/status", "VmHWM");
     let reset = std::fs::write("/proc/self/clear_refs", "5").is_ok();
-    let hwm_reset = proc_kv("/proc/self/status", "VmHWM").unwrap_or(0);
+    let hwm_reset = proc_kv("/proc/self/status", "VmHWM");
     let start = SpinBarrier::new(4);
     let done = std::sync::Barrier::new(4);
     let steps = lists.iter().map(|l| l.len()).max().unwrap();
@@ -1253,16 +1906,25 @@ pub fn rss(args: &[String]) {
             });
         }
     });
-    let hwm = proc_kv("/proc/self/status", "VmHWM").unwrap_or(0);
+    let hwm = proc_kv("/proc/self/status", "VmHWM");
     let caps: u64 = ws.iter().map(|a| a.caps(arm).0).sum();
+    let growth = match (hwm, base_rss) {
+        (Some(h), Some(b)) => (h as i64 - b as i64).to_string(),
+        _ => "null".into(),
+    };
     std::fs::write(
         out,
         format!(
-            "{{\"kind\":\"rss\",\"arm\":\"{}\",\"corpus\":{:?},\"blocks\":{},\"cpus\":{cpus:?},\"baseline_rss\":{base_rss},\"hwm_after_load\":{hwm_load},\"hwm_reset\":{reset},\"hwm_after_reset\":{hwm_reset},\"hwm_after_pass\":{hwm},\"growth_over_baseline\":{},\"arena_capacity_bytes\":{caps}}}\n",
+            "{{\"kind\":\"rss\",\"arm\":\"{}\",\"corpus\":{:?},\"corpus_sha256\":\"{corpus_sha256}\",\"blocks\":{},\"cpus\":{cpus:?},\"pid\":{},\"started_unix_ns\":{started},\"baseline_rss\":{},\"hwm_after_load\":{},\"hwm_reset\":{reset},\"hwm_after_reset\":{},\"hwm_after_pass\":{},\"growth_over_baseline\":{growth},\"arena_capacity_bytes\":{caps},\"capacity_scope\":\"{}\"}}\n",
             arm_name(arm),
             std::path::Path::new(file).file_name().unwrap().to_string_lossy(),
             rows.len(),
-            hwm as i64 - base_rss as i64
+            std::process::id(),
+            opt(base_rss),
+            opt(hwm_load),
+            opt(hwm_reset),
+            opt(hwm),
+            if arm == Arm::P { "tt" } else { "rec+raw" }
         ),
     )
     .unwrap();

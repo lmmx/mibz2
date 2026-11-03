@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
 """The compact30 construction-cost comparison's analysis
-(docs/journal/2026-11-03-compact30-construction-protocol.md, draft 3).
+(docs/journal/2026-11-03-compact30-construction-protocol.md, draft 4).
 
     python3 bench/c30_construction.py RUN.jsonl [--json OUT.json] [--identity-ok yes|no]
-        [--rss RSS.json ...]
+        [--rss RSS.json ...] [--dry-run-evidence DIR]
+
+Draft 4's repairs (report 197):
+- G2 holds every all-full W4 step to the 2% start skew, not only the row-weighted
+  aggregate, which is reported beside it.
+- G9 requires a capture to carry a verified dry run's evidence (DIR, re-verified here from
+  its files against the capture's own records). The required memory must be
+  max(estimate, verified peak), and memory sources that couldn't be read count as failures.
+- G7 reads the recorded poison coverage and the untimed poison pass's records.
+- The six peak-RSS records are validated before any summary; otherwise the diagnostic is
+  marked unavailable.
+- The step mixing full and short blocks is reported on its own.
 
 It reads `c30walk cbuild`'s records in three stages; a stage runs only if the one before
 it passed.
@@ -48,8 +59,10 @@ short-block economics, faults, capacities, peak RSS and the slow-path tables.
 """
 
 import argparse
+import hashlib
 import json
 import math
+import os
 import statistics
 import sys
 
@@ -69,8 +82,11 @@ T975 = {19: 2.093}
 W4 = {"point": 0.84047, "lo": 0.83781, "hi": 0.84313}
 REGIMES = ("warm", "cold")
 PASSES = (("warm", "w1"), ("warm", "w4"), ("cold", "w1"), ("cold", "w4"))
-KNOWN = {"meta", "preflight", "onepass", "counters", "calibration", "build", "check0",
-         "postflight", "failure"}  # fmt: skip
+KNOWN = {"meta", "preflight", "onepass", "counters", "poisoncheck", "calibration", "build",
+         "check0", "postflight", "failure"}  # fmt: skip
+# the dry-run evidence's gates, each of which must have passed (G9, report 197)
+DRY_GATES = ("G3_identity", "G4_allocation", "G6_exact_output", "G7_round_minus_one",
+             "G8_one_pass", "G9_memory", "G10_major_faults")  # fmt: skip
 
 
 def interval(ratios):
@@ -149,6 +165,9 @@ def check_schedule(meta, recs, other):
         and len(recs["preflight"]) == 1
         and len(recs["postflight"]) == 1
         and _int(meta.get("memory_estimate"))
+        and isinstance(meta.get("corpus_sha256"), str)
+        and isinstance(meta.get("binary_sha256"), str)
+        and isinstance(meta.get("machine"), dict)
     )
     dry = meta.get("dry_run")
     rounds = meta.get("rounds")
@@ -235,6 +254,7 @@ def check_schedule(meta, recs, other):
         and all(o.get("rows") == br[o["block"]] for o in recs["onepass"] + recs["counters"])
         and sorted((o.get("arm"), o.get("block")) for o in recs["check0"])
         == sorted([("C", b) for b in range(nb)] + [("P", b) for b in range(nb)])
+        and sorted(o.get("block") for o in recs["poisoncheck"]) == list(range(nb))
     )
     return c
 
@@ -275,34 +295,172 @@ def check_calibration(meta, calib):
         return False
 
 
-def check_memory(pre, post):
-    """G9, from the recorded numbers (the collector's own verdict is not trusted alone)"""
+def _pressure_free(m):
+    """PSI read as zero, or absent; never when unreadable"""
+    st = m.get("psi_status")
+    if st == "absent":
+        return True
+    return st == "read" and m.get("psi_some_avg10") == 0 and m.get("psi_full_avg10") == 0
+
+
+def check_memory(pre, post, meta, evidence=None):
+    """G9, from the recorded numbers (the collector's own verdict is not trusted alone).
+    Returns (preflight ok, postflight ok, evidence ok, reasons). A capture must carry a
+    verified dry run's evidence, re-verified here from its files (`evidence`, as
+    `load_evidence` returns it); a dry run must carry none."""
+    why = []
     try:
-        req = pre["required"]
+        req, est, peak = pre["required"], pre["estimate"], pre.get("verified_peak")
         margin = max(2 * GIB, req // 4)
         pre_ok = (
             pre.get("passed") is True
             and pre.get("injected") is False
-            and req >= pre["estimate"]
+            and pre.get("readable") is True
+            and _int(peak)
+            and req == max(est, peak)
             and pre["margin"] == margin
+            and _int(pre.get("mem_available"))
             and pre["mem_available"] >= req + margin
-            and pre["swap_used"] == 0
-            and (not pre["psi_present"]
-                 or (pre["psi_some_avg10"] == 0 and pre["psi_full_avg10"] == 0))
+            and pre.get("swap_used") == 0
+            and _pressure_free(pre)
         )  # fmt: skip
+        if not pre_ok:
+            why.append("preflight")
         post_ok = (
-            post["swap_used"] == 0
-            and (not post["psi_present"]
-                 or (post["psi_some_avg10"] == 0 and post["psi_full_avg10"] == 0))
-            and post["pswpin_delta"] == 0
-            and post["pswpout_delta"] == 0
+            post.get("readable") is True
+            and post.get("swap_used") == 0
+            and _pressure_free(post)
+            and post.get("pswpin_delta") == 0
+            and post.get("pswpout_delta") == 0
         )  # fmt: skip
-        return pre_ok, post_ok
-    except (KeyError, TypeError):
-        return False, False
+        if not post_ok:
+            why.append("postflight")
+        ev = pre.get("dry_run_evidence")
+        if meta.get("dry_run") is True:
+            ev_ok = ev is None and peak == 0
+        else:
+            ev_ok = _evidence_ok(pre, meta, evidence, why)
+        if not ev_ok:
+            why.append("dry-run evidence")
+        return pre_ok, post_ok, ev_ok, why
+    except (KeyError, TypeError, AttributeError):
+        return False, False, False, ["malformed memory records"]
 
 
-def analyse(recs, other=(), identity_ok=None, rss=()):
+def load_evidence(d):
+    """A dry run's evidence directory, read for re-verification: its three files' contents
+    and checksums, or None if any is missing"""
+    out = {}
+    for f in ("c30-construction.jsonl", "c30-analysis.json", "MANIFEST.json"):
+        try:
+            data = open(os.path.join(d, f), "rb").read()
+        except OSError:
+            return None
+        out[f] = (data, hashlib.sha256(data).hexdigest())
+    return out
+
+
+def _evidence_ok(pre, meta, evidence, why):
+    """A capture's dry-run evidence: recorded by the collector, and re-verified from the
+    files themselves against the capture's own meta record"""
+    ev = pre.get("dry_run_evidence")
+    if not isinstance(ev, dict) or evidence is None:
+        why.append("no dry-run evidence recorded or supplied")
+        return False
+    jl, an, mf = (
+        evidence[f] for f in ("c30-construction.jsonl", "c30-analysis.json", "MANIFEST.json")
+    )
+    if (jl[1], an[1], mf[1]) != (
+        ev.get("jsonl_sha256"),
+        ev.get("analysis_sha256"),
+        ev.get("manifest_sha256"),
+    ):
+        why.append("the evidence files are not the ones the collector verified")
+        return False
+    try:
+        man = json.loads(mf[0])
+        ana = json.loads(an[0])
+        recs = [json.loads(line) for line in jl[0].splitlines() if line.strip()]
+    except (ValueError, UnicodeDecodeError):
+        why.append("the evidence files are not valid JSON")
+        return False
+    dmeta = next((r for r in recs if r.get("kind") == "meta"), None)
+    dpost = next((r for r in recs if r.get("kind") == "postflight"), None)
+    files = {f.get("path"): f.get("sha256") for f in man.get("files", [])}
+    peak = pre.get("verified_peak")
+    checks = {
+        "manifest exit 0": man.get("exit_status") == 0,
+        "manifest clean source": man.get("source", {}).get("tracked_changes") == [],
+        "manifest lists the records": files.get("c30-construction.jsonl") == jl[1],
+        "manifest lists the analysis": files.get("c30-analysis.json") == an[1],
+        "same binary": (man.get("binary") or {}).get("sha256") == meta["binary_sha256"],
+        "same corpus": [c.get("sha256") for c in man.get("corpora", [])] == [meta["corpus_sha256"]],
+        "a dry run's analysis": ana.get("dry_run") is True and "failures" not in ana,
+        "its schedule passed": bool(ana.get("schedule")) and all(v is True for v in ana["schedule"].values()),
+        "its gates passed": all(ana.get("gates", {}).get(k) is True for k in DRY_GATES),
+        "a completed dry run": dmeta is not None and dpost is not None
+        and not any(r.get("kind") == "failure" for r in recs),
+        "its meta matches": dmeta is not None
+        and dmeta.get("dry_run") is True
+        and dmeta.get("inject") is None
+        and all(dmeta.get(k) == meta.get(k) for k in
+                ("corpus", "corpus_sha256", "binary_sha256", "cpus", "machine", "rows", "block_rows")),
+        "the peak is the records'": dpost is not None and _int(dpost.get("vm_hwm"))
+        and dpost["vm_hwm"] == peak == ev.get("peak_rss")
+        and (ana.get("memory") or {}).get("peak_rss_vm_hwm") == peak,
+        "the peak is plausible": _int(peak) and peak >= 2 * meta["rows"],
+    }  # fmt: skip
+    bad = [k for k, v in checks.items() if not v]
+    why.extend(f"evidence: {k}" for k in bad)
+    return not bad
+
+
+def check_rss(rss, meta):
+    """The six peak-RSS records (§5): three distinct processes per arm, each of the
+    capture's corpus and CPUs, with the high-water mark reset and sensible values.
+    Returns (summary or None, problems)."""
+    probs = []
+    if len(rss) != 6:
+        probs.append(f"{len(rss)} records, not 6")
+    by = {}
+    seen = set()
+    for r in rss:
+        a = r.get("arm")
+        key = (r.get("pid"), r.get("started_unix_ns"))
+        if key in seen or not all(_int(x) for x in key):
+            probs.append(f"a duplicate or unidentified process {key}")
+        seen.add(key)
+        ok = (
+            r.get("kind") == "rss"
+            and a in ("P", "C")
+            and r.get("corpus") == meta.get("corpus")
+            and r.get("corpus_sha256") == meta.get("corpus_sha256")
+            and r.get("cpus") == meta.get("cpus")
+            and r.get("blocks") == meta.get("blocks")
+            and r.get("hwm_reset") is True
+            and all(_int(r.get(k)) and r[k] >= 0 for k in
+                    ("baseline_rss", "hwm_after_reset", "hwm_after_pass", "growth_over_baseline",
+                     "arena_capacity_bytes"))
+            and r["hwm_after_pass"] >= r["hwm_after_reset"]
+            and r["baseline_rss"] > 0
+            and r["arena_capacity_bytes"] > 0
+        )  # fmt: skip
+        if not ok:
+            probs.append(f"an invalid record (arm {a})")
+            continue
+        by.setdefault(a, []).append(r["growth_over_baseline"])
+    if sorted((a, len(v)) for a, v in by.items()) != [("C", 3), ("P", 3)]:
+        probs.append("not three valid records per arm")
+    if probs:
+        return None, probs
+    return {
+        a: {"median": statistics.median(v), "min": min(v), "max": max(v), "n": len(v),
+            "capacity_scope": "tt" if a == "P" else "rec+raw"}
+        for a, v in by.items()
+    }, []  # fmt: skip
+
+
+def analyse(recs, other=(), identity_ok=None, rss=(), evidence=None):
     metas = recs["meta"]
     meta = metas[0] if metas else None
     out = {"dry_run": bool(meta and meta.get("dry_run")), "schedule": {}, "gates": {}}
@@ -333,16 +491,44 @@ def analyse(recs, other=(), identity_ok=None, rss=()):
     rounds = meta["rounds"]
     builds = recs["build"]
     g["G6_exact_output"] = all(w.get("exact") is True for w in builds)
-    g["G7_round_minus_one"] = all(
-        all(v is True for k, v in o.items() if k not in ("kind", "arm", "block")) and len(o) > 3
-        for o in recs["check0"]
+
+    # G7: the exact and walker checks for both arms; C's poison coverage as recorded (its
+    # flag counts, it does not gate); and the untimed poison pass, which must cover every
+    # block with a surviving poisoned allocation
+    def check0_ok(o):
+        if o.get("arm") == "P":
+            return all(o.get(k) is True for k in ("definition", "walk", "restored"))
+        return (
+            all(o.get(k) is True for k in ("exact", "walk", "restored"))
+            and _int(o.get("poisoned_capacity"))
+            and _int(o.get("needed"))
+            and isinstance(o.get("poison_survived"), bool)
+            and (not o["poison_survived"] or o["poisoned_capacity"] >= o["needed"] > 0)
+        )
+
+    g["G7_round_minus_one"] = all(check0_ok(o) for o in recs["check0"]) and all(
+        o.get("exact") is True
+        and o.get("poison_survived") is True
+        and _int(o.get("poisoned_capacity"))
+        and _int(o.get("needed"))
+        and o["poisoned_capacity"] >= o["needed"] > 0
+        for o in recs["poisoncheck"]
     )
+    c0 = [o for o in recs["check0"] if o.get("arm") == "C"]
+    out["poison_coverage"] = {
+        "round_minus_one_blocks_poison_survived": sum(o.get("poison_survived") is True for o in c0),
+        "round_minus_one_blocks": len(c0),
+        "poison_pass_blocks_survived": sum(
+            o.get("poison_survived") is True for o in recs["poisoncheck"]
+        ),
+        "poison_pass_blocks": len(recs["poisoncheck"]),
+    }
     g["G8_one_pass"] = all(
         o.get("histogram_equal") is True and o.get("below_2_24") is True for o in recs["onepass"]
     )
     pre, post = recs["preflight"][0], recs["postflight"][0]
-    pre_ok, post_ok = check_memory(pre, post)
-    g["G9_memory"] = pre_ok and post_ok
+    pre_ok, post_ok, ev_ok, why = check_memory(pre, post, meta, evidence)
+    g["G9_memory"] = pre_ok and post_ok and ev_ok
     measured = [w for w in builds if w["round"] >= 0]
     g["G10_major_faults"] = all(w["majflt"] == 0 for w in measured)
     out["memory"] = {
@@ -354,6 +540,9 @@ def analyse(recs, other=(), identity_ok=None, rss=()):
         "peak_over_estimate": (post.get("vm_hwm") or 0) / max(pre.get("estimate") or 1, 1),
         "preflight_ok": pre_ok,
         "postflight_ok": post_ok,
+        "dry_run_evidence_ok": ev_ok,
+        "verified_peak": pre.get("verified_peak"),
+        "problems": why,
     }
     out["faults"] = {
         "major_in_measured_builds": sum(w["majflt"] for w in measured),
@@ -369,18 +558,16 @@ def analyse(recs, other=(), identity_ok=None, rss=()):
         for a in ("P", "C"):
             v = [w for w in builds if w["regime"] == rg and w["arm"] == a]
             caps[f"{rg}_{a}"] = {
+                "scope": "tt" if a == "P" else "rec+raw (the bitmap's requested size apart)",
                 "cap_bytes_max": max((w.get("cap_bytes", 0) for w in v), default=0),
                 "usable_bytes_max": max((w.get("usable_bytes", 0) for w in v), default=0),
+                "bitmap_req_bytes_max": max((w.get("bitmap_req_bytes", 0) for w in v), default=0),
             }
     out["capacities"] = caps
-    if rss:
-        by = {}
-        for r in rss:
-            by.setdefault(r.get("arm"), []).append(r.get("growth_over_baseline"))
-        out["peak_rss_processes"] = {
-            a: {"median": statistics.median(v), "min": min(v), "max": max(v), "n": len(v)}
-            for a, v in by.items()
-        }
+    summary, probs = check_rss(list(rss), meta)
+    out["peak_rss_processes"] = (
+        summary if summary is not None else {"unavailable": True, "problems": probs}
+    )
     if meta["dry_run"]:
         out["valid"] = None
         out["note"] = (
@@ -418,6 +605,10 @@ def analyse(recs, other=(), identity_ok=None, rss=()):
                     for v in full_steps) / fr
                 if fr else 0.0
             ),
+            "w4_start_skew_steps": [
+                (max(x["start"] for x in v) - min(x["start"] for x in v)) / span(v)
+                for v in full_steps
+            ],
         }  # fmt: skip
 
     per = {}
@@ -431,9 +622,18 @@ def analyse(recs, other=(), identity_ok=None, rss=()):
         for key in ("w1_cpu_ns_row", "w4_cpu_ns_row", "w4_completion_ns"):
             ps = [per[r][rg]["P"][key] for r in per]
             g[f"G1_{rg}_{key}"] = max(ps) / min(ps) <= STABILITY
+    # G2 (draft 4, report 197): every all-full W4 step's own start skew, in every arm, regime
+    # and measured round; the row-weighted aggregate is reported beside it
+    steps_sk = [x for r in per for rg in REGIMES for a in ("P", "C")
+                for x in per[r][rg][a]["w4_start_skew_steps"]]  # fmt: skip
     sks = [per[r][rg][a]["w4_start_skew"] for r in per for rg in REGIMES for a in ("P", "C")]
-    g["G2_simultaneous_start"] = all(x <= START_SKEW for x in sks)
-    out["start_skew_max"] = max(sks)
+    g["G2_simultaneous_start"] = bool(steps_sk) and all(x <= START_SKEW for x in steps_sk)
+    out["start_skew"] = {
+        "per_step_max": max(steps_sk) if steps_sk else None,
+        "per_step_over_threshold": sum(x > START_SKEW for x in steps_sk),
+        "steps_checked": len(steps_sk),
+        "row_weighted_aggregate_max": max(sks),
+    }
     o = max(c["cpu_ns"][1] for k in recs["calibration"] for c in k["cpus"])
     shares, short = [], []
     for r in range(rounds):
@@ -472,6 +672,20 @@ def analyse(recs, other=(), identity_ok=None, rss=()):
             except (ZeroDivisionError, ValueError):
                 e[name] = None
         econ[label] = e
+    # the steps that mix full and short blocks, reported on their own (A7)
+    mixed = [s for s in range(nsteps)
+             if len({br[lists[k][s]] >= FULL for k in range(4) if s < len(lists[k])}) > 1]  # fmt: skip
+    if mixed:
+        rs = []
+        for r in range(rounds):
+
+            def msp(a):
+                v = by[(r, "warm", "w4", a)]
+                return sum(span([x for x in v if x["step"] == s]) for s in mixed)
+
+            rs.append(msp("C") / max(msp("P"), 1))
+        pt, lo, hi = interval(rs)
+        econ["mixed_steps"] = {"steps": mixed, "e4": {"point": pt, "lo": lo, "hi": hi}}
     out["block_economics"] = econ
     # the slow paths: per-block warm W1 ratio (median over rounds) by deciles of the
     # one-row share (reported only)
@@ -526,11 +740,18 @@ def main():
     ap.add_argument("--json")
     ap.add_argument("--identity-ok", choices=["yes", "no"])
     ap.add_argument("--rss", nargs="*", default=[])
+    ap.add_argument("--dry-run-evidence", help="a capture's dry-run evidence directory")
     a = ap.parse_args()
     recs, other = load(a.run)
-    rss = [json.loads(open(p).read()) for p in a.rss]
+    rss = []
+    for p in a.rss:
+        try:
+            rss.append(json.loads(open(p).read()))
+        except (OSError, ValueError):
+            rss.append({"unreadable": p})
     ident = None if a.identity_ok is None else a.identity_ok == "yes"
-    res = analyse(recs, other, ident, rss)
+    ev = load_evidence(a.dry_run_evidence) if a.dry_run_evidence else None
+    res = analyse(recs, other, ident, rss, ev)
     if a.json:
         with open(a.json, "w") as f:
             json.dump(res, f, indent=1)
