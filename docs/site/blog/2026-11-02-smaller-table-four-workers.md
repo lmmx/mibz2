@@ -46,26 +46,26 @@ memory per byte of block. At the other:
 > at which cache misses are serviced.
 
 mibz2 is our bzip2 decoder, written for the Wikidata dumps, and that sentence could stand
-over most of what we have written about it. How many misses a decoded byte costs, how many
-can be in flight at once, and what else is competing for them: our posts on [32
-lanes](2026-10-31-room-walk-overlap.md), [memory-level
-parallelism](2026-11-02-memory-level-parallelism.md), [memory
-interference](2026-11-01-inverse-bwt-memory-interference.md) and [compact navigation
-tables](2026-10-29-compact-navigation-tables.md) each took up one of those questions. Seward
-said as much in [bzip2's manual](https://sourceware.org/bzip2/manual/manual.html):
+over most of what we have written about it. Our posts on [32
+lanes](2026-10-31-room-walk-overlap.md) and [memory-level
+parallelism](2026-11-02-memory-level-parallelism.md) are about keeping many misses in flight
+at once; [memory interference](2026-11-01-inverse-bwt-memory-interference.md) is about four
+workers' misses competing for one memory system; [compact navigation
+tables](2026-10-29-compact-navigation-tables.md) is about taking fewer misses with a smaller
+table. Seward said as much in [bzip2's manual](https://sourceware.org/bzip2/manual/manual.html):
 *"performance, both for compressing and decompressing, is largely determined by the speed at
 which your machine can service cache misses."*
 
-This post is about a compact table that revisits Seward's tradeoff, and the first result it
-has given. The table only makes sense against his paper, so we start by working through it:
-a six-byte example done by hand, his three tables, and his results plotted as the tradeoff
-they describe.
+We work through his paper first, with a six-byte example done by hand, his three tables,
+and his results plotted as the tradeoff they describe. Then we show a compact table of ours
+that, for the walk on its own, beats that tradeoff once four cores share a cache: slower than
+mibz2's table on one core, faster with four.
 
 ## From sorted rotations to the transformation vector
 
 Seward takes his notation from Burrows and Wheeler's 1994 report, *[A Block-sorting Lossless
 Data Compression Algorithm](https://www.cs.jhu.edu/~langmea/resources/burrows_wheeler.pdf)*.
-Here it is, with `banana` as the block:
+With `banana` as the block:
 
 | Symbol | Meaning | For `banana` |
 |---|---|---|
@@ -202,8 +202,8 @@ two columns carry different information:
   context. Bytes before similar contexts tend to repeat (in English, `he ` is often preceded
   by `t`), so L has long runs, which bzip2's later stages compress.
 
-So a bzip2 block carries L, with I to say which row is S. To get from *"each L byte comes
-before its F byte"* to the order of S, the decoder needs T.
+So a bzip2 block carries L, with I to say which row is S, and the decoder rebuilds the order
+of S from them with T.
 
 **Defining T.** Seward's theory section is *"a more detailed exposition of Algorithm D in §2
 of [1]"*, Burrows and Wheeler's decompression algorithm, because *"the increased detail
@@ -244,8 +244,8 @@ To write S forwards, Seward assumes the compressor reverses each block before so
 doesn't, which a footnote calls *"a design flaw"*; by the manual's account, *"the bzip2 format
 was frozen before I properly and fully understood the performance consequences"*. Its decoder
 builds the links the other way instead, writing i into slot s where Seward would set
-T[i] = s (`tt[cftab[uc]++] |= i << 8`), and following that T⁻¹ emits S forwards. mibz2's
-builder does the same.
+T[i] = s (`tt[cftab[uc]++] |= i << 8`), and following that T⁻¹ emits S forwards. mibz2
+does the same.
 
 **Building T from counts.** The rows of M are sorted, and two rows ending in the same byte
 keep their order when that byte moves to the front, since the rest of each row decides it.
@@ -321,7 +321,7 @@ links increase with j. Every BWT has this ordering, and our compact table depend
 
 ## Making inversion fast: basis, bw94 and mergedTL
 
-*"How fast can inversion be?"* Seward answers with three algorithms, each refining the last.
+*"How fast can inversion be?"* Three algorithms, each refining the last, answer it.
 
 **basis** is the theory written out: count, build T, walk. It reads L three times and keeps L
 (one byte a row) and T (four) alive: 5N bytes.
@@ -580,9 +580,9 @@ mergedTL runs 11% more instructions and takes 54% as many misses. 89.4% of those
 the walk's reads of U[p], and 78.6% of those reads miss, because T holds *"a completely
 arbitrary permutation"* that the decoder *"is obliged to traverse"*. So *"there appears to be
 no way to avoid a miss rate approaching one per L-byte"*, and mergedTL is *"a realistic upper
-bound on inversion performance"*: the introduction's sentence, with numbers under it.
+bound on inversion performance"*.
 
-Two exceptions confirm it. kennedy inverts nearly twice as fast as bashtgz because its long
+kennedy inverts nearly twice as fast as bashtgz because its long
 runs make T point each row at its neighbour, which is usually already cached; random input
 sets the floor near 2.5 MB/s. And the tree algorithms vary 10:1 across files, against mergedTL's
 1.9:1, because a small alphabet such as ecoli's four letters lets a few deep trees shorten
