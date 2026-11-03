@@ -53,6 +53,7 @@ nav = [
   { "Blog" = [
     "blog/index.md",
     { "BWT space–time tradeoff" = "blog/2026-11-02-smaller-table-four-workers.md" },
+    { "BWT space–time tradeoff (alternative draft)" = "blog/2026-11-02-seward-bwt-space-time-tradeoff.md" },
     { "Memory-level parallelism in mibz2" = [
       { "Instructions, overlap and evidence" = "blog/2026-11-02-memory-level-parallelism.md" },
       { "Technical appendix" = "blog/2026-11-02-memory-level-parallelism-notes.md" },
@@ -223,7 +224,8 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-02-smaller-table-four-workers.md" = "A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result." },
+  { "blog/2026-11-02-seward-bwt-space-time-tradeoff.md" = "From Seward's 2001 inverse-BWT algorithms to a compact navigation table that finally passes a four-core traversal test: why more work per lookup can mean less work for the machine." },
+  { "blog/2026-11-02-smaller-table-four-workers.md" = "A compact inverse-BWT table that costs more per step but wins with four cores, read against Julian Seward's 2001 paper on the tradeoff." },
   { "blog/2026-11-02-memory-level-parallelism.md" = "Interleaved pointer chases overlap their memory waits. The speedup shows that this pays, but not what limits it, and so not what to make faster next." },
   { "blog/2026-11-02-memory-level-parallelism-notes.md" = "Technical appendix to the memory-level parallelism post: the disagreement about ILP and MLP in detail, the 2022 benchmark, throughput models, Intel counter definitions, a measurement programme for mibz2, a reading list and the source register." },
   { "blog/2026-11-01-inverse-bwt-memory-interference.md" = "Four workers finish decompression sooner, but together spend 32% more processor time per byte. We're testing whether competition for shared memory is responsible." },
