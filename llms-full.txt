@@ -684,7 +684,7 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 # Revisiting the space–⁠time tradeoff in BWT inversion
 
-In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so.
+A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result.
 
 2 November 2026 · 27 min read · [Result](<#7-timing-the-walk-on-one-core-and-on-four>)
 
@@ -696,7 +696,7 @@ Compression with the BWT had been studied closely, but *"decompression-time issu
 
 mibz2 is our bzip2 decoder, written for the Wikidata dumps, and that sentence could stand over most of what we have written about it. Our posts on [32 lanes](<https://lmmx.github.io/mibz2/blog/2026-10-31-room-walk-overlap/index.md>) and [memory-level parallelism](<https://lmmx.github.io/mibz2/blog/2026-11-02-memory-level-parallelism/index.md>) are about keeping many misses in flight at once; [memory interference](<https://lmmx.github.io/mibz2/blog/2026-11-01-inverse-bwt-memory-interference/index.md>) is about four workers' misses competing for one memory system; [compact navigation tables](<https://lmmx.github.io/mibz2/blog/2026-10-29-compact-navigation-tables/index.md>) is about taking fewer misses with a smaller table. Seward said as much in [bzip2's manual](<https://sourceware.org/bzip2/manual/manual.html>): *"performance, both for compressing and decompressing, is largely determined by the speed at which your machine can service cache misses."*
 
-The post has two halves: how Seward's algorithms work and what he measured, then what happens to his tradeoff in mibz2, where several blocks decode at once and share one cache. The result in the second half is a controlled test of the walk alone, not yet of the whole decoder.
+The post has two halves: how Seward's algorithms work and what he measured, then what happens to his tradeoff in mibz2, where several blocks decode at once and share one cache. The result in the second half is a controlled test of the walk alone, not yet of the whole decoder. Readers who know how BWT inversion works can go straight to [the compact table](<#6-a-smaller-table-a-busier-lookup>).
 
 Seward's paper, 2001
 
