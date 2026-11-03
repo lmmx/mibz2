@@ -19,7 +19,7 @@ ask whether a smaller navigation table could do more work per step and still com
 under contention. A first measurement of ours shows it doing so.
 {: .post-dek }
 
-2 November 2026 · 24 min read · [Result](#7-timing-the-walk-on-one-core-and-on-four)
+2 November 2026 · 25 min read · [Result](#7-timing-the-walk-on-one-core-and-on-four)
 {: .post-meta }
 
 </div>
@@ -92,9 +92,10 @@ Start with the word `banana` and see what the Burrows–Wheeler transform does t
 First, write out six versions of the word, each starting at a different letter and wrapping
 round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`,
 `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time
-in a different order. (Stacked so that each is the one above shifted one place to the right,
-they would form a [circulant matrix](https://en.wikipedia.org/wiki/Circulant_matrix); sorting
-only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:
+in a different order. (As permutations of the six positions, they are the powers of one
+cycle, $(0\;1\;2\;3\;4\;5)$, and the zeroth power, the identity, is the word itself. Stacked
+so that each is the one above shifted one place to the right, they would form a [circulant
+matrix](https://en.wikipedia.org/wiki/Circulant_matrix); sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:
 
 <figure class="bf-fig">
 <p class="bf-title">The six rotations of banana, sorted</p>
@@ -411,7 +412,9 @@ letter backwards through the word, treating its end as joined to its beginning, 
 The letters moved, `a`, `n`, `a`, are each row's last letter, in $L$, and they spell `banana`
 backwards from its end. So a decoder could recover the whole word from $L$ alone, starting at
 row $I$, if it knew where each move lands. Seward records the landing rows in $T$, the
-*"transformation vector"*: here $T[3] = 0$, $T[0] = 4$ and $T[4] = 1$. His theory section, *"a
+*"transformation vector"*: here $T[3] = 0$, $T[0] = 4$ and $T[4] = 1$. As a permutation of the
+rows, $T = (3\;0\;4\;1\;5\;2)$: one cycle through all six, so following it from row 3 visits
+every row once before coming back, reading the whole word on the way. His theory section, *"a
 more detailed exposition of Algorithm D in §2 of [1]"*, puts it in symbols:
 
 \[
