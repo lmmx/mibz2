@@ -6,7 +6,9 @@ if it has one, else the site's default card, docs/site/assets/social/default.png
 This script draws the default card (the site's description and how to install mibz2) and a card for each
 blog post whose front matter names an `image` under assets/social/ (the post's title, its
 description and its date), each beside the home page's illustration. Each card is an HTML
-page rendered to PNG by headless Chromium.
+page rendered to PNG by headless Chromium. It records the text each card was drawn from in
+assets/social/cards.json, which check_site.py compares with the pages, so a card left stale
+by a changed title, description or date fails the check.
 
 Run from the repository root, with a Chromium or Chrome binary:
 
@@ -20,6 +22,7 @@ than --window-size, cutting off the card's foot.
 
 import argparse
 import html
+import json
 import os
 import re
 import shutil
@@ -134,26 +137,23 @@ def render(chrome, out, **fields):
     print(f"wrote {out}")
 
 
-def main():
-    """Draw the default card and each blog post's card."""
-    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--chrome", help="the Chromium or Chrome binary")
-    chrome = find_chrome(parser.parse_args().chrome)
-    OUT.mkdir(parents=True, exist_ok=True)
+MANIFEST = OUT / "cards.json"
+DEFAULT_DESCRIPTION = (
+    "Block-parallel bzip2 decoding, byte for byte with libbzip2, from "
+    "Python and Rust: pip install mibz2, cargo add mibz2."
+)
 
-    config = tomllib.loads(Path("zensical.toml").read_text())["project"]
+
+def cards(root=Path(".")):
+    """Every card to draw: its PNG path (relative to the site) and the text it shows."""
+    config = tomllib.loads((root / "zensical.toml").read_text())["project"]
     host = re.sub(r"^https?://|/$", "", config["site_url"])
-    render(
-        chrome,
-        OUT / "default.png",
-        section="",
-        title=config["site_description"],
-        description="Block-parallel bzip2 decoding, byte for byte with libbzip2, from "
-        "Python and Rust: pip install mibz2, cargo add mibz2.",
-        foot=host,
-    )
-
-    for post in sorted((SITE / "blog").glob("*.md")):
+    out = {
+        "assets/social/default.png": dict(
+            section="", title=config["site_description"], description=DEFAULT_DESCRIPTION, foot=host
+        )
+    }
+    for post in sorted((root / SITE / "blog").glob("*.md")):
         meta, title = front_matter(post)
         image = meta.get("image")
         if not image:
@@ -161,14 +161,26 @@ def main():
         if not image.startswith("assets/social/"):
             sys.exit(f"{post}: the card must be under assets/social/, not {image}")
         day = date.fromisoformat(post.name[:10])
-        render(
-            chrome,
-            SITE / image,
+        out[image] = dict(
             section=" · Research blog",
             title=title,
             description=meta["description"],
             foot=f"{host} · {day.day} {day:%B %Y}",
         )
+    return out
+
+
+def main():
+    """Draw the default card and each blog post's card, and record what each shows."""
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser.add_argument("--chrome", help="the Chromium or Chrome binary")
+    chrome = find_chrome(parser.parse_args().chrome)
+    OUT.mkdir(parents=True, exist_ok=True)
+    drawn = cards()
+    for image, fields in drawn.items():
+        render(chrome, SITE / image, **fields)
+    MANIFEST.write_text(json.dumps(drawn, indent=2, ensure_ascii=False, sort_keys=True) + "\n")
+    print(f"wrote {MANIFEST}")
 
 
 if __name__ == "__main__":

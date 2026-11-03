@@ -1,7 +1,7 @@
 ---
 title: "Revisiting the space–time tradeoff in BWT inversion"
 image: assets/social/blog-2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.png
-description: "A packed table saved memory but cost too much to read. A cheaper compact lookup gives the first positive traversal result."
+description: "In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so."
 ---
 
 <div class="post-hero" markdown>
