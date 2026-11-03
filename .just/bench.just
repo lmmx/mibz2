@@ -455,3 +455,132 @@ bench-c30-construction corpora="target/walk-decoder/work/corpora" rounds="20" ru
       python3 bench/archive.py "$out" --corpus "$f" --command "$cmd" --status "$status"
     fi
     exit "$status"
+
+# Constructor v2's construction-cost comparison (docs/journal/2026-11-03-compact30-
+# construction-protocol-v2.md, report 211; the harness's journal 2026-11-03-compact30-
+# construction-v2-harness.md): production's public bwt::build (P) against constructor v2,
+# Ctor2::build::<false> (C, ctor2.rs at 8beffe2), with draft 4's schedule, regimes, rounds,
+# checks and recipe, and v2's registered G1 and G2. bench-c30-construction above (constructor
+# v1, draft 4, pinned to 14d9ecb) is unchanged. This recipe runs its own frozen harness commit
+# in its own worktree (target/c30-construction-v2-pin), with the same toolchain and stops as
+# v1's: rustc 1.97.0 (LLVM 22.1.6) through rustup, the analysis's tests (draft 4's, and v2's
+# with draft 4's suite under v2) and the listing check's tests, and G3 on v2's timed path
+# against its frozen references (production's builder against v1's reviewed listings). Every
+# file goes to target/c30-construction-v2-<UTC time>[-mode]/, archived as
+# target/c30-construction-v2-<UTC time>[-mode].tar.gz with a manifest, whether the run passed
+# or failed. The modes are v1's: dry-run, verify-evidence, capture (a v2 dry run's archive
+# from this machine, binary, corpus and CPUs), and the injected failures fail-output,
+# fail-output-p, fail-output-p0, fail-pin, fail-reject, fail-preflight.
+#   just bench-c30-construction-v2 target/walk-decoder/work/corpora 20 dry-run
+#   just bench-c30-construction-v2 target/walk-decoder/work/corpora 20 capture target/c30-construction-v2-<stamp>-dry-run.tar.gz
+bench-c30-construction-v2 corpora="target/walk-decoder/work/corpora" rounds="20" run="dry-run" evidence="":
+    #!/usr/bin/env bash
+    set -uo pipefail
+    pin=fa21f33b372f7534e7610d93710e06c3af506ccc
+    tc=1.97.0
+    tc_commit=2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+    tc_llvm=22.1.6
+    refs=docs/journal/2026-11-03-compact30-construction-v2-harness/listings
+    rss=yes
+    analyse=yes
+    needs_evidence=no
+    case "{{run}}" in
+      capture) flags=(); needs_evidence=yes ;;
+      verify-evidence) flags=(--verify-evidence-only); needs_evidence=yes; rss=no; analyse=no ;;
+      dry-run) flags=(--dry-run) ;;
+      fail-output) flags=(--dry-run --inject output:w4:C:2); rss=no ;;
+      fail-output-p) flags=(--dry-run --inject output:w4:P:2); rss=no ;;
+      fail-output-p0) flags=(--dry-run --inject output:w1:P:0); rss=no ;;
+      fail-pin) flags=(--dry-run --inject pin:w4:1); rss=no ;;
+      fail-reject) flags=(--dry-run --inject reject:w4:3); rss=no ;;
+      fail-preflight) flags=(--dry-run --inject preflight); rss=no ;;
+      *) echo "c30 v2: the mode is dry-run, verify-evidence, capture, fail-output, fail-output-p, fail-output-p0, fail-pin, fail-reject or fail-preflight"; exit 2 ;;
+    esac
+    if [ "$needs_evidence" = yes ]; then
+      case "{{evidence}}" in
+        *.tar.gz) [ -f "{{evidence}}" ] || { echo "c30 v2: no dry-run archive at {{evidence}}"; exit 2; } ;;
+        *) echo "c30 v2: {{run}} needs a v2 dry run's archive (target/c30-construction-v2-<stamp>-dry-run.tar.gz) as its fourth argument"; exit 2 ;;
+      esac
+    fi
+    f=$(realpath "{{corpora}}")/wikidata-20261026.bz2
+    wt=$(realpath -m target/c30-construction-v2-pin)
+    suffix=$([ "{{run}}" = capture ] || echo "-{{run}}")
+    out=$(realpath -m target)/c30-construction-v2-$(date -u +%Y%m%dT%H%M%SZ)$suffix
+    mkdir -p "$out"
+    (
+      set -e
+      echo "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe  $f" | sha256sum -c -
+      git cat-file -e "$pin^{commit}" 2> /dev/null || git fetch -q origin research/compact30-constructor
+      [ -d "$wt" ] || git worktree add -q --detach "$wt" "$pin"
+      git -C "$wt" diff --quiet HEAD || { echo "c30 v2: $wt has local changes"; exit 1; }
+      if [ "$(git -C "$wt" rev-parse HEAD)" != "$pin" ]; then
+        echo "c30 v2: $wt moved from $(git -C "$wt" rev-parse --short HEAD) to the pin"
+        git -C "$wt" checkout -q --detach "$pin"
+      fi
+      [ "$(git -C "$wt" rev-parse HEAD)" = "$pin" ] || { echo "c30 v2: $wt is not at the pin"; exit 1; }
+      echo "c30 v2: the frozen commit $pin, corpus checked, mode {{run}}, protocol c30-construction-v2"
+      if ! command -v rustup > /dev/null || ! rustup toolchain list | grep -q "^$tc-"; then
+        echo "c30 v2: the reviewed toolchain, rustc $tc (LLVM $tc_llvm), is needed: rustup toolchain install $tc --profile minimal"
+        exit 1
+      fi
+      RUSTUP_AUTO_INSTALL=0 rustup run "$tc" rustc -vV | tee "$out/rustc-vV.txt"
+      grep -qx "release: $tc" "$out/rustc-vV.txt" && grep -qx "commit-hash: $tc_commit" "$out/rustc-vV.txt" && grep -qx "LLVM version: $tc_llvm" "$out/rustc-vV.txt" \
+        || { echo "c30 v2: rustup's $tc is not the reviewed build (want commit $tc_commit, LLVM $tc_llvm); no run"; exit 1; }
+      RUSTUP_AUTO_INSTALL=0 rustup run "$tc" cargo -V | tee -a "$out/rustc-vV.txt"
+      echo "c30 v2: building with the reviewed toolchain rustc $tc, LLVM $tc_llvm, no rustflags"
+      (cd "$wt" && CARGO_TARGET_DIR="$wt/target/rust-$tc" CARGO_ENCODED_RUSTFLAGS= RUSTUP_AUTO_INSTALL=0 rustup run "$tc" cargo build --locked --release --example c30walk)
+      bin="$wt/target/rust-$tc/release/examples/c30walk"
+      python3 -I "$wt/bench/test_c30_construction.py" | tail -1
+      python3 -I "$wt/bench/test_c30_construction_v2.py" | tail -1
+      python3 -I "$wt/bench/test_c30_build_listing.py" | tail -1
+      mkdir -p "$out/listing"
+      ident=$(python3 -I "$wt/bench/c30_build_listing.py" "$bin" "$out/listing" "$wt/$refs" --protocol v2)
+      echo "c30 v2: the timed path's machine code is the frozen listings: $ident"
+      [ "$ident" = yes ] || { echo "c30 v2: G3 fails (see listing/*.diff); no run"; exit 1; }
+      phys=$(for c in $(taskset -pc $$ | sed 's/.*: //' | tr ',' '\n' | while IFS=- read a b; do seq "$a" "${b:-$a}"; done); do
+        cut -d, -f1 /sys/devices/system/cpu/cpu$c/topology/thread_siblings_list | cut -d- -f1
+      done | sort -nu)
+      n=$(echo "$phys" | wc -l)
+      [ "$n" -ge 4 ] || { echo "c30 v2: $n physical cores; four are needed"; exit 1; }
+      if [ "$n" -ge 5 ]; then cpus=$(echo "$phys" | sed -n 2,5p | paste -sd,); else cpus=$(echo "$phys" | head -4 | paste -sd,); fi
+      echo "c30 v2: workers on CPUs $cpus (W1 on the first)"
+      ev=()
+      if [ "$needs_evidence" = yes ]; then
+        # the dry run's archive, kept in this run's own with its checksum, then unpacked
+        mkdir -p "$out/dry-run-evidence"
+        cp "{{evidence}}" "$out/dry-run-evidence/"
+        (cd "$(dirname "{{evidence}}")" && sha256sum "$(basename "{{evidence}}")") > "$out/dry-run-evidence/archive.sha256"
+        tar -xzf "{{evidence}}" -C "$out/dry-run-evidence"
+        evdir="$out/dry-run-evidence/$(basename "{{evidence}}" .tar.gz)"
+        [ -f "$evdir/MANIFEST.json" ] || { echo "c30 v2: the archive holds no $(basename "$evdir")/MANIFEST.json"; exit 1; }
+        ev=(--dry-run-evidence "$evdir")
+        echo "c30 v2: the dry run's evidence: $(cat "$out/dry-run-evidence/archive.sha256")"
+      fi
+      "$bin" barrier-test --cpus "$cpus" | tee "$out/barrier-test.txt"
+      g=0
+      timeout --kill-after=30 7200 "$bin" cbuild-v2 "$out/c30-construction.jsonl" "$f" --rounds {{rounds}} --cpus "$cpus" "${flags[@]}" "${ev[@]}" || g=$?
+      echo "c30 v2: the collector exited with status $g"
+      rfiles=()
+      if [ "$g" = 0 ] && [ "$rss" = yes ]; then
+        for k in 1 2 3; do
+          for arm in P C; do
+            "$bin" cbuild-rss-v2 "$out/rss-$k-$arm.json" "$f" --arm "$arm" --cpus "$cpus"
+            rfiles+=("$out/rss-$k-$arm.json")
+          done
+        done
+      fi
+      a=0
+      if [ "$analyse" = yes ]; then
+        python3 -I "$wt/bench/c30_construction.py" "$out/c30-construction.jsonl" --protocol v2 --identity-ok "$ident" --json "$out/c30-analysis.json" --rss "${rfiles[@]}" "${ev[@]}" || a=$?
+      fi
+      [ "$g" = 0 ] || exit "$g"
+      exit "$a"
+    ) 2>&1 | tee "$out/console.log"
+    status=${PIPESTATUS[0]}
+    cmd="just bench-c30-construction-v2 {{corpora}} {{rounds}} {{run}} {{evidence}}"
+    if [ -d "$wt" ]; then
+      (cd "$wt" && python3 bench/archive.py "$out" --corpus "$f" --binary "$wt/target/rust-$tc/release/examples/c30walk" --command "$cmd" --status "$status")
+    else
+      python3 bench/archive.py "$out" --corpus "$f" --command "$cmd" --status "$status"
+    fi
+    exit "$status"

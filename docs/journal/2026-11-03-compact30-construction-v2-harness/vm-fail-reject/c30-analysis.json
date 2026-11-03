@@ -1,0 +1,25 @@
+{
+ "protocol": "c30-construction-v2",
+ "candidate": "ctor2",
+ "dry_run": true,
+ "schedule": {
+  "S0_no_failure": false,
+  "S0_no_unknown_records": true,
+  "S1_meta": false,
+  "S2_rounds": true,
+  "S3_record_set": false,
+  "S1_protocol": true
+ },
+ "gates": {
+  "G3_identity": true
+ },
+ "failures": [
+  {
+   "kind": "failure",
+   "what": "rejection",
+   "detail": "round -1 warm w4 arm C worker 3 step 0 block 9: the constructor rejected the block"
+  }
+ ],
+ "valid": false,
+ "decision": "INVALID: the records are not the registered schedule; no figures computed"
+}

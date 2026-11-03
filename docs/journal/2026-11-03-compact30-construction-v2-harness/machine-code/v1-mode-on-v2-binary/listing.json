@@ -1,0 +1,64 @@
+{
+ "functions": {
+  "ctor-build-false": {
+   "symbol": "<c30walk::ctor::Ctor>::build::<false>",
+   "size": 7006,
+   "instructions": 1538,
+   "reference": "docs/journal/2026-11-03-compact30-construction-harness/listings/ctor-build-false.asm",
+   "identical": true
+  },
+  "ctor-promote": {
+   "symbol": "<c30walk::ctor::W<false>>::promote",
+   "size": 542,
+   "instructions": 135,
+   "reference": "docs/journal/2026-11-03-compact30-construction-harness/listings/ctor-promote.asm",
+   "identical": true
+  },
+  "ctor-complete-checked": {
+   "symbol": "<c30walk::ctor::W<false>>::complete_checked",
+   "size": 958,
+   "instructions": 241,
+   "reference": "docs/journal/2026-11-03-compact30-construction-harness/listings/ctor-complete-checked.asm",
+   "identical": true
+  },
+  "ctor-canonicalise": {
+   "symbol": "c30walk::ctor::canonicalise",
+   "size": 773,
+   "instructions": 173,
+   "reference": "docs/journal/2026-11-03-compact30-construction-harness/listings/ctor-canonicalise.asm",
+   "identical": true
+  },
+  "c-build": {
+   "symbol": "c30walk::cbuild::c_build",
+   "size": 21,
+   "instructions": 8,
+   "reference": "docs/journal/2026-11-03-compact30-construction-harness/listings/c-build.asm",
+   "identical": true
+  },
+  "p-build": {
+   "symbol": "c30walk::cbuild::p_build",
+   "size": 5,
+   "instructions": 1,
+   "reference": "docs/journal/2026-11-03-compact30-construction-harness/listings/p-build.asm",
+   "identical": true
+  },
+  "bwt-build": {
+   "symbol": "mibz2::bwt::build",
+   "size": 3735,
+   "instructions": 814,
+   "reference": "docs/journal/2026-11-03-compact30-construction-harness/listings/bwt-build.asm",
+   "identical": true
+  }
+ },
+ "checks": {
+  "p_build_transfers_only_to_bwt_build": true,
+  "c_build_calls_only_ctor_build_false": true,
+  "bwt_build_callees": [
+   "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>",
+   "core::panicking::panic_bounds_check",
+   "core::slice::index::slice_index_fail"
+  ],
+  "bwt_build_inlines_one_and_two_pass": true
+ },
+ "identical": true
+}

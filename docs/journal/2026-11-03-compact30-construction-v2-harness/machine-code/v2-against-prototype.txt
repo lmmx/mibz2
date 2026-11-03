@@ -1,0 +1,20 @@
+v2's timed path in the harness binary (pin fa21f33, rustc 1.97.0, built by the recipe) against
+the audited prototype listings (8beffe2's c30walk, docs/journal/2026-11-03-compact30-constructor-v2-prototype/),
+by bench/c30_build_listing.py's normalised comparison (addresses dropped; internal branches
+as offsets; external calls as symbols; RIP displacements masked)
+
+<c30walk::ctor2::Ctor2>::build::<false>
+  harness 0x347f0, size 0x18e5, 1431 instructions
+  prototype 0x33100, size 0x18e5, 1431 instructions
+  differences after normalisation: 0
+  instructions whose raw text differs (absolute addresses, call targets, RIP displacements only): 199
+<c30walk::ctor2::W<false>>::finish
+  harness 0x764f0, size 0x5fa, 379 instructions
+  prototype 0x61d30, size 0x5fa, 379 instructions
+  differences after normalisation: 0
+  instructions whose raw text differs (absolute addresses, call targets, RIP displacements only): 74
+<c30walk::ctor2::W<false>>::refill
+  harness 0x76af0, size 0xec, 67 instructions
+  prototype 0x62330, size 0xec, 67 instructions
+  differences after normalisation: 0
+  instructions whose raw text differs (absolute addresses, call targets, RIP displacements only): 8

@@ -1,0 +1,25 @@
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/walk-freeze/corpora/wikidata-20261026.bz2: OK
+c30 v2: the frozen commit fa21f33b372f7534e7610d93710e06c3af506ccc, corpus checked, mode fail-preflight, protocol c30-construction-v2
+rustc 1.97.0 (2d8144b78 2026-07-07)
+binary: rustc
+commit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+commit-date: 2026-07-07
+host: x86_64-unknown-linux-gnu
+release: 1.97.0
+LLVM version: 22.1.6
+cargo 1.97.0 (c980f4866 2026-06-30)
+c30 v2: building with the reviewed toolchain rustc 1.97.0, LLVM 22.1.6, no rustflags
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.02s
+94 tests passed
+89 draft 4 tests passed under v2, 5 replaced; 30 v2 tests passed
+6 tests passed
+c30 v2: the timed path's machine code is the frozen listings: yes
+c30 v2: workers on CPUs 0,1,2,3 (W1 on the first)
+barrier-test: 12000 steps in 3 rounds x 2 arms, 4 workers, uneven arrivals and lists (partial final steps), cpus [0, 1, 2, 3]: every check passed
+grid: FAILED: {"kind":"failure","what":"preflight","detail":"MemAvailable 16214106112 against required 1855391770 + margin 2147483648; swap used 0; pressure Read(0.0, 0.0); sources readable true (injected)"}
+c30 v2: the collector exited with status 3
+FAILED RUN: preflight - MemAvailable 16214106112 against required 1855391770 + margin 2147483648; swap used 0; pressure Read(0.0, 0.0); sources readable true (injected)
+protocol: c30-construction-v2
+schedule: {"S1_meta": false, "S1_protocol": false}
+gates: {}
+decision: INVALID: no meta record
