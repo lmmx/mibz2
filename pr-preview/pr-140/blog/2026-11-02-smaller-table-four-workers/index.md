@@ -35,7 +35,7 @@ mibz2, 2026
 
 Start with the word `banana` and see what the Burrows–Wheeler transform does to it.
 
-First, write out six versions of the word, each starting at a different letter and wrapping round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`, `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time in a different order. Then sort the six rotations alphabetically and stack them as rows:
+First, write out six versions of the word, each starting at a different letter and wrapping round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`, `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time in a different order. (Stacked so that each is the one above shifted one place to the right, they would form a [circulant matrix](<https://en.wikipedia.org/wiki/Circulant_matrix>); sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:
 
 The six rotations of banana, sorted
 
@@ -51,7 +51,7 @@ Seward's names for the pieces
 
 The square of sorted rotations again, with each symbol pointing at what it names. In bzip2, N can be up to 900,000.
 
-So the decoder is given \\(L\\) and \\(I\\) and must produce \\(S\\). It never holds \\(M\\), and that matters for everything that follows. For a block of a million bytes, \\(M\\) would be a million rows of a million letters: a terabyte. The decoder keeps only \\(L\\), one byte a row, and whatever it needs to find its way from one row to the next. How much of that to store, and in what form, is the space in Seward's space–time tradeoff.
+So the decoder is given \\(L\\) and \\(I\\) and must produce \\(S\\). The square has been a way to understand the transform, but the decoder never builds it, and that matters for everything that follows. For a block of a million bytes, \\(M\\) would be a million rows of a million letters: a terabyte. The decoder keeps only \\(L\\), one byte a row, and whatever it needs to find its way from one row to the next. None of Seward's algorithms builds \\(M\\); what separates them is how much of that navigation they store, and in what form. That is the space in his space–time tradeoff.
 
 **Why only \\(L\\) is stored.** Of the square's two outer columns, bzip2 keeps only the last:
 
