@@ -239,3 +239,71 @@ Claude should archive its results and return the archive checksum and analysis f
 The researcher's latest message adds useful independent confirmation, but it doesn't change the plan. There's no need for another Astra consultation, further Miri testing or a new round of protocol revisions.
 
 We can proceed with the already-approved dry run.
+
+## Report 216: the guardian reviews the dry run and authorises one measured capture, as relayed
+
+Kept as relayed. What report 216 decides:
+- The dry run's required checks passed. The guardian verified this independently, from the
+  archive.
+- **One measured 20-round v2 capture is authorised**, using the frozen harness and the
+  verified dry-run archive:
+
+      just bench-c30-construction-v2 target/walk-decoder/work/corpora 20 capture target/c30-construction-v2-20261103T222051Z-dry-run.tar.gz
+
+- The machine stays otherwise idle: no Miri, no other benchmark, no CPU-intensive work.
+- Whatever formal result the protocol produces (PASS, FAIL, INCONCLUSIVE or INVALID) is
+  kept as it is. The thresholds don't change, and there is no automatic rerun.
+- A PASS would lead only to a separately approved production-shaped decoder evaluation, not
+  to integration.
+
+Guardian review: the i9 dry run has passed its required checks. I independently inspected your uploaded archive, not just the terminal output.
+
+**Archive integrity verified — 33/33 files**
+
+The archive SHA-256 matches the reported value:
+
+`65689a5800cd93b272b04d6c5a89822e561a5a10a8ab95aab20308cee4b02b27`
+
+The evidence confirms:
+
+| Check                             | Result                         |
+| --------------------------------- | ------------------------------ |
+| Frozen harness `fa21f33`          | Matched                        |
+| Rust 1.97.0 / LLVM 22.1.6         | Matched                        |
+| CPUs 1, 2, 3, 4                   | Confirmed                      |
+| Scheduled construction operations | 10,416                         |
+| Exact output checks               | 10,416/10,416 passed           |
+| Separate poison pass              | 434/434 blocks covered         |
+| Schedule checks                   | 15/15 passed                   |
+| Applicable validity gates         | 7/7 passed                     |
+| Machine-code identity             | All 7 listed functions matched |
+| Major page faults                 | Zero                           |
+
+The memory checks also passed, with approximately 1.77 GB peak resident memory against a 1.86 GB estimate.
+
+These are preflight results, not evidence that v2 is faster. The dry run correctly suppressed all timing-based conclusions.
+
+### Guardian decision: authorize one measured v2 capture
+
+The workstation preflight has satisfied the registered prerequisites. I authorize one 20-round i9 construction-cost capture, using the frozen harness and the verified dry-run archive.
+
+From `~/dev/mibz2`, run:
+
+```
+just bench-c30-construction-v2 target/walk-decoder/work/corpora 20 capture target/c30-construction-v2-20261103T222051Z-dry-run.tar.gz
+```
+
+No additional Git fetch is necessary if your working tree remains as it was for the successful dry run. The recipe pins its own harness.
+
+Keep the machine otherwise idle. Don't run Miri, another benchmark or CPU-intensive work concurrently. Let the registered checks determine the outcome.
+
+This capture has four possible formal results: PASS, FAIL, INCONCLUSIVE or INVALID. We will preserve whichever result the protocol produces, without modifying the thresholds or automatically rerunning it.
+
+When it finishes, send me the terminal output and the generated capture archive. I'll verify the evidence and assess whether v2 meets both construction-cost limits:
+
+- Four-worker CPU cost: b4 upper 95% CI ≤ 1.06714
+- Four-worker completion time: e4 upper 95% CI ≤ 1.02
+
+If those pass, the next step would be a separately approved production-shaped decoder evaluation—not immediate integration.
+
+The v1 STOP remains unchanged. The compact30 traversal VALID ADVANCE remains unchanged. This experiment answers whether constructor v2 makes that traversal improvement economically viable.
