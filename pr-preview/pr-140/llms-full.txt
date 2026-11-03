@@ -686,7 +686,7 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 In 2001, Seward showed why the fastest way to undo a Burrows–Wheeler transform could use more instructions but less memory traffic. Twenty-five years later, that observation led us to ask whether a smaller navigation table could do more work per step and still come out ahead under contention. A first measurement of ours shows it doing so.
 
-2 November 2026 · 24 min read · [Result](<#7-timing-the-walk-on-one-core-and-on-four>)
+2 November 2026 · 25 min read · [Result](<#7-timing-the-walk-on-one-core-and-on-four>)
 
 In 2001, [Julian Seward](<https://en.wikipedia.org/wiki/Julian_Seward>), the author of [bzip2](<https://en.wikipedia.org/wiki/Bzip2>) and the original designer of [Valgrind](<https://valgrind.org/info/developers.html>), was working at Microsoft Research in Cambridge. That year he presented a paper at the IEEE Data Compression Conference, *[Space-time tradeoffs in the Inverse B-W Transform](<https://doi.org/10.1109/DCC.2001.917175>)*, on what it costs to undo the [Burrows–Wheeler transform](<https://en.wikipedia.org/wiki/Burrows–Wheeler_transform>) (BWT) that bzip2 is built on.
 
@@ -717,7 +717,7 @@ mibz2, 2026
 
 Start with the word `banana` and see what the Burrows–Wheeler transform does to it.
 
-First, write out six versions of the word, each starting at a different letter and wrapping round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`, `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time in a different order. (Stacked so that each is the one above shifted one place to the right, they would form a [circulant matrix](<https://en.wikipedia.org/wiki/Circulant_matrix>); sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:
+First, write out six versions of the word, each starting at a different letter and wrapping round to the beginning when it reaches the end: `banana`, `ananab`, `nanaba`, `anaban`, `nabana`, `abanan`. These are the word's *cyclic rotations*: the same six letters, each time in a different order. (As permutations of the six positions, they are the powers of one cycle, \\((0\\;1\\;2\\;3\\;4\\;5)\\), and the zeroth power, the identity, is the word itself. Stacked so that each is the one above shifted one place to the right, they would form a [circulant matrix](<https://en.wikipedia.org/wiki/Circulant_matrix>); sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:
 
 The six rotations of banana, sorted
 
@@ -752,7 +752,7 @@ banana written round a circle, positions numbered from the top. Every row of the
 | 0: `abanan` | `n` + `abana` | 4: `nabana` |
 | 4: `nabana` | `a` + `naban` | 1: `anaban` |
 
-The letters moved, `a`, `n`, `a`, are each row's last letter, in \\(L\\), and they spell `banana` backwards from its end. So a decoder could recover the whole word from \\(L\\) alone, starting at row \\(I\\), if it knew where each move lands. Seward records the landing rows in \\(T\\), the *"transformation vector"*: here \\(T\[3\] = 0\\), \\(T\[0\] = 4\\) and \\(T\[4\] = 1\\). His theory section, *"a more detailed exposition of Algorithm D in §2 of \[1\]"*, puts it in symbols:
+The letters moved, `a`, `n`, `a`, are each row's last letter, in \\(L\\), and they spell `banana` backwards from its end. So a decoder could recover the whole word from \\(L\\) alone, starting at row \\(I\\), if it knew where each move lands. Seward records the landing rows in \\(T\\), the *"transformation vector"*: here \\(T\[3\] = 0\\), \\(T\[0\] = 4\\) and \\(T\[4\] = 1\\). As a permutation of the rows, \\(T = (3\\;0\\;4\\;1\\;5\\;2)\\): one cycle through all six, so following it from row 3 visits every row once before coming back, reading the whole word on the way. His theory section, *"a more detailed exposition of Algorithm D in §2 of \[1\]"*, puts it in symbols:
 
 \\\[ M\[j, N-1\]\\; M\[j, 0..N-2\] = M\[i, 0..N-1\] \\quad\\Longrightarrow\\quad T\[j\] = i. \\\]
 

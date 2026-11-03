@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=9642346efd58">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=c04157a7b6b1">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=9642346efd58">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=c04157a7b6b1">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=9642346efd58">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=c04157a7b6b1">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=9642346efd58">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=c04157a7b6b1">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=9642346efd58">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=c04157a7b6b1">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1813,7 +1813,7 @@
 instructions but less memory traffic. Twenty-five years later, that observation led us to
 ask whether a smaller navigation table could do more work per step and still come out ahead
 under contention. A first measurement of ours shows it doing so.</p>
-<p class="post-meta">2 November 2026 · 24 min read · <a href="#7-timing-the-walk-on-one-core-and-on-four">Result</a></p>
+<p class="post-meta">2 November 2026 · 25 min read · <a href="#7-timing-the-walk-on-one-core-and-on-four">Result</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
@@ -1876,9 +1876,10 @@ decoder.</p>
 <p>First, write out six versions of the word, each starting at a different letter and wrapping
 round to the beginning when it reaches the end: <code>banana</code>, <code>ananab</code>, <code>nanaba</code>, <code>anaban</code>,
 <code>nabana</code>, <code>abanan</code>. These are the word's <em>cyclic rotations</em>: the same six letters, each time
-in a different order. (Stacked so that each is the one above shifted one place to the right,
-they would form a <a href="https://en.wikipedia.org/wiki/Circulant_matrix">circulant matrix</a>; sorting
-only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:</p>
+in a different order. (As permutations of the six positions, they are the powers of one
+cycle, <span class="arithmatex">\((0\;1\;2\;3\;4\;5)\)</span>, and the zeroth power, the identity, is the word itself. Stacked
+so that each is the one above shifted one place to the right, they would form a <a href="https://en.wikipedia.org/wiki/Circulant_matrix">circulant
+matrix</a>; sorting only reorders those rows.) Then sort the six rotations alphabetically and stack them as rows:</p>
 <figure class="bf-fig">
 <p class="bf-title">The six rotations of banana, sorted</p>
 <svg viewBox="0 0 720 350" role="img" aria-label="The six rotations of banana, sorted alphabetically into rows 0 to 5: abanan, anaban, ananab, banana, nabana, nanaba. The first column reads a a a b n n; the last column reads n n b a a a. Row 3 is banana itself.">
@@ -2209,7 +2210,9 @@ letter backwards through the word, treating its end as joined to its beginning, 
 <p>The letters moved, <code>a</code>, <code>n</code>, <code>a</code>, are each row's last letter, in <span class="arithmatex">\(L\)</span>, and they spell <code>banana</code>
 backwards from its end. So a decoder could recover the whole word from <span class="arithmatex">\(L\)</span> alone, starting at
 row <span class="arithmatex">\(I\)</span>, if it knew where each move lands. Seward records the landing rows in <span class="arithmatex">\(T\)</span>, the
-<em>"transformation vector"</em>: here <span class="arithmatex">\(T[3] = 0\)</span>, <span class="arithmatex">\(T[0] = 4\)</span> and <span class="arithmatex">\(T[4] = 1\)</span>. His theory section, <em>"a
+<em>"transformation vector"</em>: here <span class="arithmatex">\(T[3] = 0\)</span>, <span class="arithmatex">\(T[0] = 4\)</span> and <span class="arithmatex">\(T[4] = 1\)</span>. As a permutation of the
+rows, <span class="arithmatex">\(T = (3\;0\;4\;1\;5\;2)\)</span>: one cycle through all six, so following it from row 3 visits
+every row once before coming back, reading the whole word on the way. His theory section, <em>"a
 more detailed exposition of Algorithm D in §2 of [1]"</em>, puts it in symbols:</p>
 <div class="arithmatex">\[
 M[j, N-1]\; M[j, 0..N-2] = M[i, 0..N-1] \quad\Longrightarrow\quad T[j] = i.
@@ -3210,17 +3213,17 @@ memory contention behind it, and a concrete budget for building the table.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=9642346efd58"></script>
+        <script src="../../assets/javascripts/bench.js?v=c04157a7b6b1"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=9642346efd58"></script>
+        <script src="../../assets/javascripts/couriers.js?v=c04157a7b6b1"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=9642346efd58"></script>
+        <script src="../../assets/javascripts/blog.js?v=c04157a7b6b1"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=9642346efd58"></script>
+        <script src="../../assets/javascripts/frontier.js?v=c04157a7b6b1"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=9642346efd58"></script>
+        <script src="../../assets/javascripts/katex.js?v=c04157a7b6b1"></script>
       
     
   </body>
