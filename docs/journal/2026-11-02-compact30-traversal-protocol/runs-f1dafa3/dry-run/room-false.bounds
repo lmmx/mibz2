@@ -1,0 +1,5 @@
+this binary: next symbol at 0x1b5c0 (nm -S -n)
+this binary: function 0x19510 + 0x20aa = 0x1b5ba, 1552 instructions compared
+this binary: after the function, not compared: int3 x6
+reference: function 0x14ed0 + 0x20aa = 0x16f7a, 1552 instructions compared
+reference: after the function, not compared: int3 x6

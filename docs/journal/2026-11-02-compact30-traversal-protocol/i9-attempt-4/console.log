@@ -1,0 +1,48 @@
+/home/louis/dev/mibz2/target/walk-decoder/work/corpora/wikidata-20261026.bz2: OK
+c30: /home/louis/dev/mibz2/target/c30-traversal-pin moved from 4635e2c to the pin
+c30: the frozen commit f1dafa31d88d7351a98afb005a84f23d5a2312bd, corpus checked, mode capture
+rustc 1.97.0 (2d8144b78 2026-07-07)
+binary: rustc
+commit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+commit-date: 2026-07-07
+host: x86_64-unknown-linux-gnu
+release: 1.97.0
+LLVM version: 22.1.6
+cargo 1.97.0 (c980f4866 2026-06-30)
+c30: building with the reviewed toolchain rustc 1.97.0, LLVM 22.1.6, no rustflags
+   Compiling mibz2 v0.2.1 (/home/louis/dev/mibz2/target/c30-traversal-pin)
+    Finished `release` profile [optimized + debuginfo] target(s) in 5.45s
+37 tests passed
+15 tests passed
+c30: room::<false> is the reviewed listing: yes
+c30: workers on CPUs 1,2,3,4 (W1 on the first)
+barrier-test: 12000 steps in 3 rounds x 2 arms, 4 workers, uneven arrivals and lists (partial final steps), cpus [1, 2, 3, 4]: every check passed
+grid: round -1 done
+grid: round 0 done
+grid: round 1 done
+grid: round 2 done
+grid: round 3 done
+grid: round 4 done
+grid: round 5 done
+grid: round 6 done
+grid: round 7 done
+grid: round 8 done
+grid: round 9 done
+grid: round 10 done
+grid: round 11 done
+grid: round 12 done
+grid: round 13 done
+grid: round 14 done
+grid: round 15 done
+grid: round 16 done
+grid: round 17 done
+grid: round 18 done
+grid: round 19 done
+c30: the grid exited with status 0
+schedule: {"S0_no_failure": true, "S0_no_unknown_records": true, "S1_meta": true, "S2_rounds": true, "S3_record_set": true, "S4_placement": true, "S5_walk_windows": true, "S6_w1_sequence": true, "S7_start_barrier": true, "S7_completion_barrier": true, "S7_cross_step": true, "S8_pass_order": true, "S9_calibration": true}
+gates: {"G3_identity": true, "G4_allocation": true, "G1_w1_cpu_ns_row": true, "G1_w4_cpu_ns_row": true, "G1_w4_completion_ns": true, "G2_simultaneous_start": true, "G5_clock_overhead": true}
+allocation: {"w4_rows": [51301938, 51301991, 52201043, 52201543], "rows_max_over_min": 1.0175354973919308, "rows_max_minus_min": 899605, "largest_block_rows": 900000, "w4_blocks": [109, 109, 108, 108], "w4_full_blocks": [57, 57, 58, 58], "w4_raw_groups": [12232, 12316, 12576, 12509], "w4_raw_groups_per_mrow": [238.43153839529415, 240.06865542508868, 240.9147265505787, 239.62893204133832]}
+ratios (C / P): {"w1": {"point": 1.148452772956618, "lo": 1.1474308945952614, "hi": 1.1494755613818315}, "w4": {"point": 0.8404655319847364, "lo": 0.8378135268084702, "hi": 0.8431259317872887}, "e4": {"point": 0.8560124927676666, "lo": 0.8523932114111277, "hi": 0.8596471416768354}, "w1_wall": {"point": 1.1482752175069764, "lo": 1.147243152058958, "hi": 1.1493082114060271}, "w4_wall": {"point": 0.8403594730966407, "lo": 0.8377065286680485, "hi": 0.8430208191717528}}
+constructor budget: {"b_max_at_w4_lo": 1.0837135405147897, "b_max_at_w4": 1.0754394635543782, "b_max_at_w4_hi": 1.0671391959271586}
+clock: {"calibrations": ["after", "before"], "empty_window_cpu_ns_median_max": 149, "share_max": 0.00025650093785113887, "short_blocks_share_max": 0.6200734394124847, "w4_less_median_overhead_sensitivity_only": {"point": 0.8404412745527251, "lo": 0.8377888811762256, "hi": 0.8431020652603205}}
+decision: ADVANCE

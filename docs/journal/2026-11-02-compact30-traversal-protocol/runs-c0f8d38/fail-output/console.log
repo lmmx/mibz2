@@ -1,0 +1,20 @@
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/walk-freeze/corpora/wikidata-20261026.bz2: OK
+c30: the frozen commit c0f8d3832b442dde6f2908a1c80e328641bc6e3e, corpus checked, mode fail-output
+rustc 1.97.0 (2d8144b78 2026-07-07)
+binary: rustc
+commit-hash: 2d8144b7880597b6e6d3dfd63a9a9efae3f533d3
+commit-date: 2026-07-07
+host: x86_64-unknown-linux-gnu
+release: 1.97.0
+LLVM version: 22.1.6
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.02s
+34 tests passed
+c30: room::<false> is the reviewed listing: yes
+c30: workers on CPUs 0,1,2,3 (W1 on the first)
+grid: FAILED: {"kind":"failure","what":"output","detail":"round -1 w4 arm C worker 2 step 0 block 7: the output differs from production's at byte 0"}
+c30: the grid exited with status 3
+FAILED RUN: output - round -1 w4 arm C worker 2 step 0 block 7: the output differs from production's at byte 0
+schedule: {"S0_no_failure": false, "S0_no_unknown_records": true, "S1_meta": true, "S2_rounds": true, "S3_record_set": false}
+gates: {"G3_identity": true, "G4_allocation": true}
+allocation: {"w4_rows": [51301938, 51301991, 52201043, 52201543], "rows_max_over_min": 1.0175354973919308, "rows_max_minus_min": 899605, "largest_block_rows": 900000, "w4_blocks": [109, 109, 108, 108], "w4_full_blocks": [57, 57, 58, 58], "w4_raw_groups": [12232, 12316, 12576, 12509], "w4_raw_groups_per_mrow": [238.43153839529415, 240.06865542508868, 240.9147265505787, 239.62893204133832]}
+decision: INVALID: the records are not the registered schedule; no figures computed

@@ -1,0 +1,49 @@
+{
+ "run": "c30-traversal-20261102T161127Z-fail-output",
+ "archived": "2026-11-02T16:11:32+00:00",
+ "source": {
+  "commit": "9267433661f4a440c92831a4f1b38b6af61e4726",
+  "branch": "HEAD",
+  "tracked_changes": []
+ },
+ "corpora": [
+  {
+   "path": "/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/walk-freeze/corpora/wikidata-20261026.bz2",
+   "bytes": 11953225,
+   "sha256": "cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe"
+  }
+ ],
+ "binary": {
+  "path": "/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/wt-c30w/target/c30-traversal-pin/target/release/examples/c30walk",
+  "sha256": "82c3a68574ddedd43c3f8cc99282861bde4fa82cbc3cc58f69004b25a3d8fa7e"
+ },
+ "command": "just bench-c30-traversal /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/walk-freeze/corpora 20 fail-output",
+ "exit_status": 3,
+ "files": [
+  {
+   "path": "c30-analysis.json",
+   "bytes": 1051,
+   "sha256": "6fad61612a68327ddf78b151b75c8093059179d7cc068e5216c6684490f1c4f9"
+  },
+  {
+   "path": "c30-traversal.jsonl",
+   "bytes": 7259,
+   "sha256": "c8d894c08c73576fc8b1c7c7d4ae0f2ced203533d866b42f12f141811a7d4d71"
+  },
+  {
+   "path": "console.log",
+   "bytes": 1594,
+   "sha256": "5e06dbc803c7582342daaf97d62bbc44c0ba2f0b14b33cb81a32a09e1effb9b8"
+  },
+  {
+   "path": "room-false.asm",
+   "bytes": 68884,
+   "sha256": "aeb228a7e74bbc58cf584924d1febd53449ac461e42088a5a516ec1ffc508e34"
+  },
+  {
+   "path": "room-false.diff",
+   "bytes": 0,
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+ ]
+}

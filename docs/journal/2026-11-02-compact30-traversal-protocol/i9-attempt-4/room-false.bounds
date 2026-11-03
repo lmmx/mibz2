@@ -1,0 +1,5 @@
+this binary: next symbol at 0xfc50 (nm -S -n)
+this binary: function 0xdba0 + 0x20aa = 0xfc4a, 1552 instructions compared
+this binary: after the function, not compared: nop WORD PTR [rax+rax*1+0x0] x1
+reference: function 0x14ed0 + 0x20aa = 0x16f7a, 1552 instructions compared
+reference: after the function, not compared: int3 x6
