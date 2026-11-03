@@ -166,17 +166,17 @@ He tested them on six files of at least a megabyte, four from the [Canterbury Co
 | netscape | 7678.8 | Netscape Navigator 4.75, an x86 executable | `records`, binary |
 | bashtgz | 1708.8 | bash 2.04's source, gzipped | `random` |
 
-How fast each algorithm inverted each file, in MB/s. mergedTL is the fastest on every one:
+How fast each algorithm inverted each file, in MB/s, with the fastest in bold. mergedTL is the fastest on every one:
 
-|  | basis | bw94 | mergedTL | indexF | tree-1M | treeopt-1M | treeopt-500k |
+|  | bashtgz | bible | ecoli | kennedy | netscape | world192 | Mean |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| bashtgz | 1.54 | 1.58 | 2.49 | 1.20 | 0.032 | 0.059 | 0.032 |
-| bible | 1.72 | 1.77 | 2.76 | 1.36 | 0.211 | 0.301 | 0.218 |
-| ecoli | 1.53 | 1.57 | 2.48 | 1.30 | 0.325 | 0.342 | 0.339 |
-| kennedy | 2.46 | 2.54 | 4.72 | 1.71 | 0.099 | 0.167 | 0.100 |
-| netscape | 2.32 | 2.41 | 3.51 | 1.67 | 0.044 | 0.099 | 0.036 |
-| world192 | 1.65 | 1.69 | 2.65 | 1.31 | 0.207 | 0.298 | 0.198 |
-| Average | 1.86 | 1.93 | 3.10 | 1.43 | 0.153 | 0.211 | 0.154 |
+| basis | 1.54 | 1.72 | 1.53 | 2.46 | 2.32 | 1.65 | 1.86 |
+| bw94 | 1.58 | 1.77 | 1.57 | 2.54 | 2.41 | 1.69 | 1.93 |
+| mergedTL | **2.49** | **2.76** | **2.48** | **4.72** | **3.51** | **2.65** | **3.10** |
+| indexF | 1.20 | 1.36 | 1.30 | 1.71 | 1.67 | 1.31 | 1.43 |
+| tree-1M | 0.032 | 0.211 | 0.325 | 0.099 | 0.044 | 0.207 | 0.153 |
+| treeopt-1M | 0.059 | 0.301 | 0.342 | 0.167 | 0.099 | 0.298 | 0.211 |
+| treeopt-500k | 0.032 | 0.218 | 0.339 | 0.100 | 0.036 | 0.198 | 0.154 |
 
 The paper gives these numbers only as tables. Plotting each algorithm's average speed against its memory shows the space–time tradeoff between them:
 
