@@ -2620,3 +2620,89 @@ The completion analysis is especially relevant: the slowest worker in a full-blo
 The original traversal result remains VALID ADVANCE. Both construction captures remain INVALID. Whole-decoder performance remains unestablished.
 
 My recommendation: proceed with the first untimed prototype, preserve Ultra’s cumulative ledger as a research hypothesis, and require actual compiler output before crediting any of the proposed savings.
+
+## Report 230: the guardian's addendum to the adversarial audit
+
+The guardian keeps the order set in report 228: the independent audit first, then
+implementation. It adds the researcher's two correctness obligations (report 229) and the
+researcher's acceptance conditions to the audit request.
+
+**Current decision:**
+- research direction: GO;
+- implementation: awaiting the independent audit;
+- performance capture: not authorised.
+
+If the audit passes, the expected instruction is narrow: implement only the epoch-tagged
+finalisation, prove byte-exact correctness, and inspect the whole compiled fast path against
+the 40-instruction target. The scanner-check and descriptor-array changes stay separate, so
+each saving can be seen to survive compilation before they are combined.
+
+Kept as relayed; the words are unchanged.
+
+Claude has handled this correctly. I would keep the independent Astra Max audit before implementation, but make sure it includes the researcher’s two additional correctness obligations.
+
+The researcher and I aren’t disagreeing about the technical direction. We both favor epoch-tagged fast finalization as the first bounded prototype. The difference is simply whether to spend one more reasoning pass checking Ultra’s assumptions before Claude writes code.
+
+Given your available Astra capacity, I think that extra audit is worthwhile. In particular, the proposed reuse of raw: u32 is important enough to examine independently.
+
+Updated instruction for the Astra Max audit
+
+If you haven’t sent the audit request yet, use the complete prompt I gave you previously and append this:
+
+Additional audit requirements from the independent researcher
+
+The researcher has independently reviewed Ultra’s report and provisionally supports the epoch-tagged fast finalizer as the first bounded correctness-and-compilation prototype.
+
+Before endorsing implementation, please examine two additional correctness obligations in the frozen ctor2.rs at 8beffe2.
+
+1. Descriptor raw: u32 encoding
+
+Ultra proposes reusing the existing descriptor raw field to store an ordinary portion’s opening epoch, distinguished from provisional RAW indices by its high bit.
+
+Trace every write and read of this field, including open, finish, write_entries, preset-RAW handling, descriptor transitions and exceptional fallback paths.
+
+Determine whether the proposed encoding preserves all existing invariants. In particular, check that a tagged ordinary descriptor can never be mistaken for a RAW index, that forced-RAW behavior remains correct, and that the generic finalizer correctly handles portions spanning multiple epochs.
+
+Identify any required changes to predicates, dispatch or decoding. Do not assume replacing raw == NO_RAW with a high-bit test is sufficient without checking every use.
+
+2. Opening-epoch correctness
+
+Prove that the stored opening epoch always belongs to the portion’s first appended successor.
+
+Inspect both scalar/refill and run/open paths, including source-epoch transitions, deferred finalization, exact epoch boundaries and end-of-input.
+
+The active epoch must be updated alongside snapshot creation, not inferred from a source coordinate already advanced into the next epoch.
+
+Identify any counterexample or invariant that would make the proposed optimization unsafe or produce incorrect output.
+
+3. Full-path accounting
+
+The researcher’s recommended acceptance conditions are:
+
+* At most 40 instructions across the complete fast-success call boundary.
+* No snapshot lookup or full-span classification on that path.
+* No generic callee-save frame or new spills.
+* No additional per-row scalar or fragment work.
+* All opening, fallback, exceptional-path and setup costs included in the revised instruction ledger.
+
+Please determine whether these conditions are realistic and sufficient, and whether any hidden caller-side or descriptor-transition costs have been omitted.
+
+Keep the audit independent. The researcher’s support for the prototype is not evidence that Ultra’s implementation design is correct.
+
+No implementation, repository modification or performance measurement is authorized.
+
+My current decision
+
+Research direction: GO
+
+Implementation: awaiting independent audit
+
+Performance capture: not authorized
+
+There is one point I’d especially like the independent reviewer to challenge: Ultra’s proposed ordinary tag must coexist safely with NO_RAW, existing RAW indices and the exceptional finalization paths. A fast path that works perfectly for common groups but misclassifies a rare wide or crossing group would be unacceptable.
+
+If the audit passes, I expect the next instruction to Claude will be narrowly scoped: implement only epoch-tagged finalization, prove byte-exact correctness, and inspect the complete compiled fast path against the 40-instruction target.
+
+The other two optimizations—scanner-check elimination and descriptor-array restructuring—should remain separate. That lets us see whether each proposed instruction reduction actually survives compilation before combining them.
+
+So I wouldn’t change course or rush into code. We’re one focused independent review away from a well-specified prototype, and the research is progressing in precisely the instruction-minimization direction you wanted.
