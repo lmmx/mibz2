@@ -4561,3 +4561,24 @@ rebuild checks.
 **The next decision**, taken only after reviewing the completed evidence, is a deliberate choice
 between a narrowly authorised SSE2 attempt and the scanner cleanup. The withdrawal reached the
 subagent before it had started the handoff.
+
+## Report 240: the guardian reinstates the design-only scanner handoff
+
+Summarised from the relay. This supersedes report 239's withdrawal.
+- **Both delegated tasks continue:**
+  - the finaliser closeout: Miri, the mutation check and the formatted-source rebuild;
+  - the **design-only** scanner/tile cleanup handoff. The handoff doesn't commit the project to
+    abandoning the finaliser.
+- **The finaliser stays a formal STOP** under its unchanged ≤ 40 gate. The 81 → 44 reduction
+  (about 60.2 M net instructions) is recorded as substantial structural progress, and the
+  four-instruction miss as a specific code-generation problem, not a fundamental obstacle.
+
+**The next decision**, taken once both reports are in, compares:
+
+| option | potential advantage | main uncertainty |
+|---|---|---|
+| SSE2 finaliser refinement | closes a known four-instruction gap in an already correct implementation | whether explicit intrinsics produce better code without adding other work |
+| scanner/tile cleanup | the larger conditional opportunity, about 87.62 M | whether the bounds checks can be removed safely and LLVM keeps the saving |
+
+Neither is authorised for implementation. Any SSE2 work would need a new, explicitly bounded
+authorisation.
