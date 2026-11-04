@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for independent child publication; blog revision handed off",
+  "state": "WAITING for Coordinator replay and material-findings resolution after independent review publication",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -44,9 +44,10 @@
     6633777567,
     6633793271,
     6633918984,
-    6634250201
+    6634250201,
+    6634296412
   ],
-  "last_processed_comment_id": 6634250201,
+  "last_processed_comment_id": 6634296412,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -106,9 +107,24 @@
       "duplicate_of": 6633793271,
       "review_comment_id": 6634286833,
       "disposition": "Duplicate launch request reconciled against published launch record; no second child started and no duplicate reply posted."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6634296412,
+      "report_commit": "56610384e29218c9f9ac10422994f98281d69c8f",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/s62-completion-6634296412.json",
+      "child_commit": "e62fc15f91311823ab0c48a6f6e9c7dd35a28d10",
+      "child_pr": 153,
+      "child_review_comment_id": 6634356048,
+      "disposition": "Waited for existing child; verified report, replay files, exact brief blob, input provenance, requested commit identity, draft PR and REVIEW publication. No relaunch.",
+      "independent_review_published": true,
+      "material_findings_resolved": false,
+      "additional_parent_comment_posted": false
     }
   ],
-  "active_delegations": [
+  "active_delegations": [],
+  "completed_delegations": [
     {
       "child_identifier": "/root/s62_review",
       "model": "gpt-6-astra",
@@ -116,8 +132,10 @@
       "context_mode": "fork_turns=none",
       "input_blob": "172fd8d69e18171c93038f890026c1f3cb6665e8",
       "branch": "review/compact30-s62",
-      "status": "Technical audit complete per child status; report and publication in progress",
-      "report_not_yet_received": true
+      "commit": "e62fc15f91311823ab0c48a6f6e9c7dd35a28d10",
+      "draft_pr": 153,
+      "review_comment_id": 6634356048,
+      "status": "Published and independently verified by parent; Coordinator replay and findings resolution remain."
     }
   ]
 }
