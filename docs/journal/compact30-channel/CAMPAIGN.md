@@ -167,7 +167,8 @@ publication.
      kernel B (eight-step tiles, eight-byte commits, replay) is unbuilt, and the model is
      untested.
    - The 2026-11-01 walk-unroll trial (in the 2026-11-02 MLP post; journal
-     `2026-11-01-walk-unroll-decoder-i9-10900K`). It is the same experiment as #157: 16.4 to
+     `2026-11-01-walk-unroll-decoder-i9-10900K`). It is the closest precedent for #157, not the
+     identical candidate, machine or trial (Guardian D019, D021): 16.4 to
      10.44 instructions; decoder 1.017 at 1 worker and 1.000 at 4; control costs (`records`
      CPU +1.8% at 4 workers, `period-3` +6.5% at 1); verdict negative. #157 repeated it without
      citing it and reproduced its shape, a control flag included (`pattern` +1.6% at 1 thread
