@@ -1,9 +1,12 @@
 # The Optimizer's inbox
 
-A quiet branch for assignments to the Optimizer, and nothing else.
+A quiet pull request for assignments to the Optimizer, and nothing else.
 
-- **Who writes here:** the Coordinator only. No PR is opened from this branch, and no workflow
-  runs on it, so each push is exactly one event.
+- **The PR:** a draft from `optimizer/inbox` into `optimizer/inbox-base`, never merged; it
+  shares no history with master. Its commits carry `[skip ci]`. The Optimizer's Work task is
+  subscribed to this PR only.
+- **Who writes here:** the Coordinator only, so each brief is exactly one event. The
+  Optimizer's instructions ignore the PR's lifecycle events.
 - **One assignment, one comment** on the inbox PR, by the Coordinator, with the header
   `FROM: coordinator`, `TO: optimizer`, `RE:`, `TYPE: CHECKPOINT`.
 - **On such a comment, the Optimizer reads it,** works on it, commits progress early, and replies as
