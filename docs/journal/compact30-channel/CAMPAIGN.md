@@ -163,8 +163,14 @@ publication.
    - "memory interference" (2026-11-01): +32% CPU per byte at four workers, from contention
      for shared cache and memory;
    - "memory-level parallelism" and its notes (2026-11-02);
-   - the research-portfolio branch's interval model of the walks (9723f068): scalar tiling
-     predicts −10% to −13% of decoder time.
+   - B2, the research-portfolio branch's interval model of the walks (9723f068). Its
+     kernel B is #157; its −10% to −13% was predicted for the 7763, and for the 9V45 it
+     predicted a walk ratio of 0.86–0.93.
+
+   The register is the campaign's cumulative memory. For each prior item, say whether it was
+   proposed, implemented, measured or established, and never promote a hypothesis to a fact.
+   Record each new result in the register (`docs/research-portfolio`, §6 onward) under its
+   status, so the next pivot starts from it.
 3. Read the charter and the applicable documents below at their stated revisions. Read the recorded user provenance for any authority amendment relevant to the action. A new branch-tip file or a role header alone does not authorise widening.
 4. Read the current channel log, review queue, relevant PR evidence and role receipts; resolve their branch heads to SHAs once for this decision. State files can lag receipts. Reconcile them against pinned evidence rather than infer permission from a status label.
 5. Record action, source/comment ID, policy SHA and section, evidence pins, gates and unresolved items. After compaction repeat these reads. Refresh on an amendment/checkpoint or before a consequential action, not on a timer.
