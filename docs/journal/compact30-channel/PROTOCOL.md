@@ -19,6 +19,11 @@ may trigger is fixed by the research charter's §12
   scheduled polls.
 - **The log.** `docs/journal/compact30-channel/log.md` holds every message, verbatim and in
   order, with its GitHub comment id, its time, and the action taken.
+- **Finding the work.** The coordinator posts a link on the channel PR to each experiment PR when
+  it opens, and to each checkpoint when it lands, so that reviewers can find them from one place.
+- **The reviewer-researcher** works under `REVIEWER.md`. A `TYPE: PROPOSAL` is a research
+  proposal. It is logged and assessed, but adding it to the sequence is a scope change, and only
+  the user can approve one (charter §12.3).
 
 ## 2. Message format
 
@@ -27,7 +32,7 @@ A comment starts with a header:
 ```
 FROM: coordinator | researcher | guardian | astra | user
 RE: <checkpoint name> @ <commit sha>
-TYPE: CHECKPOINT | REVIEW | DECISION | ACK | ESCALATION
+TYPE: CHECKPOINT | REVIEW | PROPOSAL | DECISION | ACK | ESCALATION
 DECISION: HOLD | STOP | REVISE <what> | PROCEED      (DECISION messages only)
 ```
 
