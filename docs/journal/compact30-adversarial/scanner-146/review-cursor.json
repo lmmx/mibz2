@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Addressed published-record, D018 and D019 follow-ups completed; awaiting next qualifying comment",
+  "state": "Per-copy model assessment and D020 reconciliation complete; awaiting qualifying comment",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -63,9 +63,11 @@
     6643744616,
     6643809123,
     6643850845,
-    6643927959
+    6643927959,
+    6643992749,
+    6644051935
   ],
-  "last_processed_comment_id": 6643927959,
+  "last_processed_comment_id": 6644051935,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -317,6 +319,24 @@
       "report_path": "docs/journal/compact30-adversarial/scanner-146/d019-model-provenance-6643927959.md",
       "review_comment_id": 6643961853,
       "disposition": "Resolved B2 model provenance at exact file/sections; calibration, unrun falsifier and historical unrolling trial boundaries preserved."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643992749,
+      "report_commit": "fb4c4027d4746e810b645ebf96361bfcd44ea06d",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/copy-predictions-6643992749/report.md",
+      "review_comment_id": 6644080568,
+      "disposition": "Derived conditional per-copy predictions. Corrected cross-host/run calibration and B2 kernel identity; timings do not identify ell/m. Archived both mutable bench snapshots. No implementation."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6644051935,
+      "report_commit": "fb4c4027d4746e810b645ebf96361bfcd44ea06d",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d020-reconciliation-6644051935.md",
+      "review_comment_id": 6644084127,
+      "disposition": "Confirmed D020 comparison corrections; added uncapped common-latency invariance, elapsed-vs-CPU and separate-core/SMT measurement distinctions."
     }
   ],
   "active_delegations": [],
@@ -336,22 +356,14 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6643809123,
-      6643814937,
-      6643850845,
-      6643927959
+      6643992749,
+      6644051935
     ],
     "handled": [
-      6643809123,
-      6643850845,
-      6643927959
+      6643992749,
+      6644051935
     ],
-    "skipped": [
-      {
-        "comment_id": 6643814937,
-        "reason": "TO excludes researcher"
-      }
-    ],
+    "skipped": [],
     "automation_modified": false
   },
   "reported_programme_status": {
