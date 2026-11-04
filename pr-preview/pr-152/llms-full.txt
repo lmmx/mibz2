@@ -708,7 +708,7 @@ To reproduce the setup, these are the exact settings:
 
 | Role | Runs as | Model | Reasoning effort | Started by |
 | --- | --- | --- | --- | --- |
-| Coordinator | Claude Code session | Claude, as configured for the session | as configured for the session | a subscription to the PRs it follows |
+| Coordinator | Claude Code session | Claude, as configured for the session | as configured | a subscription to the PRs it follows |
 | Guardian | ChatGPT Work task, *Compact30 (W) Guardian* | Astra | Extra High | any PR comment; acts only on a `CHECKPOINT` |
 | Optimiser | ChatGPT Work task, *Compact30 (W) Optimiser* | Astra | Ultra | any PR comment; acts only on a `CHECKPOINT` addressed to it |
 | Researcher | ChatGPT Work task, *Compact30 (W) Researcher* | Astra | Extra High | any PR comment; acts only on a message addressed to it |
@@ -825,7 +825,9 @@ The [channel log](<https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b0670
 
 That real exchange gives the abstract handoff an address. The Guardian's review on \#145 identified the descriptor candidate at commit 29dd071f and linked its assessment at 62a313a8. The Coordinator recorded it in the channel log and supplied the independent review index at 18ca5d4c. The next step was to obtain that independent assessment; the checkpoint review alone did not complete the pre-integration requirement.
 
-That establishes delivery and review activity at the scale recorded. The independent pre-integration assessment is still outstanding in this snapshot. The effect of the team's arrangement on research throughput remains to be measured, and the constructor's performance will be established by its own experiments.
+The independent assessment then arrived the same way, while this post was being finished. The Researcher launched an isolated reviewer with the pinned brief as its only input, and its [review](<https://github.com/lmmx/mibz2/pull/153>) came back as a comment on the channel. It passes both prototypes on correctness and safety, and v3's finaliser on its safety evidence. It also holds two things for the Coordinator to resolve before anything is combined: several changed paths still need dedicated execution counters, and the two prototypes both remove one shared instruction, so their savings overlap. That is the next checkpoint.
+
+That establishes delivery and review at the scale recorded. The effect of the team's arrangement on research throughput remains to be measured, and the constructor's performance will be established by its own experiments.
 
 The method a reader can transfer is already concrete. Give each responsibility an owned output. Make a handoff name an exact result. Use events to bring that result to the next reader, and save enough state to recognise completed work. Define the authority that travels with a message and the evidence required for a conclusion.
 
