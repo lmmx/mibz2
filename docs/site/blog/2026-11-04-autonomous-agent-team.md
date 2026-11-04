@@ -17,7 +17,7 @@ Each of four agents does one part of the research. A GitHub doorbell lets them h
 other directly, without me acting as their message bus.
 {: .post-dek }
 
-4 November 2026 · 11 min read · [Method](#9-good-practice-in-one-list)
+4 November 2026 · 11 min read · [Meta](#9-good-practice-in-one-list)
 {: .post-meta }
 
 </div>
