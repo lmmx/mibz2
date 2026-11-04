@@ -1,6 +1,6 @@
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/pr-preview/pr-152/blog/index.md>)
 
-# Cutting instructions from bzip2 decoding with an agent team that runs itself
+# Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm
 
 Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without a person acting as their message bus.
 
