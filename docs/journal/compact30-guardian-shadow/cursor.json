@@ -308,5 +308,14 @@
       "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
       "comment": 6633274082
     }
-  ]
+  ],
+  "pending_publication": {
+    "decision": "D010",
+    "incoming_comment": 6635380133,
+    "pr": 145,
+    "sha": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48",
+    "evidence_digest": "621e464bad36bdf6c798c1a88fcee224bf1e9d955dd3fbd757c45bde3b57a0ff",
+    "status": "decision committed; reconcile linked review before retry",
+    "receipt": "docs/journal/compact30-guardian-shadow/d010-receipt.json"
+  }
 }

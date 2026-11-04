@@ -268,3 +268,33 @@ The brief's assertions that the context is fresh are requirements to establish, 
 **What follows.** An authorised launcher with the required isolation capability can use this route without another scientific permission gate. If it cannot demonstrate isolation, the remaining route is a genuinely fresh Astra conversation supplied the same brief within an explicitly compatible task scope. No new infrastructure, credentials, API spend, automation or permission expansion is approved. No candidate defect, new gate result, §6.2 completion, v3 eligibility, combined composition or integration approval is established. Routine authorised work continues.
 
 **Evidence receipt.** [d009-receipt.json](d009-receipt.json) preserves this input, exact brief/index contents, source identities and supporting ACK. Its SHA-256 is `f173ad09b100e451065369fee2540b7a818d416233a8b1215c43abee7c2010fa`; incoming body SHA-256 is `29a295029590ebe4c4f342a7ed63623c9b8212d019b9c0c8d6a2f1b4090a5f16`. These are direct UTF-8 byte hashes (receipt includes its final newline). This procedural assessment depends on no new empirical figures, so no candidate, performance or Miri replay is asserted. Publish one linked TYPE: REVIEW on #145, save the incoming/outgoing identifiers, and stop.
+
+## D010 — combined floor uses demonstrated overlap (G1; ACTIVE, stage A)
+
+**Concur with the coordinator's main interpretation of charter §6.3.** The registered threshold is F = sum of translated minima minus the **lower bound** of demonstrated overlap. Using an upper overlap bound lowers the acceptance bar and is not the registered rule. This is enforcement of the existing gate, not G6 acceptance of a rebuttal or a charter amendment.
+
+**Trigger:** [6635380133](https://github.com/lmmx/mibz2/pull/145#issuecomment-6635380133), PR145. Cursor and decision log at `9e4d465f6cb8de5b0005e784667721a59b9526c3` contain neither this incoming ID nor a partial decision for this evidence key.
+
+### Evidence and reproduced arithmetic
+
+Read GUARDIAN.md and charter at `931640523226053b758ebc0c2c9fd4eac61128b3`; charter blob `31ec5719ca24cd3204b34595401c68ffd31bb57f` explicitly specifies O's lower bound. Read ROLES.md (blob `8ea1583944e13ecdcb48dc1cb23f31c934c700b5`) and activation report 262 at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`. The canonical ledger, report and 63-class map at `37193bacd220f24b1d4c81b6a55ef4410ba6eb48` incorrectly label 60 M as the certified floor.
+
+Substituting the reported demonstrated shared removal, one B2 instruction at +0x12b5 executed 2,393,313 times, reproduces:
+
+| Included components | Registered F with no further demonstrated overlap |
+|---|---:|
+| scanner and descriptors | 60,000,000 + 40,000,000 − 2,393,313 = **97,606,687** |
+| above plus eligible v3 | **147,606,687** |
+| above plus eligible v3 and qualified SSE2 refinement | **151,606,687** |
+
+This is a rule interpretation and arithmetic replay conditional on the stated demonstrated overlap. It does not independently certify the complete instruction-identity map or run new profiles. The exact read sources and calculations are in [d010-receipt.json](d010-receipt.json), SHA-256 `621e464bad36bdf6c798c1a88fcee224bf1e9d955dd3fbd757c45bde3b57a0ff`.
+
+**Correction to the checkpoint's v3 wording:** any further demonstrated overlap between v3 and the other components is **subtracted** from these thresholds, not added. v3 and its incremental SSE2 refinement are one chain; do not discount their internal overlap again. SSE2 is not a standalone +4 M component without v3.
+
+**The claimed 40 M upper bound is not established by the cited argument.** Registered minima are acceptance thresholds, not upper bounds on the sets of removed B2 instructions. Therefore min(60 M,40 M) alone does not prove an upper bound on actual shared removals. This defect does not affect the lower-bound rule or the conditional arithmetic above. No unknown overlap discount is permitted.
+
+### Gate disposition and next action
+
+G1: require correction of the canonical ledger's floor interpretation. The combined ledger must independently satisfy both §6.3 conditions: its conservative lower end >= F, and strictly greater than the best single **qualified** component's isolated lower bound on B2. Its measured net must be recounted from the combined code, not summed from isolated results.
+
+The checkpoint's proposed new scanner bound 84,060,421 and descriptor counter replays are not certified in this interpretation decision. The subsequently supplied counter-remedy checkpoint is separate evidence for separate assessment. Existing safety, counter coverage and §6.2 closure requirements remain; no new component qualification, combined composition, integration, timing, prototype, unsafe operation or spending is authorized. G6 and GUARDIAN §4 remain with the user.

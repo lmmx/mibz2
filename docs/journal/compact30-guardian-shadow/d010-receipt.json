@@ -1,0 +1,16 @@
+{
+  "incoming_comment": 6635380133,
+  "pr": 145,
+  "operating_pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+  "charter_blob": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
+  "optimizer_pin": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48",
+  "report_blob": "55714fb793ce5c54ff317b49b6f0ee4284b700a4",
+  "map_blob": "6b54c1f3f7c8e963972728c030fdbfd8f170193f",
+  "ledger_blob": "f0e30c8030aa53c663c67a5acd32091a6bbb4486",
+  "scope": "Registered floor interpretation; conditional substitution of the reported demonstrated overlap, not a new audit of overlap completeness or component qualification",
+  "arithmetic": {
+    "scanner_descriptor": 97606687,
+    "with_v3": 147606687,
+    "with_v3_sse2": 151606687
+  }
+}
