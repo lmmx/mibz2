@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without a person acting as their message bus.">
+        <meta name="description" content="Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=96dfb6187bd6">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=a8a6dfbe1106">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=96dfb6187bd6">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=a8a6dfbe1106">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=96dfb6187bd6">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=a8a6dfbe1106">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=96dfb6187bd6">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=a8a6dfbe1106">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=96dfb6187bd6">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=a8a6dfbe1106">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -88,7 +88,7 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
   <meta property="og:title" content="Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm">
-  <meta property="og:description" content="Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without a person acting as their message bus.">
+  <meta property="og:description" content="Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-152/blog/2026-11-04-autonomous-agent-team/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-152/assets/social/blog-2026-11-04-autonomous-agent-team.png">
   <meta property="og:image:type" content="image/png">
@@ -97,7 +97,7 @@
   <meta property="og:image:alt" content="Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm">
-  <meta name="twitter:description" content="Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without a person acting as their message bus.">
+  <meta name="twitter:description" content="Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-152/assets/social/blog-2026-11-04-autonomous-agent-team.png">
   <meta name="twitter:image:alt" content="Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm">
 
@@ -2012,7 +2012,7 @@
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
 <h1 id="call-on-mibz2-cutting-instructions-from-bzip2-decoding-with-an-autonomous-swarm">Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm<a class="headerlink" href="#call-on-mibz2-cutting-instructions-from-bzip2-decoding-with-an-autonomous-swarm" title="Permanent link">&para;</a></h1>
 <p class="post-dek">Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each
-other directly, without a person acting as their message bus.</p>
+other directly, without me acting as their message bus.</p>
 <p class="post-meta">4 November 2026 · 11 min read · <a href="#9-good-practice-in-one-list">Method</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
@@ -2021,10 +2021,10 @@ other directly, without a person acting as their message bus.</p>
 AI agents. One implemented and tested each change to compact30's table builder. Others
 searched the machine code for instructions to remove, reviewed each result, and checked that
 the experiments followed their registered rules. Each agent could work alone for long stretches.
-Together, though, they formed a team only when the maintainer copied each agent's messages to
-the next. A person was the team's message bus.</p>
+Together, though, they formed a team only when I copied each agent's messages to
+the next. I was the team's message bus.</p>
 <p>This post describes the team: why the work is split into four roles, and how they now hand it to
-each other through the repository without anyone relaying. Nothing in the setup is exotic: a
+each other through the repository without me relaying. Nothing in the setup is exotic: a
 shared repository, a small message format, and one event-driven trigger for each agent. Most of
 the effort went into the rules that make it safe for the agents to act on each other's messages
 without asking first.</p>
@@ -2048,7 +2048,7 @@ it. Three of the roles run on the same model, and that doesn't make them interch
 <td>change the scientific rules, or grant itself authority</td>
 </tr>
 <tr>
-<td><strong>Optimizer</strong></td>
+<td><strong>Optimiser</strong></td>
 <td>Codex</td>
 <td>finding instructions to remove, proving the transformations, keeping the canonical instruction ledger</td>
 <td>implement code, or certify its own proposals</td>
@@ -2063,18 +2063,18 @@ it. Three of the roles run on the same model, and that doesn't make them interch
 <td><strong>Researcher</strong></td>
 <td>Codex</td>
 <td>independent, adversarial challenge, including the formal review before changes are combined</td>
-<td>agree by default, or duplicate the Optimizer</td>
+<td>agree by default, or duplicate the Optimiser</td>
 </tr>
 </tbody>
 </table>
-<p>The split follows the questions each role asks. The Optimizer asks how to remove more
+<p>The split follows the questions each role asks. The Optimiser asks how to remove more
 instructions. The Guardian asks whether the process is scientifically defensible. The Researcher
 asks whether the team's reasoning is sound, and whether the Guardian is making the right call.</p>
 <h3 id="why-this-work-needs-four-roles">Why this work needs four roles<a class="headerlink" href="#why-this-work-needs-four-roles" title="Permanent link">&para;</a></h3>
 <p>Instruction-level optimisation is easy to fool yourself about, in a few specific ways, and each
 role answers one of them.</p>
 <ul>
-<li><strong>Savings are estimates until compiled.</strong> The Optimizer's design for a change predicts which
+<li><strong>Savings are estimates until compiled.</strong> The Optimiser's design for a change predicts which
   instructions disappear. The compiler then decides what's actually emitted, and often spills a
   register or recomputes an address somewhere the design didn't touch. So the agent that
   proposes isn't the one that builds and measures. The Coordinator compiles each change and
@@ -2082,7 +2082,7 @@ role answers one of them.</p>
 <li><strong>Targets drift unless someone holds them.</strong> Each experiment registers its gates before it
   runs: correctness first, then a minimum net saving. The Guardian applies them as written,
   which stops a near miss from being reinterpreted after the fact.</li>
-<li><strong>Accounting errors look like results.</strong> Here the Researcher and the Optimizer checked each
+<li><strong>Accounting errors look like results.</strong> Here the Researcher and the Optimiser checked each
   other's arithmetic, and both checked the Coordinator's. Two runs of a profiler had been
   presented as a bound, and they weren't one. A Miri test covered one unchecked access but not
   the other. Both were caught and corrected before anything was combined.</li>
@@ -2097,7 +2097,7 @@ so they survive a session restarting or being replaced.</p>
 a file in the repository, on a branch that only one agent writes to:</p>
 <ul>
 <li><strong>The charter</strong> says what work is authorised, which gates each experiment must pass, and which
-  decisions are reserved for the maintainer.</li>
+  decisions are reserved for me.</li>
 <li><strong>The operating specifications</strong> say what each role does and how it reports.</li>
 <li><strong>Each agent's own state</strong> lives on its own branch: a cursor of what it has already processed,
   and its ledger or decision log.</li>
@@ -2114,7 +2114,7 @@ stopped.</p>
 <p>The agents talk to each other in comments on pull requests. Each comment begins with a short
 header:</p>
 <div class="language-text highlight"><pre><span></span><code>FROM: coordinator
-TO: guardian, optimizer
+TO: guardian
 RE: prototype 2, hot descriptor pointer arrays @ 29dd071f
 TYPE: CHECKPOINT
 </code></pre></div>
@@ -2135,12 +2135,12 @@ TYPE: CHECKPOINT
 </tr>
 <tr>
 <td><code>REVIEW</code></td>
-<td>Optimizer, Guardian, Researcher</td>
+<td>Optimiser, Guardian, Researcher</td>
 <td>an assessment, with its evidence published on the sender's branch</td>
 </tr>
 <tr>
 <td><code>PROPOSAL</code></td>
-<td>Optimizer</td>
+<td>Optimiser</td>
 <td>a new idea; it isn't authorisation to implement it</td>
 </tr>
 <tr>
@@ -2153,7 +2153,7 @@ TYPE: CHECKPOINT
 <p><code>TO:</code> routes the message to particular roles, and <code>RE:</code> pins the commit it's about. One draft
 pull request serves as the team's channel. Every checkpoint is announced there, and each
 experiment and each agent also has a draft PR of its own.</p>
-<p>The header is a label, not authentication. All the agents post through the maintainer's GitHub
+<p>The header is a label, not authentication. All the agents post through my GitHub
 account, so a line saying <code>FROM: guardian</code> proves nothing about who wrote it. The safeguards in
 §6 are built around that fact.</p>
 <h2 id="4-who-wakes-whom">4. Who wakes whom<a class="headerlink" href="#4-who-wakes-whom" title="Permanent link">&para;</a></h2>
@@ -2164,12 +2164,12 @@ subscribed PR starts a turn in its existing session. When another agent replies,
 reads it within seconds.</p>
 <p><strong>The Codex agents</strong> needed a different mechanism. A Codex conversation keeps its objective
 between turns, but nothing on GitHub can start a turn in it. Before the change, each Codex agent
-waited until the maintainer typed a nudge, such as "new checkpoint on #151". Messages from
-Codex to the Coordinator flowed on their own. Messages in the other direction depended on a
-person.</p>
+waited until I typed a nudge, such as "new checkpoint on #151". Messages from
+Codex to the Coordinator flowed on their own. Messages in the other direction depended on
+me.</p>
 <figure class="bf-fig">
-<p class="bf-title">Before: two directions, one of them through a person</p>
-<svg viewBox="0 0 720 230" role="img" aria-label="Codex agents post to GitHub, and their comments wake the Coordinator automatically. The Coordinator's checkpoints also reach GitHub, but nothing wakes the Codex agents: the maintainer has to nudge each one by hand."><rect x="0" y="80" width="200" height="70" rx="10" class="bf-card-hi"/><text x="100" y="110" class="bf-ts" text-anchor="middle">Coordinator</text><text x="100" y="132" class="bf-tm" text-anchor="middle">Claude Code</text><rect x="260" y="80" width="200" height="70" rx="10" class="bf-panel"/><text x="360" y="110" class="bf-ts" text-anchor="middle">GitHub</text><text x="360" y="132" class="bf-tm" text-anchor="middle">PR comments and commits</text><rect x="520" y="80" width="200" height="70" rx="10" class="bf-card"/><text x="620" y="110" class="bf-ts" text-anchor="middle">Codex agents</text><text x="620" y="132" class="bf-tm" text-anchor="middle">Optimizer · Guardian · Researcher</text><path d="M204 100H252m-5-5 5 5-5 5" class="bf-arrow"/><text x="228" y="90" class="bf-tm" text-anchor="middle">posts</text><path d="M516 130H468m5-5-5 5 5 5" class="bf-arrow"/><text x="492" y="152" class="bf-tm" text-anchor="middle">posts</text><path d="M256 130H208m5-5-5 5 5 5" class="bf-arrow"/><text x="230" y="152" class="bf-tm" text-anchor="middle">wakes</text><rect x="420" y="0" width="300" height="52" rx="8" class="bf-pill-ready"/><text x="570" y="22" class="bf-ts" text-anchor="middle">The maintainer</text><text x="570" y="42" class="bf-pill-ready-t" text-anchor="middle">nudges each Codex agent by hand</text><path d="M620 56V76m-5-5 5 5 5-5" class="bf-arrow"/><text x="360" y="200" class="bf-tm" text-anchor="middle">GitHub can wake the Coordinator, but nothing on GitHub can wake a Codex conversation.</text></svg>
+<p class="bf-title">Before: two directions, one of them through me</p>
+<svg viewBox="0 0 720 230" role="img" aria-label="Codex agents post to GitHub, and their comments wake the Coordinator automatically. The Coordinator's checkpoints also reach GitHub, but nothing wakes the Codex agents: I have to nudge each one by hand."><rect x="0" y="80" width="200" height="70" rx="10" class="bf-card-hi"/><text x="100" y="110" class="bf-ts" text-anchor="middle">Coordinator</text><text x="100" y="132" class="bf-tm" text-anchor="middle">Claude Code</text><rect x="260" y="80" width="200" height="70" rx="10" class="bf-panel"/><text x="360" y="110" class="bf-ts" text-anchor="middle">GitHub</text><text x="360" y="132" class="bf-tm" text-anchor="middle">PR comments and commits</text><rect x="520" y="80" width="200" height="70" rx="10" class="bf-card"/><text x="620" y="110" class="bf-ts" text-anchor="middle">Codex agents</text><text x="620" y="132" class="bf-tm" text-anchor="middle">Optimiser · Guardian · Researcher</text><path d="M204 100H252m-5-5 5 5-5 5" class="bf-arrow"/><text x="228" y="90" class="bf-tm" text-anchor="middle">posts</text><path d="M516 130H468m5-5-5 5 5 5" class="bf-arrow"/><text x="492" y="152" class="bf-tm" text-anchor="middle">posts</text><path d="M256 130H208m5-5-5 5 5 5" class="bf-arrow"/><text x="230" y="152" class="bf-tm" text-anchor="middle">wakes</text><rect x="420" y="0" width="300" height="52" rx="8" class="bf-pill-ready"/><text x="570" y="22" class="bf-ts" text-anchor="middle">Me</text><text x="570" y="42" class="bf-pill-ready-t" text-anchor="middle">nudges each Codex agent by hand</text><path d="M620 56V76m-5-5 5 5 5-5" class="bf-arrow"/><text x="360" y="200" class="bf-tm" text-anchor="middle">GitHub can wake the Coordinator, but nothing on GitHub can wake a Codex conversation.</text></svg>
 <figcaption>The gap was in one direction only. Each agent could already do its work; what was missing was a way for the Coordinator's message to start a Codex agent.</figcaption>
 </figure>
 
@@ -2181,8 +2181,8 @@ it starts a short, fresh run of that role.</p>
 guard:</p>
 <ol>
 <li><strong>Fetch the triggering comment by its ID.</strong> The event supplies only the ID.</li>
-<li><strong>Check that it's addressed to this role.</strong> For the Optimizer, that means a <code>TYPE: CHECKPOINT</code>
-   with <code>optimizer</code> in its <code>TO:</code> line. If not, stop at once, without doing anything else.</li>
+<li><strong>Check that it's addressed to this role.</strong> For the Optimiser, that means a <code>TYPE: CHECKPOINT</code>
+   with its role in the <code>TO:</code> line. If not, stop at once, without doing anything else.</li>
 <li><strong>Check the cursor.</strong> If this comment's ID has already been processed, stop.</li>
 <li><strong>Rebuild the state.</strong> Read the role's specification, its cursor and its ledger or decision log
    from its own branch.</li>
@@ -2193,9 +2193,9 @@ guard:</p>
 <li><strong>Save the cursor,</strong> and stop.</li>
 </ol>
 <figure class="bf-fig">
-<p class="bf-title">After: one cycle, with nobody relaying</p>
-<svg viewBox="0 0 720 320" role="img" aria-label="The Coordinator posts a CHECKPOINT comment addressed to the Guardian and the Optimizer. GitHub delivers the comment event to each role's Work task, which starts a fresh run. Each run checks the address and its cursor, rebuilds its state from its branch, does the work, commits it and posts a REVIEW comment. That comment wakes the Coordinator, which takes the next step."><rect x="0" y="0" width="230" height="78" rx="10" class="bf-card-hi"/><text x="16" y="26" class="bf-ts">1 · Coordinator</text><text x="16" y="48" class="bf-tm">posts TYPE: CHECKPOINT</text><text x="16" y="66" class="bf-tm">TO: guardian, optimizer</text><path d="M234 39H282m-5-5 5 5-5 5" class="bf-arrow"/><rect x="286" y="0" width="148" height="78" rx="10" class="bf-panel"/><text x="360" y="32" class="bf-ts" text-anchor="middle">2 · GitHub</text><text x="360" y="54" class="bf-tm" text-anchor="middle">comment event</text><path d="M438 39H486m-5-5 5 5-5 5" class="bf-arrow"/><rect x="490" y="0" width="230" height="78" rx="10" class="bf-cell-hi"/><text x="506" y="26" class="bf-ts">3 · Doorbell</text><text x="506" y="48" class="bf-tm">each role's Work task</text><text x="506" y="66" class="bf-tm">starts a fresh run</text><path d="M605 82V110m-5-5 5 5 5-5" class="bf-arrow"/><rect x="380" y="114" width="340" height="104" rx="10" class="bf-card"/><text x="396" y="140" class="bf-ts">4 · The run</text><text x="396" y="162" class="bf-tm">addressed to me? already in my cursor?</text><text x="396" y="182" class="bf-tm">rebuild state from my branch, do the work</text><text x="396" y="202" class="bf-tm">commit to my branch, post TYPE: REVIEW</text><path d="M376 166H328m5-5-5 5 5 5" class="bf-arrow"/><rect x="0" y="114" width="324" height="104" rx="10" class="bf-panel"/><text x="16" y="140" class="bf-ts">5 · GitHub</text><text x="16" y="162" class="bf-tm">the REVIEW comment is an event</text><text x="16" y="182" class="bf-tm">on a PR the Coordinator subscribes to</text><path d="M115 222V250m-5-5 5 5 5-5" class="bf-arrow"/><rect x="0" y="254" width="420" height="62" rx="10" class="bf-card-hi"/><text x="16" y="280" class="bf-ts">6 · Coordinator wakes</text><text x="16" y="300" class="bf-tm">reads the review, takes the next authorised step</text></svg>
-<figcaption>Every link in the cycle is an event. No agent polls, and no person passes messages along. Replies are typed REVIEW, so they never re-trigger a CHECKPOINT run.</figcaption>
+<p class="bf-title">After: one cycle, with no one relaying</p>
+<svg viewBox="0 0 720 320" role="img" aria-label="The Coordinator posts a CHECKPOINT comment addressed to the Guardian and the Optimiser. GitHub delivers the comment event to each role's Work task, which starts a fresh run. Each run checks the address and its cursor, rebuilds its state from its branch, does the work, commits it and posts a REVIEW comment. That comment wakes the Coordinator, which takes the next step."><rect x="0" y="0" width="230" height="78" rx="10" class="bf-card-hi"/><text x="16" y="26" class="bf-ts">1 · Coordinator</text><text x="16" y="48" class="bf-tm">posts TYPE: CHECKPOINT</text><text x="16" y="66" class="bf-tm">TO: guardian</text><path d="M234 39H282m-5-5 5 5-5 5" class="bf-arrow"/><rect x="286" y="0" width="148" height="78" rx="10" class="bf-panel"/><text x="360" y="32" class="bf-ts" text-anchor="middle">2 · GitHub</text><text x="360" y="54" class="bf-tm" text-anchor="middle">comment event</text><path d="M438 39H486m-5-5 5 5-5 5" class="bf-arrow"/><rect x="490" y="0" width="230" height="78" rx="10" class="bf-cell-hi"/><text x="506" y="26" class="bf-ts">3 · Doorbell</text><text x="506" y="48" class="bf-tm">each role's Work task</text><text x="506" y="66" class="bf-tm">starts a fresh run</text><path d="M605 82V110m-5-5 5 5 5-5" class="bf-arrow"/><rect x="380" y="114" width="340" height="104" rx="10" class="bf-card"/><text x="396" y="140" class="bf-ts">4 · The run</text><text x="396" y="162" class="bf-tm">addressed to me? already in my cursor?</text><text x="396" y="182" class="bf-tm">rebuild state from my branch, do the work</text><text x="396" y="202" class="bf-tm">commit to my branch, post TYPE: REVIEW</text><path d="M376 166H328m5-5-5 5 5 5" class="bf-arrow"/><rect x="0" y="114" width="324" height="104" rx="10" class="bf-panel"/><text x="16" y="140" class="bf-ts">5 · GitHub</text><text x="16" y="162" class="bf-tm">the REVIEW comment is an event</text><text x="16" y="182" class="bf-tm">on a PR the Coordinator subscribes to</text><path d="M115 222V250m-5-5 5 5 5-5" class="bf-arrow"/><rect x="0" y="254" width="420" height="62" rx="10" class="bf-card-hi"/><text x="16" y="280" class="bf-ts">6 · Coordinator wakes</text><text x="16" y="300" class="bf-tm">reads the review, takes the next authorised step</text></svg>
+<figcaption>Every link in the cycle is an event. No agent polls, and I pass no messages along. Replies are typed REVIEW, so they never re-trigger a CHECKPOINT run.</figcaption>
 </figure>
 
 <p>A run that rings the bell for another role's message costs one comment fetch and stops. Replies
@@ -2212,8 +2212,8 @@ widen it.</strong></p>
 <li><strong>Routine work needs no permission.</strong> Work the charter already authorises goes ahead without
   anyone's go-ahead. The Guardian isn't an approval gate. It steps in when evidence is disputed, a
   safety argument fails or a rule needs interpreting.</li>
-<li><strong>Widening needs the maintainer.</strong> New experiments, unsafe code, timing runs, changes to frozen
-  code, merges and new infrastructure all count only when the maintainer says so in the
+<li><strong>Widening needs me.</strong> New experiments, unsafe code, timing runs, changes to frozen
+  code, merges and new infrastructure all count only when I say so in the
   Coordinator's own session. That session is the one channel whose author is known.</li>
 <li><strong>Only collaborators can comment.</strong> The repository limits interactions to collaborators, so
   only the team's own agents can post in the channel.</li>
@@ -2225,7 +2225,7 @@ reviewer, straight from the repository. It can't approve a new experiment.</p>
 <p>An agent that proposed an idea isn't independent when it comes to judging that idea's result.
 The team keeps three things separate:</p>
 <ul>
-<li><strong>The proposer.</strong> The Optimizer flags any audit of its own proposal as not independent.</li>
+<li><strong>The proposer.</strong> The Optimiser flags any audit of its own proposal as not independent.</li>
 <li><strong>The governor.</strong> The Guardian checks that the rules were followed. It doesn't check its own
   rulings.</li>
 <li><strong>The independent review before changes are combined.</strong> It goes to a fresh run that's given
@@ -2246,7 +2246,7 @@ listings, the counters and the raw profiles.</p>
   branches.</li>
 <li><strong>Pinned evidence everywhere.</strong> Each message names the commit it refers to, and each decision
   names the documents it applied, by blob.</li>
-<li><strong>A commit identity on every branch.</strong> Every commit is the maintainer's own GitHub identity,
+<li><strong>A commit identity on every branch.</strong> Every commit is under my own GitHub identity,
   with no AI attribution. Automated runs use the account's GitHub noreply address.</li>
 <li><strong>A model and an effort level for each role.</strong> The table below has them.</li>
 <li><strong>No polling.</strong> Nothing runs on a timer. Every run starts because something happened.</li>
@@ -2266,7 +2266,7 @@ listings, the counters and the raw profiles.</p>
 <td>Claude</td>
 </tr>
 <tr>
-<td>Optimizer</td>
+<td>Optimiser</td>
 <td>ChatGPT Work event-triggered task</td>
 <td>Astra ⠶ Ultra</td>
 </tr>
@@ -2299,9 +2299,9 @@ listings, the counters and the raw profiles.</p>
 <li><strong>Limit who can post,</strong> so the channel carries only the team's own messages.</li>
 </ol>
 <h2 id="10-what-changes">10. What changes<a class="headerlink" href="#10-what-changes" title="Permanent link">&para;</a></h2>
-<p>The maintainer is no longer the message bus. A checkpoint posted by the Coordinator reaches the
-Guardian and the Optimizer on its own, their reviews reach the Coordinator on their own, and the
-next step follows. The maintainer's part is what it should be: setting the rules, and making the
+<p>I'm no longer the message bus. A checkpoint posted by the Coordinator reaches the
+Guardian and the Optimiser on its own, their reviews reach the Coordinator on their own, and the
+next step follows. My part is what it should be: setting the rules, and making the
 decisions the rules reserve.</p>
 <p>The first cycles of this team are running now, on the compact30 table builder. Once there's a
 record to compare, this post will gain a short note on how its throughput compares with the
@@ -2450,17 +2450,17 @@ earlier way of working.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=96dfb6187bd6"></script>
+        <script src="../../assets/javascripts/bench.js?v=a8a6dfbe1106"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=96dfb6187bd6"></script>
+        <script src="../../assets/javascripts/couriers.js?v=a8a6dfbe1106"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=96dfb6187bd6"></script>
+        <script src="../../assets/javascripts/blog.js?v=a8a6dfbe1106"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=96dfb6187bd6"></script>
+        <script src="../../assets/javascripts/frontier.js?v=a8a6dfbe1106"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=96dfb6187bd6"></script>
+        <script src="../../assets/javascripts/katex.js?v=a8a6dfbe1106"></script>
       
     
   </body>
