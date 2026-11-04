@@ -183,3 +183,12 @@ Verbatim:
   - **CHECKPOINT 6641672441,** edited in place: the walk floor for parity is ≈ 18.26
     instructions per row, not 17.1, because the build saving is banked.
   - **Write-up:** `docs/journal/2026-11-04-compact30-production-port.md`.
+- **D016 (Guardian, REVIEW 6641768409).**
+  - Concurs with rejecting #155, with no line-level STOP. Walk budget: 18.25507
+    instructions per row, holding the build and the remainder fixed.
+  - **Corrections accepted:**
+    - D015's absolute totals include 16 driver instructions;
+    - the CI loss rejects a net benefit on this runner, not every cache effect;
+    - `records` at 1 thread is not significant;
+    - parity is a screen only.
+  - The write-up is corrected, and so is the #155 comment.
