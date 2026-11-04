@@ -375,5 +375,13 @@
       "commit": "080dd146353485eb2e6e7b17bc78283278563e6e",
       "comment": 6635620697
     }
-  ]
+  ],
+  "pending_publication": {
+    "decision": "D012",
+    "incoming_comment": 6637300905,
+    "pr": 145,
+    "sha": "55b4b86be4ba7eed41b283a52f2c1d56fa43cc67",
+    "evidence_digest": "6424e00222686132af7e1d3febdd09a5135101b88787b72ca72293818e4d33d4",
+    "status": "decision committed; reconcile linked review before retry"
+  }
 }

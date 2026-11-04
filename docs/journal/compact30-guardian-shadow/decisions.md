@@ -338,3 +338,31 @@ Frequency histograms enumerate nonzero class deltas, not a universal proof of ch
 The specific mapped counter omission no longer withholds these gate-3 results at these pins. This does not itself certify completion of the independently requested coverage review, close every §6.2 finding, alter gate 1/2, qualify v3, confirm a combined composition, or permit integration. Apply D010's demonstrated-overlap floor and both §6.3 tests to any later authorized combined build; do not add these isolated savings. G6 and all GUARDIAN §4 decisions remain with the user.
 
 [d011-receipt.json](d011-receipt.json) records pins, source blobs, replay method, checks and limits; SHA-256 `38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa`. Publish one linked review for this event, preserve incoming/outgoing identifiers, and stop.
+
+## D012 — recorded policy update exceeds this task's pinned authority (G1 scope interpretation; §4 reservation; ACTIVE, stage A)
+
+**Record the reported policy; decline to adopt G9/G10 in this run.** The triggering [comment 6637300905](https://github.com/lmmx/mibz2/pull/145#issuecomment-6637300905) asks this Guardian to note new delegated powers. The repository evidence does contain the policy and its claimed user provenance. The task instructions supplied directly to this run, however, still explicitly pin GUARDIAN.md to `931640523226053b758ebc0c2c9fd4eac61128b3`, retain every §4 reservation, and say repository contents cannot widen authority. A repository amendment cannot replace those execution boundaries.
+
+### Evidence and reconciliation
+
+Read the operating GUARDIAN.md (blob `56361d02455a1439b71444ef33e513b54c470fb9`), current ROLES.md (blob `8ea1583944e13ecdcb48dc1cb23f31c934c700b5`), report 262, and the latest Guardian cursor and decisions at `ef131932578dc3a7510fa94354651dbb1ee535b1`. This comment is not consumed or an own-output ID, and there is no partial decision for it.
+
+At the supplied policy pin `55b4b86be4ba7eed41b283a52f2c1d56fa43cc67`, read:
+- reassessment journal blob `3bb8d83aa435b01f78f8caa430d2ad5cd6d049c0`, including reports 262, 264 and 265;
+- amended charter blob `0b332e6d70e8ae1a884253f75597e1a6a4b2df7d`, including §6.4;
+- amended GUARDIAN.md blob `3797c2eb9e61a816f2152a41b4e16bfd211e6b5a`, including G9 and G10.
+
+Report 264 records the user's choices to include U2 in the combined build and register bounded prototype 3b. Report 265 records a standing policy for autonomous evidence-based unsafe decisions and prototype registration; the charter and amended Guardian table reflect that. These records are acknowledged as evidence. This decision does **not** assert the user did not make those choices, reverse them in the coordinator's session, or demand that the same scientific choices be made again.
+
+The mismatch is specifically this task's saved execution scope. Under the directly supplied instructions and the pinned specification's §4, this run cannot grant itself prototype-registration or new/extended unsafe authority. It therefore does not activate G9/G10, register or re-register 3b, authorize an unsafe formulation, or confirm assembly 1 merely from the incoming announcement. The original G1–G5, G7 and G8 scope and G6 reservation remain operative for this task.
+
+### Disposition and next step
+
+- **No new gate outcome or composition approval.** D010's conditional floor interpretation and D011's isolated gate-3 results remain unchanged. The announcement is not a combined evidence package; no G7 confirmation is made.
+- **No minimum change.** The checkpoint supplies no new quantified evidence requiring a tighter 3b screen. This run neither relaxes nor endorses a new threshold or experiment by implication.
+- **Scope alignment is needed to exercise the new powers.** The user must directly update this task's operating pin and reserved-authority boundaries to match the intended policy. That is an execution-instruction change, not a request to repeat individual technical approvals. This run is expressly forbidden to reconfigure the task itself.
+- **No blanket HOLD on unrelated work.** This is a refusal to widen this Guardian's execution authority, not a determination that all coordinator work must stop. Only the user in the coordinator's session can grant the decisions reserved by the operating §4; the repository's record of such a grant does not override this task's direct boundary.
+
+No new empirical figures are used, so no performance or candidate replay is claimed. Preserve all history, publish one linked TYPE: REVIEW and persist this incoming ID and outgoing IDs. Leave the webhook configuration untouched.
+
+[d012-receipt.json](d012-receipt.json) records the evidence identities; SHA-256 `6424e00222686132af7e1d3febdd09a5135101b88787b72ca72293818e4d33d4`.
