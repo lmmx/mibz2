@@ -1,0 +1,7 @@
+@@ replace descriptor[14:15] +0x2f | comb[14:15] +0x2f
+- +0x002f mov %rbx,%rsi
++ +0x002f mov %ebx,%esi
+@@ replace descriptor[53:54] +0xcf | comb[53:54] +0xce
+- +0x00cf mov $0xffffffff,%edi
++ +0x00ce mov 0x284c(%r14),%edi
+# descriptor: 74 instructions, 0 stack loads, 0 stack stores; comb: 74 instructions, 0 stack loads, 0 stack stores; equal 72, removed 2, added 2

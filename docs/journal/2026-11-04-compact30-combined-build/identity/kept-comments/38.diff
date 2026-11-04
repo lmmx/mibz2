@@ -1,0 +1,4 @@
+core::slice::index::slice_index_fail
+14: 'lea DISP(%rip),%rdi ;GCC_except_table992' / 'lea DISP(%rip),%rdi ;GCC_except_table993'
+31: 'lea DISP(%rip),%rdi ;GCC_except_table992' / 'lea DISP(%rip),%rdi ;GCC_except_table993'
+44: 'lea DISP(%rip),%rdi ;GCC_except_table992' / 'lea DISP(%rip),%rdi ;GCC_except_table993'

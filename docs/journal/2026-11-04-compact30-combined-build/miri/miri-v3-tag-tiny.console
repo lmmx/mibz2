@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner target/miri/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2c-synthetic --miri 'v3:tag-tiny'`
+ctor2c-synthetic: v3 class tag-tiny: 4 cases exact
+ctor2c-synthetic --miri v3:tag-tiny: 4 cases, 8 array comparisons, 12 walk outputs, 8 restorations: every check exact; fresh 0, lookahead 0, held 0, no-full-tile runs 0, nonuniform 0, second segments 0, tails 4; scalar rows 10, fragment rows 0, runs 0, refills 7, crossing 6, forced 0, epochs 4; leaf 0, slow 7 (old epoch 0, partial 1, preset RAW 6), wide 0

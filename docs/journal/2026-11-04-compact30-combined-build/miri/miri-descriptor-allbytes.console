@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner target/miri/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2c-synthetic --miri 'descriptor:allbytes'`
+ctor2c-synthetic: descriptor class allbytes: 1 cases exact
+ctor2c-synthetic --miri descriptor:allbytes: 1 cases, 2 array comparisons, 3 walk outputs, 2 restorations: every check exact; fresh 64, lookahead 0, held 0, no-full-tile runs 0, nonuniform 64, second segments 30, tails 0; scalar rows 1024, fragment rows 0, runs 0, refills 273, crossing 272, forced 0, epochs 1; leaf 0, slow 273 (old epoch 0, partial 1, preset RAW 272), wide 0

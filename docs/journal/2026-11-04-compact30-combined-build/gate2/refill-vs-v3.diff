@@ -1,0 +1,78 @@
+@@ insert v3[2:2] +0x4 | comb[2:3] +0x4
++ +0x0004 push %r12
+@@ replace v3[3:9] +0x5 | comb[4:12] +0x7
+- +0x0005 mov %rdi,%rbx
+- +0x0008 lea (%rsi,%rsi,4),%rax
+- +0x000c lea (%rdi,%rax,8),%r15
+- +0x0010 add $0x40,%r15
+- +0x0014 mov 0x40(%rdi,%rax,8),%r14
+- +0x0019 sub 0x50(%rdi,%rax,8),%r14
++ +0x0007 push %rax
++ +0x0008 mov %rsi,%rbx
++ +0x000b mov %rdi,%r14
++ +0x000e mov 0x40(%rdi,%rsi,8),%r15
++ +0x0013 lea (%rsi,%rsi,2),%rax
++ +0x0017 lea (%rdi,%rax,8),%r12
++ +0x001b add $0x1040,%r12
++ +0x0022 sub 0x1040(%rdi,%rax,8),%r15
+@@ replace v3[10:11] +0x20 | comb[13:15] +0x2c
+- +0x0020 mov %rbx,%rdi
++ +0x002c mov %r14,%rdi
++ +0x002f mov %ebx,%esi
+@@ replace v3[12:20] +0x28 | comb[16:24] +0x36
+- +0x0028 shr $1,%r14
+- +0x002b add 0x18(%r15),%r14d
+- +0x002f mov %r14d,0x18(%r15)
+- +0x0033 xorps %xmm0,%xmm0
+- +0x0036 movups %xmm0,(%r15)
+- +0x003a movq $0x0,0x10(%r15)
+- +0x0042 mov 0x1c(%r15),%eax
+- +0x0046 cmp %eax,%r14d
++ +0x0036 shr $1,%r15
++ +0x0039 add 0x8(%r12),%r15d
++ +0x003e mov %r15d,0x8(%r12)
++ +0x0043 movq $0x0,(%r12)
++ +0x004b movq $0x0,0x40(%r14,%rbx,8)
++ +0x0054 movq $0x0,0x840(%r14,%rbx,8)
++ +0x0060 mov 0xc(%r12),%eax
++ +0x0065 cmp %eax,%r15d
+@@ replace v3[21:22] +0x4f | comb[25:26] +0x6e
+- +0x004f mov %r14d,%ecx
++ +0x006e mov %r15d,%ecx
+@@ replace v3[34:35] +0x7c | comb[38:39] +0x9b
+- +0x007c mov 0x10(%rbx),%rsi
++ +0x009b mov 0x10(%r14),%rsi
+@@ replace v3[37:38] +0x85 | comb[41:42] +0xa4
+- +0x0085 mov %r14d,%esi
++ +0x00a4 mov %r15d,%esi
+@@ replace v3[40:41] +0x8f | comb[44:45] +0xae
+- +0x008f add 0x28(%rbx),%r8
++ +0x00ae add 0x28(%r14),%r8
+@@ replace v3[42:43] +0x96 | comb[46:47] +0xb5
+- +0x0096 mov 0x8(%rbx),%r9
++ +0x00b5 mov 0x8(%r14),%r9
+@@ replace v3[49:50] +0xaf | comb[53:54] +0xce
+- +0x00af mov 0x284c(%rbx),%edi
++ +0x00ce mov 0x284c(%r14),%edi
+@@ replace v3[52:55] +0xbb | comb[56:58] +0xdb
+- +0x00bb mov %rsi,0x10(%r15)
+- +0x00bf mov %rsi,(%r15)
+- +0x00c2 sub %r14d,%edx
++ +0x00db mov %rsi,0x40(%r14,%rbx,8)
++ +0x00e0 sub %r15d,%edx
+@@ replace v3[56:60] +0xc9 | comb[59:65] +0xe7
+- +0x00c9 mov %rdx,0x8(%r15)
+- +0x00cd mov %ecx,0x20(%r15)
+- +0x00d1 mov %edi,0x24(%r15)
+- +0x00d5 cmp %eax,%r14d
++ +0x00e7 mov %rdx,0x840(%r14,%rbx,8)
++ +0x00ef mov %rsi,(%r12)
++ +0x00f3 mov %r15d,0x8(%r12)
++ +0x00f8 mov %ecx,0x10(%r12)
++ +0x00fd mov %edi,0x14(%r12)
++ +0x0102 cmp %eax,%r15d
+@@ insert v3[61:61] +0xdb | comb[66:67] +0x108
++ +0x0108 add $0x8,%rsp
+@@ insert v3[62:62] +0xdc | comb[68:69] +0x10d
++ +0x010d pop %r12
+# v3: 67 instructions, 0 stack loads, 0 stack stores; comb: 74 instructions, 0 stack loads, 0 stack stores; equal 39, removed 28, added 35

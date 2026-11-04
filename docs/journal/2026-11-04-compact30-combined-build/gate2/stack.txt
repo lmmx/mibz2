@@ -1,0 +1,13 @@
+# Dynamic stack traffic (primary corpus, own code): executions of instructions with a plain disp(%rsp)
+# operand ("slot": spills, reloads and stack-held scan state), with an indexed (%rsp,%reg,s) operand
+# ("array": the descriptor arrays wr/en/cold, which live in W on the stack), and push/pop.
+# Each build against its own same-binary B2 profile.
+scanner    build   array loads 1,935,360 -> 1,935,360 (+0); push/pop 5,208 -> 5,208 (+0); slot loads 36,437,451 -> 35,931,566 (-505,885); slot stores 15,524,890 -> 18,916,322 (+3,391,432)
+scanner    refill  (no same-binary B2 listing archived for this group; its own Ir is unchanged against B2)
+scanner    finish  (no same-binary B2 listing archived for this group; its own Ir is unchanged against B2)
+descriptor build   array loads 1,935,360 -> 124,812,022 (+122,876,662); push/pop 5,208 -> 5,208 (+0); slot loads 36,437,451 -> 34,545,264 (-1,892,187); slot stores 15,524,890 -> 15,526,218 (+1,328)
+descriptor refill  push/pop 7,796,868 -> 11,695,302 (+3,898,434)
+descriptor finish  (no same-binary B2 listing archived for this group; its own Ir is unchanged against B2)
+combined   build   array loads 1,935,360 -> 124,812,022 (+122,876,662); push/pop 5,208 -> 5,208 (+0); slot loads 36,437,451 -> 31,723,527 (-4,713,924); slot stores 15,524,890 -> 14,886,006 (-638,884)
+combined   refill  push/pop 7,796,868 -> 11,695,302 (+3,898,434)
+combined   finish  push/pop 21,545,784 -> 1,777,284 (-19,768,500); slot loads 1,588,887 -> 1,588,887 (+0); slot stores 3,652,862 -> 358,112 (-3,294,750)

@@ -1,0 +1,37 @@
+diff --git a/examples/c30walk/ctor2c.rs b/examples/c30walk/ctor2c.rs
+index 5c45b568..3da16437 100644
+--- a/examples/c30walk/ctor2c.rs
++++ b/examples/c30walk/ctor2c.rs
+@@ -835,6 +835,8 @@ impl<const COUNT: bool> W<'_, COUNT> {
+         }
+         let u = self.y as u16;
+         let n1 = 16usize.min(ROWS.wrapping_sub(self.p));
++        // SAFETY (U1): i + n1 ≤ i + 16 ≤ ll.len() by the contract above
++        let s1 = unsafe { ll.get_unchecked(i..i + n1) };
+         // SAFETY (U2): i + n1 ≤ i + 16 ≤ ll.len() by the contract above
+         let s2 = unsafe { ll.get_unchecked(i + n1..i + 16) };
+         if COUNT {
+@@ -845,18 +847,20 @@ impl<const COUNT: bool> W<'_, COUNT> {
+         // k < n1 ≤ 16 (U1 is not used). p < 30, so n1 ≥ 1, matters for correctness only:
+         // were n1 0, this would append one wrong row, reading in bounds.
+         let mut k = 0usize;
++        let mut c = t[0];
+         loop {
+             if COUNT {
+-                self.st.tile_refills_first += self.refills(t[k]) as u64;
+-                self.st.tile_refills_first_at[k] += self.refills(t[k]) as u64;
++                self.st.tile_refills_first += self.refills(c) as u64;
++                self.st.tile_refills_first_at[k] += self.refills(c) as u64;
+             }
+-            if !self.one(t[k], u.wrapping_add(k as u16)) {
++            if !self.one(c, u.wrapping_add(k as u16)) {
+                 return false;
+             }
+             k += 1;
+             if k >= n1 {
+                 break;
+             }
++            c = s1[k];
+         }
+         for (t2, &c) in s2.iter().enumerate() {
+             if COUNT {

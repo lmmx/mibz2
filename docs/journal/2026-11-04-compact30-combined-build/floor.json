@@ -1,0 +1,49 @@
+{
+ "interval_removed": [
+  258494335,
+  262948911
+ ],
+ "O": {
+  "s62_f02_known_minimum": 2393313,
+  "further_scanner_descriptor": 3654,
+  "v3_cross": 0,
+  "lower_bound_registered": 2393313,
+  "lower_bound_with_further": 2396967
+ },
+ "F": {
+  "with_v3": {
+   "sum_of_minimums": 150000000,
+   "F_registered_O": 147606687,
+   "F_further_O": 147603033
+  },
+  "without_v3": {
+   "sum_of_minimums": 100000000,
+   "F_registered_O": 97606687,
+   "F_further_O": 97603033
+  }
+ },
+ "pass_i_with_v3": true,
+ "margin_i_with_v3": 110887648,
+ "pass_ii": true,
+ "margin_ii": 174433914,
+ "best_single_isolated_lower": 84060421,
+ "s7b": {
+  "finish_group_delta": -60212114,
+  "active_tag": 14616,
+  "run_call_site_charge": 508988,
+  "contribution_lower": 59688510,
+  "minimum": 50000000,
+  "pass": true,
+  "model_cross_check": {
+   "gross_81_minus_leaf_times_leaf_fast": 60952875,
+   "leaf_fast": 1647375,
+   "slow_entries": 148107
+  }
+ },
+ "s7c": {
+  "leaf_instructions_including_ret": 44,
+  "last": "ret",
+  "limit": 44,
+  "pass": true
+ }
+}

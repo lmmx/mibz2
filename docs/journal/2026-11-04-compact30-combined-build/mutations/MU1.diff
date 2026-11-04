@@ -1,0 +1,12 @@
+diff --git a/examples/c30walk/ctor2c.rs b/examples/c30walk/ctor2c.rs
+index 5c45b568..0167fcee 100644
+--- a/examples/c30walk/ctor2c.rs
++++ b/examples/c30walk/ctor2c.rs
+@@ -835,6 +835,7 @@ impl<const COUNT: bool> W<'_, COUNT> {
+         }
+         let u = self.y as u16;
+         let n1 = 16usize.min(ROWS.wrapping_sub(self.p));
++        let n1 = n1.max(17); // MUTANT MU1: n1 forced to 17 (tests U2 and range order only)
+         // SAFETY (U2): i + n1 ≤ i + 16 ≤ ll.len() by the contract above
+         let s2 = unsafe { ll.get_unchecked(i + n1..i + 16) };
+         if COUNT {

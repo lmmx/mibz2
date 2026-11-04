@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner target/miri/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2c-synthetic --miri 'descriptor:slots'`
+ctor2c-synthetic: descriptor class slots: 60 cases exact
+ctor2c-synthetic --miri descriptor:slots: 60 cases, 120 array comparisons, 180 walk outputs, 120 restorations: every check exact; fresh 364, lookahead 0, held 0, no-full-tile runs 0, nonuniform 364, second segments 168, tails 56; scalar rows 6270, fragment rows 0, runs 0, refills 325, crossing 174, forced 0, epochs 60; leaf 93, slow 232 (old epoch 0, partial 58, preset RAW 174), wide 0

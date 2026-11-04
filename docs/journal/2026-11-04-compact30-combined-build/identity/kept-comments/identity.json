@@ -1,0 +1,276 @@
+{
+ "roots": [
+  "<c30walk::ctor2c::Ctor2c>::build::<false>"
+ ],
+ "functions": {
+  "<alloc::raw_vec::RawVec<[u32; 256]>>::grow_one": {
+   "size": 99,
+   "instructions": 27,
+   "identical": true
+  },
+  "<alloc::raw_vec::RawVec<c30walk::RawG>>::grow_one": {
+   "size": 99,
+   "instructions": 27,
+   "identical": true
+  },
+  "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global> [size 0x7d #0]": {
+   "size": 125,
+   "instructions": 37,
+   "identical": true
+  },
+  "<alloc::raw_vec::RawVecInner>::finish_grow [size 0x13c #0]": {
+   "size": 316,
+   "instructions": 92,
+   "identical": true
+  },
+  "<alloc::raw_vec::RawVecInner>::finish_grow [size 0x17e #0]": {
+   "size": 382,
+   "instructions": 109,
+   "identical": true
+  },
+  "<alloc::raw_vec::RawVecInner>::grow_exact": {
+   "size": 91,
+   "instructions": 28,
+   "identical": true
+  },
+  "<c30walk::ctor2c::Ctor2c>::build::<false>": {
+   "size": 8383,
+   "instructions": 1784,
+   "identical": false
+  },
+  "<c30walk::ctor2c::W<false>>::finish": {
+   "size": 194,
+   "instructions": 44,
+   "identical": false
+  },
+  "<c30walk::ctor2c::W<false>>::finish_slow": {
+   "size": 1544,
+   "instructions": 378,
+   "identical": true
+  },
+  "<c30walk::ctor2c::W<false>>::refill": {
+   "size": 288,
+   "instructions": 74,
+   "identical": true
+  },
+  "<std::sys::stdio::unix::Stderr as std::io::Write>::write_fmt": {
+   "size": 255,
+   "instructions": 75,
+   "identical": true
+  },
+  "<std::sys::sync::mutex::futex::Mutex>::lock_contended": {
+   "size": 231,
+   "instructions": 77,
+   "identical": true
+  },
+  "<std::sys::sync::rwlock::futex::RwLock>::read_contended": {
+   "size": 404,
+   "instructions": 109,
+   "identical": true
+  },
+  "<std::sys::sync::rwlock::futex::RwLock>::wake_writer_or_readers": {
+   "size": 214,
+   "instructions": 60,
+   "identical": true
+  },
+  "__rustc::__rust_alloc_error_handler": {
+   "size": 18,
+   "instructions": 6,
+   "identical": true
+  },
+  "__rustc::__rust_start_panic": {
+   "size": 148,
+   "instructions": 41,
+   "identical": true
+  },
+  "__rustc::rust_begin_unwind": {
+   "size": 28,
+   "instructions": 8,
+   "identical": true
+  },
+  "__rustc::rust_panic": {
+   "size": 68,
+   "instructions": 16,
+   "identical": false
+  },
+  "alloc::alloc::handle_alloc_error": {
+   "size": 18,
+   "instructions": 6,
+   "identical": true
+  },
+  "alloc::raw_vec::capacity_overflow": {
+   "size": 28,
+   "instructions": 6,
+   "identical": true
+  },
+  "alloc::raw_vec::handle_error": {
+   "size": 19,
+   "instructions": 6,
+   "identical": true
+  },
+  "c30walk::ctor::canonicalise": {
+   "size": 773,
+   "instructions": 173,
+   "identical": false
+  },
+  "core::fmt::write": {
+   "size": 448,
+   "instructions": 138,
+   "identical": true
+  },
+  "core::panicking::assert_failed::<usize, usize>": {
+   "size": 53,
+   "instructions": 15,
+   "identical": true
+  },
+  "core::panicking::assert_failed_inner": {
+   "size": 214,
+   "instructions": 48,
+   "identical": false
+  },
+  "core::panicking::panic": {
+   "size": 17,
+   "instructions": 4,
+   "identical": true
+  },
+  "core::panicking::panic_bounds_check": {
+   "size": 60,
+   "instructions": 15,
+   "identical": false
+  },
+  "core::panicking::panic_cannot_unwind": {
+   "size": 16,
+   "instructions": 4,
+   "identical": true
+  },
+  "core::panicking::panic_fmt": {
+   "size": 43,
+   "instructions": 11,
+   "identical": true
+  },
+  "core::panicking::panic_in_cleanup": {
+   "size": 9,
+   "instructions": 3,
+   "identical": true
+  },
+  "core::panicking::panic_nounwind": {
+   "size": 23,
+   "instructions": 6,
+   "identical": true
+  },
+  "core::panicking::panic_nounwind_fmt": {
+   "size": 51,
+   "instructions": 14,
+   "identical": true
+  },
+  "core::panicking::panic_nounwind_nobacktrace": {
+   "size": 33,
+   "instructions": 7,
+   "identical": true
+  },
+  "core::ptr::drop_glue::<core::result::Result<(), std::io::error::Error>>": {
+   "size": 140,
+   "instructions": 49,
+   "identical": true
+  },
+  "core::ptr::drop_glue::<panic_unwind::imp::Exception>": {
+   "size": 93,
+   "instructions": 35,
+   "identical": true
+  },
+  "core::ptr::drop_glue::<std::io::error::Error> [size 0x8a #1]": {
+   "size": 138,
+   "instructions": 48,
+   "identical": true
+  },
+  "core::ptr::drop_glue::<std::sync::nonpoison::rwlock::RwLockReadGuard<std::panicking::Hook>>": {
+   "size": 39,
+   "instructions": 10,
+   "identical": true
+  },
+  "core::ptr::drop_glue::<std::sys::backtrace::BacktraceLock>": {
+   "size": 96,
+   "instructions": 34,
+   "identical": true
+  },
+  "core::slice::index::slice_index_fail": {
+   "size": 197,
+   "instructions": 48,
+   "identical": false
+  },
+  "std::alloc::default_alloc_error_hook": {
+   "size": 317,
+   "instructions": 81,
+   "identical": false
+  },
+  "std::alloc::rust_oom": {
+   "size": 9,
+   "instructions": 3,
+   "identical": true
+  },
+  "std::alloc::rust_oom::{closure#0}": {
+   "size": 14,
+   "instructions": 4,
+   "identical": true
+  },
+  "std::panic::get_backtrace_style": {
+   "size": 497,
+   "instructions": 129,
+   "identical": true
+  },
+  "std::panicking::panic_count::is_zero_slow_path": {
+   "size": 14,
+   "instructions": 3,
+   "identical": true
+  },
+  "std::panicking::panic_handler::{closure#0}": {
+   "size": 142,
+   "instructions": 36,
+   "identical": true
+  },
+  "std::panicking::panic_with_hook": {
+   "size": 917,
+   "instructions": 215,
+   "identical": false
+  },
+  "std::process::abort": {
+   "size": 9,
+   "instructions": 3,
+   "identical": true
+  },
+  "std::sys::backtrace::__rust_end_short_backtrace::<std::alloc::rust_oom::{closure#0}, !>": {
+   "size": 9,
+   "instructions": 3,
+   "identical": true
+  },
+  "std::sys::backtrace::__rust_end_short_backtrace::<std::panicking::panic_handler::{closure#0}, !>": {
+   "size": 9,
+   "instructions": 3,
+   "identical": true
+  },
+  "std::sys::backtrace::lock": {
+   "size": 90,
+   "instructions": 25,
+   "identical": true
+  },
+  "std::sys::env::unix::getenv::{closure#0}": {
+   "size": 295,
+   "instructions": 82,
+   "identical": true
+  },
+  "std::sys::pal::unix::abort_internal": {
+   "size": 10,
+   "instructions": 3,
+   "identical": true
+  },
+  "std::thread::current::with_current_name::<std::panicking::default_hook::{closure#0}::{closure#0}, ()>::{closure#0}": {
+   "size": 996,
+   "instructions": 247,
+   "identical": false
+  }
+ },
+ "identical": false,
+ "archived": {},
+ "closure_size": 53,
+ "closure_instructions": 4509
+}

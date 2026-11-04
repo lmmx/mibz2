@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner target/miri/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2c-synthetic --miri 'v3:small'`
+ctor2c-synthetic: v3 class small: 127 cases exact
+ctor2c-synthetic --miri v3:small: 127 cases, 248 array comparisons, 372 walk outputs, 248 restorations: every check exact; fresh 82, lookahead 24, held 4, no-full-tile runs 63, nonuniform 19, second segments 5, tails 118; scalar rows 1163, fragment rows 912, runs 67, refills 104, crossing 60, forced 6, epochs 124; leaf 6, slow 167 (old epoch 0, partial 101, preset RAW 66), wide 0

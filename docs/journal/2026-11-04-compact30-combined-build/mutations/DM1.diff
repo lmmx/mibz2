@@ -1,0 +1,13 @@
+diff --git a/examples/c30walk/ctor2c.rs b/examples/c30walk/ctor2c.rs
+index fc531b5b..708320bc 100644
+--- a/examples/c30walk/ctor2c.rs
++++ b/examples/c30walk/ctor2c.rs
+@@ -481,7 +481,7 @@ impl<const COUNT: bool> W<'_, COUNT> {
+             self.active_tag
+         };
+         self.wr[c] = w0;
+-        self.en[c] = w0.add((re - r) as usize);
++        self.en[c] = w0.add((re - r) as usize - 1); // MUTANT M1: end one field short
+         self.cold[c] = Cold {
+             w0,
+             r0: r,

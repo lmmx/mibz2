@@ -1,0 +1,13 @@
+diff --git a/examples/c30walk/ctor2c.rs b/examples/c30walk/ctor2c.rs
+index 5c45b568..936485d2 100644
+--- a/examples/c30walk/ctor2c.rs
++++ b/examples/c30walk/ctor2c.rs
+@@ -836,7 +836,7 @@ impl<const COUNT: bool> W<'_, COUNT> {
+         let u = self.y as u16;
+         let n1 = 16usize.min(ROWS.wrapping_sub(self.p));
+         // SAFETY (U2): i + n1 ≤ i + 16 ≤ ll.len() by the contract above
+-        let s2 = unsafe { ll.get_unchecked(i + n1..i + 16) };
++        let s2 = unsafe { ll.get_unchecked(i + n1..i + 17) }; // MUTANT MU3: U2 one past the tile
+         if COUNT {
+             // after U2, so that a mutant n1 > 16 (MU1) is reported at U2, not at this index
+             self.st.tile_n1[n1] += 1;

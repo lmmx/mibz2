@@ -1,0 +1,17 @@
+@@ replace v3[13:19] +0x26 | comb[13:19] +0x26
+- +0x0026 lea (%rsi,%rsi,4),%rax
+- +0x002a mov 0x40(%rdi,%rax,8),%r14
+- +0x002f mov 0x50(%rdi,%rax,8),%rdi
+- +0x0034 mov 0x58(%r11,%rax,8),%r12d
+- +0x0039 mov 0x60(%r11,%rax,8),%ecx
+- +0x003e mov 0x64(%r11,%rax,8),%eax
++ +0x0026 lea (%rsi,%rsi,2),%rax
++ +0x002a mov 0x1040(%rdi,%rax,8),%rdi
++ +0x0032 mov 0x1048(%r11,%rax,8),%r12d
++ +0x003a mov 0x1050(%r11,%rax,8),%ecx
++ +0x0042 mov 0x1054(%r11,%rax,8),%eax
++ +0x004a mov 0x40(%r11,%rsi,8),%r14
+@@ replace v3[38:39] +0x87 | comb[38:39] +0x93
+- +0x0087 nopw 0x0(%rax,%rax,1)
++ +0x0093 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+# v3: 378 instructions, 11 stack loads, 9 stack stores; comb: 378 instructions, 11 stack loads, 9 stack stores; equal 371, removed 7, added 7

@@ -1,0 +1,23 @@
+class scanner:tiny exit 0 seconds 15
+class scanner:tails exit 0 seconds 39
+class scanner:align exit 0 seconds 14
+class scanner:phase exit 0 seconds 18
+class scanner:held exit 0 seconds 6
+class scanner:endrun exit 0 seconds 2
+class scanner:epoch exit 0 seconds 1296
+class scanner:malformed exit 0 seconds 1
+class scanner:controls exit 0 seconds 2
+class descriptor:tiny exit 0 seconds 13
+class descriptor:slots exit 0 seconds 66
+class descriptor:allbytes exit 0 seconds 5
+class descriptor:crossing exit 0 seconds 118
+class descriptor:runs exit 0 seconds 8
+class descriptor:epoch exit 0 seconds 706
+class descriptor:pending exit 0 seconds 7
+class descriptor:malformed exit 0 seconds 2
+class descriptor:reuse exit 0 seconds 7
+class v3:small exit 0 seconds 108
+class v3:tag-tiny exit 0 seconds 4
+class v3:span exit 0 seconds 1571
+class v3:tag-epoch1 exit 0 seconds 693
+DONE

@@ -1,0 +1,14 @@
+diff --git a/examples/c30walk/ctor2c.rs b/examples/c30walk/ctor2c.rs
+index fc531b5b..938d5d1c 100644
+--- a/examples/c30walk/ctor2c.rs
++++ b/examples/c30walk/ctor2c.rs
+@@ -1218,7 +1218,8 @@ impl Ctor2c {
+                         }
+                     }
+                     // the run's rows: those its tiles span
+-                    if !w.run(a as u8, rest.len() - r2.len(), forced_cfg) {
++                    // MUTANT M2: the run's length short by one tile
++                    if !w.run(a as u8, rest.len() - r2.len() - 16, forced_cfg) {
+                         return false;
+                     }
+                     rest = r2;

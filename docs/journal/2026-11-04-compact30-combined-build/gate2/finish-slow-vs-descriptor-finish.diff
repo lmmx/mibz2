@@ -1,0 +1,17 @@
+@@ replace descriptor[58:59] +0xef | comb[58:59] +0xef
+- +0x00ef cmp $0xffffffff,%eax
++ +0x00ef test %eax,%eax
+@@ replace descriptor[60:61] +0xf7 | comb[60:61] +0xf6
+- +0x00f7 je T
++ +0x00f6 js T
+@@ replace descriptor[80:81] +0x14c | comb[80:81] +0x14b
+- +0x014c nopl 0x0(%rax)
++ +0x014b nopl 0x0(%rax,%rax,1)
+@@ delete descriptor[366:368] +0x5ed | comb[366:366] +0x5ed
+- +0x05ed cmp %rcx,%r14
+- +0x05f0 je T
+@@ replace descriptor[370:371] +0x5f9 | comb[368:370] +0x5f4
+- +0x05f9 jmp T
++ +0x05f4 cmp %rcx,%r14
++ +0x05f7 jne T
+# descriptor: 379 instructions, 11 stack loads, 9 stack stores; comb: 378 instructions, 11 stack loads, 9 stack stores; equal 373, removed 6, added 5

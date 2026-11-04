@@ -1,0 +1,33 @@
+@@ replace B2[13:19] +0x26 | comb[13:19] +0x26
+- +0x0026 lea (%rsi,%rsi,4),%rax
+- +0x002a mov 0x40(%rdi,%rax,8),%r14
+- +0x002f mov 0x50(%rdi,%rax,8),%rdi
+- +0x0034 mov 0x58(%r11,%rax,8),%r12d
+- +0x0039 mov 0x60(%r11,%rax,8),%ecx
+- +0x003e mov 0x64(%r11,%rax,8),%eax
++ +0x0026 lea (%rsi,%rsi,2),%rax
++ +0x002a mov 0x1040(%rdi,%rax,8),%rdi
++ +0x0032 mov 0x1048(%r11,%rax,8),%r12d
++ +0x003a mov 0x1050(%r11,%rax,8),%ecx
++ +0x0042 mov 0x1054(%r11,%rax,8),%eax
++ +0x004a mov 0x40(%r11,%rsi,8),%r14
+@@ replace B2[38:39] +0x87 | comb[38:39] +0x93
+- +0x0087 nopw 0x0(%rax,%rax,1)
++ +0x0093 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+@@ replace B2[58:59] +0xdf | comb[58:59] +0xef
+- +0x00df cmp $0xffffffff,%eax
++ +0x00ef test %eax,%eax
+@@ replace B2[60:61] +0xe7 | comb[60:61] +0xf6
+- +0x00e7 je T
++ +0x00f6 js T
+@@ replace B2[80:81] +0x13c | comb[80:81] +0x14b
+- +0x013c nopl 0x0(%rax)
++ +0x014b nopl 0x0(%rax,%rax,1)
+@@ delete B2[366:368] +0x5dd | comb[366:366] +0x5ed
+- +0x05dd cmp %rcx,%r14
+- +0x05e0 je T
+@@ replace B2[370:371] +0x5e9 | comb[368:370] +0x5f4
+- +0x05e9 jmp T
++ +0x05f4 cmp %rcx,%r14
++ +0x05f7 jne T
+# B2: 379 instructions, 11 stack loads, 9 stack stores; comb: 378 instructions, 11 stack loads, 9 stack stores; equal 366, removed 13, added 12

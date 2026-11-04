@@ -1,0 +1,2234 @@
+@@ replace B2[14:19] +0x46 | comb[14:19] +0x46
+- +0x0046 sub $0x1000,%rsp
+- +0x004d movq $0x0,(%rsp)
+- +0x0055 sub $0x4e8,%rsp
+- +0x005c mov %r8d,0x1c(%rsp)
+- +0x0061 mov 0x5520(%rsp),%rax
++ +0x0046 sub $0x4f8,%rsp
++ +0x004d mov %r8d,0x2c(%rsp)
++ +0x0052 mov %rsi,0x60(%rsp)
++ +0x0057 mov %rdi,%rbp
++ +0x005a mov 0x4530(%rsp),%rdi
+@@ replace B2[20:21] +0x71 | comb[20:21] +0x6a
+- +0x0071 movq $0x0,0x10(%rax)
++ +0x006a movq $0x0,0x10(%rdi)
+@@ replace B2[23:25] +0x86 | comb[23:24] +0x7f
+- +0x0086 mov %rcx,%r15
+- +0x0089 mov %rdx,%r13
++ +0x007f mov %rcx,%rbx
+@@ replace B2[29:32] +0x9a | comb[28:30] +0x90
+- +0x009a nopw 0x0(%rax,%rax,1)
+- +0x00a0 movq (%r15,%rax,4),%xmm3
+- +0x00a6 movq 0x8(%r15,%rax,4),%xmm4
++ +0x0090 movq (%rbx,%rax,4),%xmm3
++ +0x0095 movq 0x8(%rbx,%rax,4),%xmm4
+@@ replace B2[36:38] +0xbd | comb[34:36] +0xab
+- +0x00bd movq 0x10(%r15,%rax,4),%xmm2
+- +0x00c4 movq 0x18(%r15,%rax,4),%xmm1
++ +0x00ab movq 0x10(%rbx,%rax,4),%xmm2
++ +0x00b1 movq 0x18(%rbx,%rax,4),%xmm1
+@@ replace B2[49:50] +0xf9 | comb[47:48] +0xe5
+- +0x00f9 cmp %r13,%rax
++ +0x00e5 cmp %rdx,%rax
+@@ replace B2[56:59] +0x118 | comb[54:57] +0x104
+- +0x0118 nopl 0x0(%rax,%rax,1)
+- +0x0120 movq (%r15,%rax,4),%xmm4
+- +0x0126 movq 0x8(%r15,%rax,4),%xmm5
++ +0x0104 data16 data16 cs nopw 0x0(%rax,%rax,1)
++ +0x0110 movq (%rbx,%rax,4),%xmm4
++ +0x0115 movq 0x8(%rbx,%rax,4),%xmm5
+@@ replace B2[67:69] +0x14f | comb[65:67] +0x13d
+- +0x014f movq 0x10(%r15,%rax,4),%xmm0
+- +0x0156 movq 0x18(%r15,%rax,4),%xmm6
++ +0x013d movq 0x10(%rbx,%rax,4),%xmm0
++ +0x0143 movq 0x18(%rbx,%rax,4),%xmm6
+@@ replace B2[80:84] +0x18b | comb[78:82] +0x177
+- +0x018b mov $0x88888889,%ebp
+- +0x0190 imul %r13,%rbp
+- +0x0194 shr $0x24,%rbp
+- +0x0198 imul $0xeeeeeeef,%r13d,%eax
++ +0x0177 mov $0x88888889,%r8d
++ +0x017d imul %rdx,%r8
++ +0x0181 shr $0x24,%r8
++ +0x0185 imul $0xeeeeeeef,%edx,%eax
+@@ replace B2[86:89] +0x1a6 | comb[84:87] +0x192
+- +0x01a6 sbb $0xffffffffffffffff,%rbp
+- +0x01aa mov %rbp,%rbx
+- +0x01ad cmpl $0x0,0x1c(%rsp)
++ +0x0192 sbb $0xffffffffffffffff,%r8
++ +0x0196 mov %r8,%r14
++ +0x0199 cmpl $0x0,0x2c(%rsp)
+@@ replace B2[90:91] +0x1b4 | comb[88:89] +0x1a0
+- +0x01b4 test %r13,%r13
++ +0x01a0 test %rdx,%rdx
+@@ replace B2[96:102] +0x1cb | comb[94:100] +0x1b7
+- +0x01cb lea -0x1(%r13),%ecx
+- +0x01cf mov $0x88888889,%edx
+- +0x01d4 imul %rcx,%rdx
+- +0x01d8 shr $0x23,%rdx
+- +0x01dc and $0xfffffffe,%edx
+- +0x01df lea (%rdx,%r13,1),%ecx
++ +0x01b7 lea -0x1(%rdx),%ecx
++ +0x01ba mov $0x88888889,%esi
++ +0x01bf imul %rcx,%rsi
++ +0x01c3 shr $0x23,%rsi
++ +0x01c7 and $0xfffffffe,%esi
++ +0x01ca lea (%rsi,%rdx,1),%ecx
+@@ replace B2[104:112] +0x1e7 | comb[102:110] +0x1d1
+- +0x01e7 mov $0x80010003,%ebx
+- +0x01ec imul %rcx,%rbx
+- +0x01f0 shr $0x2e,%rbx
+- +0x01f4 inc %ebx
+- +0x01f6 imul %rax,%rbx
+- +0x01fa dec %rbx
+- +0x01fd cmp %rbp,%rbx
+- +0x0200 cmovae %rbp,%rbx
++ +0x01d1 mov $0x80010003,%r14d
++ +0x01d7 imul %rcx,%r14
++ +0x01db shr $0x2e,%r14
++ +0x01df inc %r14d
++ +0x01e2 imul %rax,%r14
++ +0x01e6 dec %r14
++ +0x01e9 cmp %r8,%r14
++ +0x01ec cmovae %r8,%r14
+@@ replace B2[113:114] +0x206 | comb[111:112] +0x1f2
+- +0x0206 xor %ebx,%ebx
++ +0x01f2 xor %r14d,%r14d
+@@ replace B2[115:119] +0x20b | comb[113:118] +0x1f8
+- +0x020b lea 0x1(%rbp),%rcx
+- +0x020f mov %rcx,0x80(%rsp)
+- +0x0217 cmp %rbp,%rax
+- +0x021a mov %rsi,0x28(%rsp)
++ +0x01f8 lea 0x1(%r8),%rcx
++ +0x01fc mov %rcx,0x78(%rsp)
++ +0x0201 cmp %r8,%rax
++ +0x0204 mov %rdx,0x20(%rsp)
++ +0x0209 mov %r8,0x58(%rsp)
+@@ replace B2[120:123] +0x225 | comb[119:121] +0x214
+- +0x0225 mov 0x5520(%rsp),%rax
+- +0x022d mov (%rax),%rax
+- +0x0230 cmp %rbx,%rax
++ +0x0214 mov (%rdi),%rax
++ +0x0217 cmp %r14,%rax
+@@ replace B2[124:130] +0x239 | comb[122:125] +0x220
+- +0x0239 movq $0x0,0x10(%rdi)
+- +0x0241 lea 0x3f(%rbp),%rbx
+- +0x0245 shr $0x6,%rbx
+- +0x0249 mov %r13,0x8(%rsp)
+- +0x024e mov %rdi,0x58(%rsp)
+- +0x0253 mov %rbp,0x60(%rsp)
++ +0x0220 movq $0x0,0x10(%rbp)
++ +0x0228 lea 0x3f(%r8),%r14
++ +0x022c shr $0x6,%r14
+@@ replace B2[131:132] +0x25a | comb[126:127] +0x232
+- +0x025a cmp (%rdi),%rbx
++ +0x0232 cmp 0x0(%rbp),%r14
+@@ insert B2[133:133] +0x263 | comb[128:135] +0x23c
++ +0x023c xor %r15d,%r15d
++ +0x023f mov 0x8(%rbp),%r12
++ +0x0243 lea (%r12,%r15,8),%rdi
++ +0x0247 cmp $0x1,%r14
++ +0x024b je T
++ +0x024d lea -0x8(,%r14,8),%rdx
++ +0x0255 xor %esi,%esi
+@@ replace B2[134:140] +0x266 | comb[136:201] +0x25a
+- +0x0266 xor %r14d,%r14d
+- +0x0269 mov 0x8(%rdi),%r12
+- +0x026d lea (%r12,%r14,8),%rdi
+- +0x0271 cmp $0x1,%rbx
+- +0x0275 je T
+- +0x0277 lea -0x8(,%rbx,8),%rdx
++ +0x025a call *DISP(%rip)
++ +0x0260 mov %r13,%r9
++ +0x0263 lea (%r15,%r14,1),%rax
++ +0x0267 lea (%r12,%rax,8),%rdi
++ +0x026b add $0xfffffffffffffff8,%rdi
++ +0x026f add %r14,%r15
++ +0x0272 dec %r15
++ +0x0275 movq $0x0,(%rdi)
++ +0x027c inc %r15
++ +0x027f jmp T
++ +0x0281 xor %r15d,%r15d
++ +0x0284 lea 0x18(%rbp),%r12
++ +0x0288 mov %r15,0x10(%rbp)
++ +0x028c movq $0x0,0x28(%rbp)
++ +0x0294 cmpq $0xf,0x18(%rbp)
++ +0x0299 jbe T
++ +0x029f lea 0x30(%rbp),%rax
++ +0x02a3 mov %rax,0x48(%rsp)
++ +0x02a8 xor %eax,%eax
++ +0x02aa pxor %xmm0,%xmm0
++ +0x02ae movabs $0xffffffff00000000,%r13
++ +0x02b8 nopl 0x0(%rax,%rax,1)
++ +0x02c0 movdqu %xmm0,0x2cf8(%rsp,%rax,1)
++ +0x02c9 mov %r13,0x2d08(%rsp,%rax,1)
++ +0x02d1 movdqu %xmm0,0x2d10(%rsp,%rax,1)
++ +0x02da mov %r13,0x2d20(%rsp,%rax,1)
++ +0x02e2 movdqu %xmm0,0x2d28(%rsp,%rax,1)
++ +0x02eb mov %r13,0x2d38(%rsp,%rax,1)
++ +0x02f3 movdqu %xmm0,0x2d40(%rsp,%rax,1)
++ +0x02fc mov %r13,0x2d50(%rsp,%rax,1)
++ +0x0304 add $0x60,%rax
++ +0x0308 cmp $0x1800,%rax
++ +0x030e jne T
++ +0x0310 mov %r12,0x8(%rsp)
++ +0x0315 lea 0xc(%rbx),%rax
++ +0x0319 xor %edx,%edx
++ +0x031b mov $0x15,%ecx
++ +0x0320 mov -0xc(%rax),%esi
++ +0x0323 add %edx,%esi
++ +0x0325 mov %edx,0x2cac(%rsp,%rcx,4)
++ +0x032c mov %esi,0x2cb0(%rsp,%rcx,4)
++ +0x0333 mov -0x8(%rax),%edx
++ +0x0336 add %esi,%edx
++ +0x0338 mov %esi,0x2cc4(%rsp,%rcx,4)
++ +0x033f mov %edx,0x2cc8(%rsp,%rcx,4)
++ +0x0346 mov -0x4(%rax),%esi
++ +0x0349 add %edx,%esi
++ +0x034b mov %edx,0x2cdc(%rsp,%rcx,4)
++ +0x0352 mov %esi,0x2ce0(%rsp,%rcx,4)
++ +0x0359 mov (%rax),%edx
++ +0x035b add %esi,%edx
++ +0x035d mov %esi,0x2cf4(%rsp,%rcx,4)
++ +0x0364 mov %edx,0x2cf8(%rsp,%rcx,4)
++ +0x036b add $0x18,%rcx
++ +0x036f add $0x10,%rax
++ +0x0373 cmp $0x615,%rcx
++ +0x037a jne T
++ +0x037c mov %r9,0x90(%rsp)
++ +0x0384 mov 0x8(%r9),%r12
++ +0x0388 mov 0x8(%rbp),%r14
++ +0x038c mov %rbp,0x88(%rsp)
++ +0x0394 mov 0x10(%rbp),%rbp
++ +0x0398 lea 0x8e8(%rsp),%rdi
++ +0x03a0 xor %r15d,%r15d
++ +0x03a3 mov $0x800,%edx
+@@ replace B2[142:212] +0x287 | comb[203:206] +0x3b0
+- +0x0287 lea (%r14,%rbx,1),%rax
+- +0x028b lea (%r12,%rax,8),%rdi
+- +0x028f add $0xfffffffffffffff8,%rdi
+- +0x0293 add %rbx,%r14
+- +0x0296 dec %r14
+- +0x0299 mov %r13,%r9
+- +0x029c movq $0x0,(%rdi)
+- +0x02a3 inc %r14
+- +0x02a6 mov 0x8(%rsp),%r13
+- +0x02ab mov 0x58(%rsp),%rdi
+- +0x02b0 jmp T
+- +0x02b2 xor %r14d,%r14d
+- +0x02b5 lea 0x18(%rdi),%r12
+- +0x02b9 mov %r14,0x10(%rdi)
+- +0x02bd movq $0x0,0x28(%rdi)
+- +0x02c5 cmpq $0xf,0x18(%rdi)
+- +0x02ca jbe T
+- +0x02d0 lea 0x30(%rdi),%rax
+- +0x02d4 mov %rax,(%rsp)
+- +0x02d8 xor %eax,%eax
+- +0x02da pxor %xmm0,%xmm0
+- +0x02de movabs $0xffffffff00000000,%rcx
+- +0x02e8 nopl 0x0(%rax,%rax,1)
+- +0x02f0 movdqu %xmm0,0x2cf8(%rsp,%rax,1)
+- +0x02f9 movdqu %xmm0,0x2ce8(%rsp,%rax,1)
+- +0x0302 mov %rcx,0x2d08(%rsp,%rax,1)
+- +0x030a movdqu %xmm0,0x2d10(%rsp,%rax,1)
+- +0x0313 movdqu %xmm0,0x2d20(%rsp,%rax,1)
+- +0x031c mov %rcx,0x2d30(%rsp,%rax,1)
+- +0x0324 movdqu %xmm0,0x2d38(%rsp,%rax,1)
+- +0x032d movdqu %xmm0,0x2d48(%rsp,%rax,1)
+- +0x0336 mov %rcx,0x2d58(%rsp,%rax,1)
+- +0x033e movdqu %xmm0,0x2d60(%rsp,%rax,1)
+- +0x0347 movdqu %xmm0,0x2d70(%rsp,%rax,1)
+- +0x0350 mov %rcx,0x2d80(%rsp,%rax,1)
+- +0x0358 add $0xa0,%rax
+- +0x035e cmp $0x2800,%rax
+- +0x0364 jne T
+- +0x0366 mov %r12,%r14
+- +0x0369 lea 0xc(%r15),%rax
+- +0x036d xor %edx,%edx
+- +0x036f mov $0x25,%ecx
+- +0x0374 data16 data16 cs nopw 0x0(%rax,%rax,1)
+- +0x0380 mov -0xc(%rax),%esi
+- +0x0383 add %edx,%esi
+- +0x0385 mov %edx,0x2c6c(%rsp,%rcx,4)
+- +0x038c mov %esi,0x2c70(%rsp,%rcx,4)
+- +0x0393 mov -0x8(%rax),%edx
+- +0x0396 add %esi,%edx
+- +0x0398 mov %esi,0x2c94(%rsp,%rcx,4)
+- +0x039f mov %edx,0x2c98(%rsp,%rcx,4)
+- +0x03a6 mov -0x4(%rax),%esi
+- +0x03a9 add %edx,%esi
+- +0x03ab mov %edx,0x2cbc(%rsp,%rcx,4)
+- +0x03b2 mov %esi,0x2cc0(%rsp,%rcx,4)
+- +0x03b9 mov (%rax),%edx
+- +0x03bb add %esi,%edx
+- +0x03bd mov %esi,0x2ce4(%rsp,%rcx,4)
+- +0x03c4 mov %edx,0x2ce8(%rsp,%rcx,4)
+- +0x03cb add $0x28,%rcx
+- +0x03cf add $0x10,%rax
+- +0x03d3 cmp $0xa25,%rcx
+- +0x03da jne T
+- +0x03dc mov %r9,0x78(%rsp)
+- +0x03e1 mov 0x8(%r9),%rbx
+- +0x03e5 mov 0x8(%rdi),%rbp
+- +0x03e9 mov 0x10(%rdi),%r12
+- +0x03ed lea 0xd8(%rsp),%rdi
+- +0x03f5 lea 0x2ce8(%rsp),%rsi
+- +0x03fd mov $0x2800,%edx
++ +0x03b0 lea 0x10e8(%rsp),%rdi
++ +0x03b8 lea 0x2cf8(%rsp),%rsi
++ +0x03c0 mov $0x1800,%edx
+@@ replace B2[213:217] +0x408 | comb[207:227] +0x3cb
+- +0x0408 mov %rbp,%r8
+- +0x040b mov %r12,%rsi
+- +0x040e mov %rbx,0xc0(%rsp)
+- +0x0416 mov 0x60(%rsp),%rax
++ +0x03cb mov %r12,0xd0(%rsp)
++ +0x03d3 mov 0x58(%rsp),%rax
++ +0x03d8 mov %rax,0xd8(%rsp)
++ +0x03e0 mov 0x20(%rsp),%rax
++ +0x03e5 mov %rax,0xe0(%rsp)
++ +0x03ed mov 0x4530(%rsp),%rax
++ +0x03f5 mov %rax,0xa8(%rsp)
++ +0x03fd mov %r14,0x18(%rsp)
++ +0x0402 mov %r14,0xb0(%rsp)
++ +0x040a mov %rbp,0x10(%rsp)
++ +0x040f mov %rbp,0xb8(%rsp)
++ +0x0417 mov 0x8(%rsp),%rax
++ +0x041c mov %rax,0xc0(%rsp)
++ +0x0424 lea 0xe8(%rsp),%rdi
++ +0x042c mov $0x800,%edx
++ +0x0431 xor %esi,%esi
++ +0x0433 call *DISP(%rip)
++ +0x0439 mov %r13,0x28f0(%rsp)
++ +0x0441 movq $0x0,0x28e8(%rsp)
++ +0x044d mov 0x48(%rsp),%rax
+@@ delete B2[218:228] +0x423 | comb[228:228] +0x45a
+- +0x0423 mov %r13,0xd0(%rsp)
+- +0x042b mov 0x5520(%rsp),%rax
+- +0x0433 mov %rax,0x98(%rsp)
+- +0x043b mov %rbp,0xa0(%rsp)
+- +0x0443 mov %r12,0xa8(%rsp)
+- +0x044b mov %r14,0xb0(%rsp)
+- +0x0453 movl $0x0,0x28e0(%rsp)
+- +0x045e movq $0x0,0x28d8(%rsp)
+- +0x046a mov (%rsp),%rax
+- +0x046e mov %rax,0xb8(%rsp)
+@@ replace B2[229:232] +0x47d | comb[229:231] +0x461
+- +0x047d xor %ebp,%ebp
+- +0x047f movabs $0xeeeeeeeeeeeeeeef,%r9
+- +0x0489 movabs $0x888888888888889,%r10
++ +0x0461 movabs $0xeeeeeeeeeeeeeeef,%r8
++ +0x046b movabs $0x888888888888889,%r14
+@@ replace B2[234:235] +0x49b | comb[233:234] +0x47d
+- +0x049b xor %r12d,%r12d
++ +0x047d xor %ebp,%ebp
+@@ replace B2[236:237] +0x4a3 | comb[235:236] +0x484
+- +0x04a3 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
++ +0x0484 data16 data16 cs nopw 0x0(%rax,%rax,1)
+@@ replace B2[251:252] +0x4f4 | comb[250:251] +0x4d4
+- +0x04f4 mov %r14,%rax
++ +0x04d4 mov %rdx,%rax
+@@ replace B2[254:260] +0x502 | comb[253:259] +0x4e2
+- +0x0502 movdqu %xmm1,0x2c(%rbx,%rax,1)
+- +0x0508 movdqa %xmm1,0x20(%rbx,%rax,1)
+- +0x050e movdqa %xmm1,0x10(%rbx,%rax,1)
+- +0x0514 movdqa %xmm1,(%rbx,%rax,1)
+- +0x0519 mov %r13d,0x3c(%rbx,%rax,1)
+- +0x051e mov %r14,%rdi
++ +0x04e2 movdqu %xmm1,0x2c(%r12,%rax,1)
++ +0x04e9 movdqa %xmm1,0x20(%r12,%rax,1)
++ +0x04f0 movdqa %xmm1,0x10(%r12,%rax,1)
++ +0x04f7 movdqa %xmm1,(%r12,%rax,1)
++ +0x04fd mov %r13d,0x3c(%r12,%rax,1)
++ +0x0502 mov %rdx,%rdi
+@@ replace B2[261:262] +0x525 | comb[260:261] +0x509
+- +0x0525 cmp %rsi,%rdi
++ +0x0509 cmp 0x10(%rsp),%rdi
+@@ replace B2[264:265] +0x533 | comb[263:264] +0x519
+- +0x0533 mov %r14d,%ecx
++ +0x0519 mov %edx,%ecx
+@@ replace B2[266:271] +0x539 | comb[265:270] +0x51e
+- +0x0539 or %rax,(%r8,%rdi,8)
+- +0x053d mov %r14,%rcx
+- +0x0540 mov 0x8(%rsp),%r13
+- +0x0545 add $0x4,%r12
+- +0x0549 cmp $0x400,%r12
++ +0x051e mov 0x18(%rsp),%rcx
++ +0x0523 or %rax,(%rcx,%rdi,8)
++ +0x0527 mov %rdx,%rcx
++ +0x052a add $0x4,%rbp
++ +0x052e cmp $0x400,%rbp
+@@ replace B2[272:278] +0x556 | comb[271:277] +0x53b
+- +0x0556 mov %rbp,%rax
+- +0x0559 mov (%r15,%r12,1),%ebp
+- +0x055d add %rax,%rbp
+- +0x0560 cmp %r13,%rbp
+- +0x0563 setae %dil
+- +0x0567 mov %rbp,%rax
++ +0x053b mov %r15,%rax
++ +0x053e mov (%rbx,%rbp,1),%r15d
++ +0x0542 add %rax,%r15
++ +0x0545 cmp 0x20(%rsp),%r15
++ +0x054a setae %sil
++ +0x054e mov %r15,%rax
+@@ replace B2[280:284] +0x577 | comb[279:282] +0x55e
+- +0x0577 mov %rdx,%r14
+- +0x057a shr $0x4,%r14
+- +0x057e mov %rbp,%rax
+- +0x0581 imul %r9,%rax
++ +0x055e shr $0x4,%rdx
++ +0x0562 mov %r15,%rax
++ +0x0565 imul %r8,%rax
+@@ replace B2[285:286] +0x588 | comb[283:284] +0x56c
+- +0x0588 cmp %r10,%rax
++ +0x056c cmp %r14,%rax
+@@ replace B2[287:291] +0x58e | comb[285:289] +0x572
+- +0x058e cmp %rcx,%r14
+- +0x0591 sete %dl
+- +0x0594 or %dil,%dl
+- +0x0597 or %al,%dl
++ +0x0572 cmp %rcx,%rdx
++ +0x0575 sete %dil
++ +0x0579 or %sil,%dil
++ +0x057c or %al,%dil
+@@ replace B2[292:293] +0x59b | comb[290:291] +0x581
+- +0x059b mov 0x5520(%rsp),%rdi
++ +0x0581 mov 0x4530(%rsp),%rdi
+@@ replace B2[296:298] +0x5b0 | comb[294:295] +0x596
+- +0x05b0 mov %rsi,(%rsp)
+- +0x05b4 mov %r8,0x10(%rsp)
++ +0x0596 mov %rdx,0x8(%rsp)
+@@ replace B2[301:306] +0x5c6 | comb[298:301] +0x5a8
+- +0x05c6 movabs $0x888888888888889,%r10
+- +0x05d0 movabs $0xeeeeeeeeeeeeeeef,%r9
+- +0x05da mov 0x10(%rsp),%r8
+- +0x05df mov (%rsp),%rsi
+- +0x05e3 mov 0x5520(%rsp),%rdi
++ +0x05a8 movabs $0xeeeeeeeeeeeeeeef,%r8
++ +0x05b2 mov 0x4530(%rsp),%rdi
++ +0x05ba mov 0x8(%rsp),%rdx
+@@ replace B2[307:309] +0x5f0 | comb[302:303] +0x5c4
+- +0x05f0 cmpl $0x0,0x1c(%rsp)
+- +0x05f5 lea 0xd8(%rsp),%r8
++ +0x05c4 cmpl $0x0,0x2c(%rsp)
+@@ replace B2[310:312] +0x603 | comb[304:306] +0x5cf
+- +0x0603 mov 0xc8(%rsp),%r11
+- +0x060b test %r11,%r11
++ +0x05cf mov 0xd8(%rsp),%r10
++ +0x05d7 test %r10,%r10
+@@ replace B2[313:320] +0x614 | comb[307:315] +0x5e0
+- +0x0614 mov 0x8(%rsp),%r9
+- +0x0619 shl $0x20,%r9
+- +0x061d mov 0x1c(%rsp),%r10d
+- +0x0622 mov 0x98(%rsp),%rdi
+- +0x062a mov 0xc0(%rsp),%r13
+- +0x0632 xor %r12d,%r12d
+- +0x0635 movabs $0xff51afd7ed558ccd,%rbx
++ +0x05e0 mov 0x20(%rsp),%r8
++ +0x05e5 shl $0x20,%r8
++ +0x05e9 mov 0x2c(%rsp),%r9d
++ +0x05ee mov 0xa8(%rsp),%rdi
++ +0x05f6 mov 0xd0(%rsp),%rbp
++ +0x05fe xor %r14d,%r14d
++ +0x0601 movabs $0xff51afd7ed558ccd,%r11
++ +0x060b movabs $0xc4ceb9fe1a85ec53,%r12
+@@ replace B2[324:325] +0x650 | comb[319:320] +0x626
+- +0x0650 mov %rbx,%rcx
++ +0x0626 mov %r12,%rcx
+@@ replace B2[334:335] +0x686 | comb[329:330] +0x65c
+- +0x0686 mov %rbx,%rax
++ +0x065c mov %r12,%rax
+@@ replace B2[337:348] +0x690 | comb[332:344] +0x666
+- +0x0690 or $0x10000000,%ebx
+- +0x0696 movdqu %xmm1,0x2c(%r13)
+- +0x069c movdqa %xmm1,0x20(%r13)
+- +0x06a2 movdqa %xmm1,0x10(%r13)
+- +0x06a8 movdqa %xmm1,0x0(%r13)
+- +0x06ae mov %ebx,0x3c(%r13)
+- +0x06b2 or %r15,(%r14,%rbp,8)
+- +0x06b6 movabs $0xff51afd7ed558ccd,%rbx
+- +0x06c0 inc %r12
+- +0x06c3 add $0x40,%r13
+- +0x06c7 cmp %r12,%r11
++ +0x0666 or $0x10000000,%r12d
++ +0x066d movdqu %xmm1,0x2c(%rbp)
++ +0x0672 movdqa %xmm1,0x20(%rbp)
++ +0x0677 movdqa %xmm1,0x10(%rbp)
++ +0x067c movdqa %xmm1,0x0(%rbp)
++ +0x0681 mov %r12d,0x3c(%rbp)
++ +0x0685 or %rbx,0x0(%r13,%r15,8)
++ +0x068a movabs $0xc4ceb9fe1a85ec53,%r12
++ +0x0694 data16 data16 cs nopw 0x0(%rax,%rax,1)
++ +0x06a0 inc %r14
++ +0x06a3 add $0x40,%rbp
++ +0x06a7 cmp %r14,%r10
+@@ replace B2[349:353] +0x6d0 | comb[345:349] +0x6b0
+- +0x06d0 mov %r12,%rbp
+- +0x06d3 shr $0x6,%rbp
+- +0x06d7 mov 0xa8(%rsp),%rsi
+- +0x06df cmp %rsi,%rbp
++ +0x06b0 mov %r14,%r15
++ +0x06b3 shr $0x6,%r15
++ +0x06b7 mov 0xb8(%rsp),%rsi
++ +0x06bf cmp %rsi,%r15
+@@ replace B2[354:360] +0x6e8 | comb[350:356] +0x6c8
+- +0x06e8 mov 0xa0(%rsp),%r14
+- +0x06f0 mov (%r14,%rbp,8),%rax
+- +0x06f4 mov $0x1,%r15d
+- +0x06fa mov %r12d,%ecx
+- +0x06fd shl %cl,%r15
+- +0x0700 bt %r12,%rax
++ +0x06c8 mov 0xb0(%rsp),%r13
++ +0x06d0 mov 0x0(%r13,%r15,8),%rax
++ +0x06d5 mov $0x1,%ebx
++ +0x06da mov %r14d,%ecx
++ +0x06dd shl %cl,%rbx
++ +0x06e0 bt %r14,%rax
+@@ replace B2[361:363] +0x706 | comb[357:359] +0x6e6
+- +0x0706 mov %r12,%rax
+- +0x0709 xor %r9,%rax
++ +0x06e6 mov %r14,%rax
++ +0x06e9 xor %r8,%rax
+@@ replace B2[366:367] +0x716 | comb[362:363] +0x6f6
+- +0x0716 imul %rbx,%rcx
++ +0x06f6 imul %r11,%rcx
+@@ replace B2[370:372] +0x724 | comb[366:367] +0x704
+- +0x0724 movabs $0xc4ceb9fe1a85ec53,%rcx
+- +0x072e imul %rcx,%rax
++ +0x0704 imul %r12,%rax
+@@ replace B2[382:383] +0x75e | comb[377:378] +0x734
+- +0x075e cmp %r10,%rcx
++ +0x0734 cmp %r9,%rcx
+@@ replace B2[384:386] +0x767 | comb[379:381] +0x73d
+- +0x0767 mov 0x10(%rdi),%rbx
+- +0x076b cmp (%rdi),%rbx
++ +0x073d mov 0x10(%rdi),%r12
++ +0x0741 cmp (%rdi),%r12
+@@ replace B2[387:390] +0x774 | comb[382:385] +0x74a
+- +0x0774 mov %r11,(%rsp)
+- +0x0778 mov %r9,0x10(%rsp)
+- +0x077d mov %r10,0x50(%rsp)
++ +0x074a mov %r10,0x10(%rsp)
++ +0x074f mov %r8,0x18(%rsp)
++ +0x0754 mov %r9,0x8(%rsp)
+@@ insert B2[394:394] +0x794 | comb[389:390] +0x76b
++ +0x076b movabs $0xff51afd7ed558ccd,%r11
+@@ replace B2[395:399] +0x799 | comb[391:394] +0x77a
+- +0x0799 mov 0x50(%rsp),%r10
+- +0x079e mov 0x10(%rsp),%r9
+- +0x07a3 mov (%rsp),%r11
+- +0x07a7 lea 0xd8(%rsp),%r8
++ +0x077a mov 0x8(%rsp),%r9
++ +0x077f mov 0x18(%rsp),%r8
++ +0x0784 mov 0x10(%rsp),%r10
+@@ replace B2[400:403] +0x7b4 | comb[395:396] +0x78e
+- +0x07b4 mov 0x8(%rsp),%r13
+- +0x07b9 test %r13,%r13
+- +0x07bc mov 0x28(%rsp),%r14
++ +0x078e cmpq $0x0,0x20(%rsp)
+@@ replace B2[404:405] +0x7c7 | comb[397:498] +0x79a
+- +0x07c7 xor %r11d,%r11d
++ +0x079a movq $0x0,0x30(%rsp)
++ +0x07a3 jmp T
++ +0x07a5 mov 0x38(%rsp),%r12
++ +0x07aa lea 0x1(%rax),%rdx
++ +0x07ae add $0xffffffffffffffe3,%rax
++ +0x07b2 xor %esi,%esi
++ +0x07b4 cmp $0x1e,%rdx
++ +0x07b8 setae %sil
++ +0x07bc cmovb %rdx,%rax
++ +0x07c0 lea (%rcx,%rsi,2),%ecx
++ +0x07c3 inc %ecx
++ +0x07c5 mov %rax,0x28e8(%rsp)
++ +0x07cd mov %ecx,0x28f0(%rsp)
++ +0x07d4 mov 0x98(%rsp),%rax
++ +0x07dc cmp 0x20(%rsp),%rax
++ +0x07e1 jae T
++ +0x07e7 mov 0x30(%rsp),%r15
++ +0x07ec mov $0x400,%edx
++ +0x07f1 lea 0x28f8(%rsp),%rdi
++ +0x07f9 xor %esi,%esi
++ +0x07fb call *DISP(%rip)
++ +0x0801 mov $0x848,%eax
++ +0x0806 mov $0xa,%ecx
++ +0x080b nopl 0x0(%rax,%rax,1)
++ +0x0810 movd 0x78(%rsp,%rax,2),%xmm0
++ +0x0816 movd 0x60(%rsp,%rax,2),%xmm1
++ +0x081c punpckldq %xmm0,%xmm1
++ +0x0820 movd 0xa8(%rsp,%rax,2),%xmm0
++ +0x0829 movd 0x90(%rsp,%rax,2),%xmm2
++ +0x0832 punpckldq %xmm0,%xmm2
++ +0x0836 punpcklqdq %xmm2,%xmm1
++ +0x083a movdqu 0x98(%rsp,%rcx,8),%xmm0
++ +0x0843 movdqu 0xa8(%rsp,%rcx,8),%xmm2
++ +0x084c movq 0x70(%rsp,%rax,2),%xmm3
++ +0x0852 movq 0x58(%rsp,%rax,2),%xmm4
++ +0x0858 punpcklqdq %xmm3,%xmm4
++ +0x085c psubq %xmm4,%xmm0
++ +0x0860 movq 0xa0(%rsp,%rax,2),%xmm3
++ +0x0869 movq 0x88(%rsp,%rax,2),%xmm4
++ +0x0872 punpcklqdq %xmm3,%xmm4
++ +0x0876 psubq %xmm4,%xmm2
++ +0x087a psrlq $0x1,%xmm0
++ +0x087f psrlq $0x1,%xmm2
++ +0x0884 pshufd $0xe8,%xmm0,%xmm0
++ +0x0889 pshufd $0xe8,%xmm2,%xmm2
++ +0x088e punpcklqdq %xmm2,%xmm0
++ +0x0892 paddd %xmm1,%xmm0
++ +0x0896 movdqu %xmm0,0x28d0(%rsp,%rcx,4)
++ +0x089f add $0x30,%rax
++ +0x08a3 add $0x4,%rcx
++ +0x08a7 cmp $0x106,%rcx
++ +0x08ae jne T
++ +0x08b4 movups 0x2890(%rsp),%xmm0
++ +0x08bc movdqu 0x8d8(%rsp),%xmm1
++ +0x08c5 movdqu 0x8c8(%rsp),%xmm2
++ +0x08ce movq 0x28d0(%rsp),%xmm3
++ +0x08d7 movq 0x28b8(%rsp),%xmm4
++ +0x08e0 punpcklqdq %xmm3,%xmm4
++ +0x08e4 psubq %xmm4,%xmm1
++ +0x08e8 movq 0x28a0(%rsp),%xmm3
++ +0x08f1 movq 0x2888(%rsp),%xmm4
++ +0x08fa punpcklqdq %xmm3,%xmm4
++ +0x08fe psubq %xmm4,%xmm2
++ +0x0902 psrlq $0x1,%xmm1
++ +0x0907 psrlq $0x1,%xmm2
++ +0x090c shufps $0x88,%xmm1,%xmm2
++ +0x0910 movss 0x28a8(%rsp),%xmm1
++ +0x0919 movlhps %xmm0,%xmm1
++ +0x091c movss 0x28c0(%rsp),%xmm0
++ +0x0925 movss 0x28d8(%rsp),%xmm3
++ +0x092e movlhps %xmm0,%xmm3
++ +0x0931 shufps $0x22,%xmm3,%xmm1
++ +0x0935 paddd %xmm2,%xmm1
++ +0x0939 movdqu %xmm1,0x2ce8(%rsp)
++ +0x0942 mov 0xc0(%rsp),%rbx
++ +0x094a mov 0x10(%rbx),%r14
++ +0x094e cmp (%rbx),%r14
++ +0x0951 je T
++ +0x0957 mov %r14,%rdi
++ +0x095a shl $0xa,%rdi
++ +0x095e add 0x8(%rbx),%rdi
++ +0x0962 mov $0x400,%edx
++ +0x0967 lea 0x28f8(%rsp),%rsi
++ +0x096f call *DISP(%rip)
++ +0x0975 inc %r14
++ +0x0978 mov %r14,0x10(%rbx)
++ +0x097c shl $0x18,%r14d
++ +0x0980 add $0x7f000000,%r14d
++ +0x0987 or $0x80000000,%r14d
++ +0x098e lea 0xf000(%r15),%rdx
++ +0x0995 mov 0x20(%rsp),%r13
++ +0x099a cmp %r13,%rdx
++ +0x099d mov %rdx,0x98(%rsp)
++ +0x09a5 cmovb %rdx,%r13
++ +0x09a9 mov %r14d,0x28f4(%rsp)
++ +0x09b1 mov %r13,0x30(%rsp)
++ +0x09b6 sub %r15,%r13
++ +0x09b9 cmp $0x10,%r13
++ +0x09bd jb T
++ +0x09c3 add 0x60(%rsp),%r15
++ +0x09c8 xor %edx,%edx
+@@ replace B2[407:505] +0x7d0 | comb[500:501] +0x9d0
+- +0x07d0 mov %r11,%r10
+- +0x07d3 cmp %r13,%r10
+- +0x07d6 jae T
+- +0x07dc mov %r11,%rbp
+- +0x07df mov %r9,%r12
+- +0x07e2 mov $0x400,%edx
+- +0x07e7 lea 0x28e8(%rsp),%rdi
+- +0x07ef xor %esi,%esi
+- +0x07f1 call *DISP(%rip)
+- +0x07f7 lea 0x118(%rsp),%rax
+- +0x07ff xor %ecx,%ecx
+- +0x0801 data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+- +0x0810 mov -0x40(%rax),%rdx
+- +0x0814 sub -0x30(%rax),%rdx
+- +0x0818 shr $1,%rdx
+- +0x081b add -0x28(%rax),%edx
+- +0x081e mov -0x18(%rax),%rsi
+- +0x0822 sub -0x8(%rax),%rsi
+- +0x0826 mov %edx,0x28e8(%rsp,%rcx,4)
+- +0x082d shr $1,%rsi
+- +0x0830 add (%rax),%esi
+- +0x0832 mov %esi,0x28ec(%rsp,%rcx,4)
+- +0x0839 add $0x2,%rcx
+- +0x083d add $0x50,%rax
+- +0x0841 cmp $0x100,%rcx
+- +0x0848 jne T
+- +0x084a mov 0xb0(%rsp),%r15
+- +0x0852 mov 0x10(%r15),%rbx
+- +0x0856 cmp (%r15),%rbx
+- +0x0859 je T
+- +0x085f mov %rbx,%rdi
+- +0x0862 shl $0xa,%rdi
+- +0x0866 add 0x8(%r15),%rdi
+- +0x086a mov $0x400,%edx
+- +0x086f lea 0x28e8(%rsp),%rsi
+- +0x0877 call *DISP(%rip)
+- +0x087d inc %rbx
+- +0x0880 mov %rbx,0x10(%r15)
+- +0x0884 mov %rbp,%r11
+- +0x0887 lea 0xf000(%rbp),%r10
+- +0x088e cmp %r13,%r10
+- +0x0891 cmovae %r13,%r10
+- +0x0895 lea 0x10(%rbp),%rdi
+- +0x0899 cmp %r10,%rdi
+- +0x089c mov %r10,0x20(%rsp)
+- +0x08a1 jbe T
+- +0x08a7 lea 0xd8(%rsp),%r8
+- +0x08af mov %r12,%r9
+- +0x08b2 mov 0x38(%rsp),%rcx
+- +0x08b7 mov %r10,%rdx
+- +0x08ba sub %r11,%rdx
+- +0x08bd mov %rcx,0x38(%rsp)
+- +0x08c2 jbe T
+- +0x08c8 mov %r9,%rbp
+- +0x08cb mov %r14,%rax
+- +0x08ce mov 0x28e0(%rsp),%r12d
+- +0x08d6 mov $0x1e,%r14d
+- +0x08dc sub 0x28d8(%rsp),%r14
+- +0x08e4 cmp %rdx,%r14
+- +0x08e7 cmovae %rdx,%r14
+- +0x08eb lea (%rax,%r11,1),%r15
+- +0x08ef test %r14,%r14
+- +0x08f2 je T
+- +0x08f8 xor %r13d,%r13d
+- +0x08fb nopl 0x0(%rax,%rax,1)
+- +0x0900 movzbl (%r15,%r13,1),%esi
+- +0x0905 lea (%rsi,%rsi,4),%rcx
+- +0x0909 lea (%r8,%rcx,8),%rbx
+- +0x090d mov (%r8,%rcx,8),%rax
+- +0x0911 cmp 0x8(%r8,%rcx,8),%rax
+- +0x0916 je T
+- +0x0918 lea (%r12,%r13,1),%rcx
+- +0x091c mov %cx,(%rax)
+- +0x091f addq $0x2,(%rbx)
+- +0x0923 inc %r13
+- +0x0926 cmp %r13,%r14
+- +0x0929 jne T
+- +0x092b jmp T
+- +0x0930 mov %rdx,0x10(%rsp)
+- +0x0935 mov %r11,(%rsp)
+- +0x0939 lea 0x98(%rsp),%rdi
+- +0x0941 call SYM<<c30walk::ctorX::W<false>>::refill>
+- +0x0946 lea 0xd8(%rsp),%r8
+- +0x094e test %al,%al
+- +0x0950 je T
+- +0x0956 mov (%rbx),%rax
+- +0x0959 mov 0x20(%rsp),%r10
+- +0x095e mov (%rsp),%r11
+- +0x0962 mov 0x10(%rsp),%rdx
+- +0x0967 jmp T
+- +0x0969 nopl 0x0(%rax)
+- +0x0970 xor %edx,%edx
+- +0x0972 lea 0xd8(%rsp),%r8
+- +0x097a mov %r12,%r9
+- +0x097d mov 0x38(%rsp),%rcx
+- +0x0982 jmp T
+- +0x0984 data16 data16 cs nopw 0x0(%rax,%rax,1)
+- +0x0990 mov 0x28d8(%rsp),%rax
++ +0x09d0 mov 0x28e8(%rsp),%rax
+@@ replace B2[511:517] +0x9ad | comb[507:512] +0x9ed
+- +0x09ad mov %rax,0x28d8(%rsp)
+- +0x09b5 mov 0x28e0(%rsp),%eax
+- +0x09bc lea 0x10(%rax,%rdx,2),%eax
+- +0x09c0 mov %eax,0x28e0(%rsp)
+- +0x09c7 mov 0x30(%rsp),%r11
+- +0x09cc lea 0x10(%r11),%rsi
++ +0x09ed mov 0x28f0(%rsp),%ecx
++ +0x09f4 lea (%rcx,%rdx,2),%ecx
++ +0x09f7 add $0x10,%ecx
++ +0x09fa mov %rax,0x28e8(%rsp)
++ +0x0a02 mov %ecx,0x28f0(%rsp)
+@@ replace B2[518:522] +0x9d2 | comb[513:518] +0xa0b
+- +0x09d2 mov %rsi,%rdi
+- +0x09d5 cmp %r10,%rsi
+- +0x09d8 mov 0x28(%rsp),%r14
+- +0x09dd ja T
++ +0x0a0b mov %rsi,%r15
++ +0x0a0e mov %rdi,%r13
++ +0x0a11 cmp $0xf,%rdi
++ +0x0a15 jbe T
++ +0x0a1b mov 0x70(%rsp),%rcx
+@@ replace B2[524:535] +0x9e8 | comb[520:527] +0xa25
+- +0x09e8 lea 0x8(%r11),%rsi
+- +0x09ec cmp $0xfffffffffffffff7,%r11
+- +0x09f0 ja T
+- +0x09f6 cmp %r13,%rsi
+- +0x09f9 ja T
+- +0x09ff lea 0x10(%r11),%rax
+- +0x0a03 cmp %r13,%rax
+- +0x0a06 ja T
+- +0x0a0c mov (%r14,%r11,1),%r9
+- +0x0a10 mov (%r14,%rsi,1),%rcx
+- +0x0a14 mov %r9,%rax
++ +0x0a25 mov (%r15),%rcx
++ +0x0a28 mov 0x8(%r15),%r12
++ +0x0a2c lea 0x10(%r15),%rsi
++ +0x0a30 lea -0x10(%r13),%rdi
++ +0x0a34 xor %rcx,%r12
++ +0x0a37 mov %rcx,%rax
++ +0x0a3a rol $0x8,%rax
+@@ replace B2[536:540] +0xa1a | comb[528:529] +0xa41
+- +0x0a1a mov %r9,%rdx
+- +0x0a1d rol $0x8,%rdx
+- +0x0a21 xor %r9,%rdx
+- +0x0a24 or %rax,%rdx
++ +0x0a41 or %r12,%rax
+@@ replace B2[541:555] +0xa29 | comb[530:537] +0xa46
+- +0x0a29 mov %rdi,%rax
+- +0x0a2c nopl 0x0(%rax)
+- +0x0a30 mov %rax,%r12
+- +0x0a33 add $0x10,%rax
+- +0x0a37 cmp %r10,%rax
+- +0x0a3a setbe %r9b
+- +0x0a3e ja T
+- +0x0a44 lea 0x8(%r12),%rsi
+- +0x0a49 cmp $0xfffffffffffffff7,%r12
+- +0x0a4d ja T
+- +0x0a53 cmp %r13,%rsi
+- +0x0a56 ja T
+- +0x0a5c mov (%r14,%r12,1),%rdx
+- +0x0a60 mov 0x8(%r14,%r12,1),%rsi
++ +0x0a46 cmp $0x10,%rdi
++ +0x0a4a lea 0x10e8(%rsp),%r8
++ +0x0a52 jb T
++ +0x0a58 nopl 0x0(%rax,%rax,1)
++ +0x0a60 mov (%rsi),%rdx
++ +0x0a63 mov 0x8(%rsi),%rax
++ +0x0a67 mov $0x1,%r9b
+@@ replace B2[557:558] +0xa6a | comb[539:560] +0xa73
+- +0x0a6a cmp %rcx,%rsi
++ +0x0a73 cmp %rcx,%rax
++ +0x0a76 jne T
++ +0x0a7c add $0xfffffffffffffff0,%rdi
++ +0x0a80 add $0x10,%rsi
++ +0x0a84 cmp $0xf,%rdi
++ +0x0a88 ja T
++ +0x0a8a mov %rsi,0x40(%rsp)
++ +0x0a8f xor %r9d,%r9d
++ +0x0a92 mov %rcx,0x70(%rsp)
++ +0x0a97 jmp T
++ +0x0a9c nopl 0x0(%rax)
++ +0x0aa0 movzwl 0x28f0(%rsp),%ebp
++ +0x0aa8 mov 0x28e8(%rsp),%r9
++ +0x0ab0 mov $0x1e,%ebx
++ +0x0ab5 sub %r9,%rbx
++ +0x0ab8 cmp $0x10,%rbx
++ +0x0abc mov $0x10,%edx
++ +0x0ac1 cmovb %rbx,%rdx
++ +0x0ac5 movzbl (%r15),%r14d
++ +0x0ac9 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0ad1 cmp 0x8e8(%rsp,%r14,8),%rax
+@@ replace B2[559:562] +0xa6f | comb[561:710] +0xadf
+- +0x0a6f mov %rsi,0x38(%rsp)
+- +0x0a74 mov %rdx,0x68(%rsp)
+- +0x0a79 lea 0x10(%r12),%r10
++ +0x0adf mov 0x30(%rsp),%r12
++ +0x0ae4 sub %r13,%r12
++ +0x0ae7 add 0x60(%rsp),%r12
++ +0x0aec mov %bp,(%rax)
++ +0x0aef addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0af8 cmp $0x2,%rbx
++ +0x0afc jb T
++ +0x0b02 movzbl 0x1(%r15),%r14d
++ +0x0b07 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0b0f cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0b17 je T
++ +0x0b1d lea 0x1(%rbp),%ecx
++ +0x0b20 mov %cx,(%rax)
++ +0x0b23 addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0b2c cmp $0x1c,%r9
++ +0x0b30 je T
++ +0x0b36 movzbl 0x2(%r15),%r14d
++ +0x0b3b mov 0xe8(%rsp,%r14,8),%rax
++ +0x0b43 cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0b4b je T
++ +0x0b51 lea 0x2(%rbp),%ecx
++ +0x0b54 mov %cx,(%rax)
++ +0x0b57 addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0b60 cmp $0x1b,%r9
++ +0x0b64 je T
++ +0x0b6a movzbl 0x3(%r15),%r14d
++ +0x0b6f mov 0xe8(%rsp,%r14,8),%rax
++ +0x0b77 cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0b7f je T
++ +0x0b85 lea 0x3(%rbp),%ecx
++ +0x0b88 mov %cx,(%rax)
++ +0x0b8b addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0b94 cmp $0x1a,%r9
++ +0x0b98 je T
++ +0x0b9e movzbl 0x4(%r15),%r14d
++ +0x0ba3 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0bab cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0bb3 je T
++ +0x0bb9 lea 0x4(%rbp),%ecx
++ +0x0bbc mov %cx,(%rax)
++ +0x0bbf addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0bc8 cmp $0x19,%r9
++ +0x0bcc je T
++ +0x0bd2 movzbl 0x5(%r15),%r14d
++ +0x0bd7 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0bdf cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0be7 je T
++ +0x0bed lea 0x5(%rbp),%ecx
++ +0x0bf0 mov %cx,(%rax)
++ +0x0bf3 addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0bfc cmp $0x18,%r9
++ +0x0c00 je T
++ +0x0c06 movzbl 0x6(%r15),%r14d
++ +0x0c0b mov 0xe8(%rsp,%r14,8),%rax
++ +0x0c13 cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0c1b je T
++ +0x0c21 lea 0x6(%rbp),%ecx
++ +0x0c24 mov %cx,(%rax)
++ +0x0c27 addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0c30 cmp $0x17,%r9
++ +0x0c34 je T
++ +0x0c3a movzbl 0x7(%r15),%r14d
++ +0x0c3f mov 0xe8(%rsp,%r14,8),%rax
++ +0x0c47 cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0c4f je T
++ +0x0c55 lea 0x7(%rbp),%ecx
++ +0x0c58 mov %cx,(%rax)
++ +0x0c5b addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0c64 cmp $0x16,%r9
++ +0x0c68 je T
++ +0x0c6e movzbl 0x8(%r15),%r14d
++ +0x0c73 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0c7b cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0c83 je T
++ +0x0c89 lea 0x8(%rbp),%ecx
++ +0x0c8c mov %cx,(%rax)
++ +0x0c8f addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0c98 cmp $0x15,%r9
++ +0x0c9c je T
++ +0x0ca2 movzbl 0x9(%r15),%r14d
++ +0x0ca7 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0caf cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0cb7 je T
++ +0x0cbd lea 0x9(%rbp),%ecx
++ +0x0cc0 mov %cx,(%rax)
++ +0x0cc3 addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0ccc cmp $0x14,%r9
++ +0x0cd0 je T
++ +0x0cd6 movzbl 0xa(%r15),%r14d
++ +0x0cdb mov 0xe8(%rsp,%r14,8),%rax
++ +0x0ce3 cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0ceb je T
++ +0x0cf1 lea 0xa(%rbp),%ecx
++ +0x0cf4 mov %cx,(%rax)
++ +0x0cf7 addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0d00 cmp $0x13,%r9
++ +0x0d04 je T
++ +0x0d0a movzbl 0xb(%r15),%r14d
++ +0x0d0f mov 0xe8(%rsp,%r14,8),%rax
++ +0x0d17 cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0d1f je T
++ +0x0d25 lea 0xb(%rbp),%ecx
++ +0x0d28 mov %cx,(%rax)
++ +0x0d2b addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0d34 cmp $0x12,%r9
++ +0x0d38 je T
++ +0x0d3e movzbl 0xc(%r15),%r14d
++ +0x0d43 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0d4b cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0d53 je T
++ +0x0d59 lea 0xc(%rbp),%ecx
++ +0x0d5c mov %cx,(%rax)
++ +0x0d5f addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0d68 cmp $0x11,%r9
++ +0x0d6c je T
++ +0x0d6e movzbl 0xd(%r15),%r14d
++ +0x0d73 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0d7b cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0d83 je T
++ +0x0d89 lea 0xd(%rbp),%ecx
++ +0x0d8c mov %cx,(%rax)
++ +0x0d8f addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0d98 cmp $0x10,%r9
++ +0x0d9c je T
++ +0x0d9e movzbl 0xe(%r15),%r14d
++ +0x0da3 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0dab cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0db3 je T
++ +0x0db9 lea 0xe(%rbp),%ecx
++ +0x0dbc mov %cx,(%rax)
++ +0x0dbf addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0dc8 cmp $0xf,%r9
++ +0x0dcc jne T
++ +0x0dd2 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
++ +0x0de0 lea 0x10(%r12),%rbx
++ +0x0de5 add %rdx,%r12
++ +0x0de8 add %edx,%ebp
++ +0x0dea add $0x2,%ebp
++ +0x0ded nopl (%rax)
++ +0x0df0 movzbl (%r12),%r14d
++ +0x0df5 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0dfd cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x0e05 je T
++ +0x0e07 mov %bp,(%rax)
++ +0x0e0a addq $0x2,0xe8(%rsp,%r14,8)
++ +0x0e13 inc %r12
++ +0x0e16 inc %ebp
++ +0x0e18 cmp %rbx,%r12
++ +0x0e1b jne T
+@@ replace B2[563:574] +0xa80 | comb[711:741] +0xe22
+- +0x0a80 mov %rdi,0x30(%rsp)
+- +0x0a85 mov 0x28d8(%rsp),%rax
+- +0x0a8d mov $0x1e,%r12d
+- +0x0a93 sub %rax,%r12
+- +0x0a96 cmp $0x10,%r12
+- +0x0a9a mov $0x10,%ebx
+- +0x0a9f cmovb %r12,%rbx
+- +0x0aa3 mov %rbx,%r15
+- +0x0aa6 add %r11,%r15
+- +0x0aa9 jb T
+- +0x0aaf cmp %r13,%r15
++ +0x0e22 mov %rsi,%r13
++ +0x0e25 mov %rdi,%r15
++ +0x0e28 lea 0xa8(%rsp),%rdi
++ +0x0e30 mov %r14,%rsi
++ +0x0e33 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x0e38 test %al,%al
++ +0x0e3a je T
++ +0x0e40 mov 0xe8(%rsp,%r14,8),%rax
++ +0x0e48 mov %r15,%rdi
++ +0x0e4b mov %r13,%rsi
++ +0x0e4e jmp T
++ +0x0e50 mov %rsi,0x40(%rsp)
++ +0x0e55 xor %r9d,%r9d
++ +0x0e58 jmp T
++ +0x0e5a mov %rdx,0x70(%rsp)
++ +0x0e5f mov %rax,0x38(%rsp)
++ +0x0e64 mov %rsi,0x40(%rsp)
++ +0x0e69 movzbl %cl,%ebx
++ +0x0e6c lea (%rbx,%rbx,2),%rdx
++ +0x0e70 mov %ebx,%eax
++ +0x0e72 mov 0xe8(%rsp,%rax,8),%rax
++ +0x0e7a mov %rax,%rsi
++ +0x0e7d sub (%r8,%rdx,8),%rsi
++ +0x0e81 shr $1,%rsi
++ +0x0e84 add 0x8(%r8,%rdx,8),%esi
++ +0x0e89 mov %rdi,0x68(%rsp)
++ +0x0e8e sub %rdi,%r13
++ +0x0e91 add %r13,%rsi
++ +0x0e94 mov 0xc(%r8,%rdx,8),%edi
++ +0x0e99 cmp %rdi,%rsi
+@@ replace B2[575:602] +0xab8 | comb[742:746] +0xea2
+- +0x0ab8 mov 0x28e0(%rsp),%r14d
+- +0x0ac0 cmp $0x1e,%rax
+- +0x0ac4 jne T
+- +0x0aca cmp %r15,0x30(%rsp)
+- +0x0acf jae T
+- +0x0ad5 jmp T
+- +0x0ada nopw 0x0(%rax,%rax,1)
+- +0x0ae0 lea 0x10(%r12),%r10
+- +0x0ae5 mov %r12,0x30(%rsp)
+- +0x0aea sub %r11,%r12
+- +0x0aed movzbl %cl,%eax
+- +0x0af0 mov %rax,0x90(%rsp)
+- +0x0af8 lea (%rax,%rax,4),%rdx
+- +0x0afc mov (%r8,%rdx,8),%rax
+- +0x0b00 mov 0x1c(%r8,%rdx,8),%esi
+- +0x0b05 mov %rax,%rdi
+- +0x0b08 sub 0x10(%r8,%rdx,8),%rdi
+- +0x0b0d shr $1,%rdi
+- +0x0b10 add 0x18(%r8,%rdx,8),%edi
+- +0x0b15 add %r12,%rdi
+- +0x0b18 cmp %rsi,%rdi
+- +0x0b1b ja T
+- +0x0b21 mov %r10,0x70(%rsp)
+- +0x0b26 mov %r9d,0x44(%rsp)
+- +0x0b2b lea (%r8,%rdx,8),%rbp
+- +0x0b2f movzbl %cl,%r13d
+- +0x0b33 mov 0x8(%rbp),%rsi
++ +0x0ea2 mov %r9d,0x54(%rsp)
++ +0x0ea7 lea (%r8,%rdx,8),%r10
++ +0x0eab movzbl %cl,%r12d
++ +0x0eaf mov 0x8e8(%rsp,%rbx,8),%rsi
+@@ replace B2[604:605] +0xb44 | comb[748:750] +0xec4
+- +0x0b44 mov %rbp,0x88(%rsp)
++ +0x0ec4 mov %rbx,0x80(%rsp)
++ +0x0ecc mov %r10,0x8(%rsp)
+@@ replace B2[606:607] +0xb4e | comb[751:752] +0xed3
+- +0x0b4e xchg %ax,%ax
++ +0x0ed3 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+@@ replace B2[614:616] +0xb69 | comb[759:760] +0xef9
+- +0x0b69 mov %rax,0x10(%rbp)
+- +0x0b6d mov %rax,0x0(%rbp)
++ +0x0ef9 mov %rax,0xe8(%rsp,%rbx,8)
+@@ replace B2[617:621] +0xb75 | comb[761:765] +0xf05
+- +0x0b75 mov %rsi,0x8(%rbp)
+- +0x0b79 mov %edx,0x20(%rbp)
+- +0x0b7c mov %edi,0x24(%rbp)
+- +0x0b7f lea 0xd8(%rsp),%r8
++ +0x0f05 mov %rsi,0x8e8(%rsp,%rbx,8)
++ +0x0f0d mov %rax,(%r10)
++ +0x0f10 mov %edx,0x10(%r10)
++ +0x0f14 mov %edi,0x14(%r10)
+@@ replace B2[623:625] +0xb8d | comb[767:769] +0xf1e
+- +0x0b8d cmp %rsi,%r12
+- +0x0b90 cmovb %r12,%rsi
++ +0x0f1e cmp %rsi,%r13
++ +0x0f21 cmovb %r13,%rsi
+@@ replace B2[627:628] +0xb9d | comb[771:772] +0xf2e
+- +0x0b9d mov 0x28d8(%rsp),%rdi
++ +0x0f2e mov 0x28e8(%rsp),%rdi
+@@ replace B2[632:633] +0xbb9 | comb[776:777] +0xf4a
+- +0x0bb9 mov 0x28e0(%rsp),%ecx
++ +0x0f4a mov 0x28f0(%rsp),%ecx
+@@ insert B2[644:644] +0xbec | comb[788:789] +0xf7d
++ +0x0f7d mov %rdx,%r8
+@@ delete B2[645:646] +0xbef | comb[790:790] +0xf83
+- +0x0bef mov %rdx,%r8
+@@ replace B2[648:649] +0xbfa | comb[792:793] +0xf8b
+- +0x0bfa nopw 0x0(%rax,%rax,1)
++ +0x0f8b nopl 0x0(%rax,%rax,1)
+@@ replace B2[657:658] +0xc1d | comb[801:802] +0xfad
+- +0x0c1d mov %rax,0x0(%rbp)
++ +0x0fad mov %rax,0xe8(%rsp,%rbx,8)
+@@ replace B2[664:665] +0xc35 | comb[808:809] +0xfc9
+- +0x0c35 mov %r8,0x28d8(%rsp)
++ +0x0fc9 mov %r8,0x28e8(%rsp)
+@@ replace B2[666:670] +0xc3f | comb[810:814] +0xfd3
+- +0x0c3f mov %edx,0x28e0(%rsp)
+- +0x0c46 sub %rsi,%r12
+- +0x0c49 lea 0xd8(%rsp),%r8
+- +0x0c51 test %r12,%r12
++ +0x0fd3 mov %edx,0x28f0(%rsp)
++ +0x0fda sub %rsi,%r13
++ +0x0fdd mov 0x8(%rsp),%r10
++ +0x0fe2 test %r13,%r13
+@@ replace B2[672:673] +0xc5d | comb[816:817] +0xfee
+- +0x0c5d cmp 0x10(%rbp),%rax
++ +0x0fee cmp (%r10),%rax
+@@ replace B2[674:676] +0xc63 | comb[818:820] +0xff3
+- +0x0c63 lea 0x98(%rsp),%rdi
+- +0x0c6b mov 0x90(%rsp),%rsi
++ +0x0ff3 lea 0xa8(%rsp),%rdi
++ +0x0ffb mov %ebx,%esi
+@@ replace B2[677:679] +0xc78 | comb[821:824] +0x1002
+- +0x0c78 mov 0x0(%rbp),%r8
+- +0x0c7c mov 0x10(%rbp),%rax
++ +0x1002 mov 0x8(%rsp),%r10
++ +0x1007 mov 0xe8(%rsp,%rbx,8),%r8
++ +0x100f mov (%r10),%rax
+@@ replace B2[681:687] +0xc86 | comb[826:832] +0x1018
+- +0x0c86 add 0x18(%rbp),%r8d
+- +0x0c8a mov %r8d,0x18(%rbp)
+- +0x0c8e pxor %xmm0,%xmm0
+- +0x0c92 movdqu %xmm0,0x0(%rbp)
+- +0x0c97 movq $0x0,0x10(%rbp)
+- +0x0c9f cmp $0x1e,%r12
++ +0x1018 add 0x8(%r10),%r8d
++ +0x101c mov %r8d,0x8(%r10)
++ +0x1020 movq $0x0,(%r10)
++ +0x1027 movq $0x0,0xe8(%rsp,%rbx,8)
++ +0x1033 movq $0x0,0x8e8(%rsp,%rbx,8)
++ +0x103f cmp $0x1e,%r13
+@@ replace B2[697:698] +0xcc7 | comb[842:843] +0x1067
+- +0x0cc7 mov %r12,%rax
++ +0x1067 mov %r13,%rax
+@@ replace B2[702:705] +0xcde | comb[847:850] +0x107e
+- +0x0cde cmpl $0x0,0x1c(%rsp)
+- +0x0ce3 mov %r12,0x50(%rsp)
+- +0x0ce8 mov %rdx,0x48(%rsp)
++ +0x107e cmpl $0x0,0x2c(%rsp)
++ +0x1083 mov %r13,0x48(%rsp)
++ +0x1088 mov %rdx,0xa0(%rsp)
+@@ replace B2[706:711] +0xcf3 | comb[851:853] +0x1096
+- +0x0cf3 mov 0x28e0(%rsp),%r10d
+- +0x0cfb mov 0xa8(%rsp),%rax
+- +0x0d03 mov %rax,(%rsp)
+- +0x0d07 mov 0x98(%rsp),%r11
+- +0x0d0f mov 0xa0(%rsp),%rax
++ +0x1096 mov 0x28f0(%rsp),%r10d
++ +0x109e mov 0xb8(%rsp),%rax
+@@ replace B2[712:714] +0xd1c | comb[854:859] +0x10ab
+- +0x0d1c mov 0xc0(%rsp),%rax
+- +0x0d24 mov 0x28d8(%rsp),%rbx
++ +0x10ab mov 0xa8(%rsp),%r11
++ +0x10b3 mov 0xb0(%rsp),%rax
++ +0x10bb mov %rax,0x18(%rsp)
++ +0x10c0 mov 0xd0(%rsp),%rax
++ +0x10c8 mov 0x28e8(%rsp),%rbx
+@@ replace B2[719:725] +0xd3d | comb[864:870] +0x10e1
+- +0x0d3d lea (%rax,%rcx,1),%r12
+- +0x0d41 add $0x3c,%r12
+- +0x0d45 mov %r10d,%r15d
+- +0x0d48 shl $0x8,%r15d
+- +0x0d4c or %r13d,%r15d
+- +0x0d4f xor %ebp,%ebp
++ +0x10e1 lea (%rax,%rcx,1),%r14
++ +0x10e5 add $0x3c,%r14
++ +0x10e9 mov %r10d,%r13d
++ +0x10ec shl $0x8,%r13d
++ +0x10f0 or %r12d,%r13d
++ +0x10f3 xor %r15d,%r15d
+@@ replace B2[726:727] +0xd56 | comb[871:872] +0x10fb
+- +0x0d56 cs nopw 0x0(%rax,%rax,1)
++ +0x10fb nopl 0x0(%rax,%rax,1)
+@@ replace B2[729:730] +0xd67 | comb[874:875] +0x1107
+- +0x0d67 mov %r15d,(%rcx,%rax,1)
++ +0x1107 mov %r13d,(%rcx,%rax,1)
+@@ replace B2[731:733] +0xd6f | comb[876:878] +0x110f
+- +0x0d6f lea (%r10,%rbp,1),%r14d
+- +0x0d73 add %r14d,%esi
++ +0x110f lea (%r10,%r15,1),%ebp
++ +0x1113 add %ebp,%esi
+@@ replace B2[734:735] +0xd79 | comb[879:880] +0x1118
+- +0x0d79 or %r13d,%esi
++ +0x1118 or %r12d,%esi
+@@ replace B2[737:738] +0xd84 | comb[882:883] +0x1123
+- +0x0d84 add %r14d,%esi
++ +0x1123 add %ebp,%esi
+@@ replace B2[739:740] +0xd8a | comb[884:885] +0x1128
+- +0x0d8a or %r13d,%esi
++ +0x1128 or %r12d,%esi
+@@ replace B2[742:743] +0xd95 | comb[887:888] +0x1133
+- +0x0d95 add %r14d,%esi
++ +0x1133 add %ebp,%esi
+@@ replace B2[744:745] +0xd9b | comb[889:890] +0x1138
+- +0x0d9b or %r13d,%esi
++ +0x1138 or %r12d,%esi
+@@ replace B2[747:748] +0xda6 | comb[892:893] +0x1143
+- +0x0da6 add %r14d,%esi
++ +0x1143 add %ebp,%esi
+@@ replace B2[749:750] +0xdac | comb[894:895] +0x1148
+- +0x0dac or %r13d,%esi
++ +0x1148 or %r12d,%esi
+@@ replace B2[752:753] +0xdb7 | comb[897:898] +0x1153
+- +0x0db7 add %r14d,%esi
++ +0x1153 add %ebp,%esi
+@@ replace B2[754:755] +0xdbd | comb[899:900] +0x1158
+- +0x0dbd or %r13d,%esi
++ +0x1158 or %r12d,%esi
+@@ replace B2[757:758] +0xdc8 | comb[902:903] +0x1163
+- +0x0dc8 add %r14d,%esi
++ +0x1163 add %ebp,%esi
+@@ replace B2[759:760] +0xdce | comb[904:905] +0x1168
+- +0x0dce or %r13d,%esi
++ +0x1168 or %r12d,%esi
+@@ replace B2[762:763] +0xdd9 | comb[907:908] +0x1173
+- +0x0dd9 add %r14d,%esi
++ +0x1173 add %ebp,%esi
+@@ replace B2[764:765] +0xddf | comb[909:910] +0x1178
+- +0x0ddf or %r13d,%esi
++ +0x1178 or %r12d,%esi
+@@ replace B2[767:768] +0xdea | comb[912:913] +0x1183
+- +0x0dea add %r14d,%esi
++ +0x1183 add %ebp,%esi
+@@ replace B2[769:770] +0xdf0 | comb[914:915] +0x1188
+- +0x0df0 or %r13d,%esi
++ +0x1188 or %r12d,%esi
+@@ replace B2[772:773] +0xdfb | comb[917:918] +0x1193
+- +0x0dfb add %r14d,%esi
++ +0x1193 add %ebp,%esi
+@@ replace B2[774:775] +0xe01 | comb[919:920] +0x1198
+- +0x0e01 or %r13d,%esi
++ +0x1198 or %r12d,%esi
+@@ replace B2[777:778] +0xe0c | comb[922:923] +0x11a3
+- +0x0e0c add %r14d,%esi
++ +0x11a3 add %ebp,%esi
+@@ replace B2[779:780] +0xe12 | comb[924:925] +0x11a8
+- +0x0e12 or %r13d,%esi
++ +0x11a8 or %r12d,%esi
+@@ replace B2[782:783] +0xe1d | comb[927:928] +0x11b3
+- +0x0e1d add %r14d,%esi
++ +0x11b3 add %ebp,%esi
+@@ replace B2[784:785] +0xe23 | comb[929:930] +0x11b8
+- +0x0e23 or %r13d,%esi
++ +0x11b8 or %r12d,%esi
+@@ replace B2[787:788] +0xe2e | comb[932:933] +0x11c3
+- +0x0e2e add %r14d,%esi
++ +0x11c3 add %ebp,%esi
+@@ replace B2[789:790] +0xe34 | comb[934:935] +0x11c8
+- +0x0e34 or %r13d,%esi
++ +0x11c8 or %r12d,%esi
+@@ replace B2[792:793] +0xe3f | comb[937:938] +0x11d3
+- +0x0e3f add %r14d,%esi
++ +0x11d3 add %ebp,%esi
+@@ replace B2[794:795] +0xe45 | comb[939:940] +0x11d8
+- +0x0e45 or %r13d,%esi
++ +0x11d8 or %r12d,%esi
+@@ replace B2[797:798] +0xe50 | comb[942:943] +0x11e3
+- +0x0e50 add %r14d,%esi
++ +0x11e3 add %ebp,%esi
+@@ replace B2[799:800] +0xe56 | comb[944:945] +0x11e8
+- +0x0e56 or %r13d,%esi
++ +0x11e8 or %r12d,%esi
+@@ replace B2[802:803] +0xe61 | comb[947:948] +0x11f3
+- +0x0e61 add %r14d,%esi
++ +0x11f3 add %ebp,%esi
+@@ replace B2[804:805] +0xe67 | comb[949:950] +0x11f8
+- +0x0e67 or %r13d,%esi
++ +0x11f8 or %r12d,%esi
+@@ replace B2[807:808] +0xe72 | comb[952:953] +0x1203
+- +0x0e72 add %r14d,%esi
++ +0x1203 add %ebp,%esi
+@@ replace B2[809:810] +0xe78 | comb[954:955] +0x1208
+- +0x0e78 or %r13d,%esi
++ +0x1208 or %r12d,%esi
+@@ replace B2[812:813] +0xe83 | comb[957:958] +0x1213
+- +0x0e83 add %r14d,%esi
++ +0x1213 add %ebp,%esi
+@@ replace B2[814:815] +0xe89 | comb[959:960] +0x1218
+- +0x0e89 or %r13d,%esi
++ +0x1218 or %r12d,%esi
+@@ replace B2[817:818] +0xe94 | comb[962:963] +0x1223
+- +0x0e94 add %r14d,%esi
++ +0x1223 add %ebp,%esi
+@@ replace B2[819:820] +0xe9a | comb[964:965] +0x1228
+- +0x0e9a or %r13d,%esi
++ +0x1228 or %r12d,%esi
+@@ replace B2[822:823] +0xea5 | comb[967:968] +0x1233
+- +0x0ea5 add %r14d,%esi
++ +0x1233 add %ebp,%esi
+@@ replace B2[824:825] +0xeab | comb[969:970] +0x1238
+- +0x0eab or %r13d,%esi
++ +0x1238 or %r12d,%esi
+@@ replace B2[827:828] +0xeb6 | comb[972:973] +0x1243
+- +0x0eb6 add %r14d,%esi
++ +0x1243 add %ebp,%esi
+@@ replace B2[829:830] +0xebc | comb[974:975] +0x1248
+- +0x0ebc or %r13d,%esi
++ +0x1248 or %r12d,%esi
+@@ replace B2[832:833] +0xec7 | comb[977:978] +0x1253
+- +0x0ec7 add %r14d,%esi
++ +0x1253 add %ebp,%esi
+@@ replace B2[834:835] +0xecd | comb[979:980] +0x1258
+- +0x0ecd or %r13d,%esi
++ +0x1258 or %r12d,%esi
+@@ replace B2[837:838] +0xed8 | comb[982:983] +0x1263
+- +0x0ed8 add %r14d,%esi
++ +0x1263 add %ebp,%esi
+@@ replace B2[839:840] +0xede | comb[984:985] +0x1268
+- +0x0ede or %r13d,%esi
++ +0x1268 or %r12d,%esi
+@@ replace B2[842:843] +0xee9 | comb[987:988] +0x1273
+- +0x0ee9 add %r14d,%esi
++ +0x1273 add %ebp,%esi
+@@ replace B2[844:845] +0xeef | comb[989:990] +0x1278
+- +0x0eef or %r13d,%esi
++ +0x1278 or %r12d,%esi
+@@ replace B2[847:848] +0xefa | comb[992:993] +0x1283
+- +0x0efa add %r14d,%esi
++ +0x1283 add %ebp,%esi
+@@ replace B2[849:850] +0xf00 | comb[994:995] +0x1288
+- +0x0f00 or %r13d,%esi
++ +0x1288 or %r12d,%esi
+@@ replace B2[852:853] +0xf0b | comb[997:998] +0x1293
+- +0x0f0b add %r14d,%esi
++ +0x1293 add %ebp,%esi
+@@ replace B2[854:855] +0xf11 | comb[999:1000] +0x1298
+- +0x0f11 or %r13d,%esi
++ +0x1298 or %r12d,%esi
+@@ replace B2[857:858] +0xf1c | comb[1002:1003] +0x12a3
+- +0x0f1c add %r14d,%esi
++ +0x12a3 add %ebp,%esi
+@@ replace B2[859:860] +0xf22 | comb[1004:1005] +0x12a8
+- +0x0f22 or %r13d,%esi
++ +0x12a8 or %r12d,%esi
+@@ replace B2[862:863] +0xf2d | comb[1007:1008] +0x12b3
+- +0x0f2d add %r14d,%esi
++ +0x12b3 add %ebp,%esi
+@@ replace B2[864:865] +0xf33 | comb[1009:1010] +0x12b8
+- +0x0f33 or %r13d,%esi
++ +0x12b8 or %r12d,%esi
+@@ replace B2[867:868] +0xf3e | comb[1012:1013] +0x12c3
+- +0x0f3e add %r14d,%esi
++ +0x12c3 add %ebp,%esi
+@@ replace B2[869:870] +0xf44 | comb[1014:1015] +0x12c8
+- +0x0f44 or %r13d,%esi
++ +0x12c8 or %r12d,%esi
+@@ replace B2[872:873] +0xf4f | comb[1017:1018] +0x12d3
+- +0x0f4f add %r14d,%esi
++ +0x12d3 add %ebp,%esi
+@@ replace B2[874:875] +0xf55 | comb[1019:1020] +0x12d8
+- +0x0f55 or %r13d,%esi
++ +0x12d8 or %r12d,%esi
+@@ replace B2[876:877] +0xf5c | comb[1021:1022] +0x12df
+- +0x0f5c lea (%r10,%rbp,1),%eax
++ +0x12df lea (%r10,%r15,1),%eax
+@@ replace B2[878:880] +0xf63 | comb[1023:1025] +0x12e6
+- +0x0f63 mov %eax,0x28e0(%rsp)
+- +0x0f6a add $0x20,%rbp
++ +0x12e6 mov %eax,0x28f0(%rsp)
++ +0x12ed add $0x20,%r15
+@@ replace B2[881:882] +0xf71 | comb[1026:1027] +0x12f4
+- +0x0f71 add $0x2000,%r15d
++ +0x12f4 add $0x2000,%r13d
+@@ replace B2[886:887] +0xf88 | comb[1031:1032] +0x130b
+- +0x0f88 cmp (%rsp),%rax
++ +0x130b cmp 0x10(%rsp),%rax
+@@ replace B2[888:889] +0xf92 | comb[1033:1034] +0x1316
+- +0x0f92 mov 0x10(%rsp),%rcx
++ +0x1316 mov 0x18(%rsp),%rcx
+@@ replace B2[894:895] +0xfab | comb[1039:1040] +0x132f
+- +0x0fab mov (%r12,%rbp,2),%eax
++ +0x132f mov (%r14,%r15,2),%eax
+@@ replace B2[900:901] +0xfc6 | comb[1045:1046] +0x134a
+- +0x0fc6 cs nopw 0x0(%rax,%rax,1)
++ +0x134a nopw 0x0(%rax,%rax,1)
+@@ replace B2[904:905] +0xfde | comb[1049:1050] +0x135e
+- +0x0fde movups %xmm0,-0x10(%r12,%rbp,2)
++ +0x135e movups %xmm0,-0x10(%r14,%r15,2)
+@@ replace B2[908:912] +0xff2 | comb[1053:1057] +0x1372
+- +0x0ff2 movdqa %xmm2,-0x1c(%r12,%rbp,2)
+- +0x0ff9 movdqa %xmm1,-0x2c(%r12,%rbp,2)
+- +0x1000 movdqa %xmm0,-0x3c(%r12,%rbp,2)
+- +0x1007 mov %r15d,(%r12,%rbp,2)
++ +0x1372 movdqa %xmm2,-0x1c(%r14,%r15,2)
++ +0x1379 movdqa %xmm1,-0x2c(%r14,%r15,2)
++ +0x1380 movdqa %xmm0,-0x3c(%r14,%r15,2)
++ +0x1387 mov %r13d,(%r14,%r15,2)
+@@ replace B2[913:914] +0x1010 | comb[1058:1059] +0x1390
+- +0x1010 mov 0x28d8(%rsp),%rdi
++ +0x1390 mov 0x28e8(%rsp),%rdi
+@@ replace B2[918:920] +0x1029 | comb[1063:1065] +0x13a9
+- +0x1029 mov 0x28e0(%rsp),%eax
+- +0x1030 mov 0xc0(%rsp),%rcx
++ +0x13a9 mov 0x28f0(%rsp),%eax
++ +0x13b0 mov 0xd0(%rsp),%rcx
+@@ replace B2[923:925] +0x1043 | comb[1068:1071] +0x13c3
+- +0x1043 or %r13d,%r14d
+- +0x1046 cmp $0x3c,%r12
++ +0x13c3 or %r12d,%r14d
++ +0x13c6 lea -0x1e(%r13),%rsi
++ +0x13ca cmp $0x1e,%rsi
+@@ replace B2[938:939] +0x1076 | comb[1084:1085] +0x13fa
+- +0x1076 cs nopw 0x0(%rax,%rax,1)
++ +0x13fa nopw 0x0(%rax,%rax,1)
+@@ insert B2[949:949] +0x10aa | comb[1095:1096] +0x142a
++ +0x142a mov 0x80(%rsp),%rbx
+@@ replace B2[957:958] +0x10cf | comb[1104:1105] +0x1457
+- +0x10cf nop
++ +0x1457 nopw 0x0(%rax,%rax,1)
+@@ replace B2[962:964] +0x10e4 | comb[1109:1111] +0x1474
+- +0x10e4 movdqa 0x20(%rdi),%xmm3
+- +0x10e9 movdqa %xmm3,-0x5c(%r11)
++ +0x1474 movaps 0x20(%rdi),%xmm3
++ +0x1478 movaps %xmm3,-0x5c(%r11)
+@@ replace B2[970:971] +0x110f | comb[1117:1118] +0x149d
+- +0x110f movdqa %xmm3,-0x1c(%r11)
++ +0x149d movaps %xmm3,-0x1c(%r11)
+@@ replace B2[994:996] +0x1175 | comb[1141:1143] +0x1502
+- +0x1175 mov %eax,0x28e0(%rsp)
+- +0x117c mov 0x48(%rsp),%rdx
++ +0x1502 mov %eax,0x28f0(%rsp)
++ +0x1509 mov 0xa0(%rsp),%rdx
+@@ replace B2[1000:1002] +0x118f | comb[1147:1149] +0x151f
+- +0x118f mov 0x50(%rsp),%r12
+- +0x1194 add %rcx,%r12
++ +0x151f mov 0x48(%rsp),%r13
++ +0x1524 add %rcx,%r13
+@@ replace B2[1006:1009] +0x11a2 | comb[1153:1156] +0x1532
+- +0x11a2 mov 0x88(%rsp),%rbp
+- +0x11aa mov %r8d,0x18(%rbp)
+- +0x11ae test %r12,%r12
++ +0x1532 mov 0x8(%rsp),%r10
++ +0x1537 mov %r8d,0x8(%r10)
++ +0x153b test %r13,%r13
+@@ insert B2[1011:1011] +0x11be | comb[1158:1159] +0x154b
++ +0x154b mov 0x80(%rsp),%rbx
+@@ replace B2[1012:1013] +0x11c4 | comb[1160:1161] +0x1555
+- +0x11c4 mov 0x1c(%rbp),%ecx
++ +0x1555 mov 0xc(%r10),%ecx
+@@ replace B2[1025:1026] +0x11ea | comb[1173:1174] +0x157c
+- +0x11ea mov 0xa8(%rsp),%rsi
++ +0x157c mov 0xb8(%rsp),%rsi
+@@ replace B2[1030:1032] +0x1202 | comb[1178:1180] +0x1594
+- +0x1202 add 0xc0(%rsp),%rsi
+- +0x120a mov 0xa0(%rsp),%r9
++ +0x1594 add 0xd0(%rsp),%rsi
++ +0x159c mov 0xb0(%rsp),%r9
+@@ replace B2[1035:1036] +0x1220 | comb[1183:1184] +0x15b2
+- +0x1220 mov $0xffffffff,%edi
++ +0x15b2 mov 0x28f4(%rsp),%edi
+@@ replace B2[1037:1039] +0x122a | comb[1185:1194] +0x15be
+- +0x122a nopw 0x0(%rax,%rax,1)
+- +0x1230 mov 0x8(%rsp),%r13
++ +0x15be xchg %ax,%ax
++ +0x15c0 mov 0x68(%rsp),%rdi
++ +0x15c5 mov 0x40(%rsp),%rsi
++ +0x15ca mov 0x38(%rsp),%r12
++ +0x15cf mov 0x54(%rsp),%edx
++ +0x15d3 mov %rsi,%r15
++ +0x15d6 mov %rdi,%r13
++ +0x15d9 cmp $0xf,%rdi
++ +0x15dd ja T
+@@ replace B2[1040:1059] +0x123a | comb[1195:1199] +0x15e8
+- +0x123a nopw 0x0(%rax,%rax,1)
+- +0x1240 add 0x28(%rsp),%r11
+- +0x1245 xor %r13d,%r13d
+- +0x1248 nopl 0x0(%rax,%rax,1)
+- +0x1250 movzbl (%r11,%r13,1),%esi
+- +0x1255 lea (%rsi,%rsi,4),%rcx
+- +0x1259 lea (%r8,%rcx,8),%rbp
+- +0x125d mov (%r8,%rcx,8),%rax
+- +0x1261 cmp 0x8(%r8,%rcx,8),%rax
+- +0x1266 je T
+- +0x1268 lea (%r14,%r13,1),%rcx
+- +0x126c mov %cx,(%rax)
+- +0x126f addq $0x2,0x0(%rbp)
+- +0x1274 inc %r13
+- +0x1277 cmp %r13,%rbx
+- +0x127a jne T
+- +0x127c jmp T
+- +0x127e mov %r11,(%rsp)
+- +0x1282 lea 0x98(%rsp),%rdi
++ +0x15e8 mov %r9,0x10(%rsp)
++ +0x15ed mov %rdx,%r12
++ +0x15f0 lea 0xa8(%rsp),%rdi
++ +0x15f8 mov %r14,%rsi
+@@ delete B2[1060:1061] +0x128f | comb[1200:1200] +0x1600
+- +0x128f lea 0xd8(%rsp),%r8
+@@ replace B2[1063:1066] +0x129f | comb[1202:1207] +0x1608
+- +0x129f mov 0x0(%rbp),%rax
+- +0x12a3 mov 0x20(%rsp),%r10
+- +0x12a8 mov (%rsp),%r11
++ +0x1608 mov 0xe8(%rsp,%r14,8),%rax
++ +0x1610 lea -0x10(%r13),%rdi
++ +0x1614 lea 0x10(%r15),%rsi
++ +0x1618 mov %r12,%rdx
++ +0x161b mov 0x10(%rsp),%r9
+@@ replace B2[1067:1094] +0x12ae | comb[1208:1215] +0x1625
+- +0x12ae xchg %ax,%ax
+- +0x12b0 cmp %r15,0x30(%rsp)
+- +0x12b5 mov 0x8(%rsp),%r13
+- +0x12ba jb T
+- +0x12c0 cmp $0xf,%r12
+- +0x12c4 ja T
+- +0x12ca add 0x28(%rsp),%r15
+- +0x12cf mov %r15,%r12
+- +0x12d2 sub %rbx,%r12
+- +0x12d5 add $0x10,%r12
+- +0x12d9 add %r14d,%ebx
+- +0x12dc add $0x2,%ebx
+- +0x12df nop
+- +0x12e0 movzbl (%r15),%esi
+- +0x12e4 lea (%rsi,%rsi,4),%rcx
+- +0x12e8 lea (%r8,%rcx,8),%r14
+- +0x12ec mov (%r8,%rcx,8),%rax
+- +0x12f0 cmp 0x8(%r8,%rcx,8),%rax
+- +0x12f5 je T
+- +0x12f7 mov %bx,(%rax)
+- +0x12fa addq $0x2,(%r14)
+- +0x12fe inc %r15
+- +0x1301 inc %ebx
+- +0x1303 cmp %r12,%r15
+- +0x1306 jne T
+- +0x1308 jmp T
+- +0x130d lea 0x98(%rsp),%rdi
++ +0x1625 mov %r9,0x10(%rsp)
++ +0x162a mov %rbx,0x18(%rsp)
++ +0x162f mov %rdx,0x8(%rsp)
++ +0x1634 mov %rsi,%r13
++ +0x1637 mov %rdi,%rbx
++ +0x163a lea 0xa8(%rsp),%rdi
++ +0x1642 mov %r14,%rsi
+@@ delete B2[1095:1096] +0x131a | comb[1216:1216] +0x164a
+- +0x131a lea 0xd8(%rsp),%r8
+@@ replace B2[1098:1101] +0x132a | comb[1218:1224] +0x1652
+- +0x132a mov (%r14),%rax
+- +0x132d mov 0x8(%rsp),%r13
+- +0x1332 mov 0x20(%rsp),%r10
++ +0x1652 mov 0xe8(%rsp,%r14,8),%rax
++ +0x165a mov %rbx,%rdi
++ +0x165d mov %r13,%rsi
++ +0x1660 mov 0x8(%rsp),%rdx
++ +0x1665 mov 0x18(%rsp),%rbx
++ +0x166a mov 0x10(%rsp),%r9
+@@ replace B2[1102:1148] +0x1339 | comb[1225:1232] +0x1674
+- +0x1339 mov 0x8(%rsp),%r13
+- +0x133e lea 0xd8(%rsp),%r8
+- +0x1346 mov 0x20(%rsp),%r10
+- +0x134b mov 0x68(%rsp),%r9
+- +0x1350 mov 0x38(%rsp),%rcx
+- +0x1355 mov 0x30(%rsp),%r11
+- +0x135a mov 0x44(%rsp),%edx
+- +0x135e mov 0x70(%rsp),%rsi
+- +0x1363 jmp T
+- +0x1368 nopl 0x0(%rax,%rax,1)
+- +0x1370 lea (%r14,%r11,1),%rax
+- +0x1374 cmp %r10,%rax
+- +0x1377 jne T
+- +0x1379 cmp $0x10,%rdx
+- +0x137d jne T
+- +0x1383 mov 0x28d8(%rsp),%rax
+- +0x138b lea 0x10(%rax),%rcx
+- +0x138f cmp $0x1d,%rcx
+- +0x1393 mov 0x8(%rsp),%r13
+- +0x1398 mov 0x28(%rsp),%r14
+- +0x139d mov %rbp,%r9
+- +0x13a0 jbe T
+- +0x13a6 add $0xfffffffffffffff2,%rax
+- +0x13aa mov %rax,0x28d8(%rsp)
+- +0x13b2 mov 0x28e0(%rsp),%eax
+- +0x13b9 add $0x12,%eax
+- +0x13bc jmp T
+- +0x13c1 add $0x2,%r12d
+- +0x13c5 movzwl %r12w,%r12d
+- +0x13c9 nopl 0x0(%rax)
+- +0x13d0 movzbl (%r15,%r14,1),%esi
+- +0x13d5 lea (%rsi,%rsi,4),%rcx
+- +0x13d9 lea (%r8,%rcx,8),%rbx
+- +0x13dd mov (%r8,%rcx,8),%rax
+- +0x13e1 cmp 0x8(%r8,%rcx,8),%rax
+- +0x13e6 je T
+- +0x13e8 lea (%r12,%r14,1),%rcx
+- +0x13ec mov %cx,(%rax)
+- +0x13ef addq $0x2,(%rbx)
+- +0x13f3 inc %r14
+- +0x13f6 cmp %r14,%rdx
+- +0x13f9 jne T
+- +0x13fb jmp T
+- +0x1400 mov %rdx,0x10(%rsp)
+- +0x1405 mov %r11,%r13
+- +0x1408 lea 0x98(%rsp),%rdi
++ +0x1674 mov %r9,0x10(%rsp)
++ +0x1679 mov %rbx,0x18(%rsp)
++ +0x167e mov %rdx,0x8(%rsp)
++ +0x1683 mov %rsi,%r13
++ +0x1686 mov %rdi,%rbx
++ +0x1689 lea 0xa8(%rsp),%rdi
++ +0x1691 mov %r14,%rsi
+@@ delete B2[1149:1150] +0x1415 | comb[1233:1233] +0x1699
+- +0x1415 lea 0xd8(%rsp),%r8
+@@ replace B2[1152:1156] +0x1425 | comb[1235:1241] +0x16a1
+- +0x1425 mov (%rbx),%rax
+- +0x1428 mov 0x20(%rsp),%r10
+- +0x142d mov %r13,%r11
+- +0x1430 mov 0x10(%rsp),%rdx
++ +0x16a1 mov 0xe8(%rsp,%r14,8),%rax
++ +0x16a9 mov %rbx,%rdi
++ +0x16ac mov %r13,%rsi
++ +0x16af mov 0x8(%rsp),%rdx
++ +0x16b4 mov 0x18(%rsp),%rbx
++ +0x16b9 mov 0x10(%rsp),%r9
+@@ replace B2[1157:1164] +0x1437 | comb[1242:1251] +0x16c3
+- +0x1437 mov 0x28e0(%rsp),%eax
+- +0x143e mov 0x28d8(%rsp),%rcx
+- +0x1446 inc %r11
+- +0x1449 cmp %r11,%r10
+- +0x144c mov 0x8(%rsp),%r13
+- +0x1451 mov 0x28(%rsp),%r14
+- +0x1456 mov %rbp,%r9
++ +0x16c3 mov %r9,0x10(%rsp)
++ +0x16c8 mov %rbx,0x18(%rsp)
++ +0x16cd mov %rdx,0x8(%rsp)
++ +0x16d2 mov %rsi,%r13
++ +0x16d5 mov %rdi,%rbx
++ +0x16d8 lea 0xa8(%rsp),%rdi
++ +0x16e0 mov %r14,%rsi
++ +0x16e3 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x16e8 test %al,%al
+@@ replace B2[1165:1170] +0x145b | comb[1252:1506] +0x16f0
+- +0x145b mov %rdx,%r10
+- +0x145e and $0xffffe,%edx
+- +0x1464 data16 data16 cs nopw 0x0(%rax,%rax,1)
+- +0x1470 lea 0x1(%rcx),%rsi
+- +0x1474 add $0xffffffffffffffe3,%rcx
++ +0x16f0 mov 0xe8(%rsp,%r14,8),%rax
++ +0x16f8 mov %rbx,%rdi
++ +0x16fb mov %r13,%rsi
++ +0x16fe mov 0x8(%rsp),%rdx
++ +0x1703 mov 0x18(%rsp),%rbx
++ +0x1708 mov 0x10(%rsp),%r9
++ +0x170d jmp T
++ +0x1712 mov %r9,0x10(%rsp)
++ +0x1717 mov %rbx,0x18(%rsp)
++ +0x171c mov %rdx,0x8(%rsp)
++ +0x1721 mov %rsi,%r13
++ +0x1724 mov %rdi,%rbx
++ +0x1727 lea 0xa8(%rsp),%rdi
++ +0x172f mov %r14,%rsi
++ +0x1732 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x1737 test %al,%al
++ +0x1739 je T
++ +0x173f mov 0xe8(%rsp,%r14,8),%rax
++ +0x1747 mov %rbx,%rdi
++ +0x174a mov %r13,%rsi
++ +0x174d mov 0x8(%rsp),%rdx
++ +0x1752 mov 0x18(%rsp),%rbx
++ +0x1757 mov 0x10(%rsp),%r9
++ +0x175c jmp T
++ +0x1761 mov %rdx,%r13
++ +0x1764 movzbl 0xf(%r15),%r14d
++ +0x1769 mov 0xe8(%rsp,%r14,8),%rax
++ +0x1771 cmp 0x8e8(%rsp,%r14,8),%rax
++ +0x1779 je T
++ +0x177f lea 0xf(%rbp),%ecx
++ +0x1782 mov %cx,(%rax)
++ +0x1785 addq $0x2,0xe8(%rsp,%r14,8)
++ +0x178e cmp $0xf,%rbx
++ +0x1792 ja T
++ +0x1798 lea 0x10(%r12),%rbx
++ +0x179d mov %r13,%rdx
++ +0x17a0 jmp T
++ +0x17a5 mov %r9,0x10(%rsp)
++ +0x17aa mov %rbx,0x18(%rsp)
++ +0x17af mov %rdx,0x8(%rsp)
++ +0x17b4 mov %rsi,%r13
++ +0x17b7 mov %rdi,%rbx
++ +0x17ba lea 0xa8(%rsp),%rdi
++ +0x17c2 mov %r14,%rsi
++ +0x17c5 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x17ca test %al,%al
++ +0x17cc je T
++ +0x17d2 mov 0xe8(%rsp,%r14,8),%rax
++ +0x17da mov %rbx,%rdi
++ +0x17dd mov %r13,%rsi
++ +0x17e0 mov 0x8(%rsp),%rdx
++ +0x17e5 mov 0x18(%rsp),%rbx
++ +0x17ea mov 0x10(%rsp),%r9
++ +0x17ef jmp T
++ +0x17f4 mov %r9,0x10(%rsp)
++ +0x17f9 mov %rbx,0x18(%rsp)
++ +0x17fe mov %rdx,0x8(%rsp)
++ +0x1803 mov %rsi,%r13
++ +0x1806 mov %rdi,%rbx
++ +0x1809 lea 0xa8(%rsp),%rdi
++ +0x1811 mov %r14,%rsi
++ +0x1814 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x1819 test %al,%al
++ +0x181b je T
++ +0x1821 mov 0xe8(%rsp,%r14,8),%rax
++ +0x1829 mov %rbx,%rdi
++ +0x182c mov %r13,%rsi
++ +0x182f mov 0x8(%rsp),%rdx
++ +0x1834 mov 0x18(%rsp),%rbx
++ +0x1839 mov 0x10(%rsp),%r9
++ +0x183e jmp T
++ +0x1843 mov %r9,0x10(%rsp)
++ +0x1848 mov %rbx,0x18(%rsp)
++ +0x184d mov %rdx,0x8(%rsp)
++ +0x1852 mov %rsi,%r13
++ +0x1855 mov %rdi,%rbx
++ +0x1858 lea 0xa8(%rsp),%rdi
++ +0x1860 mov %r14,%rsi
++ +0x1863 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x1868 test %al,%al
++ +0x186a je T
++ +0x1870 mov 0xe8(%rsp,%r14,8),%rax
++ +0x1878 mov %rbx,%rdi
++ +0x187b mov %r13,%rsi
++ +0x187e mov 0x8(%rsp),%rdx
++ +0x1883 mov 0x18(%rsp),%rbx
++ +0x1888 mov 0x10(%rsp),%r9
++ +0x188d jmp T
++ +0x1892 mov %r9,0x10(%rsp)
++ +0x1897 mov %rbx,0x18(%rsp)
++ +0x189c mov %rdx,0x8(%rsp)
++ +0x18a1 mov %rsi,%r13
++ +0x18a4 mov %rdi,%rbx
++ +0x18a7 lea 0xa8(%rsp),%rdi
++ +0x18af mov %r14,%rsi
++ +0x18b2 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x18b7 test %al,%al
++ +0x18b9 je T
++ +0x18bf mov 0xe8(%rsp,%r14,8),%rax
++ +0x18c7 mov %rbx,%rdi
++ +0x18ca mov %r13,%rsi
++ +0x18cd mov 0x8(%rsp),%rdx
++ +0x18d2 mov 0x18(%rsp),%rbx
++ +0x18d7 mov 0x10(%rsp),%r9
++ +0x18dc jmp T
++ +0x18e1 mov %r9,0x10(%rsp)
++ +0x18e6 mov %rbx,0x18(%rsp)
++ +0x18eb mov %rdx,0x8(%rsp)
++ +0x18f0 mov %rsi,%r13
++ +0x18f3 mov %rdi,%rbx
++ +0x18f6 lea 0xa8(%rsp),%rdi
++ +0x18fe mov %r14,%rsi
++ +0x1901 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x1906 test %al,%al
++ +0x1908 je T
++ +0x190e mov 0xe8(%rsp,%r14,8),%rax
++ +0x1916 mov %rbx,%rdi
++ +0x1919 mov %r13,%rsi
++ +0x191c mov 0x8(%rsp),%rdx
++ +0x1921 mov 0x18(%rsp),%rbx
++ +0x1926 mov 0x10(%rsp),%r9
++ +0x192b jmp T
++ +0x1930 mov %r9,0x10(%rsp)
++ +0x1935 mov %rbx,0x18(%rsp)
++ +0x193a mov %rdx,0x8(%rsp)
++ +0x193f mov %rsi,%r13
++ +0x1942 mov %rdi,%rbx
++ +0x1945 lea 0xa8(%rsp),%rdi
++ +0x194d mov %r14,%rsi
++ +0x1950 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x1955 test %al,%al
++ +0x1957 je T
++ +0x195d mov 0xe8(%rsp,%r14,8),%rax
++ +0x1965 mov %rbx,%rdi
++ +0x1968 mov %r13,%rsi
++ +0x196b mov 0x8(%rsp),%rdx
++ +0x1970 mov 0x18(%rsp),%rbx
++ +0x1975 mov 0x10(%rsp),%r9
++ +0x197a jmp T
++ +0x197f mov %r9,0x10(%rsp)
++ +0x1984 mov %rbx,0x18(%rsp)
++ +0x1989 mov %rdx,0x8(%rsp)
++ +0x198e mov %rsi,%r13
++ +0x1991 mov %rdi,%rbx
++ +0x1994 lea 0xa8(%rsp),%rdi
++ +0x199c mov %r14,%rsi
++ +0x199f call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x19a4 test %al,%al
++ +0x19a6 je T
++ +0x19ac mov 0xe8(%rsp,%r14,8),%rax
++ +0x19b4 mov %rbx,%rdi
++ +0x19b7 mov %r13,%rsi
++ +0x19ba mov 0x8(%rsp),%rdx
++ +0x19bf mov 0x18(%rsp),%rbx
++ +0x19c4 mov 0x10(%rsp),%r9
++ +0x19c9 jmp T
++ +0x19ce mov %r9,0x10(%rsp)
++ +0x19d3 mov %rbx,0x18(%rsp)
++ +0x19d8 mov %rdx,0x8(%rsp)
++ +0x19dd mov %rsi,%r13
++ +0x19e0 mov %rdi,%rbx
++ +0x19e3 lea 0xa8(%rsp),%rdi
++ +0x19eb mov %r14,%rsi
++ +0x19ee call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x19f3 test %al,%al
++ +0x19f5 je T
++ +0x19fb mov 0xe8(%rsp,%r14,8),%rax
++ +0x1a03 mov %rbx,%rdi
++ +0x1a06 mov %r13,%rsi
++ +0x1a09 mov 0x8(%rsp),%rdx
++ +0x1a0e mov 0x18(%rsp),%rbx
++ +0x1a13 mov 0x10(%rsp),%r9
++ +0x1a18 jmp T
++ +0x1a1d mov %r9,0x10(%rsp)
++ +0x1a22 mov %rbx,0x18(%rsp)
++ +0x1a27 mov %rdx,0x8(%rsp)
++ +0x1a2c mov %rsi,%r13
++ +0x1a2f mov %rdi,%rbx
++ +0x1a32 lea 0xa8(%rsp),%rdi
++ +0x1a3a mov %r14,%rsi
++ +0x1a3d call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x1a42 test %al,%al
++ +0x1a44 je T
++ +0x1a4a mov 0xe8(%rsp,%r14,8),%rax
++ +0x1a52 mov %rbx,%rdi
++ +0x1a55 mov %r13,%rsi
++ +0x1a58 mov 0x8(%rsp),%rdx
++ +0x1a5d mov 0x18(%rsp),%rbx
++ +0x1a62 mov 0x10(%rsp),%r9
++ +0x1a67 jmp T
++ +0x1a6c mov %r9,0x10(%rsp)
++ +0x1a71 mov %rbx,0x18(%rsp)
++ +0x1a76 mov %rdx,0x8(%rsp)
++ +0x1a7b mov %rsi,%r13
++ +0x1a7e mov %rdi,%rbx
++ +0x1a81 lea 0xa8(%rsp),%rdi
++ +0x1a89 mov %r14,%rsi
++ +0x1a8c call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x1a91 test %al,%al
++ +0x1a93 je T
++ +0x1a99 mov 0xe8(%rsp,%r14,8),%rax
++ +0x1aa1 mov %rbx,%rdi
++ +0x1aa4 mov %r13,%rsi
++ +0x1aa7 mov 0x8(%rsp),%rdx
++ +0x1aac mov 0x18(%rsp),%rbx
++ +0x1ab1 mov 0x10(%rsp),%r9
++ +0x1ab6 jmp T
++ +0x1abb mov %rbx,0x18(%rsp)
++ +0x1ac0 mov %rsi,%r15
++ +0x1ac3 mov %rdi,%rbx
++ +0x1ac6 lea 0xa8(%rsp),%rdi
++ +0x1ace mov %r14,%rsi
++ +0x1ad1 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x1ad6 test %al,%al
++ +0x1ad8 je T
++ +0x1ade mov 0xe8(%rsp,%r14,8),%rax
++ +0x1ae6 mov %rbx,%rdi
++ +0x1ae9 mov %r15,%rsi
++ +0x1aec mov 0x18(%rsp),%rbx
++ +0x1af1 jmp T
++ +0x1af6 cs nopw 0x0(%rax,%rax,1)
++ +0x1b00 mov %r13,%rdi
++ +0x1b03 test %rdi,%rdi
++ +0x1b06 je T
++ +0x1b0c mov 0x30(%rsp),%r13
++ +0x1b11 sub %rdi,%r13
++ +0x1b14 mov 0x28e8(%rsp),%rax
++ +0x1b1c mov $0x1e,%r15d
++ +0x1b22 sub %rax,%r15
++ +0x1b25 cmp %rdi,%r15
++ +0x1b28 cmovae %rdi,%r15
++ +0x1b2c mov %r15,%r14
++ +0x1b2f add %r13,%r14
++ +0x1b32 jb T
++ +0x1b38 cmp 0x20(%rsp),%r14
++ +0x1b3d ja T
++ +0x1b43 mov %r12,0x38(%rsp)
++ +0x1b48 mov 0x28f0(%rsp),%r12d
++ +0x1b50 cmp $0x1e,%rax
++ +0x1b54 jne T
++ +0x1b5a cmp %r14,0x30(%rsp)
++ +0x1b5f jb T
++ +0x1b65 jne T
++ +0x1b6b mov 0x28e8(%rsp),%rax
++ +0x1b73 mov 0x28f0(%rsp),%ecx
++ +0x1b7a cmp $0x1,%rdi
++ +0x1b7e je T
++ +0x1b84 mov %rdi,%r8
++ +0x1b87 mov %edi,%edx
++ +0x1b89 and $0xe,%edx
++ +0x1b8c mov 0x38(%rsp),%r12
++ +0x1b91 data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
++ +0x1ba0 lea 0x1(%rax),%rsi
++ +0x1ba4 add $0xffffffffffffffe3,%rax
+@@ replace B2[1173:1177] +0x1482 | comb[1509:1513] +0x1bb2
+- +0x1482 cmovb %rsi,%rcx
+- +0x1486 lea (%rax,%rdi,2),%eax
+- +0x1489 lea 0x1(%rcx),%rsi
+- +0x148d add $0xffffffffffffffe3,%rcx
++ +0x1bb2 cmovb %rsi,%rax
++ +0x1bb6 lea (%rcx,%rdi,2),%ecx
++ +0x1bb9 lea 0x1(%rax),%rsi
++ +0x1bbd add $0xffffffffffffffe3,%rax
+@@ replace B2[1180:1183] +0x149b | comb[1516:1519] +0x1bcb
+- +0x149b cmovb %rsi,%rcx
+- +0x149f lea (%rax,%rdi,2),%eax
+- +0x14a2 add $0x2,%eax
++ +0x1bcb cmovb %rsi,%rax
++ +0x1bcf lea (%rcx,%rdi,2),%ecx
++ +0x1bd2 add $0x2,%ecx
+@@ replace B2[1185:1187] +0x14ab | comb[1521:1530] +0x1bdb
+- +0x14ab test $0x1,%r10b
+- +0x14af mov 0x20(%rsp),%r10
++ +0x1bdb test $0x1,%r8b
++ +0x1bdf jne T
++ +0x1be5 jmp T
++ +0x1bea add 0x60(%rsp),%r13
++ +0x1bef xor %ebp,%ebp
++ +0x1bf1 data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
++ +0x1c00 movzbl 0x0(%r13,%rbp,1),%ebx
++ +0x1c06 mov 0xe8(%rsp,%rbx,8),%rax
++ +0x1c0e cmp 0x8e8(%rsp,%rbx,8),%rax
+@@ replace B2[1188:1197] +0x14b6 | comb[1531:1537] +0x1c18
+- +0x14b6 lea 0x1(%rcx),%rdx
+- +0x14ba add $0xffffffffffffffe3,%rcx
+- +0x14be xor %esi,%esi
+- +0x14c0 cmp $0x1e,%rdx
+- +0x14c4 setae %sil
+- +0x14c8 cmovb %rdx,%rcx
+- +0x14cc lea (%rax,%rsi,2),%eax
+- +0x14cf inc %eax
+- +0x14d1 mov %rcx,0x28d8(%rsp)
++ +0x1c18 lea (%r12,%rbp,1),%rcx
++ +0x1c1c mov %cx,(%rax)
++ +0x1c1f addq $0x2,0xe8(%rsp,%rbx,8)
++ +0x1c28 inc %rbp
++ +0x1c2b cmp %rbp,%r15
++ +0x1c2e jne T
+@@ replace B2[1198:1205] +0x14db | comb[1538:1546] +0x1c35
+- +0x14db mov %rcx,0x28d8(%rsp)
+- +0x14e3 mov 0x28e0(%rsp),%eax
+- +0x14ea add $0x10,%eax
+- +0x14ed mov %eax,0x28e0(%rsp)
+- +0x14f4 mov %r10,%r11
+- +0x14f7 cmp %r13,%r10
+- +0x14fa jb T
++ +0x1c35 mov %rdi,0x68(%rsp)
++ +0x1c3a lea 0xa8(%rsp),%rdi
++ +0x1c42 mov %rbx,%rsi
++ +0x1c45 call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x1c4a test %al,%al
++ +0x1c4c je T
++ +0x1c52 mov 0xe8(%rsp,%rbx,8),%rax
++ +0x1c5a mov 0x68(%rsp),%rdi
+@@ replace B2[1206:1207] +0x1502 | comb[1547:1574] +0x1c61
+- +0x1502 mov %r15,%rdi
++ +0x1c61 mov 0x60(%rsp),%rax
++ +0x1c66 mov 0x30(%rsp),%rcx
++ +0x1c6b lea (%rax,%rcx,1),%r14
++ +0x1c6f lea (%r12,%r15,1),%ebp
++ +0x1c73 add $0x2,%ebp
++ +0x1c76 sub %rdi,%r15
++ +0x1c79 nopl 0x0(%rax)
++ +0x1c80 movzbl (%r14,%r15,1),%ebx
++ +0x1c85 mov 0xe8(%rsp,%rbx,8),%rax
++ +0x1c8d cmp 0x8e8(%rsp,%rbx,8),%rax
++ +0x1c95 je T
++ +0x1c97 mov %bp,(%rax)
++ +0x1c9a addq $0x2,0xe8(%rsp,%rbx,8)
++ +0x1ca3 inc %ebp
++ +0x1ca5 inc %r15
++ +0x1ca8 jne T
++ +0x1caa jmp T
++ +0x1caf mov %rdi,%r12
++ +0x1cb2 lea 0xa8(%rsp),%rdi
++ +0x1cba mov %rbx,%rsi
++ +0x1cbd call SYM<<c30walk::ctorX::W<false>>::refill>
++ +0x1cc2 test %al,%al
++ +0x1cc4 je T
++ +0x1cc6 mov 0xe8(%rsp,%rbx,8),%rax
++ +0x1cce mov %r12,%rdi
++ +0x1cd1 jmp T
++ +0x1cd3 mov %rbx,%rdi
+@@ replace B2[1209:1213] +0x150f | comb[1576:1580] +0x1ce0
+- +0x150f mov $0x84,%eax
+- +0x1514 data16 data16 cs nopw 0x0(%rax,%rax,1)
+- +0x1520 lea 0x50(%rax),%rcx
+- +0x1524 cmp $0x28d4,%rcx
++ +0x1ce0 mov $0x9,%eax
++ +0x1ce5 lea 0x110c(%rsp),%rcx
++ +0x1ced nopl (%rax)
++ +0x1cf0 cmp $0x109,%rax
+@@ replace B2[1214:1216] +0x152d | comb[1581:1583] +0x1cf8
+- +0x152d mov 0x54(%rsp,%rax,1),%rdx
+- +0x1532 sub 0x64(%rsp,%rax,1),%rdx
++ +0x1cf8 mov 0xa0(%rsp,%rax,8),%rdx
++ +0x1d00 sub -0x24(%rcx),%rdx
+@@ replace B2[1217:1219] +0x153a | comb[1584:1586] +0x1d07
+- +0x153a add 0x6c(%rsp,%rax,1),%edx
+- +0x153e cmp 0x70(%rsp,%rax,1),%edx
++ +0x1d07 add -0x1c(%rcx),%edx
++ +0x1d0a cmp -0x18(%rcx),%edx
+@@ replace B2[1220:1222] +0x1544 | comb[1587:1589] +0x1d0f
+- +0x1544 mov 0x7c(%rsp,%rax,1),%rdx
+- +0x1549 sub 0x8c(%rsp,%rax,1),%rdx
++ +0x1d0f mov 0xa8(%rsp,%rax,8),%rdx
++ +0x1d17 sub -0xc(%rcx),%rdx
+@@ replace B2[1223:1226] +0x1554 | comb[1590:1594] +0x1d1e
+- +0x1554 add 0x94(%rsp,%rax,1),%edx
+- +0x155b cmp 0x98(%rsp,%rax,1),%edx
+- +0x1562 mov %rcx,%rax
++ +0x1d1e add -0x4(%rcx),%edx
++ +0x1d21 add $0x2,%rax
++ +0x1d25 cmp (%rcx),%edx
++ +0x1d27 lea 0x30(%rcx),%rcx
+@@ replace B2[1227:1228] +0x1567 | comb[1595:1596] +0x1d2d
+- +0x1567 mov 0x5520(%rsp),%rax
++ +0x1d2d mov 0x4530(%rsp),%rax
+@@ replace B2[1230:1231] +0x1579 | comb[1598:1599] +0x1d3f
+- +0x1579 add $0x54e8,%rsp
++ +0x1d3f add $0x44f8,%rsp
+@@ replace B2[1238:1243] +0x158b | comb[1606:1616] +0x1d51
+- +0x158b xor %r14d,%r14d
+- +0x158e lea 0x98(%rsp),%r15
+- +0x1596 mov 0x78(%rsp),%r12
+- +0x159b mov 0x8(%rsp),%r13
+- +0x15a0 mov 0x60(%rsp),%rbp
++ +0x1d51 lea DISP(%rip),%rcx
++ +0x1d58 mov $0x1e,%edx
++ +0x1d5d xor %edi,%edi
++ +0x1d5f call SYM<core::slice::index::slice_index_fail>
++ +0x1d64 mov $0x8,%r14d
++ +0x1d6a mov $0x1040,%r15d
++ +0x1d70 lea 0xa8(%rsp),%rbx
++ +0x1d78 mov 0x90(%rsp),%r12
++ +0x1d80 mov 0x4530(%rsp),%rsi
++ +0x1d88 mov 0x88(%rsp),%r13
+@@ replace B2[1244:1245] +0x15a7 | comb[1617:1618] +0x1d92
+- +0x15a7 nopw 0x0(%rax,%rax,1)
++ +0x1d92 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+@@ insert B2[1246:1246] +0x15b3 | comb[1619:1624] +0x1da3
++ +0x1da3 shr $1,%rax
++ +0x1da6 add %eax,0xb0(%rsp,%r15,1)
++ +0x1dae movq $0x0,0xa8(%rsp,%r15,1)
++ +0x1dba movq $0x0,0xa8(%rsp,%r14,8)
++ +0x1dc6 movq $0x0,0x8a8(%rsp,%r14,8)
+@@ replace B2[1247:1254] +0x15b6 | comb[1625:1627] +0x1dd5
+- +0x15b6 shr $1,%rax
+- +0x15b9 add %eax,0x18(%r8)
+- +0x15bd pxor %xmm0,%xmm0
+- +0x15c1 movdqu %xmm0,(%r8)
+- +0x15c6 movq $0x0,0x10(%r8)
+- +0x15ce add $0x28,%r8
+- +0x15d2 cmp $0x100,%r14
++ +0x1dd5 add $0x18,%r15
++ +0x1dd9 cmp $0x108,%r14
+@@ replace B2[1255:1256] +0x15db | comb[1628:1629] +0x1de2
+- +0x15db mov (%r8),%rcx
++ +0x1de2 mov 0xa8(%rsp,%r14,8),%rcx
+@@ replace B2[1257:1258] +0x15e1 | comb[1630:1631] +0x1ded
+- +0x15e1 cmp 0x10(%r8),%rcx
++ +0x1ded cmp 0xa8(%rsp,%r15,1),%rcx
+@@ replace B2[1259:1262] +0x15e7 | comb[1632:1634] +0x1df7
+- +0x15e7 mov %r15,%rdi
+- +0x15ea mov %r14,%rsi
+- +0x15ed mov %r8,%rbx
++ +0x1df7 lea -0x8(%r14),%esi
++ +0x1dfb mov %rbx,%rdi
+@@ replace B2[1263:1266] +0x15f5 | comb[1635:1638] +0x1e03
+- +0x15f5 mov %rbx,%r8
+- +0x15f8 mov (%rbx),%rax
+- +0x15fb mov 0x10(%rbx),%rcx
++ +0x1e03 mov 0x4530(%rsp),%rsi
++ +0x1e0b mov 0xa8(%rsp,%r14,8),%rax
++ +0x1e13 mov 0xa8(%rsp,%r15,1),%rcx
+@@ replace B2[1269:1270] +0x1608 | comb[1641:1643] +0x1e24
+- +0x1608 test %rbp,%rbp
++ +0x1e24 mov 0x58(%rsp),%r14
++ +0x1e29 test %r14,%r14
+@@ insert B2[1271:1271] +0x160e | comb[1644:1645] +0x1e2f
++ +0x1e2f mov 0x20(%rsp),%rdx
+@@ replace B2[1273:1274] +0x1612 | comb[1647:1648] +0x1e38
+- +0x1612 mov %rbp,%rax
++ +0x1e38 mov %r14,%rax
+@@ replace B2[1276:1277] +0x161c | comb[1650:1651] +0x1e42
+- +0x161c add %r13,%rcx
++ +0x1e42 add %rdx,%rcx
+@@ replace B2[1279:1281] +0x1625 | comb[1653:1655] +0x1e4b
+- +0x1625 lea (%rbx,%rbp,4),%rcx
+- +0x1629 lea (%rcx,%r13,2),%rdi
++ +0x1e4b lea (%rbx,%r14,4),%rcx
++ +0x1e4f lea (%rcx,%rdx,2),%rdi
+@@ replace B2[1285:1286] +0x163c | comb[1659:1660] +0x1e62
+- +0x163c sub %r13,%rax
++ +0x1e62 sub %rdx,%rax
+@@ replace B2[1289:1290] +0x1652 | comb[1663:1665] +0x1e78
+- +0x1652 shl $0x6,%rbp
++ +0x1e78 mov 0x4530(%rsp),%rsi
++ +0x1e80 shl $0x6,%r14
+@@ replace B2[1291:1303] +0x165a | comb[1666:1676] +0x1e88
+- +0x165a movdqu %xmm0,0x2c(%rbx,%rbp,1)
+- +0x1660 movdqa %xmm0,0x20(%rbx,%rbp,1)
+- +0x1666 movdqa %xmm0,0x10(%rbx,%rbp,1)
+- +0x166c movdqa %xmm0,(%rbx,%rbp,1)
+- +0x1671 movl $0x100fffff,0x3c(%rbx,%rbp,1)
+- +0x1679 mov 0x58(%rsp),%rax
+- +0x167e mov 0x8(%rax),%rdx
+- +0x1682 mov 0x10(%rax),%rcx
+- +0x1686 mov 0x5520(%rsp),%rax
+- +0x168e mov 0x8(%rax),%r8
+- +0x1692 mov 0x10(%rax),%r9
+- +0x1696 lea 0x98(%rsp),%rdi
++ +0x1e88 movdqu %xmm0,0x2c(%rbx,%r14,1)
++ +0x1e8f movdqa %xmm0,0x20(%rbx,%r14,1)
++ +0x1e96 movdqa %xmm0,0x10(%rbx,%r14,1)
++ +0x1e9d movdqa %xmm0,(%rbx,%r14,1)
++ +0x1ea3 movl $0x100fffff,0x3c(%rbx,%r14,1)
++ +0x1eac mov 0x8(%r13),%rdx
++ +0x1eb0 mov 0x10(%r13),%rcx
++ +0x1eb4 mov 0x8(%rsi),%r8
++ +0x1eb8 mov 0x10(%rsi),%r9
++ +0x1ebc lea 0xa8(%rsp),%rdi
+@@ replace B2[1305:1306] +0x16a6 | comb[1678:1679] +0x1ecc
+- +0x16a6 mov 0x80(%rsp),%rax
++ +0x1ecc mov 0x78(%rsp),%rax
+@@ delete B2[1309:1318] +0x16ba | comb[1682:1682] +0x1edd
+- +0x16ba lea DISP(%rip),%rcx
+- +0x16c1 mov %r12,%rdi
+- +0x16c4 mov %r13,%rdx
+- +0x16c7 call SYM<core::slice::index::slice_index_fail>
+- +0x16cc lea DISP(%rip),%rcx
+- +0x16d3 mov $0x1e,%edx
+- +0x16d8 xor %edi,%edi
+- +0x16da call SYM<core::slice::index::slice_index_fail>
+- +0x16df mov %rdi,%r12
+@@ replace B2[1321:1322] +0x16eb | comb[1685:1686] +0x1ee6
+- +0x16eb mov %r9,%r14
++ +0x1ee6 mov %r9,%r15
+@@ replace B2[1323:1324] +0x16f4 | comb[1687:1688] +0x1eef
+- +0x16f4 mov %r14,%r9
++ +0x1eef mov %r15,%r9
+@@ replace B2[1329:1331] +0x1716 | comb[1693:1695] +0x1f11
+- +0x1716 lea 0x1(%rbp),%rsi
+- +0x171a mov %r9,%r14
++ +0x1f11 mov 0x78(%rsp),%rsi
++ +0x1f16 mov %r9,%r15
+@@ replace B2[1332:1333] +0x1722 | comb[1696:1697] +0x1f1e
+- +0x1722 mov %r14,%r9
++ +0x1f1e mov %r15,%r9
+@@ replace B2[1334:1335] +0x1729 | comb[1698:1700] +0x1f25
+- +0x1729 mov %r12,%rdi
++ +0x1f25 mov 0x4530(%rsp),%rdi
++ +0x1f2d mov 0x58(%rsp),%r8
+@@ replace B2[1337:1339] +0x1734 | comb[1702:1703] +0x1f3a
+- +0x1734 mov %rdi,%r12
+- +0x1737 mov %r9,%r14
++ +0x1f3a mov %r9,%r15
+@@ replace B2[1341:1343] +0x173f | comb[1705:1706] +0x1f42
+- +0x173f mov 0x5520(%rsp),%rax
+- +0x1747 mov 0x8(%rax),%rdi
++ +0x1f42 mov 0x8(%rdi),%rdi
+@@ replace B2[1344:1345] +0x1751 | comb[1707:1708] +0x1f4c
+- +0x1751 mov 0x5520(%rsp),%rdi
++ +0x1f4c mov 0x4530(%rsp),%rdi
+@@ replace B2[1349:1350] +0x1775 | comb[1712:1713] +0x1f70
+- +0x1775 mov %rbx,%rsi
++ +0x1f70 mov %r14,%rsi
+@@ replace B2[1352:1354] +0x1781 | comb[1715:1717] +0x1f7c
+- +0x1781 mov %r14,%r9
+- +0x1784 mov %r12,%rdi
++ +0x1f7c mov %r15,%r9
++ +0x1f7f mov 0x58(%rsp),%r8
+@@ delete B2[1358:1377] +0x1798 | comb[1721:1721] +0x1f95
+- +0x1798 lea DISP(%rip),%rcx
+- +0x179f mov %r11,%rdi
+- +0x17a2 mov %r13,%rdx
+- +0x17a5 call SYM<core::slice::index::slice_index_fail>
+- +0x17aa lea DISP(%rip),%rcx
+- +0x17b1 mov %r11,%rdi
+- +0x17b4 mov %r15,%rsi
+- +0x17b7 mov %r13,%rdx
+- +0x17ba call SYM<core::slice::index::slice_index_fail>
+- +0x17bf lea DISP(%rip),%rcx
+- +0x17c6 mov %rsi,%rdi
+- +0x17c9 mov %rax,%rsi
+- +0x17cc mov %r13,%rdx
+- +0x17cf call SYM<core::slice::index::slice_index_fail>
+- +0x17d4 lea DISP(%rip),%rcx
+- +0x17db mov %r15,%rdi
+- +0x17de mov 0x30(%rsp),%rsi
+- +0x17e3 mov %r13,%rdx
+- +0x17e6 call SYM<core::slice::index::slice_index_fail>
+@@ replace B2[1379:1380] +0x17f5 | comb[1723:1724] +0x1f9f
+- +0x17f5 mov (%rsp),%rsi
++ +0x1f9f mov 0x10(%rsp),%rsi
+@@ insert B2[1389:1389] +0x1824 | comb[1733:1743] +0x1fcf
++ +0x1fcf lea DISP(%rip),%rcx
++ +0x1fd6 mov %r13,%rdi
++ +0x1fd9 mov %r14,%rsi
++ +0x1fdc mov 0x20(%rsp),%rdx
++ +0x1fe1 call SYM<core::slice::index::slice_index_fail>
++ +0x1fe6 lea DISP(%rip),%rcx
++ +0x1fed mov %r14,%rdi
++ +0x1ff0 mov 0x30(%rsp),%rsi
++ +0x1ff5 mov 0x20(%rsp),%rdx
++ +0x1ffa call SYM<core::slice::index::slice_index_fail>
+@@ delete B2[1396:1397] +0x1848 | comb[1750:1750] +0x2023
+- +0x1848 mov %rdi,%r14
+@@ replace B2[1399:1400] +0x1850 | comb[1752:1753] +0x2028
+- +0x1850 mov %r9,%rbx
++ +0x2028 mov %r9,%r14
+@@ replace B2[1401:1403] +0x1858 | comb[1754:1755] +0x2030
+- +0x1858 mov %r14,%rdi
+- +0x185b mov %rbx,%r9
++ +0x2030 mov %r14,%r9
+@@ delete B2[1404:1405] +0x1863 | comb[1756:1756] +0x2038
+- +0x1863 mov %r9,%r13
+@@ replace B2[1407:1408] +0x1871 | comb[1758:1759] +0x2043
+- +0x1871 mov %rdi,%r14
++ +0x2043 mov %rbp,%rdi
+@@ replace B2[1409:1410] +0x1876 | comb[1760:1762] +0x2048
+- +0x1876 mov %rbx,%rdx
++ +0x2048 mov %r14,%rdx
++ +0x204b mov %r9,%r15
+@@ replace B2[1411:1416] +0x187e | comb[1763:1768] +0x2053
+- +0x187e mov %r14,%rdi
+- +0x1881 mov 0x10(%r14),%r14
+- +0x1885 mov 0x8(%rdi),%r12
+- +0x1889 lea (%r12,%r14,8),%rdi
+- +0x188d cmp $0x1,%rbx
++ +0x2053 mov %r15,%r9
++ +0x2056 mov 0x10(%rbp),%r15
++ +0x205a mov 0x8(%rbp),%r12
++ +0x205e lea (%r12,%r15,8),%rdi
++ +0x2062 cmp $0x1,%r14
+@@ insert B2[1427:1427] +0x18d1 | comb[1779:1780] +0x20a6
++ +0x20a6 mov 0x10(%rsp),%rsi
+@@ replace B2[1429:1430] +0x18dd | comb[1782:1783] +0x20b7
+- +0x18dd mov %rbp,%rdi
++ +0x20b7 mov %r15,%rdi
+# B2: 1431 instructions, 127 stack loads, 62 stack stores; comb: 1784 instructions, 270 stack loads, 108 stack stores; equal 610, removed 821, added 1174

@@ -1,0 +1,5 @@
+std::alloc::default_alloc_error_hook
+15: 'lea DISP(%rip),%rsi ;GCC_except_table992' / 'lea DISP(%rip),%rsi ;GCC_except_table993'
+27: 'lea DISP(%rip),%rsi ;GCC_except_table992' / 'lea DISP(%rip),%rsi ;GCC_except_table993'
+53: 'lea DISP(%rip),%rsi ;GCC_except_table992' / 'lea DISP(%rip),%rsi ;GCC_except_table993'
+62: 'lea DISP(%rip),%rsi ;GCC_except_table992' / 'lea DISP(%rip),%rsi ;GCC_except_table993'

@@ -1,0 +1,9 @@
+<c30walk::ctor2c::W<true>>::count_leaf
+33: 'movdqu 0x1f70(%rcx),%xmm0' / 'movdqu 0x2078(%rcx),%xmm0'
+36: 'movdqu %xmm0,0x1f70(%rcx)' / 'movdqu %xmm0,0x2078(%rcx)'
+37: 'incq 0xf0(%rcx)' / 'incq 0x170(%rcx)'
+38: 'incq 0x1d68(%rcx)' / 'incq 0x1e70(%rcx)'
+39: 'incq 0x1d90(%rcx)' / 'incq 0x1e98(%rcx)'
+40: 'addq $0x1e,0x1da0(%rcx)' / 'addq $0x1e,0x1ea8(%rcx)'
+41: 'mov 0x1d10(%rcx),%rdx' / 'mov 0x1d90(%rcx),%rdx'
+44: 'mov %rdx,0x1d10(%rcx)' / 'mov %rdx,0x1d90(%rcx)'

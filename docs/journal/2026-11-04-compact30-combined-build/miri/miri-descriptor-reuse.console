@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner target/miri/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2c-synthetic --miri 'descriptor:reuse'`
+ctor2c-synthetic: descriptor class reuse: 7 cases exact
+ctor2c-synthetic --miri descriptor:reuse: 7 cases, 10 array comparisons, 15 walk outputs, 10 restorations: every check exact; fresh 27, lookahead 0, held 0, no-full-tile runs 0, nonuniform 27, second segments 12, tails 5; scalar rows 477, fragment rows 0, runs 0, refills 30, crossing 20, forced 2, epochs 5; leaf 6, slow 24 (old epoch 0, partial 2, preset RAW 22), wide 0

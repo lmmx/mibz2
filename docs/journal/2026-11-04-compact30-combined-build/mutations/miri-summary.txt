@@ -1,0 +1,7 @@
+mutant variant-a default exit 0 seconds 3
+mutant MU1 default exit 1 seconds 1
+mutant MU1 noubchecks exit 1 seconds 2
+mutant MU2 default exit 1 seconds 2
+mutant MU2 noubchecks exit 1 seconds 2
+mutant MU3 default exit 1 seconds 2
+mutant MU3 noubchecks exit 1 seconds 2

@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner target/miri/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2c-synthetic --miri 'descriptor:tiny'`
+ctor2c-synthetic: descriptor class tiny: 18 cases exact
+ctor2c-synthetic --miri descriptor:tiny: 18 cases, 32 array comparisons, 48 walk outputs, 32 restorations: every check exact; fresh 12, lookahead 2, held 0, no-full-tile runs 5, nonuniform 7, second segments 2, tails 12; scalar rows 182, fragment rows 52, runs 5, refills 21, crossing 12, forced 0, epochs 16; leaf 1, slow 25 (old epoch 0, partial 13, preset RAW 12), wide 0

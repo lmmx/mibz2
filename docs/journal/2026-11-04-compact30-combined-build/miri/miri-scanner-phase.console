@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner target/miri/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2c-synthetic --miri 'scanner:phase'`
+ctor2c-synthetic: scanner class phase: 15 cases exact
+ctor2c-synthetic --miri scanner:phase: 15 cases, 30 array comparisons, 45 walk outputs, 30 restorations: every check exact; fresh 15, lookahead 105, held 14, no-full-tile runs 0, nonuniform 15, second segments 7, tails 15; scalar rows 315, fragment rows 330, runs 14, refills 30, crossing 44, forced 0, epochs 15; leaf 0, slow 58 (old epoch 0, partial 14, preset RAW 44), wide 0

@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner target/miri/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2c-synthetic --miri 'v3:span'`
+ctor2c-synthetic: v3 class span: 2 cases exact
+ctor2c-synthetic --miri v3:span: 2 cases, 4 array comparisons, 6 walk outputs, 4 restorations: every check exact; fresh 7704, lookahead 0, held 0, no-full-tile runs 0, nonuniform 7704, second segments 3596, tails 2; scalar rows 123280, fragment rows 0, runs 0, refills 4112, crossing 4, forced 0, epochs 4; leaf 4100, slow 12 (old epoch 6, partial 2, preset RAW 4), wide 1

@@ -1,0 +1,4 @@
+std::thread::current::with_current_name::<std::panicking::default_hook::{closure#0}::{closure#0}, ()>::{closure#0}
+28: 'lea DISP(%rip),%rcx ;GCC_except_table992' / 'lea DISP(%rip),%rcx ;GCC_except_table993'
+80: 'lea DISP(%rip),%rdx ;GCC_except_table992' / 'lea DISP(%rip),%rdx ;GCC_except_table993'
+126: 'lea DISP(%rip),%rsi ;GCC_except_table992' / 'lea DISP(%rip),%rsi ;GCC_except_table993'

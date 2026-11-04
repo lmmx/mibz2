@@ -1,0 +1,34 @@
+ctor2c-synthetic: small blocks, n 0..=130: 260 cases exact
+ctor2c-synthetic: bucket boundary at every offset: 180 cases exact
+ctor2c-synthetic: bulk-to-partial transitions (phase x slot x run length): 24 cases exact
+ctor2c-synthetic: epoch boundaries: 3 cases exact
+ctor2c-synthetic: absent characters across repeated snapshots: 6 cases exact
+ctor2c-synthetic: ordinary/wide span boundaries from full labels: 2 cases exact
+ctor2c-synthetic: pending portions finished at the end of input: 3 cases exact
+ctor2c-synthetic: scanner class tiny: 18 cases exact
+ctor2c-synthetic: scanner class tails: 45 cases exact
+ctor2c-synthetic: scanner class align: 14 cases exact
+ctor2c-synthetic: scanner class phase: 15 cases exact
+ctor2c-synthetic: scanner class held: 5 cases exact
+ctor2c-synthetic: scanner class endrun: 2 cases exact
+ctor2c-synthetic: scanner class epoch: 2 cases exact
+ctor2c-synthetic: scanner class malformed: 4 cases exact
+ctor2c-synthetic: scanner class controls: 1 cases exact
+ctor2c-synthetic: descriptor class tiny: 18 cases exact
+ctor2c-synthetic: descriptor class slots: 60 cases exact
+ctor2c-synthetic: descriptor class allbytes: 1 cases exact
+ctor2c-synthetic: descriptor class crossing: 120 cases exact
+ctor2c-synthetic: descriptor class runs: 6 cases exact
+ctor2c-synthetic: descriptor class epoch: 1 cases exact
+ctor2c-synthetic: descriptor class pending: 4 cases exact
+ctor2c-synthetic: descriptor class malformed: 4 cases exact
+ctor2c-synthetic: descriptor class reuse: 7 cases exact
+ctor2c-synthetic: the tag/RAW dispatch (tagged ordinary portions in the slow finish): 15 cases exact
+ctor2c-synthetic: ordinary groups finished in a later epoch than opened: 3 cases exact
+ctor2c-synthetic: repeated construction with changing sizes: 16 cases exact
+ctor2c-synthetic: malformed counts: 29 rejected, 1 accepted (equal to ll's own after the change)
+ctor2c-synthetic: malformed counts and sizes: 30 cases exact
+ctor2c-synthetic coverage: finished fast 46248, ordinary 48, wide 2, crossing 1759, forced 1243; multi-epoch portions 43; epoch searches 77; runs split at an epoch 6; portion (first slot, length) shapes 181; max ordinary span 65533, min wide span 65534; epochs 842
+ctor2c-synthetic: 869 cases, 1634 array comparisons, 2451 walk outputs, 1634 restorations: every check exact (quick)
+ctor2c-synthetic counters: {"max_ordinary_span":65533,"min_wide_span":65534,"blocks":817,"rows":1586296,"rows_bulk":69120,"rows_bulk_raw":85740,"rows_fragment":33460,"rows_scalar":1397976,"runs":1495,"run_rows":188320,"complete_groups":2304,"fin_fast":46248,"fin_ordinary":48,"fin_wide":2,"fin_crossing":1759,"fin_forced":1243,"norm_full":45618,"norm_partial":678,"norm_fields":1373641,"raw_fields_read":57795,"raw_entries_written":57795,"fields_restored":57735,"epoch_searches":77,"epochs":842,"runs_split_at_epoch":6,"raw_groups":4841,"raw_moved":3362,"raw_cycles":8,"multi_epoch_portions":43,"fresh_pairs":87304,"lookahead_pairs":11365,"held_reuses":1090,"runs_no_full_tile":405,"tiles_nonuniform":86899,"tiles_second_segment":40486,"tails":783,"tail_rows":7592,"unchecked_tiles":86899,"tile_refills_first":22351,"tile_refills_second":24978,"tail_refills_first":363,"tail_refills_second":203,"tail_rows_second":409,"tails_second_segment":351,"tails_len1":41,"tails_len_ge2":742,"tails_even":203,"fills_vector":1795,"complete_calls":730,"runs_lookahead":1327,"runs_no_lookahead":168,"runs_exhausted":237,"final_finishes":1896,"preset_crossing":738,"epochs_tiled":733,"epochs_short":109,"epochs_untailed":59,"bitmap_memsets":25,"refills":47895,"refill_finishes":46433,"outer_iterations":88394,"fills":2409,"runs_end_fill":1473,"runs_end_complete":22,"run_opens":1405,"tile_rows_second":321946,"sweep_checks":209152,"init_descs":209152,"pad_blocks":792,"bitmap_in_place":815,"bitmap_reserves":2,"bitmap_reserves_single":1,"rec_grows":9,"rec_grow_frees":9,"raw_grows":7,"snaps_reserves":0,"leaf_fast":45570,"v2_fast_full":45570,"slow_entries":3730,"slow_ordinary_old_epoch":50,"slow_ordinary_partial_same_epoch":678,"slow_raw_preset":3002,"opens_ordinary":46298,"opens_raw":3002,"run_finishes":971,"crossing_scan":209152,"final_closes":209152,"norm_partial_scalar":885,"tile_n1_0":0,"tile_n1_1":0,"tile_n1_2":5718,"tile_n1_3":0,"tile_n1_4":5729,"tile_n1_5":0,"tile_n1_6":5732,"tile_n1_7":0,"tile_n1_8":5739,"tile_n1_9":0,"tile_n1_10":5788,"tile_n1_11":0,"tile_n1_12":5813,"tile_n1_13":0,"tile_n1_14":5967,"tile_n1_15":0,"tile_n1_16":46413,"tile_refills_first_at_0":4737,"tile_refills_first_at_1":3092,"tile_refills_first_at_2":1414,"tile_refills_first_at_3":1901,"tile_refills_first_at_4":85,"tile_refills_first_at_5":1379,"tile_refills_first_at_6":1363,"tile_refills_first_at_7":1139,"tile_refills_first_at_8":93,"tile_refills_first_at_9":1355,"tile_refills_first_at_10":1359,"tile_refills_first_at_11":1116,"tile_refills_first_at_12":73,"tile_refills_first_at_13":824,"tile_refills_first_at_14":1334,"tile_refills_first_at_15":1087}
+exit 0

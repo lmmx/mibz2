@@ -1,0 +1,4487 @@
+{
+ "counted_record": {
+  "input": "wikidata-20261026.bz2",
+  "permille": 0,
+  "extra_starts": false,
+  "sequential": true,
+  "blocks_built": 434,
+  "fnv1a": "4efb1c13ae58340f",
+  "max_ordinary_span": 65529,
+  "min_wide_span": 65535,
+  "blocks": 434,
+  "rows": 207006515,
+  "rows_bulk": 153819000,
+  "rows_bulk_raw": 0,
+  "rows_fragment": 14892632,
+  "rows_scalar": 38294883,
+  "runs": 610521,
+  "run_rows": 168711632,
+  "complete_groups": 5127300,
+  "fin_fast": 1647416,
+  "fin_ordinary": 75997,
+  "fin_wide": 30949,
+  "fin_crossing": 41120,
+  "fin_forced": 0,
+  "norm_full": 1723371,
+  "norm_partial": 42,
+  "norm_fields": 51701707,
+  "raw_fields_read": 1485808,
+  "raw_entries_written": 1485808,
+  "fields_restored": 557338,
+  "epoch_searches": 127249,
+  "epochs": 3654,
+  "runs_split_at_epoch": 2638,
+  "raw_groups": 49633,
+  "raw_moved": 48795,
+  "raw_cycles": 1135,
+  "multi_epoch_portions": 117029,
+  "fresh_pairs": 2396084,
+  "lookahead_pairs": 10541706,
+  "held_reuses": 607750,
+  "runs_no_full_tile": 2771,
+  "tiles_nonuniform": 2393313,
+  "tiles_second_segment": 1116556,
+  "tails": 230,
+  "tail_rows": 1875,
+  "unchecked_tiles": 2393313,
+  "tile_refills_first": 996634,
+  "tile_refills_second": 302049,
+  "tail_refills_first": 786,
+  "tail_refills_second": 9,
+  "tail_rows_second": 106,
+  "tails_second_segment": 22,
+  "tails_len1": 12,
+  "tails_len_ge2": 218,
+  "tails_even": 121,
+  "fills_vector": 801475,
+  "complete_calls": 296405,
+  "runs_lookahead": 610356,
+  "runs_no_lookahead": 165,
+  "runs_exhausted": 2606,
+  "final_finishes": 23559,
+  "preset_crossing": 18684,
+  "epochs_tiled": 3575,
+  "epochs_short": 79,
+  "epochs_untailed": 3424,
+  "bitmap_memsets": 230,
+  "refills": 1299478,
+  "refill_finishes": 1262935,
+  "outer_iterations": 3003834,
+  "fills": 1085833,
+  "runs_end_fill": 597255,
+  "runs_end_complete": 13266,
+  "run_opens": 496004,
+  "tile_rows_second": 8935084,
+  "sweep_checks": 111104,
+  "init_descs": 111104,
+  "pad_blocks": 233,
+  "bitmap_in_place": 432,
+  "bitmap_reserves": 2,
+  "bitmap_reserves_single": 1,
+  "rec_grows": 2,
+  "rec_grow_frees": 1,
+  "raw_grows": 8,
+  "snaps_reserves": 1,
+  "leaf_fast": 1647375,
+  "v2_fast_full": 1647375,
+  "slow_entries": 148107,
+  "slow_ordinary_old_epoch": 106946,
+  "slow_ordinary_partial_same_epoch": 41,
+  "slow_raw_preset": 41120,
+  "opens_ordinary": 1754362,
+  "opens_raw": 41120,
+  "run_finishes": 508988,
+  "crossing_scan": 111104,
+  "final_closes": 111104,
+  "norm_partial_scalar": 61,
+  "tile_n1_0": 0,
+  "tile_n1_1": 0,
+  "tile_n1_2": 159405,
+  "tile_n1_3": 0,
+  "tile_n1_4": 159753,
+  "tile_n1_5": 0,
+  "tile_n1_6": 159421,
+  "tile_n1_7": 0,
+  "tile_n1_8": 159936,
+  "tile_n1_9": 0,
+  "tile_n1_10": 159699,
+  "tile_n1_11": 0,
+  "tile_n1_12": 158901,
+  "tile_n1_13": 0,
+  "tile_n1_14": 159441,
+  "tile_n1_15": 0,
+  "tile_n1_16": 1276757,
+  "tile_refills_first_at_0": 81607,
+  "tile_refills_first_at_1": 81144,
+  "tile_refills_first_at_2": 76174,
+  "tile_refills_first_at_3": 75877,
+  "tile_refills_first_at_4": 70838,
+  "tile_refills_first_at_5": 70208,
+  "tile_refills_first_at_6": 65139,
+  "tile_refills_first_at_7": 65256,
+  "tile_refills_first_at_8": 59807,
+  "tile_refills_first_at_9": 59520,
+  "tile_refills_first_at_10": 54029,
+  "tile_refills_first_at_11": 53863,
+  "tile_refills_first_at_12": 48226,
+  "tile_refills_first_at_13": 48658,
+  "tile_refills_first_at_14": 43150,
+  "tile_refills_first_at_15": 43138
+ },
+ "classes": [
+  {
+   "group": "build",
+   "frequency": 29357924,
+   "baseline": 12,
+   "candidate": 0,
+   "delta": -352295088,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x1250 movzbl (%r11,%r13,1),%esi",
+      "+0x1255 lea    (%rsi,%rsi,4),%rcx",
+      "+0x1259 lea    (%r8,%rcx,8),%rbp",
+      "+0x125d mov    (%r8,%rcx,8),%rax",
+      "+0x1261 cmp    0x8(%r8,%rcx,8),%rax",
+      "+0x1266 je     3deae <<c30walk::ctor2::Ctor2>::build::<false>+0x127e>",
+      "+0x1268 lea    (%r14,%r13,1),%rcx",
+      "+0x126c mov    %cx,(%rax)",
+      "+0x126f addq   $0x2,0x0(%rbp)",
+      "+0x1274 inc    %r13",
+      "+0x1277 cmp    %r13,%rbx",
+      "+0x127a jne    3de80 <<c30walk::ctor2::Ctor2>::build::<false>+0x1250>"
+     ]
+    ]
+   ],
+   "counter": "rows_scalar - tile_rows_second - tail_rows",
+   "counted": 29357924,
+   "counted_each": [
+    29357924
+   ],
+   "path": "B2's full tiles' first-segment row loop (unrolled in the combined build)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 10544477,
+   "baseline": 5,
+   "candidate": 0,
+   "delta": -52722385,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0a30 mov    %rax,%r12",
+      "+0x0a33 add    $0x10,%rax",
+      "+0x0a37 cmp    %r10,%rax",
+      "+0x0a3a setbe  %r9b",
+      "+0x0a3e ja     3d710 <<c30walk::ctor2::Ctor2>::build::<false>+0xae0>"
+     ]
+    ]
+   ],
+   "counter": "lookahead_pairs + runs_no_full_tile",
+   "counted": 10544477,
+   "counted_each": [
+    10544477
+   ],
+   "path": "uniform tiles U = J + Q (B2 tile test)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 10541706,
+   "baseline": 9,
+   "candidate": 5,
+   "delta": -42166824,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0a44 lea    0x8(%r12),%rsi",
+      "+0x0a49 cmp    $0xfffffffffffffff7,%r12",
+      "+0x0a4d ja     3e2ea <<c30walk::ctor2::Ctor2>::build::<false>+0x16ba>",
+      "+0x0a53 cmp    %r13,%rsi",
+      "+0x0a56 ja     3e2ea <<c30walk::ctor2::Ctor2>::build::<false>+0x16ba>",
+      "+0x0a5c mov    (%r14,%r12,1),%rdx",
+      "+0x0a60 mov    0x8(%r14,%r12,1),%rsi",
+      "+0x0a65 cmp    %rcx,%rdx",
+      "+0x0a68 jne    3d69f <<c30walk::ctor2::Ctor2>::build::<false>+0xa6f>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0a60 mov    (%rsi),%rdx",
+      "+0x0a63 mov    0x8(%rsi),%rax",
+      "+0x0a67 mov    $0x1,%r9b",
+      "+0x0a6a cmp    %rcx,%rdx",
+      "+0x0a6d jne    4454a <<c30walk::ctor2c::Ctor2c>::build::<false>+0xe5a>"
+     ]
+    ]
+   ],
+   "counter": "lookahead_pairs",
+   "counted": 10541706,
+   "counted_each": [
+    10541706
+   ],
+   "path": "lookahead pairs J",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 9933956,
+   "baseline": 0,
+   "candidate": 4,
+   "delta": 39735824,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0a7c add    $0xfffffffffffffff0,%rdi",
+      "+0x0a80 add    $0x10,%rsi",
+      "+0x0a84 cmp    $0xf,%rdi",
+      "+0x0a88 ja     44150 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xa60>"
+     ]
+    ]
+   ],
+   "counter": "lookahead_pairs - held_reuses",
+   "counted": 9933956,
+   "counted_each": [
+    9933956
+   ],
+   "path": "matched lookaheads J - H",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 8935084,
+   "baseline": 12,
+   "candidate": 10,
+   "delta": -17870168,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x12e0 movzbl (%r15),%esi",
+      "+0x12e4 lea    (%rsi,%rsi,4),%rcx",
+      "+0x12e8 lea    (%r8,%rcx,8),%r14",
+      "+0x12ec mov    (%r8,%rcx,8),%rax",
+      "+0x12f0 cmp    0x8(%r8,%rcx,8),%rax",
+      "+0x12f5 je     3df3d <<c30walk::ctor2::Ctor2>::build::<false>+0x130d>",
+      "+0x12f7 mov    %bx,(%rax)",
+      "+0x12fa addq   $0x2,(%r14)",
+      "+0x12fe inc    %r15",
+      "+0x1301 inc    %ebx",
+      "+0x1303 cmp    %r12,%r15",
+      "+0x1306 jne    3df10 <<c30walk::ctor2::Ctor2>::build::<false>+0x12e0>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0df0 movzbl (%r12),%r14d",
+      "+0x0df5 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0dfd cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0e05 je     44512 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xe22>",
+      "+0x0e07 mov    %bp,(%rax)",
+      "+0x0e0a addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0e13 inc    %r12",
+      "+0x0e16 inc    %ebp",
+      "+0x0e18 cmp    %rbx,%r12",
+      "+0x0e1b jne    444e0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xdf0>"
+     ]
+    ]
+   ],
+   "counter": "tile_rows_second",
+   "counted": 8935084,
+   "counted_each": [
+    8935084
+   ],
+   "path": "full tiles' second-segment row loop",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 3003834,
+   "baseline": 13,
+   "candidate": 11,
+   "delta": -6007668,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x09d2 mov    %rsi,%rdi",
+      "+0x09d5 cmp    %r10,%rsi",
+      "+0x09d8 mov    0x28(%rsp),%r14",
+      "+0x09dd ja     3d4e7 <<c30walk::ctor2::Ctor2>::build::<false>+0x8b7>",
+      "+0x09e3 test   $0x1,%dl",
+      "+0x09e6 jne    3d644 <<c30walk::ctor2::Ctor2>::build::<false>+0xa14>",
+      "+0x0a14 mov    %r9,%rax",
+      "+0x0a17 xor    %rcx,%rax",
+      "+0x0a1a mov    %r9,%rdx",
+      "+0x0a1d rol    $0x8,%rdx",
+      "+0x0a21 xor    %r9,%rdx",
+      "+0x0a24 or     %rax,%rdx",
+      "+0x0a27 jne    3d6b0 <<c30walk::ctor2::Ctor2>::build::<false>+0xa80>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0a1b mov    0x70(%rsp),%rcx",
+      "+0x0a20 test   $0x1,%dl",
+      "+0x0a23 jne    4411c <<c30walk::ctor2c::Ctor2c>::build::<false>+0xa2c>",
+      "+0x0a2c lea    0x10(%r15),%rsi",
+      "+0x0a30 lea    -0x10(%r13),%rdi",
+      "+0x0a34 xor    %rcx,%r12",
+      "+0x0a37 mov    %rcx,%rax",
+      "+0x0a3a rol    $0x8,%rax",
+      "+0x0a3e xor    %rcx,%rax",
+      "+0x0a41 or     %r12,%rax",
+      "+0x0a44 jne    44190 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xaa0>"
+     ]
+    ]
+   ],
+   "counter": "outer_iterations",
+   "counted": 3003834,
+   "counted_each": [
+    3003834
+   ],
+   "path": "outer scan iterations S + R",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 2396084,
+   "baseline": 10,
+   "candidate": 2,
+   "delta": -19168672,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x09e8 lea    0x8(%r11),%rsi",
+      "+0x09ec cmp    $0xfffffffffffffff7,%r11",
+      "+0x09f0 ja     3e3c8 <<c30walk::ctor2::Ctor2>::build::<false>+0x1798>",
+      "+0x09f6 cmp    %r13,%rsi",
+      "+0x09f9 ja     3e3c8 <<c30walk::ctor2::Ctor2>::build::<false>+0x1798>",
+      "+0x09ff lea    0x10(%r11),%rax",
+      "+0x0a03 cmp    %r13,%rax",
+      "+0x0a06 ja     3e3ef <<c30walk::ctor2::Ctor2>::build::<false>+0x17bf>",
+      "+0x0a0c mov    (%r14,%r11,1),%r9",
+      "+0x0a10 mov    (%r14,%rsi,1),%rcx"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0a25 mov    (%r15),%rcx",
+      "+0x0a28 mov    0x8(%r15),%r12"
+     ]
+    ]
+   ],
+   "counter": "fresh_pairs",
+   "counted": 2396084,
+   "counted_each": [
+    2396084
+   ],
+   "path": "fresh pairs A",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 2393313,
+   "baseline": 38,
+   "candidate": 44,
+   "delta": 14359878,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0990 mov    0x28d8(%rsp),%rax",
+      "+0x0998 lea    0x10(%rax),%rcx",
+      "+0x099c add    $0xfffffffffffffff2,%rax",
+      "+0x09a0 xor    %edx,%edx",
+      "+0x09a2 cmp    $0x1e,%rcx",
+      "+0x09a6 setae  %dl",
+      "+0x09a9 cmovb  %rcx,%rax",
+      "+0x09ad mov    %rax,0x28d8(%rsp)",
+      "+0x09b5 mov    0x28e0(%rsp),%eax",
+      "+0x09bc lea    0x10(%rax,%rdx,2),%eax",
+      "+0x09c0 mov    %eax,0x28e0(%rsp)",
+      "+0x09c7 mov    0x30(%rsp),%r11",
+      "+0x09cc lea    0x10(%r11),%rsi",
+      "+0x09d0 xor    %edx,%edx",
+      "+0x0a80 mov    %rdi,0x30(%rsp)",
+      "+0x0a85 mov    0x28d8(%rsp),%rax",
+      "+0x0a8d mov    $0x1e,%r12d",
+      "+0x0a93 sub    %rax,%r12",
+      "+0x0a96 cmp    $0x10,%r12",
+      "+0x0a9a mov    $0x10,%ebx",
+      "+0x0a9f cmovb  %r12,%rbx",
+      "+0x0aa3 mov    %rbx,%r15",
+      "+0x0aa6 add    %r11,%r15",
+      "+0x0aa9 jb     3e3da <<c30walk::ctor2::Ctor2>::build::<false>+0x17aa>",
+      "+0x0aaf cmp    %r13,%r15",
+      "+0x0ab2 ja     3e3da <<c30walk::ctor2::Ctor2>::build::<false>+0x17aa>",
+      "+0x0ab8 mov    0x28e0(%rsp),%r14d",
+      "+0x0ac0 cmp    $0x1e,%rax",
+      "+0x0ac4 jne    3de70 <<c30walk::ctor2::Ctor2>::build::<false>+0x1240>",
+      "+0x1240 add    0x28(%rsp),%r11",
+      "+0x1245 xor    %r13d,%r13d",
+      "+0x1248 nopl   0x0(%rax,%rax,1)",
+      "+0x127c jmp    3dee0 <<c30walk::ctor2::Ctor2>::build::<false>+0x12b0>",
+      "+0x12b0 cmp    %r15,0x30(%rsp)",
+      "+0x12b5 mov    0x8(%rsp),%r13",
+      "+0x12ba jb     3e404 <<c30walk::ctor2::Ctor2>::build::<false>+0x17d4>",
+      "+0x12c0 cmp    $0xf,%r12",
+      "+0x12c4 ja     3d5c0 <<c30walk::ctor2::Ctor2>::build::<false>+0x990>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x09d0 mov    0x28e8(%rsp),%rax",
+      "+0x09d8 lea    0x10(%rax),%rcx",
+      "+0x09dc add    $0xfffffffffffffff2,%rax",
+      "+0x09e0 xor    %edx,%edx",
+      "+0x09e2 cmp    $0x1e,%rcx",
+      "+0x09e6 setae  %dl",
+      "+0x09e9 cmovb  %rcx,%rax",
+      "+0x09ed mov    0x28f0(%rsp),%ecx",
+      "+0x09f4 lea    (%rcx,%rdx,2),%ecx",
+      "+0x09f7 add    $0x10,%ecx",
+      "+0x09fa mov    %rax,0x28e8(%rsp)",
+      "+0x0a02 mov    %ecx,0x28f0(%rsp)",
+      "+0x0a09 xor    %edx,%edx",
+      "+0x0a0b mov    %rsi,%r15",
+      "+0x0a0e mov    %rdi,%r13",
+      "+0x0a11 cmp    $0xf,%rdi",
+      "+0x0a15 jbe    451f3 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1b03>",
+      "+0x0aa0 movzwl 0x28f0(%rsp),%ebp",
+      "+0x0aa8 mov    0x28e8(%rsp),%r9",
+      "+0x0ab0 mov    $0x1e,%ebx",
+      "+0x0ab5 sub    %r9,%rbx",
+      "+0x0ab8 cmp    $0x10,%rbx",
+      "+0x0abc mov    $0x10,%edx",
+      "+0x0ac1 cmovb  %rbx,%rdx",
+      "+0x0ac5 movzbl (%r15),%r14d",
+      "+0x0ac9 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0ad1 cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0ad9 je     44cd8 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x15e8>",
+      "+0x0adf mov    0x30(%rsp),%r12",
+      "+0x0ae4 sub    %r13,%r12",
+      "+0x0ae7 add    0x60(%rsp),%r12",
+      "+0x0aec mov    %bp,(%rax)",
+      "+0x0aef addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0af8 cmp    $0x2,%rbx",
+      "+0x0afc jb     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>",
+      "+0x0b02 movzbl 0x1(%r15),%r14d",
+      "+0x0b07 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0b0f cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0b17 je     44d15 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1625>",
+      "+0x0b1d lea    0x1(%rbp),%ecx",
+      "+0x0b20 mov    %cx,(%rax)",
+      "+0x0b23 addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0b2c cmp    $0x1c,%r9",
+      "+0x0b30 je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>"
+     ]
+    ]
+   ],
+   "counter": "tiles_nonuniform",
+   "counted": 2393313,
+   "counted_each": [
+    2393313
+   ],
+   "path": "nonuniform full tiles S (overhead, and unrolled rows 0 and 1: n1 >= 2)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 2233908,
+   "baseline": 0,
+   "candidate": 18,
+   "delta": 40210344,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0b36 movzbl 0x2(%r15),%r14d",
+      "+0x0b3b mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0b43 cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0b4b je     44d64 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1674>",
+      "+0x0b51 lea    0x2(%rbp),%ecx",
+      "+0x0b54 mov    %cx,(%rax)",
+      "+0x0b57 addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0b60 cmp    $0x1b,%r9",
+      "+0x0b64 je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>",
+      "+0x0b6a movzbl 0x3(%r15),%r14d",
+      "+0x0b6f mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0b77 cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0b7f je     44db3 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x16c3>",
+      "+0x0b85 lea    0x3(%rbp),%ecx",
+      "+0x0b88 mov    %cx,(%rax)",
+      "+0x0b8b addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0b94 cmp    $0x1a,%r9",
+      "+0x0b98 je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>"
+     ]
+    ]
+   ],
+   "counter": "tile_n1_4 + tile_n1_6 + tile_n1_8 + tile_n1_10 + tile_n1_12 + tile_n1_14 + tile_n1_16",
+   "counted": 2233908,
+   "counted_each": [
+    2233908
+   ],
+   "path": "tile16's unrolled first segment, rows 2 and 3 (n1 >= 4)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 2074155,
+   "baseline": 0,
+   "candidate": 18,
+   "delta": 37334790,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0b9e movzbl 0x4(%r15),%r14d",
+      "+0x0ba3 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0bab cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0bb3 je     44e02 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1712>",
+      "+0x0bb9 lea    0x4(%rbp),%ecx",
+      "+0x0bbc mov    %cx,(%rax)",
+      "+0x0bbf addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0bc8 cmp    $0x19,%r9",
+      "+0x0bcc je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>",
+      "+0x0bd2 movzbl 0x5(%r15),%r14d",
+      "+0x0bd7 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0bdf cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0be7 je     44e95 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x17a5>",
+      "+0x0bed lea    0x5(%rbp),%ecx",
+      "+0x0bf0 mov    %cx,(%rax)",
+      "+0x0bf3 addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0bfc cmp    $0x18,%r9",
+      "+0x0c00 je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>"
+     ]
+    ]
+   ],
+   "counter": "tile_n1_6 + tile_n1_8 + tile_n1_10 + tile_n1_12 + tile_n1_14 + tile_n1_16",
+   "counted": 2074155,
+   "counted_each": [
+    2074155
+   ],
+   "path": "tile16's unrolled first segment, rows 4 and 5 (n1 >= 6)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 1914734,
+   "baseline": 0,
+   "candidate": 18,
+   "delta": 34465212,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0c06 movzbl 0x6(%r15),%r14d",
+      "+0x0c0b mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0c13 cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0c1b je     44ee4 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x17f4>",
+      "+0x0c21 lea    0x6(%rbp),%ecx",
+      "+0x0c24 mov    %cx,(%rax)",
+      "+0x0c27 addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0c30 cmp    $0x17,%r9",
+      "+0x0c34 je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>",
+      "+0x0c3a movzbl 0x7(%r15),%r14d",
+      "+0x0c3f mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0c47 cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0c4f je     44f33 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1843>",
+      "+0x0c55 lea    0x7(%rbp),%ecx",
+      "+0x0c58 mov    %cx,(%rax)",
+      "+0x0c5b addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0c64 cmp    $0x16,%r9",
+      "+0x0c68 je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>"
+     ]
+    ]
+   ],
+   "counter": "tile_n1_8 + tile_n1_10 + tile_n1_12 + tile_n1_14 + tile_n1_16",
+   "counted": 1914734,
+   "counted_each": [
+    1914734
+   ],
+   "path": "tile16's unrolled first segment, rows 6 and 7 (n1 >= 8)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 1754798,
+   "baseline": 0,
+   "candidate": 18,
+   "delta": 31586364,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0c6e movzbl 0x8(%r15),%r14d",
+      "+0x0c73 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0c7b cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0c83 je     44f82 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1892>",
+      "+0x0c89 lea    0x8(%rbp),%ecx",
+      "+0x0c8c mov    %cx,(%rax)",
+      "+0x0c8f addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0c98 cmp    $0x15,%r9",
+      "+0x0c9c je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>",
+      "+0x0ca2 movzbl 0x9(%r15),%r14d",
+      "+0x0ca7 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0caf cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0cb7 je     44fd1 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x18e1>",
+      "+0x0cbd lea    0x9(%rbp),%ecx",
+      "+0x0cc0 mov    %cx,(%rax)",
+      "+0x0cc3 addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0ccc cmp    $0x14,%r9",
+      "+0x0cd0 je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>"
+     ]
+    ]
+   ],
+   "counter": "tile_n1_10 + tile_n1_12 + tile_n1_14 + tile_n1_16",
+   "counted": 1754798,
+   "counted_each": [
+    1754798
+   ],
+   "path": "tile16's unrolled first segment, rows 8 and 9 (n1 >= 10)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 1595099,
+   "baseline": 0,
+   "candidate": 18,
+   "delta": 28711782,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0cd6 movzbl 0xa(%r15),%r14d",
+      "+0x0cdb mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0ce3 cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0ceb je     45020 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1930>",
+      "+0x0cf1 lea    0xa(%rbp),%ecx",
+      "+0x0cf4 mov    %cx,(%rax)",
+      "+0x0cf7 addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0d00 cmp    $0x13,%r9",
+      "+0x0d04 je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>",
+      "+0x0d0a movzbl 0xb(%r15),%r14d",
+      "+0x0d0f mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0d17 cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0d1f je     4506f <<c30walk::ctor2c::Ctor2c>::build::<false>+0x197f>",
+      "+0x0d25 lea    0xb(%rbp),%ecx",
+      "+0x0d28 mov    %cx,(%rax)",
+      "+0x0d2b addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0d34 cmp    $0x12,%r9",
+      "+0x0d38 je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>"
+     ]
+    ]
+   ],
+   "counter": "tile_n1_12 + tile_n1_14 + tile_n1_16",
+   "counted": 1595099,
+   "counted_each": [
+    1595099
+   ],
+   "path": "tile16's unrolled first segment, rows 10 and 11 (n1 >= 12)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 1436198,
+   "baseline": 0,
+   "candidate": 18,
+   "delta": 25851564,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0d3e movzbl 0xc(%r15),%r14d",
+      "+0x0d43 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0d4b cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0d53 je     450be <<c30walk::ctor2c::Ctor2c>::build::<false>+0x19ce>",
+      "+0x0d59 lea    0xc(%rbp),%ecx",
+      "+0x0d5c mov    %cx,(%rax)",
+      "+0x0d5f addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0d68 cmp    $0x11,%r9",
+      "+0x0d6c je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>",
+      "+0x0d6e movzbl 0xd(%r15),%r14d",
+      "+0x0d73 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0d7b cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0d83 je     4510d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1a1d>",
+      "+0x0d89 lea    0xd(%rbp),%ecx",
+      "+0x0d8c mov    %cx,(%rax)",
+      "+0x0d8f addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0d98 cmp    $0x10,%r9",
+      "+0x0d9c je     444d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xde0>"
+     ]
+    ]
+   ],
+   "counter": "tile_n1_14 + tile_n1_16",
+   "counted": 1436198,
+   "counted_each": [
+    1436198
+   ],
+   "path": "tile16's unrolled first segment, rows 12 and 13 (n1 >= 14)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 1276757,
+   "baseline": 0,
+   "candidate": 19,
+   "delta": 24258383,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0d9e movzbl 0xe(%r15),%r14d",
+      "+0x0da3 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0dab cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x0db3 je     4515c <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1a6c>",
+      "+0x0db9 lea    0xe(%rbp),%ecx",
+      "+0x0dbc mov    %cx,(%rax)",
+      "+0x0dbf addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x0dc8 cmp    $0xf,%r9",
+      "+0x0dcc jne    44e51 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1761>",
+      "+0x1761 mov    %rdx,%r13",
+      "+0x1764 movzbl 0xf(%r15),%r14d",
+      "+0x1769 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1771 cmp    0x8e8(%rsp,%r14,8),%rax",
+      "+0x1779 je     451ab <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1abb>",
+      "+0x177f lea    0xf(%rbp),%ecx",
+      "+0x1782 mov    %cx,(%rax)",
+      "+0x1785 addq   $0x2,0xe8(%rsp,%r14,8)",
+      "+0x178e cmp    $0xf,%rbx",
+      "+0x1792 ja     440c0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x9d0>"
+     ]
+    ]
+   ],
+   "counter": "tile_n1_16",
+   "counted": 1276757,
+   "counted_each": [
+    1276757
+   ],
+   "path": "tile16's unrolled first segment, rows 14 and 15 (n1 >= 16)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 1116556,
+   "baseline": 8,
+   "candidate": 6,
+   "delta": -2233112,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x12ca add    0x28(%rsp),%r15",
+      "+0x12cf mov    %r15,%r12",
+      "+0x12d2 sub    %rbx,%r12",
+      "+0x12d5 add    $0x10,%r12",
+      "+0x12d9 add    %r14d,%ebx",
+      "+0x12dc add    $0x2,%ebx",
+      "+0x12df nop",
+      "+0x1308 jmp    3d5c0 <<c30walk::ctor2::Ctor2>::build::<false>+0x990>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0de0 lea    0x10(%r12),%rbx",
+      "+0x0de5 add    %rdx,%r12",
+      "+0x0de8 add    %edx,%ebp",
+      "+0x0dea add    $0x2,%ebp",
+      "+0x0ded nopl   (%rax)",
+      "+0x0e1d jmp    440c0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x9d0>"
+     ]
+    ]
+   ],
+   "counter": "tiles_second_segment",
+   "counted": 1116556,
+   "counted_each": [
+    1116556
+   ],
+   "path": "second segments X",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 996634,
+   "baseline": 10,
+   "candidate": 0,
+   "delta": -9966340,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x127e mov    %r11,(%rsp)",
+      "+0x1282 lea    0x98(%rsp),%rdi",
+      "+0x128a call   8e8f0 <<c30walk::ctor2::W<false>>::refill>",
+      "+0x128f lea    0xd8(%rsp),%r8",
+      "+0x1297 test   %al,%al",
+      "+0x1299 je     3e197 <<c30walk::ctor2::Ctor2>::build::<false>+0x1567>",
+      "+0x129f mov    0x0(%rbp),%rax",
+      "+0x12a3 mov    0x20(%rsp),%r10",
+      "+0x12a8 mov    (%rsp),%r11",
+      "+0x12ac jmp    3de98 <<c30walk::ctor2::Ctor2>::build::<false>+0x1268>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first",
+   "counted": 996634,
+   "counted_each": [
+    996634
+   ],
+   "path": "B2's refill detour from a tile's first segment (per position in the combined build)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 801475,
+   "baseline": 18,
+   "candidate": 19,
+   "delta": 801475,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0bd9 mov    %rax,%r8",
+      "+0x0bdc sub    %r15,%r8",
+      "+0x0bdf sub    %r11,%r8",
+      "+0x0be2 cmp    $0x10,%r8",
+      "+0x0be6 jae    3dc83 <<c30walk::ctor2::Ctor2>::build::<false>+0x1053>",
+      "+0x1053 shr    $1,%r9",
+      "+0x1056 inc    %r9",
+      "+0x1059 mov    %r9,%r10",
+      "+0x105c and    $0xfffffffffffffff8,%r10",
+      "+0x1060 lea    (%rdx,%r10,2),%r8",
+      "+0x1064 movd   %ecx,%xmm0",
+      "+0x1068 pshuflw $0x0,%xmm0,%xmm0",
+      "+0x106d add    %r15,%r11",
+      "+0x1070 add    $0x8,%r11",
+      "+0x1074 xor    %ebx,%ebx",
+      "+0x1076 cs nopw 0x0(%rax,%rax,1)",
+      "+0x10a7 cmp    %r10,%r9",
+      "+0x10aa jne    3d822 <<c30walk::ctor2::Ctor2>::build::<false>+0xbf2>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0f6a mov    %rax,%r8",
+      "+0x0f6d sub    %r15,%r8",
+      "+0x0f70 sub    %r11,%r8",
+      "+0x0f73 cmp    $0x10,%r8",
+      "+0x0f77 jae    44ac7 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x13d7>",
+      "+0x13d7 shr    $1,%r9",
+      "+0x13da inc    %r9",
+      "+0x13dd mov    %r9,%r10",
+      "+0x13e0 and    $0xfffffffffffffff8,%r10",
+      "+0x13e4 lea    (%rdx,%r10,2),%r8",
+      "+0x13e8 movd   %ecx,%xmm0",
+      "+0x13ec pshuflw $0x0,%xmm0,%xmm0",
+      "+0x13f1 add    %r15,%r11",
+      "+0x13f4 add    $0x8,%r11",
+      "+0x13f8 xor    %ebx,%ebx",
+      "+0x13fa nopw   0x0(%rax,%rax,1)",
+      "+0x1427 cmp    %r10,%r9",
+      "+0x142a mov    0x80(%rsp),%rbx",
+      "+0x1432 jne    44673 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xf83>"
+     ]
+    ]
+   ],
+   "counter": "fills_vector",
+   "counted": 801475,
+   "counted_each": [
+    801475
+   ],
+   "path": "fill's vector loop entry (m >= 8) and its alias check",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 610521,
+   "baseline": 32,
+   "candidate": 34,
+   "delta": 1221042,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0a29 mov    %rdi,%rax",
+      "+0x0a2c nopl   0x0(%rax)",
+      "+0x0ae5 mov    %r12,0x30(%rsp)",
+      "+0x0aea sub    %r11,%r12",
+      "+0x0aed movzbl %cl,%eax",
+      "+0x0af0 mov    %rax,0x90(%rsp)",
+      "+0x0af8 lea    (%rax,%rax,4),%rdx",
+      "+0x0afc mov    (%r8,%rdx,8),%rax",
+      "+0x0b00 mov    0x1c(%r8,%rdx,8),%esi",
+      "+0x0b05 mov    %rax,%rdi",
+      "+0x0b08 sub    0x10(%r8,%rdx,8),%rdi",
+      "+0x0b0d shr    $1,%rdi",
+      "+0x0b10 add    0x18(%r8,%rdx,8),%edi",
+      "+0x0b15 add    %r12,%rdi",
+      "+0x0b18 cmp    %rsi,%rdi",
+      "+0x0b1b ja     3e197 <<c30walk::ctor2::Ctor2>::build::<false>+0x1567>",
+      "+0x0b21 mov    %r10,0x70(%rsp)",
+      "+0x0b26 mov    %r9d,0x44(%rsp)",
+      "+0x0b2b lea    (%r8,%rdx,8),%rbp",
+      "+0x0b2f movzbl %cl,%r13d",
+      "+0x0b33 mov    0x8(%rbp),%rsi",
+      "+0x0b37 mov    $0x88888889,%r14d",
+      "+0x0b3d lea    -0x224b4(%rip),%r15        # 1b2c0 <c30walk::ctor2::PATTERNS>",
+      "+0x0b44 mov    %rbp,0x88(%rsp)",
+      "+0x0b4c jmp    3d7b7 <<c30walk::ctor2::Ctor2>::build::<false>+0xb87>",
+      "+0x1346 mov    0x20(%rsp),%r10",
+      "+0x134b mov    0x68(%rsp),%r9",
+      "+0x1350 mov    0x38(%rsp),%rcx",
+      "+0x1355 mov    0x30(%rsp),%r11",
+      "+0x135a mov    0x44(%rsp),%edx",
+      "+0x135e mov    0x70(%rsp),%rsi",
+      "+0x1363 jmp    3d602 <<c30walk::ctor2::Ctor2>::build::<false>+0x9d2>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0a46 cmp    $0x10,%rdi",
+      "+0x0a4a lea    0x10e8(%rsp),%r8",
+      "+0x0a52 jb     44540 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xe50>",
+      "+0x0e69 movzbl %cl,%ebx",
+      "+0x0e6c lea    (%rbx,%rbx,2),%rdx",
+      "+0x0e70 mov    %ebx,%eax",
+      "+0x0e72 mov    0xe8(%rsp,%rax,8),%rax",
+      "+0x0e7a mov    %rax,%rsi",
+      "+0x0e7d sub    (%r8,%rdx,8),%rsi",
+      "+0x0e81 shr    $1,%rsi",
+      "+0x0e84 add    0x8(%r8,%rdx,8),%esi",
+      "+0x0e89 mov    %rdi,0x68(%rsp)",
+      "+0x0e8e sub    %rdi,%r13",
+      "+0x0e91 add    %r13,%rsi",
+      "+0x0e94 mov    0xc(%r8,%rdx,8),%edi",
+      "+0x0e99 cmp    %rdi,%rsi",
+      "+0x0e9c ja     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x0ea2 mov    %r9d,0x54(%rsp)",
+      "+0x0ea7 lea    (%r8,%rdx,8),%r10",
+      "+0x0eab movzbl %cl,%r12d",
+      "+0x0eaf mov    0x8e8(%rsp,%rbx,8),%rsi",
+      "+0x0eb7 mov    $0x88888889,%r14d",
+      "+0x0ebd lea    -0x27274(%rip),%r15        # 1d340 <c30walk::ctor2c::PATTERNS>",
+      "+0x0ec4 mov    %rbx,0x80(%rsp)",
+      "+0x0ecc mov    %r10,0x8(%rsp)",
+      "+0x0ed1 jmp    44608 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xf18>",
+      "+0x15c0 mov    0x68(%rsp),%rdi",
+      "+0x15c5 mov    0x40(%rsp),%rsi",
+      "+0x15ca mov    0x38(%rsp),%r12",
+      "+0x15cf mov    0x54(%rsp),%edx",
+      "+0x15d3 mov    %rsi,%r15",
+      "+0x15d6 mov    %rdi,%r13",
+      "+0x15d9 cmp    $0xf,%rdi",
+      "+0x15dd ja     4410b <<c30walk::ctor2c::Ctor2c>::build::<false>+0xa1b>"
+     ]
+    ]
+   ],
+   "counter": "runs",
+   "counted": 610521,
+   "counted_each": [
+    610521
+   ],
+   "path": "runs R",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 610356,
+   "baseline": 0,
+   "candidate": 1,
+   "delta": 610356,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0a58 nopl   0x0(%rax,%rax,1)"
+     ]
+    ]
+   ],
+   "counter": "runs_lookahead",
+   "counted": 610356,
+   "counted_each": [
+    610356
+   ],
+   "path": "runs entering the lookahead loop (alignment nop executed)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 607750,
+   "baseline": 4,
+   "candidate": 3,
+   "delta": -607750,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0a6f mov    %rsi,0x38(%rsp)",
+      "+0x0a74 mov    %rdx,0x68(%rsp)",
+      "+0x0a79 lea    0x10(%r12),%r10",
+      "+0x0a7e jmp    3d715 <<c30walk::ctor2::Ctor2>::build::<false>+0xae5>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0e5a mov    %rdx,0x70(%rsp)",
+      "+0x0e5f mov    %rax,0x38(%rsp)",
+      "+0x0e64 mov    %rsi,0x40(%rsp)"
+     ]
+    ]
+   ],
+   "counter": "held_reuses",
+   "counted": 607750,
+   "counted_each": [
+    607750
+   ],
+   "path": "held reuses H",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 597255,
+   "baseline": 2,
+   "candidate": 0,
+   "delta": -1194510,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x1230 mov    0x8(%rsp),%r13",
+      "+0x1235 jmp    3df76 <<c30walk::ctor2::Ctor2>::build::<false>+0x1346>"
+     ]
+    ]
+   ],
+   "counter": "runs_end_fill",
+   "counted": 597255,
+   "counted_each": [
+    597255
+   ],
+   "path": "runs ending after a fill (B2 return path)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 508988,
+   "baseline": 5,
+   "candidate": 6,
+   "delta": 508988,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0c63 lea    0x98(%rsp),%rdi",
+      "+0x0c6b mov    0x90(%rsp),%rsi",
+      "+0x0c73 call   8e2f0 <<c30walk::ctor2::W<false>>::finish>",
+      "+0x0c78 mov    0x0(%rbp),%r8",
+      "+0x0c7c mov    0x10(%rbp),%rax"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0ff3 lea    0xa8(%rsp),%rdi",
+      "+0x0ffb mov    %ebx,%esi",
+      "+0x0ffd call   8adc0 <<c30walk::ctor2c::W<false>>::finish>",
+      "+0x1002 mov    0x8(%rsp),%r10",
+      "+0x1007 mov    0xe8(%rsp,%rbx,8),%r8",
+      "+0x100f mov    (%r10),%rax"
+     ]
+    ]
+   ],
+   "counter": "run_finishes",
+   "counted": 508988,
+   "counted_each": [
+    508988
+   ],
+   "path": "finish calls from run's close",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 496004,
+   "baseline": 34,
+   "candidate": 33,
+   "delta": -496004,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0b5c sub    %r8d,%ecx",
+      "+0x0b5f sub    %eax,%r8d",
+      "+0x0b62 mov    %r8d,%eax",
+      "+0x0b65 lea    (%rsi,%rax,2),%rax",
+      "+0x0b69 mov    %rax,0x10(%rbp)",
+      "+0x0b6d mov    %rax,0x0(%rbp)",
+      "+0x0b71 lea    (%rax,%rcx,2),%rsi",
+      "+0x0b75 mov    %rsi,0x8(%rbp)",
+      "+0x0b79 mov    %edx,0x20(%rbp)",
+      "+0x0b7c mov    %edi,0x24(%rbp)",
+      "+0x0b7f lea    0xd8(%rsp),%r8",
+      "+0x11c4 mov    0x1c(%rbp),%ecx",
+      "+0x11c7 mov    %r8d,%edi",
+      "+0x11ca imul   %r14,%rdi",
+      "+0x11ce mov    %rdi,%rdx",
+      "+0x11d1 shr    $0x24,%rdx",
+      "+0x11d5 mov    %edx,%eax",
+      "+0x11d7 shl    $0x5,%eax",
+      "+0x11da sub    %edx,%eax",
+      "+0x11dc sub    %edx,%eax",
+      "+0x11de lea    0x1e(%rax),%esi",
+      "+0x11e1 cmp    %ecx,%esi",
+      "+0x11e3 cmovb  %esi,%ecx",
+      "+0x11e6 shr    $0x2a,%rdi",
+      "+0x11ea mov    0xa8(%rsp),%rsi",
+      "+0x11f2 cmp    %rsi,%rdi",
+      "+0x11f5 jae    3e4cc <<c30walk::ctor2::Ctor2>::build::<false>+0x189c>",
+      "+0x11fb mov    %rdx,%rsi",
+      "+0x11fe shl    $0x6,%rsi",
+      "+0x1202 add    0xc0(%rsp),%rsi",
+      "+0x120a mov    0xa0(%rsp),%r9",
+      "+0x1212 mov    (%r9,%rdi,8),%rdi",
+      "+0x1216 bt     %rdx,%rdi",
+      "+0x121a jb     3d780 <<c30walk::ctor2::Ctor2>::build::<false>+0xb50>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0eec sub    %r8d,%ecx",
+      "+0x0eef sub    %eax,%r8d",
+      "+0x0ef2 mov    %r8d,%eax",
+      "+0x0ef5 lea    (%rsi,%rax,2),%rax",
+      "+0x0ef9 mov    %rax,0xe8(%rsp,%rbx,8)",
+      "+0x0f01 lea    (%rax,%rcx,2),%rsi",
+      "+0x0f05 mov    %rsi,0x8e8(%rsp,%rbx,8)",
+      "+0x0f0d mov    %rax,(%r10)",
+      "+0x0f10 mov    %edx,0x10(%r10)",
+      "+0x0f14 mov    %edi,0x14(%r10)",
+      "+0x1555 mov    0xc(%r10),%ecx",
+      "+0x1559 mov    %r8d,%edi",
+      "+0x155c imul   %r14,%rdi",
+      "+0x1560 mov    %rdi,%rdx",
+      "+0x1563 shr    $0x24,%rdx",
+      "+0x1567 mov    %edx,%eax",
+      "+0x1569 shl    $0x5,%eax",
+      "+0x156c sub    %edx,%eax",
+      "+0x156e sub    %edx,%eax",
+      "+0x1570 lea    0x1e(%rax),%esi",
+      "+0x1573 cmp    %ecx,%esi",
+      "+0x1575 cmovb  %esi,%ecx",
+      "+0x1578 shr    $0x2a,%rdi",
+      "+0x157c mov    0xb8(%rsp),%rsi",
+      "+0x1584 cmp    %rsi,%rdi",
+      "+0x1587 jae    45761 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x2071>",
+      "+0x158d mov    %rdx,%rsi",
+      "+0x1590 shl    $0x6,%rsi",
+      "+0x1594 add    0xd0(%rsp),%rsi",
+      "+0x159c mov    0xb0(%rsp),%r9",
+      "+0x15a4 mov    (%r9,%rdi,8),%rdi",
+      "+0x15a8 bt     %rdx,%rdi",
+      "+0x15ac jb     445d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xee0>"
+     ]
+    ]
+   ],
+   "counter": "run_opens",
+   "counted": 496004,
+   "counted_each": [
+    496004
+   ],
+   "path": "open from run",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 467712,
+   "baseline": 14,
+   "candidate": 0,
+   "delta": -6547968,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0810 mov    -0x40(%rax),%rdx",
+      "+0x0814 sub    -0x30(%rax),%rdx",
+      "+0x0818 shr    $1,%rdx",
+      "+0x081b add    -0x28(%rax),%edx",
+      "+0x081e mov    -0x18(%rax),%rsi",
+      "+0x0822 sub    -0x8(%rax),%rsi",
+      "+0x0826 mov    %edx,0x28e8(%rsp,%rcx,4)",
+      "+0x082d shr    $1,%rsi",
+      "+0x0830 add    (%rax),%esi",
+      "+0x0832 mov    %esi,0x28ec(%rsp,%rcx,4)",
+      "+0x0839 add    $0x2,%rcx",
+      "+0x083d add    $0x50,%rax",
+      "+0x0841 cmp    $0x100,%rcx",
+      "+0x0848 jne    3d440 <<c30walk::ctor2::Ctor2>::build::<false>+0x810>"
+     ]
+    ]
+   ],
+   "counter": "128 * epochs",
+   "counted": 467712,
+   "counted_each": [
+    467712
+   ],
+   "path": "B2's snapshot loop: 256 ranks, two per iteration (fixed trip)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 302049,
+   "baseline": 9,
+   "candidate": 11,
+   "delta": 604098,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x130d lea    0x98(%rsp),%rdi",
+      "+0x1315 call   8e8f0 <<c30walk::ctor2::W<false>>::refill>",
+      "+0x131a lea    0xd8(%rsp),%r8",
+      "+0x1322 test   %al,%al",
+      "+0x1324 je     3e197 <<c30walk::ctor2::Ctor2>::build::<false>+0x1567>",
+      "+0x132a mov    (%r14),%rax",
+      "+0x132d mov    0x8(%rsp),%r13",
+      "+0x1332 mov    0x20(%rsp),%r10",
+      "+0x1337 jmp    3df27 <<c30walk::ctor2::Ctor2>::build::<false>+0x12f7>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0e22 mov    %rsi,%r13",
+      "+0x0e25 mov    %rdi,%r15",
+      "+0x0e28 lea    0xa8(%rsp),%rdi",
+      "+0x0e30 mov    %r14,%rsi",
+      "+0x0e33 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x0e38 test   %al,%al",
+      "+0x0e3a je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x0e40 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x0e48 mov    %r15,%rdi",
+      "+0x0e4b mov    %r13,%rsi",
+      "+0x0e4e jmp    444f7 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xe07>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_second",
+   "counted": 302049,
+   "counted_each": [
+    302049
+   ],
+   "path": "refill detour from tile16's second segment",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 296405,
+   "baseline": 43,
+   "candidate": 45,
+   "delta": 592810,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0cc7 mov    %r12,%rax",
+      "+0x0cca movabs $0x8888888888888889,%rdx",
+      "+0x0cd4 mul    %rdx",
+      "+0x0cd7 shr    $0x4,%rdx",
+      "+0x0cdb mov    %ecx,%r9d",
+      "+0x0cde cmpl   $0x0,0x1c(%rsp)",
+      "+0x0ce3 mov    %r12,0x50(%rsp)",
+      "+0x0ce8 mov    %rdx,0x48(%rsp)",
+      "+0x0ced je     3dc40 <<c30walk::ctor2::Ctor2>::build::<false>+0x1010>",
+      "+0x1010 mov    0x28d8(%rsp),%rdi",
+      "+0x1018 cmp    $0x1d,%rdi",
+      "+0x101c ja     3e4e9 <<c30walk::ctor2::Ctor2>::build::<false>+0x18b9>",
+      "+0x1022 shl    $0x6,%rdi",
+      "+0x1026 add    %r15,%rdi",
+      "+0x1029 mov    0x28e0(%rsp),%eax",
+      "+0x1030 mov    0xc0(%rsp),%rcx",
+      "+0x1038 shl    $0x6,%r9",
+      "+0x103c mov    %eax,%r14d",
+      "+0x103f shl    $0x8,%r14d",
+      "+0x1043 or     %r13d,%r14d",
+      "+0x1046 cmp    $0x3c,%r12",
+      "+0x104a jae    3dce5 <<c30walk::ctor2::Ctor2>::build::<false>+0x10b5>",
+      "+0x116e mov    %edx,%ecx",
+      "+0x1170 shl    $0x5,%ecx",
+      "+0x1173 add    %ecx,%eax",
+      "+0x1175 mov    %eax,0x28e0(%rsp)",
+      "+0x117c mov    0x48(%rsp),%rdx",
+      "+0x1181 mov    %rdx,%rax",
+      "+0x1184 shl    $0x5,%rax",
+      "+0x1188 lea    (%rdx,%rdx,1),%rcx",
+      "+0x118c sub    %rax,%rcx",
+      "+0x118f mov    0x50(%rsp),%r12",
+      "+0x1194 add    %rcx,%r12",
+      "+0x1197 lea    (%rdx,%rdx,1),%eax",
+      "+0x119a shl    $0x5,%edx",
+      "+0x119d sub    %eax,%edx",
+      "+0x119f add    %edx,%r8d",
+      "+0x11a2 mov    0x88(%rsp),%rbp",
+      "+0x11aa mov    %r8d,0x18(%rbp)",
+      "+0x11ae test   %r12,%r12",
+      "+0x11b1 mov    $0x88888889,%r14d",
+      "+0x11b7 lea    -0x22b2e(%rip),%r15        # 1b2c0 <c30walk::ctor2::PATTERNS>",
+      "+0x11be je     3df69 <<c30walk::ctor2::Ctor2>::build::<false>+0x1339>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1067 mov    %r13,%rax",
+      "+0x106a movabs $0x8888888888888889,%rdx",
+      "+0x1074 mul    %rdx",
+      "+0x1077 shr    $0x4,%rdx",
+      "+0x107b mov    %ecx,%r9d",
+      "+0x107e cmpl   $0x0,0x2c(%rsp)",
+      "+0x1083 mov    %r13,0x48(%rsp)",
+      "+0x1088 mov    %rdx,0xa0(%rsp)",
+      "+0x1090 je     44a80 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1390>",
+      "+0x1390 mov    0x28e8(%rsp),%rdi",
+      "+0x1398 cmp    $0x1d,%rdi",
+      "+0x139c ja     4577e <<c30walk::ctor2c::Ctor2c>::build::<false>+0x208e>",
+      "+0x13a2 shl    $0x6,%rdi",
+      "+0x13a6 add    %r15,%rdi",
+      "+0x13a9 mov    0x28f0(%rsp),%eax",
+      "+0x13b0 mov    0xd0(%rsp),%rcx",
+      "+0x13b8 shl    $0x6,%r9",
+      "+0x13bc mov    %eax,%r14d",
+      "+0x13bf shl    $0x8,%r14d",
+      "+0x13c3 or     %r12d,%r14d",
+      "+0x13c6 lea    -0x1e(%r13),%rsi",
+      "+0x13ca cmp    $0x1e,%rsi",
+      "+0x13ce jae    44b2d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x143d>",
+      "+0x14fb mov    %edx,%ecx",
+      "+0x14fd shl    $0x5,%ecx",
+      "+0x1500 add    %ecx,%eax",
+      "+0x1502 mov    %eax,0x28f0(%rsp)",
+      "+0x1509 mov    0xa0(%rsp),%rdx",
+      "+0x1511 mov    %rdx,%rax",
+      "+0x1514 shl    $0x5,%rax",
+      "+0x1518 lea    (%rdx,%rdx,1),%rcx",
+      "+0x151c sub    %rax,%rcx",
+      "+0x151f mov    0x48(%rsp),%r13",
+      "+0x1524 add    %rcx,%r13",
+      "+0x1527 lea    (%rdx,%rdx,1),%eax",
+      "+0x152a shl    $0x5,%edx",
+      "+0x152d sub    %eax,%edx",
+      "+0x152f add    %edx,%r8d",
+      "+0x1532 mov    0x8(%rsp),%r10",
+      "+0x1537 mov    %r8d,0x8(%r10)",
+      "+0x153b test   %r13,%r13",
+      "+0x153e mov    $0x88888889,%r14d",
+      "+0x1544 lea    -0x278fb(%rip),%r15        # 1d340 <c30walk::ctor2c::PATTERNS>",
+      "+0x154b mov    0x80(%rsp),%rbx",
+      "+0x1553 je     44cb0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x15c0>"
+     ]
+    ]
+   ],
+   "counter": "complete_calls",
+   "counted": 296405,
+   "counted_each": [
+    296405
+   ],
+   "path": "run's whole-group branch (complete)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 230202,
+   "baseline": 0,
+   "candidate": 28,
+   "delta": 6445656,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0810 movd   0x78(%rsp,%rax,2),%xmm0",
+      "+0x0816 movd   0x60(%rsp,%rax,2),%xmm1",
+      "+0x081c punpckldq %xmm0,%xmm1",
+      "+0x0820 movd   0xa8(%rsp,%rax,2),%xmm0",
+      "+0x0829 movd   0x90(%rsp,%rax,2),%xmm2",
+      "+0x0832 punpckldq %xmm0,%xmm2",
+      "+0x0836 punpcklqdq %xmm2,%xmm1",
+      "+0x083a movdqu 0x98(%rsp,%rcx,8),%xmm0",
+      "+0x0843 movdqu 0xa8(%rsp,%rcx,8),%xmm2",
+      "+0x084c movq   0x70(%rsp,%rax,2),%xmm3",
+      "+0x0852 movq   0x58(%rsp,%rax,2),%xmm4",
+      "+0x0858 punpcklqdq %xmm3,%xmm4",
+      "+0x085c psubq  %xmm4,%xmm0",
+      "+0x0860 movq   0xa0(%rsp,%rax,2),%xmm3",
+      "+0x0869 movq   0x88(%rsp,%rax,2),%xmm4",
+      "+0x0872 punpcklqdq %xmm3,%xmm4",
+      "+0x0876 psubq  %xmm4,%xmm2",
+      "+0x087a psrlq  $0x1,%xmm0",
+      "+0x087f psrlq  $0x1,%xmm2",
+      "+0x0884 pshufd $0xe8,%xmm0,%xmm0",
+      "+0x0889 pshufd $0xe8,%xmm2,%xmm2",
+      "+0x088e punpcklqdq %xmm2,%xmm0",
+      "+0x0892 paddd  %xmm1,%xmm0",
+      "+0x0896 movdqu %xmm0,0x28d0(%rsp,%rcx,4)",
+      "+0x089f add    $0x30,%rax",
+      "+0x08a3 add    $0x4,%rcx",
+      "+0x08a7 cmp    $0x106,%rcx",
+      "+0x08ae jne    43f00 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x810>"
+     ]
+    ]
+   ],
+   "counter": "63 * epochs",
+   "counted": 230202,
+   "counted_each": [
+    230202
+   ],
+   "path": "the snapshot loop: ranks 4..256, four per iteration (fixed trip)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 111104,
+   "baseline": 37,
+   "candidate": 36,
+   "delta": -111104,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0545 add    $0x4,%r12",
+      "+0x0549 cmp    $0x400,%r12",
+      "+0x0550 je     3d220 <<c30walk::ctor2::Ctor2>::build::<false>+0x5f0>",
+      "+0x0556 mov    %rbp,%rax",
+      "+0x0559 mov    (%r15,%r12,1),%ebp",
+      "+0x055d add    %rax,%rbp",
+      "+0x0560 cmp    %r13,%rbp",
+      "+0x0563 setae  %dil",
+      "+0x0567 mov    %rbp,%rax",
+      "+0x056a movabs $0x8888888888888889,%rdx",
+      "+0x0574 mul    %rdx",
+      "+0x0577 mov    %rdx,%r14",
+      "+0x057a shr    $0x4,%r14",
+      "+0x057e mov    %rbp,%rax",
+      "+0x0581 imul   %r9,%rax",
+      "+0x0585 ror    $1,%rax",
+      "+0x0588 cmp    %r10,%rax",
+      "+0x058b setb   %al",
+      "+0x058e cmp    %rcx,%r14",
+      "+0x0591 sete   %dl",
+      "+0x0594 or     %dil,%dl",
+      "+0x0597 or     %al,%dl",
+      "+0x0599 jne    3d175 <<c30walk::ctor2::Ctor2>::build::<false>+0x545>",
+      "+0x15b0 sub    %rcx,%rax",
+      "+0x15b3 inc    %r14",
+      "+0x15b6 shr    $1,%rax",
+      "+0x15b9 add    %eax,0x18(%r8)",
+      "+0x15bd pxor   %xmm0,%xmm0",
+      "+0x15c1 movdqu %xmm0,(%r8)",
+      "+0x15c6 movq   $0x0,0x10(%r8)",
+      "+0x15ce add    $0x28,%r8",
+      "+0x15d2 cmp    $0x100,%r14",
+      "+0x15d9 je     3e231 <<c30walk::ctor2::Ctor2>::build::<false>+0x1601>",
+      "+0x15db mov    (%r8),%rcx",
+      "+0x15de mov    %rcx,%rax",
+      "+0x15e1 cmp    0x10(%r8),%rcx",
+      "+0x15e5 je     3e1e0 <<c30walk::ctor2::Ctor2>::build::<false>+0x15b0>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x052a add    $0x4,%rbp",
+      "+0x052e cmp    $0x400,%rbp",
+      "+0x0535 je     43cb4 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x5c4>",
+      "+0x053b mov    %r15,%rax",
+      "+0x053e mov    (%rbx,%rbp,1),%r15d",
+      "+0x0542 add    %rax,%r15",
+      "+0x0545 cmp    0x20(%rsp),%r15",
+      "+0x054a setae  %sil",
+      "+0x054e mov    %r15,%rax",
+      "+0x0551 movabs $0x8888888888888889,%rdx",
+      "+0x055b mul    %rdx",
+      "+0x055e shr    $0x4,%rdx",
+      "+0x0562 mov    %r15,%rax",
+      "+0x0565 imul   %r8,%rax",
+      "+0x0569 ror    $1,%rax",
+      "+0x056c cmp    %r14,%rax",
+      "+0x056f setb   %al",
+      "+0x0572 cmp    %rcx,%rdx",
+      "+0x0575 sete   %dil",
+      "+0x0579 or     %sil,%dil",
+      "+0x057c or     %al,%dil",
+      "+0x057f jne    43c1a <<c30walk::ctor2c::Ctor2c>::build::<false>+0x52a>",
+      "+0x1da0 sub    %rcx,%rax",
+      "+0x1da3 shr    $1,%rax",
+      "+0x1da6 add    %eax,0xb0(%rsp,%r15,1)",
+      "+0x1dae movq   $0x0,0xa8(%rsp,%r15,1)",
+      "+0x1dba movq   $0x0,0xa8(%rsp,%r14,8)",
+      "+0x1dc6 movq   $0x0,0x8a8(%rsp,%r14,8)",
+      "+0x1dd2 inc    %r14",
+      "+0x1dd5 add    $0x18,%r15",
+      "+0x1dd9 cmp    $0x108,%r14",
+      "+0x1de0 je     4550d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1e1d>",
+      "+0x1de2 mov    0xa8(%rsp,%r14,8),%rcx",
+      "+0x1dea mov    %rcx,%rax",
+      "+0x1ded cmp    0xa8(%rsp,%r15,1),%rcx",
+      "+0x1df5 je     45490 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1da0>"
+     ]
+    ]
+   ],
+   "counter": "crossing_scan & final_closes",
+   "counted": 111104,
+   "counted_each": [
+    111104,
+    111104
+   ],
+   "path": "the crossing pre-marking scan of the 256 counts & the final close loop",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 81607,
+   "baseline": 0,
+   "candidate": 13,
+   "delta": 1060891,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x15e8 mov    %r9,0x10(%rsp)",
+      "+0x15ed mov    %rdx,%r12",
+      "+0x15f0 lea    0xa8(%rsp),%rdi",
+      "+0x15f8 mov    %r14,%rsi",
+      "+0x15fb call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1600 test   %al,%al",
+      "+0x1602 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x1608 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1610 lea    -0x10(%r13),%rdi",
+      "+0x1614 lea    0x10(%r15),%rsi",
+      "+0x1618 mov    %r12,%rdx",
+      "+0x161b mov    0x10(%rsp),%r9",
+      "+0x1620 jmp    441cf <<c30walk::ctor2c::Ctor2c>::build::<false>+0xadf>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_0",
+   "counted": 81607,
+   "counted_each": [
+    81607
+   ],
+   "path": "tile16's refill detour from unrolled row 0",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 81144,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 1379448,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x1625 mov    %r9,0x10(%rsp)",
+      "+0x162a mov    %rbx,0x18(%rsp)",
+      "+0x162f mov    %rdx,0x8(%rsp)",
+      "+0x1634 mov    %rsi,%r13",
+      "+0x1637 mov    %rdi,%rbx",
+      "+0x163a lea    0xa8(%rsp),%rdi",
+      "+0x1642 mov    %r14,%rsi",
+      "+0x1645 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x164a test   %al,%al",
+      "+0x164c je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x1652 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x165a mov    %rbx,%rdi",
+      "+0x165d mov    %r13,%rsi",
+      "+0x1660 mov    0x8(%rsp),%rdx",
+      "+0x1665 mov    0x18(%rsp),%rbx",
+      "+0x166a mov    0x10(%rsp),%r9",
+      "+0x166f jmp    4420d <<c30walk::ctor2c::Ctor2c>::build::<false>+0xb1d>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_1",
+   "counted": 81144,
+   "counted_each": [
+    81144
+   ],
+   "path": "tile16's refill detour from unrolled row 1",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 76174,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 1294958,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x1674 mov    %r9,0x10(%rsp)",
+      "+0x1679 mov    %rbx,0x18(%rsp)",
+      "+0x167e mov    %rdx,0x8(%rsp)",
+      "+0x1683 mov    %rsi,%r13",
+      "+0x1686 mov    %rdi,%rbx",
+      "+0x1689 lea    0xa8(%rsp),%rdi",
+      "+0x1691 mov    %r14,%rsi",
+      "+0x1694 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1699 test   %al,%al",
+      "+0x169b je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x16a1 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x16a9 mov    %rbx,%rdi",
+      "+0x16ac mov    %r13,%rsi",
+      "+0x16af mov    0x8(%rsp),%rdx",
+      "+0x16b4 mov    0x18(%rsp),%rbx",
+      "+0x16b9 mov    0x10(%rsp),%r9",
+      "+0x16be jmp    44241 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xb51>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_2",
+   "counted": 76174,
+   "counted_each": [
+    76174
+   ],
+   "path": "tile16's refill detour from unrolled row 2",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 75877,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 1289909,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x16c3 mov    %r9,0x10(%rsp)",
+      "+0x16c8 mov    %rbx,0x18(%rsp)",
+      "+0x16cd mov    %rdx,0x8(%rsp)",
+      "+0x16d2 mov    %rsi,%r13",
+      "+0x16d5 mov    %rdi,%rbx",
+      "+0x16d8 lea    0xa8(%rsp),%rdi",
+      "+0x16e0 mov    %r14,%rsi",
+      "+0x16e3 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x16e8 test   %al,%al",
+      "+0x16ea je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x16f0 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x16f8 mov    %rbx,%rdi",
+      "+0x16fb mov    %r13,%rsi",
+      "+0x16fe mov    0x8(%rsp),%rdx",
+      "+0x1703 mov    0x18(%rsp),%rbx",
+      "+0x1708 mov    0x10(%rsp),%r9",
+      "+0x170d jmp    44275 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xb85>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_3",
+   "counted": 75877,
+   "counted_each": [
+    75877
+   ],
+   "path": "tile16's refill detour from unrolled row 3",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 70838,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 1204246,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x1712 mov    %r9,0x10(%rsp)",
+      "+0x1717 mov    %rbx,0x18(%rsp)",
+      "+0x171c mov    %rdx,0x8(%rsp)",
+      "+0x1721 mov    %rsi,%r13",
+      "+0x1724 mov    %rdi,%rbx",
+      "+0x1727 lea    0xa8(%rsp),%rdi",
+      "+0x172f mov    %r14,%rsi",
+      "+0x1732 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1737 test   %al,%al",
+      "+0x1739 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x173f mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1747 mov    %rbx,%rdi",
+      "+0x174a mov    %r13,%rsi",
+      "+0x174d mov    0x8(%rsp),%rdx",
+      "+0x1752 mov    0x18(%rsp),%rbx",
+      "+0x1757 mov    0x10(%rsp),%r9",
+      "+0x175c jmp    442a9 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xbb9>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_4",
+   "counted": 70838,
+   "counted_each": [
+    70838
+   ],
+   "path": "tile16's refill detour from unrolled row 4",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 70208,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 1193536,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x17a5 mov    %r9,0x10(%rsp)",
+      "+0x17aa mov    %rbx,0x18(%rsp)",
+      "+0x17af mov    %rdx,0x8(%rsp)",
+      "+0x17b4 mov    %rsi,%r13",
+      "+0x17b7 mov    %rdi,%rbx",
+      "+0x17ba lea    0xa8(%rsp),%rdi",
+      "+0x17c2 mov    %r14,%rsi",
+      "+0x17c5 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x17ca test   %al,%al",
+      "+0x17cc je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x17d2 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x17da mov    %rbx,%rdi",
+      "+0x17dd mov    %r13,%rsi",
+      "+0x17e0 mov    0x8(%rsp),%rdx",
+      "+0x17e5 mov    0x18(%rsp),%rbx",
+      "+0x17ea mov    0x10(%rsp),%r9",
+      "+0x17ef jmp    442dd <<c30walk::ctor2c::Ctor2c>::build::<false>+0xbed>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_5",
+   "counted": 70208,
+   "counted_each": [
+    70208
+   ],
+   "path": "tile16's refill detour from unrolled row 5",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 65256,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 1109352,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x1843 mov    %r9,0x10(%rsp)",
+      "+0x1848 mov    %rbx,0x18(%rsp)",
+      "+0x184d mov    %rdx,0x8(%rsp)",
+      "+0x1852 mov    %rsi,%r13",
+      "+0x1855 mov    %rdi,%rbx",
+      "+0x1858 lea    0xa8(%rsp),%rdi",
+      "+0x1860 mov    %r14,%rsi",
+      "+0x1863 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1868 test   %al,%al",
+      "+0x186a je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x1870 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1878 mov    %rbx,%rdi",
+      "+0x187b mov    %r13,%rsi",
+      "+0x187e mov    0x8(%rsp),%rdx",
+      "+0x1883 mov    0x18(%rsp),%rbx",
+      "+0x1888 mov    0x10(%rsp),%r9",
+      "+0x188d jmp    44345 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xc55>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_7",
+   "counted": 65256,
+   "counted_each": [
+    65256
+   ],
+   "path": "tile16's refill detour from unrolled row 7",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 65139,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 1107363,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x17f4 mov    %r9,0x10(%rsp)",
+      "+0x17f9 mov    %rbx,0x18(%rsp)",
+      "+0x17fe mov    %rdx,0x8(%rsp)",
+      "+0x1803 mov    %rsi,%r13",
+      "+0x1806 mov    %rdi,%rbx",
+      "+0x1809 lea    0xa8(%rsp),%rdi",
+      "+0x1811 mov    %r14,%rsi",
+      "+0x1814 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1819 test   %al,%al",
+      "+0x181b je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x1821 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1829 mov    %rbx,%rdi",
+      "+0x182c mov    %r13,%rsi",
+      "+0x182f mov    0x8(%rsp),%rdx",
+      "+0x1834 mov    0x18(%rsp),%rbx",
+      "+0x1839 mov    0x10(%rsp),%r9",
+      "+0x183e jmp    44311 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xc21>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_6",
+   "counted": 65139,
+   "counted_each": [
+    65139
+   ],
+   "path": "tile16's refill detour from unrolled row 6",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 59807,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 1016719,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x1892 mov    %r9,0x10(%rsp)",
+      "+0x1897 mov    %rbx,0x18(%rsp)",
+      "+0x189c mov    %rdx,0x8(%rsp)",
+      "+0x18a1 mov    %rsi,%r13",
+      "+0x18a4 mov    %rdi,%rbx",
+      "+0x18a7 lea    0xa8(%rsp),%rdi",
+      "+0x18af mov    %r14,%rsi",
+      "+0x18b2 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x18b7 test   %al,%al",
+      "+0x18b9 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x18bf mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x18c7 mov    %rbx,%rdi",
+      "+0x18ca mov    %r13,%rsi",
+      "+0x18cd mov    0x8(%rsp),%rdx",
+      "+0x18d2 mov    0x18(%rsp),%rbx",
+      "+0x18d7 mov    0x10(%rsp),%r9",
+      "+0x18dc jmp    44379 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xc89>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_8",
+   "counted": 59807,
+   "counted_each": [
+    59807
+   ],
+   "path": "tile16's refill detour from unrolled row 8",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 59520,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 1011840,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x18e1 mov    %r9,0x10(%rsp)",
+      "+0x18e6 mov    %rbx,0x18(%rsp)",
+      "+0x18eb mov    %rdx,0x8(%rsp)",
+      "+0x18f0 mov    %rsi,%r13",
+      "+0x18f3 mov    %rdi,%rbx",
+      "+0x18f6 lea    0xa8(%rsp),%rdi",
+      "+0x18fe mov    %r14,%rsi",
+      "+0x1901 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1906 test   %al,%al",
+      "+0x1908 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x190e mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1916 mov    %rbx,%rdi",
+      "+0x1919 mov    %r13,%rsi",
+      "+0x191c mov    0x8(%rsp),%rdx",
+      "+0x1921 mov    0x18(%rsp),%rbx",
+      "+0x1926 mov    0x10(%rsp),%r9",
+      "+0x192b jmp    443ad <<c30walk::ctor2c::Ctor2c>::build::<false>+0xcbd>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_9",
+   "counted": 59520,
+   "counted_each": [
+    59520
+   ],
+   "path": "tile16's refill detour from unrolled row 9",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 55986,
+   "baseline": 3,
+   "candidate": 2,
+   "delta": -55986,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x1520 lea    0x50(%rax),%rcx",
+      "+0x1524 cmp    $0x28d4,%rcx",
+      "+0x152b je     3e1bb <<c30walk::ctor2::Ctor2>::build::<false>+0x158b>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1cf0 cmp    $0x109,%rax",
+      "+0x1cf6 je     45454 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d64>"
+     ]
+    ]
+   ],
+   "counter": "sweep_checks // 2 + blocks",
+   "counted": 55986,
+   "counted_each": [
+    55986
+   ],
+   "path": "final sweep loop head (two checks per iteration, plus the exit)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 55552,
+   "baseline": 13,
+   "candidate": 14,
+   "delta": 55552,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x152d mov    0x54(%rsp,%rax,1),%rdx",
+      "+0x1532 sub    0x64(%rsp,%rax,1),%rdx",
+      "+0x1537 shr    $1,%rdx",
+      "+0x153a add    0x6c(%rsp,%rax,1),%edx",
+      "+0x153e cmp    0x70(%rsp,%rax,1),%edx",
+      "+0x1542 jne    3e197 <<c30walk::ctor2::Ctor2>::build::<false>+0x1567>",
+      "+0x1544 mov    0x7c(%rsp,%rax,1),%rdx",
+      "+0x1549 sub    0x8c(%rsp,%rax,1),%rdx",
+      "+0x1551 shr    $1,%rdx",
+      "+0x1554 add    0x94(%rsp,%rax,1),%edx",
+      "+0x155b cmp    0x98(%rsp,%rax,1),%edx",
+      "+0x1562 mov    %rcx,%rax",
+      "+0x1565 je     3e150 <<c30walk::ctor2::Ctor2>::build::<false>+0x1520>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1cf8 mov    0xa0(%rsp,%rax,8),%rdx",
+      "+0x1d00 sub    -0x24(%rcx),%rdx",
+      "+0x1d04 shr    $1,%rdx",
+      "+0x1d07 add    -0x1c(%rcx),%edx",
+      "+0x1d0a cmp    -0x18(%rcx),%edx",
+      "+0x1d0d jne    4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x1d0f mov    0xa8(%rsp,%rax,8),%rdx",
+      "+0x1d17 sub    -0xc(%rcx),%rdx",
+      "+0x1d1b shr    $1,%rdx",
+      "+0x1d1e add    -0x4(%rcx),%edx",
+      "+0x1d21 add    $0x2,%rax",
+      "+0x1d25 cmp    (%rcx),%edx",
+      "+0x1d27 lea    0x30(%rcx),%rcx",
+      "+0x1d2b je     453e0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1cf0>"
+     ]
+    ]
+   ],
+   "counter": "sweep_checks // 2",
+   "counted": 55552,
+   "counted_each": [
+    55552
+   ],
+   "path": "final sweep loop body (two checks per iteration)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 54029,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 918493,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x1930 mov    %r9,0x10(%rsp)",
+      "+0x1935 mov    %rbx,0x18(%rsp)",
+      "+0x193a mov    %rdx,0x8(%rsp)",
+      "+0x193f mov    %rsi,%r13",
+      "+0x1942 mov    %rdi,%rbx",
+      "+0x1945 lea    0xa8(%rsp),%rdi",
+      "+0x194d mov    %r14,%rsi",
+      "+0x1950 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1955 test   %al,%al",
+      "+0x1957 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x195d mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1965 mov    %rbx,%rdi",
+      "+0x1968 mov    %r13,%rsi",
+      "+0x196b mov    0x8(%rsp),%rdx",
+      "+0x1970 mov    0x18(%rsp),%rbx",
+      "+0x1975 mov    0x10(%rsp),%r9",
+      "+0x197a jmp    443e1 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xcf1>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_10",
+   "counted": 54029,
+   "counted_each": [
+    54029
+   ],
+   "path": "tile16's refill detour from unrolled row 10",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 53863,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 915671,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x197f mov    %r9,0x10(%rsp)",
+      "+0x1984 mov    %rbx,0x18(%rsp)",
+      "+0x1989 mov    %rdx,0x8(%rsp)",
+      "+0x198e mov    %rsi,%r13",
+      "+0x1991 mov    %rdi,%rbx",
+      "+0x1994 lea    0xa8(%rsp),%rdi",
+      "+0x199c mov    %r14,%rsi",
+      "+0x199f call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x19a4 test   %al,%al",
+      "+0x19a6 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x19ac mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x19b4 mov    %rbx,%rdi",
+      "+0x19b7 mov    %r13,%rsi",
+      "+0x19ba mov    0x8(%rsp),%rdx",
+      "+0x19bf mov    0x18(%rsp),%rbx",
+      "+0x19c4 mov    0x10(%rsp),%r9",
+      "+0x19c9 jmp    44415 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xd25>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_11",
+   "counted": 53863,
+   "counted_each": [
+    53863
+   ],
+   "path": "tile16's refill detour from unrolled row 11",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 48658,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 827186,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x1a1d mov    %r9,0x10(%rsp)",
+      "+0x1a22 mov    %rbx,0x18(%rsp)",
+      "+0x1a27 mov    %rdx,0x8(%rsp)",
+      "+0x1a2c mov    %rsi,%r13",
+      "+0x1a2f mov    %rdi,%rbx",
+      "+0x1a32 lea    0xa8(%rsp),%rdi",
+      "+0x1a3a mov    %r14,%rsi",
+      "+0x1a3d call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1a42 test   %al,%al",
+      "+0x1a44 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x1a4a mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1a52 mov    %rbx,%rdi",
+      "+0x1a55 mov    %r13,%rsi",
+      "+0x1a58 mov    0x8(%rsp),%rdx",
+      "+0x1a5d mov    0x18(%rsp),%rbx",
+      "+0x1a62 mov    0x10(%rsp),%r9",
+      "+0x1a67 jmp    44479 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xd89>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_13",
+   "counted": 48658,
+   "counted_each": [
+    48658
+   ],
+   "path": "tile16's refill detour from unrolled row 13",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 48226,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 819842,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x19ce mov    %r9,0x10(%rsp)",
+      "+0x19d3 mov    %rbx,0x18(%rsp)",
+      "+0x19d8 mov    %rdx,0x8(%rsp)",
+      "+0x19dd mov    %rsi,%r13",
+      "+0x19e0 mov    %rdi,%rbx",
+      "+0x19e3 lea    0xa8(%rsp),%rdi",
+      "+0x19eb mov    %r14,%rsi",
+      "+0x19ee call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x19f3 test   %al,%al",
+      "+0x19f5 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x19fb mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1a03 mov    %rbx,%rdi",
+      "+0x1a06 mov    %r13,%rsi",
+      "+0x1a09 mov    0x8(%rsp),%rdx",
+      "+0x1a0e mov    0x18(%rsp),%rbx",
+      "+0x1a13 mov    0x10(%rsp),%r9",
+      "+0x1a18 jmp    44449 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xd59>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_12",
+   "counted": 48226,
+   "counted_each": [
+    48226
+   ],
+   "path": "tile16's refill detour from unrolled row 12",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 43150,
+   "baseline": 0,
+   "candidate": 17,
+   "delta": 733550,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x1a6c mov    %r9,0x10(%rsp)",
+      "+0x1a71 mov    %rbx,0x18(%rsp)",
+      "+0x1a76 mov    %rdx,0x8(%rsp)",
+      "+0x1a7b mov    %rsi,%r13",
+      "+0x1a7e mov    %rdi,%rbx",
+      "+0x1a81 lea    0xa8(%rsp),%rdi",
+      "+0x1a89 mov    %r14,%rsi",
+      "+0x1a8c call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1a91 test   %al,%al",
+      "+0x1a93 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x1a99 mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1aa1 mov    %rbx,%rdi",
+      "+0x1aa4 mov    %r13,%rsi",
+      "+0x1aa7 mov    0x8(%rsp),%rdx",
+      "+0x1aac mov    0x18(%rsp),%rbx",
+      "+0x1ab1 mov    0x10(%rsp),%r9",
+      "+0x1ab6 jmp    444a9 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xdb9>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_14",
+   "counted": 43150,
+   "counted_each": [
+    43150
+   ],
+   "path": "tile16's refill detour from unrolled row 14",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 43138,
+   "baseline": 0,
+   "candidate": 13,
+   "delta": 560794,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x1abb mov    %rbx,0x18(%rsp)",
+      "+0x1ac0 mov    %rsi,%r15",
+      "+0x1ac3 mov    %rdi,%rbx",
+      "+0x1ac6 lea    0xa8(%rsp),%rdi",
+      "+0x1ace mov    %r14,%rsi",
+      "+0x1ad1 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1ad6 test   %al,%al",
+      "+0x1ad8 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x1ade mov    0xe8(%rsp,%r14,8),%rax",
+      "+0x1ae6 mov    %rbx,%rdi",
+      "+0x1ae9 mov    %r15,%rsi",
+      "+0x1aec mov    0x18(%rsp),%rbx",
+      "+0x1af1 jmp    44e6f <<c30walk::ctor2c::Ctor2c>::build::<false>+0x177f>"
+     ]
+    ]
+   ],
+   "counter": "tile_refills_first_at_15",
+   "counted": 43138,
+   "counted_each": [
+    43138
+   ],
+   "path": "tile16's refill detour from unrolled row 15",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 27776,
+   "baseline": 35,
+   "candidate": 31,
+   "delta": -111104,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x02f0 movdqu %xmm0,0x2cf8(%rsp,%rax,1)",
+      "+0x02f9 movdqu %xmm0,0x2ce8(%rsp,%rax,1)",
+      "+0x0302 mov    %rcx,0x2d08(%rsp,%rax,1)",
+      "+0x030a movdqu %xmm0,0x2d10(%rsp,%rax,1)",
+      "+0x0313 movdqu %xmm0,0x2d20(%rsp,%rax,1)",
+      "+0x031c mov    %rcx,0x2d30(%rsp,%rax,1)",
+      "+0x0324 movdqu %xmm0,0x2d38(%rsp,%rax,1)",
+      "+0x032d movdqu %xmm0,0x2d48(%rsp,%rax,1)",
+      "+0x0336 mov    %rcx,0x2d58(%rsp,%rax,1)",
+      "+0x033e movdqu %xmm0,0x2d60(%rsp,%rax,1)",
+      "+0x0347 movdqu %xmm0,0x2d70(%rsp,%rax,1)",
+      "+0x0350 mov    %rcx,0x2d80(%rsp,%rax,1)",
+      "+0x0358 add    $0xa0,%rax",
+      "+0x035e cmp    $0x2800,%rax",
+      "+0x0364 jne    3cf20 <<c30walk::ctor2::Ctor2>::build::<false>+0x2f0>",
+      "+0x0380 mov    -0xc(%rax),%esi",
+      "+0x0383 add    %edx,%esi",
+      "+0x0385 mov    %edx,0x2c6c(%rsp,%rcx,4)",
+      "+0x038c mov    %esi,0x2c70(%rsp,%rcx,4)",
+      "+0x0393 mov    -0x8(%rax),%edx",
+      "+0x0396 add    %esi,%edx",
+      "+0x0398 mov    %esi,0x2c94(%rsp,%rcx,4)",
+      "+0x039f mov    %edx,0x2c98(%rsp,%rcx,4)",
+      "+0x03a6 mov    -0x4(%rax),%esi",
+      "+0x03a9 add    %edx,%esi",
+      "+0x03ab mov    %edx,0x2cbc(%rsp,%rcx,4)",
+      "+0x03b2 mov    %esi,0x2cc0(%rsp,%rcx,4)",
+      "+0x03b9 mov    (%rax),%edx",
+      "+0x03bb add    %esi,%edx",
+      "+0x03bd mov    %esi,0x2ce4(%rsp,%rcx,4)",
+      "+0x03c4 mov    %edx,0x2ce8(%rsp,%rcx,4)",
+      "+0x03cb add    $0x28,%rcx",
+      "+0x03cf add    $0x10,%rax",
+      "+0x03d3 cmp    $0xa25,%rcx",
+      "+0x03da jne    3cfb0 <<c30walk::ctor2::Ctor2>::build::<false>+0x380>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x02c0 movdqu %xmm0,0x2cf8(%rsp,%rax,1)",
+      "+0x02c9 mov    %r13,0x2d08(%rsp,%rax,1)",
+      "+0x02d1 movdqu %xmm0,0x2d10(%rsp,%rax,1)",
+      "+0x02da mov    %r13,0x2d20(%rsp,%rax,1)",
+      "+0x02e2 movdqu %xmm0,0x2d28(%rsp,%rax,1)",
+      "+0x02eb mov    %r13,0x2d38(%rsp,%rax,1)",
+      "+0x02f3 movdqu %xmm0,0x2d40(%rsp,%rax,1)",
+      "+0x02fc mov    %r13,0x2d50(%rsp,%rax,1)",
+      "+0x0304 add    $0x60,%rax",
+      "+0x0308 cmp    $0x1800,%rax",
+      "+0x030e jne    439b0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x2c0>",
+      "+0x0320 mov    -0xc(%rax),%esi",
+      "+0x0323 add    %edx,%esi",
+      "+0x0325 mov    %edx,0x2cac(%rsp,%rcx,4)",
+      "+0x032c mov    %esi,0x2cb0(%rsp,%rcx,4)",
+      "+0x0333 mov    -0x8(%rax),%edx",
+      "+0x0336 add    %esi,%edx",
+      "+0x0338 mov    %esi,0x2cc4(%rsp,%rcx,4)",
+      "+0x033f mov    %edx,0x2cc8(%rsp,%rcx,4)",
+      "+0x0346 mov    -0x4(%rax),%esi",
+      "+0x0349 add    %edx,%esi",
+      "+0x034b mov    %edx,0x2cdc(%rsp,%rcx,4)",
+      "+0x0352 mov    %esi,0x2ce0(%rsp,%rcx,4)",
+      "+0x0359 mov    (%rax),%edx",
+      "+0x035b add    %esi,%edx",
+      "+0x035d mov    %esi,0x2cf4(%rsp,%rcx,4)",
+      "+0x0364 mov    %edx,0x2cf8(%rsp,%rcx,4)",
+      "+0x036b add    $0x18,%rcx",
+      "+0x036f add    $0x10,%rax",
+      "+0x0373 cmp    $0x615,%rcx",
+      "+0x037a jne    43a10 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x320>"
+     ]
+    ]
+   ],
+   "counter": "init_descs // 4",
+   "counted": 27776,
+   "counted_each": [
+    27776
+   ],
+   "path": "descriptor initialisation and the cumulative-rank loop (four per iteration)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 23559,
+   "baseline": 8,
+   "candidate": 7,
+   "delta": -23559,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x15e7 mov    %r15,%rdi",
+      "+0x15ea mov    %r14,%rsi",
+      "+0x15ed mov    %r8,%rbx",
+      "+0x15f0 call   8e2f0 <<c30walk::ctor2::W<false>>::finish>",
+      "+0x15f5 mov    %rbx,%r8",
+      "+0x15f8 mov    (%rbx),%rax",
+      "+0x15fb mov    0x10(%rbx),%rcx",
+      "+0x15ff jmp    3e1e0 <<c30walk::ctor2::Ctor2>::build::<false>+0x15b0>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1df7 lea    -0x8(%r14),%esi",
+      "+0x1dfb mov    %rbx,%rdi",
+      "+0x1dfe call   8adc0 <<c30walk::ctor2c::W<false>>::finish>",
+      "+0x1e03 mov    0x4530(%rsp),%rsi",
+      "+0x1e0b mov    0xa8(%rsp,%r14,8),%rax",
+      "+0x1e13 mov    0xa8(%rsp,%r15,1),%rcx",
+      "+0x1e1b jmp    45490 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1da0>"
+     ]
+    ]
+   ],
+   "counter": "final_finishes",
+   "counted": 23559,
+   "counted_each": [
+    23559
+   ],
+   "path": "finish from the final close loop",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 13266,
+   "baseline": 2,
+   "candidate": 0,
+   "delta": -26532,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x1339 mov    0x8(%rsp),%r13",
+      "+0x133e lea    0xd8(%rsp),%r8"
+     ]
+    ]
+   ],
+   "counter": "runs_end_complete",
+   "counted": 13266,
+   "counted_each": [
+    13266
+   ],
+   "path": "runs ending after complete (B2 return path)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 3654,
+   "baseline": 33,
+   "candidate": 60,
+   "delta": 98658,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x07dc mov    %r11,%rbp",
+      "+0x07df mov    %r9,%r12",
+      "+0x07e2 mov    $0x400,%edx",
+      "+0x07e7 lea    0x28e8(%rsp),%rdi",
+      "+0x07ef xor    %esi,%esi",
+      "+0x07f1 call   *0x106b19(%rip)        # 143f40 <memset@GLIBC_2.2.5>",
+      "+0x07f7 lea    0x118(%rsp),%rax",
+      "+0x07ff xor    %ecx,%ecx",
+      "+0x0801 data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)",
+      "+0x084a mov    0xb0(%rsp),%r15",
+      "+0x0852 mov    0x10(%r15),%rbx",
+      "+0x0856 cmp    (%r15),%rbx",
+      "+0x0859 je     3e132 <<c30walk::ctor2::Ctor2>::build::<false>+0x1502>",
+      "+0x085f mov    %rbx,%rdi",
+      "+0x0862 shl    $0xa,%rdi",
+      "+0x0866 add    0x8(%r15),%rdi",
+      "+0x086a mov    $0x400,%edx",
+      "+0x086f lea    0x28e8(%rsp),%rsi",
+      "+0x0877 call   *0x106ab3(%rip)        # 143f60 <memcpy@GLIBC_2.14>",
+      "+0x087d inc    %rbx",
+      "+0x0880 mov    %rbx,0x10(%r15)",
+      "+0x0884 mov    %rbp,%r11",
+      "+0x0887 lea    0xf000(%rbp),%r10",
+      "+0x088e cmp    %r13,%r10",
+      "+0x0891 cmovae %r13,%r10",
+      "+0x0895 lea    0x10(%rbp),%rdi",
+      "+0x0899 cmp    %r10,%rdi",
+      "+0x089c mov    %r10,0x20(%rsp)",
+      "+0x08a1 jbe    3d5a0 <<c30walk::ctor2::Ctor2>::build::<false>+0x970>",
+      "+0x08b7 mov    %r10,%rdx",
+      "+0x08ba sub    %r11,%rdx",
+      "+0x08bd mov    %rcx,0x38(%rsp)",
+      "+0x08c2 jbe    3d400 <<c30walk::ctor2::Ctor2>::build::<false>+0x7d0>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x07d4 mov    0x98(%rsp),%rax",
+      "+0x07dc cmp    0x20(%rsp),%rax",
+      "+0x07e1 jae    453d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1ce0>",
+      "+0x07e7 mov    0x30(%rsp),%r15",
+      "+0x07ec mov    $0x400,%edx",
+      "+0x07f1 lea    0x28f8(%rsp),%rdi",
+      "+0x07f9 xor    %esi,%esi",
+      "+0x07fb call   *0x10004f(%rip)        # 143f40 <memset@GLIBC_2.2.5>",
+      "+0x0801 mov    $0x848,%eax",
+      "+0x0806 mov    $0xa,%ecx",
+      "+0x080b nopl   0x0(%rax,%rax,1)",
+      "+0x08b4 movups 0x2890(%rsp),%xmm0",
+      "+0x08bc movdqu 0x8d8(%rsp),%xmm1",
+      "+0x08c5 movdqu 0x8c8(%rsp),%xmm2",
+      "+0x08ce movq   0x28d0(%rsp),%xmm3",
+      "+0x08d7 movq   0x28b8(%rsp),%xmm4",
+      "+0x08e0 punpcklqdq %xmm3,%xmm4",
+      "+0x08e4 psubq  %xmm4,%xmm1",
+      "+0x08e8 movq   0x28a0(%rsp),%xmm3",
+      "+0x08f1 movq   0x2888(%rsp),%xmm4",
+      "+0x08fa punpcklqdq %xmm3,%xmm4",
+      "+0x08fe psubq  %xmm4,%xmm2",
+      "+0x0902 psrlq  $0x1,%xmm1",
+      "+0x0907 psrlq  $0x1,%xmm2",
+      "+0x090c shufps $0x88,%xmm1,%xmm2",
+      "+0x0910 movss  0x28a8(%rsp),%xmm1",
+      "+0x0919 movlhps %xmm0,%xmm1",
+      "+0x091c movss  0x28c0(%rsp),%xmm0",
+      "+0x0925 movss  0x28d8(%rsp),%xmm3",
+      "+0x092e movlhps %xmm0,%xmm3",
+      "+0x0931 shufps $0x22,%xmm3,%xmm1",
+      "+0x0935 paddd  %xmm2,%xmm1",
+      "+0x0939 movdqu %xmm1,0x2ce8(%rsp)",
+      "+0x0942 mov    0xc0(%rsp),%rbx",
+      "+0x094a mov    0x10(%rbx),%r14",
+      "+0x094e cmp    (%rbx),%r14",
+      "+0x0951 je     453c3 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1cd3>",
+      "+0x0957 mov    %r14,%rdi",
+      "+0x095a shl    $0xa,%rdi",
+      "+0x095e add    0x8(%rbx),%rdi",
+      "+0x0962 mov    $0x400,%edx",
+      "+0x0967 lea    0x28f8(%rsp),%rsi",
+      "+0x096f call   *0xffefb(%rip)        # 143f60 <memcpy@GLIBC_2.14>",
+      "+0x0975 inc    %r14",
+      "+0x0978 mov    %r14,0x10(%rbx)",
+      "+0x097c shl    $0x18,%r14d",
+      "+0x0980 add    $0x7f000000,%r14d",
+      "+0x0987 or     $0x80000000,%r14d",
+      "+0x098e lea    0xf000(%r15),%rdx",
+      "+0x0995 mov    0x20(%rsp),%r13",
+      "+0x099a cmp    %r13,%rdx",
+      "+0x099d mov    %rdx,0x98(%rsp)",
+      "+0x09a5 cmovb  %rdx,%r13",
+      "+0x09a9 mov    %r14d,0x28f4(%rsp)",
+      "+0x09b1 mov    %r13,0x30(%rsp)",
+      "+0x09b6 sub    %r15,%r13",
+      "+0x09b9 cmp    $0x10,%r13",
+      "+0x09bd jb     451f0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1b00>",
+      "+0x1b03 test   %rdi,%rdi",
+      "+0x1b06 je     43ec4 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x7d4>"
+     ]
+    ]
+   ],
+   "counter": "epochs",
+   "counted": 3654,
+   "counted_each": [
+    3654
+   ],
+   "path": "epochs (snapshot, active_tag)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 3575,
+   "baseline": 5,
+   "candidate": 3,
+   "delta": -7150,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0970 xor    %edx,%edx",
+      "+0x0972 lea    0xd8(%rsp),%r8",
+      "+0x097a mov    %r12,%r9",
+      "+0x097d mov    0x38(%rsp),%rcx",
+      "+0x0982 jmp    3d613 <<c30walk::ctor2::Ctor2>::build::<false>+0x9e3>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x09c3 add    0x60(%rsp),%r15",
+      "+0x09c8 xor    %edx,%edx",
+      "+0x09ca jmp    4410b <<c30walk::ctor2c::Ctor2c>::build::<false>+0xa1b>"
+     ]
+    ]
+   ],
+   "counter": "epochs_tiled",
+   "counted": 3575,
+   "counted_each": [
+    3575
+   ],
+   "path": "epochs with a full tile (scan loop entry)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 3424,
+   "baseline": 3,
+   "candidate": 0,
+   "delta": -10272,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x07d0 mov    %r11,%r10",
+      "+0x07d3 cmp    %r13,%r10",
+      "+0x07d6 jae    3e13f <<c30walk::ctor2::Ctor2>::build::<false>+0x150f>"
+     ]
+    ]
+   ],
+   "counter": "epochs_untailed",
+   "counted": 3424,
+   "counted_each": [
+    3424
+   ],
+   "path": "epochs with no tail (B2's epoch-loop back edge)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 2606,
+   "baseline": 0,
+   "candidate": 4,
+   "delta": 10424,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0a8a mov    %rsi,0x40(%rsp)",
+      "+0x0a8f xor    %r9d,%r9d",
+      "+0x0a92 mov    %rcx,0x70(%rsp)",
+      "+0x0a97 jmp    44559 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xe69>"
+     ]
+    ]
+   ],
+   "counter": "runs_exhausted",
+   "counted": 2606,
+   "counted_each": [
+    2606
+   ],
+   "path": "runs whose lookahead exhausts the epoch",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 1769,
+   "baseline": 12,
+   "candidate": 10,
+   "delta": -3538,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0900 movzbl (%r15,%r13,1),%esi",
+      "+0x0905 lea    (%rsi,%rsi,4),%rcx",
+      "+0x0909 lea    (%r8,%rcx,8),%rbx",
+      "+0x090d mov    (%r8,%rcx,8),%rax",
+      "+0x0911 cmp    0x8(%r8,%rcx,8),%rax",
+      "+0x0916 je     3d560 <<c30walk::ctor2::Ctor2>::build::<false>+0x930>",
+      "+0x0918 lea    (%r12,%r13,1),%rcx",
+      "+0x091c mov    %cx,(%rax)",
+      "+0x091f addq   $0x2,(%rbx)",
+      "+0x0923 inc    %r13",
+      "+0x0926 cmp    %r13,%r14",
+      "+0x0929 jne    3d530 <<c30walk::ctor2::Ctor2>::build::<false>+0x900>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1c00 movzbl 0x0(%r13,%rbp,1),%ebx",
+      "+0x1c06 mov    0xe8(%rsp,%rbx,8),%rax",
+      "+0x1c0e cmp    0x8e8(%rsp,%rbx,8),%rax",
+      "+0x1c16 je     45325 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1c35>",
+      "+0x1c18 lea    (%r12,%rbp,1),%rcx",
+      "+0x1c1c mov    %cx,(%rax)",
+      "+0x1c1f addq   $0x2,0xe8(%rsp,%rbx,8)",
+      "+0x1c28 inc    %rbp",
+      "+0x1c2b cmp    %rbp,%r15",
+      "+0x1c2e jne    452f0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1c00>"
+     ]
+    ]
+   ],
+   "counter": "tail_rows - tail_rows_second",
+   "counted": 1769,
+   "counted_each": [
+    1769
+   ],
+   "path": "the tail's first-segment row loop",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 786,
+   "baseline": 12,
+   "candidate": 9,
+   "delta": -2358,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0930 mov    %rdx,0x10(%rsp)",
+      "+0x0935 mov    %r11,(%rsp)",
+      "+0x0939 lea    0x98(%rsp),%rdi",
+      "+0x0941 call   8e8f0 <<c30walk::ctor2::W<false>>::refill>",
+      "+0x0946 lea    0xd8(%rsp),%r8",
+      "+0x094e test   %al,%al",
+      "+0x0950 je     3e197 <<c30walk::ctor2::Ctor2>::build::<false>+0x1567>",
+      "+0x0956 mov    (%rbx),%rax",
+      "+0x0959 mov    0x20(%rsp),%r10",
+      "+0x095e mov    (%rsp),%r11",
+      "+0x0962 mov    0x10(%rsp),%rdx",
+      "+0x0967 jmp    3d548 <<c30walk::ctor2::Ctor2>::build::<false>+0x918>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1c35 mov    %rdi,0x68(%rsp)",
+      "+0x1c3a lea    0xa8(%rsp),%rdi",
+      "+0x1c42 mov    %rbx,%rsi",
+      "+0x1c45 call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1c4a test   %al,%al",
+      "+0x1c4c je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x1c52 mov    0xe8(%rsp,%rbx,8),%rax",
+      "+0x1c5a mov    0x68(%rsp),%rdi",
+      "+0x1c5f jmp    45308 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1c18>"
+     ]
+    ]
+   ],
+   "counter": "tail_refills_first",
+   "counted": 786,
+   "counted_each": [
+    786
+   ],
+   "path": "refill detour from the tail's first segment",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 434,
+   "baseline": 204,
+   "candidate": 205,
+   "delta": 434,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0000 push   %rbp",
+      "+0x0001 push   %r15",
+      "+0x0003 push   %r14",
+      "+0x0005 push   %r13",
+      "+0x0007 push   %r12",
+      "+0x0009 push   %rbx",
+      "+0x000a sub    $0x1000,%rsp",
+      "+0x0011 movq   $0x0,(%rsp)",
+      "+0x0019 sub    $0x1000,%rsp",
+      "+0x0020 movq   $0x0,(%rsp)",
+      "+0x0028 sub    $0x1000,%rsp",
+      "+0x002f movq   $0x0,(%rsp)",
+      "+0x0037 sub    $0x1000,%rsp",
+      "+0x003e movq   $0x0,(%rsp)",
+      "+0x0046 sub    $0x1000,%rsp",
+      "+0x004d movq   $0x0,(%rsp)",
+      "+0x0055 sub    $0x4e8,%rsp",
+      "+0x005c mov    %r8d,0x1c(%rsp)",
+      "+0x0061 mov    0x5520(%rsp),%rax",
+      "+0x0069 movq   $0x0,0x10(%r9)",
+      "+0x0071 movq   $0x0,0x10(%rax)",
+      "+0x0079 cmp    $0xeffe2,%rdx",
+      "+0x0080 ja     3e1a7 <<c30walk::ctor2::Ctor2>::build::<false>+0x1577>",
+      "+0x0086 mov    %rcx,%r15",
+      "+0x0089 mov    %rdx,%r13",
+      "+0x008c pxor   %xmm0,%xmm0",
+      "+0x0090 xor    %eax,%eax",
+      "+0x0092 pxor   %xmm2,%xmm2",
+      "+0x0096 pxor   %xmm1,%xmm1",
+      "+0x009a nopw   0x0(%rax,%rax,1)",
+      "+0x00e7 paddq  %xmm2,%xmm1",
+      "+0x00eb pshufd $0xee,%xmm1,%xmm0",
+      "+0x00f0 paddq  %xmm1,%xmm0",
+      "+0x00f4 movq   %xmm0,%rax",
+      "+0x00f9 cmp    %r13,%rax",
+      "+0x00fc jne    3e1a7 <<c30walk::ctor2::Ctor2>::build::<false>+0x1577>",
+      "+0x0102 pxor   %xmm2,%xmm2",
+      "+0x0106 xor    %eax,%eax",
+      "+0x0108 movdqa -0x2c350(%rip),%xmm3        # 109f0 <GCC_except_table992+0xb2c>",
+      "+0x0110 pxor   %xmm1,%xmm1",
+      "+0x0114 pxor   %xmm0,%xmm0",
+      "+0x0118 nopl   0x0(%rax,%rax,1)",
+      "+0x018b mov    $0x88888889,%ebp",
+      "+0x0190 imul   %r13,%rbp",
+      "+0x0194 shr    $0x24,%rbp",
+      "+0x0198 imul   $0xeeeeeeef,%r13d,%eax",
+      "+0x019f ror    $1,%eax",
+      "+0x01a1 cmp    $0x8888889,%eax",
+      "+0x01a6 sbb    $0xffffffffffffffff,%rbp",
+      "+0x01aa mov    %rbp,%rbx",
+      "+0x01ad cmpl   $0x0,0x1c(%rsp)",
+      "+0x01b2 jne    3ce38 <<c30walk::ctor2::Ctor2>::build::<false>+0x208>",
+      "+0x01b4 test   %r13,%r13",
+      "+0x01b7 je     3ce36 <<c30walk::ctor2::Ctor2>::build::<false>+0x206>",
+      "+0x01b9 paddq  %xmm1,%xmm0",
+      "+0x01bd pshufd $0xee,%xmm0,%xmm1",
+      "+0x01c2 paddq  %xmm0,%xmm1",
+      "+0x01c6 movq   %xmm1,%rax",
+      "+0x01cb lea    -0x1(%r13),%ecx",
+      "+0x01cf mov    $0x88888889,%edx",
+      "+0x01d4 imul   %rcx,%rdx",
+      "+0x01d8 shr    $0x23,%rdx",
+      "+0x01dc and    $0xfffffffe,%edx",
+      "+0x01df lea    (%rdx,%r13,1),%ecx",
+      "+0x01e3 dec    %ecx",
+      "+0x01e5 shr    $1,%ecx",
+      "+0x01e7 mov    $0x80010003,%ebx",
+      "+0x01ec imul   %rcx,%rbx",
+      "+0x01f0 shr    $0x2e,%rbx",
+      "+0x01f4 inc    %ebx",
+      "+0x01f6 imul   %rax,%rbx",
+      "+0x01fa dec    %rbx",
+      "+0x01fd cmp    %rbp,%rbx",
+      "+0x0200 cmovae %rbp,%rbx",
+      "+0x0204 jmp    3ce38 <<c30walk::ctor2::Ctor2>::build::<false>+0x208>",
+      "+0x0208 mov    (%r9),%rax",
+      "+0x020b lea    0x1(%rbp),%rcx",
+      "+0x020f mov    %rcx,0x80(%rsp)",
+      "+0x0217 cmp    %rbp,%rax",
+      "+0x021a mov    %rsi,0x28(%rsp)",
+      "+0x021f jbe    3e30f <<c30walk::ctor2::Ctor2>::build::<false>+0x16df>",
+      "+0x0225 mov    0x5520(%rsp),%rax",
+      "+0x022d mov    (%rax),%rax",
+      "+0x0230 cmp    %rbx,%rax",
+      "+0x0233 jb     3e364 <<c30walk::ctor2::Ctor2>::build::<false>+0x1734>",
+      "+0x0239 movq   $0x0,0x10(%rdi)",
+      "+0x0241 lea    0x3f(%rbp),%rbx",
+      "+0x0245 shr    $0x6,%rbx",
+      "+0x0249 mov    %r13,0x8(%rsp)",
+      "+0x024e mov    %rdi,0x58(%rsp)",
+      "+0x0253 mov    %rbp,0x60(%rsp)",
+      "+0x0258 je     3cee2 <<c30walk::ctor2::Ctor2>::build::<false>+0x2b2>",
+      "+0x025a cmp    (%rdi),%rbx",
+      "+0x025d ja     3e493 <<c30walk::ctor2::Ctor2>::build::<false>+0x1863>",
+      "+0x0299 mov    %r13,%r9",
+      "+0x029c movq   $0x0,(%rdi)",
+      "+0x02a3 inc    %r14",
+      "+0x02a6 mov    0x8(%rsp),%r13",
+      "+0x02ab mov    0x58(%rsp),%rdi",
+      "+0x02b0 jmp    3cee5 <<c30walk::ctor2::Ctor2>::build::<false>+0x2b5>",
+      "+0x02b5 lea    0x18(%rdi),%r12",
+      "+0x02b9 mov    %r14,0x10(%rdi)",
+      "+0x02bd movq   $0x0,0x28(%rdi)",
+      "+0x02c5 cmpq   $0xf,0x18(%rdi)",
+      "+0x02ca jbe    3e468 <<c30walk::ctor2::Ctor2>::build::<false>+0x1838>",
+      "+0x02d0 lea    0x30(%rdi),%rax",
+      "+0x02d4 mov    %rax,(%rsp)",
+      "+0x02d8 xor    %eax,%eax",
+      "+0x02da pxor   %xmm0,%xmm0",
+      "+0x02de movabs $0xffffffff00000000,%rcx",
+      "+0x02e8 nopl   0x0(%rax,%rax,1)",
+      "+0x0366 mov    %r12,%r14",
+      "+0x0369 lea    0xc(%r15),%rax",
+      "+0x036d xor    %edx,%edx",
+      "+0x036f mov    $0x25,%ecx",
+      "+0x0374 data16 data16 cs nopw 0x0(%rax,%rax,1)",
+      "+0x03dc mov    %r9,0x78(%rsp)",
+      "+0x03e1 mov    0x8(%r9),%rbx",
+      "+0x03e5 mov    0x8(%rdi),%rbp",
+      "+0x03e9 mov    0x10(%rdi),%r12",
+      "+0x03ed lea    0xd8(%rsp),%rdi",
+      "+0x03f5 lea    0x2ce8(%rsp),%rsi",
+      "+0x03fd mov    $0x2800,%edx",
+      "+0x0402 call   *0x106f28(%rip)        # 143f60 <memcpy@GLIBC_2.14>",
+      "+0x0408 mov    %rbp,%r8",
+      "+0x040b mov    %r12,%rsi",
+      "+0x040e mov    %rbx,0xc0(%rsp)",
+      "+0x0416 mov    0x60(%rsp),%rax",
+      "+0x041b mov    %rax,0xc8(%rsp)",
+      "+0x0423 mov    %r13,0xd0(%rsp)",
+      "+0x042b mov    0x5520(%rsp),%rax",
+      "+0x0433 mov    %rax,0x98(%rsp)",
+      "+0x043b mov    %rbp,0xa0(%rsp)",
+      "+0x0443 mov    %r12,0xa8(%rsp)",
+      "+0x044b mov    %r14,0xb0(%rsp)",
+      "+0x0453 movl   $0x0,0x28e0(%rsp)",
+      "+0x045e movq   $0x0,0x28d8(%rsp)",
+      "+0x046a mov    (%rsp),%rax",
+      "+0x046e mov    %rax,0xb8(%rsp)",
+      "+0x0476 mov    $0xffffffffffffffff,%rcx",
+      "+0x047d xor    %ebp,%ebp",
+      "+0x047f movabs $0xeeeeeeeeeeeeeeef,%r9",
+      "+0x0489 movabs $0x888888888888889,%r10",
+      "+0x0493 pxor   %xmm0,%xmm0",
+      "+0x0497 pcmpeqd %xmm1,%xmm1",
+      "+0x049b xor    %r12d,%r12d",
+      "+0x049e jmp    3d186 <<c30walk::ctor2::Ctor2>::build::<false>+0x556>",
+      "+0x05f0 cmpl   $0x0,0x1c(%rsp)",
+      "+0x05f5 lea    0xd8(%rsp),%r8",
+      "+0x05fd je     3d3e4 <<c30walk::ctor2::Ctor2>::build::<false>+0x7b4>",
+      "+0x07b4 mov    0x8(%rsp),%r13",
+      "+0x07b9 test   %r13,%r13",
+      "+0x07bc mov    0x28(%rsp),%r14",
+      "+0x07c1 je     3e13f <<c30walk::ctor2::Ctor2>::build::<false>+0x150f>",
+      "+0x07c7 xor    %r11d,%r11d",
+      "+0x07ca jmp    3d40c <<c30walk::ctor2::Ctor2>::build::<false>+0x7dc>",
+      "+0x150f mov    $0x84,%eax",
+      "+0x1514 data16 data16 cs nopw 0x0(%rax,%rax,1)",
+      "+0x1579 add    $0x54e8,%rsp",
+      "+0x1580 pop    %rbx",
+      "+0x1581 pop    %r12",
+      "+0x1583 pop    %r13",
+      "+0x1585 pop    %r14",
+      "+0x1587 pop    %r15",
+      "+0x1589 pop    %rbp",
+      "+0x158a ret",
+      "+0x158b xor    %r14d,%r14d",
+      "+0x158e lea    0x98(%rsp),%r15",
+      "+0x1596 mov    0x78(%rsp),%r12",
+      "+0x159b mov    0x8(%rsp),%r13",
+      "+0x15a0 mov    0x60(%rsp),%rbp",
+      "+0x15a5 jmp    3e20b <<c30walk::ctor2::Ctor2>::build::<false>+0x15db>",
+      "+0x1601 xor    %ecx,%ecx",
+      "+0x1603 mov    0x8(%r12),%rbx",
+      "+0x1608 test   %rbp,%rbp",
+      "+0x160b setne  %al",
+      "+0x160e je     3e282 <<c30walk::ctor2::Ctor2>::build::<false>+0x1652>",
+      "+0x1610 mov    %al,%cl",
+      "+0x1612 mov    %rbp,%rax",
+      "+0x1615 sub    %rcx,%rax",
+      "+0x1618 imul   $0xffffffffffffffe2,%rax,%rcx",
+      "+0x161c add    %r13,%rcx",
+      "+0x161f cmp    $0x1e,%rcx",
+      "+0x1623 jae    3e282 <<c30walk::ctor2::Ctor2>::build::<false>+0x1652>",
+      "+0x1652 shl    $0x6,%rbp",
+      "+0x1656 pcmpeqd %xmm0,%xmm0",
+      "+0x165a movdqu %xmm0,0x2c(%rbx,%rbp,1)",
+      "+0x1660 movdqa %xmm0,0x20(%rbx,%rbp,1)",
+      "+0x1666 movdqa %xmm0,0x10(%rbx,%rbp,1)",
+      "+0x166c movdqa %xmm0,(%rbx,%rbp,1)",
+      "+0x1671 movl   $0x100fffff,0x3c(%rbx,%rbp,1)",
+      "+0x1679 mov    0x58(%rsp),%rax",
+      "+0x167e mov    0x8(%rax),%rdx",
+      "+0x1682 mov    0x10(%rax),%rcx",
+      "+0x1686 mov    0x5520(%rsp),%rax",
+      "+0x168e mov    0x8(%rax),%r8",
+      "+0x1692 mov    0x10(%rax),%r9",
+      "+0x1696 lea    0x98(%rsp),%rdi",
+      "+0x169e mov    %rbx,%rsi",
+      "+0x16a1 call   a2470 <c30walk::ctor::canonicalise>",
+      "+0x16a6 mov    0x80(%rsp),%rax",
+      "+0x16ae mov    %rax,0x10(%r12)",
+      "+0x16b3 mov    $0x1,%al",
+      "+0x16b5 jmp    3e1a9 <<c30walk::ctor2::Ctor2>::build::<false>+0x1579>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0000 push   %rbp",
+      "+0x0001 push   %r15",
+      "+0x0003 push   %r14",
+      "+0x0005 push   %r13",
+      "+0x0007 push   %r12",
+      "+0x0009 push   %rbx",
+      "+0x000a sub    $0x1000,%rsp",
+      "+0x0011 movq   $0x0,(%rsp)",
+      "+0x0019 sub    $0x1000,%rsp",
+      "+0x0020 movq   $0x0,(%rsp)",
+      "+0x0028 sub    $0x1000,%rsp",
+      "+0x002f movq   $0x0,(%rsp)",
+      "+0x0037 sub    $0x1000,%rsp",
+      "+0x003e movq   $0x0,(%rsp)",
+      "+0x0046 sub    $0x4f8,%rsp",
+      "+0x004d mov    %r8d,0x2c(%rsp)",
+      "+0x0052 mov    %rsi,0x60(%rsp)",
+      "+0x0057 mov    %rdi,%rbp",
+      "+0x005a mov    0x4530(%rsp),%rdi",
+      "+0x0062 movq   $0x0,0x10(%r9)",
+      "+0x006a movq   $0x0,0x10(%rdi)",
+      "+0x0072 cmp    $0xeffe2,%rdx",
+      "+0x0079 ja     4542d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d3d>",
+      "+0x007f mov    %rcx,%rbx",
+      "+0x0082 pxor   %xmm0,%xmm0",
+      "+0x0086 xor    %eax,%eax",
+      "+0x0088 pxor   %xmm2,%xmm2",
+      "+0x008c pxor   %xmm1,%xmm1",
+      "+0x00d3 paddq  %xmm2,%xmm1",
+      "+0x00d7 pshufd $0xee,%xmm1,%xmm0",
+      "+0x00dc paddq  %xmm1,%xmm0",
+      "+0x00e0 movq   %xmm0,%rax",
+      "+0x00e5 cmp    %rdx,%rax",
+      "+0x00e8 jne    4542d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d3d>",
+      "+0x00ee pxor   %xmm2,%xmm2",
+      "+0x00f2 xor    %eax,%eax",
+      "+0x00f4 movdqa -0x32dfc(%rip),%xmm3        # 109f0 <GCC_except_table992+0xb2c>",
+      "+0x00fc pxor   %xmm1,%xmm1",
+      "+0x0100 pxor   %xmm0,%xmm0",
+      "+0x0104 data16 data16 cs nopw 0x0(%rax,%rax,1)",
+      "+0x0177 mov    $0x88888889,%r8d",
+      "+0x017d imul   %rdx,%r8",
+      "+0x0181 shr    $0x24,%r8",
+      "+0x0185 imul   $0xeeeeeeef,%edx,%eax",
+      "+0x018b ror    $1,%eax",
+      "+0x018d cmp    $0x8888889,%eax",
+      "+0x0192 sbb    $0xffffffffffffffff,%r8",
+      "+0x0196 mov    %r8,%r14",
+      "+0x0199 cmpl   $0x0,0x2c(%rsp)",
+      "+0x019e jne    438e5 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1f5>",
+      "+0x01a0 test   %rdx,%rdx",
+      "+0x01a3 je     438e2 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1f2>",
+      "+0x01a5 paddq  %xmm1,%xmm0",
+      "+0x01a9 pshufd $0xee,%xmm0,%xmm1",
+      "+0x01ae paddq  %xmm0,%xmm1",
+      "+0x01b2 movq   %xmm1,%rax",
+      "+0x01b7 lea    -0x1(%rdx),%ecx",
+      "+0x01ba mov    $0x88888889,%esi",
+      "+0x01bf imul   %rcx,%rsi",
+      "+0x01c3 shr    $0x23,%rsi",
+      "+0x01c7 and    $0xfffffffe,%esi",
+      "+0x01ca lea    (%rsi,%rdx,1),%ecx",
+      "+0x01cd dec    %ecx",
+      "+0x01cf shr    $1,%ecx",
+      "+0x01d1 mov    $0x80010003,%r14d",
+      "+0x01d7 imul   %rcx,%r14",
+      "+0x01db shr    $0x2e,%r14",
+      "+0x01df inc    %r14d",
+      "+0x01e2 imul   %rax,%r14",
+      "+0x01e6 dec    %r14",
+      "+0x01e9 cmp    %r8,%r14",
+      "+0x01ec cmovae %r8,%r14",
+      "+0x01f0 jmp    438e5 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1f5>",
+      "+0x01f5 mov    (%r9),%rax",
+      "+0x01f8 lea    0x1(%r8),%rcx",
+      "+0x01fc mov    %rcx,0x78(%rsp)",
+      "+0x0201 cmp    %r8,%rax",
+      "+0x0204 mov    %rdx,0x20(%rsp)",
+      "+0x0209 mov    %r8,0x58(%rsp)",
+      "+0x020e jbe    455cd <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1edd>",
+      "+0x0214 mov    (%rdi),%rax",
+      "+0x0217 cmp    %r14,%rax",
+      "+0x021a jb     4562a <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1f3a>",
+      "+0x0220 movq   $0x0,0x10(%rbp)",
+      "+0x0228 lea    0x3f(%r8),%r14",
+      "+0x022c shr    $0x6,%r14",
+      "+0x0230 je     43971 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x281>",
+      "+0x0232 cmp    0x0(%rbp),%r14",
+      "+0x0236 ja     45728 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x2038>",
+      "+0x0275 movq   $0x0,(%rdi)",
+      "+0x027c inc    %r15",
+      "+0x027f jmp    43974 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x284>",
+      "+0x0284 lea    0x18(%rbp),%r12",
+      "+0x0288 mov    %r15,0x10(%rbp)",
+      "+0x028c movq   $0x0,0x28(%rbp)",
+      "+0x0294 cmpq   $0xf,0x18(%rbp)",
+      "+0x0299 jbe    45703 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x2013>",
+      "+0x029f lea    0x30(%rbp),%rax",
+      "+0x02a3 mov    %rax,0x48(%rsp)",
+      "+0x02a8 xor    %eax,%eax",
+      "+0x02aa pxor   %xmm0,%xmm0",
+      "+0x02ae movabs $0xffffffff00000000,%r13",
+      "+0x02b8 nopl   0x0(%rax,%rax,1)",
+      "+0x0310 mov    %r12,0x8(%rsp)",
+      "+0x0315 lea    0xc(%rbx),%rax",
+      "+0x0319 xor    %edx,%edx",
+      "+0x031b mov    $0x15,%ecx",
+      "+0x037c mov    %r9,0x90(%rsp)",
+      "+0x0384 mov    0x8(%r9),%r12",
+      "+0x0388 mov    0x8(%rbp),%r14",
+      "+0x038c mov    %rbp,0x88(%rsp)",
+      "+0x0394 mov    0x10(%rbp),%rbp",
+      "+0x0398 lea    0x8e8(%rsp),%rdi",
+      "+0x03a0 xor    %r15d,%r15d",
+      "+0x03a3 mov    $0x800,%edx",
+      "+0x03a8 xor    %esi,%esi",
+      "+0x03aa call   *0x1004a0(%rip)        # 143f40 <memset@GLIBC_2.2.5>",
+      "+0x03b0 lea    0x10e8(%rsp),%rdi",
+      "+0x03b8 lea    0x2cf8(%rsp),%rsi",
+      "+0x03c0 mov    $0x1800,%edx",
+      "+0x03c5 call   *0x1004a5(%rip)        # 143f60 <memcpy@GLIBC_2.14>",
+      "+0x03cb mov    %r12,0xd0(%rsp)",
+      "+0x03d3 mov    0x58(%rsp),%rax",
+      "+0x03d8 mov    %rax,0xd8(%rsp)",
+      "+0x03e0 mov    0x20(%rsp),%rax",
+      "+0x03e5 mov    %rax,0xe0(%rsp)",
+      "+0x03ed mov    0x4530(%rsp),%rax",
+      "+0x03f5 mov    %rax,0xa8(%rsp)",
+      "+0x03fd mov    %r14,0x18(%rsp)",
+      "+0x0402 mov    %r14,0xb0(%rsp)",
+      "+0x040a mov    %rbp,0x10(%rsp)",
+      "+0x040f mov    %rbp,0xb8(%rsp)",
+      "+0x0417 mov    0x8(%rsp),%rax",
+      "+0x041c mov    %rax,0xc0(%rsp)",
+      "+0x0424 lea    0xe8(%rsp),%rdi",
+      "+0x042c mov    $0x800,%edx",
+      "+0x0431 xor    %esi,%esi",
+      "+0x0433 call   *0x100417(%rip)        # 143f40 <memset@GLIBC_2.2.5>",
+      "+0x0439 mov    %r13,0x28f0(%rsp)",
+      "+0x0441 movq   $0x0,0x28e8(%rsp)",
+      "+0x044d mov    0x48(%rsp),%rax",
+      "+0x0452 mov    %rax,0xc8(%rsp)",
+      "+0x045a mov    $0xffffffffffffffff,%rcx",
+      "+0x0461 movabs $0xeeeeeeeeeeeeeeef,%r8",
+      "+0x046b movabs $0x888888888888889,%r14",
+      "+0x0475 pxor   %xmm0,%xmm0",
+      "+0x0479 pcmpeqd %xmm1,%xmm1",
+      "+0x047d xor    %ebp,%ebp",
+      "+0x047f jmp    43c2b <<c30walk::ctor2c::Ctor2c>::build::<false>+0x53b>",
+      "+0x05c4 cmpl   $0x0,0x2c(%rsp)",
+      "+0x05c9 je     43e7e <<c30walk::ctor2c::Ctor2c>::build::<false>+0x78e>",
+      "+0x078e cmpq   $0x0,0x20(%rsp)",
+      "+0x0794 je     453d0 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1ce0>",
+      "+0x079a movq   $0x0,0x30(%rsp)",
+      "+0x07a3 jmp    43ed7 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x7e7>",
+      "+0x1ce0 mov    $0x9,%eax",
+      "+0x1ce5 lea    0x110c(%rsp),%rcx",
+      "+0x1ced nopl   (%rax)",
+      "+0x1d3f add    $0x44f8,%rsp",
+      "+0x1d46 pop    %rbx",
+      "+0x1d47 pop    %r12",
+      "+0x1d49 pop    %r13",
+      "+0x1d4b pop    %r14",
+      "+0x1d4d pop    %r15",
+      "+0x1d4f pop    %rbp",
+      "+0x1d50 ret",
+      "+0x1d64 mov    $0x8,%r14d",
+      "+0x1d6a mov    $0x1040,%r15d",
+      "+0x1d70 lea    0xa8(%rsp),%rbx",
+      "+0x1d78 mov    0x90(%rsp),%r12",
+      "+0x1d80 mov    0x4530(%rsp),%rsi",
+      "+0x1d88 mov    0x88(%rsp),%r13",
+      "+0x1d90 jmp    454d2 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1de2>",
+      "+0x1e1d xor    %ecx,%ecx",
+      "+0x1e1f mov    0x8(%r12),%rbx",
+      "+0x1e24 mov    0x58(%rsp),%r14",
+      "+0x1e29 test   %r14,%r14",
+      "+0x1e2c setne  %al",
+      "+0x1e2f mov    0x20(%rsp),%rdx",
+      "+0x1e34 je     45570 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1e80>",
+      "+0x1e36 mov    %al,%cl",
+      "+0x1e38 mov    %r14,%rax",
+      "+0x1e3b sub    %rcx,%rax",
+      "+0x1e3e imul   $0xffffffffffffffe2,%rax,%rcx",
+      "+0x1e42 add    %rdx,%rcx",
+      "+0x1e45 cmp    $0x1e,%rcx",
+      "+0x1e49 jae    45570 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1e80>",
+      "+0x1e80 shl    $0x6,%r14",
+      "+0x1e84 pcmpeqd %xmm0,%xmm0",
+      "+0x1e88 movdqu %xmm0,0x2c(%rbx,%r14,1)",
+      "+0x1e8f movdqa %xmm0,0x20(%rbx,%r14,1)",
+      "+0x1e96 movdqa %xmm0,0x10(%rbx,%r14,1)",
+      "+0x1e9d movdqa %xmm0,(%rbx,%r14,1)",
+      "+0x1ea3 movl   $0x100fffff,0x3c(%rbx,%r14,1)",
+      "+0x1eac mov    0x8(%r13),%rdx",
+      "+0x1eb0 mov    0x10(%r13),%rcx",
+      "+0x1eb4 mov    0x8(%rsi),%r8",
+      "+0x1eb8 mov    0x10(%rsi),%r9",
+      "+0x1ebc lea    0xa8(%rsp),%rdi",
+      "+0x1ec4 mov    %rbx,%rsi",
+      "+0x1ec7 call   a2470 <c30walk::ctor::canonicalise>",
+      "+0x1ecc mov    0x78(%rsp),%rax",
+      "+0x1ed1 mov    %rax,0x10(%r12)",
+      "+0x1ed6 mov    $0x1,%al",
+      "+0x1ed8 jmp    4542f <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d3f>"
+     ]
+    ]
+   ],
+   "counter": "blocks",
+   "counted": 434,
+   "counted_each": [
+    434
+   ],
+   "path": "blocks",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 432,
+   "baseline": 6,
+   "candidate": 5,
+   "delta": -432,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0263 mov    %r9,%r13",
+      "+0x0266 xor    %r14d,%r14d",
+      "+0x0269 mov    0x8(%rdi),%r12",
+      "+0x026d lea    (%r12,%r14,8),%rdi",
+      "+0x0271 cmp    $0x1,%rbx",
+      "+0x0275 je     3cec9 <<c30walk::ctor2::Ctor2>::build::<false>+0x299>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x023c xor    %r15d,%r15d",
+      "+0x023f mov    0x8(%rbp),%r12",
+      "+0x0243 lea    (%r12,%r15,8),%rdi",
+      "+0x0247 cmp    $0x1,%r14",
+      "+0x024b je     43965 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x275>"
+     ]
+    ]
+   ],
+   "counter": "bitmap_in_place",
+   "counted": 432,
+   "counted_each": [
+    432
+   ],
+   "path": "bitmap resize without a reserve",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 233,
+   "baseline": 10,
+   "candidate": 11,
+   "delta": 233,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x1625 lea    (%rbx,%rbp,4),%rcx",
+      "+0x1629 lea    (%rcx,%r13,2),%rdi",
+      "+0x162d add    $0xfffffffffffffffc,%rdi",
+      "+0x1631 lea    (%rax,%rax,1),%rcx",
+      "+0x1635 shl    $0x5,%rax",
+      "+0x1639 sub    %rcx,%rax",
+      "+0x163c sub    %r13,%rax",
+      "+0x163f lea    0x3c(,%rax,2),%rdx",
+      "+0x1647 mov    $0xff,%esi",
+      "+0x164c call   *0x105cbe(%rip)        # 143f40 <memset@GLIBC_2.2.5>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1e4b lea    (%rbx,%r14,4),%rcx",
+      "+0x1e4f lea    (%rcx,%rdx,2),%rdi",
+      "+0x1e53 add    $0xfffffffffffffffc,%rdi",
+      "+0x1e57 lea    (%rax,%rax,1),%rcx",
+      "+0x1e5b shl    $0x5,%rax",
+      "+0x1e5f sub    %rcx,%rax",
+      "+0x1e62 sub    %rdx,%rax",
+      "+0x1e65 lea    0x3c(,%rax,2),%rdx",
+      "+0x1e6d mov    $0xff,%esi",
+      "+0x1e72 call   *0xfe9d8(%rip)        # 143f40 <memset@GLIBC_2.2.5>",
+      "+0x1e78 mov    0x4530(%rsp),%rsi"
+     ]
+    ]
+   ],
+   "counter": "pad_blocks",
+   "counted": 233,
+   "counted_each": [
+    233
+   ],
+   "path": "the last group's padding (memset)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 230,
+   "baseline": 41,
+   "candidate": 39,
+   "delta": -460,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0277 lea    -0x8(,%rbx,8),%rdx",
+      "+0x027f xor    %esi,%esi",
+      "+0x0281 call   *0x107089(%rip)        # 143f40 <memset@GLIBC_2.2.5>",
+      "+0x0287 lea    (%r14,%rbx,1),%rax",
+      "+0x028b lea    (%r12,%rax,8),%rdi",
+      "+0x028f add    $0xfffffffffffffff8,%rdi",
+      "+0x0293 add    %rbx,%r14",
+      "+0x0296 dec    %r14",
+      "+0x08c8 mov    %r9,%rbp",
+      "+0x08cb mov    %r14,%rax",
+      "+0x08ce mov    0x28e0(%rsp),%r12d",
+      "+0x08d6 mov    $0x1e,%r14d",
+      "+0x08dc sub    0x28d8(%rsp),%r14",
+      "+0x08e4 cmp    %rdx,%r14",
+      "+0x08e7 cmovae %rdx,%r14",
+      "+0x08eb lea    (%rax,%r11,1),%r15",
+      "+0x08ef test   %r14,%r14",
+      "+0x08f2 je     3dfa0 <<c30walk::ctor2::Ctor2>::build::<false>+0x1370>",
+      "+0x08f8 xor    %r13d,%r13d",
+      "+0x08fb nopl   0x0(%rax,%rax,1)",
+      "+0x092b jmp    3dfa0 <<c30walk::ctor2::Ctor2>::build::<false>+0x1370>",
+      "+0x1370 lea    (%r14,%r11,1),%rax",
+      "+0x1374 cmp    %r10,%rax",
+      "+0x1377 jne    3dff1 <<c30walk::ctor2::Ctor2>::build::<false>+0x13c1>",
+      "+0x1379 cmp    $0x10,%rdx",
+      "+0x137d jne    3e067 <<c30walk::ctor2::Ctor2>::build::<false>+0x1437>",
+      "+0x1437 mov    0x28e0(%rsp),%eax",
+      "+0x143e mov    0x28d8(%rsp),%rcx",
+      "+0x1446 inc    %r11",
+      "+0x1449 cmp    %r11,%r10",
+      "+0x144c mov    0x8(%rsp),%r13",
+      "+0x1451 mov    0x28(%rsp),%r14",
+      "+0x1456 mov    %rbp,%r9",
+      "+0x1459 je     3e0e6 <<c30walk::ctor2::Ctor2>::build::<false>+0x14b6>",
+      "+0x14d1 mov    %rcx,0x28d8(%rsp)",
+      "+0x14d9 jmp    3e11d <<c30walk::ctor2::Ctor2>::build::<false>+0x14ed>",
+      "+0x14ed mov    %eax,0x28e0(%rsp)",
+      "+0x14f4 mov    %r10,%r11",
+      "+0x14f7 cmp    %r13,%r10",
+      "+0x14fa jb     3d40c <<c30walk::ctor2::Ctor2>::build::<false>+0x7dc>",
+      "+0x1500 jmp    3e13f <<c30walk::ctor2::Ctor2>::build::<false>+0x150f>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x024d lea    -0x8(,%r14,8),%rdx",
+      "+0x0255 xor    %esi,%esi",
+      "+0x0257 mov    %r9,%r13",
+      "+0x025a call   *0x1005f0(%rip)        # 143f40 <memset@GLIBC_2.2.5>",
+      "+0x0260 mov    %r13,%r9",
+      "+0x0263 lea    (%r15,%r14,1),%rax",
+      "+0x0267 lea    (%r12,%rax,8),%rdi",
+      "+0x026b add    $0xfffffffffffffff8,%rdi",
+      "+0x026f add    %r14,%r15",
+      "+0x0272 dec    %r15",
+      "+0x07c5 mov    %rax,0x28e8(%rsp)",
+      "+0x07cd mov    %ecx,0x28f0(%rsp)",
+      "+0x1b0c mov    0x30(%rsp),%r13",
+      "+0x1b11 sub    %rdi,%r13",
+      "+0x1b14 mov    0x28e8(%rsp),%rax",
+      "+0x1b1c mov    $0x1e,%r15d",
+      "+0x1b22 sub    %rax,%r15",
+      "+0x1b25 cmp    %rdi,%r15",
+      "+0x1b28 cmovae %rdi,%r15",
+      "+0x1b2c mov    %r15,%r14",
+      "+0x1b2f add    %r13,%r14",
+      "+0x1b32 jb     456bf <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1fcf>",
+      "+0x1b38 cmp    0x20(%rsp),%r14",
+      "+0x1b3d ja     456bf <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1fcf>",
+      "+0x1b43 mov    %r12,0x38(%rsp)",
+      "+0x1b48 mov    0x28f0(%rsp),%r12d",
+      "+0x1b50 cmp    $0x1e,%rax",
+      "+0x1b54 jne    452da <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1bea>",
+      "+0x1b5a cmp    %r14,0x30(%rsp)",
+      "+0x1b5f jb     456d6 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1fe6>",
+      "+0x1b65 jne    45351 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1c61>",
+      "+0x1b6b mov    0x28e8(%rsp),%rax",
+      "+0x1b73 mov    0x28f0(%rsp),%ecx",
+      "+0x1b7a cmp    $0x1,%rdi",
+      "+0x1b7e je     43e95 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x7a5>",
+      "+0x1bea add    0x60(%rsp),%r13",
+      "+0x1bef xor    %ebp,%ebp",
+      "+0x1bf1 data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)",
+      "+0x1c30 jmp    4524a <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1b5a>"
+     ]
+    ]
+   ],
+   "counter": "tails & bitmap_memsets",
+   "counted": 230,
+   "counted_each": [
+    230,
+    230
+   ],
+   "path": "tails & bitmap resize's fill (>= 2 words)",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 218,
+   "baseline": 6,
+   "candidate": 7,
+   "delta": 218,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x145b mov    %rdx,%r10",
+      "+0x145e and    $0xffffe,%edx",
+      "+0x1464 data16 data16 cs nopw 0x0(%rax,%rax,1)",
+      "+0x14ab test   $0x1,%r10b",
+      "+0x14af mov    0x20(%rsp),%r10",
+      "+0x14b4 je     3e101 <<c30walk::ctor2::Ctor2>::build::<false>+0x14d1>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1b84 mov    %rdi,%r8",
+      "+0x1b87 mov    %edi,%edx",
+      "+0x1b89 and    $0xe,%edx",
+      "+0x1b8c mov    0x38(%rsp),%r12",
+      "+0x1b91 data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)",
+      "+0x1bdb test   $0x1,%r8b",
+      "+0x1bdf jne    43e9a <<c30walk::ctor2c::Ctor2c>::build::<false>+0x7aa>"
+     ]
+    ]
+   ],
+   "counter": "tails_len_ge2",
+   "counted": 218,
+   "counted_each": [
+    218
+   ],
+   "path": "tail advance loop (unrolled by two) entry, len >= 2",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 165,
+   "baseline": 0,
+   "candidate": 3,
+   "delta": 495,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x0e50 mov    %rsi,0x40(%rsp)",
+      "+0x0e55 xor    %r9d,%r9d",
+      "+0x0e58 jmp    44559 <<c30walk::ctor2c::Ctor2c>::build::<false>+0xe69>"
+     ]
+    ]
+   ],
+   "counter": "runs_no_lookahead",
+   "counted": 165,
+   "counted_each": [
+    165
+   ],
+   "path": "runs with no lookahead tile",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 121,
+   "baseline": 0,
+   "candidate": 1,
+   "delta": 121,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x1be5 jmp    43eb5 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x7c5>"
+     ]
+    ]
+   ],
+   "counter": "tails_even",
+   "counted": 121,
+   "counted_each": [
+    121
+   ],
+   "path": "tail advance loop exit, even len",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 106,
+   "baseline": 12,
+   "candidate": 9,
+   "delta": -318,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x13d0 movzbl (%r15,%r14,1),%esi",
+      "+0x13d5 lea    (%rsi,%rsi,4),%rcx",
+      "+0x13d9 lea    (%r8,%rcx,8),%rbx",
+      "+0x13dd mov    (%r8,%rcx,8),%rax",
+      "+0x13e1 cmp    0x8(%r8,%rcx,8),%rax",
+      "+0x13e6 je     3e030 <<c30walk::ctor2::Ctor2>::build::<false>+0x1400>",
+      "+0x13e8 lea    (%r12,%r14,1),%rcx",
+      "+0x13ec mov    %cx,(%rax)",
+      "+0x13ef addq   $0x2,(%rbx)",
+      "+0x13f3 inc    %r14",
+      "+0x13f6 cmp    %r14,%rdx",
+      "+0x13f9 jne    3e000 <<c30walk::ctor2::Ctor2>::build::<false>+0x13d0>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1c80 movzbl (%r14,%r15,1),%ebx",
+      "+0x1c85 mov    0xe8(%rsp,%rbx,8),%rax",
+      "+0x1c8d cmp    0x8e8(%rsp,%rbx,8),%rax",
+      "+0x1c95 je     4539f <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1caf>",
+      "+0x1c97 mov    %bp,(%rax)",
+      "+0x1c9a addq   $0x2,0xe8(%rsp,%rbx,8)",
+      "+0x1ca3 inc    %ebp",
+      "+0x1ca5 inc    %r15",
+      "+0x1ca8 jne    45370 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1c80>"
+     ]
+    ]
+   ],
+   "counter": "tail_rows_second",
+   "counted": 106,
+   "counted_each": [
+    106
+   ],
+   "path": "the tail's second-segment row loop",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 79,
+   "baseline": 3,
+   "candidate": 1,
+   "delta": -158,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x08a7 lea    0xd8(%rsp),%r8",
+      "+0x08af mov    %r12,%r9",
+      "+0x08b2 mov    0x38(%rsp),%rcx"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1b00 mov    %r13,%rdi"
+     ]
+    ]
+   ],
+   "counter": "epochs_short",
+   "counted": 79,
+   "counted_each": [
+    79
+   ],
+   "path": "epochs with no full tile",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 22,
+   "baseline": 4,
+   "candidate": 8,
+   "delta": 88,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x13c1 add    $0x2,%r12d",
+      "+0x13c5 movzwl %r12w,%r12d",
+      "+0x13c9 nopl   0x0(%rax)",
+      "+0x13fb jmp    3dfa9 <<c30walk::ctor2::Ctor2>::build::<false>+0x1379>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1c61 mov    0x60(%rsp),%rax",
+      "+0x1c66 mov    0x30(%rsp),%rcx",
+      "+0x1c6b lea    (%rax,%rcx,1),%r14",
+      "+0x1c6f lea    (%r12,%r15,1),%ebp",
+      "+0x1c73 add    $0x2,%ebp",
+      "+0x1c76 sub    %rdi,%r15",
+      "+0x1c79 nopl   0x0(%rax)",
+      "+0x1caa jmp    4525b <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1b6b>"
+     ]
+    ]
+   ],
+   "counter": "tails_second_segment",
+   "counted": 22,
+   "counted_each": [
+    22
+   ],
+   "path": "tail second-segment entry and exit",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 12,
+   "baseline": 0,
+   "candidate": 1,
+   "delta": 12,
+   "listing": [
+    [
+     "C",
+     [
+      "+0x07a5 mov    0x38(%rsp),%r12"
+     ]
+    ]
+   ],
+   "counter": "tails_len1",
+   "counted": 12,
+   "counted_each": [
+    12
+   ],
+   "path": "a tail of length 1",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 9,
+   "baseline": 12,
+   "candidate": 9,
+   "delta": -27,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x1400 mov    %rdx,0x10(%rsp)",
+      "+0x1405 mov    %r11,%r13",
+      "+0x1408 lea    0x98(%rsp),%rdi",
+      "+0x1410 call   8e8f0 <<c30walk::ctor2::W<false>>::refill>",
+      "+0x1415 lea    0xd8(%rsp),%r8",
+      "+0x141d test   %al,%al",
+      "+0x141f je     3e197 <<c30walk::ctor2::Ctor2>::build::<false>+0x1567>",
+      "+0x1425 mov    (%rbx),%rax",
+      "+0x1428 mov    0x20(%rsp),%r10",
+      "+0x142d mov    %r13,%r11",
+      "+0x1430 mov    0x10(%rsp),%rdx",
+      "+0x1435 jmp    3e018 <<c30walk::ctor2::Ctor2>::build::<false>+0x13e8>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1caf mov    %rdi,%r12",
+      "+0x1cb2 lea    0xa8(%rsp),%rdi",
+      "+0x1cba mov    %rbx,%rsi",
+      "+0x1cbd call   8ae90 <<c30walk::ctor2c::W<false>>::refill>",
+      "+0x1cc2 test   %al,%al",
+      "+0x1cc4 je     4541d <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1d2d>",
+      "+0x1cc6 mov    0xe8(%rsp,%rbx,8),%rax",
+      "+0x1cce mov    %r12,%rdi",
+      "+0x1cd1 jmp    45387 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1c97>"
+     ]
+    ]
+   ],
+   "counter": "tail_refills_second",
+   "counted": 9,
+   "counted_each": [
+    9
+   ],
+   "path": "refill detour from the tail's second segment",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 8,
+   "baseline": 15,
+   "candidate": 13,
+   "delta": -16,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x1734 mov    %rdi,%r12",
+      "+0x1737 mov    %r9,%r14",
+      "+0x173a test   %rax,%rax",
+      "+0x173d je     3e381 <<c30walk::ctor2::Ctor2>::build::<false>+0x1751>",
+      "+0x1751 mov    0x5520(%rsp),%rdi",
+      "+0x1759 movq   $0x0,(%rdi)",
+      "+0x1760 movq   $0x40,0x8(%rdi)",
+      "+0x1768 movq   $0x0,0x10(%rdi)",
+      "+0x1770 mov    $0x80,%edx",
+      "+0x1775 mov    %rbx,%rsi",
+      "+0x1778 call   95360 <<alloc::raw_vec::RawVecInner>::grow_exact>",
+      "+0x177d cmp    $0xffffffffffffffff,%rax",
+      "+0x1781 mov    %r14,%r9",
+      "+0x1784 mov    %r12,%rdi",
+      "+0x1787 je     3ce69 <<c30walk::ctor2::Ctor2>::build::<false>+0x239>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1f3a mov    %r9,%r15",
+      "+0x1f3d test   %rax,%rax",
+      "+0x1f40 je     45644 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x1f54>",
+      "+0x1f54 movq   $0x0,(%rdi)",
+      "+0x1f5b movq   $0x40,0x8(%rdi)",
+      "+0x1f63 movq   $0x0,0x10(%rdi)",
+      "+0x1f6b mov    $0x80,%edx",
+      "+0x1f70 mov    %r14,%rsi",
+      "+0x1f73 call   95360 <<alloc::raw_vec::RawVecInner>::grow_exact>",
+      "+0x1f78 cmp    $0xffffffffffffffff,%rax",
+      "+0x1f7c mov    %r15,%r9",
+      "+0x1f7f mov    0x58(%rsp),%r8",
+      "+0x1f84 je     43910 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x220>"
+     ]
+    ]
+   ],
+   "counter": "raw_grows",
+   "counted": 8,
+   "counted_each": [
+    8
+   ],
+   "path": "raw arena regrowth",
+   "agrees": true
+  },
+  {
+   "group": "build",
+   "frequency": 1,
+   "baseline": 16,
+   "candidate": 14,
+   "delta": -2,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x16e7 mov    0x8(%r9),%rdi",
+      "+0x16eb mov    %r9,%r14",
+      "+0x16ee call   *0x105c2c(%rip)        # 143f50 <free@GLIBC_2.2.5>",
+      "+0x16f4 mov    %r14,%r9",
+      "+0x1838 mov    $0x10,%edx",
+      "+0x183d mov    $0x4,%ecx",
+      "+0x1842 mov    $0x400,%r8d",
+      "+0x1848 mov    %rdi,%r14",
+      "+0x184b mov    %r12,%rdi",
+      "+0x184e xor    %esi,%esi",
+      "+0x1850 mov    %r9,%rbx",
+      "+0x1853 call   6aea0 <<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>>",
+      "+0x1858 mov    %r14,%rdi",
+      "+0x185b mov    %rbx,%r9",
+      "+0x185e jmp    3cf00 <<c30walk::ctor2::Ctor2>::build::<false>+0x2d0>",
+      "+0x1897 jmp    3cec9 <<c30walk::ctor2::Ctor2>::build::<false>+0x299>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x1ee2 mov    0x8(%r9),%rdi",
+      "+0x1ee6 mov    %r9,%r15",
+      "+0x1ee9 call   *0xfe971(%rip)        # 143f50 <free@GLIBC_2.2.5>",
+      "+0x1eef mov    %r15,%r9",
+      "+0x2013 mov    $0x10,%edx",
+      "+0x2018 mov    $0x4,%ecx",
+      "+0x201d mov    $0x400,%r8d",
+      "+0x2023 mov    %r12,%rdi",
+      "+0x2026 xor    %esi,%esi",
+      "+0x2028 mov    %r9,%r14",
+      "+0x202b call   6aea0 <<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>>",
+      "+0x2030 mov    %r14,%r9",
+      "+0x2033 jmp    4398f <<c30walk::ctor2c::Ctor2c>::build::<false>+0x29f>",
+      "+0x206c jmp    43965 <<c30walk::ctor2c::Ctor2c>::build::<false>+0x275>"
+     ]
+    ]
+   ],
+   "counter": "rec_grow_frees & snaps_reserves & bitmap_reserves_single",
+   "counted": 1,
+   "counted_each": [
+    1,
+    1,
+    1
+   ],
+   "path": "rec regrowth freeing the old allocation & snapshot reserve & bitmap reserve of one word",
+   "agrees": true
+  },
+  {
+   "group": "refill",
+   "frequency": 1299478,
+   "baseline": 59,
+   "candidate": 65,
+   "delta": 7796868,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0000 push   %r15",
+      "+0x0002 push   %r14",
+      "+0x0004 push   %rbx",
+      "+0x0005 mov    %rdi,%rbx",
+      "+0x0008 lea    (%rsi,%rsi,4),%rax",
+      "+0x000c lea    (%rdi,%rax,8),%r15",
+      "+0x0010 add    $0x40,%r15",
+      "+0x0014 mov    0x40(%rdi,%rax,8),%r14",
+      "+0x0019 sub    0x50(%rdi,%rax,8),%r14",
+      "+0x001e je     8e918 <<c30walk::ctor2::W<false>>::refill+0x28>",
+      "+0x0028 shr    $1,%r14",
+      "+0x002b add    0x18(%r15),%r14d",
+      "+0x002f mov    %r14d,0x18(%r15)",
+      "+0x0033 xorps  %xmm0,%xmm0",
+      "+0x0036 movups %xmm0,(%r15)",
+      "+0x003a movq   $0x0,0x10(%r15)",
+      "+0x0042 mov    0x1c(%r15),%eax",
+      "+0x0046 cmp    %eax,%r14d",
+      "+0x0049 jae    8e9c4 <<c30walk::ctor2::W<false>>::refill+0xd4>",
+      "+0x004f mov    %r14d,%ecx",
+      "+0x0052 mov    $0x88888889,%edi",
+      "+0x0057 imul   %rcx,%rdi",
+      "+0x005b mov    %rdi,%rcx",
+      "+0x005e shr    $0x24,%rcx",
+      "+0x0062 mov    %ecx,%r9d",
+      "+0x0065 shl    $0x5,%r9d",
+      "+0x0069 sub    %ecx,%r9d",
+      "+0x006c sub    %ecx,%r9d",
+      "+0x006f lea    0x1e(%r9),%edx",
+      "+0x0073 cmp    %eax,%edx",
+      "+0x0075 cmovae %eax,%edx",
+      "+0x0078 shr    $0x2a,%rdi",
+      "+0x007c mov    0x10(%rbx),%rsi",
+      "+0x0080 cmp    %rsi,%rdi",
+      "+0x0083 jae    8e9d0 <<c30walk::ctor2::W<false>>::refill+0xe0>",
+      "+0x0085 mov    %r14d,%esi",
+      "+0x0088 mov    %rcx,%r8",
+      "+0x008b shl    $0x6,%r8",
+      "+0x008f add    0x28(%rbx),%r8",
+      "+0x0093 sub    %r9d,%esi",
+      "+0x0096 mov    0x8(%rbx),%r9",
+      "+0x009a mov    (%r9,%rdi,8),%rdi",
+      "+0x009e bt     %rcx,%rdi",
+      "+0x00a2 jae    8e99f <<c30walk::ctor2::W<false>>::refill+0xaf>",
+      "+0x00b4 mov    %esi,%esi",
+      "+0x00b6 lea    (%r8,%rsi,2),%rsi",
+      "+0x00ba mov    %rsi,0x10(%r15)",
+      "+0x00be mov    %rsi,(%r15)",
+      "+0x00c1 sub    %r14d,%edx",
+      "+0x00c4 lea    (%rsi,%rdx,2),%rdx",
+      "+0x00c8 mov    %rdx,0x8(%r15)",
+      "+0x00cc mov    %ecx,0x20(%r15)",
+      "+0x00d0 mov    %edi,0x24(%r15)",
+      "+0x00d4 cmp    %eax,%r14d",
+      "+0x00d7 setb   %al",
+      "+0x00da pop    %rbx",
+      "+0x00db pop    %r14",
+      "+0x00dd pop    %r15",
+      "+0x00df ret"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x0000 push   %r15",
+      "+0x0002 push   %r14",
+      "+0x0004 push   %r12",
+      "+0x0006 push   %rbx",
+      "+0x0007 push   %rax",
+      "+0x0008 mov    %rsi,%rbx",
+      "+0x000b mov    %rdi,%r14",
+      "+0x000e mov    0x40(%rdi,%rsi,8),%r15",
+      "+0x0013 lea    (%rsi,%rsi,2),%rax",
+      "+0x0017 lea    (%rdi,%rax,8),%r12",
+      "+0x001b add    $0x1040,%r12",
+      "+0x0022 sub    0x1040(%rdi,%rax,8),%r15",
+      "+0x002a je     8aec6 <<c30walk::ctor2c::W<false>>::refill+0x36>",
+      "+0x0036 shr    $1,%r15",
+      "+0x0039 add    0x8(%r12),%r15d",
+      "+0x003e mov    %r15d,0x8(%r12)",
+      "+0x0043 movq   $0x0,(%r12)",
+      "+0x004b movq   $0x0,0x40(%r14,%rbx,8)",
+      "+0x0054 movq   $0x0,0x840(%r14,%rbx,8)",
+      "+0x0060 mov    0xc(%r12),%eax",
+      "+0x0065 cmp    %eax,%r15d",
+      "+0x0068 jae    8af92 <<c30walk::ctor2c::W<false>>::refill+0x102>",
+      "+0x006e mov    %r15d,%ecx",
+      "+0x0071 mov    $0x88888889,%edi",
+      "+0x0076 imul   %rcx,%rdi",
+      "+0x007a mov    %rdi,%rcx",
+      "+0x007d shr    $0x24,%rcx",
+      "+0x0081 mov    %ecx,%r9d",
+      "+0x0084 shl    $0x5,%r9d",
+      "+0x0088 sub    %ecx,%r9d",
+      "+0x008b sub    %ecx,%r9d",
+      "+0x008e lea    0x1e(%r9),%edx",
+      "+0x0092 cmp    %eax,%edx",
+      "+0x0094 cmovae %eax,%edx",
+      "+0x0097 shr    $0x2a,%rdi",
+      "+0x009b mov    0x10(%r14),%rsi",
+      "+0x009f cmp    %rsi,%rdi",
+      "+0x00a2 jae    8afa4 <<c30walk::ctor2c::W<false>>::refill+0x114>",
+      "+0x00a4 mov    %r15d,%esi",
+      "+0x00a7 mov    %rcx,%r8",
+      "+0x00aa shl    $0x6,%r8",
+      "+0x00ae add    0x28(%r14),%r8",
+      "+0x00b2 sub    %r9d,%esi",
+      "+0x00b5 mov    0x8(%r14),%r9",
+      "+0x00b9 mov    (%r9,%rdi,8),%rdi",
+      "+0x00bd bt     %rcx,%rdi",
+      "+0x00c1 jae    8af5e <<c30walk::ctor2c::W<false>>::refill+0xce>",
+      "+0x00d5 mov    %esi,%esi",
+      "+0x00d7 lea    (%r8,%rsi,2),%rsi",
+      "+0x00db mov    %rsi,0x40(%r14,%rbx,8)",
+      "+0x00e0 sub    %r15d,%edx",
+      "+0x00e3 lea    (%rsi,%rdx,2),%rdx",
+      "+0x00e7 mov    %rdx,0x840(%r14,%rbx,8)",
+      "+0x00ef mov    %rsi,(%r12)",
+      "+0x00f3 mov    %r15d,0x8(%r12)",
+      "+0x00f8 mov    %ecx,0x10(%r12)",
+      "+0x00fd mov    %edi,0x14(%r12)",
+      "+0x0102 cmp    %eax,%r15d",
+      "+0x0105 setb   %al",
+      "+0x0108 add    $0x8,%rsp",
+      "+0x010c pop    %rbx",
+      "+0x010d pop    %r12",
+      "+0x010f pop    %r14",
+      "+0x0111 pop    %r15",
+      "+0x0113 ret"
+     ]
+    ]
+   ],
+   "counter": "refills",
+   "counted": 1299478,
+   "counted_each": [
+    1299478
+   ],
+   "path": "refill calls",
+   "agrees": true
+  },
+  {
+   "group": "refill",
+   "frequency": 1262935,
+   "baseline": 2,
+   "candidate": 3,
+   "delta": 1262935,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0020 mov    %rbx,%rdi",
+      "+0x0023 call   8e2f0 <<c30walk::ctor2::W<false>>::finish>"
+     ]
+    ],
+    [
+     "C",
+     [
+      "+0x002c mov    %r14,%rdi",
+      "+0x002f mov    %ebx,%esi",
+      "+0x0031 call   8adc0 <<c30walk::ctor2c::W<false>>::finish>"
+     ]
+    ]
+   ],
+   "counter": "refill_finishes",
+   "counted": 1262935,
+   "counted_each": [
+    1262935
+   ],
+   "path": "refills that finish a portion",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 1795482,
+   "baseline": 34,
+   "candidate": 5,
+   "delta": -52068978,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0000 push   %rbp",
+      "+0x0001 push   %r15",
+      "+0x0003 push   %r14",
+      "+0x0005 push   %r13",
+      "+0x0007 push   %r12",
+      "+0x0009 push   %rbx",
+      "+0x000a sub    $0x38,%rsp",
+      "+0x000e mov    0x18(%rdi),%rbp",
+      "+0x0012 mov    0x10(%rbp),%r8",
+      "+0x0016 mov    %r8,%r13",
+      "+0x0019 sub    $0x1,%r13",
+      "+0x001d jb     8e87a <<c30walk::ctor2::W<false>>::finish+0x58a>",
+      "+0x0023 mov    %rdi,%r11",
+      "+0x0026 lea    (%rsi,%rsi,4),%rax",
+      "+0x002a mov    0x40(%rdi,%rax,8),%r14",
+      "+0x002f mov    0x50(%rdi,%rax,8),%rdi",
+      "+0x0034 mov    0x58(%r11,%rax,8),%r12d",
+      "+0x0039 mov    0x60(%r11,%rax,8),%ecx",
+      "+0x003e mov    0x64(%r11,%rax,8),%eax",
+      "+0x0043 sub    %rdi,%r14",
+      "+0x0046 mov    %r14,0x8(%rsp)",
+      "+0x004b shr    $1,%r14",
+      "+0x004e mov    0x8(%rbp),%r10",
+      "+0x0052 mov    %r13,%rdx",
+      "+0x0055 shl    $0xa,%rdx",
+      "+0x0059 add    %r10,%rdx",
+      "+0x005c mov    %r13,%rbx",
+      "+0x005f cmp    %r12d,(%rdx,%rsi,4)",
+      "+0x0063 jbe    8e3c8 <<c30walk::ctor2::W<false>>::finish+0xd8>",
+      "+0x00d8 imul   $0xffffffffffffffe2,%rcx,%r15",
+      "+0x00dc add    %r12,%r15",
+      "+0x00df cmp    $0xffffffff,%eax",
+      "+0x00e2 mov    %r14,0x10(%rsp)",
+      "+0x00e7 je     8e4db <<c30walk::ctor2::W<false>>::finish+0x1eb>"
+     ]
+    ],
+    [
+     "C:finish",
+     [
+      "+0x0000 movzbl %sil,%esi",
+      "+0x0004 lea    (%rsi,%rsi,2),%rax",
+      "+0x0008 mov    0x1054(%rdi,%rax,8),%ecx",
+      "+0x000f cmp    0x284c(%rdi),%ecx",
+      "+0x0015 jne    8a7b0 <<c30walk::ctor2c::W<false>>::finish_slow>"
+     ]
+    ]
+   ],
+   "counter": "leaf_fast + slow_entries",
+   "counted": 1795482,
+   "counted_each": [
+    1795482
+   ],
+   "path": "every finish: B2 entry and classification; the leaf prefix to the tag test",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 1754362,
+   "baseline": 19,
+   "candidate": 0,
+   "delta": -33332878,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x01eb movzwl (%rdi),%eax",
+      "+0x01ee movzwl -0x2(%rdi,%r14,2),%r8d",
+      "+0x01f4 mov    %ebx,%edx",
+      "+0x01f6 shl    $0x10,%edx",
+      "+0x01f9 or     %eax,%edx",
+      "+0x01fb mov    %r13d,%r9d",
+      "+0x01fe shl    $0x10,%r9d",
+      "+0x0202 or     %r8d,%r9d",
+      "+0x0205 sub    %edx,%r9d",
+      "+0x0208 cmp    $0xfffe,%r9d",
+      "+0x020f jae    8e57d <<c30walk::ctor2::W<false>>::finish+0x28d>",
+      "+0x05eb add    $0x38,%rsp",
+      "+0x05ef pop    %rbx",
+      "+0x05f0 pop    %r12",
+      "+0x05f2 pop    %r13",
+      "+0x05f4 pop    %r14",
+      "+0x05f6 pop    %r15",
+      "+0x05f8 pop    %rbp",
+      "+0x05f9 ret"
+     ]
+    ]
+   ],
+   "counter": "fin_fast + fin_ordinary + fin_wide",
+   "counted": 1754362,
+   "counted_each": [
+    1754362
+   ],
+   "path": "B2's ordinary path (u0, ul, span)",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 1723413,
+   "baseline": 9,
+   "candidate": 0,
+   "delta": -15510717,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0211 mov    0x28(%r11),%r8",
+      "+0x0215 shl    $0x6,%rcx",
+      "+0x0219 shl    $0x8,%edx",
+      "+0x021c or     %edx,%esi",
+      "+0x021e mov    %esi,0x3c(%r8,%rcx,1)",
+      "+0x0223 test   %r14,%r14",
+      "+0x0226 je     8e8db <<c30walk::ctor2::W<false>>::finish+0x5eb>",
+      "+0x022c cmp    $0x1e,%r14",
+      "+0x0230 jne    8e716 <<c30walk::ctor2::W<false>>::finish+0x426>"
+     ]
+    ]
+   ],
+   "counter": "fin_fast + fin_ordinary",
+   "counted": 1723413,
+   "counted_each": [
+    1723413
+   ],
+   "path": "B2's ordinary, not wide (header)",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 1723371,
+   "baseline": 19,
+   "candidate": 0,
+   "delta": -32744049,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x0236 movd   %eax,%xmm0",
+      "+0x023a pshuflw $0x0,%xmm0,%xmm0",
+      "+0x023f pshufd $0x44,%xmm0,%xmm1",
+      "+0x0244 movdqu (%rdi),%xmm2",
+      "+0x0248 movdqu 0x10(%rdi),%xmm3",
+      "+0x024d movdqu 0x20(%rdi),%xmm4",
+      "+0x0252 psubw  %xmm1,%xmm2",
+      "+0x0256 movdqu %xmm2,(%rdi)",
+      "+0x025a psubw  %xmm1,%xmm3",
+      "+0x025e movdqu %xmm3,0x10(%rdi)",
+      "+0x0263 psubw  %xmm1,%xmm4",
+      "+0x0267 movdqu %xmm4,0x20(%rdi)",
+      "+0x026c movq   0x30(%rdi),%xmm1",
+      "+0x0271 psubw  %xmm0,%xmm1",
+      "+0x0275 movq   %xmm1,0x30(%rdi)",
+      "+0x027a movd   0x38(%rdi),%xmm1",
+      "+0x027f psubw  %xmm0,%xmm1",
+      "+0x0283 movd   %xmm1,0x38(%rdi)",
+      "+0x0288 jmp    8e8db <<c30walk::ctor2::W<false>>::finish+0x5eb>"
+     ]
+    ]
+   ],
+   "counter": "norm_full",
+   "counted": 1723371,
+   "counted_each": [
+    1723371
+   ],
+   "path": "B2's full normalisation (30 fields)",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 1647416,
+   "baseline": 0,
+   "candidate": 7,
+   "delta": 11531912,
+   "listing": [
+    [
+     "C:finish",
+     [
+      "+0x001b lea    (%rdi,%rax,8),%rax",
+      "+0x001f add    $0x1040,%rax",
+      "+0x0025 mov    0x40(%rdi,%rsi,8),%rdx",
+      "+0x002a mov    (%rax),%rax",
+      "+0x002d sub    %rax,%rdx",
+      "+0x0030 cmp    $0x3c,%rdx",
+      "+0x0034 jne    8a7b0 <<c30walk::ctor2c::W<false>>::finish_slow>"
+     ]
+    ]
+   ],
+   "counter": "leaf_fast + slow_ordinary_partial_same_epoch",
+   "counted": 1647416,
+   "counted_each": [
+    1647416
+   ],
+   "path": "leaf: tag matched, the length test",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 1647375,
+   "baseline": 0,
+   "candidate": 32,
+   "delta": 52716000,
+   "listing": [
+    [
+     "C:finish",
+     [
+      "+0x003a and    $0x7fffffff,%ecx",
+      "+0x0040 or     %esi,%ecx",
+      "+0x0042 movq   (%rax),%xmm0",
+      "+0x0046 movzwl (%rax),%edx",
+      "+0x0049 movd   %edx,%xmm1",
+      "+0x004d shl    $0x8,%edx",
+      "+0x0050 or     %ecx,%edx",
+      "+0x0052 mov    %edx,0x3c(%rax)",
+      "+0x0055 movq   0x8(%rax),%xmm2",
+      "+0x005a xor    %ecx,%ecx",
+      "+0x005c pshuflw $0x0,%xmm0,%xmm3",
+      "+0x0061 pinsrw $0x0,%ecx,%xmm0",
+      "+0x0066 punpcklqdq %xmm2,%xmm0",
+      "+0x006a pshufd $0x44,%xmm3,%xmm2",
+      "+0x006f pand   -0x7ab57(%rip),%xmm2        # 102e0 <GCC_except_table992+0x41c>",
+      "+0x0077 psubw  %xmm2,%xmm0",
+      "+0x007b movdqu %xmm0,(%rax)",
+      "+0x007f pshuflw $0x0,%xmm1,%xmm0",
+      "+0x0084 pshufd $0x44,%xmm0,%xmm1",
+      "+0x0089 movdqu 0x10(%rax),%xmm2",
+      "+0x008e movdqu 0x20(%rax),%xmm3",
+      "+0x0093 psubw  %xmm1,%xmm2",
+      "+0x0097 movdqu %xmm2,0x10(%rax)",
+      "+0x009c psubw  %xmm1,%xmm3",
+      "+0x00a0 movdqu %xmm3,0x20(%rax)",
+      "+0x00a5 movq   0x30(%rax),%xmm1",
+      "+0x00aa psubw  %xmm0,%xmm1",
+      "+0x00ae movq   %xmm1,0x30(%rax)",
+      "+0x00b3 movd   0x38(%rax),%xmm1",
+      "+0x00b8 psubw  %xmm0,%xmm1",
+      "+0x00bc movd   %xmm1,0x38(%rax)",
+      "+0x00c1 ret"
+     ]
+    ]
+   ],
+   "counter": "leaf_fast",
+   "counted": 1647375,
+   "counted_each": [
+    1647375
+   ],
+   "path": "leaf: header and five-chunk normalisation",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 148107,
+   "baseline": 0,
+   "candidate": 34,
+   "delta": 5035638,
+   "listing": [
+    [
+     "C:finish_slow",
+     [
+      "+0x0000 push   %rbp",
+      "+0x0001 push   %r15",
+      "+0x0003 push   %r14",
+      "+0x0005 push   %r13",
+      "+0x0007 push   %r12",
+      "+0x0009 push   %rbx",
+      "+0x000a sub    $0x38,%rsp",
+      "+0x000e mov    0x18(%rdi),%rbp",
+      "+0x0012 mov    0x10(%rbp),%r8",
+      "+0x0016 mov    %r8,%r13",
+      "+0x0019 sub    $0x1,%r13",
+      "+0x001d jb     8ad4a <<c30walk::ctor2c::W<false>>::finish_slow+0x59a>",
+      "+0x0023 mov    %rdi,%r11",
+      "+0x0026 lea    (%rsi,%rsi,2),%rax",
+      "+0x002a mov    0x1040(%rdi,%rax,8),%rdi",
+      "+0x0032 mov    0x1048(%r11,%rax,8),%r12d",
+      "+0x003a mov    0x1050(%r11,%rax,8),%ecx",
+      "+0x0042 mov    0x1054(%r11,%rax,8),%eax",
+      "+0x004a mov    0x40(%r11,%rsi,8),%r14",
+      "+0x004f sub    %rdi,%r14",
+      "+0x0052 mov    %r14,0x8(%rsp)",
+      "+0x0057 shr    $1,%r14",
+      "+0x005a mov    0x8(%rbp),%r10",
+      "+0x005e mov    %r13,%rdx",
+      "+0x0061 shl    $0xa,%rdx",
+      "+0x0065 add    %r10,%rdx",
+      "+0x0068 mov    %r13,%rbx",
+      "+0x006b cmp    %r12d,(%rdx,%rsi,4)",
+      "+0x006f jbe    8a898 <<c30walk::ctor2c::W<false>>::finish_slow+0xe8>",
+      "+0x00e8 imul   $0xffffffffffffffe2,%rcx,%r15",
+      "+0x00ec add    %r12,%r15",
+      "+0x00ef test   %eax,%eax",
+      "+0x00f1 mov    %r14,0x10(%rsp)",
+      "+0x00f6 js     8a9ab <<c30walk::ctor2c::W<false>>::finish_slow+0x1fb>"
+     ]
+    ]
+   ],
+   "counter": "slow_entries",
+   "counted": 148107,
+   "counted_each": [
+    148107
+   ],
+   "path": "finish_slow entry and classification",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 106987,
+   "baseline": 0,
+   "candidate": 19,
+   "delta": 2032753,
+   "listing": [
+    [
+     "C:finish_slow",
+     [
+      "+0x01fb movzwl (%rdi),%eax",
+      "+0x01fe movzwl -0x2(%rdi,%r14,2),%r8d",
+      "+0x0204 mov    %ebx,%edx",
+      "+0x0206 shl    $0x10,%edx",
+      "+0x0209 or     %eax,%edx",
+      "+0x020b mov    %r13d,%r9d",
+      "+0x020e shl    $0x10,%r9d",
+      "+0x0212 or     %r8d,%r9d",
+      "+0x0215 sub    %edx,%r9d",
+      "+0x0218 cmp    $0xfffe,%r9d",
+      "+0x021f jae    8aa4d <<c30walk::ctor2c::W<false>>::finish_slow+0x29d>",
+      "+0x05f9 add    $0x38,%rsp",
+      "+0x05fd pop    %rbx",
+      "+0x05fe pop    %r12",
+      "+0x0600 pop    %r13",
+      "+0x0602 pop    %r14",
+      "+0x0604 pop    %r15",
+      "+0x0606 pop    %rbp",
+      "+0x0607 ret"
+     ]
+    ]
+   ],
+   "counter": "slow_ordinary_old_epoch + slow_ordinary_partial_same_epoch",
+   "counted": 106987,
+   "counted_each": [
+    106987
+   ],
+   "path": "finish_slow's ordinary path",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 76038,
+   "baseline": 0,
+   "candidate": 9,
+   "delta": 684342,
+   "listing": [
+    [
+     "C:finish_slow",
+     [
+      "+0x0221 mov    0x28(%r11),%r8",
+      "+0x0225 shl    $0x6,%rcx",
+      "+0x0229 shl    $0x8,%edx",
+      "+0x022c or     %edx,%esi",
+      "+0x022e mov    %esi,0x3c(%r8,%rcx,1)",
+      "+0x0233 test   %r14,%r14",
+      "+0x0236 je     8ada9 <<c30walk::ctor2c::W<false>>::finish_slow+0x5f9>",
+      "+0x023c cmp    $0x1e,%r14",
+      "+0x0240 jne    8abe6 <<c30walk::ctor2c::W<false>>::finish_slow+0x436>"
+     ]
+    ]
+   ],
+   "counter": "fin_ordinary + slow_ordinary_partial_same_epoch",
+   "counted": 76038,
+   "counted_each": [
+    76038
+   ],
+   "path": "finish_slow's ordinary, not wide (header)",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 75996,
+   "baseline": 0,
+   "candidate": 19,
+   "delta": 1443924,
+   "listing": [
+    [
+     "C:finish_slow",
+     [
+      "+0x0246 movd   %eax,%xmm0",
+      "+0x024a pshuflw $0x0,%xmm0,%xmm0",
+      "+0x024f pshufd $0x44,%xmm0,%xmm1",
+      "+0x0254 movdqu (%rdi),%xmm2",
+      "+0x0258 movdqu 0x10(%rdi),%xmm3",
+      "+0x025d movdqu 0x20(%rdi),%xmm4",
+      "+0x0262 psubw  %xmm1,%xmm2",
+      "+0x0266 movdqu %xmm2,(%rdi)",
+      "+0x026a psubw  %xmm1,%xmm3",
+      "+0x026e movdqu %xmm3,0x10(%rdi)",
+      "+0x0273 psubw  %xmm1,%xmm4",
+      "+0x0277 movdqu %xmm4,0x20(%rdi)",
+      "+0x027c movq   0x30(%rdi),%xmm1",
+      "+0x0281 psubw  %xmm0,%xmm1",
+      "+0x0285 movq   %xmm1,0x30(%rdi)",
+      "+0x028a movd   0x38(%rdi),%xmm1",
+      "+0x028f psubw  %xmm0,%xmm1",
+      "+0x0293 movd   %xmm1,0x38(%rdi)",
+      "+0x0298 jmp    8ada9 <<c30walk::ctor2c::W<false>>::finish_slow+0x5f9>"
+     ]
+    ]
+   ],
+   "counter": "norm_full - leaf_fast",
+   "counted": 75996,
+   "counted_each": [
+    75996
+   ],
+   "path": "finish_slow's full normalisation",
+   "agrees": true
+  },
+  {
+   "group": "finish",
+   "frequency": 61,
+   "baseline": 3,
+   "candidate": 2,
+   "delta": -61,
+   "listing": [
+    [
+     "B2",
+     [
+      "+0x05e2 sub    %ax,(%rdi,%rcx,2)",
+      "+0x05e6 inc    %rcx",
+      "+0x05e9 jmp    8e8cd <<c30walk::ctor2::W<false>>::finish+0x5dd>"
+     ]
+    ],
+    [
+     "C:finish_slow",
+     [
+      "+0x05ed sub    %ax,(%rdi,%rcx,2)",
+      "+0x05f1 inc    %rcx"
+     ]
+    ]
+   ],
+   "counter": "norm_partial_scalar",
+   "counted": 61,
+   "counted_each": [
+    61
+   ],
+   "path": "the partial normalisation's scalar iterations",
+   "agrees": true
+  }
+ ],
+ "counter_supported_delta": -258873217,
+ "uncounted_added": 0,
+ "uncounted_removed": 0,
+ "own_delta": -258873217,
+ "own_by_group": {
+  "build": {
+   "Ir": [
+    1026601670,
+    818880764
+   ],
+   "Dr": [
+    205899121,
+    200681813
+   ],
+   "Dw": [
+    132435558,
+    131601590
+   ]
+  },
+  "refill": {
+   "Ir": [
+    80567464,
+    89627267
+   ],
+   "Dr": [
+    16929671,
+    19492170
+   ],
+   "Dw": [
+    16856671,
+    22054583
+   ]
+  },
+  "finish": {
+   "Ir": [
+    176758551,
+    116546437
+   ],
+   "Dr": [
+    46977623,
+    29152794
+   ],
+   "Dw": [
+    26716217,
+    13537217
+   ]
+  }
+ },
+ "unchanged_functions": {
+  "c30walk::ctor::canonicalise": {
+   "Ir": [
+    3903384,
+    3903384
+   ],
+   "Dr": [
+    609384,
+    609384
+   ],
+   "Dw": [
+    543599,
+    543599
+   ]
+  }
+ },
+ "library_added": 378882,
+ "library_removed": 4454576,
+ "library_shared_sites": 11,
+ "library_added_sites": [
+  [
+   "build",
+   "__memset_avx2_unaligned_erms",
+   434,
+   58156,
+   868,
+   29512
+  ],
+  [
+   "build",
+   "__memset_avx2_unaligned_erms",
+   434,
+   58156,
+   868,
+   29512
+  ],
+  [
+   "build",
+   "__memcpy_avx_unaligned_erms",
+   434,
+   262570,
+   85064,
+   83762
+  ]
+ ],
+ "library_removed_sites": [
+  [
+   "build",
+   "__memcpy_avx_unaligned_erms",
+   434,
+   4454576,
+   4443292,
+   4441556
+  ]
+ ],
+ "inclusive": [
+  1294434062,
+  1031485151
+ ],
+ "inclusive_delta": -262948911,
+ "interval_removed": [
+  258494335,
+  262948911
+ ],
+ "own_memory_delta": {
+  "Dr": -20479638,
+  "Dw": -8815056
+ },
+ "own_memory_delta_by_group": {
+  "build": {
+   "Dr": -5217308,
+   "Dw": -833968
+  },
+  "refill": {
+   "Dr": 2562499,
+   "Dw": 5197912
+  },
+  "finish": {
+   "Dr": -17824829,
+   "Dw": -13179000
+  }
+ },
+ "caller_main_own": [
+  4499110476,
+  4499111344
+ ],
+ "caller_main_delta": 868,
+ "interval_if_caller_charged": [
+  258493467,
+  262948043
+ ],
+ "process_totals": [
+  12330331000,
+  12067382955
+ ],
+ "closure_b2": [
+  "<c30walk::ctor2::Ctor2>::build::<false>",
+  "<c30walk::ctor2::W<false>>::finish",
+  "<c30walk::ctor2::W<false>>::refill",
+  "c30walk::ctor::canonicalise"
+ ],
+ "closure_c": [
+  "<c30walk::ctor2c::Ctor2c>::build::<false>",
+  "<c30walk::ctor2c::W<false>>::finish",
+  "<c30walk::ctor2c::W<false>>::finish_slow",
+  "<c30walk::ctor2c::W<false>>::refill",
+  "c30walk::ctor::canonicalise"
+ ],
+ "runs_identical": true
+}

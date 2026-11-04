@@ -1,0 +1,2 @@
+__rustc::rust_panic
+9: 'lea DISP(%rip),%rsi ;GCC_except_table992' / 'lea DISP(%rip),%rsi ;GCC_except_table993'

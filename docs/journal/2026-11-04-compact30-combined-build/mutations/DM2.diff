@@ -1,0 +1,13 @@
+diff --git a/examples/c30walk/ctor2c.rs b/examples/c30walk/ctor2c.rs
+index fc531b5b..ed11ac49 100644
+--- a/examples/c30walk/ctor2c.rs
++++ b/examples/c30walk/ctor2c.rs
+@@ -434,7 +434,7 @@ impl<const COUNT: bool> W<'_, COUNT> {
+     fn snapshot(&mut self) {
+         let mut a = [0u32; 256];
+         for (c, x) in a.iter_mut().enumerate() {
+-            *x = self.rank(c);
++            *x = self.cold[c].r0 + ((self.en[c] as usize).wrapping_sub(self.cold[c].w0 as usize) / 2) as u32; // MUTANT M2: rank from end
+         }
+         self.snaps.push(a);
+         // the epoch being entered: its index is its snapshot's, before any of its rows

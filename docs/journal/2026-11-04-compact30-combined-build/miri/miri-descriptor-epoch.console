@@ -1,0 +1,4 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner target/miri/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2c-synthetic --miri 'descriptor:epoch'`
+ctor2c-synthetic: descriptor class epoch: 1 cases exact
+ctor2c-synthetic --miri descriptor:epoch: 1 cases, 2 array comparisons, 3 walk outputs, 2 restorations: every check exact; fresh 3839, lookahead 5, held 1, no-full-tile runs 1, nonuniform 3838, second segments 1792, tails 0; scalar rows 61408, fragment rows 36, runs 2, refills 2048, crossing 4, forced 0, epochs 2; leaf 2045, slow 6 (old epoch 1, partial 1, preset RAW 4), wide 0

@@ -1,0 +1,19 @@
+diff --git a/examples/c30walk/ctor2c.rs b/examples/c30walk/ctor2c.rs
+index fc531b5b..fc30ca48 100644
+--- a/examples/c30walk/ctor2c.rs
++++ b/examples/c30walk/ctor2c.rs
+@@ -1221,7 +1221,13 @@ impl Ctor2c {
+                     if !w.run(a as u8, rest.len() - r2.len(), forced_cfg) {
+                         return false;
+                     }
+-                    rest = r2;
++                    // MUTANT M1: the held tile is skipped
++                    if held.is_some() {
++                        held = None;
++                        rest = &r2[16..];
++                    } else {
++                        rest = r2;
++                    }
+                 } else {
+                     // the scanner's tile, at the tile's row index in `ll`
+                     if !w.tile16(ll, end - rest.len(), t) {
