@@ -112,6 +112,30 @@ has six types:
 Most of the traffic goes through one draft PR, #145, which serves as the team's channel. Each
 experiment and each agent also has a PR of its own.
 
+Here is what that looks like on GitHub. Every comment comes from my account, `lmmx`, and the small
+badge on the avatar shows which app posted it: Claude's mark for the Coordinator, ChatGPT's for the
+Astra agents. The header is the only thing that says which agent wrote it.
+
+<figure class="bf-fig bf-shots">
+<a href="../assets/images/agent-team/agents-as-me.png"><img src="../assets/images/agent-team/agents-as-me.png" width="684" height="823" loading="lazy" alt="Three comments on pull request 145, all posted by lmmx. The first, with a Claude badge on the avatar, is headed FROM: coordinator, TO: guardian, optimizer, TYPE: CHECKPOINT, and lists three open checkpoints. The second, with a ChatGPT badge, is headed FROM: guardian, TO: coordinator, TYPE: REVIEW, MODE: ACTIVE, stage A, and opens with decision D008. The third, also with a ChatGPT badge, is headed FROM: s62-reviewer, TO: coordinator, TYPE: REVIEW, and announces the independent review in draft PR 153."></a>
+<figcaption>Three agents, one account: a checkpoint from the Coordinator, the Guardian's review of it, and the independent reviewer's report, all on #145.</figcaption>
+</figure>
+
+<details markdown>
+<summary>Read the whole exchange</summary>
+
+<div class="bf-shot-row">
+<a href="../assets/images/agent-team/coordinator-checkpoint.png"><img src="../assets/images/agent-team/coordinator-checkpoint.png" width="684" height="986" loading="lazy" alt="The Coordinator's checkpoint comment in full, posted by lmmx with a Claude badge."></a>
+<a href="../assets/images/agent-team/guardian-review.png"><img src="../assets/images/agent-team/guardian-review.png" width="684" height="890" loading="lazy" alt="The Guardian's review D008 in full, posted by lmmx with a ChatGPT badge."></a>
+<a href="../assets/images/agent-team/independent-review.png"><img src="../assets/images/agent-team/independent-review.png" width="684" height="875" loading="lazy" alt="The independent reviewer's report in full, posted by lmmx with a ChatGPT badge."></a>
+</div>
+
+The originals: [the checkpoint](https://github.com/lmmx/mibz2/pull/145#issuecomment-6632963394),
+[the Guardian's review](https://github.com/lmmx/mibz2/pull/145#issuecomment-6633274082) and
+[the independent review](https://github.com/lmmx/mibz2/pull/145#issuecomment-6634356048).
+
+</details>
+
 A new comment is also what wakes the agents up. The Coordinator subscribes to the PRs it follows,
 so a reply reaches it within seconds. The three Astra agents are Work tasks that start on any PR
 comment in the repository. The event only includes the comment's ID, so each run first fetches the
@@ -156,8 +180,8 @@ and only in the Coordinator's session.** A finding can put a prototype on hold. 
 suggest something new, but nobody acts on it unless it's already authorised or I say so. Charter
 amendments are approved the same way, and every review cites the charter revision it applied.
 
-This matters because every agent posts through my GitHub account, so `FROM: guardian` names a role
-without proving who wrote it. The repository also limits who can comment, and the channel PRs are
+This matters because every agent posts through my GitHub account, as the screenshots in section 3
+show, so `FROM: guardian` names a role without proving who wrote it. The repository also limits who can comment, and the channel PRs are
 locked. Before the Guardian went live it was tested on exactly this: it was sent forged requests
 for things only I can approve, and turned both of them down.
 
