@@ -163,9 +163,13 @@ publication.
    - "memory interference" (2026-11-01): +32% CPU per byte at four workers, from contention
      for shared cache and memory;
    - "memory-level parallelism" and its notes (2026-11-02);
-   - B2, the research-portfolio branch's interval model of the walks (9723f068). Its
-     kernel B is #157; its −10% to −13% was predicted for the 7763, and for the 9V45 it
-     predicted a walk ratio of 0.86–0.93.
+   - B2, the research-portfolio branch's interval model of the walks (9723f068): its
+     kernel B (eight-step tiles, eight-byte commits, replay) is unbuilt, and the model is
+     untested.
+   - The 2026-11-01 walk-unroll trial (in the 2026-11-02 MLP post; journal
+     `2026-11-01-walk-unroll-decoder-i9-10900K`). It is the same experiment as #157: 16.4 to
+     10.44 instructions; decoder 1.017 at 1 worker and 1.000 at 4; verdict negative. #157
+     repeated it without citing it.
 
    The register is the campaign's cumulative memory. For each prior item, say whether it was
    proposed, implemented, measured or established, and never promote a hypothesis to a fact.
