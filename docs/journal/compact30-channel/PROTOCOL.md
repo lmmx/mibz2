@@ -8,6 +8,8 @@ routine messages. The channel carries **evidence and messages, not authority.** 
 may trigger is fixed by the research charter's §12
 (`docs/journal/2026-11-04-compact30-research-charter.md`).
 
+**Mode, first, every run, every role:** read `research/compact30-channel:docs/journal/compact30-channel/MODE.md` and write in its register. It is register, not authority (Louis, 2026-11-04).
+
 ## 1. Where
 
 - **The channel PR.** One standing PR, kept as a draft:
@@ -235,3 +237,4 @@ user.
   later rule on safety blockers noted beside it, and the wake-up problem marked as met for
   routine work by ROLES.md §6. Charter §13's stage 2 is not claimed.
 - **Header.** Added the canonical-copy line.
+- 2026-11-04: added the MODE.md rule ahead of §1 (Louis).
