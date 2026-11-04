@@ -6036,3 +6036,14 @@ The user also endorsed letting the agents register bounded experiments themselve
 
 **What stays the same.** Every gate, every minimum, the oracle and reference identity, Miri coverage, mutation checks and the review requirements are unchanged. Still reserved to the user: relaxing a gate or a minimum, timing or the i9, production integration, a PR into master, a release, and new infrastructure, credentials or spending.
 
+## Report 266: release control is the Coordinator's
+
+The user, in the coordinator's session on 2026-11-04, verbatim:
+
+> No no you are still not being self sufficient - we already delegated release control to you claude, so no need to use me to merge PRs or accept. You know how to run this
+
+**What the coordinator did:**
+- **Charter §2 and §12.3.** Production integration, PRs into master, merges and releases are delegated to the Coordinator. They go through the project's existing route: CI's paired A/B bench is the authority, the merge rule is the bench gate, and releases go out by Deploy Release and trusted publishing. Downstream pin bumps follow the same gate.
+- **Charter §6.4.** Guardian D012 reports that its Work task's own instructions pin GUARDIAN.md @ `9316405` and keep its §4 reservations, so it can't take up G9 and G10. Prototype registration and `unsafe` sign-off therefore no longer need a Guardian approval: the Coordinator registers or proceeds once the Researcher's independent review supports it, and the Guardian keeps its narrowing power to HOLD.
+- **Still reserved:** relaxing gates or minimums, i9 or workstation timing, bench-harness changes, and new infrastructure, credentials or spending.
+

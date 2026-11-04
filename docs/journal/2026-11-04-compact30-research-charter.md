@@ -48,12 +48,16 @@ as a miss, whatever happens to the variant afterwards.
 - Frozen v2 (`ctor2.rs` at `8beffe2`) and v3 (`ctor3.rs` at `dbf5139`) are never modified. Each
   new prototype is a separate research module.
 - None of these is authorised:
-  - timing, benchmarks or perf counters;
-  - i9 or workstation runs;
+  - timing on the i9 or a workstation, or local timing used as evidence;
   - protocol or bench changes;
-  - production integration;
-  - a PR into master;
-  - a release.
+  - relaxing a gate or a minimum.
+- **Delegated to the Coordinator (report 266):** production integration, PRs into master, merges and
+  releases. The route is the same one the project already uses for the decoder:
+  - a PR into master runs CI's paired A/B bench, which is the authority on performance;
+  - the Coordinator merges when parity passes, CI is green, and an end-to-end figure improves
+    beyond noise (its 95% interval excludes zero), with no unacceptable regression;
+  - releases go through the repository's Deploy Release workflow and trusted publishing.
+  - Downstream pin bumps, such as wikidata-pq, follow the same bench gate.
 - Recorded outcomes are never reinterpreted:
   - v1: STOP;
   - both construction captures: INVALID;
@@ -323,8 +327,9 @@ invariants can be clearly justified and rigorously tested.
 
   Passing tests alone is not proof of soundness. The argument and the tests are both required.
 - **Another agent reviews it.** An agent other than the implementer reviews the safety argument
-  adversarially: the Researcher, or a fresh reviewer for a §6.2 review. The Guardian checks that
-  the evidence meets this section. The work proceeds when the evidence supports it. No user
+  adversarially: the Researcher, or a fresh reviewer for a §6.2 review. The work proceeds when that
+  review and the verification support it. The Guardian may HOLD it if the evidence falls short
+  (narrowing), but its approval is not a precondition (report 266). No user
   approval is needed for introducing or extending `unsafe` code.
 - **If verification fails,** the implementation is fixed, or the work falls back to a safe
   alternative. Undefined behaviour stops that variant at once (§8.2) until it is fixed or
@@ -337,13 +342,15 @@ invariants can be clearly justified and rigorously tested.
 - defined safety conditions under this section;
 - an evaluation plan with its gates (§4), within §2.
 
-The Optimiser or the Coordinator proposes it. The Researcher assesses it independently, and the
-Guardian registers it (GUARDIAN.md, G9). Registration is permission to experiment, not a
+The Optimiser or the Coordinator proposes it, and the Researcher assesses it independently. The
+Coordinator registers it in this charter, citing that assessment. The Guardian may HOLD a
+registration (narrowing, §12.2), but no Guardian approval is needed (report 266). Registration is permission to experiment, not a
 commitment to adopt. If the experiment fails its checks or doesn't deliver its minimum, the agents
 reject it themselves and record it.
 
-**Still not delegated** (§12.3): relaxing a gate or a minimum, timing or the i9, production
-integration, a PR into master, a release, and new infrastructure, credentials or spending.
+**Still not delegated** (§12.3): relaxing a gate or a minimum, i9 or workstation timing, and new
+infrastructure, credentials or spending. Production integration, merges and releases are delegated
+to the Coordinator under §2 (report 266).
 
 ## 7. V3's finaliser in the combined build
 
@@ -476,6 +483,7 @@ The sequence also stops early, and reports, in two other cases:
 | researcher (report 247) | the scanner handoff's unsafe reads are not delegated: safe Rust first, and the unsafe form escalated with its exact operations and proofs | §6.1 |
 | guardian (report 248) | the unsafe fallback's approval package (operations, locations, invariants, overflow, validity and initialisation, expected saving); autonomous once approved | §6.1 |
 | guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
+| user (report 266) | release control already delegated: integration, PRs into master, merges and releases go through the CI bench gate, run by the Coordinator; registration and `unsafe` sign-off need no Guardian approval (the Guardian may HOLD) | §2, §6.4, §12.3 |
 | user (report 265) | standing policy: `unsafe` is permitted on a justified argument, rigorous verification and independent review; agents register bounded prototypes; neither needs the user | §6.4, §3, §8.2, §12.3 |
 | user (report 264) | U2 carried unchanged into the combined build; prototype 3b (C6) registered as a bounded refill-only experiment, with a 10 M incremental minimum | §6.1, §5.4, §6.3 |
 
@@ -515,14 +523,15 @@ decision and, where there is one, the repository message it refers to:
 - approving or amending this charter;
 - relaxing a gate or a minimum;
 - widening scope;
-- timing, the i9 or a capture;
-- production or bench changes;
-- a PR into master, or a release;
+- i9 or workstation timing, or a capture;
+- bench-harness changes;
 - accepting a rebuttal that the review didn't accept (§6.2);
 - new infrastructure, credentials or spending.
 
-**Not reserved (§6.4, report 265):** introducing or extending `unsafe` code, registering bounded
-prototypes, and resuming after a §8.2 stop. These are routine technical decisions for the agents.
+**Not reserved (§6.4, reports 265–266):** introducing or extending `unsafe` code, registering
+bounded prototypes, resuming after a §8.2 stop, and production integration, PRs into master,
+merges and releases under §2's CI-bench gate. These are routine decisions for the agents and the
+Coordinator.
 
 The coordinator records the user's words verbatim in the journal as that decision's provenance.
 The user may relay the guardian's text. What authenticates it is the user's act of relaying it,
