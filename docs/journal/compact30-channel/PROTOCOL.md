@@ -15,9 +15,18 @@ may trigger is fixed by the research charter's §12
 - **The channel PR.** One standing PR, kept as a draft:
   - head `research/compact30-channel`, base `research/compact30-constructor`;
   - it is never merged into master, and it touches only `docs/`, so the bench doesn't run;
-  - it carries messages that span experiments.
+  - it carries messages that span experiments;
+  - **every role publishes its reviews and findings here,** whatever PR or inbox triggered it
+    (Louis, 2026-11-04).
+- **Inboxes (2026-11-04).** Each role has one quiet PR, a draft never merged, and its Work task
+  is subscribed to new comments on that PR alone: the Optimizer #160, the Guardian #161, the
+  Researcher #162. The coordinator posts each checkpoint separately to the inbox of every role
+  it concerns. A role needing another's attention posts in that role's inbox. Nothing else is
+  posted in an inbox; replies go to the channel PR. The reason is that on the channel PR, a new
+  event's run displaced the Optimizer's research runs before they committed.
 - **Experiment PRs.** Each prototype in the charter's §6 gets its own branch and PR into
-  `research/compact30-constructor`. Its checkpoint and its reviews happen there.
+  `research/compact30-constructor`. Its checkpoint is posted to the inboxes and linked from the
+  channel PR; its reviews are published on the channel PR.
 - **Waking.** The coordinator subscribes to every one of these PRs. Comments and reviews on them
   wake its session. Issue comments don't wake it, so issues aren't used for this. There are no
   scheduled polls.
