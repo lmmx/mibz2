@@ -2539,3 +2539,84 @@ That’s a meaningful advance in our understanding of the constructor, even thou
 I’d ask Claude to archive Ultra’s report as research evidence, without starting implementation. After the independent review, we’ll select the most defensible first compilation target.
 
 We haven’t established the execution-cost floor. We’ve found concrete evidence that substantial avoidable machine-code work may still remain. That’s exactly what we sent Ultra to investigate.
+
+## Report 229: the researcher's review of report 227
+
+The researcher supports a bounded, untimed prototype of the **epoch-tagged fast finaliser
+alone**, leaving the scanner and the descriptor layout unchanged. The other two changes would
+be later, separate steps.
+
+Its acceptance criteria cover the whole fast call boundary:
+- at most 40 instructions on the common success path;
+- no snapshot lookup and no full-span classification on that path;
+- no generic register-save frame and no new spills;
+- no added per-row work;
+- a revised ledger that includes all opening, fallback and setup costs.
+
+It adds two audit obligations:
+- every reader of the descriptor's `raw` word must handle the proposed epoch-tag encoding,
+  with its high-bit discriminator;
+- the recorded opening epoch must be the epoch of the portion's first appended row, not of a
+  source cursor that has since advanced.
+
+**Sequencing.** This differs from report 228, which asks for an independent adversarial audit
+of report 227 *before* any implementation. Report 228 is the current authority: no
+implementation is authorised until the guardian decides after that audit.
+
+Kept as relayed; the words are unchanged.
+
+I’ve read the complete Ultra report. My assessment remains GO for a bounded correctness-and-compilation prototype, with no performance capture authorized.
+
+The most consequential result is that Ultra identified three distinct sources of potentially removable work, rather than relying entirely on the ordinary-group finalizer.
+
+Conditional instruction savings per primary-corpus construction
+
+Total: 225.25 million instructions, conditional on meeting the proposed assembly targets and added-work allowances.
+
+That is potentially substantial relative to Ultra’s estimated whole-constructor instruction budget. It also explains why Astra Max’s earlier NO-GO does not settle the question: Max evaluated one optimization, while Ultra identified additional high-frequency work that may be eliminated independently.
+
+My main qualification
+
+I would not yet treat the full 225-million-instruction budget as demonstrated headroom.
+
+The epoch-tagged finalizer has a fairly concrete correctness argument and an explicit target of 81 to at most 40 instructions. The source/tile cleanup is also grounded in identifiable bounds checks.
+
+The descriptor-array proposal is more uncertain. Changing the layout may eliminate two address-generation instructions per scalar row, but it also changes how refill, finish, run handling and snapshots access descriptors. The assumed allowance of five million extra instructions elsewhere needs to survive actual compilation.
+
+More generally, the proposed savings are architectural-instruction counts, not cycle savings. Eliminating a compare and branch, two address calculations, or a serial metadata load can have quite different performance consequences.
+
+One detail I would insist Claude checks
+
+Ultra proposes encoding an ordinary descriptor’s opening epoch in its existing raw field, using the high bit as a discriminator.
+
+That requires a careful audit of every place that currently interprets raw as either NO_RAW or a RAW index. The fast path may be correct while an exceptional fallback silently misinterprets the new encoding.
+
+The other essential invariant is that a descriptor’s recorded opening epoch must correspond to its first appended successor, not the epoch of a subsequently advanced source cursor.
+
+Both obligations are manageable, but neither should be accepted merely because the ordinary fast path produces correct output on the primary corpus.
+
+What I’d authorize next
+
+I’d ask Claude to implement only the epoch-tagged fast finalizer, leaving the scanner and descriptor layout unchanged.
+
+The prototype should establish byte-exact correctness against the frozen oracle, exercise epoch boundaries, wide spans, crossing groups, forced RAW, malformed counts and allocation reuse, and provide annotated release disassembly.
+
+Its machine-code acceptance criteria should include the complete fast call boundary, not merely the normalization body:
+
+* At most 40 instructions on the common fast-success path.
+* No snapshot lookup or full-span classification on that path.
+* No generic callee-save frame or new spills.
+* No additional per-row work in scalar or fragment append.
+* All added opening, fallback and setup costs included in a revised instruction ledger.
+
+If those conditions pass, the result would justify considering the other two eliminations as separate, bounded follow-ons. It would not, by itself, demonstrate that the constructor meets the economic target.
+
+The broader significance
+
+Ultra’s most useful contribution is not its GO verdict. It’s that we now have a concrete picture of how much unnecessary control work may remain in v2, and where that work occurs.
+
+The completion analysis is especially relevant: the slowest worker in a full-block step usually has lower bulk coverage and more scalar and finalization work. That gives these optimizations a plausible route to improving synchronized completion, rather than merely reducing instructions in an already efficient path.
+
+The original traversal result remains VALID ADVANCE. Both construction captures remain INVALID. Whole-decoder performance remains unestablished.
+
+My recommendation: proceed with the first untimed prototype, preserve Ultra’s cumulative ledger as a research hypothesis, and require actual compiler output before crediting any of the proposed savings.
