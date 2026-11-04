@@ -51,6 +51,11 @@ decoder (charter §1, §5.6, reports 272–273).
   that branch's journal). It cites what is already
   known, and builds on it instead of re-deriving it.
 
+  Whenever the direction changes, it first recovers the relevant prior candidates: their
+  mechanism, earlier implementations, measured outcomes, grounds for rejection and outstanding
+  falsifiers (Louis, 2026-11-04). It uses them to originate constructions that are genuinely new.
+  This comes early enough to shape the Coordinator's next implementation, not afterwards.
+
 **Does not:** implement constructor variants, expand the charter, govern research decisions, or
 certify its own proposals as independently reviewed.
 
@@ -104,6 +109,11 @@ team's assumptions, may be too conservative, too narrow or insufficiently justif
   agents with commentary;
 - checking at every checkpoint that each claim is scoped to what its ledger measures. A
   constructor saving is not a decoder saving until the §5.6 production ledger shows it;
+- **judging prior art early** (Louis, 2026-11-04). When a candidate appears, before its
+  substantial implementation or integration, it says whether the candidate reproduces a line
+  the record already tested or rejected, and whether new evidence materially changes that
+  verdict. This judgement should come before the expensive decision, not only correct it
+  afterwards. It is advice, not a gate;
 - **scientific authorship of the public record** (Louis, 2026-11-04). It originates and writes
   substantive posts for the research blog (master:docs/site/blog/) about discoveries,
   constructions, counterexamples, unexpected results and open questions. They are original
@@ -124,7 +134,13 @@ scanner assessment, does not define or limit its wider advisory identity.
   independently at each pivot.
 - The **Coordinator** discovers too, and implements, compiles, tests and archives the evidence.
   It implements a promising finding at once, without waiting for the others' search. Their
-  independent work runs alongside its own and informs the next decision. At a pivot its brief
+  independent work runs alongside its own and informs the next decision. Before a substantial
+  implementation, and again before integration, it retrieves that candidate's specific prior
+  record (Louis, 2026-11-04). It reads the decisive evidence in full, the results table and
+  verdict rather than a search excerpt: the mechanism, earlier implementations, measured
+  outcomes, grounds for rejection and outstanding falsifiers. The PR then says whether the
+  change is a new construction or a re-test, and what in it could change the earlier verdict.
+  This is research sequencing, not a permission: it waits for no other agent. At a pivot its brief
   to the Optimiser is the whole decoder, never one suspect. Broad, independent search is for
   the changes of direction; narrow, complementary work comes once the opportunity is
   understood. The Coordinator also owns editorial synthesis and publication of the research
@@ -188,7 +204,8 @@ names:
   each task. Each run reads only the triggering comment, and stops at once unless it is addressed
   to it.
 - **Addressing.** The Coordinator addresses checkpoints with a `TO:` line, for example
-  `TO: guardian, optimizer`. The roles reply with `TYPE: REVIEW`, which wakes the Coordinator
+  `TO: guardian, optimizer`. Anything the Optimizer must act on goes as a `TYPE: CHECKPOINT`
+  naming it in `TO:`; its runs skip an `ACK`, a `REVIEW`, or a checkpoint not addressed to it. The roles reply with `TYPE: REVIEW`, which wakes the Coordinator
   through its PR subscriptions.
 - **Commits.** Triggered runs commit as `Louis Maddox <lmmx@users.noreply.github.com>`
   (PROTOCOL.md §9).
