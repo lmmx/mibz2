@@ -1,0 +1,833 @@
+{
+  "scan": {
+    "classes": 31,
+    "counter_expressions": 32,
+    "new_counter_fields": 20,
+    "increment_lines": {
+      "bitmap_memsets": [
+        933
+      ],
+      "complete_calls": [
+        809
+      ],
+      "epochs_short": [
+        1046
+      ],
+      "epochs_tiled": [
+        1045
+      ],
+      "epochs_untailed": [
+        1104
+      ],
+      "fills_vector": [
+        799
+      ],
+      "final_finishes": [
+        1118
+      ],
+      "preset_crossing": [
+        1021
+      ],
+      "runs_exhausted": [
+        1085
+      ],
+      "runs_lookahead": [
+        1067
+      ],
+      "runs_no_lookahead": [
+        1068
+      ],
+      "tail_refills_first": [
+        707
+      ],
+      "tail_refills_second": [
+        715
+      ],
+      "tail_rows_second": [
+        716
+      ],
+      "tails_even": [
+        699
+      ],
+      "tails_len1": [
+        697
+      ],
+      "tails_len_ge2": [
+        698
+      ],
+      "tails_second_segment": [
+        700
+      ],
+      "tile_refills_first": [
+        761
+      ],
+      "tile_refills_second": [
+        773
+      ]
+    },
+    "checks": [
+      {
+        "function": "build",
+        "frequency": 10544477,
+        "expressions": [
+          "lookahead_pairs + runs_no_full_tile"
+        ],
+        "values": [
+          10544477
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 10541706,
+        "expressions": [
+          "lookahead_pairs"
+        ],
+        "values": [
+          10541706
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 9933956,
+        "expressions": [
+          "lookahead_pairs - held_reuses"
+        ],
+        "values": [
+          9933956
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 3003834,
+        "expressions": [
+          "tiles_nonuniform + runs"
+        ],
+        "values": [
+          3003834
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 2396084,
+        "expressions": [
+          "fresh_pairs"
+        ],
+        "values": [
+          2396084
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 2393313,
+        "expressions": [
+          "tiles_nonuniform"
+        ],
+        "values": [
+          2393313
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 1116556,
+        "expressions": [
+          "tiles_second_segment"
+        ],
+        "values": [
+          1116556
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 996634,
+        "expressions": [
+          "tile_refills_first"
+        ],
+        "values": [
+          996634
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 801475,
+        "expressions": [
+          "fills_vector"
+        ],
+        "values": [
+          801475
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 610521,
+        "expressions": [
+          "runs"
+        ],
+        "values": [
+          610521
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 610356,
+        "expressions": [
+          "runs_lookahead"
+        ],
+        "values": [
+          610356
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 607750,
+        "expressions": [
+          "held_reuses"
+        ],
+        "values": [
+          607750
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 302049,
+        "expressions": [
+          "tile_refills_second"
+        ],
+        "values": [
+          302049
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 296405,
+        "expressions": [
+          "complete_calls"
+        ],
+        "values": [
+          296405
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 23559,
+        "expressions": [
+          "final_finishes"
+        ],
+        "values": [
+          23559
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 18684,
+        "expressions": [
+          "preset_crossing"
+        ],
+        "values": [
+          18684
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 3654,
+        "expressions": [
+          "epochs"
+        ],
+        "values": [
+          3654
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 3575,
+        "expressions": [
+          "epochs_tiled"
+        ],
+        "values": [
+          3575
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 3424,
+        "expressions": [
+          "epochs_untailed"
+        ],
+        "values": [
+          3424
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 2606,
+        "expressions": [
+          "runs_exhausted"
+        ],
+        "values": [
+          2606
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 786,
+        "expressions": [
+          "tail_refills_first"
+        ],
+        "values": [
+          786
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 434,
+        "expressions": [
+          "blocks"
+        ],
+        "values": [
+          434
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 230,
+        "expressions": [
+          "tails",
+          "bitmap_memsets"
+        ],
+        "values": [
+          230,
+          230
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 218,
+        "expressions": [
+          "tails_len_ge2"
+        ],
+        "values": [
+          218
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 165,
+        "expressions": [
+          "runs_no_lookahead"
+        ],
+        "values": [
+          165
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 121,
+        "expressions": [
+          "tails_even"
+        ],
+        "values": [
+          121
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 106,
+        "expressions": [
+          "tail_rows_second"
+        ],
+        "values": [
+          106
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 79,
+        "expressions": [
+          "epochs_short"
+        ],
+        "values": [
+          79
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 22,
+        "expressions": [
+          "tails_second_segment"
+        ],
+        "values": [
+          22
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 12,
+        "expressions": [
+          "tails_len1"
+        ],
+        "values": [
+          12
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 9,
+        "expressions": [
+          "tail_refills_second"
+        ],
+        "values": [
+          9
+        ]
+      }
+    ],
+    "interval": [
+      84060421,
+      84060421
+    ],
+    "counter_supported_delta": -84060421,
+    "distinct_bitmap_mutation_detected": true
+  },
+  "desc": {
+    "classes": 34,
+    "counter_expressions": 38,
+    "new_counter_fields": 27,
+    "increment_lines": {
+      "bitmap_in_place": [
+        911
+      ],
+      "bitmap_memsets": [
+        912
+      ],
+      "bitmap_reserves": [
+        913
+      ],
+      "bitmap_reserves_single": [
+        914
+      ],
+      "complete_calls": [
+        771
+      ],
+      "epochs_short": [
+        1033
+      ],
+      "epochs_tiled": [
+        1032
+      ],
+      "fills": [
+        759
+      ],
+      "fills_vector": [
+        761
+      ],
+      "init_descs": [
+        932
+      ],
+      "pad_blocks": [
+        966
+      ],
+      "preset_crossing": [
+        1011
+      ],
+      "raw_grows": [
+        901
+      ],
+      "rec_grow_frees": [
+        894
+      ],
+      "rec_grows": [
+        893
+      ],
+      "run_opens": [
+        854
+      ],
+      "runs_end_complete": [
+        847
+      ],
+      "runs_end_fill": [
+        834
+      ],
+      "snaps_reserves": [
+        919
+      ],
+      "sweep_checks": [
+        1078
+      ],
+      "tail_refills_first": [
+        714
+      ],
+      "tail_refills_second": [
+        726
+      ],
+      "tail_rows": [
+        708
+      ],
+      "tail_rows_second": [
+        727
+      ],
+      "tails": [
+        707
+      ],
+      "tile_refills_second": [
+        723
+      ],
+      "tile_rows_second": [
+        724
+      ]
+    },
+    "checks": [
+      {
+        "function": "build",
+        "frequency": 29357924,
+        "expressions": [
+          "rows_scalar - tile_rows_second - tail_rows"
+        ],
+        "values": [
+          29357924
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 8935084,
+        "expressions": [
+          "tile_rows_second"
+        ],
+        "values": [
+          8935084
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 3003834,
+        "expressions": [
+          "outer_iterations"
+        ],
+        "values": [
+          3003834
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 2393313,
+        "expressions": [
+          "outer_iterations - runs"
+        ],
+        "values": [
+          2393313
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 1085833,
+        "expressions": [
+          "fills"
+        ],
+        "values": [
+          1085833
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 801475,
+        "expressions": [
+          "fills_vector"
+        ],
+        "values": [
+          801475
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 610521,
+        "expressions": [
+          "runs"
+        ],
+        "values": [
+          610521
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 597255,
+        "expressions": [
+          "runs_end_fill"
+        ],
+        "values": [
+          597255
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 496004,
+        "expressions": [
+          "run_opens"
+        ],
+        "values": [
+          496004
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 467712,
+        "expressions": [
+          "128 * epochs"
+        ],
+        "values": [
+          467712
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 302049,
+        "expressions": [
+          "tile_refills_second"
+        ],
+        "values": [
+          302049
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 296405,
+        "expressions": [
+          "complete_calls"
+        ],
+        "values": [
+          296405
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 230202,
+        "expressions": [
+          "63 * epochs"
+        ],
+        "values": [
+          230202
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 55986,
+        "expressions": [
+          "sweep_checks // 2 + blocks"
+        ],
+        "values": [
+          55986
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 55552,
+        "expressions": [
+          "sweep_checks // 2"
+        ],
+        "values": [
+          55552
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 27776,
+        "expressions": [
+          "init_descs // 4"
+        ],
+        "values": [
+          27776
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 18684,
+        "expressions": [
+          "preset_crossing"
+        ],
+        "values": [
+          18684
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 13266,
+        "expressions": [
+          "runs_end_complete"
+        ],
+        "values": [
+          13266
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 3654,
+        "expressions": [
+          "epochs"
+        ],
+        "values": [
+          3654
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 3575,
+        "expressions": [
+          "epochs_tiled"
+        ],
+        "values": [
+          3575
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 1769,
+        "expressions": [
+          "tail_rows - tail_rows_second"
+        ],
+        "values": [
+          1769
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 786,
+        "expressions": [
+          "tail_refills_first"
+        ],
+        "values": [
+          786
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 434,
+        "expressions": [
+          "blocks"
+        ],
+        "values": [
+          434
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 432,
+        "expressions": [
+          "bitmap_in_place"
+        ],
+        "values": [
+          432
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 233,
+        "expressions": [
+          "pad_blocks"
+        ],
+        "values": [
+          233
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 230,
+        "expressions": [
+          "tails",
+          "bitmap_memsets"
+        ],
+        "values": [
+          230,
+          230
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 106,
+        "expressions": [
+          "tail_rows_second"
+        ],
+        "values": [
+          106
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 79,
+        "expressions": [
+          "epochs_short"
+        ],
+        "values": [
+          79
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 9,
+        "expressions": [
+          "tail_refills_second"
+        ],
+        "values": [
+          9
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 8,
+        "expressions": [
+          "raw_grows"
+        ],
+        "values": [
+          8
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 2,
+        "expressions": [
+          "rec_grows",
+          "bitmap_reserves"
+        ],
+        "values": [
+          2,
+          2
+        ]
+      },
+      {
+        "function": "build",
+        "frequency": 1,
+        "expressions": [
+          "rec_grow_frees",
+          "snaps_reserves",
+          "bitmap_reserves_single"
+        ],
+        "values": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "function": "refill",
+        "frequency": 1299478,
+        "expressions": [
+          "refills"
+        ],
+        "values": [
+          1299478
+        ]
+      },
+      {
+        "function": "refill",
+        "frequency": 1262935,
+        "expressions": [
+          "refill_finishes"
+        ],
+        "values": [
+          1262935
+        ]
+      }
+    ],
+    "interval": [
+      57830163,
+      62277795
+    ],
+    "counter_supported_delta": -58209045,
+    "distinct_bitmap_mutation_detected": true
+  }
+}

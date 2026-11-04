@@ -1,0 +1,10 @@
+{
+  "scan-ledger.json": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835:docs/journal/2026-11-04-compact30-scanner-f01/ledger.json",
+  "scan-counted.jsonl": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835:docs/journal/2026-11-04-compact30-scanner-f01/counted/corpora.jsonl",
+  "scan-source.rs": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835:examples/c30walk/ctor2su.rs",
+  "scan-old.rs": "49cb46b65070059af49e906fa8d98693b808bda2:examples/c30walk/ctor2su.rs",
+  "desc-ledger.json": "7620c0c667018772a0ba3be28eb62263b55037f8:docs/journal/2026-11-04-compact30-descriptor-f01/ledger.json",
+  "desc-counted.jsonl": "7620c0c667018772a0ba3be28eb62263b55037f8:docs/journal/2026-11-04-compact30-descriptor-f01/counted/sequential.jsonl",
+  "desc-source.rs": "7620c0c667018772a0ba3be28eb62263b55037f8:examples/c30walk/ctor2d.rs",
+  "desc-old.rs": "29dd071f8787a28560a7a081fd7ac0ef13991466:examples/c30walk/ctor2d.rs"
+}
