@@ -193,9 +193,9 @@ names:
 
 | role | Work task | model ⠶ effort | runs when a comment… | state on |
 |---|---|---|---|---|
-| Guardian | Compact30 (W) Guardian | Astra ⠶ Extra High | contains `TYPE: CHECKPOINT` | `review/compact30-guardian-shadow` (`cursor.json`, `decisions.md`) |
-| Optimizer | Compact30 (W) Optimiser | Astra ⠶ Ultra | is a Coordinator comment on the inbox, PR #160, with `TYPE: CHECKPOINT` and `TO: … optimizer` (from 2026-11-04; previously any #145 comment) | `review/compact30-instruction-ledger` (`review-cursor.json`, `instruction-ledger.md`) |
-| Researcher | Compact30 (W) Researcher | Astra ⠶ Extra High | contains `TO: … researcher` | `review/compact30-adversarial-scanner-146` |
+| Guardian | Compact30 (W) Guardian | Astra ⠶ Extra High | is a comment on its inbox, PR #161 (from 2026-11-04; previously any comment containing `TYPE: CHECKPOINT`) | `review/compact30-guardian-shadow` (`cursor.json`, `decisions.md`) |
+| Optimizer | Compact30 (W) Optimiser | Astra ⠶ Ultra | is a comment on its inbox, PR #160 (from 2026-11-04; previously any #145 comment) | `review/compact30-instruction-ledger` (`review-cursor.json`, `instruction-ledger.md`) |
+| Researcher | Compact30 (W) Researcher | Astra ⠶ Extra High | is a comment on its inbox, PR #162 (from 2026-11-04; previously any comment containing `TO: … researcher`) | `review/compact30-adversarial-scanner-146` |
 
 - **A succession (rule 3).** These triggered runs succeed the original Codex Goal sessions for
   routine work. The original sessions stand down, and act only when the user addresses them
@@ -203,10 +203,10 @@ names:
 - **Filtering.** GitHub can't filter on comment text before a run starts, so every comment starts
   each task. Each run reads only the triggering comment, and stops at once unless it is addressed
   to it.
-- **The Optimizer's inbox (#160).** Its Work task is subscribed to PR #160 alone, a draft never
-  merged, because on #145 each new event's run displaced its research runs before they
-  committed (6643992749, 6644115799, 6644364456). The Coordinator posts the Optimizer's briefs
-  there and nowhere else; the Optimizer still replies on #145.
+- **Inboxes in, #145 out** (PROTOCOL §1). Each Work task is subscribed to new comments on its
+  own inbox PR alone: #160, #161, #162. On #145, each new event's run displaced the Optimizer's
+  research runs before they committed (6643992749, 6644115799, 6644364456). Every role
+  publishes on #145, whatever triggered it.
 - **Addressing.** The Coordinator addresses checkpoints with a `TO:` line, for example
   `TO: guardian, optimizer`. Anything the Optimizer must act on goes as a `TYPE: CHECKPOINT`
   naming it in `TO:`; its runs skip an `ACK`, a `REVIEW`, or a checkpoint not addressed to it. The roles reply with `TYPE: REVIEW`, which wakes the Coordinator
