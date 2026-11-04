@@ -123,7 +123,7 @@ CLASSES = {
     ('build', 2606): [('runs_exhausted', 'runs whose lookahead exhausts the epoch')],
     ('build', 786): [('tail_refills_first', "refill detour from the tail's first segment")],
     ('build', 434): [('blocks', 'blocks')],
-    ('build', 230): [('tails', 'tails')],
+    ('build', 230): [('tails', 'tails'), ('bitmap_memsets', "bitmap resize's fill (>= 2 words)")],
     ('build', 218): [('tails_len_ge2', 'tail advance loop (unrolled by two) entry, len >= 2')],
     ('build', 165): [('runs_no_lookahead', 'runs with no lookahead tile')],
     ('build', 121): [('tails_even', 'tail advance loop exit, even len')],
