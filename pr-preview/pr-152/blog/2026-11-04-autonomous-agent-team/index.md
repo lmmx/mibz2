@@ -4,7 +4,7 @@
 
 Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.
 
-4 November 2026 · 11 min read · [Method](<#9-good-practice-in-one-list>)
+4 November 2026 · 11 min read · [Meta](<#9-good-practice-in-one-list>)
 
 The research behind [the last post](<https://lmmx.github.io/mibz2/pr-preview/pr-152/blog/2026-11-04-compact30-constructor/index.md>) was done by several AI agents. One implemented and tested each change to compact30's table builder. Others searched the machine code for instructions to remove, reviewed each result, and checked that the experiments followed their registered rules. Each agent could work alone for long stretches. Together, though, they formed a team only when I copied each agent's messages to the next. I was the team's message bus.
 
@@ -17,13 +17,13 @@ The team has four members. Each role is defined by its responsibilities, not by 
 | Role | Runs as | Responsible for | Never does |
 | --- | --- | --- | --- |
 | **Coordinator** | Claude Code | implementing, compiling and testing each change; archiving the evidence; posting checkpoints | change the scientific rules, or grant itself authority |
-| **Optimiser** | Codex | finding instructions to remove, proving the transformations, keeping the canonical instruction ledger | implement code, or certify its own proposals |
-| **Guardian** | Codex | applying the research charter's gates to evidence, resolving delegated decisions, escalating reserved ones | originate research, or become an approval gate |
-| **Researcher** | Codex | independent, adversarial challenge, including the formal review before changes are combined | agree by default, or duplicate the Optimiser |
+| **Optimiser** | Astra (ChatGPT Work) | finding instructions to remove, proving the transformations, keeping the canonical instruction ledger | implement code, or certify its own proposals |
+| **Guardian** | Astra (ChatGPT Work) | applying the research charter's gates to evidence, resolving delegated decisions, escalating reserved ones | originate research, or become an approval gate |
+| **Researcher** | Astra (ChatGPT Work) | independent, adversarial challenge, including the formal review before changes are combined | agree by default, or duplicate the Optimiser |
 
 The split follows the questions each role asks. The Optimiser asks how to remove more instructions. The Guardian asks whether the process is scientifically defensible. The Researcher asks whether the team's reasoning is sound, and whether the Guardian is making the right call.
 
-The team: three Codex agents and Claude Code, joined by one repository
+The team: three Astra agents and Claude Code, joined by one repository
 
 Every agent reads and writes the same repository and wakes on the same kind of event: a pull-request comment addressed to it.
 
@@ -82,11 +82,11 @@ An agent that has finished its turn is idle until something starts it again. The
 
 **The Coordinator** subscribes to pull requests. A new comment, a review or a CI result on a subscribed PR starts a turn in its existing session. When another agent replies, the Coordinator reads it within seconds.
 
-**The Codex agents** needed a different mechanism. A Codex conversation keeps its objective between turns, but nothing on GitHub can start a turn in it. Before the change, each Codex agent waited until I typed a nudge, such as "new checkpoint on \#151". Messages from Codex to the Coordinator flowed on their own. Messages in the other direction depended on me.
+**The Astra agents** needed a different mechanism. They began as Codex conversations, and a Codex conversation keeps its objective between turns, but nothing on GitHub can start a turn in it. Each agent waited until I typed a nudge, such as "new checkpoint on \#151". Messages from the agents to the Coordinator flowed on their own. Messages in the other direction depended on me.
 
 ## 5\. The doorbell
 
-ChatGPT Work can run a task when a GitHub event happens. Each Codex role now has one such task, subscribed to new comments on the repository's pull requests. A new comment rings the doorbell: it starts a short, fresh run of that role.
+ChatGPT Work can run a task when a GitHub event happens. Each of the three roles now has one such task, subscribed to new comments on the repository's pull requests. A new comment rings the doorbell: it starts a short, fresh run of that role.
 
 GitHub can't filter on a comment's text before a run starts. So every run begins with the same guard:
 
