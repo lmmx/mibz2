@@ -129,6 +129,19 @@
       "commit": "5ae9cc83faa22721ad72f97974006384f00677d2",
       "comment": 6633918984,
       "status": "published; fresh Astra sub-instance route confirmed conditional on actual isolation, provenance and authorised publication scope; no launch or technical review completion claimed"
+    },
+    {
+      "id": "D010",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 145,
+      "sha": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48",
+      "evidence_digest": "621e464bad36bdf6c798c1a88fcee224bf1e9d955dd3fbd757c45bde3b57a0ff",
+      "incoming_comment": 6635380133,
+      "commit": "028d7206e79fae8081cef4ea13357b4546270530",
+      "comment": 6635476486,
+      "status": "published; registered floor uses demonstrated overlap lower bound; additional overlap subtracts; minima do not prove overlap upper bound; no component requalification"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -140,7 +153,8 @@
     6631014855,
     6632636427,
     6633274082,
-    6633918984
+    6633918984,
+    6635476486
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -151,7 +165,8 @@
     "9bb210bc2fe52ef933da50239d85cc8260a759c8",
     "99952368535d6f7f970533c2cfb63c71261c435d",
     "62a313a89876c2bc980718cc094c9265ddf7ff2c",
-    "5ae9cc83faa22721ad72f97974006384f00677d2"
+    "5ae9cc83faa22721ad72f97974006384f00677d2",
+    "028d7206e79fae8081cef4ea13357b4546270530"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -161,7 +176,8 @@
     6632161918,
     6632963394,
     6633116288,
-    6633793271
+    6633793271,
+    6635380133
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -243,16 +259,16 @@
     "trigger": "new event-supplied PR comment containing the exact TYPE: CHECKPOINT marker",
     "repository": "lmmx/mibz2",
     "scope": "only triggering event comments; no backlog",
-    "last_completed_incoming_comment": 6633793271,
-    "last_decision": "D009",
-    "last_outgoing_comment": 6633918984,
+    "last_completed_incoming_comment": 6635380133,
+    "last_decision": "D010",
+    "last_outgoing_comment": 6635476486,
     "after_completion": "stop; await a future matching GitHub event",
     "polling": false,
     "timed_schedule": false,
     "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "5ae9cc83faa22721ad72f97974006384f00677d2",
+    "last_decision_commit": "028d7206e79fae8081cef4ea13357b4546270530",
     "last_duplicate_incoming_comment": 6633116288
   },
   "duplicate_events": [
@@ -307,15 +323,14 @@
       "decision": "D008",
       "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
       "comment": 6633274082
+    },
+    {
+      "pr": 145,
+      "sha": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48",
+      "evidence_digest": "621e464bad36bdf6c798c1a88fcee224bf1e9d955dd3fbd757c45bde3b57a0ff",
+      "decision": "D010",
+      "commit": "028d7206e79fae8081cef4ea13357b4546270530",
+      "comment": 6635476486
     }
-  ],
-  "pending_publication": {
-    "decision": "D010",
-    "incoming_comment": 6635380133,
-    "pr": 145,
-    "sha": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48",
-    "evidence_digest": "621e464bad36bdf6c798c1a88fcee224bf1e9d955dd3fbd757c45bde3b57a0ff",
-    "status": "decision committed; reconcile linked review before retry",
-    "receipt": "docs/journal/compact30-guardian-shadow/d010-receipt.json"
-  }
+  ]
 }
