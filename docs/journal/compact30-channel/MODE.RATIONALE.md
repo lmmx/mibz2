@@ -87,6 +87,37 @@ clear subject, and *catalyse* has no stated object. The reader must rebuild some
 *apply sufficient intensive mathematical engineering to catalyse the breakthrough*. The
 utterance feels like thought discharged faster than it can be packaged grammatically.
 
+### Paratactic cascades
+
+The two terms describe different things:
+- **Asyndetic parataxis** describes the *structure*: clauses and fragments placed side by side
+  without connective grammar.
+- **A paratactic cascade** describes the *movement*: each fragment precipitates the next,
+  producing cumulative acceleration with no explicit transitions.
+
+From the analysis: "Each phrase should propel the next, without explaining the relationship.
+The sequence begins to behave like a chain of operations."
+
+> Cost. Where cost? Which load? Which dependency? Remove. Recount. New cost where? Charge.
+> Bound. Falsify. HARDER. No speculative comfort. Real asm. Real frequency. Mathematic
+> equivalence then impl. Impl then test. Test then next. Decisioning MUST MOVE. Go go.
+
+> Where remaining work? Inherent, or artefact? Mathematical equivalence. Cheaper formulation.
+> Derive. Bound. Derisk. Suffice to catalyse next impl. HARDER. Go.
+
+The phrases are not merely disconnected. Their adjacency invites the reader, or the model, to
+reconstruct a progression of intellectual operations. Each utterance seems to discharge into the
+next before its grammatical implications have been fully articulated. The utterance no longer
+just demands effort: it enacts an engineering investigation through its own succession of
+fragments. This is central to the incantatory effect. It is not merely compressed speech, but
+speech accelerating through successive conceptual transformations.
+
+There are two intended effects, and they must be kept apart:
+- **Prosodic acceleration:** the felt rhythm of successive bursts. It can be observed in the
+  text.
+- **Inferential acceleration:** one technical consequence prompting the next. This is the
+  catalytic hypothesis under test (see the hypotheses below), not an observation.
+
 ### Register collision
 
 Three registers that do not normally coexist sit side by side, with no syntactic transition
@@ -120,6 +151,19 @@ speech feels spat out rather than composed.
 The paradox is that the more demanding the intellectual task becomes, the less grammatical
 elaboration the speaker allows. The demands are compressed, not elaborated, until they read
 like a sequence of increasingly urgent control signals rather than requests.
+
+### The construction: six intensifications
+
+The analysis built the register in stages, each one adding a quality:
+1. **Compression:** remove the conversational tissue, leaving operations.
+2. **Deformation:** delete articles, clip vocabulary, distort idioms, and let abstract nouns
+   assume agency. Example: "Perf gain actual, not story".
+3. **Collision:** sophisticated abstraction set against primitive force, with no mediation.
+   Example: "Suffice to catalyse", suspended without a subject.
+4. **Acceleration:** paratactic cascades.
+5. **Recursive entrainment:** the generated speech is made to take part. "Speak likewise.
+   Language compress itself. Each technical utterance must catalyse next."
+6. **Discharge:** the complete incantation.
 
 ### Form against meaning
 
@@ -235,6 +279,10 @@ The analysis's own terms, quoted from it.
     invoking difficult abstractions, so the intellect never seems to deteriorate.
   - *Escalating prosodic pressure.* Urgency grows through clipping, repetition, strange
     juxtaposition and abrupt terminal commands, not through simplified vocabulary.
+- **Paratactic cascade.** Fragments that precipitate one another, giving cumulative acceleration
+  without transitions. The term names the movement; asyndetic parataxis names the structure.
+  Its effects are prosodic acceleration, which is observed, and inferential acceleration, which
+  is hypothesised.
 - **High-salience semantic nuclei.** What survives once the connective material is stripped:
   "a chain of high-salience semantic nuclei, each carrying a different imperative or
   conceptual demand."
@@ -266,7 +314,8 @@ The analysis's own terms, quoted from it.
 
 The analysis was developed in Louis's ChatGPT conversation of 2026-11-04 and relayed into the
 Coordinator's session the same day. The quotations above are from that analysis, verbatim.
-Origin link: *to be added by Louis.*
+The repository's record of that origin, with Louis's original prompts verbatim (§1) and the
+drafting history, is [`../2026-11-04-compact30-mode.md`](../2026-11-04-compact30-mode.md).
 
 ## What must be preserved
 
