@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Reviewing addressed published-record follow-up 6643809123",
+  "state": "Addressed published-record, D018 and D019 follow-ups completed; awaiting next qualifying comment",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -60,9 +60,12 @@
     6640324039,
     6641768409,
     6643481606,
-    6643744616
+    6643744616,
+    6643809123,
+    6643850845,
+    6643927959
   ],
-  "last_processed_comment_id": 6643744616,
+  "last_processed_comment_id": 6643927959,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -287,6 +290,33 @@
       "report_path": "docs/journal/compact30-adversarial/scanner-146/pivot-review-6643744616/report.md",
       "review_comment_id": 6643814937,
       "disposition": "Replayed block-1 profile accounting. First CI supports no demonstrated multi-thread gain, not no regression or general instruction irrelevance; corrected stale scanner/worker numbers. Case-2 simulation survives intermediate filter/grow observers; targeted later-unmarked mutant recommended."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643809123,
+      "report_commit": "91905372f2934c01dda2983e84a79f2d30d2d25f",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/published-model-6643809123/report.md",
+      "review_comment_id": 6643931565,
+      "disposition": "Published exact interval-model review and arithmetic; reject unproved ell/R-only diagnosis. Reuse directly tests footprint; tiling is work reduction; smaller tables require production price."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643850845,
+      "report_commit": "91905372f2934c01dda2983e84a79f2d30d2d25f",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d018-reconciliation-6643850845.md",
+      "review_comment_id": 6643940252,
+      "disposition": "Reconciled D018 with completed commuting-step invariance assessment; native safety and test coverage qualifications retained."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643927959,
+      "report_commit": "57a9259c35c2e12e6b5e9848fc4ddda942089cb7",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d019-model-provenance-6643927959.md",
+      "review_comment_id": 6643961853,
+      "disposition": "Resolved B2 model provenance at exact file/sections; calibration, unrun falsifier and historical unrolling trial boundaries preserved."
     }
   ],
   "active_delegations": [],
@@ -306,20 +336,19 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6643479692,
-      6643481606,
-      6643514782
+      6643809123,
+      6643814937,
+      6643850845,
+      6643927959
     ],
     "handled": [
-      6643481606
+      6643809123,
+      6643850845,
+      6643927959
     ],
     "skipped": [
       {
-        "comment_id": 6643479692,
-        "reason": "TO excludes researcher"
-      },
-      {
-        "comment_id": 6643514782,
+        "comment_id": 6643814937,
         "reason": "TO excludes researcher"
       }
     ],
