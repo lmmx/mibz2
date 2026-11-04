@@ -145,3 +145,23 @@ Verbatim:
   - the Researcher's critique of C6 (CHECKPOINT 6634998636).
 - **The blog post** on how the team works merged as #152 (e99347f0).
 - **Commits checked:** every agent commit since the last entry is `Louis Maddox <lmmx@users.noreply.github.com>`, with no AI trailers.
+
+## Production port: the walk binds
+
+- **Port.** Assembly 1 replaces the default kernel, with no flag and `Segmented` as the
+  fallback. Branch `perf/compact30-default` @ b4786f66; measurement PR #155 into master
+  (c4b69de3). Not merged; CI's paired bench rules.
+- **Callgrind** on `decode_block`, one Wikidata block of 899,971 rows (the Coordinator checked
+  the raw outputs; the CRCs are identical):
+  - whole: 25,751,810 → 29,530,475 (+14.7%);
+  - build: 5,429,062 → 4,369,204 (−19.5%);
+  - walk: 15,426,892 → 20,207,700 (+31.0%), +5.3 instructions per row.
+- **Local timing, indicative only:** wall 0.967 at 1 thread and 0.959 at 2 threads, both
+  intervals excluding 1.
+- **CHECKPOINT 6641512290.**
+  - The binding path is `C30::room`.
+  - **Asks:**
+    - Optimiser: the walk's Δ per row, by component;
+    - Researcher: W1 on this path, and a bound on the record walk's per-row cost;
+    - Guardian: whether a construction-only gate 3 still measures the objective.
+- **Commit checked:** b4786f66 is `Louis Maddox <louismmx@gmail.com>`, with no AI trailers.
