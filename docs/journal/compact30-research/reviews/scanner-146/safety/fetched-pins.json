@@ -1,0 +1,102 @@
+{
+  "ctor2s.rs": {
+    "git_blob": "998f52202bba035d5cd3bcf65b54b59786308d4c",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/examples/c30walk/ctor2s.rs"
+  },
+  "preregistration.md": {
+    "git_blob": "cb2a0ef999cf6c79489b210596e3c72598e99b43",
+    "url": "https://github.com/lmmx/mibz2/blob/86d9fd7/docs/journal/2026-11-04-compact30-scanner-prototype.md"
+  },
+  "ctor2.rs": {
+    "git_blob": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/examples/c30walk/ctor2.rs"
+  },
+  "ctor3.rs": {
+    "git_blob": "01f91419904a605b721dc1742ba8087fe79f74cf",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/examples/c30walk/ctor3.rs"
+  },
+  "toolchain.txt": {
+    "git_blob": "e575ad81d6d6e9462457888eda7bc51a8c88cf4b",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/miri/toolchain.txt"
+  },
+  "miri-tiny.console": {
+    "git_blob": "1d2e20e1b1dbb881eee3fb31c6f4fb99771a95a1",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-tiny.console"
+  },
+  "miri-tails.console": {
+    "git_blob": "8879bb2a261f044f094d6c02b2aaa7285ab7b3a9",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-tails.console"
+  },
+  "miri-align.console": {
+    "git_blob": "24184d22ddbbc714dead038381e5863fa282379a",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-align.console"
+  },
+  "miri-phase.console": {
+    "git_blob": "5e48400c088b192bf847d4357bcd371b5a8ee0b5",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-phase.console"
+  },
+  "miri-held.console": {
+    "git_blob": "1dc90215dc19ba761263941106683ec2ff2a18ba",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-held.console"
+  },
+  "miri-endrun.console": {
+    "git_blob": "502b356bca78620ac52120505be7bbd621d4cad8",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-endrun.console"
+  },
+  "miri-epoch.console": {
+    "git_blob": "457df7e4ddadfd570e82ef88acdee4a0c38e5af9",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-epoch.console"
+  },
+  "miri-malformed.console": {
+    "git_blob": "ebccdba1356da148959f7558285b1925b26f1662",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-malformed.console"
+  },
+  "mutation-M1.diff": {
+    "git_blob": "4af7eb493a2c29f6ae64e8d39301b30e86c65d2f",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M1.diff"
+  },
+  "mutation-M1.console": {
+    "git_blob": "4741ed5ff046cb114f70385a00d69e9d4b2967d5",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M1.console"
+  },
+  "mutation-M2.diff": {
+    "git_blob": "b6f66effafa78a7bfc9c06b07402e672c05250ee",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M2.diff"
+  },
+  "mutation-M2.console": {
+    "git_blob": "0956b11e2bd9413a341208327b60c887600dbeb2",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M2.console"
+  },
+  "corpora.console": {
+    "git_blob": "9b28f7b249a74fee5b4532b9ea8a667925d89cfd",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/corpora.console"
+  },
+  "corpora.jsonl": {
+    "git_blob": "b9f8906374bd1feab063a4e28a453255622c827d",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/corpora.jsonl"
+  },
+  "adversarial.console": {
+    "git_blob": "4c012262749e84aa831f55bf2eb95eb9d16a4eef",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/adversarial.console"
+  },
+  "adversarial.jsonl": {
+    "git_blob": "b52d18fb686cf9b9f1dff925fb8377b79d0832e9",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/adversarial.jsonl"
+  },
+  "synthetic.console": {
+    "git_blob": "82844e5adb56fa5820973cf274a98330910ed2d0",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/synthetic.console"
+  },
+  "synthetic-quick.console": {
+    "git_blob": "360eb14e6949ad913ac790beb05cd04f68c27a19",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/docs/journal/2026-11-04-compact30-scanner-prototype/synthetic-quick.console"
+  },
+  "walk-0.rs": {
+    "git_blob": "e36c14767f29b03ca512326c25d55a3541a4f620",
+    "url": "https://github.com/lmmx/mibz2/blob/7f74e9f30e31af33b0d66fec3fe89af1758307d9/examples/c30walk.rs"
+  },
+  "walk-1.rs": {
+    "git_blob": "36928aab3666a171c71fba15f7cf62ed09d3fbb7",
+    "url": "https://github.com/lmmx/mibz2/blob/9f1086f8016ad72aa1046488f4073e94202d4063/examples/c30walk.rs"
+  }
+}

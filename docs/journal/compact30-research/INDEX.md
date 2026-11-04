@@ -41,9 +41,8 @@ Compiler contract: rustc 1.97.0 (`2d8144b78`), LLVM 22.1.6, recorded
 `--locked --release` flags. No constructor was compiled for this review. Locally
 materialized baseline files were checked against their Git blob IDs; this does
 not reproduce the compiler. The text connector could not retrieve binary capture archives; an explicitly
-network-enabled Git transport subsequently obtained them. Per-block Ultra claims
-remain attributed until that archive is replayed. Aggregate counters and text
-listings are available and replayable.
+network-enabled Git transport subsequently obtained them. The per-block scanner/refill bounds are now independently replayed in
+[structural findings](structural-findings.md). Original timing verdicts are unchanged.
 
 ## Coordination and provenance
 
@@ -62,3 +61,15 @@ or user nudge naming PR/SHA/evidence is the next review trigger.
 Preserved outcomes: v1 STOP; v3 compiler STOP; both construction captures INVALID;
 traversal VALID ADVANCE. Instructions, memory operations, bytes, dependencies,
 cycles and elapsed time are different units. No conversion between them is claimed.
+
+## Completed reviews and new research
+
+- [PR #146 at 7f74e9f](reviews/scanner-146/report.md), [portable replay](reviews/scanner-146/README.md). Evidence digest `aa4f295b5ec152494e999eacf381a92602de329b03e2f76aecd9d6b8c2484753`.
+- [V3 closeout at 46c3222](reviews/v3/report.md), with `replay.py --repo CHECKOUT`. Evidence-manifest digest `18e8de1ca5a97cf81ef489ce7e3e24a8f01f42272d1dd05707d24c0689868e85`.
+- [Direct-refill proposal](proposals/refill-boundary/proposal.md) and [descriptor gate arithmetic](proposals/refill-boundary/descriptor-note.md). No new prototype authorized.
+- [Structural findings](structural-findings.md): independent archive hashes, per-block frequencies and critical-worker exposure.
+
+State: WAITING after reviewing currently published implementation checkpoints. Next
+trigger is a new immutable prototype/correction/rebuttal or the §6.2 closeout index,
+delivered by an actual notification or user nudge. PR #147 is a proposed shadow
+guardian specification, not an implementation checkpoint or additional authority.

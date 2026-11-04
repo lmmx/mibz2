@@ -1,0 +1,366 @@
+[
+  {
+    "ref": "b302c5d",
+    "path": "docs/journal/compact30-channel/REVIEWER.md",
+    "file": "evidence/REVIEWER-b302c5d.md",
+    "blob": "f5941d00db4c212ef3dab61230a9a4038e4708f1",
+    "sha256": "6a3ada44f52dc8d38bf9fc0055dad5df471685d3d141fa247f0a44eb0e698f7d"
+  },
+  {
+    "ref": "b302c5d",
+    "path": "docs/journal/2026-11-04-compact30-research-charter.md",
+    "file": "evidence/charter-b302c5d.md",
+    "blob": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
+    "sha256": "0de603084ccd6d02f54f9ed0208179af7f59d2bca2656be4b398a5b403aa9b14"
+  },
+  {
+    "ref": "b302c5d",
+    "path": "docs/journal/compact30-channel/PROTOCOL.md",
+    "file": "evidence/PROTOCOL-b302c5d.md",
+    "blob": "de3b1350bc98588e593c5643a7ca4ba026f2889e",
+    "sha256": "47b9a3e62eb5bec31ee20698843cd89b024102ef3b4f1d3b7899f0408bdc8d43"
+  },
+  {
+    "ref": "2f15e513bdb9808a2c7504e3f01b59ebce65f221",
+    "path": "docs/journal/compact30-channel/PROTOCOL.md",
+    "file": "evidence/PROTOCOL-latest.md",
+    "blob": "01d5391874e756ff90bbd9a822913b201cd9dece",
+    "sha256": "575f9294fb637c47ff89668c9ba2b12da29dab5b39ba0d976357e3b01a25d122"
+  },
+  {
+    "ref": "86d9fd7",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype.md",
+    "file": "evidence/preregistration.md",
+    "blob": "cb2a0ef999cf6c79489b210596e3c72598e99b43",
+    "sha256": "962007a941cae86971ddf28fbcdc8544c04ca6c7fdb2326d0db6f7e76c441530"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-1/ctor2s-build-false.asm",
+    "file": "evidence/attempt-1-ctor2s-build-false.asm",
+    "blob": "b98f10f622813d32db03d79ff22858f35c3b3d51",
+    "sha256": "71a2ea68af146d5f381c8a198a61adafa42986a4ca6ef8efec34de8886ed0974"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-2/ctor2s-build-false.asm",
+    "file": "evidence/attempt-2-ctor2s-build-false.asm",
+    "blob": "49d4b860ce456c6016f906d573fea0a803b4a113",
+    "sha256": "9830c5ff935c0b6d2b7b509310dfc8d63b6d2d8e60168509025f827a7074f93f"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-2/source-change.diff",
+    "file": "evidence/attempt-2-source-change.diff",
+    "blob": "b8bbd405a665cad9b57adde96efd58a7e4ccbe8e",
+    "sha256": "f9bbfdea1e9774c4a046ff571966621252ccc92c2b2a202d8348bc1ac75a8089"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-3/ctor2s-build-false.asm",
+    "file": "evidence/attempt-3-ctor2s-build-false.asm",
+    "blob": "276aec4dbf25ca2e079f3ee64147b4df8c43d479",
+    "sha256": "7bb5a0ded0f957136230b21d165a764c9271b3ed892b70c7e21f04a493426de4"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-3/source-change.diff",
+    "file": "evidence/attempt-3-source-change.diff",
+    "blob": "b75ab49e520c137cb90efaab8e14576e850719da",
+    "sha256": "d5e6c2d67af0dd3afe5657e8b110ee4b0fa1f5cf4c953cb66555211fde3744cb"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype.md",
+    "file": "evidence/2026-11-04-compact30-scanner-prototype.md",
+    "blob": "c6894792273f202cd54be14d04963582281415aa",
+    "sha256": "9989e57539561456ee4f676520c8ae3e74e011658ab0d2f22473cc836cb7d2b3"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/corpora.jsonl",
+    "file": "evidence/corpora.jsonl",
+    "blob": "b9f8906374bd1feab063a4e28a453255622c827d",
+    "sha256": "741d771d09272c6ba68f6ff2fd35c1717dbf438d36187755faa145415adcc979"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/corpora.console",
+    "file": "evidence/corpora.console",
+    "blob": "9b28f7b249a74fee5b4532b9ea8a667925d89cfd",
+    "sha256": "37990144867dd39ec94116f85cdf5ffeeeba6f3ab02dbc3a25fe87b0c8d28600"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/listing-diff.txt",
+    "file": "evidence/listing-diff.txt",
+    "blob": "1fd34463d8d2a859404d3abb0c1e0345f362e5d2",
+    "sha256": "ff02a91211e3ff3ea6a29ba539c2df400e025cca1e65254473459d443085110e"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "examples/c30walk/ctor2s.rs",
+    "file": "evidence/ctor2s.rs",
+    "blob": "998f52202bba035d5cd3bcf65b54b59786308d4c",
+    "sha256": "b1c84337dcb950da8ade7a316e414c66001c4887fcd94c0b3223d5ccd2b4d101"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/cgparse.py",
+    "file": "evidence/cgparse.py",
+    "blob": "84cd963610d4245ad9bcc1299015f73be09c57a0",
+    "sha256": "b08a185510407ee45944d01fd0f43442f286f4ab350745ce6a84f7636723c785"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/run1-functions.txt",
+    "file": "evidence/run1-functions.txt",
+    "blob": "fdd9bf6e0ae907783376f0bd29e7b8050aa8f419",
+    "sha256": "75759c611259b9503d66ca21ecdbc0f8b142ee7964f637d02a2d7f8e98540c99"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/run2-functions.txt",
+    "file": "evidence/run2-functions.txt",
+    "blob": "5ccb50982ecf4df9dda02cef0d011f6b8dd40981",
+    "sha256": "ede82feba734d72205ea1c37f5e1d5fec49d29766c87c99ffc640fff235118bb"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/listings/ctor2s-build-false.asm",
+    "file": "evidence/ctor2s-build-false.asm",
+    "blob": "5959078b339270db5fb9bdc5aaf7394faa6c44a0",
+    "sha256": "62bce2360aeff1f56275ae7e66c5fc52361a3ce6a026c6856f00ccb5ae23a598"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/listings/ctor2s-finish-false.asm",
+    "file": "evidence/ctor2s-finish-false.asm",
+    "blob": "3b043edde22aa69c17d31a93dd768afbd1a2b6ef",
+    "sha256": "cb4a64c204b08998db123eb70da5ac07ba9787ef3127b6c14e3bcfbdd86b31e3"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/listings/ctor2s-refill-false.asm",
+    "file": "evidence/ctor2s-refill-false.asm",
+    "blob": "eca8468616606638be9978c1ce707d783cb0d414",
+    "sha256": "1eab7a9fc2fcd82ddc3834e7ccef85ce03309329c05d5867d912172f071a00aa"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/listings/v2-build-false-same-binary.asm",
+    "file": "evidence/v2-build-false-same-binary.asm",
+    "blob": "84265e2afe4cbf797ea6fb7e1e46ad2fe4e4ee79",
+    "sha256": "f39f3d93783017916d578fe066d61d63d67a0c1946539f817b194d82e5b8b09c"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/compact30-channel/PROTOCOL.md",
+    "file": "evidence/PROTOCOL.md",
+    "blob": "95a826aa415ffff4fcf91b52441b99a97191d6a6",
+    "sha256": "6ae7bc68fa52a79e698bda4bf65826692e7e7d389933428b2d1f6dea0244d67b"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/per-instruction.callgrind.gz",
+    "file": "evidence/per-instruction.callgrind.gz",
+    "blob": "57aec0e485610af49076f5471c478104728a5386",
+    "sha256": "c0248f6512954d788a20942d6447df85dd8acb4d162a1815cf63560814ffeb92"
+  },
+  {
+    "ref": "cd14fa9",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-build-false.asm",
+    "file": "evidence/b2/ctor2-build-false.asm",
+    "blob": "aeeaca9eb28adca5619e2bb4137a55cb6e500c7d",
+    "sha256": "89dd82b89d7491f12a068ae99e103ea20ef7bf2bc17c17f19b2e9ed83ee53bcf"
+  },
+  {
+    "ref": "cd14fa9",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-finish-false.asm",
+    "file": "evidence/b2/ctor2-finish-false.asm",
+    "blob": "1996c5215b3dfe6ba35519418e13b54b8d1fbb8b",
+    "sha256": "be6f633a1b6105668455b6bcb76c5a8e0fd0f70505910e92eb129fff75a2c44a"
+  },
+  {
+    "ref": "cd14fa9",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-refill-false.asm",
+    "file": "evidence/b2/ctor2-refill-false.asm",
+    "blob": "ef4a78b854385b56cee4ffef2080e4f97dc44c54",
+    "sha256": "e0270dc301b40c91b6bc91e87bb4d278ced83892984e5d861ae5209d72a286c1"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "examples/c30walk/ctor2s.rs",
+    "file": "safety/ctor2s.rs",
+    "blob": "998f52202bba035d5cd3bcf65b54b59786308d4c",
+    "sha256": "b1c84337dcb950da8ade7a316e414c66001c4887fcd94c0b3223d5ccd2b4d101"
+  },
+  {
+    "ref": "86d9fd7",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype.md",
+    "file": "safety/preregistration.md",
+    "blob": "cb2a0ef999cf6c79489b210596e3c72598e99b43",
+    "sha256": "962007a941cae86971ddf28fbcdc8544c04ca6c7fdb2326d0db6f7e76c441530"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "examples/c30walk/ctor2.rs",
+    "file": "safety/ctor2.rs",
+    "blob": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+    "sha256": "64025a40d7223212017d1d9cdc8b18ddcc4ddf17c1cc985345e4070f01ee0da1"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "examples/c30walk/ctor3.rs",
+    "file": "safety/ctor3.rs",
+    "blob": "01f91419904a605b721dc1742ba8087fe79f74cf",
+    "sha256": "e3da574ab734bf61476fd63441c8757fe84d4a66deaf8126ee540c943bd81de8"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/toolchain.txt",
+    "file": "safety/toolchain.txt",
+    "blob": "e575ad81d6d6e9462457888eda7bc51a8c88cf4b",
+    "sha256": "394e6c170348cb307f1f28571607e2c836da4132f6356883db17fffa2d4877c9"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-tiny.console",
+    "file": "safety/miri-tiny.console",
+    "blob": "1d2e20e1b1dbb881eee3fb31c6f4fb99771a95a1",
+    "sha256": "3c55b1e6a373b7adb3027c5771b04851b46656a51dbf0b05a5815e607312dea3"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-tails.console",
+    "file": "safety/miri-tails.console",
+    "blob": "8879bb2a261f044f094d6c02b2aaa7285ab7b3a9",
+    "sha256": "5a67b65b4dd528ad3abdc67e959b2b5d81bd772a2466db53a4b9a642e407c7c6"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-align.console",
+    "file": "safety/miri-align.console",
+    "blob": "24184d22ddbbc714dead038381e5863fa282379a",
+    "sha256": "cc5bdbaf1e400d77af9dcde7b55edbf3b8f7f0d84708dc6d3a62da08d4290b51"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-phase.console",
+    "file": "safety/miri-phase.console",
+    "blob": "5e48400c088b192bf847d4357bcd371b5a8ee0b5",
+    "sha256": "f314f2f29b6fcfd6b8f2873a329ad53ebe4e28819931c7ef873c11be7c7cadc8"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-held.console",
+    "file": "safety/miri-held.console",
+    "blob": "1dc90215dc19ba761263941106683ec2ff2a18ba",
+    "sha256": "a2bda13545df0b3f0f45ce2853c300d5c1a9d2252644e061c57de45e1b0e0a31"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-endrun.console",
+    "file": "safety/miri-endrun.console",
+    "blob": "502b356bca78620ac52120505be7bbd621d4cad8",
+    "sha256": "fd3966f602356a9261876df6b853cc1fe8360c3c2032d4f1cf005a5c17e39d99"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-epoch.console",
+    "file": "safety/miri-epoch.console",
+    "blob": "457df7e4ddadfd570e82ef88acdee4a0c38e5af9",
+    "sha256": "7a7f9ca2c3140e184e0329408f21c341c0c7085d02704efb69acd6601926bbc6"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-malformed.console",
+    "file": "safety/miri-malformed.console",
+    "blob": "ebccdba1356da148959f7558285b1925b26f1662",
+    "sha256": "5f7f4dc6d657d159e9f62783395212d680ac52f5bcc1b79296880402eac94980"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M1.diff",
+    "file": "safety/mutation-M1.diff",
+    "blob": "4af7eb493a2c29f6ae64e8d39301b30e86c65d2f",
+    "sha256": "4240084e34b4e2a161914d3afc8fbc26421c6b191f190ef15e41651a26402098"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M1.console",
+    "file": "safety/mutation-M1.console",
+    "blob": "4741ed5ff046cb114f70385a00d69e9d4b2967d5",
+    "sha256": "433caee2f89a43e7b799a9d9caee50ede65f3bd791acb23c460f1aa812877a96"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M2.diff",
+    "file": "safety/mutation-M2.diff",
+    "blob": "b6f66effafa78a7bfc9c06b07402e672c05250ee",
+    "sha256": "6c9e6e1d0c7ff8d32e879ab480478720741629430a2cf601dba5caeb2a644546"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M2.console",
+    "file": "safety/mutation-M2.console",
+    "blob": "0956b11e2bd9413a341208327b60c887600dbeb2",
+    "sha256": "a91da3df6c3ced6291d653e8f5c943838f295962f17ade89b79d7d0a689e1441"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/corpora.console",
+    "file": "safety/corpora.console",
+    "blob": "9b28f7b249a74fee5b4532b9ea8a667925d89cfd",
+    "sha256": "37990144867dd39ec94116f85cdf5ffeeeba6f3ab02dbc3a25fe87b0c8d28600"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/corpora.jsonl",
+    "file": "safety/corpora.jsonl",
+    "blob": "b9f8906374bd1feab063a4e28a453255622c827d",
+    "sha256": "741d771d09272c6ba68f6ff2fd35c1717dbf438d36187755faa145415adcc979"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/adversarial.console",
+    "file": "safety/adversarial.console",
+    "blob": "4c012262749e84aa831f55bf2eb95eb9d16a4eef",
+    "sha256": "87c844837ae3d5326a9664918451c3e105eecb39bac8715861644492caf7ee1e"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/adversarial.jsonl",
+    "file": "safety/adversarial.jsonl",
+    "blob": "b52d18fb686cf9b9f1dff925fb8377b79d0832e9",
+    "sha256": "ea33b5f72502824cac0c718af35002ca36446c6ca57890f1547287cf5ba01dde"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/synthetic.console",
+    "file": "safety/synthetic.console",
+    "blob": "82844e5adb56fa5820973cf274a98330910ed2d0",
+    "sha256": "8989b458622ab129abd044fe262dd19c275fe111b9921047e5abc61466307437"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/synthetic-quick.console",
+    "file": "safety/synthetic-quick.console",
+    "blob": "360eb14e6949ad913ac790beb05cd04f68c27a19",
+    "sha256": "a3efb5efd7698af32911b9f60a65cd3d7572544b1c76017b0c92ea606394b25a"
+  },
+  {
+    "ref": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "path": "examples/c30walk.rs",
+    "file": "safety/walk-0.rs",
+    "blob": "e36c14767f29b03ca512326c25d55a3541a4f620",
+    "sha256": "d35f1739ca4f6e1a9fd5687cc5f27083ce5f35685d438e8537cd32a5701d32ac"
+  },
+  {
+    "ref": "9f1086f8016ad72aa1046488f4073e94202d4063",
+    "path": "examples/c30walk.rs",
+    "file": "safety/walk-1.rs",
+    "blob": "36928aab3666a171c71fba15f7cf62ed09d3fbb7",
+    "sha256": "ab25c4e42a0daa9103e0695582db7f080adbb340aad330ea4212fdd8c312b832"
+  }
+]

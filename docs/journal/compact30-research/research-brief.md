@@ -56,9 +56,10 @@ the exact implementation would require the user's approval in Claude's session.
 The desired shape removes transient null writes and generic divide/bitmap/open
 work on eligible transitions. It retains initial, exhausted, forced and partial
 fallbacks. A final predecessor may be old-epoch ordinary, wide RAW or crossing
-RAW; rejecting all those states unnecessarily discards opportunity. Detailed
-eligibility accounting and a conservative charged net model are in progress;
-no fixed savings are credited yet.
+RAW; rejecting all those states unnecessarily discards opportunity. The completed [proposal and static model](proposals/refill-boundary/proposal.md)
+prove at least 1,084,913 eligible transitions and a conditional target of
+20,315,241−H instructions at specified compiler caps. All remaining added work H
+is unresolved, so no verified net savings are credited.
 
 Adversaries: a one-slot crossing predecessor followed by a full ordinary group;
 wide promotion before refill; forced RAW; limit=r+29 versus r+30; an epoch

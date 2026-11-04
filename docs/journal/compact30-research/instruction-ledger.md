@@ -16,10 +16,10 @@ review finding, never a silent replacement.
 | Cost center | Instructions / corpus | Scope and evidence |
 |---|---:|---|
 | Scalar append | 459,538,596 | 12 × 38,294,883; all four B2 loop copies replayed |
-| Scanner classification | 221,503,931–222,731,873 | Ultra audit §C, bounded Q/W; attributed per-block bounds |
+| Scanner classification | 221,503,931–222,731,873 | Ultra audit §C, bounded Q/W; per-block bounds independently replayed |
 | Fast full finalization | 133,437,375 | 81 × now-exact 1,647,375 eligible finishes; entry calls excluded |
 | Nonuniform tile setup/advance | 98,125,833–114,879,024 | 41S+7X; Ultra bounds, no scalar-body double credit |
-| Refill wrappers | 69,605,726–111,402,124 | finish body excluded; Ultra per-block lower bound not independently replayed here |
+| Refill wrappers | 69,605,726–111,402,124 | finish body excluded; per-block lower bound independently replayed |
 | Fragment filling | 43,436,844–114,277,290 | length-dependent; missing histogram prevents a sharp total |
 | Bulk emitter core | 51,273,000–51,883,521 | paired loop/odd tail; run setup excluded |
 | RAW reconstruction core | 23,772,928 | 16 × 1,485,808 fields; exceptional detours excluded |
@@ -37,13 +37,13 @@ instruction, one read and one write, not three instructions.
 | ID / status | Baseline and scope | Instruction saving | Added/removed memory and dependencies | Gate/overlap |
 |---|---|---:|---|---|
 | A1 ACHIEVED | B3 fast leaf versus B2 fast body only | 60,952,875 gross | 5 fewer explicit reads and 2 fewer explicit writes/leaf; 6 pushes+6 pops removed/leaf; snapshot chain and frame removed | 44 vs 81 instructions. Gross only; leaf has 12 reads, 6 writes. Compiler STOP stands |
-| C1 CONDITIONAL pending full review | Historical B3 §6 whole-path model | [60,049,330, 60,345,544] historical | +1,754,362 tag-opening reads, slow guards, epoch tag setup, fallback deltas; setup stores need audit | Includes A1; never add A1 again. §7 inclusion requires later independent §6.2 and combined recount |
-| A2 ACHIEVED, scoped | PR #146 same-binary build own body, `7f74e9f` | 56,195,817 | New spills and loop changes included in own-body Ir. Raw read/write profiles not yet verified | Independent per-instruction replay; excludes callees. Does not clear 60M minimum |
-| C2 CONDITIONAL / challenged | PR #146 claimed whole-constructor interval | [56.18M,56.21M] reported | Allocator and memcpy deltas not bounded by two samples; read/write raw evidence incomplete | Gate 3 not qualified. Includes A2; no separate credit |
+| A3 ACHIEVED | Historical B3 §6 whole-path model | **[60,049,330, 60,345,544] verified** | Corrected explicit reads −6,185,349; writes −3,290,662; push/pop −19,768,500 already in instruction credit. Tag loads, slow guards, setup/epoch stores and residual paths charged | [Independent closeout review](reviews/v3/report.md). Includes A1; never add it again. Formal compiler STOP stands; §7 inclusion remains conditional |
+| A2 ACHIEVED, scoped | PR #146 same-binary build own body, `7f74e9f` | 56,195,817 | New spills and loop changes included in own-body Ir. Raw Dr/Dw profiles absent; summary-only memory figures remain conditional | Independent per-instruction replay; excludes callees. Does not clear 60M minimum |
+| C2 CONDITIONAL / HOLD | PR #146 claimed whole-constructor interval | [56.18M,56.21M] reported | Allocator and memcpy deltas not bounded by two samples; read/write raw evidence incomplete | [Review F1/F2](reviews/scanner-146/report.md): interval HOLD, qualification REJECT; includes A2 |
 | C3 CONDITIONAL | Original scanner handoff versus B2 | 87,622,080–87,632,430 at stated cap | Gross 88,622,080+3Q minus ≤1M **acceptance cap**, not observed overhead | Supersedes, not adds to, scanner checkpoint; safe prototype missed its target |
 | C4 CONDITIONAL | Hot descriptor arrays versus B2 | 71,589,766 at ≤10 scalar instructions and ≤5M added work | Removes two LEAs/row; scattered pointer resets may add writes; calls, snapshots and spills must be charged | 40M registered minimum. No implemented checkpoint reviewed |
 | C5 CONDITIONAL | SSE2 first-chunk refinement versus B3 | 6,589,500 gross; net unknown | Four fewer instructions/leaf target; setup, mask/broadcast, callers and memory count must be recounted | 4M incremental minimum; overlaps A1's replacement body, not additional B2 leaf credit |
-| C6 CONDITIONAL | Direct interior refill proposal | No fixed net credit | Can avoid null/reset, divisions and bitmap work; guards, fallback and changed callers charged | Outside approved sequence; shares descriptor-layout/refill sites; separate authority required |
+| C6 CONDITIONAL | [Direct interior refill](proposals/refill-boundary/proposal.md) | **20,315,241 − H**, only at specified compiler caps; H unresolved | ≥1,084,913 eligible transitions, all on large blocks; 26,037,912 transient logical store bytes exposed before shifted work | Outside approved sequence; overlaps descriptor refill/helper work. No verified net credit. Future audit here non-independent |
 
 No verified combined net is claimed. The Ultra 225,253,100 portfolio is a
 conditional joint cap target, not achieved work removed and not an instruction
@@ -57,3 +57,17 @@ candidate completion; slow workers are enriched in scalar rows and full finishes
 These are descriptive observations from an INVALID capture, not an economic
 PASS or a causal cycles claim. They justify prioritizing scalar, tile and refill
 work over tiny-block initialization and bulk-only refinements.
+
+## Review state and next trigger
+
+[Scanner review](reviews/scanner-146/report.md): safety PASS, diagnostic partial miss,
+qualification REJECT; conservative interval HOLD pending bounded callee accounting
+and a replayable raw memory/profile package. [V3 closeout review](reviews/v3/report.md):
+archived safety PASS and historical instruction interval verified; three LOW reporting
+corrections, compiler STOP unchanged. Neither is the final §6.2 review.
+
+The [structural replay](structural-findings.md) verifies the per-block lower bounds
+and distinguishes latest absolute end from longest worker duration. There is no
+verified combined total. WAITING for a new pinned checkpoint/correction/rebuttal,
+the completed-sequence evidence index, or a user nudge. No polling or automatic
+Goal wake-up is assumed.

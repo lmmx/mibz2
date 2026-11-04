@@ -6,13 +6,53 @@
     "active_charter": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
     "protocol": "01d5391874e756ff90bbd9a822913b201cd9dece"
   },
-  "incoming_channel_comment_ids": [6628984134, 6629044041, 6629821793],
-  "outgoing_comment_ids": [],
+  "incoming_channel_comment_ids": [
+    6628984134,
+    6629044041,
+    6629821793
+  ],
+  "outgoing_comment_ids": [
+    {
+      "pr": 145,
+      "id": 6630137149,
+      "type": "PROPOSAL",
+      "sha": "ff65301b7ed622df2dd92867ca1761478f2f8915"
+    }
+  ],
   "reviews": [
-    {"pr": 146, "sha": "7f74e9f30e31af33b0d66fec3fe89af1758307d9", "status": "in_progress", "independent": true, "evidence_digest": null},
-    {"checkpoint": "v3_closeout", "sha": "46c322213e5780e4be2a05ebcc57348836657720", "status": "in_progress", "independent": true, "evidence_digest": null}
+    {
+      "pr": 146,
+      "sha": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+      "status": "complete",
+      "independent": true,
+      "evidence_digest": "aa4f295b5ec152494e999eacf381a92602de329b03e2f76aecd9d6b8c2484753",
+      "gates": {
+        "safety": "PASS archived coverage",
+        "machine": "diagnostic partial miss",
+        "net": "REJECT qualification; HOLD claimed conservative interval"
+      }
+    },
+    {
+      "checkpoint": "v3_closeout",
+      "sha": "46c322213e5780e4be2a05ebcc57348836657720",
+      "status": "complete",
+      "independent": true,
+      "evidence_digest": "18e8de1ca5a97cf81ef489ce7e3e24a8f01f42272d1dd05707d24c0689868e85",
+      "gates": {
+        "safety": "PASS archived coverage",
+        "compiler": "STOP unchanged",
+        "historical_net": "PASS [60049330,60345544]",
+        "integration": "CONDITIONAL; not section6.2"
+      }
+    }
   ],
   "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
   "wake": "Goal not subscribed; no polling or automation installed",
-  "next_trigger": "Finish current evidence audits; thereafter real checkpoint notification or user nudge with PR, SHA and evidence index"
+  "next_trigger": "New pinned checkpoint, correction/rebuttal to review, or completed-sequence section6.2 evidence index, through a real notification or user nudge; no polling",
+  "review_pr": 148,
+  "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
+  "proposal_independence": {
+    "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required"
+  },
+  "status": "WAITING"
 }

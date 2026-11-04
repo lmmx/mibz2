@@ -1,0 +1,51 @@
+V3 finaliser cost cross-check (scratch static review; no constructor execution)
+
+Rules read first: docs/journal/compact30-channel/REVIEWER.md at b302c5db47f4104093ed5f408dcbe5a59720ac7c; docs/journal/2026-11-04-compact30-research-charter.md and docs/journal/compact30-channel/PROTOCOL.md at 2f15e513bdb9808a2c7504e3f01b59ebce65f221. Exact URLs and hashes are in evidence-manifest.json.
+Inputs: docs/journal/2026-11-03-compact30-constructor-v2-prototype/{ctor2-build-false,ctor2-finish-false,ctor2-refill-false}.asm and docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-{build-false,finish-false,finish-slow-false,refill-false}.asm; frozen source; pinned closeout primary corpus counter record.
+This is a cost cross-check for the accompanying report.md, not a charter 6.2 acceptance.
+
+RESULT
+No material net-instruction defect found. The published interval [60,049,330, 60,345,544] remains conservative after the setup/fallback inspection below. Its centre is 60,197,437. Two literal descriptions in the journal need precision, and the approximate memory-operation totals omit small setup terms. None changes the historical compiler STOP, the >=50 M prospective inclusion rule, or the interval's position above that rule.
+
+REPRODUCED COUNTS AND CORE LEDGER
+Parse each instruction line with ^\s*([0-9a-f]+):\s+(\S.*). Counts are build 1431 -> 1432; refill 67 -> 67; old finish 379 -> slow 378; leaf 44. The fast old path counts 81; new leaf44 gives gross37*1,647,375=60,952,875. The prefix exits are 5 instructions for 106,946 old-epoch ordinary +41,120 preset RAW entries, and12 for41 same-epoch partials. Snapshot tag maintenance adds4*3,654. Thus 60,952,875 -5*148,066 -12*41 -4*3,654 =60,197,437.
+
+WHOLE BUILD SETUP
+The +4 instructions at B3 0x3b754..0x3b763 (shift/add/or/store active_tag) execute once per epoch. B3 0x3b32c writes 64 bits rather than B2 0x33553's 32 bits: it initializes y and active_tag together, instruction-neutral. Ordinary opening is one-for-one: B2 0x34320 immediate becomes B3 0x3c110 active_tag load; refill B3 0x811ff likewise. These add reads, not instructions.
+
+For a valid nonempty block, all the changed setup moves balance in instruction count:
+- B2 0x33363,0x33399,0x333a6 disappear (three instructions); on bitmap growth, B2 0x34963 is the alternate first move and disappears instead.
+- B3 0x3b195 adds one snapshot-pointer spill; B2 0x33466's register move disappears.
+- B2 0x334dc..0x334e9 has4 instructions; B3 0x3b2ac..0x3b2be has5.
+- B3 0x3b320 adds a snapshot-pointer reload.
+- B3 0x3b375 adds a saved n-pointer/rank register slot move.
+Net: -3 +1 -1 +1 +1 +1=0. Initialization loops otherwise have the same lengths; differing alignment nop encodings remain one instruction each.
+
+The snapshot-reserve slow path is shorter by2 instructions: B2 0x34950 and0x3495b save/restore r9 around reserve; B3 0x3c730..0x3c750 omits both. Its frequency need not be assumed: A is in[0,434] for434 builds, so an uncredited favourable contribution is in[0,868]. The allocation itself requests the same capacity/type; the matched allocator call is unchanged work.
+
+Final-sweep setup has3 loads at B2 0x34696..0x346a0 versus2 at B3 0x3c486..0x3c48b, then one extra reload at B3 0x3c4f3 before the existing record-pointer load. They cancel in instruction and memory count.
+
+Zero-row caveat: the bitmap-empty branch skips the first three deletions, so an empty valid build adds3 setup instructions. The primary corpus is presented as434 nonempty bzip2 blocks, so this is not charged to its main result. Even without relying on positivity from per-block evidence, a fully conservative Z in[0,434] adds at most1,302, far below the published148,107 margin. Invalid-input and bounds-panic blocks are not in this successful primary-corpus pass. No safety verdict is inferred from this cost observation.
+
+SLOW PATH: AGGREGATE BOUND VALID, PER-EVENT WORDING IMPRECISE
+After normalizing relocated branch targets/RIP-relative addresses, the first366 old-finish/slow-finish instructions match except the intended raw-dispatch cmp/je -> test/js at B2 0x61e0f/0x61e17 and B3 0x80b6f/0x80b76. Memory operands and counts match. The end epilogue also matches. Therefore no adverse slow-path instruction delta is hidden there.
+
+However, the claim "0 (plus/minus1, reordered tail) per entry" is not literally true. B2 0x62312(sub),0x62316(inc),0x62319(jmp),0x6230d(cmp),0x62310(je) takes5 instructions per scalar residual field. B3 0x8106d(sub),0x81071(inc),0x81074(cmp),0x81077(jne) takes4. The saving is1 per scalar residual field, up to3 per partial finish, because the normalizer handles groups of4 (and16) before this residual. B2/B3 predecessors enter the corresponding body or comparison, so no hidden entry penalty exists.
+
+The primary record has norm_partial42, hence this favourable uncredited contribution R is in[0,126], not an adverse +/-148,107. All full normalizations retain the separate five-chunk path. The journal's much wider aggregate interval still contains this correction. Its per-event justification should be rewritten, not used as a new credit without a checkpoint amendment.
+
+Combining the enumerated setup/fallback effects gives 60,197,437 +R +2A -3Z for this listing comparison, where R in[0,126], A in[0,434], Z in[0,434]. The resulting conservative envelope [60,196,135,60,198,431] lies within the published interval. With the primary's nonempty blocks, Z=0 and its lower endpoint is60,197,437. This tighter scratch envelope is a cross-check, not a silent replacement of the checkpoint's authoritative ledger.
+
+CALLERS
+Scalar boundary: B3 0x81170 mov rbx,rdi;0x81173 call -> unchanged instruction count (1 setup+1 call+44=46).
+Run boundary: B3 0x3bb53 lea W;0x3bb5b mov saved c;0x3bb63 call ->2+1+44=47, same count as old run caller.
+Final sweep: B3 0x3c4d7 mov W;0x3c4da mov r14d,esi;0x3c4dd save r8;0x3c4e0 call ->3+1+44=48.
+Literal "instruction-for-instruction identical" is too strong at the final sweep: B2 0x346ea uses mov %r14,%rsi; B3 0x3c4da uses mov %r14d,%esi. This is the ABI narrowing to c:u8, one register move in either case, no added cost or memory operation. Call-site counts are unchanged.
+
+MEMORY CORRECTION (explicit memory operations; push/pop reported separately)
+The journal's formula gives reads=-6,186,217 and writes=-3,294,750, before the omitted setup terms. The valid nonempty setup above adds2 explicit loads and1 explicit store per block: the net setup move count is0, but a register lifetime moves into stack slots. Snapshot maintenance adds1 explicit store per epoch. Ordinary-opening extra loads are already charged by the journal (1,754,362), as are slow-prefix reads.
+Thus for434 nonempty builds: explicit reads=-6,185,349; explicit writes=-3,290,662. Snapshot-reserve move removals are register-only and do not change these. If empty blocks are allowed, add one further explicit read per empty block; the store formula is unchanged. These remain approximately -6.19 M reads and -3.29 M writes, so the coarse displayed rounded totals are unaffected, but exact formulas should include all setup terms. The widened initialization store also writes4 extra bytes per build (without another architectural store instruction). This is separate from memory-op counts.
+Fast-path push/pop reduction=-12*1,647,375=-19,768,500 instructions; these are already inside the instruction saving, not an additive credit.
+
+LIMITATIONS
+This review parses archived listings and counters only. It performs no build, execution, benchmark, or timing. The source and constructor branches remain unchanged. It does not independently rerun the corpus or establish a combined build's contribution. The accompanying report.md records pin/blob verification and safety/log coverage. The conservative original interval should remain the canonical cited checkpoint interval; the above provides the missing rationale and minor wording/memory corrections.
