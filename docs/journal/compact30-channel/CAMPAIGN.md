@@ -46,7 +46,7 @@ flags. This should be good enough to commit to, not hide behind half commitment.
 proceeding through rounds of ideas that were being validated or rejected and built upon, and we
 needed to make them better each round."
 
-## Evidence-guided persistence (charter §8.4, report 267)
+## Evidence-guided persistence (charter §8.4, reports 267–268)
 
 There are two opposite mistakes to avoid:
 - **Premature abandonment:** rejecting a promising technique because its first
@@ -63,10 +63,22 @@ identifies a plausible route to qualification. Stop or deprioritise when the rem
 opportunity is insufficient, the assumptions are unsupported, or repeated attempts fail to
 improve the outlook. Never lower acceptance standards to justify previous effort.
 
-Charter §8.4 (@ f7961dbc) applies this rule as a trajectory test. A line keeps climbing while
-successive attempts show real forward motion toward the limits above, and the builder's v1 →
-v2 step was that kind of climb. A line stops on sunk cost, deterioration, or a plateau with no
-path. A miss is always recorded as a miss.
+Charter §8.4 (@ f25f1232, reports 267–268) applies this rule as a trajectory test. A line keeps
+climbing while either of these holds:
+- the accumulated evidence shows meaningful progress toward viability;
+- a bounded next experiment offers a credible chance to overcome an identified remaining
+  obstacle.
+
+Progress comes in two kinds, which are not interchangeable:
+- **Performance progress:** valid end-to-end measurements, or compiled and correctly accounted
+  reductions in instructions, memory operations and dependencies.
+- **Research progress:** new evidence that materially increases confidence in a specific route
+  to improvement. Proposals with no compiler-achievable savings don't count.
+
+Every STOP is scoped to exactly what failed: a measurement, an implementation, a compiler
+target. It is never a verdict on the whole line. Reports 217–219, 224–227 and 238–241 are the
+record of what happens otherwise. A miss is always recorded as a miss, and understanding is never
+qualification for production.
 
 ## Release checkpoints (report 267)
 
@@ -94,8 +106,8 @@ publication.
 
 The initial policy set is lmmx/mibz2 commit 0ed278d722d1ef7dea0c24e5ff551dc7c0b46204, except where an entry names a later pin:
 - master:docs/STEWARDSHIP.md (PR #154; report 267): the permanent production and release stewardship this campaign runs under. It covers the merge gates, the release procedure and checklist, and what stays with the user.
-- docs/journal/2026-11-04-compact30-research-charter.md @ research/compact30-constructor f7961dbccb7eb9c27d279cd5191dddd36dc41f39: governing campaign scope and gates (§8.4 trajectory test, report 267). Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
-- docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md, reports 264–267: recorded user provenance for U2/C6, technical autonomy, Coordinator release control, permanent stewardship and the §8.4 trajectory test. Earlier reports remain historical; later explicit amendments supersede only the affected clauses.
+- docs/journal/2026-11-04-compact30-research-charter.md @ research/compact30-constructor f25f1232fb673a65cff97b1b68ff8f77e6900caa: governing campaign scope and gates (§8.4 trajectory test, reports 267–268). Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
+- docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md, reports 264–268: recorded user provenance for U2/C6, technical autonomy, Coordinator release control, permanent stewardship and the §8.4 trajectory test. Earlier reports remain historical; later explicit amendments supersede only the affected clauses.
 - docs/journal/compact30-channel/PROTOCOL.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: publication, receipts, queue and deduplication. §10 governs apparent inactivity.
 - docs/journal/compact30-channel/ROLES.md: separate responsibilities and branch ownership. Coordinator does not mean scientific superior.
 - docs/journal/compact30-channel/REVIEWER.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: research/evidence contract; read its applicability alongside the active charter. Both files were reconciled with charter §§2, 6.4 and 12.3 and reports 265–266 at that commit (see each file's Revisions note); the research/compact30-channel copies are kept identical.
