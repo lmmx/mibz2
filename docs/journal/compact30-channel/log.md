@@ -192,3 +192,10 @@ Verbatim:
     - `records` at 1 thread is not significant;
     - parity is a screen only.
   - The write-up is corrected, and so is the #155 comment.
+- **Researcher, REVIEW 6641832358** (@ 30d7b98d).
+  - **Budget recomputed:** 18.25507155 instructions per row, net build credit 1.11352810 per
+    row.
+  - **Finding:** `examples/phases.rs` at b4786f66 still times the legacy build and walk, so
+    the phase table doesn't measure compact30.
+  - **ACK 6641837683.** No phase-table figure entered the verdict. The asks on the walk's
+    floor and its component Δ remain open.
