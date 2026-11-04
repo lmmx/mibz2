@@ -5593,3 +5593,76 @@ I’d make one further choice: research should not wait for checkpoints. While C
 That is the central improvement over my first Goal: the researcher has its own scientific workstream, not merely an inbox of Claude’s results.
 
 My recommendation: launch this Goal using the highest Astra reasoning effort available in your signed-in Codex environment, and treat the event bridge as the final infrastructure milestone. The objective is a continuously improving, evidence-driven constructor—not a sequence of agents asking you what to do next.
+
+## Report 252: the guardian approves launching the dual-role Codex Goal
+
+GO on launching report 251's Goal "as written", in a fresh Codex session at the highest reasoning effort available. Claude stays the only implementer. For the event bridge, the guardian prefers to evaluate GitHub Actions with Codex before any custom webhook service. Any workflow, credential or API spending must be reviewed before it is activated, because the charter doesn't cover infrastructure. It suggests the descriptor-array cost model as the reviewer's first research topic. Relayed by the user in the coordinator's session, and kept as relayed:
+
+I agree with the researcher. This is now the architecture I would endorse for the autonomous compact30 research programme.
+
+The latest Goal finally captures what you’ve been asking for: Astra as an active machine-code researcher, Claude as its implementation counterpart, and GitHub as their shared evidence and communication layer.
+
+The important improvement is that Astra doesn’t have to wait for Claude to finish something. It can investigate the next instruction-elimination opportunity while Claude compiles and validates the current one.
+
+My recommendation: launch the Goal now
+
+Use the researcher’s latest /goal prompt as written, in a fresh Codex session with the highest reasoning effort available to you.
+
+I wouldn’t revise it again. It already establishes the research mission, independent verification, cumulative instruction ledger, safety boundaries, GitHub collaboration and completion criteria.
+
+Astra research mission — approved
+
+Claude implementation charter — active
+
+Automatic GitHub-to-Astra wake-up — not yet established
+
+One architectural choice I’d make
+
+For the automatic event bridge, I’d start by evaluating GitHub Actions with Codex, rather than immediately building a custom webhook service.
+
+The reason is operational simplicity. GitHub already knows when Claude publishes a checkpoint, and a narrowly permissioned workflow can launch a research review from that event.
+
+But there is an important tradeoff:
+
+Approach	Advantage	Limitation
+Signed-in Codex Goal	Sustained research context, uses supported plan access	No established automatic PR-event wake-up
+GitHub Actions + Codex	Event-driven execution and review publication	Separate task execution; authentication and billing must be verified
+Custom webhook + persistent agent	Potentially closer to a continuous research collaborator	More infrastructure, security and operating complexity
+
+I would not build a custom persistent-agent service unless the simpler event-driven option proves insufficient.
+
+Also, don’t assume an API-backed GitHub Action consumes your remaining signed-in Astra allowance. That distinction needs checking before enabling repeated automatic executions.
+
+The first autonomous collaboration test
+
+Before declaring the system unattended, require one end-to-end demonstration:
+
+* Claude publishes a harmless test checkpoint containing an immutable commit SHA.
+* Astra is invoked automatically and retrieves that exact evidence.
+* Astra publishes an independent response through the designated GitHub channel.
+* Claude receives it and acknowledges it without you relaying anything.
+* Both agents respect the charter’s authority restrictions throughout.
+
+A successful test would establish the communication loop. It would not, by itself, establish that the Goal thread and event-triggered reviews share persistent state; that would need separate verification.
+
+What Astra should investigate first
+
+While Claude is working on scanner cleanup, Astra has several valuable research questions already waiting.
+
+The strongest immediate candidate is the hot descriptor-array transformation, with its conditional 71.59-million-instruction budget. The independent audit raised real questions about refill overhead, register reloads and the five-million-instruction allowance.
+
+Astra could independently tighten that model, identify the minimum necessary pointer and descriptor operations, and prepare falsifiable assembly targets before Claude reaches that stage.
+
+That would be productive parallel research, not duplicate implementation.
+
+Guardian decision
+
+GO: launch the autonomous Astra/Codex research Goal now.
+
+Keep Claude as the sole implementation coordinator. Let Astra perform intensive independent instruction-minimization research and review through GitHub.
+
+Develop and verify the event bridge separately, without delaying the research. Any new GitHub Actions workflow, credentials or API spending should be reviewed before activation; the standing constructor charter doesn’t automatically authorize that infrastructure.
+
+And importantly, you shouldn’t have to keep sending me routine updates once this is working. The next meaningful involvement should be a safety escalation, an out-of-scope decision, or a substantial engineering result.
+
+This is the arrangement we’ve been trying to reach: Astra thinks deeply about eliminating machine work, Claude turns those ideas into compiled evidence, and the repository carries the conversation.
