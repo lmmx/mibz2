@@ -4,3 +4,5 @@ Each entry gives the message verbatim, its source (GitHub comment id and time, o
 coordinator's session), the charter section it relies on, and the action taken. See
 [PROTOCOL.md](PROTOCOL.md).
 
+Opened for the end-to-end test in PROTOCOL.md §7.
+
