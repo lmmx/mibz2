@@ -210,3 +210,6 @@ Verbatim:
   - report 272 in the v2 reassessment;
   - CAMPAIGN.md: the decisive measure, the position after #155, rules 1 and 2, and the charter
     pin.
+- **Report 273.** The user delegated the whole inverse BWT, the walker included, plus per-stage
+  diagnostic instrumentation and technical direction. Measurement PRs are allowed on a
+  registered hypothesis. Charter @ 45e6cfeb; CAMPAIGN.md updated to match.

@@ -10,9 +10,12 @@ authority grant.
 
 ## Objective: a faster production decoder
 
-The campaign exists to make production's inverse BWT faster. Cutting the constructor's executed
-instructions is the means: the agents hill-climb on the charter's §5 ledger, round by round, until
-compact30's builder clears the economic limits below. Only then does it go into production.
+The campaign exists to make production's inverse BWT faster. The whole inverse BWT is in scope:
+the constructor, the walker and the representation (charter §1–§2, report 273). The agents
+hill-climb round by round on whole-decoder work removed, until a candidate beats production on
+CI's bench. Only then does it go into production. Technical direction is the Coordinator's and
+the three agents': optimise, redesign, measure, redirect or stop, on credible whole-decoder
+payoff per unit of compute.
 
 **The measure that decides is the whole decoder, not the constructor (charter §5.6, report
 272).** On production master a Wikidata block's `decode_block` is about 21% build, 60% walk and
@@ -47,20 +50,20 @@ followed instruction count.
 
 On CI the decoder was 18.7%, 11.0% and 7.3% slower at 1, 2 and 4 threads. With the build and
 the rest held fixed, parity needs the record walk at or below 18.25507 instructions per row,
-down from 22.45 (D016). The walker is frozen under charter §2, so work on it needs the user's
-scope decision.
+down from 22.45 (D016). The walk is in scope (report 273), and it is the binding cost.
 
-1. **No PR into master for a kernel that can't win** (charter §5.6(d)). That includes a
-   measurement-only PR. Open one only when one of these holds:
-   - the production ledger shows whole `decode_block` instructions at or below master's,
-     across the sample;
-   - a written, quantitative case, assessed by the Researcher, shows a non-instruction
-     mechanism outweighing the instruction excess at each of CI's thread counts (1, 2 and 4).
+1. **PRs into master** (charter §5.6(d), report 273).
+   - **An integration PR, meant to merge,** needs whole `decode_block` instructions at or below
+     master's, across the sample.
+   - **A measurement PR** tests a hypothesis on CI. It needs the hypothesis registered first:
+     the mechanism, its predicted effect at 1, 2 and 4 threads, the instruction excess it must
+     beat, and what falsifies it.
+   - **What never counts:** timing on the shared development machine. A projection that
+     predicts a loss can't be ignored; the hypothesis must say why it is wrong. The Coordinator
+     ported #155 on local timing, against its own projection of a 1-thread loss. This rule exists
+     so that cannot happen again.
 
-   Timing on the shared development machine never counts. Neither does a projection that
-   predicts a loss at any of CI's thread counts. The Coordinator ported #155 against its own
-   projection of a 1-thread loss; this rule exists so that cannot happen again. Otherwise, keep
-   climbing.
+   Otherwise, keep climbing.
 2. **Each round closes part of the remaining gap,** and the gap is the whole decoder's. Rank
    next the proposals that remove the most whole-decoder instructions per block, after every cost
    they induce in the walk and the rest. Within the constructor, prefer those that remove the
@@ -159,7 +162,7 @@ publication.
 
 The initial policy set is lmmx/mibz2 commit 0ed278d722d1ef7dea0c24e5ff551dc7c0b46204, except where an entry names a later pin:
 - master:docs/STEWARDSHIP.md (PR #154; report 267): the permanent production and release stewardship this campaign runs under. It covers the merge gates, the release procedure and checklist, and what stays with the user.
-- docs/journal/2026-11-04-compact30-research-charter.md @ research/compact30-constructor 6375277b: governing campaign scope and gates (§8.4 trajectory test, reports 267–269; the Researcher as standing reviewer, report 270; §5.6 production accounting and whole-decoder viability, report 272). Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
+- docs/journal/2026-11-04-compact30-research-charter.md @ research/compact30-constructor 45e6cfeb: governing campaign scope and gates (§8.4 trajectory test, reports 267–269; the Researcher as standing reviewer, report 270; §5.6 production accounting and whole-decoder viability, report 272; the whole inverse BWT delegated, report 273). Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
 - docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md, reports 264–270: recorded user provenance for U2/C6, technical autonomy, Coordinator release control, permanent stewardship and the §8.4 trajectory test. Earlier reports remain historical; later explicit amendments supersede only the affected clauses.
 - docs/journal/compact30-channel/PROTOCOL.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: publication, receipts, queue and deduplication. §10 governs apparent inactivity.
 - docs/journal/compact30-channel/ROLES.md: separate responsibilities and branch ownership. Coordinator does not mean scientific superior.
