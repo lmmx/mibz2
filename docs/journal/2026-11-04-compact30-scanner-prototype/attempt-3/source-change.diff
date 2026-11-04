@@ -1,0 +1,51 @@
+622a623,656
+>     /// v2's tile, unchanged (attempt 3 uses it for full nonuniform tiles and the tail)
+>     #[inline(always)]
+>     unsafe fn tile(&mut self, ll: &[u8], i: usize, len: usize) -> bool {
+>         if COUNT {
+>             if len == 16 {
+>                 self.st.tiles_nonuniform += 1;
+>                 self.st.tiles_second_segment += (ROWS - self.p < 16) as u64;
+>             } else {
+>                 self.st.tails += 1;
+>                 self.st.tail_rows += len as u64;
+>             }
+>         }
+>         let u = self.y as u16;
+>         let n1 = len.min(ROWS - self.p);
+>         for (t, &c) in ll[i..i + n1].iter().enumerate() {
+>             if !self.one(c, u.wrapping_add(t as u16)) {
+>                 return false;
+>             }
+>         }
+>         for (t, &c) in ll[i + n1..i + len].iter().enumerate() {
+>             if !self.one(c, u.wrapping_add((n1 + t) as u16 + 2)) {
+>                 return false;
+>             }
+>         }
+>         if len == 16 {
+>             self.advance(16);
+>         } else {
+>             for _ in 0..len {
+>                 self.advance(1);
+>             }
+>         }
+>         true
+>     }
+> 
+941c975,977
+<                     if !w.tile16(t) {
+---
+>                     // attempt 3: v2's own tile code, at its row index in `ll`
+>                     let _ = t;
+>                     if !w.tile(ll, end - rest.len(), 16) {
+944,946c980
+<                     // re-derived after the tile rather than kept live across it (attempt 2:
+<                     // in attempt 1, `after` held a register through the tile's row loops)
+<                     rest = &rest[16..];
+---
+>                     rest = after;
+949c983
+<             if !rest.is_empty() && !w.tile_tail(rest) {
+---
+>             if !rest.is_empty() && !w.tile(ll, end - rest.len(), rest.len()) {

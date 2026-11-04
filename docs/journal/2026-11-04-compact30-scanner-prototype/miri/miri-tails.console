@@ -1,0 +1,5 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner c2s-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2s-synthetic --miri tails`
+ctor2s-synthetic: scanner class tails: 45 cases exact
+ctor2s-synthetic --miri tails: 45 cases, 90 array comparisons, 135 walk outputs, 90 restorations: every check exact; fresh 30, lookahead 15, held 0, no-full-tile runs 15, nonuniform 15, second segments 0, tails 45
+exit 0

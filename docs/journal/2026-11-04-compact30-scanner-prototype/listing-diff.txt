@@ -1,0 +1,522 @@
+v2 1403 v2s 1387
+insert v2[17:17] +0x5c lines [] | v2s[17:18] +0x5c lines [741]
+   + 0x5c mov    %r8d,0x14(%rsp) 741
+delete v2[127:128] +0x253 lines [718] | v2s[128:128] +0x251 lines []
+   - 0x253 mov    %rbp,0x60(%rsp) 718
+delete v2[149:150] +0x2ab lines [718] | v2s[149:149] +0x2a4 lines []
+   - 0x2ab mov    0x58(%rsp),%rdi 718
+delete v2[158:159] +0x2d4 lines [718] | v2s[157:157] +0x2c8 lines []
+   - 0x2d4 mov    %rax,(%rsp) 718
+delete v2[177:178] +0x366 lines [718] | v2s[175:175] +0x356 lines []
+   - 0x366 mov    %r12,%r14 718
+insert v2[220:220] +0x453 lines [] | v2s[217:218] +0x443 lines [794]
+   + 0x443 mov    %r13,0xc0(%rsp) 794
+delete v2[222:223] +0x46a lines [743] | v2s[220:220] +0x462 lines []
+   - 0x46a mov    (%rsp),%rax 743
+delete v2[263:264] +0x540 lines [317] | v2s[260:260] +0x52d lines []
+   - 0x540 mov    0x8(%rsp),%r13 317
+insert v2[266:266] +0x550 lines [] | v2s[262:263] +0x538 lines [360]
+   + 0x538 mov    0x8(%rsp),%r11 360
+delete v2[275:276] +0x577 lines [807] | v2s[272:272] +0x564 lines []
+   - 0x577 mov    %rdx,%r14 807
+insert v2[293:293] +0x5b9 lines [] | v2s[289:290] +0x5a6 lines [857]
+   + 0x5a6 mov    %r9,0x58(%rsp) 857
+replace v2[297:298] +0x5d0 lines [806] | v2s[294:295] +0x5c2 lines [857]
+   - 0x5d0 movabs $0xeeeeeeeeeeeeeeef,%r9 806
+   + 0x5c2 mov    0x58(%rsp),%r9 857
+delete v2[303:304] +0x5f5 lines [705] | v2s[300:300] +0x5e3 lines []
+   - 0x5f5 lea    0xd8(%rsp),%r8 705
+replace v2[393:394] +0x7a7 lines [817] | v2s[389:394] +0x78a lines [868, 874]
+   - 0x7a7 lea    0xd8(%rsp),%r8 817
+   + 0x78a mov    0x8(%rsp),%r11 868
+   + 0x78f jmp    41760 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x630> 868
+   + 0x794 test   %r11,%r11 874
+   + 0x797 je     42601 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x14d1> 874
+   + 0x79d movq   $0x0,0x20(%rsp) 874
+replace v2[396:397] +0x7b9 lines [823] | v2s[396:404] +0x7ad lines [341, 342]
+   - 0x7b9 test   %r13,%r13 823
+   + 0x7ad lea    0x1(%rax),%rdx 341
+   + 0x7b1 add    $0xffffffffffffffe3,%rax 342
+   + 0x7b5 xor    %esi,%esi 342
+   + 0x7b7 cmp    $0x1e,%rdx 342
+   + 0x7bb setae  %sil 342
+   + 0x7bf cmovb  %rdx,%rax 342
+   + 0x7c3 lea    (%rcx,%rsi,2),%ecx 342
+   + 0x7c6 inc    %ecx 342
+replace v2[398:401] +0x7c1 lines [823] | v2s[405:407] +0x7d0 lines [342]
+   - 0x7c1 je     3bd4f <<c30walk::ctor2::Ctor2>::build::<false>+0x150f> 823
+   - 0x7c7 xor    %r11d,%r11d 823
+   - 0x7ca jmp    3b01c <<c30walk::ctor2::Ctor2>::build::<false>+0x7dc> 823
+   + 0x7d0 mov    %ecx,0x28f0(%rsp) 342
+   + 0x7d7 mov    0x40(%rsp),%rcx 342
+delete v2[404:405] +0x7dc lines [823] | v2s[410:410] +0x7ed lines []
+   - 0x7dc mov    %r11,%rbp 823
+insert v2[437:437] +0x880 lines [] | v2s[442:445] +0x890 lines [877]
+   + 0x890 lea    0xf000(%r13),%rax 877
+   + 0x897 mov    0x8(%rsp),%rdi 877
+   + 0x89c cmp    %rdi,%rax 877
+replace v2[439:454] +0x887 lines [826, 828, 858] | v2s[447:448] +0x8aa lines [877]
+   - 0x887 lea    0xf000(%rbp),%r10 826
+   - 0x88e cmp    %r13,%r10 826
+   - 0x891 cmovae %r13,%r10 826
+   - 0x895 lea    0x10(%rbp),%rdi 828
+   - 0x899 cmp    %r10,%rdi 828
+   - 0x89c mov    %r10,0x20(%rsp) 828
+   - 0x8a1 jbe    3b1b0 <<c30walk::ctor2::Ctor2>::build::<false>+0x970> 828
+   - 0x8a7 lea    0xd8(%rsp),%r8 828
+   - 0x8af mov    %r12,%r9 828
+   - 0x8b2 mov    0x38(%rsp),%rcx 828
+   - 0x8b7 mov    %r10,%rdx 858
+   - 0x8ba sub    %r11,%rdx 858
+   - 0x8bd mov    %rcx,0x38(%rsp) 858
+   - 0x8c2 jbe    3b010 <<c30walk::ctor2::Ctor2>::build::<false>+0x7d0> 858
+   - 0x8c8 mov    %r9,%rbp 858
+   + 0x8aa cmovb  %rax,%rcx 877
+replace v2[459:460] +0x8e7 lines [559] | v2s[453:460] +0x8c1 lines [341, 877]
+   - 0x8e7 cmovae %rdx,%r14 559
+   + 0x8c1 jb     42420 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x12f0> 877
+   + 0x8c7 add    0x48(%rsp),%r13 877
+   + 0x8cc xor    %eax,%eax 877
+   + 0x8ce mov    %r12,%rcx 877
+   + 0x8d1 mov    %r8,%r12 877
+   + 0x8d4 jmp    41a58 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x928> 877
+   + 0x8e0 mov    0x28e8(%rsp),%rax 341
+insert v2[461:461] +0x8ef lines [] | v2s[461:475] +0x8ec lines [342]
+   + 0x8ec add    $0xfffffffffffffff2,%rax 342
+   + 0x8f0 xor    %edx,%edx 342
+   + 0x8f2 cmp    $0x1e,%rcx 342
+   + 0x8f6 setae  %dl 342
+   + 0x8f9 cmovb  %rcx,%rax 342
+   + 0x8fd mov    %rax,0x28e8(%rsp) 342
+   + 0x905 mov    0x28f0(%rsp),%eax 342
+   + 0x90c lea    (%rax,%rdx,2),%eax 342
+   + 0x90f add    $0x10,%eax 342
+   + 0x912 mov    %eax,0x28f0(%rsp) 342
+   + 0x919 xor    %eax,%eax 342
+   + 0x91b mov    %r8,%r12 342
+   + 0x91e cmp    $0xf,%r8 342
+   + 0x922 jbe    42423 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x12f3> 342
+replace v2[462:463] +0x8f2 lines [559] | v2s[476:533] +0x92a lines [610, 611, 616, 884, 898, 905, 925]
+   - 0x8f2 je     3bbb0 <<c30walk::ctor2::Ctor2>::build::<false>+0x1370> 559
+   + 0x92a jne    41a64 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x934> 884
+   + 0x92c mov    0x0(%r13),%rcx 884
+   + 0x930 mov    0x8(%r13),%r14 884
+   + 0x934 add    $0x10,%r13 884
+   + 0x938 lea    -0x10(%r12),%r8 884
+   + 0x93d xor    %rcx,%r14 898
+   + 0x940 mov    %rcx,%rax 898
+   + 0x943 rol    $0x8,%rax 898
+   + 0x947 xor    %rcx,%rax 898
+   + 0x94a or     %r14,%rax 898
+   + 0x94d lea    0xe8(%rsp),%rdx 898
+   + 0x955 jne    41ae0 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x9b0> 898
+   + 0x957 cmp    $0x10,%r8 898
+   + 0x95b jb     41b50 <<c30walk::ctor2s::Ctor2s>::build::<false>+0xa20> 898
+   + 0x970 mov    0x0(%r13),%rdx 898
+   + 0x974 mov    0x8(%r13),%rax 898
+   + 0x978 mov    $0x1,%r9b 898
+   + 0x97b cmp    %rcx,%rdx 905
+   + 0x97e jne    41ca2 <<c30walk::ctor2s::Ctor2s>::build::<false>+0xb72> 905
+   + 0x984 cmp    %rcx,%rax 905
+   + 0x987 jne    41ca2 <<c30walk::ctor2s::Ctor2s>::build::<false>+0xb72> 905
+   + 0x98d add    $0xfffffffffffffff0,%r8 905
+   + 0x991 add    $0x10,%r13 905
+   + 0x995 cmp    $0xf,%r8 905
+   + 0x999 ja     41aa0 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x970> 905
+   + 0x99b mov    %r13,0x28(%rsp) 905
+   + 0x9a0 xor    %r9d,%r9d 905
+   + 0x9a3 mov    %rcx,0x40(%rsp) 905
+   + 0x9a8 jmp    41cb1 <<c30walk::ctor2s::Ctor2s>::build::<false>+0xb81> 905
+   + 0x9b0 mov    0x20(%rsp),%r14 905
+   + 0x9b5 sub    %r12,%r14 925
+   + 0x9b8 mov    0x28e8(%rsp),%rax 610
+   + 0x9c0 mov    $0x1e,%r9d 610
+   + 0x9c6 sub    %rax,%r9 610
+   + 0x9c9 cmp    $0x10,%r9 610
+   + 0x9cd mov    $0x10,%ebx 610
+   + 0x9d2 cmovb  %r9,%rbx 610
+   + 0x9d6 mov    %rbx,%r15 611
+   + 0x9d9 add    %r14,%r15 611
+   + 0x9dc jb     42885 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x1755> 611
+   + 0x9e2 cmp    %rdi,%r15 611
+   + 0x9e5 ja     42885 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x1755> 611
+   + 0x9eb mov    0x28f0(%rsp),%r12d 611
+   + 0x9f3 cmp    $0x1e,%rax 611
+   + 0x9f7 jne    41b60 <<c30walk::ctor2s::Ctor2s>::build::<false>+0xa30> 611
+   + 0x9f9 add    $0x10,%r14 616
+   + 0x9fd cmp    %rdi,%r14 616
+   + 0xa00 ja     4289a <<c30walk::ctor2s::Ctor2s>::build::<false>+0x176a> 616
+   + 0xa06 cmp    %r15,%r14 616
+   + 0xa09 jae    41c25 <<c30walk::ctor2s::Ctor2s>::build::<false>+0xaf5> 616
+   + 0xa0f jmp    4289a <<c30walk::ctor2s::Ctor2s>::build::<false>+0x176a> 616
+   + 0xa20 mov    %r13,0x28(%rsp) 616
+   + 0xa25 xor    %r9d,%r9d 616
+   + 0xa28 jmp    41cb1 <<c30walk::ctor2s::Ctor2s>::build::<false>+0xb81> 616
+   + 0xa30 mov    %r13,0x28(%rsp) 616
+   + 0xa35 mov    0x48(%rsp),%rax 616
+   + 0xa3a lea    (%rax,%r14,1),%r10 616
+insert v2[479:479] +0x939 lines [] | v2s[549:550] +0xa88 lines [590]
+   + 0xa88 mov    %r8,0x50(%rsp) 590
+delete v2[481:482] +0x946 lines [542] | v2s[552:552] +0xa9a lines []
+   - 0x946 lea    0xd8(%rsp),%r8 542
+insert v2[486:486] +0x95e lines [] | v2s[556:558] +0xaab lines [589]
+   + 0xaab lea    0xe8(%rsp),%rdx 589
+   + 0xab3 mov    0x50(%rsp),%r8 589
+replace v2[489:490] +0x970 lines [546] | v2s[561:596] +0xad0 lines [585, 589, 590, 616]
+   - 0x970 xor    %edx,%edx 546
+   + 0xad0 add    $0x10,%r14 616
+   + 0xad4 cmp    %rdi,%r14 616
+   + 0xad7 ja     4289a <<c30walk::ctor2s::Ctor2s>::build::<false>+0x176a> 616
+   + 0xadd cmp    %r15,%r14 616
+   + 0xae0 mov    0x28(%rsp),%r13 616
+   + 0xae5 jb     4289a <<c30walk::ctor2s::Ctor2s>::build::<false>+0x176a> 616
+   + 0xaeb cmp    $0xf,%r9 616
+   + 0xaef ja     41a10 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x8e0> 616
+   + 0xaf5 add    0x48(%rsp),%r15 616
+   + 0xafa mov    %r15,%r14 616
+   + 0xafd sub    %rbx,%r14 616
+   + 0xb00 add    $0x10,%r14 616
+   + 0xb04 add    %r12d,%ebx 616
+   + 0xb07 add    $0x2,%ebx 616
+   + 0xb10 movzbl (%r15),%esi 616
+   + 0xb14 lea    (%rsi,%rsi,4),%rcx 585
+   + 0xb18 lea    (%rdx,%rcx,8),%r12 585
+   + 0xb1c mov    (%rdx,%rcx,8),%rax 585
+   + 0xb20 cmp    0x8(%rdx,%rcx,8),%rax 585
+   + 0xb25 je     41c6e <<c30walk::ctor2s::Ctor2s>::build::<false>+0xb3e> 585
+   + 0xb27 mov    %bx,(%rax) 585
+   + 0xb2a addq   $0x2,(%r12) 590
+   + 0xb2f inc    %r15 590
+   + 0xb32 inc    %ebx 590
+   + 0xb34 cmp    %r14,%r15 590
+   + 0xb37 jne    41c40 <<c30walk::ctor2s::Ctor2s>::build::<false>+0xb10> 590
+   + 0xb39 jmp    41a10 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x8e0> 590
+   + 0xb3e mov    %r13,%rbp 590
+   + 0xb41 mov    %r8,%r13 590
+   + 0xb44 lea    0xa8(%rsp),%rdi 585
+   + 0xb4c call   8c100 <<c30walk::ctor2s::W<false>>::refill> 585
+   + 0xb51 test   %al,%al 585
+   + 0xb53 je     4265d <<c30walk::ctor2s::Ctor2s>::build::<false>+0x152d> 585
+   + 0xb59 mov    (%r12),%rax 589
+   + 0xb5d mov    0x8(%rsp),%rdi 589
+delete v2[495:552] +0x998 lines [99, 298, 299, 828, 829, 833, 835, 837] | v2s[601:601] +0xb77 lines []
+   - 0x998 lea    0x10(%rax),%rcx 298
+   - 0x99c add    $0xfffffffffffffff2,%rax 299
+   - 0x9a0 xor    %edx,%edx 299
+   - 0x9a2 cmp    $0x1e,%rcx 299
+   - 0x9a6 setae  %dl 299
+   - 0x9a9 cmovb  %rcx,%rax 299
+   - 0x9ad mov    %rax,0x28d8(%rsp) 299
+   - 0x9b5 mov    0x28e0(%rsp),%eax 299
+   - 0x9bc lea    0x10(%rax,%rdx,2),%eax 299
+   - 0x9c0 mov    %eax,0x28e0(%rsp) 299
+   - 0x9c7 mov    0x30(%rsp),%r11 299
+   - 0x9cc lea    0x10(%r11),%rsi 828
+   - 0x9d0 xor    %edx,%edx 828
+   - 0x9d2 mov    %rsi,%rdi 828
+   - 0x9d5 cmp    %r10,%rsi 828
+   - 0x9d8 mov    0x28(%rsp),%r14 828
+   - 0x9dd ja     3b0f7 <<c30walk::ctor2::Ctor2>::build::<false>+0x8b7> 828
+   - 0x9e3 test   $0x1,%dl 829
+   - 0x9e6 jne    3b254 <<c30walk::ctor2::Ctor2>::build::<false>+0xa14> 829
+   - 0x9e8 lea    0x8(%r11),%rsi 99
+   - 0x9ec cmp    $0xfffffffffffffff7,%r11 99
+   - 0x9f0 ja     3bfd8 <<c30walk::ctor2::Ctor2>::build::<false>+0x1798> 99
+   - 0x9f6 cmp    %r13,%rsi 99
+   - 0x9f9 ja     3bfd8 <<c30walk::ctor2::Ctor2>::build::<false>+0x1798> 99
+   - 0x9ff lea    0x10(%r11),%rax 99
+   - 0xa03 cmp    %r13,%rax 99
+   - 0xa06 ja     3bfff <<c30walk::ctor2::Ctor2>::build::<false>+0x17bf> 99
+   - 0xa0c mov    (%r14,%r11,1),%r9 99
+   - 0xa10 mov    (%r14,%rsi,1),%rcx 99
+   - 0xa14 mov    %r9,%rax 833
+   - 0xa17 xor    %rcx,%rax 833
+   - 0xa1a mov    %r9,%rdx 833
+   - 0xa1d rol    $0x8,%rdx 833
+   - 0xa21 xor    %r9,%rdx 833
+   - 0xa24 or     %rax,%rdx 833
+   - 0xa27 jne    3b2c0 <<c30walk::ctor2::Ctor2>::build::<false>+0xa80> 833
+   - 0xa29 mov    %rdi,%rax 833
+   - 0xa30 mov    %rax,%r12 833
+   - 0xa33 add    $0x10,%rax 835
+   - 0xa37 cmp    %r10,%rax 835
+   - 0xa3a setbe  %r9b 835
+   - 0xa3e ja     3b320 <<c30walk::ctor2::Ctor2>::build::<false>+0xae0> 835
+   - 0xa44 lea    0x8(%r12),%rsi 99
+   - 0xa49 cmp    $0xfffffffffffffff7,%r12 99
+   - 0xa4d ja     3befa <<c30walk::ctor2::Ctor2>::build::<false>+0x16ba> 99
+   - 0xa53 cmp    %r13,%rsi 99
+   - 0xa56 ja     3befa <<c30walk::ctor2::Ctor2>::build::<false>+0x16ba> 99
+   - 0xa5c mov    (%r14,%r12,1),%rdx 99
+   - 0xa60 mov    0x8(%r14,%r12,1),%rsi 99
+   - 0xa65 cmp    %rcx,%rdx 837
+   - 0xa68 jne    3b2af <<c30walk::ctor2::Ctor2>::build::<false>+0xa6f> 837
+   - 0xa6a cmp    %rcx,%rsi 837
+   - 0xa6d je     3b270 <<c30walk::ctor2::Ctor2>::build::<false>+0xa30> 837
+   - 0xa6f mov    %rsi,0x38(%rsp) 837
+   - 0xa74 mov    %rdx,0x68(%rsp) 837
+   - 0xa79 lea    0x10(%r12),%r10 837
+   - 0xa7e jmp    3b325 <<c30walk::ctor2::Ctor2>::build::<false>+0xae5> 837
+delete v2[556:573] +0xa96 lines [559, 560, 847] | v2s[605:605] +0xb89 lines []
+   - 0xa96 cmp    $0x10,%r12 559
+   - 0xa9a mov    $0x10,%ebx 559
+   - 0xa9f cmovb  %r12,%rbx 559
+   - 0xaa3 mov    %rbx,%r15 560
+   - 0xaa6 add    %r11,%r15 560
+   - 0xaa9 jb     3bfea <<c30walk::ctor2::Ctor2>::build::<false>+0x17aa> 560
+   - 0xaaf cmp    %r13,%r15 560
+   - 0xab2 ja     3bfea <<c30walk::ctor2::Ctor2>::build::<false>+0x17aa> 560
+   - 0xab8 mov    0x28e0(%rsp),%r14d 560
+   - 0xac0 cmp    $0x1e,%rax 560
+   - 0xac4 jne    3ba80 <<c30walk::ctor2::Ctor2>::build::<false>+0x1240> 560
+   - 0xaca cmp    %r15,0x30(%rsp) 560
+   - 0xacf jae    3bb0a <<c30walk::ctor2::Ctor2>::build::<false>+0x12ca> 560
+   - 0xad5 jmp    3c014 <<c30walk::ctor2::Ctor2>::build::<false>+0x17d4> 560
+   - 0xae0 lea    0x10(%r12),%r10 847
+   - 0xae5 mov    %r12,0x30(%rsp) 847
+   - 0xaea sub    %r11,%r12 847
+insert v2[575:575] +0xaf8 lines [] | v2s[607:608] +0xb94 lines [699]
+   + 0xb94 lea    (%rax,%rax,4),%rdx 699
+replace v2[586:587] +0xb26 lines [649] | v2s[619:620] +0xbca lines [919]
+   - 0xb26 mov    %r9d,0x44(%rsp) 649
+   + 0xbca lea    0xe8(%rsp),%rsi 919
+delete v2[607:608] +0xb7f lines [366] | v2s[640:640] +0xc2e lines []
+   - 0xb7f lea    0xd8(%rsp),%r8 366
+insert v2[631:631] +0xbec lines [] | v2s[663:664] +0xc93 lines [635]
+   + 0xc93 mov    %rdx,%r8 635
+delete v2[632:633] +0xbef lines [584] | v2s[665:665] +0xc99 lines []
+   - 0xbef mov    %rdx,%r8 584
+delete v2[654:655] +0xc49 lines [662] | v2s[686:686] +0xcf8 lines []
+   - 0xc49 lea    0xd8(%rsp),%r8 662
+insert v2[908:908] +0x1046 lines [] | v2s[939:940] +0x10c6 lines [656]
+   + 0x10c6 lea    -0x1e(%r12),%rsi 656
+insert v2[932:932] +0x10aa lines [] | v2s[964:965] +0x112a lines [640]
+   + 0x112a mov    0x80(%rsp),%rbx 640
+insert v2[1020:1020] +0x1235 lines [] | v2s[1053:1113] +0x12c5 lines [341, 342, 395, 610, 611, 931]
+   + 0x12c5 mov    0x50(%rsp),%r8 395
+   + 0x12ca mov    0x38(%rsp),%r14 395
+   + 0x12cf mov    0x28(%rsp),%r13 395
+   + 0x12d4 mov    0x40(%rsp),%rcx 395
+   + 0x12d9 mov    0x64(%rsp),%eax 395
+   + 0x12dd mov    %r8,%r12 395
+   + 0x12e0 cmp    $0xf,%r8 395
+   + 0x12e4 ja     41a58 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x928> 395
+   + 0x12ea jmp    42423 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x12f3> 395
+   + 0x12f0 mov    %r12,%rcx 395
+   + 0x12f3 test   %r8,%r8 931
+   + 0x12f6 je     4190c <<c30walk::ctor2s::Ctor2s>::build::<false>+0x7dc> 931
+   + 0x12fc mov    0x20(%rsp),%r15 931
+   + 0x1301 sub    %r8,%r15 931
+   + 0x1304 mov    0x28e8(%rsp),%rax 610
+   + 0x130c mov    $0x1e,%ebx 610
+   + 0x1311 sub    %rax,%rbx 610
+   + 0x1314 cmp    %r8,%rbx 610
+   + 0x1317 cmovae %r8,%rbx 610
+   + 0x131b mov    %rbx,%r12 611
+   + 0x131e add    %r15,%r12 611
+   + 0x1321 lea    0xe8(%rsp),%rdx 611
+   + 0x1329 jb     428e9 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x17b9> 611
+   + 0x132f cmp    %rdi,%r12 611
+   + 0x1332 ja     428e9 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x17b9> 611
+   + 0x1338 mov    %rcx,0x40(%rsp) 611
+   + 0x133d mov    %r14,0x38(%rsp) 611
+   + 0x1342 mov    0x28f0(%rsp),%r14d 611
+   + 0x134a cmp    $0x1e,%rax 611
+   + 0x134e jne    4250f <<c30walk::ctor2s::Ctor2s>::build::<false>+0x13df> 611
+   + 0x1354 cmp    %r12,0x20(%rsp) 611
+   + 0x1359 jb     428fe <<c30walk::ctor2s::Ctor2s>::build::<false>+0x17ce> 611
+   + 0x135f jne    42583 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x1453> 611
+   + 0x1365 mov    0x28e8(%rsp),%rax 611
+   + 0x136d mov    0x28f0(%rsp),%ecx 611
+   + 0x1374 cmp    $0x1,%r8 611
+   + 0x1378 je     418d8 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x7a8> 611
+   + 0x137e mov    %r8d,%edx 611
+   + 0x1381 and    $0xe,%edx 611
+   + 0x1384 mov    0x38(%rsp),%r14 611
+   + 0x1390 lea    0x1(%rax),%rsi 341
+   + 0x1394 add    $0xffffffffffffffe3,%rax 342
+   + 0x1398 xor    %edi,%edi 342
+   + 0x139a cmp    $0x1e,%rsi 342
+   + 0x139e setae  %dil 342
+   + 0x13a2 cmovb  %rsi,%rax 342
+   + 0x13a6 lea    (%rcx,%rdi,2),%ecx 342
+   + 0x13a9 lea    0x1(%rax),%rsi 341
+   + 0x13ad add    $0xffffffffffffffe3,%rax 342
+   + 0x13b1 xor    %edi,%edi 342
+   + 0x13b3 cmp    $0x1e,%rsi 342
+   + 0x13b7 setae  %dil 342
+   + 0x13bb cmovb  %rsi,%rax 342
+   + 0x13bf lea    (%rcx,%rdi,2),%ecx 342
+   + 0x13c2 add    $0x2,%ecx 342
+   + 0x13c5 add    $0xfffffffffffffffe,%rdx 342
+   + 0x13c9 jne    424c0 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x1390> 342
+   + 0x13cb test   $0x1,%r8b 342
+   + 0x13cf mov    0x8(%rsp),%rdi 342
+   + 0x13d4 jne    418dd <<c30walk::ctor2s::Ctor2s>::build::<false>+0x7ad> 342
+delete v2[1039:1040] +0x128f lines [542] | v2s[1132:1132] +0x1433 lines []
+   - 0x128f lea    0xd8(%rsp),%r8 542
+insert v2[1044:1044] +0x12a8 lines [] | v2s[1136:1137] +0x1444 lines [589]
+   + 0x1444 lea    0xe8(%rsp),%rdx 589
+delete v2[1046:1047] +0x12b0 lines [546] | v2s[1139:1139] +0x1453 lines []
+   - 0x12b0 cmp    %r15,0x30(%rsp) 546
+replace v2[1048:1051] +0x12ba lines [546] | v2s[1140:1143] +0x1458 lines [589]
+   - 0x12ba jb     3c014 <<c30walk::ctor2::Ctor2>::build::<false>+0x17d4> 546
+   - 0x12c0 cmp    $0xf,%r12 546
+   - 0x12c4 ja     3b1d0 <<c30walk::ctor2::Ctor2>::build::<false>+0x990> 546
+   + 0x1458 mov    0x20(%rsp),%rcx 589
+   + 0x145d lea    (%rax,%rcx,1),%r15 589
+   + 0x1461 lea    (%r14,%rbx,1),%ebp 589
+delete v2[1052:1053] +0x12cf lines [546] | v2s[1144:1144] +0x1468 lines []
+   - 0x12cf mov    %r15,%r12 546
+delete v2[1054:1057] +0x12d5 lines [546] | v2s[1145:1145] +0x1470 lines []
+   - 0x12d5 add    $0x10,%r12 546
+   - 0x12d9 add    %r14d,%ebx 546
+   - 0x12dc add    $0x2,%ebx 546
+delete v2[1067:1068] +0x1303 lines [547] | v2s[1155:1155] +0x1494 lines []
+   - 0x1303 cmp    %r12,%r15 547
+insert v2[1070:1070] +0x130d lines [] | v2s[1157:1158] +0x149b lines [590]
+   + 0x149b mov    %r8,%r12 590
+delete v2[1072:1073] +0x131a lines [542] | v2s[1160:1160] +0x14ab lines []
+   - 0x131a lea    0xd8(%rsp),%r8 542
+delete v2[1077:1080] +0x1332 lines [546] | v2s[1164:1164] +0x14b7 lines []
+   - 0x1332 mov    0x20(%rsp),%r10 546
+   - 0x1337 jmp    3bb37 <<c30walk::ctor2::Ctor2>::build::<false>+0x12f7> 546
+   - 0x1339 mov    0x8(%rsp),%r13 546
+delete v2[1082:1179] +0x134b lines [298, 299, 300, 301, 303, 304, 542, 546, 547, 565, 570, 664, 823] | v2s[1166:1166] +0x14c2 lines []
+   - 0x134b mov    0x68(%rsp),%r9 546
+   - 0x1350 mov    0x38(%rsp),%rcx 546
+   - 0x1355 mov    0x30(%rsp),%r11 546
+   - 0x135a mov    0x44(%rsp),%edx 546
+   - 0x135e mov    0x70(%rsp),%rsi 546
+   - 0x1363 jmp    3b212 <<c30walk::ctor2::Ctor2>::build::<false>+0x9d2> 664
+   - 0x1370 lea    (%r14,%r11,1),%rax 664
+   - 0x1374 cmp    %r10,%rax 664
+   - 0x1377 jne    3bc01 <<c30walk::ctor2::Ctor2>::build::<false>+0x13c1> 664
+   - 0x1379 cmp    $0x10,%rdx 570
+   - 0x137d jne    3bc77 <<c30walk::ctor2::Ctor2>::build::<false>+0x1437> 570
+   - 0x1383 mov    0x28d8(%rsp),%rax 298
+   - 0x138b lea    0x10(%rax),%rcx 298
+   - 0x138f cmp    $0x1d,%rcx 299
+   - 0x1393 mov    0x8(%rsp),%r13 299
+   - 0x1398 mov    0x28(%rsp),%r14 299
+   - 0x139d mov    %rbp,%r9 299
+   - 0x13a0 jbe    3bd1b <<c30walk::ctor2::Ctor2>::build::<false>+0x14db> 299
+   - 0x13a6 add    $0xfffffffffffffff2,%rax 300
+   - 0x13aa mov    %rax,0x28d8(%rsp) 300
+   - 0x13b2 mov    0x28e0(%rsp),%eax 301
+   - 0x13b9 add    $0x12,%eax 301
+   - 0x13bc jmp    3bd2d <<c30walk::ctor2::Ctor2>::build::<false>+0x14ed> 301
+   - 0x13c1 add    $0x2,%r12d 301
+   - 0x13c5 movzwl %r12w,%r12d 301
+   - 0x13d0 movzbl (%r15,%r14,1),%esi 565
+   - 0x13d5 lea    (%rsi,%rsi,4),%rcx 542
+   - 0x13d9 lea    (%r8,%rcx,8),%rbx 542
+   - 0x13dd mov    (%r8,%rcx,8),%rax 542
+   - 0x13e1 cmp    0x8(%r8,%rcx,8),%rax 542
+   - 0x13e6 je     3bc40 <<c30walk::ctor2::Ctor2>::build::<false>+0x1400> 542
+   - 0x13e8 lea    (%r12,%r14,1),%rcx 542
+   - 0x13ec mov    %cx,(%rax) 542
+   - 0x13ef addq   $0x2,(%rbx) 547
+   - 0x13f3 inc    %r14 547
+   - 0x13f6 cmp    %r14,%rdx 547
+   - 0x13f9 jne    3bc10 <<c30walk::ctor2::Ctor2>::build::<false>+0x13d0> 547
+   - 0x13fb jmp    3bbb9 <<c30walk::ctor2::Ctor2>::build::<false>+0x1379> 547
+   - 0x1400 mov    %rdx,0x10(%rsp) 547
+   - 0x1405 mov    %r11,%r13 547
+   - 0x1408 lea    0x98(%rsp),%rdi 542
+   - 0x1410 call   89290 <<c30walk::ctor2::W<false>>::refill> 542
+   - 0x1415 lea    0xd8(%rsp),%r8 542
+   - 0x141d test   %al,%al 542
+   - 0x141f je     3bda7 <<c30walk::ctor2::Ctor2>::build::<false>+0x1567> 542
+   - 0x1425 mov    (%rbx),%rax 546
+   - 0x1428 mov    0x20(%rsp),%r10 546
+   - 0x142d mov    %r13,%r11 546
+   - 0x1430 mov    0x10(%rsp),%rdx 546
+   - 0x1435 jmp    3bc28 <<c30walk::ctor2::Ctor2>::build::<false>+0x13e8> 546
+   - 0x1437 mov    0x28e0(%rsp),%eax 546
+   - 0x143e mov    0x28d8(%rsp),%rcx 546
+   - 0x1446 inc    %r11 299
+   - 0x1449 cmp    %r11,%r10 299
+   - 0x144c mov    0x8(%rsp),%r13 299
+   - 0x1451 mov    0x28(%rsp),%r14 299
+   - 0x1456 mov    %rbp,%r9 299
+   - 0x1459 je     3bcf6 <<c30walk::ctor2::Ctor2>::build::<false>+0x14b6> 299
+   - 0x145b mov    %rdx,%r10 299
+   - 0x145e and    $0xffffe,%edx 299
+   - 0x1470 lea    0x1(%rcx),%rsi 298
+   - 0x1474 add    $0xffffffffffffffe3,%rcx 299
+   - 0x1478 xor    %edi,%edi 299
+   - 0x147a cmp    $0x1e,%rsi 299
+   - 0x147e setae  %dil 299
+   - 0x1482 cmovb  %rsi,%rcx 299
+   - 0x1486 lea    (%rax,%rdi,2),%eax 299
+   - 0x1489 lea    0x1(%rcx),%rsi 298
+   - 0x148d add    $0xffffffffffffffe3,%rcx 299
+   - 0x1491 xor    %edi,%edi 299
+   - 0x1493 cmp    $0x1e,%rsi 299
+   - 0x1497 setae  %dil 299
+   - 0x149b cmovb  %rsi,%rcx 299
+   - 0x149f lea    (%rax,%rdi,2),%eax 299
+   - 0x14a2 add    $0x2,%eax 299
+   - 0x14a5 add    $0xfffffffffffffffe,%rdx 299
+   - 0x14a9 jne    3bcb0 <<c30walk::ctor2::Ctor2>::build::<false>+0x1470> 299
+   - 0x14ab test   $0x1,%r10b 299
+   - 0x14af mov    0x20(%rsp),%r10 299
+   - 0x14b4 je     3bd11 <<c30walk::ctor2::Ctor2>::build::<false>+0x14d1> 299
+   - 0x14b6 lea    0x1(%rcx),%rdx 298
+   - 0x14ba add    $0xffffffffffffffe3,%rcx 299
+   - 0x14be xor    %esi,%esi 299
+   - 0x14c0 cmp    $0x1e,%rdx 299
+   - 0x14c4 setae  %sil 299
+   - 0x14c8 cmovb  %rdx,%rcx 299
+   - 0x14cc lea    (%rax,%rsi,2),%eax 299
+   - 0x14cf inc    %eax 299
+   - 0x14d1 mov    %rcx,0x28d8(%rsp) 299
+   - 0x14d9 jmp    3bd2d <<c30walk::ctor2::Ctor2>::build::<false>+0x14ed> 299
+   - 0x14db mov    %rcx,0x28d8(%rsp) 303
+   - 0x14e3 mov    0x28e0(%rsp),%eax 304
+   - 0x14ea add    $0x10,%eax 304
+   - 0x14ed mov    %eax,0x28e0(%rsp) 304
+   - 0x14f4 mov    %r10,%r11 304
+   - 0x14f7 cmp    %r13,%r10 823
+   - 0x14fa jb     3b01c <<c30walk::ctor2::Ctor2>::build::<false>+0x7dc> 823
+insert v2[1211:1211] +0x158b lines [] | v2s[1198:1202] +0x1551 lines [840]
+   + 0x1551 lea    0xee4e8(%rip),%rcx 840
+   + 0x1558 mov    $0x1e,%edx 840
+   + 0x155d xor    %edi,%edi 840
+   + 0x155f call   d8f00 <core::slice::index::slice_index_fail> 840
+insert v2[1216:1216] +0x15a5 lines [] | v2s[1207:1208] +0x1581 lines [840]
+   + 0x1581 lea    0xe8(%rsp),%rbx 840
+delete v2[1231:1232] +0x15e7 lines [374] | v2s[1223:1223] +0x15c5 lines []
+   - 0x15e7 mov    %r15,%rdi 374
+delete v2[1281:1289] +0x16ba lines [789] | v2s[1272:1272] +0x169c lines []
+   - 0x16ba lea    0xf5b6f(%rip),%rcx 789
+   - 0x16c1 mov    %r12,%rdi 789
+   - 0x16c4 mov    %r13,%rdx 789
+   - 0x16c7 call   d8f00 <core::slice::index::slice_index_fail> 789
+   - 0x16cc lea    0xf474d(%rip),%rcx 789
+   - 0x16d3 mov    $0x1e,%edx 789
+   - 0x16d8 xor    %edi,%edi 789
+   - 0x16da call   d8f00 <core::slice::index::slice_index_fail> 789
+delete v2[1333:1342] +0x17a5 lines [719] | v2s[1316:1316] +0x1762 lines []
+   - 0x17a5 call   d8f00 <core::slice::index::slice_index_fail> 719
+   - 0x17aa lea    0xf469f(%rip),%rcx 719
+   - 0x17b1 mov    %r11,%rdi 719
+   - 0x17b4 mov    %r15,%rsi 719
+   - 0x17b7 mov    %r13,%rdx 719
+   - 0x17ba call   d8f00 <core::slice::index::slice_index_fail> 719
+   - 0x17bf lea    0xf5a6a(%rip),%rcx 719
+   - 0x17c6 mov    %rsi,%rdi 719
+   - 0x17c9 mov    %rax,%rsi 719
+insert v2[1358:1358] +0x1817 lines [] | v2s[1332:1342] +0x17ac lines [673]
+   + 0x17ac mov    $0x1e,%esi 673
+   + 0x17b1 mov    %r12,%rdi 673
+   + 0x17b4 call   d8123 <core::panicking::panic_bounds_check> 673
+   + 0x17b9 lea    0xee2b0(%rip),%rcx 673
+   + 0x17c0 mov    %rdi,%rdx 673
+   + 0x17c3 mov    %r15,%rdi 673
+   + 0x17c6 mov    %r12,%rsi 673
+   + 0x17c9 call   d8f00 <core::slice::index::slice_index_fail> 673
+   + 0x17ce lea    0xee283(%rip),%rcx 673
+   + 0x17d5 mov    %rdi,%rdx 673
+deleted 241 inserted 225

@@ -1,0 +1,25 @@
+ctor2s-synthetic: small blocks, n 0..=130: 4192 cases exact
+ctor2s-synthetic: bucket boundary at every offset: 1620 cases exact
+ctor2s-synthetic: bulk-to-partial transitions (phase x slot x run length): 43740 cases exact
+ctor2s-synthetic: epoch boundaries: 60 cases exact
+ctor2s-synthetic: absent characters across repeated snapshots: 60 cases exact
+ctor2s-synthetic: ordinary/wide span boundaries from full labels: 97 cases exact
+ctor2s-synthetic: pending portions finished at the end of input: 18 cases exact
+ctor2s-synthetic: scanner class tiny: 18 cases exact
+ctor2s-synthetic: scanner class tails: 45 cases exact
+ctor2s-synthetic: scanner class align: 14 cases exact
+ctor2s-synthetic: scanner class phase: 15 cases exact
+ctor2s-synthetic: scanner class held: 5 cases exact
+ctor2s-synthetic: scanner class endrun: 2 cases exact
+ctor2s-synthetic: scanner class epoch: 2 cases exact
+ctor2s-synthetic: scanner class malformed: 4 cases exact
+ctor2s-synthetic: RAW discovery order and forced RAW: 18 cases exact
+ctor2s-synthetic: one-symbol blocks: 57 cases exact
+ctor2s-synthetic: 900,000-row and 983,010-row blocks: 30 cases exact
+ctor2s-synthetic: repeated construction with changing sizes: 30 cases exact
+ctor2s-synthetic: malformed counts: 3995 rejected, 7 accepted (equal to ll's own after the change)
+ctor2s-synthetic: malformed counts and sizes: 4002 cases exact
+ctor2s-synthetic coverage: finished fast 2439056, ordinary 19498, wide 2248, crossing 263092, forced 214976; multi-epoch portions 31302; epoch searches 33214; runs split at an epoch 647; portion (first slot, length) shapes 384; max ordinary span 65533, min wide span 65534; epochs 51714
+ctor2s-synthetic: 54029 cases, 99966 array comparisons, 149949 walk outputs, 99966 restorations: every check exact (full)
+ctor2s-synthetic counters: {"blocks":49983,"rows":120812028,"rows_bulk":26800080,"rows_bulk_raw":10597110,"rows_fragment":4272346,"rows_scalar":79142492,"runs":170440,"run_rows":41669536,"complete_groups":893336,"fin_fast":2439056,"fin_ordinary":19498,"fin_wide":2248,"fin_crossing":263092,"fin_forced":214976,"norm_full":2412620,"norm_partial":45934,"norm_fields":73051678,"raw_fields_read":10363160,"raw_entries_written":10363160,"fields_restored":10295720,"epoch_searches":33214,"epochs":51714,"runs_split_at_epoch":647,"raw_groups":699064,"raw_moved":471038,"raw_cycles":308,"multi_epoch_portions":31302,"max_ordinary_span":65533,"min_wide_span":65534,"fresh_pairs":4937093,"lookahead_pairs":2590199,"held_reuses":156293,"runs_no_full_tile":14147,"tiles_nonuniform":4922946,"tiles_second_segment":2297190,"tails":46929,"tail_rows":375356}
+exit 0

@@ -124,3 +124,296 @@ completion.
 
 The ledger recounts every changed function in full, takes Q at its least favourable end, and
 reports loads, stores and stack operations alongside.
+
+## 1. Checkpoint (charter §9)
+
+**Outcome: prototype 1 does NOT qualify.**
+
+| gate | role | outcome |
+|---|---|---|
+| 1, correctness and safety | qualifier | **PASS**: every suite exact, both mutants caught, the release-mode argument written, and all 8 registered Miri classes complete with no undefined behaviour |
+| 2, machine code | diagnostic | **missed in part** (§4): the fresh-pair (4) and lookahead (11) targets met; the nonuniform-tile target, row-loop identity, spill-free scan and no slice checks on full tiles missed |
+| 3, net work on B2 | qualifier | **FAIL: 56.20 M** removed against the 60 M minimum (§5) |
+
+**Escalation.** The coordinator's brief (§0) asks for one if the safe forms miss the compile
+target. They do: the nonuniform tile's checks remain. So this line STOPS as a §8.2 escalation,
+with the unsafe operations that would be needed set out in §7. No unsafe variant was written.
+
+**The pin:** branch `research/compact30-scanner`, from `d055c51`, at this entry's commit.
+- **The prototype:** `examples/c30walk/ctor2s.rs` (new), plus the `mod` line and the
+  `ctor2s-` dispatch in `examples/c30walk.rs`.
+- **Frozen files, each unchanged** (`git diff` empty):
+  - `ctor2.rs` against `8beffe2`;
+  - `ctor3.rs` against `dbf5139`;
+  - `ctor.rs`, the walker, the oracle, `src/`, `cbuild.rs` and `bench/`.
+
+**Untimed.** Nothing was timed or benchmarked, and no perf counter was used. The exact counts
+in §5 come from callgrind, which simulates instructions without timing them (§5.1). That is an
+independent cross-check beside the charter's method, and is labelled as such.
+
+## 2. The three attempts (all safe Rust; listings in `attempt-*/`)
+
+**All three replace v2's `rd` reads in the same way.** Each epoch's unread rows are a slice,
+`rest`. A full tile is `rest.split_first_chunk::<16>()`, so the language's own length test is
+the loop guard. Its two qwords are read from the `[u8; 16]` at constant offsets (`halves`), and
+a run's lookahead does the same on the remainder. A held tile stays at the front of `rest`.
+
+| attempt | the nonuniform full tile | `build::<false>` | the row loops (v2: 12 each, four copies) | verdict |
+|---|---|---|---|---|
+| 1 | `tile16`: `split_at(n1)` on the 16-byte array, no slice of `ll` | 0x177d, 1,355 instructions | **13, 13, 12, 13**: the descriptor base is rematerialised in the loop (`lea 0xe8(%rsp)`), by register pressure | the row-loop regression costs ≈ 1 × the scalar rows on these paths |
+| 2 | the same, with `rest = &rest[16..]` re-derived after the tile instead of keeping `after` live | code differs elsewhere; **row loops as attempt 1** | 13, 13, 12, 13 | no improvement |
+| 3 (kept) | v2's own `tile(ll, i, 16)`, at i = `end − rest.len()` | **0x18a6, 1,414 instructions** | **12, 12, 12, 11** (the tail's second segment counts down to zero) | the variant checked below |
+
+Attempt 3 gives up C3 and C4 by design, since v2's tile keeps its slice checks and its phase
+test. Its row loops have v2's instruction counts, though not v2's registers: the descriptor
+base is in `%rdx`, not `%r8`.
+
+## 3. Gate 1: correctness and safety
+
+**The suites,** each case as v2's `check_block` runs it:
+1. the oracle;
+2. the counted and uncounted builds, in poisoned reused arenas;
+3. **v2's counted build on the same input, with every counter equal field by field,** all
+   930 portion-shape cells included;
+4. **the scan-path identities on every case:**
+   - fresh + lookahead = ⌊n/16⌋;
+   - nonuniform = ⌊n/16⌋ − run rows/16;
+   - runs = held + no-full-tile;
+   - fresh = nonuniform + no-full-tile;
+   - tail rows = n mod 16;
+   - scalar rows = 16 × nonuniform + tail rows;
+5. the counted and audited walks against production and the oracle;
+6. the arrays again after each walk.
+
+| suite | cases | array comparisons | walk outputs | restorations | result |
+|---|--:|--:|--:|--:|---|
+| 11 corpora (sha256 = the census's) × 4 configurations | 44 | 12,104 | 18,156 | 12,104 | **exact** |
+| the adversarial set | 200 | 1,056 | 1,584 | 1,056 | **exact** |
+| full synthetic: v2's classes and the 8 registered scanner classes | 54,029 | 99,966 | 149,949 | 99,966 | **exact** |
+| quick synthetic | 629 | 1,170 | 1,755 | 1,170 | **exact** |
+
+**The rest of gate 1:**
+- **Malformed counts:** v2's class gives 3,995 rejected and 7 accepted, exactly when the counts
+  equal L's own, both builds agreeing. The scanner's own malformed class rejects in both builds,
+  with both arrays empty.
+- **Reuse:** v2's repeated-size class, growing and shrinking, n = 0 through both builds, exact.
+- **The mutation checks** (§0.5): **both caught.**
+  - **M1** (the held tile skipped): the quick suite panics at "small n 32 sigma 3: the counted
+    build rejected valid counts". Exit 101.
+  - **M2** (the run short by one tile): it panics at "small n 16 sigma 1: …". Exit 101.
+
+  Both are in `mutation-M*.console`, with their diffs.
+
+**The release-mode argument:**
+- **No new `unsafe` operation.** The scanner's source accesses are:
+  - `ll[i..end]` once per epoch;
+  - `split_first_chunk::<16>()` on the remainder;
+  - constant-offset `split_at(8)` and `try_into` on a `[u8; 16]`;
+  - v2's `tile`, with its checked slicing.
+
+  Every one is safe Rust, so an out-of-bounds index panics rather than reading. No pointer,
+  `get_unchecked` or `read_unaligned` is introduced.
+- **Bounds and overflow.**
+  - `rest` is always a suffix of `ll[i₀..end]`, with end ≤ n = `ll.len()`.
+  - The tile's index i = end − `rest.len()` can't underflow, since `rest.len()` ≤ end − i₀.
+  - i + 16 ≤ end follows from `rest.len()` ≥ 16.
+  - For the tail, i + `rest.len()` = end.
+- **Initialisation:** `ll` is a `&[u8]`, so every byte read is initialised.
+- **The destination side** (`one`, `refill`, `run`, `fill`, `complete`, `finish`) is v2's
+  unchanged code. Its obligations are v2's, discharged by v2's audited argument.
+- **Correctness facts** (not safety):
+  - a held tile is the next tile;
+  - a run's length is its tiles' rows;
+  - the run lengths, splits and tile indices equal v2's.
+
+  These are checked by the counter equality on every case and by mutants M1 and M2.
+
+**Miri: all 8 registered classes complete, every check exact, no undefined behaviour
+reported.**
+- **The command:** `cargo +nightly miri run --example c30walk -- ctor2s-synthetic --miri
+  CLASS`, one invocation per class, run one after another.
+- **The toolchain:** nightly rustc 1.101.0 (`16d1ffac1`), Stacked Borrows, unpoisoned arenas.
+- **Every case also ran v2's counted build** and the field-by-field counter comparison. The
+  consoles are in `miri/`.
+
+| class (§0.4) | cases | exit | fresh | lookahead | held | no full tile | nonuniform | second segment | tails |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1. tiny and empty (n = 0, 1, 2, 15, 16, 17, 31, 32, 33; σ 1, 2) | 18 | 0 | 12 | 2 | 0 | 5 | 7 | 2 | 12 |
+| 2. every tail length 1..=15: alone, after a nonuniform tile, after a run | 45 | 0 | 30 | 15 | 0 | 15 | 15 | 0 | 45 |
+| 3. odd alignment, offsets 1..=7, tiny and tiled | 14 | 0 | 14 | 35 | 14 | 0 | 14 | 0 | 14 |
+| 4. the phase sweep, every reachable p (0, 2, …, 28) | 15 | 0 | 15 | 105 | 14 | 0 | 15 | 7 | 15 |
+| 5. held tiles (another byte, nonuniform, first or second qword only, alternating runs) | 5 | 0 | 8 | 20 | 12 | 1 | 7 | 3 | 5 |
+| 6. runs ending with no full tile left | 2 | 0 | 4 | 6 | 0 | 2 | 2 | 0 | 1 |
+| 7. the epoch boundary: a run straddling 61,440, and a nonuniform tile ending at it (61,504 rows each) | 2 | 0 | 3,841 | 3,847 | 2 | 2 | 3,839 | 1,792 | 0 |
+| 8. malformed counts, both builds, empty arrays | 4 | 0 | — | — | — | — | — | — | — |
+| **total** | **105** | | | | | | | | |
+
+The counter columns are the classes' own scan-path totals, as each console prints them. Its
+column order is: fresh, lookahead, held, no-full-tile runs, nonuniform, second segments,
+tails.
+
+## 4. Gate 2: the compiled counts against target (diagnostic)
+
+The binary is `e2e6286a…8049fac` (and, after a doc-comment-only edit, `b36885a7…1050ad53`, with identical listings at identical addresses), rustc 1.97.0, `--locked --release`, empty rustflags. The
+static paths in the final listing (`listings/ctor2s-build-false.asm`, at 0x41130):
+
+| path | B2 | target | prototype | |
+|---|--:|--:|--:|---|
+| fresh pair: held test, branch, two loads (`+0x928`–`+0x930`) | 12 | 4 | **4** | **met** |
+| lookahead per matched tile: the loop `+0x970`–`+0x999`, its guard included | 16 | 11 | **11** | **met** |
+| nonuniform full tile's overhead, outside its 16 row appends | 41 + 7X | 34 + 7X | 41 + 7X **+ 8** (exact, §5) | **missed** |
+| row loops | 12 × 4 | identical | 12, 12, 12, 11, with the descriptor base in another register | **missed** (counts equal or fewer; not identical) |
+| `slice_index_fail` unreachable from full tiles | — | yes | no: the nonuniform tile keeps v2's checks | **missed** |
+| no new spill or reload in the scan loop | — | yes | no: +4 per first-segment refill, +3 per second-segment refill, +3 per run | **missed** |
+
+`finish` and `refill` are identical to v2's (normalised), and their call sites keep their
+form.
+
+## 5. Gate 3: the net-work ledger on B2
+
+### 5.1 The method
+
+- **The charter's method** (§5.1) is Σ over compiled paths of their instructions × observed
+  execution counts.
+- **The counts:**
+  - the counted build's new counters give the scan paths' frequencies exactly on the
+    primary corpus (§5.2);
+  - **callgrind** (valgrind 3.22, `--dump-instr=yes`, and `--cache-sim=yes` for reads and
+    writes) gives each instruction's exact execution count in the uncounted build. It runs
+    `ctor2s-count`, which builds each of the 434 blocks once with v2's `build::<false>` and
+    once with the prototype's, and compares their outputs.
+- **What callgrind is and isn't.** It is a deterministic instruction simulation: untimed, not
+  a perf counter, and not a benchmark. It makes Σ instructions × executions exact for the
+  whole function, which is what §5.3a asks for. The two sources agree: the instructions that
+  execute A, J, S, R or H times execute exactly the counters' values.
+
+### 5.2 The frequencies, from the counted build (primary corpus)
+
+| A fresh | J lookahead | H held | Q no full tile left | S nonuniform | X second segment | R runs | tails |
+|--:|--:|--:|--:|--:|--:|--:|--:|
+| 2,396,084 | 10,541,706 | 607,750 | **2,771** | 2,393,313 | 1,116,556 | 610,521 | 230 |
+
+Q is now known exactly, inside the handoff's bound [0, 3,450]. So the identities A = S + Q and
+J = U − Q, with U = 10,544,477, hold exactly.
+
+### 5.3 The result
+
+| | B2 (v2) | prototype | difference |
+|---|--:|--:|--:|
+| `build::<false>`'s own instructions (deterministic, both runs) | 1,026,601,670 | 970,405,853 | **−56,195,817** |
+| including callees (refill, finish, canonicalise and the allocator), run 1 / run 2 | 1,294,414,196 / 1,294,422,962 | 1,238,210,529 / 1,238,217,311 | −56,203,667 / −56,205,651 |
+| explicit reads, `Dr`, including callees (run 1) | 275,023,421 | 271,632,049 | −3,391,372 |
+| explicit writes, `Dw`, including callees (run 1) | 182,174,544 | 184,169,209 | **+1,994,665** |
+
+- `refill` and `finish` are identical in both: 201,234,507 and 177,278,484 instructions
+  inclusive.
+- **The callee difference** (−7,850 and −9,834 in the two runs) is the allocator's
+  heap-state variation: the same calls, different internal paths. It is an unresolved term
+  of at most about 10 k, listed under §5.3e.
+- **The conservative interval** is **[56.18 M, 56.21 M]**: the deterministic −56,195,817
+  allowing for that allocator term. Its lower end is **below the 60 M minimum. Gate 3
+  fails.**
+
+**Where the saving went:** the exact decomposition by execution-count class, B2 against the
+prototype.
+
+| event class (its count) | instructions on it, B2 → prototype | Δ instructions |
+|---|---|--:|
+| uniform tiles U (10,544,477): v2's lookahead guard and checks | 5 → 0 | −52,722,385 |
+| lookahead pairs J (10,541,706) | 9 → 5 | −42,166,824 |
+| matched lookaheads J − H (9,933,956): the new loop's advance and guard | 0 → 4 | +39,735,824 |
+| fresh pairs A (2,396,084): C1 | 10 → 2 | −19,168,672 |
+| outer iterations S + R (3,003,834) | 13 → 11 | −6,007,668 |
+| nonuniform tiles S (2,393,313): v2's tile checks, now unmerged with `rd`'s, and recomputing i | 38 → 46 | **+19,146,504** |
+| refills from a tile's first segment (996,634): spills and reloads | 10 → 14 | +3,986,536 |
+| refills from a tile's second segment (302,049) | 9 → 12 | +906,147 |
+| runs R (610,521) | 32 → 35 | +1,831,563 |
+| one executed alignment `nop` (610,356) | 0 → 1 | +610,356 |
+| other classes (fills, opens, completes, held exits, run returns) | | −2,347,198 |
+| **total** | | **−56,195,817** |
+
+**Against the handoff's design:**
+- **The credited gross was 88,622,080 + 3Q,** which with the exact Q is 88,630,393.
+- **The safe re-expression removes the C1 and C2 checks** that the design credits:
+  8A + 5J = 71.9 M, achieved through the new loop shape.
+- **It does not remove C3 or C4** (7S = 16.75 M of the credit).
+- **It adds back:**
+  - +8 per nonuniform tile. v2 merged the tile's i + 16 ≤ len check with `rd`'s; without
+    `rd`, the tile runs it on its own.
+  - spills and reloads around refills on tile rows;
+  - 3 per run.
+
+### 5.4 Overlap (charter §5.5)
+
+- **This prototype's B2 listing diff** removes:
+  - the fresh pair's checks, `33ae8`–`33b06`;
+  - the lookahead's checks, `33b44`–`33b56`;
+  - the lookahead loop's v2 guard form, `33b30`–`33b3e`, replaced.
+- **It changes, without removing:**
+  - registers and stack slots throughout the scan, `run`, `fill` and `complete`;
+  - the refill detours.
+- **It doesn't touch prototype 2's credited set,** the scalar loops' descriptor-address LEAs
+  (`34355`/`34359`, `343e4`/`343e8`, `33a05`/`33a09`, `344d5`/`344d9`). Those LEAs are still
+  present in all four row loops, in another register. **Instruction-level overlap with
+  prototype 2's credit: none.**
+- The full opcode-level diff is `listing-diff.txt`.
+
+**The evidence in `2026-11-04-compact30-scanner-prototype/`:**
+- `attempt-1/`, `attempt-2/` and `attempt-3/`: each attempt's `build::<false>` listing, and
+  its source diff;
+- `listings/`: the final `build::<false>`, `finish` and `refill`, and v2's `build::<false>`
+  from the same binary;
+- `listing-diff.txt`;
+- the corpora, adversarial and synthetic consoles and records, and `corpora.sha256`;
+- `mutation-M1` and `mutation-M2`: each mutant's console and diff;
+- `miri/`: each class's console, and the toolchain;
+- `callgrind/`: the per-function counts of both runs, the parser, and the per-instruction
+  profile (gzipped).
+
+## 6. Limitations and negative findings
+
+- **The safe forms meet the read-side targets exactly, but a register-allocation
+  side-effect on the tile path makes the net short.** The first two attempts put an
+  instruction into three of the four row loops. The third avoided that by keeping v2's tile
+  code, and with it v2's tile checks.
+- **Reads fall (−3.39 M) and writes rise (+1.99 M),** from the new spills.
+- **Callgrind's inclusive figure varies by about 10 k through the allocator.** The
+  function's own count is exact and reproducible.
+- **No runtime inference.** No cycles, micro-ops or timing are claimed.
+- **Odd tile phases are unreachable.** The pre-registered phase class listed p = 0..=29, but
+  tiles start at multiples of 16, so p = 16k mod 30 is even. The class covers every reachable
+  phase (§0.4 is corrected here, before its Miri run, and the handoff's "n1 = 1..15" is in
+  fact n1 = 2, 4, …, 14).
+- **The registered epoch class runs as two blocks,** not one: a run straddling 61,440, and a
+  nonuniform tile ending at it.
+
+## 7. The escalation (§8.2): the unsafe operations that would be needed
+
+**What the safe line can't do.** It doesn't reach the nonuniform tile's target, and it adds
+spills. **No unsafe variant was implemented.** What follows is the exact formulation for the
+user's decision.
+
+**`read_unaligned` (the handoff's C1/C2 formulation) is NOT needed:** the safe
+`split_first_chunk` form already meets both of those targets. The remaining gap is C3, C4 and
+register allocation. It would need these operations instead, in the nonuniform full tile only:
+
+| op | where | pointer / length | dominating invariant | overflow | validity and initialisation | expected saving |
+|---|---|---|---|---|---|---|
+| U1 | `tile`'s first segment, for a full tile | `ll.as_ptr().add(i)`, length n1 (`get_unchecked(i..i + n1)`) | `rest.len()` ≥ 16 at the split, so i + 16 ≤ end ≤ `ll.len()`; n1 = min(16, 30 − p) ≤ 16 for any p (wrapping included) | i + 16 ≤ n ≤ 983,010 < 2²⁰ | inside the live `&[u8]`, every byte initialised, immutable | with U2, the tile's 8 check instructions (jb; cmp, ja; add, cmp, ja; cmp, jb): up to 8 × S ≈ 19.1 M |
+| U2 | `tile`'s second segment | `ll.as_ptr().add(i + n1)`, length 16 − n1 | as U1, n1 ≤ 16 | as U1 | as U1 | (with U1) |
+| U3 | `tile`, the phase test (C4) | `core::hint::assert_unchecked(self.p < 30)` | the phase induction (handoff §2 C3): p only changes by `advance(k ≤ 30)` | — | undefined behaviour if false; the induction shows it never is | 2 × S ≈ 4.8 M, if the layout falls through |
+
+**The Miri classes that would check them:**
+- the registered phase sweep: every reachable p, both segment shapes;
+- held tiles;
+- odd alignment;
+- the tail class (a tail must never take U1 or U2);
+- the epoch class;
+- a mutant with n1 forced to 17, which Miri must flag as out of bounds.
+
+**What remains uncertain even then.** These remove checks, not register pressure. The first two
+attempts removed C3 safely (`split_at` on the array) and lost more to spills in the row loops.
+So whether U1–U3 clear 60 M net is unknown until compiled. On the arithmetic, 56.20 M + up to
+23.9 M − whatever spills appear.
+
+**This line stops here** pending the user's explicit approval (charter §12.3).
