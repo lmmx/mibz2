@@ -1,5 +1,5 @@
 ---
-title: "Cutting instructions from bzip2 decoding with an agent team that runs itself"
+title: "Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm"
 image: assets/social/blog-2026-11-04-autonomous-agent-team.png
 description: "Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without a person acting as their message bus."
 ---
@@ -11,7 +11,7 @@ description: "Each of four agents does one part of the research. A GitHub doorbe
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# Cutting instructions from bzip2 decoding with an agent team that runs itself
+# Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm
 
 Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each
 other directly, without a person acting as their message bus.
