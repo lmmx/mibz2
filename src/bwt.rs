@@ -939,15 +939,15 @@ fn room_segments<const L: usize, const PF: u8>(
                         if q & START != 0 {
                             marked |= 1 << k;
                         } else {
-                            l.row = q >> 8;
-                            if PF != PF_OFF {
-                                prefetch::<PF>(t, l.row);
-                            }
                             // SAFETY: base + off is below the lane's end: room is at most
                             // its spare at the pass's start (or, for a buffer taken
                             // mid-pass, its capacity after its first byte)
                             debug_assert!(base[k].wrapping_add(off) < l.end);
                             unsafe { *base[k].wrapping_add(off) = q as u8 };
+                            l.row = q >> 8;
+                            if PF != PF_OFF {
+                                prefetch::<PF>(t, l.row);
+                            }
                         }
                     }};
                 }
