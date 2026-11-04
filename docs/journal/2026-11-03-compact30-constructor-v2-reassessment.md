@@ -6047,3 +6047,47 @@ The user, in the coordinator's session on 2026-11-04, verbatim:
 - **Charter §6.4.** Guardian D012 reports that its Work task's own instructions pin GUARDIAN.md @ `9316405` and keep its §4 reservations, so it can't take up G9 and G10. Prototype registration and `unsafe` sign-off therefore no longer need a Guardian approval: the Coordinator registers or proceeds once the Researcher's independent review supports it, and the Guardian keeps its narrowing power to HOLD.
 - **Still reserved:** relaxing gates or minimums, i9 or workstation timing, bench-harness changes, and new infrastructure, credentials or spending.
 
+## Report 267: permanent stewardship, research persistence, release checkpoints, and §8.4
+
+The user decided three things in the coordinator's session on 2026-11-04.
+
+**1. Permanent stewardship.** The question: should the Coordinator's merge and release
+authority be permanent, or end with compact30? The user's answer, verbatim: "Permanent steward
+(Recommended)". The option as presented:
+
+> I'm mibz2's standing production and release steward, and compact30 is the current campaign
+> under that. A failed experiment stays out of production. A qualified improvement doesn't
+> wait indefinitely after passing its gates. Other legitimate maintenance isn't held back
+> because of compact30.
+
+**2. Two refinements.** The user, verbatim: "I agree with both refinements." They are:
+- **evidence-guided persistence:** pursue ideas through bounded experiments ranked by credible
+  production payoff per unit of research and compute; distinguish a failed implementation from
+  a disproven approach; never lower standards to justify earlier effort;
+- **release checkpoints:** own releases of accepted production changes at sensible milestones,
+  and verify publication on both registries and the GitHub release.
+
+**3. §8.4.** The question: should the two-consecutive-misses stop be replaced by a bounded
+continuation test? The user's answer, verbatim:
+
+> well it should be more that if we are *CLIMBING THE HILL* towards it being viable, if it is
+> showing real signs of forward motion, that is no good reason to give up. if it is instead
+> just showing signs of sunk cost and deteriorating, or plateauing and we do not see a path to
+> it becoming viable then we shouldn't. but in this case we have done v1 and v2 of the
+> compact30 and we didn't give up, so of course we shouldn't just make it "2 and done"!
+
+**What the coordinator did:**
+- **Charter §8.4** is rewritten as a trajectory test. A line keeps climbing while the measured
+  gap to the economic limits narrows and a route remains. It stops on sunk cost, deterioration,
+  or a plateau with no path. A miss is still recorded as a miss, and gates and minimums are
+  never relaxed.
+- **Charter §2** points to master:docs/STEWARDSHIP.md for the standing stewardship.
+- **The §11 table** records both amendments.
+- **CAMPAIGN.md** gains the persistence and release-checkpoint sections.
+- **master:docs/STEWARDSHIP.md** (PR #154) holds the stewardship decision, the merge gates, and
+  the release procedure and checklist.
+
+**What stays the same.** Every gate and minimum, the safety requirements, and the §12.3
+reservations: relaxing a gate or minimum, i9 or workstation timing, bench-harness changes, and
+new infrastructure, credentials or spending.
+
