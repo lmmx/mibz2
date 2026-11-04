@@ -225,3 +225,17 @@ Verbatim:
 - **CHECKPOINT** to all three roles.
 - **CAMPAIGN.md:** MODE is to be read after compaction too, and renewed inside the work, not by
   ritual (Louis).
+- **D017 (Guardian, @ 8278a321).** Progress reported, qualification not established. It asked
+  for raw profiles, `decode_block` boundaries, whole-walk accounting, listings, consoles and an
+  invariance proof.
+  - **Answered at b0f6e89d** (`evidence/walk-75b13f00/`), with the test-only commit 3fc3f8c6:
+    every handover class reached, two mutants caught, release machine code identical.
+- **#157 first bench** (EPYC 9V45): `wikidata` wall −4.2% at 1 thread; 2 and 4 threads within
+  noise. A replicate runs on 3fc3f8c6.
+- **Roles widened** (ROLES @ 226cba09, Louis). The Optimiser runs an independent whole-decoder
+  search at every pivot; the Researcher checks the binding cost; the Coordinator briefs the
+  whole decoder at pivots.
+- **MODE.md:** the renewal sentence was added to the channel paragraph (07610e95, Louis's
+  wording).
+- **CHECKPOINT 6643744616:** the pivot brief. At 2 and 4 threads, walk instructions don't
+  bind; find what does.
