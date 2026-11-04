@@ -424,19 +424,44 @@ After an escalation:
 - Until every registered class is complete, the variant's qualification is paused. It doesn't
   enter the combined build while paused.
 
-### 8.4 Continuing or stopping a line of work (report 267)
+### 8.4 Continuing or stopping a line of work (reports 267, 268)
 
-A prototype that falls below its net minimum is recorded as a miss, never as a pass. A miss
-does not by itself stop a line of work. What decides is the line's **trajectory toward
-viability**, meaning the economic limits in the campaign's entry document
+A prototype that falls below its net minimum is recorded as a miss, never as a pass. A miss is a
+verdict on that prototype, not on its line of work. Every STOP is scoped to exactly what failed: a
+measurement, an implementation, a compiler target. Reports 217–219, 224–227 and 238–241 show the
+cost of letting one gate's failure stand in for a verdict on the whole programme.
+
+What decides a line is its **trajectory toward production viability**, meaning the economic
+limits in the campaign's entry document
 (research/compact30-channel:docs/journal/compact30-channel/CAMPAIGN.md).
-- **Keep climbing** while successive attempts show real forward motion: the measured gap to
-  the limits narrows, and the evidence names a plausible route for the rest. The builder's v1
-  → v2 step is the model: four-worker build CPU went from 1.316× to 1.086× production, and
-  completion from 1.364× to 1.114×, against limits of 1.067× and 1.02×.
-- **Stop or deprioritise** a line when it shows sunk cost rather than progress. That means one
-  of these: the outlook deteriorates; the gap plateaus and no path to viability is in sight;
-  or the remaining opportunity is too small to reach the limits.
+- **Keep climbing** while either of these holds:
+  - the accumulated evidence shows meaningful progress toward viability;
+  - a bounded next experiment offers a credible chance to overcome an identified remaining
+    obstacle.
+
+  Not every experiment must beat the last one's numbers. A bounded exploratory step whose
+  immediate value is information is allowed, provided it has a specific hypothesis and a
+  credible link to the objective.
+- **Progress comes in two kinds, which are not interchangeable:**
+  - *Performance progress:* valid end-to-end measurements, or compiled and correctly
+    accounted reductions in instructions, memory operations and dependencies that strengthen
+    the performance case.
+  - *Research progress:* new evidence that materially increases confidence in a specific route
+    to improvement. An example is a failed compiler experiment that pins down which part of an
+    anticipated reduction is missing. Proposals with no compiler-achievable savings are not
+    progress, however promising they look.
+- **The model is the builder's v1 → v2 step.** The common scalar append path fell from about 49
+  instructions to 12. Four-worker build CPU fell from 1.316× production to 1.086×, and
+  completion from 1.364× to 1.114×, against limits of 1.067× and 1.02×. These ratios are
+  descriptive figures from captures that failed their validity gates, not validated speedups.
+- **Stop or redirect** a line when any of these holds:
+  - the credible remaining payoff is insufficient;
+  - repeated experiments do not improve the outlook;
+  - no plausible route remains.
+
+  The signs are sunk cost, a deteriorating outlook, or a plateau with no path in sight.
+- **Never confuse progress in understanding with qualification for production.** Integration
+  still requires every gate.
 - **Before a further prototype in a line that has missed,** record its trajectory:
   - the gap after each attempt;
   - the mechanism the next attempt tests that earlier ones did not;
@@ -505,6 +530,7 @@ The sequence also stops early, and reports, in two other cases:
 | researcher (report 247) | the scanner handoff's unsafe reads are not delegated: safe Rust first, and the unsafe form escalated with its exact operations and proofs | §6.1 |
 | guardian (report 248) | the unsafe fallback's approval package (operations, locations, invariants, overflow, validity and initialisation, expected saving); autonomous once approved | §6.1 |
 | guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
+| user (report 268) | §8.4 progress is of two kinds, performance and research, never interchangeable; bounded exploratory steps allowed; every STOP scoped to what failed; understanding is not qualification | §8.4 |
 | user (report 267) | §8.4's two-misses stop replaced by a trajectory test: keep climbing while there is real forward motion toward viability; stop on sunk cost, deterioration, or a plateau with no path | §8.4 |
 | user (report 266) | release control already delegated: integration, PRs into master, merges and releases go through the CI bench gate, run by the Coordinator; registration and `unsafe` sign-off need no Guardian approval (the Guardian may HOLD) | §2, §6.4, §12.3 |
 | user (report 265) | standing policy: `unsafe` is permitted on a justified argument, rigorous verification and independent review; agents register bounded prototypes; neither needs the user | §6.4, §3, §8.2, §12.3 |

@@ -6091,3 +6091,54 @@ continuation test? The user's answer, verbatim:
 reservations: relaxing a gate or minimum, i9 or workstation timing, bench-harness changes, and
 new infrastructure, credentials or spending.
 
+## Report 268: what counts as progress under §8.4, and where the two-miss rule came from
+
+The user, in the coordinator's session on 2026-11-04, reviewed the stopping decisions of 3–4
+November and asked that §8.4 keep its trajectory test, with one refinement. Their words,
+verbatim:
+
+> Continue a research line while the accumulated evidence shows meaningful progress towards
+> production viability, or while a bounded next experiment offers a credible opportunity to
+> overcome an identified remaining obstacle. Progress may consist of demonstrated improvements
+> or of new evidence that materially increases confidence in a specific route to improvement.
+> Stop or redirect when the credible remaining payoff is insufficient, repeated experiments do
+> not improve the outlook, or no plausible route remains. Never confuse progress in
+> understanding with qualification for production.
+
+They also asked that performance progress and research progress be kept apart:
+- **Performance progress:** valid end-to-end measurements, or compiled and correctly accounted
+  reductions in instructions, memory operations and dependencies.
+- **Research progress:** eliminating uncertainty about a plausible high-value approach.
+
+The two are not interchangeable. Not every experiment must improve the last one's numbers, and
+a bounded exploratory step with a specific hypothesis is legitimate.
+
+**The history behind it.** Three times, a gate failing was nearly taken as a verdict on the
+research line:
+- **Reports 217–219.** The Guardian's first STOP on v2 was too broad. After the Researcher's
+  challenge (report 218), report 219 narrowed it: the capture stays INVALID, unchanged v2 is
+  neither re-run nor tuned further, and research into improved v2-derived constructors
+  continues.
+- **Reports 224–227.** A single design-only NO-GO on one transformation (report 224) was
+  followed by the instruction-floor investigation (reports 225–227). That investigation found a
+  conditional budget of about 225 M instructions. The audit (report 235) accepted it
+  conditionally, and report 236 authorised one bounded prototype.
+- **Reports 238–241.** v3's finaliser fell from 81 to 44 instructions, about 60 M credited per
+  pass, but missed its 40-instruction target. It was STOPped under that gate while its gain was
+  preserved. Report 241 states the distinction: a prototype can fail its gate while
+  demonstrating a valuable advance.
+
+**Where the two-miss rule came from.** The rule was not a lesson from that history. The
+coordinator wrote it into the first draft of the standing charter (`b1598a11`). Report 244 added
+exceptions for closeout and one combined build, but kept the cutoff. It was an agent-authored
+heuristic that contradicted what v1, v2 and v3 had shown. Report 267 replaced it, and this
+report refines the replacement.
+
+**What the coordinator did:**
+- §8.4 now scopes every STOP to exactly what failed.
+- It distinguishes performance progress from research progress.
+- It allows bounded exploratory steps.
+- It marks the v1 → v2 ratios as descriptive figures from invalid captures.
+- It says plainly that understanding is not qualification.
+- Gates and minimums are unchanged.
+
