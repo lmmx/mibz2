@@ -3974,3 +3974,61 @@ else in report 231 changes.
 The auditor should reproduce them rather than take them as given.
 
 Implementation and i9 measurement are not authorised; the guardian decides after the audit.
+
+## Report 234: the adversarial audit as sent
+
+The user sent the fresh Ultra session four things:
+1. The researcher's audit request (report 231), unchanged.
+2. The guardian's final requirements (report 232), without the paragraph linking this journal
+   (report 233). The text as sent is below.
+3. The standalone text of report 227, all 1,143 lines.
+4. The capture archive `c30-construction-v2-20261103T222928Z.tar.gz`, from the i9 (SHA-256
+   `ebdb7454…3d8af9`, as archived in the capture journal's folder).
+
+The session was given neither report 224, nor this journal, nor the reviewers' provisional
+views. Its result is pending. Implementation and i9 measurement are not authorised.
+
+The guardian's requirements, as sent:
+
+The independent audit described above is approved as a fully autonomous, read-only research investigation.
+
+Three final requirements apply.
+
+1. Separate mathematical removability from compiler achievability.
+
+For each claimed instruction saving, distinguish:
+- Work proven unnecessary by a mathematical or control-flow invariant.
+- Work that could plausibly disappear under an equivalent Rust implementation.
+- Work whose elimination depends on specific rustc 1.97.0 / LLVM 22.1.6 code generation.
+- Work that would disappear only by introducing additional instructions or memory operations elsewhere.
+Do not count compiler-dependent savings as established. Conversely, do not reject a mathematically correct transformation solely because its eventual assembly has not yet been compiled. Give a conditional assessment with falsifiable compilation requirements.
+
+For any proposed unsafe optimization, require an explicit release-mode bounds, initialization and pointer-validity argument. Debug assertions and successful tests are not substitutes for these invariants.
+
+2. Apply an economic relevance test to the corrected instruction budget.
+
+The INVALID v2 capture reported upper 95% confidence bounds of approximately 1.09517 for CPU cost and 1.13693 for completion.
+
+Moving those bounds proportionally to the registered ceilings would require approximately 2.6% CPU reduction and 10.3% completion reduction.
+
+These are sensitivity calculations, not prospective confidence intervals or performance predictions.
+
+Use them to challenge the practical relevance of the corrected portfolio. In particular, determine whether it could plausibly offer roughly 10–15% completion-time headroom on large, low-bulk blocks, or whether the savings primarily eliminate instructions whose latency is overlapped.
+
+If this cannot be established from the existing evidence, say so. Do not manufacture cycle savings from instruction counts.
+
+3. Make the results independently reproducible.
+
+Preserve, where the environment permits:
+- Scripts used to reconstruct structural counts and instruction-frequency calculations.
+- Independently reconstructed cumulative budgets.
+- Any counterexample-generating or mathematical verification scripts.
+- Conditional critical-worker completion models.
+- A concise list of exact source and assembly locations supporting each material correction.
+Report the original Ultra budget, your revised budget and the reason for every material difference.
+
+Do not stop after finding one error or confirming one improvement. Complete the adversarial reconstruction of the entire proposed portfolio.
+
+Your autonomy extends to extensive evidence retrieval, static analysis, independent mathematical verification and scratch-based research. It does not extend to repository modifications, constructor compilation, new benchmarks, i9 measurements or changing the registered experiment.
+
+The Guardian will make the implementation decision after reviewing your final report.
