@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Per-copy model assessment and D020 reconciliation complete; awaiting qualifying comment",
+  "state": "Conditional refit published; awaiting next qualifying comment",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -65,9 +65,10 @@
     6643850845,
     6643927959,
     6643992749,
-    6644051935
+    6644051935,
+    6644115799
   ],
-  "last_processed_comment_id": 6644051935,
+  "last_processed_comment_id": 6644115799,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -337,6 +338,17 @@
       "report_path": "docs/journal/compact30-adversarial/scanner-146/d020-reconciliation-6644051935.md",
       "review_comment_id": 6644084127,
       "disposition": "Confirmed D020 comparison corrections; added uncapped common-latency invariance, elapsed-vs-CPU and separate-core/SMT measurement distinctions."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6644115799,
+      "report_commit": "9505c3e6cd79a78a7b2f0c9b37ae8d2e1e83c685",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/conditional-refit-6644115799/report.md",
+      "review_comment_id": null,
+      "source_comment_posted": false,
+      "source_comment_omission_reason": "A later delivery in this active run explicitly instructed no additional message, reply or notification in the source app before the review comment was posted.",
+      "disposition": "Quantified conditional joint fits: common R/ell changes alone cannot fit displayed point pair under transferred issue/replay assumptions; arm-specific ell, effective R, issue or overhead can. Not a hardware identification or formal CI rejection; B2 kernel mismatch retained."
     }
   ],
   "active_delegations": [],
@@ -356,14 +368,23 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6643992749,
-      6644051935
+      6644115799,
+      6644116161
     ],
     "handled": [
-      6643992749,
-      6644051935
+      6644115799
     ],
-    "skipped": [],
+    "skipped": [
+      {
+        "comment_id": 6644116161,
+        "reason": "No TO line naming researcher"
+      },
+      {
+        "delivery_id": "c49c06d0-d8a1-11f1-9ecc-5ae13d6cfbdc",
+        "pr": 157,
+        "reason": "PR closed/merged, not newly created comment"
+      }
+    ],
     "automation_modified": false
   },
   "reported_programme_status": {
