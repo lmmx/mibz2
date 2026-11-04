@@ -1,0 +1,70 @@
+{
+  "trigger_comment_id": 6634296412,
+  "prior_launch_comment_id": 6633793271,
+  "child_identifier": "/root/s62_review",
+  "launch_count": 1,
+  "relaunch_needed": false,
+  "observed_status_before_wait": "running",
+  "completion": "Child reported completion; GitHub publication independently verified by parent.",
+  "publication": {
+    "branch": "review/compact30-s62",
+    "commit": "e62fc15f91311823ab0c48a6f6e9c7dd35a28d10",
+    "draft_pr": 153,
+    "base_branch": "research/compact30-constructor",
+    "pr_state": "open",
+    "merged": false,
+    "report_path": "docs/journal/compact30-s62-review/report.md",
+    "launch_record_path": "docs/journal/compact30-s62-review/launch-record.md",
+    "exact_brief_path": "docs/journal/compact30-s62-review/brief.txt",
+    "exact_brief_blob": "172fd8d69e18171c93038f890026c1f3cb6665e8",
+    "review_pr": 145,
+    "review_comment_id": 6634356048,
+    "author": {
+      "name": "Louis Maddox",
+      "email": "lmmx@users.noreply.github.com"
+    },
+    "committer": {
+      "name": "Louis Maddox",
+      "email": "lmmx@users.noreply.github.com"
+    }
+  },
+  "input_provenance": {
+    "requested_context_mode": "fork_turns=none",
+    "requested_model": "gpt-6-astra",
+    "requested_effort": "xhigh",
+    "launch_tool_returned_identifier": true,
+    "first_project_input": "Exact pinned brief, independently hash-verified in the published child branch.",
+    "child_observed_boundary": "The child reports no parent discussion history, proposals or prior scientific results; first fetched project document was the pinned index.",
+    "subsequent_parent_messages": [
+      "Connector commit-identity logistics",
+      "Launch provenance metadata and request to record observed inputs",
+      "Operational status request",
+      "Confirmation that parent would wait and request for publication identifiers"
+    ],
+    "scientific_content_sent_after_launch": false,
+    "assurance_limit": "Invocation settings and child-observed input history are recorded; no independent hidden-runtime or backend-model audit is claimed."
+  },
+  "verification": {
+    "draft_pr_head_and_base": true,
+    "commit_identity": true,
+    "report_and_replay_files_present": true,
+    "published_brief_blob_matches": true,
+    "review_comment_headers_and_report_link": true,
+    "no_relaunch": true
+  },
+  "reported_findings": {
+    "material": [
+      "S62-F01: changed-path counters required by charter are missing; scanner and descriptor gate 3 HOLD",
+      "S62-F02: shared removed B2 instruction establishes at least 2,393,313 instructions of overlap"
+    ],
+    "nonmaterial": [
+      "S62-F03: own-code write increases",
+      "S62-F04: caller boundary accounting note"
+    ],
+    "interpretation": "These are the child's published findings, not a new parent technical assessment."
+  },
+  "next_step": "Coordinator replay and archiving, then resolution of material findings before integration.",
+  "integration_approved": false,
+  "v3_eligibility_decided": false,
+  "parent_extra_source_comment_posted": false
+}
