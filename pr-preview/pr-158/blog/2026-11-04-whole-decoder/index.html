@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. It repeated an experiment our own record already held, with the same result at four workers.">
+        <meta name="description" content="A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. Our own record had already tested that direction, and found no gain at four workers.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -35,7 +35,7 @@
     
     
       
-        <title>A faster builder, a slower decoder, and a walk we had already tried - mibz2</title>
+        <title>A faster builder, a slower decoder, and an unrolling our record had already tested - mibz2</title>
       
     
     
@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=64387db56a92">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=9966e56d7cda">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=64387db56a92">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=9966e56d7cda">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=64387db56a92">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=9966e56d7cda">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=64387db56a92">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=9966e56d7cda">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=64387db56a92">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=9966e56d7cda">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -87,19 +87,19 @@
   
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="A faster builder, a slower decoder, and a walk we had already tried">
-  <meta property="og:description" content="A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. It repeated an experiment our own record already held, with the same result at four workers.">
+  <meta property="og:title" content="A faster builder, a slower decoder, and an unrolling our record had already tested">
+  <meta property="og:description" content="A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. Our own record had already tested that direction, and found no gain at four workers.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/pr-preview/pr-158/blog/2026-11-04-whole-decoder/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-158/assets/social/blog-2026-11-04-whole-decoder.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="A faster builder, a slower decoder, and a walk we had already tried">
+  <meta property="og:image:alt" content="A faster builder, a slower decoder, and an unrolling our record had already tested">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="A faster builder, a slower decoder, and a walk we had already tried">
-  <meta name="twitter:description" content="A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. It repeated an experiment our own record already held, with the same result at four workers.">
+  <meta name="twitter:title" content="A faster builder, a slower decoder, and an unrolling our record had already tested">
+  <meta name="twitter:description" content="A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. Our own record had already tested that direction, and found no gain at four workers.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/pr-preview/pr-158/assets/social/blog-2026-11-04-whole-decoder.png">
-  <meta name="twitter:image:alt" content="A faster builder, a slower decoder, and a walk we had already tried">
+  <meta name="twitter:image:alt" content="A faster builder, a slower decoder, and an unrolling our record had already tested">
 
   </head>
   
@@ -152,7 +152,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              A faster builder, a slower decoder, and a walk we had already tried
+              A faster builder, a slower decoder, and an unrolling our record had already tested
             
           </span>
         </div>
@@ -1829,8 +1829,8 @@
 <div class="post-hero">
 <div class="post-hero-text">
 <p class="post-kicker"><a href="../">mibz2 · Research blog</a></p>
-<h1 id="a-faster-builder-a-slower-decoder-and-a-walk-we-had-already-tried">A faster builder, a slower decoder, and a walk we had already tried<a class="headerlink" href="#a-faster-builder-a-slower-decoder-and-a-walk-we-had-already-tried" title="Permanent link">&para;</a></h1>
-<p class="post-dek">A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. It repeated an experiment our own record already held, with the same result at four workers.</p>
+<h1 id="a-faster-builder-a-slower-decoder-and-an-unrolling-our-record-had-already-tested">A faster builder, a slower decoder, and an unrolling our record had already tested<a class="headerlink" href="#a-faster-builder-a-slower-decoder-and-an-unrolling-our-record-had-already-tested" title="Permanent link">&para;</a></h1>
+<p class="post-dek">A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. Our own record had already tested that direction, and found no gain at four workers.</p>
 <p class="post-meta">4 November 2026 · 11 min read · <a href="#7-what-is-still-open">Research in progress</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
@@ -1843,8 +1843,8 @@ builder it replaced.</p>
 <p>This post is about what happened when we put it into the production decoder. The decoder got
 slower. Understanding why led to a change in the production decoder itself, one that leaves its
 table exactly as it was and removes a fifth of the instructions it spends on each block. It
-made one thread faster and four no faster. Then we found that our own record had already run
-that experiment, and had said so.</p>
+made one thread faster, with no gain detected at four. Then we found that our own record had
+already tested a closely related change, with the same outcome.</p>
 <h2 id="1-three-phases-one-budget">1. Three phases, one budget<a class="headerlink" href="#1-three-phases-one-budget" title="Permanent link">&para;</a></h2>
 <p>After its Huffman and move-to-front stages, <code>mibz2</code> turns each bzip2 block back into bytes in
 three steps:</p>
@@ -2078,17 +2078,18 @@ on two different processors. The Wikidata corpus, paired over ten rounds each:</
 </tbody>
 </table>
 <p>At one thread it is faster on both. At four, the configuration a full decode uses, neither
-machine shows a gain. On the 7763 the benchmark also times each stage on one thread: the walk
+machine shows a gain beyond noise. That is not a demonstrated zero: both intervals include
+small gains and small losses. On the 7763 the benchmark also times each stage on one thread: the walk
 went from 4.04 to 3.78 cycles per byte, a ratio of 0.925 (0.856 to 0.999). A 36% cut in the
-walk's instructions bought about 7.5% of its time on one thread, and nothing measurable on the
-decoder at four.</p>
+walk's instructions bought about 7.5% of its time on one thread, and nothing the benchmark
+could detect on the decoder at four.</p>
 <p>The benchmark covers six other corpora as controls. One of them moved the wrong way. On the
 7763, <code>pattern</code>, a short repeating input, was 1.6% slower at one thread (+0.1% to +3.1%). Its
 CPU interval included no change, and on the 9V45 the same row was 5.3% <em>faster</em> (−6.8% to
 −3.8%). With 21 wall rows a run, a flag like that can be chance. It can also be a real cost on
 one kind of core. It hasn't been reproduced either way, and until it has, it is a trade-off to
 weigh, not a regression we can rule out.</p>
-<h2 id="6-we-had-run-this-experiment-before">6. We had run this experiment before<a class="headerlink" href="#6-we-had-run-this-experiment-before" title="Permanent link">&para;</a></h2>
+<h2 id="6-we-had-tested-this-direction-before">6. We had tested this direction before<a class="headerlink" href="#6-we-had-tested-this-direction-before" title="Permanent link">&para;</a></h2>
 <p>On 1 November, three days earlier, a registered trial had unrolled the same walk. It wrote all
 32 lane steps out with fixed offsets, and <a href="../2026-11-02-memory-level-parallelism/">the 2 November post on memory-level
 parallelism</a> reported it:</p>
@@ -2135,11 +2136,12 @@ parallelism</a> reported it:</p>
 </table>
 <p>The two changes are not identical. #157 unrolls eight lanes a turn rather than all 32, and
 defers the handovers to a mask. The machines and harnesses differ too, so the rows are not a
-paired comparison. But the shape is the same: a large cut in instructions, a small gain on
-one worker, none on four, and a control workload that got more expensive. The earlier trial's
+paired comparison. It is a precedent, not a replication. But the shape is the same: a large cut in
+instructions, a small gain on one worker, none detected on four, and a control workload that
+got more expensive. The earlier trial's
 exploratory CI rows at one worker were, if anything, larger than #157's: +17.9% throughput on
 the 9V45 and +8.1% on the 7763.</p>
-<p>So the record already said what #157 would find. We didn't read it before building. A search
+<p>So the record already predicted, in outline, what #157 would find. We didn't read it before building. A search
 for "unroll" found the trial, but its output was cut short before the table that held the
 result, and nothing required the decisive evidence to be read before implementation began. Our
 independent agents recovered it, but only after the merge.</p>
@@ -2155,8 +2157,8 @@ segment assembly, which B2's boundary excludes. The model is untested.</p>
 processors, and is on master, unreleased. It does not meet the campaign's goal, which is a
 faster decoder at four workers. Before a release carries it, the <code>pattern</code> flag will be
 measured again on a 7763.</p>
-<p><strong>Why more workers erase the gain.</strong> Both trials now agree that it disappears, on three kinds
-of machine. The earlier trial's explanation, pressure on the load-address ports, came from a
+<p><strong>Why more workers erase the gain.</strong> Neither trial detected a gain at four workers, across
+three kinds of machine. The earlier trial's explanation, pressure on the load-address ports, came from a
 static model, not a measurement. Three readings make different predictions:
 - <strong>a limit private to each core,</strong> such as how many misses it can track: SMT pairs lose the
   gain first;
@@ -2170,14 +2172,14 @@ interference</a> measured a related effect on a
 four-core machine, about 30% more cycles at four workers for 1.3% more instructions, without
 settling its cause. CI's four-thread runs are two cores with SMT, not four cores.</p>
 <p><strong>What fewer instructions can't buy.</strong> Two experiments have now cut the walk's instructions by
-more than a third, and neither gained at four workers. The next gains at four are more likely
+more than a third, and neither detected a gain at four workers. The next gains at four are more likely
 to come from fewer misses per byte, or from overlapping them better across cores, than from
 fewer instructions per step. That is a hypothesis, and the experiment above is what tests it.</p>
 <p><strong>The other walks.</strong> The cooperative walk, used on machines with many cores, and the flagged
 walk carry the same rolled loop. Porting the change waits on that experiment.</p>
 <p>The lesson is about memory. A faster builder made the decoder slower because nobody had
-counted the walk. Counting it led to a change our own record had already tried, and the record
-had the answer we went on to rediscover. The project now retrieves a candidate's prior record
+counted the walk. Counting it led to a change in a direction our own record had already tested, and the
+record held the outcome we went on to rediscover. The project now retrieves a candidate's prior record
 before building it and again before integrating it, reading the results themselves rather
 than a search excerpt. The pull request then says whether the work is new or a re-test, and
 what could change the earlier verdict.</p>
@@ -2340,17 +2342,17 @@ B</a>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=64387db56a92"></script>
+        <script src="../../assets/javascripts/bench.js?v=9966e56d7cda"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=64387db56a92"></script>
+        <script src="../../assets/javascripts/couriers.js?v=9966e56d7cda"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=64387db56a92"></script>
+        <script src="../../assets/javascripts/blog.js?v=9966e56d7cda"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=64387db56a92"></script>
+        <script src="../../assets/javascripts/frontier.js?v=9966e56d7cda"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=64387db56a92"></script>
+        <script src="../../assets/javascripts/katex.js?v=9966e56d7cda"></script>
       
     
   </body>
