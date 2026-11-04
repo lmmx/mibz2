@@ -1,0 +1,80 @@
+{
+  "evidence": {
+    "49cb46b65070059af49e906fa8d98693b808bda2/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/classes-run1.txt": "== <c30walk::ctor2su::Ctor2su>::build::<false> vs <c30walk::ctor2::Ctor2>::build::<false>: 1,026,601,670 -> 942,541,249  delta -84,060,421\n  count   10,544,477:    5 ->    0 instructions     -52,722,385\n  count   10,541,706:    9 ->    5 instructions     -42,166,824\n  count    2,396,084:   10 ->    2 instructions     -19,168,672\n  count    3,003,834:   13 ->   11 instructions      -6,007,668\n  count    1,116,556:    8 ->    4 instructions      -4,466,224\n  count    2,393,313:   38 ->   37 instructions      -2,393,313\n  count      610,521:   32 ->   31 instructions        -610,521\n  count      607,750:    4 ->    3 instructions        -607,750\n  count        3,424:    3 ->    0 instructions         -10,272\n  count        3,575:    5 ->    4 instructions          -3,575\n  count          786:   12 ->    8 instructions          -3,144\n  count          434:  204 ->  200 instructions          -1,736\n  count          230:   41 ->   39 instructions            -460\n  count          106:   12 ->   11 instructions            -106\n  count           79:    3 ->    2 instructions             -79\n  count            9:   12 ->    9 instructions             -27\n  count           12:    0 ->    1 instructions              12\n  count           22:    4 ->    8 instructions              88\n  count          121:    0 ->    1 instructions             121\n  count          218:    6 ->    7 instructions             218\n  count          165:    0 ->    3 instructions             495\n  count        3,654:   33 ->   35 instructions           7,308\n  count        2,606:    0 ->    4 instructions          10,424\n  count       18,684:   36 ->   37 instructions          18,684\n  count       23,559:    8 ->    9 instructions          23,559\n  count      296,405:   43 ->   44 instructions         296,405\n  count      302,049:    9 ->   11 instructions         604,098\n  count      610,356:    0 ->    1 instructions         610,356\n  count      801,475:   18 ->   19 instructions         801,475\n  count      996,634:   10 ->   12 instructions       1,993,268\n  count    9,933,956:    0 ->    4 instructions      39,735,824\n  classes with |delta| < 100,000: 0\n== <c30walk::ctor2su::W<false>>::refill vs <c30walk::ctor2::W<false>>::refill: 80,567,464 -> 80,567,464  delta 0\n  classes with |delta| < 100,000: 0\n",
+    "49cb46b65070059af49e906fa8d98693b808bda2/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run1-library-sites.txt": "0x3da51    230 calls  Ir    865,030 (   3761.0/call)  Dr        460  Dw    861,120  __memset_avx2_unaligned_erms\n0x3dbd2    434 calls  Ir  4,440,688 (  10232.0/call)  Dr  4,429,404  Dw  4,427,668  __memcpy_avx_unaligned_erms\n0x3dfc1  3,654 calls  Ir    285,012 (     78.0/call)  Dr      7,308  Dw    131,544  __memset_avx2_unaligned_erms\n0x3e047  3,654 calls  Ir    454,910 (    124.5/call)  Dr    131,544  Dw    120,582  __memcpy_avx_unaligned_erms\n0x3ee1c    233 calls  Ir      2,817 (     12.1/call)  Dr        233  Dw        469  __memset_avx2_unaligned_erms\n0x3eebe      1 calls  Ir         85 (     85.0/call)  Dr         25  Dw         14  free\n0x3eeed      2 calls  Ir     12,656 (   6328.0/call)  Dr      2,513  Dw      1,341  <alloc::raw_vec::RawVecInner>::grow_exact\n0x3ef1b      7 calls  Ir      1,486 (    212.3/call)  Dr        461  Dw        238  free\n0x3ef48      8 calls  Ir      5,636 (    704.5/call)  Dr      1,133  Dw        859  <alloc::raw_vec::RawVecInner>::grow_exact\n0x3f023      1 calls  Ir        296 (    296.0/call)  Dr         67  Dw         45  <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>\n0x3f049      2 calls  Ir      1,035 (    517.5/call)  Dr        208  Dw        144  <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>\n",
+    "49cb46b65070059af49e906fa8d98693b808bda2/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run1-library-sites.txt": "0x477af    230 calls  Ir    865,030 (   3761.0/call)  Dr        460  Dw    861,120  __memset_avx2_unaligned_erms\n0x47925    434 calls  Ir  4,440,688 (  10232.0/call)  Dr  4,429,404  Dw  4,427,668  __memcpy_avx_unaligned_erms\n0x47d38  3,654 calls  Ir    285,012 (     78.0/call)  Dr      7,308  Dw    131,544  __memset_avx2_unaligned_erms\n0x47dba  3,654 calls  Ir    454,910 (    124.5/call)  Dr    131,544  Dw    120,582  __memcpy_avx_unaligned_erms\n0x48b01    233 calls  Ir      2,817 (     12.1/call)  Dr        233  Dw        469  __memset_avx2_unaligned_erms\n0x48b83      1 calls  Ir         85 (     85.0/call)  Dr         25  Dw         14  free\n0x48bb2      2 calls  Ir     12,656 (   6328.0/call)  Dr      2,513  Dw      1,341  <alloc::raw_vec::RawVecInner>::grow_exact\n0x48be0      7 calls  Ir      1,486 (    212.3/call)  Dr        461  Dw        238  free\n0x48c0d      8 calls  Ir      5,636 (    704.5/call)  Dr      1,133  Dw        859  <alloc::raw_vec::RawVecInner>::grow_exact\n0x48cc2      1 calls  Ir        296 (    296.0/call)  Dr         67  Dw         45  <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>\n0x48ce8      2 calls  Ir      1,035 (    517.5/call)  Dr        208  Dw        144  <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>\n"
+  },
+  "descriptorClasses": "== <c30walk::ctor2d::Ctor2d>::build::<false> vs <c30walk::ctor2::Ctor2>::build::<false>: 1,026,601,670 -> 959,332,822  delta -67,268,848\n  count   29,357,924:   12 ->   10 instructions     -58,715,848\n  count    8,935,084:   12 ->   10 instructions     -17,870,168\n  count      467,712:   14 ->    0 instructions      -6,547,968\n  count    2,393,313:   38 ->   37 instructions      -2,393,313\n  count      597,255:    2 ->    0 instructions      -1,194,510\n  count    1,085,833:   25 ->   24 instructions      -1,085,833\n  count      496,004:   34 ->   33 instructions        -496,004\n  count      302,049:    9 ->    8 instructions        -302,049\n  count       27,776:   35 ->   31 instructions        -111,104\n  count       55,986:    3 ->    2 instructions         -55,986\n  count       13,266:    2 ->    0 instructions         -26,532\n  count        3,575:    5 ->    3 instructions          -7,150\n  count        1,769:   12 ->   10 instructions          -3,538\n  count          432:    6 ->    5 instructions            -432\n  count           79:    3 ->    0 instructions            -237\n  count          106:   12 ->   10 instructions            -212\n  count            8:   15 ->   13 instructions             -16\n  count            1:   16 ->   14 instructions              -2\n  count            2:   28 ->   27 instructions              -2\n  count            9:   12 ->   14 instructions              18\n  count          230:   41 ->   42 instructions             230\n  count          233:   10 ->   11 instructions             233\n  count          786:   12 ->   13 instructions             786\n  count          434:  204 ->  211 instructions           3,038\n  count       18,684:   36 ->   37 instructions          18,684\n  count       55,552:   13 ->   14 instructions          55,552\n  count        3,654:   33 ->   53 instructions          73,080\n  count      296,405:   43 ->   44 instructions         296,405\n  count      801,475:   18 ->   19 instructions         801,475\n  count      610,521:   32 ->   35 instructions       1,831,563\n  count      230,202:    0 ->   28 instructions       6,445,656\n  count    3,003,834:   13 ->   17 instructions      12,015,336\n  classes with |delta| < 100,000: 0\n== <c30walk::ctor2d::W<false>>::refill vs <c30walk::ctor2::W<false>>::refill: 80,567,464 -> 89,627,267  delta 9,059,803\n  count    1,262,935:    2 ->    3 instructions       1,262,935\n  count    1,299,478:   59 ->   65 instructions       7,796,868\n  classes with |delta| < 100,000: 0\n",
+  "descriptorRefill": "# <c30walk::ctor2d::W<false>>::refill\n# size 0x11f\n\ntarget/rust-1.97.0/release/examples/c30walk:     file format elf64-x86-64\n\n\nDisassembly of section .text:\n\n0000000000094330 <<c30walk::ctor2d::W<false>>::refill>:\n   94330:\tpush   %r15\n   94332:\tpush   %r14\n   94334:\tpush   %r12\n   94336:\tpush   %rbx\n   94337:\tpush   %rax\n   94338:\tmov    %rsi,%rbx\n   9433b:\tmov    %rdi,%r14\n   9433e:\tmov    0x40(%rdi,%rsi,8),%r15\n   94343:\tlea    (%rsi,%rsi,2),%rax\n   94347:\tlea    (%rdi,%rax,8),%r12\n   9434b:\tadd    $0x1040,%r12\n   94352:\tsub    0x1040(%rdi,%rax,8),%r15\n   9435a:\tje     94367 <<c30walk::ctor2d::W<false>>::refill+0x37>\n   9435c:\tmov    %r14,%rdi\n   9435f:\tmov    %rbx,%rsi\n   94362:\tcall   93d20 <<c30walk::ctor2d::W<false>>::finish>\n   94367:\tshr    $1,%r15\n   9436a:\tadd    0x8(%r12),%r15d\n   9436f:\tmov    %r15d,0x8(%r12)\n   94374:\tmovq   $0x0,(%r12)\n   9437c:\tmovq   $0x0,0x40(%r14,%rbx,8)\n   94385:\tmovq   $0x0,0x840(%r14,%rbx,8)\n   94391:\tmov    0xc(%r12),%eax\n   94396:\tcmp    %eax,%r15d\n   94399:\tjae    94431 <<c30walk::ctor2d::W<false>>::refill+0x101>\n   9439f:\tmov    %r15d,%ecx\n   943a2:\tmov    $0x88888889,%edi\n   943a7:\timul   %rcx,%rdi\n   943ab:\tmov    %rdi,%rcx\n   943ae:\tshr    $0x24,%rcx\n   943b2:\tmov    %ecx,%r9d\n   943b5:\tshl    $0x5,%r9d\n   943b9:\tsub    %ecx,%r9d\n   943bc:\tsub    %ecx,%r9d\n   943bf:\tlea    0x1e(%r9),%edx\n   943c3:\tcmp    %eax,%edx\n   943c5:\tcmovae %eax,%edx\n   943c8:\tshr    $0x2a,%rdi\n   943cc:\tmov    0x10(%r14),%rsi\n   943d0:\tcmp    %rsi,%rdi\n   943d3:\tjae    94443 <<c30walk::ctor2d::W<false>>::refill+0x113>\n   943d5:\tmov    %r15d,%esi\n   943d8:\tmov    %rcx,%r8\n   943db:\tshl    $0x6,%r8\n   943df:\tadd    0x28(%r14),%r8\n   943e3:\tsub    %r9d,%esi\n   943e6:\tmov    0x8(%r14),%r9\n   943ea:\tmov    (%r9,%rdi,8),%rdi\n   943ee:\tbt     %rcx,%rdi\n   943f2:\tjae    943ff <<c30walk::ctor2d::W<false>>::refill+0xcf>\n   943f4:\tmov    $0xfffff,%edi\n   943f9:\tand    0x3c(%r8),%edi\n   943fd:\tjmp    94404 <<c30walk::ctor2d::W<false>>::refill+0xd4>\n   943ff:\tmov    $0xffffffff,%edi\n   94404:\tmov    %esi,%esi\n   94406:\tlea    (%r8,%rsi,2),%rsi\n   9440a:\tmov    %rsi,0x40(%r14,%rbx,8)\n   9440f:\tsub    %r15d,%edx\n   94412:\tlea    (%rsi,%rdx,2),%rdx\n   94416:\tmov    %rdx,0x840(%r14,%rbx,8)\n   9441e:\tmov    %rsi,(%r12)\n   94422:\tmov    %r15d,0x8(%r12)\n   94427:\tmov    %ecx,0x10(%r12)\n   9442c:\tmov    %edi,0x14(%r12)\n   94431:\tcmp    %eax,%r15d\n   94434:\tsetb   %al\n   94437:\tadd    $0x8,%rsp\n   9443b:\tpop    %rbx\n   9443c:\tpop    %r12\n   9443e:\tpop    %r14\n   94440:\tpop    %r15\n   94442:\tret\n   94443:\tlea    0x9b8ee(%rip),%rdx        # 12fd38 <__frame_dummy_init_array_entry+0x218>\n   9444a:\tcall   d9103 <core::panicking::panic_bounds_check>\n",
+  "trees": [
+    {
+      "sha": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "tree": {
+        "tree": [
+          {
+            "path": "examples/c30walk/ctor2.rs",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+            "size": 62372,
+            "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/168c2bac9ad0d8da4d9f82788f009d32f419608e"
+          },
+          {
+            "path": "examples/c30walk/ctor3.rs",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "01f91419904a605b721dc1742ba8087fe79f74cf",
+            "size": 79124,
+            "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/01f91419904a605b721dc1742ba8087fe79f74cf"
+          }
+        ]
+      }
+    },
+    {
+      "sha": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "tree": {
+        "tree": [
+          {
+            "path": "examples/c30walk/ctor2.rs",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+            "size": 62372,
+            "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/168c2bac9ad0d8da4d9f82788f009d32f419608e"
+          },
+          {
+            "path": "examples/c30walk/ctor3.rs",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "01f91419904a605b721dc1742ba8087fe79f74cf",
+            "size": 79124,
+            "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/01f91419904a605b721dc1742ba8087fe79f74cf"
+          }
+        ]
+      }
+    },
+    {
+      "sha": "a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b",
+      "tree": {
+        "tree": [
+          {
+            "path": "examples/c30walk/ctor2.rs",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+            "size": 62372,
+            "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/168c2bac9ad0d8da4d9f82788f009d32f419608e"
+          },
+          {
+            "path": "examples/c30walk/ctor3.rs",
+            "mode": "100644",
+            "type": "blob",
+            "sha": "01f91419904a605b721dc1742ba8087fe79f74cf",
+            "size": 79124,
+            "url": "https://api.github.com/repos/lmmx/mibz2/git/blobs/01f91419904a605b721dc1742ba8087fe79f74cf"
+          }
+        ]
+      }
+    }
+  ]
+}
