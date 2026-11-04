@@ -8,6 +8,7 @@
 //!     cargo run --release --example c30walk -- ctor2d-adversarial OUT.jsonl
 //!     cargo run --release --example c30walk -- ctor2d-synthetic [--quick | --miri CLASS]
 //!     cargo run --release --example c30walk -- ctor2d-count FILE.bz2 ...
+//!     cargo run --release --example c30walk -- ctor2d-count --counted FILE.bz2 ...
 //!
 //! **The change (everything else is v2's):** v2's `Desc` is no longer stored; it is
 //! assembled on demand (`W::desc`) from `wr[c]`, `en[c]` and `cold[c]` wherever v2 copied
@@ -154,6 +155,42 @@ pub struct Stats2d {
     pub refills: u64,
     pub refill_finishes: u64,
     pub outer_iterations: u64,
+    /// S62-F01's changed-path counters (counted build only; the descriptor journal's §10):
+    /// `fill` calls, and those with m ≥ 8 (its vector loop); runs ending after a fill and
+    /// after `complete`; `open`s from `run`; `complete` calls; refills from a full tile's
+    /// second segment and its rows there; tails, their rows and second-segment rows, and
+    /// refills from their two segments; the final sweep's checks; descriptors initialised;
+    /// crossing groups preset RAW; epochs with a full tile and without; blocks whose last
+    /// group is padded; the bitmap's resize in place, its fill (≥ 2 words), its reserve,
+    /// and a reserve of one word; `rec`'s regrowth, and those that free the old allocation;
+    /// `raw`'s regrowth; the snapshots' reserve
+    pub fills: u64,
+    pub fills_vector: u64,
+    pub runs_end_fill: u64,
+    pub runs_end_complete: u64,
+    pub run_opens: u64,
+    pub complete_calls: u64,
+    pub tile_refills_second: u64,
+    pub tile_rows_second: u64,
+    pub tails: u64,
+    pub tail_rows: u64,
+    pub tail_rows_second: u64,
+    pub tail_refills_first: u64,
+    pub tail_refills_second: u64,
+    pub sweep_checks: u64,
+    pub init_descs: u64,
+    pub preset_crossing: u64,
+    pub epochs_tiled: u64,
+    pub epochs_short: u64,
+    pub pad_blocks: u64,
+    pub bitmap_in_place: u64,
+    pub bitmap_memsets: u64,
+    pub bitmap_reserves: u64,
+    pub bitmap_reserves_single: u64,
+    pub rec_grows: u64,
+    pub rec_grow_frees: u64,
+    pub raw_grows: u64,
+    pub snaps_reserves: u64,
 }
 
 impl Stats2d {
@@ -191,7 +228,34 @@ impl Stats2d {
             multi_epoch_portions,
             refills,
             refill_finishes,
-            outer_iterations
+            outer_iterations,
+            fills,
+            fills_vector,
+            runs_end_fill,
+            runs_end_complete,
+            run_opens,
+            complete_calls,
+            tile_refills_second,
+            tile_rows_second,
+            tails,
+            tail_rows,
+            tail_rows_second,
+            tail_refills_first,
+            tail_refills_second,
+            sweep_checks,
+            init_descs,
+            preset_crossing,
+            epochs_tiled,
+            epochs_short,
+            pad_blocks,
+            bitmap_in_place,
+            bitmap_memsets,
+            bitmap_reserves,
+            bitmap_reserves_single,
+            rec_grows,
+            rec_grow_frees,
+            raw_grows,
+            snaps_reserves
         );
         self.max_ordinary_span = self.max_ordinary_span.max(o.max_ordinary_span);
         self.min_wide_span = match (self.min_wide_span, o.min_wide_span) {
@@ -207,7 +271,7 @@ impl Stats2d {
 
     fn json(&self) -> String {
         format!(
-            "\"blocks\":{},\"rows\":{},\"rows_bulk\":{},\"rows_bulk_raw\":{},\"rows_fragment\":{},\"rows_scalar\":{},\"runs\":{},\"run_rows\":{},\"complete_groups\":{},\"fin_fast\":{},\"fin_ordinary\":{},\"fin_wide\":{},\"fin_crossing\":{},\"fin_forced\":{},\"norm_full\":{},\"norm_partial\":{},\"norm_fields\":{},\"raw_fields_read\":{},\"raw_entries_written\":{},\"fields_restored\":{},\"epoch_searches\":{},\"epochs\":{},\"runs_split_at_epoch\":{},\"raw_groups\":{},\"raw_moved\":{},\"raw_cycles\":{},\"multi_epoch_portions\":{},\"max_ordinary_span\":{},\"min_wide_span\":{},\"refills\":{},\"refill_finishes\":{},\"outer_iterations\":{}",
+            "\"blocks\":{},\"rows\":{},\"rows_bulk\":{},\"rows_bulk_raw\":{},\"rows_fragment\":{},\"rows_scalar\":{},\"runs\":{},\"run_rows\":{},\"complete_groups\":{},\"fin_fast\":{},\"fin_ordinary\":{},\"fin_wide\":{},\"fin_crossing\":{},\"fin_forced\":{},\"norm_full\":{},\"norm_partial\":{},\"norm_fields\":{},\"raw_fields_read\":{},\"raw_entries_written\":{},\"fields_restored\":{},\"epoch_searches\":{},\"epochs\":{},\"runs_split_at_epoch\":{},\"raw_groups\":{},\"raw_moved\":{},\"raw_cycles\":{},\"multi_epoch_portions\":{},\"max_ordinary_span\":{},\"min_wide_span\":{},\"refills\":{},\"refill_finishes\":{},\"outer_iterations\":{},\"fills\":{},\"fills_vector\":{},\"runs_end_fill\":{},\"runs_end_complete\":{},\"run_opens\":{},\"complete_calls\":{},\"tile_refills_second\":{},\"tile_rows_second\":{},\"tails\":{},\"tail_rows\":{},\"tail_rows_second\":{},\"tail_refills_first\":{},\"tail_refills_second\":{},\"sweep_checks\":{},\"init_descs\":{},\"preset_crossing\":{},\"epochs_tiled\":{},\"epochs_short\":{},\"pad_blocks\":{},\"bitmap_in_place\":{},\"bitmap_memsets\":{},\"bitmap_reserves\":{},\"bitmap_reserves_single\":{},\"rec_grows\":{},\"rec_grow_frees\":{},\"raw_grows\":{},\"snaps_reserves\":{}",
             self.blocks,
             self.rows,
             self.rows_bulk,
@@ -239,7 +303,34 @@ impl Stats2d {
             self.min_wide_span,
             self.refills,
             self.refill_finishes,
-            self.outer_iterations
+            self.outer_iterations,
+            self.fills,
+            self.fills_vector,
+            self.runs_end_fill,
+            self.runs_end_complete,
+            self.run_opens,
+            self.complete_calls,
+            self.tile_refills_second,
+            self.tile_rows_second,
+            self.tails,
+            self.tail_rows,
+            self.tail_rows_second,
+            self.tail_refills_first,
+            self.tail_refills_second,
+            self.sweep_checks,
+            self.init_descs,
+            self.preset_crossing,
+            self.epochs_tiled,
+            self.epochs_short,
+            self.pad_blocks,
+            self.bitmap_in_place,
+            self.bitmap_memsets,
+            self.bitmap_reserves,
+            self.bitmap_reserves_single,
+            self.rec_grows,
+            self.rec_grow_frees,
+            self.raw_grows,
+            self.snaps_reserves
         )
     }
 }
@@ -306,6 +397,12 @@ struct W<'a, const COUNT: bool> {
 }
 
 impl<const COUNT: bool> W<'_, COUNT> {
+    /// Whether `one(c, _)` takes its refill detour: read by the counted build's counters only
+    #[inline(always)]
+    fn refills_at(&self, c: u8) -> bool {
+        self.wr[c as usize] == self.en[c as usize]
+    }
+
     /// v2's descriptor of character c, assembled from the split storage
     #[inline(always)]
     fn desc(&self, c: usize) -> Desc {
@@ -606,14 +703,30 @@ impl<const COUNT: bool> W<'_, COUNT> {
     /// label hole, the source advanced once
     #[inline(always)]
     unsafe fn tile(&mut self, ll: &[u8], i: usize, len: usize) -> bool {
+        if COUNT && len < 16 {
+            self.st.tails += 1;
+            self.st.tail_rows += len as u64;
+        }
         let u = self.y as u16;
         let n1 = len.min(ROWS - self.p);
         for (t, &c) in ll[i..i + n1].iter().enumerate() {
+            if COUNT && len < 16 {
+                self.st.tail_refills_first += self.refills_at(c) as u64;
+            }
             if !self.one(c, u.wrapping_add(t as u16)) {
                 return false;
             }
         }
         for (t, &c) in ll[i + n1..i + len].iter().enumerate() {
+            if COUNT {
+                if len == 16 {
+                    self.st.tile_refills_second += self.refills_at(c) as u64;
+                    self.st.tile_rows_second += 1;
+                } else {
+                    self.st.tail_refills_second += self.refills_at(c) as u64;
+                    self.st.tail_rows_second += 1;
+                }
+            }
             if !self.one(c, u.wrapping_add((n1 + t) as u16 + 2)) {
                 return false;
             }
@@ -643,6 +756,9 @@ impl<const COUNT: bool> W<'_, COUNT> {
         self.advance(m);
         if COUNT {
             self.st.rows_fragment += m as u64;
+            self.st.fills += 1;
+            // the uncounted listing's vector loop is entered for m ≥ 8
+            self.st.fills_vector += (m >= 8) as u64;
         }
     }
 
@@ -651,6 +767,9 @@ impl<const COUNT: bool> W<'_, COUNT> {
     #[inline(always)]
     unsafe fn complete(&mut self, c: u8, g: usize, whole: usize, forced_cfg: bool) {
         chk!(COUNT, g + whole <= self.g_count);
+        if COUNT {
+            self.st.complete_calls += 1;
+        }
         if !forced_cfg {
             let mut r = PATTERNS[self.p];
             r.h = self.y << 8 | c as u32;
@@ -711,6 +830,9 @@ impl<const COUNT: bool> W<'_, COUNT> {
                 m -= k;
             }
             if m == 0 {
+                if COUNT {
+                    self.st.runs_end_fill += 1;
+                }
                 return true;
             }
             self.close(ci);
@@ -721,10 +843,16 @@ impl<const COUNT: bool> W<'_, COUNT> {
                 m -= ROWS * whole;
                 self.cold[ci].r0 = (r + ROWS * whole) as u32;
                 if m == 0 {
+                    if COUNT {
+                        self.st.runs_end_complete += 1;
+                    }
                     return true;
                 }
             }
             let r = self.cold[ci].r0;
+            if COUNT {
+                self.st.run_opens += 1;
+            }
             self.open(ci, r);
         }
     }
@@ -761,17 +889,35 @@ impl Ctor2d {
             g_count.min(sigma * (phi(n - 1) as usize / 65_534) + sigma - 1)
         };
         if rec.capacity() < g_count + 1 {
+            if COUNT {
+                self.st.rec_grows += 1;
+                self.st.rec_grow_frees += (rec.capacity() > 0) as u64;
+            }
             *rec = Vec::new();
             rec.reserve_exact(g_count + 1);
         }
         if raw.capacity() < raw_req {
+            if COUNT {
+                self.st.raw_grows += 1;
+            }
             *raw = Vec::new();
             raw.reserve_exact(raw_req);
         }
         let Ctor2d { bitmap, snaps, st } = self;
         bitmap.clear();
+        if COUNT {
+            let words = g_count.div_ceil(64);
+            let grows = bitmap.capacity() < words;
+            st.bitmap_in_place += (words >= 1 && !grows) as u64;
+            st.bitmap_memsets += (words >= 2) as u64;
+            st.bitmap_reserves += grows as u64;
+            st.bitmap_reserves_single += (grows && words == 1) as u64;
+        }
         bitmap.resize(g_count.div_ceil(64), 0);
         snaps.clear();
+        if COUNT {
+            st.snaps_reserves += (snaps.capacity() < MAX_EPOCHS) as u64;
+        }
         snaps.reserve(MAX_EPOCHS);
         let mut cold = [Cold {
             w0: ptr::null_mut(),
@@ -782,6 +928,9 @@ impl Ctor2d {
         }; 256];
         let mut cum = 0u32;
         for (d, &k) in cold.iter_mut().zip(counts.iter()) {
+            if COUNT {
+                st.init_descs += 1;
+            }
             d.r0 = cum;
             cum += k;
             d.lim = cum;
@@ -813,6 +962,9 @@ impl Ctor2d {
             let dst = rec.as_mut_ptr();
             let used = n - ROWS * g_count.saturating_sub(1);
             if g_count > 0 && used < ROWS {
+                if COUNT {
+                    st.pad_blocks += 1;
+                }
                 let f = ptr::addr_of_mut!((*dst.add(g_count - 1)).f) as *mut u16;
                 for t in used..ROWS {
                     f.add(t).write(RAWF);
@@ -855,6 +1007,9 @@ impl Ctor2d {
             if cum > 0 && cum < n && cum % ROWS != 0 {
                 let g = cum / ROWS;
                 if g != last {
+                    if COUNT {
+                        w.st.preset_crossing += 1;
+                    }
                     w.create_raw(g);
                     last = g;
                 }
@@ -873,6 +1028,10 @@ impl Ctor2d {
             // a new epoch: the snapshot before any of its rows
             w.snapshot();
             let end = n.min(i + EPOCH);
+            if COUNT {
+                w.st.epochs_tiled += (i + 16 <= end) as u64;
+                w.st.epochs_short += (i + 16 > end) as u64;
+            }
             let mut held: Option<(u64, u64)> = None;
             while i + 16 <= end {
                 if COUNT {
@@ -915,6 +1074,9 @@ impl Ctor2d {
             }
         }
         for c in 0..256 {
+            if COUNT {
+                w.st.sweep_checks += 1;
+            }
             if w.rank(c) != w.cold[c].lim {
                 return false;
             }
@@ -1049,6 +1211,45 @@ fn same_as_v2(what: &str, s: &Stats2d, v: &super::ctor2::Stats2) {
     assert!(
         s.cov_portion == v.cov_portion,
         "{what}: portion shapes differ from v2's"
+    );
+    // S62-F01's counters: their partitions of the existing counters
+    assert_eq!(
+        s.runs_end_fill + s.runs_end_complete,
+        s.runs,
+        "{what}: run endings"
+    );
+    assert_eq!(
+        s.epochs_tiled + s.epochs_short,
+        s.epochs,
+        "{what}: epoch entry"
+    );
+    assert_eq!(s.sweep_checks, 256 * s.blocks, "{what}: sweep checks");
+    assert_eq!(
+        s.init_descs,
+        256 * s.blocks,
+        "{what}: descriptors initialised"
+    );
+    assert!(s.fills_vector <= s.fills, "{what}: vector fills");
+    assert!(
+        s.tails <= s.blocks && s.tail_rows < 16 * s.tails.max(1),
+        "{what}: tails"
+    );
+    assert!(
+        s.tail_rows_second <= s.tail_rows,
+        "{what}: tail second-segment rows"
+    );
+    assert!(
+        s.tile_rows_second + s.tail_rows <= s.rows_scalar,
+        "{what}: scalar rows by segment"
+    );
+    assert!(
+        s.tile_refills_second + s.tail_refills_first + s.tail_refills_second <= s.refills,
+        "{what}: refills by site"
+    );
+    assert!(s.pad_blocks <= s.blocks, "{what}: padded blocks");
+    assert!(
+        s.bitmap_reserves_single <= s.bitmap_reserves,
+        "{what}: bitmap reserves"
     );
 }
 
@@ -2034,6 +2235,36 @@ pub fn main(mode: &str, args: &[String]) {
     match mode {
         // the ledger's cross-check: each block built once by v2's and once by this
         // prototype's uncounted build, outputs compared; run under callgrind (untimed)
+        // S62-F01: the counted build alone, in the `--only d` process's order and arenas
+        // (one Ctor2d, one pair of arrays, the blocks in order), so the paths that depend on
+        // arena history (regrowth, reserves) see the same history as the profile; one jsonl
+        // record per file on stdout, with the output digest of `--only d`
+        "count" if args.first().map(String::as_str) == Some("--counted") => {
+            let mut c2d = Ctor2d::default();
+            let (mut r, mut w) = (Vec::new(), Vec::new());
+            for file in &args[1..] {
+                let data = std::fs::read(file).unwrap();
+                let bs = blocks(&data);
+                let mut h = 0xcbf2_9ce4_8422_2325u64;
+                c2d.st = Stats2d::default();
+                for (ll, counts, _, _) in &bs {
+                    assert!(c2d.build::<true>(ll, counts, 0, &mut r, &mut w));
+                    for &b in bytes(&r).iter().chain(bytes(&w)) {
+                        h = (h ^ b as u64).wrapping_mul(0x100_0000_01b3);
+                    }
+                }
+                let name = std::path::Path::new(file)
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .into_owned();
+                println!(
+                    "{{\"input\":{name:?},\"permille\":0,\"extra_starts\":false,\"sequential\":true,\"blocks_built\":{},\"fnv1a\":\"{h:016x}\",{}}}",
+                    bs.len(),
+                    c2d.st.json()
+                );
+            }
+        }
         "count" if args.first().map(String::as_str) == Some("--only") => {
             // One builder per process, for the library-callee bound (§0.7.2): the same
             // decode, the same arenas, and only the named builder's calls.
