@@ -35,7 +35,7 @@ what, how a message gets from one agent to another, and what I learnt from an af
 it. It covers the setup and its first full cycle. Whether it actually makes the research faster,
 we'll have to wait and see.
 
-## 1. Four agents
+## 1. A tale of four agents
 
 The Coordinator is Claude Code. It writes the code for each change in the plan, compiles it, runs
 the tests and keeps the results. When a result is ready it posts a checkpoint: a comment saying
