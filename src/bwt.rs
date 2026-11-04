@@ -745,6 +745,16 @@ thread_local! {
     static MID_PASS_TAKES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static FULL_PHASE_ENDS_MID_PASS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static TAIL_ENTERED_FULL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // the room walk's deferred handovers: several lanes marked at one offset; the queue
+    // running out with a marked lane after this one still waiting; and running out after
+    // an earlier marked lane at the same offset took a segment
+    static MARKED_SEVERAL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static ENDS_WITH_LANES_WAITING: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static ENDS_AFTER_A_TAKE: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // ... and, when it runs out, an unmarked later lane (stepped already) leaving with its
+    // buffer exactly full, or with its next entry the end of its segment
+    static LATER_STEPPED_FULL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static LATER_STEPPED_ON_START: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -832,6 +842,8 @@ fn room_segments<const L: usize, const PF: u8>(
     s: &mut SegScratch,
     segments: usize,
 ) {
+    // a pass marks its lanes in a u64
+    const { assert!(L <= 64) };
     let n = tt.0.len();
     let r0 = tt.0[orig_ptr as usize] >> 8;
     random_rows(n, segments - 1, &mut s.starts);
@@ -921,44 +933,108 @@ fn room_segments<const L: usize, const PF: u8>(
             }
             let mut base: [*mut u8; L] = std::array::from_fn(|k| lanes[k].p);
             for off in 0..room {
-                for k in 0..L {
+                // Every lane whose entry doesn't start a segment steps here; a lane whose
+                // entry does is only marked, and handed over below, in lane order. A step
+                // reads the table and writes only its own lane's buffer, so stepping a lane
+                // before an earlier lane's handover changes no byte, and the segments are
+                // taken in the same order as before. Keeping the handover out of this loop
+                // keeps the loop small enough to unroll.
+                let mut marked: u64 = 0;
+                macro_rules! step {
+                    ($k:expr) => {{
+                        let k = $k;
+                        let l = &mut lanes[k];
+                        // SAFETY: rows are below n (TVector), with the flag masked off below
+                        let q = unsafe { *t.add(l.row as usize) };
+                        if q & START != 0 {
+                            marked |= 1 << k;
+                        } else {
+                            // SAFETY: base + off is below the lane's end: room is at most
+                            // its spare at the pass's start (or, for a buffer taken
+                            // mid-pass, its capacity after its first byte)
+                            debug_assert!(base[k].wrapping_add(off) < l.end);
+                            unsafe { *base[k].wrapping_add(off) = q as u8 };
+                            l.row = q >> 8;
+                            if PF != PF_OFF {
+                                prefetch::<PF>(t, l.row);
+                            }
+                        }
+                    }};
+                }
+                // eight lanes a turn, unrolled by hand: the compiler keeps this loop rolled
+                let mut c = 0;
+                while c + 8 <= L {
+                    step!(c);
+                    step!(c + 1);
+                    step!(c + 2);
+                    step!(c + 3);
+                    step!(c + 4);
+                    step!(c + 5);
+                    step!(c + 6);
+                    step!(c + 7);
+                    c += 8;
+                }
+                while c < L {
+                    step!(c);
+                    c += 1;
+                }
+                #[cfg(test)]
+                if marked.count_ones() > 1 {
+                    transition!(MARKED_SEVERAL);
+                }
+                #[cfg(test)]
+                let mut took = false;
+                while marked != 0 {
+                    let k = marked.trailing_zeros() as usize;
+                    marked &= marked - 1;
                     let l = &mut lanes[k];
-                    // SAFETY: rows are below n (TVector), with the flag masked off below
-                    let q = unsafe { *t.add(l.row as usize) };
-                    if q & START != 0 {
-                        l.p = base[k].wrapping_add(off);
-                        finish(l, bufs, next);
-                        if queued == ns {
-                            // the lanes before this one wrote at `off`, those after it not yet
-                            for (j, lj) in lanes.iter_mut().enumerate() {
-                                if j < k {
-                                    lj.p = base[j].wrapping_add(off + 1);
-                                } else if j > k {
-                                    lj.p = base[j].wrapping_add(off);
+                    l.p = base[k].wrapping_add(off);
+                    finish(l, bufs, next);
+                    if queued == ns {
+                        // Every lane but the marked ones after this one has its next byte at
+                        // off + 1: an unmarked lane wrote at `off`, and an earlier marked
+                        // lane's new segment starts after it. A marked lane after this one
+                        // still sits on its segment's end, unwritten at `off`, for the tail.
+                        for (j, lj) in lanes.iter_mut().enumerate() {
+                            if j != k {
+                                let waiting = marked >> j & 1 != 0;
+                                lj.p = base[j].wrapping_add(off + usize::from(!waiting));
+                                #[cfg(test)]
+                                if j > k && !waiting {
+                                    if lj.p == lj.end {
+                                        transition!(LATER_STEPPED_FULL);
+                                    }
+                                    // SAFETY: the lane's row is below n
+                                    if unsafe { *t.add(lj.row as usize) } & START != 0 {
+                                        transition!(LATER_STEPPED_ON_START);
+                                    }
                                 }
                             }
-                            transition!(FULL_PHASE_ENDS_MID_PASS);
-                            break 'full;
                         }
-                        transition!(MID_PASS_TAKES);
-                        *l = take(queued, bufs);
-                        if PF != PF_OFF {
-                            prefetch::<PF>(t, l.row);
+                        transition!(FULL_PHASE_ENDS_MID_PASS);
+                        #[cfg(test)]
+                        {
+                            if marked != 0 {
+                                transition!(ENDS_WITH_LANES_WAITING);
+                            }
+                            if took {
+                                transition!(ENDS_AFTER_A_TAKE);
+                            }
                         }
-                        queued += 1;
-                        // its next byte, at offset off + 1, goes at its p
-                        base[k] = l.p.wrapping_sub(off + 1);
-                        continue;
+                        break 'full;
                     }
-                    l.row = q >> 8;
+                    transition!(MID_PASS_TAKES);
+                    *l = take(queued, bufs);
                     if PF != PF_OFF {
                         prefetch::<PF>(t, l.row);
                     }
-                    // SAFETY: base + off is below the lane's end: room is at most its spare
-                    // at the pass's start (or, for a buffer taken mid-pass, its capacity
-                    // after its first byte)
-                    debug_assert!(base[k].wrapping_add(off) < l.end);
-                    unsafe { *base[k].wrapping_add(off) = q as u8 };
+                    queued += 1;
+                    // its next byte, at offset off + 1, goes at its p
+                    base[k] = l.p.wrapping_sub(off + 1);
+                    #[cfg(test)]
+                    {
+                        took = true;
+                    }
                 }
             }
             for (l, b) in lanes.iter_mut().zip(base) {
@@ -1413,7 +1489,7 @@ pub(crate) mod tests {
             x ^= x << 17;
             x % m
         };
-        for case in 0..200 {
+        for case in 0..20000 {
             let n = MIN_SEGMENTED + rnd(200_000) as usize;
             let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
             let mut ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
@@ -1453,6 +1529,80 @@ pub(crate) mod tests {
             ("a segment taken mid-pass", &MID_PASS_TAKES),
             ("the full phase ending mid-pass", &FULL_PHASE_ENDS_MID_PASS),
             ("a lane coming into the tail full", &TAIL_ENTERED_FULL),
+        ] {
+            assert!(count(c) > 0, "never reached: {name}");
+        }
+    }
+
+    /// The room walk's deferred handovers, against `walk` on random columns small enough
+    /// for many lanes to reach a segment's end at the same offset: every interleaving the
+    /// pass can take (several lanes marked at one offset, the queue running out with marked
+    /// lanes still waiting, or after an earlier marked lane took a segment) is reached, at
+    /// 32 lanes and at 5, and every output is `walk`'s
+    #[test]
+    fn room_walk_deferred_handovers() {
+        for c in [
+            &MARKED_SEVERAL,
+            &ENDS_WITH_LANES_WAITING,
+            &ENDS_AFTER_A_TAKE,
+            &LATER_STEPPED_FULL,
+            &LATER_STEPPED_ON_START,
+        ] {
+            c.with(|c| c.set(0));
+        }
+        let mut x = 0x2545_f491_4f6c_dd1du64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        for case in 0..20000 {
+            let n = 64 + rnd(if case % 3 == 0 { 600 } else { 3000 }) as usize;
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            // a few segments more than lanes run the queue out early, while the first
+            // passes' lanes are still the ones setting the room
+            let segments = if case % 2 == 0 {
+                33 + rnd(32) as usize
+            } else {
+                2 + rnd(n as u64 / 2) as usize
+            };
+            walk_segments_room_with_prefetch::<32, PF_L1>(
+                &mut tt, orig_ptr, &mut out, &mut seg, segments,
+            );
+            assert!(plain == out, "32 lanes, case {case}");
+            check_segments(&tt, &seg, "32 lanes");
+            walk_segments_room_with_prefetch::<5, PF_OFF>(
+                &mut tt, orig_ptr, &mut out, &mut seg, segments,
+            );
+            assert!(plain == out, "5 lanes, case {case}");
+            check_segments(&tt, &seg, "5 lanes");
+        }
+        // A stepped later lane leaving exactly full needs the queue to run out at a pass's
+        // last offset with that lane setting the pass's room: not reached in 60,000 random
+        // columns. It is the tail's existing case of a lane coming in full (reached in
+        // `miri_room_walk_handoffs`), so LATER_STEPPED_FULL is counted but not required.
+        for (name, c) in [
+            ("several lanes marked at one offset", &MARKED_SEVERAL),
+            (
+                "the queue running out with lanes waiting",
+                &ENDS_WITH_LANES_WAITING,
+            ),
+            ("the queue running out after a take", &ENDS_AFTER_A_TAKE),
+            (
+                "a stepped later lane leaving on its segment's end",
+                &LATER_STEPPED_ON_START,
+            ),
         ] {
             assert!(count(c) > 0, "never reached: {name}");
         }
