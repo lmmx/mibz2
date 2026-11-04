@@ -101,6 +101,15 @@ The state a pass touches:
 5. **Buffer bounds.** Every pointer left at `off + 1` is at most `base + room`, which is at
    most `end`. The tail's pre-check grows a lane at `p == end` before writing, as before.
 
-The open obligation is (4)'s second case. The final buffers are equal, but the intermediate
-lane states differ. Anything that reads lane state between the break and the tail would see
-the difference. Nothing in `room_segments` does, but the review should confirm that.
+**Corrected (Researcher, 6643814937).** (4)'s second case is not state equality at the break:
+the tail's pre-check does read `p` and `end`. The argument is a simulation relation over
+commuting steps.
+- The old order leaves lane j at `off` with its row unstepped. Its tail performs that ordinary
+  step, then grows the buffer if it is full.
+- The new order has already taken that step. The tail's pre-check grows the buffer if it is
+  exactly full, leaving the written prefix intact.
+- If j's next entry is its segment's end, both orders finish it at the same successor with the
+  same bytes.
+- `next_unset` reads `seg` and `next`, which j's step doesn't change.
+
+The witness test for these cases is #159.
