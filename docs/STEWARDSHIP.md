@@ -67,8 +67,9 @@ measured the decoder 7–19% slower.
   Passing the gate is not the same as meeting the standing objective.
 - **This is sequencing, not permission.** The steward doesn't wait for other agents to do it.
 
-PR #157 is why: it repeated the 1 November walk-unroll trial (one-worker gain, none at four,
-a control costing more) without citing it. The record had the result. Its search had been cut
+PR #157 is why: it re-tested the direction of the 1 November walk-unroll trial without citing
+it, and reproduced that trial's shape (a one-worker gain, none detected at four, a control
+costing more). The record had the result. Its search had been cut
 short before the table that held it.
 
 **Docs-only and measurement-only changes** merge when CI is green and nothing measured
