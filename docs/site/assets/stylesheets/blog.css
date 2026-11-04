@@ -15,6 +15,8 @@
   --bf-blue-tint: #dce9fa;
   --bf-amber: #b26b00;
   --bf-amber-tint: #f8ead0;
+  --bf-claude: #d97757;
+  --bf-claude-tint: #f8e8e0;
 }
 [data-md-color-scheme="slate"] .bf-fig {
   --bf-frame: #34342f;
@@ -29,6 +31,8 @@
   --bf-blue-tint: #1d2f47;
   --bf-amber: #f2b544;
   --bf-amber-tint: #3b3020;
+  --bf-claude: #e08a6d;
+  --bf-claude-tint: #3a2821;
 }
 
 .md-typeset .bf-fig {
@@ -581,3 +585,10 @@
   border-right: 2px solid var(--md-default-fg-color--lighter);
   color: var(--md-default-fg-color--light);
 }
+
+/* the agent-team post: product marks, the agent families and the Codex lane */
+.bf-fig .bf-logo-ink { fill: var(--bf-ink); }
+.bf-fig .bf-logo-claude { fill: var(--bf-claude); }
+.bf-fig .bf-card-claude { fill: var(--bf-claude-tint); stroke: var(--bf-claude); stroke-width: 1.5; }
+.bf-fig .bf-group { fill: none; stroke: var(--bf-frame); stroke-width: 1.5; }
+.bf-fig .bf-lane { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1.5; stroke-dasharray: 6 5; }
