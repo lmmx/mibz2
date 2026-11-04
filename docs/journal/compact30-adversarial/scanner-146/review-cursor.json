@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for addressed research evidence or actual topology-specific integration results; D014 attribution closure acknowledged, no economic PASS",
+  "state": "WAITING for addressed research evidence; D016 scoped candidate rejection acknowledged; legacy phase diagnostic mismatch reported",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -57,9 +57,10 @@
     6640069360,
     6640153383,
     6640266327,
-    6640324039
+    6640324039,
+    6641768409
   ],
-  "last_processed_comment_id": 6640324039,
+  "last_processed_comment_id": 6641768409,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -254,6 +255,15 @@
       "report_path": "docs/journal/compact30-adversarial/scanner-146/topology-review-6640324039/report.md",
       "review_comment_id": 6640409593,
       "disposition": "D014 attribution closure acknowledged. W2 unidentified in cited W1/W4 capture; derived break-even versus 0.25 CPU-s/GB thresholds and relative contention requirements. Two-phase CPU subtotal not whole-decoder ratio. Multi-worker dispatch remains hypothesis; no new timing or implementation."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6641768409,
+      "report_commit": "30d7b98d94e155d0bafc148fb4864d3fdd5626d1",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d016-reconciliation-6641768409.md",
+      "review_comment_id": 6641832358,
+      "disposition": "D016 conditional walk budget independently recomputed from published totals. Found production port phase diagnostics still directly call legacy BWT build/walk; not compact30 phase measurements. Whole-decoder CI rejection remains. No new implementation or replay."
     }
   ],
   "active_delegations": [],
@@ -273,17 +283,15 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6640266327,
-      6640324039,
-      6640342479
+      6641768409,
+      6641782001
     ],
     "handled": [
-      6640266327,
-      6640324039
+      6641768409
     ],
     "skipped": [
       {
-        "comment_id": 6640342479,
+        "comment_id": 6641782001,
         "reason": "TO excludes researcher"
       }
     ],
