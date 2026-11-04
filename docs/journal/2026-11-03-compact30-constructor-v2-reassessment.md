@@ -1197,3 +1197,1195 @@ So I'd leave Ultra to complete its investigation. Send the factual correction af
 
 We have a credible NO-GO for one idea, but we haven't established that the larger instruction-minimization campaign has run out of worthwhile opportunities.
 ```
+
+## Report 227: the instruction-floor investigation's result, GO for one bounded prototype
+
+The Ultra session's answer to report 225. Its verdict: **GO for one bounded
+correctness-and-compilation prototype of epoch-tagged fast finalisation.** It also gives a
+cumulative, non-overlapping budget of about **225 million instructions per primary-corpus
+pass** across three compatible changes:
+
+| change | conditional net reduction per pass |
+|---|--:|
+| epoch-tagged fast finish | 66.0 M |
+| source and tile bounds checks removed | 87.6 M |
+| hot descriptor pointers in separate arrays | 71.6 M |
+
+These are uncompiled targets, not measured savings. Nothing was implemented or run.
+
+**Checked here before filing** (an untimed reading of existing records):
+- **Counters:** every structural count the report quotes matches the prototype's primary-corpus
+  census (`corpora.jsonl` at `cd14fa9`) exactly. That covers scalar, fragment and bulk rows,
+  the 610,521 runs, the finishes by class, the 51,701,707 normalised fields, the 3,654
+  snapshots, the 127,249 epoch searches, the 49,633 RAW groups, 48,795 moved and 1,135 cycles.
+- **Bounds checks:** the removable checks the report cites are present in the frozen listing
+  (`ctor2-build-false.asm` at `cd14fa9`), with the instruction counts it gives:
+  - 8 instructions at `33ae8–33b06`: the `rd` overflow check, the slice-end check and the
+    second load's bound;
+  - 5 at `33b44–33b56`: the run lookahead.
+
+  They come from `rd`'s checked slice-to-array conversion, which the compiler kept although
+  the caller has already bounded the tile.
+- **Partition and imbalance:** its step-class decomposition under the registered
+  `FULL = 899_000` partition, and its time-weighted imbalance factors, agree with the
+  correction above.
+
+**Relation to report 224.** The two agree on the facts:
+- the 81-instruction fast finish;
+- the 62-instruction refill;
+- the pointer re-read;
+- an achievable saving of about 40–50 instructions per fast finish.
+
+They differ in scope:
+- report 224 judged a fused finish on its own against the completion requirement, and found
+  it insufficient;
+- report 227 bases its GO on the cumulative budget, with the epoch-tagged finish as the first
+  step.
+
+The Ultra session saw report 224's verdict partway through (report 226).
+
+Kept as relayed; its heading levels are adjusted, and the words are unchanged.
+
+### Compact30: instruction-elimination investigation
+
+**Recommendation: GO for one bounded correctness-and-compilation prototype of epoch-tagged fast finalization.**
+
+The broader investigation found three substantial, compatible opportunities:
+
+| Transformation | Conditional net reduction per primary-corpus pass |
+|---|---:|
+| Epoch-tagged fast finalization | **66.04 million instructions** |
+| Remove redundant source/tile checks | **87.62 million instructions** |
+| Separate hot descriptor pointer arrays | **71.59 million instructions** |
+| **Combined, after explicit overhead allowances** | **225.25 million instructions** |
+
+These are **uncompiled machine-code targets**, not measured savings. They do not establish a runtime improvement or an economic PASS.
+
+The existing implementation is **not demonstrated to be near its practical instruction floor**. Substantial removable work exists outside the 12-instruction scalar loop. However, the available census cannot resolve an exact whole-constructor instruction total, and assembly inspection cannot establish how much of the eliminated work translates into synchronized completion time.
+
+The corrected `FULL = 899_000` partition is used throughout. Large-block paths dominate the economic question.
+
+No repository changes, Rust variants, compilation, benchmarks, i9 access, or new performance experiments were performed.
+
+#### A. Evidence and provenance
+
+##### Sources and listings inspected
+
+All requested evidence was accessible.
+
+| Evidence | Frozen location | Inspection scope |
+|---|---|---|
+| Production builder | [`src/bwt.rs`, e003a32](https://github.com/lmmx/mibz2/blob/e003a32/src/bwt.rs) | One-pass construction, validation, uniform/scalar paths, fallback |
+| Constructor v1 | [`ctor.rs`, e003a32](https://github.com/lmmx/mibz2/blob/e003a32/examples/c30walk/ctor.rs) | Online offset construction and canonicalization |
+| Constructor v2 | [`ctor2.rs`, 8beffe2](https://github.com/lmmx/mibz2/blob/8beffe2/examples/c30walk/ctor2.rs) | Complete construction data flow |
+| Frozen representation and oracle | [`c30walk.rs`, e003a32](https://github.com/lmmx/mibz2/blob/e003a32/examples/c30walk.rs) | Layout, labels, classification, canonical output and padding |
+| Prototype report | [Report, cd14fa9](https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype.md) | Census definitions, correctness evidence, compilation discussion |
+| Main construction assembly | [`ctor2-build-false.asm`](https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-build-false.asm) | Scalar, scanning, fragments, bulk, transitions, initialization |
+| Finalization assembly | [`ctor2-finish-false.asm`](https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-finish-false.asm) | Common and exceptional paths |
+| Refill assembly | [`ctor2-refill-false.asm`](https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-refill-false.asm) | Successful, initial, exhausted and preset-RAW paths |
+| Annotated excerpts | [`excerpts.asm`](https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype/excerpts.asm) | Cross-check against full listings |
+| Raw prototype census | [`corpora.jsonl`](https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype/corpora.jsonl) | Natural primary-corpus record |
+| Registered protocol | [Protocol, 1dc2edf](https://github.com/lmmx/mibz2/blob/1dc2edf/docs/journal/2026-11-03-compact30-construction-protocol-v2.md) | Definitions, validity gates, economic thresholds |
+| Capture report | [Report, 603d8c9](https://github.com/lmmx/mibz2/blob/603d8c9/docs/journal/2026-11-03-compact30-construction-v2-capture.md) | Comparison with independent reconstruction |
+| Complete archive | [Archive, e035556](https://github.com/lmmx/mibz2/blob/e035556/docs/journal/2026-11-03-compact30-construction-v2-capture/c30-construction-v2-20261103T222928Z.tar.gz) | Raw records and archived listings |
+| Registered analyzer | [`bench/c30_construction.py`, fa21f33](https://github.com/lmmx/mibz2/blob/fa21f33/bench/c30_construction.py) | Including `FULL = 899_000` at line 81 |
+
+The downloaded archive’s SHA-256 was:
+
+```text
+ebdb74549b39f83f07ae1f7d1c943916bac2ecb0be85868799aa30fe5e3d8af9
+```
+
+It exactly matches the supplied hash.
+
+Within that archive, I independently analyzed:
+
+- `c30-construction.jsonl`
+- `c30-analysis.json`
+- Manifest identity information
+- `listing/listing.json`
+- Production `listing/bwt-build.asm`
+- `listing/ctor-canonicalise.asm`
+
+The primary raw JSONL SHA-256 was:
+
+```text
+f25325eb2339b1a1385d598e8dd5a8a6d5e37c110c207ddcff18bae53f2e172b
+```
+
+It contains **75,087 records**, including **72,912 build records** and **434 per-block structural counter records**. The warm-W4 analysis selects exactly **17,360 measured builds**: 434 blocks × 20 rounds × two arms.
+
+The archive’s identity report records matching normalized listings for all seven checked functions. I used the existing listings; I did not regenerate assembly.
+
+##### Evidence limitations
+
+The structural records do **not** include:
+
+- Fragment-length histograms.
+- Exact scalar-refill counts.
+- Exact full-to-full refill counts.
+- Bulk-emitter invocation counts and parity.
+- Exact nonuniform-tile label-hole split counts.
+- RAW reconstruction interval lengths.
+- Retired instructions, decoded micro-ops, cache misses, stall cycles or execution-port utilization.
+
+Consequently, the instruction ledger contains exact census-weighted components, bounded components, and an explicitly unresolved remainder. It is not a dynamic instruction trace.
+
+Both construction captures remain **formally INVALID**. Their v1/v2 difference remains descriptive, not a controlled improvement result.
+
+#### B. Baseline machine-code ledger
+
+##### Counting conventions
+
+Here, an “instruction” means an architectural x86 instruction in the inspected path. It does not mean one micro-op or one cycle.
+
+A memory operand in a comparison or arithmetic instruction counts as a read. A memory read-modify-write counts as one read and one write. Explicit memory operands and implicit stack operations are distinguished.
+
+Alignment NOPs, unlisted library internals and unresolved control-path frequencies are retained in the unresolved remainder rather than silently treated as zero.
+
+All corpus totals below describe **one construction of the primary corpus**, not all experimental repetitions.
+
+##### Exact structural reconciliation
+
+The prototype census and the capture’s 434 per-block counters agree:
+
+| Quantity | Count |
+|---|---:|
+| Blocks | 434 |
+| Input rows | 207,006,515 |
+| Scalar rows | 38,294,883 |
+| Fragment rows | 14,892,632 |
+| Bulk rows | 153,819,000 |
+| Complete records emitted | 5,127,300 |
+| Coalesced runs | 610,521 |
+| Fast ordinary finishes | 1,647,416 |
+| Non-fast ordinary finishes | 75,997 |
+| Wide finishes | 30,949 |
+| Crossing portions finished | 41,120 |
+| Full normalizations | 1,723,371 |
+| Partial normalizations | 42 |
+| Fields normalized | 51,701,707 |
+| RAW fields reconstructed | 1,485,808 |
+| Preset-RAW fields restored | 557,338 |
+| Epoch snapshots | 3,654 |
+| Non-fast portions requiring epoch searches | 127,249 |
+| RAW groups | 49,633 |
+| RAW groups moved during canonicalization | 48,795 |
+| Canonical permutation cycles | 1,135 |
+
+Important identities:
+
+```text
+scalar + fragment + bulk = all rows
+run_rows = fragment + bulk
+30 × complete_groups = bulk rows
+fin_fast + fin_ordinary = norm_full + norm_partial
+```
+
+Thus ordinary finishes and normalizations are **the same events viewed through different counters**. They must not be added as independent whole-function costs.
+
+From the recorded block sizes:
+
+```text
+T = Σ floor(block_rows / 16) = 12,937,790 full tiles
+U = run_rows / 16            = 10,544,477 uniform tiles
+S = T − U                   =  2,393,313 nonuniform full tiles
+scalar tail rows            =      1,875
+```
+
+##### Main-build instruction ledger
+
+Addresses below refer to the frozen prototype listings unless identified as archive addresses.
+
+| Cost center | Existing path and frequency | Instructions, millions | Principal memory/dependency characteristics |
+|---|---|---:|---|
+| Scalar append | `34350–3437a`, `343e0–34406`; 12/row | **459.539** | Four reads and two writes/row, counting pointer RMW; byte → descriptor address → write pointer → field |
+| Uniformity classification and run scanning | `33ae3–33b27`, `33b30–33b6d`, exits | **221.504–222.732** | Exactly 25.876M source-qword reads; bounds and equality branches |
+| Nonuniform tile setup and advancement | `33b80–33bc4`, `34340…`, `33a90–33add` | **98.126–114.879** | `41S + 7X`, where `X` is unrecorded split-tile count |
+| Fragment filling, excluding surrounding run transitions | `33c9d…`, scalar `33d00–33d17`, vector `34180–341a5` | **43.437–114.277** | Length-dependent scalar/vector mix; histogram unavailable |
+| Complete-record emitter core | `341d0–34233`, odd tail `3423a–34269` | **51.273–51.884** | 20 instructions/two records; 11/odd tail; five stores/record |
+| Run entry | `33be5–33c4c`; 23/run | **14.042** | Rank reconstruction, whole-run bucket check, descriptor reads and spills |
+| Run return and outer availability check | `34330`/`34439`, `34446–34463`, `33ad2…` | **7.937** | Mostly state reload and control |
+| Snapshot rank loop | `33910–33948`; 1,792/epoch | **6.548** | Three descriptor reads and one snapshot store/character |
+| Descriptor initialization and prefix loops | `333f0–334da` | **0.972** | Excludes the subsequent descriptor copy |
+| **Disjoint main-build subtotal** | | **903.377–992.809** | Excludes the components below |
+
+The fragment interval is deliberately broad. Its uncertainty is material, not rounding error.
+
+For a fill of length `m`, the inspected path costs are:
+
+```text
+m < 8:                   29 + 7m
+m ≥ 8, m divisible by 8: 43 + 9 floor(m/8)
+m ≥ 8, other:            44 + 9 floor(m/8) + 7(m mod 8)
+```
+
+A run has at most a prefix and suffix fill. Combining that bound with the total fragment rows gives the table’s interval without inventing a length distribution.
+
+##### The scalar loop
+
+The second part-loop is:
+
+```asm
+343e0: movzbl (%r15),%esi
+343e4: lea    (%rsi,%rsi,4),%rcx
+343e8: lea    (%r8,%rcx,8),%r14
+343ec: mov    (%r8,%rcx,8),%rax
+343f0: cmp    0x8(%r8,%rcx,8),%rax
+343f5: je     3440d
+343f7: mov    %bx,(%rax)
+343fa: addq   $0x2,(%r14)
+343fe: inc    %r15
+34401: inc    %ebx
+34403: cmp    %r12,%r15
+34406: jne    343e0
+```
+
+Across the corpus this accounts for:
+
+- **459,538,596 instructions**
+- **153,179,532 explicit reads**
+- **76,589,766 explicit writes**
+
+The four reads are the source byte, write pointer, end pointer, and pointer-RMW read. These are memory operations, not necessarily four cache misses.
+
+V2 removed v1’s expensive header/RAW/span chain. Nevertheless, two address-generation instructions remain avoidable, and the pointer RMW remains a separate load-versus-instruction tradeoff.
+
+##### Fast full finalization is exactly 81 instructions
+
+This path is much more substantial than the 15-instruction normalization body alone:
+
+| Inclusive range | Instructions | Work |
+|---|---:|---|
+| `61d30–61d93` | 29 | Frame, snapshots metadata, descriptor loads, fast test |
+| `61e08–61e17` | 5 | `j0` calculation, RAW dispatch, spill |
+| `61f1b–61fb8` | 39 | Endpoint recovery, span check, header, broadcast and normalization |
+| `6231b–62329` | 8 | Epilogue |
+| **Total** | **81** | Excludes caller’s `call` |
+
+It executes:
+
+- **17 explicit reads**
+- **8 explicit writes**
+- Six pushes and six pops, additionally
+
+At most 42 fast finishes can be partial, because there are only 42 partial ordinary normalizations in total. Therefore:
+
+```text
+1,647,374 ≤ fast full finishes ≤ 1,647,416
+```
+
+The 81-instruction path contributes **133.437–133.441M instructions**.
+
+Its most consequential serial chain is:
+
+```text
+W
+ → snapshots Vec reference
+ → Vec length/data
+ → latest snapshot element
+ → classification
+```
+
+The normalizer then requires the first field for its subtraction base.
+
+##### Refill and RAW reconstruction
+
+A successful nonempty ordinary `refill` executes **62 instructions**, excluding the called finish body but including the call instruction. Its total function size of 67 instructions is not the relevant path count.
+
+Not every finish comes through `refill`: runs and the final sweep also finish portions.
+
+Let `P = 1,795,482` be all portions. A run can nonempty-close at most one prefix, and final sweeps close at most `256 × 434` portions. Therefore nonempty scalar refills number at least:
+
+```text
+P − runs − 256 × blocks = 1,073,857
+```
+
+All successful scalar refills open new portions, so their total is at most `P`.
+
+Accounting for empty initial refills and preset-RAW opening branches gives a wrapper contribution of approximately **66.579–111.402M instructions**.
+
+The caller detours are additional. For example, `3437e–343ac` and `3440d–34437` execute roughly 9–10 instructions around the refill call. These remain in the unresolved remainder below.
+
+The RAW reconstruction loops execute **16 instructions per field** on their non-transition iteration. Across 1,485,808 fields:
+
+```text
+16 × 1,485,808 = 23,772,928 instructions
+```
+
+Epoch transitions, allocation, dispatch, restoration and record replacement are additional.
+
+##### What the whole-constructor budget establishes
+
+Combining disjoint audited components gives:
+
+```text
+Icurrent = K + E
+
+K ∈ [1.127166, 1.261425] billion instructions
+```
+
+Here `E` is an explicitly unresolved, nonnegative remainder containing:
+
+| Remainder component | What is known |
+|---|---|
+| Scalar-refill caller detours | Approximately 9–10 instructions per relevant full-tile detour |
+| Run room/close/open/control | Portions and runs are known; exact branch combinations are not |
+| Bulk invocation setup | Formula `19 × invocations + 6 × paired invocations`; ≤15.263M instructions for this setup subset |
+| Non-fast finish work outside the counted RAW loop | Endpoints, searches, ordinary normalization, dispatch and RAW setup |
+| Epoch-search iterations | Portion count known; search-depth distribution absent |
+| Final validation and closing sweep | 256 descriptors/block; nonempty distribution not fully classified |
+| Allocation, zeroing and copies | Call sites inspected; library internals and exact invocation histories not traced |
+| Canonicalization, padding and PARK | Small but nonzero |
+| Alignment instructions and remaining scaffolding | Not credited as absent |
+
+**The upper end of `K` is not an upper bound on the entire constructor.**
+
+A conditional `E = 50–100M` would put the whole total around **1.18–1.36B instructions**. That is a sensitivity assumption, not an independently established interval. The absolute elimination budget is more defensible than a precise percentage of total work.
+
+##### Memory work
+
+Some useful logical field counts are exact:
+
+| Operation | Logical bytes per corpus pass |
+|---|---:|
+| Temporary nonbulk field writes | 106.375 MB |
+| Ordinary normalization reads | 103.403 MB |
+| Ordinary normalization writes | 103.403 MB |
+| RAW reconstruction field reads | 2.972 MB |
+| Reconstructed RAW entry writes | 5.943 MB |
+| Preset-RAW field restoration | 1.115 MB |
+
+These are **explicit logical accesses**, not measured DRAM traffic.
+
+For the main scalar loop, bulk emitter and fast finish, memory-operation counts are directly available from the assembly. Fragment operations can be bounded: their pattern reads are approximately **3.723–10.134M**, and field stores **1.862–9.340M**, excluding setup metadata accesses.
+
+I do not claim a complete load/store total: doing so would conceal the same transition and histogram uncertainties represented by `E`.
+
+##### Production comparison
+
+Production’s successful one-pass builder writes a complete `u32` table entry:
+
+```text
+tt[destination] = L[destination] | source_row << 8
+```
+
+It maintains simple bucket cursors and limits. It avoids compact30’s:
+
+- Group classification.
+- Epoch recovery.
+- Temporary-field normalization.
+- RAW promotion and canonicalization.
+- Thirty-row record transitions.
+
+Production instead writes a larger table and reads `L[destination]` to supply the low byte. The archived production assembly also contains its own bounds and scalar-path overhead.
+
+This explains structural differences. It does not provide a cycle attribution for the observed C/P ratio.
+
+##### Comet Lake interpretation
+
+Three distinctions matter:
+
+1. Removing two LEAs shortens address preparation but does not remove descriptor loads.
+2. Removing predictable compare/branch pairs reduces instruction work, but macro-fusion means instruction savings need not equal micro-op savings.
+3. Removing the snapshot dependency chain and generic frame can matter differently from removing independent arithmetic.
+
+Memory RMW instructions can represent more internal work than one register instruction. Conversely, independent loads can overlap. No latency, port occupancy, cache-miss rate or cycles-per-instruction value is inferred here.
+
+#### C. Practical execution lower bound
+
+##### Unavoidable representation and ordering work
+
+For arbitrary accepted input, construction must establish the correct occurrence ordering of each character and emit every defined output byte.
+
+The frozen oracle requires:
+
+```text
+φ(i) = 32 floor(i/30) + i mod 30
+```
+
+For an ordinary record:
+
+```text
+header = first_full_label << 8 | character
+field[j] = full_label[j] − first_full_label
+```
+
+Classification must use the **full-label span**, with ordinary permitted through 65,533.
+
+For RAW records, the constructor must produce canonical RAW indices, correct entries, `0xFFFF` record fields and zero RAW padding. Final partial-record padding and PARK also remain defined.
+
+For this corpus, the final record and RAW arrays contain **448,002,944 logical bytes**, including PARK records. Their correct materialization is unavoidable. This is not a lower bound on DRAM transfers or CPU time.
+
+##### Avoidable implementation overhead
+
+The representation does not require:
+
+- Stride-40 address multiplication on every scalar append.
+- Reconstructing the opening epoch from snapshots when it was known at opening.
+- Testing a span already bounded by a same-epoch invariant.
+- Saving six callee-saved registers for a simple ordinary normalization.
+- Nulling descriptor pointers immediately before overwriting them.
+- Dividing the next rank by 30 when the next full group is exactly 64 bytes away.
+- Rechecking source slice bounds after proving a complete 16-byte tile exists.
+- Reloading an invariant bulk pattern for every pair of records.
+
+These are concrete implementation or code-generation costs.
+
+##### Temporary fields and normalization
+
+Temporary writes followed by normalization are **not an information-theoretic requirement** of compact30. They are the current successful tradeoff.
+
+The straightforward alternative—subtract the base online—looks unfavorable:
+
+```text
+2 added scalar instructions × 38,294,883 rows
+    = 76.590M added instructions
+```
+
+That exceeds the approximately:
+
+```text
+18 × 1,723,371 = 31.021M instructions
+```
+
+in full-group broadcast plus normalization, before charging online wide handling or new dependencies.
+
+Therefore the current deferred field strategy remains a reasonable practical floor candidate. It is not proven globally optimal.
+
+##### Paths already relatively close to a floor
+
+- **Bulk output:** already emits final records directly and avoids normalization. Remaining instruction/store improvements are smaller than the leading opportunities.
+- **SIMD normalization arithmetic:** five subtraction chunks are already bounded work. The generic control surrounding them is considerably less economical.
+- **Canonicalization:** necessary ordering is preserved, and only about 49,000 RAW groups participate. It cannot plausibly be the principal solution.
+- **Tiny-block fixed work:** expensive per row, but economically small under the corrected schedule partition.
+
+#### D. Cumulative instruction-elimination ledger
+
+##### Core cumulative budget
+
+The following table uses explicit acceptance allowances. These are requirements for a future compilation checkpoint, not observed code generation.
+
+| Step | Gross removable work | Added-work allowance | Conditional net saving | Cumulative saving |
+|---|---:|---:|---:|---:|
+| Epoch-tagged fast finish | 67.542M | 1.481M slow dispatch + 0.020M epoch/block setup | **66.041M** | **66.041M** |
+| Source/tile invariant cleanup | 88.622–88.633M | Up to 1.000M additional setup/control | **≥87.622M** | **≥153.663M** |
+| Hot descriptor pointer arrays | 76.590M | Up to 5.000M additional non-row work | **≥71.590M** | **≥225.253M** |
+
+The final residual budget is:
+
+```text
+Icore = Icurrent − 225.253M
+
+      = [901.913, 1,036.172]M + E
+```
+
+This does not assume that `E` disappears.
+
+These changes remove different instructions:
+
+- Finish changes once-per-portion work.
+- Scanner changes source/tile validation.
+- Descriptor layout changes scalar address generation.
+
+They can coexist. Their interactions must still be checked in the resulting assembly: changed layouts and register pressure can introduce costs elsewhere.
+
+##### 1. Epoch-tagged fast finalization
+
+**Existing locations:** `ctor2.rs` 343–367 and 397–495; finish ranges listed in section B.
+
+**Equivalent computation:** record the first source epoch when an ordinary portion opens. If that tag equals the active epoch, every received label belongs to the same epoch.
+
+Within one epoch:
+
+```text
+0 ≤ temporary label ≤ 65,533
+```
+
+Therefore a same-epoch ordinary candidate is necessarily ordinary. Its final-label load and span calculation are unnecessary.
+
+**Removed:**
+
+- Snapshot metadata chain on fast success.
+- Last-label read and full-span reconstruction.
+- Ordinary-path `j0` calculation.
+- Generic descriptor fields not needed by the normalizer.
+- Generic frame/spills, if the intended leaf compiles.
+
+**Added:**
+
+- One active-epoch tag in build state.
+- One tag load per ordinary opening, replacing the immediate `NO_RAW` value.
+- Slow-path dispatch.
+- Epoch/block tag setup.
+
+**Frequency:** at least 1,647,374 full fast finishes.
+
+**Target:** ≤40 instructions across the complete fast call boundary, using the existing five-chunk normalizer.
+
+**Memory budget:** fast success targets ≤10 explicit reads and ≤6 explicit writes, with no spills or callee-save stack traffic. After ordinary-opening loads, slow guards and setup allowances, the model still removes approximately **9.16M explicit reads** and **3.27M explicit writes**, plus approximately **9.88M push writes and 9.88M pop reads**.
+
+The stack operations are already included in the instruction saving; they are not another instruction credit.
+
+**Critical-worker relevance:** fast finishes are enriched on the observed slowest large blocks.
+
+**Rejection:** retained snapshot chain, retained generic frame, added per-row work, incorrect opening epoch, or failure of the complete cost budget.
+
+##### 2. Source and tile invariant cleanup
+
+**Existing source:** `rd` at lines 98–100, tile processing at 557–576, scanner at 823–863.
+
+**Existing assembly:**
+
+- Fresh source loads: eight removable instructions at `33ae8–33b06`.
+- Run lookahead: five at `33b44–33b56`.
+- Nonuniform tiles: five redundant slice checks and two instructions testing an impossible phase state.
+
+The caller already establishes:
+
+```text
+i + 16 ≤ epoch_end ≤ L.len()
+L.len() ≤ MAX_N
+0 ≤ source_phase < 30
+```
+
+Precisely bounded unaligned reads can use that proof. The loop-end check remains; malformed-count bucket checks remain.
+
+Let:
+
+- `H` be runs ending with a held nonmatching tile.
+- `A = S + R − H` be fresh outer loads.
+- `J = U − R + H` be lookahead loads.
+
+Then:
+
+```text
+removed = 8A + 5J + 7S
+        = 5T + 10S + 3(R − H)
+```
+
+At most one run per epoch can end because another full tile is unavailable:
+
+```text
+0 ≤ R − H ≤ 3,654
+```
+
+Hence:
+
+```text
+88,622,080 ≤ removed instructions ≤ 88,633,042
+```
+
+**Memory change:** no intended change in source reads or output writes.
+
+**New work:** no algorithmic work is required. The ledger nevertheless reserves 1M instructions for replacement setup/control.
+
+**Critical-worker relevance:** affects all large blocks, with slightly more eliminated tile work on nonuniform input. It offers a weaker direct imbalance argument than the scalar and finish changes.
+
+**Rejection:** surviving equivalent checks, new tail overreads, changed run splitting or coverage, weakened validation, or added work exceeding the allowance.
+
+##### 3. Separate hot descriptor pointer arrays
+
+**Existing locations:** `Desc` at lines 233–240; scalar address LEAs at `34355/34359` and `343e4/343e8`.
+
+The hot state can be laid out as:
+
+```text
+write[256]
+end[256]
+cold descriptors: w0, r0, lim, g, raw_or_epoch_tag
+```
+
+Two pointer arrays occupy 4 KiB. A 24-byte cold descriptor plus the two pointer arrays can retain the existing aggregate **10 KiB** descriptor footprint.
+
+Direct scale-eight addressing removes the two LEAs used to form stride-40 addresses.
+
+**Target:** scalar append **12 → 10 instructions**.
+
+```text
+2 × 38,294,883 = 76,589,766 instructions removed
+```
+
+**Memory change:** no intended per-row change. The write-pointer RMW remains.
+
+**Added work:** initialization, snapshots, refill, run and finish addressing must be recosted. The conservative ledger allows up to 5M additional instructions outside the scalar loop. Any added metadata memory operations must also be reported explicitly; they cannot be hidden behind an unchanged byte footprint.
+
+**Critical-worker relevance:** scalar rows are enriched on slow large blocks.
+
+**Rejection:** >10 common-loop instructions, recurrent base reloads/spills, additional per-row memory accesses, expanded row-sized storage, or non-row overhead consuming the budget.
+
+##### A competing scalar choice: remove the RMW read
+
+The existing:
+
+```asm
+addq $2, [write_pointer]
+```
+
+can potentially become:
+
+```asm
+lea  2(old_pointer), new_pointer
+mov  new_pointer, [write_pointer]
+```
+
+This reuses the pointer already loaded for the field store.
+
+Its tradeoff is:
+
+| Change across scalar rows | Amount |
+|---|---:|
+| Additional instructions | **+38.295M** |
+| Explicit pointer reads removed | **−38.295M** |
+| Pointer stores | Unchanged |
+
+Combined with the descriptor layout change, the target becomes **11 instructions**, rather than 10. The net instruction saving versus baseline is then **38.295M**, not 76.590M.
+
+The repeated-character store-to-load recurrence remains. No shorter latency or micro-op count is established. This is a genuine alternative between instruction and memory-operation budgets, and its savings must not be added to the ten-instruction variant.
+
+##### Further opportunities examined
+
+| Candidate | Concrete opportunity | Weighted scale and added work | Disposition |
+|---|---|---|---|
+| Interior full-group refill | Advance `w0` by 64, rank by 30 and group by one; avoid null/reset, reciprocal division and bitmap work | At least **991,575** eligible transitions by structural bounds; guards and fallback costs required | Promising secondary candidate; not in core total |
+| Four overlapping SSE normalization chunks | Loads/stores at 0, 16, 32, 44 replace five chunks | **5.170M instructions**; one fewer load/store per full normalization | Additive if fast-finish target still uses five chunks |
+| Fragment SIMD simplification | Replace two 64-bit loads/adds plus packing with one 128-bit load/add/store | Up to about **5.6M gross** before setup; alias-check removal offers additional bounded work | Smaller, histogram-dependent |
+| Bulk pattern/register reuse | Hoist invariant pattern and retain header-bearing final vector | Pair-loop target 20 → 14; approximately **15.4M gross ceiling** before per-call setup and tails | Smaller; favors already efficient bulk paths |
+| RAW interval construction | Hoist epoch/character prefix and bounds; optionally vectorize constant-epoch intervals | Current repeated loop contributes **23.773M**; net requires interval lengths and tail accounting | Concrete secondary work; no fixed net credit |
+| Metadata initialization/copy removal | Initialize final descriptor/snapshot storage directly | Removes several MB of logical copying/zeroing; library instruction count unavailable | Small; overlaps descriptor-layout work |
+| Canonicalization cleanup | Reduce rotation register copies or bookkeeping | Whole mechanism is only a few million instructions | Too small to lead |
+| Avoid initial wide-RAW zeroing | Initialize only required padding before writing entries | At most about **0.217M** store-instruction reduction on wide groups | Too small for added unsafe complexity |
+
+###### Interior refill bound
+
+Starting with at least 1,073,857 nonempty scalar refills, conservatively subtract:
+
+- 41,120 old preset-RAW portions.
+- 41,120 possible next preset-RAW portions.
+- 42 possible next partial ordinary portions.
+
+This leaves:
+
+```text
+eligible full-to-full transitions ≥ 991,575
+```
+
+For a natural full interior group:
+
+```text
+next_w0 = old_w0 + 64
+next_r0 = old_r0 + 30
+next_g  = old_g + 1
+```
+
+If another 30 ranks remain within the same bucket, the next group cannot be crossing or forced RAW. It also cannot already have been wide-finalized.
+
+The relevant existing costs are `6235f–6236a`, `6237f–6239c` and the bitmap/pointer reconstruction following them.
+
+This is meaningful remaining work. However, a fused implementation must count the entire replacement transition. It cannot claim removal of finish loads or frame work already credited to the fast leaf.
+
+###### Overlapping normalization: fewer operations, more bytes
+
+Four 16-byte accesses at offsets:
+
+```text
+0, 16, 32, 44
+```
+
+cover bytes 0–59. Bytes 44–47 overlap. If all overlapping original values are loaded before stores, both copies subtract the same base and produce identical results.
+
+This removes three instructions per full normalization:
+
+```text
+3 × 1,723,371 = 5,170,113
+```
+
+It also changes logical reads and writes from **60 to 64 bytes each**. Across the corpus that adds **6.893 MB in each direction**.
+
+It is an instruction and memory-operation reduction, **not a byte-traffic reduction**.
+
+###### RAW reconstruction
+
+The current per-field loop repeatedly forms rank and destination index, checks epoch transitions and slot bounds, and rebuilds the epoch/character prefix.
+
+A constant-epoch interval can hoist:
+
+```text
+H = epoch << 24 | character
+entry = temporary_label << 8 | H
+```
+
+The larger alternative processes contiguous intervals bounded by the next snapshot, with SIMD widening inside sufficiently long intervals.
+
+Repeated snapshots must be skipped correctly. Interval setup, short tails and empty epochs can consume the apparent saving. The aggregate field count alone does not justify booking a 10–20M net reduction.
+
+##### Alternatives rejected or left unsupported
+
+- **Online offset formation:** added scalar work exceeds the normalization instructions it straightforwardly removes.
+- **Private scratch for all unfinished fields:** introduces comparable writes/rereads/copies; locality might improve, but instruction elimination is unproven.
+- **Post-scan group-order finalization:** can reduce descriptor/call work, but needs pending metadata and changes epoch-recovery/cache behavior. It overlaps the fast-finish saving.
+- **Extract scalar bytes from already loaded qwords:** removes byte loads but adds extraction and register-management work; no established net reduction.
+- **Coalesce short runs inside scalar tiles:** requires an unrecorded short-run distribution and additional per-row comparison/control.
+- **AVX2 normalization:** plausible, but an alternative to SSE normalization, with target-feature and surrounding-code implications. No extra credit is assigned.
+- **Scheduling changes:** outside the fixed-constructor instruction budget and cannot be inferred from this assignment’s capture.
+
+#### E. Critical-path and completion analysis
+
+##### Registered descriptive figures independently reproduced
+
+For each round:
+
+```text
+CPU = Σ(worker thread CPU durations) / corpus rows
+
+completion =
+    Σsteps(maximum build end − minimum build start)
+```
+
+The geometric mean of round C/P ratios and the log-scale t interval reproduce:
+
+| Warm W4 measure | Geometric mean C/P | Lower 95% | Upper 95% |
+|---|---:|---:|---:|
+| CPU | **1.08619319** | 1.07728640 | **1.09517361** |
+| Completion | **1.11436908** | 1.09225526 | **1.13693060** |
+
+The capture remains INVALID.
+
+##### Corrected full/short partition
+
+The corpus contains:
+
+- 197 blocks of exactly 900,000 rows.
+- 33 near-full blocks of 899,361–899,998 rows.
+- 204 genuinely tiny blocks of 1–307 rows, totaling 8,324 rows.
+
+The registered threshold is **899,000**, so the first two categories are full.
+
+The following are ratios of pooled sums across all 20 rounds, not registered geometric means:
+
+| Step class | Steps/round | P completion ms/round | C completion ms/round | Completion C/P |
+|---|---:|---:|---:|---:|
+| All full, `rows ≥ 899,000` | 57 | 31.642004 | 35.149738 | 1.110857 |
+| Mixed full/tiny | 1 | 0.508795 | 0.570458 | 1.121194 |
+| Tiny only | 51 | 0.080215 | 0.166383 | 2.074205 |
+| **All** | **109** | **32.231014** | **35.886579** | **1.113418** |
+
+The additive decomposition is:
+
+| Step class | Share of P completion | Contribution to overall C/P excess |
+|---|---:|---:|
+| All full | **98.1725%** | **0.108831** |
+| Mixed | 1.5786% | 0.001913 |
+| Tiny only | **0.2489%** | **0.002673** |
+| Total | 100% | **0.113418** |
+
+Tiny-only steps contribute **2.36% of the total completion penalty**. At the mixed step, the candidate’s slowest worker always handles a large block.
+
+Therefore tiny-block initialization cannot be the primary route to the target.
+
+##### Imbalance: the weighting matters
+
+The quoted values reproduce as:
+
+```text
+Σ(step slowest worker wall duration)
+─────────────────────────────────────
+Σ(step mean active-worker wall duration)
+```
+
+They are:
+
+- Production: **1.04670176**
+- Candidate: **1.07331477**
+
+They are **time-weighted aggregate factors**, not simple averages of per-step ratios.
+
+The unweighted averages are instead:
+
+- Production: 1.07394717
+- Candidate: 1.07068727
+
+Tiny steps dominate the unweighted statistic and reverse its ordering. The weighted definition is the relevant one for explaining aggregate completion arithmetic.
+
+The decomposition describes how aggregate worker work and imbalance combine. It does not identify the source-level cause of the imbalance.
+
+##### Bulk coverage and block cost
+
+Using all 20 rounds, the 230 registered-full blocks show correlation:
+
+```text
+bulk share versus ratio of per-arm median CPU times:
+r = −0.77275
+```
+
+| Bulk quartile, all registered-full blocks | Mean bulk share | Mean C/P CPU ratio |
+|---|---:|---:|
+| Q1 | 69.13% | 1.2004 |
+| Q2 | 74.13% | 1.0954 |
+| Q3 | 75.75% | 1.0732 |
+| Q4 | 78.16% | 0.9913 |
+
+The originally quoted approximately −0.74 and quartile values reproduce for exactly-900,000-row blocks using round-5-excluded medians. That exclusion is a **post hoc diagnostic**. The association also remains strong with all rounds included and the corrected full-block definition.
+
+Correlation does not distinguish scalar instruction cost, finalization, memory stalls and other correlated characteristics.
+
+##### Which blocks determine completion?
+
+Across **1,140 all-full candidate steps**:
+
+- The slowest worker has the lowest bulk share within its step **85.44%** of the time.
+- It has the most scalar rows **75.96%** of the time.
+- It has the most full normalizations **85.00%** of the time.
+
+Ties count as matches.
+
+Assignment-normalized quartile exposure is especially informative:
+
+| Bulk quartile | Share of assignments | Share of slowest workers |
+|---|---:|---:|
+| Lowest | **25.00%** | **40.35%** |
+| Highest | **25.44%** | **1.84%** |
+
+Average structural work is also higher on the observed winners:
+
+| Quantity | Average assigned large block | Average slowest large block |
+|---|---:|---:|
+| Scalar rows | 166,529 | 181,264 |
+| Fragment rows | 64,732 | 70,370 |
+| Full normalizations | 7,494 | 8,168 |
+| Fast finishes | 7,164 | 7,830 |
+
+Fast-finish exposure is **1.0929× greater** on current winners.
+
+This supports the relevance of scalar, fragment and finish eliminations to completion. It does not prove the same percentage of elapsed-time reduction, and the identity of the slowest worker can change.
+
+##### Largest recurring penalties
+
+The table uses the difference between per-arm median step completions over **all 20 rounds**, retaining round 5. It is descriptive, not a registered estimator.
+
+| Step | Candidate’s principal slow block | Median C−P completion |
+|---|---:|---:|
+| 51 | 284 | **191.50 µs** |
+| 55 | 279 | **188.47 µs** |
+| 6 | 60 or 56 | **169.07 µs** |
+| 32 | 280 | **161.41 µs** |
+| 31 | 273 | **139.79 µs** |
+
+Examples:
+
+| Block | Bulk share | Scalar rows | Fragment rows | Full normalizations |
+|---|---:|---:|---:|---:|
+| 284 | 61.05% | 258,471 | 92,040 | 11,454 |
+| 279 | 61.43% | 260,476 | 86,662 | 11,332 |
+| 280 | 63.98% | 249,232 | 74,978 | 10,579 |
+| 60 | 64.73% | 250,160 | 67,240 | 10,318 |
+
+**53 of 57 all-full steps** have positive median completion penalties. The disadvantage is widespread enough that optimizing only a few exceptional blocks would be insufficient.
+
+The worker-to-block assignment is fixed. These records cannot separate intrinsic block cost from persistent core, worker or order effects.
+
+##### Production round 5
+
+The raw reconstruction confirms:
+
+- Production warm-W4 CPU max/min: **1.07428**
+- Production completion max/min: **1.21474**
+- Both exceed G1’s unchanged **1.05** ceiling.
+
+Production round-5 completion was **38.319619 ms**; other rounds ranged **31.545436–32.397737 ms**.
+
+The anomaly concentrates on production worker 3. Relative to each block’s median in the other 19 rounds, worker 3 accumulates approximately **6.95 ms** excess CPU time. It affects many large blocks, not one isolated outlier.
+
+CPU and wall durations both rise. The records do not establish the cause.
+
+Post hoc removal of round 5 gives geometric ratios of approximately **1.08986 CPU** and **1.12487 completion**. These are diagnostics only. Round 5 remains in the formal INVALID result.
+
+##### CPU time versus waiting
+
+Aggregate thread-CPU/worker-wall ratios are:
+
+- Production: 0.99848
+- Candidate: 0.99866
+
+This argues against large aggregate off-CPU gaps. It does **not** exclude memory-stall cycles or establish that every individual build has negligible off-CPU time.
+
+#### F. Strongest first implementation candidate
+
+##### Selected candidate: epoch-tagged ordinary fast finish
+
+This is one bounded transformation. The scanner and descriptor-layout changes remain separate follow-ons.
+
+Its appeal is not merely the 81→40 instruction target. It removes an existing serial metadata chain and generic frame work from a path disproportionately represented on slow large blocks.
+
+##### Exact semantics
+
+Inputs and outputs remain those of `Ctor2::build`:
+
+- Same accepted inputs and malformed-count rejection.
+- Same `rec` and `raw` lengths and bytes.
+- Same canonical RAW order.
+- Same headers, padding, PARK and forced-RAW behavior.
+- Same walker.
+- Same bulk, fragment and scalar row classification.
+
+No construction work moves outside the builder.
+
+##### State representation
+
+Reuse the existing descriptor’s `raw: u32` word:
+
+```text
+preset RAW:
+    raw index, high bit clear
+
+ordinary candidate:
+    0x80000000 | first_epoch << 24
+```
+
+Maintain:
+
+```text
+active_epoch_tag = 0x80000000 | active_epoch << 24
+```
+
+in build state.
+
+The descriptor need not grow. Build state gains one small scalar, with any alignment consequence to be checked.
+
+Epochs are in 0–15. Ordinary epoch bits occupy final-header positions 24–27; bit 31 is only the temporary discriminator. RAW indices cannot collide with it.
+
+##### Why opening supplies the correct first epoch
+
+There are two opening routes:
+
+1. `refill` opens immediately before `one` writes.
+2. `run` opens only while rows remain, then immediately performs a positive fill.
+
+No epoch transition intervenes. Therefore the opening epoch is the first received row’s epoch.
+
+This invariant must remain explicit. Eagerly opening a descriptor for future use would invalidate it.
+
+##### Important epoch-boundary requirement
+
+**Update the active tag when entering a source epoch, alongside snapshot creation. Do not derive it from `W.y` after source advancement.**
+
+At an exact boundary or EOF, `W.y` may already point into the following epoch while the most recently consumed rows still belong to the preceding active epoch.
+
+##### Fast-path condition
+
+After the existing nonempty-portion discipline:
+
+```text
+descriptor.tag == active_epoch_tag
+and
+descriptor.write − descriptor.w0 == 60 bytes
+```
+
+These facts establish:
+
+- Ordinary candidate.
+- All rows in the active epoch.
+- Thirty initialized fields.
+- `w0` is record byte zero.
+- Header address is `w0 + 60`.
+- Span cannot exceed 65,533.
+
+The header becomes:
+
+```text
+(tag & 0x7fffffff) | (first_u16 << 8) | character
+```
+
+The existing five-chunk modular subtraction produces the fields.
+
+##### Illustrative machine-code shape
+
+This is an **uncompiled target**, not a verified listing:
+
+```asm
+; descriptor addressing
+lea     (c,c,4), a
+lea     desc(W,a,8), d
+
+; fast guards
+mov     tag(d), tag
+cmp     active_epoch_tag(W), tag
+jne     slow
+mov     w0(d), p
+mov     write(d), len
+sub     p, len
+cmp     $60, len
+jne     slow
+
+; first field and broadcast
+movzwl  (p), u0
+movd    u0, xmm0
+pshuflw $0, xmm0, xmm0
+pshufd  $0x44, xmm0, xmm1
+
+; exact ordinary header
+shl     $8, u0
+and     $0x7fffffff, tag
+or      tag, u0
+or      c, u0
+mov     u0, 60(p)
+
+; existing five load/subtract/store triples
+; offsets 0,16,32,48,56; widths 16,16,16,8,4
+
+ret
+```
+
+This illustrates **35 instructions**. The acceptance budget is **≤40**, allowing modest code-generation variation.
+
+The slow finalizer must be separated sufficiently that its register needs do not impose the existing generic frame on the fast route. A tail transfer is desirable. Merely adding a branch inside the large current function may fail this requirement.
+
+##### Slow and exceptional paths
+
+- Old-epoch ordinary portions retain exact full-label classification.
+- Their first epoch is available from the tag.
+- Their last epoch still requires correct recovery; it must not be assumed current.
+- Repeated snapshots for absent characters retain the “greatest snapshot ≤ rank” rule.
+- Preset RAW retains its actual RAW index and reconstruction.
+- Wide promotion, bitmap updates and canonicalization remain unchanged.
+- Partial ordinary groups use bounded partial normalization.
+
+No credit is assigned to eliminating slow-path first-epoch searches. That potential saving remains outside the conservative first-candidate budget.
+
+##### Workspace and initialization
+
+- Reuse the existing descriptor word.
+- Retain snapshots and bitmap.
+- Add one active-epoch scalar.
+- No new allocation proportional to rows or groups.
+- No successor/F table.
+- No second scan of `L`.
+
+Empty descriptors must remain excluded from finishing. The initial tag value cannot become permission to read fields.
+
+##### Expected path effects
+
+| Path | Intended effect |
+|---|---|
+| Scalar append | Identical |
+| Fragment append | Identical |
+| Bulk emitter | Identical |
+| Fast full ordinary finish | Specialized leaf |
+| Non-fast ordinary finish | Correct fallback; optionally known first epoch |
+| Wide | Correct fallback and unchanged final bytes |
+| Crossing/forced RAW | Correct fallback |
+| Partial last group | Bounded fallback |
+| Tiny blocks | Limited benefit |
+| Low-bulk large blocks | More exposure to the optimized finish path |
+
+##### Untimed rejection conditions
+
+Reject or return for redesign if any of the following occurs:
+
+1. **Output differs:** any `rec` or `raw` byte, ordering, header, padding or PARK mismatch.
+2. **Epoch proof fails:** opening can precede first append across an epoch transition.
+3. **Boundary convention fails:** active epoch is taken from an already-advanced source coordinate.
+4. **Unsafe access appears:** a full-group load reads uninitialized padding or header bytes.
+5. **Classification changes:** exact 65,533/65,534 boundaries or far-wide cases differ.
+6. **Repeated snapshots fail:** absent-character epochs recover the wrong full labels.
+7. **Malformed counts fail:** bucket overflow can write out of bounds or publish incomplete arrays.
+8. **Hot code misses budget:** >40 instructions across guards, wrappers and added caller work.
+9. **Memory budget misses:** >10 explicit reads or >6 explicit writes on fast success, or generic stack saves/spills remain.
+10. **Removed dependency returns:** snapshots metadata or final-label span classification remains on fast success.
+11. **Opening work expands:** tag assignment no longer replaces the existing assignment one-for-one without recosting.
+12. **Recurrent row work appears:** scalar or fragment paths acquire tag maintenance.
+13. **Coverage changes:** scalar/fragment/bulk counts or epoch run splitting differ on identical inputs.
+14. **Workspace expands materially:** a new table-sized intermediate appears.
+15. **Cold/setup charges exceed budget:** slow dispatch and epoch/block maintenance invalidate the net ledger.
+
+A source-level simplification alone is insufficient to pass this checkpoint.
+
+#### G. Remaining execution-cost floor
+
+##### Conditional whole-work sensitivity
+
+Using the conservative **225.253M** core saving:
+
+| Assumed current whole-constructor instruction work | Conditional reduction | Residual work |
+|---|---:|---:|
+| 1.20B | 18.8% | 0.975B |
+| 1.35B | 16.7% | 1.125B |
+| 1.50B | 15.0% | 1.275B |
+
+These are **instruction-budget sensitivities**, not fitted totals or runtime forecasts. The unresolved remainder determines which denominator is appropriate.
+
+With the independently additive overlapping SSE normalizer, the conservative total could reach approximately **230.42M instructions**, provided its code-generation and ordering conditions hold.
+
+Interior refill, fragment, bulk and RAW improvements offer additional smaller opportunities. Their setup, interval distributions and interactions prevent an honest fixed net sum at this stage.
+
+##### What remains after the core changes
+
+The core portfolio does not remove:
+
+- Most scalar descriptor and field memory operations.
+- The repeated-character cursor store-to-load recurrence.
+- Required source classification and run coalescing.
+- Temporary field writes and ordinary normalization.
+- Most fragment filling.
+- Final bulk record stores.
+- General boundary transitions.
+- RAW reconstruction, canonical ordering and final padding.
+
+The scalar body alone would still contribute approximately **382.95M instructions** at the ten-instruction target. Fragment uncertainty remains large. The successful deferred representation still rereads and rewrites roughly 103 MB of ordinary fields per corpus pass.
+
+Thus a substantial reduction in avoidable control work can coexist with a sizeable residual field/metadata workload.
+
+##### Economic headroom
+
+The existing descriptive point estimates require approximately:
+
+- **1.75%** less CPU cost to reach 1.06714.
+- **8.47%** less completion time to reach 1.02.
+
+Proportional scaling of the archived upper bounds requires approximately:
+
+- **2.56%** less CPU cost.
+- **10.29%** less completion time.
+
+These remain sensitivity calculations, not prospective confidence intervals.
+
+The instruction opportunity is large enough to make a roughly 10–15% completion improvement a worthwhile hypothesis to investigate. It is not enough to assert that improvement.
+
+The outcome could be limited by:
+
+- Work that is already overlapped.
+- Memory stalls unaffected by removed checks.
+- Register pressure and compiler reshaping.
+- Unchanged cursor dependencies.
+- Changed worker winners and imbalance.
+- Baseline instability and variance in a later valid experiment.
+
+##### Stopping assessment
+
+The investigation reached substantial opportunities beyond ordinary completion and continued through the smaller cost centers.
+
+The remaining proposals now fall into three groups:
+
+1. **Concrete but smaller:** interior refill, fragment SIMD, bulk register reuse, RAW prefix/bounds cleanup.
+2. **Overlapping alternatives:** fused finish/refill, delayed record-order finishing, alternative scalar RMW handling, wider SIMD.
+3. **Unsupported without more structural evidence:** short-run coalescing, RAW interval vectorization payoff, scratch-locality redesign.
+
+Canonicalization and tiny-block initialization are too small to determine the economics directly. Moving normalization into scalar append currently loses the instruction budget. No defensible global optimum or runtime floor follows.
+
+#### H. GO / NO-GO
+
+**GO — submit epoch-tagged fast finalization as the strongest first bounded correctness-and-compilation candidate.**
+
+The justification is concrete:
+
+- The frozen common finish executes 81 instructions.
+- A same-epoch invariant makes part of its computation unnecessary.
+- Existing descriptor storage can retain the information needed to remove a serial snapshot lookup.
+- A complete, falsifiable ≤40-instruction target is specified.
+- Added opening, fallback and setup work is accounted for.
+- The opportunity reaches the large, low-bulk blocks that frequently determine completion.
+- Independent scanner and descriptor-layout opportunities raise the conservative cumulative budget to approximately **225 million instructions per corpus pass**.
+
+This does **not** establish economic viability, authorize implementation, or recommend a performance capture. The next decision should depend on byte-exact correctness and the actual compiled whole-path ledger.
+
+The evidence supports continued bounded engineering scrutiny. It does not support declaring compact30 v2’s practical execution-cost floor exhausted.
