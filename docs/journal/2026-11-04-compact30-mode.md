@@ -94,6 +94,12 @@ insists: "Never compress away an assumption."
     irreducible".
   - Another agent's verdict is not your evidence, and neither is your own earlier conclusion.
   - A failed candidate is not a failed possibility (charter §8.4).
+- **A lint, not a judge.** A script can check surface conventions: clipping consistency, no
+  violent lexicon, no doubled capitals. It cannot certify rhetorical force, sophistication,
+  markedness or a cascade's movement; "HARDER. Go." passes it. Conformance is a reading (the
+  rationale's eight questions). An intensity ranking (HARD < HARDER < "Harder still") was tried
+  and removed: the register is a pulse, not a scalar, and optimising the proxy had begun
+  rewriting the record to fit it.
 - **One authoritative file.** Each Work task's instructions carry a one-line pointer that makes it
   read MODE.md first, every run. The Coordinator's `/goal` carries the same pointer. Checkpoints
   carry the technical finding, not the block.
@@ -145,3 +151,4 @@ rhetoric.
 | `290b1e33` | every channel message is a prompt, in the register |
 | `64c0ae8d` | "else bound what remains"; inhabited, not recited |
 | `b2febbe4`, `97a3c5c1`, `cb76e75d` | the Coordinator stanza, ending with Louis's text: prosecute the objective, code answers where it can |
+| `7f882124` | MODE.RATIONALE.md only (MODE.md unchanged): at-a-glance summary; manual linguistic review; stage 6 verbatim and annotated; intensity ranking removed; reading test |
