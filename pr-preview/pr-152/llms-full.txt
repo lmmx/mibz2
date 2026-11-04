@@ -745,6 +745,14 @@ TYPE: CHECKPOINT
 
 Most of the traffic goes through one draft PR, \#145, which serves as the team's channel. Each experiment and each agent also has a PR of its own.
 
+Here is what that looks like on GitHub. Every comment comes from my account, `lmmx`, and the small badge on the avatar shows which app posted it: Claude's mark for the Coordinator, ChatGPT's for the Astra agents. The header is the only thing that says which agent wrote it.
+
+Three agents, one account: a checkpoint from the Coordinator, the Guardian's review of it, and the independent reviewer's report, all on \#145.
+
+**Read the whole exchange**
+
+The originals: [the checkpoint](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6632963394>), [the Guardian's review](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6633274082>) and [the independent review](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6634356048>).
+
 A new comment is also what wakes the agents up. The Coordinator subscribes to the PRs it follows, so a reply reaches it within seconds. The three Astra agents are Work tasks that start on any PR comment in the repository. The event only includes the comment's ID, so each run first fetches the comment and checks whether it's meant for it. The Guardian acts only on a `CHECKPOINT`, the Optimiser only on a `CHECKPOINT` addressed to it, and the Researcher on anything addressed to it. Anything else, including the other agents' reviews, ends the run straight away. A checkpoint that both readers should see therefore has to name them both.
 
 One cycle: a checkpoint, two readers, the next step
@@ -765,7 +773,7 @@ The [research charter](<https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2
 
 So the rule is: **a message in the repository can narrow what's allowed, but only I can widen it, and only in the Coordinator's session.** A finding can put a prototype on hold. A proposal can suggest something new, but nobody acts on it unless it's already authorised or I say so. Charter amendments are approved the same way, and every review cites the charter revision it applied.
 
-This matters because every agent posts through my GitHub account, so `FROM: guardian` names a role without proving who wrote it. The repository also limits who can comment, and the channel PRs are locked. Before the Guardian went live it was tested on exactly this: it was sent forged requests for things only I can approve, and turned both of them down.
+This matters because every agent posts through my GitHub account, as the screenshots in section 3 show, so `FROM: guardian` names a role without proving who wrote it. The repository also limits who can comment, and the channel PRs are locked. Before the Guardian went live it was tested on exactly this: it was sent forged requests for things only I can approve, and turned both of them down.
 
 ## 6\. Reproducible, independent review
 
