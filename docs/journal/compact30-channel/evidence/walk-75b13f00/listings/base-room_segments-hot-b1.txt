@@ -1,0 +1,17 @@
+self 15155948 hot instrs 16 hot sum 13466544
+   841,989 34940 lea    r10,[r8+0x1]
+   841,989 34944 mov    ebx,DWORD PTR [r11]
+   841,989 34947 mov    eax,DWORD PTR [r15+rbx*4]
+   841,989 3494b test   eax,eax
+   841,989 3494d js     34980 <_RINvNtCs5Rf2Z7g0iFY_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xb20>
+   841,509 3494f mov    edi,eax
+   841,509 34951 shr    edi,0x8
+   841,509 34954 mov    DWORD PTR [r11],edi
+   841,509 34957 prefetcht0 BYTE PTR [r15+rdi*4]
+   841,509 3495c mov    rdi,QWORD PTR [rsp+r8*8+0x70]
+   841,509 34961 mov    BYTE PTR [rdi+rcx*1],al
+   841,509 34964 lea    rax,[r10-0x1]
+   841,509 34968 add    r11,0x20
+   841,509 3496c mov    r8,r10
+   841,509 3496f cmp    rax,0x1f
+   841,509 34973 jb     34940 <_RINvNtCs5Rf2Z7g0iFY_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xae0>

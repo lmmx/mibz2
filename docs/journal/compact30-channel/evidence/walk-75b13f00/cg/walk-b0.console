@@ -1,0 +1,11 @@
+==8137== Callgrind, a call-graph generating cache profiler
+==8137== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==8137== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==8137== Command: c30cg/walk/target/release/c30cg cg indep-wikidata/wikidata-independent.bz2 0 1
+==8137== 
+==8137== For interactive control, run 'callgrind_control -h'.
+==8137== 
+==8137== Events    : Ir
+==8137== Collected : 7573
+==8137== 
+==8137== I   refs:      7,573
