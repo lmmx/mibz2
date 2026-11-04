@@ -56,12 +56,12 @@ needed to make them better each round."
 
 ## Source map
 
-The initial policy set is lmmx/mibz2 commit 0ed278d722d1ef7dea0c24e5ff551dc7c0b46204:
+The initial policy set is lmmx/mibz2 commit 0ed278d722d1ef7dea0c24e5ff551dc7c0b46204, except where an entry names a later pin:
 - docs/journal/2026-11-04-compact30-research-charter.md: governing campaign scope and gates. Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
 - docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md, reports 264–266: recorded user provenance for U2/C6, technical autonomy and Coordinator release control. Earlier reports remain historical; later explicit amendments supersede only the affected clauses.
-- docs/journal/compact30-channel/PROTOCOL.md: publication, receipts, queue and deduplication. §10 governs apparent inactivity.
+- docs/journal/compact30-channel/PROTOCOL.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: publication, receipts, queue and deduplication. §10 governs apparent inactivity.
 - docs/journal/compact30-channel/ROLES.md: separate responsibilities and branch ownership. Coordinator does not mean scientific superior.
-- docs/journal/compact30-channel/REVIEWER.md: research/evidence contract; read its applicability alongside the active charter.
+- docs/journal/compact30-channel/REVIEWER.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: research/evidence contract; read its applicability alongside the active charter. Both files were reconciled with charter §§2, 6.4 and 12.3 and reports 265–266 at that commit (see each file's Revisions note); the research/compact30-channel copies are kept identical.
 - docs/journal/compact30-channel/GUARDIAN.md: governance responsibilities. A Work task can have a narrower directly supplied pin; consult its published scope disposition. This index does not change that task.
 - .github/workflows/bench.yml, .github/workflows/deploy.yml and .just/ship.just: execution mechanisms to inspect at the actual integration/release head before use. They are not alternative sources of authority; do not execute an old release recipe from memory.
 
@@ -86,7 +86,9 @@ A mibz2 bench win does not certify downstream performance. A dependency bump get
 
 ## Known inconsistencies at the initial pins
 
-PROTOCOL §§1/3 still describe prototype addition and production/master/release work as owner-only, contrary to the specific recorded amendments in charter §§2/6.4/12.3 and reports 265–266. Follow the specific amended charter for those Coordinator decisions; retain unaffected protocol safeguards. REVIEWER §2 still mixes report 265's Guardian registration with an older requirement for user approval before implementation; current charter §6.4/report 266 instead names Coordinator registration after independent Researcher assessment. GUARDIAN's G9/G10 text does not override its actual Work-task operating pin. PROTOCOL §5's blanket user escalation for §8.2 is superseded for routine safety fixes by charter §§6.4/8.2/12.3; undefined behaviour still stops the variant until fixed/abandoned, and an unaccepted rebuttal remains reserved. The protocol's old wake-up limitations also precede ROLES §6 and PROTOCOL §10. Do not require already-delegated approvals again merely because these historical paragraphs remain.
+GUARDIAN's G9/G10 text does not override its actual Work-task operating pin (D012: GUARDIAN.md @ 9316405, with its §4 reservations). Repository edits do not change that task; follow charter §6.4 and report 266 for registration and `unsafe` sign-off.
+
+(Resolved at research/compact30-constructor 2265f86f: PROTOCOL §§1, 3, 5, 6 and 8 and REVIEWER §§1, 2 and 7 now match charter §§2, 6.4, 8.2 and 12.3 and reports 265–266.)
 
 Charter §2 still lists production's builder among unchanged research objects while explicitly delegating production integration later in that section. Preserve frozen research baselines; perform qualified production integration as a separate, CI-gated step, not by editing frozen prototypes. Ask about a genuine unresolved conflict, not the delegated step itself.
 
