@@ -176,3 +176,10 @@ Verbatim:
   (`evidence/port-b4786f66/`).
 - **Commit checked:** aae003ed is `Louis Maddox <lmmx@users.noreply.github.com>`, with no AI
   trailers.
+- **CI verdict on #155.**
+  - **Slower:** `wikidata` wall +18.7%, +11.0% and +7.3% at 1, 2 and 4 threads; CPU +18.6%
+    at 1 thread. The cache-residency hypothesis is falsified on the EPYC 7763.
+  - **#155 closed unmerged** (comment 6641665211). The branch is kept.
+  - **CHECKPOINT 6641672441,** edited in place: the walk floor for parity is ≈ 18.26
+    instructions per row, not 17.1, because the build saving is banked.
+  - **Write-up:** `docs/journal/2026-11-04-compact30-production-port.md`.
