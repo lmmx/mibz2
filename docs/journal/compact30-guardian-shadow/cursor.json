@@ -290,5 +290,15 @@
       "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
       "comment": 6633274082
     }
-  ]
+  ],
+  "pending_publications": {
+    "6633793271": {
+      "decision": "D009",
+      "incoming_pr": 145,
+      "sha": "bde54f1218551766e6f6a404202e65599a06bfd4",
+      "evidence_digest": "f173ad09b100e451065369fee2540b7a818d416233a8b1215c43abee7c2010fa",
+      "decision_path": "docs/journal/compact30-guardian-shadow/decisions.md#d009--fresh-sub-instance-route-for-independent-review-g4-active-stage-a",
+      "status": "decision prepared; reconcile log and outgoing review before retrying"
+    }
+  }
 }
