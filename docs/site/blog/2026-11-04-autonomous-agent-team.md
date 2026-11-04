@@ -26,25 +26,21 @@ other directly, without me acting as their message bus.
 
 </div>
 
-Can I let a team of agents carry research from one checkpoint to the next, while keeping
-the evidence inspectable and the scope of the work under my control? In mibz2, my bzip2
-decoder, I am using a shared repository to do that. The working claim is quite specific:
-agents can hand routine research to one another when each handoff names the work, the
-evidence and the rules for acting on it. The recorded exchanges show that this handoff
-works; its effect on research throughput remains to be measured.
+[The last post](2026-11-04-compact30-constructor.md) was researched by four agents, and until
+today the work moved between them only when I passed each message along by hand. This post is
+about taking myself out of that loop: letting the agents carry compact30 from one checkpoint to
+the next, while the evidence stays inspectable and the scope stays mine to set.
 
-The research itself follows [the compact30 constructor](2026-11-04-compact30-constructor.md).
-Compact30 stores the navigation table used during decoding in a smaller form. Building
-that table involves several kinds of work: finding instructions to remove, expressing a
-change in Rust, inspecting what the compiler emits, and checking that the resulting
-records are still correct. A local saving also has to survive the accounting for the
-whole builder.
+What makes that possible is a handoff that names the work, the evidence and the rules for acting
+on it. The exchanges recorded so far show those handoffs running on their own; what they do for
+the pace of the research is still to be measured.
 
-I have given those responsibilities to four agents. They share one way of working:
-read a pinned result, do an assigned piece of work, and publish the next result through
-GitHub. Their responsibilities differ; the shape of the handoff stays the same. The
-sections below follow it from the team, through a checkpoint and its delivery, to the
-evidence that lets the next step proceed.
+The work itself splits naturally: finding instructions to remove, writing the change in Rust,
+reading what the compiler actually emits, and checking that the table is still correct and that
+a local saving survives the accounting for the whole builder. Each agent owns part of that, and
+all four work the same way: read a pinned result, do the assigned piece, and publish the next
+result through GitHub. The sections below follow one handoff from the team, through a checkpoint
+and its delivery, to the evidence that lets the next step go ahead.
 
 ## 1. One workflow, four responsibilities
 
@@ -308,7 +304,7 @@ reached the Coordinator. That setup test included confirmation of the commit ide
 The log also records the subsequent D008 assessment of real pinned checkpoints and
 the Coordinator's handoff of an evidence index.
 
-That real exchange gives the abstract handoff an address. The Guardian's review on #145
+Here is one such exchange. The Guardian's review on #145
 identified the descriptor candidate at commit 29dd071f and linked its assessment at
 62a313a8. The Coordinator recorded it in the channel log and supplied the independent
 review index at 18ca5d4c. The next step was to obtain that independent assessment; the
