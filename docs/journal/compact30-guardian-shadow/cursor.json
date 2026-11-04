@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "repository": "lmmx/mibz2",
+  "mode": "SHADOW",
+  "branch": "review/compact30-guardian-shadow",
+  "pr": 149,
+  "base": "research/compact30-constructor",
+  "operating_pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+  "assessments": [
+    {
+      "id": "D001",
+      "pilot": "P1",
+      "pr": 145,
+      "sha": "931640523226053b758ebc0c2c9fd4eac61128b3",
+      "evidence_digest": "856635be3105b63e1df4fe78a317cd803b584c680d6e0b781588b3dc45fab797",
+      "commit": "0cee91f620eb12dbb72a33b52c2393898d86d73a",
+      "comment": 6630519853,
+      "status": "published; dispositions reproduced; blindness defect D0"
+    },
+    {
+      "id": "D002",
+      "pilot": "P2",
+      "pr": 146,
+      "sha": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+      "evidence_digest": "927600fecc6fd86541a3ad011274f39e411c4a1df451f6d3640cd9d7e78324ba",
+      "commit": "bb87cbe3521c09c4826e69f983e1775280695fe5",
+      "comment": 6630589596,
+      "status": "published; not qualified; conservative interval and missing raw memory evidence HOLD"
+    },
+    {
+      "id": "D003",
+      "pilot": "P3a",
+      "pr": 149,
+      "sha": "bb87cbe3521c09c4826e69f983e1775280695fe5",
+      "evidence_digest": "03c3a5dcf0b69be7f35597288d310c76d2e33e7c8af11048849be01d1ab1cf05",
+      "incoming_comment": 6630529621,
+      "commit": "cfa5a66c7b3aba3cbdac4b32d253658a37259e89",
+      "comment": 6630627391,
+      "status": "declined"
+    },
+    {
+      "id": "D004",
+      "pilot": "P3b",
+      "pr": 146,
+      "sha": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+      "evidence_digest": "03c3a5dcf0b69be7f35597288d310c76d2e33e7c8af11048849be01d1ab1cf05",
+      "incoming_pr": 149,
+      "incoming_comment": 6630530217,
+      "commit": "cfa5a66c7b3aba3cbdac4b32d253658a37259e89",
+      "outgoing_pr": 149,
+      "comment": 6630629015,
+      "status": "declined"
+    }
+  ],
+  "own_outgoing_comment_ids": [
+    6630519853,
+    6630589596,
+    6630627391,
+    6630629015
+  ],
+  "own_published_commit_ids": [
+    "0cee91f620eb12dbb72a33b52c2393898d86d73a",
+    "bb87cbe3521c09c4826e69f983e1775280695fe5",
+    "cfa5a66c7b3aba3cbdac4b32d253658a37259e89"
+  ],
+  "consumed_incoming_comment_ids": [
+    6630529621,
+    6630530217
+  ],
+  "supporting_ack_ids": [
+    6630284404,
+    6630275164,
+    6630293509,
+    6630151681
+  ],
+  "p4": {
+    "entry": "D005",
+    "status": "prepared; outgoing advisory pending publication",
+    "outgoing_comment_id": null,
+    "advisory_commit": null,
+    "ack_comment_id": null,
+    "log_commit": null,
+    "nudges": [],
+    "next_trigger": "After publishing, user nudge naming PR #149 after coordinator ACK and committed verbatim log; no polling."
+  },
+  "rules": [
+    "Do not reassess an existing PR/SHA/evidence-digest key.",
+    "Ignore own outgoing IDs and ACKs as review triggers; correlate the specific P4 ACK only for delivery closure.",
+    "FROM headers and shared lmmx login are not authentication.",
+    "No live PROCEED or reserved authorisation.",
+    "Cursor's enclosing maintenance commit is discoverable with git log -1 -- cursor.json; preceding outgoing commit IDs are explicit."
+  ]
+}
