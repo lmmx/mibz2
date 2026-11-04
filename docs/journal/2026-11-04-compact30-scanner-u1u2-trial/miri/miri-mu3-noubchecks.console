@@ -1,0 +1,31 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2su-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2su-synthetic --miri controls`
+error: Undefined Behavior: constructing invalid value of type &[u8]: encountered a dangling reference (going beyond the bounds of its allocation)
+   --> examples/c30walk/ctor2su.rs:666:27
+    |
+666 |         let s2 = unsafe { ll.get_unchecked(i + n1..i + 17) }; // MUTANT MU3: U2 one past the tile
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Undefined Behavior occurred here
+    |
+    = help: this indicates a bug in the program: it performed an invalid operation, and caused Undefined Behavior
+    = help: see https://doc.rust-lang.org/nightly/reference/behavior-considered-undefined.html for further information
+    = note: stack backtrace:
+            0: ctor2su::W::<'_, true>::tile16
+                at examples/c30walk/ctor2su.rs:666:27: 666:59
+            1: ctor2su::Ctor2su::scatter::<true>
+                at examples/c30walk/ctor2su.rs:984:25: 984:58
+            2: ctor2su::Ctor2su::build::<true>
+                at examples/c30walk/ctor2su.rs:866:22: 866:65
+            3: ctor2su::scanner_class
+                at examples/c30walk/ctor2su.rs:1714:21: 1715:97
+            4: ctor2su::synthetic_miri
+                at examples/c30walk/ctor2su.rs:1755:9: 1755:33
+            5: ctor2su::main
+                at examples/c30walk/ctor2su.rs:2281:13: 2281:70
+            6: main
+                at examples/c30walk.rs:1915:16: 1915:44
+
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+
+error: aborting due to 1 previous error
+
+mutant mu3 noubchecks exit 1 seconds 2

@@ -1,0 +1,20 @@
+# docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run2.callgrind.gz: positions instr line; events Ir Dr Dw I1mr D1mr D1mw ILmr DLmr DLmw
+<c30walk::ctor2::Ctor2>::build::<false>
+   self      Ir 1,026,601,670 Dr 205,899,121 Dw 132,435,558
+   inclusive Ir 1,294,420,653 Dr 275,030,275 Dw 182,181,435
+     -> 1,299,478 calls  Ir 201,234,507 Dr 49,510,277 Dw 35,570,259  <c30walk::ctor2::W<false>>::refill
+     ->   532,547 calls  Ir 56,611,441 Dr 14,438,137 Dw 8,087,995  <c30walk::ctor2::W<false>>::finish
+     ->     4,088 calls  Ir 4,895,598 Dr 4,560,948 Dw 4,548,250  __memcpy_avx_unaligned_erms
+     ->       434 calls  Ir 3,903,384 Dr 609,384 Dw 543,599  c30walk::ctor::canonicalise
+     ->     4,117 calls  Ir 1,152,859 Dr 8,001 Dw 993,133  __memset_avx2_unaligned_erms
+     ->        10 calls  Ir 18,292 Dr 3,646 Dw 2,200  <alloc::raw_vec::RawVecInner>::grow_exact
+     ->         8 calls  Ir 1,571 Dr 486 Dw 252  free
+     ->         3 calls  Ir 1,331 Dr 275 Dw 189  <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>
+<c30walk::ctor2::W<false>>::finish
+   self      Ir 176,758,551 Dr 46,977,623 Dw 26,716,217
+   inclusive Ir 177,278,484 Dr 47,018,743 Dw 26,801,583
+     ->    41,120 calls  Ir 519,933 Dr 41,120 Dw 85,366  __memset_avx2_unaligned_erms
+<c30walk::ctor2::W<false>>::refill
+   self      Ir 80,567,464 Dr 16,929,671 Dw 16,856,671
+   inclusive Ir 201,234,507 Dr 49,510,277 Dw 35,570,259
+     -> 1,262,935 calls  Ir 120,667,043 Dr 32,580,606 Dw 18,713,588  <c30walk::ctor2::W<false>>::finish

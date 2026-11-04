@@ -76,6 +76,10 @@ mod ctor2;
 #[path = "c30walk/ctor2s.rs"]
 mod ctor2s;
 
+/// The U1/U2 trial: prototype 1 with unchecked segments on a nonuniform full tile
+#[path = "c30walk/ctor2su.rs"]
+mod ctor2su;
+
 /// Constructor v3: v2 with the epoch-tagged ordinary finaliser (reports 227, 235, 236)
 #[path = "c30walk/ctor3.rs"]
 mod ctor3;
@@ -1906,6 +1910,9 @@ fn main() {
     }
     if let Some(m) = args[1].strip_prefix("ctor2s-") {
         return ctor2s::main(m, &args[2..]);
+    }
+    if let Some(m) = args[1].strip_prefix("ctor2su-") {
+        return ctor2su::main(m, &args[2..]);
     }
     if let Some(m) = args[1].strip_prefix("ctor3-") {
         return ctor3::main(m, &args[2..]);

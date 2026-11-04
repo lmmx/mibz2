@@ -1,0 +1,68 @@
+--- final.rs
++++ variant-d.rs
+@@ -1,10 +1,10 @@
+-//! The U1/U2 trial of the compact30 research charter (§6.1, row 1; the scanner journal's §7,
+-//! §9 and §10): prototype 1 (`ctor2s.rs` at `7f74e9f`, copied) with one change. A
+-//! nonuniform full tile goes through `tile16`: its first segment is a do-while over the
+-//! 16-byte window (C4, safe), and its second is taken with `get_unchecked` (U2), under the
+-//! full-tile contract i + 16 ≤ end ≤ `ll.len()` and n1 = min(16, 30 − p) ≤ 16. U1 is
+-//! authorised but, after repair 1, not used. No `assert_unchecked` (U3 is not authorised)
+-//! and no other unchecked access. The tail keeps v2's checked `tile`. Untimed, research only, not wired
++//! The U1/U2 trial of the compact30 research charter (§6.1, row 1; the scanner journal's §7
++//! and §9): prototype 1 (`ctor2s.rs` at `7f74e9f`, copied) with one change. A nonuniform
++//! full tile goes through `tile16`, whose two source segments are taken with
++//! `get_unchecked` (U1, U2), under the full-tile contract i + 16 ≤ end ≤ `ll.len()` and
++//! n1 = min(16, 30 − p) ≤ 16, and whose first segment is a do-while (C4, safe: the first
++//! byte from the 16-byte window). No `assert_unchecked` (U3 is not authorised) and no other
++//! unchecked access. The tail keeps v2's checked `tile`. Untimed, research only, not wired
+ //! into the decoder; `ctor2s.rs` and `ctor2.rs` are unchanged.
+ //!
+ //!     cargo run --release --example c30walk -- ctor2su-check OUT.jsonl FILE.bz2 [FILE.bz2 ...]
+@@ -175,7 +175,7 @@
+     pub tiles_second_segment: u64,
+     pub tails: u64,
+     pub tail_rows: u64,
+-    /// the trial's unchecked tiles: `tile16` calls (U2 once per call)
++    /// the trial's unchecked tiles: `tile16` calls (U1 and U2 each once per call)
+     pub unchecked_tiles: u64,
+ }
+ 
+@@ -647,8 +647,7 @@
+     ///
+     /// The contract (the scanner journal's §9.2): t = `ll[i..i + 16]`, so
+     /// i + 16 ≤ end ≤ `ll.len()`; and n1 = min(16, 30 − p) ≤ 16 for any p. Then
+-    /// U2 = [i + n1, i + 16) is well-ordered and inside `ll`. (U1, [i, i + n1), is
+-    /// authorised but not used: the do-while reads the first segment from `t`.)
++    /// U1 = [i, i + n1) and U2 = [i + n1, i + 16) are well-ordered and inside `ll`.
+     #[inline(always)]
+     unsafe fn tile16(&mut self, ll: &[u8], i: usize, t: &[u8; 16]) -> bool {
+         // the dominating full-tile contract, checked in the counted build and under
+@@ -662,21 +661,17 @@
+         }
+         let u = self.y as u16;
+         let n1 = 16usize.min(ROWS.wrapping_sub(self.p));
++        // SAFETY (U1): i + n1 ≤ i + 16 ≤ ll.len() by the contract above
++        let s1 = unsafe { ll.get_unchecked(i..i + n1) };
+         // SAFETY (U2): i + n1 ≤ i + 16 ≤ ll.len() by the contract above
+         let s2 = unsafe { ll.get_unchecked(i + n1..i + 16) };
+-        // C4, safe: the first segment as a do-while over the 16-byte window, t[k] with
+-        // k < n1 ≤ 16 (repair 1: U1 is not used; the scanner journal's §10). p < 30, so
+-        // n1 ≥ 1, matters for correctness only: were n1 0, this would append one wrong
+-        // row, reading in bounds.
+-        let mut k = 0usize;
+-        loop {
+-            if !self.one(t[k], u.wrapping_add(k as u16)) {
++        // C4, safe: the first segment as a do-while. Its first byte is the window's t[0]
++        // (a constant index into the 16-byte array). p < 30, so n1 ≥ 1, matters for
++        // correctness only: were n1 0, this would append one wrong row, reading in bounds.
++        for (k, &c) in s1.iter().enumerate() {
++            if !self.one(c, u.wrapping_add(k as u16)) {
+                 return false;
+             }
+-            k += 1;
+-            if k >= n1 {
+-                break;
+-            }
+         }
+         for (t2, &c) in s2.iter().enumerate() {
+             if !self.one(c, u.wrapping_add((n1 + t2) as u16 + 2)) {

@@ -1,0 +1,5 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2su-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2su-synthetic --miri align`
+ctor2su-synthetic: scanner class align: 14 cases exact
+ctor2su-synthetic --miri align: 14 cases, 28 array comparisons, 42 walk outputs, 28 restorations: every check exact; fresh 14, lookahead 35, held 14, no-full-tile runs 0, nonuniform 14, second segments 0, tails 14
+class align exit 0 seconds 15

@@ -1,0 +1,24 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling shlex v2.0.1
+   Compiling libm v0.2.16
+   Compiling find-msvc-tools v0.1.15
+   Compiling pkg-config v0.3.34
+   Compiling cc v1.10.0
+   Compiling thiserror v2.0.21
+   Compiling syn v3.0.9
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling mibz2 v0.2.1 (/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/wt-c30scan)
+   Compiling bzip2 v0.4.4
+   Compiling thiserror-impl v2.0.21
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 8.71s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2su-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2su-synthetic --miri tiny`
+ctor2su-synthetic: scanner class tiny: 18 cases exact
+ctor2su-synthetic --miri tiny: 18 cases, 32 array comparisons, 48 walk outputs, 32 restorations: every check exact; fresh 12, lookahead 2, held 0, no-full-tile runs 5, nonuniform 7, second segments 2, tails 12
+class tiny exit 0 seconds 25

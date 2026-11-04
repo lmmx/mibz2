@@ -1,0 +1,10 @@
+981c981,987
+<                     rest = r2;
+---
+>                     // MUTANT M1: the held tile is skipped
+>                     if held.is_some() {
+>                         held = None;
+>                         rest = &r2[16..];
+>                     } else {
+>                         rest = r2;
+>                     }

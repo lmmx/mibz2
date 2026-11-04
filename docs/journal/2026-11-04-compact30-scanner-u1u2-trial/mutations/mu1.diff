@@ -1,0 +1,2 @@
+664a665
+>         let n1 = n1.max(17); // MUTANT MU1: n1 forced to 17 (tests U2 and range order only)

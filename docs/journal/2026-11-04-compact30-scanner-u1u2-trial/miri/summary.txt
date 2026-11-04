@@ -1,0 +1,17 @@
+class tiny exit 0 seconds 25
+class tails exit 0 seconds 38
+class align exit 0 seconds 15
+class phase exit 0 seconds 18
+class held exit 0 seconds 6
+class endrun exit 0 seconds 3
+class epoch exit 0 seconds 1073
+class malformed exit 0 seconds 1
+class controls exit 0 seconds 2
+mutant mu1 default exit 1 seconds 5
+mutant mu1 noubchecks exit 1 seconds 9
+mutant mu2 default exit 1 seconds 2
+mutant mu2 noubchecks exit 1 seconds 2
+mutant mu3 default exit 1 seconds 1
+mutant mu3 noubchecks exit 1 seconds 2
+source restored
+DONE

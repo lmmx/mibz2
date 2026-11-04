@@ -663,3 +663,208 @@ intended operation:** the source line of U1 or of U2, in the backtrace.
 - if U1 or U2 needs any safety obligation beyond §9.2;
 - if any other unchecked operation would be needed;
 - if a mutant isn't reported.
+
+## 10. The U1/U2 trial: checkpoint (charter §9)
+
+**Outcome: the trial qualifies on B2,** with gate 2 missed in part.
+
+| gate | role | outcome |
+|---|---|---|
+| 1, correctness and safety | qualifier | **PASS**: every suite exact; all 9 registered Miri classes complete with no undefined behaviour; MU1–MU3 each reported by Miri at the intended operation; M1 and M2 caught; no contract assertion fired |
+| 2, machine code | diagnostic | **missed in part** (§10.3): the 8 check instructions and C4's test are gone, the row loops are ctor2s's, and the refill and run spills fall; but the nonuniform tile's overhead misses ≤ 34 + 7X, and the safe do-while's trip count costs 3 where C4 cost 2 |
+| 3, net work on B2 | qualifier | **PASS**: **−84,060,421** own and inclusive; the conservative interval is **[84.04 M, 84.06 M] removed**, against the 60 M minimum (§10.4) |
+
+**The pin:** branch `research/compact30-scanner`, at this entry's commit. The pre-registration
+is §9, at `fa490c4`.
+- **The trial:** `examples/c30walk/ctor2su.rs` (new), plus a `mod` line and the `ctor2su-`
+  dispatch in `examples/c30walk.rs`.
+- **Frozen, each unchanged:** `ctor2s.rs` and the evidence at `7f74e9f`, `ctor2.rs`, `ctor3.rs`,
+  `ctor.rs`, `cbuild.rs`, the walker, the oracle, `src/` and `bench/`.
+- **The counted binary:** rustc 1.97.0 (`2d8144b78`, LLVM 22.1.6), `--locked --release`, empty
+  rustflags. Its sha256 is
+  `3ce86859be086ee1c47bce4ab7426ceffad3e7ffe6755c3a162f32d4ceea050f`, and a clean rebuild
+  reproduces it.
+- **Evidence:**
+  [2026-11-04-compact30-scanner-u1u2-trial/](2026-11-04-compact30-scanner-u1u2-trial/), with
+  its `README.txt`.
+
+**Untimed.** Nothing was timed or benchmarked, and no perf counter was used. Callgrind is an
+untimed simulation, used as a cross-check.
+
+### 10.1 The implementation and its one repair
+
+**The registered form (variant a) compiled badly.** Its first segment read the window's
+`t[0]`, then `s1[k]` from U1. Those are two read bases, so LLVM built the first-segment row
+loop with a separate pointer and three counters: **15 instructions per row,** against v2's 12
+(`variants/variant-a-build-false.asm`, `+0xa00`–`+0xa2f`).
+
+**Two routine variants of the same form changed nothing, or made it worse:**
+
+| variant | first segment | first-segment row loop | C4 |
+|---|---|--:|---|
+| a, registered | do-while: `t[0]`, then `s1[k]` (U1) | 15 | gone |
+| b | as a, with `s1.get(k)` | 15 (identical code) | gone |
+| d | a plain `for` over U1 (no do-while) | 13 (the descriptor base rematerialised in the loop) | kept (`cmp $0x1e`; `je`) |
+| l | the first row peeled from `t[0]`, then a `for` over U1 skipping 1 | 13, plus a peeled copy | an entry test |
+| **c, final (repair 1)** | **do-while over the window, `t[k]`, k < n1 ≤ 16** | **12** | **gone; the trip count max(n1, 1) costs `cmp`, `mov`, `adc`** |
+
+**Repair 1, the kept form, reads the first segment from the 16-byte window.** This is the
+handoff's own safe C4 form (C4: "with checked indexing or the window").
+- `t[k]` with k < n1 ≤ 16 needs no check.
+- **U1 is then not used.** The final source has only U2, `ll.get_unchecked(i + n1..i + 16)`.
+- It uses strictly less unchecked access than was authorised.
+- No other unchecked operation was added. U3 isn't used.
+
+**What C4's safe form can't reach.** The do-while has to run at least once, so without
+knowing n1 ≥ 1 (that is, p < 30, which only U3 would give the compiler) LLVM computes the trip
+count max(n1, 1). That costs 3 instructions where C4's test cost 2. As the brief required, this
+is reported, and U3 was not substituted.
+
+### 10.2 Gate 1
+
+**The release suites,** on the final binary. All were exact, exit 0:
+- **synthetic, quick:** 630 cases;
+- **synthetic, full:** 54,030 cases (99,968 array comparisons, 149,952 walk outputs);
+- **adversarial:** 200 records;
+- **corpora:** the 11 corpora × 4 configurations, 44 records. The natural configuration is
+  1,513 blocks and 707,949,378 rows.
+
+The counted build asserts the contract checks:
+- `tile16`'s chunk identity and p < 30;
+- `tile`'s `len < 16`;
+- the harness's `unchecked_tiles` = nonuniform full tiles, and one tail exactly when
+  n mod 16 > 0.
+
+No assertion fired. On the primary corpus, `unchecked_tiles` = `tiles_nonuniform` =
+2,393,313, and the 230 tails (1,875 rows) all went through the checked `tile`.
+
+**Miri** (nightly 1.101.0, `16d1ffac1`, Stacked Borrows, unpoisoned arenas, one class at a
+time): **all 9 classes complete, with no undefined behaviour.**
+
+| class | cases | seconds | reached |
+|---|--:|--:|---|
+| tiny | 18 | 25 | n = 0..33 edge sizes, 7 nonuniform full tiles, 12 tails |
+| tails | 45 | 38 | every tail length 1..=15, alone, after a nonuniform tile, after a run; each tail through `tile`, each full tile through `tile16` |
+| align | 14 | 15 | byte offsets 1..=7 |
+| phase | 15 | 18 | every reachable p (even, 0..=28), 7 with a second segment |
+| held | 5 | 6 | 12 held reuses |
+| endrun | 2 | 3 | runs to the block's end |
+| epoch | 2 | 1,073 | the run straddling 61,440, and a nonuniform tile ending at it; 3,839 nonuniform tiles |
+| malformed | 4 | 1 | rejected by both builds, both arrays empty |
+| controls | 1 | 2 | the exact-allocation 32-byte input: tiles at i = 0 (n1 = 16) and i = 16 (p = 16, n1 = 14) |
+
+**The mutants** (`mutations/`). Each was run on `controls`, under Miri's defaults (the
+library's UB checks on) and with `-Zub-checks=no` (Miri's own checks):
+
+| mutant | applied to | Miri's defaults | `-Zub-checks=no` | at the intended operation? |
+|---|---|---|---|---|
+| MU1, n1 forced to 17 (U2 and range order only) | final | `unsafe precondition(s) violated: slice::get_unchecked requires that the range is within the slice`, at `ctor2su.rs:667:30`, U2's line | `Undefined Behavior: arithmetic overflow in unchecked_sub` at `667:27`, U2 | **yes, U2** |
+| MU2, U1's end = `ll.len()` + 1 on a final full tile | the registered form (variant a), where U1 exists | the precondition, at `666:30`, U1's line | `constructing invalid value of type &[u8]: encountered a dangling reference (going beyond the bounds of its allocation)`, at `666:27`, U1 | **yes, U1** |
+| MU3, U2 = [30, 33) at i = 16, p = 16, n1 = 14 | final | the precondition, at `666:30`, U2's line | dangling reference, at `666:27`, U2 | **yes, U2** |
+
+The final source has no U1, so MU2 checks the U1 bound in the form that has one.
+
+**Prototype 1's release mutants**, ported:
+- M1 (the held tile skipped) is caught at "small n 32 sigma 3".
+- M2 (the run short by one tile) is caught at "small n 16 sigma 1".
+
+**The safety obligations are §9.2's, and nothing more.** U2's range is
+[i + n1, i + 16), with i + 16 ≤ `ll.len()` from the chunk split and n1 ≤ 16 from the `min`.
+No escalation was triggered.
+
+### 10.3 Gate 2 (diagnostic)
+
+Each path is counted by its exact execution-count class (`callgrind/classes-run1.txt`):
+
+| path | B2 | ctor2s | trial | target | |
+|---|--:|--:|--:|--:|---|
+| a nonuniform full tile, instructions outside its row loops (S class + X class) | 38 + 8X | 46 + 8X | **37 + 4X** | 31 + 8X (≤ 34 + 7X in the handoff's accounting, i.e. B2 − 7) | **missed**: by 6 per tile without a second segment, and 2 with |
+| the 8 check instructions (§7) and C4's `cmp $0x1e` / `jne` | present | present | **absent** | absent | **met**, but replaced by the trip count (3) |
+| fresh pair (A class); lookahead per pair (J class) | 10; 9 | 2; 5 | **2; 5** | unchanged from ctor2s | **met** |
+| row loops, the four scalar copies | 12, 12, 12, 12 | 12, 12, 12, 11 | **12, 12, 12, 11** | no more than ctor2s's | **met** |
+| refill detour from a tile's first segment; from its second; `run` | 10; 9; 32 | 14; 12; 35 | **12; 11; 31** | no more than ctor2s | **met** |
+| `slice_index_fail` reachable from `tile16` | | | **none** (the three left are the tail's two and `run`'s pattern index) | none | **met** |
+| a new jump in place of C4 | | | **none** (v2's S path has the same one `jmp`) | none | **met** |
+
+**Where the tile's remaining overhead is** (`listings/ctor2su-build-false.asm`,
+`+0x9c0`–`+0xa09` and `+0x8f0`–`+0x937`). It is:
+- recomputing i (`end − rest.len()`);
+- stack stores and reloads around it (`rest`'s pointer, the tile base, `ll`'s pointer, and p and y
+  from the scan state);
+- the trip count (3).
+
+The row loops were the hazard in prototype 1's first attempts. Here they are unchanged.
+
+### 10.4 Gate 3: the ledger on B2
+
+**The frequencies** come from the counted build (`corpora.jsonl`, primary corpus):
+
+| A | J | H | Q | S | X | R | epochs | tails |
+|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 2,396,084 | 10,541,706 | 607,750 | 2,771 | 2,393,313 | 1,116,556 | 610,521 | 3,654 | 230 |
+
+**The primary §5 ledger** is the path change × frequency, every changed class counted:
+
+| class | frequency | B2 → trial | Δ |
+|---|--:|---|--:|
+| uniform tiles U = J + Q | 10,544,477 | 5 → 0 | −52,722,385 |
+| lookahead pairs J | 10,541,706 | 9 → 5 | −42,166,824 |
+| matched lookaheads J − H | 9,933,956 | 0 → 4 | +39,735,824 |
+| fresh pairs A | 2,396,084 | 10 → 2 | −19,168,672 |
+| outer iterations S + R | 3,003,834 | 13 → 11 | −6,007,668 |
+| second segments X | 1,116,556 | 8 → 4 | −4,466,224 |
+| nonuniform tiles S | 2,393,313 | 38 → 37 | −2,393,313 |
+| runs R | 610,521 | 32 → 31 | −610,521 |
+| held reuses H | 607,750 | 4 → 3 | −607,750 |
+| epochs | 3,654 | 33 → 35 | +7,308 |
+| blocks | 434 | 204 → 200 | −1,736 |
+| tails | 230 | 41 → 39 | −460 |
+| **counter-matched subtotal** | | | **−88,402,421** |
+| refill from a first segment (no counter) | 996,634 | 10 → 12 | +1,993,268 |
+| `fill`'s vector path (no counter) | 801,475 | 18 → 19 | +801,475 |
+| an alignment `nop` in `run` (no counter) | 610,356 | 0 → 1 | +610,356 |
+| refill from a second segment (no counter) | 302,049 | 9 → 11 | +604,098 |
+| `run`'s whole-group branch (no counter) | 296,405 | 43 → 44 | +296,405 |
+| 8 smaller positive classes (no counter) | | | +53,601 |
+| 6 smaller negative classes (no counter) | | | −17,203 |
+| **own code, `build::<false>`** | | | **−84,060,421** |
+| `refill`, `finish`, `canonicalise` | | identical code and counts (80,567,464; 176,758,551; 3,903,384) | 0 |
+| library calls, all 11 sites | | **equal call by call,** each builder alone, both runs | 0 |
+
+- **Callgrind agrees exactly.**
+  - `build::<false>`'s own count is 1,026,601,670 → 942,541,249, and its inclusive count is
+    1,294,420,653 → 1,210,360,232. Both deltas are −84,060,421.
+  - The two runs are identical in every function, every call site and the process total
+    (12,330,316,333 for v2, 12,246,256,780 for the trial).
+  - The library sites are equal between the two builders, so their delta is 0, checked, by
+    construction (§9.4).
+- **The conservative interval is [84,043,218, 84,060,421] removed.** The lower end charges
+  every counter-less positive class (+4,359,203) and credits none of the counter-less
+  negatives (−17,203).
+- **The lower end exceeds the 60 M minimum by 24.04 M. Gate 3 passes.**
+- **No relevant cost is unbounded.**
+- **Against prototype 1:** the own body falls by a further 27,864,604 (−56,195,817 →
+  −84,060,421). On the nonuniform tile alone that is 46 → 37 per S, and 8 → 4 per X.
+
+**Reads and writes** (own and inclusive alike, since the callees are equal; reported, not
+gated):
+- reads 205,899,121 → 205,393,236, **−505,885**;
+- writes 132,435,558 → 135,826,990, **+3,391,432**.
+
+The extra writes are spills on the tile and refill paths. Against ctor2s, reads are +2.88 M
+and writes +1.40 M.
+
+### 10.5 Limitations and negative findings
+
+- **U1 isn't used in the final form** (§10.1). The trial tests U2 and the window do-while.
+  U1's bound is checked by MU2, in the registered form only.
+- **The safe C4 can't drop the test outright.** Its trip count costs one instruction more than
+  C4's test, as §10.1 explains. Only U3, which is not authorised, would let the compiler drop it.
+- **The tile overhead target is missed** by 2–6 per tile, through spills and recomputing i.
+- **Writes rise** +3.39 M against B2, untimed.
+- **Only the primary corpus is ledgered.** The other corpora were run for correctness.
+- **No combined build with prototype 2** was made. Prototype 2's descriptor LEAs are still
+  present in all four row copies here: each `movzbl` → `lea (%r,%r,4)` → `lea (%r,%r,8)`
+  remains. So the credited sets don't intersect at instruction level. Both charge the outer
+  iteration and the refill detours, though, so the gains aren't additive without a combined,
+  pre-registered build.

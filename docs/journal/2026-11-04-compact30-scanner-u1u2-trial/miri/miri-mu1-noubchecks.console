@@ -1,0 +1,41 @@
+   Compiling libm v0.2.16
+   Compiling thiserror v2.0.21
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling mibz2 v0.2.1 (/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/wt-c30scan)
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.66s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2su-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2su-synthetic --miri controls`
+error: Undefined Behavior: arithmetic overflow in `unchecked_sub`
+   --> examples/c30walk/ctor2su.rs:667:27
+    |
+667 |         let s2 = unsafe { ll.get_unchecked(i + n1..i + 16) };
+    |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Undefined Behavior occurred here
+    |
+    = help: this indicates a bug in the program: it performed an invalid operation, and caused Undefined Behavior
+    = help: see https://doc.rust-lang.org/nightly/reference/behavior-considered-undefined.html for further information
+    = note: stack backtrace:
+            0: ctor2su::W::<'_, true>::tile16
+                at examples/c30walk/ctor2su.rs:667:27: 667:59
+            1: ctor2su::Ctor2su::scatter::<true>
+                at examples/c30walk/ctor2su.rs:985:25: 985:58
+            2: ctor2su::Ctor2su::build::<true>
+                at examples/c30walk/ctor2su.rs:867:22: 867:65
+            3: ctor2su::scanner_class
+                at examples/c30walk/ctor2su.rs:1715:21: 1716:97
+            4: ctor2su::synthetic_miri
+                at examples/c30walk/ctor2su.rs:1756:9: 1756:33
+            5: ctor2su::main
+                at examples/c30walk/ctor2su.rs:2282:13: 2282:70
+            6: main
+                at examples/c30walk.rs:1915:16: 1915:44
+
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+
+error: aborting due to 1 previous error
+
+mutant mu1 noubchecks exit 1 seconds 9

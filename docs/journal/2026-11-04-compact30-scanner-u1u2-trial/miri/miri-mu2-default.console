@@ -1,0 +1,45 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2su-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2su-synthetic --miri controls`
+
+thread 'main' (1000) panicked at examples/c30walk/ctor2su.rs:666:30:
+unsafe precondition(s) violated: slice::get_unchecked requires that the range is within the slice
+
+This indicates a bug in the program. This Undefined Behavior check is optional, and cannot be relied on for safety.
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+note: in Miri, you may have to set `MIRIFLAGS=-Zmiri-env-forward=RUST_BACKTRACE` for the environment variable to have an effect
+thread caused non-unwinding panic. aborting.
+error: abnormal termination: the program aborted execution
+   --> /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/panicking.rs:833:9
+    |
+833 |         crate::process::abort();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^ abnormal termination occurred here
+    |
+    = note: stack backtrace:
+            0: std::panicking::panic_with_hook
+                at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/panicking.rs:833:9: 833:32
+            1: std::panicking::panic_handler::{closure#0}
+                at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/panicking.rs:678:13: 683:14
+            2: std::sys::backtrace::__rust_end_short_backtrace::<{closure@std::panicking::panic_handler::{closure#0}}, !>
+                at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/sys/backtrace.rs:182:18: 182:21
+            3: std::panicking::panic_handler
+                at /root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/std/src/panicking.rs:676:5: 692:7
+            4: ctor2su::W::<'_, true>::tile16
+                at examples/c30walk/ctor2su.rs:666:27: 666:50
+            5: ctor2su::Ctor2su::scatter::<true>
+                at examples/c30walk/ctor2su.rs:987:25: 987:58
+            6: ctor2su::Ctor2su::build::<true>
+                at examples/c30walk/ctor2su.rs:869:22: 869:65
+            7: ctor2su::scanner_class
+                at examples/c30walk/ctor2su.rs:1717:21: 1718:97
+            8: ctor2su::synthetic_miri
+                at examples/c30walk/ctor2su.rs:1758:9: 1758:33
+            9: ctor2su::main
+                at examples/c30walk/ctor2su.rs:2284:13: 2284:70
+            10: main
+                at examples/c30walk.rs:1915:16: 1915:44
+
+note: some details are omitted, run with `MIRIFLAGS=-Zmiri-backtrace=full` for a verbose backtrace
+
+error: aborting due to 1 previous error
+
+mutant mu2 default exit 1 seconds 2

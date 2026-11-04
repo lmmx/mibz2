@@ -1,0 +1,5 @@
+978c978,979
+<                     if !w.run(a as u8, rest.len() - r2.len(), forced_cfg) {
+---
+>                     // MUTANT M2: the run's length short by one tile
+>                     if !w.run(a as u8, rest.len() - r2.len() - 16, forced_cfg) {
