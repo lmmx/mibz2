@@ -128,7 +128,7 @@ The initial policy set is lmmx/mibz2 commit 0ed278d722d1ef7dea0c24e5ff551dc7c0b4
 - docs/journal/compact30-channel/PROTOCOL.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: publication, receipts, queue and deduplication. §10 governs apparent inactivity.
 - docs/journal/compact30-channel/ROLES.md: separate responsibilities and branch ownership. Coordinator does not mean scientific superior.
 - docs/journal/compact30-channel/REVIEWER.md @ research/compact30-constructor 2210e4457b383e4566df99eb881b4ca0401c4cd3: research/evidence contract; read its applicability alongside the active charter. Both files were reconciled with charter §§2, 6.4 and 12.3 and reports 265–266 at that commit (see each file's Revisions note); the research/compact30-channel copies are kept identical.
-- docs/journal/compact30-channel/GUARDIAN.md: governance responsibilities. A Work task can have a narrower directly supplied pin; consult its published scope disposition. This index does not change that task.
+- docs/journal/compact30-channel/GUARDIAN.md @ review/compact30-guardian-setup 288c05638c85ffbb0a4d1f5ba9762002c37acdff: the Guardian's operating spec, recorded as its pin in `guardian-operating-pin.json` (c22c2ddf) after Louis's direct update to its Work task on 2026-11-04. Only such a direct update changes that pin. This index does not.
 - .github/workflows/bench.yml, .github/workflows/deploy.yml and .just/ship.just: execution mechanisms to inspect at the actual integration/release head before use. They are not alternative sources of authority; do not execute an old release recipe from memory.
 
 Mutable state locations (resolve to SHA on each decision, not periodically):
@@ -152,7 +152,7 @@ A mibz2 bench win does not certify downstream performance. A dependency bump get
 
 ## Known inconsistencies at the initial pins
 
-GUARDIAN's G9/G10 text does not override its actual Work-task operating pin (D012: GUARDIAN.md @ 9316405, with its §4 reservations). Repository edits do not change that task; follow charter §6.4 and report 266 for registration and `unsafe` sign-off.
+(Resolved: D012's conflict between the Guardian's old pin, GUARDIAN.md @ 9316405 with its §4 reservations, and charter §§2, 6.4 and 12.3 ended when Louis updated the Guardian's Work task directly. Its pin is now 288c0563, with the charter at dad82808.)
 
 (Resolved at research/compact30-constructor 2265f86f: PROTOCOL §§1, 3, 5, 6 and 8 and REVIEWER §§1, 2 and 7 now match charter §§2, 6.4, 8.2 and 12.3 and reports 265–266.)
 
