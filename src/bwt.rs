@@ -751,6 +751,10 @@ thread_local! {
     static MARKED_SEVERAL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static ENDS_WITH_LANES_WAITING: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static ENDS_AFTER_A_TAKE: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // ... and, when it runs out, an unmarked later lane (stepped already) leaving with its
+    // buffer exactly full, or with its next entry the end of its segment
+    static LATER_STEPPED_FULL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static LATER_STEPPED_ON_START: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -995,6 +999,16 @@ fn room_segments<const L: usize, const PF: u8>(
                             if j != k {
                                 let waiting = marked >> j & 1 != 0;
                                 lj.p = base[j].wrapping_add(off + usize::from(!waiting));
+                                #[cfg(test)]
+                                if j > k && !waiting {
+                                    if lj.p == lj.end {
+                                        transition!(LATER_STEPPED_FULL);
+                                    }
+                                    // SAFETY: the lane's row is below n
+                                    if unsafe { *t.add(lj.row as usize) } & START != 0 {
+                                        transition!(LATER_STEPPED_ON_START);
+                                    }
+                                }
                             }
                         }
                         transition!(FULL_PHASE_ENDS_MID_PASS);
@@ -1475,7 +1489,7 @@ pub(crate) mod tests {
             x ^= x << 17;
             x % m
         };
-        for case in 0..200 {
+        for case in 0..20000 {
             let n = MIN_SEGMENTED + rnd(200_000) as usize;
             let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
             let mut ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
@@ -1531,6 +1545,8 @@ pub(crate) mod tests {
             &MARKED_SEVERAL,
             &ENDS_WITH_LANES_WAITING,
             &ENDS_AFTER_A_TAKE,
+            &LATER_STEPPED_FULL,
+            &LATER_STEPPED_ON_START,
         ] {
             c.with(|c| c.set(0));
         }
@@ -1541,8 +1557,8 @@ pub(crate) mod tests {
             x ^= x << 17;
             x % m
         };
-        for case in 0..400 {
-            let n = 64 + rnd(3000) as usize;
+        for case in 0..20000 {
+            let n = 64 + rnd(if case % 3 == 0 { 600 } else { 3000 }) as usize;
             let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
             let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
             let orig_ptr = rnd(n as u64) as u32;
@@ -1554,7 +1570,13 @@ pub(crate) mod tests {
             build(&ll, &counts, &mut tt);
             let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
             walk(&tt, orig_ptr, &mut plain);
-            let segments = 2 + rnd(n as u64 / 2) as usize;
+            // a few segments more than lanes run the queue out early, while the first
+            // passes' lanes are still the ones setting the room
+            let segments = if case % 2 == 0 {
+                33 + rnd(32) as usize
+            } else {
+                2 + rnd(n as u64 / 2) as usize
+            };
             walk_segments_room_with_prefetch::<32, PF_L1>(
                 &mut tt, orig_ptr, &mut out, &mut seg, segments,
             );
@@ -1566,6 +1588,10 @@ pub(crate) mod tests {
             assert!(plain == out, "5 lanes, case {case}");
             check_segments(&tt, &seg, "5 lanes");
         }
+        // A stepped later lane leaving exactly full needs the queue to run out at a pass's
+        // last offset with that lane setting the pass's room: not reached in 60,000 random
+        // columns. It is the tail's existing case of a lane coming in full (reached in
+        // `miri_room_walk_handoffs`), so LATER_STEPPED_FULL is counted but not required.
         for (name, c) in [
             ("several lanes marked at one offset", &MARKED_SEVERAL),
             (
@@ -1573,6 +1599,10 @@ pub(crate) mod tests {
                 &ENDS_WITH_LANES_WAITING,
             ),
             ("the queue running out after a take", &ENDS_AFTER_A_TAKE),
+            (
+                "a stepped later lane leaving on its segment's end",
+                &LATER_STEPPED_ON_START,
+            ),
         ] {
             assert!(count(c) > 0, "never reached: {name}");
         }
