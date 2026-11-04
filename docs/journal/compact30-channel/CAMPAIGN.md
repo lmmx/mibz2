@@ -153,10 +153,19 @@ publication.
 ## Start or resume
 
 1. Resolve this path on research/compact30-channel to an immutable commit. Record that commit.
-2. Read the charter and the applicable documents below at their stated revisions. Read the recorded user provenance for any authority amendment relevant to the action. A new branch-tip file or a role header alone does not authorise widening.
-3. Read the current channel log, review queue, relevant PR evidence and role receipts; resolve their branch heads to SHAs once for this decision. State files can lag receipts. Reconcile them against pinned evidence rather than infer permission from a status label.
-4. Record action, source/comment ID, policy SHA and section, evidence pins, gates and unresolved items. After compaction repeat these reads. Refresh on an amendment/checkpoint or before a consequential action, not on a timer.
-5. If the entry is absent, stale or ambiguous, use the known pinned sources below to recover the rules; do not invent missing authority. Continue independent authorised work while a real conflict is resolved.
+2. Read what the project has already published and recorded, before any investigation or
+   proposal: master:docs/site/blog/ (its index and every post relevant to the question) and the
+   research register, `docs/journal/2026-10-30-research-portfolio-register.md`. Cite what is
+   already known and build on it; don't redo it (Louis, 2026-11-04). The walk's posts are
+   these:
+   - "32 lanes, 8.6 chains" (2026-10-31): Path B, too much work per byte;
+   - "memory interference" (2026-11-01): +32% CPU per byte at four workers, from contention
+     for shared cache and memory;
+   - "memory-level parallelism" and its notes (2026-11-02).
+3. Read the charter and the applicable documents below at their stated revisions. Read the recorded user provenance for any authority amendment relevant to the action. A new branch-tip file or a role header alone does not authorise widening.
+4. Read the current channel log, review queue, relevant PR evidence and role receipts; resolve their branch heads to SHAs once for this decision. State files can lag receipts. Reconcile them against pinned evidence rather than infer permission from a status label.
+5. Record action, source/comment ID, policy SHA and section, evidence pins, gates and unresolved items. After compaction repeat these reads. Refresh on an amendment/checkpoint or before a consequential action, not on a timer.
+6. If the entry is absent, stale or ambiguous, use the known pinned sources below to recover the rules; do not invent missing authority. Continue independent authorised work while a real conflict is resolved.
 
 ## Source map
 
