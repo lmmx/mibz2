@@ -4284,3 +4284,116 @@ Performance capture: NOT AUTHORIZED
 This is a good outcome for the research. We now have two substantial Ultra investigations, independently reconstructed arithmetic, a specific correctness repair, and concrete assembly targets.
 
 The next meaningful evidence is whether rustc can actually eliminate the proposed instructions. We should make the compiler demonstrate that before assigning any performance value to the theoretical savings.
+
+## Report 237: the researcher concurs with report 236
+
+The researcher recommends the same single prototype (the repaired epoch-tagged finaliser), no
+further broad audit before code, and keeping the scanner and descriptor changes as separate
+later candidates. It notes that a finaliser that misses its 40-instruction target would not, by
+itself, be an architectural failure, because the scanner cleanup remains. Kept as relayed:
+
+This is the result I was hoping for. The independent Ultra audit has strengthened the case for continuing compact30 instruction minimization, while identifying real implementation hazards rather than simply endorsing the first report.
+
+My disposition would be:
+
+Research direction
+
+GO
+
+Independent budget review
+
+CONDITIONAL ACCEPT
+
+One bounded prototype
+
+Recommend approval
+
+i9 performance capture
+
+Not authorized
+
+What the second Ultra investigation established
+
+The most important finding is that the 225.253-million-instruction opportunity survived independent mathematical reconstruction.
+
+Transformation	Conditional net savings
+Epoch-tagged ordinary finalization	66,041,254
+Scanner/tile cleanup	87,622,080
+Hot descriptor arrays	71,589,766
+Total	225,253,100
+
+For perspective, that’s approximately 1.09 potentially removable instructions per input row across the 207-million-row corpus.
+
+This is not trivial housekeeping. The existing constructor already has a carefully optimized 12-instruction scalar append, yet the audits have found substantial additional control work throughout construction.
+
+However, the distinction matters: the second audit verified the conditional instruction budget, not that LLVM can achieve it or that the resulting code will run proportionally faster.
+
+The corrections are genuinely useful
+
+Three stand out.
+
+1. The epoch-tag encoding requires a real dispatch change.
+
+The existing ordinary sentinel test cannot survive unchanged. Otherwise a tagged ordinary descriptor can be interpreted as an enormous RAW index.
+
+This is a correctness-critical finding, but the repair appears compatible with Ultra’s design. It is precisely the sort of defect that an adversarial audit should discover before implementation.
+
+2. The extra memory reads must be accounted for.
+
+The proposed epoch-tag substitution adds 1,754,362 explicit reads. Even if instruction-neutral, that means the first proposal isn’t purely a reduction in machine work.
+
+Those loads might be inexpensive, but we cannot assume that without compiler and runtime evidence.
+
+3. The lower-bound accounting became more accurate.
+
+The reviewer tightened the fast-finish and refill frequencies, corrected the audited baseline subtotal, and found at least another 25.1 million previously omitted instructions.
+
+Crucially, it did not simply add those omitted instructions to the optimization budget. They remain work to be accounted for.
+
+That is the methodological discipline we wanted.
+
+The remaining economic hurdle is substantial
+
+The second Ultra report calculates that, acting alone, the epoch-finalization change would need about 8.14 ns of effective completion saving per eligible finish to achieve the illustrative 10.28% reduction.
+
+The scalar mechanism alone would need approximately 0.352 ns per scalar row.
+
+These are demanding thresholds. They show why we should not confuse the 225M architectural-instruction opportunity with a guaranteed 10–15% reduction in elapsed time.
+
+But neither mechanism needs to achieve the complete target independently if the three improvements can coexist.
+
+And that is the central result: the combined opportunity is still sufficiently large to investigate seriously.
+
+I think we can now move to engineering
+
+I would not commission yet another broad Ultra audit before writing code.
+
+We’ve now had an intensive original investigation and a separate adversarial verification. The biggest remaining unknown is no longer primarily mathematical. It’s whether rustc 1.97.0 and LLVM 22.1.6 produce the promised code.
+
+That requires a bounded compilation experiment.
+
+I’d have the guardian authorize Claude to implement only the repaired epoch-tagged fast finalizer, with these hard conditions:
+
+* Leave frozen ctor2.rs at 8beffe2 unchanged; implement in a separate research variant.
+* Audit and update every use of the descriptor’s raw field, including the slow fallback.
+* Prove opening-epoch correctness through both scalar and run paths, including EOF and exact epoch boundaries.
+* Re-run the byte-exact oracle suites and targeted Miri cases.
+* Inspect the complete generated fast-success path, targeting at most 40 instructions without the snapshot chain, generic frame or added per-row work.
+* Recalculate the net whole-constructor instruction budget, including the extra tag loads and fallback costs.
+* Do not benchmark or use the i9.
+
+I would preserve the scanner cleanup and hot descriptor arrays as separate prospective changes.
+
+There is one strategic nuance: the source/tile cleanup is actually the largest predicted instruction saving and may have a simpler correctness proof. If the epoch-tag prototype struggles to meet its ≤40-instruction target, I would not interpret that as an architectural failure. We already have another substantial, independently examined opportunity available.
+
+About the missing report files
+
+The paths /workspace/work/guardian-audit/report.txt and /workspace/work/guardian-audit-reproducibility.zip belong to Astra’s workspace; I cannot access them directly from this conversation.
+
+I would preserve those files in the repository’s research journal or obtain them as attachments before the implementation begins. The nine independent reconstruction scripts could be particularly valuable when checking Claude’s revised instruction ledger.
+
+So my recommendation is stop commissioning open-ended research for the moment, retain all of its evidence, and put the first precise hypothesis in front of the compiler.
+
+We’ve spent the extra reasoning budget well. We now have two independent investigations that agree on the conditional opportunity, a repaired design, and falsifiable acceptance conditions.
+
+The next meaningful question is whether Claude can turn the proposed 81→40-instruction finalizer into actual machine code without moving the cost somewhere else.
