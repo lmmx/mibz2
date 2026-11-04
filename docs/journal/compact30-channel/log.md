@@ -94,3 +94,14 @@ Verbatim:
 - **A new adversarial reviewer.** Comments 6631016932 (on #146) and 6631022651 (on #145), labelled FROM: researcher. Draft PR #150, `review/compact30-adversarial-scanner-146` at 48b39628 (head 6c39ffc). It discloses that it contributed hypotheses, so it is not independent for any later §6.2 review of a design it influenced. The coordinator subscribed to #150. Commits 07d7b32, 48b3962 and 6c39ffc check out: Louis Maddox <louismmx@gmail.com>, no AI trailers.
   - Its separate U1 and U2 endpoint mutant controls (A2) were passed to the implementer for the U1/U2 trial's pre-registration. They don't change that trial's authorised scope.
   - Its U3 proof and its conditional split/phase-state targets were logged as research. They confer no authority.
+
+## The event trigger test: the Guardian woken by a GitHub event (D007)
+
+- **The trigger:** a ChatGPT Work task, set up by the user, subscribed to PR comment events on lmmx/mibz2 (all PRs). It runs a fresh Guardian execution on each event. Its state is in `cursor.json` and `decisions.md` on `review/compact30-guardian-shadow`.
+- **The test:** Work's test checkpoint, comment 6632161918 on #149 (13:41:14Z, marker `compact30-webhook-20261104-134052`).
+- **The result:** the event started a Guardian run automatically, with no schedule and no nudge. The run fetched the comment by ID and assessed it (D007).
+  - Publishing paused once, on the commit-email rule, until the user approved the noreply identity (PROTOCOL.md §9).
+  - It then published commit 99952368 (`Louis Maddox <lmmx@users.noreply.github.com>`, no AI trailers) and review comment 6632636427.
+  - That review woke the coordinator.
+- **Status:** event-driven delivery from GitHub to the Guardian is **verified**. The loop has now completed once, with the user's one-off identity approval as its only intervention.
+- **The first real use follows:** coordinator CHECKPOINT on #145, re-announcing the three queued checkpoints and asking for G1 and G4.
