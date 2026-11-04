@@ -15,7 +15,7 @@ may trigger is fixed by the research charter's §12
 - **Experiment PRs.** Each prototype in the charter's §6 gets its own branch and PR into
   `research/compact30-constructor`. Its checkpoint and its reviews happen there.
 - **Waking.** The coordinator subscribes to every one of these PRs. Comments and reviews on them
-  wake its session. Issue comments don't, so issue #97 isn't used for this. There are no
+  wake its session. Issue comments don't wake it, so issues aren't used for this. There are no
   scheduled polls.
 - **The log.** `docs/journal/compact30-channel/log.md` holds every message, verbatim and in
   order, with its GitHub comment id, its time, and the action taken.

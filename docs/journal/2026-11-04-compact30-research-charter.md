@@ -1,7 +1,15 @@
-# Compact30 instruction minimisation: a standing research charter (REVISED, awaiting final approval)
+# Compact30 instruction minimisation: a standing research charter (ACTIVE)
 
-**Status: revision 3, awaiting the guardian's final approval, given in the way §12.3 requires.**
-Until then, nothing here is authorised. Once approved, it replaces case-by-case authorisation for
+**Status: revision 4, ACTIVE (stage 1, §13) from the commit that adds this line.** The guardian's
+review of revision 2 (report 246, relayed by the user in the coordinator's session) approved it
+subject to two clarifications, and authorised activation once they were made, if no other
+material change was introduced. Both are in revision 4:
+- §6.3's gate 3 now uses a single B2 baseline, translated minimums and overlap.
+- §12 says that repository comments carry no authority.
+
+Revision 3 also added §12 and §13 after the reviewed text. They state the guardian's own
+clarification 2 and its two-stage rollout (reports 245–246), and only narrow authority. Before
+activation, nothing here was authorised. It replaces case-by-case authorisation for
 the work it covers. The coordinator (Claude) and its subagents then work through the sequence
 below without asking at each step. They report at the checkpoints in §9, and escalate only under
 §8. §13 says when activation happens.
@@ -233,15 +241,43 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
    - each component's compiled path either reproduced, or its deviation listed and recounted;
    - new spills or reloads, register-allocation changes and new memory dependences on per-row
      paths reported as findings.
-3. **Gate 3, the combined whole-constructor ledger:**
-   - counted from scratch against B2, under §5;
-   - its lower end must meet **the sum of the included components' registered minimums**;
-   - and it must exceed the best single qualified component's own isolated lower bound.
-     Otherwise the stack isn't kept, and that best single component is the outcome.
+3. **Gate 3, the combined whole-constructor ledger, on one baseline (B2):**
+   - **What is measured.** The combined build's actual compiled work, counted once and from
+     scratch against B2 under §5. This charges every integration effect, and counts each
+     instruction once however many components touch it. The measured figure is never a sum of
+     isolated savings.
+   - **The floor,** F, is built from each included component's minimum, translated to B2:
+
+     | included component | its baseline | its minimum, translated to B2 |
+     |---|---|--:|
+     | scanner (prototype 1) | B2 | 60 M |
+     | descriptor arrays (prototype 2) | B2 | 40 M |
+     | v3's finaliser | B2, by §7(b) | 50 M |
+     | SSE2 refinement (prototype 3), only with v3 | B3, incremental | +4 M on top of v3's 50 M |
+
+     Then F = Σ (the translated minimums of the included components) − O.
+   - **O, the overlap,** is the B2 work that more than one included component's isolated ledger
+     credited as removed.
+     - It is computed from the intersection of their listing diffs × observed frequencies, as
+       reported under §5.5.
+     - Each shared instruction is counted once.
+     - The lower bound of O is used, so only demonstrated overlap lowers F.
+     - v3 and the SSE2 refinement are a single chain on B3, so they have no overlap with each
+       other. Overlap between v3's finish and the scanner or descriptor diffs is counted like any
+       other.
+   - **Pass conditions,** both required:
+     - (i) the combined ledger's lower end ≥ F;
+     - (ii) the combined ledger's lower end > the best single qualified component's own isolated
+       lower bound, on B2. For v3 with the SSE2 refinement, that bound is v3's isolated lower
+       bound plus the refinement's incremental lower bound.
+
+     If (ii) fails, the stack isn't kept, and the best single component is the outcome.
+   - **v3's own condition.** If v3 is included, its §7(b) contribution, re-derived from the
+     combined listing, must also hold on its own.
 
 **Attempts:**
 - Up to three assemblies, each archived.
-- An assembly may drop a component. The reason is recorded, and the minimum is recomputed for the
+- An assembly may drop a component. The reason is recorded, and F and O are recomputed for the
   components that remain.
 
 ## 7. V3's finaliser in the combined build
@@ -368,6 +404,8 @@ The sequence also stops early, and reports, in two other cases:
 | researcher (additional) | complete correctness evidence and Miri coverage before entering the combined build | §4, §8.3 |
 | guardian 7 (report 245) | explicit provenance and authorisation for each decision; a self-declared header isn't authentication; routine charter work needs no fresh PROCEED | §12 |
 | guardian (report 245) | two-stage rollout; the channel is tested end to end before unattended use | §13 |
+| guardian 1 (report 246) | the combined-build floor on one B2 baseline, with translated minimums, no double counting and all integration effects | §6.3 gate 3 |
+| guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
 
 ## 12. Provenance and authorisation
 
