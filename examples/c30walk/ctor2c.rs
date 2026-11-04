@@ -152,12 +152,23 @@ macro_rules! stats {
             pub cov_portion: [[u64; 31]; 30],
             pub max_ordinary_span: u64,
             pub min_wide_span: u64,
+            /// the combined build's own (counted build only): nonuniform full tiles by their
+            /// first segment's length n1 (index n1 ≤ 16), and `tile16`'s refills by the first
+            /// segment's row position k (LLVM unrolls that do-while by position)
+            pub tile_n1: [u64; 17],
+            pub tile_refills_first_at: [u64; 16],
             $(pub $f: u64,)*
         }
 
         impl Stats2c {
             pub fn add(&mut self, o: &Stats2c) {
                 $( self.$f += o.$f; )*
+                for (a, b) in self.tile_n1.iter_mut().zip(o.tile_n1.iter()) {
+                    *a += b;
+                }
+                for (a, b) in self.tile_refills_first_at.iter_mut().zip(o.tile_refills_first_at.iter()) {
+                    *a += b;
+                }
                 self.max_ordinary_span = self.max_ordinary_span.max(o.max_ordinary_span);
                 self.min_wide_span = match (self.min_wide_span, o.min_wide_span) {
                     (0, x) | (x, 0) => x,
@@ -176,6 +187,12 @@ macro_rules! stats {
                     self.max_ordinary_span, self.min_wide_span
                 );
                 $( s.push_str(&format!(",\"{}\":{}", stringify!($f), self.$f)); )*
+                for (j, x) in self.tile_n1.iter().enumerate() {
+                    s.push_str(&format!(",\"tile_n1_{j}\":{x}"));
+                }
+                for (k, x) in self.tile_refills_first_at.iter().enumerate() {
+                    s.push_str(&format!(",\"tile_refills_first_at_{k}\":{x}"));
+                }
                 s
             }
         }
@@ -272,6 +289,16 @@ stats!(
     slow_raw_preset,
     opens_ordinary,
     opens_raw,
+    // the combined build's own changed-path counters (counted build only): `finish` calls
+    // from `run`'s close; the crossing pre-marking scan of the 256 counts; the final close
+    // loop's iterations
+    run_finishes,
+    crossing_scan,
+    final_closes,
+    // the partial normalisation's scalar iterations in `finish_slow`: its compiled loop takes
+    // 16 fields at a time while k ≥ 16, then 4 at a time once k ≥ 4, and the rest (k mod 4,
+    // or all k when k < 4) one at a time
+    norm_partial_scalar,
 );
 
 /// The cold part of a character's descriptor (the hot `write` and `end` are in `W::wr`
@@ -644,6 +671,9 @@ impl<const COUNT: bool> W<'_, COUNT> {
                     self.st.norm_full += (k == ROWS) as u64;
                     self.st.norm_partial += (k < ROWS) as u64;
                     self.st.norm_fields += k as u64;
+                    if k < ROWS {
+                        self.st.norm_partial_scalar += if k < 4 { k } else { k % 4 } as u64;
+                    }
                     self.st.max_ordinary_span = self.st.max_ordinary_span.max(span as u64);
                 }
             } else {
@@ -805,6 +835,9 @@ impl<const COUNT: bool> W<'_, COUNT> {
         }
         let u = self.y as u16;
         let n1 = 16usize.min(ROWS.wrapping_sub(self.p));
+        if COUNT {
+            self.st.tile_n1[n1] += 1;
+        }
         // SAFETY (U2): i + n1 ≤ i + 16 ≤ ll.len() by the contract above
         let s2 = unsafe { ll.get_unchecked(i + n1..i + 16) };
         // C4, safe: the first segment as a do-while over the 16-byte window, t[k] with
@@ -814,6 +847,7 @@ impl<const COUNT: bool> W<'_, COUNT> {
         loop {
             if COUNT {
                 self.st.tile_refills_first += self.refills(t[k]) as u64;
+                self.st.tile_refills_first_at[k] += self.refills(t[k]) as u64;
             }
             if !self.one(t[k], u.wrapping_add(k as u16)) {
                 return false;
@@ -929,6 +963,9 @@ impl<const COUNT: bool> W<'_, COUNT> {
                     self.st.runs_end_fill += 1;
                 }
                 return true;
+            }
+            if COUNT {
+                self.st.run_finishes += (self.wr[ci] != self.cold[ci].w0) as u64;
             }
             self.close(ci);
             let r = self.cold[ci].r0 as usize;
@@ -1100,6 +1137,9 @@ impl Ctor2c {
         let mut cum = 0usize;
         let mut last = usize::MAX;
         for &c in counts.iter() {
+            if COUNT {
+                w.st.crossing_scan += 1;
+            }
             cum += c as usize;
             if cum > 0 && cum < n && cum % ROWS != 0 {
                 let g = cum / ROWS;
@@ -1209,6 +1249,7 @@ impl Ctor2c {
         for c in 0..256 {
             if COUNT {
                 w.st.final_finishes += (w.wr[c] != w.cold[c].w0) as u64;
+                w.st.final_closes += 1;
             }
             w.close(c);
         }
@@ -1467,6 +1508,27 @@ fn same_as_v2(what: &str, s: &Stats2c, v: &super::ctor2::Stats2, n: usize) {
         "{what}: preset RAW"
     );
     assert!(s.final_finishes <= finishes, "{what}: final finishes");
+    // the combined build's own counters: their partitions of the existing counters
+    assert_eq!(
+        s.tile_n1.iter().sum::<u64>(),
+        s.tiles_nonuniform,
+        "{what}: tiles by n1"
+    );
+    assert!(
+        (0..17).all(|j| s.tile_n1[j] == 0 || (j >= 2 && j % 2 == 0)),
+        "{what}: n1 is even, 2..=16"
+    );
+    assert_eq!(
+        s.tile_refills_first_at.iter().sum::<u64>(),
+        s.tile_refills_first,
+        "{what}: first-segment refills by position"
+    );
+    assert_eq!(s.crossing_scan, 256 * s.blocks, "{what}: crossing scan");
+    assert_eq!(s.final_closes, 256 * s.blocks, "{what}: final closes");
+    assert!(
+        s.run_finishes <= s.run_opens + s.runs_end_complete,
+        "{what}: run finishes"
+    );
 }
 
 /// One block, one configuration: the oracle; Ctor2c's counted build into a poisoned reused
