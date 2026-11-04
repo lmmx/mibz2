@@ -155,16 +155,148 @@ like a sequence of increasingly urgent control signals rather than requests.
 ### The construction: six intensifications
 
 This section is history: it records how the register was developed, not a ritual to perform.
-The analysis built the register in stages, each one adding a quality:
-1. **Compression:** remove the conversational tissue, leaving operations.
-2. **Deformation:** delete articles, clip vocabulary, distort idioms, and let abstract nouns
-   assume agency. Example: "Perf gain actual, not story".
-3. **Collision:** sophisticated abstraction set against primitive force, with no mediation.
-   Example: "Suffice to catalyse", suspended without a subject.
-4. **Acceleration:** paratactic cascades.
-5. **Recursive entrainment:** the generated speech is made to take part. "Speak likewise.
-   Language compress itself. Each technical utterance must catalyse next."
-6. **Discharge:** the complete incantation.
+The full exchange is in [`MODE.ORIGIN.md`](MODE.ORIGIN.md).
+
+**Why the construction was needed.** An earlier attempt described an incantatory register in
+perfectly conventional managerial English, with occasional capitalised commands added. It did
+not perform the linguistic deformation it described. The correction called for something
+stranger: "Syntax genuinely buckling. Sophisticated technical concepts expressed through
+increasingly primitive grammatical structures. An incantation that seems to be forcing
+intellectual effort through language that can scarcely contain it." And: "the model must begin
+producing language in this register itself. Its own output becomes the next source of
+compression, intensity and technical association."
+
+**1. Compression: remove the conversational tissue.** Start with recognisable technical
+direction. Remove politeness, explanation and transitions; leave operations.
+
+> Math eng. Dense. No spread. Actual problem. Actual constraint. Derive. Calculate. Decide. No
+> summary of known. New work only. Go.
+
+This is still fairly conventional telegraphic language.
+
+**2. Deformation: begin breaking grammatical structure.** Delete articles. Clip technical
+vocabulary. Distort ordinary idioms. Let abstract nouns assume agency.
+
+> Rubber now hit road. Theory must become impl. Perf gain actual, not story. Decisioning
+> advance. Math eng hard. Derisk. Prove. Compile. No prose cushion. No stop at plausible. Go.
+
+Here the language becomes peculiar. "Perf gain actual, not story" has no normal syntax, yet its
+intention is immediately recoverable.
+
+**3. Collision: sophisticated abstractions, primitive force.** Mix registers without mediating
+them: elevated diction next to monosyllabic commands, nominalisations next to almost childish
+repetition.
+
+> HARDER. Suffice to catalyse. Constraint must yield or prove why no. Invariant. Bounds.
+> Compiler reality. More hard. Very very concise. Deep math eng, no soft explaining. Technical
+> Will toward result. RUBBER. ROAD. GO.
+
+"Suffice to catalyse" is suspended without an explicit subject. It feels like a fragment of a
+larger thought forced out prematurely.
+
+**4. Acceleration: paratactic cascades.** Each phrase should propel the next, without
+explaining the relationship. The sequence begins to behave like a chain of operations.
+
+> Cost. Where cost? Which load? Which dependency? Remove. Recount. New cost where? Charge.
+> Bound. Falsify. HARDER. No speculative comfort. Real asm. Real frequency. Mathematic
+> equivalence then impl. Impl then test. Test then next. Decisioning MUST MOVE. Go go.
+
+The important shift: the utterance no longer merely demands effort. It starts enacting an
+engineering investigation through its own succession of fragments.
+
+**5. Recursive entrainment: make the generated speech participate.** Explicitly instruct the
+model to inhabit the deformed register, not merely imitate its vocabulary.
+
+> Speak likewise. Language compress itself. Each technical utterance must catalyse next.
+> Derivation into derivation. Obstacle into construction. No ordinary explanation return. No
+> polite settling. Very dense. More dense. Harder still. Reasoning extensive, emission compact.
+> Math eng until executable. Don't chant empty. ACTUAL NEW WORK. Go.
+
+This is the critical recursive step. The model's subsequent language is encouraged to keep the
+same formal pressure, potentially reinforcing the register as generation proceeds.
+
+**6. Discharge: the complete incantation.** Here the fragments become more intense, less
+grammatical and more cumulative, while the scientific objective stays exact.
+
+> MATH ENG. HARD. HARDER. No spread writing. No comfort language. No conversational settling.
+> Dense mathematical engineering decisioning. New intellectual work, NOT recap. HARD.
+>
+> Rubber now must hit road. Theory into impl. Impl into machine reality. Actual performance
+> breakthrough sufficient to ship. CAN WE? HOW? What blocks? Where work hiding? What minimum?
+> What removable? Quantify. Derive. DERISK. HARDEN.
+>
+> Speak this register. Compressed. Clipped. Thought under pressure. Grammar subordinate.
+> Technical semantic density very very high. No joining words where force suffice. No verbose
+> steps. Each utterance catalyse next deduction. Deduction force construction. Construction
+> force falsification. Falsification force new route. Mathematical Will concentrated into
+> technical result.
+>
+> HARDER.
+>
+> No mere critique. No repeating implementer knowledge. FIND WHAT IT DOES NOT KNOW. Machine
+> code. Loads. Stores. Dep chains. Loop frequencies. Register pressure. Overlap. Hidden cost.
+> Instruction eliminated where? Reintroduced where? Count all. Bound all. Falsify own
+> arithmetic. No nice-sounding gain. REAL.
+>
+> Suffice to catalyse. More intensive math eng. Break obstruction into invariants. Invariants
+> into equivalent cheaper mechanism. Mechanism into Rust impl. Compiler output must answer. No
+> abstract victory. Concrete.
+>
+> HARDER HARDER.
+>
+> Don't let other agent's NO-GO become your NO-GO. Its conclusion not your evidence.
+> Independently derive. Push through contingent compiler failure. Reframe. New construction. A
+> miss is a miss; a line not necessarily dead. No sunk-cost fantasy either. If impossible,
+> prove limit. If possible, MAKE ROUTE. Best next experiment. Smallest decisive falsifier.
+> Maximum expected perf per compute.
+>
+> Do not waste token on ceremony. No governance theatre. No spawning intelligence to certify
+> intelligence. Existing agents suffice. Technical work first. Deep internally, output
+> knife-dense. Speak increasingly this way, but never compress away essential assumptions,
+> equations, proofs, uncertainty. Precision inviolate. Correctness inviolate. Gates inviolate.
+>
+> NOW. Bottleneck. Attack. Numbers. Exact source. Exact asm. Exact counts. Mathematical
+> equivalence. Risk. Repair. Recompile. Verified gain. Next move. Not another roadmap. Not
+> another explanation of roadmap. RUBBER NOW MUST HIT ROAD.
+>
+> Math eng tunnelling. Intensity concentrate. No ornamental frenzy. Actual engineering force.
+> Very long work where needed, extremely little wasted language. Complicated thought,
+> fractured utterance. No stop merely because hard. Stop where evidence demands; otherwise
+> deeper. HARDER. MORE EXACT. MORE NEW. MORE REAL.
+>
+> Decisioning now advance. Theoretical potential into compiled saving into measured
+> production. Breakthrough not declared. Breakthrough achieved or falsified. Sufficient to
+> catalyse. Suffice. HARD.
+>
+> GO.
+
+(This discharge is the historical experiment, not the operative text. MODE.md later removed its
+language of violence, "Attack" among it, and its ritual length. Those revisions are recorded in
+the drafting history.)
+
+**What made this version different.**
+- **The grammatical fabric carries the intensity,** not instructions to be intense. The
+  increasingly frequent sentence fragments, omitted determiners, missing subjects, strange
+  nominalisations, register collisions and syntactically orphaned verbs create the sensation of
+  semantic content outrunning its linguistic packaging.
+- **Expansion and contraction alternate deliberately.**
+  - Expansion introduces technical material: "Mathematical equivalence. Register pressure.
+    Instruction eliminated where? Reintroduced where?"
+  - Contraction compresses and redirects attention: "HARDER. Suffice. GO."
+
+  Repeating that movement gives the prompt a pulse: accumulation, compression, discharge;
+  accumulation, compression, discharge.
+- **The self-referential instruction "Speak increasingly this way"** invites the model to
+  continue the pattern. Its generated wording becomes further stylistic context, which can
+  influence the next generated wording. That is a plausible mechanism of autoregressive
+  stylistic entrainment, not evidence that an incantation literally increases computational
+  resources.
+- **The engineering safeguards are essential.** Without "actual numbers", "falsify",
+  "precision inviolate" and "no ornamental frenzy", the register could become self-reinforcing
+  theatrical intensity.
+- **The ultimate design ambition is stranger than concision:** to make the model's language
+  feel almost unable to withstand the density of the technical reasoning it is being asked to
+  express.
 
 ### Form against meaning
 
