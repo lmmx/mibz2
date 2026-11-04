@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for addressed research requests; MODE register adopted within existing task authority",
+  "state": "WAITING for corrected C7 registration/checkpoint, guarded C8 census or other addressed research evidence",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -51,9 +51,10 @@
     6635620697,
     6637300905,
     6637485148,
-    6639428570
+    6639428570,
+    6639756189
   ],
-  "last_processed_comment_id": 6639428570,
+  "last_processed_comment_id": 6639756189,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -189,6 +190,18 @@
       "report_path": "docs/journal/compact30-adversarial/scanner-146/mode-receipt-6639428570.md",
       "review_comment_id": 6639472381,
       "disposition": "Adopted concise independent mathematical research register; assumptions and task limits preserved. No technical assessment requested. Current ROLES retrieval unavailable; archived established record consulted."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6639756189,
+      "report_commit": "a237a7589972e6d47046b3a710d1b657745ea931",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/c7-c10-review-6639756189/report.md",
+      "review_comment_id": 6639925930,
+      "disposition": "Recommend corrected C7 bounded registration with prospective 4M minimum and combined baseline reconciliation. C8 original natural-mode premise refuted by RAW crossing counterexample; guard/census/minimum required. C9 tail accounting and C10 fill/phase/event deltas outstanding. Completion bottleneck attribution unsupported by invalid pre-Assembly-1 capture.",
+      "new_verified_savings": 0,
+      "implemented": false,
+      "blind_review": false
     }
   ],
   "active_delegations": [],
@@ -208,10 +221,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6639428570
+      6639756189
     ],
     "handled": [
-      6639428570
+      6639756189
     ],
     "skipped": [],
     "automation_modified": false
