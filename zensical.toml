@@ -52,7 +52,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
-    { "Building a smaller decoding table" = [
+    { "Building a smaller bzip2 decoding table" = [
       { "From 49 instructions to 12" = "blog/2026-11-04-compact30-constructor.md" },
       { "Technical appendix" = "blog/2026-11-04-compact30-constructor-notes.md" },
     ] },
