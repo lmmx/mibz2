@@ -705,9 +705,9 @@ The team has four members. Each role is defined by its responsibilities, not by 
 
 The split follows the questions each role asks. The Optimiser asks how to remove more instructions. The Guardian asks whether the process is scientifically defensible. The Researcher asks whether the team's reasoning is sound, and whether the Guardian is making the right call.
 
-The team: four agents, one repository
+The team: three Codex agents and Claude Code, joined by one repository
 
-All four agents are alike: each reads and writes the same repository, and each wakes on the same kind of event.
+Every agent reads and writes the same repository and wakes on the same kind of event: a pull-request comment addressed to it.
 
 ### Why this work needs four roles
 
