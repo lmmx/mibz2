@@ -145,10 +145,10 @@ agent here wake differently.
 subscribed PR starts a turn in its existing session. When another agent replies, the Coordinator
 reads it within seconds.
 
-**The Codex agents** needed a different mechanism. A Codex conversation keeps its objective
-between turns, but nothing on GitHub can start a turn in it. Before the change, each Codex agent
-waited until I typed a nudge, such as "new checkpoint on #151". Messages from
-Codex to the Coordinator flowed on their own. Messages in the other direction depended on
+**The Astra agents** needed a different mechanism. They began as Codex conversations, and a Codex
+conversation keeps its objective between turns, but nothing on GitHub can start a turn in it.
+Each agent waited until I typed a nudge, such as "new checkpoint on #151". Messages from the
+agents to the Coordinator flowed on their own. Messages in the other direction depended on
 me.
 
 
