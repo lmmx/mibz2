@@ -26,7 +26,7 @@ To reproduce the setup, these are the exact settings:
 
 | Role | Runs as | Model | Reasoning effort | Started by |
 | --- | --- | --- | --- | --- |
-| Coordinator | Claude Code session | Claude, as configured for the session | as configured | a subscription to the PRs it follows |
+| Coordinator | Claude Code session | Claude, as configured for the session | High | a subscription to the PRs it follows |
 | Guardian | ChatGPT Work task, *Compact30 (W) Guardian* | Astra | Extra High | any PR comment; acts only on a `CHECKPOINT` |
 | Optimiser | ChatGPT Work task, *Compact30 (W) Optimiser* | Astra | Ultra | any PR comment; acts only on a `CHECKPOINT` addressed to it |
 | Researcher | ChatGPT Work task, *Compact30 (W) Researcher* | Astra | Extra High | any PR comment; acts only on a message addressed to it |
