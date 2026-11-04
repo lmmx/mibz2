@@ -10,6 +10,8 @@ Rules (from MODE.RATIONALE.md):
   R2 fervour, not violence: no violent or combative lexicon.
   R3 escalation does not fall before the release: the last intensifier before the final "Go"
      is not weaker than the strongest intensifier in the utterance.
+  R5 no repeated capitals: an all-caps word is never immediately repeated ("HARDER HARDER");
+     accent comes from a full stop and a slight variation or modifier ("HARDER. Harder still.").
   R4 determiner deletion: articles (a, an, the) are sparse — at most one per 25 words. Complete
      sentences may keep theirs: they are the articulate contrast that makes the fractures marked.
 Usage: python3 mode_doctest.py MODE.md MODE.RATIONALE.md
@@ -25,7 +27,7 @@ CLIP = {  # clipped form -> expanded form
     r"\bdep chains?\b": r"\bdependency chains?\b",
 }
 VIOLENT = r"\b(attack\w*|hunt\w*|kill\w*|strike\w*|destroy\w*|crush\w*|smash\w*|weapon\w*|fight\w*|war)\b"
-STRENGTH = [("HARDER", 3), ("HARD", 2)]  # repetition ("HARDER HARDER") is the same level
+STRENGTH = [("HARDER", 3), ("HARD", 2)]
 
 
 def utterances(path):
@@ -69,6 +71,8 @@ def check(name, u):
         last = ints[-1][1]
         if last < peak:
             out.append(f"R3 escalation falls before release: last {frags[ints[-1][0]]!r} < peak")
+    for m in re.finditer(r"\b([A-Z]{2,})\b[\s.,!]+\1\b", u):
+        out.append(f"R5 repeated capitals: {m.group(0)!r}")
     words = re.findall(r"[A-Za-z']+", u)
     arts = [w for w in words if w.lower() in ("a", "an", "the")]
     if words and len(arts) > max(1, len(words) // 25):

@@ -242,7 +242,7 @@ grammatical and more cumulative, while the scientific objective stays exact.
 > into equivalent cheaper mechanism. Mechanism into Rust impl. Compiler output must answer. No
 > abstract victory. Concrete.
 >
-> HARDER HARDER.
+> HARDER. Harder still.
 >
 > Don't let other agent's NO-GO become your NO-GO. Its conclusion not your evidence.
 > Independently derive. Push through contingent compiler failure. Reframe. New construction. A
@@ -274,7 +274,8 @@ grammatical and more cumulative, while the scientific objective stays exact.
 corrected to the register's own rules, which `tools/mode_doctest.py` checks:
 - "mathematical engineering" no longer re-expands after "MATH ENG";
 - "Attack" became "Isolate" (fervour, not violence);
-- the closing "HARD." became "HARDER.", so the escalation peaks before "GO".
+- the closing "HARD." became "HARDER.", so the escalation peaks before "GO";
+- "HARDER HARDER." became "HARDER. Harder still." (no repeated capitals).
 
 The uncorrected original is word for word in `MODE.ORIGIN.md`. MODE.md also dropped the
 experiment's ritual length.)
@@ -460,13 +461,16 @@ and paratactic cascades. The drafting history of MODE.md is in
 ## Doctest: the record obeys its own rules
 
 `tools/mode_doctest.py` checks every incantation in MODE.md and every quoted example in this file
-against four of the rules stated here:
+against five of the rules stated here:
 - **R1 clipping is monotone.** Once "math eng", "impl", "perf", "asm" or "dep" appears, its
   expanded form may not return later in the same utterance. An expanded form may open the
   utterance, as the unclipped baseline before deformation.
 - **R2 fervour, not violence.** No violent or combative lexicon.
 - **R3 escalation does not fall before the release.** The last intensifier before the final "Go"
-  is not weaker than the strongest one. Repetition ("HARDER HARDER") counts as the same level.
+  is not weaker than the strongest one.
+- **R5 no repeated capitals.** An all-caps word is never immediately repeated ("HARDER HARDER").
+  Repetition reads as goofy and weakens the accent. Intensify with a full stop and a slight
+  variation or a modifier instead: "HARDER. Harder still."
 - **R4 determiner deletion.** At most one article per 25 words. Complete sentences keep their
   articles, because they are the articulate contrast that makes the fractures marked.
 
