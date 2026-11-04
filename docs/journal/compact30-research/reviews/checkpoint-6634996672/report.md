@@ -26,51 +26,37 @@ unchanged.
 
 ## Overlap bound and §6.3 arithmetic
 
-S62-F02 proves one shared removed B2 instruction: build +0x12b5,
-mov 0x8(%rsp),%r13, executed 2,393,313 times. Therefore:
+S62-F02 proves one shared removed B2 instruction: build `+0x12b5`,
+`mov 0x8(%rsp),%r13`, executed 2,393,313 times. Charter §6.3 says
+the **lower bound** of demonstrated overlap is used in the registered floor.
+Therefore:
 
-- demonstrated lower bound: **O ≥ 2,393,313**;
-- conservative set-theoretic upper bound from the accepted 60M scanner and 40M
-  descriptor minima: **O ≤ min(60,000,000, 40,000,000) = 40,000,000**.
+- demonstrated overlap: **O_lower = 2,393,313**;
+- scanner + descriptor floor:
+  **F = 60,000,000 + 40,000,000 − 2,393,313 = 97,606,687**;
+- any further demonstrated cross-overlap is subtracted from F;
+- no O_upper is established by component minima. The former 40M claim was an
+  error: minima are acceptance thresholds, not upper bounds on removed B2 work.
 
-No smaller upper bound is booked. The exact-frequency coincidences at 3,575,
-106 and 79 executions are not instruction identity; the map does not turn them
-into a discount.
+With eligible v3, F is 147,606,687 before any further demonstrated cross-overlap
+with scanner or descriptor work. With eligible v3 and qualified incremental
+SSE2, F is 151,606,687. v3 and SSE2 are one chain and are not discounted against
+each other. Both combined pass conditions and a fresh combined listing remain
+mandatory.
 
-Hence 60,000,000 + 40,000,000 − O lies in:
-
-| Case | O used | Non-double-counted subtotal |
-|---|---:|---:|
-| Least favourable / certified floor | 40,000,000 | **60,000,000** |
-| Demonstrated-overlap-only endpoint | 2,393,313 | **97,606,687** |
-
-The second line is the favourable endpoint under the currently demonstrated
-overlap, not a certified lower floor. The prior 97,606,687 wording is retained
-as that endpoint and is no longer presented as exhaustive overlap.
-
-Conditional increments, kept separate because their cross-overlap is not
-bounded here:
-
-| Included minima | Zero-additional-overlap arithmetic | Certified floor without a new cross-overlap bound |
-|---|---:|---:|
-| v3 +50M | 110,000,000…147,606,687 | 60,000,000 |
-| SSE2 +4M | 64,000,000…101,606,687 | 60,000,000 |
-| v3 +50M and SSE2 +4M | 114,000,000…151,606,687 | 60,000,000 |
-
-These are arithmetic scenarios only. v3 remains conditional under its compiler
-STOP and §7 inclusion rules; SSE2 remains a proposal with unknown net.
+This correction is governed by Guardian D010 at
+`028d7206e79fae8081cef4ea13357b4546270530`. It changes the arithmetic
+interpretation, not the 63-class offset map.
 
 ## Frequency evidence flags
 
-Rows marked **profile-only** are exactly the classes still lacking the
-counted-instantiation counter/path-name evidence required by §5.3(b):
-
-- scanner: added Ir 4,359,203 and removed Ir 17,203;
-- descriptor: added Ir 1,173,383 and removed Ir 3,279,857.
-
-Those totals reproduce S62-F01. Their frequencies are usable to audit the
-numerical interval, but their path names remain provisional until counted-only
-counters are archived and the uncounted listing is shown unchanged.
+The table labels below preserve the evidence status at the original pins: those
+"profile-only" rows were the S62-F01 gap. That gap is now remedied at scanner
+`ba261eff245f45e1c07fdfb05fa2fe6ff1ced835` and descriptor
+`7620c0c667018772a0ba3be28eb62263b55037f8`. The archive-only counted replay
+supports all 31 scanner and 34 descriptor build/refill classes and is recorded
+in [checkpoint 6637121066](../checkpoint-6637121066/report.md). The exact
+offset data here remains the canonical overlap map.
 
 ## Scanner U2 build classes
 
@@ -149,9 +135,9 @@ counters are archived and the uncounted listing is shown unchanged.
 
 ## Canonical overlap decision
 
-Book only O_lower = 2,393,313 as demonstrated address identity and
-O_upper = 40,000,000 as the conservative bound. Do not claim the class map
-exhausts compiler interactions. A fresh combined constructor listing and ledger
-remain required before any combined qualification decision.
-
+Book `O_lower = 2,393,313` as demonstrated address identity. Do not book an
+upper bound from the component minima. Under §6.3 the current registered floor
+is `F = 97,606,687` for scanner plus descriptors; further demonstrated
+cross-overlap lowers F. A fresh combined constructor listing and both combined
+tests remain required before any qualification decision.
 
