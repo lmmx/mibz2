@@ -4910,3 +4910,199 @@ But your frustration about babysitting the process is justified. We should stop 
 The right balance is to give agents substantial autonomy inside clearly defined boundaries, while keeping experimental integrity and consequential changes under explicit approval.
 
 That is how I’d run the next phase of compact30 research.
+
+## Report 243: the guardian conditionally approves the research charter (revision 1, b1598a1)
+
+The guardian approves the direction but not yet the charter: CONDITIONAL APPROVAL, with four amendments (v3 not automatically in the combined build; exact baselines and a combined ledger of its own; immediate escalation for safety failures, with a Miri timeout never a pass; independent review before combining). Nothing new is authorised until the revised charter is approved. Kept as relayed; link artefacts after the commit hash are removed:
+
+I support the move to a standing research charter. This is the right way to reduce the constant back-and-forth while preserving the experimental discipline we’ve worked hard to establish.
+
+Claude’s proposal is substantially better than simply telling an agent to optimize compact30 autonomously. It gives the agent a sequence of bounded tasks, explicit acceptance criteria, stopping rules and clear limits on its authority.
+
+However, I would provisionally approve the direction, not yet grant blanket authorization for all four stages.
+
+There are three things I want to check before approving the charter itself:
+
+* The 60M, 40M and 4M thresholds. These are useful prospective engineering screens, but we need to establish how they’re calculated, what baseline each uses, and whether they measure genuinely net, non-overlapping savings.
+* The combined build. Combining individually successful optimizations can change compiler output, register pressure and memory dependencies. It needs its own correctness and assembly gates, not merely an assumption that individual savings add.
+* Autonomous stopping and escalation. Three compiler-expression attempts per prototype is reasonable, but the agent must stop when an attempted change introduces a new safety obligation outside the approved design—not treat it as routine tuning.
+
+Guardian review of the actual charter
+
+I’ve now read Claude’s proposed charter at b1598a1.
+
+Disposition: CONDITIONAL APPROVAL — four amendments before activating autonomous execution.
+
+The charter is well structured. I support its objective, isolated prototypes, three-attempt limit, separate correctness and structural gates, and the prohibition on unauthorized performance measurements.
+
+But I found four issues worth resolving once, now, rather than during the autonomous campaign.
+
+Required amendments
+
+1. Do not automatically incorporate V3 into the combined build.
+
+Section 5 currently says the combined build includes V3’s finalizer, despite V3 having formally stopped at its compiler gate.
+
+We can preserve its 60.2M-instruction result and use it as a candidate component, but its inclusion in a new combined build should require completed safety evidence and an explicit prospective structural acceptance rule.
+
+2. Make the net-saving ledger the actual gate.
+
+The proposed thresholds of 60M, 40M and 4M are reasonable provisional screens, but each must have a fixed baseline, exact counted frequencies, and explicit added-work accounting.
+
+The combined build must pass its own whole-constructor ledger. The sum of isolated savings is only a prediction, not an acceptance threshold by itself.
+
+3. Give safety failures an immediate escalation rule.
+
+Routine correctness failures may be repaired within the three-attempt allowance. But an unresolved memory-safety issue, an unsafe-access proof failure, or a change to a frozen invariant must stop the affected work immediately.
+
+A Miri timeout must not silently become permission to advance to integration.
+
+4. Require independent review before combining changes.
+
+I agree that Claude shouldn’t need to ask you after every prototype. However, the combined build is where individually correct transformations can interact in unexpected ways.
+
+Require a checkpoint review of the isolated results before assembling the combined variant. That review can be delegated to Astra using the pinned repository evidence; it needn’t become another lengthy manual relay.
+
+Message to Claude
+
+Guardian review of docs/journal/2026-11-04-compact30-research-charter.md at b1598a1:
+
+CONDITIONAL APPROVAL. I support the standing research charter and its autonomous execution model, subject to four amendments.
+
+1. V3’s observed ~60.2M-instruction saving is preserved, but its formal STOP remains. Do not automatically include V3 in the combined build. Define a prospective structural acceptance rule and require completed safety evidence before including it.
+2. Specify exact baselines and accounting conventions for the 60M, 40M and 4M net-saving thresholds. The combined build must independently establish its net savings after integration effects; isolated savings cannot simply be summed.
+3. Distinguish routine correctness repairs from unresolved safety failures. Unsafe-access proof failures, violations of frozen invariants and unaddressed undefined behavior require immediate escalation. Miri timeouts remain partial coverage, never PASS.
+4. Require independent adversarial review of the isolated prototype results before the combined build. Reviewers may work autonomously from pinned repository evidence, but the coordinator must resolve material findings before integration.
+
+Please revise the charter accordingly and return the exact revised file for final approval.
+
+The objective is to approve this standing charter once, then allow the research programme to execute without repeated Guardian intervention.
+
+Do not start autonomous implementation until the revised charter is approved. Continue the already authorized finalizer closeout and scanner handoff.
+
+No timing, i9 use, benchmark changes, production integration or relaxation of historical gates is authorized.
+
+What happens after approval
+
+Once those amendments are incorporated, I’m comfortable delegating the full bounded instruction-minimization campaign, rather than approving every prototype individually.
+
+Claude can manage the engineering sequence, the subagents can perform the untimed compilation and correctness work, and Astra can independently challenge the results at defined checkpoints.
+
+You should only need to intervene for a genuine safety escalation, a proposed scope change, or a future performance-capture decision.
+
+That’s the autonomy we were trying to achieve—not unlimited experimentation, but a research programme that can make sustained progress without you having to coordinate every step.
+
+## Report 244: the researcher conditionally approves the research charter (revision 1, b1598a1)
+
+The researcher independently reviewed revision 1: CONDITIONAL APPROVE, with four amendments. Local machine-code targets become diagnostic rather than qualifying. SSE2 is measured from v3 and the others from v2. An early stop doesn't prevent closeout and one combined build. The accounting is conservative, with unknown costs never set to zero. The researcher also notes that Codex has a Goal mode. Kept as relayed; link artefacts are removed, and its tables are as flattened in the relay:
+
+I agree with the move toward a standing research charter, but I would make several corrections before giving Claude blanket authorization. The principle is right: we should stop making you broker every small decision and let the engineering process run through pre-agreed checkpoints.
+
+And I’ve found something particularly relevant to your frustration.
+
+Codex actually has /goal
+
+Yes — Codex supports a persistent Goal mode, including in the app, CLI and IDE extension. OpenAI’s documentation describes it as a way to keep an agent working toward a verifiable objective across multiple turns, without requiring repeated prompts to continue. developers.openai.com +1
+
+In Codex, you can use:
+
+/goal <objective>
+
+You can also pause, resume or clear the goal. If the command isn’t visible, the documented feature flag is:
+
+codex features enable goals
+
+The important limitation is that a Goal belongs to its Codex thread. It’s not a global research supervisor that automatically directs your separate Claude and Astra conversations. But for a long-running sequence of isolated prototypes, it is directly applicable.
+
+See OpenAI’s guide to Goals in Codex.
+
+I’d pair Goal mode with a version-controlled research charter, rather than treating the two as alternatives.
+
+My review of Claude’s charter
+
+I read the actual research charter at b1598a1.
+
+Disposition: CONDITIONAL APPROVE. Its overall structure is good, and I support authorizing the entire bounded sequence once rather than requiring approval between every prototype.
+
+But I found four issues worth correcting first.
+
+Issue	Why it matters	Required change
+Diagnostic gates are accidentally mandatory again	§4 says local machine-code targets are diagnostic, but §5 says the combined build includes only variants passing gates 1–3. That appears to make the diagnostic gate mandatory again.	Carry variants that pass correctness/safety and the net-work minimum. Record local target misses without automatically excluding them.
+SSE2 has a different baseline	§5 says every prototype starts from frozen v2, but the SSE2 refinement necessarily starts from v3.	Scanner and descriptor variants start from v2; SSE2 starts from pinned v3. Measure each against its actual baseline.
+Two failed prototypes could prevent integration	§6 stops the whole sequence after two consecutive net-work misses, potentially leaving successful earlier variants uncombined.	Stop new implementation attempts, but still close out and combine previously qualified variants.
+Net savings need a stricter accounting rule	A positive ledger can conceal uncertain exceptional-path overhead.	Require a conservative, auditable net-saving bound covering all changed paths. Unknown costs must be bounded or disclosed as unresolved—not silently assigned zero.
+
+The first issue is especially important given your reaction to V3.
+
+We should not create an autonomy charter that inadvertently reintroduces the exact kind of rigid local gate we’ve just agreed to move beyond.
+
+What I would approve
+
+I’d keep the proposed sequence:
+
+Scanner/tile cleanup
+
+Minimum 60M net instructions
+
+Hot descriptor arrays
+
+Minimum 40M net
+
+Optional SSE2 finalizer refinement
+
+Minimum 4M incremental
+
+Combined build
+
+Recount all integration effects
+
+I would preserve the three-attempt limit, but let Claude decide which Rust expressions to try within that budget. That’s precisely the kind of implementation judgment an autonomous coding agent should exercise.
+
+For safety, no variant should enter the combined build without completed required correctness checks and its stated Miri coverage. Incomplete Miri runs should pause qualification, rather than being counted as passes.
+
+And I’d keep all the existing restrictions on timing, the i9, production integration and changes to the frozen representation.
+
+What I’d send the Guardian
+
+I’ve independently reviewed Claude’s proposed standing charter at b1598a1.
+
+I support one standing authorization for the complete bounded instruction-minimization sequence, subject to four amendments.
+
+1. Clarify the gates. Local instruction-count targets are diagnostic, not qualification gates. A prototype qualifies for integration if mandatory correctness and safety checks pass and its independently accounted net instruction saving meets the preregistered minimum. A miss against its local assembly target remains formally recorded and cannot be retrospectively called a pass.
+2. Correct the baselines. Scanner and hot descriptor prototypes begin independently from frozen v2. The SSE2 first-chunk refinement begins from frozen v3 at dbf5139. Savings must always be calculated against the corresponding actual compiled baseline. The combined build uses V3 plus the independently qualified transformations.
+3. Preserve successful work on early stop. Two consecutive prototypes missing their net-work minimum should stop further speculative implementation attempts, but must not prevent proper closeout or one combined compilation of already qualified variants.
+4. Tighten accounting. All changed callers, callees, setup, initialization, fallback and exceptional paths must be included in the net ledger. Where dynamic frequencies are unavailable, use conservative bounds. Do not claim a verified whole-constructor net saving while relevant added work remains unbounded.
+
+Additionally, require completed mandatory correctness evidence before carrying a variant into the combined build. A partial or timed-out Miri run must be reported explicitly, not treated as a pass.
+
+I would retain the rest of the charter: up to three compiler-expression attempts per prototype, autonomous untimed implementation and verification, immutable evidence, checkpoint reporting, and no measurements or i9 use.
+
+With these amendments, I recommend GO for one standing research authorization, rather than another series of approvals for each small engineering step.
+
+The original V3 STOP and both construction INVALID results remain unchanged. The charter is permission to investigate and compile within defined boundaries, not permission to reinterpret those outcomes or authorize a performance capture.
+
+How I’d use Codex alongside Claude
+
+For Codex, I’d put the amended charter in the repository and start a dedicated Goal thread. A relatively short Goal is preferable to pasting the complete research history into the command:
+
+/goal Execute the Guardian-approved compact30 instruction-minimization charter through its defined research checkpoints. Work autonomously within its approved scope: isolated constructor prototypes, untimed correctness and Miri verification, frozen-toolchain assembly inspection, conservative whole-constructor instruction accounting, and a final combined build of qualifying variants. Preserve all frozen sources and historical gate outcomes. Never run benchmarks, use the i9, alter scientific protocols, change the walker or production code, or merge without separate authorization. Stop for material safety failures or out-of-scope work; otherwise continue through the approved sequence. Finish with reproducible evidence, pinned commits, a cumulative net-work ledger, and an explicit research disposition.
+
+Codex’s Goal mode is designed for precisely this kind of sustained, evidence-checked work. A repository AGENTS.md can hold durable operating conventions, while the research charter contains this project’s specific authorization and acceptance criteria. developers.openai.com +1
+
+I wouldn’t replace Claude midway through its current work. You could use Codex for a subsequent research sequence or as a separate independent verification agent.
+
+The bigger change I’d make
+
+Rather than Claude repeatedly asking:
+
+Can I try the next expression? Can I run Miri? Can I inspect assembly? Can I move to the next prototype?
+
+The charter should let it decide all of those things autonomously.
+
+The one distinction I’d preserve is that permission to continue research is not permission to claim success.
+
+A compiled improvement of 44 rather than 40 instructions should still be reported accurately. But if it passes mandatory safety requirements and achieves a meaningful preregistered net saving, we shouldn’t automatically discard it from future research merely because it missed a local diagnostic target.
+
+That’s the correction I most want reflected in the charter.
+
+My recommendation is to make those four edits, obtain one Guardian approval, and let the agents get on with the work. You should be reading evidence-rich checkpoint reports, not managing an instruction-minimization programme one chat message at a time.
