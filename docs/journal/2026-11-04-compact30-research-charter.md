@@ -186,6 +186,7 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
 | 2 | hot descriptor pointer arrays | B2 | 71.59 M (report 227 §D.3) | 40 M | ≈ 56% |
 | 3 | SSE2 first-chunk refinement of v3's finaliser | B3 | 4 instructions × 1,647,375 leaf finishes = 6,589,500 | 4 M on top of v3 | ≈ 61% |
 | 3b | refill-boundary successor shortcut (C6) | prototype 2 (`7620c0c6`), incremental | (69 − C) × 1,084,913 − g × 710,569 − H_D: 27,909,632 − H_D at C = 40, g = 5 (Optimiser @ `ea3ace12`) | 10 M on top of prototype 2 | ≈ 36% of the pre-H_D figure |
+| 4 | full-state v3 tag (C7, report 271) | Assembly 1 at its checkpoint commit, incremental | 6 × 1,647,375 − k × 1,795,482 − H7: 6,293,286 − H7 at k = 2; 8,088,768 − H7 at k = 1 (Optimiser @ `82bc69b5`, corrected by the Researcher @ `a237a758`) | 4 M on top of Assembly 1 | ≈ 64% of the k = 2 pre-H7 figure |
 
 - The minimums are screens, not predictions. They sit below each estimate, so that a
   substantially smaller real saving still clears them while a negligible one does not.
@@ -211,6 +212,7 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
 | 2 | hot descriptor pointer arrays (report 227 §D.3) | frozen v2 | scalar append ≤ 10 instructions, with all added non-row work counted |
 | 3 | SSE2 first-chunk refinement of v3's finaliser | frozen v3 (`dbf5139`) | fast-finish body ≤ 40 (≤ 41 with the call); ≤ 10 explicit reads |
 | 3b | refill-boundary successor shortcut (C6, proposal `0ac2e67`), refill transition only (report 264) | prototype 2 @ `7620c0c6` | eligible refill wrapper C ≤ 40 (diagnostic), failed-guard cost g ≤ 5; scalar row path unchanged |
+| 4 | full-state v3 tag (C7), fast-finish leaf and tag construction only (report 271) | Assembly 1 at its checkpoint commit | fast leaf: one FULL-tag compare replaces the active-tag check plus the `write − w0` fullness test; ≤ 2 added instructions per open; no new spill on the scalar append or refill paths |
 
 - Each prototype is a single change on its own baseline, so its saving can be attributed.
 - Prototype 3 is optional. It is run only if v3 is eligible under §7(a).
@@ -230,6 +232,25 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
   - It needs a counted, mutually exclusive partition of refill classes under §5.3(b).
   - It earns no credit before its own gate 3, and doesn't delay the combined build of the
     components that already qualified.
+- **Prototype 4, C7 (report 271).** Registered by the Coordinator under §6.4, on the Researcher's
+  assessment @ `a237a758`. It has no `unsafe`.
+  - **Eligible leaves:** 1,647,375. The 41 same-epoch partials are excluded. The count is redone
+    on Assembly 1's pinned combined baseline.
+  - **Invariants:**
+    - FULL is set if and only if the portion holds 30 fields. FULL at open proves capacity, not
+      initialisation, so the finish caller still proves `write == end`.
+    - The FULL bit is stripped from the output header and from epoch decoding. Keeping
+      `tag & !ORD` would corrupt every FULL header.
+    - The bit cannot collide with RAW indices.
+    - The `w0` load stays; only the `write` load may go.
+    - The slow-tag diagnostics are audited.
+  - **Gate 1 cases:**
+    - every finish class: fast, same-epoch partial, old-epoch, crossing, RAW and wide;
+    - header bytes identical to the oracle;
+    - epoch wrap;
+    - a mutation that sets FULL on a partial portion must fail the suite.
+  - **Rules:** the ordinary three attempts. Every open, epoch, slow-path, caller and spill cost is
+    charged. It earns no credit before its own gate 3.
 
 ### 6.2 Pre-integration review (before any combined build)
 

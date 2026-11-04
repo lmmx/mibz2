@@ -6220,3 +6220,29 @@ the user had already assigned, at a large cost in tokens.
   and the replay.
 - **Gates and minimums** are unchanged.
 
+## Report 271: C7 registered; C8 held for a census; C9 and C10 need counters first
+
+The coordinator records these decisions under charter §6.4, on the Optimiser's ranked cuts
+(`82bc69b5`, REVIEW 6639751257) and the Researcher's assessment of them (`a237a758`, REVIEW
+6639925930).
+
+- **C7, the full-state v3 tag, is registered as prototype 4.** It runs on Assembly 1 at its
+  checkpoint commit, with a 4 M incremental minimum, the minimum the Researcher recommended. The
+  corrected target is 6,293,286 − H7, or 8,088,768 − H7 at one added instruction per open. The
+  invariants and gate 1 cases are in charter §6.1. It is implemented after Assembly 1's checkpoint,
+  as a serial-chain experiment: listing, counted recount, then gate 3.
+- **C8, the natural residual run-open, is not registered.** The Researcher's counterexample (n =
+  60, A = 31, B = 29) shows that natural mode is not the same as ordinary. A guarded census of the
+  eligible events E8 comes first: r aligned, mode not forced, r + 30 ≤ bucket limit, a valid
+  allocation and a dominating run bound. The saving is 17·E8 − dispatch − H8.
+- **C9 and C10 are not registered.** C9 needs Σfloor(L/4), Σ(L mod 4) and the count of complete
+  calls. C10 needs the prefix histogram plus the fill, phase, remainder-tile and 3b transition
+  deltas. The Coordinator adds both sets of counters to the counted build after Assembly 1.
+- **The completion model is the next tool.** For each step, compute max(start + duration −
+  saving) over workers, from per-worker event counts, allowing the critical worker to switch.
+  Aggregate counts cannot price completion. The 1.086/1.114 capture is INVALID and predates
+  Assembly 1, and "33 cycles per finish" is a requirement, not a measurement.
+- **Redirect condition, recorded in advance:** if the combined reductions do not reach the
+  critical low-bulk workers, the next line is scalar and fragment dependencies, or latency
+  hiding.
+
