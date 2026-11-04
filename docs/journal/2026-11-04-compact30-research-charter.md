@@ -424,12 +424,15 @@ After an escalation:
 - Until every registered class is complete, the variant's qualification is paused. It doesn't
   enter the combined build while paused.
 
-### 8.4 Continuing or stopping a line of work (reports 267, 268)
+### 8.4 Continuing or stopping a line of work (reports 267–269)
 
-A prototype that falls below its net minimum is recorded as a miss, never as a pass. A miss is a
-verdict on that prototype, not on its line of work. Every STOP is scoped to exactly what failed: a
-measurement, an implementation, a compiler target. Reports 217–219, 224–227 and 238–241 show the
-cost of letting one gate's failure stand in for a verdict on the whole programme.
+A prototype that falls below its net minimum is recorded as a miss, never as a pass. A failed gate
+is a verdict on the tested candidate, and not automatically on its line of work. Reports 217–219,
+224–227 and 238–241 show the cost of letting one gate's failure stand in for a verdict on the
+whole programme. A line can still legitimately end. Cumulative evidence may establish that its
+payoff is insufficient: for example, a proof that an essential invariant makes the
+representation impossible to implement correctly, or a convincing lower bound showing that the
+remaining economic gap cannot be closed.
 
 What decides a line is its **trajectory toward production viability**, meaning the economic
 limits in the campaign's entry document
@@ -454,14 +457,24 @@ limits in the campaign's entry document
   instructions to 12. Four-worker build CPU fell from 1.316× production to 1.086×, and
   completion from 1.364× to 1.114×, against limits of 1.067× and 1.02×. These ratios are
   descriptive figures from captures that failed their validity gates, not validated speedups.
-- **Stop or redirect** a line when any of these holds:
-  - the credible remaining payoff is insufficient;
-  - repeated experiments do not improve the outlook;
-  - no plausible route remains.
+- **Stop or redirect** a line when cumulative evidence establishes any of these:
+  - insufficient payoff;
+  - persistent stagnation;
+  - no credible route forward.
 
   The signs are sunk cost, a deteriorating outlook, or a plateau with no path in sight.
-- **Never confuse progress in understanding with qualification for production.** Integration
-  still requires every gate.
+- **Every significant experiment's report answers four questions:**
+  1. What improvement was expected, and what actually happened?
+  2. How much of the remaining economic gap has credibly been closed?
+  3. What did the experiment establish about the limiting mechanism?
+  4. What is the highest-value next experiment, and is its expected payoff worth the compute?
+
+  The report always considers STOP and REDIRECT explicitly, alongside "next experiment". The
+  Optimiser and the Researcher are responsible for that judgement, not for a stream of new
+  ideas.
+- **Distinguish research and structural progress from validated production performance.**
+  Never confuse progress in understanding with qualification for production, and never weaken
+  a qualification gate.
 - **Before a further prototype in a line that has missed,** record its trajectory:
   - the gap after each attempt;
   - the mechanism the next attempt tests that earlier ones did not;
@@ -530,6 +543,7 @@ The sequence also stops early, and reports, in two other cases:
 | researcher (report 247) | the scanner handoff's unsafe reads are not delegated: safe Rust first, and the unsafe form escalated with its exact operations and proofs | §6.1 |
 | guardian (report 248) | the unsafe fallback's approval package (operations, locations, invariants, overflow, validity and initialisation, expected saving); autonomous once approved | §6.1 |
 | guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
+| user (report 269) | a failed gate is a verdict on the candidate, not automatically its line; a line may end on cumulative evidence (impossibility, lower bound); every significant experiment reports expected vs actual, gap closed, mechanism learned, and the next step including STOP/REDIRECT | §8.4 |
 | user (report 268) | §8.4 progress is of two kinds, performance and research, never interchangeable; bounded exploratory steps allowed; every STOP scoped to what failed; understanding is not qualification | §8.4 |
 | user (report 267) | §8.4's two-misses stop replaced by a trajectory test: keep climbing while there is real forward motion toward viability; stop on sunk cost, deterioration, or a plateau with no path | §8.4 |
 | user (report 266) | release control already delegated: integration, PRs into master, merges and releases go through the CI bench gate, run by the Coordinator; registration and `unsafe` sign-off need no Guardian approval (the Guardian may HOLD) | §2, §6.4, §12.3 |

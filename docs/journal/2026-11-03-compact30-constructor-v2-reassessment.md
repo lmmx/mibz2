@@ -6142,3 +6142,37 @@ report refines the replacement.
 - It says plainly that understanding is not qualification.
 - Gates and minimums are unchanged.
 
+## Report 269: a line can end on evidence, and every experiment's report weighs the next step
+
+The user, in the coordinator's session on 2026-11-04, corrected an over-absolute line in the
+coordinator's draft goal ("Scope every STOP to what failed, never the whole line"). Their words,
+verbatim:
+
+> Keep climbing while accumulated evidence shows meaningful progress towards production
+> viability, or a bounded next experiment offers a credible route past an identified obstacle.
+> Treat a failed gate as a verdict on the tested candidate, not automatically its research line.
+> Stop or redirect when cumulative evidence establishes insufficient payoff, persistent
+> stagnation, or no credible route forward. Distinguish research and structural progress from
+> validated production performance; never weaken qualification gates.
+
+Their reasoning: one failed experiment does not by itself invalidate a direction. But a
+Researcher who proves an essential invariant impossible, or establishes a convincing lower bound
+on the remaining gap, can legitimately end one.
+
+For every significant experiment, the user also asked for a report that answers four questions:
+- What improvement was expected, and what actually happened?
+- How much of the remaining economic gap has credibly been closed?
+- What did the experiment establish about the limiting mechanism?
+- What is the highest-value next experiment, and is its expected payoff worth the compute?
+
+The report must also include an explicit STOP or REDIRECT option.
+
+**What the coordinator did:**
+- **§8.4 now says** a failed gate is a verdict on the candidate, not automatically on its line.
+- **A line can end** when cumulative evidence establishes insufficient payoff, persistent
+  stagnation, or no credible route forward.
+- **The four-question experiment report**, with STOP and REDIRECT always considered, is now part
+  of §8.4.
+- **Research and structural progress** are kept apart from validated production performance.
+- **Gates and minimums** are unchanged.
+
