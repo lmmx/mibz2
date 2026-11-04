@@ -18,7 +18,8 @@
     6635380133,
     6635419092,
     6637121066,
-    6639428570
+    6639428570,
+    6639496192
   ],
   "outgoing_comment_ids": [
     {
@@ -57,6 +58,13 @@
       "id": 6637208801,
       "type": "REVIEW",
       "sha": "cd7004a8e1226253427839319b6cc278ffea7e1b"
+    },
+    {
+      "pr": 145,
+      "id": 6639751257,
+      "type": "REVIEW",
+      "sha": "82bc69b5cdad78fe7e90243d76b4418b0b4bbef5",
+      "checkpoint_comment_id": 6639496192
     }
   ],
   "reviews": [
@@ -196,10 +204,11 @@
   "review_pr": 148,
   "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
   "proposal_independence": {
-    "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required"
+    "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
+    "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
   "status": "WAITING",
-  "published_evidence_commit": "cd7004a8e1226253427839319b6cc278ffea7e1b",
+  "published_evidence_commit": "82bc69b5cdad78fe7e90243d76b4418b0b4bbef5",
   "incoming_experiment_comment_ids": [
     {
       "pr": 146,
@@ -217,5 +226,20 @@
     "campaign_ref": "research/compact30-channel",
     "campaign_blob": "c5d2983f8e5c007a47da86202ce686750a5ab55c",
     "status": "adopted"
+  },
+  "ranked_next_cuts": {
+    "source_comment_id": 6639496192,
+    "redelivery_of": 6637300905,
+    "policy_sha": "2210e4457b383e4566df99eb881b4ca0401c4cd3",
+    "report_commit": "b54e3f27f93188fd4da0d294f94aa9206f64e508",
+    "ledger_commit": "82bc69b5cdad78fe7e90243d76b4418b0b4bbef5",
+    "status": "proposal_only_conditional",
+    "ids": [
+      "C7",
+      "C8",
+      "C9",
+      "C10"
+    ],
+    "verified_credit": 0
   }
 }
