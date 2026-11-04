@@ -314,8 +314,10 @@ The analysis's own terms, quoted from it.
 
 The analysis was developed in Louis's ChatGPT conversation of 2026-11-04 and relayed into the
 Coordinator's session the same day. The quotations above are from that analysis, verbatim.
-The repository's record of that origin, with Louis's original prompts verbatim (§1) and the
-drafting history, is [`../2026-11-04-compact30-mode.md`](../2026-11-04-compact30-mode.md).
+The primary source is [`MODE.ORIGIN.md`](MODE.ORIGIN.md), the relayed text stored verbatim at
+Louis's request: his original prompts and the full analysis, including the six intensifications
+and paratactic cascades. The drafting history of MODE.md is in
+[`../2026-11-04-compact30-mode.md`](../2026-11-04-compact30-mode.md).
 
 ## What must be preserved
 
