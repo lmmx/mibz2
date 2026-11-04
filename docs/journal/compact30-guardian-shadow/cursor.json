@@ -399,5 +399,13 @@
       "commit": "2c2565aca5be9ffd2ce5ace8ba82d3af9b60523b",
       "comment": 6637353454
     }
-  ]
+  ],
+  "pending_publication": {
+    "decision": "D013",
+    "incoming_comment": 6639998280,
+    "pr": 145,
+    "evidence_pin": "888eccfc86d5d771e881b0f87d46a21e2cf1512a",
+    "evidence_digest": "git-blob:aec6bd3757e0a4b6ec84a882a1a5c42f7f9bf074",
+    "status": "decision prepared; publish one linked review then persist cursor"
+  }
 }

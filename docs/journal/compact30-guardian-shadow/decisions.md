@@ -366,3 +366,43 @@ The mismatch is specifically this task's saved execution scope. Under the direct
 No new empirical figures are used, so no performance or candidate replay is claimed. Preserve all history, publish one linked TYPE: REVIEW and persist this incoming ID and outgoing IDs. Leave the webhook configuration untouched.
 
 [d012-receipt.json](d012-receipt.json) records the evidence identities; SHA-256 `6424e00222686132af7e1d3febdd09a5135101b88787b72ca72293818e4d33d4`.
+
+## D013 — assembly 1: arithmetic consistent; qualification reconciliation outstanding (G1/G7)
+
+**Disposition: HOLD final combined qualification/G7 confirmation at this evidence pin pending reconciliation of the checkpoint's acknowledged unexplained gain. No candidate FAIL and no line-level STOP.** Scanner U2 + descriptors + v3 is the submitted composition; its reported numeric tests clear their thresholds. This is not yet an independently certified combined PASS. Routine already-authorised research and evidence reconciliation can continue. No production performance result or timing authority is granted.
+
+Trigger: [6639998280](https://github.com/lmmx/mibz2/pull/145#issuecomment-6639998280). Evidence pin: `888eccfc86d5d771e881b0f87d46a21e2cf1512a`; profiled source `c4e45d30`; counted-counter changes `589d810e` / `591c84f7`. Latest cursor/log at `f100c312d1d01a186070b163666541123ec0f010` contain no consumed incoming ID, matching assessed key or pending publication.
+
+### Verified here
+
+Read the pinned combined journal, README, ledger.json, floor.json, floor.py, finish listing and Miri summary. Also read the task-specified GUARDIAN.md at 9316405, current ROLES.md and report 262. This decision uses the unchanged G1/G7 evidence powers; it does not resolve or expand delegated authority.
+
+Independent arithmetic over the submitted ledger:
+- All **83** class deltas equal (candidate count − baseline count) × frequency.
+- All **87** separate counter expressions, including multi-path classes, evaluate to the stated frequencies using the submitted counted record.
+- Group deltas: build −207,720,906; refill +9,059,803; finish −60,212,114. Sum −258,873,217.
+- Charge added library work 378,882: lower **258,494,335**. Credit removed copy only at upper end: +4,454,576, giving **262,948,911**.
+- Retain demonstrated O = 2,393,313 and **F = 147,606,687**. Conditional margins: **110,887,648** above F and **174,433,914** above best isolated lower bound 84,060,421.
+- §7(b) arithmetic: 60,212,114 − 4×3,654 − 508,988 = **59,688,510**, exceeding 50 M by 9,688,510.
+- §7(c): independently counted **44 instructions including final ret** in the archived leaf. No slack.
+- Miri summary lists 22 classes, each exit 0. The journal reports 461 cases, exact release suites and intended mutation failures; these remain reported results, not newly reproduced safety certification.
+
+**Verification limit:** this run did not replay the four raw profiles, rebuild binaries, execute Miri/mutants, or independently prove complete changed-site coverage. Counter agreement within ledger.json is not independent provenance for the counts or proof that no site was omitted. Gate 1 is reported PASS; no contrary safety result was established. Gate 2's new refill spills and caller reload remain findings, not an automatic veto. Gate 3's arithmetic is consistent, with final qualification withheld as above.
+
+### Reconcile the gain, not merely the total
+
+The trigger explicitly leaves approximately 40 M unexplained and asks whether it is real integration gain or accounting artefact. A positive total and large margin do not identify that cause. Conversely, nonadditivity alone is not a defect: §6.3 measures the actual composition, not the sum of isolated results.
+
+The journal already supplies useful leads for the Optimizer's reconciliation: its S-class decomposition implies 13×2,393,313 = **31,113,069** fewer non-row instructions relative to the scanner's 37-instruction class, and avoidance of the descriptor's four outer-head reloads corresponds to 4×3,003,834 = **12,015,336**. These are comparisons in the submitted table, **not additional credit** and not a proved explanation of the residual. They may overlap the existing unroll attribution and other class changes.
+
+Required closure: a disjoint signed bridge from the isolated B2 results to the combined ledger, mapping moved/unrolled rows and non-row setup exactly once, charging all detours/spills/callers and library conventions, and reconciling to the archived raw-profile totals. Correct any accounting error and rerun the existing combined conditions. This is verification of existing §5/§6.3 requirements, not a new minimum or demand that the combined result equal a sum. Preserve the existing §6.2 safety/review receipts and resolve material findings; do not substitute this arithmetic check for them.
+
+The offered extra O=3,654 is not independently certified here: frequency-class count differences alone do not prove shared instruction identity. Keeping the stricter existing floor avoids reliance on it; no result turns on that discount.
+
+### Economics and next action
+
+Inclusive removal is **20.3138%**, while the conservative lower removal is **19.9697%** of the stated B2 inclusive count. Neither fraction measures cycles or completion time. Constant-IPC transfer from INVALID captures is a hypothesis, not a VALID measurement; the half-transfer assumption is not a conservative confidence bound. No economic gate is declared passed.
+
+Complete the already-requested Optimizer reconciliation and Researcher assessment, then supply the corrected or confirmed pinned evidence. No G6 rebuttal acceptance, new prototype registration, gate relaxation, integration, merge, release, workstation capture, infrastructure or spending is authorised by this decision. No blanket HOLD on the line or unrelated work; historical results remain intact.
+
+Evidence identities and arithmetic are in [d013-receipt.json](d013-receipt.json). No empirical replay beyond the explicitly described artifact arithmetic is claimed.
