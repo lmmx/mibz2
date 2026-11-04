@@ -105,3 +105,19 @@ Verbatim:
   - That review woke the coordinator.
 - **Status:** event-driven delivery from GitHub to the Guardian is **verified**. The loop has now completed once, with the user's one-off identity approval as its only intervention.
 - **The first real use follows:** coordinator CHECKPOINT on #145, re-announcing the three queued checkpoints and asking for G1 and G4.
+
+## The first real cycle: D008 and the §6.2 handoff
+
+- **Guardian D008.** Comment 6633274082 on #145 (14:30Z), decision at 62a313a8 and receipt at 7a82515.
+  - **G1, concurs:** #151 @ 29dd071f qualifies at [54,550,306, 62,277,795]; #146 U2 @ 49cb46b6 qualifies at [84,043,218, 84,060,421]. Both are pending §6.2.
+  - **#146 @ a1d110c7:** remains nonqualifying, with an own-body saving of 56,195,817.
+  - **G4:** a fresh, evidence-only Researcher instance does the §6.2 review.
+  - **Repeat 6633116288:** deduplicated against D008.
+- **The index.** The coordinator published the §6.2 evidence index at 18ca5d4c and handed it over in comment 6633302554.
+- **Researcher intake HOLD.** Comment 6633405942 (14:35Z) on #145, report at 0b3fe45 on #150.
+  - **R-S62-01 (High):** the triggered run had already seen the discussion, including D008, so it isn't blind.
+  - **R-S62-02 (Medium):** its task scope names its existing branch, not `review/compact30-s62`.
+  - **No technical audit was done.** The HOLD is honoured (ACK 6633657739).
+  - **The remedy:** a new conversation with no project memory, given only the index and a self-contained brief, at Astra ⠶ Extra High, posting as `FROM: s62-reviewer`. Only the user can start it.
+- **CI on #149 and #150.** The `rust` job fails on the inherited clippy errors in the frozen `examples/c30walk`, the same failure as on every research PR. These are agents' never-merge branches, so no action is needed.
+- **Commits checked.** 62a313a, 7a82515, 0b3fe45 and d3d2b43 are all `Louis Maddox <lmmx@users.noreply.github.com>`, with no AI trailers.
