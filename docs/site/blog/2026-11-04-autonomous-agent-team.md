@@ -221,8 +221,8 @@ and both prototypes remove the same instruction, so their savings overlap. That 
 checkpoint.
 
 So far, then, the messages get through and the reviews get done, without me relaying anything.
-Whether that makes the research faster, and whether the constructor gets fast enough, we'll have
-to wait and see.
+Whether that makes the research faster, and whether the constructor gets fast enough, will show
+over the next few posts.
 
 If you want to set up something similar: give each responsibility its own output, point every
 message at an exact commit, wake agents with events rather than timers, keep a receipt for every
