@@ -46,17 +46,20 @@ instruction, one read and one write, not three instructions.
 | A4 ACHIEVED, scoped; §5.3b REMEDIED | #151 descriptor arrays `7620c0c667018772a0ba3be28eb62263b55037f8`, journal §10 | Own code 58,209,045; counted interval **[57,830,163, 62,277,795]** | Own writes **+5,004,156**; own reads −1,096,093. Charge 378,882 added library Ir at the lower end; removed 4,447,632-Ir memcpy remains upper-end-only | Gate 3 PASS at this pin: all 34 changed classes counter-supported, normalized uncounted closure unchanged. §6.2 and combined qualification remain open. See [counted replay](reviews/checkpoint-6637121066/report.md) |
 | A5 ACHIEVED, scoped; §5.3b REMEDIED | #146 U2 `ba261eff245f45e1c07fdfb05fa2fe6ff1ced835`, journal §11 | Counted interval **[84,060,421, 84,060,421]** | Reads −505,885; writes **+3,391,432**. U1 absent from final source; all 11 library sites match | Replaces A2/C3, never adds. Gate 3 PASS at this pin: all 31 changed classes counter-supported, normalized uncounted closure unchanged. §6.2 and combined qualification remain open. See [counted replay](reviews/checkpoint-6637121066/report.md) |
 | O1 LOWER-BOUNDED; combined net CONDITIONAL | A4 ∩ A5 on B2 | Demonstrated **O_lower = 2,393,313**; registered §6.3 floor **F = 60M + 40M − O_lower = 97,606,687** | Exact shared removal: B2 build `+0x12b5`, `mov 0x8(%rsp),%r13`, frequency 2,393,313. Same-frequency 3,575/106/79 classes are not booked as identity | [Canonical class map](reviews/checkpoint-6634996672/report.md). O_upper is not established by component minima and does not set F. Any further demonstrated cross-overlap is subtracted. Fresh combined listing and both §6.3 tests still required |
+| A6 ACHIEVED, scoped; qualification HOLD | Assembly 1 `888eccfc86d5d771e881b0f87d46a21e2cf1512a`; signed bridge `95977867fdf318b3f66420c383a73d9c48b36740` versus B2 | Own code **258,873,217**; conservative/inclusive interval **[258,494,335, 262,948,911]** | Own reads −20,479,638; writes −8,815,056. Refill locally regresses: reads +2,562,499, writes +5,197,912; unrolled middle detours spill/reload three registers | [Signed-bridge audit](reviews/checkpoint-6640153383/report.md): 83 changed classes; build nonadditivity −56,391,637 exactly reconciled, refill additive. Registered `O=2,393,313`, `F=147,606,687`; both instruction tests pass. D013 HOLD remains; no economic or timing PASS |
 | C6 CONDITIONAL | [Direct interior refill](proposals/refill-boundary/proposal.md) | B2 target **20,315,241 − H**; descriptor-relative target **27,909,632 − H_D**, only at specified compiler caps | ≥1,084,913 eligible transitions, all on large blocks; 26,037,912 transient logical store bytes exposed before shifted work | Outside approved sequence; overlaps descriptor refill/helper work. No verified net credit. Future audit here non-independent |
 | C7 CONDITIONAL | Full-state v3 tag, Assembly-1 incremental | **6,293,532 − H** at ≤2 added instructions/open; **8,089,014 − H** at ≤1 | Removes the fast leaf's two fullness-test pointer loads; no logical-byte change. Tag-construction cost and all spills charged | 1,647,416 fast finishes; at most 1,795,482 opens. Incremental to A3/v3 only; no A3 credit repeated |
 | C8 CONDITIONAL | Natural residual run-open specialization, Assembly-1 incremental | **8,432,068 − H** at a 16-instruction specialized-open cap | Same logical writes; expected generic bitmap/header read and address chain removal remain unbooked pending replay | 496,004 run opens. Event class is disjoint from scalar 3b refills unless a future formulation generalizes 3b; shared events then count once |
 | C9 CONDITIONAL | Four-record natural bulk kernel, Assembly-1 incremental | **10,254,600 − H** at an eight-instruction/group average cap | Same four record stores and bytes/group; loop/address/header recurrence only | 5,127,300 complete groups. Disjoint code site from U2, descriptors, v3 and 3b; no memory saving claimed |
 | C10 CONDITIONAL, measurement-gated | U2 terminal-tile equal-prefix extension, descriptor-relative | **10E_f − C_s·610,356 − C_b·G_f − H**; no registered net | Captured rows leave scalar pointer-RMW path; exact memory delta and changed 3b eligibility require replay | `0 ≤ E_f ≤ 9,155,340`; add prefix histogram and `G_f` counters first. U2 uniform-tile credit and A4 credit are not repeated |
 
-No verified combined net is claimed. The Ultra 225,253,100 portfolio is a
-conditional joint cap target, not achieved work removed and not an instruction
-floor. A future combined listing must be counted afresh against B2, including
-overlap and shifted work; its lower bound must clear charter §6.3's translated
-floor and exceed the best single qualified component.
+A6 is the first achieved combined-scope instruction row. Its checkpoint ledger,
+not a sum of the isolated rows, is authoritative: the isolated scanner and
+descriptor own deltas, the v3 finish group and the signed compiler interaction
+reconcile exactly to the combined own delta. The Ultra 225,253,100 portfolio
+remains only a historical conditional cap target. A6 is not a final qualification
+or an economic result; Guardian D013's HOLD and the rule that instructions are not
+cycles remain in force.
 
 Critical-block relevance: the Ultra audit reports 230 large blocks (n≥899,000)
 and 204 tiny blocks. All-full steps contribute approximately 98% of archived
@@ -74,8 +77,8 @@ archived safety PASS and historical instruction interval verified; three LOW rep
 corrections, compiler STOP unchanged. Neither is the final §6.2 review.
 
 The [structural replay](structural-findings.md) verifies the per-block lower bounds
-and distinguishes latest absolute end from longest worker duration. There is no
-verified combined total. WAITING for a new pinned checkpoint/correction/rebuttal,
+and distinguishes latest absolute end from longest worker duration. A6 now records a verified combined-scope instruction total, while final
+qualification remains on D013 HOLD and economics remain unresolved. WAITING for a new pinned checkpoint/correction/rebuttal,
 the completed-sequence evidence index, or a user nudge. No polling or automatic
 Goal wake-up is assumed.
 
@@ -97,3 +100,8 @@ Goal wake-up is assumed.
 ## Pinned update: comment 6639496192 (re-delivery of 6637300905)
 
 [Ranked next-cut audit](proposals/ranked-next-cuts-6639496192/report.md) registers four proposal-only CONDITIONAL rows, ordered by credible contribution to the completion gap: C7 full-state v3 tag, C8 natural residual run-open specialization, C9 four-record natural bulk kernel, and C10 a measurement-gated terminal-tile run fringe. All targets are incremental to Assembly 1 and contribute zero verified cumulative credit. U2, descriptor arrays, v3, and registered 3b credit are excluded; any changed 3b event frequency must be charged in a fresh combined replay. The scalar 10-instruction descriptor append is locally bounded as irreducible absent a changed formulation and listing.
+
+
+## Pinned update: comment 6640153383 (D013 reconciliation)
+
+[Assembly 1 signed-bridge audit](reviews/checkpoint-6640153383/report.md) and [machine-readable arithmetic](reviews/checkpoint-6640153383/bridge-audit.json) reproduce the pinned reconciliation at `95977867fdf318b3f66420c383a73d9c48b36740`. The exact own-code identity is scanner `−84,060,421` + descriptor `−58,209,045` + v3 finish group `−60,212,114` + build nonadditivity `−56,391,637` = `−258,873,217`; refill is exactly additive. The nonadditivity partitions into unroll `−66,676,611`, outer head `−12,015,336`, S-class cost `+19,146,504`, and remaining cost `+3,153,806`. Added library work 378,882 and the upper-only removed memcpy 4,454,576 yield `[258,494,335, 262,948,911]`. This bridge explains existing credit and is never added again. Registered O remains 2,393,313; the further 3,654 is not used. Gate-3 arithmetic passes in the checked scope; Guardian D013's qualification HOLD, the raw-profile completeness limitation, and the absence of any economic PASS remain explicit.
