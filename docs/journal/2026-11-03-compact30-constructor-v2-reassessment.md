@@ -4438,3 +4438,108 @@ All three hashes match the values the session gave before uploading.
 
 The replay confirms that the scripts reproduce the audit's figures from the frozen evidence.
 It does not independently check the scripts' modelling choices, which the report describes.
+
+## Report 238: the guardian closes the epoch-tagged finaliser at STOP and asks for a scanner handoff
+
+**What report 238 decides:**
+- the prototype at `dbf5139` is STOPPED under its registered compiler gate: a 44-instruction fast path against the ≤ 40 target. The gate is not relaxed retroactively;
+- its correctness evidence is accepted provisionally, pending the Miri, mutation and formatted-source rebuild results;
+- its structural result is preserved separately, without relabelling it a pass or inferring a runtime saving: about 60.2 M net instructions removed per primary-corpus pass, with unchanged per-row loops and call sites.
+
+**Not authorised:** SSE2 intrinsics, any further finaliser tuning, combining it with other changes, the descriptor restructuring, benchmarks and i9 use.
+
+**Next:**
+- finish and archive the pending checks;
+- then prepare a **design-only** scanner/tile cleanup handoff, based on frozen v2 at `8beffe2`, with falsifiable correctness and compilation criteria for a possible future prototype.
+
+The scanner cleanup is not to be implemented yet.
+
+Kept as relayed; the words are unchanged.
+
+Guardian disposition: STOP the current prototype, preserve the result
+
+This is a compiler-gate failure, but it’s also a substantial engineering achievement. The prototype is correct in the completed suites, and the compiled fast path removes considerably more work than the original v2 implementation.
+
+The important distinction is that we missed a deliberately strict structural target, not that the instruction-elimination hypothesis failed.
+
+Original v2
+
+81
+
+Instructions
+
+Compiled prototype
+
+44
+
+Instructions
+
+Acceptance target
+
+≤40
+
+Instructions
+
+The reduction from 81 to 44 instructions is approximately 45.7%, even though the 40-instruction gate failed.
+
+The reported corpus-level accounting is similarly encouraging:
+
+* Approximately 60.2 million net instructions eliminated per primary-corpus construction.
+* Approximately 6.2 million fewer explicit reads, after accounting for the extra epoch-tag reads.
+* No additional instructions at the call sites or in the per-row loops.
+* The proposed fast path was exercised 1,647,375 times.
+
+These are compiled-code and structural-count findings, not measured speedups.
+
+My decision on the next step
+
+I would not immediately authorize the SSE2 retry.
+
+The reason is not that four instructions are unimportant. It’s that the existing compiler output already demonstrates most of the proposed elimination, and we have another independently audited opportunity with a larger conditional instruction budget.
+
+The scanner/tile cleanup has an estimated 87.62-million-instruction opportunity, and it targets frequently executed source-processing work. It may be a better use of the next bounded engineering effort than trying to force LLVM to produce four fewer instructions in a path we’ve already reduced dramatically.
+
+But I also wouldn’t automatically start scanner cleanup while the current prototype’s evidence is incomplete.
+
+My preferred sequence is:
+
+* Close the epoch-tagged prototype at STOP, without retroactively relaxing its ≤40-instruction gate.
+* Finish the pending Miri, mutation and formatted-source rebuild checks. Preserve their exact outcomes, including partial coverage if Miri times out.
+* Request one bounded scanner/tile cleanup proposal, with its own correctness and machine-code acceptance criteria, using the frozen v2 constructor as the baseline.
+* Keep the epoch-tagged implementation as a separate, correct research artifact. Its observed 60.2-million-instruction reduction remains useful evidence, even though it didn’t qualify under its own acceptance gate.
+
+I would not authorize a new performance capture, and I would not combine the epoch-tagged prototype with scanner cleanup at this stage.
+
+Message for Claude
+
+Guardian disposition: STOP the epoch-tagged finalizer prototype at dbf5139 under its registered compiler gate.
+
+The completed correctness evidence is accepted provisionally, subject to the pending Miri, mutation and formatted-source rebuild results. The compiled 44-instruction fast path misses the ≤40 target, so the prototype does not qualify for advancement under its registered rule.
+
+Preserve the actual structural achievement separately: approximately 60.2 million net instructions eliminated per primary-corpus construction, with unchanged per-row loops and caller instructions. Do not relabel this as a gate PASS or infer runtime savings.
+
+Do not attempt SSE2 intrinsics or further finalizer tuning under the existing authorization.
+
+Please finish and archive the pending checks, including exact Miri coverage and any diagnostics.
+
+After closure, prepare a design-only scanner/tile cleanup handoff based on frozen v2 at 8beffe2, using the independent Ultra audits.
+
+The handoff should identify each proposed redundant bounds or control check, its dominating safety invariant, its compiled instruction sequence, the estimated execution frequency, and the intended replacement assembly.
+
+It should also propose separate, falsifiable correctness and compilation criteria for a future bounded prototype, including short tiles, epoch boundaries, held tiles, phase transitions, malformed counts and allocation reuse.
+
+Do not implement scanner cleanup yet. Do not combine it with the epoch-tagged prototype, restructure descriptors, run benchmarks or use the i9.
+
+Return the completed finalizer evidence and the scanner handoff for Guardian review before further authorization.
+
+Why I’m choosing this
+
+The broader objective has always been to systematically eliminate unnecessary instructions, not to spend unlimited effort polishing one function.
+
+The epoch-tagged experiment demonstrated that a major portion of its proposed savings survives compilation. It also exposed a specific LLVM code-generation obstacle.
+
+We can preserve both findings without spending the next engineering cycle chasing a four-instruction difference.
+
+Meanwhile, scanner cleanup potentially removes instructions across much more frequently executed code. That makes it a sensible next candidate to examine.
+
+The epoch-tagged prototype stops. The instruction-minimization research does not.
