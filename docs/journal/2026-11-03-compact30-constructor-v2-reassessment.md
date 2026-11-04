@@ -5943,3 +5943,14 @@ Preserve the frozen constructor and walker, byte-exact oracle output, malformed-
 If U1/U2 introduce a new unproved safety obligation, stop and escalate. If the safe C4 formulation cannot achieve the intended machine code, report that result rather than silently substituting U3.
 
 No timing, i9 use, further unsafe operations or scope expansion is authorized.
+
+## Report 260: the guardian supports a Codex guardian agent, staged
+
+The guardian supports a dedicated Codex guardian with its own Goal and governance specification, introduced in stages:
+1. the Astra–Claude exchange is shown first;
+2. a `GUARDIAN.md` specification is written;
+3. a shadow pilot on historical checkpoints;
+4. one live bounded decision;
+5. routine governance is handed over.
+
+Reserved actions stay with the user. The coordinator drafted `compact30-channel/GUARDIAN.md` (PROPOSED, not active). It separates the guardian's narrowing decisions, which can take effect from the repository at once, from widening decisions such as accepting a rebuttal. Those need the user, or else a checkable identity of the guardian's own (stage B), granted by a charter §12 amendment. The guardian's message is as relayed by the user in the coordinator's session; its full text is in the session transcript, and its decision is summarised here: GO for designing the Codex guardian handoff, and wait to activate it until Astra and Claude have shown their first successful GitHub exchange.
