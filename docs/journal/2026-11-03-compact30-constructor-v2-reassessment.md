@@ -4397,3 +4397,44 @@ So my recommendation is stop commissioning open-ended research for the moment, r
 We’ve spent the extra reasoning budget well. We now have two independent investigations that agree on the conditional opportunity, a repaired design, and falsifiable acceptance conditions.
 
 The next meaningful question is whether Claude can turn the proposed 81→40-instruction finalizer into actual machine code without moving the cost somewhere else.
+
+## Report 235's evidence: the audit's full report and reproducibility package, recovered and replayed
+
+The Ultra session couldn't attach files, so it pushed them, with the user's and the guardian's
+approval, to a transfer branch: `research/compact30-ultra-audit-evidence`, commit
+`264a9055e2f136bf5dee0644c71336b659560b7b`. That commit is authored and committed as Louis Maddox,
+with no AI attribution, and adds three files and nothing else on top of `master` (`a5fa598`).
+They are copied here, in
+[2026-11-04-compact30-ultra-audit-evidence/](2026-11-04-compact30-ultra-audit-evidence/):
+
+| file | bytes | sha256 |
+|---|--:|---|
+| `report.txt` | 54,034 | `1d5d484f49938fffb5d24c0aeeff160d11f3d5641db5707a088f6cb13d46cc35` |
+| `report.html` | 60,716 | `86ae792f69aa9d69e82b0d1b07e607558728b9a98f3ca0762a3ffdff8e08bb74` |
+| `guardian-audit-reproducibility.zip` | 11,021,879 | `5c50e65de4266499a179733ab5d63d472004de791f89b7e0f42f8127799f9bc6` |
+
+All three hashes match the values the session gave before uploading.
+
+**Checked here:**
+- **Contents:** 131 files, 44.6 MB uncompressed, with no absolute or parent-relative paths.
+- **No secrets.** A scan for tokens, keys, passwords and email addresses found none.
+- **The bundled evidence matches the repository** byte for byte. That covers the 11 sources
+  and journals (`ctor2.rs` at `8beffe2`; `bwt.rs`, `c30walk.rs` and `ctor.rs` at `e003a32`;
+  the analyser at `fa21f33`; the prototype's three listings and `corpora.jsonl` at
+  `cd14fa9`; the protocol at `1dc2edf`; the capture journal at `603d8c9`). Its inputs are the
+  capture archive (`ebdb7454…`) and the standalone report-227 file given to the session.
+- **The nine reconstruction scripts were replayed here** (`python3 -I run_all.py`, in a copy,
+  40 s). They use only the standard library and invoke no compiler, constructor or benchmark.
+  All nine exit 0, and all eleven of their outputs are **byte-identical to those shipped**:
+  - provenance;
+  - the baseline;
+  - the epoch, scanner and descriptor audits, and the secondary descriptor audit;
+  - the cross-component review;
+  - the portfolio, as JSON and as CSV;
+  - the economics;
+  - the run summary.
+
+  The console is in `replay.console`.
+
+The replay confirms that the scripts reproduce the audit's figures from the frozen evidence.
+It does not independently check the scripts' modelling choices, which the report describes.
