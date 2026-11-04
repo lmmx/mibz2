@@ -3836,3 +3836,123 @@ I want the deepest defensible answer to this question:
 Can we eliminate a substantial fraction of compact30’s remaining machine-level construction work, safely and without merely relocating that work, and has the earlier Ultra investigation identified a credible route toward doing so?
 
 Take the investigation as far as the available evidence permits. Return a report substantial enough for an independent researcher to reproduce, challenge and use as the basis for a tightly controlled engineering decision.
+
+## Report 232: the guardian approves the adversarial audit, with three final requirements
+
+**What report 232 decides:**
+- the researcher's audit request (report 231) is approved for a fresh Ultra session, unchanged;
+- three requirements are added:
+  - separate mathematical removability from compiler-achievable savings;
+  - test the corrected budget's economic relevance against the roughly 10.3% completion
+    sensitivity target;
+  - preserve the scripts, ledgers and counterexamples for reproducibility.
+- Implementation and i9 measurement are not authorised.
+
+**A note on independence.** The added requirements link this journal file at `61300a5` as
+source material. That version contains report 224 (Astra Max's design-only NO-GO) and the
+guardian's and researcher's provisional views, which reports 231 and 232 both say to keep from
+the fresh session. If the link is sent, the audit is not fully independent of those
+conclusions, and should be weighed accordingly.
+
+Kept as relayed; the words are unchanged.
+
+Guardian verdict: APPROVED. I would run this as a fresh Astra Ultra investigation.
+
+The researcher has improved the assignment considerably. This is no longer simply asking another model whether Ultra’s GO sounds reasonable. It’s asking a second independent investigator to reconstruct the evidence, attack the mathematics, search for correctness counterexamples, and independently determine how much instruction elimination is actually achievable.
+
+That’s exactly how I’d use your substantial remaining Ultra allowance.
+
+I particularly like that the new agent can autonomously write analytical scripts, reconstruct the assembly ledger and test mathematical claims without requesting permission at every step. The boundary remains clear: research autonomy, not implementation or benchmarking authority.
+
+Three final refinements
+
+The researcher’s complete prompt is already strong enough to use. I would preserve it rather than rewrite thousands of words and risk losing its specificity. I’d add just three requirements.
+
+1. Explicitly distinguish achievable savings from compiler-contingent savings. An instruction may be mathematically redundant without LLVM being able to eliminate it efficiently. The reviewer must not describe a predicted assembly target as verified or reject a design merely because its compiled outcome cannot yet be proven.
+
+2. Require realistic economic headroom. The 225-million-instruction hypothesis matters only if its reductions plausibly help synchronized completion. The invalid capture’s upper confidence bounds suggest a roughly 10.3% proportional completion improvement as a useful sensitivity target, not a forecast.
+
+3. Preserve reproducibility. Ask for independent scripts, corrected ledgers and counterexamples where possible, so we can verify the audit rather than conducting another debate between agents.
+
+Here’s my final addition for the fresh session.
+
+Final Guardian requirements
+
+The independent audit described above is approved as a fully autonomous, read-only research investigation.
+
+Three final requirements apply.
+
+1. Separate mathematical removability from compiler achievability.
+
+For each claimed instruction saving, distinguish:
+
+* Work proven unnecessary by a mathematical or control-flow invariant.
+* Work that could plausibly disappear under an equivalent Rust implementation.
+* Work whose elimination depends on specific rustc 1.97.0 / LLVM 22.1.6 code generation.
+* Work that would disappear only by introducing additional instructions or memory operations elsewhere.
+
+Do not count compiler-dependent savings as established. Conversely, do not reject a mathematically correct transformation solely because its eventual assembly has not yet been compiled. Give a conditional assessment with falsifiable compilation requirements.
+
+For any proposed unsafe optimization, require an explicit release-mode bounds, initialization and pointer-validity argument. Debug assertions and successful tests are not substitutes for these invariants.
+
+2. Apply an economic relevance test to the corrected instruction budget.
+
+The INVALID v2 capture reported upper 95% confidence bounds of approximately 1.09517 for CPU cost and 1.13693 for completion.
+
+Moving those bounds proportionally to the registered ceilings would require approximately 2.6% CPU reduction and 10.3% completion reduction.
+
+These are sensitivity calculations, not prospective confidence intervals or performance predictions.
+
+Use them to challenge the practical relevance of the corrected portfolio. In particular, determine whether it could plausibly offer roughly 10–15% completion-time headroom on large, low-bulk blocks, or whether the savings primarily eliminate instructions whose latency is overlapped.
+
+If this cannot be established from the existing evidence, say so. Do not manufacture cycle savings from instruction counts.
+
+3. Make the results independently reproducible.
+
+Preserve, where the environment permits:
+
+* Scripts used to reconstruct structural counts and instruction-frequency calculations.
+* Independently reconstructed cumulative budgets.
+* Any counterexample-generating or mathematical verification scripts.
+* Conditional critical-worker completion models.
+* A concise list of exact source and assembly locations supporting each material correction.
+
+Report the original Ultra budget, your revised budget and the reason for every material difference.
+
+The existing project journal is available here:
+
+https://github.com/lmmx/mibz2/blob/61300a5/docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md
+
+It includes the complete prior Ultra investigation, historical corrections and research decisions. Treat it as source material, not authority.
+
+Do not stop after finding one error or confirming one improvement. Complete the adversarial reconstruction of the entire proposed portfolio.
+
+Your autonomy extends to extensive evidence retrieval, static analysis, independent mathematical verification and scratch-based research. It does not extend to repository modifications, constructor compilation, new benchmarks, i9 measurements or changing the registered experiment.
+
+The Guardian will make the implementation decision after reviewing your final report.
+
+How I’d run the new session
+
+Give the fresh Astra Ultra chat the following materials together:
+
+* The researcher’s entire independent-audit prompt, unchanged.
+* The final Guardian requirements above, appended at the end.
+* The complete original 1,143-line Ultra report, attached as a text file. Attach the raw v2 capture archive too if convenient; the prompt also provides its GitHub link and checksum.
+
+I’d leave the original Astra Max NO-GO out, as the researcher recommends. The new investigator should be free to reject the 225-million-instruction model—or validate it—without being anchored to a previous verdict.
+
+What happens afterward
+
+Original Ultra instruction-floor investigation — complete
+
+Independent adversarial-audit specification — approved
+
+Fresh Ultra audit — next
+
+Claude implementation and i9 measurements — not authorized
+
+I’m especially interested in whether the audit can defend the 87.62 million scanner savings and the 71.59 million descriptor savings. Those two opportunities are what make the complete portfolio substantially more compelling than the epoch-finalization proposal Astra Max previously rejected.
+
+If they survive rigorous scrutiny, we’ll have a very different engineering case from the one that led to v2’s HOLD.
+
+My recommendation is to send this to a fresh Ultra session now. This is a worthwhile use of your expanded reasoning allowance, and the work remains entirely evidence-driven.
