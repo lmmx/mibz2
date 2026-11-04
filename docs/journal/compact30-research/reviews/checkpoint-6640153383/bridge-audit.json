@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "trigger_comment_id": 6640153383,
+  "reconciliation_pin": "95977867fdf318b3f66420c383a73d9c48b36740",
+  "combined_checkpoint": "888eccfc86d5d771e881b0f87d46a21e2cf1512a",
+  "rows_in_paths_table": 86,
+  "changed_classes": 83,
+  "nonzero_build_interaction_classes": 42,
+  "groups": {
+    "build": {
+      "scanner": -84060421,
+      "descriptor": -67268848,
+      "combined": -207720906,
+      "nonadditive": -56391637
+    },
+    "refill": {
+      "scanner": 0,
+      "descriptor": 9059803,
+      "combined": 9059803,
+      "nonadditive": 0
+    },
+    "finish": {
+      "combined": -60212114
+    }
+  },
+  "own_delta": -258873217,
+  "descriptor_own_delta": -58209045,
+  "mechanisms": {
+    "unroll": -66676611,
+    "outer_head": -12015336,
+    "s_class": 19146504,
+    "rest": 3153806,
+    "total": -56391637
+  },
+  "nonadditive_removed": -318552365,
+  "nonadditive_added": 262160728,
+  "library": {
+    "added_charge": 378882,
+    "removed_upper_only": 4454576
+  },
+  "interval_removed": [
+    258494335,
+    262948911
+  ],
+  "interval_if_caller_charged": [
+    258493467,
+    262948043
+  ],
+  "overlap_registered": 2393313,
+  "floor_with_v3": 147606687,
+  "margins": {
+    "floor": 110887648,
+    "best_single": 174433914
+  },
+  "v3": {
+    "finish_group": 60212114,
+    "active_tag_cost": 14616,
+    "run_call_site_cost": 508988,
+    "section7b": 59688510,
+    "leaf_instructions": 44
+  },
+  "own_memory_delta": {
+    "reads": -20479638,
+    "writes": -8815056
+  },
+  "refill_memory_delta": {
+    "reads": 2562499,
+    "writes": 5197912
+  },
+  "classification": {
+    "gate3_arithmetic": "PASS checked scope",
+    "qualification": "HOLD D013",
+    "economics": "unresolved"
+  },
+  "raw_profile_replayed_by_optimizer": false
+}
