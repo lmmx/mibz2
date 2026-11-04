@@ -21,6 +21,13 @@ may trigger is fixed by the research charter's §12
   order, with its GitHub comment id, its time, and the action taken.
 - **Finding the work.** The coordinator posts a link on the channel PR to each experiment PR when
   it opens, and to each checkpoint when it lands, so that reviewers can find them from one place.
+- **The reviewer's own PR.** The reviewer-researcher publishes mainly through a PR of its own:
+  from a `review/compact30-<topic>` branch into `research/compact30-constructor`, kept as a draft
+  and never merged. The coordinator subscribes to it, and every push the reviewer makes runs CI,
+  which wakes the coordinator. Each message is therefore a pinned commit. Comments are kept for
+  short messages.
+- **The wiki isn't used.** It can be read from the coordinator's session but not written to, and
+  edits to it wake no one.
 - **The reviewer-researcher** works under `REVIEWER.md`. A `TYPE: PROPOSAL` is a research
   proposal. It is logged and assessed, but adding it to the sequence is a scope change, and only
   the user can approve one (charter §12.3).
