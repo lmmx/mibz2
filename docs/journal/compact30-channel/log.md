@@ -256,3 +256,10 @@ Verbatim:
 - **#158:** the blog post, plus STEWARDSHIP "Research publication".
 - **The Researcher's review 6643814937:** the overclaims on regression and the scanner figures
   are accepted; the simulation relation is adopted in the evidence README.
+- **D018, D019, D020 and the Researcher's five reviews** were accepted (ACK 6644273456).
+  - #157 is not B2's kernel B.
+  - The (iv) "confirmed" and "rejected" claims are withdrawn.
+  - The runs are separated by machine.
+  - #157 repeats the 2026-11-01 walk-unroll trial (negative at four workers), uncited.
+- **Corrections:** register bb858157 and CAMPAIGN.md 5e32beaf. #158 is back to draft for a
+  rewrite and Researcher review.
