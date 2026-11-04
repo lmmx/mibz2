@@ -203,6 +203,16 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
 
 - Each prototype is a single change on its own baseline, so its saving can be attributed.
 - Prototype 3 is optional. It is run only if v3 is eligible under §7(a).
+- **Prototype 1 is attempted in safe Rust only.** The handoff's `read_unaligned()` raw-pointer
+  reads fall under §8.2: they are a new unsafe, unchecked access. If no safe attempt reaches the
+  compile target:
+  - the miss is recorded under gate 2, and the safe variant is still evaluated under gates 1 and 3;
+  - the exact unsafe operations, their release-mode proofs and their Miri classes are registered
+    in the journal;
+  - they are then escalated for the user's explicit approval (§12.3).
+
+  This clarification (report 247) only narrows scope. The same applies to any other prototype
+  whose design names an unsafe formulation.
 
 ### 6.2 Pre-integration review (before any combined build)
 
@@ -405,6 +415,7 @@ The sequence also stops early, and reports, in two other cases:
 | guardian 7 (report 245) | explicit provenance and authorisation for each decision; a self-declared header isn't authentication; routine charter work needs no fresh PROCEED | §12 |
 | guardian (report 245) | two-stage rollout; the channel is tested end to end before unattended use | §13 |
 | guardian 1 (report 246) | the combined-build floor on one B2 baseline, with translated minimums, no double counting and all integration effects | §6.3 gate 3 |
+| researcher (report 247) | the scanner handoff's unsafe reads are not delegated: safe Rust first, and the unsafe form escalated with its exact operations and proofs | §6.1 |
 | guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
 
 ## 12. Provenance and authorisation

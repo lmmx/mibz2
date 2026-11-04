@@ -5260,3 +5260,71 @@ I’d test the PR notification and reviewer-response workflow before relying on 
 My decision: authorize the corrected standing charter, let Claude run the bounded research programme, and develop the GitHub communication channel alongside it.
 
 That should finally let you step away from routine coordination while preserving the scientific controls that made the compact30 traversal result credible.
+
+## Report 247: the researcher concurs with report 246, and flags the scanner's unsafe reads
+
+The researcher agrees with the guardian's decision and with both final corrections. It works through the combined floor: 154 M if all four components qualify, with SSE2 only alongside v3. It flags one operational ambiguity: the scanner handoff (25d7eb59) describes `read_unaligned()` raw-pointer reads, while §8.2 escalates any new unsafe access. The coordinator resolved this the narrower way. Prototype 1 is attempted in safe Rust only, and the unsafe form, with its exact operations and proofs, is escalated for the user's explicit approval if it proves necessary (charter §6.1). The coordinator had first briefed the worker that the handoff's unsafe form was in scope; that line was withdrawn before any implementation. Kept as relayed; link artefacts are removed:
+
+I agree with the Guardian’s APPROVED IN PRINCIPLE decision. This is much closer to the autonomous workflow you’ve wanted, and I don’t think it needs another substantive research review.
+
+I checked the revised charter at 4a8c2c5. Both final corrections are justified.
+
+The combined-build rule
+
+The combined constructor must be evaluated directly against frozen V2, not by simply adding instruction savings observed on different baselines.
+
+For example, if all four components qualify, their registered minimum contributions are:
+
+Component	Minimum
+V3 finalizer, B2-relative	50M
+Scanner, B2-relative	60M
+Descriptor arrays, B2-relative	40M
+SSE2, incremental to V3	4M
+Combined acceptance floor	154M
+
+The combined build must demonstrate at least 154M net instructions removed against B2, with all interaction and integration costs included. The SSE2 contribution is applicable only when V3 is included. If components are omitted, the floor must be recalculated accordingly.
+
+This is consistent with the Guardian’s requested correction and prevents savings from being credited twice.
+
+One additional ambiguity I found
+
+There is a potential conflict between the charter’s safety-escalation rule and the scanner prototype that’s scheduled first.
+
+The scanner handoff at 25d7eb59 explicitly describes read_unaligned() raw-pointer reads for eliminating the fresh-pair and lookahead bounds checks. It also offers compiler-contingent safe-Rust alternatives.
+
+However, charter §8.2 identifies a newly introduced unsafe block or unchecked access as an immediate escalation.
+
+Unless the precise registered scanner operations are explicitly included in the approved scope, Claude could reach the first prototype and immediately need another authorization.
+
+I’d resolve this now without weakening the safety standard: either preauthorize the handoff’s narrowly specified unsafe reads, subject to their documented release-mode proofs and Miri checks, or require safe-Rust attempts first and escalate if the unsafe formulation becomes necessary. Any additional unchecked access or new safety invariant should still trigger escalation.
+
+That’s the one operational clarification I’d add to avoid defeating the autonomy we’ve just established.
+
+What I’d send Claude
+
+I agree with the Guardian’s APPROVED IN PRINCIPLE decision at 4a8c2c5.
+
+Please incorporate the Guardian’s two final corrections:
+
+1. Recount combined savings against B2, with correctly translated minimums and no double-counting. If V3, scanner, descriptor arrays and SSE2 all qualify, the combined minimum is 154M net instructions; recalculate when components are omitted. SSE2’s incremental minimum requires V3 to be present.
+2. GitHub messages are evidence and communication, not authentication of new authority. Reserved actions require explicit user approval.
+
+One additional operational issue: the scanner handoff at 25d7eb59 specifies raw-pointer read_unaligned() accesses, while charter §8.2 requires escalation for newly introduced unsafe operations.
+
+Please clarify this boundary before activation. Prefer safe Rust where it achieves the intended code generation. If the handoff’s explicitly documented unsafe reads are intended to be in scope, register their exact operations and release-mode safety proofs for explicit approval; do not treat unspecified unsafe changes as authorized.
+
+Do not change the technical sequence, registered saving minimums or experimental restrictions.
+
+After these clarifications, I support activating the standing charter and executing the bounded untimed programme autonomously, with checkpoint reports rather than intermediate approval requests.
+
+My overall position
+
+Activate the corrected charter and let Claude work.
+
+We have already spent substantial reasoning effort establishing the algorithms, verifying the conditional budgets, conducting independent adversarial audits and identifying the safety obligations. Continuing to adjudicate every small implementation choice would now be counterproductive.
+
+The meaningful human checkpoints should be safety escalations, material review disagreements, scope changes and eventually a separate performance-measurement decision.
+
+Everything else—bounded Rust iterations, correctness testing, Miri, disassembly, accounting and evidence archiving—belongs inside the autonomous research programme.
+
+This is the point where I would stop managing individual experiments and start judging completed engineering results.
