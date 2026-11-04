@@ -705,6 +705,10 @@ The team has four members. Each role is defined by its responsibilities, not by 
 
 The split follows the questions each role asks. The Optimiser asks how to remove more instructions. The Guardian asks whether the process is scientifically defensible. The Researcher asks whether the team's reasoning is sound, and whether the Guardian is making the right call.
 
+The team: four agents, one repository
+
+All four agents are alike: each reads and writes the same repository, and each wakes on the same kind of event.
+
 ### Why this work needs four roles
 
 Instruction-level optimisation is easy to fool yourself about, in a few specific ways, and each role answers one of them.
@@ -762,10 +766,6 @@ An agent that has finished its turn is idle until something starts it again. The
 
 **The Codex agents** needed a different mechanism. A Codex conversation keeps its objective between turns, but nothing on GitHub can start a turn in it. Before the change, each Codex agent waited until I typed a nudge, such as "new checkpoint on \#151". Messages from Codex to the Coordinator flowed on their own. Messages in the other direction depended on me.
 
-Before: two directions, one of them through me
-
-The gap was in one direction only. Each agent could already do its work; what was missing was a way for the Coordinator's message to start a Codex agent.
-
 ## 5\. The doorbell
 
 ChatGPT Work can run a task when a GitHub event happens. Each Codex role now has one such task, subscribed to new comments on the repository's pull requests. A new comment rings the doorbell: it starts a short, fresh run of that role.
@@ -780,9 +780,9 @@ GitHub can't filter on a comment's text before a run starts. So every run begins
 6. **Publish.** Commit the result to its own branch, and post one `TYPE: REVIEW` comment that links to it.
 7. **Save the cursor,** and stop.
 
-After: one cycle, with no one relaying
+One cycle: a checkpoint, two readers, the next step
 
-Every link in the cycle is an event. No agent polls, and I pass no messages along. Replies are typed REVIEW, so they never re-trigger a CHECKPOINT run.
+Each arrow is a pull-request comment that starts the next agent's run. No agent polls, and no message passes through me.
 
 A run that rings the bell for another role's message costs one comment fetch and stops. Replies are typed `REVIEW`, never `CHECKPOINT`, so an agent's answer can't start another round of work by accident.
 
