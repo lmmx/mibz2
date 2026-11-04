@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for addressed evidence; deferred-handover semantic argument assessed at 8465207a; no new authority",
+  "state": "Reviewing addressed published-record follow-up 6643809123",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -59,9 +59,10 @@
     6640266327,
     6640324039,
     6641768409,
-    6643481606
+    6643481606,
+    6643744616
   ],
-  "last_processed_comment_id": 6643481606,
+  "last_processed_comment_id": 6643744616,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -277,6 +278,15 @@
       "source_comment_posted": false,
       "source_comment_omission_reason": "Triggering batch explicitly prohibits an additional source-app message.",
       "disposition": "No byte or next[] counterexample found: distinct buffers and immutable T permit ordinary steps to commute with ordered handovers. Queue-exhaustion pointer reconciliation correct; 40,923 abstract schedule cases passed. Execution/grow chronology not identical; no native safety/performance certification."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643744616,
+      "report_commit": "a8fe7261507485f5d8ba836e47d6985c5e125b14",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/pivot-review-6643744616/report.md",
+      "review_comment_id": 6643814937,
+      "disposition": "Replayed block-1 profile accounting. First CI supports no demonstrated multi-thread gain, not no regression or general instruction irrelevance; corrected stale scanner/worker numbers. Case-2 simulation survives intermediate filter/grow observers; targeted later-unmarked mutant recommended."
     }
   ],
   "active_delegations": [],
