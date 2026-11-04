@@ -1,0 +1,38 @@
+{
+  "role": "independent adversarial machine-code reviewer",
+  "review_branch": "review/compact30-adversarial-scanner-146",
+  "reviewed": [{
+    "repository": "lmmx/mibz2",
+    "pr": 146,
+    "commit": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "evidence_manifest_sha256": "e18b6ff9d866ef66a32b287b5cb0f4f81b54cffc038e2275f3513bd76a2691de",
+    "kind": "independent adversarial supplement, not duplicate F1/F2 submission or charter 6.2 acceptance",
+    "governance_commit": "4d814ce56be1487b728ba0a75ada6eb57978b911",
+    "charter_blob": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
+    "reviewer_blob": "2839405784ec4e63d2f4cc7bd406e5dff4dd1029",
+    "protocol_blob": "01d5391874e756ff90bbd9a822913b201cd9dece",
+    "gate_1": "PASS on inspected archived safe-scanner evidence",
+    "gate_2": "recorded diagnostic partial miss preserved",
+    "gate_3": "REJECT qualification; whole-constructor conservative interval HOLD/withdrawn",
+    "economics": "outside scope"
+  }],
+  "prior_work_consulted_after_reconstruction": {
+    "pr": 148,
+    "commit": "27473ae1533c4eb2ef31da462bc8a324fa0fc660",
+    "existing_findings_comment": 6630265636,
+    "accepted_findings_ack": 6630284404,
+    "canonical_ledger_modified": false
+  },
+  "last_observed_pr146_comment_id": 6630598133,
+  "nonindependent_future_topics": [
+    "split-discriminator reuse across refill",
+    "phase derived from encoded label",
+    "operation-specific U1/U2 negative controls developed here"
+  ],
+  "fresh_package_critique": "fresh-check/REVIEW.md",
+  "state": "WAITING after publication",
+  "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
+  "automatic_github_wakeup_assumed": false,
+  "polling_installed": false,
+  "programme_complete": false
+}
