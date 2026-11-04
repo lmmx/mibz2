@@ -239,3 +239,20 @@ Verbatim:
   wording).
 - **CHECKPOINT 6643744616:** the pivot brief. At 2 and 4 threads, walk instructions don't
   bind; find what does.
+
+## Prior work recovered; #157 merged; the model tested
+
+- **The record first** (Louis). #157 is B2's kernel B (docs/research-portfolio 9723f068) and
+  Path B of the 2026-10-31 post. Recorded in CAMPAIGN.md step 2 and ROLES, with the register
+  as cumulative memory.
+- **Retractions.**
+  - 6643992749: "bound by l and R" was a hypothesis, not a fact.
+  - 6644115799: the walk-stage B/A of 0.925 is the 7763's, not the 9V45's. It **rejects**
+    B2 (iv) at one copy (predicted 0.73–0.76; decoder −10% to −11% predicted, −2.4% measured).
+- **#157 merged** at 5f537871. The 1-thread gain is replicated: −4.2% on the 9V45, −2.4% on
+  the 7763. At 2 threads the 7763 shows −4.9%; 4 threads are within noise.
+- **The register.** §6 was added (4dac7abc) and corrected (e58e33a6).
+- **#159:** the Researcher's witness tests (test-only).
+- **#158:** the blog post, plus STEWARDSHIP "Research publication".
+- **The Researcher's review 6643814937:** the overclaims on regression and the scanner figures
+  are accepted; the simulation relation is adopted in the evidence README.
