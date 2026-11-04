@@ -1,0 +1,926 @@
+[
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/README.txt",
+    "blob": "e994b51af473d407e8801aa62692d95a26bf4388",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/README.txt",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/adversarial.console",
+    "blob": "5352b1c1ec90319582f29803c96090ee5dc32a3a",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/adversarial.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/adversarial.jsonl",
+    "blob": "f761a9eb9d550e4193e86ad91f5b66a5dd3c6eb8",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/adversarial.jsonl",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/corpora.console",
+    "blob": "019860a6242ea8a0e794a8e0c54c153d41926814",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/corpora.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/corpora.jsonl",
+    "blob": "2d536cddb46deff5f2b7a5b714cb13b8dec1e6b3",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/corpora.jsonl",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/corpora.sha256",
+    "blob": "e608afb482b26869314290601a98ccb368bc7009",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/corpora.sha256",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/synthetic-quick.console",
+    "blob": "860dd4abb67355c4faf9661f95afee765160b354",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/synthetic-quick.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/synthetic.console",
+    "blob": "b2a2614fcf55fb8f7f651d26afd9a230ad6f0b6e",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/synthetic.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/adversarial.console",
+    "blob": "71ccb7a2ede5b94551caae677818a56ab457422c",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/adversarial.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/adversarial.jsonl",
+    "blob": "e211f9e98ddacb840a471d16b24e872bf8b76e4b",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/adversarial.jsonl",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/corpora.console",
+    "blob": "acbe2be12791b73f5f2b438114e12c2c3af9d4ec",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/corpora.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/corpora.jsonl",
+    "blob": "c95769cb055dc57c512b035ae951c511bcbdd77a",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/corpora.jsonl",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/corpora.sha256",
+    "blob": "e608afb482b26869314290601a98ccb368bc7009",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/corpora.sha256",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/mutation-M1.console",
+    "blob": "e89572737d167ee77dada7678ed9464f349e115a",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/mutation-M1.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/mutation-M1.diff",
+    "blob": "994aab9948e0680196d7b9c3c92f6f0849392292",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/mutation-M1.diff",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/mutation-M2.console",
+    "blob": "d04bddbb197ab568bfb60a64f60b2cb4d1cd7121",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/mutation-M2.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/mutation-M2.diff",
+    "blob": "0bdfd982f7035152e8c4cbc643c3d2ea39ee76b0",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/mutation-M2.diff",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/synthetic-quick-counted-binary.console",
+    "blob": "e7e2f1fad5d86933d7e69a147b40db938bdeed7b",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/synthetic-quick-counted-binary.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/synthetic-quick.console",
+    "blob": "e7e2f1fad5d86933d7e69a147b40db938bdeed7b",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/synthetic-quick.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/synthetic.console",
+    "blob": "e833f348c716dca4ce1561954701b6b25bc62da5",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/synthetic.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/adversarial.console",
+    "blob": "f6fc002a5ce254ade12ea1823ccdbacf1cf8bf37",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/adversarial.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/adversarial.jsonl",
+    "blob": "da16ee83757ad6725ed877e400e356385ab33c84",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/adversarial.jsonl",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/corpora.console",
+    "blob": "198e0376b6c38b1f36e2564a9f351b4453d505ed",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/corpora.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/corpora.jsonl",
+    "blob": "6fb88f1343c775cf4affad7947378cec324e4985",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/corpora.jsonl",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/corpora.sha256",
+    "blob": "e608afb482b26869314290601a98ccb368bc7009",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/corpora.sha256",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/miri.console",
+    "blob": "63c40191839604e23e74626ff1b8ab4d9248d11a",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/miri.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/mutation.console",
+    "blob": "75ba35d53c6699d4aae0e1b62bfef3015be475ba",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/mutation.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/mutation.diff",
+    "blob": "6a4e9124a890b122fd7cdfa498e5b3f083b10940",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/mutation.diff",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/synthetic-quick.console",
+    "blob": "b931a31827576730516424d3c5b11ba893e839cc",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/synthetic-quick.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/synthetic.console",
+    "blob": "46f5daebc05c89bada19d33b4ff7a437de7c0d7b",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/synthetic.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/adversarial.console",
+    "blob": "6689634fa5dccf7b242abb927175e087c0af189f",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/adversarial.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/adversarial.jsonl",
+    "blob": "9c80160ec5669a3ee08f6b1551d120f717004d5d",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/adversarial.jsonl",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/corpora.console",
+    "blob": "5d7d02bfa4cd29b8ae7416f41180534db6d6ce50",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/corpora.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/corpora.jsonl",
+    "blob": "714b1625734ac7b76c4931a22d171d2073ad4bc3",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/corpora.jsonl",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/corpora.sha256.check",
+    "blob": "5072bfd4aff3efa1c42f379250b8c5bbeace1774",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/corpora.sha256.check",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-build-false.asm",
+    "blob": "aeeaca9eb28adca5619e2bb4137a55cb6e500c7d",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-build-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-finish-false.asm",
+    "blob": "1996c5215b3dfe6ba35519418e13b54b8d1fbb8b",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-finish-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-refill-false.asm",
+    "blob": "ef4a78b854385b56cee4ffef2080e4f97dc44c54",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-refill-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/excerpts.asm",
+    "blob": "7fa6083397b149650f10c65cb32b91745969d8d7",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/excerpts.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/miri-quick.console",
+    "blob": "45d4b85f20ddb4b327ea7e1a02a0b28d3d7120ec",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/miri-quick.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "cd14fa90e45c39d7d42b4eb71efa6e3a9b28f78f",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/synthetic.console",
+    "blob": "233a1fd58144c6d4fc463c3a7a37fc324513408e",
+    "local": "evidence/b2list/docs/journal/2026-11-03-compact30-constructor-v2-prototype/synthetic.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/adversarial.console",
+    "blob": "a5510533557a95a2aac9d8eb5f7e7ec6c19833d2",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/adversarial.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/corpora.console",
+    "blob": "ca0780275f9ccd2b0c8d8125509319e3b8e3551a",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/corpora.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/synthetic-quick.console",
+    "blob": "b931a31827576730516424d3c5b11ba893e839cc",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/synthetic-quick.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/synthetic.console",
+    "blob": "a1be76ce41c06657fbaf6816d6497b993ae55323",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/synthetic.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-align.console",
+    "blob": "6315c9b821685f3eafc354c2b9a94c4677e79b56",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-align.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-controls.console",
+    "blob": "8852a205d9e7380c19d0368f7e6ad4e031d0ce07",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-controls.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-endrun.console",
+    "blob": "76ad2bbd1f7955dbbf6d044efc94c148643c8c46",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-endrun.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-epoch.console",
+    "blob": "a8b9376a4046f56308f7cbfa55a291a6dd90fc5b",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-epoch.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-held.console",
+    "blob": "3a6e2619268e04c590f8a3a1db06f16ace91bd05",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-held.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-malformed.console",
+    "blob": "1e7db8c44d360a71fa7995efdbb6e2d5872a8013",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-malformed.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu1-default.console",
+    "blob": "7405fdbdf4cd84e14bc8f068d4a803881043fbad",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu1-default.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu1-noubchecks.console",
+    "blob": "0a46469c34892f66f5b835ac52d79f41b62a45d5",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu1-noubchecks.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu2-default.console",
+    "blob": "23a49c122cc79202fac9a1e891b967c2f42eb1bc",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu2-default.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu2-noubchecks.console",
+    "blob": "e2d28a1957e0117b8144e1893ee70dcc0bb3435f",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu2-noubchecks.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu3-default.console",
+    "blob": "ddaebff2044ba04a5abe5621896a68ff1121cd55",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu3-default.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu3-noubchecks.console",
+    "blob": "d46a58df64d6472a103676a028115bafa314874d",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu3-noubchecks.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-phase.console",
+    "blob": "48f6a4c1cb639d775b76442b4a5450e57a4f75d1",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-phase.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-tails.console",
+    "blob": "4ab27b3d9f05b452cd5fb3e20d08445019ef1172",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-tails.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-tiny.console",
+    "blob": "fa43ce565fc37854ecfe32f7a7137f3ad508a6d6",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-tiny.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/summary.txt",
+    "blob": "3e58e5f80b676c53de496ab7b88b82743cabd64e",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/summary.txt",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/toolchain.txt",
+    "blob": "e42b1f5c4c22aa19fb2b0fc312ff81a93b9851b8",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/toolchain.txt",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-build-false.asm",
+    "blob": "f1ab04d457e0d5b98267610c7eaccccbaea82073",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-build-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-finish-false.asm",
+    "blob": "44cd87259186ceebec57518ebb7f60c50cc4d7e8",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-finish-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-finish-slow-false.asm",
+    "blob": "2c3b1f94ab99de50924b538875c53abb0b1270e8",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-finish-slow-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-refill-false.asm",
+    "blob": "babcdf71000e7e0719ecb3abd2708e1cdc93f2be",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-refill-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2s-build-false-same-binary.asm",
+    "blob": "c9b13d7a4403150b1ef5184f9e5f829382c6042e",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2s-build-false-same-binary.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2su-build-false.asm",
+    "blob": "1937f1891764819355d34fc402d7b82c00026d8c",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2su-build-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2su-finish-false.asm",
+    "blob": "39f134cd77569266b4ed3650f075100beceb740a",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2su-finish-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2su-refill-false.asm",
+    "blob": "937a815cf0f9753b54d9a699bd7bd0e714366f9f",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2su-refill-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/row-loops.txt",
+    "blob": "2b31c26920f38034369e55bba0bbc5537afca632",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/row-loops.txt",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/v2-build-false-same-binary.asm",
+    "blob": "31d23f11a9c0470f607ab2181ea735c28f8738fc",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/v2-build-false-same-binary.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/m1.console",
+    "blob": "229ce08435a7c6466ad5bc631819db73da1c0938",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/m1.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/m1.diff",
+    "blob": "e0a331102c73bc7eeeb4f1158af04f6d1d7294f5",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/m1.diff",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/m2.console",
+    "blob": "8fcb45f2b8b60cda8666289fbe05c8c8b3bc217a",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/m2.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/m2.diff",
+    "blob": "cb546c08ad10d9f2e05c61d56499b2c0a3ef67bd",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/m2.diff",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/mu1.diff",
+    "blob": "adac53bcd48a94bea07e17fee4c9b8daec709c65",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/mu1.diff",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/mu2.diff",
+    "blob": "d9ee94060427c8fa262ff5753485dda9a737a31e",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/mu2.diff",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/mu3.diff",
+    "blob": "8585ea833c9096c77fedcd1098ed6ff9410b4a95",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/mu3.diff",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-allbytes.console",
+    "blob": "000bbaf3e444c4a51d8015b762b3cfdbfa498888",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-allbytes.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-crossing.console",
+    "blob": "49c4a9863347d6d3db1ac6e7aa7bd98846ee4654",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-crossing.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-epoch.console",
+    "blob": "192e8c02bafe6586370a3268fb51e742e88b5713",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-epoch.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-malformed.console",
+    "blob": "cca88f2547f54585bf800308ef9244e14213b874",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-malformed.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-pending.console",
+    "blob": "5eb7143c37bf3e6bf01c4968a8eb4be038b0b586",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-pending.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-reuse.console",
+    "blob": "a80b3011f45ea759b6e7d42e7f650cc66f82d797",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-reuse.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-runs.console",
+    "blob": "655b14b3af830e463481108fa75b307257207ce9",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-runs.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-slots.console",
+    "blob": "e97b0372c7d85373b5e4bb705fc5b11bf5d7aa57",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-slots.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-tiny.console",
+    "blob": "a1e8d96a61633fa538514420c6a57f69aaff523d",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-tiny.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/summary.txt",
+    "blob": "d947d1758d1385c003f319f4908a80313810564a",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/summary.txt",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/toolchain.txt",
+    "blob": "e42b1f5c4c22aa19fb2b0fc312ff81a93b9851b8",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/miri/toolchain.txt",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/ctor2d-build-false.asm",
+    "blob": "a6f9141bf2574419e76f1a9ce18061f0da3291ed",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/listings/ctor2d-build-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/ctor2d-finish-false.asm",
+    "blob": "be3ca935f8a48278be45316f7750e3e182f4c6f8",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/listings/ctor2d-finish-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/ctor2d-refill-false.asm",
+    "blob": "60ad7562e7dd563f018a83daf84d0d5b1af3da97",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/listings/ctor2d-refill-false.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/row-loops.txt",
+    "blob": "0653fa2b01fca8733da523c1c439f390e29b0d83",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/listings/row-loops.txt",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/v2-build-false-same-binary.asm",
+    "blob": "dda9953ea4f7cb9c7fb6cb66757de756d8333276",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/listings/v2-build-false-same-binary.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/v2-refill-false-same-binary.asm",
+    "blob": "1f3b4b5a91e889c344a18ee914b3f2d156febbb6",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/listings/v2-refill-false-same-binary.asm",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/v2-row-loops.txt",
+    "blob": "16c4af245829e22036fb358d5391b6c55227fdb4",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/listings/v2-row-loops.txt",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/README.txt",
+    "blob": "b9f45d7b8c7ede1c3f11b29c3da33f23c8909c68",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/README.txt",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run1.callgrind.gz",
+    "blob": "31d06ed66bec1e352b47410ea74a6dd3f293b54f",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run1.callgrind.gz",
+    "encoding": "base64"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run1.console",
+    "blob": "4152898e8c963f46b69ffb5451f4fb6513b2b407",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run1.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run2.callgrind.gz",
+    "blob": "fdde1ab4cb22bf0c8f3e7f9640bd8164d7bb497c",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run2.callgrind.gz",
+    "encoding": "base64"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run2.console",
+    "blob": "e0ea88351d62ff80fc29bef4e3a8bc74a707e91d",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run2.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run1.callgrind.gz",
+    "blob": "9caa0bc1aa8d173e4c2a14a25a4f7ede8a0edbd4",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run1.callgrind.gz",
+    "encoding": "base64"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run1.console",
+    "blob": "5dad2ac458cff2d10ad624b3acf872c4d1354a20",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run1.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run2.callgrind.gz",
+    "blob": "f94493f0b5514187322635da476a6f01e3f58eaa",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run2.callgrind.gz",
+    "encoding": "base64"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run2.console",
+    "blob": "b4e339233b38b3ab2c9168a55a4c15a3f4d9b2e7",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run2.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/README.txt",
+    "blob": "b9b4f34c2903de9a38ddefcb91f0fa2371c7eef7",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/README.txt",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run1.callgrind.gz",
+    "blob": "b71ddd0d2df05dd579e8952b63eb3866efc900e8",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run1.callgrind.gz",
+    "encoding": "base64"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run1.console",
+    "blob": "c94e1e79e6354e60b279ccacbfe9c56f70c2ee13",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run1.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run2.callgrind.gz",
+    "blob": "3d8adbd68aef8fdeb7c298c8ef97c7a1febd6e10",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run2.callgrind.gz",
+    "encoding": "base64"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run2.console",
+    "blob": "b616fc1cb3027e9dfab9b965eb6085bb05c2b568",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run2.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run1.callgrind.gz",
+    "blob": "65a88a6112a09def52c831f1a3b268a2cfcfed98",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run1.callgrind.gz",
+    "encoding": "base64"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run1.console",
+    "blob": "88a3ea466e00767de889a7d8645d17f90c7abd90",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run1.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run2.callgrind.gz",
+    "blob": "8283d7a9f133fe8f6862b89e579a295ffc4e90c8",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run2.callgrind.gz",
+    "encoding": "base64"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run2.console",
+    "blob": "c762b9a7197f63f7b1b32592c54dc98832812ed4",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run2.console",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "8beffe28bec9b539517b442350d8a3fda62164c8",
+    "path": "examples/c30walk/ctor2.rs",
+    "blob": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+    "local": "evidence/b2/examples/c30walk/ctor2.rs",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "dbf5139e12ae60b5f5bff40059b88d65ddccea41",
+    "path": "examples/c30walk/ctor3.rs",
+    "blob": "01f91419904a605b721dc1742ba8087fe79f74cf",
+    "local": "evidence/b3/examples/c30walk/ctor3.rs",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "examples/c30walk/ctor2su.rs",
+    "blob": "028dfef9250bd257e1982082e93fd001301089bd",
+    "local": "evidence/scanner/examples/c30walk/ctor2su.rs",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "examples/c30walk/ctor2d.rs",
+    "blob": "d7383f9e9f2793e1d270de646ebc08294b12cf48",
+    "local": "evidence/descriptor/examples/c30walk/ctor2d.rs",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "examples/c30walk/ctor2.rs",
+    "blob": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+    "local": "evidence/scanner/examples/c30walk/ctor2.rs",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "examples/c30walk/ctor3.rs",
+    "blob": "01f91419904a605b721dc1742ba8087fe79f74cf",
+    "local": "evidence/scanner/examples/c30walk/ctor3.rs",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "examples/c30walk/ctor2.rs",
+    "blob": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+    "local": "evidence/descriptor/examples/c30walk/ctor2.rs",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "examples/c30walk/ctor3.rs",
+    "blob": "01f91419904a605b721dc1742ba8087fe79f74cf",
+    "local": "evidence/descriptor/examples/c30walk/ctor3.rs",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "examples/c30walk/ctor2.rs",
+    "blob": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+    "local": "evidence/finaliser/examples/c30walk/ctor2.rs",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "examples/c30walk/ctor3.rs",
+    "blob": "01f91419904a605b721dc1742ba8087fe79f74cf",
+    "local": "evidence/finaliser/examples/c30walk/ctor3.rs",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "18ca5d4cb9fcaeaf5cee7e7f1db2ebb1fd72080e",
+    "path": "docs/journal/2026-11-04-compact30-research-charter.md",
+    "blob": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
+    "local": "evidence/index/docs/journal/2026-11-04-compact30-research-charter.md",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "18ca5d4cb9fcaeaf5cee7e7f1db2ebb1fd72080e",
+    "path": "docs/journal/compact30-channel/REVIEWER.md",
+    "blob": "2839405784ec4e63d2f4cc7bd406e5dff4dd1029",
+    "local": "evidence/index/docs/journal/compact30-channel/REVIEWER.md",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "18ca5d4cb9fcaeaf5cee7e7f1db2ebb1fd72080e",
+    "path": "docs/journal/compact30-channel/section-6.2-index.md",
+    "blob": "27062e3971bd83981cf2725506e84e4f5430e082",
+    "local": "evidence/index/docs/journal/compact30-channel/section-6.2-index.md",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/variants/variant-a-registered.diff",
+    "blob": "20971be8998443bd6bf231f12c63dc5dcb8af390",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-u1u2-trial/variants/variant-a-registered.diff",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "49cb46b65070059af49e906fa8d98693b808bda2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype.md",
+    "blob": "1594073f42b17ddf92bfafc7e90fa8ce4a8468a0",
+    "local": "evidence/scanner/docs/journal/2026-11-04-compact30-scanner-prototype.md",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+    "path": "docs/journal/2026-11-04-compact30-descriptor-prototype.md",
+    "blob": "6b0c6aaa9eb2603906cc8042efaeceb63982feb2",
+    "local": "evidence/descriptor/docs/journal/2026-11-04-compact30-descriptor-prototype.md",
+    "encoding": "utf-8"
+  },
+  {
+    "commit": "46c322213e5780e4be2a05ebcc57348836657720",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser.md",
+    "blob": "38c9e7a739eec93f6d96e1916be3be49af7c5d7f",
+    "local": "evidence/finaliser/docs/journal/2026-11-04-compact30-epoch-tagged-finaliser.md",
+    "encoding": "utf-8"
+  }
+]
