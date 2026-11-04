@@ -1,6 +1,6 @@
 # Compact30 campaign entry
 
-**Read first, every run: [MODE.md](MODE.md)**, the register for every role, set by Louis. It changes how the work is done, never what is authorised.
+**Read first, every run: [MODE.md](MODE.md)**, the register for every role, set by Louis. It changes how the work is done, never what is authorised. Its premise, analysis and design rules: [2026-11-04-compact30-mode.md](../2026-11-04-compact30-mode.md); read that before proposing any change to MODE.md.
 
 Adopted by the Coordinator on research/compact30-channel from the Researcher's draft at
 review/compact30-adversarial-scanner-146@8b3913a6 (REVIEW on #145, comment 6637667413), with the
