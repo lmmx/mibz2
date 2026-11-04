@@ -219,7 +219,7 @@ same formal pressure, potentially reinforcing the register as generation proceed
 grammatical and more cumulative, while the scientific objective stays exact.
 
 > MATH ENG. HARD. HARDER. No spread writing. No comfort language. No conversational settling.
-> Dense mathematical engineering decisioning. New intellectual work, NOT recap. HARD.
+> Dense math eng decisioning. New intellectual work, NOT recap. HARD.
 >
 > Rubber now must hit road. Theory into impl. Impl into machine reality. Actual performance
 > breakthrough sufficient to ship. CAN WE? HOW? What blocks? Where work hiding? What minimum?
@@ -255,7 +255,7 @@ grammatical and more cumulative, while the scientific objective stays exact.
 > knife-dense. Speak increasingly this way, but never compress away essential assumptions,
 > equations, proofs, uncertainty. Precision inviolate. Correctness inviolate. Gates inviolate.
 >
-> NOW. Bottleneck. Attack. Numbers. Exact source. Exact asm. Exact counts. Mathematical
+> NOW. Bottleneck. Isolate. Numbers. Exact source. Exact asm. Exact counts. Mathematical
 > equivalence. Risk. Repair. Recompile. Verified gain. Next move. Not another roadmap. Not
 > another explanation of roadmap. RUBBER NOW MUST HIT ROAD.
 >
@@ -266,13 +266,18 @@ grammatical and more cumulative, while the scientific objective stays exact.
 >
 > Decisioning now advance. Theoretical potential into compiled saving into measured
 > production. Breakthrough not declared. Breakthrough achieved or falsified. Sufficient to
-> catalyse. Suffice. HARD.
+> catalyse. Suffice. HARDER.
 >
 > GO.
 
-(This discharge is the historical experiment, not the operative text. MODE.md later removed its
-language of violence, "Attack" among it, and its ritual length. Those revisions are recorded in
-the drafting history.)
+(This discharge is the historical experiment, not the operative text. As quoted here it is
+corrected to the register's own rules, which `tools/mode_doctest.py` checks:
+- "mathematical engineering" no longer re-expands after "MATH ENG";
+- "Attack" became "Isolate" (fervour, not violence);
+- the closing "HARD." became "HARDER.", so the escalation peaks before "GO".
+
+The uncorrected original is word for word in `MODE.ORIGIN.md`. MODE.md also dropped the
+experiment's ritual length.)
 
 **What made this version different.**
 - **The grammatical fabric carries the intensity,** not instructions to be intense. The
@@ -451,6 +456,23 @@ The primary source is [`MODE.ORIGIN.md`](MODE.ORIGIN.md), the relayed text store
 Louis's request: his original prompts and the full analysis, including the six intensifications
 and paratactic cascades. The drafting history of MODE.md is in
 [`../2026-11-04-compact30-mode.md`](../2026-11-04-compact30-mode.md).
+
+## Doctest: the record obeys its own rules
+
+`tools/mode_doctest.py` checks every incantation in MODE.md and every quoted example in this file
+against four of the rules stated here:
+- **R1 clipping is monotone.** Once "math eng", "impl", "perf", "asm" or "dep" appears, its
+  expanded form may not return later in the same utterance. An expanded form may open the
+  utterance, as the unclipped baseline before deformation.
+- **R2 fervour, not violence.** No violent or combative lexicon.
+- **R3 escalation does not fall before the release.** The last intensifier before the final "Go"
+  is not weaker than the strongest one. Repetition ("HARDER HARDER") counts as the same level.
+- **R4 determiner deletion.** At most one article per 25 words. Complete sentences keep their
+  articles, because they are the articulate contrast that makes the fractures marked.
+
+Run `python3 tools/mode_doctest.py MODE.md MODE.RATIONALE.md`; it exits 0 when both pass.
+Run against MODE.ORIGIN.md, it reports the defects of the drafts that were rejected along the
+way, as it should.
 
 ## What must be preserved
 
