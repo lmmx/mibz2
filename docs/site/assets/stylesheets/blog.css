@@ -15,6 +15,14 @@
   --bf-blue-tint: #dce9fa;
   --bf-amber: #b26b00;
   --bf-amber-tint: #f8ead0;
+  --bf-claude: #d97757;
+  --bf-claude-tint: #f8e8e0;
+  --bf-openai: #10a37f;
+  --bf-openai-tint: #e2f3ec;
+  --bf-xh: #b26b00;
+  --bf-xh-tint: #f8ead0;
+  --bf-ultra: #7b4fd6;
+  --bf-ultra-tint: #ece4fb;
 }
 [data-md-color-scheme="slate"] .bf-fig {
   --bf-frame: #34342f;
@@ -29,6 +37,14 @@
   --bf-blue-tint: #1d2f47;
   --bf-amber: #f2b544;
   --bf-amber-tint: #3b3020;
+  --bf-claude: #e08a6d;
+  --bf-claude-tint: #3a2821;
+  --bf-openai: #19c37d;
+  --bf-openai-tint: #16302a;
+  --bf-xh: #f2b544;
+  --bf-xh-tint: #3b3020;
+  --bf-ultra: #b195f2;
+  --bf-ultra-tint: #2d2543;
 }
 
 .md-typeset .bf-fig {
@@ -581,3 +597,33 @@
   border-right: 2px solid var(--md-default-fg-color--lighter);
   color: var(--md-default-fg-color--light);
 }
+
+/* the agent-team post: product marks, the agent families and the Codex lane */
+.bf-fig .bf-logo-ink { fill: var(--bf-ink); }
+.bf-fig .bf-logo-claude { fill: var(--bf-claude); }
+.bf-fig .bf-card-claude { fill: var(--bf-claude-tint); stroke: var(--bf-claude); stroke-width: 1.5; }
+.bf-fig .bf-group { fill: none; stroke: var(--bf-frame); stroke-width: 1.5; }
+.bf-fig .bf-lane { fill: var(--bf-surface); stroke: var(--bf-frame); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.bf-fig .bf-group-astra { fill: var(--bf-openai-tint); stroke: var(--bf-openai); stroke-width: 1.5; }
+.bf-fig .bf-card-astra-in { fill: var(--bf-surface); stroke: var(--bf-openai); stroke-width: 1; }
+.bf-fig .bf-card-astra { fill: var(--bf-openai-tint); stroke: var(--bf-openai); stroke-width: 1.5; }
+.bf-fig .bf-lane-astra { fill: var(--bf-openai-tint); stroke: var(--bf-openai); stroke-width: 1.5; stroke-dasharray: 6 5; }
+.bf-fig .bf-pill-xh { fill: var(--bf-xh-tint); stroke: var(--bf-xh); stroke-width: 1; }
+.bf-fig .bf-pill-xh-t { fill: var(--bf-xh); font-size: 10px; font-weight: 600; }
+.bf-fig .bf-pill-ultra { fill: var(--bf-ultra-tint); stroke: var(--bf-ultra); stroke-width: 1; }
+.bf-fig .bf-pill-ultra-t { fill: var(--bf-ultra); font-size: 10px; font-weight: 600; }
+
+/* the agent-team post: product and effort colours in running text and tables */
+.md-typeset .ag-claude { color: #c15f3c; font-weight: 600; }
+.md-typeset .ag-astra { color: #0b8a68; font-weight: 600; }
+.md-typeset .ag-chip { display: inline-block; padding: 0 0.5em; border-radius: 0.7em; font-size: 0.85em; font-weight: 600; white-space: nowrap; }
+.md-typeset .ag-xh { color: #8a5300; background: #f8ead0; box-shadow: inset 0 0 0 1px #b26b00; }
+.md-typeset .ag-ultra { color: #5b33b8; background: #ece4fb; box-shadow: inset 0 0 0 1px #7b4fd6; }
+.md-typeset .ag-high { color: #2f6f8f; background: #d6e5ec; box-shadow: inset 0 0 0 1px #4687a8; }
+.md-typeset .ag-session { color: #c15f3c; background: #f8e8e0; box-shadow: inset 0 0 0 1px #d97757; }
+[data-md-color-scheme="slate"] .md-typeset .ag-claude { color: #e9967a; }
+[data-md-color-scheme="slate"] .md-typeset .ag-astra { color: #3fd69c; }
+[data-md-color-scheme="slate"] .md-typeset .ag-xh { color: #f2b544; background: #3b3020; box-shadow: inset 0 0 0 1px #f2b544; }
+[data-md-color-scheme="slate"] .md-typeset .ag-ultra { color: #c4adf6; background: #2d2543; box-shadow: inset 0 0 0 1px #b195f2; }
+[data-md-color-scheme="slate"] .md-typeset .ag-high { color: #8cc3df; background: #1f3440; box-shadow: inset 0 0 0 1px #5199bd; }
+[data-md-color-scheme="slate"] .md-typeset .ag-session { color: #e9967a; background: #3a2821; box-shadow: inset 0 0 0 1px #e08a6d; }

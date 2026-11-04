@@ -113,7 +113,7 @@ def find_chrome(arg):
 def render(chrome, out, **fields):
     """Render one card (section, title, description, foot) to the PNG `out`."""
     fields = {k: html.escape(str(v)) for k, v in fields.items()}
-    title_px = 60 if len(fields["title"]) <= 70 else 52
+    title_px = 60 if len(fields["title"]) <= 70 else 46
     page = PAGE.format(w=W, h=H, title_px=title_px, hero=HERO.resolve().as_uri(), **fields)
     with tempfile.TemporaryDirectory() as tmp:
         src = Path(tmp) / "card.html"
