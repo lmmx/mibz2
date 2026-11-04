@@ -1,11 +1,11 @@
 ---
-title: "Technical appendix: the ideas behind compact30's table builder"
-description: "Technical appendix to the compact30 table-builder post: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time."
+title: "Technical appendix: the ideas behind building a smaller bzip2 decoding table"
+description: "Technical appendix to the post on building a smaller bzip2 decoding table: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time."
 ---
 
-← [From 49 instructions to 12](2026-11-04-compact30-constructor.md)
+← [Building a smaller bzip2 decoding table](2026-11-04-compact30-constructor.md)
 
-# Technical appendix: the ideas behind compact30's table builder
+# Technical appendix: the ideas behind building a smaller bzip2 decoding table
 
 [The main post](2026-11-04-compact30-constructor.md) moves quickly through ideas that come
 from several fields at once: the Burrows–Wheeler transform, sorting, compact integer formats
@@ -34,7 +34,8 @@ losing or repeating any.
 
 Undoing the Burrows–Wheeler transform comes down to following a permutation like this one,
 emitting a byte at each step. mibz2's conventional table stores one 4-byte entry per row.
-Compact30 stores the same permutation in less memory. The catch, and the subject of the main
+Compact30, named for the thirty rows it packs into each 64-byte record, stores the same
+permutation in less memory. The catch, and the subject of the main
 post, is that the compact table has to be built first, and building it must not cost more
 than it saves.
 

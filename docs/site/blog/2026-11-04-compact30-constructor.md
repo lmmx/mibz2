@@ -1,7 +1,7 @@
 ---
-title: "From 49 instructions to 12: building compact30's navigation table"
+title: "Building a smaller bzip2 decoding table: from 49 instructions to 12"
 image: assets/social/blog-2026-11-04-compact30-constructor.png
-description: "Compact30's second table builder writes a provisional 16-bit label for each row and finishes each group of thirty rows once. That cut its per-row loop from 49 instructions to 12, but with four workers it still builds too slowly."
+description: "Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly."
 ---
 
 <div class="post-hero" markdown>
@@ -11,11 +11,10 @@ description: "Compact30's second table builder writes a provisional 16-bit label
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# From 49 instructions to 12: building compact30's navigation table
+# Building a smaller bzip2 decoding table: from 49 instructions to 12
 
-Compact30's second table builder writes a provisional 16-bit label for each row and finishes
-each group of thirty rows once. That cut its per-row loop from 49 instructions to 12, but with
-four workers it still builds too slowly.
+Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the
+inner loop. It still builds too slowly.
 {: .post-dek }
 
 4 November 2026 · 12 min read · [Research in progress](#8-fewer-instructions-not-yet-a-cheaper-build)
@@ -28,7 +27,8 @@ four workers it still builds too slowly.
 </div>
 
 [The last post](2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md) ended with a
-smaller navigation table, compact30, beating mibz2's conventional one when four workers walk
+smaller navigation table, compact30 (named for its thirty rows to each 64-byte record),
+beating mibz2's conventional one when four workers walk
 at once, and a warning: [the table still has to be
 built](2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md#9-the-table-still-has-to-be-built).
 The records in that comparison came from a reference builder that computed every row's
