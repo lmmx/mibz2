@@ -111,6 +111,27 @@ AI-attributed commit. Every other commit is the maintainer's: Louis Maddox
 <louismmx@gmail.com>, with no AI attribution in commits, PR bodies, release notes or
 metadata.
 
+## Research publication
+
+The work is made visible as it develops, not only after a breakthrough or a release (Louis,
+2026-11-04). This is a standing responsibility, and routine posts need no approval.
+- **The Researcher** originates and writes substantive posts: discoveries, constructions,
+  counterexamples, unexpected results and open questions. They are original explanations, not
+  summaries of checkpoints.
+- **The steward** owns editorial synthesis and publication. It writes posts, carries the
+  Researcher's posts to readers, and maintains the blog (`docs/site/blog/`, its index, the
+  navigation in `zensical.toml`, and the social cards from `docs/scripts/social_cards.py`).
+- **When to publish:** at meaningful milestones, negative results and changes of direction
+  included. Not every experiment, and on no fixed schedule.
+- **What a post must do:** put the evidence first and link the reproducible records. Keep
+  hypotheses apart from measurements, and never present an unqualified result as a production
+  improvement. Write for readers outside the team: the problem, the idea, what was measured,
+  what was learned and what remains open. Technical depth, not procedural chronicle or
+  promotion.
+- **How it ships:** through the docs-only gate above (CI green, `docs/scripts/check_site.py`
+  clean), under the standing attribution rule. There is no new approval process, and no extra
+  runs: the writing follows from the research, and doesn't interrupt it.
+
 ## What stays with the maintainer
 
 These decisions still need the maintainer:
