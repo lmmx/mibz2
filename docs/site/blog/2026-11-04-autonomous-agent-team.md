@@ -77,7 +77,7 @@ To reproduce the setup, these are the exact settings:
 
 | Role | Runs as | Model | Reasoning effort | Started by |
 | --- | --- | --- | --- | --- |
-| Coordinator | <span class="ag-claude">Claude Code</span> session | <span class="ag-claude">Claude</span>, as configured for the session | <span class="ag-chip ag-session">as configured</span> | a subscription to the PRs it follows |
+| Coordinator | <span class="ag-claude">Claude Code</span> session | <span class="ag-claude">Claude</span>, as configured for the session | <span class="ag-chip ag-high">High</span> | a subscription to the PRs it follows |
 | Guardian | <span class="ag-astra">ChatGPT Work</span> task, *Compact30 (W) Guardian* | <span class="ag-astra">Astra</span> | <span class="ag-chip ag-xh">Extra High</span> | any PR comment; acts only on a `CHECKPOINT` |
 | Optimiser | <span class="ag-astra">ChatGPT Work</span> task, *Compact30 (W) Optimiser* | <span class="ag-astra">Astra</span> | <span class="ag-chip ag-ultra">Ultra</span> | any PR comment; acts only on a `CHECKPOINT` addressed to it |
 | Researcher | <span class="ag-astra">ChatGPT Work</span> task, *Compact30 (W) Researcher* | <span class="ag-astra">Astra</span> | <span class="ag-chip ag-xh">Extra High</span> | any PR comment; acts only on a message addressed to it |
