@@ -41,9 +41,11 @@
 //! 1. its header and Huffman-coded symbols (`block`), the one sequential part: a block's
 //!    end is known only once its symbols are read, so one thread reads them in order;
 //! 2. RUNA/RUNB and move-to-front (`mtf`; AVX2 for the move);
-//! 3. the T-vector, by a counting sort (`bwt::build`);
-//! 4. the inverse BWT's walk, as 12 interleaved chains joined in order
-//!    (`bwt::walk_segments`: the walk is bound by a load's latency, not by bandwidth);
+//! 3. the inverse BWT's successor table: by default compact30's records (one 64-byte
+//!    record per 30 rows, built from the last column in one scan: `bwt::Compact30`), or
+//!    the T-vector, by a counting sort (`bwt::build`, `bwt::Segmented`);
+//! 4. the inverse BWT's walk, as interleaved chains joined in order (the room walk:
+//!    the walk is bound by a load's latency, not by bandwidth);
 //!    phases 3 and 4 sit behind `bwt::InverseBwt`;
 //! 5. RLE1 undone (`rle`; AVX2) and the block's CRC (`crc`; PCLMULQDQ), checked against
 //!    the CRC the block stores.
@@ -80,6 +82,8 @@
 pub mod bits;
 pub mod block;
 pub mod bwt;
+// (the compact30 inverse BWT, the default kernel: bwt::Compact30)
+mod c30;
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;
@@ -262,7 +266,7 @@ impl From<Error> for std::io::Error {
 }
 
 /// A worker's buffers, kept from block to block (about 7 MB at the 900 kB block size)
-pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
+pub struct Scratch<I: bwt::InverseBwt = bwt::Compact30> {
     ll: Vec<u8>,
     counts: [u32; 256],
     /// the MTF stage's count checkpoints, for a kernel that reads them
@@ -357,7 +361,7 @@ pub fn decode_block<I: bwt::InverseBwt>(
 /// A whole .bz2 (its streams one after another) decoded on this thread, every block's and
 /// stream's CRC checked, with the fastest kernels this CPU has
 pub fn decode(data: &[u8]) -> Result<Vec<u8>, Error> {
-    decode_with::<bwt::Segmented>(data, Kernels::detect())
+    decode_with::<bwt::Compact30>(data, Kernels::detect())
 }
 
 /// A whole .bz2 decoded on `threads` threads (at least 1), in order, spent as
@@ -388,8 +392,9 @@ pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
     Ok(out)
 }
 
-/// `decode` with the kernels `k` and the inverse-BWT kernel `I` (`bwt::Segmented`, the
-/// default; `bwt::Plain`, the plain walk, to test or time it against)
+/// `decode` with the kernels `k` and the inverse-BWT kernel `I` (`bwt::Compact30`, the
+/// default; `bwt::Segmented`, the T-vector's room walk, or `bwt::Plain`, the plain walk,
+/// to test or time it against)
 pub fn decode_with<I: bwt::InverseBwt>(data: &[u8], k: Kernels) -> Result<Vec<u8>, Error> {
     let mut sc = stream::Scanner::new(stream::SliceSource(data));
     let mut out = Vec::new();
@@ -442,7 +447,7 @@ pub fn decode_blocks(
     k: Kernels,
     out: &mut Vec<u8>,
 ) -> Result<Range, Error> {
-    let mut s = Scratch::<bwt::Segmented>::default();
+    let mut s = Scratch::<bwt::Compact30>::default();
     let mut syms = Vec::new();
     let mut range = Range {
         end: start_bit,

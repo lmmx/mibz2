@@ -2,19 +2,22 @@ name: Miri
 
 # The segmented walks' unsafe code under Miri, on blocks small enough to interpret
 # (bwt::tests::miri_*, about a minute). Each test asserts it reached the walk's handoff
-# transitions, so a pass means they were checked. And the cooperative pool's
+# transitions, so a pass means they were checked. The compact30 kernel's constructor and
+# record walk (c30::tests::miri_*), likewise. And the cooperative pool's
 # (coop::tests::miri_*): its lifetime erasure, panics and wake-ups, under Miri's race
 # detector. Only on changes to the walks or the pool.
 on:
   pull_request:
     paths:
       - "src/bwt.rs"
+      - "src/c30.rs"
       - "src/coop.rs"
       - ".github/workflows/miri.yml"
   push:
     branches: [main, master]
     paths:
       - "src/bwt.rs"
+      - "src/c30.rs"
       - "src/coop.rs"
       - ".github/workflows/miri.yml"
   workflow_dispatch:

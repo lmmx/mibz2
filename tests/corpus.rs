@@ -42,6 +42,10 @@ fn every_entry_point() {
                 "{ctx}: scalar plain"
             );
             assert!(
+                mibz2::decode_with::<mibz2::bwt::Segmented>(&z, Kernels::detect()).unwrap() == data,
+                "{ctx}: Segmented"
+            );
+            assert!(
                 mibz2::decode_parallel(&z, 3).unwrap() == data,
                 "{ctx}: decode_parallel"
             );

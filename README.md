@@ -98,7 +98,7 @@ for span in mibz2::scan(&data) {
 | `decode_blocks(data, start_bit, end_bit, level, kernels, out)` → `Range` | a range of whole blocks, each CRC checked |
 | `Error { kind: ErrorKind, block, bit }` | what is wrong with the input, and where |
 | `Kernels::detect()`, `Kernels::scalar()` | the SIMD kernels, or the portable ones |
-| `bwt::InverseBwt` (`Segmented`, the default; `Plain`), `decode_with::<I>`, `StreamDecoder::with_inverse::<I>` | the inverse-BWT kernel, swappable and timeable as part of the whole decoder |
+| `bwt::InverseBwt` (`Compact30`, the default; `Segmented`, `Plain`), `decode_with::<I>`, `StreamDecoder::with_inverse::<I>` | the inverse-BWT kernel, swappable and timeable as part of the whole decoder |
 
 **Errors** (`ErrorKind`) cover the following:
 
@@ -134,8 +134,9 @@ and each has its own error:
   order. This is the one sequential phase: a block's end is known only once they are read.
   It is roughly a tenth of a decode on well-compressed text, more on poorly compressible
   data.
-- **The workers.** Each worker finishes a block: move-to-front, the T-vector, the inverse
-  BWT walk, RLE1 and the CRC.
+- **The workers.** Each worker finishes a block: move-to-front, the inverse BWT's table
+  (compact30's records, `bwt::Compact30`: 64 bytes per 30 rows) and its walk, RLE1 and
+  the CRC.
 - **The reader** takes the blocks in order.
 - **Memory is bounded:** at most `slots` blocks are in flight, and the buffers are reused.
 - **The walk** (`bwt::walk_segments`):

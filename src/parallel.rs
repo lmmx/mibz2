@@ -120,14 +120,14 @@ impl StreamDecoder {
     /// the plan's workers or teams). The team size is 2, 3 or 4; another runs as that many
     /// production workers.
     pub fn planned(plan: Plan, slots: usize, k: Kernels) -> StreamDecoder {
-        use super::bwt::{Cooperative, Segmented};
+        use super::bwt::{Compact30, Cooperative};
         let mut dec = match plan {
-            Plan::Workers(n) => Self::with_inverse::<Segmented>(n, slots, k),
+            Plan::Workers(n) => Self::with_inverse::<Compact30>(n, slots, k),
             Plan::Teams { teams, k: 2 } => Self::with_inverse::<Cooperative<2>>(teams, slots, k),
             Plan::Teams { teams, k: 3 } => Self::with_inverse::<Cooperative<3>>(teams, slots, k),
             Plan::Teams { teams, k: 4 } => Self::with_inverse::<Cooperative<4>>(teams, slots, k),
             Plan::Teams { teams, k: t } => {
-                Self::with_inverse::<Segmented>(teams.max(1) * t.max(1), slots, k)
+                Self::with_inverse::<Compact30>(teams.max(1) * t.max(1), slots, k)
             }
         };
         dec.threads = plan.threads();
