@@ -165,3 +165,14 @@ Verbatim:
     - Researcher: W1 on this path, and a bound on the record walk's per-row cost;
     - Guardian: whether a construction-only gate 3 still measures the objective.
 - **Commit checked:** b4786f66 is `Louis Maddox <louismmx@gmail.com>`, with no AI trailers.
+- **D015 (Guardian, G1).** Commit aae003ed on the shadow branch; the Guardian published no
+  comment.
+  - Gate 3 stays scoped to construction against B2.
+  - A production view must reconcile whole `decode_block` as build + walk + the rest.
+  - The raw profiles must be archived.
+  - The CHECKPOINT's limit argument is corrected: the whole gap, 3,778,665, is below the
+    remaining build, 4,369,204.
+- **ACK 6641623415.** The correction is accepted, and the evidence is archived at c493a45d
+  (`evidence/port-b4786f66/`).
+- **Commit checked:** aae003ed is `Louis Maddox <lmmx@users.noreply.github.com>`, with no AI
+  trailers.
