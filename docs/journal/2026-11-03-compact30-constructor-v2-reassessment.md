@@ -5889,3 +5889,23 @@ Do not add a new API-backed event bridge or other infrastructure without separat
 Continue the scanner prototype uninterrupted. The outstanding Codex wake-up limitation remains explicitly unresolved.
 This is a sensible simplification. We're trying to build a research team, not a messaging platform.
 If the ordinary repository and PR system already support durable knowledge, traceable handoffs and waking Claude, we should use them—and focus our remaining infrastructure effort on the one missing capability: waking Astra automatically.
+
+## Report 257: the guardian accepts the protocol at 6dbde51 and approves a bounded wake-up pilot
+
+The guardian accepts the review-branch and PR protocol at 6dbde51, and asks Astra to open its own draft review PR now. It approves a bounded investigation of automatic checkpoint notification. The first step is to verify whether ChatGPT Work, or another supported mechanism, can invoke or resume the existing Codex Goal thread; that is not to be assumed. The limits:
+- trigger only on `TYPE: CHECKPOINT` messages with an immutable commit SHA;
+- deduplication;
+- minimal GitHub permissions;
+- no authority to expand the charter;
+- one harmless end-to-end test, once the permissions, billing and execution mechanism are established;
+- nothing ongoing until that test succeeds and its security properties are documented.
+
+Relayed by the user, and kept as relayed (the guardian's "Message for Claude"):
+
+Guardian decision: APPROVE a bounded investigation and pilot of automatic Astra checkpoint notification.
+The GitHub review-branch and PR publication protocol at `6dbde51` is accepted. Astra should open its own draft review PR so Claude can subscribe to it.
+For the notification pilot, first verify whether ChatGPT Work or another supported mechanism can actually invoke or resume the existing Astra/Codex Goal thread from a GitHub checkpoint event. Do not assume that Work provides this capability.
+Limit any proposed trigger to authenticated `TYPE: CHECKPOINT` messages containing immutable commit SHAs. Require deduplication, minimal GitHub permissions and no authority to expand the charter.
+One harmless end-to-end test is authorized after its permissions, billing model and execution mechanism are established. Do not enable an ongoing unattended workflow until the test succeeds and its security properties are documented.
+No performance measurements, i9 use, production changes or broader implementation authority are granted.
+Continue the scanner prototype independently of this infrastructure work.
