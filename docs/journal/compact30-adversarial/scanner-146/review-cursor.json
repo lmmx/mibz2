@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for addressed research proposals or evidence; no current assessment requested by policy checkpoint",
+  "state": "WAITING for Coordinator adoption of proposed CAMPAIGN entry and goal, or new addressed research requests; current review complete",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -49,9 +49,10 @@
     6634998636,
     6635419092,
     6635620697,
-    6637300905
+    6637300905,
+    6637485148
   ],
-  "last_processed_comment_id": 6637300905,
+  "last_processed_comment_id": 6637485148,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -166,6 +167,18 @@
       "review_comment_id": null,
       "disposition": "Policy checkpoint receipt; no present Researcher assessment requested. Branch record published; source comment blocked by automatic approval review citing earlier no-additional-source-message instruction. No retry pending.",
       "source_comment_posted": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6637485148,
+      "report_commit": "8b3913a6e6ac6f89150760fe5f12c61de6f97aa8",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/coordinator-goal-6637485148/report.md",
+      "entry_path": "docs/journal/compact30-channel/CAMPAIGN.md",
+      "reader_tests_path": "docs/journal/compact30-adversarial/scanner-146/coordinator-goal-6637485148/reader-tests.md",
+      "review_comment_id": 6637667413,
+      "disposition": "Published 1123-character goal, proposed CAMPAIGN entry, revision strategy and six simulated Coordinator decision tests. Full production gate and separate downstream gate preserved. Entry awaits Coordinator adoption; no task authority changed.",
+      "source_comment_posted": true
     }
   ],
   "active_delegations": [],
@@ -185,23 +198,12 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6635419092,
-      6635476486,
-      6635481747
+      6637485148
     ],
     "handled": [
-      6635419092
+      6637485148
     ],
-    "skipped": [
-      {
-        "comment_id": 6635476486,
-        "reason": "TO excludes researcher"
-      },
-      {
-        "comment_id": 6635481747,
-        "reason": "TO excludes researcher"
-      }
-    ],
+    "skipped": [],
     "automation_modified": false
   },
   "reported_programme_status": {
