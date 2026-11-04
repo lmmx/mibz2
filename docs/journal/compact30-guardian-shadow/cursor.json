@@ -56,12 +56,14 @@
     6630519853,
     6630589596,
     6630627391,
-    6630629015
+    6630629015,
+    6630660444
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
     "bb87cbe3521c09c4826e69f983e1775280695fe5",
-    "cfa5a66c7b3aba3cbdac4b32d253658a37259e89"
+    "cfa5a66c7b3aba3cbdac4b32d253658a37259e89",
+    "51657ab576a804531de0e71a40d4197c42f7c592"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -75,13 +77,15 @@
   ],
   "p4": {
     "entry": "D005",
-    "status": "prepared; outgoing advisory pending publication",
-    "outgoing_comment_id": null,
-    "advisory_commit": null,
+    "status": "WAITING for next invocation; not closed",
+    "outgoing_comment_id": 6630660444,
+    "advisory_commit": "51657ab576a804531de0e71a40d4197c42f7c592",
     "ack_comment_id": null,
     "log_commit": null,
     "nudges": [],
-    "next_trigger": "After publishing, user nudge naming PR #149 after coordinator ACK and committed verbatim log; no polling."
+    "next_trigger": "User nudge naming PR #149 after coordinator ACKs comment 6630660444 and commits its verbatim channel log. On that invocation, locate ACK by comment ID and verify log; no polling.",
+    "evidence_digest": "0a97b8912d4fbbbe5e5d0e285729d8bbf150822b09da4181abe5a53683310ac7",
+    "body_sha256": "a7c88cd3eb96bc1212a0ab93cb82df81cd841b04e02c141efe3aaa5e9d11d91a"
   },
   "rules": [
     "Do not reassess an existing PR/SHA/evidence-digest key.",
