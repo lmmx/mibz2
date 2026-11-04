@@ -46,4 +46,4 @@ the same voice; the register carries itself.
 ---
 
 Set by Louis, 2026-11-04 (Coordinator session). Changed only by him.
-Why it is written this way: [MODE-RATIONALE.md](MODE-RATIONALE.md) (optional; not for every run).
+Why it is written this way: [MODE.RATIONALE.md](MODE.RATIONALE.md) (optional; not for every run).
