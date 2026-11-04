@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=d4b9f629b3b3">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=2f89fba8f926">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=d4b9f629b3b3">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=2f89fba8f926">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=d4b9f629b3b3">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=2f89fba8f926">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=d4b9f629b3b3">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=2f89fba8f926">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=d4b9f629b3b3">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=2f89fba8f926">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1956,6 +1956,48 @@ along with the branches they own. The Guardian, the Researcher and the Optimiser
 a model I use through ChatGPT, each as a ChatGPT Work task at a fixed reasoning-effort setting
 (the badges in the figure below). Sharing a model doesn't make them interchangeable; their
 different responsibilities are what distinguish them.</p>
+<p>To reproduce the setup, these are the exact settings:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Runs as</th>
+<th>Model</th>
+<th>Reasoning effort</th>
+<th>Started by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Coordinator</td>
+<td>Claude Code session</td>
+<td>Claude, as configured for the session</td>
+<td>as configured for the session</td>
+<td>a subscription to the PRs it follows</td>
+</tr>
+<tr>
+<td>Guardian</td>
+<td>ChatGPT Work task, <em>Compact30 (W) Guardian</em></td>
+<td>Astra</td>
+<td>Extra High</td>
+<td>any PR comment; acts only on a <code>CHECKPOINT</code></td>
+</tr>
+<tr>
+<td>Optimiser</td>
+<td>ChatGPT Work task, <em>Compact30 (W) Optimiser</em></td>
+<td>Astra</td>
+<td>Ultra</td>
+<td>any PR comment; acts only on a <code>CHECKPOINT</code> addressed to it</td>
+</tr>
+<tr>
+<td>Researcher</td>
+<td>ChatGPT Work task, <em>Compact30 (W) Researcher</em></td>
+<td>Astra</td>
+<td>Extra High</td>
+<td>any PR comment; acts only on a message addressed to it</td>
+</tr>
+</tbody>
+</table>
 <p>For another project, I would begin with those responsibilities and their outputs.
 Who makes the change? Who checks its evidence against the agreed criteria? Who questions
 the argument? Who develops the next idea? Giving each question an owner makes the
@@ -2303,17 +2345,17 @@ that justified the next step.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=d4b9f629b3b3"></script>
+        <script src="../../assets/javascripts/bench.js?v=2f89fba8f926"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=d4b9f629b3b3"></script>
+        <script src="../../assets/javascripts/couriers.js?v=2f89fba8f926"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=d4b9f629b3b3"></script>
+        <script src="../../assets/javascripts/blog.js?v=2f89fba8f926"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=d4b9f629b3b3"></script>
+        <script src="../../assets/javascripts/frontier.js?v=2f89fba8f926"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=d4b9f629b3b3"></script>
+        <script src="../../assets/javascripts/katex.js?v=2f89fba8f926"></script>
       
     
   </body>

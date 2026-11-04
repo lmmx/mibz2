@@ -22,6 +22,15 @@ Meanwhile, the Optimiser studies the instruction-reduction problem itself. It wo
 
 All four publish through the repository. A proposal, a checkpoint and a review each identify something the next reader can inspect. The roles are written down in [the identity record](<https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/ROLES.md>), along with the branches they own. The Guardian, the Researcher and the Optimiser all run Astra, a model I use through ChatGPT, each as a ChatGPT Work task at a fixed reasoning-effort setting (the badges in the figure below). Sharing a model doesn't make them interchangeable; their different responsibilities are what distinguish them.
 
+To reproduce the setup, these are the exact settings:
+
+| Role | Runs as | Model | Reasoning effort | Started by |
+| --- | --- | --- | --- | --- |
+| Coordinator | Claude Code session | Claude, as configured for the session | as configured for the session | a subscription to the PRs it follows |
+| Guardian | ChatGPT Work task, *Compact30 (W) Guardian* | Astra | Extra High | any PR comment; acts only on a `CHECKPOINT` |
+| Optimiser | ChatGPT Work task, *Compact30 (W) Optimiser* | Astra | Ultra | any PR comment; acts only on a `CHECKPOINT` addressed to it |
+| Researcher | ChatGPT Work task, *Compact30 (W) Researcher* | Astra | Extra High | any PR comment; acts only on a message addressed to it |
+
 For another project, I would begin with those responsibilities and their outputs. Who makes the change? Who checks its evidence against the agreed criteria? Who questions the argument? Who develops the next idea? Giving each question an owner makes the handoffs concrete.
 
 The team: three Astra agents and Claude Code, joined by one repository
