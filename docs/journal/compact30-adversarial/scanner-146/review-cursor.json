@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for corrected C7 registration/checkpoint, guarded C8 census or other addressed research evidence",
+  "state": "WAITING for Assembly-1 raw-profile reconciliation and CI-hardware projection; D013 final-qualification HOLD remains; routine research continues",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -52,9 +52,11 @@
     6637300905,
     6637485148,
     6639428570,
-    6639756189
+    6639756189,
+    6639998280,
+    6640069360
   ],
-  "last_processed_comment_id": 6639756189,
+  "last_processed_comment_id": 6640069360,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -202,6 +204,24 @@
       "new_verified_savings": 0,
       "implemented": false,
       "blind_review": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6639998280,
+      "report_commit": "ee4fecc22a3308b29fe221ddb3ccd52c8d58fbb7",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/assembly1-review-6639998280/report.md",
+      "review_comment_id": 6640148670,
+      "disposition": "Archived-table signed bridge identifies 40.735M non-row integration terms and 56.392M total build/refill interaction. Constant IPC is sensitivity only; half-transfer upper completion stress remains above limit. Recommend model then existing CI on qualified unmerged integration candidate. No raw-profile replay or qualification closure."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6640069360,
+      "report_commit": "ee4fecc22a3308b29fe221ddb3ccd52c8d58fbb7",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d013-reconciliation-6640069360.md",
+      "review_comment_id": 6640153847,
+      "disposition": "D013 narrow final-qualification HOLD honoured. Guardian 13S and Researcher additive 12S reconciled by existing overlap S, counted once. Raw-profile closure remains outstanding; no line STOP."
     }
   ],
   "active_delegations": [],
@@ -221,12 +241,20 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6639756189
+      6639998280,
+      6640069360,
+      6640148670
     ],
     "handled": [
-      6639756189
+      6639998280,
+      6640069360
     ],
-    "skipped": [],
+    "skipped": [
+      {
+        "comment_id": 6640148670,
+        "reason": "TO excludes researcher"
+      }
+    ],
     "automation_modified": false
   },
   "reported_programme_status": {
