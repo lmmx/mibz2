@@ -147,3 +147,18 @@ verifiably belong to the user's GitHub account. Event-triggered runs use the sec
 ChatGPT GitHub connector can't set another. No AI attribution, of any kind, in either. The
 coordinator's own commits stay at `louismmx@gmail.com`.
 
+
+## 10. Messages that arrive during a run (observed 2026-11-04)
+
+**A role's Work task does not queue events.** A comment that arrives while that role's previous
+run is still in progress may never start a run of its own. This was observed twice for the
+Researcher: 6633675410 arrived during its 14:46 run, and 6633793271 during its 14:51–15:07 run.
+Neither got its own run.
+
+**Every addressed message must therefore end in a receipt.** A receipt is that role's REVIEW
+citing the message, or its cursor commit recording it. When the Coordinator sends a message, it
+checks for the receipt. If none appears and the role's branch shows it was mid-run when the
+message arrived, the Coordinator re-delivers the message once the role is idle, marked
+`RE: re-delivery of <comment id>`. The role's cursor deduplicates the message if the original
+was in fact processed. This needs no nudge from the user. Comments addressed to a role that is
+known to be busy should wait until its run has finished.
