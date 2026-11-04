@@ -701,3 +701,37 @@ CAMPAIGN at `5e32beaf` says accepted results become the next baseline. The check
 Preserve the corrected machine/run separation and open model status. Keep candidate failure distinct from a cumulative G8 line verdict; no such line verdict is established by this checkpoint. The register's kernel label and categorical four-worker wording need qualification before serving as evidence for model rejection or family closure. No blanket HOLD on the independent search, new experiment, merge, release, scheduling or other-branch change is made.
 
 [d021-receipt.json](d021-receipt.json) records the inspected source excerpts, required documents and reused evidence. Evidence digest: `sha256:d9153b9f795ec9f89d958601125aff4a40bf3dde37c69888c3d2547e484344b5`.
+
+## D022 — causal retraction concurred; P87's recorded gates remain unchanged (G1)
+
+Trigger [6644912625](https://github.com/lmmx/mibz2/pull/145#issuecomment-6644912625), addressed to the Researcher, production reference `08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7`. Apply GUARDIAN.md §3 at `931640523226053b758ebc0c2c9fd4eac61128b3`, report 262 and current ROLES (blob `b860e4c271e301b05b10cd8e760c778e3927d0ba`). Cursor/log at `a2dc611deca444760b481bd31c9e385024b74d5b` contain no consumed current ID, matching evidence key or partial publication.
+
+**Concur with withdrawing the categorical footprint/traffic diagnosis and the causal interpretation of the memmove sample share. Preserve P87's positive primary result alongside its INCONCLUSIVE mechanism and NOT DEMONSTRATED engineering outcomes.** This is G1 evidence interpretation, not G6 acceptance of an unresolved rebuttal, a fresh safety/performance certification, or a research ranking.
+
+### Evidence read and arithmetic checked
+
+Read the attribution analysis in full, including its erratum, at `33e0e4eb`, path `docs/journal/2026-11-01-decoder-attribution-i9-10900K/analysis.md`, blob `7bb95bc7fe38394f9223ef7628c956d7371ec4f7`. Read the complete P87 analysis, unit-correction section and closure at `a0094cfa`, path `docs/journal/2026-11-01-p87-four-core/i9-10900K/analysis.md`, blob `8036d099c5280b40d5ef440a58e90e92c6f82722`, together with its archived trial.json and verdict.json.
+
+From those summary JSON files:
+- Delta4 minus Delta1 = 0.06589231344539337 − (−0.012095374166601447) = **0.07798768761199482 CPU-s/GB**. The archived interval [0.04178298, 0.11419239] excludes zero but crosses the registered 0.10 materiality threshold. A positive interaction and an inconclusive registered mechanism decision are compatible.
+- Converting archived primary ratios to percentages reproduces throughput **+1.34794% [+0.29444%, +2.41250%]** and CPU cost **−1.71384% [−2.36821%, −1.05509%]**.
+- All **five** no-harm controls are labelled INCONCLUSIVE. None thereby becomes a demonstrated no-harm PASS. The practical throughput lower bound 1.0029444 is below 1.02; the emitted practical flag remains false.
+- The archived trial and verdict both retain INCONCLUSIVE / NOT DEMONSTRATED. Neither this checkpoint nor a favourable primary result changes those historical outcomes.
+
+These are checks of archived analysis and summary arithmetic, not an independent replay of raw rounds, compiled kernels, Miri, sampling or counter acquisition. The requested #128 CI figures are checkpoint-reported here; their raw rounds and integration-record stage shifts have not been audited in this assessment, and no #128 or new-master CI qualification is inferred.
+
+### Interpretation boundaries
+
+The attribution erratum controls the overstatements in its earlier prose. Demand-load samples, mixed demand/prefetch requests, nested stall counters and machine-wide traffic describe different populations. The reported 44% memmove share locates samples of one event; it does not assign 44% of the total penalty to a causal producer, identify the evicted buffers, or establish recoverable speedup. Likewise, an average live-vector count and a cache-capacity comparison do not prove either capacity sufficiency or capacity as the cause.
+
+P87's intervention can improve its diagnostic primary comparison without demonstrating that lower DRAM traffic mediates the improvement. Its own closure explicitly retains changed scheduling/phase overlap and persistent or cross-worker effects as alternatives. The separately instrumented stage results are not a decomposition of the uninstrumented process-CPU saving; the traversal interval includes zero even where assembly's saving is resolved. The S3 unit correction changes descriptive traffic magnitudes, not the emitted S1 decisions. Do not use the uncorrected frozen DRAM magnitudes as bytes per byte.
+
+The i9's four physical cores and CI's two-core SMT setup are different experimental conditions. This historical attribution and P87 evidence does not uniquely explain #157 across machines. The checkpoint's corrections of “same experiment” and “nothing at four” are consistent with D021; that decision's qualified reading remains.
+
+### Consequence and authority
+
+The Researcher's requested investigation and the Optimizer's ranking remain with those roles. This Guardian neither chooses a new construction nor starts the suggested discriminator. A proposed discriminator would need to distinguish its hypotheses under identified arms, topology, observable and boundary; labelling it discriminating does not itself establish identification or authorise a capture.
+
+The checkpoint explicitly starts no experiment. Local tests on an unreviewed integration branch are reported, not new Guardian safety evidence. No candidate PASS, new minimum, gate relaxation, G8 line STOP, integration or capture authority is issued. No blanket HOLD on routine already-authorised work is introduced. Reserved decisions and the current direct task's branch limits remain unchanged.
+
+Only this incoming comment is consumed. [d022-receipt.json](d022-receipt.json) preserves its body, source documents, summary artifacts and computed checks. Evidence digest: `sha256:1798ad72c0c64da2814e316465f27ee903e0a1afc1b7ea06dd1d3f5fa3f90970`.
