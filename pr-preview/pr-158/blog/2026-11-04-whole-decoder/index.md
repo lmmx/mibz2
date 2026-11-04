@@ -110,33 +110,37 @@ The build and the rest are identical to the instruction. The whole difference is
 
 That is kernel B, nine instructions a step against B2's predicted eight to nine. It is as large a cut in whole-decoder instructions as anything the campaign has found. It leaves the table as it was, so it composes with whatever else is done to the walk.
 
-## 5\. Instructions are not time, as the model said
+## 5\. Instructions are not time, and the model was wrong about how much
 
-The continuous-integration benchmark then measured it, on an EPYC 9V45. The Wikidata corpus, paired over ten rounds:
+The continuous-integration benchmark measured it twice, on the same walk machine code, landing on two different processors. The Wikidata corpus, paired over ten rounds each:
 
-| Threads | Wall time | CPU |
+| Threads | EPYC 9V45, wall | EPYC 7763, wall |
 | ---: | ---: | ---: |
-| 1 | −4.2% (−8.0%, −0.3%) | −4.2% |
-| 2 | \+2.2% (−0.6%, +5.1%) | \+1.4% |
-| 4 | \+0.4% (−2.8%, +3.8%) | \+0.9% |
+| 1 | −4.2% (−8.0%, −0.3%) | −2.4% (−3.6%, −1.2%) |
+| 2 | \+2.2% (−0.6%, +5.1%) | −4.9% (−9.5%, −0.1%) |
+| 4 | \+0.4% (−2.8%, +3.8%) | \+0.2% (−2.1%, +2.7%) |
 
-The benchmark also times each stage on one thread. The walk went from 4.04 to 3.78 cycles per byte: a ratio of 0.925 (0.856 to 0.999). That is a 36% cut in instructions buying 7.5% of the walk's time.
+At one thread it is faster on both. With more threads, the picture depends on the machine.
 
-B2 had predicted it. Its model gives a step's time as its issue time plus a miss penalty limited by the processor's window: w = U/D + ℓ·U/R. For the 9V45 it predicted B's walk at 0.86 to 0.93 of A's. The miss term dominates there, so cutting operations buys less than on the slower EPYC 7763. There the model predicted −24% to −27% of the walk and −10% to −11% of decoder time, the figure we half-remembered as this change's promise.
+On the 7763 the benchmark also times each stage on one thread. The walk went from 4.04 to 3.78 cycles per byte, a ratio of 0.925 (0.856 to 0.999). A 36% cut in instructions bought 7.5% of the walk's time.
 
-The measurement also tells the model's hypotheses apart, to the extent one run can: - a walk limited purely by its instruction rate would have given 0.55 to 0.65, and that is excluded; - the interval model's 0.86 to 0.93 contains the measurement; - a walk capped by the misses one core can track would give 0.95 or more, and the interval still allows it.
+B2 had predicted much more. Its best-supported model gives a step's time as its issue time plus a miss penalty limited by the processor's window: w = U/D + ℓ·U/R. For the 7763 it predicted B's walk at 0.73 to 0.76 of A's, and −10% to −11% of decoder time. The measurement lies outside that range. So does the reading in which the walk is limited purely by its instruction rate (0.55 to 0.65). What it doesn't exclude is the remaining hypothesis B2 listed: the walk is capped by how many outstanding misses one core can track, so fewer instructions per step can't make it much faster (0.95 or more).
+
+That is a useful negative result. It says the walk on this machine is close to limited by its memory requests, not its instructions. The next large gains would then have to come from fewer misses per byte, not fewer instructions per step.
 
 ## 6\. What is still open
 
-**Whether it ships.** One benchmark run is not enough: with no real change, about one run in five flags a difference by chance. The change merges only if a second run, on the same machine code, confirms the one-thread gain, with nothing regressing. Until then it is a measured instruction reduction and a time result consistent with a model, not a production improvement.
+**Shipping.** The change met the merge gate. The one-thread gain was confirmed on two processors, with nothing regressing beyond a small, unreplicated slip on one synthetic corpus. It is now on master, unreleased.
 
-**Why the gain vanishes with more threads.** B2 predicted the ratio would hold at four copies. At two threads, the measurement excludes the predicted gain. We don't know why, and there are several candidates: - **Latency.** The latency of each miss may rise as more are in flight (B2's own risk 5). - **A shared bottleneck.** Something shared across copies may bind (its risk 6). - **The run's shape.** The benchmark's two-thread run puts four threads (two workers, the scanner and the reader) on two CPUs. - **Interference.** It may be the effect [Investigating inverse-BWT memory interference](<https://lmmx.github.io/mibz2/pr-preview/pr-158/blog/2026-11-01-inverse-bwt-memory-interference/index.md>) measured on a four-core machine. There, four workers ran about the same instructions per byte in about 30% more cycles. That post proposed causes and tests, but didn't settle the cause. CI's four-thread runs are two cores with SMT, not four cores.
+**Why B2's model overestimated.** Either the miss term isn't ℓ·U/R as fitted, or the latency of each miss rises when more are in flight, as B2's own risks list. B puts more misses in flight than A. A refit to A and B together, which can now both be measured, should say which term has to move.
 
-The cheapest decisive experiment is the falsifier B2 described: time the walk alone, A against B, at one copy, at two copies on separate cores, and on the two siblings of one core. - If B's ratio holds at every copy count, the loss is outside the walk. - If it rises towards 1, something shared limits the walk itself.
+**Why the multi-thread result depends on the machine.** On the 9V45, two threads lost the gain; on the 7763 they kept it. There are several candidates: - **A shared bottleneck.** Something shared across copies may bind. - **The run's shape.** The benchmark's two-thread run puts four threads (two workers, the scanner and the reader) on two CPUs. - **Interference.** It may be the effect [Investigating inverse-BWT memory interference](<https://lmmx.github.io/mibz2/pr-preview/pr-158/blog/2026-11-01-inverse-bwt-memory-interference/index.md>) measured on a four-core machine. That post proposed causes and tests, but didn't settle the cause. CI's four-thread runs are two cores with SMT, not four cores.
+
+The cheapest decisive experiment is the falsifier B2 described: time the walk alone, A against B, at one copy, two copies on separate cores, and on the two siblings of one core, on each machine.
 
 **The other walks.** The cooperative walk, used on machines with many cores, and the flagged walk carry the same rolled loop. Whether to port the change waits on that experiment.
 
-The lesson is about memory as much as measurement. A faster builder made the decoder slower because nobody had counted the walk. Counting it found a change our own analysis had designed and priced, and then left unbuilt. The project's record is now treated as working memory: every new direction starts from what earlier analyses proposed, measured or left untested.
+The lesson is about memory as much as measurement. A faster builder made the decoder slower because nobody had counted the walk. Counting it found a change our own analysis had designed and priced, and then left unbuilt. Building it tested the analysis, and part of it failed. The project's record is now treated as working memory: every new direction starts from what earlier analyses proposed, measured or left untested.
 
 ---
 
