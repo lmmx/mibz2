@@ -515,3 +515,151 @@ ctor2s minus v2, both in one process (`ctor2s-count`: v2 first, then ctor2s, per
 - **Unresolved:** every library term. They are listed with their observed values, and no
   interval is cited for them.
 - **No two-sample interval is cited anywhere in this erratum.**
+
+## 9. The U1/U2 trial: pre-registration (committed before any implementation, Miri run or ledger figure)
+
+**Authority:** the coordinator's authorisation, relaying the user's approval, of **one bounded
+implementation trial of U1 and U2, exactly as written in §7.**
+- **U3 is NOT authorised:** no `assert_unchecked`. C4 uses the handoff's safe do-while form.
+  If that can't reach the intended machine code, it is reported, never replaced by U3.
+- **No other unchecked access is authorised.**
+- **The trial is one implementation plus routine repairs.**
+- **Review input** is added in §9.5: the adversarial review of PR #150
+  (`docs/journal/compact30-adversarial/scanner-146/report.md` at `48b39628`, A2, and its
+  `safety/SAFETY.md`). It doesn't change the authorised scope.
+- **Stop and escalate (§8.2)** if U1 or U2 turns out to need any safety obligation beyond the
+  invariants documented in §7.
+
+### 9.1 What is built
+
+- **A new module, `examples/c30walk/ctor2su.rs`.** It is `ctor2s.rs` at `7f74e9f`, copied,
+  with one change: a nonuniform full tile goes through a new `tile16(ll, i, t)`, where `t`
+  is the 16-byte chunk that `split_first_chunk` split off `rest`.
+  - **U1, the first segment:** `ll.get_unchecked(i..i + n1)`, with n1 = min(16, 30 − p).
+  - **U2, the second segment:** `ll.get_unchecked(i + n1..i + 16)`.
+  - **C4, safe:** the first segment becomes a do-while. Its first row's byte is the window's
+    `t[0]`, a safe array access at a constant index. It then loops while k < n1, reading
+    `s1[k]`, a checked index that the compiler is expected to prove from k < n1 =
+    `s1.len()`. The handoff's safe form relies on p < 30 for correctness only: if p were 30,
+    it would append one wrong row, and read in bounds.
+- **The tail keeps v2's checked `tile`.** It never takes U1 or U2.
+- **The contract checks,** asserted in the counted build and debug-asserted in the uncounted
+  build, so active under Miri:
+  - `ptr::eq(t.as_ptr(), ll.as_ptr().wrapping_add(i))`: the tile is the chunk split off
+    `rest`, so i + 16 ≤ end ≤ `ll.len()`;
+  - `self.p < ROWS`;
+  - in `tile`, `len < 16`: the checked path is the tail's only.
+- **A counted-build counter** `unchecked_tiles`, and a count mode `ctor2su-count --only v2|su`
+  that runs one builder per process.
+- **Frozen:** `ctor2s.rs`, `ctor2.rs`, `ctor3.rs`, `ctor.rs`, `cbuild.rs`, the walker, the
+  oracle, `src/` and `bench/`. `examples/c30walk.rs` gains a `mod` line and a `ctor2su-`
+  dispatch.
+
+### 9.2 The safety argument (§7's invariants, and nothing more)
+
+- **i + 16 ≤ end ≤ `ll.len()`.**
+  - `rest` is `ll[i0..end]` shrunk from the front, and i = end − `rest.len()`.
+  - The tile was split off `rest` by `split_first_chunk::<16>()`, so `rest.len()` ≥ 16.
+- **n1 ≤ 16 for any p:** it is a `min` with 16.
+  - If p were 30, n1 = 0 and U1 is the valid empty range [i, i).
+  - If p were above 30, `30 − p` wraps in release, and n1 = 16.
+  - So memory safety doesn't rest on the phase invariant.
+- **Hence both ranges are well-ordered and inside `ll`:**
+  - U1 = [i, i + n1) and U2 = [i + n1, i + 16), with i ≤ i + n1 ≤ i + 16 ≤ `ll.len()`;
+  - no sum overflows, since i + 16 ≤ `ll.len()` ≤ `isize::MAX`;
+  - every byte is initialised and immutable, inside the live `&[u8]`.
+
+### 9.3 The compile target (gate 2, diagnostic)
+
+| path | B2 | ctor2s (`7f74e9f`) | target |
+|---|--:|--:|--:|
+| a nonuniform full tile's overhead, outside its 16 row appends | 41 + 7X | 41 + 7X + 8 | **≤ 34 + 7X** (the handoff's) |
+| the tile's 8 check instructions (§7) and C4's `cmp $0x1e` / `jne` | present | present | **absent** |
+| fresh pair; lookahead per matched tile | 12; 16 | 4; 11 | **4; 11**, unchanged |
+| row loops, the four scalar copies | 12 each | 12, 12, 12, 11 | **no more than ctor2s's**, per copy |
+
+**Also targeted:**
+- no `slice_index_fail` reachable from `tile16`;
+- no unconditional jump in place of C4;
+- no new spill or reload per row;
+- no more spills around refills or in `run` than ctor2s has;
+- the tail path unchanged.
+
+A miss is recorded, and gate 2 never disqualifies.
+
+### 9.4 The registered minimum and the ledger (gate 3, the qualifier)
+
+**The minimum is unchanged: 60 M instructions net on B2,** at the lower end of the
+conservative interval.
+
+**The ledger:**
+- **Primary:** the §5 method. It is static path lengths × observed counts from the counted
+  build's counters, with every changed caller, callee, spill and exceptional path counted.
+- **Cross-check:** callgrind's exact counts, with each builder alone in its own process,
+  twice.
+  - The raw Ir, Dr and Dw profiles are archived from the start, with the toolchain, the
+    invocation and the binary's sha256.
+  - They are parsed with the header-aware parser of §8.2.
+  - Library terms must be equal call by call (checked), or charged at their unfavourable
+    end, or listed as unresolved.
+  - No two-sample interval is cited.
+
+### 9.5 The Miri classes and mutants (gate 1)
+
+**The classes:** all eight of §0.4, as implemented: `tiny`, `tails`, `align`, `phase`,
+`held`, `endrun`, `epoch` and `malformed`.
+- These include §7's list: the phase sweep, held tiles, odd alignment, the tail class and the
+  epoch class.
+- **New: `controls`.** One 32-byte input in an exact allocation (a boxed slice), with two
+  nonuniform full tiles:
+  - i = 0, with p = 0 and n1 = 16;
+  - i = 16, with p = 16 and n1 = 14.
+
+  The unmutated build must pass it.
+
+**The mutants.** Each must be reported by Miri, and **its diagnostic must identify the
+intended operation:** the source line of U1 or of U2, in the backtrace.
+
+| mutant | change | what it tests | Miri must report it |
+|---|---|---|---|
+| MU1, the combined `n1 = 17` (§7) | n1 forced to 17 | **U2 and range order only.** At i = 0 in 32 bytes, U1's [0, 17) is still inside `ll` | at **U2** (the reversed range [17, 16)) |
+| MU2, the U1 endpoint control | on a final full tile (i + 16 = `ll.len()`), U1's end becomes `ll.len()` + 1 | U1's bound | at **U1**: [16, 33) |
+| MU3, the U2 endpoint control | at `ll.len()` = 32, i = 16, p = 16, n1 = 14: U1's [16, 30) kept, U2 becomes [30, 33) | U2's bound | at **U2** |
+
+- **Each mutant runs twice on `controls`:**
+  - under Miri's defaults, where the library's `get_unchecked` precondition check (UB
+    checks) is on;
+  - if the toolchain allows it, with `-Zub-checks=no`, so that Miri's own bounds checking
+    reports it on the exact allocation.
+
+  Both diagnostics are archived.
+- **Tails never take U1 or U2.** This is checked by:
+  - `tile16`'s contract assertion and `tile`'s `len < 16`;
+  - in every case, the counted build's `unchecked_tiles` equal to its nonuniform full tiles;
+  - in the `tails` class, every case's tail going through `tile`.
+
+  The tail class must still pass.
+- **Prototype 1's release mutants M1 and M2** (§0.5) are rerun on `ctor2su`. Each must fail the
+  quick suite.
+- Every class must complete. A timeout is partial coverage: the cases are split and run to
+  completion.
+
+### 9.6 The rejection conditions
+
+**Gate 1 fails if:**
+- §0.6's conditions hold, applied to `ctor2su`;
+- Miri reports undefined behaviour on the unmutated build;
+- a registered class can't be completed;
+- a contract assertion fires on any registered or suite input;
+- a mutant survives, or is reported at an operation other than its intended one.
+
+**Gate 2** records a miss for any §9.3 target not met.
+
+**Gate 3 fails if:**
+- the conservative interval's lower end is below 60 M; or
+- a relevant added cost stays unbounded.
+
+**Escalation (§8.2), stopping the trial:**
+- if U1 or U2 needs any safety obligation beyond §9.2;
+- if any other unchecked operation would be needed;
+- if a mutant isn't reported.
