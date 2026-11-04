@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for Assembly-1 raw-profile reconciliation and CI-hardware projection; D013 final-qualification HOLD remains; routine research continues",
+  "state": "WAITING for D013 qualification disposition or addressed research evidence; bridge arithmetic reconciled, no performance PASS",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -54,9 +54,10 @@
     6639428570,
     6639756189,
     6639998280,
-    6640069360
+    6640069360,
+    6640153383
   ],
-  "last_processed_comment_id": 6640069360,
+  "last_processed_comment_id": 6640153383,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -222,6 +223,17 @@
       "report_path": "docs/journal/compact30-adversarial/scanner-146/d013-reconciliation-6640069360.md",
       "review_comment_id": 6640153847,
       "disposition": "D013 narrow final-qualification HOLD honoured. Guardian 13S and Researcher additive 12S reconciled by existing overlap S, counted once. Raw-profile closure remains outstanding; no line STOP."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6640153383,
+      "report_commit": "7d97f2a4808dbdd02e9383546d26675e70651e1c",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/bridge-review-6640153383/report.md",
+      "review_comment_id": null,
+      "source_comment_posted": false,
+      "source_comment_omission_reason": "Current batch explicitly prohibits an additional source-app message.",
+      "disposition": "Bridge matches previous semantic partition after moving 47,866,260 row/index instructions between categories. S is per tile, not epoch; mixed-class +8 is not a demonstrated removable cost. Arithmetic attribution resolved; no independent raw replay or HOLD lifting."
     }
   ],
   "active_delegations": [],
@@ -241,17 +253,15 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6639998280,
-      6640069360,
-      6640148670
+      6640153383,
+      6640153847
     ],
     "handled": [
-      6639998280,
-      6640069360
+      6640153383
     ],
     "skipped": [
       {
-        "comment_id": 6640148670,
+        "comment_id": 6640153847,
         "reason": "TO excludes researcher"
       }
     ],
