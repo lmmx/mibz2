@@ -735,3 +735,25 @@ The Researcher's requested investigation and the Optimizer's ranking remain with
 The checkpoint explicitly starts no experiment. Local tests on an unreviewed integration branch are reported, not new Guardian safety evidence. No candidate PASS, new minimum, gate relaxation, G8 line STOP, integration or capture authority is issued. No blanket HOLD on routine already-authorised work is introduced. Reserved decisions and the current direct task's branch limits remain unchanged.
 
 Only this incoming comment is consumed. [d022-receipt.json](d022-receipt.json) preserves its body, source documents, summary artifacts and computed checks. Evidence digest: `sha256:1798ad72c0c64da2814e316465f27ee903e0a1afc1b7ea06dd1d3f5fa3f90970`.
+
+## D023 — corrected inbox brief preserves evidence status and role boundaries (G1)
+
+Trigger [6645304470](https://github.com/lmmx/mibz2/pull/160#issuecomment-6645304470), PR #160, addressed to the Optimizer; production reference `08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7`. G1 scope interpretation under GUARDIAN.md §3 at `931640523226053b758ebc0c2c9fd4eac61128b3`, activation report 262 and ROLES (blob `93a4a340ddbe910075c40de7b6de5ae1172d502c`). Cursor/log at `dbc338241e0bf818e5c7df23127c755c7b17c2af` contain no consumed current ID, matching PR/SHA/evidence key or partial publication.
+
+**The corrected brief retains D021–D022's distinctions. No new candidate classification, scientific PASS or line STOP follows from its delivery to a new inbox.** This entry assesses the new routing/supersession request and its linked independent report; it does not repeat the prior empirical assessments.
+
+Read the Researcher's full [causal assessment at 3843e7da](https://github.com/lmmx/mibz2/blob/3843e7daae6b0d370c17fb16adfbe2d32626a43f/docs/journal/compact30-adversarial/scanner-146/causal-scope-6644912625/report.md), blob `9412e2cfcf2e6adc224a2608f603422de5e6e38e`. Its central distinction is consistent with D022: effects and locations do not identify a unique physical mechanism; P87's positive diagnostic result does not change its registered promotion outcome or explain #157 across machines. Its earlier “reuse first” framing is expressly superseded by the completed diagnostic and production-candidate record.
+
+The report also distinguishes equal-allocation reuse from production allocation removal and cautions against attributing phase-harness shifts to a path that harness does not execute. Those are the independent review's reported findings, not a new Guardian code audit of #128. No raw timing/counter replay, new arithmetic qualification, Miri review or candidate implementation is claimed here. D022's checked summary arithmetic and its limits remain the existing record.
+
+### Consequence for this checkpoint
+
+- A renewed brief does not reset historical verdicts. Preserve the failed/inconclusive gates alongside positive results, and identify what differs before treating a future candidate as a new test. A local branch with passing tests is not, by that statement alone, a completed safety/review/performance qualification.
+- The Optimizer owns construction ranking and payoff estimates. The Guardian neither performs that search nor interprets a ranking as qualification. The baseline named in the brief must remain explicit in any future whole-decoder comparison; historical gains and budgets do not transfer automatically.
+- Distinct topology, counter populations, stage boundaries and CPU-versus-wall objectives remain material. The Researcher's proposed contrasts are possible discriminators, not proof that one cause has already been selected or permission to execute them.
+- The checkpoint's instruction to commit a receipt first is addressed to the Optimizer. It does not override this Guardian's direct task sequence: assess, publish one entry and one review, persist the cursor, then stop. Only this event ID is consumed. The superseded IDs are not processed as a backlog, and no Optimizer state or subscription is inspected or changed.
+- Current ROLES describes an Optimizer inbox on #160 and its reply route to #145. This Guardian follows its own direct instruction to publish its review on the triggering PR, #160. Descriptive routing text does not amend Guardian authority.
+
+The promise to build and measure the first-ranked proposal is not a Guardian permission. To the extent it seeks reserved authority from this review, none is granted: no gate relaxation, G6 decision, frozen-representation change, harness change, workstation/i9 capture, integration, credentials or spending. Independently authorised routine work does not acquire a new Guardian approval requirement.
+
+No blanket HOLD, G8 line STOP, new experiment or automation change is made. D021 and D022 remain intact. [d023-receipt.json](d023-receipt.json) records the evidence and scope; digest `sha256:4d57b6f869f123c55d7f7af27e8c54fa696a8de478b69f2006280b885f7fe379`.
