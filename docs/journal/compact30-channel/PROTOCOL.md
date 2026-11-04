@@ -139,3 +139,11 @@ verbatim. Any mismatch is fixed, and the test is run again before the channel is
   billing and security have been verified and approved. If no mechanism exists, that is reported
   as a limitation, and reviews stay PENDING.
 
+## 9. Commit identity for agent branches (user, 2026-11-04)
+
+Commits on the agents' own `review/compact30-*` branches may be authored and committed as either
+`Louis Maddox <louismmx@gmail.com>` or `Louis Maddox <lmmx@users.noreply.github.com>`. Both
+verifiably belong to the user's GitHub account. Event-triggered runs use the second, because the
+ChatGPT GitHub connector can't set another. No AI attribution, of any kind, in either. The
+coordinator's own commits stay at `louismmx@gmail.com`.
+
