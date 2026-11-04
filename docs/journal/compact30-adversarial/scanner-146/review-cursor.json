@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for next addressed evidence or scope decision; mapped S62-F01 counter remedy and Researcher coverage review complete; remaining obligations tracked separately",
+  "state": "WAITING for addressed research proposals or evidence; no current assessment requested by policy checkpoint",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -48,9 +48,10 @@
     6634296412,
     6634998636,
     6635419092,
-    6635620697
+    6635620697,
+    6637300905
   ],
-  "last_processed_comment_id": 6635620697,
+  "last_processed_comment_id": 6637300905,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -155,6 +156,16 @@
       "report_path": "docs/journal/compact30-adversarial/scanner-146/d011-reconciliation-6635620697.md",
       "review_comment_id": 6635649533,
       "disposition": "Reconciled D011 with completed Researcher coverage review; mapped S62-F01 remedied at pinned commits, other obligations unchanged. No repeated raw-profile replay."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6637300905,
+      "report_commit": "6095a427673b41b1f43ed880d3cca5e8e551adf4",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/policy-receipt-6637300905.md",
+      "review_comment_id": null,
+      "disposition": "Policy checkpoint receipt; no present Researcher assessment requested. Branch record published; source comment blocked by automatic approval review citing earlier no-additional-source-message instruction. No retry pending.",
+      "source_comment_posted": false
     }
   ],
   "active_delegations": [],
@@ -192,5 +203,12 @@
       }
     ],
     "automation_modified": false
+  },
+  "reported_programme_status": {
+    "source_comment_id": 6637300905,
+    "charter_pin": "55b4b86be4ba7eed41b283a52f2c1d56fa43cc67",
+    "c6": "Coordinator reports registered on 7620c0c6 with 10 M incremental minimum",
+    "verified_scope": "Read charter policy; registration and combined outcomes not independently assessed",
+    "task_authority_changed": false
   }
 }
