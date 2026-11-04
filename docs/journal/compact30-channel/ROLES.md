@@ -129,3 +129,30 @@ The questions each one asks:
    satisfy that by itself.
 8. **This record is descriptive.** It changes no frozen code, charter, channel protocol,
    authorisation or research gate.
+
+## 6. How the roles run (from 2026-11-04, about 14:15Z)
+
+**Each Codex role is a ChatGPT Work event-triggered task.** It runs on GitHub PR comment events
+in lmmx/mibz2, on the user's plan, with no polling, no schedule and no API key. Every run is fresh
+and rebuilds its state from its own branch (its cursor, ledger and decision log). The user's task
+names:
+
+| role | Work task | model ⠶ effort | runs when a comment… | state on |
+|---|---|---|---|---|
+| Guardian | Compact30 (W) Guardian | Astra ⠶ Extra High | contains `TYPE: CHECKPOINT` | `review/compact30-guardian-shadow` (`cursor.json`, `decisions.md`) |
+| Optimizer | Compact30 (W) Optimiser | Astra ⠶ Ultra | contains `TYPE: CHECKPOINT` and `TO: … optimizer` | `review/compact30-instruction-ledger` (`review-cursor.json`, `instruction-ledger.md`) |
+| Researcher | Compact30 (W) Researcher | Astra ⠶ Extra High | contains `TO: … researcher` | `review/compact30-adversarial-scanner-146` |
+
+- **A succession (rule 3).** These triggered runs succeed the original Codex Goal sessions for
+  routine work. The original sessions stand down, and act only when the user addresses them
+  directly.
+- **Filtering.** GitHub can't filter on comment text before a run starts, so every comment starts
+  each task. Each run reads only the triggering comment, and stops at once unless it is addressed
+  to it.
+- **Addressing.** The Coordinator addresses checkpoints with a `TO:` line, for example
+  `TO: guardian, optimizer`. The roles reply with `TYPE: REVIEW`, which wakes the Coordinator
+  through its PR subscriptions.
+- **Commits.** Triggered runs commit as `Louis Maddox <lmmx@users.noreply.github.com>`
+  (PROTOCOL.md §9).
+- **First verified loop:** D007 on #149 (commit 99952368, review 6632636427, cursor f1631a2).
+
