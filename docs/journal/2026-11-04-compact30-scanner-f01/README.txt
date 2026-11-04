@@ -7,7 +7,7 @@ CARGO_ENCODED_RUSTFLAGS= (empty), CARGO_TARGET_DIR=target/rust-1.97.0 (the trial
 Pinned binary (49cb46b6, rebuilt clean in this worktree): sha256
 3ce86859be086ee1c47bce4ab7426ceffad3e7ffe6755c3a162f32d4ceea050f, equal to the trial's archived binary.
 Counted-counter binary (this commit's source): sha256
-6b1f1d958f8ccd1f65d37c251a8a50a9bd621cd653bb8c036171ce09a9784d44.
+5777e48b8ca4837d9713653755a4b88053e7bf460f8aeefcec76005a9e5feb5c.
 Corpus: corpora/wikidata-20261026.bz2, sha256 cf13f4394e4ea0a38a0e9e3bc5271b2dce717c8f98fe3a0b8a5186c84216b8fe.
 
 identity/   identity.json: asmid.py, pinned binary against the counted-counter binary, from
@@ -20,7 +20,7 @@ identity/   identity.json: asmid.py, pinned binary against the counted-counter b
 counted/    the release suites on the counted-counter binary, all exit 0: corpora (11 corpora x 4
             configurations; the primary record is wikidata-20261026.bz2, permille 0, extra false),
             adversarial, synthetic, synthetic-quick. Every pre-existing field of every jsonl record,
-            and every console after removing the 19 new fields, equals the trial's archive.
+            and every console after removing the 20 new fields, equals the trial's archive.
 ledger.json, ledger.txt   f01_replay.py's output: every changed frequency class, its counter
             expression, the counted value against the profile frequency, and the interval.
 harness-callsite.asm      callsite.py's output: c30walk::main around both build::<false> calls,

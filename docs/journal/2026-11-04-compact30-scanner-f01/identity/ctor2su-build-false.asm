@@ -61,7 +61,7 @@ Disassembly of section .text:
    479ae:	jne    48d8d <<c30walk::ctor2su::Ctor2su>::build::<false>+0x14ed>
    479b4:	pxor   %xmm2,%xmm2
    479b8:	xor    %eax,%eax
-   479ba:	movdqa -0x36d62(%rip),%xmm3        # 10c60 <GCC_except_table1006+0xa18>
+   479ba:	movdqa -0x36d62(%rip),%xmm3        # 10c60 <GCC_except_table1006+0xa00>
    479c2:	pxor   %xmm1,%xmm1
    479c6:	pxor   %xmm0,%xmm0
    479ca:	nopw   0x0(%rax,%rax,1)
@@ -149,7 +149,7 @@ Disassembly of section .text:
    47b23:	je     47b47 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x2a7>
    47b25:	lea    -0x8(,%rbx,8),%rdx
    47b2d:	xor    %esi,%esi
-   47b2f:	call   *0x10653b(%rip)        # 14e070 <memset@GLIBC_2.2.5>
+   47b2f:	call   *0x1065c3(%rip)        # 14e0f8 <memset@GLIBC_2.2.5>
    47b35:	lea    (%r15,%rbx,1),%rax
    47b39:	lea    (%r12,%rax,8),%rdi
    47b3d:	add    $0xfffffffffffffff8,%rdi
@@ -217,7 +217,7 @@ Disassembly of section .text:
    47c90:	lea    0xe8(%rsp),%rdi
    47c98:	lea    0x2cf8(%rsp),%rsi
    47ca0:	mov    $0x2800,%edx
-   47ca5:	call   *0x1063e5(%rip)        # 14e090 <memcpy@GLIBC_2.14>
+   47ca5:	call   *0x10646d(%rip)        # 14e118 <memcpy@GLIBC_2.14>
    47cab:	mov    %rbp,%r9
    47cae:	mov    %r12,%rsi
    47cb1:	mov    %rbx,0xd0(%rsp)
@@ -304,7 +304,7 @@ Disassembly of section .text:
    47e52:	jne    47d50 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x4b0>
    47e58:	mov    %rsi,0x20(%rsp)
    47e5d:	mov    %r9,0x30(%rsp)
-   47e62:	call   9c910 <<alloc::raw_vec::RawVec<c30walk::RawG>>::grow_one>
+   47e62:	call   9c920 <<alloc::raw_vec::RawVec<c30walk::RawG>>::grow_one>
    47e67:	pcmpeqd %xmm1,%xmm1
    47e6b:	pxor   %xmm0,%xmm0
    47e6f:	movabs $0xeeeeeeeeeeeeeeef,%r10
@@ -396,7 +396,7 @@ Disassembly of section .text:
    48019:	mov    %r9,0x30(%rsp)
    4801e:	mov    %r10,0x68(%rsp)
    48023:	mov    %rdi,0x60(%rsp)
-   48028:	call   9c910 <<alloc::raw_vec::RawVec<c30walk::RawG>>::grow_one>
+   48028:	call   9c920 <<alloc::raw_vec::RawVec<c30walk::RawG>>::grow_one>
    4802d:	pcmpeqd %xmm1,%xmm1
    48031:	pxor   %xmm0,%xmm0
    48035:	mov    0x60(%rsp),%rdi
@@ -426,7 +426,7 @@ Disassembly of section .text:
    480a9:	mov    $0x400,%edx
    480ae:	lea    0x28f8(%rsp),%rdi
    480b6:	xor    %esi,%esi
-   480b8:	call   *0x105fb2(%rip)        # 14e070 <memset@GLIBC_2.2.5>
+   480b8:	call   *0x10603a(%rip)        # 14e0f8 <memset@GLIBC_2.2.5>
    480be:	lea    0x128(%rsp),%rax
    480c6:	xor    %ecx,%ecx
    480c8:	nopl   0x0(%rax,%rax,1)
@@ -453,7 +453,7 @@ Disassembly of section .text:
    48128:	add    0x8(%r12),%rdi
    4812d:	mov    $0x400,%edx
    48132:	lea    0x28f8(%rsp),%rsi
-   4813a:	call   *0x105f50(%rip)        # 14e090 <memcpy@GLIBC_2.14>
+   4813a:	call   *0x105fd8(%rip)        # 14e118 <memcpy@GLIBC_2.14>
    48140:	inc    %r14
    48143:	lea    0xf000(%rbx),%rax
    4814a:	mov    0x8(%rsp),%rdi
@@ -553,7 +553,7 @@ Disassembly of section .text:
    482dd:	mov    %r9,0x30(%rsp)
    482e2:	mov    %rdx,0x20(%rsp)
    482e7:	lea    0xa8(%rsp),%rdi
-   482ef:	call   97660 <<c30walk::ctor2su::W<false>>::refill>
+   482ef:	call   97670 <<c30walk::ctor2su::W<false>>::refill>
    482f4:	lea    0xe8(%rsp),%r8
    482fc:	test   %al,%al
    482fe:	je     48d7d <<c30walk::ctor2su::Ctor2su>::build::<false>+0x14dd>
@@ -584,7 +584,7 @@ Disassembly of section .text:
    4836c:	jmp    48190 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x8f0>
    48371:	mov    %rdx,%r12
    48374:	lea    0xa8(%rsp),%rdi
-   4837c:	call   97660 <<c30walk::ctor2su::W<false>>::refill>
+   4837c:	call   97670 <<c30walk::ctor2su::W<false>>::refill>
    48381:	lea    0xe8(%rsp),%r8
    48389:	test   %al,%al
    4838b:	je     48d7d <<c30walk::ctor2su::Ctor2su>::build::<false>+0x14dd>
@@ -692,7 +692,7 @@ Disassembly of section .text:
    48540:	je     4855e <<c30walk::ctor2su::Ctor2su>::build::<false>+0xcbe>
    48542:	lea    0xa8(%rsp),%rdi
    4854a:	mov    0xa0(%rsp),%rsi
-   48552:	call   97060 <<c30walk::ctor2su::W<false>>::finish>
+   48552:	call   97070 <<c30walk::ctor2su::W<false>>::finish>
    48557:	mov    (%rbx),%r8
    4855a:	mov    0x10(%rbx),%rax
    4855e:	sub    %rax,%r8
@@ -1140,7 +1140,7 @@ Disassembly of section .text:
    48c6a:	jne    48c40 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x13a0>
    48c6c:	jmp    48ba4 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x1304>
    48c71:	lea    0xa8(%rsp),%rdi
-   48c79:	call   97660 <<c30walk::ctor2su::W<false>>::refill>
+   48c79:	call   97670 <<c30walk::ctor2su::W<false>>::refill>
    48c7e:	lea    0xe8(%rsp),%r8
    48c86:	test   %al,%al
    48c88:	je     48d7d <<c30walk::ctor2su::Ctor2su>::build::<false>+0x14dd>
@@ -1167,7 +1167,7 @@ Disassembly of section .text:
    48ce4:	jne    48cc0 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x1420>
    48ce6:	jmp    48bba <<c30walk::ctor2su::Ctor2su>::build::<false>+0x131a>
    48ceb:	lea    0xa8(%rsp),%rdi
-   48cf3:	call   97660 <<c30walk::ctor2su::W<false>>::refill>
+   48cf3:	call   97670 <<c30walk::ctor2su::W<false>>::refill>
    48cf8:	lea    0xe8(%rsp),%r8
    48d00:	test   %al,%al
    48d02:	je     48d7d <<c30walk::ctor2su::Ctor2su>::build::<false>+0x14dd>
@@ -1176,7 +1176,7 @@ Disassembly of section .text:
    48d0c:	mov    0x18(%rsp),%r9
    48d11:	jmp    48cd8 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x1438>
    48d13:	mov    %r12,%rdi
-   48d16:	call   ff400 <<alloc::raw_vec::RawVec<[u32; 256]>>::grow_one>
+   48d16:	call   ff470 <<alloc::raw_vec::RawVec<[u32; 256]>>::grow_one>
    48d1b:	jmp    48121 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x881>
    48d20:	mov    $0x84,%eax
    48d25:	lea    0xe8(%rsp),%r8
@@ -1208,10 +1208,10 @@ Disassembly of section .text:
    48d9d:	pop    %r15
    48d9f:	pop    %rbp
    48da0:	ret
-   48da1:	lea    0x1007b0(%rip),%rcx        # 149558 <__frame_dummy_init_array_entry+0x2338>
+   48da1:	lea    0x100820(%rip),%rcx        # 1495c8 <__frame_dummy_init_array_entry+0x2338>
    48da8:	mov    $0x1e,%edx
    48dad:	xor    %edi,%edi
-   48daf:	call   f15e0 <core::slice::index::slice_index_fail>
+   48daf:	call   f1650 <core::slice::index::slice_index_fail>
    48db4:	xor    %r14d,%r14d
    48db7:	lea    0xa8(%rsp),%r15
    48dbf:	mov    0x88(%rsp),%r12
@@ -1236,7 +1236,7 @@ Disassembly of section .text:
    48e17:	mov    %r15,%rdi
    48e1a:	mov    %r14,%rsi
    48e1d:	mov    %r8,%rbx
-   48e20:	call   97060 <<c30walk::ctor2su::W<false>>::finish>
+   48e20:	call   97070 <<c30walk::ctor2su::W<false>>::finish>
    48e25:	mov    %rbx,%r8
    48e28:	mov    0x8(%rsp),%rdx
    48e2d:	mov    (%rbx),%rax
@@ -1263,7 +1263,7 @@ Disassembly of section .text:
    48e71:	sub    %rdx,%rax
    48e74:	lea    0x3c(,%rax,2),%rdx
    48e7c:	mov    $0xff,%esi
-   48e81:	call   *0x1051e9(%rip)        # 14e070 <memset@GLIBC_2.2.5>
+   48e81:	call   *0x105271(%rip)        # 14e0f8 <memset@GLIBC_2.2.5>
    48e87:	shl    $0x6,%r13
    48e8b:	pcmpeqd %xmm0,%xmm0
    48e8f:	movdqu %xmm0,0x2c(%rbx,%r13,1)
@@ -1279,7 +1279,7 @@ Disassembly of section .text:
    48ecc:	mov    0x10(%rax),%r9
    48ed0:	lea    0xa8(%rsp),%rdi
    48ed8:	mov    %rbx,%rsi
-   48edb:	call   a5ff0 <c30walk::ctor::canonicalise>
+   48edb:	call   a6000 <c30walk::ctor::canonicalise>
    48ee0:	mov    0x90(%rsp),%rax
    48ee8:	mov    %rax,0x10(%r12)
    48eed:	mov    $0x1,%al
@@ -1289,7 +1289,7 @@ Disassembly of section .text:
    48efa:	je     48f0c <<c30walk::ctor2su::Ctor2su>::build::<false>+0x166c>
    48efc:	mov    0x8(%r9),%rdi
    48f00:	mov    %r9,%r15
-   48f03:	call   *0x105177(%rip)        # 14e080 <free@GLIBC_2.2.5>
+   48f03:	call   *0x1051ff(%rip)        # 14e108 <free@GLIBC_2.2.5>
    48f09:	mov    %r15,%r9
    48f0c:	movq   $0x0,(%r9)
    48f13:	movq   $0x40,0x8(%r9)
@@ -1298,7 +1298,7 @@ Disassembly of section .text:
    48f28:	mov    %r9,%rdi
    48f2b:	lea    0x1(%r13),%rsi
    48f2f:	mov    %r9,%r15
-   48f32:	call   9bbc0 <<alloc::raw_vec::RawVecInner>::grow_exact>
+   48f32:	call   9bbd0 <<alloc::raw_vec::RawVecInner>::grow_exact>
    48f37:	mov    %r15,%r9
    48f3a:	cmp    $0xffffffffffffffff,%rax
    48f3e:	mov    %r12,%rdi
@@ -1310,47 +1310,47 @@ Disassembly of section .text:
    48f52:	je     48f66 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x16c6>
    48f54:	mov    0x5530(%rsp),%rax
    48f5c:	mov    0x8(%rax),%rdi
-   48f60:	call   *0x10511a(%rip)        # 14e080 <free@GLIBC_2.2.5>
+   48f60:	call   *0x1051a2(%rip)        # 14e108 <free@GLIBC_2.2.5>
    48f66:	mov    0x5530(%rsp),%rdi
    48f6e:	movq   $0x0,(%rdi)
    48f75:	movq   $0x40,0x8(%rdi)
    48f7d:	movq   $0x0,0x10(%rdi)
    48f85:	mov    $0x80,%edx
    48f8a:	mov    %rbx,%rsi
-   48f8d:	call   9bbc0 <<alloc::raw_vec::RawVecInner>::grow_exact>
+   48f8d:	call   9bbd0 <<alloc::raw_vec::RawVecInner>::grow_exact>
    48f92:	cmp    $0xffffffffffffffff,%rax
    48f96:	mov    %r15,%r9
    48f99:	mov    %r12,%rdi
    48f9c:	je     47aec <<c30walk::ctor2su::Ctor2su>::build::<false>+0x24c>
    48fa2:	mov    %rax,%rdi
    48fa5:	mov    %rdx,%rsi
-   48fa8:	call   eed6b <alloc::raw_vec::handle_error>
-   48fad:	lea    0xfe4f4(%rip),%rdx        # 1474a8 <__frame_dummy_init_array_entry+0x288>
+   48fa8:	call   eeddb <alloc::raw_vec::handle_error>
+   48fad:	lea    0xfe564(%rip),%rdx        # 147518 <__frame_dummy_init_array_entry+0x288>
    48fb4:	mov    %rax,%rdi
    48fb7:	mov    0x20(%rsp),%rsi
-   48fbc:	call   f0803 <core::panicking::panic_bounds_check>
-   48fc1:	lea    0x100650(%rip),%rdx        # 149618 <__frame_dummy_init_array_entry+0x23f8>
+   48fbc:	call   f0873 <core::panicking::panic_bounds_check>
+   48fc1:	lea    0x1006c0(%rip),%rdx        # 149688 <__frame_dummy_init_array_entry+0x23f8>
    48fc8:	mov    %rax,%rdi
    48fcb:	mov    %rcx,%rsi
-   48fce:	call   f0803 <core::panicking::panic_bounds_check>
-   48fd3:	lea    0x100626(%rip),%rdx        # 149600 <__frame_dummy_init_array_entry+0x23e0>
+   48fce:	call   f0873 <core::panicking::panic_bounds_check>
+   48fd3:	lea    0x100696(%rip),%rdx        # 149670 <__frame_dummy_init_array_entry+0x23e0>
    48fda:	mov    $0x1e,%esi
    48fdf:	mov    %r12,%rdi
-   48fe2:	call   f0803 <core::panicking::panic_bounds_check>
-   48fe7:	lea    0x10059a(%rip),%rcx        # 149588 <__frame_dummy_init_array_entry+0x2368>
+   48fe2:	call   f0873 <core::panicking::panic_bounds_check>
+   48fe7:	lea    0x10060a(%rip),%rcx        # 1495f8 <__frame_dummy_init_array_entry+0x2368>
    48fee:	mov    %rdi,%rdx
    48ff1:	mov    %r12,%rdi
    48ff4:	mov    %r13,%rsi
-   48ff7:	call   f15e0 <core::slice::index::slice_index_fail>
-   48ffc:	lea    0x10056d(%rip),%rcx        # 149570 <__frame_dummy_init_array_entry+0x2350>
+   48ff7:	call   f1650 <core::slice::index::slice_index_fail>
+   48ffc:	lea    0x1005dd(%rip),%rcx        # 1495e0 <__frame_dummy_init_array_entry+0x2350>
    49003:	mov    %rdi,%rdx
    49006:	mov    %r13,%rdi
    49009:	mov    0x28(%rsp),%rsi
-   4900e:	call   f15e0 <core::slice::index::slice_index_fail>
-   49013:	lea    0x1005ce(%rip),%rdx        # 1495e8 <__frame_dummy_init_array_entry+0x23c8>
+   4900e:	call   f1650 <core::slice::index::slice_index_fail>
+   49013:	lea    0x10063e(%rip),%rdx        # 149658 <__frame_dummy_init_array_entry+0x23c8>
    4901a:	mov    $0x1e,%esi
    4901f:	mov    %r12,%rdi
-   49022:	call   f0803 <core::panicking::panic_bounds_check>
+   49022:	call   f0873 <core::panicking::panic_bounds_check>
    49027:	mov    $0x10,%edx
    4902c:	mov    $0x4,%ecx
    49031:	mov    $0x400,%r8d
@@ -1358,7 +1358,7 @@ Disassembly of section .text:
    4903a:	mov    %r13,%rdi
    4903d:	xor    %esi,%esi
    4903f:	mov    %r9,%rbx
-   49042:	call   6f3e0 <<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>>
+   49042:	call   6f3d0 <<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>>
    49047:	mov    %r15,%rdi
    4904a:	mov    %rbx,%r9
    4904d:	jmp    47b79 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x2d9>
@@ -1368,7 +1368,7 @@ Disassembly of section .text:
    49060:	mov    %rdi,%r15
    49063:	xor    %esi,%esi
    49065:	mov    %rbx,%rdx
-   49068:	call   6f3e0 <<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>>
+   49068:	call   6f3d0 <<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>>
    4906d:	mov    %r15,%rdi
    49070:	mov    0x10(%r15),%r15
    49074:	mov    0x8(%rdi),%r12
@@ -1376,16 +1376,16 @@ Disassembly of section .text:
    4907c:	cmp    $0x1,%rbx
    49080:	jne    47b25 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x285>
    49086:	jmp    47b47 <<c30walk::ctor2su::Ctor2su>::build::<false>+0x2a7>
-   4908b:	lea    0xfe416(%rip),%rdx        # 1474a8 <__frame_dummy_init_array_entry+0x288>
-   49092:	call   f0803 <core::panicking::panic_bounds_check>
-   49097:	lea    0x1004a2(%rip),%rdx        # 149540 <__frame_dummy_init_array_entry+0x2320>
+   4908b:	lea    0xfe486(%rip),%rdx        # 147518 <__frame_dummy_init_array_entry+0x288>
+   49092:	call   f0873 <core::panicking::panic_bounds_check>
+   49097:	lea    0x100512(%rip),%rdx        # 1495b0 <__frame_dummy_init_array_entry+0x2320>
    4909e:	mov    $0x1e,%esi
-   490a3:	call   f0803 <core::panicking::panic_bounds_check>
-   490a8:	lea    0x100521(%rip),%rdx        # 1495d0 <__frame_dummy_init_array_entry+0x23b0>
+   490a3:	call   f0873 <core::panicking::panic_bounds_check>
+   490a8:	lea    0x100591(%rip),%rdx        # 149640 <__frame_dummy_init_array_entry+0x23b0>
    490af:	mov    $0x1e,%esi
-   490b4:	call   f0803 <core::panicking::panic_bounds_check>
-   490b9:	lea    0x100408(%rip),%rdx        # 1494c8 <__frame_dummy_init_array_entry+0x22a8>
-   490c0:	call   f0803 <core::panicking::panic_bounds_check>
-   490c5:	lea    0xfe3dc(%rip),%rdx        # 1474a8 <__frame_dummy_init_array_entry+0x288>
+   490b4:	call   f0873 <core::panicking::panic_bounds_check>
+   490b9:	lea    0x100478(%rip),%rdx        # 149538 <__frame_dummy_init_array_entry+0x22a8>
+   490c0:	call   f0873 <core::panicking::panic_bounds_check>
+   490c5:	lea    0xfe44c(%rip),%rdx        # 147518 <__frame_dummy_init_array_entry+0x288>
    490cc:	mov    %r13,%rdi
-   490cf:	call   f0803 <core::panicking::panic_bounds_check>
+   490cf:	call   f0873 <core::panicking::panic_bounds_check>

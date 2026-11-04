@@ -94,44 +94,82 @@ def asm(path):
     return result
 # ---------------------------------------------------------------------------------------
 
-# Each changed class: function, frequency -> (counter expression, path, candidate listing
-# ranges as offsets from the function's start). Read from the listings with the profile's
-# per-instruction counts (the S62-F01 addendum in each journal).
+# Each changed class: (function, frequency) -> [(counter expression, path), ...]: one entry
+# per path at that frequency, read from the listings with the profile's per-instruction
+# counts (each journal's S62-F01 addendum). The listing ranges are derived below from the
+# profile itself. A class is counter-supported only if every one of its paths' counters
+# equals the frequency.
 CLASSES = {
   'scanner': {
-    ('build', 10544477): ('lookahead_pairs + runs_no_full_tile', 'uniform tiles U = J + Q (B2 tile test)', 'B2 +0xa30..+0xa3e'),
-    ('build', 10541706): ('lookahead_pairs', 'lookahead pairs J', '+0x980..+0x98d'),
-    ('build', 9933956): ('lookahead_pairs - held_reuses', 'matched lookaheads J − H', '+0x99c..+0x9a8'),
-    ('build', 3003834): ('tiles_nonuniform + runs', 'outer scan iterations S + R', '+0x93d..+0x967'),
-    ('build', 2396084): ('fresh_pairs', 'fresh pairs A', '+0x947..+0x94a'),
-    ('build', 2393313): ('tiles_nonuniform', 'nonuniform full tiles S', '+0x8f0..+0x937, +0x9c0..+0xa09, +0xa3b, +0xa80..+0xa89'),
-    ('build', 1116556): ('tiles_second_segment', 'second segments X', '+0xa8f..+0xa97, +0xacc'),
-    ('build', 996634): ('tile_refills_first', "refill detour from tile16's first segment", '+0xa3d..+0xa76'),
-    ('build', 801475): ('fills_vector', "fill's vector loop entry (m ≥ 8) and its alias check", '+0xc18..+0xc25, +0x1078..+0x109b, +0x10c7..+0x10d2'),
-    ('build', 610521): ('runs', 'runs R', '+0x969..+0x96d, +0xb29.., +0x1274..+0x128e'),
-    ('build', 610356): ('runs_lookahead', 'runs entering the lookahead loop (alignment nop executed)', '+0x973'),
-    ('build', 607750): ('held_reuses', 'held reuses H', '+0xb1a..+0xb24'),
-    ('build', 302049): ('tile_refills_second', "refill detour from tile16's second segment", '+0xad1..+0xb01'),
-    ('build', 296405): ('complete_calls', "run's whole-group branch (complete)", '+0xd04..+0xd2a, +0x1030..+0x106f, +0x119e..+0x11ee'),
-    ('build', 23559): ('final_finishes', 'finish from the final close loop', '+0x1577..+0x1594'),
-    ('build', 18684): ('preset_crossing', 'crossing groups preset RAW (create_raw)', '+0x4b0..+0x543, +0x5a3..+0x5b2'),
-    ('build', 3654): ('epochs', 'epochs', '+0x7f6..+0x8d5, +0x12ab..+0x12ae'),
-    ('build', 3575): ('epochs_tiled', 'epochs with a full tile (scan loop entry)', '+0x8db..+0x8ea'),
-    ('build', 3424): ('epochs_untailed', 'epochs with no tail (B2 epoch-loop back edge)', 'B2 +0x7d0..+0x7d6'),
-    ('build', 2606): ('runs_exhausted', 'runs whose lookahead exhausts the epoch', '+0x9aa..+0x9b7'),
-    ('build', 786): ('tail_refills_first', "refill detour from the tail's first segment", '+0x13d1..+0x13f7'),
-    ('build', 434): ('blocks', 'blocks', 'per block'),
-    ('build', 230): ('tails', 'tails', '+0x12b4..+0x1329, +0x138f..+0x1397, +0x13cc'),
-    ('build', 218): ('tails_len_ge2', "tail advance loop (unrolled by two) entry, len ≥ 2", '+0x1333..+0x133e, +0x137b..+0x1384'),
-    ('build', 165): ('runs_no_lookahead', 'runs with no lookahead tile', '+0xb10..+0xb18'),
-    ('build', 121): ('tails_even', 'tail advance loop exit, even len', '+0x138a'),
-    ('build', 106): ('tail_rows_second', "tail second-segment row loop", '+0x1420..+0x1444'),
-    ('build', 79): ('epochs_short', 'epochs with no full tile', '+0x12a0..+0x12a3'),
-    ('build', 22): ('tails_second_segment', "tail second-segment entry and exit", '+0x13f9..+0x1411, +0x1446'),
-    ('build', 12): ('tails_len1', 'tail of length 1', '+0x7c7'),
-    ('build', 9): ('tail_refills_second', "refill detour from the tail's second segment", '+0x144b..+0x1471'),
+    ('build', 10544477): [('lookahead_pairs + runs_no_full_tile', 'uniform tiles U = J + Q (B2 tile test)')],
+    ('build', 10541706): [('lookahead_pairs', 'lookahead pairs J')],
+    ('build', 9933956): [('lookahead_pairs - held_reuses', 'matched lookaheads J - H')],
+    ('build', 3003834): [('tiles_nonuniform + runs', 'outer scan iterations S + R')],
+    ('build', 2396084): [('fresh_pairs', 'fresh pairs A')],
+    ('build', 2393313): [('tiles_nonuniform', 'nonuniform full tiles S')],
+    ('build', 1116556): [('tiles_second_segment', 'second segments X')],
+    ('build', 996634): [('tile_refills_first', "refill detour from tile16's first segment")],
+    ('build', 801475): [('fills_vector', "fill's vector loop entry (m >= 8) and its alias check")],
+    ('build', 610521): [('runs', 'runs R')],
+    ('build', 610356): [('runs_lookahead', 'runs entering the lookahead loop (alignment nop executed)')],
+    ('build', 607750): [('held_reuses', 'held reuses H')],
+    ('build', 302049): [('tile_refills_second', "refill detour from tile16's second segment")],
+    ('build', 296405): [('complete_calls', "run's whole-group branch (complete)")],
+    ('build', 23559): [('final_finishes', 'finish from the final close loop')],
+    ('build', 18684): [('preset_crossing', 'crossing groups preset RAW (create_raw)')],
+    ('build', 3654): [('epochs', 'epochs')],
+    ('build', 3575): [('epochs_tiled', 'epochs with a full tile (scan loop entry)')],
+    ('build', 3424): [('epochs_untailed', "epochs with no tail (B2's epoch-loop back edge)")],
+    ('build', 2606): [('runs_exhausted', 'runs whose lookahead exhausts the epoch')],
+    ('build', 786): [('tail_refills_first', "refill detour from the tail's first segment")],
+    ('build', 434): [('blocks', 'blocks')],
+    ('build', 230): [('tails', 'tails'), ('bitmap_memsets', "bitmap resize's fill (>= 2 words)")],
+    ('build', 218): [('tails_len_ge2', 'tail advance loop (unrolled by two) entry, len >= 2')],
+    ('build', 165): [('runs_no_lookahead', 'runs with no lookahead tile')],
+    ('build', 121): [('tails_even', 'tail advance loop exit, even len')],
+    ('build', 106): [('tail_rows_second', 'tail second-segment row loop')],
+    ('build', 79): [('epochs_short', 'epochs with no full tile')],
+    ('build', 22): [('tails_second_segment', 'tail second-segment entry and exit')],
+    ('build', 12): [('tails_len1', 'tail of length 1')],
+    ('build', 9): [('tail_refills_second', "refill detour from the tail's second segment")],
   },
-  'descriptor': {},  # filled below
+  'descriptor': {
+    ('build', 29357924): [('rows_scalar - tile_rows_second - tail_rows', "full tiles' first-segment row loop")],
+    ('build', 8935084): [('tile_rows_second', "full tiles' second-segment row loop")],
+    ('build', 3003834): [('outer_iterations', 'outer scan iterations')],
+    ('build', 2393313): [('outer_iterations - runs', 'nonuniform full tiles S')],
+    ('build', 1085833): [('fills', 'fill calls (k > 0)')],
+    ('build', 801475): [('fills_vector', "fill's vector loop entry (m >= 8) and its alias check")],
+    ('build', 610521): [('runs', 'runs')],
+    ('build', 597255): [('runs_end_fill', 'runs ending after a fill (B2 return path)')],
+    ('build', 496004): [('run_opens', "open from run")],
+    ('build', 467712): [('128 * epochs', "B2's snapshot loop: 256 ranks, two per iteration (fixed trip)")],
+    ('build', 302049): [('tile_refills_second', "refill detour from a full tile's second segment")],
+    ('build', 296405): [('complete_calls', "run's whole-group branch (complete)")],
+    ('build', 230202): [('63 * epochs', "the snapshot loop: ranks 4..256, four per iteration (fixed trip)")],
+    ('build', 55986): [('sweep_checks // 2 + blocks', 'final sweep loop head (two checks per iteration, plus the exit)')],
+    ('build', 55552): [('sweep_checks // 2', 'final sweep loop body (two checks per iteration)')],
+    ('build', 27776): [('init_descs // 4', 'descriptor initialisation and the cumulative-rank loop (four per iteration)')],
+    ('build', 18684): [('preset_crossing', 'crossing groups preset RAW (create_raw)')],
+    ('build', 13266): [('runs_end_complete', 'runs ending after complete (B2 return path)')],
+    ('build', 3654): [('epochs', 'epochs')],
+    ('build', 3575): [('epochs_tiled', 'epochs with a full tile (scan loop entry)')],
+    ('build', 1769): [('tail_rows - tail_rows_second', "the tail's first-segment row loop")],
+    ('build', 786): [('tail_refills_first', "refill detour from the tail's first segment")],
+    ('build', 434): [('blocks', 'blocks')],
+    ('build', 432): [('bitmap_in_place', 'bitmap resize without a reserve')],
+    ('build', 233): [('pad_blocks', "the last group's padding (memset)")],
+    ('build', 230): [('tails', 'tails'), ('bitmap_memsets', "bitmap resize's fill (>= 2 words)")],
+    ('build', 106): [('tail_rows_second', "the tail's second-segment row loop")],
+    ('build', 79): [('epochs_short', 'epochs with no full tile (B2 path)')],
+    ('build', 9): [('tail_refills_second', "refill detour from the tail's second segment")],
+    ('build', 8): [('raw_grows', 'raw arena regrowth')],
+    ('build', 2): [('rec_grows', 'rec arena regrowth'), ('bitmap_reserves', 'bitmap reserve')],
+    ('build', 1): [('rec_grow_frees', "rec regrowth freeing the old allocation"), ('snaps_reserves', 'snapshot reserve'),
+                   ('bitmap_reserves_single', 'bitmap reserve of one word')],
+    ('refill', 1299478): [('refills', 'refill calls')],
+    ('refill', 1262935): [('refill_finishes', 'refills that finish a portion')],
+  },
 }
 
 ITEMS = {
@@ -185,18 +223,38 @@ def main():
         runs[run] = r
     assert json.dumps(runs[1], sort_keys=True) == json.dumps(runs[2], sort_keys=True), 'the two runs differ'
     r = runs[1]
+    # each changed class's instructions, as listing ranges (offsets from the function's start)
+    ranges = {}
+    for fn, lists in (('build', ('v2-build-false-same-binary.asm', f'{mod}-build-false.asm')),
+                      ('refill', ('v2-refill-false-same-binary.asm', f'{mod}-refill-false.asm'))):
+        for side, p, pat, lf in (('B2', pb, r'::Ctor2>::build::<false>$' if fn == 'build' else r'::ctor2::W<false>>::refill$', lists[0]),
+                                 ('', pc, rf'::{cls}>::build::<false>$' if fn == 'build' else rf'::{mod}::W<false>>::refill$', lists[1])):
+            f = ev / 'listings' / lf
+            if not f.exists():
+                continue
+            L = asm(f); base = min(L); counts = p['addresses'][select(p, pat)]
+            for c in r['classes'][fn]:
+                addrs = sorted(L); segs = []; start = prev = None
+                for a in addrs + [None]:
+                    hit = a is not None and counts.get(a, {}).get('Ir', 0) == c['frequency']
+                    if hit and start is None: start = a
+                    if not hit and start is not None:
+                        segs.append(f'+{start - base:#x}' + (f'..+{prev - base:#x}' if prev != start else '')); start = None
+                    prev = a
+                if segs:
+                    ranges.setdefault((fn, c['frequency']), []).append((side + ' ' if side else '') + ', '.join(segs))
     for f in ('finish', 'canonicalise'):
         assert not r['classes'][f] and r['own'][f]['Ir'][0] == r['own'][f]['Ir'][1], f'{f} changed'
     table, counted_delta, unc_pos, unc_neg = [], 0, 0, 0
     for fn in ('build', 'refill'):
         for c in r['classes'][fn]:
             m = CLASSES[item].get((fn, c['frequency']))
-            row = dict(function=fn, **c)
+            row = dict(function=fn, **c, listing=ranges.get((fn, c['frequency'])))
             if m:
-                expr, path, where = m
-                v = evaluate(expr, rec)
-                row.update(counter=expr, counted=v, path=path, listing=where, profile_frequency=c['frequency'],
-                           agrees=(v == c['frequency']))
+                vals = [evaluate(e, rec) for e, _ in m]
+                row.update(counter=' & '.join(e for e, _ in m), counted=vals[0] if len(set(vals)) == 1 else vals,
+                           counted_each=vals, path=' & '.join(p for _, p in m), profile_frequency=c['frequency'],
+                           agrees=all(v == c['frequency'] for v in vals))
             else:
                 row.update(counter=None, counted=None, agrees=False, path='(no counter)')
             if row['agrees']:

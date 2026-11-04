@@ -884,8 +884,8 @@ Evidence: [2026-11-04-compact30-scanner-f01/](2026-11-04-compact30-scanner-f01/)
 ### 11.1 The counters (counted build only)
 
 Every changed frequency class in §10.4 was read from the listing, with each instruction's own
-count from the trial's raw profile. Each was then assigned to its source path. There are 19
-new `Stats2su` fields. Each is incremented only inside `if COUNT { … }` (that is, only in
+count from the trial's raw profile. Each was then assigned to its source path or paths. There
+are 20 new `Stats2su` fields. Each is incremented only inside `if COUNT { … }` (that is, only in
 `build::<true>`), or in the harness's `same_as_v2`. `build::<false>`, `W<false>` and every
 other line of the constructor are unchanged.
 
@@ -910,14 +910,22 @@ other line of the constructor are unchanged.
 | tail second-segment entry and exit (`+0x13f9`–`+0x1411`, `+0x1446`) | `tails_second_segment` | 22 | 22 | 4 → 8 | +88 |
 | a tail of length 1 (`+0x7c7`) | `tails_len1` | 12 | 12 | 0 → 1 | +12 |
 | refill detour from the tail's second segment (`+0x144b`–`+0x1471`) | `tail_refills_second` | 9 | 9 | 12 → 9 | −27 |
+| the class at 230: the tails (`+0x12b4`–`+0x132d`, …) **and** the bitmap resize's fill, ≥ 2 words (`+0x285`–`+0x2a4`) | `tails` (existing) & `bitmap_memsets` | 230 & 230 | 230 | 41 → 39 | −460 |
 
-**Every counted value equals the profile's frequency exactly.** The new counters are the 19
-rows above. The other 12 changed classes (A, J, J + Q, J − H, S, X, S + R, R, H, epochs,
-blocks, tails) were already counted (§10.4).
+**Every counted value equals the profile's frequency exactly.** The new counters are the 20
+in the table above. The other 11 changed classes (A, J, J + Q, J − H, S, X, S + R, R, H,
+epochs, blocks) were already counted (§10.4).
 
 Notes on the mapping:
-- **One class, one path.** Each class's instructions were read in the listing and lie on
-  one path.
+- **One class, one path, with one exception.** Each class's instructions were read in the
+  listing and lie on one path, except the class at 230.
+  - §10.4 and the S62 replay counted that class as the tails alone. Its instructions also
+    include the bitmap resize's `memset` path, which runs for blocks of ≥ 2 bitmap words: 230
+    blocks, by coincidence.
+  - The replay tool's listing ranges showed the second path. Its counter, `bitmap_memsets`,
+    was added after this section's first commit (`4ffb46c2`, which had 19 counters).
+  - A class is counter-supported only when every one of its paths' counters equals its
+    frequency.
 - **The alias check.** `fill`'s vector entry tests m ≥ 8 (`lea -0x2(,%rsi,2)`, `cmp $0xe`).
   Its alias check (`+0xc21`, `jae`) compares the field array with the static `PATTERNS`,
   which are distinct allocations, so the check always passes. The counter counts m ≥ 8.
@@ -938,7 +946,7 @@ Notes on the mapping:
 
 - **The pinned binary reproduces.** A clean build of `49cb46b6` with the trial's recipe has
   sha256 `3ce86859…a050f`, the trial's archived binary. The counted-counter binary is
-  `6b1f1d95…784d44`.
+  `5777e48b…5feb5c`.
 - **The tool.** `asmid.py` follows `build::<false>`'s transitive callee closure in both
   binaries. Each function is compared over its symbol extent after
   `bench/c30_build_listing.py`'s normalisation:
@@ -970,7 +978,7 @@ The counted-counter binary passes every suite, each exit 0, with every check exa
 - synthetic, quick: 630 cases.
 
 Every pre-existing field of every jsonl record equals the trial's archive. So does every
-console, once the 19 new fields are removed.
+console, once the 20 new fields are removed.
 
 ### 11.4 The ledger, replayed with counted frequencies
 

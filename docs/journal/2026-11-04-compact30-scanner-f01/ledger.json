@@ -64,6 +64,7 @@
   "epochs_tiled": 3575,
   "epochs_short": 79,
   "epochs_untailed": 3424,
+  "bitmap_memsets": 230,
   "v1_rows": 207006515,
   "v1_field_stores": 52107477,
   "v1_entry_stores": 1485808,
@@ -77,10 +78,15 @@
    "baseline": 5,
    "candidate": 0,
    "delta": -52722385,
+   "listing": [
+    "B2 +0xa30..+0xa3e"
+   ],
    "counter": "lookahead_pairs + runs_no_full_tile",
    "counted": 10544477,
+   "counted_each": [
+    10544477
+   ],
    "path": "uniform tiles U = J + Q (B2 tile test)",
-   "listing": "B2 +0xa30..+0xa3e",
    "profile_frequency": 10544477,
    "agrees": true
   },
@@ -90,10 +96,16 @@
    "baseline": 9,
    "candidate": 5,
    "delta": -42166824,
+   "listing": [
+    "B2 +0xa44..+0xa68",
+    "+0x980..+0x98d"
+   ],
    "counter": "lookahead_pairs",
    "counted": 10541706,
+   "counted_each": [
+    10541706
+   ],
    "path": "lookahead pairs J",
-   "listing": "+0x980..+0x98d",
    "profile_frequency": 10541706,
    "agrees": true
   },
@@ -103,10 +115,15 @@
    "baseline": 0,
    "candidate": 4,
    "delta": 39735824,
+   "listing": [
+    "+0x99c..+0x9a8"
+   ],
    "counter": "lookahead_pairs - held_reuses",
    "counted": 9933956,
-   "path": "matched lookaheads J \u2212 H",
-   "listing": "+0x99c..+0x9a8",
+   "counted_each": [
+    9933956
+   ],
+   "path": "matched lookaheads J - H",
    "profile_frequency": 9933956,
    "agrees": true
   },
@@ -116,10 +133,16 @@
    "baseline": 13,
    "candidate": 11,
    "delta": -6007668,
+   "listing": [
+    "B2 +0x9d2..+0x9e6, +0xa14..+0xa27",
+    "+0x93d..+0x945, +0x94e..+0x967"
+   ],
    "counter": "tiles_nonuniform + runs",
    "counted": 3003834,
+   "counted_each": [
+    3003834
+   ],
    "path": "outer scan iterations S + R",
-   "listing": "+0x93d..+0x967",
    "profile_frequency": 3003834,
    "agrees": true
   },
@@ -129,10 +152,16 @@
    "baseline": 10,
    "candidate": 2,
    "delta": -19168672,
+   "listing": [
+    "B2 +0x9e8..+0xa10",
+    "+0x947..+0x94a"
+   ],
    "counter": "fresh_pairs",
    "counted": 2396084,
+   "counted_each": [
+    2396084
+   ],
    "path": "fresh pairs A",
-   "listing": "+0x947..+0x94a",
    "profile_frequency": 2396084,
    "agrees": true
   },
@@ -142,10 +171,16 @@
    "baseline": 38,
    "candidate": 37,
    "delta": -2393313,
+   "listing": [
+    "B2 +0x990..+0x9d0, +0xa80..+0xac4, +0x1240..+0x1248, +0x127c, +0x12b0..+0x12c4",
+    "+0x8f0..+0x937, +0x9c0..+0xa09, +0xa3b, +0xa80..+0xa89"
+   ],
    "counter": "tiles_nonuniform",
    "counted": 2393313,
+   "counted_each": [
+    2393313
+   ],
    "path": "nonuniform full tiles S",
-   "listing": "+0x8f0..+0x937, +0x9c0..+0xa09, +0xa3b, +0xa80..+0xa89",
    "profile_frequency": 2393313,
    "agrees": true
   },
@@ -155,10 +190,16 @@
    "baseline": 8,
    "candidate": 4,
    "delta": -4466224,
+   "listing": [
+    "B2 +0x12ca..+0x12df, +0x1308",
+    "+0xa8f..+0xa97, +0xacc"
+   ],
    "counter": "tiles_second_segment",
    "counted": 1116556,
+   "counted_each": [
+    1116556
+   ],
    "path": "second segments X",
-   "listing": "+0xa8f..+0xa97, +0xacc",
    "profile_frequency": 1116556,
    "agrees": true
   },
@@ -168,10 +209,16 @@
    "baseline": 10,
    "candidate": 12,
    "delta": 1993268,
+   "listing": [
+    "B2 +0x127e..+0x12ac",
+    "+0xa3d..+0xa76"
+   ],
    "counter": "tile_refills_first",
    "counted": 996634,
+   "counted_each": [
+    996634
+   ],
    "path": "refill detour from tile16's first segment",
-   "listing": "+0xa3d..+0xa76",
    "profile_frequency": 996634,
    "agrees": true
   },
@@ -181,10 +228,16 @@
    "baseline": 18,
    "candidate": 19,
    "delta": 801475,
+   "listing": [
+    "B2 +0xbd9..+0xbe6, +0x1053..+0x1076, +0x10a7..+0x10aa",
+    "+0xc18..+0xc25, +0x1078..+0x109b, +0x10c7..+0x10d2"
+   ],
    "counter": "fills_vector",
    "counted": 801475,
-   "path": "fill's vector loop entry (m \u2265 8) and its alias check",
-   "listing": "+0xc18..+0xc25, +0x1078..+0x109b, +0x10c7..+0x10d2",
+   "counted_each": [
+    801475
+   ],
+   "path": "fill's vector loop entry (m >= 8) and its alias check",
    "profile_frequency": 801475,
    "agrees": true
   },
@@ -194,10 +247,16 @@
    "baseline": 32,
    "candidate": 31,
    "delta": -610521,
+   "listing": [
+    "B2 +0xa29..+0xa2c, +0xae5..+0xb4c, +0x1346..+0x1363",
+    "+0x969..+0x96d, +0xb29..+0xb8b, +0x1274..+0x128e"
+   ],
    "counter": "runs",
    "counted": 610521,
+   "counted_each": [
+    610521
+   ],
    "path": "runs R",
-   "listing": "+0x969..+0x96d, +0xb29.., +0x1274..+0x128e",
    "profile_frequency": 610521,
    "agrees": true
   },
@@ -207,10 +266,15 @@
    "baseline": 0,
    "candidate": 1,
    "delta": 610356,
+   "listing": [
+    "+0x973"
+   ],
    "counter": "runs_lookahead",
    "counted": 610356,
+   "counted_each": [
+    610356
+   ],
    "path": "runs entering the lookahead loop (alignment nop executed)",
-   "listing": "+0x973",
    "profile_frequency": 610356,
    "agrees": true
   },
@@ -220,10 +284,16 @@
    "baseline": 4,
    "candidate": 3,
    "delta": -607750,
+   "listing": [
+    "B2 +0xa6f..+0xa7e",
+    "+0xb1a..+0xb24"
+   ],
    "counter": "held_reuses",
    "counted": 607750,
+   "counted_each": [
+    607750
+   ],
    "path": "held reuses H",
-   "listing": "+0xb1a..+0xb24",
    "profile_frequency": 607750,
    "agrees": true
   },
@@ -233,10 +303,16 @@
    "baseline": 9,
    "candidate": 11,
    "delta": 604098,
+   "listing": [
+    "B2 +0x130d..+0x1337",
+    "+0xad1..+0xb01"
+   ],
    "counter": "tile_refills_second",
    "counted": 302049,
+   "counted_each": [
+    302049
+   ],
    "path": "refill detour from tile16's second segment",
-   "listing": "+0xad1..+0xb01",
    "profile_frequency": 302049,
    "agrees": true
   },
@@ -246,10 +322,16 @@
    "baseline": 43,
    "candidate": 44,
    "delta": 296405,
+   "listing": [
+    "B2 +0xcc7..+0xced, +0x1010..+0x104a, +0x116e..+0x11be",
+    "+0xd04..+0xd2a, +0x1030..+0x106f, +0x119e..+0x11ee"
+   ],
    "counter": "complete_calls",
    "counted": 296405,
+   "counted_each": [
+    296405
+   ],
    "path": "run's whole-group branch (complete)",
-   "listing": "+0xd04..+0xd2a, +0x1030..+0x106f, +0x119e..+0x11ee",
    "profile_frequency": 296405,
    "agrees": true
   },
@@ -259,10 +341,16 @@
    "baseline": 8,
    "candidate": 9,
    "delta": 23559,
+   "listing": [
+    "B2 +0x15e7..+0x15ff",
+    "+0x1577..+0x1594"
+   ],
    "counter": "final_finishes",
    "counted": 23559,
+   "counted_each": [
+    23559
+   ],
    "path": "finish from the final close loop",
-   "listing": "+0x1577..+0x1594",
    "profile_frequency": 23559,
    "agrees": true
   },
@@ -272,10 +360,16 @@
    "baseline": 36,
    "candidate": 37,
    "delta": 18684,
+   "listing": [
+    "B2 +0x4b0..+0x540, +0x59b..+0x5aa",
+    "+0x4b0..+0x543, +0x5a3..+0x5b2"
+   ],
    "counter": "preset_crossing",
    "counted": 18684,
+   "counted_each": [
+    18684
+   ],
    "path": "crossing groups preset RAW (create_raw)",
-   "listing": "+0x4b0..+0x543, +0x5a3..+0x5b2",
    "profile_frequency": 18684,
    "agrees": true
   },
@@ -285,10 +379,16 @@
    "baseline": 33,
    "candidate": 35,
    "delta": 7308,
+   "listing": [
+    "B2 +0x7dc..+0x801, +0x84a..+0x8a1, +0x8b7..+0x8c2",
+    "+0x7f6..+0x828, +0x86a..+0x8d5, +0x12ab..+0x12ae"
+   ],
    "counter": "epochs",
    "counted": 3654,
+   "counted_each": [
+    3654
+   ],
    "path": "epochs",
-   "listing": "+0x7f6..+0x8d5, +0x12ab..+0x12ae",
    "profile_frequency": 3654,
    "agrees": true
   },
@@ -298,10 +398,16 @@
    "baseline": 5,
    "candidate": 4,
    "delta": -3575,
+   "listing": [
+    "B2 +0x970..+0x982",
+    "+0x8db..+0x8ea"
+   ],
    "counter": "epochs_tiled",
    "counted": 3575,
+   "counted_each": [
+    3575
+   ],
    "path": "epochs with a full tile (scan loop entry)",
-   "listing": "+0x8db..+0x8ea",
    "profile_frequency": 3575,
    "agrees": true
   },
@@ -311,10 +417,15 @@
    "baseline": 3,
    "candidate": 0,
    "delta": -10272,
+   "listing": [
+    "B2 +0x7d0..+0x7d6"
+   ],
    "counter": "epochs_untailed",
    "counted": 3424,
-   "path": "epochs with no tail (B2 epoch-loop back edge)",
-   "listing": "B2 +0x7d0..+0x7d6",
+   "counted_each": [
+    3424
+   ],
+   "path": "epochs with no tail (B2's epoch-loop back edge)",
    "profile_frequency": 3424,
    "agrees": true
   },
@@ -324,10 +435,15 @@
    "baseline": 0,
    "candidate": 4,
    "delta": 10424,
+   "listing": [
+    "+0x9aa..+0x9b7"
+   ],
    "counter": "runs_exhausted",
    "counted": 2606,
+   "counted_each": [
+    2606
+   ],
    "path": "runs whose lookahead exhausts the epoch",
-   "listing": "+0x9aa..+0x9b7",
    "profile_frequency": 2606,
    "agrees": true
   },
@@ -337,10 +453,16 @@
    "baseline": 12,
    "candidate": 8,
    "delta": -3144,
+   "listing": [
+    "B2 +0x930..+0x967",
+    "+0x13d1..+0x13f7"
+   ],
    "counter": "tail_refills_first",
    "counted": 786,
+   "counted_each": [
+    786
+   ],
    "path": "refill detour from the tail's first segment",
-   "listing": "+0x13d1..+0x13f7",
    "profile_frequency": 786,
    "agrees": true
   },
@@ -350,10 +472,16 @@
    "baseline": 204,
    "candidate": 200,
    "delta": -1736,
+   "listing": [
+    "B2 +0x0..+0x9a, +0xe7..+0x118, +0x18b..+0x204, +0x208..+0x25d, +0x299..+0x2b0, +0x2b5..+0x2e8, +0x366..+0x374, +0x3dc..+0x49e, +0x5f0..+0x5fd, +0x7b4..+0x7ca, +0x150f..+0x1514, +0x1579..+0x15a5, +0x1601..+0x1623, +0x1652..+0x16b5",
+    "+0x0..+0xa1, +0xf7..+0x12a, +0x19b..+0x21c, +0x220..+0x26b, +0x2a7..+0x2b9, +0x2be..+0x2ed, +0x366..+0x371, +0x3dc..+0x4a3, +0x5f0..+0x5f5, +0x7b3..+0x7c5, +0x1480..+0x148d, +0x14ef..+0x1500, +0x1514..+0x1531, +0x1596..+0x15b8, +0x15e7..+0x164f"
+   ],
    "counter": "blocks",
    "counted": 434,
+   "counted_each": [
+    434
+   ],
    "path": "blocks",
-   "listing": "per block",
    "profile_frequency": 434,
    "agrees": true
   },
@@ -363,10 +491,17 @@
    "baseline": 41,
    "candidate": 39,
    "delta": -460,
-   "counter": "tails",
+   "listing": [
+    "B2 +0x277..+0x296, +0x8c8..+0x8fb, +0x92b, +0x1370..+0x137d, +0x1437..+0x1459, +0x14d1..+0x14d9, +0x14ed..+0x1500",
+    "+0x285..+0x2a4, +0x7e7..+0x7ef, +0x12b4..+0x132d, +0x138f..+0x1397, +0x13cc"
+   ],
+   "counter": "tails & bitmap_memsets",
    "counted": 230,
-   "path": "tails",
-   "listing": "+0x12b4..+0x1329, +0x138f..+0x1397, +0x13cc",
+   "counted_each": [
+    230,
+    230
+   ],
+   "path": "tails & bitmap resize's fill (>= 2 words)",
    "profile_frequency": 230,
    "agrees": true
   },
@@ -376,10 +511,16 @@
    "baseline": 6,
    "candidate": 7,
    "delta": 218,
+   "listing": [
+    "B2 +0x145b..+0x1464, +0x14ab..+0x14b4",
+    "+0x1333..+0x133e, +0x137b..+0x1384"
+   ],
    "counter": "tails_len_ge2",
    "counted": 218,
-   "path": "tail advance loop (unrolled by two) entry, len \u2265 2",
-   "listing": "+0x1333..+0x133e, +0x137b..+0x1384",
+   "counted_each": [
+    218
+   ],
+   "path": "tail advance loop (unrolled by two) entry, len >= 2",
    "profile_frequency": 218,
    "agrees": true
   },
@@ -389,10 +530,15 @@
    "baseline": 0,
    "candidate": 3,
    "delta": 495,
+   "listing": [
+    "+0xb10..+0xb18"
+   ],
    "counter": "runs_no_lookahead",
    "counted": 165,
+   "counted_each": [
+    165
+   ],
    "path": "runs with no lookahead tile",
-   "listing": "+0xb10..+0xb18",
    "profile_frequency": 165,
    "agrees": true
   },
@@ -402,10 +548,15 @@
    "baseline": 0,
    "candidate": 1,
    "delta": 121,
+   "listing": [
+    "+0x138a"
+   ],
    "counter": "tails_even",
    "counted": 121,
+   "counted_each": [
+    121
+   ],
    "path": "tail advance loop exit, even len",
-   "listing": "+0x138a",
    "profile_frequency": 121,
    "agrees": true
   },
@@ -415,10 +566,16 @@
    "baseline": 12,
    "candidate": 11,
    "delta": -106,
+   "listing": [
+    "B2 +0x13d0..+0x13f9",
+    "+0x1420..+0x1444"
+   ],
    "counter": "tail_rows_second",
    "counted": 106,
+   "counted_each": [
+    106
+   ],
    "path": "tail second-segment row loop",
-   "listing": "+0x1420..+0x1444",
    "profile_frequency": 106,
    "agrees": true
   },
@@ -428,10 +585,16 @@
    "baseline": 3,
    "candidate": 2,
    "delta": -79,
+   "listing": [
+    "B2 +0x8a7..+0x8b2",
+    "+0x12a0..+0x12a3"
+   ],
    "counter": "epochs_short",
    "counted": 79,
+   "counted_each": [
+    79
+   ],
    "path": "epochs with no full tile",
-   "listing": "+0x12a0..+0x12a3",
    "profile_frequency": 79,
    "agrees": true
   },
@@ -441,10 +604,16 @@
    "baseline": 4,
    "candidate": 8,
    "delta": 88,
+   "listing": [
+    "B2 +0x13c1..+0x13c9, +0x13fb",
+    "+0x13f9..+0x1411, +0x1446"
+   ],
    "counter": "tails_second_segment",
    "counted": 22,
+   "counted_each": [
+    22
+   ],
    "path": "tail second-segment entry and exit",
-   "listing": "+0x13f9..+0x1411, +0x1446",
    "profile_frequency": 22,
    "agrees": true
   },
@@ -454,10 +623,15 @@
    "baseline": 0,
    "candidate": 1,
    "delta": 12,
+   "listing": [
+    "+0x7c7"
+   ],
    "counter": "tails_len1",
    "counted": 12,
+   "counted_each": [
+    12
+   ],
    "path": "tail of length 1",
-   "listing": "+0x7c7",
    "profile_frequency": 12,
    "agrees": true
   },
@@ -467,10 +641,16 @@
    "baseline": 12,
    "candidate": 9,
    "delta": -27,
+   "listing": [
+    "B2 +0x1400..+0x1435",
+    "+0x144b..+0x1471"
+   ],
    "counter": "tail_refills_second",
    "counted": 9,
+   "counted_each": [
+    9
+   ],
    "path": "refill detour from the tail's second segment",
-   "listing": "+0x144b..+0x1471",
    "profile_frequency": 9,
    "agrees": true
   }

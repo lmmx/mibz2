@@ -204,6 +204,8 @@ pub struct Stats2su {
     pub epochs_tiled: u64,
     pub epochs_short: u64,
     pub epochs_untailed: u64,
+    /// the bitmap resize's fill (≥ 2 words), which shares the tails' frequency class
+    pub bitmap_memsets: u64,
 }
 
 impl Stats2su {
@@ -266,7 +268,8 @@ impl Stats2su {
             preset_crossing,
             epochs_tiled,
             epochs_short,
-            epochs_untailed
+            epochs_untailed,
+            bitmap_memsets
         );
         self.max_ordinary_span = self.max_ordinary_span.max(o.max_ordinary_span);
         self.min_wide_span = match (self.min_wide_span, o.min_wide_span) {
@@ -282,7 +285,7 @@ impl Stats2su {
 
     fn json(&self) -> String {
         format!(
-            "\"blocks\":{},\"rows\":{},\"rows_bulk\":{},\"rows_bulk_raw\":{},\"rows_fragment\":{},\"rows_scalar\":{},\"runs\":{},\"run_rows\":{},\"complete_groups\":{},\"fin_fast\":{},\"fin_ordinary\":{},\"fin_wide\":{},\"fin_crossing\":{},\"fin_forced\":{},\"norm_full\":{},\"norm_partial\":{},\"norm_fields\":{},\"raw_fields_read\":{},\"raw_entries_written\":{},\"fields_restored\":{},\"epoch_searches\":{},\"epochs\":{},\"runs_split_at_epoch\":{},\"raw_groups\":{},\"raw_moved\":{},\"raw_cycles\":{},\"multi_epoch_portions\":{},\"max_ordinary_span\":{},\"min_wide_span\":{},\"fresh_pairs\":{},\"lookahead_pairs\":{},\"held_reuses\":{},\"runs_no_full_tile\":{},\"tiles_nonuniform\":{},\"tiles_second_segment\":{},\"tails\":{},\"tail_rows\":{},\"unchecked_tiles\":{},\"tile_refills_first\":{},\"tile_refills_second\":{},\"tail_refills_first\":{},\"tail_refills_second\":{},\"tail_rows_second\":{},\"tails_second_segment\":{},\"tails_len1\":{},\"tails_len_ge2\":{},\"tails_even\":{},\"fills_vector\":{},\"complete_calls\":{},\"runs_lookahead\":{},\"runs_no_lookahead\":{},\"runs_exhausted\":{},\"final_finishes\":{},\"preset_crossing\":{},\"epochs_tiled\":{},\"epochs_short\":{},\"epochs_untailed\":{}",
+            "\"blocks\":{},\"rows\":{},\"rows_bulk\":{},\"rows_bulk_raw\":{},\"rows_fragment\":{},\"rows_scalar\":{},\"runs\":{},\"run_rows\":{},\"complete_groups\":{},\"fin_fast\":{},\"fin_ordinary\":{},\"fin_wide\":{},\"fin_crossing\":{},\"fin_forced\":{},\"norm_full\":{},\"norm_partial\":{},\"norm_fields\":{},\"raw_fields_read\":{},\"raw_entries_written\":{},\"fields_restored\":{},\"epoch_searches\":{},\"epochs\":{},\"runs_split_at_epoch\":{},\"raw_groups\":{},\"raw_moved\":{},\"raw_cycles\":{},\"multi_epoch_portions\":{},\"max_ordinary_span\":{},\"min_wide_span\":{},\"fresh_pairs\":{},\"lookahead_pairs\":{},\"held_reuses\":{},\"runs_no_full_tile\":{},\"tiles_nonuniform\":{},\"tiles_second_segment\":{},\"tails\":{},\"tail_rows\":{},\"unchecked_tiles\":{},\"tile_refills_first\":{},\"tile_refills_second\":{},\"tail_refills_first\":{},\"tail_refills_second\":{},\"tail_rows_second\":{},\"tails_second_segment\":{},\"tails_len1\":{},\"tails_len_ge2\":{},\"tails_even\":{},\"fills_vector\":{},\"complete_calls\":{},\"runs_lookahead\":{},\"runs_no_lookahead\":{},\"runs_exhausted\":{},\"final_finishes\":{},\"preset_crossing\":{},\"epochs_tiled\":{},\"epochs_short\":{},\"epochs_untailed\":{},\"bitmap_memsets\":{}",
             self.blocks,
             self.rows,
             self.rows_bulk,
@@ -339,7 +342,8 @@ impl Stats2su {
             self.preset_crossing,
             self.epochs_tiled,
             self.epochs_short,
-            self.epochs_untailed
+            self.epochs_untailed,
+            self.bitmap_memsets
         )
     }
 }
@@ -925,6 +929,9 @@ impl Ctor2su {
         }
         let Ctor2su { bitmap, snaps, st } = self;
         bitmap.clear();
+        if COUNT {
+            st.bitmap_memsets += (g_count.div_ceil(64) >= 2) as u64;
+        }
         bitmap.resize(g_count.div_ceil(64), 0);
         snaps.clear();
         snaps.reserve(MAX_EPOCHS);
@@ -1312,6 +1319,7 @@ fn same_as_v2(what: &str, s: &Stats2su, v: &super::ctor2::Stats2, n: usize) {
         s.preset_crossing <= s.raw_groups,
         "{what}: preset crossing groups"
     );
+    assert!(s.bitmap_memsets <= s.blocks, "{what}: bitmap fills");
 }
 
 /// One block, one configuration: the oracle; Ctor2su's counted build into a poisoned reused

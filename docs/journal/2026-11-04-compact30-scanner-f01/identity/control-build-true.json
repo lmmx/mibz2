@@ -34,7 +34,7 @@
    "identical": true
   },
   "<c30walk::ctor2su::Ctor2su>::build::<true>": {
-   "size": 7312,
+   "size": 7306,
    "instructions": 1578,
    "identical": false
   },
