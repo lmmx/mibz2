@@ -17,7 +17,7 @@ Each of four agents does one part of the research. A GitHub doorbell lets them h
 other directly, without me acting as their message bus.
 {: .post-dek }
 
-4 November 2026 · 11 min read · [Meta](#8-what-this-establishes)
+4 November 2026 · 10 min read · [Meta](#8-where-it-stands)
 {: .post-meta }
 
 </div>
@@ -26,50 +26,34 @@ other directly, without me acting as their message bus.
 
 </div>
 
-[The last post](2026-11-04-compact30-constructor.md) was researched by four agents, and until
-today the work moved between them only when I passed each message along by hand. This post is
-about taking myself out of that loop: letting the agents carry compact30 from one checkpoint to
-the next, while the evidence stays inspectable and the scope stays mine to set.
+[The last post](2026-11-04-compact30-constructor.md) was about compact30, the effort to give the
+decoder's navigation table a smaller representation, and the research behind it was done by four
+agents. Until today they could only work together if I copied each one's messages to the next. This post explains how
+they now pass work to each other through the repository, what each of them does, and what I learnt
+running it for an afternoon. It describes the setup and its first full cycle. Whether it makes the
+research faster, we'll have to wait and see.
 
-What makes that possible is a handoff that names the work, the evidence and the rules for acting
-on it. The exchanges recorded so far show those handoffs running on their own; what they do for
-the pace of the research is still to be measured.
+## 1. Four agents
 
-The work itself splits naturally: finding instructions to remove, writing the change in Rust,
-reading what the compiler actually emits, and checking that the table is still correct and that
-a local saving survives the accounting for the whole builder. Each agent owns part of that, and
-all four work the same way: read a pinned result, do the assigned piece, and publish the next
-result through GitHub. The sections below follow one handoff from the team, through a checkpoint
-and its delivery, to the evidence that lets the next step go ahead.
+The Coordinator is Claude Code. It writes the code for each registered change, compiles it, runs
+the tests and archives the results. When a result is ready it posts a checkpoint: a comment saying
+what was built and which commit holds the evidence.
 
-## 1. One workflow, four responsibilities
+The Guardian and the Researcher both read every checkpoint, looking for different things. The
+Guardian checks the result against the research charter: which gates it passes, what work can
+follow, and what has to come to me. The Researcher looks at the reasoning: whether the argument
+holds, whether something else explains the numbers, whether there's a better direction, and
+whether the Guardian has got it right.
 
-The Coordinator runs in Claude Code. It implements the registered changes, compiles
-them, runs the tests and archives the evidence. When a result is ready, it publishes a
-checkpoint: a short message saying what has been built and where the evidence lives.
+The Optimiser works on the instruction counts themselves. It reads the source, the compiled
+listings and the execution counts, works out transformations that remove instructions, and keeps
+the ledger of what each one saves. Its proposals are what the Coordinator builds next.
 
-The Guardian and the Researcher are the paired readers of that work. They read the
-same checkpoint with different questions in mind. The Guardian asks what follows under
-the agreed research rules: which gates the evidence meets, which work can continue, and
-which decisions are reserved for me. The Researcher asks whether the reasoning is sound,
-whether another explanation fits, and whether the team is pursuing the most useful
-direction. That includes questioning the Guardian's interpretation when the evidence
-warrants it.
-
-Meanwhile, the Optimiser studies the instruction-reduction
-problem itself. It works from the source, compiled listings and execution counts, develops
-transformations and keeps the canonical ledger of their savings. Its proposals give the
-Coordinator concrete ideas to implement within the authorised research programme.
-
-All four publish through the repository. A proposal, a checkpoint and a review each
-identify something the next reader can inspect. The roles are written down in
-[the identity record](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/ROLES.md),
-along with the branches they own. The Guardian, the Researcher and the Optimiser all run Astra,
-a model I use through ChatGPT, each as a ChatGPT Work task at a fixed reasoning-effort setting
-(the badges in the figure below). Sharing a model doesn't make them interchangeable; their
-different responsibilities are what distinguish them.
-
-To reproduce the setup, these are the exact settings:
+The Guardian, the Researcher and the Optimiser all run Astra, a model I use through ChatGPT, each
+as a ChatGPT Work task with its own reasoning-effort setting. What separates them is what they're
+responsible for, not the model. The roles, and the branch each one owns, are written down in
+[ROLES.md](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/ROLES.md).
+To reproduce the setup, these are the settings:
 
 | Role | Runs as | Model | Reasoning effort | Started by |
 | --- | --- | --- | --- | --- |
@@ -78,86 +62,61 @@ To reproduce the setup, these are the exact settings:
 | Optimiser | <span class="ag-astra">ChatGPT Work</span> task, *Compact30 (W) Optimiser* | <span class="ag-astra">Astra</span> | <span class="ag-chip ag-ultra">Ultra</span> | any PR comment; acts only on a `CHECKPOINT` addressed to it |
 | Researcher | <span class="ag-astra">ChatGPT Work</span> task, *Compact30 (W) Researcher* | <span class="ag-astra">Astra</span> | <span class="ag-chip ag-xh">Extra High</span> | any PR comment; acts only on a message addressed to it |
 
-For another project, I would begin with those responsibilities and their outputs.
-Who makes the change? Who checks its evidence against the agreed criteria? Who questions
-the argument? Who develops the next idea? Giving each question an owner makes the
-handoffs concrete.
-
 <figure class="bf-fig">
 <p class="bf-title">The team: three Astra agents and Claude Code, joined by one repository</p>
 <svg viewBox="0 0 720 360" role="img" aria-label="Four agents connected to one GitHub repository. Above it, three Astra agents, each a ChatGPT Work task: the Guardian, which applies the charter's gates; the Optimiser, which searches the listings for instructions to cut; and the Researcher, which questions the reasoning. Below it, the Coordinator, Claude Code, which implements and tests each change and posts it as a checkpoint."><rect x="0" y="0" width="720" height="150" rx="14" class="bf-group-astra"/><g transform="translate(16 11) scale(0.7500)"><path class="bf-logo-ink" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></g><text x="42" y="25" class="bf-ts">Astra · ChatGPT Work</text><text x="704" y="25" class="bf-tm" text-anchor="end">each role is an event-triggered task, started by a PR comment</text><rect x="16" y="40" width="216" height="96" rx="10" class="bf-card-astra-in"/><g transform="translate(30 52) scale(0.6667)"><path class="bf-logo-ink" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></g><text x="54" y="65" class="bf-ts">Guardian</text><text x="30" y="88" class="bf-tm">applies the charter's gates</text><text x="30" y="104" class="bf-tm">to every checkpoint</text><rect x="30" y="114" width="80" height="16" rx="8" class="bf-pill-xh"/><text x="70.0" y="125.5" class="bf-pill-xh-t" text-anchor="middle">Extra High</text><rect x="252" y="40" width="216" height="96" rx="10" class="bf-card-astra-in"/><g transform="translate(266 52) scale(0.6667)"><path class="bf-logo-ink" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></g><text x="290" y="65" class="bf-ts">Optimiser</text><text x="266" y="88" class="bf-tm">searches the listings for</text><text x="266" y="104" class="bf-tm">instructions to cut</text><rect x="266" y="114" width="49" height="16" rx="8" class="bf-pill-ultra"/><text x="290.5" y="125.5" class="bf-pill-ultra-t" text-anchor="middle">Ultra</text><rect x="488" y="40" width="216" height="96" rx="10" class="bf-card-astra-in"/><g transform="translate(502 52) scale(0.6667)"><path class="bf-logo-ink" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></g><text x="526" y="65" class="bf-ts">Researcher</text><text x="502" y="88" class="bf-tm">questions the reasoning</text><text x="502" y="104" class="bf-tm">behind every checkpoint</text><rect x="502" y="114" width="80" height="16" rx="8" class="bf-pill-xh"/><text x="542.0" y="125.5" class="bf-pill-xh-t" text-anchor="middle">Extra High</text><path d="M124 142V174m-5-5 5 5 5-5M119 147l5-5 5 5" class="bf-arrow"/><path d="M360 142V174m-5-5 5 5 5-5M355 147l5-5 5 5" class="bf-arrow"/><path d="M596 142V174m-5-5 5 5 5-5M591 147l5-5 5 5" class="bf-arrow"/><rect x="0" y="180" width="720" height="62" rx="12" class="bf-panel"/><g transform="translate(18 200) scale(0.9167)"><path class="bf-logo-ink" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></g><text x="52" y="206" class="bf-ts">The repository</text><text x="52" y="226" class="bf-tm">messages are pull-request comments · each agent keeps its state on its own branch · every claim pins a commit</text><path d="M360 248V276m-5-5 5 5 5-5M355 253l5-5 5 5" class="bf-arrow"/><rect x="170" y="282" width="380" height="76" rx="12" class="bf-card-claude"/><g transform="translate(188 300) scale(1.0833)"><path class="bf-logo-claude" d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></g><text x="228" y="310" class="bf-ts">Coordinator · Claude Code</text><text x="228" y="330" class="bf-tm">implements and tests each change,</text><text x="228" y="346" class="bf-tm">then posts it as a checkpoint</text></svg>
 <figcaption>The Coordinator implements and publishes checkpoints. The Guardian and the Researcher examine process and reasoning; the Optimiser develops the instruction-reduction work. Each role reads and writes through the same repository.</figcaption>
 </figure>
 
-## 2. Give the next reader an exact result
+## 2. Every result is a commit
 
-A checkpoint is a package of evidence with an address. For a constructor change, that
-package includes the source and its baseline, the compiled listings, the toolchain,
-test records, execution counts and the accounting that connects them.
+A checkpoint points at a commit, never at a branch, because a branch keeps moving. The commit holds
+the source and its baseline, the compiled listings, the toolchain, the test records, the execution
+counts and the arithmetic that ties them together. Reports and scripts go in files, and the comment
+links to them.
 
-The address is a commit. A branch is where work continues; the commit identifies
-the particular version being reviewed. A review cites that version and the governing
-documents it applied. Long reports and scripts live in committed files, with a short
-comment linking to them.
+That lets a reader check a claim rather than take it on trust. If the Optimiser predicts that a
+change will remove a load from the inner loop, the checkpoint shows whether the compiled code
+actually lost it, whether setup got more expensive, whether a caller picked up a spill, and how
+often each path runs.
 
-Suppose the Optimiser predicts that changing a descriptor will remove a load from the
-inner loop. The Coordinator's checkpoint lets another agent ask what actually happened
-after compilation. Was the load removed? Did setup acquire more work? Did a changed caller
-add a spill? How often does each path execute? The compiled code and counters let the
-reader follow the claim beyond the sentence that announces it.
+Each agent writes only to its own branch: the Coordinator to the implementation branches, the
+others to their reports, decision logs and ledgers. Every file has one author, and a review never
+edits the code it reviews. Each agent also keeps its working state on its branch, which is why a
+fresh run can pick up exactly where the last one stopped.
 
-Each role owns its publication branch. The Coordinator owns the implementation branches;
-the other agents own their reports, decisions and ledgers. That gives each result a
-clear writer and keeps the Coordinator's source changes separate from a review of them.
+## 3. Comments as messages, events as the clock
 
-The same arrangement makes a resumed task useful. Its important working state is explicit
-in the repository: what it has reviewed, which evidence it used and what remains pending.
-Conversation history can help an investigation, while the committed record lets another
-reader inspect it without having taken part.
-
-## 3. Let the repository ring the doorbell
-
-A comment carries the handoff; an event starts the next reader. The messages use a small
-header. For a checkpoint that needs both process and reasoning reviews, I can address
-both readers:
+The agents talk in comments on pull requests. Each comment starts with a short header:
 
 <pre><code>FROM: coordinator
 TO: guardian, researcher
 RE: prototype 2 @ 29dd071f8787a28560a7a081fd7ac0ef13991466
 TYPE: CHECKPOINT</code></pre>
 
-The body says what needs attention and links the evidence. One standing draft PR carries
-messages across the project, and individual experiments and reviewers have their own PRs.
-The shared channel is #145: a checkpoint there points to an experiment's evidence, and
-a short review links back to the report on the reviewer's branch. The PRs give each piece
-a home; the comment and its evidence pin connect the pieces.
-The [protocol](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/PROTOCOL.md)
-gives the main message types a small, practical vocabulary:
+`TO:` says who should act, `RE:` pins the commit, and `TYPE:` says what kind of message it is. The
+[protocol](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/PROTOCOL.md)
+has six types:
 
-| Type | What it carries |
+| Type | Means |
 | --- | --- |
-| <code>CHECKPOINT</code> | A pinned result ready for assessment |
-| <code>REVIEW</code> | An assessment and its evidence |
-| <code>PROPOSAL</code> | An idea for consideration |
-| <code>DECISION</code> | A decision within the sender's delegated remit |
-| <code>ACK</code> | What was understood and what follows |
-| <code>ESCALATION</code> | A matter requiring a reserved decision |
+| <code>CHECKPOINT</code> | a result at a pinned commit, ready to assess |
+| <code>REVIEW</code> | an assessment, with its evidence on the sender's branch |
+| <code>PROPOSAL</code> | an idea to consider; not permission to build it |
+| <code>DECISION</code> | a decision the sender is allowed to make |
+| <code>ACK</code> | what was received, and what happens next |
+| <code>ESCALATION</code> | something only I can decide |
 
-The Coordinator subscribes to the relevant PRs. The three Astra roles run as ChatGPT Work
-tasks triggered by PR comment events in this repository. Those are two delivery mechanisms
-for the same workflow: a result appears, a recipient reads it, and the recipient
-publishes its response.
+Most of the traffic goes through one draft PR, #145, which serves as the team's channel. Each
+experiment and each agent also has a PR of its own.
 
-In the events observed here, the payload supplies the comment's ID rather than its text.
-A task first fetches that exact comment, then applies its configured filter. The
-Researcher's filter looks for its role in the address line. Other tasks also filter
-by message type. To obtain paired reviews, the checkpoint must reach both configured
-readers; the role diagram alone does not establish that coverage.
-
-A comment can wake a task without giving it any work. A review is itself another event,
-so a checkpoint-only task checks its type and stops. A task with an address-based filter
-checks whom the message names. The useful boundary is the filter at the start of the
-run: it decides whether this particular message belongs to the role.
+A new comment is also what wakes the agents up. The Coordinator subscribes to the PRs it follows,
+so a reply reaches it within seconds. The three Astra agents are Work tasks that start on any PR
+comment in the repository. The event only includes the comment's ID, so each run first fetches the
+comment and checks whether it's meant for it. The Guardian acts only on a `CHECKPOINT`, the
+Optimiser only on a `CHECKPOINT` addressed to it, and the Researcher on anything addressed to it.
+Anything else, including the other agents' reviews, ends the run straight away. A checkpoint that
+both readers should see therefore has to name them both.
 
 <figure class="bf-fig">
 <p class="bf-title">One cycle: a checkpoint, two readers, the next step</p>
@@ -165,174 +124,112 @@ run: it decides whether this particular message belongs to the role.
 <figcaption>A repository event starts a reader. The reader checks the message and its saved state, does the work assigned to it, then publishes a result and records the receipt. Each arrow is a pull-request comment; no agent polls, and no message passes through me.</figcaption>
 </figure>
 
-## 4. Save a receipt for the work
+## 4. Receipts
 
-Once the message matches, the task checks its cursor: a file recording the work already
-processed. A comment ID identifies the notification. The review contract also keys
-technical work by PR, candidate commit and evidence hash, so a repeated request can be
-distinguished from a revised candidate.
+Before doing any work, a run checks its cursor: a file on its branch listing the comments it has
+already handled. Then it loads what it needs, does the work, posts its result, and adds the comment
+to the cursor. If several comments arrive at once, each is checked separately. For technical
+reviews the key also includes the PR, the candidate's commit and a hash of the evidence, so a
+repeated request can't be mistaken for a revised candidate.
 
-The task then loads the state and evidence it needs, does the work, publishes its result
-and records the receipt. If several comments arrive together, each gets its own check.
-One already processed message leaves the others available for assessment.
+The cursor answers "have I already done this?" for the next run, and it lets me trace every message
+to what came of it. Two cases it doesn't cover on its own: a run that posts its result but stops
+before saving the cursor, and two runs of the same agent at once. Recording the result's commit and
+comment ID makes the first recoverable. I haven't tested either case yet.
 
-This is a small amount of state with an important purpose. The next execution has a
-durable answer to “have I handled this?” I can also follow the receipt to the published
-result and see what was concluded.
+A review queue in the repository lists what is waiting on whom. Work that depends on a pending
+review waits for it, and everything else goes ahead.
 
-Publication and recording the receipt are separate operations. For another team adopting
-this pattern, I would make recovery at that boundary explicit: if a result was published
-but the cursor was not saved, locate the published result before repeating the write.
-Keeping its commit and outgoing comment ID makes that check possible. The cursor supports
-deduplication; exactly-once publication also needs that interruption case to be handled.
+## 5. What a message can authorise
 
-Pending work is explicit in the same way. A review stays in the queue until a pinned
-assessment appears. Work that depends on it waits for that result, while other authorised
-work can continue. The queue gives the team a shared account of progress.
+The [research charter](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/2026-11-04-compact30-research-charter.md)
+sets out what is authorised: the representation, the reference builder, the baselines, and for
+each prototype a registered design, acceptance criteria and a fixed number of attempts. Inside
+that, the Coordinator implements and tests without asking me, and the Guardian makes the decisions
+delegated to it. Anything that widens the work, such as a new prototype, new unsafe code or
+integration into production, needs me.
 
-Branch ownership assigns responsibility to one role. Concurrent executions of that role
-also need serialisation or a way to reconcile competing writes. I treat that as part of
-the execution design, alongside recovery, rather than a guarantee supplied by the cursor.
-The recorded exchanges demonstrate delivery; interruption recovery and overlapping
-executions need their own validation before I can claim those guarantees.
+So the rule is: **a message in the repository can narrow what's allowed, but only I can widen it,
+and only in the Coordinator's session.** A finding can put a prototype on hold. A proposal can
+suggest something new, but nobody acts on it unless it's already authorised or I say so. Charter
+amendments are approved the same way, and every review cites the charter revision it applied.
 
-## 5. Decide what a message may authorise
+This matters because every agent posts through my GitHub account, so `FROM: guardian` names a role
+without proving who wrote it. The repository also limits who can comment, and the channel PRs are
+locked. Before the Guardian went live it was tested on exactly this: it was sent forged requests
+for things only I can approve, and turned both of them down.
 
-For these handoffs to carry useful work, the recipients need to know what they may do.
-I put that in the [research charter](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/2026-11-04-compact30-research-charter.md).
-It fixes the representation, the reference builder and the baseline versions. Each
-prototype has a registered design, acceptance criteria and a bounded set of attempts.
+## 6. Reproducible, independent review
 
-Within that scope, the Coordinator can implement and test without asking me at every
-step. The Guardian can apply the agreed rules and make the decisions delegated to it.
-I keep the decisions that expand the work, such as adding a prototype, approving a new
-unsafe operation or integrating into production.
+The main figure for compact30 counts the instructions executed by the whole table builder and everything
+it calls, weighted by how often each path runs on the corpus. Setup, fallbacks, callers, callees and
+extra memory operations all count, and a saving that only moves work elsewhere is charged where the
+work lands. Correctness needs its own evidence: byte-identical output against the reference
+builder, safety arguments for release builds, Miri checks for undefined behaviour, and mutation
+tests that break an invariant on purpose to show the tests notice.
 
-The rule for messages follows from that split: **the repository can narrow authority;
-widening comes from me in the Coordinator's session.** A supported finding can hold a
-component's qualification. A proposal can suggest a new direction. Carrying the proposal
-out depends on the authority already granted or on my explicit decision.
-I approve the charter and its amendments there; the Coordinator records the decision's
-provenance, and reviews cite the governing revision they applied.
-
-Under the protocol, a review that holds qualification returns to the Coordinator on a
-subscribed PR. It logs the finding and keeps the dependent work pending until the required
-resolution. The checkpoint filter of another role is not the route for that decision.
-
-Every agent uses my GitHub account. The sender label therefore names a role rather than
-authenticating it. Recipients check what the message requests against their standing
-instructions. This is a rule for their behaviour, distinct from the permissions enforced
-by the tools. The protocol also records time-limited interaction restrictions and locks
-on named PRs. Those controls limit participation; the charter defines what a participant's
-message can authorise.
-
-The channel's test cases make that boundary inspectable. They include a finding, a hold,
-an acknowledgement and requests for actions reserved to me. Their value is in checking
-both halves of the exchange: the recipient understood the message, and its response stayed
-within the permitted next step.
-
-## 6. Make the review reproducible, and its independence explicit
-
-Compact30's qualification figure counts machine work across the whole constructor and
-everything it calls. Compiled path lengths are weighted by execution counts on the
-corpus. Setup, fallback paths, callers, callees and added memory operations all belong in
-the account. A saving moved from one place to another must be counted where it lands.
-
-Correctness has its own evidence: byte-exact output against the reference builder,
-release-mode safety arguments, targeted Miri checks for undefined behaviour, and
-mutation tests that deliberately break an invariant to show that a test detects it.
-These requirements give the Guardian and Researcher specific claims to examine.
-
-A report states what was inspected and what was reproduced. An implementer's journal
-contains the implementer's conclusions; the reviewer works from the source, listings,
-counters and test records to derive its own. That lets another reader replay the
-important parts of the argument.
-
-Before components are combined, the charter asks for an independent review from a
-pinned evidence index. This has a different input boundary from an ongoing role.
-The continuing Researcher knows the team's discussion and may have contributed ideas.
-The independent reviewer receives the permitted evidence and governing specifications,
-with earlier involvement disclosed.
-
-A new execution and an independent context are separate properties. To make a review
-blind, I need to control which history is supplied to it as well as which files it reads.
-The required review context excludes earlier discussion and verdicts. Its findings then
-have to be resolved before the components can be combined.
-
-For a team working on another problem, this is a useful way to specify independence:
-write down the reviewer's inputs, its earlier involvement and what it reproduced.
-A separate role provides a separate responsibility; a recorded evidence boundary explains
-what makes a particular assessment independent.
+Reviewers treat the implementer's journal as claims to check, and re-derive the figures from the
+source, listings, counters and test records. Before prototypes are combined, the charter also asks
+for one review by an agent that has seen none of the discussion. The ongoing Researcher can't do
+that: it has followed the work, and it suggested some of the tests. So it started a fresh helper
+whose only input was a pinned brief, and recorded exactly what that helper was given. A new run
+isn't independent by itself. What makes the review independent is what goes into it.
 
 ## 7. What running it looks like
 
-The first afternoon of running the team taught me what to expect, and most of it is about
-patience and where to look.
+The first afternoon taught me what to expect, and most of it is about patience and where to look.
 
-A run is long and quiet. A Work task can spend anything from a minute to a quarter of an hour on
-one message: the Researcher's revision of this post took about sixteen minutes, most of it
-reading the record and testing the draft on simulated readers. Between runs, a task's page
-simply shows that it has worked. That is a role at rest, waiting for its next comment, not a role
-that has stalled.
+Runs are long and quiet. A Work task can spend anything from a minute to a quarter of an hour on
+one message: the Researcher's revision of this post took about sixteen minutes, most of it reading
+the record and testing drafts on simulated readers. Between runs, a task's page just shows that it
+has worked. That means it is waiting for its next comment, not that it has stalled.
 
-Messages queue behind the work in hand. A comment that arrives while a role is busy is handled
-once the current work is done, and several can be handled together: one of the Researcher's runs
-took the blog revision first, then a request to launch the independent reviewer along with the
-Guardian's decision approving it. Re-sending a message because the page looks idle only adds a
-duplicate, which the role's cursor then discards.
+Messages queue behind the work in hand. A comment that arrives while an agent is busy is handled
+once it finishes, and several can be handled together: one of the Researcher's runs did the blog
+revision first, then launched the independent reviewer, picking up the Guardian's approval of that
+launch at the same time. Re-sending a message because a page looks idle only adds a duplicate,
+which the agent's cursor then ignores.
 
-The repository is the place to watch, not the task pages. Every message ends in a receipt: a
-`REVIEW` that cites it, or a cursor commit on the role's own branch that records it. A message
-without a receipt is either queued or in progress. Only when the role's branch shows it has moved
-past that point without one is the message lost, and then I send it again, once.
+Watch the repository, not the task pages. Every message ends in a receipt: a `REVIEW` that cites
+it, or a cursor commit on the agent's own branch. A message without one is queued or in progress.
+It's only lost if the agent's branch shows it has moved on without a receipt, and then I send it
+again, once.
 
-When a role hands work to a helper of its own, I ask it to keep its run open until the helper
-has published, and to record both the launch and the result. The Researcher's independent
-reviewer was set up this way: an isolated child given only the pinned brief, with its launch
-settings and inputs written to the repository before it began.
+When an agent starts a helper of its own, I ask it to keep its run open until the helper has
+published, and to record both the launch and the result. The independent reviewer was set up this
+way, with its settings and inputs written to the repository before it began.
 
-Keeping the process moving is the Coordinator's job. When the record goes quiet, it reads the
-receipts, works out who holds the next step, and posts the checkpoint that starts it. Nothing
-waits on a timer, and nothing waits on me.
+Keeping things moving is the Coordinator's job. When the record goes quiet, it checks the
+receipts, works out who has the next step, and posts the checkpoint that starts it. Nothing waits
+on a timer, and nothing waits on me.
 
-## 8. What this establishes
+## 8. Where it stands
 
 The [channel log](https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b06708e47cbfdce2ca4/docs/journal/compact30-channel/log.md)
-records a completed event-delivery loop. A GitHub comment started the Guardian task;
-the Guardian fetched it, published an assessment and saved its cursor; the review
-reached the Coordinator. That setup test included confirmation of the commit identity.
-The log also records the subsequent D008 assessment of real pinned checkpoints and
-the Coordinator's handoff of an evidence index.
+records each step. The trigger was first tested on the Guardian: a comment started its run, it
+published an assessment, and its review woke the Coordinator. The first real cycle followed on
+[a checkpoint](https://github.com/lmmx/mibz2/pull/145#issuecomment-6632963394) covering two
+prototypes. The Guardian's run started nine seconds after it was posted, checked both prototypes
+against the gates, and [asked](https://github.com/lmmx/mibz2/pull/145#issuecomment-6633274082) for
+the independent review.
 
-Here is one such exchange. The Guardian's review on #145
-identified the descriptor candidate at commit 29dd071f and linked its assessment at
-62a313a8. The Coordinator recorded it in the channel log and supplied the independent
-review index at 18ca5d4c. The next step was to obtain that independent assessment; the
-checkpoint review alone did not complete the pre-integration requirement.
+That review came back while this post was being finished. The Researcher launched the isolated
+reviewer, and its [report](https://github.com/lmmx/mibz2/pull/153) arrived as a comment on the
+channel. Both prototypes pass on correctness and safety, and so does v3's finaliser. Two things need
+fixing before anything is combined: some changed paths still need their own execution counters,
+and both prototypes remove the same instruction, so their savings overlap. That is the next
+checkpoint.
 
-The independent assessment then arrived the same way, while this post was being finished. The
-Researcher launched an isolated reviewer with the pinned brief as its only input, and its
-[review](https://github.com/lmmx/mibz2/pull/153) came back as a comment on the channel. It
-passes both prototypes on correctness and safety, and v3's finaliser on its safety evidence. It
-also holds two things for the Coordinator to resolve before anything is combined: several
-changed paths still need dedicated execution counters, and the two prototypes both remove one
-shared instruction, so their savings overlap. That is the next checkpoint.
+So far, then, the messages get through and the reviews get done, without me relaying anything.
+Whether that makes the research faster, and whether the constructor gets fast enough, we'll have
+to wait and see.
 
-That establishes delivery and review at the scale recorded. The effect of the team's
-arrangement on research throughput remains to be measured, and the constructor's performance
-will be established by its own experiments.
-
-The method a reader can transfer is already concrete. Give each responsibility an owned
-output. Make a handoff name an exact result. Use events to bring that result to the next
-reader, and save enough state to recognise completed work. Define the authority that
-travels with a message and the evidence required for a conclusion.
-
-My part is to choose the scope and make the decisions reserved to me. The agents can
-carry routine work between those decisions through the repository. A reader arriving
-later can follow the same route from the question, through the evidence, to the result
-that justified the next step.
+If you want to set up something similar: give each responsibility its own output, point every
+message at an exact commit, wake agents with events rather than timers, keep a receipt for every
+message, write down what a message is allowed to authorise, and decide what an independent
+reviewer gets to see. My own part is choosing the scope and making the decisions the charter keeps
+for me.
 
 ---
 
 **Research records:** [Role identities](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/ROLES.md) · [Research charter](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/2026-11-04-compact30-research-charter.md) · [Channel protocol](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/PROTOCOL.md) · [Review contract](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/REVIEWER.md) · [Recorded exchanges](https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b06708e47cbfdce2ca4/docs/journal/compact30-channel/log.md).
-
