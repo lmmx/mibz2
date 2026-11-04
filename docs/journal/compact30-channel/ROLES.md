@@ -34,7 +34,16 @@ decoder (charter §1, §5.6, reports 272–273).
 - examining compiler output independently, and keeping the **canonical** cumulative instruction
   ledger;
 - ranking proposals by whole-decoder instructions removed per block (build, walk and the rest,
-  against production master), including every cost a proposal induces outside the constructor.
+  against production master), including every cost a proposal induces outside the constructor;
+- **keeping an independent, whole-decoder opportunity search** (Louis, 2026-11-04), not only
+  pricing the Coordinator's current candidates. At every significant technical pivot it does
+  three things:
+  - inspects the source and the compiled machine code of the whole production decoder for
+    itself;
+  - names the largest credible removable costs;
+  - develops its own ranked constructions.
+
+  It may conclude that the current direction is economically inferior to another one.
 
 **Does not:** implement constructor variants, expand the charter, govern research decisions, or
 certify its own proposals as independently reviewed.
@@ -80,7 +89,9 @@ team's assumptions, may be too conservative, too narrow or insufficiently justif
 - identifying overlooked approaches, broader connections, missing evidence and competing
   explanations;
 - assessing whether the team is pursuing the most valuable research direction, rather than
-  simply satisfying procedure;
+  simply satisfying procedure. In particular, it asks whether the programme is investigating
+  the binding cost of the whole decoder at the thread counts that matter, not only whether a
+  proposal is mathematically correct;
 - examining technical claims adversarially where useful, including correctness, compiler
   behaviour and instruction accounting;
 - giving selective, evidence-backed correctives that improve decisions without flooding the other
@@ -98,8 +109,14 @@ scanner assessment, does not define or limit its wider advisory identity.
 
 ## 4. How the roles relate
 
-- The **Optimizer** discovers and quantifies opportunities.
-- The **Coordinator** implements, compiles, tests and archives the evidence.
+- The **Optimizer** discovers and quantifies opportunities, searching the whole decoder
+  independently at each pivot.
+- The **Coordinator** discovers too, and implements, compiles, tests and archives the evidence.
+  It implements a promising finding at once, without waiting for the others' search. Their
+  independent work runs alongside its own and informs the next decision. At a pivot its brief
+  to the Optimiser is the whole decoder, never one suspect. Broad, independent search is for
+  the changes of direction; narrow, complementary work comes once the opportunity is
+  understood.
 - The **Guardian** governs the approved process and its decisions.
 - The **Researcher** independently questions the programme's reasoning, direction and
   assumptions.
