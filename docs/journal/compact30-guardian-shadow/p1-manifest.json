@@ -1,0 +1,177 @@
+[
+  {
+    "bytes": 5301416,
+    "git_blob": "a1afdebc56d39e637dc3b9901c5fa0cac4792a74",
+    "path": "docs/journal/2026-11-03-compact30-construction-capture/c30-construction-20261103T172906Z.tar.gz",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "47c61c87c7433cf738a7ffb9ea03905384fbe28d21c00ea17f0a60953bfed5f3"
+  },
+  {
+    "bytes": 35208,
+    "git_blob": "c2b2b57d4486d4a3866cc711301e0984f8243d26",
+    "path": "docs/journal/2026-11-03-compact30-construction-protocol-v2.md",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "32531211f3d89a1e9b4b31cf6768b2eabe797844ceb33b956fa8bdf7e1277531"
+  },
+  {
+    "bytes": 38396,
+    "git_blob": "c6a1a5a148ed5308cdea8c7f4f39014424fdabe6",
+    "path": "docs/journal/2026-11-03-compact30-construction-protocol.md",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "378f3303d819401bfca7c75e3e3106209468085f74539ab6543e39543b314c5c"
+  },
+  {
+    "bytes": 5334709,
+    "git_blob": "c0e5ddbac2e60eba0d6e3123ad8b22d7b0fce7fd",
+    "path": "docs/journal/2026-11-03-compact30-construction-v2-capture/c30-construction-v2-20261103T222928Z.tar.gz",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "ebdb74549b39f83f07ae1f7d1c943916bac2ecb0be85868799aa30fe5e3d8af9"
+  },
+  {
+    "bytes": 24170,
+    "git_blob": "1996c5215b3dfe6ba35519418e13b54b8d1fbb8b",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-finish-false.asm",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "be6f633a1b6105668455b6bcb76c5a8e0fd0f70505910e92eb129fff75a2c44a"
+  },
+  {
+    "bytes": 46674,
+    "git_blob": "f6fc002a5ce254ade12ea1823ccdbacf1cf8bf37",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/adversarial.console",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "7a14a5e163ad2049d89134b3dd3d2143014d4be0e277745e96d17d20635937b5"
+  },
+  {
+    "bytes": 11761,
+    "git_blob": "198e0376b6c38b1f36e2564a9f351b4453d505ed",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/corpora.console",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "bc788fcb97a4b6e7bd4931ec5d83b8ebeaebece8253756a65a6100a9c68218ef"
+  },
+  {
+    "bytes": 38701,
+    "git_blob": "6fb88f1343c775cf4affad7947378cec324e4985",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/corpora.jsonl",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "ce0fcc3a68386bd92a1bc00bc1559f2282edfaae693aa53612a4da88a2373599"
+  },
+  {
+    "bytes": 52892,
+    "git_blob": "f1ab04d457e0d5b98267610c7eaccccbaea82073",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-build-false.asm",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "912391567fb2fe2308907917555da71aa46582afea625074bf992b67e63bf8c1"
+  },
+  {
+    "bytes": 1703,
+    "git_blob": "44cd87259186ceebec57518ebb7f60c50cc4d7e8",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-finish-false.asm",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "d3c3a230b962b6c01fa1bbace8963a4f27ff683008c118cf0e3fd95e2d5289f6"
+  },
+  {
+    "bytes": 14727,
+    "git_blob": "2c3b1f94ab99de50924b538875c53abb0b1270e8",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-finish-slow-false.asm",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "d56c26afa3550d0775e75e5d9ad81be977a80fda5ae23c905bd8bb543952749f"
+  },
+  {
+    "bytes": 2466,
+    "git_blob": "babcdf71000e7e0719ecb3abd2708e1cdc93f2be",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-refill-false.asm",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "fcd807fd0ccd4bf7fa2a51888c752935892ead38e8ff2a616b4ca1ddcb3505d1"
+  },
+  {
+    "bytes": 1450,
+    "git_blob": "63c40191839604e23e74626ff1b8ab4d9248d11a",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/miri.console",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "f02b660ea6024104dffea2e8bde1cb1d330b536398d105d144ae521186c24bcc"
+  },
+  {
+    "bytes": 1363,
+    "git_blob": "75ba35d53c6699d4aae0e1b62bfef3015be475ba",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/mutation.console",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "24f83c1fb67156352c5584c6ff9477b98870634e139834b2573ddc1423777a86"
+  },
+  {
+    "bytes": 942,
+    "git_blob": "6a4e9124a890b122fd7cdfa498e5b3f083b10940",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/mutation.diff",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "b41d11d4773f2771c4e681e6cfda0f0d959e2444b2d09480abe0dbc045308a94"
+  },
+  {
+    "bytes": 46667,
+    "git_blob": "a5510533557a95a2aac9d8eb5f7e7ec6c19833d2",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/adversarial.console",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "12e05b005e996c59cacc254274d848722bfc2344014c90775f9cfb4bdbc85ceb"
+  },
+  {
+    "bytes": 11754,
+    "git_blob": "ca0780275f9ccd2b0c8d8125509319e3b8e3551a",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/corpora.console",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "eb5bc05bd9e4e4ddfc4bde3c9383a436bd7252690a1d56a6468ac98d8afdc1d1"
+  },
+  {
+    "bytes": 2073,
+    "git_blob": "b931a31827576730516424d3c5b11ba893e839cc",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/synthetic-quick.console",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "36ddb0d4157d0742e31d359f756b453fc77afc79518834e08f3a7d69fe60c496"
+  },
+  {
+    "bytes": 2383,
+    "git_blob": "a1be76ce41c06657fbaf6816d6497b993ae55323",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/rebuild/synthetic.console",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "dcae0ef2f48cd6983bad603077bce4e4a4ec60d5fe96ad8179e87cac8c364fe2"
+  },
+  {
+    "bytes": 2073,
+    "git_blob": "b931a31827576730516424d3c5b11ba893e839cc",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/synthetic-quick.console",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "36ddb0d4157d0742e31d359f756b453fc77afc79518834e08f3a7d69fe60c496"
+  },
+  {
+    "bytes": 2390,
+    "git_blob": "46f5daebc05c89bada19d33b4ff7a437de7c0d7b",
+    "path": "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/synthetic.console",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "220c51a1b3bacddfd5115d89e21caf1e5155e55180ded8394b5beebd55da7792"
+  },
+  {
+    "bytes": 26390,
+    "git_blob": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
+    "path": "docs/journal/2026-11-04-compact30-research-charter.md",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "0de603084ccd6d02f54f9ed0208179af7f59d2bca2656be4b398a5b403aa9b14"
+  },
+  {
+    "bytes": 9085,
+    "git_blob": "56361d02455a1439b71444ef33e513b54c470fb9",
+    "path": "docs/journal/compact30-channel/GUARDIAN.md",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "567cdd3b66d089de5cdbabdf52e0824f1a8f78eaade4329cb3ca9e4ca052288f"
+  },
+  {
+    "bytes": 6270,
+    "git_blob": "01d5391874e756ff90bbd9a822913b201cd9dece",
+    "path": "docs/journal/compact30-channel/PROTOCOL.md",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "575f9294fb637c47ff89668c9ba2b12da29dab5b39ba0d976357e3b01a25d122"
+  },
+  {
+    "bytes": 9673,
+    "git_blob": "2839405784ec4e63d2f4cc7bd406e5dff4dd1029",
+    "path": "docs/journal/compact30-channel/REVIEWER.md",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "0d88188c96131655c7515fb016a42676a07bd26fc2bc0238afd59d82e9e2325e"
+  }
+]
