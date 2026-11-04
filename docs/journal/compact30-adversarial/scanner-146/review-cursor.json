@@ -32,16 +32,21 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING after recording acceptance of section 6.2 intake findings",
+  "state": "WAITING for independent child publication; blog revision handed off",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
   "programme_complete": false,
   "processed_comment_ids": [
     6633302554,
-    6633657739
+    6633657739,
+    6633675410,
+    6633777567,
+    6633793271,
+    6633918984,
+    6634250201
   ],
-  "last_processed_comment_id": 6633657739,
+  "last_processed_comment_id": 6634250201,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -64,6 +69,55 @@
       "review_comment_id": 6633695035,
       "disposition": "Coordinator accepted intake findings; proposed remedy addresses them in design; fresh technical review remains outstanding",
       "section_6_2_completed": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 152,
+      "trigger_comment_ids": [
+        6633675410,
+        6633777567
+      ],
+      "source_commit": "648c84e5d4a3fb6c1cb77503ed76abff42c18e89",
+      "report_commit": "b7d7add8186b9bdc2de3f5c184997ecf7d482042",
+      "report_path": "docs/site/blog/2026-11-04-autonomous-agent-team.md",
+      "notes_path": "docs/journal/compact30-adversarial/blog-agent-team/CHANGE_NOTE.md",
+      "reader_tests_path": "docs/journal/compact30-adversarial/blog-agent-team/reader-tests.md",
+      "review_comment_id": 6634257121,
+      "review_comment_pr": 145,
+      "disposition": "Revised post and source note published; three simulated readers assessed original and revision; two figure redraw briefs supplied for Coordinator port."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_ids": [
+        6633793271,
+        6633918984
+      ],
+      "report_commit": "684a337933dcbb5e2571738fe86a7c31ace7c937",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/s62-launch-6633793271.json",
+      "review_comment_id": 6634286833,
+      "disposition": "Isolated Astra child launched from exact brief with history inheritance disabled; operational provenance recorded; child preparing independent report.",
+      "section_6_2_completed": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6634250201,
+      "duplicate_of": 6633793271,
+      "review_comment_id": 6634286833,
+      "disposition": "Duplicate launch request reconciled against published launch record; no second child started and no duplicate reply posted."
+    }
+  ],
+  "active_delegations": [
+    {
+      "child_identifier": "/root/s62_review",
+      "model": "gpt-6-astra",
+      "reasoning_effort": "xhigh",
+      "context_mode": "fork_turns=none",
+      "input_blob": "172fd8d69e18171c93038f890026c1f3cb6665e8",
+      "branch": "review/compact30-s62",
+      "status": "Technical audit complete per child status; report and publication in progress",
+      "report_not_yet_received": true
     }
   ]
 }
