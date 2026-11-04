@@ -19,7 +19,8 @@
     6635419092,
     6637121066,
     6639428570,
-    6639496192
+    6639496192,
+    6640153383
   ],
   "outgoing_comment_ids": [
     {
@@ -65,6 +66,14 @@
       "type": "REVIEW",
       "sha": "82bc69b5cdad78fe7e90243d76b4418b0b4bbef5",
       "checkpoint_comment_id": 6639496192
+    },
+    {
+      "pr": 145,
+      "id": 6640266327,
+      "type": "REVIEW",
+      "sha": "2f7a4c8a65af3e33787a696fbfd4357cdeeaf2f8",
+      "checkpoint_sha": "95977867fdf318b3f66420c383a73d9c48b36740",
+      "checkpoint_comment_id": 6640153383
     }
   ],
   "reviews": [
@@ -196,11 +205,44 @@
         ]
       },
       "registered_floor": 97606687
+    },
+    {
+      "checkpoint": "assembly1_bridge_6640153383",
+      "combined_sha": "888eccfc86d5d771e881b0f87d46a21e2cf1512a",
+      "reconciliation_sha": "95977867fdf318b3f66420c383a73d9c48b36740",
+      "status": "complete_scoped_review",
+      "independent": false,
+      "review_sha": "2f7a4c8a65af3e33787a696fbfd4357cdeeaf2f8",
+      "replay": {
+        "paths_rows": 86,
+        "changed_classes": 83,
+        "nonzero_build_interaction_classes": 42,
+        "raw_profiles": false
+      },
+      "interval": [
+        258494335,
+        262948911
+      ],
+      "own_delta": -258873217,
+      "build_nonadditivity": -56391637,
+      "mechanisms": {
+        "unroll": -66676611,
+        "outer_head": -12015336,
+        "s_class": 19146504,
+        "rest": 3153806
+      },
+      "registered_overlap": 2393313,
+      "floor": 147606687,
+      "gates": {
+        "instruction_arithmetic": "PASS checked scope",
+        "qualification": "HOLD D013",
+        "economics": "unresolved"
+      }
     }
   ],
   "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
   "wake": "Persistent GitHub comment event task; first fetch exact triggering comment, gate TYPE CHECKPOINT and TO optimizer; no polling.",
-  "next_trigger": "New addressed checkpoint/correction; remaining section 6.2 closure or fresh combined-build evidence. No integration permission inferred.",
+  "next_trigger": "Guardian disposition of D013; pinned raw-profile completeness closure or per-worker/economic evidence. No integration permission inferred.",
   "review_pr": 148,
   "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
   "proposal_independence": {
@@ -208,7 +250,7 @@
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
   "status": "WAITING",
-  "published_evidence_commit": "82bc69b5cdad78fe7e90243d76b4418b0b4bbef5",
+  "published_evidence_commit": "2f7a4c8a65af3e33787a696fbfd4357cdeeaf2f8",
   "incoming_experiment_comment_ids": [
     {
       "pr": 146,
