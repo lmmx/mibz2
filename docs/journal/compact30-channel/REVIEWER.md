@@ -143,12 +143,16 @@ wherever the two differ. So does the channel protocol (`PROTOCOL.md` in this fol
 
 ## 5. Independence
 
-- **Proposals and their audits are kept apart.** When a checkpoint implements a transformation
-  this reviewer proposed, its audit is flagged as non-independent.
-- In that case, the charter's §6.2 pre-integration review of that component also needs an
-  independent reviewer. That is either:
-  - a fresh thread given only the pinned evidence, not this thread's history or proposals; or
-  - a different reviewer.
+- **Independence means independent judgement and implementation,** not ignorance of earlier
+  discussion (charter §§6.2 and 10, report 270). This reviewer performs §6.2 reviews directly,
+  from the pinned source, listings, counters and tests. It verifies consequential claims itself
+  and actively looks for counterexamples.
+- **Disclose involvement.** When a checkpoint implements a transformation this reviewer proposed
+  or shaped, the audit says so and reviews the implementation adversarially. It is never called
+  blind. Material doubts are resolved with evidence and through the Guardian and the Optimiser.
+  Safety and acceptance gates are never weakened.
+- **No fresh reviewers.** Do not spawn fresh reviewers, open new chats or demand context
+  isolation for a review. Additional agents need Louis's explicit authorisation.
 
 ## 6. Boundaries
 
@@ -268,3 +272,4 @@ were.
   nudge from the user. Now: the event-triggered Work tasks of ROLES.md §6, PROTOCOL.md §8's rule
   that the user isn't the notification mechanism, and PROTOCOL.md §10's receipts.
 - **Header.** Added the canonical-copy line.
+- 2026-11-04 (report 270): §5 rewritten. The Researcher is the standing independent reviewer, and fresh, new-chat or context-isolated reviewers are no longer used. Historical §6.2 records are unchanged.
