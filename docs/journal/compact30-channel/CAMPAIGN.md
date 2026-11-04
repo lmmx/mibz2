@@ -46,6 +46,42 @@ flags. This should be good enough to commit to, not hide behind half commitment.
 proceeding through rounds of ideas that were being validated or rejected and built upon, and we
 needed to make them better each round."
 
+## Evidence-guided persistence (charter §8.4, report 267)
+
+There are two opposite mistakes to avoid:
+- **Premature abandonment:** rejecting a promising technique because its first
+  implementation misses a threshold, even though the evidence identifies a credible,
+  tractable route to closing the gap.
+- **Wasteful optimism:** continuing to optimise a preferred design despite repeated evidence
+  that its remaining obstacles are fundamental, its savings are too small, or the cost of
+  establishing its viability has become disproportionate.
+
+The rule: pursue promising ideas through successive, bounded experiments, prioritising those
+with the greatest credible production payoff per unit of further research and compute.
+Distinguish a failed implementation from a disproven approach. Continue when new evidence
+identifies a plausible route to qualification. Stop or deprioritise when the remaining
+opportunity is insufficient, the assumptions are unsupported, or repeated attempts fail to
+improve the outlook. Never lower acceptance standards to justify previous effort.
+
+Charter §8.4 (@ f7961dbc) applies this rule as a trajectory test. A line keeps climbing while
+successive attempts show real forward motion toward the limits above, and the builder's v1 →
+v2 step was that kind of climb. A line stops on sunk cost, deterioration, or a plateau with no
+path. A miss is always recorded as a miss.
+
+## Release checkpoints (report 267)
+
+When a campaign milestone has landed accepted production changes on master, the Coordinator
+owns the release, using the repository's existing GitHub Actions:
+- Batch changes at sensible campaign milestones. Don't release every research iteration.
+- Verify completion on both registries and the GitHub release, record the shipped version and
+  commit, and reconcile any failure.
+- Don't release unqualified experimental work.
+- Don't leave accepted production improvements unreleased indefinitely.
+
+The procedure and its checklist are in master:docs/STEWARDSHIP.md, which isn't copied here.
+Its key point: Deploy Release starts CI on the `py-` tag itself, so a tag existing is not a
+publication.
+
 ## Start or resume
 
 1. Resolve this path on research/compact30-channel to an immutable commit. Record that commit.
@@ -57,8 +93,9 @@ needed to make them better each round."
 ## Source map
 
 The initial policy set is lmmx/mibz2 commit 0ed278d722d1ef7dea0c24e5ff551dc7c0b46204, except where an entry names a later pin:
-- docs/journal/2026-11-04-compact30-research-charter.md: governing campaign scope and gates. Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
-- docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md, reports 264–266: recorded user provenance for U2/C6, technical autonomy and Coordinator release control. Earlier reports remain historical; later explicit amendments supersede only the affected clauses.
+- master:docs/STEWARDSHIP.md (PR #154; report 267): the permanent production and release stewardship this campaign runs under. It covers the merge gates, the release procedure and checklist, and what stays with the user.
+- docs/journal/2026-11-04-compact30-research-charter.md @ research/compact30-constructor f7961dbccb7eb9c27d279cd5191dddd36dc41f39: governing campaign scope and gates (§8.4 trajectory test, report 267). Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
+- docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md, reports 264–267: recorded user provenance for U2/C6, technical autonomy, Coordinator release control, permanent stewardship and the §8.4 trajectory test. Earlier reports remain historical; later explicit amendments supersede only the affected clauses.
 - docs/journal/compact30-channel/PROTOCOL.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: publication, receipts, queue and deduplication. §10 governs apparent inactivity.
 - docs/journal/compact30-channel/ROLES.md: separate responsibilities and branch ownership. Coordinator does not mean scientific superior.
 - docs/journal/compact30-channel/REVIEWER.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: research/evidence contract; read its applicability alongside the active charter. Both files were reconciled with charter §§2, 6.4 and 12.3 and reports 265–266 at that commit (see each file's Revisions note); the research/compact30-channel copies are kept identical.
@@ -94,7 +131,7 @@ Charter §2 still lists production's builder among unchanged research objects wh
 
 The initial review-queue snapshot still carries earlier counter HOLDs and a pending C6 user decision. It is not evidence those remain open: reconcile current pinned receipts and reports before acting. Never mark every §6.2 obligation closed just because one finding was fixed.
 
-The inspected Deploy Release workflow configures github-actions[bot] for its release commit while charter §2 names Louis for campaign commits. Before running it, reconcile the applicable automated-release identity convention and verify no AI attribution appears. Do not silently claim the existing workflow produces Louis-authored commits or fabricate authorship. This concrete execution check does not reopen the user's release delegation.
+Deploy Release's release commit is made by the workflow's github-actions[bot] identity, as for every prior release. That is the repository's release mechanism, not an AI-attributed commit. Campaign commits remain Louis Maddox's (see master:docs/STEWARDSHIP.md).
 
 ## Safety-stop and activation evidence
 
