@@ -3956,3 +3956,21 @@ I’m especially interested in whether the audit can defend the 87.62 million sc
 If they survive rigorous scrutiny, we’ll have a very different engineering case from the one that led to v2’s HOLD.
 
 My recommendation is to send this to a fresh Ultra session now. This is a worthwhile use of your expanded reasoning allowance, and the work remains entirely evidence-driven.
+
+## Report 233: the guardian's final refinement, keeping the audit independent
+
+Summarised from the relay. The guardian accepts the independence note on report 232: the
+paragraph linking this journal file is omitted from what the fresh session receives. Nothing
+else in report 231 changes.
+
+**The session is given:**
+- the audit request of report 231, unchanged;
+- report 232's three final requirements, without the journal paragraph;
+- the standalone text of report 227, all 1,143 lines;
+- optionally, the capture archive. Its link and SHA-256 are in the request.
+
+**Kept as an explicit verification task:** the full-tile and nonuniform-tile counts
+(12,937,790 and 2,393,313) are report 227's derivations from block sizes, not census counters.
+The auditor should reproduce them rather than take them as given.
+
+Implementation and i9 measurement are not authorised; the guardian decides after the audit.
