@@ -1,0 +1,11 @@
+{
+  "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+  "guardian_path": "docs/journal/compact30-channel/GUARDIAN.md",
+  "branch": "review/compact30-guardian-setup",
+  "previous_operating_pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+  "charter_pin": "dad82808dd4532d21ebf51e88164b78a0af53da8",
+  "authority_source": "Louis's direct ChatGPT authority update, 2026-11-04",
+  "status": "ACTIVE",
+  "stage": "A",
+  "automation_settings_changed": false
+}
