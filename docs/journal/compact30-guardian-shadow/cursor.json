@@ -142,6 +142,30 @@
       "commit": "028d7206e79fae8081cef4ea13357b4546270530",
       "comment": 6635476486,
       "status": "published; registered floor uses demonstrated overlap lower bound; additional overlap subtracts; minima do not prove overlap upper bound; no component requalification"
+    },
+    {
+      "id": "D011",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 145,
+      "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa",
+      "incoming_comment": 6635419092,
+      "commit": "080dd146353485eb2e6e7b17bc78283278563e6e",
+      "comment": 6635620697,
+      "checkpoint_keys": [
+        {
+          "pr": 146,
+          "sha": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+          "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa"
+        },
+        {
+          "pr": 151,
+          "sha": "7620c0c667018772a0ba3be28eb62263b55037f8",
+          "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa"
+        }
+      ],
+      "status": "published; gate 3 PASS both pinned isolated models; mapped counter remedy accepted; normalized identity and histogram coverage limits retained; no integration authorization"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -154,7 +178,8 @@
     6632636427,
     6633274082,
     6633918984,
-    6635476486
+    6635476486,
+    6635620697
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -166,7 +191,8 @@
     "99952368535d6f7f970533c2cfb63c71261c435d",
     "62a313a89876c2bc980718cc094c9265ddf7ff2c",
     "5ae9cc83faa22721ad72f97974006384f00677d2",
-    "028d7206e79fae8081cef4ea13357b4546270530"
+    "028d7206e79fae8081cef4ea13357b4546270530",
+    "080dd146353485eb2e6e7b17bc78283278563e6e"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -177,7 +203,8 @@
     6632963394,
     6633116288,
     6633793271,
-    6635380133
+    6635380133,
+    6635419092
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -259,16 +286,16 @@
     "trigger": "new event-supplied PR comment containing the exact TYPE: CHECKPOINT marker",
     "repository": "lmmx/mibz2",
     "scope": "only triggering event comments; no backlog",
-    "last_completed_incoming_comment": 6635380133,
-    "last_decision": "D010",
-    "last_outgoing_comment": 6635476486,
+    "last_completed_incoming_comment": 6635419092,
+    "last_decision": "D011",
+    "last_outgoing_comment": 6635620697,
     "after_completion": "stop; await a future matching GitHub event",
     "polling": false,
     "timed_schedule": false,
     "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "028d7206e79fae8081cef4ea13357b4546270530",
+    "last_decision_commit": "080dd146353485eb2e6e7b17bc78283278563e6e",
     "last_duplicate_incoming_comment": 6633116288
   },
   "duplicate_events": [
@@ -331,17 +358,22 @@
       "decision": "D010",
       "commit": "028d7206e79fae8081cef4ea13357b4546270530",
       "comment": 6635476486
+    },
+    {
+      "pr": 146,
+      "sha": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa",
+      "decision": "D011",
+      "commit": "080dd146353485eb2e6e7b17bc78283278563e6e",
+      "comment": 6635620697
+    },
+    {
+      "pr": 151,
+      "sha": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa",
+      "decision": "D011",
+      "commit": "080dd146353485eb2e6e7b17bc78283278563e6e",
+      "comment": 6635620697
     }
-  ],
-  "pending_publication": {
-    "decision": "D011",
-    "incoming_comment": 6635419092,
-    "pr": 145,
-    "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa",
-    "status": "decision committed; reconcile linked review before retry",
-    "pins": [
-      "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
-      "7620c0c667018772a0ba3be28eb62263b55037f8"
-    ]
-  }
+  ]
 }
