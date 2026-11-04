@@ -200,17 +200,17 @@ names:
 - **A succession (rule 3).** These triggered runs succeed the original Codex Goal sessions for
   routine work. The original sessions stand down, and act only when the user addresses them
   directly.
-- **Filtering.** GitHub can't filter on comment text before a run starts, so every comment starts
-  each task. Each run reads only the triggering comment, and stops at once unless it is addressed
-  to it.
+- **Filtering.** Each subscription is scoped before a run starts: newly created comments on the
+  role's own inbox PR, with bots, reviews, pushes, edits and lifecycle events excluded. Each run
+  reads only the triggering comment, and stops at once unless it is addressed to its role.
 - **Inboxes in, #145 out** (PROTOCOL §1). Each Work task is subscribed to new comments on its
   own inbox PR alone: #160, #161, #162. On #145, each new event's run displaced the Optimizer's
   research runs before they committed (6643992749, 6644115799, 6644364456). Every role
   publishes on #145, whatever triggered it.
-- **Addressing.** The Coordinator addresses checkpoints with a `TO:` line, for example
-  `TO: guardian, optimizer`. Anything the Optimizer must act on goes as a `TYPE: CHECKPOINT`
-  naming it in `TO:`; its runs skip an `ACK`, a `REVIEW`, or a checkpoint not addressed to it. The roles reply with `TYPE: REVIEW`, which wakes the Coordinator
-  through its PR subscriptions.
+- **Addressing.** The Coordinator sends each checkpoint separately to the inbox of every role it
+  concerns, with `FROM`, `TO`, `RE` and `TYPE: CHECKPOINT` in its header, in any order. It never
+  addresses several roles through one triggering comment. The roles reply with `TYPE: REVIEW` on
+  #145, which wakes the Coordinator through its PR subscriptions.
 - **Commits.** Triggered runs commit as `Louis Maddox <lmmx@users.noreply.github.com>`
   (PROTOCOL.md §9).
 - **First verified loop:** D007 on #149 (commit 99952368, review 6632636427, cursor f1631a2).
