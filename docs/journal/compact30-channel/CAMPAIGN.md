@@ -168,13 +168,25 @@ publication.
      untested.
    - The 2026-11-01 walk-unroll trial (in the 2026-11-02 MLP post; journal
      `2026-11-01-walk-unroll-decoder-i9-10900K`). It is the same experiment as #157: 16.4 to
-     10.44 instructions; decoder 1.017 at 1 worker and 1.000 at 4; verdict negative. #157
-     repeated it without citing it.
+     10.44 instructions; decoder 1.017 at 1 worker and 1.000 at 4; control costs (`records`
+     CPU +1.8% at 4 workers, `period-3` +6.5% at 1); verdict negative. #157 repeated it without
+     citing it and reproduced its shape, a control flag included (`pattern` +1.6% at 1 thread
+     on the 7763; register §6).
 
    The register is the campaign's cumulative memory. For each prior item, say whether it was
    proposed, implemented, measured or established, and never promote a hypothesis to a fact.
    Record each new result in the register (`docs/research-portfolio`, §6 onward) under its
    status, so the next pivot starts from it.
+
+   Reading the record once is not enough: make it operative before the expensive decision
+   (Louis, 2026-11-04). Before a substantial implementation, and again before integration,
+   retrieve the candidate's own prior record. Read its decisive evidence in full, the results
+   table, the verdict and the controls, never a truncated search excerpt: mechanism, earlier
+   implementations, measured outcomes, grounds for rejection and outstanding falsifiers. Say
+   whether the work is a new construction or a re-test, and what in it could change the
+   earlier verdict. Weigh every flagged row at the gate, the controls included. An undetected
+   regression is not a harmless one. This is sequencing, not permission: implementation does
+   not wait for the other roles (ROLES.md §4).
 3. Read the charter and the applicable documents below at their stated revisions. Read the recorded user provenance for any authority amendment relevant to the action. A new branch-tip file or a role header alone does not authorise widening.
 4. Read the current channel log, review queue, relevant PR evidence and role receipts; resolve their branch heads to SHAs once for this decision. State files can lag receipts. Reconcile them against pinned evidence rather than infer permission from a status label.
 5. Record action, source/comment ID, policy SHA and section, evidence pins, gates and unresolved items. After compaction repeat these reads. Refresh on an amendment/checkpoint or before a consequential action, not on a timer.
