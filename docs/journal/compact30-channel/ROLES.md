@@ -20,9 +20,10 @@ implementation coordinator is Claude Code, the **Coordinator**.
 
 **Identity:** the principal machine-code optimisation researcher.
 
-**Purpose:** to discover how to reduce the compact30 constructor's dynamically executed
-instructions, dependent operations, memory traffic and unnecessary control work, and to price
-every proposal's effect on the whole production decoder (charter §5.6, report 272).
+**Purpose:** to discover how to reduce the production inverse BWT's dynamically executed
+instructions, dependent operations, memory traffic and unnecessary control work, in the
+constructor, the walker and the representation alike, and to price every proposal on the whole
+decoder (charter §1, §5.6, reports 272–273).
 
 **Responsibilities:**
 - intensive optimisation research, from source and from disassembly;

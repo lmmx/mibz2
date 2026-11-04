@@ -6297,3 +6297,69 @@ future".
 - The frozen walker (§2). Changing it is a scope change for the user.
 - The bench harness, including `examples/phases.rs`, which still times production's own build
   and walk. Changing it is the user's decision.
+
+## Report 273: the whole decoder is delegated
+
+**Provenance.** The user, in the Coordinator's session on 2026-11-04, verbatim:
+
+> I'd make one standing correction to its authority, then leave the technical decisions to
+> Claude:
+>
+> The objective is a faster production decoder, not merely a faster constructor. Delegate the
+> whole inverse-BWT implementation, including the walker, to the autonomous campaign. Maintain
+> representation invariants, correctness, safety and existing qualification gates.
+>
+> Routine adjustments to per-stage diagnostic instrumentation are also delegated, provided the
+> benchmark's workload, statistical method and acceptance criteria remain unchanged.
+>
+> Amend the charter to reflect this standing authority. Thereafter decide independently whether
+> to optimise, redesign, measure, redirect or stop, according to credible whole-decoder payoff
+> per compute. Do not ask me to select technical experiments or approve routine implementation
+> choices.
+>
+> Escalate only genuine changes to reserved policy, resources or measurement methodology. The
+> goal is autonomous mathematical engineering, not supervised task execution.
+>
+> One further caution: §5.6's new prohibition on measurement-only PRs may be an overcorrection.
+> If CI is the authoritative performance test, Claude needs a legitimate way to test a
+> quantitatively credible cache or latency hypothesis there, even when instruction parity has
+> not yet been demonstrated. Otherwise the rules can become circular.
+
+The same message also said: "I would authorise work on the walker. Keeping it frozen after
+identifying it as the dominant regression would preserve the problem rather than solve it. The
+existing constructor results can remain frozen as evidence; new walker variants should be
+independently developed and validated." And: "I would also authorise a narrow correction to
+examples/phases.rs so it measures the kernel actually under evaluation. Keep the benchmark
+protocol, inputs and statistical acceptance criteria unchanged."
+
+**What the Coordinator did.**
+- **Charter §1.** The objective is production's `decode_block`: construction, the walk and the
+  rest. The whole inverse BWT is in scope.
+- **Charter §2.**
+  - The walker, the representation and the decode path are in scope.
+  - v2, v3, Assembly 1 and the walker and oracle they were measured with are frozen as
+    evidence.
+  - New variants are separate modules.
+  - Representation invariants hold. A changed representation proves its own invariants under
+    gate 1.
+  - Per-stage diagnostic instrumentation is delegated, while the bench's workload, statistics
+    and acceptance criteria stay unchanged.
+- **Charter §4, gate 3.** Walker, representation and other decode-path prototypes qualify on
+  the §5.6 production ledger, against a minimum registered beforehand.
+- **Charter §5.6(d).** A measurement PR is allowed on a registered quantitative hypothesis:
+  mechanism, predicted effect at 1, 2 and 4 threads, the instruction excess it must beat, and
+  its falsifier. An integration PR still needs whole-decoder instruction parity, and merges
+  stay under §2's gate. This replaces report 272's prohibition, which made the rules circular.
+- **Charter §5.6(g) and (h).** The walk is in scope. Correcting `examples/phases.rs` is
+  delegated instrumentation.
+- **Charter §12.3.** The reservation narrows from "bench-harness changes" to the bench's
+  workload, statistical method and acceptance criteria. Technical direction is delegated, and
+  escalation is only for reserved policy, resources or measurement methodology.
+- **Charter §11** records the amendment.
+- **ROLES.md §1.** The Optimiser's purpose covers the whole inverse BWT.
+- **CAMPAIGN.md and master:docs/STEWARDSHIP.md (#156)** are made to match.
+
+**Unchanged.**
+- Every gate and minimum, and every recorded result.
+- The reservations on i9 or workstation timing, new resources and the bench methodology.
+- The authority of CI's paired bench over every merge.

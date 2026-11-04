@@ -2,7 +2,7 @@
 
 **Status: revision 4 (with the narrowing clarifications of reports 247–248, the user's
 standing autonomy policy of report 265, §6.4, and the production accounting of report 272,
-§5.6), ACTIVE (stage 1, §13). The guardian confirmed activation in report 248.** The guardian's
+§5.6, and the whole-decoder delegation of report 273), ACTIVE (stage 1, §13). The guardian confirmed activation in report 248.** The guardian's
 review of revision 2 (report 246, relayed by the user in the coordinator's session) approved it
 subject to two clarifications, and authorised activation once they were made, if no other
 material change was introduced. Both are in revision 4:
@@ -30,10 +30,15 @@ confirm.
 
 ## 1. Objective
 
-Reduce the machine work needed to build the frozen compact30 tables: executed instructions,
-dependent operations and memory operations. Measure progress by **net whole-constructor work
-removed**, as defined by the ledger in §5. That ledger is the qualification gate. Local
-instruction targets are diagnostics.
+**Make production's inverse BWT faster (report 273).** Reduce the machine work of
+`decode_block`: construction, the walk and the rest of the decode. That means executed
+instructions, dependent operations, memory operations, and wherever the evidence supports it,
+cache and latency effects. The whole inverse-BWT implementation is in scope: the constructor,
+the walker and the representation between them.
+- **Constructor prototypes** qualify on net whole-constructor work removed (the §5 ledger).
+- **Every prototype**, whatever it changes, is judged for production on the whole decoder
+  (§5.6).
+- Local instruction targets are diagnostics.
 
 **Permission to continue research isn't permission to claim success.** Every miss is reported
 as a miss, whatever happens to the variant afterwards.
@@ -46,17 +51,27 @@ result, and no candidate goes towards production on construction figures alone.
 
 ## 2. Fixed for the whole charter
 
-- These stay unchanged:
-  - the frozen representation;
-  - the walker;
-  - the oracle (`C30::build`);
-  - canonical RAW order;
-  - production's builder.
-- Frozen v2 (`ctor2.rs` at `8beffe2`) and v3 (`ctor3.rs` at `dbf5139`) are never modified. Each
-  new prototype is a separate research module.
-- None of these is authorised:
+- **Scope: the whole inverse BWT (report 273).** The constructor, the walker, the
+  representation and the rest of the decode path may all be changed, through new modules and
+  through PRs into master under the gate below.
+- **Frozen as evidence.** These are never modified, and every new variant is a separate module,
+  developed and validated independently:
+  - v2 (`ctor2.rs` at `8beffe2`) and v3 (`ctor3.rs` at `dbf5139`);
+  - Assembly 1 at its checkpoint commit;
+  - the walker and the oracle (`C30::build`) those results were measured with.
+- **Invariants.**
+  - Output is byte-exact in every case.
+  - A variant that keeps the compact30 representation keeps its invariants: canonical RAW
+    order, and `rec` and `raw` identical to the oracle's.
+  - A variant that changes the representation states its invariants and proves them under
+    gate 1 before any ledger of it counts.
+- **Diagnostic instrumentation is delegated.** That covers per-stage timing, counters, and what
+  `examples/phases.rs` times. The bench's workload, its statistical method and its acceptance
+  criteria stay unchanged.
+- **None of these is authorised:**
   - timing on the i9 or a workstation, or local timing used as evidence;
-  - protocol or bench changes;
+  - changes to the bench's workload, statistical method or acceptance criteria, or to the
+    channel protocol;
   - relaxing a gate or a minimum.
 - **Delegated to the Coordinator (report 266):** production integration, PRs into master, merges and
   releases. The route is the same one the project already uses for the decoder:
@@ -120,8 +135,13 @@ For each prototype in the sequence, within §2:
      that prototype's attempts once all three are used. **It doesn't by itself exclude the
      variant** from qualification or from the combined build.
 3. **Net work (the qualifier).**
-   - The prototype's §5 ledger against its own baseline.
-   - The lower end of its conservative bound must meet the registered minimum.
+   - The prototype's ledger against its own baseline:
+     - the §5 ledger for a constructor prototype;
+     - the §5.6 production ledger (whole `decode_block`) for a walker, representation or other
+       decode-path prototype. Its §5.3 conventions apply: whole functions recounted, bounded
+       frequencies at their least favourable end, unknown costs never zero.
+   - The lower end of its conservative bound must meet the minimum registered before it ran
+     (§6.4).
 4. **Economics (outside this charter).** Only a separately authorised, formally VALID measurement
    decides the registered CPU and completion ceilings.
 
@@ -234,26 +254,31 @@ b. **Sample.** A checkpoint uses at least the archived Wikidata blocks (1 and 41
 c. **Ranking.** Proposals are ranked by whole-decoder instructions removed per block, after every
    cost they induce in other phases. A change to the representation is priced for every consumer
    of the representation, the walk included, not only for the code that produces it.
-d. **Before any PR into master for a candidate kernel,** including a measurement-only PR, one of
-   these must hold:
-   - the production ledger shows whole `decode_block` instructions at or below master's, across
-     the sample;
-   - a written, quantitative case shows how a non-instruction mechanism (cache residency,
-     memory-level parallelism) outweighs the measured instruction excess at each of CI's
-     thread counts (1, 2 and 4), and the Researcher has assessed it.
-
-   Timing on the shared development machine is never such a case. Neither is a projection that
-   predicts a loss at any of CI's thread counts.
+d. **PRs into master for a candidate kernel** (revised by report 273).
+   - **An integration PR, meant to merge,** needs the production ledger at or below master's
+     across the sample. Otherwise it is a measurement PR.
+   - **A measurement PR** is an experiment, and CI is where the hypothesis is tested. It is
+     opened when a hypothesis is registered first, in the channel and the PR body, stating:
+     - the mechanism;
+     - the predicted whole-decoder effect at each of CI's thread counts (1, 2 and 4), with its
+       sign and size;
+     - the instruction excess the mechanism must overcome;
+     - the result that falsifies it.
+   - **What doesn't count:**
+     - timing on the shared development machine is never a hypothesis's evidence;
+     - a projection that predicts a loss can't be set aside unless the hypothesis says why the
+       projection is wrong.
+   - **Closing out.** A falsified measurement PR is closed and written up. Merges stay under
+     §2's gate.
 e. **What parity is.** Instruction parity is a screen, neither necessary nor sufficient (D016).
    CI's end-to-end paired bench decides every merge, under §2.
 f. **Scope.** This ledger is a diagnostic and a precondition. It does not replace gate 3, and it
    does not change any recorded result (D015).
-g. **The walker is frozen under §2.** If the production ledger shows the walk is the binding
-   cost, changing the walker is a scope change, and it needs the user (§12.3).
-h. **The bench's phase table does not apply.** `examples/phases.rs` times production's own
-   build and walk, so it shows nothing about a candidate kernel's phases until the bench harness
-   changes. That change is the user's decision (§12.3). Only Callgrind on `decode_block` and the
-   whole-decoder A/B apply.
+g. **Optimise the binding cost.** The walk is in scope (§2, report 273). Optimise whichever cost
+   the production ledger shows binding.
+h. **The phase table.** Until `examples/phases.rs` times the kernel under evaluation, its rows
+   say nothing about a candidate's phases. Correcting it is delegated diagnostic
+   instrumentation (§2).
 
 ## 6. The sequence
 
@@ -630,6 +655,7 @@ The sequence also stops early, and reports, in two other cases:
 | researcher (report 247) | the scanner handoff's unsafe reads are not delegated: safe Rust first, and the unsafe form escalated with its exact operations and proofs | §6.1 |
 | guardian (report 248) | the unsafe fallback's approval package (operations, locations, invariants, overflow, validity and initialisation, expected saving); autonomous once approved | §6.1 |
 | guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
+| user (report 273) | the objective is the whole production decoder; the whole inverse BWT (constructor, walker, representation) is in scope, with earlier modules frozen as evidence; per-stage diagnostic instrumentation delegated; measurement PRs allowed on a registered quantitative hypothesis; technical direction delegated, escalating only reserved policy, resources or measurement methodology | §1, §2, §4, §5.6, §12.3 |
 | user (report 272) | production accounting: every checkpoint reports whole-decoder instructions (build, walk, rest) against production master; ranking by whole-decoder saving; no PR into master for a candidate kernel without whole-decoder parity or an assessed quantitative case; viability judged on the whole decoder; local timing never a reason to integrate | §1, §5.6, §8.4 |
 | user (report 270) | the Researcher is the standing independent reviewer; no fresh, new-chat or context-isolated reviewers; additional agents need Louis's explicit authorisation | §6.2, §6.4, §10 |
 | user (report 269) | a failed gate is a verdict on the candidate, not automatically its line; a line may end on cumulative evidence (impossibility, lower bound); every significant experiment reports expected vs actual, gap closed, mechanism learned, and the next step including STOP/REDIRECT | §8.4 |
@@ -676,7 +702,8 @@ decision and, where there is one, the repository message it refers to:
 - relaxing a gate or a minimum;
 - widening scope;
 - i9 or workstation timing, or a capture;
-- bench-harness changes;
+- changes to the bench's workload, statistical method or acceptance criteria (per-stage
+  diagnostic instrumentation is delegated, §2, report 273);
 - accepting a rebuttal that the review didn't accept (§6.2);
 - new infrastructure, credentials or spending.
 
@@ -684,6 +711,13 @@ decision and, where there is one, the repository message it refers to:
 bounded prototypes, resuming after a §8.2 stop, and production integration, PRs into master,
 merges and releases under §2's CI-bench gate. These are routine decisions for the agents and the
 Coordinator.
+
+**Technical direction is delegated (report 273).** The Coordinator and the three agents decide
+for themselves whether to optimise, redesign, measure, redirect or stop. They decide on
+credible whole-decoder payoff per unit of compute, within the gates, the invariants and the
+reservations above. The user is not asked to choose experiments or to approve routine
+implementation choices. Escalation is only for a genuine change to reserved policy, resources
+or measurement methodology.
 
 The coordinator records the user's words verbatim in the journal as that decision's provenance.
 The user may relay the guardian's text. What authenticates it is the user's act of relaying it,
