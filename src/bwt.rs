@@ -745,6 +745,12 @@ thread_local! {
     static MID_PASS_TAKES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static FULL_PHASE_ENDS_MID_PASS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static TAIL_ENTERED_FULL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // the room walk's deferred handovers: several lanes marked at one offset; the queue
+    // running out with a marked lane after this one still waiting; and running out after
+    // an earlier marked lane at the same offset took a segment
+    static MARKED_SEVERAL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static ENDS_WITH_LANES_WAITING: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static ENDS_AFTER_A_TAKE: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -968,6 +974,12 @@ fn room_segments<const L: usize, const PF: u8>(
                     step!(c);
                     c += 1;
                 }
+                #[cfg(test)]
+                if marked.count_ones() > 1 {
+                    transition!(MARKED_SEVERAL);
+                }
+                #[cfg(test)]
+                let mut took = false;
                 while marked != 0 {
                     let k = marked.trailing_zeros() as usize;
                     marked &= marked - 1;
@@ -986,6 +998,15 @@ fn room_segments<const L: usize, const PF: u8>(
                             }
                         }
                         transition!(FULL_PHASE_ENDS_MID_PASS);
+                        #[cfg(test)]
+                        {
+                            if marked != 0 {
+                                transition!(ENDS_WITH_LANES_WAITING);
+                            }
+                            if took {
+                                transition!(ENDS_AFTER_A_TAKE);
+                            }
+                        }
                         break 'full;
                     }
                     transition!(MID_PASS_TAKES);
@@ -996,6 +1017,10 @@ fn room_segments<const L: usize, const PF: u8>(
                     queued += 1;
                     // its next byte, at offset off + 1, goes at its p
                     base[k] = l.p.wrapping_sub(off + 1);
+                    #[cfg(test)]
+                    {
+                        took = true;
+                    }
                 }
             }
             for (l, b) in lanes.iter_mut().zip(base) {
@@ -1490,6 +1515,64 @@ pub(crate) mod tests {
             ("a segment taken mid-pass", &MID_PASS_TAKES),
             ("the full phase ending mid-pass", &FULL_PHASE_ENDS_MID_PASS),
             ("a lane coming into the tail full", &TAIL_ENTERED_FULL),
+        ] {
+            assert!(count(c) > 0, "never reached: {name}");
+        }
+    }
+
+    /// The room walk's deferred handovers, against `walk` on random columns small enough
+    /// for many lanes to reach a segment's end at the same offset: every interleaving the
+    /// pass can take (several lanes marked at one offset, the queue running out with marked
+    /// lanes still waiting, or after an earlier marked lane took a segment) is reached, at
+    /// 32 lanes and at 5, and every output is `walk`'s
+    #[test]
+    fn room_walk_deferred_handovers() {
+        for c in [
+            &MARKED_SEVERAL,
+            &ENDS_WITH_LANES_WAITING,
+            &ENDS_AFTER_A_TAKE,
+        ] {
+            c.with(|c| c.set(0));
+        }
+        let mut x = 0x2545_f491_4f6c_dd1du64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        for case in 0..400 {
+            let n = 64 + rnd(3000) as usize;
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            let segments = 2 + rnd(n as u64 / 2) as usize;
+            walk_segments_room_with_prefetch::<32, PF_L1>(
+                &mut tt, orig_ptr, &mut out, &mut seg, segments,
+            );
+            assert!(plain == out, "32 lanes, case {case}");
+            check_segments(&tt, &seg, "32 lanes");
+            walk_segments_room_with_prefetch::<5, PF_OFF>(
+                &mut tt, orig_ptr, &mut out, &mut seg, segments,
+            );
+            assert!(plain == out, "5 lanes, case {case}");
+            check_segments(&tt, &seg, "5 lanes");
+        }
+        for (name, c) in [
+            ("several lanes marked at one offset", &MARKED_SEVERAL),
+            (
+                "the queue running out with lanes waiting",
+                &ENDS_WITH_LANES_WAITING,
+            ),
+            ("the queue running out after a take", &ENDS_AFTER_A_TAKE),
         ] {
             assert!(count(c) > 0, "never reached: {name}");
         }
