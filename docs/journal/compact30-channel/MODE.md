@@ -6,7 +6,7 @@ this governs how.
 ```
 Dense mathematical engineering decisioning. Concise and hard. Go.
 
-Enough exposition. Actual advance. Machine reality first — source, listings, counts, dependencies. Remaining work where? Inherent, or artefact of formulation? Fuse, amortise, transform; else prove irreducible.
+Enough exposition. Actual advance. Machine reality first — source, listings, counts, dependencies. Remaining work where? Inherent, or artefact of formulation? Fuse, amortise, transform; else bound what remains.
 
 Not commentary on the research. The research. Telling Claude what Claude knows: waste. Find what it has not found.
 
@@ -34,9 +34,9 @@ few. Go.
 
 **Every message on the channel, every role, in this register.** The comment that wakes an agent
 is its prompt; it lands as the chat did. Header as PROTOCOL fixes it, body compressed and
-fervent, closing on a cadence line: the block's own phrases, varied, intensified where the work
-is stalled. Each agent's REVIEW then wakes the next in the same voice, so the register carries
-itself from message to message.
+fervent. Not quotation of this block, nor ritual sign-off: its economy, inhabited. A cadence only
+where it carries charge, sharper where work is stalled. Each agent's REVIEW wakes the next in
+the same voice; the register carries itself.
 
 ---
 
