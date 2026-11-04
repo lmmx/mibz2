@@ -210,7 +210,8 @@
       "incoming_comment": 6640153383,
       "comment": null,
       "status": "D013 attribution HOLD lifted; four-profile full ledger replay; no economic or fresh safety certification",
-      "publication": "decision in enclosing commit; GitHub reply suppressed by direct batch instruction"
+      "publication": "decision in enclosing commit; GitHub reply suppressed by direct batch instruction",
+      "commit": "a0473a6b6d9e4b69c459e560136d4841aa533b5c"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -241,7 +242,8 @@
     "028d7206e79fae8081cef4ea13357b4546270530",
     "080dd146353485eb2e6e7b17bc78283278563e6e",
     "2c2565aca5be9ffd2ce5ace8ba82d3af9b60523b",
-    "88bc570db02d8e617652ea56e081e4b4c6eae0c4"
+    "88bc570db02d8e617652ea56e081e4b4c6eae0c4",
+    "a0473a6b6d9e4b69c459e560136d4841aa533b5c"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -347,7 +349,7 @@
     "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "enclosing commit",
+    "last_decision_commit": "a0473a6b6d9e4b69c459e560136d4841aa533b5c",
     "last_duplicate_incoming_comment": 6633116288,
     "source_app_reply": "omitted per this run's explicit no additional message/reply/notification instruction"
   },
@@ -450,7 +452,7 @@
       "evidence_digest": "git-blob:1542bf66e9189559c74f569327649b84521cde48",
       "decision": "D014",
       "comment": null,
-      "commit_reference": "enclosing decision commit"
+      "commit": "a0473a6b6d9e4b69c459e560136d4841aa533b5c"
     }
   ]
 }
