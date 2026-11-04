@@ -76,6 +76,11 @@ mod ctor2;
 #[path = "c30walk/ctor3.rs"]
 mod ctor3;
 
+/// The charter's combined build (§6.3), assembly 1: v2 with the scanner's U2 trial, the
+/// descriptor arrays and v3's epoch-tagged finaliser
+#[path = "c30walk/ctor2c.rs"]
+mod ctor2c;
+
 const LANES: usize = 32;
 const SEGMENTS: usize = 512;
 const MIN_SEGMENTED: usize = 1 << 16;
@@ -1902,6 +1907,9 @@ fn main() {
     }
     if let Some(m) = args[1].strip_prefix("ctor3-") {
         return ctor3::main(m, &args[2..]);
+    }
+    if let Some(m) = args[1].strip_prefix("ctor2c-") {
+        return ctor2c::main(m, &args[2..]);
     }
     if args[1] == "cbuild" {
         return cbuild::main(&args[2..]);
