@@ -10,7 +10,8 @@
     6628984134,
     6629044041,
     6629821793,
-    6633116288
+    6633116288,
+    6634996672
   ],
   "outgoing_comment_ids": [
     {
@@ -37,6 +38,12 @@
       "id": 6634221840,
       "type": "REVIEW",
       "sha": "ea3ace12614f8d078f6167c2d8fcda64f0328799"
+    },
+    {
+      "pr": 145,
+      "id": 6635366542,
+      "type": "REVIEW",
+      "sha": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48"
     }
   ],
   "reviews": [
@@ -108,18 +115,36 @@
       "evidence_manifest": "docs/journal/compact30-research/reviews/checkpoint-6633116288/evidence-manifest.json",
       "review_sha": "ea3ace12614f8d078f6167c2d8fcda64f0328799",
       "raw_profile_replay": false
+    },
+    {
+      "checkpoint": "overlap_6634996672",
+      "scanner_sha": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "descriptor_sha": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "independent_review_sha": "e62fc15f91311823ab0c48a6f6e9c7dd35a28d10",
+      "status": "complete_scoped_review",
+      "independent": false,
+      "review_sha": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48",
+      "overlap_bounds": {
+        "lower": 2393313,
+        "upper": 40000000
+      },
+      "combined_floor": {
+        "least_favourable": 60000000,
+        "demonstrated_overlap_endpoint": 97606687
+      },
+      "class_rows": 63
     }
   ],
   "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
   "wake": "Persistent GitHub comment event task; first fetch exact triggering comment, gate TYPE CHECKPOINT and TO optimizer; no polling.",
-  "next_trigger": "New addressed checkpoint/correction; structural-counter closure, instruction-level overlap mapping, or approved proposal evidence. No integration permission inferred.",
+  "next_trigger": "New addressed checkpoint/correction; structural-counter closure, exhaustive combined instruction mapping, or approved proposal evidence. No integration permission inferred.",
   "review_pr": 148,
   "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
   "proposal_independence": {
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required"
   },
   "status": "WAITING",
-  "published_evidence_commit": "ea3ace12614f8d078f6167c2d8fcda64f0328799",
+  "published_evidence_commit": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48",
   "incoming_experiment_comment_ids": [
     {
       "pr": 146,
