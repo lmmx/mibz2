@@ -1,6 +1,7 @@
 # Compact30 instruction minimisation: a standing research charter (ACTIVE)
 
-**Status: revision 4, ACTIVE (stage 1, §13) from the commit that adds this line.** The guardian's
+**Status: revision 4 (with the narrowing clarifications of reports 247–248), ACTIVE (stage 1,
+§13). The guardian confirmed activation in report 248.** The guardian's
 review of revision 2 (report 246, relayed by the user in the coordinator's session) approved it
 subject to two clarifications, and authorised activation once they were made, if no other
 material change was introduced. Both are in revision 4:
@@ -207,11 +208,20 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
   reads fall under §8.2: they are a new unsafe, unchecked access. If no safe attempt reaches the
   compile target:
   - the miss is recorded under gate 2, and the safe variant is still evaluated under gates 1 and 3;
-  - the exact unsafe operations, their release-mode proofs and their Miri classes are registered
-    in the journal;
-  - they are then escalated for the user's explicit approval (§12.3).
+  - the exact proposed unsafe formulation is registered in the journal:
+    - each `read_unaligned()` operation and its source location;
+    - the dominating bounds invariant;
+    - the integer-overflow proof;
+    - the pointer-validity and initialisation argument;
+    - the expected assembly saving;
+    - the Miri classes that would check it;
+  - it is escalated for one explicit approval (§12.3), and isn't implemented before that.
+  - Once that exact formulation is approved, its implementation and the registered correctness,
+    mutation, Miri and compilation checks proceed autonomously.
+  - Any other unchecked access, unsafe operation or new safety obligation remains an immediate
+    escalation under §8.2.
 
-  This clarification (report 247) only narrows scope. The same applies to any other prototype
+  This clarification (reports 247–248) only narrows scope. The same applies to any other prototype
   whose design names an unsafe formulation.
 
 ### 6.2 Pre-integration review (before any combined build)
@@ -416,6 +426,7 @@ The sequence also stops early, and reports, in two other cases:
 | guardian (report 245) | two-stage rollout; the channel is tested end to end before unattended use | §13 |
 | guardian 1 (report 246) | the combined-build floor on one B2 baseline, with translated minimums, no double counting and all integration effects | §6.3 gate 3 |
 | researcher (report 247) | the scanner handoff's unsafe reads are not delegated: safe Rust first, and the unsafe form escalated with its exact operations and proofs | §6.1 |
+| guardian (report 248) | the unsafe fallback's approval package (operations, locations, invariants, overflow, validity and initialisation, expected saving); autonomous once approved | §6.1 |
 | guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
 
 ## 12. Provenance and authorisation

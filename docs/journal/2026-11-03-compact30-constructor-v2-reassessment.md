@@ -5328,3 +5328,99 @@ The meaningful human checkpoints should be safety escalations, material review d
 Everything else—bounded Rust iterations, correctness testing, Miri, disassembly, accounting and evidence archiving—belongs inside the autonomous research programme.
 
 This is the point where I would stop managing individual experiments and start judging completed engineering results.
+
+## Report 248: the guardian's final operational clarification, and activation
+
+The guardian accepts report 247's finding and settles the scanner's unsafe boundary. Safe Rust comes first. If it can't reach the intended code generation, the exact `read_unaligned()` formulation is prepared with its full proof, and it needs one explicit approval before it is implemented; after that it proceeds autonomously. The guardian confirms the 154 M combined floor and that GitHub headers are not authentication. With these three clarifications, it approves the charter for autonomous execution. All three were already in charter revision 4 at 94c131d, except the approval package's itemised contents, added here. Relayed by the user in the coordinator's session, and kept as relayed:
+
+I agree with the researcher. This is the last operational ambiguity worth resolving before activating the autonomous charter.
+
+The researcher caught something important: we were about to authorize scanner cleanup while simultaneously requiring escalation for the very unsafe operations its reviewed design might need.
+
+That would recreate the approval bottleneck we’re trying to eliminate.
+
+Guardian decision: safe Rust first, narrowly bounded unsafe fallback
+
+I would not grant blanket permission for new unsafe pointer operations. But I also wouldn’t prohibit a carefully specified read_unaligned() implementation merely because it uses unsafe.
+
+My preferred rule is:
+
+* Claude first attempts the scanner cleanup using safe Rust, within the registered three-attempt budget.
+* If safe Rust cannot produce the required instruction reduction, Claude may prepare the handoff’s specific read_unaligned() formulation and its complete release-mode safety proof.
+* That unsafe formulation requires one explicit approval before implementation. Once approved, Claude can complete its tests and compilation autonomously.
+* Any additional unsafe operation or new safety invariant outside that approval still triggers immediate escalation.
+
+This introduces one possible approval checkpoint, but only if the safe implementation proves insufficient. It doesn’t hold up the entire research programme.
+
+The researcher is also right about the combined-build arithmetic.
+
+Combined minimum when all four components qualify
+
+154M instructions
+
+Net reduction against frozen V2, including integration costs
+
+V3 finalizer	50M
+Scanner cleanup	60M
+Descriptor arrays	40M
+SSE2 refinement	4M
+
+The 154M is a prospective qualification floor, not an achieved saving. The combined build must establish its actual B2-relative net saving independently.
+
+Final message to Claude
+
+Guardian final operational clarification for the compact30 standing research charter.
+
+I accept the researcher’s additional finding concerning the scanner handoff and charter §8.2.
+
+Please incorporate the following into the revised charter before activation.
+
+1. Combined-build accounting
+
+All combined-build net savings are calculated directly against frozen B2, with all changed paths and integration costs included.
+
+When V3, scanner cleanup, descriptor arrays and SSE2 all qualify, the combined acceptance minimum is 154M instructions.
+
+Recalculate that minimum for the components actually included. SSE2’s 4M incremental contribution applies only when V3 is included. Never double-count overlapping savings.
+
+2. GitHub authority
+
+The charter is the standing authorization for in-scope work. GitHub comments may communicate decisions and evidence, but self-declared role headers are not authentication for expanding authority.
+
+Reserved actions require explicit user approval.
+
+3. Scanner unsafe boundary
+
+Prefer safe Rust for the scanner/tile cleanup.
+
+If the safe formulations fail to produce the intended compiled improvement, prepare the handoff’s exact proposed read_unaligned() operations, their source locations, dominating bounds invariants, integer-overflow proof, pointer validity and initialization argument, and the expected assembly savings.
+
+Stop that unsafe implementation until it receives explicit approval.
+
+Once the exact unsafe formulation is approved, its implementation and the registered correctness, mutation, Miri and compilation checks may proceed autonomously.
+
+Any other newly introduced unchecked access, unsafe operation or safety obligation remains an immediate escalation.
+
+Do not silently interpret the scanner handoff as blanket unsafe authorization.
+
+Activation
+
+With these three clarifications incorporated and no other material changes, the standing charter is approved for autonomous execution.
+
+Continue through the registered bounded sequence without requesting approval for routine implementation, testing, disassembly, ledger accounting or checkpoint documentation.
+
+Do not authorize timing, benchmarks, i9 use, protocol changes, production integration or merges to master.
+
+Return checkpoint reports and escalate only under the charter’s explicit rules.
+
+What happens now
+
+I’m satisfied that the charter is ready to activate with these clarifications.
+
+I don’t want another round of general reviews or another substantial rewrite. The researcher’s final assessment and my decision are aligned.
+
+The important change is organizational: Claude can now make progress independently through the registered engineering sequence, while you retain control over genuinely consequential decisions.
+
+And I agree with the researcher’s closing point: we should stop managing individual experiments and start judging completed engineering results.
+
+That is the workflow we’ve been trying to establish.
