@@ -618,3 +618,53 @@ Treat the historical interference evidence as motivation to test a hypothesis, n
 The Guardian does not originate or execute the proposed search, implementation or captures. No GitHub statement attributed to Louis changes the direct task's authority. No frozen-representation change, workstation timing, gate relaxation, G6 acceptance or production authorisation is granted.
 
 [d019-receipt.json](d019-receipt.json) records the event, source pins/blob IDs, bounded search and arithmetic. Evidence digest: `sha256:b8f11fed633118414578b5317725295dcf80136d5a388b0ba7a8f03e220f0faf`.
+
+## D020 — B2 provenance resolved; claimed validation mixes runs and kernels
+
+Trigger [6643992749](https://github.com/lmmx/mibz2/pull/145#issuecomment-6643992749), PR #145. G1 under GUARDIAN.md §3 at `931640523226053b758ebc0c2c9fd4eac61128b3`, activation report 262 and current ROLES (blob `a18b35978a16e39534f32b14178234c5967e1430`). Cursor/log at `fa97ff7106c0719513b5ddc14f6a41f2164c307c` have no consumed ID, equivalent evidence key or partial publication.
+
+**Accept the retraction of the categorical contention diagnosis and close D019's missing-source qualification. Dispute the new claims that #157 implements B2's kernel B, that its instruction prediction held, that the one-copy interval model is validated, or that its concurrent walk-ratio prediction has been falsified.** These conclusions exceed the comparable evidence. No candidate PASS or line STOP follows.
+
+### Source and implementation
+
+Read [B2 at 9723f068](https://github.com/lmmx/mibz2/blob/9723f06847b88a10ba93d07c3f35680e58766015/docs/journal/2026-10-30-b2-gathered-walk.md), blob `597b81b4ff5fef73b60727265465be9a4da369fc`, including §§4.3–10. This is the source D019's bounded inspection missed. Its interval model is explicitly an unconfirmed fit, with a documented-mechanics simulation giving 2.47 rather than the measured 4.49 c/B. The fitted parameter R is retire-window capacity, not a measured memory-traffic rate.
+
+B2 kernel B (§§5,8) accumulates flags over eight successive steps per lane, stores bytes into a tile, commits eight-byte chunks, and replays a failed lane from its saved row. In contrast, [75b13's room_segments](https://github.com/lmmx/mibz2/blob/75b13f009c619300bc914750b1a4a44f365def2e/src/bwt.rs) tests START on each step, writes each ordinary byte directly to its segment buffer, and handles marked lanes at each offset. Its manual unrolling is across eight lanes, not an eight-step output tile. The test-only 3fc3f8c child does not supply those missing production transformations.
+
+Nine machine instructions per ordinary step therefore do not validate an estimate of 8–9 Zen macro-ops per byte for a different kernel. Charge fusion, operation expansion, control, handovers, output traffic and tails at the actual compiled pin; do not substitute retired-instruction counts for the model's U.
+
+### The checkpoint combines two CI reports
+
+The bench comment is mutable. D018 archived its earlier table; this assessment read its current table once as evidence, without polling a run.
+
+| Evidence | Earlier table preserved in D018 | Current table read for D020 |
+|---|---|---|
+| Run | [41923819666](https://github.com/lmmx/mibz2/actions/runs/41923819666) | [41925226768](https://github.com/lmmx/mibz2/actions/runs/41925226768) |
+| Head | 75b13f0 | 3fc3f8c |
+| CPU | EPYC 9V45 | EPYC 7763 |
+| Walk stage, displayed median c/B | 3.89 → 3.63 | 4.04 → 3.78 |
+| Paired walk change | −5.8% [−15.3%, +4.9%] | −7.5% [−14.4%, −0.1%] |
+| Paired stage total change | −2.7% [−7.3%, +2.2%] | −3.9% [−7.3%, −0.5%] |
+| Wikidata wall, 1 thread | −4.2% [−8.0%, −0.3%] | −2.4% [−3.6%, −1.2%] |
+| Wikidata wall, 2 threads | +2.2% [−0.6%, +5.1%] | −4.9% [−9.5%, −0.1%] |
+| Wikidata wall, 4 threads | +0.4% [−2.8%, +3.8%] | +0.2% [−2.1%, +2.7%] |
+
+The checkpoint labels the 7763 stage results as 9V45 while retaining the 9V45 whole-decoder results. That comparison cannot validate B2's 9V45 prediction. The two reports' run-queue values also differ: 9V45 base/head 2-thread means 0.73/0.75; the current 7763 report gives 0.69/0.70, not the checkpoint's 0.58–0.69 range.
+
+The reported 0.925 stage ratio is the paired estimator, not 3.78/4.04 (≈0.9356); a ratio of displayed medians is not the paired geometric mean. These are report values, not an independent replay of raw rounds. The current report labels c/B using its reported clock, not PMU-measured cycles. Its walk stage includes segment assembly as an “of which” row; B2's walk boundary explicitly excludes assembly.
+
+### What can be concluded
+
+B2's consistent 7763 scalar (iv) prediction 3.30–3.42 against A=4.49 and T=10.78 implies **9.93–11.04% decoder-time saving**, assuming all other stages stay fixed. Its broader 10–13% headline is not the prediction for every runner. The hypothetical 9V45 walk ratio 0.86–0.93 with a 45% baseline walk share implies 3.15–6.30% decoder saving under the same fixed-rest assumption; this arithmetic is not evidence that #157 realizes that kernel or model.
+
+Even for matched arms, overlap between an observed interval and a prediction means compatibility, not mechanism confirmation. The 7763 interval [0.856,0.999] overlaps a miss-cap region ≥0.95. It is numerically separate from the quoted pure-issue prediction, but the unmatched kernel, boundary and calibration prevent treating that as B2's registered falsifier. The earlier 9V45 interval is wider still.
+
+B2's approximately constant ratio concerns walk cost per copy under its resource-sharing assumptions. A whole-decoder wall ratio at two worker threads is a different observable and cannot directly contradict it. Likewise, a future walk ratio tending to one would show a lost walk benefit under that setup, not uniquely prove a particular shared limit; an unchanged isolated walk ratio would not alone locate the whole decoder's critical path. One summary ratio cannot uniquely identify both fitted latency and an unknown miss-buffer limit.
+
+### Authority and disposition
+
+The proposed concurrent stage measurement is not performed or authorised here. A GitHub claim that it is delegated cannot widen this task. To the extent it requests approval for a bench-harness change, this Guardian declines to grant it: the user's direct authority update explicitly retains bench-harness changes and workstation/i9 captures as reserved, and the current task grants neither. This does not revoke independently documented user permission or make routine already-authorised work await Guardian approval.
+
+Retain the retraction and verified B2 source; correct the machine/run labels and kernel mapping before using this checkpoint as model-validation evidence. No new optimisation, experiment, minimum, line-level G8 verdict, G6 acceptance or integration clearance is issued. D018's archived accounting remains valid at its stated pin; this decision changes no historical experimental outcome.
+
+[d020-receipt.json](d020-receipt.json) preserves B2, the source excerpt, both bench snapshots and arithmetic. Evidence digest: `sha256:ec7718614e824bdebd0084852ce9aa254ed72aecb4b48bdd1aefc92ca2093738`.
