@@ -1,0 +1,5 @@
+665c665,666
+<         let s1 = unsafe { ll.get_unchecked(i..i + n1) };
+---
+>         let e1 = if i + 16 == ll.len() { ll.len() + 1 } else { i + n1 }; // MUTANT MU2
+>         let s1 = unsafe { ll.get_unchecked(i..e1) }; // MUTANT MU2: U1's end past ll on a final full tile

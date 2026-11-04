@@ -1,0 +1,24 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling libm v0.2.16
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling thiserror v2.0.21
+   Compiling cc v1.10.0
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling syn v3.0.9
+   Compiling fearless_simd v1.2.0
+   Compiling bytemuck v1.25.2
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling mibz2 v0.2.1 (wt-c30scan)
+   Compiling bzip2 v0.4.4
+   Compiling thiserror-impl v2.0.21
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 9.09s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner c2s-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2s-synthetic --miri tiny`
+ctor2s-synthetic: scanner class tiny: 18 cases exact
+ctor2s-synthetic --miri tiny: 18 cases, 32 array comparisons, 48 walk outputs, 32 restorations: every check exact; fresh 12, lookahead 2, held 0, no-full-tile runs 5, nonuniform 7, second segments 2, tails 12
+exit 0

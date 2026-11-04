@@ -1,0 +1,5 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2su-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2su-synthetic --miri endrun`
+ctor2su-synthetic: scanner class endrun: 2 cases exact
+ctor2su-synthetic --miri endrun: 2 cases, 4 array comparisons, 6 walk outputs, 4 restorations: every check exact; fresh 4, lookahead 6, held 0, no-full-tile runs 2, nonuniform 2, second segments 0, tails 1
+class endrun exit 0 seconds 3

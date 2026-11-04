@@ -1,0 +1,5 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner c2s-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2s-synthetic --miri malformed`
+ctor2s-synthetic: scanner class malformed: 4 cases exact
+ctor2s-synthetic --miri malformed: 4 cases, 0 array comparisons, 0 walk outputs, 0 restorations: every check exact; fresh 0, lookahead 0, held 0, no-full-tile runs 0, nonuniform 0, second segments 0, tails 0
+exit 0

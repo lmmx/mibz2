@@ -1,0 +1,31 @@
+==18398== Callgrind, a call-graph generating cache profiler
+==18398== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==18398== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==18398== Command: target/rust-1.97.0/release/examples/c30walk ctor2su-count --only v2 ../walk-freeze/corpora/wikidata-20261026.bz2
+==18398== 
+--18398-- warning: L3 cache found, using its data for the LL simulation.
+--18398-- warning: specified LL cache: line_size 64  assoc 20  total_size 272,629,760
+--18398-- warning: simulated LL cache: line_size 64  assoc 33  total_size 276,824,064
+==18398== For interactive control, run 'callgrind_control -h'.
+==18398== brk segment overflow in thread #1: can't grow to 0x4903000
+==18398== (see section Limitations in user manual)
+==18398== NOTE: further instances of this message will not be shown
+==18398== 
+==18398== Events    : Ir Dr Dw I1mr D1mr D1mw ILmr DLmr DLmw
+==18398== Collected : 12330316333 1908005313 1506379198 43516 227662470 32013061 2551 2901116 6664013
+==18398== 
+==18398== I   refs:      12,330,316,333
+==18398== I1  misses:            43,516
+==18398== LLi misses:             2,551
+==18398== I1  miss rate:           0.00%
+==18398== LLi miss rate:           0.00%
+==18398== 
+==18398== D   refs:       3,414,384,511  (1,908,005,313 rd + 1,506,379,198 wr)
+==18398== D1  misses:       259,675,531  (  227,662,470 rd +    32,013,061 wr)
+==18398== LLd misses:         9,565,129  (    2,901,116 rd +     6,664,013 wr)
+==18398== D1  miss rate:            7.6% (         11.9%   +           2.1%  )
+==18398== LLd miss rate:            0.3% (          0.2%   +           0.4%  )
+==18398== 
+==18398== LL refs:          259,719,047  (  227,705,986 rd +    32,013,061 wr)
+==18398== LL misses:          9,567,680  (    2,903,667 rd +     6,664,013 wr)
+==18398== LL miss rate:             0.1% (          0.0%   +           0.4%  )

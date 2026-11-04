@@ -1,0 +1,23 @@
+ctor2su-synthetic: small blocks, n 0..=130: 260 cases exact
+ctor2su-synthetic: bucket boundary at every offset: 180 cases exact
+ctor2su-synthetic: bulk-to-partial transitions (phase x slot x run length): 24 cases exact
+ctor2su-synthetic: epoch boundaries: 3 cases exact
+ctor2su-synthetic: absent characters across repeated snapshots: 6 cases exact
+ctor2su-synthetic: ordinary/wide span boundaries from full labels: 2 cases exact
+ctor2su-synthetic: pending portions finished at the end of input: 3 cases exact
+ctor2su-synthetic: scanner class tiny: 18 cases exact
+ctor2su-synthetic: scanner class tails: 45 cases exact
+ctor2su-synthetic: scanner class align: 14 cases exact
+ctor2su-synthetic: scanner class phase: 15 cases exact
+ctor2su-synthetic: scanner class held: 5 cases exact
+ctor2su-synthetic: scanner class endrun: 2 cases exact
+ctor2su-synthetic: scanner class epoch: 2 cases exact
+ctor2su-synthetic: scanner class malformed: 4 cases exact
+ctor2su-synthetic: scanner class controls: 1 cases exact
+ctor2su-synthetic: repeated construction with changing sizes: 16 cases exact
+ctor2su-synthetic: malformed counts: 29 rejected, 1 accepted (equal to ll's own after the change)
+ctor2su-synthetic: malformed counts and sizes: 30 cases exact
+ctor2su-synthetic coverage: finished fast 31446, ordinary 32, wide 2, crossing 989, forced 1241; multi-epoch portions 35; epoch searches 59; runs split at an epoch 5; portion (first slot, length) shapes 166; max ordinary span 65533, min wide span 65534; epochs 604
+ctor2su-synthetic: 630 cases, 1172 array comparisons, 1758 walk outputs, 1172 restorations: every check exact (quick)
+ctor2su-synthetic counters: {"blocks":586,"rows":1137326,"rows_bulk":67800,"rows_bulk_raw":85740,"rows_fragment":29916,"rows_scalar":953870,"runs":1328,"run_rows":183456,"complete_groups":2260,"fin_fast":31446,"fin_ordinary":32,"fin_wide":2,"fin_crossing":989,"fin_forced":1241,"norm_full":31012,"norm_partial":466,"norm_fields":934221,"raw_fields_read":49565,"raw_entries_written":49565,"fields_restored":49505,"epoch_searches":59,"epochs":604,"runs_split_at_epoch":5,"raw_groups":4558,"raw_moved":3362,"raw_cycles":8,"multi_epoch_portions":35,"max_ordinary_span":65533,"min_wide_span":65534,"fresh_pairs":59595,"lookahead_pairs":11157,"held_reuses":1019,"runs_no_full_tile":309,"tiles_nonuniform":59286,"tiles_second_segment":27616,"tails":562,"tail_rows":5294,"unchecked_tiles":59286}
+exit 0

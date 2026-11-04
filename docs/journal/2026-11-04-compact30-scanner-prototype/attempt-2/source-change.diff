@@ -1,0 +1,6 @@
+944c944,946
+<                     rest = after;
+---
+>                     // re-derived after the tile rather than kept live across it (attempt 2:
+>                     // in attempt 1, `after` held a register through the tile's row loops)
+>                     rest = &rest[16..];

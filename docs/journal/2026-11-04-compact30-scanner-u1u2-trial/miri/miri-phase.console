@@ -1,0 +1,5 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2su-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2su-synthetic --miri phase`
+ctor2su-synthetic: scanner class phase: 15 cases exact
+ctor2su-synthetic --miri phase: 15 cases, 30 array comparisons, 45 walk outputs, 30 restorations: every check exact; fresh 15, lookahead 105, held 14, no-full-tile runs 0, nonuniform 15, second segments 7, tails 15
+class phase exit 0 seconds 18

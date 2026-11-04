@@ -1,0 +1,4 @@
+666c666
+<         let s2 = unsafe { ll.get_unchecked(i + n1..i + 16) };
+---
+>         let s2 = unsafe { ll.get_unchecked(i + n1..i + 17) }; // MUTANT MU3: U2 one past the tile

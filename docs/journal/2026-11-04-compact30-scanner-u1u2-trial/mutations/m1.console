@@ -1,0 +1,22 @@
+
+thread 'main' (18210) panicked at examples/c30walk/ctor2su.rs:1196:5:
+small n 32 sigma 3: the counted build rejected valid counts
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:689:5
+   1: core::panicking::panic_fmt
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:80:14
+   2: check_block
+             at ./examples/c30walk/ctor2su.rs:1196:5
+   3: case
+             at ./examples/c30walk/ctor2su.rs:1473:17
+   4: synthetic
+             at ./examples/c30walk/ctor2su.rs:1802:19
+   5: main
+             at ./examples/c30walk/ctor2su.rs:2289:24
+   6: main
+             at ./examples/c30walk.rs:1915:16
+   7: call_once<fn(), ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs:250:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+exit 101

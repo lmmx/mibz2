@@ -1,0 +1,11 @@
+0x3da51    230 calls  Ir    865,030 (   3761.0/call)  Dr        460  Dw    861,120  __memset_avx2_unaligned_erms
+0x3dbd2    434 calls  Ir  4,440,688 (  10232.0/call)  Dr  4,429,404  Dw  4,427,668  __memcpy_avx_unaligned_erms
+0x3dfc1  3,654 calls  Ir    285,012 (     78.0/call)  Dr      7,308  Dw    131,544  __memset_avx2_unaligned_erms
+0x3e047  3,654 calls  Ir    454,910 (    124.5/call)  Dr    131,544  Dw    120,582  __memcpy_avx_unaligned_erms
+0x3ee1c    233 calls  Ir      2,817 (     12.1/call)  Dr        233  Dw        469  __memset_avx2_unaligned_erms
+0x3eebe      1 calls  Ir         85 (     85.0/call)  Dr         25  Dw         14  free
+0x3eeed      2 calls  Ir     12,656 (   6328.0/call)  Dr      2,513  Dw      1,341  <alloc::raw_vec::RawVecInner>::grow_exact
+0x3ef1b      7 calls  Ir      1,486 (    212.3/call)  Dr        461  Dw        238  free
+0x3ef48      8 calls  Ir      5,636 (    704.5/call)  Dr      1,133  Dw        859  <alloc::raw_vec::RawVecInner>::grow_exact
+0x3f023      1 calls  Ir        296 (    296.0/call)  Dr         67  Dw         45  <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>
+0x3f049      2 calls  Ir      1,035 (    517.5/call)  Dr        208  Dw        144  <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>
