@@ -4032,3 +4032,92 @@ Do not stop after finding one error or confirming one improvement. Complete the 
 Your autonomy extends to extensive evidence retrieval, static analysis, independent mathematical verification and scratch-based research. It does not extend to repository modifications, constructor compilation, new benchmarks, i9 measurements or changing the registered experiment.
 
 The Guardian will make the implementation decision after reviewing your final report.
+
+## Report 235: the adversarial audit's summary, CONDITIONAL ACCEPT
+
+The fresh Ultra session's answer to report 234, after 30 minutes' work. **Verdict: CONDITIONAL
+ACCEPT of the research direction.**
+- Report 227's conditional budget reproduces exactly: 66,041,254 + 87,622,080 + 71,589,766 =
+  225,253,100 instructions per corpus pass. These remain joint compilation targets; no
+  achieved saving can be established from the existing artifacts.
+- Neither compiler-achieved savings nor the 10–15% completion headroom is established.
+
+**Its material corrections:**
+- **A mandatory dispatch repair.** If the slow fallback keeps the test `d.raw == NO_RAW`, a
+  tagged ordinary one-row block is misread as RAW index 2³¹. Testing the high bit repairs this,
+  without inherently adding an instruction.
+- **Opening traffic.** Substituting a tag loaded from memory adds 1,754,362 explicit reads,
+  even where it adds no instructions.
+- **Split descriptor arrays** can add memory writes, and need the byte index kept or reloaded
+  around `refill`. An unchanged footprint isn't an unchanged cost.
+- **Tighter bounds:**
+  - eligible full fast finishes number 1,647,374–1,647,407;
+  - nonempty scalar refills number at least 1,122,673.
+- **The audited baseline subtotal** becomes 1,130,193,036–1,261,424,207 instructions. At least
+  25,106,954 more instructions of work were identified as omitted. The whole builder's upper
+  bound remains unknown.
+
+**Its economic finding** is a solved requirement, not a prediction. To supply the 10.28476%
+completion reduction alone (the proportional sensitivity of the archived upper bound), the
+fast-finish change would need about 8.143 ns of effective saving per eligible finish, and the
+scalar change about 0.352 ns per scalar row. Report 224's 6.64 ns was for the point-estimate
+target of about 8.5%, so the two are consistent.
+
+**Its recommendation:** the repaired epoch-tagged finaliser as the first bounded
+correctness-and-compilation candidate, with the scanner cleanup as a strong alternative whose
+proof burden is simpler. The v2 capture remains INVALID.
+
+**Files not yet received.** The full report (`report.html` and `report.txt`) and the
+reproducibility package (`guardian-audit-reproducibility.zip`: nine scripts, budgets and
+models) are in the Ultra session's own workspace. They weren't relayed, so only this summary
+is archived. The session reports that all nine scripts passed, and that it verified the
+archive hash, the 69 archived file hashes and 12 Git blobs.
+
+Kept as relayed; the words are unchanged.
+
+**Verdict: CONDITIONAL ACCEPT of the research direction.** The full portfolio survives mathematical scrutiny, but neither compiler-achieved savings nor 10–15% completion headroom is established.
+
+The original conservative arithmetic survives:
+
+| Transformation | Ultra budget | Independently reconstructed conditional target |
+|---|---:|---:|
+| Epoch-tagged finalization | 66.041M | 66,041,254 |
+| Scanner/tile cleanup | 87.622M | 87,622,080 |
+| Hot descriptor arrays | 71.590M | 71,589,766 |
+| **Combined** | **225.253M** | **225,253,100** |
+
+These remain **joint compilation targets**. The ≤40-instruction finalizer, ≤10-instruction scalar path, address folding and overhead allowances must hold together in the resulting caller/callee assembly. No positive achieved instruction-saving lower bound can be established from the existing artifacts.
+
+The material corrections and qualifications are:
+
+- **Mandatory epoch-dispatch repair:** retaining `d.raw == NO_RAW` in the slow fallback misclassifies a tagged one-row ordinary block as RAW index `2³¹`. The high-bit discriminator repairs this without inherently adding an instruction.
+- **Opening traffic:** the proposed memory-loaded tag substitution adds **1,754,362 explicit reads**, even when instruction-neutral.
+- **Descriptor integration costs:** split arrays can increase memory-write operations and require character-index preservation or reloads around refill. An unchanged memory footprint does not establish unchanged cost.
+- **Tighter structural bounds:** eligible full-fast finishes are **1,647,374–1,647,407**, and nonempty scalar refills number at least **1,122,673**.
+- **Revised baseline:** Ultra’s subtotal of **1,127,166,036–1,261,424,936** becomes **1,130,193,036–1,261,424,207**. Independently identified omitted work contributes at least **25,106,954** more instructions. The whole-constructor upper bound remains unknown.
+- **Secondary opportunities:** all were audited. Their gross ceilings or eligible-event counts remain conditional; none earns an additional fixed net credit.
+
+The release-mode proofs support the repaired transformations: bounded source reads, monotone epochs and ranks, immediate positive append after opening, initialized full-group fields, stable allocation provenance, and delayed publication. Debug assertions and successful finite checks were not used as substitutes for those invariants.
+
+The economic test remains unresolved. I reproduced the archived upper bounds and their proportional sensitivities:
+
+| Measure | Archived upper bound | Reduction sensitivity |
+|---|---:|---:|
+| CPU | 1.0951736131 | **2.55974%** |
+| Completion | 1.1369306040 | **10.28476%** |
+
+The optimizations target relevant workers: low-bulk large blocks disproportionately determine completion. However, the evidence cannot determine how much eliminated work has nonoverlapped latency.
+
+Conditional models illustrate the requirement without predicting performance. Acting alone, the fast-finalizer change would need approximately **8.143 ns of effective saving per eligible finish** to supply the 10.28476% completion reduction; the scalar mechanism would need **0.351924 ns per scalar row**. These are solved requirements, not measured costs or instruction-to-cycle conversions.
+
+I recommend the **repaired epoch-tagged finalizer** as the first bounded correctness-and-compilation candidate for the Guardian’s consideration. Scanner cleanup is a strong alternative with a simpler proof burden. The existing capture remains **INVALID**, including round 5 and every registered gate.
+
+The complete report and reproducibility package are preserved in the shared workspace:
+
+- Report: `/workspace/work/guardian-audit/report.html`
+- Plain-text report: `/workspace/work/guardian-audit/report.txt`
+- Evidence, scripts, budgets and models: `/workspace/work/guardian-audit-reproducibility.zip`
+
+All nine reconstruction scripts passed. The supplied archive hash, 69 archived file hashes and 12 retrieved Git blobs were verified. No repository modifications, constructor compilation, benchmarks or new measurements occurred.
+
+The managed environment prevented creation of the designated download directory, so these files are preserved in the shared workspace without attachment links.
