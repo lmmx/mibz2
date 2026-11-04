@@ -835,11 +835,12 @@ impl<const COUNT: bool> W<'_, COUNT> {
         }
         let u = self.y as u16;
         let n1 = 16usize.min(ROWS.wrapping_sub(self.p));
-        if COUNT {
-            self.st.tile_n1[n1] += 1;
-        }
         // SAFETY (U2): i + n1 ≤ i + 16 ≤ ll.len() by the contract above
         let s2 = unsafe { ll.get_unchecked(i + n1..i + 16) };
+        if COUNT {
+            // after U2, so that a mutant n1 > 16 (MU1) is reported at U2, not at this index
+            self.st.tile_n1[n1] += 1;
+        }
         // C4, safe: the first segment as a do-while over the 16-byte window, t[k] with
         // k < n1 ≤ 16 (U1 is not used). p < 30, so n1 ≥ 1, matters for correctness only:
         // were n1 0, this would append one wrong row, reading in bounds.
