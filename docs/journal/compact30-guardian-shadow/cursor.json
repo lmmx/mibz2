@@ -332,5 +332,16 @@
       "commit": "028d7206e79fae8081cef4ea13357b4546270530",
       "comment": 6635476486
     }
-  ]
+  ],
+  "pending_publication": {
+    "decision": "D011",
+    "incoming_comment": 6635419092,
+    "pr": 145,
+    "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa",
+    "status": "decision committed; reconcile linked review before retry",
+    "pins": [
+      "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "7620c0c667018772a0ba3be28eb62263b55037f8"
+    ]
+  }
 }

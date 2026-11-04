@@ -298,3 +298,43 @@ This is a rule interpretation and arithmetic replay conditional on the stated de
 G1: require correction of the canonical ledger's floor interpretation. The combined ledger must independently satisfy both §6.3 conditions: its conservative lower end >= F, and strictly greater than the best single **qualified** component's isolated lower bound on B2. Its measured net must be recounted from the combined code, not summed from isolated results.
 
 The checkpoint's proposed new scanner bound 84,060,421 and descriptor counter replays are not certified in this interpretation decision. The subsequently supplied counter-remedy checkpoint is separate evidence for separate assessment. Existing safety, counter coverage and §6.2 closure requirements remain; no new component qualification, combined composition, integration, timing, prototype, unsafe operation or spending is authorized. G6 and GUARDIAN §4 remain with the user.
+
+## D011 — counted-path remedy and gate 3 reassessment (G1; ACTIVE, stage A)
+
+**G1: concur with gate 3 PASS for both pinned isolated models.** The submitted mapped-path counter remedy addresses the specific S62-F01 / Optimizer F3 counter omissions. This is assessment of a fix and its new evidence, not G6 acceptance of a rejected rebuttal. No combined build or integration is authorized, and §6.2's remaining review and resolution obligations remain.
+
+Trigger: [6635419092](https://github.com/lmmx/mibz2/pull/145#issuecomment-6635419092). Scanner pin `ba261eff245f45e1c07fdfb05fa2fe6ff1ced835`; descriptor pin `7620c0c667018772a0ba3be28eb62263b55037f8`. Fresh cursor/log at `c597367650b017605c4bd8b2916fad941d0ea7de` contain no consumed ID, assessed evidence key or partial publication for this checkpoint. The earlier D008 pins are preserved, not rewritten.
+
+### Evidence read and replay
+
+- GUARDIAN.md, ACTIVE charter §§5–7 at `931640523226053b758ebc0c2c9fd4eac61128b3`; ROLES.md blob `8ea1583944e13ecdcb48dc1cb23f31c934c700b5`; report 262 at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`.
+- The pinned scanner journal §11 and descriptor journal §10, both f01 evidence folders, counted records, identity and control reports, source diffs from the previously reviewed pins, and caller listings.
+- All **eight raw compressed profiles** (B2/candidate, two runs each) were replayed. Cached retrievals were checked by SHA-256 and recomputed Git blob hashes against the new pins' trees. The reviewed archive-only `f01_replay.py`, blob `759879843fb9cd80d380590aaaa7cabdb428852d`, reproduces each committed `ledger.json` exactly, not just its final total.
+- Independently evaluated **32 scanner and 38 descriptor counter expressions**, covering **31 and 34 changed classes**, respectively. Every expression matches the raw-profile frequency and every class multiplication reproduces its delta. No mapped counter remains absent or mismatched. An altered bitmap counter is detected even though it shares the tails' frequency.
+- Both sets of 44 corpus records preserve every pre-existing field; the new field counts are 20 and 27. The new release-suite consoles report exit 0. Existing safety/Miri dispositions are retained; no fresh Rust, Miri, benchmark or timing execution occurred.
+- Source diff inspection finds the new constructor accounting guarded by COUNT, plus statistics/harness additions. The descriptor sequential mode preserves the profiled arena history. Its six differing counters versus the ordinary harness are exactly bitmap_in_place, bitmap_reserves, rec_grows, rec_grow_frees, raw_grows and snaps_reserves; the recorded output digest is `4efb1c13ae58340f`.
+
+### Gate 3 figures
+
+| Model on B2 | Conservative instructions removed | Minimum | Margin at lower end | If +868 caller instructions are charged |
+|---|---:|---:|---:|---:|
+| scanner U2 | **[84,060,421, 84,060,421]** | 60,000,000 | 24,060,421 | [84,059,553, 84,059,553] |
+| descriptors | **[57,830,163, 62,277,795]** | 40,000,000 | 17,830,163 | [57,829,295, 62,276,927] |
+
+Scanner's counter-supported own delta is −84,060,421; all 11 library sites match. Descriptor's own delta is −58,209,045. Charge all 378,882 added library instructions: **58,209,045 − 378,882 = 57,830,163**. The upper end adds only the removed memcpy's 4,447,632, giving 62,277,795. The 434 calls are counted, but per-byte rep-movsb credit remains excluded from the lower end. Thus the remaining width is explicit and not assigned zero.
+
+The caller listing's own deltas sum to +868 for each harness; call setup is matched and the extra string dispatch is outside the constructor closure. Both lower ends pass even with the full charge. This is instruction accounting on the archived primary corpus, not timing or economic benefit.
+
+Own-code writes still rise: scanner **+3,391,432**; descriptors **+5,004,156**, including refill **+5,197,912**. They remain findings, not an instruction-gate veto.
+
+### Identity and coverage qualifications
+
+**Use “normalized uncounted instruction closure unchanged,” not “byte-identical.”** The identity tool masks addresses and RIP displacements. The predecessor clean-rebuild hash reproduction and the instrumented binary hash are separate statements; the two whole-binary hashes differ. Independently normalizing the six archived build/refill/finish listings reproduces identity: scanner 1,382/67/379 instructions, descriptors 1,450/74/379. The full 52-function closure and changed build-true control are supported by the archived identity reports; this run did not rebuild binaries or independently regenerate the entire closure.
+
+Frequency histograms enumerate nonzero class deltas, not a universal proof of changed-site coverage. Equal-frequency additions/removals can cancel before enumeration. The gate assessment rests on the pinned source/listing mapping as well as the counter equalities; equality alone cannot establish coverage. The coincident classes are explicitly split: scanner 230 covers tails and bitmap fill; descriptor 230, 2 and 1 cover their separate tail/bitmap/allocation predicates. No missing numerical cost was established by this reassessment. Preserve this limitation and retain changed-site/zero-net groups when strengthening future replay tools.
+
+### What follows
+
+The specific mapped counter omission no longer withholds these gate-3 results at these pins. This does not itself certify completion of the independently requested coverage review, close every §6.2 finding, alter gate 1/2, qualify v3, confirm a combined composition, or permit integration. Apply D010's demonstrated-overlap floor and both §6.3 tests to any later authorized combined build; do not add these isolated savings. G6 and all GUARDIAN §4 decisions remain with the user.
+
+[d011-receipt.json](d011-receipt.json) records pins, source blobs, replay method, checks and limits; SHA-256 `38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa`. Publish one linked review for this event, preserve incoming/outgoing identifiers, and stop.
