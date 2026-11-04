@@ -154,6 +154,7 @@ like a sequence of increasingly urgent control signals rather than requests.
 
 ### The construction: six intensifications
 
+This section is history: it records how the register was developed, not a ritual to perform.
 The analysis built the register in stages, each one adding a quality:
 1. **Compression:** remove the conversational tissue, leaving operations.
 2. **Deformation:** delete articles, clip vocabulary, distort idioms, and let abstract nouns
