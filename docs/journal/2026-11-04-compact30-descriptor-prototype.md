@@ -145,3 +145,50 @@ Each must fail the quick suite. Not catching one is a §8.2 escalation.
 
 **Overlap (§5.5):** the listing-diff intersection with prototype 1 (`7f74e9f`, PR #146) is
 reported.
+
+### 0.7 Addendum (2026-11-04, after the reviewer's brief, PR #148 at `ff65301b`, §1; before Miri and before any gate-3 figure is used)
+
+Information only, with no change of authority. The registered targets, minimum, Miri classes,
+mutation checks and rejection conditions in §0.1–§0.6 are unchanged. Three points are made
+explicit:
+
+1. **The representation is a bijection.**
+   - v2's `Desc` is stored as `wr[c]`, `en[c]` and `cold[c] = {w0, r0, lim, g, raw}`. Each
+     field is held exactly once, so no pointer is duplicated as authoritative.
+   - v2's `Desc` value is assembled from them only on reading (`W::desc`), never stored.
+   - c < 256 comes from the byte input, or from `0..256` loops.
+2. **The callee and allocator deltas are bounded without sampling.**
+   - The cross-check is split into two parts:
+     - (a) `build::<false>`'s own code plus its constructor callees (`refill`, `finish`, and
+       v1's `canonicalise`, identical code). These are deterministic for a given input, and
+       counted exactly.
+     - (b) its library callees (allocation, `memset`, `memcpy`).
+   - (b) is bounded by construction, under this argument:
+     - both builders make the same library calls, with the same arguments, in the same
+       order. The allocation and growth code (`reserve_exact`, `resize`, `reserve`, `push`)
+       is v2's text, and is driven by the same block sizes and the same RAW pushes;
+     - each builder is counted alone, in its own process, after the same decode of the same
+       corpus, so the heap's history before each call is the same.
+   - Then (b)'s instruction counts are equal by construction, and their delta is 0.
+   - That equality is **checked**, call by call, as each builder's library-callee totals. If
+     they aren't equal, (b) is listed as **unresolved**, and no two-sample interval is
+     cited.
+3. **The reviewer's adversaries,** and where each is covered (release suites; Miri as
+   registered):
+
+   | adversary | covered by |
+   |---|---|
+   | every character, 255 included | the `allbytes` class; σ = 256 random blocks in v2's synthetic suite |
+   | zero buckets | every class with σ < 256 |
+   | crossing groups | the `crossing` class; v2's bucket-boundary class |
+   | preset records | crossing; forced at permille 50 and 1000 |
+   | wide records | v2's span and far-wide classes |
+   | partial records | the `pending` class; v2's pending class |
+   | epochs | the `epoch` class; v2's epoch class, up to k = 15 |
+   | maximum size | the 983,010-row blocks in v2's synthetic suite |
+   | poisoned reuse | v2's repeated class, poisoned round, and the poisoned arenas of every release case |
+   | malformed counts | v2's class (4,000 perturbations), and the `malformed` class |
+   | an invariant-targeted mutation | M1 (`en` inconsistent with its portion) |
+
+   Maximum size and wide records are covered in release builds only. Miri runs its nine
+   registered classes.
