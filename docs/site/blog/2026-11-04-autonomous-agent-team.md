@@ -126,7 +126,7 @@ both readers should see therefore has to name them both.
 <figcaption>Each arrow is a pull-request comment, and each comment starts the next agent's run. Nobody polls, and nothing goes through me.</figcaption>
 </figure>
 
-## 4. Receipts
+## 4. A receipt for every message
 
 Before doing any work, a run checks its cursor: a file on its branch listing the comments it has
 already handled. Then it loads what it needs, does the work, posts its result, and adds the comment
