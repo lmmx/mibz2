@@ -39,7 +39,7 @@
     "description": "Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, with nobody relaying it.",
     "foot": "lmmx.github.io/mibz2 · 4 November 2026",
     "section": " · Research blog",
-    "title": "Cutting instructions from bzip2 decoding with agents that wake each other"
+    "title": "Cutting instructions from bzip2 decoding with an agent team that runs itself"
   },
   "assets/social/blog-2026-11-04-compact30-constructor.png": {
     "description": "Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly.",
