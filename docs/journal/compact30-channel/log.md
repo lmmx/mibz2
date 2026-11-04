@@ -213,3 +213,15 @@ Verbatim:
 - **Report 273.** The user delegated the whole inverse BWT, the walker included, plus per-stage
   diagnostic instrumentation and technical direction. Measurement PRs are allowed on a
   registered hypothesis. Charter @ 45e6cfeb; CAMPAIGN.md updated to match.
+
+## The production walk
+
+- **The finding:** master's `room_segments` loop compiles rolled, 16 instructions per step,
+  7 of them work.
+- **The fix:** step every lane, then hand the marked lanes over; unroll by hand, eight lanes a
+  turn.
+- **Result:** `decode_block` −18.4% to −19.2% on full blocks, with output identical.
+  Integration PR #157 @ 8465207a.
+- **CHECKPOINT** to all three roles.
+- **CAMPAIGN.md:** MODE is to be read after compaction too, and renewed inside the work, not by
+  ritual (Louis).
