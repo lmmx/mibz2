@@ -212,6 +212,19 @@
       "status": "D013 attribution HOLD lifted; four-profile full ledger replay; no economic or fresh safety certification",
       "publication": "decision in enclosing commit; GitHub reply suppressed by direct batch instruction",
       "commit": "a0473a6b6d9e4b69c459e560136d4841aa533b5c"
+    },
+    {
+      "id": "D015",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 145,
+      "sha": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+      "evidence_digest": "sha256:d72803342531ebd595bd57dc2fd528f78a004b413933623fea2c2ddf87638f0d",
+      "incoming_comment": 6641512290,
+      "comment": null,
+      "status": "constructor gate scope retained; quoted production arithmetic corrected; whole-decoder benefit unestablished; no line STOP",
+      "publication": "decision in enclosing commit; GitHub reply suppressed by direct batch instruction"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -258,7 +271,8 @@
     6635419092,
     6637300905,
     6639998280,
-    6640153383
+    6640153383,
+    6641512290
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -340,8 +354,8 @@
     "trigger": "new event-supplied PR comment containing the exact TYPE: CHECKPOINT marker",
     "repository": "lmmx/mibz2",
     "scope": "only triggering event comments; no backlog",
-    "last_completed_incoming_comment": 6640153383,
-    "last_decision": "D014",
+    "last_completed_incoming_comment": 6641512290,
+    "last_decision": "D015",
     "last_outgoing_comment": null,
     "after_completion": "stop; await a future matching GitHub event",
     "polling": false,
@@ -349,7 +363,7 @@
     "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "a0473a6b6d9e4b69c459e560136d4841aa533b5c",
+    "last_decision_commit": "enclosing decision commit; explicit SHA recorded by following cursor receipt",
     "last_duplicate_incoming_comment": 6633116288,
     "source_app_reply": "omitted per this run's explicit no additional message/reply/notification instruction"
   },
@@ -453,6 +467,13 @@
       "decision": "D014",
       "comment": null,
       "commit": "a0473a6b6d9e4b69c459e560136d4841aa533b5c"
+    },
+    {
+      "pr": 145,
+      "sha": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+      "evidence_digest": "sha256:d72803342531ebd595bd57dc2fd528f78a004b413933623fea2c2ddf87638f0d",
+      "decision": "D015",
+      "comment": null
     }
   ]
 }

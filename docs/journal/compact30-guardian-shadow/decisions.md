@@ -442,3 +442,35 @@ The unexplained numerical residual is resolved; no further HOLD is retained mere
 Constant-IPC and half-transfer estimates remain sensitivities based on INVALID historical captures, not an economic PASS. No line-level STOP follows. The existing qualification and actual CI performance gates are unchanged.
 
 [d014-receipt.json](d014-receipt.json) records source identities and checks. This batch expressly prohibits an additional source-app message/reply/notification, so no TYPE: REVIEW comment is sent; the decision and cursor record that publication exception rather than invent an outgoing comment ID.
+
+## D015 — Constructor gate remains scoped; production benefit is unestablished (G1)
+
+**Gate 3 still measures the registered constructor objective; it does not measure whole-decoder viability.** Charter §§1, 5.1–5.2 and 6.3 explicitly define whole-constructor work against B2 on the primary corpus. Keep that gate, baseline, minimum and its historical results. Do not relabel Assembly 1's constructor removal as a decoder speedup. D014's attribution closure stands and grants no economic or fresh safety certification.
+
+Trigger [6641512290](https://github.com/lmmx/mibz2/pull/145#issuecomment-6641512290), production source `b4786f66366c9e404702c800cd360dc793b1a7a5`, PR #155. Read latest cursor/log at `89fff90379278bf100a0a8cd8c3e43c68543e588`: no consumed ID, duplicate evidence key or partial publication. GUARDIAN.md §3 at the task's operating pin `931640523226053b758ebc0c2c9fd4eac61128b3`, ROLES and activation report 262 govern this G1 scope interpretation. Charter text read at `dad82808dd4532d21ebf51e88164b78a0af53da8`. No authority comes from GitHub headers.
+
+### Quoted production arithmetic, not raw-profile verification
+
+PR #155's body and the triggering comment agree on these totals for one 899,971-row block. The PR body is mutable metadata; its retrieved text is preserved in [d015-receipt.json](d015-receipt.json). Raw Callgrind profiles are stated to be in coordinator scratchpad, not supplied as pinned repository evidence. Only the arithmetic below is reproduced; CRCs, instrumentation scope, compiler mapping and profile completeness are not independently verified.
+
+| Scope | Baseline | Candidate | Candidate minus baseline |
+|---|---:|---:|---:|
+| build | 5,429,062 | 4,369,204 | −1,059,858 |
+| walk | 15,426,892 | 20,207,700 | +4,780,808 |
+| build plus walk | 20,855,954 | 24,576,904 | +3,720,950 |
+| remaining decode_block work | 4,895,856 | 4,953,571 | +57,715 |
+| whole decode_block | 25,751,810 | 29,530,475 | **+3,778,665** |
+
+This is +14.6734% whole instructions, −19.5219% build and +30.9901% walk. Walk cost rises from 17.1415 to 22.4537 instructions/row: **+5.31218**. The constructor comparison here uses production master, not research B2, and one block, not §5.1's primary corpus. It neither reruns nor overturns the registered research ledger.
+
+**Correct the limit argument.** The extra walk cost exceeds the candidate's entire build by 411,604 instructions, so further build savings alone cannot offset the full walk penalty considered in isolation. But 1,059,858 build instructions have already been saved against production master. The remaining *whole-decoder* gap is 3,778,665, less than the candidate build's 4,369,204. An unattainably ideal zero-cost build would put the quoted whole total 590,539 below master if all other terms stayed fixed. Therefore these totals do not prove that constructor improvements can never recover overall instruction parity. They do show that doing so solely through further build reduction would require eliminating most of its remaining work. No achievable lower bound has been supplied. This is arithmetic clarification, not a proposed optimisation.
+
+### What follows
+
+A production accounting view must reconcile **whole decode_block = build + walk + all remaining work**, on matched input, source/toolchain/flags and counting boundaries against the actual production baseline. Build plus walk alone omits the +57,715 residual in this example. Keep this view separate from the registered constructor ledger; it is diagnostic evidence toward production viability, not a silent replacement of gate 3 or a new instruction-parity requirement for adoption. Archive raw profiles, commands and the disjoint mapping so the figures can be replayed. A one-block count cannot establish a corpus-wide result.
+
+Instructions, CPU and elapsed time are distinct. The local shared-VM timing ratios and confidence intervals quoted in the PR do not establish a VALID economic PASS here (charter §§2 and 4). Cache residency is a hypothesis, not a demonstrated causal explanation. Applicable end-to-end performance gates still require their own valid evidence; this decision neither authorises nor evaluates integration, merge, release, timing or bench-harness changes. PR #155 itself says measurement-only and not to merge until CI rules. No CI outcome was inferred or polled.
+
+No safety PASS is inferred from the PR's test summary, and no new safety failure is established. No G8 line-level STOP is justified by these counts: they identify a cost centre and an evidence gap, not cumulative proof of no credible route forward. Historical results and all existing requirements stand. Any proposed change to a frozen walker/representation or charter remains subject to its existing authority boundary; the Researcher/Optimizer requests confer none.
+
+This batch expressly prohibits an additional source-app message/reply/notification. Accordingly no TYPE: REVIEW comment is sent; the decision and cursor preserve that publication exception with a null outgoing comment ID.
