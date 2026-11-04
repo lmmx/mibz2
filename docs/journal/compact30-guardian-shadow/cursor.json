@@ -305,6 +305,19 @@
       "comment": 6644422056,
       "incoming_comment": 6644364456,
       "status": "published; redelivery preserves prior decisions; four-worker and B2 falsifier claims scoped; ranking not qualification; no PASS or line STOP"
+    },
+    {
+      "id": "D022",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "pr": 145,
+      "sha": "08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7",
+      "evidence_digest": "sha256:1798ad72c0c64da2814e316465f27ee903e0a1afc1b7ea06dd1d3f5fa3f90970",
+      "decision": "G1",
+      "commit": "92468ff2b0adaa919721ac1b661c41cd9d089439",
+      "comment": 6644979187,
+      "incoming_comment": 6644912625,
+      "status": "published; causal retraction concurred; P87 historical gates retained; no fresh qualification or line STOP"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -325,7 +338,8 @@
     6643850845,
     6643927959,
     6644051935,
-    6644422056
+    6644422056,
+    6644979187
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -348,7 +362,8 @@
     "285f76d4daf16d494c05e4ec03be756b454cbee3",
     "71fcb3bc5e390500324afa652b447ca3de97a1f7",
     "8d6a716d0dbf75bc5c6a2ff3e4a652f6e7df1662",
-    "4534bbc8d1cd4de6a9b1fe87269b60a9f1587654"
+    "4534bbc8d1cd4de6a9b1fe87269b60a9f1587654",
+    "92468ff2b0adaa919721ac1b661c41cd9d089439"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -370,7 +385,8 @@
     6643744616,
     6643809123,
     6643992749,
-    6644364456
+    6644364456,
+    6644912625
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -452,16 +468,16 @@
     "trigger": "new event-supplied PR comment containing the exact TYPE: CHECKPOINT marker",
     "repository": "lmmx/mibz2",
     "scope": "only triggering event comments; no backlog",
-    "last_completed_incoming_comment": 6644364456,
-    "last_decision": "D021",
-    "last_outgoing_comment": 6644422056,
+    "last_completed_incoming_comment": 6644912625,
+    "last_decision": "D022",
+    "last_outgoing_comment": 6644979187,
     "after_completion": "stop; await a future matching GitHub event",
     "polling": false,
     "timed_schedule": false,
     "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "4534bbc8d1cd4de6a9b1fe87269b60a9f1587654",
+    "last_decision_commit": "92468ff2b0adaa919721ac1b661c41cd9d089439",
     "last_duplicate_incoming_comment": 6633116288,
     "source_app_reply": "one TYPE: REVIEW published on triggering PR"
   },
@@ -621,14 +637,14 @@
       "decision": "D021",
       "commit": "4534bbc8d1cd4de6a9b1fe87269b60a9f1587654",
       "comment": 6644422056
+    },
+    {
+      "pr": 145,
+      "sha": "08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7",
+      "evidence_digest": "sha256:1798ad72c0c64da2814e316465f27ee903e0a1afc1b7ea06dd1d3f5fa3f90970",
+      "decision": "D022",
+      "commit": "92468ff2b0adaa919721ac1b661c41cd9d089439",
+      "comment": 6644979187
     }
-  ],
-  "pending_publication": {
-    "decision": "D022",
-    "incoming_comment": 6644912625,
-    "pr": 145,
-    "sha": "08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7",
-    "evidence_digest": "sha256:1798ad72c0c64da2814e316465f27ee903e0a1afc1b7ea06dd1d3f5fa3f90970",
-    "status": "decision and receipt in enclosing commit; TYPE: REVIEW and final cursor pending"
-  }
+  ]
 }
