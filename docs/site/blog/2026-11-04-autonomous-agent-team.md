@@ -1,7 +1,7 @@
 ---
 title: "Cutting instructions from bzip2 decoding with an agent team that runs itself"
 image: assets/social/blog-2026-11-04-autonomous-agent-team.png
-description: "Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, with nobody relaying it."
+description: "Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without a person acting as their message bus."
 ---
 
 <div class="post-hero" markdown>
@@ -14,7 +14,7 @@ description: "Each of four agents does one part of the research. A GitHub doorbe
 # Cutting instructions from bzip2 decoding with an agent team that runs itself
 
 Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each
-other directly, with nobody relaying it.
+other directly, without a person acting as their message bus.
 {: .post-dek }
 
 4 November 2026 · 11 min read · [Method](#9-good-practice-in-one-list)
