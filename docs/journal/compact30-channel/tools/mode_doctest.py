@@ -1,4 +1,6 @@
-"""Doctest for the MODE register: does each incantation obey the rules MODE.RATIONALE.md states?
+"""Doctest for the MODE register, against the rules MODE.RATIONALE.md states.
+
+Does each incantation obey them?
 
 Utterances checked: the fenced block in MODE.md, and every blockquote (lines starting "> ")
 in MODE.RATIONALE.md, each blank-line-free run of quoted lines being one paragraph and each
@@ -16,6 +18,7 @@ Rules (from MODE.RATIONALE.md):
      sentences may keep theirs: they are the articulate contrast that makes the fractures marked.
 Usage: python3 mode_doctest.py MODE.md MODE.RATIONALE.md
 """
+
 import re
 import sys
 
@@ -26,11 +29,14 @@ CLIP = {  # clipped form -> expanded form
     r"\basm\b": r"\bassembly\b",
     r"\bdep chains?\b": r"\bdependency chains?\b",
 }
-VIOLENT = r"\b(attack\w*|hunt\w*|kill\w*|strike\w*|destroy\w*|crush\w*|smash\w*|weapon\w*|fight\w*|war)\b"
+VIOLENT = (
+    r"\b(attack\w*|hunt\w*|kill\w*|strike\w*|destroy\w*|crush\w*|smash\w*|weapon\w*|fight\w*|war)\b"
+)
 STRENGTH = [("HARDER", 3), ("HARD", 2)]
 
 
 def utterances(path):
+    """Yield (name, text) for each utterance in a MODE file."""
     text = open(path).read()
     if path.endswith("MODE.md"):
         m = re.search(r"```\n(.*?)```", text, re.S)
@@ -49,6 +55,7 @@ def utterances(path):
 
 
 def strength(s):
+    """Return the intensifier level of a fragment, 0 if none."""
     for k, v in STRENGTH:
         if s.upper().startswith(k) and (len(s) == len(k) or not s[len(k)].isalpha()):
             return v
@@ -56,12 +63,13 @@ def strength(s):
 
 
 def check(name, u):
+    """Return the rule violations found in one utterance."""
     low = u.lower()
     out = []
     for c, e in CLIP.items():
         mc = re.search(c, low)
-        if mc and re.search(e, low[mc.end():]):
-            out.append(f"R1 re-expands after clipping: {re.search(e, low[mc.end():]).group(0)!r}")
+        if mc and re.search(e, low[mc.end() :]):
+            out.append(f"R1 re-expands after clipping: {re.search(e, low[mc.end() :]).group(0)!r}")
     for m in re.finditer(VIOLENT, low):
         out.append(f"R2 violent lexicon: {m.group(0)!r}")
     frags = [f.strip() for f in re.split(r"(?<=[.!?])\s+|\n", u) if f.strip()]
