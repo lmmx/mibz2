@@ -5977,3 +5977,26 @@ Begin in SHADOW mode. Require a historical replay of V3's compiler STOP and both
 The Guardian must not issue live PROCEED decisions or expand the charter during the pilot. Activation requires my explicit approval after reviewing the pilot evidence.
 Open a draft PR into `research/compact30-constructor`. Do not merge it, alter the active charter or interrupt the ongoing prototypes.
 The branch already exists; no need to recreate it.
+
+## Report 262: the user activates the Guardian
+
+In the coordinator's session, the user wrote: **"I activate the guardian under GUARDIAN.md"**. This is the explicit approval that GUARDIAN.md §7 and charter §12.3 require. It was given after the pilot (D001–D006 on #149) and its named defects: D0, that P1 was not blind; D1/F1 and D2/F2; and D3.
+
+- **Specification:** GUARDIAN.md at 9316405 (PR #147), stage A (§5).
+- **Effective now:** the Guardian's narrowing decisions G1–G5, G7 and G8 take effect from the repository.
+- **Still the user's:** G6 (accepting a rebuttal), until stage B, and everything §4 reserves.
+- **No approval gate:** routine charter-qualified work still proceeds without the Guardian's permission (GUARDIAN.md §1).
+- **Wake-up unsolved:** the Guardian's identity is recorded in ROLES.md (38f0d94). The limitation that GitHub events don't wake it remains.
+
+## Report 263: the `@codex` notification test: no response
+
+**The one authorised test.** Comment 6631260837 on #149, posted by the coordinator at 12:59:39Z, mentioning `@codex` with a read-only request. The ChatGPT Codex Connector is installed on lmmx/mibz2, according to the user.
+
+**The result: UNSUPPORTED IN OUR ENVIRONMENT, as tested.** By about 13:25Z there was no reply, no reaction and no other activity from the Connector on #149.
+
+**Possible causes, not investigated further:**
+- the mention came from a comment the coordinator posted through another app's token;
+- no Codex cloud environment is configured for mibz2;
+- the Connector's trigger settings.
+
+**Status:** under the user's instruction, there is no further test and no workaround. Event-driven waking of the Codex roles remains an open architectural limitation. Reviews stay PENDING in the review queue.
