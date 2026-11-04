@@ -2,9 +2,12 @@
   "schema": 1,
   "base_sha": "2f15e513bdb9808a2c7504e3f01b59ebce65f221",
   "governing_blobs": {
-    "requested_reviewer": "f5941d00db4c212ef3dab61230a9a4038e4708f1",
+    "requested_reviewer": "ba2ab3dd5c09201c3809feeb93682de11583eec4",
     "active_charter": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
-    "protocol": "01d5391874e756ff90bbd9a822913b201cd9dece"
+    "protocol": "3f0160245cdb459a8cf755591a66c62ba8014da5",
+    "roles": "b89e6dc11d83c7d0c4582f53f19f4f690554e650",
+    "mode": "4d27405b52a1b34c73a957fa0aebea3f9622dca3",
+    "campaign": "c5d2983f8e5c007a47da86202ce686750a5ab55c"
   },
   "incoming_channel_comment_ids": [
     6628984134,
@@ -14,7 +17,8 @@
     6634996672,
     6635380133,
     6635419092,
-    6637121066
+    6637121066,
+    6639428570
   ],
   "outgoing_comment_ids": [
     {
@@ -203,5 +207,15 @@
       "classification": "coordinator CI explanation; not authority"
     }
   ],
-  "deduplication": "Review only a new (PR, source SHA, evidence digest); ignore own comment IDs and own branch CI as input triggers."
+  "deduplication": "Review only a new (PR, source SHA, evidence digest); ignore own comment IDs and own branch CI as input triggers.",
+  "mode_register": {
+    "source_comment_id": 6639428570,
+    "mode_commit": "e44d87f96c2bdcce904872ea4fb13ad79bdcf2af",
+    "mode_blob": "4d27405b52a1b34c73a957fa0aebea3f9622dca3",
+    "protocol_commit": "07fe905f",
+    "protocol_blob": "3f0160245cdb459a8cf755591a66c62ba8014da5",
+    "campaign_ref": "research/compact30-channel",
+    "campaign_blob": "c5d2983f8e5c007a47da86202ce686750a5ab55c",
+    "status": "adopted"
+  }
 }
