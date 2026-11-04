@@ -49,15 +49,17 @@ can reproduce is a HOLD.
 | G6 | resolve the same finding by accepting the coordinator's rebuttal | **widening: needs stage B** (§5) |
 | G7 | confirm the composition of the combined build under §6.3 and §7 | mechanical: the rules decide it; the guardian checks they were applied |
 | G8 | monitor the charter's stop conditions (§8.4) and declare when one is met | narrowing |
+| G9 | register a bounded prototype under charter §6.4: justification, pinned baseline, pre-registered minimum, safety conditions and evaluation plan, after the Researcher's independent assessment | autonomous (report 265) |
+| G10 | confirm that an `unsafe` formulation's evidence meets charter §6.4 (written argument, Miri, differential, fuzz and mutation checks, independent review), or HOLD it | autonomous (report 265) |
 
 ## 4. Reserved for the user
+
+Since report 265, introducing or extending `unsafe` code, registering bounded prototypes and
+resuming after a §8.2 stop are **not** reserved: they follow charter §6.4 (G9, G10).
 
 The guardian may advise on these, but never decide them:
 - approving or amending the charter, or this file;
 - relaxing any gate or minimum;
-- adding a prototype, including any of Astra's proposals;
-- any unsafe operation, such as U1–U3;
-- resuming after a §8.2 escalation;
 - timing, captures, the i9 or a workstation;
 - frozen-representation changes;
 - production integration, PRs into master, merges or releases;

@@ -6013,3 +6013,26 @@ confirmed in Guardian D011:
 
 **What the coordinator did.** It recorded both decisions in the charter (§6.1, §5.4, §6.3, §11). The 3b minimum, 10 M incremental on prototype 2, was set by the coordinator as a screen at about 36% of the conditional figure before H_D. A Guardian G3 decision may make it stricter, never looser. The combined build (§6.3) proceeds with scanner U2 @ `ba261eff`, descriptors @ `7620c0c6`, and v3's finaliser under §7 (§7(a) safety passed in the §6.2 review; §7(b) and §7(c) are re-derived from the combined listing). Its floor is F = 147,606,687, less any further demonstrated overlap, by D010.
 
+## Report 265: the user's standing policy on `unsafe` and autonomy
+
+Given in the coordinator's session on 2026-11-04. The user's words, verbatim:
+
+> Please formalise this as a standing policy across the project and its agent charters.
+>
+> Rust `unsafe` is permitted when it offers a worthwhile, measurable benefit and its safety invariants can be clearly justified and rigorously tested. Use Miri, differential testing, fuzzing and other appropriate verification methods. Passing tests alone is not proof of soundness.
+>
+> The agents should independently evaluate these trade-offs, review each other's safety arguments, and proceed when the evidence supports the decision. If verification fails, fix the implementation or fall back to a safe alternative.
+>
+> Importantly, I want development to remain fully autonomous. Routine technical decisions, including whether to introduce or extend `unsafe` code, should not require my approval. The existing owner-approval restriction was agent-authored, not a policy I requested.
+>
+> Update the relevant instructions and governance documents to reflect this, without weakening the project's correctness or safety standards. Then continue development autonomously without escalating comparable decisions to me.
+
+The user also endorsed letting the agents register bounded experiments themselves, when they have a technical justification, defined safety conditions and a way to evaluate the results. Prototype registration is a comparable decision.
+
+**What the coordinator did:**
+- **Charter.** New §6.4 holds the standing policy. §3 delegates `unsafe` and prototype registration. The safe-first and owner-approval clauses of §6.1 are superseded. §8.2 routes new safety obligations to §6.4 and lets resumption follow a fix or a safe fallback. §12.3 no longer reserves these decisions. §11 records the amendment.
+- **GUARDIAN.md.** New G9 registers bounded prototypes, and new G10 confirms an `unsafe` formulation's evidence. §4 no longer reserves them.
+- **REVIEWER.md.** A proposal now goes to §6.4 registration, not to the user.
+
+**What stays the same.** Every gate, every minimum, the oracle and reference identity, Miri coverage, mutation checks and the review requirements are unchanged. Still reserved to the user: relaxing a gate or a minimum, timing or the i9, production integration, a PR into master, a release, and new infrastructure, credentials or spending.
+

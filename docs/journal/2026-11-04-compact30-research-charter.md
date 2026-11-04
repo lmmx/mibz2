@@ -1,7 +1,7 @@
 # Compact30 instruction minimisation: a standing research charter (ACTIVE)
 
-**Status: revision 4 (with the narrowing clarifications of reports 247–248), ACTIVE (stage 1,
-§13). The guardian confirmed activation in report 248.** The guardian's
+**Status: revision 4 (with the narrowing clarifications of reports 247–248, and the user's
+standing autonomy policy of report 265, §6.4), ACTIVE (stage 1, §13). The guardian confirmed activation in report 248.** The guardian's
 review of revision 2 (report 246, relayed by the user in the coordinator's session) approved it
 subject to two clarifications, and authorised activation once they were made, if no other
 material change was introduced. Both are in revision 4:
@@ -71,14 +71,16 @@ For each prototype in the sequence, within §2:
 - implementing it as a separate module;
 - **up to three** Rust-expression attempts at its compile target, chosen by the coordinator. Each
   attempt is archived with its listing. An attempt may change only how the registered design is
-  expressed. One that adds a safety obligation isn't an attempt but an escalation (§8.2).
+  expressed. One that adds a safety obligation isn't an attempt: it follows §6.4 before it continues.
 - running every correctness suite, targeted Miri runs, mutation checks, disassembly at the pinned
   toolchain, and the ledger accounting (§5);
 - repairing routine defects inside that prototype's scope (§8.1);
 - writing journal entries and evidence;
 - moving on to the next prototype when the current one closes, whatever its outcome, unless §8
   applies;
-- running the pre-integration review (§6.2) and assembling the combined build (§6.3).
+- running the pre-integration review (§6.2) and assembling the combined build (§6.3);
+- introducing or extending `unsafe` code, and registering new bounded prototypes, under the
+  standing policy of §6.4. Neither needs the user.
 
 ## 4. Gates, registered before each prototype
 
@@ -206,30 +208,12 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
 
 - Each prototype is a single change on its own baseline, so its saving can be attributed.
 - Prototype 3 is optional. It is run only if v3 is eligible under §7(a).
-- **Prototype 1 is attempted in safe Rust only.** The handoff's `read_unaligned()` raw-pointer
-  reads fall under §8.2: they are a new unsafe, unchecked access. If no safe attempt reaches the
-  compile target:
-  - the miss is recorded under gate 2, and the safe variant is still evaluated under gates 1 and 3;
-  - the exact proposed unsafe formulation is registered in the journal:
-    - each `read_unaligned()` operation and its source location;
-    - the dominating bounds invariant;
-    - the integer-overflow proof;
-    - the pointer-validity and initialisation argument;
-    - the expected assembly saving;
-    - the Miri classes that would check it;
-  - it is escalated for one explicit approval (§12.3), and isn't implemented before that.
-  - Once that exact formulation is approved, its implementation and the registered correctness,
-    mutation, Miri and compilation checks proceed autonomously.
-  - Any other unchecked access, unsafe operation or new safety obligation remains an immediate
-    escalation under §8.2.
-
-  This clarification (reports 247–248) only narrows scope. The same applies to any other prototype
-  whose design names an unsafe formulation.
-- **U2 in the combined build (report 264, the user in the coordinator's session).** The U2
-  unchecked access approved for one trial in report 259 may be carried into the combined build
-  (§6.3), unchanged: the same exact full-tile bounds and initialisation invariants, and the same
-  registered Miri classes and mutation checks, run again on the combined code. No other unchecked
-  access is authorised. U1 stays absent, and U3 stays unauthorised.
+- **Unsafe code follows the standing policy in §6.4** (report 265). It supersedes the
+  safe-Rust-first and owner-approval clauses of reports 247–248 and 259, which were written by the
+  agents, not requested by the user.
+- **U2 in the combined build (report 264).** The U2 unchecked access is carried unchanged into the
+  combined build: the same full-tile bounds and initialisation invariants, and its Miri classes and
+  mutation checks run again on the combined code. Any further `unsafe` follows §6.4.
 - **Prototype 3b (report 264).** It is registered as one bounded experiment on prototype 2's
   pinned descriptors. It changes only the refill transition and the mode plumbing that strictly
   needs.
@@ -318,6 +302,49 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
 - An assembly may drop a component. The reason is recorded, and F and O are recomputed for the
   components that remain.
 
+### 6.4 Standing policy: `unsafe` code and new prototypes (report 265)
+
+This is the user's standing policy, given in the coordinator's session (report 265). It makes
+autonomous, evidence-based decisions the default. It does not weaken any correctness or safety
+standard in this charter.
+
+**`unsafe` Rust is permitted** when it offers a worthwhile, measurable benefit and its safety
+invariants can be clearly justified and rigorously tested.
+- **The justification is written down before the code is relied on.** It is a release-mode safety
+  argument naming every unsafe operation and its location, the dominating bounds invariant, the
+  integer-overflow proof, and the pointer-validity and initialisation argument, plus the expected
+  benefit.
+- **It is tested with every appropriate method:**
+  - Miri over registered classes that reach each operation, with no timeout counted as a PASS
+    (§8.3);
+  - differential testing, byte-exact against the oracle and the reference builder;
+  - fuzzing of malformed and adversarial inputs;
+  - mutation checks, each of which must fail its intended test.
+
+  Passing tests alone is not proof of soundness. The argument and the tests are both required.
+- **Another agent reviews it.** An agent other than the implementer reviews the safety argument
+  adversarially: the Researcher, or a fresh reviewer for a §6.2 review. The Guardian checks that
+  the evidence meets this section. The work proceeds when the evidence supports it. No user
+  approval is needed for introducing or extending `unsafe` code.
+- **If verification fails,** the implementation is fixed, or the work falls back to a safe
+  alternative. Undefined behaviour stops that variant at once (§8.2) until it is fixed or
+  abandoned, and is recorded; it is not escalated to the user.
+
+**New prototypes may be registered by the agents** without the user, when the registration gives:
+- a technical justification;
+- a pinned baseline;
+- a pre-registered incremental minimum, set below the estimate as in §5.4;
+- defined safety conditions under this section;
+- an evaluation plan with its gates (§4), within §2.
+
+The Optimiser or the Coordinator proposes it. The Researcher assesses it independently, and the
+Guardian registers it (GUARDIAN.md, G9). Registration is permission to experiment, not a
+commitment to adopt. If the experiment fails its checks or doesn't deliver its minimum, the agents
+reject it themselves and record it.
+
+**Still not delegated** (§12.3): relaxing a gate or a minimum, timing or the i9, production
+integration, a PR into master, a release, and new infrastructure, credentials or spending.
+
 ## 7. V3's finaliser in the combined build
 
 - V3's formal STOP stands, and its ≈ 60.2 M saving is preserved as a result.
@@ -364,7 +391,8 @@ when any of these happens:
   - a finding contradicts the representation, the walker, the oracle, canonical RAW order or
     production's builder; or
   - a frozen file differs from its pin.
-- **An attempt adds a safety obligation outside the registered design.** Examples:
+- **An attempt adds a safety obligation outside the registered design** before §6.4's argument
+  and review exist for it. Examples:
   - a new unsafe block or unchecked access;
   - new pointer arithmetic;
   - a read of possibly uninitialised memory;
@@ -375,7 +403,9 @@ when any of these happens:
 
 After an escalation:
 - work continues only on prototypes that share no code with the affected one;
-- no combined build is assembled until the guardian has decided.
+- no combined build is assembled until the guardian has decided;
+- the affected work resumes once the cause is fixed, or a safe alternative is in place, and the
+  guardian records it. That needs no user.
 
 ### 8.3 Miri coverage
 
@@ -446,6 +476,7 @@ The sequence also stops early, and reports, in two other cases:
 | researcher (report 247) | the scanner handoff's unsafe reads are not delegated: safe Rust first, and the unsafe form escalated with its exact operations and proofs | §6.1 |
 | guardian (report 248) | the unsafe fallback's approval package (operations, locations, invariants, overflow, validity and initialisation, expected saving); autonomous once approved | §6.1 |
 | guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
+| user (report 265) | standing policy: `unsafe` is permitted on a justified argument, rigorous verification and independent review; agents register bounded prototypes; neither needs the user | §6.4, §3, §8.2, §12.3 |
 | user (report 264) | U2 carried unchanged into the combined build; prototype 3b (C6) registered as a bounded refill-only experiment, with a 10 M incremental minimum | §6.1, §5.4, §6.3 |
 
 ## 12. Provenance and authorisation
@@ -487,8 +518,11 @@ decision and, where there is one, the repository message it refers to:
 - timing, the i9 or a capture;
 - production or bench changes;
 - a PR into master, or a release;
-- resuming after an escalation under §8.2;
-- accepting a rebuttal that the review didn't accept (§6.2).
+- accepting a rebuttal that the review didn't accept (§6.2);
+- new infrastructure, credentials or spending.
+
+**Not reserved (§6.4, report 265):** introducing or extending `unsafe` code, registering bounded
+prototypes, and resuming after a §8.2 stop. These are routine technical decisions for the agents.
 
 The coordinator records the user's words verbatim in the journal as that decision's provenance.
 The user may relay the guardian's text. What authenticates it is the user's act of relaying it,
