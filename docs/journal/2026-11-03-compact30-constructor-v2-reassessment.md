@@ -5954,3 +5954,26 @@ The guardian supports a dedicated Codex guardian with its own Goal and governanc
 5. routine governance is handed over.
 
 Reserved actions stay with the user. The coordinator drafted `compact30-channel/GUARDIAN.md` (PROPOSED, not active). It separates the guardian's narrowing decisions, which can take effect from the repository at once, from widening decisions such as accepting a rebuttal. Those need the user, or else a checkable identity of the guardian's own (stage B), granted by a charter §12 amendment. The guardian's message is as relayed by the user in the coordinator's session; its full text is in the session transcript, and its decision is summarised here: GO for designing the Codex guardian handoff, and wait to activate it until Astra and Claude have shown their first successful GitHub exchange.
+
+## Report 261: the guardian's shadow-mode setup request, and the researcher's amendments
+
+**The guardian's request.** The guardian asked the coordinator to write `GUARDIAN.md` on the guardian's own `review/compact30-guardian-setup` branch, because its own GitHub write there was blocked, and to open a draft PR. The guardian's conversation then reached its length limit. **The researcher's amendments:**
+- the guardian must not become an approval gate for charter-qualified work;
+- the pilot should include prototype 1's result, and a forged request for unsafe operations.
+
+**What the coordinator did.** It revised `GUARDIAN.md` into SHADOW mode on that branch (931640523226053b758ebc0c2c9fd4eac61128b3) and opened draft PR #147. Writing on the guardian's branch is recorded there as a one-off exception to the single-writer rule.
+
+**The researcher's two other points:**
+- its suggestion that the setup branch would have no diff was overtaken: the revision is a distinct commit;
+- its advice not to approve U1–U3 as a bundle matches report 259. U1 and U2 have one trial; U3 isn't approved.
+
+The guardian's instruction, relayed by the user and kept as relayed:
+
+Please prepare the Codex Guardian handoff on the existing `review/compact30-guardian-setup` branch.
+Create `docs/journal/compact30-channel/GUARDIAN.md` as a proposed governance specification, grounded in the ACTIVE research charter and channel protocol.
+The Guardian is an independent governance agent, not an implementation coordinator or optimization researcher.
+Define its evidence requirements, gate-by-gate decisions, independent-review obligations, authority restrictions, GitHub publication protocol and checkpoint cursor.
+Begin in SHADOW mode. Require a historical replay of V3's compiler STOP and both construction INVALID outcomes, plus a current-checkpoint review, an unauthorized i9-request rejection test, and an end-to-end GitHub advisory exchange.
+The Guardian must not issue live PROCEED decisions or expand the charter during the pilot. Activation requires my explicit approval after reviewing the pilot evidence.
+Open a draft PR into `research/compact30-constructor`. Do not merge it, alter the active charter or interrupt the ongoing prototypes.
+The branch already exists; no need to recreate it.
