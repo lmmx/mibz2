@@ -1,7 +1,8 @@
 # Compact30 instruction minimisation: a standing research charter (ACTIVE)
 
-**Status: revision 4 (with the narrowing clarifications of reports 247–248, and the user's
-standing autonomy policy of report 265, §6.4), ACTIVE (stage 1, §13). The guardian confirmed activation in report 248.** The guardian's
+**Status: revision 4 (with the narrowing clarifications of reports 247–248, the user's
+standing autonomy policy of report 265, §6.4, and the production accounting of report 272,
+§5.6), ACTIVE (stage 1, §13). The guardian confirmed activation in report 248.** The guardian's
 review of revision 2 (report 246, relayed by the user in the coordinator's session) approved it
 subject to two clarifications, and authorised activation once they were made, if no other
 material change was introduced. Both are in revision 4:
@@ -36,6 +37,12 @@ instruction targets are diagnostics.
 
 **Permission to continue research isn't permission to claim success.** Every miss is reported
 as a miss, whatever happens to the variant afterwards.
+
+**The constructor is not the decoder (report 272).** The §5 ledger measures construction only,
+and it stays the gate for constructor work. But the campaign's purpose is a faster production
+decoder, and construction is only about a fifth of a block's decode. Every checkpoint therefore
+also reports the whole-decoder figures of §5.6. No construction result is described as a decoder
+result, and no candidate goes towards production on construction figures alone.
 
 ## 2. Fixed for the whole charter
 
@@ -201,6 +208,52 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
   prototypes' diffs.
 - The sum of isolated savings is a prediction only. Only the combined ledger (§6.3) decides the
   combined build.
+
+### 5.6 Production accounting (report 272)
+
+**Why.** PR #155 put Assembly 1 into production. Construction fell by 1,059,858 instructions
+per Wikidata block (−19.5%). The record walk rose by 4,780,808 (+31.0%). The whole block decode
+rose by 3,778,665 (+14.7%), and CI's paired bench measured the decoder 7–19% slower. The §5
+ledger could not see this, because the walk and the rest of the decode are outside it. On
+production master a block's `decode_block` is about 21% build, 60% walk and 19% the rest (MTF,
+CRC, assembly): 5,429,062 + 15,426,892 + 4,895,840 instructions on block 1.
+
+**The rules.**
+
+a. **A production ledger at every checkpoint.** Every checkpoint and every combined build
+   reports, next to its §5 ledger, the instructions executed in `decode_block`:
+   - for production master, and for the candidate wired into production, or into a harness
+     that calls the same build, walk and remaining code;
+   - split into build, walk and the rest;
+   - on matched toolchain, flags and input;
+   - with the raw profiles, the driver and the command archived for replay
+     (`compact30-channel/evidence/port-b4786f66/` is the template).
+b. **Sample.** A checkpoint uses at least the archived Wikidata blocks (1 and 41). An
+   integration decision uses a sample covering the primary corpus's block classes, and the
+   whole corpus when that is practical. One block is a screen, not a result.
+c. **Ranking.** Proposals are ranked by whole-decoder instructions removed per block, after every
+   cost they induce in other phases. A change to the representation is priced for every consumer
+   of the representation, the walk included, not only for the code that produces it.
+d. **Before any PR into master for a candidate kernel,** including a measurement-only PR, one of
+   these must hold:
+   - the production ledger shows whole `decode_block` instructions at or below master's, across
+     the sample;
+   - a written, quantitative case shows how a non-instruction mechanism (cache residency,
+     memory-level parallelism) outweighs the measured instruction excess at each of CI's
+     thread counts (1, 2 and 4), and the Researcher has assessed it.
+
+   Timing on the shared development machine is never such a case. Neither is a projection that
+   predicts a loss at any of CI's thread counts.
+e. **What parity is.** Instruction parity is a screen, neither necessary nor sufficient (D016).
+   CI's end-to-end paired bench decides every merge, under §2.
+f. **Scope.** This ledger is a diagnostic and a precondition. It does not replace gate 3, and it
+   does not change any recorded result (D015).
+g. **The walker is frozen under §2.** If the production ledger shows the walk is the binding
+   cost, changing the walker is a scope change, and it needs the user (§12.3).
+h. **The bench's phase table does not apply.** `examples/phases.rs` times production's own
+   build and walk, so it shows nothing about a candidate kernel's phases until the bench harness
+   changes. That change is the user's decision (§12.3). Only Callgrind on `decode_block` and the
+   whole-decoder A/B apply.
 
 ## 6. The sequence
 
@@ -464,6 +517,11 @@ remaining economic gap cannot be closed.
 What decides a line is its **trajectory toward production viability**, meaning the economic
 limits in the campaign's entry document
 (research/compact30-channel:docs/journal/compact30-channel/CAMPAIGN.md).
+
+**Viability is judged on the whole decoder (report 272).** "The remaining gap" in this section
+means the gap in the §5.6 production ledger and in CI's end-to-end bench, not the constructor's
+gap alone. A line whose constructor gains are outweighed by costs elsewhere in the decoder is
+not progressing towards viability, however much its constructor ledger improves.
 - **Keep climbing** while either of these holds:
   - the accumulated evidence shows meaningful progress toward viability;
   - a bounded next experiment offers a credible chance to overcome an identified remaining
@@ -572,6 +630,7 @@ The sequence also stops early, and reports, in two other cases:
 | researcher (report 247) | the scanner handoff's unsafe reads are not delegated: safe Rust first, and the unsafe form escalated with its exact operations and proofs | §6.1 |
 | guardian (report 248) | the unsafe fallback's approval package (operations, locations, invariants, overflow, validity and initialisation, expected saving); autonomous once approved | §6.1 |
 | guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
+| user (report 272) | production accounting: every checkpoint reports whole-decoder instructions (build, walk, rest) against production master; ranking by whole-decoder saving; no PR into master for a candidate kernel without whole-decoder parity or an assessed quantitative case; viability judged on the whole decoder; local timing never a reason to integrate | §1, §5.6, §8.4 |
 | user (report 270) | the Researcher is the standing independent reviewer; no fresh, new-chat or context-isolated reviewers; additional agents need Louis's explicit authorisation | §6.2, §6.4, §10 |
 | user (report 269) | a failed gate is a verdict on the candidate, not automatically its line; a line may end on cumulative evidence (impossibility, lower bound); every significant experiment reports expected vs actual, gap closed, mechanism learned, and the next step including STOP/REDIRECT | §8.4 |
 | user (report 268) | §8.4 progress is of two kinds, performance and research, never interchangeable; bounded exploratory steps allowed; every STOP scoped to what failed; understanding is not qualification | §8.4 |

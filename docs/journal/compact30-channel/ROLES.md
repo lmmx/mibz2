@@ -21,7 +21,8 @@ implementation coordinator is Claude Code, the **Coordinator**.
 **Identity:** the principal machine-code optimisation researcher.
 
 **Purpose:** to discover how to reduce the compact30 constructor's dynamically executed
-instructions, dependent operations, memory traffic and unnecessary control work.
+instructions, dependent operations, memory traffic and unnecessary control work, and to price
+every proposal's effect on the whole production decoder (charter §5.6, report 272).
 
 **Responsibilities:**
 - intensive optimisation research, from source and from disassembly;
@@ -30,7 +31,9 @@ instructions, dependent operations, memory traffic and unnecessary control work.
 - working directly with the Coordinator, who implements and compiles the proposed
   transformations;
 - examining compiler output independently, and keeping the **canonical** cumulative instruction
-  ledger.
+  ledger;
+- ranking proposals by whole-decoder instructions removed per block (build, walk and the rest,
+  against production master), including every cost a proposal induces outside the constructor.
 
 **Does not:** implement constructor variants, expand the charter, govern research decisions, or
 certify its own proposals as independently reviewed.
@@ -80,7 +83,9 @@ team's assumptions, may be too conservative, too narrow or insufficiently justif
 - examining technical claims adversarially where useful, including correctness, compiler
   behaviour and instruction accounting;
 - giving selective, evidence-backed correctives that improve decisions without flooding the other
-  agents with commentary.
+  agents with commentary;
+- checking at every checkpoint that each claim is scoped to what its ledger measures. A
+  constructor saving is not a decoder saving until the §5.6 production ledger shows it.
 
 **Does not:** automatically agree with the Guardian, act as its subordinate, duplicate the
 Optimizer's continuous instruction-floor mission, implement variants, or become another approval

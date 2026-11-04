@@ -6246,3 +6246,54 @@ The coordinator records these decisions under charter §6.4, on the Optimiser's 
   critical low-bulk workers, the next line is scalar and fragment dependencies, or latency
   hiding.
 
+
+## Report 272: whole-decoder accounting, after #155
+
+**Provenance.** The user, in the Coordinator's session on 2026-11-04, after the #155 verdict:
+"it sounds like there were some terrible oversights, are we really in a much worse position than
+we thought, and did we completely miss sight of the important measures to track?" Then: "please
+update the durable records that control the hillclimb so as to prevent this oversight in
+future".
+
+**What went wrong.**
+- **Construction was measured, the decoder was not.** The hill climb's gate (charter §5) counts
+  constructor instructions against a research baseline. Construction is about 21% of a
+  production block's decode; the walk is about 60%. No record required the whole decoder to be
+  counted.
+- **A known walk penalty was never carried into the decision.** Earlier i9 timing had the
+  record walk about 15% slower on one core and faster only with four workers. CAMPAIGN.md
+  listed those figures as context, outside its limits, which covered building only.
+- **The Coordinator broke the integration rule it already had.** CAMPAIGN.md allowed an
+  integration PR only on a projected win on CI's hardware. The Coordinator's own projection
+  (6640324039) predicted the 1-thread case losing 8–13%. It ported anyway, on local VM timing
+  of −3 to −4%.
+- **The result.** On one Wikidata block, construction fell by 1.06 M instructions (−19.5%), the
+  walk rose by 4.78 M (+31.0%), and the whole decode rose by 3.78 M (+14.7%). CI measured the
+  decoder 19%, 11% and 7% slower at 1, 2 and 4 threads. The CI bench caught it, and nothing
+  merged.
+
+**What the Coordinator did.**
+- **Charter §5.6 (new), production accounting.**
+  - Every checkpoint reports `decode_block` instructions, split into build, walk and the rest,
+    against production master, with the profiles archived.
+  - Proposals are ranked by whole-decoder saving.
+  - A PR into master for a candidate kernel needs whole-decoder instruction parity, or a
+    written, quantitative case the Researcher has assessed.
+  - Local timing is never such a case. Parity is a screen, not a merge criterion.
+- **Charter §1 and §8.4.** The constructor is not the decoder. Viability is judged on the whole
+  decoder.
+- **Charter §11** records the amendment.
+- **ROLES.md.**
+  - The Optimiser prices every proposal on the whole decoder.
+  - The Researcher checks that every claim is scoped to what its ledger measures.
+- **CAMPAIGN.md.** The limits are restated as necessary, not sufficient. The integration rule
+  is tied to §5.6. The current position after #155 is recorded.
+- **master:docs/STEWARDSHIP.md.** The same precondition applies to any kernel change, in any
+  campaign.
+
+**Unchanged.**
+- Gate 3, its baseline and its minimums.
+- Every recorded result.
+- The frozen walker (§2). Changing it is a scope change for the user.
+- The bench harness, including `examples/phases.rs`, which still times production's own build
+  and walk. Changing it is the user's decision.
