@@ -127,6 +127,10 @@ reports loads, stores and stack operations alongside.
 
 ## 1. Checkpoint (charter §9)
 
+> **Erratum (§8, after review of PR #146):** the interval [56.18 M, 56.21 M] in §5.3 is
+> withdrawn as a conservative interval. The claim is the own-body −56,195,817. The gate
+> outcomes are unchanged.
+
 **Outcome: prototype 1 does NOT qualify.**
 
 | gate | role | outcome |
@@ -298,6 +302,9 @@ J = U − Q, with U = 10,544,477, hold exactly.
 
 ### 5.3 The result
 
+> **Erratum (§8):** the callee difference below is not an allocator bound, the interval is
+> withdrawn as conservative, and the inclusive read and write deltas are CONDITIONAL. See §8.
+
 | | B2 (v2) | prototype | difference |
 |---|--:|--:|--:|
 | `build::<false>`'s own instructions (deterministic, both runs) | 1,026,601,670 | 970,405,853 | **−56,195,817** |
@@ -417,3 +424,94 @@ So whether U1–U3 clear 60 M net is unknown until compiled. On the arithmetic, 
 23.9 M − whatever spills appear.
 
 **This line stops here** pending the user's explicit approval (charter §12.3).
+
+## 8. Erratum (2026-11-04, after the review of PR #146)
+
+**Source:** the independent review of PR #146 (comment 6630265636), findings F1 and F2. Both
+are accepted. **The gate outcomes don't change:** gate 1 PASS, gate 2 missed in part, gate 3
+FAIL. The evidence for this section is in
+[2026-11-04-compact30-scanner-prototype-erratum/](2026-11-04-compact30-scanner-prototype-erratum/).
+`ctor2s.rs` and the evidence at `7f74e9f` are unchanged.
+
+### 8.1 F1: the interval is withdrawn as conservative
+
+- **What §5.3 claimed.** It cited **[56.18 M, 56.21 M]** as a conservative interval. It
+  treated the two runs' callee differences (−7,850 and −9,834) as an allocator term of at
+  most about 10 k.
+- **Why that fails:**
+  - two samples don't bound a term;
+  - the callee difference isn't only the allocator: it includes **+1,840 `memcpy`
+    instructions**, at the snapshot push (§8.3).
+- **The interval is withdrawn as a conservative interval.**
+- **The claim, restated:** `build::<false>`'s own instructions fall by **56,195,817**
+  (1,026,601,670 → 970,405,853). This figure is exact, and it is reproduced in all four
+  profiles: the two at `7f74e9f`, and the two regenerated here. It is achieved within that
+  scope, the function's own body, and no wider.
+- **Run 1's inclusive −56,203,667** is kept as an observation only. It is not a bound.
+- **The inclusive read and write deltas are CONDITIONAL** on the unresolved library terms of
+  §8.3: −3,391,372 reads and +1,994,665 writes. The own-body deltas are exact:
+  - reads 205,899,121 → 202,509,646, **−3,389,475**;
+  - writes 132,435,558 → 134,431,097, **+1,995,539**.
+- **Gate 3 still fails.** The own-body 56.20 M is below the 60 M minimum. Because library
+  terms remain unresolved (§8.3), no verified net saving is claimed beyond the own-body scope
+  (charter §5.3e).
+
+### 8.2 F2: the parser and the archive
+
+- **The parser bug.** `callgrind/cgparse.py` (lines 22–25) assumes a single position column.
+  The archived profile, `callgrind/per-instruction.callgrind.gz`, declares
+  `positions: instr line`, with `*` compression, so the parser crashes on it. The crash is
+  reproduced in `parser-test-archived-profile.txt`.
+- The figures in `run1-functions.txt` and `run2-functions.txt` match the new parser exactly
+  wherever both can be checked. That is consistent with their coming from `positions: line`
+  profiles, which the old parser reads correctly. But those profiles weren't archived.
+- **The archive's gap.** It held only Ir: the raw Dr/Dw profiles and the second run's profile
+  were missing.
+- **The fixed parser, `cgparse.py`, is header-aware.** It reads `positions:` and `events:`,
+  and handles `*`, `+n`, `-n`, compressed names and `.gz` input. On the archived profile, it
+  gives the same Ir as `run1-functions.txt`, self and inclusive, for every function listed.
+  It also reads `positions: line` profiles (tested on prototype 2's).
+- **The regenerated profiles.**
+  - They come from a rebuild at `7f74e9f`: rustc 1.97.0, `--locked --release`, binary sha256
+    `b36885a7c5d3e38c178886727ac14d6119a1835bba5e64704bc180861050ad53`. Its listings are
+    identical to those archived, with 0 differences after normalisation.
+  - Two runs were made of `valgrind --tool=callgrind --cache-sim=yes --dump-instr=yes …
+    ctor2s-count corpora/wikidata-20261026.bz2`. They are archived raw (gzipped), with Ir,
+    Dr, Dw and the cache events, per instruction. The `README.txt` holds the exact invocation.
+  - **The two runs are identical** in every function, every call site and the process total
+    (9,128,951,041 instructions). They are also identical, in every figure, to the archived
+    run 1.
+  - **The archived run 2 is not reproduced.** It gave v2 at 1,294,422,962 and ctor2s at
+    1,238,217,311 inclusive. Its profile isn't archived, so the cause of the difference (such
+    as a different process environment) is unresolved.
+
+### 8.3 §5.3e: every callee and caller term
+
+From `run1-functions.txt` and `run1-library-sites.txt` (run 2 identical). Each figure is
+ctor2s minus v2, both in one process (`ctor2s-count`: v2 first, then ctor2s, per block).
+
+| term | calls | v2 | ctor2s | Δ | status |
+|---|--:|--:|--:|--:|---|
+| `build::<false>`, own body | | 1,026,601,670 | 970,405,853 | **−56,195,817** | **exact**: the claim |
+| `refill`, own body | 1,299,478 | 80,567,464 | 80,567,464 | 0 | **bounded by construction**: identical code, no library call; its count is a function of the block's data only |
+| `finish`, own body (direct, and from `refill`) | 532,547 + 1,262,935 | 176,758,551 | 176,758,551 | 0 | **bounded by construction**, as `refill` |
+| `canonicalise` | 434 | 3,903,384 | 3,903,384 | 0 | **bounded by construction**: no callee; data-dependent only, on the same inputs |
+| `finish`'s `memset` (heap destination) | 41,120 | 519,933 | 519,933 | 0 observed | **unresolved**: depends on the heap layout |
+| `memset`, heap destination (`+0x281` in v2) | 230 | 865,030 | 865,030 | 0 observed | **unresolved**: depends on the heap layout |
+| `memcpy`, descriptor initialisation, stack to stack, 10,240 bytes | 434 | 4,433,744 | 4,433,744 | 0 observed | **unresolved**: the per-call cost depends on the frame's alignment, and ctor2s's frame offsets differ from v2's (`0xe8`/`0x2cf8` against `0xd8`/`0x2ce8`). The same copy costs 10,216 per call here and 10,248 in another process (prototype 2's evidence) |
+| `memset`, once per epoch, stack destination | 3,654 | 285,012 | 285,012 | 0 observed | **unresolved**, as the previous row |
+| `memcpy`, the snapshot push (heap destination) | 3,654 | 454,910 | 456,750 | **+1,840** | **unresolved**: same calls and sizes, a different destination address |
+| `memset`, heap destination | 233 | 2,817 | 2,817 | 0 observed | **unresolved** |
+| `grow_exact`, first site | 2 | 12,656 | 1,780 | −10,876 | **unresolved**: the allocator's state |
+| `grow_exact`, second site | 8 | 6,150 | 7,197 | +1,047 | **unresolved** |
+| `free` (2 sites) | 8 | 1,544 | 1,688 | +144 | **unresolved** |
+| `reserve` (2 sites) | 3 | 1,331 | 1,326 | −5 | **unresolved** |
+| library total, observed | | | | −7,850 | unresolved as a whole; equal to inclusive − own |
+| **callers** of `build::<false>` | | | | n/a | **outside the ledger.** The only callers are this research binary's harnesses, with the same call for both builders. Nothing in the decoder calls either builder |
+| **call sites inside** `build::<false>` (to `refill`, `finish` and the library) | | | | | in the own body, so counted in the −56,195,817 |
+
+- **Bounded:** the own body (exact), and the code callees `refill`, `finish` and
+  `canonicalise` (Δ 0, by construction).
+- **Unresolved:** every library term. They are listed with their observed values, and no
+  interval is cited for them.
+- **No two-sample interval is cited anywhere in this erratum.**

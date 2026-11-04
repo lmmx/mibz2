@@ -1,0 +1,46 @@
+$ python3 cgparse.py ../2026-11-04-compact30-scanner-prototype/callgrind/per-instruction.callgrind.gz 'Ctor2s?>::build::<false>|ctor2s?::W<false>>::(finish|refill)' --callees
+# docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/per-instruction.callgrind.gz: positions instr line; events Ir
+<c30walk::ctor2::Ctor2>::build::<false>
+   self      Ir 1,026,601,670
+   inclusive Ir 1,294,414,196
+     -> 1,299,478 calls  Ir 201,234,507  <c30walk::ctor2::W<false>>::refill
+     ->   532,547 calls  Ir 56,611,441  <c30walk::ctor2::W<false>>::finish
+     ->     4,088 calls  Ir 4,888,654  __memcpy_avx_unaligned_erms
+     ->       434 calls  Ir 3,903,384  c30walk::ctor::canonicalise
+     ->     4,117 calls  Ir 1,152,859  __memset_avx2_unaligned_erms
+     ->        10 calls  Ir 18,806  <alloc::raw_vec::RawVecInner>::grow_exact
+     ->         8 calls  Ir 1,544  free
+     ->         3 calls  Ir 1,331  <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>
+<c30walk::ctor2::W<false>>::finish
+   self      Ir 176,758,551
+   inclusive Ir 177,278,484
+     ->    41,120 calls  Ir 519,933  __memset_avx2_unaligned_erms
+<c30walk::ctor2::W<false>>::refill
+   self      Ir 80,567,464
+   inclusive Ir 201,234,507
+     -> 1,262,935 calls  Ir 120,667,043  <c30walk::ctor2::W<false>>::finish
+<c30walk::ctor2s::Ctor2s>::build::<false>
+   self      Ir 970,405,853
+   inclusive Ir 1,238,210,529
+     -> 1,299,478 calls  Ir 201,234,507  <c30walk::ctor2s::W<false>>::refill
+     ->   532,547 calls  Ir 56,611,441  <c30walk::ctor2s::W<false>>::finish
+     ->     4,088 calls  Ir 4,890,494  __memcpy_avx_unaligned_erms
+     ->       434 calls  Ir 3,903,384  c30walk::ctor::canonicalise
+     ->     4,117 calls  Ir 1,152,859  __memset_avx2_unaligned_erms
+     ->        10 calls  Ir 8,977  <alloc::raw_vec::RawVecInner>::grow_exact
+     ->         8 calls  Ir 1,688  free
+     ->         3 calls  Ir 1,326  <alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>
+<c30walk::ctor2s::W<false>>::finish
+   self      Ir 176,758,551
+   inclusive Ir 177,278,484
+     ->    41,120 calls  Ir 519,933  __memset_avx2_unaligned_erms
+<c30walk::ctor2s::W<false>>::refill
+   self      Ir 80,567,464
+   inclusive Ir 201,234,507
+     -> 1,262,935 calls  Ir 120,667,043  <c30walk::ctor2s::W<false>>::finish
+
+$ python3 ../2026-11-04-compact30-scanner-prototype/callgrind/cgparse.py PROFILE   (the original parser, on the same profile, gunzipped)
+  File "<worktree>/docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/cgparse.py", line 25, in <module>
+    for i,x in enumerate(parts[1:]): tgt[fn][i]+=int(x)
+                                                 ~~~^^^
+ValueError: invalid literal for int() with base 10: '*'
