@@ -79,6 +79,41 @@
       "comment": 6632636427,
       "status": "published; event receipt verified; user-approved noreply identity resolved publication blocker; no scientific gate qualification or changed research disposition",
       "completion": "original event processing resumed by explicit user request after commit-identity approval; not an uninterrupted unattended end-to-end trial"
+    },
+    {
+      "id": "D008",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": [
+        "G1",
+        "G4"
+      ],
+      "pr": 145,
+      "sha": "e5d86cc508af495236c1019c5ce1daa24ec83c3e",
+      "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
+      "incoming_comment": 6632963394,
+      "incoming_created_at": "2026-11-04T14:16:41Z",
+      "body_sha256": "002b080a2313e67e1839643da827298d794df94a242abf5a8b42a33969befd66",
+      "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
+      "comment": 6633274082,
+      "checkpoint_keys": [
+        {
+          "pr": 151,
+          "sha": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        },
+        {
+          "pr": 146,
+          "sha": "49cb46b65070059af49e906fa8d98693b808bda2",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        },
+        {
+          "pr": 146,
+          "sha": "a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        }
+      ],
+      "status": "published; new isolated qualifications concurred pending section6.2; original scanner correction stays nonqualifying; Researcher appointed in fresh independent evidence-only instance; consolidated index/review outstanding"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -88,7 +123,8 @@
     6630629015,
     6630660444,
     6631014855,
-    6632636427
+    6632636427,
+    6633274082
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -97,14 +133,17 @@
     "51657ab576a804531de0e71a40d4197c42f7c592",
     "806de8ef5dff19b7859ff51475fe5b8e563a6a1b",
     "9bb210bc2fe52ef933da50239d85cc8260a759c8",
-    "99952368535d6f7f970533c2cfb63c71261c435d"
+    "99952368535d6f7f970533c2cfb63c71261c435d",
+    "62a313a89876c2bc980718cc094c9265ddf7ff2c"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
     6630530217,
     6630638365,
     6630672389,
-    6632161918
+    6632161918,
+    6632963394,
+    6633116288
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -186,24 +225,70 @@
     "trigger": "new event-supplied PR comment containing the exact TYPE: CHECKPOINT marker",
     "repository": "lmmx/mibz2",
     "scope": "only triggering event comments; no backlog",
-    "last_completed_incoming_comment": 6632161918,
-    "last_decision": "D007",
-    "last_outgoing_comment": 6632636427,
+    "last_completed_incoming_comment": 6632963394,
+    "last_decision": "D008",
+    "last_outgoing_comment": 6633274082,
     "after_completion": "stop; await a future matching GitHub event",
     "polling": false,
     "timed_schedule": false,
     "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
-    "duplicate_delivery_test": "not exercised; consumed-ID membership verified"
+    "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
+    "last_decision_commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
+    "last_duplicate_incoming_comment": 6633116288
   },
-  "pending_publications": {
-    "6632963394": {
+  "duplicate_events": [
+    {
+      "incoming_comment": 6633116288,
+      "pr": 145,
+      "created_at": "2026-11-04T14:23:21Z",
+      "duplicate_of_incoming_comment": 6632963394,
       "decision": "D008",
-      "incoming_pr": 145,
-      "sha": "e5d86cc508af495236c1019c5ce1daa24ec83c3e",
       "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
-      "decision_path": "docs/journal/compact30-guardian-shadow/decisions.md#d008--isolated-checkpoints-and-independent-review-appointment-g1-g4-active-stage-a",
-      "status": "decision prepared; reconcile published log and PR review before retrying"
+      "checkpoint_keys": [
+        {
+          "pr": 151,
+          "sha": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        },
+        {
+          "pr": 146,
+          "sha": "49cb46b65070059af49e906fa8d98693b808bda2",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        },
+        {
+          "pr": 146,
+          "sha": "a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        }
+      ],
+      "status": "same three pins and queue; no new Guardian evidence; no separate decision or outgoing review"
     }
-  }
+  ],
+  "reviewed_checkpoint_keys": [
+    {
+      "pr": 151,
+      "sha": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
+      "decision": "D008",
+      "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
+      "comment": 6633274082
+    },
+    {
+      "pr": 146,
+      "sha": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
+      "decision": "D008",
+      "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
+      "comment": 6633274082
+    },
+    {
+      "pr": 146,
+      "sha": "a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b",
+      "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
+      "decision": "D008",
+      "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
+      "comment": 6633274082
+    }
+  ]
 }
