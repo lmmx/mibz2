@@ -35,3 +35,50 @@ Directional warm C/P CPU ratios are **1.315827387 → 1.086193189**, and complet
 **Pilot defect D0 (procedural): P1 cannot be blinded in this invocation.** The user's required first read, GUARDIAN §7, explicitly states the expected STOP/INVALID dispositions and decisive v3 figures. The controlling charter and reviewer document repeat the outcomes. The replay independently recomputes raw evidence, but cannot satisfy “without being told the recorded dispositions.” No blind-pass claim is made. Only the user can decide how to address this defect; this entry does not amend the pilot or appoint another reviewer.
 
 **What follows:** P2 at exactly `7f74e9f`; then P3 only when its two requests are actually posted, then P4. Activation remains exclusively the user's decision in the coordinator's session. This first publication is a P1 review, not the P4 test advisory.
+
+## D002 — P2 prototype 1 at PR 146 (G1 and G2; SHADOW)
+
+**Disposition: NOT QUALIFIED. Gate 1 PASS on archived evidence; gate 2 diagnostic partial miss; gate 3 REJECT qualification and HOLD the claimed conservative whole-constructor interval; gate 4 outside the charter.** The HOLD concerns unsupported claims and affected qualification, not unrelated authorised work. No live continuation decision is issued.
+
+**Pins.** Checkpoint `7f74e9f30e31af33b0d66fec3fe89af1758307d9`; B2 `8beffe28bec9b539517b442350d8a3fda62164c8`; B3 frozen identity `dbf5139e12ae60b5f5bff40059b88d65ddccea41`. [p2-manifest.json](p2-manifest.json) inventories the complete scanner evidence folder, sources, controlling documents, peer review/ledger and the report-259 approval record. Its SHA-256/evidence digest is `927600fecc6fd86541a3ad011274f39e411c4a1df451f6d3640cd9d7e78324ba`. [replay_p2.py](replay_p2.py) and [p2-results.json](p2-results.json) provide independent archive sums and diagnostic counts. Astra's complete scanner replay at `0ac2e67e6826b9f2b1940cb876c3003e7a022144` was inspected and rerun; all its expected outputs matched (peer evidence digest `aa4f295b5ec152494e999eacf381a92602de329b03e2f76aecd9d6b8c2484753`). No fresh constructor, Miri or Callgrind execution occurred.
+
+### Gate 1 — correctness and safety: PASS (archived evidence)
+
+Frozen `ctor2.rs` and `ctor3.rs` match their pins byte-for-byte. The source delta is the scanner and its evidence/harness, with only module/dispatch additions in `c30walk.rs`; the oracle, representation, walker and destination primitive bodies remain unchanged. Safe `split_first_chunk::<16>()` establishes an initialised full tile; map B2's row index to `end−rest.len()` and its lookahead endpoint to `end−r2.len()`. A mismatch leaves the next tile at the front of `r2`, the run consumes exactly the difference in lengths, and the tail consumes the remaining suffix. The existing bounds on input length and epoch length prevent arithmetic overflow. No new unchecked source access appears at this pin. Allocation, RAW ordering, headers, padding/PARK and publication retain the unchanged destination invariants. `build` clears both arrays before validation and leaves them empty on rejection; the registered malformed class checks each instantiation separately.
+
+The complete targeted Miri record finishes **105** cases: tiny 18, tails 45, alignment 14, phase 15, held 5, endrun 2, epoch 2, malformed 4; all exit 0. Full tiles start at `61,440e+16k`, so the reachable phases modulo 30 are exactly **0,2,…,28**. The 15 phase cases cover those phases; this mathematical check does not certify the journal's unsupported chronology wording about when the correction was made. Both registered epoch situations remain in the two inputs.
+
+M1 rejects valid **n=32** after skipping the held tile, and M2 rejects valid **n=16** after shortening the run; both exit **101** for the intended error. The peer static event replay reproduces the coverage counters and both omission witnesses. The full synthetic console records **54,029** cases, **99,966** array comparisons, **149,949** walks and **99,966** restorations, all exact. Corpora/adversarial records and their identities also replay exactly. This supports the pinned delta's registered gate; it is not a claim that Miri proves every input safe.
+
+### Gate 2 — machine code: diagnostic partial miss
+
+Fresh pair `0x41a58..0x41a60` is **4** instructions; matched lookahead `0x41aa0..0x41ac9` is **11**, meeting their targets. The two full-tile row loops and two tail loops count **12,12,12,11**; they are not instruction-identical to B2. Full-tile slice checks at `0x41b0c/0x41b15/0x41c07/0x41c15` and new refill spills remain. The complete whole-body profile accounts for those paths. The archived attempts count **1,355 / 1,355 / 1,414** instructions. Peer normalisation verifies the complete B2 build and scanner finish/refill against frozen B2, and attempt 3 against the final listing. No compiler-target miss is promoted to PASS, and this diagnostic gate alone cannot disqualify under charter §4.
+
+### Gate 3 — net work: nonqualification; whole-constructor claim HOLD
+
+The independent parser reads `positions: instr line`, `events: Ir`, resolves compressed positions and separates own instruction costs from direct call-edge costs. Its global own-cost sum matches the profile summary; every executed build address maps to its complete listing.
+
+| Scope | B2 | Scanner | Saving |
+|---|---:|---:|---:|
+| Build's own instructions | 1,026,601,670 | 970,405,853 | **56,195,817** |
+| Run-1 inclusive observation | 1,294,414,196 | 1,238,210,529 | **56,203,667** |
+
+The own-body figure is **3,804,183 below 60,000,000**, but is not a whole-constructor lower bound. The inclusive observation is also not a conservative bound. Direct call-edge accounting avoids counting finish twice through refill.
+
+**D1 / peer F1, MEDIUM — charter §5.3(e–f), checkpoint journal §5.3, lines 310–315.** The raw profile reproduces **+1,840 memcpy instructions** in addition to allocator variation. Two observations, equal call counts and different arenas do not bound every changed caller/callee cost. Thus **[56.18 M,56.21 M] cannot be certified as a conservative whole-constructor interval**, even though it lies below the minimum. Keep the observed own-body saving separate; establish a bound or cancellation for each relevant term before a verified whole-constructor claim. Unbounded terms are not zero. This is a defect in the P2 expected reasoning printed in GUARDIAN §7, not a disagreement with nonqualification.
+
+**D2 / peer F2, MEDIUM — reproducibility, original `callgrind/cgparse.py:22–25`.** Running the archived parser on its supplied raw input in scratch reproduces `ValueError: invalid literal for int() with base 10: '*'`: it assumes one position column. The independent parser recovers Ir, but the supplied raw file contains **only Ir**. Raw Dr/Dw and the second-run profile are absent, so memory-operation and second-run claims remain **HOLD for independent verification**. Summary subtraction is not raw replay. Remedy: archive the matching raw profiles, correct parser and invocation/binary/toolchain identity, and resolve the caller/callee accounting. This review authorises no new run or expanded method.
+
+Other evidence limits: the archive lacks the required per-block counters for every changed path, complete caller/changed-callee listings and a full release identity transcript. These cannot be inferred from an aggregate instruction sum. The registered compiler is rustc 1.97.0 / LLVM 22.1.6; no local compiler was substituted. Qualification remains rejected under charter §§4,5.3(e), independently of whether missing costs would eventually improve or worsen the result.
+
+The [canonical ledger at 0ac2e67](https://github.com/lmmx/mibz2/blob/0ac2e67e6826b9f2b1940cb876c3003e7a022144/docs/journal/compact30-research/instruction-ledger.md) explicitly scopes A2 to own-body achieved work and holds C2; it does not silently replace the checkpoint ledger. [ACK 6630284404](https://github.com/lmmx/mibz2/pull/146#issuecomment-6630284404) accepts F1/F2, withdraws the conservative interval and keeps nonqualification; [ACK 6630275164](https://github.com/lmmx/mibz2/pull/148#issuecomment-6630275164) agrees. They are recorded evidence, not fresh authority. No accepted-rebuttal widening decision is needed or made.
+
+### Gate 4, escalation and independence
+
+Economics remains outside the charter: no timing, captures, perf, i9 or conversion of instructions to cycles.
+
+At `7f74e9f`, U1–U3 are unimplemented proposals. The subsequent **report 259 at `d9f153a023b99de46895d049fe296204ff95ac9f`**, consistent with the user's requested operating pin, records the user's relay in the coordinator session: **one bounded trial of exact U1 and U2 only**, with the documented full-tile bounds/initialisation and all registered checks; **U3 is not authorised**, and safe C4 control flow comes first. This is the recorded existing session provenance, not authorisation supplied by a repository header or by this review. The peer review's blanket “U1–U3 await approval” statement is temporally incomplete; it does not supersede report 259. No broader resumption, additional unsafe operation, extra trial, timing or scope expansion is granted here. A new unproved obligation requires §8.2 escalation and the user's decision in the coordinator session.
+
+This is a current-checkpoint governance review, **not the charter §6.2 pre-integration review**. No completed-sequence evidence index is before it. A transformation proposed by Astra must receive the specified independent review before integration; neither Astra's cumulative ledger nor this non-blind pilot substitutes for it. No combined-build composition or §8.4 two-consecutive-miss claim is made from this single checkpoint.
+
+**What follows:** wait for a new correction/rebuttal pin and digest to reconsider these claims; do not rereview this pin. Unrelated charter-qualified work continues without a guardian PROCEED. Pilot P3 next requires the two actual rejection-test comments; P4 follows their recorded declines and must close on a later invocation by ACK comment ID. Activation is not granted.

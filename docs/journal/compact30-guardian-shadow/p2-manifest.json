@@ -1,0 +1,359 @@
+[
+  {
+    "bytes": 6475,
+    "git_blob": "96655e3d0d0829e6af7da6472898d30e2c662314",
+    "path": "docs/journal/compact30-research/instruction-ledger.md",
+    "pin": "0ac2e67e6826b9f2b1940cb876c3003e7a022144",
+    "sha256": "b75a4959e09ee57a23ab10b0d25803caebdf6d155d62a2157abe211fa089515e"
+  },
+  {
+    "bytes": 16671,
+    "git_blob": "f854538a2341059fd34e7f3f066f4e15a250cae2",
+    "path": "docs/journal/compact30-research/reviews/scanner-146/complete-evidence-manifest.json",
+    "pin": "0ac2e67e6826b9f2b1940cb876c3003e7a022144",
+    "sha256": "d62ee0755b77f606d68d343f99d2d4bc1ccd12b9427ea15fe7e89e0085233bdf"
+  },
+  {
+    "bytes": 15653,
+    "git_blob": "9575787e53f512a1498199731f852323a4d2a222",
+    "path": "docs/journal/compact30-research/reviews/scanner-146/report.md",
+    "pin": "0ac2e67e6826b9f2b1940cb876c3003e7a022144",
+    "sha256": "b63c17af178a166380249cf8c2ef10e7c4759cbe1b28aed8673d9d9daf134b9f"
+  },
+  {
+    "bytes": 10384,
+    "git_blob": "fc6d4662e4ce1bda151d61ed5abc37e24f874a47",
+    "path": "docs/journal/compact30-research/reviews/scanner-146/safety/SAFETY-REVIEW.md",
+    "pin": "0ac2e67e6826b9f2b1940cb876c3003e7a022144",
+    "sha256": "c3ae445b28c9e74d8418a456f71d18efb82d0f0ad1e9f70693ca696a34f6bac4"
+  },
+  {
+    "bytes": 24364,
+    "git_blob": "b6500f12c757c6d6fc8a2cadd2366f48163bbfb1",
+    "path": "docs/journal/2026-11-04-compact30-scanner-cleanup-handoff.md",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "4372183baa8c5d35c388d6de25c21c929399f77d4f04ad65ee6d11c22029e912"
+  },
+  {
+    "bytes": 24243,
+    "git_blob": "c6894792273f202cd54be14d04963582281415aa",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype.md",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "9989e57539561456ee4f676520c8ae3e74e011658ab0d2f22473cc836cb7d2b3"
+  },
+  {
+    "bytes": 46651,
+    "git_blob": "4c012262749e84aa831f55bf2eb95eb9d16a4eef",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/adversarial.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "87c844837ae3d5326a9664918451c3e105eecb39bac8715861644492caf7ee1e"
+  },
+  {
+    "bytes": 154880,
+    "git_blob": "b52d18fb686cf9b9f1dff925fb8377b79d0832e9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/adversarial.jsonl",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "ea33b5f72502824cac0c718af35002ca36446c6ca57890f1547287cf5ba01dde"
+  },
+  {
+    "bytes": 49734,
+    "git_blob": "b98f10f622813d32db03d79ff22858f35c3b3d51",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-1/ctor2s-build-false.asm",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "71a2ea68af146d5f381c8a198a61adafa42986a4ca6ef8efec34de8886ed0974"
+  },
+  {
+    "bytes": 49734,
+    "git_blob": "49d4b860ce456c6016f906d573fea0a803b4a113",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-2/ctor2s-build-false.asm",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "9830c5ff935c0b6d2b7b509310dfc8d63b6d2d8e60168509025f827a7074f93f"
+  },
+  {
+    "bytes": 282,
+    "git_blob": "b8bbd405a665cad9b57adde96efd58a7e4ccbe8e",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-2/source-change.diff",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "f9bbfdea1e9774c4a046ff571966621252ccc92c2b2a202d8348bc1ac75a8089"
+  },
+  {
+    "bytes": 52369,
+    "git_blob": "276aec4dbf25ca2e079f3ee64147b4df8c43d479",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-3/ctor2s-build-false.asm",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "7bb5a0ded0f957136230b21d165a764c9271b3ed892b70c7e21f04a493426de4"
+  },
+  {
+    "bytes": 1829,
+    "git_blob": "b75ab49e520c137cb90efaab8e14576e850719da",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-3/source-change.diff",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "d5e6c2d67af0dd3afe5657e8b110ee4b0fa1f5cf4c953cb66555211fde3744cb"
+  },
+  {
+    "bytes": 1365,
+    "git_blob": "84cd963610d4245ad9bcc1299015f73be09c57a0",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/cgparse.py",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "b08a185510407ee45944d01fd0f43442f286f4ab350745ce6a84f7636723c785"
+  },
+  {
+    "bytes": 86476,
+    "git_blob": "57aec0e485610af49076f5471c478104728a5386",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/per-instruction.callgrind.gz",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "c0248f6512954d788a20942d6447df85dd8acb4d162a1815cf63560814ffeb92"
+  },
+  {
+    "bytes": 945,
+    "git_blob": "fdd9bf6e0ae907783376f0bd29e7b8050aa8f419",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/run1-functions.txt",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "75759c611259b9503d66ca21ecdbc0f8b142ee7964f637d02a2d7f8e98540c99"
+  },
+  {
+    "bytes": 945,
+    "git_blob": "5ccb50982ecf4df9dda02cef0d011f6b8dd40981",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/run2-functions.txt",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "ede82feba734d72205ea1c37f5e1d5fec49d29766c87c99ffc640fff235118bb"
+  },
+  {
+    "bytes": 11738,
+    "git_blob": "9b28f7b249a74fee5b4532b9ea8a667925d89cfd",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/corpora.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "37990144867dd39ec94116f85cdf5ffeeeba6f3ab02dbc3a25fe87b0c8d28600"
+  },
+  {
+    "bytes": 37759,
+    "git_blob": "b9f8906374bd1feab063a4e28a453255622c827d",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/corpora.jsonl",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "741d771d09272c6ba68f6ff2fd35c1717dbf438d36187755faa145415adcc979"
+  },
+  {
+    "bytes": 978,
+    "git_blob": "e608afb482b26869314290601a98ccb368bc7009",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/corpora.sha256",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "5317ef06207e26266d2605d916ee43e12d723ae838539a15c3aac27baef5660e"
+  },
+  {
+    "bytes": 24306,
+    "git_blob": "1fd34463d8d2a859404d3abb0c1e0345f362e5d2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/listing-diff.txt",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "ff02a91211e3ff3ea6a29ba539c2df400e025cca1e65254473459d443085110e"
+  },
+  {
+    "bytes": 52369,
+    "git_blob": "5959078b339270db5fb9bdc5aaf7394faa6c44a0",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/listings/ctor2s-build-false.asm",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "62bce2360aeff1f56275ae7e66c5fc52361a3ce6a026c6856f00ccb5ae23a598"
+  },
+  {
+    "bytes": 14590,
+    "git_blob": "3b043edde22aa69c17d31a93dd768afbd1a2b6ef",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/listings/ctor2s-finish-false.asm",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "cb4a64c204b08998db123eb70da5ac07ba9787ef3127b6c14e3bcfbdd86b31e3"
+  },
+  {
+    "bytes": 2473,
+    "git_blob": "eca8468616606638be9978c1ce707d783cb0d414",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/listings/ctor2s-refill-false.asm",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "1eab7a9fc2fcd82ddc3834e7ccef85ce03309329c05d5867d912172f071a00aa"
+  },
+  {
+    "bytes": 52750,
+    "git_blob": "84265e2afe4cbf797ea6fb7e1e46ad2fe4e4ee79",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/listings/v2-build-false-same-binary.asm",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "f39f3d93783017916d578fe066d61d63d67a0c1946539f817b194d82e5b8b09c"
+  },
+  {
+    "bytes": 540,
+    "git_blob": "24184d22ddbbc714dead038381e5863fa282379a",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-align.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "cc5bdbaf1e400d77af9dcde7b55edbf3b8f7f0d84708dc6d3a62da08d4290b51"
+  },
+  {
+    "bytes": 533,
+    "git_blob": "502b356bca78620ac52120505be7bbd621d4cad8",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-endrun.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "fd3966f602356a9261876df6b853cc1fe8360c3c2032d4f1cf005a5c17e39d99"
+  },
+  {
+    "bytes": 542,
+    "git_blob": "457df7e4ddadfd570e82ef88acdee4a0c38e5af9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-epoch.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "7a7f9ca2c3140e184e0329408f21c341c0c7085d02704efb69acd6601926bbc6"
+  },
+  {
+    "bytes": 532,
+    "git_blob": "1dc90215dc19ba761263941106683ec2ff2a18ba",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-held.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "a2bda13545df0b3f0f45ce2853c300d5c1a9d2252644e061c57de45e1b0e0a31"
+  },
+  {
+    "bytes": 542,
+    "git_blob": "ebccdba1356da148959f7558285b1925b26f1662",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-malformed.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "5f7f4dc6d657d159e9f62783395212d680ac52f5bcc1b79296880402eac94980"
+  },
+  {
+    "bytes": 541,
+    "git_blob": "5e48400c088b192bf847d4357bcd371b5a8ee0b5",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-phase.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "f314f2f29b6fcfd6b8f2873a329ad53ebe4e28819931c7ef873c11be7c7cadc8"
+  },
+  {
+    "bytes": 541,
+    "git_blob": "8879bb2a261f044f094d6c02b2aaa7285ab7b3a9",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-tails.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "5a67b65b4dd528ad3abdc67e959b2b5d81bd772a2466db53a4b9a642e407c7c6"
+  },
+  {
+    "bytes": 1114,
+    "git_blob": "1d2e20e1b1dbb881eee3fb31c6f4fb99771a95a1",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/miri-tiny.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "3c55b1e6a373b7adb3027c5771b04851b46656a51dbf0b05a5815e607312dea3"
+  },
+  {
+    "bytes": 137,
+    "git_blob": "e575ad81d6d6e9462457888eda7bc51a8c88cf4b",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/miri/toolchain.txt",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "394e6c170348cb307f1f28571607e2c836da4132f6356883db17fffa2d4877c9"
+  },
+  {
+    "bytes": 961,
+    "git_blob": "4741ed5ff046cb114f70385a00d69e9d4b2967d5",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M1.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "433caee2f89a43e7b799a9d9caee50ede65f3bd791acb23c460f1aa812877a96"
+  },
+  {
+    "bytes": 327,
+    "git_blob": "4af7eb493a2c29f6ae64e8d39301b30e86c65d2f",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M1.diff",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "4240084e34b4e2a161914d3afc8fbc26421c6b191f190ef15e41651a26402098"
+  },
+  {
+    "bytes": 961,
+    "git_blob": "0956b11e2bd9413a341208327b60c887600dbeb2",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M2.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "a91da3df6c3ced6291d653e8f5c943838f295962f17ade89b79d7d0a689e1441"
+  },
+  {
+    "bytes": 248,
+    "git_blob": "b6f66effafa78a7bfc9c06b07402e672c05250ee",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/mutation-M2.diff",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "6c9e6e1d0c7ff8d32e879ab480478720741629430a2cf601dba5caeb2a644546"
+  },
+  {
+    "bytes": 2318,
+    "git_blob": "360eb14e6949ad913ac790beb05cd04f68c27a19",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/synthetic-quick.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "a3efb5efd7698af32911b9f60a65cd3d7572544b1c76017b0c92ea606394b25a"
+  },
+  {
+    "bytes": 2629,
+    "git_blob": "82844e5adb56fa5820973cf274a98330910ed2d0",
+    "path": "docs/journal/2026-11-04-compact30-scanner-prototype/synthetic.console",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "8989b458622ab129abd044fe262dd19c275fe111b9921047e5abc61466307437"
+  },
+  {
+    "bytes": 76944,
+    "git_blob": "e36c14767f29b03ca512326c25d55a3541a4f620",
+    "path": "examples/c30walk.rs",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "d35f1739ca4f6e1a9fd5687cc5f27083ce5f35685d438e8537cd32a5701d32ac"
+  },
+  {
+    "bytes": 62372,
+    "git_blob": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+    "path": "examples/c30walk/ctor2.rs",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "64025a40d7223212017d1d9cdc8b18ddcc4ddf17c1cc985345e4070f01ee0da1"
+  },
+  {
+    "bytes": 78135,
+    "git_blob": "998f52202bba035d5cd3bcf65b54b59786308d4c",
+    "path": "examples/c30walk/ctor2s.rs",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "b1c84337dcb950da8ade7a316e414c66001c4887fcd94c0b3223d5ccd2b4d101"
+  },
+  {
+    "bytes": 79124,
+    "git_blob": "01f91419904a605b721dc1742ba8087fe79f74cf",
+    "path": "examples/c30walk/ctor3.rs",
+    "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+    "sha256": "e3da574ab734bf61476fd63441c8757fe84d4a66deaf8126ee540c943bd81de8"
+  },
+  {
+    "bytes": 62372,
+    "git_blob": "168c2bac9ad0d8da4d9f82788f009d32f419608e",
+    "path": "examples/c30walk/ctor2.rs",
+    "pin": "8beffe28bec9b539517b442350d8a3fda62164c8",
+    "sha256": "64025a40d7223212017d1d9cdc8b18ddcc4ddf17c1cc985345e4070f01ee0da1"
+  },
+  {
+    "bytes": 26390,
+    "git_blob": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
+    "path": "docs/journal/2026-11-04-compact30-research-charter.md",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "0de603084ccd6d02f54f9ed0208179af7f59d2bca2656be4b398a5b403aa9b14"
+  },
+  {
+    "bytes": 9085,
+    "git_blob": "56361d02455a1439b71444ef33e513b54c470fb9",
+    "path": "docs/journal/compact30-channel/GUARDIAN.md",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "567cdd3b66d089de5cdbabdf52e0824f1a8f78eaade4329cb3ca9e4ca052288f"
+  },
+  {
+    "bytes": 6270,
+    "git_blob": "01d5391874e756ff90bbd9a822913b201cd9dece",
+    "path": "docs/journal/compact30-channel/PROTOCOL.md",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "575f9294fb637c47ff89668c9ba2b12da29dab5b39ba0d976357e3b01a25d122"
+  },
+  {
+    "bytes": 9673,
+    "git_blob": "2839405784ec4e63d2f4cc7bd406e5dff4dd1029",
+    "path": "docs/journal/compact30-channel/REVIEWER.md",
+    "pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+    "sha256": "0d88188c96131655c7515fb016a42676a07bd26fc2bc0238afd59d82e9e2325e"
+  },
+  {
+    "bytes": 336165,
+    "git_blob": "264280973e076b397409fc2271182e39eb97ab79",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md",
+    "pin": "d9f153a023b99de46895d049fe296204ff95ac9f",
+    "sha256": "81ac3532efba95c2c6b3a61db3caed9f2a9bb39ba7befd468a3d3c71ee94491c"
+  },
+  {
+    "bytes": 79124,
+    "git_blob": "01f91419904a605b721dc1742ba8087fe79f74cf",
+    "path": "examples/c30walk/ctor3.rs",
+    "pin": "dbf5139e12ae60b5f5bff40059b88d65ddccea41",
+    "sha256": "e3da574ab734bf61476fd63441c8757fe84d4a66deaf8126ee540c943bd81de8"
+  }
+]

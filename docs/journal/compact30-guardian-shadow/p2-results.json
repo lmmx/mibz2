@@ -1,0 +1,103 @@
+{
+  "attempt_listing_instructions": [
+    1355,
+    1355,
+    1414
+  ],
+  "baseline_pin": "8beffe28bec9b539517b442350d8a3fda62164c8",
+  "callee_delta_scanner_minus_B2": {
+    "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>": -5,
+    "<alloc::raw_vec::RawVecInner>::grow_exact": -9829,
+    "<c30walk::ctor2::W<false>>::finish": -56611441,
+    "<c30walk::ctor2::W<false>>::refill": -201234507,
+    "<c30walk::ctor2s::W<false>>::finish": 56611441,
+    "<c30walk::ctor2s::W<false>>::refill": 201234507,
+    "__memcpy_avx_unaligned_erms": 1840,
+    "__memset_avx2_unaligned_erms": 0,
+    "c30walk::ctor::canonicalise": 0,
+    "free": 144
+  },
+  "diagnostic_path_counts": {
+    "fresh": 4,
+    "lookahead": 11,
+    "row1": 12,
+    "row2": 12,
+    "tail1": 12,
+    "tail2": 11
+  },
+  "evidence_digest": "927600fecc6fd86541a3ad011274f39e411c4a1df451f6d3640cd9d7e78324ba",
+  "full_listing_instructions": {
+    "B2": 1431,
+    "scanner": 1414
+  },
+  "full_synthetic": {
+    "arrays": 99966,
+    "cases": 54029,
+    "restorations": 99966,
+    "walks": 149949
+  },
+  "gate1": "PASS on archived evidence; no fresh execution",
+  "gate2": "diagnostic partial miss",
+  "gate3": "REJECT qualification; HOLD conservative whole-constructor interval",
+  "gate4": "outside charter",
+  "inclusive_B2_observed": 1294414196,
+  "inclusive_saving_observed": 56203667,
+  "inclusive_scanner_observed": 1238210529,
+  "limits": [
+    "Only Ir exists in the raw supplied profile; Dr/Dw and run2 cannot be reproduced from it.",
+    "No bounded callee/caller cancellation follows from equal call counts or two observations."
+  ],
+  "minimum": 60000000,
+  "miri_cases": {
+    "align": 14,
+    "endrun": 2,
+    "epoch": 2,
+    "held": 5,
+    "malformed": 4,
+    "phase": 15,
+    "tails": 45,
+    "tiny": 18
+  },
+  "miri_total": 105,
+  "mutations": {
+    "M1": {
+      "exit": 101,
+      "rejects_valid_input_rows": 32
+    },
+    "M2": {
+      "exit": 101,
+      "rejects_valid_input_rows": 16
+    }
+  },
+  "own_B2": 1026601670,
+  "own_body_gap_to_minimum": 3804183,
+  "own_saving": 56195817,
+  "own_scanner": 970405853,
+  "packaged_parser_fails": true,
+  "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+  "profile_events": [
+    "Ir"
+  ],
+  "profile_global_Ir": 9128951031,
+  "profile_positions": [
+    "instr",
+    "line"
+  ],
+  "reachable_phases": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20,
+    22,
+    24,
+    26,
+    28
+  ]
+}
