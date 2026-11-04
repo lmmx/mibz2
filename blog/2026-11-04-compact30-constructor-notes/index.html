@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Technical appendix to the compact30 table-builder post: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time.">
+        <meta name="description" content="Technical appendix to the post on building a smaller bzip2 decoding table: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -35,7 +35,7 @@
     
     
       
-        <title>Technical appendix: the ideas behind compact30's table builder - mibz2</title>
+        <title>Technical appendix: the ideas behind building a smaller bzip2 decoding table - mibz2</title>
       
     
     
@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=56cb34b6aeee">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=732b7efd335f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=56cb34b6aeee">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=732b7efd335f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=56cb34b6aeee">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=732b7efd335f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=56cb34b6aeee">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=732b7efd335f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=56cb34b6aeee">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=732b7efd335f">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -87,19 +87,19 @@
   
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="mibz2">
-  <meta property="og:title" content="Technical appendix: the ideas behind compact30's table builder">
-  <meta property="og:description" content="Technical appendix to the compact30 table-builder post: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time.">
+  <meta property="og:title" content="Technical appendix: the ideas behind building a smaller bzip2 decoding table">
+  <meta property="og:description" content="Technical appendix to the post on building a smaller bzip2 decoding table: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor-notes/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/assets/social/default.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Technical appendix: the ideas behind compact30's table builder">
+  <meta property="og:image:alt" content="Technical appendix: the ideas behind building a smaller bzip2 decoding table">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Technical appendix: the ideas behind compact30's table builder">
-  <meta name="twitter:description" content="Technical appendix to the compact30 table-builder post: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time.">
+  <meta name="twitter:title" content="Technical appendix: the ideas behind building a smaller bzip2 decoding table">
+  <meta name="twitter:description" content="Technical appendix to the post on building a smaller bzip2 decoding table: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/assets/social/default.png">
-  <meta name="twitter:image:alt" content="Technical appendix: the ideas behind compact30's table builder">
+  <meta name="twitter:image:alt" content="Technical appendix: the ideas behind building a smaller bzip2 decoding table">
 
   </head>
   
@@ -152,7 +152,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Technical appendix: the ideas behind compact30's table builder
+              Technical appendix: the ideas behind building a smaller bzip2 decoding table
             
           </span>
         </div>
@@ -1124,7 +1124,7 @@
   <span class="md-ellipsis">
     
   
-  Building compact30's table
+  Building a smaller decoding table
 
     
   </span>
@@ -1140,7 +1140,7 @@
               <span class="md-nav__icon md-icon"></span>
               
   
-  Building compact30's table
+  Building a smaller decoding table
 
             </label>
             <ul class="md-nav__list" data-md-scrollfix>
@@ -2079,7 +2079,7 @@
 
 
 <p>← <a href="../2026-11-04-compact30-constructor/">From 49 instructions to 12</a></p>
-<h1 id="technical-appendix-the-ideas-behind-compact30s-table-builder">Technical appendix: the ideas behind compact30's table builder<a class="headerlink" href="#technical-appendix-the-ideas-behind-compact30s-table-builder" title="Permanent link">&para;</a></h1>
+<h1 id="technical-appendix-the-ideas-behind-building-a-smaller-bzip2-decoding-table">Technical appendix: the ideas behind building a smaller bzip2 decoding table<a class="headerlink" href="#technical-appendix-the-ideas-behind-building-a-smaller-bzip2-decoding-table" title="Permanent link">&para;</a></h1>
 <p><a href="../2026-11-04-compact30-constructor/">The main post</a> moves quickly through ideas that come
 from several fields at once: the Burrows–Wheeler transform, sorting, compact integer formats
 and machine code. This appendix introduces them one at a time, for a programmer who hasn't
@@ -2101,7 +2101,8 @@ exactly once as a destination, so the table is a <em>permutation</em>: it reorde
 losing or repeating any.</p>
 <p>Undoing the Burrows–Wheeler transform comes down to following a permutation like this one,
 emitting a byte at each step. mibz2's conventional table stores one 4-byte entry per row.
-Compact30 stores the same permutation in less memory. The catch, and the subject of the main
+Compact30, named for the thirty rows it packs into each 64-byte record, stores the same
+permutation in less memory. The catch, and the subject of the main
 post, is that the compact table has to be built first, and building it must not cost more
 than it saves.</p>
 <h2 id="2-the-bwt-in-one-example">2. The BWT in one example<a class="headerlink" href="#2-the-bwt-in-one-example" title="Permanent link">&para;</a></h2>
@@ -3047,17 +3048,17 @@ trade-off itself. It doesn't propose this builder.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=56cb34b6aeee"></script>
+        <script src="../../assets/javascripts/bench.js?v=732b7efd335f"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=56cb34b6aeee"></script>
+        <script src="../../assets/javascripts/couriers.js?v=732b7efd335f"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=56cb34b6aeee"></script>
+        <script src="../../assets/javascripts/blog.js?v=732b7efd335f"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=56cb34b6aeee"></script>
+        <script src="../../assets/javascripts/frontier.js?v=732b7efd335f"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=56cb34b6aeee"></script>
+        <script src="../../assets/javascripts/katex.js?v=732b7efd335f"></script>
       
     
   </body>

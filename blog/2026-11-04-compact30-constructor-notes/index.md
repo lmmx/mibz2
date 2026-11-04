@@ -1,6 +1,6 @@
 ← [From 49 instructions to 12](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>)
 
-# Technical appendix: the ideas behind compact30's table builder
+# Technical appendix: the ideas behind building a smaller bzip2 decoding table
 
 [The main post](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>) moves quickly through ideas that come from several fields at once: the Burrows–Wheeler transform, sorting, compact integer formats and machine code. This appendix introduces them one at a time, for a programmer who hasn't met them before. Simple things get simple explanations. The sections build on one another, but each can be read on its own. A [glossary](<#14-glossary>) is at the end.
 
@@ -21,7 +21,7 @@ next[i]:    3  4  5  2  0  1
 
 Start at index 3 and follow it: \\(3 \\to 2 \\to 5 \\to 1 \\to 4 \\to 0 \\to 3\\). Every index appears exactly once as a destination, so the table is a *permutation*: it reorders the indices without losing or repeating any.
 
-Undoing the Burrows–Wheeler transform comes down to following a permutation like this one, emitting a byte at each step. mibz2's conventional table stores one 4-byte entry per row. Compact30 stores the same permutation in less memory. The catch, and the subject of the main post, is that the compact table has to be built first, and building it must not cost more than it saves.
+Undoing the Burrows–Wheeler transform comes down to following a permutation like this one, emitting a byte at each step. mibz2's conventional table stores one 4-byte entry per row. Compact30, named for the thirty rows it packs into each 64-byte record, stores the same permutation in less memory. The catch, and the subject of the main post, is that the compact table has to be built first, and building it must not cost more than it saves.
 
 ## 2\. The BWT in one example
 

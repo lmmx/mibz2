@@ -682,13 +682,13 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# From 49 instructions to 12: building compact30's navigation table
+# From 49 instructions to 12: building a smaller bzip2 decoding table
 
-Compact30's second table builder writes a provisional 16-bit label for each row and finishes each group of thirty rows once. That cut its per-row loop from 49 instructions to 12, but with four workers it still builds too slowly.
+Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly.
 
 4 November 2026 · 12 min read · [Research in progress](<#8-fewer-instructions-not-yet-a-cheaper-build>)
 
-[The last post](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>) ended with a smaller navigation table, compact30, beating mibz2's conventional one when four workers walk at once, and a warning: [the table still has to be built](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/#9-the-table-still-has-to-be-built>). The records in that comparison came from a reference builder that computed every row's successor in a full-sized temporary array first. A decoder can't afford that. It needs a builder that goes straight from the block's last column \\(L\\) and its byte counts to the final records, and costs about as much as the builder mibz2 uses today.
+[The last post](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>) ended with a smaller navigation table, compact30 (named for its thirty rows to each 64-byte record), beating mibz2's conventional one when four workers walk at once, and a warning: [the table still has to be built](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/#9-the-table-still-has-to-be-built>). The records in that comparison came from a reference builder that computed every row's successor in a full-sized temporary array first. A decoder can't afford that. It needs a builder that goes straight from the block's last column \\(L\\) and its byte counts to the final records, and costs about as much as the builder mibz2 uses today.
 
 This post follows that builder through two versions. The second one's inner loop is a quarter the length of the first's, and the change behind it wasn't hand-written assembly. It was a different order of work, which let the compiler emit a much shorter loop. The second builder still costs too much with four workers, so the post ends with what we're doing about that.
 
@@ -914,7 +914,7 @@ The general lesson outlasts this builder. A computation that is expensive done o
 
 ← [From 49 instructions to 12](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>)
 
-# Technical appendix: the ideas behind compact30's table builder
+# Technical appendix: the ideas behind building a smaller bzip2 decoding table
 
 [The main post](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>) moves quickly through ideas that come from several fields at once: the Burrows–Wheeler transform, sorting, compact integer formats and machine code. This appendix introduces them one at a time, for a programmer who hasn't met them before. Simple things get simple explanations. The sections build on one another, but each can be read on its own. A [glossary](<#14-glossary>) is at the end.
 
@@ -935,7 +935,7 @@ next[i]:    3  4  5  2  0  1
 
 Start at index 3 and follow it: \\(3 \\to 2 \\to 5 \\to 1 \\to 4 \\to 0 \\to 3\\). Every index appears exactly once as a destination, so the table is a *permutation*: it reorders the indices without losing or repeating any.
 
-Undoing the Burrows–Wheeler transform comes down to following a permutation like this one, emitting a byte at each step. mibz2's conventional table stores one 4-byte entry per row. Compact30 stores the same permutation in less memory. The catch, and the subject of the main post, is that the compact table has to be built first, and building it must not cost more than it saves.
+Undoing the Burrows–Wheeler transform comes down to following a permutation like this one, emitting a byte at each step. mibz2's conventional table stores one 4-byte entry per row. Compact30, named for the thirty rows it packs into each 64-byte record, stores the same permutation in less memory. The catch, and the subject of the main post, is that the compact table has to be built first, and building it must not cost more than it saves.
 
 ## 2\. The BWT in one example
 

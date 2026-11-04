@@ -1,12 +1,12 @@
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# From 49 instructions to 12: building compact30's navigation table
+# From 49 instructions to 12: building a smaller bzip2 decoding table
 
-Compact30's second table builder writes a provisional 16-bit label for each row and finishes each group of thirty rows once. That cut its per-row loop from 49 instructions to 12, but with four workers it still builds too slowly.
+Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly.
 
 4 November 2026 · 12 min read · [Research in progress](<#8-fewer-instructions-not-yet-a-cheaper-build>)
 
-[The last post](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>) ended with a smaller navigation table, compact30, beating mibz2's conventional one when four workers walk at once, and a warning: [the table still has to be built](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/#9-the-table-still-has-to-be-built>). The records in that comparison came from a reference builder that computed every row's successor in a full-sized temporary array first. A decoder can't afford that. It needs a builder that goes straight from the block's last column \\(L\\) and its byte counts to the final records, and costs about as much as the builder mibz2 uses today.
+[The last post](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/index.md>) ended with a smaller navigation table, compact30 (named for its thirty rows to each 64-byte record), beating mibz2's conventional one when four workers walk at once, and a warning: [the table still has to be built](<https://lmmx.github.io/mibz2/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion/#9-the-table-still-has-to-be-built>). The records in that comparison came from a reference builder that computed every row's successor in a full-sized temporary array first. A decoder can't afford that. It needs a builder that goes straight from the block's last column \\(L\\) and its byte counts to the final records, and costs about as much as the builder mibz2 uses today.
 
 This post follows that builder through two versions. The second one's inner loop is a quarter the length of the first's, and the change behind it wasn't hand-written assembly. It was a different order of work, which let the compiler emit a much shorter loop. The second builder still costs too much with four workers, so the post ends with what we're doing about that.
 

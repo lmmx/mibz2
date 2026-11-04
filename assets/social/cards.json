@@ -36,10 +36,10 @@
     "title": "Revisiting the space–⁠time tradeoff in BWT inversion"
   },
   "assets/social/blog-2026-11-04-compact30-constructor.png": {
-    "description": "Compact30's second table builder writes a provisional 16-bit label for each row and finishes each group of thirty rows once. That cut its per-row loop from 49 instructions to 12, but with four workers it still builds too slowly.",
+    "description": "Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly.",
     "foot": "lmmx.github.io/mibz2 · 4 November 2026",
     "section": " · Research blog",
-    "title": "From 49 instructions to 12: building compact30's navigation table"
+    "title": "From 49 instructions to 12: building a smaller bzip2 decoding table"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
