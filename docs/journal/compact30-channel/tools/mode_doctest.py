@@ -6,17 +6,16 @@ Utterances checked: the fenced block in MODE.md, and every blockquote (lines sta
 in MODE.RATIONALE.md, each blank-line-free run of quoted lines being one paragraph and each
 whole blockquote one utterance.
 
-Rules (from MODE.RATIONALE.md):
-  R1 clipping is monotone: once a clipped form appears, its expanded form may not reappear
-     later in the same utterance (an expanded form may open, as the unclipped baseline).
+Surface conventions only (MODE.RATIONALE.md, "Checking"); conformance is a reading, not this.
+Rules:
+  R1 clipping consistency: an expanded form returning after its clipped form in one utterance.
+     A preference, not a law: a hit is a question for the reader, not a verdict.
   R2 fervour, not violence: no violent or combative lexicon.
-  R3 escalation does not fall before the release: the last intensifier before the final "Go"
-     is not weaker than the strongest intensifier in the utterance.
-  R5 no repeated capitals: an all-caps word is never immediately repeated ("HARDER HARDER");
-     accent comes from a full stop and a slight variation or modifier ("HARDER. Harder still.").
-  R4 determiner deletion: articles (a, an, the) are sparse — at most one per 25 words. Complete
-     sentences may keep theirs: they are the articulate contrast that makes the fractures marked.
-Usage: python3 mode_doctest.py MODE.md MODE.RATIONALE.md
+  R5 no bare doubled capitals ("HARDER HARDER").
+  R4 article count: more than one per 25 words is flagged. The threshold is arbitrary and
+     never a target; determiner deletion matters only against otherwise competent syntax.
+Run on MODE.RATIONALE.md or MODE.ORIGIN.md, it flags the verbatim historical quotations.
+Usage: python3 mode_doctest.py MODE.md
 """
 
 import re
@@ -32,7 +31,6 @@ CLIP = {  # clipped form -> expanded form
 VIOLENT = (
     r"\b(attack\w*|hunt\w*|kill\w*|strike\w*|destroy\w*|crush\w*|smash\w*|weapon\w*|fight\w*|war)\b"
 )
-STRENGTH = [("HARDER STILL", 4), ("HARDER YET", 4), ("EVEN HARDER", 4), ("HARDER", 3), ("HARD", 2)]
 
 
 def utterances(path):
@@ -54,14 +52,6 @@ def utterances(path):
             block = []
 
 
-def strength(s):
-    """Return the intensifier level of a fragment, 0 if none."""
-    for k, v in STRENGTH:
-        if s.upper().startswith(k) and (len(s) == len(k) or not s[len(k)].isalpha()):
-            return v
-    return 0
-
-
 def check(name, u):
     """Return the rule violations found in one utterance."""
     low = u.lower()
@@ -72,13 +62,6 @@ def check(name, u):
             out.append(f"R1 re-expands after clipping: {re.search(e, low[mc.end() :]).group(0)!r}")
     for m in re.finditer(VIOLENT, low):
         out.append(f"R2 violent lexicon: {m.group(0)!r}")
-    frags = [f.strip() for f in re.split(r"(?<=[.!?])\s+|\n", u) if f.strip()]
-    ints = [(i, strength(f)) for i, f in enumerate(frags) if strength(f)]
-    if ints and re.match(r"^go\b", frags[-1].strip(), re.I):
-        peak = max(s for _, s in ints)
-        last = ints[-1][1]
-        if last < peak:
-            out.append(f"R3 escalation falls before release: last {frags[ints[-1][0]]!r} < peak")
     for m in re.finditer(r"\b([A-Z]{2,})\b[\s.,!]+\1\b", u):
         out.append(f"R5 repeated capitals: {m.group(0)!r}")
     words = re.findall(r"[A-Za-z']+", u)

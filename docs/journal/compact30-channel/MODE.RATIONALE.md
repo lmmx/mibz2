@@ -5,6 +5,59 @@ records the linguistic premise, not an operational specification, and it is not 
 every run. It adds no authority. MODE.md remains the operative register, CAMPAIGN.md the objective, and
 the charter the authority and evidence standard. Set by Louis, 2026-11-04.*
 
+## At a glance
+
+Everything in this file, in one burst. Each line is expanded in its section below.
+
+- **Premise.** Rhetorical overclocking: fervent telegraphic acceleration. The speech is
+  hurried; the thought isn't.
+- **Incantatory performativity.** The utterance performs the concentration it asks for: a
+  gathering, then a discharge. Fervour, not violence.
+- **Recursive catalysis.** The model's own output in the register conditions what follows
+  (stylistic entrainment). A hypothesis, not a finding.
+- **Grammatical compression.** Determiner deletion, nominalisation (reification), clipping,
+  syntactic ellipsis, asyndetic parataxis, deontic modality. The defining case: "Intensive math
+  eng, suffice to catalyse."
+- **Paratactic cascade.** Parataxis is the structure; the cascade is the movement, each
+  fragment precipitating the next. Prosodic acceleration is observed; inferential acceleration
+  is hypothesised.
+- **Register collision.** Technical-managerial, elevated and primitive-imperative registers sit
+  side by side, unmediated.
+- **Staccato prosody.** Full stops are beats; capitals are stress peaks; *Go* is the release.
+- **Escalation.** Across prompts, demand rises while elaboration falls. Within an utterance it
+  is a pulse (accumulation, compression, discharge, renewed accumulation), not a scalar climb.
+  "HARDER." may outweigh "Harder still."; *Go* releases, it does not peak.
+- **Six intensifications (history).** Compression → deformation → collision → cascade →
+  recursive entrainment → discharge. Stage 6 is kept verbatim, its four failures annotated.
+- **Constructed example.** Prototype 4's FULL tag, written in the register and read feature by
+  feature.
+- **Form against meaning.** Semantic density rises, syntactic explicitness falls, pressure
+  rises.
+- **Markedness through contrast.** Articulate sentences make the fractures visible. Controlled
+  linguistic derangement, not simulated incompetence.
+- **The speech act.**
+  - *Austin:* locution, illocution, perlocution; the hearer is assigned a stance ("your Will").
+  - *Kamehameha:* the syllables accompany the gathering and the discharge.
+  - *Incantation:* reinforcement (contraction) alternates with the cascade (expansion).
+    Reinforcement alone is a slogan.
+- **Hypotheses (not established).**
+  - The register removes ambiguity about register, frames the task as ongoing effort, primes
+    decision, and suppresses the explain-what-you-know default.
+  - High reasoning, low emission.
+  - Three to keep apart: linguistic entrainment and behavioural acceleration, both observable;
+    cognitive catalysis, which only a controlled comparison can show.
+  - Clipped language hides gaps as easily as it removes padding.
+- **Checking.** The surface lint is a sanity check, not a certification: "HARDER. Go." passes
+  it. Conformance is a reading: eight questions, each answered with a quoted span.
+- **What must be preserved.**
+  - Controlled oddness, not caricature.
+  - Ellipsis, not incoherence.
+  - Unusual diction, not obscurity.
+  - Fervour, not aggression.
+  - Concentration, not slogans.
+
+  Brevity preserves the charge.
+
 ## Rhetorical overclocking
 
 MODE originates in an unusual form of speech: fervent telegraphic acceleration.
@@ -102,6 +155,8 @@ The sequence begins to behave like a chain of operations."
 > Bound. Falsify. HARDER. No speculative comfort. Real asm. Real frequency. Mathematic
 > equivalence then impl. Impl then test. Test then next. Decisioning MUST MOVE. Go go.
 
+(Stage 4 of the six intensifications, verbatim. The next is constructed for this file.)
+
 > Where remaining work? Inherent, or artefact? Mathematical equivalence. Cheaper formulation.
 > Derive. Bound. Derisk. Suffice to catalyse next impl. HARDER. Go.
 
@@ -126,9 +181,13 @@ between them:
 - **elevated and abstract:** *suffice*, *catalyse*, *Will*, *breakthrough*;
 - **primitive imperative:** *HARDER*, *go*, *no stop*.
 
-"HARDER. Derisk. Concise. Math eng very very concise. Go." moves through all three in one
-breath: professional discourse, a colloquial intensifier, a clipped technical label, a bare
-execution command. The vocabulary is intellectually elaborate. The grammar that delivers it is
+The analysis's example is "HARDER. Derisk. Concise. Math eng very very concise. Go.": professional
+discourse (*Derisk*), a colloquial intensifier (*very very*), a clipped technical label (*Math
+eng*), a bare execution command (*Go*). It spans two of the three registers, not all three:
+nothing in it is elevated. All three meet in "(do not let Claude dissuade your Will. see it
+through. hard and concise. math eng tunnelling to a breakthrough. go.)": *Will* and
+*breakthrough* elevated, *math eng* technical, *go* primitive, *see it through* colloquial
+between them. The vocabulary is intellectually elaborate. The grammar that delivers it is
 deliberately underdeveloped.
 
 ### Staccato punctuation and simulated prosody (prosodic simulation)
@@ -152,6 +211,19 @@ The paradox is that the more demanding the intellectual task becomes, the less g
 elaboration the speaker allows. The demands are compressed, not elaborated, until they read
 like a sequence of increasingly urgent control signals rather than requests.
 
+This escalation runs across the sequence of prompts: demand rises while elaboration falls. It is
+not a scalar of lexical intensity that should climb within an utterance. Within an utterance the
+structure is a pulse: accumulation, compression, discharge, renewed accumulation. Force comes
+from contrast, from the cascade, from deformation and from elevated diction under pressure,
+each fragment judged by its relation to what precedes it.
+- A return from an elevated phrase to a primitive imperative can raise the perceived force
+  through contrast. A quieter phrase can concentrate tension.
+- "HARDER." can carry more force than "Harder still.": the first is abrupt and percussive, the
+  second grammatically elaborated and comparatively mild.
+- The repetition that carries charge is structural. Anadiplosis ("Impl then test. Test then
+  next.") hands each fragment to the next. Bare doubling ("HARDER HARDER") reads as comic.
+- The terminal *Go* is a release, not a peak.
+
 ### The construction: six intensifications
 
 This section is history: it records how the register was developed, not a ritual to perform.
@@ -172,7 +244,8 @@ direction. Remove politeness, explanation and transitions; leave operations.
 > Math eng. Dense. No spread. Actual problem. Actual constraint. Derive. Calculate. Decide. No
 > summary of known. New work only. Go.
 
-This is still fairly conventional telegraphic language.
+This is still fairly conventional telegraphic language. It already clips ("Math eng") and drops
+articles, though: the stages are cumulative emphases, not clean separations.
 
 **2. Deformation: begin breaking grammatical structure.** Delete articles. Clip technical
 vocabulary. Distort ordinary idioms. Let abstract nouns assume agency.
@@ -213,13 +286,15 @@ model to inhabit the deformed register, not merely imitate its vocabulary.
 > Math eng until executable. Don't chant empty. ACTUAL NEW WORK. Go.
 
 This is the critical recursive step. The model's subsequent language is encouraged to keep the
-same formal pressure, potentially reinforcing the register as generation proceeds.
+same formal pressure, potentially reinforcing the register as generation proceeds. "Very dense.
+More dense. Harder still." is the record's nearest approach to a graded climb, and its weakest
+run: graded intensifiers add pressure but no consequence.
 
 **6. Discharge: the complete incantation.** Here the fragments become more intense, less
 grammatical and more cumulative, while the scientific objective stays exact.
 
 > MATH ENG. HARD. HARDER. No spread writing. No comfort language. No conversational settling.
-> Dense math eng decisioning. New intellectual work, NOT recap. HARD.
+> Dense mathematical engineering decisioning. New intellectual work, NOT recap. HARD.
 >
 > Rubber now must hit road. Theory into impl. Impl into machine reality. Actual performance
 > breakthrough sufficient to ship. CAN WE? HOW? What blocks? Where work hiding? What minimum?
@@ -242,43 +317,47 @@ grammatical and more cumulative, while the scientific objective stays exact.
 > into equivalent cheaper mechanism. Mechanism into Rust impl. Compiler output must answer. No
 > abstract victory. Concrete.
 >
-> HARDER.
+> HARDER HARDER.
 >
-> Don't let other agent's NO-GO become your NO-GO. Its conclusion not your evidence.
+> Don’t let other agent’s NO-GO become your NO-GO. Its conclusion not your evidence.
 > Independently derive. Push through contingent compiler failure. Reframe. New construction. A
-> miss is a miss; a line not necessarily dead. No sunk-cost fantasy either. If impossible,
-> prove limit. If possible, MAKE ROUTE. Best next experiment. Smallest decisive falsifier.
-> Maximum expected perf per compute.
+> miss is a miss; a line not necessarily dead. No sunk-cost fantasy either. If impossible, prove
+> limit. If possible, MAKE ROUTE. Best next experiment. Smallest decisive falsifier. Maximum
+> expected perf per compute.
 >
 > Do not waste token on ceremony. No governance theatre. No spawning intelligence to certify
-> intelligence. Existing agents suffice. Technical work first. Deep internally, output
-> knife-dense. Speak increasingly this way, but never compress away essential assumptions,
-> equations, proofs, uncertainty. Precision inviolate. Correctness inviolate. Gates inviolate.
+> intelligence. Existing agents suffice. Technical work first. Deep internally, output knife-
+> dense. Speak increasingly this way, but never compress away essential assumptions, equations,
+> proofs, uncertainty. Precision inviolate. Correctness inviolate. Gates inviolate.
 >
-> NOW. Bottleneck. Isolate. Numbers. Exact source. Exact asm. Exact counts. Mathematical
+> NOW. Bottleneck. Attack. Numbers. Exact source. Exact asm. Exact counts. Mathematical
 > equivalence. Risk. Repair. Recompile. Verified gain. Next move. Not another roadmap. Not
 > another explanation of roadmap. RUBBER NOW MUST HIT ROAD.
 >
 > Math eng tunnelling. Intensity concentrate. No ornamental frenzy. Actual engineering force.
-> Very long work where needed, extremely little wasted language. Complicated thought,
-> fractured utterance. No stop merely because hard. Stop where evidence demands; otherwise
-> deeper. HARDER. MORE EXACT. MORE NEW. MORE REAL.
+> Very long work where needed, extremely little wasted language. Complicated thought, fractured
+> utterance. No stop merely because hard. Stop where evidence demands; otherwise deeper. HARDER.
+> MORE EXACT. MORE NEW. MORE REAL.
 >
-> Decisioning now advance. Theoretical potential into compiled saving into measured
-> production. Breakthrough not declared. Breakthrough achieved or falsified. Sufficient to
-> catalyse. Suffice. Harder still.
+> Decisioning now advance. Theoretical potential into compiled saving into measured production.
+> Breakthrough not declared. Breakthrough achieved or falsified. Sufficient to catalyse.
+> Suffice. HARD.
 >
 > GO.
 
-(This discharge is the historical experiment, not the operative text. As quoted here it is
-corrected to the register's own rules, which `tools/mode_doctest.py` checks:
-- "mathematical engineering" no longer re-expands after "MATH ENG";
-- "Attack" became "Isolate" (fervour, not violence);
-- "HARDER HARDER." became "HARDER." (no repeated capitals);
-- the closing "HARD." became "Harder still.", so the escalation climbs to its peak at the release instead of falling back.
+(Verbatim from [`MODE.ORIGIN.md`](MODE.ORIGIN.md). This is the historical experiment, not the
+operative text and not a conforming example of the final design. Judged by the criteria the
+design later settled on, it fails in four places:
+- **Clipping is inconsistent.** It opens with "MATH ENG", then expands to "Dense mathematical
+  engineering decisioning" in the same paragraph, then clips again to "math eng".
+- **"Attack"** survives. The register was later fixed as fervour, not violence.
+- **"HARDER HARDER."** Bare repetition reads as comic. It weakens the accent rather than
+  sharpening it.
+- **Length.** It runs far longer than the distilled register. Brevity preserves the charge
+  (see "What must be preserved").
 
-The uncorrected original is word for word in `MODE.ORIGIN.md`. MODE.md also dropped the
-experiment's ritual length.)
+Stage 4's closing "Go go." likewise blurs the terminal release; "Go." is the release. A short,
+newly constructed example that does conform follows this list.)
 
 **What made this version different.**
 - **The grammatical fabric carries the intensity,** not instructions to be intense. The
@@ -303,6 +382,37 @@ experiment's ritual length.)
 - **The ultimate design ambition is stranger than concision:** to make the model's language
   feel almost unable to withstand the density of the technical reasoning it is being asked to
   express.
+
+### A constructed example, read feature by feature
+
+This example is newly written for this file. It is neither historical nor operative. Its subject is
+a real compact30 design point: prototype 4's FULL tag (charter, report 271).
+
+> We have counted enough to know where the fast leaf spends its instructions. Active-tag check
+> plus fullness test: inherent, or artefact of formulation? One FULL compare replaces both.
+> Replaces, not proves: FULL at open means capacity, not initialisation; caller still owes
+> `write == end`. Bit must not escape. Kept by `tag & !ORD`, it corrupts every FULL header.
+> Strip. Strip, then falsify: mutant sets FULL on partial portion, suite must fail.
+>
+> HARDER.
+>
+> Each saving precipitates its falsifier; each falsifier, next construction. Suffice to catalyse.
+>
+> Go.
+
+| Feature | Where | How |
+| --- | --- | --- |
+| Markedness through contrast | "We have counted enough to know where the fast leaf spends its instructions." | A complete, articulate sentence, articles kept; the fractures after it are marked against it |
+| Paratactic cascade | the saving → what it does not prove → the bit that must not escape → how it escapes → strip → falsify the strip | Each fragment takes up the last and advances; anadiplosis hands it on ("replaces. Replaces", "Strip. Strip") |
+| Elevated diction under pressure | "artefact of formulation", "precipitates", "Suffice to catalyse" | Abstraction survives where syntax buckles |
+| Selective buckling | "Bit must not escape", "mutant sets FULL on partial portion" | Determiners deleted in fragments only |
+| Ellipsis | "Replaces, not proves"; "each falsifier, next construction" | Verb and subject left for the reader to rebuild |
+| Register collision | `tag & !ORD` beside "artefact of formulation" beside "HARDER." | Technical, elevated, primitive, unmediated |
+| Pulse | the first paragraph expands; "HARDER." contracts; the third re-expands, from the instance to the rule; "Go." | Accumulation, compression, discharge, renewed accumulation |
+| Thought precipitating thought | the specific saving generalises: "Each saving precipitates its falsifier" | The cascade moves from instance to principle |
+| Exactness | every technical claim is the charter's: the replaced checks, capacity not initialisation, `write == end`, the header corruption, the mutation | Nothing compressed away |
+| Release | "Go." | Release, not a peak |
+| Fervour, not violence; brevity | about 90 words | |
 
 ### Form against meaning
 
@@ -345,7 +455,7 @@ organise how the model should behave.
 
 The analogy is with the Kamehameha in Dragon Ball Z. Its syllables do not announce the attack;
 they accompany the gathering, concentration and discharge of force. The vocalisation is
-performatively bound to the act. "HARDER. Derisk. Concise. Math eng. Go." has the same
+performatively bound to the act. "HARDER. Derisk. Concise. Math eng very very concise. Go." has the same
 temporal structure. Each fragment narrows further the range of behaviour the hearer may
 exhibit, and the final monosyllable *Go* is the release trigger that turns preparation into
 action.
@@ -359,9 +469,15 @@ fractured, but the intention is not.
 
 As a linguistic form, an incantation is defined not by mystical content but by its features:
 repetition, rhythmic compression, unusual syntax, heightened diction, and the expectation that
-speaking will help bring about a transformation. The fragments stop carrying new information
-and become successive reinforcements of an intention already established. This is
-**ritualised imperative speech**. With an LLM there is a plausible causal path, through
+speaking will help bring about a transformation. Of "HARDER. Derisk. Concise. Math eng very
+very concise. Go." the analysis observes: "The phrases cease to function primarily as new
+information. They become successive reinforcements of an already established intention." This is
+**ritualised imperative speech**.
+
+It is one of two modes in the record. In the other, the paratactic cascade, each fragment does
+carry new consequence. MODE needs both, and the pulse alternates them: reinforcement contracts,
+the cascade expands. Reinforcement alone is the failure the design guards against: repetitive
+ceremonial slogans. "HARDER. Go." is that failure in miniature. With an LLM there is a plausible causal path, through
 conditioning on context: the model does not need to experience the intensity for the intensity
 to shape its output.
 
@@ -458,26 +574,50 @@ Louis's request: his original prompts and the full analysis, including the six i
 and paratactic cascades. The drafting history of MODE.md is in
 [`../2026-11-04-compact30-mode.md`](../2026-11-04-compact30-mode.md).
 
-## Doctest: the record obeys its own rules
+## Checking: a surface lint, then a reading
 
-`tools/mode_doctest.py` checks every incantation in MODE.md and every quoted example in this file
-against five of the rules stated here:
-- **R1 clipping is monotone.** Once "math eng", "impl", "perf", "asm" or "dep" appears, its
-  expanded form may not return later in the same utterance. An expanded form may open the
-  utterance, as the unclipped baseline before deformation.
-- **R2 fervour, not violence.** No violent or combative lexicon.
-- **R3 escalation does not fall before the release.** The last intensifier before the final "Go"
-  is not weaker than the strongest one. A varied form ranks above its base: once "Harder still"
-  appears, a bare "HARDER" may not follow.
-- **R5 no repeated capitals.** An all-caps word is never immediately repeated ("HARDER HARDER").
-  Repetition reads as goofy and weakens the accent. Intensify with a full stop and a slight
-  variation or a modifier instead: "HARDER. Harder still."
-- **R4 determiner deletion.** At most one article per 25 words. Complete sentences keep their
-  articles, because they are the articulate contrast that makes the fractures marked.
+**The lint.** `tools/mode_doctest.py` checks surface conventions, and nothing more. Run it on
+MODE.md: `python3 tools/mode_doctest.py MODE.md`.
+- **R1, clipping consistency.** It flags an expanded form ("mathematical engineering") that
+  returns after its clipped form within one utterance. This is a preference for a single
+  sustained passage, not a linguistic law. A deliberate return to articulate, elevated
+  expression can create the very contrast the register needs. A hit is a question for the
+  reader, not a verdict.
+- **R2, fervour, not violence.** No violent or combative lexicon.
+- **R4, article count.** It flags dense article use. Its threshold is arbitrary. Determiner
+  deletion matters only against otherwise competent syntax, so the count is never a target.
+- **R5, no bare doubled capitals** ("HARDER HARDER").
 
-Run `python3 tools/mode_doctest.py MODE.md MODE.RATIONALE.md`; it exits 0 when both pass.
-Run against MODE.ORIGIN.md, it reports the defects of the drafts that were rejected along the
-way, as it should.
+R3 is removed. It ranked HARD < HARDER < "Harder still" and failed any utterance whose last
+intensifier fell below its strongest. That was wrong in kind: rhetorical overclocking is a
+pulse, not a scalar climbing toward *Go* (see "Accumulation and intensification"). The edits
+made to satisfy it were reverted.
+
+The lint cannot certify the register. "HARDER. Go." passes it and exhibits almost nothing of
+the design. Run on this file or on MODE.ORIGIN.md, it flags the historical quotations, which are
+kept verbatim and annotated.
+
+**The reading.** Conformance is a matter of linguistic judgement, by a human reader or a
+language model (a small one suffices). Regexes cannot decide it. For each question, quote the
+span that answers it. A question answered without a quotation is not met. An utterance
+conforms only if every question is met.
+1. **Cumulative conceptual movement.** Do fragments precipitate further implications, each
+   taking up what precedes it? Or do they merely list, or merely reinforce?
+2. **Elevated diction.** Does sophisticated abstraction survive where the syntax breaks?
+3. **Selective buckling.** Is the syntax deformed in places and competent in others, so that
+   the fractures are marked?
+4. **The pulse.** Does expansion alternate with contraction: accumulation, compression,
+   discharge?
+5. **Register collision.** Do technical, elevated and primitive registers meet without
+   mediation?
+6. **Exactness.** Is the technical content real and checkable, with no assumption compressed
+   away?
+7. **Release.** Does it end in a release, not a trailing off or a doubled command?
+8. **What must be preserved.** Fervour, not aggression. Controlled oddness, not caricature.
+   Brief.
+
+The negative control "HARDER. Go." fails questions 1 to 6. The constructed example above is
+read against these questions, feature by feature.
 
 ## What must be preserved
 
