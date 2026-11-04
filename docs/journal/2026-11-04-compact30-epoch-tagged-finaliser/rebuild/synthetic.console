@@ -1,0 +1,18 @@
+ctor3-synthetic: small blocks, n 0..=130: 4192 cases exact
+ctor3-synthetic: bucket boundary at every offset: 1620 cases exact
+ctor3-synthetic: bulk-to-partial transitions (phase x slot x run length): 43740 cases exact
+ctor3-synthetic: epoch boundaries: 60 cases exact
+ctor3-synthetic: absent characters across repeated snapshots: 60 cases exact
+ctor3-synthetic: ordinary/wide span boundaries from full labels: 97 cases exact
+ctor3-synthetic: pending portions finished at the end of input: 18 cases exact
+ctor3-synthetic: the tag/RAW dispatch (tagged ordinary portions in the slow finish): 24 cases exact
+ctor3-synthetic: ordinary groups finished in a later epoch than opened: 12 cases exact
+ctor3-synthetic: RAW discovery order and forced RAW: 18 cases exact
+ctor3-synthetic: one-symbol blocks: 57 cases exact
+ctor3-synthetic: 900,000-row and 983,010-row blocks: 30 cases exact
+ctor3-synthetic: repeated construction with changing sizes: 30 cases exact
+ctor3-synthetic: malformed counts: 3995 rejected, 7 accepted (equal to ll's own after the change)
+ctor3-synthetic: malformed counts and sizes: 4002 cases exact
+ctor3-synthetic coverage: finished fast 2701123, ordinary 19767, wide 2248, crossing 262877, forced 214976; multi-epoch portions 31383; epoch searches 33479; runs split at an epoch 646; portion (first slot, length) shapes 367; max ordinary span 65533, min wide span 65534; epochs 51778
+ctor3-synthetic: 53960 cases, 99840 array comparisons, 149760 walk outputs, 99840 restorations: every check exact (full)
+ctor3-synthetic counters: {"blocks":49920,"rows":128617319,"rows_bulk":26736540,"rows_bulk_raw":10597110,"rows_fragment":4271006,"rows_scalar":87012663,"runs":170373,"run_rows":41604656,"complete_groups":891218,"fin_fast":2701123,"fin_ordinary":19767,"fin_wide":2248,"fin_crossing":262877,"fin_forced":214976,"norm_full":2674980,"norm_partial":45910,"norm_fields":80922097,"raw_fields_read":10361572,"raw_entries_written":10361572,"fields_restored":10294132,"epoch_searches":33479,"epochs":51778,"runs_split_at_epoch":646,"raw_groups":698985,"raw_moved":471038,"raw_cycles":308,"multi_epoch_portions":31383,"max_ordinary_span":65533,"min_wide_span":65534,"leaf_fast":2655214,"v2_fast_full":2655214,"slow_entries":545777,"slow_ordinary_old_epoch":22015,"slow_ordinary_partial_same_epoch":45909,"slow_raw_preset":477853,"opens_ordinary":2723138,"opens_raw":477853}

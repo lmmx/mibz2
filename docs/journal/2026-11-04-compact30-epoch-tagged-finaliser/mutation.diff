@@ -1,0 +1,22 @@
+diff --git a/examples/c30walk/ctor3.rs b/examples/c30walk/ctor3.rs
+index 01f91419..793c6c34 100644
+--- a/examples/c30walk/ctor3.rs
++++ b/examples/c30walk/ctor3.rs
+@@ -562,7 +562,7 @@ impl<const COUNT: bool> W<'_, COUNT> {
+             self.st.cov_portion[j0][k] += 1;
+             self.st.multi_epoch_portions += (h0 != h1) as u64;
+             self.st.slow_entries += 1;
+-            if d.raw & ORD != 0 {
++            if d.raw == u32::MAX {
+                 // the opening epoch is the first row's (the leaf's premise)
+                 assert!(
+                     (d.raw & !ORD) >> 24 == h0 as u32,
+@@ -580,7 +580,7 @@ impl<const COUNT: bool> W<'_, COUNT> {
+                 self.st.slow_raw_preset += 1;
+             }
+         }
+-        if d.raw & ORD != 0 {
++        if d.raw == u32::MAX {
+             // an ordinary candidate: its whole group, j0 = 0
+             let u0 = d.w0.read();
+             let ul = d.w0.add(k - 1).read();

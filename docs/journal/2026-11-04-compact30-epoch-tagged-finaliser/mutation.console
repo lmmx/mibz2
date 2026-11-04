@@ -1,0 +1,32 @@
+
+thread 'main' (4258) panicked at examples/c30walk/ctor3.rs:579:17:
+assertion failed: (d.raw as usize) < self.raw.len()
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:689:5
+   1: core::panicking::panic_fmt
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:80:14
+   2: core::panicking::panic
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:150:5
+   3: finish_slow<true>
+             at ./examples/c30walk/ctor3.rs:579:17
+   4: close<true>
+             at ./examples/c30walk/ctor3.rs:451:18
+   5: scatter<true>
+             at ./examples/c30walk/ctor3.rs:1037:15
+   6: build<true>
+             at ./examples/c30walk/ctor3.rs:922:22
+   7: check_block
+             at ./examples/c30walk/ctor3.rs:1221:14
+   8: case
+             at ./examples/c30walk/ctor3.rs:1490:17
+   9: synthetic
+             at ./examples/c30walk/ctor3.rs:1622:19
+  10: main
+             at ./examples/c30walk/ctor3.rs:2134:24
+  11: main
+             at ./examples/c30walk.rs:1904:16
+  12: call_once<fn(), ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs:250:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+exit 101

@@ -1,0 +1,32 @@
+rustc 1.101.0-nightly (16d1ffac1 2026-10-26)
+binary: rustc
+commit-hash: 16d1ffac17ad8b739e32483ac2e65fe7e1804977
+commit-date: 2026-10-26
+miri 0.1.0 (16d1ffac17 2026-10-26)
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling libm v0.2.16
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling cc v1.10.0
+   Compiling pkg-config v0.3.34
+   Compiling thiserror v2.0.21
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling libc v0.2.191
+   Compiling bytemuck v1.25.2
+   Compiling syn v3.0.9
+   Compiling mibz2 v0.2.1 (wt-c30ctor)
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2 v0.4.4
+   Compiling thiserror-impl v2.0.21
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 34.39s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner c3-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor3-synthetic --miri`
+ctor3-synthetic: small blocks, n 0..=40 (and four forced): 127 cases exact
+ctor3-synthetic: the tag/RAW dispatch, tiny: 4 cases exact
+ctor3-synthetic: the exact span cases: 2 cases exact
+ctor3-synthetic: the tag/RAW dispatch, epoch 1: 1 cases exact
+ctor3-synthetic --miri: 134 cases, 262 array comparisons, 393 walk outputs, 262 restorations: every check exact; leaf 6162, slow 189 (old epoch 8, partial 105, preset RAW 76), wide 1
+exit 0

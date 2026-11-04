@@ -1,6 +1,7 @@
 # Compact30: the epoch-tagged ordinary finaliser, one untimed prototype (constructor v3) — STOP on the compilation gate
 
-**Verdict: STOP for this prototype.**
+**Verdict: STOP for this prototype** (a formal STOP under its compilation gate, report 238;
+the gate is not relaxed).
 - **Correctness passes.** Output is byte-exact everywhere, the walker output is unchanged, the
   markers are restored, the per-case counters match v2's, and every eligible finish takes the
   new leaf.
@@ -18,6 +19,25 @@
 - **One iteration on the Rust expression was made, as allowed, and it did not help:** 45
   instructions (§5.3). No further variant was tried. The scanner cleanup and the descriptor
   split weren't touched; they need the guardian's separate decision.
+- **The checks pending at the first report are complete** (§9):
+  - **Miri:** all 134 selected cases ran, every check exact, and no undefined behaviour was
+    reported.
+  - **The mutation check:** with v2's `== NO_RAW` dispatch put back, the quick suite panics
+    on its first one-row block.
+  - **The rebuild of the formatted source:** the four listings are identical, and every
+    suite's output is byte-identical.
+
+**The structural result, recorded as findings** (static, no runtime inferred):
+- **The fast full finish fell from 81 instructions to 44** (body, including `ret`).
+- **About 60.2 M fewer instructions** on the primary corpus net of every added cost, against
+  the conditional 66.041 M (§6).
+- **The per-row loops and the finish call sites are unchanged** against v2.
+- **The cause of the 4-instruction excess is specific:** LLVM's lane-0 zero
+  materialisation in chunk 0. u0 is loaded from field 0, and the header store at +60 can't
+  alias the fields, so LLVM knows field 0 − u0 = 0 and builds that lane (§5.1).
+- **What it rules in or out:** whether an explicit SSE2 expression would avoid this is
+  untested. It is neither ruled out nor authorised. The choice between it and the scanner
+  cleanup is the guardian's.
 
 **Authority:** reports 224–237, at `ade14d5`
 ([the reassessment](2026-11-03-compact30-constructor-v2-reassessment.md)).
@@ -32,11 +52,9 @@
   `0b4cd00`). Its formula, its bound and its counterexample are cited in §6 from
   `report.txt`. Its scripts were not rerun here.
 
-**Source and evidence.** The listings, suites and counters below came from a build of
-`ctor3.rs` before `rustfmt` re-wrapped a few `assert!` calls (formatting only), and the pinned
-source is the formatted one. A rebuild of the pinned source, with the listings' identity
-rechecked and the suites rerun, is **PENDING** with Miri (one heavy job at a time). It will be
-appended here.
+**Source and evidence.** The listings, suites and counters below came first from a build of
+`ctor3.rs` before `rustfmt` re-wrapped a few `assert!` calls (formatting only). The pinned
+source (`dbf5139`) is the formatted one. Its rebuild reproduces all of them exactly (§9.3).
 
 **Untimed throughout.** No timing, benchmark, perf or cycle measurement, i9 use, PR, merge,
 protocol change or production integration was done. Every figure is a static instruction
@@ -220,7 +238,7 @@ The binary is built with rustc 1.97.0 (`2d8144b78`, LLVM 22.1.6), `--locked --re
 | the adversarial set, 25 inputs × levels 1, 9 × 4 configurations | 200 | 1,056 | 1,584 | 1,056 | **exact** |
 | synthetic, full (v2's suite and two new classes) | 53,960 | 99,840 | 149,760 | 99,840 | **exact** |
 | synthetic, quick | 542 | 1,008 | 1,512 | 1,008 | **exact** |
-| synthetic, targeted Miri selection | 137 selected (§4.2) | | | | **PENDING** (running) |
+| synthetic, targeted Miri selection | 134 | 262 | 393 | 262 | **exact, no UB reported** (§4.2) |
 
 **The targeted cases** are all in the full synthetic run, all exact:
 - **The tag/RAW dispatch counterexample:**
@@ -273,24 +291,54 @@ including leaf = v2-eligible. The suite totals (natural configuration):
 
 ### 4.2 Miri
 
-**PENDING.** Miri is still running at the time of this entry; its result will be appended
-here with its console (`miri.console`).
-- **The command:** `cargo +nightly miri run --example c30walk -- ctor3-synthetic --miri`
-  (nightly, Stacked Borrows, unpoisoned arenas).
-- **Its selection** (`synthetic_miri`), 137 cases:
-  - small blocks, n 0..=40, σ ∈ {1, 2, 3}, with n = 0 through both builds; plus four forced
-    one-symbol blocks (n = 1, 2, 31, 61, permille 1000): 127 cases;
-  - the tag/RAW dispatch, tiny (n = 1–4): 4 cases;
-  - the exact span cases, 3 → 61,440 (ordinary) and 2 → 61,440 (RAW): 2 cases of 61,640 rows;
-  - the tag/RAW dispatch in epoch 1 (a one-row partial group, tag `0x8100_0000`): 1 case of
-    61,741 rows;
-  - each case running v2's counted build too.
-- **Completed so far, every case exact and no undefined behaviour reported:**
-  - small blocks: 127 cases;
-  - the tag/RAW dispatch, tiny: 4 cases.
+**Complete:** every selected case ran, with no timeout, and nothing was cut off. Every check
+was exact, and **no undefined behaviour was reported**. The run exited 0 (`miri.console`).
+- **The command:** `cargo +nightly miri run --example c30walk -- ctor3-synthetic --miri`, on
+  nightly rustc 1.101.0 (`16d1ffac1`) with Stacked Borrows and unpoisoned arenas, after the
+  first report was sent.
+- **The 134 cases** (`synthetic_miri`), each running Ctor3's counted and uncounted builds,
+  v2's counted build with the counter comparison, the three walks and the restoration
+  checks:
 
-  The span and epoch-1 cases are running. A timeout won't be counted as a pass: whatever is
-  cut off will be listed as uncovered.
+  | class | cases | completed |
+  |---|--:|---|
+  | small blocks, n 0..=40, σ ∈ {1, 2, 3} (n = 0 through both builds, so with no array comparison), plus four forced one-symbol blocks at permille 1000 (n = 1, 2, 31, 61) | 127 | all, exact |
+  | the tag/RAW dispatch, tiny (n = 1–4) | 4 | all, exact |
+  | the exact span cases, 3 → 61,440 (65,533, ordinary) and 2 → 61,440 (65,534, RAW, `fin_wide` = 1 asserted); 61,640 rows each | 2 | both, exact |
+  | the tag/RAW dispatch in epoch 1 (a one-row partial group, tag `0x8100_0000`; 61,741 rows) | 1 | exact |
+
+  (The selection was described as 137 cases while running; that was a miscount. It is 127 +
+  4 + 2 + 1 = 134.)
+- **Coverage of v3's own paths under Miri,** from the run's counters:
+  - **the leaf:** 6,162 finishes;
+  - **the slow finish:** 189 entries. Of these, 105 were same-epoch partial (the tag
+    dispatch, epochs 0 and 1, including the one-row blocks), 8 old-epoch ordinary (the span
+    cases' groups opened in epoch 0 and finished in epoch 1, one of them wide), and 76 preset
+    RAW (crossing and forced).
+
+**Against v2's focused Miri coverage** (473 cases in five classes: small blocks n 0..=64,
+bucket boundaries at n = 61, bulk-to-partial transitions, epoch boundaries and absent
+characters; it stopped in the span class):
+
+| v3-specific path | reached under Miri |
+|---|---|
+| the tag dispatch (a tagged ordinary portion in `finish_slow`) | yes: 105 entries, tags `0x8000_0000` and `0x8100_0000` |
+| tagged one-row blocks | yes: n = 1 in the small and tiny classes |
+| a portion finished in a later epoch than it opened | yes: 8 entries, in the span cases |
+| the fast-path boundary (exactly 30 fields: leaf; 29 or fewer: slow) | yes: 6,162 leaf finishes and 105 partial |
+| the exact 65,533/65,534 span cases | yes, both (v2's Miri didn't reach them) |
+
+**What this run didn't cover,** all of it v2 code that v3 doesn't change, covered by v2's Miri
+run and by v3's release suites:
+- bucket boundaries at every offset;
+- bulk-to-partial transitions;
+- multi-epoch blocks beyond epoch 1;
+- forced RAW at permille 50;
+- malformed counts;
+- large reuse;
+- poisoned arenas.
+
+No gap in v3's own paths remains, so no further targeted run was made.
 
 ### 4.3 What the counted build asserts on top (each held everywhere)
 
@@ -305,19 +353,21 @@ here with its console (`miri.console`).
 
 ### 4.4 The test fails on the unrepaired design
 
-**PENDING (one heavy job at a time: it needs a release build, which waits for Miri).** The
-planned check:
-1. replace the slow finish's two `d.raw & ORD != 0` tests with v2's `d.raw == u32::MAX`
-   (`NO_RAW`), keeping the tags;
-2. rebuild;
-3. run `ctor3-synthetic --quick`;
-4. revert.
+**Done** (`mutation.diff`, `mutation.console`):
+1. The slow finish's two `d.raw & ORD != 0` tests (the counted-build classification and the
+   dispatch) were replaced with v2's `d.raw == u32::MAX`, keeping the tags.
+2. The source was rebuilt with the same toolchain and settings.
+3. `ctor3-synthetic --quick` was run.
+4. The change was reverted with `git checkout`.
 
-The expected outcome follows from the code and from the audit's counterexample (`report.txt`
-line 251). The first one-row block (n = 1) reaches `finish_slow` with tag `0x8000_0000`, and
-takes the RAW branch. The counted build's `raw < raw.len()` assertion fails, and without it
-`write_entries` would index `raw[2³¹]` and panic. The result, and its console
-(`mutation.console`), will be appended here.
+The mutant **panicked on the first portion it finished** with "assertion failed: `(d.raw as
+usize) < self.raw.len()`" at `ctor3.rs:579`, in `finish_slow<true>`, under `check_block`. It
+exited 101.
+- The run's first cases are n = 0, which finishes nothing, and then n = 1. So the failure is
+  the one-row block's single portion: tag `0x8000_0000`, read as a RAW index.
+- Without that counted-build assertion, `write_entries` would index `raw[0x8000_0000]` and
+  panic on the bounds check.
+- The repaired source passes the same suite (`synthetic-quick.console`).
 
 ## 5. The compiled code (static observations only)
 
@@ -556,5 +606,31 @@ Corpus totals (primary):
   - `listings/`;
   - `attempt-1/` and `attempt-2/` (the leaf listings and the iteration's source diff);
   - `corpora.console` and `.jsonl`, `adversarial.console` and `.jsonl`, `synthetic.console`,
-    `synthetic-quick.console`; `miri.console` and `mutation.console` (to follow: §4.2, §4.4);
+    `synthetic-quick.console`, `miri.console`, `mutation.diff`, `mutation.console`;
+  - `rebuild/`: every suite's console from the rebuilt pinned source (§9.3);
   - `corpora.sha256`.
+
+## 9. The checks completed after the first report
+
+### 9.1 Miri
+
+Complete, exact, and no undefined behaviour reported: 134 cases (§4.2).
+
+### 9.2 The mutation check
+
+v2's `== NO_RAW` dispatch fails on the first one-row block (§4.4).
+
+### 9.3 The rebuild of the formatted source
+
+The pinned source at `dbf5139` was rebuilt with rustc 1.97.0, `--locked --release` and empty
+rustflags. The binary's sha256 is `4deb4234…3e1cc7e`; it differs from the first build's by
+line tables only.
+- **Listings:** `Ctor3::build::<false>`, the leaf `finish`, `finish_slow` and `refill` are
+  **identical instruction for instruction, at the same addresses** (0x3aed0, 0x81090,
+  0x80a90, 0x81150), as the archived listings.
+- **Suites:** the corpora, adversarial, full synthetic and quick synthetic runs, rerun on it,
+  give **byte-identical** records (`corpora.jsonl`, `adversarial.jsonl`) and consoles. The
+  only difference is the runner's appended `exit 0` line in the archived copies
+  (`rebuild/`).
+
+So every figure in §4–§6 holds for the pinned source.
