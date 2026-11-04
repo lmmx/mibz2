@@ -598,5 +598,13 @@
       "commit": "8d6a716d0dbf75bc5c6a2ff3e4a652f6e7df1662",
       "comment": 6644051935
     }
-  ]
+  ],
+  "pending_publication": {
+    "decision": "D021",
+    "incoming_comment": 6644364456,
+    "pr": 145,
+    "sha": "5f537871505fb50f1c84529418b88b7c60c3d7ec",
+    "evidence_digest": "sha256:d9153b9f795ec9f89d958601125aff4a40bf3dde37c69888c3d2547e484344b5",
+    "status": "decision and receipt in enclosing commit; TYPE: REVIEW and final cursor pending"
+  }
 }

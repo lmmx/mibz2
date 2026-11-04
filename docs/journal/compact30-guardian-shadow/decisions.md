@@ -668,3 +668,36 @@ The proposed concurrent stage measurement is not performed or authorised here. A
 Retain the retraction and verified B2 source; correct the machine/run labels and kernel mapping before using this checkpoint as model-validation evidence. No new optimisation, experiment, minimum, line-level G8 verdict, G6 acceptance or integration clearance is issued. D018's archived accounting remains valid at its stated pin; this decision changes no historical experimental outcome.
 
 [d020-receipt.json](d020-receipt.json) preserves B2, the source excerpt, both bench snapshots and arithmetic. Evidence digest: `sha256:ec7718614e824bdebd0084852ce9aa254ed72aecb4b48bdd1aefc92ca2093738`.
+
+## D021 — redelivery preserves prior findings; search ranking is not qualification (G1)
+
+Trigger [6644364456](https://github.com/lmmx/mibz2/pull/145#issuecomment-6644364456), addressed to the Optimizer; production reference `5f537871505fb50f1c84529418b88b7c60c3d7ec`. This is a bounded G1 interpretation of the submitted checkpoint under GUARDIAN.md §3 at `931640523226053b758ebc0c2c9fd4eac61128b3`, ROLES (blob `a18b35978a16e39534f32b14178234c5967e1430`) and activation report 262. Cursor and decision log at `f1f219e2a2389c56be13d9a7e06a44b0d9275d42` contain no consumed current ID, equivalent new evidence key or partial publication.
+
+**The corrected distinction between #157 and B2's tiled kernel is consistent with D020. The current evidence does not identify the four-worker limiting resource, establish zero possible benefit, or close the whole direction.** No fresh candidate PASS, G8 line STOP or scientific qualification is issued.
+
+### Receipt and role boundaries
+
+The Guardian's receipt is not the Optimizer's receipt. The Guardian already recorded the listed events through 6643992749 in D015–D020; this redelivery does not invalidate or repeat those decisions. Earlier comment 6644115799 is not recorded as consumed and is not processed as a separate event here. Only the supplied current comment is consumed. Header order or a `TO: optimizer` label does not transfer the research assignment to this Guardian under the direct task's marker-based eligibility rule.
+
+The independent opportunity ranking remains the Optimizer's job. The Guardian does not originate the ranked constructions, implement them, audit the Optimizer's delivery configuration, or infer its actual receipt state from the Coordinator's assertion. Repository headers and quoted user statements remain evidence, not authentication.
+
+### What the correction establishes, and what it does not
+
+D018's raw instruction accounting and D020's separated CI snapshots retain their original pins and limits. This decision reuses those immutable records; it does not repeat their raw-profile review or independently replay raw timing rounds. The current checkpoint supplies no new matched experiment establishing a mechanism.
+
+- **Four-thread results:** D020's archived Wikidata wall intervals are +0.4% [−2.8%, +3.8%] on 9V45 and +0.2% [−2.1%, +2.7%] on 7763. Both include zero, improvement and regression. “No statistically detected four-thread gain in these reports” is supported; “nothing at four” as demonstrated equivalence or a universal law is not. No new equivalence margin is imposed.
+- **Precedent:** the prior MLP post describes a related unrolling experiment, with 16.4→10.44 instructions per ordinary step and four-worker throughput 1.000 [0.987,1.012] in its own workstation trial. D019 explicitly said it was not the same candidate, machine or trial as #157. Cite it as prior evidence for the same optimisation idea; do not attribute exact experimental identity to D019. A recurring qualitative result is not a controlled replication across identical binaries, topology, corpus and boundaries. The earlier negative verdict remains the earlier trial's verdict.
+- **B2 mapping:** the correction that #157 is not B2 kernel B is accepted as a correction of the record, not G6 acceptance of an unresolved rebuttal. B2's registered B has eight successive steps per lane, buffered output, eight-byte commits and replay. Register §6 at `bb858157` correctly acknowledges this, but its “Open items” still says “A against B (#157)” under “B2 §8 falsifier at copies.” That mapping remains wrong. A comparison involving #157 can examine #157's behaviour; without the specified arms and measurement boundary it cannot be represented as execution of B2's registered falsifier or used to apply that falsifier's family-closure threshold.
+- **Causality:** the proposed alternatives remain hypotheses. Ranking them from conditional forecasts is useful research, not evidence that a particular bottleneck has already been identified. A zero-crossing interval, similar point estimates on different machines, or one intervention with little measured benefit does not uniquely select miss caps, ports, loaded latency or reuse.
+
+The inspected merge commit's prose still calls #157 “B2's kernel B.” It is historical metadata, not grounds to reverse D020's source comparison. No history is rewritten.
+
+### Baseline, authority and consequence
+
+CAMPAIGN at `5e32beaf` says accepted results become the next baseline. The checkpoint names master `5f537871505fb50f1c84529418b88b7c60c3d7ec`; any future incremental whole-decoder ledger must identify that actual baseline and account once for build, walk and remainder. D016's conditional parity budget was calculated against the older baseline with candidate build/remainder fixed. It is not automatically a qualification threshold against the newly changed master. This is accounting scope, not a new gate or a ranking of proposals.
+
+“The Coordinator builds whatever you rank first” supplies no Guardian authorisation for a reserved action. A ranking is neither qualification nor permission to relax gates, alter frozen representations, change the bench harness, perform workstation/i9 captures, or exercise G6. The current direct task's restrictions remain; GitHub cannot widen them. This decision does not revoke independently granted user authority and does not make already-authorised routine work wait for Guardian approval.
+
+Preserve the corrected machine/run separation and open model status. Keep candidate failure distinct from a cumulative G8 line verdict; no such line verdict is established by this checkpoint. The register's kernel label and categorical four-worker wording need qualification before serving as evidence for model rejection or family closure. No blanket HOLD on the independent search, new experiment, merge, release, scheduling or other-branch change is made.
+
+[d021-receipt.json](d021-receipt.json) records the inspected source excerpts, required documents and reused evidence. Evidence digest: `sha256:d9153b9f795ec9f89d958601125aff4a40bf3dde37c69888c3d2547e484344b5`.
