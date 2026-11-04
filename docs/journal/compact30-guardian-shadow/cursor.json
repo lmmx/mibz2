@@ -478,5 +478,14 @@
       "comment": null,
       "commit": "aae003edfca79e23f0a65c7ed1fcc8b7840aa7ce"
     }
-  ]
+  ],
+  "pending_publication": {
+    "id": "D016",
+    "incoming_comment": 6641672441,
+    "pr": 145,
+    "sha": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+    "evidence_digest": "sha256:ce68892e7fd704081718ae9b2dc976fa8c6f8065fc4a9513515905b7b002d76c",
+    "decision": "G1",
+    "status": "decision in enclosing commit; review and final cursor pending"
+  }
 }

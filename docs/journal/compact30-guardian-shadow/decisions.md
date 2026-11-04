@@ -474,3 +474,42 @@ Instructions, CPU and elapsed time are distinct. The local shared-VM timing rati
 No safety PASS is inferred from the PR's test summary, and no new safety failure is established. No G8 line-level STOP is justified by these counts: they identify a cost centre and an evidence gap, not cumulative proof of no credible route forward. Historical results and all existing requirements stand. Any proposed change to a frozen walker/representation or charter remains subject to its existing authority boundary; the Researcher/Optimizer requests confer none.
 
 This batch expressly prohibits an additional source-app message/reply/notification. Accordingly no TYPE: REVIEW comment is sent; the decision and cursor preserve that publication exception with a null outgoing comment ID.
+
+## D016 — Reject current production candidate; retain limits on causal and revival claims (G1)
+
+**Concur with closing #155 unmerged for the reported performance regression. No line-level STOP.** This is a verdict on `b4786f66366c9e404702c800cd360dc793b1a7a5` against `c4b69de363dba4485567142a0d9cec4034fba6e2`, not on the representation's possibilities. The constructor-only gate and D014/D015 results remain scoped and unchanged.
+
+Trigger [6641672441](https://github.com/lmmx/mibz2/pull/145#issuecomment-6641672441), created event. The retrieved body includes an explicitly disclosed correction to its walk target; the receipt preserves the read body and timestamps. This assesses the supplied created event, not a separately polled edit. Latest cursor/log at `efdf9805d7f25b42c6fa50cabc444f70a3aaaa4e` contain no consumed ID, equivalent decision or partial publication for this evidence. Authority: GUARDIAN.md §3 G1 at `931640523226053b758ebc0c2c9fd4eac61128b3`, ROLES, report 262, charter §§4, 5, 6.3 and the directly authorised §8.4 distinction between candidate and line. No GitHub header grants authority.
+
+### What the CI evidence supports
+
+Read [benchmark comment 6641501139](https://github.com/lmmx/mibz2/pull/155#issuecomment-6641501139) and [run 41908271917](https://github.com/lmmx/mibz2/actions/runs/41908271917); the completed run's head matches the candidate. PR #155 is closed and unmerged. The benchmark reports ten paired rounds, EPYC 7763, four logical CPUs on two physical cores, bench 3.2.0, Rust 1.99.1. Its Wikidata wall intervals are wholly slower at 1, 2 and 4 threads: +18.7% [17.6,19.7], +11.0% [8.6,13.5], +7.3% [6.2,8.5]. The report also gives higher CPU costs, lower peak RSS and identical output hashes in every arm. This supports rejecting the present default for the stated performance objective.
+
+This is **review of the published CI result**, not independent recomputation of its paired-round estimates or intervals. A successful Actions conclusion is not an economic PASS: the report explicitly says performance trade-offs do not themselves fail CI. It describes better memory/contention sensitivity but worse speed/CPU. The reported −8.8% amplification change at four threads is relative scaling, not an absolute performance win.
+
+Qualify “every corpus slower”: the one-thread `records` point estimate is +8.2%, but its wall interval [−3.9,+21.9]% includes no change. Do not label that cell a statistically established slowdown.
+
+**Narrow the mechanism claim.** These results reject the claim that smaller records deliver a net speed benefit for this candidate on this runner. They do not show that cache residency has no benefit, identify cache as the cause, or establish instruction count as the sole binding currency. The report reads no hardware counters, and says shared L3 size is unknown. Moreover the Callgrind count is one block built with Rust 1.97, whereas CI measures a corpus with Rust 1.99.1. Comparing +14.7% instructions with +18.6% CPU is not a controlled causal decomposition. Neither local-VM gain nor CI loss proves a universal instruction/time conversion.
+
+### Replayed block accounting and corrected scope
+
+Read the pinned archive README and both raw block-1 r1 profiles at `c493a45d3f24e9c07657b3183cd2ab59fd66f5b2`. Parsed Callgrind function IDs, summed self costs separately from call-arc costs, and reconstructed inclusive costs. Sum of all self costs equals each PROGRAM TOTAL. The measured driver contributes exactly **16 instructions** outside decode_block in each arm.
+
+| Scope | Base | Candidate | Delta |
+|---|---:|---:|---:|
+| decode_block | 25,751,794 | 29,530,459 | +3,778,665 |
+| build, inclusive | 5,429,062 | 4,369,204 | −1,059,858 |
+| walk, inclusive | 15,426,892 | 20,207,700 | +4,780,808 |
+| decode_block remainder | 4,895,840 | 4,953,555 | +57,715 |
+
+This corrects D015's absolute “whole decode_block” and remainder labels by −16 in each arm; all its deltas and conclusions are unchanged. The two raw profile identities and replay results are in [d016-receipt.json](d016-receipt.json). No fresh execution, timing or safety certification was performed.
+
+For this block, **holding candidate build and remainder fixed**, instruction parity permits walk ≤16,429,035, or **18.25507155 instructions/row** (899,971 rows). That requires a walk cut of **18.6991%**, or a whole-decoder cut of **12.7958%**. The banked build credit is 1.17765795 instructions/row, but the remainder charges 0.06412984 of it; the net permitted walk excess is only 1.11352810 over master's 17.14154345. Any mixture must save at least 3,778,665 **net**, charging all induced costs.
+
+### Revival and trajectory
+
+Instruction parity can serve as a conservative next-candidate screen chosen by the Coordinator. It is neither a proven necessary condition for speed nor sufficient for production qualification. “Any mix ... qualifies” is valid only for that arithmetic screen. The actual correctness, safety, review and applicable end-to-end CI gates still decide qualification. Do not replace the research B2 gate or the performance gate with a one-block instruction target, or reinterpret prior outcomes.
+
+A lower bound on an essential walk cost, above this conditional budget **after all credible build/remainder improvements are accounted for**, could support REDIRECT. The current implementation's measured count is not that lower bound, and a bound on one formulation is not a proof about every permitted formulation. Bounded evidence work may inform trajectory; it does not acquire new authority to change frozen code or representation. No G8 stop on the line is established here; no blanket PROCEED or widening decision is issued.
+
+No integration, merge, release, gate relaxation, new capture, harness change, infrastructure, credentials or spending is authorised. Missing evidence cannot establish a PASS.
