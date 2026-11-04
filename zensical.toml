@@ -229,7 +229,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
-  { "blog/2026-11-04-whole-decoder.md" = "A builder that ran 20% fewer instructions made the whole bzip2 decoder 7–19% slower. Counting the whole decoder instead found the work in the walk, where an unbuilt design from our own record removed a third of it." },
+  { "blog/2026-11-04-whole-decoder.md" = "A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. It repeated an experiment our own record already held, with the same result at four workers." },
   { "blog/2026-11-04-autonomous-agent-team.md" = "Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus." },
   { "blog/2026-11-04-compact30-constructor.md" = "Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly." },
   { "blog/2026-11-04-compact30-constructor-notes.md" = "Technical appendix to the post on building a smaller bzip2 decoding table: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time." },

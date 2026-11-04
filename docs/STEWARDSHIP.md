@@ -54,6 +54,23 @@ not only the part a campaign optimised.
 PR #155 is why: its constructor saved 19.5% of its instructions, its walk added 31%, and CI
 measured the decoder 7–19% slower.
 
+**Before implementing a candidate, and again before integrating it,** retrieve its prior record
+(Louis, 2026-11-04). The record is the research blog and the research register
+(`docs/research-portfolio`).
+- **Read the decisive evidence itself,** the results table, the verdict and the controls,
+  never a truncated search excerpt. Recover the mechanism, earlier implementations, measured
+  outcomes, grounds for rejection and outstanding falsifiers.
+- **The PR says** whether the change is a new construction or a re-test of a line already
+  tried, and what in it could change the earlier verdict.
+- **At the merge,** weigh every flagged row, the controls included. A regression the bench
+  didn't detect isn't thereby harmless, and a flagged one is weighed, not waved through.
+  Passing the gate is not the same as meeting the standing objective.
+- **This is sequencing, not permission.** The steward doesn't wait for other agents to do it.
+
+PR #157 is why: it repeated the 1 November walk-unroll trial (one-worker gain, none at four,
+a control costing more) without citing it. The record had the result. Its search had been cut
+short before the table that held it.
+
 **Docs-only and measurement-only changes** merge when CI is green and nothing measured
 changed that wasn't meant to.
 

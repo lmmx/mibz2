@@ -1,7 +1,7 @@
 ---
-title: "A faster table builder made the decoder slower: what the failure found in the walk"
+title: "A faster builder, a slower decoder, and a walk we had already tried"
 image: assets/social/blog-2026-11-04-whole-decoder.png
-description: "A builder that ran 20% fewer instructions made the whole bzip2 decoder 7–19% slower. Counting the whole decoder instead found the work in the walk, where an unbuilt design from our own record removed a third of it."
+description: "A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. It repeated an experiment our own record already held, with the same result at four workers."
 ---
 
 <div class="post-hero" markdown>
@@ -11,14 +11,12 @@ description: "A builder that ran 20% fewer instructions made the whole bzip2 dec
 [mibz2 · Research blog](index.md)
 {: .post-kicker }
 
-# A faster table builder made the decoder slower: what the failure found in the walk
+# A faster builder, a slower decoder, and a walk we had already tried
 
-A builder that ran 20% fewer instructions made the whole bzip2 decoder 7–19% slower. Counting
-the whole decoder instead found the work in the walk, where an unbuilt design from our own
-record removed a third of it.
+A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. It repeated an experiment our own record already held, with the same result at four workers.
 {: .post-dek }
 
-4 November 2026 · 10 min read · [Research in progress](#6-what-is-still-open)
+4 November 2026 · 11 min read · [Research in progress](#7-what-is-still-open)
 {: .post-meta }
 
 </div>
@@ -35,7 +33,9 @@ builder it replaced.
 
 This post is about what happened when we put it into the production decoder. The decoder got
 slower. Understanding why led to a change in the production decoder itself, one that leaves its
-table exactly as it was and removes a fifth of the instructions it spends on each block.
+table exactly as it was and removes a fifth of the instructions it spends on each block. It
+made one thread faster and four no faster. Then we found that our own record had already run
+that experiment, and had said so.
 
 ## 1. Three phases, one budget
 
@@ -99,19 +99,11 @@ fixed in the project's rules: every candidate is counted across the whole decode
 production before it goes near a pull request, and local timing is never the reason to open
 one.
 
+
 ## 3. Looking at the walk itself
 
 If the walk is three-fifths of the work, the question is no longer how to build a table more
-cheaply. It is what the production walk spends on each step. That question was already in our
-own record. [32 lanes, 8.6 chains](2026-10-31-room-walk-overlap.md) had proposed "Path B": the
-walk already overlaps its memory lookups well enough, so spend fewer instructions on each step
-and keep all 32 chains. A read-only analysis from 30 October, B2 (linked below), had gone
-further. It counted the shipped loop at 14.8 operations per byte, designed a kernel B ("the
-same 32 scalar chains with deferred flags and tiled commits") at 8–9, and fitted a model
-predicting what B would buy on each of CI's processors. Nobody had built it.
-
-We came to it from the profiles, and only then recognised it as B. Here is what the profiles
-showed.
+cheaply. It is what the production walk spends on each step.
 
 Callgrind can count every instruction separately. Here is the production walk's hot loop, as
 the compiler emitted it, with the count of each instruction on that block:
@@ -192,11 +184,7 @@ several lanes reaching segment ends in the same round, and the queue running out
 lanes still waiting, after a handover, and with a later lane already stepped onto its own
 segment's end. It fails if the offsets the tail picks up from are changed.
 
-That is kernel B, nine instructions a step against B2's predicted eight to nine. It is as large
-a cut in whole-decoder instructions as anything the campaign has found. It leaves the table as
-it was, so it composes with whatever else is done to the walk.
-
-## 5. Instructions are not time, and the model was wrong about how much
+## 5. Instructions are not time
 
 The continuous-integration benchmark measured it twice, on the same walk machine code, landing
 on two different processors. The Wikidata corpus, paired over ten rounds each:
@@ -207,56 +195,91 @@ on two different processors. The Wikidata corpus, paired over ten rounds each:
 | 2 | +2.2% (−0.6%, +5.1%) | −4.9% (−9.5%, −0.1%) |
 | 4 | +0.4% (−2.8%, +3.8%) | +0.2% (−2.1%, +2.7%) |
 
-At one thread it is faster on both. With more threads, the picture depends on the machine.
+At one thread it is faster on both. At four, the configuration a full decode uses, neither
+machine shows a gain. On the 7763 the benchmark also times each stage on one thread: the walk
+went from 4.04 to 3.78 cycles per byte, a ratio of 0.925 (0.856 to 0.999). A 36% cut in the
+walk's instructions bought about 7.5% of its time on one thread, and nothing measurable on the
+decoder at four.
 
-On the 7763 the benchmark also times each stage on one thread. The walk went from 4.04 to 3.78
-cycles per byte, a ratio of 0.925 (0.856 to 0.999). A 36% cut in instructions bought 7.5% of
-the walk's time.
+The benchmark covers six other corpora as controls. One of them moved the wrong way. On the
+7763, `pattern`, a short repeating input, was 1.6% slower at one thread (+0.1% to +3.1%). Its
+CPU interval included no change, and on the 9V45 the same row was 5.3% *faster* (−6.8% to
+−3.8%). With 21 wall rows a run, a flag like that can be chance. It can also be a real cost on
+one kind of core. It hasn't been reproduced either way, and until it has, it is a trade-off to
+weigh, not a regression we can rule out.
 
-B2 had predicted much more. Its best-supported model gives a step's time as its issue time
-plus a miss penalty limited by the processor's window: w = U/D + ℓ·U/R. For the 7763 it
-predicted B's walk at 0.73 to 0.76 of A's, and −10% to −11% of decoder time. The measurement
-lies outside that range. So does the reading in which the walk is limited purely by its
-instruction rate (0.55 to 0.65). What it doesn't exclude is the remaining hypothesis B2
-listed: the walk is capped by how many outstanding misses one core can track, so fewer
-instructions per step can't make it much faster (0.95 or more).
+## 6. We had run this experiment before
 
-That is a useful negative result. It says the walk on this machine is close to limited by its
-memory requests, not its instructions. The next large gains would then have to come from
-fewer misses per byte, not fewer instructions per step.
+On 1 November, three days earlier, a registered trial had unrolled the same walk. It wrote all
+32 lane steps out with fixed offsets, and [the 2 November post on memory-level
+parallelism](2026-11-02-memory-level-parallelism.md) reported it:
 
-## 6. What is still open
+| | 1 November trial | This change (#157) |
+| --- | --: | --: |
+| Instructions per lane step | 16.4 → 10.44 | 16 → 9 |
+| Walk alone, EPYC 7763 | 0.877 (0.863–0.891), isolated walk | 0.925 (0.856–0.999), stage timing |
+| Decoder, one worker | +1.7% throughput (i9-10900K) | −2.4% to −4.2% wall (CI) |
+| Decoder, four workers | 1.000 (0.987–1.012) (i9-10900K) | +0.2% to +0.4% wall, neither interval clear of zero (CI) |
+| A control costing more | `records`: +1.8% CPU at four workers | `pattern`: +1.6% wall at one thread, 7763 only |
+| Verdict | negative, at four workers | met the one-thread merge gate |
 
-**Shipping.** The change met the merge gate. The one-thread gain was confirmed on two
-processors, with nothing regressing beyond a small, unreplicated slip on one synthetic corpus.
-It is now on master, unreleased.
+The two changes are not identical. #157 unrolls eight lanes a turn rather than all 32, and
+defers the handovers to a mask. The machines and harnesses differ too, so the rows are not a
+paired comparison. But the shape is the same: a large cut in instructions, a small gain on
+one worker, none on four, and a control workload that got more expensive. The earlier trial's
+exploratory CI rows at one worker were, if anything, larger than #157's: +17.9% throughput on
+the 9V45 and +8.1% on the 7763.
 
-**Why B2's model overestimated.** Either the miss term isn't ℓ·U/R as fitted, or the
-latency of each miss rises when more are in flight, as B2's own risks list. B puts more
-misses in flight than A. A refit to A and B together, which can now both be measured, should
-say which term has to move.
+So the record already said what #157 would find. We didn't read it before building. A search
+for "unroll" found the trial, but its output was cut short before the table that held the
+result, and nothing required the decisive evidence to be read before implementation began. Our
+independent agents recovered it, but only after the merge.
 
-**Why the multi-thread result depends on the machine.** On the 9V45, two threads lost the
-gain; on the 7763 they kept it. There are several candidates:
-- **A shared bottleneck.** Something shared across copies may bind.
-- **The run's shape.** The benchmark's two-thread run puts four threads (two workers, the
-  scanner and the reader) on two CPUs.
-- **Interference.** It may be the effect [Investigating inverse-BWT memory
-  interference](2026-11-01-inverse-bwt-memory-interference.md) measured on a four-core
-  machine. That post proposed causes and tests, but didn't settle the cause. CI's four-thread
-  runs are two cores with SMT, not four cores.
+Two earlier claims in drafts of this post are withdrawn. The first said the change is the
+"kernel B" that an analysis from 30 October, B2, had designed and priced. It isn't. B2's kernel
+B buffers eight successive steps per lane and commits them eight bytes at a time, replaying a
+tile that fails. #157 writes every byte as it goes and unrolls across lanes, not steps. Kernel
+B remains unbuilt. The second claim was that the 7763's walk figure rejected B2's model of the
+walk's time. It can't: the model's predictions were for kernel B, and the stage figure includes
+segment assembly, which B2's boundary excludes. The model is untested.
 
-The cheapest decisive experiment is the falsifier B2 described: time the walk alone, A against
-B, at one copy, two copies on separate cores, and on the two siblings of one core, on each
-machine.
+## 7. What is still open
+
+**Shipping.** The change met the merge gate, a one-thread gain beyond noise confirmed on two
+processors, and is on master, unreleased. It does not meet the campaign's goal, which is a
+faster decoder at four workers. Before a release carries it, the `pattern` flag will be
+measured again on a 7763.
+
+**Why more workers erase the gain.** Both trials now agree that it disappears, on three kinds
+of machine. The earlier trial's explanation, pressure on the load-address ports, came from a
+static model, not a measurement. Three readings make different predictions:
+- **a limit private to each core,** such as how many misses it can track: SMT pairs lose the
+  gain first;
+- **a penalty shared across cores:** the gain shrinks towards nothing as copies are added,
+  whether or not they share a core;
+- **higher latency for every miss as more are in flight:** the ratio between the two walks
+  holds as copies are added.
+
+The experiment that separates them times the walk alone, the old against the new, at one copy,
+two copies on separate cores, and two on the siblings of one core, on each machine. [Memory
+interference](2026-11-01-inverse-bwt-memory-interference.md) measured a related effect on a
+four-core machine, about 30% more cycles at four workers for 1.3% more instructions, without
+settling its cause. CI's four-thread runs are two cores with SMT, not four cores.
+
+**What fewer instructions can't buy.** Two experiments have now cut the walk's instructions by
+more than a third, and neither gained at four workers. The next gains at four are more likely
+to come from fewer misses per byte, or from overlapping them better across cores, than from
+fewer instructions per step. That is a hypothesis, and the experiment above is what tests it.
 
 **The other walks.** The cooperative walk, used on machines with many cores, and the flagged
-walk carry the same rolled loop. Whether to port the change waits on that experiment.
+walk carry the same rolled loop. Porting the change waits on that experiment.
 
-The lesson is about memory as much as measurement. A faster builder made the decoder slower
-because nobody had counted the walk. Counting it found a change our own analysis had designed
-and priced, and then left unbuilt. Building it tested the analysis, and part of it failed. The project's record is now treated as working memory:
-every new direction starts from what earlier analyses proposed, measured or left untested.
+The lesson is about memory. A faster builder made the decoder slower because nobody had
+counted the walk. Counting it led to a change our own record had already tried, and the record
+had the answer we went on to rediscover. The project now retrieves a candidate's prior record
+before building it and again before integrating it, reading the results themselves rather
+than a search excerpt. The pull request then says whether the work is new or a re-test, and
+what could change the earlier verdict.
 
 ---
 
@@ -265,8 +288,12 @@ write-up](https://github.com/lmmx/mibz2/blob/8abefea4/docs/journal/2026-11-04-co
 · [Its profiles](https://github.com/lmmx/mibz2/tree/c493a45d/docs/journal/compact30-channel/evidence/port-b4786f66)
 · [The walk change, PR #157](https://github.com/lmmx/mibz2/pull/157) · [Its profiles, listings
 and tests](https://github.com/lmmx/mibz2/tree/b0f6e89d/docs/journal/compact30-channel/evidence/walk-75b13f00)
+· [The 1 November walk-unroll trial: decoder
+results](https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-decoder-i9-10900K/results.md)
+· [Its assembly
+comparison](https://github.com/lmmx/mibz2/blob/270333c2d32fe16dc24ae7ab64f3697d87939418/docs/journal/2026-11-01-walk-unroll-astra-fidelity/README.md)
 · [B2, the gathered walk: the model and kernel
 B](https://github.com/lmmx/mibz2/blob/9723f068/docs/journal/2026-10-30-b2-gathered-walk.md)
-· [The research register](https://github.com/lmmx/mibz2/blob/4dac7abc/docs/journal/2026-10-30-research-portfolio-register.md)
+· [The research register, §6](https://github.com/lmmx/mibz2/blob/3ace9d33/docs/journal/2026-10-30-research-portfolio-register.md)
 · [Whole-decoder accounting, charter
 §5.6](https://github.com/lmmx/mibz2/blob/45e6cfeb/docs/journal/2026-11-04-compact30-research-charter.md)

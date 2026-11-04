@@ -48,10 +48,10 @@
     "title": "Building a smaller bzip2 decoding table: from 49 instructions to 12"
   },
   "assets/social/blog-2026-11-04-whole-decoder.png": {
-    "description": "A builder that ran 20% fewer instructions made the whole bzip2 decoder 7–19% slower. Counting the whole decoder instead found the work in the walk, where an unbuilt design from our own record removed a third of it.",
+    "description": "A table builder that ran a fifth fewer instructions made the bzip2 decoder 7–19% slower. Counting the whole decoder led to the walk, and to a change that made one thread 2–4% faster. It repeated an experiment our own record already held, with the same result at four workers.",
     "foot": "lmmx.github.io/mibz2 · 4 November 2026",
     "section": " · Research blog",
-    "title": "A faster table builder made the decoder slower: what the failure found in the walk"
+    "title": "A faster builder, a slower decoder, and a walk we had already tried"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
