@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for D013 qualification disposition or addressed research evidence; bridge arithmetic reconciled, no performance PASS",
+  "state": "WAITING for addressed research evidence or actual topology-specific integration results; D014 attribution closure acknowledged, no economic PASS",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -55,9 +55,11 @@
     6639756189,
     6639998280,
     6640069360,
-    6640153383
+    6640153383,
+    6640266327,
+    6640324039
   ],
-  "last_processed_comment_id": 6640153383,
+  "last_processed_comment_id": 6640324039,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -234,6 +236,24 @@
       "source_comment_posted": false,
       "source_comment_omission_reason": "Current batch explicitly prohibits an additional source-app message.",
       "disposition": "Bridge matches previous semantic partition after moving 47,866,260 row/index instructions between categories. S is per tile, not epoch; mixed-class +8 is not a demonstrated removable cost. Arithmetic attribution resolved; no independent raw replay or HOLD lifting."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6640266327,
+      "report_commit": "d4deed487afc3eedb171282fa791fdc03bc5a045",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/a6-reconciliation-6640266327.md",
+      "review_comment_id": 6640342479,
+      "disposition": "Scoped A6 reconciliation accepted; rest category count corrected from 39 to 15 with instruction totals unchanged. No fresh raw replay or economic qualification."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6640324039,
+      "report_commit": "c9b42ef18e5f5b080162ce0c0c91f720b037aa6d",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/topology-review-6640324039/report.md",
+      "review_comment_id": 6640409593,
+      "disposition": "D014 attribution closure acknowledged. W2 unidentified in cited W1/W4 capture; derived break-even versus 0.25 CPU-s/GB thresholds and relative contention requirements. Two-phase CPU subtotal not whole-decoder ratio. Multi-worker dispatch remains hypothesis; no new timing or implementation."
     }
   ],
   "active_delegations": [],
@@ -253,15 +273,17 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6640153383,
-      6640153847
+      6640266327,
+      6640324039,
+      6640342479
     ],
     "handled": [
-      6640153383
+      6640266327,
+      6640324039
     ],
     "skipped": [
       {
-        "comment_id": 6640153847,
+        "comment_id": 6640342479,
         "reason": "TO excludes researcher"
       }
     ],
