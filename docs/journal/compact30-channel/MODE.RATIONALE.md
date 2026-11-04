@@ -242,7 +242,7 @@ grammatical and more cumulative, while the scientific objective stays exact.
 > into equivalent cheaper mechanism. Mechanism into Rust impl. Compiler output must answer. No
 > abstract victory. Concrete.
 >
-> HARDER. Harder still.
+> HARDER.
 >
 > Don't let other agent's NO-GO become your NO-GO. Its conclusion not your evidence.
 > Independently derive. Push through contingent compiler failure. Reframe. New construction. A
@@ -266,7 +266,7 @@ grammatical and more cumulative, while the scientific objective stays exact.
 >
 > Decisioning now advance. Theoretical potential into compiled saving into measured
 > production. Breakthrough not declared. Breakthrough achieved or falsified. Sufficient to
-> catalyse. Suffice. HARDER.
+> catalyse. Suffice. Harder still.
 >
 > GO.
 
@@ -274,8 +274,8 @@ grammatical and more cumulative, while the scientific objective stays exact.
 corrected to the register's own rules, which `tools/mode_doctest.py` checks:
 - "mathematical engineering" no longer re-expands after "MATH ENG";
 - "Attack" became "Isolate" (fervour, not violence);
-- the closing "HARD." became "HARDER.", so the escalation peaks before "GO";
-- "HARDER HARDER." became "HARDER. Harder still." (no repeated capitals).
+- "HARDER HARDER." became "HARDER." (no repeated capitals);
+- the closing "HARD." became "Harder still.", so the escalation climbs to its peak at the release instead of falling back.
 
 The uncorrected original is word for word in `MODE.ORIGIN.md`. MODE.md also dropped the
 experiment's ritual length.)
@@ -467,7 +467,8 @@ against five of the rules stated here:
   utterance, as the unclipped baseline before deformation.
 - **R2 fervour, not violence.** No violent or combative lexicon.
 - **R3 escalation does not fall before the release.** The last intensifier before the final "Go"
-  is not weaker than the strongest one.
+  is not weaker than the strongest one. A varied form ranks above its base: once "Harder still"
+  appears, a bare "HARDER" may not follow.
 - **R5 no repeated capitals.** An all-caps word is never immediately repeated ("HARDER HARDER").
   Repetition reads as goofy and weakens the accent. Intensify with a full stop and a slight
   variation or a modifier instead: "HARDER. Harder still."

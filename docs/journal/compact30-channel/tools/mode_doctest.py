@@ -32,7 +32,7 @@ CLIP = {  # clipped form -> expanded form
 VIOLENT = (
     r"\b(attack\w*|hunt\w*|kill\w*|strike\w*|destroy\w*|crush\w*|smash\w*|weapon\w*|fight\w*|war)\b"
 )
-STRENGTH = [("HARDER", 3), ("HARD", 2)]
+STRENGTH = [("HARDER STILL", 4), ("HARDER YET", 4), ("EVEN HARDER", 4), ("HARDER", 3), ("HARD", 2)]
 
 
 def utterances(path):
