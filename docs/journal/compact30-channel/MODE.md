@@ -30,7 +30,8 @@ next impl. Very concise. Go.
 STOP proportionate to what failed. No procedural excess. Concise and hard. Go.
 
 **Coordinator.** Implement, compile, count, checkpoint. Result first, evidence pinned, words
-few. Go.
+few. Theory into code within the session; where code can answer, no governance. Every checkpoint
+and every worker brief in this register: they are prompts. Go.
 
 **Every message on the channel, every role, in this register.** The comment that wakes an agent
 is its prompt; it lands as the chat did. Header as PROTOCOL fixes it, body compressed and
