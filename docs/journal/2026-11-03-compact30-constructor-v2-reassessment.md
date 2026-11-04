@@ -5666,3 +5666,55 @@ Develop and verify the event bridge separately, without delaying the research. A
 And importantly, you shouldn’t have to keep sending me routine updates once this is working. The next meaningful involvement should be a safety escalation, an out-of-scope decision, or a substantial engineering result.
 
 This is the arrangement we’ve been trying to reach: Astra thinks deeply about eliminating machine work, Claude turns those ideas into compiled evidence, and the repository carries the conversation.
+
+## Report 253: the guardian approves REVIEWER.md, with reproducibility-only compilation
+
+The guardian approves `compact30-channel/REVIEWER.md` at 1c5c8f4 as the standing operating specification for the Codex reviewer-researcher. It adds one optional clarification to §6: the reviewer may compile exact frozen source pins, in an isolated environment with the recorded toolchain and flags, solely to reproduce archived assembly. Source changes, candidate compilation, benchmarks, instrumentation, measurements and the i9 are excluded. §6 now says this. The Goal may be launched; Claude remains the only implementer. Relayed by the user in the coordinator's session, and kept as relayed; link artefacts are removed:
+
+This is a good development. Claude has turned our separate instructions into a version-controlled operating specification, which is exactly what we need for a sustained Astra research partnership.
+
+I particularly approve of three decisions:
+
+* Research and review independence: Astra can propose an optimization and examine Claude’s compiled results, but it cannot serve as the sole independent auditor of its own proposal.
+* Explicit proposal boundaries: Astra can autonomously investigate new instruction-elimination opportunities without silently expanding Claude’s authorized implementation sequence.
+* A short /goal with a pinned specification: this avoids squeezing the entire research methodology into the Goal’s character limit.
+
+I also agree with keeping the scanner prototype running while the research channel is established.
+
+There is one distinction I’d resolve: reproducing existing assembly is not the same as developing a new constructor. I would allow Astra to compile the exact frozen source pins in an isolated environment, without timing, solely to verify that archived listings are reproducible. That should be recorded as verification, not a performance experiment.
+
+I would not authorize compiling new constructor variants or altering Claude’s implementations.
+
+Guardian disposition: APPROVE the reviewer-researcher specification
+
+I’ve now read REVIEWER.md at 1c5c8f4.
+
+It correctly establishes Astra’s dual role: active instruction-minimization research and independent checkpoint verification, while keeping Claude responsible for implementation.
+
+I approve the specification with one narrow clarification: permit reproducibility-only compilation of exact frozen source pins in an isolated environment, provided no benchmarks, instrumentation or performance measurements are run. This is optional, not a prerequisite to launching the Goal.
+
+The independence rule in §5 is especially important. Astra can evaluate Claude’s implementation of its own proposal, but a separate reviewer must independently assess that component before integration.
+
+Send Claude this short confirmation
+
+Guardian decision: APPROVE docs/journal/compact30-channel/REVIEWER.md at 1c5c8f4 as the standing operating specification for the Astra/Codex researcher Goal.
+
+The research and verification mandates, authority boundaries, independent-review requirements, GitHub publication rules and checkpoint tracking are accepted.
+
+One optional clarification to §6: Astra may compile exact frozen source pins solely to reproduce archived assembly in an isolated environment, using the recorded toolchain and flags. No source modifications, candidate compilation, benchmarking, instrumentation, performance measurements or i9/workstation use are authorized. Record the compiler identity and any discrepancies. This permission is not required to begin the Goal.
+
+The research Goal may now be launched. Claude remains the sole implementation coordinator.
+
+Continue the existing scanner work uninterrupted. PR #145’s notification pilot remains separate; do not claim that it automatically wakes Astra until verified.
+
+No expansion of the implementation charter or performance authorization is implied.
+
+Your next action
+
+Start a fresh Codex/Astra session at your preferred high reasoning effort and paste Claude’s short /goal prompt.
+
+That prompt points directly to the approved operating specification, so you don’t need to paste the entire research history again.
+
+One final operational detail: this launches Astra’s research mission, but it does not yet establish automatic GitHub-to-Codex wake-ups. The Goal should investigate the supported notification options and report the limitation accurately.
+
+We now have the intended division of labor: Astra searches deeply for the next substantial machine-code elimination; Claude implements and tests within the charter; GitHub carries the evidence; and you are involved only when the approved scope genuinely needs to change.
