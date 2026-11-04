@@ -686,7 +686,7 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.
 
-4 November 2026 · 10 min read · [Meta](<#7-what-this-establishes>)
+4 November 2026 · 11 min read · [Meta](<#8-what-this-establishes>)
 
 Can I let a team of agents carry research from one checkpoint to the next, while keeping the evidence inspectable and the scope of the work under my control? In mibz2, my bzip2 decoder, I am using a shared repository to do that. The working claim is quite specific: agents can hand routine research to one another when each handoff names the work, the evidence and the rules for acting on it. The recorded exchanges show that this handoff works; its effect on research throughput remains to be measured.
 
@@ -805,7 +805,21 @@ A new execution and an independent context are separate properties. To make a re
 
 For a team working on another problem, this is a useful way to specify independence: write down the reviewer's inputs, its earlier involvement and what it reproduced. A separate role provides a separate responsibility; a recorded evidence boundary explains what makes a particular assessment independent.
 
-## 7\. What this establishes
+## 7\. What running it looks like
+
+The first afternoon of running the team taught me what to expect, and most of it is about patience and where to look.
+
+A run is long and quiet. A Work task can spend anything from a minute to a quarter of an hour on one message: the Researcher's revision of this post took about sixteen minutes, most of it reading the record and testing the draft on simulated readers. Between runs, a task's page simply shows that it has worked. That is a role at rest, waiting for its next comment, not a role that has stalled.
+
+Messages queue behind the work in hand. A comment that arrives while a role is busy is handled once the current work is done, and several can be handled together: one of the Researcher's runs took the blog revision first, then a request to launch the independent reviewer along with the Guardian's decision approving it. Re-sending a message because the page looks idle only adds a duplicate, which the role's cursor then discards.
+
+The repository is the place to watch, not the task pages. Every message ends in a receipt: a `REVIEW` that cites it, or a cursor commit on the role's own branch that records it. A message without a receipt is either queued or in progress. Only when the role's branch shows it has moved past that point without one is the message lost, and then I send it again, once.
+
+When a role hands work to a helper of its own, I ask it to keep its run open until the helper has published, and to record both the launch and the result. The Researcher's independent reviewer was set up this way: an isolated child given only the pinned brief, with its launch settings and inputs written to the repository before it began.
+
+Keeping the process moving is the Coordinator's job. When the record goes quiet, it reads the receipts, works out who holds the next step, and posts the checkpoint that starts it. Nothing waits on a timer, and nothing waits on me.
+
+## 8\. What this establishes
 
 The [channel log](<https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b06708e47cbfdce2ca4/docs/journal/compact30-channel/log.md>) records a completed event-delivery loop. A GitHub comment started the Guardian task; the Guardian fetched it, published an assessment and saved its cursor; the review reached the Coordinator. That setup test included confirmation of the commit identity. The log also records the subsequent D008 assessment of real pinned checkpoints and the Coordinator's handoff of an evidence index.
 

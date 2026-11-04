@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=2f89fba8f926">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=f881f85d1f2b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=2f89fba8f926">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=f881f85d1f2b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=2f89fba8f926">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=f881f85d1f2b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=2f89fba8f926">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=f881f85d1f2b">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=2f89fba8f926">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=f881f85d1f2b">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1225,10 +1225,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-what-this-establishes" class="md-nav__link">
+  <a href="#7-what-running-it-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7. What this establishes
+        7. What running it looks like
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-what-this-establishes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        8. What this establishes
       </span>
     </span>
   </a>
@@ -1867,10 +1878,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#7-what-this-establishes" class="md-nav__link">
+  <a href="#7-what-running-it-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        7. What this establishes
+        7. What running it looks like
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-what-this-establishes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        8. What this establishes
       </span>
     </span>
   </a>
@@ -1913,7 +1935,7 @@
 <h1 id="call-on-mibz2-cutting-instructions-from-bzip2-decoding-with-an-autonomous-swarm">Call on mibz2: cutting instructions from bzip2 decoding with an autonomous swarm<a class="headerlink" href="#call-on-mibz2-cutting-instructions-from-bzip2-decoding-with-an-autonomous-swarm" title="Permanent link">&para;</a></h1>
 <p class="post-dek">Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each
 other directly, without me acting as their message bus.</p>
-<p class="post-meta">4 November 2026 · 10 min read · <a href="#7-what-this-establishes">Meta</a></p>
+<p class="post-meta">4 November 2026 · 11 min read · <a href="#8-what-this-establishes">Meta</a></p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
@@ -2175,7 +2197,31 @@ have to be resolved before the components can be combined.</p>
 write down the reviewer's inputs, its earlier involvement and what it reproduced.
 A separate role provides a separate responsibility; a recorded evidence boundary explains
 what makes a particular assessment independent.</p>
-<h2 id="7-what-this-establishes">7. What this establishes<a class="headerlink" href="#7-what-this-establishes" title="Permanent link">&para;</a></h2>
+<h2 id="7-what-running-it-looks-like">7. What running it looks like<a class="headerlink" href="#7-what-running-it-looks-like" title="Permanent link">&para;</a></h2>
+<p>The first afternoon of running the team taught me what to expect, and most of it is about
+patience and where to look.</p>
+<p>A run is long and quiet. A Work task can spend anything from a minute to a quarter of an hour on
+one message: the Researcher's revision of this post took about sixteen minutes, most of it
+reading the record and testing the draft on simulated readers. Between runs, a task's page
+simply shows that it has worked. That is a role at rest, waiting for its next comment, not a role
+that has stalled.</p>
+<p>Messages queue behind the work in hand. A comment that arrives while a role is busy is handled
+once the current work is done, and several can be handled together: one of the Researcher's runs
+took the blog revision first, then a request to launch the independent reviewer along with the
+Guardian's decision approving it. Re-sending a message because the page looks idle only adds a
+duplicate, which the role's cursor then discards.</p>
+<p>The repository is the place to watch, not the task pages. Every message ends in a receipt: a
+<code>REVIEW</code> that cites it, or a cursor commit on the role's own branch that records it. A message
+without a receipt is either queued or in progress. Only when the role's branch shows it has moved
+past that point without one is the message lost, and then I send it again, once.</p>
+<p>When a role hands work to a helper of its own, I ask it to keep its run open until the helper
+has published, and to record both the launch and the result. The Researcher's independent
+reviewer was set up this way: an isolated child given only the pinned brief, with its launch
+settings and inputs written to the repository before it began.</p>
+<p>Keeping the process moving is the Coordinator's job. When the record goes quiet, it reads the
+receipts, works out who holds the next step, and posts the checkpoint that starts it. Nothing
+waits on a timer, and nothing waits on me.</p>
+<h2 id="8-what-this-establishes">8. What this establishes<a class="headerlink" href="#8-what-this-establishes" title="Permanent link">&para;</a></h2>
 <p>The <a href="https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b06708e47cbfdce2ca4/docs/journal/compact30-channel/log.md">channel log</a>
 records a completed event-delivery loop. A GitHub comment started the Guardian task;
 the Guardian fetched it, published an assessment and saved its cursor; the review
@@ -2345,17 +2391,17 @@ that justified the next step.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=2f89fba8f926"></script>
+        <script src="../../assets/javascripts/bench.js?v=f881f85d1f2b"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=2f89fba8f926"></script>
+        <script src="../../assets/javascripts/couriers.js?v=f881f85d1f2b"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=2f89fba8f926"></script>
+        <script src="../../assets/javascripts/blog.js?v=f881f85d1f2b"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=2f89fba8f926"></script>
+        <script src="../../assets/javascripts/frontier.js?v=f881f85d1f2b"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=2f89fba8f926"></script>
+        <script src="../../assets/javascripts/katex.js?v=f881f85d1f2b"></script>
       
     
   </body>
