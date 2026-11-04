@@ -832,6 +832,8 @@ fn room_segments<const L: usize, const PF: u8>(
     s: &mut SegScratch,
     segments: usize,
 ) {
+    // a pass marks its lanes in a u64
+    const { assert!(L <= 64) };
     let n = tt.0.len();
     let r0 = tt.0[orig_ptr as usize] >> 8;
     random_rows(n, segments - 1, &mut s.starts);
@@ -921,44 +923,79 @@ fn room_segments<const L: usize, const PF: u8>(
             }
             let mut base: [*mut u8; L] = std::array::from_fn(|k| lanes[k].p);
             for off in 0..room {
-                for k in 0..L {
-                    let l = &mut lanes[k];
-                    // SAFETY: rows are below n (TVector), with the flag masked off below
-                    let q = unsafe { *t.add(l.row as usize) };
-                    if q & START != 0 {
-                        l.p = base[k].wrapping_add(off);
-                        finish(l, bufs, next);
-                        if queued == ns {
-                            // the lanes before this one wrote at `off`, those after it not yet
-                            for (j, lj) in lanes.iter_mut().enumerate() {
-                                if j < k {
-                                    lj.p = base[j].wrapping_add(off + 1);
-                                } else if j > k {
-                                    lj.p = base[j].wrapping_add(off);
-                                }
+                // Every lane whose entry doesn't start a segment steps here; a lane whose
+                // entry does is only marked, and handed over below, in lane order. A step
+                // reads the table and writes only its own lane's buffer, so stepping a lane
+                // before an earlier lane's handover changes no byte, and the segments are
+                // taken in the same order as before. Keeping the handover out of this loop
+                // keeps the loop small enough to unroll.
+                let mut marked: u64 = 0;
+                macro_rules! step {
+                    ($k:expr) => {{
+                        let k = $k;
+                        let l = &mut lanes[k];
+                        // SAFETY: rows are below n (TVector), with the flag masked off below
+                        let q = unsafe { *t.add(l.row as usize) };
+                        if q & START != 0 {
+                            marked |= 1 << k;
+                        } else {
+                            l.row = q >> 8;
+                            if PF != PF_OFF {
+                                prefetch::<PF>(t, l.row);
                             }
-                            transition!(FULL_PHASE_ENDS_MID_PASS);
-                            break 'full;
+                            // SAFETY: base + off is below the lane's end: room is at most
+                            // its spare at the pass's start (or, for a buffer taken
+                            // mid-pass, its capacity after its first byte)
+                            debug_assert!(base[k].wrapping_add(off) < l.end);
+                            unsafe { *base[k].wrapping_add(off) = q as u8 };
                         }
-                        transition!(MID_PASS_TAKES);
-                        *l = take(queued, bufs);
-                        if PF != PF_OFF {
-                            prefetch::<PF>(t, l.row);
+                    }};
+                }
+                // eight lanes a turn, unrolled by hand: the compiler keeps this loop rolled
+                let mut c = 0;
+                while c + 8 <= L {
+                    step!(c);
+                    step!(c + 1);
+                    step!(c + 2);
+                    step!(c + 3);
+                    step!(c + 4);
+                    step!(c + 5);
+                    step!(c + 6);
+                    step!(c + 7);
+                    c += 8;
+                }
+                while c < L {
+                    step!(c);
+                    c += 1;
+                }
+                while marked != 0 {
+                    let k = marked.trailing_zeros() as usize;
+                    marked &= marked - 1;
+                    let l = &mut lanes[k];
+                    l.p = base[k].wrapping_add(off);
+                    finish(l, bufs, next);
+                    if queued == ns {
+                        // Every lane but the marked ones after this one has its next byte at
+                        // off + 1: an unmarked lane wrote at `off`, and an earlier marked
+                        // lane's new segment starts after it. A marked lane after this one
+                        // still sits on its segment's end, unwritten at `off`, for the tail.
+                        for (j, lj) in lanes.iter_mut().enumerate() {
+                            if j != k {
+                                let waiting = marked >> j & 1 != 0;
+                                lj.p = base[j].wrapping_add(off + usize::from(!waiting));
+                            }
                         }
-                        queued += 1;
-                        // its next byte, at offset off + 1, goes at its p
-                        base[k] = l.p.wrapping_sub(off + 1);
-                        continue;
+                        transition!(FULL_PHASE_ENDS_MID_PASS);
+                        break 'full;
                     }
-                    l.row = q >> 8;
+                    transition!(MID_PASS_TAKES);
+                    *l = take(queued, bufs);
                     if PF != PF_OFF {
                         prefetch::<PF>(t, l.row);
                     }
-                    // SAFETY: base + off is below the lane's end: room is at most its spare
-                    // at the pass's start (or, for a buffer taken mid-pass, its capacity
-                    // after its first byte)
-                    debug_assert!(base[k].wrapping_add(off) < l.end);
-                    unsafe { *base[k].wrapping_add(off) = q as u8 };
+                    queued += 1;
+                    // its next byte, at offset off + 1, goes at its p
+                    base[k] = l.p.wrapping_sub(off + 1);
                 }
             }
             for (l, b) in lanes.iter_mut().zip(base) {
