@@ -4543,3 +4543,21 @@ We can preserve both findings without spending the next engineering cycle chasin
 Meanwhile, scanner cleanup potentially removes instructions across much more frequently executed code. That makes it a sensible next candidate to examine.
 
 The epoch-tagged prototype stops. The instruction-minimization research does not.
+
+## Report 239: the guardian withdraws report 238's scanner handoff
+
+Summarised from the relay.
+- **Withdrawn:** report 238's instruction to prepare a scanner/tile cleanup handoff, and its
+  ruling out of an SSE2 attempt. The guardian judged that move premature, because the compiler
+  result hadn't yet been weighed.
+- **Still in force:** the finaliser prototype at `dbf5139` remains a formal STOP under its
+  registered gate. The gate is not changed, and no further attempt is authorised.
+- **Recorded as a positive result:** the fast finish fell from 81 instructions to 44, with
+  correctness intact in the suites completed.
+
+**The only current work:** finish and archive the pending Miri, mutation and formatted-source
+rebuild checks.
+
+**The next decision**, taken only after reviewing the completed evidence, is a deliberate choice
+between a narrowly authorised SSE2 attempt and the scanner cleanup. The withdrawal reached the
+subagent before it had started the handoff.
