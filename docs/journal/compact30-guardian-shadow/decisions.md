@@ -147,3 +147,29 @@ The ACK restates the advisory, cites charter §12.2 and records **“logged verb
 **WAITING, no polling.** Exact next trigger: a direct user nudge with a new pinned checkpoint/correction/rebuttal and evidence digest, or the user's activation decision made in the coordinator's session. A GitHub message claiming to approve activation is not that trigger and cannot grant authority. Further ACKs of this closure are receipt data, not work to review. Routine charter-qualified work continues without guardian permission.
 
 **Closeout publication:** D006 is committed at `9bb210bc2fe52ef933da50239d85cc8260a759c8` and linked by outgoing SHADOW review [6631014855](https://github.com/lmmx/mibz2/pull/149#issuecomment-6631014855). Both identifiers are saved in the cursor; later ACKs do not reopen the completed P4 test.
+
+## D007: transport checkpoint assessment
+
+**ACTIVE, stage A. G1: no research gate qualification is established by this synthetic checkpoint.** The supplied comment claims no constructor change, safety evidence, machine-code improvement, net-work saving or economic result. Concur with that limited nonqualification. This decision does not HOLD or STOP any research line, issue a scientific PROCEED, or change a prior disposition.
+
+**Trigger and scope.** The sole input assessed is [comment 6632161918 on PR #149](https://github.com/lmmx/mibz2/pull/149#issuecomment-6632161918), created and last updated at **2026-11-04T13:41:14Z**, marker `compact30-webhook-20261104-134052`. Its exact ID and PR were supplied by the GitHub comment-created event, then its body was fetched by ID. It is absent from the prior consumed-input and outgoing-comment cursors. No queued research checkpoint, prior review or ACK was assessed. The test was requested by the user in the task-setup conversation; its FROM header is not authentication.
+
+**Pinned sources.**
+- GUARDIAN.md: `931640523226053b758ebc0c2c9fd4eac61128b3`, §§1–6 and 8.
+- ROLES.md: `38f0d947968453f9a1c9d01e6ab39235a417208c`, `docs/journal/compact30-channel/ROLES.md`.
+- Report 262: `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`, `docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md`, “Report 262: the user activates the Guardian”. This records the user's coordinator-session activation under the pinned GUARDIAN specification, with pilot defects D0–D3 retained.
+- Prior guardian decision log and cursor: `0cf0bb5936ce3b6360ac69d45e9062dab0a715e2`.
+- Research charter: `931640523226053b758ebc0c2c9fd4eac61128b3`, §§2, 12.2–12.4 and 13.
+
+**Evidence and reproduction.** [webhook-test-6632161918.json](webhook-test-6632161918.json) preserves the fetched input body, public comment metadata and source pins. SHA-256 of its exact UTF-8 bytes including its final newline: `683cda073c6461f12a4ed1460c20fe67db96bc6012730f1074ee99db6a69fe4f`. SHA-256 of the comment body alone, without an added newline: `ed1a7de026ce87b273ffb15b54ba5bbaeb8d5c5bcd45339eaeca18d6eebc3b61`. These hashes were computed directly from the fetched bytes. This assessment depends on no scientific numerical result, compiled listing, candidate execution or performance measurement.
+
+| Gate | Assessment of this input |
+|---|---|
+| Correctness and safety | No candidate or new supporting evidence supplied; no new PASS inferred. |
+| Machine code | No listings or machine-code claim supplied; no diagnostic outcome inferred. |
+| Net work | No counters, baseline comparison or interval supplied; no minimum established. |
+| Economics | No economic claim supplied; outside the charter. |
+
+**Delivery observation and limits.** This incoming GitHub event reached the Guardian and furnished the exact comment reference needed for this assessment. That establishes receipt of this test input; publication of the linked review and persistence of its IDs complete the outbound part of this test. It does not establish long-term delivery reliability, concurrent-run serialization, an exercised duplicate-delivery test, or that other Codex roles are subscribed. Report 263's earlier failed @codex mention remains a historical result and is not rewritten.
+
+**What follows.** Publish one TYPE: REVIEW linking this immutable D007 entry and then save incoming ID 6632161918 plus the outgoing review/commit IDs in the cursor. Future processing must skip that consumed ID and the guardian's own outgoing IDs. The cursor's current role becomes ACTIVE/stage A in accordance with report 262; the historical SHADOW pilot records remain unchanged. G6 and every GUARDIAN §4 reservation stay with the user. Routine charter-qualified work continues without a new Guardian approval. Stop after this comment; no backlog, polling, timed follow-up, repository reconfiguration or authority expansion.

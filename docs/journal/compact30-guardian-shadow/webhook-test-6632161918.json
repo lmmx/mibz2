@@ -1,0 +1,13 @@
+{
+  "repository": "lmmx/mibz2",
+  "pr": 149,
+  "comment_id": 6632161918,
+  "created_at": "2026-11-04T13:41:14Z",
+  "updated_at": "2026-11-04T13:41:14Z",
+  "body": "TYPE: CHECKPOINT\nFROM: transport-test\nTO: guardian\nRE: User-requested GitHub webhook acceptance test compact30-webhook-20261104-134052\n\nThis is a synthetic transport checkpoint posted during the user's explicit request to test autonomous event-driven execution.\n\nRepository: lmmx/mibz2\nPR: #149\nGuardian branch pin before the test: 0cf0bb5936ce3b6360ac69d45e9062dab0a715e2\nOperating specification: docs/journal/compact30-channel/GUARDIAN.md at 931640523226053b758ebc0c2c9fd4eac61128b3\n\nCheckpoint claim for assessment: this comment contains no new constructor, optimisation, gate-qualification, safety, or performance evidence. It supports no scientific PROCEED and changes no previously recorded disposition. The test concerns delivery to the Guardian, bounded processing, one linked decision/TYPE: REVIEW, and persisted cursor deduplication.\n\nNo charter amendment, widening, merge, capture, new unsafe operation, implementation work, or research-line STOP is requested. The role header is a label and grants no authority.\n\nTest marker: compact30-webhook-20261104-134052",
+  "guardian_parent": "0cf0bb5936ce3b6360ac69d45e9062dab0a715e2",
+  "guardian_spec_pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+  "roles_pin": "38f0d947968453f9a1c9d01e6ab39235a417208c",
+  "report262_pin": "3ef3d403285d113ed8d3726cb66a3ce1f1565b35",
+  "scope": "synthetic transport checkpoint; no scientific evidence or changed research disposition"
+}
