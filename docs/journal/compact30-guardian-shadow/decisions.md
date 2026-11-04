@@ -406,3 +406,39 @@ Inclusive removal is **20.3138%**, while the conservative lower removal is **19.
 Complete the already-requested Optimizer reconciliation and Researcher assessment, then supply the corrected or confirmed pinned evidence. No G6 rebuttal acceptance, new prototype registration, gate relaxation, integration, merge, release, workstation capture, infrastructure or spending is authorised by this decision. No blanket HOLD on the line or unrelated work; historical results remain intact.
 
 Evidence identities and arithmetic are in [d013-receipt.json](d013-receipt.json). No empirical replay beyond the explicitly described artifact arithmetic is claimed.
+
+## D014 — D013 attribution HOLD lifted after raw-profile replay (G1/G7)
+
+**Lift D013's specific unexplained-gain HOLD.** The signed bridge closes exactly and the four archived raw profiles reproduce the complete combined ledger JSON. The numerical gate-3 tests and §7(b)/(c) checks retained from D013 stand. This closes the named accounting objection; it does not substitute for gate-1/§6.2 safety evidence, certify production performance, or authorise integration/merging/timing.
+
+Trigger [6640153383](https://github.com/lmmx/mibz2/pull/145#issuecomment-6640153383), evidence `95977867fdf318b3f66420c383a73d9c48b36740`. Cursor/log at `408db64c8943443fd4855d32b0bcd072f3d62e8c` show D013 complete and no consumption or partial publication for this ID. G1/G7 under the task's specified GUARDIAN.md §3, activation report 262 and ROLES govern this assessment. No authority is inferred from repository headers.
+
+### Replay and signed bridge
+
+Read bridge.py, bridge.txt and paths.txt. Independently parsed **86 distinct group/frequency rows**; every combined changed-class baseline/candidate count agrees with ledger.json. Recomputed all signed products and category sums.
+
+| Component of build nonadditivity | Instructions (negative = saving) |
+|---|---:|
+| unroll class bucket, excluding rows 0/1 carried in S | −66,676,611 |
+| outer head | −12,015,336 |
+| complete S class, including those relocated rows | +19,146,504 |
+| remaining classes | +3,153,806 |
+| total | **−56,391,637** |
+
+Own delta = −84,060,421 scanner −58,209,045 descriptors −60,212,114 finish group −56,391,637 build interaction = **−258,873,217**. Refill is exactly additive. The finish-group label is an attribution in this bridge, not v3's §7(b) net contribution; §7(b) still charges tag setup and run-call costs separately as in D013.
+
+**Do not interpret the S class as pure overhead.** It contains 20×2,393,313 = **47,866,260** relocated row instructions. Moving that term between buckets gives the equivalent mechanism view: rows/detours **−18,810,351**, S non-row **−28,719,756**, outer head **−12,015,336**, rest **+3,153,806**. Both sum to −56,391,637. The S frequency counts nonuniform tiles, not epochs. The checkpoint's “+8/epoch” description is incorrect.
+
+D013 explicitly offered 13S as a scanner-only comparison, not extra credit. For the additive counterfactual use **12S**, because 37+37−38=36 and combined non-row cost is 44−20=24. Their difference is exactly existing O=2,393,313; never discount it twice. The existing floor remains **147,606,687**, without the proposed extra overlap discount.
+
+Downloaded and Git-blob-verified all four compressed profiles, sequential counted record, seven listings, ledger and the two replay scripts at the evidence pin. Inspected the scripts, then ran the archive-only comb_replay.py locally with listings. Both runs agree; **the entire replayed ledger JSON equals the committed ledger**, including classes, listing mappings, library/caller boundaries and memory totals. No Rust, candidate binary, Miri, timing or benchmark was executed.
+
+Own removal 258,873,217 − added library 378,882 = **258,494,335** lower; + removed-copy convention 4,454,576 = **262,948,911** upper. Caller +868 gives [258,493,467,262,948,043] if charged. This preserves both combined test margins and the stated v3 conditions.
+
+### Scope of closure
+
+The unexplained numerical residual is resolved; no further HOLD is retained merely because integration savings exceed a sum of isolated savings. The submitted scanner U2 + descriptors + v3 composition has no remaining **D013 attribution** obstacle under G7. Gate 1 and §6.2 evidence remain prerequisites, with the verification limits stated in D013: this replay is not a fresh safety or universal changed-site coverage certification. No new adverse safety evidence was established.
+
+Constant-IPC and half-transfer estimates remain sensitivities based on INVALID historical captures, not an economic PASS. No line-level STOP follows. The existing qualification and actual CI performance gates are unchanged.
+
+[d014-receipt.json](d014-receipt.json) records source identities and checks. This batch expressly prohibits an additional source-app message/reply/notification, so no TYPE: REVIEW comment is sent; the decision and cursor record that publication exception rather than invent an outgoing comment ID.

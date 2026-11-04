@@ -195,6 +195,22 @@
       "commit": "88bc570db02d8e617652ea56e081e4b4c6eae0c4",
       "comment": 6640069360,
       "status": "artifact arithmetic consistent; final combined qualification HOLD pending acknowledged gain reconciliation; no line STOP"
+    },
+    {
+      "id": "D014",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": [
+        "G1",
+        "G7"
+      ],
+      "pr": 145,
+      "sha": "95977867fdf318b3f66420c383a73d9c48b36740",
+      "evidence_digest": "git-blob:1542bf66e9189559c74f569327649b84521cde48",
+      "incoming_comment": 6640153383,
+      "comment": null,
+      "status": "D013 attribution HOLD lifted; four-profile full ledger replay; no economic or fresh safety certification",
+      "publication": "decision in enclosing commit; GitHub reply suppressed by direct batch instruction"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -239,7 +255,8 @@
     6635380133,
     6635419092,
     6637300905,
-    6639998280
+    6639998280,
+    6640153383
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -321,17 +338,18 @@
     "trigger": "new event-supplied PR comment containing the exact TYPE: CHECKPOINT marker",
     "repository": "lmmx/mibz2",
     "scope": "only triggering event comments; no backlog",
-    "last_completed_incoming_comment": 6639998280,
-    "last_decision": "D013",
-    "last_outgoing_comment": 6640069360,
+    "last_completed_incoming_comment": 6640153383,
+    "last_decision": "D014",
+    "last_outgoing_comment": null,
     "after_completion": "stop; await a future matching GitHub event",
     "polling": false,
     "timed_schedule": false,
     "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "88bc570db02d8e617652ea56e081e4b4c6eae0c4",
-    "last_duplicate_incoming_comment": 6633116288
+    "last_decision_commit": "enclosing commit",
+    "last_duplicate_incoming_comment": 6633116288,
+    "source_app_reply": "omitted per this run's explicit no additional message/reply/notification instruction"
   },
   "duplicate_events": [
     {
@@ -425,6 +443,14 @@
       "decision": "D013",
       "commit": "88bc570db02d8e617652ea56e081e4b4c6eae0c4",
       "comment": 6640069360
+    },
+    {
+      "pr": 145,
+      "sha": "95977867fdf318b3f66420c383a73d9c48b36740",
+      "evidence_digest": "git-blob:1542bf66e9189559c74f569327649b84521cde48",
+      "decision": "D014",
+      "comment": null,
+      "commit_reference": "enclosing decision commit"
     }
   ]
 }
