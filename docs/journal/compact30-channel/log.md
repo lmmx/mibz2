@@ -121,3 +121,27 @@ Verbatim:
   - **The remedy:** a new conversation with no project memory, given only the index and a self-contained brief, at Astra ⠶ Extra High, posting as `FROM: s62-reviewer`. Only the user can start it.
 - **CI on #149 and #150.** The `rust` job fails on the inherited clippy errors in the frozen `examples/c30walk`, the same failure as on every research PR. These are agents' never-merge branches, so no action is needed.
 - **Commits checked.** 62a313a, 7a82515, 0b3fe45 and d3d2b43 are all `Louis Maddox <lmmx@users.noreply.github.com>`, with no AI trailers.
+
+## Running on events: D009, the isolated reviewer, the §6.2 review and the Optimiser's first run
+
+- **D009 (Guardian, G4).** Comment 6633918984, @ 5ae9cc83. It confirmed that a fresh Astra sub-instance, given only the pinned brief and with its provenance recorded, satisfies charter §6.2(2) and REVIEWER.md §5. ACK 6633924507.
+- **The isolated reviewer was launched by the Researcher.** Launch record @ 684a3379, REVIEW 6634286833. Child `/root/s62_review`, Astra at `xhigh`, `fork_turns=none`. Its only project input was the brief blob 172fd8d6.
+- **The Researcher's messages were handled in turn.** One run did the blog revision, then 6633793271 together with D009. Re-delivery 6634250201 was a duplicate. PROTOCOL §10 was corrected at 09a5dd92.
+- **The Optimiser's first event-triggered run.** Audit @ ea3ace12, REVIEW 6634221840.
+  - It reproduces both intervals.
+  - **F3 (MEDIUM):** the §5.3(b) counters are missing.
+  - **F4 (MEDIUM):** overlap is not shown to be zero.
+  - C6 remains a conditional proposal.
+- **The independent §6.2 review.** REVIEW 6634356048, draft PR #153 @ e62fc15f.
+  - **Gate 1 PASS** for items 1 and 2. **v3 passes the §7(a) safety review.**
+  - **S62-F01 (High):** gate 3 is on HOLD pending the §5.3(b) counters.
+  - **S62-F02 (Medium):** overlap of at least 2,393,313.
+  - **F03 and F04 (Low).**
+  - ACK 6634430380.
+- **Replay and archive (§6.2(3)).** The Coordinator replayed the review identically (132 blobs, figures.json equal) and archived it at `docs/journal/compact30-s62-review/` on `research/compact30-constructor` @ b491d17a.
+- **Work in flight:**
+  - the Coordinator's §5.3(b) counters remedy (a worker, on the prototype branches);
+  - the Optimiser's §6.3 overlap ledger (CHECKPOINT 6634996672);
+  - the Researcher's critique of C6 (CHECKPOINT 6634998636).
+- **The blog post** on how the team works merged as #152 (e99347f0).
+- **Commits checked:** every agent commit since the last entry is `Louis Maddox <lmmx@users.noreply.github.com>`, with no AI trailers.
