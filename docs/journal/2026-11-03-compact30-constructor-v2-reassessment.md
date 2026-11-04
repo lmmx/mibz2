@@ -2389,3 +2389,153 @@ The justification is concrete:
 This does **not** establish economic viability, authorize implementation, or recommend a performance capture. The next decision should depend on byte-exact correctness and the actual compiled whole-path ledger.
 
 The evidence supports continued bounded engineering scrutiny. It does not support declaring compact30 v2’s practical execution-cost floor exhausted.
+
+## Report 228: the guardian's review of report 227, and the adversarial audit it commissions
+
+**What report 228 decides:**
+- **GO for independent validation of the instruction budget:** one fresh, adversarial review of
+  report 227, before any implementation.
+- The guardian is provisionally supportive of a bounded prototype strategy. No implementation,
+  benchmark, i9 use or protocol change is authorised.
+- The v2 capture stays formally INVALID, and the economic thresholds are unchanged.
+
+**The three challenges it records:**
+- the 225 M figure depends on compiler behaviour, including the 5 M allowance for the
+  descriptor-array change;
+- removing bounds checks needs a complete memory-safety proof, short tiles and epoch boundaries
+  included;
+- the first proposed prototype covers only about 66 M of the 225 M.
+
+The audit's request is in the text below, under "Send this to a fresh Astra Max chat". It goes
+with the full text of report 227, which is above in this file.
+
+Kept as relayed; the relay lost its formatting, and the words are unchanged.
+
+Guardian review: Astra Ultra has found a credible way forward
+
+Ultra recommends GO for a bounded prototype
+
+This is a substantially more encouraging result than Max’s earlier NO-GO. More importantly, it’s the kind of result you wanted: a systematic analysis of actual machine instructions, with a cumulative savings budget rather than another collection of speculative algorithms.
+
+Ultra identifies three potentially compatible improvements:
+
+Conditional net instruction savings per primary-corpus construction
+
+Remove redundant source/tile checks
+
+87.62M
+
+Separate hot descriptor pointer arrays
+
+71.59M
+
+Epoch-tagged fast finalization
+
+66.04M
+
+Combined conditional saving
+
+225.25M
+
+These are theoretical instruction-removal targets after stated overhead allowances—not compiled results, retired-instruction measurements or predicted speedups.
+
+That’s potentially around 15–19% of the constructor’s instruction work, depending on the unresolved total. It is enough to make a serious performance hypothesis worth investigating, although not to establish a 10–15% runtime improvement.
+
+Why Max and Ultra disagree
+
+They aren’t necessarily contradicting each other.
+
+Max examined the strongest single optimization it could justify and found insufficient evidence that it would save enough completion time.
+
+Ultra looked for multiple non-overlapping sources of unnecessary machine work. Its most important discovery is that ordinary finalization is not the only remaining opportunity: scanner bounds checks and descriptor addressing could collectively offer greater instruction savings than finalization itself.
+
+So Max’s NO-GO on one change does not refute Ultra’s broader case.
+
+The original v2 capture remains formally INVALID. Neither analysis changes that.
+
+What I’ve checked
+
+I compared Ultra’s proposed transformations with the frozen v2 Rust source and assembly. The opportunities are grounded in real compiled operations:
+
+Opportunity	Existing cost	Proposed target
+Fast ordinary finalization	81 instructions on the common full-group path	At most 40
+Source/tile processing	Repeated bounds-check and control instructions	Remove redundant checks where bounds are already proven
+Scalar descriptor addressing	Two address-generation instructions per scalar row	12 → 10 instructions per iteration
+
+The cumulative arithmetic is internally consistent. Ultra has also accounted for some added work rather than crediting every removed instruction as a free saving.
+
+Its analysis of the slowest workers is especially useful: in 85.44% of the 1,140 registered all-full candidate steps, the slowest worker also had the lowest bulk-emitter coverage in that step. That gives us a concrete reason to target scalar and finalization work rather than polishing already-efficient bulk emission.
+
+Three things I’d challenge before implementation
+
+First, the 225-million figure is conditional on compiler behavior. The descriptor-array change, for example, saves two scalar instructions only if reorganizing the descriptors doesn’t add expensive operations elsewhere. Ultra permits 5 million additional non-row instructions; that allowance needs independent scrutiny.
+
+Second, removing bounds checks must preserve Rust memory safety. The existing scan establishes useful source bounds, but any use of unchecked indexing or raw-pointer reads must have a complete proof, including short tiles and epoch boundaries.
+
+Third, the first proposed prototype addresses only about 66 million of the 225 million instructions. By itself, it doesn’t establish enough headroom to overturn Max’s earlier economic concerns. Ultra’s stronger case is the combined, compatible reductions, not just epoch-tagged finalization.
+
+These are reasons to scrutinize the proposal, not reject it.
+
+Guardian disposition
+
+GO for independent validation of Ultra’s instruction budget.
+
+I’m provisionally supportive of the bounded prototype strategy, but I would follow the review sequence we discussed: one independent adversarial Astra Max assessment before asking Claude to implement anything.
+
+We have abundant reasoning capacity. This is exactly where to spend it.
+
+Send this to a fresh Astra Max chat
+
+Attach Ultra’s complete report, not merely its summary.
+
+Independent adversarial audit: compact30 instruction-elimination budget
+
+Please independently and critically review the attached Astra Ultra report.
+
+This is a machine-code accounting and design-falsification assignment, not another algorithm-ideation exercise.
+
+Ultra proposes three compatible transformations with conditional net savings of approximately:
+
+* 66.04 million instructions: epoch-tagged ordinary fast finalization.
+* 87.62 million: source/tile bounds-check elimination.
+* 71.59 million: hot descriptor-pointer arrays.
+
+Total: approximately 225.25 million instructions per construction of the primary corpus.
+
+Your objective is to determine whether this cumulative budget is defensible.
+
+Independently inspect the frozen Rust source, archived assembly, structural census and raw capture evidence wherever available. Do not simply endorse or reject Ultra’s conclusions.
+
+Prioritize these questions:
+
+1. Are the path counts, execution frequencies and 225-million-instruction arithmetic correct? Are any operations counted twice, omitted or credited to an execution path where they cannot actually disappear?
+2. Are the three transformations genuinely compatible? In particular, could separating descriptor storage increase refill, finish, snapshot or run-handling work beyond Ultra’s 5-million-instruction allowance?
+3. Is removing approximately 87.6 million source/tile instructions realistic for rustc 1.97.0? Which checks are demonstrably redundant, what safe bounds invariants justify removing them, and how much of the proposed saving depends on unsafe accesses?
+4. Is the epoch-tagged ordinary fast path semantically correct across all epoch boundaries, deferred completion, RAW and forced-RAW configurations, malformed counts, reused arenas and partial groups? Can the complete hot path plausibly compile to 40 instructions or fewer without hidden caller overhead, spills or new dependencies?
+5. Are the proposed reductions likely to matter to four-worker completion, especially on low-bulk large blocks? Distinguish reduced architectural instructions from reduced micro-ops, dependency latency and actual cycles.
+6. Is Ultra’s choice of epoch-tagged finalization as the FIRST prototype justified, or would testing another transformation first offer stronger instruction savings with less implementation or safety risk?
+7. What parts of the practical execution-cost floor remain unaccounted for? Does the unresolved instruction remainder materially undermine the GO recommendation?
+
+Do not generate a fresh collection of algorithmic ideas. Challenge the proposed eliminations and their accounting.
+
+Return a clear verdict: ACCEPT, CONDITIONAL ACCEPT or REJECT.
+
+For each material concern, identify the precise source or assembly location, the quantitative impact on the cumulative budget, and the evidence required to resolve it.
+
+If acceptable, recommend the best order for bounded, untimed correctness-and-compilation prototypes. Define the static rejection conditions before any benchmark.
+
+The constructor-v2 performance capture remains formally INVALID. The economic thresholds remain unchanged. No repository changes, implementation, new timing, i9 use or performance experiment is authorized.
+
+A rigorous negative result is welcome. The goal is to determine whether Ultra has found a defensible path to substantial machine-code elimination, not to validate its optimism.
+
+What this means for the project
+
+We now have a much stronger reason to continue examining v2 than we had yesterday.
+
+Max found one promising change but couldn’t defend its economic upside. Ultra has identified a portfolio of large, specific, potentially compatible instruction reductions and supported it with a detailed workload analysis.
+
+That’s a meaningful advance in our understanding of the constructor, even though no runtime improvement has yet been demonstrated.
+
+I’d ask Claude to archive Ultra’s report as research evidence, without starting implementation. After the independent review, we’ll select the most defensible first compilation target.
+
+We haven’t established the execution-cost floor. We’ve found concrete evidence that substantial avoidable machine-code work may still remain. That’s exactly what we sent Ultra to investigate.
