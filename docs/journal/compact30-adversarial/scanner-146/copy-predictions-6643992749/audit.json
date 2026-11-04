@@ -1,0 +1,103 @@
+{
+  "trigger": 6643992749,
+  "first": {
+    "run": "41923819666",
+    "cpu": "EPYC 9V45",
+    "head": "75b13f009c619300bc914750b1a4a44f365def2e",
+    "stage_walk": {
+      "medians": [
+        3.89,
+        3.63
+      ],
+      "paired_ratio": 0.942,
+      "interval": [
+        0.847,
+        1.049
+      ]
+    },
+    "stage_total": {
+      "medians": [
+        8.82,
+        8.56
+      ],
+      "paired_ratio": 0.973,
+      "interval": [
+        0.927,
+        1.022
+      ]
+    },
+    "wall": {
+      "one": [
+        0.958,
+        0.92,
+        0.997
+      ],
+      "two": [
+        1.022,
+        0.994,
+        1.051
+      ],
+      "four": [
+        1.004,
+        0.972,
+        1.038
+      ]
+    },
+    "source_comment": 6643479692,
+    "observed_comment_updated": "2026-11-04T22:26:11Z"
+  },
+  "second": {
+    "run": "41925226768",
+    "cpu": "EPYC 7763",
+    "head": "3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1",
+    "stage_walk": {
+      "medians": [
+        4.04,
+        3.78
+      ],
+      "paired_ratio": 0.925,
+      "interval": [
+        0.856,
+        0.999
+      ]
+    },
+    "stage_total": {
+      "medians": [
+        8.71,
+        8.4
+      ],
+      "paired_ratio": 0.961,
+      "interval": [
+        0.927,
+        0.995
+      ]
+    },
+    "wall": {
+      "one": [
+        0.976,
+        0.964,
+        0.988
+      ],
+      "two": [
+        0.951,
+        0.905,
+        0.999
+      ],
+      "four": [
+        1.002,
+        0.979,
+        1.027
+      ]
+    },
+    "source_comment": 6643479692,
+    "observed_comment_updated": "2026-11-04T22:33:47Z"
+  },
+  "hypothetical_identifiability_example": {
+    "rho_from_7763": 0.925,
+    "assumed_issue_ratio": 0.6081081081081081,
+    "inferred_issue_share_if_equal_miss_penalties": 0.19137931034482747,
+    "B_penalty_multiplier_for_break_even": 1.0927505330490404,
+    "not_estimated_hardware_parameters": true
+  },
+  "median_ratio_vs_paired_ratio": 0.9356435643564356
+}
