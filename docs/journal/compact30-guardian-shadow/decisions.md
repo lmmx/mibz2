@@ -552,3 +552,44 @@ No request for broader authority is accepted through this checkpoint. The latest
 Retain the reported sample reductions as provisional evidence while the requested independent review and reproducible accounting are completed. No scientific PASS is asserted from missing evidence, and no new minimum is invented. No candidate code, other branch, timing, infrastructure or automation was changed.
 
 [d017-receipt.json](d017-receipt.json) preserves the PR snapshot, source patch and arithmetic. This batch prohibits an additional source-app message/reply/notification, so no TYPE: REVIEW comment is sent. The cursor records that exception rather than inventing an outgoing ID.
+
+## D018 — walk archive reconciled; CI causality remains unestablished
+
+Trigger [6643744616](https://github.com/lmmx/mibz2/pull/145#issuecomment-6643744616), PR #145. G1 assessment under GUARDIAN.md §3 at `931640523226053b758ebc0c2c9fd4eac61128b3`, ROLES and activation report 262. Cursor/log at `6b39c9b8615e25f674c1f46b6139f2e2a676c559` have no consumed ID, equivalent evidence key or pending publication. Candidate `75b13f009c619300bc914750b1a4a44f365def2e`, PR #157; archive `b0f6e89db10e579d7626b7e93b10f2c8137ebec5`, `docs/journal/compact30-channel/evidence/walk-75b13f00/`.
+
+**D017's missing raw-profile and accounting-boundary concerns are closed for this newer pin. Safety and economic qualification are not thereby established.** No line STOP or blanket HOLD is issued.
+
+### Replayed evidence
+
+Parsed all 14 raw Callgrind profiles, distinguished call-edge costs from self costs, and checked summed self costs against each profile's summary. Every arm has exactly 16 driver instructions outside decode_block. The inclusive decode/build/room_segments ledger reproduces the archive table:
+
+| Block | Base decode | Candidate decode | Removed | Base walk | Candidate walk |
+|---|---:|---:|---:|---:|---:|
+| 1 | 25,751,796 | 20,184,697 | 5,567,099 | 15,426,892 | 9,859,793 |
+| 41 | 25,168,380 | 19,480,512 | 5,687,868 | 15,364,532 | 9,676,664 |
+| 233 | 25,588,404 | 19,989,537 | 5,598,867 | 15,429,922 | 9,831,055 |
+| 400 | 25,129,254 | 19,490,536 | 5,638,718 | 15,373,793 | 9,735,075 |
+
+Build and the remaining decode costs are identical in each pair. Whole-walk accounting includes setup, handovers, remainder and tail; the entire sampled decode reduction is attributable to that function. Tiny blocks 0/97/472 reproduce 7,557/7,926/8,764 decode instructions in both arms and do not call room_segments. Matching stdout blobs establish matching reported length/CRC, not an independent full-byte comparison. These Rust 1.97 profiles use the independent input identified by SHA-256 in the archive; they are not the Rust 1.99.1 CI corpus. D017's earlier `8465207` figures remain historical and are not silently replaced.
+
+Read the driver, hot-path listings and debug/release-trace/Miri consoles. The block-1 base hot excerpt sums to 13,466,544 instructions: its first five instructions execute 841,989 times and the remaining eleven 841,509 times. Thus “16 instructions executed 841,989 times” is shorthand, not an exact weighted total. The candidate excerpt sums to 7,995,072, with eight nine-instruction steps plus four control instructions and differing execution frequencies. Inclusive whole-function totals above avoid using either excerpt as the whole-walk cost. Withdrawal of “about 7” as a proven floor is accepted; no replacement minimum is invented.
+
+### Safety evidence scope
+
+The archived Miri console reports ten passing selected tests, including miri_room_walk_handoffs. The later test-only child `3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1` adds room_walk_deferred_handovers; its inspected patch introduces test-only counters and differential tests, not a production algorithm change. Its three coverage counters accumulate across both lane counts and all 400 cases, then assert positivity once. That establishes the asserted classes collectively if the test passes; it does not establish every class separately at both lane counts, or every possible interleaving. The archived consoles at 75b13 predate this new test. Mutant failures are reported in the README, not independently replayed here.
+
+The archive itself leaves §4 case 2 open: an unmarked lane j>k has already stepped when the new implementation exhausts the queue, whereas the old implementation reaches that step in the tail. Final-buffer equivalence requires the stated no-intervening-observer and bounds argument; identical intermediate states is the wrong invariant. The requested Researcher review remains the appropriate independent assessment. No soundness failure is established here, and no complete safety proof is claimed.
+
+### CI interpretation
+
+Read [bench comment 6643479692](https://github.com/lmmx/mibz2/pull/157#issuecomment-6643479692). Its retained table is the completed 75b13 run [41923819666](https://github.com/lmmx/mibz2/actions/runs/41923819666); its running banner names the separate 3fc3f8c replicate. No replicate outcome was polled or inferred.
+
+The first report supports 1-thread Wikidata wall −4.2% [−8.0%, −0.3%] and pattern −5.3% [−6.8%, −3.8%]. Wikidata at 2 threads is +2.2% [−0.6%, +5.1%] and at 4 threads +0.4% [−2.8%, +3.8%]. Say **no statistically detected wall regression in this report**, not demonstrated equivalence, “nothing at 2/4,” or proof that walk instructions do not bind. Those intervals allow both improvements and regressions. A sampled instruction reduction and a whole-program timing change do not identify a unique limiting resource.
+
+Amplification is a ratio to each build's own 1-thread CPU cost. The rounded CPU ratios give 1.014/0.958−1≈5.85% and 1.009/0.958−1≈5.32%, consistent with the reported +5.9% and +5.4%. The cheaper denominator explains the arithmetic; it does not erase the statistically flagged scaling change or settle its deployment consequences. The report explicitly asks for more-core evidence before release. This decision grants no workstation capture, release waiver or new authority.
+
+Do not transplant the earlier 0.11/1.21-second scanner/worker split into this run: its head values are 0.07/0.85 seconds. Summed worker CPU is not elapsed critical-path time; the instruction ledger's “rest” share is not a timing share. The report reads no hardware counters and cannot distinguish cache, bandwidth, SMT or handoff causality. These remain hypotheses, not a Guardian finding.
+
+**Disposition:** accept the archive and reproduced instruction accounting as evidence; retain the independent invariance review and applicable performance gates. No PASS, integration authorisation, new experiment, gate relaxation or line-level G8 STOP follows. Repository requests do not widen this Guardian's direct task authority.
+
+[d018-receipt.json](d018-receipt.json) contains the replay/parser, immutable blob manifest, inspected test patch and CI snapshot. Evidence digest: `sha256:8bf36cd55a53f0a35016b2625ef1f71ca59ae5a8c9c2228cda04c59d606e4eea`.
