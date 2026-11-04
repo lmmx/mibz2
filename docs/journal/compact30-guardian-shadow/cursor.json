@@ -1,7 +1,7 @@
 {
   "version": 1,
   "repository": "lmmx/mibz2",
-  "mode": "SHADOW",
+  "mode": "ACTIVE",
   "branch": "review/compact30-guardian-shadow",
   "pr": 149,
   "base": "research/compact30-constructor",
@@ -62,6 +62,23 @@
       "commit": "9bb210bc2fe52ef933da50239d85cc8260a759c8",
       "comment": 6631014855,
       "status": "P4 CLOSED; pilot execution complete with named defects; remains SHADOW"
+    },
+    {
+      "id": "D007",
+      "kind": "synthetic transport checkpoint",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 149,
+      "sha": "0cf0bb5936ce3b6360ac69d45e9062dab0a715e2",
+      "evidence_digest": "683cda073c6461f12a4ed1460c20fe67db96bc6012730f1074ee99db6a69fe4f",
+      "incoming_comment": 6632161918,
+      "incoming_created_at": "2026-11-04T13:41:14Z",
+      "body_sha256": "ed1a7de026ce87b273ffb15b54ba5bbaeb8d5c5bcd45339eaeca18d6eebc3b61",
+      "commit": "99952368535d6f7f970533c2cfb63c71261c435d",
+      "comment": 6632636427,
+      "status": "published; event receipt verified; user-approved noreply identity resolved publication blocker; no scientific gate qualification or changed research disposition",
+      "completion": "original event processing resumed by explicit user request after commit-identity approval; not an uninterrupted unattended end-to-end trial"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -70,7 +87,8 @@
     6630627391,
     6630629015,
     6630660444,
-    6631014855
+    6631014855,
+    6632636427
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -78,13 +96,15 @@
     "cfa5a66c7b3aba3cbdac4b32d253658a37259e89",
     "51657ab576a804531de0e71a40d4197c42f7c592",
     "806de8ef5dff19b7859ff51475fe5b8e563a6a1b",
-    "9bb210bc2fe52ef933da50239d85cc8260a759c8"
+    "9bb210bc2fe52ef933da50239d85cc8260a759c8",
+    "99952368535d6f7f970533c2cfb63c71261c435d"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
     6630530217,
     6630638365,
-    6630672389
+    6630672389,
+    6632161918
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -137,5 +157,43 @@
     ],
     "P3": "PASS",
     "P4": "PASS, exact advisory/log/ACK correlation verified"
+  },
+  "stage": "A",
+  "activation": {
+    "source": "user activation recorded in report 262",
+    "commit": "3ef3d403285d113ed8d3726cb66a3ce1f1565b35",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md",
+    "section": "Report 262: the user activates the Guardian",
+    "reserved": "G6 until stage B and all GUARDIAN.md §4 decisions remain with the user",
+    "historical_pilot_record": "pilot and p4 below preserve their original SHADOW closeout history"
+  },
+  "commit_identity": {
+    "author": {
+      "name": "Louis Maddox",
+      "email": "lmmx@users.noreply.github.com"
+    },
+    "committer": {
+      "name": "Louis Maddox",
+      "email": "lmmx@users.noreply.github.com"
+    },
+    "scope": "review/compact30-guardian-shadow",
+    "authority": "explicit user approval in this conversation and PROTOCOL.md §9",
+    "protocol_commit": "374cfe4d2e0fd1f436c4bee9a38e5366d6855726",
+    "protocol_path": "docs/journal/compact30-channel/PROTOCOL.md",
+    "ai_attribution": false
+  },
+  "current_execution": {
+    "trigger": "new event-supplied PR comment containing the exact TYPE: CHECKPOINT marker",
+    "repository": "lmmx/mibz2",
+    "scope": "only triggering event comments; no backlog",
+    "last_completed_incoming_comment": 6632161918,
+    "last_decision": "D007",
+    "last_outgoing_comment": 6632636427,
+    "after_completion": "stop; await a future matching GitHub event",
+    "polling": false,
+    "timed_schedule": false,
+    "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
+    "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
+    "duplicate_delivery_test": "not exercised; consumed-ID membership verified"
   }
 }
