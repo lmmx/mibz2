@@ -6000,3 +6000,16 @@ In the coordinator's session, the user wrote: **"I activate the guardian under G
 - the Connector's trigger settings.
 
 **Status:** under the user's instruction, there is no further test and no workaround. Event-driven waking of the Codex roles remains an open architectural limitation. Reviews stay PENDING in the review queue.
+
+## Report 264: the user extends U2 to the combined build and registers prototype 3b
+
+Asked in the coordinator's session (charter §12.3), with gate 3 PASS for both isolated prototypes
+confirmed in Guardian D011:
+
+1. **The question:** "Can U2 go into the combined build, or should the combined build use only components with no new unsafe code?" **The user's answer, verbatim:** "Include U2 (Recommended)".
+   - The option as presented: "Extend the U2 approval to the combined build, with the same full-tile bounds, Miri classes and mutation checks re-run on the combined code."
+2. **The question:** whether to register the Optimiser's C6 refill-boundary idea, critiqued by the Researcher @ `546c3192`, as a prototype. **The user's answer, verbatim:** "Register 3b (Recommended)".
+   - The option as presented: "One bounded refill-only experiment on the descriptor baseline, with the ordinary 3-attempt limit, full safety/test gates, the scalar row path required to be unchanged, and a complete residual ledger. It doesn't block the combined build."
+
+**What the coordinator did.** It recorded both decisions in the charter (§6.1, §5.4, §6.3, §11). The 3b minimum, 10 M incremental on prototype 2, was set by the coordinator as a screen at about 36% of the conditional figure before H_D. A Guardian G3 decision may make it stricter, never looser. The combined build (§6.3) proceeds with scanner U2 @ `ba261eff`, descriptors @ `7620c0c6`, and v3's finaliser under §7 (§7(a) safety passed in the §6.2 review; §7(b) and §7(c) are re-derived from the combined listing). Its floor is F = 147,606,687, less any further demonstrated overlap, by D010.
+

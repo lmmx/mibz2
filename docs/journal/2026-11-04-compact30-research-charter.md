@@ -177,6 +177,7 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
 | 1 | scanner and tile-bounds cleanup | B2 | gross 88,622,080 + 3Q, with Q ∈ [0, 3,450] (handoff 25d7eb59); 87.62 M in report 227 §D.2 | 60 M | ≈ 68% |
 | 2 | hot descriptor pointer arrays | B2 | 71.59 M (report 227 §D.3) | 40 M | ≈ 56% |
 | 3 | SSE2 first-chunk refinement of v3's finaliser | B3 | 4 instructions × 1,647,375 leaf finishes = 6,589,500 | 4 M on top of v3 | ≈ 61% |
+| 3b | refill-boundary successor shortcut (C6) | prototype 2 (`7620c0c6`), incremental | (69 − C) × 1,084,913 − g × 710,569 − H_D: 27,909,632 − H_D at C = 40, g = 5 (Optimiser @ `ea3ace12`) | 10 M on top of prototype 2 | ≈ 36% of the pre-H_D figure |
 
 - The minimums are screens, not predictions. They sit below each estimate, so that a
   substantially smaller real saving still clears them while a negligible one does not.
@@ -201,6 +202,7 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
 | 1 | scanner and tile-bounds cleanup (report 227 §D.2), as in the handoff 25d7eb59 | frozen v2 | the handoff's per-path targets: fresh pair 12 → 4, lookahead 16 → 11, nonuniform-tile overhead 41 + 7X → 34 + 7X; per-row loops otherwise unchanged |
 | 2 | hot descriptor pointer arrays (report 227 §D.3) | frozen v2 | scalar append ≤ 10 instructions, with all added non-row work counted |
 | 3 | SSE2 first-chunk refinement of v3's finaliser | frozen v3 (`dbf5139`) | fast-finish body ≤ 40 (≤ 41 with the call); ≤ 10 explicit reads |
+| 3b | refill-boundary successor shortcut (C6, proposal `0ac2e67`), refill transition only (report 264) | prototype 2 @ `7620c0c6` | eligible refill wrapper C ≤ 40 (diagnostic), failed-guard cost g ≤ 5; scalar row path unchanged |
 
 - Each prototype is a single change on its own baseline, so its saving can be attributed.
 - Prototype 3 is optional. It is run only if v3 is eligible under §7(a).
@@ -223,6 +225,21 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
 
   This clarification (reports 247–248) only narrows scope. The same applies to any other prototype
   whose design names an unsafe formulation.
+- **U2 in the combined build (report 264, the user in the coordinator's session).** The U2
+  unchecked access approved for one trial in report 259 may be carried into the combined build
+  (§6.3), unchanged: the same exact full-tile bounds and initialisation invariants, and the same
+  registered Miri classes and mutation checks, run again on the combined code. No other unchecked
+  access is authorised. U1 stays absent, and U3 stays unauthorised.
+- **Prototype 3b (report 264).** It is registered as one bounded experiment on prototype 2's
+  pinned descriptors. It changes only the refill transition and the mode plumbing that strictly
+  needs.
+  - It has the ordinary three attempts and the full gate 1 obligations, plus successor-boundary
+    cases: an empty descriptor, exactly 29 and exactly 30 successor ranks, a forced RAW successor,
+    an exhausted or malformed bucket, and exactly one finish on every non-empty path.
+  - An increase in the scalar common-row path, or an unbounded residual, is a STOP or HOLD.
+  - It needs a counted, mutually exclusive partition of refill classes under §5.3(b).
+  - It earns no credit before its own gate 3, and doesn't delay the combined build of the
+    components that already qualified.
 
 ### 6.2 Pre-integration review (before any combined build)
 
@@ -274,6 +291,7 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
      | descriptor arrays (prototype 2) | B2 | 40 M |
      | v3's finaliser | B2, by §7(b) | 50 M |
      | SSE2 refinement (prototype 3), only with v3 | B3, incremental | +4 M on top of v3's 50 M |
+| refill shortcut (prototype 3b), only with prototype 2 | prototype 2, incremental | +10 M on top of prototype 2's 40 M |
 
      Then F = Σ (the translated minimums of the included components) − O.
    - **O, the overlap,** is the B2 work that more than one included component's isolated ledger
@@ -428,6 +446,7 @@ The sequence also stops early, and reports, in two other cases:
 | researcher (report 247) | the scanner handoff's unsafe reads are not delegated: safe Rust first, and the unsafe form escalated with its exact operations and proofs | §6.1 |
 | guardian (report 248) | the unsafe fallback's approval package (operations, locations, invariants, overflow, validity and initialisation, expected saving); autonomous once approved | §6.1 |
 | guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
+| user (report 264) | U2 carried unchanged into the combined build; prototype 3b (C6) registered as a bounded refill-only experiment, with a 10 M incremental minimum | §6.1, §5.4, §6.3 |
 
 ## 12. Provenance and authorisation
 
