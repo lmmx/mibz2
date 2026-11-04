@@ -343,6 +343,11 @@ pub struct Settings {
     /// the largest decoded block, in bytes (`rows` by default: text with few RLE1 runs; at
     /// most `max_decoded(rows)`, a block of runs only)
     pub decoded: usize,
+    /// whether the workers' kernel inverts in place (`InverseBwt::invert_in_place`): its
+    /// output goes over `ll` and `rle` is never allocated. True for `Segmented`, the
+    /// default and the kernel this ledger describes; false for one that inverts into `rle`
+    /// (`Plain`)
+    pub in_place: bool,
 }
 
 impl Settings {
@@ -358,6 +363,7 @@ impl Settings {
             chunk: CHUNK,
             rows,
             decoded: rows,
+            in_place: true,
         }
     }
 }
@@ -424,7 +430,11 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
             live: rows,
             hot: 0,
             life: "once",
-            note: "the BWT's last column: reserved at the level's bound; written by MTF, read in order by the T-vector's build, dead from the walk on",
+            note: if s.in_place {
+                "the BWT's last column, then the walk's output (RLE1-coded) over it: reserved at the level's bound; written by MTF, read in order by the T-vector's build, overwritten by the walk, read in order by RLE1"
+            } else {
+                "the BWT's last column: reserved at the level's bound; written by MTF, read in order by the T-vector's build, dead from the walk on"
+            },
         },
         Entry {
             owner: "worker",
@@ -438,17 +448,32 @@ pub fn ledger(s: &Settings) -> Vec<Entry> {
             life: "once",
             note: "the T-vector: live from its build to the walk's end; doubles when a block is longer than any before it on that worker",
         },
-        Entry {
-            owner: "worker",
-            name: "rle",
-            count: t,
-            per: "threads",
-            alloc: rows,
-            alloc_max: Some((2 * rows).saturating_sub(1)),
-            live: rows,
-            hot: 0,
-            life: "once",
-            note: "the walk's output (RLE1-coded): written by the join, read in order by RLE1; doubles as tt does",
+        if s.in_place {
+            Entry {
+                owner: "worker",
+                name: "rle",
+                count: t,
+                per: "threads",
+                alloc: 0,
+                alloc_max: Some(0),
+                live: 0,
+                hot: 0,
+                life: "once",
+                note: "never allocated: the kernel inverts in place, its output over ll",
+            }
+        } else {
+            Entry {
+                owner: "worker",
+                name: "rle",
+                count: t,
+                per: "threads",
+                alloc: rows,
+                alloc_max: Some((2 * rows).saturating_sub(1)),
+                live: rows,
+                hot: 0,
+                life: "once",
+                note: "the walk's output (RLE1-coded): written by the join, read in order by RLE1; doubles as tt does",
+            }
         },
         Entry {
             owner: "worker",
@@ -671,17 +696,17 @@ mod tests {
         let mut scratch = Scratch::<crate::bwt::Segmented>::default();
         let (mut out, mut syms) = (Vec::new(), Vec::new());
         let (mut rows, mut decoded) = (Vec::new(), Vec::new());
-        let (mut tt, mut rle, mut out_cap) = (0usize, 0usize, 0usize);
+        let (mut tt, mut out_cap) = (0usize, 0usize);
         let mut syms_cap = 0;
         while let Event::Block { symbols, .. } = sc.next(syms).unwrap() {
             syms_cap = symbols.syms.capacity() * 2;
             out.clear();
             decode_block(&symbols, k, &mut scratch, &mut out).unwrap();
+            // (in place, ll then holds the walk's output: as long as the block)
             let n = get(&scratch.buffers(), "ll").len;
             rows.push(n);
             decoded.push(out.len());
             tt = grown(tt, n);
-            rle = grown(rle, n);
             out_cap = grown(out_cap, n + pad);
             syms = symbols.syms;
         }
@@ -707,13 +732,17 @@ mod tests {
         // the last column: reserved at the level's bound, exactly
         assert_eq!(get(&b, "ll").cap, block_rows(level));
         assert_eq!(get(&b, "ll").cap, entry(&l, "ll").alloc);
-        // the T-vector and the walk's output: grown as Vec grows, doubled by the second
-        // block (2 x 70,000 rows reserved, 99,000 used)
+        // the T-vector: grown as Vec grows, doubled by the second block (2 x 70,000 rows
+        // reserved, 99,000 used)
         assert_eq!(get(&b, "tt").cap, TT_ROW * tt);
         assert_eq!(tt, 2 * rows[0]);
         assert_eq!(get(&b, "tt").len, TT_ROW * rows[1]);
         within("tt", get(&b, "tt").cap);
-        assert_eq!(get(&b, "rle").cap, rle);
+        // the walk's output went over ll (Segmented inverts in place): rle never allocated,
+        // as the ledger has it
+        assert!(s.in_place);
+        assert_eq!(get(&b, "rle").cap, 0);
+        assert_eq!(entry(&l, "rle").alloc, 0);
         within("rle", get(&b, "rle").cap);
         assert_eq!(get(&b, "counts").cap, entry(&l, "counts").alloc);
         // the segments' bookkeeping
@@ -742,6 +771,64 @@ mod tests {
         }
     }
 
+    /// The same two blocks through a kernel that doesn't invert in place (`Plain`): its
+    /// walk's output goes into `rle`, grown as `Vec` grows, as the ledger has it with
+    /// `in_place` false
+    #[test]
+    fn ledger_matches_a_separate_buffer_workers_buffers() {
+        let level = 1;
+        let mut data = compress(&letters(70_000, 7), level);
+        data.extend(compress(&letters(99_000, 11), level));
+        let k = Kernels::detect();
+        let mut sc = Scanner::new(SliceSource(&data));
+        let mut scratch = Scratch::<crate::bwt::Plain>::default();
+        let (mut out, mut syms) = (Vec::new(), Vec::new());
+        let (mut rows, mut decoded) = (Vec::new(), Vec::new());
+        let (mut tt, mut rle) = (0usize, 0usize);
+        while let Event::Block { symbols, .. } = sc.next(syms).unwrap() {
+            out.clear();
+            decode_block(&symbols, k, &mut scratch, &mut out).unwrap();
+            let n = get(&scratch.buffers(), "ll").len;
+            rows.push(n);
+            decoded.push(out.len());
+            tt = grown(tt, n);
+            rle = grown(rle, n);
+            syms = symbols.syms;
+        }
+        assert_eq!(rows.len(), 2);
+        assert!(rows[0] < rows[1] && rows[1] < 2 * rows[0]);
+        let b = scratch.buffers();
+        let s = Settings {
+            rows: rows[1],
+            decoded: decoded[1],
+            in_place: false,
+            ..Settings::new(level, 1, 1)
+        };
+        let l = ledger(&s);
+        let within = |name: &str, cap: usize| {
+            let e = entry(&l, name);
+            assert!(
+                e.alloc <= cap && e.alloc_max.map_or(true, |m| cap <= m),
+                "{name}: {cap} outside the ledger's {} ..= {:?}",
+                e.alloc,
+                e.alloc_max
+            );
+        };
+        assert_eq!(get(&b, "ll").cap, block_rows(level));
+        assert_eq!(get(&b, "ll").cap, entry(&l, "ll").alloc);
+        assert_eq!(get(&b, "tt").cap, TT_ROW * tt);
+        within("tt", get(&b, "tt").cap);
+        // the walk's output: grown as Vec grows, doubled by the second block (2 x 70,000
+        // rows reserved, 99,000 used)
+        assert_eq!(rle, 2 * rows[0]);
+        assert_eq!(get(&b, "rle").cap, rle);
+        assert_eq!(get(&b, "rle").len, rows[1]);
+        within("rle", get(&b, "rle").cap);
+        for x in &b {
+            entry(&l, x.name);
+        }
+    }
+
     const FLAGGED: usize = crate::bwt::FLAGGED_SEGMENTS;
 
     /// The arithmetic at -9 (docs/ledger.md's table): exact figures for full blocks
@@ -752,6 +839,14 @@ mod tests {
         assert_eq!(entry(&l, "tt").alloc, 3_600_000);
         assert_eq!(entry(&l, "tt").alloc_max, Some(7_199_996));
         assert_eq!(entry(&l, "tt").hot, 3_600_000);
+        // rle: unallocated in place (the default); a block, doubling, otherwise
+        assert_eq!(entry(&l, "rle").alloc, 0);
+        let sep = ledger(&Settings {
+            in_place: false,
+            ..Settings::new(9, 4, 8)
+        });
+        assert_eq!(entry(&sep, "rle").alloc, 900_000);
+        assert_eq!(entry(&sep, "rle").alloc_max, Some(1_799_999));
         assert_eq!(entry(&l, "symbols").alloc, 1_800_200);
         assert_eq!(entry(&l, "symbols").count, 8);
         assert_eq!(entry(&l, "out").count, 9);
