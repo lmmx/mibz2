@@ -1,0 +1,4 @@
+371c371
+<             *x = self.rank(c);
+---
+>             *x = self.cold[c].r0 + ((self.en[c] as usize).wrapping_sub(self.cold[c].w0 as usize) / 2) as u32; // MUTANT M2: rank from end

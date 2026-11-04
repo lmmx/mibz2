@@ -1,0 +1,787 @@
+{
+ "item": "descriptor",
+ "counted_record": {
+  "input": "wikidata-20261026.bz2",
+  "permille": 0,
+  "extra_starts": false,
+  "sequential": true,
+  "blocks_built": 434,
+  "fnv1a": "4efb1c13ae58340f",
+  "blocks": 434,
+  "rows": 207006515,
+  "rows_bulk": 153819000,
+  "rows_bulk_raw": 0,
+  "rows_fragment": 14892632,
+  "rows_scalar": 38294883,
+  "runs": 610521,
+  "run_rows": 168711632,
+  "complete_groups": 5127300,
+  "fin_fast": 1647416,
+  "fin_ordinary": 75997,
+  "fin_wide": 30949,
+  "fin_crossing": 41120,
+  "fin_forced": 0,
+  "norm_full": 1723371,
+  "norm_partial": 42,
+  "norm_fields": 51701707,
+  "raw_fields_read": 1485808,
+  "raw_entries_written": 1485808,
+  "fields_restored": 557338,
+  "epoch_searches": 127249,
+  "epochs": 3654,
+  "runs_split_at_epoch": 2638,
+  "raw_groups": 49633,
+  "raw_moved": 48795,
+  "raw_cycles": 1135,
+  "multi_epoch_portions": 117029,
+  "max_ordinary_span": 65529,
+  "min_wide_span": 65535,
+  "refills": 1299478,
+  "refill_finishes": 1262935,
+  "outer_iterations": 3003834,
+  "fills": 1085833,
+  "fills_vector": 801475,
+  "runs_end_fill": 597255,
+  "runs_end_complete": 13266,
+  "run_opens": 496004,
+  "complete_calls": 296405,
+  "tile_refills_second": 302049,
+  "tile_rows_second": 8935084,
+  "tails": 230,
+  "tail_rows": 1875,
+  "tail_rows_second": 106,
+  "tail_refills_first": 786,
+  "tail_refills_second": 9,
+  "sweep_checks": 111104,
+  "init_descs": 111104,
+  "preset_crossing": 18684,
+  "epochs_tiled": 3575,
+  "epochs_short": 79,
+  "pad_blocks": 233,
+  "bitmap_in_place": 432,
+  "bitmap_memsets": 230,
+  "bitmap_reserves": 2,
+  "bitmap_reserves_single": 1,
+  "rec_grows": 2,
+  "rec_grow_frees": 1,
+  "raw_grows": 8,
+  "snaps_reserves": 1
+ },
+ "classes": [
+  {
+   "function": "build",
+   "frequency": 29357924,
+   "baseline": 12,
+   "candidate": 10,
+   "delta": -58715848,
+   "listing": [
+    "B2 +0x1250..+0x127a",
+    "+0x1370..+0x139d"
+   ],
+   "counter": "rows_scalar - tile_rows_second - tail_rows",
+   "counted": 29357924,
+   "counted_each": [
+    29357924
+   ],
+   "path": "full tiles' first-segment row loop",
+   "profile_frequency": 29357924,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 8935084,
+   "baseline": 12,
+   "candidate": 10,
+   "delta": -17870168,
+   "listing": [
+    "B2 +0x12e0..+0x1306",
+    "+0x1410..+0x143a"
+   ],
+   "counter": "tile_rows_second",
+   "counted": 8935084,
+   "counted_each": [
+    8935084
+   ],
+   "path": "full tiles' second-segment row loop",
+   "profile_frequency": 8935084,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 3003834,
+   "baseline": 13,
+   "candidate": 17,
+   "delta": 12015336,
+   "listing": [
+    "B2 +0x9d2..+0x9e6, +0xa14..+0xa27",
+    "+0xa92..+0xab9, +0xae9..+0xafc"
+   ],
+   "counter": "outer_iterations",
+   "counted": 3003834,
+   "counted_each": [
+    3003834
+   ],
+   "path": "outer scan iterations",
+   "profile_frequency": 3003834,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 2393313,
+   "baseline": 38,
+   "candidate": 37,
+   "delta": -2393313,
+   "listing": [
+    "B2 +0x990..+0x9d0, +0xa80..+0xac4, +0x1240..+0x1248, +0x127c, +0x12b0..+0x12c4",
+    "+0xa50..+0xa90, +0xb60..+0xba5, +0x1360..+0x1365, +0x139f, +0x13e0..+0x13ef"
+   ],
+   "counter": "outer_iterations - runs",
+   "counted": 2393313,
+   "counted_each": [
+    2393313
+   ],
+   "path": "nonuniform full tiles S",
+   "profile_frequency": 2393313,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 1085833,
+   "baseline": 25,
+   "candidate": 24,
+   "delta": -1085833,
+   "listing": [
+    "B2 +0xb9d..+0xbd7, +0xc19..+0xc49",
+    "+0xc8c..+0xcc6, +0xd09..+0xd3a"
+   ],
+   "counter": "fills",
+   "counted": 1085833,
+   "counted_each": [
+    1085833
+   ],
+   "path": "fill calls (k > 0)",
+   "profile_frequency": 1085833,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 801475,
+   "baseline": 18,
+   "candidate": 19,
+   "delta": 801475,
+   "listing": [
+    "B2 +0xbd9..+0xbe6, +0x1053..+0x1076, +0x10a7..+0x10aa",
+    "+0xcc8..+0xcd5, +0x1143..+0x1166, +0x1197..+0x119f"
+   ],
+   "counter": "fills_vector",
+   "counted": 801475,
+   "counted_each": [
+    801475
+   ],
+   "path": "fill's vector loop entry (m >= 8) and its alias check",
+   "profile_frequency": 801475,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 610521,
+   "baseline": 32,
+   "candidate": 35,
+   "delta": 1831563,
+   "listing": [
+    "B2 +0xa29..+0xa2c, +0xae5..+0xb4c, +0x1346..+0x1363",
+    "+0xafe..+0xb04, +0xbc4..+0xc36, +0x1330..+0x134c"
+   ],
+   "counter": "runs",
+   "counted": 610521,
+   "counted_each": [
+    610521
+   ],
+   "path": "runs",
+   "profile_frequency": 610521,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 597255,
+   "baseline": 2,
+   "candidate": 0,
+   "delta": -1194510,
+   "listing": [
+    "B2 +0x1230..+0x1235"
+   ],
+   "counter": "runs_end_fill",
+   "counted": 597255,
+   "counted_each": [
+    597255
+   ],
+   "path": "runs ending after a fill (B2 return path)",
+   "profile_frequency": 597255,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 496004,
+   "baseline": 34,
+   "candidate": 33,
+   "delta": -496004,
+   "listing": [
+    "B2 +0xb5c..+0xb7f, +0x11c4..+0x121a",
+    "+0xc4c..+0xc73, +0x12c2..+0x1318"
+   ],
+   "counter": "run_opens",
+   "counted": 496004,
+   "counted_each": [
+    496004
+   ],
+   "path": "open from run",
+   "profile_frequency": 496004,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 467712,
+   "baseline": 14,
+   "candidate": 0,
+   "delta": -6547968,
+   "listing": [
+    "B2 +0x810..+0x848"
+   ],
+   "counter": "128 * epochs",
+   "counted": 467712,
+   "counted_each": [
+    467712
+   ],
+   "path": "B2's snapshot loop: 256 ranks, two per iteration (fixed trip)",
+   "profile_frequency": 467712,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 302049,
+   "baseline": 9,
+   "candidate": 8,
+   "delta": -302049,
+   "listing": [
+    "B2 +0x130d..+0x1337",
+    "+0x1441..+0x1465"
+   ],
+   "counter": "tile_refills_second",
+   "counted": 302049,
+   "counted_each": [
+    302049
+   ],
+   "path": "refill detour from a full tile's second segment",
+   "profile_frequency": 302049,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 296405,
+   "baseline": 43,
+   "candidate": 44,
+   "delta": 296405,
+   "listing": [
+    "B2 +0xcc7..+0xced, +0x1010..+0x104a, +0x116e..+0x11be",
+    "+0xdbe..+0xde4, +0x1100..+0x113a, +0x126b..+0x12c0"
+   ],
+   "counter": "complete_calls",
+   "counted": 296405,
+   "counted_each": [
+    296405
+   ],
+   "path": "run's whole-group branch (complete)",
+   "profile_frequency": 296405,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 230202,
+   "baseline": 0,
+   "candidate": 28,
+   "delta": 6445656,
+   "listing": [
+    "+0x7f0..+0x88b"
+   ],
+   "counter": "63 * epochs",
+   "counted": 230202,
+   "counted_each": [
+    230202
+   ],
+   "path": "the snapshot loop: ranks 4..256, four per iteration (fixed trip)",
+   "profile_frequency": 230202,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 55986,
+   "baseline": 3,
+   "candidate": 2,
+   "delta": -55986,
+   "listing": [
+    "B2 +0x1520..+0x152b",
+    "+0x1620..+0x1626"
+   ],
+   "counter": "sweep_checks // 2 + blocks",
+   "counted": 55986,
+   "counted_each": [
+    55986
+   ],
+   "path": "final sweep loop head (two checks per iteration, plus the exit)",
+   "profile_frequency": 55986,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 55552,
+   "baseline": 13,
+   "candidate": 14,
+   "delta": 55552,
+   "listing": [
+    "B2 +0x152d..+0x1565",
+    "+0x1628..+0x165b"
+   ],
+   "counter": "sweep_checks // 2",
+   "counted": 55552,
+   "counted_each": [
+    55552
+   ],
+   "path": "final sweep loop body (two checks per iteration)",
+   "profile_frequency": 55552,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 27776,
+   "baseline": 35,
+   "candidate": 31,
+   "delta": -111104,
+   "listing": [
+    "B2 +0x2f0..+0x364, +0x380..+0x3da",
+    "+0x2e0..+0x32e, +0x340..+0x39a"
+   ],
+   "counter": "init_descs // 4",
+   "counted": 27776,
+   "counted_each": [
+    27776
+   ],
+   "path": "descriptor initialisation and the cumulative-rank loop (four per iteration)",
+   "profile_frequency": 27776,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 18684,
+   "baseline": 36,
+   "candidate": 37,
+   "delta": 18684,
+   "listing": [
+    "B2 +0x4b0..+0x540, +0x59b..+0x5aa",
+    "+0x509..+0x5b7"
+   ],
+   "counter": "preset_crossing",
+   "counted": 18684,
+   "counted_each": [
+    18684
+   ],
+   "path": "crossing groups preset RAW (create_raw)",
+   "profile_frequency": 18684,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 13266,
+   "baseline": 2,
+   "candidate": 0,
+   "delta": -26532,
+   "listing": [
+    "B2 +0x1339..+0x133e"
+   ],
+   "counter": "runs_end_complete",
+   "counted": 13266,
+   "counted_each": [
+    13266
+   ],
+   "path": "runs ending after complete (B2 return path)",
+   "profile_frequency": 13266,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 3654,
+   "baseline": 33,
+   "candidate": 53,
+   "delta": 73080,
+   "listing": [
+    "B2 +0x7dc..+0x801, +0x84a..+0x8a1, +0x8b7..+0x8c2",
+    "+0x7cc..+0x7ee, +0x891..+0x983"
+   ],
+   "counter": "epochs",
+   "counted": 3654,
+   "counted_each": [
+    3654
+   ],
+   "path": "epochs",
+   "profile_frequency": 3654,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 3575,
+   "baseline": 5,
+   "candidate": 3,
+   "delta": -7150,
+   "listing": [
+    "B2 +0x970..+0x982",
+    "+0xa40..+0xa4a"
+   ],
+   "counter": "epochs_tiled",
+   "counted": 3575,
+   "counted_each": [
+    3575
+   ],
+   "path": "epochs with a full tile (scan loop entry)",
+   "profile_frequency": 3575,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 1769,
+   "baseline": 12,
+   "candidate": 10,
+   "delta": -3538,
+   "listing": [
+    "B2 +0x900..+0x929",
+    "+0x9c0..+0x9ed"
+   ],
+   "counter": "tail_rows - tail_rows_second",
+   "counted": 1769,
+   "counted_each": [
+    1769
+   ],
+   "path": "the tail's first-segment row loop",
+   "profile_frequency": 1769,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 786,
+   "baseline": 12,
+   "candidate": 13,
+   "delta": 786,
+   "listing": [
+    "B2 +0x930..+0x967",
+    "+0x9f4..+0xa31"
+   ],
+   "counter": "tail_refills_first",
+   "counted": 786,
+   "counted_each": [
+    786
+   ],
+   "path": "refill detour from the tail's first segment",
+   "profile_frequency": 786,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 434,
+   "baseline": 204,
+   "candidate": 211,
+   "delta": 3038,
+   "listing": [
+    "B2 +0x0..+0x9a, +0xe7..+0x118, +0x18b..+0x204, +0x208..+0x25d, +0x299..+0x2b0, +0x2b5..+0x2e8, +0x366..+0x374, +0x3dc..+0x49e, +0x5f0..+0x5fd, +0x7b4..+0x7ca, +0x150f..+0x1514, +0x1579..+0x15a5, +0x1601..+0x1623, +0x1652..+0x16b5",
+    "+0x0..+0x91, +0xe3..+0x114, +0x187..+0x200, +0x205..+0x252, +0x291..+0x29b, +0x2a0..+0x2d4, +0x330..+0x33b, +0x39c..+0x4a5, +0x5ea..+0x5ef, +0x7a2..+0x7b2, +0x160e..+0x161b, +0x166f..+0x1680, +0x1690..+0x16c0, +0x1754..+0x177b, +0x17b2..+0x180a"
+   ],
+   "counter": "blocks",
+   "counted": 434,
+   "counted_each": [
+    434
+   ],
+   "path": "blocks",
+   "profile_frequency": 434,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 432,
+   "baseline": 6,
+   "candidate": 5,
+   "delta": -432,
+   "listing": [
+    "B2 +0x263..+0x275",
+    "+0x258..+0x267"
+   ],
+   "counter": "bitmap_in_place",
+   "counted": 432,
+   "counted_each": [
+    432
+   ],
+   "path": "bitmap resize without a reserve",
+   "profile_frequency": 432,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 233,
+   "baseline": 10,
+   "candidate": 11,
+   "delta": 233,
+   "listing": [
+    "B2 +0x1625..+0x164c",
+    "+0x177d..+0x17aa"
+   ],
+   "counter": "pad_blocks",
+   "counted": 233,
+   "counted_each": [
+    233
+   ],
+   "path": "the last group's padding (memset)",
+   "profile_frequency": 233,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 230,
+   "baseline": 41,
+   "candidate": 42,
+   "delta": 230,
+   "listing": [
+    "B2 +0x277..+0x296, +0x8c8..+0x8fb, +0x92b, +0x1370..+0x137d, +0x1437..+0x1459, +0x14d1..+0x14d9, +0x14ed..+0x1500",
+    "+0x269..+0x28e, +0x989..+0x9bd, +0x9ef, +0x1470..+0x1482, +0x1544..+0x1563, +0x15d0..+0x15d8, +0x15ec..+0x15ff"
+   ],
+   "counter": "tails & bitmap_memsets",
+   "counted": 230,
+   "counted_each": [
+    230,
+    230
+   ],
+   "path": "tails & bitmap resize's fill (>= 2 words)",
+   "profile_frequency": 230,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 106,
+   "baseline": 12,
+   "candidate": 10,
+   "delta": -212,
+   "listing": [
+    "B2 +0x13d0..+0x13f9",
+    "+0x14d0..+0x14fd"
+   ],
+   "counter": "tail_rows_second",
+   "counted": 106,
+   "counted_each": [
+    106
+   ],
+   "path": "the tail's second-segment row loop",
+   "profile_frequency": 106,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 79,
+   "baseline": 3,
+   "candidate": 0,
+   "delta": -237,
+   "listing": [
+    "B2 +0x8a7..+0x8b2"
+   ],
+   "counter": "epochs_short",
+   "counted": 79,
+   "counted_each": [
+    79
+   ],
+   "path": "epochs with no full tile (B2 path)",
+   "profile_frequency": 79,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 9,
+   "baseline": 12,
+   "candidate": 14,
+   "delta": 18,
+   "listing": [
+    "B2 +0x1400..+0x1435",
+    "+0x1504..+0x1542"
+   ],
+   "counter": "tail_refills_second",
+   "counted": 9,
+   "counted_each": [
+    9
+   ],
+   "path": "refill detour from the tail's second segment",
+   "profile_frequency": 9,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 8,
+   "baseline": 15,
+   "candidate": 13,
+   "delta": -16,
+   "listing": [
+    "B2 +0x1734..+0x173d, +0x1751..+0x1787",
+    "+0x1877..+0x187d, +0x1891..+0x18c1"
+   ],
+   "counter": "raw_grows",
+   "counted": 8,
+   "counted_each": [
+    8
+   ],
+   "path": "raw arena regrowth",
+   "profile_frequency": 8,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 2,
+   "baseline": 28,
+   "candidate": 27,
+   "delta": -2,
+   "listing": [
+    "B2 +0x16df..+0x16e5, +0x16f7..+0x172c, +0x1863..+0x1891",
+    "+0x1822..+0x1825, +0x1837..+0x186f, +0x1983..+0x19b1"
+   ],
+   "counter": "rec_grows & bitmap_reserves",
+   "counted": 2,
+   "counted_each": [
+    2,
+    2
+   ],
+   "path": "rec arena regrowth & bitmap reserve",
+   "profile_frequency": 2,
+   "agrees": true
+  },
+  {
+   "function": "build",
+   "frequency": 1,
+   "baseline": 16,
+   "candidate": 14,
+   "delta": -2,
+   "listing": [
+    "B2 +0x16e7..+0x16f4, +0x1838..+0x185e, +0x1897",
+    "+0x1827..+0x1834, +0x195e..+0x197e, +0x19b7"
+   ],
+   "counter": "rec_grow_frees & snaps_reserves & bitmap_reserves_single",
+   "counted": 1,
+   "counted_each": [
+    1,
+    1,
+    1
+   ],
+   "path": "rec regrowth freeing the old allocation & snapshot reserve & bitmap reserve of one word",
+   "profile_frequency": 1,
+   "agrees": true
+  },
+  {
+   "function": "refill",
+   "frequency": 1299478,
+   "baseline": 59,
+   "candidate": 65,
+   "delta": 7796868,
+   "listing": [
+    "B2 +0x0..+0x1e, +0x28..+0xa2, +0xb4..+0xdf",
+    "+0x0..+0x2a, +0x37..+0xc2, +0xd4..+0x112"
+   ],
+   "counter": "refills",
+   "counted": 1299478,
+   "counted_each": [
+    1299478
+   ],
+   "path": "refill calls",
+   "profile_frequency": 1299478,
+   "agrees": true
+  },
+  {
+   "function": "refill",
+   "frequency": 1262935,
+   "baseline": 2,
+   "candidate": 3,
+   "delta": 1262935,
+   "listing": [
+    "B2 +0x20..+0x23",
+    "+0x2c..+0x32"
+   ],
+   "counter": "refill_finishes",
+   "counted": 1262935,
+   "counted_each": [
+    1262935
+   ],
+   "path": "refills that finish a portion",
+   "profile_frequency": 1262935,
+   "agrees": true
+  }
+ ],
+ "counter_supported_delta": -58209045,
+ "uncounted_added": 0,
+ "uncounted_removed": 0,
+ "own_delta_build_and_refill": -58209045,
+ "library_added": 378882,
+ "library_removed": 4447632,
+ "library_shared_sites": 10,
+ "library_added_sites": [
+  [
+   "__memset_avx2_unaligned_erms",
+   434,
+   58156,
+   868,
+   29512
+  ],
+  [
+   "__memset_avx2_unaligned_erms",
+   434,
+   58156,
+   868,
+   29512
+  ],
+  [
+   "__memcpy_avx_unaligned_erms",
+   434,
+   262570,
+   85064,
+   83762
+  ]
+ ],
+ "library_removed_sites": [
+  [
+   "__memcpy_avx_unaligned_erms",
+   434,
+   4447632,
+   4436348,
+   4434612
+  ]
+ ],
+ "inclusive_delta": -62277795,
+ "interval_removed": [
+  57830163,
+  62277795
+ ],
+ "minimum": 40000000,
+ "lower_end_minus_minimum": 17830163,
+ "own_memory_delta": {
+  "Dr": -1096093,
+  "Dw": 5004156
+ },
+ "own_memory_delta_by_function": {
+  "build": {
+   "Dr": -2395571,
+   "Dw": -193756
+  },
+  "refill": {
+   "Dr": 1299478,
+   "Dw": 5197912
+  }
+ },
+ "caller_main_own": [
+  4499110446,
+  4499111314
+ ],
+ "caller_main_delta": 868,
+ "interval_if_caller_charged": [
+  57829295,
+  62276927
+ ],
+ "runs_identical": true
+}

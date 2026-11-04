@@ -1,0 +1,32 @@
+
+thread 'main' (11431) panicked at examples/c30walk/ctor2d.rs:453:9:
+assertion failed: k >= 1 && d.write == d.end
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/std/src/panicking.rs:689:5
+   1: core::panicking::panic_fmt
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:80:14
+   2: core::panicking::panic
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/panicking.rs:150:5
+   3: finish<true>
+             at ./examples/c30walk/ctor2d.rs:284:17
+   4: close<true>
+             at ./examples/c30walk/ctor2d.rs:421:18
+   5: scatter<true>
+             at ./examples/c30walk/ctor2d.rs:923:15
+   6: build<true>
+             at ./examples/c30walk/ctor2d.rs:805:22
+   7: check_block
+             at ./examples/c30walk/ctor2d.rs:1082:14
+   8: case
+             at ./examples/c30walk/ctor2d.rs:1351:17
+   9: synthetic
+             at ./examples/c30walk/ctor2d.rs:1597:19
+  10: main
+             at ./examples/c30walk/ctor2d.rs:2057:24
+  11: main
+             at ./examples/c30walk.rs:1908:16
+  12: call_once<fn(), ()>
+             at /rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs:250:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+exit 101

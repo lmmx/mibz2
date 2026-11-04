@@ -1,0 +1,5 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2d-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2d-synthetic --miri pending`
+ctor2d-synthetic: descriptor class pending: 4 cases exact
+ctor2d-synthetic --miri pending: 4 cases, 8 array comparisons, 12 walk outputs, 8 restorations: every check exact; scalar rows 891, fragment rows 0, runs 0, crossing 16, forced 0, epochs 4
+class pending exit 0 seconds 7

@@ -1,0 +1,5 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2d-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2d-synthetic --miri reuse`
+ctor2d-synthetic: descriptor class reuse: 7 cases exact
+ctor2d-synthetic --miri reuse: 7 cases, 10 array comparisons, 15 walk outputs, 10 restorations: every check exact; scalar rows 477, fragment rows 0, runs 0, crossing 20, forced 2, epochs 5
+class reuse exit 0 seconds 6

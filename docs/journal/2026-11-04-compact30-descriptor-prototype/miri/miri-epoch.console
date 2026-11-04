@@ -1,0 +1,5 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/root/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/cargo-miri runner /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/c2d-miri-target/miri/x86_64-unknown-linux-gnu/debug/examples/c30walk ctor2d-synthetic --miri epoch`
+ctor2d-synthetic: descriptor class epoch: 1 cases exact
+ctor2d-synthetic --miri epoch: 1 cases, 2 array comparisons, 3 walk outputs, 2 restorations: every check exact; scalar rows 61408, fragment rows 36, runs 2, crossing 4, forced 0, epochs 2
+class epoch exit 0 seconds 580

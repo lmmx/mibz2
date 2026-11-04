@@ -72,6 +72,10 @@ mod cbuild;
 #[path = "c30walk/ctor2.rs"]
 mod ctor2;
 
+/// Charter prototype 2: v2 with its descriptor split into hot pointer arrays
+#[path = "c30walk/ctor2d.rs"]
+mod ctor2d;
+
 /// Constructor v3: v2 with the epoch-tagged ordinary finaliser (reports 227, 235, 236)
 #[path = "c30walk/ctor3.rs"]
 mod ctor3;
@@ -1899,6 +1903,9 @@ fn main() {
     }
     if let Some(m) = args[1].strip_prefix("ctor2-") {
         return ctor2::main(m, &args[2..]);
+    }
+    if let Some(m) = args[1].strip_prefix("ctor2d-") {
+        return ctor2d::main(m, &args[2..]);
     }
     if let Some(m) = args[1].strip_prefix("ctor3-") {
         return ctor3::main(m, &args[2..]);
