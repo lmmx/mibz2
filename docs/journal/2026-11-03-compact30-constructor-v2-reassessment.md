@@ -6176,3 +6176,47 @@ The report must also include an explicit STOP or REDIRECT option.
 - **Research and structural progress** are kept apart from validated production performance.
 - **Gates and minimums** are unchanged.
 
+## Report 270: the Researcher is the reviewer, with no fresh reviewers
+
+The user, in the coordinator's session on 2026-11-04, verbatim:
+
+> that stuff about a genuinely fresh reviewer looks toxic: that way subagents lie, and demands
+> for new chats. NO. I told it to be that role ffs. subagents are also v costly tokenwise
+
+The user adopted this replacement rule, verbatim:
+
+> The existing Astra Researcher is our standing independent scientific reviewer. Independence
+> means independence of judgement and implementation, not ignorance of prior discussion.
+>
+> The Researcher should perform §6.2 reviews directly, using the pinned source, assembly,
+> counters, tests and other evidence. It should independently verify consequential claims,
+> actively look for counterexamples, and disclose any prior involvement in a proposed design.
+>
+> Do not spawn fresh reviewers, create new chats or demand context isolation for routine
+> review. These are costly, unnecessary duplications of the Researcher's assigned
+> responsibility. Additional agents require my explicit authorisation.
+>
+> If the Researcher contributed to a design, disclose that limitation and review its
+> implementation adversarially. Do not claim that such an assessment is blind. Resolve material
+> doubts using evidence and the existing Guardian and Optimiser roles, without weakening safety
+> or acceptance gates.
+
+Their operating principle: use the agents we already have, and spend compute on understanding
+and improving mibz2, not on repeatedly recreating reviewers and proving that they are
+reviewers.
+
+**Why.** The §6.2 review that report 244 required, and that #153 carried out, did catch real
+problems: missing execution counters, and about 2.39 M double-counted instructions. It caught
+them by checking the code and evidence, not because its context was empty. A spawned agent's
+claim that it inherited no context cannot be verified anyway. The procedure duplicated a role
+the user had already assigned, at a large cost in tokens.
+
+**What the coordinator did:**
+- **Charter §6.2(2), §6.4 and §10:** the Researcher reviews directly. It discloses its own
+  involvement, never describes such a review as blind, and no fresh reviewer is spawned.
+  Additional agents need Louis's explicit authorisation.
+- **REVIEWER.md §5 and ROLES.md §5(7):** rewritten to match.
+- **Historical §6.2 records** are preserved: #153, `section-6.2-brief.md`, the review queue
+  and the replay.
+- **Gates and minimums** are unchanged.
+

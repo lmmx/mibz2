@@ -236,9 +236,15 @@ g. **Memory operations are reported, not gated.** A net increase in loads or sto
 1. When the isolated prototypes have closed, the coordinator pins one commit holding:
    - every isolated result;
    - an evidence index of the listings, consoles, ledgers and Miri coverage.
-2. An independent adversarial reviewer, delegated to Astra, reviews from that pinned repository
-   evidence alone:
-   - It is given the commit and the index, not the discussion history.
+2. The Researcher, the standing independent scientific reviewer, reviews adversarially from that
+   pinned evidence: the source, the listings, the counters and the tests (report 270).
+   - Independence means independence of judgement and implementation, not ignorance of earlier
+     discussion. The Researcher verifies consequential claims itself and actively looks for
+     counterexamples.
+   - It discloses any part it played in a design under review, reviews that implementation
+     adversarially, and never calls such a review blind.
+   - No fresh reviewer, new chat or context-isolated agent is spawned for a review. Any
+     additional agent needs Louis's explicit authorisation.
    - It may push its report and scripts to a branch of its own.
 3. The coordinator verifies, archives and replays the review, as for report 235's evidence.
 4. **A material finding** is one that, if true, would change any of:
@@ -329,7 +335,7 @@ invariants can be clearly justified and rigorously tested.
 
   Passing tests alone is not proof of soundness. The argument and the tests are both required.
 - **Another agent reviews it.** An agent other than the implementer reviews the safety argument
-  adversarially: the Researcher, or a fresh reviewer for a §6.2 review. The work proceeds when that
+  adversarially: the Researcher (report 270). The work proceeds when that
   review and the verification support it. The Guardian may HOLD it if the evidence falls short
   (narrowing), but its approval is not a precondition (report 266). No user
   approval is needed for introducing or extending `unsafe` code.
@@ -520,8 +526,10 @@ The sequence also stops early, and reports, in two other cases:
 - Adversarial reviews are of completed checkpoints, not intermediate steps.
 - Reviewers read the repository directly at a named commit, and may push their reports and
   scripts to a branch of their own.
-- Independent reviewers are given pinned evidence, not the discussion history, so that they
-  aren't anchored by it.
+- The Researcher is the standing independent reviewer. It works from pinned evidence, verifies
+  claims itself and discloses its own involvement. It is not kept ignorant of the discussion,
+  and no fresh or context-isolated reviewer is spawned (report 270). Additional agents need
+  Louis's explicit authorisation.
 - The coordinator verifies, archives and replays every review.
 
 ## 11. Amendments incorporated
@@ -543,6 +551,7 @@ The sequence also stops early, and reports, in two other cases:
 | researcher (report 247) | the scanner handoff's unsafe reads are not delegated: safe Rust first, and the unsafe form escalated with its exact operations and proofs | §6.1 |
 | guardian (report 248) | the unsafe fallback's approval package (operations, locations, invariants, overflow, validity and initialisation, expected saving); autonomous once approved | §6.1 |
 | guardian 2 (report 246) | the standing charter authorises work within its scope; repository comments are communication, never a source of authority | §12 |
+| user (report 270) | the Researcher is the standing independent reviewer; no fresh, new-chat or context-isolated reviewers; additional agents need Louis's explicit authorisation | §6.2, §6.4, §10 |
 | user (report 269) | a failed gate is a verdict on the candidate, not automatically its line; a line may end on cumulative evidence (impossibility, lower bound); every significant experiment reports expected vs actual, gap closed, mechanism learned, and the next step including STOP/REDIRECT | §8.4 |
 | user (report 268) | §8.4 progress is of two kinds, performance and research, never interchangeable; bounded exploratory steps allowed; every STOP scoped to what failed; understanding is not qualification | §8.4 |
 | user (report 267) | §8.4's two-misses stop replaced by a trajectory test: keep climbing while there is real forward motion toward viability; stop on sunk cost, deterioration, or a plateau with no path | §8.4 |

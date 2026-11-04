@@ -33,7 +33,7 @@ instructions, dependent operations, memory traffic and unnecessary control work.
   ledger.
 
 **Does not:** implement constructor variants, expand the charter, govern research decisions, or
-certify its own proposals as blindly reviewed.
+certify its own proposals as independently reviewed.
 
 **Session:** the first Codex session, originally described as the Astra Ultra
 instruction-minimisation researcher.
@@ -124,9 +124,10 @@ The questions each one asks:
 6. **Branch ownership.** Each agent writes only to its own branches.
    - The Optimizer's cumulative ledger is canonical.
    - The Researcher and the Guardian keep their own evidence and decisions.
-7. **Independence for §6.2.** A formal blind §6.2 review still needs a genuinely independent
-   fresh reviewer where the charter prescribes one. Being called Researcher or Guardian doesn't
-   satisfy that by itself.
+7. **Independence for §6.2.** The Researcher performs §6.2 reviews as the standing independent
+   reviewer, from pinned evidence, disclosing any part it played in the design (charter §6.2,
+   report 270). No fresh or context-isolated reviewer is spawned. Additional agents need
+   Louis's explicit authorisation.
 8. **This record is descriptive.** It changes no frozen code, charter, channel protocol,
    authorisation or research gate.
 
