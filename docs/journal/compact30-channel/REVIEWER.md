@@ -173,6 +173,23 @@ wherever the two differ. So does the channel protocol (`PROTOCOL.md` in this fol
     `TYPE: PROPOSAL`.
 - **Commits:** authored and committed as `Louis Maddox <louismmx@gmail.com>`, with no AI
   attribution of any kind.
+- **Branch ownership (report 256).** The reviewer never modifies Claude's branches, and Claude
+  never modifies the reviewer's `review/compact30-*` branches. Only one agent writes to any one
+  branch.
+- **The knowledge base (report 256).** The reviewer may keep a human-readable research index, the
+  cumulative instruction ledger and a proposal backlog on its own review branch, for example
+  under `docs/journal/compact30-research/` (`INDEX.md`, `instruction-ledger.md`,
+  `research-backlog.md`, `proposals/`, `reviews/`). Every entry cites immutable evidence: a
+  commit, a path and, where it applies, a digest. The wiki isn't used.
+- **One canonical ledger.** The reviewer's `instruction-ledger.md` is the single canonical
+  cumulative ledger. Each row:
+  - is marked ACHIEVED (compiled and checked) or CONDITIONAL;
+  - gives source pins and its evidence;
+  - for an achieved saving, cites the checkpoint's own §5 ledger, which remains the authority for
+    that checkpoint's gates.
+
+  If the cumulative ledger and a checkpoint ledger disagree, that is a review finding (charter
+  §6.2). It is never silently reconciled.
 
 ## 7. Coordination
 
