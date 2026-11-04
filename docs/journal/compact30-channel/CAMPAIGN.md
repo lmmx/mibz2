@@ -14,6 +14,13 @@ The campaign exists to make production's inverse BWT faster. Cutting the constru
 instructions is the means: the agents hill-climb on the charter's §5 ledger, round by round, until
 compact30's builder clears the economic limits below. Only then does it go into production.
 
+**The measure that decides is the whole decoder, not the constructor (charter §5.6, report
+272).** On production master a Wikidata block's `decode_block` is about 21% build, 60% walk and
+19% the rest. A constructor saving counts towards the objective only after every cost the
+representation adds to the walk and the rest is subtracted. Every checkpoint reports both
+ledgers: the §5 constructor ledger and the §5.6 production ledger (build, walk and the rest,
+against production master).
+
 The limits are four-worker ratios, compact30 over production. They come from the §8 table of
 master:docs/site/blog/2026-11-04-compact30-constructor.md (lines 375–376), derived in §9 of
 master:docs/site/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md.
@@ -23,14 +30,41 @@ master:docs/site/blog/2026-11-02-revisiting-space-time-tradeoff-bwt-inversion.md
 | CPU cost of building | 1.316 | 1.086 | at most 1.067 |
 | Time until all four have built | 1.364 | 1.114 | at most 1.02 |
 
-The compact30 walk already gains with four workers (0.840 of production's CPU per row) and loses on
-one core (1.148). CI's bench runs on 2 physical cores.
+These limits cover building only. They are necessary, not sufficient. The walk figures (0.840 of
+production's CPU per row with four workers, 1.148 on one core) are i9 time ratios. They are part
+of the decision, not settled context. CI's bench runs on 2 physical cores, and there (#155) time
+followed instruction count.
 
-1. **No integration PR for a builder that can't win.** Open one only when the combined build's
-   ledger, translated through the per-group cost model in the v2 reassessment, projects a win over
-   production on the hardware CI measures. Otherwise, keep climbing.
-2. **Each round closes part of the remaining gap.** Rank next the proposals that remove the most
-   instructions per fast-path group. The v2 reassessment's analysis puts the bulk path at 74.3% of
+**Where it stands after #155** (evidence at research/compact30-channel c493a45d,
+`evidence/port-b4786f66/`; write-up `docs/journal/2026-11-04-compact30-production-port.md`):
+
+| `decode_block`, Wikidata block 1 | master | Assembly 1 in production | change |
+|---|--:|--:|--:|
+| build | 5,429,062 | 4,369,204 | −1,059,858 |
+| walk | 15,426,892 | 20,207,700 | +4,780,808 |
+| rest | 4,895,840 | 4,953,555 | +57,715 |
+| whole | 25,751,794 | 29,530,459 | **+3,778,665** |
+
+On CI the decoder was 18.7%, 11.0% and 7.3% slower at 1, 2 and 4 threads. With the build and
+the rest held fixed, parity needs the record walk at or below 18.25507 instructions per row,
+down from 22.45 (D016). The walker is frozen under charter §2, so work on it needs the user's
+scope decision.
+
+1. **No PR into master for a kernel that can't win** (charter §5.6(d)). That includes a
+   measurement-only PR. Open one only when one of these holds:
+   - the production ledger shows whole `decode_block` instructions at or below master's,
+     across the sample;
+   - a written, quantitative case, assessed by the Researcher, shows a non-instruction
+     mechanism outweighing the instruction excess at each of CI's thread counts (1, 2 and 4).
+
+   Timing on the shared development machine never counts. Neither does a projection that
+   predicts a loss at any of CI's thread counts. The Coordinator ported #155 against its own
+   projection of a 1-thread loss; this rule exists so that cannot happen again. Otherwise, keep
+   climbing.
+2. **Each round closes part of the remaining gap,** and the gap is the whole decoder's. Rank
+   next the proposals that remove the most whole-decoder instructions per block, after every cost
+   they induce in the walk and the rest. Within the constructor, prefer those that remove the
+   most instructions per fast-path group. The v2 reassessment's analysis puts the bulk path at 74.3% of
    rows, with about 143 instructions per fast finish plus refill. Reaching the completion limit
    alone needs about 33 cycles saved on each of about 1.65M fast finishes. Accepted results become
    the next baseline. Rejects are recorded, and are not retried against the same baseline without
@@ -125,7 +159,7 @@ publication.
 
 The initial policy set is lmmx/mibz2 commit 0ed278d722d1ef7dea0c24e5ff551dc7c0b46204, except where an entry names a later pin:
 - master:docs/STEWARDSHIP.md (PR #154; report 267): the permanent production and release stewardship this campaign runs under. It covers the merge gates, the release procedure and checklist, and what stays with the user.
-- docs/journal/2026-11-04-compact30-research-charter.md @ research/compact30-constructor 2210e4457b383e4566df99eb881b4ca0401c4cd3: governing campaign scope and gates (§8.4 trajectory test, reports 267–269; the Researcher as standing reviewer, report 270). Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
+- docs/journal/2026-11-04-compact30-research-charter.md @ research/compact30-constructor 6375277b: governing campaign scope and gates (§8.4 trajectory test, reports 267–269; the Researcher as standing reviewer, report 270; §5.6 production accounting and whole-decoder viability, report 272). Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
 - docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md, reports 264–270: recorded user provenance for U2/C6, technical autonomy, Coordinator release control, permanent stewardship and the §8.4 trajectory test. Earlier reports remain historical; later explicit amendments supersede only the affected clauses.
 - docs/journal/compact30-channel/PROTOCOL.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: publication, receipts, queue and deduplication. §10 governs apparent inactivity.
 - docs/journal/compact30-channel/ROLES.md: separate responsibilities and branch ownership. Coordinator does not mean scientific superior.

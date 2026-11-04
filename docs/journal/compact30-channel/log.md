@@ -199,3 +199,14 @@ Verbatim:
     the phase table doesn't measure compact30.
   - **ACK 6641837683.** No phase-table figure entered the verdict. The asks on the walk's
     floor and its component Δ remain open.
+
+## Whole-decoder accounting (report 272)
+
+- **The user's instruction:** "please update the durable records that control the hillclimb so
+  as to prevent this oversight in future".
+- **The changes:**
+  - charter §1, §5.6 (new), §8.4 and §11, and ROLES.md §§1 and 3, @ research/compact30-constructor
+    6375277b;
+  - report 272 in the v2 reassessment;
+  - CAMPAIGN.md: the decisive measure, the position after #155, rules 1 and 2, and the charter
+    pin.
