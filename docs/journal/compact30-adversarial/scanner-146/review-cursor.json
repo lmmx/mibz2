@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for Coordinator replay and material-findings resolution after independent review publication",
+  "state": "WAITING for user C6 scope decision and Coordinator resolution of existing material review findings",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -45,9 +45,10 @@
     6633793271,
     6633918984,
     6634250201,
-    6634296412
+    6634296412,
+    6634998636
   ],
-  "last_processed_comment_id": 6634296412,
+  "last_processed_comment_id": 6634998636,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -121,6 +122,18 @@
       "independent_review_published": true,
       "material_findings_resolved": false,
       "additional_parent_comment_posted": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6634998636,
+      "report_commit": "546c3192717f2b6eb9b26f85cc13033141f40982",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/c6-review-6634998636/report.md",
+      "disposition": "Recommend user registration of bounded C6 prototype 3b; no authority granted, no achieved saving, H_D unresolved. Static wrapper count and budget replay passed.",
+      "review_comment_id": null,
+      "source_comment_posted": false,
+      "source_comment_omission_reason": "Current batch explicitly instructs no additional message, reply or notification in the source app.",
+      "independent_blind_section_6_2_review": false
     }
   ],
   "active_delegations": [],
@@ -137,5 +150,21 @@
       "review_comment_id": 6634356048,
       "status": "Published and independently verified by parent; Coordinator replay and findings resolution remain."
     }
-  ]
+  ],
+  "last_batch": {
+    "event_comment_ids": [
+      6634996672,
+      6634998636
+    ],
+    "skipped": [
+      {
+        "comment_id": 6634996672,
+        "reason": "TO line names optimizer, not researcher"
+      }
+    ],
+    "handled": [
+      6634998636
+    ],
+    "automation_modified": false
+  }
 }
