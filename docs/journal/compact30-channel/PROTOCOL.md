@@ -150,15 +150,16 @@ coordinator's own commits stay at `louismmx@gmail.com`.
 
 ## 10. Messages that arrive during a run (observed 2026-11-04)
 
-**A role's Work task does not queue events.** A comment that arrives while that role's previous
-run is still in progress may never start a run of its own. This was observed twice for the
-Researcher: 6633675410 arrived during its 14:46 run, and 6633793271 during its 14:51–15:07 run.
-Neither got its own run.
+**A role handles messages one run at a time.** A comment that arrives while that role's run is
+in progress is handled afterwards, and may be folded into a later run together with other
+comments. For example, the Researcher's run of 14:51–15:08 handled the blog request first, then
+6633793271 together with D009 (launch record `684a3379`). The receipt may therefore come long
+after the comment, and only once the role's current work is done.
 
-**Every addressed message must therefore end in a receipt.** A receipt is that role's REVIEW
-citing the message, or its cursor commit recording it. When the Coordinator sends a message, it
-checks for the receipt. If none appears and the role's branch shows it was mid-run when the
-message arrived, the Coordinator re-delivers the message once the role is idle, marked
-`RE: re-delivery of <comment id>`. The role's cursor deduplicates the message if the original
-was in fact processed. This needs no nudge from the user. Comments addressed to a role that is
-known to be busy should wait until its run has finished.
+**Every addressed message still ends in a receipt.** A receipt is that role's REVIEW citing the
+message, or its cursor commit recording it. The Coordinator checks for one before treating a
+message as lost. A message counts as lost only if the role has finished its later work, as its
+branch shows, and still has no receipt. It is then re-delivered once, marked
+`RE: re-delivery of <comment id>`, and the role's cursor deduplicates the message if the
+original was in fact processed. The early re-delivery 6634250201 is such a duplicate, posted
+before this rule was corrected. None of this needs a nudge from the user.
