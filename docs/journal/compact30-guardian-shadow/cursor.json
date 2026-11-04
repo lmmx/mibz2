@@ -226,6 +226,19 @@
       "status": "constructor gate scope retained; quoted production arithmetic corrected; whole-decoder benefit unestablished; no line STOP",
       "publication": "decision in enclosing commit; GitHub reply suppressed by direct batch instruction",
       "commit": "aae003edfca79e23f0a65c7ed1fcc8b7840aa7ce"
+    },
+    {
+      "id": "D016",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 145,
+      "sha": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+      "evidence_digest": "sha256:ce68892e7fd704081718ae9b2dc976fa8c6f8065fc4a9513515905b7b002d76c",
+      "incoming_comment": 6641672441,
+      "commit": "2b58b12acc57e270a667923e7edf81808a41c39d",
+      "comment": 6641768409,
+      "status": "published; current production candidate rejection concurred; causal claims narrowed; parity screen distinct from qualification; no line STOP"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -241,7 +254,8 @@
     6635476486,
     6635620697,
     6637353454,
-    6640069360
+    6640069360,
+    6641768409
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -258,7 +272,8 @@
     "2c2565aca5be9ffd2ce5ace8ba82d3af9b60523b",
     "88bc570db02d8e617652ea56e081e4b4c6eae0c4",
     "a0473a6b6d9e4b69c459e560136d4841aa533b5c",
-    "aae003edfca79e23f0a65c7ed1fcc8b7840aa7ce"
+    "aae003edfca79e23f0a65c7ed1fcc8b7840aa7ce",
+    "2b58b12acc57e270a667923e7edf81808a41c39d"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -274,7 +289,8 @@
     6637300905,
     6639998280,
     6640153383,
-    6641512290
+    6641512290,
+    6641672441
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -356,18 +372,18 @@
     "trigger": "new event-supplied PR comment containing the exact TYPE: CHECKPOINT marker",
     "repository": "lmmx/mibz2",
     "scope": "only triggering event comments; no backlog",
-    "last_completed_incoming_comment": 6641512290,
-    "last_decision": "D015",
-    "last_outgoing_comment": null,
+    "last_completed_incoming_comment": 6641672441,
+    "last_decision": "D016",
+    "last_outgoing_comment": 6641768409,
     "after_completion": "stop; await a future matching GitHub event",
     "polling": false,
     "timed_schedule": false,
     "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "aae003edfca79e23f0a65c7ed1fcc8b7840aa7ce",
+    "last_decision_commit": "2b58b12acc57e270a667923e7edf81808a41c39d",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "omitted per this run's explicit no additional message/reply/notification instruction"
+    "source_app_reply": "one TYPE: REVIEW published on triggering PR"
   },
   "duplicate_events": [
     {
@@ -477,15 +493,14 @@
       "decision": "D015",
       "comment": null,
       "commit": "aae003edfca79e23f0a65c7ed1fcc8b7840aa7ce"
+    },
+    {
+      "pr": 145,
+      "sha": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+      "evidence_digest": "sha256:ce68892e7fd704081718ae9b2dc976fa8c6f8065fc4a9513515905b7b002d76c",
+      "decision": "D016",
+      "commit": "2b58b12acc57e270a667923e7edf81808a41c39d",
+      "comment": 6641768409
     }
-  ],
-  "pending_publication": {
-    "id": "D016",
-    "incoming_comment": 6641672441,
-    "pr": 145,
-    "sha": "b4786f66366c9e404702c800cd360dc793b1a7a5",
-    "evidence_digest": "sha256:ce68892e7fd704081718ae9b2dc976fa8c6f8065fc4a9513515905b7b002d76c",
-    "decision": "G1",
-    "status": "decision in enclosing commit; review and final cursor pending"
-  }
+  ]
 }
