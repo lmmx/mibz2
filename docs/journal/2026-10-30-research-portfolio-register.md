@@ -1535,9 +1535,9 @@ physical cores with SMT.
 
 | Entry | Status | What is established | What is not |
 |---|---|---|---|
-| **B2 kernel B** = "Path B" of the 2026-10-31 post: the 32 scalar chains with deferred flags and tiled commits | **conditional** (implemented in #157; merge pending a replicate bench) | It compiles to 9 instructions per step against A's 16, in line with B2's predicted 8.0–9.0 µops/B. `decode_block` is −21.6% to −22.6% on full Wikidata blocks, and the walk −36% (Callgrind; evidence at research/compact30-channel b0f6e89d). On the 9V45 at one thread, stage-table walk B/A = 0.925 (0.856–0.999), decoder −4.2% wall (−8.0, −0.3). | That the gain holds at more copies. At 2 threads the wall is +2.2% (−0.6, +5.1); at 4, +0.4% (−2.8, +3.8). |
-| **B2 interval model (iv)**, at one copy | **conditional**, supported | Its 9V45 prediction, B/A 0.86–0.93, contains the measured 0.925. | (iii′), the issue rate, is excluded. (i′), the per-core miss cap at ≥ 0.95, is not excluded at 95%. |
-| **B2 (iv)**, "the ratio holds at four copies" | **open**, contradicted at 2 threads | | Why. The candidates: B2 risk 5 (ℓ rising with misses in flight); B2 risk 6 (a new shared bottleneck); the bench's 2-thread arm putting four threads on two CPUs (run-queue 0.58–0.69); the 2026-11-01 interference hypotheses. The decisive test is B2 §8's falsifier with A and B at one copy, two copies on separate cores, and an SMT pair. |
+| **B2 kernel B** = "Path B" of the 2026-10-31 post: the 32 scalar chains with deferred flags and tiled commits | **validated** (#157, merged at master 5f537871; not yet released) | It compiles to 9 instructions per step against A's 16, in line with B2's predicted 8.0–9.0 µops/B. `decode_block` is −21.6% to −22.6% on full Wikidata blocks, and the walk −36% (Callgrind; evidence at research/compact30-channel b0f6e89d). CI `wikidata` wall: on the **9V45** (75b13f00), 1 thread −4.2% (−8.0, −0.3), 2 threads +2.2% (−0.6, +5.1), 4 threads +0.4% (−2.8, +3.8); on the **7763** (3fc3f8c6, identical walk machine code), 1 thread −2.4% (−3.6, −1.2), 2 threads −4.9% (−9.5, −0.1), 4 threads +0.2% (−2.1, +2.7). The 7763's stage table gives walk B/A = **0.925 (0.856–0.999)**; the 9V45's walk-stage figure was overwritten, so there is none. | Why the gain differs by machine and copy count. |
+| **B2 interval model (iv)**, at one copy | **rejected** on the 7763 | It predicted walk B/A 0.73–0.76 and decoder −10% to −11% on the 7763. Measured: 0.925 (0.856–0.999) and −2.4%. (iii′), the issue rate (0.55–0.65), is rejected too. | Whether (i′), the per-core miss cap at ≥ 0.95, holds: the interval allows it. Which of (iv)'s terms fails: R, ℓ under load (B2 risk 5), or the issue term. B2 §8's close rule (B/A ≥ 0.95) is not met at the point estimate, and is met within the interval. |
+| **B2 (iv)**, "the ratio holds at four copies" | **open** | | It depends on the machine: on the 9V45 two threads lost the gain, on the 7763 they kept it. The candidates are B2 risks 5 and 6, the bench's 2-thread arm putting four threads on two CPUs, and the 2026-11-01 interference hypotheses. The decisive test is B2 §8's falsifier per copy count and per machine. |
 | **Memory interference** at four workers (2026-11-01 post) | **open** | On the i9 (four physical cores): +1.3% instructions per byte, about +30% cycles. | The cause (eviction, congestion or competing writes). It is not established, and CI's 4-thread arm is SMT, not four cores. It is not to be cited as the binding cause. |
 | **compact30 in production** (#155, Assembly 1 as the default kernel) | **rejected**, class III | Construction −1.06 M instructions per block (−19.5%), record walk +4.78 M (+31%), whole +14.7%. CI on the 7763: +18.7%, +11.0% and +7.3% wall at 1, 2 and 4 threads. A record step loads a 16-bit offset and a 32-bit group header against one 32-bit entry. Write-up: research/compact30-channel 8abefea4. | A record walk at parity, which would need ≤ 18.26 instructions per row against 22.45: not shown to be reachable. |
 | **The construction-only gate** (compact30 charter §5) | superseded for production decisions by charter §5.6 | A constructor saving is not a decoder saving. Every candidate is now counted across the whole `decode_block` against production master. | |
@@ -1547,6 +1547,9 @@ physical cores with SMT.
 - **B2 kernel C** (AVX2 gathers on B's tiling): its prediction is now against B, not A.
 - **The cooperative and flagged walks:** the same rolled loop. A port waits on the item above.
 
-**Contradiction, resolved:** a channel message (6643809123) stated "the walk is bound by l and R
-under contention at ≥ 2 workers" as a fact. It was retracted (6643992749): it is an open
-hypothesis.
+**Contradictions, resolved:**
+- A channel message (6643809123) stated "the walk is bound by l and R under contention at
+  ≥ 2 workers" as a fact. It was retracted (6643992749): it is an open hypothesis.
+- That retraction then attributed the stage table's walk B/A of 0.925 to the 9V45, and read
+  it as supporting (iv). It was the 7763's (stage clock 2445 MHz), and it rejects (iv) there.
+  Corrected in 6644115799.
