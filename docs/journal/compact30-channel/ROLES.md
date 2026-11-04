@@ -45,6 +45,11 @@ decoder (charter §1, §5.6, reports 272–273).
 
   It may conclude that the current direction is economically inferior to another one.
 
+  The search starts from what the project has already published and recorded:
+  master:docs/site/blog/ (its index and every post relevant to the question) and the research
+  register, `docs/journal/2026-10-30-research-portfolio-register.md`. It cites what is already
+  known, and builds on it instead of re-deriving it.
+
 **Does not:** implement constructor variants, expand the charter, govern research decisions, or
 certify its own proposals as independently reviewed.
 
