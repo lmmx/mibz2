@@ -48,6 +48,29 @@ pub trait InverseBwt: Default + Send {
     fn buffers(&self) -> Vec<crate::trace::Buffer> {
         Vec::new()
     }
+
+    /// `invert` with `ll` as both its input and its output, for a kernel that reads `ll`
+    /// only while building its table: the block's bytes are then written over `ll`, so the
+    /// decoder needs no separate output buffer (about one block a worker).
+    ///
+    /// The preconditions are `invert`'s: `counts` counts `ll`, and `orig_ptr` is below
+    /// `ll.len()` (the caller checks).
+    ///
+    /// **On success** it returns true, and then:
+    /// - `ll` holds exactly the bytes `invert` would have put in its `out` for the same
+    ///   `ll`, `counts` and `orig_ptr`, so its length is the original `ll.len()`;
+    /// - it doesn't grow `ll`: the output is no longer than the input, so `ll`'s buffer
+    ///   and capacity are unchanged;
+    /// - the kernel's own buffers are as `invert` leaves them, ready for the next block.
+    ///
+    /// **On fallback** it returns false and has changed nothing: not `ll` (contents,
+    /// length or buffer), not the kernel. A kernel that doesn't support it returns false,
+    /// and the decoder then calls `invert` with a buffer of its own. A kernel returns true
+    /// for every block or false for every block, never by the block.
+    fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], orig_ptr: u32) -> bool {
+        let _ = (ll, counts, orig_ptr);
+        false
+    }
 }
 
 /// The plain walk: one chain of dependent loads (lbzip2's and libbzip2's)
@@ -80,6 +103,18 @@ impl InverseBwt for Segmented {
     fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
         build(ll, counts, &mut self.tt);
         walk_segments_room(&mut self.tt, orig_ptr, out, &mut self.seg);
+    }
+
+    // The build is `ll`'s last read: it copies every byte and link the walk needs into the
+    // table. The walk (segmented, or plain for a short block) then reads only the table and
+    // the segment scratch, so its output can go over `ll`. Both writers (`walk`,
+    // `SegScratch::assemble`) clear their output and write exactly the table's n rows, and
+    // n = ll.len() fits the capacity `ll` already has. So the success contract holds, and
+    // Segmented never falls back.
+    fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], orig_ptr: u32) -> bool {
+        build(ll, counts, &mut self.tt);
+        walk_segments_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
+        true
     }
 
     #[cfg(any(test, feature = "trace"))]

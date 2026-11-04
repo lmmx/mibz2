@@ -261,13 +261,17 @@ impl From<Error> for std::io::Error {
     }
 }
 
-/// A worker's buffers, kept from block to block (about 7 MB at the 900 kB block size)
+/// A worker's buffers, kept from block to block (about 6 MB at the 900 kB block size)
 pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
+    /// the MTF stage's output, the BWT's last column; for a kernel that inverts in place
+    /// (`InverseBwt::invert_in_place`), then the inverse BWT's output too
     ll: Vec<u8>,
     counts: [u32; 256],
     /// the MTF stage's count checkpoints, for a kernel that reads them
     checkpoints: Vec<[u32; 256]>,
     inverse: I,
+    /// the inverse BWT's output, for a kernel that doesn't invert in place (never allocated
+    /// otherwise)
     rle: Vec<u8>,
 }
 
@@ -329,17 +333,20 @@ pub fn decode_block<I: bwt::InverseBwt>(
         n as u64,
         trace::UNREAD,
     );
+    // in place where the kernel can (its output over `ll`), else into `rle`
+    let in_place = !cooperative && s.inverse.invert_in_place(&mut s.ll, &s.counts, b.orig_ptr);
     if cooperative {
         let cps = &s.checkpoints;
         s.inverse
             .invert_checkpointed(&s.ll, &s.counts, cps, b.orig_ptr, &mut s.rle);
-    } else {
+    } else if !in_place {
         s.inverse.invert(&s.ll, &s.counts, b.orig_ptr, &mut s.rle);
     }
     #[cfg(feature = "trace")]
     trace::mark(trace::Kind::InvertEnd, trace::NONE);
+    let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
     let start = out.len();
-    if let Err(kind) = rle::unrle(&s.rle, out, k) {
+    if let Err(kind) = rle::unrle(inverted, out, k) {
         out.truncate(start);
         return Err(kind);
     }
