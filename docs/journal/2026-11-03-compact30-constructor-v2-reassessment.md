@@ -2706,3 +2706,1133 @@ If the audit passes, I expect the next instruction to Claude will be narrowly sc
 The other two optimizations—scanner-check elimination and descriptor-array restructuring—should remain separate. That lets us see whether each proposed instruction reduction actually survives compilation before combining them.
 
 So I wouldn’t change course or rush into code. We’re one focused independent review away from a well-specified prototype, and the research is progressing in precisely the instruction-minimization direction you wanted.
+
+## Report 231: the adversarial audit request, as assembled by the researcher
+
+At the user's request, the researcher assembled a fuller, more autonomous audit request for a
+fresh Ultra session. It replaces the shorter prompt of reports 228 and 230 and includes their
+requirements:
+- the `raw`-encoding audit;
+- the opening-epoch proof;
+- the 40-instruction full-path accounting.
+
+It also asks the session to reconstruct the ledger independently, write read-only analysis
+scripts, search for counterexamples and return separate verdicts on each transformation.
+
+The session is to receive report 227's text only, as a standalone file of its 1,143 lines.
+For independence, it gets neither report 224 nor the guardian's and researcher's provisional
+views.
+
+**Checked here before sending:**
+- the source pins `rd` (lines 98–100), `tile` (557–576) and the scan loop in `scatter`
+  (823–863) match `ctor2.rs` at `8beffe2`;
+- the structural figures match the census;
+- the full-tile and nonuniform-tile counts (12,937,790 and 2,393,313) are report 227's
+  derivations from block sizes, not census counters. The request asks for them to be verified
+  in any case.
+
+Kept as sent:
+
+Independent adversarial research audit: compact30’s 225-million-instruction elimination opportunity
+
+Your role
+
+You are an independent principal systems researcher and adversarial reviewer specializing in optimized Rust, x86-64 machine code, compiler behavior, memory safety, compression algorithms and multicore execution.
+
+You have been given a substantial technical report from an earlier Astra Ultra investigation proposing approximately 225.25 million dynamically executed x86 instructions of conditional net savings per construction of the primary compact30 corpus.
+
+Your mission is to determine whether that result survives an exceptionally rigorous independent investigation.
+
+This is not a request for a quick opinion, a superficial design review or another collection of algorithm ideas.
+
+You are expected to reconstruct the relevant evidence, independently audit the arithmetic and control flow, actively search for correctness counterexamples, investigate implementation and compiler obstacles, and determine what portion of the proposed savings is genuinely defensible.
+
+Use substantial reasoning effort. Investigate deeply enough that the result can guide an expensive and safety-critical engineering decision.
+
+The most valuable possible result is a technically grounded conclusion, whether favorable or unfavorable.
+
+Do not adopt the earlier Ultra report’s GO recommendation as your starting assumption.
+
+⸻
+
+1. Research objective
+
+The project is lmmx/mibz2, a performance-oriented Rust bzip2 decoder.
+
+Compact30 is a frozen inverse-BWT navigation-table representation using:
+
+* 64-byte-aligned, 64-byte records.
+* Thirty u16 fields occupying bytes 0–59.
+* A four-byte header at bytes 60–63.
+* Sparse 128-byte RAW groups.
+* Canonical RAW ordering.
+* An unchanged, independently validated walker.
+
+The measured target is an Intel Core i9-10900K, using four physical cores.
+
+Prepared-table traversal previously achieved a formally VALID ADVANCE:
+
+Measure	Compact30 / conventional
+Four-worker traversal CPU	0.84047
+Four-worker traversal completion	0.85601
+One-worker traversal CPU	1.14845
+
+Those results do not establish a whole-decoder improvement.
+
+Construction remains the economic obstacle.
+
+Constructor v1 used online offset formation and had an approximately 49-instruction common scalar path.
+
+Constructor v2 replaced much of that work with temporary successor labels, sparse epoch snapshots and deferred normalization. Its common scalar append path compiles to approximately 12 instructions.
+
+The v2 construction capture was formally INVALID because production’s warm four-worker stability gates failed. It nevertheless recorded descriptive C/P ratios of:
+
+Measure	Descriptive ratio	Registered upper-95%-CI ceiling
+Four-worker construction CPU	1.08619	1.06714
+Four-worker construction completion	1.11437	1.02000
+
+The previous Ultra investigation claims that further reductions in machine-code work may be substantial enough to justify another bounded prototype.
+
+Your task is to challenge that claim comprehensively.
+
+We are seeking the practical minimum machine-level work required to produce exactly the same compact30 arrays.
+
+We are not seeking a novel algorithm for its own sake.
+
+⸻
+
+2. The report under audit
+
+The attached Compact30: instruction-elimination investigation is the primary object of this review.
+
+It proposes:
+
+Transformation	Conditional net instructions eliminated per corpus pass
+Epoch-tagged ordinary fast finalization	66.041 million
+Source/tile bounds-check and control cleanup	87.622 million
+Separate hot descriptor pointer arrays	71.590 million
+Combined	225.253 million
+
+These numbers are calculated from frozen assembly and structural frequencies. None of the proposed replacements has yet been implemented or compiled.
+
+The earlier report suggests that the combined savings could represent approximately 15–19% of the current constructor’s instruction work, depending on its unresolved instruction total.
+
+Treat every one of these numbers as an assertion to verify, not a fact to inherit.
+
+Your responsibilities include deciding whether:
+
+1. The identified instructions actually execute as frequently as claimed.
+2. Each proposed transformation can eliminate the attributed work.
+3. The replacement would introduce more work than allowed.
+4. The three transformations are compatible.
+5. Their savings have been counted without overlap.
+6. The required Rust and memory-safety invariants hold.
+7. Their machine-code targets are plausible under the frozen compiler.
+8. The resulting reduction would be relevant to synchronized four-worker completion.
+
+A mathematically correct instruction count is not sufficient if the corresponding replacement cannot be generated safely or if its overhead is underestimated.
+
+⸻
+
+3. Evidence and reproducibility
+
+Frozen sources
+
+Repository:
+
+https://github.com/lmmx/mibz2
+
+Production builder:
+
+https://github.com/lmmx/mibz2/blob/e003a32/src/bwt.rs
+
+Constructor v1:
+
+https://github.com/lmmx/mibz2/blob/e003a32/examples/c30walk/ctor.rs
+
+Constructor v2 — the primary subject:
+
+https://github.com/lmmx/mibz2/blob/8beffe2/examples/c30walk/ctor2.rs
+
+Frozen representation, oracle and walker:
+
+https://github.com/lmmx/mibz2/blob/e003a32/examples/c30walk.rs
+
+V2 prototype report and structural census:
+
+https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype.md
+
+Optimized assembly
+
+Full constructor listing:
+
+https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-build-false.asm
+
+Finalization:
+
+https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-finish-false.asm
+
+Descriptor refill:
+
+https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-refill-false.asm
+
+Annotated excerpts:
+
+https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype/excerpts.asm
+
+Construction experiment
+
+Registered protocol:
+
+https://github.com/lmmx/mibz2/blob/1dc2edf/docs/journal/2026-11-03-compact30-construction-protocol-v2.md
+
+Capture journal:
+
+https://github.com/lmmx/mibz2/blob/603d8c9/docs/journal/2026-11-03-compact30-construction-v2-capture.md
+
+Complete raw capture archive:
+
+https://github.com/lmmx/mibz2/blob/e035556/docs/journal/2026-11-03-compact30-construction-v2-capture/c30-construction-v2-20261103T222928Z.tar.gz
+
+Expected archive SHA-256:
+
+ebdb74549b39f83f07ae1f7d1c943916bac2ecb0be85868799aa30fe5e3d8af9
+
+Registered analyzer:
+
+https://github.com/lmmx/mibz2/blob/fa21f33/bench/c30_construction.py
+
+The registered full-block threshold is FULL = 899_000, not exactly 900,000.
+
+Research autonomy
+
+You are authorized to conduct extensive read-only research.
+
+Within the available environment, you may autonomously:
+
+* Retrieve the frozen source files and assembly.
+* Download and verify the archived capture.
+* Inspect every relevant archived record, metadata file and machine-code listing.
+* Write temporary analytical scripts in an isolated scratch workspace.
+* Execute those scripts to reproduce arithmetic, classify assembly paths, construct mathematical models and search for counterexamples.
+* Independently recompute structural frequencies and proposed savings.
+* Develop symbolic or mathematical models for pointer, epoch and group invariants.
+* Inspect authoritative processor and compiler documentation where relevant.
+* Revisit your conclusions when an inconsistency emerges.
+
+Do not rely on the earlier report’s own calculations when an independent reconstruction is feasible.
+
+Do not request step-by-step approval for work that is purely read-only analysis or scratch-based mathematical verification.
+
+If an evidence source cannot be accessed, pursue the available alternatives autonomously, then identify exactly what remains unverified.
+
+Do not modify the repository, implement a Rust constructor variant, compile a candidate, execute a benchmark, use the i9, or conduct a new performance experiment.
+
+Scratch scripts that analyze existing artifacts or test mathematical claims are permitted. They must not become disguised performance experiments.
+
+If the environment supports saving your analysis scripts or derived tables as attachments, preserve them as reproducibility evidence.
+
+⸻
+
+PHASE I — INDEPENDENTLY RECONSTRUCT THE BASELINE
+
+4. Rebuild the instruction ledger from the actual assembly
+
+Do not begin by accepting the previous report’s totals.
+
+Independently inspect the optimized constructor and trace all significant common and exceptional paths, including inlined code.
+
+Reconstruct the baseline ledger using the original source, disassembly and census.
+
+The earlier report claims:
+
+Cost center	Estimated instructions per corpus construction
+Scalar append	459.539M
+Uniformity classification and scanning	221.504–222.732M
+Nonuniform tile setup and advancement	98.126–114.879M
+Fragment filling	43.437–114.277M
+Bulk emitter core	51.273–51.884M
+Run entry	14.042M
+Run return/control	7.937M
+Snapshot rank loop	6.548M
+Descriptor initialization/prefix	0.972M
+Fast ordinary completion	133.437–133.441M
+Refill wrappers	66.579–111.402M
+RAW reconstruction core	23.773M
+
+It derives an audited subtotal K of approximately 1.127–1.261 billion instructions, plus an unresolved nonnegative remainder E.
+
+Verify the disjointness of these categories.
+
+Questions to investigate:
+
+* Does each counted instruction actually belong to the claimed execution path?
+* Are path-entry, exit, caller and callee instructions counted consistently?
+* Are any function prologues, branch detours or refill operations counted twice?
+* Does the report count instructions in paths that are mutually exclusive?
+* Does it omit substantial instructions from a supposedly complete common path?
+* Are the frequency bounds justified by the census?
+* Are counted and uncounted builds generating equivalent relevant machine code?
+* Are any calculations relying on inferred frequencies that the available evidence cannot establish?
+
+Reconstruct the baseline using independently written arithmetic or parsing scripts where practical.
+
+Give exact counts when proven, ranges when bounded, and explicit unknowns otherwise.
+
+If you discover an error, quantify its effect on the total and continue the investigation with a corrected ledger.
+
+A flaw in one component should not cause you to abandon verification of the others.
+
+⸻
+
+5. Audit the structural frequency model
+
+The previous Ultra investigation used the following census:
+
+Quantity	Count
+Corpus rows	207,006,515
+Scalar rows	38,294,883
+Fragment rows	14,892,632
+Bulk rows	153,819,000
+Full tiles	12,937,790
+Nonuniform full tiles	2,393,313
+Coalesced runs	610,521
+Fast ordinary finishes	1,647,416
+Other ordinary finishes	75,997
+Full normalizations	1,723,371
+Wide finishes	30,949
+Crossing portions	41,120
+Epoch snapshots	3,654
+
+Independently verify the relevant identities and derived counts.
+
+Pay particular attention to:
+
+* Whether fin_fast counts exactly the execution path credited in the assembly.
+* Whether all fast finishes are eligible for the proposed replacement.
+* Whether partial and full finishes have been separated correctly.
+* Whether normalizations and ordinary finishes are mistakenly treated as independent events.
+* Whether run counts imply the reported number of fresh and held tile loads.
+* Whether the number of full-to-full descriptor transitions is adequately bounded.
+* Whether a different compiler structure could change the event-to-instruction mapping.
+
+Do not use an aggregate counter as evidence of a precise branch frequency unless the relationship is established.
+
+⸻
+
+PHASE II — ATTACK THE EPOCH-TAGGED FINALIZER
+
+6. Fully audit the proposed descriptor encoding
+
+This is a particularly important correctness obligation.
+
+In the frozen constructor, the descriptor contains:
+
+raw: u32
+
+An ordinary descriptor currently uses NO_RAW. A preset-RAW descriptor uses a provisional RAW index.
+
+The existing finish() branches on d.raw == NO_RAW; the alternative branch uses d.raw as an index into the RAW arena.
+
+Ultra proposes changing the representation to:
+
+preset RAW:
+    raw index with high bit clear
+ordinary:
+    0x80000000 | opening_epoch << 24
+
+and maintaining:
+
+active_epoch_tag = 0x80000000 | active_epoch << 24
+
+Trace every read, write, copy and interpretation of Desc.raw in the complete constructor.
+
+Inspect at least:
+
+* Descriptor initialization.
+* open().
+* close().
+* refill().
+* finish().
+* write_entries().
+* Forced-RAW and crossing-group setup.
+* run() and complete().
+* Wide promotion.
+* Descriptor reuse and rebuilding after failure.
+* Canonical RAW ownership and permutation.
+
+Determine whether:
+
+1. The new ordinary tag can be distinguished unambiguously from every legal RAW index.
+2. The old NO_RAW sentinel can survive in a descriptor state that might be finished.
+3. Every existing ordinary-versus-RAW predicate must change, and exactly how.
+4. A slow ordinary descriptor can recover its original opening epoch without being mistaken for preset RAW.
+5. Forced RAW remains correctly dispatched.
+6. Crossing portions cannot be misclassified as ordinary.
+7. A wide ordinary candidate still promotes to RAW with byte-exact indices and fields.
+8. Failed or reused builds cannot expose stale tag data.
+9. The encoding remains valid for every allowed input size and epoch.
+10. No additional representation invariant is silently assumed.
+
+Do not accept a generic statement that a high-bit discriminator solves these issues.
+
+Produce a complete state-transition and dispatch audit.
+
+If you find a flaw, construct the smallest convincing counterexample or show the precise incompatible execution path.
+
+If the proposed encoding is flawed but easily repaired, distinguish design-fixable from fundamentally invalid.
+
+Quantify the machine-code cost of any necessary repair.
+
+⸻
+
+7. Prove the opening-epoch invariant
+
+The fast-finalizer argument depends on knowing the epoch that supplied the first successor of an open portion.
+
+The earlier report asserts that a descriptor opens immediately before a positive append and that no epoch transition intervenes.
+
+Independently prove or refute this for every opening route.
+
+Trace:
+
+* Scalar append through one() and refill().
+* Run handling through run() and open().
+* Fragment filling.
+* Complete-record bypass paths.
+* Run remainders and suffixes.
+* Transitions into a new source epoch.
+* Deferred completion across an epoch.
+* End-of-input closure.
+* Zero-length or exhausted descriptors.
+
+Test the distinction between:
+
+* The epoch containing the first appended source row.
+* The currently active source epoch.
+* The most recent saved snapshot.
+* The epoch implied by an already advanced source coordinate.
+
+The active epoch tag must be updated alongside source-epoch entry and snapshot creation.
+
+A tag derived from W.y after advancement may be incorrect at a boundary or at EOF.
+
+Prove that:
+
+stored opening epoch == active epoch
+
+on a completed ordinary portion implies that all its temporary labels came from that same epoch.
+
+Then establish whether this is sufficient to eliminate full-label span classification.
+
+Explicitly examine:
+
+* The 61,440-row epoch boundary.
+* The exact 65,533/65,534 ordinary/wide boundary.
+* A group spanning two or more source epochs.
+* Repeated snapshots for absent characters.
+* The final portion completed after the scan ends.
+* Partial last groups.
+* Empty buckets.
+* Groups shared by two character buckets.
+* Malformed counts and rejected builds.
+
+Mathematical proof is preferred where possible. Supplement it with independent small models or adversarially constructed inputs.
+
+⸻
+
+8. Challenge the proposed fast-path machine code
+
+Ultra claims the current fast full-group finish executes 81 instructions and proposes a complete fast-success path of at most 40.
+
+Its candidate removes:
+
+* Snapshot metadata lookup and dependency chain.
+* Full-label endpoint reconstruction.
+* Last-field span calculation and classification.
+* Generic frame and saved registers.
+* Certain descriptor calculations.
+
+It retains the five-chunk SIMD normalizer.
+
+Audit the current 81-instruction count independently.
+
+Then determine whether the proposed replacement can plausibly compile to at most 40 instructions under rustc 1.97.0 / LLVM 22.1.6.
+
+Do not simply count an illustrative handwritten assembly fragment.
+
+Account for:
+
+* Calling convention.
+* Full call and return boundaries.
+* Actual argument passing.
+* Required descriptor loads.
+* Guards and fallback branches.
+* Compiler register allocation.
+* Saved registers and stack spills.
+* Header construction.
+* Vector broadcast and field normalization.
+* Effects on caller code.
+* Any extra descriptor work at opening and closing.
+
+The earlier estimate assumes a 41-instruction saving across approximately 1.647 million fast finishes, with small fallback/setup overhead.
+
+Verify whether that is realistic.
+
+In particular, the additional-work allowance is not automatically credible merely because the main new tag assignment replaces an existing sentinel assignment.
+
+If active epoch state requires extra loads, spills, or changes to surrounding control flow, charge those costs at their actual frequencies.
+
+Provide a conservative revised range for the achievable saving.
+
+⸻
+
+PHASE III — CHALLENGE THE LARGEST PROPOSED SAVING
+
+9. Independently audit source/tile check elimination
+
+Ultra assigns approximately 87.62 million instructions of net potential savings to scanner and tile-control cleanup.
+
+This is the largest component of the proposed portfolio.
+
+Treat it as a primary audit target, not an afterthought.
+
+Inspect the frozen source around:
+
+* rd() at lines 98–100.
+* tile() at lines 557–576.
+* scatter() at lines 823–863.
+
+Inspect the corresponding machine code around:
+
+* 33ae8–33b06.
+* 33b44–33b56.
+* The nonuniform tile setup and advancement paths.
+
+Ultra claims several bounds checks are redundant because a surrounding condition establishes:
+
+i + 16 <= epoch_end <= L.len()
+L.len() <= MAX_N
+0 <= source_phase < 30
+
+For every proposed eliminated instruction:
+
+1. Identify the exact source expression that generated it.
+2. Identify the dominating condition that supposedly makes it redundant.
+3. Prove the condition remains valid at that point.
+4. Prove integer arithmetic cannot overflow.
+5. Prove no source read can extend beyond initialized memory.
+6. Determine whether the compiler can express the replacement without adding equivalent checks.
+7. Classify the removal as achievable with safe Rust, requiring an explicitly justified unsafe access, or potentially unsound.
+8. Identify the precise fallback behavior for short tiles and epoch ends.
+
+Check carefully:
+
+* i + 16 and e + 16 arithmetic.
+* Both eight-byte loads within a validated tile.
+* rd(i + 8).
+* The held-tile mechanism.
+* Uniform runs spanning successive tiles.
+* Epoch boundaries.
+* The final 1–15-row tail.
+* Empty and very short inputs.
+* Different source slice alignments.
+* Nonuniform tiles split around the 30-row phase boundary.
+* Correct preservation of run/fragment/scalar classification.
+* Malformed-count rejection and any early-exit behavior.
+
+Do not accept “the caller checked the bounds” without a precise dominance proof.
+
+Also audit the purported impossible phase branch. Prove the invariant from all advance() paths, not from a comment or assumption.
+
+Independently reproduce the 87.62M arithmetic
+
+Ultra derives:
+
+removed = 5T + 10S + 3(R − H)
+
+where:
+
+* T is the number of full tiles.
+* S is the number of nonuniform full tiles.
+* R is the number of runs.
+* H is the number of runs ending with a held nonmatching tile.
+
+It bounds:
+
+0 <= R − H <= number of epochs
+
+and reports approximately 88.622–88.633M gross removed instructions, with a one-million-instruction overhead allowance.
+
+Independently derive or falsify those relationships.
+
+Check whether all credited instructions occur on the claimed paths and whether eliminating one check changes the control flow in a way that makes another claimed saving unavailable.
+
+If the precise frequency cannot be established from the census, calculate a defensible interval.
+
+A safety-proof failure or a flawed execution-frequency formula could materially reduce the entire 225M proposal.
+
+Treat this component accordingly.
+
+⸻
+
+PHASE IV — CHALLENGE THE DESCRIPTOR-LAYOUT SAVING
+
+10. Audit the proposed hot-pointer arrays
+
+The existing descriptor is approximately 40 bytes:
+
+write
+end
+w0
+r0
+lim
+g
+raw
+
+The scalar append path currently uses two address-generation instructions to calculate a stride-40 descriptor address.
+
+Ultra proposes:
+
+write[256]
+end[256]
+cold descriptor:
+    w0
+    r0
+    lim
+    g
+    raw_or_epoch_tag
+
+It claims this could retain approximately the same total descriptor footprint while reducing the scalar loop from 12 to 10 instructions.
+
+The claimed gross saving is:
+
+2 × 38,294,883 = 76,589,766 instructions
+
+It allows up to five million additional non-row instructions, producing approximately 71.59M net.
+
+Audit the entire data-layout consequence, not merely the scalar loop.
+
+Determine:
+
+* Whether direct scale-eight addressing actually removes both existing address-generation instructions.
+* Whether the required write and end addresses can be generated without new per-row operations.
+* Whether the write-pointer memory RMW still operates as expected.
+* Whether register allocation or base-address reloads might consume the nominal savings.
+* Whether the layout expands or reduces the working set.
+* Whether cold descriptor operations become more expensive.
+* Whether the stack frame and array-copy behavior change.
+* Whether initialization becomes more expensive.
+* Whether snapshot creation pays additional indexed loads.
+* Whether open, close, refill, finish, run, complete and rank become materially costlier.
+* Whether the new layout affects pointer provenance, partial initialization or aliasing assumptions.
+* Whether it interacts cleanly with epoch-tagged finalization.
+
+The five-million-instruction added-work allowance deserves particularly close scrutiny.
+
+Express the allowance as a cost per affected descriptor operation, and compare that budget with the frequencies of those operations.
+
+If the allowance is implausibly low, calculate a better-supported bound and revise the total portfolio saving.
+
+Investigate the scalar pointer-update alternative
+
+The current scalar path uses a memory read-modify-write:
+
+addq $2, [write_pointer]
+
+Ultra identifies a possible alternative using the already loaded pointer and a separate store.
+
+Analyze this as a competing tradeoff:
+
+* Fewer architectural instructions versus fewer memory reads.
+* Possible dependency-chain changes.
+* Micro-op behavior.
+* Register pressure.
+* Store-to-load recurrence.
+* Interaction with the hot-pointer arrays.
+
+Do not count both alternatives as independent savings.
+
+Determine which assembly target is more defensible for the target microarchitecture.
+
+⸻
+
+PHASE V — VERIFY COMBINED SAVINGS
+
+11. Independently reconstruct the 225.253M portfolio
+
+The previous report claims:
+
+Epoch finish:   67.542M gross − 1.501M overhead = 66.041M
+Scanner:        88.622M gross − 1.000M overhead = 87.622M
+Descriptor:     76.590M gross − 5.000M overhead = 71.590M
+Combined: 225.253M
+
+Arithmetic consistency alone is insufficient.
+
+Build a dependency and overlap matrix.
+
+For every pair of transformations, examine:
+
+* Whether they remove the same baseline instructions.
+* Whether one changes the path frequency of the other.
+* Whether shared metadata or register pressure changes the expected machine code.
+* Whether extra initialization or descriptor transitions affect more than one budget.
+* Whether one proposed layout makes another fast path harder to compile.
+* Whether common code movement simply shifts work from one path to another.
+* Whether the same prologue, spill, or address calculation is credited twice.
+
+Pay special attention to the combined epoch-tag and hot-descriptor design. Both modify descriptor state and addressing. Their source-level independence does not prove code-generation independence.
+
+Produce three versions of the portfolio:
+
+A. Strictly established opportunity
+
+Instructions demonstrably redundant under proven invariants, without assuming that a future compiler will remove all of them.
+
+B. Conditional compiler-achievable opportunity
+
+Savings that appear attainable if explicitly stated machine-code targets are met.
+
+C. Optimistic upper opportunity
+
+Savings requiring aggressive compiler behavior, favorable interactions or unverified assumptions.
+
+Be careful with terminology: a demonstrably redundant operation is not necessarily guaranteed removable without added costs. Do not describe an upper bound on removable instructions as a guaranteed runtime saving.
+
+Report a corrected cumulative ledger and its uncertainty.
+
+If a transformation is unsound, discard it or replace it with a well-specified safe alternative, with all additional cost included.
+
+⸻
+
+12. Examine the unresolved instruction remainder
+
+Ultra writes:
+
+Icurrent = K + E
+
+with K estimated at 1.127–1.261 billion instructions and E unresolved.
+
+It then illustrates how 225.253M savings compare against hypothetical full totals of 1.20B, 1.35B and 1.50B instructions.
+
+Investigate whether the unresolved remainder materially affects the research decision.
+
+Questions:
+
+* Is E likely large enough to make the percentage-savings interpretation misleading?
+* Does E contain more promising removable work not yet considered?
+* Does any of the proposed savings actually overlap work left inside E?
+* Are fragment-fill, refill-call and exceptional-path costs adequately bounded?
+* Is there a source of substantial per-row or per-group overhead missing from the prior accounting?
+* Would better structural counters materially change the priority order?
+
+Where exact execution counts cannot be recovered from existing evidence, identify the smallest additional untimed structural observation that a future authorized prototype could collect.
+
+Do not conduct new instrumentation now.
+
+⸻
+
+PHASE VI — CHALLENGE THE PERFORMANCE RELEVANCE
+
+13. Independently examine synchronized completion
+
+The earlier report independently reproduced the INVALID capture’s registered ratios.
+
+It also found that, across the 1,140 measured all-full candidate steps:
+
+* The slowest worker had the lowest bulk coverage in approximately 85.44% of steps.
+* It had the most scalar rows in approximately 75.96%.
+* It had the most full normalizations in approximately 85.00%.
+
+The corrected FULL = 899_000 partition shows that large-block steps dominate the completion penalty.
+
+Independently check these findings if the raw records are accessible.
+
+Then ask:
+
+If the machine-code eliminations worked exactly as intended, which workers and blocks would benefit most?
+
+Examine each candidate’s exposure on:
+
+* Low-bulk large blocks.
+* The slowest worker of each synchronized step.
+* The blocks responsible for recurring completion penalties.
+* Blocks whose cost is dominated by scalar processing.
+* Blocks with many group completions.
+* Blocks with high uniform-run coverage.
+
+Distinguish:
+
+1. Eliminating architectural instructions.
+2. Eliminating micro-ops.
+3. Shortening serial dependency chains.
+4. Reducing or increasing memory operations.
+5. Reducing the slowest worker’s elapsed time.
+6. Changing the identity of the slowest worker.
+7. Reducing aggregate four-worker CPU time.
+
+Do not infer a proportional cycle improvement from instruction reductions.
+
+Conditional completion models
+
+You may construct counterfactual models using the existing archived records.
+
+For example:
+
+* Assume a specified cycle or time saving per fast ordinary finish.
+* Assume a specified saving per nonuniform tile.
+* Assume a specified saving per scalar row.
+* Apply those hypothetical changes to each recorded block.
+* Recompute the slowest worker at every step.
+* Recalculate aggregate completion and CPU ratios.
+
+Label every such result conditional modeling, not measurement.
+
+Do not select assumptions merely to obtain a favorable result.
+
+Instead, solve for the break-even savings required from each proposed mechanism or compatible combination.
+
+This can reveal whether the portfolio has plausible economic headroom without pretending to know its eventual runtime.
+
+Production instability
+
+The frozen v2 capture remains formally INVALID.
+
+Production’s round-5 anomaly must remain in the formal record.
+
+Any analysis excluding round 5 is post hoc diagnostic only.
+
+Do not modify the registered gates, recommend deleting inconvenient rounds, or present a revised performance decision.
+
+⸻
+
+PHASE VII — MICROARCHITECTURAL AND COMPILER REALISM
+
+14. Challenge instruction savings as a proxy for cycles
+
+Where supported by authoritative sources, investigate the relevant behavior of the i9-10900K’s Comet Lake microarchitecture.
+
+Consider:
+
+* Macro-fused compare/branch pairs.
+* Address-generation resources.
+* Load and store throughput.
+* Memory read-modify-write instructions.
+* Register pressure and spills.
+* SIMD subtraction throughput.
+* Dependent metadata loads.
+* Store-to-load forwarding.
+* Front-end instruction delivery.
+* Cache-line traffic and locality.
+* Possible core-to-core contention.
+
+Identify which proposed eliminations remove expensive serial dependencies and which merely reduce independent arithmetic or predictable control instructions.
+
+Do not fabricate uop counts, latencies, stall rates or port-pressure estimates.
+
+If a microarchitectural claim cannot be grounded in the available evidence, label it an uncertainty.
+
+The purpose is to test whether the claimed instruction reductions are likely to remove meaningful execution work, not to manufacture a speedup forecast.
+
+⸻
+
+PHASE VIII — RED-TEAM THE DESIGN
+
+15. Search for decisive counterexamples
+
+Conduct a distinct adversarial pass that tries to falsify your own interim conclusions.
+
+Do not only verify examples suggested by Ultra.
+
+Invent hostile but valid inputs that challenge the invariants.
+
+Prioritize:
+
+* Epoch changes between descriptor operations.
+* Deferred portions crossing multiple epochs.
+* Repeated equal snapshots.
+* Boundary spans of 65,533 and 65,534.
+* Character buckets absent for several epochs.
+* Crossing groups.
+* Forced RAW configurations.
+* Last partial records.
+* Very short and empty blocks.
+* Malformed count distributions.
+* Reused rec, raw and constructor scratch allocations.
+* Exact pointer and field initialization boundaries.
+* Unusual phase transitions around rows 29/30 and tiles of 16.
+* Cases where compiler reordering or aliasing could invalidate the intended vector accesses.
+
+For each potential flaw:
+
+1. State the violated invariant.
+2. Give the concrete source or machine-code path.
+3. Construct or describe a reproducible counterexample.
+4. Identify whether the problem is inherent or repairable.
+5. Determine the cost of the repair.
+6. Revise the instruction budget if needed.
+
+Use independent mathematical or symbolic checks where helpful.
+
+A superficially successful fast path with an unsound exceptional fallback is a failure.
+
+⸻
+
+16. Perform a second, independent economic challenge
+
+After your technical audit is substantially complete, reconsider the whole portfolio from the opposite position:
+
+Assume the proposed optimizations will not be economically worthwhile. What evidence supports that conclusion?
+
+Investigate the strongest possible arguments against continuing:
+
+* The eliminated instructions are cheap or heavily overlapped.
+* The new metadata costs absorb the savings.
+* The compiler cannot produce the targeted hot paths.
+* The source/tile checks cannot be eliminated safely at their claimed scale.
+* The descriptor layout disrupts refill or finalization.
+* The critical worker is dominated by work the portfolio does not remove.
+* The unresolved instruction remainder is too large.
+* Construction completion does not improve proportionally to aggregate work.
+* Statistical margin is insufficient even after substantial code reduction.
+
+Then test those objections against the actual evidence.
+
+Do not manufacture negative evidence any more than positive evidence.
+
+The objective is to arrive at a judgment that has survived serious attempts at falsification.
+
+⸻
+
+PHASE IX — CHOOSE THE RIGHT ENGINEERING ORDER
+
+17. Independently select the first prototype
+
+The earlier Ultra report preferred epoch-tagged fast finalization.
+
+Do not assume that choice is optimal.
+
+Compare the three leading transformations using:
+
+Criterion	Question
+Instruction opportunity	What net saving is defensible?
+Proof burden	How difficult is byte-exact correctness?
+Unsafe-code risk	What pointer or initialization invariants change?
+Compiler risk	How likely is the intended assembly shape?
+Added-work risk	How easily might the savings be consumed elsewhere?
+Isolation	Can the mechanism be tested independently?
+Structural relevance	Does it help low-bulk, completion-critical blocks?
+Diagnostic value	What would a successful or failed prototype teach us?
+Portfolio compatibility	Does it preserve the remaining opportunities?
+
+It is entirely possible that source/tile cleanup is the better first target, or that epoch-tagged completion remains preferable because it removes a serial metadata chain.
+
+Make that decision from your independent audit.
+
+For the chosen first prototype, specify precise untimed acceptance and rejection conditions.
+
+Include:
+
+* Correctness obligations.
+* Byte-exact oracle checks.
+* Machine-code path target.
+* Loads, stores, branches and dependency target.
+* Caller and callee accounting.
+* Additional setup and fallback budget.
+* Structural-path coverage requirements.
+* Required machine-code identity checks.
+* Explicit unsafe-code invariants.
+* Reasons for rejecting the implementation before any timing.
+
+Then recommend a logical sequence for the remaining transformations, conditional on earlier prototypes passing.
+
+Do not authorize implementation yourself.
+
+⸻
+
+PHASE X — FINAL VERDICT
+
+18. Use a multi-part decision, not a single optimistic label
+
+Provide one overall verdict:
+
+ACCEPT
+
+The principal instruction-budget claims survive adversarial scrutiny, the compatibility argument is credible, and at least one tightly specified bounded prototype is justified.
+
+CONDITIONAL ACCEPT
+
+There is genuine removable work and a worthwhile prototype, but one or more material budgets, compiler assumptions or correctness obligations require revision or resolution.
+
+REJECT
+
+The key arithmetic, invariants, code-generation expectations or combined saving model are sufficiently flawed that the proposed research direction is not defensible in its current form.
+
+You must also give separate judgments on:
+
+1. Epoch-tagged fast finalization.
+2. Source/tile check elimination.
+3. Hot descriptor arrays.
+4. The combined 225.253M budget.
+5. The selected first implementation candidate.
+6. The evidence for four-worker economic relevance.
+
+A portfolio may be conditionally acceptable even if one component is rejected, provided the remaining case is explicit and sufficient for further investigation.
+
+Conversely, individually plausible transformations do not make an unsound combined budget acceptable.
+
+⸻
+
+REQUIRED DELIVERABLE
+
+Produce a substantial, technically auditable research report with the following sections.
+
+A. Executive decision
+
+Give your overall verdict, the strongest findings and the main reasons. Make clear what is established versus conditional.
+
+B. Evidence provenance
+
+List every source, listing, archive file and external technical reference actually inspected.
+
+Report hashes where applicable.
+
+Explain missing or inaccessible evidence.
+
+C. Independent baseline reconstruction
+
+Reproduce the important execution frequencies and machine-code counts.
+
+Provide the audited instruction ledger, its unresolved remainder and corrections to the attached report.
+
+D. Epoch-tag correctness audit
+
+Give a complete state-machine analysis of raw, ordinary tags, RAW indices, descriptor transitions and source-epoch tracking.
+
+Include exact boundary proofs and counterexamples where relevant.
+
+E. Scanner/bounds-check audit
+
+Identify each claimed removable check, its source and assembly location, its safety proof and its frequency.
+
+Provide a corrected saving bound.
+
+F. Descriptor-layout audit
+
+Assess the 12→10 instruction claim and its consequences across the entire constructor.
+
+Quantify plausible additional work.
+
+G. Corrected cumulative savings ledger
+
+Show the original and revised budgets side by side.
+
+Separate:
+
+* Verified redundant work.
+* Conditional compiler-achievable savings.
+* Uncertain or rejected savings.
+* Added work.
+* Potential overlaps.
+* Remaining unknowns.
+
+Do not double-count.
+
+H. Critical-worker economic analysis
+
+Use existing raw records and conditional models where appropriate.
+
+Explain whether the savings are concentrated where completion is expensive.
+
+Separate descriptive evidence from modeled effects and unverified hardware causes.
+
+I. Adversarial findings
+
+List the strongest counterarguments, discovered defects, unsafe invariants and unresolved compiler risks.
+
+Rank them by consequence, not by ease of explanation.
+
+J. Prototype priority and rejection gates
+
+Recommend the best first bounded correctness-and-compilation target.
+
+Provide enough specificity that the Guardian could issue a narrow implementation authorization without reinventing the design.
+
+Give the intended assembly-level acceptance criteria and the complete correctness checklist.
+
+K. Remaining practical execution-cost floor
+
+After correcting the proposed savings, estimate what meaningful avoidable work remains.
+
+Distinguish mathematical lower bounds from conditional engineering floors.
+
+State whether further instruction minimization remains credible.
+
+L. Final verdict
+
+Conclude with:
+
+* ACCEPT / CONDITIONAL ACCEPT / REJECT.
+* The corrected defensible instruction-savings portfolio.
+* The most important unresolved question.
+* The strongest first implementation candidate, or NO-GO.
+* Exactly what evidence would change your judgment.
+
+If you created independent analytical scripts or tables, include or attach them where possible.
+
+⸻
+
+RESEARCH QUALITY REQUIREMENTS
+
+Be independent. The earlier Astra Ultra report is evidence to audit, not authority to follow.
+
+Be autonomous. Pursue relevant sources, calculations and counterexamples without requiring repeated user direction.
+
+Be exhaustive where material. Investigate every potentially decisive flaw. Do not waste effort making minor details cosmetically perfect while a major budget assumption remains untested.
+
+Be quantitative. Every important machine-code claim should have a source location, execution frequency, arithmetic and uncertainty classification.
+
+Be adversarial. Search for counterexamples and hidden costs, particularly in exceptional paths and compiler-generated code.
+
+Be constructive when justified. If a proposal is wrong but a smaller, safer version survives, specify it and recalculate the opportunity.
+
+Do not anchor on GO or NO-GO. The outcome must emerge from the independent reconstruction.
+
+Do not equate instructions with cycles. Treat runtime improvement as a hypothesis until measured under a separately authorized experiment.
+
+Do not stop after the first discovery. Continue reconstructing the remaining budget and checking portfolio compatibility, even if one component fails.
+
+Do not silently repair the earlier analysis. Record every material correction and its quantitative consequence.
+
+Do not change the scientific record. Both construction captures remain formally INVALID, with their original gates and all measured rounds intact.
+
+⸻
+
+NON-NEGOTIABLE CONSTRAINTS
+
+* Preserve the exact frozen compact30 representation.
+* Preserve the existing walker.
+* Require byte-identical rec and raw arrays against the frozen oracle.
+* Preserve canonical RAW ordering, headers, padding and PARK.
+* Preserve exact ordinary/wide classification and epoch recovery.
+* Preserve malformed-count rejection and allocation-reuse safety.
+* No full successor table or F array.
+* No hidden construction work moved outside the timed builder.
+* No unauthorized additional scan of the BWT last column.
+* No repository changes.
+* No Rust implementation or compilation of proposed variants.
+* No performance measurements or benchmarks.
+* No i9 use.
+* No modification of validity gates or economic thresholds.
+* No retrospective reclassification of the INVALID captures.
+
+Read-only source inspection, archived-record analysis, mathematical proof, scratch-based verification scripts and static cost modeling are encouraged.
+
+Do not rush to a conclusion merely because the original Ultra report’s total is large. Equally, do not reject a substantial instruction-minimization opportunity because one individual optimization cannot independently close the completion gap.
+
+I want the deepest defensible answer to this question:
+
+Can we eliminate a substantial fraction of compact30’s remaining machine-level construction work, safely and without merely relocating that work, and has the earlier Ultra investigation identified a credible route toward doing so?
+
+Take the investigation as far as the available evidence permits. Return a report substantial enough for an independent researcher to reproduce, challenge and use as the basis for a tightly controlled engineering decision.
