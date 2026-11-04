@@ -4121,3 +4121,166 @@ The complete report and reproducibility package are preserved in the shared work
 All nine reconstruction scripts passed. The supplied archive hash, 69 archived file hashes and 12 retrieved Git blobs were verified. No repository modifications, constructor compilation, benchmarks or new measurements occurred.
 
 The managed environment prevented creation of the designated download directory, so these files are preserved in the shared workspace without attachment links.
+
+## Report 236: the guardian accepts the audit and authorises one untimed prototype
+
+**What report 236 decides:**
+- the independent audit (report 235) is accepted as CONDITIONAL ACCEPT;
+- **one bounded, untimed correctness-and-compilation prototype of the repaired epoch-tagged
+  ordinary finaliser** is authorised. It is a separate research variant; the audited v2
+  source stays unchanged. The scanner cleanup and the descriptor-array change are excluded.
+
+**Its scope:**
+- audit every reader and writer of `Desc.raw`;
+- prove the opening epoch;
+- byte-exact equality with the oracle across all suites, plus targeted cases;
+- the whole compiled fast-success boundary at most 40 instructions, with no snapshot lookup,
+  no span test, no new register-save frame or spills, and no added per-row work;
+- a revised ledger from the compiled paths, with the 66.041 M not credited automatically;
+- a STOP report rather than further variants if any gate fails.
+
+No timing, i9 work, benchmark, protocol change, production integration, PR or merge is
+authorised.
+
+**The audit's full report and reproducibility package** are to be preserved if the Ultra
+session can expose them. They have not been received here, so they are not archived.
+
+Kept as relayed; the words are unchanged.
+
+Guardian review: CONDITIONAL ACCEPT
+
+This is a strong result from the independent Ultra audit. After 30 minutes of adversarial investigation, it has preserved the central 225-million-instruction hypothesis, identified a real correctness defect in the proposed implementation, and tightened the accounting.
+
+Most importantly, it has not mistaken theoretical instruction savings for demonstrated performance gains.
+
+My recommendation is to advance to one bounded, untimed correctness-and-compilation prototype, beginning with the repaired epoch-tagged finalizer.
+
+1. What Ultra established
+
+Conditional instruction-elimination budget per primary corpus
+
+225.25 million
+
+Independently reconstructed, not yet achieved in compiled code
+
+Scanner/tile cleanup
+
+87.62M
+
+Hot descriptor arrays
+
+71.59M
+
+Epoch-tagged finalizer
+
+66.04M
+
+The independent reconstruction confirms the original conditional arithmetic, but with important limitations:
+
+* No positive instruction saving has yet been demonstrated by compiling the proposed transformations.
+* The finalizer requires a mandatory correction to its RAW/ordinary dispatch.
+* The new epoch-tag mechanism adds approximately 1.75 million explicit memory reads.
+* Descriptor restructuring could introduce more work than its allowance anticipates.
+* The estimated total constructor instruction count remains incomplete.
+
+The portfolio survives as a credible engineering hypothesis, not an achieved optimization.
+
+2. The most important discovery is a correctness issue
+
+Ultra found that simply introducing an epoch tag into Desc.raw would break the existing slow fallback.
+
+A tagged ordinary descriptor could be interpreted as an enormous RAW index if the original d.raw == NO_RAW test remains.
+
+This is exactly the kind of issue we commissioned an independent audit to discover.
+
+The required correction is to make the descriptor’s ordinary/RAW distinction explicit throughout every relevant path, including exceptional fallbacks.
+
+The audit also reports that the opening-epoch and bounds-safety invariants can be justified in release mode. That’s encouraging, but those arguments still need to survive an actual Rust implementation and byte-exact correctness testing.
+
+3. Why I would authorize the finalizer first
+
+The first prototype should be narrowly scoped:
+
+Requirement	Acceptance target
+Ordinary fast-finalizer path	At most 40 instructions across the complete fast-success boundary
+Epoch classification	No snapshot lookup or full-span test on the fast path
+RAW dispatch	Correct high-bit discrimination on all paths
+Compiler overhead	No new generic frame or spills on the fast path
+Scalar/fragment append	No added per-row work
+Output	Byte-identical rec and raw arrays
+Safety	Explicit initialization, bounds and epoch proofs
+Measurement	None
+
+The existing scanner and descriptor layout should remain unchanged.
+
+This gives us a controlled test of whether the compiler can produce the proposed reduction without making the constructor more complicated elsewhere.
+
+Passing this prototype would not authorize an i9 capture. It would establish whether the first part of Ultra’s instruction budget is achievable.
+
+4. The economic challenge is still substantial
+
+CPU-cost sensitivity
+
+2.56%
+
+Proportional reduction needed from archived upper bound
+
+Completion sensitivity
+
+10.28%
+
+Proportional reduction needed from archived upper bound
+
+These figures come from a formally INVALID capture. They are useful sensitivity calculations, not predictions of what a future valid experiment will show.
+
+The independent audit’s modeled requirement of approximately 8.14 ns saved per eligible finalization reinforces the concern that the finalizer alone may not close the completion gap.
+
+That doesn’t defeat the cumulative instruction-minimization strategy. It means the first prototype should be judged on its compiled instruction savings and correctness, not on an unsupported runtime forecast.
+
+5. What I would send Claude
+
+Guardian disposition: CONDITIONAL ACCEPT of the independent Astra Ultra adversarial audit.
+
+The audit independently reconstructed the conditional 225,253,100-instruction portfolio, identified a mandatory epoch-tag dispatch repair, and confirmed that the mathematical opportunity remains distinct from demonstrated compiler or runtime savings.
+
+Please archive the complete audit report and reproducibility evidence if available, preserving the original Ultra report and the independent corrections separately.
+
+I authorize one bounded, untimed correctness-and-compilation prototype of the repaired epoch-tagged ordinary finalizer only.
+
+Scope:
+
+1. Preserve the frozen compact30 layout, walker, oracle, constructor v1 and constructor v2. Implement the proposed change as a separate research variant, without modifying the audited v2 source.
+2. Correct the descriptor-tag design before using it. Audit every Desc.raw reader and writer. A tagged ordinary descriptor must never enter a RAW-index path, including slow fallback, forced RAW, crossing groups, wide promotion, reuse and failure recovery.
+3. Prove that the recorded opening epoch belongs to the first appended successor, including epoch boundaries, delayed completion and end-of-input.
+4. Require byte-exact rec and raw equality against the frozen oracle across the established corpus, adversarial and synthetic suites. Include targeted epoch-tag, boundary, forced-RAW, malformed-count and reuse cases.
+5. Compile with the reviewed rustc 1.97.0 / LLVM 22.1.6 settings. Inspect the entire fast-success call boundary, including caller overhead. The target is at most 40 instructions, with no snapshot lookup or full-span classification, no new generic callee-save frame or spills, and no additional per-row scalar or fragment work.
+6. Account for all new tag reads, opening work, fallback work and setup costs. Update the cumulative instruction ledger using actual compiled paths and observed untimed structural frequencies. Do not credit the full 66.041M saving automatically.
+7. If correctness fails, safety invariants cannot be established, or the compiler fails the registered structural targets, report STOP for this prototype rather than tuning through additional variants.
+
+Do not implement scanner cleanup or descriptor-array restructuring in this prototype.
+
+No performance timing, i9 work, benchmark, protocol change, production integration, PR or merge is authorized.
+
+Return the source pin, exact correctness evidence, annotated assembly, revised instruction budget, safety argument and any unresolved limitations for Guardian review.
+
+6. One thing to preserve before Claude starts
+
+The audit says its complete report and scripts are in a shared workspace, but that it couldn’t produce downloadable attachments.
+
+Those files are valuable, particularly the independently reconstructed ledger and counterexample scripts. We should try to preserve them before the Ultra workspace disappears.
+
+Ask the Ultra session to expose the report and reproducibility bundle as downloadable attachments if its environment permits. Otherwise, preserve the full report text and any critical tables or scripts through the available workspace.
+
+Claude should not claim to have archived the reproducibility package unless it actually receives it.
+
+Final position
+
+Independent adversarial audit: CONDITIONAL ACCEPT
+
+One epoch-finalizer correctness-and-compilation prototype: AUTHORIZED
+
+Performance capture: NOT AUTHORIZED
+
+This is a good outcome for the research. We now have two substantial Ultra investigations, independently reconstructed arithmetic, a specific correctness repair, and concrete assembly targets.
+
+The next meaningful evidence is whether rustc can actually eliminate the proposed instructions. We should make the compiler demonstrate that before assigning any performance value to the theoretical savings.
