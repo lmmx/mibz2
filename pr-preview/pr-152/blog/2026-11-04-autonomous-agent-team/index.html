@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=ad2244669b2c">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=23001e289700">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=ad2244669b2c">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=23001e289700">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=ad2244669b2c">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=23001e289700">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=ad2244669b2c">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=23001e289700">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=ad2244669b2c">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=23001e289700">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1939,23 +1939,19 @@ other directly, without me acting as their message bus.</p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p>Can I let a team of agents carry research from one checkpoint to the next, while keeping
-the evidence inspectable and the scope of the work under my control? In mibz2, my bzip2
-decoder, I am using a shared repository to do that. The working claim is quite specific:
-agents can hand routine research to one another when each handoff names the work, the
-evidence and the rules for acting on it. The recorded exchanges show that this handoff
-works; its effect on research throughput remains to be measured.</p>
-<p>The research itself follows <a href="../2026-11-04-compact30-constructor/">the compact30 constructor</a>.
-Compact30 stores the navigation table used during decoding in a smaller form. Building
-that table involves several kinds of work: finding instructions to remove, expressing a
-change in Rust, inspecting what the compiler emits, and checking that the resulting
-records are still correct. A local saving also has to survive the accounting for the
-whole builder.</p>
-<p>I have given those responsibilities to four agents. They share one way of working:
-read a pinned result, do an assigned piece of work, and publish the next result through
-GitHub. Their responsibilities differ; the shape of the handoff stays the same. The
-sections below follow it from the team, through a checkpoint and its delivery, to the
-evidence that lets the next step proceed.</p>
+<p><a href="../2026-11-04-compact30-constructor/">The last post</a> was researched by four agents, and until
+today the work moved between them only when I passed each message along by hand. This post is
+about taking myself out of that loop: letting the agents carry compact30 from one checkpoint to
+the next, while the evidence stays inspectable and the scope stays mine to set.</p>
+<p>What makes that possible is a handoff that names the work, the evidence and the rules for acting
+on it. The exchanges recorded so far show those handoffs running on their own; what they do for
+the pace of the research is still to be measured.</p>
+<p>The work itself splits naturally: finding instructions to remove, writing the change in Rust,
+reading what the compiler actually emits, and checking that the table is still correct and that
+a local saving survives the accounting for the whole builder. Each agent owns part of that, and
+all four work the same way: read a pinned result, do the assigned piece, and publish the next
+result through GitHub. The sections below follow one handoff from the team, through a checkpoint
+and its delivery, to the evidence that lets the next step go ahead.</p>
 <h2 id="1-one-workflow-four-responsibilities">1. One workflow, four responsibilities<a class="headerlink" href="#1-one-workflow-four-responsibilities" title="Permanent link">&para;</a></h2>
 <p>The Coordinator runs in Claude Code. It implements the registered changes, compiles
 them, runs the tests and archives the evidence. When a result is ready, it publishes a
@@ -2228,7 +2224,7 @@ the Guardian fetched it, published an assessment and saved its cursor; the revie
 reached the Coordinator. That setup test included confirmation of the commit identity.
 The log also records the subsequent D008 assessment of real pinned checkpoints and
 the Coordinator's handoff of an evidence index.</p>
-<p>That real exchange gives the abstract handoff an address. The Guardian's review on #145
+<p>Here is one such exchange. The Guardian's review on #145
 identified the descriptor candidate at commit 29dd071f and linked its assessment at
 62a313a8. The Coordinator recorded it in the channel log and supplied the independent
 review index at 18ca5d4c. The next step was to obtain that independent assessment; the
@@ -2397,17 +2393,17 @@ that justified the next step.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=ad2244669b2c"></script>
+        <script src="../../assets/javascripts/bench.js?v=23001e289700"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=ad2244669b2c"></script>
+        <script src="../../assets/javascripts/couriers.js?v=23001e289700"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=ad2244669b2c"></script>
+        <script src="../../assets/javascripts/blog.js?v=23001e289700"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=ad2244669b2c"></script>
+        <script src="../../assets/javascripts/frontier.js?v=23001e289700"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=ad2244669b2c"></script>
+        <script src="../../assets/javascripts/katex.js?v=23001e289700"></script>
       
     
   </body>
