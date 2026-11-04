@@ -72,6 +72,10 @@ mod cbuild;
 #[path = "c30walk/ctor2.rs"]
 mod ctor2;
 
+/// Constructor v3: v2 with the epoch-tagged ordinary finaliser (reports 227, 235, 236)
+#[path = "c30walk/ctor3.rs"]
+mod ctor3;
+
 const LANES: usize = 32;
 const SEGMENTS: usize = 512;
 const MIN_SEGMENTED: usize = 1 << 16;
@@ -1895,6 +1899,9 @@ fn main() {
     }
     if let Some(m) = args[1].strip_prefix("ctor2-") {
         return ctor2::main(m, &args[2..]);
+    }
+    if let Some(m) = args[1].strip_prefix("ctor3-") {
+        return ctor3::main(m, &args[2..]);
     }
     if args[1] == "cbuild" {
         return cbuild::main(&args[2..]);

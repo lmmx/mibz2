@@ -1,0 +1,8 @@
+495c495,499
+<             let u0 = p.read();
+---
+>             // u0 is read on its own, opaquely to the optimiser: with a plain load, LLVM
+>             // proves field 0 − u0 = 0 (the header store at +60 can't alias the fields) and
+>             // spends five instructions materialising that lane (attempt 1, in the journal).
+>             // A volatile read is an ordinary read of an initialised field.
+>             let u0 = p.read_volatile();

@@ -1,0 +1,15 @@
+ctor3-synthetic: small blocks, n 0..=130: 260 cases exact
+ctor3-synthetic: bucket boundary at every offset: 180 cases exact
+ctor3-synthetic: bulk-to-partial transitions (phase x slot x run length): 24 cases exact
+ctor3-synthetic: epoch boundaries: 3 cases exact
+ctor3-synthetic: absent characters across repeated snapshots: 6 cases exact
+ctor3-synthetic: ordinary/wide span boundaries from full labels: 2 cases exact
+ctor3-synthetic: pending portions finished at the end of input: 3 cases exact
+ctor3-synthetic: the tag/RAW dispatch (tagged ordinary portions in the slow finish): 15 cases exact
+ctor3-synthetic: ordinary groups finished in a later epoch than opened: 3 cases exact
+ctor3-synthetic: repeated construction with changing sizes: 16 cases exact
+ctor3-synthetic: malformed counts: 29 rejected, 1 accepted (equal to ll's own after the change)
+ctor3-synthetic: malformed counts and sizes: 30 cases exact
+ctor3-synthetic coverage: finished fast 41686, ordinary 46, wide 2, crossing 748, forced 1241; multi-epoch portions 37; epoch searches 69; runs split at an epoch 4; portion (first slot, length) shapes 117; max ordinary span 65533, min wide span 65534; epochs 526
+ctor3-synthetic: 542 cases, 1008 array comparisons, 1512 walk outputs, 1008 restorations: every check exact (quick)
+ctor3-synthetic counters: {"blocks":504,"rows":1379954,"rows_bulk":4260,"rows_bulk_raw":85740,"rows_fragment":28576,"rows_scalar":1261378,"runs":1261,"run_rows":118576,"complete_groups":142,"fin_fast":41686,"fin_ordinary":46,"fin_wide":2,"fin_crossing":748,"fin_forced":1241,"norm_full":41300,"norm_partial":432,"norm_fields":1242367,"raw_fields_read":47587,"raw_entries_written":47587,"fields_restored":47527,"epoch_searches":69,"epochs":526,"runs_split_at_epoch":4,"raw_groups":4466,"raw_moved":3362,"raw_cycles":8,"multi_epoch_portions":37,"max_ordinary_span":65533,"min_wide_span":65534,"leaf_fast":41254,"v2_fast_full":41254,"slow_entries":2469,"slow_ordinary_old_epoch":48,"slow_ordinary_partial_same_epoch":432,"slow_raw_preset":1989,"opens_ordinary":41734,"opens_raw":1989}
