@@ -5106,3 +5106,90 @@ A compiled improvement of 44 rather than 40 instructions should still be reporte
 That’s the correction I most want reflected in the charter.
 
 My recommendation is to make those four edits, obtain one Guardian approval, and let the agents get on with the work. You should be reading evidence-rich checkpoint reports, not managing an instruction-minimization programme one chat message at a time.
+
+## Report 245: the guardian approves the autonomous model in principle and holds activation
+
+The guardian agrees with both sets of charter amendments, and adds a seventh requirement:
+explicit provenance and authorisation for each decision. It points out that a `FROM: guardian`
+header on a comment from `lmmx` proves nothing, because every agent acts through the same
+GitHub identity. It proposes a two-stage rollout: first the charter, then the GitHub channel,
+tested end to end with PROCEED, HOLD and an out-of-scope request. Decision: APPROVE the model in
+principle; HOLD activation until the amended charter and the communication protocol are
+verified. Kept as relayed:
+
+I think we’ve finally identified the real opportunity: stop making you the message bus between three research agents, without making the research process less rigorous.
+
+Claude and the researcher are proposing complementary solutions, not competing ones.
+
+* Claude’s GitHub channel addresses communication, provenance, checkpoint reviews and waking the coordinator.
+* Codex Goal mode, as described by the researcher, addresses sustained execution toward a defined objective.
+* The research charter establishes what agents may do autonomously and what still requires explicit approval.
+
+My preference is to combine the ideas, but not to create three independent agents that can all authorize each other to do things. That would replace your current coordination burden with a potentially confusing chain of authority.
+
+There is also one serious issue in Claude’s proposal: a GitHub comment authored by lmmx with FROM: guardian is not proof that the Guardian actually approved anything. The role is self-declared, and multiple agents may act through the same GitHub identity.
+
+Before making this autonomous, we need to solve that authority problem.
+
+My recommended architecture
+
+GitHub holds the evidence and decisions. The charter, not a self-declared comment header, defines the permitted actions.
+
+I would use one primary coordinator, Claude for the current work, and independent reviewers at meaningful checkpoints. Codex can later run a dedicated Goal thread or independently verify a prototype, but I wouldn’t have Claude and Codex simultaneously modifying the same constructor branch.
+
+The charter needs both sets of corrections
+
+The researcher caught four genuine issues in the charter, and I agree with all four. They complement my earlier amendments.
+
+The final version should establish:
+
+* Qualification by correctness and net work, not a local diagnostic instruction target. Historical STOP outcomes remain unchanged.
+* Correct baselines: scanner and descriptor work start from frozen v2; SSE2 starts from v3.
+* Conservative accounting: no unbounded added work silently assigned zero cost.
+* Early stopping without losing successful work: terminate further speculative attempts when required, but preserve and evaluate already qualified variants.
+* Independent review before combining variants, with a separate combined-build correctness and machine-code ledger.
+* Safety escalation: unresolved undefined behavior, invalid unsafe-access proofs or frozen-invariant violations stop the affected work immediately.
+
+I would also add a seventh requirement: explicit provenance and authorization for each decision.
+
+The GitHub-channel idea needs one safeguard
+
+Claude proposes accepting comments from lmmx with headers such as FROM: guardian.
+
+That’s fine as a message format. It’s not sufficient as an authentication mechanism.
+
+If Claude, Astra, you and potentially Codex all act through the same GitHub account, a comment’s GitHub author cannot distinguish who actually produced it.
+
+I recommend the following separation:
+
+Message	May trigger
+Researcher review	Findings, objections, recommended changes
+Guardian review	PROCEED, REVISE, HOLD or STOP within the approved charter
+Claude coordinator	Execution of already authorized work
+Explicit user approval	Expansion of authority, new performance captures, production changes
+
+For routine work already covered by the charter, Claude should not need a fresh Guardian PROCEED at every stage. Otherwise we’ve merely moved the babysitting into GitHub.
+
+For a decision outside the charter, a self-declared FROM: guardian comment should not count as your approval.
+
+I’d also have Claude verify that its proposed PR-comment wake-up mechanism actually works in the current session before depending on it. The same applies to the researcher’s /goal recommendation: useful if available, but it shouldn’t be assumed to coordinate separate agents or supply persistent background execution across them.
+
+What I’d do next
+
+I recommend a two-stage rollout.
+
+First, finalize and approve the corrected research charter. Let Claude autonomously execute its bounded sequence, with evidence-rich checkpoints and no routine relays through you.
+
+Second, introduce the GitHub channel with a small end-to-end test: Claude publishes a checkpoint, a reviewer responds, Claude receives and archives the response, and the correct next action follows. Test HOLD and an out-of-scope request as well as PROCEED before relying on it for unattended research.
+
+Once that works, you can genuinely step out of most of the loop.
+
+My decision
+
+APPROVE the autonomous research model in principle.
+
+HOLD activation until the amended charter and communication protocol are verified.
+
+And one final point: I wouldn’t require the Guardian and researcher to approve every successful prototype if we’ve already approved the sequence and its gates. Their role should increasingly be independent audit and exception handling, not micromanagement.
+
+That’s how we get what you actually want: agents making sustained, technically serious progress while you spend your time reviewing important results rather than relaying messages.
