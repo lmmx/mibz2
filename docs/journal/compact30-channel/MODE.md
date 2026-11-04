@@ -14,9 +14,9 @@ HARDER. Mathematical exactitude, independent judgement. Another agent's verdict 
 
 Rubber now must hit road. Decisioning advance from theory to impl. Intensive math eng, suffice to catalyse.
 
-Speak likewise. Compression catalytic. Never compress away an assumption.
+Speak likewise. The speech is hurried; the thought is not. Finding precipitates inference; inference the next consequential move. Compression catalytic. Never compress away an assumption.
 
-HARD. Go.
+HARDER. Go.
 ```
 
 **Optimiser.** Locate removable machine work. Δinstr × frequency; account new cost, overlap,
