@@ -177,6 +177,33 @@ pub struct Stats2su {
     pub tail_rows: u64,
     /// the trial's unchecked tiles: `tile16` calls (U2 once per call)
     pub unchecked_tiles: u64,
+    /// S62-F01's changed-path counters (counted build only; the scanner journal's §11):
+    /// refills from `tile16`'s first and second segments, and from the tail's;
+    /// the tail's second-segment rows and tails with one; tails of length 1, ≥ 2 and even
+    /// (its advance loop, unrolled by two); `fill` calls with m ≥ 8 (its vector loop);
+    /// `complete` calls (the run's whole-group branch); runs with a lookahead tile, with
+    /// none, and those whose lookahead exhausts the epoch; portions finished by the final
+    /// close; crossing groups preset RAW; epochs with a full tile, without one, and
+    /// without a tail
+    pub tile_refills_first: u64,
+    pub tile_refills_second: u64,
+    pub tail_refills_first: u64,
+    pub tail_refills_second: u64,
+    pub tail_rows_second: u64,
+    pub tails_second_segment: u64,
+    pub tails_len1: u64,
+    pub tails_len_ge2: u64,
+    pub tails_even: u64,
+    pub fills_vector: u64,
+    pub complete_calls: u64,
+    pub runs_lookahead: u64,
+    pub runs_no_lookahead: u64,
+    pub runs_exhausted: u64,
+    pub final_finishes: u64,
+    pub preset_crossing: u64,
+    pub epochs_tiled: u64,
+    pub epochs_short: u64,
+    pub epochs_untailed: u64,
 }
 
 impl Stats2su {
@@ -220,7 +247,26 @@ impl Stats2su {
             tiles_second_segment,
             tails,
             tail_rows,
-            unchecked_tiles
+            unchecked_tiles,
+            tile_refills_first,
+            tile_refills_second,
+            tail_refills_first,
+            tail_refills_second,
+            tail_rows_second,
+            tails_second_segment,
+            tails_len1,
+            tails_len_ge2,
+            tails_even,
+            fills_vector,
+            complete_calls,
+            runs_lookahead,
+            runs_no_lookahead,
+            runs_exhausted,
+            final_finishes,
+            preset_crossing,
+            epochs_tiled,
+            epochs_short,
+            epochs_untailed
         );
         self.max_ordinary_span = self.max_ordinary_span.max(o.max_ordinary_span);
         self.min_wide_span = match (self.min_wide_span, o.min_wide_span) {
@@ -236,7 +282,7 @@ impl Stats2su {
 
     fn json(&self) -> String {
         format!(
-            "\"blocks\":{},\"rows\":{},\"rows_bulk\":{},\"rows_bulk_raw\":{},\"rows_fragment\":{},\"rows_scalar\":{},\"runs\":{},\"run_rows\":{},\"complete_groups\":{},\"fin_fast\":{},\"fin_ordinary\":{},\"fin_wide\":{},\"fin_crossing\":{},\"fin_forced\":{},\"norm_full\":{},\"norm_partial\":{},\"norm_fields\":{},\"raw_fields_read\":{},\"raw_entries_written\":{},\"fields_restored\":{},\"epoch_searches\":{},\"epochs\":{},\"runs_split_at_epoch\":{},\"raw_groups\":{},\"raw_moved\":{},\"raw_cycles\":{},\"multi_epoch_portions\":{},\"max_ordinary_span\":{},\"min_wide_span\":{},\"fresh_pairs\":{},\"lookahead_pairs\":{},\"held_reuses\":{},\"runs_no_full_tile\":{},\"tiles_nonuniform\":{},\"tiles_second_segment\":{},\"tails\":{},\"tail_rows\":{},\"unchecked_tiles\":{}",
+            "\"blocks\":{},\"rows\":{},\"rows_bulk\":{},\"rows_bulk_raw\":{},\"rows_fragment\":{},\"rows_scalar\":{},\"runs\":{},\"run_rows\":{},\"complete_groups\":{},\"fin_fast\":{},\"fin_ordinary\":{},\"fin_wide\":{},\"fin_crossing\":{},\"fin_forced\":{},\"norm_full\":{},\"norm_partial\":{},\"norm_fields\":{},\"raw_fields_read\":{},\"raw_entries_written\":{},\"fields_restored\":{},\"epoch_searches\":{},\"epochs\":{},\"runs_split_at_epoch\":{},\"raw_groups\":{},\"raw_moved\":{},\"raw_cycles\":{},\"multi_epoch_portions\":{},\"max_ordinary_span\":{},\"min_wide_span\":{},\"fresh_pairs\":{},\"lookahead_pairs\":{},\"held_reuses\":{},\"runs_no_full_tile\":{},\"tiles_nonuniform\":{},\"tiles_second_segment\":{},\"tails\":{},\"tail_rows\":{},\"unchecked_tiles\":{},\"tile_refills_first\":{},\"tile_refills_second\":{},\"tail_refills_first\":{},\"tail_refills_second\":{},\"tail_rows_second\":{},\"tails_second_segment\":{},\"tails_len1\":{},\"tails_len_ge2\":{},\"tails_even\":{},\"fills_vector\":{},\"complete_calls\":{},\"runs_lookahead\":{},\"runs_no_lookahead\":{},\"runs_exhausted\":{},\"final_finishes\":{},\"preset_crossing\":{},\"epochs_tiled\":{},\"epochs_short\":{},\"epochs_untailed\":{}",
             self.blocks,
             self.rows,
             self.rows_bulk,
@@ -274,7 +320,26 @@ impl Stats2su {
             self.tiles_second_segment,
             self.tails,
             self.tail_rows,
-            self.unchecked_tiles
+            self.unchecked_tiles,
+            self.tile_refills_first,
+            self.tile_refills_second,
+            self.tail_refills_first,
+            self.tail_refills_second,
+            self.tail_rows_second,
+            self.tails_second_segment,
+            self.tails_len1,
+            self.tails_len_ge2,
+            self.tails_even,
+            self.fills_vector,
+            self.complete_calls,
+            self.runs_lookahead,
+            self.runs_no_lookahead,
+            self.runs_exhausted,
+            self.final_finishes,
+            self.preset_crossing,
+            self.epochs_tiled,
+            self.epochs_short,
+            self.epochs_untailed
         )
     }
 }
@@ -334,6 +399,13 @@ struct W<'a, const COUNT: bool> {
 }
 
 impl<const COUNT: bool> W<'_, COUNT> {
+    /// Whether `one(c, _)` takes its refill detour (the open portion is full, or there is
+    /// none): read by the counted build's counters only
+    #[inline(always)]
+    fn refills(&self, c: u8) -> bool {
+        self.desc[c as usize].write == self.desc[c as usize].end
+    }
+
     #[inline(always)]
     fn is_raw(&self, g: usize) -> bool {
         self.bitmap[g >> 6] >> (g & 63) & 1 != 0
@@ -618,16 +690,27 @@ impl<const COUNT: bool> W<'_, COUNT> {
             } else {
                 self.st.tails += 1;
                 self.st.tail_rows += len as u64;
+                self.st.tails_len1 += (len == 1) as u64;
+                self.st.tails_len_ge2 += (len >= 2) as u64;
+                self.st.tails_even += (len % 2 == 0) as u64;
+                self.st.tails_second_segment += (len > len.min(ROWS - self.p)) as u64;
             }
         }
         let u = self.y as u16;
         let n1 = len.min(ROWS - self.p);
         for (t, &c) in ll[i..i + n1].iter().enumerate() {
+            if COUNT {
+                self.st.tail_refills_first += self.refills(c) as u64;
+            }
             if !self.one(c, u.wrapping_add(t as u16)) {
                 return false;
             }
         }
         for (t, &c) in ll[i + n1..i + len].iter().enumerate() {
+            if COUNT {
+                self.st.tail_refills_second += self.refills(c) as u64;
+                self.st.tail_rows_second += 1;
+            }
             if !self.one(c, u.wrapping_add((n1 + t) as u16 + 2)) {
                 return false;
             }
@@ -670,6 +753,9 @@ impl<const COUNT: bool> W<'_, COUNT> {
         // row, reading in bounds.
         let mut k = 0usize;
         loop {
+            if COUNT {
+                self.st.tile_refills_first += self.refills(t[k]) as u64;
+            }
             if !self.one(t[k], u.wrapping_add(k as u16)) {
                 return false;
             }
@@ -679,6 +765,9 @@ impl<const COUNT: bool> W<'_, COUNT> {
             }
         }
         for (t2, &c) in s2.iter().enumerate() {
+            if COUNT {
+                self.st.tile_refills_second += self.refills(c) as u64;
+            }
             if !self.one(c, u.wrapping_add((n1 + t2) as u16 + 2)) {
                 return false;
             }
@@ -702,6 +791,8 @@ impl<const COUNT: bool> W<'_, COUNT> {
         self.advance(m);
         if COUNT {
             self.st.rows_fragment += m as u64;
+            // the uncounted listing's vector loop is entered for m ≥ 8
+            self.st.fills_vector += (m >= 8) as u64;
         }
     }
 
@@ -710,6 +801,9 @@ impl<const COUNT: bool> W<'_, COUNT> {
     #[inline(always)]
     unsafe fn complete(&mut self, c: u8, g: usize, whole: usize, forced_cfg: bool) {
         chk!(COUNT, g + whole <= self.g_count);
+        if COUNT {
+            self.st.complete_calls += 1;
+        }
         if !forced_cfg {
             let mut r = PATTERNS[self.p];
             r.h = self.y << 8 | c as u32;
@@ -916,6 +1010,9 @@ impl Ctor2su {
             if cum > 0 && cum < n && cum % ROWS != 0 {
                 let g = cum / ROWS;
                 if g != last {
+                    if COUNT {
+                        w.st.preset_crossing += 1;
+                    }
                     w.create_raw(g);
                     last = g;
                 }
@@ -937,6 +1034,10 @@ impl Ctor2su {
             // the epoch's unread rows: a full tile is split off its front, the split being
             // the loop's own bounds test; a held tile stays at the front
             let mut rest: &[u8] = &ll[i..end];
+            if COUNT {
+                w.st.epochs_tiled += (rest.len() >= 16) as u64;
+                w.st.epochs_short += (rest.len() < 16) as u64;
+            }
             let mut held: Option<(u64, u64)> = None;
             while let Some((t, after)) = rest.split_first_chunk::<16>() {
                 // `t` is read only on the fresh path; a nonuniform tile is re-read from `ll`
@@ -955,6 +1056,10 @@ impl Ctor2su {
                     }
                 };
                 if a == b && a == a.rotate_left(8) {
+                    if COUNT {
+                        w.st.runs_lookahead += (after.len() >= 16) as u64;
+                        w.st.runs_no_lookahead += (after.len() < 16) as u64;
+                    }
                     let mut r2 = after;
                     while let Some((t2, after2)) = r2.split_first_chunk::<16>() {
                         let (a2, b2) = halves(t2);
@@ -970,6 +1075,7 @@ impl Ctor2su {
                     }
                     if COUNT {
                         w.st.runs_no_full_tile += held.is_none() as u64;
+                        w.st.runs_exhausted += (held.is_none() && after.len() >= 16) as u64;
                         if r2.is_empty() && end < n && ll[end] == a as u8 {
                             w.st.runs_split_at_epoch += 1;
                         }
@@ -987,6 +1093,9 @@ impl Ctor2su {
                     rest = after;
                 }
             }
+            if COUNT {
+                w.st.epochs_untailed += rest.is_empty() as u64;
+            }
             if !rest.is_empty() && !w.tile(ll, end - rest.len(), rest.len()) {
                 return false;
             }
@@ -998,6 +1107,9 @@ impl Ctor2su {
             }
         }
         for c in 0..256 {
+            if COUNT {
+                w.st.final_finishes += (w.desc[c].write != w.desc[c].w0) as u64;
+            }
             w.close(c);
         }
         true
@@ -1159,6 +1271,46 @@ fn same_as_v2(what: &str, s: &Stats2su, v: &super::ctor2::Stats2, n: usize) {
         s.rows_scalar,
         16 * s.tiles_nonuniform + s.tail_rows,
         "{what}: scalar rows"
+    );
+    // S62-F01's counters: their partitions of the existing counters
+    assert_eq!(
+        s.runs_lookahead + s.runs_no_lookahead,
+        s.runs,
+        "{what}: run lookahead entry"
+    );
+    assert_eq!(
+        s.runs_exhausted + s.runs_no_lookahead,
+        s.runs_no_full_tile,
+        "{what}: run endings with no full tile"
+    );
+    assert_eq!(
+        s.epochs_tiled + s.epochs_short,
+        s.epochs,
+        "{what}: epoch entry"
+    );
+    assert_eq!(s.epochs_untailed + s.tails, s.epochs, "{what}: epoch tails");
+    assert_eq!(
+        s.tails_len1 + s.tails_len_ge2,
+        s.tails,
+        "{what}: tail lengths"
+    );
+    assert!(s.tails_even <= s.tails_len_ge2, "{what}: even tails");
+    assert!(
+        s.tail_rows_second <= s.tail_rows,
+        "{what}: tail second-segment rows"
+    );
+    assert!(
+        s.tails_second_segment <= s.tails,
+        "{what}: tail second segments"
+    );
+    assert!(
+        s.tile_refills_first + s.tile_refills_second + s.tail_refills_first + s.tail_refills_second
+            <= s.rows_scalar,
+        "{what}: scalar refills"
+    );
+    assert!(
+        s.preset_crossing <= s.raw_groups,
+        "{what}: preset crossing groups"
     );
 }
 

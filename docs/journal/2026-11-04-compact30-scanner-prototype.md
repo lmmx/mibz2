@@ -868,3 +868,158 @@ and writes +1.40 M.
   remains. So the credited sets don't intersect at instruction level. Both charge the outer
   iteration and the refill detours, though, so the gains aren't additive without a combined,
   pre-registered build.
+
+## 11. Addendum (2026-11-04): S62-F01's counters and the counted ledger
+
+This addendum answers review finding S62-F01 and the Optimiser audit's F3. Charter §5.3(b)
+requires an observed execution count for every changed path, from a counter added to the
+counted instantiation only, with the uncounted listing shown unchanged. §10.4 used
+Callgrind-only frequencies for several changed paths. This section adds those counters and
+replays §10.4's ledger with counted frequencies. It records numbers only; it makes no
+qualification decision. S62-F02 (the overlap) is not addressed here.
+
+Evidence: [2026-11-04-compact30-scanner-f01/](2026-11-04-compact30-scanner-f01/), with its
+`README.txt`. Untimed: no benchmark, no perf, and no timing run.
+
+### 11.1 The counters (counted build only)
+
+Every changed frequency class in §10.4 was read from the listing, with each instruction's own
+count from the trial's raw profile. Each was then assigned to its source path. There are 19
+new `Stats2su` fields. Each is incremented only inside `if COUNT { … }` (that is, only in
+`build::<true>`), or in the harness's `same_as_v2`. `build::<false>`, `W<false>` and every
+other line of the constructor are unchanged.
+
+| path (listing, `ctor2su-build-false.asm`) | counter | counted | profile | B2 → trial | Δ |
+|---|---|--:|--:|---|--:|
+| refill detour from `tile16`'s first segment (`+0xa3d`–`+0xa76`) | `tile_refills_first` | 996,634 | 996,634 | 10 → 12 | +1,993,268 |
+| `fill`'s vector-loop entry, m ≥ 8, and its alias check (`+0xc18`–`+0xc25`, `+0x1078`–`+0x109b`, `+0x10c7`–`+0x10d2`) | `fills_vector` | 801,475 | 801,475 | 18 → 19 | +801,475 |
+| runs entering the lookahead loop: the executed alignment `nop` (`+0x973`) | `runs_lookahead` | 610,356 | 610,356 | 0 → 1 | +610,356 |
+| refill detour from `tile16`'s second segment (`+0xad1`–`+0xb01`) | `tile_refills_second` | 302,049 | 302,049 | 9 → 11 | +604,098 |
+| `run`'s whole-group branch, `complete` (`+0xd04`–`+0xd2a`, `+0x1030`–`+0x106f`, `+0x119e`–`+0x11ee`) | `complete_calls` | 296,405 | 296,405 | 43 → 44 | +296,405 |
+| `finish` from the final close loop (`+0x1577`–`+0x1594`) | `final_finishes` | 23,559 | 23,559 | 8 → 9 | +23,559 |
+| crossing groups preset RAW, `create_raw` (`+0x4b0`–`+0x543`, `+0x5a3`–`+0x5b2`) | `preset_crossing` | 18,684 | 18,684 | 36 → 37 | +18,684 |
+| epochs with a full tile: scan-loop entry (`+0x8db`–`+0x8ea`) | `epochs_tiled` | 3,575 | 3,575 | 5 → 4 | −3,575 |
+| epochs with no tail: B2's epoch-loop back edge (B2 `+0x7d0`–`+0x7d6`) | `epochs_untailed` | 3,424 | 3,424 | 3 → 0 | −10,272 |
+| runs whose lookahead exhausts the epoch (`+0x9aa`–`+0x9b7`) | `runs_exhausted` | 2,606 | 2,606 | 0 → 4 | +10,424 |
+| refill detour from the tail's first segment (`+0x13d1`–`+0x13f7`) | `tail_refills_first` | 786 | 786 | 12 → 8 | −3,144 |
+| tail advance loop (unrolled by two), entry for len ≥ 2 (`+0x1333`–`+0x133e`, `+0x137b`–`+0x1384`) | `tails_len_ge2` | 218 | 218 | 6 → 7 | +218 |
+| runs with no lookahead tile (`+0xb10`–`+0xb18`) | `runs_no_lookahead` | 165 | 165 | 0 → 3 | +495 |
+| tail advance loop exit, even len (`+0x138a`) | `tails_even` | 121 | 121 | 0 → 1 | +121 |
+| tail second-segment row loop (`+0x1420`–`+0x1444`) | `tail_rows_second` | 106 | 106 | 12 → 11 | −106 |
+| epochs with no full tile (`+0x12a0`–`+0x12a3`) | `epochs_short` | 79 | 79 | 3 → 2 | −79 |
+| tail second-segment entry and exit (`+0x13f9`–`+0x1411`, `+0x1446`) | `tails_second_segment` | 22 | 22 | 4 → 8 | +88 |
+| a tail of length 1 (`+0x7c7`) | `tails_len1` | 12 | 12 | 0 → 1 | +12 |
+| refill detour from the tail's second segment (`+0x144b`–`+0x1471`) | `tail_refills_second` | 9 | 9 | 12 → 9 | −27 |
+
+**Every counted value equals the profile's frequency exactly.** The new counters are the 19
+rows above. The other 12 changed classes (A, J, J + Q, J − H, S, X, S + R, R, H, epochs,
+blocks, tails) were already counted (§10.4).
+
+Notes on the mapping:
+- **One class, one path.** Each class's instructions were read in the listing and lie on
+  one path.
+- **The alias check.** `fill`'s vector entry tests m ≥ 8 (`lea -0x2(,%rsi,2)`, `cmp $0xe`).
+  Its alias check (`+0xc21`, `jae`) compares the field array with the static `PATTERNS`,
+  which are distinct allocations, so the check always passes. The counter counts m ≥ 8.
+- **B2's own classes** (J + Q and the epoch back edge, which have no trial instruction) are
+  the same logical events, counted by the trial's counters. B2 is frozen, and its counted
+  build agrees with the trial's on every shared field (`same_as_v2`).
+- **The harness checks partitions.** `same_as_v2` now asserts:
+  - `runs_lookahead + runs_no_lookahead = runs`;
+  - `runs_exhausted + runs_no_lookahead = runs_no_full_tile`;
+  - `epochs_tiled + epochs_short = epochs`;
+  - `epochs_untailed + tails = epochs`;
+  - `tails_len1 + tails_len_ge2 = tails`;
+  - bounds on the rest.
+
+  No assertion fired on any suite.
+
+### 11.2 The uncounted listing is unchanged
+
+- **The pinned binary reproduces.** A clean build of `49cb46b6` with the trial's recipe has
+  sha256 `3ce86859…a050f`, the trial's archived binary. The counted-counter binary is
+  `6b1f1d95…784d44`.
+- **The tool.** `asmid.py` follows `build::<false>`'s transitive callee closure in both
+  binaries. Each function is compared over its symbol extent after
+  `bench/c30_build_listing.py`'s normalisation:
+  - addresses dropped;
+  - internal branches as offsets;
+  - external targets as symbols;
+  - RIP displacements masked;
+  - comment symbols kept.
+
+  The sizes must be equal.
+- **The result is identical.** All 52 functions (4,057 instructions) match:
+  - `build::<false>`, 1,382 instructions;
+  - `refill`, 67;
+  - `finish`, 379;
+  - `canonicalise`, 173;
+  - the allocator and panic paths.
+
+  The new binary's `build::<false>`, `refill` and `finish` also equal the trial's archived
+  listings.
+- **The control shows the tool detects a change.** The same tool on `build::<true>` reports
+  DIFFERENT.
+
+### 11.3 The suites
+
+The counted-counter binary passes every suite, each exit 0, with every check exact:
+- corpora: 11 × 4, 44 records;
+- adversarial: 200 records;
+- synthetic: 54,030 cases;
+- synthetic, quick: 630 cases.
+
+Every pre-existing field of every jsonl record equals the trial's archive. So does every
+console, once the 19 new fields are removed.
+
+### 11.4 The ledger, replayed with counted frequencies
+
+`f01_replay.py` reads the trial's raw profiles (the S62 review's parser, copied unchanged)
+and the counted record. It checks each changed class's counter against the profile's
+frequency. It charges any class without an agreeing counter at its least favourable end.
+
+| | §10.4 / S62 replay | counted (this section) |
+|---|--:|--:|
+| counter-supported Δ | −88,402,421 | **−84,060,421** |
+| profile-only added | +4,359,203 | **0** |
+| profile-only removed (withheld) | −17,203 | **0** |
+| library sites | 11 equal | 11 equal |
+| **interval removed** | [84,043,218, 84,060,421] | **[84,060,421, 84,060,421]** |
+| minimum | 60,000,000 | 60,000,000 |
+
+- **The interval collapses to a point.** Every changed class is now counted, and the
+  library sites are equal, so there is no width left.
+- **The memory deltas are unchanged** (own code, all in `build::<false>`; `refill`, `finish`
+  and `canonicalise` are equal). They are reported, not gated:
+  - reads: **−505,885**;
+  - writes: **+3,391,432**.
+
+### 11.5 The caller boundary (S62-F04)
+
+- **The harness's own count rises.** `c30walk::main`'s own count goes from 4,499,105,219
+  (v2 alone) to 4,499,106,087 (trial alone): +868 = 2 × 434 blocks.
+- **The two call sites match.** `harness-callsite.asm` lists both call sites with each
+  instruction's count in both profiles. Each arm sets up and makes the call in 10
+  instructions: 7 for arguments, then the `call`, `test` and branch. They are identical but
+  for the arena's stack offset.
+- **The difference is the dispatch.** The `--only` match tests `"v2"` first (`cmpw $0x3276`,
+  `je`). The trial's arm then runs `cmpw $0x7573` and `jne`: two instructions per block that
+  v2's arm skips.
+- **So it is not constructor work.** The +868 is the harness's string dispatch, in code
+  outside `build::<false>`'s closure. The call's setup costs the same in both arms.
+- **If it were charged anyway,** the interval would be [84,059,553, 84,059,553].
+
+### 11.6 Commands
+
+These run from the worktree root. `README.txt` gives them in full.
+
+```sh
+CARGO_ENCODED_RUSTFLAGS= CARGO_TARGET_DIR=target/rust-1.97.0 cargo +1.97.0 build --locked --release --example c30walk
+F=docs/journal/2026-11-04-compact30-scanner-f01; T=docs/journal/2026-11-04-compact30-scanner-u1u2-trial
+python3 $F/asmid.py PINNED_BINARY target/rust-1.97.0/release/examples/c30walk OUT '<c30walk::ctor2su::Ctor2su>::build::<false>' \
+  --archived "<c30walk::ctor2su::Ctor2su>::build::<false>=$T/listings/ctor2su-build-false.asm"
+target/rust-1.97.0/release/examples/c30walk ctor2su-check $F/counted/corpora.jsonl corpora/*.bz2
+python3 $F/f01_replay.py scanner $T $F/counted/corpora.jsonl ledger.json
+python3 $F/callsite.py PINNED_BINARY $T/callgrind/only-v2-run1.callgrind.gz $T/callgrind/only-su-run1.callgrind.gz \
+  '<c30walk::ctor2su::Ctor2su>::build::<false>'
+```
