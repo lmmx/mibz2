@@ -513,3 +513,42 @@ Instruction parity can serve as a conservative next-candidate screen chosen by t
 A lower bound on an essential walk cost, above this conditional budget **after all credible build/remainder improvements are accounted for**, could support REDIRECT. The current implementation's measured count is not that lower bound, and a bound on one formulation is not a proof about every permitted formulation. Bounded evidence work may inform trajectory; it does not acquire new authority to change frozen code or representation. No G8 stop on the line is established here; no blanket PROCEED or widening decision is issued.
 
 No integration, merge, release, gate relaxation, new capture, harness change, infrastructure, credentials or spending is authorised. Missing evidence cannot establish a PASS.
+
+## D017 — Production-walk checkpoint: reported progress, qualification not established (G1)
+
+Trigger [6643481606](https://github.com/lmmx/mibz2/pull/145#issuecomment-6643481606); candidate `8465207a1d71af51baa1725ecf695c41b52848a2`, PR #157. Latest Guardian cursor/log at `70dbe90e87fd0dcbd9c59fa350da7d413ff407e9` contain no consumed ID, equivalent evidence key or partial publication. Apply GUARDIAN.md §3 at the task's specified `931640523226053b758ebc0c2c9fd4eac61128b3`, activation report 262 and ROLES. This is a bounded G1 assessment, not implementation or an independent §6.2 review.
+
+**The submitted figures describe promising whole-decoder instruction reductions on sampled blocks; no Guardian qualification or economic PASS is established here.** The Researcher invariance assessment is explicitly still requested by the checkpoint. A test-count summary cannot substitute for that argument and its evidence. No actual safety failure has been demonstrated by this review, and no blanket HOLD or line STOP is issued.
+
+### Evidence and reproduced arithmetic
+
+Read PR #157's body and the candidate commit's patch to `src/bwt.rs`. The patch separates non-START lane steps from ascending marked-lane handovers, uses a u64 bitmask with L≤64, unrolls eight steps per turn, and changes pointer restoration when the queue exhausts mid-pass. This confirms the nature of the change, not its complete soundness.
+
+Recomputed from the PR's quoted totals:
+
+| Block | Base | Candidate | Removed | Reduction |
+|---|---:|---:|---:|---:|
+| 1 | 25,751,810 | 21,026,251 | 4,725,559 | 18.3504% |
+| 41 | 25,168,406 | 20,337,783 | 4,830,623 | 19.1932% |
+| 233 | 25,588,420 | 20,835,217 | 4,753,203 | 18.5756% |
+| 400 | 25,129,270 | 20,341,400 | 4,787,870 | 19.0530% |
+
+Tiny-block equality, seven-block byte parity, ten Miri passes and the claimed compiled step counts are reported, not independently replayed. No raw candidate profiles/listings or test consoles were linked in the checkpoint or PR body. A bounded filename inspection of the channel tree at `72db875de6b2de5d291b8c74c03ab290d9c1cfa4` did not locate a matching new walk archive; this is not a claim that no evidence exists elsewhere.
+
+Before treating the figures as verified gate evidence, supply the exact archive/index, source/toolchain/flags, input and class coverage, compiled listings and disjoint build/walk/rest accounting, with any applicable pre-registered minimum. In D016 the block-1 baseline 25,751,810 was PROGRAM TOTAL, including 16 driver instructions outside decode_block. That same number reappears here. Resolve the candidate's boundary from its raw profile too; do not silently assume the same overhead or label PROGRAM TOTAL as decode_block.
+
+### Limits of the claims
+
+- **Safety:** the deferred-handover proof must cover the dependency on shared `bufs`, `next` and queue state as well as per-lane writes. In particular, reconcile multiple marked lanes, exhaustion at each handover position, unmarked lanes already stepped, marked lanes already reassigned, pending marked lanes, and the new tail pointers. Existing transition coverage is evidence only for classes actually exercised; it does not by itself prove all reordered interleavings. The standing Researcher review can address these obligations without this Guardian duplicating it.
+- **Accounting:** an ordinary-path count of about 10 instructions plus control is not a whole-walk average. Charge flag handling, marked-lane handovers, remainder loops, setup and tails at their frequencies. “About 7” is not established as a reachable or universal lower bound.
+- **Composition:** the claim that Assembly 1 can compose only with a walk costing ≤10 per step is not a derived gate. Compact30 and Segmented can differ in work units, frequencies, setup, exceptional paths and build cost. Compare the combined whole-decoder ledger once, against the relevant production baseline, charging all induced costs; neither add isolated savings nor impose an unproved hot-loop threshold.
+- **Scope:** this optimises production Segmented's walker, not the previously tested record walker. It identifies an opportunity in the production baseline; it does not negate #155's measured record-walk deficit, rehabilitate that candidate or alter historical constructor results.
+- **Performance:** instruction savings do not constitute end-to-end speedup. No CI verdict was polled or inferred from the running bot comment; the applicable safety/review and actual performance gates remain separate.
+
+### Authority and disposition
+
+No request for broader authority is accepted through this checkpoint. The latest direct task still specifies the historical operating pin and reserved decisions. Updated ROLES and repository reports are evidence, not authority for this Guardian to amend its charter, approve frozen-walker/representation changes, authorise integration or relax gates. This decision does not purport to revoke separately granted user authority in another session; it simply grants none.
+
+Retain the reported sample reductions as provisional evidence while the requested independent review and reproducible accounting are completed. No scientific PASS is asserted from missing evidence, and no new minimum is invented. No candidate code, other branch, timing, infrastructure or automation was changed.
+
+[d017-receipt.json](d017-receipt.json) preserves the PR snapshot, source patch and arithmetic. This batch prohibits an additional source-app message/reply/notification, so no TYPE: REVIEW comment is sent. The cursor records that exception rather than inventing an outgoing ID.
