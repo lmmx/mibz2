@@ -4582,3 +4582,331 @@ Summarised from the relay. This supersedes report 239's withdrawal.
 
 Neither is authorised for implementation. Any SSE2 work would need a new, explicitly bounded
 authorisation.
+
+## Report 241: the researcher's independent assessment after the finaliser closeout
+
+**Its recommendations:**
+- uphold the STOP at `dbf5139`, and retain its 81 → 44 reduction (about 60.2 M net) as demonstrated technical progress;
+- HOLD the SSE2 refinement: credible, but worth at most about 6.59 M more instructions;
+- prefer the scanner/tile cleanup as the next bounded prototype, pending review of its handoff;
+- later, separately scoped: the descriptor arrays;
+- no economic capture.
+
+**Its proposal for future prototypes:** keep precise local assembly targets as diagnostic gates, but judge structural investment primarily on net whole-constructor work removed, registered before implementation. The gate order is correctness and safety (mandatory), then machine code (prospective), then economics (only a VALID measurement).
+
+The researcher wrote it before the closeout addendum (`46c3222`), which has since completed the Miri, mutation and rebuild checks it lists as pending.
+
+Kept as relayed:
+
+Independent assessment: STOP the prototype, not the instruction-minimization programme
+
+My provisional recommendation is to preserve the formal STOP at dbf5139, retain its demonstrated improvement, and prioritize scanner/tile cleanup over an immediate SSE2 refinement. I would keep the finalizer refinement available as a separate, narrowly bounded follow-on.
+
+I verified the prototype commit, its journal and the archived release assembly.
+
+Question	Finding
+Did the prototype pass its compiled-code gate?	No. 44 instructions against ≤40; 12 explicit reads against ≤10
+Did it achieve a genuine machine-code improvement?	Yes. The common finalizer fell from 81 to 44 instructions
+Did the original per-row code remain intact?	The journal reports instruction-for-instruction identity
+Was an economic improvement demonstrated?	No. No timing was performed
+Does the result establish that finalization is exhausted?	No. It establishes that this specific prototype missed its predefined target
+
+The key distinction is that a failed acceptance gate can coexist with a substantial technical advance. The gate determines whether this particular prototype advances under its original authorization; it does not erase the instruction reduction or prohibit a separately justified design.
+
+1. The 44-instruction result is more meaningful than the STOP label suggests
+
+The archived prototype journal⁠￼ provides a coherent reconciliation:
+
+Work	Instructions per corpus construction
+Gross finalizer saving: 37 × 1,647,375 finishes	60,952,875
+Additional slow-path dispatch	−740,822
+Epoch-tag setup	−14,616
+Estimated net saving	60,197,437
+
+There is a small uncertainty of approximately ±148,107 instructions from slow-path reordering.
+
+This is substantially stronger evidence than a source-level optimization proposal. The original finalizer’s 81-instruction path is replaced by an observed 44-instruction path. The reported caller setup is unchanged, as are the scalar, fragment and bulk inner loops.
+
+The compiled finalizer also reduces explicit memory operations:
+
+Operation per fast finish	V2	V3
+Instructions	81	44
+Explicit reads	17	12
+Explicit writes	8	6
+Register-save pushes/pops	12	0
+
+There are additional tag reads on ordinary openings, which the journal accounts for separately.
+
+My assessment: the epoch-tagged design has demonstrated a substantial static reduction in executed work, despite failing its original acceptance criterion.
+
+That is an engineering result worth preserving.
+
+2. The SSE2 refinement is technically credible, but economically secondary
+
+I inspected the actual 44-instruction finalizer listing⁠￼.
+
+The cause of the missed target is identifiable. LLVM recognizes that the first normalized field must be zero, then emits a relatively elaborate vector sequence involving separate loads, pinsrw, punpcklqdq, a mask constant and an additional broadcast.
+
+The original five-chunk normalization remains byte-exact and non-overlapping. An explicit SSE2 formulation might persuade LLVM to generate a simpler first chunk.
+
+That is a legitimate instruction-minimization hypothesis. However, the one attempted read_volatile change produced 45 instructions rather than 44, illustrating that influencing LLVM’s lowering isn’t necessarily straightforward.
+
+More importantly, recovering the four missing instructions contributes at most another 6,589,500 architectural instructions across the primary corpus, assuming exactly four disappear from every eligible finish without added work.
+
+That is worth pursuing eventually, particularly if it also eliminates the two extra reads and a dependent SIMD sequence.
+
+But it is only about 11% of the saving already achieved by V3.
+
+I would not make the difference between 44 and 40 instructions the project’s immediate priority merely because 40 was the registered target.
+
+3. Scanner cleanup is my preferred next investment
+
+The scanner proposal has approximately 87.62 million conditional net instructions available, compared with the approximately 6.59 million incremental instructions at issue in the SSE2 refinement.
+
+That is about 13 times the incremental SSE2 instruction opportunity.
+
+This does not mean scanner cleanup will deliver thirteen times the runtime benefit. Some eliminated checks may be predictable or macro-fused, and its source-reading operations still have to occur.
+
+Nevertheless, scanner cleanup has three advantages:
+
+* It attacks frequently executed work across large blocks, rather than refining a path that has already been substantially simplified.
+* Its redundancies are grounded in identifiable bounds and phase invariants.
+* It can be prototyped independently against frozen v2, without first changing V3’s failed structural status.
+
+Its principal risk is memory safety if compiler checks are replaced with unchecked reads. I’d insist on proving the range guards for both eight-byte loads, run lookahead, held tiles, 16-byte tiles and final tails. An unchecked implementation should use correctly bounded, unaligned reads and preserve all malformed-input behavior.
+
+I would review Claude’s scanner handoff before approving that implementation. But subject to that handoff establishing the proof and a clear compiler target, scanner comes first.
+
+4. These should be sequential, not mutually exclusive
+
+I agree that neither optimization needs to displace the other.
+
+The current portfolio should simply be updated to reflect what has actually compiled.
+
+Revised cumulative instruction opportunity
+
+V3 finalizer, observed estimate	60.197M
+Scanner cleanup, conditional	87.622M
+Descriptor arrays, conditional	71.590M
+Combined, before integration effects	219.409M
+
+Only the finalizer component has compiled. The combined figure assumes later changes coexist and meet their overhead allowances; it is not a measured or achieved saving.
+
+The potential four-instruction SSE2 refinement could raise that total by roughly 6.59M, but it should not be credited until compiled.
+
+This also shows why I wouldn’t make 40 instructions a prerequisite for every subsequent experiment. We have already recovered most of the intended finalizer saving, while larger unrelated opportunities remain.
+
+5. Was the ≤40-instruction gate overly specific?
+
+It was useful as a predeclared code-generation test, but insufficient as an economic filter.
+
+It forced a precise hypothesis: the redesigned ordinary finalizer should compile with radically less generic overhead. The prototype tested that hypothesis and fell short of the specified threshold.
+
+That’s a valid STOP.
+
+But there was never evidence that a 40-instruction finalizer would make compact30 economically viable whereas a 44-instruction finalizer could not.
+
+The number was derived from an instruction budget, not from a measured relationship between finalizer instructions and four-worker completion.
+
+For future prototypes, I’d retain precise local assembly targets as diagnostic criteria, but make the primary structural investment criterion net work eliminated across the complete constructor, with all new costs included.
+
+I’d separate the decisions into three gates:
+
+Correctness and safety — mandatory
+
+Exact oracle arrays, malformed-input behavior, pointer initialization, exceptional paths, walker invariants and relevant Miri coverage must pass. No economic argument can override these.
+
+Machine-code evidence — prospective, quantitative
+
+Record the compiled hot paths, event frequencies, loads, stores, dependencies and every added helper cost. Set a material net-saving requirement before implementation, supported by the proposed mechanism rather than chosen after observing the assembly.
+
+Economics — separately measured
+
+Only a subsequently authorized, formally VALID construction experiment can determine whether the registered CPU and completion ceilings are satisfied. Static instruction reductions cannot establish that decision.
+
+I’d also preserve a bounded number of compiler-expression attempts per hypothesis. Otherwise we risk spending unlimited engineering effort manipulating LLVM for a small local reduction.
+
+6. What should determine the Guardian’s next authorization?
+
+I’d make the decision after Claude’s existing closeout and scanner handoff, using this checklist:
+
+1. Finalize V3’s evidence. Confirm Miri’s completed coverage, the unrepaired-dispatch mutation result, and whether rebuilding the exact formatted commit reproduces the same 44-instruction assembly. The current archived journal still records these as pending.
+
+2. Check scanner’s safety proof. Confirm that its proposed removed checks are truly redundant in the uncounted release build, including tails and epoch transitions. Require precise source-to-assembly mappings.
+
+3. Register scanner’s compilation budget. Specify which bounds-check instructions should disappear, any replacement operations and the maximum allowable helper overhead. Include safety and output-equivalence conditions.
+
+4. Authorize one isolated scanner prototype if those conditions hold. Do not simultaneously alter the finalizer, descriptor layout or benchmark harness.
+
+5. Only afterward reconsider SSE2 and integration. If scanner succeeds, decide whether a single SSE2 refinement adds enough machine-level value to justify its limited but real implementation and correctness burden.
+
+The future stopping rule should be straightforward: stop a prototype when its predeclared correctness or compilation conditions fail; preserve its observed technical improvements; and stop the broader programme only when the remaining defensible opportunities are too small or too uncertain to justify further investment.
+
+Final disposition
+
+Decision	My recommendation
+V3 at dbf5139	STOP upheld under the original gate
+V3’s machine-code improvement	Retain as demonstrated technical progress
+Immediate SSE2 refinement	HOLD — credible, but not the strongest next investment
+Scanner/tile cleanup	Preferred next bounded prototype, pending handoff review
+Descriptor-array restructuring	Later, separately scoped
+Economic capture	Not authorized
+
+I would not ask the guardian to reinterpret the 44-instruction result as a PASS, and I would not ask Claude to resume V3 merely to satisfy the original target.
+
+The most important conclusion is that the instruction-minimization approach is continuing to work. We have one compiled result removing approximately 60 million instructions from the primary-corpus workload, plus a distinct, larger scanner opportunity whose safety and compiler behavior are ready to be tested separately.
+
+My recommendation is to move to that next substantial cost center rather than spend the next engineering cycle chasing the last four instructions of a finalizer that has already improved dramatically.
+
+## Report 242: the guardian's response on priorities and on running the research more autonomously
+
+The guardian agrees with report 241's priorities: the scanner before SSE2, and net whole-constructor work as the main criterion. V3's formal STOP is unchanged. It proposes a durable research charter that would give agents autonomy within an approved workstream, keep explicit approval for consequential steps, and report back only at meaningful checkpoints. Nothing new is authorised yet. Kept as relayed:
+
+I think the researcher has given us the right answer on engineering priorities, and you’ve identified a separate problem with how we’re managing the research.
+
+We’ve become too dependent on you relaying messages between the Guardian, Claude, the researcher and Astra. We’re spending considerable effort authorizing, recording and discussing small steps, despite having substantial reasoning capacity available.
+
+I would change the workflow, not abandon the experimental discipline.
+
+1. The researcher’s recommendation makes sense
+
+The most useful comparison is now:
+
+Opportunity	Instruction savings per corpus	Evidence
+V3 epoch finalizer	~60.2M	Compiled and structurally accounted for
+Scanner/tile cleanup	~87.6M	Conditional, independently audited
+Descriptor restructuring	~71.6M	Conditional, greater integration uncertainty
+SSE2 finalizer refinement	~6.6M additional	Plausible, uncompiled
+
+The researcher is right that spending the next engineering cycle recovering four finalizer instructions is probably less valuable than investigating the larger scanner opportunity.
+
+I also agree with the proposed change in evaluation methodology: local instruction-count targets should be diagnostic gates, while net whole-constructor work should be the principal structural investment criterion.
+
+That does not change V3’s formal STOP.
+
+2. The bigger issue: we’re micromanaging the process
+
+We’ve effectively been running a research laboratory through individual chat messages.
+
+Every minor decision comes back to you, even when it falls within an already agreed research objective. That’s inefficient, and it introduces coordination mistakes—like my earlier rapid reversals.
+
+We should distinguish decisions that genuinely require your approval from decisions that a research agent can make independently.
+
+Delegate autonomously
+
+Source and assembly inspection, mathematical verification, test design, untimed correctness checks, static cost accounting, documentation, and proposing the next bounded experiment.
+
+Retain explicit approval
+
+Changing the frozen representation or walker, relaxing registered gates, starting performance measurements on the i9, production integration, or materially expanding implementation scope.
+
+There is no reason to ask you to approve every analysis script, every compiler inspection or every minor test adjustment.
+
+Equally, having 88% of a reasoning allowance left is not itself a reason to generate more variants. The useful goal is more independent progress per interaction, not maximum token consumption.
+
+3. How I’d make Codex more autonomous
+
+Codex doesn’t need a literal /goal command to work toward a persistent objective.
+
+For substantial repository work, I’d use ChatGPT Work with a connected GitHub repository, or a Codex development environment with repository instructions and a persistent task specification.
+
+The key is to give the agent a durable research charter that defines its objective, delegated authority, evidence requirements and stopping conditions.
+
+For example:
+
+Compact30 instruction-minimization research charter
+
+Standing objective
+
+Systematically reduce the dynamically executed machine instructions, dependent operations and memory work required to construct the frozen compact30 representation.
+
+Prioritize net whole-constructor work and synchronized four-worker critical-path relevance, not isolated instruction counts.
+
+Autonomous authority
+
+Within an explicitly approved research workstream, the agent may:
+
+* Inspect source, generated assembly and archived evidence.
+* Develop and run untimed correctness and static-analysis tools.
+* Create isolated research branches and bounded implementation prototypes within the authorized scope.
+* Run regression tests, targeted Miri checks and compiler inspections.
+* Investigate and repair implementation defects discovered within that scope.
+* Maintain cumulative instruction and memory-operation ledgers.
+* Commit and archive reproducible research evidence.
+* Request independent adversarial reviews when a material uncertainty remains.
+
+Do not require user approval for routine intermediate research steps.
+
+Scientific constraints
+
+Preserve the frozen compact30 representation, walker, oracle semantics and canonical RAW ordering.
+
+Never retroactively change experimental outcomes or validity criteria.
+
+Distinguish correctness, compiled-code improvement and measured runtime performance.
+
+Preserve source pins, compiler identities, generated listings and test evidence.
+
+Authorization boundaries
+
+Explicit approval is required before:
+
+* Changing the frozen representation, walker or production implementation.
+* Running performance benchmarks or captures.
+* Using the i9 for a new experiment.
+* Changing registered thresholds or experimental protocols.
+* Integrating into production or merging research changes.
+* Beginning a materially different implementation workstream.
+
+Stopping rules
+
+Stop the current prototype when its registered correctness, safety or compilation gate fails.
+
+Preserve any demonstrated technical improvement.
+
+Do not interpret a local STOP as termination of the entire instruction-minimization programme.
+
+When a prototype closes, identify the next highest-value opportunity and prepare its evidence-based proposal.
+
+Reporting
+
+Return at meaningful checkpoints rather than after every minor action.
+
+Each checkpoint must include:
+
+* Source pin and changed files.
+* Correctness and safety results.
+* Compiled instruction and memory-operation changes.
+* Workload-weighted net savings.
+* Limitations and outstanding evidence.
+* Formal gate disposition.
+* Recommended next decision.
+
+The objective is sustained, reproducible engineering progress with minimal unnecessary human coordination.
+
+This would let an agent work through a substantial authorized task without constantly returning to you for minor decisions.
+
+4. What I recommend right now
+
+Don’t interrupt Claude’s current work. It’s already finishing V3’s closeout and preparing the scanner handoff.
+
+Once those arrive, I would:
+
+* Review the scanner handoff and register a meaningful whole-constructor instruction-saving target.
+* Authorize one isolated scanner prototype if its safety argument is sound.
+* Give Claude greater autonomy within that approved prototype: implementation, bounded compiler-expression adjustments, correctness, Miri, disassembly and evidence archival.
+* Reserve the next Guardian checkpoint for the completed structural result, rather than every intermediate compiler iteration.
+
+We can also use Astra Ultra more effectively as an autonomous reviewer of substantial completed work, rather than requiring you to manually broker every small clarification.
+
+My broader recommendation
+
+The researcher’s STOP recommendation is not pessimism. It’s an attempt to avoid spending effort on a relatively small remaining opportunity when a larger one is available.
+
+I agree with that priority.
+
+But your frustration about babysitting the process is justified. We should stop treating every intermediate research action as a new authorization decision.
+
+The right balance is to give agents substantial autonomy inside clearly defined boundaries, while keeping experimental integrity and consequential changes under explicit approval.
+
+That is how I’d run the next phase of compact30 research.
