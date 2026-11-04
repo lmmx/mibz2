@@ -682,7 +682,7 @@ What mibz2's experiments are finding, and where they go next. The evidence behin
 
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# From 49 instructions to 12: building a smaller bzip2 decoding table
+# Building a smaller bzip2 decoding table: from 49 instructions to 12
 
 Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly.
 
@@ -912,7 +912,7 @@ The general lesson outlasts this builder. A computation that is expensive done o
 
 **Research records:** [Technical appendix](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor-notes/index.md>) · [First builder](<https://github.com/lmmx/mibz2/blob/e003a32/examples/c30walk/ctor.rs>) · [Second builder](<https://github.com/lmmx/mibz2/blob/8beffe2/examples/c30walk/ctor2.rs>) · [Its design](<https://github.com/lmmx/mibz2/blob/25891bd/docs/journal/2026-11-03-compact30-constructor-v2-design.md>) · [Prototype, counters and machine code](<https://github.com/lmmx/mibz2/blob/cd14fa9/docs/journal/2026-11-03-compact30-constructor-v2-prototype.md>) · [Construction-cost protocol](<https://github.com/lmmx/mibz2/blob/1dc2edf/docs/journal/2026-11-03-compact30-construction-protocol-v2.md>) · [The measurement and its analysis](<https://github.com/lmmx/mibz2/blob/25891bd/docs/journal/2026-11-03-compact30-construction-v2-capture.md>) · [Assembly-level review](<https://github.com/lmmx/mibz2/blob/25891bd/docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md>).
 
-← [From 49 instructions to 12](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>)
+← [Building a smaller bzip2 decoding table](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>)
 
 # Technical appendix: the ideas behind building a smaller bzip2 decoding table
 

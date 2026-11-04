@@ -1,6 +1,6 @@
 [mibz2 · Research blog](<https://lmmx.github.io/mibz2/blog/index.md>)
 
-# From 49 instructions to 12: building a smaller bzip2 decoding table
+# Building a smaller bzip2 decoding table: from 49 instructions to 12
 
 Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly.
 

@@ -39,7 +39,7 @@
     "description": "Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly.",
     "foot": "lmmx.github.io/mibz2 · 4 November 2026",
     "section": " · Research blog",
-    "title": "From 49 instructions to 12: building a smaller bzip2 decoding table"
+    "title": "Building a smaller bzip2 decoding table: from 49 instructions to 12"
   },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",

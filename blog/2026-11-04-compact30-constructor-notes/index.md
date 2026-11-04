@@ -1,4 +1,4 @@
-← [From 49 instructions to 12](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>)
+← [Building a smaller bzip2 decoding table](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>)
 
 # Technical appendix: the ideas behind building a smaller bzip2 decoding table
 
