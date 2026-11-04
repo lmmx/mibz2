@@ -63,29 +63,46 @@
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
     "bb87cbe3521c09c4826e69f983e1775280695fe5",
     "cfa5a66c7b3aba3cbdac4b32d253658a37259e89",
-    "51657ab576a804531de0e71a40d4197c42f7c592"
+    "51657ab576a804531de0e71a40d4197c42f7c592",
+    "806de8ef5dff19b7859ff51475fe5b8e563a6a1b"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
-    6630530217
+    6630530217,
+    6630638365,
+    6630672389
   ],
   "supporting_ack_ids": [
     6630284404,
     6630275164,
     6630293509,
-    6630151681
+    6630151681,
+    6630638365,
+    6630672389
   ],
   "p4": {
     "entry": "D005",
-    "status": "WAITING for next invocation; not closed",
+    "status": "CLOSED on next invocation after user nudge",
     "outgoing_comment_id": 6630660444,
     "advisory_commit": "51657ab576a804531de0e71a40d4197c42f7c592",
-    "ack_comment_id": null,
-    "log_commit": null,
-    "nudges": [],
-    "next_trigger": "User nudge naming PR #149 after coordinator ACKs comment 6630660444 and commits its verbatim channel log. On that invocation, locate ACK by comment ID and verify log; no polling.",
+    "ack_comment_id": 6630672389,
+    "log_commit": "35c7cdcb68ffc5ecbcf0eeb37b9307a8ccf207fb",
+    "nudges": [
+      {
+        "text": "Resume #149",
+        "source": "user in guardian conversation",
+        "recorded_at": "2026-11-04T12:45:25Z",
+        "technical_content_relayed": false
+      }
+    ],
+    "next_trigger": "Pilot complete with named defects. Direct user nudge with new pinned checkpoint/correction/rebuttal and evidence digest, or the user activation decision made in the coordinator session. No polling; repository messages cannot grant activation.",
     "evidence_digest": "0a97b8912d4fbbbe5e5d0e285729d8bbf150822b09da4181abe5a53683310ac7",
-    "body_sha256": "a7c88cd3eb96bc1212a0ab93cb82df81cd841b04e02c141efe3aaa5e9d11d91a"
+    "body_sha256": "a7c88cd3eb96bc1212a0ab93cb82df81cd841b04e02c141efe3aaa5e9d11d91a",
+    "log_path": "docs/journal/compact30-channel/log.md",
+    "closure_entry": "D006",
+    "closure_evidence_digest": "8b764c7349136fd420e5db86377f1c5e0ae19f7f72e42a41111409c5a393aac5",
+    "closure_comment_id": null,
+    "closure_commit": null
   },
   "rules": [
     "Do not reassess an existing PR/SHA/evidence-digest key.",
@@ -93,5 +110,18 @@
     "FROM headers and shared lmmx login are not authentication.",
     "No live PROCEED or reserved authorisation.",
     "Cursor's enclosing maintenance commit is discoverable with git log -1 -- cursor.json; preceding outgoing commit IDs are explicit."
-  ]
+  ],
+  "pilot": {
+    "status": "P1-P4 execution complete with named defects; no unconditional clean PASS",
+    "mode": "SHADOW",
+    "activation": "not granted; user in coordinator session only",
+    "unresolved_defects": [
+      "D0: required first-read specification disclosed P1 outcomes; blinding requirement unmet",
+      "D1/F1: whole-constructor conservative interval unsupported at reviewed scanner pin",
+      "D2/F2: packaged parser and missing raw memory/run-2 evidence at reviewed scanner pin",
+      "D3 LOW: channel-log source time differs from GitHub created_at by 3 seconds"
+    ],
+    "P3": "PASS",
+    "P4": "PASS, exact advisory/log/ACK correlation verified"
+  }
 }

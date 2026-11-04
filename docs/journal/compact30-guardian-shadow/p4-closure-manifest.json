@@ -1,0 +1,17 @@
+[
+  {
+    "bytes": 7537,
+    "path": "p4-channel-log.md",
+    "sha256": "ed74ad0f414428a1b79028b9cdf1d30336e4ad2ea213fa4481b8659774c21052"
+  },
+  {
+    "bytes": 1520,
+    "path": "p4-outgoing.json",
+    "sha256": "0a97b8912d4fbbbe5e5d0e285729d8bbf150822b09da4181abe5a53683310ac7"
+  },
+  {
+    "bytes": 5087,
+    "path": "p4-receipt.json",
+    "sha256": "7c7919351165b0214b3bd14dd91639a58cf42ae4154ba4d281e43772fe4d6ac1"
+  }
+]

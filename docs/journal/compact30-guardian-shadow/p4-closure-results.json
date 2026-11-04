@@ -1,0 +1,33 @@
+{
+  "ack_body_sha256": "72e326e2ab2477809df885ca158259e4547c2c241711697978b24608e67fad5b",
+  "ack_comment_id": 6630672389,
+  "evidence_digest": "8b764c7349136fd420e5db86377f1c5e0ae19f7f72e42a41111409c5a393aac5",
+  "limitations": [
+    "Shared lmmx login, role headers and commit attribution do not authenticate the coordinator.",
+    "No new authority, activation, research review, or unattended wake capability is established.",
+    "Earlier P1/P2 evidence and decisions are not rerun or reassessed here."
+  ],
+  "log_commit": "35c7cdcb68ffc5ecbcf0eeb37b9307a8ccf207fb",
+  "log_git_blob": "ab18784fa4f2688efc7d27c0848213dc292c5bf6",
+  "log_path": "docs/journal/compact30-channel/log.md",
+  "log_sha256": "ed74ad0f414428a1b79028b9cdf1d30336e4ad2ea213fa4481b8659774c21052",
+  "nudge": {
+    "source": "user in guardian conversation",
+    "technical_content_relayed": false,
+    "text": "Resume #149"
+  },
+  "observed_outgoing_body_unchanged": true,
+  "outgoing_body_sha256": "a7c88cd3eb96bc1212a0ab93cb82df81cd841b04e02c141efe3aaa5e9d11d91a",
+  "outgoing_comment_id": 6630660444,
+  "status": "P4 CLOSED: correlated ACK and exact verbatim log verified on next invocation",
+  "timestamp_finding": {
+    "changes_delivery_outcome": false,
+    "discrepancy_seconds": 3.0,
+    "github_created_at": "2026-11-04T12:31:21Z",
+    "id": "D3",
+    "logged_time": "2026-11-04T12:31:24Z",
+    "severity": "LOW"
+  },
+  "verbatim_body_matches": true,
+  "wake_evidence": "Coordinator reports issue_comment.created; matching ACK and pinned log evidence receipt. No event-queue telemetry supplied; no latency figure certified."
+}
