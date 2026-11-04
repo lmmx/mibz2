@@ -195,5 +195,15 @@
     "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "not exercised; consumed-ID membership verified"
+  },
+  "pending_publications": {
+    "6632963394": {
+      "decision": "D008",
+      "incoming_pr": 145,
+      "sha": "e5d86cc508af495236c1019c5ce1daa24ec83c3e",
+      "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
+      "decision_path": "docs/journal/compact30-guardian-shadow/decisions.md#d008--isolated-checkpoints-and-independent-review-appointment-g1-g4-active-stage-a",
+      "status": "decision prepared; reconcile published log and PR review before retrying"
+    }
   }
 }

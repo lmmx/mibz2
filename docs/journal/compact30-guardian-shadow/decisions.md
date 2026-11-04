@@ -175,3 +175,66 @@ The ACK restates the advisory, cites charter §12.2 and records **“logged verb
 **What follows.** Publish one TYPE: REVIEW linking this immutable D007 entry and then save incoming ID 6632161918 plus the outgoing review/commit IDs in the cursor. Future processing must skip that consumed ID and the guardian's own outgoing IDs. The cursor's current role becomes ACTIVE/stage A in accordance with report 262; the historical SHADOW pilot records remain unchanged. G6 and every GUARDIAN §4 reservation stay with the user. Routine charter-qualified work continues without a new Guardian approval. Stop after this comment; no backlog, polling, timed follow-up, repository reconfiguration or authority expansion.
 
 **Publication receipt (2026-11-04).** D007 was published on the guardian branch at `99952368535d6f7f970533c2cfb63c71261c435d` and linked by [TYPE: REVIEW comment 6632636427](https://github.com/lmmx/mibz2/pull/149#issuecomment-6632636427). The original event's processing had stopped before branch publication because the connector used `Louis Maddox <lmmx@users.noreply.github.com>`. The user explicitly approved that identity and requested this completion; [PROTOCOL.md §9 at 374cfe4d2e0fd1f436c4bee9a38e5366d6855726](https://github.com/lmmx/mibz2/blob/374cfe4d2e0fd1f436c4bee9a38e5366d6855726/docs/journal/compact30-channel/PROTOCOL.md#9-commit-identity-for-agent-branches-user-2026-11-04) records the allowance. The decision commit's author and committer were both verified against that identity before publishing. This receipt's commit saves input ID 6632161918, outgoing review ID 6632636427 and the decision commit in `cursor.json`, with the current role ACTIVE/stage A and all historical pilot entries preserved. The saved task instructions use the approved identity for future runs. Automatic receipt and the completed publication path are demonstrated; the intervening user approval means this was not an uninterrupted unattended end-to-end trial. A duplicate delivery was not injected; cursor membership and one outgoing review for this input were checked.
+
+## D008 — isolated checkpoints and independent review appointment (G1, G4; ACTIVE, stage A)
+
+**G1: concur with the two new isolated qualifications, pending §6.2; concur with the F1/F2 correction's continued nonqualification. G4: appoint the Researcher in a fresh, evidence-only review instance for §6.2.** This is a checkpoint governance assessment, not the blind pre-integration review, a combined-build approval, or an economic claim.
+
+### Input, pins and reproducibility
+
+The only new substantive input is [comment 6632963394 on #145](https://github.com/lmmx/mibz2/pull/145#issuecomment-6632963394), created/updated 2026-11-04T14:16:41Z and fetched by the event-supplied ID. Its body SHA-256 is `002b080a2313e67e1839643da827298d794df94a242abf5a8b42a33969befd66`. The previous cursor at `f1631a2bdf0fe3e7b8d1d5f62f4e55cd70d73db9` does not contain that ID or these new checkpoint keys. No backlog is assessed.
+
+| Evidence | Immutable pin / identity |
+|---|---|
+| Descriptor prototype, #151 | `29dd071f8787a28560a7a081fd7ac0ef13991466`; journal `docs/journal/2026-11-04-compact30-descriptor-prototype.md` and its evidence directory |
+| U2 scanner trial, #146 | `49cb46b65070059af49e906fa8d98693b808bda2`; scanner journal §10 and `docs/journal/2026-11-04-compact30-scanner-u1u2-trial/` |
+| Original scanner correction, #146 | `a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b`; scanner journal §8 and `docs/journal/2026-11-04-compact30-scanner-prototype-erratum/` |
+| Governing specification / charter | `931640523226053b758ebc0c2c9fd4eac61128b3`; GUARDIAN §§2–4,6 and ACTIVE charter §§4–8,12 |
+| Activation | Report 262 at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`, reassessment journal |
+| Roles | `docs/journal/compact30-channel/ROLES.md` on the constructor branch; read blob `8ea1583944e13ecdcb48dc1cb23f31c934c700b5`, especially §5.7 independence |
+| Review queue | `e5d86cc508af495236c1019c5ce1daa24ec83c3e`; §6.2 index still “to come” |
+| Optimizer's canonical ledger and review cursor | Read on `review/compact30-instruction-ledger`, head `27473ae1533c4eb2ef31da462bc8a324fa0fc660`; blobs `98e883a287d82e4e01ff358e51673cc199d68d4a` and `4755afd0531d1bcf58482a8fd6e9eee3909a590b` |
+
+The canonical ledger still records C4 as unreviewed and the original scanner C2 HOLD; it has no completed audit of the two new pins at this read. That is outstanding review state, not evidence against the new archives or permission to edit the Optimizer's branch. Coordinator ACK 6630151681 accepts the original library-bound finding; the correction below does not silently erase it.
+
+[Input receipt](d008/event.json), [archive manifest](d008/manifest.json), [offline replay](d008/replay_d008.py), its [header-aware parser](d008/parser.py), and [results](d008/d008-results.json) accompany this entry. Manifest SHA-256/evidence digest: **`6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47`**. Populate a cache at `CACHE/<key>` using each manifest entry's exact repository commit/path, then run `python replay_d008.py manifest.json CACHE`. The replay verifies Git-blob and SHA-256 identities, parses all ten raw compressed profiles, reconciles executed instruction addresses to the archived listings, recomputes changed frequency classes from counters, compares shared library call-site counts/costs, and verifies the archived Miri/mutation completion records and scalar-loop lengths. This is archive reproduction; constructors, Miri and compilers were not rerun.
+
+Both new source pins retain frozen `ctor2.rs` blob `168c2bac9ad0d8da4d9f82788f009d32f419608e`, identical to B2 `8beffe28bec9b539517b442350d8a3fda62164c8`, and `ctor3.rs` blob `01f91419904a605b721dc1742ba8087fe79f74cf`, identical to B3 `dbf5139e12ae60b5f5bff40059b88d65ddccea41`.
+
+### G1 — descriptor arrays, #151
+
+**Gate 1 PASS on archived evidence.** The descriptor split preserves the write/end/start invariant; byte indices and 0..256 iteration bound the arrays. Source `open`, `close`, `rank` and `desc` preserve the fields used by the existing unsafe operations. All nine registered Miri classes finish with exit 0 and exact checks, including every byte, refill slots, crossing, epochs, pending portions, malformed counts and reuse. The release suites finish successfully. M1 fails the full-portion assertion; M2 exposes the erroneous rank at an epoch boundary. No new unsafe operation is approved here.
+
+**Gate 2 diagnostic partial miss.** All four scalar copies contain ten instructions, versus B2's twelve. The removed descriptor LEAs do not remove the pointer read/modify/write's memory accesses. Added non-row work is **18,380,721 net**, above the registered 5 M diagnostic allowance. In particular, refill adds **9,059,803 instructions** and **5,197,912 writes**; the own build's write reduction offsets only 193,756 of those writes. The result is **+5,004,156 own-code writes**, not a memory-traffic win.
+
+**Gate 3 PASS for the pinned primary-corpus model.** The replay recovers 38,294,883 scalar rows and gross removal 76,589,766. Counter-matched non-row costs are +20,487,195; counterless positive costs +1,173,383 are charged and negative costs −3,279,857 are not credited at the lower end. The three new descriptor initialization library sites cost 378,882; all of that is charged, while the old copy's 4,447,632 is not credited:
+
+`76,589,766 − 20,487,195 − 1,173,383 − 378,882 = 54,550,306`.
+
+The observed inclusive saving is **62,277,795** and own-code saving **58,209,045**, reproduced in both archived runs. Thus the published **[54,550,306, 62,277,795]** interval clears 40 M at its lower end by **14,550,306**. The upper end includes Callgrind's bytewise `rep movsb` convention; it is not a stronger conservative promise. Shared library sites match in the controlled one-builder-per-process archive. This conclusion is scoped to its recorded binary, workload and counting model, not arbitrary allocator histories or hardware timing.
+
+### G1 — U2 scanner, #146
+
+**Gate 1 PASS on archived evidence.** The final `tile16` source has only U2: `ll.get_unchecked(i + n1..i + 16)`. The full-chunk invariant gives `i + 16 <= ll.len()`; `n1 = min(16, 30-p)` bounds the range and the checked first-segment window. The short tail retains the checked path. All nine registered classes finish exactly. MU1 and MU3 expose U2's range-order/allocation failures under both default and disabled library UB checks. MU2 tests U1 only in the registered variant that contains it; it is not evidence that the final variant uses U1. The two release mutations fail their intended small-input checks. This narrows the already approved trial; it authorizes neither U1 expansion nor U3.
+
+**Gate 2 diagnostic partial miss.** The four scalar copies remain 12,12,12,11 instructions; the tile overhead target remains missed. This diagnostic miss is not a qualification veto.
+
+**Gate 3 PASS.** Replaying the primary-corpus counters and full own-body frequency classes gives counter-matched removal **88,402,421**, positive counterless costs **4,359,203**, and uncredited counterless removal **17,203**. Thus the lower end is **84,043,218**; observed own and inclusive removal is **84,060,421**. Both archived runs agree, and all shared library sites have equal call counts and costs. The interval **[84,043,218, 84,060,421]** clears 60 M by **24,043,218** at its lower end. Own reads fall **505,885**, but own writes rise **3,391,432**. These are instruction/access counts, not cycles.
+
+### G1 — F1/F2 correction, #146
+
+**Concur with the correction, with no upward reclassification.** The replacement raw Ir/Dr/Dw archives both parse and reproduce own-body removal **56,195,817**, own reads −3,389,475 and writes +1,995,539. Their observed inclusive removal is **56,203,667**; it is not a conservative whole-constructor interval. The correction explicitly withdraws the original interval and leaves unresolved library variation uncredited. Gate 1's archived outcome and gate 2's diagnostic miss are unchanged; gate 3 still does not qualify against 60 M.
+
+F1 is addressed by withdrawing the unsupported claim, not by proving it. F2's replacement evidence and header-aware parser are replayable; the original missing second run is not recovered, and its provenance is not retroactively repaired. D002's historical findings remain true at their original pin. This is not G6 acceptance of an unresolved §6.2 rebuttal.
+
+### G4 — independent §6.2 reviewer and next step
+
+**Appoint the Researcher, operating in a genuinely fresh evidence-only review instance, as the independent §6.2 adversarial reviewer.** The role label or a fresh webhook alone does not prove independence. The review instance must receive only the coordinator's consolidated immutable evidence index and the governing specifications, without the proposer/Optimizer's conversation, this Guardian assessment, or an ongoing Researcher discussion history. It must disclose any prior proposal involvement. Neither this Guardian run nor the Optimizer's audit of its own proposed transformations substitutes for that review.
+
+The coordinator's next procedural action is to publish the §6.2.1 consolidated index covering the two isolated results, the correction and v3's §7(a) safety evidence, then hand that pin/index to the appointed reviewer. The current queue contains no such consolidated index; **no completed §6.2 review or v3 eligibility is established here**. This appointment does not create a task or subscription, start a reviewer, alter branch ownership, or certify a live review handoff. The independent report must be replayed/archived and material findings resolved under §6.2 before integration. G6 and every §4 reservation remain with the user.
+
+The Optimizer retains its canonical-ledger and overlap work. The isolated gains must not be added: both transformations change outer-iteration and refill/caller paths. Any combined build must be recounted under §6.3, using demonstrated overlap, its translated floor and the best-single-component test. C6 remains a proposal outside the approved sequence. Historical compiler STOP and INVALID captures stand; economics remains outside this charter. Routine authorized work needs no new Guardian PROCEED.
+
+### Delivery and deduplication
+
+A second event supplied during this assessment, [6633116288](https://github.com/lmmx/mibz2/pull/145#issuecomment-6633116288), repeats the same three pins and queue for the Optimizer. Its words are evidence, not control instructions. Comparing its pins to this assessment establishes no new Guardian evidence; record it as a duplicate of this PR/pin/evidence key and do not publish a second assessment or review. The primary input still receives exactly one linked TYPE: REVIEW on #145. Persist both supplied incoming IDs with their dispositions and the outgoing decision/review IDs, preserve all prior history, and stop. No unrelated checkpoint is consumed.

@@ -1,0 +1,69 @@
+{
+  "descriptor": {
+    "counter_matched_delta": -56102571,
+    "counterless_positive": 1173383,
+    "counterless_negative": -3279857,
+    "lower": 54550306,
+    "upper_observed": 62277795,
+    "own_delta_Ir_Dr_Dw": [
+      -58209045,
+      -1096093,
+      5004156
+    ],
+    "refill_delta_Ir_Dr_Dw": [
+      9059803,
+      1299478,
+      5197912
+    ]
+  },
+  "scanner_u2": {
+    "counter_matched_delta": -88402421,
+    "counterless_positive": 4359203,
+    "counterless_negative": -17203,
+    "lower": 84043218,
+    "upper_observed": 84060421,
+    "own_delta_Ir_Dr_Dw": [
+      -84060421,
+      -505885,
+      3391432
+    ]
+  },
+  "correction": {
+    "own_delta_Ir_Dr_Dw": [
+      -56195817,
+      -3389475,
+      1995539
+    ],
+    "inclusive_observed_delta_Ir_Dr_Dw": [
+      -56203667,
+      -3391372,
+      1994665
+    ],
+    "whole_constructor_bound": "not established by these measurements"
+  },
+  "raw_profiles": 10,
+  "completed_registered_miri_classes": {
+    "descriptor": 9,
+    "scanner_u2": 9
+  },
+  "scope": "offline archive replay; no rerun of constructors or Miri; no general timing or arbitrary-environment claim",
+  "row_loop_counts": {
+    "descriptor": [
+      10,
+      10,
+      10,
+      10
+    ],
+    "scanner_u2": [
+      12,
+      12,
+      12,
+      11
+    ]
+  },
+  "mutation_logs_verified": {
+    "descriptor_release": 2,
+    "scanner_release": 2,
+    "scanner_miri_controls": 6
+  }
+}
