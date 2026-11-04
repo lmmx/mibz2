@@ -50,6 +50,18 @@
       "outgoing_pr": 149,
       "comment": 6630629015,
       "status": "declined"
+    },
+    {
+      "id": "D006",
+      "pilot": "P4 closeout",
+      "pr": 149,
+      "sha": "51657ab576a804531de0e71a40d4197c42f7c592",
+      "evidence_digest": "8b764c7349136fd420e5db86377f1c5e0ae19f7f72e42a41111409c5a393aac5",
+      "incoming_comment": 6630672389,
+      "log_commit": "35c7cdcb68ffc5ecbcf0eeb37b9307a8ccf207fb",
+      "commit": "9bb210bc2fe52ef933da50239d85cc8260a759c8",
+      "comment": 6631014855,
+      "status": "P4 CLOSED; pilot execution complete with named defects; remains SHADOW"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -57,14 +69,16 @@
     6630589596,
     6630627391,
     6630629015,
-    6630660444
+    6630660444,
+    6631014855
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
     "bb87cbe3521c09c4826e69f983e1775280695fe5",
     "cfa5a66c7b3aba3cbdac4b32d253658a37259e89",
     "51657ab576a804531de0e71a40d4197c42f7c592",
-    "806de8ef5dff19b7859ff51475fe5b8e563a6a1b"
+    "806de8ef5dff19b7859ff51475fe5b8e563a6a1b",
+    "9bb210bc2fe52ef933da50239d85cc8260a759c8"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -101,8 +115,8 @@
     "log_path": "docs/journal/compact30-channel/log.md",
     "closure_entry": "D006",
     "closure_evidence_digest": "8b764c7349136fd420e5db86377f1c5e0ae19f7f72e42a41111409c5a393aac5",
-    "closure_comment_id": null,
-    "closure_commit": null
+    "closure_comment_id": 6631014855,
+    "closure_commit": "9bb210bc2fe52ef933da50239d85cc8260a759c8"
   },
   "rules": [
     "Do not reassess an existing PR/SHA/evidence-digest key.",
