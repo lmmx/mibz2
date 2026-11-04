@@ -17,6 +17,19 @@
       "id": 6630137149,
       "type": "PROPOSAL",
       "sha": "ff65301b7ed622df2dd92867ca1761478f2f8915"
+    },
+    {
+      "pr": 146,
+      "id": 6630265636,
+      "type": "REVIEW",
+      "sha": "0ac2e67e6826b9f2b1940cb876c3003e7a022144",
+      "checkpoint_sha": "7f74e9f30e31af33b0d66fec3fe89af1758307d9"
+    },
+    {
+      "pr": 145,
+      "id": 6630279852,
+      "type": "REVIEW",
+      "sha": "0ac2e67e6826b9f2b1940cb876c3003e7a022144"
     }
   ],
   "reviews": [
@@ -54,5 +67,14 @@
   "proposal_independence": {
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required"
   },
-  "status": "WAITING"
+  "status": "WAITING",
+  "published_evidence_commit": "0ac2e67e6826b9f2b1940cb876c3003e7a022144",
+  "incoming_experiment_comment_ids": [
+    {
+      "pr": 146,
+      "id": 6629864932,
+      "classification": "coordinator CI explanation; not authority"
+    }
+  ],
+  "deduplication": "Review only a new (PR, source SHA, evidence digest); ignore own comment IDs and own branch CI as input triggers."
 }
