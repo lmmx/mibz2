@@ -39,6 +39,19 @@ merge only when all of these hold:
   beyond noise, meaning its 95% interval excludes zero in the beneficial direction;
 - no other figure regresses unacceptably.
 
+**Before opening a PR that changes the default decoding kernel,** including a measurement-only
+PR, account for the whole decoder, not only the part a campaign optimised:
+- Count the instructions executed in `decode_block` on master and on the candidate, split into
+  build, walk and the rest. Use matched toolchain, flags and input, and archive the profiles.
+- Open the PR only if one of these holds:
+  - the whole count is at or below master's;
+  - a written, quantitative case shows how a non-instruction effect outweighs the excess at
+    each thread count CI measures.
+- Timing on the shared development machine is never the reason to open one.
+
+PR #155 is why: its constructor saved 19.5% of its instructions, its walk added 31%, and CI
+measured the decoder 7–19% slower.
+
 **Docs-only and measurement-only changes** merge when CI is green and nothing measured
 changed that wasn't meant to.
 
