@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING for addressed research evidence; D016 scoped candidate rejection acknowledged; legacy phase diagnostic mismatch reported",
+  "state": "WAITING for addressed evidence; deferred-handover semantic argument assessed at 8465207a; no new authority",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -58,9 +58,10 @@
     6640153383,
     6640266327,
     6640324039,
-    6641768409
+    6641768409,
+    6643481606
   ],
-  "last_processed_comment_id": 6641768409,
+  "last_processed_comment_id": 6643481606,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -264,6 +265,18 @@
       "report_path": "docs/journal/compact30-adversarial/scanner-146/d016-reconciliation-6641768409.md",
       "review_comment_id": 6641832358,
       "disposition": "D016 conditional walk budget independently recomputed from published totals. Found production port phase diagnostics still directly call legacy BWT build/walk; not compact30 phase measurements. Whole-decoder CI rejection remains. No new implementation or replay."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643481606,
+      "source_commit": "8465207a1d71af51baa1725ecf695c41b52848a2",
+      "report_commit": "825af2e73fac1b1ff2559a5883031766b6b53f7e",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/deferred-handover-6643481606/report.md",
+      "review_comment_id": null,
+      "source_comment_posted": false,
+      "source_comment_omission_reason": "Triggering batch explicitly prohibits an additional source-app message.",
+      "disposition": "No byte or next[] counterexample found: distinct buffers and immutable T permit ordinary steps to commute with ordered handovers. Queue-exhaustion pointer reconciliation correct; 40,923 abstract schedule cases passed. Execution/grow chronology not identical; no native safety/performance certification."
     }
   ],
   "active_delegations": [],
@@ -283,15 +296,20 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6641768409,
-      6641782001
+      6643479692,
+      6643481606,
+      6643514782
     ],
     "handled": [
-      6641768409
+      6643481606
     ],
     "skipped": [
       {
-        "comment_id": 6641782001,
+        "comment_id": 6643479692,
+        "reason": "TO excludes researcher"
+      },
+      {
+        "comment_id": 6643514782,
         "reason": "TO excludes researcher"
       }
     ],
