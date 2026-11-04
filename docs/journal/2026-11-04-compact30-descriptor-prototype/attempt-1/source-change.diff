@@ -1,0 +1,783 @@
+--- ctor2.rs@8beffe2
++++ ctor2d.rs@attempt-1
+@@ -1,12 +1,20 @@
+-//! Constructor v2: deferred offset formation (Astra's design, report 205; one bounded
+-//! compile-and-correctness prototype, report 206, clarified by report 208). Untimed,
+-//! research only, not wired into the decoder. The frozen representation (`Rec`, `RawG`),
+-//! the walker, the oracle `C30::build` and constructor v1 (`ctor.rs`) are used as they
+-//! are; this module only adds to them.
++//! Prototype 2 of the compact30 research charter (§6.1): constructor v2 (`ctor2.rs` at
++//! `8beffe2`, copied) with its per-character descriptor split into two hot pointer arrays,
++//! `wr[256]` (next field) and `en[256]` (portion end), and a cold array of the rest, so
++//! that the one-row append can address `wr[c]` and `en[c]` with base + 8c (report 227
++//! §D.3). Untimed, research only, not wired into the decoder; `ctor2.rs` is unchanged.
+ //!
+-//!     cargo run --release --example c30walk -- ctor2-check OUT.jsonl FILE.bz2 [FILE.bz2 ...]
+-//!     cargo run --release --example c30walk -- ctor2-adversarial OUT.jsonl
+-//!     cargo run --release --example c30walk -- ctor2-synthetic [--quick]
++//!     cargo run --release --example c30walk -- ctor2d-check OUT.jsonl FILE.bz2 [FILE.bz2 ...]
++//!     cargo run --release --example c30walk -- ctor2d-adversarial OUT.jsonl
++//!     cargo run --release --example c30walk -- ctor2d-synthetic [--quick | --miri CLASS]
++//!     cargo run --release --example c30walk -- ctor2d-count FILE.bz2 ...
++//!
++//! **The change (everything else is v2's):** v2's `Desc` is no longer stored; it is
++//! assembled on demand (`W::desc`) from `wr[c]`, `en[c]` and `cold[c]` wherever v2 copied
++//! it. The same updates happen at the same sites (`open`, `close`, `one`, `fill`, `run`),
++//! on the same pointers. No new `unsafe` operation.
++//!
++//! What follows is v2's description.
+ //!
+ //! **What changes from v1:** incomplete records no longer form offsets row by row.
+ //! - **The append:** every row that the bulk emitter doesn't place (fragment and scalar
+@@ -101,7 +109,7 @@
+ 
+ /// The untimed structural counters (`build::<true>` only)
+ #[derive(Clone, Default, Debug)]
+-pub struct Stats2 {
++pub struct Stats2d {
+     pub blocks: u64,
+     pub rows: u64,
+     /// rows emitted as complete records by the bulk emitter (ordinary), and as RAW entries
+@@ -143,8 +151,8 @@
+     pub multi_epoch_portions: u64,
+ }
+ 
+-impl Stats2 {
+-    pub fn add(&mut self, o: &Stats2) {
++impl Stats2d {
++    pub fn add(&mut self, o: &Stats2d) {
+         macro_rules! sum {
+             ($($f:ident),*) => { $( self.$f += o.$f; )* };
+         }
+@@ -225,35 +233,39 @@
+     }
+ }
+ 
+-/// A character's write descriptor. Empty (no open portion) when `w0 == write == end`
+-/// (null); otherwise its open portion is the fields `[w0, end)` of group `g`, starting at
+-/// destination rank `r0`, of which `[w0, write)` hold temporary labels. `raw` is the
+-/// group's provisional RAW index if it is preset RAW (crossing or forced), else `NO_RAW`.
++/// The cold part of a character's descriptor (the hot `write` and `end` are in `W::wr`
++/// and `W::en`)
++#[derive(Clone, Copy)]
++struct Cold {
++    w0: *mut u16,
++    r0: u32,
++    lim: u32,
++    g: u32,
++    raw: u32,
++}
++
++/// A character's write descriptor, as v2 has it, assembled from the split storage. Empty
++/// (no open portion) when `w0 == write == end` (null); otherwise its open portion is the
++/// fields `[w0, end)` of group `g`, starting at destination rank `r0`, of which
++/// `[w0, write)` hold temporary labels. `raw` is the group's provisional RAW index if it is
++/// preset RAW (crossing or forced), else `NO_RAW`.
+ #[derive(Clone, Copy)]
+ struct Desc {
+     write: *mut u16,
+     end: *mut u16,
+     w0: *mut u16,
+     r0: u32,
+-    lim: u32,
+     g: u32,
+     raw: u32,
+ }
+ 
+-impl Desc {
+-    /// The character's next destination rank: the portion's start plus its rows
+-    #[inline(always)]
+-    fn rank(&self) -> u32 {
+-        self.r0 + ((self.write as usize - self.w0 as usize) / 2) as u32
+-    }
+-}
+ 
+ /// The constructor's reusable scratch: the RAW bitmap, the epoch snapshots, the counters
+ #[derive(Default)]
+-pub struct Ctor2 {
++pub struct Ctor2d {
+     bitmap: Vec<u64>,
+     snaps: Vec<[u32; 256]>,
+-    pub st: Stats2,
++    pub st: Stats2d,
+ }
+ 
+ /// A bounds condition: asserted in the counted build, debug-asserted in the other
+@@ -272,14 +284,38 @@
+     raw: &'a mut Vec<RawG>,
+     bitmap: &'a mut [u64],
+     snaps: &'a mut Vec<[u32; 256]>,
+-    desc: [Desc; 256],
++    /// the hot descriptor arrays: each character's next field and its portion's end
++    wr: [*mut u16; 256],
++    en: [*mut u16; 256],
++    /// the rest of each descriptor
++    cold: [Cold; 256],
+     /// the source row's full label φ(i) and phase i mod 30
+     y: u32,
+     p: usize,
+-    st: &'a mut Stats2,
++    st: &'a mut Stats2d,
+ }
+ 
+ impl<const COUNT: bool> W<'_, COUNT> {
++    /// v2's descriptor of character c, assembled from the split storage
++    #[inline(always)]
++    fn desc(&self, c: usize) -> Desc {
++        let k = self.cold[c];
++        Desc {
++            write: self.wr[c],
++            end: self.en[c],
++            w0: k.w0,
++            r0: k.r0,
++            g: k.g,
++            raw: k.raw,
++        }
++    }
++
++    /// Character c's next destination rank
++    #[inline(always)]
++    fn rank(&self, c: usize) -> u32 {
++        self.cold[c].r0 + ((self.wr[c] as usize - self.cold[c].w0 as usize) / 2) as u32
++    }
++
+     #[inline(always)]
+     fn is_raw(&self, g: usize) -> bool {
+         self.bitmap[g >> 6] >> (g & 63) & 1 != 0
+@@ -321,8 +357,8 @@
+     /// Save every character's next destination rank: the snapshot A_e
+     fn snapshot(&mut self) {
+         let mut a = [0u32; 256];
+-        for (x, d) in a.iter_mut().zip(self.desc.iter()) {
+-            *x = d.rank();
++        for (c, x) in a.iter_mut().enumerate() {
++            *x = self.rank(c);
+         }
+         self.snaps.push(a);
+         if COUNT {
+@@ -344,7 +380,7 @@
+     /// to the group's end or the bucket's. SAFETY: r < lim ≤ n
+     #[inline(always)]
+     unsafe fn open(&mut self, c: usize, r: u32) {
+-        let lim = self.desc[c].lim;
++        let lim = self.cold[c].lim;
+         chk!(COUNT, r < lim);
+         let g = r as usize / ROWS;
+         let re = lim.min(((g + 1) * ROWS) as u32);
+@@ -357,27 +393,27 @@
+             chk!(COUNT, r as usize % ROWS == 0);
+             NO_RAW
+         };
+-        let d = &mut self.desc[c];
+-        d.w0 = w0;
+-        d.write = w0;
+-        d.end = w0.add((re - r) as usize);
+-        d.r0 = r;
+-        d.g = g as u32;
+-        d.raw = raw;
++        self.wr[c] = w0;
++        self.en[c] = w0.add((re - r) as usize);
++        self.cold[c] = Cold {
++            w0,
++            r0: r,
++            lim,
++            g: g as u32,
++            raw,
++        };
+     }
+ 
+     /// Finish c's pending portion (if any) and leave the descriptor empty at its next rank
+     #[inline(always)]
+     unsafe fn close(&mut self, c: usize) {
+-        let d = self.desc[c];
+-        if d.write != d.w0 {
++        if self.wr[c] != self.cold[c].w0 {
+             self.finish(c);
+         }
+-        let d = &mut self.desc[c];
+-        d.r0 = d.rank();
+-        d.w0 = ptr::null_mut();
+-        d.write = ptr::null_mut();
+-        d.end = ptr::null_mut();
++        self.cold[c].r0 = self.rank(c);
++        self.cold[c].w0 = ptr::null_mut();
++        self.wr[c] = ptr::null_mut();
++        self.en[c] = ptr::null_mut();
+     }
+ 
+     /// The one-row path's slow edge: the open portion is full (or there is none). Finish
+@@ -386,8 +422,8 @@
+     #[inline(never)]
+     unsafe fn refill(&mut self, c: usize) -> bool {
+         self.close(c);
+-        let r = self.desc[c].r0;
+-        if r >= self.desc[c].lim {
++        let r = self.cold[c].r0;
++        if r >= self.cold[c].lim {
+             return false;
+         }
+         self.open(c, r);
+@@ -398,7 +434,7 @@
+     /// final form (once)
+     #[inline(never)]
+     unsafe fn finish(&mut self, c: usize) {
+-        let d = self.desc[c];
++        let d = self.desc(c);
+         let k = (d.write as usize - d.w0 as usize) / 2;
+         chk!(COUNT, k >= 1 && d.write == d.end);
+         let (r0, r1) = (d.r0, d.r0 + k as u32 - 1);
+@@ -539,12 +575,12 @@
+     #[inline(always)]
+     unsafe fn one(&mut self, c: u8, u: u16) -> bool {
+         let ci = c as usize;
+-        if self.desc[ci].write == self.desc[ci].end && !self.refill(ci) {
++        if self.wr[ci] == self.en[ci] && !self.refill(ci) {
+             return false;
+         }
+-        let d = &mut self.desc[ci];
+-        d.write.write(u);
+-        d.write = d.write.add(1);
++        let w = self.wr[ci];
++        w.write(u);
++        self.wr[ci] = w.add(1);
+         if COUNT {
+             self.st.rows_scalar += 1;
+         }
+@@ -583,12 +619,12 @@
+     unsafe fn fill(&mut self, c: usize, m: usize) {
+         let pat = &PATTERNS[self.p].f;
+         let y = self.y;
+-        let d = &mut self.desc[c];
+-        chk!(COUNT, m <= (d.end as usize - d.write as usize) / 2);
++        let w = self.wr[c];
++        chk!(COUNT, m <= (self.en[c] as usize - w as usize) / 2);
+         for (t, &o) in pat[..m].iter().enumerate() {
+-            d.write.add(t).write((y + o as u32) as u16);
++            w.add(t).write((y + o as u32) as u16);
+         }
+-        d.write = d.write.add(m);
++        self.wr[c] = w.add(m);
+         self.advance(m);
+         if COUNT {
+             self.st.rows_fragment += m as u64;
+@@ -645,8 +681,7 @@
+     #[inline(always)]
+     unsafe fn run(&mut self, c: u8, mut m: usize, forced_cfg: bool) -> bool {
+         let ci = c as usize;
+-        let d = self.desc[ci];
+-        if d.rank() as usize + m > d.lim as usize {
++        if self.rank(ci) as usize + m > self.cold[ci].lim as usize {
+             return false;
+         }
+         if COUNT {
+@@ -654,8 +689,7 @@
+             self.st.run_rows += m as u64;
+         }
+         loop {
+-            let d = self.desc[ci];
+-            let room = (d.end as usize - d.write as usize) / 2;
++            let room = (self.en[ci] as usize - self.wr[ci] as usize) / 2;
+             let k = room.min(m);
+             if k > 0 {
+                 self.fill(ci, k);
+@@ -665,23 +699,23 @@
+                 return true;
+             }
+             self.close(ci);
+-            let r = self.desc[ci].r0 as usize;
++            let r = self.cold[ci].r0 as usize;
+             if r % ROWS == 0 && m >= ROWS {
+                 let whole = m / ROWS;
+                 self.complete(c, r / ROWS, whole, forced_cfg);
+                 m -= ROWS * whole;
+-                self.desc[ci].r0 = (r + ROWS * whole) as u32;
++                self.cold[ci].r0 = (r + ROWS * whole) as u32;
+                 if m == 0 {
+                     return true;
+                 }
+             }
+-            let r = self.desc[ci].r0;
++            let r = self.cold[ci].r0;
+             self.open(ci, r);
+         }
+     }
+ }
+ 
+-impl Ctor2 {
++impl Ctor2d {
+     /// `rec` and `raw` for the last column `ll` and its `counts`, exactly as `C30::build`
+     /// gives them for the same `permille`. False, with both arrays empty, if the counts
+     /// don't sum to n, n is out of range, or a bucket overflows (the counts are not `ll`'s
+@@ -719,14 +753,12 @@
+             *raw = Vec::new();
+             raw.reserve_exact(raw_req);
+         }
+-        let Ctor2 { bitmap, snaps, st } = self;
++        let Ctor2d { bitmap, snaps, st } = self;
+         bitmap.clear();
+         bitmap.resize(g_count.div_ceil(64), 0);
+         snaps.clear();
+         snaps.reserve(MAX_EPOCHS);
+-        let mut desc = [Desc {
+-            write: ptr::null_mut(),
+-            end: ptr::null_mut(),
++        let mut cold = [Cold {
+             w0: ptr::null_mut(),
+             r0: 0,
+             lim: 0,
+@@ -734,7 +766,7 @@
+             raw: NO_RAW,
+         }; 256];
+         let mut cum = 0u32;
+-        for (d, &k) in desc.iter_mut().zip(counts.iter()) {
++        for (d, &k) in cold.iter_mut().zip(counts.iter()) {
+             d.r0 = cum;
+             cum += k;
+             d.lim = cum;
+@@ -747,7 +779,9 @@
+                 raw: &mut *raw,
+                 bitmap,
+                 snaps,
+-                desc,
++                wr: [ptr::null_mut(); 256],
++                en: [ptr::null_mut(); 256],
++                cold,
+                 y: 0,
+                 p: 0,
+                 st: &mut *st,
+@@ -863,7 +897,7 @@
+             }
+         }
+         for c in 0..256 {
+-            if w.desc[c].rank() != w.desc[c].lim {
++            if w.rank(c) != w.cold[c].lim {
+                 return false;
+             }
+         }
+@@ -929,7 +963,11 @@
+ struct Arenas {
+     oracle: C30,
+     cand: C30,
+-    ctor: Ctor2,
++    ctor: Ctor2d,
++    /// constructor v2 (`ctor2.rs`, unchanged, called read-only), for the counters' comparison
++    v2: super::ctor2::Ctor2,
++    v2rec: Vec<Rec>,
++    v2raw: Vec<RawG>,
+     out: Vec<u8>,
+     out_o: Vec<u8>,
+     prod: Segmented,
+@@ -952,10 +990,52 @@
+     }
+ }
+ 
+-/// One block, one configuration: the oracle; Ctor2's counted build into a poisoned reused
+-/// arena, against the oracle; its uncounted build, again; then with `want` the unchanged
+-/// walker on its arrays (counted, audited) against production and the oracle's own
+-/// counted walk, and the arrays again after each walk
++/// The prototype's counters against v2's counted build on the same input: every field
++/// equal (the row classification, runs, finishes, normalisation, RAW work, epochs, spans
++/// and portion shapes)
++fn same_as_v2(what: &str, s: &Stats2d, v: &super::ctor2::Stats2) {
++    macro_rules! eq {
++        ($($f:ident),*) => { $( assert_eq!(s.$f, v.$f, "{what}: {} differs from v2's", stringify!($f)); )* };
++    }
++    eq!(
++        blocks,
++        rows,
++        rows_bulk,
++        rows_bulk_raw,
++        rows_fragment,
++        rows_scalar,
++        runs,
++        run_rows,
++        complete_groups,
++        fin_fast,
++        fin_ordinary,
++        fin_wide,
++        fin_crossing,
++        fin_forced,
++        norm_full,
++        norm_partial,
++        norm_fields,
++        raw_fields_read,
++        raw_entries_written,
++        fields_restored,
++        epoch_searches,
++        epochs,
++        runs_split_at_epoch,
++        raw_groups,
++        raw_moved,
++        raw_cycles,
++        max_ordinary_span,
++        min_wide_span,
++        multi_epoch_portions
++    );
++    assert!(s.cov_portion == v.cov_portion, "{what}: portion shapes differ from v2's");
++}
++
++/// One block, one configuration: the oracle; Ctor2d's counted build into a poisoned reused
++/// arena, against the oracle, and its counters against v2's counted build; its uncounted
++/// build, again; then with `want` the unchanged walker on its arrays (counted, audited)
++/// against production and the oracle's own counted walk, and the arrays again after each
++/// walk (marker restoration)
+ #[allow(clippy::too_many_arguments)]
+ fn check_block(
+     a: &mut Arenas,
+@@ -968,7 +1048,7 @@
+     extra: bool,
+     poisoned: bool,
+     ck: &mut Checked,
+-) -> Stats2 {
++) -> Stats2d {
+     let n = ll.len();
+     let _ = a.oracle.build(ll, counts, pm);
+     a.flips += 1;
+@@ -983,8 +1063,14 @@
+     );
+     let st = std::mem::replace(&mut a.ctor.st, before);
+     if let Some(d) = diff(&a.oracle, &a.cand.rec, &a.cand.raw) {
+-        panic!("{what} pm {pm}: Ctor2's counted build differs: {d}");
++        panic!("{what} pm {pm}: Ctor2d's counted build differs: {d}");
+     }
++    let before2 = std::mem::take(&mut a.v2.st);
++    assert!(a
++        .v2
++        .build::<true>(ll, counts, pm, &mut a.v2rec, &mut a.v2raw));
++    let st2 = std::mem::replace(&mut a.v2.st, before2);
++    same_as_v2(&format!("{what} pm {pm}"), &st, &st2);
+     if poisoned {
+         poison(&mut a.cand.rec, a.flips % 2 == 1);
+     }
+@@ -994,7 +1080,7 @@
+         "{what}: the uncounted build rejected valid counts"
+     );
+     if let Some(d) = diff(&a.oracle, &a.cand.rec, &a.cand.raw) {
+-        panic!("{what} pm {pm}: Ctor2's uncounted build differs: {d}");
++        panic!("{what} pm {pm}: Ctor2d's uncounted build differs: {d}");
+     }
+     ck.arrays += 2;
+     if let Some(want) = want {
+@@ -1067,18 +1153,18 @@
+     }
+ }
+ 
+-fn check_input(name: &str, data: &[u8], jl: &mut std::fs::File, traffic: bool) -> Stats2 {
++fn check_input(name: &str, data: &[u8], jl: &mut std::fs::File, traffic: bool) -> Stats2d {
+     let bs = blocks(data);
+-    let mut nat = Stats2::default();
++    let mut nat = Stats2d::default();
+     for &(pm, extra) in &CONFIGS {
+         let next = AtomicUsize::new(0);
+-        let results: Vec<(Stats2, Checked, V1Traffic)> = std::thread::scope(|sc| {
++        let results: Vec<(Stats2d, Checked, V1Traffic)> = std::thread::scope(|sc| {
+             let hs: Vec<_> = (0..3)
+                 .map(|_| {
+                     sc.spawn(|| {
+                         let mut a = Arenas::default();
+                         let (mut st, mut ck, mut v1) =
+-                            (Stats2::default(), Checked::default(), V1Traffic::default());
++                            (Stats2d::default(), Checked::default(), V1Traffic::default());
+                         loop {
+                             let i = next.fetch_add(1, Ordering::Relaxed);
+                             let Some((ll, counts, op, want)) = bs.get(i) else {
+@@ -1113,7 +1199,7 @@
+             hs.into_iter().map(|h| h.join().unwrap()).collect()
+         });
+         let (mut st, mut ck, mut v1) =
+-            (Stats2::default(), Checked::default(), V1Traffic::default());
++            (Stats2d::default(), Checked::default(), V1Traffic::default());
+         for (s, c, t) in &results {
+             st.add(s);
+             ck.add(c);
+@@ -1195,7 +1281,7 @@
+ 
+ struct Synth {
+     a: Arenas,
+-    st: Stats2,
++    st: Stats2d,
+     ck: Checked,
+     cases: u64,
+     poisoned: bool,
+@@ -1203,7 +1289,7 @@
+ }
+ 
+ impl Synth {
+-    fn case(&mut self, what: &str, ll: &[u8], pm: u32) -> Stats2 {
++    fn case(&mut self, what: &str, ll: &[u8], pm: u32) -> Stats2d {
+         let counts = hist(ll);
+         let n = ll.len();
+         self.cases += 1;
+@@ -1236,7 +1322,7 @@
+                         }
+                 );
+             }
+-            return Stats2::default();
++            return Stats2d::default();
+         }
+         let op = (n / 2) as u32;
+         let mut w = std::mem::take(&mut self.a.want);
+@@ -1259,7 +1345,7 @@
+     }
+ 
+     fn mark(&mut self, name: &str, from: u64) {
+-        println!("ctor2-synthetic: {name}: {} cases exact", self.cases - from);
++        println!("ctor2d-synthetic: {name}: {} cases exact", self.cases - from);
+         self.classes.push((name.into(), self.cases - from));
+     }
+ }
+@@ -1276,10 +1362,168 @@
+     v
+ }
+ 
++/// The prototype's registered classes (pre-registration §0.4), each runnable on its own
++/// (`--miri CLASS`), all of them in the full and quick suites
++const DESC_CLASSES: [&str; 9] = [
++    "tiny", "slots", "allbytes", "crossing", "runs", "epoch", "pending", "malformed", "reuse",
++];
++
++fn desc_class(s: &mut Synth, class: &str) {
++    let from = s.cases;
++    match class {
++        // 1. tiny and empty inputs
++        "tiny" => {
++            for n in [0usize, 1, 2, 15, 16, 17, 31, 32, 33] {
++                for sigma in [1usize, 2] {
++                    let v: Vec<u8> = (0..n).map(|k| ((k / 3) % sigma) as u8 * 5).collect();
++                    s.case(&format!("descriptor tiny n {n} sigma {sigma}"), &v, 0);
++                }
++            }
++        }
++        // 2. a refill at every slot: characters interleaved so that each one's portions
++        //    close at every slot of its groups
++        "slots" => {
++            for sigma in [2usize, 3] {
++                for shift in 0..30usize {
++                    let n = 90 + shift;
++                    let v: Vec<u8> = (0..n).map(|k| ((k * 7 + shift) % sigma) as u8 + 1).collect();
++                    s.case(&format!("descriptor slots sigma {sigma} shift {shift}"), &v, 0);
++                }
++            }
++        }
++        // 3. all 256 byte values in one block: every hot and cold index, 255 included
++        "allbytes" => {
++            let mut v: Vec<u8> = (0..=255u8).collect();
++            v.extend((0..=255u8).rev());
++            v.extend((0..512usize).map(|k| (k * 37 % 256) as u8));
++            s.case("descriptor all 256 bytes", &v, 0);
++        }
++        // 4. crossing groups: a bucket boundary at every offset, n = 61
++        "crossing" => {
++            for bnd in 1..61usize {
++                let mut v = vec![1u8; bnd];
++                v.extend(std::iter::repeat(2u8).take(61 - bnd));
++                let rev: Vec<u8> = v.iter().rev().copied().collect();
++                s.case(&format!("descriptor crossing B {bnd}"), &v, 0);
++                s.case(&format!("descriptor crossing B {bnd} reversed"), &rev, 0);
++            }
++        }
++        // 5. runs: a run's fill, close, complete and open, ending inside a group and
++        //    spanning several
++        "runs" => {
++            for (p, m) in [(0usize, 16usize), (5, 32), (13, 48), (29, 64), (3, 96), (7, 160)] {
++                let mut v = Vec::new();
++                filler(&mut v, p);
++                v.extend(std::iter::repeat(1u8).take(m));
++                filler(&mut v, 23);
++                v.push(1);
++                filler(&mut v, 9);
++                s.case(&format!("descriptor runs P {p} m {m}"), &v, 0);
++            }
++        }
++        // 6. an epoch boundary: the snapshot reads the split arrays
++        "epoch" => {
++            let n = EPOCH + 64;
++            let mut v = Vec::with_capacity(n);
++            filler(&mut v, n);
++            for t in 0..5 {
++                v[EPOCH - 30 + 7 * t] = 1;
++                v[EPOCH + 7 * t] = 1;
++            }
++            for x in &mut v[EPOCH - 48..EPOCH + 48] {
++                *x = 4;
++            }
++            s.case("descriptor epoch boundary", &v, 0);
++        }
++        // 7. pending portions finished by the final sweep
++        "pending" => {
++            for count in [1usize, 29, 30, 31] {
++                let n = 200 + count;
++                let mut v = Vec::with_capacity(n);
++                filler(&mut v, n);
++                for t in 0..count {
++                    v[n - 1 - 3 * t.min(60)] = 9;
++                }
++                s.case(&format!("descriptor pending count {count}"), &v, 0);
++            }
++        }
++        // 8. malformed counts: rejected by both builds, both arrays empty
++        "malformed" => {
++            let mut v = Vec::new();
++            filler(&mut v, 40);
++            v.extend(std::iter::repeat(3u8).take(33));
++            let own = hist(&v);
++            for t in 0..4 {
++                let mut c = own;
++                match t {
++                    0 => c[3] += 1,
++                    1 => c[3] -= 1,
++                    2 => {
++                        c[3] -= 5;
++                        c[200] += 5;
++                    }
++                    _ => c.swap(2, 3),
++                }
++                for counted in [true, false] {
++                    let ok = if counted {
++                        s.a.ctor.build::<true>(&v, &c, 0, &mut s.a.cand.rec, &mut s.a.cand.raw)
++                    } else {
++                        s.a.ctor.build::<false>(&v, &c, 0, &mut s.a.cand.rec, &mut s.a.cand.raw)
++                    };
++                    assert!(!ok && s.a.cand.rec.is_empty() && s.a.cand.raw.is_empty());
++                }
++                s.cases += 1;
++            }
++        }
++        // 9. reuse: sizes up and down on one constructor, n = 0 included
++        "reuse" => {
++            for (k, n) in [200usize, 1, 0, 95, 31, 0, 150].into_iter().enumerate() {
++                let v: Vec<u8> = (0..n).map(|x| ((x / 5 + k) % 4) as u8 * 3).collect();
++                s.case(&format!("descriptor reuse {k} n {n}"), &v, [0, 1000, 50][k % 3]);
++            }
++        }
++        c => panic!("unknown descriptor class {c}"),
++    }
++    s.mark(&format!("descriptor class {class}"), from);
++}
++
++/// `ctor2d-synthetic --miri CLASS`: one registered class, unpoisoned arenas
++fn synthetic_miri(class: &str) {
++    let mut s = Synth {
++        a: Arenas::default(),
++        st: Stats2d::default(),
++        ck: Checked::default(),
++        cases: 0,
++        poisoned: !cfg!(miri),
++        classes: Vec::new(),
++    };
++    let classes: Vec<&str> = if class == "all" {
++        DESC_CLASSES.to_vec()
++    } else {
++        vec![class]
++    };
++    for c in classes {
++        desc_class(&mut s, c);
++    }
++    println!(
++        "ctor2d-synthetic --miri {class}: {} cases, {} array comparisons, {} walk outputs, {} restorations: every check exact; scalar rows {}, fragment rows {}, runs {}, crossing {}, forced {}, epochs {}",
++        s.cases,
++        s.ck.arrays,
++        s.ck.walks,
++        s.ck.restorations,
++        s.st.rows_scalar,
++        s.st.rows_fragment,
++        s.st.runs,
++        s.st.fin_crossing,
++        s.st.fin_forced,
++        s.st.epochs
++    );
++}
++
+ fn synthetic(quick: bool) {
+     let mut s = Synth {
+         a: Arenas::default(),
+-        st: Stats2::default(),
++        st: Stats2d::default(),
+         ck: Checked::default(),
+         cases: 0,
+         poisoned: !cfg!(miri),
+@@ -1545,6 +1789,11 @@
+     }
+     s.mark("pending portions finished at the end of input", from);
+ 
++    // the prototype's registered descriptor classes (pre-registration §0.4)
++    for c in DESC_CLASSES {
++        desc_class(&mut s, c);
++    }
++
+     if !quick {
+         // 8. RAW discovery order unlike group order, and forced RAW
+         let from = s.cases;
+@@ -1697,7 +1946,7 @@
+             s.cases += 1;
+         }
+     }
+-    println!("ctor2-synthetic: malformed counts: {rejected} rejected, {accepted} accepted (equal to ll's own after the change)");
++    println!("ctor2d-synthetic: malformed counts: {rejected} rejected, {accepted} accepted (equal to ll's own after the change)");
+     s.mark("malformed counts and sizes", from);
+ 
+     let st = &s.st;
+@@ -1705,7 +1954,7 @@
+         .map(|j| (1..=ROWS - j).filter(|&k| st.cov_portion[j][k] > 0).count())
+         .sum();
+     println!(
+-        "ctor2-synthetic coverage: finished fast {}, ordinary {}, wide {}, crossing {}, forced {}; multi-epoch portions {}; epoch searches {}; runs split at an epoch {}; portion (first slot, length) shapes {shapes}; max ordinary span {}, min wide span {}; epochs {}",
++        "ctor2d-synthetic coverage: finished fast {}, ordinary {}, wide {}, crossing {}, forced {}; multi-epoch portions {}; epoch searches {}; runs split at an epoch {}; portion (first slot, length) shapes {shapes}; max ordinary span {}, min wide span {}; epochs {}",
+         st.fin_fast,
+         st.fin_ordinary,
+         st.fin_wide,
+@@ -1719,23 +1968,42 @@
+         st.epochs
+     );
+     println!(
+-        "ctor2-synthetic: {} cases, {} array comparisons, {} walk outputs, {} restorations: every check exact ({})",
++        "ctor2d-synthetic: {} cases, {} array comparisons, {} walk outputs, {} restorations: every check exact ({})",
+         s.cases,
+         s.ck.arrays,
+         s.ck.walks,
+         s.ck.restorations,
+         if quick { "quick" } else { "full" }
+     );
+-    println!("ctor2-synthetic counters: {{{}}}", st.json());
++    println!("ctor2d-synthetic counters: {{{}}}", st.json());
+ }
+ 
+-/// `ctor2-check`, `ctor2-adversarial`, `ctor2-synthetic`
++/// `ctor2d-check`, `ctor2d-adversarial`, `ctor2d-synthetic`
+ pub fn main(mode: &str, args: &[String]) {
+     match mode {
++        // the ledger's cross-check: each block built once by v2's and once by this
++        // prototype's uncounted build, outputs compared; run under callgrind (untimed)
++        "count" => {
++            let (mut v2, mut c2d) = (super::ctor2::Ctor2::default(), Ctor2d::default());
++            let (mut r1, mut w1, mut r2, mut w2) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
++            for file in args {
++                let data = std::fs::read(file).unwrap();
++                let bs = blocks(&data);
++                for (ll, counts, _, _) in &bs {
++                    assert!(v2.build::<false>(ll, counts, 0, &mut r1, &mut w1));
++                    assert!(c2d.build::<false>(ll, counts, 0, &mut r2, &mut w2));
++                    assert!(bytes(&r1) == bytes(&r2) && bytes(&w1) == bytes(&w2));
++                }
++                println!("ctor2d-count: {file}: {} blocks built by both, identical", bs.len());
++            }
++        }
++        "synthetic" if args.first().map(String::as_str) == Some("--miri") => {
++            synthetic_miri(args.get(1).map_or("all", String::as_str))
++        }
+         "synthetic" => synthetic(args.iter().any(|a| a == "--quick")),
+         "check" | "adversarial" => {
+             let mut jl = std::fs::File::create(&args[0]).unwrap();
+-            let mut total = Stats2::default();
++            let mut total = Stats2d::default();
+             if mode == "check" {
+                 for file in &args[1..] {
+                     let data = std::fs::read(file).unwrap();
+@@ -1762,6 +2030,6 @@
+             }
+             println!("\ntotals (natural): {{{}}}", total.json());
+         }
+-        m => panic!("unknown mode ctor2-{m}"),
++        m => panic!("unknown mode ctor2d-{m}"),
+     }
+ }

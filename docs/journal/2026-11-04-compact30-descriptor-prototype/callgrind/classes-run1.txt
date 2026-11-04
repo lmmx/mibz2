@@ -1,0 +1,38 @@
+== <c30walk::ctor2d::Ctor2d>::build::<false> vs <c30walk::ctor2::Ctor2>::build::<false>: 1,026,601,670 -> 959,332,822  delta -67,268,848
+  count   29,357,924:   12 ->   10 instructions     -58,715,848
+  count    8,935,084:   12 ->   10 instructions     -17,870,168
+  count      467,712:   14 ->    0 instructions      -6,547,968
+  count    2,393,313:   38 ->   37 instructions      -2,393,313
+  count      597,255:    2 ->    0 instructions      -1,194,510
+  count    1,085,833:   25 ->   24 instructions      -1,085,833
+  count      496,004:   34 ->   33 instructions        -496,004
+  count      302,049:    9 ->    8 instructions        -302,049
+  count       27,776:   35 ->   31 instructions        -111,104
+  count       55,986:    3 ->    2 instructions         -55,986
+  count       13,266:    2 ->    0 instructions         -26,532
+  count        3,575:    5 ->    3 instructions          -7,150
+  count        1,769:   12 ->   10 instructions          -3,538
+  count          432:    6 ->    5 instructions            -432
+  count           79:    3 ->    0 instructions            -237
+  count          106:   12 ->   10 instructions            -212
+  count            8:   15 ->   13 instructions             -16
+  count            1:   16 ->   14 instructions              -2
+  count            2:   28 ->   27 instructions              -2
+  count            9:   12 ->   14 instructions              18
+  count          230:   41 ->   42 instructions             230
+  count          233:   10 ->   11 instructions             233
+  count          786:   12 ->   13 instructions             786
+  count          434:  204 ->  211 instructions           3,038
+  count       18,684:   36 ->   37 instructions          18,684
+  count       55,552:   13 ->   14 instructions          55,552
+  count        3,654:   33 ->   53 instructions          73,080
+  count      296,405:   43 ->   44 instructions         296,405
+  count      801,475:   18 ->   19 instructions         801,475
+  count      610,521:   32 ->   35 instructions       1,831,563
+  count      230,202:    0 ->   28 instructions       6,445,656
+  count    3,003,834:   13 ->   17 instructions      12,015,336
+  classes with |delta| < 100,000: 0
+== <c30walk::ctor2d::W<false>>::refill vs <c30walk::ctor2::W<false>>::refill: 80,567,464 -> 89,627,267  delta 9,059,803
+  count    1,262,935:    2 ->    3 instructions       1,262,935
+  count    1,299,478:   59 ->   65 instructions       7,796,868
+  classes with |delta| < 100,000: 0

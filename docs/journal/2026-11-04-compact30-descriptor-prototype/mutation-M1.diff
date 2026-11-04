@@ -1,0 +1,4 @@
+407c407
+<         self.en[c] = w0.add((re - r) as usize);
+---
+>         self.en[c] = w0.add((re - r) as usize - 1); // MUTANT M1: end one field short

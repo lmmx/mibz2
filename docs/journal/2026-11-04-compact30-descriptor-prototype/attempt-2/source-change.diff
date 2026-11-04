@@ -1,0 +1,9 @@
+581,583c581,584
+<         let w = self.wr[ci];
+<         w.write(u);
+<         self.wr[ci] = w.add(1);
+---
+>         // the pointer re-read after the store, as v2's `d.write = d.write.add(1)` (attempt
+>         // 2: reusing the loaded pointer gives a register add and a store, 11 instructions)
+>         self.wr[ci].write(u);
+>         self.wr[ci] = self.wr[ci].add(1);

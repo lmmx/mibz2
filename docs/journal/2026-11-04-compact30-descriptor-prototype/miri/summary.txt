@@ -1,0 +1,10 @@
+class tiny exit 0 seconds 25
+class slots exit 0 seconds 73
+class allbytes exit 0 seconds 6
+class crossing exit 0 seconds 124
+class runs exit 0 seconds 8
+class epoch exit 0 seconds 580
+class pending exit 0 seconds 7
+class malformed exit 0 seconds 1
+class reuse exit 0 seconds 6
+DONE

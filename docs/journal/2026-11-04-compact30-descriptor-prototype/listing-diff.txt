@@ -1,0 +1,1658 @@
+v2 1431 proto 1450
+delete v2[14:16] +0x46 lines [690] | proto[14:14] +0x46 lines []
+   - 0x46 sub    $0x1000,%rsp 690
+   - 0x4d movq   $0x0,(%rsp) 690
+replace v2[18:19] +0x61 lines [690] | proto[16:17] +0x52 lines [739]
+   - 0x61 mov    0x5520(%rsp),%rax 690
+   + 0x52 mov    0x4520(%rsp),%rax 739
+replace v2[23:25] +0x86 lines [701] | proto[21:25] +0x77 lines [750]
+   - 0x86 mov    %rcx,%r15 701
+   - 0x89 mov    %rdx,%r13 701
+   + 0x77 mov    %rcx,%rbx 750
+   + 0x7a mov    %rsi,%r12 750
+   + 0x7d mov    %rdi,%rbp 750
+   + 0x80 mov    %rdx,%rsi 750
+replace v2[29:32] +0x9a lines [701] | proto[29:32] +0x91 lines [750]
+   - 0x9a nopw   0x0(%rax,%rax,1) 701
+   - 0xa0 movq   (%r15,%rax,4),%xmm3 None
+   - 0xa6 movq   0x8(%r15,%rax,4),%xmm4 None
+   + 0x91 data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1) 750
+   + 0xa0 movq   (%rbx,%rax,4),%xmm3 None
+   + 0xa5 movq   0x8(%rbx,%rax,4),%xmm4 None
+replace v2[36:38] +0xbd lines [] | proto[36:38] +0xbb lines []
+   - 0xbd movq   0x10(%r15,%rax,4),%xmm2 None
+   - 0xc4 movq   0x18(%r15,%rax,4),%xmm1 None
+   + 0xbb movq   0x10(%rbx,%rax,4),%xmm2 None
+   + 0xc1 movq   0x18(%rbx,%rax,4),%xmm1 None
+replace v2[49:50] +0xf9 lines [701] | proto[49:50] +0xf5 lines [750]
+   - 0xf9 cmp    %r13,%rax 701
+   + 0xf5 cmp    %rsi,%rax 750
+replace v2[56:59] +0x118 lines [701] | proto[56:59] +0x114 lines [750]
+   - 0x118 nopl   0x0(%rax,%rax,1) 701
+   - 0x120 movq   (%r15,%rax,4),%xmm4 None
+   - 0x126 movq   0x8(%r15,%rax,4),%xmm5 None
+   + 0x114 data16 data16 cs nopw 0x0(%rax,%rax,1) 750
+   + 0x120 movq   (%rbx,%rax,4),%xmm4 None
+   + 0x125 movq   0x8(%rbx,%rax,4),%xmm5 None
+replace v2[67:69] +0x14f lines [] | proto[67:69] +0x14d lines []
+   - 0x14f movq   0x10(%r15,%rax,4),%xmm0 None
+   - 0x156 movq   0x18(%r15,%rax,4),%xmm6 None
+   + 0x14d movq   0x10(%rbx,%rax,4),%xmm0 None
+   + 0x153 movq   0x18(%rbx,%rax,4),%xmm6 None
+replace v2[80:84] +0x18b lines [] | proto[80:84] +0x187 lines []
+   - 0x18b mov    $0x88888889,%ebp None
+   - 0x190 imul   %r13,%rbp None
+   - 0x194 shr    $0x24,%rbp None
+   - 0x198 imul   $0xeeeeeeef,%r13d,%eax None
+   + 0x187 mov    $0x88888889,%r8d None
+   + 0x18d imul   %rsi,%r8 None
+   + 0x191 shr    $0x24,%r8 None
+   + 0x195 imul   $0xeeeeeeef,%esi,%eax None
+replace v2[86:88] +0x1a6 lines [] | proto[86:88] +0x1a2 lines []
+   - 0x1a6 sbb    $0xffffffffffffffff,%rbp None
+   - 0x1aa mov    %rbp,%rbx None
+   + 0x1a2 sbb    $0xffffffffffffffff,%r8 None
+   + 0x1a6 mov    %r8,%r15 None
+replace v2[90:91] +0x1b4 lines [709] | proto[90:91] +0x1b0 lines [758]
+   - 0x1b4 test   %r13,%r13 709
+   + 0x1b0 test   %rsi,%rsi 758
+replace v2[96:97] +0x1cb lines [] | proto[96:97] +0x1c7 lines []
+   - 0x1cb lea    -0x1(%r13),%ecx None
+   + 0x1c7 lea    -0x1(%rsi),%ecx None
+replace v2[101:102] +0x1df lines [712] | proto[101:102] +0x1da lines [761]
+   - 0x1df lea    (%rdx,%r13,1),%ecx 712
+   + 0x1da lea    (%rdx,%rsi,1),%ecx 761
+replace v2[104:112] +0x1e7 lines [712] | proto[104:112] +0x1e1 lines [761]
+   - 0x1e7 mov    $0x80010003,%ebx 712
+   - 0x1ec imul   %rcx,%rbx 712
+   - 0x1f0 shr    $0x2e,%rbx 712
+   - 0x1f4 inc    %ebx 712
+   - 0x1f6 imul   %rax,%rbx 712
+   - 0x1fa dec    %rbx 712
+   - 0x1fd cmp    %rbp,%rbx None
+   - 0x200 cmovae %rbp,%rbx None
+   + 0x1e1 mov    $0x80010003,%r15d 761
+   + 0x1e7 imul   %rcx,%r15 761
+   + 0x1eb shr    $0x2e,%r15 761
+   + 0x1ef inc    %r15d 761
+   + 0x1f2 imul   %rax,%r15 761
+   + 0x1f6 dec    %r15 761
+   + 0x1f9 cmp    %r8,%r15 None
+   + 0x1fc cmovae %r8,%r15 None
+replace v2[113:114] +0x206 lines [] | proto[113:114] +0x202 lines []
+   - 0x206 xor    %ebx,%ebx None
+   + 0x202 xor    %r15d,%r15d None
+replace v2[115:119] +0x20b lines [714] | proto[115:120] +0x208 lines [763]
+   - 0x20b lea    0x1(%rbp),%rcx 714
+   - 0x20f mov    %rcx,0x80(%rsp) 714
+   - 0x217 cmp    %rbp,%rax 714
+   - 0x21a mov    %rsi,0x28(%rsp) 714
+   + 0x208 lea    0x1(%r8),%rcx 763
+   + 0x20c mov    %rcx,0x68(%rsp) 763
+   + 0x211 cmp    %r8,%rax 763
+   + 0x214 mov    %rsi,(%rsp) 763
+   + 0x218 mov    %r8,0x58(%rsp) 763
+replace v2[120:123] +0x225 lines [718] | proto[121:124] +0x223 lines [763, 767]
+   - 0x225 mov    0x5520(%rsp),%rax None
+   - 0x22d mov    (%rax),%rax None
+   - 0x230 cmp    %rbx,%rax 718
+   + 0x223 mov    0x4520(%rsp),%rdi 763
+   + 0x22b mov    (%rdi),%rax None
+   + 0x22e cmp    %r15,%rax 767
+replace v2[124:130] +0x239 lines [] | proto[125:129] +0x237 lines []
+   - 0x239 movq   $0x0,0x10(%rdi) None
+   - 0x241 lea    0x3f(%rbp),%rbx None
+   - 0x245 shr    $0x6,%rbx None
+   - 0x249 mov    %r13,0x8(%rsp) None
+   - 0x24e mov    %rdi,0x58(%rsp) None
+   - 0x253 mov    %rbp,0x60(%rsp) None
+   + 0x237 movq   $0x0,0x10(%rbp) None
+   + 0x23f lea    0x3f(%r8),%r15 None
+   + 0x243 shr    $0x6,%r15 None
+   + 0x247 mov    %r12,0x40(%rsp) None
+replace v2[131:132] +0x25a lines [] | proto[130:131] +0x24e lines []
+   - 0x25a cmp    (%rdi),%rbx None
+   + 0x24e cmp    0x0(%rbp),%r15 None
+insert v2[133:133] +0x263 lines [] | proto[132:139] +0x258 lines []
+   + 0x258 xor    %r14d,%r14d None
+   + 0x25b mov    0x8(%rbp),%r12 None
+   + 0x25f lea    (%r12,%r14,8),%rdi None
+   + 0x263 cmp    $0x1,%r15 None
+   + 0x267 je     3abf1 <<c30walk::ctor2d::Ctor2d>::build::<false>+0x291> None
+   + 0x269 lea    -0x8(,%r15,8),%rdx None
+   + 0x271 xor    %esi,%esi None
+delete v2[134:141] +0x266 lines [] | proto[140:140] +0x276 lines []
+   - 0x266 xor    %r14d,%r14d None
+   - 0x269 mov    0x8(%rdi),%r12 None
+   - 0x26d lea    (%r12,%r14,8),%rdi None
+   - 0x271 cmp    $0x1,%rbx None
+   - 0x275 je     3e2a9 <<c30walk::ctor2::Ctor2>::build::<false>+0x299> None
+   - 0x277 lea    -0x8(,%rbx,8),%rdx None
+   - 0x27f xor    %esi,%esi None
+replace v2[142:143] +0x287 lines [] | proto[141:143] +0x27c lines []
+   - 0x287 lea    (%r14,%rbx,1),%rax None
+   + 0x27c mov    %r13,%r9 None
+   + 0x27f lea    (%r14,%r15,1),%rax None
+replace v2[145:146] +0x293 lines [] | proto[145:146] +0x28b lines []
+   - 0x293 add    %rbx,%r14 None
+   + 0x28b add    %r15,%r14 None
+delete v2[147:148] +0x299 lines [] | proto[147:147] +0x291 lines []
+   - 0x299 mov    %r13,%r9 None
+delete v2[150:152] +0x2a6 lines [] | proto[149:149] +0x29b lines []
+   - 0x2a6 mov    0x8(%rsp),%r13 None
+   - 0x2ab mov    0x58(%rsp),%rdi None
+replace v2[154:158] +0x2b5 lines [] | proto[151:155] +0x2a0 lines []
+   - 0x2b5 lea    0x18(%rdi),%r12 None
+   - 0x2b9 mov    %r14,0x10(%rdi) None
+   - 0x2bd movq   $0x0,0x28(%rdi) None
+   - 0x2c5 cmpq   $0xf,0x18(%rdi) None
+   + 0x2a0 lea    0x18(%rbp),%r15 None
+   + 0x2a4 mov    %r14,0x10(%rbp) None
+   + 0x2a8 movq   $0x0,0x28(%rbp) None
+   + 0x2b0 cmpq   $0xf,0x18(%rbp) None
+replace v2[159:161] +0x2d0 lines [] | proto[156:158] +0x2bb lines []
+   - 0x2d0 lea    0x30(%rdi),%rax None
+   - 0x2d4 mov    %rax,(%rsp) None
+   + 0x2bb lea    0x30(%rbp),%rax None
+   + 0x2bf mov    %rax,0x48(%rsp) None
+replace v2[164:166] +0x2e8 lines [] | proto[161:162] +0x2d4 lines []
+   - 0x2e8 nopl   0x0(%rax,%rax,1) None
+   - 0x2f0 movdqu %xmm0,0x2cf8(%rsp,%rax,1) None
+   + 0x2d4 data16 data16 cs nopw 0x0(%rax,%rax,1) None
+replace v2[167:179] +0x302 lines [] | proto[163:172] +0x2e9 lines []
+   - 0x302 mov    %rcx,0x2d08(%rsp,%rax,1) None
+   - 0x30a movdqu %xmm0,0x2d10(%rsp,%rax,1) None
+   - 0x313 movdqu %xmm0,0x2d20(%rsp,%rax,1) None
+   - 0x31c mov    %rcx,0x2d30(%rsp,%rax,1) None
+   - 0x324 movdqu %xmm0,0x2d38(%rsp,%rax,1) None
+   - 0x32d movdqu %xmm0,0x2d48(%rsp,%rax,1) None
+   - 0x336 mov    %rcx,0x2d58(%rsp,%rax,1) None
+   - 0x33e movdqu %xmm0,0x2d60(%rsp,%rax,1) None
+   - 0x347 movdqu %xmm0,0x2d70(%rsp,%rax,1) None
+   - 0x350 mov    %rcx,0x2d80(%rsp,%rax,1) None
+   - 0x358 add    $0xa0,%rax None
+   - 0x35e cmp    $0x2800,%rax None
+   + 0x2e9 mov    %rcx,0x2cf8(%rsp,%rax,1) None
+   + 0x2f1 movdqu %xmm0,0x2d00(%rsp,%rax,1) None
+   + 0x2fa mov    %rcx,0x2d10(%rsp,%rax,1) None
+   + 0x302 movdqu %xmm0,0x2d18(%rsp,%rax,1) None
+   + 0x30b mov    %rcx,0x2d28(%rsp,%rax,1) None
+   + 0x313 movdqu %xmm0,0x2d30(%rsp,%rax,1) None
+   + 0x31c mov    %rcx,0x2d40(%rsp,%rax,1) None
+   + 0x324 add    $0x60,%rax None
+   + 0x328 cmp    $0x1800,%rax None
+replace v2[180:182] +0x366 lines [] | proto[173:175] +0x330 lines []
+   - 0x366 mov    %r12,%r14 None
+   - 0x369 lea    0xc(%r15),%rax None
+   + 0x330 mov    %r15,0x28(%rsp) None
+   + 0x335 lea    0xc(%rbx),%rax None
+replace v2[183:185] +0x36f lines [] | proto[176:177] +0x33b lines []
+   - 0x36f mov    $0x25,%ecx None
+   - 0x374 data16 data16 cs nopw 0x0(%rax,%rax,1) None
+   + 0x33b mov    $0x15,%ecx None
+replace v2[187:189] +0x385 lines [738, 740] | proto[179:181] +0x345 lines [785, 787]
+   - 0x385 mov    %edx,0x2c6c(%rsp,%rcx,4) 738
+   - 0x38c mov    %esi,0x2c70(%rsp,%rcx,4) 740
+   + 0x345 mov    %edx,0x2c9c(%rsp,%rcx,4) 785
+   + 0x34c mov    %esi,0x2ca0(%rsp,%rcx,4) 787
+replace v2[191:193] +0x398 lines [738, 740] | proto[183:185] +0x358 lines [785, 787]
+   - 0x398 mov    %esi,0x2c94(%rsp,%rcx,4) 738
+   - 0x39f mov    %edx,0x2c98(%rsp,%rcx,4) 740
+   + 0x358 mov    %esi,0x2cb4(%rsp,%rcx,4) 785
+   + 0x35f mov    %edx,0x2cb8(%rsp,%rcx,4) 787
+replace v2[195:197] +0x3ab lines [738, 740] | proto[187:189] +0x36b lines [785, 787]
+   - 0x3ab mov    %edx,0x2cbc(%rsp,%rcx,4) 738
+   - 0x3b2 mov    %esi,0x2cc0(%rsp,%rcx,4) 740
+   + 0x36b mov    %edx,0x2ccc(%rsp,%rcx,4) 785
+   + 0x372 mov    %esi,0x2cd0(%rsp,%rcx,4) 787
+replace v2[201:202] +0x3cb lines [] | proto[193:194] +0x38b lines []
+   - 0x3cb add    $0x28,%rcx None
+   + 0x38b add    $0x18,%rcx None
+replace v2[203:204] +0x3d3 lines [] | proto[195:196] +0x393 lines []
+   - 0x3d3 cmp    $0xa25,%rcx None
+   + 0x393 cmp    $0x615,%rcx None
+replace v2[205:209] +0x3dc lines [] | proto[197:224] +0x39c lines [790, 799]
+   - 0x3dc mov    %r9,0x78(%rsp) None
+   - 0x3e1 mov    0x8(%r9),%rbx None
+   - 0x3e5 mov    0x8(%rdi),%rbp None
+   - 0x3e9 mov    0x10(%rdi),%r12 None
+   + 0x39c mov    %r9,0x88(%rsp) None
+   + 0x3a4 mov    0x8(%r9),%r14 None
+   + 0x3a8 mov    0x8(%rbp),%r13 None
+   + 0x3ac mov    %rbp,0x80(%rsp) None
+   + 0x3b4 mov    0x10(%rbp),%rbp None
+   + 0x3b8 lea    0x8d8(%rsp),%rdi 790
+   + 0x3c0 xor    %r12d,%r12d 790
+   + 0x3c3 mov    $0x800,%edx 790
+   + 0x3c8 xor    %esi,%esi 790
+   + 0x3ca call   *0xfb120(%rip) 790
+   + 0x3d0 lea    0x10d8(%rsp),%rdi 790
+   + 0x3d8 lea    0x2ce8(%rsp),%rsi 790
+   + 0x3e0 mov    $0x1800,%edx 799
+   + 0x3e5 call   *0xfb125(%rip) 799
+   + 0x3eb mov    %r14,0xc0(%rsp) 790
+   + 0x3f3 mov    0x58(%rsp),%rax 790
+   + 0x3f8 mov    %rax,0xc8(%rsp) 790
+   + 0x400 mov    (%rsp),%r15 790
+   + 0x404 mov    %r15,0xd0(%rsp) 790
+   + 0x40c mov    0x4520(%rsp),%rax 790
+   + 0x414 mov    %rax,0x98(%rsp) 790
+   + 0x41c mov    %r13,0x10(%rsp) 790
+   + 0x421 mov    %r13,0xa0(%rsp) 790
+   + 0x429 mov    %rbp,0x8(%rsp) 790
+   + 0x42e mov    %rbp,0xa8(%rsp) 790
+   + 0x436 mov    0x28(%rsp),%rax 790
+   + 0x43b mov    %rax,0xb0(%rsp) 790
+replace v2[210:212] +0x3f5 lines [743, 750] | proto[225:227] +0x44b lines [790]
+   - 0x3f5 lea    0x2ce8(%rsp),%rsi 743
+   - 0x3fd mov    $0x2800,%edx 750
+   + 0x44b mov    $0x800,%edx 790
+   + 0x450 xor    %esi,%esi 790
+replace v2[213:224] +0x408 lines [743, 750] | proto[228:229] +0x458 lines [790]
+   - 0x408 mov    %rbp,%r8 750
+   - 0x40b mov    %r12,%rsi 750
+   - 0x40e mov    %rbx,0xc0(%rsp) 743
+   - 0x416 mov    0x60(%rsp),%rax 743
+   - 0x41b mov    %rax,0xc8(%rsp) 743
+   - 0x423 mov    %r13,0xd0(%rsp) 743
+   - 0x42b mov    0x5520(%rsp),%rax 743
+   - 0x433 mov    %rax,0x98(%rsp) 743
+   - 0x43b mov    %rbp,0xa0(%rsp) 743
+   - 0x443 mov    %r12,0xa8(%rsp) 743
+   - 0x44b mov    %r14,0xb0(%rsp) 743
+   + 0x458 mov    %r15,%r11 790
+replace v2[226:227] +0x46a lines [743] | proto[231:232] +0x472 lines [790]
+   - 0x46a mov    (%rsp),%rax 743
+   + 0x472 mov    0x48(%rsp),%rax 790
+replace v2[229:232] +0x47d lines [743] | proto[234:236] +0x486 lines [790]
+   - 0x47d xor    %ebp,%ebp 743
+   - 0x47f movabs $0xeeeeeeeeeeeeeeef,%r9 743
+   - 0x489 movabs $0x888888888888889,%r10 743
+   + 0x486 movabs $0xeeeeeeeeeeeeeeef,%r8 790
+   + 0x490 movabs $0x888888888888889,%r15 790
+replace v2[234:235] +0x49b lines [743] | proto[238:239] +0x4a2 lines [790]
+   - 0x49b xor    %r12d,%r12d 743
+   + 0x4a2 xor    %r13d,%r13d 790
+replace v2[236:237] +0x4a3 lines [743] | proto[240:268] +0x4a7 lines [790, 853, 854, 855, 856]
+   - 0x4a3 data16 data16 data16 cs nopw 0x0(%rax,%rax,1) 743
+   + 0x4a7 nopw   0x0(%rax,%rax,1) 790
+   + 0x4b0 add    $0x4,%r13 790
+   + 0x4b4 cmp    $0x400,%r13 None
+   + 0x4bb mov    (%rsp),%r11 None
+   + 0x4bf je     3af4a <<c30walk::ctor2d::Ctor2d>::build::<false>+0x5ea> None
+   + 0x4c5 mov    %r12,%rax None
+   + 0x4c8 mov    (%rbx,%r13,1),%r12d 853
+   + 0x4cc add    %rax,%r12 854
+   + 0x4cf cmp    %r11,%r12 854
+   + 0x4d2 setae  %sil 854
+   + 0x4d6 mov    %r12,%rax 856
+   + 0x4d9 movabs $0x8888888888888889,%rdx 856
+   + 0x4e3 mul    %rdx 856
+   + 0x4e6 shr    $0x4,%rdx 856
+   + 0x4ea mov    %r12,%rax 856
+   + 0x4ed imul   %r8,%rax 856
+   + 0x4f1 ror    $1,%rax 856
+   + 0x4f4 cmp    %r15,%rax 856
+   + 0x4f7 setb   %al 856
+   + 0x4fa cmp    %rcx,%rdx 856
+   + 0x4fd sete   %dil 856
+   + 0x501 or     %sil,%dil 855
+   + 0x504 or     %al,%dil 855
+   + 0x507 jne    3ae10 <<c30walk::ctor2d::Ctor2d>::build::<false>+0x4b0> 855
+   + 0x509 mov    0x4520(%rsp),%rdi 855
+   + 0x511 mov    0x10(%rdi),%rbp None
+   + 0x515 cmp    (%rdi),%rbp None
+   + 0x518 je     3af1c <<c30walk::ctor2d::Ctor2d>::build::<false>+0x5bc> None
+replace v2[238:239] +0x4b4 lines [] | proto[269:270] +0x522 lines []
+   - 0x4b4 mov    %r13,%rcx None
+   + 0x522 mov    %rbp,%rcx None
+replace v2[248:249] +0x4ea lines [] | proto[279:280] +0x558 lines []
+   - 0x4ea mov    %r13,%rax None
+   + 0x558 mov    %rbp,%rax None
+replace v2[251:252] +0x4f4 lines [] | proto[282:283] +0x562 lines []
+   - 0x4f4 mov    %r14,%rax None
+   + 0x562 mov    %rdx,%rax None
+replace v2[253:260] +0x4fb lines [315, 317] | proto[284:291] +0x569 lines [361, 363]
+   - 0x4fb or     $0x10000000,%r13d 315
+   - 0x502 movdqu %xmm1,0x2c(%rbx,%rax,1) None
+   - 0x508 movdqa %xmm1,0x20(%rbx,%rax,1) None
+   - 0x50e movdqa %xmm1,0x10(%rbx,%rax,1) None
+   - 0x514 movdqa %xmm1,(%rbx,%rax,1) None
+   - 0x519 mov    %r13d,0x3c(%rbx,%rax,1) None
+   - 0x51e mov    %r14,%rdi 317
+   + 0x569 or     $0x10000000,%ebp 361
+   + 0x56f movdqu %xmm1,0x2c(%r14,%rax,1) None
+   + 0x576 movdqa %xmm1,0x20(%r14,%rax,1) None
+   + 0x57d movdqa %xmm1,0x10(%r14,%rax,1) None
+   + 0x584 movdqa %xmm1,(%r14,%rax,1) None
+   + 0x58a mov    %ebp,0x3c(%r14,%rax,1) None
+   + 0x58f mov    %rdx,%rdi 363
+replace v2[261:262] +0x525 lines [317] | proto[292:293] +0x596 lines [363]
+   - 0x525 cmp    %rsi,%rdi 317
+   + 0x596 cmp    0x8(%rsp),%rdi 363
+replace v2[264:265] +0x533 lines [317] | proto[295:296] +0x5a6 lines [363]
+   - 0x533 mov    %r14d,%ecx 317
+   + 0x5a6 mov    %edx,%ecx 363
+replace v2[266:298] +0x539 lines [317, 804, 805, 806, 807] | proto[297:302] +0x5ab lines [363, 857]
+   - 0x539 or     %rax,(%r8,%rdi,8) 317
+   - 0x53d mov    %r14,%rcx 317
+   - 0x540 mov    0x8(%rsp),%r13 317
+   - 0x545 add    $0x4,%r12 317
+   - 0x549 cmp    $0x400,%r12 None
+   - 0x550 je     3e600 <<c30walk::ctor2::Ctor2>::build::<false>+0x5f0> None
+   - 0x556 mov    %rbp,%rax None
+   - 0x559 mov    (%r15,%r12,1),%ebp 804
+   - 0x55d add    %rax,%rbp 805
+   - 0x560 cmp    %r13,%rbp 805
+   - 0x563 setae  %dil 805
+   - 0x567 mov    %rbp,%rax 807
+   - 0x56a movabs $0x8888888888888889,%rdx 807
+   - 0x574 mul    %rdx 807
+   - 0x577 mov    %rdx,%r14 807
+   - 0x57a shr    $0x4,%r14 807
+   - 0x57e mov    %rbp,%rax 807
+   - 0x581 imul   %r9,%rax 807
+   - 0x585 ror    $1,%rax 807
+   - 0x588 cmp    %r10,%rax 807
+   - 0x58b setb   %al 807
+   - 0x58e cmp    %rcx,%r14 807
+   - 0x591 sete   %dl 807
+   - 0x594 or     %dil,%dl 806
+   - 0x597 or     %al,%dl 806
+   - 0x599 jne    3e555 <<c30walk::ctor2::Ctor2>::build::<false>+0x545> 806
+   - 0x59b mov    0x5520(%rsp),%rdi 806
+   - 0x5a3 mov    0x10(%rdi),%r13 None
+   - 0x5a7 cmp    (%rdi),%r13 None
+   - 0x5aa jne    3e4c0 <<c30walk::ctor2::Ctor2>::build::<false>+0x4b0> None
+   - 0x5b0 mov    %rsi,(%rsp) None
+   - 0x5b4 mov    %r8,0x10(%rsp) None
+   + 0x5ab mov    0x10(%rsp),%rcx 363
+   + 0x5b0 or     %rax,(%rcx,%rdi,8) 363
+   + 0x5b4 mov    %rdx,%rcx 363
+   + 0x5b7 jmp    3ae10 <<c30walk::ctor2d::Ctor2d>::build::<false>+0x4b0> 857
+   + 0x5bc mov    %rdx,0x28(%rsp) 857
+replace v2[301:306] +0x5c6 lines [] | proto[305:308] +0x5ce lines []
+   - 0x5c6 movabs $0x888888888888889,%r10 None
+   - 0x5d0 movabs $0xeeeeeeeeeeeeeeef,%r9 None
+   - 0x5da mov    0x10(%rsp),%r8 None
+   - 0x5df mov    (%rsp),%rsi None
+   - 0x5e3 mov    0x5520(%rsp),%rdi None
+   + 0x5ce movabs $0xeeeeeeeeeeeeeeef,%r8 None
+   + 0x5d8 mov    0x4520(%rsp),%rdi None
+   + 0x5e0 mov    0x28(%rsp),%rdx None
+delete v2[308:309] +0x5f5 lines [705] | proto[310:310] +0x5ef lines []
+   - 0x5f5 lea    0xd8(%rsp),%r8 705
+replace v2[310:312] +0x603 lines [816] | proto[311:313] +0x5f5 lines [865]
+   - 0x603 mov    0xc8(%rsp),%r11 816
+   - 0x60b test   %r11,%r11 None
+   + 0x5f5 mov    0xc8(%rsp),%r8 865
+   + 0x5fd test   %r8,%r8 None
+replace v2[313:314] +0x614 lines [] | proto[314:315] +0x606 lines []
+   - 0x614 mov    0x8(%rsp),%r9 None
+   + 0x606 mov    %r11,%r9 None
+replace v2[317:320] +0x62a lines [] | proto[318:321] +0x61a lines []
+   - 0x62a mov    0xc0(%rsp),%r13 None
+   - 0x632 xor    %r12d,%r12d None
+   - 0x635 movabs $0xff51afd7ed558ccd,%rbx None
+   + 0x61a mov    0xc0(%rsp),%rbp None
+   + 0x622 xor    %r15d,%r15d None
+   + 0x625 movabs $0xff51afd7ed558ccd,%r14 None
+replace v2[324:325] +0x650 lines [] | proto[325:326] +0x640 lines []
+   - 0x650 mov    %rbx,%rcx None
+   + 0x640 mov    %r14,%rcx None
+replace v2[334:335] +0x686 lines [] | proto[335:336] +0x676 lines []
+   - 0x686 mov    %rbx,%rax None
+   + 0x676 mov    %r14,%rax None
+replace v2[337:348] +0x690 lines [315, 317] | proto[338:350] +0x680 lines [361, 363]
+   - 0x690 or     $0x10000000,%ebx 315
+   - 0x696 movdqu %xmm1,0x2c(%r13) None
+   - 0x69c movdqa %xmm1,0x20(%r13) None
+   - 0x6a2 movdqa %xmm1,0x10(%r13) None
+   - 0x6a8 movdqa %xmm1,0x0(%r13) None
+   - 0x6ae mov    %ebx,0x3c(%r13) None
+   - 0x6b2 or     %r15,(%r14,%rbp,8) 317
+   - 0x6b6 movabs $0xff51afd7ed558ccd,%rbx 317
+   - 0x6c0 inc    %r12 317
+   - 0x6c3 add    $0x40,%r13 None
+   - 0x6c7 cmp    %r12,%r11 None
+   + 0x680 or     $0x10000000,%r14d 361
+   + 0x687 movdqu %xmm1,0x2c(%rbp) None
+   + 0x68c movdqa %xmm1,0x20(%rbp) None
+   + 0x691 movdqa %xmm1,0x10(%rbp) None
+   + 0x696 movdqa %xmm1,0x0(%rbp) None
+   + 0x69b mov    %r14d,0x3c(%rbp) None
+   + 0x69f or     %rbx,0x0(%r13,%r12,8) 363
+   + 0x6a4 movabs $0xff51afd7ed558ccd,%r14 363
+   + 0x6ae xchg   %ax,%ax 363
+   + 0x6b0 inc    %r15 363
+   + 0x6b3 add    $0x40,%rbp None
+   + 0x6b7 cmp    %r15,%r8 None
+replace v2[349:351] +0x6d0 lines [285] | proto[351:353] +0x6c0 lines [331]
+   - 0x6d0 mov    %r12,%rbp 285
+   - 0x6d3 shr    $0x6,%rbp 285
+   + 0x6c0 mov    %r15,%r12 331
+   + 0x6c3 shr    $0x6,%r12 331
+replace v2[352:353] +0x6df lines [285] | proto[354:355] +0x6cf lines [331]
+   - 0x6df cmp    %rsi,%rbp 285
+   + 0x6cf cmp    %rsi,%r12 331
+replace v2[354:360] +0x6e8 lines [285, 817] | proto[356:362] +0x6d8 lines [331, 866]
+   - 0x6e8 mov    0xa0(%rsp),%r14 285
+   - 0x6f0 mov    (%r14,%rbp,8),%rax 285
+   - 0x6f4 mov    $0x1,%r15d 817
+   - 0x6fa mov    %r12d,%ecx 817
+   - 0x6fd shl    %cl,%r15 817
+   - 0x700 bt     %r12,%rax 817
+   + 0x6d8 mov    0xa0(%rsp),%r13 331
+   + 0x6e0 mov    0x0(%r13,%r12,8),%rax 331
+   + 0x6e5 mov    $0x1,%ebx 866
+   + 0x6ea mov    %r15d,%ecx 866
+   + 0x6ed shl    %cl,%rbx 866
+   + 0x6f0 bt     %r15,%rax 866
+replace v2[361:362] +0x706 lines [95] | proto[363:364] +0x6f6 lines [103]
+   - 0x706 mov    %r12,%rax 95
+   + 0x6f6 mov    %r15,%rax 103
+replace v2[366:367] +0x716 lines [] | proto[368:369] +0x706 lines []
+   - 0x716 imul   %rbx,%rcx None
+   + 0x706 imul   %r14,%rcx None
+replace v2[384:386] +0x767 lines [] | proto[386:388] +0x757 lines []
+   - 0x767 mov    0x10(%rdi),%rbx None
+   - 0x76b cmp    (%rdi),%rbx None
+   + 0x757 mov    0x10(%rdi),%r14 None
+   + 0x75b cmp    (%rdi),%r14 None
+replace v2[387:388] +0x774 lines [] | proto[389:390] +0x764 lines []
+   - 0x774 mov    %r11,(%rsp) None
+   + 0x764 mov    %r8,0x8(%rsp) None
+replace v2[389:390] +0x77d lines [] | proto[391:392] +0x76e lines []
+   - 0x77d mov    %r10,0x50(%rsp) None
+   + 0x76e mov    %r10,0x28(%rsp) None
+replace v2[395:396] +0x799 lines [] | proto[397:398] +0x78a lines []
+   - 0x799 mov    0x50(%rsp),%r10 None
+   + 0x78a mov    0x28(%rsp),%r10 None
+insert v2[397:397] +0x7a3 lines [] | proto[399:400] +0x794 lines []
+   + 0x794 mov    0x8(%rsp),%r8 None
+delete v2[398:399] +0x7a7 lines [] | proto[401:401] +0x79d lines []
+   - 0x7a7 lea    0xd8(%rsp),%r8 None
+replace v2[400:403] +0x7b4 lines [823] | proto[402:404] +0x7a2 lines [872]
+   - 0x7b4 mov    0x8(%rsp),%r13 None
+   - 0x7b9 test   %r13,%r13 823
+   - 0x7bc mov    0x28(%rsp),%r14 823
+   + 0x7a2 test   %r11,%r11 872
+   + 0x7a5 mov    0x40(%rsp),%rbp 872
+replace v2[404:405] +0x7c7 lines [823] | proto[405:406] +0x7b0 lines [872]
+   - 0x7c7 xor    %r11d,%r11d 823
+   + 0x7b0 xor    %edi,%edi 872
+replace v2[406:409] +0x7cc lines [823] | proto[407:410] +0x7b4 lines [872]
+   - 0x7cc nopl   0x0(%rax) 823
+   - 0x7d0 mov    %r11,%r10 823
+   - 0x7d3 cmp    %r13,%r10 823
+   + 0x7b4 data16 data16 cs nopw 0x0(%rax,%rax,1) 872
+   + 0x7c0 mov    %rdi,%r8 872
+   + 0x7c3 cmp    %r10,%r8 872
+replace v2[410:412] +0x7dc lines [823] | proto[411:412] +0x7cc lines [872]
+   - 0x7dc mov    %r11,%rbp 823
+   - 0x7df mov    %r9,%r12 823
+   + 0x7cc mov    %rdi,%r13 872
+replace v2[416:432] +0x7f7 lines [247, 323, 325] | proto[416:446] +0x7e4 lines [326, 369, 371]
+   - 0x7f7 lea    0x118(%rsp),%rax 323
+   - 0x7ff xor    %ecx,%ecx 323
+   - 0x801 data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1) 323
+   - 0x810 mov    -0x40(%rax),%rdx 247
+   - 0x814 sub    -0x30(%rax),%rdx 247
+   - 0x818 shr    $1,%rdx 247
+   - 0x81b add    -0x28(%rax),%edx 247
+   - 0x81e mov    -0x18(%rax),%rsi 247
+   - 0x822 sub    -0x8(%rax),%rsi 247
+   - 0x826 mov    %edx,0x28e8(%rsp,%rcx,4) 325
+   - 0x82d shr    $1,%rsi 247
+   - 0x830 add    (%rax),%esi 247
+   - 0x832 mov    %esi,0x28ec(%rsp,%rcx,4) 325
+   - 0x839 add    $0x2,%rcx None
+   - 0x83d add    $0x50,%rax None
+   - 0x841 cmp    $0x100,%rcx None
+   + 0x7e4 mov    $0x848,%eax 369
+   + 0x7e9 mov    $0xa,%ecx 369
+   + 0x7ee xchg   %ax,%ax 369
+   + 0x7f0 movd   0x68(%rsp,%rax,2),%xmm0 369
+   + 0x7f6 movd   0x50(%rsp,%rax,2),%xmm1 369
+   + 0x7fc punpckldq %xmm0,%xmm1 369
+   + 0x800 movd   0x98(%rsp,%rax,2),%xmm0 369
+   + 0x809 movd   0x80(%rsp,%rax,2),%xmm2 369
+   + 0x812 punpckldq %xmm0,%xmm2 369
+   + 0x816 punpcklqdq %xmm2,%xmm1 371
+   + 0x81a movdqu 0x88(%rsp,%rcx,8),%xmm0 326
+   + 0x823 movdqu 0x98(%rsp,%rcx,8),%xmm2 326
+   + 0x82c movq   0x60(%rsp,%rax,2),%xmm3 326
+   + 0x832 movq   0x48(%rsp,%rax,2),%xmm4 326
+   + 0x838 punpcklqdq %xmm3,%xmm4 326
+   + 0x83c psubq  %xmm4,%xmm0 326
+   + 0x840 movq   0x90(%rsp,%rax,2),%xmm3 326
+   + 0x849 movq   0x78(%rsp,%rax,2),%xmm4 326
+   + 0x84f punpcklqdq %xmm3,%xmm4 326
+   + 0x853 psubq  %xmm4,%xmm2 326
+   + 0x857 psrlq  $0x1,%xmm0 326
+   + 0x85c psrlq  $0x1,%xmm2 326
+   + 0x861 pshufd $0xe8,%xmm0,%xmm0 326
+   + 0x866 pshufd $0xe8,%xmm2,%xmm2 326
+   + 0x86b punpcklqdq %xmm2,%xmm0 371
+   + 0x86f paddd  %xmm1,%xmm0 371
+   + 0x873 movdqu %xmm0,0x28c0(%rsp,%rcx,4) 371
+   + 0x87c add    $0x30,%rax None
+   + 0x880 add    $0x4,%rcx None
+   + 0x884 cmp    $0x106,%rcx None
+replace v2[433:436] +0x84a lines [327] | proto[447:472] +0x891 lines [326, 371, 373]
+   - 0x84a mov    0xb0(%rsp),%r15 327
+   - 0x852 mov    0x10(%r15),%rbx None
+   - 0x856 cmp    (%r15),%rbx None
+   + 0x891 movups 0x2880(%rsp),%xmm0 326
+   + 0x899 movdqu 0x8c8(%rsp),%xmm1 326
+   + 0x8a2 movdqu 0x8b8(%rsp),%xmm2 326
+   + 0x8ab movq   0x28c0(%rsp),%xmm3 326
+   + 0x8b4 movq   0x28a8(%rsp),%xmm4 326
+   + 0x8bd punpcklqdq %xmm3,%xmm4 326
+   + 0x8c1 psubq  %xmm4,%xmm1 326
+   + 0x8c5 movq   0x2890(%rsp),%xmm3 326
+   + 0x8ce movq   0x2878(%rsp),%xmm4 326
+   + 0x8d7 punpcklqdq %xmm3,%xmm4 326
+   + 0x8db psubq  %xmm4,%xmm2 326
+   + 0x8df psrlq  $0x1,%xmm1 326
+   + 0x8e4 psrlq  $0x1,%xmm2 326
+   + 0x8e9 shufps $0x88,%xmm1,%xmm2 326
+   + 0x8ed movss  0x2898(%rsp),%xmm1 326
+   + 0x8f6 movlhps %xmm0,%xmm1 326
+   + 0x8f9 movss  0x28b0(%rsp),%xmm0 326
+   + 0x902 movss  0x28c8(%rsp),%xmm3 326
+   + 0x90b movlhps %xmm0,%xmm3 326
+   + 0x90e shufps $0x22,%xmm3,%xmm1 326
+   + 0x912 paddd  %xmm2,%xmm1 326
+   + 0x916 movdqu %xmm1,0x2cd8(%rsp) 371
+   + 0x91f mov    0xb0(%rsp),%rbx 373
+   + 0x927 mov    0x10(%rbx),%r14 None
+   + 0x92b cmp    (%rbx),%r14 None
+replace v2[437:438] +0x85f lines [] | proto[473:474] +0x934 lines []
+   - 0x85f mov    %rbx,%rdi None
+   + 0x934 mov    %r14,%rdi None
+replace v2[439:440] +0x866 lines [] | proto[475:476] +0x93b lines []
+   - 0x866 add    0x8(%r15),%rdi None
+   + 0x93b add    0x8(%rbx),%rdi None
+replace v2[443:452] +0x87d lines [826, 828] | proto[479:489] +0x952 lines [875, 877]
+   - 0x87d inc    %rbx None
+   - 0x880 mov    %rbx,0x10(%r15) None
+   - 0x884 mov    %rbp,%r11 None
+   - 0x887 lea    0xf000(%rbp),%r10 826
+   - 0x88e cmp    %r13,%r10 None
+   - 0x891 cmovae %r13,%r10 None
+   - 0x895 lea    0x10(%rbp),%rdi 828
+   - 0x899 cmp    %r10,%rdi 828
+   - 0x89c mov    %r10,0x20(%rsp) 828
+   + 0x952 inc    %r14 None
+   + 0x955 mov    %r14,0x10(%rbx) None
+   + 0x959 mov    %r13,%rdi None
+   + 0x95c lea    0xf000(%r13),%r9 875
+   + 0x963 mov    (%rsp),%r10 875
+   + 0x967 cmp    %r10,%r9 None
+   + 0x96a cmovae %r10,%r9 None
+   + 0x96e lea    0x10(%r13),%r11 877
+   + 0x972 cmp    %r9,%r11 877
+   + 0x975 mov    %r9,0x60(%rsp) 877
+replace v2[453:459] +0x8a7 lines [828, 858] | proto[490:491] +0x980 lines [910]
+   - 0x8a7 lea    0xd8(%rsp),%r8 828
+   - 0x8af mov    %r12,%r9 828
+   - 0x8b2 mov    0x38(%rsp),%rcx 828
+   - 0x8b7 mov    %r10,%rdx 858
+   - 0x8ba sub    %r11,%rdx 858
+   - 0x8bd mov    %rcx,0x38(%rsp) 858
+   + 0x980 sub    %rdi,%r9 910
+replace v2[460:469] +0x8c8 lines [558, 559, 858] | proto[492:501] +0x989 lines [609, 610, 910]
+   - 0x8c8 mov    %r9,%rbp 858
+   - 0x8cb mov    %r14,%rax 858
+   - 0x8ce mov    0x28e0(%rsp),%r12d 558
+   - 0x8d6 mov    $0x1e,%r14d 559
+   - 0x8dc sub    0x28d8(%rsp),%r14 559
+   - 0x8e4 cmp    %rdx,%r14 None
+   - 0x8e7 cmovae %rdx,%r14 None
+   - 0x8eb lea    (%rax,%r11,1),%r15 None
+   - 0x8ef test   %r14,%r14 None
+   + 0x989 mov    %r12,0x30(%rsp) 910
+   + 0x98e mov    %r15,0x38(%rsp) 910
+   + 0x993 mov    0x28e0(%rsp),%r13d 609
+   + 0x99b mov    $0x1e,%r15d 610
+   + 0x9a1 sub    0x28d8(%rsp),%r15 610
+   + 0x9a9 cmp    %r9,%r15 None
+   + 0x9ac cmovae %r9,%r15 None
+   + 0x9b0 lea    (%rdi,%rbp,1),%r12 None
+   + 0x9b4 test   %r15,%r15 None
+replace v2[470:477] +0x8f8 lines [542, 560] | proto[502:506] +0x9bd lines [592, 611]
+   - 0x8f8 xor    %r13d,%r13d None
+   - 0x8fb nopl   0x0(%rax,%rax,1) None
+   - 0x900 movzbl (%r15,%r13,1),%esi 560
+   - 0x905 lea    (%rsi,%rsi,4),%rcx 542
+   - 0x909 lea    (%r8,%rcx,8),%rbx 542
+   - 0x90d mov    (%r8,%rcx,8),%rax 542
+   - 0x911 cmp    0x8(%r8,%rcx,8),%rax 542
+   + 0x9bd xor    %r14d,%r14d None
+   + 0x9c0 movzbl (%r12,%r14,1),%ebx 611
+   + 0x9c5 mov    0xd8(%rsp,%rbx,8),%rax 592
+   + 0x9cd cmp    0x8d8(%rsp,%rbx,8),%rax 592
+replace v2[478:479] +0x918 lines [542] | proto[507:508] +0x9d7 lines [592]
+   - 0x918 lea    (%r12,%r13,1),%rcx 542
+   + 0x9d7 lea    (%r14,%r13,1),%rcx 592
+replace v2[480:483] +0x91f lines [547] | proto[509:512] +0x9de lines [598]
+   - 0x91f addq   $0x2,(%rbx) 547
+   - 0x923 inc    %r13 None
+   - 0x926 cmp    %r13,%r14 None
+   + 0x9de addq   $0x2,0xd8(%rsp,%rbx,8) 598
+   + 0x9e7 inc    %r14 None
+   + 0x9ea cmp    %r14,%r15 None
+replace v2[485:487] +0x930 lines [] | proto[514:516] +0x9f4 lines []
+   - 0x930 mov    %rdx,0x10(%rsp) None
+   - 0x935 mov    %r11,(%rsp) None
+   + 0x9f4 mov    %r9,0x10(%rsp) None
+   + 0x9f9 mov    %rdi,0x8(%rsp) None
+insert v2[488:488] +0x941 lines [] | proto[517:518] +0xa06 lines [592]
+   + 0xa06 mov    %rbx,%rsi 592
+delete v2[489:490] +0x946 lines [542] | proto[519:519] +0xa0e lines []
+   - 0x946 lea    0xd8(%rsp),%r8 542
+replace v2[492:496] +0x956 lines [546] | proto[521:530] +0xa16 lines [597]
+   - 0x956 mov    (%rbx),%rax 546
+   - 0x959 mov    0x20(%rsp),%r10 546
+   - 0x95e mov    (%rsp),%r11 546
+   - 0x962 mov    0x10(%rsp),%rdx 546
+   + 0xa16 mov    0xd8(%rsp,%rbx,8),%rax 597
+   + 0xa1e mov    (%rsp),%r10 597
+   + 0xa22 mov    0x40(%rsp),%rbp 597
+   + 0xa27 mov    0x8(%rsp),%rdi 597
+   + 0xa2c mov    0x10(%rsp),%r9 597
+   + 0xa31 jmp    3b337 <<c30walk::ctor2d::Ctor2d>::build::<false>+0x9d7> 597
+   + 0xa33 data16 data16 data16 cs nopw 0x0(%rax,%rax,1) 597
+   + 0xa40 xor    %edx,%edx 597
+   + 0xa42 lea    0x10d8(%rsp),%r8 597
+delete v2[498:504] +0x970 lines [546] | proto[532:532] +0xa50 lines []
+   - 0x970 xor    %edx,%edx 546
+   - 0x972 lea    0xd8(%rsp),%r8 546
+   - 0x97a mov    %r12,%r9 546
+   - 0x97d mov    0x38(%rsp),%rcx 546
+   - 0x982 jmp    3e9f3 <<c30walk::ctor2::Ctor2>::build::<false>+0x9e3> 546
+   - 0x984 data16 data16 cs nopw 0x0(%rax,%rax,1) 546
+replace v2[515:517] +0x9c7 lines [299, 828] | proto[543:545] +0xa87 lines [345, 877]
+   - 0x9c7 mov    0x30(%rsp),%r11 299
+   - 0x9cc lea    0x10(%r11),%rsi 828
+   + 0xa87 mov    0x20(%rsp),%rax 345
+   + 0xa8c lea    0x10(%rax),%rcx 877
+replace v2[518:521] +0x9d2 lines [828] | proto[546:552] +0xa92 lines [877]
+   - 0x9d2 mov    %rsi,%rdi 828
+   - 0x9d5 cmp    %r10,%rsi 828
+   - 0x9d8 mov    0x28(%rsp),%r14 828
+   + 0xa92 mov    %rax,%rdi 877
+   + 0xa95 mov    %rcx,%r11 877
+   + 0xa98 mov    0x60(%rsp),%r9 877
+   + 0xa9d cmp    %r9,%rcx 877
+   + 0xaa0 mov    0x40(%rsp),%rbp 877
+   + 0xaa5 lea    0x10d8(%rsp),%r8 877
+insert v2[522:522] +0x9e3 lines [] | proto[553:554] +0xab3 lines [877]
+   + 0xab3 mov    %r12,%rcx 877
+replace v2[524:526] +0x9e8 lines [99] | proto[556:558] +0xabb lines [107]
+   - 0x9e8 lea    0x8(%r11),%rsi 99
+   - 0x9ec cmp    $0xfffffffffffffff7,%r11 None
+   + 0xabb lea    0x8(%rdi),%rsi 107
+   + 0xabf cmp    $0xfffffffffffffff7,%rdi None
+replace v2[527:528] +0x9f6 lines [] | proto[559:560] +0xac9 lines []
+   - 0x9f6 cmp    %r13,%rsi None
+   + 0xac9 cmp    %r10,%rsi None
+replace v2[529:531] +0x9ff lines [99] | proto[561:563] +0xad2 lines [107]
+   - 0x9ff lea    0x10(%r11),%rax 99
+   - 0xa03 cmp    %r13,%rax 99
+   + 0xad2 lea    0x10(%rdi),%rax 107
+   + 0xad6 cmp    %r10,%rax 107
+replace v2[532:535] +0xa0c lines [833] | proto[564:567] +0xadf lines [885]
+   - 0xa0c mov    (%r14,%r11,1),%r9 None
+   - 0xa10 mov    (%r14,%rsi,1),%rcx None
+   - 0xa14 mov    %r9,%rax 833
+   + 0xadf mov    0x0(%rbp,%rdi,1),%r15 None
+   + 0xae4 mov    0x0(%rbp,%rsi,1),%rcx None
+   + 0xae9 mov    %r15,%rax 885
+replace v2[536:537] +0xa1a lines [833] | proto[568:569] +0xaef lines [885]
+   - 0xa1a mov    %r9,%rdx 833
+   + 0xaef mov    %r15,%rdx 885
+replace v2[538:539] +0xa21 lines [833] | proto[570:571] +0xaf6 lines [885]
+   - 0xa21 xor    %r9,%rdx 833
+   + 0xaf6 xor    %r15,%rdx 885
+replace v2[541:544] +0xa29 lines [833] | proto[573:577] +0xafe lines [885]
+   - 0xa29 mov    %rdi,%rax 833
+   - 0xa2c nopl   0x0(%rax) 833
+   - 0xa30 mov    %rax,%r12 833
+   + 0xafe mov    %rdi,%rbx 885
+   + 0xb01 mov    %r11,%rax 885
+   + 0xb04 data16 data16 cs nopw 0x0(%rax,%rax,1) 885
+   + 0xb10 mov    %rax,%rdi 885
+replace v2[545:547] +0xa37 lines [835] | proto[578:580] +0xb17 lines [887]
+   - 0xa37 cmp    %r10,%rax 835
+   - 0xa3a setbe  %r9b 835
+   + 0xb17 cmp    %r9,%rax 887
+   + 0xb1a setbe  %r11b 887
+replace v2[548:550] +0xa44 lines [99] | proto[581:583] +0xb24 lines [107]
+   - 0xa44 lea    0x8(%r12),%rsi 99
+   - 0xa49 cmp    $0xfffffffffffffff7,%r12 None
+   + 0xb24 lea    0x8(%rdi),%rsi 107
+   + 0xb28 cmp    $0xfffffffffffffff7,%rdi None
+replace v2[551:552] +0xa53 lines [] | proto[584:585] +0xb32 lines []
+   - 0xa53 cmp    %r13,%rsi None
+   + 0xb32 cmp    %r10,%rsi None
+replace v2[553:555] +0xa5c lines [] | proto[586:588] +0xb3b lines []
+   - 0xa5c mov    (%r14,%r12,1),%rdx None
+   - 0xa60 mov    0x8(%r14,%r12,1),%rsi None
+   + 0xb3b mov    0x0(%rbp,%rdi,1),%rdx None
+   + 0xb40 mov    0x8(%rbp,%rdi,1),%rsi None
+replace v2[559:562] +0xa6f lines [837] | proto[592:595] +0xb4f lines [889]
+   - 0xa6f mov    %rsi,0x38(%rsp) 837
+   - 0xa74 mov    %rdx,0x68(%rsp) 837
+   - 0xa79 lea    0x10(%r12),%r10 837
+   + 0xb4f mov    %rsi,0x30(%rsp) 889
+   + 0xb54 mov    %rdx,0x38(%rsp) 889
+   + 0xb59 lea    0x10(%rdi),%r9 889
+replace v2[563:564] +0xa80 lines [837] | proto[596:598] +0xb5f lines [889]
+   - 0xa80 mov    %rdi,0x30(%rsp) 837
+   + 0xb5f nop 889
+   + 0xb60 mov    %r11,0x20(%rsp) 889
+replace v2[565:572] +0xa8d lines [559, 560] | proto[599:606] +0xb6d lines [610, 611]
+   - 0xa8d mov    $0x1e,%r12d 559
+   - 0xa93 sub    %rax,%r12 559
+   - 0xa96 cmp    $0x10,%r12 None
+   - 0xa9a mov    $0x10,%ebx None
+   - 0xa9f cmovb  %r12,%rbx None
+   - 0xaa3 mov    %rbx,%r15 560
+   - 0xaa6 add    %r11,%r15 560
+   + 0xb6d mov    $0x1e,%r13d 610
+   + 0xb73 sub    %rax,%r13 610
+   + 0xb76 cmp    $0x10,%r13 None
+   + 0xb7a mov    $0x10,%r14d None
+   + 0xb80 cmovb  %r13,%r14 None
+   + 0xb84 mov    %r14,%rbx 611
+   + 0xb87 add    %rdi,%rbx 611
+replace v2[573:574] +0xaaf lines [] | proto[607:608] +0xb90 lines []
+   - 0xaaf cmp    %r13,%r15 None
+   + 0xb90 cmp    %r10,%rbx None
+replace v2[575:576] +0xab8 lines [] | proto[609:610] +0xb99 lines []
+   - 0xab8 mov    0x28e0(%rsp),%r14d None
+   + 0xb99 mov    0x28e0(%rsp),%r12d None
+replace v2[578:605] +0xaca lines [247, 647, 648, 649, 657, 847] | proto[612:615] +0xbab lines []
+   - 0xaca cmp    %r15,0x30(%rsp) None
+   - 0xacf jae    3f2da <<c30walk::ctor2::Ctor2>::build::<false>+0x12ca> None
+   - 0xad5 jmp    3f7e4 <<c30walk::ctor2::Ctor2>::build::<false>+0x17d4> None
+   - 0xada nopw   0x0(%rax,%rax,1) None
+   - 0xae0 lea    0x10(%r12),%r10 847
+   - 0xae5 mov    %r12,0x30(%rsp) 847
+   - 0xaea sub    %r11,%r12 847
+   - 0xaed movzbl %cl,%eax 647
+   - 0xaf0 mov    %rax,0x90(%rsp) 647
+   - 0xaf8 lea    (%rax,%rax,4),%rdx 648
+   - 0xafc mov    (%r8,%rdx,8),%rax 648
+   - 0xb00 mov    0x1c(%r8,%rdx,8),%esi 648
+   - 0xb05 mov    %rax,%rdi 247
+   - 0xb08 sub    0x10(%r8,%rdx,8),%rdi 247
+   - 0xb0d shr    $1,%rdi 247
+   - 0xb10 add    0x18(%r8,%rdx,8),%edi 247
+   - 0xb15 add    %r12,%rdi 649
+   - 0xb18 cmp    %rsi,%rdi 649
+   - 0xb1b ja     3f577 <<c30walk::ctor2::Ctor2>::build::<false>+0x1567> 649
+   - 0xb21 mov    %r10,0x70(%rsp) 649
+   - 0xb26 mov    %r9d,0x44(%rsp) 649
+   - 0xb2b lea    (%r8,%rdx,8),%rbp 847
+   - 0xb2f movzbl %cl,%r13d 847
+   - 0xb33 mov    0x8(%rbp),%rsi 657
+   - 0xb37 mov    $0x88888889,%r14d 657
+   - 0xb3d lea    -0x25494(%rip),%r15 657
+   - 0xb44 mov    %rbp,0x88(%rsp) 657
+   + 0xbab cmp    %rbx,0x20(%rsp) None
+   + 0xbb0 jb     3c259 <<c30walk::ctor2d::Ctor2d>::build::<false>+0x18f9> None
+   + 0xbb6 add    %rbp,%rbx None
+insert v2[607:607] +0xb50 lines [] | proto[617:644] +0xbc0 lines [326, 698, 699, 707, 899]
+   + 0xbc0 lea    0x10(%rdi),%r9 899
+   + 0xbc4 movzbl %cl,%r12d 698
+   + 0xbc8 lea    (%r12,%r12,2),%rdx 326
+   + 0xbcc mov    %r12d,%eax 326
+   + 0xbcf mov    0xd8(%rsp,%rax,8),%rax 326
+   + 0xbd7 mov    %rax,%rsi 326
+   + 0xbda sub    (%r8,%rdx,8),%rsi 326
+   + 0xbde mov    %rdi,0x20(%rsp) 326
+   + 0xbe3 mov    %rdi,%rbp 899
+   + 0xbe6 shr    $1,%rsi 326
+   + 0xbe9 add    0x8(%r8,%rdx,8),%esi 326
+   + 0xbee sub    %rbx,%rbp 899
+   + 0xbf1 add    %rbp,%rsi 699
+   + 0xbf4 mov    0xc(%r8,%rdx,8),%edi 699
+   + 0xbf9 cmp    %rdi,%rsi 699
+   + 0xbfc ja     3bfbd <<c30walk::ctor2d::Ctor2d>::build::<false>+0x165d> 699
+   + 0xc02 mov    %r9,0x70(%rsp) 699
+   + 0xc07 mov    %r11d,0x54(%rsp) 699
+   + 0xc0c lea    (%r8,%rdx,8),%rbx 899
+   + 0xc10 movzbl %cl,%r14d 899
+   + 0xc14 mov    0x8d8(%rsp,%r12,8),%rsi 707
+   + 0xc1c mov    $0x88888889,%r15d 707
+   + 0xc22 lea    -0x20149(%rip),%r13 707
+   + 0xc29 mov    %r12,0x90(%rsp) 707
+   + 0xc31 mov    %rbx,0x78(%rsp) 707
+   + 0xc36 jmp    3b5d6 <<c30walk::ctor2d::Ctor2d>::build::<false>+0xc76> 707
+   + 0xc38 nopl   0x0(%rax,%rax,1) 707
+replace v2[614:616] +0xb69 lines [361, 362] | proto[651:652] +0xc59 lines [406]
+   - 0xb69 mov    %rax,0x10(%rbp) 361
+   - 0xb6d mov    %rax,0x0(%rbp) 362
+   + 0xc59 mov    %rax,0xd8(%rsp,%r12,8) 406
+replace v2[617:621] +0xb75 lines [363, 365, 366] | proto[653:657] +0xc65 lines [407, 408]
+   - 0xb75 mov    %rsi,0x8(%rbp) 363
+   - 0xb79 mov    %edx,0x20(%rbp) 365
+   - 0xb7c mov    %edi,0x24(%rbp) 366
+   - 0xb7f lea    0xd8(%rsp),%r8 366
+   + 0xc65 mov    %rsi,0x8d8(%rsp,%r12,8) 407
+   + 0xc6d mov    %rax,(%rbx) 408
+   + 0xc70 mov    %edx,0x10(%rbx) 408
+   + 0xc73 mov    %edi,0x14(%rbx) 408
+replace v2[623:625] +0xb8d lines [] | proto[659:661] +0xc7c lines []
+   - 0xb8d cmp    %rsi,%r12 None
+   - 0xb90 cmovb  %r12,%rsi None
+   + 0xc7c cmp    %rsi,%rbp None
+   + 0xc7f cmovb  %rbp,%rsi None
+replace v2[635:636] +0xbc7 lines [584] | proto[671:672] +0xcb6 lines [635]
+   - 0xbc7 lea    (%r15,%r11,1),%rdx 584
+   + 0xcb6 lea    (%r11,%r13,1),%rdx 635
+replace v2[640:641] +0xbdc lines [] | proto[676:677] +0xccb lines []
+   - 0xbdc sub    %r15,%r8 None
+   + 0xccb sub    %r13,%r8 None
+replace v2[648:649] +0xbfa lines [] | proto[684:685] +0xce9 lines []
+   - 0xbfa nopw   0x0(%rax,%rax,1) None
+   + 0xce9 nopl   0x0(%rax) None
+replace v2[657:658] +0xc1d lines [591] | proto[693:694] +0xd0d lines [642]
+   - 0xc1d mov    %rax,0x0(%rbp) 591
+   + 0xd0d mov    %rax,0xd8(%rsp,%r12,8) 642
+replace v2[667:670] +0xc46 lines [662, 664] | proto[703:705] +0xd3a lines [711, 713]
+   - 0xc46 sub    %rsi,%r12 662
+   - 0xc49 lea    0xd8(%rsp),%r8 662
+   - 0xc51 test   %r12,%r12 664
+   + 0xd3a sub    %rsi,%rbp 711
+   + 0xd3d test   %rbp,%rbp 713
+replace v2[672:673] +0xc5d lines [373] | proto[707:708] +0xd49 lines [420]
+   - 0xc5d cmp    0x10(%rbp),%rax 373
+   + 0xd49 cmp    (%rbx),%rax 420
+replace v2[675:676] +0xc6b lines [374] | proto[710:711] +0xd56 lines [421]
+   - 0xc6b mov    0x90(%rsp),%rsi 374
+   + 0xd56 mov    %r12,%rsi 421
+replace v2[677:679] +0xc78 lines [247] | proto[712:714] +0xd5e lines [326]
+   - 0xc78 mov    0x0(%rbp),%r8 247
+   - 0xc7c mov    0x10(%rbp),%rax 247
+   + 0xd5e mov    0xd8(%rsp,%r12,8),%r8 326
+   + 0xd66 mov    (%rbx),%rax 326
+replace v2[681:687] +0xc86 lines [247, 377, 379] | proto[716:722] +0xd6f lines [326, 423, 424, 425, 426]
+   - 0xc86 add    0x18(%rbp),%r8d 247
+   - 0xc8a mov    %r8d,0x18(%rbp) 377
+   - 0xc8e pxor   %xmm0,%xmm0 379
+   - 0xc92 movdqu %xmm0,0x0(%rbp) 379
+   - 0xc97 movq   $0x0,0x10(%rbp) 379
+   - 0xc9f cmp    $0x1e,%r12 379
+   + 0xd6f add    0x8(%rbx),%r8d 326
+   + 0xd73 mov    %r8d,0x8(%rbx) 423
+   + 0xd77 movq   $0x0,(%rbx) 424
+   + 0xd7e movq   $0x0,0xd8(%rsp,%r12,8) 425
+   + 0xd8a movq   $0x0,0x8d8(%rsp,%r12,8) 426
+   + 0xd96 cmp    $0x1e,%rbp 426
+replace v2[689:690] +0xcac lines [669] | proto[724:725] +0xda3 lines [718]
+   - 0xcac imul   %r14,%rcx 669
+   + 0xda3 imul   %r15,%rcx 718
+replace v2[697:698] +0xcc7 lines [672] | proto[732:733] +0xdbe lines [721]
+   - 0xcc7 mov    %r12,%rax 672
+   + 0xdbe mov    %rbp,%rax 721
+replace v2[703:704] +0xce3 lines [705] | proto[738:739] +0xdda lines [754]
+   - 0xce3 mov    %r12,0x50(%rsp) 705
+   + 0xdda mov    %rbp,0x28(%rsp) 754
+replace v2[708:709] +0xd03 lines [603] | proto[743:744] +0xdfa lines [654]
+   - 0xd03 mov    %rax,(%rsp) 603
+   + 0xdfa mov    %rax,0x8(%rsp) 654
+replace v2[713:715] +0xd24 lines [603] | proto[748:750] +0xe1c lines [654]
+   - 0xd24 mov    0x28d8(%rsp),%rbx 603
+   - 0xd2c mov    %rbx,%rdi 603
+   + 0xe1c mov    0x28d8(%rsp),%r12 654
+   + 0xe24 mov    %r12,%rdi 654
+replace v2[716:717] +0xd33 lines [603] | proto[751:752] +0xe2b lines [654]
+   - 0xd33 add    %r15,%rdi 603
+   + 0xe2b add    %r13,%rdi 654
+replace v2[719:725] +0xd3d lines [] | proto[754:760] +0xe35 lines []
+   - 0xd3d lea    (%rax,%rcx,1),%r12 None
+   - 0xd41 add    $0x3c,%r12 None
+   - 0xd45 mov    %r10d,%r15d None
+   - 0xd48 shl    $0x8,%r15d None
+   - 0xd4c or     %r13d,%r15d None
+   - 0xd4f xor    %ebp,%ebp None
+   + 0xe35 lea    (%rax,%rcx,1),%r15 None
+   + 0xe39 add    $0x3c,%r15 None
+   + 0xe3d mov    %r10d,%ebp None
+   + 0xe40 shl    $0x8,%ebp None
+   + 0xe43 or     %r14d,%ebp None
+   + 0xe46 xor    %ebx,%ebx None
+replace v2[726:727] +0xd56 lines [] | proto[761:762] +0xe4d lines []
+   - 0xd56 cs nopw 0x0(%rax,%rax,1) None
+   + 0xe4d nopl   (%rax) None
+replace v2[729:730] +0xd67 lines [625] | proto[764:765] +0xe57 lines [676]
+   - 0xd67 mov    %r15d,(%rcx,%rax,1) 625
+   + 0xe57 mov    %ebp,(%rcx,%rax,1) 676
+replace v2[731:733] +0xd6f lines [625] | proto[766:768] +0xe5e lines [676]
+   - 0xd6f lea    (%r10,%rbp,1),%r14d 625
+   - 0xd73 add    %r14d,%esi 625
+   + 0xe5e lea    (%r10,%rbx,1),%r13d 676
+   + 0xe62 add    %r13d,%esi 676
+replace v2[734:735] +0xd79 lines [625] | proto[769:770] +0xe68 lines [676]
+   - 0xd79 or     %r13d,%esi 625
+   + 0xe68 or     %r14d,%esi 676
+replace v2[737:738] +0xd84 lines [625] | proto[772:773] +0xe73 lines [676]
+   - 0xd84 add    %r14d,%esi 625
+   + 0xe73 add    %r13d,%esi 676
+replace v2[739:740] +0xd8a lines [625] | proto[774:775] +0xe79 lines [676]
+   - 0xd8a or     %r13d,%esi 625
+   + 0xe79 or     %r14d,%esi 676
+replace v2[742:743] +0xd95 lines [625] | proto[777:778] +0xe84 lines [676]
+   - 0xd95 add    %r14d,%esi 625
+   + 0xe84 add    %r13d,%esi 676
+replace v2[744:745] +0xd9b lines [625] | proto[779:780] +0xe8a lines [676]
+   - 0xd9b or     %r13d,%esi 625
+   + 0xe8a or     %r14d,%esi 676
+replace v2[747:748] +0xda6 lines [625] | proto[782:783] +0xe95 lines [676]
+   - 0xda6 add    %r14d,%esi 625
+   + 0xe95 add    %r13d,%esi 676
+replace v2[749:750] +0xdac lines [625] | proto[784:785] +0xe9b lines [676]
+   - 0xdac or     %r13d,%esi 625
+   + 0xe9b or     %r14d,%esi 676
+replace v2[752:753] +0xdb7 lines [625] | proto[787:788] +0xea6 lines [676]
+   - 0xdb7 add    %r14d,%esi 625
+   + 0xea6 add    %r13d,%esi 676
+replace v2[754:755] +0xdbd lines [625] | proto[789:790] +0xeac lines [676]
+   - 0xdbd or     %r13d,%esi 625
+   + 0xeac or     %r14d,%esi 676
+replace v2[757:758] +0xdc8 lines [625] | proto[792:793] +0xeb7 lines [676]
+   - 0xdc8 add    %r14d,%esi 625
+   + 0xeb7 add    %r13d,%esi 676
+replace v2[759:760] +0xdce lines [625] | proto[794:795] +0xebd lines [676]
+   - 0xdce or     %r13d,%esi 625
+   + 0xebd or     %r14d,%esi 676
+replace v2[762:763] +0xdd9 lines [625] | proto[797:798] +0xec8 lines [676]
+   - 0xdd9 add    %r14d,%esi 625
+   + 0xec8 add    %r13d,%esi 676
+replace v2[764:765] +0xddf lines [625] | proto[799:800] +0xece lines [676]
+   - 0xddf or     %r13d,%esi 625
+   + 0xece or     %r14d,%esi 676
+replace v2[767:768] +0xdea lines [625] | proto[802:803] +0xed9 lines [676]
+   - 0xdea add    %r14d,%esi 625
+   + 0xed9 add    %r13d,%esi 676
+replace v2[769:770] +0xdf0 lines [625] | proto[804:805] +0xedf lines [676]
+   - 0xdf0 or     %r13d,%esi 625
+   + 0xedf or     %r14d,%esi 676
+replace v2[772:773] +0xdfb lines [625] | proto[807:808] +0xeea lines [676]
+   - 0xdfb add    %r14d,%esi 625
+   + 0xeea add    %r13d,%esi 676
+replace v2[774:775] +0xe01 lines [625] | proto[809:810] +0xef0 lines [676]
+   - 0xe01 or     %r13d,%esi 625
+   + 0xef0 or     %r14d,%esi 676
+replace v2[777:778] +0xe0c lines [625] | proto[812:813] +0xefb lines [676]
+   - 0xe0c add    %r14d,%esi 625
+   + 0xefb add    %r13d,%esi 676
+replace v2[779:780] +0xe12 lines [625] | proto[814:815] +0xf01 lines [676]
+   - 0xe12 or     %r13d,%esi 625
+   + 0xf01 or     %r14d,%esi 676
+replace v2[782:783] +0xe1d lines [625] | proto[817:818] +0xf0c lines [676]
+   - 0xe1d add    %r14d,%esi 625
+   + 0xf0c add    %r13d,%esi 676
+replace v2[784:785] +0xe23 lines [625] | proto[819:820] +0xf12 lines [676]
+   - 0xe23 or     %r13d,%esi 625
+   + 0xf12 or     %r14d,%esi 676
+replace v2[787:788] +0xe2e lines [625] | proto[822:823] +0xf1d lines [676]
+   - 0xe2e add    %r14d,%esi 625
+   + 0xf1d add    %r13d,%esi 676
+replace v2[789:790] +0xe34 lines [625] | proto[824:825] +0xf23 lines [676]
+   - 0xe34 or     %r13d,%esi 625
+   + 0xf23 or     %r14d,%esi 676
+replace v2[792:793] +0xe3f lines [625] | proto[827:828] +0xf2e lines [676]
+   - 0xe3f add    %r14d,%esi 625
+   + 0xf2e add    %r13d,%esi 676
+replace v2[794:795] +0xe45 lines [625] | proto[829:830] +0xf34 lines [676]
+   - 0xe45 or     %r13d,%esi 625
+   + 0xf34 or     %r14d,%esi 676
+replace v2[797:798] +0xe50 lines [625] | proto[832:833] +0xf3f lines [676]
+   - 0xe50 add    %r14d,%esi 625
+   + 0xf3f add    %r13d,%esi 676
+replace v2[799:800] +0xe56 lines [625] | proto[834:835] +0xf45 lines [676]
+   - 0xe56 or     %r13d,%esi 625
+   + 0xf45 or     %r14d,%esi 676
+replace v2[802:803] +0xe61 lines [625] | proto[837:838] +0xf50 lines [676]
+   - 0xe61 add    %r14d,%esi 625
+   + 0xf50 add    %r13d,%esi 676
+replace v2[804:805] +0xe67 lines [625] | proto[839:840] +0xf56 lines [676]
+   - 0xe67 or     %r13d,%esi 625
+   + 0xf56 or     %r14d,%esi 676
+replace v2[807:808] +0xe72 lines [625] | proto[842:843] +0xf61 lines [676]
+   - 0xe72 add    %r14d,%esi 625
+   + 0xf61 add    %r13d,%esi 676
+replace v2[809:810] +0xe78 lines [625] | proto[844:845] +0xf67 lines [676]
+   - 0xe78 or     %r13d,%esi 625
+   + 0xf67 or     %r14d,%esi 676
+replace v2[812:813] +0xe83 lines [625] | proto[847:848] +0xf72 lines [676]
+   - 0xe83 add    %r14d,%esi 625
+   + 0xf72 add    %r13d,%esi 676
+replace v2[814:815] +0xe89 lines [625] | proto[849:850] +0xf78 lines [676]
+   - 0xe89 or     %r13d,%esi 625
+   + 0xf78 or     %r14d,%esi 676
+replace v2[817:818] +0xe94 lines [625] | proto[852:853] +0xf83 lines [676]
+   - 0xe94 add    %r14d,%esi 625
+   + 0xf83 add    %r13d,%esi 676
+replace v2[819:820] +0xe9a lines [625] | proto[854:855] +0xf89 lines [676]
+   - 0xe9a or     %r13d,%esi 625
+   + 0xf89 or     %r14d,%esi 676
+replace v2[822:823] +0xea5 lines [625] | proto[857:858] +0xf94 lines [676]
+   - 0xea5 add    %r14d,%esi 625
+   + 0xf94 add    %r13d,%esi 676
+replace v2[824:825] +0xeab lines [625] | proto[859:860] +0xf9a lines [676]
+   - 0xeab or     %r13d,%esi 625
+   + 0xf9a or     %r14d,%esi 676
+replace v2[827:828] +0xeb6 lines [625] | proto[862:863] +0xfa5 lines [676]
+   - 0xeb6 add    %r14d,%esi 625
+   + 0xfa5 add    %r13d,%esi 676
+replace v2[829:830] +0xebc lines [625] | proto[864:865] +0xfab lines [676]
+   - 0xebc or     %r13d,%esi 625
+   + 0xfab or     %r14d,%esi 676
+replace v2[832:833] +0xec7 lines [625] | proto[867:868] +0xfb6 lines [676]
+   - 0xec7 add    %r14d,%esi 625
+   + 0xfb6 add    %r13d,%esi 676
+replace v2[834:835] +0xecd lines [625] | proto[869:870] +0xfbc lines [676]
+   - 0xecd or     %r13d,%esi 625
+   + 0xfbc or     %r14d,%esi 676
+replace v2[837:838] +0xed8 lines [625] | proto[872:873] +0xfc7 lines [676]
+   - 0xed8 add    %r14d,%esi 625
+   + 0xfc7 add    %r13d,%esi 676
+replace v2[839:840] +0xede lines [625] | proto[874:875] +0xfcd lines [676]
+   - 0xede or     %r13d,%esi 625
+   + 0xfcd or     %r14d,%esi 676
+replace v2[842:843] +0xee9 lines [625] | proto[877:878] +0xfd8 lines [676]
+   - 0xee9 add    %r14d,%esi 625
+   + 0xfd8 add    %r13d,%esi 676
+replace v2[844:845] +0xeef lines [625] | proto[879:880] +0xfde lines [676]
+   - 0xeef or     %r13d,%esi 625
+   + 0xfde or     %r14d,%esi 676
+replace v2[847:848] +0xefa lines [625] | proto[882:883] +0xfe9 lines [676]
+   - 0xefa add    %r14d,%esi 625
+   + 0xfe9 add    %r13d,%esi 676
+replace v2[849:850] +0xf00 lines [625] | proto[884:885] +0xfef lines [676]
+   - 0xf00 or     %r13d,%esi 625
+   + 0xfef or     %r14d,%esi 676
+replace v2[852:853] +0xf0b lines [625] | proto[887:888] +0xffa lines [676]
+   - 0xf0b add    %r14d,%esi 625
+   + 0xffa add    %r13d,%esi 676
+replace v2[854:855] +0xf11 lines [625] | proto[889:890] +0x1000 lines [676]
+   - 0xf11 or     %r13d,%esi 625
+   + 0x1000 or     %r14d,%esi 676
+replace v2[857:858] +0xf1c lines [625] | proto[892:893] +0x100b lines [676]
+   - 0xf1c add    %r14d,%esi 625
+   + 0x100b add    %r13d,%esi 676
+replace v2[859:860] +0xf22 lines [625] | proto[894:895] +0x1011 lines [676]
+   - 0xf22 or     %r13d,%esi 625
+   + 0x1011 or     %r14d,%esi 676
+replace v2[862:863] +0xf2d lines [625] | proto[897:898] +0x101c lines [676]
+   - 0xf2d add    %r14d,%esi 625
+   + 0x101c add    %r13d,%esi 676
+replace v2[864:865] +0xf33 lines [625] | proto[899:900] +0x1022 lines [676]
+   - 0xf33 or     %r13d,%esi 625
+   + 0x1022 or     %r14d,%esi 676
+replace v2[867:868] +0xf3e lines [625] | proto[902:903] +0x102d lines [676]
+   - 0xf3e add    %r14d,%esi 625
+   + 0x102d add    %r13d,%esi 676
+replace v2[869:870] +0xf44 lines [625] | proto[904:905] +0x1033 lines [676]
+   - 0xf44 or     %r13d,%esi 625
+   + 0x1033 or     %r14d,%esi 676
+replace v2[872:873] +0xf4f lines [625] | proto[907:908] +0x103e lines [676]
+   - 0xf4f add    %r14d,%esi 625
+   + 0x103e add    %r13d,%esi 676
+replace v2[874:875] +0xf55 lines [625] | proto[909:910] +0x1044 lines [676]
+   - 0xf55 or     %r13d,%esi 625
+   + 0x1044 or     %r14d,%esi 676
+replace v2[876:877] +0xf5c lines [639] | proto[911:912] +0x104b lines [690]
+   - 0xf5c lea    (%r10,%rbp,1),%eax 639
+   + 0x104b lea    (%r10,%rbx,1),%eax 690
+replace v2[879:880] +0xf6a lines [] | proto[914:915] +0x1059 lines []
+   - 0xf6a add    $0x20,%rbp None
+   + 0x1059 add    $0x20,%rbx None
+replace v2[881:882] +0xf71 lines [] | proto[916:917] +0x1060 lines []
+   - 0xf71 add    $0x2000,%r15d None
+   + 0x1060 add    $0x2000,%ebp None
+replace v2[886:887] +0xf88 lines [285] | proto[921:922] +0x1076 lines [331]
+   - 0xf88 cmp    (%rsp),%rax 285
+   + 0x1076 cmp    0x8(%rsp),%rax 331
+replace v2[892:893] +0xfa1 lines [620] | proto[927:928] +0x1090 lines [671]
+   - 0xfa1 cmp    $0x1e,%rbx 620
+   + 0x1090 cmp    $0x1e,%r12 671
+replace v2[894:895] +0xfab lines [622] | proto[929:930] +0x109a lines [673]
+   - 0xfab mov    (%r12,%rbp,2),%eax 622
+   + 0x109a mov    (%r15,%rbx,2),%eax 673
+replace v2[900:902] +0xfc6 lines [] | proto[935:937] +0x10b5 lines []
+   - 0xfc6 cs nopw 0x0(%rax,%rax,1) None
+   - 0xfd0 cmp    $0x1e,%rbx None
+   + 0x10b5 data16 cs nopw 0x0(%rax,%rax,1) None
+   + 0x10c0 cmp    $0x1e,%r12 None
+replace v2[904:905] +0xfde lines [] | proto[939:940] +0x10ce lines []
+   - 0xfde movups %xmm0,-0x10(%r12,%rbp,2) None
+   + 0x10ce movups %xmm0,-0x10(%r15,%rbx,2) None
+replace v2[908:912] +0xff2 lines [] | proto[943:947] +0x10e2 lines []
+   - 0xff2 movdqa %xmm2,-0x1c(%r12,%rbp,2) None
+   - 0xff9 movdqa %xmm1,-0x2c(%r12,%rbp,2) None
+   - 0x1000 movdqa %xmm0,-0x3c(%r12,%rbp,2) None
+   - 0x1007 mov    %r15d,(%r12,%rbp,2) None
+   + 0x10e2 movdqa %xmm2,-0x1c(%r15,%rbx,2) None
+   + 0x10e9 movdqa %xmm1,-0x2c(%r15,%rbx,2) None
+   + 0x10f0 movdqa %xmm0,-0x3c(%r15,%rbx,2) None
+   + 0x10f7 mov    %ebp,(%r15,%rbx,2) None
+replace v2[917:918] +0x1026 lines [604] | proto[952:953] +0x1116 lines [655]
+   - 0x1026 add    %r15,%rdi 604
+   + 0x1116 add    %r13,%rdi 655
+replace v2[921:925] +0x103c lines [605] | proto[956:960] +0x112c lines [656]
+   - 0x103c mov    %eax,%r14d 605
+   - 0x103f shl    $0x8,%r14d 605
+   - 0x1043 or     %r13d,%r14d 605
+   - 0x1046 cmp    $0x3c,%r12 None
+   + 0x112c mov    %eax,%r15d 656
+   + 0x112f shl    $0x8,%r15d 656
+   + 0x1133 or     %r14d,%r15d 656
+   + 0x1136 cmp    $0x3c,%rbp None
+replace v2[935:936] +0x106d lines [] | proto[970:971] +0x115d lines []
+   - 0x106d add    %r15,%r11 None
+   + 0x115d add    %r13,%r11 None
+insert v2[949:949] +0x10aa lines [] | proto[984:985] +0x119a lines []
+   + 0x119a mov    0x78(%rsp),%rbx None
+replace v2[957:958] +0x10cf lines [] | proto[993:994] +0x11c4 lines []
+   - 0x10cf nop None
+   + 0x11c4 data16 data16 cs nopw 0x0(%rax,%rax,1) None
+replace v2[962:964] +0x10e4 lines [] | proto[998:1000] +0x11e4 lines []
+   - 0x10e4 movdqa 0x20(%rdi),%xmm3 None
+   - 0x10e9 movdqa %xmm3,-0x5c(%r11) None
+   + 0x11e4 movaps 0x20(%rdi),%xmm3 None
+   + 0x11e8 movaps %xmm3,-0x5c(%r11) None
+replace v2[966:967] +0x10fb lines [] | proto[1002:1003] +0x11f9 lines []
+   - 0x10fb mov    %r14d,-0x40(%r11) None
+   + 0x11f9 mov    %r15d,-0x40(%r11) None
+replace v2[970:971] +0x110f lines [] | proto[1006:1007] +0x120d lines []
+   - 0x110f movdqa %xmm3,-0x1c(%r11) None
+   + 0x120d movaps %xmm3,-0x1c(%r11) None
+replace v2[972:973] +0x111b lines [] | proto[1008:1009] +0x1218 lines []
+   - 0x111b lea    0x2000(%r14),%ebx None
+   + 0x1218 lea    0x2000(%r15),%ebx None
+replace v2[974:975] +0x1125 lines [609] | proto[1010:1011] +0x1222 lines [660]
+   - 0x1125 add    $0x4000,%r14d 609
+   + 0x1222 add    $0x4000,%r15d 660
+replace v2[990:991] +0x1169 lines [] | proto[1026:1027] +0x1266 lines []
+   - 0x1169 mov    %r14d,0x3c(%rcx,%rsi,1) None
+   + 0x1266 mov    %r15d,0x3c(%rcx,%rsi,1) None
+replace v2[1000:1002] +0x118f lines [672] | proto[1036:1038] +0x128c lines [721]
+   - 0x118f mov    0x50(%rsp),%r12 672
+   - 0x1194 add    %rcx,%r12 672
+   + 0x128c mov    0x28(%rsp),%rbp 721
+   + 0x1291 add    %rcx,%rbp 721
+replace v2[1006:1011] +0x11a2 lines [673, 674] | proto[1042:1048] +0x129f lines [722, 723]
+   - 0x11a2 mov    0x88(%rsp),%rbp 673
+   - 0x11aa mov    %r8d,0x18(%rbp) 673
+   - 0x11ae test   %r12,%r12 674
+   - 0x11b1 mov    $0x88888889,%r14d 674
+   - 0x11b7 lea    -0x25b0e(%rip),%r15 674
+   + 0x129f mov    0x78(%rsp),%rbx 722
+   + 0x12a4 mov    %r8d,0x8(%rbx) 722
+   + 0x12a8 test   %rbp,%rbp 723
+   + 0x12ab mov    $0x88888889,%r15d 723
+   + 0x12b1 lea    -0x207d8(%rip),%r13 723
+   + 0x12b8 mov    0x90(%rsp),%r12 723
+replace v2[1012:1013] +0x11c4 lines [347] | proto[1049:1050] +0x12c2 lines [393]
+   - 0x11c4 mov    0x1c(%rbp),%ecx 347
+   + 0x12c2 mov    0xc(%rbx),%ecx 393
+replace v2[1014:1015] +0x11ca lines [291] | proto[1051:1052] +0x12c8 lines [337]
+   - 0x11ca imul   %r14,%rdi 291
+   + 0x12c8 imul   %r15,%rdi 337
+replace v2[1037:1039] +0x122a lines [352] | proto[1074:1081] +0x1328 lines [398]
+   - 0x122a nopw   0x0(%rax,%rax,1) 352
+   - 0x1230 mov    0x8(%rsp),%r13 352
+   + 0x1328 nopl   0x0(%rax,%rax,1) 398
+   + 0x1330 mov    (%rsp),%r10 398
+   + 0x1334 mov    0x38(%rsp),%r15 398
+   + 0x1339 mov    0x30(%rsp),%r12 398
+   + 0x133e mov    0x20(%rsp),%rax 398
+   + 0x1343 mov    0x54(%rsp),%edx 398
+   + 0x1347 mov    0x70(%rsp),%rcx 398
+replace v2[1040:1043] +0x123a lines [352] | proto[1082:1118] +0x1351 lines [592, 597, 598, 611, 713]
+   - 0x123a nopw   0x0(%rax,%rax,1) 352
+   - 0x1240 add    0x28(%rsp),%r11 352
+   - 0x1245 xor    %r13d,%r13d 352
+   + 0x1351 data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1) 713
+   + 0x1360 add    %rbp,%rdi 713
+   + 0x1363 xor    %ebp,%ebp 713
+   + 0x1365 data16 cs nopw 0x0(%rax,%rax,1) 713
+   + 0x1370 movzbl (%rdi,%rbp,1),%r15d 611
+   + 0x1375 mov    0xd8(%rsp,%r15,8),%rax 592
+   + 0x137d cmp    0x8d8(%rsp,%r15,8),%rax 592
+   + 0x1385 je     3bd01 <<c30walk::ctor2d::Ctor2d>::build::<false>+0x13a1> 592
+   + 0x1387 lea    (%r12,%rbp,1),%rcx 592
+   + 0x138b mov    %cx,(%rax) None
+   + 0x138e addq   $0x2,0xd8(%rsp,%r15,8) 598
+   + 0x1397 inc    %rbp None
+   + 0x139a cmp    %rbp,%r14 None
+   + 0x139d jne    3bcd0 <<c30walk::ctor2d::Ctor2d>::build::<false>+0x1370> None
+   + 0x139f jmp    3bd40 <<c30walk::ctor2d::Ctor2d>::build::<false>+0x13e0> None
+   + 0x13a1 mov    %rdi,0x8(%rsp) None
+   + 0x13a6 lea    0x98(%rsp),%rdi 592
+   + 0x13ae mov    %r15,%rsi 592
+   + 0x13b1 call   94330 <<c30walk::ctor2d::W<false>>::refill> 592
+   + 0x13b6 test   %al,%al 592
+   + 0x13b8 je     3bfbd <<c30walk::ctor2d::Ctor2d>::build::<false>+0x165d> 592
+   + 0x13be mov    0xd8(%rsp,%r15,8),%rax 597
+   + 0x13c6 mov    (%rsp),%r10 597
+   + 0x13ca mov    0x8(%rsp),%rdi 597
+   + 0x13cf jmp    3bce7 <<c30walk::ctor2d::Ctor2d>::build::<false>+0x1387> 597
+   + 0x13d1 data16 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1) 597
+   + 0x13e0 cmp    %rbx,0x20(%rsp) None
+   + 0x13e5 jb     3c259 <<c30walk::ctor2d::Ctor2d>::build::<false>+0x18f9> None
+   + 0x13eb cmp    $0xf,%r13 None
+   + 0x13ef ja     3b3b0 <<c30walk::ctor2d::Ctor2d>::build::<false>+0xa50> None
+   + 0x13f5 add    0x40(%rsp),%rbx None
+   + 0x13fa mov    %rbx,%r13 None
+   + 0x13fd sub    %r14,%r13 None
+   + 0x1400 add    $0x10,%r13 None
+   + 0x1404 lea    (%r12,%r14,1),%ebp None
+   + 0x1408 add    $0x2,%ebp None
+replace v2[1044:1049] +0x1250 lines [542, 560] | proto[1119:1122] +0x1410 lines [592, 616]
+   - 0x1250 movzbl (%r11,%r13,1),%esi 560
+   - 0x1255 lea    (%rsi,%rsi,4),%rcx 542
+   - 0x1259 lea    (%r8,%rcx,8),%rbp 542
+   - 0x125d mov    (%r8,%rcx,8),%rax 542
+   - 0x1261 cmp    0x8(%r8,%rcx,8),%rax 542
+   + 0x1410 movzbl (%rbx),%r15d 616
+   + 0x1414 mov    0xd8(%rsp,%r15,8),%rax 592
+   + 0x141c cmp    0x8d8(%rsp,%r15,8),%rax 592
+replace v2[1050:1054] +0x1268 lines [542, 547] | proto[1123:1127] +0x1426 lines [598]
+   - 0x1268 lea    (%r14,%r13,1),%rcx 542
+   - 0x126c mov    %cx,(%rax) None
+   - 0x126f addq   $0x2,0x0(%rbp) 547
+   - 0x1274 inc    %r13 None
+   + 0x1426 mov    %bp,(%rax) None
+   + 0x1429 addq   $0x2,0xd8(%rsp,%r15,8) 598
+   + 0x1432 inc    %rbx 598
+   + 0x1435 inc    %ebp None
+delete v2[1057:1058] +0x127e lines [] | proto[1130:1130] +0x1441 lines []
+   - 0x127e mov    %r11,(%rsp) None
+insert v2[1059:1059] +0x128a lines [] | proto[1131:1132] +0x1449 lines [592]
+   + 0x1449 mov    %r15,%rsi 592
+delete v2[1060:1061] +0x128f lines [542] | proto[1133:1133] +0x1451 lines []
+   - 0x128f lea    0xd8(%rsp),%r8 542
+replace v2[1063:1066] +0x129f lines [546] | proto[1135:1137] +0x1459 lines [597]
+   - 0x129f mov    0x0(%rbp),%rax 546
+   - 0x12a3 mov    0x20(%rsp),%r10 546
+   - 0x12a8 mov    (%rsp),%r11 546
+   + 0x1459 mov    0xd8(%rsp,%r15,8),%rax 597
+   + 0x1461 mov    (%rsp),%r10 597
+replace v2[1067:1091] +0x12ae lines [542, 546, 547, 565] | proto[1138:1142] +0x1467 lines [597]
+   - 0x12ae xchg   %ax,%ax 546
+   - 0x12b0 cmp    %r15,0x30(%rsp) None
+   - 0x12b5 mov    0x8(%rsp),%r13 None
+   - 0x12ba jb     3f7e4 <<c30walk::ctor2::Ctor2>::build::<false>+0x17d4> None
+   - 0x12c0 cmp    $0xf,%r12 None
+   - 0x12c4 ja     3e9a0 <<c30walk::ctor2::Ctor2>::build::<false>+0x990> None
+   - 0x12ca add    0x28(%rsp),%r15 None
+   - 0x12cf mov    %r15,%r12 None
+   - 0x12d2 sub    %rbx,%r12 None
+   - 0x12d5 add    $0x10,%r12 None
+   - 0x12d9 add    %r14d,%ebx None
+   - 0x12dc add    $0x2,%ebx None
+   - 0x12df nop None
+   - 0x12e0 movzbl (%r15),%esi 565
+   - 0x12e4 lea    (%rsi,%rsi,4),%rcx 542
+   - 0x12e8 lea    (%r8,%rcx,8),%r14 542
+   - 0x12ec mov    (%r8,%rcx,8),%rax 542
+   - 0x12f0 cmp    0x8(%r8,%rcx,8),%rax 542
+   - 0x12f5 je     3f31d <<c30walk::ctor2::Ctor2>::build::<false>+0x130d> 542
+   - 0x12f7 mov    %bx,(%rax) None
+   - 0x12fa addq   $0x2,(%r14) 547
+   - 0x12fe inc    %r15 547
+   - 0x1301 inc    %ebx None
+   - 0x1303 cmp    %r12,%r15 None
+   + 0x1467 nopw   0x0(%rax,%rax,1) 597
+   + 0x1470 lea    (%r15,%rdi,1),%rax 597
+   + 0x1474 mov    0x60(%rsp),%r8 597
+   + 0x1479 cmp    %r8,%rax None
+replace v2[1092:1116] +0x1308 lines [542, 546, 570, 664] | proto[1143:1144] +0x147e lines [621]
+   - 0x1308 jmp    3e9a0 <<c30walk::ctor2::Ctor2>::build::<false>+0x990> None
+   - 0x130d lea    0x98(%rsp),%rdi 542
+   - 0x1315 call   8a7e0 <<c30walk::ctor2::W<false>>::refill> 542
+   - 0x131a lea    0xd8(%rsp),%r8 542
+   - 0x1322 test   %al,%al 542
+   - 0x1324 je     3f577 <<c30walk::ctor2::Ctor2>::build::<false>+0x1567> 542
+   - 0x132a mov    (%r14),%rax 546
+   - 0x132d mov    0x8(%rsp),%r13 546
+   - 0x1332 mov    0x20(%rsp),%r10 546
+   - 0x1337 jmp    3f307 <<c30walk::ctor2::Ctor2>::build::<false>+0x12f7> 546
+   - 0x1339 mov    0x8(%rsp),%r13 546
+   - 0x133e lea    0xd8(%rsp),%r8 546
+   - 0x1346 mov    0x20(%rsp),%r10 546
+   - 0x134b mov    0x68(%rsp),%r9 546
+   - 0x1350 mov    0x38(%rsp),%rcx 546
+   - 0x1355 mov    0x30(%rsp),%r11 546
+   - 0x135a mov    0x44(%rsp),%edx 546
+   - 0x135e mov    0x70(%rsp),%rsi 546
+   - 0x1363 jmp    3e9e2 <<c30walk::ctor2::Ctor2>::build::<false>+0x9d2> 664
+   - 0x1368 nopl   0x0(%rax,%rax,1) 664
+   - 0x1370 lea    (%r14,%r11,1),%rax 664
+   - 0x1374 cmp    %r10,%rax None
+   - 0x1377 jne    3f3d1 <<c30walk::ctor2::Ctor2>::build::<false>+0x13c1> None
+   - 0x1379 cmp    $0x10,%rdx 570
+   + 0x147e cmp    $0x10,%r9 621
+replace v2[1120:1123] +0x1393 lines [299] | proto[1148:1150] +0x1498 lines [345]
+   - 0x1393 mov    0x8(%rsp),%r13 299
+   - 0x1398 mov    0x28(%rsp),%r14 299
+   - 0x139d mov    %rbp,%r9 299
+   + 0x1498 mov    0x38(%rsp),%r15 345
+   + 0x149d mov    0x30(%rsp),%r12 345
+replace v2[1129:1137] +0x13c1 lines [301, 542, 565] | proto[1156:1162] +0x14c3 lines [347, 592, 616]
+   - 0x13c1 add    $0x2,%r12d 301
+   - 0x13c5 movzwl %r12w,%r12d None
+   - 0x13c9 nopl   0x0(%rax) None
+   - 0x13d0 movzbl (%r15,%r14,1),%esi 565
+   - 0x13d5 lea    (%rsi,%rsi,4),%rcx 542
+   - 0x13d9 lea    (%r8,%rcx,8),%rbx 542
+   - 0x13dd mov    (%r8,%rcx,8),%rax 542
+   - 0x13e1 cmp    0x8(%r8,%rcx,8),%rax 542
+   + 0x14c3 add    $0x2,%r13d 347
+   + 0x14c7 movzwl %r13w,%r13d None
+   + 0x14cb nopl   0x0(%rax,%rax,1) None
+   + 0x14d0 movzbl (%r12,%r15,1),%ebx 616
+   + 0x14d5 mov    0xd8(%rsp,%rbx,8),%rax 592
+   + 0x14dd cmp    0x8d8(%rsp,%rbx,8),%rax 592
+replace v2[1138:1139] +0x13e8 lines [542] | proto[1163:1164] +0x14e7 lines [592]
+   - 0x13e8 lea    (%r12,%r14,1),%rcx 542
+   + 0x14e7 lea    (%r15,%r13,1),%rcx 592
+replace v2[1140:1143] +0x13ef lines [547] | proto[1165:1168] +0x14ee lines [598]
+   - 0x13ef addq   $0x2,(%rbx) 547
+   - 0x13f3 inc    %r14 None
+   - 0x13f6 cmp    %r14,%rdx None
+   + 0x14ee addq   $0x2,0xd8(%rsp,%rbx,8) 598
+   + 0x14f7 inc    %r15 None
+   + 0x14fa cmp    %r15,%r9 None
+replace v2[1145:1147] +0x1400 lines [] | proto[1170:1172] +0x1504 lines []
+   - 0x1400 mov    %rdx,0x10(%rsp) None
+   - 0x1405 mov    %r11,%r13 None
+   + 0x1504 mov    %r9,0x10(%rsp) None
+   + 0x1509 mov    %rdi,%r14 None
+insert v2[1148:1148] +0x1410 lines [] | proto[1173:1174] +0x1514 lines [592]
+   + 0x1514 mov    %rbx,%rsi 592
+delete v2[1149:1150] +0x1415 lines [542] | proto[1175:1175] +0x151c lines []
+   - 0x1415 lea    0xd8(%rsp),%r8 542
+replace v2[1152:1156] +0x1425 lines [546] | proto[1177:1183] +0x1524 lines [597]
+   - 0x1425 mov    (%rbx),%rax 546
+   - 0x1428 mov    0x20(%rsp),%r10 546
+   - 0x142d mov    %r13,%r11 546
+   - 0x1430 mov    0x10(%rsp),%rdx 546
+   + 0x1524 mov    0xd8(%rsp,%rbx,8),%rax 597
+   + 0x152c mov    (%rsp),%r10 597
+   + 0x1530 mov    0x40(%rsp),%rbp 597
+   + 0x1535 mov    0x60(%rsp),%r8 597
+   + 0x153a mov    %r14,%rdi 597
+   + 0x153d mov    0x10(%rsp),%r9 597
+replace v2[1159:1164] +0x1446 lines [299] | proto[1186:1190] +0x1553 lines [345]
+   - 0x1446 inc    %r11 299
+   - 0x1449 cmp    %r11,%r10 299
+   - 0x144c mov    0x8(%rsp),%r13 299
+   - 0x1451 mov    0x28(%rsp),%r14 299
+   - 0x1456 mov    %rbp,%r9 299
+   + 0x1553 inc    %rdi 345
+   + 0x1556 cmp    %rdi,%r8 345
+   + 0x1559 mov    0x38(%rsp),%r15 345
+   + 0x155e mov    0x30(%rsp),%r12 345
+replace v2[1165:1166] +0x145b lines [299] | proto[1191:1192] +0x1565 lines [345]
+   - 0x145b mov    %rdx,%r10 299
+   + 0x1565 mov    %r9d,%edx 345
+replace v2[1167:1168] +0x1464 lines [299] | proto[1193:1194] +0x156e lines [345]
+   - 0x1464 data16 data16 cs nopw 0x0(%rax,%rax,1) 299
+   + 0x156e xchg   %ax,%ax 345
+replace v2[1185:1187] +0x14ab lines [] | proto[1211:1213] +0x15ab lines []
+   - 0x14ab test   $0x1,%r10b None
+   - 0x14af mov    0x20(%rsp),%r10 None
+   + 0x15ab test   $0x1,%r9b None
+   + 0x15af mov    (%rsp),%r10 None
+replace v2[1202:1204] +0x14f4 lines [304, 823] | proto[1228:1230] +0x15f3 lines [350, 872]
+   - 0x14f4 mov    %r10,%r11 304
+   - 0x14f7 cmp    %r13,%r10 823
+   + 0x15f3 mov    %r8,%rdi 350
+   + 0x15f6 cmp    %r10,%r8 872
+replace v2[1206:1207] +0x1502 lines [] | proto[1232:1233] +0x1601 lines []
+   - 0x1502 mov    %r15,%rdi None
+   + 0x1601 mov    %rbx,%rdi None
+replace v2[1209:1213] +0x150f lines [] | proto[1235:1239] +0x160e lines []
+   - 0x150f mov    $0x84,%eax None
+   - 0x1514 data16 data16 cs nopw 0x0(%rax,%rax,1) None
+   - 0x1520 lea    0x50(%rax),%rcx None
+   - 0x1524 cmp    $0x28d4,%rcx None
+   + 0x160e mov    $0x9,%eax None
+   + 0x1613 lea    0x10fc(%rsp),%rcx None
+   + 0x161b nopl   0x0(%rax,%rax,1) None
+   + 0x1620 cmp    $0x109,%rax None
+replace v2[1214:1216] +0x152d lines [247] | proto[1240:1242] +0x1628 lines [326]
+   - 0x152d mov    0x54(%rsp,%rax,1),%rdx 247
+   - 0x1532 sub    0x64(%rsp,%rax,1),%rdx 247
+   + 0x1628 mov    0x90(%rsp,%rax,8),%rdx 326
+   + 0x1630 sub    -0x24(%rcx),%rdx 326
+replace v2[1217:1219] +0x153a lines [247, 866] | proto[1243:1245] +0x1637 lines [326, 918]
+   - 0x153a add    0x6c(%rsp,%rax,1),%edx 247
+   - 0x153e cmp    0x70(%rsp,%rax,1),%edx 866
+   + 0x1637 add    -0x1c(%rcx),%edx 326
+   + 0x163a cmp    -0x18(%rcx),%edx 918
+replace v2[1220:1222] +0x1544 lines [247] | proto[1246:1248] +0x163f lines [326]
+   - 0x1544 mov    0x7c(%rsp,%rax,1),%rdx 247
+   - 0x1549 sub    0x8c(%rsp,%rax,1),%rdx 247
+   + 0x163f mov    0x98(%rsp,%rax,8),%rdx 326
+   + 0x1647 sub    -0xc(%rcx),%rdx 326
+replace v2[1223:1226] +0x1554 lines [247, 866] | proto[1249:1253] +0x164e lines [326, 918]
+   - 0x1554 add    0x94(%rsp,%rax,1),%edx 247
+   - 0x155b cmp    0x98(%rsp,%rax,1),%edx 866
+   - 0x1562 mov    %rcx,%rax 866
+   + 0x164e add    -0x4(%rcx),%edx 326
+   + 0x1651 add    $0x2,%rax 918
+   + 0x1655 cmp    (%rcx),%edx 918
+   + 0x1657 lea    0x30(%rcx),%rcx 918
+replace v2[1227:1228] +0x1567 lines [] | proto[1254:1255] +0x165d lines []
+   - 0x1567 mov    0x5520(%rsp),%rax None
+   + 0x165d mov    0x4520(%rsp),%rax None
+replace v2[1230:1231] +0x1579 lines [789] | proto[1257:1258] +0x166f lines [838]
+   - 0x1579 add    $0x54e8,%rsp 789
+   + 0x166f add    $0x44e8,%rsp 838
+replace v2[1238:1243] +0x158b lines [789] | proto[1265:1275] +0x1681 lines []
+   - 0x158b xor    %r14d,%r14d 789
+   - 0x158e lea    0x98(%rsp),%r15 789
+   - 0x1596 mov    0x78(%rsp),%r12 789
+   - 0x159b mov    0x8(%rsp),%r13 789
+   - 0x15a0 mov    0x60(%rsp),%rbp 789
+   + 0x1681 lea    0xf7488(%rip),%rcx None
+   + 0x1688 mov    %r10,%rdx None
+   + 0x168b call   d9ee0 <core::slice::index::slice_index_fail> None
+   + 0x1690 mov    $0x8,%r14d None
+   + 0x1696 mov    $0x1040,%r15d None
+   + 0x169c lea    0x98(%rsp),%rbx None
+   + 0x16a4 mov    0x88(%rsp),%r12 None
+   + 0x16ac mov    (%rsp),%rdx None
+   + 0x16b0 mov    0x4520(%rsp),%rsi None
+   + 0x16b8 mov    0x80(%rsp),%r13 None
+replace v2[1244:1245] +0x15a7 lines [789] | proto[1276:1277] +0x16c2 lines []
+   - 0x15a7 nopw   0x0(%rax,%rax,1) 789
+   + 0x16c2 data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1) None
+insert v2[1246:1246] +0x15b3 lines [] | proto[1278:1283] +0x16d3 lines [326, 423, 424, 425, 426]
+   + 0x16d3 shr    $1,%rax 326
+   + 0x16d6 add    %eax,0xa0(%rsp,%r15,1) 423
+   + 0x16de movq   $0x0,0x98(%rsp,%r15,1) 424
+   + 0x16ea movq   $0x0,0x98(%rsp,%r14,8) 425
+   + 0x16f6 movq   $0x0,0x898(%rsp,%r14,8) 426
+replace v2[1247:1254] +0x15b6 lines [247, 377, 379] | proto[1284:1286] +0x1705 lines []
+   - 0x15b6 shr    $1,%rax 247
+   - 0x15b9 add    %eax,0x18(%r8) 377
+   - 0x15bd pxor   %xmm0,%xmm0 379
+   - 0x15c1 movdqu %xmm0,(%r8) 379
+   - 0x15c6 movq   $0x0,0x10(%r8) 379
+   - 0x15ce add    $0x28,%r8 None
+   - 0x15d2 cmp    $0x100,%r14 None
+   + 0x1705 add    $0x18,%r15 None
+   + 0x1709 cmp    $0x108,%r14 None
+replace v2[1255:1256] +0x15db lines [372] | proto[1287:1288] +0x1712 lines [420]
+   - 0x15db mov    (%r8),%rcx 372
+   + 0x1712 mov    0x98(%rsp,%r14,8),%rcx 420
+replace v2[1257:1258] +0x15e1 lines [373] | proto[1289:1290] +0x171d lines [420]
+   - 0x15e1 cmp    0x10(%r8),%rcx 373
+   + 0x171d cmp    0x98(%rsp,%r15,1),%rcx 420
+replace v2[1259:1262] +0x15e7 lines [374] | proto[1291:1293] +0x1727 lines [420, 421]
+   - 0x15e7 mov    %r15,%rdi 374
+   - 0x15ea mov    %r14,%rsi 374
+   - 0x15ed mov    %r8,%rbx 374
+   + 0x1727 lea    -0x8(%r14),%rsi 420
+   + 0x172b mov    %rbx,%rdi 421
+replace v2[1263:1266] +0x15f5 lines [247, 374] | proto[1294:1298] +0x1733 lines [326, 421]
+   - 0x15f5 mov    %rbx,%r8 374
+   - 0x15f8 mov    (%rbx),%rax 247
+   - 0x15fb mov    0x10(%rbx),%rcx 247
+   + 0x1733 mov    0x4520(%rsp),%rsi 421
+   + 0x173b mov    (%rsp),%rdx 421
+   + 0x173f mov    0x98(%rsp,%r14,8),%rax 326
+   + 0x1747 mov    0x98(%rsp,%r15,1),%rcx 326
+replace v2[1269:1270] +0x1608 lines [] | proto[1301:1303] +0x175b lines []
+   - 0x1608 test   %rbp,%rbp None
+   + 0x175b mov    0x58(%rsp),%r14 None
+   + 0x1760 test   %r14,%r14 None
+replace v2[1273:1274] +0x1612 lines [766] | proto[1306:1307] +0x176a lines [815]
+   - 0x1612 mov    %rbp,%rax 766
+   + 0x176a mov    %r14,%rax 815
+replace v2[1276:1277] +0x161c lines [766] | proto[1309:1310] +0x1774 lines [815]
+   - 0x161c add    %r13,%rcx 766
+   + 0x1774 add    %rdx,%rcx 815
+replace v2[1279:1281] +0x1625 lines [] | proto[1312:1314] +0x177d lines []
+   - 0x1625 lea    (%rbx,%rbp,4),%rcx None
+   - 0x1629 lea    (%rcx,%r13,2),%rdi None
+   + 0x177d lea    (%rbx,%r14,4),%rcx None
+   + 0x1781 lea    (%rcx,%rdx,2),%rdi None
+replace v2[1285:1286] +0x163c lines [] | proto[1318:1319] +0x1794 lines []
+   - 0x163c sub    %r13,%rax None
+   + 0x1794 sub    %rdx,%rax None
+replace v2[1289:1290] +0x1652 lines [] | proto[1322:1324] +0x17aa lines []
+   - 0x1652 shl    $0x6,%rbp None
+   + 0x17aa mov    0x4520(%rsp),%rsi None
+   + 0x17b2 shl    $0x6,%r14 None
+replace v2[1291:1302] +0x165a lines [] | proto[1325:1334] +0x17ba lines []
+   - 0x165a movdqu %xmm0,0x2c(%rbx,%rbp,1) None
+   - 0x1660 movdqa %xmm0,0x20(%rbx,%rbp,1) None
+   - 0x1666 movdqa %xmm0,0x10(%rbx,%rbp,1) None
+   - 0x166c movdqa %xmm0,(%rbx,%rbp,1) None
+   - 0x1671 movl   $0x100fffff,0x3c(%rbx,%rbp,1) None
+   - 0x1679 mov    0x58(%rsp),%rax None
+   - 0x167e mov    0x8(%rax),%rdx None
+   - 0x1682 mov    0x10(%rax),%rcx None
+   - 0x1686 mov    0x5520(%rsp),%rax None
+   - 0x168e mov    0x8(%rax),%r8 None
+   - 0x1692 mov    0x10(%rax),%r9 None
+   + 0x17ba movdqu %xmm0,0x2c(%rbx,%r14,1) None
+   + 0x17c1 movdqa %xmm0,0x20(%rbx,%r14,1) None
+   + 0x17c8 movdqa %xmm0,0x10(%rbx,%r14,1) None
+   + 0x17cf movdqa %xmm0,(%rbx,%r14,1) None
+   + 0x17d5 movl   $0x100fffff,0x3c(%rbx,%r14,1) None
+   + 0x17de mov    0x8(%r13),%rdx None
+   + 0x17e2 mov    0x10(%r13),%rcx None
+   + 0x17e6 mov    0x8(%rsi),%r8 None
+   + 0x17ea mov    0x10(%rsi),%r9 None
+replace v2[1305:1306] +0x16a6 lines [776] | proto[1337:1338] +0x17fe lines [825]
+   - 0x16a6 mov    0x80(%rsp),%rax 776
+   + 0x17fe mov    0x68(%rsp),%rax 825
+delete v2[1310:1314] +0x16c1 lines [] | proto[1342:1342] +0x1816 lines []
+   - 0x16c1 mov    %r12,%rdi None
+   - 0x16c4 mov    %r13,%rdx None
+   - 0x16c7 call   d9ee0 <core::slice::index::slice_index_fail> None
+   - 0x16cc lea    0xf1fbd(%rip),%rcx None
+delete v2[1317:1318] +0x16df lines [] | proto[1345:1345] +0x1822 lines []
+   - 0x16df mov    %rdi,%r12 None
+replace v2[1329:1330] +0x1716 lines [] | proto[1356:1357] +0x1856 lines []
+   - 0x1716 lea    0x1(%rbp),%rsi None
+   + 0x1856 mov    0x68(%rsp),%rsi None
+replace v2[1334:1335] +0x1729 lines [] | proto[1361:1362] +0x186a lines []
+   - 0x1729 mov    %r12,%rdi None
+   + 0x186a mov    0x58(%rsp),%r8 None
+delete v2[1337:1338] +0x1734 lines [] | proto[1364:1364] +0x1877 lines []
+   - 0x1734 mov    %rdi,%r12 None
+replace v2[1341:1343] +0x173f lines [719] | proto[1367:1368] +0x187f lines [768]
+   - 0x173f mov    0x5520(%rsp),%rax 719
+   - 0x1747 mov    0x8(%rax),%rdi 719
+   + 0x187f mov    0x8(%rdi),%rdi 768
+replace v2[1344:1345] +0x1751 lines [] | proto[1369:1370] +0x1889 lines []
+   - 0x1751 mov    0x5520(%rsp),%rdi None
+   + 0x1889 mov    0x4520(%rsp),%rdi None
+replace v2[1349:1350] +0x1775 lines [] | proto[1374:1375] +0x18ad lines []
+   - 0x1775 mov    %rbx,%rsi None
+   + 0x18ad mov    %r15,%rsi None
+replace v2[1353:1354] +0x1784 lines [] | proto[1378:1379] +0x18bc lines []
+   - 0x1784 mov    %r12,%rdi None
+   + 0x18bc mov    0x58(%rsp),%r8 None
+replace v2[1359:1361] +0x179f lines [] | proto[1384:1386] +0x18d9 lines []
+   - 0x179f mov    %r11,%rdi None
+   - 0x17a2 mov    %r13,%rdx None
+   + 0x18d9 mov    %r10,%rdx None
+   + 0x18dc mov    %rbx,%rsi None
+replace v2[1363:1366] +0x17b1 lines [] | proto[1388:1391] +0x18eb lines []
+   - 0x17b1 mov    %r11,%rdi None
+   - 0x17b4 mov    %r15,%rsi None
+   - 0x17b7 mov    %r13,%rdx None
+   + 0x18eb mov    %r10,%rdx None
+   + 0x18ee mov    %rsi,%rdi None
+   + 0x18f1 mov    %rax,%rsi None
+replace v2[1368:1376] +0x17c6 lines [] | proto[1393:1396] +0x1900 lines []
+   - 0x17c6 mov    %rsi,%rdi None
+   - 0x17c9 mov    %rax,%rsi None
+   - 0x17cc mov    %r13,%rdx None
+   - 0x17cf call   d9ee0 <core::slice::index::slice_index_fail> None
+   - 0x17d4 lea    0xf1ecd(%rip),%rcx None
+   - 0x17db mov    %r15,%rdi None
+   - 0x17de mov    0x30(%rsp),%rsi None
+   - 0x17e3 mov    %r13,%rdx None
+   + 0x1900 mov    %r10,%rdx None
+   + 0x1903 mov    %rbx,%rdi None
+   + 0x1906 mov    0x20(%rsp),%rsi None
+replace v2[1379:1380] +0x17f5 lines [285] | proto[1399:1400] +0x191a lines [331]
+   - 0x17f5 mov    (%rsp),%rsi 285
+   + 0x191a mov    0x8(%rsp),%rsi 331
+replace v2[1387:1388] +0x181c lines [622] | proto[1407:1408] +0x1942 lines [673]
+   - 0x181c mov    %rbx,%rdi 622
+   + 0x1942 mov    %r12,%rdi 673
+replace v2[1391:1392] +0x1830 lines [631] | proto[1411:1412] +0x1956 lines [682]
+   - 0x1830 mov    %rbx,%rdi 631
+   + 0x1956 mov    %r12,%rdi 682
+replace v2[1396:1398] +0x1848 lines [] | proto[1416:1417] +0x196e lines []
+   - 0x1848 mov    %rdi,%r14 None
+   - 0x184b mov    %r12,%rdi None
+   + 0x196e mov    %r15,%rdi None
+replace v2[1399:1400] +0x1850 lines [] | proto[1418:1419] +0x1973 lines []
+   - 0x1850 mov    %r9,%rbx None
+   + 0x1973 mov    %r9,%r14 None
+replace v2[1401:1403] +0x1858 lines [] | proto[1420:1421] +0x197b lines []
+   - 0x1858 mov    %r14,%rdi None
+   - 0x185b mov    %rbx,%r9 None
+   + 0x197b mov    %r14,%r9 None
+delete v2[1404:1405] +0x1863 lines [] | proto[1422:1422] +0x1983 lines []
+   - 0x1863 mov    %r9,%r13 None
+replace v2[1407:1408] +0x1871 lines [] | proto[1424:1425] +0x198e lines []
+   - 0x1871 mov    %rdi,%r14 None
+   + 0x198e mov    %rbp,%rdi None
+replace v2[1409:1410] +0x1876 lines [] | proto[1426:1428] +0x1993 lines []
+   - 0x1876 mov    %rbx,%rdx None
+   + 0x1993 mov    %r15,%rdx None
+   + 0x1996 mov    %r9,%r14 None
+replace v2[1411:1414] +0x187e lines [] | proto[1429:1432] +0x199e lines []
+   - 0x187e mov    %r14,%rdi None
+   - 0x1881 mov    0x10(%r14),%r14 None
+   - 0x1885 mov    0x8(%rdi),%r12 None
+   + 0x199e mov    %r14,%r9 None
+   + 0x19a1 mov    0x10(%rbp),%r14 None
+   + 0x19a5 mov    0x8(%rbp),%r12 None
+replace v2[1415:1416] +0x188d lines [] | proto[1433:1434] +0x19ad lines []
+   - 0x188d cmp    $0x1,%rbx None
+   + 0x19ad cmp    $0x1,%r15 None
+insert v2[1427:1427] +0x18d1 lines [] | proto[1445:1446] +0x19f1 lines [363]
+   + 0x19f1 mov    0x8(%rsp),%rsi 363
+replace v2[1429:1430] +0x18dd lines [285] | proto[1448:1449] +0x1a02 lines [331]
+   - 0x18dd mov    %rbp,%rdi 285
+   + 0x1a02 mov    %r12,%rdi 331
