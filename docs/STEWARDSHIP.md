@@ -39,15 +39,17 @@ merge only when all of these hold:
   beyond noise, meaning its 95% interval excludes zero in the beneficial direction;
 - no other figure regresses unacceptably.
 
-**Before opening a PR that changes the default decoding kernel,** including a measurement-only
-PR, account for the whole decoder, not only the part a campaign optimised:
-- Count the instructions executed in `decode_block` on master and on the candidate, split into
-  build, walk and the rest. Use matched toolchain, flags and input, and archive the profiles.
-- Open the PR only if one of these holds:
-  - the whole count is at or below master's;
-  - a written, quantitative case shows how a non-instruction effect outweighs the excess at
-    each thread count CI measures.
-- Timing on the shared development machine is never the reason to open one.
+**Before opening a PR that changes the default decoding kernel,** account for the whole decoder,
+not only the part a campaign optimised.
+- **Count the instructions** executed in `decode_block` on master and on the candidate, split
+  into build, walk and the rest. Use matched toolchain, flags and input, and archive the
+  profiles.
+- **An integration PR, meant to merge,** needs the whole count at or below master's.
+- **A measurement PR** tests a hypothesis that instructions don't capture, such as cache
+  residency or memory-level parallelism. It needs the hypothesis written down first: the
+  mechanism, its predicted effect at each thread count CI measures, the instruction excess it
+  must beat, and what falsifies it. Falsified, it is closed and written up.
+- **Timing on the shared development machine** is never the evidence for either.
 
 PR #155 is why: its constructor saved 19.5% of its instructions, its walk added 31%, and CI
 measured the decoder 7–19% slower.
@@ -113,7 +115,8 @@ metadata.
 
 These decisions still need the maintainer:
 - relaxing a gate or an acceptance minimum;
-- changes to the bench harness;
+- changes to the bench's workload, statistical method or acceptance criteria (per-stage
+  diagnostic instrumentation is the steward's);
 - timing runs or captures on the i9 or another workstation;
 - new infrastructure, credentials or spending;
 - widening the scope beyond mibz2 and its downstream pin bump.
