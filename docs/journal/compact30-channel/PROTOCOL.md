@@ -119,3 +119,23 @@ recorded in the log.
 
 The test passes when every step's outcome matches the table and the log holds all six messages
 verbatim. Any mismatch is fixed, and the test is run again before the channel is relied on.
+
+## 8. Standing coordination policy (user, 2026-11-04)
+
+- **The coordinator never asks the user to wake Astra, the guardian or any other reviewer for
+  routine checkpoints.** The user is not the notification mechanism.
+- **Every checkpoint or correction that needs a review** is published with its pin on its own PR
+  and linked from #145. It is then listed in the **review queue** (`review-queue.md` in this
+  folder) as PENDING.
+- **Silence is never approval.** A review stays PENDING until a pinned review is published.
+- **Charter-authorised engineering continues meanwhile.** Steps that depend on a review, such as
+  §6.2 before a combined build, wait for it visibly in the queue.
+- **The user is involved only for reserved decisions and safety blockers.**
+- **Waking a reviewer from a GitHub event** is an open architectural problem. Candidates are
+  investigated under the user's constraints: subscription allowance only; no API keys or credits,
+  new credentials, paid infrastructure, polling loops, or changes to master. A fresh execution is
+  acceptable if it loads the pinned REVIEWER.md, the canonical ledger and the review cursor,
+  publishes through GitHub, and de-duplicates by pin. Nothing is deployed before its permissions,
+  billing and security have been verified and approved. If no mechanism exists, that is reported
+  as a limitation, and reviews stay PENDING.
+
