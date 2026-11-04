@@ -46,7 +46,7 @@ flags. This should be good enough to commit to, not hide behind half commitment.
 proceeding through rounds of ideas that were being validated or rejected and built upon, and we
 needed to make them better each round."
 
-## Evidence-guided persistence (charter §8.4, reports 267–268)
+## Evidence-guided persistence (charter §8.4, reports 267–269)
 
 There are two opposite mistakes to avoid:
 - **Premature abandonment:** rejecting a promising technique because its first
@@ -63,7 +63,7 @@ identifies a plausible route to qualification. Stop or deprioritise when the rem
 opportunity is insufficient, the assumptions are unsupported, or repeated attempts fail to
 improve the outlook. Never lower acceptance standards to justify previous effort.
 
-Charter §8.4 (@ f25f1232, reports 267–268) applies this rule as a trajectory test. A line keeps
+Charter §8.4 (@ dad82808, reports 267–269) applies this rule as a trajectory test. A line keeps
 climbing while either of these holds:
 - the accumulated evidence shows meaningful progress toward viability;
 - a bounded next experiment offers a credible chance to overcome an identified remaining
@@ -75,10 +75,27 @@ Progress comes in two kinds, which are not interchangeable:
 - **Research progress:** new evidence that materially increases confidence in a specific route
   to improvement. Proposals with no compiler-achievable savings don't count.
 
-Every STOP is scoped to exactly what failed: a measurement, an implementation, a compiler
-target. It is never a verdict on the whole line. Reports 217–219, 224–227 and 238–241 are the
-record of what happens otherwise. A miss is always recorded as a miss, and understanding is never
-qualification for production.
+A failed gate is a verdict on the tested candidate, not automatically on its line. A line ends
+only when cumulative evidence establishes one of these:
+- insufficient payoff, for example an essential invariant proved impossible to implement
+  correctly, or a convincing lower bound showing the remaining gap cannot close;
+- persistent stagnation;
+- no credible route forward.
+
+Reports 217–219, 224–227 and 238–241 record what happens when one gate's failure is taken as a
+verdict on the whole line. A miss is always recorded as a miss. Research and structural
+progress are distinct from validated production performance, and qualification gates are never
+weakened.
+
+**Every significant experiment's report answers four questions** (charter §8.4, report 269):
+1. What improvement was expected, and what actually happened?
+2. How much of the remaining economic gap has credibly been closed?
+3. What did the experiment establish about the limiting mechanism?
+4. What is the highest-value next experiment, and is its expected payoff worth the compute?
+
+STOP and REDIRECT are always considered alongside the next experiment. The Optimiser proposes and
+the Researcher assesses; their job is that judgement, not a stream of new ideas. The Coordinator
+records the decision and its evidence in the checkpoint that follows.
 
 ## Release checkpoints (report 267)
 
@@ -106,8 +123,8 @@ publication.
 
 The initial policy set is lmmx/mibz2 commit 0ed278d722d1ef7dea0c24e5ff551dc7c0b46204, except where an entry names a later pin:
 - master:docs/STEWARDSHIP.md (PR #154; report 267): the permanent production and release stewardship this campaign runs under. It covers the merge gates, the release procedure and checklist, and what stays with the user.
-- docs/journal/2026-11-04-compact30-research-charter.md @ research/compact30-constructor f25f1232fb673a65cff97b1b68ff8f77e6900caa: governing campaign scope and gates (§8.4 trajectory test, reports 267–268). Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
-- docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md, reports 264–268: recorded user provenance for U2/C6, technical autonomy, Coordinator release control, permanent stewardship and the §8.4 trajectory test. Earlier reports remain historical; later explicit amendments supersede only the affected clauses.
+- docs/journal/2026-11-04-compact30-research-charter.md @ research/compact30-constructor dad82808dd4532d21ebf51e88164b78a0af53da8: governing campaign scope and gates (§8.4 trajectory test, reports 267–269). Read §§2–8 and §§12.2–12.4; §6.3 combined qualification, §6.4 new prototypes/unsafe, §12.3 reservations.
+- docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md, reports 264–269: recorded user provenance for U2/C6, technical autonomy, Coordinator release control, permanent stewardship and the §8.4 trajectory test. Earlier reports remain historical; later explicit amendments supersede only the affected clauses.
 - docs/journal/compact30-channel/PROTOCOL.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: publication, receipts, queue and deduplication. §10 governs apparent inactivity.
 - docs/journal/compact30-channel/ROLES.md: separate responsibilities and branch ownership. Coordinator does not mean scientific superior.
 - docs/journal/compact30-channel/REVIEWER.md @ research/compact30-constructor 2265f86f6e5cb6947971bb8f5e93c57a0a5d9f7a: research/evidence contract; read its applicability alongside the active charter. Both files were reconciled with charter §§2, 6.4 and 12.3 and reports 265–266 at that commit (see each file's Revisions note); the research/compact30-channel copies are kept identical.
