@@ -32,15 +32,16 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "WAITING after section 6.2 intake publication",
+  "state": "WAITING after recording acceptance of section 6.2 intake findings",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
   "programme_complete": false,
   "processed_comment_ids": [
-    6633302554
+    6633302554,
+    6633657739
   ],
-  "last_processed_comment_id": 6633302554,
+  "last_processed_comment_id": 6633657739,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -51,6 +52,17 @@
       "report_path": "docs/journal/compact30-adversarial/scanner-146/s62-intake-6633302554.md",
       "review_comment_id": 6633405942,
       "disposition": "Intake HOLD: inherited discussion prevents blind section 6.2 acceptance; technical review not performed",
+      "section_6_2_completed": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6633657739,
+      "index_commit": "18ca5d4cb9fcaeaf5cee7e7f1db2ebb1fd72080e",
+      "report_commit": "b38bced5252018be4cc3a76b59ccd7c6f6e4dcd1",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/s62-ack-6633657739.md",
+      "review_comment_id": 6633695035,
+      "disposition": "Coordinator accepted intake findings; proposed remedy addresses them in design; fresh technical review remains outstanding",
       "section_6_2_completed": false
     }
   ]
