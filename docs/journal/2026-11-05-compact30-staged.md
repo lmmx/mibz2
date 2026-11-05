@@ -131,12 +131,18 @@ Both terms the census contested are real, and on CI the per-byte core term domin
 
 - **The footprint term.** The smaller table cuts the walk's co-run amplification beyond noise
   on both models. The cut is −3.9% on Zen 4's 1 MB L2 and −2.7% on Zen 3's 512 KB L2: larger
-  where more of the table can stay in L2, as the hit-rate model predicts.
+  where more of the table can stay in L2, which is consistent with the hit-rate model. The cut
+  alone does not show the cause. The L2 reading rests on the walk-only sweeps below.
 - **The core term.** The step's added work (12 instructions and 3 loads against 8 and 2) costs
   +11% to +14% of 1-thread CPU.
-- **They multiply.** The product reproduces the measured 4-thread CPU on both models:
+- **How the terms combine.** Amplification is CPU at 4 threads over CPU at 1
+  (`bench/report.py`). The 4-thread change is therefore the 1-thread change times the
+  amplification change, by definition:
   - 1.114 × 0.961 ≈ 1.071, against +7.0% measured;
   - 1.136 × 0.973 ≈ 1.105, against +10.5% measured.
+
+  The agreement is an identity, not a check (corrected after REVIEW 6660203300). What it does
+  give is the split. In logs, the core term is about 3 to 5 times the footprint term.
 
 The census's central prediction was +3% to +5% at 4 threads. The measured +4.8% and +7.7% are at
 and above it.
