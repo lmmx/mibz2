@@ -84,3 +84,26 @@ It can't attribute any effect to a mechanism, and it claims none.
 
 A pass meets STEWARDSHIP's merge gate. It doesn't establish P87's mechanism, and it doesn't meet
 the four-worker campaign objective by itself.
+
+## Measured: whole-decoder instructions (added after the registration above)
+
+Inclusive Ir of the driver's `measured` (one `decode_block` on a fresh `Scratch`), from
+`callgrind_annotate --inclusive=yes`. Both arms: `driver/` with only the `mibz2` path differing,
+rustc 1.97.0, fat LTO, `codegen-units = 1`, line tables. Input `wikidata-independent.bz2`, sha256
+`7f5c9a0044e5a305…`. Command: `valgrind --tool=callgrind --toggle-collect=c30cg::measured c30cg cg
+FILE BLOCK 1`. The profiles, stdout (length and CRC) and consoles are in `cg/`.
+
+| block | master 08e7fc3b | perf/p87-in-place | change | output |
+|---|--:|--:|--:|---|
+| 0 (54 B) | 7,573 | 7,296 | −277 | identical |
+| 1 (899,971 B) | 20,184,756 | 20,184,356 | −400 | identical |
+| 41 (900,000 B) | 19,480,510 | 19,480,110 | −400 | identical |
+| 97 (56 B) | 7,942 | 7,672 | −270 | identical |
+| 233 (899,978 B) | 19,989,585 | 19,989,153 | −432 | identical |
+| 400 (899,993 B) | 19,490,584 | 19,490,042 | −542 | identical |
+| 472 (70 B) | 8,780 | 8,510 | −270 | identical |
+
+**The instruction condition holds:** the candidate is at or below master on every block. The
+difference is a few hundred instructions a block, consistent with the allocation it removes. A
+single decode on a fresh scratch includes `rle`'s first growth, so this is not a steady-state
+saving, and none is claimed.
