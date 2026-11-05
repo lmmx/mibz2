@@ -244,8 +244,9 @@ published, and to record both the launch and the result. The independent reviewe
 way, with its settings and inputs written to the repository before it began.
 
 Keeping things moving is the Coordinator's job. When the record goes quiet, it checks the
-receipts, works out who has the next step, and posts the checkpoint that starts it. There's no
-timer involved, and nothing sits waiting for me.
+receipts, works out who has the next step, and posts the checkpoint that starts it. The agents are
+woken only by events. The Coordinator also has one recurring check-in, every quarter of an hour,
+at which it re-reads its mode note, and nothing sits waiting for me.
 
 ## 8. What a shared message board got wrong
 
@@ -302,10 +303,9 @@ research with nobody watching. At 06:03 UTC it sent the Optimiser a brief in
 at 06:12. At 07:38 it posted the next brief, on the result of the fused post-walk experiment, to
 [#145](https://github.com/lmmx/mibz2/pull/145#issuecomment-6652503445) instead, and at 08:21 an
 addendum to the
-[same place](https://github.com/lmmx/mibz2/pull/145#issuecomment-6653242752). Both were
-well-formed, with the right header, the right `TO:` and a pinned commit, and GitHub accepted
-both. Then the Coordinator waited for a review that couldn't come, and its status reports
-listed the Optimiser's answer as pending.
+[same place](https://github.com/lmmx/mibz2/pull/145#issuecomment-6653242752). Both had the
+right header and the right `TO:`, the first pinned its commit, and GitHub accepted both. Then the
+Coordinator waited for a review that couldn't come.
 
 I found it at my morning check, by looking at what had happened rather than at what had been
 reported:
@@ -320,20 +320,21 @@ intent and correctness of record both held. Correctness of effect didn't.
 
 **The recovery didn't need me as a message bus.** I pointed out the discrepancy. The Coordinator
 re-sent both messages as one checkpoint in the
-[right inbox](https://github.com/lmmx/mibz2/pull/160#issuecomment-6653416078) at 08:31, and
-logged its mistake on the channel. The Optimiser's run started from that comment, its cursor
+[right inbox](https://github.com/lmmx/mibz2/pull/160#issuecomment-6653416078) at 08:31, said so in
+that message, and [logged the mistake](https://github.com/lmmx/mibz2/commit/10a8af6e) in the
+channel log. The Optimiser's run started from that comment, its cursor
 marked the brief finished, and its
 [review](https://github.com/lmmx/mibz2/pull/145#issuecomment-6653724458) came back at 08:48,
 proposing the next build. The work had sat at the wrong address for 53 minutes. Once the error
 was visible, the system recovered through its own channel.
 
 **A guard that guarded nothing.** At 08:26 the Coordinator squash-merged
-[#185](https://github.com/lmmx/mibz2/pull/185), passing an expected head SHA that it had
-completed from memory, `c32ba5db3b0f…` where the head was `c32ba5db9df8…`. GitHub merged it
-anyway. The right commit merged, since it was the only one. But the check the Coordinator relied
-on to merge only the commit CI had tested had checked nothing. An earlier merge had rejected a
-short prefix, which was why the check seemed to work. The Coordinator noticed when it read the
-head back after merging.
+[#185](https://github.com/lmmx/mibz2/pull/185), passing as the expected head a SHA it had
+completed from memory: `c32ba5db3b0f…`, where the head was `c32ba5db9df8…`. The merge went
+through anyway. The right commit merged, since nothing had been pushed after it. But the check the
+Coordinator relied on to merge only the commit CI had tested had checked nothing. A short prefix
+had been refused on an earlier merge, which was why the check seemed to work. The Coordinator
+noticed when it read the head back, fourteen seconds after merging.
 
 Both mistakes have the same shape: an agent's report of its own action is a claim, like any other
 claim in this project, and it needs an observable effect behind it. The research already works
@@ -343,11 +344,11 @@ whose effects matter, so that autonomy doesn't depend on the Coordinator remembe
 
 | Check | What it compares | Status |
 | --- | --- | --- |
-| `route` | an assignment's destination, from the role's cursor and reviews: its inbox, or #145 as `TYPE: QUEUED` while it is busy | in use |
-| `verify` | the posted comment, read back by ID: the right PR, the right header, the only assignment in flight | in use: fails the 07:38 misroute, passes the 08:31 dispatch |
-| `head-sha` | a merge's expected head against the PR's exact 40-character head | in use since #186 merged; rejects the SHA used for #185 |
-| `audit` | every message on #145 and the inboxes since the inbox cutover | in use, at each session start and each recurring wake-up; the channel's first 120 comments replay to exactly the two misroutes |
-| the tripwire | each new comment on #145 or an inbox, checked by a GitHub Actions workflow apart from the Coordinator | in use as a record: a misroute turns #145 red, but no event wakes the Coordinator |
+| `route` | an assignment's destination: the role's inbox, or, while it is busy, staged on #145 as `TYPE: QUEUED` | in use |
+| `verify` | the posted comment, read back by ID: its PR, its header, the only assignment in flight | in use: fails the 07:38 misroute, passes the 08:31 dispatch |
+| `head-sha` | a merge's expected head against the PR's exact 40-character head, before the merge and, with `--merged`, after it | before: since #186; after: since #190; rejects #185's SHA |
+| `audit` | every message on #145 and the inboxes since the inbox cutover | in use at each session start and check-in; in its tests, the 120 comments up to 08:49 give exactly the two misroutes |
+| the tripwire | each new comment on #145 or an inbox, checked by a GitHub Actions workflow | in use as a record: a failing check on #145's head commit, and no event for the Coordinator |
 
 The first four are one stdlib script,
 [`coord.py`](https://github.com/lmmx/mibz2/blob/bab0d603a338817e9df4766806b028e15c244bd3/.github/coordination/coord.py), added in
@@ -356,25 +357,42 @@ Coordinator runs each one. The script only reads: it never posts, edits or delet
 can't stop a misroute, only report it. It never edits, moves or re-posts a comment, and never
 dispatches anything itself, so it can't create work of its own.
 
-The tripwire needed the same treatment as everything else. I tested it with three deliberate,
-labelled misroutes on #145, and each found something that the code and its unit tests hadn't.
+The tripwire needed the same treatment as everything else. The Coordinator tested it with three
+deliberate, labelled misroutes on #145, and each found something that the code and its unit tests
+hadn't.
 
 - **The first** was classified correctly, and then its warning couldn't be posted: #145 is
   locked, and the Actions bot can't comment on a locked conversation.
 - **The second** raised a failing check run on #145 instead. The check showed red, but nothing
   woke the Coordinator.
-- **The third** tried to make that check's suite reopen, and showed why it can't: a GitHub
-  Actions check suite follows its workflow run, not check runs added to it, so it stays green
-  and sends no event.
+- **The third** opened its check run in progress and then failed it, so that #145's check suite
+  would reopen, and showed why it can't: a GitHub Actions check suite follows its workflow run,
+  not check runs added to it, so it stays green and sends no event.
 
-So the tripwire is a record, not an alarm. It marks #145 red independently of the Coordinator,
-and the Coordinator finds the misroute itself, by running `audit` at the start of each session
-and on each of its recurring wake-ups, about every quarter of an hour.
+So the tripwire is a record, not an alarm. It leaves a failing check on #145's head commit,
+independently of the Coordinator, and the check shows on #145 until the next commit to the channel
+branch. The Coordinator finds the misroute itself, by running `audit` at the start of each session
+and at each quarter-hourly check-in.
+
+The merge guard needed the same treatment, and got it only while this post was being checked. A
+reviewing agent pointed out that GitHub refuses a mismatched head, and it does: a merge of
+[#139](https://github.com/lmmx/mibz2/pull/139) was refused with a 409 on 2 November. The guess had
+never reached GitHub. The merge tool takes the expected head as `expectedHeadSha`, and the
+Coordinator had been passing it as `sha`, a name the tool doesn't have and drops without a word.
+The prefix refused earlier had met the tool's own format check, under the right name. Read back,
+eight merges between 02:12 and 09:36 had passed the head that way, among them an earlier guess on
+[#167](https://github.com/lmmx/mibz2/pull/167) and four merges made after `head-sha` existed. Each
+merged its PR's final head, so nothing wrong landed, but none was checked. `head-sha` had checked
+the value; nothing had checked that the value reached the merge.
+[#190](https://github.com/lmmx/mibz2/pull/190) adds the missing step: the SHA goes in
+`expectedHeadSha`, and `head-sha --merged` reads the merge back and passes only if the PR merged
+at exactly that head.
 
 Two gaps remain. The Coordinator can't see the Astra tasks' run history; it infers a run from
-receipts in the cursors, which `route` reads. And nothing yet notices a brief that was delivered
-but never started, one with no receipt half an hour after it was posted. A check for that would
-close the loop from sent to started. It isn't built.
+receipts in the cursors, which `route` reads. And no deterministic check yet notices a brief that
+was delivered but never started, one with no receipt half an hour after it was posted; today that
+rests on the Coordinator reading the receipts. A check for that would close the loop from sent to
+started. It isn't built.
 
 ## 10. Where it stands
 
@@ -415,9 +433,10 @@ The first reviews under the new design corrected the Coordinator's write-up befo
 published.
 
 The first night was the first long test, from the evening of 4 November to the morning of the
-5th. The Coordinator ran under a [mode note](https://github.com/lmmx/mibz2/blob/e8b136fed714b54d79b7fa9914b70f815d2a4d8a/docs/journal/compact30-channel/MODE.md)
-that tells it to fan out hard on the hard research, and to do tests, CI and documentation itself
-rather than spend agents on them.
+5th. At 02:52 UTC, at my instruction, the Coordinator's
+[mode note](https://github.com/lmmx/mibz2/blob/e8b136fed714b54d79b7fa9914b70f815d2a4d8a/docs/journal/compact30-channel/MODE.md)
+was amended to tell it to fan out hard on the hard research, and to do tests, CI and documentation
+itself rather than spend agents on them.
 
 - Its Claude Code workflows put several agents on one question at once. In one, three agents
   mined an old CI sweep, modelled each runner's per-core miss resources and built a walk keyed on
@@ -426,16 +445,19 @@ rather than spend agents on them.
   differential of about 14,600 valid and corrupt inputs against master, which found no
   divergence.
 
-Every decoder change still went through the CI benchmark, under a decision rule registered
-before its first run.
+Every decoder change that reached a pull request went through the CI benchmark, under a decision
+rule registered before its first run.
 
-Three changes merged:
+Five decoder changes merged. Two were small gains in the move-to-front stage:
+[#170](https://github.com/lmmx/mibz2/pull/170), about 2% faster wall, and
+[#172](https://github.com/lmmx/mibz2/pull/172), 2.2% less four-thread CPU in one run. Three moved
+the four-thread wall most:
 
 - **[#171](https://github.com/lmmx/mibz2/pull/171)** staged the walk's output through one tile,
   for a four-thread wall 5% to 14% faster over five runs.
 - **[#180](https://github.com/lmmx/mibz2/pull/180)** widened the window of blocks in flight, for
   a four-thread wall 8% to 10% faster in three runs. It cost 4% to 6% more CPU and 8 MB more
-  memory, which I accepted.
+  memory, a trade-off the Coordinator weighed in its write-up and accepted.
 - **[#181](https://github.com/lmmx/mibz2/pull/181)** removed the deferred flags that #171 had
   carried with it. The decoder ran about 4% more instructions and still got faster. That fits
   the reading that the walk is bound by memory requests in flight rather than by instructions,
@@ -447,22 +469,26 @@ it was 0.85×. The chain assumes that a change measured on one runner holds on a
 
 Just as much was tested and rejected:
 
-- **Larger tiles** (#177, #178). The 1024-byte tile filled the whole L1D, and ran 23.5% slower
-  at one thread on Zen 4.
+- **Larger tiles** (#177, #178). The 32 KiB tile, 1024 offsets a lane, filled the whole of Zen
+  4's 32 KiB L1D, and ran 23.5% slower at one thread.
 - **A fused post-walk pass** ([#183](https://github.com/lmmx/mibz2/pull/183)). It halved the
-  simulated cache misses after the walk, but the four-thread wall didn't follow.
-- **A walk shape keyed on SMT co-residency.** October's four-copy win reversed on today's kernel.
+  simulated cache misses after the walk, but the four-thread wall wasn't shown to follow: neither
+  PR run was faster there beyond noise, though the fusion alone was, by 1.5%.
+- **A walk shape keyed on SMT co-residency.** October's four-copy win reversed on today's staged walk.
 - **Split condition variables.** These were rejected on a count of wasted wakes before anything
   was built.
 
-Each is written up in the journal with its runs. Their common lesson redirected the work: the
-Optimiser now ranks candidates by the memory traffic that binds four workers on two SMT cores,
-not by instruction counts, and its next build is a retest of compact30's smaller table under
-today's staged walk.
+Each is written up in the journal with its runs. The walk round had already redirected the
+work: since the 06:03 checkpoint the Optimiser has ranked candidates by the memory traffic of four
+workers on two SMT cores, not by instruction counts, and the fused pass and split condition
+variables were its first and third picks. Their failures narrowed the search to the walk's random
+reads and its table's footprint. The next build the Optimiser proposed is a retest of compact30's
+smaller table under today's staged walk, though its own prior on it is weak.
 
-So the messages get through, the reviews arrive before the decisions they bear on, and nothing
-goes through me. When a message is sent to the wrong place, the system now checks, rather than
-assumes, that it arrived. Whether all of this makes the research faster will keep showing in the
+So the reviews arrive before the decisions they bear on, and no message is relayed through me.
+Two went astray overnight; I spotted them, and the agents recovered through their own channel.
+When a message is sent to the wrong place now, the Coordinator checks, rather than assumes, that
+it arrived. Whether all of this makes the research faster will keep showing in the
 benchmark history.
 
 If you want to set up something similar:
@@ -474,8 +500,8 @@ If you want to set up something similar:
 - keep every agent's instructions in the repository at a pinned commit;
 - write down what a message is allowed to authorise;
 - decide what an independent reviewer gets to see;
-- check effects, not reports: read every message back where it should have landed, and check a
-  merge's head against the PR's exact head.
+- check effects, not reports: read every message back where it should have landed, and every
+  merge back after it lands.
 
 My own part is choosing the scope and making the decisions the charter keeps for me.
 
