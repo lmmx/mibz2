@@ -107,16 +107,49 @@ The fit is 10.9 Ir/B + 108 Ir a segment (0.4% misfit): the walk 37.3 and the joi
 **Cross-chain lockstep is closed on CI.** The partitioned-walk entry's revival gate is not met.
 Partitioning stays rejected.
 
-## What the anatomy opens
+## What the anatomy opens: the tail
 
-**The tail's cost is latency, not instructions.** Tail passes (#173) cut the tail's instructions,
-about 2% of decoder Ir, and their effect was not shown. The anatomy's tail model (`tailsim.py`,
-the census fit t = a + lat/min(L, M), L the live lanes) prices the tail differently:
-- at 512 segments the tail costs 0.20–0.45 c/B beyond the busy phase's rate. Against the walk
-  alone at 2.89–4.27 c/B, that is 5–16% of it (INFERRED). The model was not split by CPU;
-- the cost is lost memory-level parallelism, as live lanes drain from 32 towards 1;
-- it is largest alone and at one thread a core, where M is largest. That is wikidata-pq's
-  configuration.
+*This section was corrected after REVIEW 6660203300. It first read "the tail's cost is
+latency, not instructions", with 0.20–0.45 c/B. Both are withdrawn.*
 
-Today's only lever on the tail is more segments, at 262–338 cycles each. A construction that
-keeps the lanes full in the tail, at a lower price than a segment, is the next front.
+**The tail costs more than the busy phase, in two terms.**
+- **Instructions:** master's tail walks at about 17 Ir a byte, against the busy phase's 10.7
+  (OBSERVED, callgrind). Tail passes (#173) cut this term. Their result on `wikidata` was "not
+  shown", which is not the same as zero cost.
+- **Lost memory-level parallelism,** as live lanes drain from 32 towards 1 (INFERRED).
+
+**The price of the second term** (INFERRED). `tailsim.py`'s fit, t = a + lat/min(L, M), cancels
+the instruction term by construction, so it prices only this term.
+
+The Optimiser's derivation assumes exponential segment lengths:
+- every live-lane count k then produces equal tail bytes;
+- that gives E ≈ q·lat·(H_M − 1)/32, with q the tail's share of the block and H_M the harmonic
+  number;
+- at the census fit's parameters (q = 5.7–6.0%):
+
+| CPU, occupancy | E, c/B of the block | share of the walk |
+|---|--:|--:|
+| 9V45 alone (M 32) | 0.26–0.27 | 8.9–9.3% |
+| 9V74 alone (M 22) | 0.25–0.26 | 5.8–6.1% |
+| 9V45, four copies (M 22) | 0.21–0.23 | 3.3–3.5% |
+| 9V74, four copies (M 16) | 0.23–0.25 | 2.6–2.7% |
+
+- **A smaller window does not remove it.** Halving M from 32 to 16 cuts the excess by only
+  about 22%, so the tail pays at four copies too.
+- **As gross pools of decoder wall,** if removed for free: about 3.3–3.5% on the 9V45 alone,
+  and 1.3–2.1% at four copies. These are ceilings, not predicted gains. Zero stays the
+  demonstrated lower bound.
+- **The live-lane histogram decides it.** The same q costs little if the tail's bytes sit near 16
+  live lanes, and several times this if they sit near 1.
+- **Other models:** the 7763 and the Xeons have no fitted tail knee here.
+
+Today's only lever on the tail is more segments, at 262–338 cycles each. The next front is a
+construction that keeps the lanes full in the tail for less than a segment costs.
+
+**Its falsifier, before any production build, is a CI tail clock:**
+- busy and tail clocks a byte, separately;
+- runs alone, spread over two cores, and at four copies, per CPU model;
+- tail bytes binned by live-lane count: 1, 2, 3–4, 5–8, 9–16 and 17–32;
+- transition, finish and growth work kept apart from assembly;
+- aggregate phase clocks, with a separate counting arm;
+- the tiny-block fallback kept, as production has it.
