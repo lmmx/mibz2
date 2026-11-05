@@ -373,7 +373,7 @@
       "pr": 160,
       "status": "in_progress",
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Receipt committed; auditing compact-table opportunity after fused-pass and scheduling falsifiers.",
+      "progress": "Audited pinned #183 result and prior compact layout/dependencies; evidence checkpoint committed. Defining controlled staged-compact proposal and resource falsifiers.",
       "report_path": "docs/journal/compact30-research/reviews/inbox-6653416078/report.md",
       "completed": false
     }
