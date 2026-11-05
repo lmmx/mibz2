@@ -88,3 +88,21 @@ effect.
 A pass establishes an end-to-end gain from fewer walk instructions. It doesn't establish that
 the gain comes from instruction count rather than from the branch-free offset's effect on
 overlap. Both change together here.
+
+## Result: closed unmerged (#168); carried into #171
+
+Two runs, bench 3.2.0, head eb3e857 against 4d4709d (archived in
+`2026-11-05-walk-round.md`'s directory):
+
+| run | runner | `wikidata` wall, 1 / 2 / 4 threads | CPU at 4 threads | walk stage (1 thread) |
+|---|---|---|---|---|
+| 1 | EPYC 7763 | +0.3% / +1.3% / +1.0% | **+1.7%** (+0.0, +3.3) slower | +4.0% (−0.7, +9.0) |
+| 2 | EPYC 9V74 | **+1.7%** (+1.1, +2.3) slower / +1.3% / −0.5% | +0.3% | |
+
+- **Benefit:** not met. No `wikidata` figure was faster in either run.
+- **No harm:** `wikidata` wall at 1 thread was flagged slower in run 2. It was not settled by
+  a third run, because the change went on into #171, which staged the bytes on top of it.
+  #171 was measured against master with both changes together, and passed.
+- **What it says:** 2.6% fewer instructions in the walk bought no time, and the 1-thread
+  point estimates leaned slower. The local attribution in `2026-11-05-walk-round.md` gives
+  staging alone the whole of #171's gain. The deferred flags add nothing detectable there.
