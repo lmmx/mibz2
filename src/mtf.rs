@@ -88,16 +88,17 @@ unsafe fn mtf_avx2(
     #[repr(align(64))]
     struct L([u8; 320]);
     let mut store = L([0u8; 320]);
-    // the list at store[32..288], with slack before it for the shifted load
+    // the list at store[32..288], with slack before it for the shifted load, held as the
+    // bytes themselves (each symbol's seq_to_unseq), not their indices: a move permutes
+    // both alike, so the front is the byte with no lookup
     for i in 0..256 {
-        store.0[32 + i] = i as u8;
+        store.0[32 + i] = b.seq_to_unseq[i];
     }
     let base = store.0.as_mut_ptr().add(32);
     let idx = _mm256_setr_epi8(
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
         25, 26, 27, 28, 29, 30, 31,
     );
-    let s2u = &b.seq_to_unseq;
     let (mut run, mut weight) = (0u32, 1u32);
     // `n` bytes written at `out`; every write below is checked against `max`, which
     // `ll`'s capacity holds
@@ -119,7 +120,7 @@ unsafe fn mtf_avx2(
                 result = Err(ErrorKind::BlockTooLong);
                 break;
             }
-            let c = s2u[*base as usize];
+            let c = *base;
             counts[c as usize] += run;
             if run <= 64 && n + 64 <= max {
                 // a short run as two 32-byte stores of its byte: the bytes past the run are
@@ -153,7 +154,7 @@ unsafe fn mtf_avx2(
             std::ptr::copy(base, base.add(1), nn);
         }
         *base = v;
-        let c = s2u[v as usize];
+        let c = v;
         counts[c as usize] += 1;
         *out.add(n) = c;
         n += 1;
