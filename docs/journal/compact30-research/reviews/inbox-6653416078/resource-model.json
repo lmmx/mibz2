@@ -1,0 +1,53 @@
+{
+  "n": 900000,
+  "m": null,
+  "rows_per_output_byte": "a=n/m; measure per corpus",
+  "active_tables_per_core": 2,
+  "main_plain_bytes": 3600000,
+  "main_compact_bytes": 1920000,
+  "cache_sensitivity": [
+    {
+      "capacity_bytes": 524288,
+      "p_plain": 0.9271822222222222,
+      "p_compact": 0.8634666666666666,
+      "saved_main_misses_per_row": 0.06371555555555557
+    },
+    {
+      "capacity_bytes": 1048576,
+      "p_plain": 0.8543644444444445,
+      "p_compact": 0.7269333333333333,
+      "saved_main_misses_per_row": 0.12743111111111113
+    },
+    {
+      "capacity_bytes": 2097152,
+      "p_plain": 0.708728888888889,
+      "p_compact": 0.45386666666666664,
+      "saved_main_misses_per_row": 0.25486222222222227
+    }
+  ],
+  "fusion": {
+    "postwalk_miss_change": -38669,
+    "decoder_miss_change": -38669,
+    "decoder_relative_change": -0.04605596176315404
+  },
+  "no_measured_latency": true,
+  "same_byte_control": {
+    "N": "ceil(n/30)+1, includes PARK",
+    "dense": {
+      "field": "64g+2j",
+      "header": "64g+60"
+    },
+    "split": {
+      "field": "60g+2j",
+      "header": "60N+4g"
+    },
+    "arena_bytes": "64N for both; RAW unchanged",
+    "qualification": "diagnostic only; C-P whole decoder decides"
+  },
+  "raw_threshold_storage": 0.4375,
+  "compulsory_line_density": {
+    "plain": 0.0625,
+    "compact": 0.03333333333333333,
+    "not_dynamic_miss_probability": true
+  }
+}

@@ -161,3 +161,18 @@ The old P87 diagnostic remains closed/INCONCLUSIVE, A1–A6 and D013 remain unch
 | C20 self-scanning | CONDITIONAL, priority 5 | Removes handoff at cost of scanner work on decode cores; old idle shares overlap and do not define the remaining gain |
 
 No new verified cumulative instruction credit is booked. Reported #169/#173 reductions remain economically not shown; merged MTF/staging outcomes are baseline, not additive future credit. #171/#170/#172 unresolved controls remain explicit. From the unpaired 93%-busy observation, 98%/100% busy gives illustrative 5.10%/7% wall reductions only at unchanged useful-work cost; scheduling candidates share this opportunity. Absolute runner latency, actual cache misses and current phase exposure are unmeasured here. Recommended next build is the Coordinator's already-local fused post-walk path, not another Ir-only walk cut.
+
+
+## Current compact-parity decision: inbox 6653416078
+
+[Post-fusion audit and bounded staged-compact proposal](reviews/inbox-6653416078/report.md), baseline **3c4ed7939d107a7b7b2633ca913f2e640023f15a**. This supersedes the production ranking in inbox 6651023083, not the historical constructor accounting.
+
+| ID | Updated disposition | Resource finding and next falsifier |
+|---|---|---|
+| C17 fused post-walk | REJECTED for registered four-thread claim (#183); fresh single-thread question separate | Two PR runs fail the four-thread benefit rule; runs 4t harm unresolved; attribution fails on text 2t. Simulated line reduction is not a hardware resource measurement or proof of zero benefit. No cumulative credit |
+| C18 split condvars | CLOSED before implementation of rewrite (#185) | Local counts argue against a material wake-driven opportunity at window 16. Wasted-wake CPU estimate is not an SMT wall bound |
+| C19 byte budget / C20 self-scan | DEPRIORITIZED as throughput builds | Backpressure weakens scanner-starvation premise; memory/tail objectives remain distinct. No shared slack ceilings added |
+| Co-resident 16/L2 | NOT REPRODUCED on current kernel | Seven of eight four-copy CPU cells slower beyond noise. No demonstrated better grid setting; not proof of a universal optimum |
+| C15 staged compact parity | CONDITIONAL, bounded next comparison recommended; old #155 port remains REJECTED | Compact changes footprint, not the existence of random references. Ordinary field/header share one line but add load/reconstruction work; RAW adds dependent service. Compare current staged compact direct-build decoder with production and an equal-byte split-header layout control. Include build/walk/rest, four workers on two SMT cores, window 16. Close if whole-decoder benefit rule fails even when misses/bytes fall |
+
+No numerical four-thread gain is forecast and no verified instruction credit is added. Historical 46.25% walk-Ir parity is not a time gate. The report distinguishes net random line counts from latency-weighted service demand, charges RAW and construction, and specifies the equal-size control's attribution limits. The proposal is a changed-walker retest, not a new constructor or authorisation. A1–A6 and D013 remain unchanged.

@@ -1,0 +1,86 @@
+{
+  "inbox_comment_id": 6653416078,
+  "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+  "baseline_commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+  "port_commit": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+  "port_evidence_commit": "c493a45d3f24e9c07657b3183cd2ab59fd66f5b2",
+  "artifacts": [
+    {
+      "path": "docs/journal/2026-11-05-fused-postwalk.md",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "4e6fc2bddc5dcae2d0f5a05196a2802fd5674a58"
+    },
+    {
+      "path": "docs/journal/2026-11-05-split-condvars.md",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "b0fcc25e09d4531f6b80fcd3d5a4c940b58b3c7b"
+    },
+    {
+      "path": "docs/journal/2026-11-05-coresident-walk.md",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "23087a305566351d25abbb09b4c078dc0dbe2126"
+    },
+    {
+      "path": "src/bwt.rs",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "b6b450c840e4ce90d8eb84e070143e2bec5e3358"
+    },
+    {
+      "path": "src/lib.rs",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "e7f6896cbcf63b3d9c4f3df497f68a535651e75f"
+    },
+    {
+      "path": "src/parallel.rs",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "7ea7a69e4bb025711361a9e960bba1398b07ac9d"
+    },
+    {
+      "path": "docs/journal/2026-11-05-walk-round/bench-runs/pr183-fusion-alone.md",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "97c0c5e98c9f7ab0bfea1e0f828b7c585b076d59"
+    },
+    {
+      "path": "docs/journal/2026-11-05-walk-round/bench-runs/pr183-refactor-alone.md",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "e53c587d66fe02d18a800ab0031bac1d5b6fe23c"
+    },
+    {
+      "path": "docs/journal/2026-11-05-walk-round/bench-runs/pr183-run1.md",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "d4f0ff50e990ff8adf092b1950c22843b7e8da1c"
+    },
+    {
+      "path": "docs/journal/2026-11-05-walk-round/bench-runs/pr183-run2.md",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "d166b54e5a9179df881c02fb28edfb30485c7d63"
+    },
+    {
+      "path": "src/c30.rs",
+      "commit": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+      "blob": "05c8fb20f33fc77018516e948f2c70693d56d14c"
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/port-b4786f66/README.md",
+      "commit": "c493a45d3f24e9c07657b3183cd2ab59fd66f5b2",
+      "blob": "2c089d97b556fde7b89a07140451bc60299726a9"
+    },
+    {
+      "path": "docs/journal/2026-11-02-compact30-walker.md",
+      "commit": "f1dafa31d88d7351a98afb005a84f23d5a2312bd",
+      "blob": "365178d925266971942fae77d704124d019b87cc"
+    },
+    {
+      "path": "docs/journal/2026-11-05-staged-walk/spec_offset-P0.asm",
+      "commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "blob": "4e5421e1f9b5677a888f96b4a82347c4db1453b6",
+      "scope": "Historical #171 listing; not current #181 start-test listing."
+    }
+  ],
+  "limitations": [
+    "No new timing, compilation or execution",
+    "No full raw CI or simulator replay",
+    "No independent safety certification of authored proposal",
+    "Current staged compact candidate unbuilt"
+  ]
+}
