@@ -1227,7 +1227,7 @@ const TILE: usize = 256;
 /// chunk's end, SSE2; 3, that loop in an AVX2 function chosen at run time; 4, that with
 /// non-temporal stores for whole destination lines; 5, a const-length copy_nonoverlapping
 /// in the closure
-const FLUSH: u8 = 0;
+const FLUSH: u8 = 2;
 
 /// The tile, its rows on cache lines
 #[repr(C, align(64))]
