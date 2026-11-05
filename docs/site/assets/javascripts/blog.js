@@ -3,6 +3,9 @@
 // - .bf-chain: the pointer chain. "Follow pointer" moves from the current card to the card
 //   it names, until every card has been visited; "Reset" goes back to card 0. Without
 //   JavaScript the figure shows the whole path instead.
+// - .bf-bitbuf: a bit buffer read one code at a time. "Read the next code" consumes the code
+//   at the front (its bits highlighted), shifts the rest up and logs the symbol; "Reset"
+//   starts again. Without JavaScript the figure shows the whole decode instead.
 // - .bf-anim-controls: replay and pause buttons on an animated figure, which plays once and
 //   holds its last frame. Pause freezes it where it is; replay starts it from the beginning.
 //   With reduced motion the figure starts as a still picture, and either button runs the
@@ -90,8 +93,58 @@
     draw();
   };
 
+  const bitbuf = (fig) => {
+    if (fig.dataset.ready) return;
+    fig.dataset.ready = "1";
+    const bits = fig.dataset.bits;
+    const codes = Object.fromEntries(fig.dataset.codes.split(" ").map((p) => p.split(":")));
+    const cells = [...fig.querySelectorAll(".bf-bit")];
+    const q = (sel) => fig.querySelector(sel);
+    const [state, buttons, next, live, shift, out, read, reset] = [
+      ".bf-buf-state", ".bf-buttons", ".bf-buf-next", ".bf-buf-live", ".bf-buf-shift", ".bf-buf-out",
+      ".bf-read", ".bf-reset",
+    ].map(q);
+    let rem = bits;
+    let decoded = [];
+    let last = "";
+    const front = () => Object.keys(codes).find((c) => rem.startsWith(c)) || "";
+    const draw = () => {
+      const code = front();
+      cells.forEach((cell, i) => {
+        cell.textContent = i < rem.length ? rem[i] : "·";
+        cell.classList.toggle("is-next", i < code.length);
+        cell.classList.toggle("is-empty", i >= rem.length);
+      });
+      next.textContent = code ? `${codes[code]} = ${code}` : "none: all ten bits read";
+      live.textContent = rem.length;
+      shift.textContent = last ? `buf <<= ${last.length}; live -= ${last.length};` : "nothing consumed yet";
+      out.textContent = decoded.length ? decoded.join(" ") : "none yet";
+      read.disabled = !code;
+    };
+    read.addEventListener("click", () => {
+      const code = front();
+      if (!code) return;
+      decoded.push(codes[code]);
+      rem = rem.slice(code.length);
+      last = code;
+      draw();
+    });
+    reset.addEventListener("click", () => {
+      rem = bits;
+      decoded = [];
+      last = "";
+      draw();
+      read.focus();
+    });
+    state.hidden = false;
+    buttons.hidden = false;
+    q(".bf-buf-static").hidden = true;
+    draw();
+  };
+
   const init = () => {
     document.querySelectorAll(".bf-chain").forEach(chain);
+    document.querySelectorAll(".bf-bitbuf").forEach(bitbuf);
     document.querySelectorAll(".bf-anim-controls").forEach(animated);
   };
   if (window.document$ && typeof window.document$.subscribe === "function") window.document$.subscribe(init);
