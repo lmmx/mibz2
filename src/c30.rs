@@ -3701,15 +3701,18 @@ mod tests {
         let files = std::env::var("MIBZ2_RHO").expect("MIBZ2_RHO: .bz2 files, ':'-separated");
         let k = crate::Kernels::detect();
         println!(
-            "file                          blocks      rows   busy arr  resolves  tail arr   \
-             raw starts   rho (arr/B)  max block rho  RAW rows/rows"
+            "file              blocks       rows  busy arr  resolves  tail arr  raw starts  \
+             rho (arr/B)  max block (rows)    max segmented block (rows)  RAW rows/rows"
         );
         for path in files.split(':').filter(|p| !p.is_empty()) {
             let data = std::fs::read(path).unwrap();
             let mut sc = Scanner::new(SliceSource(&data));
             let mut c30 = Compact30::default();
             let (mut ll, mut counts, mut out) = (Vec::new(), [0u32; 256], Vec::new());
-            let (mut blocks, mut rows, mut max_rho, mut raw_rows) = (0, 0, 0f64, 0);
+            let (mut blocks, mut rows, mut max_rho, mut raw_rows) = (0, 0, (0f64, 0), 0);
+            // the largest rho among the blocks the room walk segments (MIN_SEGMENTED rows or
+            // more), and its block's rows
+            let mut max_seg = (0f64, 0);
             let mut plain_arrivals = 0;
             let mut totals = [0usize; 4];
             let mut syms = Vec::new();
@@ -3742,7 +3745,13 @@ mod tests {
                 } else {
                     row[0] + row[2]
                 };
-                max_rho = max_rho.max(arrivals as f64 / n as f64);
+                let rho = arrivals as f64 / n as f64;
+                if rho > max_rho.0 {
+                    max_rho = (rho, n);
+                }
+                if n >= MIN_SEGMENTED && rho > max_seg.0 {
+                    max_seg = (rho, n);
+                }
                 blocks += 1;
                 rows += n;
                 syms = symbols.syms;
@@ -3752,12 +3761,17 @@ mod tests {
                 .unwrap()
                 .to_string_lossy();
             println!(
-                "{name:28}  {blocks:6}  {rows:8}  {:9}  {:8}  {:8}  {:10}   {:11.5}  {max_rho:13.5}  {:13.5}",
+                "{name:16}  {blocks:6}  {rows:9}  {:8}  {:8}  {:8}  {:10}  {:11.5}  {:.5} ({:7})  \
+                 {:.5} ({:7})            {:.5}",
                 totals[0],
                 totals[1],
                 totals[2],
                 totals[3],
                 (totals[0] + totals[2] + plain_arrivals) as f64 / rows as f64,
+                max_rho.0,
+                max_rho.1,
+                max_seg.0,
+                max_seg.1,
                 raw_rows as f64 / rows as f64,
             );
         }
