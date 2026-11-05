@@ -929,7 +929,16 @@ fn parent(args: &[String]) {
         // the arithmetic alone, for full blocks of the file's level: no runs
         let ls: Vec<trace::Settings> = threads
             .iter()
-            .map(|&t| trace::Settings::new(level, t, slots.unwrap_or(2 * t)))
+            .map(|&t| {
+                let plan = teams.map_or(Plan::for_threads(t), |k| Plan::Teams {
+                    teams: (t / k).max(1),
+                    k,
+                });
+                trace::Settings {
+                    in_place: matches!(plan, Plan::Workers(_)),
+                    ..trace::Settings::new(level, t, slots.unwrap_or(2 * t))
+                }
+            })
             .collect();
         print!("{}", ledger_table(&ls, &[], n_blocks));
         return;
@@ -1171,7 +1180,13 @@ fn parent(args: &[String]) {
         let s = slots.unwrap_or(2 * t);
         let rows = g(&tl, "f.rows_max");
         let decoded = g(&tl, "f.decoded_max");
+        let plan = teams.map_or(Plan::for_threads(t), |k| Plan::Teams {
+            teams: (t / k).max(1),
+            k,
+        });
         let mut ls = trace::Settings::new(level, t, s);
+        // a team plan inverts cooperatively, into `rle`; only workers' kernels invert in place
+        ls.in_place = matches!(plan, Plan::Workers(_));
         if rows.is_finite() && rows > 0.0 {
             (ls.rows, ls.decoded) = (rows as usize, decoded as usize);
         }
@@ -1181,10 +1196,6 @@ fn parent(args: &[String]) {
         if spec == specs[0] {
             ledgers.push((ls, Some(median(&mut rss.clone()) * 1024.0)));
         }
-        let plan = teams.map_or(Plan::for_threads(t), |k| Plan::Teams {
-            teams: (t / k).max(1),
-            k,
-        });
         summary.push_str(&queue_summary(t, plan, &spec, s, &tl, &trace::ledger(&ls)));
         let verdict = |c: (f64, f64, f64)| {
             J::S(if !c.1.is_finite() {
