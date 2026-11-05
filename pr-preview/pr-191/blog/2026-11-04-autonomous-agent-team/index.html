@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=08b59671950a">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=4bffd8815aa9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=08b59671950a">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=4bffd8815aa9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=08b59671950a">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=4bffd8815aa9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=08b59671950a">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=4bffd8815aa9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=08b59671950a">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=4bffd8815aa9">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2221,8 +2221,8 @@ published, and to record both the launch and the result. The independent reviewe
 way, with its settings and inputs written to the repository before it began.</p>
 <p>Keeping things moving is the Coordinator's job. When the record goes quiet, it checks the
 receipts, works out who has the next step, and posts the checkpoint that starts it. No Astra agent runs
-on a timer. The Coordinator's session has one: it wakes about every quarter of an hour to re-read
-its mode note, which is also when it runs <code>audit</code> (section 9). Nothing sits waiting for me.</p>
+on a timer. On the first night the Coordinator's session had one, waking it every quarter of an
+hour to re-read its mode note; otherwise it too wakes on events. Nothing sits waiting for me.</p>
 <h2 id="8-what-a-shared-message-board-got-wrong">8. What a shared message board got wrong<a class="headerlink" href="#8-what-a-shared-message-board-got-wrong" title="Permanent link">&para;</a></h2>
 <p>The design above is the second one. The first put every message on one PR, #145, and let every
 agent read the whole board. It looked simple, and over the evening of 4 November it went wrong in
@@ -2332,7 +2332,7 @@ this failure rather than remove it.</p>
 <tr>
 <td><code>audit</code></td>
 <td>every message on #145 and the inboxes since the inbox cutover</td>
-<td>in use at each session start and check-in; in its tests, the 120 comments up to 08:49 give exactly the two misroutes</td>
+<td>in use at each session start and wake-up; in its tests, the 120 comments up to 08:49 give exactly the two misroutes</td>
 </tr>
 <tr>
 <td>the tripwire</td>
@@ -2369,7 +2369,7 @@ wake the Coordinator, and its test showed within a minute that it didn't.</p>
 <p>So the tripwire is a record, not an alarm. It leaves a failing check on #145's head commit,
 independently of the Coordinator, and the check shows on #145 until the next commit to the channel
 branch. The Coordinator finds the misroute itself, by running <code>audit</code> at the start of each session
-and at each quarter-hourly check-in.</p>
+and every time it wakes.</p>
 <p>The merge guard needed the same treatment, and got it only while this post was being checked. A
 reviewing agent pointed out that GitHub refuses a mismatched head, and it does: a merge of
 <a href="https://github.com/lmmx/mibz2/pull/139">#139</a> was refused with a 409 on 2 November. The guess had
@@ -2630,17 +2630,17 @@ all of this makes the research faster will keep showing in the benchmark history
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=08b59671950a"></script>
+        <script src="../../assets/javascripts/bench.js?v=4bffd8815aa9"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=08b59671950a"></script>
+        <script src="../../assets/javascripts/couriers.js?v=4bffd8815aa9"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=08b59671950a"></script>
+        <script src="../../assets/javascripts/blog.js?v=4bffd8815aa9"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=08b59671950a"></script>
+        <script src="../../assets/javascripts/frontier.js?v=4bffd8815aa9"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=08b59671950a"></script>
+        <script src="../../assets/javascripts/katex.js?v=4bffd8815aa9"></script>
       
     
   </body>

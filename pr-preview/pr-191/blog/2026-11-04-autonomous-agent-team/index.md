@@ -115,7 +115,7 @@ Watch the repository, not the task pages. Every message ends in a receipt: a cur
 
 When an agent starts a helper of its own, I ask it to keep its run open until the helper has published, and to record both the launch and the result. The independent reviewer was set up this way, with its settings and inputs written to the repository before it began.
 
-Keeping things moving is the Coordinator's job. When the record goes quiet, it checks the receipts, works out who has the next step, and posts the checkpoint that starts it. No Astra agent runs on a timer. The Coordinator's session has one: it wakes about every quarter of an hour to re-read its mode note, which is also when it runs `audit` (section 9). Nothing sits waiting for me.
+Keeping things moving is the Coordinator's job. When the record goes quiet, it checks the receipts, works out who has the next step, and posts the checkpoint that starts it. No Astra agent runs on a timer. On the first night the Coordinator's session had one, waking it every quarter of an hour to re-read its mode note; otherwise it too wakes on events. Nothing sits waiting for me.
 
 ## 8\. What a shared message board got wrong
 
@@ -160,7 +160,7 @@ Both mistakes have the same shape: an agent's report of its own action is a clai
 | `route` | an assignment's destination: the role's inbox, or, while it is busy, staged on \#145 as `TYPE: QUEUED` | required before each assignment; none posted since it landed |
 | `verify` | the posted comment, read back by ID: its PR, its header, the only assignment in flight | required after each; replayed, it fails the 07:38 misroute and passes the 08:31 dispatch |
 | `head-sha` | a merge's expected head against the PR's exact 40-character head, before the merge and, with `--merged`, after it | before: since \#186; after: since \#190; rejects \#185's SHA |
-| `audit` | every message on \#145 and the inboxes since the inbox cutover | in use at each session start and check-in; in its tests, the 120 comments up to 08:49 give exactly the two misroutes |
+| `audit` | every message on \#145 and the inboxes since the inbox cutover | in use at each session start and wake-up; in its tests, the 120 comments up to 08:49 give exactly the two misroutes |
 | the tripwire | each new comment on \#145 or an inbox, checked by a GitHub Actions workflow that runs independently of the Coordinator | in use as a record: a failing check on \#145's head until the next commit there; no event for the Coordinator |
 
 The first four are one stdlib script, [`coord.py`](<https://github.com/lmmx/mibz2/blob/b773431366def44a1214a0c42a6b0fe0b606d870/.github/coordination/coord.py>), added in [\#186](<https://github.com/lmmx/mibz2/pull/186>), and the repository's `CLAUDE.md` says when the Coordinator runs each one. (`TYPE: QUEUED` is a staging label added with the inboxes: work for a busy role waits on \#145 until the Coordinator dispatches it.) The script only reads: it never posts, edits or deletes. The tripwire can't stop a misroute, only report it. It never edits, moves or re-posts a comment, and never dispatches anything itself, so it can't create work of its own.
@@ -173,7 +173,7 @@ The tripwire needed the same treatment as everything else. A workflow started by
 
 One of these tests refuted a claim that had already merged: \#188 went in saying its check run would wake the Coordinator, and its test showed within a minute that it didn't.
 
-So the tripwire is a record, not an alarm. It leaves a failing check on \#145's head commit, independently of the Coordinator, and the check shows on \#145 until the next commit to the channel branch. The Coordinator finds the misroute itself, by running `audit` at the start of each session and at each quarter-hourly check-in.
+So the tripwire is a record, not an alarm. It leaves a failing check on \#145's head commit, independently of the Coordinator, and the check shows on \#145 until the next commit to the channel branch. The Coordinator finds the misroute itself, by running `audit` at the start of each session and every time it wakes.
 
 The merge guard needed the same treatment, and got it only while this post was being checked. A reviewing agent pointed out that GitHub refuses a mismatched head, and it does: a merge of [\#139](<https://github.com/lmmx/mibz2/pull/139>) was refused with a 409 on 2 November. The guess had never reached GitHub. The merge tool takes the expected head as `expectedHeadSha`, and the Coordinator had been passing it as `sha`, a name the tool doesn't have and drops without a word. The prefix refused earlier had met the tool's own format check, under the right name. Read back, eight merges between 02:12 and 09:36 had passed the head that way, among them an earlier guess on [\#167](<https://github.com/lmmx/mibz2/pull/167>) and four merges made after `head-sha` existed. Each merged its PR's final head, so nothing wrong landed, but none was checked. `head-sha` had checked the value; nothing had checked that the value reached the merge. [\#190](<https://github.com/lmmx/mibz2/pull/190>) adds the missing step: the SHA goes in `expectedHeadSha`, and `head-sha --merged` reads the merge back and passes only if the PR merged at exactly that head.
 
