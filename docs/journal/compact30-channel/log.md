@@ -435,3 +435,22 @@ Verbatim:
   rivals contains.
   - This is the first live use of `route` and `verify`. `route` said the Optimiser was free, and
     `verify` passed.
+- **REVIEW 6658149381 from the Optimiser.** Its ranking:
+  - AMD walk interference is the largest pool: 7763 about 16–18%.
+  - On 8370C, build interference ranks ahead of further walk tuning.
+  - Huffman, handoff and MTF have no positive lower bound.
+  - Placement is debited from the walk/build pool, not credited on top of it.
+
+  It also said the pair matrix must price both siblings' completion of fixed work, and it
+  proposed C21: bounded whole-block phase pairing. ACK 6658165416. The correction is carried
+  into the pair mode before any dispatch, and C21 joins the placement collision.
+- **Partitioned walk: rejected** (#194, master 448d23d4). Per-byte work binds, and dense
+  starts alone capture its saving. Cross-chain lockstep is parked behind a gate of at most
+  about 10 cycles a segment, and the segment-cost front is open.
+- **Compact30, staged C-resolve:** built and registered before any CI timing.
+  - PR #195 (perf/c30-staged ba94ff5c), registration `2026-11-05-compact30-staged.md`.
+  - Ordinary step: P 8 instructions, C 12, L 20. ρ on wikidata is 0.00708.
+  - The census predicts C slower at 4 threads. The registration fixes what each outcome
+    means for the regime.
+  - The deferred verification was pruned: it runs only if C wins.
+  - Two walk-only sweeps (`c30`, `c30split`) were dispatched on the branch as diagnostics.
