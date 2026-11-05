@@ -1201,6 +1201,506 @@ fn room_segments<const L: usize, const PF: u8>(
 /// tile at 32 lanes, in L1) before they are copied to the lanes' buffers
 const TILE: usize = 256;
 
+/// The one-store room walk's busy-phase chunk in its word tile: at most this many offsets
+/// are staged per lane, one u32 a step (an entry: its byte and its link), 65 words a lane
+/// with the seed: an 8.1 KiB tile at 32 lanes, about master's 8 KiB, so two SMT siblings'
+/// tiles take half of a 32 KiB L1D as master's do (a 512-offset tile, 16 KiB, failed on CI:
+/// docs/journal/2026-11-05-tile-size.md)
+const ONE_TILE: usize = 64;
+/// The same in the byte tile, whose step stores its entry as a u64 one byte along: 240
+/// offsets in a 256-byte column (a chunk's steps touch its bytes 0 to W + 8), an 8 KiB
+/// tile at 32 lanes, as master's
+const ONE_BYTE_TILE: usize = 240;
+
+/// A lane's column of the one-store walk's tile (`room_segments_one`): offset j's step
+/// reads the lane's row from it (what offset j - 1's step left, or a seed) and stores one
+/// value back, the entry it read, which holds both its byte and the lane's next row; so a
+/// step has one store where master's room walk has two (the byte into its tile and the row
+/// into `rows`). Its bytes are copied out at a flush.
+///
+/// # Safety
+/// Each takes a pointer to a column; `row` and `seed` an offset up to `W`, `put` one
+/// below it; `flush` offsets `from <= to <= W`, and a `dst` with `to - from` writable
+/// bytes.
+trait Column: Copy {
+    /// offsets a chunk stages
+    const W: usize;
+    /// a column of zeroes
+    const ZERO: Self;
+    /// the lane's row at offset j (read by offset j's step)
+    unsafe fn row(c: *const Self, j: usize) -> u32;
+    /// offset j's step read `q`, not a start: its byte for the flush, its link the lane's
+    /// row at offset j + 1; one store
+    unsafe fn put(c: *mut Self, j: usize, q: u32);
+    /// the lane's row at offset j is `row` (a seed: a chunk's first offset, a take)
+    unsafe fn seed(c: *mut Self, j: usize, row: u32);
+    /// offsets from..to's bytes copied to dst
+    unsafe fn flush(c: *const Self, from: usize, to: usize, dst: *mut u8);
+}
+
+/// Nothing, on a path marked cold: its branch's other side is laid out to fall through
+/// (`room_segments_one`'s step, whose start test would otherwise jump over the marking on
+/// every step)
+#[cold]
+#[inline]
+fn cold() {}
+
+// a byte column's chunk touches its bytes 0 to W + 8
+const _: () = assert!(ONE_BYTE_TILE + 9 <= 256);
+
+/// The word column: the seed in word 0, offset j's entry in word j + 1, so offset j's
+/// step loads word j, shifts it to a row and stores word j + 1 (`room1w`); its bytes are
+/// the words' low bytes, packed at the flush
+#[derive(Clone, Copy)]
+#[repr(C)]
+struct Words([u32; ONE_TILE + 1]);
+
+impl Column for Words {
+    const W: usize = ONE_TILE;
+    const ZERO: Self = Words([0; ONE_TILE + 1]);
+    #[inline(always)]
+    unsafe fn row(c: *const Self, j: usize) -> u32 {
+        unsafe { *c.cast::<u32>().add(j) >> 8 }
+    }
+    #[inline(always)]
+    unsafe fn put(c: *mut Self, j: usize, q: u32) {
+        unsafe { *c.cast::<u32>().add(j + 1) = q }
+    }
+    #[inline(always)]
+    unsafe fn seed(c: *mut Self, j: usize, row: u32) {
+        unsafe { *c.cast::<u32>().add(j) = row << 8 }
+    }
+    /// The words' low bytes, 16 at a time by SSE2 (x86_64's baseline: mask, then two
+    /// saturating packs, which the masked values pass unchanged), the rest one at a time
+    #[inline(always)]
+    unsafe fn flush(c: *const Self, from: usize, to: usize, dst: *mut u8) {
+        // SAFETY: the caller's: words from + 1..to + 1 are inside the column (to <= W),
+        // and dst has to - from bytes
+        let src = unsafe { c.cast::<u32>().add(from + 1) };
+        let n = to - from;
+        let mut i = 0;
+        #[cfg(target_arch = "x86_64")]
+        // SAFETY: SSE2 is in x86_64's baseline; i + 16 <= n, so each load reads four of
+        // the n words and each store writes 16 of the n bytes
+        unsafe {
+            use core::arch::x86_64::*;
+            let mask = _mm_set1_epi32(0xff);
+            while i + 16 <= n {
+                let w = |o: usize| _mm_and_si128(_mm_loadu_si128(src.add(i + o).cast()), mask);
+                let lo = _mm_packs_epi32(w(0), w(4));
+                let hi = _mm_packs_epi32(w(8), w(12));
+                _mm_storeu_si128(dst.add(i).cast(), _mm_packus_epi16(lo, hi));
+                i += 16;
+            }
+        }
+        while i < n {
+            // SAFETY: i < n
+            unsafe { *dst.add(i) = *src.add(i) as u8 };
+            i += 1;
+        }
+    }
+}
+
+/// The byte column: offset j's step stores its entry, zero-extended to a u64, at byte
+/// j + 1, so the entry's byte lands at byte j + 1, its link in bytes j + 2 to j + 4 and
+/// zeroes from byte j + 5, and offset j + 1 reads its row as the u32 at byte j + 2, with
+/// no shift. The next step's store overwrites all but the byte, so the bytes are left
+/// packed in order, and the flush is master's copy (`room1b`). A column is 256 bytes and
+/// 256-aligned, so no access crosses a 4 KiB page; a u64 store one byte along crosses a
+/// 64-byte line at 7 offsets in 64 (and Zen 3 and 4's 32-byte store-data boundary at 7 in
+/// 32), a u32 load at 3 in 64.
+#[derive(Clone, Copy)]
+#[repr(C, align(256))]
+struct Bytes([u8; 256]);
+
+impl Column for Bytes {
+    const W: usize = ONE_BYTE_TILE;
+    const ZERO: Self = Bytes([0; 256]);
+    #[inline(always)]
+    unsafe fn row(c: *const Self, j: usize) -> u32 {
+        unsafe { c.cast::<u8>().add(j + 1).cast::<u32>().read_unaligned() }
+    }
+    #[inline(always)]
+    unsafe fn put(c: *mut Self, j: usize, q: u32) {
+        unsafe {
+            c.cast::<u8>()
+                .add(j + 1)
+                .cast::<u64>()
+                .write_unaligned(u64::from(q))
+        }
+    }
+    #[inline(always)]
+    unsafe fn seed(c: *mut Self, j: usize, row: u32) {
+        unsafe {
+            c.cast::<u8>()
+                .add(j)
+                .cast::<u64>()
+                .write_unaligned(u64::from(row) << 8)
+        }
+    }
+    #[inline(always)]
+    unsafe fn flush(c: *const Self, from: usize, to: usize, dst: *mut u8) {
+        // SAFETY: the caller's: bytes from + 1..to + 1 are inside the column
+        unsafe { std::ptr::copy_nonoverlapping(c.cast::<u8>().add(from + 1), dst, to - from) }
+    }
+}
+
+/// The room walk with one store a step, in the u32 word tile:
+/// `walk_segments_room_with_prefetch`'s segments, starts, passes, handovers and tail, its
+/// busy phase staging each step's entry (byte and next row together) in the lane's tile
+/// column and reading the lane's row back from it, in place of a byte tile and a `rows`
+/// array (`Column`, `Words`). A diagnostic for the walk sweep (examples/sweep.rs,
+/// `room1w`): the decoder never calls it. Exactly `walk`'s output, on a block of any
+/// length.
+pub fn walk_segments_room_onestore_with_prefetch<const L: usize, const PF: u8>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    segments: usize,
+) {
+    out.clear();
+    if tt.0.is_empty() {
+        return;
+    }
+    room_segments_one::<L, PF, Words>(tt, orig_ptr, s, segments);
+    s.assemble(out);
+}
+
+/// `walk_segments_room_onestore_with_prefetch` in the byte tile (`Bytes`): each step's one
+/// store a u64 one byte along, so its row is read back with no shift and the bytes are
+/// left packed (`room1b`). A diagnostic for the walk sweep; exactly `walk`'s output.
+pub fn walk_segments_room_onestore_bytes_with_prefetch<const L: usize, const PF: u8>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    segments: usize,
+) {
+    out.clear();
+    if tt.0.is_empty() {
+        return;
+    }
+    room_segments_one::<L, PF, Bytes>(tt, orig_ptr, s, segments);
+    s.assemble(out);
+}
+
+/// `room_segments` with its busy phase staged through `C`'s columns (`Column`): the same
+/// segments, passes, handovers and tail (master's code, the walks' contract above
+/// `walk_segments_room_with_prefetch`), each lane's row and staged bytes kept in its
+/// column. Never inlined, like `room_segments`, so its listing is its own
+#[inline(never)]
+fn room_segments_one<const L: usize, const PF: u8, C: Column>(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    s: &mut SegScratch,
+    segments: usize,
+) {
+    const { assert!(L <= 64) };
+    let n = tt.0.len();
+    assert!(
+        n <= 1 << 23,
+        "the room walk takes at most 2^23 rows, not {n}"
+    );
+    let r0 = tt.0[orig_ptr as usize] >> 8;
+    random_rows(n, segments - 1, &mut s.starts);
+    s.starts.push(r0);
+    s.starts.sort_unstable();
+    s.starts.dedup();
+    let ns = s.starts.len();
+    for &r in &s.starts {
+        tt.0[r as usize] |= START;
+    }
+    let cap = 2 * n / ns + 64;
+    s.bufs.resize_with(ns.max(s.bufs.len()), Vec::new);
+    for b in &mut s.bufs[..ns] {
+        b.clear();
+        b.reserve(cap);
+    }
+    s.next.clear();
+    s.next.resize(ns, usize::MAX);
+    let starts = &s.starts;
+    let seg_of = move |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let t = tt.0.as_ptr();
+    let bufs = &mut s.bufs;
+    let next = &mut s.next;
+
+    let take = move |seg: usize, bufs: &mut Vec<Vec<u8>>| -> Lane {
+        let b = &mut bufs[seg];
+        let base = b.as_mut_ptr();
+        // SAFETY: the starts are rows below n; the buffer has `cap` > 0 spare bytes
+        let q = unsafe { *t.add(starts[seg] as usize) } & LINK;
+        unsafe { *base = q as u8 };
+        Lane {
+            row: q >> 8,
+            seg,
+            p: unsafe { base.add(1) },
+            end: unsafe { base.add(b.capacity()) },
+        }
+    };
+    let finish = move |l: &Lane, bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| {
+        let b = &mut bufs[l.seg];
+        // SAFETY: p is within b's allocation, every byte below it written
+        unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
+        next[l.seg] = seg_of(l.row);
+    };
+    let grow = |l: &mut Lane, bufs: &mut Vec<Vec<u8>>| {
+        transition!(GROWS);
+        let b = &mut bufs[l.seg];
+        let len = unsafe { l.p.offset_from(b.as_ptr()) } as usize;
+        unsafe { b.set_len(len) };
+        b.reserve(b.capacity());
+        l.p = unsafe { b.as_mut_ptr().add(len) };
+        l.end = unsafe { b.as_mut_ptr().add(b.capacity()) };
+    };
+
+    let mut queued = 0;
+    let mut lanes: [Lane; L] = std::array::from_fn(|_| Lane {
+        row: 0,
+        seg: usize::MAX,
+        p: std::ptr::null_mut(),
+        end: std::ptr::null_mut(),
+    });
+    let mut active = 0;
+    while active < L && queued < ns {
+        lanes[active] = take(queued, bufs);
+        if PF != PF_OFF {
+            prefetch::<PF>(t, lanes[active].row);
+        }
+        queued += 1;
+        active += 1;
+    }
+    if active == L {
+        // While every lane is busy, lane k's row and its staged bytes are in its column
+        // tile[k]: offset j's step reads the row at j and stores one value, which holds
+        // the byte and the row at j + 1. A marked lane stores nothing: its row is still the
+        // one at j, until a take seeds j + 1. The lane's segment has its bytes from st[k];
+        // they are copied to its buffer at p when the chunk ends or the segment does, as
+        // in master's staged walk.
+        let mut tile: [C; L] = [C::ZERO; L];
+        for (k, l) in lanes.iter().enumerate() {
+            // SAFETY: offset 0 is inside the column
+            unsafe { C::seed(&mut tile[k], 0, l.row) };
+        }
+        let flush = |l: &mut Lane, col: &C, from: usize, to: usize| {
+            let len = to - from;
+            // SAFETY: from..to is inside the chunk; the lane's buffer has room for the
+            // chunk's bytes (the pass's room, as for the unstaged writes), so p + len is at
+            // most its end
+            debug_assert!(from <= to && to <= C::W);
+            debug_assert!(len <= unsafe { l.end.offset_from(l.p) } as usize);
+            unsafe {
+                C::flush(col, from, to, l.p);
+                l.p = l.p.add(len);
+            }
+        };
+        'full: loop {
+            let mut room = cap - 1;
+            for l in lanes.iter_mut() {
+                if l.p == l.end {
+                    grow(l, bufs);
+                }
+                room = room.min(unsafe { l.end.offset_from(l.p) } as usize);
+            }
+            debug_assert!(room > 0);
+            if lanes
+                .iter()
+                .any(|l| unsafe { l.end.offset_from(l.p) } as usize == room)
+            {
+                transition!(PASS_ENDS_FULL);
+            }
+            let mut done = 0;
+            if room > C::W {
+                transition!(ROOM_OVER_TILE);
+            }
+            while done < room {
+                let w = (room - done).min(C::W);
+                let mut st = [0usize; L];
+                for j in 0..w {
+                    let mut marked: u64 = 0;
+                    let tp = tile.as_mut_ptr();
+                    macro_rules! ostep {
+                        ($k:expr) => {{
+                            let k = $k;
+                            // SAFETY: k < L; j < w <= C::W; rows are below n (TVector)
+                            unsafe {
+                                let c = tp.add(k);
+                                let q = *t.add(C::row(c, j) as usize);
+                                if q & START != 0 {
+                                    cold();
+                                    marked |= 1 << k;
+                                } else {
+                                    C::put(c, j, q);
+                                    if PF != PF_OFF {
+                                        prefetch::<PF>(t, q >> 8);
+                                    }
+                                }
+                            }
+                        }};
+                    }
+                    let mut c = 0;
+                    while c + 8 <= L {
+                        ostep!(c);
+                        ostep!(c + 1);
+                        ostep!(c + 2);
+                        ostep!(c + 3);
+                        ostep!(c + 4);
+                        ostep!(c + 5);
+                        ostep!(c + 6);
+                        ostep!(c + 7);
+                        c += 8;
+                    }
+                    while c < L {
+                        ostep!(c);
+                        c += 1;
+                    }
+                    if marked != 0 && j == 0 && done > 0 {
+                        transition!(MARK_AT_LATER_CHUNK_START);
+                    }
+                    #[cfg(test)]
+                    if marked.count_ones() > 1 {
+                        transition!(MARKED_SEVERAL);
+                    }
+                    #[cfg(test)]
+                    let mut took = false;
+                    while marked != 0 {
+                        let k = marked.trailing_zeros() as usize;
+                        marked &= marked - 1;
+                        let l = &mut lanes[k];
+                        // the start it ran into (its row at j: it did not step)
+                        // SAFETY: j < w <= C::W
+                        l.row = unsafe { C::row(&tile[k], j) };
+                        if st[k] > 0 {
+                            transition!(DONE_IN_TAKING_CHUNK);
+                        }
+                        // its segment's bytes end before offset j
+                        flush(l, &tile[k], st[k], j);
+                        finish(l, bufs, next);
+                        if queued == ns {
+                            // Every lane but this one and the marked ones after it has its
+                            // row at j + 1 in its column: an unmarked lane's next row, an
+                            // earlier marked lane's new segment's. Those did not step, so
+                            // their row is the one at j: their segment's end, for the tail,
+                            // without a byte at j. Every other lane has its byte at j.
+                            for (i, li) in lanes.iter_mut().enumerate() {
+                                let waiting = marked >> i & 1 != 0;
+                                let at = if i == k || waiting { j } else { j + 1 };
+                                // SAFETY: at <= w <= C::W
+                                li.row = unsafe { C::row(&tile[i], at) };
+                                if i != k {
+                                    flush(li, &tile[i], st[i], j + usize::from(!waiting));
+                                    #[cfg(test)]
+                                    if i > k && !waiting {
+                                        if li.p == li.end {
+                                            transition!(LATER_STEPPED_FULL);
+                                        }
+                                        // SAFETY: the lane's row is below n
+                                        if unsafe { *t.add(li.row as usize) } & START != 0 {
+                                            transition!(LATER_STEPPED_ON_START);
+                                        }
+                                    }
+                                }
+                            }
+                            transition!(FULL_PHASE_ENDS_MID_PASS);
+                            #[cfg(test)]
+                            {
+                                if j == 0 && done > 0 {
+                                    transition!(EXHAUSTED_AT_CHUNK_START);
+                                }
+                                if j + 1 == w && done + w < room {
+                                    transition!(EXHAUSTED_AT_CHUNK_END);
+                                }
+                                if done + j + 1 == room {
+                                    transition!(EXHAUSTED_AT_PASS_END);
+                                }
+                                if marked != 0 {
+                                    transition!(ENDS_WITH_LANES_WAITING);
+                                }
+                                if took {
+                                    transition!(ENDS_AFTER_A_TAKE);
+                                }
+                            }
+                            break 'full;
+                        }
+                        transition!(MID_PASS_TAKES);
+                        *l = take(queued, bufs);
+                        // SAFETY: j + 1 <= w <= C::W
+                        unsafe { C::seed(&mut tile[k], j + 1, l.row) };
+                        if PF != PF_OFF {
+                            prefetch::<PF>(t, l.row);
+                        }
+                        queued += 1;
+                        // its first byte is in its buffer; its next, at offset j + 1, is
+                        // staged
+                        st[k] = j + 1;
+                        #[cfg(test)]
+                        {
+                            took = true;
+                            if j + 1 == w {
+                                transition!(TAKE_AT_CHUNK_END);
+                            }
+                            if done > 0 {
+                                transition!(TAKE_IN_LATER_CHUNK);
+                            }
+                        }
+                    }
+                }
+                for (k, l) in lanes.iter_mut().enumerate() {
+                    flush(l, &tile[k], st[k], w);
+                    // the next chunk's seed: the row at offset w
+                    // SAFETY: w <= C::W
+                    unsafe {
+                        let c = &mut tile[k] as *mut C;
+                        C::seed(c, 0, C::row(c, w));
+                    }
+                }
+                done += w;
+            }
+        }
+    }
+    let mut live: Vec<Lane> = lanes[..active]
+        .iter()
+        .copied()
+        .filter(|l| next_unset(l, next))
+        .collect();
+    for l in live.iter_mut() {
+        if l.p == l.end {
+            transition!(TAIL_ENTERED_FULL);
+            grow(l, bufs);
+        }
+        debug_assert!(l.p < l.end);
+    }
+    while !live.is_empty() {
+        let mut i = 0;
+        while i < live.len() {
+            let l = &mut live[i];
+            let q = unsafe { *t.add(l.row as usize) };
+            if q & START != 0 {
+                finish(l, bufs, next);
+                live.swap_remove(i);
+                continue;
+            }
+            l.row = q >> 8;
+            if PF != PF_OFF {
+                prefetch::<PF>(t, l.row);
+            }
+            unsafe {
+                *l.p = q as u8;
+                l.p = l.p.add(1);
+            }
+            if l.p == l.end {
+                grow(l, bufs);
+            }
+            i += 1;
+        }
+    }
+    for &r in starts {
+        tt.0[r as usize] &= LINK;
+    }
+    s.first = seg_of(r0);
+    s.n = n;
+}
+
 /// `walk_segments_flagged_with_prefetch` with 0.1.5's switch: `PF` prefetches each lane's
 /// next entry into L1 (`PF_L1`, 0.1.5's prefetch) or not at all (`PF_OFF`). Kept so that
 /// 0.1.5's callers build unchanged.
@@ -1371,6 +1871,14 @@ pub(crate) mod tests {
             }
             // the flags are taken off again: the T-vector is as build left it
             assert!(tt.0.iter().all(|&e| e & START == 0));
+            // the one-store walks, at the same segment counts
+            for segments in [2, 40, 512, 4096] {
+                for (name, f32, f5) in ONE_STORE {
+                    let what = format!("{name}, orig_ptr {orig_ptr}, {segments} segments");
+                    check_one(f32, &mut tt, orig_ptr, segments, &plain, &mut seg, &what);
+                    check_one(f5, &mut tt, orig_ptr, segments, &plain, &mut seg, &what);
+                }
+            }
             // other lane and segment counts, with and without the prefetch
             for segments in [1, 256, 1024] {
                 walk_segments_flagged_with_prefetch::<12, PF_OFF>(
@@ -1986,6 +2494,473 @@ pub(crate) mod tests {
                 );
                 assert!(plain == out, "flagged walk, {segments} segments");
                 check_segments(&tt, &seg, "flagged walk");
+            }
+        }
+    }
+
+    type Walk = fn(&mut TVector, u32, &mut Vec<u8>, &mut SegScratch, usize);
+
+    /// The one-store room walks (`room_segments_one`), one per tile: as the sweep calls
+    /// them (32 lanes, L1 prefetch) and at 5 lanes without, as the room walk's tests call it
+    const ONE_STORE: [(&str, Walk, Walk); 2] = [
+        (
+            "one-store words",
+            walk_segments_room_onestore_with_prefetch::<32, PF_L1>,
+            walk_segments_room_onestore_with_prefetch::<5, PF_OFF>,
+        ),
+        (
+            "one-store bytes",
+            walk_segments_room_onestore_bytes_with_prefetch::<32, PF_L1>,
+            walk_segments_room_onestore_bytes_with_prefetch::<5, PF_OFF>,
+        ),
+    ];
+
+    type Counter = &'static std::thread::LocalKey<std::cell::Cell<usize>>;
+
+    /// Every transition the room walk counts, so a test can tell which kernel reached
+    /// which when several run in one loop
+    fn transitions() -> [(&'static str, Counter); 18] {
+        [
+            ("a buffer grown", &GROWS),
+            ("a pass ending with a buffer full", &PASS_ENDS_FULL),
+            ("a segment taken mid-pass", &MID_PASS_TAKES),
+            ("the full phase ending mid-pass", &FULL_PHASE_ENDS_MID_PASS),
+            ("a lane coming into the tail full", &TAIL_ENTERED_FULL),
+            ("several lanes marked at one offset", &MARKED_SEVERAL),
+            (
+                "the queue running out with lanes waiting",
+                &ENDS_WITH_LANES_WAITING,
+            ),
+            ("the queue running out after a take", &ENDS_AFTER_A_TAKE),
+            ("a stepped later lane leaving full", &LATER_STEPPED_FULL),
+            (
+                "a stepped later lane leaving on its segment's end",
+                &LATER_STEPPED_ON_START,
+            ),
+            ("a pass of more than one chunk", &ROOM_OVER_TILE),
+            ("a take at a chunk's last offset", &TAKE_AT_CHUNK_END),
+            ("a take in a later chunk", &TAKE_IN_LATER_CHUNK),
+            (
+                "a segment taken and finished in one chunk",
+                &DONE_IN_TAKING_CHUNK,
+            ),
+            (
+                "a lane marked at a later chunk's first offset",
+                &MARK_AT_LATER_CHUNK_START,
+            ),
+            (
+                "the queue running out at a later chunk's first offset",
+                &EXHAUSTED_AT_CHUNK_START,
+            ),
+            (
+                "the queue running out at a chunk's last offset",
+                &EXHAUSTED_AT_CHUNK_END,
+            ),
+            (
+                "the queue running out at a pass's last offset",
+                &EXHAUSTED_AT_PASS_END,
+            ),
+        ]
+    }
+
+    /// Each kernel's own counts of the transitions, over the calls `run` made of it
+    #[derive(Default)]
+    struct Reached([usize; 18]);
+
+    impl Reached {
+        /// `f` run, the transitions it reached added to these counts
+        fn run(&mut self, f: impl FnOnce()) {
+            let before: Vec<usize> = transitions().iter().map(|&(_, c)| count(c)).collect();
+            f();
+            for (i, &(_, c)) in transitions().iter().enumerate() {
+                self.0[i] += count(c) - before[i];
+            }
+        }
+        /// The count of the transition `transitions` names `name` (by name: a
+        /// thread-local's key is a constant, so two references to it need not be one
+        /// address, and under Miri are not)
+        fn get(&self, name: &str) -> usize {
+            let i = transitions()
+                .iter()
+                .position(|&(n, _)| n == name)
+                .unwrap_or_else(|| panic!("no transition named {name:?}"));
+            self.0[i]
+        }
+        /// Every one of `required` (by name) reached
+        fn assert(&self, what: &str, required: &[&str]) {
+            for &name in required {
+                assert!(self.get(name) > 0, "{what}: never reached: {name}");
+            }
+        }
+    }
+
+    /// The room walk's handoff transitions (`assert_reached`'s)
+    fn handoffs() -> [&'static str; 5] {
+        [
+            "a buffer grown",
+            "a pass ending with a buffer full",
+            "a segment taken mid-pass",
+            "the full phase ending mid-pass",
+            "a lane coming into the tail full",
+        ]
+    }
+
+    /// `f`'s output against `walk`'s and its segments against the oracle's, the flags
+    /// taken off again
+    fn check_one(
+        f: Walk,
+        tt: &mut TVector,
+        orig_ptr: u32,
+        segments: usize,
+        plain: &[u8],
+        seg: &mut SegScratch,
+        what: &str,
+    ) {
+        let mut out = Vec::new();
+        f(tt, orig_ptr, &mut out, seg, segments);
+        assert!(out == plain, "{what}");
+        if !tt.0.is_empty() {
+            check_segments(tt, seg, what);
+        }
+        assert!(tt.0.iter().all(|&e| e & START == 0), "{what}: a flag left");
+    }
+
+    /// The one-store walks on `room_walk_short_cycles`'s columns: cycles of one and two
+    /// rows, segments of one or two bytes ending in every round of a pass
+    #[test]
+    fn onestore_short_cycles() {
+        let n = MIN_SEGMENTED + 77;
+        for ll in [
+            vec![3u8; n],
+            (0..n).map(|i| (i % 2) as u8).collect::<Vec<u8>>(),
+        ] {
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut seg) = (Vec::new(), SegScratch::default());
+            for orig_ptr in [0, 1, n as u32 / 2, n as u32 - 1] {
+                walk(&tt, orig_ptr, &mut plain);
+                for segments in [33, 64, 512, 4096] {
+                    for (name, f32, f5) in ONE_STORE {
+                        let what = format!("{name}, orig_ptr {orig_ptr}, {segments} segments");
+                        check_one(f32, &mut tt, orig_ptr, segments, &plain, &mut seg, &what);
+                        check_one(f5, &mut tt, orig_ptr, segments, &plain, &mut seg, &what);
+                    }
+                }
+            }
+        }
+    }
+
+    /// The one-store walks on `room_walk_crafted_permutations`'s 20,000 columns (the same
+    /// generator and seed: random columns over 1 to 256 symbols, periodic ones, random
+    /// primary indices), each at the production room walk's settings (32 lanes, L1, 512
+    /// segments), each found to reach every handoff transition on its own
+    #[test]
+    fn onestore_crafted_permutations() {
+        let mut x = 99u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        let mut reached = [Reached::default(), Reached::default()];
+        for case in 0..20000 {
+            let n = MIN_SEGMENTED + rnd(200_000) as usize;
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let mut ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            if case % 5 == 0 {
+                let p = 1 + rnd(5) as usize;
+                for i in p..n {
+                    ll[i] = ll[i % p];
+                }
+            }
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let mut plain = Vec::new();
+            walk(&tt, orig_ptr, &mut plain);
+            for ((name, f32, _), r) in ONE_STORE.into_iter().zip(&mut reached) {
+                // each tile its own scratch: buffers one tile grew would leave the other
+                // none to grow
+                let mut seg = SegScratch::default();
+                let what = format!("{name}, case {case} n {n} alphabet {alphabet}");
+                r.run(|| {
+                    check_one(
+                        f32,
+                        &mut tt,
+                        orig_ptr,
+                        FLAGGED_SEGMENTS,
+                        &plain,
+                        &mut seg,
+                        &what,
+                    )
+                });
+            }
+        }
+        for ((name, _, _), r) in ONE_STORE.into_iter().zip(&reached) {
+            r.assert(name, &handoffs());
+        }
+    }
+
+    /// The one-store walks on `room_walk_deferred_handovers`'s 20,000 small columns (the
+    /// same generator, seed and segment counts), at 32 lanes and at 5: each reaches every
+    /// interleaving of the handovers that test requires
+    #[test]
+    fn onestore_deferred_handovers() {
+        let mut x = 0x2545_f491_4f6c_dd1du64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        let mut reached = [Reached::default(), Reached::default()];
+        for case in 0..20000 {
+            let n = 64 + rnd(if case % 3 == 0 { 600 } else { 3000 }) as usize;
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let mut plain = Vec::new();
+            walk(&tt, orig_ptr, &mut plain);
+            let segments = if case % 2 == 0 {
+                33 + rnd(32) as usize
+            } else {
+                2 + rnd(n as u64 / 2) as usize
+            };
+            for ((name, f32, f5), r) in ONE_STORE.into_iter().zip(&mut reached) {
+                // each tile its own scratch: buffers one tile grew would leave the other
+                // none to grow
+                let mut seg = SegScratch::default();
+                r.run(|| {
+                    let what = format!("{name}, 32 lanes, case {case}");
+                    check_one(f32, &mut tt, orig_ptr, segments, &plain, &mut seg, &what);
+                    let what = format!("{name}, 5 lanes, case {case}");
+                    check_one(f5, &mut tt, orig_ptr, segments, &plain, &mut seg, &what);
+                });
+            }
+        }
+        for ((name, _, _), r) in ONE_STORE.into_iter().zip(&reached) {
+            r.assert(
+                name,
+                &[
+                    "several lanes marked at one offset",
+                    "the queue running out with lanes waiting",
+                    "the queue running out after a take",
+                    "a stepped later lane leaving on its segment's end",
+                ],
+            );
+        }
+    }
+
+    /// The one-store walks on `room_walk_staged_chunk_edges`'s columns (the same generator
+    /// and seed), at 32 lanes and at 5, until each tile has reached every chunk edge that
+    /// test requires (its own chunk: 64 offsets in the word tile, 240 in the byte tile)
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    fn onestore_staged_chunk_edges() {
+        let required = [
+            "a pass of more than one chunk",
+            "a take at a chunk's last offset",
+            "a take in a later chunk",
+            "a segment taken and finished in one chunk",
+            "a lane marked at a later chunk's first offset",
+            "the queue running out at a later chunk's first offset",
+            "the queue running out at a chunk's last offset",
+            "the queue running out at a pass's last offset",
+            "a segment taken mid-pass",
+        ];
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        let mut reached = [Reached::default(), Reached::default()];
+        let all = |reached: &[Reached; 2]| {
+            reached
+                .iter()
+                .all(|r| required.iter().all(|&c| r.get(c) > 0))
+        };
+        let mut cases = 0;
+        while cases < 20000 && !all(&reached) {
+            cases += 1;
+            let n = 4000 + rnd(28000) as usize;
+            let alphabet = 1 + rnd(if cases % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let mut plain = Vec::new();
+            walk(&tt, orig_ptr, &mut plain);
+            let segments = 33 + rnd((n / 150) as u64) as usize;
+            for ((name, f32, f5), r) in ONE_STORE.into_iter().zip(&mut reached) {
+                // each tile its own scratch: buffers one tile grew would leave the other
+                // none to grow
+                let mut seg = SegScratch::default();
+                r.run(|| {
+                    let what = format!("{name}, 32 lanes, case {cases}");
+                    check_one(f32, &mut tt, orig_ptr, segments, &plain, &mut seg, &what);
+                    let what = format!("{name}, 5 lanes, case {cases}");
+                    check_one(f5, &mut tt, orig_ptr, segments, &plain, &mut seg, &what);
+                });
+            }
+        }
+        for ((name, _, _), r) in ONE_STORE.into_iter().zip(&reached) {
+            r.assert(&format!("{name} in {cases} cases"), &required);
+        }
+    }
+
+    /// A block of more than 2^23 rows is refused by the one-store walk, in either tile
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    #[should_panic(expected = "at most 2^23 rows")]
+    fn onestore_words_refuses_more_than_2_23_rows() {
+        let n = (1 << 23) + 1;
+        let mut tt = TVector((0..n as u32).map(|r| r << 8).collect());
+        let (mut out, mut seg) = (Vec::new(), SegScratch::default());
+        walk_segments_room_onestore_with_prefetch::<32, PF_L1>(&mut tt, 0, &mut out, &mut seg, 64);
+    }
+
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    #[should_panic(expected = "at most 2^23 rows")]
+    fn onestore_bytes_refuses_more_than_2_23_rows() {
+        let n = (1 << 23) + 1;
+        let mut tt = TVector((0..n as u32).map(|r| r << 8).collect());
+        let (mut out, mut seg) = (Vec::new(), SegScratch::default());
+        walk_segments_room_onestore_bytes_with_prefetch::<32, PF_L1>(
+            &mut tt, 0, &mut out, &mut seg, 64,
+        );
+    }
+
+    /// The one-store walks on `segmented_walks_on_any_length`'s lengths (the same
+    /// generator): every length edge, at segment counts below, at and above the lanes
+    #[test]
+    fn onestore_on_any_length() {
+        let mut x = 7u64;
+        for n in [
+            1,
+            2,
+            3,
+            31,
+            32,
+            33,
+            100,
+            1000,
+            MIN_SEGMENTED - 1,
+            MIN_SEGMENTED,
+            MIN_SEGMENTED + 1,
+        ] {
+            let ll: Vec<u8> = (0..n)
+                .map(|_| {
+                    x ^= x << 13;
+                    x ^= x >> 7;
+                    x ^= x << 17;
+                    (x % 3) as u8
+                })
+                .collect();
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut seg) = (Vec::new(), SegScratch::default());
+            for orig_ptr in [0, n as u32 / 2, n as u32 - 1] {
+                walk(&tt, orig_ptr, &mut plain);
+                for segments in [1, 2, 33, 256] {
+                    for (name, f32, f5) in ONE_STORE {
+                        let what = format!("{name}, n {n}, {segments} segments");
+                        check_one(f32, &mut tt, orig_ptr, segments, &plain, &mut seg, &what);
+                        check_one(f5, &mut tt, orig_ptr, segments, &plain, &mut seg, &what);
+                    }
+                }
+            }
+        }
+        // and an empty block: no output
+        let mut tt = TVector::new();
+        let (mut out, mut seg) = (vec![1u8], SegScratch::default());
+        for (_, f32, f5) in ONE_STORE {
+            f32(&mut tt, 0, &mut out, &mut seg, 512);
+            assert!(out.is_empty());
+            out.push(1);
+            f5(&mut tt, 0, &mut out, &mut seg, 512);
+            assert!(out.is_empty());
+        }
+    }
+
+    /// For Miri (`cargo +nightly miri test --lib -- miri_`): the one-store walks' unsafe
+    /// code (each tile's unaligned or packed loads and stores, its seeds and flushes) on
+    /// `miri_room_walk_handoffs`'s blocks, each tile found to reach every handoff
+    /// transition, and on its degenerate columns
+    #[test]
+    fn miri_onestore_handoffs() {
+        let mut reached = [Reached::default(), Reached::default()];
+        for seed in [170_778u64, 8_824] {
+            let mut x = seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1;
+            let mut rnd = move |m: u64| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                x % m
+            };
+            let n = 200 + rnd(4000) as usize;
+            let alphabet = 1 + rnd(if seed % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let mut plain = Vec::new();
+            walk(&tt, orig_ptr, &mut plain);
+            for ((name, f32, _), r) in ONE_STORE.into_iter().zip(&mut reached) {
+                // each tile its own scratch: buffers one tile grew would leave the other
+                // none to grow
+                let mut seg = SegScratch::default();
+                let what = format!("{name}, seed {seed}");
+                r.run(|| check_one(f32, &mut tt, orig_ptr, 256, &plain, &mut seg, &what));
+            }
+        }
+        for ((name, _, _), r) in ONE_STORE.into_iter().zip(&reached) {
+            r.assert(name, &handoffs());
+        }
+        let n = 600;
+        for ll in [vec![3u8; n], (0..n).map(|i| (i % 2) as u8).collect()] {
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut seg) = (Vec::new(), SegScratch::default());
+            walk(&tt, 1, &mut plain);
+            for segments in [33, 256] {
+                for (name, f32, _) in ONE_STORE {
+                    let what = format!("{name}, {segments} segments");
+                    check_one(f32, &mut tt, 1, segments, &plain, &mut seg, &what);
+                }
             }
         }
     }

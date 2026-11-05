@@ -26,6 +26,17 @@
 //! would charge each setting's segment count on blocks of tens of rows, which no decode pays
 //! (`docs/journal/2026-11-05-segment-cost.md`).
 //!
+//! Two more settings are the room walk with one store a step (`bwt::
+//! walk_segments_room_onestore_with_prefetch` and its byte-tile twin), at 32 lanes, L1
+//! prefetch, 512 segments: master's busy-phase step stores twice, its byte into the tile
+//! and its row into the lanes' rows; these stage the entry it read (its byte and the lane's
+//! next row together) in the lane's tile column and read the row back from it. `room1w`
+//! stages it as a u32 in a 64-offset word tile, its bytes packed at the flush; `room1b`
+//! stores it as a u64 one byte along a 240-offset byte tile, so the row is read back with no
+//! shift and the bytes are left packed. Each is paired by round against the default like
+//! any setting: under SMT the store queue is statically partitioned between the siblings,
+//! so their four-copy rows test whether the step's share of it binds.
+//!
 //! Where the kernel lets a process count its own events (Linux on x86_64, a PMU exposed to
 //! the machine, `perf_event_paranoid` at 2 or below), one more round, untimed, counts each
 //! setting's instructions, cycles, last-level cache misses and back-end stall cycles, as
@@ -35,8 +46,10 @@
 use std::time::Instant;
 
 use mibz2::bwt::{
-    build, walk, walk_segments_flagged_with_prefetch, walk_segments_room_with_prefetch, SegScratch,
-    TVector, MIN_SEGMENTED, PF_L1, PF_L2, PF_NTA, PF_OFF,
+    build, walk, walk_segments_flagged_with_prefetch,
+    walk_segments_room_onestore_bytes_with_prefetch, walk_segments_room_onestore_with_prefetch,
+    walk_segments_room_with_prefetch, SegScratch, TVector, MIN_SEGMENTED, PF_L1, PF_L2, PF_NTA,
+    PF_OFF,
 };
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{mtf, rle, Kernels};
@@ -118,6 +131,25 @@ fn main() {
             pf: PF_L1,
             segments,
             f: walk_segments_room_with_prefetch::<32, PF_L1>,
+        });
+    }
+    // The room walk with one store a step, at the default's lanes, prefetch and segments
+    for (walk, f) in [
+        (
+            "room1w",
+            walk_segments_room_onestore_with_prefetch::<32, PF_L1> as Walk,
+        ),
+        (
+            "room1b",
+            walk_segments_room_onestore_bytes_with_prefetch::<32, PF_L1>,
+        ),
+    ] {
+        settings.push(Setting {
+            walk,
+            lanes: 32,
+            pf: PF_L1,
+            segments: 512,
+            f,
         });
     }
     let default = settings
