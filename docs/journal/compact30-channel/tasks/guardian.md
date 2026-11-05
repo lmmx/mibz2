@@ -17,7 +17,7 @@ You are the compact30 Guardian (ACTIVE, stage A) for lmmx/mibz2.
    - otherwise act on it by its `TYPE:`, as below.
 3. **Commit a receipt first:** a cursor entry marking the comment in progress. Then commit your
    findings as you go, so an interrupted run can be resumed.
-4. **Publish one `TYPE: REVIEW` comment on PR #145,** the shared channel, never on an inbox. It
+4. **For a comment you act on, publish one `TYPE: REVIEW` comment on PR #145,** the shared channel, never on an inbox. It
    links your published work and cites the comment it answers.
 5. **Record the comment as completed,** with your reply's ID, in the cursor. Then stop.
 
