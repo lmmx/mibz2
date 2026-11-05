@@ -1,6 +1,7 @@
 """paired.py RESULTS.jsonl BASE : each decoder's wall and CPU against BASE's, paired by
 round (interleaved runs only: rounds 1.., run 0 hashed). The geometric mean of the
 per-round ratios and its 95% interval (t, rounds - 1 degrees of freedom). < 1 is faster."""
+
 import json, math, statistics as st, sys
 from collections import defaultdict
 
@@ -13,7 +14,13 @@ def main() -> None:
     groups = defaultdict(dict)
     for r in recs:
         groups[(r["workload"], r["threads"])][r["decoder"]] = r
-    print("| workload | threads | decoder | wall / " + base + " (95% CI) | CPU / " + base + " (95% CI) |")
+    print(
+        "| workload | threads | decoder | wall / "
+        + base
+        + " (95% CI) | CPU / "
+        + base
+        + " (95% CI) |"
+    )
     print("|---|--:|---|--:|--:|")
     for (w, t), g in groups.items():
         if base not in g:

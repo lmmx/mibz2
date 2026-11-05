@@ -8,6 +8,7 @@ stream: "BZh9", the blocks' bits, the end-of-stream magic, the combined CRC (eac
 stored CRC, rotated in as bzip2 does) and padding to a byte. The decoders check every
 block's CRC, so a false magic match (2^-48 a bit) cannot pass unnoticed.
 """
+
 import sys
 
 BLOCK, EOS = 0x314159265359, 0x177245385090
