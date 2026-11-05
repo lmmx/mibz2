@@ -54,6 +54,24 @@ not only the part a campaign optimised.
 PR #155 is why: its constructor saved 19.5% of its instructions, its walk added 31%, and CI
 measured the decoder 7–19% slower.
 
+**Before implementing a candidate, and again before integrating it,** retrieve its prior record
+(Louis, 2026-11-04). The record is the research blog and the research register
+(`docs/research-portfolio`).
+- **Read the decisive evidence itself,** the results table, the verdict and the controls,
+  never a truncated search excerpt. Recover the mechanism, earlier implementations, measured
+  outcomes, grounds for rejection and outstanding falsifiers.
+- **The PR says** whether the change is a new construction or a re-test of a line already
+  tried, and what in it could change the earlier verdict.
+- **At the merge,** weigh every flagged row, the controls included. A regression the bench
+  didn't detect isn't thereby harmless, and a flagged one is weighed, not waved through.
+  Passing the gate is not the same as meeting the standing objective.
+- **This is sequencing, not permission.** The steward doesn't wait for other agents to do it.
+
+PR #157 is why: it re-tested the direction of the 1 November walk-unroll trial without citing
+it, and reproduced that trial's shape (a one-worker gain, none detected at four, a control
+costing more). The record had the result. Its search had been cut
+short before the table that held it.
+
 **Docs-only and measurement-only changes** merge when CI is green and nothing measured
 changed that wasn't meant to.
 
@@ -110,6 +128,27 @@ identity, as for every prior release. That is the repository's release mechanism
 AI-attributed commit. Every other commit is the maintainer's: Louis Maddox
 <louismmx@gmail.com>, with no AI attribution in commits, PR bodies, release notes or
 metadata.
+
+## Research publication
+
+The work is made visible as it develops, not only after a breakthrough or a release (Louis,
+2026-11-04). This is a standing responsibility, and routine posts need no approval.
+- **The Researcher** originates and writes substantive posts: discoveries, constructions,
+  counterexamples, unexpected results and open questions. They are original explanations, not
+  summaries of checkpoints.
+- **The steward** owns editorial synthesis and publication. It writes posts, carries the
+  Researcher's posts to readers, and maintains the blog (`docs/site/blog/`, its index, the
+  navigation in `zensical.toml`, and the social cards from `docs/scripts/social_cards.py`).
+- **When to publish:** at meaningful milestones, negative results and changes of direction
+  included. Not every experiment, and on no fixed schedule.
+- **What a post must do:** put the evidence first and link the reproducible records. Keep
+  hypotheses apart from measurements, and never present an unqualified result as a production
+  improvement. Write for readers outside the team: the problem, the idea, what was measured,
+  what was learned and what remains open. Technical depth, not procedural chronicle or
+  promotion.
+- **How it ships:** through the docs-only gate above (CI green, `docs/scripts/check_site.py`
+  clean), under the standing attribution rule. There is no new approval process, and no extra
+  runs: the writing follows from the research, and doesn't interrupt it.
 
 ## What stays with the maintainer
 
