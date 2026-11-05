@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3](https://github.com/lmmx/mibz2/compare/v0.2.2...v0.2.3) - 2026-11-05
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.2.2's notes from its paired run against 0.2.1 ([#210](https://github.com/lmmx/mibz2/pull/210))
+- *(blog)* the Huffman post builds the reader's model first; the writing skill learns why ([#208](https://github.com/lmmx/mibz2/pull/208))
+
 ## [0.2.2](https://github.com/lmmx/mibz2/compare/v0.2.1...v0.2.2) - 2026-11-05
 
 The inverse BWT's walk, the move-to-front decode and the Huffman scanner are each faster,
