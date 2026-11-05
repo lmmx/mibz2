@@ -105,3 +105,19 @@ Goal wake-up is assumed.
 ## Pinned update: comment 6640153383 (D013 reconciliation)
 
 [Assembly 1 signed-bridge audit](reviews/checkpoint-6640153383/report.md) and [machine-readable arithmetic](reviews/checkpoint-6640153383/bridge-audit.json) reproduce the pinned reconciliation at `95977867fdf318b3f66420c383a73d9c48b36740`. The exact own-code identity is scanner `−84,060,421` + descriptor `−58,209,045` + v3 finish group `−60,212,114` + build nonadditivity `−56,391,637` = `−258,873,217`; refill is exactly additive. The nonadditivity partitions into unroll `−66,676,611`, outer head `−12,015,336`, S-class cost `+19,146,504`, and remaining cost `+3,153,806`. Added library work 378,882 and the upper-only removed memcpy 4,454,576 yield `[258,494,335, 262,948,911]`. This bridge explains existing credit and is never added again. Registered O remains 2,393,313; the further 3,654 is not used. Gate-3 arithmetic passes in the checked scope; Guardian D013's qualification HOLD, the raw-profile completeness limitation, and the absence of any economic PASS remain explicit.
+
+
+## Current production ranking: inbox 6645643541 (resumes 6645304470)
+
+[Whole-decoder ranking and corrected parity arithmetic](reviews/inbox-6645643541/report.md), baseline **08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7**. These rows are a separate production scope, not additions to frozen B2 constructor credits.
+
+| Priority / ID | Status | Current whole-decoder model | Evidence boundary |
+|---|---|---|---|
+| 1 / C11 P87 | CONDITIONAL, zero new verified credit | Modest historical total benefit; current instruction and timing delta unknown | Closed positive diagnostic, engineering NOT DEMONSTRATED; production reuse plus allocation removal needs its own validation |
+| 2 / C12 true tiled B | CONDITIONAL, zero credit | Eligible rows × incremental work reduction minus replay/tail/setup/rest | Unbuilt; #157 is not B; old 10–11% model cannot transfer |
+| 3 / C13 handoff | CONDITIONAL diagnostic, zero credit | Direct decode_block delta zero; whole-process and idle effects unknown | 34.7% of Q2, ~11% worker time; convoy plausible not proven |
+| 4 / C14 gather C | CONDITIONAL, zero credit | Incremental to B, with packing, replay and tail charged | Unbuilt; no additive B+C credit |
+| 5 / C15 compact parity | CONDITIONAL target, existing port REJECTED | Block-1 walk ≤10,861,938 Ir, ≤12.0692/row if compact build/rest unchanged | Cross-archive rebase, not new compiled measurement; old 18.26 budget obsolete |
+| 6 / C16 Precopy | Historical REJECTED; deferred | No positive four-worker forecast | Recorded reopening at 8–10 workstation workers, not CI |
+
+P87 ranks first for a production-shaped comparison, not automatic promotion. No unique four-worker limiting mechanism is established on either topology. Earlier unroll is precedent, not identical; no detected gain is not zero benefit. Historical A1–A6 accounting and their qualifications are preserved; no current production gain is obtained by summing them.

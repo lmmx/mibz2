@@ -290,8 +290,9 @@
       "pr": 160,
       "resumes_comment_id": 6645304470,
       "status": "in_progress",
-      "progress": "Read governing roles and reviewer, full causal assessment, attribution with erratum, P87 analysis and closure, production integration, register section 6 and prior Precopy entry. Baseline resolved to 08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7. Rebased compact-table block-1 parity budget is 10,861,938 walk Ir (12.0692/row), conditional on archived build/rest; final ranking pending.",
-      "completed": false
+      "progress": "Ranking and current-baseline accounting complete; publication of report/ledger then REVIEW and completion record pending.",
+      "completed": false,
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6645643541/report.md"
     }
   ]
 }
