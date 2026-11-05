@@ -92,8 +92,8 @@ binary). Two more numbers go with it, and together they are the reader's whole s
 
 Three operations act on it, each a line or two of Rust:
 
-- **Peek** at the next $n$ bits without consuming them: `buf >> (64 - n)`. For the next ten
-  bits that is `buf >> 54`, which moves the top ten bits to the bottom of the number.
+- **Peek** at the next $n$ bits without consuming them: `buf >> (64 - n)`. For the next three
+  bits that is `buf >> 61`, which moves the top three bits to the bottom of the number.
 - **Skip** $n$ bits once a code of that length has been read: `buf <<= n; live -= n;`. The
   code's bits fall off the top, and the next code moves up to take their place.
 - **Refill** when the buffer runs low: load the eight bytes at `pos`, OR them into `buf`
@@ -108,7 +108,7 @@ that code out, so the next one moves to the front.
 <p class="bf-title">Try it: decode the toy bits one code at a time</p>
 <p class="bf-keys"><span class="bf-keys-label">The code:</span> <span class="bf-key" data-code="0">A = <code>0</code></span> <span class="bf-key" data-code="10">B = <code>10</code></span> <span class="bf-key" data-code="110">C = <code>110</code></span> <span class="bf-key" data-code="111">D = <code>111</code></span></p>
 <ol class="bf-bits" aria-label="The buffer's unread bits, first bit on the left"><li class="bf-bit">0</li><li class="bf-bit">1</li><li class="bf-bit">1</li><li class="bf-bit">0</li><li class="bf-bit">1</li><li class="bf-bit">0</li><li class="bf-bit">0</li><li class="bf-bit">1</li><li class="bf-bit">1</li><li class="bf-bit">1</li></ol>
-<p class="bf-bits-note">The buffer, its next unread bit on the left. In green: the bits of the code at the front, and that code in the key above.</p>
+<p class="bf-bits-note">The buffer, its next unread bit on the left. In green: the bits of the code at the front, and that code in the key above. Dotted: room left by bits already shifted out.</p>
 <p class="bf-buf-step" aria-live="polite" hidden></p>
 <dl class="bf-buf-state" hidden><dt>Decoded so far</dt><dd class="bf-buf-out">none yet</dd><dt>Unread bits (<code>live</code>)</dt><dd class="bf-buf-live">10</dd><dt>The last shift, in Rust</dt><dd><code class="bf-buf-shift">nothing shifted yet</code></dd></dl>
 <div class="bf-buttons" hidden><button type="button" class="bf-btn bf-read">Read the next code →</button><button type="button" class="bf-btn bf-reset">Reset</button></div>
@@ -129,7 +129,9 @@ not, it looks at the third. Each bit of a code costs a step, so the toy's ten bi
 
 Fast Huffman decoders, mibz2 among them, replace those steps with a single lookup in a table
 made before decoding starts. The toy's longest code is three bits, so peek at the next three
-bits, whatever they are: `buf >> 61`, the peek from section 1. Three bits have only eight
+bits, whatever they are: `buf >> 61`, the peek from section 1. No code is longer than three
+bits, so the first code is always inside them. A shorter code leaves bits over, and those
+belong to the codes after it. Three bits have only eight
 possible values, and for each one we can work out in advance which codes it begins with:
 
 | Next three bits | They begin with | Bits to skip |
@@ -145,7 +147,8 @@ possible values, and for each one we can work out in advance which codes it begi
 
 The three bits, read as a number from 0 to 7, pick the row. Many rows hold more than one
 code: `010` is A's code `0` followed by B's code `10`. So a row can name two symbols, and one
-lookup then decodes both. When the bits after the first code don't make a whole code, the
+lookup then decodes both. The bits to skip are the lengths of the codes the row names, added
+up: A and B are 1 + 2 = 3 bits. When the bits after the first code don't make a whole code, the
 row names just the one symbol. `011` is an example: its `11` is only the start of C or D, so
 the row says A and skips one bit, and the next lookup sees the rest.
 
@@ -163,7 +166,8 @@ and a table with a row for every 20-bit value would have about a million rows, 4
 far too large for the processor's nearest cache, which holds tens of kilobytes. So mibz2
 peeks at ten bits instead. Its [table has 1,024
 entries](https://github.com/lmmx/mibz2/blob/264ae5bb/src/block.rs#L45-L72) of 32 bits each,
-4 KB in all. Most of bzip2's codes are shorter than ten bits, so most entries are like the
+4 KB in all. Ten bits is a balance: with fewer, more codes would be too long for the table;
+with more, the table would outgrow the cache. Most of bzip2's codes are shorter than ten bits, so most entries are like the
 toy table's rows: one or two symbols, and how many bits to skip.
 
 Ten bits can't settle every case, and two other kinds of entry cover the rest. A code longer
@@ -179,9 +183,10 @@ corrupt.
 <figcaption>Conceptual, drawn just after a refill. The divisions in the bar are bytes. A refill leaves 56 to 63 bits live; four lookups use at most 40 of them.</figcaption>
 </figure>
 
-On the Wikidata sample, about 83% of lookups decode a pair
-([census](https://github.com/lmmx/mibz2/blob/264ae5bb/docs/journal/2026-11-05-binding-census/serial-stages.md)).
-The fast loop refills, makes four lookups, then refills again.
+On the Wikidata sample, about 83% of lookups decode two symbols at once ([our
+counts](https://github.com/lmmx/mibz2/blob/264ae5bb/docs/journal/2026-11-05-binding-census/serial-stages.md)).
+A refill leaves at least 56 bits live, and four lookups use at most 40, so the fast loop
+refills, makes four lookups, then refills again.
 
 One lookup is four steps:
 
