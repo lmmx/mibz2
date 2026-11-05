@@ -372,3 +372,15 @@ Verbatim:
   - Created already complete, it joined that head's finished check suite (113800156742)
     without reopening it, so no `check_suite` event fired and nothing woke the coordinator.
   - **Fix in #188:** the run is opened in progress and then failed.
+- **Tripwire test 3:** comment 6654531225, a no-action misroute testing #188, which opened the
+  check run in progress and then failed it.
+  - Run 42003100178 created check run 127163063522, failure, on #145's head 36372c38.
+  - Its GitHub Actions suite (113814328830) still read "completed, success". An Actions suite
+    follows its workflow run, not check runs added through the API, so no event fired.
+- **#189** (master bab0d603) settled the design:
+  - **The tripwire** is an independent, visible record (a red check on #145), not a wake-up.
+    `GITHUB_TOKEN` can't comment on locked #145, and a comment in an inbox would wake the role.
+  - **The catch** is `coord.py audit`, which the coordinator runs at session start and on
+    every recurring wake-up (CLAUDE.md).
+  - **Audit at bab0d603:** 5 misroutes, 0 open. They are the two real ones (re-dispatched as
+    6653416078) and the three labelled tests.
