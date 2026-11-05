@@ -258,8 +258,10 @@ unsafe fn mtf_avx2(
             result = Err(ErrorKind::BlockTooLong);
             break;
         }
-        // (s - 1 < 256: a symbol is below the alphabet, at most 257)
-        let nn = (s - 1) as usize;
+        // A decoded symbol is below the alphabet (s <= 256 here, so nn <= 255). `Symbols`'
+        // fields are public, so a hand-built one could hold more; clamped, its index stays
+        // inside the list (t <= 223 in `second`), whatever byte it then names
+        let nn = ((s - 1) as usize).min(255);
         if nn < 32 {
             let t = steps.add(nn);
             let a = _mm_load_si128((*t).a.as_ptr() as *const __m128i);
