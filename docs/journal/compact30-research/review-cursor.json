@@ -426,7 +426,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Receipt; pricing tail and auditing scope at 1132857e."
+      "progress": "Pinned journals/source audited; independent harmonic-tail calculation committed. Preparing proposal and scope corrections."
     }
   ]
 }

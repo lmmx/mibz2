@@ -1,0 +1,66 @@
+{
+  "pin": "1132857e18819ce689424dd2df7751630b29522a",
+  "assumptions": "Exponential independent residuals; equal expected bytes at each k=1..32; q=0.057..0.060. Additive fit transferred from census; not measured tail clocks. overlapSensitivity is an uncalibrated max-vs-sum sensitivity, not a second fitted predictor.",
+  "rows": [
+    {
+      "cpu": "9V45 alone",
+      "a": 1.43,
+      "lat": 47.1,
+      "M": 32,
+      "busy": 2.89,
+      "add": [
+        0.2565981890996384,
+        0.2701033569469877
+      ],
+      "overlapSensitivity": [
+        0.2565981890996384,
+        0.2701033569469877
+      ]
+    },
+    {
+      "cpu": "9V74 alone",
+      "a": 2.12,
+      "lat": 52,
+      "M": 22,
+      "busy": 4.27,
+      "add": [
+        0.24923657730137502,
+        0.26235429189618426
+      ],
+      "overlapSensitivity": [
+        0.24923657730137502,
+        0.26235429189618426
+      ]
+    },
+    {
+      "cpu": "9V45 four",
+      "a": 4.49,
+      "lat": 44.6,
+      "M": 22,
+      "busy": 6.44,
+      "add": [
+        0.21376829514694867,
+        0.22501925804941963
+      ],
+      "overlapSensitivity": [
+        0.15276353422619043,
+        0.1608037202380952
+      ]
+    },
+    {
+      "cpu": "9V74 four",
+      "a": 5.68,
+      "lat": 54.8,
+      "M": 16,
+      "busy": 9.08,
+      "add": [
+        0.23238890885156513,
+        0.24461990405427908
+      ],
+      "overlapSensitivity": [
+        0.18508516369047623,
+        0.19482648809523812
+      ]
+    }
+  ]
+}
