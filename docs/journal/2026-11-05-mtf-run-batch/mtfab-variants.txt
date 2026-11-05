@@ -1,0 +1,56 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 14.19s
+== wikidata.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/walk-exp/corpora/wikidata.bz2: 431 blocks, 24979299 symbols, 209706557 ll bytes; all 8 kernels agree on every block
+                  v1/old: mean -14.5% (-15.2, -13.7), min 0.830, max 0.871
+                  v2/old: mean -23.0% (-24.0, -22.0), min 0.751, max 0.802
+               dense/old: mean -16.0% (-17.0, -14.9), min 0.822, max 0.872
+       dense+memmove/old: mean -12.1% (-13.1, -11.1), min 0.850, max 0.899
+          dense+half/old: mean -16.0% (-16.9, -15.1), min 0.818, max 0.871
+  dense+memmove+half/old: mean -12.4% (-13.6, -11.2), min 0.841, max 0.900
+        dense+8chunk/old: mean -14.1% (-15.3, -12.9), min 0.831, max 0.897
+== random.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/random.bz2: 9 blocks, 7999538 symbols, 8000003 ll bytes; all 8 kernels agree on every block
+                  v1/old: mean +25.4% (+23.8, +27.0), min 1.217, max 1.282
+                  v2/old: mean +41.5% (+37.5, +45.5), min 1.329, max 1.514
+               dense/old: mean +33.8% (+30.1, +37.7), min 1.245, max 1.445
+       dense+memmove/old: mean +21.8% (+15.0, +29.0), min 1.129, max 1.556
+          dense+half/old: mean +19.8% (+16.7, +22.9), min 1.107, max 1.268
+  dense+memmove+half/old: mean +18.3% (+15.1, +21.5), min 1.111, max 1.260
+        dense+8chunk/old: mean +52.3% (+48.4, +56.2), min 1.414, max 1.612
+== records.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/records.bz2: 11 blocks, 9599931 symbols, 9600002 ll bytes; all 8 kernels agree on every block
+                  v1/old: mean +20.3% (+16.8, +23.9), min 1.139, max 1.290
+                  v2/old: mean +53.3% (+49.0, +57.7), min 1.463, max 1.645
+               dense/old: mean +51.0% (+47.0, +55.1), min 1.424, max 1.627
+       dense+memmove/old: mean +4.7% (+1.2, +8.3), min 0.971, max 1.137
+          dense+half/old: mean +31.0% (+28.1, +33.9), min 1.237, max 1.375
+  dense+memmove+half/old: mean +6.8% (+3.8, +9.8), min 1.000, max 1.137
+        dense+8chunk/old: mean +46.7% (+43.2, +50.2), min 1.378, max 1.557
+== text.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/text.bz2: 13 blocks, 4587491 symbols, 11230655 ll bytes; all 8 kernels agree on every block
+                  v1/old: mean -29.5% (-31.6, -27.4), min 0.651, max 0.739
+                  v2/old: mean -33.6% (-36.5, -30.6), min 0.595, max 0.736
+               dense/old: mean -30.4% (-32.2, -28.6), min 0.656, max 0.748
+       dense+memmove/old: mean -27.0% (-29.7, -24.2), min 0.656, max 0.800
+          dense+half/old: mean -31.6% (-33.6, -29.5), min 0.648, max 0.763
+  dense+memmove+half/old: mean -28.3% (-30.2, -26.3), min 0.663, max 0.763
+        dense+8chunk/old: mean -27.5% (-29.8, -25.2), min 0.663, max 0.765
+== runs.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/runs.bz2: 1 blocks, 62343 symbols, 254432 ll bytes; all 8 kernels agree on every block
+                  v1/old: mean -1.1% (-10.1, +8.7), min 0.756, max 1.271
+                  v2/old: mean +28.1% (+4.6, +56.8), min 0.819, max 2.311
+               dense/old: mean +26.1% (-5.3, +68.1), min 1.008, max 4.563
+       dense+memmove/old: mean +5.5% (-0.3, +11.7), min 0.926, max 1.243
+          dense+half/old: mean +15.8% (+8.6, +23.4), min 0.978, max 1.371
+  dense+memmove+half/old: mean +2.3% (-3.0, +8.0), min 0.870, max 1.202
+        dense+8chunk/old: mean +4.7% (-2.6, +12.6), min 0.841, max 1.270
+== pattern.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/pattern.bz2: 22 blocks, 2661 symbols, 19600000 ll bytes; all 8 kernels agree on every block
+                  v1/old: mean +5.9% (-7.2, +20.8), min 0.638, max 1.369
+                  v2/old: mean -18.1% (-30.7, -3.2), min 0.423, max 1.103
+               dense/old: mean +1.7% (-12.8, +18.6), min 0.576, max 1.486
+       dense+memmove/old: mean -3.1% (-14.2, +9.5), min 0.610, max 1.157
+          dense+half/old: mean -0.4% (-17.5, +20.4), min 0.521, max 1.836
+  dense+memmove+half/old: mean -6.9% (-18.5, +6.4), min 0.561, max 1.093
+        dense+8chunk/old: mean +2.2% (-18.9, +28.8), min 0.560, max 2.523
+VARIANTS_DONE

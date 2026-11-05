@@ -1,0 +1,30 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 15.03s
+== wikidata.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/walk-exp/corpora/wikidata.bz2: 431 blocks, 24979299 symbols, 209706557 ll bytes; all 3 kernels agree on every block
+                  v2/old: mean -35.6% (-37.2, -34.0), min 0.605, max 0.680
+       v4 (worktree)/old: mean -33.8% (-35.2, -32.4), min 0.628, max 0.690
+== random.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/random.bz2: 9 blocks, 7999538 symbols, 8000003 ll bytes; all 3 kernels agree on every block
+                  v2/old: mean +17.1% (+14.3, +19.8), min 1.100, max 1.252
+       v4 (worktree)/old: mean -7.5% (-9.4, -5.6), min 0.892, max 0.981
+== records.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/records.bz2: 11 blocks, 9599931 symbols, 9600002 ll bytes; all 3 kernels agree on every block
+                  v2/old: mean +1.2% (-0.9, +3.3), min 0.983, max 1.099
+       v4 (worktree)/old: mean +0.1% (-1.7, +1.9), min 0.970, max 1.058
+== text.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/text.bz2: 13 blocks, 4587491 symbols, 11230655 ll bytes; all 3 kernels agree on every block
+                  v2/old: mean -49.9% (-50.5, -49.3), min 0.477, max 0.510
+       v4 (worktree)/old: mean -47.6% (-48.2, -46.9), min 0.502, max 0.535
+== runs.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/runs.bz2: 1 blocks, 62343 symbols, 254432 ll bytes; all 3 kernels agree on every block
+                  v2/old: mean -14.4% (-18.6, -10.1), min 0.738, max 0.942
+       v4 (worktree)/old: mean -6.6% (-11.4, -1.6), min 0.793, max 1.081
+== pattern.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/pattern.bz2: 22 blocks, 2661 symbols, 19600000 ll bytes; all 3 kernels agree on every block
+                  v2/old: mean -5.4% (-9.5, -1.1), min 0.872, max 1.088
+       v4 (worktree)/old: mean -6.1% (-11.5, -0.5), min 0.815, max 1.119
+== onebyte.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/onebyte.bz2: 1 blocks, 41 symbols, 392160 ll bytes; all 3 kernels agree on every block
+                  v2/old: mean +47.0% (+39.1, +55.4), min 1.219, max 1.767
+       v4 (worktree)/old: mean +2.1% (-2.7, +7.2), min 0.853, max 1.143
+HARNESS_DONE

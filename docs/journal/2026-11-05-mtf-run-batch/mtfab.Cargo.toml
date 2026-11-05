@@ -1,0 +1,15 @@
+[package]
+name = "mtfab"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+mibz2 = { path = "/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/mtf-run-batch" }
+
+[profile.release]
+codegen-units = 1
+debug = "line-tables-only"
+lto = "fat"
+
+[workspace]

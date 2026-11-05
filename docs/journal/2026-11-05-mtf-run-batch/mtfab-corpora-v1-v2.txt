@@ -1,0 +1,32 @@
+== corpora: old / v1 / v2 on every block
+-- runs
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/runs.bz2: 1 blocks, 62343 symbols, 254432 ll bytes; old, cur and wt agree on every block
+cur/old: median 0.9762, min 0.9148, max 1.1603
+wt/old: median 1.1371, min 1.0360, max 1.2638
+wt/cur: median 1.1084, min 0.9539, max 1.3379
+-- random
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/random.bz2: 9 blocks, 7999538 symbols, 8000003 ll bytes; old, cur and wt agree on every block
+cur/old: median 1.2798, min 1.2176, max 1.3373
+wt/old: median 1.4192, min 1.3685, max 1.4694
+wt/cur: median 1.1143, min 1.0377, max 1.1431
+-- records
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/records.bz2: 11 blocks, 9599931 symbols, 9600002 ll bytes; old, cur and wt agree on every block
+cur/old: median 1.2325, min 1.1754, max 1.2812
+wt/old: median 1.5766, min 1.4690, max 1.6870
+wt/cur: median 1.2767, min 1.2498, max 1.3304
+-- text
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/text.bz2: 13 blocks, 4587491 symbols, 11230655 ll bytes; old, cur and wt agree on every block
+cur/old: median 0.7081, min 0.6420, max 0.7521
+wt/old: median 0.6627, min 0.6377, max 0.7233
+wt/cur: median 0.9570, min 0.8864, max 1.0120
+-- pattern
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/pattern.bz2: 22 blocks, 2661 symbols, 19600000 ll bytes; old, cur and wt agree on every block
+cur/old: median 0.9888, min 0.9105, max 1.0921
+wt/old: median 0.8129, min 0.6494, max 0.9912
+wt/cur: median 0.8440, min 0.6546, max 0.9175
+-- onebyte
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/onebyte.bz2: 1 blocks, 41 symbols, 392160 ll bytes; old, cur and wt agree on every block
+cur/old: median 1.8181, min 1.7020, max 2.1333
+wt/old: median 1.0560, min 1.0238, max 4.2341
+wt/cur: median 0.5821, min 0.5026, max 2.3393
+FINAL_DONE

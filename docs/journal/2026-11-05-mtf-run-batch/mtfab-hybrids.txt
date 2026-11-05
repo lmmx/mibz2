@@ -1,0 +1,50 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 7.61s
+== wikidata.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/walk-exp/corpora/wikidata.bz2: 431 blocks, 24979299 symbols, 209706557 ll bytes; all 7 kernels agree on every block
+                  v2/old: mean -24.7% (-25.8, -23.5), min 0.723, max 0.778
+  dense+memmove+half/old: mean -11.6% (-12.9, -10.3), min 0.860, max 0.926
+             hyb8 mm/old: mean -21.3% (-22.7, -19.9), min 0.748, max 0.810
+            hyb16 mm/old: mean -21.2% (-22.6, -19.8), min 0.756, max 0.827
+             hyb8 ck/old: mean -21.0% (-22.4, -19.5), min 0.753, max 0.824
+         hyb8 mm big/old: mean -15.9% (-17.0, -14.9), min 0.816, max 0.859
+== random.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/random.bz2: 9 blocks, 7999538 symbols, 8000003 ll bytes; all 7 kernels agree on every block
+                  v2/old: mean +35.4% (+31.7, +39.2), min 1.247, max 1.432
+  dense+memmove+half/old: mean +15.8% (+12.1, +19.7), min 1.075, max 1.239
+             hyb8 mm/old: mean +27.2% (+21.7, +33.0), min 1.148, max 1.471
+            hyb16 mm/old: mean +23.6% (+19.0, +28.4), min 1.134, max 1.327
+             hyb8 ck/old: mean +52.2% (+46.6, +58.1), min 1.390, max 1.636
+         hyb8 mm big/old: mean +21.4% (+17.4, +25.5), min 1.130, max 1.325
+== records.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/records.bz2: 11 blocks, 9599931 symbols, 9600002 ll bytes; all 7 kernels agree on every block
+                  v2/old: mean +51.4% (+46.8, +56.2), min 1.404, max 1.637
+  dense+memmove+half/old: mean +7.6% (+4.9, +10.3), min 1.008, max 1.138
+             hyb8 mm/old: mean +24.2% (+20.3, +28.3), min 1.178, max 1.415
+            hyb16 mm/old: mean +24.6% (+21.8, +27.5), min 1.174, max 1.344
+             hyb8 ck/old: mean +65.7% (+60.3, +71.3), min 1.498, max 1.772
+         hyb8 mm big/old: mean +16.4% (+14.1, +18.6), min 1.089, max 1.213
+== text.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/text.bz2: 13 blocks, 4587491 symbols, 11230655 ll bytes; all 7 kernels agree on every block
+                  v2/old: mean -35.5% (-38.7, -32.1), min 0.539, max 0.710
+  dense+memmove+half/old: mean -28.8% (-36.2, -20.5), min 0.449, max 0.894
+             hyb8 mm/old: mean -33.9% (-42.0, -24.8), min 0.403, max 0.914
+            hyb16 mm/old: mean -35.1% (-40.6, -29.0), min 0.460, max 0.715
+             hyb8 ck/old: mean -31.8% (-40.2, -22.3), min 0.419, max 0.922
+         hyb8 mm big/old: mean -29.5% (-36.7, -21.5), min 0.448, max 0.853
+== runs.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/runs.bz2: 1 blocks, 62343 symbols, 254432 ll bytes; all 7 kernels agree on every block
+                  v2/old: mean +8.1% (-2.5, +19.7), min 0.838, max 1.460
+  dense+memmove+half/old: mean +9.5% (-1.4, +21.6), min 0.915, max 1.591
+             hyb8 mm/old: mean +13.0% (+3.9, +22.8), min 0.915, max 1.477
+            hyb16 mm/old: mean +13.0% (+3.7, +23.1), min 0.929, max 1.364
+             hyb8 ck/old: mean +19.2% (+9.3, +29.9), min 0.956, max 1.477
+         hyb8 mm big/old: mean +12.0% (+4.3, +20.2), min 0.868, max 1.270
+== pattern.bz2
+/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/corp2/pattern.bz2: 22 blocks, 2661 symbols, 19600000 ll bytes; all 7 kernels agree on every block
+                  v2/old: mean -6.9% (-10.9, -2.7), min 0.828, max 1.016
+  dense+memmove+half/old: mean -0.8% (-4.7, +3.3), min 0.912, max 1.104
+             hyb8 mm/old: mean -11.8% (-17.2, -6.1), min 0.793, max 1.123
+            hyb16 mm/old: mean -8.9% (-13.8, -3.6), min 0.800, max 1.076
+             hyb8 ck/old: mean -7.7% (-12.7, -2.4), min 0.772, max 1.037
+         hyb8 mm big/old: mean +1.2% (-1.7, +4.1), min 0.940, max 1.075
+HYBRID_DONE
