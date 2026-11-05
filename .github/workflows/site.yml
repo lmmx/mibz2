@@ -113,25 +113,6 @@ jobs:
         run: uv run --no-project -p 3.13 python docs/scripts/check_site.py
       - name: Check for Markdown that rendered as something else
         run: uv run --no-project -p 3.13 python docs/scripts/check_render.py
-      # The changed pages in Chromium, from this build (not a deployed preview): desktop and
-      # phone, light and dark. Fails on objective defects; the screenshots are for reading.
-      - name: Look at the changed pages
-        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-        env:
-          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}
-        run: |
-          uv run --no-project -p 3.13 --with playwright==1.56.0 playwright install --with-deps chromium
-          if [ -n "$BASE" ]; then pages="--changed $BASE"; else pages="--blog"; fi
-          uv run --no-project -p 3.13 --with playwright==1.56.0 python docs/scripts/look_pages.py $pages
-      - if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
-        run: test -f site-shots/report.md && cat site-shots/report.md >> "$GITHUB_STEP_SUMMARY" || true
-      - if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
-        uses: actions/upload-artifact@v4
-        with:
-          name: page-shots
-          path: site-shots
-          retention-days: 14
-          if-no-files-found: ignore
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Run the examples in the pages
@@ -141,6 +122,41 @@ jobs:
           name: site
           path: site
           retention-days: 7
+
+  # The changed pages in Chromium, from the build job's own artifact (not a deployed preview):
+  # desktop and phone, light and dark. Fails on objective defects; the screenshots, in the
+  # page-shots artifact, are for reading. On ubuntu-24.04: Playwright has no Chromium build
+  # for the newer image ubuntu-latest names.
+  look:
+    if: github.event.action != 'closed' && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site
+      - uses: astral-sh/setup-uv@v8.1.0
+      - name: Look at the changed pages
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}
+        run: |
+          uv run --no-project -p 3.13 --with playwright==1.56.0 playwright install --with-deps chromium
+          if [ -n "$BASE" ]; then pages="--changed $BASE"; else pages="--blog"; fi
+          uv run --no-project -p 3.13 --with playwright==1.56.0 python docs/scripts/look_pages.py $pages
+      - if: always()
+        run: test -f site-shots/report.md && cat site-shots/report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: page-shots
+          path: site-shots
+          retention-days: 14
+          if-no-files-found: ignore
 
   # Production, on the gh-pages branch (created by the first run).
   deploy-branch:
