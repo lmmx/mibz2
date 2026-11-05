@@ -71,6 +71,7 @@ RESOLVED = {
     6653242752: "re-dispatched to #160 as 6653416078 (logged on the channel)",
     6654146350: "a deliberate tripwire test; its first run could not comment on locked #145 (#187)",
     6654371320: "a deliberate tripwire test; its check run did not reopen the finished suite (#188)",
+    6654531225: "a deliberate tripwire test; an in-progress check run did not reopen it either",
 }
 
 
