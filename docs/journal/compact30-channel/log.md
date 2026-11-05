@@ -454,3 +454,31 @@ Verbatim:
     means for the regime.
   - The deferred verification was pruned: it runs only if C wins.
   - Two walk-only sweeps (`c30`, `c30split`) were dispatched on the branch as diagnostics.
+- **Compact30, staged C-resolve: the rule failed** (#195 closed; result in
+  `2026-11-05-compact30-staged.md`, docs PR #196).
+  - 4-thread wall was slower on both models: +4.8% on the 9V74 (flagged twice) and +7.7% on the
+    7763.
+  - Both contested terms are real. The smaller table cuts amplification by −2.7% to −3.9%; the
+    step's added work costs +11–14% of 1-thread CPU. Their product reproduces the 4-thread CPU.
+  - **The walk-only sweeps show an L2 cliff:** c30 alone is −9.4% on the 8573C (its table fits
+    in 2 MB) and +21.4% on the 9V45. At four copies the gain is gone.
+  - A model-specific dispatch is parked, not pursued. The census's core-side reading gains
+    support.
+- **Co-run placement, design-only** (`2026-11-05-corun-placement.md`, docs PR #197).
+  - Three rivals and a collision. C3 (interleaving) is pruned in every variant.
+  - C1 (pairs), C2 (token) and the Optimiser's C21 are held for the pair matrix. C21 was not in
+    the collision. All three are rejected if the matrix reads C.
+  - **The collision's shared assumption is a fixed walk footprint.** It opened the window-light
+    walks: the gather walk and a one-store walk, being built under Gate 0.
+  - None of these moves the release ETA as configured, since the release runs one thread a
+    physical core.
+- **Segment cost: cross-chain lockstep closed** (`2026-11-05-segment-cost.md`, docs PR #197).
+  - A segment costs 262–338 cycles net: instructions, mispredicts, and dependent misses at half
+    an L3 latency.
+  - The lean path costs 33–64 cycles against the gate's 10, and lockstep forces K ≤ 8.
+- **New front, opened by the segment anatomy: the walk's tail.** Its cost is lost memory-level
+  parallelism as the lanes drain, not instructions: 0.20–0.45 c/B at 512 segments, modelled. It
+  is largest at one thread a core, the release configuration.
+  - Workflow wf_38ffcfee-79f runs three rivals (soft starts activated only in the tail, cheap
+    segments in master's own walk, cross-block continuity) and then a collision.
+  - The collision must specify a CI falsifier, a tail clock, before any production build.
