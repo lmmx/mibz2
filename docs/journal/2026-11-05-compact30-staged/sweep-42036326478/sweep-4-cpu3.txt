@@ -1,0 +1,65 @@
+runner: AMD EPYC 9V45 96-Core Processor, 4 CPUs, 4.2653 GHz reported; rustc 1.99.1 (58cf8f9c3 2026-10-13); head ba94ff5c; sweep, rounds 5; this copy on CPU 3
+corpora/wikidata.bz2: 431 blocks, 209.7 MB of output; the walk alone at 4.2653 GHz, 5 rounds, against the room walk, 32 lanes, prefetch L1, 512 segments
+counters: unavailable here (no PMU exposed to this machine)
+walk      lanes  prefetch  segments    c/B  change (95% interval)        
+room         32  L1             256   6.67   -11.8% (-27.3%, +7.0%)            
+room         24  NTA            512   6.89    -9.7% (-13.1%, -6.1%) faster     
+room         32  L1            1024   6.93   -13.4% (-28.9%, +5.7%)            
+room         32  NTA            512   7.23    -7.5% (-10.3%, -4.5%) faster     
+room         24  L1             512   7.41    -7.1% (-14.2%, +0.7%)            
+room         48  NTA            512   7.47    -1.1% (-9.8%, +8.5%)            
+c30          32  L1             512   7.51    +0.8% (-17.7%, +23.5%)            
+room         64  NTA            512   7.54    -1.4% (-12.4%, +11.1%)            
+room         32  L1            2048   7.57    -4.0% (-13.7%, +6.8%)            
+room         32  L1             512   7.78    +0.0% (+0.0%, +0.0%) the default
+room         48  L1             512   7.95    +5.3% (-1.3%, +12.3%)            
+room         16  L1             512   8.05    +6.1% (-13.1%, +29.5%)            
+room         16  NTA            512   8.38   +10.5% (+4.1%, +17.3%) slower     
+room         64  L1             512   8.39    +7.3% (-2.0%, +17.4%)            
+room         12  L1             512   9.17   +18.8% (+9.3%, +29.1%) slower     
+room         48  L2             512   9.22   +21.5% (+11.8%, +32.0%) slower     
+room         24  L2             512   9.28   +16.0% (-3.0%, +38.6%)            
+room         12  L2             512   9.48   +25.1% (+13.8%, +37.5%) slower     
+room         16  L2             512   9.56   +21.3% (+14.8%, +28.0%) slower     
+room         64  L2             512   9.58   +23.2% (+10.3%, +37.6%) slower     
+room         12  NTA            512   9.60   +24.8% (+12.3%, +38.6%) slower     
+room         32  L2             512   9.95   +23.2% (+2.7%, +47.8%) slower     
+room          8  L1             512  10.39   +34.4% (-4.0%, +88.2%)            
+room          8  L2             512  11.06   +41.2% (+29.4%, +54.1%) slower     
+c30split     32  L1             512  11.09   +47.5% (+21.9%, +78.6%) slower     
+room         12  none           512  11.80   +61.1% (+46.4%, +77.2%) slower     
+room          8  NTA            512  12.08   +55.3% (+36.2%, +77.0%) slower     
+room         64  none           512  12.68   +73.3% (+60.9%, +86.6%) slower     
+room         24  none           512  12.77   +57.2% (+44.6%, +70.9%) slower     
+room         16  none           512  12.86   +70.4% (+44.0%, +101.5%) slower     
+flagged      48  NTA            512  12.98   +76.4% (+62.6%, +91.5%) slower     
+flagged       8  L1             512  13.05   +72.7% (+9.6%, +172.1%) slower     
+flagged      64  NTA            512  13.09   +67.6% (+52.3%, +84.5%) slower     
+flagged      48  L1             512  13.14   +76.6% (+60.9%, +93.8%) slower     
+room         48  none           512  13.50   +73.3% (+60.5%, +87.1%) slower     
+room         32  none           512  13.62   +62.6% (+42.3%, +85.8%) slower     
+flagged      64  L1             512  13.87   +78.9% (+58.2%, +102.2%) slower     
+flagged      32  NTA            512  14.07   +82.7% (+60.3%, +108.4%) slower     
+flagged      24  L1             512  14.11   +79.7% (+60.8%, +100.8%) slower     
+flagged      24  NTA            512  14.18   +73.7% (+50.9%, +99.9%) slower     
+room          8  none           512  14.32   +84.3% (+37.7%, +146.7%) slower     
+flagged      64  L2             512  14.32   +80.5% (+60.8%, +102.5%) slower     
+flagged      24  L2             512  14.38   +88.1% (+76.7%, +100.2%) slower     
+flagged      32  L1             512  14.59   +86.8% (+69.7%, +105.7%) slower     
+flagged      32  L2             512  14.72   +90.0% (+72.4%, +109.4%) slower     
+flagged      16  NTA            512  14.82   +91.9% (+74.1%, +111.5%) slower     
+flagged      48  L2             512  14.85   +94.5% (+71.9%, +120.0%) slower     
+flagged      12  L1             512  15.07  +100.0% (+89.0%, +111.6%) slower     
+flagged      16  L1             512  15.08   +86.0% (+66.3%, +108.1%) slower     
+flagged       8  NTA            512  15.45  +102.9% (+92.8%, +113.6%) slower     
+flagged       8  L2             512  15.53  +101.7% (+84.2%, +120.7%) slower     
+flagged      12  NTA            512  15.98  +107.4% (+84.0%, +133.8%) slower     
+flagged      16  L2             512  17.12  +112.2% (+91.8%, +134.8%) slower     
+flagged      12  L2             512  17.44  +122.5% (+90.1%, +160.5%) slower     
+flagged      24  none           512  18.66  +136.1% (+108.8%, +166.9%) slower     
+flagged      32  none           512  18.97  +145.3% (+115.8%, +178.8%) slower     
+flagged      64  none           512  19.01  +150.1% (+130.7%, +171.2%) slower     
+flagged      12  none           512  19.12  +150.3% (+127.0%, +176.0%) slower     
+flagged       8  none           512  19.13  +138.7% (+41.3%, +303.3%) slower     
+flagged      48  none           512  20.11  +163.1% (+126.6%, +205.6%) slower     
+flagged      16  none           512  20.76  +164.4% (+120.8%, +216.8%) slower     
