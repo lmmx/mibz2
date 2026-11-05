@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Huffman decoding: the bit buffer in a register](<https://lmmx.github.io/mibz2/blog/2026-11-05-huffman-bit-buffer/index.md>): The Huffman decoder wrote its bit buffer to memory and read it back at every lookup. Kept in a register, the stage ran 13% faster on Intel and 5% on AMD.
 - [An autonomous agent team](<https://lmmx.github.io/mibz2/blog/2026-11-04-autonomous-agent-team/index.md>): Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.
 - [From 49 instructions to 12](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>): Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly.
 - [Technical appendix](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor-notes/index.md>): Technical appendix to the post on building a smaller bzip2 decoding table: the BWT's navigation table from first principles, stable counting sort, compact30's row labels, records and RAW groups, epochs and snapshots, finishing a group, RAW canonicalisation, and why fewer instructions needn't mean less time.
