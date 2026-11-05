@@ -27,7 +27,8 @@
     6646251725,
     6651023083,
     6653416078,
-    6657883434
+    6657883434,
+    6659992544
   ],
   "outgoing_comment_ids": [
     {
@@ -116,6 +117,13 @@
       "type": "REVIEW",
       "sha": "9d82533f45030e05a7240b7baa1b0a38e471acab",
       "checkpoint_comment_id": 6657883434
+    },
+    {
+      "pr": 145,
+      "id": 6660203300,
+      "type": "REVIEW",
+      "sha": "0c2718ec9f858fee6cf186ba4a9d3644505f3f2c",
+      "checkpoint_comment_id": 6659992544
     }
   ],
   "reviews": [
@@ -291,7 +299,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "IN_PROGRESS",
+  "status": "WAITING",
   "published_evidence_commit": "0c2718ec9f858fee6cf186ba4a9d3644505f3f2c",
   "incoming_experiment_comment_ids": [
     {
@@ -423,10 +431,10 @@
     {
       "comment_id": 6659992544,
       "pr": 160,
-      "status": "complete",
-      "completed": false,
+      "status": "finished",
+      "completed": true,
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Report, tail model and canonical ledger complete; awaiting REVIEW.",
+      "progress": "Report, model and ledger committed; REVIEW published and recorded.",
       "report_commit": "0c2718ec9f858fee6cf186ba4a9d3644505f3f2c",
       "report_path": "docs/journal/compact30-research/reviews/inbox-6659992544/report.md",
       "baseline_commit": "1132857e18819ce689424dd2df7751630b29522a",
@@ -435,7 +443,8 @@
         "implementation": false,
         "new_timing": false,
         "raw_benchmark_replay": false
-      }
+      },
+      "reply_id": 6660203300
     }
   ]
 }
