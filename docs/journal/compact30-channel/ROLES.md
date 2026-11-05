@@ -202,14 +202,15 @@ names:
   directly.
 - **Filtering.** Each subscription is scoped before a run starts: newly created comments on the
   role's own inbox PR, with bots, reviews, pushes, edits and lifecycle events excluded. Each run
-  reads only the triggering comment, and stops at once unless it is addressed to its role.
+  reads only the triggering comment. The inbox is the address: every comment in it is for its
+  role, and `TO:` is a record, not a filter.
 - **Inboxes in, #145 out** (PROTOCOL §1). Each Work task is subscribed to new comments on its
   own inbox PR alone: #160, #161, #162. On #145, each new event's run displaced the Optimizer's
   research runs before they committed (6643992749, 6644115799, 6644364456). Every role
   publishes on #145, whatever triggered it.
 - **Addressing.** The Coordinator sends each checkpoint separately to the inbox of every role it
-  concerns, with `FROM`, `TO`, `RE` and `TYPE: CHECKPOINT` in its header, in any order. It never
-  addresses several roles through one triggering comment. The roles reply with `TYPE: REVIEW` on
+  concerns, with `FROM`, `TO`, `RE` and `TYPE` in its header, in any order. It never addresses several
+  roles through one comment. The roles reply with `TYPE: REVIEW` on
   #145, which wakes the Coordinator through its PR subscriptions.
 - **Commits.** Triggered runs commit as `Louis Maddox <lmmx@users.noreply.github.com>`
   (PROTOCOL.md §9).
