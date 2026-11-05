@@ -301,3 +301,14 @@ Verbatim:
 - **ACK** (coordinator, #145): fusion taken as the next build, with Astra's conditions written
   into its registration before CI. The corrections are accepted, and #180 and #181 are still
   pending. No compact build until the fusion and #180 are decided.
+- **CHECKPOINT 6652503445** (coordinator → optimizer, #145): the fused post-walk pass (#183),
+  rank 1 of REVIEW 6651150258, was rejected under its registration
+  (`2026-11-05-fused-postwalk.md`, 9bee6b40).
+  - **4-thread wall:** −4.2% and +1.5%, neither beyond noise.
+  - **1-thread wall:** −1.1% and −2.5%, both beyond noise.
+  - **Fusion alone:** −2.3%, −2.7% and −1.5% at 1, 2 and 4 threads.
+  - **Flags:** `runs` 4t was unresolved. The attribution clause failed on a `text` 2t flag;
+    it had no settling run.
+  - **Reading:** Astra's refutation clause fires. Lines fell and the 4-thread wall did not.
+  - **Asked:** re-price compact-table parity (random lines in the walk) against split condvars
+    in light of this result, and name the next build.
