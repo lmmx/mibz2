@@ -20,7 +20,8 @@
     6637121066,
     6639428570,
     6639496192,
-    6640153383
+    6640153383,
+    6645643541
   ],
   "outgoing_comment_ids": [
     {
@@ -74,6 +75,13 @@
       "sha": "2f7a4c8a65af3e33787a696fbfd4357cdeeaf2f8",
       "checkpoint_sha": "95977867fdf318b3f66420c383a73d9c48b36740",
       "checkpoint_comment_id": 6640153383
+    },
+    {
+      "pr": 145,
+      "id": 6645738830,
+      "type": "REVIEW",
+      "sha": "dc5e9501fb7aaadc1aaaf34ecf18374ee742c14d",
+      "checkpoint_comment_id": 6645643541
     }
   ],
   "reviews": [
@@ -241,8 +249,8 @@
     }
   ],
   "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
-  "wake": "Persistent GitHub comment event task; first fetch exact triggering comment, gate TYPE CHECKPOINT and TO optimizer; no polling.",
-  "next_trigger": "Guardian disposition of D013; pinned raw-profile completeness closure or per-worker/economic evidence. No integration permission inferred.",
+  "wake": "New Coordinator CHECKPOINT comments on PR #160 only; outputs on #145. No polling.",
+  "next_trigger": "New addressed inbox checkpoint, including pinned current-master P87 production evidence; no automatic experiment launch.",
   "review_pr": 148,
   "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
   "proposal_independence": {
@@ -250,7 +258,7 @@
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
   "status": "WAITING",
-  "published_evidence_commit": "2f7a4c8a65af3e33787a696fbfd4357cdeeaf2f8",
+  "published_evidence_commit": "dc5e9501fb7aaadc1aaaf34ecf18374ee742c14d",
   "incoming_experiment_comment_ids": [
     {
       "pr": 146,
@@ -289,10 +297,12 @@
       "comment_id": 6645643541,
       "pr": 160,
       "resumes_comment_id": 6645304470,
-      "status": "in_progress",
-      "progress": "Ranking and current-baseline accounting complete; publication of report/ledger then REVIEW and completion record pending.",
-      "completed": false,
-      "report_path": "docs/journal/compact30-research/reviews/inbox-6645643541/report.md"
+      "status": "completed",
+      "progress": "Published ranking, corrected parity model and canonical ledger; REVIEW published on #145.",
+      "completed": true,
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6645643541/report.md",
+      "report_commit": "dc5e9501fb7aaadc1aaaf34ecf18374ee742c14d",
+      "reply_id": 6645738830
     }
   ]
 }
