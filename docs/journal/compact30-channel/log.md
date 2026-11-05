@@ -384,3 +384,24 @@ Verbatim:
     every recurring wake-up (CLAUDE.md).
   - **Audit at bab0d603:** 5 misroutes, 0 open. They are the two real ones (re-dispatched as
     6653416078) and the three labelled tests.
+- **The merge guard never reached the merge.** Found while fact-checking the blog post: the
+  merge tool takes the expected head as `expectedHeadSha`, and the coordinator had passed it
+  as `sha`, which the tool silently drops.
+  - Eight merges went through with no head check: #167, #170 and #184-#189. Four of them
+    came after `head-sha` existed.
+  - Two of the SHAs were guesses that never reached GitHub: #167 (`bfaa71b2fa9c…` against
+    `bfaa71b24b51…`) and #185. GitHub refuses a mismatched head when it gets one (409 on
+    #139, 2 November).
+  - The short prefix refused on #181 was the tool's own format check, under the right name.
+  - Read back, every one of the eight merged its PR's final head, so nothing wrong landed.
+  - **Fixed in #190** (master b7734313): the SHA goes in `expectedHeadSha`, and
+    `coord.py head-sha --merged` must pass after every merge. #190 itself was the first merge
+    done this way, and its read-back passes.
+- **MODE amended** at Louis's instruction (8e665214): differential recurrence, after Deleuze's
+  "He Stuttered". The Coordinator first establishes what binds today's production decoder;
+  the Optimiser opens each cost term into its actual cost.
+  - Census launched: five routes (time accounting, worker supply, the walk on 2 SMT cores,
+    the serial stages, no-go archaeology), each attacked by a falsifier from another route.
+  - The staged compact30 build (C-resolve, layout twin L) runs alongside. Its RAW scheme was
+    chosen before registration: the ordinary step is the same in every scheme, and C-resolve
+    keeps master's one-byte-per-lane-per-offset invariant. D is the named follow-up.
