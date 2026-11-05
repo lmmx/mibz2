@@ -1,0 +1,1156 @@
+{
+  "incoming_comment": 6646249200,
+  "decision": "D025",
+  "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
+  "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+  "source": "a995ce87dcd63b318a10795a1860fc21edf039cf",
+  "digest": "git-blob:6def96def6c11f19df3137cf0159c07013a5ea2a",
+  "journal": {
+    "content": "# P87's production candidate on current master: registration\n\nRegistered before any measurement of this branch. The decision rule below is fixed here: it may\nbe amended only in a commit made before the first bench comment on this PR is posted, and every\namendment says what changed and why.\n\n## The candidate\n\n- **Branch:** `perf/p87-in-place`, which merges `research/p87-production` (7c404919) into master\n  08e7fc3b. The merge is clean.\n- **The change:** `Segmented` inverts in place, writing the walk's output over `ll`, whose last read\n  is the build. A worker using it never allocates `rle`. Every other kernel returns false from\n  `invert_in_place` and keeps the separate output buffer, unchanged.\n- **Contracts and tests:** see `2026-11-02-p87-production-integration.md`:\n  - the in-place success and fallback contracts;\n  - the differential test against `Segmented::invert` into its own buffer, on every sample shape at\n    levels 1 and 9;\n  - the fallback and error-reuse tests;\n  - the corrected trace ledger.\n\n## Prior record, read in full\n\n- **The four-core diagnostic** (research/p87-buffer-reuse a0094cfa, analysis §§1–6). It reused `ll`\n  with equal allocation, on the i9.\n  - Primary w4 throughput +1.35% [+0.29, +2.41]; CPU per GB −1.71% [−2.37, −1.06].\n  - **Mechanism INCONCLUSIVE:** D = 0.078 [0.042, 0.114] crosses the 0.10 bound.\n  - **Engineering NOT DEMONSTRATED:** five no-harm controls were inconclusive, and none harmed.\n  - It is closed and is not reopened here.\n- **#128 on CI** (EPYC 7763, bench 3.2.0, against 13e9854):\n  - at 0c121c5, w4 wall −1.9% [−3.2, −0.7];\n  - at 7c40491, w4 wall −0.7% [−2.1, +0.7], CPU −1.4% [−2.5, −0.3], peak RSS −6.2%, with no row\n    slower;\n  - its stage table showed unexplained between-build shifts, and the phase harness doesn't call\n    `invert_in_place`.\n- **The Optimizer's ranking** (review/compact30-instruction-ledger dc5e9501, `reviews/inbox-6645643541/report.md` §1)\n  puts this first. It asks for:\n  - a current-master comparison;\n  - byte-exact controls;\n  - no-harm criteria registered first.\n- **The Researcher's causal assessment** (3843e7da) and Guardian D021–D023. #128's CPU and RSS\n  findings don't isolate destination reuse, because the production change also drops an\n  allocation.\n\n**What this is.** A production validation of a recorded candidate on a new baseline, not a new\nconstruction and not a repeat of the diagnostic. Two things could change the earlier picture:\n- master now carries #157's walk;\n- the production intervention also removes `rle`, which the diagnostic didn't test.\n\nIt can't attribute any effect to a mechanism, and it claims none.\n\n## What is measured\n\n1. **Whole-decoder instructions** (charter §5.6, STEWARDSHIP): Callgrind on `decode_block`, both\n   arms built from the same driver, rustc 1.97.0, fat LTO, one codegen unit. Seven blocks of\n   `wikidata-independent.bz2`: full blocks 1, 41, 233 and 400, and tiny blocks 0, 97 and 472. The\n   output length and CRC must match in every block.\n2. **The CI bench** on this PR's head: the paired A/B of bench 3.2.0, 10 rounds on one runner,\n   against the merge base with master.\n3. **One re-run of the bench on the same head,** as a second, independent run. The runner may differ;\n   each run is read on its own, not pooled.\n\n## The decision rule\n\n*Amended once, at 00:20 UTC on 5 November, after Guardian D024 (6645964170). At that time the\nbench run (41940043718) was still in progress, with no artifacts. The only bench comment on #164\nwas its \"Running\" placeholder, with no figures. So no measured result was available, and none\ninformed the amendment. The original rule is in d6401b55.*\n\n- **Correctness (required):**\n  - CI green, Miri included;\n  - same bytes on every corpus in every bench run;\n  - the tests named above pass.\n- **Instructions (required):** `decode_block` at or below master's on every full block.\n- **Benefit (required):** on `wikidata` at 4 threads, the CPU change or the wall change excludes\n  zero on the faster side in at least one run, and the same figure's point estimate is not slower\n  in the other. Peak RSS is reported as a secondary figure. It doesn't satisfy this condition on\n  its own.\n  - **\"RSS lower beyond noise\"** means the bench's own flag (**less**) on the peak RSS column.\n- **No harm (required), per run, each run read under its own conditions:**\n  - a wall row (any corpus × thread count) flagged **slower** in a run is a harm signal. A second\n    run that is inconclusive on that row doesn't cancel it;\n  - each harm signal is settled by one more run on the same head: if the row is flagged slower\n    again, it is a harm, and the rule fails;\n  - if it isn't flagged slower again, the row is reported as unresolved, with all three runs, and\n    the PR doesn't claim to have excluded harm on it;\n  - at most three runs are made in all.\n- **Power, stated before seeing the data:** control rows' 95% intervals in recent runs are ±1–5%. A\n  harm smaller than a row's half-width can't be excluded by these runs, and this PR doesn't\n  claim to exclude it.\n- **Falsified, and closed with a write-up, if any of these holds:**\n  - the instruction count exceeds master's on a full block;\n  - a harm is confirmed as above;\n  - the benefit condition fails.\n\n**What a pass means:**\n- the registered conditions are met;\n- and if no row is left unresolved, STEWARDSHIP's conditions on measured code are met too: an\n  end-to-end improvement beyond noise, and no regression shown.\n\nIt doesn't establish P87's mechanism or a steady-state instruction saving. It doesn't meet the\nfour-worker campaign objective by itself.\n\n## Measured: whole-decoder instructions (added after the registration above)\n\nInclusive Ir of the driver's `measured` (one `decode_block` on a fresh `Scratch`), from\n`callgrind_annotate --inclusive=yes`. Both arms: `driver/` with only the `mibz2` path differing,\nrustc 1.97.0, fat LTO, `codegen-units = 1`, line tables. Input `wikidata-independent.bz2`, sha256\n`7f5c9a0044e5a305…`. Command: `valgrind --tool=callgrind --toggle-collect=c30cg::measured c30cg cg\nFILE BLOCK 1`. The profiles, stdout (length and CRC) and consoles are in `cg/`.\n\n| block | master 08e7fc3b | perf/p87-in-place | change | output |\n|---|--:|--:|--:|---|\n| 0 (54 B) | 7,573 | 7,296 | −277 | identical |\n| 1 (899,971 B) | 20,184,756 | 20,184,356 | −400 | identical |\n| 41 (900,000 B) | 19,480,510 | 19,480,110 | −400 | identical |\n| 97 (56 B) | 7,942 | 7,672 | −270 | identical |\n| 233 (899,978 B) | 19,989,585 | 19,989,153 | −432 | identical |\n| 400 (899,993 B) | 19,490,584 | 19,490,042 | −542 | identical |\n| 472 (70 B) | 8,780 | 8,510 | −270 | identical |\n\n**The instruction condition holds:** the candidate is at or below master on every block. The\ndifference is a few hundred instructions a block, consistent with the allocation it removes. A\nsingle decode on a fresh scratch includes `rle`'s first growth, so this is not a steady-state\nsaving, and none is claimed.\n\n## Measured: the two bench runs, and the verdict\n\n**Timing of the amendment.** The registration allowed amendments \"before the first bench comment\non this PR is posted\". The bench workflow posts a \"Running\" placeholder before it measures: one\nwas posted at 00:16:10 UTC, and the amendment (ef28ad32) came at about 00:20. So the literal\ncutoff had passed. When the amendment was made, the run was still in progress, with no figures\nand no artifacts, and nothing measured informed it (Researcher 6645977057; Guardian D024). The\nverdict below is read under both the original rule (d6401b55) and the amended one.\n\n**The runs.** Bench 3.2.0, 10 paired rounds, against master 08e7fc3b. The measured code is the same\nin both: ee12bb9e differs from ef28ad32 only in `examples/occupancy.rs`, which the bench doesn't\nbuild. Raw reports and results are in `bench-run1-ef28ad32/` and `bench-run2-ee12bb9e/`.\n\n| `wikidata` | run 1, ef28ad32, Xeon Platinum 8573C | run 2, ee12bb9e, Xeon 6975P-C |\n|---|--:|--:|\n| 1 thread, wall | +0.0% (−0.6, +0.7) | +0.0% (−0.2, +0.2) |\n| 2 threads, wall | −0.2% (−1.8, +1.4) | −1.1% (−4.8, +2.8) |\n| 4 threads, wall | **−2.2% (−4.0, −0.5) faster** | −1.1% (−2.3, +0.2) |\n| 4 threads, CPU | −1.3% (−2.9, +0.3) | −0.7% (−1.9, +0.5) |\n| 4 threads, peak RSS | 71 → 66 MB (−6.8%, **less**) | 71 → 66 MB (−6.8%, **less**) |\n\n- **Correctness:** same bytes on all 21 rows of both runs, and CI green at ee12bb9e, Miri and\n  occupancy included.\n- **Instructions:** at or below master on all seven blocks (above).\n- **Benefit:**\n  - **amended rule:** 4-thread wall is faster beyond noise in run 1, and its point estimate is\n    faster in run 2. **Met;**\n  - **original rule:** 4-thread CPU isn't beyond noise in either run. Peak RSS is lower beyond\n    noise in both. **Met.**\n- **No harm:** no wall row is flagged slower in either run, so there is no harm signal and no\n  third run. **Met under both rules.**\n- **What isn't excluded.** Several rows have wide upper bounds, and a harm of that size on them\n  isn't excluded:\n  - run 1: `random` 1 thread +6.4% (upper +17.7%), `records` 1 thread +2.6% (+9.3%), `pattern`\n    4 threads −3.0% (+5.1%);\n  - run 2: `onebyte` 2 threads +0.7% (+9.2%), `pattern` 2 threads −3.4% (+8.0%), `runs` 2 threads\n    +1.2% (+6.4%), and `pattern` 4 threads CPU +2.7% (+10.2%).\n- **The stage table** flags RLE1 slower in both runs: +2.6% (+2.0, +3.2) and +3.9% (+3.1, +4.8).\n  - Run 1's stage total is also slower, +1.2% (+0.1, +2.4); run 2's isn't, −0.1% (−0.3, +0.2).\n  - The stage harness, `examples/phases.rs`, never calls `invert_in_place`, so it doesn't run the\n    changed path. #128's integration record saw the same RLE1 shift (+3.2%) and recorded it as\n    an unexplained between-build sensitivity. It is recorded the same way here: unexplained, not\n    a measurement of P87.\n\n**Verdict.** The registered conditions hold under both rules, with no row left unresolved, so\nSTEWARDSHIP's gate on measured code is met. #164 merged as e26e3d9c.\n- **Claimed:** a faster `wikidata` decode at 4 threads in one run, not slower in the other, with\n  less memory.\n- **Not claimed:**\n  - why it is faster: the change moves the output buffer and removes an allocation together;\n  - a steady-state instruction saving;\n  - that harm is excluded on the rows listed above;\n  - that the four-worker campaign objective is met.\n",
+    "encoding": "utf-8",
+    "sha": "6def96def6c11f19df3137cf0159c07013a5ea2a",
+    "display_url": "https://github.com/lmmx/mibz2/blob/a995ce87/docs/journal/2026-11-05-p87-production-validation.md",
+    "display_title": "2026-11-05-p87-production-validation.md"
+  },
+  "computed": [
+    {
+      "run": "https://github.com/lmmx/mibz2/actions/runs/41940471497",
+      "head": "ef28ad32f2259d3276aed84765c7b03fe12c1385",
+      "base": "08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7",
+      "machine": "INTEL(R) XEON(R) PLATINUM 8573C",
+      "w4": {
+        "wall": [
+          -2.24,
+          -3.98,
+          -0.47
+        ],
+        "cpu": [
+          -1.33,
+          -2.92,
+          0.29
+        ],
+        "rss": [
+          -6.81,
+          -7.88,
+          -5.72
+        ]
+      },
+      "rows": [
+        {
+          "corpus": "onebyte",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            0.9954,
+            0.9846,
+            1.0064
+          ],
+          "cpu": [
+            1.0018,
+            0.9901,
+            1.0136
+          ],
+          "rss": [
+            0.9882,
+            0.987,
+            0.9894
+          ]
+        },
+        {
+          "corpus": "onebyte",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            1.0005,
+            0.981,
+            1.0203
+          ],
+          "cpu": [
+            1,
+            0.981,
+            1.0195
+          ],
+          "rss": [
+            0.988,
+            0.9859,
+            0.99
+          ]
+        },
+        {
+          "corpus": "onebyte",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.9909,
+            0.978,
+            1.004
+          ],
+          "cpu": [
+            0.9919,
+            0.9785,
+            1.0055
+          ],
+          "rss": [
+            0.9882,
+            0.987,
+            0.9893
+          ]
+        },
+        {
+          "corpus": "pattern",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            0.9976,
+            0.9898,
+            1.0055
+          ],
+          "cpu": [
+            0.9985,
+            0.99,
+            1.0071
+          ],
+          "rss": [
+            0.9489,
+            0.9452,
+            0.9527
+          ]
+        },
+        {
+          "corpus": "pattern",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            0.9701,
+            0.9255,
+            1.0167
+          ],
+          "cpu": [
+            0.9843,
+            0.9679,
+            1.0009
+          ],
+          "rss": [
+            0.9223,
+            0.908,
+            0.9368
+          ]
+        },
+        {
+          "corpus": "pattern",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.97,
+            0.8954,
+            1.0508
+          ],
+          "cpu": [
+            1.0144,
+            0.9728,
+            1.0578
+          ],
+          "rss": [
+            0.9239,
+            0.9138,
+            0.9342
+          ]
+        },
+        {
+          "corpus": "random",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            1.0642,
+            0.9621,
+            1.177
+          ],
+          "cpu": [
+            1.0632,
+            0.9622,
+            1.1748
+          ],
+          "rss": [
+            0.9637,
+            0.9614,
+            0.9659
+          ]
+        },
+        {
+          "corpus": "random",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            0.9778,
+            0.9578,
+            0.9983
+          ],
+          "cpu": [
+            0.9818,
+            0.9713,
+            0.9925
+          ],
+          "rss": [
+            0.9537,
+            0.9479,
+            0.9596
+          ]
+        },
+        {
+          "corpus": "random",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.9862,
+            0.9408,
+            1.0338
+          ],
+          "cpu": [
+            0.9804,
+            0.9637,
+            0.9974
+          ],
+          "rss": [
+            0.9382,
+            0.9295,
+            0.947
+          ]
+        },
+        {
+          "corpus": "records",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            1.0262,
+            0.9637,
+            1.0927
+          ],
+          "cpu": [
+            1.0262,
+            0.9642,
+            1.0921
+          ],
+          "rss": [
+            0.965,
+            0.9629,
+            0.967
+          ]
+        },
+        {
+          "corpus": "records",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            0.9931,
+            0.9739,
+            1.0126
+          ],
+          "cpu": [
+            0.9943,
+            0.9841,
+            1.0046
+          ],
+          "rss": [
+            0.9617,
+            0.9506,
+            0.9728
+          ]
+        },
+        {
+          "corpus": "records",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.9922,
+            0.9659,
+            1.0192
+          ],
+          "cpu": [
+            0.9735,
+            0.9607,
+            0.9865
+          ],
+          "rss": [
+            0.9327,
+            0.9156,
+            0.9502
+          ]
+        },
+        {
+          "corpus": "runs",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            0.9924,
+            0.9836,
+            1.0012
+          ],
+          "cpu": [
+            0.9907,
+            0.9817,
+            0.9998
+          ],
+          "rss": [
+            0.989,
+            0.987,
+            0.991
+          ]
+        },
+        {
+          "corpus": "runs",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            1.0155,
+            0.9709,
+            1.0621
+          ],
+          "cpu": [
+            0.9966,
+            0.9857,
+            1.0075
+          ],
+          "rss": [
+            0.9863,
+            0.9829,
+            0.9897
+          ]
+        },
+        {
+          "corpus": "runs",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            1.0033,
+            0.9889,
+            1.018
+          ],
+          "cpu": [
+            1.0042,
+            0.9912,
+            1.0174
+          ],
+          "rss": [
+            0.9885,
+            0.9857,
+            0.9913
+          ]
+        },
+        {
+          "corpus": "text",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            1.002,
+            0.9919,
+            1.0123
+          ],
+          "cpu": [
+            1.0018,
+            0.9918,
+            1.0119
+          ],
+          "rss": [
+            0.954,
+            0.9507,
+            0.9572
+          ]
+        },
+        {
+          "corpus": "text",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            1,
+            0.9613,
+            1.0402
+          ],
+          "cpu": [
+            0.999,
+            0.9924,
+            1.0058
+          ],
+          "rss": [
+            0.9322,
+            0.9159,
+            0.9487
+          ]
+        },
+        {
+          "corpus": "text",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.9815,
+            0.9593,
+            1.0043
+          ],
+          "cpu": [
+            0.9856,
+            0.9676,
+            1.004
+          ],
+          "rss": [
+            0.9272,
+            0.9035,
+            0.9515
+          ]
+        },
+        {
+          "corpus": "wikidata",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            1.0004,
+            0.994,
+            1.0067
+          ],
+          "cpu": [
+            1.0003,
+            0.994,
+            1.0067
+          ],
+          "rss": [
+            0.9655,
+            0.9626,
+            0.9684
+          ]
+        },
+        {
+          "corpus": "wikidata",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            0.9975,
+            0.9816,
+            1.0136
+          ],
+          "cpu": [
+            0.9975,
+            0.9886,
+            1.0064
+          ],
+          "rss": [
+            0.9218,
+            0.8965,
+            0.9477
+          ]
+        },
+        {
+          "corpus": "wikidata",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.9776,
+            0.9602,
+            0.9953
+          ],
+          "cpu": [
+            0.9867,
+            0.9708,
+            1.0029
+          ],
+          "rss": [
+            0.9319,
+            0.9212,
+            0.9428
+          ]
+        }
+      ],
+      "stage_changes": {
+        "scan": [
+          0.9984,
+          0.9935,
+          1.0034
+        ],
+        "mtf": [
+          1.0037,
+          0.9953,
+          1.0121
+        ],
+        "build": [
+          1.0019,
+          0.997,
+          1.0069
+        ],
+        "walk": [
+          1.0217,
+          0.9966,
+          1.0473
+        ],
+        "assemble": [
+          1.006,
+          0.993,
+          1.0192
+        ],
+        "rle": [
+          1.0261,
+          1.0204,
+          1.0318
+        ],
+        "crc": [
+          0.9987,
+          0.983,
+          1.0147
+        ],
+        "total": [
+          1.0125,
+          1.0012,
+          1.0239
+        ]
+      }
+    },
+    {
+      "run": "https://github.com/lmmx/mibz2/actions/runs/41941330350",
+      "head": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0",
+      "base": "08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7",
+      "machine": "Intel(R) Xeon(R) 6975P-C",
+      "w4": {
+        "wall": [
+          -1.06,
+          -2.28,
+          0.19
+        ],
+        "cpu": [
+          -0.71,
+          -1.93,
+          0.53
+        ],
+        "rss": [
+          -6.8,
+          -8.38,
+          -5.2
+        ]
+      },
+      "rows": [
+        {
+          "corpus": "onebyte",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            0.9884,
+            0.9172,
+            1.065
+          ],
+          "cpu": [
+            0.9924,
+            0.9226,
+            1.0675
+          ],
+          "rss": [
+            0.9881,
+            0.9861,
+            0.9901
+          ]
+        },
+        {
+          "corpus": "onebyte",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            1.0071,
+            0.929,
+            1.0918
+          ],
+          "cpu": [
+            1.0114,
+            0.9411,
+            1.0869
+          ],
+          "rss": [
+            0.9867,
+            0.9839,
+            0.9895
+          ]
+        },
+        {
+          "corpus": "onebyte",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            1.0069,
+            0.9567,
+            1.0597
+          ],
+          "cpu": [
+            1.007,
+            0.9588,
+            1.0577
+          ],
+          "rss": [
+            0.9894,
+            0.9873,
+            0.9915
+          ]
+        },
+        {
+          "corpus": "pattern",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            0.9982,
+            0.971,
+            1.0262
+          ],
+          "cpu": [
+            0.9946,
+            0.9667,
+            1.0232
+          ],
+          "rss": [
+            0.9479,
+            0.9446,
+            0.9511
+          ]
+        },
+        {
+          "corpus": "pattern",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            0.9655,
+            0.8632,
+            1.08
+          ],
+          "cpu": [
+            0.9894,
+            0.9674,
+            1.0119
+          ],
+          "rss": [
+            0.9193,
+            0.8971,
+            0.9421
+          ]
+        },
+        {
+          "corpus": "pattern",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.9583,
+            0.8969,
+            1.0238
+          ],
+          "cpu": [
+            1.0267,
+            0.9566,
+            1.1018
+          ],
+          "rss": [
+            0.9229,
+            0.9068,
+            0.9393
+          ]
+        },
+        {
+          "corpus": "random",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            1.0081,
+            0.983,
+            1.0338
+          ],
+          "cpu": [
+            1.0078,
+            0.9824,
+            1.0338
+          ],
+          "rss": [
+            0.9629,
+            0.9605,
+            0.9654
+          ]
+        },
+        {
+          "corpus": "random",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            1.0131,
+            0.9797,
+            1.0477
+          ],
+          "cpu": [
+            0.9998,
+            0.9877,
+            1.0121
+          ],
+          "rss": [
+            0.9447,
+            0.9197,
+            0.9704
+          ]
+        },
+        {
+          "corpus": "random",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.992,
+            0.9603,
+            1.0248
+          ],
+          "cpu": [
+            0.9992,
+            0.9682,
+            1.0311
+          ],
+          "rss": [
+            0.9273,
+            0.8989,
+            0.9565
+          ]
+        },
+        {
+          "corpus": "records",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            0.973,
+            0.9095,
+            1.0408
+          ],
+          "cpu": [
+            0.9737,
+            0.9113,
+            1.0404
+          ],
+          "rss": [
+            0.9625,
+            0.9596,
+            0.9654
+          ]
+        },
+        {
+          "corpus": "records",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            0.9918,
+            0.9649,
+            1.0195
+          ],
+          "cpu": [
+            0.9987,
+            0.99,
+            1.0074
+          ],
+          "rss": [
+            0.9522,
+            0.9313,
+            0.9735
+          ]
+        },
+        {
+          "corpus": "records",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.9893,
+            0.9598,
+            1.0198
+          ],
+          "cpu": [
+            0.9796,
+            0.9668,
+            0.9925
+          ],
+          "rss": [
+            0.917,
+            0.8988,
+            0.9356
+          ]
+        },
+        {
+          "corpus": "runs",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            0.9862,
+            0.9295,
+            1.0464
+          ],
+          "cpu": [
+            0.9846,
+            0.9285,
+            1.0441
+          ],
+          "rss": [
+            0.9892,
+            0.987,
+            0.9915
+          ]
+        },
+        {
+          "corpus": "runs",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            1.0117,
+            0.9619,
+            1.0642
+          ],
+          "cpu": [
+            1.002,
+            0.9538,
+            1.0527
+          ],
+          "rss": [
+            0.9896,
+            0.9864,
+            0.9928
+          ]
+        },
+        {
+          "corpus": "runs",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            1.0076,
+            0.9823,
+            1.0335
+          ],
+          "cpu": [
+            1.0088,
+            0.9785,
+            1.04
+          ],
+          "rss": [
+            0.9895,
+            0.986,
+            0.9932
+          ]
+        },
+        {
+          "corpus": "text",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            1.0013,
+            0.9913,
+            1.0115
+          ],
+          "cpu": [
+            1.0015,
+            0.9905,
+            1.0125
+          ],
+          "rss": [
+            0.9528,
+            0.9499,
+            0.9557
+          ]
+        },
+        {
+          "corpus": "text",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            0.9916,
+            0.9637,
+            1.0203
+          ],
+          "cpu": [
+            0.9921,
+            0.9777,
+            1.0068
+          ],
+          "rss": [
+            0.929,
+            0.9201,
+            0.9381
+          ]
+        },
+        {
+          "corpus": "text",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.9771,
+            0.942,
+            1.0136
+          ],
+          "cpu": [
+            1.0001,
+            0.972,
+            1.0291
+          ],
+          "rss": [
+            0.9247,
+            0.9046,
+            0.9452
+          ]
+        },
+        {
+          "corpus": "wikidata",
+          "threads": "1",
+          "parity": true,
+          "wall": [
+            1.0004,
+            0.9983,
+            1.0024
+          ],
+          "cpu": [
+            1.0005,
+            0.9984,
+            1.0026
+          ],
+          "rss": [
+            0.9679,
+            0.9659,
+            0.97
+          ]
+        },
+        {
+          "corpus": "wikidata",
+          "threads": "2",
+          "parity": true,
+          "wall": [
+            0.9892,
+            0.9515,
+            1.0285
+          ],
+          "cpu": [
+            0.9979,
+            0.9861,
+            1.0098
+          ],
+          "rss": [
+            0.937,
+            0.9137,
+            0.961
+          ]
+        },
+        {
+          "corpus": "wikidata",
+          "threads": "4",
+          "parity": true,
+          "wall": [
+            0.9894,
+            0.9772,
+            1.0019
+          ],
+          "cpu": [
+            0.9929,
+            0.9807,
+            1.0053
+          ],
+          "rss": [
+            0.932,
+            0.9162,
+            0.948
+          ]
+        }
+      ],
+      "stage_changes": {
+        "scan": [
+          0.9957,
+          0.9894,
+          1.0019
+        ],
+        "mtf": [
+          0.9988,
+          0.9917,
+          1.0061
+        ],
+        "build": [
+          0.9988,
+          0.9952,
+          1.0023
+        ],
+        "walk": [
+          0.9992,
+          0.9952,
+          1.0033
+        ],
+        "assemble": [
+          0.9972,
+          0.9896,
+          1.0048
+        ],
+        "rle": [
+          1.0392,
+          1.0306,
+          1.0479
+        ],
+        "crc": [
+          0.9883,
+          0.9689,
+          1.0081
+        ],
+        "total": [
+          0.9994,
+          0.9972,
+          1.0017
+        ]
+      }
+    }
+  ],
+  "run1_blob": "44c4e6d48ff85a21eb6a444710a0f351d797e100",
+  "run2_blob": "8f8724b9319d09ebb7d3eef9117595f9942c7c97",
+  "compare_files": [
+    {
+      "sha": "8e37b289b3d45a43808db456457336e4cd598354",
+      "filename": "examples/occupancy.rs",
+      "status": "modified",
+      "additions": 16,
+      "deletions": 5,
+      "changes": 21,
+      "blob_url": "https://github.com/lmmx/mibz2/blob/ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0/examples%2Foccupancy.rs",
+      "raw_url": "https://github.com/lmmx/mibz2/raw/ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0/examples%2Foccupancy.rs",
+      "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/examples%2Foccupancy.rs?ref=ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0",
+      "patch": "@@ -929,7 +929,16 @@ fn parent(args: &[String]) {\n         // the arithmetic alone, for full blocks of the file's level: no runs\n         let ls: Vec<trace::Settings> = threads\n             .iter()\n-            .map(|&t| trace::Settings::new(level, t, slots.unwrap_or(2 * t)))\n+            .map(|&t| {\n+                let plan = teams.map_or(Plan::for_threads(t), |k| Plan::Teams {\n+                    teams: (t / k).max(1),\n+                    k,\n+                });\n+                trace::Settings {\n+                    in_place: matches!(plan, Plan::Workers(_)),\n+                    ..trace::Settings::new(level, t, slots.unwrap_or(2 * t))\n+                }\n+            })\n             .collect();\n         print!(\"{}\", ledger_table(&ls, &[], n_blocks));\n         return;\n@@ -1171,7 +1180,13 @@ fn parent(args: &[String]) {\n         let s = slots.unwrap_or(2 * t);\n         let rows = g(&tl, \"f.rows_max\");\n         let decoded = g(&tl, \"f.decoded_max\");\n+        let plan = teams.map_or(Plan::for_threads(t), |k| Plan::Teams {\n+            teams: (t / k).max(1),\n+            k,\n+        });\n         let mut ls = trace::Settings::new(level, t, s);\n+        // a team plan inverts cooperatively, into `rle`; only workers' kernels invert in place\n+        ls.in_place = matches!(plan, Plan::Workers(_));\n         if rows.is_finite() && rows > 0.0 {\n             (ls.rows, ls.decoded) = (rows as usize, decoded as usize);\n         }\n@@ -1181,10 +1196,6 @@ fn parent(args: &[String]) {\n         if spec == specs[0] {\n             ledgers.push((ls, Some(median(&mut rss.clone()) * 1024.0)));\n         }\n-        let plan = teams.map_or(Plan::for_threads(t), |k| Plan::Teams {\n-            teams: (t / k).max(1),\n-            k,\n-        });\n         summary.push_str(&queue_summary(t, plan, &spec, s, &tl, &trace::ledger(&ls)));\n         let verdict = |c: (f64, f64, f64)| {\n             J::S(if !c.1.is_finite() {"
+    }
+  ],
+  "check_runs": [
+    {
+      "name": "preview",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "deploy-branch",
+      "conclusion": "skipped",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "build",
+      "conclusion": "skipped",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "pages",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "Release",
+      "conclusion": "skipped",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "deploy-branch",
+      "conclusion": "skipped",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "preview",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "bench",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "python (3.13)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "python (3.10)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "python (3.12)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "python (3.14)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "python (3.15)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "python (3.11)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "Publish crate",
+      "conclusion": "skipped",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "macos (macos-14, x86_64)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "macos (macos-14, aarch64)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "linux (ubuntu-22.04, x86_64, auto)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "linux (ubuntu-22.04, aarch64, 2_28)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "sdist",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "windows (windows-latest, x64)",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "typing",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "build",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "get-python-versions",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "occupancy",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "rust",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "pages",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "check-commit",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    },
+    {
+      "name": "miri",
+      "conclusion": "success",
+      "head_sha": "ee12bb9e73e676ee6067f4fc33778f47ed5ab8e0"
+    }
+  ],
+  "researcher_comment": "FROM: researcher\nTO: coordinator, guardian\nRE: #162 comment 6645922140; P87 registration d6401b55 / candidate f142e38e\nTYPE: REVIEW\n\n[Independent assessment](https://github.com/lmmx/mibz2/blob/da2abea93591123685ae8187cc84bd319a21653a/docs/journal/compact30-adversarial/scanner-146/p87-registration-6645922140.md).\n\n1. **Claim less.** This is a repeated-regression screen, not demonstrated no harm. If each independent run has power p, requiring both to flag has power p². Illustratively, a true slowdown equal to a normal 95% half-width gives ~50% detection per run, ~25% jointly. Excludable harm is determined by the upper interval endpoint, not its half-width. Report all row-wise upper bounds and single-run flags; call unresolved controls inconclusive, not harmless. A genuine noninferiority claim needs a prospectively justified material margin; I authorize no gate/statistical changes.\n\n2. **No reuse-only attribution.** The rule correctly disclaims it. This intervention changes destination and removes rle allocation together. Fresh-Scratch Callgrind differences include first growth and do not establish steady-state savings.\n\n3. **Cheap additions:** archive both existing runs' raw artifacts before the mutable comment is overwritten; interpret existing 1t/2t-spread/4t CPU and wall rows separately with actual topology. Optional existing-driver Callgrind C2−C1 isolates the second-call instruction increment with reused Scratch. Its XOR CRC becomes zero on even repeats: keep separate byte-exact parity checks. None of these identifies traffic/residency mediation. Matched-allocation timing arms or new affinity/PMU experiments would broaden this validation.\n\n**Additional gate issue:** STEWARDSHIP requires an end-to-end improvement beyond noise. RSS alone does not establish a faster decoder, so the registration's assertion that its RSS alternative automatically meets that gate is unsupported. CPU efficiency likewise must not be silently renamed elapsed-time improvement.\n\n**Timing:** no bench results read. The workflow posts a pending comment before measuring, then edits it. The literal “before first bench comment” amendment cutoff may therefore already have passed; do not retroactively redefine it. Record exposure/timing and retain this as a critique if closed. No implementation, measurement, acceptance or merge performed.",
+  "limitations": "Summary arithmetic and classification predicates checked; no independent raw-round interval replay, safety certification or binary identity verification."
+}

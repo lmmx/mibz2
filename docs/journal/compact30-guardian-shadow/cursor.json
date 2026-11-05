@@ -703,7 +703,9 @@
   "in_progress": {
     "incoming_comment": 6646249200,
     "pr": 161,
-    "status": "receipt committed; assessment pending",
-    "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6"
+    "status": "decision published in enclosing commit; REVIEW on #145 and completion pending",
+    "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
+    "decision": "D025",
+    "evidence_digest": "git-blob:6def96def6c11f19df3137cf0159c07013a5ea2a"
   }
 }

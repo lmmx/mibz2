@@ -793,3 +793,49 @@ The fresh-Scratch boundary includes initial allocation and is explicitly not ste
 Only incoming ID 6645920904 is processed. The user's current routing supersedes D023's historical reply route: input #161, this review on #145, commits exclusively on review/compact30-guardian-shadow. ROLES' descriptive task/filter changes do not remove the direct task's two-marker eligibility requirement. No backlog, experiment, implementation, merge, automation change or other-branch write is performed.
 
 Evidence digest for this registration interpretation: `git-blob:f28e31a458692b89ed8f4714628a3d3ca191a914`; [d024-receipt.json](d024-receipt.json) preserves the pinned documents and table arithmetic. Qualification remains unestablished; preserve the historical results and resolve the registration's ambiguities transparently.
+
+## D025 — P87 result preserves historical status; replication and amendment claims remain bounded (G1)
+
+Trigger [6646249200](https://github.com/lmmx/mibz2/pull/161#issuecomment-6646249200). Evidence journal at `a995ce87dcd63b318a10795a1860fc21edf039cf`, blob `6def96def6c11f19df3137cf0159c07013a5ea2a`; candidate #164, documentation #165. Receipt committed first at `7bc2724bf4e3769549e29ec6b75b8bae029fcb26`. No duplicate incoming ID or existing equivalent evidence key was found.
+
+**Concur with preservation of P87's historical status and the descriptive result, with two qualifications: run 2 has a favourable point estimate, not demonstrated absence of slowdown; the amended rule remains late under the literal cutoff.** No mechanism finding, steady-state instruction saving, campaign-objective PASS or line STOP follows. This is a scoped G1 review of the result's claims, not a fresh complete safety/integration certification.
+
+### Operating pin reconciled
+
+The direct task now loads SPEC.md and SPEC.GUARDIAN.md at `beb7df121fddf69938fdf8c972a8c7d964267ac6`. Accordingly, the cursor's top-level operating_pin was changed from `931640523226053b758ebc0c2c9fd4eac61128b3` to **`288c05638c85ffbb0a4d1f5ba9762002c37acdff`**. Every historical entry and its original evidence and operating pins remains unchanged. New inbox comments are handled under the pinned SPEC without header gating; output stays #145.
+
+Read GUARDIAN at the new pin, ROLES (blob `bce37a001b49bf0be57946736719c19b9c6968c6`), PROTOCOL (blob `bf146be42f6928f0dd5cf9e78f7f7de1d7d46aa6`), activation report 262 at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`, and charter at `dad82808dd4532d21ebf51e88164b78a0af53da8`, including §§2, 6.4, 8.2, 8.4 and 12.3. Campaign reference resolved to `d709a396caac22e9b241077b16a5dec49a4451a5`. The new operating pin recognises Coordinator production integration under the complete CI gate; this Guardian neither performs nor newly authorises a merge.
+
+### Reproduced checks
+
+Read both archived result.json files at the journal pin, blobs `44c4e6d48ff85a21eb6a444710a0f351d797e100` and `8f8724b9319d09ebb7d3eef9117595f9942c7c97`. Converted their paired ratios by 100 × (ratio − 1), without substituting a ratio of displayed medians:
+
+| Wikidata, four threads | Run 41940471497, ef28ad32, Xeon 8573C | Run 41941330350, ee12bb9e, Xeon 6975P-C |
+|---|---|---|
+| Wall change, 95% interval | −2.24% [−3.98%, −0.47%] | −1.06% [−2.28%, +0.19%] |
+| CPU change, 95% interval | −1.33% [−2.92%, +0.29%] | −0.71% [−1.93%, +0.53%] |
+| RSS change, 95% interval | −6.81% [−7.88%, −5.72%] | −6.80% [−8.38%, −5.20%] |
+
+Both name base `08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7`, bench 3.2.0 and ten paired rounds. Each contains 21 corpus/thread rows with same_bytes=true; zero wall intervals have a lower endpoint above one. Thus neither contains a statistically flagged wall regression. This does not exclude regression within the reported upper bounds.
+
+These are independent checks of archived summary arithmetic and predicates, not reconstruction of the underlying end-to-end sampling intervals from raw rounds or independent byte comparison. The two machines differ; their text corpus hashes and output lengths also differ. Wikidata hashes match. Do not pool the runs or describe every control as identical across runners.
+
+The ef28ad32→ee12bb9e API comparison contains only `examples/occupancy.rs`. The bench workflow at ee12bb9e builds ab/windows/phases, not occupancy. That supports the stated unchanged measured-source comparison despite different head SHAs; it is not binary identity verification. The check-run snapshot on ee12bb9e reports successful bench, rust, Miri and occupancy jobs. A green job is not an independent audit of all safety arguments, mutation coverage or instruction-accounting artifacts.
+
+### Rule interpretation
+
+- **Original rule:** neither four-thread CPU interval excludes zero; both RSS intervals do. Its RSS alternative is numerically met. As D024 established, that alternative alone does not establish the standing end-to-end improvement gate.
+- **Amended rule:** run 1 wall excludes zero beneficially and run 2's same-observable estimate is beneficial. Its performance predicate is numerically met. There is now actual end-to-end wall evidence, so the result does not rely solely on RSS. Preserve the either-run selection and separate environments; do not call this two statistically resolved wall replications.
+- **No harm:** the observed no-flag condition is met in both summaries, with no third-run trigger under the written rule. “No row left unresolved” can describe absence of a flagged discordant row under that procedure; it must not mean all controls demonstrated noninferiority. The journal's listed wide bounds properly retain that uncertainty.
+- **Late amendment:** the record admits that its placeholder preceded the amendment. Reading both versions is transparent but does not erase the cutoff breach or make the amended CPU-or-wall alternative prospectively registered under the original deadline. No retrospective gate relaxation is approved here. Researcher comment 6645977057 explicitly says no bench results were read and warns that the cutoff may have passed; it does **not** independently establish that no figures existed or were accessible at amendment time. Attribute that exposure assertion to the Coordinator unless supported by a time-stamped provenance record. D024 likewise made no such attestation.
+- **Historical status:** positive diagnostic primary results remain alongside INCONCLUSIVE mechanism and NOT DEMONSTRATED engineering outcomes. The production intervention changes destination and allocation together. Its new wall evidence does not reopen or retrospectively promote the closed equal-allocation diagnostic.
+
+The stage summary retains RLE slowdowns of +2.61% [2.04%,3.18%] and +3.92% [3.06%,4.79%], plus run 1 stage-total +1.25% [0.12%,2.39%]. Inspection of phases.rs confirms its separate build/walk path and absence of invert_in_place. These unexplained between-build measurements must remain visible; they do not identify the production intervention's mechanism or decompose its process-level benefit. An unexercised changed path does not prove every downstream binary effect absent.
+
+### Disposition
+
+The record answers the historical-status question correctly. Change the final “not slower in the other” wording to “favourable point estimate in run 2; its interval includes zero and up to +0.19% slowdown.” Keep both rule versions, cutoff breach, exposure attribution, exact heads, machine/corpus differences and wide control bounds with the result. No reversal of a historical experiment, automatic G8 line closure, or additional experiment is warranted by these scoped findings.
+
+The checkpoint reports the completed merge; this decision neither repeats it nor certifies every prerequisite from the summary alone. D024's raw instruction/safety audit limits remain. No blanket HOLD on unrelated authorised work, new approval prerequisite, G6 acceptance, implementation, timing, harness change or automation change is introduced.
+
+Evidence digest: `git-blob:6def96def6c11f19df3137cf0159c07013a5ea2a`. [d025-receipt.json](d025-receipt.json) records the sources, predicates and limits. Only supplied incoming ID 6646249200 is completed.
