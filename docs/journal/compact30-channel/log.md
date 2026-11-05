@@ -533,3 +533,19 @@ Verbatim:
   - **MTF + RLE2 is +19.3% slower.** Its codegen is fragile to the compilation context.
   - **The lead this opens:** the MTF synthesis checks the stage's codegen sensitivity (inlining,
     the kernel boundary). The PGO probe reads its MTF row first.
+- **The census's two cheap fixes, built and registered, now on the PR bench:**
+  - **#203, the job handoff.** The jobs' `Mutex<Receiver>` held across `recv` becomes a
+    condvar-backed queue. It is Miri-clean, with new handoff tests. Predicted 4-thread wall
+    −0.2% to −0.8%, probably inside noise. The occupancy run on the PR reads its mechanism.
+  - **#204, the Huffman bit buffer in registers.** The listing showed the cause: the bit
+    reader's address escapes to its cold calls, so LLVM stores and reloads `buf` on every
+    lookup.
+    - Instructions −2.5% on the scanner, with 9.15 billion symbols identical in a
+      differential.
+    - Predicted scanner stage −15% to −25% at 1 thread on Intel.
+- **A measurement hazard, caught before it struck.** A shared `CARGO_TARGET_DIR` across
+  worktrees can make cargo link another copy's mibz2 as fresh. The Huffman-register agent saw
+  it. The build-front brief had told three agents to share one target dir.
+  - The withdrawn path is now a file, so any build pointed at it fails loudly, and the saved
+    workflow script is corrected.
+  - No build had run there yet.
