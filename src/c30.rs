@@ -2675,7 +2675,9 @@ mod tests {
         }
     }
 
-    static WALK_HITS: [(&str, Counter); 10] = [
+    // (a lane coming into the tail with its buffer exactly full, TAIL_ENTERED_FULL, is
+    // counted but not required: as in master, these columns don't reach it)
+    static WALK_HITS: [(&str, Counter); 11] = [
         (
             "a lane arriving at a RAW row in the busy phase",
             &hits::RAW_ARRIVALS_FULL,
@@ -2695,6 +2697,7 @@ mod tests {
             &hits::FULL_PHASE_ENDS_MID_PASS,
         ),
         ("a RAW start", &hits::RAW_START),
+        ("a pass ending with a buffer full", &hits::PASS_ENDS_FULL),
     ];
     static BUILD_HITS: [(&str, Counter); 8] = [
         ("the leaf finish", &hits::LEAF),
@@ -3353,6 +3356,7 @@ mod tests {
         let grows = [
             "a buffer grown at a pass's start",
             "a buffer grown in the tail",
+            "a pass ending with a buffer full",
         ];
         let walk_hits: Vec<_> = WALK_HITS
             .into_iter()
@@ -3398,14 +3402,32 @@ mod tests {
         }
     }
 
-    /// The room walk's buffer growth under Miri, in both layouts: starts along a long cycle
-    /// of a 10,000-row block (`chain_starts`), so lanes fill their buffers in the full
-    /// phase and the tail
+    /// The room walk's buffer growth under Miri: starts along a long cycle (`chain_starts`)
+    /// of a 10,000-row block in the record layout (the port's case) and of a 5,000-row one
+    /// in the split layout, so lanes fill their buffers in the full phase and the tail;
+    /// each case asserted to reach the growth transitions itself
     #[test]
     fn miri_compact30_grows() {
-        miri_grows::<false>();
-        miri_grows::<true>();
-        assert_reached(&[
+        miri_grows::<false>(10_000, 4321);
+        miri_grows::<true>(5_000, 2_111);
+    }
+
+    fn miri_grows<const S: bool>(n: usize, orig_ptr: u32) {
+        let mut k = Compact30Of::<S>::default();
+        let mut rnd = rng(0x6e0);
+        let ll = column(&mut rnd, n, 256, &[1]);
+        let counts = counts_of(&ll);
+        let mut tt = TVector::new();
+        build(&ll, &counts, &mut tt);
+        let mut want = Vec::new();
+        walk(&tt, orig_ptr, &mut want);
+        assert!(k
+            .ctor
+            .build::<S>(&ll, &counts, 0, &mut k.c.rec, &mut k.c.raw));
+        k.c.n = ll.len();
+        let st = chain_starts(&k.c, orig_ptr).expect("a long cycle");
+        let d = room_from(&mut k.c, orig_ptr, st, &want, "miri grows").counts;
+        for (name, c) in [
             ("a buffer grown at a pass's start", &hits::GROWS_FULL),
             ("a buffer grown in the tail", &hits::GROWS_TAIL),
             ("a segment taken mid-pass", &hits::MID_PASS_TAKES),
@@ -3413,24 +3435,9 @@ mod tests {
                 "the full phase ending mid-pass",
                 &hits::FULL_PHASE_ENDS_MID_PASS,
             ),
-        ]);
-    }
-
-    fn miri_grows<const S: bool>() {
-        let mut k = Compact30Of::<S>::default();
-        let mut rnd = rng(0x6e0);
-        let ll = column(&mut rnd, 10_000, 256, &[1]);
-        let counts = counts_of(&ll);
-        let mut tt = TVector::new();
-        build(&ll, &counts, &mut tt);
-        let mut want = Vec::new();
-        walk(&tt, 4321, &mut want);
-        assert!(k
-            .ctor
-            .build::<S>(&ll, &counts, 0, &mut k.c.rec, &mut k.c.raw));
-        k.c.n = ll.len();
-        let st = chain_starts(&k.c, 4321).expect("a long cycle");
-        room_from(&mut k.c, 4321, st, &want, "miri grows");
+        ] {
+            assert!(of(&d, c) > 0, "S {S}, n {n}: never reached: {name}");
+        }
     }
 
     /// The epoch paths under Miri, in both layouts: a block of two epochs whose byte-1
@@ -3471,13 +3478,15 @@ mod tests {
 
     /// One staged case for Miri: a column from `seed` of rows.0 + rnd(rows.1) rows, its
     /// records at `permille` forced RAW, walked from segments.0 + rnd(segments.1 + n / per)
-    /// random starts and the first, in both layouts (C against L); its rows
+    /// random starts and the first, in the record layout (`layouts[0]`), the split one
+    /// (`layouts[1]`) or both (then C against L); its rows
     fn miri_staged_case(
         seed: u64,
         rows: (usize, u64),
         segments: (usize, u64),
         per: usize,
         permille: u32,
+        layouts: [bool; 2],
     ) -> usize {
         let mut rnd = rng(seed);
         let n = rows.0 + rnd(rows.1) as usize;
@@ -3491,28 +3500,35 @@ mod tests {
         walk(&tt, orig_ptr, &mut want);
         let m = segments.0 + rnd(segments.1 + (n / per) as u64) as usize;
         let st = random_starts(n, orig_ptr, m);
-        let mut c = C30::<false>::default();
-        let mut l = C30::<true>::default();
-        assert!(Ctor::default().build::<false>(&ll, &counts, permille, &mut c.rec, &mut c.raw));
-        assert!(Ctor::default().build::<true>(&ll, &counts, permille, &mut l.rec, &mut l.raw));
-        c.n = n;
-        l.n = n;
         let what = format!("seed {seed}, n {n}, {m} starts, permille {permille}");
-        let a = room_from(&mut c, orig_ptr, st.clone(), &want, &what);
-        let b = room_from(&mut l, orig_ptr, st, &want, &what);
-        assert!(a == b, "{what}: C and L differ");
+        let a = layouts[0].then(|| {
+            let mut c = C30::<false>::default();
+            assert!(Ctor::default().build::<false>(&ll, &counts, permille, &mut c.rec, &mut c.raw));
+            c.n = n;
+            room_from(&mut c, orig_ptr, st.clone(), &want, &what)
+        });
+        let b = layouts[1].then(|| {
+            let mut l = C30::<true>::default();
+            assert!(Ctor::default().build::<true>(&ll, &counts, permille, &mut l.rec, &mut l.raw));
+            l.n = n;
+            room_from(&mut l, orig_ptr, st.clone(), &want, &what)
+        });
+        if let (Some(a), Some(b)) = (a, b) {
+            assert!(a == b, "{what}: C and L differ");
+        }
         n
     }
 
     /// The staged busy phase's RAW paths under Miri: small blocks (200 to 4,200 rows) and
-    /// 64 to 256 starts, with groups forced RAW (300 and 1000 per mille), in both layouts:
+    /// 64 to 256 starts, with groups forced RAW (300 and 1000 per mille), one case in each
+    /// layout:
     /// arrivals and their resolves, an arrival beside a mark, an arrival where the queue
     /// runs out, takes mid-pass and the busy phase ending mid-pass. The seeds were searched
     /// for natively (`search_miri_seeds`)
     #[test]
     fn miri_c30_staged_small() {
-        for (seed, pm) in MIRI_SMALL {
-            miri_staged_case(seed, SMALL_ROWS, (64, 192), usize::MAX, pm);
+        for (seed, pm, layouts) in MIRI_SMALL {
+            miri_staged_case(seed, SMALL_ROWS, (64, 192), usize::MAX, pm, layouts);
         }
         assert_reached(&MIRI_SMALL_HITS);
     }
@@ -3521,23 +3537,25 @@ mod tests {
     /// pass of more than one chunk): blocks of 8,000-16,000 rows and 33 + rnd(n / 120)
     /// starts, so that a pass's room (2n / ns + 63) can be over TILE and the queue can last
     /// past a chunk's last offset (with 33-40 starts it runs out within the first chunk), at
-    /// 300 per mille forced RAW, in both layouts: arrivals at a later chunk's first offset
-    /// and at a chunk's last, a take at a chunk's last offset, and the queue running out at
-    /// a chunk's last offset. The seeds were searched for natively (`search_miri_seeds`):
-    /// 5 (15,921 rows) reaches all but the last, 298 (13,395 rows) that
+    /// 300 per mille forced RAW, one case in each layout (each block is over 13,000 rows,
+    /// minutes under Miri): arrivals at a later chunk's first offset and at a chunk's last,
+    /// a take at a chunk's last offset, and the queue running out at a chunk's last offset.
+    /// The seeds were searched for natively (`search_miri_seeds`): 5 (15,921 rows, the
+    /// record layout) reaches all but the last, 298 (13,395 rows, the split layout) that
     #[test]
     fn miri_c30_staged_chunks() {
-        for seed in MIRI_CHUNKS {
-            miri_staged_case(seed, CHUNK_ROWS, (33, 0), CHUNK_PER, 300);
+        for (seed, layouts) in MIRI_CHUNKS {
+            miri_staged_case(seed, CHUNK_ROWS, (33, 0), CHUNK_PER, 300, layouts);
         }
         assert_reached(&MIRI_CHUNKS_HITS);
     }
 
     // (seed, permille) for `miri_c30_staged_small`, and seeds for `miri_c30_staged_chunks`,
     // with their columns' and starts' ranges
-    const MIRI_SMALL: [(u64, u32); 2] = [(1, 300), (2, 1000)];
+    const MIRI_SMALL: [(u64, u32, [bool; 2]); 2] =
+        [(1, 300, [true, false]), (2, 1000, [false, true])];
     const SMALL_ROWS: (usize, u64) = (200, 4000);
-    const MIRI_CHUNKS: [u64; 2] = [5, 298];
+    const MIRI_CHUNKS: [(u64, [bool; 2]); 2] = [(5, [true, false]), (298, [false, true])];
     const CHUNK_ROWS: (usize, u64) = (8000, 8000);
     const CHUNK_PER: usize = 120;
     static MIRI_SMALL_HITS: [(&str, Counter); 6] = [
@@ -3630,7 +3648,7 @@ mod tests {
             for b in a + 1..a + 40 {
                 reset();
                 for (seed, pm) in [(a, 300), (b, 1000)] {
-                    miri_staged_case(seed, SMALL_ROWS, (64, 192), usize::MAX, pm);
+                    miri_staged_case(seed, SMALL_ROWS, (64, 192), usize::MAX, pm, [true; 2]);
                 }
                 if reached(&MIRI_SMALL_HITS) {
                     println!("small: [({a}, 300), ({b}, 1000)]");
@@ -3646,7 +3664,7 @@ mod tests {
                 .iter()
                 .map(|(_, c)| hits::get(c) > 0)
                 .collect();
-            let n = miri_staged_case(seed, CHUNK_ROWS, (33, 0), CHUNK_PER, 300);
+            let n = miri_staged_case(seed, CHUNK_ROWS, (33, 0), CHUNK_PER, 300, [true; 2]);
             let after: Vec<bool> = MIRI_CHUNKS_HITS
                 .iter()
                 .map(|(_, c)| hits::get(c) > 0)
@@ -3665,7 +3683,7 @@ mod tests {
         // each found seed alone: what it reaches
         for &(seed, n) in &found {
             reset();
-            miri_staged_case(seed, CHUNK_ROWS, (33, 0), CHUNK_PER, 300);
+            miri_staged_case(seed, CHUNK_ROWS, (33, 0), CHUNK_PER, 300, [true; 2]);
             let r: Vec<usize> = MIRI_CHUNKS_HITS.iter().map(|(_, c)| hits::get(c)).collect();
             println!("chunks: seed {seed} (n {n}) alone: {r:?}");
         }
