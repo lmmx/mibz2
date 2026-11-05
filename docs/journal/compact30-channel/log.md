@@ -549,3 +549,28 @@ Verbatim:
   - The withdrawn path is now a file, so any build pointed at it fails loudly, and the saved
     workflow script is corrected.
   - No build had run there yet.
+- **#203, the job handoff: benefit not shown, closed unmerged.**
+  - **The mechanism worked** (occupancy 42057901176, 9V45). 4-thread `w.lock` was 0.0085%, and
+    `i:q` 1.6%.
+  - **No benefit beyond noise in either run.** 7763: wall −0.9%, CPU −0.4%. 9V45: wall +0.9%,
+    CPU **+3.1% slower**, amplification +3.5%.
+  - **What it says (INFERRED):** at 4 threads on 2 SMT cores, the freed idle went to more walks
+    beside walks, with no throughput gained. So the 4-thread row is bound by core throughput,
+    not by the handoff. Removing handoff idle is closed where threads exceed physical cores.
+    One thread a core is unmeasured.
+  - **The entry,** with its registration, both runs and the occupancy record, is on
+    `docs/gen2-results`.
+- **The pair matrix's cross-exam** found a blocker: its loads could not separate C, M and P.
+  It also found three majors: no anchor to the 4-copy ×2.1–2.2, a denominator that overstated
+  the lever, and too few rounds for the 0.2 band.
+  - **Being fixed before any dispatch:**
+    - five light and memory loads;
+    - a whole-decode anchor with the other core busy;
+    - fixed-work makespan for both siblings;
+    - a duty-cycled ALU load, and the same block started together;
+    - environment records (cpuidle, cmdline, THP);
+    - 9 rounds.
+  - **The registration** of its C, M and P rule is written with the fixes.
+- **#204, the Huffman register: merged (264ae5bb).** The rule passed on run 2 (8370C): `wikidata` 1-thread −2.7% (−4.3, −1.1), scanner −12.9%, below the predicted 15–25%. On run 1 (9V74) the scanner moved −5.0% and the whole decoder didn't. An independent differential review found nothing. Results in docs PR #205.
+- **The swarms are stopped at the maintainer's request** (weekly limit). These remain parked, with their worktrees kept: the build front, the tail rivals, MTF, the window-light walks and the pair-matrix fixes. Work continues serially.
+- **Bench precision, first result** (OBSERVED, k = 9 harness-only A/A): at 1 and 2 threads, run-to-run spread is 0.7–1.0%, beyond one run's interval. 2 of 9 A/A intervals exclude 0. At 4 threads it is about 0. So rounds help at 4 threads, and independent runners at 1 and 2. True A/A dispatches come next.
