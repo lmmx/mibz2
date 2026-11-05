@@ -1,0 +1,15 @@
+[package]
+name = "c30cg"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+mibz2 = { path = "<the arm's mibz2 worktree: master 4d4709de, or research/tiled-b>" }
+
+[profile.release]
+codegen-units = 1
+debug = "line-tables-only"
+lto = "fat"
+
+[workspace]
