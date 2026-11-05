@@ -75,6 +75,12 @@ pub trait InverseBwt: Default + Send {
 
 pub use crate::c30::{Compact30, Compact30Of, Compact30Split};
 
+/// The decoder's inverse-BWT kernel, wherever it isn't chosen: `Scratch`'s default type,
+/// `decode`, `decode_blocks`, `BzReader`, and `StreamDecoder`'s workers (`Plan::Workers`, and
+/// a team size it can't run). Cooperative teams (`Plan::Teams`) keep the T-vector, inlined
+/// in their own build and walk.
+pub type DefaultInverse = Compact30;
+
 /// The plain walk: one chain of dependent loads (lbzip2's and libbzip2's)
 #[derive(Default)]
 pub struct Plain {
@@ -94,7 +100,7 @@ impl InverseBwt for Plain {
 }
 
 /// The segmented walk in passes (`walk_segments_room`), the plain one for a short block:
-/// the default
+/// the default before `Compact30`, and its fallback where the records can't hold a block
 #[derive(Default)]
 pub struct Segmented {
     tt: TVector,

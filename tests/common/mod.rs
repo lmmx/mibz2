@@ -44,10 +44,11 @@ pub fn compress(data: &[u8], level: u32) -> Vec<u8> {
     e.finish().unwrap()
 }
 
-/// The sequential decoder, a panic caught and reported as one
+/// The sequential decoder (its default kernel, `bwt::DefaultInverse`), a panic caught and
+/// reported as one
 pub fn ours(data: &[u8], k: Kernels) -> Result<Result<Vec<u8>, Error>, String> {
     catch_unwind(AssertUnwindSafe(|| {
-        mibz2::decode_with::<mibz2::bwt::Segmented>(data, k)
+        mibz2::decode_with::<mibz2::bwt::DefaultInverse>(data, k)
     }))
     .map_err(|_| "PANIC".to_string())
 }
@@ -457,7 +458,7 @@ impl Candidate for Mibz2 {
     }
     fn decode(&self, data: &[u8]) -> Result<Vec<u8>, String> {
         let r = if self.threads == 0 {
-            mibz2::decode_with::<mibz2::bwt::Segmented>(data, self.kernels)
+            mibz2::decode_with::<mibz2::bwt::DefaultInverse>(data, self.kernels)
         } else {
             parallel(
                 data,

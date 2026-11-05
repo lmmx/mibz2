@@ -829,6 +829,49 @@ mod tests {
         }
     }
 
+    /// The same two blocks through compact30 (the default kernel, and its split layout):
+    /// it inverts in place too, so `rle` is never allocated; its records (64 bytes per 30
+    /// rows and PARK) and RAW groups stand where the T-vector stood (this ledger describes
+    /// `Segmented`'s table, so its entries are checked here, not looked up there)
+    #[test]
+    fn compact30_inverts_in_place_with_its_records() {
+        compact30_buffers::<false>();
+        compact30_buffers::<true>();
+    }
+
+    fn compact30_buffers<const S: bool>() {
+        let level = 1;
+        let mut data = compress(&letters(70_000, 7), level);
+        data.extend(compress(&letters(99_000, 11), level));
+        let k = Kernels::detect();
+        let mut sc = Scanner::new(SliceSource(&data));
+        let mut scratch = Scratch::<crate::bwt::Compact30Of<S>>::default();
+        let (mut out, mut syms) = (Vec::new(), Vec::new());
+        let mut rows = Vec::new();
+        while let Event::Block { symbols, .. } = sc.next(syms).unwrap() {
+            out.clear();
+            decode_block(&symbols, k, &mut scratch, &mut out).unwrap();
+            rows.push(get(&scratch.buffers(), "ll").len);
+            syms = symbols.syms;
+        }
+        assert_eq!(rows.len(), 2);
+        let b = scratch.buffers();
+        assert!(Settings::new(level, 1, 1).in_place);
+        assert_eq!(get(&b, "rle").cap, 0, "rle allocated (S {S})");
+        assert_eq!(get(&b, "ll").cap, block_rows(level));
+        // the records: one per 30 rows and PARK, 64 bytes each, for the last block
+        let rec = get(&b, "c30.rec");
+        assert_eq!(rec.len, 64 * (rows[1].div_ceil(30) + 1), "S {S}");
+        assert!(rec.cap >= rec.len);
+        get(&b, "c30.raw");
+        // no T-vector, and no fallback's
+        assert!(b
+            .iter()
+            .all(|x| x.name != "tt" && !x.name.starts_with("fallback")));
+        let ns = get(&b, "seg.next").len / 8;
+        assert!(ns > FLAGGED - 8 && ns <= FLAGGED, "{ns} segments");
+    }
+
     const FLAGGED: usize = crate::bwt::FLAGGED_SEGMENTS;
 
     /// The arithmetic at -9 (docs/ledger.md's table): exact figures for full blocks
