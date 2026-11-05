@@ -138,10 +138,17 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       # The release profile (Cargo.toml's: fat LTO, one codegen unit), as published
+      # RESEARCH PROBE (research/pgo-probe, not for merge; docs/journal/2026-11-05-pgo-probe.md):
+      # the head's harness and phases built with profile-guided optimisation by bench/pgo.sh,
+      # trained on the generated corpora only (never the Wikidata blocks, whose rows stay out
+      # of sample), the base as published. The same source on both arms, so the bench reads
+      # what PGO alone is worth. The PGO flags stay inside bench/pgo.sh (a target dir of its
+      # own, exported nowhere): the windows tool here and the base below are built without.
       - name: Build the head
         run: |
-          cargo build --release --example ab --example windows --example phases
-          mkdir -p bin && cp target/release/examples/ab bin/ab && cp target/release/examples/phases bin/phases
+          cargo build --release --example windows
+          bash bench/pgo.sh "$RUNNER_TEMP/pgo" bin ab phases
+          ls -l bin
 
       # The alternatives (master and the Actions tab only): bench/alternatives' build of the
       # harness, and indexed_bzip2 in a virtualenv of its own
@@ -171,6 +178,8 @@ jobs:
         env:
           BASE_SAMPLE_MS: ${{ inputs.base_sample_ms }}
         run: |
+          # (the PGO probe: no flag of the head's build reaches the base's)
+          if [ -n "${RUSTFLAGS:-}${CARGO_ENCODED_RUSTFLAGS:-}" ]; then echo "::error::RUSTFLAGS set for the base build"; exit 1; fi
           git worktree add --detach .base-src "$BASE_SHA"
           test -f .base-src/examples/ab.rs || { echo "::error::the base $BASE_SHA has no examples/ab.rs"; exit 1; }
           # (and its examples/phases.rs, for the stage table, where it has one)
