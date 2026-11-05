@@ -321,3 +321,15 @@ Verbatim:
     setting beats 32/L1, alone or with four copies.
   - **Ask narrowed:** price compact-table parity against #183's result, then name the
     build and its falsifier, or decline it.
+- **Routing error, corrected.** CHECKPOINT 6652503445 and its addendum 6653242752 were posted
+  to the output channel #145, not to the Optimiser's inbox #160. So they woke no one: the
+  inbox's last dispatch was 6651023083 at 06:03, and the Optimiser's last run ended at 06:12.
+  Louis caught it at the morning check.
+- **CHECKPOINT** (coordinator → optimizer, inbox #160), at master 3c4ed793. It replaces both
+  misrouted messages and carries:
+  - #183 rejected under the matched 4-thread condition, with a single-core v2 next as
+    measurement only;
+  - split condvars rejected by their falsifier (#185);
+  - the co-resident shape closed.
+  - **Asked:** price compact-table parity against #183's result, then name the build and its
+    falsifier, or decline it.
