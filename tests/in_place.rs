@@ -10,14 +10,17 @@
 //!   scratch reused after an error;
 //! - against `Segmented::invert` into a buffer of its own, block by block (the algorithm
 //!   held fixed, only the output's storage changed), with `ll`'s buffer unmoved;
-//! - for a kernel that falls back (`Plain`, `Cooperative`): false, and nothing changed.
+//! - for a kernel that falls back (`Plain`, `Cooperative`): false, and nothing changed;
+//! - for the split (`InverseBwt::invert_split`, RLE1 over the walk's segments with no copy
+//!   joining them): the same bytes, `ll` untouched on the chain's path, RLE1 and the CRC
+//!   over the chain as over the joined block, and the decoder's errors on that path.
 //!
 //! With the `trace` feature, they also check from the scratch's own buffers that `rle` is
 //! never allocated, and how `ll` grows across levels.
 
 mod common;
 use common::{compress, craft, oracle, Rng, Spec};
-use mibz2::bwt::{Cooperative, InverseBwt, Plain, Segmented};
+use mibz2::bwt::{Cooperative, InverseBwt, Inverted, Plain, Segmented};
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{decode_with, ErrorKind, Kernels, Scratch, StreamDecoder};
 
@@ -242,6 +245,160 @@ fn segmented_in_place_equals_segmented_into_its_own_buffer() {
     );
 }
 
+/// The split, the algorithm held fixed: `Segmented::invert_split` against
+/// `Segmented::invert` into a buffer of its own, block by block, on every sample. The
+/// chain's pieces joined are the separate buffer's bytes, with `ll` untouched (bytes,
+/// length, buffer); in place (a short block, or one whose chain would join a short cycle
+/// round again), `invert_in_place`'s contract. RLE1 and the CRC over the chain are those
+/// over the joined bytes, by both kernels. Both paths, and the plain walk, are taken.
+#[test]
+fn segmented_split_equals_segmented_into_its_own_buffer() {
+    let mut rng = Rng(0x87_1a);
+    let (mut sep, mut split) = (Segmented::default(), Segmented::default());
+    let mut out = Vec::new();
+    let (mut chained, mut in_place) = (0, 0);
+    let mut samples = common::samples(&mut rng);
+    // a string repeated: r0's cycle is short, joined round again
+    samples.push(("repeated".into(), b"abcdefg".repeat(40_000)));
+    for (name, data) in samples {
+        for level in [1, 9] {
+            for (i, (mut ll, counts, orig_ptr)) in last_columns(&compress(&data, level))
+                .into_iter()
+                .enumerate()
+            {
+                let what = format!("{name} -{level} block {i}");
+                sep.invert(&ll, &counts, orig_ptr, &mut out);
+                let before = ll.clone();
+                let (ptr, cap, n) = (ll.as_ptr(), ll.capacity(), ll.len());
+                match split.invert_split(&mut ll, &counts, orig_ptr) {
+                    Some(Inverted::Chain(c)) => {
+                        assert!(c.clone().flatten().eq(out.iter()), "{what}: the pieces");
+                        for k in [Kernels::scalar(), Kernels::detect()] {
+                            let (mut whole, mut got) = (b"x".to_vec(), b"x".to_vec());
+                            let want = mibz2::rle::unrle(&out, &mut whole, k);
+                            let mut crc = mibz2::crc::Running::new(1);
+                            let r = mibz2::rle::unrle_chain(c.clone(), n, &mut got, &mut crc, k);
+                            assert_eq!(r, want, "{what}: RLE1's result");
+                            assert!(got == whole, "{what}: RLE1's bytes, {k:?}");
+                            let crc = crc.finish(&got, k);
+                            assert_eq!(crc, mibz2::crc::crc32(&whole[1..], k), "{what}");
+                        }
+                        assert!(ll == before, "{what}: ll changed on the chain's path");
+                        chained += 1;
+                    }
+                    Some(Inverted::InPlace) => {
+                        assert!(ll == out, "{what}: the bytes differ");
+                        in_place += 1;
+                    }
+                    None => panic!("{what}: Segmented fell back"),
+                }
+                assert_eq!(ll.len(), n, "{what}: the length");
+                assert_eq!((ll.as_ptr(), ll.capacity()), (ptr, cap), "{what}: ll moved");
+            }
+        }
+    }
+    assert!(
+        chained > 0 && in_place > 0,
+        "{chained} chained, {in_place} in place"
+    );
+}
+
+/// The decoder's errors on the chain's path, against the separate buffer's (`Plain`):
+/// crafted blocks long enough to segment whose walk ends in a run's 4 bytes with no count
+/// (RunUnfinished), and blocks with a wrong stored CRC (BlockCrc, its computed CRC the
+/// same), each after a good block: the same error, after the same bytes (the output
+/// truncated back to the good block's end), on one thread and through the 4-worker
+/// parallel reader. One scratch is kept through every error and then decodes a good
+/// stream exactly. Each block was checked to take the chain.
+#[test]
+fn errors_on_the_chain_end_as_the_separate_buffer_path_does() {
+    let mut rng = Rng(0x87_17);
+    let good: Vec<u8> = rng.bytes(150_000);
+    let good_z = compress(&good, 9);
+    let (mut unfinished, mut bad_crc) = (0, 0);
+    let mut kernel = Segmented::default();
+    let mut shared = Scratch::<Segmented>::default();
+    for case in 0..400 {
+        if unfinished >= 3 && bad_crc >= 3 {
+            break;
+        }
+        let n = 70_000 + rng.below(30_000) as usize;
+        let alphabet = 1 + rng.below(3);
+        let ll: Vec<u8> = (0..n).map(|_| (rng.below(alphabet) * 5) as u8).collect();
+        let orig_ptr = rng.below(n as u64) as u32;
+        let ends_unfinished = common::reference(&ll, orig_ptr).is_none();
+        if !ends_unfinished && bad_crc >= 3 {
+            continue;
+        }
+        // the chain's path, by the kernel itself
+        let mut counts = [0u32; 256];
+        for &c in &ll {
+            counts[c as usize] += 1;
+        }
+        let mut l2 = ll.clone();
+        if !matches!(
+            kernel.invert_split(&mut l2, &counts, orig_ptr),
+            Some(Inverted::Chain(_))
+        ) {
+            continue;
+        }
+        let mut spec = Spec::of(ll, orig_ptr);
+        if !ends_unfinished {
+            spec.crc = Some(0x1234_5678);
+        }
+        let mut z = good_z.clone();
+        z.extend(craft(9, &[spec], None));
+        let (sep, sep_err) = run(&z, &mut Scratch::<Plain>::default());
+        let (got, err) = run(&z, &mut Scratch::<Segmented>::default());
+        let want = if ends_unfinished {
+            unfinished += 1;
+            Some(ErrorKind::RunUnfinished)
+        } else {
+            bad_crc += 1;
+            assert!(matches!(
+                sep_err,
+                Some(ErrorKind::BlockCrc {
+                    stored: 0x1234_5678,
+                    ..
+                })
+            ));
+            sep_err.clone()
+        };
+        assert_eq!(sep_err, want, "case {case}: the separate buffer's error");
+        assert_eq!(err, sep_err, "case {case}: the error");
+        assert!(got == sep && sep == good, "case {case}: the output kept");
+        // one scratch through the error, then a good stream
+        let (got, err) = run(&z, &mut shared);
+        assert_eq!(err, sep_err, "case {case}: the error, the scratch kept");
+        assert!(
+            got == good,
+            "case {case}: the output kept, the scratch kept"
+        );
+        let (again, err) = run(&good_z, &mut shared);
+        assert_eq!(err, None, "case {case}: after the error");
+        assert!(again == good, "case {case}: after the error, one scratch");
+        // the parallel reader: the same error after the same bytes
+        let (par, par_err) = parallel::<Segmented>(&z);
+        let (par_sep, par_sep_err) = parallel::<Plain>(&z);
+        assert!(
+            par_err.is_some(),
+            "case {case}: the parallel reader decoded it"
+        );
+        assert_eq!(
+            par_err, par_sep_err,
+            "case {case}: the parallel reader's error"
+        );
+        assert!(
+            par == par_sep,
+            "case {case}: the parallel reader's bytes before it"
+        );
+    }
+    assert!(
+        unfinished >= 3 && bad_crc >= 3,
+        "{unfinished} unfinished, {bad_crc} bad CRCs"
+    );
+}
+
 /// The fallback contract: a kernel that doesn't invert in place returns false and changes
 /// nothing (`ll`'s bytes, length, buffer and capacity), and its next `invert` is unaffected
 #[test]
@@ -260,6 +417,16 @@ fn a_kernel_that_falls_back_changes_nothing() {
             "Cooperative"
         );
         assert!(ll == before, "ll's bytes changed on fallback");
+        // and the split's default is that answer: None, nothing changed
+        assert!(
+            plain.invert_split(&mut ll, &counts, orig_ptr).is_none(),
+            "Plain split"
+        );
+        assert!(
+            coop.invert_split(&mut ll, &counts, orig_ptr).is_none(),
+            "Coop split"
+        );
+        assert!(ll == before, "ll's bytes changed on the split's fallback");
         assert_eq!(
             (ll.as_ptr(), ll.capacity()),
             (ptr, cap),

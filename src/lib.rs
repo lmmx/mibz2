@@ -46,7 +46,9 @@
 //!    (`bwt::walk_segments`: the walk is bound by a load's latency, not by bandwidth);
 //!    phases 3 and 4 sit behind `bwt::InverseBwt`;
 //! 5. RLE1 undone (`rle`; AVX2) and the block's CRC (`crc`; PCLMULQDQ), checked against
-//!    the CRC the block stores.
+//!    the CRC the block stores. For a segmented walk, RLE1 reads the walk's segments in
+//!    order where they lie (`rle::unrle_chain`), with no copy joining them first, and the
+//!    CRC is folded in as the output grows (`crc::Running`), not read back after.
 //!
 //! In parallel, phases 2-5 run on worker threads, a block each (`parallel`), and the
 //! blocks come out in order. Each stream's combined CRC is checked at its end.
@@ -264,7 +266,8 @@ impl From<Error> for std::io::Error {
 /// A worker's buffers, kept from block to block (about 6 MB at the 900 kB block size)
 pub struct Scratch<I: bwt::InverseBwt = bwt::Segmented> {
     /// the MTF stage's output, the BWT's last column; for a kernel that inverts in place
-    /// (`InverseBwt::invert_in_place`), then the inverse BWT's output too
+    /// (`InverseBwt::invert_in_place`, or `invert_split`'s `InPlace`), then the inverse
+    /// BWT's output too
     ll: Vec<u8>,
     counts: [u32; 256],
     /// the MTF stage's count checkpoints, for a kernel that reads them
@@ -333,24 +336,43 @@ pub fn decode_block<I: bwt::InverseBwt>(
         n as u64,
         trace::UNREAD,
     );
-    // in place where the kernel can (its output over `ll`), else into `rle`
-    let in_place = !cooperative && s.inverse.invert_in_place(&mut s.ll, &s.counts, b.orig_ptr);
-    if cooperative {
+    // in pieces where the kernel leaves them so (RLE1 then reads its segments in order, the
+    // CRC folded in as the output grows), in place where it can (its output over `ll`),
+    // else into `rle`
+    let split = if cooperative {
         let cps = &s.checkpoints;
         s.inverse
             .invert_checkpointed(&s.ll, &s.counts, cps, b.orig_ptr, &mut s.rle);
-    } else if !in_place {
-        s.inverse.invert(&s.ll, &s.counts, b.orig_ptr, &mut s.rle);
-    }
-    #[cfg(feature = "trace")]
-    trace::mark(trace::Kind::InvertEnd, trace::NONE);
-    let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
+        None
+    } else {
+        s.inverse.invert_split(&mut s.ll, &s.counts, b.orig_ptr)
+    };
     let start = out.len();
-    if let Err(kind) = rle::unrle(inverted, out, k) {
-        out.truncate(start);
-        return Err(kind);
-    }
-    let computed = crc::crc32(&out[start..], k);
+    let decoded = match split {
+        Some(bwt::Inverted::Chain(chain)) => {
+            #[cfg(feature = "trace")]
+            trace::mark(trace::Kind::InvertEnd, trace::NONE);
+            let mut crc = crc::Running::new(start);
+            rle::unrle_chain(chain, n, out, &mut crc, k).map(|()| crc.finish(out, k))
+        }
+        split => {
+            let in_place = matches!(split, Some(bwt::Inverted::InPlace));
+            if !cooperative && !in_place {
+                s.inverse.invert(&s.ll, &s.counts, b.orig_ptr, &mut s.rle);
+            }
+            #[cfg(feature = "trace")]
+            trace::mark(trace::Kind::InvertEnd, trace::NONE);
+            let inverted: &[u8] = if in_place { &s.ll } else { &s.rle };
+            rle::unrle(inverted, out, k).map(|()| crc::crc32(&out[start..], k))
+        }
+    };
+    let computed = match decoded {
+        Ok(c) => c,
+        Err(kind) => {
+            out.truncate(start);
+            return Err(kind);
+        }
+    };
     if computed != b.crc {
         out.truncate(start);
         return Err(ErrorKind::BlockCrc {

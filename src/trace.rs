@@ -702,7 +702,8 @@ mod tests {
             syms_cap = symbols.syms.capacity() * 2;
             out.clear();
             decode_block(&symbols, k, &mut scratch, &mut out).unwrap();
-            // (in place, ll then holds the walk's output: as long as the block)
+            // (ll holds the block's last column, or in place the walk's output: as long as
+            // the block either way)
             let n = get(&scratch.buffers(), "ll").len;
             rows.push(n);
             decoded.push(out.len());

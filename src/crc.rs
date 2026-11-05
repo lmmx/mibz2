@@ -40,15 +40,62 @@ static TABLES: [[u32; 256]; 8] = tables();
 
 /// The CRC of `data`, by the kernels given
 pub fn crc32(data: &[u8], k: Kernels) -> u32 {
+    !update_with(!0, data, k)
+}
+
+/// The CRC register after `data`, from `s` (no initial or final xor), by the kernels given:
+/// `crc32`'s own step, so the register taken over pieces in order is `crc32`'s of them
+/// joined
+pub fn update_with(s: u32, data: &[u8], k: Kernels) -> u32 {
     #[cfg(target_arch = "x86_64")]
     {
         if k.clmul && data.len() >= 128 {
             // SAFETY: `k.clmul` is set only when PCLMULQDQ, SSE4.1 and SSSE3 were detected
-            return !unsafe { clmul_update(!0, data) };
+            return unsafe { clmul_update(s, data) };
         }
     }
     let _ = k;
-    !update(!0, data)
+    update(s, data)
+}
+
+/// The bytes `Running` lets build up before it folds them in: few enough that they are
+/// still in L2 when it does (512 KiB or more on the targets; often still in L1), many
+/// enough that each fold's fixed cost (its last 64 bytes through the table, about 60
+/// instructions more than one call's) is a small share
+pub const FOLD: usize = 32 << 10;
+
+/// The CRC of what is appended to a buffer from `at` on, taken as it is appended (RLE1's
+/// output over the segment chain: `rle::unrle_chain`), so that each piece is folded in while
+/// it is still in L1 rather than read again from the whole block afterwards. Exactly
+/// `crc32` of the bytes appended, however they were appended.
+pub struct Running {
+    s: u32,
+    at: usize,
+}
+
+impl Running {
+    /// The CRC of `buf[at..]`, for a buffer now `at` bytes long
+    pub fn new(at: usize) -> Running {
+        Running { s: !0, at }
+    }
+
+    /// Folds in what `buf` gained since the last fold, once that is at least `FOLD` bytes:
+    /// its whole 64-byte units, the rest left for the next. `buf` only grows in between.
+    #[inline]
+    pub fn fold(&mut self, buf: &[u8], k: Kernels) {
+        debug_assert!(buf.len() >= self.at);
+        let pending = buf.len() - self.at;
+        if pending >= FOLD {
+            let m = pending & !63;
+            self.s = update_with(self.s, &buf[self.at..self.at + m], k);
+            self.at += m;
+        }
+    }
+
+    /// The CRC of everything appended to `buf` since `new`
+    pub fn finish(self, buf: &[u8], k: Kernels) -> u32 {
+        !update_with(self.s, &buf[self.at..], k)
+    }
 }
 
 /// The CRC register after `data`, from `s` (no initial or final xor): a byte at a time
@@ -166,5 +213,47 @@ mod tests {
         }
         // the check value of CRC-32/BZIP2
         assert_eq!(crc32(b"123456789", Kernels::scalar()), 0xFC89_1918);
+    }
+
+    /// The register taken over pieces (`update_with` from any state, `Running`'s folds) is
+    /// `crc32` of them joined, whatever the cuts: pieces of every length about the clmul
+    /// kernel's 128-byte floor and its 64-byte lanes, and `Running` from a buffer that
+    /// already held bytes
+    #[test]
+    fn pieces_agree_with_the_whole() {
+        let mut x = 0x2545_f491_4f6c_dd1du64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        let data: Vec<u8> = (0..70_000).map(|_| rnd(256) as u8).collect();
+        for k in [Kernels::scalar(), Kernels::detect()] {
+            for case in 0..300 {
+                let n = rnd(data.len() as u64 + 1) as usize;
+                let want = crc32(&data[..n], k);
+                assert_eq!(want, !update_bytewise(!0, &data[..n]), "case {case}");
+                let (mut s, mut i) = (!0u32, 0);
+                while i < n {
+                    let t = (1 + rnd(if case % 2 == 0 { 300 } else { 20_000 }) as usize).min(n - i);
+                    s = update_with(s, &data[i..i + t], k);
+                    i += t;
+                }
+                assert_eq!(!s, want, "case {case}: update_with in pieces");
+                let head = rnd(100) as usize;
+                let mut buf = data[..head].to_vec();
+                let mut r = Running::new(head);
+                let mut i = 0;
+                while i < n {
+                    let t = (1 + rnd(if case % 3 == 0 { 64 } else { 3 * FOLD as u64 }) as usize)
+                        .min(n - i);
+                    buf.extend_from_slice(&data[i..i + t]);
+                    r.fold(&buf, k);
+                    i += t;
+                }
+                assert_eq!(r.finish(&buf, k), want, "case {case}: Running, {k:?}");
+            }
+        }
     }
 }

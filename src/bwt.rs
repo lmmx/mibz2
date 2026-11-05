@@ -71,6 +71,41 @@ pub trait InverseBwt: Default + Send {
         let _ = (ll, counts, orig_ptr);
         false
     }
+
+    /// `invert_in_place`, for a kernel whose walk leaves the block's bytes in pieces (the
+    /// room walk's segments): it may leave them there, for the decoder to read in order
+    /// (RLE1 over the chain, `rle::unrle_chain`) with no copy joining them first.
+    ///
+    /// The preconditions are `invert_in_place`'s. It returns:
+    /// - **`Some(Inverted::InPlace)`:** `invert_in_place`'s success, exactly as stated
+    ///   there (the bytes over `ll`, its buffer and capacity unchanged);
+    /// - **`Some(Inverted::Chain(c))`:** the slices `c` yields, joined in order, are exactly
+    ///   the bytes `invert` would have put in its `out` (`ll.len()` of them), and `ll` is
+    ///   unchanged (contents, length and buffer). The kernel's own buffers are as `invert`
+    ///   leaves them once `c` is dropped, ready for the next block;
+    /// - **`None`:** `invert_in_place`'s fallback, nothing changed, and the decoder calls
+    ///   `invert` with a buffer of its own.
+    ///
+    /// A kernel returns `None` for every block or `Some` for every block, never by the
+    /// block. The default is `invert_in_place`'s answer, so a kernel that doesn't leave its
+    /// bytes in pieces is decoded as before.
+    fn invert_split(
+        &mut self,
+        ll: &mut Vec<u8>,
+        counts: &[u32; 256],
+        orig_ptr: u32,
+    ) -> Option<Inverted<'_>> {
+        self.invert_in_place(ll, counts, orig_ptr)
+            .then_some(Inverted::InPlace)
+    }
+}
+
+/// Where `InverseBwt::invert_split` left a block's bytes
+pub enum Inverted<'a> {
+    /// over `ll`, as `invert_in_place` leaves them
+    InPlace,
+    /// in the walk's segments, joined in order by the chain
+    Chain(Chain<'a>),
 }
 
 /// The plain walk: one chain of dependent loads (lbzip2's and libbzip2's)
@@ -115,6 +150,29 @@ impl InverseBwt for Segmented {
         build(ll, counts, &mut self.tt);
         walk_segments_room(&mut self.tt, orig_ptr, ll, &mut self.seg);
         true
+    }
+
+    // The build reads `ll` and the walk doesn't. A short block's plain walk writes over
+    // `ll` as `invert_in_place` does (InPlace). A segmented one leaves its segments for the
+    // chain where the chain takes each segment at most once (a block whose text is not a
+    // string repeated: its pieces then average n / segments bytes); otherwise (r0's cycle
+    // shorter than the block, joined round again, perhaps in pieces of a few bytes) they are
+    // assembled over `ll` as before. `ll` is untouched on the chain's path. Never None.
+    fn invert_split(
+        &mut self,
+        ll: &mut Vec<u8>,
+        counts: &[u32; 256],
+        orig_ptr: u32,
+    ) -> Option<Inverted<'_>> {
+        build(ll, counts, &mut self.tt);
+        if !walk_segments_room_parts(&mut self.tt, orig_ptr, ll, &mut self.seg) {
+            return Some(Inverted::InPlace);
+        }
+        if self.seg.chain_pieces_at_most(self.seg.starts.len()) {
+            return Some(Inverted::Chain(self.seg.chain()));
+        }
+        self.seg.assemble(ll);
+        Some(Inverted::InPlace)
     }
 
     #[cfg(any(test, feature = "trace"))]
@@ -468,6 +526,51 @@ impl SegScratch {
             out.extend_from_slice(&b[..b.len().min(n - out.len())]);
             seg = self.next[seg];
         }
+    }
+
+    /// The room walk's segments in the output's order, without joining them: exactly the
+    /// slices `assemble` copies, in its order (the last cut where the block's n bytes end)
+    pub fn chain(&self) -> Chain<'_> {
+        Chain {
+            bufs: &self.bufs,
+            next: &self.next,
+            seg: self.first,
+            left: self.n,
+        }
+    }
+
+    /// Whether the chain covers the block in at most `most` pieces (followed no further)
+    pub fn chain_pieces_at_most(&self, most: usize) -> bool {
+        self.chain().nth(most).is_none()
+    }
+}
+
+/// A room walk's segments in the output's order (`SegScratch::chain`): each segment's
+/// bytes, then its successor's, until the block's n bytes are given
+#[derive(Clone)]
+pub struct Chain<'a> {
+    bufs: &'a [Vec<u8>],
+    next: &'a [usize],
+    seg: usize,
+    left: usize,
+}
+
+impl<'a> Iterator for Chain<'a> {
+    type Item = &'a [u8];
+
+    #[inline]
+    fn next(&mut self) -> Option<&'a [u8]> {
+        if self.left == 0 {
+            return None;
+        }
+        let b = &self.bufs[self.seg];
+        // every walked segment holds its start's byte at least, so the chain always gains;
+        // an empty one (a broken walk) would make it, and `assemble`, go round forever
+        assert!(!b.is_empty(), "an empty segment in the chain");
+        let take = b.len().min(self.left);
+        self.left -= take;
+        self.seg = self.next[self.seg];
+        Some(&b[..take])
     }
 }
 
@@ -1426,6 +1529,7 @@ pub(crate) mod tests {
             assert!(plain == flagged, "room walk, orig_ptr {orig_ptr}");
             if ll.len() >= MIN_SEGMENTED {
                 check_segments(&tt, &seg, "room walk");
+                check_chain(&seg, &plain, "room walk's chain");
             }
             assert!(tt.0.iter().all(|&e| e & START == 0));
             for segments in [2, 40, 512, 4096] {
@@ -1662,6 +1766,7 @@ pub(crate) mod tests {
                         &mut tt, orig_ptr, &mut room, &mut seg, segments,
                     );
                     assert!(plain == room, "orig_ptr {orig_ptr}, {segments} segments");
+                    check_chain(&seg, &plain, &format!("short cycles, {segments} segments"));
                 }
             }
         }
@@ -1680,6 +1785,7 @@ pub(crate) mod tests {
             x ^= x << 17;
             x % m
         };
+        let mut unfinished = 0;
         for case in 0..20000 {
             let n = MIN_SEGMENTED + rnd(200_000) as usize;
             let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
@@ -1702,6 +1808,8 @@ pub(crate) mod tests {
             walk_segments_room(&mut tt, orig_ptr, &mut room, &mut seg);
             assert!(plain == room, "case {case} n {n} alphabet {alphabet}");
             check_segments(&tt, &seg, "room walk");
+            // the fused post-walk pass over the same segments, periodic lists among them
+            unfinished += check_chain(&seg, &plain, &format!("case {case}")) as usize;
             walk_segments_flagged(&mut tt, orig_ptr, &mut room, &mut seg);
             assert!(plain == room, "flagged walk, case {case}");
             check_segments(&tt, &seg, "flagged walk");
@@ -1709,6 +1817,11 @@ pub(crate) mod tests {
         // the transitions the walk's handoffs guard were all reached (the one that
         // overran, a lane coming into the tail with its buffer full, among them)
         assert_reached();
+        // and the chain met blocks ending in an unfinished run, and blocks that don't
+        assert!(
+            unfinished > 0 && unfinished < 20000,
+            "{unfinished} unfinished"
+        );
     }
 
     /// Asserts that every transition the room walk's handoffs guard was reached on this
@@ -1978,6 +2091,127 @@ pub(crate) mod tests {
                     check_segments(&tt, &seg, &what);
                 }
                 assert!(tt.0.iter().all(|&e| e & START == 0));
+            }
+        }
+    }
+
+    /// The chain (`SegScratch::chain`) against the segment oracle: from the first
+    /// segment, each piece is the oracle's segment (the last cut where the block ends),
+    /// followed by the oracle's successor, the pieces joined being `walk`'s output; and RLE1
+    /// over the chain (`rle::unrle_chain`) is RLE1 over that output, its error and CRC
+    /// alike, by both kernels. Random columns over 1-3 symbols and over 256 (runs of 4 equal
+    /// bytes, and so tokens across boundaries, at random offsets; unfinished runs at the
+    /// end), periodic ones (r0's cycle joined round again, in pieces of a few bytes), and
+    /// segment counts from 1 to more than the rows (segments of one byte)
+    fn chain_case(ll: &[u8], orig_ptr: u32, segments: usize, ends: &mut [usize; 2]) {
+        let mut counts = [0u32; 256];
+        for &c in ll {
+            counts[c as usize] += 1;
+        }
+        let mut tt = TVector::new();
+        build(ll, &counts, &mut tt);
+        let (mut plain, mut joined, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+        walk(&tt, orig_ptr, &mut plain);
+        walk_segments_room_with_prefetch::<32, PF_L1>(
+            &mut tt,
+            orig_ptr,
+            &mut joined,
+            &mut seg,
+            segments,
+        );
+        assert!(plain == joined, "the room walk");
+        let want = segment_oracle(&tt, &seg.starts);
+        let (mut at, mut left) = (seg.first, ll.len());
+        let mut pieces = 0;
+        for piece in seg.chain() {
+            let bytes = &want[at].0;
+            assert!(piece == &bytes[..bytes.len().min(left)], "piece {pieces}");
+            left -= piece.len();
+            at = want[at].1;
+            pieces += 1;
+        }
+        assert_eq!(left, 0, "the chain's length");
+        assert!(seg.chain_pieces_at_most(pieces));
+        assert!(!seg.chain_pieces_at_most(pieces - 1));
+        ends[check_chain(&seg, &plain, "chain_case") as usize] += 1;
+    }
+
+    /// The fused post-walk pass over a room walk's segments (`s`, just walked) against the
+    /// walk's output `plain`: the chain yields exactly n bytes, `plain`'s, in at most
+    /// n pieces (it never goes round past the block's end, however many cycles the list
+    /// is); RLE1 over it (`rle::unrle_chain`) gives `unrle`'s bytes after a prefix already
+    /// in the output, or its error, and the folded CRC is `crc32` of exactly the bytes
+    /// appended, by both kernels. Returns whether the block ends in an unfinished run.
+    pub(crate) fn check_chain(s: &SegScratch, plain: &[u8], what: &str) -> bool {
+        let n = plain.len();
+        assert_eq!(s.n, n, "{what}: the chain's block");
+        let (mut bytes, mut pieces) = (0, 0);
+        for piece in s.chain() {
+            assert!(!piece.is_empty() && pieces < n, "{what}: piece {pieces}");
+            assert!(
+                piece == &plain[bytes..bytes + piece.len()],
+                "{what}: piece {pieces}"
+            );
+            bytes += piece.len();
+            pieces += 1;
+        }
+        assert_eq!(bytes, n, "{what}: the chain's bytes");
+        let mut whole = b"before".to_vec();
+        let err = crate::rle::unrle_scalar(plain, &mut whole, 0).err();
+        for k in [crate::Kernels::scalar(), crate::Kernels::detect()] {
+            let mut out = b"before".to_vec();
+            let mut crc = crate::crc::Running::new(out.len());
+            let got = crate::rle::unrle_chain(s.chain(), n, &mut out, &mut crc, k);
+            assert_eq!(got.err(), err, "{what}: the error, {k:?}");
+            if err.is_none() {
+                assert!(out == whole, "{what}: the bytes, {k:?}");
+                let crc = crc.finish(&out, k);
+                assert_eq!(crc, crate::crc::crc32(&whole[6..], k), "{what}: the CRC");
+            }
+        }
+        err.is_some()
+    }
+
+    #[test]
+    fn chain_is_the_segment_oracles() {
+        let mut x = 0x000c_4a17_u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        let mut ends = [0usize; 2];
+        for case in 0..600 {
+            let n = 1 + rnd(if case % 3 == 0 { 70_000 } else { 3_000 }) as usize;
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let mut ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            if case % 5 == 0 {
+                let p = 1 + rnd(6) as usize;
+                for i in p..n {
+                    ll[i] = ll[i % p];
+                }
+            }
+            let orig_ptr = rnd(n as u64) as u32;
+            let segments = [1, 2, 33, 512, 4096, n + 7][case % 6];
+            chain_case(&ll, orig_ptr, segments, &mut ends);
+        }
+        // both ends were reached: a block decoded, and one ending in an unfinished run
+        assert!(ends[0] > 0 && ends[1] > 0, "{ends:?}");
+    }
+
+    /// For Miri: the chain and RLE1 over it on the room walk's own segments, small blocks
+    /// (random, periodic, one symbol) at segment counts up to one a row
+    #[test]
+    fn miri_chain_over_room_segments() {
+        let mut ends = [0usize; 2];
+        let random: Vec<u8> = (0..700u32)
+            .map(|i| (i.wrapping_mul(2_654_435_761) >> 29) as u8 % 3)
+            .collect();
+        let periodic: Vec<u8> = (0..500).map(|i| b"ab"[i % 2]).collect();
+        for ll in [random, periodic, vec![5u8; 300]] {
+            for segments in [3, 64, ll.len() + 1] {
+                chain_case(&ll, ll.len() as u32 / 3, segments, &mut ends);
             }
         }
     }
