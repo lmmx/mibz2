@@ -1036,16 +1036,25 @@ fn room_segments<const L: usize, const PF: u8>(
                 let mut st = [0usize; L];
                 // the lanes that took a segment in this chunk (their rows start at st > 0)
                 let mut taken: u64 = 0;
-                for j in 0..w {
-                    let flags = if cur == 0 {
-                        spec_offset::<L, PF, 0>(t, &mut rows, tile, j)
+                let mut j = 0;
+                while j < w {
+                    if RUN {
+                        j = spec_run::<L, PF>(t, &mut rows, tile, &mut cur, j, w);
+                        if j == w {
+                            break;
+                        }
                     } else {
-                        spec_offset::<L, PF, 1>(t, &mut rows, tile, j)
-                    };
-                    if flags & START == 0 {
-                        transition!(TILES_KEPT);
-                        cur ^= 1;
-                        continue;
+                        let flags = if cur == 0 {
+                            spec_offset::<L, PF, 0>(t, &mut rows, tile, j)
+                        } else {
+                            spec_offset::<L, PF, 1>(t, &mut rows, tile, j)
+                        };
+                        if flags & START == 0 {
+                            transition!(TILES_KEPT);
+                            cur ^= 1;
+                            j += 1;
+                            continue;
+                        }
                     }
                     transition!(TILES_REPLAYED);
                     // The scalar offset, on the rows from before it
@@ -1142,6 +1151,7 @@ fn room_segments<const L: usize, const PF: u8>(
                     }
                     // The scalar offset stepped the rows in place, so the next offset reads
                     // the same slot
+                    j += 1;
                 }
                 #[cfg(target_arch = "x86_64")]
                 if FLUSH >= 6 && avx2 {
@@ -1269,6 +1279,40 @@ const TILE: usize = 256;
 /// non-temporal stores for whole destination lines; 5, a const-length copy_nonoverlapping
 /// in the closure
 const FLUSH: u8 = 0;
+
+/// The chunk's offsets stepped together in their own function (`spec_run`), so that its
+/// loop's registers do not depend on the code around it (research, walk/flush)
+const RUN: bool = false;
+
+/// The busy phase's offsets j.. of a chunk of w offsets, every lane stepped together
+/// (`spec_offset`) until an offset reads a start: returns that offset, its rows still in
+/// slot `cur` for the scalar offset to do again, or w
+#[inline(never)]
+fn spec_run<const L: usize, const PF: u8>(
+    t: *const u32,
+    rows: &mut [[u32; L]; 2],
+    tile: &mut [[u8; TILE]; L],
+    cur: &mut usize,
+    mut j: usize,
+    w: usize,
+) -> usize {
+    let mut c = *cur;
+    while j < w {
+        let flags = if c == 0 {
+            spec_offset::<L, PF, 0>(t, rows, tile, j)
+        } else {
+            spec_offset::<L, PF, 1>(t, rows, tile, j)
+        };
+        if flags & START != 0 {
+            break;
+        }
+        transition!(TILES_KEPT);
+        c ^= 1;
+        j += 1;
+    }
+    *cur = c;
+    j
+}
 
 /// The tile, its rows on cache lines
 #[repr(C, align(64))]
