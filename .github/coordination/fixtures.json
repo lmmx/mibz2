@@ -1,0 +1,602 @@
+[
+{
+"issue": 145,
+"id": 6628984134,
+"header": "FROM: coordinator\nRE: channel test dummy checkpoint @ e0fd65b\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6629044041,
+"header": "FROM: coordinator\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6629821793,
+"header": "FROM: coordinator\nRE: prototype 1, scanner and tile bounds @ 7f74e9f\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6630100715,
+"header": "FROM: coordinator\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6630137149,
+"header": "FROM: researcher\nRE: pinned baseline ledger and research branch @ ff65301b7ed622df2dd92867ca1761478f2f8915\nTYPE: PROPOSAL"
+},
+{
+"issue": 145,
+"id": 6630151681,
+"header": "FROM: coordinator\nRE: comment 6630137149, reviewer PR #148 @ ff65301b7ed622df2dd92867ca1761478f2f8915\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6630279852,
+"header": "FROM: researcher\nRE: scanner/v3 reviews and direct-refill research @ 0ac2e67e6826b9f2b1940cb876c3003e7a022144\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6630293509,
+"header": "FROM: coordinator\nRE: comment 6630279852, #148 @ 0ac2e67\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6630519853,
+"header": "FROM: guardian\nRE: shadow pilot P1 @ 0cee91f620eb12dbb72a33b52c2393898d86d73a\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6630528994,
+"header": "FROM: coordinator\nRE: comment 6630519853, shadow P1 on #149 @ 0cee91f\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6631022651,
+"header": "FROM: researcher\nRE: independent adversarial scanner supplement @ 48b39628a6fd36873045f5a9782e445a12d35fdb\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6631195430,
+"header": "FROM: coordinator\nRE: prototype 2, hot descriptor pointer arrays @ 29dd071f\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6631358472,
+"header": "FROM: coordinator\nRE: review queue @ 2259797\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6631607920,
+"header": "FROM: coordinator\nRE: agent identities @ 38f0d947968453f9a1c9d01e6ab39235a417208c\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6632058506,
+"header": "FROM: coordinator\nRE: WAKE-TEST 2, review queue @ 3ef3d40\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6632654523,
+"header": "FROM: coordinator\nRE: review queue @ e5d86cc \u2014 three checkpoints awaiting G1 classification\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6632963394,
+"header": "FROM: coordinator\nTO: guardian, optimizer\nRE: review queue @ e5d86cc\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6633116288,
+"header": "FROM: coordinator\nTO: optimizer\nRE: repeat of 6632963394, for the Optimizer only\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6633274082,
+"header": "FROM: guardian\nTO: coordinator\nRE: comment 6632963394; isolated pins 29dd071f, 49cb46b6, a1d110c7\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6633302554,
+"header": "FROM: coordinator\nTO: researcher\nRE: \u00a76.2 pre-integration review, appointed by Guardian D008 (G4) @ 62a313a8\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6633405942,
+"header": "FROM: researcher\nTO: coordinator\nRE: comment 6633302554; \u00a76.2 index @ 18ca5d4cb9fcaeaf5cee7e7f1db2ebb1fd72080e\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6633657739,
+"header": "FROM: coordinator\nTO: researcher, guardian\nRE: comment 6633405942 (Researcher intake HOLD @ 0b3fe45c); D008 G4\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6633695035,
+"header": "FROM: researcher\nTO: coordinator\nRE: comment 6633657739; accepted intake findings R-S62-01 / R-S62-02\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6633793271,
+"header": "FROM: coordinator\nTO: researcher, guardian\nRE: \u00a76.2 fresh reviewer; brief @ bde54f1218551766e6f6a404202e65599a06bfd4\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6633918984,
+"header": "FROM: guardian\nTO: coordinator, researcher\nRE: comment 6633793271; fresh reviewer brief @ bde54f1218551766e6f6a404202e65599a06bfd4\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6633924507,
+"header": "FROM: coordinator\nTO: guardian\nRE: comment 6633918984 (D009, G4) @ 5ae9cc83\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6634221840,
+"header": "FROM: astra\nTO: coordinator\nRE: checkpoint 6633116288; #151 @ 29dd071f, #146 @ 49cb46b6 and a1d110c7\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6634250201,
+"header": "FROM: coordinator\nTO: researcher\nRE: re-delivery of comment 6633793271 (fresh \u00a76.2 reviewer); brief @ bde54f1218551766e6f6a404202e65599a06bfd4; Guardian D009 @ 5ae9cc83\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6634257121,
+"header": "FROM: researcher\nTO: coordinator\nRE: blog requests 6633675410 / 6633777567; source @ 648c84e5\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6634284040,
+"header": "FROM: coordinator\nTO: astra, guardian\nRE: Optimiser review 6634221840 @ ea3ace12; Researcher blog review 6634257121 @ b7d7add8; \u00a76.2 launch record @ 684a3379\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6634286833,
+"header": "FROM: researcher\nTO: coordinator\nRE: checkpoint 6633793271; D009 / 6633918984; brief @ bde54f12\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6634296412,
+"header": "FROM: coordinator\nTO: researcher\nRE: your 6634286833; child /root/s62_review, launched @ 684a3379\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6634356048,
+"header": "FROM: s62-reviewer\nTO: coordinator\nRE: \u00a76.2 index @ 18ca5d4cb9fcaeaf5cee7e7f1db2ebb1fd72080e\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6634430380,
+"header": "FROM: coordinator\nTO: guardian, s62-reviewer\nRE: \u00a76.2 review 6634356048; #153 @ e62fc15f\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6634996672,
+"header": "FROM: coordinator\nTO: optimizer\nRE: \u00a76.3 overlap ledger; S62-F02 @ e62fc15f; your F4 @ ea3ace12\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6634998636,
+"header": "FROM: coordinator\nTO: researcher\nRE: C6 refill-boundary proposal (#148 @ 0ac2e67; Optimiser reassessment @ ea3ace12)\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6635366542,
+"header": "FROM: optimizer\nTO: coordinator\nRE: \u00a76.3 overlap ledger; checkpoint comment 6634996672\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6635380133,
+"header": "FROM: coordinator\nTO: optimizer, guardian\nRE: Optimiser overlap review 6635366542 @ 37193bac; charter \u00a76.3 (F and O)\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6635419092,
+"header": "FROM: coordinator\nTO: guardian, researcher, optimizer\nRE: S62-F01 / Optimiser F3 remedy; scanner U2 @ ba261eff245f45e1c07fdfb05fa2fe6ff1ced835; descriptors @ 7620c0c667018772a0ba3be28eb62263b55037f8\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6635476486,
+"header": "FROM: guardian\nTO: coordinator, optimizer\nRE: comment 6635380133; D010; charter \u00a76.3\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6635481747,
+"header": "FROM: coordinator\nTO: guardian\nRE: D010 (6635476486) @ 028d7206\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6635548872,
+"header": "FROM: researcher\nTO: coordinator, guardian, optimizer\nRE: S62-F01 coverage; checkpoint 6635419092; scanner ba261eff / descriptors 7620c0c6\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6635555095,
+"header": "FROM: coordinator\nTO: guardian, optimizer\nRE: Researcher coverage review 6635548872 @ 9acf64ac (on checkpoint 6635419092)\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6635620697,
+"header": "FROM: guardian\nTO: coordinator, researcher, optimizer\nRE: checkpoint 6635419092; scanner ba261eff / descriptors 7620c0c6; D011\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6635649533,
+"header": "FROM: researcher\nTO: coordinator, guardian\nRE: D011 / 6635620697; coverage review 6635548872\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6637121066,
+"header": "FROM: coordinator\nTO: optimizer\nRE: re-delivery of 6635380133 (floor correction) and 6635419092 (counted replays); D010 @ 028d7206; D011 @ 080dd146\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6637208801,
+"header": "FROM: optimizer\nTO: coordinator\nRE: re-delivery 6637121066; floor correction 6635380133; counted replay 6635419092\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6637300905,
+"header": "FROM: coordinator\nTO: guardian, researcher, optimizer\nRE: the user's standing policy (report 265) and charter \u00a76.4 @ 55b4b86be4ba7eed41b283a52f2c1d56fa43cc67; prototype 3b (report 264) @ 1bbe34fd\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6637313731,
+"header": "FROM: coordinator\nTO: optimizer\nRE: counted replay and floor correction 6637208801 @ cd7004a8\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6637353454,
+"header": "FROM: guardian\nTO: coordinator\nRE: checkpoint 6637300905; policy 55b4b86b; D012\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6637375143,
+"header": "FROM: coordinator\nTO: guardian\nRE: D012 (6637353454); charter @ 0ed278d722d1ef7dea0c24e5ff551dc7c0b46204, report 266\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6637485148,
+"header": "FROM: coordinator\nTO: researcher\nRE: Coordinator session goal @ 0ed278d722d1ef7dea0c24e5ff551dc7c0b46204\nTYPE: PROPOSAL"
+},
+{
+"issue": 145,
+"id": 6637667413,
+"header": "FROM: researcher\nTO: coordinator\nTYPE: REVIEW\nRE: 6637485148"
+},
+{
+"issue": 145,
+"id": 6637716117,
+"header": "FROM: coordinator\nTO: record\nRE: 6637667413 @ 6978ae2e67a97eba5efa694aa230532738f4cba1\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6639428570,
+"header": "FROM: coordinator\nTO: guardian, researcher, optimizer\nRE: MODE.md @ e44d87f96c2bdcce904872ea4fb13ad79bdcf2af\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6639472381,
+"header": "FROM: researcher\nTO: coordinator\nTYPE: REVIEW\nRE: 6639428570"
+},
+{
+"issue": 145,
+"id": 6639496192,
+"header": "FROM: coordinator\nTO: optimizer\nRE: re-delivery of 6637300905 (ranked next cuts) @ 2210e4457b383e4566df99eb881b4ca0401c4cd3\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6639751257,
+"header": "FROM: optimizer\nTO: coordinator\nRE: checkpoint 6639496192 (re-delivery of 6637300905) @ 2210e4457b383e4566df99eb881b4ca0401c4cd3\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6639756189,
+"header": "FROM: coordinator\nTO: researcher\nRE: Optimiser ranked cuts C7\u2013C10 @ 82bc69b5 (review/compact30-instruction-ledger, `ranked-next-cuts-6639496192/report.md`)\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6639925930,
+"header": "FROM: researcher\nTO: coordinator\nTYPE: REVIEW\nRE: 6639756189 \u2014 C7\u2013C10 \u00a76.4 assessment"
+},
+{
+"issue": 145,
+"id": 6639998280,
+"header": "FROM: coordinator\nTO: guardian, researcher, optimizer\nRE: combined build, assembly 1 @ 888eccfc86d5d771e881b0f87d46a21e2cf1512a (research/compact30-combined)\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6640069360,
+"header": "FROM: guardian\nTO: coordinator, optimizer, researcher\nRE: 6639998280 @ 888eccfc86d5d771e881b0f87d46a21e2cf1512a\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6640148670,
+"header": "FROM: researcher\nTO: coordinator, optimizer, guardian\nTYPE: REVIEW\nRE: 6639998280 @ 888eccfc \u2014 Assembly 1 attribution/economics"
+},
+{
+"issue": 145,
+"id": 6640153383,
+"header": "FROM: coordinator\nTO: guardian, researcher, optimizer\nRE: D013 reconciliation @ 95977867fdf318b3f66420c383a73d9c48b36740 (research/compact30-combined)\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6640153847,
+"header": "FROM: researcher\nTO: guardian, coordinator, optimizer\nTYPE: REVIEW\nRE: 6640069360 \u2014 D013 reconciliation"
+},
+{
+"issue": 145,
+"id": 6640266327,
+"header": "FROM: astra\nTO: coordinator, guardian, researcher\nRE: D013 reconciliation 6640153383 @ 95977867fdf318b3f66420c383a73d9c48b36740\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6640324039,
+"header": "FROM: coordinator\nTO: researcher\nRE: per-topology decoder projection, after D014 @ 95977867 (combined) / space-time post \u00a79 constants\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6640342479,
+"header": "FROM: researcher\nTO: coordinator, optimizer\nTYPE: REVIEW\nRE: 6640266327"
+},
+{
+"issue": 145,
+"id": 6640409593,
+"header": "FROM: researcher\nTO: coordinator, optimizer\nTYPE: REVIEW\nRE: 6640324039"
+},
+{
+"issue": 145,
+"id": 6641512290,
+"header": "FROM: coordinator\nRE: production port @ b4786f66\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6641623415,
+"header": "FROM: coordinator\nRE: D015 @ aae003ed\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6641672441,
+"header": "FROM: coordinator\nRE: production port, CI verdict @ b4786f66\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6641768409,
+"header": "FROM: guardian\nTO: coordinator, optimizer, researcher\nTYPE: REVIEW\nRE: 6641672441"
+},
+{
+"issue": 145,
+"id": 6641782001,
+"header": "FROM: coordinator\nRE: D016 @ 2b58b12a\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6641832358,
+"header": "FROM: researcher\nTO: coordinator, guardian, optimizer\nTYPE: REVIEW\nRE: 6641768409"
+},
+{
+"issue": 145,
+"id": 6641837683,
+"header": "FROM: coordinator\nRE: 6641832358 @ 30d7b98d\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6642486832,
+"header": "FROM: coordinator\nRE: report 272 @ 6375277b\nTYPE: DECISION\nDECISION: REVISE production accounting (tightening; user's instruction, in the Coordinator's session)"
+},
+{
+"issue": 145,
+"id": 6643191206,
+"header": "FROM: coordinator\nRE: report 273 @ 45e6cfeb\nTYPE: DECISION\nDECISION: REVISE scope: the whole inverse BWT (user's instruction, in the Coordinator's session)"
+},
+{
+"issue": 145,
+"id": 6643481606,
+"header": "FROM: coordinator\nRE: production walk @ 8465207a\nTYPE: CHECKPOINT\nTO: optimizer, researcher, guardian"
+},
+{
+"issue": 145,
+"id": 6643744616,
+"header": "FROM: coordinator\nRE: #157 bench and D017 @ 75b13f00\nTYPE: CHECKPOINT\nTO: optimizer, researcher, guardian"
+},
+{
+"issue": 145,
+"id": 6643809123,
+"header": "FROM: coordinator\nRE: 6643744616, the record first @ 4b90be58\nTYPE: CHECKPOINT\nTO: optimizer, researcher, guardian"
+},
+{
+"issue": 145,
+"id": 6643814937,
+"header": "FROM: researcher\nTO: coordinator, optimizer, guardian\nTYPE: REVIEW\nRE: 6643744616"
+},
+{
+"issue": 145,
+"id": 6643850845,
+"header": "FROM: guardian\nRE: 6643744616\nTYPE: REVIEW\nTO: coordinator, researcher, optimizer"
+},
+{
+"issue": 145,
+"id": 6643927959,
+"header": "FROM: guardian\nRE: 6643809123\nTYPE: REVIEW\nTO: coordinator, optimizer, researcher"
+},
+{
+"issue": 145,
+"id": 6643931565,
+"header": "FROM: researcher\nTO: coordinator, optimizer, guardian\nTYPE: REVIEW\nRE: 6643809123"
+},
+{
+"issue": 145,
+"id": 6643940252,
+"header": "FROM: researcher\nTO: guardian, coordinator, optimizer\nTYPE: REVIEW\nRE: 6643850845"
+},
+{
+"issue": 145,
+"id": 6643961853,
+"header": "FROM: researcher\nTO: guardian, coordinator, optimizer\nTYPE: REVIEW\nRE: 6643927959"
+},
+{
+"issue": 145,
+"id": 6643992749,
+"header": "FROM: coordinator\nRE: 6643809123, corrected against B2 @ 9723f068\nTYPE: CHECKPOINT\nTO: optimizer, researcher, guardian"
+},
+{
+"issue": 145,
+"id": 6644051935,
+"header": "FROM: guardian\nRE: 6643992749\nTYPE: REVIEW\nTO: coordinator, optimizer, researcher"
+},
+{
+"issue": 145,
+"id": 6644080568,
+"header": "FROM: researcher\nTO: coordinator, optimizer, guardian\nTYPE: REVIEW\nRE: 6643992749"
+},
+{
+"issue": 145,
+"id": 6644084127,
+"header": "FROM: researcher\nTO: guardian, coordinator, optimizer\nTYPE: REVIEW\nRE: 6644051935"
+},
+{
+"issue": 145,
+"id": 6644115799,
+"header": "FROM: coordinator\nRE: 6643992749, corrected: the stage table was the 7763's\nTYPE: CHECKPOINT\nTO: optimizer, researcher, guardian"
+},
+{
+"issue": 145,
+"id": 6644273456,
+"header": "FROM: coordinator\nRE: D018, D019, D020; Researcher 6643931565, 6643940252, 6643961853, 6644080568, 6644084127\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6644364456,
+"header": "FROM: coordinator\nTO: optimizer\nRE: re-delivery, whole-decoder search @ 5f537871 (master)\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6644422056,
+"header": "FROM: guardian\nRE: 6644364456\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6644912625,
+"header": "FROM: coordinator\nTO: researcher\nRE: the four-worker penalty: open question and measurements, no conclusion @ master 08e7fc3b\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6644979187,
+"header": "FROM: guardian\nRE: 6644912625\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6645002054,
+"header": "FROM: researcher\nTO: coordinator, optimizer, guardian\nTYPE: REVIEW\nRE: 6644912625"
+},
+{
+"issue": 145,
+"id": 6645738830,
+"header": "FROM: astra\nTO: coordinator\nTYPE: REVIEW\nRE: inbox #160 comment 6645643541, resuming 6645304470"
+},
+{
+"issue": 145,
+"id": 6645964170,
+"header": "FROM: guardian\nTO: coordinator\nRE: #161 checkpoint 6645920904; P87 #164 @ f142e38e\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6645977057,
+"header": "FROM: researcher\nTO: coordinator, guardian\nRE: #162 comment 6645922140; P87 registration d6401b55 / candidate f142e38e\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6646303348,
+"header": "FROM: researcher\nTO: coordinator, guardian\nRE: #162 comment 6646250444; P87 results a995ce87\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6646304926,
+"header": "FROM: guardian\nTO: coordinator\nRE: #161 comment 6646249200; P87 result a995ce87\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6646432357,
+"header": "FROM: astra\nTO: coordinator\nRE: Post-P87 ranking at e26e3d9c; inbox 6646251725\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6651150258,
+"header": "FROM: astra\nTO: coordinator\nRE: resource ranking at c9433318 + assumed #180 window; inbox 6651023083\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6651156608,
+"header": "FROM: coordinator\nTO: astra\nRE: REVIEW 6651150258 (report 6b720b24)\nTYPE: ACK"
+},
+{
+"issue": 145,
+"id": 6652503445,
+"header": "FROM: coordinator\nTO: optimizer\nRE: fused post-walk @ 9bee6b40 (#183)\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6653242752,
+"header": "FROM: coordinator\nTO: optimizer\nRE: addendum to CHECKPOINT 6652503445\nTYPE: CHECKPOINT"
+},
+{
+"issue": 145,
+"id": 6653724458,
+"header": "FROM: astra\nTO: coordinator\nRE: compact parity after #183 @ 3c4ed793\nTYPE: REVIEW"
+},
+{
+"issue": 145,
+"id": 6653737410,
+"header": "FROM: coordinator\nTO: astra\nRE: REVIEW 6653724458 (report a2eb0877)\nTYPE: ACK"
+},
+{
+"issue": 160,
+"id": 6645304470,
+"header": "FROM: coordinator\nTO: optimizer\nRE: the four-worker question, and the ranking @ master 08e7fc3b\nTYPE: CHECKPOINT"
+},
+{
+"issue": 160,
+"id": 6645337230,
+"header": "FROM: guardian\nRE: 6645304470\nTYPE: REVIEW"
+},
+{
+"issue": 160,
+"id": 6645643541,
+"header": "FROM: coordinator\nTO: optimizer\nRE: resume 6645304470\nTYPE: CHECKPOINT"
+},
+{
+"issue": 160,
+"id": 6646251725,
+"header": "FROM: coordinator\nTO: optimizer\nRE: P87 merged; the next ranking @ master e26e3d9c\nTYPE: CHECKPOINT"
+},
+{
+"issue": 160,
+"id": 6651023083,
+"header": "FROM: coordinator\nTO: optimizer\nRE: walk round and window @ master c9433318\nTYPE: CHECKPOINT"
+},
+{
+"issue": 160,
+"id": 6653416078,
+"header": "FROM: coordinator\nTO: optimizer\nRE: fused post-walk, co-resident shape and split condvars @ master 3c4ed793\nTYPE: CHECKPOINT"
+},
+{
+"issue": 161,
+"id": 6645920904,
+"header": "FROM: coordinator\nTO: guardian\nRE: P87 production validation registered @ perf/p87-in-place f142e38e (#164)\nTYPE: CHECKPOINT"
+},
+{
+"issue": 161,
+"id": 6646249200,
+"header": "FROM: coordinator\nTO: guardian\nRE: P87 production validation result; #164 merged @ master e26e3d9c\nTYPE: CHECKPOINT"
+},
+{
+"issue": 162,
+"id": 6645922140,
+"header": "FROM: coordinator\nTO: researcher\nRE: P87 production validation registered @ perf/p87-in-place f142e38e (#164)\nTYPE: CHECKPOINT"
+},
+{
+"issue": 162,
+"id": 6646250444,
+"header": "FROM: coordinator\nTO: researcher\nRE: P87 production validation result; #164 merged @ master e26e3d9c\nTYPE: CHECKPOINT"
+}
+]

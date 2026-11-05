@@ -441,7 +441,7 @@ pub const PF_L2: u8 = 2;
 pub const PF_NTA: u8 = 3;
 /// Blocks shorter than this are walked plainly (the segments' bookkeeping would cost more
 /// than the latency they hide; such blocks are only a stream's last)
-pub(crate) const MIN_SEGMENTED: usize = 1 << 16;
+pub const MIN_SEGMENTED: usize = 1 << 16;
 
 /// The segment walk's buffers, kept from block to block
 #[derive(Default)]

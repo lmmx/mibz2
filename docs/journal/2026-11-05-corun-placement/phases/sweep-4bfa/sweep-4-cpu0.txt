@@ -1,0 +1,14 @@
+runner: AMD EPYC 7763 64-Core Processor, 4 CPUs, 3.2408 GHz reported; rustc 1.99.1 (58cf8f9c3 2026-10-13); head 4bfaf7cb; phases, rounds 5; this copy on CPU 0
+corpora/wikidata.bz2: 431 blocks, 11.9 MB -> 209.7 MB (17.69x); c/B of output at 3.2408 GHz, decode order, each stage's fastest of 5 passes
+  scanner (headers, Huffman)     1.72 c/B    9.8%
+  MTF + RLE2                     2.60 c/B   14.8%
+  T-vector build                 3.04 c/B   17.3%
+  walk, room (used)              9.38 c/B   53.5%
+  RLE1                           0.43 c/B    2.5%
+  CRC                            0.36 c/B    2.1%
+  segment assembly               0.49 c/B    2.8%  (within the walk)
+  walk, room + assembly as one   9.18 c/B  (not in the total: the walk's row, timed as one)
+  walk, flagged (before #37)    14.98 c/B  (not in the total)
+  walk, bitmap (before #4)      30.12 c/B  (not in the total)
+  walk, plain                   48.42 c/B  (not in the total)
+  total                         17.54 c/B  = 185 MB/s on one thread

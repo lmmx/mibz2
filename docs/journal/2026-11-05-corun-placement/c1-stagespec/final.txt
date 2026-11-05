@@ -1,0 +1,13 @@
+model  outcome  N=flat   N=prefers_walk  N=dislikes_walk   (staged core time per block vs today; TT2 OUT1, walker pulls no jobs)
+7763   C      -0.5% [fWN 2.12 fWW 2.12 cal 2.12]    -3.9% [fWN 2.12 fWW 2.12 cal 2.12]    +2.7% [fWN 2.12 fWW 2.12 cal 2.12]
+7763   M     -18.4% [fWN 1.12 fWW 2.21 cal 2.12]   -21.3% [fWN 1.12 fWW 2.21 cal 2.12]   -14.6% [fWN 1.12 fWW 2.21 cal 2.12]
+7763   P      -9.9% [fWN 1.81 fWW 2.62 cal 2.20]   -13.0% [fWN 1.80 fWW 2.59 cal 2.20]    -7.3% [fWN 1.82 fWW 2.63 cal 2.21]
+7763   P25   -18.4% [fWN 1.55 fWW 3.20 cal 2.27]   -21.2% [fWN 1.54 fWW 3.17 cal 2.30]   -15.0% [fWN 1.56 fWW 3.23 cal 2.26]
+9V74   C      -1.0% [fWN 2.22 fWW 2.22 cal 2.22]    -5.2% [fWN 2.22 fWW 2.22 cal 2.22]    +1.8% [fWN 2.22 fWW 2.22 cal 2.22]
+9V74   M     -19.4% [fWN 1.13 fWW 2.32 cal 2.22]   -23.4% [fWN 1.13 fWW 2.31 cal 2.22]   -17.6% [fWN 1.13 fWW 2.32 cal 2.22]
+9V74   P     -10.7% [fWN 1.87 fWW 2.73 cal 2.30]   -15.3% [fWN 1.79 fWW 2.57 cal 2.28]    -6.6% [fWN 1.91 fWW 2.81 cal 2.24]
+9V74   P25   -19.8% [fWN 1.59 fWW 3.36 cal 2.41]   -23.9% [fWN 1.47 fWW 2.89 cal 2.31]   -14.7% [fWN 1.66 fWW 3.63 cal 2.25]
+8370C  C      +0.4% [fWN 1.46 fWW 1.46 cal 1.46]    -4.7% [fWN 1.46 fWW 1.46 cal 1.46]    +3.5% [fWN 1.46 fWW 1.46 cal 1.46]
+8370C  M      -9.6% [fWN 1.05 fWW 1.51 cal 1.46]   -15.5% [fWN 1.05 fWW 1.50 cal 1.46]    -6.5% [fWN 1.05 fWW 1.52 cal 1.46]
+8370C  P      -5.4% [fWN 1.34 fWW 1.68 cal 1.50]   -11.5% [fWN 1.30 fWW 1.60 cal 1.48]    -1.1% [fWN 1.36 fWW 1.72 cal 1.46]
+8370C  P25   -10.5% [fWN 1.23 fWW 1.90 cal 1.52]   -16.4% [fWN 1.18 fWW 1.72 cal 1.51]    -5.6% [fWN 1.27 fWW 2.06 cal 1.45]
