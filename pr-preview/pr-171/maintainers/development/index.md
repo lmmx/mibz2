@@ -51,7 +51,11 @@ just bench-occupancy --threads 1,2,4,8,12,16,20
 
 It needs cargo, python3, git and lbzip2, and writes `occupancy-<UTC time>.json`: the machine as the process sees it, each thread count's throughput and the cost of tracing, and the decoder's own timeline (workers decoding or idle and why, the scanner, the reader, and per block its CPU time and run-queue wait). It is a diagnostic: the benchmark's paired A/B decides what is faster.
 
-The benchmark has a version of its own (`BENCH` in `bench/report.py`), with its history in [`bench/CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md>): - **A pull request that changes the benchmark** (`bench/`, `examples/ab.rs`, `examples/phases.rs`, `.github/workflows/bench.yml`) either adds a changelog entry with its new version, or says in its description why no version is needed. - **A major version that redefines a family of figures** adds itself to that family in `MEANING` (`bench/report.py`), so the site's history splits that family there and joins the others across it. - **`python3 bench/test_report.py`** checks that `BENCH` and the newest entry agree, and that the history joins versions but never runner models, core counts, corpora or a corpus's different contents.
+The benchmark has a version of its own (`BENCH` in `bench/report.py`), with its history in [`bench/CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md>):
+
+- **A pull request that changes the benchmark** (`bench/`, `examples/ab.rs`, `examples/phases.rs`, `.github/workflows/bench.yml`) either adds a changelog entry with its new version, or says in its description why no version is needed.
+- **A major version that redefines a family of figures** adds itself to that family in `MEANING` (`bench/report.py`), so the site's history splits that family there and joins the others across it.
+- **`python3 bench/test_report.py`** checks that `BENCH` and the newest entry agree, and that the history joins versions but never runner models, core counts, corpora or a corpus's different contents.
 
 ## Commits
 

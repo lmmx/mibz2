@@ -73,9 +73,7 @@ Three agents, one account: a checkpoint from the Coordinator, the Guardian's rev
 
 The originals: [the checkpoint](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6632963394>), [the Guardian's review](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6633274082>) and [the independent review](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6634356048>).
 
-A new comment is also what wakes the agents up. Each Astra agent is a Work task subscribed to new comments on its own inbox and nothing else, so the filtering happens before a run starts. The inbox is the address: every comment in it is for its agent. The Coordinator posts each checkpoint to the inbox of every agent that should act on it, so a checkpoint for the Guardian and the Researcher is two comments, one in each inbox. Each run fetches its comment, reads from the header who sent it and what kind of message it is, and does the work. It commits a receipt to its own branch first, then its progress as it goes, and publishes its `REVIEW` on \#145. The Coordinator subscribes to
-
-# 145, so a reply reaches it within seconds.
+A new comment is also what wakes the agents up. Each Astra agent is a Work task subscribed to new comments on its own inbox and nothing else, so the filtering happens before a run starts. The inbox is the address: every comment in it is for its agent. The Coordinator posts each checkpoint to the inbox of every agent that should act on it, so a checkpoint for the Guardian and the Researcher is two comments, one in each inbox. Each run fetches its comment, reads from the header who sent it and what kind of message it is, and does the work. It commits a receipt to its own branch first, then its progress as it goes, and publishes its `REVIEW` on \#145. The Coordinator subscribes to \#145, so a reply reaches it within seconds.
 
 This keeps each agent's attention on its own work. An inbox carries only messages meant for its agent, so the other agents' reviews, CI results and pull requests never start a run there. An investigation that takes a quarter of an hour runs to the end undisturbed, and everything it finds still comes back to one place.
 
@@ -141,15 +139,32 @@ The [channel log](<https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b0670
 
 That review came back while this post was being finished. The Researcher launched the isolated reviewer, and its [report](<https://github.com/lmmx/mibz2/pull/153>) arrived as a comment on the channel. Both prototypes pass on correctness and safety, and so does v3's finaliser. Two things need fixing before anything is combined: some changed paths still need their own execution counters, and both prototypes remove the same instruction, so their savings overlap. That is the next checkpoint.
 
-On 5 November the redesigned setup ran its first full round: - **The Optimiser** ranked the whole decoder's candidates from its inbox. It put P87, a production-shaped change that writes the walk's output over a buffer it has already consumed, first. - **The Coordinator** built P87 and registered a decision rule before measuring it. - **The Guardian and the Researcher** reviewed that rule from their inboxes before the benchmark finished. The Guardian's review changed it. - **The change** made the four-worker Wikidata decode 2.2% faster in one run, and favourable but inconclusive in a second, with 6.8% less memory and no slower row. It [merged](<https://github.com/lmmx/mibz2/pull/164>).
+On 5 November the redesigned setup ran its first full round:
 
-Then all three agents took their next assignment under the new specs: - each woke only on its own inbox; - each committed a receipt within a minute or two, and published its review on \#145; - the Guardian also moved itself onto its current operating spec.
+- **The Optimiser** ranked the whole decoder's candidates from its inbox. It put P87, a production-shaped change that writes the walk's output over a buffer it has already consumed, first.
+- **The Coordinator** built P87 and registered a decision rule before measuring it.
+- **The Guardian and the Researcher** reviewed that rule from their inboxes before the benchmark finished. The Guardian's review changed it.
+- **The change** made the four-worker Wikidata decode 2.2% faster in one run, and favourable but inconclusive in a second, with 6.8% less memory and no slower row. It [merged](<https://github.com/lmmx/mibz2/pull/164>).
+
+Then all three agents took their next assignment under the new specs:
+
+- each woke only on its own inbox;
+- each committed a receipt within a minute or two, and published its review on \#145;
+- the Guardian also moved itself onto its current operating spec.
 
 The first reviews under the new design corrected the Coordinator's write-up before it was published.
 
 So the messages get through, the reviews arrive before the decisions they bear on, and nothing goes through me. Whether that makes the research faster will show over the next few posts.
 
-If you want to set up something similar: - give each agent its own inbox, and one shared place to publish; - have each run commit a receipt before it works, and its progress as it goes; - point every message at an exact commit; - wake agents with events rather than timers, and keep those events few; - keep every agent's instructions in the repository at a pinned commit; - write down what a message is allowed to authorise; - decide what an independent reviewer gets to see. My own part is choosing the scope and making the decisions the charter keeps for me.
+If you want to set up something similar:
+
+- give each agent its own inbox, and one shared place to publish;
+- have each run commit a receipt before it works, and its progress as it goes;
+- point every message at an exact commit;
+- wake agents with events rather than timers, and keep those events few;
+- keep every agent's instructions in the repository at a pinned commit;
+- write down what a message is allowed to authorise;
+- decide what an independent reviewer gets to see. My own part is choosing the scope and making the decisions the charter keeps for me.
 
 ---
 

@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=466de80c9bc2">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=3ffb1503e50f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=466de80c9bc2">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=3ffb1503e50f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=466de80c9bc2">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=3ffb1503e50f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=466de80c9bc2">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=3ffb1503e50f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=466de80c9bc2">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=3ffb1503e50f">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1883,23 +1883,25 @@ in the tables <a href="#what-is-measured-so-far">below</a>.</p>
 <p>The charts are drawn here by JavaScript. The tables
 <a href="#what-is-measured-so-far">below</a> give every value they show.</p>
 </div>
-<p><strong>The rules the charts keep:</strong>
-- <strong>One machine and one workload a chart.</strong> An L3 effect on the i9 may appear at another
-  concurrency, or not at all, on another CPU.
-- <strong>Two kinds of memory, never mixed:</strong> the live tables' bytes (computed: live full
+<p><strong>The rules the charts keep:</strong></p>
+<ul>
+<li><strong>One machine and one workload a chart.</strong> An L3 effect on the i9 may appear at another
+  concurrency, or not at all, on another CPU.</li>
+<li><strong>Two kinds of memory, never mixed:</strong> the live tables' bytes (computed: live full
   blocks × 900,000 rows × 4 bytes for today's table) and the process's peak RSS
   (measured). Peak RSS also counts the scanner's slots, the output and every worker's
-  buffers: at 4 threads on CI it is about 74 MB, against 14.4 MB of tables.
-- <strong>Two levels, never mixed:</strong> the full decoder (a file to verified output) and the
+  buffers: at 4 threads on CI it is about 74 MB, against 14.4 MB of tables.</li>
+<li><strong>Two levels, never mixed:</strong> the full decoder (a file to verified output) and the
   research harness's inversion (MTF, build and walk). The headline is the full decoder;
-  the inversion shows the mechanism.
-- <strong>Releases are the record.</strong> Selected pull requests and research runs appear as
-  labelled overlays.
-- <strong>Only measurements.</strong> Footprints of designs that don't exist yet, and models, stay in
-  the text.
-- <strong>The frontier is judged against the best alternative,</strong> not a convenient one. A
+  the inversion shows the mechanism.</li>
+<li><strong>Releases are the record.</strong> Selected pull requests and research runs appear as
+  labelled overlays.</li>
+<li><strong>Only measurements.</strong> Footprints of designs that don't exist yet, and models, stay in
+  the text.</li>
+<li><strong>The frontier is judged against the best alternative,</strong> not a convenient one. A
   compact table at four blocks beating today's at four blocks is a step; the frontier
-  moves only if it beats today's best configuration at any block count.</p>
+  moves only if it beats today's best configuration at any block count.</li>
+</ul>
 <h2 id="what-is-measured-so-far">What is measured so far<a class="headerlink" href="#what-is-measured-so-far" title="Permanent link">&para;</a></h2>
 <p>Three series exist, on the i9 (Intel i9-10900K, 10 cores, 20 MB L3). They are different
 runs at different levels, so they are separate series, never one line.</p>
@@ -1987,16 +1989,20 @@ research harness's MTF, build and walk; <a href="https://github.com/lmmx/mibz2/b
 </tbody>
 </table>
 <p>A cooperative team shares one block's table among k cores, so N teams keep N tables
-live on N × k cores.
-- y3x3 runs faster than p4 from fewer live tables. p4 is production's best worker count
-  on this machine in every scaling run (series 1).
-- So at this level, in throughput against live table bytes, sharing a table already does
-  better than every production configuration measured.
-- <strong>It is not yet a frontier result:</strong>
-  - it is the inversion, not the decoder;
-  - it is pinned;
-  - its memory axis is computed table bytes, not peak RSS;
-  - it uses more cores (CPU-seconds are not yet measured).</p>
+live on N × k cores.</p>
+<ul>
+<li>y3x3 runs faster than p4 from fewer live tables. p4 is production's best worker count
+  on this machine in every scaling run (series 1).</li>
+<li>So at this level, in throughput against live table bytes, sharing a table already does
+  better than every production configuration measured.</li>
+<li><strong>It is not yet a frontier result:</strong><ul>
+<li>it is the inversion, not the decoder;</li>
+<li>it is pinned;</li>
+<li>its memory axis is computed table bytes, not peak RSS;</li>
+<li>it uses more cores (CPU-seconds are not yet measured).</li>
+</ul>
+</li>
+</ul>
 <p><strong>3. The full decoder, workers against cooperative teams, with measured memory</strong>
 (unpinned; the bench corpus, 209.7 MB decoded; 20 interleaved rounds; the
 <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-cooperative-decoder.md">decoder journal</a>
@@ -2162,20 +2168,22 @@ and 8), the table gives the range of their medians, which is noise.</p>
 <p>Peak RSS is measured (the median run's, in decimal MB). Live tables are computed. The
 nondominated column compares medians on throughput (higher) and peak RSS (lower) within
 this series.</p>
-<p>What it shows, and what it doesn't:
-- <strong>Every worker count measured is dominated.</strong> p4, the decoder's best worker count here,
+<p>What it shows, and what it doesn't:</p>
+<ul>
+<li><strong>Every worker count measured is dominated.</strong> p4, the decoder's best worker count here,
   is beaten on both axes by 3 teams of 2 (the policy at 6 threads: 1.166× with its lower
-  bound 1.123, at 64 MB against 76) and by 3 teams of 3.
-- <strong>The nondominated set is all teams:</strong> 1×3, 2×3, 3×3 and 4×2. Measured by medians,
+  bound 1.123, at 64 MB against 76) and by 3 teams of 3.</li>
+<li><strong>The nondominated set is all teams:</strong> 1×3, 2×3, 3×3 and 4×2. Measured by medians,
   4×2 stays on the set by its best repeat. Its throughput is tied with 3×3's within noise
   (their intervals overlap almost entirely), at 13 MB more RSS and about 6% more CPU. 3×3
-  is a lead for refining the policy, not yet a result.
-- <strong>Not a whole-frontier result.</strong> No worker counts below 4 were measured in this run. At
+  is a lead for refining the policy, not yet a result.</li>
+<li><strong>Not a whole-frontier result.</strong> No worker counts below 4 were measured in this run. At
   1 to 3 workers, today's decoder may still own the low-memory end: series 1 has 2
   workers at 707 MB/s, but without RSS. Filling that in needs the same A/B at 1, 2 and 3
-  threads.
-- <strong>One machine, one workload, one level (the full decoder).</strong> Threads above 10 share
-  physical cores with SMT siblings.</p>
+  threads.</li>
+<li><strong>One machine, one workload, one level (the full decoder).</strong> Threads above 10 share
+  physical cores with SMT siblings.</li>
+</ul>
 <h2 id="what-fills-it-in">What fills it in<a class="headerlink" href="#what-fills-it-in" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>The low-memory end on the i9:</strong> the same A/B at 1, 2 and 3 threads, where today's
@@ -2335,17 +2343,17 @@ and the <a href="https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=466de80c9bc2"></script>
+        <script src="../../assets/javascripts/bench.js?v=3ffb1503e50f"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=466de80c9bc2"></script>
+        <script src="../../assets/javascripts/couriers.js?v=3ffb1503e50f"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=466de80c9bc2"></script>
+        <script src="../../assets/javascripts/blog.js?v=3ffb1503e50f"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=466de80c9bc2"></script>
+        <script src="../../assets/javascripts/frontier.js?v=3ffb1503e50f"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=466de80c9bc2"></script>
+        <script src="../../assets/javascripts/katex.js?v=3ffb1503e50f"></script>
       
     
   </body>

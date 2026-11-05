@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=466de80c9bc2">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=3ffb1503e50f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=466de80c9bc2">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=3ffb1503e50f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=466de80c9bc2">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=3ffb1503e50f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=466de80c9bc2">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=3ffb1503e50f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=466de80c9bc2">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=3ffb1503e50f">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1926,16 +1926,18 @@ and the decoder's own timeline (workers decoding or idle and why, the scanner, t
 reader, and per block its CPU time and run-queue wait). It is a diagnostic: the benchmark's
 paired A/B decides what is faster.</p>
 <p>The benchmark has a version of its own (<code>BENCH</code> in <code>bench/report.py</code>), with its
-history in <a href="https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md"><code>bench/CHANGELOG.md</code></a>:
-- <strong>A pull request that changes the benchmark</strong> (<code>bench/</code>, <code>examples/ab.rs</code>,
+history in <a href="https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md"><code>bench/CHANGELOG.md</code></a>:</p>
+<ul>
+<li><strong>A pull request that changes the benchmark</strong> (<code>bench/</code>, <code>examples/ab.rs</code>,
   <code>examples/phases.rs</code>, <code>.github/workflows/bench.yml</code>) either adds a changelog entry with
-  its new version, or says in its description why no version is needed.
-- <strong>A major version that redefines a family of figures</strong> adds itself to that family in
+  its new version, or says in its description why no version is needed.</li>
+<li><strong>A major version that redefines a family of figures</strong> adds itself to that family in
   <code>MEANING</code> (<code>bench/report.py</code>), so the site's history splits that family there and joins
-  the others across it.
-- <strong><code>python3 bench/test_report.py</code></strong> checks that <code>BENCH</code> and the newest entry agree, and
+  the others across it.</li>
+<li><strong><code>python3 bench/test_report.py</code></strong> checks that <code>BENCH</code> and the newest entry agree, and
   that the history joins versions but never runner models, core counts, corpora or a
-  corpus's different contents.</p>
+  corpus's different contents.</li>
+</ul>
 <h2 id="commits">Commits<a class="headerlink" href="#commits" title="Permanent link">&para;</a></h2>
 <p>Commit messages follow <a href="https://www.conventionalcommits.org/">Conventional Commits</a>
 (<code>feat:</code>, <code>fix:</code>, <code>docs:</code>, <code>ci:</code> ...); the <code>conventional-pre-commit</code> hook checks them.
@@ -2084,17 +2086,17 @@ history in <a href="https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=466de80c9bc2"></script>
+        <script src="../../assets/javascripts/bench.js?v=3ffb1503e50f"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=466de80c9bc2"></script>
+        <script src="../../assets/javascripts/couriers.js?v=3ffb1503e50f"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=466de80c9bc2"></script>
+        <script src="../../assets/javascripts/blog.js?v=3ffb1503e50f"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=466de80c9bc2"></script>
+        <script src="../../assets/javascripts/frontier.js?v=3ffb1503e50f"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=466de80c9bc2"></script>
+        <script src="../../assets/javascripts/katex.js?v=3ffb1503e50f"></script>
       
     
   </body>
