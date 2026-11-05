@@ -974,9 +974,28 @@ fn room_segments<const L: usize, const PF: u8>(
             rows[0][k] = l.row;
         }
         let mut cur = 0usize;
-        let mut tile = [[0u8; TILE]; L];
+        let mut tile_store = Tile([[0u8; TILE]; L]);
+        let tile = &mut tile_store.0;
+        #[cfg(target_arch = "x86_64")]
+        let avx2 = FLUSH >= 3
+            && std::is_x86_feature_detected!("avx2")
+            && std::is_x86_feature_detected!("bmi1");
+        // every lane's bit
+        let all: u64 = if L >= 64 { u64::MAX } else { (1u64 << L) - 1 };
         // copy lane k's tile row from st[k] to end into its buffer at p
         let flush = |l: &mut Lane, row: &[u8; TILE], from: usize, to: usize| {
+            if (FLUSH == 1 || FLUSH == 5) && from == 0 && to == TILE {
+                // SAFETY: as below, with len = TILE
+                unsafe {
+                    if FLUSH == 1 {
+                        copy_row_sse2(row.as_ptr(), l.p);
+                    } else {
+                        std::ptr::copy_nonoverlapping(row.as_ptr(), l.p, TILE);
+                    }
+                    l.p = l.p.add(TILE);
+                }
+                return;
+            }
             let len = to - from;
             // SAFETY: from..to is inside the row; the lane's buffer has room for the
             // chunk's bytes (the pass's room, as for the unstaged writes), so p + len is
@@ -989,6 +1008,12 @@ fn room_segments<const L: usize, const PF: u8>(
             }
         };
         'full: loop {
+            // the non-temporal stores are ordered before a grow reads a buffer
+            #[cfg(target_arch = "x86_64")]
+            if FLUSH == 4 && avx2 {
+                // SAFETY: SSE is in x86_64's baseline
+                unsafe { core::arch::x86_64::_mm_sfence() };
+            }
             // The pass's room: what every lane has spare, and no more than a buffer taken
             // mid-pass has after its first byte (`cap` - 1)
             let mut room = cap - 1;
@@ -1009,11 +1034,13 @@ fn room_segments<const L: usize, const PF: u8>(
             while done < room {
                 let w = (room - done).min(TILE);
                 let mut st = [0usize; L];
+                // the lanes that took a segment in this chunk (their rows start at st > 0)
+                let mut taken: u64 = 0;
                 for j in 0..w {
                     let flags = if cur == 0 {
-                        spec_offset::<L, PF, 0>(t, &mut rows, &mut tile, j)
+                        spec_offset::<L, PF, 0>(t, &mut rows, tile, j)
                     } else {
-                        spec_offset::<L, PF, 1>(t, &mut rows, &mut tile, j)
+                        spec_offset::<L, PF, 1>(t, &mut rows, tile, j)
                     };
                     if flags & START == 0 {
                         transition!(TILES_KEPT);
@@ -1095,6 +1122,7 @@ fn room_segments<const L: usize, const PF: u8>(
                         // its first byte is in its buffer; its next, at offset j + 1, is
                         // staged
                         st[k] = j + 1;
+                        taken |= 1 << k;
                         #[cfg(test)]
                         {
                             took = true;
@@ -1103,11 +1131,46 @@ fn room_segments<const L: usize, const PF: u8>(
                     // The scalar offset stepped the rows in place, so the next offset reads
                     // the same slot
                 }
-                for (k, l) in lanes.iter_mut().enumerate() {
-                    flush(l, &tile[k], st[k], w);
+                if FLUSH >= 2 {
+                    // the lanes with a whole row to copy: every lane in a whole chunk but
+                    // those that took a segment in it
+                    let whole = if w == TILE { all & !taken } else { 0 };
+                    // SAFETY: each lane in `whole` has its row's TILE bytes to copy, which
+                    // the room covers, as for `flush`
+                    unsafe {
+                        #[cfg(target_arch = "x86_64")]
+                        if avx2 {
+                            if FLUSH == 4 {
+                                flush_rows_avx2_nt(&mut lanes, tile, whole);
+                            } else {
+                                flush_rows_avx2(&mut lanes, tile, whole);
+                            }
+                        } else {
+                            flush_rows_sse2(&mut lanes, tile, whole);
+                        }
+                        #[cfg(not(target_arch = "x86_64"))]
+                        flush_rows_sse2(&mut lanes, tile, whole);
+                    }
+                    let mut rest = all & !whole;
+                    while rest != 0 {
+                        let k = rest.trailing_zeros() as usize;
+                        rest &= rest - 1;
+                        flush(&mut lanes[k], &tile[k], st[k], w);
+                    }
+                } else {
+                    for (k, l) in lanes.iter_mut().enumerate() {
+                        flush(l, &tile[k], st[k], w);
+                    }
                 }
                 done += w;
             }
+        }
+        // the walk's non-temporal stores are ordered before the tail's and the assembly's
+        // accesses
+        #[cfg(target_arch = "x86_64")]
+        if FLUSH == 4 && avx2 {
+            // SAFETY: SSE is in x86_64's baseline
+            unsafe { core::arch::x86_64::_mm_sfence() };
         }
     }
     let mut live: Vec<Lane> = lanes[..active]
@@ -1158,6 +1221,159 @@ fn room_segments<const L: usize, const PF: u8>(
 /// The busy phase's chunk: at most this many offsets' bytes are staged per lane (an 8 KiB
 /// tile at 32 lanes, in L1) before they are copied to the lanes' buffers
 const TILE: usize = 256;
+
+/// The flush's arms (research, walk/flush): 0, the closure's memcpy call per lane; 1, a
+/// whole row's fixed SSE2 copy in the closure; 2, whole rows copied in one mask loop at a
+/// chunk's end, SSE2; 3, that loop in an AVX2 function chosen at run time; 4, that with
+/// non-temporal stores for whole destination lines; 5, a const-length copy_nonoverlapping
+/// in the closure
+const FLUSH: u8 = 0;
+
+/// The tile, its rows on cache lines
+#[repr(C, align(64))]
+struct Tile<const L: usize>([[u8; TILE]; L]);
+
+/// A whole tile row from src to dst in sixteen 16-byte loads and stores (SSE2, in
+/// x86_64's baseline)
+///
+/// # Safety
+/// src..src + TILE readable, dst..dst + TILE writable, not overlapping
+#[inline(always)]
+unsafe fn copy_row_sse2(src: *const u8, dst: *mut u8) {
+    #[cfg(target_arch = "x86_64")]
+    {
+        use core::arch::x86_64::{__m128i, _mm_loadu_si128, _mm_storeu_si128};
+        let s = src.cast::<__m128i>();
+        let d = dst.cast::<__m128i>();
+        macro_rules! mv {
+            ($($i:expr),*) => {$(
+                _mm_storeu_si128(d.add($i), _mm_loadu_si128(s.add($i)));
+            )*};
+        }
+        mv!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    }
+    #[cfg(not(target_arch = "x86_64"))]
+    std::ptr::copy_nonoverlapping(src, dst, TILE);
+}
+
+/// Lane k's whole tile row to its p, p moved on by TILE, for each lane k in `mask` (SSE2)
+///
+/// # Safety
+/// each lane in `mask` has TILE bytes spare from its p
+#[inline(always)]
+unsafe fn flush_rows_sse2<const L: usize>(
+    lanes: &mut [Lane; L],
+    tile: &[[u8; TILE]; L],
+    mut mask: u64,
+) {
+    while mask != 0 {
+        let k = mask.trailing_zeros() as usize;
+        mask &= mask - 1;
+        let l = lanes.get_unchecked_mut(k);
+        copy_row_sse2(tile.get_unchecked(k).as_ptr(), l.p);
+        l.p = l.p.add(TILE);
+    }
+}
+
+/// `flush_rows_sse2` in eight 32-byte loads and stores a row (AVX2)
+///
+/// # Safety
+/// as `flush_rows_sse2`, on a CPU with AVX2 and BMI1
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1")]
+unsafe fn flush_rows_avx2<const L: usize>(
+    lanes: &mut [Lane; L],
+    tile: &[[u8; TILE]; L],
+    mut mask: u64,
+) {
+    use core::arch::x86_64::{__m256i, _mm256_loadu_si256, _mm256_storeu_si256};
+    while mask != 0 {
+        let k = mask.trailing_zeros() as usize;
+        mask &= mask - 1;
+        let l = lanes.get_unchecked_mut(k);
+        let s = tile.get_unchecked(k).as_ptr().cast::<__m256i>();
+        let d = l.p.cast::<__m256i>();
+        macro_rules! mv {
+            ($($i:expr),*) => {$(
+                _mm256_storeu_si256(d.add($i), _mm256_loadu_si256(s.add($i)));
+            )*};
+        }
+        mv!(0, 1, 2, 3, 4, 5, 6, 7);
+        l.p = l.p.add(TILE);
+    }
+}
+
+/// n < 64 bytes from s to d in at most two overlapping loads and stores of a width
+///
+/// # Safety
+/// as `copy_nonoverlapping`, on a CPU with AVX2
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+#[inline]
+unsafe fn copy_small(s: *const u8, d: *mut u8, n: usize) {
+    use core::arch::x86_64::*;
+    debug_assert!(n < 64);
+    if n >= 32 {
+        let a = _mm256_loadu_si256(s.cast());
+        let b = _mm256_loadu_si256(s.add(n - 32).cast());
+        _mm256_storeu_si256(d.cast(), a);
+        _mm256_storeu_si256(d.add(n - 32).cast(), b);
+    } else if n >= 16 {
+        let a = _mm_loadu_si128(s.cast());
+        let b = _mm_loadu_si128(s.add(n - 16).cast());
+        _mm_storeu_si128(d.cast(), a);
+        _mm_storeu_si128(d.add(n - 16).cast(), b);
+    } else if n >= 8 {
+        let a = s.cast::<u64>().read_unaligned();
+        let b = s.add(n - 8).cast::<u64>().read_unaligned();
+        d.cast::<u64>().write_unaligned(a);
+        d.add(n - 8).cast::<u64>().write_unaligned(b);
+    } else if n >= 4 {
+        let a = s.cast::<u32>().read_unaligned();
+        let b = s.add(n - 4).cast::<u32>().read_unaligned();
+        d.cast::<u32>().write_unaligned(a);
+        d.add(n - 4).cast::<u32>().write_unaligned(b);
+    } else if n > 0 {
+        *d = *s;
+        *d.add(n / 2) = *s.add(n / 2);
+        *d.add(n - 1) = *s.add(n - 1);
+    }
+}
+
+/// `flush_rows_avx2` with non-temporal stores for the row's whole destination lines, its
+/// partial lines at either end stored as usual; the caller fences before the bytes are read
+///
+/// # Safety
+/// as `flush_rows_avx2`
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1")]
+unsafe fn flush_rows_avx2_nt<const L: usize>(
+    lanes: &mut [Lane; L],
+    tile: &[[u8; TILE]; L],
+    mut mask: u64,
+) {
+    use core::arch::x86_64::{_mm256_loadu_si256, _mm256_stream_si256};
+    while mask != 0 {
+        let k = mask.trailing_zeros() as usize;
+        mask &= mask - 1;
+        let l = lanes.get_unchecked_mut(k);
+        let s = tile.get_unchecked(k).as_ptr();
+        let d = l.p;
+        // the bytes up to d's next line, then whole lines
+        let h = (d as usize).wrapping_neg() & 63;
+        copy_small(s, d, h);
+        let mut i = h;
+        while i + 64 <= TILE {
+            let a = _mm256_loadu_si256(s.add(i).cast());
+            let b = _mm256_loadu_si256(s.add(i + 32).cast());
+            _mm256_stream_si256(d.add(i).cast(), a);
+            _mm256_stream_si256(d.add(i + 32).cast(), b);
+            i += 64;
+        }
+        copy_small(s.add(i), d.add(i), TILE - i);
+        l.p = d.add(TILE);
+    }
+}
 
 /// One offset of the room walk's busy phase, every lane stepped without testing its flag:
 /// lane k reads the row in slot P, stages its byte at tile[k][j] and writes its next row
