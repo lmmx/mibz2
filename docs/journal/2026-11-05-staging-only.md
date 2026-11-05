@@ -76,3 +76,24 @@ The incumbent stays unless this branch wins. A neutral result keeps the deferred
   deferred flags stay.
 - **What a pass establishes:** that the deferred flags cost time on CI's runners, net of the
   instructions they save. It does not establish the mechanism.
+
+## Result: merged as #181 (d1fd4405)
+
+Three runs, bench 3.2.1. The first two ran on head eebe33f against c943331. The third ran on
+e3ea69f, which has #180's window merged in, against eb5363c.
+
+| run | runner | `wikidata` wall at 1 / 2 / 4 threads | walk stage | flagged slower |
+|---|---|---|---|---|
+| 1 | EPYC 9V74 | **−2.0%** (−2.7, −1.2) / −2.4% / +0.2% | **−2.6%** | none |
+| 2 | Xeon 8573C | **−0.5%** (−0.9, −0.1) / **−1.8%** / −3.2% (−6.6, +0.2) | −0.9% | none |
+| 3 | EPYC 9V45 | −0.9% / −0.1% / **−3.2%** (−5.6, −0.7) | **−6.8%** | none |
+
+- **Benefit:** met. The 1-thread wall was faster beyond noise in runs 1 and 2. On the merged
+  head, the 4-thread wall was faster beyond noise too.
+- **No harm:** no wall row was flagged slower in any run.
+- **What it says:** the deferred flags saved 4% of the walk's instructions and cost it time.
+  - The replay's second slot of rows and the out-of-line `spec_offset` are the likely cost.
+    That is an inference: no counters were read.
+  - #171's whole gain was the staging's. This agrees with the local attribution in
+    `2026-11-05-walk-round.md`.
+  - It is another case where instructions mispredict the walk.
