@@ -323,10 +323,8 @@ fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
                 return false;
             }
             let base = (i as u32) << 8;
-            for (j, &l) in ll[s..s + 16].iter().enumerate() {
-                // SAFETY: s..s + 16 is below its bucket's end, as above
-                unsafe { *t.add(s + j) = l as u32 | (base + ((j as u32) << 8)) };
-            }
+            // SAFETY: s..s + 16 is below its bucket's end, as above, and inside ll
+            unsafe { run16(ll.as_ptr().add(s), base, t.add(s)) };
             ftab[c] += 16;
         } else {
             for i in i..i + 16 {
@@ -350,6 +348,40 @@ fn build_one_pass(ll: &[u8], counts: &[u32; 256], tt: &mut Vec<u32>) -> bool {
     // and the buckets tile [0, n)
     unsafe { tt.set_len(n) };
     true
+}
+
+/// The 16 entries of a run, `src[j] | (base + (j << 8))` for j < 16, at `dst`: on x86_64 as
+/// four SSE2 vectors (the bytes widened by unpacking with zero; a byte and a link share no
+/// bit, so the OR is an add), elsewhere one at a time
+///
+/// # Safety
+/// `src` must be readable for 16 bytes and `dst` writable for 16 entries.
+#[inline(always)]
+unsafe fn run16(src: *const u8, base: u32, dst: *mut u32) {
+    #[cfg(target_arch = "x86_64")]
+    // SAFETY: SSE2 is in x86_64's baseline; the caller guarantees both ranges
+    unsafe {
+        use core::arch::x86_64::*;
+        let z = _mm_setzero_si128();
+        let v = _mm_loadu_si128(src.cast());
+        let lo = _mm_unpacklo_epi8(v, z);
+        let hi = _mm_unpackhi_epi8(v, z);
+        let b = _mm_set1_epi32(base as i32);
+        let j0 = _mm_add_epi32(b, _mm_setr_epi32(0, 1 << 8, 2 << 8, 3 << 8));
+        let j1 = _mm_add_epi32(b, _mm_setr_epi32(4 << 8, 5 << 8, 6 << 8, 7 << 8));
+        let j2 = _mm_add_epi32(b, _mm_setr_epi32(8 << 8, 9 << 8, 10 << 8, 11 << 8));
+        let j3 = _mm_add_epi32(b, _mm_setr_epi32(12 << 8, 13 << 8, 14 << 8, 15 << 8));
+        let d = dst.cast::<__m128i>();
+        _mm_storeu_si128(d, _mm_add_epi32(_mm_unpacklo_epi16(lo, z), j0));
+        _mm_storeu_si128(d.add(1), _mm_add_epi32(_mm_unpackhi_epi16(lo, z), j1));
+        _mm_storeu_si128(d.add(2), _mm_add_epi32(_mm_unpacklo_epi16(hi, z), j2));
+        _mm_storeu_si128(d.add(3), _mm_add_epi32(_mm_unpackhi_epi16(hi, z), j3));
+    }
+    #[cfg(not(target_arch = "x86_64"))]
+    for j in 0..16 {
+        // SAFETY: the caller guarantees both ranges
+        unsafe { *dst.add(j) = *src.add(j) as u32 | (base + ((j as u32) << 8)) };
+    }
 }
 
 /// The two-pass build: the last column copied into the table, then each row's link added
