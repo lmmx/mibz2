@@ -1,4 +1,4 @@
-# 2026-11-05: MTF on libbzip2's two-level list, its first 32 bytes in registers: registration
+# 2026-11-05: MTF on libbzip2's two-level list, its first 32 bytes in registers: merged
 
 Registered before any CI timing of this branch. The decision rule may be amended only in a
 commit made before the first bench comment on its PR, and each amendment says what changed
@@ -86,3 +86,63 @@ symbol's move must finish before the next symbol's index can be read off the lis
 - **No harm (required):** a wall row flagged slower is a harm signal, settled by one more run
   on the same head. Flagged again, it is a harm and the rule fails. At most three runs, each
   run's CPU named.
+
+## Result
+
+Merged as #207 (squash bc899400, at the benched head e6dd0492), after a separate
+cross-model check. The rule above is left as written: its replication clause was not met
+within it.
+
+### The three runs under this rule
+
+All three drew an AMD EPYC 7763 (run 42082730010, attempts 1–3).
+
+| attempt | `wikidata` 1t wall | 2t wall | 4t wall | MTF + RLE2 | `records` 1t | `random` 1t |
+|---|--:|--:|--:|--:|--:|--:|
+| 1 | −5.2% (−5.9, −4.5) | −3.9% | −4.2% (n.s.) | −23.5% | −26.4% | −13.3% |
+| 2 | −5.2% (−6.2, −4.2) | −4.9% | −1.2% (−2.0, −0.3) | −23.5% | −27.0% | −13.2% |
+| 3 | −4.8% (−5.8, −3.7) | −4.4% | −1.5% (n.s.) | −23.1% | −28.5% | −13.1% |
+
+- **Correctness and benefit** passed, and no refuter was hit.
+- **No harm:** no wall row was flagged slower.
+- **Replication on a second CPU model** could not be met. The rule allowed three runs, and the runner's model can't be chosen.
+
+### The cross-model check
+
+- **Registered** in [a comment on #207](https://github.com/lmmx/mibz2/pull/207#issuecomment-6671156633)
+  before any of its runs, and authorised by the maintainer.
+- **What was measured:** the frozen head against the same base, by `workflow_dispatch`.
+- **Choosing the run:** runs went one at a time, with only the runner's CPU read first. A
+  7763 run would have been set aside unread. The first run on another model decided, with
+  a cap of 5 dispatches.
+- **The rule:** this rule's own clauses, applied to that run.
+
+One dispatch was needed. Run 42121493512 drew an AMD EPYC 9V45 (Zen 5):
+
+| Clause | Result |
+|---|---|
+| Correctness | the same bytes on all 7 corpora at 1, 2 and 4 threads |
+| Benefit | `wikidata` 1t wall −2.1% (−3.8, −0.4), faster beyond noise; MTF + RLE2 −18.5% (−21.8, −15.1) |
+| Refuter (MTF cut under 5%) | not hit |
+| Harm | no wall row flagged slower; no other stage moved beyond noise |
+
+Other rows on the 9V45 at 1 thread: `records` −24.7%, `random` −6.0%, and the stage total
+−5.3%.
+
+### What it shows
+
+- **The mechanism holds on Zen 3 and Zen 5.** Keeping list bytes 0–31 in registers
+  removes the store and reload from the serial chain. It cuts the MTF stage by about a
+  fifth on both models.
+- **Zen 5 gains less:** −18.5% against −23% on the stage, and −2.1% against −5% on the
+  1-thread wall. This fits a faster store-to-load path on Zen 5 leaving less to remove,
+  but no hardware counters were read, so it is not shown.
+- **The prediction was low on Zen 3.** It said 8–15% on the stage and 1–3% on the wall.
+- **The far-index corpora gained instead of slowing:** `records` −25% to −28%. The
+  per-symbol cycle counts above put index ≥ 64 slower. The likely cause is that removing
+  the store from every move outweighs that slowdown, but this was not measured.
+- **Caveat:** at 1 thread, the A/A runs put the between-run spread at about 0.7%. Widened
+  by that, the 9V45 run's `wikidata` 1-thread interval would touch zero. Its own interval
+  excludes zero, which is what the rule judges, and the three 7763 runs are well clear of
+  it.
+- **Not covered:** Intel. No run drew the Xeon 8370C.
