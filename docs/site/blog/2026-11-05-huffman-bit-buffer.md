@@ -100,14 +100,20 @@ Three operations act on it, each a line or two of Rust:
   just below the bits still live, and advance `pos` by as many whole bytes as fitted. That
   leaves at least 56 bits live.
 
+The figure below runs the toy bits through a ten-bit buffer. Each press of its button is
+one peek and one skip: it says which code the bits at the front begin with, and then shifts
+that code out, so the next one moves to the front.
+
 <figure class="bf-fig bf-bitbuf" data-bits="0110100111" data-codes="0:A 10:B 110:C 111:D">
-<p class="bf-title">A bit buffer, read one code at a time</p>
+<p class="bf-title">Try it: decode the toy bits one code at a time</p>
+<p class="bf-keys"><span class="bf-keys-label">The code:</span> <span class="bf-key" data-code="0">A = <code>0</code></span> <span class="bf-key" data-code="10">B = <code>10</code></span> <span class="bf-key" data-code="110">C = <code>110</code></span> <span class="bf-key" data-code="111">D = <code>111</code></span></p>
 <ol class="bf-bits" aria-label="The buffer's unread bits, first bit on the left"><li class="bf-bit">0</li><li class="bf-bit">1</li><li class="bf-bit">1</li><li class="bf-bit">0</li><li class="bf-bit">1</li><li class="bf-bit">0</li><li class="bf-bit">0</li><li class="bf-bit">1</li><li class="bf-bit">1</li><li class="bf-bit">1</li></ol>
-<p class="bf-bits-note">The toy code's ten bits at the front of the buffer, the next unread bit on the left. Highlighted: the code at the front.</p>
-<dl class="bf-buf-state" aria-live="polite" hidden><dt>Code at the front</dt><dd class="bf-buf-next">A = 0</dd><dt>Unread bits (<code>live</code>)</dt><dd class="bf-buf-live">10</dd><dt>Last step</dt><dd><code class="bf-buf-shift">nothing consumed yet</code></dd><dt>Decoded so far</dt><dd class="bf-buf-out">none yet</dd></dl>
+<p class="bf-bits-note">The buffer, its next unread bit on the left. In green: the bits of the code at the front, and that code in the key above.</p>
+<p class="bf-buf-step" aria-live="polite" hidden></p>
+<dl class="bf-buf-state" hidden><dt>Decoded so far</dt><dd class="bf-buf-out">none yet</dd><dt>Unread bits (<code>live</code>)</dt><dd class="bf-buf-live">10</dd><dt>The last shift, in Rust</dt><dd><code class="bf-buf-shift">nothing shifted yet</code></dd></dl>
 <div class="bf-buttons" hidden><button type="button" class="bf-btn bf-read">Read the next code →</button><button type="button" class="bf-btn bf-reset">Reset</button></div>
-<p class="bf-buf-static">Read in order: <code>0</code> is A, then <code>110</code> is C, <code>10</code> is B, <code>0</code> is A and <code>111</code> is D. Each read shifts the buffer left by the code's length, which brings the next code to the front.</p>
-<figcaption>Each read peeks at the front, finds the code that starts there, then shifts the buffer left by its length. The dotted cells are the space the shift leaves at the end, which a refill fills with more of the file. In mibz2 the buffer is 64 bits wide, not ten.</figcaption>
+<p class="bf-buf-static">Read in order: the buffer starts <code>0</code>, which is A. Shifting A's one bit out brings <code>110</code> to the front, which is C. Then <code>10</code> is B, <code>0</code> is A and <code>111</code> is D. Each shift moves the buffer left by the length of the code just read.</p>
+<figcaption>In mibz2 the buffer is 64 bits wide, not ten, and a refill tops it up long before it runs out.</figcaption>
 </figure>
 
 So the buffer is just an integer and a few shifts. It isn't an array or a special piece of
@@ -116,19 +122,55 @@ hardware, and the whole state is three numbers: `pos`, `buf` and `live`.
 
 ## 2. Reading a code with a lookup table
 
-Reading a code a bit at a time, as in the toy example, would take a step for every bit. So
-fast Huffman decoders, mibz2 among them, read a code with a lookup table: they peek at the
-next several bits and look up which code those bits begin with. A bzip2 block is coded with
-a few different codes, called code tables, rather than one ([section
-3](#3-where-this-sits-in-bzip2-and-in-mibz2) shows why). For each of them, mibz2 builds a
-[lookup table of 1,024
-entries](https://github.com/lmmx/mibz2/blob/264ae5bb/src/block.rs#L45-L72), one 32-bit entry for
-each possible value of the next ten bits. Ten bits hold most of bzip2's codes but not all,
-since a code can be up to 20 bits long, so an entry says one of four things. Usually the ten
-bits begin with one whole code, and the entry gives its symbol and length. Often they begin
-with two whole codes, and the entry gives both symbols and their combined length. If the
-code is longer than ten bits, the entry sends the decoder to a slow path that reads it a bit
-at a time, as libbzip2 (the reference bzip2 library) does. And if no valid code begins with these bits, the block is
+In the figure, each symbol was found by matching the front of the buffer against the four
+codes. A simple decoder makes that match a bit at a time. It looks at the first bit: if it
+is 0, the symbol is A. If not, it looks at the second bit: if that is 0, the symbol is B. If
+not, it looks at the third. Each bit of a code costs a step, so the toy's ten bits take ten.
+
+Fast Huffman decoders, mibz2 among them, replace those steps with a single lookup in a table
+made before decoding starts. The toy's longest code is three bits, so peek at the next three
+bits, whatever they are: `buf >> 61`, the peek from section 1. Three bits have only eight
+possible values, and for each one we can work out in advance which code it begins with:
+
+| Next three bits | They begin with | Bits to skip |
+| --- | --- | ---: |
+| `000` | A, then A | 2 |
+| `001` | A, then A | 2 |
+| `010` | A, then B | 3 |
+| `011` | A | 1 |
+| `100` | B, then A | 3 |
+| `101` | B | 2 |
+| `110` | C | 3 |
+| `111` | D | 3 |
+
+The three bits, read as a number from 0 to 7, pick the row. Many rows hold more than one
+code: `010` is A's code `0` followed by B's code `10`. So a row can name two symbols, and one
+lookup then decodes both. When the bits after the first code don't make a whole code, the
+row names just the one symbol. `011` is an example: its `11` is only the start of C or D, so
+the row says A and skips one bit, and the next lookup sees the rest.
+
+With this table the toy bits `0110100111` take four lookups instead of ten steps:
+
+| Lookup | Next three bits | The row says | Bits to skip | Decoded so far |
+| ---: | --- | --- | ---: | --- |
+| 1 | `011` | A | 1 | A |
+| 2 | `110` | C | 3 | A C |
+| 3 | `100` | B, then A | 3 | A C B A |
+| 4 | `111` | D | 3 | A C B A D |
+
+mibz2's table works the same way, at a larger size. A bzip2 code can be up to 20 bits long,
+and a table with a row for every 20-bit value would have about a million rows, 4 MB of them:
+far too large for the processor's nearest cache, which holds tens of kilobytes. So mibz2
+peeks at ten bits instead. Its [table has 1,024
+entries](https://github.com/lmmx/mibz2/blob/264ae5bb/src/block.rs#L45-L72) of 32 bits each,
+4 KB in all. Most of bzip2's codes are shorter than ten bits, so most entries are like the
+toy table's rows: one or two symbols, and how many bits to skip.
+
+Ten bits can't settle every case, and two other kinds of entry cover the rest. A code longer
+than ten bits only begins in those ten bits. Its entry says so, and the decoder reads that
+code a bit at a time on a slower path, as libbzip2 (the reference bzip2 library) does. Long
+codes belong to the rarest symbols, so this path is seldom taken. And if no code at all
+begins with the ten bits, the file can't be valid bzip2, so that entry marks the block as
 corrupt.
 
 <figure class="bf-fig">
@@ -139,10 +181,7 @@ corrupt.
 
 On the Wikidata sample, about 83% of lookups decode a pair
 ([census](https://github.com/lmmx/mibz2/blob/264ae5bb/docs/journal/2026-11-05-binding-census/serial-stages.md)).
-The fast loop refills, makes four lookups, then refills again. Symbols come in groups of 50
-that share a code table (section 3), and the fast loop runs while at least eight symbols of
-the group remain, because four lookups can produce eight; a group's last few symbols go
-through a slower loop.
+The fast loop refills, makes four lookups, then refills again.
 
 One lookup is four steps:
 
@@ -203,6 +242,9 @@ symbols, naming the table that group was coded with. bzip2's codes are at most 2
 So reading a block's symbols means reading its header, then, for each group of 50, taking
 the table its selector names and reading codes with it one after another, until the
 end-of-block symbol.
+mibz2 builds a lookup table like section 2's for each of the block's code tables. Within a
+group of 50, its fast loop runs while at least eight of the group's symbols remain, since four
+lookups can decode eight; the group's last few symbols go through a slower loop.
 
 
 mibz2 splits a decode between two kinds of thread, as the [post on block
