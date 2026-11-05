@@ -346,6 +346,22 @@
       "comment": 6645964170,
       "incoming_comment": 6645920904,
       "status": "published; historical P87 status preserved; unconditional merge qualification disputed; no new PASS or line STOP"
+    },
+    {
+      "id": "D025",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 161,
+      "output_pr": 145,
+      "sha": "a995ce87dcd63b318a10795a1860fc21edf039cf",
+      "evidence_digest": "git-blob:6def96def6c11f19df3137cf0159c07013a5ea2a",
+      "incoming_comment": 6646249200,
+      "comment": 6646304926,
+      "commit": "fd43a0a90e418a651f27c3c2197850582acd6379",
+      "receipt_commit": "7bc2724bf4e3769549e29ec6b75b8bae029fcb26",
+      "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+      "status": "completed; historical status preserved; summary predicates verified; replication and late-amendment claims bounded"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -369,7 +385,8 @@
     6644422056,
     6644979187,
     6645337230,
-    6645964170
+    6645964170,
+    6646304926
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -395,7 +412,9 @@
     "4534bbc8d1cd4de6a9b1fe87269b60a9f1587654",
     "92468ff2b0adaa919721ac1b661c41cd9d089439",
     "9f85bcb6da410334db12a3fc0efacec298d18a98",
-    "ca1b65de2ae684b5d0a32795154abd8f44857f7a"
+    "ca1b65de2ae684b5d0a32795154abd8f44857f7a",
+    "7bc2724bf4e3769549e29ec6b75b8bae029fcb26",
+    "fd43a0a90e418a651f27c3c2197850582acd6379"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -420,7 +439,8 @@
     6644364456,
     6644912625,
     6645304470,
-    6645920904
+    6645920904,
+    6646249200
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -499,23 +519,24 @@
     "ai_attribution": false
   },
   "current_execution": {
-    "trigger": "new non-bot PR #161 comment containing both exact TYPE: CHECKPOINT and TO: guardian literals in either order",
+    "trigger": "new non-bot inbox #161 comment; headers do not gate eligibility under SPEC",
     "repository": "lmmx/mibz2",
     "scope": "only triggering event comments; no backlog",
-    "last_completed_incoming_comment": 6645920904,
-    "last_decision": "D024",
-    "last_outgoing_comment": 6645964170,
+    "last_completed_incoming_comment": 6646249200,
+    "last_decision": "D025",
+    "last_outgoing_comment": 6646304926,
     "after_completion": "stop; await a future matching GitHub event",
     "polling": false,
     "timed_schedule": false,
-    "own_outputs": "ignore IDs in own_outgoing_comment_ids and ACKs",
+    "own_outputs": "skip IDs in own_outgoing_comment_ids; handle remaining inbox comments under pinned SPEC",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "ca1b65de2ae684b5d0a32795154abd8f44857f7a",
+    "last_decision_commit": "fd43a0a90e418a651f27c3c2197850582acd6379",
     "last_duplicate_incoming_comment": 6633116288,
     "source_app_reply": "one TYPE: REVIEW published on PR #145",
     "input_pr": 161,
-    "output_pr": 145
+    "output_pr": 145,
+    "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6"
   },
   "duplicate_events": [
     {
@@ -697,15 +718,15 @@
       "decision": "D024",
       "commit": "ca1b65de2ae684b5d0a32795154abd8f44857f7a",
       "comment": 6645964170
+    },
+    {
+      "pr": 161,
+      "sha": "a995ce87dcd63b318a10795a1860fc21edf039cf",
+      "evidence_digest": "git-blob:6def96def6c11f19df3137cf0159c07013a5ea2a",
+      "decision": "D025",
+      "commit": "fd43a0a90e418a651f27c3c2197850582acd6379",
+      "comment": 6646304926
     }
   ],
-  "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
-  "in_progress": {
-    "incoming_comment": 6646249200,
-    "pr": 161,
-    "status": "decision published in enclosing commit; REVIEW on #145 and completion pending",
-    "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
-    "decision": "D025",
-    "evidence_digest": "git-blob:6def96def6c11f19df3137cf0159c07013a5ea2a"
-  }
+  "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6"
 }
