@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "P87 registration review completed; awaiting next qualifying inbox comment",
+  "state": "P87 results review completed; awaiting next inbox comment",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -68,9 +68,10 @@
     6644051935,
     6644115799,
     6644912625,
-    6645922140
+    6645922140,
+    6646250444
   ],
-  "last_processed_comment_id": 6645922140,
+  "last_processed_comment_id": 6646250444,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -370,6 +371,18 @@
       "review_comment_pr": 145,
       "review_comment_id": 6645977057,
       "disposition": "Repeated-detection screen is not no-harm assurance; RSS-only gate claim unsupported; causal bundle preserved; bounded existing-data and warm-scratch diagnostics proposed. No benchmarks or implementation."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6646250444,
+      "status": "completed",
+      "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
+      "report_commit": "448eabe549bcb8d392deb6ba4d84dda1466e2e40",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/p87-results-6646250444/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": 6646303348,
+      "disposition": "Verified 42 published wall intervals; narrowed inconclusive/safety claims; identified untimed production parity decode between timed phase passes; proposed binary audit; raw paired JSONL absent from archive."
     }
   ],
   "active_delegations": [],
@@ -389,10 +402,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6645922140
+      6646250444
     ],
     "handled": [
-      6645922140
+      6646250444
     ],
     "skipped": [],
     "automation_modified": false
@@ -412,10 +425,5 @@
     "authority_changed": false
   },
   "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
-  "in_progress_comment": {
-    "id": 6646250444,
-    "pr": 162,
-    "status": "in_progress",
-    "progress": "Receipt committed; read result write-up and archived reports, assess claims and RLE1, recommend next measurement."
-  }
+  "in_progress_comment": null
 }
