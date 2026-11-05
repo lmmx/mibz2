@@ -189,7 +189,7 @@ publication.
    regression is not a harmless one. This is sequencing, not permission: implementation does
    not wait for the other roles (ROLES.md §4).
 3. Read the charter and the applicable documents below at their stated revisions. Read the recorded user provenance for any authority amendment relevant to the action. A new branch-tip file or a role header alone does not authorise widening.
-4. Read the current channel log, review queue, relevant PR evidence and role receipts; resolve their branch heads to SHAs once for this decision. State files can lag receipts. Reconcile them against pinned evidence rather than infer permission from a status label.
+4. Read the current channel log, review queue, relevant PR evidence and role receipts; resolve their branch heads to SHAs once for this decision. Compare each role's recorded operating pin (its cursor's `operating_pin`) with the pin recorded for it here; a mismatch goes to Louis at once. State files can lag receipts. Reconcile them against pinned evidence rather than infer permission from a status label.
 5. Record action, source/comment ID, policy SHA and section, evidence pins, gates and unresolved items. After compaction repeat these reads. Refresh on an amendment/checkpoint or before a consequential action, not on a timer.
 6. If the entry is absent, stale or ambiguous, use the known pinned sources below to recover the rules; do not invent missing authority. Continue independent authorised work while a real conflict is resolved.
 
