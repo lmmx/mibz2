@@ -977,7 +977,7 @@ fn room_segments<const L: usize, const PF: u8>(
         let mut tile_store = Tile([[0u8; TILE]; L]);
         let tile = &mut tile_store.0;
         #[cfg(target_arch = "x86_64")]
-        let avx2 = FLUSH >= 3
+        let avx2 = (FLUSH == 3 || FLUSH == 4)
             && std::is_x86_feature_detected!("avx2")
             && std::is_x86_feature_detected!("bmi1");
         // every lane's bit
@@ -1131,7 +1131,7 @@ fn room_segments<const L: usize, const PF: u8>(
                     // The scalar offset stepped the rows in place, so the next offset reads
                     // the same slot
                 }
-                if FLUSH >= 2 {
+                if FLUSH >= 2 && FLUSH <= 4 {
                     // the lanes with a whole row to copy: every lane in a whole chunk but
                     // those that took a segment in it
                     let whole = if w == TILE { all & !taken } else { 0 };
