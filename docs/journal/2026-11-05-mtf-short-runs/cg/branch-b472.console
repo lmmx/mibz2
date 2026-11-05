@@ -1,0 +1,11 @@
+==16400== Callgrind, a call-graph generating cache profiler
+==16400== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==16400== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==16400== Command: mtf/target/release/c30cg cg /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/indep-wikidata/wikidata-independent.bz2 472 1
+==16400== 
+==16400== For interactive control, run 'callgrind_control -h'.
+==16400== 
+==16400== Events    : Ir
+==16400== Collected : 8192
+==16400== 
+==16400== I   refs:      8,192

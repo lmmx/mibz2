@@ -121,7 +121,16 @@ unsafe fn mtf_avx2(
             }
             let c = s2u[*base as usize];
             counts[c as usize] += run;
-            std::ptr::write_bytes(out.add(n), c, run as usize);
+            if run <= 64 && n + 64 <= max {
+                // a short run as two 32-byte stores of its byte: the bytes past the run are
+                // still inside `ll`'s capacity (n + 64 <= max), and are written again by
+                // what follows or left past the length set at the end
+                let v = _mm256_set1_epi8(c as i8);
+                _mm256_storeu_si256(out.add(n) as *mut __m256i, v);
+                _mm256_storeu_si256(out.add(n + 32) as *mut __m256i, v);
+            } else {
+                std::ptr::write_bytes(out.add(n), c, run as usize);
+            }
             n += run as usize;
             (run, weight) = (0, 1);
         }
