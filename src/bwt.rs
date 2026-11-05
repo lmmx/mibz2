@@ -794,6 +794,9 @@ thread_local! {
     // done again lane by lane because a lane read a start
     static TILES_KEPT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static TILES_REPLAYED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // set by a test to walk with the whole-row copies of x86_64's baseline (SSE2) on a CPU
+    // that has AVX2
+    static BASELINE_ROWS: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -968,13 +971,20 @@ fn room_segments<const L: usize, const PF: u8>(
         // the chunk ends or the segment does, so every byte lands where an unstaged walk
         // would have written it, and the room bounds the copies as it bounded the writes.
         // A speculative byte is either written again by the scalar offset or left past
-        // st..end, never copied.
+        // st..end, never copied. A lane that walked a whole chunk of TILE offsets in one
+        // segment copies its whole row, in fixed-size loads and stores (AVX2 where the CPU
+        // has it), in one loop over those lanes; the others copy theirs from st with a
+        // memcpy each.
         let mut rows = [[0u32; L]; 2];
         for (k, l) in lanes.iter().enumerate() {
             rows[0][k] = l.row;
         }
         let mut cur = 0usize;
-        let mut tile = [[0u8; TILE]; L];
+        let mut tile_store = Tile([[0u8; TILE]; L]);
+        let tile = &mut tile_store.0;
+        let avx2 = rows_avx2();
+        // every lane's bit
+        let all: u64 = if L >= 64 { u64::MAX } else { (1u64 << L) - 1 };
         // copy lane k's tile row from st[k] to end into its buffer at p
         let flush = |l: &mut Lane, row: &[u8; TILE], from: usize, to: usize| {
             let len = to - from;
@@ -1009,11 +1019,13 @@ fn room_segments<const L: usize, const PF: u8>(
             while done < room {
                 let w = (room - done).min(TILE);
                 let mut st = [0usize; L];
+                // the lanes that took a segment in this chunk (their rows start at st > 0)
+                let mut taken: u64 = 0;
                 for j in 0..w {
                     let flags = if cur == 0 {
-                        spec_offset::<L, PF, 0>(t, &mut rows, &mut tile, j)
+                        spec_offset::<L, PF, 0>(t, &mut rows, tile, j)
                     } else {
-                        spec_offset::<L, PF, 1>(t, &mut rows, &mut tile, j)
+                        spec_offset::<L, PF, 1>(t, &mut rows, tile, j)
                     };
                     if flags & START == 0 {
                         transition!(TILES_KEPT);
@@ -1095,6 +1107,7 @@ fn room_segments<const L: usize, const PF: u8>(
                         // its first byte is in its buffer; its next, at offset j + 1, is
                         // staged
                         st[k] = j + 1;
+                        taken |= 1 << k;
                         #[cfg(test)]
                         {
                             took = true;
@@ -1103,8 +1116,17 @@ fn room_segments<const L: usize, const PF: u8>(
                     // The scalar offset stepped the rows in place, so the next offset reads
                     // the same slot
                 }
-                for (k, l) in lanes.iter_mut().enumerate() {
-                    flush(l, &tile[k], st[k], w);
+                // the lanes with a whole row to copy: in a whole chunk, every lane but those
+                // that took a segment in it
+                let whole = if w == TILE { all & !taken } else { 0 };
+                // SAFETY: a lane in `whole` has its row's TILE bytes to copy, which the
+                // room covers, as for `flush`
+                unsafe { flush_rows(&mut lanes, tile, whole, avx2) };
+                let mut rest = all & !whole;
+                while rest != 0 {
+                    let k = rest.trailing_zeros() as usize;
+                    rest &= rest - 1;
+                    flush(&mut lanes[k], &tile[k], st[k], w);
                 }
                 done += w;
             }
@@ -1158,6 +1180,118 @@ fn room_segments<const L: usize, const PF: u8>(
 /// The busy phase's chunk: at most this many offsets' bytes are staged per lane (an 8 KiB
 /// tile at 32 lanes, in L1) before they are copied to the lanes' buffers
 const TILE: usize = 256;
+
+/// The tile, its rows on cache lines
+#[repr(C, align(64))]
+struct Tile<const L: usize>([[u8; TILE]; L]);
+
+/// Whether the busy phase copies whole tile rows with AVX2: where the CPU has it, with
+/// BMI1 (as `Kernels::detect` asks for its AVX2 kernels), unless a test asked for the
+/// baseline's copies
+#[inline]
+fn rows_avx2() -> bool {
+    #[cfg(test)]
+    if BASELINE_ROWS.with(|c| c.get()) {
+        return false;
+    }
+    #[cfg(target_arch = "x86_64")]
+    {
+        std::is_x86_feature_detected!("avx2") && std::is_x86_feature_detected!("bmi1")
+    }
+    #[cfg(not(target_arch = "x86_64"))]
+    {
+        false
+    }
+}
+
+/// Lane k's whole tile row to its buffer at p, p moved on by TILE, for each lane k in
+/// `mask`: eight 32-byte loads and stores a row with `avx2`, else the baseline's
+/// (`flush_rows_baseline`)
+///
+/// # Safety
+/// each lane in `mask` has TILE bytes spare from its p; `avx2` only on a CPU with AVX2 and
+/// BMI1
+#[inline(always)]
+unsafe fn flush_rows<const L: usize>(
+    lanes: &mut [Lane; L],
+    tile: &[[u8; TILE]; L],
+    mask: u64,
+    avx2: bool,
+) {
+    #[cfg(target_arch = "x86_64")]
+    if avx2 {
+        flush_rows_avx2(lanes, tile, mask);
+    } else {
+        flush_rows_baseline(lanes, tile, mask);
+    }
+    #[cfg(not(target_arch = "x86_64"))]
+    {
+        let _ = avx2;
+        flush_rows_baseline(lanes, tile, mask);
+    }
+}
+
+/// `flush_rows` in the target's baseline: on x86_64, sixteen 16-byte loads and stores a
+/// row (SSE2), straight-line, as a 256-byte copy_nonoverlapping is a memcpy call there
+///
+/// # Safety
+/// as `flush_rows`
+#[inline(always)]
+unsafe fn flush_rows_baseline<const L: usize>(
+    lanes: &mut [Lane; L],
+    tile: &[[u8; TILE]; L],
+    mut mask: u64,
+) {
+    while mask != 0 {
+        let k = mask.trailing_zeros() as usize;
+        mask &= mask - 1;
+        let l = lanes.get_unchecked_mut(k);
+        let src = tile.get_unchecked(k).as_ptr();
+        #[cfg(target_arch = "x86_64")]
+        {
+            use core::arch::x86_64::{__m128i, _mm_loadu_si128, _mm_storeu_si128};
+            let s = src.cast::<__m128i>();
+            let d = l.p.cast::<__m128i>();
+            macro_rules! mv {
+                ($($i:expr),*) => {$(
+                    _mm_storeu_si128(d.add($i), _mm_loadu_si128(s.add($i)));
+                )*};
+            }
+            mv!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+        }
+        #[cfg(not(target_arch = "x86_64"))]
+        std::ptr::copy_nonoverlapping(src, l.p, TILE);
+        l.p = l.p.add(TILE);
+    }
+}
+
+/// `flush_rows` with AVX2: eight 32-byte loads and stores a row
+///
+/// # Safety
+/// as `flush_rows`, on a CPU with AVX2 and BMI1
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1")]
+unsafe fn flush_rows_avx2<const L: usize>(
+    lanes: &mut [Lane; L],
+    tile: &[[u8; TILE]; L],
+    mut mask: u64,
+) {
+    use core::arch::x86_64::{__m256i, _mm256_loadu_si256, _mm256_storeu_si256};
+    while mask != 0 {
+        let k = mask.trailing_zeros() as usize;
+        mask &= mask - 1;
+        let l = lanes.get_unchecked_mut(k);
+        let s = tile.get_unchecked(k).as_ptr().cast::<__m256i>();
+        let d = l.p.cast::<__m256i>();
+        macro_rules! mv {
+            ($($i:expr),*) => {$(
+                _mm256_storeu_si256(d.add($i), _mm256_loadu_si256(s.add($i)));
+            )*};
+        }
+        mv!(0, 1, 2, 3, 4, 5, 6, 7);
+        l.p = l.p.add(TILE);
+    }
+}
 
 /// One offset of the room walk's busy phase, every lane stepped without testing its flag:
 /// lane k reads the row in slot P, stages its byte at tile[k][j] and writes its next row
@@ -1665,6 +1799,46 @@ pub(crate) mod tests {
         }
         // the transitions the walk's handoffs guard were all reached (the one that
         // overran, a lane coming into the tail with its buffer full, among them)
+        assert_reached();
+    }
+
+    /// The room walk with x86_64's baseline whole-row copies (SSE2), as on a CPU without
+    /// AVX2, against `walk` on random columns (the other room walk tests take AVX2's where
+    /// the CPU has it)
+    #[test]
+    fn room_walk_baseline_rows() {
+        BASELINE_ROWS.with(|c| c.set(true));
+        let mut x = 171u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        for case in 0..2000 {
+            let n = MIN_SEGMENTED + rnd(200_000) as usize;
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let mut ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            if case % 5 == 0 {
+                let p = 1 + rnd(5) as usize;
+                for i in p..n {
+                    ll[i] = ll[i % p];
+                }
+            }
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut room, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            walk_segments_room(&mut tt, orig_ptr, &mut room, &mut seg);
+            assert!(plain == room, "case {case} n {n} alphabet {alphabet}");
+            check_segments(&tt, &seg, "room walk, baseline rows");
+        }
+        BASELINE_ROWS.with(|c| c.set(false));
         assert_reached();
     }
 
