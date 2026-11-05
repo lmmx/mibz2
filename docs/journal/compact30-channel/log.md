@@ -263,3 +263,27 @@ Verbatim:
   - #157 repeats the 2026-11-01 walk-unroll trial (negative at four workers), uncited.
 - **Corrections:** register bb858157 and CAMPAIGN.md 5e32beaf. #158 is back to draft for a
   rewrite and Researcher review.
+
+## The walk round, the window, and a re-ranking on the binding resource (2026-11-05)
+
+- **CHECKPOINT 6651023083** (inbox #160, 06:0x UTC), to the Optimizer: "walk round and window @
+  master c9433318". The Optimizer's d143d8fe ranking, run through CI:
+  - **B (#168):** −2.6% Ir, no `wikidata` gain, closed. **B + staging (#171):** merged, 4t wall
+    −5% to −14%.
+  - **C (gather):** rejected locally. **Tail passes (#173)** and **build run16 (#169):** not shown.
+  - **MTF (#170, #172):** merged.
+  - **Tile 512/1024 (#177, #178):** failed on CI. 1024 is +23.5% at 1t on Zen 4.
+  - **Staging alone vs #171:** CI A/B #181, pending.
+- **Finding stated:** Δinstr × frequency mispredicts the walk and the build. It holds only on
+  MTF's serial chain. The walk reads as bound by misses in flight (`2026-11-05-walk-round.md`).
+- **#180 (window 2t → 4t), run 1:**
+  - 4t wall −8.1% (−10.5, −5.5) and 2t −12.4%;
+  - 4t CPU +6.1%;
+  - RSS +8 MB;
+  - occupancy at window 16: workers decoding 93%.
+- **Asked:** a re-ranking priced in misses per output byte under 4 workers on 2 SMT cores, not in
+  Ir; compact-table parity re-priced in lines fetched at random per row; scheduling slack and
+  post-walk traffic. Name one build.
+- **Action:** dispatched (the Optimizer was idle: cursor WAITING, 6646251725 answered by REVIEW
+  6646432357). No other role is briefed. Tile arms #177 and #178 closed under their
+  registered rule (2026-11-05-tile-size.md).
