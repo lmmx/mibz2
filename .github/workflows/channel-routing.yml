@@ -6,8 +6,10 @@
 # checks the header against that routing. A correct comment ends the run silently.
 #
 # A misrouted one gets one failing check run on the channel PR #145's head commit, named for
-# the comment, whichever of the four PRs it is on. That marks #145 red and wakes the
-# coordinator, which is subscribed to #145's checks; no role listens to #145. It is a check
+# the comment, whichever of the four PRs it is on. It is opened in progress and then failed,
+# so the head's check suite reopens and completes failed: #145 turns red, and the suite's
+# completion wakes the coordinator, which is subscribed to #145's checks; no role listens
+# to #145. It is a check
 # run, not a comment: #145 is locked (PROTOCOL.md §1), so GITHUB_TOKEN can't comment there,
 # and a comment in an inbox would wake that role's Work task as if it were a brief. If the
 # warning can't be delivered, this run fails instead, so the failure is still visible.
@@ -70,8 +72,13 @@ jobs:
             echo "already flagged on #145 ($head)"
             exit 0
           fi
-          gh api "repos/$REPO/check-runs" -f name="$name" -f head_sha="$head" \
-            -f status=completed -f conclusion=failure \
+          # opened in progress, then completed: a run created already complete joins the
+          # head's finished check suite without reopening it, so no completion event fires
+          # (observed for comment 6654371320); this way the suite reopens and completes
+          # failed, and its check_suite event reaches the coordinator
+          id=$(gh api "repos/$REPO/check-runs" -f name="$name" -f head_sha="$head" \
+            -f status=in_progress --jq .id)
+          gh api -X PATCH "repos/$REPO/check-runs/$id" -f status=completed -f conclusion=failure \
             -f "output[title]=Misrouted: comment $COMMENT on #$ISSUE" \
             -f "output[summary]=$warning" --jq .html_url
 
