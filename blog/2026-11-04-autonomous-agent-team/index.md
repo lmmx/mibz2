@@ -4,7 +4,7 @@
 
 Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.
 
-4 November 2026 · 10 min read · [Meta](<#8-where-it-stands>)
+4 November 2026, revised 5 November · 13 min read · [Meta](<#9-where-it-stands>)
 
 [The last post](<https://lmmx.github.io/mibz2/blog/2026-11-04-compact30-constructor/index.md>) was about compact30, my effort to give the decoder's navigation table a smaller representation. Four agents did the research behind it, but until today they could only work together if I copied each one's messages to the next by hand.
 
@@ -119,15 +119,37 @@ When an agent starts a helper of its own, I ask it to keep its run open until th
 
 Keeping things moving is the Coordinator's job. When the record goes quiet, it checks the receipts, works out who has the next step, and posts the checkpoint that starts it. There's no timer involved, and nothing sits waiting for me.
 
-## 8\. Where it stands
+## 8\. What a shared message board got wrong
+
+The design above is the second one. The first put every message on one PR, \#145, and let every agent read the whole board. It looked simple, and over the evening of 4 November it went wrong in five ways.
+
+**Every event woke every agent.** Each Work task started on any comment in the repository, fetched it, and decided for itself whether it was addressed. A review from one agent, a CI result, a preview bot's comment or a merged PR started a run in all three, and nearly all of those runs ended straight away with "not for me".
+
+**A new run displaced the one in progress, and nothing caught the loss.** The automation keeps one current run per task. When an event arrived while a long run was still working, the new run took its place, and the earlier one stopped without an error, a partial result or any record of what it had read. There was no dead-letter queue to catch it. That evening six briefs to the Optimiser went this way. Each run started and began reading, and each was overtaken within two or three minutes: by the other agents' reviews of the same checkpoint, by a bot, or by a merge. None of them committed anything. From outside, it simply looked as if the Optimiser had gone quiet.
+
+**Routing by header was brittle.** Each agent decided from `TO:` and `TYPE:` lines whether a comment was meant for it, sometimes by exact string. A checkpoint naming two agents had to be worded exactly right for both, and a message that failed the test was dropped without trace.
+
+**Noise spent the wakes.** Every one of those runs counts against a task's use of the automation, and on a busy board most of them went on comments the agent then ignored.
+
+**The connector added friction.** The Astra agents reach GitHub through ChatGPT's GitHub connector, not a shell with `git` as the Coordinator has. Their runs hit errors such as a call missing its repository argument, or "no usable execution environment". Each was recoverable, but each one lengthened a run, and a longer run was more likely to be overtaken. The task settings also can't show their subscriptions back, so the only way to confirm where an agent listens is to watch where it wakes.
+
+The inboxes fix all five. An agent's subscription now covers its own inbox and nothing else, so the only events it sees are its own work, and there's nothing to filter by header. With nothing else arriving, a long run finishes. A receipt is committed first, so a stopped run leaves a trace that a one-line resume can pick up. The wake budget goes on work. And each agent's instructions are an agent spec at a pinned commit, so what each one does can be read in the repository, not inferred from a task page.
+
+## 9\. Where it stands
 
 The [channel log](<https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b06708e47cbfdce2ca4/docs/journal/compact30-channel/log.md>) records each step. The trigger was first tested on the Guardian: a comment started its run, it published an assessment, and its review woke the Coordinator. The first real cycle followed on [a checkpoint](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6632963394>) covering two prototypes. The Guardian's run started nine seconds after it was posted, checked both prototypes against the gates, and [asked](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6633274082>) for the independent review.
 
 That review came back while this post was being finished. The Researcher launched the isolated reviewer, and its [report](<https://github.com/lmmx/mibz2/pull/153>) arrived as a comment on the channel. Both prototypes pass on correctness and safety, and so does v3's finaliser. Two things need fixing before anything is combined: some changed paths still need their own execution counters, and both prototypes remove the same instruction, so their savings overlap. That is the next checkpoint.
 
-So far, then, the messages get through and the reviews get done, without me relaying anything. Whether that makes the research faster, and whether the constructor gets fast enough, will show over the next few posts.
+On 5 November the redesigned setup ran its first full round: - **The Optimiser** ranked the whole decoder's candidates from its inbox. It put P87, a production-shaped change that writes the walk's output over a buffer it has already consumed, first. - **The Coordinator** built P87 and registered a decision rule before measuring it. - **The Guardian and the Researcher** reviewed that rule from their inboxes before the benchmark finished. The Guardian's review changed it. - **The change** made the four-worker Wikidata decode 2.2% faster in one run, and favourable but inconclusive in a second, with 6.8% less memory and no slower row. It [merged](<https://github.com/lmmx/mibz2/pull/164>).
 
-If you want to set up something similar: give each responsibility its own output, point every message at an exact commit, wake agents with events rather than timers, keep a receipt for every message, write down what a message is allowed to authorise, and decide what an independent reviewer gets to see. My own part is choosing the scope and making the decisions the charter keeps for me.
+Then all three agents took their next assignment under the new specs: - each woke only on its own inbox; - each committed a receipt within a minute or two, and published its review on \#145; - the Guardian also moved itself onto its current operating spec.
+
+The first reviews under the new design corrected the Coordinator's write-up before it was published.
+
+So the messages get through, the reviews arrive before the decisions they bear on, and nothing goes through me. Whether that makes the research faster will show over the next few posts.
+
+If you want to set up something similar: - give each agent its own inbox, and one shared place to publish; - have each run commit a receipt before it works, and its progress as it goes; - point every message at an exact commit; - wake agents with events rather than timers, and keep those events few; - keep every agent's instructions in the repository at a pinned commit; - write down what a message is allowed to authorise; - decide what an independent reviewer gets to see. My own part is choosing the scope and making the decisions the charter keeps for me.
 
 ---
 
