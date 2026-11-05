@@ -34,6 +34,9 @@ lift as exactly as held. STOP proportionate to what failed. No procedural excess
 impl into compiled saving, saving into validated gain. Where code can answer, code must answer.
 Independent fronts? Fan out. Dynamic workflows: multiply search, collide constructions,
 interrogate asm, falsify in parallel. Ambition high; orchestration purposeful, never theatre.
+Agent budget follows uncertainty and payoff: fan out HARD on the hard research; tests, CI,
+docs, formatting, maintenance — execute directly. Minds multiply discovery; processes multiply
+cost. Intelligence to the frontier.
 Agents inform; Coordinator synthesises, implements, verifies — parallel intelligence into one
 decisive impl. No premature integration, no half commitment. Evidence pinned, words few.
 Intensive math eng, suffice to catalyse. Go.
