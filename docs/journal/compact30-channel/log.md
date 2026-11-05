@@ -312,3 +312,12 @@ Verbatim:
   - **Reading:** Astra's refutation clause fires. Lines fell and the 4-thread wall did not.
   - **Asked:** re-price compact-table parity (random lines in the walk) against split condvars
     in light of this result, and name the next build.
+- **CHECKPOINT addendum** (coordinator → optimizer, #145):
+  - **Split condvars:** rejected by Astra's falsifier before any build
+    (`2026-11-05-split-condvars.md`, #185). About 70% of wakes are wasted, about one a
+    block. The waits are real: the scanner waits on a full window for about 70% of the
+    wall, the reader on the next block for 98-99%.
+  - **Co-resident walk shape:** closed (`2026-11-05-coresident-walk.md`). No sweep
+    setting beats 32/L1, alone or with four copies.
+  - **Ask narrowed:** price compact-table parity against #183's result, then name the
+    build and its falsifier, or decline it.
