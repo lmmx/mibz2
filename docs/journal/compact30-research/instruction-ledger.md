@@ -176,3 +176,23 @@ No new verified cumulative instruction credit is booked. Reported #169/#173 redu
 | C15 staged compact parity | CONDITIONAL, bounded next comparison recommended; old #155 port remains REJECTED | Compact changes footprint, not the existence of random references. Ordinary field/header share one line but add load/reconstruction work; RAW adds dependent service. Compare current staged compact direct-build decoder with production and an equal-byte split-header layout control. Include build/walk/rest, four workers on two SMT cores, window 16. Close if whole-decoder benefit rule fails even when misses/bytes fall |
 
 No numerical four-thread gain is forecast and no verified instruction credit is added. Historical 46.25% walk-Ir parity is not a time gate. The report distinguishes net random line counts from latency-weighted service demand, charges RAW and construction, and specifies the equal-size control's attribution limits. The proposal is a changed-walker retest, not a new constructor or authorisation. A1–A6 and D013 remain unchanged.
+
+
+## Current binding-census decision: inbox 6657883434
+
+[Model-specific ranking and whole-block phase-pairing proposal](reviews/inbox-6657883434/report.md);
+[static arithmetic](reviews/inbox-6657883434/model.json).
+Evidence **decc71b866a1d55ae86251e6e227b9c11987f357**, reported production source d1fd4405.
+This supersedes production priorities above, not historical constructor accounting.
+
+| Item | Disposition | Conditional whole-decoder price / next falsifier |
+|---|---|---|
+| AMD walk interference | Largest identified resource opportunity, no demonstrated lever | 7763 ~16–18% own-stage pool at unchanged rest/utilisation; 9V74 ~20–22% scenario with explicitly transferred worker share. Neither is an achievable forecast or hard bound. 9V45 unpriced without matched decomposition |
+| 8370C / 9V74 build interference | Raised above generic global rank | 8370C ~5–6% own-stage pool; 9V74 ~4% scenario; 7763 ~0–1%. 8573C unpriced. Store-stream versus issue explanation unresolved |
+| Huffman / MTF / handoff | Existing isolated workflows; no duplicate build | Huffman 0–4.3% conditional direct pool, MTF 0–3% working envelope with larger unverified ideal scenarios, handoff 0–2% working envelope. No positive lower bound. Scanner-starvation and handoff overlap supply |
+| C21 whole-block phase pairing | CONDITIONAL design-only, zero credit | Four end-to-end workers, private scratch, bounded ready-job selection. Pair fixed-work makespans and job diversity must support benefit after coordination and ordered-output delay. No token, stage handoff or software-interleaved walker |
+| C15 staged compact | Existing regime discriminator; no duplicate port | Pinned models mostly predict harm; no new numerical gain or qualification. Build/rest and RAW costs remain charged |
+| C17 fusion / C18 condvars | CLOSED under existing decisions | Heterogeneous small effects do not reopen the registered fusion gate; receiver mutex is distinct from condvars |
+| C19 byte budget / C20 self-scan | Throughput-deprioritized | Shared measured steady supply scenario ~1.2–1.8%; fixed bench startup/tail not recurring release gains |
+
+The four-copy factors are uncontrolled-phase fastest-pass proxies, not exact parallel-decoder shares or W/W pairs. Inferred MLP and a fitted lane-independent term do not settle issue versus miss slots. Placement changes both siblings and is not additional credit above the same walk/build pool. A1–A6, A7 and D013 remain unchanged; no new verified instruction or wall-time credit.
