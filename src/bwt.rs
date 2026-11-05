@@ -1155,9 +1155,9 @@ fn room_segments<const L: usize, const PF: u8>(
     s.n = n;
 }
 
-/// The busy phase's chunk: at most this many offsets' bytes are staged per lane (an 8 KiB
+/// The busy phase's chunk: at most this many offsets' bytes are staged per lane (a 32 KiB
 /// tile at 32 lanes, in L1) before they are copied to the lanes' buffers
-const TILE: usize = 256;
+const TILE: usize = 1024;
 
 /// One offset of the room walk's busy phase, every lane stepped without testing its flag:
 /// lane k reads the row in slot P, stages its byte at tile[k][j] and writes its next row
