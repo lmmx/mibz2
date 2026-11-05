@@ -3,9 +3,10 @@
 // - .bf-chain: the pointer chain. "Follow pointer" moves from the current card to the card
 //   it names, until every card has been visited; "Reset" goes back to card 0. Without
 //   JavaScript the figure shows the whole path instead.
-// - .bf-bitbuf: a bit buffer read one code at a time. "Read the next code" consumes the code
-//   at the front (its bits highlighted), shifts the rest up and logs the symbol; "Reset"
-//   starts again. Without JavaScript the figure shows the whole decode instead.
+// - .bf-bitbuf: a bit buffer read one code at a time. Each step says in words what is at the
+//   front and why it is that symbol; the button, labelled with what it will do, shifts that
+//   code out. The code key lights the matching code. "Reset" starts again. Without
+//   JavaScript the figure shows the whole decode instead.
 // - .bf-anim-controls: replay and pause buttons on an animated figure, which plays once and
 //   holds its last frame. Pause freezes it where it is; replay starts it from the beginning.
 //   With reduced motion the figure starts as a still picture, and either button runs the
@@ -99,43 +100,60 @@
     const bits = fig.dataset.bits;
     const codes = Object.fromEntries(fig.dataset.codes.split(" ").map((p) => p.split(":")));
     const cells = [...fig.querySelectorAll(".bf-bit")];
+    const keys = [...fig.querySelectorAll(".bf-key")];
     const q = (sel) => fig.querySelector(sel);
-    const [state, buttons, next, live, shift, out, read, reset] = [
-      ".bf-buf-state", ".bf-buttons", ".bf-buf-next", ".bf-buf-live", ".bf-buf-shift", ".bf-buf-out",
+    const [step, state, buttons, live, shift, out, read, reset] = [
+      ".bf-buf-step", ".bf-buf-state", ".bf-buttons", ".bf-buf-live", ".bf-buf-shift", ".bf-buf-out",
       ".bf-read", ".bf-reset",
     ].map(q);
-    let rem = bits;
-    let decoded = [];
-    let last = "";
-    const front = () => Object.keys(codes).find((c) => rem.startsWith(c)) || "";
+    const codeAt = (r) => Object.keys(codes).find((c) => r.startsWith(c)) || "";
+    // The whole decode, worked out once, so each step can say "step i of n"
+    const plan = [];
+    for (let r = bits; codeAt(r); r = r.slice(codeAt(r).length)) plan.push(codeAt(r));
+    const nbits = (n) => `${n} bit${n === 1 ? "" : "s"}`;
+    let i = 0;
     const draw = () => {
-      const code = front();
-      cells.forEach((cell, i) => {
-        cell.textContent = i < rem.length ? rem[i] : "·";
-        cell.classList.toggle("is-next", i < code.length);
-        cell.classList.toggle("is-empty", i >= rem.length);
+      const done = plan.slice(0, i).join("").length;
+      const rem = bits.slice(done);
+      const code = plan[i] || "";
+      const prev = plan[i - 1] || "";
+      cells.forEach((cell, k) => {
+        cell.textContent = k < rem.length ? rem[k] : "\u00b7";
+        cell.classList.toggle("is-next", k < code.length);
+        cell.classList.toggle("is-empty", k >= rem.length);
       });
-      next.textContent = code ? `${codes[code]} = ${code}` : "none: all ten bits read";
+      keys.forEach((key) => key.classList.toggle("is-next", key.dataset.code === code));
+      const shifted = prev
+        ? `${codes[prev]}'s ${nbits(prev.length)} ${prev.length === 1 ? "was" : "were"} shifted out, and the rest of the buffer moved left to fill the gap. `
+        : "";
+      if (code) {
+        const which = i === 0 ? "starts" : "now starts";
+        step.textContent =
+          `Step ${i + 1} of ${plan.length}. ${shifted}The buffer ${which} with ${code}. ` +
+          `That is ${codes[code]}'s code, and no other code begins this way, so the next symbol is ` +
+          `${codes[code]}. Its code is ${nbits(code.length)} long.`;
+        read.textContent = `Read ${codes[code]}: shift out ${nbits(code.length)} \u2192`;
+      } else {
+        step.textContent =
+          `Done. ${shifted}All ten bits are read, and they decoded to ${plan.map((c) => codes[c]).join(" ")}. ` +
+          "The dotted cells are the room the shifts freed up; in mibz2 a refill would load more of the file into it.";
+        read.textContent = "All bits read";
+      }
       live.textContent = rem.length;
-      shift.textContent = last ? `buf <<= ${last.length}; live -= ${last.length};` : "nothing consumed yet";
-      out.textContent = decoded.length ? decoded.join(" ") : "none yet";
+      shift.textContent = prev ? `buf <<= ${prev.length}; live -= ${prev.length};` : "nothing shifted yet";
+      out.textContent = i ? plan.slice(0, i).map((c) => codes[c]).join(" ") : "none yet";
       read.disabled = !code;
     };
     read.addEventListener("click", () => {
-      const code = front();
-      if (!code) return;
-      decoded.push(codes[code]);
-      rem = rem.slice(code.length);
-      last = code;
+      if (i < plan.length) i += 1;
       draw();
     });
     reset.addEventListener("click", () => {
-      rem = bits;
-      decoded = [];
-      last = "";
+      i = 0;
       draw();
       read.focus();
     });
+    step.hidden = false;
     state.hidden = false;
     buttons.hidden = false;
     q(".bf-buf-static").hidden = true;

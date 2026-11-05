@@ -244,6 +244,21 @@ Fix every "assumed" and every "late" before publishing.
   "room walk", "compact30", "teams") are defined in plain words at first use, or replaced
   by what they mean. Defining a term the reader doesn't need is worse than describing the
   thing instead.
+- **The small version before the real one.** Introduce a mechanism on the toy example
+  first, with every case worked through: the whole table, a trace of it running. Then scale
+  it to the real thing, saying what changes and why (its size, its limits). The real
+  mechanism's special cases come last, each motivated by the scaling that creates them.
+  Never introduce them in the abstract. The Huffman post's lookup table is shown first as
+  the toy code's eight rows and a four-lookup trace. Only after that comes mibz2's 1,024
+  entries, why ten bits and not twenty, and the two kinds of entry ten bits can't settle.
+- **An interactive figure explains itself.** Before the reader touches it, a lead-in says
+  what it shows and what one press does. Inside it, the symbols' key sits next to the
+  data, and each state says in words what is happening and why: "The buffer now starts
+  with 110. That is C's code, and no other code begins this way". The button names what
+  it will do ("Read A: shift out 1 bit"), and a counter says "Step 2 of 5". A panel of
+  values with no narration is not enough: the reader can't tell what changed or why. Test
+  it on a fresh reader, who looks at the figure alone and says what the next press will
+  do and why.
 - **Pace check.** In the simulated-reader pass, ask of each of the first three sections:
   where would a reader feel rushed or lost? Fix that by adding the missing step, not by
   apologising for it.
@@ -270,6 +285,29 @@ next step waits for it". The same guide's companion rule
 "Control the format of responses") backs the bullets rule above: write explanation as
 flowing prose in complete paragraphs. Keep lists for truly discrete items, and never write
 a series of short bullet points.
+
+### Unpacked, not compressed
+
+Compression is slop too: a sentence so self-contained that the reader can't get into it.
+It packs a fact, its cause and a list of consequences into one clause chain, and it answers
+questions the reader hasn't asked yet, in an order they can't follow. It reads as
+satisfied with itself, and a reader finds it frustrating. The Huffman post's draft had:
+
+> Ten bits hold most of bzip2's codes but not all, since a code can be up to 20 bits long,
+> so an entry says one of four things.
+
+The rewrite unpacks it. First, why a table at all, on the toy code. Then why mibz2 peeks at
+ten bits and not twenty: a 20-bit table would be 4 MB, and the nearest cache holds tens of
+kilobytes. Then that most codes fit in ten bits, so most entries name one or two symbols.
+And last, the two other kinds of entry, each in its own sentence with its reason. Signs of
+a compressed sentence:
+
+- "since … so …" chains;
+- "one of N things" followed by the N things in a run;
+- a number or limit stated before the reader knows why it matters.
+
+The fix is one idea a sentence, in the order the reader needs them, each case after the
+reason it arises.
 
 ## The house rules
 
@@ -504,6 +542,11 @@ Before `publish-page`:
       introduction's own figures is left open there.
 - [ ] The domain is explained before the routine, with a diagram for each process or
       structure and a worked example for the central idea.
+- [ ] Each mechanism appears first on the toy example, worked through in full, before the
+      real one. No sentence packs a cause, a consequence and a list of cases together.
+- [ ] Every interactive figure has a lead-in saying what one press does, a key inside the
+      figure, a narration of each step in words, a button that names its action and a step
+      counter. A fresh reader, from the figure alone, could say what the next press does.
 - [ ] The de-slop pass is done: no mannered prose (metaphor or flourish where a literal
       phrase exists).
 - [ ] No bullets carry explanation or narrative. Project jargon is defined in plain words
