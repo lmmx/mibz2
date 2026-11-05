@@ -285,7 +285,14 @@ Both are drawn from [`frontier.json`](<https://lmmx.github.io/mibz2/assets/data/
 
 The charts are drawn here by JavaScript. The tables [below](<#what-is-measured-so-far>) give every value they show.
 
-**The rules the charts keep:** - **One machine and one workload a chart.** An L3 effect on the i9 may appear at another concurrency, or not at all, on another CPU. - **Two kinds of memory, never mixed:** the live tables' bytes (computed: live full blocks × 900,000 rows × 4 bytes for today's table) and the process's peak RSS (measured). Peak RSS also counts the scanner's slots, the output and every worker's buffers: at 4 threads on CI it is about 74 MB, against 14.4 MB of tables. - **Two levels, never mixed:** the full decoder (a file to verified output) and the research harness's inversion (MTF, build and walk). The headline is the full decoder; the inversion shows the mechanism. - **Releases are the record.** Selected pull requests and research runs appear as labelled overlays. - **Only measurements.** Footprints of designs that don't exist yet, and models, stay in the text. - **The frontier is judged against the best alternative,** not a convenient one. A compact table at four blocks beating today's at four blocks is a step; the frontier moves only if it beats today's best configuration at any block count.
+**The rules the charts keep:**
+
+- **One machine and one workload a chart.** An L3 effect on the i9 may appear at another concurrency, or not at all, on another CPU.
+- **Two kinds of memory, never mixed:** the live tables' bytes (computed: live full blocks × 900,000 rows × 4 bytes for today's table) and the process's peak RSS (measured). Peak RSS also counts the scanner's slots, the output and every worker's buffers: at 4 threads on CI it is about 74 MB, against 14.4 MB of tables.
+- **Two levels, never mixed:** the full decoder (a file to verified output) and the research harness's inversion (MTF, build and walk). The headline is the full decoder; the inversion shows the mechanism.
+- **Releases are the record.** Selected pull requests and research runs appear as labelled overlays.
+- **Only measurements.** Footprints of designs that don't exist yet, and models, stay in the text.
+- **The frontier is judged against the best alternative,** not a convenient one. A compact table at four blocks beating today's at four blocks is a step; the frontier moves only if it beats today's best configuration at any block count.
 
 ## What is measured so far
 
@@ -311,7 +318,16 @@ Past 4 workers, more tables than the L3 holds make each block's work dearer: fro
 | y3x3, cooperative | 10.8 MB | 9 | 1657 | 1.375 ±0.022 |
 | y4x2, cooperative | 14.4 MB | 8 | 1725 | 1.439 ±0.020 |
 
-A cooperative team shares one block's table among k cores, so N teams keep N tables live on N × k cores. - y3x3 runs faster than p4 from fewer live tables. p4 is production's best worker count on this machine in every scaling run (series 1). - So at this level, in throughput against live table bytes, sharing a table already does better than every production configuration measured. - **It is not yet a frontier result:** - it is the inversion, not the decoder; - it is pinned; - its memory axis is computed table bytes, not peak RSS; - it uses more cores (CPU-seconds are not yet measured).
+A cooperative team shares one block's table among k cores, so N teams keep N tables live on N × k cores.
+
+- y3x3 runs faster than p4 from fewer live tables. p4 is production's best worker count on this machine in every scaling run (series 1).
+- So at this level, in throughput against live table bytes, sharing a table already does better than every production configuration measured.
+- **It is not yet a frontier result:**
+
+  - it is the inversion, not the decoder;
+  - it is pinned;
+  - its memory axis is computed table bytes, not peak RSS;
+  - it uses more cores (CPU-seconds are not yet measured).
 
 **3\. The full decoder, workers against cooperative teams, with measured memory** (unpinned; the bench corpus, 209.7 MB decoded; 20 interleaved rounds; the [decoder journal](<https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-cooperative-decoder.md>) and its raw files). One point per distinct plan: where two arms ran the same plan (the policy at 8, 10 and 20 threads is 4 teams of 2 on this machine; 2 teams of 3 ran at both 6 and 8), the table gives the range of their medians, which is noise.
 
@@ -334,7 +350,12 @@ A cooperative team shares one block's table among k cores, so N teams keep N tab
 
 Peak RSS is measured (the median run's, in decimal MB). Live tables are computed. The nondominated column compares medians on throughput (higher) and peak RSS (lower) within this series.
 
-What it shows, and what it doesn't: - **Every worker count measured is dominated.** p4, the decoder's best worker count here, is beaten on both axes by 3 teams of 2 (the policy at 6 threads: 1.166× with its lower bound 1.123, at 64 MB against 76) and by 3 teams of 3. - **The nondominated set is all teams:** 1×3, 2×3, 3×3 and 4×2. Measured by medians, 4×2 stays on the set by its best repeat. Its throughput is tied with 3×3's within noise (their intervals overlap almost entirely), at 13 MB more RSS and about 6% more CPU. 3×3 is a lead for refining the policy, not yet a result. - **Not a whole-frontier result.** No worker counts below 4 were measured in this run. At 1 to 3 workers, today's decoder may still own the low-memory end: series 1 has 2 workers at 707 MB/s, but without RSS. Filling that in needs the same A/B at 1, 2 and 3 threads. - **One machine, one workload, one level (the full decoder).** Threads above 10 share physical cores with SMT siblings.
+What it shows, and what it doesn't:
+
+- **Every worker count measured is dominated.** p4, the decoder's best worker count here, is beaten on both axes by 3 teams of 2 (the policy at 6 threads: 1.166× with its lower bound 1.123, at 64 MB against 76) and by 3 teams of 3.
+- **The nondominated set is all teams:** 1×3, 2×3, 3×3 and 4×2. Measured by medians, 4×2 stays on the set by its best repeat. Its throughput is tied with 3×3's within noise (their intervals overlap almost entirely), at 13 MB more RSS and about 6% more CPU. 3×3 is a lead for refining the policy, not yet a result.
+- **Not a whole-frontier result.** No worker counts below 4 were measured in this run. At 1 to 3 workers, today's decoder may still own the low-memory end: series 1 has 2 workers at 707 MB/s, but without RSS. Filling that in needs the same A/B at 1, 2 and 3 threads.
+- **One machine, one workload, one level (the full decoder).** Threads above 10 share physical cores with SMT siblings.
 
 ## What fills it in
 
@@ -755,9 +776,7 @@ Three agents, one account: a checkpoint from the Coordinator, the Guardian's rev
 
 The originals: [the checkpoint](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6632963394>), [the Guardian's review](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6633274082>) and [the independent review](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6634356048>).
 
-A new comment is also what wakes the agents up. Each Astra agent is a Work task subscribed to new comments on its own inbox and nothing else, so the filtering happens before a run starts. The inbox is the address: every comment in it is for its agent. The Coordinator posts each checkpoint to the inbox of every agent that should act on it, so a checkpoint for the Guardian and the Researcher is two comments, one in each inbox. Each run fetches its comment, reads from the header who sent it and what kind of message it is, and does the work. It commits a receipt to its own branch first, then its progress as it goes, and publishes its `REVIEW` on \#145. The Coordinator subscribes to
-
-# 145, so a reply reaches it within seconds.
+A new comment is also what wakes the agents up. Each Astra agent is a Work task subscribed to new comments on its own inbox and nothing else, so the filtering happens before a run starts. The inbox is the address: every comment in it is for its agent. The Coordinator posts each checkpoint to the inbox of every agent that should act on it, so a checkpoint for the Guardian and the Researcher is two comments, one in each inbox. Each run fetches its comment, reads from the header who sent it and what kind of message it is, and does the work. It commits a receipt to its own branch first, then its progress as it goes, and publishes its `REVIEW` on \#145. The Coordinator subscribes to \#145, so a reply reaches it within seconds.
 
 This keeps each agent's attention on its own work. An inbox carries only messages meant for its agent, so the other agents' reviews, CI results and pull requests never start a run there. An investigation that takes a quarter of an hour runs to the end undisturbed, and everything it finds still comes back to one place.
 
@@ -823,15 +842,32 @@ The [channel log](<https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b0670
 
 That review came back while this post was being finished. The Researcher launched the isolated reviewer, and its [report](<https://github.com/lmmx/mibz2/pull/153>) arrived as a comment on the channel. Both prototypes pass on correctness and safety, and so does v3's finaliser. Two things need fixing before anything is combined: some changed paths still need their own execution counters, and both prototypes remove the same instruction, so their savings overlap. That is the next checkpoint.
 
-On 5 November the redesigned setup ran its first full round: - **The Optimiser** ranked the whole decoder's candidates from its inbox. It put P87, a production-shaped change that writes the walk's output over a buffer it has already consumed, first. - **The Coordinator** built P87 and registered a decision rule before measuring it. - **The Guardian and the Researcher** reviewed that rule from their inboxes before the benchmark finished. The Guardian's review changed it. - **The change** made the four-worker Wikidata decode 2.2% faster in one run, and favourable but inconclusive in a second, with 6.8% less memory and no slower row. It [merged](<https://github.com/lmmx/mibz2/pull/164>).
+On 5 November the redesigned setup ran its first full round:
 
-Then all three agents took their next assignment under the new specs: - each woke only on its own inbox; - each committed a receipt within a minute or two, and published its review on \#145; - the Guardian also moved itself onto its current operating spec.
+- **The Optimiser** ranked the whole decoder's candidates from its inbox. It put P87, a production-shaped change that writes the walk's output over a buffer it has already consumed, first.
+- **The Coordinator** built P87 and registered a decision rule before measuring it.
+- **The Guardian and the Researcher** reviewed that rule from their inboxes before the benchmark finished. The Guardian's review changed it.
+- **The change** made the four-worker Wikidata decode 2.2% faster in one run, and favourable but inconclusive in a second, with 6.8% less memory and no slower row. It [merged](<https://github.com/lmmx/mibz2/pull/164>).
+
+Then all three agents took their next assignment under the new specs:
+
+- each woke only on its own inbox;
+- each committed a receipt within a minute or two, and published its review on \#145;
+- the Guardian also moved itself onto its current operating spec.
 
 The first reviews under the new design corrected the Coordinator's write-up before it was published.
 
 So the messages get through, the reviews arrive before the decisions they bear on, and nothing goes through me. Whether that makes the research faster will show over the next few posts.
 
-If you want to set up something similar: - give each agent its own inbox, and one shared place to publish; - have each run commit a receipt before it works, and its progress as it goes; - point every message at an exact commit; - wake agents with events rather than timers, and keep those events few; - keep every agent's instructions in the repository at a pinned commit; - write down what a message is allowed to authorise; - decide what an independent reviewer gets to see. My own part is choosing the scope and making the decisions the charter keeps for me.
+If you want to set up something similar:
+
+- give each agent its own inbox, and one shared place to publish;
+- have each run commit a receipt before it works, and its progress as it goes;
+- point every message at an exact commit;
+- wake agents with events rather than timers, and keep those events few;
+- keep every agent's instructions in the repository at a pinned commit;
+- write down what a message is allowed to authorise;
+- decide what an independent reviewer gets to see. My own part is choosing the scope and making the decisions the charter keeps for me.
 
 ---
 
@@ -3210,7 +3246,10 @@ The [journals](<https://lmmx.github.io/mibz2/background/journals/index.md>) reco
 
 *As of 29 October 2026.* This page is a snapshot of where the research stands. The evidence is in the [journals](<https://lmmx.github.io/mibz2/background/journals/index.md>) and the pull requests linked below.
 
-**In short:** - A faster way to run the inverse BWT on a many-core machine has been found, confirmed and explained. - **It is not in the released decoder yet.** mibz2 0.1.5 decodes as it did, and every figure here is the inversion stage alone, not whole decompression.
+**In short:**
+
+- A faster way to run the inverse BWT on a many-core machine has been found, confirmed and explained.
+- **It is not in the released decoder yet.** mibz2 0.1.5 decodes as it did, and every figure here is the inversion stage alone, not whole decompression.
 
 ## The starting point: a knee at four workers
 
@@ -3232,10 +3271,11 @@ Measured on the i9 in the research harness ([PR \#73](<https://github.com/lmmx/m
 | s3x3 | libsais 2.12.1, 3 blocks on 3 threads each | 2,355 | 1.59 |
 
 - **The confirmation was registered before the runs.**
-- 4x2 and 3x3 were each run alone against p4, 20 paired rounds each.
-- Each beat p4 in all 20 rounds, and every block's output was checked.
-- 4x2 reproduced its discovery figure within 0.3%.
-- 3x3 came in 2.3% under its discovery figure, as picking the best of 19 arms would predict.
+
+  - 4x2 and 3x3 were each run alone against p4, 20 paired rounds each.
+  - Each beat p4 in all 20 rounds, and every block's output was checked.
+  - 4x2 reproduced its discovery figure within 0.3%.
+  - 3x3 came in 2.3% under its discovery figure, as picking the best of 19 arms would predict.
 - **[libsais](<https://github.com/IlyaGrebnov/libsais>)'s inverse BWT is still about 20% ahead** at 3x3 (1.195× ours, paired). It gains from cooperation by the same factor as ours, about 1.5×. The gap between them is the kernel.
 
 ## Why it works: two mechanisms, measured
@@ -3250,10 +3290,12 @@ A hardware-counter study on the same machine ran each arm alone under `perf stat
 | 3x3 | 96.7% | 41.9 | 66 cycles |
 
 - **Residency.**
-- With eight cores either way, four shared tables (4x2) stay in the L3 where eight independent ones (p8) don't. The hit share rises from 66% to 95%, and each read waits 64 cycles instead of 366.
+
+  - With eight cores either way, four shared tables (4x2) stay in the L3 where eight independent ones (p8) don't. The hit share rises from 66% to 95%, and each read waits 64 cycles instead of 366.
 - **Overlap.**
-- With four tables either way, the second core on each (4x2 against p4) leaves the hit share and the wait unchanged.
-- It puts 1.38× as many reads in flight.
+
+  - With four tables either way, the second core on each (4x2 against p4) leaves the hit share and the wait unchanged.
+  - It puts 1.38× as many reads in flight.
 - **3x3 has both:** a higher hit share than p4, a third fewer reads missing the L3 per byte, and 1.49× the reads in flight.
 - **The counters account for the timings.** Little's law on them (reads in flight over the wait, against reads per byte) reproduces each arm's measured throughput to within 0–11%.
 
@@ -3270,12 +3312,14 @@ The cooperative kernel retires more instructions per output byte than production
 | libsais, 3x3 | 23.2 |
 
 - **Its 4x1 penalty is instructions, not memory.**
-- The cooperative kernel on one core a block (4x1) runs at 0.87× production.
-- Its reads and waits are within 10% of production's; it executes a third more instructions.
+
+  - The cooperative kernel on one core a block (4x1) runs at 0.87× production.
+  - Its reads and waits are within 10% of production's; it executes a third more instructions.
 - **libsais's lead is fewer reads.**
-- It makes 0.86–0.89 reads past L2 per byte, against our 1.40–1.55. That is one dependent load for two output bytes.
-- It does so within about 23 instructions a byte.
-- mibz2's own two-byte walk (\#6) wins only past the knee. At its best it reaches 0.86× the one-byte walk's best.
+
+  - It makes 0.86–0.89 reads past L2 per byte, against our 1.40–1.55. That is one dependent load for two output bytes.
+  - It does so within about 23 instructions a byte.
+  - mibz2's own two-byte walk (\#6) wins only past the knee. At its best it reaches 0.86× the one-byte walk's best.
 
 ## What's next
 
@@ -3286,9 +3330,16 @@ The cooperative kernel retires more instructions per output byte than production
 | 3 | [\#79](<https://github.com/lmmx/mibz2/issues/79>): a smaller table | more teams resident at once (a scheduling gain, not one for 3x3 itself) |
 | later | a two-byte walk within production's instruction budget | libsais's fewer reads a byte |
 
-**Still open in the counter record:** - 3 short checks of the raw L3 event's accounting, with their criteria fixed in advance. It counts a steady 23–39% more requests than `offcore_requests.all_data_rd`, and the likely cause is prefetches into L3. - The study's conclusions rest on the arm-to-arm directions, which a second, independent pair of counters reproduces.
+**Still open in the counter record:**
 
-**Before any of this reaches a release:** - the cooperative build and walk must pass the decoder's correctness checks: the segment oracle, fuzzing and Miri on the shared table; - the whole decoder must be A/B'd at 4–10 cores, where an inversion-stage gain counts only as far as it survives; - other CPUs must be measured too. CI's 4-core runners can't show a gain that only exists past four workers, so the workstation measures it.
+- 3 short checks of the raw L3 event's accounting, with their criteria fixed in advance. It counts a steady 23–39% more requests than `offcore_requests.all_data_rd`, and the likely cause is prefetches into L3.
+- The study's conclusions rest on the arm-to-arm directions, which a second, independent pair of counters reproduces.
+
+**Before any of this reaches a release:**
+
+- the cooperative build and walk must pass the decoder's correctness checks: the segment oracle, fuzzing and Miri on the shared table;
+- the whole decoder must be A/B'd at 4–10 cores, where an inversion-stage gain counts only as far as it survives;
+- other CPUs must be measured too. CI's 4-core runners can't show a gain that only exists past four workers, so the workstation measures it.
 
 # Journals
 
@@ -3357,7 +3408,11 @@ just bench-occupancy --threads 1,2,4,8,12,16,20
 
 It needs cargo, python3, git and lbzip2, and writes `occupancy-<UTC time>.json`: the machine as the process sees it, each thread count's throughput and the cost of tracing, and the decoder's own timeline (workers decoding or idle and why, the scanner, the reader, and per block its CPU time and run-queue wait). It is a diagnostic: the benchmark's paired A/B decides what is faster.
 
-The benchmark has a version of its own (`BENCH` in `bench/report.py`), with its history in [`bench/CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md>): - **A pull request that changes the benchmark** (`bench/`, `examples/ab.rs`, `examples/phases.rs`, `.github/workflows/bench.yml`) either adds a changelog entry with its new version, or says in its description why no version is needed. - **A major version that redefines a family of figures** adds itself to that family in `MEANING` (`bench/report.py`), so the site's history splits that family there and joins the others across it. - **`python3 bench/test_report.py`** checks that `BENCH` and the newest entry agree, and that the history joins versions but never runner models, core counts, corpora or a corpus's different contents.
+The benchmark has a version of its own (`BENCH` in `bench/report.py`), with its history in [`bench/CHANGELOG.md`](<https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md>):
+
+- **A pull request that changes the benchmark** (`bench/`, `examples/ab.rs`, `examples/phases.rs`, `.github/workflows/bench.yml`) either adds a changelog entry with its new version, or says in its description why no version is needed.
+- **A major version that redefines a family of figures** adds itself to that family in `MEANING` (`bench/report.py`), so the site's history splits that family there and joins the others across it.
+- **`python3 bench/test_report.py`** checks that `BENCH` and the newest entry agree, and that the history joins versions but never runner models, core counts, corpora or a corpus's different contents.
 
 ## Commits
 
@@ -3373,6 +3428,7 @@ just docs-check   # strict build, site checks, and the pages' examples as tests
 ```
 
 - `docs/scripts/check_site.py` checks that every page is in the nav, that internal links and anchors resolve, that every page has a description matching its llms.txt entry, and that every public name is in the API reference.
+- `docs/scripts/check_render.py` finds Markdown that rendered as something else (a list run into a paragraph, a stray heading, a flattened nested list), and `docs/scripts/look_pages.py` opens the changed pages in Chromium and screenshots them (`just docs-look`). Before a page is published, its render is read: see the `publish-page` skill in `.claude/skills/`.
 - `docs/conftest.py` runs each page's Python examples with pytest (`pytest docs/site`); a `pycon` block's output must match.
 - `docs/scripts/bench_history.py` turns the `bench-results` branch into the benchmark pages' data (`docs/site/assets/bench-history.json`) and tables (`docs/generated/`) before each build. Without a checkout of the branch (`--store`), it reads `origin/bench-results`, or writes empty ones.
 - `docs/site/assets/data/lane-sweeps.json` holds the measured walk timings by lane count that [Why 32 couriers beat one](<https://lmmx.github.io/mibz2/concepts/couriers/#lane-counts>) draws (`assets/javascripts/couriers.js`). It is written by hand, from the record: one panel a sweep, each with its own axes, its points (`x`, `y`, and optionally `lo` and `hi` for an interval) and its source. A new sweep is a new panel; the page draws every panel. Only measured points go in it.

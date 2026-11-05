@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=4d4709ded59c">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=5a1ddeea130a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=4d4709ded59c">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=5a1ddeea130a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=4d4709ded59c">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=5a1ddeea130a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=4d4709ded59c">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=5a1ddeea130a">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=4d4709ded59c">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=5a1ddeea130a">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1866,11 +1866,13 @@
 <h1 id="status">Status<a class="headerlink" href="#status" title="Permanent link">&para;</a></h1>
 <p><em>As of 29 October 2026.</em> This page is a snapshot of where the research stands. The
 evidence is in the <a href="../journals/">journals</a> and the pull requests linked below.</p>
-<p><strong>In short:</strong>
-- A faster way to run the inverse BWT on a many-core machine has been found, confirmed
-  and explained.
-- <strong>It is not in the released decoder yet.</strong> mibz2 0.1.5 decodes as it did, and every
-  figure here is the inversion stage alone, not whole decompression.</p>
+<p><strong>In short:</strong></p>
+<ul>
+<li>A faster way to run the inverse BWT on a many-core machine has been found, confirmed
+  and explained.</li>
+<li><strong>It is not in the released decoder yet.</strong> mibz2 0.1.5 decodes as it did, and every
+  figure here is the inversion stage alone, not whole decompression.</li>
+</ul>
 <h2 id="the-starting-point-a-knee-at-four-workers">The starting point: a knee at four workers<a class="headerlink" href="#the-starting-point-a-knee-at-four-workers" title="Permanent link">&para;</a></h2>
 <ul>
 <li>mibz2's decoder gives each worker its own block. The inverse BWT then walks that block's
@@ -1928,12 +1930,14 @@ and so on.</p>
 </tbody>
 </table>
 <ul>
-<li><strong>The confirmation was registered before the runs.</strong></li>
+<li><strong>The confirmation was registered before the runs.</strong><ul>
 <li>4x2 and 3x3 were each run alone against p4, 20 paired rounds each.</li>
 <li>Each beat p4 in all 20 rounds, and every block's output was checked.</li>
 <li>4x2 reproduced its discovery figure within 0.3%.</li>
 <li>3x3 came in 2.3% under its discovery figure, as picking the best of 19 arms would
-    predict.</li>
+  predict.</li>
+</ul>
+</li>
 <li><strong><a href="https://github.com/IlyaGrebnov/libsais">libsais</a>'s inverse BWT is still about 20%
   ahead</strong> at 3x3 (1.195× ours, paired). It gains from cooperation by the same factor as
   ours, about 1.5×. The gap between them is the kernel.</li>
@@ -1979,14 +1983,18 @@ counters that include the walk's software prefetches. It was 588 runs, none mult
 </tbody>
 </table>
 <ul>
-<li><strong>Residency.</strong></li>
+<li><strong>Residency.</strong><ul>
 <li>With eight cores either way, four shared tables (4x2) stay in the L3 where eight
-    independent ones (p8) don't. The hit share rises from 66% to 95%, and each read waits
-    64 cycles instead of 366.</li>
-<li><strong>Overlap.</strong></li>
+  independent ones (p8) don't. The hit share rises from 66% to 95%, and each read waits
+  64 cycles instead of 366.</li>
+</ul>
+</li>
+<li><strong>Overlap.</strong><ul>
 <li>With four tables either way, the second core on each (4x2 against p4) leaves the hit
-    share and the wait unchanged.</li>
+  share and the wait unchanged.</li>
 <li>It puts 1.38× as many reads in flight.</li>
+</ul>
+</li>
 <li><strong>3x3 has both:</strong> a higher hit share than p4, a third fewer reads missing the L3 per
   byte, and 1.49× the reads in flight.</li>
 <li><strong>The counters account for the timings.</strong> Little's law on them (reads in flight over
@@ -2027,16 +2035,20 @@ libsais's:</p>
 </tbody>
 </table>
 <ul>
-<li><strong>Its 4x1 penalty is instructions, not memory.</strong></li>
+<li><strong>Its 4x1 penalty is instructions, not memory.</strong><ul>
 <li>The cooperative kernel on one core a block (4x1) runs at 0.87× production.</li>
 <li>Its reads and waits are within 10% of production's; it executes a third more
-    instructions.</li>
-<li><strong>libsais's lead is fewer reads.</strong></li>
+  instructions.</li>
+</ul>
+</li>
+<li><strong>libsais's lead is fewer reads.</strong><ul>
 <li>It makes 0.86–0.89 reads past L2 per byte, against our 1.40–1.55. That is one
-    dependent load for two output bytes.</li>
+  dependent load for two output bytes.</li>
 <li>It does so within about 23 instructions a byte.</li>
 <li>mibz2's own two-byte walk (#6) wins only past the knee. At its best it reaches 0.86×
-    the one-byte walk's best.</li>
+  the one-byte walk's best.</li>
+</ul>
+</li>
 </ul>
 <h2 id="whats-next">What's next<a class="headerlink" href="#whats-next" title="Permanent link">&para;</a></h2>
 <table>
@@ -2070,19 +2082,23 @@ libsais's:</p>
 </tr>
 </tbody>
 </table>
-<p><strong>Still open in the counter record:</strong>
-- 3 short checks of the raw L3 event's accounting, with their criteria fixed in advance.
+<p><strong>Still open in the counter record:</strong></p>
+<ul>
+<li>3 short checks of the raw L3 event's accounting, with their criteria fixed in advance.
   It counts a steady 23–39% more requests than <code>offcore_requests.all_data_rd</code>, and the
-  likely cause is prefetches into L3.
-- The study's conclusions rest on the arm-to-arm directions, which a second, independent
-  pair of counters reproduces.</p>
-<p><strong>Before any of this reaches a release:</strong>
-- the cooperative build and walk must pass the decoder's correctness checks: the segment
-  oracle, fuzzing and Miri on the shared table;
-- the whole decoder must be A/B'd at 4–10 cores, where an inversion-stage gain counts only
-  as far as it survives;
-- other CPUs must be measured too. CI's 4-core runners can't show a gain that only exists
-  past four workers, so the workstation measures it.</p>
+  likely cause is prefetches into L3.</li>
+<li>The study's conclusions rest on the arm-to-arm directions, which a second, independent
+  pair of counters reproduces.</li>
+</ul>
+<p><strong>Before any of this reaches a release:</strong></p>
+<ul>
+<li>the cooperative build and walk must pass the decoder's correctness checks: the segment
+  oracle, fuzzing and Miri on the shared table;</li>
+<li>the whole decoder must be A/B'd at 4–10 cores, where an inversion-stage gain counts only
+  as far as it survives;</li>
+<li>other CPUs must be measured too. CI's 4-core runners can't show a gain that only exists
+  past four workers, so the workstation measures it.</li>
+</ul>
 
 
 
@@ -2227,17 +2243,17 @@ libsais's:</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=4d4709ded59c"></script>
+        <script src="../../assets/javascripts/bench.js?v=5a1ddeea130a"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=4d4709ded59c"></script>
+        <script src="../../assets/javascripts/couriers.js?v=5a1ddeea130a"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=4d4709ded59c"></script>
+        <script src="../../assets/javascripts/blog.js?v=5a1ddeea130a"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=4d4709ded59c"></script>
+        <script src="../../assets/javascripts/frontier.js?v=5a1ddeea130a"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=4d4709ded59c"></script>
+        <script src="../../assets/javascripts/katex.js?v=5a1ddeea130a"></script>
       
     
   </body>

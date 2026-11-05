@@ -21,7 +21,14 @@ Both are drawn from [`frontier.json`](<https://lmmx.github.io/mibz2/assets/data/
 
 The charts are drawn here by JavaScript. The tables [below](<#what-is-measured-so-far>) give every value they show.
 
-**The rules the charts keep:** - **One machine and one workload a chart.** An L3 effect on the i9 may appear at another concurrency, or not at all, on another CPU. - **Two kinds of memory, never mixed:** the live tables' bytes (computed: live full blocks × 900,000 rows × 4 bytes for today's table) and the process's peak RSS (measured). Peak RSS also counts the scanner's slots, the output and every worker's buffers: at 4 threads on CI it is about 74 MB, against 14.4 MB of tables. - **Two levels, never mixed:** the full decoder (a file to verified output) and the research harness's inversion (MTF, build and walk). The headline is the full decoder; the inversion shows the mechanism. - **Releases are the record.** Selected pull requests and research runs appear as labelled overlays. - **Only measurements.** Footprints of designs that don't exist yet, and models, stay in the text. - **The frontier is judged against the best alternative,** not a convenient one. A compact table at four blocks beating today's at four blocks is a step; the frontier moves only if it beats today's best configuration at any block count.
+**The rules the charts keep:**
+
+- **One machine and one workload a chart.** An L3 effect on the i9 may appear at another concurrency, or not at all, on another CPU.
+- **Two kinds of memory, never mixed:** the live tables' bytes (computed: live full blocks × 900,000 rows × 4 bytes for today's table) and the process's peak RSS (measured). Peak RSS also counts the scanner's slots, the output and every worker's buffers: at 4 threads on CI it is about 74 MB, against 14.4 MB of tables.
+- **Two levels, never mixed:** the full decoder (a file to verified output) and the research harness's inversion (MTF, build and walk). The headline is the full decoder; the inversion shows the mechanism.
+- **Releases are the record.** Selected pull requests and research runs appear as labelled overlays.
+- **Only measurements.** Footprints of designs that don't exist yet, and models, stay in the text.
+- **The frontier is judged against the best alternative,** not a convenient one. A compact table at four blocks beating today's at four blocks is a step; the frontier moves only if it beats today's best configuration at any block count.
 
 ## What is measured so far
 
@@ -47,7 +54,16 @@ Past 4 workers, more tables than the L3 holds make each block's work dearer: fro
 | y3x3, cooperative | 10.8 MB | 9 | 1657 | 1.375 ±0.022 |
 | y4x2, cooperative | 14.4 MB | 8 | 1725 | 1.439 ±0.020 |
 
-A cooperative team shares one block's table among k cores, so N teams keep N tables live on N × k cores. - y3x3 runs faster than p4 from fewer live tables. p4 is production's best worker count on this machine in every scaling run (series 1). - So at this level, in throughput against live table bytes, sharing a table already does better than every production configuration measured. - **It is not yet a frontier result:** - it is the inversion, not the decoder; - it is pinned; - its memory axis is computed table bytes, not peak RSS; - it uses more cores (CPU-seconds are not yet measured).
+A cooperative team shares one block's table among k cores, so N teams keep N tables live on N × k cores.
+
+- y3x3 runs faster than p4 from fewer live tables. p4 is production's best worker count on this machine in every scaling run (series 1).
+- So at this level, in throughput against live table bytes, sharing a table already does better than every production configuration measured.
+- **It is not yet a frontier result:**
+
+  - it is the inversion, not the decoder;
+  - it is pinned;
+  - its memory axis is computed table bytes, not peak RSS;
+  - it uses more cores (CPU-seconds are not yet measured).
 
 **3\. The full decoder, workers against cooperative teams, with measured memory** (unpinned; the bench corpus, 209.7 MB decoded; 20 interleaved rounds; the [decoder journal](<https://github.com/lmmx/mibz2/blob/master/docs/journal/2026-10-29-cooperative-decoder.md>) and its raw files). One point per distinct plan: where two arms ran the same plan (the policy at 8, 10 and 20 threads is 4 teams of 2 on this machine; 2 teams of 3 ran at both 6 and 8), the table gives the range of their medians, which is noise.
 
@@ -70,7 +86,12 @@ A cooperative team shares one block's table among k cores, so N teams keep N tab
 
 Peak RSS is measured (the median run's, in decimal MB). Live tables are computed. The nondominated column compares medians on throughput (higher) and peak RSS (lower) within this series.
 
-What it shows, and what it doesn't: - **Every worker count measured is dominated.** p4, the decoder's best worker count here, is beaten on both axes by 3 teams of 2 (the policy at 6 threads: 1.166× with its lower bound 1.123, at 64 MB against 76) and by 3 teams of 3. - **The nondominated set is all teams:** 1×3, 2×3, 3×3 and 4×2. Measured by medians, 4×2 stays on the set by its best repeat. Its throughput is tied with 3×3's within noise (their intervals overlap almost entirely), at 13 MB more RSS and about 6% more CPU. 3×3 is a lead for refining the policy, not yet a result. - **Not a whole-frontier result.** No worker counts below 4 were measured in this run. At 1 to 3 workers, today's decoder may still own the low-memory end: series 1 has 2 workers at 707 MB/s, but without RSS. Filling that in needs the same A/B at 1, 2 and 3 threads. - **One machine, one workload, one level (the full decoder).** Threads above 10 share physical cores with SMT siblings.
+What it shows, and what it doesn't:
+
+- **Every worker count measured is dominated.** p4, the decoder's best worker count here, is beaten on both axes by 3 teams of 2 (the policy at 6 threads: 1.166× with its lower bound 1.123, at 64 MB against 76) and by 3 teams of 3.
+- **The nondominated set is all teams:** 1×3, 2×3, 3×3 and 4×2. Measured by medians, 4×2 stays on the set by its best repeat. Its throughput is tied with 3×3's within noise (their intervals overlap almost entirely), at 13 MB more RSS and about 6% more CPU. 3×3 is a lead for refining the policy, not yet a result.
+- **Not a whole-frontier result.** No worker counts below 4 were measured in this run. At 1 to 3 workers, today's decoder may still own the low-memory end: series 1 has 2 workers at 707 MB/s, but without RSS. Filling that in needs the same A/B at 1, 2 and 3 threads.
+- **One machine, one workload, one level (the full decoder).** Threads above 10 share physical cores with SMT siblings.
 
 ## What fills it in
 

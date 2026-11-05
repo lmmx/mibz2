@@ -2,7 +2,10 @@
 
 *As of 29 October 2026.* This page is a snapshot of where the research stands. The evidence is in the [journals](<https://lmmx.github.io/mibz2/background/journals/index.md>) and the pull requests linked below.
 
-**In short:** - A faster way to run the inverse BWT on a many-core machine has been found, confirmed and explained. - **It is not in the released decoder yet.** mibz2 0.1.5 decodes as it did, and every figure here is the inversion stage alone, not whole decompression.
+**In short:**
+
+- A faster way to run the inverse BWT on a many-core machine has been found, confirmed and explained.
+- **It is not in the released decoder yet.** mibz2 0.1.5 decodes as it did, and every figure here is the inversion stage alone, not whole decompression.
 
 ## The starting point: a knee at four workers
 
@@ -24,10 +27,11 @@ Measured on the i9 in the research harness ([PR \#73](<https://github.com/lmmx/m
 | s3x3 | libsais 2.12.1, 3 blocks on 3 threads each | 2,355 | 1.59 |
 
 - **The confirmation was registered before the runs.**
-- 4x2 and 3x3 were each run alone against p4, 20 paired rounds each.
-- Each beat p4 in all 20 rounds, and every block's output was checked.
-- 4x2 reproduced its discovery figure within 0.3%.
-- 3x3 came in 2.3% under its discovery figure, as picking the best of 19 arms would predict.
+
+  - 4x2 and 3x3 were each run alone against p4, 20 paired rounds each.
+  - Each beat p4 in all 20 rounds, and every block's output was checked.
+  - 4x2 reproduced its discovery figure within 0.3%.
+  - 3x3 came in 2.3% under its discovery figure, as picking the best of 19 arms would predict.
 - **[libsais](<https://github.com/IlyaGrebnov/libsais>)'s inverse BWT is still about 20% ahead** at 3x3 (1.195× ours, paired). It gains from cooperation by the same factor as ours, about 1.5×. The gap between them is the kernel.
 
 ## Why it works: two mechanisms, measured
@@ -42,10 +46,12 @@ A hardware-counter study on the same machine ran each arm alone under `perf stat
 | 3x3 | 96.7% | 41.9 | 66 cycles |
 
 - **Residency.**
-- With eight cores either way, four shared tables (4x2) stay in the L3 where eight independent ones (p8) don't. The hit share rises from 66% to 95%, and each read waits 64 cycles instead of 366.
+
+  - With eight cores either way, four shared tables (4x2) stay in the L3 where eight independent ones (p8) don't. The hit share rises from 66% to 95%, and each read waits 64 cycles instead of 366.
 - **Overlap.**
-- With four tables either way, the second core on each (4x2 against p4) leaves the hit share and the wait unchanged.
-- It puts 1.38× as many reads in flight.
+
+  - With four tables either way, the second core on each (4x2 against p4) leaves the hit share and the wait unchanged.
+  - It puts 1.38× as many reads in flight.
 - **3x3 has both:** a higher hit share than p4, a third fewer reads missing the L3 per byte, and 1.49× the reads in flight.
 - **The counters account for the timings.** Little's law on them (reads in flight over the wait, against reads per byte) reproduces each arm's measured throughput to within 0–11%.
 
@@ -62,12 +68,14 @@ The cooperative kernel retires more instructions per output byte than production
 | libsais, 3x3 | 23.2 |
 
 - **Its 4x1 penalty is instructions, not memory.**
-- The cooperative kernel on one core a block (4x1) runs at 0.87× production.
-- Its reads and waits are within 10% of production's; it executes a third more instructions.
+
+  - The cooperative kernel on one core a block (4x1) runs at 0.87× production.
+  - Its reads and waits are within 10% of production's; it executes a third more instructions.
 - **libsais's lead is fewer reads.**
-- It makes 0.86–0.89 reads past L2 per byte, against our 1.40–1.55. That is one dependent load for two output bytes.
-- It does so within about 23 instructions a byte.
-- mibz2's own two-byte walk (\#6) wins only past the knee. At its best it reaches 0.86× the one-byte walk's best.
+
+  - It makes 0.86–0.89 reads past L2 per byte, against our 1.40–1.55. That is one dependent load for two output bytes.
+  - It does so within about 23 instructions a byte.
+  - mibz2's own two-byte walk (\#6) wins only past the knee. At its best it reaches 0.86× the one-byte walk's best.
 
 ## What's next
 
@@ -78,6 +86,13 @@ The cooperative kernel retires more instructions per output byte than production
 | 3 | [\#79](<https://github.com/lmmx/mibz2/issues/79>): a smaller table | more teams resident at once (a scheduling gain, not one for 3x3 itself) |
 | later | a two-byte walk within production's instruction budget | libsais's fewer reads a byte |
 
-**Still open in the counter record:** - 3 short checks of the raw L3 event's accounting, with their criteria fixed in advance. It counts a steady 23–39% more requests than `offcore_requests.all_data_rd`, and the likely cause is prefetches into L3. - The study's conclusions rest on the arm-to-arm directions, which a second, independent pair of counters reproduces.
+**Still open in the counter record:**
 
-**Before any of this reaches a release:** - the cooperative build and walk must pass the decoder's correctness checks: the segment oracle, fuzzing and Miri on the shared table; - the whole decoder must be A/B'd at 4–10 cores, where an inversion-stage gain counts only as far as it survives; - other CPUs must be measured too. CI's 4-core runners can't show a gain that only exists past four workers, so the workstation measures it.
+- 3 short checks of the raw L3 event's accounting, with their criteria fixed in advance. It counts a steady 23–39% more requests than `offcore_requests.all_data_rd`, and the likely cause is prefetches into L3.
+- The study's conclusions rest on the arm-to-arm directions, which a second, independent pair of counters reproduces.
+
+**Before any of this reaches a release:**
+
+- the cooperative build and walk must pass the decoder's correctness checks: the segment oracle, fuzzing and Miri on the shared table;
+- the whole decoder must be A/B'd at 4–10 cores, where an inversion-stage gain counts only as far as it survives;
+- other CPUs must be measured too. CI's 4-core runners can't show a gain that only exists past four workers, so the workstation measures it.
