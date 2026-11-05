@@ -26,7 +26,8 @@
     6645643541,
     6646251725,
     6651023083,
-    6653416078
+    6653416078,
+    6657883434
   ],
   "outgoing_comment_ids": [
     {
@@ -108,6 +109,13 @@
       "type": "REVIEW",
       "sha": "a2eb08773c3231f839a6fbe73a764d3f3bb25b16",
       "checkpoint_comment_id": 6653416078
+    },
+    {
+      "pr": 145,
+      "id": 6658149381,
+      "type": "REVIEW",
+      "sha": "9d82533f45030e05a7240b7baa1b0a38e471acab",
+      "checkpoint_comment_id": 6657883434
     }
   ],
   "reviews": [
@@ -283,7 +291,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "IN_PROGRESS",
+  "status": "WAITING",
   "published_evidence_commit": "9d82533f45030e05a7240b7baa1b0a38e471acab",
   "incoming_experiment_comment_ids": [
     {
@@ -397,10 +405,10 @@
     {
       "comment_id": 6657883434,
       "pr": 160,
-      "status": "complete",
-      "completed": false,
+      "status": "finished",
+      "completed": true,
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Report, static derivations and canonical ledger committed; awaiting REVIEW publication.",
+      "progress": "Report, static arithmetic and canonical ledger committed; REVIEW published and recorded.",
       "report_commit": "9d82533f45030e05a7240b7baa1b0a38e471acab",
       "report_path": "docs/journal/compact30-research/reviews/inbox-6657883434/report.md",
       "baseline_commit": "decc71b866a1d55ae86251e6e227b9c11987f357",
@@ -409,7 +417,8 @@
         "raw_benchmark_replay": false,
         "new_timing": false,
         "implementation": false
-      }
+      },
+      "reply_id": 6658149381
     }
   ]
 }
