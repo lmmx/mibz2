@@ -61,29 +61,44 @@ It can't attribute any effect to a mechanism, and it claims none.
 
 ## The decision rule
 
+*Amended once, at 00:20 UTC on 5 November, after Guardian D024 (6645964170). At that time the
+bench run (41940043718) was still in progress, with no artifacts. The only bench comment on #164
+was its "Running" placeholder, with no figures. So no measured result was available, and none
+informed the amendment. The original rule is in d6401b55.*
+
 - **Correctness (required):**
   - CI green, Miri included;
-  - same bytes on every corpus in both runs;
+  - same bytes on every corpus in every bench run;
   - the tests named above pass.
-- **Instructions (required):** `decode_block` at or below master's on every full block. The in-place
-  path removes an allocation and changes a destination, so the expectation is equal to within a
-  few thousand instructions, not a large saving.
-- **Benefit (required, one of):**
-  - on `wikidata` at 4 threads, the CPU change excludes zero on the faster side in at least one
-    run, and its point estimate is not slower in the other;
-  - or peak RSS at 4 threads is lower beyond noise in both runs.
-- **No harm (required):** no corpus × thread-count wall row is flagged slower in both runs. A row
-  flagged slower in one run only is reported and weighed, not waved through.
+- **Instructions (required):** `decode_block` at or below master's on every full block.
+- **Benefit (required):** on `wikidata` at 4 threads, the CPU change or the wall change excludes
+  zero on the faster side in at least one run, and the same figure's point estimate is not slower
+  in the other. Peak RSS is reported as a secondary figure. It doesn't satisfy this condition on
+  its own.
+  - **"RSS lower beyond noise"** means the bench's own flag (**less**) on the peak RSS column.
+- **No harm (required), per run, each run read under its own conditions:**
+  - a wall row (any corpus × thread count) flagged **slower** in a run is a harm signal. A second
+    run that is inconclusive on that row doesn't cancel it;
+  - each harm signal is settled by one more run on the same head: if the row is flagged slower
+    again, it is a harm, and the rule fails;
+  - if it isn't flagged slower again, the row is reported as unresolved, with all three runs, and
+    the PR doesn't claim to have excluded harm on it;
+  - at most three runs are made in all.
 - **Power, stated before seeing the data:** control rows' 95% intervals in recent runs are ±1–5%. A
   harm smaller than a row's half-width can't be excluded by these runs, and this PR doesn't
   claim to exclude it.
 - **Falsified, and closed with a write-up, if any of these holds:**
   - the instruction count exceeds master's on a full block;
-  - a control row is slower beyond noise in both runs;
-  - neither benefit condition holds.
+  - a harm is confirmed as above;
+  - the benefit condition fails.
 
-A pass meets STEWARDSHIP's merge gate. It doesn't establish P87's mechanism, and it doesn't meet
-the four-worker campaign objective by itself.
+**What a pass means:**
+- the registered conditions are met;
+- and if no row is left unresolved, STEWARDSHIP's conditions on measured code are met too: an
+  end-to-end improvement beyond noise, and no regression shown.
+
+It doesn't establish P87's mechanism or a steady-state instruction saving. It doesn't meet the
+four-worker campaign objective by itself.
 
 ## Measured: whole-decoder instructions (added after the registration above)
 
