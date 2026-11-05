@@ -8,8 +8,8 @@
     "roles": "b89e6dc11d83c7d0c4582f53f19f4f690554e650",
     "mode": "4d27405b52a1b34c73a957fa0aebea3f9622dca3",
     "campaign": "c5d2983f8e5c007a47da86202ce686750a5ab55c",
-    "spec": "74ebaccaeddfcf68fd676aea54009d2e656c95f2",
-    "spec_optimizer": "597769beb23846ba481d00dca0040445a56a97eb"
+    "spec": "791d1723f13dce77e9683e82e698222379c2fc83",
+    "spec_optimizer": "582b883f3b7b3e7f1f77bb0f149b94875704df59"
   },
   "incoming_channel_comment_ids": [
     6628984134,
@@ -267,7 +267,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "IN_PROGRESS",
+  "status": "COMPLETE_PENDING_REVIEW",
   "published_evidence_commit": "d143d8fee0e2ea107b22ec9c80df18d61e264276",
   "incoming_experiment_comment_ids": [
     {
@@ -344,10 +344,20 @@
     {
       "comment_id": 6651023083,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Resource ranking finished: fusion first; compact shared-cache/build model; scheduling alternatives and falsifiers. Work publication pending.",
-      "report_path": "docs/journal/compact30-research/reviews/inbox-6651023083/report.md"
+      "progress": "Work complete and committed; REVIEW publication and finished-state record pending.",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6651023083/report.md",
+      "completed": true,
+      "report_commit": "6b720b2415ac04c1aed1e0447842ebf832f3dfd7",
+      "evidence_blobs": {
+        "round": "907b7fe5de465b2a12b2ee3a3d4eca67dadd1a9b",
+        "staged": "8543d3904c4dd6e4b0144cb5cf311ea520ecef06",
+        "source_bwt": "c4c65a56c91cee373b8d1a8bd7965cc30ee51cf4",
+        "compact_source": "05c8fb20f33fc77018516e948f2c70693d56d14c",
+        "window": "7633c418c6ba18366d4cad06d4035de59da41019",
+        "assembly": "4e5421e1f9b5677a888f96b4a82347c4db1453b6"
+      }
     }
   ]
 }
