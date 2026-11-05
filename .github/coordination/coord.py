@@ -15,7 +15,8 @@ Subcommands (stdlib only; GitHub reads go through the public REST API, unauthent
                                            `route` said, with the header it should have
     check    --issue N  (body on stdin)    the tripwire: is this comment misrouted?
     audit    [--since ID]                  every misrouted comment on #145 and the inboxes
-    head-sha --pr N --sha SHA              exit 0 only if SHA is the PR's exact full head
+    head-sha --pr N --sha SHA [--merged]   exit 0 only if SHA is the PR's exact full head;
+                                           with --merged, only if the PR is merged at that head
     warn     --issue N --comment-id ID     the tripwire's warning text (used by the workflow)
 
 Exit status: 0 when the action checked is correct, 1 when it is not, 2 on a usage or
@@ -261,11 +262,24 @@ def audit(since):
     return found
 
 
-def head_sha(pr, sha):
-    """A merge's expected head must be the PR's exact 40-hex head, never a prefix or guess."""
-    head = get(f"{API}/pulls/{pr}")["head"]["sha"]
+def head_sha(pr, sha, merged=False):
+    """A merge's expected head must be the PR's exact 40-hex head, never a prefix or guess.
+
+    Before a merge this checks the value; it cannot check that the value reached the merge.
+    The merge tool takes it as `expectedHeadSha` and silently drops an unknown name such as
+    `sha`, which is how #167, #170 and #184-#189 merged with no head check at all. So the
+    check runs again after the merge with `merged=True`: it passes only if the PR is merged
+    and its head, which GitHub keeps as the merged head, is still exactly `sha`.
+    """
+    pull = get(f"{API}/pulls/{pr}")
+    head = pull["head"]["sha"]
     ok = bool(re.fullmatch(r"[0-9a-f]{40}", sha)) and sha == head
-    return {"pr": pr, "head": head, "given": sha, "ok": ok}
+    out = {"pr": pr, "head": head, "given": sha}
+    if merged:
+        out["merged"] = bool(pull.get("merged"))
+        ok = ok and out["merged"]
+    out["ok"] = ok
+    return out
 
 
 def main(argv=None):
@@ -281,6 +295,8 @@ def main(argv=None):
     a = sub.add_parser("audit"); a.add_argument("--since", type=int, default=CUTOVER)
     a = sub.add_parser("head-sha"); a.add_argument("--pr", type=int, required=True)
     a.add_argument("--sha", required=True)
+    a.add_argument("--merged", action="store_true",
+                   help="after the merge: the PR must be merged, at exactly this head")
     args = p.parse_args(argv)
     try:
         if args.cmd == "route":
@@ -298,7 +314,7 @@ def main(argv=None):
         elif args.cmd == "audit":
             out = audit(args.since); ok = not [f for f in out if not f["resolved"]]
         else:
-            out = head_sha(args.pr, args.sha); ok = out["ok"]
+            out = head_sha(args.pr, args.sha, args.merged); ok = out["ok"]
     except (OSError, ValueError, KeyError) as e:
         print(json.dumps({"error": str(e)}), file=sys.stderr)
         return 2

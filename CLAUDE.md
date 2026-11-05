@@ -17,3 +17,7 @@ Researcher): route every message with `.github/coordination/coord.py`, never fro
   A comment that exists is not a message delivered.
 - **Before any merge:** `coord.py head-sha --pr <n> --sha <sha>` must pass, and its SHA is the
   merge's expected head. It passes only for the PR's exact 40-character head, never a prefix.
+- **The merge itself:** pass that SHA as `expectedHeadSha`, the merge tool's parameter. The tool
+  silently drops a name it doesn't have, such as `sha`, and then nothing checks the head.
+- **After the merge:** `coord.py head-sha --pr <n> --sha <sha> --merged` must pass: the PR is
+  merged, at exactly that head. A merge call that returned success is not a checked merge.

@@ -238,15 +238,30 @@ class Verify(unittest.TestCase):
 class HeadSha(unittest.TestCase):
     head = "c32ba5db9df80a08147c35eeb1fb91259faab965"
 
-    def run_guard(self, given):
-        with mock.patch.object(coord, "get", lambda url: {"head": {"sha": self.head}}):
-            return coord.head_sha(185, given)["ok"]
+    def run_guard(self, given, merged=False, is_merged=False):
+        pull = {"head": {"sha": self.head}, "merged": is_merged}
+        with mock.patch.object(coord, "get", lambda url: pull):
+            return coord.head_sha(185, given, merged)["ok"]
 
     def test_only_the_exact_head_passes(self):
         self.assertTrue(self.run_guard(self.head))
         self.assertFalse(self.run_guard("c32ba5db"))  # a prefix
         self.assertFalse(self.run_guard("c32ba5db3b0f9eec2b3d0dc3cbe8e4cb24a71c51"))  # the guess
         self.assertFalse(self.run_guard(self.head.upper()))
+
+    def test_after_the_merge_the_pr_is_merged_at_that_head(self):
+        self.assertTrue(self.run_guard(self.head, merged=True, is_merged=True))
+        self.assertFalse(self.run_guard(self.head, merged=True, is_merged=False))  # not merged
+        self.assertFalse(self.run_guard("c32ba5db3b0f9eec2b3d0dc3cbe8e4cb24a71c51",
+                                        merged=True, is_merged=True))  # merged, another head
+        self.assertTrue(self.run_guard(self.head, merged=False, is_merged=False))  # before
+
+    def test_cli_merged_flag_reaches_the_check(self):
+        pull = {"head": {"sha": self.head}, "merged": False}
+        with mock.patch.object(coord, "get", lambda url: pull), redirect_stdout(io.StringIO()):
+            self.assertEqual(coord.main(["head-sha", "--pr", "185", "--sha", self.head]), 0)
+            self.assertEqual(coord.main(["head-sha", "--pr", "185", "--sha", self.head,
+                                         "--merged"]), 1)
 
 
 class Cli(unittest.TestCase):
