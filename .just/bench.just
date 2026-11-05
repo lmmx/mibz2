@@ -220,7 +220,7 @@ bench-pmu-probe *args:
 #   just bench-release-scaling v0.2.4 v0.2.1 10 "1,4,10,20" /path/to/big.bz2
 
 # Two releases and lbzip2 on this machine, up to its full thread count
-bench-release-scaling NEW="v0.2.4" OLD="v0.2.1" ROUNDS="10" THREADS="" *FILES:
+bench-release-scaling NEW="v0.2.4" OLD="v0.2.1" ROUNDS="10" THREADS="" *FILES="":
     #!/usr/bin/env bash
     set -euo pipefail
     W=$PWD/target/release-scaling
