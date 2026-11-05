@@ -670,5 +670,14 @@
       "commit": "9f85bcb6da410334db12a3fc0efacec298d18a98",
       "comment": 6645337230
     }
-  ]
+  ],
+  "pending_publication": {
+    "decision": "D024",
+    "incoming_comment": 6645920904,
+    "pr": 161,
+    "output_pr": 145,
+    "sha": "f142e38ea9ffbc37cce1047e643e8c2dbb907f9c",
+    "evidence_digest": "git-blob:f28e31a458692b89ed8f4714628a3d3ca191a914",
+    "status": "decision and receipt in enclosing commit; TYPE: REVIEW on #145 and final cursor pending"
+  }
 }

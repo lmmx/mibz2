@@ -757,3 +757,39 @@ The report also distinguishes equal-allocation reuse from production allocation 
 The promise to build and measure the first-ranked proposal is not a Guardian permission. To the extent it seeks reserved authority from this review, none is granted: no gate relaxation, G6 decision, frozen-representation change, harness change, workstation/i9 capture, integration, credentials or spending. Independently authorised routine work does not acquire a new Guardian approval requirement.
 
 No blanket HOLD, G8 line STOP, new experiment or automation change is made. D021 and D022 remain intact. [d023-receipt.json](d023-receipt.json) records the evidence and scope; digest `sha256:4d57b6f869f123c55d7f7af27e8c54fa696a8de478b69f2006280b885f7fe379`.
+
+## D024 — P87 registration preserves history but does not establish merge qualification (G1)
+
+Trigger [6645920904](https://github.com/lmmx/mibz2/pull/161#issuecomment-6645920904), candidate PR #164, source `f142e38ea9ffbc37cce1047e643e8c2dbb907f9c`. ACTIVE stage A, GUARDIAN.md §3 G1; operating specification `931640523226053b758ebc0c2c9fd4eac61128b3`, activation report 262 at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`. Cursor/log at `35fc5714f5c7f8bc95786c826e7a323eb8d52bdd` contain no consumed trigger, equivalent evidence key or pending publication. This is a rule interpretation, not a completed candidate evidence audit.
+
+**Concur with the preserved historical status; dispute the unconditional statement “A pass meets STEWARDSHIP's merge gate.”** No new safety/performance PASS, merge clearance or G8 line STOP is issued. This decision does not hold routine already-authorised work or revoke independently granted permissions.
+
+### Pinned evidence and scope
+
+Read the registration at `d6401b55a59e4bf79edf6028f872e59bff979cc7`, blob `caa40b044c2a8cd8fbdc4cb4803aae3df2131252`; its measured appendage at the candidate source above, blob `f28e31a458692b89ed8f4714628a3d3ca191a914`; STEWARDSHIP at master `08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7`, blob `efb0fcb5ce9971bc3ce57e86bddf1f891633b987`; current ROLES and D021–D023. The candidate commit is a direct child of the registration commit. This verifies document order, not when anyone first observed measurements.
+
+D022's previously checked P87 record remains the basis for historical comparisons; its raw experiments are not rerun. The registration correctly retains the positive primary comparison, INCONCLUSIVE mechanism, NOT DEMONSTRATED engineering result, five inconclusive controls, and closed diagnostic. A changed baseline plus production allocation removal is a distinct production comparison. It neither reverses the old verdict nor identifies destination reuse as the cause.
+
+### What needs clarification before treating this as a qualification rule
+
+1. **Benefit and the standing gate.** STEWARDSHIP requires a paired CI end-to-end improvement whose 95% interval excludes zero beneficially, plus no unacceptable regression. A repeatable RSS reduction is useful memory evidence, but RSS alone is not evidence of a faster decoder and cannot by itself discharge that improvement requirement. A significant whole-decoder CPU reduction must be described as a CPU-cost result; it does not demonstrate a wall-time improvement. Specify which end-to-end observable satisfies the standing gate and retain any separate unmet gate. This Guardian cannot approve a weaker substitute or interpret a new candidate registration as permission to relax the standing gate.
+
+2. **No harm is not demonstrated by failure to detect harm twice.** A wall regression in one run is not erased by a non-significant second run, particularly on another runner. “Reported and weighed” leaves the disposition discretionary. Define the criterion for an unacceptable regression and the disposition of discordant runs before using them for acceptance; retain INCONCLUSIVE where the evidence cannot resolve it. Do not invent a numerical tolerance after seeing results. The admission of limited power is appropriate, but absence of a flag is not equivalence. Different machines must remain separately labelled; the second run is another environment-specific comparison, not automatically an identical replication.
+
+3. **Operational definitions and frozen evidence.** “RSS lower beyond noise” needs a specified corpus, estimator and uncertainty/noise rule. “CPU excludes zero in at least one run” is an either-run selection rule: preserve it as stated, but do not represent selection across two opportunities as a single preselected 95% confirmation or silently substitute a pooled result. Keep the exact candidate/base, workload, topology, toolchain and both run IDs, including unfavourable rows. The pinned rule names master 08e7fc3b but describes a moving merge-base comparison; report and reconcile the actual comparator rather than assuming it stays fixed.
+
+4. **Timing of amendments.** The proposed first-comment-posted cutoff does not by itself establish outcome blindness: logs or artifacts may be visible before the comment. Any amendment must disclose when it was made and whether results were already accessible or inspected. If outcomes informed it, label it a post-registration amendment; do not retrospectively call it the original prospective rule. This run has not read bench comments or workflow results and cannot attest that the requested amendment window remains open.
+
+These are G1 limits on the claimed classification, not a replacement experiment, new acceptance minimum, harness modification or G6 acceptance. Any gate relaxation remains the user's decision under GUARDIAN.md §4. The registration's missing-benefit closure is an operational candidate disposition, not proof that the true effect is zero or that a mechanism or the whole line is falsified.
+
+### Instruction and correctness evidence
+
+Subtracting the seven displayed master counts from candidate counts reproduces changes **−277, −400, −400, −270, −432, −542, −270** for blocks 0, 1, 41, 97, 233, 400, 472. Thus the quoted table is arithmetically consistent with 270–542 fewer instructions. This is a table check only: raw profiles, compiled listings, output bytes, independent safety review, Miri/mutation coverage and CI parity are not audited here. No instruction or safety gate is independently certified.
+
+The fresh-Scratch boundary includes initial allocation and is explicitly not steady state. Length plus CRC agreement is not an independent byte-for-byte comparison; retain the separately required exact parity tests. Total inclusive counts do not supply STEWARDSHIP's build/walk/remainder split. Archive that accounting and the actual profiles before treating a complete ledger as established. None of these small sample reductions establishes a mechanism or campaign qualification.
+
+### Publication and authority
+
+Only incoming ID 6645920904 is processed. The user's current routing supersedes D023's historical reply route: input #161, this review on #145, commits exclusively on review/compact30-guardian-shadow. ROLES' descriptive task/filter changes do not remove the direct task's two-marker eligibility requirement. No backlog, experiment, implementation, merge, automation change or other-branch write is performed.
+
+Evidence digest for this registration interpretation: `git-blob:f28e31a458692b89ed8f4714628a3d3ca191a914`; [d024-receipt.json](d024-receipt.json) preserves the pinned documents and table arithmetic. Qualification remains unestablished; preserve the historical results and resolve the registration's ambiguities transparently.
