@@ -346,7 +346,7 @@
       "pr": 160,
       "status": "in_progress",
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Receipt: resource-based ranking against c9433318 with #180 window assumed."
+      "progress": "Read walk-round records and 17 CI run summaries, current source/listing and compact source. Derived shared-L2 sensitivity and fusion traffic ledger; final ranking pending."
     }
   ]
 }
