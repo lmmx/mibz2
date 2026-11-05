@@ -259,7 +259,7 @@
     }
   ],
   "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
-  "wake": "Every newly posted comment on inbox PR #160 is work under SPEC.md and SPEC.OPTIMIZER.md at beb7df121fddf69938fdf8c972a8c7d964267ac6; no header gate. Outputs on #145; no polling.",
+  "wake": "Scan inbox #160 oldest first after offset 6646251725 under SPEC at 0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0.",
   "next_trigger": "New inbox #160 comment; next useful evidence is current-baseline true tiled B with explicit replay domain, whole-decoder counts and safety coverage.",
   "review_pr": 148,
   "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
@@ -267,7 +267,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "WAITING",
+  "status": "IN_PROGRESS",
   "published_evidence_commit": "d143d8fee0e2ea107b22ec9c80df18d61e264276",
   "incoming_experiment_comment_ids": [
     {
@@ -340,6 +340,13 @@
       },
       "report_commit": "d143d8fee0e2ea107b22ec9c80df18d61e264276",
       "reply_id": 6646432357
+    },
+    {
+      "comment_id": 6651023083,
+      "pr": 160,
+      "status": "in_progress",
+      "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "progress": "Receipt: resource-based ranking against c9433318 with #180 window assumed."
     }
   ]
 }
