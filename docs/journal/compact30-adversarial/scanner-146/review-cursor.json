@@ -410,5 +410,12 @@
     "trigger_comment_id": 6639428570,
     "read_order": "After event eligibility, addressee and cursor gates, read MODE and applicable role instructions.",
     "authority_changed": false
+  },
+  "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
+  "in_progress_comment": {
+    "id": 6646250444,
+    "pr": 162,
+    "status": "in_progress",
+    "progress": "Receipt committed; read result write-up and archived reports, assess claims and RLE1, recommend next measurement."
   }
 }
