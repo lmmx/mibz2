@@ -5,7 +5,7 @@
   "branch": "review/compact30-guardian-shadow",
   "pr": 149,
   "base": "research/compact30-constructor",
-  "operating_pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+  "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
   "assessments": [
     {
       "id": "D001",
@@ -698,5 +698,12 @@
       "commit": "ca1b65de2ae684b5d0a32795154abd8f44857f7a",
       "comment": 6645964170
     }
-  ]
+  ],
+  "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
+  "in_progress": {
+    "incoming_comment": 6646249200,
+    "pr": 161,
+    "status": "receipt committed; assessment pending",
+    "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6"
+  }
 }
