@@ -956,19 +956,38 @@ fn room_segments<const L: usize, const PF: u8>(
         // The rows live in two slots while every lane is busy: an offset reads one and
         // writes the other, so the rows from before an offset survive it. An offset first
         // steps every lane at once, the flags ORed together instead of tested lane by lane
-        // (B, deferred flag checking). If no lane read a start, that is exactly the scalar
+        // (deferred flag checking). If no lane read a start, that is exactly the scalar
         // offset's effect, and the slots swap. If one did, the offset is done again, from
-        // the surviving slot, by the scalar offset (`walk_segments_room`'s, unchanged),
-        // which hands segments over in lane order. Its speculative bytes are harmless: each
-        // went at base + off, inside its own lane's room, and is either written again by
-        // the scalar offset or left beyond the segment's length. A speculative row, taken
-        // from a start's entry with its flag bit, is never read: the slot it went into is
-        // discarded.
+        // the surviving slot, by the scalar offset, which hands segments over in lane
+        // order. A speculative row, taken from a start's entry with its flag bit, is never
+        // read: the slot it went into is discarded.
+        //
+        // The bytes are staged: offset j of a chunk of at most TILE offsets puts lane k's
+        // byte at tile[k][j], one base for every lane. Lane k's current segment has its
+        // bytes from st[k] in its tile row; they are copied to its buffer at its p when
+        // the chunk ends or the segment does, so every byte lands where an unstaged walk
+        // would have written it, and the room bounds the copies as it bounded the writes.
+        // A speculative byte is either written again by the scalar offset or left past
+        // st..end, never copied.
         let mut rows = [[0u32; L]; 2];
         for (k, l) in lanes.iter().enumerate() {
             rows[0][k] = l.row;
         }
         let mut cur = 0usize;
+        let mut tile = [[0u8; TILE]; L];
+        // copy lane k's tile row from st[k] to end into its buffer at p
+        let flush = |l: &mut Lane, row: &[u8; TILE], from: usize, to: usize| {
+            let len = to - from;
+            // SAFETY: from..to is inside the row; the lane's buffer has room for the
+            // chunk's bytes (the pass's room, as for the unstaged writes), so p + len is
+            // at most its end
+            debug_assert!(from <= to && to <= TILE);
+            debug_assert!(len <= unsafe { l.end.offset_from(l.p) } as usize);
+            unsafe {
+                std::ptr::copy_nonoverlapping(row.as_ptr().add(from), l.p, len);
+                l.p = l.p.add(len);
+            }
+        };
         'full: loop {
             // The pass's room: what every lane has spare, and no more than a buffer taken
             // mid-pass has after its first byte (`cap` - 1)
@@ -986,106 +1005,108 @@ fn room_segments<const L: usize, const PF: u8>(
             {
                 transition!(PASS_ENDS_FULL);
             }
-            let mut base: [*mut u8; L] = std::array::from_fn(|k| lanes[k].p);
-            for off in 0..room {
-                // One offset, every lane at once: the slot read and the slot written are
-                // fixed by the step's parity, so each row's address is a constant
-                let flags = if cur == 0 {
-                    spec_offset::<L, PF, 0>(t, &mut rows, &base, off)
-                } else {
-                    spec_offset::<L, PF, 1>(t, &mut rows, &base, off)
-                };
-                if flags & START == 0 {
-                    transition!(TILES_KEPT);
-                    cur ^= 1;
-                    continue;
-                }
-                transition!(TILES_REPLAYED);
-                // The scalar offset, on the rows from before it
-                let rs = &mut rows[cur];
-                let mut marked: u64 = 0;
-                macro_rules! step {
-                    ($k:expr) => {{
-                        let k = $k;
+            let mut done = 0;
+            while done < room {
+                let w = (room - done).min(TILE);
+                let mut st = [0usize; L];
+                for j in 0..w {
+                    let flags = if cur == 0 {
+                        spec_offset::<L, PF, 0>(t, &mut rows, &mut tile, j)
+                    } else {
+                        spec_offset::<L, PF, 1>(t, &mut rows, &mut tile, j)
+                    };
+                    if flags & START == 0 {
+                        transition!(TILES_KEPT);
+                        cur ^= 1;
+                        continue;
+                    }
+                    transition!(TILES_REPLAYED);
+                    // The scalar offset, on the rows from before it
+                    let rs = &mut rows[cur];
+                    let mut marked: u64 = 0;
+                    for k in 0..L {
                         // SAFETY: rows are below n (TVector), with the flag masked off below
                         let q = unsafe { *t.add(rs[k] as usize) };
                         if q & START != 0 {
                             marked |= 1 << k;
                         } else {
-                            debug_assert!(base[k].wrapping_add(off) < lanes[k].end);
-                            unsafe { *base[k].wrapping_add(off) = q as u8 };
+                            tile[k][j] = q as u8;
                             rs[k] = q >> 8;
                             if PF != PF_OFF {
                                 prefetch::<PF>(t, rs[k]);
                             }
                         }
-                    }};
-                }
-                for k in 0..L {
-                    step!(k);
-                }
-                #[cfg(test)]
-                if marked.count_ones() > 1 {
-                    transition!(MARKED_SEVERAL);
-                }
-                #[cfg(test)]
-                let mut took = false;
-                while marked != 0 {
-                    let k = marked.trailing_zeros() as usize;
-                    marked &= marked - 1;
-                    let l = &mut lanes[k];
-                    l.row = rs[k];
-                    l.p = base[k].wrapping_add(off);
-                    finish(l, bufs, next);
-                    if queued == ns {
-                        for (j, lj) in lanes.iter_mut().enumerate() {
-                            lj.row = rs[j];
-                            if j != k {
-                                let waiting = marked >> j & 1 != 0;
-                                lj.p = base[j].wrapping_add(off + usize::from(!waiting));
-                                #[cfg(test)]
-                                if j > k && !waiting {
-                                    if lj.p == lj.end {
-                                        transition!(LATER_STEPPED_FULL);
-                                    }
-                                    // SAFETY: the lane's row is below n
-                                    if unsafe { *t.add(lj.row as usize) } & START != 0 {
-                                        transition!(LATER_STEPPED_ON_START);
+                    }
+                    #[cfg(test)]
+                    if marked.count_ones() > 1 {
+                        transition!(MARKED_SEVERAL);
+                    }
+                    #[cfg(test)]
+                    let mut took = false;
+                    while marked != 0 {
+                        let k = marked.trailing_zeros() as usize;
+                        marked &= marked - 1;
+                        let l = &mut lanes[k];
+                        l.row = rs[k];
+                        // its segment's bytes end before offset j
+                        flush(l, &tile[k], st[k], j);
+                        finish(l, bufs, next);
+                        if queued == ns {
+                            // Every lane but the marked ones after this one has its byte at
+                            // j: an unmarked lane wrote it, and an earlier marked lane's new
+                            // segment starts after it. A marked lane after this one still
+                            // sits on its segment's end, without a byte at j, for the tail.
+                            for (i, li) in lanes.iter_mut().enumerate() {
+                                li.row = rs[i];
+                                if i != k {
+                                    let waiting = marked >> i & 1 != 0;
+                                    flush(li, &tile[i], st[i], j + usize::from(!waiting));
+                                    #[cfg(test)]
+                                    if i > k && !waiting {
+                                        if li.p == li.end {
+                                            transition!(LATER_STEPPED_FULL);
+                                        }
+                                        // SAFETY: the lane's row is below n
+                                        if unsafe { *t.add(li.row as usize) } & START != 0 {
+                                            transition!(LATER_STEPPED_ON_START);
+                                        }
                                     }
                                 }
                             }
+                            transition!(FULL_PHASE_ENDS_MID_PASS);
+                            #[cfg(test)]
+                            {
+                                if marked != 0 {
+                                    transition!(ENDS_WITH_LANES_WAITING);
+                                }
+                                if took {
+                                    transition!(ENDS_AFTER_A_TAKE);
+                                }
+                            }
+                            break 'full;
                         }
-                        transition!(FULL_PHASE_ENDS_MID_PASS);
+                        transition!(MID_PASS_TAKES);
+                        *l = take(queued, bufs);
+                        rs[k] = l.row;
+                        if PF != PF_OFF {
+                            prefetch::<PF>(t, l.row);
+                        }
+                        queued += 1;
+                        // its first byte is in its buffer; its next, at offset j + 1, is
+                        // staged
+                        st[k] = j + 1;
                         #[cfg(test)]
                         {
-                            if marked != 0 {
-                                transition!(ENDS_WITH_LANES_WAITING);
-                            }
-                            if took {
-                                transition!(ENDS_AFTER_A_TAKE);
-                            }
+                            took = true;
                         }
-                        break 'full;
                     }
-                    transition!(MID_PASS_TAKES);
-                    *l = take(queued, bufs);
-                    rs[k] = l.row;
-                    if PF != PF_OFF {
-                        prefetch::<PF>(t, l.row);
-                    }
-                    queued += 1;
-                    // its next byte, at offset off + 1, goes at its p
-                    base[k] = l.p.wrapping_sub(off + 1);
-                    #[cfg(test)]
-                    {
-                        took = true;
-                    }
+                    // The scalar offset stepped the rows in place, so the next offset reads
+                    // the same slot
                 }
-                // The scalar offset stepped the rows in place, so the next offset reads
-                // the same slot
-            }
-            for (l, b) in lanes.iter_mut().zip(base) {
-                l.p = b.wrapping_add(room);
+                for (k, l) in lanes.iter_mut().enumerate() {
+                    flush(l, &tile[k], st[k], w);
+                }
+                done += w;
             }
         }
     }
@@ -1134,18 +1155,24 @@ fn room_segments<const L: usize, const PF: u8>(
     s.n = n;
 }
 
+/// The busy phase's chunk: at most this many offsets' bytes are staged per lane (an 8 KiB
+/// tile at 32 lanes, in L1) before they are copied to the lanes' buffers
+const TILE: usize = 256;
+
 /// One offset of the room walk's busy phase, every lane stepped without testing its flag:
-/// lane k reads the row in slot P, writes its byte at base + off and its next row into
-/// slot 1 - P, and the entries read are ORed together for the caller to test for a start.
-/// A start's entry gives a row with its flag bit in it, which only ever goes into slot
-/// 1 - P, never read if the caller finds the start.
+/// lane k reads the row in slot P, stages its byte at tile[k][j] and writes its next row
+/// into slot 1 - P, and the entries read are ORed together for the caller to test for a
+/// start. A start's entry gives a row with its flag bit in it, which only ever goes into
+/// slot 1 - P, never read if the caller finds the start.
 #[inline(never)]
 fn spec_offset<const L: usize, const PF: u8, const P: usize>(
     t: *const u32,
     rows: &mut [[u32; L]; 2],
-    base: &[*mut u8; L],
-    off: usize,
+    tile: &mut [[u8; TILE]; L],
+    j: usize,
 ) -> u32 {
+    debug_assert!(j < TILE);
+    let tp = tile.as_mut_ptr().cast::<u8>();
     let mut flags = 0u32;
     macro_rules! spec {
         ($k:expr) => {{
@@ -1155,8 +1182,8 @@ fn spec_offset<const L: usize, const PF: u8, const P: usize>(
             // never read
             let q = unsafe { *t.add(rows[P][k] as usize) };
             flags |= q;
-            // SAFETY: base + off is in lane k's room, as for the scalar step
-            unsafe { *base[k].wrapping_add(off) = q as u8 };
+            // SAFETY: k < L and j < TILE, so k * TILE + j is inside the tile
+            unsafe { *tp.add(k * TILE + j) = q as u8 };
             rows[1 - P][k] = q >> 8;
             if PF != PF_OFF {
                 prefetch::<PF>(t, q >> 8);
