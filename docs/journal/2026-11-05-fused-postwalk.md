@@ -129,3 +129,37 @@ The incumbent stays unless this branch wins. A neutral result keeps master's thr
 - **What a pass establishes:** that removing these passes saves 4-thread wall time on CI's
   runners. That the saving comes from the shared traffic is an inference: no hardware
   counters are read.
+
+## Result: not shown at 4 threads; #183 closed
+
+Two PR runs on head beef4e8f against master 0769b52f, and two dispatched attribution runs,
+all bench 3.2.1 at 10 rounds. The summaries are in `2026-11-05-walk-round/bench-runs/`.
+
+| run | runner | `wikidata` wall at 1 / 2 / 4 threads | wall rows flagged slower |
+|---|---|---|---|
+| PR 1 | EPYC 7763 | **−1.1%** (−1.6, −0.7) / −2.4% / −4.2% (−10.0, +1.8) | `runs` 4t, +1.3% (+0.2, +2.4) |
+| PR 2 | EPYC 9V45 | **−2.5%** (−4.1, −0.9) / **−2.3%** / +1.5% (−3.9, +7.2) | none |
+| fusion alone (head against the refactor arm) | Xeon 8370C | **−2.3%** / **−2.7%** / **−1.5%** (−2.4, −0.6) | `text` 2t, +3.4% (+0.0, +6.8) |
+| refactor alone (the arm against master) | EPYC 7763 | −3.5% / −1.3% / +1.8% (all within noise) | none |
+
+Every arm gave the same bytes on every corpus. CI was green, Miri included, on Linux,
+aarch64, macOS and Windows.
+
+- **Benefit:** failed. The 4-thread wall was not faster beyond noise in either PR run, and its
+  point estimate was slower in run 2.
+- **No harm:** unresolved. `runs` at 4 threads was flagged in run 1 and not in run 2.
+- **Attribution:** failed as registered. The fusion-alone run flagged `text` at 2 threads.
+  The clause gave no further run to settle a flag, a gap in how it was written. Even had it
+  passed, the benefit criterion had already failed.
+- **What it says:**
+  - By Astra's own refutation clause ("if line traffic falls but wall does not, the removed
+    traffic was not the binding cost at that point"), the post-walk traffic is not shown to
+    bind the 4-thread wall on two SMT cores. The fusion halves the simulated L2 misses of
+    the post-walk phase, and the 4-thread wall does not follow.
+  - Measured but not registered: the whole branch was faster beyond noise at 1 thread in
+    both PR runs, and the fusion alone at 1, 2 and 4 threads in its one run.
+  - The registration required the 4-thread wall, so these gains decide nothing here. Any
+    claim on them needs a registration of its own, judged only on fresh runs.
+- **The stage table** (`examples/phases.rs`) times segment assembly, RLE1 and the CRC as
+  separate library calls. It cannot see the fusion, so its rows say nothing about this
+  change.
