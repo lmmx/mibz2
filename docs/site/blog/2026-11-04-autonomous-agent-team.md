@@ -269,8 +269,8 @@ anything. From outside, it simply looked as if the Optimiser had gone quiet.
 was meant for it, sometimes by exact string. A checkpoint naming two agents had to be worded
 exactly right for both, and a message that failed the test was dropped without trace.
 
-**Noise used up the wake budget.** As far as I can tell, the Work automation lets a task wake about
-30 times an hour. On a busy board, most of those wakes went on comments the agent then ignored.
+**Noise spent the wakes.** Every one of those runs counts against a task's use of the automation,
+and on a busy board most of them went on comments the agent then ignored.
 
 **The connector added friction.** The Astra agents reach GitHub through ChatGPT's GitHub connector,
 not a shell with `git` as the Coordinator has. Their runs hit errors such as a call missing its
