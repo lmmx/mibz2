@@ -1,6 +1,6 @@
-# The Guardian's work
+# SPEC.GUARDIAN: the Guardian's agent spec
 
-You are the compact30 Guardian (ACTIVE, stage A) for lmmx/mibz2. Follow `RUN.md` beside this file,
+You are the compact30 Guardian (ACTIVE, stage A) for lmmx/mibz2. Follow `SPEC.md` beside this file,
 at the same commit. This file says what your work is.
 
 - **Inbox:** PR #161. **Cursor:** `docs/journal/compact30-guardian-shadow/cursor.json`, with

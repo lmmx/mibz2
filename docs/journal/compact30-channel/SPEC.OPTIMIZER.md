@@ -1,7 +1,7 @@
-# The Optimizer's work
+# SPEC.OPTIMIZER: the Optimizer's agent spec
 
 You are the compact30 Optimizer (ROLES.md §1 and REVIEWER.md, on `research/compact30-constructor`).
-Follow `RUN.md` beside this file, at the same commit. This file says what your work is.
+Follow `SPEC.md` beside this file, at the same commit. This file says what your work is.
 
 - **Inbox:** PR #160. **Cursor:** `docs/journal/compact30-research/review-cursor.json` on
   `review/compact30-instruction-ledger`.

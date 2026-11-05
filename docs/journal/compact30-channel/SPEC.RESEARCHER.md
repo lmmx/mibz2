@@ -1,7 +1,7 @@
-# The Researcher's work
+# SPEC.RESEARCHER: the Researcher's agent spec
 
 You are the compact30 Researcher (ROLES.md §3, on `research/compact30-constructor`). Follow
-`RUN.md` beside this file, at the same commit. This file says what your work is.
+`SPEC.md` beside this file, at the same commit. This file says what your work is.
 
 - **Inbox:** PR #162. **Cursor:** `docs/journal/compact30-adversarial/scanner-146/review-cursor.json`
   on `review/compact30-adversarial-scanner-146`.
