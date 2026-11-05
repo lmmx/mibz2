@@ -275,7 +275,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "WAITING",
+  "status": "IN_PROGRESS",
   "published_evidence_commit": "6b720b2415ac04c1aed1e0447842ebf832f3dfd7",
   "incoming_experiment_comment_ids": [
     {
@@ -367,6 +367,15 @@
         "assembly": "4e5421e1f9b5677a888f96b4a82347c4db1453b6"
       },
       "reply_id": 6651150258
+    },
+    {
+      "comment_id": 6653416078,
+      "pr": 160,
+      "status": "in_progress",
+      "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "progress": "Receipt committed; auditing compact-table opportunity after fused-pass and scheduling falsifiers.",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6653416078/report.md",
+      "completed": false
     }
   ]
 }
