@@ -6,11 +6,14 @@
 # checks the header against that routing. A correct comment ends the run silently.
 #
 # A misrouted one gets one failing check run on the channel PR #145's head commit, named for
-# the comment, whichever of the four PRs it is on. That marks #145 red and wakes the
-# coordinator, which is subscribed to #145's checks; no role listens to #145. It is a check
-# run, not a comment: #145 is locked (PROTOCOL.md §1), so GITHUB_TOKEN can't comment there,
-# and a comment in an inbox would wake that role's Work task as if it were a brief. If the
-# warning can't be delivered, this run fails instead, so the failure is still visible.
+# the comment, whichever of the four PRs it is on. That is an independent, visible record:
+# #145 shows red. It is not a wake-up. #145 is locked (PROTOCOL.md §1), so GITHUB_TOKEN can't
+# comment there, and a comment in an inbox would wake that role's Work task as if it were a
+# brief. A check run made with GITHUB_TOKEN joins the commit's GitHub Actions check suite,
+# which follows its workflow run and stays "completed, success", so no check_suite event
+# reaches the coordinator either (tested with comments 6654371320 and 6654531225). The
+# coordinator finds misroutes itself, with `coord.py audit` at session start and on its
+# recurring cycle (CLAUDE.md). If the record can't be made, this run fails.
 #
 # The tripwire never edits, deletes, moves or re-posts a comment, and never dispatches
 # anything. It skips bots, and what GITHUB_TOKEN creates starts no workflow runs.
