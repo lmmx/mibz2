@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.4](https://github.com/lmmx/mibz2/compare/v0.2.3...v0.2.4) - 2026-11-05
 
+The move-to-front decode keeps the first 32 bytes of its list in two registers, so a move
+whose index is below 32 no longer writes the list to memory and reads it back. About 98%
+of the Wikidata sample's moves take that path. The output, the API and the supported inputs
+are unchanged.
+
+### Measured
+
+One paired run of this release against `v0.2.3`, both builds on one CI runner (AMD EPYC
+9V45, 4 vCPUs), 10 rounds, the builds' order alternating, the bench's Wikidata sample (12
+slices of the dump, 210 MB decoded):
+
+| threads | `wikidata` wall | `records` wall |
+|--:|--:|--:|
+| 1 | **−4.8% (−8.8, −0.7)** | **−23.5%** |
+| 2 | −0.4% (−6.6, +6.3) | **−17.5%** |
+| 4 | −2.1% (−11.1, +7.7) | **−17.7%** |
+
+- **By stage,** at one thread: MTF + RLE2 −17.1%. The table build was flagged +6.7%
+  slower, though its code is unchanged: with seven stages a run, one flagged by chance is
+  expected about one run in three.
+- **#207's own runs:**
+  - three on an AMD EPYC 7763 (Zen 3), with `wikidata` at 1 thread about −5% and the MTF
+    stage about −23%;
+  - a cross-model check on an EPYC 9V45 (Zen 5), with −2.1% (−3.8, −0.4) and −18.5%.
+- **No run drew an Intel CPU.** At 2 and 4 threads this run shows no change beyond noise.
+- **The output** was the same bytes on every corpus.
+
 ### <!-- 3 -->Performance
 
 - *(mtf)* libbzip2's two-level list, its first 32 bytes in two registers ([#207](https://github.com/lmmx/mibz2/pull/207))
