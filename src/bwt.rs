@@ -431,6 +431,10 @@ const SEGMENTS: usize = 256;
 /// 256-1024 segments on Wikidata's blocks, at one walk and at four at once
 const FLAGGED_LANES: usize = 32;
 pub(crate) const FLAGGED_SEGMENTS: usize = 512;
+/// The same in the room walk (`Segmented`'s): its bytes staged in a tile, a lane costs one
+/// tile row rather than a store stream of its own, so it keeps more misses in flight
+const ROOM_LANES: usize = 32;
+pub(crate) const ROOM_SEGMENTS: usize = 512;
 const PREFETCH: u8 = PF_L1;
 /// The walks' prefetch (their `PF`): none, or a hint into L1 (`prefetcht0`, `prfm
 /// pldl1keep`), into L2 (`prefetcht1`, `prfm pldl2keep`), or non-temporal (`prefetchnta`,
@@ -846,7 +850,7 @@ pub fn walk_segments_room_parts(
         walk(tt, orig_ptr, out);
         return false;
     }
-    room_segments::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    room_segments::<ROOM_LANES, PREFETCH>(tt, orig_ptr, s, ROOM_SEGMENTS);
     true
 }
 
@@ -1259,8 +1263,9 @@ fn room_segments<const L: usize, const PF: u8>(
     s.n = n;
 }
 
-/// The busy phase's chunk: at most this many offsets' bytes are staged per lane (an 8 KiB
-/// tile at 32 lanes, in L1) before they are copied to the lanes' buffers
+/// The busy phase's chunk: at most this many offsets' bytes are staged per lane (a tile of
+/// L x TILE bytes, in L1: 8 KiB at 32 lanes, 16 KiB at 64) before they are copied to the
+/// lanes' buffers
 const TILE: usize = 256;
 
 /// One offset of the room walk's busy phase, every lane stepped without testing its flag:
@@ -1294,41 +1299,33 @@ fn spec_offset<const L: usize, const PF: u8, const P: usize>(
             }
         }};
     }
-    // all 32 lanes unrolled, with no loop to control (the production width); any other
-    // width loops
-    if L == 32 {
-        spec!(0);
-        spec!(1);
-        spec!(2);
-        spec!(3);
-        spec!(4);
-        spec!(5);
-        spec!(6);
-        spec!(7);
-        spec!(8);
-        spec!(9);
-        spec!(10);
-        spec!(11);
-        spec!(12);
-        spec!(13);
-        spec!(14);
-        spec!(15);
-        spec!(16);
-        spec!(17);
-        spec!(18);
-        spec!(19);
-        spec!(20);
-        spec!(21);
-        spec!(22);
-        spec!(23);
-        spec!(24);
-        spec!(25);
-        spec!(26);
-        spec!(27);
-        spec!(28);
-        spec!(29);
-        spec!(30);
-        spec!(31);
+    macro_rules! spec8 {
+        ($b:expr) => {{
+            spec!($b);
+            spec!($b + 1);
+            spec!($b + 2);
+            spec!($b + 3);
+            spec!($b + 4);
+            spec!($b + 5);
+            spec!($b + 6);
+            spec!($b + 7);
+        }};
+    }
+    // 32, 48 or 64 lanes unrolled, with no loop to control (the production width is one of
+    // them); any other width loops
+    if L == 32 || L == 48 || L == 64 {
+        spec8!(0);
+        spec8!(8);
+        spec8!(16);
+        spec8!(24);
+        if L >= 48 {
+            spec8!(32);
+            spec8!(40);
+        }
+        if L == 64 {
+            spec8!(48);
+            spec8!(56);
+        }
     } else {
         let mut k = 0;
         while k < L {
