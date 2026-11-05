@@ -1,0 +1,250 @@
+{
+  "spec_commit": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
+  "trigger_comment_id": 6646251725,
+  "baseline_commit": "e26e3d9cbac6bcd2106b7070c869dd91fcd7217d",
+  "method": "Parse Callgrind function ID/name definitions before call arcs; sum named direct caller-to-callee inclusive Ir. No candidate execution. Every measured->decode call excludes exactly 16 wrapper Ir. Rest is decode minus build minus room_segments (includes assembly).",
+  "profiles": [
+    {
+      "arm": "m08",
+      "block": 0,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/m08-b0.out",
+      "blob": "fae7e9a7b991a443c27121ae5e97f19a39b16bb4",
+      "measured": 7573,
+      "decode": 7557,
+      "build": 3150,
+      "walk": null,
+      "assemble": null
+    },
+    {
+      "arm": "m08",
+      "block": 1,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/m08-b1.out",
+      "blob": "e8fd6a6c81b803e6d080672a0ff2406d606676f0",
+      "measured": 20184756,
+      "decode": 20184740,
+      "build": 5429062,
+      "walk": 9859825,
+      "assemble": 178822
+    },
+    {
+      "arm": "m08",
+      "block": 41,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/m08-b41.out",
+      "blob": "5c4cbd160894cbfc134e625ded99fd66be668a2e",
+      "measured": 19480510,
+      "decode": 19480494,
+      "build": 5280730,
+      "walk": 9676664,
+      "assemble": 166419
+    },
+    {
+      "arm": "m08",
+      "block": 97,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/m08-b97.out",
+      "blob": "231977d90fb24a9d3e3d5eaa7aa6128d21ba69a6",
+      "measured": 7942,
+      "decode": 7926,
+      "build": 3318,
+      "walk": null,
+      "assemble": null
+    },
+    {
+      "arm": "m08",
+      "block": 233,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/m08-b233.out",
+      "blob": "1b3bb50f5efdd54518f026f4758d33d641a58985",
+      "measured": 19989585,
+      "decode": 19989569,
+      "build": 5215492,
+      "walk": 9831055,
+      "assemble": 150585
+    },
+    {
+      "arm": "m08",
+      "block": 400,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/m08-b400.out",
+      "blob": "bfd1a2cce6c5c0c465a688143156696937c24c63",
+      "measured": 19490584,
+      "decode": 19490568,
+      "build": 5203460,
+      "walk": 9735075,
+      "assemble": 139713
+    },
+    {
+      "arm": "m08",
+      "block": 472,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/m08-b472.out",
+      "blob": "8162e9145a8265b8ead9f0c153680b2261e9cffa",
+      "measured": 8780,
+      "decode": 8764,
+      "build": 3539,
+      "walk": null,
+      "assemble": null
+    },
+    {
+      "arm": "p87",
+      "block": 0,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/p87-b0.out",
+      "blob": "1eaa4c5028690d1d8c6461855c78bb4be3f9855d",
+      "measured": 7296,
+      "decode": 7280,
+      "build": 3150,
+      "walk": null,
+      "assemble": null
+    },
+    {
+      "arm": "p87",
+      "block": 1,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/p87-b1.out",
+      "blob": "1c83bc563172523fe5770b8110f61c33288eac9c",
+      "measured": 20184356,
+      "decode": 20184340,
+      "build": 5429062,
+      "walk": 9859825,
+      "assemble": 178330
+    },
+    {
+      "arm": "p87",
+      "block": 41,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/p87-b41.out",
+      "blob": "b565dc68d47dba4a5fb865bd295bece9e66f6538",
+      "measured": 19480110,
+      "decode": 19480094,
+      "build": 5280730,
+      "walk": 9676664,
+      "assemble": 165940
+    },
+    {
+      "arm": "p87",
+      "block": 97,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/p87-b97.out",
+      "blob": "9ea0b25e08545f56a7bfa3f0007d8bc9ff65bf5f",
+      "measured": 7672,
+      "decode": 7656,
+      "build": 3318,
+      "walk": null,
+      "assemble": null
+    },
+    {
+      "arm": "p87",
+      "block": 233,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/p87-b233.out",
+      "blob": "9be748aca284e692e59e7a1ffe6133279967f1ab",
+      "measured": 19989153,
+      "decode": 19989137,
+      "build": 5215492,
+      "walk": 9831055,
+      "assemble": 150074
+    },
+    {
+      "arm": "p87",
+      "block": 400,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/p87-b400.out",
+      "blob": "ad375a14ae10f6c86bedcf1da62846399cdf30c2",
+      "measured": 19490042,
+      "decode": 19490026,
+      "build": 5203460,
+      "walk": 9735075,
+      "assemble": 139073
+    },
+    {
+      "arm": "p87",
+      "block": 472,
+      "path": "docs/journal/2026-11-05-p87-production-validation/cg/p87-b472.out",
+      "blob": "30417df545041e2e41902ed38c4739e3a259edc7",
+      "measured": 8510,
+      "decode": 8494,
+      "build": 3539,
+      "walk": null,
+      "assemble": null
+    }
+  ],
+  "normalized": [
+    {
+      "block": 0,
+      "base_decode": 7557,
+      "p87_decode": 7280,
+      "saving": 277,
+      "build": 3150,
+      "walk": null,
+      "rest": null,
+      "assemble": null,
+      "assemble_saving": null
+    },
+    {
+      "block": 1,
+      "base_decode": 20184740,
+      "p87_decode": 20184340,
+      "saving": 400,
+      "build": 5429062,
+      "walk": 9859825,
+      "rest": 4895453,
+      "assemble": 178330,
+      "assemble_saving": 492
+    },
+    {
+      "block": 41,
+      "base_decode": 19480494,
+      "p87_decode": 19480094,
+      "saving": 400,
+      "build": 5280730,
+      "walk": 9676664,
+      "rest": 4522700,
+      "assemble": 165940,
+      "assemble_saving": 479
+    },
+    {
+      "block": 97,
+      "base_decode": 7926,
+      "p87_decode": 7656,
+      "saving": 270,
+      "build": 3318,
+      "walk": null,
+      "rest": null,
+      "assemble": null,
+      "assemble_saving": null
+    },
+    {
+      "block": 233,
+      "base_decode": 19989569,
+      "p87_decode": 19989137,
+      "saving": 432,
+      "build": 5215492,
+      "walk": 9831055,
+      "rest": 4942590,
+      "assemble": 150074,
+      "assemble_saving": 511
+    },
+    {
+      "block": 400,
+      "base_decode": 19490568,
+      "p87_decode": 19490026,
+      "saving": 542,
+      "build": 5203460,
+      "walk": 9735075,
+      "rest": 4551491,
+      "assemble": 139073,
+      "assemble_saving": 640
+    },
+    {
+      "block": 472,
+      "base_decode": 8764,
+      "p87_decode": 8494,
+      "saving": 270,
+      "build": 3539,
+      "walk": null,
+      "rest": null,
+      "assemble": null,
+      "assemble_saving": null
+    }
+  ],
+  "compact_parity_b1": {
+    "production_decode": 20184340,
+    "old_compact_build": 4369204,
+    "old_compact_rest": 4953555,
+    "max_compact_walk": 10861581,
+    "rows": 899971,
+    "per_row": 12.068812217282558,
+    "qualification": "Cross-archive conditional parity; compact build/rest held at c493a45d. Not new compact/P87 measurement."
+  }
+}

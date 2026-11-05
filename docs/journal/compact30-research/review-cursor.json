@@ -313,7 +313,7 @@
       "completed": false,
       "spec_commit": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
       "baseline_commit": "e26e3d9cbac6bcd2106b7070c869dd91fcd7217d",
-      "progress": "Receipt recorded. Reviewing P87 validation at a995ce87 and reranking remaining proposals against merged e26e3d9c.",
+      "progress": "Replayed named inclusive call arcs in all 14 P87 profiles; wrapper-normalized totals and compact parity recorded. Final ranking/replay obligations and publication pending.",
       "report_path": "docs/journal/compact30-research/reviews/inbox-6646251725/report.md"
     }
   ]
