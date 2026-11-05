@@ -139,6 +139,11 @@ jobs:
 
       # The release profile (Cargo.toml's: fat LTO, one codegen unit), as published
       - name: Build the head
+        # RESEARCH PROBE (research/isa-v3-probe, not for merge): the head at x86-64-v3 (AVX2, BMI1/2,
+        # LZCNT, MOVBE, FMA), the base at the default x86-64. Same source, so the bench's per-stage
+        # table reads how much the ISA level alone is worth to each stage.
+        env:
+          RUSTFLAGS: "-C target-cpu=x86-64-v3"
         run: |
           cargo build --release --example ab --example windows --example phases
           mkdir -p bin && cp target/release/examples/ab bin/ab && cp target/release/examples/phases bin/phases
