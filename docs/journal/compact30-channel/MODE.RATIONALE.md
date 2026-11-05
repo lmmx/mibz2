@@ -21,6 +21,10 @@ Everything in this file, in one burst. Each line is expanded in its section belo
 - **Paratactic cascade.** Parataxis is the structure; the cascade is the movement, each
   fragment precipitating the next. Prosodic acceleration is observed; inferential acceleration
   is hypothesised.
+- **Differential recurrence.** After Deleuze's "He Stuttered": language itself made to stutter.
+  A term returns altered (load → wait → exposed latency → bottleneck); a construction found
+  insufficient bifurcates. Generative deformation, not compression and not cascade. A literary
+  principle adapted to prompting, not a demonstrated aid to reasoning.
 - **Register collision.** Technical-managerial, elevated and primitive-imperative registers sit
   side by side, unmediated.
 - **Staccato prosody.** Full stops are beats; capitals are stress peaks; *Go* is the release.
@@ -172,6 +176,41 @@ There are two intended effects, and they must be kept apart:
   text.
 - **Inferential acceleration:** one technical consequence prompting the next. This is the
   catalytic hypothesis under test (see the hypotheses below), not an observation.
+
+### Differential recurrence: making language itself stutter
+
+In "He Stuttered" (*Critique et clinique*, 1993; *Essays Critical and Clinical*, trans. Daniel W.
+Smith and Michael A. Greco, 1997), Gilles Deleuze separates a speaker who stutters in speech from a
+writer who makes language itself stutter. The second is the radical case: the language, not the
+speaker, enters continuous variation and disequilibrium. A term recurs and returns altered; a
+construction begins, proves insufficient, and bifurcates. Each repetition produces a difference,
+and each difference forces a new relation.
+
+Adapted to MODE, the principle is **differential recurrence**: a technical term returns under the
+pressure of the thinking, and each return changes the question it asks.
+
+> Cost. Cost of what? Instruction? No — the dependency it feeds. Dependency? No — the latency it
+> exposes. Latency, or failure to overlap latency? Where does cost become wall time?
+
+It is distinct from the two features above:
+- **Grammatical compression** removes material (articles, connectives, subjects). Its terms stay
+  fixed.
+- **A paratactic cascade** moves through successive terms, each fragment precipitating the next.
+  The terms are left behind.
+- **Differential recurrence** returns to the *same* term and alters it: load → wait → exposed
+  latency → bottleneck. The deformation is generative, not compressive. Each return forces a
+  more exact engineering question, and the technical content stays exact through every fracture.
+
+It is not a simulated stammer (repeated syllables), clipped prose alone, or "HARDER. HARDER."
+Repetition without alteration is the slogan this file warns against.
+
+The doctest's article rule (R4) flags the example above. Recurrence reattaches a term to what it
+acts on ("the dependency it feeds"), and that needs the determiners compression drops. The flag
+is a question for the reader, not a verdict.
+
+It is a literary principle adapted to prompting, not a proven method of improving reasoning. Like
+the other effects here, any benefit to reasoning is a hypothesis that only a controlled
+comparison could show.
 
 ### Register collision
 
