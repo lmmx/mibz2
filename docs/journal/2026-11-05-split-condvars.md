@@ -43,7 +43,7 @@ There were 473 worker notifies and 473 reader notifies in every run, one each pe
 ## Result: rejected by its own falsifier
 
 - **The waits are real, not wake-driven.** At 4 threads the scanner spends about 70% of the
-  wall waiting for a slot, because the window is full. The reader waits about 90% of it,
+  wall waiting for a slot, because the window is full. The reader waits 98-99% of it,
   because the next block is not done. Both mean the workers bind; neither is a lost or
   late wake.
 - **The wasted wakes come to about one a block** at 4 threads: about 460 for 473 blocks.
