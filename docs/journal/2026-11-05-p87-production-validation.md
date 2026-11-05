@@ -122,3 +122,77 @@ FILE BLOCK 1`. The profiles, stdout (length and CRC) and consoles are in `cg/`.
 difference is a few hundred instructions a block, consistent with the allocation it removes. A
 single decode on a fresh scratch includes `rle`'s first growth, so this is not a steady-state
 saving, and none is claimed.
+
+## Measured: the two bench runs, and the verdict
+
+**Timing of the amendment.** The registration allowed amendments "before the first bench comment
+on this PR is posted". The bench workflow posts a "Running" placeholder before it measures: one
+was posted at 00:16:10 UTC, and the amendment (ef28ad32) came at about 00:20. So the literal
+cutoff had passed. When the amendment was made, the Coordinator observed the run still in progress, with no
+artifacts and only the placeholder comment, and states that nothing measured informed the
+amendment. That observation is the Coordinator's own, made through the GitHub API at about 00:20.
+Neither the Researcher (6645977057) nor the Guardian (D024, D025) attests to it. The
+verdict below is read under both the original rule (d6401b55) and the amended one.
+
+**The runs.** Bench 3.2.0, 10 paired rounds, against master 08e7fc3b, each on a runner with two
+physical cores and four logical CPUs (`env.json`).
+- **The measured source is the same in both:** ee12bb9e differs from ef28ad32 only in
+  `examples/occupancy.rs`, which the bench doesn't build. That is equivalence of source, not a
+  checked identity of the executables.
+- **The corpora:** `wikidata` is byte-identical in both runs (sha256 `82f65ace0731962d…`). The
+  generated `text` corpus is not: 1,687,702 bytes (`81b3b27d…`) in run 1 against 1,690,460
+  (`42f88d7c…`) in run 2. Each run's paired comparison holds within itself, but the `text` rows
+  aren't like for like across the two runs (Guardian D025).
+- **The archive:** each run's report, `result.json`, `env.json`, `ab-summary.md`, and the
+  sample-level `runs.jsonl` and `stages.jsonl`, are in `bench-run1-ef28ad32/` and
+  `bench-run2-ee12bb9e/`, copied from the Actions artifacts.
+
+| `wikidata` | run 1, ef28ad32, Xeon Platinum 8573C | run 2, ee12bb9e, Xeon 6975P-C |
+|---|--:|--:|
+| 1 thread, wall | +0.0% (−0.6, +0.7) | +0.0% (−0.2, +0.2) |
+| 2 threads, wall | −0.2% (−1.8, +1.4) | −1.1% (−4.8, +2.8) |
+| 4 threads, wall | **−2.2% (−4.0, −0.5) faster** | −1.1% (−2.3, +0.2) |
+| 4 threads, CPU | −1.3% (−2.9, +0.3) | −0.7% (−1.9, +0.5) |
+| 4 threads, peak RSS | 71 → 66 MB (−6.8%, **less**) | 71 → 66 MB (−6.8%, **less**) |
+
+- **Correctness:** same bytes on all 21 rows of both runs, and CI green at ee12bb9e, Miri and
+  occupancy included.
+- **Instructions:** at or below master on all seven blocks (above).
+- **Benefit:**
+  - **amended rule:** 4-thread wall is faster beyond noise in run 1. Run 2's estimate is
+    favourable but inconclusive, and not slower. **Met;**
+  - **original rule:** 4-thread CPU isn't beyond noise in either run. Peak RSS is lower beyond
+    noise in both. **Met.**
+- **No harm:** no wall row is flagged slower in either run, so there is no harm signal awaiting a
+  repeat, and no third run. **Met under both rules.** This is the absence of a detected harm, not a
+  demonstration of safety.
+- **What isn't excluded.** Several rows have wide upper bounds, and a harm of that size on them
+  isn't excluded:
+  - run 1: `random` 1 thread +6.4% (upper +17.7%), `records` 1 thread +2.6% (+9.3%), `pattern`
+    4 threads −3.0% (+5.1%);
+  - run 2: `onebyte` 2 threads +0.7% (+9.2%), `pattern` 2 threads −3.4% (+8.0%), `runs` 2 threads
+    +1.2% (+6.4%), and `pattern` 4 threads CPU +2.7% (+10.2%).
+- **The stage table** flags RLE1 slower in both runs: +2.6% (+2.0, +3.2) and +3.9% (+3.1, +4.8).
+  - Run 1's stage total is also slower, +1.2% (+0.1, +2.4); run 2's isn't, −0.1% (−0.3, +0.2).
+  - The stage harness, `examples/phases.rs`, times RLE1 over a separately walked buffer, so its
+    timed stages don't measure production's in-place path.
+  - But after the first timed pass, its `main` calls production `mibz2::decode` for parity, and
+    that path does invert in place. So the untimed run of the changed code could affect later
+    passes, through cache, allocation or thermal state. That is a hypothesis, not an identified
+    cause (Researcher 6646303348).
+  - #128's integration record saw the same RLE1 shift (+3.2%). It is recorded the same way here:
+    an unexplained between-build sensitivity, neither dismissed as noise nor shown unrelated to
+    the change.
+  - **Next, if it matters:** audit the retained phase binaries, callers and layout first, without
+    timing. Only then, if needed, record first and later passes separately around the parity call.
+
+**Verdict.** The registered conditions hold under both rules, with no flagged harm awaiting a repeat,
+so STEWARDSHIP's gate on measured code is met. The amendment was disclosed, but it was made after
+the literal cutoff, so it is not retroactively preregistered. #164 merged as e26e3d9c.
+- **Claimed:** a faster `wikidata` decode at 4 threads in one run, favourable but inconclusive in
+  the other, with less memory in both.
+- **Not claimed:**
+  - why it is faster: the change moves the output buffer and removes an allocation together;
+  - a steady-state instruction saving;
+  - that harm is excluded on the rows listed above;
+  - that the four-worker campaign objective is met.
