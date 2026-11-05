@@ -433,7 +433,7 @@ const FLAGGED_LANES: usize = 32;
 pub(crate) const FLAGGED_SEGMENTS: usize = 512;
 /// The same in the room walk (`Segmented`'s): its bytes staged in a tile, a lane costs one
 /// tile row rather than a store stream of its own, so it keeps more misses in flight
-const ROOM_LANES: usize = 32;
+const ROOM_LANES: usize = 64;
 pub(crate) const ROOM_SEGMENTS: usize = 512;
 const PREFETCH: u8 = PF_L1;
 /// The walks' prefetch (their `PF`): none, or a hint into L1 (`prefetcht0`, `prfm
