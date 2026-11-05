@@ -1,0 +1,8 @@
+round 7 h4: 1048 MB/s
+434 blocks, 207.0 MB, 8 timed rounds; the T-vector phase only (build + walk), not the decoder; threads not pinned
+| arm | blocks live | cores | MB/s, median | vs o1, paired: mean ±95% (min-max) | build MB/s | walk MB/s | walk vs o1, paired | walk: busiest thread's bytes / mean, median | walk: last start, end spread (µs a block), medians | rounds misplaced |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| o1 | 1 | 1 | 315 | 1.000 ±0.000 (1.000-1.000) | 1113 | 442 | 1.000 |  |  | 0 |
+| h1 | 1 | 1 | 274 | 0.815 ±0.067 (0.648-0.902) | 4723 | 291 | 0.613 |  |  | 0 |
+| o4 | 4 | 4 | 1270 | 3.799 ±0.338 (3.258-4.332) | 4399 | 1754 | 3.766 |  |  | 0 |
+| h4 | 4 | 4 | 931 | 2.815 ±0.249 (2.270-3.351) | 16935 | 997 | 2.138 |  |  | 0 |

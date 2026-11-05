@@ -1,0 +1,55 @@
+== wikidata-20261026
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 434 blocks, 207006515 rows: exact output and CRC on every block; groups 6469082: RUN 4968098 (76.80%), FOR 1
+permille 50: 434 blocks, 207006515 rows: exact output and CRC on every block; groups 6469082: RUN 4713732 (72.87%), FOR 
+permille 1000: 434 blocks, 207006515 rows: exact output and CRC on every block; groups 6469082: RUN 0 (0.00%), FOR 0 (0.
+== wikidata-fitted
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 431 blocks, 209706557 rows: exact output and CRC on every block; groups 6553457: RUN 5071195 (77.38%), FOR 1
+permille 50: 431 blocks, 209706557 rows: exact output and CRC on every block; groups 6553457: RUN 4811079 (73.41%), FOR 
+permille 1000: 431 blocks, 209706557 rows: exact output and CRC on every block; groups 6553457: RUN 0 (0.00%), FOR 0 (0.
+== wikidata-heldout
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 473 blocks, 235773776 rows: exact output and CRC on every block; groups 7368065: RUN 5789546 (78.58%), FOR 1
+permille 50: 473 blocks, 235773776 rows: exact output and CRC on every block; groups 7368065: RUN 5493068 (74.55%), FOR 
+permille 1000: 473 blocks, 235773776 rows: exact output and CRC on every block; groups 7368065: RUN 0 (0.00%), FOR 0 (0.
+== mixed-independent
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 34 (0.05%), FOR 58078 (92.89%
+permille 50: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 32 (0.05%), FOR 55095 (88.12
+permille 1000: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 0 (0.00%), FOR 0 (0.00%), 
+== random
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00%), FOR 247784 (99.11
+permille 50: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00%), FOR 235124 (94.0
+permille 1000: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00%), FOR 0 (0.00%),
+== records
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 11 blocks, 9600002 rows: exact output and CRC on every block; groups 300006: RUN 0 (0.00%), FOR 297295 (99.1
+permille 50: 11 blocks, 9600002 rows: exact output and CRC on every block; groups 300006: RUN 0 (0.00%), FOR 282082 (94.
+permille 1000: 11 blocks, 9600002 rows: exact output and CRC on every block; groups 300006: RUN 0 (0.00%), FOR 0 (0.00%)
+== text
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 13 blocks, 11036297 rows: exact output and CRC on every block; groups 344892: RUN 96897 (28.09%), FOR 237051
+permille 50: 13 blocks, 11036297 rows: exact output and CRC on every block; groups 344892: RUN 92083 (26.70%), FOR 22478
+permille 1000: 13 blocks, 11036297 rows: exact output and CRC on every block; groups 344892: RUN 0 (0.00%), FOR 0 (0.00%
+== text-l1
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 59562 (17.27%), FOR 26905
+permille 50: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 56569 (16.40%), FOR 2537
+permille 1000: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 0 (0.00%), FOR 0 (0.00
+== text-l5
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 23 blocks, 11036297 rows: exact output and CRC on every block; groups 344898: RUN 78178 (22.67%), FOR 254259
+permille 50: 23 blocks, 11036297 rows: exact output and CRC on every block; groups 344898: RUN 73981 (21.45%), FOR 24097
+permille 1000: 23 blocks, 11036297 rows: exact output and CRC on every block; groups 344898: RUN 0 (0.00%), FOR 0 (0.00%
+== period-3
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 84369 (99.99%), FOR 0 (0.00%)
+permille 50: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 80055 (94.88%), FOR 0 (0.00%
+permille 1000: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 0 (0.00%), FOR 0 (0.00%), 
+== zeros
+h-check: the h walk and the b, k and j walks (BMI2)
+permille 0: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 1654 (99.94%), FOR 0 (0.00%), RA
+permille 50: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 1559 (94.20%), FOR 0 (0.00%), R
+permille 1000: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 0 (0.00%), FOR 0 (0.00%), RAW

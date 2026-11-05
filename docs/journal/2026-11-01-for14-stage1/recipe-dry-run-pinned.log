@@ -1,0 +1,67 @@
+<corpora>/wikidata-20261026.bz2: OK
+for14: the frozen commit 7d7962fce96b4009a30ee85fa935a0a20bfa0607, corpus checked
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling find-msvc-tools v0.1.15
+   Compiling shlex v2.0.1
+   Compiling libm v0.2.16
+   Compiling cc v1.10.0
+   Compiling thiserror v2.0.21
+   Compiling pkg-config v0.3.34
+   Compiling libc v0.2.191
+   Compiling syn v3.0.9
+   Compiling bytemuck v1.25.2
+   Compiling fearless_simd v1.2.0
+   Compiling bzip2-sys v0.1.13+1.0.8
+   Compiling mibz2 v0.2.1 (<repo>/target/for14-pin)
+   Compiling thiserror-impl v2.0.21
+   Compiling bzip2 v0.4.4
+   Compiling pbz2-core v0.2.0
+   Compiling pbz2 v0.2.0
+    Finished `release` profile [optimized + debuginfo] target(s) in 23.50s
+# The cooperative inversion pilot (7d7962f, 2026-11-01T23:02:28Z)
+
+- **Machine:** Intel(R) Xeon(R) Processor @ 2.10GHz; 4 CPUs on 4 physical cores used (0,1,2,3); L3 266240K shared by CPUs 0-3
+- **libsais:** not built
+- **Load:** 0.77 0.48 0.37
+- **Corpus:** <corpora>/wikidata-20261026.bz2 (11953225 bytes, sha256 cf13f4394e4ea0a3...)
+- **Build:** 7d7962fce96b4009a30ee85fa935a0a20bfa0607; **timing boundary:** the T-vector phase only, build + walk (the MTF outside the timing)
+
+## One block on k cores (block)
+
+
+## N blocks in flight on k cores each (grid, 1 rounds)
+
+434 blocks, 207.0 MB, 1 timed rounds; the T-vector phase only (build + walk), not the decoder; each thread pinned to its own CPU, checked
+| arm | blocks live | cores | MB/s, median | vs p1, paired: mean ±95% (min-max) | build MB/s | walk MB/s | walk vs p1, paired | walk: busiest thread's bytes / mean, median | walk: last start, end spread (µs a block), medians | rounds misplaced |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| p1 | 1 | 1 | 331 | 1.000 ±NaN (1.000-1.000) | 1314 | 439 | 1.000 |  |  | 0 |
+| o1 | 1 | 1 | 367 | 1.109 ±NaN (1.109-1.109) | 1207 | 528 | 1.202 |  |  | 0 |
+| h1 | 1 | 1 | 297 | 0.897 ±NaN (0.897-0.897) | 4958 | 316 | 0.720 |  |  | 0 |
+| p4 | 4 | 4 | 1373 | 4.145 ±NaN (4.145-4.145) | 5241 | 1882 | 4.284 |  |  | 0 |
+| o4 | 4 | 4 | 1357 | 4.097 ±NaN (4.097-4.097) | 4625 | 1929 | 4.391 |  |  | 0 |
+| h4 | 4 | 4 | 1039 | 3.137 ±NaN (3.137-3.137) | 16870 | 1114 | 2.536 |  |  | 0 |
+h: records made from each block's T-vector and checked row by row: 414.0 MB of records, 15.79 MB raw
+checked p1: every block's output the room walk's
+checked o1: every block's output the room walk's
+checked h1: every block's output the room walk's
+checked p4: every block's output the room walk's
+checked o4: every block's output the room walk's
+checked h4: every block's output the room walk's
+wrote coop-20261101T230228Z.md and coop-20261101T230228Z.jsonl
+1 rounds with every arm; pinned and placed: True
+
+walk phase (speed ratios, mean [95% interval], lag-1 r)
+  h1/o1: 0.599 [nan, nan]  r1 +nan
+  h4/o4: 0.578 [nan, nan]  r1 +nan
+  o1/p1: 1.202 [nan, nan]  r1 +nan
+  o4/p4: 1.025 [nan, nan]  r1 +nan
+
+whole phase (speed ratios, mean [95% interval], lag-1 r)
+  h1/o1: 0.809 [nan, nan]  r1 +nan
+  h4/o4: 0.766 [nan, nan]  r1 +nan
+
+calibration (G1): o1/p1 fails, o4/p4 fails
+W1 against the bounds: 0.599 (0.25 saving needs 0.774; break-even 0.669)
+decision: VOID: the control's walk does not reproduce production's (G1)

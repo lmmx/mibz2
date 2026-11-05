@@ -1,0 +1,24 @@
+h-check: the h walk and the b walk (BMI2)
+permille 0: 434 blocks, 207006515 rows: exact output and CRC on every block; groups 6469082: RUN 4968098 (76.8
+permille 50: 434 blocks, 207006515 rows: exact output and CRC on every block; groups 6469082: RUN 4713732 (72.
+permille 1000: 434 blocks, 207006515 rows: exact output and CRC on every block; groups 6469082: RUN 0 (0.00%),
+h-check: the h walk and the b walk (BMI2)
+permille 0: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 34 (0.05%), FOR 580
+permille 50: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 32 (0.05%), FOR 55
+permille 1000: 3 blocks, 2000689 rows: exact output and CRC on every block; groups 62523: RUN 0 (0.00%), FOR 0
+h-check: the h walk and the b walk (BMI2)
+permille 0: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 59562 (17.27%),
+permille 50: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 56569 (16.40%)
+permille 1000: 111 blocks, 11036297 rows: exact output and CRC on every block; groups 344949: RUN 0 (0.00%), F
+h-check: the h walk and the b walk (BMI2)
+permille 0: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 84369 (99.99%), FOR
+permille 50: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 80055 (94.88%), FO
+permille 1000: 4 blocks, 2700000 rows: exact output and CRC on every block; groups 84377: RUN 0 (0.00%), FOR 0
+h-check: the h walk and the b walk (BMI2)
+permille 0: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 1654 (99.94%), FOR 0 (
+permille 50: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 1559 (94.20%), FOR 0 
+permille 1000: 1 blocks, 52945 rows: exact output and CRC on every block; groups 1655: RUN 0 (0.00%), FOR 0 (0
+h-check: the h walk and the b walk (BMI2)
+permille 0: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00%), FOR 247
+permille 50: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00%), FOR 23
+permille 1000: 9 blocks, 8000003 rows: exact output and CRC on every block; groups 250005: RUN 0 (0.00%), FOR 
