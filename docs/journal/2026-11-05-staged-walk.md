@@ -73,3 +73,35 @@ for the per-lane prefetch. It is not sent to CI. The branch is kept as a referen
   against the new master, and the rule is applied to that run.
 - **No harm (required):** as in `2026-11-05-deferred-flag-walk.md`. A wall row flagged slower
   is settled by one more run on the same head, with at most three runs on the final head.
+
+## Result: merged as #171 (6b337819)
+
+#168 was closed unmerged, so the rule was read against master with both changes together.
+There were five CI runs (bench 3.2.0, 10 paired rounds each). The first three ran on head 0a32416
+against 4d4709d; the last two ran on head 2301189 (master e7c30a8 merged in) against e7c30a8.
+
+| run | runner | `wikidata` wall at 1 / 2 / 4 threads | CPU at 4 threads | amplification at 4 threads |
+|---|---|---|---|---|
+| 1 | EPYC 9V45 | −0.1% / −3.2% / **−14.4%** | **−17.6%** | **−17.5%** |
+| 2 | EPYC 7763 | **−7.3%** / **−9.8%** / **−10.4%** | **−11.5%** | −4.5% |
+| 3 | EPYC 7763 | **−12.6%** / **−9.8%** / **−13.0%** | **−15.2%** | −3.0% |
+| 4 | Xeon 8573C | **−4.7%** / **−4.8%** / **−5.2%** | **−7.0%** | **−2.4%** |
+| 5 | EPYC 9V45 | +0.4% / −1.1% / **−13.9%** | **−16.3%** | **−16.6%** |
+
+Bold marks a 95% interval that excludes no change.
+
+- **Benefit:** met in every run. No `wikidata` figure was slower.
+- **No harm:** unresolved, as the rule requires it to be reported.
+  - `runs` at 1 thread was flagged slower twice: run 2 (+1.7%, +0.0 to +3.4) and run 4 (+1.9%, +0.1 to +3.7).
+  - Each time, the next run on the same head did not repeat the flag: run 3 −0.5%, run 5 +0.2%.
+  - Instructions do not back a staging cost on `runs`. Its single block runs 0.8% fewer instructions (17,756,248 against 17,904,270).
+  - Most of that decode is code this change leaves alone (CRC, an RLE1 memset, the build, MTF). That code moved in the binary: `crc::clmul_update` goes from 64-byte aligned to 16 mod 64. A code-layout check is under way.
+- **Mechanism:** the gain is mostly lower contention between SMT siblings, not fewer instructions.
+  - At 4 threads on Zen 5, amplification fell by about a sixth (the CPU spent on the same bytes, at 4 threads against 1).
+  - At 1 thread on Zen 5, wall was unchanged.
+  - On Zen 3 (7763) and Sapphire Rapids (8573C), the 1-thread gain was 5–13%.
+- **Correctness:**
+  - An adversarial review of the busy phase and of the tail passes (#173) found no defect.
+  - It found coverage gaps at chunk edges for 32 lanes. `room_walk_staged_chunk_edges` now requires each of those states.
+  - Four mutants planted at chunk edges each fail it within 0.25 s.
+  - Without the test, the two at the queue's exhaustion fail only `room_walk_crafted_permutations`, a randomised test that takes 35–85 s.
