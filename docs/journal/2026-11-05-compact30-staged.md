@@ -162,9 +162,16 @@ Compact30's table for a 900k-row block is about 1.95 MB.
 - **On Zen 5's 1 MB L2** it never fits, and the extra step work shows plainly.
 
 So the gain is L2 residency, not compactness as such. A table that stayed resident at four
-copies would need about 1 byte a row on the 8573C, and about 0.5 byte on Zen 4/5. That is below
-the information in a row index, about 2.5 bytes for 900k rows. Residency at four copies is out of
-reach for any T-vector encoding.
+copies would need about 1 byte a row on the 8573C, and about 0.5 byte on Zen 4/5.
+- **One byte a row** is the block's own bytes, with nothing left for the rank checkpoints that
+  let compact30 (2.13 bytes) undercut a stored row index (about 2.5 bytes at 900k rows).
+- **Half a byte** is below the block's bytes. It needs an entropy-compressed rank structure, of
+  the wavelet or run-length FM-index kind.
+- **Either costs** several dependent loads and popcounts a step. Compact30's 4 extra
+  instructions already sink it.
+
+So residency at four copies is out of reach at any step cost the walk can bear. This is an
+inference from the step counts, not a measurement.
 
 **Parked, not pursued:** a model-specific dispatch to compact30 when the table fits the per-core
 L2 at one thread a core. Today that means 2 MB L2 at 1–2 threads.
