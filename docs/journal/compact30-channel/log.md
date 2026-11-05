@@ -405,3 +405,13 @@ Verbatim:
   - The staged compact30 build (C-resolve, layout twin L) runs alongside. Its RAW scheme was
     chosen before registration: the ordinary step is the same in every scheme, and C-resolve
     keeps master's one-byte-per-lane-per-offset invariant. D is the named follow-up.
+- **MODE amended again** at Louis's instruction (f6581f76; e6835134 was an intermediate
+  version): differential proliferation, one surgical addition to the Coordinator stanza. Swarm
+  structure is transformed by its own discoveries, and agent count follows generative
+  uncertainty and expected gain.
+  - **New front, outside the census:** a radix-partitioned walk. Steps are queued by T-vector
+    region and served while L2-resident. No partitioned or region-queued walk appears in the
+    journals or branches.
+  - **Its two rival routes:** an analytic design and a trace-driven cache simulation.
+  - **Their collision** with compact30 C-resolve and master's staged walk decides whether a
+    prototype is built.
