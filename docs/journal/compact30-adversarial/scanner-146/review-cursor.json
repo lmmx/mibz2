@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Four-worker causal assessment completed; awaiting next qualifying comment",
+  "state": "P87 registration review completed; awaiting next qualifying inbox comment",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -67,9 +67,10 @@
     6643992749,
     6644051935,
     6644115799,
-    6644912625
+    6644912625,
+    6645922140
   ],
-  "last_processed_comment_id": 6644912625,
+  "last_processed_comment_id": 6645922140,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -359,6 +360,16 @@
       "report_path": "docs/journal/compact30-adversarial/scanner-146/causal-scope-6644912625/report.md",
       "review_comment_id": 6645002054,
       "disposition": "Reviewed full attribution erratum, P87 closed diagnostic and production integration. Positive intervention/interaction does not identify mediation or larger penalty. Superseded prior unrun-reuse framing; supplied topology and measurement discriminators, no new experiments."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6645922140,
+      "report_commit": "da2abea93591123685ae8187cc84bd319a21653a",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/p87-registration-6645922140.md",
+      "review_comment_pr": 145,
+      "review_comment_id": 6645977057,
+      "disposition": "Repeated-detection screen is not no-harm assurance; RSS-only gate claim unsupported; causal bundle preserved; bounded existing-data and warm-scratch diagnostics proposed. No benchmarks or implementation."
     }
   ],
   "active_delegations": [],
@@ -378,18 +389,12 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6644912625,
-      6644979187
+      6645922140
     ],
     "handled": [
-      6644912625
+      6645922140
     ],
-    "skipped": [
-      {
-        "comment_id": 6644979187,
-        "reason": "No TO line naming researcher"
-      }
-    ],
+    "skipped": [],
     "automation_modified": false
   },
   "reported_programme_status": {
