@@ -65,6 +65,12 @@ CUTOVER = min(r["offset"] for r in ROLES.values())
 # Assignments: what wakes a role in its inbox. Everything else is a publication.
 ASSIGNMENTS = {"CHECKPOINT", "PROPOSAL"}
 MARKER = "<!-- routing-tripwire: {id} -->"
+# Misroutes already handled, and how: `audit` reports them apart and doesn't fail on them.
+RESOLVED = {
+    6652503445: "re-dispatched to #160 as 6653416078 (logged on the channel)",
+    6653242752: "re-dispatched to #160 as 6653416078 (logged on the channel)",
+    6654146350: "a deliberate tripwire test; its first run could not comment on locked #145 (#187)",
+}
 
 
 def header(body):
@@ -249,7 +255,7 @@ def audit(since):
                 reason = misrouted(issue, c["body"], c["id"])
                 if reason:
                     found.append({"issue": issue, "comment": c["id"], "at": c["created_at"],
-                                  "reason": reason})
+                                  "reason": reason, "resolved": RESOLVED.get(c["id"])})
     return found
 
 
@@ -288,7 +294,7 @@ def main(argv=None):
                 return 0
             out = {"misrouted": bool(reason), "reason": reason}; ok = not reason
         elif args.cmd == "audit":
-            out = audit(args.since); ok = not out
+            out = audit(args.since); ok = not [f for f in out if not f["resolved"]]
         else:
             out = head_sha(args.pr, args.sha); ok = out["ok"]
     except (OSError, ValueError, KeyError) as e:
