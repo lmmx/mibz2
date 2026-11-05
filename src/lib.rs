@@ -103,7 +103,7 @@ use std::fmt;
 /// The SIMD kernels to use, detected once at run time (or forced to the scalar ones)
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Kernels {
-    /// AVX2: the move-to-front and RLE1
+    /// AVX2 (with BMI1 and BMI2): the move-to-front and RLE1
     pub avx2: bool,
     /// PCLMULQDQ (with SSE4.1 and SSSE3): the CRC
     pub clmul: bool,
@@ -124,7 +124,8 @@ impl Kernels {
         {
             Kernels {
                 avx2: std::is_x86_feature_detected!("avx2")
-                    && std::is_x86_feature_detected!("bmi1"),
+                    && std::is_x86_feature_detected!("bmi1")
+                    && std::is_x86_feature_detected!("bmi2"),
                 clmul: std::is_x86_feature_detected!("pclmulqdq")
                     && std::is_x86_feature_detected!("sse4.1")
                     && std::is_x86_feature_detected!("ssse3"),

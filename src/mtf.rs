@@ -1,7 +1,9 @@
 //! Phase 2: RUNA/RUNB runs and move-to-front undone, into the BWT's last column (`ll`)
 //! and its byte counts, with libbzip2's checks: a run's weight below 2^21, and the block
 //! no longer than its stream's level allows. The scalar loop, or (AVX2) the move of an
-//! index below 32, nearly all of them, as one blend of the list and the list a byte on.
+//! index below 32, nearly all of them, as one blend of the list and the list a byte on,
+//! with the runs read 64 symbols at a time as bit masks: a step a byte symbol, its run
+//! with it, and no branch on a symbol's kind.
 
 use super::block::Symbols;
 use super::{ErrorKind, Kernels};
@@ -73,8 +75,80 @@ pub fn mtf_scalar(
     Ok(ll.len())
 }
 
+/// The run symbols in a row that libbzip2 refuses: the 22nd's weight is 2^21
+const RUN_SYMBOLS_REFUSED: u32 = 22;
+
+/// A window of 64 symbols from `w`, as bit masks (bit j for `w[j]`): the byte symbols
+/// (s >= 2), the symbols other than RUNA (s != 0), and whether the window holds the
+/// end-of-block symbol or `RUN_SYMBOLS_REFUSED` run symbols in a row (the window is then
+/// left to the symbol loop)
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
+#[inline]
+unsafe fn window64(w: *const u16, eob: u16) -> (u64, u64, bool) {
+    use std::arch::x86_64::*;
+    let z = _mm256_setzero_si256();
+    let e = _mm256_set1_epi16(eob as i16);
+    let s0 = _mm256_loadu_si256(w as *const __m256i);
+    let s1 = _mm256_loadu_si256(w.add(16) as *const __m256i);
+    let s2 = _mm256_loadu_si256(w.add(32) as *const __m256i);
+    let s3 = _mm256_loadu_si256(w.add(48) as *const __m256i);
+    // run symbols (s >> 1 == 0) and RUNA (s == 0), each 16-bit lane 0 or -1
+    macro_rules! run {
+        ($x:expr) => {
+            _mm256_cmpeq_epi16(_mm256_srli_epi16::<1>($x), z)
+        };
+    }
+    let ends = _mm256_or_si256(
+        _mm256_or_si256(_mm256_cmpeq_epi16(s0, e), _mm256_cmpeq_epi16(s1, e)),
+        _mm256_or_si256(_mm256_cmpeq_epi16(s2, e), _mm256_cmpeq_epi16(s3, e)),
+    );
+    // 32 lanes' masks in order: the packs interleave the 128-bit halves, the permute
+    // puts them back
+    macro_rules! bits {
+        ($x:expr, $y:expr) => {
+            _mm256_movemask_epi8(_mm256_permute4x64_epi64::<0b11_01_10_00>(
+                _mm256_packs_epi16($x, $y),
+            )) as u32 as u64
+        };
+    }
+    let runs = bits!(run!(s0), run!(s1)) | bits!(run!(s2), run!(s3)) << 32;
+    let runa = bits!(_mm256_cmpeq_epi16(s0, z), _mm256_cmpeq_epi16(s1, z))
+        | bits!(_mm256_cmpeq_epi16(s2, z), _mm256_cmpeq_epi16(s3, z)) << 32;
+    // bit j of x set where symbols j.. j + 21 are all run symbols
+    let mut x = runs;
+    x &= x >> 1;
+    x &= x >> 2;
+    x &= x >> 4;
+    x &= x >> 8;
+    x &= x >> (RUN_SYMBOLS_REFUSED - 16);
+    (!runs, !runa, x != 0 || _mm256_testz_si256(ends, ends) == 0)
+}
+
+/// The AVX2 kernel. Its symbol loop is `mtf_scalar`'s, the list held as bytes and moved
+/// by a blend (an index below 32) or a copy. After the block's first byte symbol it runs
+/// the window loop, one step a byte symbol with the run before it, until a window it
+/// leaves to the symbol loop: the block's last symbols (the end-of-block symbol among
+/// them), a run of 22 symbols (refused), or a step that would end within 64 bytes of
+/// the block's limit. The symbol loop then finishes the block from that run's start.
+///
+/// The window loop: 64 symbols from a run's start as bit masks, their byte symbols taken
+/// in order (tzcnt, blsr). A byte symbol's run is the bijective base-2 number of the run
+/// symbols before it, sum (s + 1) 2^k, which is 2^m - 1 plus their RUNB bits. With the
+/// byte symbol's own bit (bit m, set in the not-RUNA mask) that is the run plus one: the
+/// bits from the last byte symbol to this one, read with one shift and a bzhi. No branch
+/// on a symbol's kind, so none mispredicted from one symbol to the next: the loop's one
+/// unpredictable exit is once a window.
+///
+/// Each step writes a segment: the byte the step before moved to the front, and the run
+/// of it before this step's byte symbol, `seg` bytes as two 32-byte stores (or a fill
+/// above 64), counted at once. Its byte is then moved, and written by the next step (or
+/// at the loop's exit). Every segment ends at most at `max - 64`, so the stores past it
+/// stay inside `ll`'s capacity, the checks that `mtf_scalar` makes on the run and the
+/// byte both pass, and a step that would fail it is left to the symbol loop, which makes
+/// them.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1,bmi2")]
 unsafe fn mtf_avx2(
     b: &Symbols,
     ll: &mut Vec<u8>,
@@ -99,13 +173,38 @@ unsafe fn mtf_avx2(
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
         25, 26, 27, 28, 29, 30, 31,
     );
+    // symbol s's byte (s >= 2: index s - 1 < 256, a symbol below the alphabet, at most
+    // 257) moved to the front
+    macro_rules! move_front {
+        ($s:expr) => {{
+            let s = $s as usize;
+            let v = *base.add(s - 1);
+            if s <= 32 {
+                let old = _mm256_load_si256(base as *const __m256i);
+                let shifted = _mm256_loadu_si256(base.sub(1) as *const __m256i);
+                let m = _mm256_cmpgt_epi8(_mm256_set1_epi8(s as i8), idx); // i <= s - 1
+                _mm256_store_si256(base as *mut __m256i, _mm256_blendv_epi8(old, shifted, m));
+            } else {
+                std::ptr::copy(base, base.add(1), s - 1);
+            }
+            *base = v;
+            v
+        }};
+    }
+    let syms = &b.syms[..];
+    let (p, len, eob) = (syms.as_ptr(), syms.len(), b.eob);
     let (mut run, mut weight) = (0u32, 1u32);
     // `n` bytes written at `out`; every write below is checked against `max`, which
     // `ll`'s capacity holds
     let out = ll.as_mut_ptr();
     let mut n = 0usize;
     let mut result = Ok(());
-    for &s in &b.syms {
+    // the next symbol; whether the window loop is still to run
+    let mut i = 0usize;
+    let mut windows = true;
+    while i < len {
+        let s = *p.add(i);
+        i += 1;
         if s <= 1 {
             if weight >= MAX_RUN_WEIGHT {
                 result = Err(ErrorKind::RunTooLong);
@@ -135,29 +234,64 @@ unsafe fn mtf_avx2(
             n += run as usize;
             (run, weight) = (0, 1);
         }
-        if s == b.eob {
+        if s == eob {
             break;
         }
         if n >= max {
             result = Err(ErrorKind::BlockTooLong);
             break;
         }
-        // (s - 1 < 256: a symbol is below the alphabet, at most 257)
-        let nn = (s - 1) as usize;
-        let v = *base.add(nn);
-        if nn < 32 {
-            let old = _mm256_load_si256(base as *const __m256i);
-            let shifted = _mm256_loadu_si256(base.sub(1) as *const __m256i);
-            let m = _mm256_cmpgt_epi8(_mm256_set1_epi8(nn as i8 + 1), idx); // i <= nn
-            _mm256_store_si256(base as *mut __m256i, _mm256_blendv_epi8(old, shifted, m));
-        } else {
-            std::ptr::copy(base, base.add(1), nn);
+        let v = move_front!(s);
+        if !windows {
+            counts[v as usize] += 1;
+            *out.add(n) = v;
+            n += 1;
+            continue;
         }
-        *base = v;
-        let c = v;
-        counts[c as usize] += 1;
-        *out.add(n) = c;
+        // the window loop, from symbol i (a run's start), with v's byte at n to write
+        windows = false;
+        let mut v = v;
+        let mut q = i;
+        let lim = max.saturating_sub(64);
+        'windows: while q + 64 <= len {
+            let w = p.add(q);
+            let (mut bytes, notruna, leave) = window64(w, eob);
+            if leave {
+                break;
+            }
+            // (bytes != 0: 64 symbols with no byte symbol would be 22 run symbols in a row)
+            let mut prev = 0u32;
+            loop {
+                let j = bytes.trailing_zeros();
+                bytes &= bytes - 1;
+                // v's byte and the run of it: the run symbols' RUNB bits, then a 1
+                let seg = _bzhi_u64(notruna >> prev, j + 1 - prev) as usize;
+                if n + seg > lim {
+                    q += prev as usize;
+                    break 'windows;
+                }
+                if seg <= 64 {
+                    let x = _mm256_set1_epi8(v as i8);
+                    _mm256_storeu_si256(out.add(n) as *mut __m256i, x);
+                    _mm256_storeu_si256(out.add(n + 32) as *mut __m256i, x);
+                } else {
+                    std::ptr::write_bytes(out.add(n), v, seg);
+                }
+                counts[v as usize] += seg as u32;
+                n += seg;
+                v = move_front!(*w.add(j as usize));
+                prev = j + 1;
+                if bytes == 0 {
+                    break;
+                }
+            }
+            q += prev as usize;
+        }
+        // v's byte written; the symbol loop goes on from the run after it (q)
+        counts[v as usize] += 1;
+        *out.add(n) = v;
         n += 1;
+        i = q;
     }
     // SAFETY: the first n bytes were written above, n <= max <= capacity
     ll.set_len(n);
