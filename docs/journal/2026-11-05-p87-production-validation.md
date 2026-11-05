@@ -132,9 +132,14 @@ cutoff had passed. When the amendment was made, the run was still in progress, w
 and no artifacts, and nothing measured informed it (Researcher 6645977057; Guardian D024). The
 verdict below is read under both the original rule (d6401b55) and the amended one.
 
-**The runs.** Bench 3.2.0, 10 paired rounds, against master 08e7fc3b. The measured code is the same
-in both: ee12bb9e differs from ef28ad32 only in `examples/occupancy.rs`, which the bench doesn't
-build. Raw reports and results are in `bench-run1-ef28ad32/` and `bench-run2-ee12bb9e/`.
+**The runs.** Bench 3.2.0, 10 paired rounds, against master 08e7fc3b, each on a runner with two
+physical cores and four logical CPUs (`env.json`).
+- **The measured source is the same in both:** ee12bb9e differs from ef28ad32 only in
+  `examples/occupancy.rs`, which the bench doesn't build. That is equivalence of source, not a
+  checked identity of the executables.
+- **The archive:** each run's report, `result.json`, `env.json`, `ab-summary.md`, and the
+  sample-level `runs.jsonl` and `stages.jsonl`, are in `bench-run1-ef28ad32/` and
+  `bench-run2-ee12bb9e/`, copied from the Actions artifacts.
 
 | `wikidata` | run 1, ef28ad32, Xeon Platinum 8573C | run 2, ee12bb9e, Xeon 6975P-C |
 |---|--:|--:|
@@ -148,12 +153,13 @@ build. Raw reports and results are in `bench-run1-ef28ad32/` and `bench-run2-ee1
   occupancy included.
 - **Instructions:** at or below master on all seven blocks (above).
 - **Benefit:**
-  - **amended rule:** 4-thread wall is faster beyond noise in run 1, and its point estimate is
-    faster in run 2. **Met;**
+  - **amended rule:** 4-thread wall is faster beyond noise in run 1. Run 2's estimate is
+    favourable but inconclusive, and not slower. **Met;**
   - **original rule:** 4-thread CPU isn't beyond noise in either run. Peak RSS is lower beyond
     noise in both. **Met.**
-- **No harm:** no wall row is flagged slower in either run, so there is no harm signal and no
-  third run. **Met under both rules.**
+- **No harm:** no wall row is flagged slower in either run, so there is no harm signal awaiting a
+  repeat, and no third run. **Met under both rules.** This is the absence of a detected harm, not a
+  demonstration of safety.
 - **What isn't excluded.** Several rows have wide upper bounds, and a harm of that size on them
   isn't excluded:
   - run 1: `random` 1 thread +6.4% (upper +17.7%), `records` 1 thread +2.6% (+9.3%), `pattern`
@@ -162,15 +168,23 @@ build. Raw reports and results are in `bench-run1-ef28ad32/` and `bench-run2-ee1
     +1.2% (+6.4%), and `pattern` 4 threads CPU +2.7% (+10.2%).
 - **The stage table** flags RLE1 slower in both runs: +2.6% (+2.0, +3.2) and +3.9% (+3.1, +4.8).
   - Run 1's stage total is also slower, +1.2% (+0.1, +2.4); run 2's isn't, −0.1% (−0.3, +0.2).
-  - The stage harness, `examples/phases.rs`, never calls `invert_in_place`, so it doesn't run the
-    changed path. #128's integration record saw the same RLE1 shift (+3.2%) and recorded it as
-    an unexplained between-build sensitivity. It is recorded the same way here: unexplained, not
-    a measurement of P87.
+  - The stage harness, `examples/phases.rs`, times RLE1 over a separately walked buffer, so its
+    timed stages don't measure production's in-place path.
+  - But after the first timed pass, its `main` calls production `mibz2::decode` for parity, and
+    that path does invert in place. So the untimed run of the changed code could affect later
+    passes, through cache, allocation or thermal state. That is a hypothesis, not an identified
+    cause (Researcher 6646303348).
+  - #128's integration record saw the same RLE1 shift (+3.2%). It is recorded the same way here:
+    an unexplained between-build sensitivity, neither dismissed as noise nor shown unrelated to
+    the change.
+  - **Next, if it matters:** audit the retained phase binaries, callers and layout first, without
+    timing. Only then, if needed, record first and later passes separately around the parity call.
 
-**Verdict.** The registered conditions hold under both rules, with no row left unresolved, so
-STEWARDSHIP's gate on measured code is met. #164 merged as e26e3d9c.
-- **Claimed:** a faster `wikidata` decode at 4 threads in one run, not slower in the other, with
-  less memory.
+**Verdict.** The registered conditions hold under both rules, with no flagged harm awaiting a repeat,
+so STEWARDSHIP's gate on measured code is met. The amendment was disclosed, but it was made after
+the literal cutoff, so it is not retroactively preregistered. #164 merged as e26e3d9c.
+- **Claimed:** a faster `wikidata` decode at 4 threads in one run, favourable but inconclusive in
+  the other, with less memory in both.
 - **Not claimed:**
   - why it is faster: the change moves the output buffer and removes an allocation together;
   - a steady-state instruction saving;
