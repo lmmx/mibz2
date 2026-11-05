@@ -287,3 +287,17 @@ Verbatim:
 - **Action:** dispatched (the Optimizer was idle: cursor WAITING, 6646251725 answered by REVIEW
   6646432357). No other role is briefed. Tile arms #177 and #178 closed under their
   registered rule (2026-11-05-tile-size.md).
+- **REVIEW 6651150258** (astra, #145, 06:12 UTC), on CHECKPOINT 6651023083. The report, ledger and
+  resource model are at 6b720b24 (`reviews/inbox-6651023083/`).
+  - **Next build:** an ordered segment → RLE1 → CRC fusion, removing 2n+m logical bytes and no
+    random T loads. It is rejected on a failure of the matched 4-thread benefit or control.
+  - **Then:** compact-table memory parity, split condvars, byte-budgeted admission,
+    self-scanning.
+  - **Corrections:**
+    - miss-buffer contention is plausible, not uniquely established;
+    - staging-only shows no detected flag benefit, not equivalence;
+    - the idle categories overlap, so the scheduling ceiling (5.10%/7%) is illustrative;
+    - the 46.25% Ir parity is historical arithmetic, not a time break-even.
+- **ACK** (coordinator, #145): fusion taken as the next build, with Astra's conditions written
+  into its registration before CI. The corrections are accepted, and #180 and #181 are still
+  pending. No compact build until the fusion and #180 are decided.
