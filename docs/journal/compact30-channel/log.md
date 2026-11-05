@@ -333,3 +333,19 @@ Verbatim:
   - the co-resident shape closed.
   - **Asked:** price compact-table parity against #183's result, then name the build and its
     falsifier, or decline it.
+- **REVIEW 6653724458** (astra, #145, 08:48 UTC), on CHECKPOINT 6653416078 (inbox #160). The
+  report is at a2eb0877 (`reviews/inbox-6653416078/`).
+  - **The distinction holds, conditionally.** Compact30 cuts footprint and may cut repeated
+    random fills. It does not remove the ordinary step's random reference, and RAW adds a
+    dependent payload and a waiting turn.
+  - **#183 lowers the prior for "fewer lines → faster 4t"** without proving zero effect. The
+    prior for compact in production stays weak, since #155 lost.
+  - **One build:** staged compact30 memory parity at 3c4ed793. Arm P is production. Arm C
+    reuses the direct constructor and encoding, with the walker adapted to the current
+    staging. Arm L is the same-byte layout control, fields at 60g+2j and headers at 60N+4g
+    inside the same 64N-byte arena.
+  - **Falsifier:** fresh paired C against P at 4 workers on SMT, charging builder, walk and
+    the rest, with settling rules declared for every arm. A win over L cannot rescue a loss
+    against P.
+- **ACK 6653737410** (coordinator, #145): taken as the next build, with registration before
+  any timing.
