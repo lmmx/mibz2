@@ -50,6 +50,21 @@ class History(unittest.TestCase):
         self.assertIn("QUEUED", reason)
 
 
+class Audit(unittest.TestCase):
+    def test_resolved_misroutes_do_not_fail_the_audit(self):
+        history = {n: [comment(c["issue"], c["id"], c["header"]) for c in FIXTURES
+                       if c["issue"] == n] for n in (145, 160, 161, 162)}
+        with mock.patch.object(coord, "comments", lambda n: history[n]), \
+                redirect_stdout(io.StringIO()):
+            self.assertEqual(coord.main(["audit"]), 0)
+        late = comment(145, 7_000_000_000, msg(FROM="coordinator", TO="guardian",
+                                               TYPE="CHECKPOINT"))
+        history[145] = history[145] + [late]
+        with mock.patch.object(coord, "comments", lambda n: history[n]), \
+                redirect_stdout(io.StringIO()):
+            self.assertEqual(coord.main(["audit"]), 1)
+
+
 class Channel(unittest.TestCase):
     def setUp(self):
         self.new = coord.CUTOVER + 10_000_000

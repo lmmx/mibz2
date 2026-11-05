@@ -3,13 +3,17 @@
 # The coordinator's assignments go to a role's inbox (#160 Optimizer, #161 Guardian, #162
 # Researcher), or are staged on the channel PR #145 as TYPE: QUEUED while the role is busy;
 # the channel PR wakes only the coordinator. On each new comment on those four PRs, this
-# checks the header against that routing. A correct comment ends the run silently. A
-# misrouted one gets one warning comment on the channel PR #145, whichever of the four PRs it
-# is on: #145 wakes only the coordinator, through its subscription, while a comment in an
-# inbox would wake that role's Work task as if it were a brief. The tripwire never edits,
-# deletes, moves or re-posts a comment, and never dispatches anything. Its own warnings carry
-# a marker it skips, and comments made with GITHUB_TOKEN start no workflow runs, so it cannot
-# loop.
+# checks the header against that routing. A correct comment ends the run silently.
+#
+# A misrouted one gets one failing check run on the channel PR #145's head commit, named for
+# the comment, whichever of the four PRs it is on. That marks #145 red and wakes the
+# coordinator, which is subscribed to #145's checks; no role listens to #145. It is a check
+# run, not a comment: #145 is locked (PROTOCOL.md §1), so GITHUB_TOKEN can't comment there,
+# and a comment in an inbox would wake that role's Work task as if it were a brief. If the
+# warning can't be delivered, this run fails instead, so the failure is still visible.
+#
+# The tripwire never edits, deletes, moves or re-posts a comment, and never dispatches
+# anything. It skips bots, and what GITHUB_TOKEN creates starts no workflow runs.
 name: Channel routing
 
 on:
@@ -38,8 +42,7 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
-      issues: write
-      pull-requests: write
+      checks: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -60,13 +63,17 @@ jobs:
           fi
           echo "::warning::comment $COMMENT on #$ISSUE is misrouted"
           printf '%s\n' "$warning"
-          marker="<!-- routing-tripwire: $COMMENT -->"
-          # the warning always goes on #145, never in an inbox (see the top of this file)
-          if gh api --paginate "repos/$REPO/issues/145/comments" --jq '.[].body' | grep -qF "$marker"; then
-            echo "already warned about $COMMENT"
+          name="routing tripwire: comment $COMMENT"
+          head=$(gh api "repos/$REPO/pulls/145" --jq .head.sha)
+          seen=$(gh api -X GET "repos/$REPO/commits/$head/check-runs" -f check_name="$name" --jq .total_count)
+          if [ "$seen" != 0 ]; then
+            echo "already flagged on #145 ($head)"
             exit 0
           fi
-          gh api "repos/$REPO/issues/145/comments" -f body="$warning" --jq '.html_url'
+          gh api "repos/$REPO/check-runs" -f name="$name" -f head_sha="$head" \
+            -f status=completed -f conclusion=failure \
+            -f "output[title]=Misrouted: comment $COMMENT on #$ISSUE" \
+            -f "output[summary]=$warning" --jq .html_url
 
   tests:
     if: github.event_name != 'issue_comment'
