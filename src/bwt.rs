@@ -798,6 +798,8 @@ thread_local! {
     // done again lane by lane because a lane read a start
     static TILES_KEPT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static TILES_REPLAYED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // the pass's last lane (bit L - 1 of its mask: bit 63 at 64 lanes) marked
+    static MARKED_LAST_LANE: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -1044,6 +1046,10 @@ fn room_segments<const L: usize, const PF: u8>(
                     #[cfg(test)]
                     if marked.count_ones() > 1 {
                         transition!(MARKED_SEVERAL);
+                    }
+                    #[cfg(test)]
+                    if marked >> (L - 1) & 1 != 0 {
+                        transition!(MARKED_LAST_LANE);
                     }
                     #[cfg(test)]
                     let mut took = false;
@@ -1409,6 +1415,14 @@ pub(crate) mod tests {
                     segments,
                 );
                 assert!(plain == flagged, "room walk, 5 lanes, {segments} segments");
+                walk_segments_room_with_prefetch::<64, PF_L1>(
+                    &mut tt,
+                    orig_ptr,
+                    &mut flagged,
+                    &mut seg,
+                    segments,
+                );
+                assert!(plain == flagged, "room walk, 64 lanes, {segments} segments");
             }
             // the flags are taken off again: the T-vector is as build left it
             assert!(tt.0.iter().all(|&e| e & START == 0));
@@ -1767,6 +1781,67 @@ pub(crate) mod tests {
         }
     }
 
+    /// The deferred handovers at 64 lanes, as many as a pass's u64 mask holds: random
+    /// columns as `room_walk_deferred_handovers`'s, a little longer so that 64 lanes fill,
+    /// every output `walk`'s and every segment the reference's; each interleaving is
+    /// reached, and so is the mask's top bit (the last lane marked)
+    #[test]
+    fn room_walk_deferred_handovers_64_lanes() {
+        let all = [
+            ("several lanes marked at one offset", &MARKED_SEVERAL),
+            (
+                "the queue running out with lanes waiting",
+                &ENDS_WITH_LANES_WAITING,
+            ),
+            ("the queue running out after a take", &ENDS_AFTER_A_TAKE),
+            (
+                "a stepped later lane leaving on its segment's end",
+                &LATER_STEPPED_ON_START,
+            ),
+            ("an offset kept as stepped together", &TILES_KEPT),
+            ("an offset done again lane by lane", &TILES_REPLAYED),
+            ("the last lane marked", &MARKED_LAST_LANE),
+        ];
+        for (_, c) in all {
+            c.with(|c| c.set(0));
+        }
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        for case in 0..5000 {
+            let n = 256 + rnd(if case % 3 == 0 { 1200 } else { 6000 }) as usize;
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            // a few segments more than lanes run the queue out early, as at 32 lanes
+            let segments = if case % 2 == 0 {
+                65 + rnd(64) as usize
+            } else {
+                2 + rnd(n as u64 / 2) as usize
+            };
+            walk_segments_room_with_prefetch::<64, PF_L1>(
+                &mut tt, orig_ptr, &mut out, &mut seg, segments,
+            );
+            assert!(plain == out, "64 lanes, case {case}");
+            check_segments(&tt, &seg, "64 lanes");
+        }
+        for (name, c) in all {
+            assert!(count(c) > 0, "never reached at 64 lanes: {name}");
+        }
+    }
+
     /// The flagged walk on a random last column and on a periodic one (a list of several
     /// cycles), both past MIN_SEGMENTED so the segments are walked
     #[test]
@@ -1837,6 +1912,11 @@ pub(crate) mod tests {
                         &mut tt, orig_ptr, &mut out, &mut seg, segments,
                     );
                     assert!(plain == out, "room walk, 5 lanes, {what}");
+                    check_segments(&tt, &seg, &what);
+                    walk_segments_room_with_prefetch::<64, PF_L1>(
+                        &mut tt, orig_ptr, &mut out, &mut seg, segments,
+                    );
+                    assert!(plain == out, "room walk, 64 lanes, {what}");
                     check_segments(&tt, &seg, &what);
                     walk_segments_flagged_with_prefetch::<32, PF_L1>(
                         &mut tt, orig_ptr, &mut out, &mut seg, segments,
