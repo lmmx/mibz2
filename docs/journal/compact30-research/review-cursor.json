@@ -313,8 +313,23 @@
       "completed": false,
       "spec_commit": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
       "baseline_commit": "e26e3d9cbac6bcd2106b7070c869dd91fcd7217d",
-      "progress": "Replayed named inclusive call arcs in all 14 P87 profiles; wrapper-normalized totals and compact parity recorded. Final ranking/replay obligations and publication pending.",
-      "report_path": "docs/journal/compact30-research/reviews/inbox-6646251725/report.md"
+      "progress": "Completed ranking and P87 call-arc audit; publishing final report/ledger, then one REVIEW and completion record.",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6646251725/report.md",
+      "evidence_blobs": {
+        "validation": "6def96def6c11f19df3137cf0159c07013a5ea2a",
+        "bwt": "9b376e03439314e88e979cc87eb3ca8ef764fe22",
+        "parallel": "f44c688ad1960e8ffb5be2de43e1d02a09d82913",
+        "walk_listing": "e4a2eccd79ce2cc3103c41c5129db868ebb21ade",
+        "roles": "bce37a001b49bf0be57946736719c19b9c6968c6",
+        "reviewer": "ba2ab3dd5c09201c3809feeb93682de11583eec4"
+      },
+      "audit_scope": {
+        "independent": false,
+        "raw_call_arcs": true,
+        "raw_profiles": 14,
+        "per_instruction_replay": false,
+        "tests_rerun": false
+      }
     }
   ]
 }

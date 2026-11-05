@@ -107,7 +107,7 @@ Goal wake-up is assumed.
 [Assembly 1 signed-bridge audit](reviews/checkpoint-6640153383/report.md) and [machine-readable arithmetic](reviews/checkpoint-6640153383/bridge-audit.json) reproduce the pinned reconciliation at `95977867fdf318b3f66420c383a73d9c48b36740`. The exact own-code identity is scanner `−84,060,421` + descriptor `−58,209,045` + v3 finish group `−60,212,114` + build nonadditivity `−56,391,637` = `−258,873,217`; refill is exactly additive. The nonadditivity partitions into unroll `−66,676,611`, outer head `−12,015,336`, S-class cost `+19,146,504`, and remaining cost `+3,153,806`. Added library work 378,882 and the upper-only removed memcpy 4,454,576 yield `[258,494,335, 262,948,911]`. This bridge explains existing credit and is never added again. Registered O remains 2,393,313; the further 3,654 is not used. Gate-3 arithmetic passes in the checked scope; Guardian D013's qualification HOLD, the raw-profile completeness limitation, and the absence of any economic PASS remain explicit.
 
 
-## Current production ranking: inbox 6645643541 (resumes 6645304470)
+## Historical production ranking: inbox 6645643541 (resumes 6645304470)
 
 [Whole-decoder ranking and corrected parity arithmetic](reviews/inbox-6645643541/report.md), baseline **08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7**. These rows are a separate production scope, not additions to frozen B2 constructor credits.
 
@@ -121,3 +121,26 @@ Goal wake-up is assumed.
 | 6 / C16 Precopy | Historical REJECTED; deferred | No positive four-worker forecast | Recorded reopening at 8–10 workstation workers, not CI |
 
 P87 ranks first for a production-shaped comparison, not automatic promotion. No unique four-worker limiting mechanism is established on either topology. Earlier unroll is precedent, not identical; no detected gain is not zero benefit. Historical A1–A6 accounting and their qualifications are preserved; no current production gain is obtained by summing them.
+
+
+## Current production ranking: inbox 6646251725, after P87
+
+[Post-P87 review and next-build proposal](reviews/inbox-6646251725/report.md);
+[replayed call-arc arithmetic](reviews/inbox-6646251725/arithmetic.json).
+Production baseline **e26e3d9cbac6bcd2106b7070c869dd91fcd7217d**.
+This section supersedes the production ranking immediately above, not the historical constructor ledger.
+
+| Priority / ID | Status | Whole-decoder accounting at this baseline | Prior verdict and next falsifier |
+|---|---|---|---|
+| Baseline / A7 (resolves C11) P87 | ACHIEVED, scoped archive instruction reduction; reported production gate passed and merged | Four full-block decode savings vs 08e7fc3b: **400 / 400 / 432 / 542 Ir**; tiny blocks **277 / 270 / 270**. Each published driver total includes 16 Ir. Build and room walk unchanged. Fresh-Scratch scope only, no recurring corpus credit | Validation a995ce87; raw profiles e26e3d9c. Original/amended criteria both supported by reported results; literal amendment-cutoff exception disclosed. No new mechanism or independent safety certification |
+| 1 / C12 true tiled B | CONDITIONAL, zero credit; **next build recommended** | E×(9.5−u)−Q×u_spec−H; proposed u≤8.5 is an assembly target, not achieved saving. All-lane eight-round rollback may discard up to 256 steps per failed tile and erase the margin | Unbuilt, distinct from #157. Preserve offset/lane handover semantics or prove changed scheduling; reject formulation on non-positive whole-decoder net or missed prospective minimum |
+| 2 / C13 handoff diagnosis | CONDITIONAL diagnostic, zero credit | Direct decode_block saving zero; current whole-process work and wall benefit unknown | Convoy plausible, not demonstrated. Observe queue/owner/scheduling together before any rewrite; historical 11% worker-time share is not a gain forecast |
+| 3 / C14 gather C | CONDITIONAL, zero credit | Compare C−B with packing, masks, spills, replay/tail/rest; no additive B+C credit | Unbuilt; old Zen timing thresholds do not transfer to the new Xeon runners. Reject if incremental registered benefit over B fails |
+| 4 / C15 compact parity | CONDITIONAL target; existing port REJECTED | Block-1 walk ceiling **10,861,581 Ir**, **12.0688122/row**, holding c493a45d compact build/rest fixed; requires **9,346,119 Ir (46.25%)** off existing compact walk | Cross-archive budget, not a new compact/P87 result. Need new reconstruction path reaching whole-decoder parity; storage size or constructor credit alone insufficient |
+| 5 / C16 Precopy | Historical REJECTED; deferred | Negative four-worker prior; no positive forecast or new credit | Recorded reopening at 8–10 workstation workers or materially changed construction; neither supplied here |
+
+Block 1's normalized production budget is **20,184,340 = 5,429,062 build + 9,859,825 room walk + 4,895,453 rest**.
+Rest includes assembly; its 178,330 Ir is not an extra component. Instruction shares are not time shares.
+A7 is already in this baseline and never added to C12–C16. Do not multiply fresh worker allocation savings by all corpus blocks.
+The smaller-table ceiling changes from 10,861,938 to 10,861,581 only because the normalized production baseline changes; the old compact arm is held fixed, not silently given P87.
+The old P87 diagnostic remains closed/INCONCLUSIVE, A1–A6 and D013 remain unchanged, and no unique four-worker limiting mechanism has been established.
