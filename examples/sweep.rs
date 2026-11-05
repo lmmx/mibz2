@@ -26,6 +26,12 @@
 //! would charge each setting's segment count on blocks of tens of rows, which no decode pays
 //! (`docs/journal/2026-11-05-segment-cost.md`).
 //!
+//! One more row, where the CPU has AVX2 (`bwt::gather_available`; left out where it
+//! hasn't): the gathered round (`gather`, 32 lanes, 512 segments;
+//! `walk_segments_room_gathered`), the room walk with its busy phase's per-lane step
+//! replaced by four `vpgatherdd` an offset and one `vpextrb` store a lane, with no
+//! per-step prefetch (its prefetch column is the takes' and the tail's, as the room walk's).
+//!
 //! Where the kernel lets a process count its own events (Linux on x86_64, a PMU exposed to
 //! the machine, `perf_event_paranoid` at 2 or below), one more round, untimed, counts each
 //! setting's instructions, cycles, last-level cache misses and back-end stall cycles, as
@@ -35,8 +41,9 @@
 use std::time::Instant;
 
 use mibz2::bwt::{
-    build, walk, walk_segments_flagged_with_prefetch, walk_segments_room_with_prefetch, SegScratch,
-    TVector, MIN_SEGMENTED, PF_L1, PF_L2, PF_NTA, PF_OFF,
+    build, gather_available, walk, walk_segments_flagged_with_prefetch,
+    walk_segments_room_gathered, walk_segments_room_with_prefetch, SegScratch, TVector,
+    MIN_SEGMENTED, PF_L1, PF_L2, PF_NTA, PF_OFF,
 };
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{mtf, rle, Kernels};
@@ -118,6 +125,17 @@ fn main() {
             pf: PF_L1,
             segments,
             f: walk_segments_room_with_prefetch::<32, PF_L1>,
+        });
+    }
+    // The gathered round, at the default's lanes and segments, where it runs
+    let gathered = gather_available();
+    if gathered {
+        settings.push(Setting {
+            walk: "gather",
+            lanes: 32,
+            pf: PF_L1,
+            segments: 512,
+            f: walk_segments_room_gathered,
         });
     }
     let default = settings
@@ -222,6 +240,9 @@ fn main() {
         pf_name(DEFAULT.2),
         DEFAULT.3
     );
+    if !gathered {
+        println!("gather: left out (no AVX2 on this CPU)");
+    }
     match &counters {
         Some(c) => println!(
             "counters (one untimed round, one group): {}; a byte of output, misses a kB, \

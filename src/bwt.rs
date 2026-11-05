@@ -803,6 +803,10 @@ thread_local! {
     static EXHAUSTED_AT_CHUNK_START: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static EXHAUSTED_AT_CHUNK_END: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static EXHAUSTED_AT_PASS_END: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // the sweep's gathered round (walk_segments_room_gathered): its chunks gathered, and a
+    // test's switch that takes AVX2 away, to cover the walk without it
+    static GATHERED_CHUNKS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static NO_GATHER: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -840,7 +844,7 @@ pub fn walk_segments_room_parts(
         walk(tt, orig_ptr, out);
         return false;
     }
-    room_segments::<FLAGGED_LANES, PREFETCH>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
+    room_segments::<FLAGGED_LANES, PREFETCH, false>(tt, orig_ptr, s, FLAGGED_SEGMENTS);
     true
 }
 
@@ -875,16 +879,65 @@ pub fn walk_segments_room_with_prefetch<const L: usize, const PF: u8>(
     if tt.0.is_empty() {
         return;
     }
-    room_segments::<L, PF>(tt, orig_ptr, s, segments);
+    room_segments::<L, PF, false>(tt, orig_ptr, s, segments);
+    s.assemble(out);
+}
+
+/// Whether this CPU runs `walk_segments_room_gathered`'s gathers (AVX2, detected at run
+/// time; never under Miri). Where it doesn't, that walk is the room walk's own step, and the
+/// sweep (examples/sweep.rs) leaves its row out.
+pub fn gather_available() -> bool {
+    #[cfg(test)]
+    if NO_GATHER.with(|c| c.get()) {
+        return false;
+    }
+    #[cfg(all(target_arch = "x86_64", not(miri)))]
+    {
+        std::is_x86_feature_detected!("avx2")
+    }
+    #[cfg(not(all(target_arch = "x86_64", not(miri))))]
+    {
+        false
+    }
+}
+
+/// For the walk sweep only (examples/sweep.rs), never the decoder's: the room walk at 32
+/// lanes (`walk_segments_room_with_prefetch::<32, PF_L1>`) with its busy phase's per-lane
+/// step replaced by a gathered round (`gather_offsets`): the 32 rows held in four AVX2
+/// vectors, each offset's 32 entries read by four `vpgatherdd`, their start flags tested
+/// with one `vmovmskps`, and each lane's byte staged with one `vpextrb` store, against the
+/// scalar step's two stores (the byte and the row) and its prefetch. The staging (tile,
+/// flush), the start handling (lanes marked, then handed over in lane order) and the takes'
+/// and tail's prefetch are the room walk's own. `segments` segments; exactly `walk`'s
+/// output. Without AVX2 (`gather_available`) it is that room walk.
+pub fn walk_segments_room_gathered(
+    tt: &mut TVector,
+    orig_ptr: u32,
+    out: &mut Vec<u8>,
+    s: &mut SegScratch,
+    segments: usize,
+) {
+    out.clear();
+    if tt.0.is_empty() {
+        return;
+    }
+    if gather_available() {
+        room_segments::<32, PF_L1, true>(tt, orig_ptr, s, segments);
+    } else {
+        room_segments::<32, PF_L1, false>(tt, orig_ptr, s, segments);
+    }
     s.assemble(out);
 }
 
 /// The room walk itself, on a block of one row or more: each segment's bytes into its
 /// buffer in `s`, its successor in `s.next`, and the block's length and first segment
 /// for `SegScratch::assemble`. Never inlined, so the decoder and the stage table's split
-/// timing (`walk_segments_room_parts`) run the same machine code for the walk
+/// timing (`walk_segments_room_parts`) run the same machine code for the walk. `G` (the
+/// sweep's gathered round, `walk_segments_room_gathered`: 32 lanes, and AVX2 checked
+/// before it is called) replaces only the busy phase's per-lane step; with `G` false the
+/// code is the room walk's as it was, which the decoder runs.
 #[inline(never)]
-fn room_segments<const L: usize, const PF: u8>(
+fn room_segments<const L: usize, const PF: u8, const G: bool>(
     tt: &mut TVector,
     orig_ptr: u32,
     s: &mut SegScratch,
@@ -892,6 +945,8 @@ fn room_segments<const L: usize, const PF: u8>(
 ) {
     // a pass marks its lanes in a u64
     const { assert!(L <= 64) };
+    // the gathered round holds 32 rows, in four vectors of eight
+    const { assert!(!G || L == 32) };
     let n = tt.0.len();
     // A start is marked in bit 31 of its entry, which is bit 23 of the entry's link: a link
     // of 2^23 or more would read as a start (bzip2's blocks are at most 900,000 rows)
@@ -1017,132 +1072,162 @@ fn room_segments<const L: usize, const PF: u8>(
             while done < room {
                 let w = (room - done).min(TILE);
                 let mut st = [0usize; L];
-                for j in 0..w {
-                    // The offset: every lane whose entry doesn't start a segment steps; a
-                    // lane whose entry does is only marked, and handed over below, in lane
-                    // order, as master's room walk does
-                    let rs = &mut rows;
-                    let mut marked: u64 = 0;
-                    let tp = tile.as_mut_ptr().cast::<u8>();
-                    macro_rules! sstep {
-                        ($k:expr) => {{
-                            let k = $k;
-                            // SAFETY: k < L; rows are below n (TVector); k * TILE + j is
-                            // inside the tile (j < w <= TILE)
-                            unsafe {
-                                let r = rs.get_unchecked_mut(k);
-                                let q = *t.add(*r as usize);
-                                if q & START != 0 {
-                                    marked |= 1 << k;
-                                } else {
-                                    *tp.add(k * TILE + j) = q as u8;
-                                    *r = q >> 8;
-                                    if PF != PF_OFF {
-                                        prefetch::<PF>(t, q >> 8);
-                                    }
-                                }
-                            }
-                        }};
-                    }
-                    let mut c = 0;
-                    while c + 8 <= L {
-                        sstep!(c);
-                        sstep!(c + 1);
-                        sstep!(c + 2);
-                        sstep!(c + 3);
-                        sstep!(c + 4);
-                        sstep!(c + 5);
-                        sstep!(c + 6);
-                        sstep!(c + 7);
-                        c += 8;
-                    }
-                    while c < L {
-                        sstep!(c);
-                        c += 1;
-                    }
-                    if marked != 0 && j == 0 && done > 0 {
-                        transition!(MARK_AT_LATER_CHUNK_START);
-                    }
-                    #[cfg(test)]
-                    if marked.count_ones() > 1 {
-                        transition!(MARKED_SEVERAL);
-                    }
-                    #[cfg(test)]
-                    let mut took = false;
-                    while marked != 0 {
-                        let k = marked.trailing_zeros() as usize;
-                        marked &= marked - 1;
-                        let l = &mut lanes[k];
-                        l.row = rs[k];
-                        if st[k] > 0 {
-                            transition!(DONE_IN_TAKING_CHUNK);
+                // Offset j's handovers, its lanes stepped or marked (`marked`, the rows in
+                // `rs`): each marked lane, in lane order, ends its segment and takes the
+                // next, or the busy phase ends. The scalar step and the gathered round
+                // (`G`) share it.
+                macro_rules! handover {
+                    ($j:ident, $marked:ident, $rs:ident) => {{
+                        if $marked != 0 && $j == 0 && done > 0 {
+                            transition!(MARK_AT_LATER_CHUNK_START);
                         }
-                        // its segment's bytes end before offset j
-                        flush(l, &tile[k], st[k], j);
-                        finish(l, bufs, next);
-                        if queued == ns {
-                            // Every lane but the marked ones after this one has its byte at
-                            // j: an unmarked lane wrote it, and an earlier marked lane's new
-                            // segment starts after it. A marked lane after this one still
-                            // sits on its segment's end, without a byte at j, for the tail.
-                            for (i, li) in lanes.iter_mut().enumerate() {
-                                li.row = rs[i];
-                                if i != k {
-                                    let waiting = marked >> i & 1 != 0;
-                                    flush(li, &tile[i], st[i], j + usize::from(!waiting));
-                                    #[cfg(test)]
-                                    if i > k && !waiting {
-                                        if li.p == li.end {
-                                            transition!(LATER_STEPPED_FULL);
-                                        }
-                                        // SAFETY: the lane's row is below n
-                                        if unsafe { *t.add(li.row as usize) } & START != 0 {
-                                            transition!(LATER_STEPPED_ON_START);
+                        #[cfg(test)]
+                        if $marked.count_ones() > 1 {
+                            transition!(MARKED_SEVERAL);
+                        }
+                        #[cfg(test)]
+                        let mut took = false;
+                        while $marked != 0 {
+                            let k = $marked.trailing_zeros() as usize;
+                            $marked &= $marked - 1;
+                            let l = &mut lanes[k];
+                            l.row = $rs[k];
+                            if st[k] > 0 {
+                                transition!(DONE_IN_TAKING_CHUNK);
+                            }
+                            // its segment's bytes end before offset j
+                            flush(l, &tile[k], st[k], $j);
+                            finish(l, bufs, next);
+                            if queued == ns {
+                                // Every lane but the marked ones after this one has its byte at
+                                // j: an unmarked lane wrote it, and an earlier marked lane's new
+                                // segment starts after it. A marked lane after this one still
+                                // sits on its segment's end, without a byte at j, for the tail.
+                                for (i, li) in lanes.iter_mut().enumerate() {
+                                    li.row = $rs[i];
+                                    if i != k {
+                                        let waiting = $marked >> i & 1 != 0;
+                                        flush(li, &tile[i], st[i], $j + usize::from(!waiting));
+                                        #[cfg(test)]
+                                        if i > k && !waiting {
+                                            if li.p == li.end {
+                                                transition!(LATER_STEPPED_FULL);
+                                            }
+                                            // SAFETY: the lane's row is below n
+                                            if unsafe { *t.add(li.row as usize) } & START != 0 {
+                                                transition!(LATER_STEPPED_ON_START);
+                                            }
                                         }
                                     }
                                 }
+                                transition!(FULL_PHASE_ENDS_MID_PASS);
+                                #[cfg(test)]
+                                {
+                                    if $j == 0 && done > 0 {
+                                        transition!(EXHAUSTED_AT_CHUNK_START);
+                                    }
+                                    if $j + 1 == w && done + w < room {
+                                        transition!(EXHAUSTED_AT_CHUNK_END);
+                                    }
+                                    if done + $j + 1 == room {
+                                        transition!(EXHAUSTED_AT_PASS_END);
+                                    }
+                                    if $marked != 0 {
+                                        transition!(ENDS_WITH_LANES_WAITING);
+                                    }
+                                    if took {
+                                        transition!(ENDS_AFTER_A_TAKE);
+                                    }
+                                }
+                                break 'full;
                             }
-                            transition!(FULL_PHASE_ENDS_MID_PASS);
+                            transition!(MID_PASS_TAKES);
+                            *l = take(queued, bufs);
+                            $rs[k] = l.row;
+                            if PF != PF_OFF {
+                                prefetch::<PF>(t, l.row);
+                            }
+                            queued += 1;
+                            // its first byte is in its buffer; its next, at offset j + 1, is
+                            // staged
+                            st[k] = $j + 1;
                             #[cfg(test)]
                             {
-                                if j == 0 && done > 0 {
-                                    transition!(EXHAUSTED_AT_CHUNK_START);
+                                took = true;
+                                if $j + 1 == w {
+                                    transition!(TAKE_AT_CHUNK_END);
                                 }
-                                if j + 1 == w && done + w < room {
-                                    transition!(EXHAUSTED_AT_CHUNK_END);
-                                }
-                                if done + j + 1 == room {
-                                    transition!(EXHAUSTED_AT_PASS_END);
-                                }
-                                if marked != 0 {
-                                    transition!(ENDS_WITH_LANES_WAITING);
-                                }
-                                if took {
-                                    transition!(ENDS_AFTER_A_TAKE);
+                                if done > 0 {
+                                    transition!(TAKE_IN_LATER_CHUNK);
                                 }
                             }
-                            break 'full;
                         }
-                        transition!(MID_PASS_TAKES);
-                        *l = take(queued, bufs);
-                        rs[k] = l.row;
-                        if PF != PF_OFF {
-                            prefetch::<PF>(t, l.row);
+                    }};
+                }
+                if G {
+                    // The gathered round: offsets from `from` on, until one with a start
+                    // among its entries (j, its marked lanes) or the chunk's end
+                    transition!(GATHERED_CHUNKS);
+                    let mut from = 0;
+                    loop {
+                        // SAFETY: G is instantiated at 32 lanes only, and called only where
+                        // AVX2 is available (walk_segments_room_gathered); the rows are
+                        // below n; the tile is 32 rows of TILE bytes, and w <= TILE
+                        let (j, mut marked) = unsafe {
+                            gather_offsets(t, rows.as_mut_ptr(), tile.as_mut_ptr().cast(), from, w)
+                        };
+                        if j == w {
+                            break;
                         }
-                        queued += 1;
-                        // its first byte is in its buffer; its next, at offset j + 1, is
-                        // staged
-                        st[k] = j + 1;
-                        #[cfg(test)]
-                        {
-                            took = true;
-                            if j + 1 == w {
-                                transition!(TAKE_AT_CHUNK_END);
-                            }
-                            if done > 0 {
-                                transition!(TAKE_IN_LATER_CHUNK);
-                            }
+                        let rs = &mut rows;
+                        handover!(j, marked, rs);
+                        from = j + 1;
+                    }
+                } else {
+                    for j in 0..w {
+                        // The offset: every lane whose entry doesn't start a segment steps; a
+                        // lane whose entry does is only marked, and handed over below, in lane
+                        // order, as master's room walk does
+                        let rs = &mut rows;
+                        let mut marked: u64 = 0;
+                        let tp = tile.as_mut_ptr().cast::<u8>();
+                        macro_rules! sstep {
+                            ($k:expr) => {{
+                                let k = $k;
+                                // SAFETY: k < L; rows are below n (TVector); k * TILE + j is
+                                // inside the tile (j < w <= TILE)
+                                unsafe {
+                                    let r = rs.get_unchecked_mut(k);
+                                    let q = *t.add(*r as usize);
+                                    if q & START != 0 {
+                                        marked |= 1 << k;
+                                    } else {
+                                        *tp.add(k * TILE + j) = q as u8;
+                                        *r = q >> 8;
+                                        if PF != PF_OFF {
+                                            prefetch::<PF>(t, q >> 8);
+                                        }
+                                    }
+                                }
+                            }};
                         }
+                        let mut c = 0;
+                        while c + 8 <= L {
+                            sstep!(c);
+                            sstep!(c + 1);
+                            sstep!(c + 2);
+                            sstep!(c + 3);
+                            sstep!(c + 4);
+                            sstep!(c + 5);
+                            sstep!(c + 6);
+                            sstep!(c + 7);
+                            c += 8;
+                        }
+                        while c < L {
+                            sstep!(c);
+                            c += 1;
+                        }
+                        handover!(j, marked, rs);
                     }
                 }
                 for (k, l) in lanes.iter_mut().enumerate() {
@@ -1200,6 +1285,121 @@ fn room_segments<const L: usize, const PF: u8>(
 /// The busy phase's chunk: at most this many offsets' bytes are staged per lane (an 8 KiB
 /// tile at 32 lanes, in L1) before they are copied to the lanes' buffers
 const TILE: usize = 256;
+
+/// The gathered round (the sweep's `walk_segments_room_gathered` only): a chunk's offsets
+/// `from..w` at 32 lanes, the rows held in four vectors of eight, lane 8v + i in dword i of
+/// vector v. Each offset gathers its 32 entries (four `vpgatherdd`), stages each lane's byte
+/// at `tile[k][j]` (one `vpextrb` store a lane), and tests the 32 start flags together (bit
+/// 31: one `vmovmskps` of the entries' OR). With no start among them every row becomes its
+/// entry's link and the next offset follows. At the first offset j with a start, the lanes
+/// whose entries are starts are marked (bit k of the mask returned) and keep their rows, the
+/// others step as at any offset, and it returns (j, the mask) for the room walk's handovers;
+/// at the chunk's end, (w, 0). The rows are stored back at `rows` either way. A marked lane's
+/// byte at j is staged too, and never read: its segment's bytes end before j, and a segment
+/// it takes stages from j + 1 (as the scalar step leaves a stale byte there).
+///
+/// # Safety
+/// AVX2 must be available; `rows` must hold 32 rows below the length of the table `t`
+/// points to the start of; `tile` must be 32 rows of `TILE` bytes, and `w <= TILE`.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn gather_offsets(
+    t: *const u32,
+    rows: *mut u32,
+    tile: *mut u8,
+    from: usize,
+    w: usize,
+) -> (usize, u64) {
+    use core::arch::x86_64::*;
+    debug_assert!(w <= TILE);
+    // SAFETY: the caller's contract: the rows index the table (below 2^23, so positive as
+    // the gathers' signed indices), and every store is at tile[8v + i][j], j < w <= TILE
+    unsafe {
+        let rp = rows.cast::<__m256i>();
+        let (mut r0, mut r1, mut r2, mut r3) = (
+            _mm256_loadu_si256(rp),
+            _mm256_loadu_si256(rp.add(1)),
+            _mm256_loadu_si256(rp.add(2)),
+            _mm256_loadu_si256(rp.add(3)),
+        );
+        let tb = t.cast::<i32>();
+        let mut j = from;
+        while j < w {
+            let q0 = _mm256_i32gather_epi32::<4>(tb, r0);
+            let q1 = _mm256_i32gather_epi32::<4>(tb, r1);
+            let q2 = _mm256_i32gather_epi32::<4>(tb, r2);
+            let q3 = _mm256_i32gather_epi32::<4>(tb, r3);
+            // lane 8v + i's byte is the low byte of q_v's dword i
+            macro_rules! bytes {
+                ($q:expr, $v:expr) => {{
+                    let lo = _mm256_castsi256_si128($q);
+                    let hi = _mm256_extracti128_si256::<1>($q);
+                    let d = tile.add($v * 8 * TILE + j);
+                    *d = _mm_extract_epi8::<0>(lo) as u8;
+                    *d.add(TILE) = _mm_extract_epi8::<4>(lo) as u8;
+                    *d.add(2 * TILE) = _mm_extract_epi8::<8>(lo) as u8;
+                    *d.add(3 * TILE) = _mm_extract_epi8::<12>(lo) as u8;
+                    *d.add(4 * TILE) = _mm_extract_epi8::<0>(hi) as u8;
+                    *d.add(5 * TILE) = _mm_extract_epi8::<4>(hi) as u8;
+                    *d.add(6 * TILE) = _mm_extract_epi8::<8>(hi) as u8;
+                    *d.add(7 * TILE) = _mm_extract_epi8::<12>(hi) as u8;
+                }};
+            }
+            bytes!(q0, 0);
+            bytes!(q1, 1);
+            bytes!(q2, 2);
+            bytes!(q3, 3);
+            // a start among the 32 sets a sign bit of their OR
+            let f = _mm256_or_si256(_mm256_or_si256(q0, q1), _mm256_or_si256(q2, q3));
+            if _mm256_movemask_ps(_mm256_castsi256_ps(f)) != 0 {
+                macro_rules! mask {
+                    ($q:expr) => {
+                        _mm256_movemask_ps(_mm256_castsi256_ps($q)) as u32 as u64
+                    };
+                }
+                let marked = mask!(q0) | mask!(q1) << 8 | mask!(q2) << 16 | mask!(q3) << 24;
+                // a marked lane keeps its row (the start), the others take their links
+                macro_rules! step {
+                    ($q:expr, $r:expr) => {
+                        _mm256_castps_si256(_mm256_blendv_ps(
+                            _mm256_castsi256_ps(_mm256_srli_epi32::<8>($q)),
+                            _mm256_castsi256_ps($r),
+                            _mm256_castsi256_ps($q),
+                        ))
+                    };
+                }
+                _mm256_storeu_si256(rp, step!(q0, r0));
+                _mm256_storeu_si256(rp.add(1), step!(q1, r1));
+                _mm256_storeu_si256(rp.add(2), step!(q2, r2));
+                _mm256_storeu_si256(rp.add(3), step!(q3, r3));
+                return (j, marked);
+            }
+            r0 = _mm256_srli_epi32::<8>(q0);
+            r1 = _mm256_srli_epi32::<8>(q1);
+            r2 = _mm256_srli_epi32::<8>(q2);
+            r3 = _mm256_srli_epi32::<8>(q3);
+            j += 1;
+        }
+        _mm256_storeu_si256(rp, r0);
+        _mm256_storeu_si256(rp.add(1), r1);
+        _mm256_storeu_si256(rp.add(2), r2);
+        _mm256_storeu_si256(rp.add(3), r3);
+        (w, 0)
+    }
+}
+
+/// `gather_offsets` where there is no AVX2 to compile it for: never called
+/// (`gather_available` is false there)
+#[cfg(not(target_arch = "x86_64"))]
+unsafe fn gather_offsets(
+    _: *const u32,
+    _: *mut u32,
+    _: *mut u8,
+    _: usize,
+    _: usize,
+) -> (usize, u64) {
+    unreachable!()
+}
 
 /// `walk_segments_flagged_with_prefetch` with 0.1.5's switch: `PF` prefetches each lane's
 /// next entry into L1 (`PF_L1`, 0.1.5's prefetch) or not at all (`PF_OFF`). Kept so that
@@ -1988,5 +2188,335 @@ pub(crate) mod tests {
                 check_segments(&tt, &seg, "flagged walk");
             }
         }
+    }
+
+    // The sweep's gathered round (`walk_segments_room_gathered`) on every column and edge
+    // the room walk's tests above use, each against `walk` and the segment oracle, and each
+    // test asserting the gathers ran (where the CPU has AVX2: elsewhere the walk is the room
+    // walk's own, and the tests say so)
+
+    fn gathered(tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, s: &mut SegScratch, n: usize) {
+        walk_segments_room_gathered(tt, orig_ptr, out, s, n)
+    }
+
+    /// The column's T-vector, built
+    fn built(ll: &[u8]) -> TVector {
+        let mut counts = [0u32; 256];
+        for &c in ll {
+            counts[c as usize] += 1;
+        }
+        let mut tt = TVector::new();
+        build(ll, &counts, &mut tt);
+        tt
+    }
+
+    /// The gathered round ran on this thread (where it can)
+    fn assert_gathered() {
+        if gather_available() {
+            assert!(count(&GATHERED_CHUNKS) > 0, "the gathered round never ran");
+        } else {
+            eprintln!("no AVX2 here: the gathered walk ran as the room walk");
+        }
+    }
+
+    /// `flagged_walk_equals_plain`'s columns (random, and periodic: a list of several
+    /// cycles), at `check`'s primary indices and every segment count the room walk is
+    /// checked at there
+    #[test]
+    fn gathered_walk_equals_plain() {
+        let n = MIN_SEGMENTED + 1000;
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let random: Vec<u8> = (0..n)
+            .map(|_| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                (x % 7) as u8
+            })
+            .collect();
+        let periodic: Vec<u8> = (0..n).map(|i| b"abc"[i % 3]).collect();
+        for ll in [random, periodic] {
+            let mut tt = built(&ll);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            for orig_ptr in [0, ll.len() as u32 / 3, ll.len() as u32 - 1] {
+                walk(&tt, orig_ptr, &mut plain);
+                for segments in [1, 2, 40, 256, 512, 1024, 4096] {
+                    gathered(&mut tt, orig_ptr, &mut out, &mut seg, segments);
+                    assert!(plain == out, "orig_ptr {orig_ptr}, {segments} segments");
+                    check_segments(&tt, &seg, "gathered walk");
+                    assert!(tt.0.iter().all(|&e| e & START == 0));
+                }
+            }
+        }
+        assert_gathered();
+    }
+
+    /// `room_walk_short_cycles`'s degenerate columns (segments of one and two bytes)
+    #[test]
+    fn gathered_walk_short_cycles() {
+        let n = MIN_SEGMENTED + 77;
+        for ll in [
+            vec![3u8; n],
+            (0..n).map(|i| (i % 2) as u8).collect::<Vec<u8>>(),
+        ] {
+            let mut tt = built(&ll);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            for orig_ptr in [0, 1, n as u32 / 2, n as u32 - 1] {
+                walk(&tt, orig_ptr, &mut plain);
+                for segments in [33, 64, 512, 4096] {
+                    gathered(&mut tt, orig_ptr, &mut out, &mut seg, segments);
+                    assert!(plain == out, "orig_ptr {orig_ptr}, {segments} segments");
+                    check_segments(&tt, &seg, "gathered walk");
+                }
+            }
+        }
+        assert_gathered();
+    }
+
+    /// `room_walk_crafted_permutations`'s 20,000 columns, at the room walk's 512 segments,
+    /// reaching every transition `assert_reached` requires
+    #[test]
+    fn gathered_walk_crafted_permutations() {
+        let mut x = 99u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        for case in 0..20000 {
+            let n = MIN_SEGMENTED + rnd(200_000) as usize;
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let mut ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            if case % 5 == 0 {
+                let p = 1 + rnd(5) as usize;
+                for i in p..n {
+                    ll[i] = ll[i % p];
+                }
+            }
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut tt = built(&ll);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            gathered(&mut tt, orig_ptr, &mut out, &mut seg, FLAGGED_SEGMENTS);
+            assert!(plain == out, "case {case} n {n} alphabet {alphabet}");
+            check_segments(&tt, &seg, "gathered walk");
+        }
+        assert_reached();
+        assert_gathered();
+    }
+
+    /// `room_walk_deferred_handovers`'s 20,000 small columns: several lanes marked at one
+    /// offset, the queue running out with lanes waiting or after a take, and a stepped later
+    /// lane leaving on its segment's end, each reached by the gathered round
+    #[test]
+    fn gathered_walk_deferred_handovers() {
+        let mut x = 0x2545_f491_4f6c_dd1du64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        for case in 0..20000 {
+            let n = 64 + rnd(if case % 3 == 0 { 600 } else { 3000 }) as usize;
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut tt = built(&ll);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            let segments = if case % 2 == 0 {
+                33 + rnd(32) as usize
+            } else {
+                2 + rnd(n as u64 / 2) as usize
+            };
+            gathered(&mut tt, orig_ptr, &mut out, &mut seg, segments);
+            assert!(plain == out, "case {case}");
+            check_segments(&tt, &seg, "gathered walk");
+        }
+        for (name, c) in [
+            ("several lanes marked at one offset", &MARKED_SEVERAL),
+            (
+                "the queue running out with lanes waiting",
+                &ENDS_WITH_LANES_WAITING,
+            ),
+            ("the queue running out after a take", &ENDS_AFTER_A_TAKE),
+            (
+                "a stepped later lane leaving on its segment's end",
+                &LATER_STEPPED_ON_START,
+            ),
+        ] {
+            assert!(count(c) > 0, "never reached: {name}");
+        }
+        assert_gathered();
+    }
+
+    /// `room_walk_staged_chunk_edges`'s columns, until the gathered round has reached every
+    /// chunk edge that test requires
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    fn gathered_walk_staged_chunk_edges() {
+        let required = [
+            ("a pass of more than one chunk", &ROOM_OVER_TILE),
+            ("a take at a chunk's last offset", &TAKE_AT_CHUNK_END),
+            ("a take in a later chunk", &TAKE_IN_LATER_CHUNK),
+            (
+                "a segment taken and finished in one chunk",
+                &DONE_IN_TAKING_CHUNK,
+            ),
+            (
+                "a lane marked at a later chunk's first offset",
+                &MARK_AT_LATER_CHUNK_START,
+            ),
+            (
+                "the queue running out at a later chunk's first offset",
+                &EXHAUSTED_AT_CHUNK_START,
+            ),
+            (
+                "the queue running out at a chunk's last offset",
+                &EXHAUSTED_AT_CHUNK_END,
+            ),
+            (
+                "the queue running out at a pass's last offset",
+                &EXHAUSTED_AT_PASS_END,
+            ),
+            ("a lane taken mid-pass", &MID_PASS_TAKES),
+        ];
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        let mut cases = 0;
+        while cases < 20000 && required.iter().any(|(_, c)| count(c) == 0) {
+            cases += 1;
+            let n = 4000 + rnd(28000) as usize;
+            let alphabet = 1 + rnd(if cases % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut tt = built(&ll);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            let segments = 33 + rnd((n / 150) as u64) as usize;
+            gathered(&mut tt, orig_ptr, &mut out, &mut seg, segments);
+            assert!(plain == out, "case {cases}");
+            check_segments(&tt, &seg, "gathered walk");
+        }
+        for (name, c) in required {
+            assert!(count(c) > 0, "never reached in {cases} cases: {name}");
+        }
+        assert_gathered();
+    }
+
+    /// `segmented_walks_on_any_length`'s length edges (1 row up to MIN_SEGMENTED + 1), at
+    /// segment counts below, at and above the lanes
+    #[test]
+    fn gathered_walk_on_any_length() {
+        let mut x = 7u64;
+        for n in [
+            1,
+            2,
+            3,
+            31,
+            32,
+            33,
+            100,
+            1000,
+            MIN_SEGMENTED - 1,
+            MIN_SEGMENTED,
+            MIN_SEGMENTED + 1,
+        ] {
+            let ll: Vec<u8> = (0..n)
+                .map(|_| {
+                    x ^= x << 13;
+                    x ^= x >> 7;
+                    x ^= x << 17;
+                    (x % 3) as u8
+                })
+                .collect();
+            let mut tt = built(&ll);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            for orig_ptr in [0, n as u32 / 2, n as u32 - 1] {
+                walk(&tt, orig_ptr, &mut plain);
+                for segments in [1, 2, 33, 256] {
+                    gathered(&mut tt, orig_ptr, &mut out, &mut seg, segments);
+                    assert!(plain == out, "n {n}, {segments} segments");
+                    check_segments(&tt, &seg, &format!("n {n}, {segments} segments"));
+                }
+                assert!(tt.0.iter().all(|&e| e & START == 0));
+            }
+        }
+        assert_gathered();
+    }
+
+    /// `miri_room_walk_handoffs`'s blocks (natively: Miri has no gathers), reaching every
+    /// transition `assert_reached` requires, and its degenerate columns
+    #[test]
+    fn gathered_walk_handoffs() {
+        for seed in [170_778u64, 8_824] {
+            let mut x = seed.wrapping_mul(0x9e37_79b9_7f4a_7c15) | 1;
+            let mut rnd = move |m: u64| {
+                x ^= x << 13;
+                x ^= x >> 7;
+                x ^= x << 17;
+                x % m
+            };
+            let n = 200 + rnd(4000) as usize;
+            let alphabet = 1 + rnd(if seed % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut tt = built(&ll);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            gathered(&mut tt, orig_ptr, &mut out, &mut seg, 256);
+            assert!(plain == out, "seed {seed}");
+            check_segments(&tt, &seg, "gathered walk");
+        }
+        assert_reached();
+        let n = 600;
+        for ll in [vec![3u8; n], (0..n).map(|i| (i % 2) as u8).collect()] {
+            let mut tt = built(&ll);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, 1, &mut plain);
+            for segments in [33, 256] {
+                gathered(&mut tt, 1, &mut out, &mut seg, segments);
+                assert!(plain == out, "{segments} segments");
+                check_segments(&tt, &seg, "gathered walk");
+            }
+        }
+        assert_gathered();
+    }
+
+    /// Without AVX2 the gathered walk is the room walk's own step: no gather runs, and the
+    /// output is `walk`'s
+    #[test]
+    fn gathered_walk_without_avx2() {
+        NO_GATHER.with(|c| c.set(true));
+        assert!(!gather_available());
+        let ll: Vec<u8> = (0..MIN_SEGMENTED as u32 + 999)
+            .map(|i| (i.wrapping_mul(2_654_435_761) >> 27) as u8)
+            .collect();
+        let mut tt = built(&ll);
+        let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+        walk(&tt, 5, &mut plain);
+        gathered(&mut tt, 5, &mut out, &mut seg, 512);
+        NO_GATHER.with(|c| c.set(false));
+        assert!(plain == out);
+        check_segments(&tt, &seg, "gathered walk, no AVX2");
+        assert_eq!(count(&GATHERED_CHUNKS), 0);
+    }
+
+    /// A block of more than 2^23 rows is refused by the gathered walk too
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    #[should_panic(expected = "at most 2^23 rows")]
+    fn gathered_walk_refuses_more_than_2_23_rows() {
+        let n = (1 << 23) + 1;
+        let mut tt = TVector((0..n as u32).map(|r| r << 8).collect());
+        let (mut out, mut seg) = (Vec::new(), SegScratch::default());
+        gathered(&mut tt, 0, &mut out, &mut seg, 64);
     }
 }
