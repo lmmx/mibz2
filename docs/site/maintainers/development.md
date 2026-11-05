@@ -73,6 +73,7 @@ paired A/B decides what is faster.
 
 The benchmark has a version of its own (`BENCH` in `bench/report.py`), with its
 history in [`bench/CHANGELOG.md`](https://github.com/lmmx/mibz2/blob/master/bench/CHANGELOG.md):
+
 - **A pull request that changes the benchmark** (`bench/`, `examples/ab.rs`,
   `examples/phases.rs`, `.github/workflows/bench.yml`) either adds a changelog entry with
   its new version, or says in its description why no version is needed.
