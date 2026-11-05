@@ -7,7 +7,9 @@
     "protocol": "3f0160245cdb459a8cf755591a66c62ba8014da5",
     "roles": "b89e6dc11d83c7d0c4582f53f19f4f690554e650",
     "mode": "4d27405b52a1b34c73a957fa0aebea3f9622dca3",
-    "campaign": "c5d2983f8e5c007a47da86202ce686750a5ab55c"
+    "campaign": "c5d2983f8e5c007a47da86202ce686750a5ab55c",
+    "spec": "74ebaccaeddfcf68fd676aea54009d2e656c95f2",
+    "spec_optimizer": "597769beb23846ba481d00dca0040445a56a97eb"
   },
   "incoming_channel_comment_ids": [
     6628984134,
@@ -249,7 +251,7 @@
     }
   ],
   "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
-  "wake": "New Coordinator CHECKPOINT comments on PR #160 only; outputs on #145. No polling.",
+  "wake": "Every newly posted comment on inbox PR #160 is work under SPEC.md and SPEC.OPTIMIZER.md at beb7df121fddf69938fdf8c972a8c7d964267ac6; no header gate. Outputs on #145; no polling.",
   "next_trigger": "New addressed inbox checkpoint, including pinned current-master P87 production evidence; no automatic experiment launch.",
   "review_pr": 148,
   "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
@@ -257,7 +259,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "WAITING",
+  "status": "IN_PROGRESS",
   "published_evidence_commit": "dc5e9501fb7aaadc1aaaf34ecf18374ee742c14d",
   "incoming_experiment_comment_ids": [
     {
@@ -266,7 +268,7 @@
       "classification": "coordinator CI explanation; not authority"
     }
   ],
-  "deduplication": "Review only a new (PR, source SHA, evidence digest); ignore own comment IDs and own branch CI as input triggers.",
+  "deduplication": "For inbox PR #160, deduplicate completed comment IDs; resume in_progress entries. Preserve historical checkpoint identities.",
   "mode_register": {
     "source_comment_id": 6639428570,
     "mode_commit": "e44d87f96c2bdcce904872ea4fb13ad79bdcf2af",
@@ -303,6 +305,16 @@
       "report_path": "docs/journal/compact30-research/reviews/inbox-6645643541/report.md",
       "report_commit": "dc5e9501fb7aaadc1aaaf34ecf18374ee742c14d",
       "reply_id": 6645738830
+    },
+    {
+      "comment_id": 6646251725,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
+      "baseline_commit": "e26e3d9cbac6bcd2106b7070c869dd91fcd7217d",
+      "progress": "Receipt recorded. Reviewing P87 validation at a995ce87 and reranking remaining proposals against merged e26e3d9c.",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6646251725/report.md"
     }
   ]
 }
