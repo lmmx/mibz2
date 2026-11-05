@@ -1850,10 +1850,12 @@ pub(crate) mod tests {
             x ^= x << 17;
             x % m
         };
+        // the blocks scale with the tile, so a pass spans as many chunks at any TILE
+        let scale = TILE.div_ceil(256);
         let mut cases = 0;
         while cases < 20000 && required.iter().any(|(_, c)| count(c) == 0) {
             cases += 1;
-            let n = 4000 + rnd(28000) as usize;
+            let n = (4000 + rnd(28000) as usize) * scale;
             let alphabet = 1 + rnd(if cases % 2 == 0 { 3 } else { 256 });
             let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
             let orig_ptr = rnd(n as u64) as u32;
@@ -1865,9 +1867,9 @@ pub(crate) mod tests {
             build(&ll, &counts, &mut tt);
             let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
             walk(&tt, orig_ptr, &mut plain);
-            // a pass's room is about 2n / segments + 63: under n / 150 segments it is over
-            // two tiles, and over 32 of them the busy phase runs at 32 lanes
-            let segments = 33 + rnd((n / 150) as u64) as usize;
+            // a pass's room is about 2n / segments + 63: under n / (150 * scale) segments it
+            // is over two tiles, and over 32 of them the busy phase runs at 32 lanes
+            let segments = 33 + rnd((n / (150 * scale)) as u64) as usize;
             walk_segments_room_with_prefetch::<32, PF_L1>(
                 &mut tt, orig_ptr, &mut out, &mut seg, segments,
             );
