@@ -381,7 +381,7 @@ impl<const COUNT: bool> W<'_, COUNT> {
     #[cold]
     #[inline(never)]
     unsafe fn promote(&mut self, g: usize, j: usize, h: u32, one: bool) -> u32 {
-        chk!(COUNT, j >= 1 && j < ROWS);
+        chk!(COUNT, (1..ROWS).contains(&j));
         chk!(COUNT, g < self.g_count && !self.is_raw(g));
         // the old base and F byte, then a zeroed RawG holding the j reconstructed entries
         let (base, fb) = (h >> 8, h & 0xFF);
@@ -1880,9 +1880,9 @@ fn canon_tests(rng: &mut Rng, quick: bool, cases: &mut u64) {
                     assert_eq!(rc.h, RAW_BIT | rank as u32, "{shape}: header of {g}");
                     assert!(rc.f == [RAWF; 30]);
                     let e = &raw[rank].0;
-                    for j in 0..30 {
+                    for (j, &ej) in e.iter().take(30).enumerate() {
                         assert_eq!(
-                            e[j],
+                            ej,
                             (g as u32) << 8 | j as u32,
                             "{shape}: group {g} entry {j}"
                         );

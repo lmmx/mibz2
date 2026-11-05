@@ -1,0 +1,12 @@
+     Running unittests src/lib.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/a96ed9f45711006e/out/mibz2-a96ed9f45711006e)
+test bwt::tests::miri_build_one_pass ... ok
+test bwt::tests::miri_room_walk_handoffs ... ok
+test coop::tests::miri_build_fused ... ok
+test coop::tests::miri_pool_caller_panic_waits_for_the_helpers ... ok
+test coop::tests::miri_pool_caller_panic_wins ... ok
+test coop::tests::miri_pool_dropped_while_parked ... ok
+test coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable ... ok
+test coop::tests::miri_pool_runs_every_index_once ... ok
+test coop::tests::miri_pool_writes_visible_after_run ... ok
+test coop::tests::miri_walk_room_handoffs ... ok
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 22 filtered out; finished in 173.04s

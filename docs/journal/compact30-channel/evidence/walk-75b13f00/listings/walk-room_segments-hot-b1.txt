@@ -1,0 +1,77 @@
+self 9588849 hot instrs 76 hot sum 7995072
+   105,192 34ec0 mov    rdx,QWORD PTR [rsp+rcx*8+0x98]
+   105,192 34ec8 mov    BYTE PTR [rdx+r8*1],dil
+   105,192 34ecc shr    edi,0x8
+   105,192 34ecf mov    DWORD PTR [rax],edi
+   105,192 34ed1 prefetcht0 BYTE PTR [rbx+rdi*4]
+   105,252 34ed5 add    rcx,0x8
+   105,252 34ed9 add    rax,0x100
+   105,252 34edf cmp    rcx,0x19
+   105,252 34ee3 jae    350c0 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xce0>
+   105,252 34ee9 mov    edx,DWORD PTR [rax-0xe0]
+   105,252 34eef mov    edi,DWORD PTR [rbx+rdx*4]
+   105,252 34ef2 test   edi,edi
+   105,252 34ef4 js     35000 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc20>
+   105,192 34efa mov    rdx,QWORD PTR [rsp+rcx*8+0x60]
+   105,192 34eff mov    BYTE PTR [rdx+r8*1],dil
+   105,192 34f03 shr    edi,0x8
+   105,192 34f06 mov    DWORD PTR [rax-0xe0],edi
+   105,192 34f0c prefetcht0 BYTE PTR [rbx+rdi*4]
+   105,192 34f10 mov    edx,DWORD PTR [rax-0xc0]
+   105,192 34f16 mov    edi,DWORD PTR [rbx+rdx*4]
+   105,192 34f19 test   edi,edi
+   105,192 34f1b js     35015 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc35>
+   105,190 34f21 mov    rdx,QWORD PTR [rsp+rcx*8+0x68]
+   105,190 34f26 mov    BYTE PTR [rdx+r8*1],dil
+   105,190 34f2a shr    edi,0x8
+   105,190 34f2d mov    DWORD PTR [rax-0xc0],edi
+   105,190 34f33 prefetcht0 BYTE PTR [rbx+rdi*4]
+   105,190 34f37 mov    edx,DWORD PTR [rax-0xa0]
+   105,190 34f3d mov    edi,DWORD PTR [rbx+rdx*4]
+   105,190 34f40 test   edi,edi
+   105,190 34f42 js     35031 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc51>
+   105,198 34f48 mov    rdx,QWORD PTR [rsp+rcx*8+0x70]
+   105,198 34f4d mov    BYTE PTR [rdx+r8*1],dil
+   105,198 34f51 shr    edi,0x8
+   105,198 34f54 mov    DWORD PTR [rax-0xa0],edi
+   105,198 34f5a prefetcht0 BYTE PTR [rbx+rdi*4]
+   105,198 34f5e mov    edx,DWORD PTR [rax-0x80]
+   105,198 34f61 mov    edi,DWORD PTR [rbx+rdx*4]
+   105,198 34f64 test   edi,edi
+   105,198 34f66 js     3504a <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc6a>
+   105,198 34f6c mov    rdx,QWORD PTR [rsp+rcx*8+0x78]
+   105,198 34f71 mov    BYTE PTR [rdx+r8*1],dil
+   105,198 34f75 shr    edi,0x8
+   105,198 34f78 mov    DWORD PTR [rax-0x80],edi
+   105,198 34f7b prefetcht0 BYTE PTR [rbx+rdi*4]
+   105,198 34f7f mov    edx,DWORD PTR [rax-0x60]
+   105,198 34f82 mov    edi,DWORD PTR [rbx+rdx*4]
+   105,198 34f85 test   edi,edi
+   105,198 34f87 js     35063 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc83>
+   105,189 34f8d mov    rdx,QWORD PTR [rsp+rcx*8+0x80]
+   105,189 34f95 mov    BYTE PTR [rdx+r8*1],dil
+   105,189 34f99 shr    edi,0x8
+   105,189 34f9c mov    DWORD PTR [rax-0x60],edi
+   105,189 34f9f prefetcht0 BYTE PTR [rbx+rdi*4]
+   105,189 34fa3 mov    edx,DWORD PTR [rax-0x40]
+   105,189 34fa6 mov    edi,DWORD PTR [rbx+rdx*4]
+   105,189 34fa9 test   edi,edi
+   105,189 34fab js     3507c <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc9c>
+   105,187 34fb1 mov    rdx,QWORD PTR [rsp+rcx*8+0x88]
+   105,187 34fb9 mov    BYTE PTR [rdx+r8*1],dil
+   105,187 34fbd shr    edi,0x8
+   105,187 34fc0 mov    DWORD PTR [rax-0x40],edi
+   105,187 34fc3 prefetcht0 BYTE PTR [rbx+rdi*4]
+   105,187 34fc7 mov    edx,DWORD PTR [rax-0x20]
+   105,187 34fca mov    edi,DWORD PTR [rbx+rdx*4]
+   105,187 34fcd test   edi,edi
+   105,187 34fcf js     35095 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xcb5>
+   105,190 34fd5 mov    rdx,QWORD PTR [rsp+rcx*8+0x90]
+   105,190 34fdd mov    BYTE PTR [rdx+r8*1],dil
+   105,190 34fe1 shr    edi,0x8
+   105,190 34fe4 mov    DWORD PTR [rax-0x20],edi
+   105,190 34fe7 prefetcht0 BYTE PTR [rbx+rdi*4]
+   105,190 34feb mov    edx,DWORD PTR [rax]
+   105,190 34fed mov    edi,DWORD PTR [rbx+rdx*4]
+   105,190 34ff0 test   edi,edi
+   105,190 34ff2 jns    34ec0 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xae0>

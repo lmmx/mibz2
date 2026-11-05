@@ -1,0 +1,11 @@
+==8144== Callgrind, a call-graph generating cache profiler
+==8144== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==8144== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==8144== Command: c30cg/base/target/release/c30cg cg indep-wikidata/wikidata-independent.bz2 233 1
+==8144== 
+==8144== For interactive control, run 'callgrind_control -h'.
+==8144== 
+==8144== Events    : Ir
+==8144== Collected : 25588420
+==8144== 
+==8144== I   refs:      25,588,420

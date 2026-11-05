@@ -948,8 +948,8 @@ impl<K: Candidate> Worker<K> {
                     let ll = &e.ll[b];
                     let mut ftab = [0usize; 256];
                     let mut cum = 0;
-                    for c in 0..256 {
-                        ftab[c] = cum;
+                    for (c, slot) in ftab.iter_mut().enumerate() {
+                        *slot = cum;
                         cum += e.counts[b][c] as usize;
                     }
                     let mut def = t.len() == ll.len();

@@ -1,0 +1,11 @@
+     Running unittests src/lib.rs (target/debug/deps/mibz2-f3f83d9a02d247d5)
+test result: ok. 32 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.60s
+     Running tests/cooperative.rs (target/debug/deps/cooperative-23012644834f65ae)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.64s
+     Running tests/corpus.rs (target/debug/deps/corpus-bcf87ed6eab495ba)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.69s
+     Running tests/decode.rs (target/debug/deps/decode-3fe626165573880b)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.73s
+     Running tests/mtf_checkpoints.rs (target/debug/deps/mtf_checkpoints-83e9899d6e9c3f2c)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.60s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
