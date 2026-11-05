@@ -1,7 +1,8 @@
 //! Phase 2: RUNA/RUNB runs and move-to-front undone, into the BWT's last column (`ll`)
 //! and its byte counts, with libbzip2's checks: a run's weight below 2^21, and the block
-//! no longer than its stream's level allows. The scalar loop, or (AVX2) the move of an
-//! index below 32, nearly all of them, as one blend of the list and the list a byte on.
+//! no longer than its stream's level allows. The scalar loop, or (AVX2) the list's first
+//! 32 bytes held in two registers from one symbol to the next, so that the move of an
+//! index below 32, nearly all of them, is four byte shuffles with no store between.
 
 use super::block::Symbols;
 use super::{ErrorKind, Kernels};
@@ -73,6 +74,79 @@ pub fn mtf_scalar(
     Ok(ll.len())
 }
 
+/// The `pshufb` controls that move list[i], for each i < 32, to the front of the list's
+/// first 32 bytes, held as two registers (`lo` list[0..16], `hi` list[16..32]):
+/// `lo' = lo[c0] | hi[c1]` and `hi' = hi[c2] | lo[c3]`, a control byte with its top bit
+/// set giving 0. An index below 16 rotates `lo[0..=i]` by one and leaves `hi`; one in
+/// 16..32 (k = i - 16) gives `lo' = [hi[k], lo[0..15]]` and
+/// `hi' = [lo[15], hi[0..k], hi[k + 1..16]]`. Each index's four controls are one 64-byte
+/// line.
+#[cfg(target_arch = "x86_64")]
+#[repr(C, align(64))]
+struct Moves([[[u8; 16]; 4]; 32]);
+
+#[cfg(target_arch = "x86_64")]
+static MOVES: Moves = {
+    const Z: u8 = 0x80;
+    let mut m = [[[Z; 16]; 4]; 32];
+    let mut i = 0;
+    while i < 32 {
+        let mut j = 0;
+        while j < 16 {
+            if i < 16 {
+                m[i][0][j] = if j == 0 {
+                    i as u8
+                } else if j <= i {
+                    (j - 1) as u8
+                } else {
+                    j as u8
+                };
+                m[i][2][j] = j as u8;
+            } else {
+                let k = i - 16;
+                m[i][0][j] = if j == 0 { Z } else { (j - 1) as u8 };
+                m[i][1][j] = if j == 0 { k as u8 } else { Z };
+                m[i][2][j] = if j == 0 {
+                    Z
+                } else if j <= k {
+                    (j - 1) as u8
+                } else {
+                    j as u8
+                };
+                m[i][3][j] = if j == 0 { 15 } else { Z };
+            }
+            j += 1;
+        }
+        i += 1;
+    }
+    Moves(m)
+};
+
+/// The list's places 32..256 as bytes, a 32-byte line for each chunk of the list that
+/// `mtf_avx2` keeps in memory: a place moves when it is at most the index
+#[cfg(target_arch = "x86_64")]
+#[repr(C, align(64))]
+struct Tail([[u8; 32]; 7]);
+
+#[cfg(target_arch = "x86_64")]
+static TAIL: Tail = {
+    let mut t = [[0u8; 32]; 7];
+    let mut i = 0;
+    while i < 224 {
+        t[i / 32][i % 32] = (32 + i) as u8;
+        i += 1;
+    }
+    Tail(t)
+};
+
+/// The list's first 32 bytes live in two registers across the symbols, so the move of an
+/// index below 32, 98% of them on Wikidata, is four `pshufb`s and two ORs on registers,
+/// two instructions deep from one symbol's list to the next. The list in memory instead
+/// put a store and a reload between them, which waited for the store to commit (the next
+/// symbol's 32-byte load spanned the 32-byte store and the front's 1-byte one, so could
+/// not be forwarded from either). An index of 32 or more moves the rest of the list in
+/// memory, in aligned 32-byte chunks each loaded and stored whole (so that a later load
+/// of one is forwarded from its store), and `lo` and `hi` a byte on.
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn mtf_avx2(
@@ -85,20 +159,17 @@ unsafe fn mtf_avx2(
     ll.clear();
     ll.reserve(max);
     *counts = [0; 256];
+    // the list held as the bytes themselves (each symbol's seq_to_unseq), not their
+    // indices: a move permutes both alike, so the front is the byte with no lookup. Its
+    // bytes 32..256 are in memory here; 0..32 are in `lo` and `hi`, and `front` is its
+    // first byte, for the runs
     #[repr(align(64))]
-    struct L([u8; 320]);
-    let mut store = L([0u8; 320]);
-    // the list at store[32..288], with slack before it for the shifted load, held as the
-    // bytes themselves (each symbol's seq_to_unseq), not their indices: a move permutes
-    // both alike, so the front is the byte with no lookup
-    for i in 0..256 {
-        store.0[32 + i] = b.seq_to_unseq[i];
-    }
-    let base = store.0.as_mut_ptr().add(32);
-    let idx = _mm256_setr_epi8(
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-        25, 26, 27, 28, 29, 30, 31,
-    );
+    struct L([u8; 256]);
+    let mut list = L(b.seq_to_unseq);
+    let t = list.0.as_mut_ptr();
+    let mut lo = _mm_load_si128(t as *const __m128i);
+    let mut hi = _mm_load_si128(t.add(16) as *const __m128i);
+    let mut front = b.seq_to_unseq[0];
     let (mut run, mut weight) = (0u32, 1u32);
     // `n` bytes written at `out`; every write below is checked against `max`, which
     // `ll`'s capacity holds
@@ -120,7 +191,7 @@ unsafe fn mtf_avx2(
                 result = Err(ErrorKind::BlockTooLong);
                 break;
             }
-            let c = *base;
+            let c = front;
             counts[c as usize] += run;
             if run <= 64 && n + 64 <= max {
                 // a short run as two 32-byte stores of its byte: the bytes past the run are
@@ -144,17 +215,52 @@ unsafe fn mtf_avx2(
         }
         // (s - 1 < 256: a symbol is below the alphabet, at most 257)
         let nn = (s - 1) as usize;
-        let v = *base.add(nn);
         if nn < 32 {
-            let old = _mm256_load_si256(base as *const __m256i);
-            let shifted = _mm256_loadu_si256(base.sub(1) as *const __m256i);
-            let m = _mm256_cmpgt_epi8(_mm256_set1_epi8(nn as i8 + 1), idx); // i <= nn
-            _mm256_store_si256(base as *mut __m256i, _mm256_blendv_epi8(old, shifted, m));
+            let m = MOVES.0.as_ptr().add(nn) as *const __m128i;
+            let lo2 = _mm_or_si128(
+                _mm_shuffle_epi8(lo, _mm_load_si128(m)),
+                _mm_shuffle_epi8(hi, _mm_load_si128(m.add(1))),
+            );
+            hi = _mm_or_si128(
+                _mm_shuffle_epi8(hi, _mm_load_si128(m.add(2))),
+                _mm_shuffle_epi8(lo, _mm_load_si128(m.add(3))),
+            );
+            lo = lo2;
         } else {
-            std::ptr::copy(base, base.add(1), nn);
+            // list[32..=nn] a byte on, list[32] from `hi`'s last byte, and `lo` and `hi` a
+            // byte on, list[nn] at the front
+            let v = *t.add(nn);
+            // the tail's aligned 32-byte chunks, each with the chunk a byte on made in
+            // registers (its first byte the last of the chunk before, as it was) and
+            // blended in up to nn: the first chunk alone for an index below 64, else all
+            // seven, the same work for every index there with no branch on it
+            let nv = _mm256_set1_epi8(nn as u8 as i8);
+            let pos = TAIL.0.as_ptr() as *const __m256i;
+            let p = t.add(32) as *mut __m256i;
+            let y = _mm256_load_si256(p);
+            let below = _mm256_permute2x128_si256(_mm256_castsi128_si256(hi), y, 0x20);
+            let at = _mm256_load_si256(pos);
+            let m = _mm256_cmpeq_epi8(_mm256_min_epu8(at, nv), at); // at <= nn
+            let shifted = _mm256_alignr_epi8(y, below, 15);
+            _mm256_store_si256(p, _mm256_blendv_epi8(y, shifted, m));
+            if nn >= 64 {
+                let mut prev = y;
+                for k in 1..7 {
+                    let p = t.add(32 + 32 * k) as *mut __m256i;
+                    let y = _mm256_load_si256(p);
+                    let below = _mm256_permute2x128_si256(prev, y, 0x21);
+                    let at = _mm256_load_si256(pos.add(k));
+                    let m = _mm256_cmpeq_epi8(_mm256_min_epu8(at, nv), at);
+                    let shifted = _mm256_alignr_epi8(y, below, 15);
+                    _mm256_store_si256(p, _mm256_blendv_epi8(y, shifted, m));
+                    prev = y;
+                }
+            }
+            hi = _mm_alignr_epi8(hi, lo, 15);
+            lo = _mm_or_si128(_mm_slli_si128::<1>(lo), _mm_cvtsi32_si128(v as i32));
         }
-        *base = v;
-        let c = v;
+        let c = _mm_cvtsi128_si32(lo) as u8;
+        front = c;
         counts[c as usize] += 1;
         *out.add(n) = c;
         n += 1;
@@ -215,15 +321,16 @@ pub fn mtf_checkpoints_scalar(
     r
 }
 
-/// `mtf_avx2`'s loop unchanged but for its limit, the nearer of the block's end and the
-/// next checkpoint, fixed for the loop as `max` is there. Where it stops at that limit,
-/// the outer loop, entered once every `CHECKPOINT` bytes, tells the block's end (`mtf`'s
-/// error) from a checkpoint, copies the counts, splits a run that crosses one, and takes
-/// the symbol it stopped at. Making the checkpoints in the loop itself instead put more
+/// `mtf_avx2`'s loop as it was before the list's front moved into registers (and before
+/// #172 made its list bytes: this one's holds indices), but for its limit, the nearer of
+/// the block's end and the next checkpoint, fixed for the loop as `max` is there. Where it
+/// stops at that limit, the outer loop, entered once every `CHECKPOINT` bytes, tells the
+/// block's end (`mtf`'s error) from a checkpoint, copies the counts, splits a run that
+/// crosses one, and takes the symbol it stopped at. Making the checkpoints in the loop itself instead put more
 /// state live in it and cost about twice as much (the coop journal's §14.4, §15).
 ///
 /// The compiler fence after the list's new front is stored emits no instruction. It keeps
-/// `mtf_avx2`'s order, that store before the count's increment: the next symbol's 32-byte
+/// that loop's order, the store before the count's increment: the next symbol's 32-byte
 /// list load overlaps it, can't be forwarded from it and waits for it to commit, so with
 /// the store later that wait takes in the `s2u` load and the count's update (§15.1).
 #[cfg(target_arch = "x86_64")]

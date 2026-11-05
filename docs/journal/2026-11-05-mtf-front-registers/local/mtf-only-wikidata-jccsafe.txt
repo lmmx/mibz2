@@ -1,0 +1,6 @@
+basea 659.2	v4a 559.0
+basea 680.9	v4a 557.7
+basea 648.2	v4a 580.1
+basea 691.7	v4a 576.7
+basea 657.0	v4a 574.4
+basea 652.2	v4a 575.1
