@@ -111,6 +111,27 @@ jobs:
           fi
       - name: Check the nav, internal links, llms.txt and API coverage
         run: uv run --no-project -p 3.13 python docs/scripts/check_site.py
+      - name: Check for Markdown that rendered as something else
+        run: uv run --no-project -p 3.13 python docs/scripts/check_render.py
+      # The changed pages in Chromium, from this build (not a deployed preview): desktop and
+      # phone, light and dark. Fails on objective defects; the screenshots are for reading.
+      - name: Look at the changed pages
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) || '' }}
+        run: |
+          uv run --no-project -p 3.13 --with playwright==1.56.0 playwright install --with-deps chromium
+          if [ -n "$BASE" ]; then pages="--changed $BASE"; else pages="--blog"; fi
+          uv run --no-project -p 3.13 --with playwright==1.56.0 python docs/scripts/look_pages.py $pages
+      - if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+        run: test -f site-shots/report.md && cat site-shots/report.md >> "$GITHUB_STEP_SUMMARY" || true
+      - if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-artifact@v4
+        with:
+          name: page-shots
+          path: site-shots
+          retention-days: 14
+          if-no-files-found: ignore
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Run the examples in the pages

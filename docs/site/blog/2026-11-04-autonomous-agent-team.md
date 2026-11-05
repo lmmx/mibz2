@@ -155,8 +155,8 @@ inbox is the address: every comment in it is for its agent. The Coordinator post
 to the inbox of every agent that should act on it, so a checkpoint for the Guardian and the
 Researcher is two comments, one in each inbox. Each run fetches its comment, reads from the header
 who sent it and what kind of message it is, and does the work. It commits a receipt to its own branch first,
-then its progress as it goes, and publishes its `REVIEW` on #145. The Coordinator subscribes to
-#145, so a reply reaches it within seconds.
+then its progress as it goes, and publishes its `REVIEW` on #145. The Coordinator subscribes
+to #145, so a reply reaches it within seconds.
 
 This keeps each agent's attention on its own work. An inbox carries only messages meant for its
 agent, so the other agents' reviews, CI results and pull requests never start a run there. An
@@ -304,6 +304,7 @@ and both prototypes remove the same instruction, so their savings overlap. That 
 checkpoint.
 
 On 5 November the redesigned setup ran its first full round:
+
 - **The Optimiser** ranked the whole decoder's candidates from its inbox. It put P87, a
   production-shaped change that writes the walk's output over a buffer it has already consumed,
   first.
@@ -315,6 +316,7 @@ On 5 November the redesigned setup ran its first full round:
   [merged](https://github.com/lmmx/mibz2/pull/164).
 
 Then all three agents took their next assignment under the new specs:
+
 - each woke only on its own inbox;
 - each committed a receipt within a minute or two, and published its review on #145;
 - the Guardian also moved itself onto its current operating spec.
@@ -326,6 +328,7 @@ So the messages get through, the reviews arrive before the decisions they bear o
 goes through me. Whether that makes the research faster will show over the next few posts.
 
 If you want to set up something similar:
+
 - give each agent its own inbox, and one shared place to publish;
 - have each run commit a receipt before it works, and its progress as it goes;
 - point every message at an exact commit;

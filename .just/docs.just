@@ -16,4 +16,9 @@ docs-build: docs-bench
 # The build, the site checks and the examples in the pages
 docs-check: docs-build
    uv run --no-project -p 3.13 python docs/scripts/check_site.py
+   uv run --no-project -p 3.13 python docs/scripts/check_render.py
    uv run pytest docs/site
+
+# Open the pages changed since BASE in Chromium: checks, and screenshots in site-shots/
+docs-look BASE="origin/master": docs-build
+   uv run --no-project -p 3.13 --with playwright==1.56.0 python docs/scripts/look_pages.py --changed {{BASE}}
