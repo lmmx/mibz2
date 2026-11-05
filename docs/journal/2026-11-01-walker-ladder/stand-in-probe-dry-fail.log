@@ -1,0 +1,39 @@
+<corpora>/wikidata-20261026.bz2: OK
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.02s
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.02s
+     Running unittests examples/walker_ladder.rs (target/release/examples/walker_ladder-1a8806f6612e0453)
+
+running 8 tests
+test tests::deadline_loop_walks_at_least_once ... ok
+test tests::malformed_acks_are_rejected ... ok
+test tests::mixed_framing ... ok
+test tests::deadline_loop_is_capped_by_reps ... ok
+test tests::reads_no_further_than_its_frame ... ok
+test tests::fixed_loop_walks_reps ... ok
+test tests::two_acks_plain ... ok
+test tests::two_acks_with_perf_6_8_nul_framing ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+.........................
+----------------------------------------------------------------------
+Ran 25 tests in 0.061s
+
+OK
+check: block 1 (900000 rows, 511 segments): rungs A-D, M and P at 1, 8, 16 and 32 lanes, and S: every walk visits every row once, M's every segment reaches its successor's start, and D's and P's outputs are the shipped walk's (fnv 27d7635e0e1a9555)
+# Walker counter probe (20261102T002510Z)
+
+Environment (numbers only): cpu_family 6, cpu_model 207, cpu_stepping 2, logical_cpus 4, physical_cores 4, threads_per_core 1, perf_event_paranoid 2, nmi_watchdog 0; perf version 6.8.fake
+
+**The control path failed: no group was probed.** The counters were not enabled and counted around the walks, so no availability can be read.
+
+Failures:
+
+- probe round 0 A32 None cpu 0: cycles <not counted>
+- probe round 0 A32 None cpu 0: instructions <not counted>
+- probe round 0 A32 None cpu 0: cycles <not counted>
+- probe round 0 A32 None cpu 0: instructions <not counted>
+
+wrote target/walker-probe-20261102T002509Z/walker-probe-20261102T002510Z.json and target/walker-probe-20261102T002509Z/walker-probe-20261102T002510Z.md (perf's raw output in the .json)
+archive: target/walker-probe-20261102T002509Z.tar.gz (2115 bytes, sha256 1c9680cbd59193a8dc7e9003a1fffdfaebbad67e98b2d42a26c394c9226bf68e): 3 files and MANIFEST.json, commit a245a4550fc44d6d3f7884a6d966ed369a66acff, WITH tracked changes
+error: recipe `walker-counter-probe` failed with exit code 1

@@ -1,0 +1,322 @@
+preflight: all 7 groups counted as perf groups, unmultiplexed, bounded by the control FIFO
+round 0 B8 pf: 3.969 ns a row
+round 0 D32 branch_sb: 2.279 ns a row
+round 0 P16 branch_sb: 2.207 ns a row
+round 0 C32 exec: 1.477 ns a row
+round 0 D16 stalls_l1: 2.312 ns a row
+round 0 B16 pf: 2.137 ns a row
+round 0 B16 stalls_l2: 2.426 ns a row
+round 0 P32 stalls_l2: 1.929 ns a row
+round 0 P16 stalls_l2: 2.248 ns a row
+round 0 B32 stalls_l2: 1.573 ns a row
+round 0 B8 mlp: 4.100 ns a row
+round 0 A16 stalls_l1: 2.441 ns a row
+round 0 D1 branch_sb: 19.028 ns a row
+round 0 P32 mlp: 2.004 ns a row
+round 0 A8 mlp: 4.008 ns a row
+round 0 C16 stalls_l1: 2.308 ns a row
+round 0 B32 loads: 1.594 ns a row
+round 0 S32 pf: 0.049 ns a row
+round 0 S32 stalls_l1: 0.043 ns a row
+round 0 P8 stalls_l2: 4.245 ns a row
+round 0 D16 pf: 2.227 ns a row
+round 0 A1 pf: 19.259 ns a row
+round 0 A1 branch_sb: 17.677 ns a row
+round 0 A32 stalls_l2: 2.400 ns a row
+round 0 D1 stalls_l2: 19.186 ns a row
+round 0 C32 pf: 1.638 ns a row
+round 0 C16 branch_sb: 2.409 ns a row
+round 0 B32 mlp: 1.554 ns a row
+round 0 B32 pf: 1.698 ns a row
+round 0 P32 pf: 1.736 ns a row
+round 0 D8 exec: 3.917 ns a row
+round 0 B1 exec: 20.780 ns a row
+round 0 A8 branch_sb: 4.157 ns a row
+round 0 D8 mlp: 4.117 ns a row
+round 0 B8 exec: 3.913 ns a row
+round 0 P16 loads: 2.323 ns a row
+round 0 S32 branch_sb: 0.051 ns a row
+round 0 D16 stalls_l2: 2.570 ns a row
+round 0 A32 stalls_l1: 2.494 ns a row
+round 0 A1 mlp: 18.995 ns a row
+round 0 A8 stalls_l1: 4.191 ns a row
+round 0 C16 pf: 2.165 ns a row
+round 0 D32 exec: 2.089 ns a row
+round 0 D8 stalls_l1: 4.104 ns a row
+round 0 C8 loads: 3.802 ns a row
+round 0 P8 mlp: 3.990 ns a row
+round 0 C8 branch_sb: 3.778 ns a row
+round 0 C32 branch_sb: 1.431 ns a row
+round 0 D8 branch_sb: 3.814 ns a row
+round 0 D1 mlp: 18.180 ns a row
+round 0 C32 mlp: 1.437 ns a row
+round 0 A16 mlp: 2.354 ns a row
+round 0 S32 mlp: 0.057 ns a row
+round 0 D8 stalls_l2: 3.797 ns a row
+round 0 D32 stalls_l1: 2.083 ns a row
+round 0 C8 mlp: 3.595 ns a row
+round 0 D32 pf: 2.448 ns a row
+round 0 B32 exec: 1.718 ns a row
+round 0 B16 mlp: 2.282 ns a row
+round 0 C16 mlp: 2.506 ns a row
+round 0 B16 stalls_l1: 2.312 ns a row
+round 0 B1 pf: 17.032 ns a row
+round 0 P1 stalls_l2: 21.494 ns a row
+round 0 B32 branch_sb: 2.145 ns a row
+round 0 P32 stalls_l1: 1.786 ns a row
+round 0 A32 exec: 2.221 ns a row
+round 0 A1 stalls_l2: 18.107 ns a row
+round 0 C8 stalls_l2: 3.778 ns a row
+round 0 A32 loads: 2.510 ns a row
+round 0 A32 branch_sb: 2.404 ns a row
+round 0 C1 stalls_l1: 21.257 ns a row
+round 0 C1 pf: 19.534 ns a row
+round 0 A32 pf: 2.258 ns a row
+round 0 C1 stalls_l2: 20.142 ns a row
+round 0 D8 pf: 3.761 ns a row
+round 0 C8 pf: 4.097 ns a row
+round 0 A16 pf: 2.429 ns a row
+round 0 A16 exec: 2.584 ns a row
+round 0 P8 pf: 4.556 ns a row
+round 0 C16 stalls_l2: 2.310 ns a row
+round 0 C32 stalls_l2: 1.592 ns a row
+round 0 D1 pf: 19.262 ns a row
+round 0 P32 loads: 2.382 ns a row
+round 0 A16 stalls_l2: 2.847 ns a row
+round 0 B16 loads: 2.268 ns a row
+round 0 P1 pf: 22.243 ns a row
+round 0 P8 branch_sb: 4.377 ns a row
+round 0 P16 mlp: 2.553 ns a row
+round 0 P8 exec: 4.072 ns a row
+round 0 C1 loads: 18.561 ns a row
+round 0 C32 loads: 1.445 ns a row
+round 0 P1 stalls_l1: 22.309 ns a row
+round 0 D32 mlp: 2.119 ns a row
+round 0 S32 exec: 0.047 ns a row
+round 0 C1 branch_sb: 18.553 ns a row
+round 0 A8 exec: 4.061 ns a row
+round 0 C16 loads: 2.283 ns a row
+round 0 P16 stalls_l1: 2.414 ns a row
+round 0 C8 stalls_l1: 3.765 ns a row
+round 0 D16 loads: 2.436 ns a row
+round 0 C1 mlp: 18.463 ns a row
+round 0 P1 branch_sb: 20.987 ns a row
+round 0 B16 branch_sb: 2.287 ns a row
+round 0 B8 stalls_l1: 4.096 ns a row
+round 0 B32 stalls_l1: 1.573 ns a row
+round 0 B1 mlp: 18.895 ns a row
+round 0 D8 loads: 4.086 ns a row
+round 0 A16 loads: 2.873 ns a row
+round 0 A1 stalls_l1: 20.056 ns a row
+round 0 D16 exec: 2.247 ns a row
+round 0 B8 loads: 4.267 ns a row
+round 0 B8 stalls_l2: 4.050 ns a row
+round 0 P8 stalls_l1: 4.554 ns a row
+round 0 B1 stalls_l1: 18.902 ns a row
+round 0 D32 stalls_l2: 2.060 ns a row
+round 0 B16 exec: 2.332 ns a row
+round 0 C32 stalls_l1: 1.622 ns a row
+round 0 P16 exec: 2.279 ns a row
+round 0 D32 loads: 1.946 ns a row
+round 0 P1 exec: 25.738 ns a row
+round 0 S32 stalls_l2: 0.051 ns a row
+round 0 D1 stalls_l1: 18.757 ns a row
+round 0 P32 exec: 2.139 ns a row
+round 0 P1 loads: 22.261 ns a row
+round 0 P16 pf: 2.676 ns a row
+round 0 C8 exec: 3.949 ns a row
+round 0 A8 loads: 3.922 ns a row
+round 0 D16 branch_sb: 2.242 ns a row
+round 0 P32 branch_sb: 2.034 ns a row
+round 0 A1 loads: 19.031 ns a row
+round 0 D1 loads: 21.933 ns a row
+round 0 A1 exec: 18.996 ns a row
+round 0 B1 loads: 20.086 ns a row
+round 0 S32 loads: 0.043 ns a row
+round 0 P8 loads: 4.111 ns a row
+round 0 P1 mlp: 19.606 ns a row
+round 0 B8 branch_sb: 4.146 ns a row
+round 0 B1 stalls_l2: 19.293 ns a row
+round 0 D1 exec: 20.022 ns a row
+round 0 C16 exec: 2.157 ns a row
+round 0 C1 exec: 20.028 ns a row
+round 0 A8 pf: 4.154 ns a row
+round 0 A8 stalls_l2: 4.254 ns a row
+round 0 A16 branch_sb: 2.769 ns a row
+round 0 D16 mlp: 2.392 ns a row
+round 0 B1 branch_sb: 17.565 ns a row
+round 0 A32 mlp: 2.293 ns a row
+round 0 four-core A32 exec
+round 0 four-core A32 mlp
+round 0 four-core B32 exec
+round 0 four-core B32 mlp
+round 0 four-core P32 exec
+round 0 four-core P32 mlp
+wrote walker-ladder-20261101T235714Z.jsonl
+G0: 120 failures, e.g. four round 0 A32 exec cpu 0: cycles running 80.0% (multiplexed)
+G1: P32's ns a row, max / min over its 7 runs: 1.372 (fails)
+
+cycles a row, medians over runs (one core)
+| rung | 1 lanes | 8 lanes | 16 lanes | 32 lanes |
+|---|--:|--:|--:|--:|
+| A | 95.110 | 20.796 | 12.957 | 12.027 |
+| B | 94.647 | 20.509 | 11.471 | 8.002 |
+| C | 97.812 | 18.928 | 11.569 | 7.437 |
+| D | 96.046 | 19.617 | 11.603 | 10.479 |
+| P | 111.355 | 21.259 | 11.649 | 10.056 |
+
+{
+ "unit": "cycles a row",
+ "G0_failures": [
+  "four round 0 A32 exec cpu 0: cycles running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 0: instructions running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 0: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 0: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 0: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 1: cycles running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 1: instructions running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 1: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 1: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 1: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 2: cycles running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 2: instructions running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 2: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 2: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 2: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 3: cycles running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 3: instructions running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 3: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 3: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 A32 exec cpu 3: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 0: cycles running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 0: instructions running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 0: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 0: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 0: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 1: cycles running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 1: instructions running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 1: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 1: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 1: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 2: cycles running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 2: instructions running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 2: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 2: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 2: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 3: cycles running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 3: instructions running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 3: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 3: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 A32 mlp cpu 3: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 0: cycles running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 0: instructions running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 0: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 0: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 0: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 1: cycles running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 1: instructions running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 1: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 1: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 1: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 2: cycles running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 2: instructions running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 2: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 2: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 2: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 3: cycles running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 3: instructions running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 3: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 3: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 B32 exec cpu 3: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 0: cycles running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 0: instructions running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 0: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 0: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 0: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 1: cycles running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 1: instructions running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 1: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 1: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 1: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 2: cycles running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 2: instructions running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 2: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 2: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 2: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 3: cycles running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 3: instructions running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 3: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 3: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 B32 mlp cpu 3: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 0: cycles running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 0: instructions running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 0: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 0: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 0: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 1: cycles running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 1: instructions running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 1: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 1: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 1: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 2: cycles running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 2: instructions running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 2: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 2: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 2: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 3: cycles running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 3: instructions running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 3: uops_issued.any running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 3: uops_retired.retire_slots running 80.0% (multiplexed)",
+  "four round 0 P32 exec cpu 3: idq_uops_not_delivered.core running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 0: cycles running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 0: instructions running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 0: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 0: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 0: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 1: cycles running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 1: instructions running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 1: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 1: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 1: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 2: cycles running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 2: instructions running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 2: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 2: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 2: l1d_pend_miss.fb_full running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 3: cycles running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 3: instructions running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 3: l1d_pend_miss.pending running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 3: l1d_pend_miss.pending_cycles running 80.0% (multiplexed)",
+  "four round 0 P32 mlp cpu 3: l1d_pend_miss.fb_full running 80.0% (multiplexed)"
+ ],
+ "G1_spread": 1.3723931328494066,
+ "valid": false,
+ "bare32": 8.001871388888889,
+ "P32": 10.055534861111111,
+ "P32_over_bare32": 1.2566478980246878,
+ "best_bare_any_lanes": 8.001871388888889,
+ "contrasts_32": {
+  "B->C": -0.5646840277777772,
+  "C->D": 3.041420555555555,
+  "D->P": -0.4230730555555553
+ },
+ "D1_D2": "between 1.15 and 1.5: reported, no rewrite on this evidence",
+ "D3": {
+  "issued_share": 0.3,
+  "retired_share": 0.3250000003237304,
+  "front_end_undelivered_share": 0.35,
+  "reading": "issue pressure below 0.70 of 4 a cycle: no classification follows"
+ },
+ "D4": {
+  "demand_mlp_B16": 0.9230769222151686,
+  "demand_mlp_B32": 0.9230769218145043,
+  "fb_full_events_a_cycle_B16": 1.4,
+  "fb_full_events_a_cycle_B32": 1.4,
+  "reading": "no plateau with rising fill-buffer pressure"
+ },
+ "D5": {
+  "ratio_of_ratios": 0.8470615324038787,
+  "reading": "does not transfer (|r - 1| > 0.15): report and stop"
+ },
+ "read": "VOID: G0 or G1 failed, so none of the decisions above is read"
+}

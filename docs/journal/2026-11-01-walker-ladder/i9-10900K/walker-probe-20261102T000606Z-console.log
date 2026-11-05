@@ -1,0 +1,119 @@
+louis 🌟 ~/dev/mibz2 $ git fetch origin research/walker-ladder
+git switch research/walker-ladder
+git pull --ff-only
+git status
+sudo -v
+just walker-counter-probe 2>&1 | tee walker-probe-console.log
+remote: Enumerating objects: 62, done.
+remote: Counting objects: 100% (62/62), done.
+remote: Compressing objects: 100% (14/14), done.
+remote: Total 36 (delta 23), reused 35 (delta 22), pack-reused 0 (from 0)
+Unpacking objects: 100% (36/36), 35.75 KiB | 572.00 KiB/s, done.
+From github.com:lmmx/mibz2
+ * branch            research/walker-ladder -> FETCH_HEAD
+   e46506b..a245a45  research/walker-ladder -> origin/research/walker-ladder
+Already on 'research/walker-ladder'
+Your branch is behind 'origin/research/walker-ladder' by 3 commits, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+remote: Enumerating objects: 1570, done.
+remote: Counting objects: 100% (1488/1488), done.
+remote: Compressing objects: 100% (816/816), done.
+remote: Total 1391 (delta 669), reused 1268 (delta 559), pack-reused 0 (from 0)
+Receiving objects: 100% (1391/1391), 5.78 MiB | 7.87 MiB/s, done.
+Resolving deltas: 100% (669/669), completed with 40 local objects.
+From github.com:lmmx/mibz2
+ * [new branch]      docs/architecture-plan          -> origin/docs/architecture-plan
+ * [new branch]      docs/blog-dispatch              -> origin/docs/blog-dispatch
+ * [new branch]      docs/blog-p87                   -> origin/docs/blog-p87
+ * [new branch]      docs/blog-p87-access            -> origin/docs/blog-p87-access
+ * [new branch]      docs/blog-p87-rewrite           -> origin/docs/blog-p87-rewrite
+ * [new branch]      docs/blog-p87-title             -> origin/docs/blog-p87-title
+ * [new branch]      docs/bwt-memory-proposal        -> origin/docs/bwt-memory-proposal
+ * [new branch]      docs/dispatch-causality-records -> origin/docs/dispatch-causality-records
+   f4e5f8d..b3ae686  docs/external-reports-74        -> origin/docs/external-reports-74
+ * [new branch]      docs/katex                      -> origin/docs/katex
+   c222467..107f5e4  gh-pages                        -> origin/gh-pages
+   9175a11..9d22ac9  research/for14-records          -> origin/research/for14-records
+   045808a..a0094cf  research/p87-buffer-reuse       -> origin/research/p87-buffer-reuse
+ * [new branch]      research/p87-production         -> origin/research/p87-production
+Updating e46506b..a245a45
+Fast-forward
+ .just/bench.just                                                                   |  39 ++++++++++++----
+ bench/test_walker_ladder.py                                                        | 125 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ bench/walker_ladder.py                                                             | 537 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----------------------------------------------------------------------------
+ docs/journal/2026-11-01-walker-ladder-protocol.md                                  | 429 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++------------------------------------------------------------------------------
+ docs/journal/2026-11-01-walker-ladder/check-debug.log                              |   6 +--
+ docs/journal/2026-11-01-walker-ladder/check-release.log                            |  14 +++---
+ docs/journal/2026-11-01-walker-ladder/i9-10900K/walker-audit-20261101T232121Z.json | 255 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ docs/journal/2026-11-01-walker-ladder/i9-10900K/walker-audit-20261101T232121Z.md   |  36 +++++++++++++++
+ docs/journal/2026-11-01-walker-ladder/i9-10900K/walker-audit-console.log           |  42 +++++++++++++++++
+ docs/journal/2026-11-01-walker-ladder/rungs-disassembly.md                         | 146 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ docs/journal/2026-11-01-walker-ladder/stand-in-e2e-clean.log                       | 201 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ docs/journal/2026-11-01-walker-ladder/stand-in-e2e-mux4.log                        | 322 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ examples/walker_ladder.rs                                                          | 287 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------
+ 13 files changed, 1979 insertions(+), 460 deletions(-)
+ create mode 100644 bench/test_walker_ladder.py
+ create mode 100644 docs/journal/2026-11-01-walker-ladder/i9-10900K/walker-audit-20261101T232121Z.json
+ create mode 100644 docs/journal/2026-11-01-walker-ladder/i9-10900K/walker-audit-20261101T232121Z.md
+ create mode 100644 docs/journal/2026-11-01-walker-ladder/i9-10900K/walker-audit-console.log
+ create mode 100644 docs/journal/2026-11-01-walker-ladder/rungs-disassembly.md
+ create mode 100644 docs/journal/2026-11-01-walker-ladder/stand-in-e2e-clean.log
+ create mode 100644 docs/journal/2026-11-01-walker-ladder/stand-in-e2e-mux4.log
+On branch research/walker-ladder
+Your branch is up-to-date with 'origin/research/walker-ladder'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        bench/results/
+        for14-analysis.json
+        for14-console.log
+        for14-coop-20261101T231824Z.jsonl
+        for14-coop-20261101T231824Z.md
+        walker-audit-20261101T232121Z.json
+        walker-audit-20261101T232121Z.md
+        walker-audit-console.log
+
+nothing added to commit but untracked files present (use "git add" to track)
+[sudo] password for louis:          
+/home/louis/dev/mibz2/target/walk-decoder/work/corpora/wikidata-20261026.bz2: OK
+   Compiling mibz2 v0.2.1 (/home/louis/dev/mibz2)
+    Finished `release` profile [optimized + debuginfo] target(s) in 3.94s
+check: block 1 (900000 rows, 511 segments): rungs A-D, M and P at 1, 8, 16 and 32 lanes, and S: every walk visits every row once, M's every segment reaches its successor's start, and D's and P's outputs are the shipped walk's (fnv 27d7635e0e1a9555)
+# Walker counter probe (20261102T000606Z)
+
+Environment (numbers only): cpu_family 6, cpu_model 165, cpu_stepping 5, logical_cpus 20, physical_cores 10, threads_per_core 2, perf_event_paranoid 4, nmi_watchdog 1
+
+| group | as one perf group: all counted | multiplexed | bounded by the FIFO | cycles, 20 walks | cycles, control only |
+|---|---|---|---|--:|--:|
+| exec | False | False | False | None | None |
+| branch_sb | False | False | False | None | None |
+| mlp | False | False | False | None | None |
+| stalls_l1 | False | False | False | None | None |
+| stalls_l2 | False | False | False | None | None |
+| pf | False | False | False | None | None |
+| loads | False | False | False | None | None |
+| exec_pair | False | False | False | None | None |
+| mlp_pair | False | False | False | None | None |
+| fb_full | False | False | False | None | None |
+| single:uops_issued.any | False | False | False | None | None |
+| single:uops_retired.retire_slots | False | False | False | None | None |
+| single:idq_uops_not_delivered.core | False | False | False | None | None |
+| single:br_misp_retired.all_branches | False | False | False | None | None |
+| single:resource_stalls.sb | False | False | False | None | None |
+| single:resource_stalls.any | False | False | False | None | None |
+| single:l1d_pend_miss.pending | False | False | False | None | None |
+| single:l1d_pend_miss.pending_cycles | False | False | False | None | None |
+| single:l1d_pend_miss.fb_full | False | False | False | None | None |
+| single:cycle_activity.stalls_l1d_miss | False | False | False | None | None |
+| single:cycle_activity.stalls_total | False | False | False | None | None |
+| single:cycle_activity.stalls_l2_miss | False | False | False | None | None |
+| single:cycle_activity.stalls_l3_miss | False | False | False | None | None |
+| single:dtlb_load_misses.walk_active | False | False | False | None | None |
+| single:sw_prefetch_access.t0 | False | False | False | None | None |
+| single:load_hit_pre.sw_pf | False | False | False | None | None |
+| single:mem_load_retired.l1_miss | False | False | False | None | None |
+| single:mem_load_retired.fb_hit | False | False | False | None | None |
+| single:mem_load_retired.l2_miss | False | False | False | None | None |
+| single:mem_load_retired.l3_miss | False | False | False | None | None |
+
+wrote walker-probe-20261102T000606Z.json and walker-probe-20261102T000606Z.md (perf's raw output in the .json)

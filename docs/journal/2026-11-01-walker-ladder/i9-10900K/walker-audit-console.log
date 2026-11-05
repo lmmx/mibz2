@@ -1,0 +1,42 @@
+/home/louis/dev/mibz2/target/walk-decoder/work/corpora/wikidata-20261026.bz2: OK
+   Compiling mibz2 v0.2.1 (/home/louis/dev/mibz2)
+    Finished `release` profile [optimized + debuginfo] target(s) in 6.65s
+check: block 1 (900000 rows, 511 segments): rungs A-D and P at 1, 8, 16 and 32 lanes, and S: every walk visits every row once and D's and P's outputs are the shipped walk's (fnv 27d7635e0e1a9555)
+# Walker counter audit (20261101T232121Z)
+
+Environment (numbers only): cpu_family 6, cpu_model 165, cpu_stepping 5, logical_cpus 20, physical_cores 10, threads_per_core 2, perf_event_paranoid 4, nmi_watchdog 1
+
+| event | in perf list | status | counts on a run |
+|---|---|---|---|
+| `cycles` | True | counted | True |
+| `instructions` | True | counted | True |
+| `uops_issued.any` | True | counted | True |
+| `uops_retired.retire_slots` | True | counted | True |
+| `br_misp_retired.all_branches` | True | counted | True |
+| `idq_uops_not_delivered.core` | True | counted | True |
+| `l1d_pend_miss.pending` | True | counted | True |
+| `l1d_pend_miss.pending_cycles` | True | counted | True |
+| `l1d_pend_miss.fb_full` | True | counted | True |
+| `cycle_activity.stalls_l1d_miss` | True | counted | True |
+| `cycle_activity.stalls_l2_miss` | True | counted | True |
+| `cycle_activity.stalls_l3_miss` | True | counted | True |
+| `cycle_activity.stalls_total` | True | counted | True |
+| `resource_stalls.sb` | True | counted | True |
+| `dtlb_load_misses.walk_active` | True | counted | True |
+| `sw_prefetch_access.t0` | True | counted | True |
+| `load_hit_pre.sw_pf` | True | counted | True |
+| `mem_load_retired.l1_miss` | True | counted | True |
+| `mem_load_retired.fb_hit` | True | counted | True |
+| `mem_load_retired.l2_miss` | True | counted | True |
+| `mem_load_retired.l3_miss` | True | counted | True |
+| `resource_stalls.any` | True | counted | True |
+
+| group | all counted | multiplexed |
+|---|---|---|
+| exec | True | True |
+| mlp | True | True |
+| stalls | True | True |
+| pf_tlb | True | True |
+| loads | True | True |
+
+wrote walker-audit-20261101T232121Z.json and walker-audit-20261101T232121Z.md

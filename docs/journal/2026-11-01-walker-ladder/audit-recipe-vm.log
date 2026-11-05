@@ -1,0 +1,15 @@
+<corpora>/wikidata-20261026.bz2: OK
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.02s
+check: block 1 (900000 rows, 511 segments): rungs A-D and P at 1, 8, 16 and 32 lanes, and S: every walk visits every row once and D's and P's outputs are the shipped walk's (fnv 27d7635e0e1a9555)
+walker_ladder: sudo perf stat -x , -e cycles -- taskset -c 0 target/release/examples/walker_ladder <corpora>/wikidata-20261026.bz2 A 32 3 failed:
+WARNING: perf not found for kernel 6.18.44-fc
+
+  You may need to install the following packages for this specific kernel:
+    linux-tools-6.18.44-fc-v185
+    linux-cloud-tools-6.18.44-fc-v185
+
+  You may also want to install one of the following packages to keep up to date:
+    linux-tools-v185
+    linux-cloud-tools-v185
+
+error: recipe `walker-counter-audit` failed with exit code 1

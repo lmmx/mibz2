@@ -1,0 +1,255 @@
+{
+ "time": "20261101T232121Z",
+ "environment": {
+  "cpu_family": 6,
+  "cpu_model": 165,
+  "cpu_stepping": 5,
+  "logical_cpus": 20,
+  "physical_cores": 10,
+  "threads_per_core": 2,
+  "perf_event_paranoid": 4,
+  "nmi_watchdog": 1
+ },
+ "events": [
+  {
+   "event": "cycles",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "instructions",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "uops_issued.any",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "uops_retired.retire_slots",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "br_misp_retired.all_branches",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "idq_uops_not_delivered.core",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "l1d_pend_miss.pending",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "l1d_pend_miss.pending_cycles",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "l1d_pend_miss.fb_full",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "cycle_activity.stalls_l1d_miss",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "cycle_activity.stalls_l2_miss",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "cycle_activity.stalls_l3_miss",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "cycle_activity.stalls_total",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "resource_stalls.sb",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "dtlb_load_misses.walk_active",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "sw_prefetch_access.t0",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "load_hit_pre.sw_pf",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "mem_load_retired.l1_miss",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "mem_load_retired.fb_hit",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "mem_load_retired.l2_miss",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "mem_load_retired.l3_miss",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  },
+  {
+   "event": "resource_stalls.any",
+   "listed": true,
+   "status": "counted",
+   "counts": true
+  }
+ ],
+ "groups": [
+  {
+   "group": "exec",
+   "events": [
+    "cycles",
+    "instructions",
+    "uops_issued.any",
+    "uops_retired.retire_slots",
+    "br_misp_retired.all_branches",
+    "idq_uops_not_delivered.core"
+   ],
+   "all_counted": true,
+   "multiplexed": true,
+   "running_pct": [
+    65.0,
+    82.0,
+    82.0,
+    82.0,
+    83.0,
+    84.0
+   ]
+  },
+  {
+   "group": "mlp",
+   "events": [
+    "cycles",
+    "instructions",
+    "l1d_pend_miss.pending",
+    "l1d_pend_miss.pending_cycles",
+    "l1d_pend_miss.fb_full",
+    "cycle_activity.stalls_l1d_miss"
+   ],
+   "all_counted": true,
+   "multiplexed": true,
+   "running_pct": [
+    65.0,
+    82.0,
+    82.0,
+    82.0,
+    83.0,
+    85.0
+   ]
+  },
+  {
+   "group": "stalls",
+   "events": [
+    "cycles",
+    "instructions",
+    "cycle_activity.stalls_l2_miss",
+    "cycle_activity.stalls_l3_miss",
+    "cycle_activity.stalls_total",
+    "resource_stalls.sb"
+   ],
+   "all_counted": true,
+   "multiplexed": true,
+   "running_pct": [
+    65.0,
+    82.0,
+    82.0,
+    83.0,
+    86.0,
+    82.0
+   ]
+  },
+  {
+   "group": "pf_tlb",
+   "events": [
+    "cycles",
+    "instructions",
+    "dtlb_load_misses.walk_active",
+    "sw_prefetch_access.t0",
+    "load_hit_pre.sw_pf",
+    "mem_load_retired.l1_miss"
+   ],
+   "all_counted": true,
+   "multiplexed": true,
+   "running_pct": [
+    66.0,
+    82.0,
+    82.0,
+    82.0,
+    82.0,
+    85.0
+   ]
+  },
+  {
+   "group": "loads",
+   "events": [
+    "cycles",
+    "instructions",
+    "mem_load_retired.fb_hit",
+    "mem_load_retired.l2_miss",
+    "mem_load_retired.l3_miss",
+    "resource_stalls.any"
+   ],
+   "all_counted": true,
+   "multiplexed": true,
+   "running_pct": [
+    65.0,
+    82.0,
+    82.0,
+    82.0,
+    82.0,
+    85.0
+   ]
+  }
+ ],
+ "note": "availability only: the ladder runs' counts and times are not kept"
+}

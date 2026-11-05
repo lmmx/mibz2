@@ -1,0 +1,1057 @@
+{
+ "unit": "cycles a row",
+ "G0_failures": [],
+ "G1_spread": 1.025824302513258,
+ "valid": true,
+ "bare32": 6.293082755555556,
+ "P32": 6.897460888888889,
+ "P32_over_bare32": 1.096038484922161,
+ "best_bare_any_lanes": 6.2089198,
+ "contrasts_32": {
+  "A->B": -3.1033815222222216,
+  "B->C": -0.2962927999999998,
+  "C->D": 0.4772111777777779,
+  "M->P": 0.6043781333333333,
+  "D->P": 0.057117822222222614
+ },
+ "D1_D2": "D1: P32 within 15% of the bare chase at 32 lanes: no walker scheduling rewrite",
+ "D3": {
+  "issued_share": 0.5711604251386251,
+  "retired_share": 0.540473529127016,
+  "front_end_undelivered_share": 0.012328101051857759,
+  "reading": "issue pressure below 0.70 of 4 a cycle: no classification follows"
+ },
+ "D4": {
+  "demand_mlp_B16": 1.3539841877286496,
+  "demand_mlp_B32": 1.6119033632099165,
+  "fb_full_events_a_cycle_B16": 0.12274048006537498,
+  "fb_full_events_a_cycle_B32": 0.16413534966564353,
+  "reading": "no plateau with rising fill-buffer pressure"
+ },
+ "control_vs_window": {
+  "P32 exec cycles": {
+   "window": 621022284.0,
+   "control": 97117.0,
+   "control_over_window": 0.0001568635355332749,
+   "state": "small"
+  },
+  "P32 exec instructions": {
+   "window": 1529233715.0,
+   "control": 36924.0,
+   "control_over_window": 2.4145045084715116e-05,
+   "state": "small"
+  },
+  "P32 exec uops_issued.any": {
+   "window": 1420123385.0,
+   "control": 60893.0,
+   "control_over_window": 4.287866860244682e-05,
+   "state": "small"
+  },
+  "P32 exec uops_retired.retire_slots": {
+   "window": 1342620957.0,
+   "control": 43703.0,
+   "control_over_window": 3.254892126214411e-05,
+   "state": "small"
+  },
+  "P32 exec idq_uops_not_delivered.core": {
+   "window": 30170213.0,
+   "control": 194105.0,
+   "control_over_window": 0.006322844598288042,
+   "state": "small"
+  },
+  "P32 branch_sb cycles": {
+   "window": 620771480.0,
+   "control": 77981.0,
+   "control_over_window": 0.0001256194952770704,
+   "state": "small"
+  },
+  "P32 branch_sb instructions": {
+   "window": 1529218525.0,
+   "control": 36916.0,
+   "control_over_window": 2.414056105733455e-05,
+   "state": "small"
+  },
+  "P32 branch_sb br_misp_retired.all_branches": {
+   "window": 2730145.0,
+   "control": 330.0,
+   "control_over_window": 0.00012079443203556188,
+   "state": "small"
+  },
+  "P32 branch_sb resource_stalls.sb": {
+   "window": 18020413.0,
+   "control": 255.0,
+   "control_over_window": 1.415061907848616e-05,
+   "state": "small"
+  },
+  "P32 branch_sb resource_stalls.any": {
+   "window": 226995707.0,
+   "control": 20628.0,
+   "control_over_window": 9.087396529485908e-05,
+   "state": "small"
+  },
+  "P32 mlp cycles": {
+   "window": 612056044.0,
+   "control": 78673.0,
+   "control_over_window": 0.0001292895369607797,
+   "state": "small"
+  },
+  "P32 mlp instructions": {
+   "window": 1529239610.0,
+   "control": 37014.0,
+   "control_over_window": 2.4203638325256143e-05,
+   "state": "small"
+  },
+  "P32 mlp l1d_pend_miss.pending": {
+   "window": 204756855.0,
+   "control": 51701.0,
+   "control_over_window": 0.00024596158630070894,
+   "state": "small"
+  },
+  "P32 mlp l1d_pend_miss.pending_cycles": {
+   "window": 83594311.0,
+   "control": 36309.0,
+   "control_over_window": 0.0004343477392857512,
+   "state": "small"
+  },
+  "P32 mlp l1d_pend_miss.fb_full": {
+   "window": 230651074.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "P32 stalls_l1 cycles": {
+   "window": 605547327.0,
+   "control": 75710.0,
+   "control_over_window": 0.00012165161130363056,
+   "state": "small"
+  },
+  "P32 stalls_l1 instructions": {
+   "window": 1529242228.0,
+   "control": 37014.0,
+   "control_over_window": 2.4204202186791666e-05,
+   "state": "small"
+  },
+  "P32 stalls_l1 cycle_activity.stalls_l1d_miss": {
+   "window": 43113617.0,
+   "control": 30212.0,
+   "control_over_window": 0.0006652187245639765,
+   "state": "small"
+  },
+  "P32 stalls_l1 cycle_activity.stalls_total": {
+   "window": 139272853.0,
+   "control": 53640.0,
+   "control_over_window": 0.00035876886647193725,
+   "state": "small"
+  },
+  "P32 stalls_l2 cycles": {
+   "window": 621861238.0,
+   "control": 95504.0,
+   "control_over_window": 0.00015357767000746876,
+   "state": "small"
+  },
+  "P32 stalls_l2 instructions": {
+   "window": 1529224705.0,
+   "control": 40424.0,
+   "control_over_window": 2.64341397563644e-05,
+   "state": "small"
+  },
+  "P32 stalls_l2 cycle_activity.stalls_l2_miss": {
+   "window": 16012171.0,
+   "control": 31557.0,
+   "control_over_window": 0.00200945009523441,
+   "state": "small"
+  },
+  "P32 stalls_l2 cycle_activity.stalls_l3_miss": {
+   "window": 33855.0,
+   "control": 20394.0,
+   "control_over_window": 0.6246935460050214,
+   "state": "comparable"
+  },
+  "P32 stalls_l2 dtlb_load_misses.walk_active": {
+   "window": 2297785.0,
+   "control": 11893.0,
+   "control_over_window": 0.0052586385286247156,
+   "state": "small"
+  },
+  "P32 pf cycles": {
+   "window": 621599785.0,
+   "control": 92929.0,
+   "control_over_window": 0.00014966826717660874,
+   "state": "small"
+  },
+  "P32 pf instructions": {
+   "window": 1529214913.0,
+   "control": 37022.0,
+   "control_over_window": 2.4209620941813082e-05,
+   "state": "small"
+  },
+  "P32 pf sw_prefetch_access.t0": {
+   "window": 90049059.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "P32 pf load_hit_pre.sw_pf": {
+   "window": 3778616.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "P32 pf mem_load_retired.l1_miss": {
+   "window": 1622567.0,
+   "control": 476.0,
+   "control_over_window": 0.00030304515818511604,
+   "state": "small"
+  },
+  "P32 loads cycles": {
+   "window": 607005170.0,
+   "control": 88408.0,
+   "control_over_window": 0.0001446721187530437,
+   "state": "small"
+  },
+  "P32 loads instructions": {
+   "window": 1529245739.0,
+   "control": 37017.0,
+   "control_over_window": 2.4206266914813174e-05,
+   "state": "small"
+  },
+  "P32 loads mem_load_retired.fb_hit": {
+   "window": 4560893.0,
+   "control": 427.0,
+   "control_over_window": 9.493754841431272e-05,
+   "state": "small"
+  },
+  "P32 loads mem_load_retired.l2_miss": {
+   "window": 1018478.0,
+   "control": 298.0,
+   "control_over_window": 0.0002925934580815688,
+   "state": "small"
+  },
+  "P32 loads mem_load_retired.l3_miss": {
+   "window": 135.0,
+   "control": 64.0,
+   "control_over_window": 0.4740740740740741,
+   "state": "comparable"
+  },
+  "B16 exec cycles": {
+   "window": 588176278.0,
+   "control": 97117.0,
+   "control_over_window": 0.00016131218403201225,
+   "state": "small"
+  },
+  "B16 exec instructions": {
+   "window": 1865860686.0,
+   "control": 36924.0,
+   "control_over_window": 1.978925880000025e-05,
+   "state": "small"
+  },
+  "B16 exec uops_issued.any": {
+   "window": 1683959444.0,
+   "control": 60893.0,
+   "control_over_window": 3.616223655296532e-05,
+   "state": "small"
+  },
+  "B16 exec uops_retired.retire_slots": {
+   "window": 1681236293.0,
+   "control": 43703.0,
+   "control_over_window": 2.5994561372462593e-05,
+   "state": "small"
+  },
+  "B16 exec idq_uops_not_delivered.core": {
+   "window": 2950988.0,
+   "control": 194105.0,
+   "control_over_window": 0.06764018162367101,
+   "state": "small"
+  },
+  "B16 branch_sb cycles": {
+   "window": 613479798.0,
+   "control": 77981.0,
+   "control_over_window": 0.00012175591930404697,
+   "state": "small"
+  },
+  "B16 branch_sb instructions": {
+   "window": 1865940242.0,
+   "control": 36916.0,
+   "control_over_window": 1.9784934354953396e-05,
+   "state": "small"
+  },
+  "B16 branch_sb br_misp_retired.all_branches": {
+   "window": 67300.0,
+   "control": 330.0,
+   "control_over_window": 0.004819840214994085,
+   "state": "small"
+  },
+  "B16 branch_sb resource_stalls.sb": {
+   "window": 4564.0,
+   "control": 255.0,
+   "control_over_window": 0.07340241796200346,
+   "state": "small"
+  },
+  "B16 branch_sb resource_stalls.any": {
+   "window": 176774743.0,
+   "control": 20628.0,
+   "control_over_window": 0.00010918980660036937,
+   "state": "small"
+  },
+  "B16 mlp cycles": {
+   "window": 587674335.0,
+   "control": 78673.0,
+   "control_over_window": 0.0001326875341506213,
+   "state": "small"
+  },
+  "B16 mlp instructions": {
+   "window": 1865877220.0,
+   "control": 37014.0,
+   "control_over_window": 1.9836946569589578e-05,
+   "state": "small"
+  },
+  "B16 mlp l1d_pend_miss.pending": {
+   "window": 273988239.0,
+   "control": 51701.0,
+   "control_over_window": 0.00020811842219256718,
+   "state": "small"
+  },
+  "B16 mlp l1d_pend_miss.pending_cycles": {
+   "window": 200982478.0,
+   "control": 36309.0,
+   "control_over_window": 0.00019410266415221538,
+   "state": "small"
+  },
+  "B16 mlp l1d_pend_miss.fb_full": {
+   "window": 72131430.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "B16 stalls_l1 cycles": {
+   "window": 581847533.0,
+   "control": 75710.0,
+   "control_over_window": 0.00012394280452921415,
+   "state": "small"
+  },
+  "B16 stalls_l1 instructions": {
+   "window": 1865916116.0,
+   "control": 37014.0,
+   "control_over_window": 1.983734364344978e-05,
+   "state": "small"
+  },
+  "B16 stalls_l1 cycle_activity.stalls_l1d_miss": {
+   "window": 41359263.0,
+   "control": 30212.0,
+   "control_over_window": 0.00064365533138124,
+   "state": "small"
+  },
+  "B16 stalls_l1 cycle_activity.stalls_total": {
+   "window": 78878407.0,
+   "control": 53640.0,
+   "control_over_window": 0.0006535549931397157,
+   "state": "small"
+  },
+  "B16 stalls_l2 cycles": {
+   "window": 612856219.0,
+   "control": 95504.0,
+   "control_over_window": 0.00015583426754783408,
+   "state": "small"
+  },
+  "B16 stalls_l2 instructions": {
+   "window": 1865923758.0,
+   "control": 40424.0,
+   "control_over_window": 2.1664464400402124e-05,
+   "state": "small"
+  },
+  "B16 stalls_l2 cycle_activity.stalls_l2_miss": {
+   "window": 2899531.0,
+   "control": 31557.0,
+   "control_over_window": 0.010803126436654755,
+   "state": "small"
+  },
+  "B16 stalls_l2 cycle_activity.stalls_l3_miss": {
+   "window": 35503.0,
+   "control": 20394.0,
+   "control_over_window": 0.5707123341689435,
+   "state": "comparable"
+  },
+  "B16 stalls_l2 dtlb_load_misses.walk_active": {
+   "window": 43488.0,
+   "control": 11893.0,
+   "control_over_window": 0.30309510669610007,
+   "state": "comparable"
+  },
+  "B16 pf cycles": {
+   "window": 576267964.0,
+   "control": 92929.0,
+   "control_over_window": 0.000158078830510123,
+   "state": "small"
+  },
+  "B16 pf instructions": {
+   "window": 1865947013.0,
+   "control": 37022.0,
+   "control_over_window": 1.984080386795587e-05,
+   "state": "small"
+  },
+  "B16 pf sw_prefetch_access.t0": {
+   "window": 90000589.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "B16 pf load_hit_pre.sw_pf": {
+   "window": 14167305.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "B16 pf mem_load_retired.l1_miss": {
+   "window": 267528.0,
+   "control": 476.0,
+   "control_over_window": 0.0017526072388332535,
+   "state": "small"
+  },
+  "B16 loads cycles": {
+   "window": 587687330.0,
+   "control": 88408.0,
+   "control_over_window": 0.0001501658301570345,
+   "state": "small"
+  },
+  "B16 loads instructions": {
+   "window": 1865891586.0,
+   "control": 37017.0,
+   "control_over_window": 1.983885690316926e-05,
+   "state": "small"
+  },
+  "B16 loads mem_load_retired.fb_hit": {
+   "window": 14746423.0,
+   "control": 427.0,
+   "control_over_window": 2.9229656125584105e-05,
+   "state": "small"
+  },
+  "B16 loads mem_load_retired.l2_miss": {
+   "window": 131384.0,
+   "control": 298.0,
+   "control_over_window": 0.0022681605066065882,
+   "state": "small"
+  },
+  "B16 loads mem_load_retired.l3_miss": {
+   "window": 120.0,
+   "control": 64.0,
+   "control_over_window": 0.5333333333333333,
+   "state": "comparable"
+  },
+  "B32 exec cycles": {
+   "window": 602679047.0,
+   "control": 97117.0,
+   "control_over_window": 0.00016140609607741702,
+   "state": "small"
+  },
+  "B32 exec instructions": {
+   "window": 1839126461.0,
+   "control": 36924.0,
+   "control_over_window": 2.007692281254171e-05,
+   "state": "small"
+  },
+  "B32 exec uops_issued.any": {
+   "window": 1653853863.0,
+   "control": 60893.0,
+   "control_over_window": 3.681885163030272e-05,
+   "state": "small"
+  },
+  "B32 exec uops_retired.retire_slots": {
+   "window": 1647352986.0,
+   "control": 43703.0,
+   "control_over_window": 2.652922620191857e-05,
+   "state": "small"
+  },
+  "B32 exec idq_uops_not_delivered.core": {
+   "window": 4748622.0,
+   "control": 194105.0,
+   "control_over_window": 0.04219539900206839,
+   "state": "small"
+  },
+  "B32 branch_sb cycles": {
+   "window": 601596175.0,
+   "control": 77981.0,
+   "control_over_window": 0.00012962349702439515,
+   "state": "small"
+  },
+  "B32 branch_sb instructions": {
+   "window": 1839080210.0,
+   "control": 36916.0,
+   "control_over_window": 2.0073115960573144e-05,
+   "state": "small"
+  },
+  "B32 branch_sb br_misp_retired.all_branches": {
+   "window": 177830.0,
+   "control": 330.0,
+   "control_over_window": 0.0018557048866895349,
+   "state": "small"
+  },
+  "B32 branch_sb resource_stalls.sb": {
+   "window": 4872.0,
+   "control": 255.0,
+   "control_over_window": 0.08762886597938144,
+   "state": "small"
+  },
+  "B32 branch_sb resource_stalls.any": {
+   "window": 171739046.0,
+   "control": 20628.0,
+   "control_over_window": 0.00012449698271868102,
+   "state": "small"
+  },
+  "B32 mlp cycles": {
+   "window": 599453364.0,
+   "control": 78673.0,
+   "control_over_window": 0.000131241235306505,
+   "state": "small"
+  },
+  "B32 mlp instructions": {
+   "window": 1839090533.0,
+   "control": 37014.0,
+   "control_over_window": 2.012557226135493e-05,
+   "state": "small"
+  },
+  "B32 mlp l1d_pend_miss.pending": {
+   "window": 92717532.0,
+   "control": 51701.0,
+   "control_over_window": 0.0005774686909400991,
+   "state": "small"
+  },
+  "B32 mlp l1d_pend_miss.pending_cycles": {
+   "window": 57792556.0,
+   "control": 36309.0,
+   "control_over_window": 0.0006274566767099464,
+   "state": "small"
+  },
+  "B32 mlp l1d_pend_miss.fb_full": {
+   "window": 98662365.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "B32 stalls_l1 cycles": {
+   "window": 603642095.0,
+   "control": 75710.0,
+   "control_over_window": 0.000125422001923176,
+   "state": "small"
+  },
+  "B32 stalls_l1 instructions": {
+   "window": 1839093145.0,
+   "control": 37014.0,
+   "control_over_window": 2.012622367748535e-05,
+   "state": "small"
+  },
+  "B32 stalls_l1 cycle_activity.stalls_l1d_miss": {
+   "window": 31263138.0,
+   "control": 30212.0,
+   "control_over_window": 0.000966377719344744,
+   "state": "small"
+  },
+  "B32 stalls_l1 cycle_activity.stalls_total": {
+   "window": 93199034.0,
+   "control": 53640.0,
+   "control_over_window": 0.0005755424460729925,
+   "state": "small"
+  },
+  "B32 stalls_l2 cycles": {
+   "window": 598052792.0,
+   "control": 95504.0,
+   "control_over_window": 0.00015969158789580569,
+   "state": "small"
+  },
+  "B32 stalls_l2 instructions": {
+   "window": 1839070450.0,
+   "control": 40424.0,
+   "control_over_window": 2.1980035108473443e-05,
+   "state": "small"
+  },
+  "B32 stalls_l2 cycle_activity.stalls_l2_miss": {
+   "window": 2831303.0,
+   "control": 31557.0,
+   "control_over_window": 0.011063457355147082,
+   "state": "small"
+  },
+  "B32 stalls_l2 cycle_activity.stalls_l3_miss": {
+   "window": 38944.0,
+   "control": 20394.0,
+   "control_over_window": 0.5202855382087099,
+   "state": "comparable"
+  },
+  "B32 stalls_l2 dtlb_load_misses.walk_active": {
+   "window": 39915.0,
+   "control": 11893.0,
+   "control_over_window": 0.2830049495526366,
+   "state": "comparable"
+  },
+  "B32 pf cycles": {
+   "window": 588417204.0,
+   "control": 92929.0,
+   "control_over_window": 0.00015793046051046461,
+   "state": "small"
+  },
+  "B32 pf instructions": {
+   "window": 1839113326.0,
+   "control": 37022.0,
+   "control_over_window": 2.0130399083400104e-05,
+   "state": "small"
+  },
+  "B32 pf sw_prefetch_access.t0": {
+   "window": 90000633.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "B32 pf load_hit_pre.sw_pf": {
+   "window": 3612845.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "B32 pf mem_load_retired.l1_miss": {
+   "window": 374817.0,
+   "control": 476.0,
+   "control_over_window": 0.001269953070431704,
+   "state": "small"
+  },
+  "B32 loads cycles": {
+   "window": 586746970.0,
+   "control": 88408.0,
+   "control_over_window": 0.0001514552611869004,
+   "state": "small"
+  },
+  "B32 loads instructions": {
+   "window": 1839099720.0,
+   "control": 37017.0,
+   "control_over_window": 2.0127482680633376e-05,
+   "state": "small"
+  },
+  "B32 loads mem_load_retired.fb_hit": {
+   "window": 2505509.0,
+   "control": 427.0,
+   "control_over_window": 0.00017042445267608297,
+   "state": "small"
+  },
+  "B32 loads mem_load_retired.l2_miss": {
+   "window": 133578.0,
+   "control": 298.0,
+   "control_over_window": 0.002230906286963422,
+   "state": "small"
+  },
+  "B32 loads mem_load_retired.l3_miss": {
+   "window": 114.0,
+   "control": 64.0,
+   "control_over_window": 0.5614035087719298,
+   "state": "comparable"
+  },
+  "A32 exec cycles": {
+   "window": 880068646.0,
+   "control": 97117.0,
+   "control_over_window": 0.00011020600874111797,
+   "state": "small"
+  },
+  "A32 exec instructions": {
+   "window": 1749430883.0,
+   "control": 36924.0,
+   "control_over_window": 2.1106292542796046e-05,
+   "state": "small"
+  },
+  "A32 exec uops_issued.any": {
+   "window": 1576098467.0,
+   "control": 60893.0,
+   "control_over_window": 3.863489376266145e-05,
+   "state": "small"
+  },
+  "A32 exec uops_retired.retire_slots": {
+   "window": 1557771753.0,
+   "control": 43703.0,
+   "control_over_window": 2.8054816063929488e-05,
+   "state": "small"
+  },
+  "A32 exec idq_uops_not_delivered.core": {
+   "window": 9274767.0,
+   "control": 194105.0,
+   "control_over_window": 0.02038484288196935,
+   "state": "small"
+  },
+  "A32 branch_sb cycles": {
+   "window": 879515973.0,
+   "control": 77981.0,
+   "control_over_window": 8.866354039484851e-05,
+   "state": "small"
+  },
+  "A32 branch_sb instructions": {
+   "window": 1749514132.0,
+   "control": 36916.0,
+   "control_over_window": 2.110157754915891e-05,
+   "state": "small"
+  },
+  "A32 branch_sb br_misp_retired.all_branches": {
+   "window": 845744.0,
+   "control": 330.0,
+   "control_over_window": 0.00039117369890293556,
+   "state": "small"
+  },
+  "A32 branch_sb resource_stalls.sb": {
+   "window": 10598.0,
+   "control": 255.0,
+   "control_over_window": 0.020828228375398185,
+   "state": "small"
+  },
+  "A32 branch_sb resource_stalls.any": {
+   "window": 444344560.0,
+   "control": 20628.0,
+   "control_over_window": 4.64234332023779e-05,
+   "state": "small"
+  },
+  "A32 mlp cycles": {
+   "window": 878954310.0,
+   "control": 78673.0,
+   "control_over_window": 8.950749669797967e-05,
+   "state": "small"
+  },
+  "A32 mlp instructions": {
+   "window": 1749526229.0,
+   "control": 37014.0,
+   "control_over_window": 2.1156101837216196e-05,
+   "state": "small"
+  },
+  "A32 mlp l1d_pend_miss.pending": {
+   "window": 4393125683.0,
+   "control": 51701.0,
+   "control_over_window": 1.176861390514422e-05,
+   "state": "small"
+  },
+  "A32 mlp l1d_pend_miss.pending_cycles": {
+   "window": 868181716.0,
+   "control": 36309.0,
+   "control_over_window": 4.182188973903708e-05,
+   "state": "small"
+  },
+  "A32 mlp l1d_pend_miss.fb_full": {
+   "window": 16218.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "A32 stalls_l1 cycles": {
+   "window": 864567851.0,
+   "control": 75710.0,
+   "control_over_window": 8.5622128793211e-05,
+   "state": "small"
+  },
+  "A32 stalls_l1 instructions": {
+   "window": 1749490383.0,
+   "control": 37014.0,
+   "control_over_window": 2.1157756638936514e-05,
+   "state": "small"
+  },
+  "A32 stalls_l1 cycle_activity.stalls_l1d_miss": {
+   "window": 219451940.0,
+   "control": 30212.0,
+   "control_over_window": 0.0001290444083872988,
+   "state": "small"
+  },
+  "A32 stalls_l1 cycle_activity.stalls_total": {
+   "window": 224875229.0,
+   "control": 53640.0,
+   "control_over_window": 0.00022382568595781614,
+   "state": "small"
+  },
+  "A32 stalls_l2 cycles": {
+   "window": 868593850.0,
+   "control": 95504.0,
+   "control_over_window": 0.0001098238649973755,
+   "state": "small"
+  },
+  "A32 stalls_l2 instructions": {
+   "window": 1749494017.0,
+   "control": 40424.0,
+   "control_over_window": 2.3106359079567264e-05,
+   "state": "small"
+  },
+  "A32 stalls_l2 cycle_activity.stalls_l2_miss": {
+   "window": 221611912.0,
+   "control": 31557.0,
+   "control_over_window": 0.0001425187865094057,
+   "state": "small"
+  },
+  "A32 stalls_l2 cycle_activity.stalls_l3_miss": {
+   "window": 34176.0,
+   "control": 20394.0,
+   "control_over_window": 0.592872191011236,
+   "state": "comparable"
+  },
+  "A32 stalls_l2 dtlb_load_misses.walk_active": {
+   "window": 22955.0,
+   "control": 11893.0,
+   "control_over_window": 0.46808974079721194,
+   "state": "comparable"
+  },
+  "A32 pf cycles": {
+   "window": 884363515.0,
+   "control": 92929.0,
+   "control_over_window": 0.00010507990730533983,
+   "state": "small"
+  },
+  "A32 pf instructions": {
+   "window": 1749530408.0,
+   "control": 37022.0,
+   "control_over_window": 2.11610418582201e-05,
+   "state": "small"
+  },
+  "A32 pf sw_prefetch_access.t0": {
+   "window": 0.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "zero"
+  },
+  "A32 pf load_hit_pre.sw_pf": {
+   "window": 0.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "zero"
+  },
+  "A32 pf mem_load_retired.l1_miss": {
+   "window": 87977923.0,
+   "control": 476.0,
+   "control_over_window": 5.410448255296956e-06,
+   "state": "small"
+  },
+  "A32 loads cycles": {
+   "window": 878652559.0,
+   "control": 88408.0,
+   "control_over_window": 0.00010061770047152393,
+   "state": "small"
+  },
+  "A32 loads instructions": {
+   "window": 1749488838.0,
+   "control": 37017.0,
+   "control_over_window": 2.11588382049079e-05,
+   "state": "small"
+  },
+  "A32 loads mem_load_retired.fb_hit": {
+   "window": 1175922.0,
+   "control": 427.0,
+   "control_over_window": 0.0003654720878078343,
+   "state": "small"
+  },
+  "A32 loads mem_load_retired.l2_miss": {
+   "window": 81778491.0,
+   "control": 298.0,
+   "control_over_window": 3.6443265008856017e-06,
+   "state": "small"
+  },
+  "A32 loads mem_load_retired.l3_miss": {
+   "window": 127.0,
+   "control": 64.0,
+   "control_over_window": 0.5039370078740157,
+   "state": "comparable"
+  },
+  "M32 exec cycles": {
+   "window": 566152525.0,
+   "control": 97117.0,
+   "control_over_window": 0.00017157572578142344,
+   "state": "small"
+  },
+  "M32 exec instructions": {
+   "window": 1199410963.0,
+   "control": 36924.0,
+   "control_over_window": 3.0783647237370626e-05,
+   "state": "small"
+  },
+  "M32 exec uops_issued.any": {
+   "window": 1015547693.0,
+   "control": 60893.0,
+   "control_over_window": 5.996449695668484e-05,
+   "state": "small"
+  },
+  "M32 exec uops_retired.retire_slots": {
+   "window": 1007600898.0,
+   "control": 43703.0,
+   "control_over_window": 4.336871817047635e-05,
+   "state": "small"
+  },
+  "M32 exec idq_uops_not_delivered.core": {
+   "window": 4167642.0,
+   "control": 194105.0,
+   "control_over_window": 0.043788549976221565,
+   "state": "small"
+  },
+  "M32 branch_sb cycles": {
+   "window": 566082105.0,
+   "control": 77981.0,
+   "control_over_window": 0.00013771414798575748,
+   "state": "small"
+  },
+  "M32 branch_sb instructions": {
+   "window": 1199432218.0,
+   "control": 36916.0,
+   "control_over_window": 3.077863562455338e-05,
+   "state": "small"
+  },
+  "M32 branch_sb br_misp_retired.all_branches": {
+   "window": 215845.0,
+   "control": 330.0,
+   "control_over_window": 0.0015284216961775562,
+   "state": "small"
+  },
+  "M32 branch_sb resource_stalls.sb": {
+   "window": 5665.0,
+   "control": 255.0,
+   "control_over_window": 0.04594594594594595,
+   "state": "small"
+  },
+  "M32 branch_sb resource_stalls.any": {
+   "window": 291839908.0,
+   "control": 20628.0,
+   "control_over_window": 7.066365410942908e-05,
+   "state": "small"
+  },
+  "M32 mlp cycles": {
+   "window": 568924596.0,
+   "control": 78673.0,
+   "control_over_window": 0.0001382837032414046,
+   "state": "small"
+  },
+  "M32 mlp instructions": {
+   "window": 1199415281.0,
+   "control": 37014.0,
+   "control_over_window": 3.0859422819875694e-05,
+   "state": "small"
+  },
+  "M32 mlp l1d_pend_miss.pending": {
+   "window": 146424672.0,
+   "control": 51701.0,
+   "control_over_window": 0.00038924267636443547,
+   "state": "small"
+  },
+  "M32 mlp l1d_pend_miss.pending_cycles": {
+   "window": 79281612.0,
+   "control": 36309.0,
+   "control_over_window": 0.0004886223108107298,
+   "state": "small"
+  },
+  "M32 mlp l1d_pend_miss.fb_full": {
+   "window": 342861262.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "M32 stalls_l1 cycles": {
+   "window": 566352438.0,
+   "control": 75710.0,
+   "control_over_window": 0.00013370147914647468,
+   "state": "small"
+  },
+  "M32 stalls_l1 instructions": {
+   "window": 1199440037.0,
+   "control": 37014.0,
+   "control_over_window": 3.086001450287283e-05,
+   "state": "small"
+  },
+  "M32 stalls_l1 cycle_activity.stalls_l1d_miss": {
+   "window": 43915663.0,
+   "control": 30212.0,
+   "control_over_window": 0.0006881938244649716,
+   "state": "small"
+  },
+  "M32 stalls_l1 cycle_activity.stalls_total": {
+   "window": 194193740.0,
+   "control": 53640.0,
+   "control_over_window": 0.0002766331976082368,
+   "state": "small"
+  },
+  "M32 stalls_l2 cycles": {
+   "window": 566493364.0,
+   "control": 95504.0,
+   "control_over_window": 0.00016862253314860092,
+   "state": "small"
+  },
+  "M32 stalls_l2 instructions": {
+   "window": 1199462198.0,
+   "control": 40424.0,
+   "control_over_window": 3.3703249142707576e-05,
+   "state": "small"
+  },
+  "M32 stalls_l2 cycle_activity.stalls_l2_miss": {
+   "window": 6169855.0,
+   "control": 31557.0,
+   "control_over_window": 0.005096300789126157,
+   "state": "small"
+  },
+  "M32 stalls_l2 cycle_activity.stalls_l3_miss": {
+   "window": 46476.0,
+   "control": 20394.0,
+   "control_over_window": 0.4550520698855323,
+   "state": "comparable"
+  },
+  "M32 stalls_l2 dtlb_load_misses.walk_active": {
+   "window": 40802.0,
+   "control": 11893.0,
+   "control_over_window": 0.28048971494204866,
+   "state": "comparable"
+  },
+  "M32 pf cycles": {
+   "window": 566392998.0,
+   "control": 92929.0,
+   "control_over_window": 0.00016823104089265766,
+   "state": "small"
+  },
+  "M32 pf instructions": {
+   "window": 1199417956.0,
+   "control": 37022.0,
+   "control_over_window": 3.086706027540641e-05,
+   "state": "small"
+  },
+  "M32 pf sw_prefetch_access.t0": {
+   "window": 90014025.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "M32 pf load_hit_pre.sw_pf": {
+   "window": 5108762.0,
+   "control": 0.0,
+   "control_over_window": 0.0,
+   "state": "small"
+  },
+  "M32 pf mem_load_retired.l1_miss": {
+   "window": 420153.0,
+   "control": 476.0,
+   "control_over_window": 0.0011067396876852005,
+   "state": "small"
+  },
+  "M32 loads cycles": {
+   "window": 568591996.0,
+   "control": 88408.0,
+   "control_over_window": 0.00015548583276223256,
+   "state": "small"
+  },
+  "M32 loads instructions": {
+   "window": 1199423809.0,
+   "control": 37017.0,
+   "control_over_window": 3.086275723551005e-05,
+   "state": "small"
+  },
+  "M32 loads mem_load_retired.fb_hit": {
+   "window": 3664287.0,
+   "control": 427.0,
+   "control_over_window": 0.00011690134228659025,
+   "state": "small"
+  },
+  "M32 loads mem_load_retired.l2_miss": {
+   "window": 276410.0,
+   "control": 298.0,
+   "control_over_window": 0.0010781086067797837,
+   "state": "small"
+  },
+  "M32 loads mem_load_retired.l3_miss": {
+   "window": 126.0,
+   "control": 64.0,
+   "control_over_window": 0.5079365079365079,
+   "state": "comparable"
+  }
+ },
+ "D5": {
+  "ratio_of_ratios": 1.0552141461666695,
+  "reading": "transfers: |r - 1| <= 0.15"
+ }
+}
