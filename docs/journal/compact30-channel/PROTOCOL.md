@@ -20,8 +20,9 @@ may trigger is fixed by the research charter's §12
     (Louis, 2026-11-04).
 - **Inboxes (2026-11-04).** Each role has one quiet PR, a draft never merged, and its Work task
   is subscribed to new comments on that PR alone: the Optimizer #160, the Guardian #161, the
-  Researcher #162. The coordinator posts each checkpoint separately to the inbox of every role
-  it concerns. A role needing another's attention posts in that role's inbox. Nothing else is
+  Researcher #162. The inbox is the address: every comment in it is for its role, which acts on
+  it by its `TYPE:`, and `TO:` is a record, not a filter. The coordinator posts each checkpoint
+  separately to the inbox of every role it concerns. A role needing another's attention posts in that role's inbox. Nothing else is
   posted in an inbox; replies go to the channel PR. The reason is that on the channel PR, a new
   event's run displaced the Optimizer's research runs before they committed.
 - **Experiment PRs.** Each prototype in the charter's §6 gets its own branch and PR into
