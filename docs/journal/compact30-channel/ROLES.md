@@ -206,6 +206,7 @@ names:
   ends only if its event isn't a new inbox comment. Otherwise it handles each new comment in the
   event, skipping one its cursor marks completed and resuming one marked in progress.
 - **Each Work task runs from its agent spec,** `SPEC.md` with `SPEC.<AGENT>.md`, beside this file and read at a pinned commit; the task's prompt only points to them.
+- **The agent specs' pin:** `5fbdd2c9c09f753282d9c5608ef236657837efa9`. SPEC.md has the command that loads it. Only Louis moves the pin, by pasting that command with a new SHA.
 - **Inboxes in, #145 out** (PROTOCOL §1). Each Work task is subscribed to new comments on its
   own inbox PR alone: #160, #161, #162. On #145, each new event's run displaced the Optimizer's
   research runs before they committed (6643992749, 6644115799, 6644364456). Every role
