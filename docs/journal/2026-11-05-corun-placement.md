@@ -38,6 +38,18 @@ otherwise. The models, the collision's probes and the full record (`results.json
 
 The C1 and C3 rows are as corrected in the collision, which follows.
 
+**A fourth rival, not in the collision:** the Optimiser's C21 (REVIEW 6658149381), bounded
+whole-block phase pairing. It arrived after the collision had started.
+- **The design:** select among blocks already ready, so that siblings' costly phases coincide
+  less.
+- **What it keeps:** four end-to-end workers, private scratch, the existing window and ordered
+  output. It adds no stage-specialised threads, no walk token and no interleaving.
+- **Its gate:** a symmetric pair benefit, and enough predictable job diversity. It is rejected
+  if selection, imbalance or ordered-output delay erases the net.
+- **What the collision implies:** it shares the collision's first shared assumption, a fixed
+  walk footprint. Under C, it gains about nothing, as C1 and C2 do.
+- **Status:** it is not modelled here. It is held with C1 and C2.
+
 ## What the collision found
 
 **Each model's own failure.**
@@ -96,9 +108,10 @@ needs less window per miss in flight, only where SMT siblings co-run (threads > 
 - **Engaging either pairing design on Intel** without a measured Intel row.
 
 **Held for the pair matrix, with no PR before it.**
-- **C1** is the first choice under M; **C2** under P.
-- Both are rejected, with a line in the Rejected list, the moment the matrix reads C: every
-  light sibling within 0.2 of walk beside walk, on both Zen models.
+- **C1** is the first choice under M; **C2** under P. **C21** is modelled only if the matrix
+  reads M or P, against C1 and C2's predictions from the same table.
+- All three are rejected, with a line in the Rejected list, the moment the matrix reads C:
+  every light sibling within 0.2 of walk beside walk, on both Zen models.
 
 **Built first, whatever the outcome: the window-light walk.**
 - Both variants are being built on `research/window-gather` and `research/window-onestore`.
