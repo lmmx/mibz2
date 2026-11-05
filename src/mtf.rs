@@ -1,9 +1,9 @@
 //! Phase 2: RUNA/RUNB runs and move-to-front undone, into the BWT's last column (`ll`)
 //! and its byte counts, with libbzip2's checks: a run's weight below 2^21, and the block
 //! no longer than its stream's level allows. The scalar loop, or (AVX2) the move of an
-//! index below 32, nearly all of them, as one blend of the list and the list a byte on,
-//! with the runs read 64 symbols at a time as bit masks: a step a byte symbol, its run
-//! with it, and no branch on a symbol's kind.
+//! index below 32, nearly all of them, as one blend of the list and the list a byte on;
+//! where runs are common, with them read 64 symbols at a time as bit masks: a step a byte
+//! symbol, its run with it, and no branch on a symbol's kind.
 
 use super::block::Symbols;
 use super::{ErrorKind, Kernels};
@@ -125,31 +125,56 @@ unsafe fn window64(w: *const u16, eob: u16) -> (u64, u64, bool) {
     (!runs, !runa, x != 0 || _mm256_testz_si256(ends, ends) == 0)
 }
 
-/// The AVX2 kernel. Its symbol loop is `mtf_scalar`'s, the list held as bytes and moved
-/// by a blend (an index below 32) or a copy. After the block's first byte symbol it runs
-/// the window loop, one step a byte symbol with the run before it, until a window it
-/// leaves to the symbol loop: the block's last symbols (the end-of-block symbol among
-/// them), a run of 22 symbols (refused), or a step that would end within 64 bytes of
-/// the block's limit. The symbol loop then finishes the block from that run's start.
-///
-/// The window loop: 64 symbols from a run's start as bit masks, their byte symbols taken
-/// in order (tzcnt, blsr). A byte symbol's run is the bijective base-2 number of the run
-/// symbols before it, sum (s + 1) 2^k, which is 2^m - 1 plus their RUNB bits. With the
-/// byte symbol's own bit (bit m, set in the not-RUNA mask) that is the run plus one: the
-/// bits from the last byte symbol to this one, read with one shift and a bzhi. No branch
-/// on a symbol's kind, so none mispredicted from one symbol to the next: the loop's one
-/// unpredictable exit is once a window.
-///
-/// Each step writes a segment: the byte the step before moved to the front, and the run
-/// of it before this step's byte symbol, `seg` bytes as two 32-byte stores (or a fill
-/// above 64), counted at once. Its byte is then moved, and written by the next step (or
-/// at the loop's exit). Every segment ends at most at `max - 64`, so the stores past it
-/// stay inside `ll`'s capacity, the checks that `mtf_scalar` makes on the run and the
-/// byte both pass, and a step that would fail it is left to the symbol loop, which makes
-/// them.
+/// The AVX2 kernel: the window kernel, or for a block with few runs master's symbol kernel.
+/// Both are exact on every input, errors included; the choice is only of speed.
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2,bmi1,bmi2")]
 unsafe fn mtf_avx2(
+    b: &Symbols,
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+) -> Result<usize, ErrorKind> {
+    if few_runs(&b.syms) {
+        mtf_avx2_symbols(b, ll, counts)
+    } else {
+        mtf_avx2_windows(b, ll, counts)
+    }
+}
+
+/// Fewer than one symbol in `FEW_RUNS` a RUNA or RUNB: random data and records, where the
+/// window loop's segments cost more than the symbol loop's predicted branches (about 0.4% of
+/// their symbols are run symbols, against 44% of Wikidata's)
+const FEW_RUNS: usize = 8;
+
+/// Whether fewer than one in `FEW_RUNS` of `syms` are run symbols: 16 at a time, each 16-bit
+/// lane counting its own (at most `MAX_SYMS` / 16 = 56,257, inside a lane)
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+#[inline]
+unsafe fn few_runs(syms: &[u16]) -> bool {
+    use std::arch::x86_64::*;
+    let z = _mm256_setzero_si256();
+    let mut acc = z;
+    let mut chunks = syms.chunks_exact(16);
+    for c in chunks.by_ref() {
+        let s = _mm256_loadu_si256(c.as_ptr() as *const __m256i);
+        // -1 in each run symbol's lane
+        acc = _mm256_sub_epi16(acc, _mm256_cmpeq_epi16(_mm256_srli_epi16::<1>(s), z));
+    }
+    let mut lanes = [0u16; 16];
+    _mm256_storeu_si256(lanes.as_mut_ptr() as *mut __m256i, acc);
+    let mut runs = lanes.iter().map(|&x| x as usize).sum::<usize>();
+    runs += chunks.remainder().iter().filter(|&&s| s <= 1).count();
+    runs * FEW_RUNS < syms.len()
+}
+
+/// Master's kernel, one symbol an iteration, for blocks with few runs (`few_runs`): there
+/// the branch on a symbol's kind is predicted, and a byte symbol's one-byte store is cheaper
+/// than the window loop's segment
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+#[inline(never)]
+unsafe fn mtf_avx2_symbols(
     b: &Symbols,
     ll: &mut Vec<u8>,
     counts: &mut [u32; 256],
@@ -173,19 +198,140 @@ unsafe fn mtf_avx2(
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
         25, 26, 27, 28, 29, 30, 31,
     );
-    // symbol s's byte (s >= 2: index s - 1 < 256, a symbol below the alphabet, at most
-    // 257) moved to the front
+    let (mut run, mut weight) = (0u32, 1u32);
+    // `n` bytes written at `out`; every write below is checked against `max`, which
+    // `ll`'s capacity holds
+    let out = ll.as_mut_ptr();
+    let mut n = 0usize;
+    let mut result = Ok(());
+    for &s in &b.syms {
+        if s <= 1 {
+            if weight >= MAX_RUN_WEIGHT {
+                result = Err(ErrorKind::RunTooLong);
+                break;
+            }
+            run += (s as u32 + 1) * weight;
+            weight <<= 1;
+            continue;
+        }
+        if run != 0 {
+            if n + run as usize > max {
+                result = Err(ErrorKind::BlockTooLong);
+                break;
+            }
+            let c = *base;
+            counts[c as usize] += run;
+            if run <= 64 && n + 64 <= max {
+                // a short run as two 32-byte stores of its byte: the bytes past the run are
+                // still inside `ll`'s capacity (n + 64 <= max), and are written again by
+                // what follows or left past the length set at the end
+                let v = _mm256_set1_epi8(c as i8);
+                _mm256_storeu_si256(out.add(n) as *mut __m256i, v);
+                _mm256_storeu_si256(out.add(n + 32) as *mut __m256i, v);
+            } else {
+                std::ptr::write_bytes(out.add(n), c, run as usize);
+            }
+            n += run as usize;
+            (run, weight) = (0, 1);
+        }
+        if s == b.eob {
+            break;
+        }
+        if n >= max {
+            result = Err(ErrorKind::BlockTooLong);
+            break;
+        }
+        // (s - 1 < 256: a symbol is below the alphabet, at most 257)
+        let nn = (s - 1) as usize;
+        let v = *base.add(nn);
+        if nn < 32 {
+            let old = _mm256_load_si256(base as *const __m256i);
+            let shifted = _mm256_loadu_si256(base.sub(1) as *const __m256i);
+            let m = _mm256_cmpgt_epi8(_mm256_set1_epi8(nn as i8 + 1), idx); // i <= nn
+            _mm256_store_si256(base as *mut __m256i, _mm256_blendv_epi8(old, shifted, m));
+        } else {
+            std::ptr::copy(base, base.add(1), nn);
+        }
+        *base = v;
+        let c = v;
+        counts[c as usize] += 1;
+        *out.add(n) = c;
+        n += 1;
+    }
+    // SAFETY: the first n bytes were written above, n <= max <= capacity
+    ll.set_len(n);
+    result.map(|()| n)
+}
+
+/// The window kernel. Its symbol loop is `mtf_scalar`'s, the list held as bytes and moved
+/// by a blend (an index below 32) or a copy. After the block's first byte symbol it runs
+/// the window loop, one step a byte symbol with the run before it, until a window it
+/// leaves to the symbol loop: the block's last symbols (the end-of-block symbol among
+/// them), a run of 22 symbols (refused), or a step that would end within 64 bytes of
+/// the block's limit. The symbol loop then finishes the block from that run's start.
+///
+/// The window loop: 64 symbols from a run's start as bit masks, their byte symbols taken
+/// in order (tzcnt, blsr). A byte symbol's run is the bijective base-2 number of the run
+/// symbols before it, sum (s + 1) 2^k, which is 2^m - 1 plus their RUNB bits. With the
+/// byte symbol's own bit (bit m, set in the not-RUNA mask) that is the run plus one: the
+/// bits from the last byte symbol to this one, read with one shift and a bzhi. No branch
+/// on a symbol's kind, so none mispredicted from one symbol to the next: the loop's one
+/// unpredictable exit is once a window.
+///
+/// Each step writes a segment: the byte the step before moved to the front, and the run
+/// of it before this step's byte symbol, `seg` bytes as two 32-byte stores (or a fill
+/// above 64), counted at once. Its byte is then moved, and written by the next step (or
+/// at the loop's exit). Every segment ends at most at `max - 64`, so the stores past it
+/// stay inside `ll`'s capacity, the checks that `mtf_scalar` makes on the run and the
+/// byte both pass, and a step that would fail it is left to the symbol loop, which makes
+/// them.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1,bmi2")]
+#[inline(never)]
+unsafe fn mtf_avx2_windows(
+    b: &Symbols,
+    ll: &mut Vec<u8>,
+    counts: &mut [u32; 256],
+) -> Result<usize, ErrorKind> {
+    use std::arch::x86_64::*;
+    let max = b.max_len;
+    ll.clear();
+    ll.reserve(max);
+    *counts = [0; 256];
+    #[repr(align(64))]
+    struct L([u8; 320]);
+    let mut store = L([0u8; 320]);
+    // the list at store[32..288], with slack before it for the shifted load, held as the
+    // bytes themselves (each symbol's seq_to_unseq), not their indices: a move permutes
+    // both alike, so the front is the byte with no lookup
+    for i in 0..256 {
+        store.0[32 + i] = b.seq_to_unseq[i];
+    }
+    let base = store.0.as_mut_ptr().add(32);
+    let idx = _mm256_setr_epi8(
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+        25, 26, 27, 28, 29, 30, 31,
+    );
+    // symbol s's byte (s >= 2: index s - 1 <= 256, a symbol below the alphabet, at most
+    // 257) moved to the front: the 32 bytes holding index s - 1 blended with them a byte
+    // on, then (an index from 32) each 32 below them a byte on, from the top down so that
+    // each shifted load reads the list before the move. No call, so the window loop keeps
+    // its state in registers
     macro_rules! move_front {
         ($s:expr) => {{
-            let s = $s as usize;
-            let v = *base.add(s - 1);
-            if s <= 32 {
-                let old = _mm256_load_si256(base as *const __m256i);
-                let shifted = _mm256_loadu_si256(base.sub(1) as *const __m256i);
-                let m = _mm256_cmpgt_epi8(_mm256_set1_epi8(s as i8), idx); // i <= s - 1
-                _mm256_store_si256(base as *mut __m256i, _mm256_blendv_epi8(old, shifted, m));
-            } else {
-                std::ptr::copy(base, base.add(1), s - 1);
+            let nn = $s as usize - 1;
+            let v = *base.add(nn);
+            let mut k = nn & !31;
+            let p = base.add(k);
+            let old = _mm256_load_si256(p as *const __m256i);
+            let shifted = _mm256_loadu_si256(p.sub(1) as *const __m256i);
+            let m = _mm256_cmpgt_epi8(_mm256_set1_epi8((nn - k + 1) as i8), idx); // i <= nn - k
+            _mm256_store_si256(p as *mut __m256i, _mm256_blendv_epi8(old, shifted, m));
+            while k != 0 {
+                k -= 32;
+                let p = base.add(k);
+                let shifted = _mm256_loadu_si256(p.sub(1) as *const __m256i);
+                _mm256_store_si256(p as *mut __m256i, shifted);
             }
             *base = v;
             v
@@ -270,12 +416,15 @@ unsafe fn mtf_avx2(
                     q += prev as usize;
                     break 'windows;
                 }
-                if seg <= 64 {
-                    let x = _mm256_set1_epi8(v as i8);
-                    _mm256_storeu_si256(out.add(n) as *mut __m256i, x);
-                    _mm256_storeu_si256(out.add(n + 32) as *mut __m256i, x);
-                } else {
-                    std::ptr::write_bytes(out.add(n), v, seg);
+                // 32 bytes at a time, past the segment by up to 63 (inside the capacity,
+                // n + seg <= max - 64), with no call
+                let x = _mm256_set1_epi8(v as i8);
+                _mm256_storeu_si256(out.add(n) as *mut __m256i, x);
+                _mm256_storeu_si256(out.add(n + 32) as *mut __m256i, x);
+                let mut k = 64;
+                while k < seg {
+                    _mm256_storeu_si256(out.add(n + k) as *mut __m256i, x);
+                    k += 32;
                 }
                 counts[v as usize] += seg as u32;
                 n += seg;

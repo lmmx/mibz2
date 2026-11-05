@@ -295,3 +295,26 @@ fn every_limit_near_the_end_of_a_block() {
         );
     }
 }
+
+#[test]
+fn sparse_and_dense_stretches() {
+    // stretches with no runs (the window loop leaves them to the symbol loop) and with
+    // many (it takes them back), of lengths about the hand-back's 1024 symbols, so that
+    // each kind meets the other at many offsets
+    let mut rng = Rng(0xa5a5_5a5a_0f0f_f0f0);
+    let used = 120;
+    let eob = used as u16 + 1;
+    for (sparse, dense) in [(100, 100), (900, 300), (1100, 2000), (3000, 64), (64, 3000)] {
+        let mut s = Vec::new();
+        while s.len() < 40_000 {
+            let n = sparse + rng.below(64) as usize;
+            let a = random_stream(&mut rng, used, n, 1, 2);
+            s.extend(a);
+            let n = dense + rng.below(64) as usize;
+            let b = random_stream(&mut rng, used, n, 60, 6);
+            s.extend(b);
+        }
+        s.push(eob);
+        at_limits(used, eob, &s, &format!("stretches of {sparse} and {dense}"));
+    }
+}
