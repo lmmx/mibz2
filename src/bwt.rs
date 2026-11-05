@@ -977,7 +977,7 @@ fn room_segments<const L: usize, const PF: u8>(
         let mut tile_store = Tile([[0u8; TILE]; L]);
         let tile = &mut tile_store.0;
         #[cfg(target_arch = "x86_64")]
-        let avx2 = (FLUSH == 3 || FLUSH == 4)
+        let avx2 = (FLUSH == 3 || FLUSH == 4 || FLUSH >= 6)
             && std::is_x86_feature_detected!("avx2")
             && std::is_x86_feature_detected!("bmi1");
         // every lane's bit
@@ -1073,10 +1073,22 @@ fn room_segments<const L: usize, const PF: u8>(
                     while marked != 0 {
                         let k = marked.trailing_zeros() as usize;
                         marked &= marked - 1;
+                        // its segment's bytes end before offset j
+                        #[cfg(target_arch = "x86_64")]
+                        if FLUSH == 7
+                            && avx2
+                            && st[k] == 0
+                            && unsafe { lanes[k].end.offset_from(lanes[k].p) } as usize >= TILE
+                        {
+                            // SAFETY: a whole row fits in the lane's spare
+                            unsafe { flush_rows_avx2_adv(&mut lanes, tile, 1 << k, j) };
+                        } else {
+                            flush(&mut lanes[k], &tile[k], st[k], j);
+                        }
+                        #[cfg(not(target_arch = "x86_64"))]
+                        flush(&mut lanes[k], &tile[k], st[k], j);
                         let l = &mut lanes[k];
                         l.row = rs[k];
-                        // its segment's bytes end before offset j
-                        flush(l, &tile[k], st[k], j);
                         finish(l, bufs, next);
                         if queued == ns {
                             // Every lane but the marked ones after this one has its byte at
@@ -1130,6 +1142,35 @@ fn room_segments<const L: usize, const PF: u8>(
                     }
                     // The scalar offset stepped the rows in place, so the next offset reads
                     // the same slot
+                }
+                #[cfg(target_arch = "x86_64")]
+                if FLUSH >= 6 && avx2 {
+                    // the lanes with a whole row's room: in a whole chunk every lane but
+                    // those that took a segment in it; in a pass's last, shorter chunk,
+                    // those of them with TILE bytes spare, the row's bytes past w copied
+                    // too and written over later or left past the buffer's length
+                    let whole = if w == TILE {
+                        all & !taken
+                    } else {
+                        let mut m = 0u64;
+                        for (k, l) in lanes.iter().enumerate() {
+                            // SAFETY: p and end are in one buffer
+                            if unsafe { l.end.offset_from(l.p) } as usize >= TILE {
+                                m |= 1 << k;
+                            }
+                        }
+                        m & !taken
+                    };
+                    // SAFETY: each lane in `whole` has TILE bytes spare
+                    unsafe { flush_rows_avx2_adv(&mut lanes, tile, whole, w) };
+                    let mut rest = all & !whole;
+                    while rest != 0 {
+                        let k = rest.trailing_zeros() as usize;
+                        rest &= rest - 1;
+                        flush(&mut lanes[k], &tile[k], st[k], w);
+                    }
+                    done += w;
+                    continue;
                 }
                 if FLUSH >= 2 && FLUSH <= 4 {
                     // the lanes with a whole row to copy: every lane in a whole chunk but
@@ -1300,6 +1341,36 @@ unsafe fn flush_rows_avx2<const L: usize>(
         }
         mv!(0, 1, 2, 3, 4, 5, 6, 7);
         l.p = l.p.add(TILE);
+    }
+}
+
+/// `flush_rows_avx2`, each lane's p moved on by `adv` (at most TILE): the row's bytes past
+/// adv are copied too, into the lane's spare
+///
+/// # Safety
+/// as `flush_rows_avx2`
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2,bmi1")]
+unsafe fn flush_rows_avx2_adv<const L: usize>(
+    lanes: &mut [Lane; L],
+    tile: &[[u8; TILE]; L],
+    mut mask: u64,
+    adv: usize,
+) {
+    use core::arch::x86_64::{__m256i, _mm256_loadu_si256, _mm256_storeu_si256};
+    while mask != 0 {
+        let k = mask.trailing_zeros() as usize;
+        mask &= mask - 1;
+        let l = lanes.get_unchecked_mut(k);
+        let s = tile.get_unchecked(k).as_ptr().cast::<__m256i>();
+        let d = l.p.cast::<__m256i>();
+        macro_rules! mv {
+            ($($i:expr),*) => {$(
+                _mm256_storeu_si256(d.add($i), _mm256_loadu_si256(s.add($i)));
+            )*};
+        }
+        mv!(0, 1, 2, 3, 4, 5, 6, 7);
+        l.p = l.p.add(adv);
     }
 }
 
