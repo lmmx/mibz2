@@ -283,5 +283,15 @@
       "C10"
     ],
     "verified_credit": 0
-  }
+  },
+  "inbox_briefs": [
+    {
+      "comment_id": 6645643541,
+      "pr": 160,
+      "resumes_comment_id": 6645304470,
+      "status": "in_progress",
+      "progress": "Receipt recorded; pinned evidence review and ranking pending.",
+      "completed": false
+    }
+  ]
 }
