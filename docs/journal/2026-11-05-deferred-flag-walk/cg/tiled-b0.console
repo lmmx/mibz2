@@ -1,0 +1,11 @@
+==10286== Callgrind, a call-graph generating cache profiler
+==10286== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==10286== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==10286== Command: tiled/target/release/c30cg cg /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/indep-wikidata/wikidata-independent.bz2 0 1
+==10286== 
+==10286== For interactive control, run 'callgrind_control -h'.
+==10286== 
+==10286== Events    : Ir
+==10286== Collected : 7289
+==10286== 
+==10286== I   refs:      7,289

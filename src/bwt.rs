@@ -790,6 +790,10 @@ thread_local! {
     // buffer exactly full, or with its next entry the end of its segment
     static LATER_STEPPED_FULL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static LATER_STEPPED_ON_START: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // the room walk's offsets while every lane is busy: kept as stepped together, or
+    // done again lane by lane because a lane read a start
+    static TILES_KEPT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static TILES_REPLAYED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -898,12 +902,12 @@ fn room_segments<const L: usize, const PF: u8>(
     s.next.clear();
     s.next.resize(ns, usize::MAX);
     let starts = &s.starts;
-    let seg_of = |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
+    let seg_of = move |row: u32| starts.binary_search(&row).unwrap_or(usize::MAX);
     let t = tt.0.as_ptr();
     let bufs = &mut s.bufs;
     let next = &mut s.next;
 
-    let take = |seg: usize, bufs: &mut Vec<Vec<u8>>| -> Lane {
+    let take = move |seg: usize, bufs: &mut Vec<Vec<u8>>| -> Lane {
         let b = &mut bufs[seg];
         let base = b.as_mut_ptr();
         // SAFETY: the starts are rows below n; the buffer has `cap` > 0 spare bytes
@@ -916,7 +920,7 @@ fn room_segments<const L: usize, const PF: u8>(
             end: unsafe { base.add(b.capacity()) },
         }
     };
-    let finish = |l: &Lane, bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| {
+    let finish = move |l: &Lane, bufs: &mut Vec<Vec<u8>>, next: &mut Vec<usize>| {
         let b = &mut bufs[l.seg];
         // SAFETY: p is within b's allocation, every byte below it written
         unsafe { b.set_len(l.p.offset_from(b.as_ptr()) as usize) };
@@ -949,6 +953,22 @@ fn room_segments<const L: usize, const PF: u8>(
         active += 1;
     }
     if active == L {
+        // The rows live in two slots while every lane is busy: an offset reads one and
+        // writes the other, so the rows from before an offset survive it. An offset first
+        // steps every lane at once, the flags ORed together instead of tested lane by lane
+        // (B, deferred flag checking). If no lane read a start, that is exactly the scalar
+        // offset's effect, and the slots swap. If one did, the offset is done again, from
+        // the surviving slot, by the scalar offset (`walk_segments_room`'s, unchanged),
+        // which hands segments over in lane order. Its speculative bytes are harmless: each
+        // went at base + off, inside its own lane's room, and is either written again by
+        // the scalar offset or left beyond the segment's length. A speculative row, taken
+        // from a start's entry with its flag bit, is never read: the slot it went into is
+        // discarded.
+        let mut rows = [[0u32; L]; 2];
+        for (k, l) in lanes.iter().enumerate() {
+            rows[0][k] = l.row;
+        }
+        let mut cur = 0usize;
         'full: loop {
             // The pass's room: what every lane has spare, and no more than a buffer taken
             // mid-pass has after its first byte (`cap` - 1)
@@ -968,50 +988,41 @@ fn room_segments<const L: usize, const PF: u8>(
             }
             let mut base: [*mut u8; L] = std::array::from_fn(|k| lanes[k].p);
             for off in 0..room {
-                // Every lane whose entry doesn't start a segment steps here; a lane whose
-                // entry does is only marked, and handed over below, in lane order. A step
-                // reads the table and writes only its own lane's buffer, so stepping a lane
-                // before an earlier lane's handover changes no byte, and the segments are
-                // taken in the same order as before. Keeping the handover out of this loop
-                // keeps the loop small enough to unroll.
+                // One offset, every lane at once: the slot read and the slot written are
+                // fixed by the step's parity, so each row's address is a constant
+                let flags = if cur == 0 {
+                    spec_offset::<L, PF, 0>(t, &mut rows, &base, off)
+                } else {
+                    spec_offset::<L, PF, 1>(t, &mut rows, &base, off)
+                };
+                if flags & START == 0 {
+                    transition!(TILES_KEPT);
+                    cur ^= 1;
+                    continue;
+                }
+                transition!(TILES_REPLAYED);
+                // The scalar offset, on the rows from before it
+                let rs = &mut rows[cur];
                 let mut marked: u64 = 0;
                 macro_rules! step {
                     ($k:expr) => {{
                         let k = $k;
-                        let l = &mut lanes[k];
                         // SAFETY: rows are below n (TVector), with the flag masked off below
-                        let q = unsafe { *t.add(l.row as usize) };
+                        let q = unsafe { *t.add(rs[k] as usize) };
                         if q & START != 0 {
                             marked |= 1 << k;
                         } else {
-                            // SAFETY: base + off is below the lane's end: room is at most
-                            // its spare at the pass's start (or, for a buffer taken
-                            // mid-pass, its capacity after its first byte)
-                            debug_assert!(base[k].wrapping_add(off) < l.end);
+                            debug_assert!(base[k].wrapping_add(off) < lanes[k].end);
                             unsafe { *base[k].wrapping_add(off) = q as u8 };
-                            l.row = q >> 8;
+                            rs[k] = q >> 8;
                             if PF != PF_OFF {
-                                prefetch::<PF>(t, l.row);
+                                prefetch::<PF>(t, rs[k]);
                             }
                         }
                     }};
                 }
-                // eight lanes a turn, unrolled by hand: the compiler keeps this loop rolled
-                let mut c = 0;
-                while c + 8 <= L {
-                    step!(c);
-                    step!(c + 1);
-                    step!(c + 2);
-                    step!(c + 3);
-                    step!(c + 4);
-                    step!(c + 5);
-                    step!(c + 6);
-                    step!(c + 7);
-                    c += 8;
-                }
-                while c < L {
-                    step!(c);
-                    c += 1;
+                for k in 0..L {
+                    step!(k);
                 }
                 #[cfg(test)]
                 if marked.count_ones() > 1 {
@@ -1023,14 +1034,12 @@ fn room_segments<const L: usize, const PF: u8>(
                     let k = marked.trailing_zeros() as usize;
                     marked &= marked - 1;
                     let l = &mut lanes[k];
+                    l.row = rs[k];
                     l.p = base[k].wrapping_add(off);
                     finish(l, bufs, next);
                     if queued == ns {
-                        // Every lane but the marked ones after this one has its next byte at
-                        // off + 1: an unmarked lane wrote at `off`, and an earlier marked
-                        // lane's new segment starts after it. A marked lane after this one
-                        // still sits on its segment's end, unwritten at `off`, for the tail.
                         for (j, lj) in lanes.iter_mut().enumerate() {
+                            lj.row = rs[j];
                             if j != k {
                                 let waiting = marked >> j & 1 != 0;
                                 lj.p = base[j].wrapping_add(off + usize::from(!waiting));
@@ -1060,6 +1069,7 @@ fn room_segments<const L: usize, const PF: u8>(
                     }
                     transition!(MID_PASS_TAKES);
                     *l = take(queued, bufs);
+                    rs[k] = l.row;
                     if PF != PF_OFF {
                         prefetch::<PF>(t, l.row);
                     }
@@ -1071,6 +1081,8 @@ fn room_segments<const L: usize, const PF: u8>(
                         took = true;
                     }
                 }
+                // The scalar offset stepped the rows in place, so the next offset reads
+                // the same slot
             }
             for (l, b) in lanes.iter_mut().zip(base) {
                 l.p = b.wrapping_add(room);
@@ -1120,6 +1132,80 @@ fn room_segments<const L: usize, const PF: u8>(
     }
     s.first = seg_of(r0);
     s.n = n;
+}
+
+/// One offset of the room walk's busy phase, every lane stepped without testing its flag:
+/// lane k reads the row in slot P, writes its byte at base + off and its next row into
+/// slot 1 - P, and the entries read are ORed together for the caller to test for a start.
+/// A start's entry gives a row with its flag bit in it, which only ever goes into slot
+/// 1 - P, never read if the caller finds the start.
+#[inline(never)]
+fn spec_offset<const L: usize, const PF: u8, const P: usize>(
+    t: *const u32,
+    rows: &mut [[u32; L]; 2],
+    base: &[*mut u8; L],
+    off: usize,
+) -> u32 {
+    let mut flags = 0u32;
+    macro_rules! spec {
+        ($k:expr) => {{
+            let k = $k;
+            // SAFETY: slot P holds real rows below n: the caller replays any offset whose
+            // entries held a start, from slot P, so slot 1 - P's speculative rows are
+            // never read
+            let q = unsafe { *t.add(rows[P][k] as usize) };
+            flags |= q;
+            // SAFETY: base + off is in lane k's room, as for the scalar step
+            unsafe { *base[k].wrapping_add(off) = q as u8 };
+            rows[1 - P][k] = q >> 8;
+            if PF != PF_OFF {
+                prefetch::<PF>(t, q >> 8);
+            }
+        }};
+    }
+    // all 32 lanes unrolled, with no loop to control (the production width); any other
+    // width loops
+    if L == 32 {
+        spec!(0);
+        spec!(1);
+        spec!(2);
+        spec!(3);
+        spec!(4);
+        spec!(5);
+        spec!(6);
+        spec!(7);
+        spec!(8);
+        spec!(9);
+        spec!(10);
+        spec!(11);
+        spec!(12);
+        spec!(13);
+        spec!(14);
+        spec!(15);
+        spec!(16);
+        spec!(17);
+        spec!(18);
+        spec!(19);
+        spec!(20);
+        spec!(21);
+        spec!(22);
+        spec!(23);
+        spec!(24);
+        spec!(25);
+        spec!(26);
+        spec!(27);
+        spec!(28);
+        spec!(29);
+        spec!(30);
+        spec!(31);
+    } else {
+        let mut k = 0;
+        while k < L {
+            spec!(k);
+            k += 1;
+        }
+    }
+    flags
 }
 
 /// `walk_segments_flagged_with_prefetch` with 0.1.5's switch: `PF` prefetches each lane's
@@ -1582,6 +1668,8 @@ pub(crate) mod tests {
             &ENDS_AFTER_A_TAKE,
             &LATER_STEPPED_FULL,
             &LATER_STEPPED_ON_START,
+            &TILES_KEPT,
+            &TILES_REPLAYED,
         ] {
             c.with(|c| c.set(0));
         }
@@ -1638,6 +1726,8 @@ pub(crate) mod tests {
                 "a stepped later lane leaving on its segment's end",
                 &LATER_STEPPED_ON_START,
             ),
+            ("an offset kept as stepped together", &TILES_KEPT),
+            ("an offset done again lane by lane", &TILES_REPLAYED),
         ] {
             assert!(count(c) > 0, "never reached: {name}");
         }
