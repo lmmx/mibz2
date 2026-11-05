@@ -6,18 +6,23 @@
 # figures are the run's summary and artifact, never recorded, and a setting it favours is
 # decided by the decoder's own A/B (bench.yml) on a pull request. With `tool: phases`, the
 # stage table's examples/phases.rs runs the same way instead (ROUNDS its passes): the
-# stages alone and with every CPU busy, as a multi-threaded decode runs them.
+# stages alone and with every CPU busy, as a multi-threaded decode runs them. With
+# `tool: pair`, examples/pair.rs runs once, pinning its own threads (ROUNDS rounds, at
+# least 5): the walk, MTF and the build each measured on one CPU beside a chosen load
+# (another walk, a one-line chain, an ALU loop, MTF, the build, a streaming read) on its
+# SMT sibling and on the other core, and alone; its markdown is the summary, its JSON
+# (pair.json) in the artifact. Never part of bench.yml or a pull request's benchmark.
 name: Walk sweep
 
 on:
   workflow_dispatch:
     inputs:
       rounds:
-        description: "Rounds (each walks every block at every setting); for phases, its passes"
+        description: "Rounds (each walks every block at every setting); for phases, its passes; for pair, at least 5"
         required: false
         default: "5"
       tool:
-        description: "sweep (the factorial) or phases (the stages)"
+        description: "sweep (the factorial), phases (the stages) or pair (a stage beside a chosen sibling load)"
         required: false
         default: "sweep"
 
@@ -43,8 +48,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
+      # the tool's example only, and windows (the corpus's check)
       - name: Build
-        run: cargo build --release --example sweep --example phases --example windows
+        env:
+          TOOL: ${{ inputs.tool || 'sweep' }}
+        run: |
+          case "$TOOL" in sweep|phases|pair) ;; *) echo "tool: sweep, phases or pair"; exit 1 ;; esac
+          cargo build --release --example "$TOOL" --example windows
 
       # The same blocks as bench.yml's (bench/wikidata.json), from its cache or bench-data
       - name: Wikidata windows (cache)
@@ -70,6 +80,7 @@ jobs:
       # One copy pinned to one CPU, then a copy on each CPU at once: a setting that wins
       # alone can lose when four walks share the caches and the memory system
       - name: Sweep
+        if: (inputs.tool || 'sweep') != 'pair'
         env:
           ROUNDS: ${{ inputs.rounds }}
           TOOL: ${{ inputs.tool || 'sweep' }}
@@ -107,10 +118,50 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # The pair matrix: one process on the whole runner, its threads pinned by itself (the
+      # measured stage on one CPU, its load on the SMT sibling or on the other core), so no
+      # taskset; it says so, and runs the cross-core conditions only, where there is no SMT
+      - name: Pair
+        if: inputs.tool == 'pair'
+        env:
+          ROUNDS: ${{ inputs.rounds }}
+        run: |
+          case "$ROUNDS" in ''|*[!0-9]*) echo "::error::rounds: a number"; exit 1 ;; esac
+          [ "$ROUNDS" -ge 5 ] || { echo "::error::pair: at least 5 rounds"; exit 1; }
+          mhz=$(awk -F: '/cpu MHz/ {print $2; exit}' /proc/cpuinfo | tr -d ' ')
+          model=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo | sed 's/^ //')
+          ghz=$(python3 -c "print(round($mhz / 1000, 4))")
+          head="runner: $model, $(nproc) CPUs, ${ghz} GHz reported; $(rustc --version); head $(git rev-parse --short HEAD); pair, rounds $ROUNDS"
+          echo "$head"
+          for c in /sys/devices/system/cpu/cpu[0-9]*; do
+            echo "$(basename "$c"): siblings $(cat "$c/topology/thread_siblings_list"), core_id $(cat "$c/topology/core_id")"
+          done | sort -V | tee pair-topology.txt
+          start=$SECONDS
+          target/release/examples/pair corpora/wikidata.bz2 "$ROUNDS" "$ghz" --json pair.json > pair.md
+          took=$((SECONDS - start))
+          cat pair.md
+          {
+            echo "## Pair matrix: $model, $(nproc) CPUs, at its reported clock (${ghz} GHz)"
+            echo
+            echo "Head \`$(git rev-parse --short HEAD)\`, $(rustc --version), ${took} s. Diagnostic only: the decoder's A/B decides."
+            echo
+            echo '```'
+            echo "$head"
+            cat pair-topology.txt
+            echo '```'
+            echo
+            # its headings one level down, under this one
+            sed 's/^#/##/' pair.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Results
         if: "!cancelled()"
         uses: actions/upload-artifact@v4
         with:
           name: sweep-${{ github.sha }}
-          path: sweep-*.txt
+          path: |
+            sweep-*.txt
+            pair.md
+            pair.json
+            pair-topology.txt
           if-no-files-found: ignore
