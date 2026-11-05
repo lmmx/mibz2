@@ -283,7 +283,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "WAITING",
+  "status": "IN_PROGRESS",
   "published_evidence_commit": "a2eb08773c3231f839a6fbe73a764d3f3bb25b16",
   "incoming_experiment_comment_ids": [
     {
@@ -400,7 +400,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Receipt; auditing binding census and pricing distinct placement construction."
+      "progress": "Census and source audit committed; deriving model-specific headroom and whole-block phase pairing falsifier."
     }
   ]
 }
