@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=921b851b76d6">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=51d62b2b55ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=921b851b76d6">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=51d62b2b55ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=921b851b76d6">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=51d62b2b55ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=921b851b76d6">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=51d62b2b55ab">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=921b851b76d6">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=51d62b2b55ab">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2085,8 +2085,8 @@ anything. From outside, it simply looked as if the Optimiser had gone quiet.</p>
 <p><strong>Routing by header was brittle.</strong> Each agent decided from <code>TO:</code> and <code>TYPE:</code> lines whether a comment
 was meant for it, sometimes by exact string. A checkpoint naming two agents had to be worded
 exactly right for both, and a message that failed the test was dropped without trace.</p>
-<p><strong>Noise used up the wake budget.</strong> As far as I can tell, the Work automation lets a task wake about
-30 times an hour. On a busy board, most of those wakes went on comments the agent then ignored.</p>
+<p><strong>Noise spent the wakes.</strong> Every one of those runs counts against a task's use of the automation,
+and on a busy board most of them went on comments the agent then ignored.</p>
 <p><strong>The connector added friction.</strong> The Astra agents reach GitHub through ChatGPT's GitHub connector,
 not a shell with <code>git</code> as the Coordinator has. Their runs hit errors such as a call missing its
 repository argument, or "no usable execution environment". Each was recoverable, but each one
@@ -2286,17 +2286,17 @@ for me.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=921b851b76d6"></script>
+        <script src="../../assets/javascripts/bench.js?v=51d62b2b55ab"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=921b851b76d6"></script>
+        <script src="../../assets/javascripts/couriers.js?v=51d62b2b55ab"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=921b851b76d6"></script>
+        <script src="../../assets/javascripts/blog.js?v=51d62b2b55ab"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=921b851b76d6"></script>
+        <script src="../../assets/javascripts/frontier.js?v=51d62b2b55ab"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=921b851b76d6"></script>
+        <script src="../../assets/javascripts/katex.js?v=51d62b2b55ab"></script>
       
     
   </body>
