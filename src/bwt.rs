@@ -1282,7 +1282,7 @@ const FLUSH: u8 = 0;
 
 /// The chunk's offsets stepped together in their own function (`spec_run`), so that its
 /// loop's registers do not depend on the code around it (research, walk/flush)
-const RUN: bool = false;
+const RUN: bool = true;
 
 /// The busy phase's offsets j.. of a chunk of w offsets, every lane stepped together
 /// (`spec_offset`) until an offset reads a start: returns that offset, its rows still in
