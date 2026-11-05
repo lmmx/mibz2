@@ -2,7 +2,7 @@
 //! thread or block-parallel; and `scan`, the blocks of a .bz2 in memory without decoding
 //! them past their Huffman symbols (for a caller that splits the work itself).
 
-use crate::parallel::Plan;
+use crate::parallel::{Plan, SLOTS_PER_THREAD};
 use crate::stream::{Event, Scanner, SliceSource, Source};
 use crate::{decode_block, Error, ErrorKind, Kernels, Scratch, StreamDecoder};
 use std::io::{self, Read};
@@ -81,11 +81,16 @@ impl<R: Read> BzReader<R> {
 }
 
 impl<R: Read + Send + 'static> BzReader<R> {
-    /// Decode on `threads` threads (at least 1), with at most 2 x `threads` blocks in
-    /// flight, spent as `StreamDecoder::new` plans them (a block a worker, or teams of 2
+    /// Decode on `threads` threads (at least 1), with at most `SLOTS_PER_THREAD` x `threads`
+    /// blocks in flight (`parallel::SLOTS_PER_THREAD`), spent as `StreamDecoder::new` plans them (a block a worker, or teams of 2
     /// sharing each block on 6 or more physical cores: `Plan::for_threads`)
     pub fn parallel(r: R, threads: usize) -> Self {
-        Self::parallel_with(r, threads, 2 * threads.max(1), Kernels::detect())
+        Self::parallel_with(
+            r,
+            threads,
+            SLOTS_PER_THREAD * threads.max(1),
+            Kernels::detect(),
+        )
     }
 
     /// `parallel`, with the blocks in flight (`slots`, at least `threads`; scaled to the
