@@ -1207,19 +1207,29 @@ fn spec_offset<const L: usize, const PF: u8, const P: usize>(
             spec!($b + 7);
         }};
     }
-    // 32, 48 or 64 lanes unrolled, with no loop to control (the production width is one of
-    // them); any other width loops
-    if L == 32 || L == 48 || L == 64 {
+    // a multiple of 8 lanes up to 64 unrolled, with no loop to control (the production
+    // width among them); any other width loops
+    if L % 8 == 0 && 8 <= L && L <= 64 {
         spec8!(0);
-        spec8!(8);
-        spec8!(16);
-        spec8!(24);
-        if L >= 48 {
+        if L > 8 {
+            spec8!(8);
+        }
+        if L > 16 {
+            spec8!(16);
+        }
+        if L > 24 {
+            spec8!(24);
+        }
+        if L > 32 {
             spec8!(32);
+        }
+        if L > 40 {
             spec8!(40);
         }
-        if L == 64 {
+        if L > 48 {
             spec8!(48);
+        }
+        if L > 56 {
             spec8!(56);
         }
     } else {
