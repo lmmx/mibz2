@@ -1,0 +1,12 @@
+c30 master L32 S512 [b0]                     L1 0.993  L2 all 0.732  tt 0.731 | q 0.000 log 0.000 meta 0.000 flag 0.001 | ttloads 1.001
+c30 master L32 S512 [b1]                     L1 0.992  L2 all 0.729  tt 0.728 | q 0.000 log 0.000 meta 0.000 flag 0.001 | ttloads 1.001
+c30 master L32 S16384 [b0]                   L1 0.941  L2 all 0.663  tt 0.638 | q 0.000 log 0.000 meta 0.000 flag 0.026 | ttloads 1.018
+c30 master L32 S16384 [b1]                   L1 0.938  L2 all 0.668  tt 0.640 | q 0.000 log 0.000 meta 0.000 flag 0.027 | ttloads 1.018
+c30 master L32 S131072 [b0]                  L1 0.629  L2 all 0.432  tt 0.369 | q 0.000 log 0.000 meta 0.000 flag 0.063 | ttloads 1.136
+c30 master L32 S131072 [b1]                  L1 0.621  L2 all 0.429  tt 0.364 | q 0.000 log 0.000 meta 0.000 flag 0.066 | ttloads 1.136
+c30 part S131072 L32768 P8 e8 g4 bf [b0]     L1 0.790  L2 all 0.590  tt 0.350 | q 0.098 log 0.062 meta 0.079 flag 0.000 | ttloads 1.136 | cold 0.518 spv 3339.8 live 10731
+c30 part S131072 L32768 P8 e8 g4 bf [b1]     L1 0.783  L2 all 0.591  tt 0.351 | q 0.099 log 0.062 meta 0.078 flag 0.000 | ttloads 1.136 | cold 0.522 spv 3296.7 live 11040
+c30 part S131072 L32768 P8 shuf e8 g4 bf [b0] L1 1.269  L2 all 0.838  tt 0.463 | q 0.108 log 0.062 meta 0.204 flag 0.000 | ttloads 1.136 | cold 0.665 spv 3134.9 live 10426
+c30 part S131072 L32768 P8 shuf e8 g4 bf [b1] L1 1.267  L2 all 0.848  tt 0.473 | q 0.109 log 0.062 meta 0.203 flag 0.000 | ttloads 1.136 | cold 0.676 spv 3173.8 live 10962
+c30 part S65536 L16384 P8 e8 g4 bf [b0]      L1 0.875  L2 all 0.679  tt 0.495 | q 0.073 log 0.062 meta 0.048 flag 0.000 | ttloads 1.070 | cold 0.671 spv 1751.5 live 5671
+c30 part S65536 L16384 P8 e8 g4 bf [b1]      L1 0.872  L2 all 0.679  tt 0.496 | q 0.072 log 0.062 meta 0.048 flag 0.000 | ttloads 1.070 | cold 0.675 spv 1629.9 live 5501

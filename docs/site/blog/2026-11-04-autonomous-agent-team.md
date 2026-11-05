@@ -17,7 +17,7 @@ Each of four agents does one part of the research. A GitHub doorbell lets them h
 other directly, without me acting as their message bus.
 {: .post-dek }
 
-4 November 2026, revised 5 November · 13 min read · [Meta](#9-where-it-stands)
+4 November 2026, revised 5 November · 20 min read · [Meta](#10-where-it-stands)
 {: .post-meta }
 
 </div>
@@ -31,9 +31,10 @@ decoder's navigation table a smaller representation. Four agents did the researc
 until today they could only work together if I copied each one's messages to the next by hand.
 
 This post is about how they now pass work between themselves through the repository: who does
-what, how a message gets from one agent to another, and what I learnt from an afternoon of running
-it. It covers the setup and its first full cycle. Whether it actually makes the research faster,
-we'll have to wait and see.
+what, how a message gets from one agent to another, and what I learnt from running it: an
+afternoon, a first full cycle, and then a first night with nobody watching. That night produced
+real gains, and one ordinary mistake that taught me the most: a message can be sent, and recorded
+as sent, without ever being delivered.
 
 ## 1. A tale of four agents
 
@@ -166,7 +167,7 @@ finds still comes back to one place.
 <figure class="bf-fig">
 <p class="bf-title">One cycle: a checkpoint to two inboxes, two reviews, the next step</p>
 <svg viewBox="0 0 720 330" role="img" aria-label="One cycle. The Coordinator posts a checkpoint to the Guardian's inbox and to the Researcher's. Each comment starts that agent's run, and each agent posts a review on the shared channel. Their reviews wake the Coordinator, which takes the next step. Meanwhile the Optimiser works on briefs from its own inbox, and its proposals become new checkpoints."><rect x="0" y="70" width="196" height="100" rx="10" class="bf-card-claude"/><g transform="translate(14 84) scale(0.7500)"><path class="bf-logo-claude" d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></g><text x="40" y="98" class="bf-ts">1 · Checkpoint</text><text x="14" y="124" class="bf-tm">a result at a pinned commit,</text><text x="14" y="141" class="bf-tm">posted to each reader's inbox</text><rect x="262" y="0" width="196" height="100" rx="10" class="bf-card-astra"/><g transform="translate(276 14) scale(0.7500)"><path class="bf-logo-ink" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></g><text x="302" y="28" class="bf-ts">2 · Guardian</text><text x="276" y="54" class="bf-tm">applies the gates,</text><text x="276" y="71" class="bf-tm">posts a REVIEW on #145</text><rect x="262" y="140" width="196" height="100" rx="10" class="bf-card-astra"/><g transform="translate(276 154) scale(0.7500)"><path class="bf-logo-ink" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></g><text x="302" y="168" class="bf-ts">2 · Researcher</text><text x="276" y="194" class="bf-tm">tests the reasoning,</text><text x="276" y="211" class="bf-tm">posts a REVIEW on #145</text><rect x="524" y="70" width="196" height="100" rx="10" class="bf-card-claude"/><g transform="translate(538 84) scale(0.7500)"><path class="bf-logo-claude" d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></g><text x="564" y="98" class="bf-ts">3 · Next step</text><text x="538" y="124" class="bf-tm">the Coordinator wakes,</text><text x="538" y="141" class="bf-tm">acts on both reviews</text><path d="M200 120H230V50H254m-5-5 5 5-5 5M230 120V190H254m-5-5 5 5-5 5" class="bf-arrow"/><path d="M462 50H492V190H462M492 120H516m-5-5 5 5-5 5" class="bf-arrow"/><text x="229" y="134" class="bf-ttiny" text-anchor="end">event</text><text x="496" y="134" class="bf-ttiny">event</text><rect x="0" y="264" width="720" height="62" rx="12" class="bf-lane-astra"/><g transform="translate(16 278) scale(0.7500)"><path class="bf-logo-ink" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></g><text x="42" y="292" class="bf-ts">Meanwhile · Optimiser</text><text x="42" y="312" class="bf-tm">works on briefs from its own inbox, #160; once implemented, its proposals become new checkpoints</text></svg>
-<figcaption>Each arrow is a pull-request comment. A checkpoint goes to the inbox of each agent that should act on it, and each review comes back on the shared channel, #145, where it wakes the Coordinator. Nobody polls, and nothing goes through me.</figcaption>
+<figcaption>Each arrow is a pull-request comment. A checkpoint goes to the inbox of each agent that should act on it, and each review comes back on the shared channel, #145, where it wakes the Coordinator. No Astra agent polls, and nothing goes through me.</figcaption>
 </figure>
 
 ## 4. A receipt for every message
@@ -243,8 +244,9 @@ published, and to record both the launch and the result. The independent reviewe
 way, with its settings and inputs written to the repository before it began.
 
 Keeping things moving is the Coordinator's job. When the record goes quiet, it checks the
-receipts, works out who has the next step, and posts the checkpoint that starts it. There's no
-timer involved, and nothing sits waiting for me.
+receipts, works out who has the next step, and posts the checkpoint that starts it. No Astra agent runs
+on a timer. On the first night the Coordinator's session had one, waking it every quarter of an
+hour to re-read its mode note; otherwise it too wakes on events. Nothing sits waiting for me.
 
 ## 8. What a shared message board got wrong
 
@@ -286,9 +288,129 @@ one-line resume can pick up. The wake budget goes on work. And each agent's inst
 agent spec at a pinned commit, so what each one does can be read in the repository, not inferred
 from a task page.
 
-## 9. Where it stands
+They also bring a failure of their own: when the address is the mechanism, a message sent to the
+wrong address fails without a sound.
 
-The [channel log](https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b06708e47cbfdce2ca4/docs/journal/compact30-channel/log.md)
+## 9. Trust, but verify
+
+In the inbox design a comment in #160 wakes the Optimiser, and the same comment on #145 wakes
+nobody but the Coordinator. That is what keeps each agent's attention on its own work.
+
+**A checkpoint that looked dispatched.** On the night of 4–5 November the Coordinator ran the
+research with nobody watching. At 06:03 UTC it sent the Optimiser a brief in
+[#160](https://github.com/lmmx/mibz2/pull/160#issuecomment-6651023083), and the review came back
+at 06:12. At 07:38 it posted the next brief, reporting that the fused post-walk pass (#183) had been
+rejected, to
+[#145](https://github.com/lmmx/mibz2/pull/145#issuecomment-6652503445) instead, and at 08:21 an
+addendum to the
+[same place](https://github.com/lmmx/mibz2/pull/145#issuecomment-6653242752). Both had the
+right header and the right `TO:`, the first pinned its commit, and GitHub accepted both. Then the
+Coordinator waited for a review that couldn't come.
+
+I found it at my morning check, by looking at what had happened rather than at what had been
+reported:
+
+- the two comments were on #145;
+- the Optimiser's inbox had received nothing since 06:03;
+- its task's run history showed no run since 06:12.
+
+The Coordinator had intended to dispatch an assignment, and GitHub had confirmed that a comment
+was posted. Neither fact established that the Optimiser had received the work. Correctness of
+intent and correctness of record both held. Correctness of effect didn't.
+
+**The recovery didn't need me as a message bus.** I pointed out the discrepancy. The Coordinator
+re-sent both messages as one checkpoint in the
+[right inbox](https://github.com/lmmx/mibz2/pull/160#issuecomment-6653416078) at 08:31, said so in
+that message, and [logged the mistake](https://github.com/lmmx/mibz2/commit/10a8af6e) in the
+channel log. The Optimiser's run started from that comment, its cursor
+marked the brief finished, and its
+[review](https://github.com/lmmx/mibz2/pull/145#issuecomment-6653724458) came back at 08:48,
+proposing the next build. The work had sat at the wrong address for 53 minutes. Once the error
+was visible, the system recovered by its own means: a corrected checkpoint in the right inbox, and
+a review back on #145.
+
+**A guard that guarded nothing.** At 08:26 the Coordinator squash-merged
+[#185](https://github.com/lmmx/mibz2/pull/185), naming the commit it expected as the PR's head,
+so that the merge would be refused if anything had been pushed after CI tested it. It passed
+`c32ba5db3b0f…`: the first eight characters of the real head, `c32ba5db9df8…`, padded out to forty
+with characters it made up. The merge went through anyway. The right commit merged, since nothing had been pushed after it. But the check the
+Coordinator relied on to merge only the commit CI had tested had checked nothing. A short prefix
+had been refused on an earlier merge, which was why the check seemed to work. The Coordinator
+noticed when it read the head back, fourteen seconds after merging.
+
+Both mistakes have the same shape: an agent's report of its own action is a claim, like any other
+claim in this project, and it needs an observable effect behind it. The research already works
+that way, since every result pins a commit that a reviewer can check. The coordination didn't.
+The answer isn't for me to watch more closely. It's small, deterministic checks on the few actions
+whose effects matter, so that a route is computed rather than remembered, and a posted message or a
+merge is read back rather than assumed. The Coordinator still runs them on itself, so they narrow
+this failure rather than remove it.
+
+| Check | What it compares | Status |
+| --- | --- | --- |
+| `route` | an assignment's destination: the role's inbox, or, while it is busy, staged on #145 as `TYPE: QUEUED` | required before each assignment; none posted since it landed |
+| `verify` | the posted comment, read back by ID: its PR, its header, the only assignment in flight | required after each; replayed, it fails the 07:38 misroute and passes the 08:31 dispatch |
+| `head-sha` | a merge's expected head against the PR's exact 40-character head, before the merge and, with `--merged`, after it | before: since #186; after: since #190; rejects #185's SHA |
+| `audit` | every message on #145 and the inboxes since the inbox cutover | in use at each session start and wake-up; in its tests, the 120 comments up to 08:49 give exactly the two misroutes |
+| the tripwire | each new comment on #145 or an inbox, checked by a GitHub Actions workflow that runs independently of the Coordinator | in use as a record: a failing check on #145's head until the next commit there; no event for the Coordinator |
+
+The first four are one stdlib script,
+[`coord.py`](https://github.com/lmmx/mibz2/blob/b773431366def44a1214a0c42a6b0fe0b606d870/.github/coordination/coord.py), added in
+[#186](https://github.com/lmmx/mibz2/pull/186), and the repository's `CLAUDE.md` says when the
+Coordinator runs each one. (`TYPE: QUEUED` is a staging label added with the inboxes: work for a
+busy role waits on #145 until the Coordinator dispatches it.) The script only reads: it never
+posts, edits or deletes. The tripwire
+can't stop a misroute, only report it. It never edits, moves or re-posts a comment, and never
+dispatches anything itself, so it can't create work of its own.
+
+The tripwire needed the same treatment as everything else. A workflow started by a comment runs
+only from master, so each version could be tested only after it merged. The Coordinator tested
+each one with a deliberate, labelled misroute on #145, and each test found something that the code
+and its unit tests hadn't. (A check run is one line in a PR's list of checks. GitHub groups a
+workflow's check runs into a check suite, and the Coordinator's subscription hears only when a
+suite finishes.)
+
+- **The first** was classified correctly, and then its warning couldn't be posted: #145 is
+  locked, and the Actions bot can't comment on a locked conversation.
+- **The second** raised a failing check run on #145 instead. The check showed red, but nothing
+  woke the Coordinator.
+- **The third** made its check run start in progress and then fail, to reopen the suite. The
+  suite stayed green and sent no event: a GitHub Actions suite follows its workflow run, not check
+  runs added to it.
+
+One of these tests refuted a claim that had already merged: #188 went in saying its check run would
+wake the Coordinator, and its test showed within a minute that it didn't.
+
+So the tripwire is a record, not an alarm. It leaves a failing check on #145's head commit,
+independently of the Coordinator, and the check shows on #145 until the next commit to the channel
+branch. The Coordinator finds the misroute itself, by running `audit` at the start of each session
+and every time it wakes.
+
+The merge guard needed the same treatment, and got it only while this post was being checked. A
+reviewing agent pointed out that GitHub refuses a mismatched head, and it does: a merge of
+[#139](https://github.com/lmmx/mibz2/pull/139) was refused with a 409 on 2 November. The guess had
+never reached GitHub. The merge tool takes the expected head as `expectedHeadSha`, and the
+Coordinator had been passing it as `sha`, a name the tool doesn't have and drops without a word.
+The prefix refused earlier had met the tool's own format check, under the right name. Read back,
+eight merges between 02:12 and 09:36 had passed the head that way, among them an earlier guess on
+[#167](https://github.com/lmmx/mibz2/pull/167) and four merges made after `head-sha` existed. Each
+merged its PR's final head, so nothing wrong landed, but none was checked. `head-sha` had checked
+the value; nothing had checked that the value reached the merge.
+[#190](https://github.com/lmmx/mibz2/pull/190) adds the missing step: the SHA goes in
+`expectedHeadSha`, and `head-sha --merged` reads the merge back and passes only if the PR merged
+at exactly that head.
+
+Three gaps remain. The checks are run by the Coordinator on itself: `CLAUDE.md` says when, but
+nothing outside its session makes it run them, and the tripwire, the one check outside it, can
+only leave a mark. The Coordinator can't see the Astra tasks' run history; it infers a run from
+receipts in the cursors, which `route` reads. And a brief that was delivered but never started,
+one with no receipt half an hour after it was posted, is still caught only by the Coordinator
+noticing a quiet record (section 7). A mechanical check for it would close the loop from sent to
+started. It isn't built.
+
+## 10. Where it stands
+
+The [channel log](https://github.com/lmmx/mibz2/blob/abc14cc284bb971142cf5347bf8072014bc5a37a/docs/journal/compact30-channel/log.md)
 records each step. The trigger was first tested on the Guardian: a comment started its run, it
 published an assessment, and its review woke the Coordinator. The first real cycle followed on
 [a checkpoint](https://github.com/lmmx/mibz2/pull/145#issuecomment-6632963394) covering two
@@ -324,8 +446,58 @@ Then all three agents took their next assignment under the new specs:
 The first reviews under the new design corrected the Coordinator's write-up before it was
 published.
 
-So the messages get through, the reviews arrive before the decisions they bear on, and nothing
-goes through me. Whether that makes the research faster will show over the next few posts.
+The rest of that night was the first long test. At 02:52 UTC, at my instruction, the
+Coordinator's [mode note](https://github.com/lmmx/mibz2/blob/e8b136fed714b54d79b7fa9914b70f815d2a4d8a/docs/journal/compact30-channel/MODE.md)
+was amended to tell it to fan out hard on the hard research, and to do tests, CI and documentation
+itself rather than spend agents on them. From then until my morning check it ran with nobody
+watching. Only the Optimiser was in the loop: the Guardian and the Researcher received no work
+after 00:36.
+
+The Coordinator's Claude Code workflows put several agents on one question at once. In one, three
+agents mined an old CI sweep, modelled each runner's per-core miss resources and built a walk
+keyed on SMT co-residency, and three sceptics each refuted part of that work. Another reviewed the
+fused post-walk change through three lenses, one of them a differential of about 14,600 valid and
+corrupt inputs against master, which
+[found no divergence](https://github.com/lmmx/mibz2/pull/160#issuecomment-6653416078). The
+workflows' own records stay in the Coordinator's session; the journal keeps what they found. Every
+decoder change that reached a pull request still went through the CI benchmark, under a decision
+rule registered before its first run, without review by the Guardian or the Researcher.
+
+Five decoder changes merged. Two trimmed the move-to-front stage
+([#170](https://github.com/lmmx/mibz2/pull/170), [#172](https://github.com/lmmx/mibz2/pull/172)).
+[#171](https://github.com/lmmx/mibz2/pull/171) staged the walk's output through one tile, for a
+four-thread wall 5% to 14% faster over five runs. [#180](https://github.com/lmmx/mibz2/pull/180)
+widened the window of blocks in flight, for 8% to 10% in three runs, at a cost of 4% to 6% more CPU
+and 8 MB more memory. The Coordinator weighed that in the journal and accepted it, noting that the
+extra CPU still has to be measured in wikidata-pq's pipeline, where the decoder shares its cores.
+[#181](https://github.com/lmmx/mibz2/pull/181) removed the deferred flags that #171 had carried
+with it: the decoder ran about 4% more instructions and still got faster. That fits the reading
+that the walk is bound by memory requests in flight rather than by instructions, though no
+hardware counter has shown it. The [benchmark history](../benchmarks/history.md), which chains
+each merge's own paired run, now puts the four-thread Wikidata wall at 0.75× its value at #69 (95%
+band 0.69–0.82), against 0.85× before #180. The chain assumes that a change measured on one runner
+holds on another.
+
+As much again was tested and rejected. The 32 KiB tile, 1024 offsets a lane, filled the whole of
+Zen 4's L1D and ran 23.5% slower even at one thread (#177, #178). The fused post-walk pass
+([#183](https://github.com/lmmx/mibz2/pull/183)) halved the simulated cache misses after the walk,
+but the four-thread wall wasn't shown to follow: neither PR run was faster there beyond noise,
+though the fusion alone was, by 1.5%. October's four-copy win for a walk keyed on SMT co-residency
+reversed on today's staged walk. Split condition variables were rejected on a count of wasted
+wakes before anything was built.
+
+Each is written up in the journal with its runs. The walk round had already redirected the
+work: since the 06:03 checkpoint the Optimiser has ranked candidates by the memory traffic of four
+workers on two SMT cores, not by instruction counts, and the fused pass and split condition
+variables were its first and third picks. Their failures narrowed the search to the walk's random
+reads and its table's footprint. The next build the Optimiser proposed is a retest of compact30's
+smaller table under today's staged walk, though its own prior on it is weak.
+
+So the work moves without me relaying it. When a message went to the wrong address, the record
+showed it, and the Coordinator corrected it without my carrying anything across, though it took me
+to notice. Now the Coordinator reads each message and each merge back rather than assume they
+landed, and a misroute leaves a failing check on #145 that the Coordinator didn't write. Whether
+all of this makes the research faster will keep showing in the benchmark history.
 
 If you want to set up something similar:
 
@@ -335,9 +507,12 @@ If you want to set up something similar:
 - wake agents with events rather than timers, and keep those events few;
 - keep every agent's instructions in the repository at a pinned commit;
 - write down what a message is allowed to authorise;
-- decide what an independent reviewer gets to see. My own part is choosing the scope and making the decisions the charter keeps
-for me.
+- decide what an independent reviewer gets to see;
+- check effects, not reports: read every message back where it should have landed, and every
+  merge back after it lands.
+
+My own part is choosing the scope and making the decisions the charter keeps for me.
 
 ---
 
-**Research records:** [Role identities](https://github.com/lmmx/mibz2/blob/8304583b/docs/journal/compact30-channel/ROLES.md) · [Research charter](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/2026-11-04-compact30-research-charter.md) · [Channel protocol](https://github.com/lmmx/mibz2/blob/8304583b/docs/journal/compact30-channel/PROTOCOL.md) · [Review contract](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/REVIEWER.md) · [Recorded exchanges](https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b06708e47cbfdce2ca4/docs/journal/compact30-channel/log.md).
+**Research records:** [Role identities](https://github.com/lmmx/mibz2/blob/8304583b/docs/journal/compact30-channel/ROLES.md) · [Research charter](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/2026-11-04-compact30-research-charter.md) · [Channel protocol](https://github.com/lmmx/mibz2/blob/8304583b/docs/journal/compact30-channel/PROTOCOL.md) · [Review contract](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/REVIEWER.md) · [Recorded exchanges](https://github.com/lmmx/mibz2/blob/abc14cc284bb971142cf5347bf8072014bc5a37a/docs/journal/compact30-channel/log.md) · [Routing checks](https://github.com/lmmx/mibz2/blob/b773431366def44a1214a0c42a6b0fe0b606d870/.github/coordination/coord.py).
