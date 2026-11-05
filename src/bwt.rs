@@ -794,6 +794,8 @@ thread_local! {
     // done again lane by lane because a lane read a start
     static TILES_KEPT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static TILES_REPLAYED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // a chunk ending at TILE with the pass's room still to go (another chunk follows)
+    static TILE_ENDS_MID_PASS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -1107,6 +1109,9 @@ fn room_segments<const L: usize, const PF: u8>(
                     flush(l, &tile[k], st[k], w);
                 }
                 done += w;
+                if done < room {
+                    transition!(TILE_ENDS_MID_PASS);
+                }
             }
         }
     }
@@ -1758,6 +1763,53 @@ pub(crate) mod tests {
         ] {
             assert!(count(c) > 0, "never reached: {name}");
         }
+    }
+
+    /// A pass running past TILE, so a chunk's flush is followed by another chunk of the same
+    /// pass, at 32 lanes and at 5, against `walk` and the segment oracle: a column of
+    /// 512 * TILE rows in 64 or 256 segments, each segment 2 to 8 tiles long on average
+    /// (and each buffer's `cap` twice that), whatever TILE is
+    #[test]
+    fn room_walk_chunks_end_mid_pass() {
+        TILE_ENDS_MID_PASS.with(|c| c.set(0));
+        let mut x = 0x5851_f42d_4c95_7f2du64;
+        let n = 512 * TILE;
+        for alphabet in [3u64, 256] {
+            let ll: Vec<u8> = (0..n)
+                .map(|_| {
+                    x ^= x << 13;
+                    x ^= x >> 7;
+                    x ^= x << 17;
+                    (x % alphabet) as u8
+                })
+                .collect();
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let orig_ptr = n as u32 / 3;
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            for segments in [64, 256] {
+                let what = format!("alphabet {alphabet}, {segments} segments");
+                walk_segments_room_with_prefetch::<32, PF_L1>(
+                    &mut tt, orig_ptr, &mut out, &mut seg, segments,
+                );
+                assert!(plain == out, "room walk, {what}");
+                check_segments(&tt, &seg, &what);
+                walk_segments_room_with_prefetch::<5, PF_OFF>(
+                    &mut tt, orig_ptr, &mut out, &mut seg, segments,
+                );
+                assert!(plain == out, "room walk, 5 lanes, {what}");
+                check_segments(&tt, &seg, &what);
+            }
+        }
+        assert!(
+            count(&TILE_ENDS_MID_PASS) > 0,
+            "never reached: a chunk ending at TILE mid-pass"
+        );
     }
 
     /// The flagged walk on a random last column and on a periodic one (a list of several
