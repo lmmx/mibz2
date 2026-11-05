@@ -35,6 +35,19 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.2.1] - 2026-11-05
+
+### Added
+
+- **Each merged pull request's paired benchmark is kept** (`bench/links.py`,
+  `.github/workflows/bench-links.yml`). Its last run's head against base, on one runner, is
+  stored as a link of the history's chain in the results store: `links.jsonl`,
+  `pr/<commit>.json` and `pr-raw/<commit>.jsonl`.
+  - A push to master links its own merge. A dispatch links every earlier merge whose
+    artifact is still kept (90 days).
+  - Nothing is measured again: the figures are the pull request's own runs.
+  - This is a change to what is stored. Every figure keeps its meaning.
+
 ## [3.2.0] - 2026-10-29
 
 ### Added
