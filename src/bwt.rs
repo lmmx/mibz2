@@ -794,6 +794,8 @@ thread_local! {
     // done again lane by lane because a lane read a start
     static TILES_KEPT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static TILES_REPLAYED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // the tail's offsets done again lane by lane
+    static TAIL_REPLAYED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -1124,28 +1126,87 @@ fn room_segments<const L: usize, const PF: u8>(
         }
         debug_assert!(l.p < l.end);
     }
-    while !live.is_empty() {
-        let mut i = 0;
-        while i < live.len() {
-            let l = &mut live[i];
-            let q = unsafe { *t.add(l.row as usize) };
-            if q & START != 0 {
-                finish(l, bufs, next);
-                live.swap_remove(i);
-                continue;
-            }
-            l.row = q >> 8;
-            if PF != PF_OFF {
-                prefetch::<PF>(t, l.row);
-            }
-            unsafe {
-                *l.p = q as u8;
-                l.p = l.p.add(1);
-            }
+    // The tail, in passes as the busy phase walks: a pass is `room` offsets, room the fewest
+    // bytes any live lane has spare, and an offset steps every live lane without testing its
+    // flag, then tests the flags together. An offset whose entries hold a start is done again
+    // lane by lane from the rows before it (kept in the other slot): a lane that reads its
+    // start finishes there and leaves, the last live lane taking its place. No segment is
+    // taken in the tail, so the order the lanes finish in changes no byte.
+    let mut m = live.len();
+    debug_assert!(m <= L);
+    let mut rows = [[0u32; L]; 2];
+    let mut base = [std::ptr::null_mut::<u8>(); L];
+    while m > 0 {
+        let mut room = usize::MAX;
+        for l in live[..m].iter_mut() {
             if l.p == l.end {
                 grow(l, bufs);
             }
-            i += 1;
+            room = room.min(unsafe { l.end.offset_from(l.p) } as usize);
+        }
+        for (i, l) in live[..m].iter().enumerate() {
+            rows[0][i] = l.row;
+            base[i] = l.p;
+        }
+        let mut cur = 0;
+        let mut off = 0;
+        while off < room && m > 0 {
+            let (sr, dr) = if cur == 0 {
+                let (a, b) = rows.split_at_mut(1);
+                (&mut a[0], &mut b[0])
+            } else {
+                let (a, b) = rows.split_at_mut(1);
+                (&mut b[0], &mut a[0])
+            };
+            let mut flags = 0u32;
+            for i in 0..m {
+                // SAFETY: i < m <= L; the rows in sr are real rows below n (a speculative
+                // row goes only into dr, discarded if any entry was a start); base + off is
+                // inside lane i's room
+                unsafe {
+                    let q = *t.add(*sr.get_unchecked(i) as usize);
+                    flags |= q;
+                    *base.get_unchecked(i).wrapping_add(off) = q as u8;
+                    *dr.get_unchecked_mut(i) = q >> 8;
+                    if PF != PF_OFF {
+                        prefetch::<PF>(t, q >> 8);
+                    }
+                }
+            }
+            if flags & START == 0 {
+                cur ^= 1;
+                off += 1;
+                continue;
+            }
+            transition!(TAIL_REPLAYED);
+            let mut i = 0;
+            while i < m {
+                // SAFETY: as above
+                let q = unsafe { *t.add(sr[i] as usize) };
+                if q & START != 0 {
+                    let l = &mut live[i];
+                    l.row = sr[i];
+                    l.p = base[i].wrapping_add(off);
+                    finish(l, bufs, next);
+                    m -= 1;
+                    live.swap(i, m);
+                    sr[i] = sr[m];
+                    base[i] = base[m];
+                    continue;
+                }
+                unsafe { *base[i].wrapping_add(off) = q as u8 };
+                sr[i] = q >> 8;
+                if PF != PF_OFF {
+                    prefetch::<PF>(t, sr[i]);
+                }
+                i += 1;
+            }
+            // stepped in place: the next offset reads the same slot
+            off += 1;
+        }
+        for i in 0..m {
+            live[i].row = rows[cur][i];
+            live[i].p = base[i].wrapping_add(room);
         }
     }
     for &r in starts {
@@ -1697,6 +1758,7 @@ pub(crate) mod tests {
             &LATER_STEPPED_ON_START,
             &TILES_KEPT,
             &TILES_REPLAYED,
+            &TAIL_REPLAYED,
         ] {
             c.with(|c| c.set(0));
         }
@@ -1755,6 +1817,7 @@ pub(crate) mod tests {
             ),
             ("an offset kept as stepped together", &TILES_KEPT),
             ("an offset done again lane by lane", &TILES_REPLAYED),
+            ("a tail offset done again lane by lane", &TAIL_REPLAYED),
         ] {
             assert!(count(c) > 0, "never reached: {name}");
         }
