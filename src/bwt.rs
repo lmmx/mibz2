@@ -431,7 +431,7 @@ const SEGMENTS: usize = 256;
 /// 256-1024 segments on Wikidata's blocks, at one walk and at four at once
 const FLAGGED_LANES: usize = 32;
 pub(crate) const FLAGGED_SEGMENTS: usize = 512;
-const PREFETCH: u8 = PF_L1;
+const PREFETCH: u8 = PF_L2;
 /// The walks' prefetch (their `PF`): none, or a hint into L1 (`prefetcht0`, `prfm
 /// pldl1keep`), into L2 (`prefetcht1`, `prfm pldl2keep`), or non-temporal (`prefetchnta`,
 /// `prfm pldl1strm`): the same values read whichever, so they can be measured side by side
