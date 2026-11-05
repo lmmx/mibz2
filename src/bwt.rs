@@ -119,23 +119,88 @@ impl InverseBwt for Segmented {
 
     #[cfg(any(test, feature = "trace"))]
     fn buffers(&self) -> Vec<crate::trace::Buffer> {
-        use crate::trace::Buffer;
-        let s = &self.seg;
-        let mut v = vec![Buffer::of("tt", &self.tt.0)];
-        if s.bufs.capacity() > 0 {
-            v.push(Buffer {
-                name: "seg.bufs",
-                len: s.bufs.iter().map(Vec::len).sum(),
-                cap: s.bufs.iter().map(Vec::capacity).sum(),
-            });
-            v.push(Buffer::of("seg.bufs.outer", &s.bufs));
-            v.push(Buffer::of("seg.starts", &s.starts));
-            v.push(Buffer::of("seg.next", &s.next));
+        segmented_buffers(&self.tt, &self.seg)
+    }
+}
+
+/// `Segmented`'s and `Shaped`'s buffers, for the footprint ledger
+#[cfg(any(test, feature = "trace"))]
+fn segmented_buffers(tt: &TVector, s: &SegScratch) -> Vec<crate::trace::Buffer> {
+    use crate::trace::Buffer;
+    let mut v = vec![Buffer::of("tt", &tt.0)];
+    if s.bufs.capacity() > 0 {
+        v.push(Buffer {
+            name: "seg.bufs",
+            len: s.bufs.iter().map(Vec::len).sum(),
+            cap: s.bufs.iter().map(Vec::capacity).sum(),
+        });
+        v.push(Buffer::of("seg.bufs.outer", &s.bufs));
+        v.push(Buffer::of("seg.starts", &s.starts));
+        v.push(Buffer::of("seg.next", &s.next));
+    }
+    if s.bitmap.capacity() > 0 {
+        v.push(Buffer::of("seg.bitmap", &s.bitmap));
+    }
+    v
+}
+
+/// The co-resident walk's shape: its lanes and its prefetch (`PF_OFF`, `PF_L1`, `PF_L2`,
+/// `PF_NTA`). The parallel decoder runs it (`Coresident`) where its workers outnumber the
+/// physical cores (`parallel::Shape`), so that two walks share a core's L1D, fill buffers
+/// and L2 (SMT siblings). This pair is the one place a CI arm changes; the shape alone,
+/// `Segmented`'s, is `FLAGGED_LANES` lanes at `PREFETCH`, and stays as it is.
+pub const CORESIDENT_LANES: usize = 16;
+pub const CORESIDENT_PF: u8 = PF_L2;
+
+/// The kernel the parallel decoder's workers run when they share cores
+/// (`parallel::Shape::Coresident`)
+pub type Coresident = Shaped<CORESIDENT_LANES, CORESIDENT_PF>;
+
+/// `Segmented` at another shape: its room walk with `L` lanes and the prefetch `PF`, at
+/// `FLAGGED_SEGMENTS` segments, the plain walk below `MIN_SEGMENTED` rows. `L` is any count
+/// from 1 to 64 (a pass marks its lanes in a u64): the busy offset steps the lanes in
+/// groups of 8 and then one at a time (`room_segments`), so a multiple of 8 (16, 24, 32)
+/// has no single steps left over, and another count only adds them. Exactly `walk`'s
+/// output at every shape, and in place as `Segmented` is. `Segmented` is not an alias of
+/// `Shaped<FLAGGED_LANES, PREFETCH>` but its own type, so that the default decoder's code
+/// (the sequential decoder's, and the parallel one's alone) is untouched by the other
+/// shapes.
+#[derive(Default)]
+pub struct Shaped<const L: usize, const PF: u8> {
+    tt: TVector,
+    seg: SegScratch,
+}
+
+impl<const L: usize, const PF: u8> Shaped<L, PF> {
+    /// `walk_segments_room` at this shape, on the table `invert` built
+    fn walk_room(&mut self, orig_ptr: u32, out: &mut Vec<u8>) {
+        const { assert!(L >= 1 && L <= 64 && PF <= PF_NTA) };
+        if self.tt.len() < MIN_SEGMENTED {
+            return walk(&self.tt, orig_ptr, out);
         }
-        if s.bitmap.capacity() > 0 {
-            v.push(Buffer::of("seg.bitmap", &s.bitmap));
-        }
-        v
+        room_segments::<L, PF>(&mut self.tt, orig_ptr, &mut self.seg, FLAGGED_SEGMENTS);
+        self.seg.assemble(out);
+    }
+}
+
+impl<const L: usize, const PF: u8> InverseBwt for Shaped<L, PF> {
+    fn invert(&mut self, ll: &[u8], counts: &[u32; 256], orig_ptr: u32, out: &mut Vec<u8>) {
+        build(ll, counts, &mut self.tt);
+        self.walk_room(orig_ptr, out);
+    }
+
+    // As `Segmented`'s: the build is `ll`'s last read, and both writers (`walk`,
+    // `SegScratch::assemble`) clear their output and write exactly the table's n rows,
+    // within the capacity `ll` has. So it never falls back.
+    fn invert_in_place(&mut self, ll: &mut Vec<u8>, counts: &[u32; 256], orig_ptr: u32) -> bool {
+        build(ll, counts, &mut self.tt);
+        self.walk_room(orig_ptr, ll);
+        true
+    }
+
+    #[cfg(any(test, feature = "trace"))]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        segmented_buffers(&self.tt, &self.seg)
     }
 }
 
@@ -1652,7 +1717,7 @@ pub(crate) mod tests {
     /// for many lanes to reach a segment's end at the same offset: every interleaving the
     /// pass can take (several lanes marked at one offset, the queue running out with marked
     /// lanes still waiting, or after an earlier marked lane took a segment) is reached, at
-    /// 32 lanes and at 5, and every output is `walk`'s
+    /// 32 lanes and at 5, and every output is `walk`'s (the co-resident shape's too)
     #[test]
     fn room_walk_deferred_handovers() {
         for c in [
@@ -1701,6 +1766,12 @@ pub(crate) mod tests {
             );
             assert!(plain == out, "5 lanes, case {case}");
             check_segments(&tt, &seg, "5 lanes");
+            // (and the co-resident shape's: its outputs checked, its counts with the others)
+            walk_segments_room_with_prefetch::<CORESIDENT_LANES, CORESIDENT_PF>(
+                &mut tt, orig_ptr, &mut out, &mut seg, segments,
+            );
+            assert!(plain == out, "the co-resident shape, case {case}");
+            check_segments(&tt, &seg, "the co-resident shape");
         }
         // A stepped later lane leaving exactly full needs the queue to run out at a pass's
         // last offset with that lane setting the pass's room: not reached in 60,000 random
@@ -1722,16 +1793,53 @@ pub(crate) mod tests {
         }
     }
 
-    /// The staged busy phase's chunk edges, at 32 lanes and at 5: blocks long enough and
-    /// segments few enough that a pass's room spans several tiles. Each state is required:
-    /// a pass of more than one chunk; a take at a chunk's last offset (its row then staged
-    /// from one past the chunk) and in a later chunk; a segment taken and finished in one
-    /// chunk; a lane marked at a later chunk's first offset; and the queue running out at a
-    /// later chunk's first offset, at a chunk's last offset short of the pass's end, and at
-    /// the pass's last offset. Every output against `walk` and the segment oracle
+    /// A room walk at some shape, as `walk_segments_room_with_prefetch::<L, PF>` is
+    type RoomWalk = fn(&mut TVector, u32, &mut Vec<u8>, &mut SegScratch, usize);
+
+    /// The staged busy phase's chunk edges, at 32 lanes and at 5 (`staged_chunk_edges`)
     #[test]
     #[cfg_attr(miri, ignore)]
     fn room_walk_staged_chunk_edges() {
+        staged_chunk_edges(&[
+            ("32 lanes", walk_segments_room_with_prefetch::<32, PF_L1>),
+            ("5 lanes", walk_segments_room_with_prefetch::<5, PF_OFF>),
+        ]);
+    }
+
+    /// The same edges at the co-resident walk's lane counts, each shape on its own (its own
+    /// counts, so every state is reached at that shape): 16 lanes into L2, 16 into L1, 24
+    /// into L2, and the shape `CORESIDENT_LANES` and `CORESIDENT_PF` name, whatever a CI
+    /// arm sets them to
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    fn room_walk_staged_chunk_edges_coresident() {
+        staged_chunk_edges(&[(
+            "16 lanes, L2",
+            walk_segments_room_with_prefetch::<16, PF_L2>,
+        )]);
+        staged_chunk_edges(&[(
+            "16 lanes, L1",
+            walk_segments_room_with_prefetch::<16, PF_L1>,
+        )]);
+        staged_chunk_edges(&[(
+            "24 lanes, L2",
+            walk_segments_room_with_prefetch::<24, PF_L2>,
+        )]);
+        staged_chunk_edges(&[(
+            "the co-resident shape",
+            walk_segments_room_with_prefetch::<CORESIDENT_LANES, CORESIDENT_PF>,
+        )]);
+    }
+
+    /// The staged busy phase's chunk edges, through each of `walks` on every case: blocks
+    /// long enough and segments few enough that a pass's room spans several tiles. Each
+    /// state is required (counted over `walks` together): a pass of more than one chunk; a
+    /// take at a chunk's last offset (its row then staged from one past the chunk) and in a
+    /// later chunk; a segment taken and finished in one chunk; a lane marked at a later
+    /// chunk's first offset; and the queue running out at a later chunk's first offset, at a
+    /// chunk's last offset short of the pass's end, and at the pass's last offset. Every
+    /// output against `walk` and the segment oracle
+    fn staged_chunk_edges(walks: &[(&str, RoomWalk)]) {
         let required = [
             ("a pass of more than one chunk", &ROOM_OVER_TILE),
             ("a take at a chunk's last offset", &TAKE_AT_CHUNK_END),
@@ -1786,19 +1894,102 @@ pub(crate) mod tests {
             // a pass's room is about 2n / segments + 63: under n / 150 segments it is over
             // two tiles, and over 32 of them the busy phase runs at 32 lanes
             let segments = 33 + rnd((n / 150) as u64) as usize;
-            walk_segments_room_with_prefetch::<32, PF_L1>(
-                &mut tt, orig_ptr, &mut out, &mut seg, segments,
-            );
-            assert!(plain == out, "32 lanes, case {cases}");
-            check_segments(&tt, &seg, "32 lanes");
-            walk_segments_room_with_prefetch::<5, PF_OFF>(
-                &mut tt, orig_ptr, &mut out, &mut seg, segments,
-            );
-            assert!(plain == out, "5 lanes, case {cases}");
-            check_segments(&tt, &seg, "5 lanes");
+            for &(what, f) in walks {
+                f(&mut tt, orig_ptr, &mut out, &mut seg, segments);
+                assert!(plain == out, "{what}, case {cases}");
+                check_segments(&tt, &seg, what);
+            }
         }
+        let names: Vec<&str> = walks.iter().map(|w| w.0).collect();
         for (name, c) in required {
-            assert!(count(c) > 0, "never reached in {cases} cases: {name}");
+            assert!(
+                count(c) > 0,
+                "{names:?}: never reached in {cases} cases: {name}"
+            );
+        }
+    }
+
+    /// `Shaped`'s `invert` and `invert_in_place` give `walk`'s output, and its room walk
+    /// the oracle's segments, on every column of `columns` (one kernel of each reused
+    /// throughout, as a worker reuses its scratch); in place, `ll`'s buffer unmoved
+    fn shape_is_walk<const L: usize, const PF: u8>(columns: &[(Vec<u8>, u32)]) {
+        let what = |i: usize| format!("{} lanes, prefetch {}, column {}", L, PF, i);
+        let (mut sep, mut inp) = (Shaped::<L, PF>::default(), Shaped::<L, PF>::default());
+        let (mut plain, mut out) = (Vec::new(), Vec::new());
+        for (i, (ll, orig_ptr)) in columns.iter().enumerate() {
+            let counts = counts_of(ll);
+            let mut tt = TVector::new();
+            build(ll, &counts, &mut tt);
+            walk(&tt, *orig_ptr, &mut plain);
+            sep.invert(ll, &counts, *orig_ptr, &mut out);
+            assert!(out == plain, "{}: invert", what(i));
+            if ll.len() >= MIN_SEGMENTED {
+                check_segments(&sep.tt, &sep.seg, &what(i));
+            }
+            assert!(sep.tt.0.iter().all(|&e| e & START == 0), "{}", what(i));
+            let mut v = ll.clone();
+            let (ptr, cap) = (v.as_ptr(), v.capacity());
+            assert!(inp.invert_in_place(&mut v, &counts, *orig_ptr));
+            assert!(v == plain, "{}: in place", what(i));
+            assert_eq!((v.as_ptr(), v.capacity()), (ptr, cap), "{}", what(i));
+        }
+    }
+
+    /// Every shape the co-resident arms take (16 lanes into L2, the default; 16 into L1; 24
+    /// and 32 into L2), the shape alone as `Shaped` (32 into L1) and as `Segmented`, and
+    /// `Coresident` itself, on the same random columns: short of MIN_SEGMENTED (the plain
+    /// walk), past it, full blocks of 900,000 rows, over 3 symbols and over 256, periodic
+    /// ones (lists of several cycles) and one byte throughout, at random primary indices
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    fn shaped_kernels_are_walk() {
+        let mut x = 0x5eed_c0de_u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        let mut columns = Vec::new();
+        for case in 0..30 {
+            let n = match case % 5 {
+                0 => 1 + rnd(MIN_SEGMENTED as u64 - 1) as usize,
+                1 | 2 => MIN_SEGMENTED + rnd(250_000) as usize,
+                3 => 900_000,
+                _ => MIN_SEGMENTED + rnd(3000) as usize,
+            };
+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });
+            let mut ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            if case % 7 == 6 {
+                let p = 1 + rnd(5) as usize;
+                for i in p..n {
+                    ll[i] = ll[i % p];
+                }
+            }
+            let orig_ptr = rnd(n as u64) as u32;
+            columns.push((ll, orig_ptr));
+        }
+        columns.push((vec![3u8; MIN_SEGMENTED + 77], 1));
+        columns.push(((0..MIN_SEGMENTED + 5).map(|i| (i % 2) as u8).collect(), 0));
+        shape_is_walk::<16, PF_L2>(&columns);
+        shape_is_walk::<16, PF_L1>(&columns);
+        shape_is_walk::<24, PF_L2>(&columns);
+        shape_is_walk::<32, PF_L2>(&columns);
+        shape_is_walk::<32, PF_L1>(&columns);
+        shape_is_walk::<CORESIDENT_LANES, CORESIDENT_PF>(&columns);
+        let (mut alone, mut co) = (Segmented::default(), Coresident::default());
+        let (mut plain, mut a, mut c) = (Vec::new(), Vec::new(), Vec::new());
+        for (i, (ll, orig_ptr)) in columns.iter().enumerate() {
+            let counts = counts_of(ll);
+            let mut tt = TVector::new();
+            build(ll, &counts, &mut tt);
+            walk(&tt, *orig_ptr, &mut plain);
+            alone.invert(ll, &counts, *orig_ptr, &mut a);
+            co.invert(ll, &counts, *orig_ptr, &mut c);
+            assert!(
+                a == plain && c == plain,
+                "column {i}: Segmented, Coresident"
+            );
         }
     }
 

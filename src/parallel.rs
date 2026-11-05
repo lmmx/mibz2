@@ -96,6 +96,7 @@ pub struct StreamDecoder {
     handles: Mutex<Vec<JoinHandle<()>>>,
     reader: Mutex<Reader>,
     threads: usize,
+    shape: Option<Shape>,
 }
 
 #[derive(Default)]
@@ -111,27 +112,50 @@ impl StreamDecoder {
     /// `threads`), on kernels `k`, spending them as the cooperative policy plans
     /// (`Plan::for_threads`): `threads` workers of a block each, or, on 6 or more physical
     /// cores, teams of 2 sharing each block, with the window scaled to the teams (`window`).
-    /// `planned(Plan::Workers(threads), ..)` is the decoder before the policy.
+    /// `planned(Plan::Workers(threads), ..)` is the decoder before the policy. Production's
+    /// workers walk in the shape for their number (`Shape::for_workers`, as `planned`).
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
         let threads = threads.max(1);
-        let plan = Plan::for_threads(threads);
-        Self::planned(plan, window(plan, threads, slots), k)
+        // (`Plan::for_threads`, the topology read once for the plan and the walk's shape)
+        let phys = physical_cores();
+        let plan = plan_with(threads, phys, l3_bytes());
+        Self::planned_on(plan, phys, window(plan, threads, slots), k)
     }
 
     /// A decoder spending its threads as `plan` says: production's workers, or teams of
     /// k sharing each block (`bwt::Cooperative`), with `slots` blocks in flight (at least
     /// the plan's workers or teams). The team size is 2, 3 or 4; another runs as that many
-    /// production workers.
+    /// production workers. Production's workers walk in the shape for their number on this
+    /// machine (`Shape::for_workers`): `bwt::Segmented`'s alone, `bwt::Coresident`'s where
+    /// they outnumber the physical cores.
     pub fn planned(plan: Plan, slots: usize, k: Kernels) -> StreamDecoder {
-        use super::bwt::{Cooperative, Segmented};
+        Self::planned_on(plan, physical_cores(), slots, k)
+    }
+
+    /// `planned` on a machine of `phys` physical cores (None: not known)
+    pub(crate) fn planned_on(
+        plan: Plan,
+        phys: Option<usize>,
+        slots: usize,
+        k: Kernels,
+    ) -> StreamDecoder {
+        use super::bwt::{Cooperative, Coresident, Segmented};
+        // production's workers, n of them, in their shape: chosen once, for the decoder
+        let workers = |n: usize| {
+            let shape = shape_with(n.max(1), phys);
+            let mut dec = match shape {
+                Shape::Alone => Self::with_inverse::<Segmented>(n, slots, k),
+                Shape::Coresident => Self::with_inverse::<Coresident>(n, slots, k),
+            };
+            dec.shape = Some(shape);
+            dec
+        };
         let mut dec = match plan {
-            Plan::Workers(n) => Self::with_inverse::<Segmented>(n, slots, k),
+            Plan::Workers(n) => workers(n),
             Plan::Teams { teams, k: 2 } => Self::with_inverse::<Cooperative<2>>(teams, slots, k),
             Plan::Teams { teams, k: 3 } => Self::with_inverse::<Cooperative<3>>(teams, slots, k),
             Plan::Teams { teams, k: 4 } => Self::with_inverse::<Cooperative<4>>(teams, slots, k),
-            Plan::Teams { teams, k: t } => {
-                Self::with_inverse::<Segmented>(teams.max(1) * t.max(1), slots, k)
-            }
+            Plan::Teams { teams, k: t } => workers(teams.max(1) * t.max(1)),
         };
         dec.threads = plan.threads();
         dec
@@ -185,12 +209,20 @@ impl StreamDecoder {
             handles: Mutex::new(handles),
             reader: Mutex::default(),
             threads,
+            shape: None,
         }
     }
 
     /// The threads decoding blocks: the workers, or the teams' threads in all
     pub fn threads(&self) -> usize {
         self.threads
+    }
+
+    /// The shape production's workers walk in (`Shape`), as `new` and `planned` chose it;
+    /// None where the workers run another kernel (the cooperative teams, or the kernel
+    /// given to `with_inverse`)
+    pub fn shape(&self) -> Option<Shape> {
+        self.shape
     }
 
     /// Queue compressed bytes, blocking while the queue is full. Err if the input is
@@ -527,6 +559,36 @@ impl Plan {
     }
 }
 
+/// The room walk's shape a decoder's production workers run, chosen once a decoder: the
+/// walk is bound by the misses it keeps in flight, and two walks on one core (SMT
+/// siblings) share its L1D, its fill and miss buffers and its L2
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Shape {
+    /// `bwt::Segmented`'s: 32 lanes, each lane's next entry prefetched into L1. The
+    /// sequential decoder's always (`decode`, `BzReader::new`, `decode_blocks`)
+    Alone,
+    /// `bwt::Coresident`'s: `bwt::CORESIDENT_LANES` lanes, prefetched at
+    /// `bwt::CORESIDENT_PF`, for workers that outnumber the physical cores
+    Coresident,
+}
+
+impl Shape {
+    /// The shape for `workers` production workers on this machine: co-resident where they
+    /// outnumber the physical cores of the CPUs this process may use (`physical_cores`),
+    /// alone where they don't or where the topology can't be read
+    pub fn for_workers(workers: usize) -> Shape {
+        shape_with(workers, physical_cores())
+    }
+}
+
+/// `Shape::for_workers` on a machine of `phys` physical cores (None: not known)
+pub(crate) fn shape_with(workers: usize, phys: Option<usize>) -> Shape {
+    match phys {
+        Some(p) if workers > p => Shape::Coresident,
+        _ => Shape::Alone,
+    }
+}
+
 /// The blocks in flight for `plan` when a caller asked for `slots` on `threads` threads:
 /// as many a worker as asked (a team counting as one worker), at least one each
 fn window(plan: Plan, threads: usize, slots: usize) -> usize {
@@ -644,16 +706,125 @@ mod plan_tests {
         assert_eq!(window(t4, 20, usize::MAX), usize::MAX / 20);
     }
 
-    /// The default decoder's threads are the plan's for this machine
+    /// The default decoder's threads are the plan's for this machine, and its workers'
+    /// shape the one for their number (none for a team plan)
     #[test]
     fn the_default_is_the_plan() {
         for t in [1, 4, 8] {
             let dec = StreamDecoder::new(t, 2 * t, Kernels::detect());
-            assert_eq!(dec.threads(), Plan::for_threads(t).threads());
+            let plan = Plan::for_threads(t);
+            assert_eq!(dec.threads(), plan.threads());
+            let shape = match plan {
+                Plan::Workers(w) => Some(Shape::for_workers(w)),
+                Plan::Teams { .. } => None,
+            };
+            assert_eq!(dec.shape(), shape, "{t} threads: {plan:?}");
             dec.close();
             let e = dec.read(&mut [0; 16]).unwrap_err();
             assert_eq!(e.kind, ErrorKind::Empty);
         }
+    }
+
+    /// The walk's shape: co-resident only where the workers outnumber the physical cores;
+    /// alone where they don't, or where the topology is not known
+    #[test]
+    fn the_shape() {
+        // CI's runner: 4 workers on 2 cores (4 vCPUs), and 3; a 4-core laptop's 8 CPUs
+        assert_eq!(shape_with(4, Some(2)), Shape::Coresident);
+        assert_eq!(shape_with(3, Some(2)), Shape::Coresident);
+        assert_eq!(shape_with(8, Some(4)), Shape::Coresident);
+        assert_eq!(shape_with(2, Some(1)), Shape::Coresident);
+        // at most a worker a core
+        assert_eq!(shape_with(2, Some(2)), Shape::Alone);
+        assert_eq!(shape_with(1, Some(2)), Shape::Alone);
+        assert_eq!(shape_with(1, Some(1)), Shape::Alone);
+        assert_eq!(shape_with(4, Some(4)), Shape::Alone);
+        assert_eq!(shape_with(4, Some(10)), Shape::Alone);
+        // the topology not known: alone, however many workers
+        for w in [1, 2, 4, 64] {
+            assert_eq!(shape_with(w, None), Shape::Alone, "{w} workers");
+        }
+    }
+
+    /// A stream through a decoder, fed from another thread: the bytes read, and the error
+    /// that ended it
+    fn run(dec: &StreamDecoder, z: &[u8]) -> (Vec<u8>, Option<Error>) {
+        std::thread::scope(|s| {
+            s.spawn(|| {
+                for c in z.chunks(1 << 20) {
+                    if dec.write(c.to_vec()).is_err() {
+                        return;
+                    }
+                }
+                dec.close();
+            });
+            let (mut out, mut buf) = (Vec::new(), vec![0u8; 1 << 20]);
+            loop {
+                match dec.read(&mut buf) {
+                    Ok(0) => return (out, None),
+                    Ok(n) => out.extend_from_slice(&buf[..n]),
+                    Err(e) => {
+                        dec.cancel();
+                        return (out, Some(e));
+                    }
+                }
+            }
+        })
+    }
+
+    /// The shape reaches the decoder (production's workers in the one for their number on
+    /// the cores given, a team plan's in none), and a stream of full blocks (the room walk,
+    /// not the plain one) decodes exactly through each
+    #[test]
+    fn the_shape_is_the_decoders() {
+        use std::io::Write;
+        let mut x = 0x2545_f491_4f6c_dd1du64;
+        let words = [
+            "walk", "lane", "core", "sibling", "prefetch", "miss", "{\"id\":", "Q42",
+        ];
+        let mut text = Vec::new();
+        while text.len() < 2_000_000 {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            text.extend_from_slice(words[(x % 8) as usize].as_bytes());
+            text.extend_from_slice(if x >> 60 == 0 { b"\n" } else { b" " });
+            if x >> 56 == 1 {
+                text.extend_from_slice(&x.to_le_bytes());
+            }
+        }
+        let mut e = bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(9));
+        e.write_all(&text).unwrap();
+        let z = e.finish().unwrap();
+        for (plan, phys, want) in [
+            (Plan::Workers(4), Some(2), Some(Shape::Coresident)),
+            (Plan::Workers(3), Some(1), Some(Shape::Coresident)),
+            (Plan::Workers(2), Some(2), Some(Shape::Alone)),
+            (Plan::Workers(4), None, Some(Shape::Alone)),
+            (
+                Plan::Teams { teams: 1, k: 5 },
+                Some(2),
+                Some(Shape::Coresident),
+            ),
+            (Plan::Teams { teams: 1, k: 5 }, Some(8), Some(Shape::Alone)),
+            (Plan::Teams { teams: 2, k: 2 }, Some(2), None),
+        ] {
+            let dec = StreamDecoder::planned_on(plan, phys, 8, Kernels::detect());
+            assert_eq!(dec.shape(), want, "{plan:?} on {phys:?} cores");
+            let (out, err) = run(&dec, &z);
+            assert_eq!(err, None, "{plan:?} on {phys:?} cores");
+            assert!(out == text, "{plan:?} on {phys:?} cores: the bytes");
+        }
+        // and a corrupt stream ends in the same error, after the same bytes, alone and
+        // co-resident
+        let mut bad = z.clone();
+        bad[z.len() / 2] ^= 0x5a;
+        let on = |phys| StreamDecoder::planned_on(Plan::Workers(4), phys, 8, Kernels::detect());
+        let (alone, alone_err) = run(&on(None), &bad);
+        let (shared, shared_err) = run(&on(Some(2)), &bad);
+        assert!(alone_err.is_some(), "the corrupt stream decoded");
+        assert_eq!(alone_err, shared_err, "the error");
+        assert!(alone == shared, "the bytes before it");
     }
 
     /// Whatever this machine is, the plan is one of the two shapes and never more threads
