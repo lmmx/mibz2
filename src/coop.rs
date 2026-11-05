@@ -1,7 +1,9 @@
 //! The cooperative inverse BWT's thread pool: k − 1 helper threads kept for a worker's
 //! life, so a block run on k cores pays no spawn (research: the coop journal,
 //! docs/journal/2026-10-28-cooperative-inversion.md; the integration plan's step 2).
-//! Nothing uses it yet.
+//! `bwt::Cooperative` runs on it: each of the decoder's teams (`Plan::Teams`, which
+//! `Plan::for_threads` picks where the threads and the physical cores both reach
+//! `COOP_MIN_CORES`) keeps one pool for its worker's life.
 //!
 //! `Pool::run(f)` calls `f(0)` on the caller and `f(j)` on helper j, for j in 1..k, and
 //! returns once all k calls have ended. Its guarantees, each tested below:

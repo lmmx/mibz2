@@ -1,0 +1,7 @@
+master L32 S256 [b0]                         L1 0.989  L2 all 0.719  tt 0.718 | q 0.000 log 0.000 meta 0.000 flag 0.000 | ttloads 1.000
+master L32 S512 [b0]                         L1 0.992  L2 all 0.718  tt 0.717 | q 0.000 log 0.000 meta 0.000 flag 0.001 | ttloads 1.001
+master L32 S1024 [b0]                        L1 0.990  L2 all 0.726  tt 0.724 | q 0.000 log 0.000 meta 0.000 flag 0.002 | ttloads 1.001
+master L32 S2048 [b0]                        L1 0.993  L2 all 0.724  tt 0.720 | q 0.000 log 0.000 meta 0.000 flag 0.004 | ttloads 1.002
+master L32 S4096 [b0]                        L1 0.991  L2 all 0.711  tt 0.704 | q 0.000 log 0.000 meta 0.000 flag 0.008 | ttloads 1.005
+master L32 S8192 [b0]                        L1 0.987  L2 all 0.703  tt 0.689 | q 0.000 log 0.000 meta 0.000 flag 0.015 | ttloads 1.009
+master L32 S32768 [b0]                       L1 0.957  L2 all 0.676  tt 0.624 | q 0.000 log 0.000 meta 0.000 flag 0.052 | ttloads 1.036

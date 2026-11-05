@@ -21,6 +21,11 @@
 //! t-interval on the logs). Each setting's output is checked against the plain walk's
 //! first, block by block.
 //!
+//! A block shorter than `MIN_SEGMENTED` (a stream's last; the bench corpus has 198) is
+//! walked plainly at every setting, as the decoder walks it (`walk_fast`): segmented, it
+//! would charge each setting's segment count on blocks of tens of rows, which no decode pays
+//! (`docs/journal/2026-11-05-segment-cost.md`).
+//!
 //! Where the kernel lets a process count its own events (Linux on x86_64, a PMU exposed to
 //! the machine, `perf_event_paranoid` at 2 or below), one more round, untimed, counts each
 //! setting's instructions, cycles, last-level cache misses and back-end stall cycles, as
@@ -31,7 +36,7 @@ use std::time::Instant;
 
 use mibz2::bwt::{
     build, walk, walk_segments_flagged_with_prefetch, walk_segments_room_with_prefetch, SegScratch,
-    TVector, PF_L1, PF_L2, PF_NTA, PF_OFF,
+    TVector, MIN_SEGMENTED, PF_L1, PF_L2, PF_NTA, PF_OFF,
 };
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{mtf, rle, Kernels};
@@ -44,6 +49,18 @@ struct Setting {
     pf: u8,
     segments: usize,
     f: Walk,
+}
+
+impl Setting {
+    /// The setting's walk of a block as the decoder would walk it: a block shorter than
+    /// `MIN_SEGMENTED` plainly, whatever the setting (`walk_fast`), the rest segmented
+    fn run(&self, tt: &mut TVector, orig_ptr: u32, out: &mut Vec<u8>, seg: &mut SegScratch) {
+        if tt.len() < MIN_SEGMENTED {
+            walk(tt, orig_ptr, out)
+        } else {
+            (self.f)(tt, orig_ptr, out, seg, self.segments)
+        }
+    }
 }
 
 macro_rules! settings {
@@ -131,7 +148,7 @@ fn main() {
         walk(&tt, b.orig_ptr, &mut plain);
         n += plain.len();
         for s in &settings {
-            (s.f)(&mut tt, b.orig_ptr, &mut out, &mut seg, s.segments);
+            s.run(&mut tt, b.orig_ptr, &mut out, &mut seg);
             assert!(
                 out == plain,
                 "block {bi}: the {} walk, {} lanes, prefetch {}, {} segments",
@@ -149,7 +166,7 @@ fn main() {
         for b in &blocks {
             mtf::mtf(b, &mut ll, &mut freq, k).unwrap();
             build(&ll, &freq, &mut tt);
-            time(&mut || (s.f)(&mut tt, b.orig_ptr, &mut out, &mut seg, s.segments));
+            time(&mut || s.run(&mut tt, b.orig_ptr, &mut out, &mut seg));
             bytes.clear();
             rle::unrle(&out, &mut bytes, k).unwrap();
         }
