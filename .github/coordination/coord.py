@@ -14,14 +14,13 @@ Subcommands (stdlib only; GitHub reads go through the public REST API, unauthent
                                            fetch a posted comment and check it is where
                                            `route` said, with the header it should have
     check    --issue N  (body on stdin)    the tripwire: is this comment misrouted?
-    audit    [--since ID]                  every misrouted comment on #145 and the inboxes,
-                                           and whether the tripwire has warned about it
+    audit    [--since ID]                  every misrouted comment on #145 and the inboxes
     head-sha --pr N --sha SHA              exit 0 only if SHA is the PR's exact full head
     warn     --issue N --comment-id ID     the tripwire's warning text (used by the workflow)
 
 Exit status: 0 when the action checked is correct, 1 when it is not, 2 on a usage or
 network error. Nothing here posts, edits or deletes anything; the workflow that calls
-`check` posts its one warning itself.
+`warn` raises its one warning itself, as a failing check run on #145.
 """
 
 import argparse
@@ -243,16 +242,14 @@ def verify(comment_id, role, kind):
 
 
 def audit(since):
-    found, channel = [], comments(CHANNEL)  # the tripwire's warnings are all on #145
+    found = []
     for issue in (CHANNEL, *INBOXES):
         for c in comments(issue):
             if c["id"] >= since and not is_bot(c):
                 reason = misrouted(issue, c["body"], c["id"])
                 if reason:
-                    warned = any(MARKER.format(id=c["id"]) in d["body"]
-                                 for d in channel if is_bot(d))
                     found.append({"issue": issue, "comment": c["id"], "at": c["created_at"],
-                                  "warned": warned, "reason": reason})
+                                  "reason": reason})
     return found
 
 

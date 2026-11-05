@@ -6,7 +6,8 @@ Publishing a page of the site (a blog post above all): use the `publish-page` sk
 The compact30 channel (#145) and the role inboxes (#160 Optimizer, #161 Guardian, #162
 Researcher): route every message with `.github/coordination/coord.py`, never from memory.
 - **At session start:** `python3 .github/coordination/coord.py audit` lists any misrouted
-  message, and whether the tripwire has warned about it.
+  message. The tripwire also flags each one live, as a failing `routing tripwire` check
+  on #145.
 - **Before posting an assignment:** `coord.py route --to <role> --type CHECKPOINT` gives the
   destination: the role's inbox, or #145 as `TYPE: QUEUED` while the role is busy, or an older
   QUEUED item to dispatch first.
