@@ -130,7 +130,7 @@ not, it looks at the third. Each bit of a code costs a step, so the toy's ten bi
 Fast Huffman decoders, mibz2 among them, replace those steps with a single lookup in a table
 made before decoding starts. The toy's longest code is three bits, so peek at the next three
 bits, whatever they are: `buf >> 61`, the peek from section 1. Three bits have only eight
-possible values, and for each one we can work out in advance which code it begins with:
+possible values, and for each one we can work out in advance which codes it begins with:
 
 | Next three bits | They begin with | Bits to skip |
 | --- | --- | ---: |
