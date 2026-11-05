@@ -1,4 +1,4 @@
-# 2026-11-05: The symbol loop keeps the bit reader's state in registers: registration
+# 2026-11-05: The symbol loop keeps the bit reader's state in registers: merged (#204)
 
 Registered before any CI timing of this branch. The decision rule may be amended only in a
 commit made before the first bench comment on this PR, and each amendment says what changed
@@ -83,3 +83,34 @@ The saving is about F cycles a lookup, where F is the store-forward latency on t
   each run's CPU.
 - **Precondition:** rustc 1.99.1's listing of `read_item` in the CI build must not reintroduce
   the `buf` spill. The scanner stage row reads it indirectly.
+
+## Result: the rule passed; merged as 264ae5bb
+
+The registration above is as committed before any timing. Both bench runs are in
+`2026-11-05-huffman-register/`.
+
+| run | CPU | scanner stage | `wikidata` 1t wall | 1t CPU | 4t wall |
+|---|---|--:|--:|--:|--:|
+| 42057920798, attempt 1 | EPYC 9V74 | −5.0% (−6.3, −3.6) **faster** | +1.0% (−0.7, +2.6) | +1.0% (−0.7, +2.6) | not significant |
+| 42057920798, attempt 2 | Xeon 8370C | −12.9% (−13.9, −11.9) **faster** | **−2.7% (−4.3, −1.1) faster** | **−2.7% (−4.3, −1.1) faster** | −1.3% (−5.6, +3.3) |
+
+- **Benefit:** met in run 2. The same figure was not flagged slower in run 1.
+- **Refuters, not hit:**
+  - the Intel scanner cut is 12.9%, against the 10% floor;
+  - no other stage moved beyond noise in either run.
+- **No harm:** no wall row was flagged slower.
+- **Correctness:** the same bytes on every corpus; CI green.
+- **Against the prediction:**
+  - The Intel scanner cut is below the predicted 15–25%.
+  - 1-thread wall is within the predicted −1.5% to −3.5%.
+  - On AMD the scanner gain is smaller and the whole decoder doesn't move. That is consistent
+    with store-to-load forwarding being memory-renamed there (INFERRED).
+- **Precision** (OBSERVED, harness-only A/A merges, k = 9): at 1 thread, run-to-run spread is
+  about 0.7%, beyond one run's own interval. With it added, run 2's 1-thread result is about
+  −2.7% (−4.8, −0.6).
+- **Independent review:** no findings. A differential of master's `bits.rs` and `block.rs`
+  against the head's compared `read_item` field by field, including `bit_pos` and `overran`:
+  - 6,000 corpus trials and 100,000 synthetic blocks, truncated and bit-flipped, every error
+    kind reached: 0 mismatches;
+  - two injected write-back bugs were both caught.
+
