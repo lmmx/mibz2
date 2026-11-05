@@ -106,6 +106,17 @@ def same_code(a: str, b: str) -> bool:
     return True
 
 
+def decoder_changed(a: str, b: str) -> bool:
+    """Whether the decoder itself differs between two commits: its source, or its Cargo
+    manifest or lock beyond a version-only bump (a dependency or a build profile)."""
+    if git("diff", "--name-only", a, b, "--", "src").strip():
+        return True
+    return any(
+        not version_only(git("diff", "-U0", a, b, "--", name))
+        for name in git("diff", "--name-only", a, b, "--", "Cargo.toml", "Cargo.lock").split()
+    )
+
+
 def line(commit: str, pr: int, res: dict, runs: list[dict], source: str) -> dict:
     parent = git("rev-parse", f"{commit}^1").strip()
     head, base = res["head"], res["base"]
@@ -131,9 +142,7 @@ def line(commit: str, pr: int, res: dict, runs: list[dict], source: str) -> dict
         "corpora": {k: v.get("sha256", "")[:12] for k, v in sorted(res["corpora"].items())},
         "base_ok": same_code(base, parent) if known else None,
         "head_ok": same_code(head, commit) if known else None,
-        "decoder": bool(git("diff", "--name-only", base, head, "--", "src").strip())
-        if known
-        else None,
+        "decoder": decoder_changed(base, head) if known else None,
         "change": change(runs),
         "source": source,
     }
