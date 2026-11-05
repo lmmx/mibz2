@@ -343,14 +343,14 @@ whose effects matter, so that autonomy doesn't depend on the Coordinator remembe
 
 | Check | What it compares | Status |
 | --- | --- | --- |
-| `route` | an assignment's destination, from the role's cursor and its reviews: its inbox, or #145 as `TYPE: QUEUED` while it is busy | in use |
-| `verify` | the posted comment, read back by ID: the right PR, the right header, the only assignment in flight | in use; it fails the 07:38 misroute and passes the 08:31 dispatch |
-| `head-sha` | a merge's expected head against the PR's exact 40-character head | in use since #186's own merge; it rejects the SHA used for #185 |
-| `audit` | every message on #145 and the inboxes since the inbox cutover | run at the start of each session; the channel's 120 comments replay to exactly the two misroutes |
-| the tripwire | each new comment on #145 or an inbox, checked by a GitHub Actions workflow independent of the Coordinator | in use as a record: a misroute turns #145 red, but sends no event that could wake the Coordinator |
+| `route` | an assignment's destination, from the role's cursor and reviews: its inbox, or #145 as `TYPE: QUEUED` while it is busy | in use |
+| `verify` | the posted comment, read back by ID: the right PR, the right header, the only assignment in flight | in use: fails the 07:38 misroute, passes the 08:31 dispatch |
+| `head-sha` | a merge's expected head against the PR's exact 40-character head | in use since #186 merged; rejects the SHA used for #185 |
+| `audit` | every message on #145 and the inboxes since the inbox cutover | in use, at each session start and each recurring wake-up; the channel's first 120 comments replay to exactly the two misroutes |
+| the tripwire | each new comment on #145 or an inbox, checked by a GitHub Actions workflow apart from the Coordinator | in use as a record: a misroute turns #145 red, but no event wakes the Coordinator |
 
 The first four are one stdlib script,
-[`coord.py`](https://github.com/lmmx/mibz2/blob/d98e478781efb640d65523d42df6c4a745138544/.github/coordination/coord.py), added in
+[`coord.py`](https://github.com/lmmx/mibz2/blob/bab0d603a338817e9df4766806b028e15c244bd3/.github/coordination/coord.py), added in
 [#186](https://github.com/lmmx/mibz2/pull/186), and the repository's `CLAUDE.md` says when the
 Coordinator runs each one. The script only reads: it never posts, edits or deletes. The tripwire
 can't stop a misroute, only report it. It never edits, moves or re-posts a comment, and never
@@ -481,4 +481,4 @@ My own part is choosing the scope and making the decisions the charter keeps for
 
 ---
 
-**Research records:** [Role identities](https://github.com/lmmx/mibz2/blob/8304583b/docs/journal/compact30-channel/ROLES.md) · [Research charter](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/2026-11-04-compact30-research-charter.md) · [Channel protocol](https://github.com/lmmx/mibz2/blob/8304583b/docs/journal/compact30-channel/PROTOCOL.md) · [Review contract](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/REVIEWER.md) · [Recorded exchanges](https://github.com/lmmx/mibz2/blob/36372c38b779d7accfda536ec022b30d32b47e88/docs/journal/compact30-channel/log.md) · [Routing checks](https://github.com/lmmx/mibz2/blob/d98e478781efb640d65523d42df6c4a745138544/.github/coordination/coord.py).
+**Research records:** [Role identities](https://github.com/lmmx/mibz2/blob/8304583b/docs/journal/compact30-channel/ROLES.md) · [Research charter](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/2026-11-04-compact30-research-charter.md) · [Channel protocol](https://github.com/lmmx/mibz2/blob/8304583b/docs/journal/compact30-channel/PROTOCOL.md) · [Review contract](https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/REVIEWER.md) · [Recorded exchanges](https://github.com/lmmx/mibz2/blob/36372c38b779d7accfda536ec022b30d32b47e88/docs/journal/compact30-channel/log.md) · [Routing checks](https://github.com/lmmx/mibz2/blob/bab0d603a338817e9df4766806b028e15c244bd3/.github/coordination/coord.py).
