@@ -18,8 +18,9 @@ target/
 
 *.so
 
-# Documentation site build output
+# Documentation site build output, and look_pages.py's screenshots of it
 /site/
+/site-shots/
 
 # The benchmark pages' generated data (docs/scripts/bench_history.py)
 /docs/site/assets/bench-history.json

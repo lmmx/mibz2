@@ -50,6 +50,7 @@ The charts are drawn here by JavaScript. The tables
 </div>
 
 **The rules the charts keep:**
+
 - **One machine and one workload a chart.** An L3 effect on the i9 may appear at another
   concurrency, or not at all, on another CPU.
 - **Two kinds of memory, never mixed:** the live tables' bytes (computed: live full
@@ -98,15 +99,16 @@ research harness's MTF, build and walk; [coop journal §17.4](https://github.com
 
 A cooperative team shares one block's table among k cores, so N teams keep N tables
 live on N × k cores.
+
 - y3x3 runs faster than p4 from fewer live tables. p4 is production's best worker count
   on this machine in every scaling run (series 1).
 - So at this level, in throughput against live table bytes, sharing a table already does
   better than every production configuration measured.
 - **It is not yet a frontier result:**
-  - it is the inversion, not the decoder;
-  - it is pinned;
-  - its memory axis is computed table bytes, not peak RSS;
-  - it uses more cores (CPU-seconds are not yet measured).
+    - it is the inversion, not the decoder;
+    - it is pinned;
+    - its memory axis is computed table bytes, not peak RSS;
+    - it uses more cores (CPU-seconds are not yet measured).
 
 **3. The full decoder, workers against cooperative teams, with measured memory**
 (unpinned; the bench corpus, 209.7 MB decoded; 20 interleaved rounds; the
@@ -137,6 +139,7 @@ nondominated column compares medians on throughput (higher) and peak RSS (lower)
 this series.
 
 What it shows, and what it doesn't:
+
 - **Every worker count measured is dominated.** p4, the decoder's best worker count here,
   is beaten on both axes by 3 teams of 2 (the policy at 6 threads: 1.166× with its lower
   bound 1.123, at 64 MB against 76) and by 3 teams of 3.

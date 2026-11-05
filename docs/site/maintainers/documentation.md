@@ -16,6 +16,11 @@ just docs-check   # strict build, site checks, and the pages' examples as tests
 - `docs/scripts/check_site.py` checks that every page is in the nav, that internal links
   and anchors resolve, that every page has a description matching its llms.txt entry, and
   that every public name is in the API reference.
+- `docs/scripts/check_render.py` finds Markdown that rendered as something else (a list
+  run into a paragraph, a stray heading, a flattened nested list), and
+  `docs/scripts/look_pages.py` opens the changed pages in Chromium and screenshots them
+  (`just docs-look`). Before a page is published, its render is read: see the
+  `publish-page` skill in `.claude/skills/`.
 - `docs/conftest.py` runs each page's Python examples with pytest (`pytest docs/site`); a
   `pycon` block's output must match.
 - `docs/scripts/bench_history.py` turns the `bench-results` branch into the benchmark
