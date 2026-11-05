@@ -1,0 +1,80 @@
+# The routing tripwire for the compact30 channel (.github/coordination/coord.py).
+#
+# The coordinator's assignments go to a role's inbox (#160 Optimizer, #161 Guardian, #162
+# Researcher), or are staged on the channel PR #145 as TYPE: QUEUED while the role is busy;
+# the channel PR wakes only the coordinator. On each new comment on those four PRs, this
+# checks the header against that routing. A correct comment ends the run silently. A
+# misrouted one gets one warning comment on the channel PR #145, whichever of the four PRs it
+# is on: #145 wakes only the coordinator, through its subscription, while a comment in an
+# inbox would wake that role's Work task as if it were a brief. The tripwire never edits,
+# deletes, moves or re-posts a comment, and never dispatches anything. Its own warnings carry
+# a marker it skips, and comments made with GITHUB_TOKEN start no workflow runs, so it cannot
+# loop.
+name: Channel routing
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request:
+    paths:
+      - ".github/coordination/**"
+      - ".github/workflows/channel-routing.yml"
+  push:
+    branches: [master]
+    paths:
+      - ".github/coordination/**"
+      - ".github/workflows/channel-routing.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  tripwire:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      contains(fromJSON('[145, 160, 161, 162]'), github.event.issue.number) &&
+      github.event.comment.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github/coordination
+      - name: Check the comment's routing
+        env:
+          # untrusted text: only ever read from the environment, never interpolated
+          BODY: ${{ github.event.comment.body }}
+          ISSUE: ${{ github.event.issue.number }}
+          COMMENT: ${{ github.event.comment.id }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          warning=$(printf '%s' "$BODY" | python3 .github/coordination/coord.py warn --issue "$ISSUE" --comment-id "$COMMENT")
+          if [ -z "$warning" ]; then
+            echo "comment $COMMENT on #$ISSUE: routed correctly"
+            exit 0
+          fi
+          echo "::warning::comment $COMMENT on #$ISSUE is misrouted"
+          printf '%s\n' "$warning"
+          marker="<!-- routing-tripwire: $COMMENT -->"
+          # the warning always goes on #145, never in an inbox (see the top of this file)
+          if gh api --paginate "repos/$REPO/issues/145/comments" --jq '.[].body' | grep -qF "$marker"; then
+            echo "already warned about $COMMENT"
+            exit 0
+          fi
+          gh api "repos/$REPO/issues/145/comments" -f body="$warning" --jq '.html_url'
+
+  tests:
+    if: github.event_name != 'issue_comment'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github/coordination
+      - name: Unit tests
+        run: python3 -m unittest discover -s .github/coordination -v
