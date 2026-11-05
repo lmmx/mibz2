@@ -27,6 +27,8 @@ The Guardian, the Researcher and the Optimiser all run Astra, a model I use thro
 | Optimiser | ChatGPT Work task, *Compact30 (W) Optimiser* | Astra | Ultra | a new comment in its inbox, \#160 |
 | Researcher | ChatGPT Work task, *Compact30 (W) Researcher* | Astra | Extra High | a new comment in its inbox, \#162 |
 
+Each Astra agent's instructions live in the repository as its **agent spec**, beside ROLES.md. [SPEC.md](<https://github.com/lmmx/mibz2/blob/5fbdd2c9c09f753282d9c5608ef236657837efa9/docs/journal/compact30-channel/SPEC.md>) holds what the three have in common: how a run goes, from the inbox comment to the receipt, the work and the review, and the reasoning behind that design. `SPEC.OPTIMIZER.md`, `SPEC.GUARDIAN.md` and `SPEC.RESEARCHER.md` each say only what that agent's work is. A task's prompt in ChatGPT is a single sentence pointing at its two files at one pinned commit. So an agent's behaviour changes only by a commit to its spec and a new pin, both of which stay in the record. SPEC.md also holds the one command that loads a new pin into all three tasks.
+
 The team: three Astra agents and Claude Code, joined by one repository
 
 Claude Code builds each change and posts a checkpoint. The Guardian checks it against the rules and the Researcher checks the reasoning, while the Optimiser hunts for more instructions to cut. All four work through the same repository.
