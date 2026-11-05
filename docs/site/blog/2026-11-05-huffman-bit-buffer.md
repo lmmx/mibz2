@@ -27,18 +27,19 @@ a register, the stage ran 13% faster on Intel and 5% on AMD.
 </div>
 
 A decoder reads a compressed file one byte at a time, but the codes inside a bzip2 file
-aren't whole bytes. Each is a run of bits of its own length: one bit for a very common
-symbol, a dozen or more for a rare one, packed end to end with nothing between them. So a
-decoder keeps a bit buffer: a small holding area for bits it has read from the file but not
-yet decoded. In mibz2 the buffer is a single 64-bit integer. The decoder reads each code off
-its front, shifts the rest up, and tops it up with more bytes from the file when it runs low.
+aren't whole bytes. They are Huffman codes: each is a run of bits of its own length, one bit
+for a very common symbol and a dozen or more for a rare one, packed end to end with nothing
+between them. So a decoder keeps a bit buffer, a small holding area for bits it has read from
+the file but not yet decoded. In mibz2, our bzip2 decoder written in Rust, the buffer is a
+single 64-bit integer. The decoder reads each code off its top end, shifts the rest up
+behind it, and tops it up with more bytes from the file when it runs low.
 
 This post is about where that integer was kept. It held the same bits and the decoder did
 the same work, but the compiled code wrote the buffer to memory after every code and read it
 back before the next. Even from the processor's nearest cache, a read of a value just
 written waits several cycles for the write, and every code waited that long. Rearranged so
-the compiler could keep the buffer in a register, the Huffman stage of mibz2 (the scanner)
-ran 12.9% faster on an Intel Xeon 8370C CI runner and 5.0% faster on an AMD EPYC 9V74.
+the compiler could keep the buffer in a register, the thread that reads the codes, which
+mibz2 calls the scanner, ran 12.9% faster on an Intel Xeon 8370C CI runner and 5.0% faster on an AMD EPYC 9V74.
 
 The benchmark decodes a fixed sample of the Wikidata dump: 12 slices of it, 210 MB once
 decoded. On the Intel runner a one-thread decode of that sample ran 2.7% faster. The scanner
@@ -127,7 +128,7 @@ since a code can be up to 20 bits long, so an entry says one of four things. Usu
 bits begin with one whole code, and the entry gives its symbol and length. Often they begin
 with two whole codes, and the entry gives both symbols and their combined length. If the
 code is longer than ten bits, the entry sends the decoder to a slow path that reads it a bit
-at a time, as libbzip2 does. And if no valid code begins with these bits, the block is
+at a time, as libbzip2 (the reference bzip2 library) does. And if no valid code begins with these bits, the block is
 corrupt.
 
 <figure class="bf-fig">
@@ -138,9 +139,10 @@ corrupt.
 
 On the Wikidata sample, about 83% of lookups decode a pair
 ([census](https://github.com/lmmx/mibz2/blob/264ae5bb/docs/journal/2026-11-05-binding-census/serial-stages.md)).
-The fast loop refills, makes four lookups, then refills again. It runs while at least eight
-symbols remain in the group, because four lookups can produce eight, and the group's last
-few symbols go through a slower loop.
+The fast loop refills, makes four lookups, then refills again. Symbols come in groups of 50
+that share a code table (section 3), and the fast loop runs while at least eight symbols of
+the group remain, because four lookups can produce eight; a group's last few symbols go
+through a slower loop.
 
 One lookup is four steps:
 
@@ -153,6 +155,7 @@ Step 1 of the next lookup needs the result of step 4 of this one. However many i
 the processor could run at once, it can't start a lookup before the last one has finished
 its shift. So the time a lookup takes is the latency of this chain: the time each step waits
 for the one before it. Any step added to the chain adds its latency to every lookup.
+
 ## 3. Where this sits in bzip2 and in mibz2
 
 The bit buffer is the first thing a bzip2 decoder touches, because Huffman coding is the
@@ -217,6 +220,7 @@ a checksum stored in its header.
 <svg viewBox="0 0 720 442" role="img" aria-label="A compressed stream feeds the scanner thread, which reads each block's header and Huffman-decodes its symbols at 1.19 cycles a byte. A worker then undoes move-to-front (1.79), builds the inverse BWT's table (1.66), walks it (6.19) and expands runs and checks the CRC (0.44), before the bytes are handed back in order."><rect x="110" y="0" width="500" height="58" rx="8" class="bf-card"/><text x="126" y="26" class="bf-ts">Compressed stream</text><text x="126" y="47" class="bf-tm">bzip2 blocks, each a header and its Huffman-coded symbols</text><path d="M360 62V84m-5-5 5 5 5-5" class="bf-arrow"/><rect x="40" y="88" width="640" height="110" rx="12" class="bf-panel"/><text x="360" y="114" class="bf-ts" text-anchor="middle">The scanner thread · every block, in order</text><rect x="58" y="128" width="190" height="54" rx="8" class="bf-box"/><text x="153" y="151" class="bf-t-strong" text-anchor="middle">Block header</text><text x="153" y="170" class="bf-tm" text-anchor="middle">bytes used, code tables</text><rect x="262" y="128" width="400" height="54" rx="8" class="bf-card-hi"/><text x="462" y="151" class="bf-t-strong" text-anchor="middle">Huffman decoding: this post</text><text x="462" y="170" class="bf-tm" text-anchor="middle">1.19 c/B, about 10.5% of a one-thread decode</text><path d="M360 202V224m-5-5 5 5 5-5" class="bf-arrow"/><rect x="40" y="228" width="640" height="140" rx="12" class="bf-panel"/><text x="360" y="254" class="bf-ts" text-anchor="middle">A worker · one block at a time, several workers at once</text><rect x="58" y="268" width="142" height="80" rx="8" class="bf-box"/><text x="129" y="293" class="bf-t-strong" text-anchor="middle">MTF + RLE2</text><text x="129" y="312" class="bf-tm" text-anchor="middle">undo move-to-front</text><text x="129" y="333" class="bf-tm" text-anchor="middle">1.79 c/B</text><rect x="212" y="268" width="142" height="80" rx="8" class="bf-box"/><text x="283" y="293" class="bf-t-strong" text-anchor="middle">Table build</text><text x="283" y="312" class="bf-tm" text-anchor="middle">inverse BWT, part 1</text><text x="283" y="333" class="bf-tm" text-anchor="middle">1.66 c/B</text><rect x="366" y="268" width="142" height="80" rx="8" class="bf-box"/><text x="437" y="293" class="bf-t-strong" text-anchor="middle">Walk</text><text x="437" y="312" class="bf-tm" text-anchor="middle">inverse BWT, part 2</text><text x="437" y="333" class="bf-tm" text-anchor="middle">6.19 c/B</text><rect x="520" y="268" width="142" height="80" rx="8" class="bf-box"/><text x="591" y="293" class="bf-t-strong" text-anchor="middle">RLE1 + CRC</text><text x="591" y="312" class="bf-tm" text-anchor="middle">expand runs, check</text><text x="591" y="333" class="bf-tm" text-anchor="middle">0.44 c/B</text><path d="M360 372V394m-5-5 5 5 5-5" class="bf-arrow"/><rect x="110" y="398" width="500" height="42" rx="8" class="bf-card"/><text x="360" y="424" class="bf-ts" text-anchor="middle">Decoded bytes, handed back in stream order</text></svg>
 <figcaption>Measured: the base build's one-thread stage costs on the Intel Xeon 8370C runner, in cycles per byte of output at the runner's reported clock, 11.28 c/B in all (the second benchmark run of section 9). At one thread the stages run one after another on one CPU; at four, the scanner's thread runs beside the workers.</figcaption>
 </figure>
+
 At one thread every stage runs on the same CPU, one after another, so the scanner's share of
 the time is its share of the decode: on the Intel runner, 1.19 of 11.28 cycles per output
 byte, about 10.5%. At four threads the scanner runs alongside the workers. All four of the
@@ -227,6 +231,7 @@ we took of what limits the decoder's speed on CI's runners, stage by stage. Its 
 entry calls it the binding census, after the resource that binds each stage: the one whose
 limit it runs into first, whether that is the processor's instructions, memory, or waiting
 on another thread.
+
 ## 4. What the census found
 
 The [census](https://github.com/lmmx/mibz2/blob/264ae5bb/docs/journal/2026-11-05-binding-census.md)
