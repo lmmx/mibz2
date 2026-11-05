@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4](https://github.com/lmmx/mibz2/compare/v0.2.3...v0.2.4) - 2026-11-05
+
+### <!-- 3 -->Performance
+
+- *(mtf)* libbzip2's two-level list, its first 32 bytes in two registers ([#207](https://github.com/lmmx/mibz2/pull/207))
+
+### <!-- 4 -->Documentation
+
+- *(claude)* the coordinator drives releases itself ([#214](https://github.com/lmmx/mibz2/pull/214))
+- *(blog)* the bit-buffer figure narrates itself; section 2 builds the table on the toy code first ([#212](https://github.com/lmmx/mibz2/pull/212))
+- *(blog)* the Huffman post opens with what a bit buffer is ([#211](https://github.com/lmmx/mibz2/pull/211))
+
 ## [0.2.3](https://github.com/lmmx/mibz2/compare/v0.2.2...v0.2.3) - 2026-11-05
 
 ### <!-- 4 -->Documentation
