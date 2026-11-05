@@ -415,3 +415,23 @@ Verbatim:
   - **Its two rival routes:** an analytic design and a trace-driven cache simulation.
   - **Their collision** with compact30 C-resolve and master's staged walk decides whether a
     prototype is built.
+- **The binding census is in** (`docs/journal/2026-11-05-binding-census.md`, #193 at decc71b8).
+  It ran five routes, each attacked by a falsifier from another route.
+  - At 4 threads the decoder is CPU-saturated, so wall tracks co-run CPU.
+  - **Largest term:** the walk's co-run excess on AMD (×2.1–2.2 against ×1.2–1.4), up to about
+    16–18% of 4-thread wall. Its mechanism is contested: core-side work against lines in
+    flight.
+  - **Never examined:** co-run-aware placement.
+  - **Next generation, from the census:**
+    - a sibling-pair matrix for the sweep, which decides the mechanism and whether placement
+      pays;
+    - three rival placement constructions, design-only until the matrix answers;
+    - two isolated prototypes: the job handoff's `Mutex<Receiver>` held across `recv`, and the
+      Huffman bit buffer kept in memory.
+  - **Pruned:** compact30's verification phase. It is predicted slower by three routes, and its
+    A/B still runs as a discriminator of the regime.
+- **Checkpoint 6657883434 to the Optimiser (#160): the census.** It asks for the Optimiser's own
+  ranking of the levers on the binding term, and a construction none of the three placement
+  rivals contains.
+  - This is the first live use of `route` and `verify`. `route` said the Optimiser was free, and
+    `verify` passed.
