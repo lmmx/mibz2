@@ -1,0 +1,4 @@
+master L32 S512 [b0]                         L1 0.990  L2 all 0.856  tt 0.855 | q 0.000 log 0.000 meta 0.000 flag 0.001 | ttloads 1.001
+master L32 S131072 [b0]                      L1 0.819  L2 all 0.693  tt 0.582 | q 0.000 log 0.000 meta 0.000 flag 0.112 | ttloads 1.136
+part S131072 L32768 P16 e8 g4 bf [b0]        L1 0.936  L2 all 0.796  tt 0.538 | q 0.111 log 0.062 meta 0.084 flag 0.000 | ttloads 1.136 | cold 0.541 spv 1525.3 live 11046
+part S131072 L32768 P16 shuf e8 g4 bf [b0]   L1 1.331  L2 all 1.093  tt 0.699 | q 0.118 log 0.062 meta 0.214 flag 0.000 | ttloads 1.136 | cold 0.701 spv 1536.8 live 11456
