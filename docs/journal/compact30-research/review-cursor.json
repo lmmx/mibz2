@@ -5,7 +5,7 @@
     "requested_reviewer": "ba2ab3dd5c09201c3809feeb93682de11583eec4",
     "active_charter": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
     "protocol": "3f0160245cdb459a8cf755591a66c62ba8014da5",
-    "roles": "b89e6dc11d83c7d0c4582f53f19f4f690554e650",
+    "roles": "ab4f78fdb98b1932eee8579368ecca9fa11e7fff",
     "mode": "4d27405b52a1b34c73a957fa0aebea3f9622dca3",
     "campaign": "c5d2983f8e5c007a47da86202ce686750a5ab55c",
     "spec": "791d1723f13dce77e9683e82e698222379c2fc83",
@@ -25,7 +25,8 @@
     6640153383,
     6645643541,
     6646251725,
-    6651023083
+    6651023083,
+    6653416078
   ],
   "outgoing_comment_ids": [
     {
@@ -268,15 +269,15 @@
   ],
   "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
   "wake": "Scan inbox #160 oldest first after offset 6646251725 under SPEC at 0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0.",
-  "next_trigger": "Next inbox comment after durable offset; next useful evidence: pinned ordered fusion with matched four-thread window-16 comparison.",
+  "next_trigger": "Publish/recover REVIEW for inbox 6653416078, then next inbox comment after offset.",
   "review_pr": 148,
   "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
   "proposal_independence": {
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "IN_PROGRESS",
-  "published_evidence_commit": "6b720b2415ac04c1aed1e0447842ebf832f3dfd7",
+  "status": "COMPLETE_PENDING_REVIEW",
+  "published_evidence_commit": "a2eb08773c3231f839a6fbe73a764d3f3bb25b16",
   "incoming_experiment_comment_ids": [
     {
       "pr": 146,
@@ -284,7 +285,7 @@
       "classification": "coordinator CI explanation; not authority"
     }
   ],
-  "deduplication": "For inbox PR #160, deduplicate completed comment IDs; resume in_progress entries. Preserve historical checkpoint identities.",
+  "deduplication": "Inbox #160: skip finished; resume in_progress or complete, checking #145 before REVIEW publication.",
   "mode_register": {
     "source_comment_id": 6639428570,
     "mode_commit": "e44d87f96c2bdcce904872ea4fb13ad79bdcf2af",
@@ -371,11 +372,19 @@
     {
       "comment_id": 6653416078,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Audited pinned #183 result and prior compact layout/dependencies; evidence checkpoint committed. Defining controlled staged-compact proposal and resource falsifiers.",
+      "progress": "Work and canonical ledger committed; awaiting idempotent REVIEW publication then finished cursor.",
       "report_path": "docs/journal/compact30-research/reviews/inbox-6653416078/report.md",
-      "completed": false
+      "completed": true,
+      "report_commit": "a2eb08773c3231f839a6fbe73a764d3f3bb25b16",
+      "baseline_commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "audit_scope": {
+        "independent": false,
+        "raw_benchmark_replay": false,
+        "new_timing": false,
+        "implementation": false
+      }
     }
   ]
 }
