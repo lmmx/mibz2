@@ -415,7 +415,7 @@ pub struct Entry {
 pub fn ledger(s: &Settings) -> Vec<Entry> {
     let (t, rows, max_rows) = (s.threads, s.rows, block_rows(s.level));
     let segmented = rows >= crate::bwt::MIN_SEGMENTED;
-    let ns = crate::bwt::FLAGGED_SEGMENTS;
+    let ns = crate::bwt::ROOM_SEGMENTS;
     let seg_cap = 2 * rows / ns + 64;
     let out_req = (rows + 64).max(s.decoded);
     let window_max = crate::parallel::COMPACT + LOOKAHEAD + s.chunk;
@@ -749,7 +749,7 @@ mod tests {
         assert_eq!(get(&b, "seg.starts").cap, entry(&l, "seg.starts").alloc);
         let next = get(&b, "seg.next");
         let ns = next.len / 8;
-        assert!(ns > FLAGGED - 8 && ns <= FLAGGED, "{ns} segments");
+        assert!(ns > SEGMENTS - 8 && ns <= SEGMENTS, "{ns} segments");
         within("seg.next", next.cap);
         within("seg.bufs.outer", get(&b, "seg.bufs.outer").cap);
         // each segment's buffer reserved 2 x the mean segment at least: the ledger's
@@ -757,8 +757,8 @@ mod tests {
         let seg = get(&b, "seg.bufs");
         let cap0 = 2 * rows[1] / ns + 64;
         assert!(seg.cap >= ns * cap0 && seg.cap >= seg.len, "{seg:?}");
-        assert!(seg.cap + (FLAGGED - ns) * cap0 >= entry(&l, "seg.bufs").alloc);
-        assert!(seg.len >= rows[1] && seg.len <= rows[1] + FLAGGED);
+        assert!(seg.cap + (SEGMENTS - ns) * cap0 >= entry(&l, "seg.bufs").alloc);
+        assert!(seg.len >= rows[1] && seg.len <= rows[1] + SEGMENTS);
         // a block's symbols: the format's bound, whatever the level
         assert_eq!(syms_cap, entry(&l, "symbols").alloc);
         // a block's output buffer: rows + 64 reserved (AVX2's RLE1, rows for the scalar
@@ -829,7 +829,7 @@ mod tests {
         }
     }
 
-    const FLAGGED: usize = crate::bwt::FLAGGED_SEGMENTS;
+    const SEGMENTS: usize = crate::bwt::ROOM_SEGMENTS;
 
     /// The arithmetic at -9 (docs/ledger.md's table): exact figures for full blocks
     #[test]
