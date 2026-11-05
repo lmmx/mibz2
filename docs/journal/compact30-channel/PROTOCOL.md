@@ -21,9 +21,27 @@ may trigger is fixed by the research charter's §12
 - **Inboxes (2026-11-04).** Each role has one quiet PR, a draft never merged, and its Work task
   is subscribed to new comments on that PR alone: the Optimizer #160, the Guardian #161, the
   Researcher #162. The inbox is the address: every comment in it is for its role, which acts on
-  it by its `TYPE:`, and `TO:` is a record, not a filter. The coordinator posts each checkpoint
-  separately to the inbox of every role it concerns. A role needing another's attention posts in that role's inbox. Nothing else is
-  posted in an inbox; replies go to the channel PR. The reason is that on the channel PR, a new
+  it by its `TYPE:`, and `TO:` is a record, not a filter. The coordinator is an inbox's only writer.
+  A role needing another's attention asks on the channel PR, and the coordinator dispatches it.
+  Replies go to the channel PR.
+- **Dispatch (2026-11-05): one assignment in flight per role.** The coordinator keeps
+  `dispatch-queue.json` on `research/compact30-channel`. For each role it holds the active job and
+  an ordered queue of pending ones. Adding work to that queue wakes no one; a comment in an inbox
+  means "start now".
+  - **Before posting,** the coordinator commits the job as the role's active reservation, with a
+    stable `JOB:` id. Only then does it post the assignment, carrying that `JOB:` line, and record
+    the comment's ID.
+  - **After a crash,** it reconciles any reservation without a recorded comment against the inbox,
+    by `JOB:` id, before posting anything.
+  - **While a job is active,** the coordinator posts nothing in that role's inbox. New work waits in
+    the queue.
+  - **The slot is released** when the role's REVIEW citing the job is on the channel PR and the
+    role's cursor marks the job complete. Then the next pending job is dispatched.
+  - **If a role goes silent with a job active,** the slot stays occupied, and work keeps queueing.
+    Once the run evidence shows the run has ended without finishing, the coordinator sends one
+    resume request for that job ID, not a fresh assignment.
+  - **A stop doesn't need the inbox.** A HOLD or STOP takes effect through the coordinator's own
+    authority, without interrupting a role to deliver it. The reason is that on the channel PR, a new
   event's run displaced the Optimizer's research runs before they committed.
 - **Experiment PRs.** Each prototype in the charter's §6 gets its own branch and PR into
   `research/compact30-constructor`. Its checkpoint is posted to the inboxes and linked from the
@@ -198,21 +216,22 @@ ChatGPT GitHub connector can't set another. No AI attribution, of any kind, in e
 coordinator's own commits stay at `louismmx@gmail.com`.
 
 
-## 10. Messages that arrive during a run (observed 2026-11-04)
+## 10. Messages that arrive during a run
 
-**A role handles messages one run at a time.** A comment that arrives while that role's run is
-in progress is handled afterwards, and may be folded into a later run together with other
-comments. For example, the Researcher's run of 14:51–15:08 handled the blog request first, then
-6633793271 together with D009 (launch record `684a3379`). The receipt may therefore come long
-after the comment, and only once the role's current work is done.
+**Observed on 2026-11-04: a new event can displace a run in progress.** On the shared channel PR,
+research runs for 6643992749, 6644115799 and 6644364456 each stopped, without output, when the
+next event's run began. So nothing may rely on a message waiting until a run ends. This replaces
+the earlier reading, from the Researcher's runs of 14:51–15:08, that a message arriving
+mid-run is simply handled afterwards.
 
-**Every addressed message still ends in a receipt.** A receipt is that role's REVIEW citing the
-message, or its cursor commit recording it. The Coordinator checks for one before treating a
-message as lost. A message counts as lost only if the role has finished its later work, as its
-branch shows, and still has no receipt. It is then re-delivered once, marked
-`RE: re-delivery of <comment id>`, and the role's cursor deduplicates the message if the
-original was in fact processed. The early re-delivery 6634250201 is such a duplicate, posted
-before this rule was corrected. None of this needs a nudge from the user.
+**What protects a run is dispatch, not queueing on the platform.** Only the coordinator posts in
+an inbox, and only while that role has no active job (§1). Lifecycle events on an inbox PR can't
+be excluded by subscription, so nobody pushes to, edits or retitles an inbox PR.
+
+**Every assignment still ends in a receipt:** the role's cursor entry, then its REVIEW citing the
+job. A job counts as stalled only when the run evidence shows its run has ended without
+completing. It then gets one resume request for its `JOB:` id, which the role finishes from its
+recorded progress. The cursor deduplicates the request if the job was in fact complete.
 
 ## Revisions
 
