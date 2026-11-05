@@ -1,5 +1,4 @@
 import os, resource, subprocess, sys, time, statistics, math
-
 sp, w = sys.argv[1], sys.argv[2]
 rounds = int(sys.argv[3])
 rows = []
@@ -11,8 +10,7 @@ for t in (1, 2):
             pid = os.fork()
             if pid == 0:
                 os.sched_setaffinity(0, {int(c) for c in cpus.split(",")})
-                fd = os.open(os.devnull, os.O_WRONLY)
-                os.dup2(fd, 1)
+                fd = os.open(os.devnull, os.O_WRONLY); os.dup2(fd, 1)
                 os.execv(f"{sp}/{v}/target/release/c30cg", ["c30cg", "time", w, str(t), "1"])
             t0 = time.perf_counter()
             _, status, ru = os.wait4(pid, 0)
@@ -24,8 +22,5 @@ for t in (1, 2):
         b = [x[k] for x in rows if x[0] == t and x[2] == "base"]
         c = [x[k] for x in rows if x[0] == t and x[2] == "branch"]
         ratios = [math.log(ci / bi) for bi, ci in zip(b, c)]
-        m = statistics.mean(ratios)
-        s = statistics.stdev(ratios) / math.sqrt(len(ratios))
-        print(
-            f"threads {t} {name}: base median {statistics.median(b):.3f} branch median {statistics.median(c):.3f} ratio {math.exp(m):.4f} (approx 95% [{math.exp(m - 2.57 * s):.4f}, {math.exp(m + 2.57 * s):.4f}], n={len(b)})"
-        )
+        m = statistics.mean(ratios); s = statistics.stdev(ratios) / math.sqrt(len(ratios))
+        print(f"threads {t} {name}: base median {statistics.median(b):.3f} branch median {statistics.median(c):.3f} ratio {math.exp(m):.4f} (approx 95% [{math.exp(m-2.57*s):.4f}, {math.exp(m+2.57*s):.4f}], n={len(b)})")

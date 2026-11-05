@@ -12,24 +12,13 @@ written, how many of them are a correct prefix of TRUTH, and whether any byte is
 pass is a non-zero exit with no wrong byte (bytes of the good blocks before the damage
 are allowed). "Wrong bytes then an error" and "exit 0" are reported apart.
 """
-
 import json, os, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mkstream import EOS, magics  # noqa: E402
 from run import command  # noqa: E402
 
-DECODERS = [
-    "bz2k",
-    "bunzip",
-    "pbz2",
-    "fbz",
-    "lbzip2rs",
-    "bzip2rs",
-    "indexed_bzip2",
-    "lbzip2",
-    "bzip2",
-]
+DECODERS = ["bz2k", "bunzip", "pbz2", "fbz", "lbzip2rs", "bzip2rs", "indexed_bzip2", "lbzip2", "bzip2"]
 ONE_THREAD = {"bzip2", "bzip2rs"}
 
 
@@ -71,36 +60,16 @@ def main() -> None:
                 while k < n and o[k] == truth[k]:
                     k += 1  # (4 MB at most: fine in Python)
                 wrong = len(o) - k
-                verdict = (
-                    "PASS"
-                    if code != 0 and wrong == 0
-                    else "SILENT WRONG OUTPUT"
-                    if code == 0 and o != truth
-                    else "exit 0, output correct"
-                    if code == 0
-                    else "error after wrong bytes"
-                )
-                if isinstance(code, int) and (
-                    code < 0 or code == 101 or "Traceback" in err or "panicked" in err
-                ):
+                verdict = ("PASS" if code != 0 and wrong == 0 else
+                           "SILENT WRONG OUTPUT" if code == 0 and o != truth else
+                           "exit 0, output correct" if code == 0 else "error after wrong bytes")
+                if isinstance(code, int) and (code < 0 or code == 101 or "Traceback" in err or "panicked" in err):
                     verdict += " (crash/panic)"
-                rec = {
-                    "variant": name,
-                    "decoder": dec,
-                    "threads": t,
-                    "exit": code,
-                    "out_bytes": len(o),
-                    "correct_prefix": k,
-                    "wrong_bytes": wrong,
-                    "verdict": verdict,
-                    "stderr": err.strip()[-200:],
-                }
+                rec = {"variant": name, "decoder": dec, "threads": t, "exit": code, "out_bytes": len(o),
+                       "correct_prefix": k, "wrong_bytes": wrong, "verdict": verdict, "stderr": err.strip()[-200:]}
                 with open(out, "a") as f:
                     f.write(json.dumps(rec) + "\n")
-                print(
-                    f"{name:10s} {dec:14s} t={t} exit={code} out={len(o)} wrong={wrong} {verdict} | {err.strip()[-90:]!r}",
-                    flush=True,
-                )
+                print(f"{name:10s} {dec:14s} t={t} exit={code} out={len(o)} wrong={wrong} {verdict} | {err.strip()[-90:]!r}", flush=True)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,5 @@
 """ib.py THREADS FILE: indexed_bzip2 (PyPI 1.7.0) decoding FILE to stdout, read in 4 MiB
 chunks; THREADS is its `parallelization`. A decode error exits 2."""
-
 import sys
 
 import indexed_bzip2

@@ -63,19 +63,13 @@ def main():
     manifest = {
         "run": name,
         "archived": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
-        "source": {
-            "commit": git("rev-parse", "HEAD"),
-            "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
-            "tracked_changes": dirty.splitlines() if dirty else [],
-        },
-        "corpora": [
-            {"path": c, "bytes": os.path.getsize(c), "sha256": sha256(c)} for c in a.corpus
-        ],
-        "binary": (
-            {"path": a.binary, "sha256": sha256(a.binary)}
-            if a.binary and os.path.exists(a.binary)
-            else None
-        ),
+        "source": {"commit": git("rev-parse", "HEAD"),
+                   "branch": git("rev-parse", "--abbrev-ref", "HEAD"),
+                   "tracked_changes": dirty.splitlines() if dirty else []},
+        "corpora": [{"path": c, "bytes": os.path.getsize(c), "sha256": sha256(c)}
+                    for c in a.corpus],
+        "binary": ({"path": a.binary, "sha256": sha256(a.binary)}
+                   if a.binary and os.path.exists(a.binary) else None),
         "command": a.command,
         "exit_status": a.status,
         "files": sorted(files, key=lambda f: f["path"]),
@@ -85,11 +79,9 @@ def main():
     tar = os.path.join(os.path.dirname(d) or ".", name + ".tar.gz")
     with tarfile.open(tar, "w:gz") as t:
         t.add(d, arcname=name)
-    print(
-        f"archive: {tar} ({os.path.getsize(tar)} bytes, sha256 {sha256(tar)}): "
-        f"{len(files)} files and MANIFEST.json, commit {manifest['source']['commit']}"
-        + (", WITH tracked changes" if manifest["source"]["tracked_changes"] else "")
-    )
+    print(f"archive: {tar} ({os.path.getsize(tar)} bytes, sha256 {sha256(tar)}): "
+          f"{len(files)} files and MANIFEST.json, commit {manifest['source']['commit']}"
+          + (", WITH tracked changes" if manifest["source"]["tracked_changes"] else ""))
 
 
 if __name__ == "__main__":

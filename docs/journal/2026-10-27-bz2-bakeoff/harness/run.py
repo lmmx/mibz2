@@ -12,7 +12,6 @@ Env: BAKEOFF_BIN (the harness binary), BAKEOFF_PY (the venv's python, for indexe
 BAKEOFF_BIN_NATIVE (the harness built with -C target-cpu=native, for DECODER-native),
 REPS (default 3).
 """
-
 import fcntl, hashlib, json, os, subprocess, sys, time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -81,13 +80,7 @@ def once(cmd: list[str], hash_it: bool) -> dict:
 
 
 def main() -> None:
-    out, workload, path, threads, decs = (
-        sys.argv[1],
-        sys.argv[2],
-        sys.argv[3],
-        int(sys.argv[4]),
-        sys.argv[5:],
-    )
+    out, workload, path, threads, decs = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5:]
     cmds = {}
     for dec in decs:
         cmd = command(dec, threads, path)
@@ -102,25 +95,14 @@ def main() -> None:
             runs[dec].append(once(cmds[dec], i == 0))
     for dec in decs:
         rs = runs[dec]
-        rec = {
-            "workload": workload,
-            "file": os.path.basename(path),
-            "in_bytes": os.path.getsize(path),
-            "threads": threads,
-            "decoder": dec,
-            "load1_before": loads[dec],
-            "cmd": cmds[dec],
-            "runs": rs,
-        }
+        rec = {"workload": workload, "file": os.path.basename(path), "in_bytes": os.path.getsize(path),
+               "threads": threads, "decoder": dec, "load1_before": loads[dec], "cmd": cmds[dec], "runs": rs}
         with open(out, "a") as f:
             f.write(json.dumps(rec) + "\n")
         t = sorted(r["wall_s"] for r in rs[1:]) or [rs[0]["wall_s"]]
-        print(
-            f"{workload} t={threads} {dec:14s} load={max(loads[dec]):.2f} best={t[0]:.2f} med={t[len(t) // 2]:.2f} "
-            f"cpu={min(r['cpu_s'] for r in rs):.2f} rss={max(r['rss_mb'] for r in rs):.0f}MB out={rs[0]['out_bytes']} "
-            f"exit={rs[0]['exit']} sha={(rs[0]['sha256'] or '')[:12]}",
-            flush=True,
-        )
+        print(f"{workload} t={threads} {dec:14s} load={max(loads[dec]):.2f} best={t[0]:.2f} med={t[len(t)//2]:.2f} "
+              f"cpu={min(r['cpu_s'] for r in rs):.2f} rss={max(r['rss_mb'] for r in rs):.0f}MB out={rs[0]['out_bytes']} "
+              f"exit={rs[0]['exit']} sha={(rs[0]['sha256'] or '')[:12]}", flush=True)
 
 
 if __name__ == "__main__":
