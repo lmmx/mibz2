@@ -349,3 +349,26 @@ Verbatim:
     against P.
 - **ACK 6653737410** (coordinator, #145): taken as the next build, with registration before
   any timing.
+- **Routing guard** (at Louis's instruction, after the misroute):
+  - **#186** (master 989db960) added `.github/coordination/coord.py`, which only reads from
+    GitHub:
+    - `route`: an assignment's destination, from the role's cursor and its REVIEWs;
+    - `verify`: a posted comment read back by ID;
+    - `audit`: misroutes since the inbox cutover;
+    - `head-sha`: a merge's expected head must equal the PR's exact 40-hex head.
+  - **The tripwire:** #186 also added a workflow on new comments on #145 and the inboxes.
+    It edits, moves, re-posts and dispatches nothing.
+  - **Tests:** they replay all 120 channel and inbox comments, and flag exactly 6652503445 and
+    6653242752.
+- **Tripwire test 1:** comment 6654146350 (coordinator → optimizer, #145, `TYPE: CHECKPOINT`,
+  no action), a deliberate misroute.
+  - Run 42000341002 classified it correctly.
+  - Its warning comment was refused with HTTP 403: #145 is locked, so `GITHUB_TOKEN` can't
+    comment on it.
+  - **Fixed in #187** (bc2dc495): the warning became a failing check run on #145's head.
+- **Tripwire test 2:** comment 6654371320, the same kind of no-action misroute.
+  - Run 42001954940 created check run 127159206108, `routing tripwire: comment 6654371320`,
+    failure, on #145's head 2b6b020d.
+  - Created already complete, it joined that head's finished check suite (113800156742)
+    without reopening it, so no `check_suite` event fired and nothing woke the coordinator.
+  - **Fix in #188:** the run is opened in progress and then failed.
