@@ -245,8 +245,8 @@ way, with its settings and inputs written to the repository before it began.
 
 Keeping things moving is the Coordinator's job. When the record goes quiet, it checks the
 receipts, works out who has the next step, and posts the checkpoint that starts it. No Astra agent runs
-on a timer. The Coordinator's session has one: it wakes about every quarter of an hour to re-read
-its mode note, which is also when it runs `audit` (section 9). Nothing sits waiting for me.
+on a timer. On the first night the Coordinator's session had one, waking it every quarter of an
+hour to re-read its mode note; otherwise it too wakes on events. Nothing sits waiting for me.
 
 ## 8. What a shared message board got wrong
 
@@ -351,7 +351,7 @@ this failure rather than remove it.
 | `route` | an assignment's destination: the role's inbox, or, while it is busy, staged on #145 as `TYPE: QUEUED` | required before each assignment; none posted since it landed |
 | `verify` | the posted comment, read back by ID: its PR, its header, the only assignment in flight | required after each; replayed, it fails the 07:38 misroute and passes the 08:31 dispatch |
 | `head-sha` | a merge's expected head against the PR's exact 40-character head, before the merge and, with `--merged`, after it | before: since #186; after: since #190; rejects #185's SHA |
-| `audit` | every message on #145 and the inboxes since the inbox cutover | in use at each session start and check-in; in its tests, the 120 comments up to 08:49 give exactly the two misroutes |
+| `audit` | every message on #145 and the inboxes since the inbox cutover | in use at each session start and wake-up; in its tests, the 120 comments up to 08:49 give exactly the two misroutes |
 | the tripwire | each new comment on #145 or an inbox, checked by a GitHub Actions workflow that runs independently of the Coordinator | in use as a record: a failing check on #145's head until the next commit there; no event for the Coordinator |
 
 The first four are one stdlib script,
@@ -384,7 +384,7 @@ wake the Coordinator, and its test showed within a minute that it didn't.
 So the tripwire is a record, not an alarm. It leaves a failing check on #145's head commit,
 independently of the Coordinator, and the check shows on #145 until the next commit to the channel
 branch. The Coordinator finds the misroute itself, by running `audit` at the start of each session
-and at each quarter-hourly check-in.
+and every time it wakes.
 
 The merge guard needed the same treatment, and got it only while this post was being checked. A
 reviewing agent pointed out that GitHub refuses a mismatched head, and it does: a merge of
