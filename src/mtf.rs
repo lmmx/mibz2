@@ -1,7 +1,8 @@
 //! Phase 2: RUNA/RUNB runs and move-to-front undone, into the BWT's last column (`ll`)
 //! and its byte counts, with libbzip2's checks: a run's weight below 2^21, and the block
-//! no longer than its stream's level allows. The scalar loop, or (AVX2) the move of an
-//! index below 32, nearly all of them, as one blend of the list and the list a byte on.
+//! no longer than its stream's level allows. The scalar loop, or (AVX2) libbzip2's
+//! two-level list: its first 32 bytes in two registers, the move of an index below 32
+//! (nearly all of them) a few shuffles with no branch on the index; the rest in memory.
 
 use super::block::Symbols;
 use super::{ErrorKind, Kernels};
@@ -73,6 +74,119 @@ pub fn mtf_scalar(
     Ok(ll.len())
 }
 
+/// The list's first level, its bytes 0-31 as two 16-byte sub-lists in registers (`f0`,
+/// `f1`): the move of index nn < 32 as three byte shuffles, an or and a blend, with no
+/// branch on nn and no load or store on the chain from one symbol to the next. Row nn:
+/// `a`, `f0`'s own shuffle (index nn < 16 to the front, the bytes before it a byte on;
+/// for nn >= 16 every byte a byte on, the front cleared); `b`, `f1`'s byte nn - 16 to
+/// `f0`'s front (nn >= 16; nothing below 16); `m`, the bytes of `f1` that take the byte
+/// before them (`f0`'s last at 0), those up to nn - 16 (nn >= 16; none below 16).
+#[cfg(target_arch = "x86_64")]
+#[repr(C, align(64))]
+#[derive(Clone, Copy)]
+struct Step {
+    a: [u8; 16],
+    b: [u8; 16],
+    m: [u8; 16],
+    _pad: [u8; 16],
+}
+
+#[cfg(target_arch = "x86_64")]
+const fn steps() -> [Step; 32] {
+    const Z: u8 = 0x80; // a shuffle's zero
+    let mut t = [Step {
+        a: [0; 16],
+        b: [Z; 16],
+        m: [0; 16],
+        _pad: [0; 16],
+    }; 32];
+    let mut nn = 0;
+    while nn < 32 {
+        let mut i = 0;
+        while i < 16 {
+            if nn < 16 {
+                t[nn].a[i] = if i == 0 {
+                    nn as u8
+                } else if i <= nn {
+                    (i - 1) as u8
+                } else {
+                    i as u8
+                };
+            } else {
+                t[nn].a[i] = if i == 0 { Z } else { (i - 1) as u8 };
+                if i == 0 {
+                    t[nn].b[i] = (nn - 16) as u8;
+                }
+                if i <= nn - 16 {
+                    t[nn].m[i] = 0xff;
+                }
+            }
+            i += 1;
+        }
+        nn += 1;
+    }
+    t
+}
+
+#[cfg(target_arch = "x86_64")]
+static STEPS: [Step; 32] = steps();
+
+/// The second level's move of its byte t (the list's t + 32), returned: the bytes before
+/// it a byte on, `f1`'s last byte in at 0. Row j (of 7, at `tail + 32j`, 32-aligned) takes
+/// the last byte of row j - 1, of `f1` for row 0, by a lane permute and a byte align in
+/// registers. Every load is a whole aligned row or a byte inside one, as the stores before
+/// it wrote them, so each forwards from one store (a load across two stores waits for them
+/// to commit). Row 0 alone for t < 32, nearly all of them; else every row, with no branch
+/// on how many: up to t whole (the bytes 32j + i <= t), none past it.
+#[cfg(target_arch = "x86_64")]
+#[inline(always)]
+unsafe fn second(
+    tail: *mut u8,
+    t: usize,
+    f1: std::arch::x86_64::__m128i,
+    idx: std::arch::x86_64::__m256i,
+) -> u8 {
+    use std::arch::x86_64::*;
+    let v = *tail.add(t);
+    let row = |j: usize| _mm256_load_si256(tail.add(32 * j) as *const __m256i);
+    // row -1 as the shift reads it: `f1` in the high lane
+    let below0 = _mm256_inserti128_si256::<1>(_mm256_castsi128_si256(f1), f1);
+    // [below's last byte, r's bytes 0..31]
+    let on = |r: __m256i, below: __m256i| {
+        _mm256_alignr_epi8::<15>(r, _mm256_permute2x128_si256::<0x03>(r, below))
+    };
+    if t < 32 {
+        let r0 = row(0);
+        let m = _mm256_cmpgt_epi8(_mm256_set1_epi8(t as i8 + 1), idx); // i <= t
+        _mm256_store_si256(
+            tail as *mut __m256i,
+            _mm256_blendv_epi8(r0, on(r0, below0), m),
+        );
+    } else {
+        // (t < 224: an index is below 256)
+        let tv = _mm256_set1_epi8(t as u8 as i8);
+        let r: [__m256i; 7] = std::array::from_fn(row);
+        for j in 0..7 {
+            let p = _mm256_add_epi8(idx, _mm256_set1_epi8((32 * j) as u8 as i8));
+            let m = _mm256_cmpeq_epi8(_mm256_min_epu8(p, tv), p); // 32j + i <= t
+            let below = if j == 0 { below0 } else { r[j - 1] };
+            let new = _mm256_blendv_epi8(r[j], on(r[j], below), m);
+            _mm256_store_si256(tail.add(32 * j) as *mut __m256i, new);
+        }
+    }
+    v
+}
+
+/// libbzip2's two-level list (`mtfa`, `mtfbase`: 16 sub-lists of 16), vectorised. The
+/// first level, sub-lists 0 and 1, is held in registers (`Step`). The second, the list's
+/// bytes 32-255, is in memory as 7 aligned rows of 32 (`second`): the move of index
+/// nn >= 32 takes byte nn - 32 out and moves the bytes before it a byte on, each row in
+/// registers taking the last byte of the row before it (of `f1`, for the first), with no
+/// call: with a memmove there as well as the long runs' memset, the compiler kept `f1` in
+/// memory through the whole loop, and the chain with it; with the memset alone it spills
+/// `f0` and `f1` around that call only. (libbzip2's moving bases
+/// save byte copies: with 32-byte vectors a row costs a load and a store whether it moves
+/// one byte or 32, so the rows stay where they are.)
 #[cfg(target_arch = "x86_64")]
 #[target_feature(enable = "avx2")]
 unsafe fn mtf_avx2(
@@ -85,20 +199,22 @@ unsafe fn mtf_avx2(
     ll.clear();
     ll.reserve(max);
     *counts = [0; 256];
+    // the list as bytes (each symbol's seq_to_unseq), not indices: a move permutes both
+    // alike, so the front is the byte with no lookup
+    let s2u = &b.seq_to_unseq;
+    let mut f0 = _mm_loadu_si128(s2u.as_ptr() as *const __m128i);
+    let mut f1 = _mm_loadu_si128(s2u.as_ptr().add(16) as *const __m128i);
+    // the second level, the list's bytes 32-255
     #[repr(align(64))]
-    struct L([u8; 320]);
-    let mut store = L([0u8; 320]);
-    // the list at store[32..288], with slack before it for the shifted load, held as the
-    // bytes themselves (each symbol's seq_to_unseq), not their indices: a move permutes
-    // both alike, so the front is the byte with no lookup
-    for i in 0..256 {
-        store.0[32 + i] = b.seq_to_unseq[i];
-    }
-    let base = store.0.as_mut_ptr().add(32);
+    struct Rows([u8; 224]);
+    let mut rows = Rows([0u8; 224]);
+    rows.0.copy_from_slice(&s2u[32..]);
+    let tail = rows.0.as_mut_ptr();
     let idx = _mm256_setr_epi8(
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
         25, 26, 27, 28, 29, 30, 31,
     );
+    let steps = STEPS.as_ptr();
     let (mut run, mut weight) = (0u32, 1u32);
     // `n` bytes written at `out`; every write below is checked against `max`, which
     // `ll`'s capacity holds
@@ -120,13 +236,13 @@ unsafe fn mtf_avx2(
                 result = Err(ErrorKind::BlockTooLong);
                 break;
             }
-            let c = *base;
+            let c = _mm_cvtsi128_si32(f0) as u8;
             counts[c as usize] += run;
             if run <= 64 && n + 64 <= max {
                 // a short run as two 32-byte stores of its byte: the bytes past the run are
                 // still inside `ll`'s capacity (n + 64 <= max), and are written again by
                 // what follows or left past the length set at the end
-                let v = _mm256_set1_epi8(c as i8);
+                let v = _mm256_broadcastb_epi8(f0);
                 _mm256_storeu_si256(out.add(n) as *mut __m256i, v);
                 _mm256_storeu_si256(out.add(n + 32) as *mut __m256i, v);
             } else {
@@ -142,19 +258,24 @@ unsafe fn mtf_avx2(
             result = Err(ErrorKind::BlockTooLong);
             break;
         }
-        // (s - 1 < 256: a symbol is below the alphabet, at most 257)
-        let nn = (s - 1) as usize;
-        let v = *base.add(nn);
+        // A decoded symbol is below the alphabet (s <= 256 here, so nn <= 255). `Symbols`'
+        // fields are public, so a hand-built one could hold more; clamped, its index stays
+        // inside the list (t <= 223 in `second`), whatever byte it then names
+        let nn = ((s - 1) as usize).min(255);
         if nn < 32 {
-            let old = _mm256_load_si256(base as *const __m256i);
-            let shifted = _mm256_loadu_si256(base.sub(1) as *const __m256i);
-            let m = _mm256_cmpgt_epi8(_mm256_set1_epi8(nn as i8 + 1), idx); // i <= nn
-            _mm256_store_si256(base as *mut __m256i, _mm256_blendv_epi8(old, shifted, m));
+            let t = steps.add(nn);
+            let a = _mm_load_si128((*t).a.as_ptr() as *const __m128i);
+            let bb = _mm_load_si128((*t).b.as_ptr() as *const __m128i);
+            let m = _mm_load_si128((*t).m.as_ptr() as *const __m128i);
+            let g0 = _mm_or_si128(_mm_shuffle_epi8(f0, a), _mm_shuffle_epi8(f1, bb));
+            f1 = _mm_blendv_epi8(f1, _mm_alignr_epi8::<15>(f1, f0), m);
+            f0 = g0;
         } else {
-            std::ptr::copy(base, base.add(1), nn);
+            let v = second(tail, nn - 32, f1, idx);
+            f1 = _mm_alignr_epi8::<15>(f1, f0);
+            f0 = _mm_or_si128(_mm_slli_si128::<1>(f0), _mm_cvtsi32_si128(v as i32));
         }
-        *base = v;
-        let c = v;
+        let c = _mm_cvtsi128_si32(f0) as u8;
         counts[c as usize] += 1;
         *out.add(n) = c;
         n += 1;
