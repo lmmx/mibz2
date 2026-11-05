@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Turn the workstation runs (bench/release-scaling/*/, bench/release_scaling.py record) into the
-History page's workstation view and tables.
+"""Turn the release-scaling runs (bench/release-scaling/*/, bench/release_scaling.py record) into the
+History page's Release scaling view and tables.
 
     python3 docs/scripts/bench_release_scaling.py
 
 Writes, for each run, newest first:
 
 - docs/site/assets/release-scaling.json, read by the History page's hero (bench.js), which
-  offers a Workstation view only when a run is recorded: the machine, and per corpus each
+  offers a Release scaling view only when a run is recorded: the machine, and per corpus each
   arm's throughput (MB/s of output, the median of its rounds) at each thread count, and its
   paired wall change against the reference arm;
 - docs/generated/release-scaling.md, included by the History page: per corpus, each arm's
@@ -140,10 +140,10 @@ def main() -> None:
     OUT.parent.mkdir(parents=True, exist_ok=True)
     ASSET.write_text(json.dumps({"runs": [run_data(d) for d in dirs]}, separators=(",", ":"), allow_nan=False))
     if not dirs:
-        OUT.write_text("No workstation run is recorded yet.\n")
+        OUT.write_text("No release-scaling run is recorded yet.\n")
     else:
         OUT.write_text("\n\n".join(run_section(d) for d in dirs) + "\n")
-    print(f"{OUT.relative_to(ROOT)}, {ASSET.relative_to(ROOT)}: {len(dirs)} workstation runs")
+    print(f"{OUT.relative_to(ROOT)}, {ASSET.relative_to(ROOT)}: {len(dirs)} release-scaling runs")
 
 
 if __name__ == "__main__":

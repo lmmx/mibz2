@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Workstation runs: `examples/ab.rs` runs made off CI, kept with their machine.
+"""Release-scaling runs: `examples/ab.rs` runs made off CI (just bench-release-scaling),
+kept with their machine.
 
     python3 bench/release_scaling.py record DIR --runs RUNS.jsonl [--env ENV.json]
         [--lscpu LSCPU.txt] [--machine NAME] [--ref ARM] [--arm ARM=LABEL ...]
@@ -11,8 +12,8 @@ model and counts (from --lscpu, an `lscpu` output saved on that machine, else th
 the reference arm, each arm's label (a release or commit), each corpus's bytes and
 SHA-256 (--file, when the files are at hand), and a note.
 
-The site's Workstation page (docs/scripts/bench_release_scaling.py) reads every such
-directory. CI's figures never depend on them: a pull request benches without any.
+The History page's Release scaling view (docs/scripts/bench_release_scaling.py) reads
+every such directory. CI's figures never depend on them: a pull request benches without any.
 """
 
 import argparse

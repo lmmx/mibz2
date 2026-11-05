@@ -133,9 +133,9 @@
     const ch = data.chain || {};
     const start = ch.start;
     const head = el("div", { class: "bh-hero-head" }, box);
-    const ws = (data.workstation && data.workstation.runs) || [];
+    const ws = (data.scaling && data.scaling.runs) || [];
     if (!ws.length) state.tView = "ci";
-    el("h2", { class: "bh-hero-title", id: "trajectory", text: state.tView === "ws" ? "On a workstation" : "Merge by merge, chained" }, head);
+    el("h2", { class: "bh-hero-title", id: "trajectory", text: state.tView === "ws" ? "Release scaling" : "Merge by merge, chained" }, head);
     const seg = (label, options, value, set) => {
       const g = el("div", { class: "bh-seg", role: "radiogroup", "aria-label": label }, head);
       for (const [v, t] of options) {
@@ -148,10 +148,10 @@
         });
       }
     };
-    // A workstation run (bench/release-scaling/, docs/scripts/bench_release_scaling.py): offered only
+    // A release-scaling run (bench/release-scaling/, docs/scripts/bench_release_scaling.py): offered only
     // when one is recorded, so the page needs none
-    if (ws.length) seg("View", [["ci", "CI, merge by merge"], ["ws", "Workstation"]], state.tView, (v) => (state.tView = v));
-    if (state.tView === "ws") { workstation(ws, box, seg); return; }
+    if (ws.length) seg("View", [["ci", "CI, merge by merge"], ["ws", "Release scaling"]], state.tView, (v) => (state.tView = v));
+    if (state.tView === "ws") { releaseScaling(ws, box, seg); return; }
     if (start === null || start === undefined || !data.links || !data.links.length) {
       el("p", { class: "bh-hero-note", text: "No merged pull request's benchmark is linked yet (bench/links.py)." }, box);
       return;
@@ -347,10 +347,10 @@
     }
   }
 
-  // The hero's Workstation view: one recorded run, each arm's throughput (the median of its
+  // The hero's Release scaling view: one recorded run, each arm's throughput (the median of its
   // rounds) against threads, and its paired wall change against the reference arm. A run is
   // one machine's: runs are never combined, and they inform rather than decide.
-  function workstation(ws, box, seg) {
+  function releaseScaling(ws, box, seg) {
     if (!ws.some((r) => r.id === state.wsRun)) state.wsRun = ws[0].id;
     const run = ws.find((r) => r.id === state.wsRun);
     if (ws.length > 1) seg("Run", ws.map((r) => [r.id, `${r.date} · ${r.cpu}`]), state.wsRun, (v) => (state.wsRun = v));
@@ -403,7 +403,7 @@
       item.append(` ${a}${a === run.ref ? " (reference)" : ""}  `);
     });
     const cores = run.cores ? `${run.cores} cores, ${run.cpus} CPUs` : `${run.cpus} CPUs`;
-    note.textContent = `${run.date} · ${cores} · ${run.rounds} paired rounds · ${c.same_bytes ? "every arm gave the same bytes" : "the arms' outputs differ"}. A workstation run informs; it doesn't decide (the tables below).` + (run.note ? ` ${run.note}` : "");
+    note.textContent = `${run.date} · ${cores} · ${run.rounds} paired rounds · ${c.same_bytes ? "every arm gave the same bytes" : "the arms' outputs differ"}. A local run informs; it doesn't decide (the tables below).` + (run.note ? ` ${run.note}` : "");
   }
 
   function render(root, data) {
@@ -658,11 +658,11 @@
       fetch(root.dataset.src)
         .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
         .then((d) => {
-          // the workstation runs, if any are recorded (none is no error: the view is offered only with one)
+          // the release-scaling runs, if any are recorded (none is no error: the view is offered only with one)
           const hero = document.getElementById("bench-hero");
           const src = hero && hero.dataset.ws;
           const ws = src ? fetch(src).then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null);
-          return ws.then((w) => { d.workstation = w; return d; });
+          return ws.then((w) => { d.scaling = w; return d; });
         })
         .then((d) => { render(root, d); drawn.hero = [d, root]; })
         .catch((e) => { root.textContent = `The benchmark history could not be loaded (${e.message}).`; });
