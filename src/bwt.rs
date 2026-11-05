@@ -794,6 +794,19 @@ thread_local! {
     // done again lane by lane because a lane read a start
     static TILES_KEPT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static TILES_REPLAYED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // the staged busy phase's chunk edges: a pass of more than one chunk; a take at a
+    // chunk's last offset (its row staged from st = w, one past the chunk) or in a later
+    // chunk; a segment taken and finished in one chunk; a lane marked at a later chunk's
+    // first offset; and the queue running out at a later chunk's first offset, at a
+    // chunk's last offset short of the pass's end, or at the pass's last offset
+    static ROOM_OVER_TILE: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static TAKE_AT_CHUNK_END: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static TAKE_IN_LATER_CHUNK: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static DONE_IN_TAKING_CHUNK: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static MARK_AT_LATER_CHUNK_START: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static EXHAUSTED_AT_CHUNK_START: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static EXHAUSTED_AT_CHUNK_END: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    static EXHAUSTED_AT_PASS_END: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -884,6 +897,12 @@ fn room_segments<const L: usize, const PF: u8>(
     // a pass marks its lanes in a u64
     const { assert!(L <= 64) };
     let n = tt.0.len();
+    // A start is marked in bit 31 of its entry, which is bit 23 of the entry's link: a link
+    // of 2^23 or more would read as a start (bzip2's blocks are at most 900,000 rows)
+    assert!(
+        n <= 1 << 23,
+        "the room walk takes at most 2^23 rows, not {n}"
+    );
     let r0 = tt.0[orig_ptr as usize] >> 8;
     random_rows(n, segments - 1, &mut s.starts);
     s.starts.push(r0);
@@ -1006,6 +1025,9 @@ fn room_segments<const L: usize, const PF: u8>(
                 transition!(PASS_ENDS_FULL);
             }
             let mut done = 0;
+            if room > TILE {
+                transition!(ROOM_OVER_TILE);
+            }
             while done < room {
                 let w = (room - done).min(TILE);
                 let mut st = [0usize; L];
@@ -1021,6 +1043,9 @@ fn room_segments<const L: usize, const PF: u8>(
                         continue;
                     }
                     transition!(TILES_REPLAYED);
+                    if j == 0 && done > 0 {
+                        transition!(MARK_AT_LATER_CHUNK_START);
+                    }
                     // The scalar offset, on the rows from before it
                     let rs = &mut rows[cur];
                     let mut marked: u64 = 0;
@@ -1048,6 +1073,9 @@ fn room_segments<const L: usize, const PF: u8>(
                         marked &= marked - 1;
                         let l = &mut lanes[k];
                         l.row = rs[k];
+                        if st[k] > 0 {
+                            transition!(DONE_IN_TAKING_CHUNK);
+                        }
                         // its segment's bytes end before offset j
                         flush(l, &tile[k], st[k], j);
                         finish(l, bufs, next);
@@ -1076,6 +1104,15 @@ fn room_segments<const L: usize, const PF: u8>(
                             transition!(FULL_PHASE_ENDS_MID_PASS);
                             #[cfg(test)]
                             {
+                                if j == 0 && done > 0 {
+                                    transition!(EXHAUSTED_AT_CHUNK_START);
+                                }
+                                if j + 1 == w && done + w < room {
+                                    transition!(EXHAUSTED_AT_CHUNK_END);
+                                }
+                                if done + j + 1 == room {
+                                    transition!(EXHAUSTED_AT_PASS_END);
+                                }
                                 if marked != 0 {
                                     transition!(ENDS_WITH_LANES_WAITING);
                                 }
@@ -1098,6 +1135,12 @@ fn room_segments<const L: usize, const PF: u8>(
                         #[cfg(test)]
                         {
                             took = true;
+                            if j + 1 == w {
+                                transition!(TAKE_AT_CHUNK_END);
+                            }
+                            if done > 0 {
+                                transition!(TAKE_IN_LATER_CHUNK);
+                            }
                         }
                     }
                     // The scalar offset stepped the rows in place, so the next offset reads
@@ -1758,6 +1801,98 @@ pub(crate) mod tests {
         ] {
             assert!(count(c) > 0, "never reached: {name}");
         }
+    }
+
+    /// The staged busy phase's chunk edges, at 32 lanes and at 5: blocks long enough and
+    /// segments few enough that a pass's room spans several tiles. Each state is required:
+    /// a pass of more than one chunk; a take at a chunk's last offset (its row then staged
+    /// from one past the chunk) and in a later chunk; a segment taken and finished in one
+    /// chunk; a lane marked at a later chunk's first offset; and the queue running out at a
+    /// later chunk's first offset, at a chunk's last offset short of the pass's end, and at
+    /// the pass's last offset. Every output against `walk` and the segment oracle
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    fn room_walk_staged_chunk_edges() {
+        let required = [
+            ("a pass of more than one chunk", &ROOM_OVER_TILE),
+            ("a take at a chunk's last offset", &TAKE_AT_CHUNK_END),
+            ("a take in a later chunk", &TAKE_IN_LATER_CHUNK),
+            (
+                "a segment taken and finished in one chunk",
+                &DONE_IN_TAKING_CHUNK,
+            ),
+            (
+                "a lane marked at a later chunk's first offset",
+                &MARK_AT_LATER_CHUNK_START,
+            ),
+            (
+                "the queue running out at a later chunk's first offset",
+                &EXHAUSTED_AT_CHUNK_START,
+            ),
+            (
+                "the queue running out at a chunk's last offset",
+                &EXHAUSTED_AT_CHUNK_END,
+            ),
+            (
+                "the queue running out at a pass's last offset",
+                &EXHAUSTED_AT_PASS_END,
+            ),
+            ("a lane taken mid-pass", &MID_PASS_TAKES),
+            ("an offset done again lane by lane", &TILES_REPLAYED),
+        ];
+        for (_, c) in required {
+            c.with(|c| c.set(0));
+        }
+        let mut x = 0x9e37_79b9_7f4a_7c15u64;
+        let mut rnd = move |m: u64| {
+            x ^= x << 13;
+            x ^= x >> 7;
+            x ^= x << 17;
+            x % m
+        };
+        let mut cases = 0;
+        while cases < 20000 && required.iter().any(|(_, c)| count(c) == 0) {
+            cases += 1;
+            let n = 4000 + rnd(28000) as usize;
+            let alphabet = 1 + rnd(if cases % 2 == 0 { 3 } else { 256 });
+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();
+            let orig_ptr = rnd(n as u64) as u32;
+            let mut counts = [0u32; 256];
+            for &c in &ll {
+                counts[c as usize] += 1;
+            }
+            let mut tt = TVector::new();
+            build(&ll, &counts, &mut tt);
+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());
+            walk(&tt, orig_ptr, &mut plain);
+            // a pass's room is about 2n / segments + 63: under n / 150 segments it is over
+            // two tiles, and over 32 of them the busy phase runs at 32 lanes
+            let segments = 33 + rnd((n / 150) as u64) as usize;
+            walk_segments_room_with_prefetch::<32, PF_L1>(
+                &mut tt, orig_ptr, &mut out, &mut seg, segments,
+            );
+            assert!(plain == out, "32 lanes, case {cases}");
+            check_segments(&tt, &seg, "32 lanes");
+            walk_segments_room_with_prefetch::<5, PF_OFF>(
+                &mut tt, orig_ptr, &mut out, &mut seg, segments,
+            );
+            assert!(plain == out, "5 lanes, case {cases}");
+            check_segments(&tt, &seg, "5 lanes");
+        }
+        for (name, c) in required {
+            assert!(count(c) > 0, "never reached in {cases} cases: {name}");
+        }
+    }
+
+    /// A block of more than 2^23 rows is refused rather than walked with its links misread
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    #[should_panic(expected = "at most 2^23 rows")]
+    fn room_walk_refuses_more_than_2_23_rows() {
+        let n = (1 << 23) + 1;
+        let mut tt = TVector((0..n as u32).map(|r| r << 8).collect());
+        let (mut out, mut seg) = (Vec::new(), SegScratch::default());
+        walk_segments_room_with_prefetch::<32, PF_L1>(&mut tt, 0, &mut out, &mut seg, 64);
     }
 
     /// The flagged walk on a random last column and on a periodic one (a list of several
