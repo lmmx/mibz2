@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.2](https://github.com/lmmx/mibz2/compare/v0.2.1...v0.2.2) - 2026-11-05
 
+The inverse BWT's walk, the move-to-front decode and the Huffman scanner are each faster,
+and a decode keeps more blocks in flight per thread. The output, the API and the
+supported inputs are unchanged.
+
+### Measured
+
+One paired run of this release against `v0.2.1`, both builds on one CI runner (AMD EPYC
+7763, 4 vCPUs), 10 rounds, the builds' order alternating, the bench's Wikidata sample
+(12 slices of the dump, 210 MB decoded):
+
+| threads | wall | CPU |
+|--:|--:|--:|
+| 1 | **−15.4% (−17.5, −13.3)** | **−15.3%** |
+| 2 | **−25.2% (−26.5, −23.8)** | **−17.8%** |
+| 4 | **−25.8% (−27.3, −24.2)** | **−15.5%** |
+
+- **By stage,** at one thread: the walk −24.9%, MTF −12.5%, the Huffman scanner −7.6%.
+  RLE1 was +2.6% slower and the table build unchanged.
+- **The other corpora** were faster or unchanged at every thread count. The output was
+  the same bytes on all of them.
+- **The cost:** peak memory at 4 threads +4.3%, from the window of 4 blocks a thread
+  (#180).
+- **One run on one CPU model,** so the intervals understate the run-to-run spread, which
+  merges that left the decoder alone put at about 0.7% at one thread.
+
+### Packages
+
+0.2.2 is on crates.io only. Its PyPI wheels were not built: the macOS wheel jobs ran on
+`macos-14` runners, which GitHub no longer serves, and the PyPI step needs every wheel.
+0.2.3 publishes the wheels, built from the same source with the macOS jobs on
+`macos-15` (#209).
+
 ### <!-- 2 -->Bug Fixes
 
 - *(sweep)* walk blocks under MIN_SEGMENTED plainly at every setting, as the decoder does ([#200](https://github.com/lmmx/mibz2/pull/200))
