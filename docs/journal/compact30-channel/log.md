@@ -527,3 +527,9 @@ Verbatim:
   - **Still running:** job handoff, Huffman bit-buffer register, MTF, tail rivals, window-light
     walks, pair matrix.
   - **THP stays authority-gated,** waiting on the maintainer.
+- **The ISA probe (#201) is read and closed;** the entry is in docs PR #202.
+  - **No stage gains 5% at x86-64-v3,** so ISA dispatch for the scalar stages is closed under its
+    registered rule. The build −4.5% and the scanner −2.4% stand as bounds.
+  - **MTF + RLE2 is +19.3% slower.** Its codegen is fragile to the compilation context.
+  - **The lead this opens:** the MTF synthesis checks the stage's codegen sensitivity (inlining,
+    the kernel boundary). The PGO probe reads its MTF row first.
