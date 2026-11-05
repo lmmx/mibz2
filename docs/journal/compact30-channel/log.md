@@ -482,3 +482,10 @@ Verbatim:
   - Workflow wf_38ffcfee-79f runs three rivals (soft starts activated only in the tail, cheap
     segments in master's own walk, cross-block continuity) and then a collision.
   - The collision must specify a CI falsifier, a tail clock, before any production build.
+- **Checkpoint 6659992544 to the Optimiser (#160): the tail.**
+  - It asks for the Optimiser's own price of the tail on CI's models, and a construction none of
+    the three tail rivals contains.
+  - It also asks for a correction of the scope claim: tail levers move the 1-thread and 2-thread
+    rows, which are the release's, while placement and window-light walks move only the
+    4-thread row.
+  - `route` said the Optimiser was free, and `verify` passed.
