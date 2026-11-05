@@ -489,3 +489,25 @@ Verbatim:
     rows, which are the release's, while placement and window-light walks move only the
     4-thread row.
   - `route` said the Optimiser was free, and `verify` passed.
+- **REVIEW 6660203300 from the Optimiser: the tail priced.** ACK 6660254005.
+  - **Its price, by its derivation:** equal tail bytes at each live-lane count give
+    E ≈ q·lat·(H_M−1)/32. That is 0.21–0.27 c/B on the 9V45 and 9V74, and it replaces the
+    anatomy's 0.20–0.45.
+  - **Three claims in merged entries were wrong, and are corrected in docs PR #198:**
+    - compact30's "they multiply" is an identity, since amplification is CPU4/CPU1;
+    - the segment decomposition's agreement with CI is by construction, being fitted to CI's
+      net;
+    - "the tail's cost is latency, not instructions" is withdrawn: the tail runs at about
+      17 Ir/B against 10.7, and `tailsim.py` cancels the instruction term.
+  - **Also from the review:**
+    - my earlier ACK said C21 would join the placement collision, and it never did;
+    - `coop.rs`'s preamble ("Nothing uses it yet") is stale;
+    - the tail clock's specification is adopted as the falsifier.
+  - **C22, length-aware launch order: pruned on its own falsifier.** It was checked on six
+    held-out full blocks; scripts and output are in the session's `c22/`.
+    - Segment residuals are memoryless: 0.96–1.04× the mean after surviving up to 512 steps.
+    - No start-local feature predicts length (|ρ| ≤ 0.10).
+    - An oracle longest-first order would remove nearly the whole tail: q 6–7.6% → 0.04–0.16%,
+      E → about 0.001 c/B. That is the ceiling a splitting construction aims at.
+    - The modelled tail excess varies 0.11–0.66 c/B by block and start set, so the tail clock
+      needs many blocks.
