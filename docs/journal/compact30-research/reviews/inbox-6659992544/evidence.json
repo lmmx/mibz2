@@ -1,0 +1,15 @@
+{
+  "pin": "1132857e18819ce689424dd2df7751630b29522a",
+  "inbox": 6659992544,
+  "blobs": {
+    "docs/journal/2026-11-05-segment-cost.md": "68b14a239e12fdbbbf1869a5050c3eed8eb0184b",
+    "docs/journal/2026-11-05-corun-placement.md": "492594063950a3f57217aed9f8d6ff21b176d026",
+    "docs/journal/2026-11-05-compact30-staged.md": "3d1785473e133ffa95fc0b3cccbf72c81be62206",
+    "docs/journal/2026-11-05-tail-passes.md": "f124db250152e219f544bbd0679db211c21b423c",
+    "docs/journal/2026-11-05-segment-cost/tailsim.py": "39c692b225679fa05d88ef007374545d961c936a",
+    "src/bwt.rs": "b6b450c840e4ce90d8eb84e070143e2bec5e3358",
+    "src/coop.rs": "b5d2424c2343836d65d444bbd698ea9bdd518ce3",
+    "docs/journal/2026-10-30-research-portfolio-register.md": "23177c3c56adaf5e6297879d20afcbaac700cd1e"
+  },
+  "limitations": "Source and static model audit; no raw timings or complete assembly replay, no tests or compilation."
+}

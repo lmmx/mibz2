@@ -196,3 +196,19 @@ This supersedes production priorities above, not historical constructor accounti
 | C19 byte budget / C20 self-scan | Throughput-deprioritized | Shared measured steady supply scenario ~1.2–1.8%; fixed bench startup/tail not recurring release gains |
 
 The four-copy factors are uncontrolled-phase fastest-pass proxies, not exact parallel-decoder shares or W/W pairs. Inferred MLP and a fitted lane-independent term do not settle issue versus miss slots. Placement changes both siblings and is not additional credit above the same walk/build pool. A1–A6, A7 and D013 remain unchanged; no new verified instruction or wall-time credit.
+
+
+## Tail-front update: inbox 6659992544
+
+[Report and scope correction](reviews/inbox-6659992544/report.md), [model](reviews/inbox-6659992544/model.json).
+Evidence **1132857e18819ce689424dd2df7751630b29522a**.
+
+| Item | Disposition | Accounting / falsifier |
+|---|---|---|
+| C15 staged C-resolve | REJECTED, #195 rule failed | Archived 4t wall +4.8% and +7.7%; RSS does not carry harm. Amplification-product identity is not independent cache causality evidence |
+| C21 block phase pairing | HELD for pair matrix M/P | No new credit; C outcome closes partner-selection mechanism |
+| Tail concurrency | CONDITIONAL resource pool | Independent exponential-residual model: ~0.25–0.27 c/B alone, ~0.21–0.25 at four copies on fitted 9V45/9V74. Live-lane histogram and CI tail clock required; not transferable measured bounds |
+| C22 length-aware segment launch with reusable bounded scouting | CONDITIONAL, zero credit, low priority | Same starts/count/table; predictable remaining length required. Memoryless residuals falsify cheap scouting's benefit. Charge resume metadata/cache/copy effects; no free oracle |
+| Cross-chain lockstep | CLOSED | Lean path misses its 10-cycle gate; inferred cycle decomposition not independently validated by fitting CI net cost |
+
+Tail gains are not confined to 1t/2t. Current placement/window-light variants leave those rows unchanged by policy. Teams require a slowest-thread/barrier model, not summed per-thread tail credit. No implementation, new timing, new safety certification or historical-credit change.
