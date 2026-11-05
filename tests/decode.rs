@@ -431,6 +431,63 @@ fn corrupted_tables_and_selectors() {
 }
 
 #[test]
+fn corrupted_symbols() {
+    // bits flipped past each block's first 3000 (the rest of its selectors and code
+    // tables, then its Huffman-coded symbols, to its end), one to three at a time:
+    // libbzip2 and this decoder (sequential and parallel) both fail, or both give the
+    // same bytes; the symbol loop's own errors among the failures
+    let mut rng = Rng(23);
+    let data = samples(&mut rng).swap_remove(3).1;
+    let z = compress(&data[..400_000], 1);
+    let starts = block_starts(&z);
+    let ends = starts[1..].iter().copied().chain([z.len() as u64 * 8 - 80]);
+    // (the blocks longer than 3000 bits: not the last, of a few bytes)
+    let spans: Vec<(u64, u64)> = starts
+        .iter()
+        .zip(ends)
+        .map(|(&s, e)| (s + 3000, e))
+        .filter(|&(s, e)| s < e)
+        .collect();
+    assert!(spans.len() >= 3, "{spans:?}");
+    let (mut both_err, mut both_ok, mut huffman) = (0, 0, 0);
+    for case in 0..300 {
+        let (s, e) = spans[rng.below(spans.len() as u64) as usize];
+        let mut t = z.clone();
+        for _ in 0..1 + rng.below(3) {
+            let bit = s + rng.below(e - s);
+            t[(bit / 8) as usize] ^= 0x80 >> (bit % 8);
+        }
+        let a = oracle(&t);
+        let b = ours(&t, Kernels::detect()).unwrap();
+        match (&a, &b) {
+            (Ok(x), Ok(y)) => {
+                assert!(x == y, "case {case}: different bytes");
+                both_ok += 1
+            }
+            (Err(_), Err(e)) => {
+                both_err += 1;
+                if matches!(
+                    e.kind,
+                    ErrorKind::BadHuffmanCode | ErrorKind::SelectorOverrun
+                ) {
+                    huffman += 1;
+                }
+            }
+            (Ok(_), Err(e)) => panic!("case {case}: libbzip2 decodes it, this decoder fails: {e}"),
+            (Err(e), Ok(_)) => panic!("case {case}: libbzip2 fails ({e}), this decoder decodes it"),
+        }
+        if case % 10 == 0 {
+            let p = parallel(&t, 2, 2, 1 << 14, 1 << 14, Kernels::detect());
+            assert_eq!(p.is_ok(), a.is_ok(), "case {case}: parallel");
+        }
+    }
+    assert!(
+        both_err > 250 && huffman > 0,
+        "{both_err} errors ({huffman} in the symbols), {both_ok} decoded"
+    );
+}
+
+#[test]
 fn block_ranges() {
     // every range of whole blocks, decoded alone (the API the sweep reader could use),
     // gives exactly its part of the stream; a range ending inside a block fails

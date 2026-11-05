@@ -3,7 +3,7 @@
 //! symbols are decoded. Every check libbzip2 1.0.8 makes here (`decompress.c`) is made
 //! the same way, in the same terms, so a stream libbzip2 refuses is refused here too.
 
-use super::bits::Bits;
+use super::bits::{Bits, Reg};
 use super::ErrorKind;
 
 /// A block header's magic (pi) and the stream end's (sqrt(pi))
@@ -161,26 +161,32 @@ impl Huff {
         (0..self.alpha).contains(&i).then(|| self.perm[i as usize])
     }
 
-    /// One symbol (a pair's first only)
+    /// One symbol (a pair's first only), from a reader's state `r` on its slice `data`
     #[inline(always)]
-    fn decode(&self, br: &mut Bits) -> Result<u16, ErrorKind> {
-        let e = self.lut[br.peek(LUT_BITS) as usize];
+    fn decode(&self, r: &mut Reg, data: &[u8]) -> Result<u16, ErrorKind> {
+        let e = self.lut[r.peek(data, LUT_BITS) as usize];
         if e >> COUNT & 3 != 0 {
-            br.skip_short(e >> LEN1 & 31);
+            r.skip_short(e >> LEN1 & 31);
             return Ok((e >> SYM1 & 0x1ff) as u16);
         }
-        self.decode_entry_slow(e, br)
+        let (s, after) = self.decode_entry_slow(e, *r, data);
+        *r = after;
+        s
     }
 
-    /// A table entry with no symbol: an error, or a code longer than the table's bits
+    /// A table entry with no symbol: an error, or a code longer than the table's bits. The
+    /// reader's state comes in and goes out by value (with the state after), so that the
+    /// symbol loop's stays in registers across the call.
     #[cold]
-    fn decode_entry_slow(&self, e: u32, br: &mut Bits) -> Result<u16, ErrorKind> {
+    #[inline(never)]
+    fn decode_entry_slow(&self, e: u32, r: Reg, data: &[u8]) -> (Result<u16, ErrorKind>, Reg) {
         if e == BAD {
-            return Err(ErrorKind::BadHuffmanCode);
+            return (Err(ErrorKind::BadHuffmanCode), r);
         }
-        let s = self.decode_slow(br);
+        let mut br = Bits::of(data, r);
+        let s = self.decode_slow(&mut br);
         br.refill();
-        s
+        (s, br.parts().1)
     }
 
     #[cold]
@@ -311,6 +317,9 @@ pub fn read_item(
     let out = &mut syms.spare_capacity_mut()[..MAX_SYMS];
     let mut n = 0;
     let mut sel = 0;
+    // the reader's state in locals through the symbol loop (in registers: nothing the loop
+    // calls takes `br`, the cold paths take the state by value), given back at its end
+    let (data, mut r) = br.parts();
     let res = 'groups: loop {
         let Some(&g) = selectors.get(sel) else {
             break Err(ErrorKind::SelectorOverrun);
@@ -324,12 +333,12 @@ pub fn read_item(
         macro_rules! step {
             ($live:expr) => {
                 let e = t.lut[if $live {
-                    br.peek_live(LUT_BITS)
+                    r.peek_live(LUT_BITS)
                 } else {
-                    br.peek(LUT_BITS)
+                    r.peek(data, LUT_BITS)
                 } as usize];
                 if e >> COUNT & 3 != 0 {
-                    br.skip_short(e & 31);
+                    r.skip_short(e & 31);
                     let c = (e >> COUNT & 3) as usize;
                     out[n].write((e >> SYM1 & 0x1ff) as u16);
                     out[n + 1].write((e >> SYM2) as u16);
@@ -340,7 +349,9 @@ pub fn read_item(
                         break 'groups Ok(());
                     }
                 } else {
-                    let s = match t.decode_entry_slow(e, br) {
+                    let (s, after) = t.decode_entry_slow(e, r, data);
+                    r = after;
+                    let s = match s {
                         Ok(s) => s,
                         Err(k) => break 'groups Err(k),
                     };
@@ -353,17 +364,26 @@ pub fn read_item(
                 }
             };
         }
-        while left >= 2 * STEPS {
-            br.refill();
-            for _ in 0..STEPS {
-                step!(true);
+        // (the refill at the loop's foot, so that the state reaches the next lookups from
+        // it in registers on both ways in: refilled at its head, the state crossed the back
+        // edge in memory, a store and a reload each refill)
+        if left >= 2 * STEPS {
+            r.refill(data);
+            loop {
+                for _ in 0..STEPS {
+                    step!(true);
+                }
+                if left < 2 * STEPS {
+                    break;
+                }
+                r.refill(data);
             }
         }
         while left >= 2 {
             step!(false);
         }
         if left == 1 {
-            let s = match t.decode(br) {
+            let s = match t.decode(&mut r, data) {
                 Ok(s) => s,
                 Err(k) => break 'groups Err(k),
             };
@@ -373,10 +393,11 @@ pub fn read_item(
                 break 'groups Ok(());
             }
         }
-        if br.overran() {
+        if r.overran(data) {
             break Err(ErrorKind::Truncated);
         }
     };
+    br.set(r);
     if let Err(k) = res {
         fail!(k);
     }
@@ -414,6 +435,11 @@ mod tests {
     /// or any lengths 1-20 at all (oversubscribed or incomplete, as a corrupt block's)
     fn lengths(rng: &mut Rng) -> Vec<u8> {
         let alpha = 3 + rng.below(256) as usize;
+        lengths_of(rng, alpha)
+    }
+
+    /// `lengths` for an alphabet of `alpha` symbols
+    fn lengths_of(rng: &mut Rng, alpha: usize) -> Vec<u8> {
         if rng.below(3) == 0 {
             let lo = 1 + rng.below(20) as u8;
             let hi = lo + rng.below(21 - lo as u64) as u8;
@@ -455,6 +481,14 @@ mod tests {
         h.decode_slow(br)
     }
 
+    /// `Huff::decode` on a reader
+    fn decode(h: &Huff, br: &mut Bits) -> Result<u16, ErrorKind> {
+        let (data, mut r) = br.parts();
+        let s = h.decode(&mut r, data);
+        br.set(r);
+        s
+    }
+
     /// The table's way: a pair taken where two or more symbols are still wanted
     fn by_table(h: &Huff, br: &mut Bits, want: usize, out: &mut Vec<u16>) -> Option<ErrorKind> {
         while out.len() < want {
@@ -467,7 +501,7 @@ mod tests {
                     continue;
                 }
             }
-            match h.decode(br) {
+            match decode(h, br) {
                 Ok(s) => out.push(s),
                 Err(k) => return Some(k),
             }
@@ -529,5 +563,215 @@ mod tests {
                 assert!(e >> COUNT & 3 != 2 || (e >> SYM1 & 0x1ff) as u16 != eob);
             }
         }
+    }
+
+    /// MSB-first bits, for a test's blocks
+    #[derive(Default)]
+    struct Writer {
+        out: Vec<u8>,
+        n: u64,
+    }
+    impl Writer {
+        fn put(&mut self, v: u64, bits: u32) {
+            for i in (0..bits).rev() {
+                if self.n % 8 == 0 {
+                    self.out.push(0);
+                }
+                if v >> i & 1 == 1 {
+                    *self.out.last_mut().unwrap() |= 0x80 >> (self.n % 8);
+                }
+                self.n += 1;
+            }
+        }
+    }
+
+    /// A block's symbols read as they were before the symbol loop held the reader's state
+    /// in registers: a table lookup at a time on the reader itself, a pair where two or
+    /// more of the group are still wanted, a code longer than the table's bits decoded
+    /// bit by bit (libbzip2's loop), each group's end checked for an overrun
+    fn symbols_in_memory(
+        br: &mut Bits,
+        tables: &[Huff],
+        selectors: &[u8],
+        eob: u16,
+    ) -> (Result<(), ErrorKind>, Vec<u16>) {
+        let mut out = Vec::new();
+        let mut sel = selectors.iter();
+        let res = 'groups: loop {
+            let Some(&g) = sel.next() else {
+                break Err(ErrorKind::SelectorOverrun);
+            };
+            let t = &tables[g as usize];
+            let mut left = GROUP;
+            while left > 0 {
+                let e = t.lut[br.peek(LUT_BITS) as usize];
+                let c = (e >> COUNT & 3) as usize;
+                if c == 2 && left >= 2 {
+                    br.skip_short(e & 31);
+                    out.extend([(e >> SYM1 & 0x1ff) as u16, (e >> SYM2) as u16]);
+                    left -= 2;
+                } else if c != 0 {
+                    br.skip_short(e >> LEN1 & 31);
+                    out.push((e >> SYM1 & 0x1ff) as u16);
+                    left -= 1;
+                } else if e == BAD {
+                    break 'groups Err(ErrorKind::BadHuffmanCode);
+                } else {
+                    let s = t.decode_slow(br);
+                    br.refill();
+                    match s {
+                        Ok(s) => out.push(s),
+                        Err(k) => break 'groups Err(k),
+                    }
+                    left -= 1;
+                }
+                if out.last() == Some(&eob) {
+                    break 'groups Ok(());
+                }
+            }
+            if br.overran() {
+                break Err(ErrorKind::Truncated);
+            }
+        };
+        (res, out)
+    }
+
+    #[test]
+    fn symbols_read_as_in_memory() {
+        // blocks written whole (header, selectors, code tables), any code lengths (real
+        // codes, and corrupt ones whose table holds BAD entries), then symbols coded with
+        // them and ending in EOB, or random bits, a bit flipped, the input cut short: the
+        // symbol loop, its reader's state in registers, gives the same symbols, the same
+        // error and the same end bit (so the same `overran`) as the reader in memory
+        let mut rng = Rng(0x2545_f491_4f6c_dd1d);
+        let mut seen = [0usize; 6]; // ok, BadHuffmanCode, SelectorOverrun, overran, other, long codes
+        for case in 0..4000 {
+            let alpha = 3 + rng.below(256) as usize;
+            let n_groups = 2 + rng.below(5) as usize;
+            let lens: Vec<Vec<u8>> = (0..n_groups).map(|_| lengths_of(&mut rng, alpha)).collect();
+            let tables: Vec<Huff> = lens.iter().map(|l| Huff::new(l)).collect();
+            let n_sel = 1 + rng.below(40) as usize;
+            let selectors: Vec<u8> = (0..n_sel)
+                .map(|_| rng.below(n_groups as u64) as u8)
+                .collect();
+            let eob = (alpha - 1) as u16;
+            let mut w = Writer::default();
+            let lead = rng.below(8) as u32;
+            w.put(rng.next(), lead);
+            let start = w.n;
+            w.put(BLOCK_MAGIC, 48);
+            w.put(rng.below(1u64 << 32), 32);
+            w.put(0, 1);
+            w.put(rng.below(900_000), 24);
+            // the bytes in use: the first alpha - 2
+            let used = alpha - 2;
+            let words = used.div_ceil(16);
+            w.put(((1u64 << words) - 1) << (16 - words), 16);
+            for i in 0..words {
+                let k = (used - 16 * i).min(16);
+                w.put(((1u64 << k) - 1) << (16 - k), 16);
+            }
+            w.put(n_groups as u64, 3);
+            w.put(n_sel as u64, 15);
+            let mut mtf: Vec<u8> = (0..n_groups as u8).collect();
+            for &g in &selectors {
+                let j = mtf.iter().position(|&x| x == g).unwrap();
+                w.put((1 << (j + 1)) - 2, j as u32 + 1);
+                mtf.remove(j);
+                mtf.insert(0, g);
+            }
+            for l in &lens {
+                let mut curr = l[0] as i32;
+                w.put(curr as u64, 5);
+                for &x in l {
+                    while curr != x as i32 {
+                        let up = (x as i32) > curr;
+                        w.put(if up { 0b10 } else { 0b11 }, 2);
+                        curr += if up { 1 } else { -1 };
+                    }
+                    w.put(0, 1);
+                }
+            }
+            let sym_start = w.n;
+            let complete = lens
+                .iter()
+                .all(|l| l.iter().map(|&x| 1u64 << (20 - x)).sum::<u64>() <= 1 << 20);
+            if complete && rng.below(4) != 0 {
+                // symbols (small ones likelier, as MTF values are), the last EOB, each in
+                // its group's code (libbzip2's canonical code: by length, then symbol)
+                let m = 1 + rng.below((n_sel * GROUP) as u64) as usize;
+                for i in 0..m {
+                    let s = if i + 1 == m {
+                        eob
+                    } else {
+                        let k = rng.below(9);
+                        (rng.below(1 << k) % (alpha as u64 - 1)) as u16
+                    };
+                    let t = &tables[selectors[i / GROUP] as usize];
+                    let l = &lens[selectors[i / GROUP] as usize];
+                    let at = t.perm[..alpha].iter().position(|&p| p == s).unwrap();
+                    let zn = l[s as usize] as u32;
+                    w.put((at as i32 + t.base[zn as usize]) as u64, zn);
+                }
+            }
+            for _ in 0..rng.below(200) {
+                w.put(rng.next(), 64);
+            }
+            let mut data = w.out;
+            let end = data.len() as u64 * 8;
+            if rng.below(3) == 0 && end > sym_start {
+                let bit = sym_start + rng.below(end - sym_start);
+                data[(bit / 8) as usize] ^= 0x80 >> (bit % 8);
+            }
+            // (cut past the code tables' last byte: zeros read in place of a table's bits
+            // would give other tables than the reference's)
+            let first = sym_start.div_ceil(8);
+            if rng.below(3) == 0 {
+                let cut = first + rng.below(data.len() as u64 - first + 1);
+                data.truncate(cut as usize);
+            }
+            let mut a = Bits::at(&data, start);
+            let got = read_item(&mut a, 9, Vec::new());
+            let mut b = Bits::at(&data, sym_start);
+            let (want, syms) = symbols_in_memory(&mut b, &tables, &selectors, eob);
+            let ctx = format!("case {case}: alpha {alpha} groups {n_groups} selectors {n_sel}");
+            assert_eq!(a.bit_pos(), b.bit_pos(), "{ctx}");
+            assert_eq!(a.overran(), b.overran(), "{ctx}");
+            match (got, want) {
+                (Ok(Item::Block(x)), Ok(())) => {
+                    assert!(x.syms == syms, "{ctx}");
+                    assert_eq!(x.eob, eob, "{ctx}");
+                    seen[0] += 1;
+                    seen[5] += syms
+                        .iter()
+                        .enumerate()
+                        .filter(|&(i, &s)| {
+                            lens[selectors[i / GROUP] as usize][s as usize] as u32 > LUT_BITS
+                        })
+                        .count();
+                }
+                (Err((k, _)), Err(k2)) => {
+                    assert_eq!(k, k2, "{ctx}");
+                    seen[match k {
+                        ErrorKind::BadHuffmanCode => 1,
+                        ErrorKind::SelectorOverrun => 2,
+                        ErrorKind::Truncated => 3,
+                        _ => 4,
+                    }] += 1;
+                }
+                (got, want) => panic!(
+                    "{ctx}: {:?} against {want:?}",
+                    got.map(|_| ()).map_err(|e| e.0)
+                ),
+            }
+            if a.overran() {
+                seen[3] += 1;
+            }
+        }
+        // every way out of the loop taken, and codes longer than the table's bits read
+        assert!(
+            seen[..4].iter().all(|&k| k > 100) && seen[5] > 1000,
+            "{seen:?}"
+        );
     }
 }
