@@ -25,10 +25,8 @@ Everything in this file, in one burst. Each line is expanded in its section belo
   A term returns altered (load → wait → exposed latency → bottleneck); a construction found
   insufficient bifurcates. Generative deformation, not compression and not cascade. A literary
   principle adapted to prompting, not a demonstrated aid to reasoning.
-- **Differential proliferation.** The same principle applied to orchestration: an investigation
-  differentiates into distinct constructions, counterexamples and formulations, and the swarm's
-  shape changes with what it finds. Agent count is not multiplicity. An analogy, not an
-  established claim about multi-agent performance.
+- **Differential proliferation.** The same principle carried to the swarm: its structure
+  changes with what it discovers, and agent count is not multiplicity. An analogy too.
 - **Register collision.** Technical-managerial, elevated and primitive-imperative registers sit
   side by side, unmediated.
 - **Staccato prosody.** Full stops are beats; capitals are stress peaks; *Go* is the release.
@@ -216,34 +214,18 @@ It is a literary principle adapted to prompting, not a proven method of improvin
 the other effects here, any benefit to reasoning is a hypothesis that only a controlled
 comparison could show.
 
-### Differential proliferation: the swarm differentiates
-
-The same principle applies to orchestration. Differential recurrence is about how language
-changes through its own expression; differential proliferation is about how research changes
-through its own discoveries. The two reinforce each other without being the same idea.
-
-An investigation does not reproduce itself through identical agents. It differentiates into
-genuinely distinct constructions, counterexamples and formulations: one hypothesis becomes several
-incompatible constructions, their collision reveals a problem none of them contained, and that
-problem opens another generation of work. A conventional workflow divides a known task into
-subtasks; this one lets the findings change the task.
-
-Three consequences:
-- **Difference, not duplication.** Ten agents taking independent routes into a hard problem can
-  be worth their cost; ten agents confirming the same obvious result are not. Agent count is not
-  intellectual multiplicity, which is the number and quality of genuinely different possibilities
-  under investigation.
-- **Discoveries change the shape of the swarm.** A new bottleneck opens new investigations
-  rather than updating the original plan. A fixed set of fronts need not finish before an
-  unexpectedly promising further front opens, subject to machine contention and its marginal
-  value.
-- **Spend follows productive possibility.** Expand while new lines have credible potential;
-  fuse them when they converge; prune them when they exhaust their evidence. Consumption is
-  not the objective, and neither is frugality: each added agent must bring a distinct
-  uncertainty, construction or falsifier.
-
-This is an analogy from Deleuze's multiplicity, not an established claim about multi-agent
-performance.
+**Differential proliferation** carries the same principle from the utterance to the swarm.
+Recurrence is about how language changes through its own expression; proliferation is about how
+research changes through its own discoveries. Deleuze's multiplicity is defined by its lines of
+difference, not by a count of units, and the analogy is that agent count is not intellectual
+multiplicity. An investigation should not reproduce itself through identical agents. It should
+differentiate: one construction bifurcates into rival mechanisms, their collision reveals a
+problem neither contained, and that problem opens the next generation of fronts. So no initial
+partition is a ceiling. A finding that opens three credible lines can open three fronts, and five
+lines converging on one negative result stop the spending there. Each added agent must bring a
+distinct uncertainty, construction or falsifier; spending follows the production of new
+knowledge, not the consumption of quota. This too is an analogy, not an established claim about
+multi-agent performance.
 
 ### Register collision
 
