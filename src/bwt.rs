@@ -794,6 +794,8 @@ thread_local! {
     // done again lane by lane because a lane read a start
     static TILES_KEPT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static TILES_REPLAYED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+    // set by a test to walk the 32-lane busy phase without gathers
+    static NO_GATHER: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 #[cfg(test)]
 macro_rules! transition {
@@ -975,6 +977,8 @@ fn room_segments<const L: usize, const PF: u8>(
         }
         let mut cur = 0usize;
         let mut tile = [[0u8; TILE]; L];
+        // the 32-lane busy phase gathers each offset's 32 entries in four AVX2 gathers
+        let gather = L == 32 && gather_available();
         // copy lane k's tile row from st[k] to end into its buffer at p
         let flush = |l: &mut Lane, row: &[u8; TILE], from: usize, to: usize| {
             let len = to - from;
@@ -1009,16 +1013,39 @@ fn room_segments<const L: usize, const PF: u8>(
             while done < room {
                 let w = (room - done).min(TILE);
                 let mut st = [0usize; L];
-                for j in 0..w {
-                    let flags = if cur == 0 {
-                        spec_offset::<L, PF, 0>(t, &mut rows, &mut tile, j)
+                let mut j = 0;
+                while j < w {
+                    if gather {
+                        // SAFETY: L == 32 here; the rows in rows[cur] are real rows below n,
+                        // and tile is 32 rows of TILE bytes, with w <= TILE
+                        let to = unsafe {
+                            gather_offsets(
+                                t,
+                                rows[cur].as_mut_ptr(),
+                                tile.as_mut_ptr().cast(),
+                                j,
+                                w,
+                            )
+                        };
+                        if to > j {
+                            transition!(TILES_KEPT);
+                        }
+                        j = to;
+                        if j == w {
+                            break;
+                        }
                     } else {
-                        spec_offset::<L, PF, 1>(t, &mut rows, &mut tile, j)
-                    };
-                    if flags & START == 0 {
-                        transition!(TILES_KEPT);
-                        cur ^= 1;
-                        continue;
+                        let flags = if cur == 0 {
+                            spec_offset::<L, PF, 0>(t, &mut rows, &mut tile, j)
+                        } else {
+                            spec_offset::<L, PF, 1>(t, &mut rows, &mut tile, j)
+                        };
+                        if flags & START == 0 {
+                            transition!(TILES_KEPT);
+                            cur ^= 1;
+                            j += 1;
+                            continue;
+                        }
                     }
                     transition!(TILES_REPLAYED);
                     // The scalar offset, on the rows from before it
@@ -1102,6 +1129,7 @@ fn room_segments<const L: usize, const PF: u8>(
                     }
                     // The scalar offset stepped the rows in place, so the next offset reads
                     // the same slot
+                    j += 1;
                 }
                 for (k, l) in lanes.iter_mut().enumerate() {
                     flush(l, &tile[k], st[k], w);
@@ -1153,6 +1181,106 @@ fn room_segments<const L: usize, const PF: u8>(
     }
     s.first = seg_of(r0);
     s.n = n;
+}
+
+/// Whether the room walk's busy phase may use `gather_offsets`: AVX2, detected at run time
+/// (and never under Miri, nor in a test that turns it off to cover the scalar offsets)
+#[inline]
+fn gather_available() -> bool {
+    #[cfg(test)]
+    if NO_GATHER.with(|c| c.get()) {
+        return false;
+    }
+    #[cfg(all(target_arch = "x86_64", not(miri)))]
+    {
+        std::is_x86_feature_detected!("avx2")
+    }
+    #[cfg(not(all(target_arch = "x86_64", not(miri))))]
+    {
+        false
+    }
+}
+
+/// The 32-lane busy phase's offsets `from..w`, eight lanes to a gather: the 32 rows held in
+/// four vectors, each offset's 32 entries gathered, and their flags tested together. If none
+/// is a start, each lane's byte goes to `tile[k][j]` and its row becomes its entry's link;
+/// at the first offset whose entries hold a start, nothing of that offset is kept. Returns
+/// that offset (or `w`), with the rows as they were before it stored back at `rows`, for the
+/// scalar offset to do it.
+///
+/// # Safety
+/// AVX2 must be available; `rows` must hold 32 rows below the table's length `t` points to
+/// the start of; `tile` must be 32 rows of `TILE` bytes, and `w <= TILE`.
+#[cfg(target_arch = "x86_64")]
+#[target_feature(enable = "avx2")]
+unsafe fn gather_offsets(
+    t: *const u32,
+    rows: *mut u32,
+    tile: *mut u8,
+    from: usize,
+    w: usize,
+) -> usize {
+    use core::arch::x86_64::*;
+    // SAFETY: the caller's contract
+    unsafe {
+        let rp = rows.cast::<__m256i>();
+        let (mut r0, mut r1, mut r2, mut r3) = (
+            _mm256_loadu_si256(rp),
+            _mm256_loadu_si256(rp.add(1)),
+            _mm256_loadu_si256(rp.add(2)),
+            _mm256_loadu_si256(rp.add(3)),
+        );
+        let tb = t.cast::<i32>();
+        let mut j = from;
+        while j < w {
+            let q0 = _mm256_i32gather_epi32::<4>(tb, r0);
+            let q1 = _mm256_i32gather_epi32::<4>(tb, r1);
+            let q2 = _mm256_i32gather_epi32::<4>(tb, r2);
+            let q3 = _mm256_i32gather_epi32::<4>(tb, r3);
+            // START is bit 31: a start among the 32 sets a sign bit of the OR
+            let f = _mm256_or_si256(_mm256_or_si256(q0, q1), _mm256_or_si256(q2, q3));
+            if _mm256_movemask_ps(_mm256_castsi256_ps(f)) != 0 {
+                break;
+            }
+            // lane 8v + i's byte is byte 4i of q_v (the low byte of its dword)
+            macro_rules! bytes {
+                ($q:expr, $v:expr) => {{
+                    let lo = _mm256_castsi256_si128($q);
+                    let hi = _mm256_extracti128_si256::<1>($q);
+                    let d = tile.add($v * 8 * TILE + j);
+                    *d = _mm_extract_epi8::<0>(lo) as u8;
+                    *d.add(TILE) = _mm_extract_epi8::<4>(lo) as u8;
+                    *d.add(2 * TILE) = _mm_extract_epi8::<8>(lo) as u8;
+                    *d.add(3 * TILE) = _mm_extract_epi8::<12>(lo) as u8;
+                    *d.add(4 * TILE) = _mm_extract_epi8::<0>(hi) as u8;
+                    *d.add(5 * TILE) = _mm_extract_epi8::<4>(hi) as u8;
+                    *d.add(6 * TILE) = _mm_extract_epi8::<8>(hi) as u8;
+                    *d.add(7 * TILE) = _mm_extract_epi8::<12>(hi) as u8;
+                }};
+            }
+            bytes!(q0, 0);
+            bytes!(q1, 1);
+            bytes!(q2, 2);
+            bytes!(q3, 3);
+            r0 = _mm256_srli_epi32::<8>(q0);
+            r1 = _mm256_srli_epi32::<8>(q1);
+            r2 = _mm256_srli_epi32::<8>(q2);
+            r3 = _mm256_srli_epi32::<8>(q3);
+            j += 1;
+        }
+        _mm256_storeu_si256(rp, r0);
+        _mm256_storeu_si256(rp.add(1), r1);
+        _mm256_storeu_si256(rp.add(2), r2);
+        _mm256_storeu_si256(rp.add(3), r3);
+        j
+    }
+}
+
+/// `gather_offsets` where there is no AVX2 to compile it for; never called
+/// (`gather_available` is false)
+#[cfg(not(target_arch = "x86_64"))]
+unsafe fn gather_offsets(_: *const u32, _: *mut u32, _: *mut u8, _: usize, _: usize) -> usize {
+    unreachable!()
 }
 
 /// The busy phase's chunk: at most this many offsets' bytes are staged per lane (an 8 KiB
