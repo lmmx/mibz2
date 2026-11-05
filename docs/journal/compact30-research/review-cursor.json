@@ -24,7 +24,8 @@
     6639496192,
     6640153383,
     6645643541,
-    6646251725
+    6646251725,
+    6651023083
   ],
   "outgoing_comment_ids": [
     {
@@ -92,6 +93,13 @@
       "type": "REVIEW",
       "sha": "d143d8fee0e2ea107b22ec9c80df18d61e264276",
       "checkpoint_comment_id": 6646251725
+    },
+    {
+      "pr": 145,
+      "id": 6651150258,
+      "type": "REVIEW",
+      "sha": "6b720b2415ac04c1aed1e0447842ebf832f3dfd7",
+      "checkpoint_comment_id": 6651023083
     }
   ],
   "reviews": [
@@ -260,15 +268,15 @@
   ],
   "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
   "wake": "Scan inbox #160 oldest first after offset 6646251725 under SPEC at 0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0.",
-  "next_trigger": "New inbox #160 comment; next useful evidence is current-baseline true tiled B with explicit replay domain, whole-decoder counts and safety coverage.",
+  "next_trigger": "Next inbox comment after durable offset; next useful evidence: pinned ordered fusion with matched four-thread window-16 comparison.",
   "review_pr": 148,
   "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
   "proposal_independence": {
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "COMPLETE_PENDING_REVIEW",
-  "published_evidence_commit": "d143d8fee0e2ea107b22ec9c80df18d61e264276",
+  "status": "WAITING",
+  "published_evidence_commit": "6b720b2415ac04c1aed1e0447842ebf832f3dfd7",
   "incoming_experiment_comment_ids": [
     {
       "pr": 146,
@@ -344,9 +352,9 @@
     {
       "comment_id": 6651023083,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Work complete and committed; REVIEW publication and finished-state record pending.",
+      "progress": "Work complete; REVIEW published and recorded.",
       "report_path": "docs/journal/compact30-research/reviews/inbox-6651023083/report.md",
       "completed": true,
       "report_commit": "6b720b2415ac04c1aed1e0447842ebf832f3dfd7",
@@ -357,7 +365,8 @@
         "compact_source": "05c8fb20f33fc77018516e948f2c70693d56d14c",
         "window": "7633c418c6ba18366d4cad06d4035de59da41019",
         "assembly": "4e5421e1f9b5677a888f96b4a82347c4db1453b6"
-      }
+      },
+      "reply_id": 6651150258
     }
   ]
 }
