@@ -233,12 +233,18 @@
         svg("title", {}, gt).textContent = "a decoder change with no link: the chain starts again here";
       }
     }
-    // x labels: every few merges
-    const every = Math.max(1, Math.ceil(idx.length / (narrow ? 6 : 12)));
+    // x labels: as many as fit with a gap between them, the last always shown
+    const minGap = narrow ? 40 : 46;
+    const drawn = [];
     idx.forEach((i, k) => {
-      if (k % every && k !== idx.length - 1) return;
-      const anchor = idx.length > 1 && k === 0 ? "start" : idx.length > 1 && k === idx.length - 1 ? "end" : "middle";
-      svg("text", { x: xs.get(i), y: H - 8, class: "bh-tick", "text-anchor": anchor }, s).textContent = tag(data.links[i]);
+      const xx = xs.get(i);
+      const last = k === idx.length - 1;
+      if (!last && drawn.length && xx - drawn[drawn.length - 1].x < minGap) return;
+      if (last) while (drawn.length && xx - drawn[drawn.length - 1].x < minGap) drawn.pop().el.remove();
+      const anchor = idx.length > 1 && k === 0 ? "start" : last && idx.length > 1 ? "end" : "middle";
+      const t = svg("text", { x: xx, y: H - 8, class: "bh-tick", "text-anchor": anchor }, s);
+      t.textContent = tag(data.links[i]);
+      drawn.push({ x: xx, el: t });
     });
     const show = (i) => {
       const l = data.links[i];
