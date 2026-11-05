@@ -21,6 +21,16 @@
 //! t-interval on the logs). Each setting's output is checked against the plain walk's
 //! first, block by block.
 //!
+//! Two more settings walk compact30's records instead of the T-vector: `c30` (the default
+//! kernel, `bwt::Compact30`: a group's fields and header in one 64-byte record) and
+//! `c30split` (its layout control, `bwt::Compact30Split`: the same values, fields and
+//! headers apart), each with its own records built before its walk (untimed, as the
+//! T-vector is built before the settings' walks), at 32 lanes, L1 prefetch, 512 segments.
+//! Each is paired by round against the default like any setting, so `c30` against
+//! `c30split` is the walk's layout effect with the rest of the decode the same. (Their
+//! segments are production's rotated by a byte, the `c30` module's emission convention, so
+//! their segment lengths are production's but for two.)
+//!
 //! Where the kernel lets a process count its own events (Linux on x86_64, a PMU exposed to
 //! the machine, `perf_event_paranoid` at 2 or below), one more round, untimed, counts each
 //! setting's instructions, cycles, last-level cache misses and back-end stall cycles, as
@@ -30,20 +40,58 @@
 use std::time::Instant;
 
 use mibz2::bwt::{
-    build, walk, walk_segments_flagged_with_prefetch, walk_segments_room_with_prefetch, SegScratch,
-    TVector, PF_L1, PF_L2, PF_NTA, PF_OFF,
+    build, walk, walk_segments_flagged_with_prefetch, walk_segments_room_with_prefetch, Compact30,
+    Compact30Split, SegScratch, TVector, PF_L1, PF_L2, PF_NTA, PF_OFF,
 };
 use mibz2::stream::{Event, Scanner, SliceSource};
 use mibz2::{mtf, rle, Kernels};
 
 type Walk = fn(&mut TVector, u32, &mut Vec<u8>, &mut SegScratch, usize);
 
+/// What a setting walks: the T-vector (with `f`), or compact30's records in the record
+/// layout (`C30`) or the split one (`Split`)
+#[derive(Clone, Copy, PartialEq)]
+enum Table {
+    T,
+    C30,
+    Split,
+}
+
 struct Setting {
     walk: &'static str,
     lanes: usize,
     pf: u8,
     segments: usize,
+    table: Table,
     f: Walk,
+}
+
+/// The compact30 kernels, one per layout, kept from block to block as a worker keeps its own
+#[derive(Default)]
+struct Compact {
+    c30: Compact30,
+    split: Compact30Split,
+}
+
+impl Compact {
+    /// The block's records for `table` (untimed): the T-vector setting builds none
+    fn build(&mut self, table: Table, ll: &[u8], freq: &[u32; 256]) {
+        let built = match table {
+            Table::T => return,
+            Table::C30 => self.c30.build_records(ll, freq),
+            Table::Split => self.split.build_records(ll, freq),
+        };
+        assert!(built, "compact30 refused a block's records");
+    }
+
+    /// The walk of the records `build` built for `table`
+    fn walk(&mut self, table: Table, orig_ptr: u32, out: &mut Vec<u8>) {
+        match table {
+            Table::T => unreachable!(),
+            Table::C30 => self.c30.walk_records(orig_ptr, out),
+            Table::Split => self.split.walk_records(orig_ptr, out),
+        }
+    }
 }
 
 macro_rules! settings {
@@ -55,8 +103,8 @@ macro_rules! settings {
                 (PF_L2, walk_segments_room_with_prefetch::<$l, PF_L2>, walk_segments_flagged_with_prefetch::<$l, PF_L2>),
                 (PF_NTA, walk_segments_room_with_prefetch::<$l, PF_NTA>, walk_segments_flagged_with_prefetch::<$l, PF_NTA>),
             ] {
-                $v.push(Setting { walk: "room", lanes: $l, pf, segments: $segments, f: room });
-                $v.push(Setting { walk: "flagged", lanes: $l, pf, segments: $segments, f: flagged });
+                $v.push(Setting { walk: "room", lanes: $l, pf, segments: $segments, table: Table::T, f: room });
+                $v.push(Setting { walk: "flagged", lanes: $l, pf, segments: $segments, table: Table::T, f: flagged });
             }
         )*
     };
@@ -100,12 +148,25 @@ fn main() {
             lanes: 32,
             pf: PF_L1,
             segments,
+            table: Table::T,
+            f: walk_segments_room_with_prefetch::<32, PF_L1>,
+        });
+    }
+    // compact30's staged room walk on its records, in each layout (32 lanes, L1, 512
+    // segments, its constants)
+    for (walk, table) in [("c30", Table::C30), ("c30split", Table::Split)] {
+        settings.push(Setting {
+            walk,
+            lanes: 32,
+            pf: PF_L1,
+            segments: 512,
+            table,
             f: walk_segments_room_with_prefetch::<32, PF_L1>,
         });
     }
     let default = settings
         .iter()
-        .position(|s| (s.walk, s.lanes, s.pf, s.segments) == DEFAULT)
+        .position(|s| (s.walk, s.lanes, s.pf, s.segments) == DEFAULT && s.table == Table::T)
         .unwrap();
     let mut counters = pmu::Counters::open();
 
@@ -123,6 +184,7 @@ fn main() {
     let mut cover = vec![(0u64, 0u64); settings.len()];
     let (mut ll, mut freq) = (Vec::new(), [0u32; 256]);
     let (mut tt, mut seg) = (TVector::new(), SegScratch::default());
+    let mut compact = Compact::default();
     let (mut plain, mut out, mut bytes) = (Vec::new(), Vec::new(), Vec::new());
     let mut n = 0usize;
     for (bi, b) in blocks.iter().enumerate() {
@@ -131,7 +193,12 @@ fn main() {
         walk(&tt, b.orig_ptr, &mut plain);
         n += plain.len();
         for s in &settings {
-            (s.f)(&mut tt, b.orig_ptr, &mut out, &mut seg, s.segments);
+            if s.table == Table::T {
+                (s.f)(&mut tt, b.orig_ptr, &mut out, &mut seg, s.segments);
+            } else {
+                compact.build(s.table, &ll, &freq);
+                compact.walk(s.table, b.orig_ptr, &mut out);
+            }
             assert!(
                 out == plain,
                 "block {bi}: the {} walk, {} lanes, prefetch {}, {} segments",
@@ -144,12 +211,18 @@ fn main() {
     }
 
     // A decode of the file at one setting, as `decode` runs it on one thread; `time` wraps
-    // the walk alone
+    // the walk alone. A compact30 setting builds its own records (its decode's table) in
+    // place of the T-vector
     let mut decode = |s: &Setting, time: &mut dyn FnMut(&mut dyn FnMut())| {
         for b in &blocks {
             mtf::mtf(b, &mut ll, &mut freq, k).unwrap();
-            build(&ll, &freq, &mut tt);
-            time(&mut || (s.f)(&mut tt, b.orig_ptr, &mut out, &mut seg, s.segments));
+            if s.table == Table::T {
+                build(&ll, &freq, &mut tt);
+                time(&mut || (s.f)(&mut tt, b.orig_ptr, &mut out, &mut seg, s.segments));
+            } else {
+                compact.build(s.table, &ll, &freq);
+                time(&mut || compact.walk(s.table, b.orig_ptr, &mut out));
+            }
             bytes.clear();
             rle::unrle(&out, &mut bytes, k).unwrap();
         }
@@ -214,7 +287,7 @@ fn main() {
         ),
         None => println!("counters: unavailable here ({})", pmu::why()),
     }
-    print!("walk     lanes  prefetch  segments    c/B  change (95% interval)        ");
+    print!("walk      lanes  prefetch  segments    c/B  change (95% interval)        ");
     if counters.is_some() {
         print!("  ins/B  cyc/B  LLC miss/kB  back-end stall  counted");
     }
@@ -234,7 +307,7 @@ fn main() {
             ""
         };
         print!(
-            "{:7}  {:5}  {:8}  {:8}  {:5.2}  {:+6.1}% ({:+.1}%, {:+.1}%) {mark:11}",
+            "{:8}  {:5}  {:8}  {:8}  {:5.2}  {:+6.1}% ({:+.1}%, {:+.1}%) {mark:11}",
             s.walk,
             s.lanes,
             pf_name(s.pf),
