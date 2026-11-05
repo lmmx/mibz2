@@ -1174,6 +1174,15 @@ fn spec_offset<const L: usize, const PF: u8, const P: usize>(
     debug_assert!(j < TILE);
     let tp = tile.as_mut_ptr().cast::<u8>();
     let mut flags = 0u32;
+    // The prefetches one offset late: each lane's row in slot P was known, and its flags
+    // tested, at the offset before; it is prefetched here, ahead of the offset's loads,
+    // instead of inside the step that computed it, so the step is only its load, OR, byte
+    // and row
+    if PF != PF_OFF {
+        for k in 0..L {
+            prefetch::<PF>(t, rows[P][k]);
+        }
+    }
     macro_rules! spec {
         ($k:expr) => {{
             let k = $k;
@@ -1185,9 +1194,6 @@ fn spec_offset<const L: usize, const PF: u8, const P: usize>(
             // SAFETY: k < L and j < TILE, so k * TILE + j is inside the tile
             unsafe { *tp.add(k * TILE + j) = q as u8 };
             rows[1 - P][k] = q >> 8;
-            if PF != PF_OFF {
-                prefetch::<PF>(t, q >> 8);
-            }
         }};
     }
     // all 32 lanes unrolled, with no loop to control (the production width); any other
