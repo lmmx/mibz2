@@ -205,6 +205,7 @@ names:
   is the address: every comment in it is for its role, and `TO:` is a record, not a filter. A run
   ends only if its event isn't a new inbox comment. Otherwise it handles each new comment in the
   event, skipping one its cursor marks completed and resuming one marked in progress.
+- **Each task's instructions are a file,** `tasks/<role>.md` beside this one, read at a pinned commit; the task's prompt only points to it (`tasks/README.md`).
 - **Inboxes in, #145 out** (PROTOCOL §1). Each Work task is subscribed to new comments on its
   own inbox PR alone: #160, #161, #162. On #145, each new event's run displaced the Optimizer's
   research runs before they committed (6643992749, 6644115799, 6644364456). Every role
