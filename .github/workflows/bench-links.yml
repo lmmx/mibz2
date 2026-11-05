@@ -1,0 +1,67 @@
+# Each merged pull request's own paired benchmark, kept on the bench-results branch as a
+# link of the history's chain (bench/links.py): the pull request run's head against its
+# base, on one runner, from its artifact. Nothing is measured here.
+#
+# - A push to master: links its own merge (its pull request's last benchmark run).
+# - From the Actions tab: links every first-parent merge not linked yet whose artifact is
+#   still kept (90 days), the backfill. Idempotent: a merge already linked is skipped.
+name: Benchmark links
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "src/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "examples/ab.rs"
+      - "examples/windows.rs"
+      - "examples/phases.rs"
+      - "tests/common/**"
+      - "bench/**"
+      - ".github/workflows/bench.yml"
+  workflow_dispatch:
+
+# (one writer of the store at a time; bench.yml's Record retries a rejected push)
+concurrency:
+  group: bench-links
+  cancel-in-progress: false
+
+permissions:
+  contents: write # (the bench-results branch)
+  actions: read # (the pull requests' benchmark artifacts)
+  pull-requests: read
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Link
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch -q origin bench-results:refs/remotes/origin/bench-results 2>/dev/null; then
+            git worktree add -q --detach .store origin/bench-results
+          else
+            git worktree add -q --orphan -b bench-results .store
+          fi
+          source=$([ "${{ github.event_name }}" = workflow_dispatch ] && echo backfill || echo record)
+          python3 bench/links.py sync .store --master "${{ github.sha }}" --repo "${{ github.repository }}" --source "$source" | tee -a "$GITHUB_STEP_SUMMARY"
+          git -C .store add -A
+          if git -C .store diff --cached --quiet; then
+            echo "nothing to link"
+            exit 0
+          fi
+          n=$(git -C .store diff --cached --name-only -- pr | wc -l)
+          git -C .store commit -qm "link bench: $n merge(s) to ${GITHUB_SHA::7}"
+          for try in 1 2 3; do
+            git -C .store push -q origin HEAD:bench-results && exit 0
+            git -C .store fetch -q origin bench-results && git -C .store rebase -q FETCH_HEAD
+          done
+          exit 1

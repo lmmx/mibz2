@@ -6,13 +6,16 @@ within another is never counted twice.
     python3 bench/test_report.py
 """
 
+import math
 import re
+import statistics
 import sys
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import report  # noqa: E402
+import links  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "docs" / "scripts"))
 import bench_history  # noqa: E402
@@ -309,6 +312,42 @@ class Accounting(unittest.TestCase):
         run = dict(run, cpu=1.0, thread_cpu="mibz2-scan=0.1 mibz2-0=0.4 mibz2-1=0.4 main=0.02")
         s = report.split_cpu(run)
         self.assertAlmostEqual(s["unattributed"], 0.08, places=6)
+
+
+class Links(unittest.TestCase):
+    def test_a_link_pairs_rounds_and_drops_errors(self):
+        """A link's change is the rounds' log ratios, head over base, where both ran"""
+        runs = []
+        for r, (h, b) in enumerate([(0.9, 1.0), (0.8, 1.0), (1.0, 1.0), (0.5, 1.0)]):
+            for arm, wall in ((links.HEAD, h), (links.BASE, b)):
+                run = {
+                    "round": r,
+                    "corpus": "c",
+                    "threads": 4,
+                    "arm": arm,
+                    "wall": wall,
+                    "cpu": wall * 2,
+                    "rss_kb": 1000,
+                }
+                if r == 3 and arm == links.BASE:
+                    run["err"] = "failed"
+                runs.append(run)
+        cell = links.change(runs)["c"]["4"]
+        self.assertEqual(cell["n"], 3)
+        logs = [math.log(0.9), math.log(0.8), 0.0]
+        self.assertAlmostEqual(cell["wall"][0], statistics.fmean(logs), places=6)
+        self.assertAlmostEqual(cell["wall"][1], statistics.stdev(logs), places=6)
+        self.assertEqual(cell["rss"], [0.0, 0.0])
+
+    def test_a_version_bump_is_not_a_code_change(self):
+        self.assertTrue(
+            links.version_only(
+                '--- a/Cargo.toml\n+++ b/Cargo.toml\n-version = "0.2.0"\n+version = "0.2.1"\n'
+            )
+        )
+        self.assertFalse(
+            links.version_only('-version = "0.2.0"\n+version = "0.2.1"\n+lto = "fat"\n')
+        )
 
 
 if __name__ == "__main__":
