@@ -155,6 +155,10 @@ and detail moved to a technical appendix [E: 2464928e, 54220de4, d0640e02].
 2. **What was found:** the result and its scope, in a sentence or two.
 3. **How it was found,** and the route through the post.
 
+The opening also settles, in a sentence each, anything its own claims make the reader
+wonder about: why the mechanism costs anything, what a named sample or machine is, how its
+figures fit together (see the key-facts audit below).
+
 The evidence:
 
 - "a conventional opening paragraph" [E: 41dc44fc]. Before: "Julian Seward wrote bzip2,
@@ -169,6 +173,78 @@ The evidence:
 - A follow-up post can open from where the last one left off, linking it, without
   re-introducing mibz2 [E: 920b77f1]. It still says what this post is about before it goes
   into detail.
+
+## Understanding before mechanism
+
+The maintainer's review of the first Huffman post [E: the 2026-11-05 Huffman post, revised
+after its review] found a reader "dumped into fast flowing routines with no understanding
+set out in advance, nor eased in". These rules come from that review.
+
+### The key-facts audit (do it on every draft)
+
+Before revising, write down the facts and connections a reader needs to follow the post's
+claim, in the order the argument uses them. For each:
+
+1. **Background or not?** Assume a general computer-science grounding: registers, memory
+   and caches, compilers, bits and bytes, what a lookup table is. Don't assume the domain:
+   bzip2's layers, Huffman decoding's details, the BWT, MTF, store-to-load forwarding, our
+   own terms. Anything not background has to be explained.
+2. **Where is it first established?** Record the section and paragraph. A fact the
+   introduction's claims depend on must be established in the introduction or section 1,
+   not two or three sections in. Readers drop at the first claim they can't follow.
+3. **Does the introduction raise a question it doesn't answer?** Check the intro's own
+   numbers against each other. For example, a stage that is a tenth of the decode got 13%
+   faster, which predicts about 1.3%, so how did the decode get 2.7% faster? Resolve each
+   such ambiguity in the introduction, even if only in one sentence pointing ahead.
+4. **Is it explained, or merely named?** Saying "the block's Huffman tables" names a thing.
+   Explaining it says what it is, why it exists and how it is used.
+
+Put the audit table (fact, background or not, where established, verdict) in the PR body.
+Fix every "assumed" and every "late" before publishing.
+
+### Building the reader's model
+
+- **Explain the domain before the routine.** Lay out what the data is and what each stage
+  does before the post zooms into one loop. If the post is about one stage of a pipeline,
+  first show the pipeline and what flows through it.
+- **Every process or structure gets a diagram,** and the central idea gets a worked
+  example small enough to follow by hand. A post about Huffman decoding shows a toy code
+  being read before it shows a lookup table.
+- **Prose, not bullets, for explanation.** A bullet list strips out the connecting words
+  ("because", "so", "then") that carry an explanation. Use bullets only for parallel,
+  self-contained items whose concepts the reader already has: results, rule clauses, a
+  list of files. Never use them to introduce concepts or to describe a sequence of work.
+  For steps in order, a numbered list is fine once each step's terms are known.
+- **Our own jargon is never self-explanatory.** Names from the journal ("binding census",
+  "room walk", "compact30", "teams") are defined in plain words at first use, or replaced
+  by what they mean. Defining a term the reader doesn't need is worse than describing the
+  thing instead.
+- **Pace check.** In the simulated-reader pass, ask of each of the first three sections:
+  where would a reader feel rushed or lost? Fix that by adding the missing step, not by
+  apologising for it.
+
+## Plain statement, not mannered prose
+
+Every draft gets a de-slop pass with this instruction, from Anthropic's prompting guide
+([Prompting Claude Fable 5.1, "Writing density"](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1)),
+quoted verbatim:
+
+> Mannered prose substitutes metaphor and flourish for direct statement. Instead of "a
+> parameter worth varying," the mannered writer produces "a dial worth turning." Instead of
+> "this point still matters," they write "this point earns its keep." The phrases exist to
+> display the writer, not to convey the idea, and readers can tell. That is why mannered
+> prose irritates: it makes the reader work harder so the writer can perform. It is also
+> imprecise. Metaphors drag in connotations the writer did not choose and cannot control.
+> The fix is to say what you mean. When a literal phrase is available, use it.
+
+In practice, read the draft for any phrase that is a figure of speech where a literal
+phrase exists, and replace it. Examples: "peels off the layers" becomes "undoes the
+steps"; "the lever" becomes "the change"; "a hand-over sits on the chain" becomes "the
+next step waits for it". The same guide's companion rule
+([Prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices),
+"Control the format of responses") backs the bullets rule above: write explanation as
+flowing prose in complete paragraphs. Keep lists for truly discrete items, and never write
+a series of short bullet points.
 
 ## The house rules
 
@@ -221,6 +297,11 @@ The evidence:
   [E: 842c0223].
 - **Show the thing, then name it** [E: 33ff3ce6 "The rotations are built and sorted before
   anything is named"; bd734ea5 "names C and T only once the decoder needs them"].
+- **Link code where its readers look:** a public, documented item of the crate (a `pub`
+  struct, function or module) links to its docs.rs page, at the version the post is about
+  (`https://docs.rs/mibz2/<version>/mibz2/...`). A private item, a `pub(crate)` one or a
+  specific line of code links to the source on GitHub, pinned to a commit [E: the
+  maintainer, 2026-11-05].
 - **Link at first mention,** to the earlier post, the source file or the journal, with
   commit-pinned links to files that may change [E: 54220de4 "links at first mention",
   842c0223, 99e38b8c, 0be765db, 9942497d]. Credit the source of an idea or a presentation
@@ -391,6 +472,17 @@ Before `publish-page`:
       the draft. Its stuck points were fixed by restructuring, and the revision was read
       again.
 - [ ] Every term is defined or linked at first use, and every symbol is bound.
+- [ ] The key-facts audit is done and in the PR body. Every fact the introduction relies on
+      is established in the introduction or section 1, and no question raised by the
+      introduction's own figures is left open there.
+- [ ] The domain is explained before the routine, with a diagram for each process or
+      structure and a worked example for the central idea.
+- [ ] The de-slop pass is done: no mannered prose (metaphor or flourish where a literal
+      phrase exists).
+- [ ] No bullets carry explanation or narrative. Project jargon is defined in plain words
+      or replaced.
+- [ ] Public crate items link to docs.rs at the post's version. Private items and code
+      lines link to GitHub, pinned.
 - [ ] Every number, quotation and listing was checked against its source. Links to
       changing files are pinned.
 - [ ] Every run is reported, with its machine, its point estimate and its interval. The
