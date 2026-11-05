@@ -211,9 +211,9 @@ names:
   own inbox PR alone: #160, #161, #162. On #145, each new event's run displaced the Optimizer's
   research runs before they committed (6643992749, 6644115799, 6644364456). Every role
   publishes on #145, whatever triggered it.
-- **One job in flight per role** (PROTOCOL §1, "Dispatch"): the Coordinator is each inbox's only
-  writer. It stages work in `dispatch-queue.json` on `research/compact30-channel`, and posts a role's
-  next assignment only after that role's REVIEW for the active job.
+- **One assignment in flight per role** (PROTOCOL §1, "Dispatch"): the Coordinator is each inbox's
+  only writer. It stages work on #145 as `TYPE: QUEUED`, and posts a role's next assignment only
+  after that role's REVIEW, with its cursor marking the current comment complete.
 - **Addressing.** The Coordinator sends each checkpoint separately to the inbox of every role it
   concerns, with `FROM`, `TO`, `RE` and `TYPE` in its header, in any order. It never addresses several
   roles through one comment. The roles reply with `TYPE: REVIEW` on

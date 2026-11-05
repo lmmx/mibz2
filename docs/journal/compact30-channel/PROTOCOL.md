@@ -24,25 +24,24 @@ may trigger is fixed by the research charter's §12
   it by its `TYPE:`, and `TO:` is a record, not a filter. The coordinator is an inbox's only writer.
   A role needing another's attention asks on the channel PR, and the coordinator dispatches it.
   Replies go to the channel PR.
-- **Dispatch (2026-11-05): one assignment in flight per role.** The coordinator keeps
-  `dispatch-queue.json` on `research/compact30-channel`. For each role it holds the active job and
-  an ordered queue of pending ones. Adding work to that queue wakes no one; a comment in an inbox
-  means "start now".
-  - **Before posting,** the coordinator commits the job as the role's active reservation, with a
-    stable `JOB:` id. Only then does it post the assignment, carrying that `JOB:` line, and record
-    the comment's ID.
-  - **After a crash,** it reconciles any reservation without a recorded comment against the inbox,
-    by `JOB:` id, before posting anything.
-  - **While a job is active,** the coordinator posts nothing in that role's inbox. New work waits in
-    the queue.
-  - **The slot is released** when the role's REVIEW citing the job is on the channel PR and the
-    role's cursor marks the job complete. Then the next pending job is dispatched.
-  - **If a role goes silent with a job active,** the slot stays occupied, and work keeps queueing.
-    Once the run evidence shows the run has ended without finishing, the coordinator sends one
-    resume request for that job ID, not a fresh assignment.
+- **Dispatch (2026-11-05): one assignment in flight per role.** An inbox is a role's durable queue,
+  and its cursor marks the role's place in it (SPEC.md). The coordinator keeps that queue one
+  deep:
+  - **A role is busy** while any of its inbox comments after its offset is not marked complete in
+    its cursor. That includes a brief just posted, which has no receipt yet.
+  - **While a role is busy, new work for it is staged on the channel PR** as a comment headed
+    `TYPE: QUEUED` and `TO: <role>`. The channel PR wakes only the coordinator, so staging disturbs
+    no one.
+  - **The next item is dispatched** only when the role's REVIEW citing its current comment is on
+    the channel PR and its cursor marks that comment complete. The coordinator then posts the
+    oldest staged item in the inbox, citing the QUEUED comment's ID.
+  - **The queue is recoverable from GitHub alone:** a QUEUED comment has been dispatched exactly
+    when an inbox comment cites it.
+  - **If a role goes silent with a comment unfinished,** new work keeps staging. Once the run
+    evidence shows the run has ended unfinished, the coordinator posts one resume request naming
+    that comment. The role's next run would also resume it, whatever woke it.
   - **A stop doesn't need the inbox.** A HOLD or STOP takes effect through the coordinator's own
-    authority, without interrupting a role to deliver it. The reason is that on the channel PR, a new
-  event's run displaced the Optimizer's research runs before they committed.
+    authority, without interrupting a role to deliver it.
 - **Experiment PRs.** Each prototype in the charter's §6 gets its own branch and PR into
   `research/compact30-constructor`. Its checkpoint is posted to the inboxes and linked from the
   channel PR; its reviews are published on the channel PR.
@@ -229,9 +228,9 @@ an inbox, and only while that role has no active job (§1). Lifecycle events on 
 be excluded by subscription, so nobody pushes to, edits or retitles an inbox PR.
 
 **Every assignment still ends in a receipt:** the role's cursor entry, then its REVIEW citing the
-job. A job counts as stalled only when the run evidence shows its run has ended without
-completing. It then gets one resume request for its `JOB:` id, which the role finishes from its
-recorded progress. The cursor deduplicates the request if the job was in fact complete.
+comment. A comment counts as stalled only when the run evidence shows its run has ended without
+completing it. It then gets one resume request naming the comment, which the role finishes from its recorded
+progress. The cursor deduplicates the request if the comment was in fact complete.
 
 ## Revisions
 

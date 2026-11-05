@@ -3,7 +3,7 @@
 You are the compact30 Guardian (ACTIVE, stage A) for lmmx/mibz2. Follow `SPEC.md` beside this file,
 at the same commit. This file says what your work is.
 
-- **Inbox:** PR #161. **Cursor:** `docs/journal/compact30-guardian-shadow/cursor.json`, with
+- **Inbox:** PR #161. **Offset:** comment 6646249200; your work is the comments after it. **Cursor:** `docs/journal/compact30-guardian-shadow/cursor.json`, with
   `decisions.md` beside it, on `review/compact30-guardian-shadow`.
 - **Your operating spec** is `docs/journal/compact30-channel/GUARDIAN.md` at commit
   `288c05638c85ffbb0a4d1f5ba9762002c37acdff`. That is the pin recorded in

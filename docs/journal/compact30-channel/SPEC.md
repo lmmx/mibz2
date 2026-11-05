@@ -42,7 +42,7 @@ resume (CAMPAIGN.md, start step 4).
   carries only its own work, and every agent publishes on one shared channel, #145. Routing by
   header would duplicate what the subscription already does, and would add ways to drop real work.
 - **A run must survive interruption.** A receipt comes first and progress is committed as it goes,
-  so a stopped run leaves state that a short resume can pick up.
+  so a stopped run leaves state that the next run, or a short resume request, picks up.
 - **Pinned and reviewable.** The instructions live in the repository, change only by a new pin,
   and have one common part and one part per agent. A prompt typed into a task can't be checked
   against the record; a pinned file can.
@@ -56,27 +56,27 @@ The Coordinator posts in an inbox only what that role should act on.
 
 ## Each run
 
-Only the Coordinator posts in an inbox, and only when the agent has no job in progress, so a run
-normally starts on one new assignment. Each assignment carries a `JOB:` line.
+Your inbox is your queue, and your cursor is your place in it. Your work is every comment in your
+inbox after the offset in your agent spec. Only the Coordinator posts there, and normally one
+assignment at a time, but a run may find more than one waiting. It works through all of them.
 
-1. **The event.** The platform can't exclude non-comment events, such as PR lifecycle events,
-   before a run starts. Such an event carries no work: end without repository writes.
-2. **For each new inbox comment in the event,** in order:
-   - fetch it by its ID;
-   - read your cursor (named in your agent spec);
-   - if its job is already complete, go on to the next comment;
-   - if the comment asks you to resume a job, or its job is in progress, finish that job from
-     your recorded progress;
+1. **Whatever woke you, list your inbox,** oldest first, from the comment after your offset.
+2. **Take each comment in turn:**
+   - if your cursor marks it finished, go on to the next;
+   - if your cursor marks it in progress or complete, resume it from your recorded progress;
    - otherwise, start it.
-3. **Commit a receipt first:** a cursor entry marking the job in progress, with its `JOB:` id and
-   comment ID. Then commit your work as you go, so an interrupted run can be resumed.
-4. **Finish the work before announcing it.** Commit the completed work, then mark the job
+3. **Commit a receipt first:** a cursor entry marking the comment in progress, with its comment
+   ID. Then commit your work as you go, so an interrupted run can be resumed.
+4. **Finish the work before announcing it.** Commit the completed work, then mark the comment
    complete in the cursor, with the commit that holds the work. Commit that.
-5. **Publish one `TYPE: REVIEW` comment on PR #145,** the shared channel, never on an inbox. It
-   cites the `JOB:` id and the inbox comment, and links the published work. It is the run's last
-   external action: the Coordinator treats it as the signal that you are free for the next job.
-6. **Record the REVIEW's comment ID in the cursor,** then stop. If the run stops before this, the
-   next run records it.
+5. **Publish one `TYPE: REVIEW` comment on PR #145,** the shared channel, never on an inbox.
+   - It cites the inbox comment and links the published work.
+   - First check #145 for a REVIEW of yours that already cites this comment: an interrupted
+     earlier run may have posted it. If there is one, don't post again.
+   - The REVIEW is the last external action for that comment. The Coordinator treats it, with your
+     cursor marking the comment complete, as the signal that you are free.
+6. **Record the REVIEW's comment ID** and mark the comment finished in the cursor. Then take the
+   next comment.
 
 ## Always
 
