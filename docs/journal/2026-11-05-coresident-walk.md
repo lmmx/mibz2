@@ -68,3 +68,40 @@ copies, one on each CPU.
   reproduced", not as "absent".
 - **Alone:** reported, not decided. A dispatch keyed on co-residency never runs the
   co-resident shape alone.
+
+## Result: not reproduced; the hypothesis is closed
+
+Two walk sweeps at master 0769b52f, 5 rounds each: run 41989592674 on an EPYC 9V45 and run
+41989596336 on an EPYC 9V74. Their files are in `2026-11-05-coresident-walk/`.
+
+Change of room/16/L2/512 against room/32/L1/512:
+
+| runner | alone | four copies, cpu0 / cpu1 / cpu2 / cpu3 |
+|---|---|---|
+| EPYC 9V45 | **+62.6%** (+53.3, +72.5) | **+23.7%** / **+27.8%** / **+53.7%** / **+50.1%** |
+| EPYC 9V74 | **+28.0%** (+24.2, +31.9) | **+10.6%** / +2.8% (−5.2, +11.6) / **+17.5%** / **+26.0%** |
+
+Bold rows are slower beyond noise. The registered cell is not faster on any CPU, and it is
+slower beyond noise on 7 of the 8. The rule fails, and the dispatch is not built further.
+`research/coresident-walk` stays unmerged.
+
+**Exploratory (decides nothing):**
+
+- On today's kernel, no setting in the 59-setting grid is faster than the default with
+  four copies, beyond noise, on any CPU of either runner.
+- Alone, none is faster beyond noise either.
+- The closest are within noise:
+  - 9V45: room/32/NTA −0.5%, room/48/L1 +0.7%, room/24/L1 +1.3%;
+  - 9V74: room/24/L1 +0.0%, room/48/L1 +1.4%.
+- So the default sits at the grid's optimum both alone and beside a busy sibling, and a
+  shape dispatch keyed on co-residency has no headroom here.
+
+**What it says:**
+
+- The old four-copy interaction was a property of kernel A, which stored to 32 segment
+  buffers with no staging. Today's staged kernel does not have it.
+- That #171's staging is what removed it fits #171's 4-thread result on the 9V45:
+  amplification fell from 2.23× to 1.84× and from 2.05× to 1.71×. This is an inference:
+  the sweep does not separate the mechanism.
+- The B2 model's prediction, that 16 lanes would be slower than 32 even on an SMT pair,
+  holds in sign. Its size is not tested.
