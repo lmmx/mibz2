@@ -7,7 +7,7 @@ hide:
 
 # History
 
-<div id="bench-hero">
+<div id="bench-hero" data-ws="../../assets/release-scaling.json">
 Loading the chart…
 </div>
 
@@ -54,3 +54,34 @@ mean of its 10 rounds with its 95% interval as a whisker.
 <div id="bench-history" data-src="../../assets/bench-history.json" markdown>
 Loading the benchmark history…
 </div>
+
+## Workstation runs
+
+CI's runners have 4 vCPUs on 2 physical cores, so the charts above stop at 4 threads. A
+workstation run fills in the rest. It runs two releases and lbzip2 on a developer's
+machine, with the same harness and paired rounds, from 1 thread to every CPU the machine
+has. When one is recorded, the chart at the top offers it as the **Workstation** view.
+
+These runs inform; they don't decide. Nothing merges or releases on a workstation figure:
+pull requests are measured on CI, and pass without any run here. Each run is kept as it was
+recorded, with its machine, its date and its raw records in
+[`bench/release-scaling/`](https://github.com/lmmx/mibz2/tree/master/bench/workstation). Runs on
+different machines are never compared or combined.
+
+Each table gives an arm's median wall time. It also gives the geometric mean of the rounds'
+paired wall ratios against the reference arm, with its 95% interval: a minus sign is
+faster. Up to the machine's physical core count, each thread runs on a core of its own
+(`--spread`); above it, threads share cores.
+
+--8<-- "docs/generated/release-scaling.md"
+
+To make a run, on the workstation, from a checkout of mibz2 with lbzip2 installed:
+
+```sh
+just bench-release-scaling                                    # v0.2.4 against v0.2.1, every CPU
+just bench-release-scaling v0.2.4 v0.2.1 10 "1,4,10,20" big.bz2   # releases, rounds, threads, more files
+```
+
+It builds both releases in `target/release-scaling/`, runs the rounds, and records the run in
+`bench/release-scaling/<date>-<machine>/`, to commit in a pull request.
+

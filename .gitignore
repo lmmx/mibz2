@@ -25,6 +25,7 @@ target/
 # The benchmark pages' generated data (docs/scripts/bench_history.py)
 /docs/site/assets/bench-history.json
 /docs/site/assets/alternatives.json
+/docs/site/assets/release-scaling.json
 /docs/generated/
 
 # just bench-occupancy's and bench-imc's corpus, its windows and their result files
