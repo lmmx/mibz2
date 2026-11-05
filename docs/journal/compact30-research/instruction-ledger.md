@@ -123,7 +123,7 @@ Goal wake-up is assumed.
 P87 ranks first for a production-shaped comparison, not automatic promotion. No unique four-worker limiting mechanism is established on either topology. Earlier unroll is precedent, not identical; no detected gain is not zero benefit. Historical A1–A6 accounting and their qualifications are preserved; no current production gain is obtained by summing them.
 
 
-## Current production ranking: inbox 6646251725, after P87
+## Historical production ranking: inbox 6646251725, after P87
 
 [Post-P87 review and next-build proposal](reviews/inbox-6646251725/report.md);
 [replayed call-arc arithmetic](reviews/inbox-6646251725/arithmetic.json).
@@ -144,3 +144,20 @@ Rest includes assembly; its 178,330 Ir is not an extra component. Instruction sh
 A7 is already in this baseline and never added to C12–C16. Do not multiply fresh worker allocation savings by all corpus blocks.
 The smaller-table ceiling changes from 10,861,938 to 10,861,581 only because the normalized production baseline changes; the old compact arm is held fixed, not silently given P87.
 The old P87 diagnostic remains closed/INCONCLUSIVE, A1–A6 and D013 remain unchanged, and no unique four-worker limiting mechanism has been established.
+
+
+## Resource ranking: inbox 6651023083 at c9433318 + assumed #180 window
+
+[Resource review](reviews/inbox-6651023083/report.md) and [static model](reviews/inbox-6651023083/resource-model.json). This supersedes the previous production priority, not historical arithmetic. Instructions are not a wall-time predictor.
+
+| ID | Status and current priority | Whole-decoder accounting / falsifier |
+|---|---|---|
+| C12/B | Historical proposal superseded by #168/#171 outcomes | Deferred flags alone: no detected benefit; staged combined path merged with 4t gain and unresolved runs 1t control. Do not claim the eight-round B prototype was tested identically |
+| C14/C | REJECTED local implementation relative to staged scalar | Lower Ir did not win local wall; not an independent CI qualification |
+| C17 fusion | CONDITIONAL, **priority 1** | Ordered assembly→RLE1→CRC: removes 2n+m logical bytes, no random T accesses; actual lower-level traffic saving 0 to a cold-model ceiling. Preserve run/cycle/CRC/error semantics; reject on whole-decoder benefit/control failure |
+| C15 compact | CONDITIONAL, priority 2; existing port still REJECTED | Main table compulsory lines 1/16→1/30 per row, NOT steady random misses. Two sibling tables share L2; RAW/build/reconstruction charged. 46.25% old Ir parity remains historical arithmetic, not time parity |
+| C18 split condvars | CONDITIONAL, priority 3 | Per-job wake/ownership costs, zero direct random-walk saving; require wrong-predicate wake evidence and no lost-wakeup/cancellation defect |
+| C19 byte-budgeted window | CONDITIONAL, priority 4 | Memory/latency objective; speed unknown after assumed window 16. Reserve progress for earliest block; charge capacities and expansion |
+| C20 self-scanning | CONDITIONAL, priority 5 | Removes handoff at cost of scanner work on decode cores; old idle shares overlap and do not define the remaining gain |
+
+No new verified cumulative instruction credit is booked. Reported #169/#173 reductions remain economically not shown; merged MTF/staging outcomes are baseline, not additive future credit. #171/#170/#172 unresolved controls remain explicit. From the unpaired 93%-busy observation, 98%/100% busy gives illustrative 5.10%/7% wall reductions only at unchanged useful-work cost; scheduling candidates share this opportunity. Absolute runner latency, actual cache misses and current phase exposure are unmeasured here. Recommended next build is the Coordinator's already-local fused post-walk path, not another Ir-only walk cut.
