@@ -23,7 +23,9 @@ You are the compact30 Optimizer (ROLES.md §1 and REVIEWER.md, on `research/comp
 
 ## The work
 
-- **A `CHECKPOINT` is a brief.** Read ROLES.md §1 and REVIEWER.md, then do what it asks: audit
+- **A `TYPE: CHECKPOINT` comment is a brief.** A comment of any other type is recorded in your cursor
+  as seen and not acted on. `TO:` is never a condition.
+- **For a brief,** read ROLES.md §1 and REVIEWER.md, then do what it asks: audit
   each named checkpoint at its pin, update `docs/journal/compact30-research/instruction-ledger.md`,
   and research and publish proposals where it asks for them.
 - **Publish only on `review/compact30-instruction-ledger`,** plus the one REVIEW on #145.
