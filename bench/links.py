@@ -232,7 +232,10 @@ def sync(a: argparse.Namespace) -> None:
             )
             missing.append(commit)
             continue
-        e = write(store, commit, pr, result, runs_text, a.source)
+        # (on a push, only the pushed merge is linked as it lands; any earlier is a backfill)
+        tip = git("rev-parse", a.master).strip()
+        source = a.source if commit == tip else "backfill"
+        e = write(store, commit, pr, result, runs_text, source)
         w4 = e["change"].get("wikidata", {}).get("4", {}).get("wall")
         print(
             f"{commit[:7]} #{pr} bench {e['bench']} {report_cpu(e['cpu'])}: "

@@ -15,7 +15,7 @@
     ["rss_mb", "Peak RSS", "MB", (v) => v.toFixed(1)],
   ];
   const SLOTS = 4; // categorical slots (bench.css: --bh-s1..s4), then muted
-  let state = { metric: "mb_s", threads: "all" };
+  let state = { metric: "mb_s", threads: "all", cpu: null, tCorpus: "wikidata", tThreads: "4", tFig: "wall" };
   try {
     state = { ...state, ...JSON.parse(localStorage.getItem("mibz2-bench") || "{}") };
   } catch (e) { /* (no storage: the defaults) */ }
@@ -31,7 +31,13 @@
     return e;
   };
   const svg = (tag, attrs, parent) => el(tag, attrs, parent, SVG);
-  const slot = (cls) => (cls < SLOTS ? `var(--bh-s${cls + 1})` : "var(--bh-old)");
+  // a class's colour: its place among the classes on screen (render's `shown`), so one
+  // runner's classes take the first slots; past the slots, muted
+  let colourOf = new Map();
+  const slot = (cls) => {
+    const k = colourOf.has(cls) ? colourOf.get(cls) : cls;
+    return k < SLOTS ? `var(--bh-s${k + 1})` : "var(--bh-old)";
+  };
 
   // Nice ticks over [lo, hi]
   const ticks = (lo, hi, n = 4) => {
@@ -50,7 +56,7 @@
     el("figcaption", { text: `${series.corpus} · ${series.threads} thread${series.threads === 1 ? "" : "s"}` }, fig);
     const pts = series.lines.flatMap((l) => l.points.filter((p) => p[key]).map((p) => ({ ...p, cls: l.class })));
     if (!pts.length) { el("p", { text: "No points." }, fig); return; }
-    const W = 640, H = 210, L = 56, R = 14, T = 12, B = 34;
+    const W = 640, H = 222, L = 56, R = 14, T = 24, B = 34;
     const cs = [...new Set(pts.map((p) => p.c))].sort((a, b) => a - b);
     const xi = new Map(cs.map((c, i) => [c, i]));
     const x = (c) => L + (cs.length === 1 ? (W - L - R) / 2 : (xi.get(c) * (W - L - R)) / (cs.length - 1));
@@ -64,11 +70,12 @@
       svg("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), class: "bh-grid" }, s);
       svg("text", { x: L - 6, y: y(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = fmt(v);
     }
-    svg("text", { x: 4, y: T + 2, class: "bh-unit" }, s).textContent = unit;
+    svg("text", { x: 4, y: 11, class: "bh-unit" }, s).textContent = unit;
     const every = Math.max(1, Math.ceil(cs.length / 8));
     cs.forEach((c, i) => {
       if (i % every && i !== cs.length - 1) return;
-      svg("text", { x: x(c), y: H - B + 16, class: "bh-tick", "text-anchor": "middle" }, s).textContent = data.commits[c].sha.slice(0, 7);
+      const anchor = cs.length > 1 && i === 0 ? "start" : cs.length > 1 && i === cs.length - 1 ? "end" : "middle";
+      svg("text", { x: x(c), y: H - B + 16, class: "bh-tick", "text-anchor": anchor }, s).textContent = data.commits[c].sha.slice(0, 7);
     });
     for (const line of series.lines) {
       const lp = line.points.filter((p) => p[key]);
@@ -102,294 +109,192 @@
     }
   }
 
-  // The hero chart (#bench-hero, first on the page), after wikidata-pq's: every figure
-  // of one corpus (each metric at 1 and 4 threads) over master's recorded commits, each
-  // line on its own scale (its own range, padded), so every figure's shape shows at once;
-  // the left axis, in that figure's own units, is the highlighted line's, with its 95%
-  // band. Pointing at (or focusing) a legend entry or a line highlights it and fades the
-  // rest; a click or tap keeps it highlighted, and another releases it. A class of results
-  // (the bench major that last set these figures' meaning, a runner CPU and core count, a
-  // set of corpora) is never joined
-  // to another: a dashed rule names each new one. Nor is a corpus's content (its sha256).
-  const hero = { pinned: null, hover: null, commit: null };
-  const HERO_DEFAULT = "mb_s-4";
-  function hero_(data, root) {
+  // The trajectory (#bench-hero, first on the page): each merged pull request's own paired
+  // benchmark (its head against its base, on one runner, in alternating order: bench/links.py)
+  // chained into one cumulative change, from the first link whose arms ran in balanced order
+  // (bench 3.0.0). A link that left the decoder alone (the harness, docs or CI) is an A/A
+  // pair: drawn, adding nothing. A decoder change with no link (a gap) starts a new segment,
+  // never bridged. Below, each link's own change and its 95% interval. The figures are
+  // ratios, so links measured on different runners chain only on the assumption that a
+  // relative change holds across runners: the page says so.
+  const TRAJ = [
+    // [link figure, label, sign: +1 when a lower ratio is better and shown as an increase]
+    ["wall", "Throughput", -1],
+    ["cpu", "CPU time", 1],
+    ["rss", "Peak RSS", 1],
+  ];
+  const pct = (L, sign) => 100 * (Math.exp(sign * L) - 1);
+  const fmtPct = (v) => `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(Math.abs(v) < 10 ? 1 : 0)}%`;
+  function trajectory(data, root) {
     const host = document.getElementById("bench-hero") || el("div", {}, root);
     host.textContent = "";
     host.classList.add("bh-root");
     const box = el("section", { class: "bh-hero" }, host);
-    const corpora = [...new Set(data.series.map((s) => s.corpus))];
-    if (!corpora.includes(state.heroCorpus)) state.heroCorpus = corpora.includes("wikidata") ? "wikidata" : corpora[0];
+    const ch = data.chain || {};
+    const start = ch.start;
     const head = el("div", { class: "bh-hero-head" }, box);
-    el("h2", { class: "bh-hero-title", id: "every-figure", text: "Every figure, every merge" }, head);
-    const seg = el("div", { class: "bh-seg", role: "radiogroup", "aria-label": "Corpus" }, head);
-    for (const c of corpora) {
-      const b = el("button", { type: "button", role: "radio", "aria-checked": String(c === state.heroCorpus), text: c, "data-hero-id": `corpus-${c}` }, seg);
-      b.addEventListener("click", () => {
-        state.heroCorpus = c;
-        try { localStorage.setItem("mibz2-bench", JSON.stringify(state)); } catch (e) { /* (none) */ }
-        hero_(data, root);
-        host.querySelector(`[data-hero-id="corpus-${c}"]`).focus();
-      });
+    el("h2", { class: "bh-hero-title", id: "trajectory", text: "Merge by merge, chained" }, head);
+    if (start === null || start === undefined || !data.links || !data.links.length) {
+      el("p", { class: "bh-hero-note", text: "No merged pull request's benchmark is linked yet (bench/links.py)." }, box);
+      return;
     }
-    // the figures: each metric at each thread count, its points by commit
-    const figs = [];
-    METRICS.forEach((m, mi) => {
-      for (const s of data.series.filter((q) => q.corpus === state.heroCorpus).sort((a, b) => a.threads - b.threads)) {
-        const vals = new Map();
-        for (const l of s.lines) for (const p of l.points) if (p[m[0]]) vals.set(p.c, { v: p[m[0]][0], h: p[m[0]][1], n: p.n, cls: l.class, seg: `${l.class}|${l.content}`, same: p.same_bytes });
-        if (vals.size) figs.push({ key: `${m[0]}-${s.threads}`, m, mi, threads: s.threads, label: `${m[1]}, ${s.threads} thread${s.threads === 1 ? "" : "s"}`, vals });
+    const keys = Object.keys(ch.series);
+    const corpora = [...new Set(keys.map((k) => k.split("|")[0]))].sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
+    if (!corpora.includes(state.tCorpus)) state.tCorpus = corpora.includes("wikidata") ? "wikidata" : corpora[0];
+    const threads = [...new Set(keys.filter((k) => k.startsWith(`${state.tCorpus}|`)).map((k) => k.split("|")[1]))].sort((a, b) => a - b);
+    if (!threads.includes(state.tThreads)) state.tThreads = threads.includes("4") ? "4" : threads[threads.length - 1];
+    if (!TRAJ.some((f) => f[0] === state.tFig)) state.tFig = "wall";
+    const seg = (label, options, value, set) => {
+      const g = el("div", { class: "bh-seg", role: "radiogroup", "aria-label": label }, head);
+      for (const [v, t] of options) {
+        const b = el("button", { type: "button", role: "radio", "aria-checked": String(v === value), text: t, "data-hero-id": `${label}-${v}` }, g);
+        b.addEventListener("click", () => {
+          set(v);
+          try { localStorage.setItem("mibz2-bench", JSON.stringify(state)); } catch (e) { /* (none) */ }
+          trajectory(data, root);
+          host.querySelector(`[data-hero-id="${label}-${v}"]`).focus();
+        });
       }
-    });
-    const byKey = new Map(figs.map((f) => [f.key, f]));
-    const cs = [...new Set(figs.flatMap((f) => [...f.vals.keys()]))].sort((a, b) => a - b);
-    const focusP = el("p", { class: "bh-hero-focus" }, box);
+    };
+    seg("Corpus", corpora.map((c) => [c, c]), state.tCorpus, (v) => (state.tCorpus = v));
+    seg("Threads", threads.map((t) => [t, `${t} thread${t === "1" ? "" : "s"}`]), state.tThreads, (v) => (state.tThreads = v));
+    seg("Figure", TRAJ.map((f) => [f[0], f[1]]), state.tFig, (v) => (state.tFig = v));
+    const fig = TRAJ.find((f) => f[0] === state.tFig);
+    const sign = fig[2];
+    const key = `${state.tCorpus}|${state.tThreads}`;
+    const chain = ch.series[key][fig[0]];
+    const own = (data.changes[key] || {})[fig[0]] || [];
+    const idx = [];
+    for (let i = start; i < data.links.length; i++) idx.push(i);
+    const pts = idx.filter((i) => chain[i]);
+    const lead = el("p", { class: "bh-hero-focus" }, box);
     const body = el("div", { class: "bh-hero-chart" }, box);
-    const link = el("p", { class: "bh-hero-commit" }, box);
-    const legend = el("div", { class: "bh-hero-legend" }, box);
-    el("p", { class: "bh-hero-note", text: "Each line is scaled to its own range over the commits recorded, so every figure's shape shows at once; the axis on the left, in the figure's own units, is the highlighted line's, with its 95% interval as a band. Point at a legend entry or a line to highlight it; click or tap to keep it highlighted, and again to release it (on the keyboard: Tab to an entry, Enter to keep; on the chart, ←/→ a commit, ↑/↓ a line). Solid lines are one thread, dashed ones four. A dashed rule marks each change of class of results, a return to an earlier one included (a bench version that redefined these figures, a runner kind, a set of corpora), whose lines are never joined to the last's, and a corpus whose bytes changed (text, made from mibz2's own sources) is never joined either; a bench version that left them as they were keeps the line, and each point's tooltip names the version that measured it. Each commit's label links to its pull request." }, box);
-    const tip = el("div", { class: "bh-tip", hidden: "" }, box);
-    if (!cs.length) { el("p", { text: "No points yet." }, body); return; }
-    if (!byKey.has(hero.pinned)) hero.pinned = null;
-    if (!byKey.has(hero.hover)) hero.hover = null;
-    const current = () => hero.pinned || hero.hover || (byKey.has(HERO_DEFAULT) ? HERO_DEFAULT : figs[0].key);
-    const tag = (cm) => (cm.pr ? `#${cm.pr}` : cm.sha.slice(0, 7));
+    const readout = el("p", { class: "bh-hero-commit", "aria-live": "polite" }, box);
+    if (!pts.length) { el("p", { text: "No link measured this figure." }, body); return; }
+    const tag = (l) => (l.pr ? `#${l.pr}` : l.sha.slice(0, 7));
+    const decoderLinks = pts.filter((i) => data.links[i].decoder);
+    const last = pts[pts.length - 1];
+    const [L, S, sg] = chain[last];
+    const segStart = pts.find((i) => chain[i][2] === sg);
+    const cpus = [...new Set(decoderLinks.map((i) => data.links[i].cpu))];
+    const better = sign < 0 ? "faster" : "less";
+    const lv = pct(L, sign), lo = pct(L - S, sign), hi = pct(L + S, sign);
+    const strong = el("strong", { text: `${fig[1]}, ${state.tCorpus} at ${state.tThreads} thread${state.tThreads === "1" ? "" : "s"}: ${fmtPct(lv)}` }, lead);
+    strong.title = "chained change since the segment's start";
+    lead.append(` (95%: ${fmtPct(Math.min(lo, hi))} to ${fmtPct(Math.max(lo, hi))}) from ${tag(data.links[segStart])}'s base to ${tag(data.links[last])}, over ${decoderLinks.filter((i) => chain[i][2] === sg).length} decoder merges, each measured on its own runner (${cpus.join(", ")}). ${sign < 0 ? "Up is faster." : `Down is ${better}.`}`);
 
-    const W = Math.max(300, Math.round(body.clientWidth) || 700), H = W < 560 ? 320 : 400;
-    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `${figs.length} figures of the ${state.heroCorpus} corpus over ${cs.length} master commits, each on its own scale` }, body);
-    for (const f of figs) {
-      const vs = [...f.vals.values()].flatMap((o) => [o.v - o.h, o.v + o.h]);
-      const lo = Math.min(...vs), hi = Math.max(...vs);
-      const pad = (hi - lo) * 0.12 || Math.abs(hi) * 0.05 || 1;
-      f.ticks = ticks(Math.max(0, lo - pad), hi + pad, W < 560 ? 4 : 5);
-      f.lo = f.ticks[0]; f.hi = f.ticks[f.ticks.length - 1];
-    }
+    const W = Math.max(300, Math.round(body.clientWidth) || 700);
+    const narrow = W < 560;
+    const H1 = narrow ? 230 : 280, H2 = narrow ? 130 : 150, gapY = 38;
+    const H = H1 + gapY + H2;
+    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `${fig[1]} of ${state.tCorpus} at ${state.tThreads} threads: the change chained over ${pts.length} merges, and each merge's own change` }, body);
+    // y scales: the chain (top) and each link's own change (bottom), in percent
+    const band = pts.map((i) => [pct(chain[i][0] - chain[i][1], sign), pct(chain[i][0] + chain[i][1], sign)]).flat();
+    const t1 = ticks(Math.min(0, ...band), Math.max(0, ...band), narrow ? 4 : 5);
+    const ownV = idx.filter((i) => own[i]).map((i) => [pct(own[i][0] - own[i][1], sign), pct(own[i][0] + own[i][1], sign)]).flat();
+    const t2 = ticks(Math.min(0, ...ownV), Math.max(0, ...ownV), 3);
     const meas = svg("text", { class: "bh-tick", x: 0, y: -50 }, s);
     const textW = (t) => { meas.textContent = t; return meas.getComputedTextLength(); };
-    let tw = 24;
-    for (const f of figs) for (const t of f.ticks) tw = Math.max(tw, textW(f.m[3](t)));
-    const M = { l: Math.ceil(tw) + 14, r: 14, t: 26, b: 30 };
-    const inner = W - M.l - M.r, ih = H - M.t - M.b;
-    const xi = new Map(cs.map((c, i) => [c, i]));
-    const padX = cs.length > 1 ? Math.min(24, inner / (cs.length - 1) / 2) : 0;
-    const x = (c) => (cs.length === 1 ? M.l + inner / 2 : M.l + padX + (xi.get(c) * (inner - 2 * padX)) / (cs.length - 1));
-    const y = (f, v) => M.t + ((f.hi - v) * ih) / (f.hi - f.lo || 1);
-
-    const gridG = svg("g", {}, s);
-    const deco = svg("g", {}, s);
-    svg("line", { x1: M.l, x2: W - M.r, y1: H - M.b, y2: H - M.b, class: "bh-grid" }, deco);
-    // every change of class from one commit to the next, a return to an earlier one included:
-    // a dashed rule before it (none before the first), and its name, or the runner's alone
-    // where the whole would run into the next rule (nothing, if neither fits)
-    const clsAt = new Map();
-    for (const f of figs) for (const [c, o] of f.vals) if (!clsAt.has(c)) clsAt.set(c, o.cls);
-    const changes = [];
-    for (const c of cs) {
-      const cls = clsAt.get(c), i = xi.get(c);
-      if (changes.length && changes[changes.length - 1].cls === cls) continue;
-      changes.push({ cls, i, xx: i ? (x(cs[i - 1]) + x(c)) / 2 : M.l });
-    }
-    changes.forEach(({ cls, i, xx }, k) => {
-      if (i) svg("line", { x1: xx, x2: xx, y1: M.t - 8, y2: H - M.b, class: "bh-hero-rule" }, deco);
-      const room = (k + 1 < changes.length ? changes[k + 1].xx - 8 : W) - (xx + 3);
-      const name = [data.classes[cls], data.classes[cls].split(" · ")[1]].find((t) => t && textW(t) <= room);
-      if (name) svg("text", { x: xx + 3, y: M.t - 12, class: "bh-tick" }, deco).textContent = name;
-    });
-    const placed = [];
-    for (const c of cs.slice().reverse()) {
-      const cm = data.commits[c], text = tag(cm), w = textW(text);
-      const lx = Math.max(M.l + w / 2, Math.min(W - w / 2, x(c)));
-      if (!placed.every((q) => Math.abs(q - lx) >= w + 12)) continue;
-      placed.push(lx);
-      const a = svg("a", { href: cm.pr ? `${data.repo}/pull/${cm.pr}` : `${data.repo}/commit/${cm.sha}`, class: "bh-hero-xlink", "aria-label": `${text}: ${cm.subject}` }, deco);
-      svg("text", { x: lx, y: H - M.b + 17, "text-anchor": "middle", class: "bh-tick" }, a).textContent = text;
-    }
+    const tw = Math.max(24, ...[...t1, ...t2].map((v) => textW(fmtPct(v))));
     meas.remove();
-
-    const bandG = svg("g", {}, s);
-    const lineG = svg("g", {}, s);
-    const paths = new Map();
-    for (const f of figs) {
-      // one path per class and corpus content, never joined across either's boundary (a
-      // point on its own is a dot)
-      let d = "", prev = null;
-      for (const c of cs) {
-        if (!f.vals.has(c)) { prev = null; continue; }
-        const o = f.vals.get(c);
-        const at = `${x(c).toFixed(1)} ${y(f, o.v).toFixed(1)}`;
-        d += prev !== null && prev === o.seg ? `L${at}` : `M${at}h0`;
-        prev = o.seg;
-      }
-      const p = svg("path", { d, class: `bh-hero-line${f.threads === 1 ? "" : " bh-dashed"}`, stroke: slot(f.mi) }, lineG);
-      paths.set(f.key, p);
+    const M = { l: Math.ceil(tw) + 12, r: 12, t: 14, b: 26 };
+    const inner = W - M.l - M.r;
+    const xs = new Map(idx.map((i, k) => [i, M.l + (idx.length === 1 ? inner / 2 : 8 + (k * (inner - 16)) / (idx.length - 1))]));
+    const y1 = (v) => M.t + (H1 - M.t - 8) * (1 - (v - t1[0]) / (t1[t1.length - 1] - t1[0] || 1));
+    const top2 = H1 + gapY;
+    const y2 = (v) => top2 + (H2 - M.b) * (1 - (v - t2[0]) / (t2[t2.length - 1] - t2[0] || 1));
+    for (const v of t1) {
+      svg("line", { x1: M.l, x2: W - M.r, y1: y1(v), y2: y1(v), class: v === 0 ? "bh-zero" : "bh-grid" }, s);
+      svg("text", { x: M.l - 6, y: y1(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = fmtPct(v);
     }
-    const axisG = svg("g", {}, s);
-    const cross = svg("line", { y1: M.t, y2: H - M.b, class: "bh-cross", visibility: "hidden" }, s);
-    const dots = svg("g", {}, s);
-    const hit = svg("rect", { x: M.l - 8, y: M.t - 6, width: inner + 16, height: ih + 6, class: "bh-hit bh-hero-hit", tabindex: 0, "data-hero-id": "plot", "aria-label": "The chart: ←/→ moves between commits, ↑/↓ between lines, Enter keeps the highlighted line, Escape releases it" }, s);
-
-    const paint = () => {
-      const key = current(), f = byKey.get(key), active = !!(hero.pinned || hero.hover);
-      for (const [k, p] of paths) {
-        p.classList.toggle("is-on", k === key);
-        p.classList.toggle("is-dim", active && k !== key);
+    for (const v of t2) {
+      svg("line", { x1: M.l, x2: W - M.r, y1: y2(v), y2: y2(v), class: v === 0 ? "bh-zero" : "bh-grid" }, s);
+      svg("text", { x: M.l - 6, y: y2(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = fmtPct(v);
+    }
+    svg("text", { x: M.l, y: top2 - 14, class: "bh-unit" }, s).textContent = narrow ? "each merge's own change (95%)" : "each merge's own change, with its 95% interval (hollow: the decoder unchanged, an A/A pair)";
+    // segments of the chain: a band and a line each, never bridged across a gap
+    const segs = [];
+    for (const i of pts) {
+      const g = chain[i][2];
+      if (!segs.length || segs[segs.length - 1].g !== g) segs.push({ g, pts: [] });
+      segs[segs.length - 1].pts.push(i);
+    }
+    for (const sgm of segs) {
+      const p = sgm.pts;
+      const upper = p.map((i) => `${xs.get(i)},${y1(Math.max(pct(chain[i][0] - chain[i][1], sign), pct(chain[i][0] + chain[i][1], sign)))}`);
+      const lower = p.map((i) => `${xs.get(i)},${y1(Math.min(pct(chain[i][0] - chain[i][1], sign), pct(chain[i][0] + chain[i][1], sign)))}`).reverse();
+      svg("polygon", { points: [...upper, ...lower].join(" "), class: "bh-band" }, s);
+      svg("polyline", { points: p.map((i) => `${xs.get(i)},${y1(pct(chain[i][0], sign))}`).join(" "), class: "bh-chain" }, s);
+      if (sgm !== segs[0]) {
+        const xg = xs.get(p[0]) - 6;
+        svg("line", { x1: xg, x2: xg, y1: M.t, y2: H - M.b, class: "bh-gap" }, s);
+        const gt = svg("text", { x: xg + 3, y: M.t + 10, class: "bh-tick" }, s);
+        gt.textContent = narrow ? "gap" : "gap: a decoder change with no link";
+        svg("title", {}, gt).textContent = "a decoder change with no link: the chain starts again here";
       }
-      lineG.appendChild(paths.get(key));
-      gridG.textContent = ""; axisG.textContent = ""; dots.textContent = ""; bandG.textContent = "";
-      const col = slot(f.mi);
-      svg("line", { x1: M.l - 0.5, x2: M.l - 0.5, y1: M.t, y2: H - M.b, class: "bh-hero-axis", stroke: col }, axisG);
-      for (const t of f.ticks) {
-        svg("line", { x1: M.l, x2: W - M.r, y1: y(f, t), y2: y(f, t), class: "bh-grid" }, gridG);
-        svg("line", { x1: M.l - 5, x2: M.l - 0.5, y1: y(f, t), y2: y(f, t), class: "bh-hero-axis", stroke: col }, axisG);
-        svg("text", { x: M.l - 8, y: y(f, t) + 4, "text-anchor": "end", class: "bh-tick" }, axisG).textContent = f.m[3](t);
-      }
-      // the highlighted line's 95% band and whiskers, one band per class and corpus content
-      let run = [];
-      const flush = () => {
-        if (run.length > 1) {
-          const up = run.map((c) => `${x(c)},${y(f, f.vals.get(c).v + f.vals.get(c).h)}`);
-          const dn = run.map((c) => `${x(c)},${y(f, f.vals.get(c).v - f.vals.get(c).h)}`).reverse();
-          svg("polygon", { points: [...up, ...dn].join(" "), class: "bh-hero-band", fill: col }, bandG);
-        }
-        run = [];
-      };
-      for (const c of cs) {
-        if (!f.vals.has(c)) { flush(); continue; }
-        if (run.length && f.vals.get(run[run.length - 1]).seg !== f.vals.get(c).seg) flush();
-        run.push(c);
-        const o = f.vals.get(c);
-        svg("line", { x1: x(c), x2: x(c), y1: y(f, o.v - o.h), y2: y(f, o.v + o.h), class: "bh-whisker", stroke: col }, dots);
-        svg("circle", { cx: x(c), cy: y(f, o.v), r: hero.commit === c ? 5 : 3.5, class: "bh-marker", fill: col }, dots);
-      }
-      flush();
-      const lastC = cs.filter((c) => f.vals.has(c)).pop(), lv = f.vals.get(lastC);
-      focusP.textContent = "Axis: ";
-      el("strong", { text: f.label }, focusP);
-      focusP.append(` (${f.m[2]}) · ${f.m[3](lv.v)} ± ${f.m[3](lv.h)} at ${tag(data.commits[lastC])}${hero.pinned ? " · kept: click it again to release it" : ""}`);
-      for (const b of legend.querySelectorAll(".bh-hero-item")) {
-        b.classList.toggle("is-focus", b.dataset.key === key);
-        b.setAttribute("aria-pressed", String(b.dataset.key === hero.pinned));
-      }
-    };
-    const commitLinks = (c) => {
-      const cm = data.commits[c];
-      link.textContent = "";
-      el("strong", { text: tag(cm) }, link);
-      link.append(` · ${cm.date.slice(0, 10)} · ${cm.subject} · `);
-      el("a", { href: `${data.repo}/commit/${cm.sha}`, text: `commit ${cm.sha.slice(0, 7)}` }, link);
-      if (cm.pr) { link.append(" · "); el("a", { href: `${data.repo}/pull/${cm.pr}`, text: `pull request #${cm.pr}` }, link); }
-      if (cm.run) { link.append(" · "); el("a", { href: cm.run, text: "bench run" }, link); }
-    };
-    const hideTip = () => { tip.hidden = true; cross.setAttribute("visibility", "hidden"); hero.commit = null; };
-    const show = (c, py) => {
-      hero.commit = c;
-      commitLinks(c);
-      cross.setAttribute("x1", x(c)); cross.setAttribute("x2", x(c)); cross.setAttribute("visibility", "visible");
-      paint();
-      const key = current(), cm = data.commits[c];
-      tip.textContent = "";
-      el("div", { class: "bh-tip-title", text: `${tag(cm)} · ${cm.sha.slice(0, 7)} · bench ${cm.bench}` }, tip);
-      el("div", { class: "bh-tip-subject", text: cm.subject.length > 90 ? `${cm.subject.slice(0, 88)}…` : cm.subject }, tip);
-      for (const f of figs) {
-        if (!f.vals.has(c)) continue;
-        const o = f.vals.get(c);
-        const row = el("div", { class: `bh-tip-row${f.key === key ? " is-on" : ""}` }, tip);
-        el("span", { class: "bh-swatch", style: `background:${slot(f.mi)}` }, row);
-        el("span", { text: `${f.label}: ${f.m[3](o.v)} ± ${f.m[3](o.h)} ${f.m[2]}${o.same ? "" : " (SAME BYTES: NO)"}` }, row);
-      }
-      tip.hidden = false;
-      const r = s.getBoundingClientRect(), hb = box.getBoundingClientRect(), k = r.width / W;
-      const px = r.left - hb.left + x(c) * k, tw2 = tip.offsetWidth, th = tip.offsetHeight;
-      let left = px + 14;
-      if (left + tw2 > hb.width) left = px - tw2 - 14;
-      tip.style.left = `${Math.max(0, Math.min(hb.width - tw2, left))}px`;
-      const top = r.top - hb.top + M.t * k, bottom = r.top - hb.top + (H - M.b) * k;
-      if (W < 560) tip.style.top = `${r.bottom - hb.top + 4}px`;
-      else tip.style.top = `${py < M.t + ih / 2 ? Math.max(top, bottom - th) : top}px`;
-    };
-    const nearest = (c, py) => {
-      let best = null, bd = Infinity;
-      for (const f of figs) {
-        if (!f.vals.has(c)) continue;
-        const d = Math.abs(y(f, f.vals.get(c).v) - py);
-        if (d < bd) { bd = d; best = f.key; }
-      }
-      return best;
-    };
-    const at = (ev) => {
-      const r = s.getBoundingClientRect();
-      const px = ((ev.clientX - r.left) * W) / r.width, py = ((ev.clientY - r.top) * H) / r.height;
-      const c = cs.reduce((a, q) => (Math.abs(x(q) - px) < Math.abs(x(a) - px) ? q : a), cs[0]);
-      return { c, py, key: nearest(c, py) };
-    };
-    const move = (ev) => { const { c, py, key } = at(ev); if (!hero.pinned && key) hero.hover = key; show(c, py); };
-    hit.addEventListener("pointermove", move);
-    hit.addEventListener("pointerdown", move);
-    hit.addEventListener("click", (ev) => {
-      const { c, py, key } = at(ev);
-      if (hero.pinned) { hero.pinned = null; hero.hover = key; } else hero.pinned = key;
-      show(c, py);
+    }
+    // x labels: as many as fit with a gap between them, the last always shown
+    const minGap = narrow ? 40 : 46;
+    const drawn = [];
+    idx.forEach((i, k) => {
+      const xx = xs.get(i);
+      const last = k === idx.length - 1;
+      if (!last && drawn.length && xx - drawn[drawn.length - 1].x < minGap) return;
+      if (last) while (drawn.length && xx - drawn[drawn.length - 1].x < minGap) drawn.pop().el.remove();
+      const anchor = idx.length > 1 && k === 0 ? "start" : last && idx.length > 1 ? "end" : "middle";
+      const t = svg("text", { x: xx, y: H - 8, class: "bh-tick", "text-anchor": anchor }, s);
+      t.textContent = tag(data.links[i]);
+      drawn.push({ x: xx, el: t });
     });
-    hit.addEventListener("pointerleave", () => { hideTip(); hero.hover = null; paint(); });
-    let ki = cs.length - 1;
-    const keyShow = () => { const f = byKey.get(current()); show(cs[ki], f.vals.has(cs[ki]) ? y(f, f.vals.get(cs[ki]).v) : M.t); };
-    hit.addEventListener("focus", keyShow);
-    hit.addEventListener("blur", () => { hideTip(); hero.hover = null; paint(); });
-    hit.addEventListener("keydown", (ev) => {
-      if (ev.key === "ArrowLeft") ki = Math.max(0, ki - 1);
-      else if (ev.key === "ArrowRight") ki = Math.min(cs.length - 1, ki + 1);
-      else if (ev.key === "ArrowUp" || ev.key === "ArrowDown") {
-        const c = cs[ki];
-        const order = figs.filter((f) => f.vals.has(c)).sort((a, b) => y(a, a.vals.get(c).v) - y(b, b.vals.get(c).v)).map((f) => f.key);
-        const i = order.indexOf(current());
-        const next = order[i < 0 ? 0 : Math.max(0, Math.min(order.length - 1, i + (ev.key === "ArrowUp" ? -1 : 1)))];
-        if (hero.pinned) hero.pinned = next; else hero.hover = next;
-      } else if (ev.key === "Enter" || ev.key === " ") {
-        if (hero.pinned) { hero.hover = hero.pinned; hero.pinned = null; } else hero.pinned = current();
-      } else if (ev.key === "Escape") { hero.pinned = null; hero.hover = null; }
-      else return;
-      ev.preventDefault();
-      keyShow();
-    });
-
-    // The legend under the chart, by metric: pointing at or focusing an entry highlights
-    // its line and fades the rest; a click, tap or Enter keeps it, and another releases it
-    METRICS.forEach((m, mi) => {
-      const items = figs.filter((f) => f.mi === mi);
-      if (!items.length) return;
-      const g = el("div", { class: "bh-hero-lgroup", role: "group", "aria-label": m[1] }, legend);
-      el("div", { class: "bh-hero-ghead", text: `${m[1]} (${m[2]})` }, g);
-      for (const f of items) {
-        const b = el("button", { type: "button", class: "bh-hero-item", "aria-pressed": "false", "data-key": f.key, "data-hero-id": `fig-${f.key}` }, g);
-        svg("line", { x1: 1, x2: 21, y1: 5, y2: 5, stroke: slot(mi), "stroke-width": 2.5, "stroke-dasharray": f.threads === 1 ? null : "5 3" }, svg("svg", { width: 22, height: 10, "aria-hidden": "true" }, b));
-        const lv = f.vals.get(cs.filter((c) => f.vals.has(c)).pop());
-        el("span", { text: `${f.threads} thread${f.threads === 1 ? "" : "s"}` }, b);
-        el("span", { class: "bh-num", text: `${f.m[3](lv.v)} ± ${f.m[3](lv.h)}` }, b);
-        b.addEventListener("click", () => { hero.pinned = hero.pinned === f.key ? null : f.key; hero.hover = f.key; paint(); });
-        const enter = () => { hero.hover = f.key; paint(); };
-        const leave = () => { if (hero.hover === f.key) { hero.hover = null; paint(); } };
-        b.addEventListener("pointerenter", enter);
-        b.addEventListener("focus", enter);
-        b.addEventListener("pointerleave", leave);
-        b.addEventListener("blur", leave);
+    const show = (i) => {
+      const l = data.links[i];
+      readout.textContent = "";
+      el("strong", { text: `${tag(l)} ` }, readout);
+      readout.append(`${l.subject.replace(/\s*\(#\d+\)\s*$/, "")} · ${l.date.slice(0, 10)} · ${l.cpu}, bench ${l.bench}`);
+      const o = own[i];
+      if (o) {
+        const a = pct(o[0] - o[1], sign), b = pct(o[0] + o[1], sign);
+        readout.append(` · own change ${fmtPct(pct(o[0], sign))} (95%: ${fmtPct(Math.min(a, b))} to ${fmtPct(Math.max(a, b))}, ${o[2]} rounds)`);
+      } else readout.append(" · not measured");
+      if (!l.decoder) readout.append(" · the decoder unchanged: an A/A pair, adding nothing");
+      if (chain[i]) readout.append(` · chained ${fmtPct(pct(chain[i][0], sign))}`);
+      if (l.base_ok === false || l.head_ok === false) readout.append(" · its run's base or head differs from the merge's parent or the merge on the benchmarked paths");
+      readout.append(" · ");
+      el("a", { href: l.run, text: "run" }, readout);
+      readout.append(" · ");
+      el("a", { href: `${data.repo}/pull/${l.pr}`, text: "pull request" }, readout);
+    };
+    for (const i of idx) {
+      const l = data.links[i];
+      const g = svg("g", { tabindex: 0, class: "bh-pt", role: "button", "aria-label": `${tag(l)}` }, s);
+      if (chain[i]) svg("circle", { cx: xs.get(i), cy: y1(pct(chain[i][0], sign)), r: l.decoder ? 3.5 : 2.5, class: l.decoder ? "bh-dot-chain" : "bh-dot-aa" }, g);
+      const o = own[i];
+      if (o) {
+        const a = pct(o[0] - o[1], sign), b = pct(o[0] + o[1], sign);
+        const excl = Math.min(a, b) > 0 || Math.max(a, b) < 0;
+        svg("line", { x1: xs.get(i), x2: xs.get(i), y1: y2(Math.min(a, b)), y2: y2(Math.max(a, b)), class: "bh-whisker", stroke: "var(--bh-ink-2)" }, g);
+        svg("circle", { cx: xs.get(i), cy: y2(pct(o[0], sign)), r: 3.5, class: l.decoder ? (excl ? "bh-dot-own bh-dot-excl" : "bh-dot-own") : "bh-dot-aa" }, g);
       }
-    });
-    commitLinks(cs[cs.length - 1]);
-    paint();
+      svg("rect", { x: xs.get(i) - Math.max(4, inner / idx.length / 2), y: M.t, width: Math.max(8, inner / idx.length), height: H - M.t - M.b, class: "bh-hit" }, g);
+      svg("title", {}, g).textContent = `${tag(l)} ${l.subject}`;
+      for (const ev of ["pointerenter", "focus", "click"]) g.addEventListener(ev, () => show(i));
+    }
+    show(last);
+    el("p", { class: "bh-hero-note", text: "Top: the change chained since the start, with its 95% band. Below: each merge's own change, its head against its base on one runner. Point at, tap or Tab to a merge for its figures. What the chain assumes is under the chart." }, box);
   }
 
-  function table(data, metric, root) {
+  function table(data, metric, root, shown = () => true) {
     const [key, label, unit, fmt] = metric;
     const d = el("details", { class: "bh-table" }, root);
     el("summary", { text: `Every point as a table (${label}, ${unit})` }, d);
-    const t = el("table", {}, d);
+    const t = el("table", {}, el("div", { class: "bh-scroll" }, d));
     const hr = el("tr", {}, el("thead", {}, t));
     for (const h of ["corpus", "threads", "commit", "date", "class", `${label} (${unit})`, "± 95%", "rounds"]) el("th", { text: h }, hr);
     const tb = el("tbody", {}, t);
     for (const s of data.series) {
       if (state.threads !== "all" && String(s.threads) !== state.threads) continue;
       for (const l of s.lines) for (const p of l.points) {
-        if (!p[key]) continue;
+        if (!p[key] || !shown(l.class)) continue;
         const cm = data.commits[p.c];
         const tr = el("tr", {}, tb);
         el("td", { text: s.corpus }, tr);
@@ -405,6 +310,37 @@
     }
   }
 
+  // Every link as a table: each merged pull request's own paired change, before the chain's
+  // start too (bench 1-2: the head ran first in every round, so not chained)
+  function links(data, root) {
+    if (!data.links || !data.links.length) return;
+    const d = el("details", { class: "bh-table" }, root);
+    el("summary", { text: `Every merge's own benchmark (${data.links.length} linked pull requests)` }, d);
+    const key = `${state.tCorpus}|${state.tThreads}`;
+    const fig = TRAJ.find((f) => f[0] === state.tFig) || TRAJ[0];
+    const own = (data.changes[key] || {})[fig[0]] || [];
+    const chain = ((data.chain.series || {})[key] || {})[fig[0]] || [];
+    const t = el("table", {}, el("div", { class: "bh-scroll" }, d));
+    const hr = el("tr", {}, el("thead", {}, t));
+    for (const h of ["merge", "pull request", "runner", "bench", "decoder", `${fig[1]}, ${key.replace("|", " at ")} threads (95%)`, "chained"]) el("th", { text: h }, hr);
+    const tb = el("tbody", {}, t);
+    data.links.forEach((l, i) => {
+      const tr = el("tr", {}, tb);
+      el("a", { href: `${data.repo}/commit/${l.sha}`, text: l.sha.slice(0, 7) }, el("td", {}, tr)).title = l.subject;
+      el("a", { href: `${data.repo}/pull/${l.pr}`, text: `#${l.pr}` }, el("td", {}, tr));
+      el("td", { text: l.cpu }, tr);
+      el("td", { text: `${l.bench}${l.balanced ? "" : " (head first)"}` }, tr);
+      el("td", { text: l.decoder ? "changed" : "unchanged (A/A)" }, tr);
+      const o = own[i];
+      const a = o && pct(o[0] - o[1], fig[2]), b = o && pct(o[0] + o[1], fig[2]);
+      el("td", { text: o ? `${fmtPct(pct(o[0], fig[2]))} (${fmtPct(Math.min(a, b))}, ${fmtPct(Math.max(a, b))})` : "–" }, tr);
+      el("td", { text: chain[i] ? fmtPct(pct(chain[i][0], fig[2])) : "–" }, tr);
+    });
+    if (data.gaps && data.gaps.length) {
+      el("p", { text: `Decoder changes with no link (the chain breaks at each): ${data.gaps.map((g) => (g.pr ? `#${g.pr}` : g.sha.slice(0, 7))).join(", ")}.` }, d);
+    }
+  }
+
   function render(root, data) {
     root.textContent = "";
     root.classList.add("bh-root");
@@ -412,7 +348,7 @@
       el("p", { text: "No master commit is recorded yet: the first record appears once the Benchmark workflow has run on a push to master." }, root);
       return;
     }
-    hero_(data, root);
+    trajectory(data, root);
     const controls = el("div", { class: "bh-controls" }, root);
     const pick = (label, options, value, set) => {
       const lab = el("label", {}, controls);
@@ -428,8 +364,20 @@
     pick("Figure", METRICS.map((m) => [m[0], `${m[1]} (${m[2]})`]), state.metric, (v) => (state.metric = v));
     const threads = [...new Set(data.series.map((s) => String(s.threads)))];
     pick("Threads", [["all", "all"], ...threads.map((t) => [t, t])], state.threads, (v) => (state.threads = v));
+    const meta = data.classes_meta || [];
+    const recs = {};
+    for (const s of data.series) for (const l of s.lines) for (const p of l.points) {
+      const cpu = (meta[l.class] || {}).cpu;
+      if (cpu) (recs[cpu] = recs[cpu] || new Set()).add(p.c);
+    }
+    const cpus = Object.keys(recs).sort((a, b) => recs[b].size - recs[a].size);
+    if (state.cpu !== "all" && !cpus.includes(state.cpu)) state.cpu = data.default_cpu && cpus.includes(data.default_cpu) ? data.default_cpu : cpus[0] || "all";
+    pick("Runner", [...cpus.map((c) => [c, `${c} (${recs[c].size} records)`]), ["all", "All runners (mixed: not comparable)"]], state.cpu, (v) => (state.cpu = v));
+    const shown = (cls) => state.cpu === "all" || (meta[cls] || {}).cpu === state.cpu;
+    colourOf = new Map(data.classes.map((_, i) => i).filter(shown).map((cls, k) => [cls, k]));
     const legend = el("ul", { class: "bh-legend" }, root);
     data.classes.forEach((c, i) => {
+      if (!shown(i)) return;
       const li = el("li", {}, legend);
       el("span", { class: "bh-swatch", style: `background:${slot(i)}` }, li);
       li.append(c);
@@ -438,9 +386,10 @@
     const grid = el("div", { class: "bh-grid-charts" }, root);
     for (const s of data.series) {
       if (state.threads !== "all" && String(s.threads) !== state.threads) continue;
-      chart(data, s, metric, grid);
+      chart(data, { ...s, lines: s.lines.filter((l) => shown(l.class)) }, metric, grid);
     }
-    table(data, metric, root);
+    table(data, metric, root, shown);
+    links(data, root);
     el("p", { class: "bh-generated", text: `${data.commits.length} commits recorded; data generated ${data.generated}.` }, root);
   }
 
@@ -633,7 +582,7 @@
   window.addEventListener("resize", () => {
     clearTimeout(resizeT);
     resizeT = setTimeout(() => {
-      if (drawn.hero && drawn.hero[1].isConnected) hero_(...drawn.hero);
+      if (drawn.hero && drawn.hero[1].isConnected) trajectory(...drawn.hero);
       if (drawn.cmp && drawn.cmp[1].isConnected) alternativesHero(...drawn.cmp);
     }, 150);
   });

@@ -69,6 +69,8 @@
 }
 .md-typeset .bh-root .bh-chart {
   margin: 0;
+  width: 100%;
+  min-width: 0;
 }
 .md-typeset .bh-root .bh-chart figcaption {
   margin: 0 0 0.2rem;
@@ -189,67 +191,10 @@
 .bh-hero .bh-tick {
   font-size: 11px;
 }
-.bh-hero .bh-hero-unit {
-  font-weight: 600;
-}
-.bh-hero .bh-hero-rule {
-  stroke: var(--bh-ink-2);
-  stroke-width: 1;
-  stroke-dasharray: 4 4;
-}
-.bh-hero .bh-hero-axis {
-  stroke-width: 1.5;
-}
-.bh-hero .bh-hero-xlink text {
-  font-weight: 600;
-}
-.bh-hero .bh-hero-xlink:hover text,
-.bh-hero .bh-hero-xlink:focus-visible text {
-  text-decoration: underline;
-}
-.bh-hero .bh-hero-line {
-  fill: none;
-  stroke-width: 1.8;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  opacity: 0.55;
-}
-.bh-hero .bh-dashed {
-  stroke-dasharray: 6 4;
-}
-.bh-hero .bh-hero-line.is-dim {
-  opacity: 0.12;
-}
-.bh-hero .bh-hero-line.is-on {
-  stroke-width: 3;
-  opacity: 1;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .bh-hero .bh-hero-line {
-    transition: opacity 120ms ease-out, stroke-width 120ms ease-out;
-  }
-}
-.bh-hero .bh-hero-band {
-  opacity: 0.16;
-  stroke: none;
 }
 .bh-hero .bh-marker {
   stroke: var(--md-default-bg-color);
   stroke-width: 1.5;
-}
-.bh-hero .bh-cross {
-  stroke: var(--bh-ink-2);
-  stroke-width: 1;
-}
-.bh-hero .bh-hero-hit {
-  fill: transparent;
-  cursor: crosshair;
-  outline: none;
-}
-.bh-hero .bh-hero-hit:focus-visible {
-  stroke: var(--md-default-fg-color);
-  stroke-width: 1.5;
-  stroke-dasharray: 3 3;
 }
 .bh-hero .bh-tip {
   position: absolute;
@@ -389,4 +334,58 @@
 }
 .bh-hero .bh-cmp-legend .bh-hero-item {
   grid-template-columns: 0.9em auto 1fr;
+}
+
+/* The trajectory (#bench-hero): the merges' paired changes, chained, and each one's own */
+.bh-hero .bh-zero {
+  stroke: var(--bh-ink-2);
+  stroke-width: 1;
+}
+.bh-hero .bh-band {
+  fill: var(--bh-s1);
+  opacity: 0.16;
+}
+.bh-hero .bh-chain {
+  fill: none;
+  stroke: var(--bh-s1);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+}
+.bh-hero .bh-gap {
+  stroke: var(--bh-s8);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.bh-hero .bh-dot-chain {
+  fill: var(--bh-s1);
+}
+.bh-hero .bh-dot-own {
+  fill: var(--bh-ink-2);
+}
+.bh-hero .bh-dot-own.bh-dot-excl {
+  fill: var(--md-default-fg-color);
+}
+.bh-hero .bh-dot-aa {
+  fill: var(--md-default-bg-color);
+  stroke: var(--bh-ink-2);
+  stroke-width: 1.25;
+}
+.bh-hero .bh-pt {
+  cursor: pointer;
+  outline: none;
+}
+.bh-hero .bh-pt:focus-visible .bh-hit,
+.bh-hero .bh-pt:hover .bh-hit {
+  fill: var(--bh-grid);
+  opacity: 0.45;
+}
+.bh-hero .bh-hit {
+  fill: transparent;
+}
+.bh-hero .bh-hero-commit a {
+  overflow-wrap: anywhere;
+}
+.bh-root .bh-scroll {
+  overflow-x: auto;
+  max-width: 100%;
 }
