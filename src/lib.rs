@@ -80,6 +80,8 @@
 pub mod bits;
 pub mod block;
 pub mod bwt;
+// (the compact30 inverse BWT: bwt::Compact30)
+mod c30;
 // (the cooperative inverse BWT's pool, build and walk: bwt::Cooperative's)
 mod coop;
 pub mod crc;

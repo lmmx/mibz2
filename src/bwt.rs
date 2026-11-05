@@ -73,6 +73,8 @@ pub trait InverseBwt: Default + Send {
     }
 }
 
+pub use crate::c30::{Compact30, Compact30Of, Compact30Split};
+
 /// The plain walk: one chain of dependent loads (lbzip2's and libbzip2's)
 #[derive(Default)]
 pub struct Plain {
@@ -1198,8 +1200,9 @@ fn room_segments<const L: usize, const PF: u8>(
 }
 
 /// The busy phase's chunk: at most this many offsets' bytes are staged per lane (an 8 KiB
-/// tile at 32 lanes, in L1) before they are copied to the lanes' buffers
-const TILE: usize = 256;
+/// tile at 32 lanes, in L1) before they are copied to the lanes' buffers (compact30's busy
+/// phase stages the same way: `c30`)
+pub(crate) const TILE: usize = 256;
 
 /// `walk_segments_flagged_with_prefetch` with 0.1.5's switch: `PF` prefetches each lane's
 /// next entry into L1 (`PF_L1`, 0.1.5's prefetch) or not at all (`PF_OFF`). Kept so that
