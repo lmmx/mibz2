@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2](https://github.com/lmmx/mibz2/compare/v0.2.1...v0.2.2) - 2026-11-05
+
+### <!-- 2 -->Bug Fixes
+
+- *(sweep)* walk blocks under MIN_SEGMENTED plainly at every setting, as the decoder does ([#200](https://github.com/lmmx/mibz2/pull/200))
+- *(occupancy)* complete traces under a team plan; --teams K, checked in CI ([#116](https://github.com/lmmx/mibz2/pull/116))
+
+### <!-- 3 -->Performance
+
+- *(block)* the symbol loop keeps the bit reader's state in registers ([#204](https://github.com/lmmx/mibz2/pull/204))
+- *(bwt)* the staged walk tests each lane's start flag, without the deferred flags ([#181](https://github.com/lmmx/mibz2/pull/181))
+- *(parallel)* the default window is 4 blocks a thread, not 2 ([#180](https://github.com/lmmx/mibz2/pull/180))
+- *(mtf)* the move-to-front list holds the bytes, not their indices ([#172](https://github.com/lmmx/mibz2/pull/172))
+- *(bwt)* the room walk tests its flags once an offset and stages its bytes in one tile ([#171](https://github.com/lmmx/mibz2/pull/171))
+- *(mtf)* a run of at most 64 bytes is two vector stores, not a memset call ([#170](https://github.com/lmmx/mibz2/pull/170))
+- *(bwt)* Segmented inverts in place over ll; rle is never allocated ([#164](https://github.com/lmmx/mibz2/pull/164))
+- *(bwt)* the room walk's pass steps eight lanes a turn, handovers after ([#157](https://github.com/lmmx/mibz2/pull/157))
+
+### <!-- 4 -->Documentation
+
+- *(blog)* Huffman decoding in mibz2: keeping the bit buffer in a register ([#206](https://github.com/lmmx/mibz2/pull/206))
+- *(coop)* the pool's preamble said nothing uses it; the cooperative kernel's teams do ([#199](https://github.com/lmmx/mibz2/pull/199))
+- *(claude)* audit runs every time the coordinator wakes, not only on a recurring timer ([#192](https://github.com/lmmx/mibz2/pull/192))
+- *(benchmarks)* the history as one chained trajectory, and absolute figures one runner at a time ([#176](https://github.com/lmmx/mibz2/pull/176))
+- look at rendered pages before publishing; fix the renders it found ([#167](https://github.com/lmmx/mibz2/pull/167))
+- *(blog)* name the table-builder post's sidebar group after its title
+- *(blog)* plainer title and a shorter dek for the table-builder post, and say what compact30 means
+- *(blog)* how compact30's table builder went from 49 instructions to 12 ([#144](https://github.com/lmmx/mibz2/pull/144))
+- *(blog)* restore the space–time post's original dek; fix the card check on previews ([#143](https://github.com/lmmx/mibz2/pull/143))
+- check that each post's description, index card and social card match its text ([#142](https://github.com/lmmx/mibz2/pull/142))
+- *(blog)* revisiting the space–time tradeoff in BWT inversion ([#140](https://github.com/lmmx/mibz2/pull/140))
+- *(blog)* a smaller inverse-BWT table wins with four workers ([#139](https://github.com/lmmx/mibz2/pull/139))
+- *(blog)* the MLP post states its conclusion up front ([#138](https://github.com/lmmx/mibz2/pull/138))
+- *(blog)* MLP post, links at first mention and an intuition for the chain and IPC ([#136](https://github.com/lmmx/mibz2/pull/136))
+- *(blog)* memory-level parallelism in mibz2, with measurement notes ([#135](https://github.com/lmmx/mibz2/pull/135))
+- *(blog)* restore the P87 post's title ([#127](https://github.com/lmmx/mibz2/pull/127))
+- *(blog)* rewrite the P87 post around the problem: the extra CPU cost of four-worker decoding ([#126](https://github.com/lmmx/mibz2/pull/126))
+- *(site)* render maths with KaTeX; the blog posts drop process detail ([#124](https://github.com/lmmx/mibz2/pull/124))
+- *(blog)* Investigating inverse-BWT memory interference in mibz2 ([#123](https://github.com/lmmx/mibz2/pull/123))
+- *(blog)* Block dispatch in mibz2: mutexes, futexes and the scheduler ([#121](https://github.com/lmmx/mibz2/pull/121))
+- *(blog)* 32 lanes, 8.6 chains: where the inverse BWT walk spends its cycles ([#119](https://github.com/lmmx/mibz2/pull/119))
+- 0.2.1's measured notes (the one-pass build: who gets it, the i9 and CI runs); the compact-Ψ feasibility review after #112 (the 32-row descriptor is what #112 measured; on the i9 a smaller table can add a fifth team at most, about 1.25x the inversion; wikidata-pq's 0.1.4 pin and 4-thread cap found)
+
+### <!-- 6 -->Testing
+
+- *(bwt)* the staged walk's chunk edges, each required; blocks over 2^23 rows refused ([#174](https://github.com/lmmx/mibz2/pull/174))
+- witness the walk's deferred handovers ([#159](https://github.com/lmmx/mibz2/pull/159))
+
+### <!-- 7 -->Build System and CI
+
+- *(channel)* head-sha reads the merge back; the expected head goes in expectedHeadSha ([#190](https://github.com/lmmx/mibz2/pull/190))
+- *(channel)* the tripwire is a record, not a wake-up; audit runs on every recurring wake ([#189](https://github.com/lmmx/mibz2/pull/189))
+- *(channel)* the tripwire flags a misroute as a failing check run on #145 ([#187](https://github.com/lmmx/mibz2/pull/187))
+- *(channel)* route the coordinator's messages deterministically, and a tripwire for misroutes ([#186](https://github.com/lmmx/mibz2/pull/186))
+
+### <!-- 9 -->Other
+
+- Call on mibz2, cutting instructions from bzip2 decoding with an autonomous swarm ([#152](https://github.com/lmmx/mibz2/pull/152))
+
 ## [0.2.1](https://github.com/lmmx/mibz2/compare/v0.2.0...v0.2.1) - 2026-10-30
 
 The one-core inverse-BWT table build now writes each entry in one pass. The table, the

@@ -648,7 +648,7 @@ dependencies = [
 
 [[package]]
 name = "mibz2"
-version = "0.2.1"
+version = "0.2.2"
 
 [[package]]
 name = "mibz2-bench-alternatives"
