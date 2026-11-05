@@ -9,7 +9,7 @@
 //!
 //! **The workload is the benchmark's.** Each run is a fresh process decoding FILE as
 //! examples/ab.rs's `mibz2` arm does: `BzReader::parallel_with(File, t, slots,
-//! Kernels::detect())` (`parallel`'s own call, its window `2 × t` unless `--slots`), its
+//! Kernels::detect())` (`parallel`'s own call, its window `SLOTS_PER_THREAD × t` unless `--slots`), its
 //! feeder reading the file, the output drained in 4 MiB reads into a streaming hash. The
 //! 1-thread runs are pinned to one CPU, as the benchmark's are. Every run must give the same
 //! bytes.
@@ -88,7 +88,7 @@ use std::io::Read;
 use std::process::Command;
 use std::time::{Duration, Instant};
 
-use mibz2::parallel::Plan;
+use mibz2::parallel::{Plan, SLOTS_PER_THREAD};
 use mibz2::trace::{self, Kind, ThreadTrace, UNREAD};
 use mibz2::{BzReader, Kernels};
 
@@ -936,7 +936,7 @@ fn parent(args: &[String]) {
                 });
                 trace::Settings {
                     in_place: matches!(plan, Plan::Workers(_)),
-                    ..trace::Settings::new(level, t, slots.unwrap_or(2 * t))
+                    ..trace::Settings::new(level, t, slots.unwrap_or(SLOTS_PER_THREAD * t))
                 }
             })
             .collect();
@@ -981,7 +981,7 @@ fn parent(args: &[String]) {
     let mut raw = Vec::new();
     for r in 0..rounds {
         for &t in &threads {
-            let s = slots.unwrap_or(2 * t);
+            let s = slots.unwrap_or(SLOTS_PER_THREAD * t);
             let mut places = specs.clone();
             let n = places.len();
             places.rotate_left(r % n);
@@ -1177,7 +1177,7 @@ fn parent(args: &[String]) {
             g(&full, "b.runq_ms"),
             g(&full, "b.slices"),
         );
-        let s = slots.unwrap_or(2 * t);
+        let s = slots.unwrap_or(SLOTS_PER_THREAD * t);
         let rows = g(&tl, "f.rows_max");
         let decoded = g(&tl, "f.decoded_max");
         let plan = teams.map_or(Plan::for_threads(t), |k| Plan::Teams {
@@ -1229,7 +1229,10 @@ fn parent(args: &[String]) {
                     .get(&(t, spec.clone()))
                     .map_or(J::Null, |c| J::S(c.clone())),
             ),
-            ("slots".into(), J::N(slots.unwrap_or(2 * t) as f64)),
+            (
+                "slots".into(),
+                J::N(slots.unwrap_or(SLOTS_PER_THREAD * t) as f64),
+            ),
             (
                 "above_physical_cores".into(),
                 m.cores.map_or(J::Null, |c| J::B(t > c)),

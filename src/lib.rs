@@ -392,7 +392,11 @@ pub fn decode(data: &[u8]) -> Result<Vec<u8>, Error> {
 /// A whole .bz2 decoded on `threads` threads (at least 1), in order, spent as
 /// `StreamDecoder::new` plans them
 pub fn decode_parallel(data: &[u8], threads: usize) -> Result<Vec<u8>, Error> {
-    let dec = StreamDecoder::new(threads, 2 * threads.max(1), Kernels::detect());
+    let dec = StreamDecoder::new(
+        threads,
+        parallel::SLOTS_PER_THREAD * threads.max(1),
+        Kernels::detect(),
+    );
     let mut out = Vec::with_capacity(data.len().saturating_mul(4));
     std::thread::scope(|s| {
         s.spawn(|| {

@@ -70,15 +70,20 @@ Where the counts and bounds come from:
   drops them. So it holds under 4 MiB + its 2 MiB lookahead + one chunk, reserved by
   doubling.
 
-**The ledger at -9 (full blocks, the default window 2t, 4 MiB chunks; `just bench-ledger
---threads 1,2,4,10`):**
+**The ledger at -9 (full blocks, the default window 4t, `SLOTS_PER_THREAD`; 4 MiB chunks;
+`just bench-ledger --threads 1,2,4,10`):**
 
 | threads | reserved at least | at most, before the segments' ratchet | hot (model) |
 |--:|--:|--:|--:|
-| 1 | 33.7 MB | 54.9 MB | 3.6 MB |
-| 2 | 45.4 MB | 70.3 MB | 7.2 MB |
-| 4 | 68.9 MB | 101.0 MB | 14.4 MB |
-| 10 | 139.5 MB | 193.0 MB | 36.0 MB |
+| 1 | 39.1 MB | 62.1 MB | 3.6 MB |
+| 2 | 56.2 MB | 84.7 MB | 7.2 MB |
+| 4 | 90.5 MB | 129.8 MB | 14.4 MB |
+| 10 | 193.5 MB | 265.0 MB | 36.0 MB |
+
+Each slot reserves 2.7 MB: its symbols at the format's bound, and its output buffer. The
+window was 2t before #180, so the wider one adds 2.7 MB × 2t, 21.6 MB at 4 threads. A
+corpus block writes about 0.2 MB of its slot's symbols, so RSS grows by less than the
+reservation.
 
 These are for the segmented kernel, the default, which inverts in place
 (`InverseBwt::invert_in_place`): its walk writes over `ll`, so `rle` is never allocated.

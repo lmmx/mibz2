@@ -49,3 +49,18 @@ The same as `2026-11-05-build-run-vectors.md`:
 - no harm, with at most three runs.
 
 It is closed as not shown if no run shows a gain beyond noise.
+
+## Result: merged as #170 (e7c30a86)
+
+Two runs, bench 3.2.0, head 55dff0a against 4d4709d:
+
+| run | runner | `wikidata` wall, 1 / 2 / 4 threads | CPU at 4 threads | MTF + RLE2 stage |
+|---|---|---|---|---|
+| 1 | EPYC 9V74 | **−1.4%** (−2.7, −0.1) / −0.5% / −3.3% (−7.6, +1.2) | **−2.1%** (−4.1, −0.0) | **−4.4%** |
+| 2 | EPYC 7763 | **−2.1%** (−3.0, −1.1) / −1.0% / **−1.9%** (−3.6, −0.2) | **−2.0%** (−3.3, −0.7) | **−9.7%** |
+
+- **Benefit:** met in both runs.
+- **No harm:** `random` wall at 4 threads was flagged slower in run 1, at +2.7% (+0.4, +5.0).
+  It was not flagged in run 2, at +0.5% (−2.1, +3.2), so it is unresolved and reported here.
+- **What it says:** 1.5% fewer instructions gave about 2% of wall time at both thread counts.
+  MTF is one serial chain per block, so its instructions are on the critical path.
