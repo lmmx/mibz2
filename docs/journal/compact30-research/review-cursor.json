@@ -101,6 +101,13 @@
       "type": "REVIEW",
       "sha": "6b720b2415ac04c1aed1e0447842ebf832f3dfd7",
       "checkpoint_comment_id": 6651023083
+    },
+    {
+      "pr": 145,
+      "id": 6653724458,
+      "type": "REVIEW",
+      "sha": "a2eb08773c3231f839a6fbe73a764d3f3bb25b16",
+      "checkpoint_comment_id": 6653416078
     }
   ],
   "reviews": [
@@ -269,14 +276,14 @@
   ],
   "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
   "wake": "Scan inbox #160 oldest first after offset 6646251725 under SPEC at 0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0.",
-  "next_trigger": "Publish/recover REVIEW for inbox 6653416078, then next inbox comment after offset.",
+  "next_trigger": "Next unfinished inbox #160 comment after offset 6646251725.",
   "review_pr": 148,
   "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
   "proposal_independence": {
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "COMPLETE_PENDING_REVIEW",
+  "status": "WAITING",
   "published_evidence_commit": "a2eb08773c3231f839a6fbe73a764d3f3bb25b16",
   "incoming_experiment_comment_ids": [
     {
@@ -372,9 +379,9 @@
     {
       "comment_id": 6653416078,
       "pr": 160,
-      "status": "complete",
+      "status": "finished",
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Work and canonical ledger committed; awaiting idempotent REVIEW publication then finished cursor.",
+      "progress": "Report, evidence and canonical ledger committed; REVIEW published and recorded.",
       "report_path": "docs/journal/compact30-research/reviews/inbox-6653416078/report.md",
       "completed": true,
       "report_commit": "a2eb08773c3231f839a6fbe73a764d3f3bb25b16",
@@ -384,7 +391,8 @@
         "raw_benchmark_replay": false,
         "new_timing": false,
         "implementation": false
-      }
+      },
+      "reply_id": 6653724458
     }
   ]
 }
