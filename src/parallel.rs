@@ -6,7 +6,8 @@
 //!   Huffman-coded symbols (the one phase that must be sequential: a block's end is
 //!   known only once they are read), and each stream's end and combined CRC;
 //! - `threads` **workers** finish a block each (move-to-front, the inverse BWT, RLE1 and
-//!   the block's CRC: `decode_block`);
+//!   the block's CRC: `decode_block`), taking them in order from a queue whose idle
+//!   workers wait without holding its lock (`JobQueue`);
 //! - the **reader** takes the blocks in order.
 //!
 //! **Memory is bounded:** at most `slots` blocks are between the scanner and the reader
@@ -24,10 +25,10 @@
 
 use super::stream::{Event, Scanner, Source};
 use super::{decode_block, Error, ErrorKind, Kernels, Scratch};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 use std::panic::{catch_unwind, AssertUnwindSafe};
-use std::sync::mpsc::{channel, sync_channel, Receiver, SyncSender};
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::mpsc::{sync_channel, Receiver, SyncSender};
+use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::JoinHandle;
 
 /// Input chunks queued for the scanner (the split writes 8 MB at a time)
@@ -57,6 +58,114 @@ macro_rules! mark {
 
 /// A block to finish: its place in the stream, its first bit, its symbols
 type Job = (u64, u64, super::block::Symbols);
+
+/// The jobs' queue, from the scanner to the workers in the order sent, with a channel's
+/// ends: the sender's drop (the scanner's return, or its unwinding) closes it, and a send
+/// fails once every worker's end is dropped. A worker waits for a job on the condition
+/// variable, whose wait gives the lock up, so the lock is held only to push or pop, never
+/// by a worker asleep. (A `Mutex<Receiver>` held across `recv` queued the idle workers on
+/// the lock: a job went to its holder, which had to be woken first, while a worker just
+/// back from a block slept on the lock, and each holder's pass woke the next.)
+struct JobQueue<T> {
+    state: Mutex<Queued<T>>,
+    cv: Condvar,
+}
+
+struct Queued<T> {
+    jobs: VecDeque<T>,
+    /// workers asleep in `recv`, so a send wakes one only if one waits
+    waiting: usize,
+    /// the workers' ends not yet dropped
+    receivers: usize,
+    /// the sender's end dropped: no job will come
+    closed: bool,
+}
+
+impl<T> JobQueue<T> {
+    fn lock(&self) -> MutexGuard<'_, Queued<T>> {
+        // (nothing panics while the lock is held: a poisoned lock is still consistent)
+        self.state.lock().unwrap_or_else(|e| e.into_inner())
+    }
+}
+
+/// The scanner's end of the jobs' queue
+struct JobTx<T>(Arc<JobQueue<T>>);
+/// A worker's end of the jobs' queue
+struct JobRx<T>(Arc<JobQueue<T>>);
+
+fn job_queue<T>() -> (JobTx<T>, JobRx<T>) {
+    let q = Arc::new(JobQueue {
+        state: Mutex::new(Queued {
+            jobs: VecDeque::new(),
+            waiting: 0,
+            receivers: 1,
+            closed: false,
+        }),
+        cv: Condvar::new(),
+    });
+    (JobTx(q.clone()), JobRx(q))
+}
+
+impl<T> JobTx<T> {
+    /// Queue a job, waking a waiting worker if there is one; the job back if no worker's
+    /// end is left (as a channel's send fails once its receivers are gone)
+    fn send(&self, job: T) -> Result<(), T> {
+        let mut q = self.0.lock();
+        if q.receivers == 0 {
+            return Err(job);
+        }
+        q.jobs.push_back(job);
+        let wake = q.waiting > 0;
+        drop(q);
+        // (a worker not waiting is decoding, or about to look at the queue under the lock:
+        // it takes the job itself, with no wake-up)
+        if wake {
+            self.0.cv.notify_one();
+        }
+        Ok(())
+    }
+}
+
+impl<T> Drop for JobTx<T> {
+    fn drop(&mut self) {
+        self.0.lock().closed = true;
+        self.0.cv.notify_all();
+    }
+}
+
+impl<T> JobRx<T> {
+    /// The next job in the order sent, waiting for one; None once the queue is closed
+    /// and empty (the jobs queued before the close are taken first)
+    fn recv(&self) -> Option<T> {
+        mark!(JobLock);
+        let mut q = self.0.lock();
+        mark!(JobRecv);
+        loop {
+            if let Some(job) = q.jobs.pop_front() {
+                return Some(job);
+            }
+            if q.closed {
+                return None;
+            }
+            q.waiting += 1;
+            q = self.0.cv.wait(q).unwrap_or_else(|e| e.into_inner());
+            q.waiting -= 1;
+        }
+    }
+}
+
+impl<T> Clone for JobRx<T> {
+    fn clone(&self) -> Self {
+        self.0.lock().receivers += 1;
+        JobRx(self.0.clone())
+    }
+}
+
+impl<T> Drop for JobRx<T> {
+    fn drop(&mut self) {
+        self.0.lock().receivers -= 1;
+    }
+}
 
 struct State {
     /// decoded blocks (or errors) by their place in the stream, not yet read
@@ -160,8 +269,7 @@ impl StreamDecoder {
             slots,
         });
         let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
-        let (job_tx, job_rx) = channel::<Job>();
-        let job_rx = Arc::new(Mutex::new(job_rx));
+        let (job_tx, job_rx) = job_queue::<Job>();
         let mut handles = Vec::with_capacity(threads + 1);
         for i in 0..threads {
             let (shared, job_rx) = (shared.clone(), job_rx.clone());
@@ -172,6 +280,7 @@ impl StreamDecoder {
                     .expect("spawn a bz2 worker"),
             );
         }
+        drop(job_rx); // (the workers hold the queue's receiving ends)
         let sh = shared.clone();
         handles.push(
             std::thread::Builder::new()
@@ -343,7 +452,7 @@ impl Source for ChannelSource<'_> {
     }
 }
 
-fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender<Job>) {
+fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: JobTx<Job>) {
     let src = ChannelSource {
         rx,
         buf: Vec::new(),
@@ -415,16 +524,11 @@ fn scanner(shared: &Shared, rx: Receiver<Vec<u8>>, jobs: std::sync::mpsc::Sender
     // fails, and the workers end once the jobs queued are done)
 }
 
-fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels) {
+fn worker<I: super::bwt::InverseBwt>(shared: &Shared, jobs: &JobRx<Job>, k: Kernels) {
     let mut scratch = Scratch::<I>::default();
     loop {
-        mark!(JobLock);
-        let job = {
-            let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());
-            mark!(JobRecv);
-            rx.recv()
-        };
-        let Ok((place, bit, symbols)) = job else {
+        // (`recv` marks JobLock and JobRecv)
+        let Some((place, bit, symbols)) = jobs.recv() else {
             // (its buffers' high-water marks, for the footprint ledger)
             #[cfg(feature = "trace")]
             if crate::trace::level() > 0 {
@@ -669,5 +773,189 @@ mod plan_tests {
             let p = Plan::for_threads(t);
             assert!(p.threads() <= t.max(1), "{t}: {p:?}");
         }
+    }
+}
+
+/// The jobs' queue alone (`miri_` so CI's Miri job runs them under its race detector): the
+/// order, a wake-up for every job sent to waiting workers, the close and the ends' drops.
+/// A wake-up lost or a close not seen fails at `PATIENCE` rather than hanging.
+#[cfg(test)]
+mod queue_tests {
+    use super::*;
+    use std::sync::mpsc;
+    use std::thread::JoinHandle;
+    use std::time::Duration;
+
+    const PATIENCE: Duration = Duration::from_secs(120);
+
+    fn settled<T>(q: &JobQueue<T>) -> (usize, usize, usize, bool) {
+        let st = q.lock();
+        (st.jobs.len(), st.waiting, st.receivers, st.closed)
+    }
+
+    /// `n` workers taking jobs from `rx` until the queue ends, each sending what it took
+    fn workers(n: usize, rx: &JobRx<u32>) -> (mpsc::Receiver<Vec<u32>>, Vec<JoinHandle<()>>) {
+        let (tx, got) = mpsc::channel();
+        let hs = (0..n)
+            .map(|_| {
+                let (rx, tx) = (rx.clone(), tx.clone());
+                std::thread::spawn(move || {
+                    let _ = tx.send(std::iter::from_fn(|| rx.recv()).collect());
+                })
+            })
+            .collect();
+        (got, hs)
+    }
+
+    /// What each of the `n` workers took, once the queue has ended them all
+    fn ended(got: mpsc::Receiver<Vec<u32>>, hs: Vec<JoinHandle<()>>) -> Vec<Vec<u32>> {
+        let all = (0..hs.len())
+            .map(|_| {
+                got.recv_timeout(PATIENCE)
+                    .expect("a worker the close never ended")
+            })
+            .collect();
+        for h in hs {
+            h.join().unwrap();
+        }
+        all
+    }
+
+    /// One worker takes the jobs in exactly the order sent
+    #[test]
+    fn miri_queue_order() {
+        let n = if cfg!(miri) { 200 } else { 100_000 };
+        let (tx, rx) = job_queue::<u32>();
+        let q = tx.0.clone();
+        let (got, hs) = workers(1, &rx);
+        drop(rx);
+        for j in 0..n {
+            tx.send(j).unwrap();
+        }
+        drop(tx);
+        assert_eq!(ended(got, hs), vec![(0..n).collect::<Vec<_>>()]);
+        assert_eq!(settled(&q), (0, 0, 0, true));
+    }
+
+    /// Many workers: every job reaches exactly one, each worker's in the order sent, and
+    /// the sender's drop ends them all once the queue is empty
+    #[test]
+    fn miri_queue_each_job_once() {
+        let n = if cfg!(miri) { 300 } else { 200_000 };
+        let (tx, rx) = job_queue::<u32>();
+        let q = tx.0.clone();
+        let (got, hs) = workers(4, &rx);
+        drop(rx);
+        for j in 0..n {
+            tx.send(j).unwrap();
+        }
+        drop(tx);
+        let got = ended(got, hs);
+        for v in &got {
+            assert!(
+                v.windows(2).all(|w| w[0] < w[1]),
+                "a worker's jobs out of order"
+            );
+        }
+        let mut all: Vec<u32> = got.concat();
+        all.sort_unstable();
+        assert_eq!(all, (0..n).collect::<Vec<_>>());
+        assert_eq!(settled(&q), (0, 0, 0, true));
+    }
+
+    /// Bursts of 1 to 7 jobs to 4 workers that are all waiting or on their way back: each
+    /// burst is taken before the next is sent, so a job left queued with a worker asleep
+    /// (a wake-up lost, or skipped by the `waiting` count) fails here
+    #[test]
+    fn miri_queue_wakes_waiting_workers() {
+        let rounds = if cfg!(miri) { 30 } else { 20_000 };
+        let (tx, rx) = job_queue::<u32>();
+        let q = tx.0.clone();
+        let (ack_tx, ack_rx) = mpsc::channel();
+        let hs: Vec<_> = (0..4)
+            .map(|_| {
+                let (rx, ack) = (rx.clone(), ack_tx.clone());
+                std::thread::spawn(move || {
+                    while let Some(j) = rx.recv() {
+                        ack.send(j).unwrap();
+                    }
+                    ack.send(u32::MAX).unwrap(); // (ended)
+                })
+            })
+            .collect();
+        drop((rx, ack_tx));
+        for r in 0..rounds {
+            let burst = 1 + r % 7;
+            for j in 0..burst {
+                tx.send(j).unwrap();
+            }
+            let mut seen = [false; 7];
+            for _ in 0..burst {
+                let j = ack_rx
+                    .recv_timeout(PATIENCE)
+                    .expect("a job queued while its workers slept");
+                assert!(
+                    !std::mem::replace(&mut seen[j as usize], true),
+                    "job {j} twice"
+                );
+            }
+        }
+        drop(tx);
+        for _ in 0..hs.len() {
+            let end = ack_rx.recv_timeout(PATIENCE);
+            assert_eq!(end, Ok(u32::MAX), "a worker the close never ended");
+        }
+        for h in hs {
+            h.join().unwrap();
+        }
+        assert_eq!(settled(&q), (0, 0, 0, true));
+    }
+
+    /// The close wakes every waiting worker, after the jobs queued before it are taken
+    #[test]
+    fn miri_queue_close_wakes_waiting_workers() {
+        for before in [0, 5] {
+            let (tx, rx) = job_queue::<u32>();
+            let q = tx.0.clone();
+            let (got, hs) = workers(3, &rx);
+            drop(rx);
+            // (all three asleep in recv)
+            while q.lock().waiting < 3 {
+                std::thread::yield_now();
+            }
+            for j in 0..before {
+                tx.send(j).unwrap();
+            }
+            drop(tx);
+            let taken: usize = ended(got, hs).iter().map(Vec::len).sum();
+            assert_eq!(taken, before as usize);
+            assert_eq!(settled(&q), (0, 0, 0, true));
+        }
+    }
+
+    /// A send fails, the job handed back, once every worker's end is gone, a worker's
+    /// unwinding included (as the channel's did); and the sender's unwinding closes it
+    #[test]
+    fn miri_queue_ends_dropped() {
+        let (tx, rx) = job_queue::<u32>();
+        let other = rx.clone();
+        tx.send(1).unwrap();
+        drop(rx);
+        tx.send(2).unwrap();
+        let h = std::thread::spawn(move || {
+            assert_eq!(other.recv(), Some(1));
+            panic!("a worker's panic outside catch_unwind");
+        });
+        assert!(h.join().is_err());
+        assert_eq!(tx.send(3), Err(3));
+
+        let (tx, rx) = job_queue::<u32>();
+        let h = std::thread::spawn(move || {
+            tx.send(7).unwrap();
+            panic!("the scanner's panic");
+        });
+        assert!(h.join().is_err());
+        assert_eq!(rx.recv(), Some(7));
+        assert_eq!(rx.recv(), None);
     }
 }

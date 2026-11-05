@@ -46,11 +46,11 @@ pub enum Kind {
     SlotWait,
     SlotGot,
     /// the scanner: a block read (its Huffman-coded symbols) and given its place (counted
-    /// in the window from here), then sent to the workers' channel
+    /// in the window from here), then sent to the workers' queue
     Issued,
     Enqueued,
-    /// a worker: before it takes the jobs' lock, once it holds it (waiting in `recv`), and
-    /// once it has a job
+    /// a worker: before it takes the jobs' lock, once it holds it (then waiting for a job
+    /// if none is queued, the lock given up while it sleeps), and once it has a job
     JobLock,
     JobRecv,
     JobGot,

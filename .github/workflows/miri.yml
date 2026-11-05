@@ -4,18 +4,22 @@ name: Miri
 # (bwt::tests::miri_*, about a minute). Each test asserts it reached the walk's handoff
 # transitions, so a pass means they were checked. And the cooperative pool's
 # (coop::tests::miri_*): its lifetime erasure, panics and wake-ups, under Miri's race
-# detector. Only on changes to the walks or the pool.
+# detector. And the parallel decoder's jobs' queue (parallel::queue_tests::miri_*): its
+# order, wake-ups and close, under the race detector. Only on changes to the walks, the
+# pool or the queue.
 on:
   pull_request:
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
+      - "src/parallel.rs"
       - ".github/workflows/miri.yml"
   push:
     branches: [main, master]
     paths:
       - "src/bwt.rs"
       - "src/coop.rs"
+      - "src/parallel.rs"
       - ".github/workflows/miri.yml"
   workflow_dispatch:
 

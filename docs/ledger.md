@@ -166,8 +166,9 @@ reader can take a block before its `Ready` mark. Such a block counts as held for
   resident. Peak RSS is printed beside it for comparison: the same process, the `off`
   mode.
 - **Not every allocation.** The scanner's per-block tables are approximate: their struct
-  size isn't public. The channels' nodes and the shared state's headers, a few KB, are
-  left out. So are the caller's own read buffer and the thread stacks' touched pages.
+  size isn't public. The input channel's nodes, the jobs' queue and the shared state's
+  headers, a few KB, are left out. So are the caller's own read buffer and the thread
+  stacks' touched pages.
 - **Measured figures are this file's.** The corpus has 431 blocks: about 233 full ones of
   about 900,000 rows, and about 200 short ones (a tenth of all its blocks hold 10 rows or
   fewer). So per-block means, such as the mean decode or the time from ready to taken,
