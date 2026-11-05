@@ -511,3 +511,19 @@ Verbatim:
       E → about 0.001 c/B. That is the ceiling a splitting construction aims at.
     - The modelled tail excess varies 0.11–0.66 c/B by block and start set, so the tail clock
       needs many blocks.
+- **Two fronts, to convert the census into built constructions** (Louis's instruction).
+  - **Near-term, inline:** the ISA-level probe, research PR #201. The head is built at
+    x86-64-v3 against the base at x86-64, and the per-stage table says which stages a
+    multiversioned clone could pay for. Its rule is registered in the body.
+  - **Workflow wf_91b6b8b3-196:** four constructions, each in its own worktree with an
+    independent adversarial review and one repair round:
+    - PGO probe, trained only on the generated corpora so the wikidata rows stay out of sample;
+    - multi-symbol Huffman decode in the scanner;
+    - the build's scatter: software write-combining, prefetchw, two-pass;
+    - frontier: speculative block discovery by bit-level magic search, with a fused
+      Huffman+MTF on the workers. It re-derives #10, whose supply premise the census has
+      changed: the gain is now CPU, from overlapping two dependency chains and dropping the
+      1.8 MB symbol array.
+  - **Still running:** job handoff, Huffman bit-buffer register, MTF, tail rivals, window-light
+    walks, pair matrix.
+  - **THP stays authority-gated,** waiting on the maintainer.
