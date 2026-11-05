@@ -291,7 +291,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "WAITING",
+  "status": "IN_PROGRESS",
   "published_evidence_commit": "9d82533f45030e05a7240b7baa1b0a38e471acab",
   "incoming_experiment_comment_ids": [
     {
@@ -419,6 +419,14 @@
         "implementation": false
       },
       "reply_id": 6658149381
+    },
+    {
+      "comment_id": 6659992544,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "progress": "Receipt; pricing tail and auditing scope at 1132857e."
     }
   ]
 }
