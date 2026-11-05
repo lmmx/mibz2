@@ -190,8 +190,8 @@
 .md-typeset .bf-fig .bf-anim-btn svg { display: block; width: 0.75rem; height: 0.75rem; fill: currentColor; }
 .md-typeset .bf-fig .bf-anim-btn[data-state="playing"] .i-play,
 .md-typeset .bf-fig .bf-anim-btn[data-state="paused"] .i-pause { display: none; }
-.bf-chain .bf-buttons { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
-.bf-chain .bf-btn {
+.bf-chain .bf-buttons, .bf-bitbuf .bf-buttons { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+.bf-chain .bf-btn, .bf-bitbuf .bf-btn {
   padding: 0.5rem 1.1rem;
   border: 1px solid var(--bf-frame);
   border-radius: 999px;
@@ -202,22 +202,22 @@
   cursor: pointer;
   transition: background-color 0.15s, color 0.15s, opacity 0.15s;
 }
-.bf-chain .bf-btn:hover { background: var(--bf-track); }
-.bf-chain .bf-follow {
+.bf-chain .bf-btn:hover, .bf-bitbuf .bf-btn:hover { background: var(--bf-track); }
+.bf-chain .bf-follow, .bf-bitbuf .bf-read {
   flex: 1;
   border-color: var(--bf-ink);
   background: var(--bf-ink);
   color: var(--md-default-bg-color);
 }
-.bf-chain .bf-follow:hover { opacity: 0.88; background: var(--bf-ink); }
-.bf-chain .bf-follow:disabled {
+.bf-bitbuf .bf-read:hover, .bf-chain .bf-follow:hover { opacity: 0.88; background: var(--bf-ink); }
+.bf-bitbuf .bf-read:disabled, .bf-chain .bf-follow:disabled {
   border-color: var(--bf-track);
   background: var(--bf-track);
   color: var(--bf-muted);
   opacity: 1;
   cursor: default;
 }
-.bf-chain .bf-btn:focus-visible { outline: 2px solid var(--md-accent-fg-color); outline-offset: 2px; }
+.bf-bitbuf .bf-btn:focus-visible, .bf-chain .bf-btn:focus-visible { outline: 2px solid var(--md-accent-fg-color); outline-offset: 2px; }
 .md-typeset .bf-chain .bf-path { margin: 0.55rem 0 0; color: var(--bf-muted); font-size: 0.62rem; }
 @media (prefers-reduced-motion: reduce) {
   .md-typeset .bf-chain .bf-cardx, .bf-chain .bf-btn { transition: none; }
@@ -627,3 +627,17 @@
 [data-md-color-scheme="slate"] .md-typeset .ag-ultra { color: #c4adf6; background: #2d2543; box-shadow: inset 0 0 0 1px #b195f2; }
 [data-md-color-scheme="slate"] .md-typeset .ag-high { color: #8cc3df; background: #1f3440; box-shadow: inset 0 0 0 1px #5199bd; }
 [data-md-color-scheme="slate"] .md-typeset .ag-session { color: #e9967a; background: #3a2821; box-shadow: inset 0 0 0 1px #e08a6d; }
+
+/* The bit buffer read one code at a time (.bf-bitbuf, blog.js) */
+.md-typeset .bf-bitbuf .bf-bits { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 0.3rem; margin: 0.4rem 0 0.2rem; padding: 0; list-style: none; }
+.md-typeset .bf-bitbuf .bf-bit { margin: 0; padding: 0.45rem 0; border: 1px solid var(--bf-frame); border-radius: 6px; background: var(--bf-surface); color: var(--bf-ink); font-family: var(--md-code-font-family); font-size: 0.8rem; text-align: center; transition: background-color 0.15s, border-color 0.15s; }
+.md-typeset .bf-bitbuf .bf-bit.is-next { background: var(--bf-green-tint); border-color: var(--bf-green); font-weight: 700; }
+.md-typeset .bf-bitbuf .bf-bit.is-empty { color: var(--bf-muted); background: transparent; border-style: dashed; }
+.md-typeset .bf-bitbuf .bf-bits-note { margin: 0; color: var(--bf-muted); font-size: 0.62rem; }
+.md-typeset .bf-bitbuf .bf-buf-state { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 0.8rem; margin: 0.6rem 0 0; font-size: 0.7rem; }
+.md-typeset .bf-bitbuf .bf-buf-state dt { color: var(--bf-muted); }
+.md-typeset .bf-bitbuf .bf-buf-state dd { margin: 0; color: var(--bf-ink); }
+.md-typeset .bf-bitbuf .bf-buf-static { margin: 0.55rem 0 0; color: var(--bf-muted); font-size: 0.66rem; }
+@media (prefers-reduced-motion: reduce) {
+  .md-typeset .bf-bitbuf .bf-bit, .bf-bitbuf .bf-btn { transition: none; }
+}

@@ -17,7 +17,7 @@ The Huffman decoder wrote its bit buffer to memory and read it back at every loo
 a register, the stage ran 13% faster on Intel and 5% on AMD.
 {: .post-dek }
 
-5 November 2026 · 16 min read · [Research result](#10-what-the-benchmark-measured)
+5 November 2026 · 16 min read · [Research result](#9-what-the-benchmark-measured)
 {: .post-meta }
 
 </div>
@@ -26,45 +26,138 @@ a register, the stage ran 13% faster on Intel and 5% on AMD.
 
 </div>
 
-bzip2 compresses a file in layers, and a decoder undoes them in reverse order. The
-outermost layer is Huffman coding. It writes each block's contents as bit codes of varying
-length, short ones for common symbols and long ones for rare ones, packed end to end with
-nothing to mark where one ends and the next begins. Reading those codes back is the first
-thing a decoder does to every block. It has to go one code at a time, because it can't know
-where a code starts until it has decoded the one before it. In mibz2, one thread, the
-scanner, does this for every block in the file. On CI's runners it takes about a tenth of a
-one-thread decode.
+A decoder reads a compressed file one byte at a time, but the codes inside a bzip2 file
+aren't whole bytes. Each is a run of bits of its own length: one bit for a very common
+symbol, a dozen or more for a rare one, packed end to end with nothing between them. So a
+decoder keeps a bit buffer: a small holding area for bits it has read from the file but not
+yet decoded. In mibz2 the buffer is a single 64-bit integer. The decoder reads each code off
+its front, shifts the rest up, and tops it up with more bytes from the file when it runs low.
 
-This post is about a change to that loop which leaves the Huffman codes, the decoding tables
-and the bits read exactly as they were. What changed is where the decoder keeps three
-numbers: its place in the input, the 64 bits it holds, and how many of them are still
-unread. They had been written to memory and read back at every table lookup. That costs
-more than it sounds, even though the memory is in the processor's nearest cache: the read
-has to wait several cycles for the write before it, and every lookup waited that long. Kept
-in registers, the numbers need no write and no read.
+This post is about where that integer was kept. It held the same bits and the decoder did
+the same work, but the compiled code wrote the buffer to memory after every code and read it
+back before the next. Even from the processor's nearest cache, a read of a value just
+written waits several cycles for the write, and every code waited that long. Rearranged so
+the compiler could keep the buffer in a register, the Huffman stage of mibz2 (the scanner)
+ran 12.9% faster on an Intel Xeon 8370C CI runner and 5.0% faster on an AMD EPYC 9V74.
 
-On CI's runners the scanner ran 12.9% faster on an Intel Xeon 8370C and 5.0% faster on an
-AMD EPYC 9V74. The benchmark decodes a fixed sample of the Wikidata dump: 12 slices of
-it, 210 MB once decoded. On the Intel runner a one-thread decode of that sample ran 2.7%
-faster. The scanner is about a tenth of the decode, so its own saving accounts for about
-half of that figure; the rest is within the noise of the other stages. On the AMD runner no
-change in the whole decode was detected. Some AMD cores can serve a read of an address just
-written without the usual wait, which leaves less to remove there. On
-Intel the cut fell short of the 15–25% predicted for it.
+The benchmark decodes a fixed sample of the Wikidata dump: 12 slices of it, 210 MB once
+decoded. On the Intel runner a one-thread decode of that sample ran 2.7% faster. The scanner
+is about a tenth of the decode, so its own saving accounts for about half of that figure;
+the rest is within the noise of the other stages. On the AMD runner no change in the whole
+decode was detected. Some AMD cores can serve a read of an address just written without the
+usual wait, which leaves less to remove there. On Intel the cut fell short of the 15–25%
+predicted for it.
 
-The first two sections set out what a bzip2 block holds and how Huffman codes are read.
-[Section 3](#3-where-huffman-decoding-sits-in-mibz2) places that reading in mibz2, and
-[section 4](#4-the-bit-reader-and-its-table) explains the bit reader and its lookup table.
-Sections [5](#5-what-the-census-found) and [6](#6-why-the-compiler-kept-the-buffer-in-memory)
-are how the stored buffer was found and why the compiler put it there, and
-[section 7](#7-the-change-the-state-as-a-value) is the change. Sections
-[8](#8-what-was-predicted-before-any-timing) to [10](#10-what-the-benchmark-measured) give
-what was predicted, how correctness was checked, and what the benchmark measured, run by run.
+[Section 1](#1-what-a-bit-buffer-is) shows a bit buffer at work on a small example and as
+mibz2's code. [Section 2](#2-reading-a-code-with-a-lookup-table) is how the decoder reads a
+code with a lookup table, and why each code waits for the last.
+[Section 3](#3-where-this-sits-in-bzip2-and-in-mibz2) places this in bzip2's format and in
+mibz2's decoder. Sections [4](#4-what-the-census-found) to
+[6](#6-the-change-the-state-as-a-value) are how the stored buffer was found, why the compiler
+put it there, and the change. Sections [7](#7-what-was-predicted-before-any-timing) to
+[9](#9-what-the-benchmark-measured) give the prediction, the correctness checks and what the
+benchmark measured, run by run.
 
-## 1. What a bzip2 block holds
+## 1. What a bit buffer is
 
-bzip2 splits its input into blocks of up to 900 kB and compresses each block on its own, in
-four steps. A decoder undoes them in the opposite order.
+Huffman coding gives each symbol a code of its own length: short for common symbols, long
+for rare ones. The codes are chosen so that no code is the beginning of another, which is
+what lets them be packed end to end with no separators. Reading from the start, the bits
+seen so far can only ever be the beginning of one code.
+
+<figure class="bf-fig">
+<p class="bf-title">Reading a toy Huffman code</p>
+<svg viewBox="0 0 720 218" role="img" aria-label="A toy code of four symbols: A is 0, B is 10, C is 110 and D is 111. The bits 0110100111 read as A, C, B, A, D. Each code's start is known only once the code before it has been read."><text x="0" y="18" class="bf-ts">The code</text><rect x="0" y="30" width="62" height="34" rx="6" class="bf-card-hi"/><text x="31" y="52" class="bf-t-strong" text-anchor="middle">A  0</text><rect x="72" y="30" width="72" height="34" rx="6" class="bf-box"/><text x="108" y="52" class="bf-t-strong" text-anchor="middle">B  10</text><rect x="154" y="30" width="82" height="34" rx="6" class="bf-box"/><text x="195" y="52" class="bf-t-strong" text-anchor="middle">C  110</text><rect x="246" y="30" width="82" height="34" rx="6" class="bf-box"/><text x="287" y="52" class="bf-t-strong" text-anchor="middle">D  111</text><text x="344" y="44" class="bf-tm">A is the most common symbol,</text><text x="344" y="60" class="bf-tm">so it gets the shortest code</text><text x="0" y="98" class="bf-ts">The bits, and how they read</text><rect x="0" y="110" width="46" height="36" class="bf-cell-hi"/><text x="23" y="133" class="bf-t-strong" text-anchor="middle">0</text><rect x="52" y="110" width="138" height="36" class="bf-cell"/><text x="121" y="133" class="bf-t-strong" text-anchor="middle">1  1  0</text><rect x="196" y="110" width="92" height="36" class="bf-cell"/><text x="242" y="133" class="bf-t-strong" text-anchor="middle">1  0</text><rect x="294" y="110" width="46" height="36" class="bf-cell-hi"/><text x="317" y="133" class="bf-t-strong" text-anchor="middle">0</text><rect x="346" y="110" width="138" height="36" class="bf-cell"/><text x="415" y="133" class="bf-t-strong" text-anchor="middle">1  1  1</text><text x="23" y="166" class="bf-t" text-anchor="middle">A</text><text x="121" y="166" class="bf-t" text-anchor="middle">C</text><text x="242" y="166" class="bf-t" text-anchor="middle">B</text><text x="317" y="166" class="bf-t" text-anchor="middle">A</text><text x="415" y="166" class="bf-t" text-anchor="middle">D</text><path d="M30 182c30 16 60 16 88 0" class="bf-arrow"/><path d="M126 182c34 16 80 16 112 0" class="bf-arrow"/><path d="M246 182c20 16 52 16 68 0" class="bf-arrow"/><path d="M322 182c30 16 60 16 90 0" class="bf-arrow"/><text x="500" y="124" class="bf-tm">each arrow: where the next</text><text x="500" y="140" class="bf-tm">code starts is known only</text><text x="500" y="156" class="bf-tm">once this one has been read</text></svg>
+<figcaption>A made-up code, not one of bzip2's. The ten bits 0110100111 hold five symbols. Their boundaries are found only by reading the codes in order.</figcaption>
+</figure>
+
+Take a made-up alphabet of four symbols, A to D, where A is the most common: A gets `0`, B
+`10`, C `110` and D `111`. The ten bits `0110100111` then read as A, C, B, A, D. Notice what
+the reader had to do. It could only tell that C began at the second bit once it had read A,
+and only tell where B began once it had read C. Where a code starts depends on the lengths
+of all the codes before it.
+
+A computer, though, reads the file in bytes, eight bits at a time, and these codes don't
+line up with bytes. The bit buffer bridges the two. mibz2 loads the file's next bytes into a
+64-bit integer, `buf`, with the first unread bit at the top (the left end, written in
+binary). Two more numbers go with it, and together they are the reader's whole state,
+[`Bits`](https://docs.rs/mibz2/0.2.2/mibz2/bits/struct.Bits.html):
+
+| Field | Type | What it holds |
+| --- | --- | --- |
+| `pos` | `usize` | the next byte of input to load |
+| `buf` | `u64` | the stream's next bits, the first of them in the most significant bit |
+| `live` | `u32` | how many of `buf`'s top bits are valid |
+
+Three operations act on it, each a line or two of Rust:
+
+- **Peek** at the next $n$ bits without consuming them: `buf >> (64 - n)`. For the next ten
+  bits that is `buf >> 54`, which moves the top ten bits to the bottom of the number.
+- **Skip** $n$ bits once a code of that length has been read: `buf <<= n; live -= n;`. The
+  code's bits fall off the top, and the next code moves up to take their place.
+- **Refill** when the buffer runs low: load the eight bytes at `pos`, OR them into `buf`
+  just below the bits still live, and advance `pos` by as many whole bytes as fitted. That
+  leaves at least 56 bits live.
+
+<figure class="bf-fig bf-bitbuf" data-bits="0110100111" data-codes="0:A 10:B 110:C 111:D">
+<p class="bf-title">A bit buffer, read one code at a time</p>
+<ol class="bf-bits" aria-label="The buffer's unread bits, first bit on the left"><li class="bf-bit">0</li><li class="bf-bit">1</li><li class="bf-bit">1</li><li class="bf-bit">0</li><li class="bf-bit">1</li><li class="bf-bit">0</li><li class="bf-bit">0</li><li class="bf-bit">1</li><li class="bf-bit">1</li><li class="bf-bit">1</li></ol>
+<p class="bf-bits-note">The toy code's ten bits at the front of the buffer, the next unread bit on the left. Highlighted: the code at the front.</p>
+<dl class="bf-buf-state" aria-live="polite" hidden><dt>Code at the front</dt><dd class="bf-buf-next">A = 0</dd><dt>Unread bits (<code>live</code>)</dt><dd class="bf-buf-live">10</dd><dt>Last step</dt><dd><code class="bf-buf-shift">nothing consumed yet</code></dd><dt>Decoded so far</dt><dd class="bf-buf-out">none yet</dd></dl>
+<div class="bf-buttons" hidden><button type="button" class="bf-btn bf-read">Read the next code →</button><button type="button" class="bf-btn bf-reset">Reset</button></div>
+<p class="bf-buf-static">Read in order: <code>0</code> is A, then <code>110</code> is C, <code>10</code> is B, <code>0</code> is A and <code>111</code> is D. Each read shifts the buffer left by the code's length, which brings the next code to the front.</p>
+<figcaption>Each read peeks at the front, finds the code that starts there, then shifts the buffer left by its length. The dotted cells are the space the shift leaves at the end, which a refill fills with more of the file. In mibz2 the buffer is 64 bits wide, not ten.</figcaption>
+</figure>
+
+So the buffer is just an integer and a few shifts. It isn't an array or a special piece of
+hardware, and the whole state is three numbers: `pos`, `buf` and `live`.
+
+
+## 2. Reading a code with a lookup table
+
+Reading a code a bit at a time, as in the toy example, would take a step for every bit. So
+fast Huffman decoders, mibz2 among them, read a code with a lookup table: they peek at the
+next several bits and look up which code those bits begin with. A bzip2 block is coded with
+a few different codes, called code tables, rather than one ([section
+3](#3-where-this-sits-in-bzip2-and-in-mibz2) shows why). For each of them, mibz2 builds a
+[lookup table of 1,024
+entries](https://github.com/lmmx/mibz2/blob/264ae5bb/src/block.rs#L45-L72), one 32-bit entry for
+each possible value of the next ten bits. Ten bits hold most of bzip2's codes but not all,
+since a code can be up to 20 bits long, so an entry says one of four things. Usually the ten
+bits begin with one whole code, and the entry gives its symbol and length. Often they begin
+with two whole codes, and the entry gives both symbols and their combined length. If the
+code is longer than ten bits, the entry sends the decoder to a slow path that reads it a bit
+at a time, as libbzip2 does. And if no valid code begins with these bits, the block is
+corrupt.
+
+<figure class="bf-fig">
+<p class="bf-title">The bit buffer, and one table lookup</p>
+<svg viewBox="0 0 720 344" role="img" aria-label="A 64-bit buffer: its top 10 bits index a 1,024-entry table, 46 more bits are live, and 8 are not yet valid. The entry gives one or two symbols and the bits they take, a longer code or an invalid one. Shifting the buffer left by those bits makes the next index, so each lookup waits for the last."><path d="M40 30v-6H600v6" class="bf-axis"/><text x="320" y="16" class="bf-tm" text-anchor="middle">live = 56: bits loaded and not yet used</text><rect x="40" y="34" width="100" height="34" rx="4" class="bf-card-hi"/><rect x="140" y="34" width="460" height="34" class="bf-slot"/><rect x="600" y="34" width="80" height="34" rx="4" class="bf-track"/><path d="M200 34v34M280 34v34M360 34v34M440 34v34M520 34v34" class="bf-rule"/><text x="90" y="56" class="bf-t-strong" text-anchor="middle">next 10 bits</text><text x="370" y="56" class="bf-t" text-anchor="middle">46 more live bits</text><text x="640" y="56" class="bf-tm" text-anchor="middle">not valid yet</text><path d="M90 72V104m-5-5 5 5 5-5" class="bf-arrow"/><rect x="20" y="108" width="220" height="78" rx="8" class="bf-card"/><text x="34" y="134" class="bf-ts">Table lookup</text><text x="34" y="155" class="bf-tm">1,024 entries of 32 bits,</text><text x="34" y="172" class="bf-tm">one for each 10-bit prefix</text><path d="M244 147H260m-5-5 5 5-5 5" class="bf-arrow"/><rect x="266" y="108" width="434" height="78" rx="8" class="bf-card"/><text x="282" y="134" class="bf-ts">The entry says what those bits begin with</text><text x="282" y="155" class="bf-tm">one symbol, or two whose codes both fit, and the bits they take;</text><text x="282" y="172" class="bf-tm">or a code longer than 10 bits (slow path), or an invalid code</text><path d="M483 190V212m-5-5 5 5 5-5" class="bf-arrow"/><rect x="266" y="216" width="434" height="62" rx="8" class="bf-card-hi"/><text x="282" y="241" class="bf-ts">Shift buf left by those bits; take them from live</text><text x="282" y="262" class="bf-tm">the next lookup's index is the top 10 bits of the new buf</text><path d="M262 247H10V51H34m-5-5 5 5-5 5" class="bf-arrow"/><text x="20" y="302" class="bf-t">Every lookup needs the last one's shift: these steps form one chain.</text><text x="20" y="322" class="bf-tm">refill, after every four lookups: load the 8 bytes at pos below the live bits, and</text><text x="20" y="338" class="bf-tm">advance pos by whole bytes until at least 56 bits are live</text></svg>
+<figcaption>Conceptual, drawn just after a refill. The divisions in the bar are bytes. A refill leaves 56 to 63 bits live; four lookups use at most 40 of them.</figcaption>
+</figure>
+
+On the Wikidata sample, about 83% of lookups decode a pair
+([census](https://github.com/lmmx/mibz2/blob/264ae5bb/docs/journal/2026-11-05-binding-census/serial-stages.md)).
+The fast loop refills, makes four lookups, then refills again. It runs while at least eight
+symbols remain in the group, because four lookups can produce eight, and the group's last
+few symbols go through a slower loop.
+
+One lookup is four steps:
+
+1. take the top ten bits of `buf`;
+2. load the table entry they index;
+3. take the code's length from the entry;
+4. shift `buf` left by that length.
+
+Step 1 of the next lookup needs the result of step 4 of this one. However many instructions
+the processor could run at once, it can't start a lookup before the last one has finished
+its shift. So the time a lookup takes is the latency of this chain: the time each step waits
+for the one before it. Any step added to the chain adds its latency to every lookup.
+## 3. Where this sits in bzip2 and in mibz2
+
+The bit buffer is the first thing a bzip2 decoder touches, because Huffman coding is the
+last of bzip2's four compression steps, and a decoder undoes them in reverse. bzip2 splits
+its input into blocks of up to 900 kB and compresses each block on its own:
 
 <figure class="bf-fig">
 <p class="bf-title">How bzip2 compresses a block, and how a decoder undoes it</p>
@@ -89,26 +182,6 @@ byte values has an alphabet of 102 symbols. The block is mostly runs and small p
 so a few symbols are very common and most are rare. That imbalance is what the fourth step,
 Huffman coding, turns into fewer bits.
 
-## 2. Huffman codes, and why they are read one at a time
-
-Huffman coding gives each symbol a string of bits, short for common symbols and long for
-rare ones. The codes are chosen so that no code is the beginning of another. That property
-is what lets them be written end to end with no separators: reading from the start, the bits
-seen so far can only ever be the beginning of one code.
-
-<figure class="bf-fig">
-<p class="bf-title">Reading a toy Huffman code</p>
-<svg viewBox="0 0 720 218" role="img" aria-label="A toy code of four symbols: A is 0, B is 10, C is 110 and D is 111. The bits 0110100111 read as A, C, B, A, D. Each code's start is known only once the code before it has been read."><text x="0" y="18" class="bf-ts">The code</text><rect x="0" y="30" width="62" height="34" rx="6" class="bf-card-hi"/><text x="31" y="52" class="bf-t-strong" text-anchor="middle">A  0</text><rect x="72" y="30" width="72" height="34" rx="6" class="bf-box"/><text x="108" y="52" class="bf-t-strong" text-anchor="middle">B  10</text><rect x="154" y="30" width="82" height="34" rx="6" class="bf-box"/><text x="195" y="52" class="bf-t-strong" text-anchor="middle">C  110</text><rect x="246" y="30" width="82" height="34" rx="6" class="bf-box"/><text x="287" y="52" class="bf-t-strong" text-anchor="middle">D  111</text><text x="344" y="44" class="bf-tm">A is the most common symbol,</text><text x="344" y="60" class="bf-tm">so it gets the shortest code</text><text x="0" y="98" class="bf-ts">The bits, and how they read</text><rect x="0" y="110" width="46" height="36" class="bf-cell-hi"/><text x="23" y="133" class="bf-t-strong" text-anchor="middle">0</text><rect x="52" y="110" width="138" height="36" class="bf-cell"/><text x="121" y="133" class="bf-t-strong" text-anchor="middle">1  1  0</text><rect x="196" y="110" width="92" height="36" class="bf-cell"/><text x="242" y="133" class="bf-t-strong" text-anchor="middle">1  0</text><rect x="294" y="110" width="46" height="36" class="bf-cell-hi"/><text x="317" y="133" class="bf-t-strong" text-anchor="middle">0</text><rect x="346" y="110" width="138" height="36" class="bf-cell"/><text x="415" y="133" class="bf-t-strong" text-anchor="middle">1  1  1</text><text x="23" y="166" class="bf-t" text-anchor="middle">A</text><text x="121" y="166" class="bf-t" text-anchor="middle">C</text><text x="242" y="166" class="bf-t" text-anchor="middle">B</text><text x="317" y="166" class="bf-t" text-anchor="middle">A</text><text x="415" y="166" class="bf-t" text-anchor="middle">D</text><path d="M30 182c30 16 60 16 88 0" class="bf-arrow"/><path d="M126 182c34 16 80 16 112 0" class="bf-arrow"/><path d="M246 182c20 16 52 16 68 0" class="bf-arrow"/><path d="M322 182c30 16 60 16 90 0" class="bf-arrow"/><text x="500" y="124" class="bf-tm">each arrow: where the next</text><text x="500" y="140" class="bf-tm">code starts is known only</text><text x="500" y="156" class="bf-tm">once this one has been read</text></svg>
-<figcaption>A made-up code, not one of bzip2's. The ten bits 0110100111 hold five symbols. Their boundaries are found only by reading the codes in order.</figcaption>
-</figure>
-
-Take a toy alphabet of four symbols, A to D, where A is the most common: A gets `0`, B
-`10`, C `110` and D `111`. The bits `0110100111` then read as A, C, B, A, D. Notice what the
-reader had to do. It could only tell that C began at the second bit once it had read A, and
-only tell where B began once it had read C. Where a code starts depends on the lengths of
-all the codes before it. That chain, each code waiting for the last, is what this post is
-about.
-
 A bzip2 block uses not one code but several. The encoder builds between two and six code
 tables, each suited to a different mix of symbols. It switches between them every 50
 symbols, picking for each group of 50 the table that codes it in the fewest bits. So the
@@ -128,7 +201,6 @@ So reading a block's symbols means reading its header, then, for each group of 5
 the table its selector names and reading codes with it one after another, until the
 end-of-block symbol.
 
-## 3. Where Huffman decoding sits in mibz2
 
 mibz2 splits a decode between two kinds of thread, as the [post on block
 dispatch](2026-11-01-block-dispatch.md) describes. One thread, the scanner, reads the stream
@@ -143,9 +215,8 @@ a checksum stored in its header.
 <figure class="bf-fig">
 <p class="bf-title">Where Huffman decoding sits in mibz2</p>
 <svg viewBox="0 0 720 442" role="img" aria-label="A compressed stream feeds the scanner thread, which reads each block's header and Huffman-decodes its symbols at 1.19 cycles a byte. A worker then undoes move-to-front (1.79), builds the inverse BWT's table (1.66), walks it (6.19) and expands runs and checks the CRC (0.44), before the bytes are handed back in order."><rect x="110" y="0" width="500" height="58" rx="8" class="bf-card"/><text x="126" y="26" class="bf-ts">Compressed stream</text><text x="126" y="47" class="bf-tm">bzip2 blocks, each a header and its Huffman-coded symbols</text><path d="M360 62V84m-5-5 5 5 5-5" class="bf-arrow"/><rect x="40" y="88" width="640" height="110" rx="12" class="bf-panel"/><text x="360" y="114" class="bf-ts" text-anchor="middle">The scanner thread · every block, in order</text><rect x="58" y="128" width="190" height="54" rx="8" class="bf-box"/><text x="153" y="151" class="bf-t-strong" text-anchor="middle">Block header</text><text x="153" y="170" class="bf-tm" text-anchor="middle">bytes used, code tables</text><rect x="262" y="128" width="400" height="54" rx="8" class="bf-card-hi"/><text x="462" y="151" class="bf-t-strong" text-anchor="middle">Huffman decoding: this post</text><text x="462" y="170" class="bf-tm" text-anchor="middle">1.19 c/B, about 10.5% of a one-thread decode</text><path d="M360 202V224m-5-5 5 5 5-5" class="bf-arrow"/><rect x="40" y="228" width="640" height="140" rx="12" class="bf-panel"/><text x="360" y="254" class="bf-ts" text-anchor="middle">A worker · one block at a time, several workers at once</text><rect x="58" y="268" width="142" height="80" rx="8" class="bf-box"/><text x="129" y="293" class="bf-t-strong" text-anchor="middle">MTF + RLE2</text><text x="129" y="312" class="bf-tm" text-anchor="middle">undo move-to-front</text><text x="129" y="333" class="bf-tm" text-anchor="middle">1.79 c/B</text><rect x="212" y="268" width="142" height="80" rx="8" class="bf-box"/><text x="283" y="293" class="bf-t-strong" text-anchor="middle">Table build</text><text x="283" y="312" class="bf-tm" text-anchor="middle">inverse BWT, part 1</text><text x="283" y="333" class="bf-tm" text-anchor="middle">1.66 c/B</text><rect x="366" y="268" width="142" height="80" rx="8" class="bf-box"/><text x="437" y="293" class="bf-t-strong" text-anchor="middle">Walk</text><text x="437" y="312" class="bf-tm" text-anchor="middle">inverse BWT, part 2</text><text x="437" y="333" class="bf-tm" text-anchor="middle">6.19 c/B</text><rect x="520" y="268" width="142" height="80" rx="8" class="bf-box"/><text x="591" y="293" class="bf-t-strong" text-anchor="middle">RLE1 + CRC</text><text x="591" y="312" class="bf-tm" text-anchor="middle">expand runs, check</text><text x="591" y="333" class="bf-tm" text-anchor="middle">0.44 c/B</text><path d="M360 372V394m-5-5 5 5 5-5" class="bf-arrow"/><rect x="110" y="398" width="500" height="42" rx="8" class="bf-card"/><text x="360" y="424" class="bf-ts" text-anchor="middle">Decoded bytes, handed back in stream order</text></svg>
-<figcaption>Measured: the base build's one-thread stage costs on the Intel Xeon 8370C runner, in cycles per byte of output at the runner's reported clock, 11.28 c/B in all (the second benchmark run of section 10). At one thread the stages run one after another on one CPU; at four, the scanner's thread runs beside the workers.</figcaption>
+<figcaption>Measured: the base build's one-thread stage costs on the Intel Xeon 8370C runner, in cycles per byte of output at the runner's reported clock, 11.28 c/B in all (the second benchmark run of section 9). At one thread the stages run one after another on one CPU; at four, the scanner's thread runs beside the workers.</figcaption>
 </figure>
-
 At one thread every stage runs on the same CPU, one after another, so the scanner's share of
 the time is its share of the decode: on the Intel runner, 1.19 of 11.28 cycles per output
 byte, about 10.5%. At four threads the scanner runs alongside the workers. All four of the
@@ -156,64 +227,7 @@ we took of what limits the decoder's speed on CI's runners, stage by stage. Its 
 entry calls it the binding census, after the resource that binds each stage: the one whose
 limit it runs into first, whether that is the processor's instructions, memory, or waiting
 on another thread.
-
-## 4. The bit reader and its table
-
-The scanner reads the stream through a small bit reader,
-[`Bits`](https://docs.rs/mibz2/0.2.2/mibz2/bits/struct.Bits.html). It keeps up to 64 of the
-stream's next bits in a register-sized number, so that the next code always sits at the top,
-ready to be read. Its state is three numbers:
-
-| Field | Type | What it holds |
-| --- | --- | --- |
-| `pos` | `usize` | the next byte of input to load |
-| `buf` | `u64` | the stream's next bits, the first of them in the most significant bit |
-| `live` | `u32` | how many of `buf`'s top bits are valid |
-
-Three operations act on that state. A refill loads the eight bytes at `pos` and ORs them
-into `buf` just below the bits still live, then advances `pos` by as many whole bytes as
-fitted, which leaves at least 56 bits live; near the end of the input it loads a byte at a
-time instead. A peek reads the top few bits of `buf` without consuming them. And a skip
-consumes $n$ bits: it shifts `buf` left by $n$ and takes $n$ from `live`.
-
-<figure class="bf-fig">
-<p class="bf-title">The bit buffer, and one table lookup</p>
-<svg viewBox="0 0 720 344" role="img" aria-label="A 64-bit buffer: its top 10 bits index a 1,024-entry table, 46 more bits are live, and 8 are not yet valid. The entry gives one or two symbols and the bits they take, a longer code or an invalid one. Shifting the buffer left by those bits makes the next index, so each lookup waits for the last."><path d="M40 30v-6H600v6" class="bf-axis"/><text x="320" y="16" class="bf-tm" text-anchor="middle">live = 56: bits loaded and not yet used</text><rect x="40" y="34" width="100" height="34" rx="4" class="bf-card-hi"/><rect x="140" y="34" width="460" height="34" class="bf-slot"/><rect x="600" y="34" width="80" height="34" rx="4" class="bf-track"/><path d="M200 34v34M280 34v34M360 34v34M440 34v34M520 34v34" class="bf-rule"/><text x="90" y="56" class="bf-t-strong" text-anchor="middle">next 10 bits</text><text x="370" y="56" class="bf-t" text-anchor="middle">46 more live bits</text><text x="640" y="56" class="bf-tm" text-anchor="middle">not valid yet</text><path d="M90 72V104m-5-5 5 5 5-5" class="bf-arrow"/><rect x="20" y="108" width="220" height="78" rx="8" class="bf-card"/><text x="34" y="134" class="bf-ts">Table lookup</text><text x="34" y="155" class="bf-tm">1,024 entries of 32 bits,</text><text x="34" y="172" class="bf-tm">one for each 10-bit prefix</text><path d="M244 147H260m-5-5 5 5-5 5" class="bf-arrow"/><rect x="266" y="108" width="434" height="78" rx="8" class="bf-card"/><text x="282" y="134" class="bf-ts">The entry says what those bits begin with</text><text x="282" y="155" class="bf-tm">one symbol, or two whose codes both fit, and the bits they take;</text><text x="282" y="172" class="bf-tm">or a code longer than 10 bits (slow path), or an invalid code</text><path d="M483 190V212m-5-5 5 5 5-5" class="bf-arrow"/><rect x="266" y="216" width="434" height="62" rx="8" class="bf-card-hi"/><text x="282" y="241" class="bf-ts">Shift buf left by those bits; take them from live</text><text x="282" y="262" class="bf-tm">the next lookup's index is the top 10 bits of the new buf</text><path d="M262 247H10V51H34m-5-5 5 5-5 5" class="bf-arrow"/><text x="20" y="302" class="bf-t">Every lookup needs the last one's shift: these steps form one chain.</text><text x="20" y="322" class="bf-tm">refill, after every four lookups: load the 8 bytes at pos below the live bits, and</text><text x="20" y="338" class="bf-tm">advance pos by whole bytes until at least 56 bits are live</text></svg>
-<figcaption>Conceptual, drawn just after a refill. The divisions in the bar are bytes. A refill leaves 56 to 63 bits live; four lookups use at most 40 of them.</figcaption>
-</figure>
-
-Reading a code a bit at a time, as in the toy example, would take a step for every bit. So
-fast Huffman decoders, mibz2 among them, read a code with a lookup table: they peek at the
-next several bits and look up which code those bits begin with. For each of a block's code
-tables, mibz2 builds a [lookup table of 1,024
-entries](https://github.com/lmmx/mibz2/blob/264ae5bb/src/block.rs#L45-L72), one 32-bit entry for
-each possible value of the next ten bits. Ten bits hold most of bzip2's codes but not all,
-since a code can be up to 20 bits long, so an entry says one of four things. Usually the ten
-bits begin with one whole code, and the entry gives its symbol and length. Often they begin
-with two whole codes, and the entry gives both symbols and their combined length. If the
-code is longer than ten bits, the entry sends the decoder to a slow path that reads it a bit
-at a time, as libbzip2 does. And if no valid code begins with these bits, the block is
-corrupt.
-
-On the Wikidata sample, about 83% of lookups decode a pair
-([census](https://github.com/lmmx/mibz2/blob/264ae5bb/docs/journal/2026-11-05-binding-census/serial-stages.md)).
-The fast loop refills, makes four lookups, then refills again. It runs while at least eight
-symbols remain in the group, because four lookups can produce eight, and the group's last
-few symbols go through a slower loop.
-
-One lookup is four steps:
-
-1. take the top ten bits of `buf`;
-2. load the table entry they index;
-3. take the code's length from the entry;
-4. shift `buf` left by that length.
-
-Step 1 of the next lookup needs the result of step 4 of this one. However many instructions
-the processor could run at once, it can't start a lookup before the last one has finished
-its shift. So the time a lookup takes is the latency of this chain: the time each step waits
-for the one before it. Any step added to the chain adds its latency to every lookup.
-
-## 5. What the census found
+## 4. What the census found
 
 The [census](https://github.com/lmmx/mibz2/blob/264ae5bb/docs/journal/2026-11-05-binding-census.md)
 asked what limits today's decoder on CI's runners. One of its lines of inquiry took the
@@ -231,7 +245,7 @@ counts of events: CI's runners expose no hardware performance counters.
 <figure class="bf-fig">
 <p class="bf-title">One lookup's chain, before and after</p>
 <svg viewBox="0 0 720 214" role="img" aria-label="Before: reload buf through a store-to-load forward, shift right, load the entry, mask the length, shift buf left and store it, about 13 to 15 cycles. After: the same steps without the reload or the store, about 8 to 9 cycles."><text x="0" y="16" class="bf-ts">Before: buf kept in memory</text><rect x="0" y="28" width="150" height="48" rx="8" class="bf-pill-ready"/><text x="75" y="49" class="bf-t-strong" text-anchor="middle">reload buf</text><text x="75" y="67" class="bf-tm" text-anchor="middle">a forward, ~4–5 cycles</text><path d="M152 52h10m-4-4 4 4-4 4" class="bf-arrow"/><rect x="166" y="28" width="118" height="48" rx="8" class="bf-box"/><text x="225" y="49" class="bf-t-strong" text-anchor="middle">shift right</text><text x="225" y="67" class="bf-tm" text-anchor="middle">the top 10 bits</text><path d="M286 52h10m-4-4 4 4-4 4" class="bf-arrow"/><rect x="300" y="28" width="118" height="48" rx="8" class="bf-box"/><text x="359" y="49" class="bf-t-strong" text-anchor="middle">table load</text><text x="359" y="67" class="bf-tm" text-anchor="middle">the entry</text><path d="M420 52h10m-4-4 4 4-4 4" class="bf-arrow"/><rect x="434" y="28" width="118" height="48" rx="8" class="bf-box"/><text x="493" y="49" class="bf-t-strong" text-anchor="middle">mask</text><text x="493" y="67" class="bf-tm" text-anchor="middle">the length</text><path d="M554 52h10m-4-4 4 4-4 4" class="bf-arrow"/><rect x="568" y="28" width="152" height="48" rx="8" class="bf-pill-ready"/><text x="644" y="49" class="bf-t-strong" text-anchor="middle">shift left, store</text><text x="644" y="67" class="bf-tm" text-anchor="middle">for the next lookup</text><text x="0" y="96" class="bf-tm">about 13–15 cycles a lookup on Ice Lake</text><text x="0" y="132" class="bf-ts">After: buf held in a register</text><rect x="0" y="144" width="150" height="48" rx="8" class="bf-box"/><text x="75" y="173" class="bf-tm" text-anchor="middle">nothing to reload</text><rect x="166" y="144" width="118" height="48" rx="8" class="bf-box"/><text x="225" y="165" class="bf-t-strong" text-anchor="middle">shift right</text><text x="225" y="183" class="bf-tm" text-anchor="middle">the top 10 bits</text><path d="M286 168h10m-4-4 4 4-4 4" class="bf-arrow"/><rect x="300" y="144" width="118" height="48" rx="8" class="bf-box"/><text x="359" y="165" class="bf-t-strong" text-anchor="middle">table load</text><text x="359" y="183" class="bf-tm" text-anchor="middle">the entry</text><path d="M420 168h10m-4-4 4 4-4 4" class="bf-arrow"/><rect x="434" y="144" width="118" height="48" rx="8" class="bf-box"/><text x="493" y="165" class="bf-t-strong" text-anchor="middle">mask</text><text x="493" y="183" class="bf-tm" text-anchor="middle">the length</text><path d="M554 168h10m-4-4 4 4-4 4" class="bf-arrow"/><rect x="568" y="144" width="152" height="48" rx="8" class="bf-card-hi"/><text x="644" y="165" class="bf-t-strong" text-anchor="middle">shift left</text><text x="644" y="183" class="bf-tm" text-anchor="middle">stays in a register</text><text x="0" y="210" class="bf-tm">about 8–9 cycles a lookup</text></svg>
-<figcaption>Estimated, not measured: the census's reading of the listing for Ice Lake. The measured saving is in section 10.</figcaption>
+<figcaption>Estimated, not measured: the census's reading of the listing for Ice Lake. The measured saving is in section 9.</figcaption>
 </figure>
 
 Across the four runner models the census measured, the scanner took 6.9–10.3% of the
@@ -239,7 +253,7 @@ four-thread wall time (7–10% in its summary) and 11–14% of the one-thread ti
 that removing the forward would recover 0.5–4.1% of the four-thread wall, and 1.7–5.6% at one
 thread, and called it "The cheapest and most certain mechanism on this front."
 
-## 6. Why the compiler kept the buffer in memory
+## 5. Why the compiler kept the buffer in memory
 
 Nothing in the Rust asked for a store. The loop calls the reader's methods, which are small
 and marked `#[inline(always)]`, so their bodies are compiled into the loop. Two calls are not
@@ -293,7 +307,7 @@ ab269  sub    DWORD PTR [r15+0x20],ecx                              bits.rs:82
 Over a four-lookup iteration the registration counts five stores and three reloads of `buf`,
 and four read-modify-writes of `live` in memory: about one forward on the chain per lookup.
 
-## 7. The change: the state as a value
+## 6. The change: the state as a value
 
 The change, [#204](https://github.com/lmmx/mibz2/pull/204), moves the three fields into a
 small struct that can be copied, `Reg`, and has the loop hold one in a local variable
@@ -362,7 +376,7 @@ now are the symbol writes. It still loads values that don't change during the lo
 stack, such as the table's address (`[rsp+0x28]`). Nothing in the loop stores to them, so
 those loads wait on no forward, and their addresses don't depend on the chain.
 
-## 8. What was predicted, before any timing
+## 7. What was predicted, before any timing
 
 Before any CI timing, the change was registered: its mechanism, the measurements that need
 no timing, a prediction and a decision rule, committed before any CI timing of the branch
@@ -405,7 +419,7 @@ The decision rule had four parts:
 - **No harm, required:** a wall figure flagged slower is settled by one more run on the same
   head. Flagged again, the rule fails. At most three runs, with each run's CPU named.
 
-## 9. Is it still the same decoder?
+## 8. Is it still the same decoder?
 
 The change has to give exactly the same symbols, and fail in exactly the same way on corrupt
 input. Before timing:
@@ -425,7 +439,7 @@ input. Before timing:
 In both benchmark runs, every corpus decoded to the same bytes with both builds, and CI
 passed.
 
-## 10. What the benchmark measured
+## 9. What the benchmark measured
 
 The CI benchmark decodes every corpus with the base build and the PR's build in alternating
 order, ten paired rounds a run. It runs on a GitHub-hosted runner with four virtual CPUs: two
@@ -482,7 +496,7 @@ nothing was flagged as a harm.
 
 PR #204 met its registered decision rule and was merged on 5 November 2026, as 264ae5bb.
 
-## 11. What it shows
+## 10. What it shows
 
 The Huffman codes, the tables and the bits consumed are the same as before, and the scanner
 runs only 2.5% fewer instructions. What changed is the chain each lookup waits on. On Intel,

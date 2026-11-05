@@ -180,6 +180,31 @@ The maintainer's review of the first Huffman post [E: the 2026-11-05 Huffman pos
 after its review] found a reader "dumped into fast flowing routines with no understanding
 set out in advance, nor eased in". These rules come from that review.
 
+### The title's subject comes first
+
+The maintainer's second review of the Huffman post [E: 2026-11-05]: its title was about the
+bit buffer, but the opening was background about bzip2's layers, and the bit buffer was
+first explained in section 4. Asked where to start reading, a fresh reader (another model)
+said "section 2". By construction, the reader could not know what the post was about until
+far in.
+
+- **The first paragraph says, concretely, what the title's subject is.** Not where it sits,
+  not its history: what it physically is. For example, "a small holding area for bits read
+  from the file but not yet decoded: in mibz2, one 64-bit integer". Then say why the post is
+  about it.
+- **Section 1 shows the core mechanism working,** on a small example: a worked example, an
+  interactive figure where one helps, and the real code's few lines. Background (the format,
+  the pipeline, where the stage sits) comes after the core, unless the core can't be stated
+  without it.
+- **Order sections by what the reader needs for the claim,** not by the order of the
+  system's pipeline.
+- **The "where would you start?" test.** Ask a fresh reader, a subagent or another model
+  given only the post, which section to start reading at and what each section is for. If
+  the answer isn't "at the top", the core is buried. Restructure until it is. Never answer
+  this by adding a reading guide.
+- **No forward references for things the reader needs now.** If a later section explains a
+  term, say what it is in place, in a clause, and point ahead for the detail.
+
 ### The key-facts audit (do it on every draft)
 
 Before revising, write down the facts and connections a reader needs to follow the post's
@@ -472,6 +497,8 @@ Before `publish-page`:
       the draft. Its stuck points were fixed by restructuring, and the revision was read
       again.
 - [ ] Every term is defined or linked at first use, and every symbol is bound.
+- [ ] The first paragraph says concretely what the title's subject is. Section 1 shows it
+      working. A fresh reader asked where to start says "at the top".
 - [ ] The key-facts audit is done and in the PR body. Every fact the introduction relies on
       is established in the introduction or section 1, and no question raised by the
       introduction's own figures is left open there.
