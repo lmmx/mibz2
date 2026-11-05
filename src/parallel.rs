@@ -32,6 +32,9 @@ use std::thread::JoinHandle;
 
 /// Input chunks queued for the scanner (the split writes 8 MB at a time)
 pub(crate) const INPUT_QUEUE: usize = 2;
+/// The blocks in flight a thread where the caller gives no window (`BzReader::parallel`,
+/// `decode_parallel`): how far the scanner may run ahead of the reader
+pub const SLOTS_PER_THREAD: usize = 4;
 /// Bytes the scanner's window keeps behind it before it drops them
 pub(crate) const COMPACT: usize = 4 << 20;
 
