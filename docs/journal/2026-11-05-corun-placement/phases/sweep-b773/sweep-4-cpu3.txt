@@ -1,0 +1,14 @@
+runner: Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz, 4 CPUs, 3.5806 GHz reported; rustc 1.99.1 (58cf8f9c3 2026-10-13); head b7734313; phases, rounds 5; this copy on CPU 3
+corpora/wikidata.bz2: 431 blocks, 11.9 MB -> 209.7 MB (17.69x); c/B of output at 3.5806 GHz, decode order, each stage's fastest of 5 passes
+  scanner (headers, Huffman)     2.44 c/B   11.0%
+  MTF + RLE2                     3.50 c/B   15.7%
+  T-vector build                 4.68 c/B   21.0%
+  walk, room (used)             10.76 c/B   48.3%
+  RLE1                           0.63 c/B    2.9%
+  CRC                            0.25 c/B    1.1%
+  segment assembly               0.69 c/B    3.1%  (within the walk)
+  walk, room + assembly as one  11.23 c/B  (not in the total: the walk's row, timed as one)
+  walk, flagged (before #37)    19.03 c/B  (not in the total)
+  walk, bitmap (before #4)      35.05 c/B  (not in the total)
+  walk, plain                   71.37 c/B  (not in the total)
+  total                         22.26 c/B  = 161 MB/s on one thread
