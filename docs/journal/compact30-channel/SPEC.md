@@ -4,22 +4,36 @@ The three ChatGPT Work agents each run from an agent spec: `SPEC.OPTIMIZER.md`, 
 and `SPEC.RESEARCHER.md`. Each is read together with this file, and each says only what that
 agent's work is. This file holds what they have in common, and why.
 
-**How a spec is loaded.** An agent's Work task prompt only points at its spec, at a pinned commit:
+**How a spec is loaded.** An agent's Work task prompt only points at its spec, at a pinned commit.
+The current pin is recorded in ROLES.md ("The agent specs' pin"). To load or change the specs,
+Louis pastes the command below into a ChatGPT chat, with SHA replaced by that pin. It edits the
+three existing tasks in place.
 
-> You are the compact30 AGENT for lmmx/mibz2. Fetch `docs/journal/compact30-channel/SPEC.md` and
-> `docs/journal/compact30-channel/SPEC.AGENT.md` from lmmx/mibz2 at commit SHA, and follow them.
-> Those files, at that commit, are your complete instruction. If they can't be fetched, report that
-> and stop. Keep this task enabled.
+> Edit three **existing** Work tasks in place: **Compact30 (W) Optimiser**, **Compact30 (W)
+> Guardian** and **Compact30 (W) Researcher**. Don't create, duplicate, pause or delete any task,
+> and don't run or replay anything.
+>
+> 1. **Instructions.** In each task, replace the whole instruction text with exactly this, with
+>    AGENT replaced by `OPTIMIZER`, `GUARDIAN` or `RESEARCHER` (both places):
+>
+>    `You are the compact30 AGENT for lmmx/mibz2. Fetch docs/journal/compact30-channel/SPEC.md and docs/journal/compact30-channel/SPEC.AGENT.md from lmmx/mibz2 at commit SHA, and follow them. Those files, at that commit, are your complete instruction. If they can't be fetched, report that and stop. Keep this task enabled.`
+>
+> 2. **Subscriptions.** Leave each one as it is: repository `lmmx/mibz2`, newly created comments
+>    only, on a single PR: the Optimiser **#160**, the Guardian **#161**, the Researcher **#162**.
+>    If the settings let you exclude bots, reviews, commit updates and edits, keep them excluded.
+>
+> 3. **Report back, for each task:**
+>    - the instruction text exactly as saved;
+>    - the subscription's repository and PR number, as the interface shows them, or say plainly
+>      that it doesn't expose them;
+>    - whether the task is enabled.
+>
+>    Don't claim to have verified anything the interface doesn't actually show you.
 
-The subscription is set in the task's settings, not here:
-- the Optimizer subscribes to new comments on PR #160;
-- the Guardian, on PR #161;
-- the Researcher, on PR #162.
-
-Every subscription excludes bots, review submissions, pushes, commit updates and comment edits. A
-changed spec takes effect only when Louis moves that task's pin to a new commit. The Coordinator
-compares each agent's recorded pin with the recorded one at every start or resume (CAMPAIGN.md,
-start step 4).
+Every subscription is set in the task's settings, not here, and excludes bots, review submissions,
+pushes, commit updates and comment edits. A changed spec takes effect only when Louis moves the
+pin. The Coordinator compares each agent's recorded pin with the recorded one at every start or
+resume (CAMPAIGN.md, start step 4).
 
 ## Why the specs are written this way
 
