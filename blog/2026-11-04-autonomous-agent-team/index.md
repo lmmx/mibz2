@@ -22,10 +22,10 @@ The Guardian, the Researcher and the Optimiser all run Astra, a model I use thro
 
 | Role | Runs as | Model | Reasoning effort | Started by |
 | --- | --- | --- | --- | --- |
-| Coordinator | Claude Code session | Claude, as configured for the session | High | a subscription to the PRs it follows |
-| Guardian | ChatGPT Work task, *Compact30 (W) Guardian* | Astra | Extra High | any PR comment; acts only on a `CHECKPOINT` |
-| Optimiser | ChatGPT Work task, *Compact30 (W) Optimiser* | Astra | Ultra | any PR comment; acts only on a `CHECKPOINT` addressed to it |
-| Researcher | ChatGPT Work task, *Compact30 (W) Researcher* | Astra | Extra High | any PR comment; acts only on a message addressed to it |
+| Coordinator | Claude Code session | Claude, as configured for the session | High | a subscription to the shared channel, \#145, and the PRs it follows |
+| Guardian | ChatGPT Work task, *Compact30 (W) Guardian* | Astra | Extra High | a new comment in its inbox, \#161 |
+| Optimiser | ChatGPT Work task, *Compact30 (W) Optimiser* | Astra | Ultra | a new comment in its inbox, \#160 |
+| Researcher | ChatGPT Work task, *Compact30 (W) Researcher* | Astra | Extra High | a new comment in its inbox, \#162 |
 
 The team: three Astra agents and Claude Code, joined by one repository
 
@@ -45,12 +45,12 @@ The agents talk in comments on pull requests. Each comment starts with a short h
 
 ```
 FROM: coordinator
-TO: guardian, researcher
+TO: guardian
 RE: prototype 2 @ 29dd071f8787a28560a7a081fd7ac0ef13991466
 TYPE: CHECKPOINT
 ```
 
-`TO:` says who should act, `RE:` pins the commit, and `TYPE:` says what kind of message it is. The [protocol](<https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/PROTOCOL.md>) has six types:
+`FROM:` names the sender, since every agent posts from the same account. `TO:` records who it's for, `RE:` pins the commit, and `TYPE:` says what kind of message it is. The [protocol](<https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/PROTOCOL.md>) has six types:
 
 | Type | Means |
 | --- | --- |
@@ -61,7 +61,7 @@ TYPE: CHECKPOINT
 | `ACK` | what was received, and what happens next |
 | `ESCALATION` | something only I can decide |
 
-Most of the traffic goes through one draft PR, \#145, which serves as the team's channel. Each experiment and each agent also has a PR of its own.
+The messages travel through draft PRs that are never merged. One, \#145, is the team's shared channel, where every agent publishes its reviews and findings. Each Astra agent also has a quiet inbox of its own, where it receives work: [\#160](<https://github.com/lmmx/mibz2/pull/160>) for the Optimiser, [\#161](<https://github.com/lmmx/mibz2/pull/161>) for the Guardian and [\#162](<https://github.com/lmmx/mibz2/pull/162>) for the Researcher. Each experiment has a PR of its own too.
 
 Here is what that looks like on GitHub. Every comment comes from my account, `lmmx`, and the small badge on the avatar shows which app posted it: Claude's mark for the Coordinator, ChatGPT's for the Astra agents. The header is the only thing that says which agent wrote it.
 
@@ -71,11 +71,15 @@ Three agents, one account: a checkpoint from the Coordinator, the Guardian's rev
 
 The originals: [the checkpoint](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6632963394>), [the Guardian's review](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6633274082>) and [the independent review](<https://github.com/lmmx/mibz2/pull/145#issuecomment-6634356048>).
 
-A new comment is also what wakes the agents up. The Coordinator subscribes to the PRs it follows, so a reply reaches it within seconds. The three Astra agents are Work tasks that start on any PR comment in the repository. The event only includes the comment's ID, so each run first fetches the comment and checks whether it's meant for it. The Guardian acts only on a `CHECKPOINT`, the Optimiser only on a `CHECKPOINT` addressed to it, and the Researcher on anything addressed to it. Anything else, including the other agents' reviews, ends the run straight away. A checkpoint that both readers should see therefore has to name them both.
+A new comment is also what wakes the agents up. Each Astra agent is a Work task subscribed to new comments on its own inbox and nothing else, so the filtering happens before a run starts. The inbox is the address: every comment in it is for its agent. The Coordinator posts each checkpoint to the inbox of every agent that should act on it, so a checkpoint for the Guardian and the Researcher is two comments, one in each inbox. Each run fetches its comment, reads from the header who sent it and what kind of message it is, and does the work. It commits a receipt to its own branch first, then its progress as it goes, and publishes its `REVIEW` on \#145. The Coordinator subscribes to
 
-One cycle: a checkpoint, two readers, the next step
+# 145, so a reply reaches it within seconds.
 
-Each arrow is a pull-request comment, and each comment starts the next agent's run. Nobody polls, and nothing goes through me.
+This keeps each agent's attention on its own work. An inbox carries only messages meant for its agent, so the other agents' reviews, CI results and pull requests never start a run there. An investigation that takes a quarter of an hour runs to the end undisturbed, and everything it finds still comes back to one place.
+
+One cycle: a checkpoint to two inboxes, two reviews, the next step
+
+Each arrow is a pull-request comment. A checkpoint goes to the inbox of each agent that should act on it, and each review comes back on the shared channel, \#145, where it wakes the Coordinator. Nobody polls, and nothing goes through me.
 
 ## 4\. A receipt for every message
 
@@ -105,9 +109,9 @@ The first afternoon taught me what to expect. Mostly it comes down to patience, 
 
 Runs are long and quiet. A Work task can spend anything from a minute to a quarter of an hour on one message: the Researcher's revision of this post took about sixteen minutes, most of it reading the record and testing drafts on simulated readers. Between runs, a task's page just shows that it has worked. That means it is waiting for its next comment, not that it has stalled.
 
-Messages queue behind the work in hand. A comment that arrives while an agent is busy is handled once it finishes, and several can be handled together: one of the Researcher's runs did the blog revision first, then launched the independent reviewer, picking up the Guardian's approval of that launch at the same time. Re-sending a message because a page looks idle only adds a duplicate, which the agent's cursor then ignores.
+Each run has room to finish. Its inbox receives nothing else while it works, and the Coordinator sends an agent its next brief only after the last one has been published. A run commits a receipt first and its progress as it goes, so if one ever stops part-way, a short resume in its inbox picks it up from its last commit.
 
-Watch the repository, not the task pages. Every message ends in a receipt: a `REVIEW` that cites it, or a cursor commit on the agent's own branch. A message without one is queued or in progress. It's only lost if the agent's branch shows it has moved on without a receipt, and then I send it again, once.
+Watch the repository, not the task pages. Every message ends in a receipt: a cursor commit on the agent's own branch, then a `REVIEW` on \#145 that cites it. A message with a receipt but no review is in progress. One with neither, while the agent's branch is still, gets a resume, once.
 
 When an agent starts a helper of its own, I ask it to keep its run open until the helper has published, and to record both the launch and the result. The independent reviewer was set up this way, with its settings and inputs written to the repository before it began.
 
@@ -125,4 +129,4 @@ If you want to set up something similar: give each responsibility its own output
 
 ---
 
-**Research records:** [Role identities](<https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/ROLES.md>) · [Research charter](<https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/2026-11-04-compact30-research-charter.md>) · [Channel protocol](<https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/PROTOCOL.md>) · [Review contract](<https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/REVIEWER.md>) · [Recorded exchanges](<https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b06708e47cbfdce2ca4/docs/journal/compact30-channel/log.md>).
+**Research records:** [Role identities](<https://github.com/lmmx/mibz2/blob/8304583b/docs/journal/compact30-channel/ROLES.md>) · [Research charter](<https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/2026-11-04-compact30-research-charter.md>) · [Channel protocol](<https://github.com/lmmx/mibz2/blob/8304583b/docs/journal/compact30-channel/PROTOCOL.md>) · [Review contract](<https://github.com/lmmx/mibz2/blob/09e4ef6cb7c845781b0a2cb0d2c1a4fe6f33fe47/docs/journal/compact30-channel/REVIEWER.md>) · [Recorded exchanges](<https://github.com/lmmx/mibz2/blob/688d4f7c4cdd813d13ed2b06708e47cbfdce2ca4/docs/journal/compact30-channel/log.md>).
