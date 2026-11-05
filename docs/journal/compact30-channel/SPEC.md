@@ -56,20 +56,27 @@ The Coordinator posts in an inbox only what that role should act on.
 
 ## Each run
 
+Only the Coordinator posts in an inbox, and only when the agent has no job in progress, so a run
+normally starts on one new assignment. Each assignment carries a `JOB:` line.
+
 1. **The event.** The platform can't exclude non-comment events, such as PR lifecycle events,
-   before a run starts. Such an event carries no work: end without repository writes. Nobody
-   pushes to or edits an inbox PR, so this shouldn't happen.
-2. **For each new inbox comment in the event,** independently and in order:
+   before a run starts. Such an event carries no work: end without repository writes.
+2. **For each new inbox comment in the event,** in order:
    - fetch it by its ID;
    - read your cursor (named in your agent spec);
-   - if the cursor marks the comment completed, go on to the next comment;
-   - if it marks it in progress, resume from your recorded progress;
+   - if its job is already complete, go on to the next comment;
+   - if the comment asks you to resume a job, or its job is in progress, finish that job from
+     your recorded progress;
    - otherwise, start it.
-3. **Commit a receipt first:** a cursor entry marking the comment in progress. Then commit your
-   work as you go, so an interrupted run can be resumed by a short resume in your inbox.
-4. **Publish one `TYPE: REVIEW` comment on PR #145,** the shared channel, never on an inbox. It
-   links your published work and cites the comment it answers.
-5. **Record the comment as completed,** with your reply's ID, in the cursor. Then stop.
+3. **Commit a receipt first:** a cursor entry marking the job in progress, with its `JOB:` id and
+   comment ID. Then commit your work as you go, so an interrupted run can be resumed.
+4. **Finish the work before announcing it.** Commit the completed work, then mark the job
+   complete in the cursor, with the commit that holds the work. Commit that.
+5. **Publish one `TYPE: REVIEW` comment on PR #145,** the shared channel, never on an inbox. It
+   cites the `JOB:` id and the inbox comment, and links the published work. It is the run's last
+   external action: the Coordinator treats it as the signal that you are free for the next job.
+6. **Record the REVIEW's comment ID in the cursor,** then stop. If the run stops before this, the
+   next run records it.
 
 ## Always
 
