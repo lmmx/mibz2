@@ -128,8 +128,10 @@ saving, and none is claimed.
 **Timing of the amendment.** The registration allowed amendments "before the first bench comment
 on this PR is posted". The bench workflow posts a "Running" placeholder before it measures: one
 was posted at 00:16:10 UTC, and the amendment (ef28ad32) came at about 00:20. So the literal
-cutoff had passed. When the amendment was made, the run was still in progress, with no figures
-and no artifacts, and nothing measured informed it (Researcher 6645977057; Guardian D024). The
+cutoff had passed. When the amendment was made, the Coordinator observed the run still in progress, with no
+artifacts and only the placeholder comment, and states that nothing measured informed the
+amendment. That observation is the Coordinator's own, made through the GitHub API at about 00:20.
+Neither the Researcher (6645977057) nor the Guardian (D024, D025) attests to it. The
 verdict below is read under both the original rule (d6401b55) and the amended one.
 
 **The runs.** Bench 3.2.0, 10 paired rounds, against master 08e7fc3b, each on a runner with two
@@ -137,6 +139,10 @@ physical cores and four logical CPUs (`env.json`).
 - **The measured source is the same in both:** ee12bb9e differs from ef28ad32 only in
   `examples/occupancy.rs`, which the bench doesn't build. That is equivalence of source, not a
   checked identity of the executables.
+- **The corpora:** `wikidata` is byte-identical in both runs (sha256 `82f65ace0731962d…`). The
+  generated `text` corpus is not: 1,687,702 bytes (`81b3b27d…`) in run 1 against 1,690,460
+  (`42f88d7c…`) in run 2. Each run's paired comparison holds within itself, but the `text` rows
+  aren't like for like across the two runs (Guardian D025).
 - **The archive:** each run's report, `result.json`, `env.json`, `ab-summary.md`, and the
   sample-level `runs.jsonl` and `stages.jsonl`, are in `bench-run1-ef28ad32/` and
   `bench-run2-ee12bb9e/`, copied from the Actions artifacts.
