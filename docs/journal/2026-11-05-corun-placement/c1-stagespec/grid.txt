@@ -1,0 +1,9 @@
+7763   flat          fWN 2.12/fWW 2.12  -0.4% | fWN 1.98/fWW 2.31  -3.8% | fWN 1.81/fWW 2.62!  -8.9% | fWN 1.67/fWW 2.92! -13.0% | fWN 1.55/fWW 3.20! -16.4% | fWN 1.29/fWW 3.90! -21.0%
+7763   prefers_walk  fWN 2.12/fWW 2.12  -3.4% | fWN 1.97/fWW 2.30  -6.8% | fWN 1.80/fWW 2.59! -11.8% | fWN 1.66/fWW 2.88! -15.7% | fWN 1.54/fWW 3.17! -19.0% | fWN 1.28/fWW 3.85! -24.1%
+7763   dislikes_walk fWN 2.12/fWW 2.12  +2.4% | fWN 1.99/fWW 2.32  -1.0% | fWN 1.82/fWW 2.63!  -6.3% | fWN 1.68/fWW 2.94! -10.7% | fWN 1.56/fWW 3.23! -13.6% | fWN 1.30/fWW 3.98! -18.1%
+9V74   flat          fWN 2.22/fWW 2.22  -0.9% | fWN 2.06/fWW 2.41  -4.3% | fWN 1.87/fWW 2.73!  -9.5% | fWN 1.72/fWW 3.05! -14.0% | fWN 1.59/fWW 3.36! -17.9% | fWN 1.30/fWW 4.04! -24.3%
+9V74   prefers_walk  fWN 2.22/fWW 2.22  -4.6% | fWN 2.02/fWW 2.37  -8.8% | fWN 1.79/fWW 2.57! -14.6% | fWN 1.61/fWW 2.75! -19.2% | fWN 1.47/fWW 2.89! -22.5% | fWN 1.21/fWW 3.08! -27.1%
+9V74   dislikes_walk fWN 2.22/fWW 2.22  +1.7% | fWN 2.08/fWW 2.44  -1.4% | fWN 1.91/fWW 2.81  -5.8% | fWN 1.77/fWW 3.21  -9.5% | fWN 1.66/fWW 3.63 -12.4% | fWN 1.41/fWW 5.06! -17.9%
+8370C  flat          fWN 1.46/fWW 1.46  +0.1% | fWN 1.41/fWW 1.54  -2.0% | fWN 1.34/fWW 1.68  -4.9% | fWN 1.28/fWW 1.79  -7.3% | fWN 1.23/fWW 1.90!  -9.5% | fWN 1.11/fWW 2.14! -14.0%
+8370C  prefers_walk  fWN 1.46/fWW 1.46  -4.8% | fWN 1.39/fWW 1.52  -7.8% | fWN 1.30/fWW 1.60 -11.2% | fWN 1.23/fWW 1.66 -13.6% | fWN 1.18/fWW 1.72 -15.3% | fWN 1.08/fWW 1.77 -17.9%
+8370C  dislikes_walk fWN 1.46/fWW 1.46  +3.0% | fWN 1.42/fWW 1.56  +1.4% | fWN 1.36/fWW 1.72  -0.9% | fWN 1.31/fWW 1.89  -3.1% | fWN 1.27/fWW 2.06  -4.8% | fWN 1.16/fWW 2.58  -8.9%

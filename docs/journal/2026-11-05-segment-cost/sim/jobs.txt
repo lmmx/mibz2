@@ -1,0 +1,16 @@
+mfull 32 512
+mfull 32 2048
+mfull 32 16384
+mfull 32 131072
+master 32 512
+master 32 131072
+lean 32 2 6 16
+lean 32 3 6 16
+lean 32 4 6 16
+lean 32 5 6 16
+lean 32 3 4 16
+lean 32 3 8 16
+lean2 32 2 6 16
+lean2 32 3 6 16
+lean2 32 4 6 16
+lean2 32 5 6 16

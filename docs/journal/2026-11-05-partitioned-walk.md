@@ -74,6 +74,9 @@ added it becomes about +30%. **Planning figure: 0 recoverable.** No prototype or
 
 ## Parked: cross-chain lockstep (dense, row-sorted starts)
 
+**Closed since** (`2026-11-05-segment-cost.md`): the lean per-segment path costs 33–64 cycles a
+segment against the gate's 10, and lockstep reuse forces one segment per 8 bytes or fewer.
+
 **The collision's third possibility.**
 - Taking many short segments in row order makes the 32 live lanes walk chains that share a
   long prefix. Chains from adjacent sorted starts walk rows within 16 of each other for a mean
