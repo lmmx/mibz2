@@ -3,7 +3,7 @@
 This file is for a ChatGPT conversation with Louis (`lmmx`), the repository's owner, that he
 has pointed at `lmmx/mibz2`. It is for his use only: nobody else engages with this repository.
 
-**If you are one of the team's Work tasks** (the Optimiser, Guardian, Researcher or Oracle),
+**If you are one of the team's Work tasks** (the Optimiser, Guardian, Researcher or Observer),
 this file is not for you. Follow your own spec, and never post as `louis via chatgpt`.
 
 ## When to use it
@@ -24,7 +24,7 @@ before you post. If this file and §7 ever differ, §7 holds.
      comment's URL, the file's path, the commit;
    - where things stand: whether a PR is open or merged, what its latest review said, the
      relevant entry in `docs/journal/decisions.md`;
-   - the role he means: Coordinator, Optimiser, Guardian, Researcher, Oracle
+   - the role he means: Coordinator, Optimiser, Guardian, Researcher, Observer
      (`docs/team/ROLES.md`).
 
    Don't invent a reference you can't find; say in the interpretation what you couldn't
