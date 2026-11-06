@@ -53,7 +53,7 @@ class History(unittest.TestCase):
 class Audit(unittest.TestCase):
     def test_resolved_misroutes_do_not_fail_the_audit(self):
         history = {n: [comment(c["issue"], c["id"], c["header"]) for c in FIXTURES
-                       if c["issue"] == n] for n in (145, 160, 161, 162)}
+                       if c["issue"] == n] for n in (145, *coord.INBOXES)}
         with mock.patch.object(coord, "comments", lambda n: history[n]), \
                 redirect_stdout(io.StringIO()):
             self.assertEqual(coord.main(["audit"]), 0)
@@ -83,8 +83,8 @@ class Channel(unittest.TestCase):
 
     def test_assignments_to_any_role_are_flagged(self):
         for to, inbox in (("optimizer", "#160"), ("Astra", "#160"), ("guardian", "#161"),
-                          ("researcher", "#162")):
-            for kind in ("CHECKPOINT", "PROPOSAL"):
+                          ("researcher", "#162"), ("oracle", "#222")):
+            for kind in ("CHECKPOINT", "PROPOSAL", "CORRECTION"):
                 reason = coord.misrouted(145, msg(FROM="coordinator", TO=to, TYPE=kind),
                                          self.new)
                 self.assertIsNotNone(reason, (to, kind))
@@ -96,6 +96,15 @@ class Channel(unittest.TestCase):
                      TYPE="CHECKPOINT"), self.new)
         for inbox in ("#160", "#161", "#162"):
             self.assertIn(inbox, reason)
+
+    def test_the_oracle_inbox_takes_only_its_own_work(self):
+        new = coord.ROLES["oracle"]["offset"] + 1
+        ok = msg(FROM="coordinator", TO="oracle", TYPE="CORRECTION")
+        self.assertIsNone(coord.misrouted(222, ok, new))
+        self.assertIsNotNone(coord.misrouted(222, msg(FROM="oracle", TYPE="REVIEW"), new))
+        self.assertIsNotNone(coord.misrouted(222, msg(FROM="coordinator", TO="guardian",
+                                                      TYPE="CHECKPOINT"), new))
+        self.assertEqual(coord.completed("oracle", {"processed_comment_ids": [new]}), {new})
 
     def test_other_senders_on_the_channel_pass(self):
         body = msg(FROM="astra", TO="coordinator, guardian", TYPE="REVIEW")

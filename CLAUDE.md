@@ -76,7 +76,13 @@ shape when it is next used.
 
 ## The agent team
 
-The coordinator and the three roles work in the register of
+The coordinator and the roles work in the register of
 `docs/journal/compact30-channel/MODE.md`; reload it at session start and when asked. The
 protocol, the roles' specs and the channel's log are beside it (its README says where each
 came from). Route every message with `.github/coordination/coord.py`, as above.
+
+The Oracle (#222, ROLES.md §7) keeps `docs/journal/oracle/intention.md` on
+`review/oracle-intention`, the plain answer to "what's going on?".
+- **Dispatching to it:** send it a CHECKPOINT whenever the record moves materially (a result,
+  a decision, a merge, a change of direction), one at a time.
+- **Correcting it:** correct only major discrepancies, through a CORRECTION, never on wording.

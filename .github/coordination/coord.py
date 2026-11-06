@@ -3,7 +3,7 @@
 
 The coordinator's messages have one correct place each (PROTOCOL.md §1):
 
-    an assignment for a role   -> the role's inbox (#160, #161, #162), one in flight
+    an assignment for a role   -> the role's inbox (#160, #161, #162, #222), one in flight
     the same, role busy        -> the channel PR #145 as TYPE: QUEUED
     findings, ACKs, decisions  -> the channel PR #145
 
@@ -35,8 +35,9 @@ REPO = "lmmx/mibz2"
 API = f"https://api.github.com/repos/{REPO}"
 CHANNEL = 145
 
-# Each role's inbox, offset and cursor (docs/journal/compact30-channel/SPEC.<ROLE>.md on
-# research/compact30-constructor). Comments after the offset are the role's queue.
+# Each role's inbox, offset and cursor (docs/journal/compact30-channel/SPEC.<ROLE>.md; the
+# Oracle's on master, the others' on research/compact30-constructor). Comments after the
+# offset are the role's queue.
 ROLES = {
     "optimizer": {
         "aliases": ("optimizer", "astra"),
@@ -59,12 +60,18 @@ ROLES = {
         "cursor": ("review/compact30-adversarial-scanner-146",
                    "docs/journal/compact30-adversarial/scanner-146/review-cursor.json"),
     },
+    "oracle": {
+        "aliases": ("oracle",),
+        "inbox": 222,
+        "offset": 6683737090,
+        "cursor": ("review/oracle-intention", "docs/journal/oracle/cursor.json"),
+    },
 }
 INBOXES = {r["inbox"]: name for name, r in ROLES.items()}
 # The first inbox comment: before it, assignments on #145 with a TO: line were correct.
 CUTOVER = min(r["offset"] for r in ROLES.values())
 # Assignments: what wakes a role in its inbox. Everything else is a publication.
-ASSIGNMENTS = {"CHECKPOINT", "PROPOSAL"}
+ASSIGNMENTS = {"CHECKPOINT", "PROPOSAL", "CORRECTION"}
 MARKER = "<!-- routing-tripwire: {id} -->"
 # Misroutes already handled, and how: `audit` reports them apart and doesn't fail on them.
 RESOLVED = {
@@ -172,7 +179,7 @@ def completed(role, cur):
                 if b.get("completed") or b.get("status") in ("completed", "finished")}
     if role == "guardian":
         return set(cur.get("consumed_incoming_comment_ids", []))
-    if role == "researcher":
+    if role in ("researcher", "oracle"):
         return set(cur.get("processed_comment_ids", []))
     raise ValueError(role)
 
