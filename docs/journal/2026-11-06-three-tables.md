@@ -134,11 +134,14 @@ The screen's figures were 1.097 and 1.075. The predicted regression toward the m
 appear in this run. One run can't say why.
 
 **The occupancy pass (diagnostic only, under the limits the registration set).**
-- **The traces can be read:** for every plan and placement, neither traced mode
-  perturbed throughput (each interval includes 0).
+- **Tracing cost:** for every plan and placement, neither traced mode's effect on throughput
+  was distinguishable from zero (each interval includes 0). That bounds the perturbation; it
+  doesn't show there was none.
 - **The workers were busy:** in all three plans they spent about 96% of their time decoding and
   about 3% idle, so no plan was starved for blocks.
-- **SMT siblings:** packing threads onto SMT siblings cost throughput in every plan:
+- **Placement:** the packed placement (pairs of SMT siblings) ran slower than the spread one
+  (one thread per core) in every plan. That compares two whole placements: the cost isn't
+  isolated to sibling sharing.
   - 4 × 2 at 8: −20.7% (−21.9 to −19.5);
   - 3 × 3 at 10: −19.4% (−20.9 to −17.9);
   - 3 × 4 at 12: −12.4% (−14.3 to −10.4).
