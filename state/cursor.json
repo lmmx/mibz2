@@ -9,7 +9,9 @@
     6693505093,
     6694815910
   ],
-  "in_progress": [],
+  "in_progress": [
+    6696708089
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -60,6 +62,11 @@
       "progress": "Account and levels published; REVIEW read back and Oracle routing/header/citation verified.",
       "work_commit": "d91c869de27270a6f662aa7f530ebda54eea357b",
       "review_id": 6694943875
+    },
+    "6696708089": {
+      "comment_id": 6696708089,
+      "status": "in_progress",
+      "progress": "Migration verified; updating frozen policy and completed Observer rename."
     }
   },
   "last_record_commit": "d91c869de27270a6f662aa7f530ebda54eea357b"
