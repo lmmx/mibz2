@@ -15,4 +15,10 @@
 - **Status:** #242 merged as 9ece704953d815d1d0e8dd184c99defce273dd4d; first end-to-end use is confirmation [6698069738](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698069738), fetched, checksum-checked and re-judged by the Coordinator in [6698087098](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698087098).
 - **Behavior:** Louis's opt-in `just submit <recipe>` runs the frozen recipe unchanged, archives bundle/checksum at an immutable evidence-branch commit and posts identity to #145. Ordinary runs submit nothing; `just submit-bundle <tarball>` retries delivery without another run. Deduplication uses run and digest.
 - **Authority history:** Louis's recorded C5/D5 approval is now merged; the command counts as handover of his own run, not automatic qualification or permission for agent timing. This Observer still executes the authenticated aa5ce6f5 pin; it observes this history without widening its own remit.
-- **Sequence resolved:** submission integration and confirmation are complete. Keeping the old tooling wait would now misstate direction. The remaining work is release validation, not evidence delivery.
+- **Sequence resolved:** submission integration and confirmation are complete. Keeping the old tooling wait would now misstate direction. Release validation and publication are now complete; the new scaling follow-up has its own pending run.
+
+## Release procedure
+
+- **Doing:** separate runbook [docs/RELEASING.md](https://github.com/lmmx/mibz2/blob/8823f617717aa8bf02e91e95f9b4b24284e388e9/docs/RELEASING.md) at Louis's request, referenced by CLAUDE.md.
+- **In order to:** 0, make release checks/publication/follow-ups reproducible.
+- **Status:** present at 8823f617717aa8bf02e91e95f9b4b24284e388e9; #244 merged the current/previous-tag defaults. Runbook distinguishes mandatory pre-release checks from the informative post-release workstation scaling request. That run is Louis's and does not hold publication.

@@ -1,8 +1,8 @@
 # 1. Scaling beyond eight threads on the i9
 
-- **Doing:** validating a release after the policy passed confirmation and merged.
+- **Doing:** documenting release scaling after publishing the admitted policy.
 - **In order to:** 0, faster correct production decoding. Recoverable headroom and its mechanism remain questions.
-- **Status:** policy admitted and merged; release validation underway. Mechanism and other performance investigations have no new recorded dispatch.
+- **Status:** policy admitted, merged and released as 0.2.5; informative release-scaling follow-up pending. Mechanism and other performance investigations have no new recorded dispatch.
 - **Known:** the [team-size screen](https://github.com/lmmx/mibz2/blob/3421fe600f544724425db665caf06fa89dd25f06/docs/journal/2026-11-06-team-size.md) completed 320 runs with matching output, a complete grid and an unflagged control. Its registered primaries returned 1.017 (95% interval 1.008–1.026) and 1.003 (0.993–1.014), below the 1.03 minimum. The run was done as intended; neither primary qualified. Both point estimates fell within their broad predicted ranges. No confirmation was due for either failed primary.
 - **Exploration, not qualification:** three teams at 10 and 12 requested threads returned 1.075 and 1.097, with about 18% less peak memory. These cells were selected after seeing the data. The [screen and corrected interpretation](https://github.com/lmmx/mibz2/blob/838d765c7de4956ada5a29c61ee30a436b1cf605/docs/journal/2026-11-06-team-size.md) separates table-count association from causation: concurrency and window change too; the last-level cache explanation is a hypothesis. Throughput divided by tables is not measured block service rate.
 
@@ -26,23 +26,32 @@
 
 - **Doing:** completed the registered same-requested-count test and confirmation; policy merged.
 - **In order to:** 1 and 0, turn candidate gains into validated production throughput.
-- **Status:** both runs done as intended and VALID PASS, as recorded by the Coordinator; admitted, no replacement. [Result](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698087098); [journal at open documentation PR's pin](https://github.com/lmmx/mibz2/blob/83cf36d304ebf02adbb452cd011a334210191881/docs/journal/2026-11-06-three-team-policy.md).
+- **Status:** both runs done as intended and VALID PASS, as recorded by the Coordinator; admitted, no replacement. [Result](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698087098); [journal at merged documentation PR's pin](https://github.com/lmmx/mibz2/blob/83cf36d304ebf02adbb452cd011a334210191881/docs/journal/2026-11-06-three-team-policy.md).
 - **Policy:** ten physical cores, 20 MiB last-level cache and ≥10 requested threads select three groups of three decoding workers, window twelve. Other selections retain old rule. Both windows and grouping change as intended, not an isolated cache experiment.
 - **Identity:** frozen candidate 3b780fb3d70efc8573bed1485254a5579e3a82c7, baseline 8b111867ff1caaca727a0d35e160786c499c4849. First run at 912baf00; confirmation head 422db167ea1b86b8ff45623c2c03984243807418, with matching frozen inputs and identical executables/corpus by the Coordinator's digest check.
 - **Ten-thread findings:** run 1 speed 1.089 (1.075–1.103), CPU 0.88, memory 0.82; confirmation 1.088 (1.076–1.101), CPU 0.89, memory 0.81. Approximate predictions were speed 1.08, CPU 0.9 and memory 0.82; directions and scale reproduced.
 - **Full rule satisfied:** both controls and every higher-count no-harm row passed in both runs under the unchanged rule. No pooling, replacement or switched primary. Confirmation no-harm upper wall ratios at 11/12/16/20 were 0.953/0.936/0.941/0.937, each below 1.02. This is recorded qualification, not Observer adjudication.
 - **Control nuance:** first eight-thread 0.986 (0.977–0.995) passed the drift screen despite excluding 1; confirmation 1.005 (0.992–1.019) did not repeat that offset. Nine-thread confirmation 1.007 (0.997–1.017). No equivalence or identified build/layout cause follows.
 - **Provenance:** run 1 three-team-policy/20261106T220546Z at evidence 820f4a87ee8f2ce43744350ef15462bed448c3bc; confirmation 20261106T225836Z at [0b340a53ce9b11cf1e4db9d1746dcaf34afb2b74](https://github.com/lmmx/mibz2/blob/0b340a53ce9b11cf1e4db9d1746dcaf34afb2b74/three-team-policy/20261106T225836Z.tar.gz). Confirmation SHA-256 7275bb95fe8328630fc856607544ea76ecc692c880518dcf1e5d9c49d6248c62; 280 rows; Coordinator reports digest match and identical frozen-judge verdict. Observer read the archived checksum and reports, not the binary bundle or a new calculation.
-- **Integration:** [#234](https://github.com/lmmx/mibz2/pull/234) merged tested head 422db167 as 16646a9bb6de6c9af34689bc78788b1e79883864. Admission is complete; package release is not.
+- **Integration:** [#234](https://github.com/lmmx/mibz2/pull/234) merged tested head 422db167 as 16646a9bb6de6c9af34689bc78788b1e79883864. Admission and package release are complete.
 - **Limits retained:** same-topology other processors, unmeasured counts, other workloads, custom windows and contention remain unestablished. Census overhead unseparated; mechanism not isolated. Review fixture scope is not general build certification.
-- **Source reconciliation:** master journal includes run 1 but still says confirmation not run; merged PR body still waits for two runs. [#243](https://github.com/lmmx/mibz2/pull/243), open at 83cf36d304ebf02adbb452cd011a334210191881, adds confirmation and admission. Use the newer result LOG plus verified merge for current status.
+- **Source reconciliation:** confirmation journal #243 is now merged at 8e0f6e37c027e393b37b140e1397853b6a3712c8; its former lag behind the result LOG is resolved. Historical PR-body wording does not supersede merge/release evidence.
 
-## 1.5 Release
+## 1.5 Release: completed
 
-- **Doing:** running release validation against py-0.2.4, in order to serve 0 by packaging 1.4's merged gain.
-- **Status:** [dispatched paired Benchmark](https://github.com/lmmx/mibz2/actions/runs/42310037840) in progress on master 16646a9b; master Test [42309987808](https://github.com/lmmx/mibz2/actions/runs/42309987808) also in progress at inspection. No completed release claim.
-- **Known:** Coordinator identifies #234 as the only src change since py-0.2.4 and names comparison base 1e644f9a ([plan](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698087098)). Latest published release inspected: v0.2.4. No new version number invented.
-- **Next:** completed automated evidence, then Coordinator's release under standing rules. No new workstation run requested and no implicit restart of paused investigations.
+- **Doing:** completed validation and publication, in order to serve 0 by delivering 1.4's admitted policy.
+- **Status:** done as intended, [v0.2.5 published](https://github.com/lmmx/mibz2/releases/tag/v0.2.5) at 2026-11-06 23:27:32 UTC. Coordinator reports crates.io, five PyPI wheels plus source distribution, and docs.rs verified ([LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698812800)).
+- **Validation:** paired Benchmark [42310037840](https://github.com/lmmx/mibz2/actions/runs/42310037840) completed successfully at master 16646a9b against the previous tag. Coordinator reports green master and parity. [Draft notes](https://github.com/lmmx/mibz2/blob/b7fddd7aaa23d7906c13c9df5d305f5a93130b67/CHANGELOG.md) report best wall change −0.1% (−1.1 to +0.9%), no detected change in CPU/amplification/memory on a four-CPU/two-physical-core runner. The policy does not apply there; no equivalence or target-machine gain follows from that null result.
+- **Remaining documentation:** #245 open at b7fddd7aaa23d7906c13c9df5d305f5a93130b67, expands notes and categorises #234 as performance. It is not a publication blocker.
+
+## 1.6 Release scaling: pending
+
+- **Doing:** waiting for Louis's run of the newly released package against its predecessor across workstation thread counts.
+- **In order to:** 0, document delivered scaling on the History page beyond what small automated runners show.
+- **Status:** pending Louis, per [release LOG](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698812800); no new result observed. This is distinct from completed policy confirmation.
+- **Purpose/rule:** [runbook](https://github.com/lmmx/mibz2/blob/8823f617717aa8bf02e91e95f9b4b24284e388e9/docs/RELEASING.md#5-release-scaling-the-new-release-against-the-last-on-the-workstation) requests one informative scaling run per release; if unavailable/declined, report that, do not delay release. This records the Coordinator's procedure, not a new Observer power or timing instruction.
+- **Recipe:** #244 merged 02d43b3c870ff9b2dd03d3064480f7b9880283b5, head 7f8add6309f4e795e15cb42ff8ce65741f08e70e. Bare `just submit bench-release-scaling` selects newest release tag and predecessor (currently v0.2.5/v0.2.4), logs them, retains explicit arguments, refuses absent predecessor. The previous hard-coded v0.2.4/v0.2.1 pair is superseded.
+- **Next:** Coordinator verifies submitted object/checksum, commits recorded results for History. No agent-run workstation timing; no reinterpretation of the completed registered verdict.
 
 ## 1.2 Mechanism
 
