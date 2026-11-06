@@ -28,7 +28,8 @@
     6651023083,
     6653416078,
     6657883434,
-    6659992544
+    6659992544,
+    6683037641
   ],
   "outgoing_comment_ids": [
     {
@@ -124,6 +125,13 @@
       "type": "REVIEW",
       "sha": "0c2718ec9f858fee6cf186ba4a9d3644505f3f2c",
       "checkpoint_comment_id": 6659992544
+    },
+    {
+      "pr": 145,
+      "id": 6683232182,
+      "type": "REVIEW",
+      "sha": "b6d99258c84d285614dd2fddc7dedcd2737eea8a",
+      "checkpoint_comment_id": 6683037641
     }
   ],
   "reviews": [
@@ -299,7 +307,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "IN_PROGRESS",
+  "status": "WAITING_FOR_INBOX",
   "published_evidence_commit": "b6d99258c84d285614dd2fddc7dedcd2737eea8a",
   "incoming_experiment_comment_ids": [
     {
@@ -449,10 +457,10 @@
     {
       "comment_id": 6683037641,
       "pr": 160,
-      "status": "complete",
-      "completed": false,
+      "status": "finished",
+      "completed": true,
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Audit and proposals committed; awaiting one REVIEW publication.",
+      "progress": "Report, archived arithmetic, sensitivity model and canonical ledger committed; REVIEW published and recorded.",
       "report_path": "docs/journal/compact30-research/reviews/inbox-6683037641/report.md",
       "baseline_commit": "f4f99ab82652411feb4a5a6e2ccb96d04902fb58",
       "evidence_commit": "cbc6eb14b065fdb7092911147ce3374f63541467",
@@ -463,7 +471,8 @@
         "new_timing": false,
         "archived_run_rows": 320,
         "raw_profile_replay": false
-      }
+      },
+      "reply_id": 6683232182
     }
   ]
 }
