@@ -25,7 +25,7 @@
     "6697544323": 6697604068,
     "6698097217": 6698197841
   },
-  "last_rebuilt_from": 6698087098,
+  "last_rebuilt_from": 6698812800,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -92,9 +92,10 @@
     },
     "6698816282": {
       "comment_id": 6698816282,
-      "status": "in_progress",
-      "progress": "Migration verified; reconciling published release, scaling follow-up and downstream bump."
+      "status": "complete",
+      "work_commit": "bd440eac0c946aa3026ff13747984d9291eee25c",
+      "progress": "Account and levels committed through channel 6698812800; awaiting deduplicated REVIEW."
     }
   },
-  "last_record_commit": "b41f5c25951bf1a335643e73a79a7f6fb654e276"
+  "last_record_commit": "bd440eac0c946aa3026ff13747984d9291eee25c"
 }
