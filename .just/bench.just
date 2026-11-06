@@ -254,3 +254,44 @@ bench-release-scaling NEW="v0.2.4" OLD="v0.2.1" ROUNDS="10" THREADS="" *FILES=""
       --env "$W/env.json" --lscpu "$W/lscpu.txt" --ref mibz2 \
       --arm "mibz2={{trim_start_match(NEW, 'v')}}" --arm "mibz2@$OLDAB={{trim_start_match(OLD, 'v')}}" \
       --arm "lbzip2=lbzip2 $lb" "${files[@]}"
+
+# Team size against live tables (docs/journal/2026-11-06-team-size.md, registered before any
+# run): what holds the decoder at its 8-thread ceiling. The cooperative decoder at teams × k
+# (mibz2-coop2/3/4 at T threads run T // k teams of k; mibz2, the policy, runs 4 × 2 on the
+# i9 from 8 threads up) at 8, 10, 12 and 16 threads, paired by round against mibz2 at 8;
+# then perf's counters on the registered cells. Writes target/team-size/ and prints the
+# report. About 15 minutes. Close the browser and anything busy first.
+#   just bench-team-size 2>&1 | tee team-size-console.log
+#   just bench-team-size 20 "8,10,12,16" /path/to/big.bz2
+
+# Teams of 2, 3 and 4 at fixed live tables, against today's 4 × 2
+bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    W=$PWD/target/team-size
+    mkdir -p "$W"
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$W/wikidata.bz2"
+    "$AB" env > "$W/env.json"
+    lscpu > "$W/lscpu.txt"
+    git rev-parse HEAD > "$W/commit.txt"
+    rm -f "$W/runs.jsonl" "$W/counters.jsonl"
+    "$AB" run "$W/runs.jsonl" --arms "mibz2,mibz2-coop2,mibz2-coop3,mibz2-coop4" \
+      --threads "{{THREADS}}" --rounds {{ROUNDS}} "$W/wikidata.bz2" {{FILES}}
+    cells="mibz2@8,mibz2-coop3@12,mibz2-coop4@16,mibz2-coop2@10,mibz2-coop2@12,mibz2-coop3@10"
+    if perf stat -e cycles -- true >/dev/null 2>&1; then
+      python3 bench/team_size.py counters "$AB" "$W/wikidata.bz2" "$W/counters.jsonl" --cells "$cells" \
+        || echo "bench-team-size: the counters failed; the timed report stands without them"
+    else
+      echo "bench-team-size: perf can't count here (try: sudo sysctl kernel.perf_event_paranoid=1); no counters"
+    fi
+    ctr=(); [ -s "$W/counters.jsonl" ] && ctr=(--counters "$W/counters.jsonl")
+    python3 bench/team_size.py report "$W/runs.jsonl" "${ctr[@]}" --ref mibz2@8 --out "$W/team-size"
+    echo "Upload: $W/team-size.md, team-size.json, runs.jsonl, counters.jsonl, env.json, lscpu.txt, commit.txt"
