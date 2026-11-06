@@ -161,3 +161,11 @@
   margin: 0 0 0.4rem;
   font-size: 0.72rem;
 }
+
+/* The account line and L0 under the page title, before the explanation */
+.obs-root.obs-now {
+  margin: 0.4rem 0 1.4rem;
+}
+.md-typeset .obs-root.obs-now #now > h2 {
+  margin-top: 0.6rem;
+}

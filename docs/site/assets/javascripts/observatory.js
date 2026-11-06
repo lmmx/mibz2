@@ -150,6 +150,8 @@
       const got = Object.fromEntries(wanted.map((p, i) => [p, texts[i]]));
       if (!got["current/L0.md"]) throw new Error("current/L0.md is missing from the record");
       const out = document.createDocumentFragment();
+      /* The account line and L0 open the page (#obs-now, under its title); the rest follows the table. */
+      const top = document.createDocumentFragment();
 
       const man = got["manifest.md"] || "";
       const through = (man.match(/through \[(\d+)\]/) || [])[1];
@@ -163,7 +165,7 @@
         : [document.createTextNode("The branch's latest files. GitHub's API was unavailable, so the account's commit and its history are not shown")];
       const again = el("a", { href: "#", class: "obs-again", text: "read again" });
       again.addEventListener("click", (e) => { e.preventDefault(); start(root, true); });
-      out.appendChild(el("p", { class: "obs-stamp" }, [...stamp.filter(Boolean), document.createTextNode(" · "), again]));
+      top.appendChild(el("p", { class: "obs-stamp" }, [...stamp.filter(Boolean), document.createTextNode(" · "), again]));
       const jumps = [["now", "Now"], ["in-five-lines", "In five lines"], ["the-tree", "The tree"], ["each-front", "Each front"],
         ["where-the-why-is-weak", "Weak links"], ["this-version", "This version"], ["every-move", "Every move"]];
       const nav = el("nav", { class: "obs-jumps", "aria-label": "Levels of the record" });
@@ -173,7 +175,7 @@
       });
       out.appendChild(nav);
 
-      out.appendChild(section("now", "Now", render(got["current/L0.md"], ctx, "current/")));
+      top.appendChild(section("now", "Now", render(got["current/L0.md"], ctx, "current/")));
       if (got["current/L1.md"]) out.appendChild(section("in-five-lines", "In five lines", render(got["current/L1.md"], ctx, "current/")));
       if (got["current/L2.md"]) out.appendChild(section("the-tree", "The tree", render(got["current/L2.md"], ctx, "current/")));
 
@@ -198,6 +200,9 @@
       if (got["changes.md"]) movesBody.appendChild(disclose("changes-detail", "The Oracle's own change log", "changes.md", render(got["changes.md"], ctx, ""), !commits));
       out.appendChild(section("every-move", "Every move", movesBody, commits ? `${commits.length} settled version${commits.length === 1 ? "" : "s"}, newest first.` : null));
 
+      const nowBox = document.getElementById("obs-now");
+      if (nowBox) { nowBox.textContent = ""; nowBox.appendChild(top); }
+      else out.insertBefore(top, out.firstChild);
       root.textContent = "";
       root.appendChild(out);
       if (location.hash) {

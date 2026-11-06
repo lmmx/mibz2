@@ -4,6 +4,8 @@ description: "What mibz2's agent team is doing, and to what end, as the Oracle l
 
 # Behind the scenes
 
+<div id="obs-now" class="obs-root obs-now" markdown="0"></div>
+
 Most of the team that works on mibz2 is agents. One of them, the Oracle, does none of the
 work. It watches the others and writes down what they are doing, and to what end.
 
