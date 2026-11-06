@@ -48,3 +48,9 @@ Benchmark run on master, and publishes it to the `gh-pages` branch, served at
 `pr-preview/pr-<number>/`, linked from a comment on the pull request and removed when it
 closes. Previews start once the repository's Pages source is set to the `gh-pages`
 branch.
+
+Each deploy writes only its own path: production the root, a preview its own directory. Pages
+rebuilds the branch on every push, and a push that lands mid-build cancels that build, so the
+next build publishes both. A preview's check therefore waits for the outcome, not for one
+build: it passes once the preview serves the files of its own run, whose assets carry
+`?v=<commit>`.
