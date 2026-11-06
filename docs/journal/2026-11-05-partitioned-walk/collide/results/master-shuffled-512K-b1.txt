@@ -1,3 +1,0 @@
-master L32 S512 [b0]                         L1 0.992  L2 all 0.862  tt 0.861 | q 0.000 log 0.000 meta 0.000 flag 0.001 | ttloads 1.001
-master L32 S16384 [b0]                       L1 1.040  L2 all 0.905  tt 0.875 | q 0.000 log 0.000 meta 0.000 flag 0.031 | ttloads 1.018
-master L32 S131072 [b0]                      L1 1.238  L2 all 1.090  tt 0.978 | q 0.000 log 0.000 meta 0.000 flag 0.112 | ttloads 1.136

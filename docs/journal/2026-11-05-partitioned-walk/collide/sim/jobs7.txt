@@ -1,3 +1,0 @@
-master 32 512
-master 32 16384
-master 32 131072

@@ -1,1 +1,0 @@
-# #175 run 1: head cc8b48d vs 6b33781, run 41963170000, EPYC 9V74, bench 3.2.1 (head): wikidata 1t +0.8% (-0.4,+2.1), 4t -0.5% (-2.0,+1.0); onebyte 4t -1.9% faster (chance; harness-only); no wall row slower

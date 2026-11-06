@@ -1,7 +1,0 @@
-master 32 256
-master 32 512
-master 32 1024
-master 32 2048
-master 32 4096
-master 32 8192
-master 32 32768

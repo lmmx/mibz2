@@ -1,0 +1,16 @@
+{
+  "role": "oracle",
+  "inbox": 222,
+  "offset": 6683737090,
+  "processed_comment_ids": [],
+  "in_progress": [],
+  "reviews": {},
+  "last_rebuilt_from": null,
+  "migrated_from": {
+    "branch": "review/oracle-intention",
+    "sha": "382518724f59c1c4e3755a57649c318fb443923d",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "aaa3e698e4dccb035318805eee24f8b41e037afe89c0729f49b441a008689b50",
+    "date": "2026-11-06"
+  }
+}
