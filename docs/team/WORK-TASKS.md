@@ -14,6 +14,7 @@ marked:
   its model, its effort and the task's name **beside** it, never inside it.
 - **The UI needs a signed-in browser.** A prompt that asks the chat agent to change settings
   only reachable through the interface fails when the browser is signed out (2026-11-06).
+- **Renaming is done by hand** in the Work interface. No prompt for it is recorded.
 - **One task per creation prompt.** A prompt that creates one task and edits others confuses
   it (2026-11-06).
 - **The trigger can't be restricted to comments only.** Asking it to be made Work stop and ask
@@ -76,7 +77,12 @@ and why, and fix the form or the spec. A question is not a step.
 The Coordinator then checks the saved instruction text against the pin before the first
 assignment.
 
-## Re-pinning an existing task — untested
+## Re-pinning an existing task — known to work
+
+It re-pinned the Optimiser, Guardian and Researcher tasks to `282fcbb0` on 2026-11-06. Their saved
+texts were read back character for character, and nothing else changed. Several prompts can go
+in one chat, as long as each is sent as its own message. Tell Work the task's current name: if a
+prompt says NAME, it asks.
 
 This is for one existing task at a time, so that it loads the specs at a new pin. Beside the
 prompt, tell Louis the task's name, and to leave its model and effort as set.
@@ -89,9 +95,11 @@ You are the ROLE-NAME of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC
 Then show me the instruction text exactly as saved, the trigger and subscription, and whether the task is enabled.
 ```
 
-When Louis reports the result, mark this form known to work, or record what failed.
+
 
 ## Revisions
+
+- 2026-11-06: the re-pin form worked for all three existing tasks. Marked known to work.
 
 - 2026-11-06: ChatGPT's form created the Oracle task first time. Marked known to work.
 - 2026-11-06: ChatGPT's form adopted, with its four traps recorded. It is pinned to a
