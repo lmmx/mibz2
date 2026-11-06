@@ -1,8 +1,0 @@
-/tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/walk-freeze/corpora/wikidata-20261026.bz2: OK
-c30: the frozen commit 9267433661f4a440c92831a4f1b38b6af61e4726, corpus checked, mode dry-run
-warn: no toolchain installed and no default toolchain set
-help: run 'rustup default stable' to download the latest stable release of Rust and set it as your default toolchain.
-c30: the reviewed toolchain, rustc 1.97.0 (LLVM 22.1.6), is not installed. Install it beside your default, which stays as it is:
-      rustup toolchain install 1.97.0 --profile minimal
-archive: /tmp/claude-0/-home-user/a3c6f4e5-fac5-5911-974c-cd24e5aa55fb/scratchpad/wt-c30w/target/c30-traversal-20261102T180902Z-dry-run.tar.gz (1090 bytes, sha256 de8f6e34423d56f85241cabb1b17b3608d0c3ebfc30a5bc82a6b493c02fdea7e): 1 files and MANIFEST.json, commit 9267433661f4a440c92831a4f1b38b6af61e4726
-error: recipe `bench-c30-traversal` failed with exit code 1

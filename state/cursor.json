@@ -1,0 +1,514 @@
+{
+  "role": "independent adversarial machine-code reviewer",
+  "review_branch": "review/compact30-adversarial-scanner-146",
+  "reviewed": [
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 146,
+      "commit": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+      "evidence_manifest_sha256": "e18b6ff9d866ef66a32b287b5cb0f4f81b54cffc038e2275f3513bd76a2691de",
+      "kind": "independent adversarial supplement, not duplicate F1/F2 submission or charter 6.2 acceptance",
+      "governance_commit": "4d814ce56be1487b728ba0a75ada6eb57978b911",
+      "charter_blob": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
+      "reviewer_blob": "2839405784ec4e63d2f4cc7bd406e5dff4dd1029",
+      "protocol_blob": "01d5391874e756ff90bbd9a822913b201cd9dece",
+      "gate_1": "PASS on inspected archived safe-scanner evidence",
+      "gate_2": "recorded diagnostic partial miss preserved",
+      "gate_3": "REJECT qualification; whole-constructor conservative interval HOLD/withdrawn",
+      "economics": "outside scope"
+    }
+  ],
+  "prior_work_consulted_after_reconstruction": {
+    "pr": 148,
+    "commit": "27473ae1533c4eb2ef31da462bc8a324fa0fc660",
+    "existing_findings_comment": 6630265636,
+    "accepted_findings_ack": 6630284404,
+    "canonical_ledger_modified": false
+  },
+  "last_observed_pr146_comment_id": 6630598133,
+  "nonindependent_future_topics": [
+    "split-discriminator reuse across refill",
+    "phase derived from encoded label",
+    "operation-specific U1/U2 negative controls developed here"
+  ],
+  "fresh_package_critique": "fresh-check/REVIEW.md",
+  "state": "Three-table review finished; awaiting next inbox assignment",
+  "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
+  "automatic_github_wakeup_assumed": false,
+  "polling_installed": false,
+  "programme_complete": false,
+  "processed_comment_ids": [
+    6633302554,
+    6633657739,
+    6633675410,
+    6633777567,
+    6633793271,
+    6633918984,
+    6634250201,
+    6634296412,
+    6634998636,
+    6635419092,
+    6635620697,
+    6637300905,
+    6637485148,
+    6639428570,
+    6639756189,
+    6639998280,
+    6640069360,
+    6640153383,
+    6640266327,
+    6640324039,
+    6641768409,
+    6643481606,
+    6643744616,
+    6643809123,
+    6643850845,
+    6643927959,
+    6643992749,
+    6644051935,
+    6644115799,
+    6644912625,
+    6645922140,
+    6646250444,
+    6681848572,
+    6682105521,
+    6682938532,
+    6683787130,
+    6684137403,
+    6684938042
+  ],
+  "last_processed_comment_id": 6684938042,
+  "comment_reviews": [
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6633302554,
+      "index_commit": "18ca5d4cb9fcaeaf5cee7e7f1db2ebb1fd72080e",
+      "report_commit": "0b3fe45c398bba7fb5af4f91766297cf829378fe",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/s62-intake-6633302554.md",
+      "review_comment_id": 6633405942,
+      "disposition": "Intake HOLD: inherited discussion prevents blind section 6.2 acceptance; technical review not performed",
+      "section_6_2_completed": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6633657739,
+      "index_commit": "18ca5d4cb9fcaeaf5cee7e7f1db2ebb1fd72080e",
+      "report_commit": "b38bced5252018be4cc3a76b59ccd7c6f6e4dcd1",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/s62-ack-6633657739.md",
+      "review_comment_id": 6633695035,
+      "disposition": "Coordinator accepted intake findings; proposed remedy addresses them in design; fresh technical review remains outstanding",
+      "section_6_2_completed": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 152,
+      "trigger_comment_ids": [
+        6633675410,
+        6633777567
+      ],
+      "source_commit": "648c84e5d4a3fb6c1cb77503ed76abff42c18e89",
+      "report_commit": "b7d7add8186b9bdc2de3f5c184997ecf7d482042",
+      "report_path": "docs/site/blog/2026-11-04-autonomous-agent-team.md",
+      "notes_path": "docs/journal/compact30-adversarial/blog-agent-team/CHANGE_NOTE.md",
+      "reader_tests_path": "docs/journal/compact30-adversarial/blog-agent-team/reader-tests.md",
+      "review_comment_id": 6634257121,
+      "review_comment_pr": 145,
+      "disposition": "Revised post and source note published; three simulated readers assessed original and revision; two figure redraw briefs supplied for Coordinator port."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_ids": [
+        6633793271,
+        6633918984
+      ],
+      "report_commit": "684a337933dcbb5e2571738fe86a7c31ace7c937",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/s62-launch-6633793271.json",
+      "review_comment_id": 6634286833,
+      "disposition": "Isolated Astra child launched from exact brief with history inheritance disabled; operational provenance recorded; child preparing independent report.",
+      "section_6_2_completed": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6634250201,
+      "duplicate_of": 6633793271,
+      "review_comment_id": 6634286833,
+      "disposition": "Duplicate launch request reconciled against published launch record; no second child started and no duplicate reply posted."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6634296412,
+      "report_commit": "56610384e29218c9f9ac10422994f98281d69c8f",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/s62-completion-6634296412.json",
+      "child_commit": "e62fc15f91311823ab0c48a6f6e9c7dd35a28d10",
+      "child_pr": 153,
+      "child_review_comment_id": 6634356048,
+      "disposition": "Waited for existing child; verified report, replay files, exact brief blob, input provenance, requested commit identity, draft PR and REVIEW publication. No relaunch.",
+      "independent_review_published": true,
+      "material_findings_resolved": false,
+      "additional_parent_comment_posted": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6634998636,
+      "report_commit": "546c3192717f2b6eb9b26f85cc13033141f40982",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/c6-review-6634998636/report.md",
+      "disposition": "Recommend user registration of bounded C6 prototype 3b; no authority granted, no achieved saving, H_D unresolved. Static wrapper count and budget replay passed.",
+      "review_comment_id": null,
+      "source_comment_posted": false,
+      "source_comment_omission_reason": "Current batch explicitly instructs no additional message, reply or notification in the source app.",
+      "independent_blind_section_6_2_review": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6635419092,
+      "report_commit": "9acf64acee19b14104d239a8923381322d152982",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/f01-review-6635419092/report.md",
+      "review_comment_id": 6635548872,
+      "disposition": "Recommend acceptance of mapped S62-F01 counter repair: 65 classes, 70 counter expressions checked; source predicates inspected. Retain frequency-histogram coverage and normalized-identity qualifications. No fresh raw-profile replay or builds.",
+      "blind_section_6_2_review": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6635620697,
+      "report_commit": "7e265fd1f8a8dd6b2520a2013300904cbc01fb1b",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d011-reconciliation-6635620697.md",
+      "review_comment_id": 6635649533,
+      "disposition": "Reconciled D011 with completed Researcher coverage review; mapped S62-F01 remedied at pinned commits, other obligations unchanged. No repeated raw-profile replay."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6637300905,
+      "report_commit": "6095a427673b41b1f43ed880d3cca5e8e551adf4",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/policy-receipt-6637300905.md",
+      "review_comment_id": null,
+      "disposition": "Policy checkpoint receipt; no present Researcher assessment requested. Branch record published; source comment blocked by automatic approval review citing earlier no-additional-source-message instruction. No retry pending.",
+      "source_comment_posted": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6637485148,
+      "report_commit": "8b3913a6e6ac6f89150760fe5f12c61de6f97aa8",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/coordinator-goal-6637485148/report.md",
+      "entry_path": "docs/journal/compact30-channel/CAMPAIGN.md",
+      "reader_tests_path": "docs/journal/compact30-adversarial/scanner-146/coordinator-goal-6637485148/reader-tests.md",
+      "review_comment_id": 6637667413,
+      "disposition": "Published 1123-character goal, proposed CAMPAIGN entry, revision strategy and six simulated Coordinator decision tests. Full production gate and separate downstream gate preserved. Entry awaits Coordinator adoption; no task authority changed.",
+      "source_comment_posted": true
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6639428570,
+      "report_commit": "f70e7a214eb228db5a3590a5695a26bab0a31628",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/mode-receipt-6639428570.md",
+      "review_comment_id": 6639472381,
+      "disposition": "Adopted concise independent mathematical research register; assumptions and task limits preserved. No technical assessment requested. Current ROLES retrieval unavailable; archived established record consulted."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6639756189,
+      "report_commit": "a237a7589972e6d47046b3a710d1b657745ea931",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/c7-c10-review-6639756189/report.md",
+      "review_comment_id": 6639925930,
+      "disposition": "Recommend corrected C7 bounded registration with prospective 4M minimum and combined baseline reconciliation. C8 original natural-mode premise refuted by RAW crossing counterexample; guard/census/minimum required. C9 tail accounting and C10 fill/phase/event deltas outstanding. Completion bottleneck attribution unsupported by invalid pre-Assembly-1 capture.",
+      "new_verified_savings": 0,
+      "implemented": false,
+      "blind_review": false
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6639998280,
+      "report_commit": "ee4fecc22a3308b29fe221ddb3ccd52c8d58fbb7",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/assembly1-review-6639998280/report.md",
+      "review_comment_id": 6640148670,
+      "disposition": "Archived-table signed bridge identifies 40.735M non-row integration terms and 56.392M total build/refill interaction. Constant IPC is sensitivity only; half-transfer upper completion stress remains above limit. Recommend model then existing CI on qualified unmerged integration candidate. No raw-profile replay or qualification closure."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6640069360,
+      "report_commit": "ee4fecc22a3308b29fe221ddb3ccd52c8d58fbb7",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d013-reconciliation-6640069360.md",
+      "review_comment_id": 6640153847,
+      "disposition": "D013 narrow final-qualification HOLD honoured. Guardian 13S and Researcher additive 12S reconciled by existing overlap S, counted once. Raw-profile closure remains outstanding; no line STOP."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6640153383,
+      "report_commit": "7d97f2a4808dbdd02e9383546d26675e70651e1c",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/bridge-review-6640153383/report.md",
+      "review_comment_id": null,
+      "source_comment_posted": false,
+      "source_comment_omission_reason": "Current batch explicitly prohibits an additional source-app message.",
+      "disposition": "Bridge matches previous semantic partition after moving 47,866,260 row/index instructions between categories. S is per tile, not epoch; mixed-class +8 is not a demonstrated removable cost. Arithmetic attribution resolved; no independent raw replay or HOLD lifting."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6640266327,
+      "report_commit": "d4deed487afc3eedb171282fa791fdc03bc5a045",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/a6-reconciliation-6640266327.md",
+      "review_comment_id": 6640342479,
+      "disposition": "Scoped A6 reconciliation accepted; rest category count corrected from 39 to 15 with instruction totals unchanged. No fresh raw replay or economic qualification."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6640324039,
+      "report_commit": "c9b42ef18e5f5b080162ce0c0c91f720b037aa6d",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/topology-review-6640324039/report.md",
+      "review_comment_id": 6640409593,
+      "disposition": "D014 attribution closure acknowledged. W2 unidentified in cited W1/W4 capture; derived break-even versus 0.25 CPU-s/GB thresholds and relative contention requirements. Two-phase CPU subtotal not whole-decoder ratio. Multi-worker dispatch remains hypothesis; no new timing or implementation."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6641768409,
+      "report_commit": "30d7b98d94e155d0bafc148fb4864d3fdd5626d1",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d016-reconciliation-6641768409.md",
+      "review_comment_id": 6641832358,
+      "disposition": "D016 conditional walk budget independently recomputed from published totals. Found production port phase diagnostics still directly call legacy BWT build/walk; not compact30 phase measurements. Whole-decoder CI rejection remains. No new implementation or replay."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643481606,
+      "source_commit": "8465207a1d71af51baa1725ecf695c41b52848a2",
+      "report_commit": "825af2e73fac1b1ff2559a5883031766b6b53f7e",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/deferred-handover-6643481606/report.md",
+      "review_comment_id": null,
+      "source_comment_posted": false,
+      "source_comment_omission_reason": "Triggering batch explicitly prohibits an additional source-app message.",
+      "disposition": "No byte or next[] counterexample found: distinct buffers and immutable T permit ordinary steps to commute with ordered handovers. Queue-exhaustion pointer reconciliation correct; 40,923 abstract schedule cases passed. Execution/grow chronology not identical; no native safety/performance certification."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643744616,
+      "report_commit": "a8fe7261507485f5d8ba836e47d6985c5e125b14",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/pivot-review-6643744616/report.md",
+      "review_comment_id": 6643814937,
+      "disposition": "Replayed block-1 profile accounting. First CI supports no demonstrated multi-thread gain, not no regression or general instruction irrelevance; corrected stale scanner/worker numbers. Case-2 simulation survives intermediate filter/grow observers; targeted later-unmarked mutant recommended."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643809123,
+      "report_commit": "91905372f2934c01dda2983e84a79f2d30d2d25f",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/published-model-6643809123/report.md",
+      "review_comment_id": 6643931565,
+      "disposition": "Published exact interval-model review and arithmetic; reject unproved ell/R-only diagnosis. Reuse directly tests footprint; tiling is work reduction; smaller tables require production price."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643850845,
+      "report_commit": "91905372f2934c01dda2983e84a79f2d30d2d25f",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d018-reconciliation-6643850845.md",
+      "review_comment_id": 6643940252,
+      "disposition": "Reconciled D018 with completed commuting-step invariance assessment; native safety and test coverage qualifications retained."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643927959,
+      "report_commit": "57a9259c35c2e12e6b5e9848fc4ddda942089cb7",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d019-model-provenance-6643927959.md",
+      "review_comment_id": 6643961853,
+      "disposition": "Resolved B2 model provenance at exact file/sections; calibration, unrun falsifier and historical unrolling trial boundaries preserved."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6643992749,
+      "report_commit": "fb4c4027d4746e810b645ebf96361bfcd44ea06d",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/copy-predictions-6643992749/report.md",
+      "review_comment_id": 6644080568,
+      "disposition": "Derived conditional per-copy predictions. Corrected cross-host/run calibration and B2 kernel identity; timings do not identify ell/m. Archived both mutable bench snapshots. No implementation."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6644051935,
+      "report_commit": "fb4c4027d4746e810b645ebf96361bfcd44ea06d",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/d020-reconciliation-6644051935.md",
+      "review_comment_id": 6644084127,
+      "disposition": "Confirmed D020 comparison corrections; added uncapped common-latency invariance, elapsed-vs-CPU and separate-core/SMT measurement distinctions."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6644115799,
+      "report_commit": "9505c3e6cd79a78a7b2f0c9b37ae8d2e1e83c685",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/conditional-refit-6644115799/report.md",
+      "review_comment_id": null,
+      "source_comment_posted": false,
+      "source_comment_omission_reason": "A later delivery in this active run explicitly instructed no additional message, reply or notification in the source app before the review comment was posted.",
+      "disposition": "Quantified conditional joint fits: common R/ell changes alone cannot fit displayed point pair under transferred issue/replay assumptions; arm-specific ell, effective R, issue or overhead can. Not a hardware identification or formal CI rejection; B2 kernel mismatch retained."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 145,
+      "trigger_comment_id": 6644912625,
+      "report_commit": "3843e7daae6b0d370c17fb16adfbe2d32626a43f",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/causal-scope-6644912625/report.md",
+      "review_comment_id": 6645002054,
+      "disposition": "Reviewed full attribution erratum, P87 closed diagnostic and production integration. Positive intervention/interaction does not identify mediation or larger penalty. Superseded prior unrun-reuse framing; supplied topology and measurement discriminators, no new experiments."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6645922140,
+      "report_commit": "da2abea93591123685ae8187cc84bd319a21653a",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/p87-registration-6645922140.md",
+      "review_comment_pr": 145,
+      "review_comment_id": 6645977057,
+      "disposition": "Repeated-detection screen is not no-harm assurance; RSS-only gate claim unsupported; causal bundle preserved; bounded existing-data and warm-scratch diagnostics proposed. No benchmarks or implementation."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6646250444,
+      "status": "completed",
+      "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
+      "report_commit": "448eabe549bcb8d392deb6ba4d84dda1466e2e40",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/p87-results-6646250444/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": 6646303348,
+      "disposition": "Verified 42 published wall intervals; narrowed inconclusive/safety claims; identified untimed production parity decode between timed phase passes; proposed binary audit; raw paired JSONL absent from archive."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6681848572,
+      "status": "finished",
+      "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "report_commit": "61e3325c5783b4fbfc2fa70742f2cc92086e0c0f",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/team-size-6681848572/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": 6682038133,
+      "disposition": "Fixed arms have 8 slots versus production reference 16; mechanism fields non-identifying. Phase/wait and placement diagnostics prioritized, shared-request contention prior art, counter validity corrections."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6682105521,
+      "status": "finished",
+      "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "source_commit": "6f3183d96f2e8fc1d59751e1279be062fc09d897",
+      "report_commit": "fb5418e7385dc96bdb560dc56efbda458af3a29e",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/team-size-amendment-6682105521/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": 6682204169,
+      "disposition": "Window confound closed; helper trace can follow screen. Narrow whole-process placement and whole-inversion span claims; control duplicate-round predicate omission identified."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6682938532,
+      "status": "finished",
+      "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "report_commit": "186702b380614658aa2864908de3b3ab92e836a3",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/three-tables-6682938532/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": 6683028366,
+      "disposition": "Reconstructed paired results; three-table follow-up justified, cache-capacity cause unproven. New occupancy lacks same-k counterpart; buffer capacity and perturbation claims corrected."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6683787130,
+      "status": "finished",
+      "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "report_commit": "0e74fcc12d2d2dcecaebce5ac8f60b0502f46f29",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/oracle-6683787130/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": 6683945162,
+      "disposition": "Oracle purpose/evidence/dispatch relations separated; 25% performance necessity refuted by 2.91% capacity-model counterexample; seed causal and dependency corrections. #220 rule retained; no implementation or authority change."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6684137403,
+      "status": "finished",
+      "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "report_commit": "de52e038812ac8a49e3686644b35f7305fcb0c09",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/oracle-precis-6684137403/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": 6684224966,
+      "disposition": "Claim-relative stopping, channel watermark plus evidence manifest, parallel-front L0; identified already-retracted 25% restriction still shown operative inside claimed cutoff. No implementation or authority change."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6684938042,
+      "status": "finished",
+      "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "report_commit": "1d7404fdba6a38a8a07d4dab37230ff4b889f6e6",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/team-neutral-6684938042/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": 6685052784,
+      "disposition": "Identified live instruction-gate and scope inheritance through STEWARDSHIP/MODE; reviewed all rule dispositions, opportunity cost, evidence/adoption distinction, continuation-state handover and Oracle applicability checks."
+    }
+  ],
+  "active_delegations": [],
+  "completed_delegations": [
+    {
+      "child_identifier": "/root/s62_review",
+      "model": "gpt-6-astra",
+      "reasoning_effort": "xhigh",
+      "context_mode": "fork_turns=none",
+      "input_blob": "172fd8d69e18171c93038f890026c1f3cb6665e8",
+      "branch": "review/compact30-s62",
+      "commit": "e62fc15f91311823ab0c48a6f6e9c7dd35a28d10",
+      "draft_pr": 153,
+      "review_comment_id": 6634356048,
+      "status": "Published and independently verified by parent; Coordinator replay and findings resolution remain."
+    }
+  ],
+  "last_batch": {
+    "event_comment_ids": [
+      6684938042
+    ],
+    "handled": [
+      6684938042
+    ],
+    "skipped": [],
+    "automation_modified": false
+  },
+  "reported_programme_status": {
+    "source_comment_id": 6637300905,
+    "charter_pin": "55b4b86be4ba7eed41b283a52f2c1d56fa43cc67",
+    "c6": "Coordinator reports registered on 7620c0c6 with 10 M incremental minimum",
+    "verified_scope": "Read charter policy; registration and combined outcomes not independently assessed",
+    "task_authority_changed": false
+  },
+  "working_register": {
+    "path": "docs/journal/compact30-channel/MODE.md",
+    "commit": "e44d87f96c2bdcce904872ea4fb13ad79bdcf2af",
+    "trigger_comment_id": 6639428570,
+    "read_order": "After event eligibility, addressee and cursor gates, read MODE and applicable role instructions.",
+    "authority_changed": false
+  },
+  "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+  "migrated_from": {
+    "branch": "review/compact30-adversarial-scanner-146",
+    "sha": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "9b6bfe5b8e2193a68d8e788873da11947197c3457b6ad6e454b580a05f7b8fd0",
+    "date": "2026-11-06"
+  }
+}
