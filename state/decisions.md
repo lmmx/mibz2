@@ -1516,3 +1516,52 @@ D036's wrong-worktree case and original missing-output/failed-row cases are repa
 
 Evidence key: PR234 / `7c341a875049f8c95d27448046eb4923387687cf` / registration blob `10bfc325085bf5b08acb4b624dc0012d2fa01a57`.
 Reviewed blobs: recipe `72c1838ad16b349e8692aa92397a52fd5b99489d`; frozen file `89054e82aea59bb9f5087e1176b9ccc32821fd75`; judge `53a3ed5fb4234f9abcd959994e2318a151ae0159`; tests `a6e494fb1a60ebed21376d0c9d65d60a4f7c9bdf`; head ab `657ccf608b493a64b934ccc757ecabead43c6f62`; bundler `1ce3e2a20b63032ad53a42945e14393c5e968231`.
+
+## D038 — D037 re-review: partial closure, HOLD remains
+
+**G1/G2: HOLD freezing the evidence recipe at #234 `0a2d5b1389ef177372730ac0aaa19889316aa9b9`.** Inbox [6695276659](https://github.com/lmmx/mibz2/pull/161#issuecomment-6695276659). This is a narrow evidence-integrity HOLD, not a stop on repairs or the optimisation line. No performance rule changed, no timing or implementation performed.
+
+Operating pin `a6a703cefcc40ac4115803f44a8a29ad76a3a7ef`: SPEC, Guardian SPEC, MODE, RULES and PROTOCOL read. Migration verified before receipt: previous branch `f9dab3d2b40739d89d613f86e8c2d67bec3159e4`; manifest SHA-256 `60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488`. Receipt `057fe3049a5e5f782430ca9e7f3727c0600fcb18`. Fifteen inbox comments listed; all earlier work finished.
+
+### What closes
+
+- **F2 and malformed-input portion of F4:** all **14 supplied Python test functions pass**, invoked directly with temporary directories and None for the unused monkeypatch argument. Tests cover null rows/arms, list rows and truncated JSON producing both invalid reports, and old-format child JSON with parent-supplied observed_threads. The prior missing-output/failed-zero-row cases remain rejected.
+- **F3 base-path wiring:** source now spawns the executable selected by the arm, creates Census::watch(child.id()), waits, and inserts observed_threads into the parent record. This covers the real `mibz2@<base ab>` dispatch, not merely the external-program path in piped(). No child-side census field is required. D037's specific absent-base-field defect is repaired in source.
+- **F1 workload inputs:** the candidate comparison now includes the Wikidata builder/manifest and .cargo; tracked changes, ordinary untracked measured inputs, and a list of environment overrides are refused. Executable/corpus digests and toolchain versions are recorded. These are substantive improvements.
+- **Window wording:** corrected to 16 blocks for four teams and 12 for three. D037's accepted derivation stands.
+- **Outcome reporting:** outcome.txt now distinguishes refused, incomplete, invalid, valid pass/fail and report error. A report crash no longer points to nonexistent Markdown.
+
+### Remaining F3 defect: first-observed names are frozen
+
+Census::watch inserts a name only through Entry::Vacant. Later samples never update an existing TID. A newborn thread can initially carry its parent's name, then set its intended mibz2 worker/helper name. The older sample_tasks in the same file explicitly handles this by refreshing the name at every observation.
+
+A deterministic replay of this exact insertion rule with observations `(101,"ab")`, then `(101,"mibz2-coop-1")`, retains `"ab"`; the helper is never counted. If a helper initially inherits a leader name, the wrong category can remain too. An otherwise correct run can thus consume an invalidation allowance because of observer timing. Repeated samples do not repair it.
+
+**Required:** refresh each successfully read nonempty name for an existing TID; retain per-TID multiplicity. Test a name transition, not just a final preformatted list. A periodic /proc census is still “threads observed”, not a guarantee of seeing every short-lived thread; keep that limitation explicit and fail closed when counts disagree. The busy predicate is not to be relaxed.
+
+This is a source-derived race with a deterministic state-machine replay, not an observed i9 failure. A live thread-name probe was attempted but this executor exposes no usable /proc/self/task/<native-id>/comm for it; that attempt failed and was terminated. No live-race reproduction is claimed.
+
+### Remaining F1 defect: target directory is not an executable artifact
+
+The recipe queries cargo metadata.target_directory, then appends `/release/examples/ab`. This still assumes a layout, rather than consuming the executable path emitted by the build:
+1. A configured build.target adds a target-triple component. The environment refusal does not reject a target in Cargo configuration.
+2. The base build runs with cwd in its worktree; target_of(base) runs from the head directory with only --manifest-path changed. Cargo configuration is searched from cwd and ancestors, so those operations need not use the same local configuration.
+3. A shared configured target directory can give both builds the same ab path. The base is built first, then the head overwrites that artifact before either path is hashed or run. There is no distinct-path/snapshot check. Hashing after both builds identifies the overwritten artifact, not which source produced the supposed base.
+
+These are permitted configuration cases, not claims about Louis's current configuration. Cargo's official [configuration hierarchy](https://doc.rust-lang.org/cargo/reference/config.html#hierarchical-structure) and [target-directory layouts](https://doc.rust-lang.org/cargo/reference/build-cache.html) support this source analysis. The needed fix is small in scope: isolate build outputs or preserve each actual built artifact, obtain executable paths from compiler-artifact messages in the build's own cwd/configuration, and bind those immutable artifacts to the run. Alternatively enforce a demonstrably equivalent fixed configuration/layout. Ensure the head and base cannot silently alias.
+
+The freeze file is still unset, appropriately. Before populating it, retain D037's baseline-relationship check. No new workload or acceptance condition is requested.
+
+### Remaining F4 defect: REPORT ERROR exits successfully
+
+The final report branch assigns outcome=REPORT ERROR but never exits nonzero. I reproduced its report-failure control flow with a stub judge exiting 2: outcome.txt correctly says REPORT ERROR, but the shell exits **0**. The stub tests shell handling only; it does not stand in for a decoder run. Preserve the failure status after recording/bundling that outcome. This is not a request to treat a valid statistical FAIL as invalid or to change replacement policy.
+
+The previously requested boolean-round schema hygiene also remains (bool is an int in Python); it is not an independent blocker. Avoid expanding this repair into unrelated validation work.
+
+### Validation boundary and disposition
+
+No cargo or rustc executable is available in this executor. I therefore could not execute the actual pinned parent against the 818d521c base binary; the supplied “real line” test and source trace establish schema/path wiring, not an independently executed binary compatibility test. No Rust suite or A/B was run. This limitation is disclosed rather than inventing a passing smoke test.
+
+Resolve the census name-update race, actual-artifact selection/isolation, and report-error exit status; add focused untimed checks for each. **Not CLEAR to freeze this pin.** The base schema and malformed-JSON fixes are accepted; the statistical rule stays outside this review's scope. Independent work continues; no merge or capture authority is granted.
+
+Evidence key: PR234 / `0a2d5b1389ef177372730ac0aaa19889316aa9b9` / registration blob `72c5dd6dfeb7112d02239258a3633f33eef086fc`. Recipe blob `214bea72094daccd7ec617058670325da7cd06ae`; judge `921b62c9dbaf14ea74180a9ed04210054536f932`; tests `53874220fdf3bf83929c0300323f7a53aeeaf634`; harness `3b37022b9e1d8bda69b4656af1a80f59f0bae227`.
