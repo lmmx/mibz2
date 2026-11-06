@@ -168,3 +168,9 @@
   margin: 1.2rem 0 0.3rem;
   font-size: 0.85rem;
 }
+
+/* A comment ID linked to its comment: set in the code face, so it reads as an ID */
+.md-typeset .obs-root a.obs-comment {
+  font-family: var(--md-code-font-family);
+  font-size: 0.85em;
+}

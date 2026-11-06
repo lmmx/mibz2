@@ -4,6 +4,9 @@
     the front-matter `image` or the site's default (docs/scripts/social_cards.py makes
     both). -#}
 {% block extrahead %}
+  {#- Safari and iOS turn long digit runs into telephone links: the comment IDs on the
+      "Behind the scenes" page, and figures elsewhere, are not phone numbers. -#}
+  <meta name="format-detection" content="telephone=no">
   {{ super() }}
   {%- set og_title = page.meta.title if (page.meta and page.meta.title) else ((page.title | striptags) if (page.title and not (page.is_homepage or page.url in ['', '.', './'])) else config.site_name) %}
   {%- set og_description = page.meta.description if (page.meta and page.meta.description) else config.site_description %}
