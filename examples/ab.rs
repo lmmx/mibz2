@@ -39,7 +39,9 @@
 //!   `mibz2-workers` (THREADS workers of a block each, `Plan::Workers`: the decoder before
 //!   the policy);
 //! - `mibz2-coop2`, `-coop3`, `-coop4` (the cooperative decoder, `bwt::Cooperative`:
-//!   THREADS cores as THREADS / K teams of K, `BzReader::parallel_planned`) and
+//!   THREADS cores as THREADS / K teams of K, `BzReader::parallel_planned`, 2 blocks in
+//!   flight a team), `mibz2-team2`, `-team3`, `-team4` (the same plans with the default's
+//!   window, `parallel::SLOTS_PER_THREAD` blocks a team) and
 //!   `mibz2-auto` (the cooperative policy's plan for THREADS, `Plan::for_threads`: today's
 //!   workers below 6 physical cores, else teams of 2 capped by the L3);
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
@@ -443,7 +445,8 @@ fn decode(
         ),
         // the cooperative decoder (bwt::Cooperative): THREADS cores as THREADS / K teams of
         // K, or as the policy plans THREADS (`Plan::for_threads`)
-        "mibz2-coop2" | "mibz2-coop3" | "mibz2-coop4" | "mibz2-auto" | "mibz2-workers" => {
+        "mibz2-coop2" | "mibz2-coop3" | "mibz2-coop4" | "mibz2-team2" | "mibz2-team3"
+        | "mibz2-team4" | "mibz2-auto" | "mibz2-workers" => {
             use mibz2::parallel::Plan;
             let plan = match arm {
                 "mibz2-auto" => Plan::for_threads(threads),
@@ -456,7 +459,15 @@ fn decode(
                     }
                 }
             };
-            let slots = 2 * plan.workers();
+            // the coopK arms keep 2 blocks in flight a team, as they always have; the teamK
+            // arms keep the default's window, SLOTS_PER_THREAD a team (what
+            // `BzReader::parallel` gives the policy's plan), so a teamK arm differs from
+            // `mibz2` in its plan alone
+            let slots = if arm.starts_with("mibz2-team") {
+                mibz2::parallel::SLOTS_PER_THREAD * plan.workers()
+            } else {
+                2 * plan.workers()
+            };
             drain(
                 mibz2::BzReader::parallel_planned(open()?, plan, slots, mibz2::Kernels::detect()),
                 h,
