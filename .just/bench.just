@@ -436,9 +436,9 @@ bench-three-team-policy:
     {
       sha256sum "$AB" "$BASEAB" "$WINDOWS" "$B/wikidata.bz2"
       tool "$PWD"
-      for f in "${CARGO_HOME:-$HOME/.cargo}/config" "${CARGO_HOME:-$HOME/.cargo}/config.toml" $(configs "$(dirname "$PWD")" /); do
-        [ -f "$f" ] && sha256sum "$f"
-      done
+      # (one path a line, so a directory with a space in its name stays one path)
+      { printf '%s\n' "${CARGO_HOME:-$HOME/.cargo}/config" "${CARGO_HOME:-$HOME/.cargo}/config.toml"; configs "$(dirname "$PWD")" /; } \
+        | while IFS= read -r f; do [ -f "$f" ] && sha256sum "$f"; done; true
       echo "census every 5 ms (AB_CENSUS_MS unset)"
     } > "$W/inputs.txt"
     cat "$W/inputs.txt"
