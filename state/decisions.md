@@ -1671,3 +1671,21 @@ D039's census and exit-status closures stand. D038's malformed-input/base-arm re
 Expected repair: distinct preserved artifacts and checked producer failures. Observed: both now hold in the targeted counterexamples; the remaining Guardian recipe gap is closed. Mechanism: check status synchronously, snapshot before overwrite, verify the snapshot. Next consequential step is the registered freeze and Louis's separately governed evidence process, not another statistical revision. Performance, correctness and CI admission still require their registered evidence. No G3 revision, G8 stop, merge or widened authority.
 
 Evidence key: PR234 / `ce3fa6d203cf5ee2bdc03026039f88833b7ad49e` / registration blob `3e338d691ead5b469bf414ff172b528279edbccc`. Recipe blob `6005631680471be8fa132ba274296abf5fafc889`; frozen-file blob `89054e82aea59bb9f5087e1176b9ccc32821fd75`.
+
+## D041 — D040 clearance retained; ancestor-config inventory caveat
+
+**G1: D040's scoped clearance holds at #234 `87ddcf269603e4459667b4d1e2119c2a3b3b7932`. No new G2 HOLD.** Inbox [6695685974](https://github.com/lmmx/mibz2/pull/161#issuecomment-6695685974). The added config refusal narrows accepted setups; it does not weaken the checked builds, snapshot ordering or base-copy checksum. Those closed issues and the statistical rule were not reopened.
+
+I reproduced the new snippets directly in temporary filesystem fixtures: clean paths accepted; both config and config.toml refused at each of checkout root, target, and target/three-team-policy. Eight guard cases passed. The diff changes only this refusal, config-hash inventory and registration wording.
+
+**One nonblocking defect in the new inventory:** `$(configs "$(dirname "$PWD")" /)` is unquoted in the for-list. A config above a checkout under a directory named `with space` is split into separate words, neither of which passes `[ -f "$f" ]`. The loop exits successfully without hashing that config. Two exact-loop fixtures show plain path → hash recorded, space-containing path → omitted, both exit 0. Therefore the new claim “every Cargo configuration” is not established for all supported paths. Use a path-preserving iteration rather than shell word splitting; do not equate a successful loop with a complete inventory.
+
+This caveat does **not** reinstate D039: D040 explicitly excluded a complete ancestor-config inventory from its artifact-provenance closure, and the new commit removes none of those established checks. Clearance to freeze remains scoped as in D040; it is not a performance qualification or authority to run/merge. The reporting claim should reflect this limitation until corrected.
+
+Small wording correction: a config at this checkout's own root is read by the head too; refusing it is still conservative because the nested base inherits the head checkout's config. The genuinely base-only intermediate directories are below that root. This explanatory distinction does not break the guard.
+
+[Probes](records/d041/probes.py), [results](records/d041/results.json), and [extracted recipe](records/d041/recipe.sh) are committed here. Run `python probes.py` beside recipe.sh. No Cargo invocation, decoder, statistical replay or timing; ten focused shell/filesystem observations only.
+
+Operating SPEC pin `a6a703cefcc40ac4115803f44a8a29ad76a3a7ef`; SPEC, Guardian SPEC, MODE, RULES and PROTOCOL fetched/read. Migration checked before receipt: prior branch head `f9dab3d2b40739d89d613f86e8c2d67bec3159e4`, manifest SHA-256 `60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488`. Receipt `9e87313455a522aac6739c50e7383804bc92f9af`. Eighteen inbox comments listed, all earlier eligible comments finished, no duplicate evidence pin.
+
+Evidence key: PR234 / `87ddcf269603e4459667b4d1e2119c2a3b3b7932` / registration blob `b47192997aef68a8e1156c95bad2963353d669b6`; recipe blob `5401cb69ca57a135657f6c8b9052eb059524f6b5`.

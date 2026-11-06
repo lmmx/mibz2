@@ -1,0 +1,57 @@
+{
+  "method": "Exact new shell snippets, synthetic filesystem/config files only; no Cargo invocation, decoding or timing",
+  "guard": [
+    {
+      "location": "none",
+      "file": "config",
+      "exit": 0
+    },
+    {
+      "location": "none",
+      "file": "config.toml",
+      "exit": 0
+    },
+    {
+      "location": "root",
+      "file": "config",
+      "exit": 1
+    },
+    {
+      "location": "root",
+      "file": "config.toml",
+      "exit": 1
+    },
+    {
+      "location": "target",
+      "file": "config",
+      "exit": 1
+    },
+    {
+      "location": "target",
+      "file": "config.toml",
+      "exit": 1
+    },
+    {
+      "location": "policy",
+      "file": "config",
+      "exit": 1
+    },
+    {
+      "location": "policy",
+      "file": "config.toml",
+      "exit": 1
+    }
+  ],
+  "inventory": [
+    {
+      "ancestor": "plain",
+      "exit": 0,
+      "config_hash_recorded": true
+    },
+    {
+      "ancestor": "with space",
+      "exit": 0,
+      "config_hash_recorded": false
+    }
+  ]
+}
