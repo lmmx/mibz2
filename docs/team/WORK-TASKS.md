@@ -25,14 +25,9 @@ marked:
 
 ## Creating a task — untested
 
-This keeps the opening sentence of the prompt that created the first three tasks (2026-11-04).
-It then answers, in advance, every question Work raised while creating the Oracle on
-2026-11-06:
-- the lifecycle events;
-- the spec's exclusion wording;
-- permissions and cost.
-
-Its aim is that the task is created without a single question.
+This is ChatGPT's form of 2026-11-06, agreed with the Coordinator. It removes the four traps
+that made Work investigate and ask instead of creating the task (see below). The pin must be a
+commit whose SPEC.md says the trigger's lifecycle events are expected: one after #226's merge.
 
 Beside the prompt, tell Louis:
 - the **name**: `mibz2⠶<Role>⠶<effort code>`;
@@ -40,29 +35,40 @@ Beside the prompt, tell Louis:
 - to start it in a **new** Work chat.
 
 ```
-Create an event-triggered task, not a scheduled one and not a one-off, that runs automatically whenever a new comment is posted on pull request #N in `lmmx/mibz2`. Use the GitHub webhook for that PR as available, including its PR lifecycle events: those are expected and accepted, and the pinned spec ignores any event without a new comment, so add no condition and change nothing in the instructions. Where the spec mentions excluding bots, reviews, commit updates or edits, that means "where the settings allow it", so the available webhook satisfies it. The cost and permission terms are accepted; if you can't verify them exactly, say so in your report, but don't let that stop the creation. Create and enable the task now, without running it, and don't ask me anything further. Then report the saved trigger, the instruction text exactly as saved, and whether it is enabled. The task's instructions are:
+Create and enable a persistent GitHub event-triggered Work task for pull request #N in `lmmx/mibz2`. It must not be a scheduled task or a one-off.
+
+Use the GitHub pull-request webhook subscription supported by the platform. I explicitly accept its full event coverage, including incidental pull-request lifecycle events and review events. No narrower event filter is required. The task's pinned specifications handle checking its inbox for new assignments.
+
+This is my authorisation to create and enable the task with that event coverage. Do not ask me to approve the broader subscription again.
+
+Use my existing GitHub connection and normal Work usage settings. Do not change permissions, billing settings or purchase credits. No preliminary feasibility, permissions or pricing investigation is required.
+
+Create and enable the task now. Do not run its work immediately. After creation, report the saved trigger, exact instruction text and enabled status. Report settings you cannot inspect as unknown rather than treating them as prerequisites.
+
+The task's instructions are exactly:
 
 You are the ROLE-NAME of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC.md and docs/team/SPEC.ROLE.md from lmmx/mibz2 at commit SHA, and follow them. Those files, at that commit, are your complete instruction. If they can't be fetched, report that and stop. Keep this task enabled.
 ```
 
 Fill in N (the role's inbox PR), ROLE-NAME (Optimiser, Guardian, Researcher, Oracle), ROLE
-(OPTIMIZER, GUARDIAN, RESEARCHER, ORACLE) and SHA (the pin). **Change nothing else.**
+(OPTIMIZER, GUARDIAN, RESEARCHER, ORACLE) and SHA (the pin). Change nothing else.
 
 **If Work asks anything before creating the task, the form has failed.** Record what it asked
-and why, and fix the form or the spec so that it cannot ask again. A question is not a step to
-be expected.
+and why, and fix the form or the spec. A question is not a step.
 
-- **Why the instructions are only a pointer:** the rules (commit identity, no polling, no
-  widening) live once, in the pinned spec. A copy in the task would drift from it.
-- **Why the condition names no comment content:** the inbox is the address. A content filter,
-  such as the first tasks' `TYPE: CHECKPOINT`, would drop other assignments, for example
-  `CORRECTION`.
-- **Why the prompt asks for no event exclusions:** Work's trigger can't be limited to comments,
-  and asking for that made it stop instead of creating the task. PROTOCOL.md §1 already
-  accommodates the extra events: nobody touches an inbox PR, and the spec ignores any event that
-  brings no new inbox comment. The scripted reply answers that question if Work raises it.
-- **Why unverifiable checks don't block:** Work can't inspect exact GitHub scopes or billing.
-  The scripted reply says that's fine.
+**The traps it removes** (2026-11-06):
+
+| earlier wording | what Work did |
+|---|---|
+| "whenever a new comment is posted" | read it as requiring a comments-only webhook, which doesn't exist |
+| "before enabling it, show me…" | turned creation into a preflight approval |
+| "whether it runs on my plan or costs anything extra" | started a billing investigation it couldn't complete |
+| "exclude bots, reviews, commit updates and edits", in the prompt or in the pinned SPEC.md it fetched | demanded controls the connector doesn't expose, then asked whether to add a condition to the instructions |
+
+- **Why the instructions are only a pointer:** the rules live once, in the pinned spec. A copy
+  in the task would drift from it.
+- **Why the pin matters here too:** Work fetches the spec during creation. A spec that demands
+  what the trigger can't do makes it stop, whatever the prompt says.
 
 The Coordinator then checks the saved instruction text against the pin before the first
 assignment.
@@ -83,6 +89,10 @@ Then show me the instruction text exactly as saved, the trigger and subscription
 When Louis reports the result, mark this form known to work, or record what failed.
 
 ## Revisions
+
+- 2026-11-06: ChatGPT's form adopted, with its four traps recorded. It is pinned to a
+  commit whose SPEC.md no longer demands exclusions. Untested until it creates a task with no
+  question asked.
 
 - 2026-11-06: the unchanged original form failed too. Work fetched the pinned SPEC.md, read its
   "exclude bots, reviews, commit updates and edits" as a hard requirement it couldn't meet, and
