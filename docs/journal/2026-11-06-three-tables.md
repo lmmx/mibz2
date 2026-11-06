@@ -134,7 +134,7 @@ The screen's figures were 1.097 and 1.075. The predicted regression toward the m
 appear in this run. One run can't say why.
 
 **The occupancy pass (diagnostic only, under the limits the registration set).**
-- **The traces are uninterpreted-safe:** for every plan and placement, neither traced mode
+- **The traces can be read:** for every plan and placement, neither traced mode
   perturbed throughput (each interval includes 0).
 - **The workers were busy:** in all three plans they spent about 96% of their time decoding and
   about 3% idle, so no plan was starved for blocks.
