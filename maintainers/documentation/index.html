@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=a6a703cefcc4">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=9612e01b0fa6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=a6a703cefcc4">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=9612e01b0fa6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=a6a703cefcc4">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=9612e01b0fa6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=a6a703cefcc4">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=9612e01b0fa6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=a6a703cefcc4">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=9612e01b0fa6">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=a6a703cefcc4">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=9612e01b0fa6">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1877,6 +1877,11 @@ Benchmark run on master, and publishes it to the <code>gh-pages</code> branch, s
 <code>pr-preview/pr-&lt;number&gt;/</code>, linked from a comment on the pull request and removed when it
 closes. Previews start once the repository's Pages source is set to the <code>gh-pages</code>
 branch.</p>
+<p>Each deploy writes only its own path: production the root, a preview its own directory. Pages
+rebuilds the branch on every push, and a push that lands mid-build cancels that build, so the
+next build publishes both. A preview's check therefore waits for the outcome, not for one
+build: it passes once the preview serves the files of its own run, whose assets carry
+<code>?v=&lt;commit&gt;</code>.</p>
 
 
 
@@ -2021,19 +2026,19 @@ branch.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=a6a703cefcc4"></script>
+        <script src="../../assets/javascripts/bench.js?v=9612e01b0fa6"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=a6a703cefcc4"></script>
+        <script src="../../assets/javascripts/couriers.js?v=9612e01b0fa6"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=a6a703cefcc4"></script>
+        <script src="../../assets/javascripts/blog.js?v=9612e01b0fa6"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=a6a703cefcc4"></script>
+        <script src="../../assets/javascripts/frontier.js?v=9612e01b0fa6"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=a6a703cefcc4"></script>
+        <script src="../../assets/javascripts/observatory.js?v=9612e01b0fa6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=a6a703cefcc4"></script>
+        <script src="../../assets/javascripts/katex.js?v=9612e01b0fa6"></script>
       
     
   </body>
