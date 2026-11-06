@@ -270,7 +270,10 @@ bench-release-scaling NEW="v0.2.4" OLD="v0.2.1" ROUNDS="10" THREADS="" *FILES=""
 bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
     #!/usr/bin/env bash
     set -euo pipefail
-    W=$PWD/target/team-size
+    # each attempt in a directory of its own, never overwritten: the registration's
+    # invalidation and confirmation rules need every attempt's evidence
+    B=$PWD/target/team-size
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
     mkdir -p "$W"
     cargo build -q --release --example ab --example windows
     cargo build -q --release --features trace --example occupancy
@@ -281,11 +284,11 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
         && git archive origin/bench-data "$dir" | tar -x || true
     fi
     python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
-    python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$W/wikidata.bz2"
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$B/wikidata.bz2"
+    ln -sf "$B/wikidata.bz2" "$W/wikidata.bz2"
     "$AB" env > "$W/env.json"
     lscpu > "$W/lscpu.txt"
     git rev-parse HEAD > "$W/commit.txt"
-    rm -f "$W/runs.jsonl" "$W/counters.jsonl"
     "$AB" run "$W/runs.jsonl" --arms "mibz2,mibz2-team2,mibz2-team3,mibz2-team4" \
       --threads "{{THREADS}}" --rounds {{ROUNDS}} "$W/wikidata.bz2" {{FILES}}
     cells="mibz2@8,mibz2-team3@12,mibz2-team4@16,mibz2-team2@10,mibz2-team2@12,mibz2-team3@10"
@@ -296,7 +299,8 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
       echo "bench-team-size: perf can't count here (try: sudo sysctl kernel.perf_event_paranoid=1); no counters"
     fi
     ctr=(); [ -s "$W/counters.jsonl" ] && ctr=(--counters "$W/counters.jsonl")
-    python3 bench/team_size.py report "$W/runs.jsonl" "${ctr[@]}" --ref mibz2@8 --rounds {{ROUNDS}} --out "$W/team-size"
+    python3 bench/team_size.py report "$W/runs.jsonl" "${ctr[@]}" --ref mibz2@8 --rounds {{ROUNDS}} \
+      --arms "mibz2,mibz2-team2,mibz2-team3,mibz2-team4" --threads "{{THREADS}}" --out "$W/team-size"
     for tk in 8:2 12:3 16:4; do
       t=${tk%:*}; k=${tk#*:}
       target/release/examples/occupancy "$W/wikidata.bz2" --threads "$t" --teams "$k" \
@@ -304,4 +308,4 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
         --meta "commit=$(git rev-parse HEAD)" \
         || echo "bench-team-size: the occupancy pass at $t threads, teams of $k, failed"
     done
-    echo "Upload all of $W except wikidata.bz2, and the console log"
+    echo "Upload all of $W (its wikidata.bz2 is a link; leave it out), and the console log"

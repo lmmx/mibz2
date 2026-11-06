@@ -316,7 +316,8 @@ def judge(a, cells_by, ref, by, bad, hashes, dupes):
     here, not left to the reader of the table"""
     n = a.rounds
     want_rounds = list(range(n))
-    same_bytes = len(hashes) == 1 and not bad
+    lengths = {r["out"] for c in by.values() for r in c.values()}
+    same_bytes = len(hashes) == 1 and len(lengths) == 1 and not bad
     ref_row = cells_by[a.ref]
     ref_plan = parse_plan(a.ref_plan)
     ref_ok = (
@@ -328,12 +329,41 @@ def judge(a, cells_by, ref, by, bad, hashes, dupes):
     lines = [
         "## The rule's predicates",
         "",
-        f"- Every run of every cell the same output hash, no run failed: "
-        f"**{'yes' if same_bytes else 'NO'}**.",
+        f"- Every run of every cell the same output hash and length, no run failed: "
+        f"**{'yes' if same_bytes else 'NO'}** ({len(hashes)} hash(es), {len(lengths)} length(s), "
+        f"{len(bad)} failed).",
         f"- The reference `{a.ref}`: rounds 0–{n - 1} once each, every run {a.ref_plan}: "
         f"**{'yes' if ref_ok else 'NO'}**.",
     ]
-    out = {"same_bytes": same_bytes, "reference_complete": ref_ok, "primaries": {}}
+
+    def complete(c):
+        r = cells_by.get(c)
+        return bool(
+            r
+            and r["round_ids"] == want_rounds
+            and r["pairs"] == n
+            and not r["duplicate_rounds"]
+            and not r["error_runs"]
+        )
+
+    grid = [f"{arm}@{t}" for arm in a.arms.split(",") for t in a.threads.split(",")]
+    missing = [c for c in grid if not complete(c)]
+    extra = sorted(set(cells_by) - set(grid))
+    grid_ok = not missing and not extra
+    lines.append(
+        f"- The whole grid, {len(grid)} cells × {n} rounds, each round once, no failed run: "
+        f"**{'yes' if grid_ok else 'NO'}**"
+        + (f" (incomplete: {', '.join(missing)})" if missing else "")
+        + (f" (not in the grid: {', '.join(extra)})" if extra else "")
+        + "."
+    )
+    out = {
+        "same_bytes": same_bytes,
+        "reference_complete": ref_ok,
+        "grid_complete": grid_ok,
+        "incomplete_cells": missing,
+        "primaries": {},
+    }
 
     # the control: the same plan through another entry point. Flagged when its 95% interval
     # lies wholly beyond ±2% (lower bound above 1.02, or upper below 0.98); a flagged run is
@@ -346,7 +376,7 @@ def judge(a, cells_by, ref, by, bad, hashes, dupes):
         g, lo, hi = ctl["vs_ref"]
         flagged = (
             not (lo <= 1.02 and hi >= 0.98)
-            or ctl["round_ids"] != want_rounds
+            or not complete(ctl_cell)
             or ctl["plans_seen"] != [list(parse_plan(ctl_plan))]
         )
         ctl_txt = f"`{ctl_cell}` {g:.3f} ({lo:.3f}–{hi:.3f}), {ctl['pairs']} pairs"
@@ -368,24 +398,26 @@ def judge(a, cells_by, ref, by, bad, hashes, dupes):
             continue
         g, lo, hi = r["vs_ref"]
         plan_ok = r["plans_seen"] == [list(parse_plan(plan))]
-        complete = (
+        cell_complete = (
             r["round_ids"] == want_rounds
             and r["pairs"] == n
             and not r["duplicate_rounds"]
             and not r["error_runs"]
         )
         mean_ok, lo_ok = g >= 1.03, lo > 1.00
-        passes = all([same_bytes, ref_ok, not flagged, plan_ok, complete, mean_ok, lo_ok])
+        passes = all(
+            [same_bytes, ref_ok, grid_ok, not flagged, plan_ok, cell_complete, mean_ok, lo_ok]
+        )
         rss = r["rss_mb"] / ref_row["rss_mb"]
         cpu = r["cpu"] / ref_row["cpu"]
         yn = lambda b: "yes" if b else "NO"  # noqa: E731
         lines.append(
-            f"| `{c}` ({plan}) | {yn(plan_ok)} | {yn(complete)} | {yn(mean_ok)} ({g:.3f}) | "
+            f"| `{c}` ({plan}) | {yn(plan_ok)} | {yn(cell_complete)} | {yn(mean_ok)} ({g:.3f}) | "
             f"{yn(lo_ok)} ({lo:.3f}) | **{'yes' if passes else 'no'}** | {rss:.2f} | {cpu:.2f} |"
         )
         out["primaries"][c] = {
             "plan_ok": plan_ok,
-            "complete": complete,
+            "complete": cell_complete,
             "mean": g,
             "lower": lo,
             "upper": hi,
@@ -396,9 +428,10 @@ def judge(a, cells_by, ref, by, bad, hashes, dupes):
         }
     lines += [
         "",
-        "A pass here is not a qualification: the same cell must pass the same predicates in "
-        "one predeclared second run of 20 pairs. The adoption limits are ratios of medians "
-        "(the cell's median peak RSS and CPU-seconds over the reference's).",
+        "A pass here is not a qualification: the same cell must pass the same predicates, "
+        "within the adoption limits, in one predeclared second run of 20 rounds. The adoption "
+        "limits are ratios of medians (the cell's median peak RSS and CPU-seconds over the "
+        "reference's) and must hold in both runs.",
     ]
     out["lines"] = lines
     return out
@@ -428,6 +461,12 @@ def main():
     )
     r.add_argument("--control", default="mibz2-team2@8=4x2", help="CELL=PLAN: the noise check")
     r.add_argument("--rounds", type=int, default=20, help="the registered rounds, 0..N-1")
+    r.add_argument(
+        "--arms",
+        default="mibz2,mibz2-team2,mibz2-team3,mibz2-team4",
+        help="the registered grid's arms: every arm at every thread count must be complete",
+    )
+    r.add_argument("--threads", default="8,10,12,16", help="the registered grid's thread counts")
     r.add_argument("--corpus", default="wikidata")
     r.add_argument("--out")
     a = ap.parse_args()
