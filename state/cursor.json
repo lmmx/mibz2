@@ -5,17 +5,16 @@
   "processed_comment_ids": [
     6686307919,
     6686599413,
-    6693088129
-  ],
-  "in_progress": [
+    6693088129,
     6693505093
   ],
+  "in_progress": [],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
     "6693088129": 6693181300
   },
-  "last_rebuilt_from": 6693085860,
+  "last_rebuilt_from": 6693504170,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -47,9 +46,10 @@
     },
     "6693505093": {
       "comment_id": 6693505093,
-      "status": "in_progress",
-      "progress": "Migration verified; reading confirmation evidence and policy-design dispatch."
+      "status": "complete",
+      "progress": "Account and levels committed; self-check passed; REVIEW pending.",
+      "work_commit": "456fcb964af5a3f28b33175f134a739fe10b9840"
     }
   },
-  "last_record_commit": "740bf1a10e6dae929434a348a59a27445ddc7f32"
+  "last_record_commit": "456fcb964af5a3f28b33175f134a739fe10b9840"
 }
