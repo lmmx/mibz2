@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Re-reviewing artifact preservation and Cargo configuration guards",
+  "state": "Re-review complete; scoped findings cleared, publication pending",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -80,9 +80,10 @@
     6694153375,
     6694804971,
     6695278609,
-    6695535463
+    6695535463,
+    6695669534
   ],
-  "last_processed_comment_id": 6695535463,
+  "last_processed_comment_id": 6695669534,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -543,9 +544,13 @@
       "trigger_comment_id": 6695669534,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
-      "source_commit": "87ddcf269603e4459667b4d1e2119c2a3b3b7932"
+      "source_commit": "87ddcf269603e4459667b4d1e2119c2a3b3b7932",
+      "report_commit": "d15802704f732b5a9fc840a7f455f14c52afe72e",
+      "report_path": "state/reports/policy-freeze-6695669534/report.md",
+      "review_comment_pr": 145,
+      "disposition": "CLEAR two remaining H2 findings: base preserved before head, failed builds refused, intermediate Cargo configurations refused and common configs recorded. Nonblocking special-character path limitation noted; no timing."
     }
   ],
   "active_delegations": [],
