@@ -11,12 +11,12 @@ measurably faster, correct production decoder, properly released. MODE.md says t
 | [ROLES.md](ROLES.md) | the five roles, and what each does and doesn't do |
 | [SPEC.md](SPEC.md) | what every Work task's spec has in common, and the command that loads them |
 | [WORK-TASKS.md](WORK-TASKS.md) | the only prompts for creating or re-pinning a ChatGPT Work task, each marked known to work or untested |
-| `SPEC.<ROLE>.md` | each Work role's own spec: OPTIMIZER, GUARDIAN, RESEARCHER, ORACLE |
+| `SPEC.<ROLE>.md` | each Work role's own spec: OPTIMIZER, GUARDIAN, RESEARCHER, OBSERVER |
 
 **Where the rest lives:**
 - **Each role's state:** `team-state/<role>`, a continuation of its old branch, holding its
   cursor and records. These branches have no PR, and the workflows' filters run no CI on them.
-- **The Oracle's record of what the team is doing and why:** `observatory/intention`, an orphan
+- **The Observer's record of what the team is doing and why:** `observatory/intention`, an orphan
   branch with its own history.
 - **Routing:** `.github/coordination/coord.py`.
 - **History:** the team began as the compact30 research channel. That record is frozen in

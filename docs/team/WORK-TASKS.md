@@ -59,8 +59,8 @@ The task's instructions are exactly:
 You are the ROLE-NAME of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC.md and docs/team/SPEC.ROLE.md from lmmx/mibz2 at commit SHA, and follow them. Those files, at that commit, are your complete instruction. If they can't be fetched, report that and stop. Keep this task enabled.
 ```
 
-Fill in N (the role's inbox PR), ROLE-NAME (Optimiser, Guardian, Researcher, Oracle), ROLE
-(OPTIMIZER, GUARDIAN, RESEARCHER, ORACLE) and SHA (the pin). Change nothing else.
+Fill in N (the role's inbox PR), ROLE-NAME (Optimiser, Guardian, Researcher, Observer), ROLE
+(OPTIMIZER, GUARDIAN, RESEARCHER, OBSERVER) and SHA (the pin). Change nothing else.
 
 **If Work asks anything before creating the task, the form has failed.** Record what it asked
 and why, and fix the form or the spec. A question is not a step.

@@ -56,10 +56,14 @@ ROLES = {
         "offset": 6646250444,
         "cursor": ("team-state/researcher", "state/cursor.json"),
     },
-    "oracle": {
-        "aliases": ("oracle",),
+    # (the Oracle until 2026-11-06: `oracle` stays an alias, so its earlier messages and
+    # any reply from a task still pinned to SPEC.ORACLE.md route and audit as the same role)
+    "observer": {
+        "aliases": ("observer", "oracle"),
         "inbox": 222,
         "offset": 6683737090,
+        # (its state branch keeps the old name, an address like #222: moving it would need a
+        # migration manifest that SPEC.md's check fails closed on, for no reader's benefit)
         "cursor": ("team-state/oracle", "state/cursor.json"),
     },
 }
@@ -87,6 +91,12 @@ def header(body):
         if m:
             h[m[1]] = m[2]
     return h
+
+
+def canonical(name):
+    """The role a name or alias means (`oracle` → `observer`), or the name unchanged"""
+    name = name.strip().lower()
+    return next((r for r, v in ROLES.items() if name in v["aliases"]), name)
 
 
 def roles_named(to):
@@ -179,7 +189,7 @@ def completed(role, cur):
                 if b.get("completed") or b.get("status") in ("completed", "finished")}
     if role == "guardian":
         return set(cur.get("consumed_incoming_comment_ids", []))
-    if role in ("researcher", "oracle"):
+    if role in ("researcher", "observer"):
         return set(cur.get("processed_comment_ids", []))
     raise ValueError(role)
 
@@ -307,9 +317,9 @@ def main(argv=None):
     args = p.parse_args(argv)
     try:
         if args.cmd == "route":
-            out = route(args.to.lower(), args.type); ok = True
+            out = route(canonical(args.to), args.type); ok = True
         elif args.cmd == "verify":
-            out = verify(args.comment_id, args.to.lower(), args.type); ok = out["ok"]
+            out = verify(args.comment_id, canonical(args.to), args.type); ok = out["ok"]
         elif args.cmd in ("check", "warn"):
             body = sys.stdin.read()
             reason = misrouted(args.issue, body, args.comment_id)
