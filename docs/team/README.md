@@ -1,7 +1,8 @@
 # The mibz2 agent team
 
-The live machinery of the agent team that works on mibz2. Its objective is MODE.md's: a faster
-production inverse BWT, released.
+The live machinery of the agent team that works on mibz2. Its objective is STEWARDSHIP.md's: a
+measurably faster, correct production decoder, properly released. MODE.md names the current
+focus within it.
 
 | file | what it is |
 |---|---|
