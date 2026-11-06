@@ -216,32 +216,41 @@ bench-pmu-probe *args:
 # 1 thread to every CPU, in paired rounds on the bench's Wikidata sample (and any FILES).
 # Builds both releases in target/release-scaling/, then records the run in
 # bench/release-scaling/<date>-<machine>/ for a pull request. Needs lbzip2.
+# With no NEW, it is the current release (the newest vX.Y.Z tag); with no OLD, the release
+# before NEW. The release runbook (docs/RELEASING.md) runs it bare after every release.
 #   just bench-release-scaling
 #   just bench-release-scaling v0.2.4 v0.2.1 10 "1,4,10,20" /path/to/big.bz2
 
 # Two releases and lbzip2 on this machine, up to its full thread count
-bench-release-scaling NEW="v0.2.4" OLD="v0.2.1" ROUNDS="10" THREADS="" *FILES="":
+bench-release-scaling NEW="" OLD="" ROUNDS="10" THREADS="" *FILES="":
     #!/usr/bin/env bash
     set -euo pipefail
+    git fetch -q --tags origin
+    # (release tags only, newest first: vX.Y.Z, no pre-releases)
+    releases=$(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -rV)
+    NEW="{{NEW}}"; OLD="{{OLD}}"
+    [ -n "$NEW" ] || NEW=$(echo "$releases" | head -1)
+    [ -n "$OLD" ] || OLD=$(echo "$releases" | awk -v n="$NEW" 'found {print; exit} $0 == n {found = 1}')
+    [ -n "$NEW" ] && [ -n "$OLD" ] || { echo "bench-release-scaling: no release before ${NEW:-the newest tag} to compare against"; exit 1; }
     W=$PWD/target/release-scaling
     mkdir -p "$W"
     O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
     mkdir "$O"
     exec > >(tee -a "$O/console.log") 2>&1
-    git fetch -q --tags origin
-    for v in {{NEW}} {{OLD}}; do
+    echo "bench-release-scaling: $NEW against $OLD"
+    for v in "$NEW" "$OLD"; do
       [ -d "$W/build-$v" ] || git worktree add -q --detach "$W/build-$v" "$v"
       (cd "$W/build-$v" && cargo build -q --release --example ab --example windows)
     done
-    NEWAB=$W/build-{{NEW}}/target/release/examples/ab
-    OLDAB=$W/build-{{OLD}}/target/release/examples/ab
+    NEWAB=$W/build-$NEW/target/release/examples/ab
+    OLDAB=$W/build-$OLD/target/release/examples/ab
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
     if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
       git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
         && git archive origin/bench-data "$dir" | tar -x || true
     fi
     python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
-    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-{{NEW}}/target/release/examples/windows" "$W/wikidata.bz2"
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/build-$NEW/target/release/examples/windows" "$W/wikidata.bz2"
     threads="{{THREADS}}"
     [ -n "$threads" ] || threads=$(python3 -c "import os; n = os.cpu_count(); print(','.join(map(str, sorted(t for t in {1, 2, 4, 8, 12, 16, n // 2, n} if t <= n))))")
     "$NEWAB" env > "$W/env.json"
@@ -255,7 +264,7 @@ bench-release-scaling NEW="v0.2.4" OLD="v0.2.1" ROUNDS="10" THREADS="" *FILES=""
     for f in {{FILES}}; do files+=(--file "$(basename "$f" .bz2)=$f"); done
     python3 bench/release_scaling.py record bench/release-scaling --runs "$W/runs.jsonl" \
       --env "$W/env.json" --lscpu "$W/lscpu.txt" --ref mibz2 \
-      --arm "mibz2={{trim_start_match(NEW, 'v')}}" --arm "mibz2@$OLDAB={{trim_start_match(OLD, 'v')}}" \
+      --arm "mibz2=${NEW#v}" --arm "mibz2@$OLDAB=${OLD#v}" \
       --arm "lbzip2=lbzip2 $lb" "${files[@]}"
     cp "$W/runs.jsonl" "$W/env.json" "$W/lscpu.txt" "$W/summary.txt" "$O/"
     cp -r "bench/release-scaling/$(ls -t bench/release-scaling | head -1)" "$O/recorded"
