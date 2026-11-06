@@ -728,5 +728,10 @@
       "comment": 6646304926
     }
   ],
-  "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6"
+  "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+  "in_progress": {
+    "incoming_comment": 6681847165,
+    "pr": 161,
+    "status": "in progress; receipt; registration assessment pending"
+  }
 }
