@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Team-size amendment review finished; awaiting next inbox comment",
+  "state": "Three-table review complete; publication pending",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -410,6 +410,18 @@
       "review_comment_pr": 145,
       "review_comment_id": 6682204169,
       "disposition": "Window confound closed; helper trace can follow screen. Narrow whole-process placement and whole-inversion span claims; control duplicate-round predicate omission identified."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6682938532,
+      "status": "complete",
+      "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "report_commit": "186702b380614658aa2864908de3b3ab92e836a3",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/three-tables-6682938532/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": null,
+      "disposition": "Reconstructed paired results; three-table follow-up justified, cache-capacity cause unproven. New occupancy lacks same-k counterpart; buffer capacity and perturbation claims corrected."
     }
   ],
   "active_delegations": [],
@@ -457,7 +469,8 @@
   "in_progress_comment": {
     "id": 6682938532,
     "pr": 162,
-    "status": "in_progress",
-    "progress": "Receipt; review team-size results and three-table registration"
+    "status": "complete",
+    "report_commit": "186702b380614658aa2864908de3b3ab92e836a3",
+    "report_path": "docs/journal/compact30-adversarial/scanner-146/three-tables-6682938532/report.md"
   }
 }
