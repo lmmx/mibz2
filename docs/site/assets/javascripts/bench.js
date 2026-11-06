@@ -15,7 +15,7 @@
     ["rss_mb", "Peak RSS", "MB", (v) => v.toFixed(1)],
   ];
   const SLOTS = 4; // categorical slots (bench.css: --bh-s1..s4), then muted
-  let state = { metric: "mb_s", threads: "all", cpu: null, tCorpus: "wikidata", tThreads: "4", tFig: "wall" };
+  let state = { metric: "mb_s", threads: "all", cpu: null, tCorpus: "wikidata", tThreads: "4", tFig: "wall", tView: "ci", wsRun: null, wsCorpus: "wikidata" };
   try {
     state = { ...state, ...JSON.parse(localStorage.getItem("mibz2-bench") || "{}") };
   } catch (e) { /* (no storage: the defaults) */ }
@@ -133,17 +133,9 @@
     const ch = data.chain || {};
     const start = ch.start;
     const head = el("div", { class: "bh-hero-head" }, box);
-    el("h2", { class: "bh-hero-title", id: "trajectory", text: "Merge by merge, chained" }, head);
-    if (start === null || start === undefined || !data.links || !data.links.length) {
-      el("p", { class: "bh-hero-note", text: "No merged pull request's benchmark is linked yet (bench/links.py)." }, box);
-      return;
-    }
-    const keys = Object.keys(ch.series);
-    const corpora = [...new Set(keys.map((k) => k.split("|")[0]))].sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
-    if (!corpora.includes(state.tCorpus)) state.tCorpus = corpora.includes("wikidata") ? "wikidata" : corpora[0];
-    const threads = [...new Set(keys.filter((k) => k.startsWith(`${state.tCorpus}|`)).map((k) => k.split("|")[1]))].sort((a, b) => a - b);
-    if (!threads.includes(state.tThreads)) state.tThreads = threads.includes("4") ? "4" : threads[threads.length - 1];
-    if (!TRAJ.some((f) => f[0] === state.tFig)) state.tFig = "wall";
+    const ws = (data.scaling && data.scaling.runs) || [];
+    if (!ws.length) state.tView = "ci";
+    el("h2", { class: "bh-hero-title", id: "trajectory", text: state.tView === "ws" ? "Release scaling" : "Merge by merge, chained" }, head);
     const seg = (label, options, value, set) => {
       const g = el("div", { class: "bh-seg", role: "radiogroup", "aria-label": label }, head);
       for (const [v, t] of options) {
@@ -156,6 +148,20 @@
         });
       }
     };
+    // A release-scaling run (bench/release-scaling/, docs/scripts/bench_release_scaling.py): offered only
+    // when one is recorded, so the page needs none
+    if (ws.length) seg("View", [["ci", "CI, merge by merge"], ["ws", "Release scaling"]], state.tView, (v) => (state.tView = v));
+    if (state.tView === "ws") { releaseScaling(ws, box, seg); return; }
+    if (start === null || start === undefined || !data.links || !data.links.length) {
+      el("p", { class: "bh-hero-note", text: "No merged pull request's benchmark is linked yet (bench/links.py)." }, box);
+      return;
+    }
+    const keys = Object.keys(ch.series);
+    const corpora = [...new Set(keys.map((k) => k.split("|")[0]))].sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
+    if (!corpora.includes(state.tCorpus)) state.tCorpus = corpora.includes("wikidata") ? "wikidata" : corpora[0];
+    const threads = [...new Set(keys.filter((k) => k.startsWith(`${state.tCorpus}|`)).map((k) => k.split("|")[1]))].sort((a, b) => a - b);
+    if (!threads.includes(state.tThreads)) state.tThreads = threads.includes("4") ? "4" : threads[threads.length - 1];
+    if (!TRAJ.some((f) => f[0] === state.tFig)) state.tFig = "wall";
     seg("Corpus", corpora.map((c) => [c, c]), state.tCorpus, (v) => (state.tCorpus = v));
     seg("Threads", threads.map((t) => [t, `${t} thread${t === "1" ? "" : "s"}`]), state.tThreads, (v) => (state.tThreads = v));
     seg("Figure", TRAJ.map((f) => [f[0], f[1]]), state.tFig, (v) => (state.tFig = v));
@@ -339,6 +345,65 @@
     if (data.gaps && data.gaps.length) {
       el("p", { text: `Decoder changes with no link (the chain breaks at each): ${data.gaps.map((g) => (g.pr ? `#${g.pr}` : g.sha.slice(0, 7))).join(", ")}.` }, d);
     }
+  }
+
+  // The hero's Release scaling view: one recorded run, each arm's throughput (the median of its
+  // rounds) against threads, and its paired wall change against the reference arm. A run is
+  // one machine's: runs are never combined, and they inform rather than decide.
+  function releaseScaling(ws, box, seg) {
+    if (!ws.some((r) => r.id === state.wsRun)) state.wsRun = ws[0].id;
+    const run = ws.find((r) => r.id === state.wsRun);
+    if (ws.length > 1) seg("Run", ws.map((r) => [r.id, `${r.date} · ${r.cpu}`]), state.wsRun, (v) => (state.wsRun = v));
+    const corpora = Object.keys(run.corpora).sort((a, b) => (a !== "wikidata") - (b !== "wikidata") || a.localeCompare(b));
+    if (!corpora.includes(state.wsCorpus)) state.wsCorpus = corpora[0];
+    if (corpora.length > 1) seg("Corpus", corpora.map((c) => [c, c]), state.wsCorpus, (v) => (state.wsCorpus = v));
+    const c = run.corpora[state.wsCorpus];
+    const ts = c.threads.map(String);
+    const top = ts[ts.length - 1];
+    const lead = el("p", { class: "bh-hero-focus" }, box);
+    const body = el("div", { class: "bh-hero-chart" }, box);
+    const legend = el("p", { class: "bh-hero-commit" }, box);
+    const note = el("p", { class: "bh-hero-commit" }, box);
+    const mb = (a, t) => (c.mbps[a] || {})[t];
+    el("strong", { text: `${state.wsCorpus} on ${run.cpu} at ${top} threads: ${run.ref} ${(mb(run.ref, top) || 0).toFixed(0)} MB/s` }, lead);
+    const others = run.arms.filter((a) => a !== run.ref && (c.change[a] || {})[top]);
+    if (others.length) {
+      lead.append(`. Wall against ${run.ref}: ` + others.map((a) => {
+        const [e, lo, hi] = c.change[a][top];
+        return `${a} ${fmtPct(e)} (95%: ${fmtPct(lo)} to ${fmtPct(hi)})`;
+      }).join("; ") + ". Above 0 is slower than " + run.ref + ".");
+    }
+    const W = Math.max(300, Math.round(body.clientWidth) || 700);
+    const narrow = W < 560;
+    const H = narrow ? 240 : 300, M = { l: 52, r: 14, t: 16, b: 36 };
+    const vals = run.arms.flatMap((a) => ts.map((t) => mb(a, t)).filter((v) => v));
+    const yt = ticks(0, Math.max(...vals), narrow ? 4 : 5);
+    const y = (v) => M.t + (H - M.t - M.b) * (1 - v / yt[yt.length - 1]);
+    const x = (i) => M.l + (ts.length === 1 ? (W - M.l - M.r) / 2 : (i * (W - M.l - M.r)) / (ts.length - 1));
+    const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `Throughput of ${state.wsCorpus} on ${run.cpu} against threads, for ${run.arms.join(", ")}` }, body);
+    for (const v of yt) {
+      svg("line", { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), class: "bh-grid" }, s);
+      svg("text", { x: M.l - 6, y: y(v) + 4, class: "bh-tick", "text-anchor": "end" }, s).textContent = v.toLocaleString();
+    }
+    svg("text", { x: M.l, y: M.t - 4, class: "bh-unit" }, s).textContent = "MB/s of output (median of the rounds)";
+    ts.forEach((t, i) => {
+      svg("text", { x: x(i), y: H - M.b + 16, class: "bh-tick", "text-anchor": "middle" }, s).textContent = t;
+    });
+    svg("text", { x: (M.l + W - M.r) / 2, y: H - 4, class: "bh-tick", "text-anchor": "middle" }, s).textContent = "threads";
+    run.arms.forEach((a, k) => {
+      const col = k < SLOTS ? `var(--bh-s${k + 1})` : "var(--bh-old)";
+      const pts = ts.map((t, i) => [x(i), mb(a, t)]).filter(([, v]) => v);
+      svg("polyline", { points: pts.map(([px, v]) => `${px},${y(v)}`).join(" "), class: "bh-line", stroke: col, fill: "none" }, s);
+      for (const [px, v] of pts) {
+        const d = svg("circle", { cx: px, cy: y(v), r: 4, class: "bh-dot", fill: col }, s);
+        svg("title", {}, d).textContent = `${a}: ${v.toFixed(0)} MB/s`;
+      }
+      const item = el("span", { class: "bh-ws-key" }, legend);
+      el("span", { class: "bh-swatch", style: `background:${col}` }, item);
+      item.append(` ${a}${a === run.ref ? " (reference)" : ""}  `);
+    });
+    const cores = run.cores ? `${run.cores} cores, ${run.cpus} CPUs` : `${run.cpus} CPUs`;
+    note.textContent = `${run.date} · ${cores} · ${run.rounds} paired rounds · ${c.same_bytes ? "every arm gave the same bytes" : "the arms' outputs differ"}. A local run informs; it doesn't decide (the tables below).` + (run.note ? ` ${run.note}` : "");
   }
 
   function render(root, data) {
@@ -592,6 +657,13 @@
     if (root) {
       fetch(root.dataset.src)
         .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then((d) => {
+          // the release-scaling runs, if any are recorded (none is no error: the view is offered only with one)
+          const hero = document.getElementById("bench-hero");
+          const src = hero && hero.dataset.ws;
+          const ws = src ? fetch(src).then((r) => (r.ok ? r.json() : null)).catch(() => null) : Promise.resolve(null);
+          return ws.then((w) => { d.scaling = w; return d; });
+        })
         .then((d) => { render(root, d); drawn.hero = [d, root]; })
         .catch((e) => { root.textContent = `The benchmark history could not be loaded (${e.message}).`; });
     }

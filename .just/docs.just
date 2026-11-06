@@ -4,6 +4,7 @@ docs_with := "--with zensical==0.0.71 --with mkdocstrings-python==2.0.9 --with r
 # The benchmark pages' data, from the bench-results branch (git fetch origin bench-results)
 docs-bench:
    python3 docs/scripts/bench_history.py
+   python3 docs/scripts/bench_release_scaling.py
 
 # Build the site, serve it and rebuild on change
 docs-serve: docs-bench
