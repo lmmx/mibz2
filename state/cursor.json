@@ -10,7 +10,9 @@
     6694815910,
     6696708089
   ],
-  "in_progress": [],
+  "in_progress": [
+    6697544323
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -69,6 +71,11 @@
       "work_commit": "bd56804cc5664631a79262b67198c23bf15cabbb",
       "progress": "Account and levels published; REVIEW read back and Observer routing/header/citation verified.",
       "review_id": 6696838616
+    },
+    "6697544323": {
+      "comment_id": 6697544323,
+      "status": "in_progress",
+      "progress": "Migration verified; reconciling first policy run and submission change."
     }
   },
   "last_record_commit": "bd56804cc5664631a79262b67198c23bf15cabbb"
