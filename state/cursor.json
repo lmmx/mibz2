@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Comment reference proposal finished; awaiting next inbox assignment",
+  "state": "Policy A/B science review complete; publication pending",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -76,9 +76,10 @@
     6683787130,
     6684137403,
     6684938042,
-    6693597404
+    6693597404,
+    6694153375
   ],
-  "last_processed_comment_id": 6693597404,
+  "last_processed_comment_id": 6694153375,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -481,9 +482,12 @@
       "trigger_comment_id": 6694153375,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
-      "progress": "Migration checks passed; science review receipt."
+      "report_commit": "354c4f18ed3b394a282e2ba64ec315978abf86a8",
+      "report_path": "state/reports/policy-ab-6694153375/report.md",
+      "review_comment_pr": 145,
+      "disposition": "HOLD to freeze: missing output evidence and mixed baseline identities accepted; immutable build comparison not enforced. Estimand and t/Bonferroni algebra sound; clarify retries and scope."
     }
   ],
   "active_delegations": [],
@@ -503,10 +507,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6693597404
+      6694153375
     ],
     "handled": [
-      6693597404
+      6694153375
     ],
     "skipped": [],
     "automation_modified": false
