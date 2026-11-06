@@ -127,7 +127,7 @@ Coordinator's session on 2026-11-06 (`docs/journal/decisions.md`).
     spending, workstation runs). For those, the Coordinator asks him in its session.
 - **Reading it:** the Coordinator checks the interpretation against Louis's words. Where they
   differ materially, it follows neither silently: it says so, and asks.
-- **The acknowledgement:** one `TYPE: LOG` on #145, replying to the request's comment, saying
+- **The acknowledgement:** one `TYPE: LOG` on #145, citing the request's comment ID, saying
   what was understood and what was done or will be done. Posting the request isn't evidence
   that it was carried out. ChatGPT reports completion only from the acknowledgement and what
   it links.
