@@ -85,6 +85,8 @@ The team's live machinery is `docs/team/`:
 **Work task commands** (creating or editing a ChatGPT Work task) always name each task's model
 and effort, to set or to leave as set (`docs/team/ROLES.md` lists them). A command without them
 is incomplete.
+- **Creating a task:** one task per creation prompt.
+- **Editing existing tasks:** goes in a separate prompt.
 
 Route every message with `.github/coordination/coord.py`, as above. compact30 is history
 (`docs/journal/compact30-channel/`, frozen): it is no source of the team's identity, authority

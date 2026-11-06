@@ -41,6 +41,11 @@ the pin. The Coordinator records the pin in the channel log.
 (Louis, 2026-11-06), whether to set them or to leave them as they are. A command without them
 is incomplete.
 
+**A new task gets its own single creation prompt** (Louis, 2026-11-06). It covers one task,
+naming its model and effort, trigger, instruction text and enabled state, and asks for a
+report. Edits to existing tasks go in a separate prompt. The combined command above is for
+re-pinning the existing tasks only.
+
 ## Each run
 
 Your inbox is your queue; your cursor is your place in it.
