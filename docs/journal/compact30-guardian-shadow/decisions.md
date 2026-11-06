@@ -1072,3 +1072,40 @@ The Coordinator can record D026–D028's material registration/reporting finding
 No candidate PASS, line-level STOP, G6 acceptance, new capture permission, implementation or automation change is issued. i9/workstation captures and bench-harness changes remain with Louis under the standing boundary; Guardian concurrence neither supplies nor duplicates that authority.
 
 Evidence digest: `git-blob:4db93c96b4915745b04175827bacc76d8eaec0b9`, with the reporter/test/recipe blobs and archived reproduction above.
+
+## D030 — three-table registration carries the numerical rule; narrow outcome and mechanism claims
+
+**Decision:** G1 concurrence on the prospective numerical rule; G3 narrowing of interpretation. ACTIVE, stage A. Incoming [6682936439](https://github.com/lmmx/mibz2/pull/161#issuecomment-6682936439), experiment PR #220. No candidate qualification or line-level STOP.
+
+### Pins and verification
+
+Registration/source: `1091663e7beb6996eafb05a9896ac62b892600f1`, [three-table registration](https://github.com/lmmx/mibz2/blob/1091663e7beb6996eafb05a9896ac62b892600f1/docs/journal/2026-11-06-three-tables.md), blob `1b1f8c8ec1ab18e160bf0d3114887e3ef503fcf3`.
+Reporter blob `3d8b22de49f3ae33aac575159fb4e5aa5d6d5bae` and test blob `8a8554bb75a057291fe7a0d7d8a1c49320c5317b` are identical to D029. The comparison from D029 changes recipes, packaging and documentation/evidence, not decoder code or reporter predicates. The wrapper passes exactly:
+`20 "8,10,12,16" "mibz2-team4@12=3x4,mibz2-team3@10=3x3" "8:2 10:3 12:4"`.
+The separate counter list now includes seven cells, including both new primaries.
+
+The existing CLI maps 3x4 to (3 leaders,9 helpers) and 3x3 to (3,6). Reference/control remain 4x2. The full 16-cell grid, 20 unique rounds, output hash and length, errors, reference/control plans, geometric mean ≥1.03 and two-sided 95% log-t lower bound >1 remain fixed. CPU ≤1.5 and RSS ≤1.15 ratios of medians apply in both accepted runs. Same-cell, same-build independent confirmation, no pooling/switching, and one replacement across the entire new experiment remain binding. “No third run” means no further valid confirmation attempt; it does not erase the explicitly inherited single flagged-run replacement.
+
+[Reproduction script](d030-reproduce.py) and [results](d030-results.json): put the exact pinned reporter and test file beside the script as team_size.py and test_team_size.py, then run it. Nine synthetic cases exercise the new primary CLI: clean passes both; duplicate control, missing secondary cell, contradictory output length, failed run and duplicate new-primary round fail both; incorrect helpers fail the affected primary; excess CPU or RSS fails its adoption flag despite a true speed flag. This last separation is intentional and unchanged: never use `passes` alone as qualification. No decoder, compiler, perf or workstation timing ran. Fixture speed is about 0.161/0.140=1.15, CPU/RSS ratios 1.0; these are synthetic, not measurements.
+
+Specs `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`; operating pin `288c05638c85ffbb0a4d1f5ba9762002c37acdff`; controlling charter `dad82808dd4532d21ebf51e88164b78a0af53da8` §§2,6.4,8.4,12.3. Campaign resolved to `e52252f51419b4c94a016f110a25ef19cd2b5f00`. ROLES, PROTOCOL, MODE and report 262 at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35` read. Operating pin already correct; historical pins unchanged.
+
+### Selection: fresh data can test selected hypotheses
+
+The screen may choose the two hypotheses; it supplies zero confirmatory observations. Freeze both comparisons and all decision rules before fresh measurements, use a fresh independent initial run and the prescribed same-cell confirmation, preserve every attempt, and do not promote another cell after seeing these results. Under those conditions selection among the screen's 14 non-control/reference cells does not require treating all 14 as fresh primary tests. Conditional on the screen, the new family has two fixed hypotheses. Each beneficial tail is nominally 0.025, so the union bound is 2×0.025=0.05 for a fixed fresh run under the paired-log model, without requiring independence between the two comparisons.
+
+This is not campaign-wide 5% control across repeated registrations, nor a calibrated bound for data-dependent invalidation/replacement. Repeatedly searching and restarting would not inherit that claim. Same-cell confirmation does not cure systematic bias or guarantee a true ≥3% gain. Preserve D029's qualifications. No additional statistical penalty is imposed solely because these two hypotheses arose from an independent screen; no new data collection is demanded by this review.
+
+### Required narrower interpretations
+
+1. **Both failing means failure of the registered qualification, not proof that the screen was selection or noise.** A real benefit below 3%, uncertainty, changed conditions or systematic differences can fail the rule. Keep the cap unchanged on this evidence; report estimates and uncertainty. A valid failed confirmation is not replaceable.
+2. **The occupancy trio cannot establish a same-K three-versus-four-team effect.** It is 4x2, 3x3, 3x4: no K has both table counts. Earlier 4x3/4x4 captures are from another run. The new trio supports diagnostics on whole configurations and within-plan CPU-mask contrasts, not the claimed isolated table-count mechanism. No extra capture is required: narrow that claim.
+3. **Window and other changes remain bundled.** Four slots per team gives 12 slots for three teams versus reference 16. K changes segmentation and scheduling; 10 requested threads means nine decoding threads plus service threads. A win concerns these complete configurations, not cache capacity alone. Unpinned requests and process masks do not establish per-thread placement.
+4. **Production is a separate measured-head gate.** Passing this experiment permits recording configuration evidence, not automatically changing/releasing the cap. A policy choosing K from cores must be tested as implemented, including untested requests/regressions, under the complete CI/parity/safety gate. G6, timing/captures and harness-authority reservations remain unchanged.
+5. **Archive completeness remains mandatory.** bundle.sh omits symlinks and files ≥50 MiB. That is acceptable for the external corpus link, but not a waiver to omit required raw evidence. Check the delivered archive contains the required attempt files; preserve originals and disclose/recover missing evidence. This is not itself a new timing gate.
+
+The old experiment's failed primaries remain failed. The fresh registration is a bounded follow-up, not retroactive confirmation of exploratory cells or automatic line continuation indefinitely. No G8 stop follows merely from the old misses. Claims of L3 causality, negligible tracing overhead, or inevitable regression of these particular point estimates remain unsupported; winner selection creates bias risk, not proof of its realised size.
+
+**Disposition:** numerical carry-over supported at this pin; amend/read the outcome and diagnostic claims only as narrowed above. No new performance gate, candidate PASS, release permission, implementation, capture authority or automation change. Independent review and actual execution/provenance remain separate. Registration says “Not yet run”; this review does not attest that no measurements exist elsewhere.
+
+Evidence digest: `git-blob:1b1f8c8ec1ab18e160bf0d3114887e3ef503fcf3`, with the identical reporter/test blobs, recipe diff and archived synthetic results.
