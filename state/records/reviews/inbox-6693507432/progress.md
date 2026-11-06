@@ -1,0 +1,1 @@
+Policy design in progress: choose 3x3 at requested threads >=10 in the measured 10-core/20-MiB topology bucket; retain current policy elsewhere. Generalisation is explicit and limited; three-team qualification is not adoption. Current CI grid does not reach the modified plan. No policy PR created: writes are restricted to team-state/optimizer plus REVIEW on #145.

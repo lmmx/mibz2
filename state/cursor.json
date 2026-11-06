@@ -480,7 +480,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
-      "progress": "Migration head and manifest digest verified; designing policy and evidence plan only."
+      "progress": "Migration verified; #220 journal/source reviewed. Prefer 3x3 over automatic 3x4 escalation; CI cannot qualify untouched branch. Raw confirmation bundles absent from reviewed tree; no independent raw replay claimed."
     }
   ],
   "migrated_from": {
