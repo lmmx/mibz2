@@ -1,11 +1,14 @@
 //! The decoder with the cooperative inverse BWT (`bwt::Cooperative<K>`) against libbzip2
 //! and against the default kernel: valid streams of every level and shape byte for byte,
 //! sequential and parallel, at K = 2, 3 and 4; corrupted and truncated streams failing as
-//! the default kernel fails, at the same block.
+//! the default kernel fails, at the same block. The plan the policy picks on the ten-core
+//! topology, three teams of three in a window of 12, gets the same checks through
+//! `StreamDecoder::planned`.
 
 mod common;
 use common::*;
 use mibz2::bwt::{Cooperative, InverseBwt, Segmented};
+use mibz2::parallel::Plan;
 use mibz2::{Error, ErrorKind, Kernels, StreamDecoder};
 
 fn kernels() -> Vec<Kernels> {
@@ -144,6 +147,97 @@ fn errors_as_the_default_kernel() {
                 !matches!(e.kind, ErrorKind::Internal(_)),
                 "case {i}: an internal error"
             );
+        }
+    }
+}
+
+/// The planned decoder on `plan` and `slots`, fed 100,003 bytes at a time from another thread
+fn planned(z: &[u8], plan: Plan, slots: usize) -> Result<Vec<u8>, Error> {
+    let dec = StreamDecoder::planned(plan, slots, Kernels::detect());
+    let mut out = Vec::new();
+    std::thread::scope(|s| {
+        s.spawn(|| {
+            for c in z.chunks(100_003) {
+                if dec.write(c.to_vec()).is_err() {
+                    return;
+                }
+            }
+            dec.close();
+        });
+        let mut buf = vec![0u8; 1 << 16];
+        loop {
+            match dec.read(&mut buf) {
+                Ok(0) => break Ok(()),
+                Ok(n) => out.extend_from_slice(&buf[..n]),
+                Err(e) => {
+                    dec.cancel();
+                    break Err(e);
+                }
+            }
+        }
+    })
+    .map(|()| out)
+}
+
+/// Three teams of three in the default window of 12 (what `Plan::for_threads` picks at 10
+/// threads on the ten-core topology), against four teams of two in 16 (what it picked
+/// before), and in windows too small for a block a team: byte for byte on every level and
+/// shape, on several streams, and failing alike on corrupted and truncated input
+#[test]
+fn three_teams_of_three_as_planned() {
+    let new = Plan::Teams { teams: 3, k: 3 };
+    let old = Plan::Teams { teams: 4, k: 2 };
+    let mut rng = Rng(0x3333_9999_0a0b_0c0d);
+    let s = samples(&mut rng);
+    for (name, data) in &s {
+        for level in 1..=9 {
+            let z = compress(data, level);
+            for (plan, slots) in [(new, 12), (new, 1), (new, 3), (old, 16)] {
+                let got = planned(&z, plan, slots)
+                    .unwrap_or_else(|e| panic!("{name} level {level} {plan:?} in {slots}: {e}"));
+                assert!(
+                    got == *data,
+                    "{name} level {level} {plan:?} in {slots}: differs"
+                );
+            }
+        }
+    }
+    let mut z = compress(&s[3].1, 9);
+    z.extend(compress(&s[5].1, 1));
+    z.extend(compress(&s[4].1, 9));
+    let mut want = s[3].1.clone();
+    want.extend(&s[5].1);
+    want.extend(&s[4].1);
+    assert!(planned(&z, new, 12).unwrap() == want);
+
+    let data = &s[3].1;
+    let z = compress(data, 9);
+    let starts = block_starts(&z);
+    assert!(starts.len() >= 3);
+    let mut bad: Vec<Vec<u8>> = Vec::new();
+    for &b in &starts {
+        let mut t = z.clone();
+        let bit = b + 48 + 5;
+        t[(bit / 8) as usize] ^= 0x80 >> (bit % 8);
+        bad.push(t);
+        let mut t = z.clone();
+        t[(b / 8) as usize + 4000] ^= 0x5a;
+        bad.push(t);
+    }
+    bad.push(z[..z.len() / 2].to_vec());
+    bad.push(z[..z.len() - 3].to_vec());
+    bad.push(Vec::new());
+    for (i, t) in bad.iter().enumerate() {
+        let want = planned(t, old, 16);
+        let got = planned(t, new, 12);
+        match (&want, &got) {
+            (Err(a), Err(b)) => assert_eq!(a.kind, b.kind, "case {i}: the error"),
+            (Ok(a), Ok(b)) => assert!(a == b, "case {i}: the output"),
+            _ => panic!(
+                "case {i}: {:?} against {:?}",
+                want.as_ref().err(),
+                got.as_ref().err()
+            ),
         }
     }
 }

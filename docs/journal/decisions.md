@@ -54,3 +54,19 @@ The brief he relayed with it, its operative lines verbatim:
 > I want one coherent change to the Oracle specification and its presentation, then one Oracle-only re-pin and one rebuild. Keep MODE, the swarm's authority, and the observational branch architecture intact.
 >
 > The acceptance test is simple: when I open the page, I should understand what the team is doing and why before I've had occasion to think about how the Oracle represents that knowledge.
+
+## 2026-11-06: admitting the three-team policy on workstation evidence
+
+- **Source:** Louis, in the Coordinator's session (RULES.md A4; C6 reserves the merge
+  acceptance rule to him).
+- **Observed:** 2026-11-06, about 19:45 UTC.
+- **The question:** CI's paired bench can't reach the changed plan (its runners have 4 cores),
+  so the policy can't meet the usual rule (an end-to-end figure whose 95% interval excludes
+  no change) on CI.
+- **What was decided:** "Workstation A/B (Recommended)", chosen from four options (the others
+  were: opt-in only; a larger CI runner; hold). The option as put to him, verbatim:
+
+> Benefit shown on your workstation, not on CI. CI must show no regression, plus correctness tests that fake a 10-core topology. You then run one frozen same-thread-count A/B of new vs old default (run plus confirmation): ≥1.03 at 10 threads, lower bound >1, and no more than 2% slower at 11, 12, 16 and 20 threads.
+
+- **Applies to:** this policy change only (`docs/journal/2026-11-06-three-team-policy.md`). It is
+  not a general change to the merge rule.

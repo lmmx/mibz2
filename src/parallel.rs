@@ -496,6 +496,12 @@ pub const COOP_MIN_CORES: usize = 6;
 /// A full block's T-vector: 900,000 rows × 4 bytes
 const FULL_TABLE: f64 = 3.6e6;
 
+/// The topology three teams of three were measured on (physical cores, L3 bytes as
+/// `l3_bytes` reads them), and the fewest threads asked for that select them: 3 × 3 runs 9
+/// decoding threads, inside any budget of 10 or more
+const TEN_CORES: (usize, u64) = (10, 20 << 20);
+const TEN_CORES_MIN_THREADS: usize = 10;
+
 impl Plan {
     /// The cooperative decoder's policy for a caller's `threads`, on this machine, and the
     /// default (`StreamDecoder::new`, so `BzReader::parallel` and `decode_parallel`), as
@@ -506,7 +512,11 @@ impl Plan {
     ///   workers, as today;
     /// - else teams of 2 on the physical cores the threads can use (never SMT siblings), as
     ///   many as keep the live tables near 0.7 of the L3: the knee measured on the i9 at
-    ///   two block sizes (workstation journal §9), 4 teams there.
+    ///   two block sizes (workstation journal §9), 4 teams there;
+    /// - except on the measured ten-core topology (10 physical cores, a 20 MiB L3) at 10 or
+    ///   more threads: three teams of three, which two registered runs qualified against
+    ///   four teams of two on the i9-10900K (docs/journal/2026-11-06-three-tables.md). Any
+    ///   other CPU with that topology gets it too, unmeasured.
     pub fn for_threads(threads: usize) -> Plan {
         plan_with(threads.max(1), physical_cores(), l3_bytes())
     }
@@ -544,6 +554,9 @@ pub(crate) fn plan_with(threads: usize, phys: Option<usize>, l3: Option<u64>) ->
     let cores = threads.min(phys);
     if cores < COOP_MIN_CORES {
         return Plan::Workers(threads);
+    }
+    if phys == TEN_CORES.0 && l3 == Some(TEN_CORES.1) && threads >= TEN_CORES_MIN_THREADS {
+        return Plan::Teams { teams: 3, k: 3 };
     }
     let cap = l3.map_or(4, |b| {
         ((0.7 * b as f64) / FULL_TABLE).round().max(1.0) as usize
@@ -617,8 +630,15 @@ mod plan_tests {
         // the i9: teams of 2, at most 4 (0.7 × 20 MiB over a full table)
         assert_eq!(plan_with(6, i9.0, i9.1), Plan::Teams { teams: 3, k: 2 });
         assert_eq!(plan_with(8, i9.0, i9.1), Plan::Teams { teams: 4, k: 2 });
-        assert_eq!(plan_with(10, i9.0, i9.1), Plan::Teams { teams: 4, k: 2 });
-        assert_eq!(plan_with(20, i9.0, i9.1), Plan::Teams { teams: 4, k: 2 });
+        assert_eq!(plan_with(9, i9.0, i9.1), Plan::Teams { teams: 4, k: 2 });
+        // the i9 at 10 threads or more: three teams of three (docs/journal/2026-11-06-three-tables.md)
+        for t in [10, 11, 12, 16, 20, 64, usize::MAX] {
+            assert_eq!(
+                plan_with(t, i9.0, i9.1),
+                Plan::Teams { teams: 3, k: 3 },
+                "{t}"
+            );
+        }
         // a bigger cache, more teams; no cache size read, 4
         assert_eq!(
             plan_with(16, Some(16), Some(32 << 20)),
@@ -630,6 +650,53 @@ mod plan_tests {
         );
         let p = Plan::Teams { teams: 4, k: 2 };
         assert_eq!((p.workers(), p.threads()), (4, 8));
+    }
+
+    /// Three teams of three only on the measured topology, and never more decoding threads
+    /// than asked for
+    #[test]
+    fn the_ten_core_exception() {
+        let t33 = Plan::Teams { teams: 3, k: 3 };
+        let mib = 1u64 << 20;
+        // a core more or fewer, or a cache a byte off or unread: the old rule
+        for (phys, l3) in [
+            (Some(9), Some(20 * mib)),
+            (Some(11), Some(20 * mib)),
+            (Some(10), Some(20 * mib - 1)),
+            (Some(10), Some(20 * mib + 1)),
+            (Some(10), Some(16 * mib)),
+            (Some(10), None),
+            (None, Some(20 * mib)),
+        ] {
+            for t in [6, 9, 10, 12, 20] {
+                let p = plan_with(t, phys, l3);
+                assert_ne!(p, t33, "{phys:?} {l3:?} at {t}");
+            }
+        }
+        // the budget: whatever the topology, no plan runs more decoding threads than asked
+        for phys in [
+            None,
+            Some(4),
+            Some(6),
+            Some(9),
+            Some(10),
+            Some(11),
+            Some(16),
+        ] {
+            for l3 in [None, Some(16 * mib), Some(20 * mib), Some(32 * mib)] {
+                for t in 1..=24 {
+                    let p = plan_with(t, phys, l3);
+                    assert!(p.threads() <= t, "{phys:?} {l3:?} at {t}: {p:?}");
+                }
+            }
+        }
+        assert_eq!((t33.workers(), t33.threads()), (3, 9));
+        // its default window (`SLOTS_PER_THREAD` a thread asked for) is 12 blocks, as the
+        // registered runs used; fewer slots still give a block a team; saturating at the top
+        assert_eq!(window(t33, 10, 40), 12);
+        assert_eq!(window(t33, 20, 80), 12);
+        assert_eq!(window(t33, 10, 1), 3);
+        assert_eq!(window(t33, 10, usize::MAX), usize::MAX / 10);
     }
 
     /// The default's window: what the A/B ran (2 a team at 2 a thread asked), and at least

@@ -318,3 +318,47 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
         || echo "bench-team-size: the occupancy pass at $t threads, teams of $k, failed"
     done
     bash bench/bundle.sh "$W"
+
+# The three-team policy's workstation A/B (docs/journal/2026-11-06-three-team-policy.md,
+# registered before any run): this commit's default plan against its merge base's, at the
+# same requested thread counts, 20 paired rounds on the bench's Wikidata sample, judged by
+# bench/policy_ab.py under the rule Louis approved. The run and its confirmation are two runs
+# of this same recipe at the same commit. About 10 minutes; it ends with one .tar.gz to upload.
+#   just bench-three-team-policy
+
+# Head default against base default, 8 to 20 threads
+bench-three-team-policy:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/three-team-policy
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-three-team-policy: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    git fetch -q origin master
+    head=$(git rev-parse HEAD)
+    base=$(git merge-base HEAD origin/master)
+    if [ "$head" = "$base" ]; then echo "bench-three-team-policy: HEAD is its own merge base; check out the policy branch"; exit 1; fi
+    echo "head $head"; echo "base $base"
+    printf 'head %s\nbase %s\n' "$head" "$base" > "$W/commits.txt"
+    [ -d "$B/build-$base" ] || git worktree add -q --detach "$B/build-$base" "$base"
+    (cd "$B/build-$base" && cargo build -q --release --example ab)
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    BASEAB=$B/build-$base/target/release/examples/ab
+    dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+    if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+      git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+        && git archive origin/bench-data "$dir" | tar -x || true
+    fi
+    python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$B/wikidata.bz2"
+    ln -sf "$B/wikidata.bz2" "$W/wikidata.bz2"
+    "$AB" env > "$W/env.json"
+    lscpu > "$W/lscpu.txt"
+    "$AB" run "$W/runs.jsonl" --arms "mibz2,mibz2@$BASEAB" \
+      --threads "8,9,10,11,12,16,20" --rounds 20 "$W/wikidata.bz2"
+    python3 bench/policy_ab.py report "$W/runs.jsonl" --out "$W/policy-ab" \
+      || echo "bench-three-team-policy: the run is not valid; see policy-ab.md"
+    bash bench/bundle.sh "$W"
