@@ -1,0 +1,19 @@
+{
+  "candidate": "523ceaa922e1c479f90aad113891dc8ce98ebf0a",
+  "source_sha256": {
+    "examples/ab.rs": "9bbe1b97d922c5d85c278fe3ffa6bf699101ba9cd4c27bd67e50f364dc09c704",
+    ".just/bench.just": "be4eb22231c06c7a7e3f2289bbffb91e0f97e346fa4ec5f234fbd80877e2c4a5",
+    "bench/policy_ab.py": "346a72555bcf99385fd3bf66bd569cc551a4b2d69a34b0e06e3c000dd52bd609",
+    "bench/test_policy_ab.py": "7a61254f3dae3bcb5131296df80d7118a3c2d8d73e92b1cccf203c050cd7283c",
+    "docs/journal/2026-11-06-three-team-policy.md": "39cc6cb18c5f5213f1cfad85ade6dc793d90906d580bab5bcb95f82b9bb9281c"
+  },
+  "python_tests_passed": 14,
+  "rust_tests_executed": false,
+  "timing_run": false,
+  "limitations": [
+    "Cargo/rustc unavailable",
+    "No /proc/self/task or /dev/fd",
+    "Shell fixture uses successful temporary path lists in place of process substitution",
+    "Cargo config effect inferred from official configuration hierarchy"
+  ]
+}

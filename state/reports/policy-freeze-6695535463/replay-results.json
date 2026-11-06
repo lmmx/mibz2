@@ -1,0 +1,63 @@
+{
+  "root_inputs": {
+    "build.rs": {
+      "untracked_refused": true,
+      "committed_change_refused": true
+    },
+    "rust-toolchain": {
+      "untracked_refused": true,
+      "committed_change_refused": true
+    },
+    "rust-toolchain.toml": {
+      "untracked_refused": true,
+      "committed_change_refused": true
+    }
+  },
+  "environment": {
+    "RUSTC_WORKSPACE_WRAPPER": {
+      "refused": true
+    },
+    "CARGO_PROFILE_RELEASE_LTO": {
+      "refused": true
+    },
+    "RUSTUP_TOOLCHAIN": {
+      "refused": true
+    },
+    "AB_CENSUS_MS": {
+      "refused": true
+    },
+    "AB_SAMPLE_MS": {
+      "refused": true
+    },
+    "CARGO_HOME": {
+      "refused": false
+    },
+    "CARGO_HTTP_PROXY": {
+      "refused": false
+    }
+  },
+  "shared_target_copy": {
+    "shell_exit": 0,
+    "copies": {
+      "ab-base": "HEAD ab",
+      "ab-head": "HEAD ab",
+      "windows": "HEAD windows"
+    },
+    "baseline_preserved": false,
+    "method": "recipe function/build/copy order; simulated Cargo messages/files; successful process substitutions expanded to temporary path lists because /dev/fd is unavailable; no compilation"
+  },
+  "census_source_review": {
+    "refreshes_existing_tid": true,
+    "guard_has_no_cpu_threshold": true,
+    "rust_test_executed": false
+  },
+  "base_only_config": {
+    "head_status": "",
+    "measured_status": "",
+    "base_status": "",
+    "config_relative_to_head": "target/three-team-policy/.cargo/config.toml",
+    "ancestor_of_base_only": true,
+    "recorded_by_CARGO_HOME_loop": false,
+    "basis": "Git clean checks executed; configuration effect inferred from documented Cargo ancestor search"
+  }
+}
