@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Three-table review complete; publication pending",
+  "state": "Three-table review finished; awaiting next inbox assignment",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -71,9 +71,10 @@
     6645922140,
     6646250444,
     6681848572,
-    6682105521
+    6682105521,
+    6682938532
   ],
-  "last_processed_comment_id": 6682105521,
+  "last_processed_comment_id": 6682938532,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -415,12 +416,12 @@
       "repository": "lmmx/mibz2",
       "pr": 162,
       "trigger_comment_id": 6682938532,
-      "status": "complete",
+      "status": "finished",
       "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
       "report_commit": "186702b380614658aa2864908de3b3ab92e836a3",
       "report_path": "docs/journal/compact30-adversarial/scanner-146/three-tables-6682938532/report.md",
       "review_comment_pr": 145,
-      "review_comment_id": null,
+      "review_comment_id": 6683028366,
       "disposition": "Reconstructed paired results; three-table follow-up justified, cache-capacity cause unproven. New occupancy lacks same-k counterpart; buffer capacity and perturbation claims corrected."
     }
   ],
@@ -441,14 +442,12 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6682105521
+      6682938532
     ],
     "handled": [
-      6682105521
+      6682938532
     ],
-    "skipped": [
-      6681848572
-    ],
+    "skipped": [],
     "automation_modified": false
   },
   "reported_programme_status": {
@@ -466,11 +465,5 @@
     "authority_changed": false
   },
   "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-  "in_progress_comment": {
-    "id": 6682938532,
-    "pr": 162,
-    "status": "complete",
-    "report_commit": "186702b380614658aa2864908de3b3ab92e836a3",
-    "report_path": "docs/journal/compact30-adversarial/scanner-146/three-tables-6682938532/report.md"
-  }
+  "in_progress_comment": null
 }
