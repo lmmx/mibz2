@@ -212,3 +212,20 @@ Evidence **1132857e18819ce689424dd2df7751630b29522a**.
 | Cross-chain lockstep | CLOSED | Lean path misses its 10-cycle gate; inferred cycle decomposition not independently validated by fitting CI net cost |
 
 Tail gains are not confined to 1t/2t. Current placement/window-light variants leave those rows unchanged by policy. Teams require a slowest-thread/barrier model, not summed per-thread tail credit. No implementation, new timing, new safety certification or historical-credit change.
+
+
+## Live-byte/team-count decision: inbox 6683037641
+
+[Access audit and ranked proposals](reviews/inbox-6683037641/report.md), [archived arithmetic](reviews/inbox-6683037641/arithmetic.json), [sensitivity model](reviews/inbox-6683037641/model.json).
+Source **f4f99ab82652411feb4a5a6e2ccb96d04902fb58**; results **cbc6eb14b065fdb7092911147ce3374f63541467**; three-table registration **656d2794cf0146e65af9223b8a10c31297518f35**.
+
+| Item | Disposition | Whole-decoder accounting / falsifier |
+|---|---|---|
+| #219 four-table primaries | FAIL registered benefit | Replayed 320 rows: 4×3 1.016955; 4×4 1.003463 and CPU 1.52452. No counter evidence |
+| #220 three-table policy | CONDITIONAL, existing first priority | Screen 3×4 1.096728 speed ratio (8.82% wall reduction), exploratory only. Same-cell fresh confirmation required; k/window/placement confounds retained |
+| C23 cooperative ll reuse | CONDITIONAL, preferred new bounded proposal | Remove separate rle allocation (~1.35 MB/team endpoint), not T loads or assembly/RLE payload work. Extend in-place lifetime safely after build; fixed-plan net benefit required for speed claim |
+| C24 reusable segment page arena | HELD for counted growth/page census | Reserve at n900000,k2 is 1,864,704 B before growth; observed6.1 MB is historical capacity, not touched-prefix demand. Charge page chains, handoffs and copy costs; no lower traffic/pages means no throughput premise |
+| Placement | Existing lead, no duplicate experiment | Mask intervention not thread assignment; unpinned release gain unpriced |
+| C15/C17/C18 | Prior rejection/closure unchanged | New cache hypothesis does not reopen failed registered claims |
+
+T footprint≤4n, ll dead after build, rle untouched during cooperative traversal. L3 is20MiB; C/W using13.9MB allocation per team is invalid. At fixed shared load, four teams need25% effective footprint reduction to match three, not25% less allocated capacity. No calibrated speedup per MB; all new proposal credit zero. A1–A7, D013 and prior tail/phase-pairing qualifications unchanged.

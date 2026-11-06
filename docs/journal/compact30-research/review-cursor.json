@@ -452,7 +452,10 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Verified source/evidence pins; replayed 320 archived run ratios. Static audit separates capacity from accessed prefixes; researching bounded proposals."
+      "progress": "Completed static access ledger, 320-row archived replay, C/W sensitivity and bounded C23/C24 proposals; preparing final publication.",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6683037641/report.md",
+      "baseline_commit": "f4f99ab82652411feb4a5a6e2ccb96d04902fb58",
+      "evidence_commit": "cbc6eb14b065fdb7092911147ce3374f63541467"
     }
   ]
 }

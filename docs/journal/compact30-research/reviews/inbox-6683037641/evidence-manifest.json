@@ -1,0 +1,24 @@
+{
+  "source_commit": "f4f99ab82652411feb4a5a6e2ccb96d04902fb58",
+  "evidence_commit": "cbc6eb14b065fdb7092911147ce3374f63541467",
+  "registration_commit": "656d2794cf0146e65af9223b8a10c31297518f35",
+  "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+  "blobs": {
+    "src/bwt.rs": "9b429c9c0a5b542f6b28adeb9565de5355ebf8c9",
+    "src/coop.rs": "a756c7ad424c223bc073d73616a94fc3ade4e0e8",
+    "src/lib.rs": "e7f6896cbcf63b3d9c4f3df497f68a535651e75f",
+    "src/trace.rs": "3d9066a52f2726ef4ce30c2ff90470ca9771651f",
+    "src/rle.rs": "5f3bc36af1cc2f514d293f5c3b38be12413e78cb",
+    "src/parallel.rs": "7ea7a69e4bb025711361a9e960bba1398b07ac9d"
+  },
+  "raw_runs": "7532625470443000f15202e8b91415d86eec6bbf",
+  "result_journal": "a8ffda93efdb85c7c2b2a8a7c61e91bf547f986c",
+  "scope": {
+    "static": true,
+    "archived_arithmetic": true,
+    "raw_profile_replay": false,
+    "new_timing": false,
+    "implementation": false,
+    "independent_qualification": false
+  }
+}
