@@ -465,5 +465,10 @@
     "authority_changed": false
   },
   "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-  "in_progress_comment": null
+  "in_progress_comment": {
+    "id": 6683787130,
+    "pr": 162,
+    "status": "in_progress",
+    "progress": "Receipt; independently review Oracle design and seed accuracy"
+  }
 }
