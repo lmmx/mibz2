@@ -73,9 +73,10 @@
     6681848572,
     6682105521,
     6682938532,
-    6683787130
+    6683787130,
+    6684137403
   ],
-  "last_processed_comment_id": 6683787130,
+  "last_processed_comment_id": 6684137403,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -441,12 +442,12 @@
       "repository": "lmmx/mibz2",
       "pr": 162,
       "trigger_comment_id": 6684137403,
-      "status": "complete",
+      "status": "finished",
       "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
       "report_commit": "de52e038812ac8a49e3686644b35f7305fcb0c09",
       "report_path": "docs/journal/compact30-adversarial/scanner-146/oracle-precis-6684137403/report.md",
       "review_comment_pr": 145,
-      "review_comment_id": null,
+      "review_comment_id": 6684224966,
       "disposition": "Claim-relative stopping, channel watermark plus evidence manifest, parallel-front L0; identified already-retracted 25% restriction still shown operative inside claimed cutoff. No implementation or authority change."
     }
   ],
@@ -467,10 +468,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6683787130
+      6684137403
     ],
     "handled": [
-      6683787130
+      6684137403
     ],
     "skipped": [],
     "automation_modified": false
@@ -489,13 +490,5 @@
     "read_order": "After event eligibility, addressee and cursor gates, read MODE and applicable role instructions.",
     "authority_changed": false
   },
-  "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-  "in_progress_comment": {
-    "id": 6684137403,
-    "pr": 162,
-    "status": "complete",
-    "report_commit": "de52e038812ac8a49e3686644b35f7305fcb0c09",
-    "report_path": "docs/journal/compact30-adversarial/scanner-146/oracle-precis-6684137403/report.md",
-    "progress": "Completed; awaiting deduplicated REVIEW"
-  }
+  "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0"
 }
