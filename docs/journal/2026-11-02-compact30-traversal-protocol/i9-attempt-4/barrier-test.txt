@@ -1,1 +1,0 @@
-barrier-test: 12000 steps in 3 rounds x 2 arms, 4 workers, uneven arrivals and lists (partial final steps), cpus [1, 2, 3, 4]: every check passed
