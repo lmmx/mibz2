@@ -46,19 +46,27 @@ CPU.
   - if either is unset;
   - if the checkout has uncommitted changes, or untracked files among the build and workload
     inputs;
-  - if HEAD's build and workload inputs differ from the candidate's: `src`, `Cargo.toml`,
-    `Cargo.lock`, `.cargo`, `examples`, the corpus's builder and manifest
+  - if HEAD's build and workload inputs differ from the candidate's, including a file that
+    appears or disappears: `src`, `Cargo.toml`, `Cargo.lock`, `.cargo`, `build.rs`,
+    `rust-toolchain`, `rust-toolchain.toml`, `examples`, the corpus's builder and manifest
     (`bench/wikidata.py`, `bench/wikidata.json`), the judge and the recipe;
-  - if any of `RUSTFLAGS`, `CARGO_ENCODED_RUSTFLAGS`, `CARGO_BUILD_RUSTFLAGS`,
-    `CARGO_TARGET_DIR`, `CARGO_BUILD_TARGET`, `RUSTC`, `RUSTC_WRAPPER` or
-    `CARGO_PROFILE_RELEASE_OPT_LEVEL` is set;
+  - if any `CARGO_*` or `RUST*` environment variable is set, except those that only locate
+    the installation (`CARGO_HOME`, `RUSTUP_HOME`), shape Cargo's network or terminal
+    (`CARGO_HTTP_*`, `CARGO_NET_*`, `CARGO_TERM_*`), or only affect panics and logs
+    (`RUST_BACKTRACE`, `RUST_LOG`); or if `AB_CENSUS_MS` or `AB_SAMPLE_MS` is set, so the
+    census reads every 5 ms and the child's sampler every 10 ms, as registered;
+  - if the two checkouts select different toolchains (`rustc -vV` and `cargo -V`, asked in
+    each);
   - if the base build's worktree is not at the base, or has changes or untracked files.
 
   Each build runs in its own checkout, and Cargo's own build messages name each executable.
   The recipe copies them into the attempt's directory (`bin/`), and those copies are what
   run, so neither build can overwrite the other's. It records HEAD, the candidate and the
   base (`commits.txt`), and the sha256 of both `ab` copies, the corpus builder and the
-  corpus, with `rustc -vV` and `cargo -V` (`inputs.txt`).
+  corpus, with the toolchain and the sha256 of any Cargo configuration outside the
+  repository, which applies to both builds alike (`inputs.txt`). The digests are a record
+  of what ran, not a proof of what each was built from; the refusals above are what bind
+  the builds to the frozen inputs.
 - **The arms:** the head build's `mibz2` against the base build's (`mibz2@<base ab>`). Both use
   the default plan, unpinned, as a caller gets it.
 - **The grid:** 8, 9, 10, 11, 12, 16 and 20 threads, 20 rounds, paired by round, on the bench's
@@ -68,7 +76,8 @@ CPU.
   - from those that ran, as the child reports them (`thread_cpu`, more than 2% of the
     busiest's CPU);
   - from every thread the child ran, busy or not, so a helper that sat idle still counts
-    (`observed_threads`). The parent `ab` reads these names from `/proc` every 5 ms while each
+    (`observed_threads`, the observed threads). The parent `ab` reads these names from `/proc`
+    every 5 ms while each
     child runs, the same way for both builds, keeping each thread's latest name (a new
     thread carries its parent's name until it names itself); the base build's own `ab`
     records no such list.

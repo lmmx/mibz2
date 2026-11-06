@@ -362,10 +362,15 @@ bench-three-team-policy:
     [[ $cand =~ ^[0-9a-f]{40}$ && $base =~ ^[0-9a-f]{40}$ ]] || fail "$frozen names no frozen candidate and base yet; nothing to run"
     # what the builds and the workload are made from: sources, Cargo's files and configuration,
     # the harness, the corpus's builder and manifest, the judge and this recipe
-    measured=(src Cargo.toml Cargo.lock .cargo examples bench/policy_ab.py bench/wikidata.json bench/wikidata.py .just/bench.just)
-    for v in RUSTFLAGS CARGO_ENCODED_RUSTFLAGS CARGO_BUILD_RUSTFLAGS CARGO_TARGET_DIR CARGO_BUILD_TARGET RUSTC RUSTC_WRAPPER CARGO_PROFILE_RELEASE_OPT_LEVEL; do
-      [ -z "${!v:-}" ] || fail "$v is set; unset it, so both builds are made the same, plain way"
-    done
+    # (a path that doesn't exist counts too: one appearing, such as a build.rs or a toolchain
+    # file, is a change)
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples bench/policy_ab.py bench/wikidata.json bench/wikidata.py .just/bench.just)
+    # no environment that changes how Cargo, rustc or rustup build, or how ab observes: any
+    # CARGO_* or RUST* variable but those that only say where they are installed, how Cargo
+    # reaches its registry (the lockfile pins what it fetches) or how it prints, and the
+    # census's interval, which stays at its registered 5 ms
+    overrides=$(env | cut -d= -f1 | grep -E '^(CARGO_|RUST|AB_CENSUS_MS$|AB_SAMPLE_MS$)' | grep -vxE 'CARGO_HOME|RUSTUP_HOME|RUST_BACKTRACE|RUST_LOG|CARGO_(HTTP|NET|TERM)_[A-Z_]+' || true)
+    [ -z "$overrides" ] || fail "unset these, so both builds and both arms run the same, registered way: $(echo $overrides)"
     [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout has uncommitted changes"
     [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the build and workload inputs"
     git cat-file -e "$cand^{commit}" && git cat-file -e "$base^{commit}" || fail "fetch the branch: the frozen commits are missing"
@@ -393,6 +398,10 @@ bench-three-team-policy:
     if missing: sys.exit("no executable reported for: "+" ".join(missing))
     print("\n".join(got[w] for w in want))' "$@"
     }
+    # the toolchain each build will use, asked in its own checkout (a toolchain file there
+    # would change it): they must be the same
+    tool() { (cd "$1" && rustc -vV && cargo -V); }
+    [ "$(tool "$PWD")" = "$(tool "$B/build-$base")" ] || fail "the two checkouts select different toolchains"
     mkdir "$W/bin"
     mapfile -t base_built < <(built "$B/build-$base" ab)
     mapfile -t head_built < <(built "$PWD" ab windows)
@@ -411,8 +420,16 @@ bench-three-team-policy:
     python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
     python3 bench/wikidata.py build bench/wikidata.json "$dir" "$WINDOWS" "$B/wikidata.bz2"
     ln -sf "$B/wikidata.bz2" "$W/wikidata.bz2"
-    # what ran: both executables, the corpus and the toolchain, by digest
-    { sha256sum "$AB" "$BASEAB" "$WINDOWS" "$B/wikidata.bz2"; rustc -vV; cargo -V; } > "$W/inputs.txt"
+    # what ran: both executables, the corpus and the toolchain, by digest, and the Cargo
+    # configuration outside the repository, which applies to both builds alike
+    {
+      sha256sum "$AB" "$BASEAB" "$WINDOWS" "$B/wikidata.bz2"
+      tool "$PWD"
+      for f in "${CARGO_HOME:-$HOME/.cargo}/config" "${CARGO_HOME:-$HOME/.cargo}/config.toml"; do
+        [ -f "$f" ] && sha256sum "$f"
+      done
+      echo "census every 5 ms (AB_CENSUS_MS unset)"
+    } > "$W/inputs.txt"
     cat "$W/inputs.txt"
     "$AB" env > "$W/env.json"
     lscpu > "$W/lscpu.txt"
