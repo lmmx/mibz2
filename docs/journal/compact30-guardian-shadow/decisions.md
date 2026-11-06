@@ -1269,3 +1269,49 @@ Correct the material change/source inventory, replace the ambiguous interim, and
 Governing evidence: common/Guardian SPEC at `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`; operating GUARDIAN `288c05638c85ffbb0a4d1f5ba9762002c37acdff`; charter `dad82808dd4532d21ebf51e88164b78a0af53da8` §§2,6.4,8.2–8.4,12.3; activation report 262 at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`. ROLES/PROTOCOL reread unchanged (blobs `ab4f78fdb98b1932eee8579368ecca9fa11e7fff`, `0d7d9ed8035859a8ddb930668d00f491e97c6285`); MODE/CAMPAIGN read at channel head `e52252f51419b4c94a016f110a25ef19cd2b5f00`. No historical decision is rewritten.
 
 Evidence digest: `git-blob:7d085a668c313439bfb5316d0cc725fe4231d4d5`, with the other pinned documents, routing source and archived probes.
+
+## D034 — D033 readiness HOLD lifted at 5cb46ba3
+
+**Decision:** G1 — lift D033's document/readiness HOLD at `5cb46ba390de24c875f881e720f266f7fcd7e9b5` (PR #225). Incoming [6685165401](https://github.com/lmmx/mibz2/pull/161#issuecomment-6685165401). The proposal is ready for Louis's decisions and the specified cutover checks; this is not approval of reserved changes or certification that a cutover occurred. Current task pin, authority and state branch remain operative.
+
+Read the exact four-commit diff from D033's `40709781a39758d14e037d70a9bb20a65fc0edf9`: `673865d493de72280ec4f65d1cfc17dbde038f9f`, `e377cb73a76f8f5324b96521c32a3490cb49cb13`, `af8ddd9e93d319875bf1ce70bf58e7ba751f8c2d`, `5cb46ba390de24c875f881e720f266f7fcd7e9b5`. Read the resulting RULES, common/Guardian/Oracle specs, PROTOCOL, migration journal and STEWARDSHIP. Read Researcher [6685052784](https://github.com/lmmx/mibz2/pull/145#issuecomment-6685052784) as provenance; dispositions below rest on the pinned text.
+
+### D033 items
+
+| Item | Disposition |
+|---|---|
+| Change inventory | **Closed.** A1 explicitly prevents a focus change from undoing a binding scoped restriction. B2 keeps invariants on code that relies on them; B3 flags retirement of campaign/representation freezes while preserving immutable reproducible snapshots, separately from B4's verdicts. C1 keeps every substantive bound when moving the registration and flags its diagnostic information-objective exception; diagnostic success cannot qualify production. C3 flags the opportunity-cost revision and separates information value, target-machine research viability and production qualification. E3 preserves the authentication boundary without pursuing stage B. The whole table, not just flagged rows, now requires Louis's approval. |
+| Sources and Guardian IDs | **Closed.** RULES identifies active GUARDIAN at 288c0563 and the stale master copies. The new role keeps G1/G2/G3/G8 by meaning, retires compact30 G4/G5/G7, retains G6's reservation through D and separately records resumptions. No invented G9 or implicit promotion to stage B remains. The journal's historical contradiction row is read with this explicit source correction, not as a description of the live operating pin. |
+| Exact effects: C5/C6/E2/D | **Closed.** C5 makes the identified result handoff in Louis's authenticated session the authority for one already-frozen recipe; metadata, attribution and repository messages do not suffice or authorise future captures. C6 names workload, estimand, repeat/multiplicity policy and merge rule as reserved; versioning grants nothing. E2 acknowledges mutable comments and preserves committed verbatim decision provenance while explicitly retiring routine transcription. D bars self-acceptance of an unresolved material safety rebuttal: independent reviewer acceptance/withdrawal resolves it; continued disagreement goes to Louis. |
+| Interim | **Closed.** RULES and the journal preserve each existing authenticated pin, authority, state and registration scope until approval/re-pin. They no longer extend the charter across the team by analogy. The Coordinator's permanent stewardship remains separate; MODE proposals are Louis's, with neither objective choice assumed. |
+| Cutover | **Closed as a procedure.** Dispatch is held; comments must be finished through the final cursor commit. Continuation branches preserve ancestry, then relocate state. The manifest covers processed IDs, offsets, all receipt states, REVIEW links and open HOLDs. Exact old heads plus manifest digests are recorded; old heads, saved task pins and new cursor paths are read back before dispatch resumes. Common SPEC checks migration before receipts/work and fails closed on missing provenance, head inequality or digest mismatch. Complete-but-unfinished entries resume publication rather than redo work. Oracle separately records its page commit in cursor progress. No replay test or task disabling is required. |
+
+These closures preserve the substantive constraints, not an obligation to retain obsolete names. In particular:
+- B5's **retain** and C1's “every substantive bound stays” carry the source safety/registration obligations; short summaries do not waive registered coverage or proof requirements. G2 can still HOLD insufficient unsafe evidence without an approval prerequisite.
+- C5 controls the shorter “by running” summaries in D5 and STEWARDSHIP through their explicit C5 references. Running or attribution alone is not the specified authenticated handoff.
+- E2's decision-preservation rule applies by effect: a REVIEW or ACK carrying a narrowing/authorising/policy decision is not exempt merely because its header appears in the routine-message examples.
+- A check that cannot read/validate its provenance cannot establish a matching SHA/digest and must stop. The journal's numbered sequence controls the handoff order: prepare/copy, merge, re-pin, read back, resume. No missing migration evidence is treated as success.
+
+### New section S: no additional unflagged delegation
+
+**S1:** recording the campaign as ended does not revoke permanent stewardship, evidence or live registrations. The proposal expressly leaves #220's frozen registration untouched.
+
+**S2 — correctly flagged substantive relaxation.** The current instruction-parity admission rule would admit fewer candidates than the proposal. Removing it permits a candidate with more whole-decoder instructions to be considered for merge when its prospective mechanism and CI evidence support it. That is the exact effect flagged for Louis, not a purely editorial restatement. Matched whole-decoder counts, archived profiles, induced-cost accounting, predicted effect and falsifier remain. The unchanged STEWARDSHIP gate still requires correctness/parity, green CI on the measured head, beneficial end-to-end paired A/B evidence with its 95% interval excluding zero, and no unacceptable regression. Expected-head and re-bench requirements remain. Counts alone qualify neither direction; a mechanism alone establishes no speedup. No additional merge permission beyond the flagged removal was found.
+
+**S3:** explicitly inherits C5's one-run, authenticated-session restriction; no agent timing or future-capture permission.
+
+**S4:** explicitly inherits C6's boundary. STEWARDSHIP's shorter statistical list is read with the referenced full C6, including multiplicity. Only harness mechanics/reporting/diagnostics within that boundary are delegated; a version bump is not authority for a changed statistical question or gate. This is the flagged policy proposal, not an automatic concession to existing practice.
+
+The direct STEWARDSHIP diff preserves its standing objective, correctness and full CI merge checks, release verification, downstream gate, infrastructure/credentials/spending and external-scope reservations, and standing prohibitions. No other unflagged authority expansion was found in that diff. Louis must approve the full exact replacement policy, including S2–S4; MODE remains his decision.
+
+### Verification and limits
+
+coord.py remains blob `29d1f0e4b3dccc03470b566acdb3ee068732aab1`, identical to D033. The exact diff changes documentation only. D033's 34 routing tests and 20 queue-state comparisons therefore remain applicable to the unchanged code; they were not presented as a new execution here. The stronger handoff is a written procedure, not tested live state migration. A stale snapshot still cannot reconcile itself; the required drain/head/digest/read-back checks are what prevent its use.
+
+Pinned blobs: RULES `88825a4bf7c4b6e82ffab9fc53881fd7ade4781a`; common SPEC `016ed12d9d3a8935abb13edf79cdc8d21b8919b1`; Guardian SPEC `f4228cb2d9610db9147242231d6d7ebe9e4d76d9`; journal `0484ae64868dd97781666231c468698923a00209`; STEWARDSHIP `43756aeba910bf55a4c77b18929f886dcfdf3789`; PROTOCOL `8aeccac4004a13f9d730d822855a5d3f362a8dae`; Oracle SPEC `e17f5a855bd1991467c34da69fd5fe07cd410fe1`.
+
+Operating sources remain the user-pinned common/Guardian SPEC at `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`, operating GUARDIAN `288c05638c85ffbb0a4d1f5ba9762002c37acdff`, its charter `dad82808dd4532d21ebf51e88164b78a0af53da8` and activation report 262 at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`, already read for D033. ROLES/PROTOCOL reread unchanged; MODE/CAMPAIGN reread at unchanged head `e52252f51419b4c94a016f110a25ef19cd2b5f00`. History is preserved.
+
+**Disposition:** no D033 drafting/readiness objection remains at this pin. Louis's approval/re-pin and the actual handoff checks remain necessary. No migration, merge, task modification, candidate qualification, or reserved decision is performed or certified by D034. G6 remains reserved in this running task. Independent authorised work continues.
+
+Evidence digest: `git-blob:88825a4bf7c4b6e82ffab9fc53881fd7ade4781a`, with the pinned source diff and documents above.
