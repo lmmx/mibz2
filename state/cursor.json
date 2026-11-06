@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Comment reference proposal complete; publication pending",
+  "state": "Comment reference proposal finished; awaiting next inbox assignment",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -468,12 +468,14 @@
       "repository": "lmmx/mibz2",
       "pr": 162,
       "trigger_comment_id": 6693597404,
-      "status": "complete",
+      "status": "finished",
       "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
       "report_commit": "912a3ec03e7aa9489edea4695b771c21b456655f",
       "report_path": "state/reports/comment-references-6693597404/report.md",
       "review_comment_pr": 145,
-      "disposition": "Recommend Oracle-authored descriptive Markdown links; compare per-version reference table and consistent citation style. Sender/recipient, mutable-source and fallback version-coherence limits documented. Proposal only."
+      "disposition": "Recommend Oracle-authored descriptive Markdown links; compare per-version reference table and consistent citation style. Sender/recipient, mutable-source and fallback version-coherence limits documented. Proposal only.",
+      "review_comment_id": 6693740945,
+      "publication_verified": true
     }
   ],
   "active_delegations": [],
