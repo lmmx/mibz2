@@ -1,17 +1,8 @@
-# 3. The team's own machinery, independent of compact30
+# 3. Current team machinery
 
-- **Doing:** giving the team's identity, instructions, state and authority neutral, current
-  sources (#225; `docs/journal/2026-11-06-team-neutral.md`).
-- **In order to:** 0. The team had kept compact30's charter, names, instruction-count framing
-  and state branches after the campaign was set aside.
-- **Status:** doing.
-  - **Done:**
-    - the audit;
-    - the Researcher's review (6685052784) and the Guardian's (D033, lifted in D034);
-    - Louis's approval of RULES.md and his MODE.md decisions (M1 yes, M2 kept, M3 widened);
-    - the four `team-state/*` continuation branches, verified against their sources;
-    - this branch.
-  - **Next:** #225's merge, Louis's re-pin of the four tasks, the read-back checks, then the
-    Oracle's first rebuild.
-- **Known:** the Oracle's first test is whether its account would have flagged this drift
-  early, from comments 6643481606 and 6643744616 (4 November).
+- **Doing:** finishing the first Oracle account after the machinery cutover.
+- **In order to:** 0, keep current authority, purposes and recoverable state aligned with whole-decoder work.
+- **Status:** the migration, #225 merge and four-task re-pin are done as intended; this version supplies the first rebuild and drift test. The result of Louis's Oracle verification is not established.
+- **Known:** [Louis's recorded decision](https://github.com/lmmx/mibz2/blob/3421fe600f544724425db665caf06fa89dd25f06/docs/journal/decisions.md) records approval of the full rules and MODE choices; [#225](https://github.com/lmmx/mibz2/pull/225) merged at `282fcbb0dd273196052fc9637a7d7516918e684c`; [6686470751](https://github.com/lmmx/mibz2/pull/145#issuecomment-6686470751) records read-back and reopened dispatch. This run independently verified the Oracle's old head and migration digest before committing its receipt. Other roles' migration verification is the Coordinator's recorded report, not an independent audit here.
+- **Next:** Louis assesses the configured Oracle; #220's result handoff remains his decision. Cosmetic old task names do not revive old authority.
+- **Drift test:** see [weak chain](../weak.md). An applicability question was justified on 4 November, without treating any unauthenticated comment as authority to retire a rule.
