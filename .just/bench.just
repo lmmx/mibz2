@@ -257,10 +257,12 @@ bench-release-scaling NEW="v0.2.4" OLD="v0.2.1" ROUNDS="10" THREADS="" *FILES=""
 
 # Team size against live tables (docs/journal/2026-11-06-team-size.md, registered before any
 # run): what holds the decoder at its 8-thread ceiling. The cooperative decoder at teams × k
-# (mibz2-coop2/3/4 at T threads run T // k teams of k; mibz2, the policy, runs 4 × 2 on the
-# i9 from 8 threads up) at 8, 10, 12 and 16 threads, paired by round against mibz2 at 8;
-# then perf's counters on the registered cells. Writes target/team-size/ and prints the
-# report. About 15 minutes. Close the browser and anything busy first.
+# with the default's window (mibz2-team2/3/4 at T threads run T // k teams of k; mibz2, the
+# policy, runs 4 × 2 on the i9 from 8 threads up) at 8, 10, 12 and 16 threads, paired by
+# round against mibz2 at 8; then perf's counters on the registered cells; then the
+# occupancy trace of 4 × 2, 4 × 3 and 4 × 4, pinned spread against packed. Writes
+# target/team-size/ and prints the report. About 20 minutes. Close the browser and anything
+# busy first.
 #   just bench-team-size 2>&1 | tee team-size-console.log
 #   just bench-team-size 20 "8,10,12,16" /path/to/big.bz2
 
@@ -271,6 +273,7 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
     W=$PWD/target/team-size
     mkdir -p "$W"
     cargo build -q --release --example ab --example windows
+    cargo build -q --release --features trace --example occupancy
     AB=$PWD/target/release/examples/ab
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
     if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
@@ -283,9 +286,9 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
     lscpu > "$W/lscpu.txt"
     git rev-parse HEAD > "$W/commit.txt"
     rm -f "$W/runs.jsonl" "$W/counters.jsonl"
-    "$AB" run "$W/runs.jsonl" --arms "mibz2,mibz2-coop2,mibz2-coop3,mibz2-coop4" \
+    "$AB" run "$W/runs.jsonl" --arms "mibz2,mibz2-team2,mibz2-team3,mibz2-team4" \
       --threads "{{THREADS}}" --rounds {{ROUNDS}} "$W/wikidata.bz2" {{FILES}}
-    cells="mibz2@8,mibz2-coop3@12,mibz2-coop4@16,mibz2-coop2@10,mibz2-coop2@12,mibz2-coop3@10"
+    cells="mibz2@8,mibz2-team3@12,mibz2-team4@16,mibz2-team2@10,mibz2-team2@12,mibz2-team3@10"
     if perf stat -e cycles -- true >/dev/null 2>&1; then
       python3 bench/team_size.py counters "$AB" "$W/wikidata.bz2" "$W/counters.jsonl" --cells "$cells" \
         || echo "bench-team-size: the counters failed; the timed report stands without them"
@@ -294,4 +297,11 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
     fi
     ctr=(); [ -s "$W/counters.jsonl" ] && ctr=(--counters "$W/counters.jsonl")
     python3 bench/team_size.py report "$W/runs.jsonl" "${ctr[@]}" --ref mibz2@8 --rounds {{ROUNDS}} --out "$W/team-size"
-    echo "Upload: $W/team-size.md, team-size.json, runs.jsonl, counters.jsonl, env.json, lscpu.txt, commit.txt"
+    for tk in 8:2 12:3 16:4; do
+      t=${tk%:*}; k=${tk#*:}
+      target/release/examples/occupancy "$W/wikidata.bz2" --threads "$t" --teams "$k" \
+        --placements spread/packed --rounds 6 --out "$W/occupancy-t${t}-k${k}.json" \
+        --meta "commit=$(git rev-parse HEAD)" \
+        || echo "bench-team-size: the occupancy pass at $t threads, teams of $k, failed"
+    done
+    echo "Upload all of $W except wikidata.bz2, and the console log"

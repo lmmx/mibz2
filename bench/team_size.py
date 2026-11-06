@@ -9,8 +9,8 @@ asks for. This separates the two things a thread count changes:
 - `teams`, the live tables (the cache's load);
 - `k`, the threads on each table (the work each table gets).
 
-`ab run`'s arms `mibz2-coop2`, `-coop3`, `-coop4` at T threads run T // k teams of k; the
-`mibz2` arm is the policy. Two steps, both from `just bench-team-size`:
+`ab run`'s arms `mibz2-team2`, `-team3`, `-team4` at T threads run T // k teams of k, with
+the default's window (`SLOTS_PER_THREAD` blocks in flight a team); the `mibz2` arm is the policy. Two steps, both from `just bench-team-size`:
 
     python3 bench/team_size.py counters AB FILE OUT.jsonl --cells ARM@T,.. [--reps 3] [--loops 5]
     python3 bench/team_size.py report RUNS.jsonl [--counters C.jsonl] [--ref mibz2@8] [--out STEM]
@@ -110,12 +110,26 @@ def counters(a):
             order = cells[rep % len(cells) :] + cells[: rep % len(cells)]
             for arm, t in order:
                 child = [os.path.abspath(a.ab), "child", arm, t, os.path.abspath(a.file)]
-                chain = ["sh", "-c", 'for i in $(seq "$0"); do "$@" > /dev/null || exit 1; done']
+                # each decode's own JSON line is kept: `ab child` can report a failed decode
+                # in its JSON and still exit 0, so the exit status alone validates nothing
+                chain = ["sh", "-c", 'for i in $(seq "$0"); do "$@" || exit 1; done']
                 cmd = ["perf", "stat", "-x", ",", "-e", ",".join(EVENTS), "--", *chain]
                 p = subprocess.run(cmd + [str(a.loops), *child], capture_output=True, text=True)
                 if p.returncode != 0:
                     sys.exit(f"team_size counters: {arm}@{t} failed:\n{p.stderr[-2000:]}")
-                row = {"rep": rep, "arm": arm, "threads": int(t), "loops": a.loops}
+                row = {"rep": rep, "arm": arm, "threads": int(t), "loops": a.loops, "children": []}
+                for line in p.stdout.splitlines():
+                    try:
+                        j = json.loads(line)
+                    except ValueError:
+                        continue
+                    row["children"].append(
+                        {
+                            "hash": j.get("hash"),
+                            "err": j.get("err"),
+                            "plan": list(plan_of(threads_of(j.get("thread_cpu", "")))),
+                        }
+                    )
                 for line in p.stderr.splitlines():
                     f = line.split(",")
                     if len(f) >= 3 and f[2] in EVENTS:
@@ -201,6 +215,28 @@ def report(a):
         }
         cs = ctr.get(c, [])
         if cs:
+            # a reading counts only if each of its decodes gave the timed runs' bytes, without
+            # error, on the plan the timed runs showed, and perf counted every event the whole
+            # time (no multiplexing)
+            want_plan = [list(p) for p in plans] if len(plans) == 1 else None
+            problems = []
+            for x in cs:
+                ch = x.get("children", [])
+                if len(ch) != x["loops"]:
+                    problems.append(f"rep {x['rep']}: {len(ch)} of {x['loops']} decodes reported")
+                for y in ch:
+                    if y.get("err"):
+                        problems.append(f"rep {x['rep']}: a decode failed: {y['err']}")
+                    elif y.get("hash") not in hashes or len(hashes) != 1:
+                        problems.append(f"rep {x['rep']}: a decode's hash is not the timed runs'")
+                    if want_plan is None or [y.get("plan")] != want_plan:
+                        problems.append(
+                            f"rep {x['rep']}: a decode's plan {y.get('plan')} is not {want_plan}"
+                        )
+                if x.get("counted_pct"):
+                    problems.append(f"rep {x['rep']}: multiplexed {x['counted_pct']}")
+                if any(x.get(e) is None for e in EVENTS):
+                    problems.append(f"rep {x['rep']}: an event was not counted")
 
             def tot(e):
                 v = [x.get(e) for x in cs]
@@ -219,7 +255,11 @@ def report(a):
                 "ipc": ins / cyc if ins is not None and cyc else None,
                 "stall_l3_miss_share": st / cyc if st is not None and cyc else None,
                 "multiplexed": [x.get("counted_pct") for x in cs if x.get("counted_pct")],
+                "valid": not problems,
+                "problems": problems,
             }
+            if problems:  # an invalid reading's figures are kept in the JSON, never shown as data
+                row["counters_invalid"] = row.pop("counters")
         rows.append(row)
     rows.sort(key=lambda r: (r["teams"], r["k"] or 0, r["threads"], r["arm"]))
     cells_by = {r["cell"]: r for r in rows}
@@ -246,7 +286,7 @@ def report(a):
             f"| {' / '.join(plan_label(tuple(p)) for p in r['plans_seen'])} | `{r['cell']}` | {r['tables_mb']} MB | {r['mb_s']:,.0f} | "
             f"{f(g, '.3f')} ({f(lo, '.3f')}–{f(hi, '.3f')}) | {r['busy']:.1f} | "
             f"{f(r['leader_cpu'], '.3f')} | {f(r['helper_cpu'], '.3f')} | {f(r['scan_cpu'], '.3f')} | "
-            f"{r['rss_mb']:.0f} MB | {f(c.get('l3_hit_share'), '.2f')} | {f(c.get('l3_miss_per_kb'), '.1f')} | "
+            f"{r['rss_mb']:.0f} MB | {'INVALID' if r.get('counters_invalid') else f(c.get('l3_hit_share'), '.2f')} | {f(c.get('l3_miss_per_kb'), '.1f')} | "
             f"{f(c.get('cycles_per_byte'), '.2f')} | {f(c.get('ipc'), '.2f')} | {f(c.get('stall_l3_miss_share'), '.2f')} |"
         )
     mixed = [r["cell"] for r in rows if len(r["plans_seen"]) > 1]
@@ -383,10 +423,10 @@ def main():
     r.add_argument("--ref-plan", default="4x2", help="the plan every reference run must show")
     r.add_argument(
         "--primary",
-        default="mibz2-coop3@12=4x3,mibz2-coop4@16=4x4",
+        default="mibz2-team3@12=4x3,mibz2-team4@16=4x4",
         help="CELL=PLAN,...: the registered primary comparisons",
     )
-    r.add_argument("--control", default="mibz2-coop2@8=4x2", help="CELL=PLAN: the noise check")
+    r.add_argument("--control", default="mibz2-team2@8=4x2", help="CELL=PLAN: the noise check")
     r.add_argument("--rounds", type=int, default=20, help="the registered rounds, 0..N-1")
     r.add_argument("--corpus", default="wikidata")
     r.add_argument("--out")
