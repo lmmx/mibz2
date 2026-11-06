@@ -200,6 +200,12 @@ icon = "fontawesome/brands/rust"
 link = "https://crates.io/crates/mibz2"
 name = "mibz2 on crates.io"
 
+# the Oracle's account of what the team is doing and why: the detective's view of the work
+[[project.extra.social]]
+icon = "fontawesome/solid/user-secret"
+link = "https://lmmx.github.io/mibz2/background/behind-the-scenes/"
+name = "Behind the scenes"
+
 # llms.txt, llms-full.txt and a Markdown copy of each page listed here (<page>/index.md).
 # Each description must equal the page's front-matter description (check_site.py).
 [project.plugins.llmstxt]
