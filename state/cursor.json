@@ -462,6 +462,14 @@
       "review_comment_pr": 145,
       "review_comment_id": 6685052784,
       "disposition": "Identified live instruction-gate and scope inheritance through STEWARDSHIP/MODE; reviewed all rule dispositions, opportunity cost, evidence/adoption distinction, continuation-state handover and Oracle applicability checks."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6693597404,
+      "status": "in_progress",
+      "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+      "progress": "Migration source head and manifest SHA256 verified; assignment received. Proposal only."
     }
   ],
   "active_delegations": [],
