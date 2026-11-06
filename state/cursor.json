@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Three-table review finished; awaiting next inbox assignment",
+  "state": "Comment reference proposal complete; publication pending",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -75,9 +75,10 @@
     6682938532,
     6683787130,
     6684137403,
-    6684938042
+    6684938042,
+    6693597404
   ],
-  "last_processed_comment_id": 6684938042,
+  "last_processed_comment_id": 6693597404,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -467,9 +468,12 @@
       "repository": "lmmx/mibz2",
       "pr": 162,
       "trigger_comment_id": 6693597404,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
-      "progress": "Migration source head and manifest SHA256 verified; assignment received. Proposal only."
+      "report_commit": "912a3ec03e7aa9489edea4695b771c21b456655f",
+      "report_path": "state/reports/comment-references-6693597404/report.md",
+      "review_comment_pr": 145,
+      "disposition": "Recommend Oracle-authored descriptive Markdown links; compare per-version reference table and consistent citation style. Sender/recipient, mutable-source and fallback version-coherence limits documented. Proposal only."
     }
   ],
   "active_delegations": [],
@@ -489,10 +493,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6684938042
+      6693597404
     ],
     "handled": [
-      6684938042
+      6693597404
     ],
     "skipped": [],
     "automation_modified": false
@@ -511,7 +515,7 @@
     "read_order": "After event eligibility, addressee and cursor gates, read MODE and applicable role instructions.",
     "authority_changed": false
   },
-  "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+  "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
   "migrated_from": {
     "branch": "review/compact30-adversarial-scanner-146",
     "sha": "1283b969e9e295e268257cd1b6be3ad7da29e6dd",
