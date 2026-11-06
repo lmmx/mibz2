@@ -66,15 +66,15 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=2b56be35392c">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=18c50c5131f9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=2b56be35392c">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=18c50c5131f9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=2b56be35392c">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=18c50c5131f9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=2b56be35392c">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=18c50c5131f9">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=2b56be35392c">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=18c50c5131f9">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -729,6 +729,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Absolute figures, one runner at a time
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#release-scaling-past-4-threads" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Release scaling, past 4 threads
       </span>
     </span>
   </a>
@@ -1778,6 +1789,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#release-scaling-past-4-threads" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Release scaling, past 4 threads
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1809,7 +1831,7 @@
 
 
 <h1 id="history">History<a class="headerlink" href="#history" title="Permanent link">&para;</a></h1>
-<div id="bench-hero">
+<div id="bench-hero" data-ws="../../assets/release-scaling.json">
 Loading the chart…
 </div>
 
@@ -1854,6 +1876,28 @@ mean of its 10 rounds with its 95% interval as a whisker.</p>
 <div data-src="../../assets/bench-history.json" id="bench-history">
 <p>Loading the benchmark history…</p>
 </div>
+<h2 id="release-scaling-past-4-threads">Release scaling, past 4 threads<a class="headerlink" href="#release-scaling-past-4-threads" title="Permanent link">&para;</a></h2>
+<p>CI's runners have 4 vCPUs on 2 physical cores, so the charts above stop at 4 threads. A
+release-scaling run (<code>just bench-release-scaling</code>) fills in the rest. It runs two releases
+and lbzip2 on one machine of a developer's, with the same harness and paired rounds, from 1
+thread to every CPU the machine has. When one is recorded, the chart at the top offers it as
+the <strong>Release scaling</strong> view.</p>
+<p>These runs inform; they don't decide. Nothing merges or releases on a release-scaling
+figure: pull requests are measured on CI, and pass without any run here. Each run is kept as
+it was recorded, with its machine, its date and its raw records, in
+<a href="https://github.com/lmmx/mibz2/tree/master/bench/release-scaling"><code>bench/release-scaling/</code></a>.
+Runs on different machines are never compared or combined.</p>
+<p>Each table gives an arm's median wall time. It also gives the geometric mean of the rounds'
+paired wall ratios against the reference arm, with its 95% interval: a minus sign is
+faster. Up to the machine's physical core count, each thread runs on a core of its own
+(<code>--spread</code>); above it, threads share cores.</p>
+<p>No release-scaling run is recorded yet.</p>
+<p>To make a run, from a checkout of mibz2 with lbzip2 installed:</p>
+<div class="language-sh highlight"><pre><span></span><code>just<span class="w"> </span>bench-release-scaling<span class="w">                                    </span><span class="c1"># v0.2.4 against v0.2.1, every CPU</span>
+just<span class="w"> </span>bench-release-scaling<span class="w"> </span>v0.2.4<span class="w"> </span>v0.2.1<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="s2">"1,4,10,20"</span><span class="w"> </span>big.bz2<span class="w">   </span><span class="c1"># releases, rounds, threads, more files</span>
+</code></pre></div>
+<p>It builds both releases in <code>target/release-scaling/</code>, runs the rounds, and records the run in
+<code>bench/release-scaling/&lt;date&gt;-&lt;machine&gt;/</code>, to commit in a pull request.</p>
 
   
 
@@ -2004,17 +2048,17 @@ mean of its 10 rounds with its 95% interval as a whisker.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=2b56be35392c"></script>
+        <script src="../../assets/javascripts/bench.js?v=18c50c5131f9"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=2b56be35392c"></script>
+        <script src="../../assets/javascripts/couriers.js?v=18c50c5131f9"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=2b56be35392c"></script>
+        <script src="../../assets/javascripts/blog.js?v=18c50c5131f9"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=2b56be35392c"></script>
+        <script src="../../assets/javascripts/frontier.js?v=18c50c5131f9"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=2b56be35392c"></script>
+        <script src="../../assets/javascripts/katex.js?v=18c50c5131f9"></script>
       
     
   </body>
