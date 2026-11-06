@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Re-reviewing #234 census and frozen inputs",
+  "state": "Re-review complete; publication pending",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -78,9 +78,10 @@
     6684938042,
     6693597404,
     6694153375,
-    6694804971
+    6694804971,
+    6695278609
   ],
-  "last_processed_comment_id": 6694804971,
+  "last_processed_comment_id": 6695278609,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -511,9 +512,13 @@
       "trigger_comment_id": 6695278609,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
-      "source_commit": "0a2d5b1389ef177372730ac0aaa19889316aa9b9"
+      "source_commit": "0a2d5b1389ef177372730ac0aaa19889316aa9b9",
+      "report_commit": "dc6e56e7caaed774f789f294ad451fee3b325c56",
+      "report_path": "state/reports/policy-freeze-6695278609/report.md",
+      "review_comment_pr": 145,
+      "disposition": "HOLD freeze: baseline compatibility fixed; root build/toolchain inputs omitted and census permanently caches initial names. 14 tests pass; no timing."
     }
   ],
   "active_delegations": [],
