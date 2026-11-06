@@ -829,14 +829,14 @@
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
     "last_decision_commit": "4e30b5028df4bc9b5c8312df35be02c523c4c1d2",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "one TYPE: REVIEW for D039 on #145",
+    "source_app_reply": "pending D040 review on #145",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "finished",
-    "queue_snapshot": "16 inbox comments listed; all after offset finished",
-    "active_incoming_comment": 6695438405
+    "active_comment_status": "in_progress",
+    "queue_snapshot": "17 inbox comments listed; all earlier comments finished",
+    "active_incoming_comment": 6695594055
   },
   "duplicate_events": [
     {
@@ -1281,6 +1281,12 @@
       "work_commit": "4e30b5028df4bc9b5c8312df35be02c523c4c1d2",
       "review_comment_id": 6695575803,
       "complete_cursor_commit": "c6cadf1b2a86cccae0f2ea5c4ab78b242dbe4728"
+    },
+    {
+      "comment_id": 6695594055,
+      "pr": 161,
+      "status": "in_progress",
+      "decision": "D040"
     }
   ],
   "migrated_from": {
