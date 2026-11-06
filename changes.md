@@ -1,5 +1,7 @@
 # Changes, newest first
 
+- **2026-11-06, channel through 6694853843:** policy design completed and implementation open; replaced the old design wait with held evidence-path repairs, pending two re-reviews before freeze and Louis's collection. Recorded the policy-specific workstation evidence decision and unchanged generalisation limits. Relay, single-version page fix and footer merged; deployment unverified, discovery guide open. Added the proposed role rename without adopting it or moving state.
+
 - **2026-11-06, channel through 6693504170:** confirmation complete, both arrangements qualified as policy candidates; no adoption. The Optimiser has the design brief. Replaced the obsolete confirmation wait with policy/evidence work, retained scope and coverage gaps, closed the corrected diagnostic-wording finding, and recorded the open evidence-link follow-up.
 
 - **2026-11-06, channel through 6693085860:** run 1 passes both primaries; confirmation outstanding, policy unchanged. The old Oracle-verification pause is resolved. First rebuild and site presentation are complete. Added the plain-language account with the levels; retained the open downstream front and source mismatches, and flagged overconfident diagnostic wording.
