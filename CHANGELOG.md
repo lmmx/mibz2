@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/lmmx/mibz2/compare/v0.2.4...v0.2.5) - 2026-11-06
+
+### <!-- 4 -->Documentation
+
+- *(team)* WORK-TASKS.md, the only ChatGPT Work task prompts ([#226](https://github.com/lmmx/mibz2/pull/226))
+- *(team)* the agent team, independent of compact30 ([#225](https://github.com/lmmx/mibz2/pull/225))
+- *(team)* add the Oracle, the team's record of what it is doing and why ([#223](https://github.com/lmmx/mibz2/pull/223))
+- keep the agent team's protocol on master (MODE, PROTOCOL, roles, specs, log) ([#221](https://github.com/lmmx/mibz2/pull/221))
+- *(changelog)* 0.2.4's notes from its paired run against 0.2.3 ([#216](https://github.com/lmmx/mibz2/pull/216))
+
+### <!-- 9 -->Other
+
+- Three-team policy: 3×3 teams at 10 threads on a 10-core, 20 MiB-L3 machine ([#234](https://github.com/lmmx/mibz2/pull/234))
+- Workstation evidence by command: just submit RECIPE (RULES C5) ([#242](https://github.com/lmmx/mibz2/pull/242))
+- The relay's return direction: no repeated re-pin, and requests the Coordinator closes ([#241](https://github.com/lmmx/mibz2/pull/241))
+- The relay's return direction: the Coordinator's requests to ChatGPT ([#240](https://github.com/lmmx/mibz2/pull/240))
+- The Oracle is renamed the Observer ([#239](https://github.com/lmmx/mibz2/pull/239))
+- how a new ChatGPT conversation sends Louis's requests to the team ([#238](https://github.com/lmmx/mibz2/pull/238))
+- a footer link to "Behind the scenes" on every page ([#237](https://github.com/lmmx/mibz2/pull/237))
+- Louis's requests relayed from ChatGPT on #145 ([#235](https://github.com/lmmx/mibz2/pull/235))
+- The Oracle explains: a plain-prose account first, its hierarchy behind it ([#231](https://github.com/lmmx/mibz2/pull/231))
+- Behind the scenes, the Oracle's account read live from observatory/intention ([#229](https://github.com/lmmx/mibz2/pull/229))
+- team size against live tables on the i9, registered, run and recorded; workstation recipes end with one tarball ([#219](https://github.com/lmmx/mibz2/pull/219))
+- release scaling past 4 threads, recorded locally and shown on the History chart ([#217](https://github.com/lmmx/mibz2/pull/217))
+
 ## [0.2.4](https://github.com/lmmx/mibz2/compare/v0.2.3...v0.2.4) - 2026-11-05
 
 The move-to-front decode keeps the first 32 bytes of its list in two registers, so a move
