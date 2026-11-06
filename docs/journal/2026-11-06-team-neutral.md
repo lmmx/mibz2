@@ -67,8 +67,10 @@ This is three separations, following Louis's distinction:
    - whether it was specific to compact30;
    - a proposal: retain, adapt or retire.
 
-   Rows that change substance are marked ⚑. **Louis approves them.** Until he does, the
-   charter's text applies, read as covering the whole team.
+   It covers STEWARDSHIP.md too (section S), and lists MODE.md's premises as proposals
+   (section M). **Louis approves the whole table,** retirements included. Until he approves
+   and re-pins, each role keeps its current authenticated pin, authority, state and
+   registration scope (Guardian D033).
 
 The evolving records are separated as well:
 - **Each role's state** moves to a neutral **continuation** branch, `team-state/<role>`:
