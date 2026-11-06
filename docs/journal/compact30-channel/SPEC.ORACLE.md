@@ -59,7 +59,9 @@ The page is read the same way. The record (PRs, comments, journal entries, runs)
 and the page summarises it level by level:
 
 - **L0, one line:** the shortest true answer to "what is the team doing?". It names the current
-  step and what it serves, never the whole chain.
+  step and what it serves, never the whole chain. One line is enough only if its scope is
+  true. If there are materially distinct fronts, either give one line per front, or label the
+  line's scope. Never invent a single purpose to make them fit.
 - **L1, five lines:** "Right now".
 - **L2, the fronts:** the top of the tree.
 - **L3, the experiments and steps** under each front.
@@ -69,24 +71,52 @@ The whole chain from L0 up to item 0 is always on the page, though L0 doesn't re
 a step finishes, the page collapses it into one line with its result and link. The current
 step then moves up to the parent, which says what it does next.
 
-**The page settles at discrete points, not continuously.** Each rebuild is a version, settled
-at one comment on #145: the newest one it covers, recorded as `last_rebuilt_from`. Between
-rebuilds, the page is the last settled version. It is not a live feed. Something still in
-progress since that comment appears in the next version, not in this one.
+**The page settles at discrete points, not continuously.** Each rebuild is a version, stamped
+with two things:
+- **a channel watermark:** the newest #145 comment it covers, recorded as `last_rebuilt_from`;
+- **a small evidence manifest:** the exact revisions it rests on (branch heads, PR heads,
+  commits), and any changeable status it observed (CI, runs, PR state), with the time it
+  observed them.
+
+Write it as: "channel covered through C; evidence inspected at T, pins linked". A set of
+branch heads alone is not enough: it misses comments, PR changes and runs, and it is not an
+atomic snapshot.
+
+*Settled* means reconciled against that declared evidence. It doesn't mean frozen, or finished:
+- Everything inside the watermark must agree with the page. A contradiction there is an error
+  now, not something to fix in the next version.
+- Where sources depend on each other, reconcile them. Refresh a material mismatch, or flag
+  it. Don't restart indefinitely.
+- A commit nobody announced can show that work was done. It can't, on its own, establish that
+  an intention changed.
+
+Between rebuilds, the page is the last settled version. It is not a live feed.
 
 **Where to stop: enough is enough** (J. L. Austin, "Other Minds"). An answer to "what is being
-done?" is complete enough when it rules out the reasonable other readings for present
-purposes, not when it accounts for everything. Expand an item only until it rests on a
-*demonstration*: something in the record that shows the item is what the page says it is.
-Examples:
-- a registration, a PR or a committed branch;
-- a dispatched brief, or a run in progress;
-- a result.
+done?" is complete enough when it rules out the *relevant* competing readings for present
+purposes, not every imaginable one. Expand an item only until each claim on the page rests
+on evidence in the record that supports that claim. Then stop. Don't list the subagents,
+workflows or attempts in flight underneath it.
 
-Stop there. Don't list the subagents, workflows or attempts in flight underneath it. Go one
-level further only if, without it, a reasonable reader would misread what is being done, or
-which way it is going. An item with no demonstration is one of two things: a stated
-intention not yet acted on, which says so, or a finding for "Where the 'why' chain is weak".
+- **What a piece of evidence supports is the claim, not the kind of artifact.**
+  - A brief shows that work was dispatched, not that it is still running.
+  - An old PR shows its purpose at the time, not that the purpose still applies after a
+    revision.
+  - A registration can stay binding however old it is.
+- **Recheck an item after any relevant change:** to the item itself, to its purpose or
+  premise, or to the work it rests on. How old it is doesn't decide this. An unchanged parent
+  can have a child that failed.
+- **Where execution can't be established,** say so: "last confirmed: <state> at <link>;
+  execution unconfirmed". Age alone doesn't show that work has died.
+- **Where attempts diverge,** and the divergence is the direction, say so in one sentence
+  naming the competing directions. Don't list the attempts.
+- **The compression test.** Suppose two states of the record give the same précis, but the
+  difference between them would change what Louis could reasonably direct. An operative brief
+  against a retracted one is an example. Then the précis has lost information it needed:
+  expand it.
+
+An item with no supporting evidence is either a stated intention not yet acted on, which says
+so, or a finding for "Where the 'why' chain is weak".
 
 ## The page's shape
 
