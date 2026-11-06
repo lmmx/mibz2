@@ -67,6 +67,12 @@
       sub.innerHTML = h.innerHTML;
       h.replaceWith(sub);
     }
+    /* A table scrolls sideways on a narrow screen, as the site's own tables do */
+    for (const t of holder.querySelectorAll("table")) {
+      const wrap = el("div", { class: "md-typeset__scrollwrap" }, [el("div", { class: "md-typeset__table" })]);
+      t.replaceWith(wrap);
+      wrap.firstChild.appendChild(t);
+    }
     for (const a of holder.querySelectorAll("a[href]")) {
       const href = a.getAttribute("href");
       if (/^[a-z]+:|^#/.test(href)) {
@@ -78,56 +84,10 @@
       if (front) a.setAttribute("href", `#front-${front[1]}`);
       else a.setAttribute("href", `https://github.com/${ctx.repo}/blob/${ctx.ref}/${path}`);
     }
-    linkComments(holder, ctx);
     holder.className = "obs-md";
     return holder;
   }
 
-  /* A bare comment ID in the record (ten digits, outside a link or code) becomes a link to
-     that comment. Most are on the channel, #145, which is where the link points first; a
-     click asks GitHub's API where the comment really is (an inbox, another PR) and goes
-     there, falling back to the channel if the API refuses. */
-  const COMMENT_ID = /\b\d{10}\b/g;
-  function linkComments(holder, ctx) {
-    const walker = document.createTreeWalker(holder, NodeFilter.SHOW_TEXT, {
-      acceptNode: (n) => (n.parentElement.closest("a, code, pre") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
-    });
-    const texts = [];
-    while (walker.nextNode()) if (/\b\d{10}\b/.test(walker.currentNode.nodeValue)) texts.push(walker.currentNode);
-    for (const t of texts) {
-      const frag = document.createDocumentFragment();
-      let last = 0;
-      const value = t.nodeValue;
-      for (const m of value.matchAll(COMMENT_ID)) {
-        frag.appendChild(document.createTextNode(value.slice(last, m.index)));
-        const a = el("a", {
-          href: `https://github.com/${ctx.repo}/pull/145#issuecomment-${m[0]}`,
-          rel: "noopener",
-          class: "obs-comment",
-          title: `Comment ${m[0]} on GitHub`,
-          "data-comment": m[0],
-          text: m[0],
-        });
-        frag.appendChild(a);
-        last = m.index + m[0].length;
-      }
-      frag.appendChild(document.createTextNode(value.slice(last)));
-      t.replaceWith(frag);
-    }
-  }
-
-  document.addEventListener("click", (e) => {
-    const a = e.target.closest && e.target.closest("a.obs-comment");
-    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if (a.dataset.resolved) return;
-    e.preventDefault();
-    const root = document.getElementById("obs-root");
-    const repo = (root && root.dataset.repo) || "lmmx/mibz2";
-    getJSON(`${API}/repos/${repo}/issues/comments/${a.dataset.comment}`)
-      .then((c) => { if (c && c.html_url) a.href = c.html_url; })
-      .catch(() => {})
-      .then(() => { a.dataset.resolved = "1"; window.location.href = a.href; });
-  });
 
   function section(id, title, node, note) {
     return el("section", { class: "obs-level", id }, [
@@ -201,7 +161,7 @@
       });
       list.appendChild(el("li", { class: i === 0 ? "obs-move obs-move--current" : "obs-move" }, [
         el("p", { class: "obs-move__when", text: day(c.commit.committer.date) + (i === 0 ? " · the version shown above" : "") }),
-        (() => { const p = el("p", { class: "obs-move__subject", text: subject }); linkComments(p, ctx); return p; })(),
+        el("p", { class: "obs-move__subject", text: subject }),
         links,
         d,
       ]));
@@ -323,17 +283,11 @@
               commits,
             })),
           )
-          .catch(() =>
-            /* No API: the branch's files by name, the fronts found from L2's links. */
-            getText(`${RAW}/${repo}/${branch}/current/L2.md`)
-              .catch(() => "")
-              .then((l2) => ({
-                ctx: { repo, ref: branch },
-                files: [...new Set([...l2.matchAll(/\]\((L3\/[^)\s]+\.md)\)/g)].map((m) => `current/${m[1]}`))],
-                head: null,
-                commits: null,
-              })),
-          ),
+          .catch(() => {
+            /* Without the API there is no commit to pin every file to, and files read by the
+               branch's name could come from two versions: show none rather than a mixture. */
+            throw new Error("unpinned");
+          }),
       )
       .then(({ ctx, files, head, commits }) => {
         if (head) root.dataset.sha = head.sha;
@@ -342,7 +296,14 @@
       .catch((e) => {
         if (again) return;
         const p = root.querySelector(".obs-status") || root.appendChild(el("p", { class: "obs-status" }));
-        p.insertBefore(document.createTextNode(`The account could not be read here (${e.message}). `), p.firstChild);
+        p.textContent = "";
+        p.append(
+          e.message === "unpinned"
+            ? "GitHub isn't answering this page just now (it allows 60 requests an hour from one address), so it can't be sure every part comes from one version of the account. Read it "
+            : `The account could not be read here (${e.message}). Read it `,
+          el("a", { href: `https://github.com/${repo}/tree/${branch}/current`, rel: "noopener", text: "on GitHub" }),
+          ", or try again later.",
+        );
       });
   }
   window.addEventListener("hashchange", onHash);
