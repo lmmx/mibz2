@@ -1,0 +1,619 @@
+w00: 37 whole blocks (bits 332560..8076600), 0 streams ended, 19800013 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w01: 26 whole blocks (bits 240072..8299136), 0 streams ended, 13500017 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w02: 42 whole blocks (bits 265400..8381128), 0 streams ended, 18900000 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w03: 47 whole blocks (bits 23504..8326712), 0 streams ended, 21600009 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w04: 23 whole blocks (bits 407808..7919608), 0 streams ended, 12600036 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w05: 45 whole blocks (bits 213280..8160856), 0 streams ended, 19800010 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w06: 45 whole blocks (bits 228536..8232832), 0 streams ended, 21600008 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w07: 19 whole blocks (bits 560064..8221584), 0 streams ended, 10800021 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w08: 47 whole blocks (bits 11000..8113744), 0 streams ended, 20700024 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w09: 43 whole blocks (bits 269560..8077440), 0 streams ended, 20700020 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w10: 16 whole blocks (bits 298696..7955712), 0 streams ended, 11700024 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+w11: 41 whole blocks (bits 330936..8254184), 0 streams ended, 18000014 bytes decoded, every block CRC checked: identical in libbzip2, lbzip2, mibz2 scalar, mibz2 simd, mibz2 simd 3t, mibz2 decode_blocks
+431 blocks, 209700196 bytes, 0 windows failed
+/home/louis/dev/mibz2/target/team-size/wikidata.bz2: 11854933 bytes, SHA-256 checked
+r0 wikidata     t=8 mibz2            wall   0.165 cpu   1.088 rss    82MB others 0.07 steal 0.0% 
+r0 wikidata     t=8 mibz2-team2      wall   0.162 cpu   1.076 rss    83MB others 0.03 steal 0.0% 
+r0 wikidata     t=8 mibz2-team3      wall   0.188 cpu   0.819 rss    51MB others 0.15 steal 0.0% 
+r0 wikidata     t=8 mibz2-team4      wall   0.190 cpu   0.971 rss    52MB others 0.10 steal 0.0% 
+r0 wikidata     t=10 mibz2            wall   0.169 cpu   1.103 rss    81MB others 0.04 steal 0.0% 
+r0 wikidata     t=10 mibz2-team2      wall   0.186 cpu   1.530 rss    97MB others 0.05 steal 0.0% 
+r0 wikidata     t=10 mibz2-team3      wall   0.152 cpu   0.974 rss    68MB others 0.16 steal 0.0% 
+r0 wikidata     t=10 mibz2-team4      wall   0.176 cpu   0.898 rss    52MB others 0.01 steal 0.0% 
+r0 wikidata     t=12 mibz2            wall   0.162 cpu   1.073 rss    81MB others 0.16 steal 0.0% 
+r0 wikidata     t=12 mibz2-team2      wall   0.197 cpu   1.942 rss   112MB others 0.04 steal 0.0% 
+r0 wikidata     t=12 mibz2-team3      wall   0.161 cpu   1.364 rss    82MB others 0.21 steal 0.0% 
+r0 wikidata     t=12 mibz2-team4      wall   0.144 cpu   1.091 rss    67MB others 0.19 steal 0.0% 
+r0 wikidata     t=16 mibz2            wall   0.162 cpu   1.072 rss    81MB others 0.10 steal 0.0% 
+r0 wikidata     t=16 mibz2-team2      wall   0.239 cpu   3.111 rss   137MB others 0.08 steal 0.0% 
+r0 wikidata     t=16 mibz2-team3      wall   0.182 cpu   1.924 rss    95MB others 0.23 steal 0.0% 
+r0 wikidata     t=16 mibz2-team4      wall   0.165 cpu   1.664 rss    83MB others 0.00 steal 0.0% 
+r1 wikidata     t=8 mibz2-team2      wall   0.168 cpu   1.110 rss    82MB others 0.06 steal 0.0% 
+r1 wikidata     t=8 mibz2-team3      wall   0.187 cpu   0.816 rss    51MB others 0.07 steal 0.0% 
+r1 wikidata     t=8 mibz2-team4      wall   0.179 cpu   0.915 rss    52MB others 0.00 steal 0.0% 
+r1 wikidata     t=8 mibz2            wall   0.163 cpu   1.087 rss    82MB others 0.07 steal 0.0% 
+r1 wikidata     t=10 mibz2-team2      wall   0.178 cpu   1.480 rss    96MB others 0.05 steal 0.0% 
+r1 wikidata     t=10 mibz2-team3      wall   0.152 cpu   0.952 rss    67MB others 0.11 steal 0.0% 
+r1 wikidata     t=10 mibz2-team4      wall   0.178 cpu   0.914 rss    52MB others 0.00 steal 0.0% 
+r1 wikidata     t=10 mibz2            wall   0.167 cpu   1.102 rss    83MB others 0.00 steal 0.0% 
+r1 wikidata     t=12 mibz2-team2      wall   0.202 cpu   2.018 rss   110MB others 0.06 steal 0.0% 
+r1 wikidata     t=12 mibz2-team3      wall   0.161 cpu   1.365 rss    82MB others 0.14 steal 0.0% 
+r1 wikidata     t=12 mibz2-team4      wall   0.146 cpu   1.118 rss    68MB others 0.14 steal 0.0% 
+r1 wikidata     t=12 mibz2            wall   0.171 cpu   1.121 rss    82MB others 0.00 steal 0.0% 
+r1 wikidata     t=16 mibz2-team2      wall   0.239 cpu   3.132 rss   138MB others 0.15 steal 0.0% 
+r1 wikidata     t=16 mibz2-team3      wall   0.182 cpu   1.945 rss    93MB others 0.13 steal 0.0% 
+r1 wikidata     t=16 mibz2-team4      wall   0.160 cpu   1.592 rss    81MB others 0.22 steal 0.0% 
+r1 wikidata     t=16 mibz2            wall   0.164 cpu   1.077 rss    82MB others 0.13 steal 0.0% 
+r2 wikidata     t=8 mibz2-team3      wall   0.190 cpu   0.831 rss    52MB others 0.10 steal 0.0% 
+r2 wikidata     t=8 mibz2-team4      wall   0.183 cpu   0.962 rss    52MB others 0.04 steal 0.0% 
+r2 wikidata     t=8 mibz2            wall   0.167 cpu   1.091 rss    82MB others 0.05 steal 0.0% 
+r2 wikidata     t=8 mibz2-team2      wall   0.163 cpu   1.076 rss    80MB others 0.02 steal 0.0% 
+r2 wikidata     t=10 mibz2-team3      wall   0.154 cpu   0.972 rss    66MB others 0.11 steal 0.0% 
+r2 wikidata     t=10 mibz2-team4      wall   0.179 cpu   0.933 rss    52MB others 0.09 steal 0.0% 
+r2 wikidata     t=10 mibz2            wall   0.163 cpu   1.085 rss    81MB others 0.08 steal 0.0% 
+r2 wikidata     t=10 mibz2-team2      wall   0.183 cpu   1.533 rss    96MB others 0.09 steal 0.0% 
+r2 wikidata     t=12 mibz2-team3      wall   0.158 cpu   1.343 rss    81MB others 0.21 steal 0.0% 
+r2 wikidata     t=12 mibz2-team4      wall   0.153 cpu   1.163 rss    67MB others 0.00 steal 0.0% 
+r2 wikidata     t=12 mibz2            wall   0.162 cpu   1.064 rss    82MB others 0.03 steal 0.0% 
+r2 wikidata     t=12 mibz2-team2      wall   0.200 cpu   1.965 rss   109MB others 0.07 steal 0.0% 
+r2 wikidata     t=16 mibz2-team3      wall   0.182 cpu   1.899 rss    96MB others 0.11 steal 0.0% 
+r2 wikidata     t=16 mibz2-team4      wall   0.164 cpu   1.654 rss    80MB others 0.00 steal 0.0% 
+r2 wikidata     t=16 mibz2            wall   0.166 cpu   1.089 rss    81MB others 0.12 steal 0.0% 
+r2 wikidata     t=16 mibz2-team2      wall   0.236 cpu   3.099 rss   141MB others 0.00 steal 0.0% 
+r3 wikidata     t=8 mibz2-team4      wall   0.182 cpu   0.943 rss    51MB others 0.00 steal 0.0% 
+r3 wikidata     t=8 mibz2            wall   0.162 cpu   1.075 rss    82MB others 0.03 steal 0.0% 
+r3 wikidata     t=8 mibz2-team2      wall   0.160 cpu   1.055 rss    81MB others 0.00 steal 0.0% 
+r3 wikidata     t=8 mibz2-team3      wall   0.192 cpu   0.838 rss    52MB others 0.01 steal 0.0% 
+r3 wikidata     t=10 mibz2-team4      wall   0.172 cpu   0.878 rss    52MB others 0.07 steal 0.0% 
+r3 wikidata     t=10 mibz2            wall   0.164 cpu   1.076 rss    83MB others 0.08 steal 0.0% 
+r3 wikidata     t=10 mibz2-team2      wall   0.181 cpu   1.481 rss    96MB others 0.20 steal 0.0% 
+r3 wikidata     t=10 mibz2-team3      wall   0.153 cpu   0.987 rss    66MB others 0.00 steal 0.0% 
+r3 wikidata     t=12 mibz2-team4      wall   0.151 cpu   1.168 rss    68MB others 0.26 steal 0.0% 
+r3 wikidata     t=12 mibz2            wall   0.165 cpu   1.082 rss    82MB others 0.11 steal 0.0% 
+r3 wikidata     t=12 mibz2-team2      wall   0.201 cpu   2.015 rss   109MB others 0.16 steal 0.0% 
+r3 wikidata     t=12 mibz2-team3      wall   0.163 cpu   1.352 rss    82MB others 0.00 steal 0.0% 
+r3 wikidata     t=16 mibz2-team4      wall   0.164 cpu   1.657 rss    83MB others 0.13 steal 0.0% 
+r3 wikidata     t=16 mibz2            wall   0.166 cpu   1.089 rss    82MB others 0.11 steal 0.0% 
+r3 wikidata     t=16 mibz2-team2      wall   0.237 cpu   3.108 rss   141MB others 0.05 steal 0.0% 
+r3 wikidata     t=16 mibz2-team3      wall   0.187 cpu   1.950 rss    96MB others 0.15 steal 0.0% 
+r4 wikidata     t=8 mibz2-team4      wall   0.188 cpu   0.970 rss    52MB others 0.05 steal 0.0% 
+r4 wikidata     t=8 mibz2-team3      wall   0.186 cpu   0.812 rss    52MB others 0.00 steal 0.0% 
+r4 wikidata     t=8 mibz2-team2      wall   0.162 cpu   1.071 rss    81MB others 0.05 steal 0.0% 
+r4 wikidata     t=8 mibz2            wall   0.168 cpu   1.120 rss    83MB others 0.05 steal 0.0% 
+r4 wikidata     t=10 mibz2-team4      wall   0.180 cpu   0.914 rss    52MB others 0.24 steal 0.0% 
+r4 wikidata     t=10 mibz2-team3      wall   0.147 cpu   0.944 rss    67MB others 0.00 steal 0.0% 
+r4 wikidata     t=10 mibz2-team2      wall   0.181 cpu   1.509 rss    96MB others 0.06 steal 0.0% 
+r4 wikidata     t=10 mibz2            wall   0.166 cpu   1.101 rss    82MB others 0.10 steal 0.0% 
+r4 wikidata     t=12 mibz2-team4      wall   0.150 cpu   1.129 rss    68MB others 0.25 steal 0.0% 
+r4 wikidata     t=12 mibz2-team3      wall   0.165 cpu   1.414 rss    82MB others 0.21 steal 0.0% 
+r4 wikidata     t=12 mibz2-team2      wall   0.202 cpu   2.020 rss   110MB others 0.09 steal 0.0% 
+r4 wikidata     t=12 mibz2            wall   0.169 cpu   1.108 rss    82MB others 0.06 steal 0.0% 
+r4 wikidata     t=16 mibz2-team4      wall   0.162 cpu   1.662 rss    81MB others 0.00 steal 0.0% 
+r4 wikidata     t=16 mibz2-team3      wall   0.184 cpu   1.942 rss    96MB others 0.25 steal 0.0% 
+r4 wikidata     t=16 mibz2-team2      wall   0.231 cpu   2.963 rss   134MB others 0.15 steal 0.0% 
+r4 wikidata     t=16 mibz2            wall   0.167 cpu   1.093 rss    82MB others 0.04 steal 0.0% 
+r5 wikidata     t=8 mibz2            wall   0.167 cpu   1.093 rss    81MB others 0.04 steal 0.0% 
+r5 wikidata     t=8 mibz2-team4      wall   0.177 cpu   0.895 rss    52MB others 0.00 steal 0.0% 
+r5 wikidata     t=8 mibz2-team3      wall   0.181 cpu   0.795 rss    52MB others 0.24 steal 0.0% 
+r5 wikidata     t=8 mibz2-team2      wall   0.165 cpu   1.086 rss    80MB others 0.03 steal 0.0% 
+r5 wikidata     t=10 mibz2            wall   0.170 cpu   1.127 rss    83MB others 0.13 steal 0.0% 
+r5 wikidata     t=10 mibz2-team4      wall   0.188 cpu   0.968 rss    52MB others 0.01 steal 0.0% 
+r5 wikidata     t=10 mibz2-team3      wall   0.152 cpu   0.958 rss    67MB others 0.01 steal 0.0% 
+r5 wikidata     t=10 mibz2-team2      wall   0.183 cpu   1.545 rss    96MB others 0.00 steal 0.0% 
+r5 wikidata     t=12 mibz2            wall   0.167 cpu   1.089 rss    83MB others 0.11 steal 0.0% 
+r5 wikidata     t=12 mibz2-team4      wall   0.149 cpu   1.156 rss    66MB others 0.02 steal 0.0% 
+r5 wikidata     t=12 mibz2-team3      wall   0.160 cpu   1.345 rss    80MB others 0.14 steal 0.0% 
+r5 wikidata     t=12 mibz2-team2      wall   0.200 cpu   1.971 rss   113MB others 0.14 steal 0.0% 
+r5 wikidata     t=16 mibz2            wall   0.169 cpu   1.112 rss    83MB others 0.05 steal 0.0% 
+r5 wikidata     t=16 mibz2-team4      wall   0.163 cpu   1.685 rss    82MB others 0.00 steal 0.0% 
+r5 wikidata     t=16 mibz2-team3      wall   0.183 cpu   1.870 rss    97MB others 0.00 steal 0.0% 
+r5 wikidata     t=16 mibz2-team2      wall   0.233 cpu   3.055 rss   139MB others 0.10 steal 0.0% 
+r6 wikidata     t=8 mibz2-team2      wall   0.164 cpu   1.092 rss    82MB others 0.11 steal 0.0% 
+r6 wikidata     t=8 mibz2            wall   0.163 cpu   1.085 rss    82MB others 0.15 steal 0.0% 
+r6 wikidata     t=8 mibz2-team4      wall   0.172 cpu   0.885 rss    52MB others 0.03 steal 0.0% 
+r6 wikidata     t=8 mibz2-team3      wall   0.199 cpu   0.882 rss    52MB others 0.18 steal 0.0% 
+r6 wikidata     t=10 mibz2-team2      wall   0.182 cpu   1.506 rss    93MB others 0.13 steal 0.0% 
+r6 wikidata     t=10 mibz2            wall   0.166 cpu   1.089 rss    81MB others 0.06 steal 0.0% 
+r6 wikidata     t=10 mibz2-team4      wall   0.183 cpu   0.934 rss    52MB others 0.00 steal 0.0% 
+r6 wikidata     t=10 mibz2-team3      wall   0.152 cpu   0.967 rss    67MB others 0.02 steal 0.0% 
+r6 wikidata     t=12 mibz2-team2      wall   0.202 cpu   2.014 rss   111MB others 0.35 steal 0.0% 
+r6 wikidata     t=12 mibz2            wall   0.166 cpu   1.087 rss    81MB others 0.02 steal 0.0% 
+r6 wikidata     t=12 mibz2-team4      wall   0.153 cpu   1.129 rss    67MB others 0.19 steal 0.0% 
+r6 wikidata     t=12 mibz2-team3      wall   0.162 cpu   1.377 rss    82MB others 0.13 steal 0.0% 
+r6 wikidata     t=16 mibz2-team2      wall   0.240 cpu   3.151 rss   134MB others 0.08 steal 0.0% 
+r6 wikidata     t=16 mibz2            wall   0.165 cpu   1.109 rss    82MB others 0.06 steal 0.0% 
+r6 wikidata     t=16 mibz2-team4      wall   0.163 cpu   1.679 rss    82MB others 0.01 steal 0.0% 
+r6 wikidata     t=16 mibz2-team3      wall   0.184 cpu   1.963 rss    95MB others 0.00 steal 0.0% 
+r7 wikidata     t=8 mibz2-team3      wall   0.186 cpu   0.809 rss    51MB others 0.01 steal 0.0% 
+r7 wikidata     t=8 mibz2-team2      wall   0.165 cpu   1.093 rss    82MB others 0.16 steal 0.0% 
+r7 wikidata     t=8 mibz2            wall   0.164 cpu   1.075 rss    81MB others 0.09 steal 0.0% 
+r7 wikidata     t=8 mibz2-team4      wall   0.188 cpu   0.967 rss    51MB others 0.22 steal 0.0% 
+r7 wikidata     t=10 mibz2-team3      wall   0.157 cpu   1.002 rss    68MB others 0.00 steal 0.0% 
+r7 wikidata     t=10 mibz2-team2      wall   0.190 cpu   1.591 rss    96MB others 0.09 steal 0.0% 
+r7 wikidata     t=10 mibz2            wall   0.166 cpu   1.102 rss    82MB others 0.05 steal 0.0% 
+r7 wikidata     t=10 mibz2-team4      wall   0.181 cpu   0.940 rss    51MB others 0.11 steal 0.0% 
+r7 wikidata     t=12 mibz2-team3      wall   0.161 cpu   1.344 rss    80MB others 0.15 steal 0.0% 
+r7 wikidata     t=12 mibz2-team2      wall   0.197 cpu   1.960 rss   109MB others 0.00 steal 0.0% 
+r7 wikidata     t=12 mibz2            wall   0.161 cpu   1.069 rss    82MB others 0.00 steal 0.0% 
+r7 wikidata     t=12 mibz2-team4      wall   0.145 cpu   1.095 rss    68MB others 0.03 steal 0.0% 
+r7 wikidata     t=16 mibz2-team3      wall   0.182 cpu   1.916 rss    95MB others 0.07 steal 0.0% 
+r7 wikidata     t=16 mibz2-team2      wall   0.238 cpu   3.171 rss   136MB others 0.04 steal 0.0% 
+r7 wikidata     t=16 mibz2            wall   0.164 cpu   1.082 rss    82MB others 0.05 steal 0.0% 
+r7 wikidata     t=16 mibz2-team4      wall   0.165 cpu   1.643 rss    82MB others 0.04 steal 0.0% 
+r8 wikidata     t=8 mibz2            wall   0.160 cpu   1.050 rss    81MB others 0.06 steal 0.0% 
+r8 wikidata     t=8 mibz2-team2      wall   0.168 cpu   1.102 rss    81MB others 0.10 steal 0.0% 
+r8 wikidata     t=8 mibz2-team3      wall   0.193 cpu   0.837 rss    52MB others 0.11 steal 0.0% 
+r8 wikidata     t=8 mibz2-team4      wall   0.187 cpu   0.982 rss    52MB others 0.09 steal 0.0% 
+r8 wikidata     t=10 mibz2            wall   0.166 cpu   1.099 rss    82MB others 0.00 steal 0.0% 
+r8 wikidata     t=10 mibz2-team2      wall   0.184 cpu   1.524 rss    97MB others 0.03 steal 0.0% 
+r8 wikidata     t=10 mibz2-team3      wall   0.161 cpu   1.053 rss    67MB others 0.16 steal 0.0% 
+r8 wikidata     t=10 mibz2-team4      wall   0.172 cpu   0.884 rss    51MB others 0.00 steal 0.0% 
+r8 wikidata     t=12 mibz2            wall   0.167 cpu   1.100 rss    82MB others 0.50 steal 0.0% 
+r8 wikidata     t=12 mibz2-team2      wall   0.196 cpu   1.913 rss   110MB others 0.13 steal 0.0% 
+r8 wikidata     t=12 mibz2-team3      wall   0.160 cpu   1.339 rss    81MB others 0.18 steal 0.0% 
+r8 wikidata     t=12 mibz2-team4      wall   0.151 cpu   1.139 rss    68MB others 0.13 steal 0.0% 
+r8 wikidata     t=16 mibz2            wall   0.162 cpu   1.069 rss    83MB others 0.18 steal 0.0% 
+r8 wikidata     t=16 mibz2-team2      wall   0.233 cpu   3.083 rss   138MB others 0.18 steal 0.0% 
+r8 wikidata     t=16 mibz2-team3      wall   0.183 cpu   1.935 rss    96MB others 0.08 steal 0.0% 
+r8 wikidata     t=16 mibz2-team4      wall   0.164 cpu   1.691 rss    82MB others 0.05 steal 0.0% 
+r9 wikidata     t=8 mibz2-team2      wall   0.163 cpu   1.074 rss    81MB others 0.04 steal 0.0% 
+r9 wikidata     t=8 mibz2-team3      wall   0.189 cpu   0.836 rss    51MB others 0.02 steal 0.0% 
+r9 wikidata     t=8 mibz2-team4      wall   0.177 cpu   0.915 rss    52MB others 0.08 steal 0.0% 
+r9 wikidata     t=8 mibz2            wall   0.163 cpu   1.067 rss    83MB others 0.13 steal 0.0% 
+r9 wikidata     t=10 mibz2-team2      wall   0.182 cpu   1.530 rss    95MB others 0.20 steal 0.0% 
+r9 wikidata     t=10 mibz2-team3      wall   0.152 cpu   0.968 rss    67MB others 0.01 steal 0.0% 
+r9 wikidata     t=10 mibz2-team4      wall   0.183 cpu   0.938 rss    52MB others 0.17 steal 0.0% 
+r9 wikidata     t=10 mibz2            wall   0.164 cpu   1.079 rss    80MB others 0.01 steal 0.0% 
+r9 wikidata     t=12 mibz2-team2      wall   0.199 cpu   2.004 rss   110MB others 0.13 steal 0.0% 
+r9 wikidata     t=12 mibz2-team3      wall   0.161 cpu   1.365 rss    81MB others 0.14 steal 0.0% 
+r9 wikidata     t=12 mibz2-team4      wall   0.159 cpu   1.174 rss    66MB others 0.09 steal 0.0% 
+r9 wikidata     t=12 mibz2            wall   0.165 cpu   1.086 rss    81MB others 0.00 steal 0.0% 
+r9 wikidata     t=16 mibz2-team2      wall   0.239 cpu   3.192 rss   138MB others 0.07 steal 0.0% 
+r9 wikidata     t=16 mibz2-team3      wall   0.179 cpu   1.852 rss    96MB others 0.09 steal 0.0% 
+r9 wikidata     t=16 mibz2-team4      wall   0.161 cpu   1.599 rss    81MB others 0.07 steal 0.0% 
+r9 wikidata     t=16 mibz2            wall   0.176 cpu   1.126 rss    83MB others 0.07 steal 0.0% 
+r10 wikidata     t=8 mibz2-team3      wall   0.186 cpu   0.818 rss    51MB others 0.16 steal 0.0% 
+r10 wikidata     t=8 mibz2-team4      wall   0.192 cpu   0.981 rss    52MB others 0.09 steal 0.0% 
+r10 wikidata     t=8 mibz2            wall   0.166 cpu   1.097 rss    82MB others 0.07 steal 0.0% 
+r10 wikidata     t=8 mibz2-team2      wall   0.166 cpu   1.101 rss    83MB others 0.05 steal 0.0% 
+r10 wikidata     t=10 mibz2-team3      wall   0.151 cpu   0.956 rss    68MB others 0.09 steal 0.0% 
+r10 wikidata     t=10 mibz2-team4      wall   0.182 cpu   0.932 rss    52MB others 0.04 steal 0.0% 
+r10 wikidata     t=10 mibz2            wall   0.161 cpu   1.063 rss    82MB others 0.10 steal 0.0% 
+r10 wikidata     t=10 mibz2-team2      wall   0.184 cpu   1.520 rss    96MB others 0.05 steal 0.0% 
+r10 wikidata     t=12 mibz2-team3      wall   0.165 cpu   1.377 rss    82MB others 0.48 steal 0.0% 
+r10 wikidata     t=12 mibz2-team4      wall   0.157 cpu   1.155 rss    68MB others 0.09 steal 0.0% 
+r10 wikidata     t=12 mibz2            wall   0.165 cpu   1.088 rss    81MB others 0.07 steal 0.0% 
+r10 wikidata     t=12 mibz2-team2      wall   0.200 cpu   1.955 rss   110MB others 0.00 steal 0.0% 
+r10 wikidata     t=16 mibz2-team3      wall   0.183 cpu   1.878 rss    95MB others 0.00 steal 0.0% 
+r10 wikidata     t=16 mibz2-team4      wall   0.165 cpu   1.692 rss    81MB others 0.04 steal 0.0% 
+r10 wikidata     t=16 mibz2            wall   0.172 cpu   1.129 rss    81MB others 0.06 steal 0.0% 
+r10 wikidata     t=16 mibz2-team2      wall   0.239 cpu   3.177 rss   138MB others 0.09 steal 0.0% 
+r11 wikidata     t=8 mibz2-team4      wall   0.179 cpu   0.932 rss    51MB others 0.00 steal 0.0% 
+r11 wikidata     t=8 mibz2            wall   0.166 cpu   1.095 rss    83MB others 0.03 steal 0.0% 
+r11 wikidata     t=8 mibz2-team2      wall   0.167 cpu   1.116 rss    81MB others 0.08 steal 0.0% 
+r11 wikidata     t=8 mibz2-team3      wall   0.183 cpu   0.802 rss    52MB others 0.00 steal 0.0% 
+r11 wikidata     t=10 mibz2-team4      wall   0.180 cpu   0.931 rss    52MB others 0.05 steal 0.0% 
+r11 wikidata     t=10 mibz2            wall   0.170 cpu   1.117 rss    81MB others 0.07 steal 0.0% 
+r11 wikidata     t=10 mibz2-team2      wall   0.181 cpu   1.485 rss    98MB others 0.18 steal 0.0% 
+r11 wikidata     t=10 mibz2-team3      wall   0.161 cpu   1.008 rss    67MB others 0.07 steal 0.0% 
+r11 wikidata     t=12 mibz2-team4      wall   0.148 cpu   1.116 rss    67MB others 0.15 steal 0.0% 
+r11 wikidata     t=12 mibz2            wall   0.161 cpu   1.066 rss    82MB others 0.08 steal 0.0% 
+r11 wikidata     t=12 mibz2-team2      wall   0.199 cpu   1.980 rss   111MB others 0.09 steal 0.0% 
+r11 wikidata     t=12 mibz2-team3      wall   0.157 cpu   1.356 rss    81MB others 0.14 steal 0.0% 
+r11 wikidata     t=16 mibz2-team4      wall   0.164 cpu   1.638 rss    81MB others 0.07 steal 0.0% 
+r11 wikidata     t=16 mibz2            wall   0.168 cpu   1.109 rss    82MB others 0.00 steal 0.0% 
+r11 wikidata     t=16 mibz2-team2      wall   0.247 cpu   3.304 rss   139MB others 0.14 steal 0.0% 
+r11 wikidata     t=16 mibz2-team3      wall   0.182 cpu   1.902 rss    96MB others 0.09 steal 0.0% 
+r12 wikidata     t=8 mibz2-team4      wall   0.179 cpu   0.934 rss    53MB others 0.00 steal 0.0% 
+r12 wikidata     t=8 mibz2-team3      wall   0.204 cpu   0.917 rss    52MB others 0.00 steal 0.0% 
+r12 wikidata     t=8 mibz2-team2      wall   0.166 cpu   1.104 rss    82MB others 0.03 steal 0.0% 
+r12 wikidata     t=8 mibz2            wall   0.168 cpu   1.116 rss    82MB others 0.02 steal 0.0% 
+r12 wikidata     t=10 mibz2-team4      wall   0.180 cpu   0.924 rss    52MB others 0.00 steal 0.0% 
+r12 wikidata     t=10 mibz2-team3      wall   0.148 cpu   0.936 rss    67MB others 0.02 steal 0.0% 
+r12 wikidata     t=10 mibz2-team2      wall   0.182 cpu   1.494 rss    95MB others 0.03 steal 0.0% 
+r12 wikidata     t=10 mibz2            wall   0.162 cpu   1.067 rss    81MB others 0.14 steal 0.0% 
+r12 wikidata     t=12 mibz2-team4      wall   0.150 cpu   1.183 rss    68MB others 0.17 steal 0.0% 
+r12 wikidata     t=12 mibz2-team3      wall   0.164 cpu   1.401 rss    83MB others 0.22 steal 0.0% 
+r12 wikidata     t=12 mibz2-team2      wall   0.201 cpu   2.015 rss   108MB others 0.16 steal 0.0% 
+r12 wikidata     t=12 mibz2            wall   0.164 cpu   1.090 rss    81MB others 0.06 steal 0.0% 
+r12 wikidata     t=16 mibz2-team4      wall   0.164 cpu   1.660 rss    81MB others 0.12 steal 0.0% 
+r12 wikidata     t=16 mibz2-team3      wall   0.181 cpu   1.849 rss    97MB others 0.00 steal 0.0% 
+r12 wikidata     t=16 mibz2-team2      wall   0.242 cpu   3.282 rss   137MB others 0.07 steal 0.0% 
+r12 wikidata     t=16 mibz2            wall   0.166 cpu   1.084 rss    80MB others 0.09 steal 0.0% 
+r13 wikidata     t=8 mibz2            wall   0.162 cpu   1.082 rss    83MB others 0.05 steal 0.0% 
+r13 wikidata     t=8 mibz2-team4      wall   0.185 cpu   0.957 rss    52MB others 0.01 steal 0.0% 
+r13 wikidata     t=8 mibz2-team3      wall   0.181 cpu   0.799 rss    52MB others 0.11 steal 0.0% 
+r13 wikidata     t=8 mibz2-team2      wall   0.165 cpu   1.106 rss    82MB others 0.02 steal 0.0% 
+r13 wikidata     t=10 mibz2            wall   0.168 cpu   1.106 rss    83MB others 0.08 steal 0.0% 
+r13 wikidata     t=10 mibz2-team4      wall   0.186 cpu   0.968 rss    52MB others 0.15 steal 0.0% 
+r13 wikidata     t=10 mibz2-team3      wall   0.148 cpu   0.951 rss    66MB others 0.12 steal 0.0% 
+r13 wikidata     t=10 mibz2-team2      wall   0.180 cpu   1.531 rss    97MB others 0.20 steal 0.0% 
+r13 wikidata     t=12 mibz2            wall   0.167 cpu   1.097 rss    83MB others 0.07 steal 0.0% 
+r13 wikidata     t=12 mibz2-team4      wall   0.147 cpu   1.105 rss    68MB others 0.15 steal 0.0% 
+r13 wikidata     t=12 mibz2-team3      wall   0.163 cpu   1.365 rss    82MB others 0.14 steal 0.0% 
+r13 wikidata     t=12 mibz2-team2      wall   0.205 cpu   2.045 rss   112MB others 0.07 steal 0.0% 
+r13 wikidata     t=16 mibz2            wall   0.165 cpu   1.085 rss    81MB others 0.08 steal 0.0% 
+r13 wikidata     t=16 mibz2-team4      wall   0.168 cpu   1.599 rss    82MB others 0.01 steal 0.0% 
+r13 wikidata     t=16 mibz2-team3      wall   0.181 cpu   1.855 rss    97MB others 0.13 steal 0.0% 
+r13 wikidata     t=16 mibz2-team2      wall   0.238 cpu   3.118 rss   137MB others 0.05 steal 0.0% 
+r14 wikidata     t=8 mibz2-team2      wall   0.163 cpu   1.089 rss    81MB others 0.12 steal 0.0% 
+r14 wikidata     t=8 mibz2            wall   0.166 cpu   1.093 rss    82MB others 0.04 steal 0.0% 
+r14 wikidata     t=8 mibz2-team4      wall   0.175 cpu   0.897 rss    52MB others 0.00 steal 0.0% 
+r14 wikidata     t=8 mibz2-team3      wall   0.187 cpu   0.815 rss    51MB others 0.02 steal 0.0% 
+r14 wikidata     t=10 mibz2-team2      wall   0.185 cpu   1.567 rss    97MB others 0.02 steal 0.0% 
+r14 wikidata     t=10 mibz2            wall   0.165 cpu   1.084 rss    81MB others 0.27 steal 0.0% 
+r14 wikidata     t=10 mibz2-team4      wall   0.179 cpu   0.930 rss    52MB others 0.10 steal 0.0% 
+r14 wikidata     t=10 mibz2-team3      wall   0.148 cpu   0.947 rss    66MB others 0.08 steal 0.0% 
+r14 wikidata     t=12 mibz2-team2      wall   0.196 cpu   2.018 rss   112MB others 0.11 steal 0.0% 
+r14 wikidata     t=12 mibz2            wall   0.164 cpu   1.078 rss    81MB others 0.07 steal 0.0% 
+r14 wikidata     t=12 mibz2-team4      wall   0.148 cpu   1.103 rss    68MB others 0.11 steal 0.0% 
+r14 wikidata     t=12 mibz2-team3      wall   0.164 cpu   1.360 rss    83MB others 0.23 steal 0.0% 
+r14 wikidata     t=16 mibz2-team2      wall   0.233 cpu   3.014 rss   140MB others 0.06 steal 0.0% 
+r14 wikidata     t=16 mibz2            wall   0.167 cpu   1.107 rss    83MB others 0.02 steal 0.0% 
+r14 wikidata     t=16 mibz2-team4      wall   0.160 cpu   1.585 rss    83MB others 0.32 steal 0.0% 
+r14 wikidata     t=16 mibz2-team3      wall   0.184 cpu   1.925 rss    95MB others 0.07 steal 0.0% 
+r15 wikidata     t=8 mibz2-team3      wall   0.195 cpu   0.859 rss    51MB others 0.05 steal 0.0% 
+r15 wikidata     t=8 mibz2-team2      wall   0.161 cpu   1.077 rss    81MB others 0.07 steal 0.0% 
+r15 wikidata     t=8 mibz2            wall   0.164 cpu   1.095 rss    80MB others 0.03 steal 0.0% 
+r15 wikidata     t=8 mibz2-team4      wall   0.185 cpu   0.947 rss    52MB others 0.12 steal 0.0% 
+r15 wikidata     t=10 mibz2-team3      wall   0.149 cpu   0.947 rss    68MB others 0.02 steal 0.0% 
+r15 wikidata     t=10 mibz2-team2      wall   0.181 cpu   1.530 rss    96MB others 0.00 steal 0.0% 
+r15 wikidata     t=10 mibz2            wall   0.163 cpu   1.078 rss    81MB others 0.07 steal 0.0% 
+r15 wikidata     t=10 mibz2-team4      wall   0.187 cpu   0.953 rss    52MB others 0.04 steal 0.0% 
+r15 wikidata     t=12 mibz2-team3      wall   0.163 cpu   1.405 rss    82MB others 0.09 steal 0.0% 
+r15 wikidata     t=12 mibz2-team2      wall   0.197 cpu   1.948 rss   110MB others 0.06 steal 0.0% 
+r15 wikidata     t=12 mibz2            wall   0.166 cpu   1.089 rss    81MB others 0.12 steal 0.0% 
+r15 wikidata     t=12 mibz2-team4      wall   0.151 cpu   1.130 rss    67MB others 0.06 steal 0.0% 
+r15 wikidata     t=16 mibz2-team3      wall   0.179 cpu   1.865 rss    99MB others 0.03 steal 0.0% 
+r15 wikidata     t=16 mibz2-team2      wall   0.237 cpu   3.134 rss   139MB others 0.07 steal 0.0% 
+r15 wikidata     t=16 mibz2            wall   0.165 cpu   1.082 rss    81MB others 0.10 steal 0.0% 
+r15 wikidata     t=16 mibz2-team4      wall   0.161 cpu   1.626 rss    81MB others 0.02 steal 0.0% 
+r16 wikidata     t=8 mibz2            wall   0.165 cpu   1.079 rss    80MB others 0.07 steal 0.0% 
+r16 wikidata     t=8 mibz2-team2      wall   0.166 cpu   1.101 rss    82MB others 0.05 steal 0.0% 
+r16 wikidata     t=8 mibz2-team3      wall   0.188 cpu   0.816 rss    52MB others 0.07 steal 0.0% 
+r16 wikidata     t=8 mibz2-team4      wall   0.182 cpu   0.943 rss    52MB others 0.09 steal 0.0% 
+r16 wikidata     t=10 mibz2            wall   0.166 cpu   1.094 rss    82MB others 0.09 steal 0.0% 
+r16 wikidata     t=10 mibz2-team2      wall   0.179 cpu   1.481 rss    95MB others 0.15 steal 0.0% 
+r16 wikidata     t=10 mibz2-team3      wall   0.150 cpu   0.960 rss    67MB others 0.13 steal 0.0% 
+r16 wikidata     t=10 mibz2-team4      wall   0.176 cpu   0.902 rss    52MB others 0.04 steal 0.0% 
+r16 wikidata     t=12 mibz2            wall   0.161 cpu   1.079 rss    81MB others 0.01 steal 0.0% 
+r16 wikidata     t=12 mibz2-team2      wall   0.196 cpu   1.940 rss   110MB others 0.05 steal 0.0% 
+r16 wikidata     t=12 mibz2-team3      wall   0.162 cpu   1.374 rss    80MB others 0.15 steal 0.0% 
+r16 wikidata     t=12 mibz2-team4      wall   0.150 cpu   1.104 rss    67MB others 0.35 steal 0.0% 
+r16 wikidata     t=16 mibz2            wall   0.163 cpu   1.077 rss    81MB others 0.08 steal 0.0% 
+r16 wikidata     t=16 mibz2-team2      wall   0.238 cpu   3.146 rss   135MB others 0.09 steal 0.0% 
+r16 wikidata     t=16 mibz2-team3      wall   0.184 cpu   1.885 rss    95MB others 0.08 steal 0.0% 
+r16 wikidata     t=16 mibz2-team4      wall   0.164 cpu   1.581 rss    82MB others 0.17 steal 0.0% 
+r17 wikidata     t=8 mibz2-team2      wall   0.168 cpu   1.119 rss    83MB others 0.06 steal 0.0% 
+r17 wikidata     t=8 mibz2-team3      wall   0.196 cpu   0.863 rss    51MB others 0.13 steal 0.0% 
+r17 wikidata     t=8 mibz2-team4      wall   0.177 cpu   0.947 rss    52MB others 0.07 steal 0.0% 
+r17 wikidata     t=8 mibz2            wall   0.159 cpu   1.055 rss    81MB others 0.00 steal 0.0% 
+r17 wikidata     t=10 mibz2-team2      wall   0.181 cpu   1.500 rss    97MB others 0.05 steal 0.0% 
+r17 wikidata     t=10 mibz2-team3      wall   0.156 cpu   1.033 rss    67MB others 0.27 steal 0.0% 
+r17 wikidata     t=10 mibz2-team4      wall   0.177 cpu   0.904 rss    52MB others 0.03 steal 0.0% 
+r17 wikidata     t=10 mibz2            wall   0.164 cpu   1.096 rss    81MB others 0.08 steal 0.0% 
+r17 wikidata     t=12 mibz2-team2      wall   0.199 cpu   2.006 rss   109MB others 0.07 steal 0.0% 
+r17 wikidata     t=12 mibz2-team3      wall   0.158 cpu   1.344 rss    81MB others 0.09 steal 0.0% 
+r17 wikidata     t=12 mibz2-team4      wall   0.143 cpu   1.092 rss    68MB others 0.00 steal 0.0% 
+r17 wikidata     t=12 mibz2            wall   0.162 cpu   1.069 rss    82MB others 0.07 steal 0.0% 
+r17 wikidata     t=16 mibz2-team2      wall   0.241 cpu   3.205 rss   138MB others 0.10 steal 0.0% 
+r17 wikidata     t=16 mibz2-team3      wall   0.184 cpu   1.954 rss    96MB others 0.03 steal 0.0% 
+r17 wikidata     t=16 mibz2-team4      wall   0.168 cpu   1.695 rss    83MB others 0.25 steal 0.0% 
+r17 wikidata     t=16 mibz2            wall   0.168 cpu   1.114 rss    81MB others 0.09 steal 0.0% 
+r18 wikidata     t=8 mibz2-team3      wall   0.185 cpu   0.805 rss    52MB others 0.02 steal 0.0% 
+r18 wikidata     t=8 mibz2-team4      wall   0.174 cpu   0.896 rss    52MB others 0.00 steal 0.0% 
+r18 wikidata     t=8 mibz2            wall   0.164 cpu   1.081 rss    81MB others 0.06 steal 0.0% 
+r18 wikidata     t=8 mibz2-team2      wall   0.165 cpu   1.099 rss    83MB others 0.18 steal 0.0% 
+r18 wikidata     t=10 mibz2-team3      wall   0.157 cpu   1.003 rss    67MB others 0.00 steal 0.0% 
+r18 wikidata     t=10 mibz2-team4      wall   0.172 cpu   0.884 rss    52MB others 0.00 steal 0.0% 
+r18 wikidata     t=10 mibz2            wall   0.166 cpu   1.098 rss    82MB others 0.07 steal 0.0% 
+r18 wikidata     t=10 mibz2-team2      wall   0.185 cpu   1.556 rss    95MB others 0.17 steal 0.0% 
+r18 wikidata     t=12 mibz2-team3      wall   0.158 cpu   1.368 rss    81MB others 0.07 steal 0.0% 
+r18 wikidata     t=12 mibz2-team4      wall   0.150 cpu   1.135 rss    67MB others 0.03 steal 0.0% 
+r18 wikidata     t=12 mibz2            wall   0.163 cpu   1.075 rss    80MB others 0.15 steal 0.0% 
+r18 wikidata     t=12 mibz2-team2      wall   0.202 cpu   2.047 rss   112MB others 0.06 steal 0.0% 
+r18 wikidata     t=16 mibz2-team3      wall   0.184 cpu   1.897 rss    96MB others 0.12 steal 0.0% 
+r18 wikidata     t=16 mibz2-team4      wall   0.165 cpu   1.678 rss    83MB others 0.00 steal 0.0% 
+r18 wikidata     t=16 mibz2            wall   0.166 cpu   1.090 rss    81MB others 0.06 steal 0.0% 
+r18 wikidata     t=16 mibz2-team2      wall   0.240 cpu   3.188 rss   136MB others 0.13 steal 0.0% 
+r19 wikidata     t=8 mibz2-team4      wall   0.180 cpu   0.935 rss    50MB others 0.03 steal 0.0% 
+r19 wikidata     t=8 mibz2            wall   0.164 cpu   1.079 rss    81MB others 0.06 steal 0.0% 
+r19 wikidata     t=8 mibz2-team2      wall   0.158 cpu   1.049 rss    81MB others 0.06 steal 0.0% 
+r19 wikidata     t=8 mibz2-team3      wall   0.209 cpu   0.930 rss    52MB others 0.05 steal 0.0% 
+r19 wikidata     t=10 mibz2-team4      wall   0.176 cpu   0.905 rss    52MB others 0.03 steal 0.0% 
+r19 wikidata     t=10 mibz2            wall   0.165 cpu   1.078 rss    83MB others 0.07 steal 0.0% 
+r19 wikidata     t=10 mibz2-team2      wall   0.184 cpu   1.538 rss    97MB others 0.11 steal 0.0% 
+r19 wikidata     t=10 mibz2-team3      wall   0.155 cpu   0.985 rss    67MB others 0.03 steal 0.0% 
+r19 wikidata     t=12 mibz2-team4      wall   0.148 cpu   1.105 rss    67MB others 0.16 steal 0.0% 
+r19 wikidata     t=12 mibz2            wall   0.170 cpu   1.111 rss    82MB others 0.00 steal 0.0% 
+r19 wikidata     t=12 mibz2-team2      wall   0.199 cpu   1.970 rss   110MB others 0.18 steal 0.0% 
+r19 wikidata     t=12 mibz2-team3      wall   0.166 cpu   1.367 rss    81MB others 0.25 steal 0.0% 
+r19 wikidata     t=16 mibz2-team4      wall   0.164 cpu   1.624 rss    81MB others 0.00 steal 0.0% 
+r19 wikidata     t=16 mibz2            wall   0.168 cpu   1.104 rss    82MB others 0.03 steal 0.0% 
+r19 wikidata     t=16 mibz2-team2      wall   0.237 cpu   3.079 rss   137MB others 0.04 steal 0.0% 
+r19 wikidata     t=16 mibz2-team3      wall   0.181 cpu   1.872 rss    98MB others 0.19 steal 0.0% 
+bench-team-size: perf can't count here (try: sudo sysctl kernel.perf_event_paranoid=1); no counters
+# Team size against live tables: wikidata
+
+Runs: 320; errors: 0; output hashes: 1 (same bytes). Reference: `mibz2@8`. Paired ratio: the reference's wall over the cell's, by round (above 1 is faster), its geometric mean and 95% interval.
+
+| teams × k | arm @ threads | tables | MB/s | vs ref | busy cores | leader CPU | helper CPU | scanner CPU | peak RSS | L3 hit share | L3 misses /KB | cycles /B | IPC | L3-miss stall share |
+|---|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 2 × 3 | `mibz2-team3@8` | 7.2 MB | 1,116 | 0.863 (0.846–0.881) | 4.4 | 0.165 | 0.085 | 0.050 | 52 MB | – | – | – | – | – |
+| 2 × 4 | `mibz2-team4@8` | 7.2 MB | 1,159 | 0.905 (0.891–0.919) | 5.2 | 0.155 | 0.073 | 0.050 | 52 MB | – | – | – | – | – |
+| 2 × 4 | `mibz2-team4@10` | 7.2 MB | 1,166 | 0.915 (0.904–0.926) | 5.2 | 0.155 | 0.073 | 0.050 | 52 MB | – | – | – | – | – |
+| 3 × 3 | `mibz2-team3@10` | 10.8 MB | 1,382 | 1.075 (1.058–1.093) | 6.4 | 0.127 | 0.065 | 0.050 | 67 MB | – | – | – | – | – |
+| 3 × 4 | `mibz2-team4@12` | 10.8 MB | 1,399 | 1.097 (1.083–1.111) | 7.5 | 0.123 | 0.059 | 0.060 | 68 MB | – | – | – | – | – |
+| 4 × 2 | `mibz2@8` | 14.4 MB | 1,276 | 1.000 (1.000–1.000) | 6.6 | 0.135 | 0.080 | 0.060 | 82 MB | – | – | – | – | – |
+| 4 × 2 | `mibz2-team2@8` | 14.4 MB | 1,274 | 1.001 (0.989–1.012) | 6.6 | 0.136 | 0.080 | 0.055 | 82 MB | – | – | – | – | – |
+| 4 × 2 | `mibz2@10` | 14.4 MB | 1,265 | 0.992 (0.983–1.002) | 6.6 | 0.136 | 0.083 | 0.050 | 82 MB | – | – | – | – | – |
+| 4 × 2 | `mibz2@12` | 14.4 MB | 1,274 | 0.996 (0.985–1.008) | 6.6 | 0.138 | 0.080 | 0.055 | 82 MB | – | – | – | – | – |
+| 4 × 2 | `mibz2@16` | 14.4 MB | 1,264 | 0.987 (0.976–0.997) | 6.6 | 0.135 | 0.083 | 0.050 | 82 MB | – | – | – | – | – |
+| 4 × 3 | `mibz2-team3@12` | 14.4 MB | 1,300 | 1.017 (1.008–1.026) | 8.5 | 0.133 | 0.073 | 0.065 | 82 MB | – | – | – | – | – |
+| 4 × 4 | `mibz2-team4@16` | 14.4 MB | 1,279 | 1.003 (0.993–1.014) | 10.1 | 0.135 | 0.068 | 0.070 | 82 MB | – | – | – | – | – |
+| 5 × 2 | `mibz2-team2@10` | 18.0 MB | 1,152 | 0.899 (0.891–0.908) | 8.4 | 0.154 | 0.100 | 0.070 | 96 MB | – | – | – | – | – |
+| 5 × 3 | `mibz2-team3@16` | 18.0 MB | 1,147 | 0.899 (0.891–0.907) | 10.4 | 0.152 | 0.083 | 0.080 | 96 MB | – | – | – | – | – |
+| 6 × 2 | `mibz2-team2@12` | 21.6 MB | 1,051 | 0.823 (0.816–0.831) | 10.0 | 0.165 | 0.109 | 0.080 | 110 MB | – | – | – | – | – |
+| 8 × 2 | `mibz2-team2@16` | 28.8 MB | 882 | 0.690 (0.683–0.697) | 13.2 | 0.203 | 0.135 | 0.100 | 138 MB | – | – | – | – | – |
+
+## The rule's predicates
+
+- Every run of every cell the same output hash and length, no run failed: **yes** (1 hash(es), 1 length(s), 0 failed).
+- The reference `mibz2@8`: rounds 0–19 once each, every run 4x2: **yes**.
+- The whole grid, 16 cells × 20 rounds, each round once, no failed run: **yes**.
+- The control `mibz2-team2@8` 1.001 (0.989–1.012), 20 pairs: **within ±2%**.
+
+| primary | plan in every run | 20 unique pairs | mean ≥ 1.03 | lower bound > 1.00 | raises the ceiling | peak RSS / ref (≤ 1.15) | CPU / ref (≤ 1.5) |
+|---|---|---|---|---|---|---|---|
+| `mibz2-team3@12` (4x3) | yes | yes | NO (1.017) | yes (1.008) | **no** | 1.00 | 1.26 |
+| `mibz2-team4@16` (4x4) | yes | yes | NO (1.003) | NO (0.993) | **no** | 1.00 | 1.52 |
+
+A pass here is not a qualification: the same cell must pass the same predicates, within the adoption limits, in one predeclared second run of 20 rounds. The adoption limits are ratios of medians (the cell's median peak RSS and CPU-seconds over the reference's) and must hold in both runs.
+
+occupancy: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz · 20 CPUs allowed · threads [8] · 6 rounds × 3 modes
+r0 t=8   spread  off      wall 0.158808 s
+r0 t=8   spread  timeline wall 0.154386 s  trace complete: yes
+r0 t=8   spread  full     wall 0.156339 s  trace complete: yes
+r0 t=8   packed  off      wall 0.192982 s
+r0 t=8   packed  timeline wall 0.196361 s  trace complete: yes
+r0 t=8   packed  full     wall 0.194033 s  trace complete: yes
+r1 t=8   packed  timeline wall 0.196072 s  trace complete: yes
+r1 t=8   packed  full     wall 0.194760 s  trace complete: yes
+r1 t=8   packed  off      wall 0.199504 s
+r1 t=8   spread  timeline wall 0.155145 s  trace complete: yes
+r1 t=8   spread  full     wall 0.155948 s  trace complete: yes
+r1 t=8   spread  off      wall 0.155124 s
+r2 t=8   spread  full     wall 0.156701 s  trace complete: yes
+r2 t=8   spread  off      wall 0.153691 s
+r2 t=8   spread  timeline wall 0.153170 s  trace complete: yes
+r2 t=8   packed  full     wall 0.195581 s  trace complete: yes
+r2 t=8   packed  off      wall 0.201188 s
+r2 t=8   packed  timeline wall 0.202627 s  trace complete: yes
+r3 t=8   packed  off      wall 0.197907 s
+r3 t=8   packed  timeline wall 0.195829 s  trace complete: yes
+r3 t=8   packed  full     wall 0.197125 s  trace complete: yes
+r3 t=8   spread  off      wall 0.152649 s
+r3 t=8   spread  timeline wall 0.156250 s  trace complete: yes
+r3 t=8   spread  full     wall 0.157714 s  trace complete: yes
+r4 t=8   spread  timeline wall 0.154958 s  trace complete: yes
+r4 t=8   spread  full     wall 0.155493 s  trace complete: yes
+r4 t=8   spread  off      wall 0.152472 s
+r4 t=8   packed  timeline wall 0.194677 s  trace complete: yes
+r4 t=8   packed  full     wall 0.194204 s  trace complete: yes
+r4 t=8   packed  off      wall 0.199633 s
+r5 t=8   packed  full     wall 0.196934 s  trace complete: yes
+r5 t=8   packed  off      wall 0.196607 s
+r5 t=8   packed  timeline wall 0.195560 s  trace complete: yes
+r5 t=8   spread  full     wall 0.156476 s  trace complete: yes
+r5 t=8   spread  off      wall 0.151266 s
+r5 t=8   spread  timeline wall 0.156079 s  trace complete: yes
+occupancy: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz · 20 CPUs allowed (0-19) · physical cores 10 · SMT siblings 0,10 | 1,11 | 2,12 | 3,13 | 4,14 | 5,15 | 6,16 | 7,17 | 8,18 | 9,19 · parity ok
+schedstat run-queue counter: {"status":"validated","selftest_threads":40,"selftest_off_cpu_ms_mean":88.243747,"selftest_runq_wait_ms_mean":88.064405}
+
+ thr      MB/s     speedup (95%)    timeline cost        full cost |    dec   idle i:sl-d i:sl-r   i:in   i:rd    i:q |   s:in r:wait |  blk ms  cpu ms runq ms slices
+8 spread [0,1,2,3,4,5,6,7]    1369.1                 1 -0.7% (-2.9,+1.6) -1.6% (-3.5,+0.4) |    96%     3%     0%     0%     1%     1%     0% |     1%    82% |    1.39    1.36   0.008    0.5
+8 packed [0,10,1,11,2,12,3,13]    1055.3                 1 +0.6% (-1.1,+2.2) +1.3% (-0.3,+3.0) |    97%     2%     0%     0%     1%     1%     0% |     1%    86% |    1.75    1.72   0.008    0.5
+8 threads: packed [0,10,1,11,2,12,3,13] over spread [0,1,2,3,4,5,6,7]: throughput -22.2% (-24.5, -19.9), paired by round
+
+MB/s and speedup: the off mode (median; speedup paired by round against 8 threads). Costs: each traced mode's throughput against off's, paired; an interval excluding 0 means that mode perturbs and its trace is not interpreted.
+Timeline (medians of complete traces; shares of the workers' time): dec = decoding; idle = on the jobs' lock or waiting in recv; i:sl-d, i:sl-r = idle while the scanner waited for a slot and the earliest block not taken was still decoding / ready for the reader (reader backpressure); i:in, i:rd = idle while the scanner waited for input / read a block; i:q = idle while jobs sat in the queue (handoff). s:in = the scanner waiting for input, a share of the span; r:wait = the reader waiting for its next block. Idle during slot waits, in worker-seconds, is in the file: an upper bound on what a wider window could recover.
+Full, per block over decode_block: elapsed, CPU, run-queue wait and timeslices (Linux). CPU counts memory stalls as running: CPU up with little run-queue wait is an on-CPU cost, not by itself contention. * = more threads than physical cores.
+
+Footprint ledger (src/trace.rs, docs/ledger.md): level 9 (431 blocks; at most 900000 rows a block), longest block 900000 rows, largest decoded 0.90 MB, input chunks of 4 MiB. Each buffer:
+  owner    buffer          how many           reserved    ≤ bound     live ≤       hot*  allocated 
+  worker   ll              threads             0.90 MB    0.90 MB    0.90 MB          –  once      
+  worker   tt              threads             3.60 MB    7.20 MB    3.60 MB    3.60 MB  once      
+  worker   rle             threads             0.90 MB    1.80 MB    0.90 MB          –  once      
+  worker   counts          threads              1.0 KB     1.0 KB     1.0 KB     1.0 KB  once      
+  worker   seg.bufs        threads             1.83 MB   ratchets    0.90 MB          –  once      
+  worker   seg.bufs.outer  threads             12.3 KB    24.6 KB    12.3 KB          –  once      
+  worker   seg.starts      threads              4.1 KB     4.1 KB     2.0 KB     2.0 KB  once      
+  worker   seg.next        threads              4.1 KB     8.2 KB     4.1 KB          –  once      
+  slot     symbols         slots               1.80 MB    1.80 MB    1.80 MB          –  once      
+  slot     out             slots + 1           0.90 MB    1.80 MB    0.90 MB          –  once      
+  input    chunks          INPUT_QUEUE + 2     4.19 MB    4.19 MB    4.19 MB          –  per chunk 
+  input    window          1                   4.19 MB   20.97 MB    6.29 MB          –  once      
+  decoder  block tables    1                   46.8 KB    46.8 KB    46.8 KB          –  per block 
+  decoder  stacks          threads + 2         2.10 MB    2.10 MB        0 B          –  once      
+    8 threads, window  32: reserved ≥ 166.36 MB, ≤ 234.31 MB + the segment buffers (they ratchet: measured below) · live ≤ 160.97 MB (each buffer's maximum, summed) · hot* 28.82 MB · peak RSS (off, median) 86.0 MB
+  * hot: a model of what the T-vector phase reads at random (each worker's T-vector), not a measured cache residency. Reserved is Vec capacity: pages never written are not resident, so RSS can be below it; RSS is resident pages, not cache residency.
+
+Queues and live structures (timeline medians; docs/ledger.md has the exact definitions):
+8 threads spread, window 32: reader waiting 82.3% (starved, the next block not ready, 76.9%; the handoff, ready and the reader not yet woken, 5.4%) · scanner backpressured (slot wait, the earliest untaken block ready: the reader binds) 8.2% (3.3% of it in the handoff) · slot wait, the earliest untaken still decoding (the workers bind) 45.3% · input wait 1.0%  [of the span]
+  workers: decoding 96.3% · idle, no job queued 2.7% · idle, a job queued (handoff) 0.1%  [of worker time] · mean decoding 3.85 of 8
+  T-vector phase (build and walk): mean 2.75 blocks, max 4 · live T-vectors mean 9.9 MB, max 14.4 MB (the hot model)
+  window: mean 14.6, max 16 of 32 · ready, not taken: max 11 blocks, 3.6 MB; mean 0.20 MB = 0.07 head of line (an earlier block decoding) + 0.07 reader busy + 0.06 handoff · ready→taken mean 1.07 ms, max 4.8 ms (decode mean 1.4 ms)
+  held: symbols mean 1.6 MB, 0.7 MB of it dead (read by MTF, not yet returned) · output buffers reserved/used 2.52×, largest 1.80 MB · window live ≤ 6.3 MB, reserved ≤ 8.4 MB
+  worker buffers (each at its end, mean MB): 13.89 total = seg.bufs 6.12 + tt 5.40 + rle 1.35 + ll 0.90 · ledger check: ok (the segment buffers not checked under teams) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+8 threads packed, window 32: reader waiting 86.3% (starved, the next block not ready, 83.6%; the handoff, ready and the reader not yet woken, 2.7%) · scanner backpressured (slot wait, the earliest untaken block ready: the reader binds) 5.3% (1.5% of it in the handoff) · slot wait, the earliest untaken still decoding (the workers bind) 45.6% · input wait 0.8%  [of the span]
+  workers: decoding 97.1% · idle, no job queued 2.1% · idle, a job queued (handoff) 0.1%  [of worker time] · mean decoding 3.88 of 8
+  T-vector phase (build and walk): mean 2.83 blocks, max 4 · live T-vectors mean 10.2 MB, max 14.4 MB (the hot model)
+  window: mean 14.8, max 16 of 32 · ready, not taken: max 10 blocks, 3.6 MB; mean 0.15 MB = 0.09 head of line (an earlier block decoding) + 0.04 reader busy + 0.03 handoff · ready→taken mean 1.30 ms, max 6.0 ms (decode mean 1.8 ms)
+  held: symbols mean 1.7 MB, 0.7 MB of it dead (read by MTF, not yet returned) · output buffers reserved/used 2.51×, largest 1.80 MB · window live ≤ 6.3 MB, reserved ≤ 8.4 MB
+  worker buffers (each at its end, mean MB): 13.87 total = seg.bufs 6.10 + tt 5.40 + rle 1.35 + ll 0.90 · ledger check: ok (the segment buffers not checked under teams) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+Written: /home/louis/dev/mibz2/target/team-size/20261106T100854Z/occupancy-t8-k2.json
+occupancy: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz · 20 CPUs allowed · threads [12] · 6 rounds × 3 modes
+r0 t=12  spread  off      wall 0.155976 s
+r0 t=12  spread  timeline wall 0.153466 s  trace complete: yes
+r0 t=12  spread  full     wall 0.153611 s  trace complete: yes
+r0 t=12  packed  off      wall 0.170411 s
+r0 t=12  packed  timeline wall 0.170813 s  trace complete: yes
+r0 t=12  packed  full     wall 0.167254 s  trace complete: yes
+r1 t=12  packed  timeline wall 0.165531 s  trace complete: yes
+r1 t=12  packed  full     wall 0.169998 s  trace complete: yes
+r1 t=12  packed  off      wall 0.165371 s
+r1 t=12  spread  timeline wall 0.154673 s  trace complete: yes
+r1 t=12  spread  full     wall 0.155424 s  trace complete: yes
+r1 t=12  spread  off      wall 0.155320 s
+r2 t=12  spread  full     wall 0.154675 s  trace complete: yes
+r2 t=12  spread  off      wall 0.153843 s
+r2 t=12  spread  timeline wall 0.155693 s  trace complete: yes
+r2 t=12  packed  full     wall 0.168134 s  trace complete: yes
+r2 t=12  packed  off      wall 0.164172 s
+r2 t=12  packed  timeline wall 0.168596 s  trace complete: yes
+r3 t=12  packed  off      wall 0.176390 s
+r3 t=12  packed  timeline wall 0.163809 s  trace complete: yes
+r3 t=12  packed  full     wall 0.167942 s  trace complete: yes
+r3 t=12  spread  off      wall 0.152802 s
+r3 t=12  spread  timeline wall 0.153409 s  trace complete: yes
+r3 t=12  spread  full     wall 0.156292 s  trace complete: yes
+r4 t=12  spread  timeline wall 0.154917 s  trace complete: yes
+r4 t=12  spread  full     wall 0.156208 s  trace complete: yes
+r4 t=12  spread  off      wall 0.154535 s
+r4 t=12  packed  timeline wall 0.165559 s  trace complete: yes
+r4 t=12  packed  full     wall 0.165823 s  trace complete: yes
+r4 t=12  packed  off      wall 0.166396 s
+r5 t=12  packed  full     wall 0.162987 s  trace complete: yes
+r5 t=12  packed  off      wall 0.168835 s
+r5 t=12  packed  timeline wall 0.167880 s  trace complete: yes
+r5 t=12  spread  full     wall 0.152952 s  trace complete: yes
+r5 t=12  spread  off      wall 0.154651 s
+r5 t=12  spread  timeline wall 0.152465 s  trace complete: yes
+occupancy: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz · 20 CPUs allowed (0-19) · physical cores 10 · SMT siblings 0,10 | 1,11 | 2,12 | 3,13 | 4,14 | 5,15 | 6,16 | 7,17 | 8,18 | 9,19 · parity ok
+schedstat run-queue counter: {"status":"validated","selftest_threads":40,"selftest_off_cpu_ms_mean":95.567638,"selftest_runq_wait_ms_mean":95.35074}
+
+ thr      MB/s     speedup (95%)    timeline cost        full cost |    dec   idle i:sl-d i:sl-r   i:in   i:rd    i:q |   s:in r:wait |  blk ms  cpu ms runq ms slices
+12* spread [0,1,2,3,4,5,6,7,8,9,10,11]    1356.5                 1 +0.3% (-0.9,+1.4) -0.2% (-1.7,+1.3) |    96%     3%     0%     0%     1%     1%     0% |     1%    80% |    1.38    1.33   0.001    1.2
+12* packed [0,10,1,11,2,12,3,13,4,14,5,15]    1251.1                 1 +0.9% (-2.6,+4.6) +0.9% (-2.3,+4.3) |    97%     3%     0%     0%     1%     1%     0% |     1%    83% |    1.50    1.47   0.001    0.9
+12 threads: packed [0,10,1,11,2,12,3,13,4,14,5,15] over spread [0,1,2,3,4,5,6,7,8,9,10,11]: throughput -8.3% (-11.1, -5.4), paired by round
+
+MB/s and speedup: the off mode (median; speedup paired by round against 12 threads). Costs: each traced mode's throughput against off's, paired; an interval excluding 0 means that mode perturbs and its trace is not interpreted.
+Timeline (medians of complete traces; shares of the workers' time): dec = decoding; idle = on the jobs' lock or waiting in recv; i:sl-d, i:sl-r = idle while the scanner waited for a slot and the earliest block not taken was still decoding / ready for the reader (reader backpressure); i:in, i:rd = idle while the scanner waited for input / read a block; i:q = idle while jobs sat in the queue (handoff). s:in = the scanner waiting for input, a share of the span; r:wait = the reader waiting for its next block. Idle during slot waits, in worker-seconds, is in the file: an upper bound on what a wider window could recover.
+Full, per block over decode_block: elapsed, CPU, run-queue wait and timeslices (Linux). CPU counts memory stalls as running: CPU up with little run-queue wait is an on-CPU cost, not by itself contention. * = more threads than physical cores.
+
+Footprint ledger (src/trace.rs, docs/ledger.md): level 9 (431 blocks; at most 900000 rows a block), longest block 900000 rows, largest decoded 0.90 MB, input chunks of 4 MiB. Each buffer:
+  owner    buffer          how many           reserved    ≤ bound     live ≤       hot*  allocated 
+  worker   ll              threads             0.90 MB    0.90 MB    0.90 MB          –  once      
+  worker   tt              threads             3.60 MB    7.20 MB    3.60 MB    3.60 MB  once      
+  worker   rle             threads             0.90 MB    1.80 MB    0.90 MB          –  once      
+  worker   counts          threads              1.0 KB     1.0 KB     1.0 KB     1.0 KB  once      
+  worker   seg.bufs        threads             1.83 MB   ratchets    0.90 MB          –  once      
+  worker   seg.bufs.outer  threads             12.3 KB    24.6 KB    12.3 KB          –  once      
+  worker   seg.starts      threads              4.1 KB     4.1 KB     2.0 KB     2.0 KB  once      
+  worker   seg.next        threads              4.1 KB     8.2 KB     4.1 KB          –  once      
+  slot     symbols         slots               1.80 MB    1.80 MB    1.80 MB          –  once      
+  slot     out             slots + 1           0.90 MB    1.80 MB    0.90 MB          –  once      
+  input    chunks          INPUT_QUEUE + 2     4.19 MB    4.19 MB    4.19 MB          –  per chunk 
+  input    window          1                   4.19 MB   20.97 MB    6.29 MB          –  once      
+  decoder  block tables    1                   46.8 KB    46.8 KB    46.8 KB          –  per block 
+  decoder  stacks          threads + 2         2.10 MB    2.10 MB        0 B          –  once      
+   12 threads, window  48: reserved ≥ 238.58 MB, ≤ 331.67 MB + the segment buffers (they ratchet: measured below) · live ≤ 229.45 MB (each buffer's maximum, summed) · hot* 43.24 MB · peak RSS (off, median) 85.3 MB
+  * hot: a model of what the T-vector phase reads at random (each worker's T-vector), not a measured cache residency. Reserved is Vec capacity: pages never written are not resident, so RSS can be below it; RSS is resident pages, not cache residency.
+
+Queues and live structures (timeline medians; docs/ledger.md has the exact definitions):
+12 threads spread, window 48: reader waiting 79.6% (starved, the next block not ready, 75.7%; the handoff, ready and the reader not yet woken, 3.9%) · scanner backpressured (slot wait, the earliest untaken block ready: the reader binds) 6.8% (2.8% of it in the handoff) · slot wait, the earliest untaken still decoding (the workers bind) 38.4% · input wait 1.0%  [of the span]
+  workers: decoding 96.2% · idle, no job queued 2.7% · idle, a job queued (handoff) 0.1%  [of worker time] · mean decoding 3.85 of 12
+  T-vector phase (build and walk): mean 2.61 blocks, max 4 · live T-vectors mean 9.4 MB, max 14.4 MB (the hot model)
+  window: mean 14.6, max 16 of 48 · ready, not taken: max 10 blocks, 3.6 MB; mean 0.21 MB = 0.09 head of line (an earlier block decoding) + 0.08 reader busy + 0.05 handoff · ready→taken mean 1.07 ms, max 4.9 ms (decode mean 1.4 ms)
+  held: symbols mean 1.6 MB, 0.7 MB of it dead (read by MTF, not yet returned) · output buffers reserved/used 2.42×, largest 1.80 MB · window live ≤ 6.3 MB, reserved ≤ 8.4 MB
+  worker buffers (each at its end, mean MB): 13.87 total = seg.bufs 6.07 + tt 5.40 + rle 1.35 + ll 0.90 · ledger check: ok (the segment buffers not checked under teams) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+12 threads packed, window 48: reader waiting 83.4% (starved, the next block not ready, 81.3%; the handoff, ready and the reader not yet woken, 2.1%) · scanner backpressured (slot wait, the earliest untaken block ready: the reader binds) 4.5% (1.5% of it in the handoff) · slot wait, the earliest untaken still decoding (the workers bind) 42.1% · input wait 0.9%  [of the span]
+  workers: decoding 96.7% · idle, no job queued 2.4% · idle, a job queued (handoff) 0.1%  [of worker time] · mean decoding 3.87 of 12
+  T-vector phase (build and walk): mean 2.64 blocks, max 4 · live T-vectors mean 9.5 MB, max 14.4 MB (the hot model)
+  window: mean 14.6, max 16 of 48 · ready, not taken: max 11 blocks, 3.6 MB; mean 0.15 MB = 0.07 head of line (an earlier block decoding) + 0.05 reader busy + 0.03 handoff · ready→taken mean 1.09 ms, max 5.1 ms (decode mean 1.5 ms)
+  held: symbols mean 1.6 MB, 0.6 MB of it dead (read by MTF, not yet returned) · output buffers reserved/used 2.41×, largest 1.80 MB · window live ≤ 6.3 MB, reserved ≤ 8.4 MB
+  worker buffers (each at its end, mean MB): 13.89 total = seg.bufs 6.09 + tt 5.40 + rle 1.35 + ll 0.90 · ledger check: ok (the segment buffers not checked under teams) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+Written: /home/louis/dev/mibz2/target/team-size/20261106T100854Z/occupancy-t12-k3.json
+occupancy: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz · 20 CPUs allowed · threads [16] · 6 rounds × 3 modes
+r0 t=16  spread  off      wall 0.157918 s
+r0 t=16  spread  timeline wall 0.157584 s  trace complete: yes
+r0 t=16  spread  full     wall 0.156642 s  trace complete: yes
+r0 t=16  packed  off      wall 0.163792 s
+r0 t=16  packed  timeline wall 0.162026 s  trace complete: yes
+r0 t=16  packed  full     wall 0.162372 s  trace complete: yes
+r1 t=16  packed  timeline wall 0.165009 s  trace complete: yes
+r1 t=16  packed  full     wall 0.158160 s  trace complete: yes
+r1 t=16  packed  off      wall 0.157825 s
+r1 t=16  spread  timeline wall 0.155466 s  trace complete: yes
+r1 t=16  spread  full     wall 0.158274 s  trace complete: yes
+r1 t=16  spread  off      wall 0.155386 s
+r2 t=16  spread  full     wall 0.155866 s  trace complete: yes
+r2 t=16  spread  off      wall 0.156370 s
+r2 t=16  spread  timeline wall 0.157032 s  trace complete: yes
+r2 t=16  packed  full     wall 0.162110 s  trace complete: yes
+r2 t=16  packed  off      wall 0.159528 s
+r2 t=16  packed  timeline wall 0.160126 s  trace complete: yes
+r3 t=16  packed  off      wall 0.159362 s
+r3 t=16  packed  timeline wall 0.165370 s  trace complete: yes
+r3 t=16  packed  full     wall 0.160255 s  trace complete: yes
+r3 t=16  spread  off      wall 0.158107 s
+r3 t=16  spread  timeline wall 0.157147 s  trace complete: yes
+r3 t=16  spread  full     wall 0.157014 s  trace complete: yes
+r4 t=16  spread  timeline wall 0.155602 s  trace complete: yes
+r4 t=16  spread  full     wall 0.160071 s  trace complete: yes
+r4 t=16  spread  off      wall 0.156595 s
+r4 t=16  packed  timeline wall 0.162940 s  trace complete: yes
+r4 t=16  packed  full     wall 0.163036 s  trace complete: yes
+r4 t=16  packed  off      wall 0.161310 s
+r5 t=16  packed  full     wall 0.160634 s  trace complete: yes
+r5 t=16  packed  off      wall 0.159094 s
+r5 t=16  packed  timeline wall 0.161977 s  trace complete: yes
+r5 t=16  spread  full     wall 0.158214 s  trace complete: yes
+r5 t=16  spread  off      wall 0.159272 s
+r5 t=16  spread  timeline wall 0.155574 s  trace complete: yes
+occupancy: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz · 20 CPUs allowed (0-19) · physical cores 10 · SMT siblings 0,10 | 1,11 | 2,12 | 3,13 | 4,14 | 5,15 | 6,16 | 7,17 | 8,18 | 9,19 · parity ok
+schedstat run-queue counter: {"status":"validated","selftest_threads":40,"selftest_off_cpu_ms_mean":97.510309,"selftest_runq_wait_ms_mean":97.29754}
+
+ thr      MB/s     speedup (95%)    timeline cost        full cost |    dec   idle i:sl-d i:sl-r   i:in   i:rd    i:q |   s:in r:wait |  blk ms  cpu ms runq ms slices
+16* spread [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]    1333.5                 1 +0.6% (-0.5,+1.6) -0.3% (-1.7,+1.2) |    96%     3%     0%     0%     1%     1%     0% |     1%    80% |    1.40    1.36   0.002    1.7
+16* packed [0,10,1,11,2,12,3,13,4,14,5,15,6,16,7,17]    1315.2                 1 -1.7% (-3.8,+0.5) -0.6% (-1.5,+0.3) |    96%     3%     0%     0%     1%     1%     0% |     1%    82% |    1.44    1.41   0.002    1.6
+16 threads: packed [0,10,1,11,2,12,3,13,4,14,5,15,6,16,7,17] over spread [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]: throughput -1.8% (-3.2, -0.4), paired by round
+
+MB/s and speedup: the off mode (median; speedup paired by round against 16 threads). Costs: each traced mode's throughput against off's, paired; an interval excluding 0 means that mode perturbs and its trace is not interpreted.
+Timeline (medians of complete traces; shares of the workers' time): dec = decoding; idle = on the jobs' lock or waiting in recv; i:sl-d, i:sl-r = idle while the scanner waited for a slot and the earliest block not taken was still decoding / ready for the reader (reader backpressure); i:in, i:rd = idle while the scanner waited for input / read a block; i:q = idle while jobs sat in the queue (handoff). s:in = the scanner waiting for input, a share of the span; r:wait = the reader waiting for its next block. Idle during slot waits, in worker-seconds, is in the file: an upper bound on what a wider window could recover.
+Full, per block over decode_block: elapsed, CPU, run-queue wait and timeslices (Linux). CPU counts memory stalls as running: CPU up with little run-queue wait is an on-CPU cost, not by itself contention. * = more threads than physical cores.
+
+Footprint ledger (src/trace.rs, docs/ledger.md): level 9 (431 blocks; at most 900000 rows a block), longest block 900000 rows, largest decoded 0.90 MB, input chunks of 4 MiB. Each buffer:
+  owner    buffer          how many           reserved    ≤ bound     live ≤       hot*  allocated 
+  worker   ll              threads             0.90 MB    0.90 MB    0.90 MB          –  once      
+  worker   tt              threads             3.60 MB    7.20 MB    3.60 MB    3.60 MB  once      
+  worker   rle             threads             0.90 MB    1.80 MB    0.90 MB          –  once      
+  worker   counts          threads              1.0 KB     1.0 KB     1.0 KB     1.0 KB  once      
+  worker   seg.bufs        threads             1.83 MB   ratchets    0.90 MB          –  once      
+  worker   seg.bufs.outer  threads             12.3 KB    24.6 KB    12.3 KB          –  once      
+  worker   seg.starts      threads              4.1 KB     4.1 KB     2.0 KB     2.0 KB  once      
+  worker   seg.next        threads              4.1 KB     8.2 KB     4.1 KB          –  once      
+  slot     symbols         slots               1.80 MB    1.80 MB    1.80 MB          –  once      
+  slot     out             slots + 1           0.90 MB    1.80 MB    0.90 MB          –  once      
+  input    chunks          INPUT_QUEUE + 2     4.19 MB    4.19 MB    4.19 MB          –  per chunk 
+  input    window          1                   4.19 MB   20.97 MB    6.29 MB          –  once      
+  decoder  block tables    1                   46.8 KB    46.8 KB    46.8 KB          –  per block 
+  decoder  stacks          threads + 2         2.10 MB    2.10 MB        0 B          –  once      
+   16 threads, window  64: reserved ≥ 310.80 MB, ≤ 429.02 MB + the segment buffers (they ratchet: measured below) · live ≤ 297.93 MB (each buffer's maximum, summed) · hot* 57.65 MB · peak RSS (off, median) 85.8 MB
+  * hot: a model of what the T-vector phase reads at random (each worker's T-vector), not a measured cache residency. Reserved is Vec capacity: pages never written are not resident, so RSS can be below it; RSS is resident pages, not cache residency.
+
+Queues and live structures (timeline medians; docs/ledger.md has the exact definitions):
+16 threads spread, window 64: reader waiting 80.2% (starved, the next block not ready, 77.1%; the handoff, ready and the reader not yet woken, 3.2%) · scanner backpressured (slot wait, the earliest untaken block ready: the reader binds) 5.7% (2.2% of it in the handoff) · slot wait, the earliest untaken still decoding (the workers bind) 38.6% · input wait 1.0%  [of the span]
+  workers: decoding 96.3% · idle, no job queued 2.7% · idle, a job queued (handoff) 0.1%  [of worker time] · mean decoding 3.85 of 16
+  T-vector phase (build and walk): mean 2.59 blocks, max 4 · live T-vectors mean 9.3 MB, max 14.4 MB (the hot model)
+  window: mean 14.6, max 16 of 64 · ready, not taken: max 10 blocks, 3.6 MB; mean 0.18 MB = 0.07 head of line (an earlier block decoding) + 0.08 reader busy + 0.03 handoff · ready→taken mean 1.07 ms, max 5.2 ms (decode mean 1.4 ms)
+  held: symbols mean 1.6 MB, 0.7 MB of it dead (read by MTF, not yet returned) · output buffers reserved/used 2.52×, largest 1.80 MB · window live ≤ 6.3 MB, reserved ≤ 8.4 MB
+  worker buffers (each at its end, mean MB): 13.93 total = seg.bufs 6.07 + tt 5.40 + rle 1.35 + ll 0.90 · ledger check: ok (the segment buffers not checked under teams) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+16 threads packed, window 64: reader waiting 82.3% (starved, the next block not ready, 80.0%; the handoff, ready and the reader not yet woken, 2.3%) · scanner backpressured (slot wait, the earliest untaken block ready: the reader binds) 4.2% (1.6% of it in the handoff) · slot wait, the earliest untaken still decoding (the workers bind) 42.3% · input wait 1.0%  [of the span]
+  workers: decoding 96.5% · idle, no job queued 2.6% · idle, a job queued (handoff) 0.1%  [of worker time] · mean decoding 3.86 of 16
+  T-vector phase (build and walk): mean 2.58 blocks, max 4 · live T-vectors mean 9.3 MB, max 14.4 MB (the hot model)
+  window: mean 14.5, max 16 of 64 · ready, not taken: max 11 blocks, 3.6 MB; mean 0.19 MB = 0.08 head of line (an earlier block decoding) + 0.08 reader busy + 0.03 handoff · ready→taken mean 1.10 ms, max 5.5 ms (decode mean 1.5 ms)
+  held: symbols mean 1.6 MB, 0.6 MB of it dead (read by MTF, not yet returned) · output buffers reserved/used 2.25×, largest 1.80 MB · window live ≤ 6.3 MB, reserved ≤ 8.4 MB
+  worker buffers (each at its end, mean MB): 13.94 total = seg.bufs 6.08 + tt 5.40 + rle 1.35 + ll 0.90 · ledger check: ok (the segment buffers not checked under teams) · events reconciled: ok (Σ decoded = bytes read, end state empty, every worker recorded)
+Written: /home/louis/dev/mibz2/target/team-size/20261106T100854Z/occupancy-t16-k4.json
+Upload all of /home/louis/dev/mibz2/target/team-size/20261106T100854Z (its wikidata.bz2 is a link; leave it out), and the console log
