@@ -1,0 +1,22 @@
+{
+  "quantiles": [
+    2.0930240544083087,
+    2.433440211374971
+  ],
+  "clean": {
+    "valid": true,
+    "pass": true
+  },
+  "missing_output": {
+    "valid": true,
+    "pass": true
+  },
+  "mixed_base_binary": {
+    "valid": true,
+    "pass": true
+  },
+  "zero_length": {
+    "valid": true,
+    "pass": true
+  }
+}
