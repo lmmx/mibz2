@@ -229,6 +229,12 @@ What the table shows:
   These are decoder-level figures; in wikidata-pq's split, end to end, the decoder took
   20% less CPU and 16% less wall time than lbzip2 (lmmx/wikidata-pq#197).
 
+## Working with the agent team
+
+The decoder is worked on by an agent team (`docs/team/`). Louis sends it requests from ChatGPT
+by a comment on PR #145; a ChatGPT conversation pointed at this repository finds how in
+[`CHATGPT.md`](CHATGPT.md).
+
 ## Licence
 
 **MIT OR Apache-2.0** (`LICENSE-MIT`, `LICENSE-APACHE`), at the licensee's option.
