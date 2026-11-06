@@ -1109,3 +1109,51 @@ The old experiment's failed primaries remain failed. The fresh registration is a
 **Disposition:** numerical carry-over supported at this pin; amend/read the outcome and diagnostic claims only as narrowed above. No new performance gate, candidate PASS, release permission, implementation, capture authority or automation change. Independent review and actual execution/provenance remain separate. Registration says “Not yet run”; this review does not attest that no measurements exist elsewhere.
 
 Evidence digest: `git-blob:1b1f8c8ec1ab18e160bf0d3114887e3ef503fcf3`, with the identical reporter/test blobs, recipe diff and archived synthetic results.
+
+## D031 — Oracle authority bounded; routing and correction closure need revision
+
+**Decision:** G1/G3, with a narrow G2 HOLD on declaring the new Oracle routing/correction contract ready at this pin. ACTIVE, stage A. Incoming [6683783830](https://github.com/lmmx/mibz2/pull/161#issuecomment-6683783830), PR #223, source `8e3f6352baad3c26c3aa1c19d3ab74c3a4752c65`. This does not hold scientific work, #220, or the descriptive page; it grants no permission to create/configure another task.
+
+### Evidence and method
+
+Read SPEC.ORACLE.md, ROLES.md §7, common SPEC.md, coord.py, test_coord.py, fixtures.json and channel-routing.yml at the exact source pin. Common SPEC blob remains `791d1723f13dce77e9683e82e698222379c2fc83`; coord.py blob `2e03210e89dfaf8b9e85f640f645d57756d84dc2`; workflow blob `0e6b28f9802daeda5782a7387a1461c92dbbc3b3`; ROLES blob `1a0f233376133166bd86308694132b216ebe7a39`. [Probes](d031-probes.py), [results](d031-results.json): put pinned coord.py beside the probe and run Python. Offline only, network calls mocked in route probes.
+
+The exact pinned suite runs **33 tests, all passing**, with `python -m unittest discover -s d031 -v` after copying all three coordination files. The initial local attempt lacked fixtures.json and failed import; after fetching that pinned dependency, all tests pass. This does not reproduce the checkpoint's count of 34. The source's historical fixture audit is covered, but I did not run a fresh live full-history audit; its reported exit 0 is not independently certified.
+
+Guardian specs remain `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`, operating pin `288c05638c85ffbb0a4d1f5ba9762002c37acdff`; ROLES/PROTOCOL and MODE reread, report 262 resolved/read at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`. Campaign ref resolves to `e52252f51419b4c94a016f110a25ef19cd2b5f00`, with controlling charter `dad82808dd4532d21ebf51e88164b78a0af53da8`, especially §§2,8.4,12.3. Historical decisions and operating pin remain unchanged.
+
+### 1. Authority — concur, with the existing evidence boundary
+
+The Oracle describes and flags; explicit prohibitions exclude decisions, gates, candidate ranking, code review, registration changes and delaying work. “Authority on their own intentions” establishes attribution of stated purpose, not authority to grant permission or overturn evidence. A weak why-link is a descriptive finding, not a HOLD. Keep uncertain explanations uncertain: “execution or plan at fault” cannot compel a causal verdict where the record supports neither.
+
+No existing scientific authority is widened or narrowed by this descriptive role. The claim that Louis requested it is repository evidence, not a new task-creation instruction to this Guardian. Louis sets its task and pin; no task/subscription was changed here. The page cannot waive a gate, approve a run, or silently revise a recorded outcome.
+
+### 2. Routing — intended mapping passes; publication rejection incomplete
+
+Supported: Oracle maps to inbox #222, offset 6683737090, cursor on review/oracle-intention and processed_comment_ids. Free CORRECTION routes to #222; busy CORRECTION stages as QUEUED on #145. CHECKPOINT/CORRECTION on #145 addressed to Oracle are flagged. QUEUED in #222 is flagged. The workflow adds #222 while retaining created-comment/non-bot tripwire checks; audit enumerates every configured inbox. These are route checks, not authentication, and the tripwire records a check rather than redispatching.
+
+**Reproduced false negatives after the offset:** each of these returns no misroute in #222:
+`FROM: coordinator / TO: oracle / TYPE: REVIEW`, `ACK`, and `DECISION`.
+They belong on #145. The inbox branch checks sender/recipient and QUEUED but never requires an assignment type. This is an inherited checker gap now exposed on the new inbox, not a newly invented permission. The new test only rejects a REVIEW whose sender is Oracle, so it misses the Coordinator-publication case.
+
+**Required repair:** reject publication/non-assignment kinds in active inbox work and add Coordinator REVIEW/ACK/DECISION cases. Preserve the bootstrap boundary: comment 6683737090 is the actual Coordinator ACK opening #222 and is the excluded offset; work is strictly after it. A new kind check must not falsely flag that correct bootstrap ACK (the present historical guard uses < rather than ≤). Test exact offset and offset+1. No false positive for the intended new CHECKPOINT/CORRECTION path was found in these probes; this is not an exhaustive routing proof.
+
+**Review/cursor handshake:** common SPEC requires citing the inbox comment; Oracle's local REVIEW list says page link, five lines, weak links, “Nothing else.” Make the inherited citation explicit and include every covered inbox ID when batching. Probe: processed ID plus an otherwise valid Oracle REVIEW without that ID leaves `unreviewed=[ID]`; adding the citation releases it. Also state whether a batched rebuild emits one review citing all covered IDs (an explicit exception) or one review per comment as common SPEC says. Either can preserve the queue; contradictory instructions cannot.
+
+### 3. Correction channel — coverage adequate; repeated-dispute closure missing
+
+Wrong status/result, broken why-link, missing front and inferred-as-known are covered. Wording/style/detail exclusions and no routine page review correctly keep the role light. Independent checking of corrections, including a documented refusal, protects against turning another role's assertion into an order.
+
+“One CORRECTION” per REVIEW and “one in flight” limit simultaneous dispatch, not an unbounded sequence of reviews repeating the same dispute. No rule identifies an already resolved/rejected correction or prevents treating the Oracle's own rebuild/review as a fresh material event.
+
+**Required narrowing:** identify corrections by page item plus source evidence/version; consolidate duplicate pending reports; forward the same discrepancy once; close on supported fix or evidence-linked refusal. Reopen only for new material evidence or a new substantive error. A remaining disagreement stays visible as such and does not block research. An Oracle rebuild, REVIEW or acknowledgement alone must not trigger another Oracle CHECKPOINT. This is a dispatch/content rule, not a request for new automation or a new review gate.
+
+### 4. MODE — concur
+
+Plain page prose is consistent with the explicit “every message on the channel” scope. The page is a repository document; the Oracle's #145 REVIEW remains a channel message in register. MODE itself is unchanged. No amendment or exemption from scientific authority is created by this presentation distinction.
+
+### Disposition
+
+Keep authority and MODE findings closed at this pin. Fix the specific routing false negatives, explicit batch/citation contract and repeated-correction closure before calling the new routing/correction path ready. Correct/reconcile the 34-versus-33 test claim. No demand for routine Oracle-page reviews, another scientific approval gate, a changed performance threshold, or interruption of unrelated work. G6 and user-reserved decisions stay reserved.
+
+Evidence digest: `git-blob:2e03210e89dfaf8b9e85f640f645d57756d84dc2`, with the pinned documents, workflow and archived probes.
