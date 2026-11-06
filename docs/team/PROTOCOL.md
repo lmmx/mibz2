@@ -135,6 +135,27 @@ Coordinator's session on 2026-11-06 (`docs/journal/decisions.md`).
 - **When the Coordinator's session isn't running,** the request waits on #145 until a session
   starts and reads the channel.
 
+**The other direction: the Coordinator's requests to ChatGPT.** Some work only ChatGPT can
+do, such as re-pinning a Work task. The Coordinator posts it on #145 and Louis, in any
+ChatGPT conversation, picks it up; nobody copies anything across. `CHATGPT.md` is the
+procedure ChatGPT follows.
+- **The request:** a comment on #145 with `FROM: coordinator`, `TO: chatgpt`,
+  `TYPE: CHECKPOINT`, saying exactly what to do and how ChatGPT checks it before acting.
+- **Two phrases, two permissions:**
+  - "check in with the swarm" (or the like): ChatGPT reads the open requests and reports
+    them to Louis. It changes nothing and writes nothing to GitHub;
+  - "process the swarm's pending requests" (or the like): Louis's consent to carry out the
+    eligible ones and post their results.
+- **What ChatGPT may carry out without Louis reviewing it first** (his decision in the
+  Coordinator's session, 2026-11-06, `docs/journal/decisions.md`): only a re-pin of an
+  existing Work task, named in the request, using `WORK-TASKS.md`'s re-pin form with nothing
+  changed but its placeholders, to a commit that is on master and holds the role's spec.
+  Anything else in a request comes back to Louis.
+- **The result:** one `FROM: chatgpt`, `TYPE: REVIEW` on #145, citing the request's comment ID,
+  with what was done and the read-back (for a re-pin, the saved instruction text exactly).
+  A request with such a REVIEW is done, and is never carried out again. The Coordinator
+  verifies the read-back before acting on it.
+
 ## History
 
 This replaces `docs/journal/compact30-channel/PROTOCOL.md`, which is kept as history. Dropped:
