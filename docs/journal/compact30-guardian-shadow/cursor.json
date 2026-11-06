@@ -383,6 +383,22 @@
       "status": "finished",
       "disposition": "prospective qualification rule narrowed; validity defects and causal limits recorded; no candidate PASS or line STOP",
       "comment": 6681996710
+    },
+    {
+      "id": "D027",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 161,
+      "output_pr": 145,
+      "sha": "b8b8ce473c7acde505c266768fcd38a7f1f1eacb",
+      "evidence_digest": "git-blob:acd3e6503b64d2cc9eaa72b30de302a68392ff13",
+      "incoming_comment": 6682032075,
+      "commit": "80722a9c2ce25f537b4efeecc354bbb7a9adf9b1",
+      "receipt_commit": "9f7a6099908c74a2b09b2c8958bcfde13dcebce9",
+      "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+      "status": "complete",
+      "disposition": "D026 partially closed; duplicate-control false pass and whole-grid validity gaps reproduced"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -439,7 +455,9 @@
     "fd43a0a90e418a651f27c3c2197850582acd6379",
     "ead2d5a2eeab54f1970072dd0c4bfdcfb41120ed",
     "5a1fe19170ee66cd7d3fbbc7620552e4ca19a23d",
-    "94ea77479d881c10761fd88363004fe0f46ee985"
+    "94ea77479d881c10761fd88363004fe0f46ee985",
+    "9f7a6099908c74a2b09b2c8958bcfde13dcebce9",
+    "80722a9c2ce25f537b4efeecc354bbb7a9adf9b1"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -559,13 +577,15 @@
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
     "last_decision_commit": "5a1fe19170ee66cd7d3fbbc7620552e4ca19a23d",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "one TYPE: REVIEW published on PR #145",
+    "source_app_reply": "D027 complete; REVIEW reconciliation pending",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "finished",
-    "queue_snapshot": "three inbox comments listed; only 6681847165 after offset; all eligible comments in snapshot finished"
+    "active_comment_status": "complete",
+    "queue_snapshot": "three inbox comments listed; only 6681847165 after offset; all eligible comments in snapshot finished",
+    "active_comment_id": 6682032075,
+    "active_work_commit": "80722a9c2ce25f537b4efeecc354bbb7a9adf9b1"
   },
   "duplicate_events": [
     {
@@ -780,9 +800,10 @@
     {
       "comment_id": 6682032075,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D027",
-      "receipt_commit": "9f7a6099908c74a2b09b2c8958bcfde13dcebce9"
+      "receipt_commit": "9f7a6099908c74a2b09b2c8958bcfde13dcebce9",
+      "work_commit": "80722a9c2ce25f537b4efeecc354bbb7a9adf9b1"
     }
   ]
 }
