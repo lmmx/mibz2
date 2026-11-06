@@ -541,7 +541,8 @@
       "mode": "ACTIVE",
       "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
       "incoming_comment": 6694151539,
-      "status": "complete; HOLD policy recipe freeze/admission evidence; ordinary repair continues"
+      "status": "published; HOLD policy recipe freeze/admission evidence; ordinary repair continues",
+      "comment": 6694299257
     }
   ],
   "own_outgoing_comment_ids": [
@@ -576,7 +577,8 @@
     6684025721,
     6685099382,
     6685253567,
-    6693689951
+    6693689951,
+    6694299257
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -636,7 +638,8 @@
     "66e8a8278acd4025fc2c8a2bd416c8e41d2d86f5",
     "0e78770f82bd4324204648a0dfe78c6a4f0bd819",
     "7d6374ad69b92c9c32a4bd42252f2904986d02c6",
-    "02c7ab6fa44a57d7589b5e48b14b16efd9bafa49"
+    "02c7ab6fa44a57d7589b5e48b14b16efd9bafa49",
+    "dd7ebb2b28e623b3a0f7c279f39a1c13dc4f5a17"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -672,7 +675,8 @@
     6683967083,
     6684935718,
     6685165401,
-    6693599811
+    6693599811,
+    6694151539
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -754,9 +758,9 @@
     "trigger": "new non-bot inbox #161 comment; headers do not gate eligibility under SPEC",
     "repository": "lmmx/mibz2",
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
-    "last_completed_incoming_comment": 6693599811,
+    "last_completed_incoming_comment": 6694151539,
     "last_decision": "D036",
-    "last_outgoing_comment": 6693689951,
+    "last_outgoing_comment": 6694299257,
     "after_completion": "stop; await next event; no automation or subscription changes",
     "polling": false,
     "timed_schedule": false,
@@ -765,13 +769,13 @@
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
     "last_decision_commit": "02c7ab6fa44a57d7589b5e48b14b16efd9bafa49",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "pending one TYPE: REVIEW for D036 on #145",
+    "source_app_reply": "one TYPE: REVIEW for D036 on #145",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "complete",
-    "queue_snapshot": "13 inbox comments listed; current comment work complete; review pending",
+    "active_comment_status": "finished",
+    "queue_snapshot": "13 inbox comments listed; all after offset finished",
     "active_incoming_comment": 6694151539
   },
   "duplicate_events": [
@@ -1048,7 +1052,8 @@
       "sha": "40c2578095cbfe67a30a9ce2c10d0034b66e859c",
       "evidence_digest": "git-blob:622e634b01f9e736a7e504600c96addfccb98038",
       "decision": "D036",
-      "commit": "02c7ab6fa44a57d7589b5e48b14b16efd9bafa49"
+      "commit": "02c7ab6fa44a57d7589b5e48b14b16efd9bafa49",
+      "comment": 6694299257
     }
   ],
   "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
@@ -1156,10 +1161,12 @@
     {
       "comment_id": 6694151539,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D036",
       "receipt_commit": "7d6374ad69b92c9c32a4bd42252f2904986d02c6",
-      "work_commit": "02c7ab6fa44a57d7589b5e48b14b16efd9bafa49"
+      "work_commit": "02c7ab6fa44a57d7589b5e48b14b16efd9bafa49",
+      "review_comment_id": 6694299257,
+      "complete_cursor_commit": "dd7ebb2b28e623b3a0f7c279f39a1c13dc4f5a17"
     }
   ],
   "migrated_from": {
