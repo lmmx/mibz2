@@ -69,7 +69,12 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
   beside it, leaving out symbolic links (a shared corpus) and files over 50 MB, and prints the
   path. The maintainer uploads that one file: the chat takes at most 5 files a message.
 - **Is given to the maintainer as the git commands to get the branch and the `just` command,**
-  nothing else.
+  nothing else. For a frozen recipe whose run is evidence, the command is
+  `just submit <recipe>`. It runs the recipe unchanged, then archives the bundle on the
+  `evidence` branch and posts its identity and digest on #145 (RULES C5). Nothing needs uploading. If the
+  submission fails, the bundle is kept and `just submit-bundle <tarball>` retries it without a
+  rerun. The coordinator reads the bundle from the `evidence` branch at the commit the post
+  names, and checks its SHA-256.
 
 `bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
 shape when it is next used.
