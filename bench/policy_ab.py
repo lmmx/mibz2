@@ -43,6 +43,7 @@ OLD, NEW = (4, 4), (3, 6)
 EXPECT = {t: {"base": OLD, "head": OLD if t in CONTROLS else NEW} for t in THREADS}
 MIN_SPEED, NO_HARM_MAX, CONTROL_BAND = 1.03, 1.02, (0.98, 1.02)
 RSS_MAX, CPU_MAX = 1.15, 1.5
+CORPUS = "wikidata"
 
 
 def plan_of(thread_cpu):
@@ -82,20 +83,74 @@ def log_stats(ratios):
     return statistics.fmean(logs), statistics.stdev(logs) / math.sqrt(len(logs))
 
 
-def judge(rows):
-    """The run's verdict: a dict of every cell's figures and every predicate"""
-    cells, problems = {}, []
-    by = {}
-    for r in rows:
-        b = build_of(r["arm"])
-        if b is None or r["threads"] not in THREADS:
-            continue
-        by.setdefault((b, r["threads"]), []).append(r)
-    outputs = {(r.get("hash"), r.get("out")) for r in rows if not r.get("err")}
+def positive(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and x > 0
+
+
+def row_problems(rows):
+    """What makes the rows, as a whole, not the registered run: anything but the Wikidata
+    sample at the registered thread counts, from the head's `mibz2` and one base binary,
+    each run with a hash, a positive output length and finite positive wall, CPU and RSS"""
+    problems = []
     failed = [r for r in rows if r.get("err")]
-    valid = not failed and len(outputs) == 1
     if failed:
         problems.append(f"{len(failed)} failed run(s)")
+    bases = sorted({r.get("arm") for r in rows if build_of(r.get("arm", "")) == "base"})
+    if len(bases) != 1:
+        problems.append(f"{len(bases)} base binaries ({', '.join(map(str, bases)) or 'none'})")
+    stray = [r for r in rows if build_of(r.get("arm", "")) is None]
+    if stray:
+        arms = sorted({str(r.get("arm")) for r in stray})
+        problems.append(f"{len(stray)} row(s) from undeclared arms ({', '.join(arms)})")
+    off = [r for r in rows if r.get("threads") not in THREADS]
+    if off:
+        problems.append(f"{len(off)} row(s) at unregistered thread counts")
+    corpora = sorted({str(r.get("corpus")) for r in rows} - {CORPUS})
+    if corpora:
+        problems.append(f"rows from other corpora ({', '.join(corpora)})")
+    bad = [
+        r
+        for r in rows
+        if not r.get("err")
+        and not (
+            isinstance(r.get("hash"), str)
+            and r["hash"]
+            and isinstance(r.get("out"), int)
+            and not isinstance(r.get("out"), bool)
+            and r["out"] > 0
+            and all(positive(r.get(k)) for k in ("wall", "cpu", "rss_kb"))
+            and isinstance(r.get("round"), int)
+            and isinstance(r.get("thread_cpu"), str)
+        )
+    ]
+    if bad:
+        problems.append(
+            f"{len(bad)} malformed row(s): a missing hash or length, or a "
+            "wall, CPU or RSS not finite and positive"
+        )
+    return problems
+
+
+def judge(rows):
+    """The run's verdict: a dict of every cell's figures and every predicate"""
+    cells = {}
+    problems = row_problems(rows)
+    if problems:
+        # the figures below are only computed from rows that are all well formed
+        return {
+            "valid": False,
+            "problems": problems,
+            "cells": {},
+            "controls": {t: False for t in CONTROLS},
+            "primary": {k: False for k in ("speed", "lower bound", "cpu", "rss")},
+            "no_harm": {t: False for t in NO_HARM},
+            "pass": False,
+        }
+    by = {}
+    for r in rows:
+        by.setdefault((build_of(r["arm"]), r["threads"]), []).append(r)
+    outputs = {(r["hash"], r["out"]) for r in rows}
+    valid = len(outputs) == 1
     if len(outputs) != 1:
         problems.append(f"{len(outputs)} distinct outputs")
     for t in THREADS:

@@ -41,9 +41,17 @@ CPU.
 ## The run
 
 `just bench-three-team-policy` on the i9, at this branch's frozen commit.
+- **The commits:** `bench/three-team-policy.frozen` names the candidate and the base, set
+  once, when this registration freezes. The recipe refuses to run:
+  - if either is unset;
+  - if the checkout has uncommitted changes;
+  - if HEAD's measured files (`src`, the Cargo files, `examples`, `bench/policy_ab.py`, the
+    recipe) differ from the candidate's;
+  - if the base build's worktree is not clean at the base.
+
+  It records HEAD, the candidate and the base in `commits.txt`.
 - **The arms:** the head build's `mibz2` against the base build's (`mibz2@<base ab>`). Both use
-  the default plan, unpinned, as a caller gets it. The base is the head's merge base with
-  master; the recipe records both commits.
+  the default plan, unpinned, as a caller gets it.
 - **The grid:** 8, 9, 10, 11, 12, 16 and 20 threads, 20 rounds, paired by round, on the bench's
   Wikidata sample.
 - **The plans each build must run,** read from every run's thread names:
@@ -61,6 +69,9 @@ CPU.
 head's, the geometric mean of the 20 rounds' ratios.
 
 - **Validity:**
+  - only the registered rows: the Wikidata sample, the seven thread counts, the two arms and one
+    base binary;
+  - every run with a hash, a positive output length, and finite, positive wall, CPU and RSS;
   - 20 rounds a cell, each once, no failed run;
   - one output hash and one length across every run;
   - every run's plan as in the table.
@@ -72,10 +83,16 @@ head's, the geometric mean of the 20 rounds' ratios.
 - **No harm, at 11, 12, 16 and 20 threads:** each head-over-base wall ratio's one-sided upper
   bound at most 1.02. The bound is Bonferroni over the four: t at 1 − 0.05/4, 19 degrees of
   freedom. An interval too wide to show it is inconclusive, and fails.
-- **Admission:** the run passes only if every predicate holds. The policy is admitted only if
-  one run and its predeclared confirmation, a second run of the same recipe at the same commit,
-  both pass. No pooling, no switching cells, no third run.
-- **Invalidation:** one replacement run in the whole experiment, for a run that isn't valid.
+- **A run's verdict** is the `pass` field of its `policy-ab.json`; it passes only if every
+  predicate holds.
+- **Admission:** two slots, the first run and its confirmation, each a run of the same recipe
+  at the frozen commits. The policy is admitted only if both pass. No pooling, no switching
+  cells.
+- **Replacement:** at most one in the whole experiment, so at most three attempts. Only a run
+  that is not valid (`valid` false: a structural defect, such as a failed run, a missing round
+  or a wrong plan) may be replaced, and its replacement takes its slot. A valid run that fails
+  is never replaced: it fails the registration.
+- **Every attempt is kept,** replaced or not, with its tarball, and reported.
 
 ## The prediction
 
@@ -92,6 +109,20 @@ head's, the geometric mean of the 20 rounds' ratios.
 - **Both runs pass:** the policy merges, with this PR's CI green.
 - **Either fails:** it doesn't merge. The report names the failed predicate, and the change
   stays unmerged until a new registration.
+
+## What a pass would not show
+
+- **Unmeasured thread counts:** 13 to 15, 17 to 19, and above 20. The plan there is the same
+  3 × 3, so they are expected to behave like their neighbours, but nothing measures them.
+- **Other machines:** only the i9. A CPU with the same core count and L3 can differ in cache
+  layout, NUMA, affinity or a CPU quota, and the exception would still pick 3 × 3 there.
+- **Other uses:** a custom window, small inputs, other workload shapes, and a machine busy with
+  other work are not measured.
+- **The controls** screen for drift between the builds; they do not show the builds equivalent
+  at 8 and 9 threads.
+- **The intervals** are conditional on the model: paired rounds, a normal log-ratio.
+- **A measured 1.03** does not show that the true gain is at least 3%; the lower bound above 1.00
+  shows only that it is a gain.
 
 ## Frozen
 

@@ -1,0 +1,7 @@
+# The three-team policy's workstation A/B (docs/journal/2026-11-06-three-team-policy.md).
+# Unfrozen: `just bench-three-team-policy` refuses to run until both lines name 40-character
+# commits. Freezing sets them once, in their own commit, after the reviews: the candidate is
+# the commit whose src, Cargo files, examples, bench/policy_ab.py and .just/bench.just are
+# measured; the base is master's commit the candidate branched from.
+candidate unfrozen
+base unfrozen

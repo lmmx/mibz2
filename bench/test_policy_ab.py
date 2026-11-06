@@ -46,6 +46,7 @@ def grid(case=None, speedup=1.08, harm=1.0, seed=7):
                 rows.append(
                     {
                         "round": rnd,
+                        "corpus": "wikidata",
                         "threads": t,
                         "arm": "mibz2" if build == "head" else BASE,
                         "wall": wall,
@@ -116,3 +117,34 @@ def test_cli_writes_both_reports(tmp_path):
     assert r.returncode == 0, r.stderr
     assert json.loads((tmp_path / "policy-ab.json").read_text())["pass"]
     assert "**This run: PASS.**" in (tmp_path / "policy-ab.md").read_text()
+
+
+def test_rows_outside_the_registration_are_rejected():
+    cases = {
+        "no hash": lambda r: r.pop("hash"),
+        "empty hash": lambda r: r.update(hash=""),
+        "no length": lambda r: r.pop("out"),
+        "zero length": lambda r: r.update(out=0),
+        "nan wall": lambda r: r.update(wall=float("nan")),
+        "zero cpu": lambda r: r.update(cpu=0.0),
+        "inf rss": lambda r: r.update(rss_kb=float("inf")),
+        "string wall": lambda r: r.update(wall="0.16"),
+        "other corpus": lambda r: r.update(corpus="enwiki"),
+        "second base": lambda r: r.update(arm="mibz2@/elsewhere/ab"),
+        "undeclared arm": lambda r: r.update(arm="libbzip2"),
+        "unregistered threads": lambda r: r.update(threads=14),
+    }
+    for name, spoil in cases.items():
+        rows = grid()
+        spoil(rows[37])
+        v = policy_ab.judge(rows)
+        assert not v["valid"] and not v["pass"], name
+        assert v["problems"], name
+
+
+def test_a_failed_run_without_figures_is_rejected_not_a_crash():
+    rows = grid()
+    rows[11] = {k: rows[11][k] for k in ("round", "threads", "arm", "corpus")} | {"err": "oom"}
+    v = policy_ab.judge(rows)
+    assert not v["valid"] and "1 failed run(s)" in v["problems"]
+    assert "This run: FAIL" in policy_ab.markdown(v)

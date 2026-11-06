@@ -336,13 +336,23 @@ bench-three-team-policy:
     mkdir -p "$B"
     mkdir "$W" || { echo "bench-three-team-policy: $W already exists; not reusing an attempt's directory"; exit 1; }
     exec > >(tee -a "$W/console.log") 2>&1
-    git fetch -q origin master
+    # the commits the registration froze (bench/three-team-policy.frozen): the candidate, whose
+    # measured files HEAD must match exactly, and the base it is measured against
+    fail() { echo "bench-three-team-policy: $*"; exit 1; }
+    frozen=bench/three-team-policy.frozen
+    cand=$(awk '$1 == "candidate" {print $2}' "$frozen")
+    base=$(awk '$1 == "base" {print $2}' "$frozen")
+    [[ $cand =~ ^[0-9a-f]{40}$ && $base =~ ^[0-9a-f]{40}$ ]] || fail "$frozen names no frozen candidate and base yet; nothing to run"
+    measured=(src Cargo.toml Cargo.lock examples bench/policy_ab.py .just/bench.just)
+    [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout has uncommitted changes"
+    git cat-file -e "$cand^{commit}" && git cat-file -e "$base^{commit}" || fail "fetch the branch: the frozen commits are missing"
+    git diff --quiet "$cand" HEAD -- "${measured[@]}" || fail "HEAD's measured files differ from the frozen candidate $cand"
     head=$(git rev-parse HEAD)
-    base=$(git merge-base HEAD origin/master)
-    if [ "$head" = "$base" ]; then echo "bench-three-team-policy: HEAD is its own merge base; check out the policy branch"; exit 1; fi
-    echo "head $head"; echo "base $base"
-    printf 'head %s\nbase %s\n' "$head" "$base" > "$W/commits.txt"
+    echo "head $head (measured files as candidate $cand)"; echo "base $base"
+    printf 'head %s\ncandidate %s\nbase %s\n' "$head" "$cand" "$base" > "$W/commits.txt"
     [ -d "$B/build-$base" ] || git worktree add -q --detach "$B/build-$base" "$base"
+    [ "$(git -C "$B/build-$base" rev-parse HEAD)" = "$base" ] || fail "$B/build-$base is not at the base $base"
+    [ -z "$(git -C "$B/build-$base" status --porcelain --untracked-files=no)" ] || fail "$B/build-$base has uncommitted changes"
     (cd "$B/build-$base" && cargo build -q --release --example ab)
     cargo build -q --release --example ab --example windows
     AB=$PWD/target/release/examples/ab
