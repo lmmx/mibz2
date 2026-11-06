@@ -9,6 +9,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.5](https://github.com/lmmx/mibz2/compare/v0.2.4...v0.2.5) - 2026-11-06
 
+On a machine with 10 physical cores and a 20 MiB L3, such as the i9-10900K, the decoder now
+splits 10 or more threads into three teams of three, where it used to split them into four
+teams of two (#234). Every other machine shape keeps the 0.2.4 plan unchanged. So do the
+output, the API and the supported inputs.
+
+### Measured
+
+**On the target machine:** two registered runs on an Intel i9-10900K (10 cores, 20 CPUs).
+- **Method:** 0.2.5's default against the 0.2.4 base, 20 rounds, on the bench's Wikidata sample.
+- **Admission rule:** fixed before the first run (`docs/journal/2026-11-06-three-team-policy.md`). Both runs had to pass, and both did.
+- **Reading the table:** speed is the base's wall time over the head's, so above 1 is faster. CPU and RSS are the head's median over the base's.
+
+| threads | run 1 speed (95%) | confirmation speed (95%) | CPU | peak RSS |
+|--:|--:|--:|--:|--:|
+| 8 (control, same plan) | 0.986 (0.977–0.995) | 1.005 (0.992–1.019) | 1.00 | 1.00 |
+| 9 (control, same plan) | 1.000 (0.991–1.009) | 1.007 (0.997–1.017) | 0.99 | 0.99 |
+| **10** | **1.089 (1.075–1.103)** | **1.088 (1.076–1.101)** | 0.89 | 0.81 |
+| 11 | 1.081 | 1.072 | 0.89 | 0.81 |
+| 12 | 1.065 | 1.085 | 0.88 | 0.82 |
+| 16 | 1.076 | 1.082 | 0.90 | 0.82 |
+| 20 | 1.092 | 1.081 | 0.89 | 0.82 |
+
+The CPU and RSS columns are the confirmation's. Run 1's are within 0.01 of them.
+
+**On CI:** one paired run of this release against `v0.2.4`, both builds on one 4-CPU GitHub runner, 10 rounds,
+on the Wikidata sample and the crate's corpora ([run 42310037840](https://github.com/lmmx/mibz2/actions/runs/42310037840)).
+- **Result:** no change on any of the four measures.
+  - Best wall time: −0.1% (−1.1, +0.9).
+  - CPU per byte and amplification at 2 and 4 threads: no change.
+  - The output was the same bytes as the base's.
+- **Stages:** within ±0.03 ns/B, at a total of about 2.4 ns/B.
+- **Why no gain shows:** this runner has 2 physical cores. The policy doesn't apply to it, so this run only checks that nothing else moved.
+
+**Caveats:**
+- **One machine shape, one workload.** The evidence is a 10-core Intel part with 20 MiB of L3, decoding Wikidata's bzip2 blocks. The policy applies only to that shape.
+- **The cause of run 1's control offset is unknown.** In run 1, the 8-thread control, which runs the same plan in both builds, was 1.4% slower for the head. That is inside its registered ±2% band, and it didn't recur in the confirmation.
+- **The gain is not split into causes.** The lower CPU and RSS are consistent with fewer, larger teams sharing L3 better, but that is not measured.
+- **Evidence:** both runs' bundles are on the `evidence` branch (`820f4a87`, `0b340a53`), each with its SHA-256.
+
+### <!-- 3 -->Performance
+
+- three teams of three at 10 threads on a 10-core, 20 MiB-L3 machine ([#234](https://github.com/lmmx/mibz2/pull/234))
+
 ### <!-- 4 -->Documentation
 
 - *(team)* WORK-TASKS.md, the only ChatGPT Work task prompts ([#226](https://github.com/lmmx/mibz2/pull/226))
@@ -19,7 +62,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### <!-- 9 -->Other
 
-- Three-team policy: 3×3 teams at 10 threads on a 10-core, 20 MiB-L3 machine ([#234](https://github.com/lmmx/mibz2/pull/234))
 - Workstation evidence by command: just submit RECIPE (RULES C5) ([#242](https://github.com/lmmx/mibz2/pull/242))
 - The relay's return direction: no repeated re-pin, and requests the Coordinator closes ([#241](https://github.com/lmmx/mibz2/pull/241))
 - The relay's return direction: the Coordinator's requests to ChatGPT ([#240](https://github.com/lmmx/mibz2/pull/240))
