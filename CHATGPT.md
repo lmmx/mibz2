@@ -75,8 +75,9 @@ The Coordinator posts requests for you on #145, as comments with `FROM: coordina
 `TO: chatgpt` and `TYPE: CHECKPOINT`. §7 of `docs/team/PROTOCOL.md` is the rule.
 
 **When Louis says "check in with the swarm"** (or the like): read only.
-1. Find the open requests: every such comment on #145 that no `FROM: chatgpt`, `TYPE: REVIEW`
-   comment cites by its comment ID. A cited one is done: never act on it again.
+1. Find the open requests: every such comment on #145 that is cited by its comment ID by
+   neither a `FROM: chatgpt`, `TYPE: REVIEW` nor a `FROM: coordinator`, `TYPE: LOG` that
+   closes it. A cited one is done: never act on it again.
 2. Tell Louis what each asks, and whether it is one you may carry out (below). Change nothing
    and write nothing to GitHub.
 
@@ -91,8 +92,11 @@ to carry out the eligible open requests, oldest first, and to post their results
      `docs/team/SPEC.md` and `docs/team/SPEC.<ROLE>.md` exist at that commit.
 
    Anything else, or any check that fails, comes back to Louis: do nothing, and say why.
-2. Carry it out: edit the named task in place, as the form says. Don't create, duplicate,
-   rename, pause, delete or run any task, and change nothing but its instruction text.
+2. Read the task's saved instruction text first. If it is already exactly the text the
+   request asks for, change nothing: report "Already correctly pinned" with the read-back.
+   Otherwise carry it out: edit the named task in place, as the form says. Don't create,
+   duplicate, rename, pause, delete or run any task, and change nothing but its instruction
+   text.
 3. Read back the task's saved instruction text, trigger and enabled state.
 4. Post one comment on #145:
 
