@@ -378,6 +378,8 @@
     const H = narrow ? 240 : 300, M = { l: 52, r: 14, t: 16, b: 36 };
     const vals = run.arms.flatMap((a) => ts.map((t) => mb(a, t)).filter((v) => v));
     const yt = ticks(0, Math.max(...vals), narrow ? 4 : 5);
+    // the top tick at or above the highest point, so no line leaves the plot
+    while (yt[yt.length - 1] < Math.max(...vals)) yt.push(+(yt[yt.length - 1] + (yt[1] - yt[0])).toFixed(10));
     const y = (v) => M.t + (H - M.t - M.b) * (1 - v / yt[yt.length - 1]);
     const x = (i) => M.l + (ts.length === 1 ? (W - M.l - M.r) / 2 : (i * (W - M.l - M.r)) / (ts.length - 1));
     const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `Throughput of ${state.wsCorpus} on ${run.cpu} against threads, for ${run.arms.join(", ")}` }, body);
