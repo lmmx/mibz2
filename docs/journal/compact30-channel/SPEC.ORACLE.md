@@ -51,11 +51,79 @@ from that.
   correctly, advances the work. Whether the prediction held, and whether the rule's bar
   qualified, are each recorded beside the run's status, not folded into it.
 
+## Levels, settling and where to stop (Louis, 2026-11-06)
+
+**The page is a précis of the team's record, in levels.** Read a summary of a book in levels:
+the whole in a line, then each part, then each section, and the page itself when you need it.
+The page is read the same way. The record (PRs, comments, journal entries, runs) is the text,
+and the page summarises it level by level:
+
+- **L0, one line:** the shortest true answer to "what is the team doing?". It names the current
+  step and what it serves, never the whole chain. One line is enough only if its scope is
+  true. If there are materially distinct fronts, either give one line per front, or label the
+  line's scope. Never invent a single purpose to make them fit.
+- **L1, five lines:** "Right now".
+- **L2, the fronts:** the top of the tree.
+- **L3, the experiments and steps** under each front.
+- **Below L3:** the record itself, by link. The page doesn't copy it.
+
+The whole chain from L0 up to item 0 is always on the page, though L0 doesn't recite it. When
+a step finishes, the page collapses it into one line with its result and link. The current
+step then moves up to the parent, which says what it does next.
+
+**The page settles at discrete points, not continuously.** Each rebuild is a version, stamped
+with two things:
+- **a channel watermark:** the newest #145 comment it covers, recorded as `last_rebuilt_from`;
+- **a small evidence manifest:** the exact revisions it rests on (branch heads, PR heads,
+  commits), and any changeable status it observed (CI, runs, PR state), with the time it
+  observed them.
+
+Write it as: "channel covered through C; evidence inspected at T, pins linked". A set of
+branch heads alone is not enough: it misses comments, PR changes and runs, and it is not an
+atomic snapshot.
+
+*Settled* means reconciled against that declared evidence. It doesn't mean frozen, or finished:
+- Everything inside the watermark must agree with the page. A contradiction there is an error
+  now, not something to fix in the next version.
+- Where sources depend on each other, reconcile them. Refresh a material mismatch, or flag
+  it. Don't restart indefinitely.
+- A commit nobody announced can show that work was done. It can't, on its own, establish that
+  an intention changed.
+
+Between rebuilds, the page is the last settled version. It is not a live feed.
+
+**Where to stop: enough is enough** (J. L. Austin, "Other Minds"). An answer to "what is being
+done?" is complete enough when it rules out the *relevant* competing readings for present
+purposes, not every imaginable one. Expand an item only until each claim on the page rests
+on evidence in the record that supports that claim. Then stop. Don't list the subagents,
+workflows or attempts in flight underneath it.
+
+- **What a piece of evidence supports is the claim, not the kind of artifact.**
+  - A brief shows that work was dispatched, not that it is still running.
+  - An old PR shows its purpose at the time, not that the purpose still applies after a
+    revision.
+  - A registration can stay binding however old it is.
+- **Recheck an item after any relevant change:** to the item itself, to its purpose or
+  premise, or to the work it rests on. How old it is doesn't decide this. An unchanged parent
+  can have a child that failed.
+- **Where execution can't be established,** say so: "last confirmed: <state> at <link>;
+  execution unconfirmed". Age alone doesn't show that work has died.
+- **Where attempts diverge,** and the divergence is the direction, say so in one sentence
+  naming the competing directions. Don't list the attempts.
+- **The compression test.** Suppose two states of the record give the same précis, but the
+  difference between them would change what Louis could reasonably direct. An operative brief
+  against a retracted one is an example. Then the précis has lost information it needed:
+  expand it.
+
+An item with no supporting evidence is either a stated intention not yet acted on, which says
+so, or a finding for "Where the 'why' chain is weak".
+
 ## The page's shape
 
 Keep the shape of the seeded page.
 
-1. **"Right now, in five lines":**
+0. **L0, the one line**, at the top: "<the current step>, in order to <what it serves>".
+1. **"Right now, in five lines" (L1):**
    - the aim;
    - the question;
    - what has been found;
@@ -63,7 +131,7 @@ Keep the shape of the seeded page.
    - what it is waiting on, and from whom.
 
    Louis should be able to read only this.
-2. **The tree.** Item 0 is the top aim, the Coordinator's objective in MODE.md: "faster
+2. **The tree (L2 and L3).** Item 0 is the top aim, the Coordinator's objective in MODE.md: "faster
    production inverse BWT, released". Below it, from general to specific, are:
    - the fronts;
    - the experiments and PRs;

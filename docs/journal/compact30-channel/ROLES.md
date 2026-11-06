@@ -244,6 +244,10 @@ Source: `lmmx/anscombe-intention`, `.claude/skills/house-goal/SKILL.md`.
   (SPEC.ORACLE.md);
 - keeping intention and outcome apart, and observed facts apart from inferred ones;
 - flagging any item whose "why" chain is broken, stops at a procedure, or has lost its parent.
+- writing the page in levels: one line, then five, then the fronts, then the experiments, with
+  the record below them by link. Each version is settled at discrete points: a channel
+  watermark, plus a manifest of the evidence it rests on. Each claim is expanded only until
+  evidence in the record supports it ("enough is enough", Austin).
 
 **Does not:** decide, judge gates, rank candidates, review code, rewrite registrations, or hold
 up any work. It is not a gate.
