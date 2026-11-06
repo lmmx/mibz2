@@ -13,6 +13,14 @@ pin in the channel log, and checks what each task saved against it.
 (Louis, 2026-11-06). That file also says what Work can't do: model and effort are selected by
 Louis in the chat window, beside the prompt, never in it.
 
+## Your trigger
+
+Your task is woken by the GitHub webhook on your inbox PR. That webhook also delivers the PR's
+lifecycle events (opened, ready for review, closed), and can't be limited to comments. **This is
+expected, and nothing needs to be added to your task for it.** Each run handles it: whatever woke
+you, you list your inbox, and if no comment is new, you stop. No subscription setting is
+required of your task beyond "your inbox PR".
+
 ## Each run
 
 Your inbox is your queue; your cursor is your place in it.

@@ -23,11 +23,16 @@ marked:
   ("Allow low-risk actions") and on Work usage. It can't certify the scopes or billing, and
   doesn't need to.
 
-## Creating a task — the original form
+## Creating a task — untested
 
-This is the prompt that created the first three tasks first time (2026-11-04). Only the trigger's
-condition and the instruction text are substituted. The Coordinator and ChatGPT agreed on it on
-2026-11-06, after the versions that added sentences failed.
+This keeps the opening sentence of the prompt that created the first three tasks (2026-11-04).
+It then answers, in advance, every question Work raised while creating the Oracle on
+2026-11-06:
+- the lifecycle events;
+- the spec's exclusion wording;
+- permissions and cost.
+
+Its aim is that the task is created without a single question.
 
 Beside the prompt, tell Louis:
 - the **name**: `mibz2⠶<Role>⠶<effort code>`;
@@ -35,7 +40,7 @@ Beside the prompt, tell Louis:
 - to start it in a **new** Work chat.
 
 ```
-Create an event-triggered task, not a scheduled one and not a one-off, that runs automatically whenever a new comment is posted on pull request #N in `lmmx/mibz2`. Before enabling it, show me the trigger, the condition, the GitHub permissions it will use, and whether it runs on my plan or costs anything extra. The task's instructions are:
+Create an event-triggered task, not a scheduled one and not a one-off, that runs automatically whenever a new comment is posted on pull request #N in `lmmx/mibz2`. Use the GitHub webhook for that PR as available, including its PR lifecycle events: those are expected and accepted, and the pinned spec ignores any event without a new comment, so add no condition and change nothing in the instructions. Where the spec mentions excluding bots, reviews, commit updates or edits, that means "where the settings allow it", so the available webhook satisfies it. The cost and permission terms are accepted; if you can't verify them exactly, say so in your report, but don't let that stop the creation. Create and enable the task now, without running it, and don't ask me anything further. Then report the saved trigger, the instruction text exactly as saved, and whether it is enabled. The task's instructions are:
 
 You are the ROLE-NAME of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC.md and docs/team/SPEC.ROLE.md from lmmx/mibz2 at commit SHA, and follow them. Those files, at that commit, are your complete instruction. If they can't be fetched, report that and stop. Keep this task enabled.
 ```
@@ -43,12 +48,9 @@ You are the ROLE-NAME of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC
 Fill in N (the role's inbox PR), ROLE-NAME (Optimiser, Guardian, Researcher, Oracle), ROLE
 (OPTIMIZER, GUARDIAN, RESEARCHER, ORACLE) and SHA (the pin). **Change nothing else.**
 
-**Work then shows the trigger, permissions and cost before enabling,** as the prompt asks. That
-pause is expected, not a failure. Louis replies with exactly this:
-
-```
-Yes, enable it. If the trigger can't be limited to comments, accept the broader pull-request subscription and add nothing to the instructions; the pinned spec ignores events with no new comment. If you can't verify permissions or cost exactly, that's fine. Then show me the instruction text exactly as saved, and whether it's enabled.
-```
+**If Work asks anything before creating the task, the form has failed.** Record what it asked
+and why, and fix the form or the spec so that it cannot ask again. A question is not a step to
+be expected.
 
 - **Why the instructions are only a pointer:** the rules (commit identity, no polling, no
   widening) live once, in the pinned spec. A copy in the task would drift from it.
@@ -81,6 +83,12 @@ Then show me the instruction text exactly as saved, the trigger and subscription
 When Louis reports the result, mark this form known to work, or record what failed.
 
 ## Revisions
+
+- 2026-11-06: the unchanged original form failed too. Work fetched the pinned SPEC.md, read its
+  "exclude bots, reviews, commit updates and edits" as a hard requirement it couldn't meet, and
+  asked whether to add a condition. The form now answers that in advance, and SPEC.md (from the
+  next pin) states that lifecycle events are expected and need no condition. Rule: any question
+  from Work during creation means the form has failed.
 
 - 2026-11-06: settled with ChatGPT on the original form unchanged, plus one scripted reply for
   its confirmation step (accept the broader events; unverifiable checks are fine).
