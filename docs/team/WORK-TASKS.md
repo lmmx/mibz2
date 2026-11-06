@@ -23,11 +23,14 @@ marked:
   ("Allow low-risk actions") and on Work usage. It can't certify the scopes or billing, and
   doesn't need to.
 
-## Creating a task — untested
+## Creating a task — known to work
 
-This is ChatGPT's form of 2026-11-06, agreed with the Coordinator. It removes the four traps
-that made Work investigate and ask instead of creating the task (see below). The pin must be a
-commit whose SPEC.md says the trigger's lifecycle events are expected: one after #226's merge.
+It created the Oracle task first time, with no question, on 2026-11-06. Its saved trigger was the
+`pull_request` webhook on #222 (comments, reviews, bot reviews and commit updates enabled), and
+its instruction text matched the template byte for byte. This is ChatGPT's form of 2026-11-06,
+agreed with the Coordinator. It removes the four traps
+that made Work investigate and ask instead of creating the task (see below). It also worked with the older pin `282fcbb0`, whose SPEC.md still mentions
+exclusions, so the prompt alone is enough.
 
 Beside the prompt, tell Louis:
 - the **name**: `mibz2⠶<Role>⠶<effort code>`;
@@ -90,6 +93,7 @@ When Louis reports the result, mark this form known to work, or record what fail
 
 ## Revisions
 
+- 2026-11-06: ChatGPT's form created the Oracle task first time. Marked known to work.
 - 2026-11-06: ChatGPT's form adopted, with its four traps recorded. It is pinned to a
   commit whose SPEC.md no longer demands exclusions. Untested until it creates a task with no
   question asked.
