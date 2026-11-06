@@ -11,7 +11,7 @@ the pin. The Coordinator records the pin in the channel log.
 > Edit the three existing Work tasks below in place, and create the one marked new. Don't
 > duplicate, rename, pause or delete any task, and don't run or replay anything.
 >
-> | task | model ⠶ effort | subscription: new comments on lmmx/mibz2 PR |
+> | task | model ⠶ effort (set by hand in the Work interface; not part of this prompt) | subscription: new comments on lmmx/mibz2 PR |
 > |---|---|---|
 > | the existing **mibz2⠶Optimiser⠶…** task | Astra ⠶ Ultra (leave as set) | #160 |
 > | the existing **mibz2⠶Guardian⠶…** task | Astra ⠶ Extra High (leave as set) | #161 |
@@ -23,14 +23,11 @@ the pin. The Coordinator records the pin in the channel log.
 >    `Optimiser`, `Guardian`, `Researcher` or `Oracle`:
 >
 >    `You are the Role of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC.md and docs/team/SPEC.ROLE.md from lmmx/mibz2 at commit SHA, and follow them. Those files, at that commit, are your complete instruction. If they can't be fetched, report that and stop. Keep this task enabled.`
-> 2. **Model and effort.** Set the new task's as in the table. Leave the existing three
->    tasks' as they are, and report what each shows.
-> 3. **Subscriptions.** Newly created comments only, on that single PR. Exclude bots, reviews,
+> 2. **Subscriptions.** Newly created comments only, on that single PR. Exclude bots, reviews,
 >    commit updates and edits where the settings allow it. Leave the existing three
 >    subscriptions as they are; set the new one.
-> 4. **Report back, for each task:**
+> 3. **Report back, for each task:**
 >    - its name;
->    - its model and effort;
 >    - the instruction text exactly as saved;
 >    - the subscription's repository and PR number, as the interface shows them;
 >    - whether it is enabled.
@@ -39,11 +36,20 @@ the pin. The Coordinator records the pin in the channel log.
 
 **Every command that creates or edits a Work task names each task's model and effort**
 (Louis, 2026-11-06), whether to set them or to leave them as they are. A command without them
-is incomplete.
+is incomplete. The ChatGPT task tool can't set model or effort, so they are given **beside**
+the prompt, as a step Louis takes by hand in the Work interface. They are never put inside the
+prompt.
 
 **A new task gets its own single creation prompt** (Louis, 2026-11-06). It covers one task,
-naming its model and effort, trigger, instruction text and enabled state, and asks for a
-report. Edits to existing tasks go in a separate prompt. The combined command above is for
+in the form that created the first three:
+
+> Create an event-triggered task, not a scheduled one and not a one-off, that runs
+> automatically whenever a new comment is posted on pull request #N in lmmx/mibz2. Before
+> enabling it, show me the trigger, the condition, the GitHub permissions it will use, and
+> whether it runs on my plan or costs anything extra. Name it NAME. The task's instructions
+> are: INSTRUCTION TEXT
+
+The model and effort follow it, as the by-hand step above. Edits to existing tasks go in a separate prompt. The combined command above is for
 re-pinning the existing tasks only.
 
 ## Each run

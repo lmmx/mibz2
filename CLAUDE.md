@@ -84,8 +84,9 @@ The team's live machinery is `docs/team/`:
 
 **Work task commands** (creating or editing a ChatGPT Work task) always name each task's model
 and effort, to set or to leave as set (`docs/team/ROLES.md` lists them). A command without them
-is incomplete.
-- **Creating a task:** one task per creation prompt.
+is incomplete. The chat agent can't set them: give them beside the prompt, as a by-hand step
+in the Work interface.
+- **Creating a task:** one task per creation prompt, in `docs/team/SPEC.md`'s form.
 - **Editing existing tasks:** goes in a separate prompt.
 
 Route every message with `.github/coordination/coord.py`, as above. compact30 is history
