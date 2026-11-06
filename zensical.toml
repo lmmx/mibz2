@@ -10,6 +10,7 @@ extra_css = [
   "assets/stylesheets/couriers.css?v=dev",
   "assets/stylesheets/blog.css?v=dev",
   "assets/stylesheets/frontier.css?v=dev",
+  "assets/stylesheets/observatory.css?v=dev",
   # KaTeX, for the maths pymdownx.arithmatex marks (pinned; assets/javascripts/katex.js)
   "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css",
 ]
@@ -18,6 +19,7 @@ extra_javascript = [
   "assets/javascripts/couriers.js?v=dev",
   "assets/javascripts/blog.js?v=dev",
   "assets/javascripts/frontier.js?v=dev",
+  "assets/javascripts/observatory.js?v=dev",
   "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js",
   "assets/javascripts/katex.js?v=dev",
 ]
@@ -49,6 +51,7 @@ nav = [
     "background/history.md",
     "background/status.md",
     "background/journals.md",
+    "background/behind-the-scenes.md",
   ] },
   { "Blog" = [
     "blog/index.md",
@@ -242,6 +245,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
   { "blog/2026-10-29-compact-navigation-tables.md" = "Most of the inverse BWT's navigation table follows simple patterns: what a census of real blocks found, and what comes next." },
   { "background/history.md" = "Where mibz2 came from: written in wikidata-pq to decode the Wikidata dump, then moved to a repository of its own." },
   { "background/status.md" = "Where mibz2's research stands: the cooperative inverse BWT found, confirmed and explained on a 10-core workstation, and what comes next." },
+  { "background/behind-the-scenes.md" = "What mibz2's agent team is doing, and to what end, as the Oracle last wrote it down: in a line, in five lines, as a tree, front by front, and every account since the first." },
   { "background/journals.md" = "mibz2's development journals: where they are and what each one records." },
   { "maintainers/development.md" = "The repository's layout, how to build, test and benchmark mibz2, and the commit conventions." },
   { "maintainers/documentation.md" = "How the documentation site and its benchmark pages are built, checked, tested and published to GitHub Pages." },
