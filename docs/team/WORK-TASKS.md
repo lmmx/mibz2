@@ -16,18 +16,25 @@ marked:
   only reachable through the interface fails when the browser is signed out (2026-11-06).
 - **One task per creation prompt.** A prompt that creates one task and edits others confuses
   it (2026-11-06).
+- **The trigger can't be restricted to comments only.** Work's GitHub event subscription is
+  broader. The specs already make any other event harmless: whatever wakes a task, it lists its
+  inbox and stops if nothing is new (SPEC.md "Each run"). So accept the broader subscription,
+  and add no guard to the instruction text (2026-11-06, the Oracle).
+- **Its permission and cost answers are generic.** It runs on the existing GitHub connection
+  ("Allow low-risk actions") and on Work usage. It can't certify the scopes or billing, and
+  doesn't need to.
 
 ## Creating a task — known to work
 
-This is the form that created the first three tasks (2026-11-04). It was confirmed again for
-the Oracle on 2026-11-06.
+This is the form that created the first three tasks (2026-11-04). The subscription sentence
+was amended on 2026-11-06, after the Oracle's creation asked about it.
 
 Beside the prompt, tell Louis:
 - the **name**: `mibz2⠶<Role>⠶<effort code>`;
 - the **model ⠶ effort** to select in the chat window (ROLES.md lists each role's).
 
 ```
-Create an event-triggered task, not a scheduled one and not a one-off, that runs automatically whenever a new comment is posted on pull request #N in `lmmx/mibz2`. Subscribe to newly created comments only, excluding bots, reviews, commit updates and edits where supported. Do not filter by comment content. Before enabling it, show me the trigger, the condition, the GitHub permissions it will use, and whether it runs on my plan or costs anything extra. The task's instructions are:
+Create an event-triggered task, not a scheduled one and not a one-off, that runs automatically whenever a new comment is posted on pull request #N in `lmmx/mibz2`. Subscribe to newly created comments, excluding bots, reviews, commit updates and edits where supported. If the trigger can't be limited to comments, accept the broader event subscription without adding any instruction: the pinned spec ignores events that bring no new inbox comment. Do not filter by comment content. Before enabling it, show me the trigger, the condition, the GitHub permissions it will use, and whether it runs on my plan or costs anything extra. The task's instructions are:
 
 You are the ROLE-NAME of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC.md and docs/team/SPEC.ROLE.md from lmmx/mibz2 at commit SHA, and follow them. Those files, at that commit, are your complete instruction. If they can't be fetched, report that and stop. Keep this task enabled.
 ```
