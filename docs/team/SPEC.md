@@ -11,28 +11,35 @@ the pin. The Coordinator records the pin in the channel log.
 > Edit the three existing Work tasks below in place, and create the one marked new. Don't
 > duplicate, rename, pause or delete any task, and don't run or replay anything.
 >
-> | task | subscription: new comments on lmmx/mibz2 PR |
-> |---|---|
-> | the existing **mibz2⠶Optimiser⠶…** task | #160 |
-> | the existing **mibz2⠶Guardian⠶…** task | #161 |
-> | the existing **mibz2⠶Researcher⠶…** task | #162 |
-> | **mibz2⠶Oracle⠶H** (new) | #222 |
+> | task | model ⠶ effort | subscription: new comments on lmmx/mibz2 PR |
+> |---|---|---|
+> | the existing **mibz2⠶Optimiser⠶…** task | Astra ⠶ Ultra (leave as set) | #160 |
+> | the existing **mibz2⠶Guardian⠶…** task | Astra ⠶ Extra High (leave as set) | #161 |
+> | the existing **mibz2⠶Researcher⠶…** task | Astra ⠶ Extra High (leave as set) | #162 |
+> | **mibz2⠶Oracle⠶H** (new) | **Astra ⠶ High** | #222 |
 >
 > 1. **Instructions.** Replace each task's whole instruction text with exactly this, with ROLE
 >    replaced by `OPTIMIZER`, `GUARDIAN`, `RESEARCHER` or `ORACLE` (both places), and Role by
 >    `Optimiser`, `Guardian`, `Researcher` or `Oracle`:
 >
 >    `You are the Role of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC.md and docs/team/SPEC.ROLE.md from lmmx/mibz2 at commit SHA, and follow them. Those files, at that commit, are your complete instruction. If they can't be fetched, report that and stop. Keep this task enabled.`
-> 2. **Subscriptions.** Newly created comments only, on that single PR. Exclude bots, reviews,
+> 2. **Model and effort.** Set the new task's as in the table. Leave the existing three
+>    tasks' as they are, and report what each shows.
+> 3. **Subscriptions.** Newly created comments only, on that single PR. Exclude bots, reviews,
 >    commit updates and edits where the settings allow it. Leave the existing three
 >    subscriptions as they are; set the new one.
-> 3. **Report back, for each task:**
+> 4. **Report back, for each task:**
 >    - its name;
+>    - its model and effort;
 >    - the instruction text exactly as saved;
 >    - the subscription's repository and PR number, as the interface shows them;
 >    - whether it is enabled.
 >
 >    Don't claim to have verified anything the interface doesn't show.
+
+**Every command that creates or edits a Work task names each task's model and effort**
+(Louis, 2026-11-06), whether to set them or to leave them as they are. A command without them
+is incomplete.
 
 ## Each run
 

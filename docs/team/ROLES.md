@@ -6,13 +6,13 @@ with the inverse BWT as a subgoal (RULES.md M3, Louis, 2026-11-06).
 Authority comes from RULES.md, not from any role's title. Roles are defined by their
 responsibilities, not by the model a role runs on.
 
-| role | runs as | inbox | state | channel header |
+| role | runs as (model ⠶ effort) | inbox | state | channel header |
 |---|---|---|---|---|
 | Coordinator | Claude Code (the only Claude Code session) | — (the channel #145 wakes it) | its PRs and the channel | `FROM: coordinator` |
-| Optimiser | a ChatGPT Work task, **mibz2⠶Optimiser⠶…** | #160 | `team-state/optimizer` | `FROM: optimizer` (`astra` in older messages) |
-| Guardian | a ChatGPT Work task, **mibz2⠶Guardian⠶…** | #161 | `team-state/guardian` | `FROM: guardian` |
-| Researcher | a ChatGPT Work task, **mibz2⠶Researcher⠶…** | #162 | `team-state/researcher` | `FROM: researcher` |
-| Oracle | a ChatGPT Work task, **mibz2⠶Oracle⠶…** | #222 | `team-state/oracle`; its record is on `observatory/intention` | `FROM: oracle` |
+| Optimiser | a ChatGPT Work task, **mibz2⠶Optimiser⠶…** (Astra ⠶ Ultra) | #160 | `team-state/optimizer` | `FROM: optimizer` (`astra` in older messages) |
+| Guardian | a ChatGPT Work task, **mibz2⠶Guardian⠶…** (Astra ⠶ Extra High) | #161 | `team-state/guardian` | `FROM: guardian` |
+| Researcher | a ChatGPT Work task, **mibz2⠶Researcher⠶…** (Astra ⠶ Extra High) | #162 | `team-state/researcher` | `FROM: researcher` |
+| Oracle | a ChatGPT Work task, **mibz2⠶Oracle⠶…** (Astra ⠶ High) | #222 | `team-state/oracle`; its record is on `observatory/intention` | `FROM: oracle` |
 
 ## Coordinator
 
