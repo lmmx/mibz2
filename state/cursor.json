@@ -7,11 +7,10 @@
     6686599413,
     6693088129,
     6693505093,
-    6694815910
-  ],
-  "in_progress": [
+    6694815910,
     6696708089
   ],
+  "in_progress": [],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -19,7 +18,7 @@
     "6693505093": 6693582783,
     "6694815910": 6694943875
   },
-  "last_rebuilt_from": 6694853843,
+  "last_rebuilt_from": 6696702367,
   "migrated_from": {
     "branch": "review/oracle-intention",
     "sha": "382518724f59c1c4e3755a57649c318fb443923d",
@@ -65,9 +64,10 @@
     },
     "6696708089": {
       "comment_id": 6696708089,
-      "status": "in_progress",
-      "progress": "Migration verified; updating frozen policy and completed Observer rename."
+      "status": "complete",
+      "work_commit": "bd56804cc5664631a79262b67198c23bf15cabbb",
+      "progress": "Account and levels committed; REVIEW pending."
     }
   },
-  "last_record_commit": "d91c869de27270a6f662aa7f530ebda54eea357b"
+  "last_record_commit": "bd56804cc5664631a79262b67198c23bf15cabbb"
 }
