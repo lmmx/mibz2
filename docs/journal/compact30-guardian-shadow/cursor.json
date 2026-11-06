@@ -509,7 +509,8 @@
       "mode": "ACTIVE",
       "stage": "A",
       "incoming_comment": 6685165401,
-      "status": "complete; D033 readiness HOLD lifted; reserved approval and cutover verification remain"
+      "status": "published; D033 readiness HOLD lifted; reserved approval and cutover verification remain",
+      "comment": 6685253567
     }
   ],
   "own_outgoing_comment_ids": [
@@ -542,7 +543,8 @@
     6683039047,
     6683861491,
     6684025721,
-    6685099382
+    6685099382,
+    6685253567
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -596,7 +598,8 @@
     "8450b722f092e25b12a4713136dc0f3c6a86521e",
     "d1e6f5e3e84a721ddbe11b88f681c2078658505c",
     "6af1967e7e74c8f59113431abc5a7b90ab47321a",
-    "d510599dbc5bccf84fe0139aa5626ef9f42638d1"
+    "d510599dbc5bccf84fe0139aa5626ef9f42638d1",
+    "d7272ba8bba1b16e14dcac4cda7fe5630b528aca"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -630,7 +633,8 @@
     6682936439,
     6683783830,
     6683967083,
-    6684935718
+    6684935718,
+    6685165401
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -989,7 +993,8 @@
       "sha": "5cb46ba390de24c875f881e720f266f7fcd7e9b5",
       "evidence_digest": "git-blob:88825a4bf7c4b6e82ffab9fc53881fd7ade4781a",
       "decision": "D034",
-      "commit": "d510599dbc5bccf84fe0139aa5626ef9f42638d1"
+      "commit": "d510599dbc5bccf84fe0139aa5626ef9f42638d1",
+      "comment": 6685253567
     }
   ],
   "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
@@ -1077,10 +1082,12 @@
     {
       "comment_id": 6685165401,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D034",
       "receipt_commit": "6af1967e7e74c8f59113431abc5a7b90ab47321a",
-      "work_commit": "d510599dbc5bccf84fe0139aa5626ef9f42638d1"
+      "work_commit": "d510599dbc5bccf84fe0139aa5626ef9f42638d1",
+      "review_comment_id": 6685253567,
+      "complete_cursor_commit": "d7272ba8bba1b16e14dcac4cda7fe5630b528aca"
     }
   ]
 }
