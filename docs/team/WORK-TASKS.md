@@ -59,8 +59,8 @@ The task's instructions are exactly:
 You are the ROLE-NAME of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC.md and docs/team/SPEC.ROLE.md from lmmx/mibz2 at commit SHA, and follow them. Those files, at that commit, are your complete instruction. If they can't be fetched, report that and stop. Keep this task enabled.
 ```
 
-Fill in N (the role's inbox PR), ROLE-NAME (Optimiser, Guardian, Researcher, Oracle), ROLE
-(OPTIMIZER, GUARDIAN, RESEARCHER, ORACLE) and SHA (the pin). Change nothing else.
+Fill in N (the role's inbox PR), ROLE-NAME (Optimiser, Guardian, Researcher, Observer), ROLE
+(OPTIMIZER, GUARDIAN, RESEARCHER, OBSERVER) and SHA (the pin). Change nothing else.
 
 **If Work asks anything before creating the task, the form has failed.** Record what it asked
 and why, and fix the form or the spec. A question is not a step.
@@ -88,6 +88,10 @@ It re-pinned the Optimiser, Guardian and Researcher tasks to `282fcbb0` on 2026-
 texts were read back character for character, and nothing else changed. Several prompts can go
 in one chat, as long as each is sent as its own message. Tell Work the task's current name: if a
 prompt says NAME, it asks.
+
+ChatGPT may also send this form itself, when the Coordinator asks on #145 and Louis says to
+process the swarm's pending requests (PROTOCOL.md §7, `CHATGPT.md`); the Coordinator then
+verifies the read-back.
 
 This is for one existing task at a time, so that it loads the specs at a new pin. Beside the
 prompt, tell Louis the task's name, and to leave its model and effort as set.

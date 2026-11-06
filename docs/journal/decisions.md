@@ -96,3 +96,95 @@ The instruction, verbatim:
 > Acknowledge each relay on #145, explaining what you understood and what you did or will do. Posting a message is not proof of execution, and the sender must not report completion until there is evidence.
 >
 > Please document this concisely, without creating another agent, PR inbox or unnecessary governance process.
+
+## 2026-11-06: the Oracle is renamed the Observer
+
+- **Source:** Louis, relayed from ChatGPT on #145 (comment 6694788681), and confirmed in the
+  Coordinator's session for the one part the relay can't approve: the role's name in RULES.md
+  (RULES D1).
+- **His words, relayed:**
+
+  > I'd like to do a full row rename. Can you send a request to Claude to do the rename via the
+  > GitHub root? And then can you also do the rename of the ChatGPT work tasks here? So two
+  > separate things
+  >
+  > \*route not root
+  >
+  > \*full role rename not full row rename
+
+- **His answer in session**, to whether the rename may change RULES.md: "Yes, rename it
+  (Recommended)", the option that reads: "I approve changing only the role's name in RULES.md
+  (Oracle → Observer), nothing else in the rules."
+- **What changed:** the role's name in the live team files, `coord.py` (with `oracle` kept as an
+  alias, so earlier messages and replies from a task still pinned to `SPEC.ORACLE.md` route as
+  the same role) and the site. `SPEC.ORACLE.md` became `SPEC.OBSERVER.md`.
+- **What didn't:** its work, authority, inbox #222 and its title (a retitle would fire the
+  inbox's webhook, PROTOCOL.md §1), its state branch `team-state/oracle` (moving it would need
+  a migration SPEC.md's check fails closed on), `observatory/intention`, history and old
+  citations, and "oracle" in its other sense, a reference implementation in the tests.
+- **The Work task:** already renamed `mibz2⠶Observer⠶H` in ChatGPT. Louis re-pins its
+  instructions to the merge's commit once its current assignment has its receipt.
+
+## 2026-11-06: the Coordinator's requests to ChatGPT, and re-pins without Louis's review
+
+- **Source:** Louis, in the Coordinator's session (RULES D: a change to how a role's
+  instructions are set needs him there).
+- **The question and his answers, verbatim:**
+  - "How should messages from the Coordinator reach ChatGPT, so things like a re-pin don't
+    need you to copy anything?" → "Check-in on #145 (Recommended)".
+  - "May ChatGPT re-pin a role's Work task when the Coordinator asks, without you reviewing the
+    text first?" → "Yes, with checks (Recommended)", the option that read: "Only the
+    WORK-TASKS.md re-pin form, only to a commit already merged into master that contains the
+    role's spec, only the named existing task, then a read-back posted on #145 that I verify
+    character for character. Anything else still comes to you."
+- **Before it:** he asked for messages to go back to ChatGPT as well, so he wouldn't pass them
+  by hand: "i know the local i9 run requires me to read and run, but the re-pin does not".
+- **A refinement from ChatGPT, adopted:** "check in with the swarm" only reads and reports;
+  "process the swarm's pending requests" is the consent to carry requests out; a request
+  with a REVIEW citing its ID is done and never repeated.
+- **Where it is:** PROTOCOL.md §7 ("The other direction"), `CHATGPT.md` ("Requests from the
+  Coordinator"), WORK-TASKS.md.
+
+## 2026-11-06: a workstation run submitted by command counts as handed over (RULES C5)
+
+- **Source:** Louis, relayed from ChatGPT on #145 (comment 6697379232, `FROM: louis via
+  chatgpt`). He then approved the wording in the Coordinator's session (RULES A4, D1, D5).
+- **Observed:** 2026-11-06, about 22:20 UTC.
+- **What was decided:** RULES C5 is amended. A frozen recipe's run counts as evidence when Louis runs
+  it himself and either hands its bundle over in session or runs it with the opt-in submission
+  command (`just submit <recipe>`, `.just/submit.just`, `bench/submit.sh`). That command
+  archives the bundle on the `evidence` branch and posts its identity and digest on #145. The
+  run's identity is read from the bundle. The freeze, the provenance checks, the evidence test
+  and the prohibition on timing by agents are unchanged. The command is named `submit`, not
+  `publish`, on Louis's instruction: "publish" reads as publishing a package, and the Justfile
+  already has `publish-rust`.
+- **Applies:** RULES C5 and D5; PROTOCOL §6; CLAUDE.md, "Workstation recipes".
+
+Louis's words in the relay, verbatim:
+
+> in regards to what you said about auth, "automatic admission of the results as experimental
+> evidence requires … amendment to C5" — i think this has probably been overly locked down,
+> the thing about all these conditions on it being accepted is a bit much no? by running them
+> with an automated provision to the coordinator via a PR comment in the inbox we are doing
+> so… and the thing about "identifying the run" is just an implementation detail (if we need
+> it identifying then we can just… put that in the comment or in the tarball itself, we
+> should avoid requiring things that force us into a manual path)
+
+The wording put to him in session, and his answer:
+
+> A run of a registered, frozen recipe counts as evidence for its registration's question
+> when Louis runs it himself and either hands its bundle over in session, or runs it with the
+> opt-in publish command. Publishing archives the complete bundle immutably, on an evidence
+> branch with its SHA-256, and posts its identity and digest on #145. Your running the command
+> is the authorisation (A4). The run's identity is read from the bundle, not stated by you.
+> This authorises no further runs, no changed method and no timing by agents.
+
+> Approve as worded (Recommended)
+
+And on the name, in session: "also hold up do not call it "just publish", that sounds like
+publishing a package! be very careful not to tread on existing justfile naming conventions!"
+
+Why there is no attachment: GitHub has no supported scripted way to attach a file to a comment
+(`gh issue comment` has no attach option, and uploads go through the browser only). So the
+bundle is a git object on the orphan `evidence` branch, linked at its commit. Pushes to that
+branch start no workflow: the push triggers are master, main and `py-*` tags only.

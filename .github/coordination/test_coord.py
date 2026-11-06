@@ -83,7 +83,7 @@ class Channel(unittest.TestCase):
 
     def test_assignments_to_any_role_are_flagged(self):
         for to, inbox in (("optimizer", "#160"), ("Astra", "#160"), ("guardian", "#161"),
-                          ("researcher", "#162"), ("oracle", "#222")):
+                          ("researcher", "#162"), ("observer", "#222"), ("oracle", "#222")):
             for kind in ("CHECKPOINT", "PROPOSAL", "CORRECTION"):
                 reason = coord.misrouted(145, msg(FROM="coordinator", TO=to, TYPE=kind),
                                          self.new)
@@ -97,24 +97,32 @@ class Channel(unittest.TestCase):
         for inbox in ("#160", "#161", "#162"):
             self.assertIn(inbox, reason)
 
-    def test_the_oracle_inbox_takes_only_its_own_work(self):
-        new = coord.ROLES["oracle"]["offset"] + 1
-        ok = msg(FROM="coordinator", TO="oracle", TYPE="CORRECTION")
-        self.assertIsNone(coord.misrouted(222, ok, new))
-        self.assertIsNotNone(coord.misrouted(222, msg(FROM="oracle", TYPE="REVIEW"), new))
+    def test_the_observer_inbox_takes_only_its_own_work(self):
+        new = coord.ROLES["observer"]["offset"] + 1
+        for name in ("observer", "oracle"):  # its name before 2026-11-06 still addresses it
+            ok = msg(FROM="coordinator", TO=name, TYPE="CORRECTION")
+            self.assertIsNone(coord.misrouted(222, ok, new), name)
+            self.assertIsNotNone(coord.misrouted(222, msg(FROM=name, TYPE="REVIEW"), new), name)
         self.assertIsNotNone(coord.misrouted(222, msg(FROM="coordinator", TO="guardian",
                                                       TYPE="CHECKPOINT"), new))
-        self.assertEqual(coord.completed("oracle", {"processed_comment_ids": [new]}), {new})
+        self.assertEqual(coord.completed("observer", {"processed_comment_ids": [new]}), {new})
+
+    def test_the_old_name_is_the_same_role(self):
+        self.assertEqual(coord.canonical("Oracle"), "observer")
+        self.assertEqual(coord.canonical("observer"), "observer")
+        self.assertEqual(coord.canonical("Astra"), "optimizer")
+        self.assertEqual(coord.roles_named("oracle"), ["observer"])
+        self.assertNotIn("oracle", coord.ROLES)
 
     def test_an_inbox_takes_only_assignments_after_its_offset(self):
-        off = coord.ROLES["oracle"]["offset"]
-        ack = msg(FROM="coordinator", TO="oracle", TYPE="ACK")
+        off = coord.ROLES["observer"]["offset"]
+        ack = msg(FROM="coordinator", TO="observer", TYPE="ACK")
         self.assertIsNone(coord.misrouted(222, ack, off))  # the bootstrap ACK at the offset
         for kind in ("ACK", "REVIEW", "DECISION", "LOG"):
-            body = msg(FROM="coordinator", TO="oracle", TYPE=kind)
+            body = msg(FROM="coordinator", TO="observer", TYPE=kind)
             self.assertIsNotNone(coord.misrouted(222, body, off + 1), kind)
         for kind in ("CHECKPOINT", "CORRECTION"):
-            body = msg(FROM="coordinator", TO="oracle", TYPE=kind)
+            body = msg(FROM="coordinator", TO="observer", TYPE=kind)
             self.assertIsNone(coord.misrouted(222, body, off + 1), kind)
         for role in ("optimizer", "guardian", "researcher"):
             body = msg(FROM="coordinator", TO=role, TYPE="ACK")

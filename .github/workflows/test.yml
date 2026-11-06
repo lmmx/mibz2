@@ -33,6 +33,15 @@ jobs:
       - name: The benchmark alternatives' lock
         run: cargo metadata --locked --format-version 1 --manifest-path bench/alternatives/Cargo.toml > /dev/null
 
+  # bench/submit.sh, the workstation evidence submission (RULES C5), against a scratch
+  # repository and a stand-in for gh: archived once, posted once, retried without a rerun
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Submission tests
+        run: python3 bench/test_submit.py
+
   get-python-versions:
     runs-on: ubuntu-latest
     outputs:

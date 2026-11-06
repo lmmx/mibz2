@@ -200,7 +200,7 @@ icon = "fontawesome/brands/rust"
 link = "https://crates.io/crates/mibz2"
 name = "mibz2 on crates.io"
 
-# the Oracle's account of what the team is doing and why, kept on observatory/intention
+# the Observer's account of what the team is doing and why, kept on observatory/intention
 [[project.extra.social]]
 icon = "lucide/telescope"
 link = "https://lmmx.github.io/mibz2/background/behind-the-scenes/"

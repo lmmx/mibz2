@@ -1,7 +1,7 @@
 # The routing tripwire for the agent team's channel (docs/team/PROTOCOL.md) (.github/coordination/coord.py).
 #
 # The coordinator's assignments go to a role's inbox (#160 Optimizer, #161 Guardian, #162
-# Researcher, #222 Oracle), or are staged on the channel PR #145 as TYPE: QUEUED while the role is busy;
+# Researcher, #222 Observer), or are staged on the channel PR #145 as TYPE: QUEUED while the role is busy;
 # the channel PR wakes only the coordinator. On each new comment on those five PRs, this
 # checks the header against that routing. A correct comment ends the run silently.
 #

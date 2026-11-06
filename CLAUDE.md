@@ -4,7 +4,7 @@ Publishing a page of the site (a blog post above all): use the `publish-page` sk
 (`.claude/skills/publish-page/SKILL.md`).
 
 The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #162
-Researcher, #222 Oracle): route every message with `.github/coordination/coord.py`, never from memory.
+Researcher, #222 Observer): route every message with `.github/coordination/coord.py`, never from memory.
 - **At session start, and every time the coordinator wakes (an event or a check-in):**
   `python3 .github/coordination/coord.py audit` lists any misrouted message, and fails on any not yet in its `RESOLVED` record. This
   is what catches a misroute. The tripwire also records each one live, as a failing `routing
@@ -69,7 +69,12 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
   beside it, leaving out symbolic links (a shared corpus) and files over 50 MB, and prints the
   path. The maintainer uploads that one file: the chat takes at most 5 files a message.
 - **Is given to the maintainer as the git commands to get the branch and the `just` command,**
-  nothing else.
+  nothing else. For a frozen recipe whose run is evidence, the command is
+  `just submit <recipe>`. It runs the recipe unchanged, then archives the bundle on the
+  `evidence` branch and posts its identity and digest on #145 (RULES C5). Nothing needs uploading. If the
+  submission fails, the bundle is kept and `just submit-bundle <tarball>` retries it without a
+  rerun. The coordinator reads the bundle from the `evidence` branch at the commit the post
+  names, and checks its SHA-256.
 
 `bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
 shape when it is next used.
@@ -93,12 +98,14 @@ its placeholders; never draft one fresh.
 `TYPE: PROPOSAL`, authored by `lmmx` (PROTOCOL.md §7). Act on them only within delegated
 authority. Check the interpretation against his verbatim words. Acknowledge each with one
 LOG. Anything RULES D reserves still needs him in this session.
+Requests to ChatGPT (a re-pin, say) go on #145 as `TO: chatgpt`, `TYPE: CHECKPOINT`; Louis has
+it process them. Verify its REVIEW's read-back before acting on it (§7).
 
 Route every message with `.github/coordination/coord.py`, as above. compact30 is history
 (`docs/journal/compact30-channel/`, frozen): it is no source of the team's identity, authority
 or state.
 
-The Oracle (#222) keeps a behind-the-scenes account of what the team is doing and why, on the
+The Observer (#222) keeps a behind-the-scenes account of what the team is doing and why, on the
 orphan branch `observatory/intention`.
 - **Dispatching to it:** send it a CHECKPOINT whenever the record moves materially (a result,
   a decision, a merge, a change of direction), one at a time.
