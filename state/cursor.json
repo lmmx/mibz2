@@ -16,7 +16,8 @@
     "6686599413": 6686754574,
     "6693088129": 6693181300,
     "6693505093": 6693582783,
-    "6694815910": 6694943875
+    "6694815910": 6694943875,
+    "6696708089": 6696838616
   },
   "last_rebuilt_from": 6696702367,
   "migrated_from": {
@@ -64,9 +65,10 @@
     },
     "6696708089": {
       "comment_id": 6696708089,
-      "status": "complete",
+      "status": "finished",
       "work_commit": "bd56804cc5664631a79262b67198c23bf15cabbb",
-      "progress": "Account and levels committed; REVIEW pending."
+      "progress": "Account and levels published; REVIEW read back and Observer routing/header/citation verified.",
+      "review_id": 6696838616
     }
   },
   "last_record_commit": "bd56804cc5664631a79262b67198c23bf15cabbb"
