@@ -147,3 +147,61 @@ appear in this run. One run can't say why.
   - 3 × 4 at 12: −12.4% (−14.3 to −10.4).
 - **No table-count mechanism is claimed.** No two plans share a team size, and the window
   differs, so the registration defers that claim (D030).
+
+### Run 2 of 2 (the confirmation): both primaries pass again
+
+Louis handed over the second bundle in the Coordinator's session on 2026-11-06 as the next
+run, the predeclared confirmation.
+
+**Provenance.**
+- **The bundle:** `20261106T190811Z.tar.gz`, SHA-256 `cfd53609…`.
+- **When and where:** started 19:08:11 UTC at `a3880ce8`. Nothing the run executes differs from
+  the freeze: the recipe, `bench/`, the decoder, examples, `Cargo.toml` and `Cargo.lock` are all
+  unchanged since `656d2794`, and the later commits are journal text only. The machine was the
+  same i9-10900K, again with no quota or throttling.
+- **The data:** the corpus SHA-256 matched. All 431 blocks decoded byte-identically. There were
+  no counters (perf again couldn't count); the occupancy pass ran.
+- **Fresh data:** the raw runs differ from run 1's. Only 5 of 320 wall times coincide, as
+  4-digit rounding allows. Nothing from run 1 or the screen is reused.
+
+**The report.**
+- Rerunning this branch's `bench/team_size.py` on the raw runs reproduces the bundle's report
+  byte for byte.
+- The primaries were also recomputed independently from the raw runs, and agree.
+
+**The predicates.**
+- **Bytes:** one hash and one length across all 320 runs, and no failed run.
+- **The reference:** complete, 4 × 2 in every run.
+- **The grid:** complete.
+- **The control:** 1.000 (0.990–1.011), within ±2%.
+
+| primary | run | plan in every run | mean ≥ 1.03 | lower bound > 1.00 | peak RSS / ref (≤ 1.15) | CPU / ref (≤ 1.5) |
+|---|---|---|---|---|---|---|
+| `mibz2-team4@12` (3 × 4) | 1 | yes | 1.090 | 1.072 | 0.82 | 1.04 |
+| | 2 | yes | **1.086** | **1.062** | 0.83 | 1.04 |
+| `mibz2-team3@10` (3 × 3) | 1 | yes | 1.076 | 1.058 | 0.82 | 0.90 |
+| | 2 | yes | **1.087** | **1.074** | 0.82 | 0.89 |
+
+## Outcome
+
+**Both primaries pass and confirm. Under the frozen rule, each qualifies.** The same cell
+passed every predicate in both runs, within the adoption limits in each. Nothing was switched
+or pooled, and no run was replaced.
+
+**What this makes them:** policy candidates, not an adoption ("What each outcome would mean").
+On this machine, three teams beat today's four:
+- **3 × 3 at 10 threads:** about 8% faster, with about 18% less peak memory and about 11% less CPU;
+- **3 × 4 at 12 threads:** about 9% faster, at the same peak-memory saving and about 4% more CPU.
+
+Moving the cap on this machine from 4 teams to 3 still needs a PR with its own measured-head
+CI, parity, safety and regression evidence, as any decoder change does.
+
+**Limits.**
+- **Scope:** both results are for one machine (the i9-10900K) and one workload (the Wikidata
+  corpus at level 9).
+- **Error rate:** the nominal fixed-run bound is 0.05 under the paired-log model, for this
+  experiment only.
+- **Choosing between them:** the rule qualifies both and doesn't rank them. Choosing between
+  them, or between 10 and 12 threads, belongs to the policy PR and its evidence.
+- **Mechanism:** none is established. The registration deferred it, and nothing here isolates
+  table count from the other things that change with it (D030).
