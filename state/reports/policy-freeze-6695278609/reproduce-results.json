@@ -1,0 +1,35 @@
+{
+  "untracked_root_build_script": {
+    "tracked_only_status": "",
+    "measured_status": "",
+    "full_status": "?? build.rs"
+  },
+  "clean_later_head_build_script": {
+    "full_status": "",
+    "measured_diff_exit": 0,
+    "all_diff": "build.rs"
+  },
+  "untracked_toolchain_file": {
+    "measured_status": "",
+    "full_status": "?? rust-toolchain.toml"
+  },
+  "first_name_cache_model": {
+    "observations": [
+      {
+        "12": "mibz2-0"
+      },
+      {
+        "12": "mibz2-coop-1"
+      },
+      {
+        "12": "mibz2-coop-1"
+      }
+    ],
+    "cached": {
+      "12": "mibz2-0"
+    },
+    "helper_count_cached": 0,
+    "helper_count_final_observation": 1
+  },
+  "refresh_model_helper_count": 1
+}

@@ -1,0 +1,70 @@
+{
+  "candidate": "0a2d5b1389ef177372730ac0aaa19889316aa9b9",
+  "source_sha256": {
+    "examples/ab.rs": "f1998a979c04cd562e96fe7d94fea2c5f7b5a65e89a3172c5dedffa4926fc717",
+    "bench/policy_ab.py": "346a72555bcf99385fd3bf66bd569cc551a4b2d69a34b0e06e3c000dd52bd609",
+    "bench/test_policy_ab.py": "7a61254f3dae3bcb5131296df80d7118a3c2d8d73e92b1cccf203c050cd7283c",
+    ".just/bench.just": "c142a82a85d9ee0e32610dd9d65fa2e65e1e1b601adf3733281b6bc22659f54a",
+    "bench/three-team-policy.frozen": "fa02a5ca7fab465572872d47c38bc7e964f88270dd424f0d6a7212b70f99e3d5",
+    "docs/journal/2026-11-06-three-team-policy.md": "0c8ab7c3f8b8e5b24d81a3fa1e82085db60bd3753aa52860018d44c62cc0f869"
+  },
+  "python_tests_passed": [
+    "test_clean_grid_passes",
+    "test_plans_read_from_thread_names",
+    "test_an_idle_helper_still_fails_the_busy_check",
+    "test_each_defect_fails",
+    "test_a_flagged_control_fails",
+    "test_too_small_a_gain_fails",
+    "test_harm_beyond_two_percent_fails",
+    "test_noise_too_wide_is_inconclusive",
+    "test_cli_writes_both_reports",
+    "test_rows_outside_the_registration_are_rejected",
+    "test_a_failed_run_without_figures_is_rejected_not_a_crash",
+    "test_old_format_base_rows_pass_on_the_parents_census",
+    "test_a_real_ab_line_from_an_old_base_child",
+    "test_broken_input_is_an_invalid_report_not_a_crash"
+  ],
+  "execution": "direct function invocation; tmp_path=temporary Path, unused monkeypatch=None",
+  "limitations": [
+    "pytest unavailable",
+    "Cargo/rustc unavailable; no Rust builds",
+    "/proc/self/task unavailable; live census test could not run",
+    "census replay is a state-transition model",
+    "no decoder or timing run"
+  ],
+  "findings": {
+    "untracked_root_build_script": {
+      "tracked_only_status": "",
+      "measured_status": "",
+      "full_status": "?? build.rs"
+    },
+    "clean_later_head_build_script": {
+      "full_status": "",
+      "measured_diff_exit": 0,
+      "all_diff": "build.rs"
+    },
+    "untracked_toolchain_file": {
+      "measured_status": "",
+      "full_status": "?? rust-toolchain.toml"
+    },
+    "first_name_cache_model": {
+      "observations": [
+        {
+          "12": "mibz2-0"
+        },
+        {
+          "12": "mibz2-coop-1"
+        },
+        {
+          "12": "mibz2-coop-1"
+        }
+      ],
+      "cached": {
+        "12": "mibz2-0"
+      },
+      "helper_count_cached": 0,
+      "helper_count_final_observation": 1
+    },
+    "refresh_model_helper_count": 1
+  }
+}
