@@ -16,7 +16,9 @@ should be permanent or end with the compact30 campaign. They chose:
 > isn't held back because of compact30.
 
 The steward is the Coordinator, which is the maintainer's Claude Code session. The role
-extends the delegation in the compact30 research charter (§2, report 266) beyond that campaign.
+extended the delegation in the compact30 research charter (§2, report 266) beyond that campaign.
+compact30 ended on 2026-11-06. The agent team's standing rules are now `docs/team/RULES.md`
+(row A6 is this role).
 
 ## The standing objective
 
@@ -40,16 +42,16 @@ merge only when all of these hold:
 - no other figure regresses unacceptably.
 
 **Before opening a PR that changes the default decoding kernel,** account for the whole decoder,
-not only the part a campaign optimised.
+not only the part being optimised (RULES.md C4, S2).
 - **Count the instructions** executed in `decode_block` on master and on the candidate, split
   into build, walk and the rest. Use matched toolchain, flags and input, and archive the
-  profiles.
-- **An integration PR, meant to merge,** needs the whole count at or below master's.
-- **A measurement PR** tests a hypothesis that instructions don't capture, such as cache
-  residency or memory-level parallelism. It needs the hypothesis written down first: the
-  mechanism, its predicted effect at each thread count CI measures, the instruction excess it
-  must beat, and what falsifies it. Falsified, it is closed and written up.
-- **Timing on the shared development machine** is never the evidence for either.
+  profiles. Charge every induced cost: work, memory traffic, synchronisation and control.
+- **An excess over master's count needs a stated mechanism,** written down first: what it
+  buys (overlap, locality, less contention), its predicted effect at each thread count CI
+  measures, and what falsifies it. Falsified, the PR is closed and written up.
+- **CI's end-to-end bench decides the merge,** not the count alone.
+- **Timing on the shared development machine** is never the evidence. A workstation run is
+  evidence only under RULES.md C5.
 
 PR #155 is why: its constructor saved 19.5% of its instructions, its walk added 31%, and CI
 measured the decoder 7–19% slower.
@@ -115,14 +117,16 @@ metadata.
 
 These decisions still need the maintainer:
 - relaxing a gate or an acceptance minimum;
-- changes to the bench's workload, statistical method or acceptance criteria (per-stage
-  diagnostic instrumentation is the steward's);
-- timing runs or captures on the i9 or another workstation;
+- the bench's workload, statistical estimand, repeat policy and merge acceptance rule. Harness
+  mechanics and diagnostic instrumentation that leave these unchanged are the steward's
+  (RULES.md C6);
+- a run on the i9 or another workstation. The maintainer authorises it by running a recipe
+  frozen before the run, and that authorises that run only (RULES.md C5);
 - new infrastructure, credentials or spending;
 - widening the scope beyond mibz2 and its downstream pin bump.
 
-A campaign's charter can reserve more for the maintainer. It cannot give the steward more than
-this document does without the maintainer's own words.
+A campaign's rules can reserve more for the maintainer. They cannot give the steward more than
+this document and `docs/team/RULES.md` do without the maintainer's own words.
 
 ## Standing prohibitions
 
@@ -144,4 +148,6 @@ decision. Resolve it to a commit and record the revision that a decision used.
 
 | Campaign | Entry document |
 | --- | --- |
-| compact30 (current) | `research/compact30-channel:docs/journal/compact30-channel/CAMPAIGN.md` |
+| compact30 (ended 2026-11-06, archived) | `docs/journal/compact30-channel/CAMPAIGN.md` (history: `docs/journal/2026-11-06-team-neutral.md`) |
+
+There is no current campaign. The agent team's standing work runs under `docs/team/`.

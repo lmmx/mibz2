@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic routing and delivery checks for the compact30 channel.
+"""Deterministic routing and delivery checks for the mibz2 agent team's channel (docs/team/PROTOCOL.md).
 
 The coordinator's messages have one correct place each (PROTOCOL.md §1):
 
@@ -35,36 +35,32 @@ REPO = "lmmx/mibz2"
 API = f"https://api.github.com/repos/{REPO}"
 CHANNEL = 145
 
-# Each role's inbox, offset and cursor (docs/journal/compact30-channel/SPEC.<ROLE>.md; the
-# Oracle's on master, the others' on research/compact30-constructor). Comments after the
-# offset are the role's queue.
+# Each role's inbox, offset and cursor (docs/team/SPEC.<ROLE>.md). Comments after the offset are
+# the role's queue. Each cursor is state/cursor.json on the role's team-state/<role> branch.
 ROLES = {
     "optimizer": {
-        "aliases": ("optimizer", "astra"),
+        "aliases": ("optimizer", "optimiser", "astra"),
         "inbox": 160,
         "offset": 6646251725,
-        "cursor": ("review/compact30-instruction-ledger",
-                   "docs/journal/compact30-research/review-cursor.json"),
+        "cursor": ("team-state/optimizer", "state/cursor.json"),
     },
     "guardian": {
         "aliases": ("guardian",),
         "inbox": 161,
         "offset": 6646249200,
-        "cursor": ("review/compact30-guardian-shadow",
-                   "docs/journal/compact30-guardian-shadow/cursor.json"),
+        "cursor": ("team-state/guardian", "state/cursor.json"),
     },
     "researcher": {
         "aliases": ("researcher",),
         "inbox": 162,
         "offset": 6646250444,
-        "cursor": ("review/compact30-adversarial-scanner-146",
-                   "docs/journal/compact30-adversarial/scanner-146/review-cursor.json"),
+        "cursor": ("team-state/researcher", "state/cursor.json"),
     },
     "oracle": {
         "aliases": ("oracle",),
         "inbox": 222,
         "offset": 6683737090,
-        "cursor": ("review/oracle-intention", "docs/journal/oracle/cursor.json"),
+        "cursor": ("team-state/oracle", "state/cursor.json"),
     },
 }
 INBOXES = {r["inbox"]: name for name, r in ROLES.items()}
