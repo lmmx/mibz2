@@ -155,6 +155,11 @@ procedure ChatGPT follows.
   with what was done and the read-back (for a re-pin, the saved instruction text exactly).
   A request with such a REVIEW is done, and is never carried out again. The Coordinator
   verifies the read-back before acting on it.
+- **Already done:** before a re-pin, ChatGPT reads the saved text. If it already matches,
+  it changes nothing and reports "Already correctly pinned" with the read-back.
+- **Closed by the Coordinator:** a request is also done once a Coordinator LOG cites it and
+  says it is closed: when the Coordinator has verified the same result by another route,
+  such as a read-back relayed in a PROPOSAL.
 
 ## History
 
