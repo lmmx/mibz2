@@ -417,6 +417,22 @@
       "status": "finished",
       "disposition": "matched window and tested counter checks supported; duplicate-control and full-grid gaps remain",
       "comment": 6682239005
+    },
+    {
+      "id": "D029",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 161,
+      "output_pr": 145,
+      "sha": "d6fc2d25959ee10af461143f3808534febdb7a00",
+      "evidence_digest": "git-blob:4db93c96b4915745b04175827bacc76d8eaec0b9",
+      "incoming_comment": 6682260206,
+      "commit": "dca06f62983447c277ca634bc453304aa2fe3901",
+      "receipt_commit": "557b27624b3cb4ef87519451484c1c5bbedab78c",
+      "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+      "status": "complete",
+      "disposition": "material D026-D028 registration/reporting findings closed at pinned amendment; diagnostic and authority limits retained"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -481,7 +497,9 @@
     "1fc297cee7ebafa005e40740dc8c67be319110be",
     "208beb1ff28cc536820ed0aae8e2c48e017864fc",
     "8158cb4c9958c3797748595426bb24ee9f168b4f",
-    "8bbf90210adcd3ed9126f940a2af2c213c5c7a20"
+    "8bbf90210adcd3ed9126f940a2af2c213c5c7a20",
+    "557b27624b3cb4ef87519451484c1c5bbedab78c",
+    "dca06f62983447c277ca634bc453304aa2fe3901"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -603,13 +621,15 @@
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
     "last_decision_commit": "8158cb4c9958c3797748595426bb24ee9f168b4f",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "one TYPE: REVIEW for D028 on #145",
+    "source_app_reply": "D029 complete; REVIEW reconciliation pending",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "finished",
-    "queue_snapshot": "inbox snapshot contained five comments; D026, D027 and D028 after offset are finished; #145 QUEUED 6682167812 not dispatched in snapshot"
+    "active_comment_status": "complete",
+    "queue_snapshot": "inbox snapshot contained five comments; D026, D027 and D028 after offset are finished; #145 QUEUED 6682167812 not dispatched in snapshot",
+    "active_comment_id": 6682260206,
+    "active_work_commit": "dca06f62983447c277ca634bc453304aa2fe3901"
   },
   "duplicate_events": [
     {
@@ -860,9 +880,10 @@
     {
       "comment_id": 6682260206,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D029",
-      "receipt_commit": "557b27624b3cb4ef87519451484c1c5bbedab78c"
+      "receipt_commit": "557b27624b3cb4ef87519451484c1c5bbedab78c",
+      "work_commit": "dca06f62983447c277ca634bc453304aa2fe3901"
     }
   ]
 }
