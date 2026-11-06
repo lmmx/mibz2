@@ -23,10 +23,15 @@ marked:
   ("Allow low-risk actions") and on Work usage. It can't certify the scopes or billing, and
   doesn't need to.
 
-## Creating a task — known to work
+## Creating a task — untested until the Oracle's creation succeeds
 
-This is the exact prompt that created the first three tasks first time (2026-11-04). Only the
-trigger's condition and the instruction text are substituted.
+This keeps the opening sentence of the prompt that created the first three tasks first time
+(2026-11-04). It adds the two answers Work asked for when the Oracle was created (2026-11-06),
+agreed by the Coordinator and ChatGPT:
+- accept the broader event subscription;
+- don't block on checks Work can't make.
+
+It creates and enables the task, then reports, so there's no second round trip.
 
 Beside the prompt, tell Louis:
 - the **name**: `mibz2⠶<Role>⠶<effort code>`;
@@ -34,28 +39,28 @@ Beside the prompt, tell Louis:
 - to start it in a **new** Work chat.
 
 ```
-Create an event-triggered task, not a scheduled one and not a one-off, that runs automatically whenever a new comment is posted on pull request #N in `lmmx/mibz2`. Before enabling it, show me the trigger, the condition, the GitHub permissions it will use, and whether it runs on my plan or costs anything extra. The task's instructions are:
+Create an event-triggered task, not a scheduled one and not a one-off, that runs automatically whenever a new comment is posted on pull request #N in `lmmx/mibz2`. Use the GitHub pull-request event subscription the platform supports, as for my existing mibz2 tasks. It may also deliver other events on that PR; I accept that, because the task's instructions ignore any event that brings no new comment. Create and enable the task without running it now. Then show me the saved trigger, the instruction text exactly as saved, the GitHub permissions it will use, whether it runs on my plan or costs anything extra, and whether it is enabled. If you can't verify the permissions or the cost exactly, say so, but don't let that stop the creation. The task's instructions are:
 
 You are the ROLE-NAME of the mibz2 agent team (lmmx/mibz2). Fetch docs/team/SPEC.md and docs/team/SPEC.ROLE.md from lmmx/mibz2 at commit SHA, and follow them. Those files, at that commit, are your complete instruction. If they can't be fetched, report that and stop. Keep this task enabled.
 ```
 
 Fill in N (the role's inbox PR), ROLE-NAME (Optimiser, Guardian, Researcher, Oracle), ROLE
-(OPTIMIZER, GUARDIAN, RESEARCHER, ORACLE) and SHA (the pin). **Change nothing else.** A form
-that worked first time is not improved by added sentences: any other change makes it untested.
+(OPTIMIZER, GUARDIAN, RESEARCHER, ORACLE) and SHA (the pin). **Change nothing else.** Any other
+change makes the form untested again.
 
 - **Why the instructions are only a pointer:** the rules (commit identity, no polling, no
   widening) live once, in the pinned spec. A copy in the task would drift from it.
 - **Why the condition names no comment content:** the inbox is the address. A content filter,
   such as the first tasks' `TYPE: CHECKPOINT`, would drop other assignments, for example
   `CORRECTION`.
-- **Why the prompt says nothing about filtering events:** Work's trigger can't be restricted to
-  comments only, and the spec already ignores any event that brings no new inbox comment. Adding
-  "subscribe to comments only, excluding bots, reviews, commit updates and edits" made Work stop
-  and ask, instead of creating the task (2026-11-06).
+- **Why it accepts the broader subscription and asks for no exclusions:** Work's trigger can't
+  be limited to comments. Asking for that made it stop and ask, instead of creating the task.
+  PROTOCOL.md §1 already accommodates the extra events: nobody touches an inbox PR, and the spec
+  ignores any event that brings no new inbox comment.
+- **Why unverifiable checks don't block:** Work can't inspect exact GitHub scopes or billing.
+  Asked to confirm them before enabling, it stopped instead.
 
-Then ask Louis to send back what Work shows before enabling: the trigger, the condition, the
-permissions and the instruction text as saved. The Coordinator checks these against the pin
-before the first assignment.
+The Coordinator then checks what Work reported against the pin before the first assignment.
 
 ## Re-pinning an existing task — untested
 
@@ -74,6 +79,8 @@ When Louis reports the result, mark this form known to work, or record what fail
 
 ## Revisions
 
+- 2026-11-06: the creation form now keeps the original opening sentence, plus the two answers
+  Work asked for (agreed with ChatGPT). It stays untested until it succeeds first time.
 - 2026-11-06: the creation form restored to the exact wording that worked. The added subscription
   and content-filter sentences, untested yet labelled as known to work, made Work stop and ask.
   Rule: in a known-good form, change only the placeholders.
