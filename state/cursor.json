@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Policy freeze re-review complete; publication pending",
+  "state": "Policy freeze re-review finished; remaining HOLD findings published",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -497,12 +497,15 @@
       "trigger_comment_id": 6694804971,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "complete",
+      "status": "finished",
       "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
       "report_commit": "2f9922db62b311a4c08a212f40cbd4e6554664cf",
       "report_path": "state/reports/policy-freeze-6694804971/report.md",
       "review_comment_pr": 145,
-      "disposition": "HOLD remains: old baseline does not emit required census; freeze still permits untracked build inputs and changed corpus inputs. H1, retry and disclosures substantially resolved; window derivation accepted."
+      "disposition": "HOLD remains: old baseline does not emit required census; freeze still permits untracked build inputs and changed corpus inputs. H1, retry and disclosures substantially resolved; window derivation accepted.",
+      "review_comment_id": 6694897330,
+      "publication_verified": true,
+      "verification_note": "Exact body and #145 read back; role-aware routing check passed. Pinned verify helper rejects non-Coordinator FROM."
     }
   ],
   "active_delegations": [],
