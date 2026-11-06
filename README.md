@@ -6,8 +6,9 @@ master. Its own history is the record of how the team's intentions changed, leve
 
 - **Kept by:** the Oracle (`docs/team/SPEC.ORACLE.md` on master), by direct commit; never
   through a PR.
-- **Read:** `current/L0.md` for one line, `current/L1.md` for five, `current/L2.md` for the
-  tree, `current/L3/` for each front. `current/weak.md` lists where the "why" chain is weak.
+- **Start here:** [the account](current/account.md), explaining what is happening and why.
+- **Supporting detail:** `current/L0.md` for one line, `current/L1.md` for five, `current/L2.md`
+  for the tree, `current/L3/` for each front. `current/weak.md` lists where the reasoning is weak.
 - **Each commit is one settled version.** `manifest.md` gives the channel watermark and the
   evidence it was checked against. Errors are corrected by new commits, never by rewriting.
 - **Predecessor:** `review/oracle-intention` at `382518724f59c1c4e3755a57649c318fb443923d`, the
