@@ -14,6 +14,11 @@ marked:
   its model, its effort and the task's name **beside** it, never inside it.
 - **The UI needs a signed-in browser.** A prompt that asks the chat agent to change settings
   only reachable through the interface fails when the browser is signed out (2026-11-06).
+- **A new task's webhook isn't live at once.** The Oracle's first assignment, posted about a
+  minute after its task was created, never triggered a run. A resume request posted about 15
+  minutes later started one within 8 seconds (2026-11-06). So wait a few minutes after creating
+  a task before its first assignment. If the task's run list shows no run, post one resume
+  request (PROTOCOL.md §2).
 - **Renaming is done by hand** in the Work interface. No prompt for it is recorded.
 - **One task per creation prompt.** A prompt that creates one task and edits others confuses
   it (2026-11-06).
@@ -98,6 +103,9 @@ Then show me the instruction text exactly as saved, the trigger and subscription
 
 
 ## Revisions
+
+- 2026-11-06: the webhook warm-up recorded (the Oracle's first assignment was missed; a resume
+  request started its run).
 
 - 2026-11-06: the re-pin form worked for all three existing tasks. Marked known to work.
 
