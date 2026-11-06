@@ -67,6 +67,12 @@
       sub.innerHTML = h.innerHTML;
       h.replaceWith(sub);
     }
+    /* A table scrolls sideways on a narrow screen, as the site's own tables do */
+    for (const t of holder.querySelectorAll("table")) {
+      const wrap = el("div", { class: "md-typeset__scrollwrap" }, [el("div", { class: "md-typeset__table" })]);
+      t.replaceWith(wrap);
+      wrap.firstChild.appendChild(t);
+    }
     for (const a of holder.querySelectorAll("a[href]")) {
       const href = a.getAttribute("href");
       if (/^[a-z]+:|^#/.test(href)) {
