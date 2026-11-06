@@ -7,7 +7,10 @@
     6686599413
   ],
   "in_progress": [],
-  "reviews": {},
+  "reviews": {
+    "6686307919": 6686754574,
+    "6686599413": 6686754574
+  },
   "last_rebuilt_from": 6686607992,
   "migrated_from": {
     "branch": "review/oracle-intention",
@@ -18,16 +21,18 @@
   },
   "entries": {
     "6686307919": {
-      "status": "complete",
+      "status": "finished",
       "comment_id": 6686307919,
-      "progress": "First rebuild and drift test committed; REVIEW pending.",
-      "work_commit": "d70d629f9759ea1a66d6d7d322d80c438d0346dd"
+      "progress": "Work and REVIEW published; finished.",
+      "work_commit": "d70d629f9759ea1a66d6d7d322d80c438d0346dd",
+      "review_id": 6686754574
     },
     "6686599413": {
-      "status": "complete",
+      "status": "finished",
       "comment_id": 6686599413,
-      "progress": "First rebuild and drift test committed; REVIEW pending.",
-      "work_commit": "d70d629f9759ea1a66d6d7d322d80c438d0346dd"
+      "progress": "Work and REVIEW published; finished.",
+      "work_commit": "d70d629f9759ea1a66d6d7d322d80c438d0346dd",
+      "review_id": 6686754574
     }
   },
   "last_record_commit": "d70d629f9759ea1a66d6d7d322d80c438d0346dd"
