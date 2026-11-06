@@ -44,32 +44,55 @@ CPU.
 - **The commits:** `bench/three-team-policy.frozen` names the candidate and the base, set
   once, when this registration freezes. The recipe refuses to run:
   - if either is unset;
-  - if the checkout has uncommitted changes;
-  - if HEAD's measured files (`src`, the Cargo files, `examples`, `bench/policy_ab.py`, the
-    recipe) differ from the candidate's;
-  - if the base build's worktree is not clean at the base.
+  - if the checkout has uncommitted changes, or untracked files among the build and workload
+    inputs;
+  - if HEAD's build and workload inputs differ from the candidate's: `src`, `Cargo.toml`,
+    `Cargo.lock`, `.cargo`, `examples`, the corpus's builder and manifest
+    (`bench/wikidata.py`, `bench/wikidata.json`), the judge and the recipe;
+  - if any of `RUSTFLAGS`, `CARGO_ENCODED_RUSTFLAGS`, `CARGO_BUILD_RUSTFLAGS`,
+    `CARGO_TARGET_DIR`, `CARGO_BUILD_TARGET`, `RUSTC`, `RUSTC_WRAPPER` or
+    `CARGO_PROFILE_RELEASE_OPT_LEVEL` is set;
+  - if the base build's worktree is not at the base, or has changes or untracked files.
 
-  It records HEAD, the candidate and the base in `commits.txt`.
+  It runs the executables where Cargo reports it built them. It records HEAD, the candidate
+  and the base (`commits.txt`), and the sha256 of both `ab` executables, the corpus builder's
+  executable and the corpus, with `rustc -vV` and `cargo -V` (`inputs.txt`).
 - **The arms:** the head build's `mibz2` against the base build's (`mibz2@<base ab>`). Both use
   the default plan, unpinned, as a caller gets it.
 - **The grid:** 8, 9, 10, 11, 12, 16 and 20 threads, 20 rounds, paired by round, on the bench's
   Wikidata sample.
-- **The plans each build must run,** read from every run's threads twice: from those that ran
-  (`thread_cpu`, more than 2% of the busiest's CPU) and from every thread the sampler saw
-  (`thread_names`), so a helper that sat idle still counts. Both must show the plan.
+- **The plans each build must run,** read from every run's threads twice, and both must show
+  the plan:
+  - from those that ran, as the child reports them (`thread_cpu`, more than 2% of the
+    busiest's CPU);
+  - from every thread the child ran, busy or not, so a helper that sat idle still counts
+    (`observed_threads`). The parent `ab` reads these names from `/proc` every 5 ms while each
+    child runs, the same way for both builds; the base build's own `ab` records no such list.
+    The census thread runs in the parent, not in the decoding process, and alike for both
+    arms. Its cost is not measured separately.
 
   | threads | base | head |
   |---|---|---|
   | 8, 9 | 4 × 2 | 4 × 2 |
   | 10, 11, 12, 16, 20 | 4 × 2 | 3 × 3 |
 
-- **The window** is not observed: it follows from the plan. Each build's window is a function
-  of the plan, the requested threads and the requested slots (`window` in `src/parallel.rs`,
-  at its frozen commit), and `ab` always requests 4 slots a thread. So the observed plan
-  fixes it: 12 blocks for 3 × 3 at 10 to 20 threads, and 4 a team times the threads over 8
-  for 4 × 2. `the_ten_core_exception` tests the 3 × 3 values.
+- **The window** is not observed: it follows from the plan. Each build's window is
+  `floor(slots × teams / threads)` for a team plan (`window` in `src/parallel.rs`, at its
+  frozen commit), and `ab` always requests 4 slots a thread. So the observed plan fixes it,
+  at every registered thread count: **16 blocks for 4 × 2 and 12 for 3 × 3.** The windows
+  differ by design: they are part of the change being tested. `the_ten_core_exception`
+  tests the 3 × 3 values.
 - **The output:** one directory per attempt, its console log included, packed into one tarball
-  however the attempt ends: a refusal, a failed build or a full run.
+  however the attempt ends. Every attempt states one outcome, in `outcome.txt` and on its
+  last line:
+  - `VALID PASS`, `VALID FAIL` or `INVALID: <the problems>`, read from the report's own
+    fields;
+  - `REFUSED: <why>`, before anything ran;
+  - `REPORT ERROR`, when the judge wrote no report;
+  - `INCOMPLETE`, when the attempt stopped before the run finished.
+
+  A broken runs file (truncated JSON, a null row or arm) is reported `INVALID`, never a
+  crash.
 
 ## The rule
 
@@ -128,7 +151,8 @@ head's, the geometric mean of the 20 rounds' ratios.
   other work are not measured.
 - **The controls** screen for drift between the builds; they do not show the builds equivalent
   at 8 and 9 threads.
-- **The intervals** are conditional on the model: paired rounds, a normal log-ratio.
+- **The intervals** are conditional on the model: paired rounds that are independent of each
+  other, and a normal log-ratio.
 - **A measured 1.03** does not show that the true gain is at least 3%; the lower bound above 1.00
   shows only that it is a gain.
 

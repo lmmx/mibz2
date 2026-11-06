@@ -219,9 +219,7 @@ type Seen = BTreeMap<u32, (String, u64, u64)>;
 /// A run's threads, as `Threads::finish` gives them: how many were busy, each one's CPU
 /// ("name=seconds ..."), their summed run-queue wait, the sampler's own CPU (seconds,
 /// exact) and the CPUs it ran on ("pinned": the run's own)
-/// (threads busy, their CPU seconds, run-queue wait, the sampler's CPU, its CPUs, and every
-/// thread seen at all, busy or not, by name)
-type Busy = (usize, String, f64, f64, String, String);
+type Busy = (usize, String, f64, f64, String);
 
 /// Each thread's CPU and run-queue wait of process `pid`, sampled every 10 ms until `stop`,
 /// the last sample of each thread kept (both only grow)
@@ -325,7 +323,7 @@ impl Threads {
     /// seconds; and the sampler's own CPU seconds
     fn finish(mut self, own: bool) -> Busy {
         let Some(handle) = self.handle.take() else {
-            return (0, String::new(), 0.0, 0.0, "off".into(), String::new());
+            return (0, String::new(), 0.0, 0.0, "off".into());
         };
         if own {
             sample_tasks(self.pid, &self.seen);
@@ -362,18 +360,61 @@ impl Threads {
             .map(|(t, k)| format!("{k}={:.2}", *t as f64 / HZ))
             .collect();
         let away = away.unwrap_or_else(|| "pinned".into());
-        // (every thread the sampler saw, however little it ran: a team's idle helper is
-        // still part of the plan, which the busy list alone can't show)
-        let mut names: Vec<&str> = v.iter().map(|(_, k)| k.as_str()).collect();
+        (busy.len(), busy.join(" "), runq, sampler, away)
+    }
+}
+
+/// The names of every thread a child process runs, read from outside it, by its parent, every
+/// AB_CENSUS_MS milliseconds (default 5) until it exits: the same observer for every arm,
+/// whichever build the child is. Only names: a thread's CPU is the child's own report
+struct Census {
+    stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    handle: std::thread::JoinHandle<BTreeMap<u64, String>>,
+}
+
+impl Census {
+    fn watch(pid: u32) -> Census {
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let s = stop.clone();
+        let every: u64 = std::env::var("AB_CENSUS_MS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(5)
+            .max(1);
+        let handle = std::thread::Builder::new()
+            .name("census".into())
+            .spawn(move || {
+                let mut seen = BTreeMap::new();
+                let dir = format!("/proc/{pid}/task");
+                while !s.load(std::sync::atomic::Ordering::Relaxed) {
+                    let Ok(tasks) = std::fs::read_dir(&dir) else {
+                        break;
+                    };
+                    for t in tasks.flatten() {
+                        let Some(tid) = t.file_name().to_str().and_then(|x| x.parse().ok()) else {
+                            continue;
+                        };
+                        if let std::collections::btree_map::Entry::Vacant(e) = seen.entry(tid) {
+                            if let Ok(name) = std::fs::read_to_string(t.path().join("comm")) {
+                                e.insert(name.trim().to_string());
+                            }
+                        }
+                    }
+                    std::thread::sleep(Duration::from_millis(every));
+                }
+                seen
+            })
+            .unwrap();
+        Census { stop, handle }
+    }
+
+    /// Every thread seen, by name, sorted (one entry a thread)
+    fn finish(self) -> String {
+        self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        let seen: BTreeMap<u64, String> = self.handle.join().unwrap_or_default();
+        let mut names: Vec<String> = seen.into_values().map(|n| n.replace('"', "'")).collect();
         names.sort_unstable();
-        (
-            busy.len(),
-            busy.join(" "),
-            runq,
-            sampler,
-            away,
-            names.join(" "),
-        )
+        names.join(" ")
     }
 }
 
@@ -555,7 +596,7 @@ fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f6
             return (
                 Err(format!("{cmd:?}: {e}")),
                 0.0,
-                (0, String::new(), 0.0, 0.0, String::new(), String::new()),
+                (0, String::new(), 0.0, 0.0, String::new()),
                 0.0,
             )
         }
@@ -594,34 +635,27 @@ fn child(arm: &str, threads: usize, path: &str) {
     let mut h = Hash::new();
     let external = program(arm, threads, path);
     let is_program = external.is_some();
-    let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus, names), startup) =
-        match external {
-            Some((cmd, ready)) => piped(cmd, ready, &mut h),
-            // (a 1-thread in-process run has one thread to account for, so no sampler at all:
-            // reading another thread's /proc entries cost a 12 ms run up to 17% (#69). Its split
-            // is its own thread's CPU, RUSAGE_THREAD, and its run-queue wait its own schedstat)
-            None if threads == 1 => {
-                let t0 = Instant::now();
-                let res = decode(arm, threads, path, &mut h, &|| ());
-                let wall = t0.elapsed().as_secs_f64();
-                let wait =
-                    run_delay(std::path::Path::new("/proc/thread-self/schedstat")) as f64 * 1e-9;
-                let main = format!("main={:.2}", rusage(1).0);
-                (
-                    res,
-                    wall,
-                    (1, main, wait, 0.0, "none".into(), "main".into()),
-                    0.0,
-                )
-            }
-            None => {
-                let w = Threads::watch(std::process::id());
-                let t0 = Instant::now();
-                let res = decode(arm, threads, path, &mut h, &|| w.sample());
-                let wall = t0.elapsed().as_secs_f64();
-                (res, wall, w.finish(true), 0.0)
-            }
-        };
+    let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus), startup) = match external {
+        Some((cmd, ready)) => piped(cmd, ready, &mut h),
+        // (a 1-thread in-process run has one thread to account for, so no sampler at all:
+        // reading another thread's /proc entries cost a 12 ms run up to 17% (#69). Its split
+        // is its own thread's CPU, RUSAGE_THREAD, and its run-queue wait its own schedstat)
+        None if threads == 1 => {
+            let t0 = Instant::now();
+            let res = decode(arm, threads, path, &mut h, &|| ());
+            let wall = t0.elapsed().as_secs_f64();
+            let wait = run_delay(std::path::Path::new("/proc/thread-self/schedstat")) as f64 * 1e-9;
+            let main = format!("main={:.2}", rusage(1).0);
+            (res, wall, (1, main, wait, 0.0, "none".into()), 0.0)
+        }
+        None => {
+            let w = Threads::watch(std::process::id());
+            let t0 = Instant::now();
+            let res = decode(arm, threads, path, &mut h, &|| w.sample());
+            let wall = t0.elapsed().as_secs_f64();
+            (res, wall, w.finish(true), 0.0)
+        }
+    };
     let (cpu_self, rss_self) = rusage(0);
     let (cpu_kids, rss_kids) = rusage(-1);
     // (a program's arm: its own peak RSS, and its CPU with this process's hashing, less
@@ -629,7 +663,7 @@ fn child(arm: &str, threads: usize, path: &str) {
     let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"thread_names\":\"{names}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"err\":\"{err}\"}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler,
         h.n,
         h.finish()
@@ -1007,7 +1041,17 @@ fn run(args: &[String]) {
                     let (b0, s0, tot0) = stat();
                     let (th0, psi0) = (throttled(), psi_cpu());
                     let w0 = Instant::now();
-                    let o = cmd.output().unwrap();
+                    // (every arm's child is watched alike from here, whatever build it is:
+                    // the names of the threads it runs, read from /proc, for the plan. A
+                    // child's own figures, wall, CPU and RSS among them, are its own)
+                    let child = cmd
+                        .stdout(std::process::Stdio::piped())
+                        .stderr(std::process::Stdio::inherit())
+                        .spawn()
+                        .unwrap();
+                    let census = Census::watch(child.id());
+                    let o = child.wait_with_output().unwrap();
+                    let observed = census.finish();
                     let span = w0.elapsed().as_secs_f64();
                     let (b1, s1, tot1) = stat();
                     let (th1, psi1) = (throttled(), psi_cpu());
@@ -1024,7 +1068,7 @@ fn run(args: &[String]) {
                         .to_string_lossy()
                         .to_string();
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{}",
                         parallel(&name),
                         cpus.as_deref().unwrap_or("all"),
                         opt(throttle.map(|x| x.0 as f64)),

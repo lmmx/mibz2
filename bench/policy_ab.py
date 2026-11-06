@@ -5,8 +5,9 @@ the Coordinator's session on 2026-11-06 (docs/journal/decisions.md), fixed befor
 
 - **Validity**, for every cell: 20 rounds, each once, no failed run; one output hash and one
   length across every run; every run's plan the one the registration expects (below), read
-  both from the threads that ran (`thread_cpu`) and from every thread the sampler saw, busy
-  or not (`thread_names`), so an idle helper still counts.
+  both from the threads that ran (`thread_cpu`, the child's own) and from every thread the
+  parent `ab` saw it run, busy or not (`observed_threads`, the same observer for both
+  builds), so an idle helper still counts.
 - **Controls**, 8 and 9 threads, where both builds pick four teams of two: as #220's control,
   flagged when a speed ratio's 95% interval lies wholly beyond ±2% (lower bound above 1.02,
   or upper below 0.98). A flagged run fails.
@@ -48,7 +49,7 @@ CORPUS = "wikidata"
 
 
 def plan_of(threads):
-    """(leaders, helpers) from ab's `thread_cpu` ("name=seconds ...") or `thread_names`
+    """(leaders, helpers) from ab's `thread_cpu` ("name=seconds ...") or `observed_threads`
     ("name ..."): team leaders or workers are `mibz2-N`, helpers `mibz2-coop-*`"""
     names = [p.partition("=")[0] for p in threads.split()]
     return (
@@ -59,6 +60,8 @@ def plan_of(threads):
 
 def build_of(arm):
     """ "head" for the head build's own `mibz2`, "base" for `mibz2@<base binary>`"""
+    if not isinstance(arm, str):
+        return None
     if arm == "mibz2":
         return "head"
     if arm.startswith("mibz2@"):
@@ -93,6 +96,9 @@ def row_problems(rows):
     sample at the registered thread counts, from the head's `mibz2` and one base binary,
     each run with a hash, a positive output length and finite positive wall, CPU and RSS"""
     problems = []
+    if not all(isinstance(r, dict) for r in rows):
+        n = sum(not isinstance(r, dict) for r in rows)
+        return [f"{n} row(s) not a JSON object"]
     failed = [r for r in rows if r.get("err")]
     if failed:
         problems.append(f"{len(failed)} failed run(s)")
@@ -122,7 +128,7 @@ def row_problems(rows):
             and all(positive(r.get(k)) for k in ("wall", "cpu", "rss_kb"))
             and isinstance(r.get("round"), int)
             and isinstance(r.get("thread_cpu"), str)
-            and isinstance(r.get("thread_names"), str)
+            and isinstance(r.get("observed_threads"), str)
         )
     ]
     if bad:
@@ -133,10 +139,15 @@ def row_problems(rows):
     return problems
 
 
-def judge(rows):
-    """The run's verdict: a dict of every cell's figures and every predicate"""
+def judge(rows, unreadable=()):
+    """The run's verdict: a dict of every cell's figures and every predicate. `unreadable`
+    names lines of the runs file that weren't JSON: any makes the run invalid"""
     cells = {}
-    problems = row_problems(rows)
+    problems = [f"line {n} of the runs file is not JSON" for n in unreadable][:5]
+    if len(unreadable) > 5:
+        problems.append(f"... and {len(unreadable) - 5} more unreadable line(s)")
+    if not problems:
+        problems = row_problems(rows)
     if problems:
         # the figures below are only computed from rows that are all well formed
         return {
@@ -163,10 +174,10 @@ def judge(rows):
             plan_of(r[k]) == EXPECT[t][b]
             for b in runs
             for r in runs[b]
-            for k in ("thread_cpu", "thread_names")
+            for k in ("thread_cpu", "observed_threads")
         )
         seen = {
-            b: sorted({plan_of(r[k]) for r in runs[b] for k in ("thread_cpu", "thread_names")})
+            b: sorted({plan_of(r[k]) for r in runs[b] for k in ("thread_cpu", "observed_threads")})
             for b in runs
         }
         c = {"threads": t, "complete": complete, "plans": plans_ok, "seen": seen}
@@ -274,8 +285,15 @@ def main(argv=None):
     r.add_argument("runs")
     r.add_argument("--out", required=True)
     a = p.parse_args(argv)
-    rows = [json.loads(line) for line in open(a.runs) if line.strip()]
-    v = judge(rows)
+    rows, unreadable = [], []
+    for n, line in enumerate(open(a.runs, errors="replace"), 1):
+        if not line.strip():
+            continue
+        try:
+            rows.append(json.loads(line))
+        except json.JSONDecodeError:
+            unreadable.append(n)
+    v = judge(rows, unreadable)
     with open(a.out + ".json", "w") as f:
         json.dump(v, f, indent=1, sort_keys=True)
     md = markdown(v)

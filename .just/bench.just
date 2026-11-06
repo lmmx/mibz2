@@ -336,40 +336,68 @@ bench-three-team-policy:
     mkdir -p "$B"
     mkdir "$W" || { echo "bench-three-team-policy: $W already exists; not reusing an attempt's directory"; exit 1; }
     exec > >(tee -a "$W/console.log") 2>&1
-    # every attempt is packed, however it ends: a refusal, a failed build or a full run
-    trap 'bash bench/bundle.sh "$W"' EXIT
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends:
+    # a refusal, a failed build, a broken report or a full run
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-three-team-policy: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W"
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-three-team-policy: $*"; exit 1; }
     # the commits the registration froze (bench/three-team-policy.frozen): the candidate, whose
-    # measured files HEAD must match exactly, and the base it is measured against
-    fail() { echo "bench-three-team-policy: $*"; exit 1; }
+    # build and workload inputs HEAD must match exactly, and the base it is measured against
     frozen=bench/three-team-policy.frozen
     cand=$(awk '$1 == "candidate" {print $2}' "$frozen")
     base=$(awk '$1 == "base" {print $2}' "$frozen")
     [[ $cand =~ ^[0-9a-f]{40}$ && $base =~ ^[0-9a-f]{40}$ ]] || fail "$frozen names no frozen candidate and base yet; nothing to run"
-    measured=(src Cargo.toml Cargo.lock examples bench/policy_ab.py .just/bench.just)
+    # what the builds and the workload are made from: sources, Cargo's files and configuration,
+    # the harness, the corpus's builder and manifest, the judge and this recipe
+    measured=(src Cargo.toml Cargo.lock .cargo examples bench/policy_ab.py bench/wikidata.json bench/wikidata.py .just/bench.just)
+    for v in RUSTFLAGS CARGO_ENCODED_RUSTFLAGS CARGO_BUILD_RUSTFLAGS CARGO_TARGET_DIR CARGO_BUILD_TARGET RUSTC RUSTC_WRAPPER CARGO_PROFILE_RELEASE_OPT_LEVEL; do
+      [ -z "${!v:-}" ] || fail "$v is set; unset it, so both builds are made the same, plain way"
+    done
     [ -z "$(git status --porcelain --untracked-files=no)" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the build and workload inputs"
     git cat-file -e "$cand^{commit}" && git cat-file -e "$base^{commit}" || fail "fetch the branch: the frozen commits are missing"
-    git diff --quiet "$cand" HEAD -- "${measured[@]}" || fail "HEAD's measured files differ from the frozen candidate $cand"
+    git diff --quiet "$cand" HEAD -- "${measured[@]}" || fail "HEAD's build or workload inputs differ from the frozen candidate $cand"
     head=$(git rev-parse HEAD)
-    echo "head $head (measured files as candidate $cand)"; echo "base $base"
+    echo "head $head (build and workload inputs as candidate $cand)"; echo "base $base"
     printf 'head %s\ncandidate %s\nbase %s\n' "$head" "$cand" "$base" > "$W/commits.txt"
     [ -d "$B/build-$base" ] || git worktree add -q --detach "$B/build-$base" "$base"
     [ "$(git -C "$B/build-$base" rev-parse HEAD)" = "$base" ] || fail "$B/build-$base is not at the base $base"
-    [ -z "$(git -C "$B/build-$base" status --porcelain --untracked-files=no)" ] || fail "$B/build-$base has uncommitted changes"
+    [ -z "$(git -C "$B/build-$base" status --porcelain --untracked-files=all)" ] || fail "$B/build-$base has changes or untracked files"
+    # (the executables where Cargo says it put them, not where they usually are)
+    target_of() { cargo metadata -q --format-version 1 --no-deps --manifest-path "$1/Cargo.toml" | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])'; }
     (cd "$B/build-$base" && cargo build -q --release --example ab)
     cargo build -q --release --example ab --example windows
-    AB=$PWD/target/release/examples/ab
-    BASEAB=$B/build-$base/target/release/examples/ab
+    AB=$(target_of "$PWD")/release/examples/ab
+    BASEAB=$(target_of "$B/build-$base")/release/examples/ab
+    WINDOWS=$(target_of "$PWD")/release/examples/windows
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
     if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
       git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
         && git archive origin/bench-data "$dir" | tar -x || true
     fi
     python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
-    python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$B/wikidata.bz2"
+    python3 bench/wikidata.py build bench/wikidata.json "$dir" "$WINDOWS" "$B/wikidata.bz2"
     ln -sf "$B/wikidata.bz2" "$W/wikidata.bz2"
+    # what ran: both executables, the corpus and the toolchain, by digest
+    { sha256sum "$AB" "$BASEAB" "$WINDOWS" "$B/wikidata.bz2"; rustc -vV; cargo -V; } > "$W/inputs.txt"
+    cat "$W/inputs.txt"
     "$AB" env > "$W/env.json"
     lscpu > "$W/lscpu.txt"
     "$AB" run "$W/runs.jsonl" --arms "mibz2,mibz2@$BASEAB" \
       --threads "8,9,10,11,12,16,20" --rounds 20 "$W/wikidata.bz2"
-    python3 bench/policy_ab.py report "$W/runs.jsonl" --out "$W/policy-ab" \
-      || echo "bench-three-team-policy: the run is not valid; see policy-ab.md"
+    # the verdict: VALID PASS, VALID FAIL or INVALID, from the report's own fields; a report
+    # that couldn't be written is said to be so, and points to nothing
+    set +e
+    python3 bench/policy_ab.py report "$W/runs.jsonl" --out "$W/policy-ab"
+    rc=$?
+    set -e
+    if [ "$rc" -le 1 ] && [ -s "$W/policy-ab.json" ] && [ -s "$W/policy-ab.md" ]; then
+      outcome=$(python3 -c 'import json,sys; v=json.load(open(sys.argv[1])); print(("VALID PASS" if v["pass"] else "VALID FAIL") if v["valid"] else "INVALID: " + "; ".join(v["problems"]))' "$W/policy-ab.json")
+    else
+      outcome="REPORT ERROR: policy_ab.py exited $rc without writing its report"
+    fi
