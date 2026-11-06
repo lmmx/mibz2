@@ -21,8 +21,8 @@ byte-for-byte as they had it:
 - The research charter: the constructor branch's is the later (2026-11-04 21:58, 745 lines,
   against 11:03 and 497); it is kept.
 - The compact30 evidence on the channel branch (`evidence/`, 1.5 MB) and everything else on
-  both branches stay whole under the tags `archive/compact30-channel` and
-  `archive/compact30-constructor`.
+  both branches stay on those branches, at the commits above. Keep both branches; they are
+  the full record.
 
 MODE.md is changed only by Louis. The roles' own working files (cursors, decision logs)
 stay on their review branches.
