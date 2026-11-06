@@ -79,10 +79,13 @@ faster. Up to the machine's physical core count, each thread runs on a core of i
 To make a run, from a checkout of mibz2 with lbzip2 installed:
 
 ```sh
-just bench-release-scaling                                    # v0.2.4 against v0.2.1, every CPU
+just bench-release-scaling                                    # the current release against the last, every CPU
 just bench-release-scaling v0.2.4 v0.2.1 10 "1,4,10,20" big.bz2   # releases, rounds, threads, more files
 ```
 
-It builds both releases in `target/release-scaling/`, runs the rounds, and records the run in
-`bench/release-scaling/<date>-<machine>/`, to commit in a pull request.
+With no releases named, it compares the newest release tag with the one before it. It builds
+both releases in `target/release-scaling/`, runs the rounds, and records the run in
+`bench/release-scaling/<date>-<machine>/`. After each release, the release runbook
+(`docs/RELEASING.md`) asks for one such run, made with `just submit bench-release-scaling`,
+and commits its record.
 
