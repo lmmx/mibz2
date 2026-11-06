@@ -6,7 +6,9 @@
     6686307919,
     6686599413
   ],
-  "in_progress": [],
+  "in_progress": [
+    6693088129
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574
@@ -33,6 +35,11 @@
       "progress": "Work and REVIEW published; finished.",
       "work_commit": "d70d629f9759ea1a66d6d7d322d80c438d0346dd",
       "review_id": 6686754574
+    },
+    "6693088129": {
+      "comment_id": 6693088129,
+      "status": "in_progress",
+      "progress": "Migration head and manifest digest verified; rebuilding under a6a703ce with plain-prose account."
     }
   },
   "last_record_commit": "d70d629f9759ea1a66d6d7d322d80c438d0346dd"
