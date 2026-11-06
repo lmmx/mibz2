@@ -66,7 +66,7 @@ three-team policy came from it). Every release gets one.
    - It is his run, under RULES C5. The agents never time on the workstation. Its figures inform; they don't decide.
 2. **When the submission lands on #145:**
    - fetch the bundle from the `evidence` branch at the commit the post names, and check its SHA-256;
-   - copy its `recorded/` directory to `bench/release-scaling/<date>-<machine>/`;
+   - copy its `recorded/` directory to `bench/release-scaling/<date>-<machine>-<release>/`;
    - commit that to master. The site rebuilds the History page from it.
 3. **If the run can't be had** (the i9 is away, or Louis declines), say so in the report. The release
    doesn't wait for it.

@@ -6,7 +6,8 @@ kept with their machine.
         [--lscpu LSCPU.txt] [--machine NAME] [--ref ARM] [--arm ARM=LABEL ...]
         [--file NAME=PATH ...] [--note TEXT] [--date YYYY-MM-DD]
 
-writes DIR/<date>-<machine>/: the harness's records as they were (runs.jsonl), the
+writes DIR/<date>-<machine>-<release>/ (the reference arm's label; a second such run that
+day gets -2, and so on, never overwriting one): the harness's records as they were (runs.jsonl), the
 machine as the runs saw it (env.json, from `ab env`), and meta.json: the date, the CPU
 model and counts (from --lscpu, an `lscpu` output saved on that machine, else this one's),
 the reference arm, each arm's label (a release or commit), each corpus's bytes and
@@ -88,8 +89,16 @@ def record(a: argparse.Namespace) -> None:
         files[name] = {"bytes": p.stat().st_size, "sha256": sha256(p)}
     m = machine(a.lscpu)
     day = a.date or date.today().isoformat()
-    out = a.dir / f"{day}-{slug(a.machine or m['cpu'] or 'machine')}"
-    out.mkdir(parents=True, exist_ok=True)
+    # (the reference arm's release in the name too, so two releases recorded the same day on
+    # the same machine keep a directory each)
+    release = re.sub(r"[^a-z0-9.]+", "-", labels.get(ref, ref).lower()).strip("-.")
+    out = a.dir / f"{day}-{slug(a.machine or m['cpu'] or 'machine')}-{release}"
+    # (and a second run of the same pair that day beside the first, never over it)
+    n = 1
+    while out.exists():
+        n += 1
+        out = out.with_name(f"{day}-{slug(a.machine or m['cpu'] or 'machine')}-{release}-{n}")
+    out.mkdir(parents=True)
     shutil.copyfile(a.runs, out / "runs.jsonl")
     if a.env:
         shutil.copyfile(a.env, out / "env.json")

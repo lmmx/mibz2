@@ -215,7 +215,7 @@ bench-pmu-probe *args:
 # Release scaling (the History page's Release scaling view): NEW against OLD and lbzip2, from
 # 1 thread to every CPU, in paired rounds on the bench's Wikidata sample (and any FILES).
 # Builds both releases in target/release-scaling/, then records the run in
-# bench/release-scaling/<date>-<machine>/ for a pull request. Needs lbzip2.
+# bench/release-scaling/<date>-<machine>-<release>/ for a pull request. Needs lbzip2.
 # With no NEW, it is the current release (the newest vX.Y.Z tag); with no OLD, the release
 # before NEW. The release runbook (docs/RELEASING.md) runs it bare after every release.
 #   just bench-release-scaling
