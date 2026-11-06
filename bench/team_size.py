@@ -80,11 +80,23 @@ def threads_of(thread_cpu):
 
 
 def plan_of(kinds):
-    """(teams, k) as the run's threads show it: a team is a leader and k - 1 helpers"""
-    teams = len(kinds["leader"])
-    if not teams:
-        return 0, 1
-    return teams, 1 + round(len(kinds["helper"]) / teams)
+    """(leaders, helpers) as the run's threads show them, counted exactly: a plan of
+    teams x k is `teams` leaders and teams * (k - 1) helpers"""
+    return len(kinds["leader"]), len(kinds["helper"])
+
+
+def plan_label(plan):
+    """ "4 × 3" where the helpers divide evenly among the leaders, else the raw counts"""
+    teams, helpers = plan
+    if teams and helpers % teams == 0:
+        return f"{teams} × {1 + helpers // teams}"
+    return f"{teams} leaders + {helpers} helpers"
+
+
+def parse_plan(text):
+    """ "4x3" -> (4, 8): the leaders and helpers a plan of teams x k shows"""
+    teams, k = (int(v) for v in text.lower().split("x"))
+    return teams, teams * (k - 1)
 
 
 def cell(arm, threads):
@@ -124,9 +136,17 @@ def report(a):
     bad = [r for r in runs if r.get("err")]
     hashes = {r["hash"] for r in runs if not r.get("err")}
     by = defaultdict(dict)  # cell -> round -> run
+    dupes = defaultdict(int)  # cell -> rounds seen more than once (never overwritten silently)
     for r in runs:
+        c = cell(r["arm"], r["threads"])
+        if r["round"] in by[c]:
+            dupes[c] += 1
+            continue
         if not r.get("err"):
-            by[cell(r["arm"], r["threads"])][r["round"]] = r
+            by[c][r["round"]] = r
+    errs = defaultdict(int)
+    for r in bad:
+        errs[cell(r["arm"], r["threads"])] += 1
     if a.ref not in by:
         sys.exit(f"team_size report: no runs of the reference {a.ref}")
     ref = by[a.ref]
@@ -145,8 +165,9 @@ def report(a):
         wall = statistics.median(r["wall"] for r in xs)
         cpu = statistics.median(r["cpu"] for r in xs)
         kinds = [threads_of(r.get("thread_cpu", "")) for r in xs]
-        teams, k = plan_of(kinds[0])
-        plans = {plan_of(kd) for kd in kinds}
+        plans = sorted({plan_of(kd) for kd in kinds})
+        teams, helpers = plans[0]
+        k = 1 + helpers // teams if teams and helpers % teams == 0 else None
         paired = [ref[i]["wall"] / r["wall"] for i, r in rounds.items() if i in ref]
         g, lo, hi = geo_ci(paired) if paired else (math.nan,) * 3
 
@@ -160,7 +181,12 @@ def report(a):
             "threads": int(t),
             "teams": teams,
             "k": k,
-            "plans_seen": sorted(plans),
+            "helpers": helpers,
+            "plans_seen": [list(p) for p in plans],
+            "round_ids": sorted(rounds),
+            "duplicate_rounds": dupes.get(c, 0),
+            "error_runs": errs.get(c, 0),
+            "pairs": len(paired),
             "tables_mb": round(teams * TABLE_MB, 1),
             "rounds": len(xs),
             "wall": wall,
@@ -195,7 +221,9 @@ def report(a):
                 "multiplexed": [x.get("counted_pct") for x in cs if x.get("counted_pct")],
             }
         rows.append(row)
-    rows.sort(key=lambda r: (r["teams"], r["k"], r["threads"], r["arm"]))
+    rows.sort(key=lambda r: (r["teams"], r["k"] or 0, r["threads"], r["arm"]))
+    cells_by = {r["cell"]: r for r in rows}
+    verdict = judge(a, cells_by, ref, by, bad, hashes, dupes)
 
     def f(v, fmt):
         return "–" if v is None or (isinstance(v, float) and math.isnan(v)) else format(v, fmt)
@@ -215,7 +243,7 @@ def report(a):
         g, lo, hi = r["vs_ref"]
         c = r.get("counters", {})
         lines.append(
-            f"| {r['teams']} × {r['k']} | `{r['cell']}` | {r['tables_mb']} MB | {r['mb_s']:,.0f} | "
+            f"| {' / '.join(plan_label(tuple(p)) for p in r['plans_seen'])} | `{r['cell']}` | {r['tables_mb']} MB | {r['mb_s']:,.0f} | "
             f"{f(g, '.3f')} ({f(lo, '.3f')}–{f(hi, '.3f')}) | {r['busy']:.1f} | "
             f"{f(r['leader_cpu'], '.3f')} | {f(r['helper_cpu'], '.3f')} | {f(r['scan_cpu'], '.3f')} | "
             f"{r['rss_mb']:.0f} MB | {f(c.get('l3_hit_share'), '.2f')} | {f(c.get('l3_miss_per_kb'), '.1f')} | "
@@ -224,6 +252,7 @@ def report(a):
     mixed = [r["cell"] for r in rows if len(r["plans_seen"]) > 1]
     if mixed:
         lines += ["", f"Cells whose runs showed more than one plan: {', '.join(mixed)}."]
+    lines += ["", *verdict["lines"]]
     md = "\n".join(lines) + "\n"
     stem = a.out or os.path.splitext(a.runs)[0] + "-report"
     open(stem + ".md", "w").write(md)
@@ -234,11 +263,105 @@ def report(a):
             "hashes": len(hashes),
             "errors": len(bad),
             "cells": rows,
+            "verdict": {k: v for k, v in verdict.items() if k != "lines"},
         },
         open(stem + ".json", "w"),
         indent=1,
     )
     print(md)
+
+
+def judge(a, cells_by, ref, by, bad, hashes, dupes):
+    """The registered rule (docs/journal/2026-11-06-team-size.md), each predicate checked
+    here, not left to the reader of the table"""
+    n = a.rounds
+    want_rounds = list(range(n))
+    same_bytes = len(hashes) == 1 and not bad
+    ref_row = cells_by[a.ref]
+    ref_plan = parse_plan(a.ref_plan)
+    ref_ok = (
+        ref_row["round_ids"] == want_rounds
+        and not ref_row["duplicate_rounds"]
+        and not ref_row["error_runs"]
+        and ref_row["plans_seen"] == [list(ref_plan)]
+    )
+    lines = [
+        "## The rule's predicates",
+        "",
+        f"- Every run of every cell the same output hash, no run failed: "
+        f"**{'yes' if same_bytes else 'NO'}**.",
+        f"- The reference `{a.ref}`: rounds 0–{n - 1} once each, every run {a.ref_plan}: "
+        f"**{'yes' if ref_ok else 'NO'}**.",
+    ]
+    out = {"same_bytes": same_bytes, "reference_complete": ref_ok, "primaries": {}}
+
+    # the control: the same plan through another entry point. Flagged when its 95% interval
+    # lies wholly beyond ±2% (lower bound above 1.02, or upper below 0.98); a flagged run is
+    # kept and reported, never read for qualification
+    ctl_cell, _, ctl_plan = a.control.partition("=")
+    ctl = cells_by.get(ctl_cell)
+    if ctl is None:
+        flagged, ctl_txt = True, f"`{ctl_cell}` has no runs"
+    else:
+        g, lo, hi = ctl["vs_ref"]
+        flagged = (
+            not (lo <= 1.02 and hi >= 0.98)
+            or ctl["round_ids"] != want_rounds
+            or ctl["plans_seen"] != [list(parse_plan(ctl_plan))]
+        )
+        ctl_txt = f"`{ctl_cell}` {g:.3f} ({lo:.3f}–{hi:.3f}), {ctl['pairs']} pairs"
+    out["control_flagged"] = flagged
+    lines.append(
+        f"- The control {ctl_txt}: **{'FLAGGED: this run is not read for qualification' if flagged else 'within ±2%'}**."
+    )
+    lines += [
+        "",
+        "| primary | plan in every run | 20 unique pairs | mean ≥ 1.03 | lower bound > 1.00 | raises the ceiling | peak RSS / ref (≤ 1.15) | CPU / ref (≤ 1.5) |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for spec in a.primary.split(","):
+        c, _, plan = spec.partition("=")
+        r = cells_by.get(c)
+        if r is None:
+            lines.append(f"| `{c}` | no runs | | | | **no** | | |")
+            out["primaries"][c] = {"passes": False, "why": "no runs"}
+            continue
+        g, lo, hi = r["vs_ref"]
+        plan_ok = r["plans_seen"] == [list(parse_plan(plan))]
+        complete = (
+            r["round_ids"] == want_rounds
+            and r["pairs"] == n
+            and not r["duplicate_rounds"]
+            and not r["error_runs"]
+        )
+        mean_ok, lo_ok = g >= 1.03, lo > 1.00
+        passes = all([same_bytes, ref_ok, not flagged, plan_ok, complete, mean_ok, lo_ok])
+        rss = r["rss_mb"] / ref_row["rss_mb"]
+        cpu = r["cpu"] / ref_row["cpu"]
+        yn = lambda b: "yes" if b else "NO"  # noqa: E731
+        lines.append(
+            f"| `{c}` ({plan}) | {yn(plan_ok)} | {yn(complete)} | {yn(mean_ok)} ({g:.3f}) | "
+            f"{yn(lo_ok)} ({lo:.3f}) | **{'yes' if passes else 'no'}** | {rss:.2f} | {cpu:.2f} |"
+        )
+        out["primaries"][c] = {
+            "plan_ok": plan_ok,
+            "complete": complete,
+            "mean": g,
+            "lower": lo,
+            "upper": hi,
+            "passes": passes,
+            "rss_ratio_of_medians": rss,
+            "cpu_ratio_of_medians": cpu,
+            "within_adoption_limits": rss <= 1.15 and cpu <= 1.5,
+        }
+    lines += [
+        "",
+        "A pass here is not a qualification: the same cell must pass the same predicates in "
+        "one predeclared second run of 20 pairs. The adoption limits are ratios of medians "
+        "(the cell's median peak RSS and CPU-seconds over the reference's).",
+    ]
+    out["lines"] = lines
+    return out
 
 
 def main():
@@ -257,6 +380,14 @@ def main():
     r.add_argument("runs")
     r.add_argument("--counters")
     r.add_argument("--ref", default="mibz2@8")
+    r.add_argument("--ref-plan", default="4x2", help="the plan every reference run must show")
+    r.add_argument(
+        "--primary",
+        default="mibz2-coop3@12=4x3,mibz2-coop4@16=4x4",
+        help="CELL=PLAN,...: the registered primary comparisons",
+    )
+    r.add_argument("--control", default="mibz2-coop2@8=4x2", help="CELL=PLAN: the noise check")
+    r.add_argument("--rounds", type=int, default=20, help="the registered rounds, 0..N-1")
     r.add_argument("--corpus", default="wikidata")
     r.add_argument("--out")
     a = ap.parse_args()

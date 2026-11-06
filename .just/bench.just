@@ -293,5 +293,5 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
       echo "bench-team-size: perf can't count here (try: sudo sysctl kernel.perf_event_paranoid=1); no counters"
     fi
     ctr=(); [ -s "$W/counters.jsonl" ] && ctr=(--counters "$W/counters.jsonl")
-    python3 bench/team_size.py report "$W/runs.jsonl" "${ctr[@]}" --ref mibz2@8 --out "$W/team-size"
+    python3 bench/team_size.py report "$W/runs.jsonl" "${ctr[@]}" --ref mibz2@8 --rounds {{ROUNDS}} --out "$W/team-size"
     echo "Upload: $W/team-size.md, team-size.json, runs.jsonl, counters.jsonl, env.json, lscpu.txt, commit.txt"
