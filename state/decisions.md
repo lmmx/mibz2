@@ -1381,3 +1381,79 @@ Before shipping attribution: one known-role reference; missing/duplicate/quoted 
 Refuse: authenticated-role claims from FROM/login; actor inference by prose or destination; latest-table overlays on old text; silent #145 guesses; treating an API failure as verified resolution; per-view per-ID lookups; credentials/new infrastructure; build/deploy per Oracle commit. Repair the existing moving-branch fallback before representing the enriched multi-file view as one version. No performance gate, new research approval prerequisite or authority expansion is introduced.
 
 Evidence digest: `git-blob:c288193910ed28457cd1fc243c792a8e41876276`; governing RULES blob `2aff5d9a7b71618ebdddae353b5ecc49d03554aa`, PROTOCOL `88c9438032acd6e6fedef9eb92b0242d7dfde2b2`, MODE `a1ae305664492eaac13695a7d6a2648f93ae4068`.
+
+## D036 — HOLD the three-team policy recipe before freezing
+
+**G1/G2: HOLD freeze and admission evidence from #234 at `40c2578095cbfe67a30a9ce2c10d0034b66e859c`.** Inbox [6694151539](https://github.com/lmmx/mibz2/pull/161#issuecomment-6694151539). Scope: this recipe's evidence integrity, not the optimisation line, ordinary repairs, or independent work. No implementation or timing performed. No merge permission granted.
+
+Operating SPEC pin: `a6a703cefcc40ac4115803f44a8a29ad76a3a7ef`; common/Guardian SPEC, MODE, RULES and PROTOCOL read. Migration check passed before receipt: previous branch head `f9dab3d2b40739d89d613f86e8c2d67bec3159e4`; manifest SHA-256 `60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488`. Receipt: `7d6374ad69b92c9c32a4bd42252f2904986d02c6`. Review is of the requested immutable pin, not later changes to the PR.
+
+### Rule: concur, with its scope intact
+
+The recorded Louis decision in `docs/journal/decisions.md` (blob `b7856e979f1f982b27eeffc1a3706124d1eb2efb`) permits this policy's workstation test plus confirmation to supply benefit evidence, with CI no regression and hardware-independent correctness tests. This is the recorded scoped exception, not a general amendment supplied by this review.
+
+The registration and judge agree on:
+- 20 same-thread-count, round-paired ratios; geometric mean base/head wall;
+- primary at 10: mean ≥1.03, two-sided 95% lower bound >1;
+- no harm at 11, 12, 16, 20: head/base upper bound ≤1.02, one-sided Bonferroni over four;
+- controls at 8/9: fail when the 95% interval lies wholly outside [0.98,1.02];
+- primary median CPU ≤1.5 and RSS ≤1.15; both test and predeclared confirmation must pass, no pooling or switching; one replacement only for invalidity.
+
+Independent SciPy quantiles at df=19 are 2.0930240544083087 and 2.433440211374971, matching the code's rounded constants. In particular, the harm bound correctly negates the log speed mean, not its standard error. Retain full-precision constants at the freeze to avoid rounding a boundary towards acceptance. A valid statistical FAIL is not an invalid run and cannot buy a replacement. Single-run JSON is not experiment admission; both run identities, frozen head/base pair, order and replacement use must remain explicit in the record. No campaign-wide error-rate claim follows, especially with a replacement.
+
+The #220 three-tables journal is absent at the reviewed #234 pin (404); its immutable blob `ed5d5e6603af9b3fd8dbc86b5878aa5ba2da6880`, resolved from #220's changed files, was read separately. Its rule carries the grid/output/control predicates and CPU/RSS limits forward; its result remains historical evidence, not a fresh same-thread policy A/B. Its raw timing bundles were not reanalysed here, and this review does not certify or rewrite their verdicts.
+
+### F1 — HIGH: claimed base is not the source that gets built
+
+[Recipe lines 338–349](https://github.com/lmmx/mibz2/blob/40c2578095cbfe67a30a9ce2c10d0034b66e859c/.just/bench.just#L338) records HEAD and its merge base, then trusts any existing directory named `build-$base`. It never checks that directory's HEAD or cleanliness. A local Git-only reproduction created that directory as a detached worktree at a different commit. The exact directory guard accepted it with exit 0; the subsequent build directory resolved to the wrong commit. No benchmark or decoder was run.
+
+The head worktree is also not required to be clean. The build commands may honour a configured target directory while the recipe executes hard-coded `target/release/examples/ab` paths, potentially selecting an old executable. Neither a directory name nor `commits.txt` proves executable provenance.
+
+Required repair: pin and verify the same head/base pair for the experiment and confirmation; validate both source trees and worktree identity before building; control/resolve Cargo output paths and record the actual executable identities, build configuration and corpus digest. Reject mismatches instead of silently using them. Missing base worktree is handled by `git worktree add`; an existing wrong or dirty one is the hole. A base with the old 4×2 plan can pass plan checks while measuring unrelated code.
+
+### F2 — HIGH: a passing grid need not have output evidence
+
+[Judge line 81](https://github.com/lmmx/mibz2/blob/40c2578095cbfe67a30a9ce2c10d0034b66e859c/bench/policy_ab.py#L81) uses `get` for hash and length. Removing both fields from every row of the supplied passing fixture produces one pair, `(None,None)`: **valid=true, pass=true, no problems**. Negating every wall time also passes, because the ratios remain positive. Giving each round a different `mibz2@...` binary path passes as well: `build_of` collapses every such path into one base.
+
+Required repair: validate row schema before statistics; require nonempty output hash, valid positive output length for this nonempty corpus, finite meaningful timings/resource metrics, the exact registered grid and arm identities, and evidence tying those identities to F1's binaries. Missing or malformed evidence is INVALID, never PASS. Do not merely add another nominal fixture asserting the current implementation.
+
+### F3 — material proof gap: busy thread names are not the configured plan
+
+[Threads::finish](https://github.com/lmmx/mibz2/blob/40c2578095cbfe67a30a9ce2c10d0034b66e859c/examples/ab.rs#L324) retains only threads with CPU ticks strictly greater than 2% of the busiest. The judge counts those names as the exact plan. The observation map is keyed by TID, so repeated helper names are legitimate distinct threads; name uniqueness is not the fix.
+
+A real 3×3 plan with an under-threshold helper can be rejected. Conversely, extra inactive/under-threshold workers are invisible. Aggregate counts do not establish topology, team membership, configured window or binary identity. A 4×3 arrangement with one inactive leader and its two inactive helpers has the same counted shape as 3×3. This is a source-derived counterexample, not an observed workstation run.
+
+**G3, separately identified pre-freeze admission constraint:** record the actual selected plan and effective window directly, without replacing or relaxing the existing registered busy-thread predicate. Bind the diagnostic to the verified executable and requested thread count. A contrary/missing plan is invalid. Harness diagnostics are delegated under RULES C6; changing the registered busy-thread predicate or statistical method is not smuggled in as instrumentation. This constraint does not retrospectively rewrite #220's results.
+
+### F4 — invalid attempts can lose their report or bundle
+
+The judge computes ratios for complete cells even after finding failed rows. A failed head row with wall=0 raises ZeroDivisionError. A missing `thread_cpu` raises KeyError; the CLI reproduction exits 1 with neither JSON nor Markdown written. The shell catches every report failure, says “see policy-ab.md”, and continues even when that file does not exist. Separately, `set -e` exits on setup/build/harness errors before reaching the bundler. A missing child executable makes `ab run` panic at `cmd.output().unwrap()`; ordinary child decode errors are different and are recorded in rows.
+
+Required repair: always retain an explicit failed/invalid attempt outcome and available console/raw material, distinguish report-generation failure from a completed invalid verdict, and bundle what exists on relevant failure exits. Run validity before statistical arithmetic. Add executable checks for malformed/zero/error rows and missing/stale base paths.
+
+The per-attempt `mkdir` is sound against overwriting: a same-second retry fails; a later invocation gets a new directory. It does not enforce the experiment's attempt allowance. Preserve and account for failed attempts; do not silently retry a valid FAIL. Shared corpus symlinks are omitted by the bundler, so the archive must retain the corpus identity needed to rebuild the run, not just the symlink path.
+
+### Decoder and tests: no source defect found in the new planner branch
+
+The exact 10-core/20 MiB condition and threshold ≥10 select 3×3; 8/9 stay 4×2. Nine decoding threads fit every affected request. The existing window formula gives 12 for ordinary default slots=4×requested threads, and clamps undersized requests to three teams. Saturation is explicitly tested; it is not a claim that the window remains 12 for overflowing synthetic inputs. The changed branch introduces no new unsafe implementation.
+
+Injected-topology unit tests cover the threshold, nearby core/cache mismatches, missing topology/cache, budgets and window scaling. The planned-decoder test compares known bytes for every level/shape at new windows 12/1/3 and old window 16, plus concatenation and malformed input. This is useful coverage even on CI machines that cannot choose the new default.
+
+Remaining targeted gaps: the new planned error comparison checks only error kind, drops the bytes emitted before error, and tests malformed input only at window 12. It does not establish same error location/ordered prefix or failure/cancellation progress at windows 1/3. Extend those checks with known CRC/truncation failures and timeout-bounded cancellation; add a full default-dispatch check with injected topology if practical. These are coverage recommendations, not an observed decoder failure or a new unsafe-code stop. Rust tests were source-reviewed, not executed here; CI remains necessary.
+
+### Reproduction and disposition
+
+All eight supplied Python test functions passed when called directly, including their CLI test. Pytest was unavailable; the unused monkeypatch parameter was passed None and a temporary Path supplied to the CLI test. The additional adversarial probes produced:
+
+| Probe on supplied passing fixture | Result |
+|---|---|
+| Remove all hash/out fields | valid=true, pass=true |
+| Different base executable path each round | valid=true, pass=true |
+| Negate every wall time | valid=true, pass=true |
+| One failed head row with zero wall | ZeroDivisionError |
+| Missing thread_cpu | KeyError; CLI writes neither report |
+| Existing base directory at wrong Git commit | directory guard accepts; wrong source selected |
+
+These are synthetic evidence checks, not measured performance. No local timing, implementation, CI invocation or new capture was performed. Required to resolve this scoped HOLD: repaired pinned recipe/judge with focused adversarial checks addressing F1–F4, explicit actual-plan evidence, and an unchanged or separately authorised statistical rule. Ordinary repair proceeds under existing authority. Once resolved, freeze the recipe/head/base and declare test/confirmation identities before Louis's runs; no result yet qualifies this policy.
+
+Evidence key: PR234 / `40c2578095cbfe67a30a9ce2c10d0034b66e859c` / `git-blob:622e634b01f9e736a7e504600c96addfccb98038` (registration). Other reviewed blobs: recipe `c127e883143a6559d5f2614d4ad91b55ef042b20`; judge `914e0dae55281f588b3ed4f8e02130ebe56403bb`; judge tests `f9c22286484747001169dcd0db5d2d275abf2ec5`; planner `235d602dd47e3bc181ae57dc19ed8de8881bb569`; cooperative tests `ae6c12dea33ff67509725f9f601dfe676be51378`; ab harness `39394f39fb216ebb35bc8f0e0293d7caedb02fde`; bundler `1ce3e2a20b63032ad53a42945e14393c5e968231`.
