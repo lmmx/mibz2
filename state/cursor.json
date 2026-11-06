@@ -2,7 +2,7 @@
   "version": 1,
   "repository": "lmmx/mibz2",
   "mode": "ACTIVE",
-  "branch": "review/compact30-guardian-shadow",
+  "branch": "team-state/guardian",
   "pr": 149,
   "base": "research/compact30-constructor",
   "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
@@ -511,6 +511,20 @@
       "incoming_comment": 6685165401,
       "status": "published; D033 readiness HOLD lifted; reserved approval and cutover verification remain",
       "comment": 6685253567
+    },
+    {
+      "pr": 161,
+      "sha": "818d521c6d0d5da09b4b0f34322baaf54cbf39af",
+      "evidence_digest": "git-blob:c288193910ed28457cd1fc243c792a8e41876276",
+      "decision": [
+        "G1"
+      ],
+      "commit": "66e8a8278acd4025fc2c8a2bd416c8e41d2d86f5",
+      "id": "D035",
+      "mode": "ACTIVE",
+      "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+      "incoming_comment": 6693599811,
+      "status": "complete; attribution and snapshot integrity review; no implementation"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -599,7 +613,9 @@
     "d1e6f5e3e84a721ddbe11b88f681c2078658505c",
     "6af1967e7e74c8f59113431abc5a7b90ab47321a",
     "d510599dbc5bccf84fe0139aa5626ef9f42638d1",
-    "d7272ba8bba1b16e14dcac4cda7fe5630b528aca"
+    "d7272ba8bba1b16e14dcac4cda7fe5630b528aca",
+    "b3496d3b8eda3f5127c6cb236eb76ec31a81d9cf",
+    "66e8a8278acd4025fc2c8a2bd416c8e41d2d86f5"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -995,9 +1011,16 @@
       "decision": "D034",
       "commit": "d510599dbc5bccf84fe0139aa5626ef9f42638d1",
       "comment": 6685253567
+    },
+    {
+      "pr": 161,
+      "sha": "818d521c6d0d5da09b4b0f34322baaf54cbf39af",
+      "evidence_digest": "git-blob:c288193910ed28457cd1fc243c792a8e41876276",
+      "decision": "D035",
+      "commit": "66e8a8278acd4025fc2c8a2bd416c8e41d2d86f5"
     }
   ],
-  "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+  "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
   "inbox_comments": [
     {
       "comment_id": 6681847165,
@@ -1092,8 +1115,10 @@
     {
       "comment_id": 6693599811,
       "pr": 161,
-      "status": "in_progress",
-      "decision": "D035"
+      "status": "complete",
+      "decision": "D035",
+      "receipt_commit": "b3496d3b8eda3f5127c6cb236eb76ec31a81d9cf",
+      "work_commit": "66e8a8278acd4025fc2c8a2bd416c8e41d2d86f5"
     }
   ],
   "migrated_from": {
@@ -1102,5 +1127,13 @@
     "manifest": "state/MANIFEST.md",
     "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488",
     "date": "2026-11-06"
+  },
+  "authority_transition": {
+    "previous_spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+    "active_spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+    "source": "direct user instruction in this run",
+    "historical_fields": "operating_pin, stage, activation and earlier assessments retain their compact30 provenance; current authority is docs/team/SPEC.GUARDIAN.md at active_spec_pin",
+    "migration_checked": true,
+    "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488"
   }
 }
