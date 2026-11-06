@@ -133,7 +133,7 @@ just bench-release-scaling                                    # the current rele
 just bench-release-scaling v0.2.4 v0.2.1 10 "1,4,10,20" big.bz2   # releases, rounds, threads, more files
 ```
 
-With no releases named, it compares the newest release tag with the one before it. It builds both releases in `target/release-scaling/`, runs the rounds, and records the run in `bench/release-scaling/<date>-<machine>/`. After each release, the release runbook (`docs/RELEASING.md`) asks for one such run, made with `just submit bench-release-scaling`, and commits its record.
+With no releases named, it compares the newest release tag with the one before it. It builds both releases in `target/release-scaling/`, runs the rounds, and records the run in `bench/release-scaling/<date>-<machine>-<release>/`. After each release, the release runbook (`docs/RELEASING.md`) asks for one such run, made with `just submit bench-release-scaling`, and commits its record.
 
 # Alternatives
 
