@@ -1,0 +1,443 @@
+{
+  "boundary_checks": 72,
+  "all_passed": true,
+  "batch_state": {
+    "incomplete": [],
+    "unreviewed": [],
+    "queued": []
+  },
+  "cases": [
+    {
+      "role": "optimizer",
+      "offset_delta": 0,
+      "kind": "ACK",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 0,
+      "kind": "REVIEW",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 0,
+      "kind": "DECISION",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 0,
+      "kind": "LOG",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 0,
+      "kind": "",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 0,
+      "kind": "CHECKPOINT",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 0,
+      "kind": "PROPOSAL",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 0,
+      "kind": "CORRECTION",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 0,
+      "kind": "QUEUED",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 1,
+      "kind": "ACK",
+      "flagged": true
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 1,
+      "kind": "REVIEW",
+      "flagged": true
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 1,
+      "kind": "DECISION",
+      "flagged": true
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 1,
+      "kind": "LOG",
+      "flagged": true
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 1,
+      "kind": "",
+      "flagged": true
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 1,
+      "kind": "CHECKPOINT",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 1,
+      "kind": "PROPOSAL",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 1,
+      "kind": "CORRECTION",
+      "flagged": false
+    },
+    {
+      "role": "optimizer",
+      "offset_delta": 1,
+      "kind": "QUEUED",
+      "flagged": true
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 0,
+      "kind": "ACK",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 0,
+      "kind": "REVIEW",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 0,
+      "kind": "DECISION",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 0,
+      "kind": "LOG",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 0,
+      "kind": "",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 0,
+      "kind": "CHECKPOINT",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 0,
+      "kind": "PROPOSAL",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 0,
+      "kind": "CORRECTION",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 0,
+      "kind": "QUEUED",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 1,
+      "kind": "ACK",
+      "flagged": true
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 1,
+      "kind": "REVIEW",
+      "flagged": true
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 1,
+      "kind": "DECISION",
+      "flagged": true
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 1,
+      "kind": "LOG",
+      "flagged": true
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 1,
+      "kind": "",
+      "flagged": true
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 1,
+      "kind": "CHECKPOINT",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 1,
+      "kind": "PROPOSAL",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 1,
+      "kind": "CORRECTION",
+      "flagged": false
+    },
+    {
+      "role": "guardian",
+      "offset_delta": 1,
+      "kind": "QUEUED",
+      "flagged": true
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 0,
+      "kind": "ACK",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 0,
+      "kind": "REVIEW",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 0,
+      "kind": "DECISION",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 0,
+      "kind": "LOG",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 0,
+      "kind": "",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 0,
+      "kind": "CHECKPOINT",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 0,
+      "kind": "PROPOSAL",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 0,
+      "kind": "CORRECTION",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 0,
+      "kind": "QUEUED",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 1,
+      "kind": "ACK",
+      "flagged": true
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 1,
+      "kind": "REVIEW",
+      "flagged": true
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 1,
+      "kind": "DECISION",
+      "flagged": true
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 1,
+      "kind": "LOG",
+      "flagged": true
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 1,
+      "kind": "",
+      "flagged": true
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 1,
+      "kind": "CHECKPOINT",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 1,
+      "kind": "PROPOSAL",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 1,
+      "kind": "CORRECTION",
+      "flagged": false
+    },
+    {
+      "role": "researcher",
+      "offset_delta": 1,
+      "kind": "QUEUED",
+      "flagged": true
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 0,
+      "kind": "ACK",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 0,
+      "kind": "REVIEW",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 0,
+      "kind": "DECISION",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 0,
+      "kind": "LOG",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 0,
+      "kind": "",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 0,
+      "kind": "CHECKPOINT",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 0,
+      "kind": "PROPOSAL",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 0,
+      "kind": "CORRECTION",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 0,
+      "kind": "QUEUED",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 1,
+      "kind": "ACK",
+      "flagged": true
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 1,
+      "kind": "REVIEW",
+      "flagged": true
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 1,
+      "kind": "DECISION",
+      "flagged": true
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 1,
+      "kind": "LOG",
+      "flagged": true
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 1,
+      "kind": "",
+      "flagged": true
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 1,
+      "kind": "CHECKPOINT",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 1,
+      "kind": "PROPOSAL",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 1,
+      "kind": "CORRECTION",
+      "flagged": false
+    },
+    {
+      "role": "oracle",
+      "offset_delta": 1,
+      "kind": "QUEUED",
+      "flagged": true
+    }
+  ]
+}

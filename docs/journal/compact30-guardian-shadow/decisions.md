@@ -1157,3 +1157,35 @@ Plain page prose is consistent with the explicit “every message on the channel
 Keep authority and MODE findings closed at this pin. Fix the specific routing false negatives, explicit batch/citation contract and repeated-correction closure before calling the new routing/correction path ready. Correct/reconcile the 34-versus-33 test claim. No demand for routine Oracle-page reviews, another scientific approval gate, a changed performance threshold, or interruption of unrelated work. G6 and user-reserved decisions stay reserved.
 
 Evidence digest: `git-blob:2e03210e89dfaf8b9e85f640f645d57756d84dc2`, with the pinned documents, workflow and archived probes.
+
+## D032 — D031 narrow HOLD lifted at b58cb628
+
+**Decision:** G1 — D031's routing/correction readiness HOLD is lifted at `b58cb628ccbb86b34a9ceac8e852f5d978a29a0d` (PR #223). Incoming [6683967083](https://github.com/lmmx/mibz2/pull/161#issuecomment-6683967083). ACTIVE, stage A. Authority and MODE concurrence from D031 remain; no new gate or permission.
+
+### Verification
+
+Read the exact diff from `8e3f6352baad3c26c3aa1c19d3ab74c3a4752c65`, the new coordination source/tests/fixtures and full SPEC.ORACLE. Reporter evidence:
+- coord.py blob `07b625553b6b71db05c4675fc19a9ad62f98e726`;
+- test_coord.py `3fd84fd36d1f496d72a3de76873c34c65a7ac426`;
+- fixtures.json `fbd476918e806d49c5eff04547eac05e145ca1ac`;
+- SPEC.ORACLE.md `570ae729b9fc922a66a92d94aec1ee1313c9375a`.
+
+**34 exact pinned unittest tests pass.** D031's 33-test result remains correct for its earlier pin; the additional test explains the increase. Independent [probes](d032-probes.py) / [results](d032-results.json) check all four inboxes, nine message types including untyped, at offset and offset+1: **72/72 pass**. Copy pinned coord.py beside the probe and run Python. A two-comment Oracle batch with both IDs cited and processed has no incomplete, unreviewed or queued entries. These are offline checks; no fresh live full-history audit or historical-count claim is made.
+
+### Disposition per item
+
+1. **Routing — closed.** The new assignment-kind check rejects ACK, REVIEW, DECISION, LOG and untyped messages after the offset. CHECKPOINT, PROPOSAL and CORRECTION remain admitted on the intended path; QUEUED remains on the channel. The ≤ historical boundary preserves the bootstrap ACK and excludes the offset itself from active work. The source test checks Oracle's exact boundary and other roles after it; the independent matrix supplies exact-boundary checks for every role. D031's Coordinator-publication counterexamples are repaired.
+
+2. **Correction closure — closed.** The written contract forwards an item/evidence discrepancy once, closes on a fix or evidence-citing refusal, reopens only on new material evidence or a substantive error in the refusal, and bars Oracle rebuilds/REVIEWs/ACKs from generating another checkpoint. This meets the requested procedural bound; it is not a claim of automated deduplication enforcement. Read “a repeat of either is dropped” subject to the explicit reopening exception: the same item with new material evidence is not forbidden. Reasserting a rejected claim without new evidence or an identified substantive error is not reopening.
+
+3. **Batch/citation contract — closed.** SPEC.ORACLE explicitly overrides common SPEC's one-REVIEW-per-comment rule for Oracle alone: one rebuild may emit one REVIEW citing every covered inbox ID, with a cursor entry for each. The inherited receipt/complete/publication/finished sequence remains. The new explicit citation requirement controls the earlier “Nothing else” output wording; it cannot be used to omit those IDs. The queue probe confirms the intended handshake. Guardian's own per-comment publication rule is unchanged.
+
+4. **Researcher's distinctions — no new authority or gate.** Purpose, empirical premise and dispatch order are separate descriptions; a hypothesis does not become established by being restated. Necessary dependencies and chosen pauses remain distinguishable, with the owner and decision cited. Execution as registered, prediction outcome and qualification each retain their own status: a correctly performed negative experiment can be done as intended without qualifying. These rules improve fidelity; the Oracle still cannot change dispatch, rank work, judge gates, or decide scientific disputes. Treat the suggested dependency counterfactual as a diagnostic, not authority to unpause work or invent a causal conclusion when evidence is insufficient.
+
+### Scope
+
+Lift exactly D031's narrow readiness HOLD. This is not a merger, task-creation instruction, deployment verification or end-to-end operation certificate. Louis configures the Oracle task; the Guardian neither does so nor widens its own instruction pin. No routine page review, new scientific approval gate, candidate qualification, performance threshold change or G6 acceptance is introduced. Scientific work was not held by D031.
+
+Operating documents remain those read for D031: specs `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`, GUARDIAN `288c05638c85ffbb0a4d1f5ba9762002c37acdff`, charter `dad82808dd4532d21ebf51e88164b78a0af53da8` §§2,12.3; ROLES/PROTOCOL/MODE reread unchanged; activation report 262 reread at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`. Researcher review [6683945162](https://github.com/lmmx/mibz2/pull/145#issuecomment-6683945162) read for provenance of the descriptive distinctions, not as a new authority grant. Historical decision pins are preserved.
+
+Evidence digest: `git-blob:07b625553b6b71db05c4675fc19a9ad62f98e726`, with the spec/test/fixture blobs and archived probe results.
