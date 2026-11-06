@@ -890,3 +890,63 @@ The counter script wraps five child decodes in a shell and collects process-wide
 Record the precise conditions before the run and keep any later amendment visible. The registration's throughput comparison is useful in scope, but qualification and the stronger causal claims are **not established** by its current text/report alone. This is no blanket stop on otherwise authorised work and no G8 finding that the research line is exhausted. The existing CI measured-head performance, parity, safety and regression gate remains necessary for production policy changes. An i9 result does not replace it. i9 captures, bench-harness changes, G6 and the other §4 reservations remain with Louis; this REVIEW grants none of them.
 
 Evidence digest: `git-blob:5aadf3ce52f696396eec1d8f04dc9ca071c2ab3e`; the companion script blob is part of this decision's evidence. Arithmetic above was reproduced directly; no candidate was compiled or timed.
+
+
+## D027 — D026 amendment: partial closure, reproducible remaining defects
+
+**Decision:** G1 — concur with the closed points below; dispute “every D026 point is taken” at this pin. D026's G3 conditions remain. **Mode:** ACTIVE, stage A. **Incoming:** [6682032075 on #161](https://github.com/lmmx/mibz2/pull/161#issuecomment-6682032075). This is a prospective registration/reporting review, not performance qualification, a line STOP, or permission to time or change a harness.
+
+### Evidence and reproduction
+
+Source pin: `b8b8ce473c7acde505c266768fcd38a7f1f1eacb`:
+- [Registration](https://github.com/lmmx/mibz2/blob/b8b8ce473c7acde505c266768fcd38a7f1f1eacb/docs/journal/2026-11-06-team-size.md), blob `acd3e6503b64d2cc9eaa72b30de302a68392ff13`.
+- [Reporter](https://github.com/lmmx/mibz2/blob/b8b8ce473c7acde505c266768fcd38a7f1f1eacb/bench/team_size.py), blob `4fdc178f7c7a966dc7d3d29836955d9e1835eeef`.
+- [Recipe](https://github.com/lmmx/mibz2/blob/b8b8ce473c7acde505c266768fcd38a7f1f1eacb/.just/bench.just).
+
+[D026](https://github.com/lmmx/mibz2/blob/5a1fe19170ee66cd7d3fbbc7620552e4ca19a23d/docs/journal/compact30-guardian-shadow/decisions.md#d026--team-size-registration-qualification-rule-and-evidence-validity) is the finding being checked. Specs remain at `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`; operating pin remains `288c05638c85ffbb0a4d1f5ba9762002c37acdff`, with original historical pins preserved. Charter §§2, 6.4, 8.4 and 12 govern scope; controlling charter is `dad82808dd4532d21ebf51e88164b78a0af53da8`, campaign reference resolved at `e52252f51419b4c94a016f110a25ef19cd2b5f00`. Report 262 activation was read again.
+
+Executed the exact reporter's report path on deterministic **synthetic** records only: [d027-reproduce.py](d027-reproduce.py), [d027-reproduction.json](d027-reproduction.json). To reproduce, obtain `bench/team_size.py` at the source pin and run `python d027-reproduce.py /path/to/team_size.py`. No decoder, compiler, timing or perf was run. Synthetic constant ratios test predicates, not statistical calibration or performance.
+
+| fixture | records / cells | observed result |
+|---|---:|---|
+| clean grid | 320 / 16 | both primaries pass, control unflagged |
+| duplicate control round 0 | 321 / 16 | **both still pass; control unflagged** |
+| omit all coop2@16 records | 300 / 15 | **both still pass** |
+| coop4@16 round 0 has 4 leaders + 11 helpers | 320 / 16 | that primary fails plan and pass predicates |
+| omit coop3@12 round 0 | 319 / 16 | that primary fails completeness and pass predicates |
+| change one recorded output length to 1, keep hash | 320 / 16 | **same_bytes and both passes remain true** |
+
+All clean primary ratios are exactly 1.05, with CPU and RSS ratios 1.0; the fixtures deliberately make outcome changes depend only on the mutated validity field. The inconsistent-length case demonstrates absent metadata consistency checking, not a real hash collision or decoder byte mismatch.
+
+### Closed points
+
+The nominal fixed-run family bound is corrected to 5%, conditional on the paired-log model. Same-cell confirmation, one second 20-round run, no switching/pooling/retry after a failed confirmation, and the point-estimate interpretation of 1.03 are now explicit. The control's interval-outside-band predicate is precise, flagged runs are to be retained, and a finite replacement limit is stated. Ratios of medians define the RSS/CPU estimands. Exact helper-count comparison and incomplete/duplicate **primary** detection address major D026 defects. The outcome section now calls its mechanism readings hypotheses.
+
+These corrections stand; they need no fresh approval ritual.
+
+### Remaining material findings
+
+**1. Control completeness is not implemented as registered.** In `judge`, `flagged` tests interval overlap, round IDs and plan, but omits `duplicate_rounds`, `error_runs` and the complete pairing test. The duplicate-control fixture demonstrates an actual false pass of the registered rule. A failed control run makes global `same_bytes` false, so it already blocks a primary pass, but the control flag still does not implement the stated predicate or replacement trigger. Apply the complete predicate to the control, including the reference, before classifying it. “Within ±2%” is also too strong for an interval that merely overlaps that band: print “not flagged,” not equivalence.
+
+**2. D026's whole-grid completeness requirement remains absent.** The amended text narrows Complete to reference plus primary, and the script does not require all 16 cells × 20 unique rounds. A completely missing secondary cell is invisible to the verdict. Restore the full expected-grid check, successful rows and output-length/hash consistency; keep per-cell plan checks and all original records. The inconsistent-length fixture identifies the latter missing check. This does not require inventing a hash-collision failure; it requires rejecting contradictory archived metadata. Until these checks are met, the table cannot certify D026 compliance.
+
+**3. Confirmation must include adoption limits in both runs.** The script usefully exposes `within_adoption_limits` separately from `passes`. Preserve that distinction, but state explicitly that a candidate for adoption needs RSS ≤1.15 and CPU ≤1.5 by the declared ratio-of-medians rule **in each accepted run**, alongside the same-cell speed and validity predicates. The current prose puts adoption after qualification and does not say both runs. Ratios of medians do not establish worst-case memory or a confident population cap; report that uncertainty rather than changing the estimator after seeing results.
+
+Clarify the replacement budget over the whole experiment and how it applies if the confirmation is flagged; do not turn “one replacement” into a new budget on each retry. A valid confirmation that fails cannot be replaced. The stated 5% nominal bound is for a fixed run, not a calibrated guarantee for the whole selection/invalidation/replacement procedure; the control shares its reference with the primary comparisons.
+
+**4. Preserve runs before repeating the recipe.** The recipe always writes `target/team-size`, removes `runs.jsonl` and `counters.jsonl`, and overwrites reports, environment and commit metadata. An unarchived replacement/confirmation invocation destroys the previous evidence. Archive each attempt's raw files, report, environment, commit and console under a distinct run identity before another invocation. This is necessary to fulfil the amendment's retention promise. No harness edit was made here.
+
+### Remaining claim and documentation corrections
+
+- “Unpinned cells bound what sibling sharing could cost” is still unsupported. Different plans under unobserved placement provide neither a no-SMT control nor an identified quantitative bound on sibling cost. Remove “bound” unless a bound and its assumptions are derived. The earlier exact “at least 2/6 cores” claims and prediction discounts also remain; named worker counts do not establish simultaneous placement.
+- The recipe resolves counter sequencing: it finishes the entire timed `ab run`, **then** invokes counters. Amend “after every timed round” accordingly.
+- “Nothing is multiplexed” remains asserted without checking the actual readings. The reporter still derives counter ratios when recorded running percentages indicate multiplexing. Retain D026's requirement to label unsupported/multiplexed evidence and not claim it is validated nonmultiplexed attribution. Counters remain process-wide and diagnostic. Missing usable counters need not invalidate an otherwise valid timing comparison, but cannot support its mechanism claims.
+- The registration mislocates review 6681996710 on inbox #161; it is on channel #145.
+
+### Disposition
+
+**Not yet full D026 closure at b8b8ce47.** The duplicate-control false pass is decisive; whole-grid completeness, both-run adoption wording and evidence retention remain concrete requirements. Correct them prospectively and retain this pin and the amendment trail. The registration reports no run yet; that is its recorded assertion, not an independently established absence of all measurements.
+
+No performance, safety, compiled-code or net-work gate is certified from synthetic reporter tests. There is no line-level G8 stop and no blanket interruption of unrelated authorised work. Guardian confirmation is not permission for i9 timing or bench changes; those remain reserved. Production policy changes still use the existing measured-head CI, parity, safety and regression requirements. G6 is not exercised.
+
+Evidence digest: `git-blob:acd3e6503b64d2cc9eaa72b30de302a68392ff13`; script blob and archived reproduction above are supporting evidence.

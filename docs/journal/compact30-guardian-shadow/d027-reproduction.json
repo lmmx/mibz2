@@ -1,0 +1,200 @@
+{
+  "clean": {
+    "cells": 16,
+    "input_rows": 320,
+    "verdict": {
+      "control_flagged": false,
+      "primaries": {
+        "mibz2-coop3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-coop4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "duplicate_control_round": {
+    "cells": 16,
+    "input_rows": 321,
+    "verdict": {
+      "control_flagged": false,
+      "primaries": {
+        "mibz2-coop3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-coop4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "inconsistent_output_length": {
+    "cells": 16,
+    "input_rows": 320,
+    "verdict": {
+      "control_flagged": false,
+      "primaries": {
+        "mibz2-coop3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-coop4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "missing_primary_round": {
+    "cells": 16,
+    "input_rows": 319,
+    "verdict": {
+      "control_flagged": false,
+      "primaries": {
+        "mibz2-coop3@12": {
+          "complete": false,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-coop4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "missing_secondary_cell": {
+    "cells": 15,
+    "input_rows": 300,
+    "verdict": {
+      "control_flagged": false,
+      "primaries": {
+        "mibz2-coop3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-coop4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "wrong_primary_helpers": {
+    "cells": 16,
+    "input_rows": 320,
+    "verdict": {
+      "control_flagged": false,
+      "primaries": {
+        "mibz2-coop3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-coop4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": false,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  }
+}

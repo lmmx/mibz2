@@ -781,7 +781,8 @@
       "comment_id": 6682032075,
       "pr": 161,
       "status": "in progress",
-      "decision": "D027"
+      "decision": "D027",
+      "receipt_commit": "9f7a6099908c74a2b09b2c8958bcfde13dcebce9"
     }
   ]
 }
