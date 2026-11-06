@@ -839,3 +839,54 @@ The record answers the historical-status question correctly. Change the final �
 The checkpoint reports the completed merge; this decision neither repeats it nor certifies every prerequisite from the summary alone. D024's raw instruction/safety audit limits remain. No blanket HOLD on unrelated authorised work, new approval prerequisite, G6 acceptance, implementation, timing, harness change or automation change is introduced.
 
 Evidence digest: `git-blob:6def96def6c11f19df3137cf0159c07013a5ea2a`. [d025-receipt.json](d025-receipt.json) records the sources, predicates and limits. Only supplied incoming ID 6646249200 is completed.
+
+
+## D026 — team-size registration: qualification rule and evidence validity
+
+**Mode:** ACTIVE, stage A. **Decision:** G1 (dispute unqualified soundness of the proposed inference); G3 (narrow confirmation and validity conditions). **Incoming:** [6681847165, inbox #161](https://github.com/lmmx/mibz2/pull/161#issuecomment-6681847165). **Output:** #145. No candidate PASS, line HOLD/STOP, timing permission or harness-change permission is issued.
+
+### Pinned evidence and scope
+
+- Task specs: `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`; operating GUARDIAN.md: `288c05638c85ffbb0a4d1f5ba9762002c37acdff`. The cursor already used this operating pin; historical pins remain unchanged.
+- [Registration](https://github.com/lmmx/mibz2/blob/bb9291abc6ec353fd07c0cba00a6fa8eaba61c15/docs/journal/2026-11-06-team-size.md), blob `5aadf3ce52f696396eec1d8f04dc9ca071c2ab3e`.
+- [Reporting script](https://github.com/lmmx/mibz2/blob/bb9291abc6ec353fd07c0cba00a6fa8eaba61c15/bench/team_size.py), blob `52a615aef22aeb6e2d717e775ce1f246e52d5de1`.
+- Controlling charter: `dad82808dd4532d21ebf51e88164b78a0af53da8`, §§2, 6.4, 8.4, 12.2–12.3; campaign reference resolved at `e52252f51419b4c94a016f110a25ef19cd2b5f00`. Report 262 establishes stage A activation.
+
+This assesses the prospective rule and its reporter, not a completed performance or safety checkpoint. The registration says “Not yet run.” Historical throughput, CPU and cache figures are motivation quoted by the registration, not independently reproduced results of this review. No measured-head gate ledger, safety suite, Miri/mutation coverage or compiled-listing result is certified here. The plan below can test an operational throughput difference; it cannot alone establish the stated causal explanations.
+
+### Two primaries and confirmation
+
+The script uses a **two-sided 95% t-interval on paired log ratios**, with t = 2.093 for 20 pairs. Requiring its lower end above 1 uses the beneficial **2.5% tail**. Under a calibrated test at the null boundary, the probability of either of two false beneficial declarations is at most `2 × 0.025 = 0.05`, even with their shared reference. If the comparisons were independent it would be `1 − 0.975² = 0.049375`; independence is not asserted here. The additional point-estimate floor can only reduce that null rejection probability. The stated “1 in 10” instead corresponds approximately to two independent one-sided 95% tests (`1 − 0.95² = 0.0975`), not the implemented rule.
+
+Thus two primaries alone do not require a stricter interval to keep this nominal one-run family error at 5%. This is a model-based calculation, not validation that scheduling, drift, serial dependence or log-ratio distributions make the t-interval calibrated. Rotation/reversal helps balance order but does not prove independent rounds.
+
+**G3 confirmation condition:** fix the two primary cells and reference now. A cell must independently satisfy the same speed, validity and adoption predicates in the initial run and in one prospectively fixed confirmation run of 20 pairs. A different winning cell in confirmation does not confirm the first; neither pooling after selection nor repeated confirmation until a pass counts. Report both primaries and all runs, including failed confirmation. Under independent runs and calibrated tests the probability that any null cell passes both is bounded by `2 × 0.025² = 0.00125`; shared systematic bias is not removed by replication. This conditional calculation is not an empirical error guarantee.
+
+### The 1.03 floor and 2% check
+
+Keep the registered **1.03 point-estimate floor**; nothing here lowers it. At fixed output it means 3% higher throughput, equivalent to `1 − 1/1.03 = 2.9126%` less wall time. A lower bound merely above 1 establishes a positive effect under the model, **not a demonstrated minimum 3% effect**. If the intended claim is “at least 3% with confidence,” a lower bound at least 1.03 would be required. That is a distinct, stricter claim, not what the current rule says. The evidence supplied does not derive 3% as a universal economic threshold or establish the power of 20 rounds to detect it.
+
+“Interval excludes 1 by more than 2%” needs an exact predicate before results: for example, `upper < 0.98 or lower > 1.02` means the whole interval is beyond the band, whereas an estimate outside the band plus exclusion of 1 is a different rule. Neither a non-significant result nor an interval overlapping that band establishes equivalence. Same plan through a different entry point can have a real systematic difference, so a flag does not identify random noise.
+
+**G3 validity condition:** retain every flagged run and fix the invalidation/replacement rule and finite replacement budget prospectively, without looking at the primary result to decide replacement. Do not discard inconvenient results or repeat until this control passes. A reproducible control difference needs explanation. The 2% threshold is a diagnostic tolerance; it does not subtract or bound bias in the primary comparison.
+
+### Reporter defects that can change a verdict
+
+1. `plan_of` rounds `helpers / leaders`. Four leaders with **7** helpers is labelled 4 × 3 although 8 helpers are expected; four with **11** is labelled 4 × 4 although 12 are expected. Require exact leader and helper counts, valid parsing, and the intended plan on every run including the reference. Count consistency alone does not prove per-team membership, simultaneous activity or CPU placement.
+2. `report` silently overwrites duplicate cell/round rows and pairs only the intersection of available rounds. Its displayed round count is the cell count, not the matched-pair count. It does not enforce all 16 registered cells × 20 rounds or reject missing rounds. Require the exact unique round set, successful runs, matching output hashes and output lengths, and all 20 reference/cell pairs before a confirmatory verdict. Archive violations rather than repairing the sample by selective deletion.
+3. It flags mixed inferred plans, not a consistently wrong plan. It reports summaries but does not enforce the speed, noise, replication, CPU or RSS gates. A generated table is not itself a PASS.
+4. CPU and peak RSS are reported as medians across decodes; “busy” is median CPU divided by median wall. It is not the median of per-decode CPU/wall. Define the adoption estimands and comparison rule prospectively: median peak RSS is different from maximum observed peak RSS, and ratios of medians differ from paired ratios. Keep the 1.15 RSS and 1.5 CPU caps, apply the chosen rule in both runs, and state uncertainty. The current wording does not resolve those choices.
+
+These are requirements on evidence accepted for qualification, not an instruction to this agent to modify the harness. Any harness change remains subject to the standing authority boundary.
+
+### SMT, counters and disposition
+
+Unpinned 10-thread cells **can** occupy separate cores; they are not established no-SMT controls. Placement, migration, runnable time, scanner and main threads matter. Nor do 12 or 16 named workers prove exactly two or six concurrently shared sibling pairs. The compared cells also differ in teams and k. Therefore their relative performance cannot isolate sibling cost.
+
+Likewise, leader CPU near 0.14 s is aggregate CPU, not a measured serial critical path. More helper CPU does not establish a pipeline as the required next design. Worse process-level L3 metrics at four tables do not identify helper cache pressure as the cause. Preserve these as competing hypotheses, not predetermined causal verdicts or implementation mandates.
+
+The counter script wraps five child decodes in a shell and collects process-wide events, including startup and other decoder phases. Those counters are not walk-only attribution. It records event running percentages but still computes ratios when multiplexing is reported; unsupported or multiplexed events must not be represented as validated nonmultiplexed evidence. Also settle whether the counter pass occurs after all timing or after each round: the registration currently says both “separate pass” and “after every timed round.”
+
+Record the precise conditions before the run and keep any later amendment visible. The registration's throughput comparison is useful in scope, but qualification and the stronger causal claims are **not established** by its current text/report alone. This is no blanket stop on otherwise authorised work and no G8 finding that the research line is exhausted. The existing CI measured-head performance, parity, safety and regression gate remains necessary for production policy changes. An i9 result does not replace it. i9 captures, bench-harness changes, G6 and the other §4 reservations remain with Louis; this REVIEW grants none of them.
+
+Evidence digest: `git-blob:5aadf3ce52f696396eec1d8f04dc9ca071c2ab3e`; the companion script blob is part of this decision's evidence. Arithmetic above was reproduced directly; no candidate was compiled or timed.
