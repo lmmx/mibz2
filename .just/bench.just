@@ -274,7 +274,8 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
     # invalidation and confirmation rules need every attempt's evidence
     B=$PWD/target/team-size
     W=$B/$(date -u +%Y%m%dT%H%M%SZ)
-    mkdir -p "$W"
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-team-size: $W already exists; not reusing an attempt's directory"; exit 1; }
     cargo build -q --release --example ab --example windows
     cargo build -q --release --features trace --example occupancy
     AB=$PWD/target/release/examples/ab
