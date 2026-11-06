@@ -449,6 +449,18 @@
       "review_comment_pr": 145,
       "review_comment_id": 6684224966,
       "disposition": "Claim-relative stopping, channel watermark plus evidence manifest, parallel-front L0; identified already-retracted 25% restriction still shown operative inside claimed cutoff. No implementation or authority change."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6684938042,
+      "status": "complete",
+      "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "report_commit": "1d7404fdba6a38a8a07d4dab37230ff4b889f6e6",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/team-neutral-6684938042/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": null,
+      "disposition": "Identified live instruction-gate and scope inheritance through STEWARDSHIP/MODE; reviewed all rule dispositions, opportunity cost, evidence/adoption distinction, continuation-state handover and Oracle applicability checks."
     }
   ],
   "active_delegations": [],
@@ -494,7 +506,9 @@
   "in_progress_comment": {
     "id": 6684938042,
     "pr": 162,
-    "status": "in_progress",
-    "progress": "Receipt; audit inherited premises and proposed governance/state migration"
+    "status": "complete",
+    "report_commit": "1d7404fdba6a38a8a07d4dab37230ff4b889f6e6",
+    "report_path": "docs/journal/compact30-adversarial/scanner-146/team-neutral-6684938042/report.md",
+    "progress": "Completed; awaiting deduplicated REVIEW"
   }
 }
