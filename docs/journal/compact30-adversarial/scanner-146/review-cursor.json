@@ -423,6 +423,18 @@
       "review_comment_pr": 145,
       "review_comment_id": 6683028366,
       "disposition": "Reconstructed paired results; three-table follow-up justified, cache-capacity cause unproven. New occupancy lacks same-k counterpart; buffer capacity and perturbation claims corrected."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6683787130,
+      "status": "complete",
+      "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "report_commit": "0e74fcc12d2d2dcecaebce5ac8f60b0502f46f29",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/oracle-6683787130/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": null,
+      "disposition": "Oracle purpose/evidence/dispatch relations separated; 25% performance necessity refuted by 2.91% capacity-model counterexample; seed causal and dependency corrections. #220 rule retained; no implementation or authority change."
     }
   ],
   "active_delegations": [],
@@ -468,7 +480,9 @@
   "in_progress_comment": {
     "id": 6683787130,
     "pr": 162,
-    "status": "in_progress",
-    "progress": "Receipt; independently review Oracle design and seed accuracy"
+    "status": "complete",
+    "report_commit": "0e74fcc12d2d2dcecaebce5ac8f60b0502f46f29",
+    "report_path": "docs/journal/compact30-adversarial/scanner-146/oracle-6683787130/report.md",
+    "progress": "Completed Oracle design and seed review; awaiting deduplicated REVIEW on #145"
   }
 }
