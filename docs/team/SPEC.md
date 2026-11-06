@@ -34,43 +34,9 @@ the pin. The Coordinator records the pin in the channel log.
 >
 >    Don't claim to have verified anything the interface doesn't show.
 
-**Every command that creates or edits a Work task names each task's model and effort**
-(Louis, 2026-11-06), whether to set them or to leave them as they are. A command without them
-is incomplete. The ChatGPT task tool can't set model or effort, so they are given **beside**
-the prompt, for Louis to select in the model setting of the Work task chat window. They are
-never put inside the
-prompt.
-
-**A new task gets its own single creation prompt** (Louis, 2026-11-06), in this exact form, the
-one that created the first three. Fill in only N and ROLE:
-
-> Create an event-triggered task, not a scheduled one and not a one-off, that runs
-> automatically whenever a new comment is posted on pull request #N in `lmmx/mibz2`. Subscribe
-> to newly created comments only, excluding bots, reviews, commit updates and edits where
-> supported. Do not filter by comment content. Before enabling it, show me the trigger, the condition, the GitHub permissions it
-> will use, and whether it runs on my plan or costs anything extra. The task's instructions
-> are:
->
-> (the instruction text above, verbatim, with ROLE, Role and SHA filled in)
-
-Beside the prompt, never inside it, give Louis the task's name and its model and effort, for
-the Work task chat window's settings.
-
-- **Why the instruction text is exactly the template:** a task's instructions only point at
-  the pinned spec, so what a task saved can be checked against the record. Rules such as
-  commit identity, no polling and no widening live once, in this file ("Always"). Repeating
-  them in the task would make a second copy that can drift.
-- **Why the prompt says "do not filter by comment content":** the inbox is the address. A
-  content filter, such as the first tasks' `TYPE: CHECKPOINT`, would silently drop other
-  assignments, for example the Oracle's `CORRECTION`.
-- **Why the prompt names no commit identity:** SPEC.md's "Always" allows the connector's
-  `lmmx@users.noreply.github.com`. Forcing another address could block every commit.
-- **Why the subscription line is required:** each inbox wakes its role only for new comments.
-  Edits, bot comments and reviews would start runs that displace real work, which is what the
-  inboxes exist to prevent (PROTOCOL.md §6).
-
-Edits to existing tasks go in a separate prompt. The combined command above is for re-pinning
-the existing tasks only.
+**Work task prompts come only from `WORK-TASKS.md`,** copied with their placeholders filled in
+(Louis, 2026-11-06). That file also says what Work can't do: model and effort are selected by
+Louis in the chat window, beside the prompt, never in it.
 
 ## Each run
 
