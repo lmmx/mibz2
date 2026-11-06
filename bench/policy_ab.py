@@ -4,8 +4,9 @@ the bench's Wikidata sample, paired by round. Its verdict follows the rule Louis
 the Coordinator's session on 2026-11-06 (docs/journal/decisions.md), fixed before any run:
 
 - **Validity**, for every cell: 20 rounds, each once, no failed run; one output hash and one
-  length across every run; every run's plan, read from its thread names, the one the
-  registration expects (below).
+  length across every run; every run's plan the one the registration expects (below), read
+  both from the threads that ran (`thread_cpu`) and from every thread the sampler saw, busy
+  or not (`thread_names`), so an idle helper still counts.
 - **Controls**, 8 and 9 threads, where both builds pick four teams of two: as #220's control,
   flagged when a speed ratio's 95% interval lies wholly beyond ±2% (lower bound above 1.02,
   or upper below 0.98). A flagged run fails.
@@ -46,10 +47,10 @@ RSS_MAX, CPU_MAX = 1.15, 1.5
 CORPUS = "wikidata"
 
 
-def plan_of(thread_cpu):
-    """(leaders, helpers) from ab's `thread_cpu` ("name=seconds ..."): team leaders or
-    workers are `mibz2-N`, helpers `mibz2-coop-*`"""
-    names = [p.rpartition("=")[0] for p in thread_cpu.split()]
+def plan_of(threads):
+    """(leaders, helpers) from ab's `thread_cpu` ("name=seconds ...") or `thread_names`
+    ("name ..."): team leaders or workers are `mibz2-N`, helpers `mibz2-coop-*`"""
+    names = [p.partition("=")[0] for p in threads.split()]
     return (
         sum(1 for n in names if re.fullmatch(r"mibz2-\d+", n)),
         sum(1 for n in names if n.startswith("mibz2-coop")),
@@ -121,6 +122,7 @@ def row_problems(rows):
             and all(positive(r.get(k)) for k in ("wall", "cpu", "rss_kb"))
             and isinstance(r.get("round"), int)
             and isinstance(r.get("thread_cpu"), str)
+            and isinstance(r.get("thread_names"), str)
         )
     ]
     if bad:
@@ -157,8 +159,16 @@ def judge(rows):
         runs = {b: by.get((b, t), []) for b in ("base", "head")}
         rounds = {b: sorted(r["round"] for r in runs[b]) for b in runs}
         complete = all(rounds[b] == list(range(ROUNDS)) for b in runs)
-        plans_ok = all(plan_of(r["thread_cpu"]) == EXPECT[t][b] for b in runs for r in runs[b])
-        seen = {b: sorted({plan_of(r["thread_cpu"]) for r in runs[b]}) for b in runs}
+        plans_ok = all(
+            plan_of(r[k]) == EXPECT[t][b]
+            for b in runs
+            for r in runs[b]
+            for k in ("thread_cpu", "thread_names")
+        )
+        seen = {
+            b: sorted({plan_of(r[k]) for r in runs[b] for k in ("thread_cpu", "thread_names")})
+            for b in runs
+        }
         c = {"threads": t, "complete": complete, "plans": plans_ok, "seen": seen}
         if not complete:
             problems.append(f"{t} threads: rounds incomplete or repeated")

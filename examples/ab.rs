@@ -219,7 +219,9 @@ type Seen = BTreeMap<u32, (String, u64, u64)>;
 /// A run's threads, as `Threads::finish` gives them: how many were busy, each one's CPU
 /// ("name=seconds ..."), their summed run-queue wait, the sampler's own CPU (seconds,
 /// exact) and the CPUs it ran on ("pinned": the run's own)
-type Busy = (usize, String, f64, f64, String);
+/// (threads busy, their CPU seconds, run-queue wait, the sampler's CPU, its CPUs, and every
+/// thread seen at all, busy or not, by name)
+type Busy = (usize, String, f64, f64, String, String);
 
 /// Each thread's CPU and run-queue wait of process `pid`, sampled every 10 ms until `stop`,
 /// the last sample of each thread kept (both only grow)
@@ -323,7 +325,7 @@ impl Threads {
     /// seconds; and the sampler's own CPU seconds
     fn finish(mut self, own: bool) -> Busy {
         let Some(handle) = self.handle.take() else {
-            return (0, String::new(), 0.0, 0.0, "off".into());
+            return (0, String::new(), 0.0, 0.0, "off".into(), String::new());
         };
         if own {
             sample_tasks(self.pid, &self.seen);
@@ -360,7 +362,18 @@ impl Threads {
             .map(|(t, k)| format!("{k}={:.2}", *t as f64 / HZ))
             .collect();
         let away = away.unwrap_or_else(|| "pinned".into());
-        (busy.len(), busy.join(" "), runq, sampler, away)
+        // (every thread the sampler saw, however little it ran: a team's idle helper is
+        // still part of the plan, which the busy list alone can't show)
+        let mut names: Vec<&str> = v.iter().map(|(_, k)| k.as_str()).collect();
+        names.sort_unstable();
+        (
+            busy.len(),
+            busy.join(" "),
+            runq,
+            sampler,
+            away,
+            names.join(" "),
+        )
     }
 }
 
@@ -542,7 +555,7 @@ fn piped(mut cmd: Command, ready: bool, h: &mut Hash) -> (Result<(), String>, f6
             return (
                 Err(format!("{cmd:?}: {e}")),
                 0.0,
-                (0, String::new(), 0.0, 0.0, String::new()),
+                (0, String::new(), 0.0, 0.0, String::new(), String::new()),
                 0.0,
             )
         }
@@ -581,27 +594,34 @@ fn child(arm: &str, threads: usize, path: &str) {
     let mut h = Hash::new();
     let external = program(arm, threads, path);
     let is_program = external.is_some();
-    let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus), startup) = match external {
-        Some((cmd, ready)) => piped(cmd, ready, &mut h),
-        // (a 1-thread in-process run has one thread to account for, so no sampler at all:
-        // reading another thread's /proc entries cost a 12 ms run up to 17% (#69). Its split
-        // is its own thread's CPU, RUSAGE_THREAD, and its run-queue wait its own schedstat)
-        None if threads == 1 => {
-            let t0 = Instant::now();
-            let res = decode(arm, threads, path, &mut h, &|| ());
-            let wall = t0.elapsed().as_secs_f64();
-            let wait = run_delay(std::path::Path::new("/proc/thread-self/schedstat")) as f64 * 1e-9;
-            let main = format!("main={:.2}", rusage(1).0);
-            (res, wall, (1, main, wait, 0.0, "none".into()), 0.0)
-        }
-        None => {
-            let w = Threads::watch(std::process::id());
-            let t0 = Instant::now();
-            let res = decode(arm, threads, path, &mut h, &|| w.sample());
-            let wall = t0.elapsed().as_secs_f64();
-            (res, wall, w.finish(true), 0.0)
-        }
-    };
+    let (res, wall, (nthreads, per_thread, runq, sampler, sampler_cpus, names), startup) =
+        match external {
+            Some((cmd, ready)) => piped(cmd, ready, &mut h),
+            // (a 1-thread in-process run has one thread to account for, so no sampler at all:
+            // reading another thread's /proc entries cost a 12 ms run up to 17% (#69). Its split
+            // is its own thread's CPU, RUSAGE_THREAD, and its run-queue wait its own schedstat)
+            None if threads == 1 => {
+                let t0 = Instant::now();
+                let res = decode(arm, threads, path, &mut h, &|| ());
+                let wall = t0.elapsed().as_secs_f64();
+                let wait =
+                    run_delay(std::path::Path::new("/proc/thread-self/schedstat")) as f64 * 1e-9;
+                let main = format!("main={:.2}", rusage(1).0);
+                (
+                    res,
+                    wall,
+                    (1, main, wait, 0.0, "none".into(), "main".into()),
+                    0.0,
+                )
+            }
+            None => {
+                let w = Threads::watch(std::process::id());
+                let t0 = Instant::now();
+                let res = decode(arm, threads, path, &mut h, &|| w.sample());
+                let wall = t0.elapsed().as_secs_f64();
+                (res, wall, w.finish(true), 0.0)
+            }
+        };
     let (cpu_self, rss_self) = rusage(0);
     let (cpu_kids, rss_kids) = rusage(-1);
     // (a program's arm: its own peak RSS, and its CPU with this process's hashing, less
@@ -609,7 +629,7 @@ fn child(arm: &str, threads: usize, path: &str) {
     let rss = if is_program { rss_kids } else { rss_self };
     let err = res.err().unwrap_or_default().replace('"', "'");
     println!(
-        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"err\":\"{err}\"}}",
+        "{{\"wall\":{wall:.4},\"cpu\":{:.4},\"rss_kb\":{rss},\"out\":{},\"hash\":\"{}\",\"threads_busy\":{nthreads},\"thread_cpu\":\"{per_thread}\",\"thread_names\":\"{names}\",\"runq_s\":{runq:.4},\"sampler_s\":{sampler:.4},\"sampler_cpus\":\"{sampler_cpus}\",\"err\":\"{err}\"}}",
         cpu_self + cpu_kids - startup - sampler,
         h.n,
         h.finish()

@@ -54,14 +54,22 @@ CPU.
   the default plan, unpinned, as a caller gets it.
 - **The grid:** 8, 9, 10, 11, 12, 16 and 20 threads, 20 rounds, paired by round, on the bench's
   Wikidata sample.
-- **The plans each build must run,** read from every run's thread names:
+- **The plans each build must run,** read from every run's threads twice: from those that ran
+  (`thread_cpu`, more than 2% of the busiest's CPU) and from every thread the sampler saw
+  (`thread_names`), so a helper that sat idle still counts. Both must show the plan.
 
   | threads | base | head |
   |---|---|---|
   | 8, 9 | 4 × 2 | 4 × 2 |
   | 10, 11, 12, 16, 20 | 4 × 2 | 3 × 3 |
 
-- **The output:** one directory per attempt, its console log included, packed into one tarball.
+- **The window** is not observed: it follows from the plan. Each build's window is a function
+  of the plan, the requested threads and the requested slots (`window` in `src/parallel.rs`,
+  at its frozen commit), and `ab` always requests 4 slots a thread. So the observed plan
+  fixes it: 12 blocks for 3 × 3 at 10 to 20 threads, and 4 a team times the threads over 8
+  for 4 × 2. `the_ten_core_exception` tests the 3 × 3 values.
+- **The output:** one directory per attempt, its console log included, packed into one tarball
+  however the attempt ends: a refusal, a failed build or a full run.
 
 ## The rule
 
@@ -74,7 +82,7 @@ head's, the geometric mean of the 20 rounds' ratios.
   - every run with a hash, a positive output length, and finite, positive wall, CPU and RSS;
   - 20 rounds a cell, each once, no failed run;
   - one output hash and one length across every run;
-  - every run's plan as in the table.
+  - every run's plan as in the table, in both the busy threads and the full census.
 - **Controls, at 8 and 9 threads:** as #220's control, flagged when a speed ratio's 95% interval
   lies wholly beyond ±2%. A flagged run fails.
 - **Primary, at 10 threads:** speed at least 1.03, with its two-sided 95% lower bound above

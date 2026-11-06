@@ -336,6 +336,8 @@ bench-three-team-policy:
     mkdir -p "$B"
     mkdir "$W" || { echo "bench-three-team-policy: $W already exists; not reusing an attempt's directory"; exit 1; }
     exec > >(tee -a "$W/console.log") 2>&1
+    # every attempt is packed, however it ends: a refusal, a failed build or a full run
+    trap 'bash bench/bundle.sh "$W"' EXIT
     # the commits the registration froze (bench/three-team-policy.frozen): the candidate, whose
     # measured files HEAD must match exactly, and the base it is measured against
     fail() { echo "bench-three-team-policy: $*"; exit 1; }
@@ -371,4 +373,3 @@ bench-three-team-policy:
       --threads "8,9,10,11,12,16,20" --rounds 20 "$W/wikidata.bz2"
     python3 bench/policy_ab.py report "$W/runs.jsonl" --out "$W/policy-ab" \
       || echo "bench-three-team-policy: the run is not valid; see policy-ab.md"
-    bash bench/bundle.sh "$W"
