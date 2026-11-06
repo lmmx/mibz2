@@ -1,5 +1,7 @@
 # Changes, newest first
 
+- **2026-11-06, channel through 6698087098:** confirmation VALID PASS, policy admitted and #234 merged; collapsed the completed comparison and moved current work to release validation. First control offset did not recur, without proving equivalence. Submission #242 merged and delivered confirmation successfully. #243 documentation catches up with the result; master tests and pre-release benchmark still running, no new release observed.
+
 - **2026-11-06, channel through 6697537827:** first registered policy run VALID PASS; replaced two-run wait with confirmation-only dependency. Recorded same-plan control slowdown without rejudging the rule. Submission approval recorded, implementation open and deliberately sequenced before confirmation; idempotency docs merged. Frozen journal and PR summaries lag the result LOG.
 
 - **2026-11-06, channel through 6696702367:** recipe objections resolved and exact comparison frozen; replaced review wait with Louis's run/confirmation dependency, keeping qualification separate. Recorded the corrected baseline-census claim and remaining instrumentation limits. Discovery guide and return relay merged; Observer rename/re-pin complete on the unchanged state branch; idempotency docs still open. Flagged stale PR-body status and ambiguous D041 wording.

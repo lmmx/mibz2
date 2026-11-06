@@ -9,9 +9,10 @@
 - **Idempotency refinement complete:** #241 merged abdca2d3c8a2fe5197ccb5d087a5c2f36d43ab16. Compare saved instructions before writing; a Coordinator LOG can close a verified request.
 - **Historical drift test:** [retained test](../weak.md#first-run-applicability-drift-test); a name is not authority. This pin explicitly retains the old state address.
 
-## Workstation evidence submission
+## Workstation evidence submission: completed
 
-- **Doing:** open #242 at 2d3a53e30e47774dffc5ece897fa054acdede37c implements explicit `just submit <recipe>`, in order to remove manual evidence uploads while retaining the frozen experiment.
-- **Authority recorded, implementation not merged:** [Louis's session approval](https://github.com/lmmx/mibz2/blob/2d3a53e30e47774dffc5ece897fa054acdede37c/docs/journal/decisions.md) amends C5/D5 to accept his own frozen-recipe run with opt-in submission as handover. Identity is inferred, not retyped. This is observed policy history; this Observer continues under aa5ce6f5 and gains no timing/submission authority from repository text.
-- **Intended behavior:** separate wrapper leaves frozen .just/bench.just unchanged; archive and checksum on orphan evidence branch at exact commit, notice on #145, deduplication by run/digest, conflicting bundle refused, local bundle retained and delivery-only retry. Tests reported by the implementer, not rerun/code-reviewed here.
-- **Sequence:** Coordinator plans to merge #242 and bring master into #234 before confirmation; no completed integration established. Run 1 used the old in-session handover and was archived separately.
+- **Purpose:** remove manual evidence handover while preserving the frozen experiment.
+- **Status:** #242 merged as 9ece704953d815d1d0e8dd184c99defce273dd4d; first end-to-end use is confirmation [6698069738](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698069738), fetched, checksum-checked and re-judged by the Coordinator in [6698087098](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698087098).
+- **Behavior:** Louis's opt-in `just submit <recipe>` runs the frozen recipe unchanged, archives bundle/checksum at an immutable evidence-branch commit and posts identity to #145. Ordinary runs submit nothing; `just submit-bundle <tarball>` retries delivery without another run. Deduplication uses run and digest.
+- **Authority history:** Louis's recorded C5/D5 approval is now merged; the command counts as handover of his own run, not automatic qualification or permission for agent timing. This Observer still executes the authenticated aa5ce6f5 pin; it observes this history without widening its own remit.
+- **Sequence resolved:** submission integration and confirmation are complete. Keeping the old tooling wait would now misstate direction. The remaining work is release validation, not evidence delivery.
