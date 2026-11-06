@@ -1,0 +1,13 @@
+{
+  "kind": "hypothetical counterexample, not a hardware fit",
+  "source": "b6d99258c84d285614dd2fddc7dedcd2737eea8a",
+  "C": 20971520,
+  "G": 0,
+  "F": 5400000,
+  "equal_aggregate_cut": 0.25,
+  "cut_bytes_to_fit": 157120,
+  "cut_fraction_to_fit": 0.029096296296296287,
+  "h4_before": 0.9709037037037037,
+  "h3_before": 1,
+  "h4_after": 1
+}
