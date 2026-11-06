@@ -41,7 +41,7 @@
   }
 
   function getJSON(url) {
-    return fetch(url, { headers: { Accept: "application/vnd.github+json" } }).then((r) => {
+    return fetch(url).then((r) => {
       if (!r.ok) throw new Error(`${r.status} from the GitHub API`);
       return r.json();
     });
@@ -60,6 +60,12 @@
     const body = md.replace(/^\s*#\s[^\n]*\n/, "");
     const holder = document.createElement("div");
     holder.innerHTML = window.DOMPurify.sanitize(window.marked.parse(body));
+    /* A file's own headings sit below the page's sections (h2) and a front's fold. */
+    for (const h of holder.querySelectorAll("h1, h2, h3")) {
+      const h4 = document.createElement("h4");
+      h4.innerHTML = h.innerHTML;
+      h.replaceWith(h4);
+    }
     for (const a of holder.querySelectorAll("a[href]")) {
       const href = a.getAttribute("href");
       if (/^[a-z]+:|^#/.test(href)) {
@@ -145,11 +151,19 @@
       if (!got["current/L0.md"]) throw new Error("current/L0.md is missing from the record");
       const out = document.createDocumentFragment();
 
+      const man = got["manifest.md"] || "";
+      const through = (man.match(/through \[(\d+)\]/) || [])[1];
+      const read = (man.match(/evidence inspected ([^,;*]+)/) || [])[1];
       const stamp = head
-        ? [el("a", { href: `https://github.com/${ctx.repo}/commit/${head.sha}`, rel: "noopener", text: head.sha.slice(0, 8) }),
-           document.createTextNode(`, settled ${when(head.commit.committer.date)}`)]
-        : [document.createTextNode(`the branch's latest files (GitHub's API was unavailable, so the version and its history are not shown)`)];
-      out.appendChild(el("p", { class: "obs-stamp" }, [el("span", { class: "obs-stamp__label", text: "Version " }), ...stamp]));
+        ? [document.createTextNode("Account "),
+           el("a", { href: `https://github.com/${ctx.repo}/commit/${head.sha}`, rel: "noopener", text: head.sha.slice(0, 8) }),
+           document.createTextNode(`, settled ${when(head.commit.committer.date)}`),
+           through ? document.createTextNode(`; covers the channel through ${through}`) : null,
+           read ? document.createTextNode(`; evidence read ${read.trim()}`) : null]
+        : [document.createTextNode("The branch's latest files. GitHub's API was unavailable, so the account's commit and its history are not shown")];
+      const again = el("a", { href: "#", class: "obs-again", text: "read again" });
+      again.addEventListener("click", (e) => { e.preventDefault(); start(root, true); });
+      out.appendChild(el("p", { class: "obs-stamp" }, [...stamp.filter(Boolean), document.createTextNode(" · "), again]));
       const jumps = [["now", "Now"], ["in-five-lines", "In five lines"], ["the-tree", "The tree"], ["each-front", "Each front"],
         ["where-the-why-is-weak", "Weak links"], ["this-version", "This version"], ["every-move", "Every move"]];
       const nav = el("nav", { class: "obs-jumps", "aria-label": "Levels of the record" });
@@ -171,7 +185,7 @@
           const name = p.split("/").pop().replace(/\.md$/, "");
           wrap.appendChild(disclose(`front-${name}`, frontTitle(md, name), null, render(md, ctx, "current/L3/"), false));
         }
-        out.appendChild(section("each-front", "Each front", wrap, "Open a front for its reasons, status and sources."));
+        out.appendChild(section("each-front", "Each front", wrap, "Each opens onto its reasons, its status and its sources."));
       }
       if (got["current/weak.md"]) {
         out.appendChild(section("where-the-why-is-weak", "Where the “why” is weak", disclose("weak-detail", "Weak links in the chain of reasons", null, render(got["current/weak.md"], ctx, "current/"), false)));
@@ -198,10 +212,29 @@
     if (t && t.tagName === "DETAILS") t.open = true;
   }
 
+  /* Every five minutes while the page is visible, one API call asks for the branch's head;
+     the account is read again only if it has moved. */
+  let timer = null;
+  function watch(root) {
+    clearInterval(timer);
+    timer = setInterval(() => {
+      if (!document.body.contains(root)) { clearInterval(timer); return; }
+      if (document.hidden || !root.dataset.sha) return;
+      getJSON(`${API}/repos/${root.dataset.repo}/commits?sha=${encodeURIComponent(root.dataset.branch)}&per_page=1`)
+        .then((c) => { if (c[0] && c[0].sha !== root.dataset.sha) start(root, true); })
+        .catch(() => {});
+    }, 300000);
+  }
+
   function init() {
     const root = document.getElementById("obs-root");
     if (!root || root.dataset.started) return;
     root.dataset.started = "1";
+    start(root, false);
+    watch(root);
+  }
+
+  function start(root, again) {
     const repo = root.dataset.repo;
     const branch = root.dataset.branch;
     const enc = encodeURIComponent(branch);
@@ -228,10 +261,14 @@
               })),
           ),
       )
-      .then(({ ctx, files, head, commits }) => build(root, ctx, files, head, commits))
+      .then(({ ctx, files, head, commits }) => {
+        if (head) root.dataset.sha = head.sha;
+        return build(root, ctx, files, head, commits);
+      })
       .catch((e) => {
+        if (again) return;
         const p = root.querySelector(".obs-status") || root.appendChild(el("p", { class: "obs-status" }));
-        p.insertBefore(document.createTextNode(`The record could not be read here (${e.message}). `), p.firstChild);
+        p.insertBefore(document.createTextNode(`The account could not be read here (${e.message}). `), p.firstChild);
       });
   }
   window.addEventListener("hashchange", onHash);

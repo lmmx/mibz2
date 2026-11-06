@@ -68,12 +68,31 @@
 .md-typeset .obs-root details.obs-front > summary {
   cursor: pointer;
   padding: 0.5rem 0.8rem;
-  list-style: revert;
+  list-style: none;
   font-weight: 600;
 }
-.md-typeset .obs-root details.obs-front > summary::before,
+.md-typeset .obs-root details.obs-front > summary::-webkit-details-marker {
+  display: none;
+}
 .md-typeset .obs-root details.obs-front > summary::after {
   content: none;
+}
+/* Material draws an admonition icon here; a plain disclosure arrow instead */
+.md-typeset .obs-root details.obs-front > summary::before {
+  content: "\25B8";
+  position: static;
+  display: inline-block;
+  width: 1rem;
+  height: auto;
+  margin: 0;
+  background: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+  color: var(--obs-accent);
+  transition: transform 0.15s;
+}
+.md-typeset .obs-root details.obs-front[open] > summary::before {
+  transform: rotate(90deg);
 }
 .md-typeset .obs-root .obs-front__sub {
   margin-left: 0.5rem;
