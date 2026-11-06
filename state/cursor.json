@@ -12,7 +12,9 @@
     6697544323,
     6698097217
   ],
-  "in_progress": [],
+  "in_progress": [
+    6698816282
+  ],
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
@@ -87,6 +89,11 @@
       "work_commit": "b41f5c25951bf1a335643e73a79a7f6fb654e276",
       "progress": "Account and levels published; REVIEW read back and Observer routing/header/citation verified.",
       "review_id": 6698197841
+    },
+    "6698816282": {
+      "comment_id": 6698816282,
+      "status": "in_progress",
+      "progress": "Migration verified; reconciling published release, scaling follow-up and downstream bump."
     }
   },
   "last_record_commit": "b41f5c25951bf1a335643e73a79a7f6fb654e276"
