@@ -10,5 +10,10 @@ out="$dir.tar.gz"
 ( cd "$(dirname "$dir")" && find "$(basename "$dir")" -type f -size -50M -print0 \
   | tar --null -czf "$out.tmp" -T - )
 mv "$out.tmp" "$out"
+left=$(cd "$(dirname "$dir")" && find "$(basename "$dir")" \( -type l -o \( -type f -size +50M \) \) -print)
+if [ -n "$left" ]; then
+  echo "Left out of the tarball (links, or over 50 MB): upload any that are evidence separately:"
+  echo "$left" | sed 's/^/  /'
+fi
 echo
 echo "Upload this one file: $(realpath "$out") ($(du -h "$out" | cut -f1))"

@@ -63,14 +63,25 @@ than the reference; 3 × 4 about the same.
 
 ## What each outcome would mean
 
-- **Either passes and confirms:** a PR changes the policy's cap on this machine from 4 teams
-  to 3, and k from the cores per table. It is measured again, end to end, as a release-shaped
-  comparison.
-- **Both fail:** the screen's 3-table result was selection or noise. The cap stays at 4, and
-  the next lever is placement (one thread per core).
-- **The occupancy pass (diagnostic):** it shows whether a block decodes faster with 3 tables
-  than with 4 at the same k, which is the mechanism the screen suggests. The occupancy limits
-  of the team-size entry apply unchanged.
+- **Either passes and confirms:** a policy candidate, not an adoption. A PR changing the cap
+  on this machine from 4 teams to 3 still needs its own measured-head CI, parity, safety and
+  regression evidence, as any decoder change does.
+- **Both fail:** no qualification. The report names the predicate that failed, and the
+  effect's interval is kept. A failure does not show that the screen's result was selection
+  or noise.
+- **The occupancy pass (diagnostic):** it traces 4 × 2, 3 × 3 and 3 × 4. No pair shares a k,
+  and the total window changes from 16 to 12 blocks, so it cannot isolate a table-count
+  mechanism or compare block times at the same k. That claim is deferred (the Researcher
+  and the Guardian, D030). The trace reads waits and spans per plan, under the team-size
+  entry's occupancy limits.
+- **Error rate:** the nominal fixed-run bound is 2 × 0.025 = 0.05 under the paired-log model.
+  It is not campaign-wide, and not calibrated for the replacement run.
+
+## Frozen
+
+The Guardian carried the D029 rule over exactly (D030, #145 comment 6683039047). The
+Researcher kept the screen and rule (#145 comment 6683028366). The predicates are fixed from
+here. The two primaries were frozen before collection, and no screen observation is reused.
 
 ## Result
 
