@@ -1205,6 +1205,12 @@
       "work_commit": "0a33fb14187ab252c92096b1cdacfd47d1caaeee",
       "review_comment_id": 6694899143,
       "complete_cursor_commit": "4b2a6e4549f196010f8cb360d75e6c01719b30a3"
+    },
+    {
+      "comment_id": 6695276659,
+      "pr": 161,
+      "status": "in_progress",
+      "decision": "D038"
     }
   ],
   "migrated_from": {
