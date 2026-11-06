@@ -452,7 +452,7 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Receipt; auditing live bytes versus allocated capacity and team-size evidence."
+      "progress": "Verified source/evidence pins; replayed 320 archived run ratios. Static audit separates capacity from accessed prefixes; researching bounded proposals."
     }
   ]
 }
