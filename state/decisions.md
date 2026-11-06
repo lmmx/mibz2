@@ -1457,3 +1457,62 @@ All eight supplied Python test functions passed when called directly, including 
 These are synthetic evidence checks, not measured performance. No local timing, implementation, CI invocation or new capture was performed. Required to resolve this scoped HOLD: repaired pinned recipe/judge with focused adversarial checks addressing F1–F4, explicit actual-plan evidence, and an unchanged or separately authorised statistical rule. Ordinary repair proceeds under existing authority. Once resolved, freeze the recipe/head/base and declare test/confirmation identities before Louis's runs; no result yet qualifies this policy.
 
 Evidence key: PR234 / `40c2578095cbfe67a30a9ce2c10d0034b66e859c` / `git-blob:622e634b01f9e736a7e504600c96addfccb98038` (registration). Other reviewed blobs: recipe `c127e883143a6559d5f2614d4ad91b55ef042b20`; judge `914e0dae55281f588b3ed4f8e02130ebe56403bb`; judge tests `f9c22286484747001169dcd0db5d2d275abf2ec5`; planner `235d602dd47e3bc181ae57dc19ed8de8881bb569`; cooperative tests `ae6c12dea33ff67509725f9f601dfe676be51378`; ab harness `39394f39fb216ebb35bc8f0e0293d7caedb02fde`; bundler `1ce3e2a20b63032ad53a42945e14393c5e968231`.
+
+## D037 — D036 re-review: HOLD remains, with partial closure
+
+**G1/G2: not CLEAR to freeze #234 at `7c341a875049f8c95d27448046eb4923387687cf`.** Inbox [6694803492](https://github.com/lmmx/mibz2/pull/161#issuecomment-6694803492); Coordinator change log 6694798888. Scope remains the recipe's evidence path, not routine repairs or independent work. No Rust tests, A/B, timing or implementation performed. Statistical thresholds and repeat policy were not reopened.
+
+Operating SPEC pin `a6a703cefcc40ac4115803f44a8a29ad76a3a7ef`: common and Guardian SPEC, MODE, RULES and PROTOCOL read. Migration checked before receipt: old branch head `f9dab3d2b40739d89d613f86e8c2d67bec3159e4`; manifest SHA-256 `60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488`. Receipt `9280b0516350e1b97cb6584291e02fd4f2e767fd`. Fourteen inbox comments listed, previous work finished; this is the only new checkpoint.
+
+### F1 — partial repair; executable and corpus binding still open
+
+The explicit candidate/base file, refusal while unset, candidate source comparison, base HEAD equality and tracked-worktree cleanliness checks close the previously demonstrated wrong-existing-worktree defect. A missing worktree is still created at the specified base. The frozen file remains deliberately unset at this review pin; that alone is not a defect.
+
+Remaining material holes:
+- Cargo builds still honour target-directory configuration/environment, while AB, BASEAB and the windows builder are taken from hard-coded target/release paths. A successful build elsewhere can leave these paths pointing at stale executables. No executable hashes or resolved build configuration are recorded. Resolve Cargo's actual artifacts or control the target directories explicitly, then record identities.
+- The measured-file comparison excludes `bench/wikidata.json` and `bench/wikidata.py`, although both execute to select/build the corpus. Thus a clean later HEAD can change the workload while passing the candidate comparison. Include these inputs and preserve the built corpus digest in the attempt; the archive omits its symlink.
+- `--untracked-files=no` does not rule out an untracked Cargo configuration influencing the build. Bind relevant configuration, rather than describing that test as proof of all build inputs.
+- Before filling the frozen file, record/verify the selected base's relationship to the candidate and master. Merely naming two extant commits is not proof of the promised baseline.
+
+The current comparison against master resolves merge base `818d521c6d0d5da09b4b0f34322baaf54cbf39af`. This is observed baseline evidence, not a substitute for setting the freeze.
+
+### F2 — original false PASS cases fixed; malformed input handling incomplete
+
+All **11 supplied Python test functions pass**, invoked directly with temporary paths and None for the unused monkeypatch argument. No pytest runner or Rust test result is claimed.
+
+Replayed D036 missing hash/length and failed zero-wall cases now return valid=false/pass=false before arithmetic. Tests also exercise second-base paths, invalid metrics, other corpus/arms/thread counts, absent census and hidden helpers. These are substantive fixes.
+
+Additional probes:
+- `arm: null` causes AttributeError in build_of.
+- A JSON null row causes AttributeError before validation.
+- Truncated JSON causes JSONDecodeError before either report is written.
+- Boolean false used for every round zero is accepted as an integer and the clean grid still passes. Reject booleans explicitly for integer identifiers; this is schema hygiene, not a separate performance objection.
+
+The first three retain F4's report-integrity defect. Require top-level mapping/field types and parse-failure handling before calling semantic validators. Missing evidence must be explicitly invalid, not an uncaught exception.
+
+### F3 — the base census claim is contradicted by the actual arm path
+
+The new child emits thread_names from the sampler's full TID map, without the busy threshold. Both census and busy counts are required, preserving the older busy predicate. This improves head-side evidence.
+
+But LOG 6694798888 says the head “samples the base's process from outside”. **The registered base arm does not take that path.** In `ab run`, `mibz2@<base ab>` selects that executable, then invokes `base-ab child mibz2 ...` with `cmd.output()`. It copies the child's JSON into the row; it does not create a parent-side Threads watcher. The external watcher in `piped()` belongs to the child decoder's external-program arms, not this base-executable selection.
+
+The merge-base `examples/ab.rs` (blob `39394f39fb216ebb35bc8f0e0293d7caedb02fde`) contains **no thread_names field**. Removing that field from the 140 base rows in the supplied otherwise passing grid gives valid=false/pass=false and 140 malformed rows. Therefore this recipe/judge combination cannot produce a valid run against that unmodified base. A synthetic fixture that supplies the new field to both builds does not test their compatibility.
+
+Required: make the registered base arm actually provide the census, with a defined and provenance-bound harness path. Preserve the comparison's decoder and timing semantics; do not fix this by dropping the base predicate or silently changing its decoder. An untimed compatibility check using the real base schema should prevent recurrence.
+
+**Window argument accepted, conditional on verified binaries and plan.** I checked BzReader::parallel in src/read.rs and window in src/parallel.rs at both the reviewed candidate and the observed merge base. Slots=4t and window=max(floor(slots×teams/t),teams). On this grid there is no overflow: 3 teams give 12 blocks; **4 teams give 16 at every requested thread count**, not a value growing with t/8. Correct the registration's ambiguous “4 a team times the threads over 8” wording. A pure, pinned derivation is sufficient here; a new runtime window probe is not necessary once executable provenance and actual plan evidence are established. This accepts a corrected proof for D036's window concern, not a relaxation of any performance predicate or historical result.
+
+### F4 — archive-on-exit improved; report failure still masquerades as an invalid verdict
+
+The EXIT trap reaches bundling after ordinary post-trap setup/build failures. I tested the unfrozen refusal with only the console process-substitution redirected to a plain file: exit 1, one tarball, refusal present in console.log. The exact recipe could not pass its tee process substitution in this restricted executor (/dev/fd/63 unavailable), so that adjusted test is not presented as an unmodified end-to-end recipe PASS. No benchmark/build was reached.
+
+Normal schema-detected invalid rows now yield reports. Parse/type failures do not. A real truncated-JSON CLI probe writes neither JSON nor Markdown; the recipe's exact `report ... || echo ...` wrapper then returns **0** and says “see policy-ab.md”. The trap packs available material but does not create an explicit outcome or distinguish reporting failure.
+
+Required: preserve an explicit terminal status for setup failure, harness failure, completed invalid verdict and report-generation failure; do not announce a nonexistent report. Catch malformed raw input into an invalid diagnostic or a separate report-error outcome, preserve raw/console files, and retain a non-success status for report-generation failure. The registration's valid FAIL versus invalid replacement distinction is now clear; a reporting crash must not be silently treated as a normal verdict or an excuse to repeat a valid FAIL. Fatal signals/disk failure cannot guarantee a bundle; the claim should concern ordinary handled exits.
+
+### Resolution boundary
+
+D036's wrong-worktree case and original missing-output/failed-row cases are repaired. Its window concern is resolved by the pinned derivation above. **HOLD remains for unresolved F1 artifact/workload binding, F3 base-arm census compatibility, and F4 malformed/report-error handling.** Repair those mechanisms, demonstrate the targeted untimed failure/compatibility cases, and provide the next pin. No new statistical condition, timing permission, implementation work or merge authority is introduced.
+
+Evidence key: PR234 / `7c341a875049f8c95d27448046eb4923387687cf` / registration blob `10bfc325085bf5b08acb4b624dc0012d2fa01a57`.
+Reviewed blobs: recipe `72c1838ad16b349e8692aa92397a52fd5b99489d`; frozen file `89054e82aea59bb9f5087e1176b9ccc32821fd75`; judge `53a3ed5fb4234f9abcd959994e2318a151ae0159`; tests `a6e494fb1a60ebed21376d0c9d65d60a4f7c9bdf`; head ab `657ccf608b493a64b934ccc757ecabead43c6f62`; bundler `1ce3e2a20b63032ad53a42945e14393c5e968231`.
