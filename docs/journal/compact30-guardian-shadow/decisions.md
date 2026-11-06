@@ -1189,3 +1189,83 @@ Lift exactly D031's narrow readiness HOLD. This is not a merger, task-creation i
 Operating documents remain those read for D031: specs `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`, GUARDIAN `288c05638c85ffbb0a4d1f5ba9762002c37acdff`, charter `dad82808dd4532d21ebf51e88164b78a0af53da8` §§2,12.3; ROLES/PROTOCOL/MODE reread unchanged; activation report 262 reread at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`. Researcher review [6683945162](https://github.com/lmmx/mibz2/pull/145#issuecomment-6683945162) read for provenance of the descriptive distinctions, not as a new authority grant. Historical decision pins are preserved.
 
 Evidence digest: `git-blob:07b625553b6b71db05c4675fc19a9ad62f98e726`, with the spec/test/fixture blobs and archived probe results.
+
+## D033 — team-neutral proposal: HOLD cutover readiness, not independent work
+
+**Decision:** G1 dispute readiness; G2 HOLD adoption/cutover at `40709781a39758d14e037d70a9bb20a65fc0edf9` (PR #225) until the material points below are resolved. Incoming [6684935718](https://github.com/lmmx/mibz2/pull/161#issuecomment-6684935718). ACTIVE, stage A. This assesses a proposed replacement; it does not adopt it, approve its reserved changes, or move this task's pin/state.
+
+### Evidence and reproduction
+
+Read RULES, common/Guardian/Oracle specs, ROLES, PROTOCOL, audit journal and coordination source at the requested proposal pin. RULES blob `7d085a668c313439bfb5316d0cc725fe4231d4d5`; common SPEC `0eadda126ecf3e4511c6e0d0f70e14e193482205`; Guardian SPEC `5c298debabd3e8c5cb3442c2aa565d2f5e6f80c3`; audit `ae78a276d27b785c3ef6d8b2f35c12eaefc7cc45`; coord.py `29d1f0e4b3dccc03470b566acdb3ee068732aab1`.
+
+The proposed charter source at that same commit has blob `b63e55985b4f5119c3fc560ab0e9f287e91b79a1`, including reports 272–273. It is distinguishable from this task's controlling charter at `dad82808dd4532d21ebf51e88164b78a0af53da8` (blob `dd5e53c4abdd05df1ceb0a7301c083754ee377ce`). Later repository text is evidence of the proposal's source, not a new instruction pin for this task.
+
+**34 pinned unittest tests pass.** Test and fixture blobs remain `3fd84fd36d1f496d72a3de76873c34c65a7ac426` and `fbd476918e806d49c5eff04547eac05e145ca1ac`. Independent [probes](d033-probes.py) / [results](d033-results.json):
+- all four cursor destinations are `team-state/<role>:state/cursor.json`; inboxes and offsets are unchanged;
+- 20 comparisons (four roles × five receipt/publication phases) give identical queue state before and after a lossless JSON copy with migration provenance;
+- ASTs of `completed`, `state`, `route`, `verify` and `misrouted` are unchanged from D032's pin;
+- Guardian `status: complete` plus REVIEW remains busy until `consumed_incoming_comment_ids` contains the ID;
+- a stale new cursor does not acquire a completion written later to the old branch. The router does not inspect `migrated_from`.
+
+These are offline source/fixture checks, not a live migration certificate. No candidate, benchmark, automation or other branch was changed.
+
+### 1. No silent widening: row audit
+
+| Rows | Finding and required disposition |
+|---|---|
+| A1 | The distinction between choosing a new focus inside an existing mandate and expanding that mandate is sound. But “narrowing the current focus doesn't permanently narrow what may be done” can also be read as permission to discard a binding HOLD/STOP/REVISE. State that a voluntary focus choice does not amend the mandate; an operative restriction remains binding until its stated resolution conditions are met or Louis changes the reserved policy. A2 must prevail. Otherwise mark the changed effect ⚑. |
+| A2–A4 | Retained authentication/narrowing rule is sound. Preserve verbatim authenticated user provenance; a repository claim about what Louis did is not that authentication. |
+| A5–A7 | A5 reflects the later charter's report 273 delegation, within its gates/invariants/reservations; A6 reflects standing stewardship. Retain those bounds and pin the cited live stewardship source at adoption. A7 must point to a complete change inventory, not imply section D exhausts every changed permission. None of these rows updates this Guardian's current pin. |
+| B1–B4 | B1 is retained. B2 may become inapplicable to a different representation, but cannot retire invariants for an experiment still using compact30 or rewrite past qualifications. B3's frozen evidence is not equivalent to B4's prohibition on rewriting a registered result: one protects the underlying baselines, the other the verdict. Preserve historical pinned artifacts and recorded outcomes explicitly, including INVALID/STOP results, while freeing new work from the old representation. If the proposal really permits changing those artifacts or relaxes a still-live registration, mark that ⚑. |
+| B5–B7 | Independent unsafe review, no Guardian approval prerequisite, immediate stop/resumption and partial-Miri-not-PASS remain sound. B5's summary must retain or explicitly incorporate the release-mode argument for each operation (bounds, overflow, pointer validity, initialisation), appropriate registered coverage and mutation obligations; tests alone are not proof. B7 should retain the consequence that missing registered coverage cannot qualify. B6's blanket stop for a new outside-design safety obligation is at least as restrictive as the source's conditional stop; do not silently weaken it when implementing the summary. |
+| C1 | Moving a registration from a charter to a frozen journal entry need not widen authority. Keep the existing conditions: bounded scope within the mandate, independent Researcher assessment cited by the Coordinator, baseline, prospective minimum and its justification, safety requirements, evaluation gates, and permission to experiment rather than adopt. The shorter text drops “incremental”/below-estimate and the source's explicit gate/scope constraints. Preserve the applicable substance, or identify its proposed replacement as ⚑. #219/#220 practice alone does not amend the standing rule. |
+| C2 | Retain the prohibition on agents relaxing registered rules. Reconcile its absolute “never” with D3's Louis-reserved amendment power. No existing gate is relaxed by this review. |
+| C3–C4 | Closing compact30-specific attempt/composition/instruction-ledger machinery for future, differently registered work is reasonable. It must not remove a live registration's minimum, historical verdict or evidence obligations. Retain research progress versus validated performance, bounded information-seeking experiments, explicit STOP/REDIRECT consideration and the next experiment's payoff case. CI is the production qualification authority; it is not the sole evidence of research progress. Replacing a live economic floor or allowing previously excluded work requires an explicit ⚑ decision; simple historical inapplicability does not. |
+| E1, E4 | Channel ACK/LOG records can retain source/rule/action provenance; the transcription change belongs under E2. Identity, no force-push and shared-machine protection remain retained. |
+| E3 | A completed pilot may be archived. Stage A/B was also an authentication/authority boundary: completion of a pilot did not grant G6. Mark that substantive retirement together with the changed role decisions and D's rebuttal proposal, or explicitly preserve its effect without those names. |
+
+The proposed Guardian retirement sentence is not an accurate map of the **active** role. Its pinned operating spec has G1–G8; no operative G9. It expressly rejects G9/G10 approval prerequisites. Old G4 names the independent reviewer, G5 requires fix/drop, G6 accepts an unaccepted rebuttal (reserved), G7 checks composition, G8 supplies the cumulative line-stop test. Map each by meaning; do not call all of G4–G7/G9 “registration” or erase G8's evidentiary test.
+
+The audit's status/merge contradiction describes a stale copy. Active GUARDIAN at `288c05638c85ffbb0a4d1f5ba9762002c37acdff` already says ACTIVE, stage A and delegates integration/merges/releases to the Coordinator under the full CI gate. Record that source discrepancy rather than presenting the replacement as resolving a contradiction in the current task. Pin each source version used for the inventory.
+
+### 2. Flagged rows: advice, not approval
+
+**C5 is correctly flagged.** Separate a run-specific permission from a standing new rule. “Louis running it is his authorisation” is a proposed change to A4's authentication convention, not proof that an attributed run or GitHub report supplied authority. Make its scope explicit and obtain Louis's decision in the authenticated session; do not retrospectively validate runs outside their frozen recipes. Local indicative timing, registered-question evidence and production CI qualification remain three distinct claims.
+
+**C6 is correctly flagged and materially broad.** It delegates workload/statistical-method changes formerly reserved, not merely diagnostic instrumentation. Version numbers document a change; they do not authorise it. State that delegation explicitly, including any remaining statistical/workload reservations. Preserve the full merge gate: parity, green CI, beneficial end-to-end 95% interval excluding zero, no unacceptable regression, evidence for the measured head, paired A/B. No already-registered experiment or result changes meaning through a harness version bump.
+
+**E2 is correctly flagged.** #145 is a shared verbatim record, but comments can be edited or deleted; it does not provide the same immutable snapshot as committed transcription. Louis may accept that tradeoff. Keep immutable links for decisions, work and user-authority provenance. Do not describe lapsed transcription as prior permission to retire it.
+
+**D's rebuttal/timing retirements are correctly flagged, but incomplete as a change map.** Retiring reserved acceptance is not granting the Coordinator or Guardian power to self-accept a disputed rebuttal. The replacement must define what closes an unresolved unsafe objection: evidence-linked resolution accepted by the independent review, a fix, safe fallback/drop, or Louis's explicit decision when disagreement persists. A conclusory “resolved by evidence” from the disputed author is insufficient. PROTOCOL's escalation of reviewer disagreement should remain explicit. Include changed role powers/stage retirement and any actual relaxation identified above in Louis's approval package. All remain his decisions.
+
+### 3. Interim: narrow it
+
+“The charter's text applies, read as covering the whole team” is not a well-defined interim. It could transplant compact30-only constraints onto unrelated work or generalise a delegation beyond its authorised scope.
+
+Use the narrower contract: **each task keeps its current authenticated instruction pin, state branch and applicable authority; existing registrations, findings and restrictions retain their exact scope; unaffected already-authorised work continues; new rules/specs/state locations take effect only through Louis's recorded approval and explicit re-pin.** Do not infer universal scope from a defunct campaign name, and do not infer permission from its abandonment. Record which clauses and pins each approved replacement supersedes.
+
+### 4. Routing and state: preserve the handoff, not just the file
+
+The path substitution and preserved per-role formats do not themselves lose or duplicate queue items. Offsets and IDs remain stable; queued work stays recoverable from #145/inbox citations. Guardian's consumed-ID adapter is conservative: it may keep a role busy briefly after REVIEW, but does not release it early. Keep that existing format.
+
+The cutover needs a precise closure of its existing “no assignment in flight” condition:
+1. Stop dispatching new assignments during the handoff; leave tasks enabled. Finish/reconcile every in-progress or complete-but-not-finished item, including the final REVIEW-ID/consumed-ID cursor commit. A visible REVIEW alone is not the final state snapshot.
+2. Record each old branch's exact final head and copied paths/blobs in a defined `migrated_from` schema. Copy the entire cursor, decision history and required supporting records; preserve historical commit links/pins rather than rebasing them. Verify offsets, processed/consumed/outgoing IDs and pending work survive the copy.
+3. Recheck old heads against the recorded heads after copying and before dispatch resumes; verify every existing task now uses its intended new pin. If a late old writer appears, stop this cutover and reconcile explicitly before replacing the snapshot. A quiet queue is not by itself proof that an old invocation cannot still write.
+4. Put the migration check **before receipts or work**. Missing/malformed provenance, an unreadable branch, or a mismatched head must fail closed; compare exact head equality, not merely “has commits after,” which is unclear for divergence. Report the specific mismatch on #145, without automatic merging. The new cursor's provenance is not an old/new Git ancestry relationship: the new branch is orphaned.
+
+This is a finite handoff check, not polling, new infrastructure or a new scientific gate. The proposed per-run check is useful defence, but cannot retroactively prevent duplicate work caused by a stale old invocation after a copy. No live migrated branches were supplied or certified here.
+
+### 5. Proposed Guardian role
+
+G1–G3 and the new G4 stop/resumption duty are operable narrowing/recording responsibilities. New G5 can evaluate unsafe evidence without becoming an approval prerequisite, as B5 requires. Keep independence, no implementation/merge, reproduction, historical decisions and missing-evidence limits. Keep the cumulative-evidence standard for a line-level STOP; a single candidate miss is not the line's failure.
+
+Dropping stage labels is operable **after** Louis approves the actual replacement authority/authentication rules. It cannot activate an implicit stage B. Preserve historical G-number meanings, and identify new decisions with the new spec pin. Pending that approval/re-pin, this run operates under the old specification and writes only its existing branch.
+
+### Release of this HOLD
+
+Correct the material change/source inventory, replace the ambiguous interim, and make the migration handoff/check exact. Louis decides the proposed substantive changes; the task is explicitly re-pinned only by him. No HOLD on unrelated authorised scientific work, proposal discussion, or ordinary maintenance; no new routine Guardian sign-off gate.
+
+Governing evidence: common/Guardian SPEC at `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`; operating GUARDIAN `288c05638c85ffbb0a4d1f5ba9762002c37acdff`; charter `dad82808dd4532d21ebf51e88164b78a0af53da8` §§2,6.4,8.2–8.4,12.3; activation report 262 at `3ef3d403285d113ed8d3726cb66a3ce1f1565b35`. ROLES/PROTOCOL reread unchanged (blobs `ab4f78fdb98b1932eee8579368ecca9fa11e7fff`, `0d7d9ed8035859a8ddb930668d00f491e97c6285`); MODE/CAMPAIGN read at channel head `e52252f51419b4c94a016f110a25ef19cd2b5f00`. No historical decision is rewritten.
+
+Evidence digest: `git-blob:7d085a668c313439bfb5316d0cc725fe4231d4d5`, with the other pinned documents, routing source and archived probes.
