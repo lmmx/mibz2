@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Re-review finished; prior defects closed and remaining H2 boundaries published",
+  "state": "Re-reviewing artifact preservation and Cargo configuration guards",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -538,6 +538,14 @@
       "review_comment_id": 6695649422,
       "publication_verified": true,
       "verification_note": "Exact body and #145 read back; role-aware routing check passed. Pinned verify helper rejects non-Coordinator FROM."
+    },
+    {
+      "trigger_comment_id": 6695669534,
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "status": "in_progress",
+      "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+      "source_commit": "87ddcf269603e4459667b4d1e2119c2a3b3b7932"
     }
   ],
   "active_delegations": [],
