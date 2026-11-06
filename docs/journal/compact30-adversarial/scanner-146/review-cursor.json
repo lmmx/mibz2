@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Team-size review complete; REVIEW publication pending",
+  "state": "Team-size review finished; awaiting next inbox comment",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -69,9 +69,10 @@
     6644115799,
     6644912625,
     6645922140,
-    6646250444
+    6646250444,
+    6681848572
   ],
-  "last_processed_comment_id": 6646250444,
+  "last_processed_comment_id": 6681848572,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -388,12 +389,12 @@
       "repository": "lmmx/mibz2",
       "pr": 162,
       "trigger_comment_id": 6681848572,
-      "status": "complete",
+      "status": "finished",
       "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
       "report_commit": "61e3325c5783b4fbfc2fa70742f2cc92086e0c0f",
       "report_path": "docs/journal/compact30-adversarial/scanner-146/team-size-6681848572/report.md",
       "review_comment_pr": 145,
-      "review_comment_id": null,
+      "review_comment_id": 6682038133,
       "disposition": "Fixed arms have 8 slots versus production reference 16; mechanism fields non-identifying. Phase/wait and placement diagnostics prioritized, shared-request contention prior art, counter validity corrections."
     }
   ],
@@ -414,10 +415,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6646250444
+      6681848572
     ],
     "handled": [
-      6646250444
+      6681848572
     ],
     "skipped": [],
     "automation_modified": false
@@ -437,12 +438,5 @@
     "authority_changed": false
   },
   "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-  "in_progress_comment": {
-    "id": 6681848572,
-    "pr": 162,
-    "status": "complete",
-    "report_commit": "61e3325c5783b4fbfc2fa70742f2cc92086e0c0f",
-    "report_path": "docs/journal/compact30-adversarial/scanner-146/team-size-6681848572/report.md",
-    "progress": "Source and literature review complete; publish one deduplicated REVIEW on #145"
-  }
+  "in_progress_comment": null
 }
