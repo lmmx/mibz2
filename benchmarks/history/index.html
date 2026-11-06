@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8823f617717a">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=02d43b3c870f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8823f617717a">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=02d43b3c870f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8823f617717a">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=02d43b3c870f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8823f617717a">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=02d43b3c870f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8823f617717a">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=02d43b3c870f">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8823f617717a">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=02d43b3c870f">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2039,11 +2039,14 @@ faster. Up to the machine's physical core count, each thread runs on a core of i
 </table>
 <p>Every arm's output was the same bytes as the reference's.</p>
 <p>To make a run, from a checkout of mibz2 with lbzip2 installed:</p>
-<div class="language-sh highlight"><pre><span></span><code>just<span class="w"> </span>bench-release-scaling<span class="w">                                    </span><span class="c1"># v0.2.4 against v0.2.1, every CPU</span>
+<div class="language-sh highlight"><pre><span></span><code>just<span class="w"> </span>bench-release-scaling<span class="w">                                    </span><span class="c1"># the current release against the last, every CPU</span>
 just<span class="w"> </span>bench-release-scaling<span class="w"> </span>v0.2.4<span class="w"> </span>v0.2.1<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="s2">"1,4,10,20"</span><span class="w"> </span>big.bz2<span class="w">   </span><span class="c1"># releases, rounds, threads, more files</span>
 </code></pre></div>
-<p>It builds both releases in <code>target/release-scaling/</code>, runs the rounds, and records the run in
-<code>bench/release-scaling/&lt;date&gt;-&lt;machine&gt;/</code>, to commit in a pull request.</p>
+<p>With no releases named, it compares the newest release tag with the one before it. It builds
+both releases in <code>target/release-scaling/</code>, runs the rounds, and records the run in
+<code>bench/release-scaling/&lt;date&gt;-&lt;machine&gt;/</code>. After each release, the release runbook
+(<code>docs/RELEASING.md</code>) asks for one such run, made with <code>just submit bench-release-scaling</code>,
+and commits its record.</p>
 
   
 
@@ -2210,19 +2213,19 @@ just<span class="w"> </span>bench-release-scaling<span class="w"> </span>v0.2.4<
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=8823f617717a"></script>
+        <script src="../../assets/javascripts/bench.js?v=02d43b3c870f"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=8823f617717a"></script>
+        <script src="../../assets/javascripts/couriers.js?v=02d43b3c870f"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=8823f617717a"></script>
+        <script src="../../assets/javascripts/blog.js?v=02d43b3c870f"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=8823f617717a"></script>
+        <script src="../../assets/javascripts/frontier.js?v=02d43b3c870f"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=8823f617717a"></script>
+        <script src="../../assets/javascripts/observatory.js?v=02d43b3c870f"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=8823f617717a"></script>
+        <script src="../../assets/javascripts/katex.js?v=02d43b3c870f"></script>
       
     
   </body>
