@@ -1,0 +1,434 @@
+{
+  "clean": {
+    "cells": 16,
+    "counters": {},
+    "input_rows": 320,
+    "verdict": {
+      "control_flagged": false,
+      "grid_complete": true,
+      "incomplete_cells": [],
+      "primaries": {
+        "mibz2-team3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-team4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "counter_missing_event": {
+    "cells": 16,
+    "counters": {
+      "mibz2-team3@12": {
+        "counters_invalid": {
+          "cycles_per_byte": 9.537434430138293e-08,
+          "ipc": null,
+          "l3_hit_share": 0.5,
+          "l3_miss_per_kb": 9.766332856461612e-05,
+          "multiplexed": [],
+          "problems": [
+            "rep 0: an event was not counted"
+          ],
+          "readings": 1,
+          "stall_l3_miss_share": 1.0,
+          "valid": false
+        }
+      }
+    },
+    "input_rows": 320,
+    "verdict": {
+      "control_flagged": false,
+      "grid_complete": true,
+      "incomplete_cells": [],
+      "primaries": {
+        "mibz2-team3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-team4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "counter_multiplexed": {
+    "cells": 16,
+    "counters": {
+      "mibz2-team3@12": {
+        "counters_invalid": {
+          "cycles_per_byte": 9.537434430138293e-08,
+          "ipc": 1.0,
+          "l3_hit_share": 0.5,
+          "l3_miss_per_kb": 9.766332856461612e-05,
+          "multiplexed": [
+            {
+              "cycles": "50.00"
+            }
+          ],
+          "problems": [
+            "rep 0: multiplexed {'cycles': '50.00'}"
+          ],
+          "readings": 1,
+          "stall_l3_miss_share": 1.0,
+          "valid": false
+        }
+      }
+    },
+    "input_rows": 320,
+    "verdict": {
+      "control_flagged": false,
+      "grid_complete": true,
+      "incomplete_cells": [],
+      "primaries": {
+        "mibz2-team3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-team4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "counter_single_valid_reading": {
+    "cells": 16,
+    "counters": {
+      "mibz2-team3@12": {
+        "counters": {
+          "cycles_per_byte": 9.537434430138293e-08,
+          "ipc": 1.0,
+          "l3_hit_share": 0.5,
+          "l3_miss_per_kb": 9.766332856461612e-05,
+          "multiplexed": [],
+          "problems": [],
+          "readings": 1,
+          "stall_l3_miss_share": 1.0,
+          "valid": true
+        }
+      }
+    },
+    "input_rows": 320,
+    "verdict": {
+      "control_flagged": false,
+      "grid_complete": true,
+      "incomplete_cells": [],
+      "primaries": {
+        "mibz2-team3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-team4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "counter_wrong_child_hash": {
+    "cells": 16,
+    "counters": {
+      "mibz2-team3@12": {
+        "counters_invalid": {
+          "cycles_per_byte": 9.537434430138293e-08,
+          "ipc": 1.0,
+          "l3_hit_share": 0.5,
+          "l3_miss_per_kb": 9.766332856461612e-05,
+          "multiplexed": [],
+          "problems": [
+            "rep 0: a decode's hash is not the timed runs'"
+          ],
+          "readings": 1,
+          "stall_l3_miss_share": 1.0,
+          "valid": false
+        }
+      }
+    },
+    "input_rows": 320,
+    "verdict": {
+      "control_flagged": false,
+      "grid_complete": true,
+      "incomplete_cells": [],
+      "primaries": {
+        "mibz2-team3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-team4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "duplicate_control_round": {
+    "cells": 16,
+    "counters": {},
+    "input_rows": 321,
+    "verdict": {
+      "control_flagged": true,
+      "grid_complete": false,
+      "incomplete_cells": [
+        "mibz2-team2@8"
+      ],
+      "primaries": {
+        "mibz2-team3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-team4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "inconsistent_output_length": {
+    "cells": 16,
+    "counters": {},
+    "input_rows": 320,
+    "verdict": {
+      "control_flagged": false,
+      "grid_complete": true,
+      "incomplete_cells": [],
+      "primaries": {
+        "mibz2-team3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-team4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": false
+    }
+  },
+  "missing_primary_round": {
+    "cells": 16,
+    "counters": {},
+    "input_rows": 319,
+    "verdict": {
+      "control_flagged": false,
+      "grid_complete": false,
+      "incomplete_cells": [
+        "mibz2-team3@12"
+      ],
+      "primaries": {
+        "mibz2-team3@12": {
+          "complete": false,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-team4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "missing_secondary_cell": {
+    "cells": 15,
+    "counters": {},
+    "input_rows": 300,
+    "verdict": {
+      "control_flagged": false,
+      "grid_complete": false,
+      "incomplete_cells": [
+        "mibz2-team2@16"
+      ],
+      "primaries": {
+        "mibz2-team3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-team4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  },
+  "wrong_primary_helpers": {
+    "cells": 16,
+    "counters": {},
+    "input_rows": 320,
+    "verdict": {
+      "control_flagged": false,
+      "grid_complete": true,
+      "incomplete_cells": [],
+      "primaries": {
+        "mibz2-team3@12": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": true,
+          "plan_ok": true,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        },
+        "mibz2-team4@16": {
+          "complete": true,
+          "cpu_ratio_of_medians": 1.0,
+          "lower": 1.05,
+          "mean": 1.05,
+          "passes": false,
+          "plan_ok": false,
+          "rss_ratio_of_medians": 1.0,
+          "upper": 1.05,
+          "within_adoption_limits": true
+        }
+      },
+      "reference_complete": true,
+      "same_bytes": true
+    }
+  }
+}

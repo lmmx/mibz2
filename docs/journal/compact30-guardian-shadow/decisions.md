@@ -1013,3 +1013,62 @@ The instrument appropriately reports “no perturbation shown” when an interva
 The registration still reports “Not yet run”; this review does not independently attest to the absence of all measurement. No archived performance, machine-code, net-work or safety result is certified from these synthetic reporting tests.
 
 Evidence digest: `git-blob:0384ed256a77e23db5b61477df58e1fa52cc24b6`, with the reporter blob, source inspection and reproduction above.
+
+
+## D029 — material D026–D028 findings closed at d6fc2d25
+
+**Decision:** G1 — concur with closure of the material prospective-rule and reporter findings, within the limits below. **Mode:** ACTIVE, stage A. **Incoming:** [6682260206 on #161](https://github.com/lmmx/mibz2/pull/161#issuecomment-6682260206), dispatch of QUEUED 6682167812. No numerical gate is relaxed, and this is not a performance qualification or permission to capture.
+
+### Pinned evidence
+
+Source: `d6fc2d25959ee10af461143f3808534febdb7a00`.
+- [Registration](https://github.com/lmmx/mibz2/blob/d6fc2d25959ee10af461143f3808534febdb7a00/docs/journal/2026-11-06-team-size.md), blob `4db93c96b4915745b04175827bacc76d8eaec0b9`.
+- [Reporter](https://github.com/lmmx/mibz2/blob/d6fc2d25959ee10af461143f3808534febdb7a00/bench/team_size.py), blob `3d8b22de49f3ae33aac575159fb4e5aa5d6d5bae`.
+- [Tests](https://github.com/lmmx/mibz2/blob/d6fc2d25959ee10af461143f3808534febdb7a00/bench/test_team_size.py), blob `8a8554bb75a057291fe7a0d7d8a1c49320c5317b`.
+- [Recipe](https://github.com/lmmx/mibz2/blob/d6fc2d25959ee10af461143f3808534febdb7a00/.just/bench.just), blob `1ccf7d04a2554c69d2652dc180f17c354426cc07`.
+
+Specs remain `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`; operating pin remains `288c05638c85ffbb0a4d1f5ba9762002c37acdff`. GUARDIAN, ROLES, PROTOCOL, MODE, campaign and report 262 were checked; operative contents match those read for D027–D028. Campaign head resolved to `e52252f51419b4c94a016f110a25ef19cd2b5f00`; controlling charter remains `dad82808dd4532d21ebf51e88164b78a0af53da8`, especially §§2, 6.4, 8.4 and 12. Historical pins and verdicts remain untouched.
+
+### Reproduced verification
+
+Pytest is unavailable in this environment. Instead, the **three exact source test functions** were invoked directly with fresh temporary directories; all returned successfully, with assertions enabled. This is not a claim that pytest ran. [Test receipt](d029-test-results.json) records the method.
+
+The independent D028 fixtures were replayed against this reporter, adding only its new registered-grid arguments: [d029-reproduce.py](d029-reproduce.py), [d029-reproduction.json](d029-reproduction.json). Run `python d029-reproduce.py /path/to/team_size.py` with the source-pinned reporter.
+
+| synthetic case | result at this pin |
+|---|---|
+| clean 320-record / 16-cell grid | both primaries pass |
+| 321 records: duplicate control round | control flagged, grid fails, both primaries fail |
+| 300 records: one entire secondary cell missing | grid fails, both primaries fail |
+| inconsistent output length | bytes predicate fails, both primaries fail |
+| one primary round missing | grid fails, both primaries fail |
+| four leaders plus eleven helpers in 4×4 | that primary fails its plan predicate |
+| counter hash mismatch, missing event or recorded multiplexing | counter evidence invalidated; speed predicates remain separate |
+
+The source tests additionally reject a duplicate primary round and a failed decode. Clean synthetic speed ratios are 1.05 and adoption ratios 1.0; these values are fixture inputs, not measured gains. No decoder, compilation, perf or timing was executed.
+
+### Closure
+
+1. **Validity:** the exact expected grid now gates both primaries, including duplicate/error/missing/extra-cell checks. The control uses the complete predicate; output lengths now join hashes in the bytes predicate. These repairs close the reproduced false passes.
+2. **Replication and economics:** the same cell must satisfy the fixed criteria in the predeclared confirmation; the RSS ≤1.15 and CPU ≤1.5 ratios of medians explicitly apply in **both** accepted runs. There is one replacement across the whole experiment, at either stage, with a second flag ending it as inconclusive. A valid failed confirmation is not a replacement opportunity.
+3. **Retention:** normal sequential attempts now write separate timestamped subdirectories, removing the former fixed-directory overwrite. Keep all raw/report/environment/commit/console evidence for every attempt.
+4. **Interpretation:** counters are explicitly after all timed rounds. The journal now disclaims a quantitative sibling-cost bound from unpinned cells and explains process-wide CPU masks, changed physical-core availability, inversion/assembly scope, mixed causes of job waits, absent helper traces and the uncertainty in a non-significant perturbation result.
+5. **Prior fixes remain:** matched four-team windows and the counter rejection checks supported in D028 remain part of the accepted design. The counter validation block is unchanged at this pin and its synthetic rejection cases still reproduce.
+
+This closes the material defects that prevented D026–D028 concurrence. No additional Guardian approval cycle is required for already authorised work under these fixed predicates. Assess actual results against the complete registered rule, not a lone `passes` flag: adoption is reported separately, and confirmation is a cross-run obligation.
+
+### Retained limits, not new performance gates
+
+- A seconds-resolution timestamp with `mkdir -p` is not intrinsically collision-proof. The retention finding is closed for sequential attempts using distinct names; ensure a new attempt's directory is unused. Reusing an existing directory violates the retention condition regardless of its timestamp. A fail-if-existing or unique suffix would harden that implementation; no harness edit was made here.
+- Some earlier summary sentences still overstate placement and job starvation, and the reporter still labels a control interval overlapping the ±2% band “within ±2%.” Read them under the explicit amended limits: allowed CPU set is not per-thread placement, aggregate waits do not identify starvation, and “not flagged” is not equivalence. The journal's “at least 2/6 cores” and prediction discounts are assumptions about simultaneous occupancy, not observed scheduling. Correct those labels when maintaining the record; they do not alter the accepted predicates or supply causal evidence.
+- The 5% bound remains nominal for a fixed run under the paired-log model, not a calibrated guarantee for selection/replacement or a protection against systematic bias. A point estimate ≥1.03 is not a confident minimum 3% effect.
+- Ratios of medians do not establish worst-case or population caps. Partial counter coverage remains partial; one valid reading is not a completed three-reading pass. Invalid diagnostics cannot support a mechanism claim.
+- This is targeted verification of the named defects, not an exhaustive parser or safety audit. Missing/failed collection must never be promoted to a PASS because a report could not be produced. The registered 20-round, four-arm, four-thread-count arguments stay fixed; configurable CLI arguments do not authorise a smaller confirmatory design.
+
+### What follows
+
+The Coordinator can record D026–D028's material registration/reporting findings as closed at **this pin**, preserving the earlier pins' failures. The experiment remains unmeasured in the supplied registration; the review does not independently attest that no measurements exist elsewhere. Actual execution, its authorisation and provenance, and any eventual measured-head CI/parity/safety/regression qualification remain separate.
+
+No candidate PASS, line-level STOP, G6 acceptance, new capture permission, implementation or automation change is issued. i9/workstation captures and bench-harness changes remain with Louis under the standing boundary; Guardian concurrence neither supplies nor duplicates that authority.
+
+Evidence digest: `git-blob:4db93c96b4915745b04175827bacc76d8eaec0b9`, with the reporter/test/recipe blobs and archived reproduction above.
