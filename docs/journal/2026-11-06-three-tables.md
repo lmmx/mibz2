@@ -182,6 +182,12 @@ run, the predeclared confirmation.
 | `mibz2-team3@10` (3 × 3) | 1 | yes | 1.076 | 1.058 | 0.82 | 0.90 |
 | | 2 | yes | **1.087** | **1.074** | 0.82 | 0.89 |
 
+**The evidence, archived.** Both bundles are committed beside this entry, exactly as uploaded, in
+`2026-11-06-three-tables/`: `run1-20261106T105317Z.tar.gz` and `run2-20261106T190811Z.tar.gz`,
+with their SHA-256 sums in `SHA256SUMS`. Each holds the raw `runs.jsonl`, the report, the
+occupancy traces, the console log, the commit and the machine description. The report can be
+rebuilt from either with this branch's `bench/team_size.py report`.
+
 ## Outcome
 
 **Both primaries pass and confirm. Under the frozen rule, each qualifies.** The same cell
