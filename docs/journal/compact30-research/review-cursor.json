@@ -299,7 +299,7 @@
     "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
-  "status": "WAITING",
+  "status": "IN_PROGRESS",
   "published_evidence_commit": "0c2718ec9f858fee6cf186ba4a9d3644505f3f2c",
   "incoming_experiment_comment_ids": [
     {
@@ -445,6 +445,14 @@
         "raw_benchmark_replay": false
       },
       "reply_id": 6660203300
+    },
+    {
+      "comment_id": 6683037641,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "progress": "Receipt; auditing live bytes versus allocated capacity and team-size evidence."
     }
   ]
 }
