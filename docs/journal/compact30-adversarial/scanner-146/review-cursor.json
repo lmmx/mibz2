@@ -72,9 +72,10 @@
     6646250444,
     6681848572,
     6682105521,
-    6682938532
+    6682938532,
+    6683787130
   ],
-  "last_processed_comment_id": 6682938532,
+  "last_processed_comment_id": 6683787130,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -428,12 +429,12 @@
       "repository": "lmmx/mibz2",
       "pr": 162,
       "trigger_comment_id": 6683787130,
-      "status": "complete",
+      "status": "finished",
       "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
       "report_commit": "0e74fcc12d2d2dcecaebce5ac8f60b0502f46f29",
       "report_path": "docs/journal/compact30-adversarial/scanner-146/oracle-6683787130/report.md",
       "review_comment_pr": 145,
-      "review_comment_id": null,
+      "review_comment_id": 6683945162,
       "disposition": "Oracle purpose/evidence/dispatch relations separated; 25% performance necessity refuted by 2.91% capacity-model counterexample; seed causal and dependency corrections. #220 rule retained; no implementation or authority change."
     }
   ],
@@ -454,10 +455,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6682938532
+      6683787130
     ],
     "handled": [
-      6682938532
+      6683787130
     ],
     "skipped": [],
     "automation_modified": false
@@ -476,13 +477,5 @@
     "read_order": "After event eligibility, addressee and cursor gates, read MODE and applicable role instructions.",
     "authority_changed": false
   },
-  "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-  "in_progress_comment": {
-    "id": 6683787130,
-    "pr": 162,
-    "status": "complete",
-    "report_commit": "0e74fcc12d2d2dcecaebce5ac8f60b0502f46f29",
-    "report_path": "docs/journal/compact30-adversarial/scanner-146/oracle-6683787130/report.md",
-    "progress": "Completed Oracle design and seed review; awaiting deduplicated REVIEW on #145"
-  }
+  "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0"
 }
