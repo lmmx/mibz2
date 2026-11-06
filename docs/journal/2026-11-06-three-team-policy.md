@@ -195,4 +195,28 @@ Nothing in this registration changes from here; a change needs a new registratio
 
 ## Result
 
-Not yet run.
+**First run: VALID PASS** (2026-11-06, `three-team-policy/20261106T220546Z`).
+- **Machine:** Intel i9-10900K, 10 cores, 20 CPUs.
+- **Commits:** head `912baf00`, base `8b111867`.
+- **Hand-over:** Louis handed the bundle over in session (RULES C5).
+- **Archive:** [`evidence@820f4a87`](https://github.com/lmmx/mibz2/blob/820f4a87ee8f2ce43744350ef15462bed448c3bc/three-team-policy/20261106T220546Z.tar.gz),
+  SHA-256 `3319e544a5e5198df1fd6e06bb9ffad507dcfe86879fada152d6ce276feee14c`.
+- **Re-judged:** the frozen judge, re-run on its `runs.jsonl`, wrote a `policy-ab.json` identical to the
+  bundle's (LOG 6697537827 on #145).
+
+| threads | role | plan base → head | speed (95%) | upper bound | CPU | RSS |
+|--:|---|---|--:|--:|--:|--:|
+| 8 | control | 4×2 → 4×2 | 0.986 (0.977–0.995) | 1.025 | 1.01 | 1.00 |
+| 9 | control | 4×2 → 4×2 | 1.000 (0.991–1.009) | 1.010 | 1.00 | 1.00 |
+| 10 | primary | 4×2 → 3×3 | 1.089 (1.075–1.103) | 0.932 | 0.88 | 0.82 |
+| 11 | no harm | 4×2 → 3×3 | 1.081 (1.066–1.098) | 0.941 | 0.90 | 0.81 |
+| 12 | no harm | 4×2 → 3×3 | 1.065 (1.048–1.082) | 0.957 | 0.90 | 0.82 |
+| 16 | no harm | 4×2 → 3×3 | 1.076 (1.060–1.092) | 0.946 | 0.89 | 0.82 |
+| 20 | no harm | 4×2 → 3×3 | 1.092 (1.079–1.104) | 0.928 | 0.87 | 0.82 |
+
+The 8-thread control passes its registered band, but its interval excludes 1. The plan is the same
+in both arms, so a pass here is not equivalence. Its cause, a build or layout effect, is untested.
+
+**Confirmation:** not yet run. The policy is admitted only if it passes too. It is to be submitted with
+`just submit bench-three-team-policy` (RULES C5, #242). This section is a record, not an input of
+the registration.
