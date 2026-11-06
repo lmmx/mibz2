@@ -1,0 +1,81 @@
+{
+  "weights": {
+    "walk": 0.7572775727757277,
+    "build": 0.24272242722427223
+  },
+  "ratios": {
+    "w1": {
+      "point": 1.148452772956618,
+      "lo": 1.1474308945952614,
+      "hi": 1.1494755613818315
+    },
+    "w4": {
+      "point": 0.8404655319847364,
+      "lo": 0.8378135268084702,
+      "hi": 0.8431259317872887
+    },
+    "e4": {
+      "point": 0.8560124927676666,
+      "lo": 0.8523932114111277,
+      "hi": 0.8596471416768354
+    },
+    "w1_wall": {
+      "point": 1.1482752175069764,
+      "lo": 1.147243152058958,
+      "hi": 1.1493082114060271
+    },
+    "w4_wall": {
+      "point": 0.8403594730966407,
+      "lo": 0.8377065286680485,
+      "hi": 0.8430208191717528
+    }
+  },
+  "scenarios": [
+    {
+      "b": 0.865,
+      "R1": 1.0796524279011372,
+      "R4": 0.8464205976120575,
+      "walk_break_even": 1.04327016783974,
+      "walk_for_025": 0.9079155387114239,
+      "required_P_over_C_amplification_break_even": 1.1008201023658863,
+      "required_P_over_C_amplification_target": 1.2649334921468367,
+      "W1_cost_reduction_break_even": 0.09158635652565161,
+      "W1_cost_reduction_target": 0.20944460225904327
+    },
+    {
+      "b": 0.94,
+      "R1": 1.0978566099429576,
+      "R4": 0.864624779653878,
+      "walk_break_even": 1.0192311857065512,
+      "walk_for_025": 0.8838765565782349,
+      "required_P_over_C_amplification_break_even": 1.126783392288461,
+      "required_P_over_C_amplification_target": 1.299336162283386,
+      "W1_cost_reduction_break_even": 0.11251798096790178,
+      "W1_cost_reduction_target": 0.23037622670129365
+    },
+    {
+      "b": 1,
+      "R1": 1.1124199555764138,
+      "R4": 0.8791881252873343,
+      "walk_break_even": 1,
+      "walk_for_025": 0.8646453708716838,
+      "required_P_over_C_amplification_break_even": 1.148452772956618,
+      "required_P_over_C_amplification_target": 1.3282356115534588,
+      "W1_cost_reduction_break_even": 0.12926328052170222,
+      "W1_cost_reduction_target": 0.24712152625509387
+    },
+    {
+      "b": 1.086,
+      "R1": 1.1332940843177013,
+      "R4": 0.9000622540286216,
+      "walk_break_even": 0.9724353004872768,
+      "walk_for_025": 0.8370806713589606,
+      "required_P_over_C_amplification_break_even": 1.1810068725200955,
+      "required_P_over_C_amplification_target": 1.3719738279133358,
+      "W1_cost_reduction_break_even": 0.15326487654881582,
+      "W1_cost_reduction_target": 0.2711231222822076
+    }
+  ],
+  "b_break_even_at_w1": 0.5368373789681189,
+  "b_break_even_at_w4": 1.4977367608516756
+}

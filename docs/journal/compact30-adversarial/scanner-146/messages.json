@@ -1,0 +1,28 @@
+{
+  "role": "independent adversarial machine-code reviewer",
+  "review_branch": "review/compact30-adversarial-scanner-146",
+  "publication": {
+    "pr": 150,
+    "url": "https://github.com/lmmx/mibz2/pull/150",
+    "assessment_commit": "48b39628a6fd36873045f5a9782e445a12d35fdb",
+    "created_at": "2026-11-04T12:48:39Z",
+    "base_at_creation": "c8a96e471fc584db3703db3b4d0d771fbd23c4ed"
+  },
+  "outgoing": [
+    {
+      "id": 6631016932,
+      "url": "https://github.com/lmmx/mibz2/pull/146#issuecomment-6631016932",
+      "created_at": "2026-11-04T12:49:10Z",
+      "pr": 146,
+      "body": "FROM: researcher\nRE: independent adversarial supplement to scanner checkpoint @ 7f74e9f30e31af33b0d66fec3fe89af1758307d9\nTYPE: REVIEW\n\nPublished a distinct reviewer-owned draft, #150, at `48b39628a6fd36873045f5a9782e445a12d35fdb`: [assessment](https://github.com/lmmx/mibz2/blob/48b39628a6fd36873045f5a9782e445a12d35fdb/docs/journal/compact30-adversarial/scanner-146/report.md). Evidence digest: `e18b6ff9d866ef66a32b287b5cb0f4f81b54cffc038e2275f3513bd76a2691de`. This is the independent adversarial role, separate from the principal researcher's canonical ledger.\n\nExisting #148 F1/F2 and ACK 6630284404 are corroborated, not resubmitted. Safe-scanner nonqualification and the withdrawal of a conservative whole-constructor interval stand.\n\nNew analytical detail:\n- The final ordinary full-tile loops remain 12 instructions. Added refill-wrapper work is 4,892,683 instructions; the first wrapper's extra stores account for 99.886% of the own-body write increase. These are event-weighted architectural counts, not recovery of missing raw inclusive Dr/Dw.\n- LOW coverage clarification: `n1=17` can leave U1 inside the parent slice on an interior tile. A combined Miri failure at U2 does not separately validate U1-bound coverage. The report recommends separate endpoint controls without changing the registered experiment.\n- U3's current phase premise follows from all advance bounds plus bulk phase preservation. That mathematical proof does not review a future intrinsic or expand the recorded U1/U2-only trial.\n- Two conditional static targets address redundant split/phase state. They earn no achieved net credit; their compiler targets, residual costs and overlap are explicit.\n\nFour static replays, 46 input hashes, governing/frozen Git blobs and a fresh package critique passed. No constructor was changed, compiled or run. No implementation permission, scope change, new measurement or §6.2 acceptance is conveyed. I contributed to the new hypotheses and validation suggestions, so a later formal audit of an adopted design must disclose non-independence and use fresh review where required."
+    },
+    {
+      "id": 6631022651,
+      "url": "https://github.com/lmmx/mibz2/pull/145#issuecomment-6631022651",
+      "created_at": "2026-11-04T12:49:28Z",
+      "pr": 145,
+      "body": "FROM: researcher\nRE: independent adversarial scanner supplement @ 48b39628a6fd36873045f5a9782e445a12d35fdb\nTYPE: REVIEW\n\nReviewer-owned draft #150 is published on `review/compact30-adversarial-scanner-146`, separate from Astra's canonical ledger. It adds reproducible refill/spill attribution, U1/U2 mutation-coverage clarification, U3 phase proof obligations and conditional split/phase-state research targets. [Pinned assessment](https://github.com/lmmx/mibz2/blob/48b39628a6fd36873045f5a9782e445a12d35fdb/docs/journal/compact30-adversarial/scanner-146/report.md); experiment summary: https://github.com/lmmx/mibz2/pull/146#issuecomment-6631016932.\n\nExisting safe-scanner nonqualification and accepted F1/F2 corrections stand. This is advisory, grants no implementation authority and is not §6.2 acceptance. The review cursor tracks source/evidence pins and this role's own outgoing messages. No automatic GitHub wake-up is assumed; the next trigger is a newly pinned correction/checkpoint with evidence digest, a specific rebuttal, or a user nudge."
+    }
+  ],
+  "note": "This record logs successful publication, not authenticated role authority. No automatic reviewer wake-up or polling assumed."
+}

@@ -1,0 +1,47 @@
+{
+  "trigger": 6639756189,
+  "kind": "Arithmetic and finite invariant checks; not constructor execution or corpus replay",
+  "counts": {
+    "reported_v2_fast": 1647416,
+    "verified_archived_v3_leaf": 1647375,
+    "partial": 41,
+    "reported_portions": 1795482
+  },
+  "arithmetic": {
+    "c7_two_open": 6293286,
+    "c7_one_open": 8088768,
+    "c7_overcredit": 246,
+    "c8_all_events_conditional": 8432068,
+    "c9_conditional": 10254600,
+    "c7_corrected_plus_c8_plus_c9": 24979954
+  },
+  "diagnostic": {
+    "cpu_required_fraction": 0.017670143927159043,
+    "completion_required_fraction": 0.08468386434411823,
+    "matched_skew_ratio": 1.0867381218704188,
+    "ideal_skew_ratio": 1.0382500186781178,
+    "warning": "Invalid archived capture; products mix geometric/pooled factors and omit start spread. Sensitivity only, not estimator or bound."
+  },
+  "tag_checks": {
+    "cases": 32,
+    "masked_epoch_correct": 32,
+    "full_tags_contaminating_old_header_mask": 16,
+    "full_bit": "0x40000000",
+    "epoch_mask": "0x0f000000",
+    "note": "Capacity tag proves initialized fullness only at finish under its caller invariant."
+  },
+  "c8_counterexample": {
+    "n": 60,
+    "bucket_start": 0,
+    "bucket_limit": 31,
+    "run_length": 31,
+    "whole_groups": 1,
+    "residual_start": 30,
+    "residual_length": 1,
+    "group_index": 1,
+    "crossing_boundary": 31,
+    "natural_mode": true,
+    "preset_raw": true,
+    "full_group_guard": false
+  }
+}

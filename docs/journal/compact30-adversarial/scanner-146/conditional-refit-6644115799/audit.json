@@ -1,0 +1,63 @@
+{
+  "scope": "Sensitivity fits to rounded medians, not paired estimators or hardware identification. B2 kernel costs are counterfactual for #157.",
+  "wa": 4.04,
+  "wb": 3.78,
+  "assembly": 0.13,
+  "ia": 2.466666666666667,
+  "ib": 1.8,
+  "ua": 14.8,
+  "R": 256,
+  "m": 24,
+  "K": 32,
+  "qa": 0.0578125,
+  "qb": 0.041666666666666664,
+  "ellA": 24.965765765765767,
+  "displayed_saving": 0.26000000000000023,
+  "rows": [
+    {
+      "replay": 0.05,
+      "ub": 8,
+      "ellB": 43.2,
+      "ell_ratio": 1.7303695150115475,
+      "R_B": 110.95895895895896,
+      "I_B_if_common_ell": 2.5597597597597597,
+      "unmodelled_B_cost": 0.7597597597597594,
+      "common_R_minimum_saving": 0.6166666666666667
+    },
+    {
+      "replay": 0.05,
+      "ub": 9,
+      "ellB": 43.2,
+      "ell_ratio": 1.7303695150115475,
+      "R_B": 124.82882882882882,
+      "I_B_if_common_ell": 2.5597597597597597,
+      "unmodelled_B_cost": 0.7597597597597594,
+      "common_R_minimum_saving": 0.6166666666666667
+    },
+    {
+      "replay": 0.17,
+      "ub": 8,
+      "ellB": 40.32,
+      "ell_ratio": 1.615011547344111,
+      "R_B": 118.88459888459889,
+      "I_B_if_common_ell": 2.4397597597597596,
+      "unmodelled_B_cost": 0.6397597597597593,
+      "common_R_minimum_saving": 0.4966666666666667
+    },
+    {
+      "replay": 0.17,
+      "ub": 9,
+      "ellB": 40.32,
+      "ell_ratio": 1.615011547344111,
+      "R_B": 133.74517374517376,
+      "I_B_if_common_ell": 2.4397597597597596,
+      "unmodelled_B_cost": 0.6397597597597593,
+      "common_R_minimum_saving": 0.4966666666666667
+    }
+  ],
+  "paired_ratio": 0.925,
+  "paired_interval": [
+    0.856,
+    0.999
+  ]
+}

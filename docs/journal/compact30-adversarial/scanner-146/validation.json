@@ -1,0 +1,27 @@
+{
+  "checkpoint": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+  "compiler_reproduction": false,
+  "constructor_execution": false,
+  "governance_and_historical_blobs_replayed": true,
+  "manifest_sha256": "e18b6ff9d866ef66a32b287b5cb0f4f81b54cffc038e2275f3513bd76a2691de",
+  "new_measurements": false,
+  "static_replays": [
+    {
+      "matches_saved_json": true,
+      "script": "accounting/reconstruct.py"
+    },
+    {
+      "matches_saved_json": true,
+      "script": "safety/replay_safety.py"
+    },
+    {
+      "matches_saved_json": true,
+      "script": "phase/model.py"
+    },
+    {
+      "matches_saved_json": true,
+      "script": "fresh-check/check_totals.py"
+    }
+  ],
+  "verified_files": 46
+}

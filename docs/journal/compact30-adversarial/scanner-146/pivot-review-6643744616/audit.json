@@ -1,0 +1,41 @@
+{
+  "base": {
+    "totalSelf": 25751812,
+    "functions": [
+      {
+        "id": "1018",
+        "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+        "self": 87,
+        "inclusive": 25751796
+      },
+      {
+        "id": "1058",
+        "name": "mibz2::bwt::room_segments::<32, 1>",
+        "self": 15155948,
+        "inclusive": 15426892
+      }
+    ]
+  },
+  "candidate": {
+    "totalSelf": 20184713,
+    "functions": [
+      {
+        "id": "1018",
+        "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+        "self": 87,
+        "inclusive": 20184697
+      },
+      {
+        "id": "1058",
+        "name": "mibz2::bwt::room_segments::<32, 1>",
+        "self": 9588849,
+        "inclusive": 9859793
+      }
+    ]
+  },
+  "amp2": 1.058455114822547,
+  "amp4": 1.0532359081419624,
+  "scannerLower": 0.07,
+  "workerLower": 0.2125,
+  "idealWallRatio": 0.7838170588179558
+}

@@ -1,0 +1,2837 @@
+{
+  "B2_bridge": {
+    "equal_after_address_and_rip_relocation_normalization": true,
+    "limitation": "RIP data values and external callee binaries are not proven equal by normalization.",
+    "new_instruction_count": 1431,
+    "old_instruction_count": 1431
+  },
+  "callees_B2_bridge": {
+    "finish": {
+      "new_count": 379,
+      "normalized_equal": true,
+      "old_count": 379
+    },
+    "refill": {
+      "new_count": 67,
+      "normalized_equal": true,
+      "old_count": 67
+    }
+  },
+  "conventions": [
+    "Archived Ir only; no constructor execution or new capture.",
+    "Self excludes call-edge inclusive costs; inclusive adds each direct call edge once.",
+    "Explicit memory counts are architectural operands: RMW is one read plus one write, LEA and NOP are no memory access.",
+    "Direct rsp counts require an explicit %rsp-based operand; stack accesses through aliased registers are not classified as rsp.",
+    "push/call implicitly write, pop/ret implicitly read the stack; reported separately from explicit rsp operands.",
+    "These absolute memory counts are not Callgrind Dr/Dw semantics. Their scanner-v2 differences match the saved self Dr/Dw differences, but missing raw Dr/Dw cannot be reproduced.",
+    "Normalization erases instruction addresses, branch destinations to instruction ordinals, and RIP-relative displacements/comments. It does not verify constant bytes or external callee binaries."
+  ],
+  "earlier_attempts": {
+    "attempt-1": {
+      "fulltile_first_loop": 13,
+      "fulltile_second_loop": 13,
+      "instruction_count": 1355
+    },
+    "attempt-2": {
+      "fulltile_first_loop": 13,
+      "fulltile_second_loop": 13,
+      "instruction_count": 1355
+    }
+  },
+  "fulltile_normal_row_loops": {
+    "first": {
+      "scanner": {
+        "first": "0x41b80",
+        "frequencies": [
+          29357924
+        ],
+        "instructions": 12,
+        "last": "0x41baa",
+        "lines": [
+          556,
+          557,
+          558,
+          559,
+          560,
+          561,
+          562,
+          563,
+          564,
+          565,
+          566,
+          567
+        ],
+        "weighted_Ir": 352295088
+      },
+      "v2": {
+        "first": "0x3ba90",
+        "frequencies": [
+          29357924
+        ],
+        "instructions": 12,
+        "last": "0x3baba",
+        "lines": [
+          1054,
+          1055,
+          1056,
+          1057,
+          1058,
+          1059,
+          1060,
+          1061,
+          1062,
+          1063,
+          1064,
+          1065
+        ],
+        "weighted_Ir": 352295088
+      }
+    },
+    "second": {
+      "scanner": {
+        "first": "0x41c40",
+        "frequencies": [
+          8935084
+        ],
+        "instructions": 12,
+        "last": "0x41c67",
+        "lines": [
+          599,
+          600,
+          601,
+          602,
+          603,
+          604,
+          605,
+          606,
+          607,
+          608,
+          609,
+          610
+        ],
+        "weighted_Ir": 107221008
+      },
+      "v2": {
+        "first": "0x3bb20",
+        "frequencies": [
+          8935084
+        ],
+        "instructions": 12,
+        "last": "0x3bb46",
+        "lines": [
+          1090,
+          1091,
+          1092,
+          1093,
+          1094,
+          1095,
+          1096,
+          1097,
+          1098,
+          1099,
+          1100,
+          1101
+        ],
+        "weighted_Ir": 107221008
+      }
+    }
+  },
+  "fulltile_refill_wrappers": {
+    "first": {
+      "scanner": {
+        "first": "0x41bae",
+        "frequencies": [
+          996634
+        ],
+        "instructions": 14,
+        "last": "0x41bf2",
+        "lines": [
+          569,
+          570,
+          571,
+          572,
+          573,
+          574,
+          575,
+          576,
+          577,
+          578,
+          579,
+          580,
+          581,
+          582
+        ],
+        "weighted_Ir": 13952876
+      },
+      "v2": {
+        "first": "0x3babe",
+        "frequencies": [
+          996634
+        ],
+        "instructions": 10,
+        "last": "0x3baec",
+        "lines": [
+          1067,
+          1068,
+          1069,
+          1070,
+          1071,
+          1072,
+          1073,
+          1074,
+          1075,
+          1076
+        ],
+        "weighted_Ir": 9966340
+      }
+    },
+    "second": {
+      "scanner": {
+        "first": "0x41c6e",
+        "frequencies": [
+          302049
+        ],
+        "instructions": 12,
+        "last": "0x41ca0",
+        "lines": [
+          612,
+          613,
+          614,
+          615,
+          616,
+          617,
+          618,
+          619,
+          620,
+          621,
+          622,
+          623
+        ],
+        "weighted_Ir": 3624588
+      },
+      "v2": {
+        "first": "0x3bb4d",
+        "frequencies": [
+          302049
+        ],
+        "instructions": 9,
+        "last": "0x3bb77",
+        "lines": [
+          1103,
+          1104,
+          1105,
+          1106,
+          1107,
+          1108,
+          1109,
+          1110,
+          1111
+        ],
+        "weighted_Ir": 2718441
+      }
+    }
+  },
+  "functions": {
+    "scanner": {
+      "calls_inclusive_Ir": {
+        "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>": 1326,
+        "<alloc::raw_vec::RawVecInner>::grow_exact": 8977,
+        "<c30walk::ctor2s::W<false>>::finish": 56611441,
+        "<c30walk::ctor2s::W<false>>::refill": 201234507,
+        "__memcpy_avx_unaligned_erms": 4890494,
+        "__memset_avx2_unaligned_erms": 1152859,
+        "c30walk::ctor::canonicalise": 3903384,
+        "free": 1688
+      },
+      "hot_rsp": [
+        {
+          "address": "0x41a10",
+          "count": 2393313,
+          "line": 476,
+          "read": 1,
+          "text": "mov    0x28e8(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x41a2d",
+          "count": 2393313,
+          "line": 483,
+          "read": 0,
+          "text": "mov    %rax,0x28e8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41a35",
+          "count": 2393313,
+          "line": 484,
+          "read": 1,
+          "text": "mov    0x28f0(%rsp),%eax",
+          "write": 0
+        },
+        {
+          "address": "0x41a42",
+          "count": 2393313,
+          "line": 487,
+          "read": 0,
+          "text": "mov    %eax,0x28f0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41ae0",
+          "count": 2393313,
+          "line": 524,
+          "read": 1,
+          "text": "mov    0x20(%rsp),%r14",
+          "write": 0
+        },
+        {
+          "address": "0x41ae8",
+          "count": 2393313,
+          "line": 526,
+          "read": 1,
+          "text": "mov    0x28e8(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x41b1b",
+          "count": 2393313,
+          "line": 537,
+          "read": 1,
+          "text": "mov    0x28f0(%rsp),%r12d",
+          "write": 0
+        },
+        {
+          "address": "0x41b60",
+          "count": 2393313,
+          "line": 551,
+          "read": 0,
+          "text": "mov    %r13,0x28(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41b65",
+          "count": 2393313,
+          "line": 552,
+          "read": 1,
+          "text": "mov    0x48(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x41c10",
+          "count": 2393313,
+          "line": 588,
+          "read": 1,
+          "text": "mov    0x28(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x41c25",
+          "count": 1116556,
+          "line": 592,
+          "read": 1,
+          "text": "add    0x48(%rsp),%r15",
+          "write": 0
+        },
+        {
+          "address": "0x41d74",
+          "count": 1085833,
+          "line": 671,
+          "read": 1,
+          "text": "mov    0x28e8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x41d90",
+          "count": 1085833,
+          "line": 676,
+          "read": 1,
+          "text": "mov    0x28f0(%rsp),%ecx",
+          "write": 0
+        },
+        {
+          "address": "0x41e14",
+          "count": 1085833,
+          "line": 708,
+          "read": 0,
+          "text": "mov    %r8,0x28e8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41e1e",
+          "count": 1085833,
+          "line": 710,
+          "read": 0,
+          "text": "mov    %edx,0x28f0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41bae",
+          "count": 996634,
+          "line": 569,
+          "read": 0,
+          "text": "mov    %r10,0x30(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41bb3",
+          "count": 996634,
+          "line": 570,
+          "read": 0,
+          "text": "mov    %r9,0x18(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41bb8",
+          "count": 996634,
+          "line": 571,
+          "read": 0,
+          "text": "mov    %r8,0x50(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41bd6",
+          "count": 996634,
+          "line": 577,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x41be3",
+          "count": 996634,
+          "line": 579,
+          "read": 1,
+          "text": "mov    0x50(%rsp),%r8",
+          "write": 0
+        },
+        {
+          "address": "0x41be8",
+          "count": 996634,
+          "line": 580,
+          "read": 1,
+          "text": "mov    0x18(%rsp),%r9",
+          "write": 0
+        },
+        {
+          "address": "0x41bed",
+          "count": 996634,
+          "line": 581,
+          "read": 1,
+          "text": "mov    0x30(%rsp),%r10",
+          "write": 0
+        },
+        {
+          "address": "0x4225a",
+          "count": 801475,
+          "line": 993,
+          "read": 1,
+          "text": "mov    0x80(%rsp),%rbx",
+          "write": 0
+        },
+        {
+          "address": "0x41cb1",
+          "count": 610521,
+          "line": 627,
+          "read": 0,
+          "text": "mov    %r8,0x50(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41cbc",
+          "count": 610521,
+          "line": 630,
+          "read": 0,
+          "text": "mov    %rax,0xa0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41cf5",
+          "count": 610521,
+          "line": 642,
+          "read": 0,
+          "text": "mov    %r9d,0x64(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41d1b",
+          "count": 610521,
+          "line": 649,
+          "read": 0,
+          "text": "mov    %rbx,0x80(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x423f0",
+          "count": 610521,
+          "line": 1083,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x423f5",
+          "count": 610521,
+          "line": 1084,
+          "read": 1,
+          "text": "mov    0x50(%rsp),%r8",
+          "write": 0
+        },
+        {
+          "address": "0x423fa",
+          "count": 610521,
+          "line": 1085,
+          "read": 1,
+          "text": "mov    0x38(%rsp),%r14",
+          "write": 0
+        },
+        {
+          "address": "0x423ff",
+          "count": 610521,
+          "line": 1086,
+          "read": 1,
+          "text": "mov    0x28(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x42404",
+          "count": 610521,
+          "line": 1087,
+          "read": 1,
+          "text": "mov    0x40(%rsp),%rcx",
+          "write": 0
+        },
+        {
+          "address": "0x42409",
+          "count": 610521,
+          "line": 1088,
+          "read": 1,
+          "text": "mov    0x64(%rsp),%eax",
+          "write": 0
+        },
+        {
+          "address": "0x41ca2",
+          "count": 607750,
+          "line": 624,
+          "read": 0,
+          "text": "mov    %rdx,0x40(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41ca7",
+          "count": 607750,
+          "line": 625,
+          "read": 0,
+          "text": "mov    %r13,0x28(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41cac",
+          "count": 607750,
+          "line": 626,
+          "read": 0,
+          "text": "mov    %rax,0x38(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41e42",
+          "count": 508988,
+          "line": 718,
+          "read": 1,
+          "text": "mov    0xa0(%rsp),%rsi",
+          "write": 0
+        },
+        {
+          "address": "0x423a6",
+          "count": 496004,
+          "line": 1070,
+          "read": 1,
+          "text": "mov    0xb8(%rsp),%rsi",
+          "write": 0
+        },
+        {
+          "address": "0x423be",
+          "count": 496004,
+          "line": 1075,
+          "read": 1,
+          "text": "add    0xd0(%rsp),%rsi",
+          "write": 0
+        },
+        {
+          "address": "0x423c6",
+          "count": 496004,
+          "line": 1076,
+          "read": 1,
+          "text": "mov    0xb0(%rsp),%r9",
+          "write": 0
+        },
+        {
+          "address": "0x41966",
+          "count": 467712,
+          "line": 439,
+          "read": 0,
+          "text": "mov    %edx,0x28f8(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x41972",
+          "count": 467712,
+          "line": 442,
+          "read": 0,
+          "text": "mov    %esi,0x28fc(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x41c8d",
+          "count": 302049,
+          "line": 619,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x41eb3",
+          "count": 296405,
+          "line": 745,
+          "read": 1,
+          "text": "cmpl   $0x0,0x14(%rsp)",
+          "write": 0
+        },
+        {
+          "address": "0x41eb8",
+          "count": 296405,
+          "line": 746,
+          "read": 0,
+          "text": "mov    %r12,0x58(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41ebd",
+          "count": 296405,
+          "line": 747,
+          "read": 0,
+          "text": "mov    %rdx,0x68(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x421c0",
+          "count": 296405,
+          "line": 956,
+          "read": 1,
+          "text": "mov    0x28e8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x421d9",
+          "count": 296405,
+          "line": 961,
+          "read": 1,
+          "text": "mov    0x28f0(%rsp),%eax",
+          "write": 0
+        },
+        {
+          "address": "0x421e0",
+          "count": 296405,
+          "line": 962,
+          "read": 1,
+          "text": "mov    0xd0(%rsp),%rcx",
+          "write": 0
+        },
+        {
+          "address": "0x42335",
+          "count": 296405,
+          "line": 1039,
+          "read": 0,
+          "text": "mov    %eax,0x28f0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4233c",
+          "count": 296405,
+          "line": 1040,
+          "read": 1,
+          "text": "mov    0x68(%rsp),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x4234f",
+          "count": 296405,
+          "line": 1045,
+          "read": 1,
+          "text": "mov    0x58(%rsp),%r12",
+          "write": 0
+        },
+        {
+          "address": "0x42362",
+          "count": 296405,
+          "line": 1051,
+          "read": 1,
+          "text": "mov    0x80(%rsp),%rbx",
+          "write": 0
+        },
+        {
+          "address": "0x41668",
+          "count": 111104,
+          "line": 277,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r11",
+          "write": 0
+        },
+        {
+          "address": "0x4261d",
+          "count": 55552,
+          "line": 1210,
+          "read": 1,
+          "text": "mov    0x64(%rsp,%rax,1),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x42622",
+          "count": 55552,
+          "line": 1211,
+          "read": 1,
+          "text": "sub    0x74(%rsp,%rax,1),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x4262a",
+          "count": 55552,
+          "line": 1213,
+          "read": 1,
+          "text": "add    0x7c(%rsp,%rax,1),%edx",
+          "write": 0
+        },
+        {
+          "address": "0x4262e",
+          "count": 55552,
+          "line": 1214,
+          "read": 1,
+          "text": "cmp    0x80(%rsp,%rax,1),%edx",
+          "write": 0
+        },
+        {
+          "address": "0x42637",
+          "count": 55552,
+          "line": 1216,
+          "read": 1,
+          "text": "mov    0x8c(%rsp,%rax,1),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x4263f",
+          "count": 55552,
+          "line": 1217,
+          "read": 1,
+          "text": "sub    0x9c(%rsp,%rax,1),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x4264a",
+          "count": 55552,
+          "line": 1219,
+          "read": 1,
+          "text": "add    0xa4(%rsp,%rax,1),%edx",
+          "write": 0
+        },
+        {
+          "address": "0x42651",
+          "count": 55552,
+          "line": 1220,
+          "read": 1,
+          "text": "cmp    0xa8(%rsp,%rax,1),%edx",
+          "write": 0
+        },
+        {
+          "address": "0x41410",
+          "count": 27776,
+          "line": 173,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d08(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x41419",
+          "count": 27776,
+          "line": 174,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2cf8(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x41422",
+          "count": 27776,
+          "line": 175,
+          "read": 0,
+          "text": "mov    %rcx,0x2d18(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x4142a",
+          "count": 27776,
+          "line": 176,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d20(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x41433",
+          "count": 27776,
+          "line": 177,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d30(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x4143c",
+          "count": 27776,
+          "line": 178,
+          "read": 0,
+          "text": "mov    %rcx,0x2d40(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x41444",
+          "count": 27776,
+          "line": 179,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d48(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x4144d",
+          "count": 27776,
+          "line": 180,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d58(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x41456",
+          "count": 27776,
+          "line": 181,
+          "read": 0,
+          "text": "mov    %rcx,0x2d68(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x4145e",
+          "count": 27776,
+          "line": 182,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d70(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x41467",
+          "count": 27776,
+          "line": 183,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d80(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x41470",
+          "count": 27776,
+          "line": 184,
+          "read": 0,
+          "text": "mov    %rcx,0x2d90(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x414a5",
+          "count": 27776,
+          "line": 194,
+          "read": 0,
+          "text": "mov    %edx,0x2c7c(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x414ac",
+          "count": 27776,
+          "line": 195,
+          "read": 0,
+          "text": "mov    %esi,0x2c80(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x414b8",
+          "count": 27776,
+          "line": 198,
+          "read": 0,
+          "text": "mov    %esi,0x2ca4(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x414bf",
+          "count": 27776,
+          "line": 199,
+          "read": 0,
+          "text": "mov    %edx,0x2ca8(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x414cb",
+          "count": 27776,
+          "line": 202,
+          "read": 0,
+          "text": "mov    %edx,0x2ccc(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x414d2",
+          "count": 27776,
+          "line": 203,
+          "read": 0,
+          "text": "mov    %esi,0x2cd0(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x414dd",
+          "count": 27776,
+          "line": 206,
+          "read": 0,
+          "text": "mov    %esi,0x2cf4(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x414e4",
+          "count": 27776,
+          "line": 207,
+          "read": 0,
+          "text": "mov    %edx,0x2cf8(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x42700",
+          "count": 23559,
+          "line": 1263,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x416b7",
+          "count": 18684,
+          "line": 298,
+          "read": 1,
+          "text": "mov    0x5530(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x4190f",
+          "count": 3654,
+          "line": 423,
+          "read": 1,
+          "text": "cmp    %rdi,0x98(%rsp)",
+          "write": 0
+        },
+        {
+          "address": "0x4191d",
+          "count": 3654,
+          "line": 425,
+          "read": 1,
+          "text": "mov    0x20(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x4198a",
+          "count": 3654,
+          "line": 447,
+          "read": 1,
+          "text": "mov    0xc0(%rsp),%r15",
+          "write": 0
+        },
+        {
+          "address": "0x419c7",
+          "count": 3654,
+          "line": 459,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x419d2",
+          "count": 3654,
+          "line": 462,
+          "read": 0,
+          "text": "mov    %rax,0x98(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x419e2",
+          "count": 3654,
+          "line": 465,
+          "read": 0,
+          "text": "mov    %rcx,0x20(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x419f7",
+          "count": 3575,
+          "line": 470,
+          "read": 1,
+          "text": "add    0x48(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x41acb",
+          "count": 2606,
+          "line": 519,
+          "read": 0,
+          "text": "mov    %r13,0x28(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41ad3",
+          "count": 2606,
+          "line": 521,
+          "read": 0,
+          "text": "mov    %rcx,0x40(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x42551",
+          "count": 786,
+          "line": 1163,
+          "read": 0,
+          "text": "mov    %r8,0x50(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4256f",
+          "count": 786,
+          "line": 1169,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x4257c",
+          "count": 786,
+          "line": 1171,
+          "read": 1,
+          "text": "mov    0x50(%rsp),%r8",
+          "write": 0
+        },
+        {
+          "address": "0x41141",
+          "count": 434,
+          "line": 17,
+          "read": 0,
+          "text": "movq   $0x0,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41150",
+          "count": 434,
+          "line": 19,
+          "read": 0,
+          "text": "movq   $0x0,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4115f",
+          "count": 434,
+          "line": 21,
+          "read": 0,
+          "text": "movq   $0x0,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4116e",
+          "count": 434,
+          "line": 23,
+          "read": 0,
+          "text": "movq   $0x0,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4117d",
+          "count": 434,
+          "line": 25,
+          "read": 0,
+          "text": "movq   $0x0,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4118c",
+          "count": 434,
+          "line": 27,
+          "read": 0,
+          "text": "mov    %r8d,0x14(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41191",
+          "count": 434,
+          "line": 28,
+          "read": 0,
+          "text": "mov    %rsi,0x48(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41196",
+          "count": 434,
+          "line": 29,
+          "read": 1,
+          "text": "mov    0x5530(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x412dd",
+          "count": 434,
+          "line": 99,
+          "read": 1,
+          "text": "cmpl   $0x0,0x14(%rsp)",
+          "write": 0
+        },
+        {
+          "address": "0x4133d",
+          "count": 434,
+          "line": 127,
+          "read": 0,
+          "text": "mov    %rcx,0x90(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41348",
+          "count": 434,
+          "line": 129,
+          "read": 0,
+          "text": "mov    %rsi,0x8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41353",
+          "count": 434,
+          "line": 131,
+          "read": 1,
+          "text": "mov    0x5530(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x41377",
+          "count": 434,
+          "line": 138,
+          "read": 0,
+          "text": "mov    %rdi,0x70(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4137c",
+          "count": 434,
+          "line": 139,
+          "read": 0,
+          "text": "mov    %r13,0x78(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x413cf",
+          "count": 434,
+          "line": 160,
+          "read": 1,
+          "text": "mov    0x70(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x414fc",
+          "count": 434,
+          "line": 212,
+          "read": 0,
+          "text": "mov    %r9,0x88(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41531",
+          "count": 434,
+          "line": 222,
+          "read": 0,
+          "text": "mov    %rbx,0xd0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41539",
+          "count": 434,
+          "line": 223,
+          "read": 1,
+          "text": "mov    0x78(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x4153e",
+          "count": 434,
+          "line": 224,
+          "read": 0,
+          "text": "mov    %rax,0xd8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41546",
+          "count": 434,
+          "line": 225,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r11",
+          "write": 0
+        },
+        {
+          "address": "0x4154b",
+          "count": 434,
+          "line": 226,
+          "read": 0,
+          "text": "mov    %r11,0xe0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41553",
+          "count": 434,
+          "line": 227,
+          "read": 1,
+          "text": "mov    0x5530(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x4155b",
+          "count": 434,
+          "line": 228,
+          "read": 0,
+          "text": "mov    %rax,0xa8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41563",
+          "count": 434,
+          "line": 229,
+          "read": 0,
+          "text": "mov    %rbp,0xb0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4156b",
+          "count": 434,
+          "line": 230,
+          "read": 0,
+          "text": "mov    %r12,0xb8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41573",
+          "count": 434,
+          "line": 231,
+          "read": 0,
+          "text": "mov    %r13,0xc0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4157b",
+          "count": 434,
+          "line": 232,
+          "read": 0,
+          "text": "movl   $0x0,0x28f0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41586",
+          "count": 434,
+          "line": 233,
+          "read": 0,
+          "text": "movq   $0x0,0x28e8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41592",
+          "count": 434,
+          "line": 234,
+          "read": 0,
+          "text": "mov    %r14,0xc8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4170e",
+          "count": 434,
+          "line": 314,
+          "read": 1,
+          "text": "cmpl   $0x0,0x14(%rsp)",
+          "write": 0
+        },
+        {
+          "address": "0x418cd",
+          "count": 434,
+          "line": 408,
+          "read": 0,
+          "text": "movq   $0x0,0x20(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4269f",
+          "count": 434,
+          "line": 1240,
+          "read": 1,
+          "text": "mov    0x88(%rsp),%r12",
+          "write": 0
+        },
+        {
+          "address": "0x426a7",
+          "count": 434,
+          "line": 1241,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x426ac",
+          "count": 434,
+          "line": 1242,
+          "read": 1,
+          "text": "mov    0x78(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x4278b",
+          "count": 434,
+          "line": 1296,
+          "read": 1,
+          "text": "mov    0x70(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x42798",
+          "count": 434,
+          "line": 1299,
+          "read": 1,
+          "text": "mov    0x5530(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x427b8",
+          "count": 434,
+          "line": 1305,
+          "read": 1,
+          "text": "mov    0x90(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x418f8",
+          "count": 230,
+          "line": 419,
+          "read": 0,
+          "text": "mov    %rax,0x28e8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41900",
+          "count": 230,
+          "line": 420,
+          "read": 0,
+          "text": "mov    %ecx,0x28f0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x41907",
+          "count": 230,
+          "line": 421,
+          "read": 1,
+          "text": "mov    0x40(%rsp),%rcx",
+          "write": 0
+        },
+        {
+          "address": "0x4242c",
+          "count": 230,
+          "line": 1097,
+          "read": 1,
+          "text": "mov    0x20(%rsp),%r15",
+          "write": 0
+        },
+        {
+          "address": "0x42434",
+          "count": 230,
+          "line": 1099,
+          "read": 1,
+          "text": "mov    0x28e8(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x42468",
+          "count": 230,
+          "line": 1110,
+          "read": 0,
+          "text": "mov    %rcx,0x40(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x4246d",
+          "count": 230,
+          "line": 1111,
+          "read": 0,
+          "text": "mov    %r14,0x38(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x42472",
+          "count": 230,
+          "line": 1112,
+          "read": 1,
+          "text": "mov    0x28f0(%rsp),%r14d",
+          "write": 0
+        },
+        {
+          "address": "0x42484",
+          "count": 230,
+          "line": 1115,
+          "read": 1,
+          "text": "cmp    %r12,0x20(%rsp)",
+          "write": 0
+        },
+        {
+          "address": "0x42495",
+          "count": 230,
+          "line": 1118,
+          "read": 1,
+          "text": "mov    0x28e8(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x4249d",
+          "count": 230,
+          "line": 1119,
+          "read": 1,
+          "text": "mov    0x28f0(%rsp),%ecx",
+          "write": 0
+        },
+        {
+          "address": "0x4250f",
+          "count": 230,
+          "line": 1147,
+          "read": 1,
+          "text": "add    0x48(%rsp),%r15",
+          "write": 0
+        },
+        {
+          "address": "0x424b4",
+          "count": 218,
+          "line": 1124,
+          "read": 1,
+          "text": "mov    0x38(%rsp),%r14",
+          "write": 0
+        },
+        {
+          "address": "0x424ff",
+          "count": 218,
+          "line": 1144,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x41b50",
+          "count": 165,
+          "line": 547,
+          "read": 0,
+          "text": "mov    %r13,0x28(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x42583",
+          "count": 22,
+          "line": 1173,
+          "read": 1,
+          "text": "mov    0x48(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x42588",
+          "count": 22,
+          "line": 1174,
+          "read": 1,
+          "text": "mov    0x20(%rsp),%rcx",
+          "write": 0
+        },
+        {
+          "address": "0x418d8",
+          "count": 12,
+          "line": 410,
+          "read": 1,
+          "text": "mov    0x38(%rsp),%r14",
+          "write": 0
+        },
+        {
+          "address": "0x425e2",
+          "count": 9,
+          "line": 1198,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x4283e",
+          "count": 8,
+          "line": 1336,
+          "read": 1,
+          "text": "mov    0x5530(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x4282c",
+          "count": 7,
+          "line": 1333,
+          "read": 1,
+          "text": "mov    0x5530(%rsp),%rax",
+          "write": 0
+        }
+      ],
+      "inclusive_Ir": 1238210529,
+      "self": {
+        "Ir": 970405853,
+        "explicit_reads": 240435275,
+        "explicit_writes": 132091804,
+        "implicit_reads": 3038,
+        "implicit_writes": 1843289,
+        "rsp_reads": 33492392,
+        "rsp_writes": 19011373
+      }
+    },
+    "v2": {
+      "calls_inclusive_Ir": {
+        "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>": 1331,
+        "<alloc::raw_vec::RawVecInner>::grow_exact": 18806,
+        "<c30walk::ctor2::W<false>>::finish": 56611441,
+        "<c30walk::ctor2::W<false>>::refill": 201234507,
+        "__memcpy_avx_unaligned_erms": 4888654,
+        "__memset_avx2_unaligned_erms": 1152859,
+        "c30walk::ctor::canonicalise": 3903384,
+        "free": 1544
+      },
+      "hot_rsp": [
+        {
+          "address": "0x3b218",
+          "count": 3003834,
+          "line": 530,
+          "read": 1,
+          "text": "mov    0x28(%rsp),%r14",
+          "write": 0
+        },
+        {
+          "address": "0x3b1d0",
+          "count": 2393313,
+          "line": 514,
+          "read": 1,
+          "text": "mov    0x28d8(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x3b1ed",
+          "count": 2393313,
+          "line": 521,
+          "read": 0,
+          "text": "mov    %rax,0x28d8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b1f5",
+          "count": 2393313,
+          "line": 522,
+          "read": 1,
+          "text": "mov    0x28e0(%rsp),%eax",
+          "write": 0
+        },
+        {
+          "address": "0x3b200",
+          "count": 2393313,
+          "line": 524,
+          "read": 0,
+          "text": "mov    %eax,0x28e0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b207",
+          "count": 2393313,
+          "line": 525,
+          "read": 1,
+          "text": "mov    0x30(%rsp),%r11",
+          "write": 0
+        },
+        {
+          "address": "0x3b2c0",
+          "count": 2393313,
+          "line": 573,
+          "read": 0,
+          "text": "mov    %rdi,0x30(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b2c5",
+          "count": 2393313,
+          "line": 574,
+          "read": 1,
+          "text": "mov    0x28d8(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x3b2f8",
+          "count": 2393313,
+          "line": 585,
+          "read": 1,
+          "text": "mov    0x28e0(%rsp),%r14d",
+          "write": 0
+        },
+        {
+          "address": "0x3ba80",
+          "count": 2393313,
+          "line": 1051,
+          "read": 1,
+          "text": "add    0x28(%rsp),%r11",
+          "write": 0
+        },
+        {
+          "address": "0x3baf0",
+          "count": 2393313,
+          "line": 1078,
+          "read": 1,
+          "text": "cmp    %r15,0x30(%rsp)",
+          "write": 0
+        },
+        {
+          "address": "0x3baf5",
+          "count": 2393313,
+          "line": 1079,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x3bb0a",
+          "count": 1116556,
+          "line": 1083,
+          "read": 1,
+          "text": "add    0x28(%rsp),%r15",
+          "write": 0
+        },
+        {
+          "address": "0x3b3dd",
+          "count": 1085833,
+          "line": 637,
+          "read": 1,
+          "text": "mov    0x28d8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x3b3f9",
+          "count": 1085833,
+          "line": 642,
+          "read": 1,
+          "text": "mov    0x28e0(%rsp),%ecx",
+          "write": 0
+        },
+        {
+          "address": "0x3b475",
+          "count": 1085833,
+          "line": 674,
+          "read": 0,
+          "text": "mov    %r8,0x28d8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b47f",
+          "count": 1085833,
+          "line": 676,
+          "read": 0,
+          "text": "mov    %edx,0x28e0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3babe",
+          "count": 996634,
+          "line": 1067,
+          "read": 0,
+          "text": "mov    %r11,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3bae3",
+          "count": 996634,
+          "line": 1074,
+          "read": 1,
+          "text": "mov    0x20(%rsp),%r10",
+          "write": 0
+        },
+        {
+          "address": "0x3bae8",
+          "count": 996634,
+          "line": 1075,
+          "read": 1,
+          "text": "mov    (%rsp),%r11",
+          "write": 0
+        },
+        {
+          "address": "0x3b325",
+          "count": 610521,
+          "line": 593,
+          "read": 0,
+          "text": "mov    %r12,0x30(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b330",
+          "count": 610521,
+          "line": 596,
+          "read": 0,
+          "text": "mov    %rax,0x90(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b361",
+          "count": 610521,
+          "line": 607,
+          "read": 0,
+          "text": "mov    %r10,0x70(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b366",
+          "count": 610521,
+          "line": 608,
+          "read": 0,
+          "text": "mov    %r9d,0x44(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b384",
+          "count": 610521,
+          "line": 614,
+          "read": 0,
+          "text": "mov    %rbp,0x88(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3bb86",
+          "count": 610521,
+          "line": 1114,
+          "read": 1,
+          "text": "mov    0x20(%rsp),%r10",
+          "write": 0
+        },
+        {
+          "address": "0x3bb8b",
+          "count": 610521,
+          "line": 1115,
+          "read": 1,
+          "text": "mov    0x68(%rsp),%r9",
+          "write": 0
+        },
+        {
+          "address": "0x3bb90",
+          "count": 610521,
+          "line": 1116,
+          "read": 1,
+          "text": "mov    0x38(%rsp),%rcx",
+          "write": 0
+        },
+        {
+          "address": "0x3bb95",
+          "count": 610521,
+          "line": 1117,
+          "read": 1,
+          "text": "mov    0x30(%rsp),%r11",
+          "write": 0
+        },
+        {
+          "address": "0x3bb9a",
+          "count": 610521,
+          "line": 1118,
+          "read": 1,
+          "text": "mov    0x44(%rsp),%edx",
+          "write": 0
+        },
+        {
+          "address": "0x3bb9e",
+          "count": 610521,
+          "line": 1119,
+          "read": 1,
+          "text": "mov    0x70(%rsp),%rsi",
+          "write": 0
+        },
+        {
+          "address": "0x3b2af",
+          "count": 607750,
+          "line": 569,
+          "read": 0,
+          "text": "mov    %rsi,0x38(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b2b4",
+          "count": 607750,
+          "line": 570,
+          "read": 0,
+          "text": "mov    %rdx,0x68(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ba70",
+          "count": 597255,
+          "line": 1048,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x3b4ab",
+          "count": 508988,
+          "line": 685,
+          "read": 1,
+          "text": "mov    0x90(%rsp),%rsi",
+          "write": 0
+        },
+        {
+          "address": "0x3ba2a",
+          "count": 496004,
+          "line": 1035,
+          "read": 1,
+          "text": "mov    0xa8(%rsp),%rsi",
+          "write": 0
+        },
+        {
+          "address": "0x3ba42",
+          "count": 496004,
+          "line": 1040,
+          "read": 1,
+          "text": "add    0xc0(%rsp),%rsi",
+          "write": 0
+        },
+        {
+          "address": "0x3ba4a",
+          "count": 496004,
+          "line": 1041,
+          "read": 1,
+          "text": "mov    0xa0(%rsp),%r9",
+          "write": 0
+        },
+        {
+          "address": "0x3b066",
+          "count": 467712,
+          "line": 435,
+          "read": 0,
+          "text": "mov    %edx,0x28e8(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x3b072",
+          "count": 467712,
+          "line": 438,
+          "read": 0,
+          "text": "mov    %esi,0x28ec(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x3bb6d",
+          "count": 302049,
+          "line": 1109,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x3bb72",
+          "count": 302049,
+          "line": 1110,
+          "read": 1,
+          "text": "mov    0x20(%rsp),%r10",
+          "write": 0
+        },
+        {
+          "address": "0x3b51e",
+          "count": 296405,
+          "line": 712,
+          "read": 1,
+          "text": "cmpl   $0x0,0x1c(%rsp)",
+          "write": 0
+        },
+        {
+          "address": "0x3b523",
+          "count": 296405,
+          "line": 713,
+          "read": 0,
+          "text": "mov    %r12,0x50(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b528",
+          "count": 296405,
+          "line": 714,
+          "read": 0,
+          "text": "mov    %rdx,0x48(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b850",
+          "count": 296405,
+          "line": 923,
+          "read": 1,
+          "text": "mov    0x28d8(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x3b869",
+          "count": 296405,
+          "line": 928,
+          "read": 1,
+          "text": "mov    0x28e0(%rsp),%eax",
+          "write": 0
+        },
+        {
+          "address": "0x3b870",
+          "count": 296405,
+          "line": 929,
+          "read": 1,
+          "text": "mov    0xc0(%rsp),%rcx",
+          "write": 0
+        },
+        {
+          "address": "0x3b9b5",
+          "count": 296405,
+          "line": 1004,
+          "read": 0,
+          "text": "mov    %eax,0x28e0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b9bc",
+          "count": 296405,
+          "line": 1005,
+          "read": 1,
+          "text": "mov    0x48(%rsp),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x3b9cf",
+          "count": 296405,
+          "line": 1010,
+          "read": 1,
+          "text": "mov    0x50(%rsp),%r12",
+          "write": 0
+        },
+        {
+          "address": "0x3b9e2",
+          "count": 296405,
+          "line": 1016,
+          "read": 1,
+          "text": "mov    0x88(%rsp),%rbp",
+          "write": 0
+        },
+        {
+          "address": "0x3bd6d",
+          "count": 55552,
+          "line": 1224,
+          "read": 1,
+          "text": "mov    0x54(%rsp,%rax,1),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x3bd72",
+          "count": 55552,
+          "line": 1225,
+          "read": 1,
+          "text": "sub    0x64(%rsp,%rax,1),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x3bd7a",
+          "count": 55552,
+          "line": 1227,
+          "read": 1,
+          "text": "add    0x6c(%rsp,%rax,1),%edx",
+          "write": 0
+        },
+        {
+          "address": "0x3bd7e",
+          "count": 55552,
+          "line": 1228,
+          "read": 1,
+          "text": "cmp    0x70(%rsp,%rax,1),%edx",
+          "write": 0
+        },
+        {
+          "address": "0x3bd84",
+          "count": 55552,
+          "line": 1230,
+          "read": 1,
+          "text": "mov    0x7c(%rsp,%rax,1),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x3bd89",
+          "count": 55552,
+          "line": 1231,
+          "read": 1,
+          "text": "sub    0x8c(%rsp,%rax,1),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x3bd94",
+          "count": 55552,
+          "line": 1233,
+          "read": 1,
+          "text": "add    0x94(%rsp,%rax,1),%edx",
+          "write": 0
+        },
+        {
+          "address": "0x3bd9b",
+          "count": 55552,
+          "line": 1234,
+          "read": 1,
+          "text": "cmp    0x98(%rsp,%rax,1),%edx",
+          "write": 0
+        },
+        {
+          "address": "0x3ab30",
+          "count": 27776,
+          "line": 175,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2cf8(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab39",
+          "count": 27776,
+          "line": 176,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2ce8(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab42",
+          "count": 27776,
+          "line": 177,
+          "read": 0,
+          "text": "mov    %rcx,0x2d08(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab4a",
+          "count": 27776,
+          "line": 178,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d10(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab53",
+          "count": 27776,
+          "line": 179,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d20(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab5c",
+          "count": 27776,
+          "line": 180,
+          "read": 0,
+          "text": "mov    %rcx,0x2d30(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab64",
+          "count": 27776,
+          "line": 181,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d38(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab6d",
+          "count": 27776,
+          "line": 182,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d48(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab76",
+          "count": 27776,
+          "line": 183,
+          "read": 0,
+          "text": "mov    %rcx,0x2d58(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab7e",
+          "count": 27776,
+          "line": 184,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d60(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab87",
+          "count": 27776,
+          "line": 185,
+          "read": 0,
+          "text": "movdqu %xmm0,0x2d70(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3ab90",
+          "count": 27776,
+          "line": 186,
+          "read": 0,
+          "text": "mov    %rcx,0x2d80(%rsp,%rax,1)",
+          "write": 1
+        },
+        {
+          "address": "0x3abc5",
+          "count": 27776,
+          "line": 197,
+          "read": 0,
+          "text": "mov    %edx,0x2c6c(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x3abcc",
+          "count": 27776,
+          "line": 198,
+          "read": 0,
+          "text": "mov    %esi,0x2c70(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x3abd8",
+          "count": 27776,
+          "line": 201,
+          "read": 0,
+          "text": "mov    %esi,0x2c94(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x3abdf",
+          "count": 27776,
+          "line": 202,
+          "read": 0,
+          "text": "mov    %edx,0x2c98(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x3abeb",
+          "count": 27776,
+          "line": 205,
+          "read": 0,
+          "text": "mov    %edx,0x2cbc(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x3abf2",
+          "count": 27776,
+          "line": 206,
+          "read": 0,
+          "text": "mov    %esi,0x2cc0(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x3abfd",
+          "count": 27776,
+          "line": 209,
+          "read": 0,
+          "text": "mov    %esi,0x2ce4(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac04",
+          "count": 27776,
+          "line": 210,
+          "read": 0,
+          "text": "mov    %edx,0x2ce8(%rsp,%rcx,4)",
+          "write": 1
+        },
+        {
+          "address": "0x3ad80",
+          "count": 18684,
+          "line": 278,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x3addb",
+          "count": 18684,
+          "line": 302,
+          "read": 1,
+          "text": "mov    0x5520(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x3bb79",
+          "count": 13266,
+          "line": 1112,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x3b08a",
+          "count": 3654,
+          "line": 443,
+          "read": 1,
+          "text": "mov    0xb0(%rsp),%r15",
+          "write": 0
+        },
+        {
+          "address": "0x3b0dc",
+          "count": 3654,
+          "line": 461,
+          "read": 0,
+          "text": "mov    %r10,0x20(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b0fd",
+          "count": 3654,
+          "line": 468,
+          "read": 0,
+          "text": "mov    %rcx,0x38(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b1bd",
+          "count": 3575,
+          "line": 511,
+          "read": 1,
+          "text": "mov    0x38(%rsp),%rcx",
+          "write": 0
+        },
+        {
+          "address": "0x3b170",
+          "count": 786,
+          "line": 495,
+          "read": 0,
+          "text": "mov    %rdx,0x10(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b175",
+          "count": 786,
+          "line": 496,
+          "read": 0,
+          "text": "mov    %r11,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3b199",
+          "count": 786,
+          "line": 503,
+          "read": 1,
+          "text": "mov    0x20(%rsp),%r10",
+          "write": 0
+        },
+        {
+          "address": "0x3b19e",
+          "count": 786,
+          "line": 504,
+          "read": 1,
+          "text": "mov    (%rsp),%r11",
+          "write": 0
+        },
+        {
+          "address": "0x3b1a2",
+          "count": 786,
+          "line": 505,
+          "read": 1,
+          "text": "mov    0x10(%rsp),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x3a851",
+          "count": 434,
+          "line": 17,
+          "read": 0,
+          "text": "movq   $0x0,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3a860",
+          "count": 434,
+          "line": 19,
+          "read": 0,
+          "text": "movq   $0x0,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3a86f",
+          "count": 434,
+          "line": 21,
+          "read": 0,
+          "text": "movq   $0x0,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3a87e",
+          "count": 434,
+          "line": 23,
+          "read": 0,
+          "text": "movq   $0x0,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3a88d",
+          "count": 434,
+          "line": 25,
+          "read": 0,
+          "text": "movq   $0x0,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3a89c",
+          "count": 434,
+          "line": 27,
+          "read": 0,
+          "text": "mov    %r8d,0x1c(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3a8a1",
+          "count": 434,
+          "line": 28,
+          "read": 1,
+          "text": "mov    0x5520(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x3a9ed",
+          "count": 434,
+          "line": 98,
+          "read": 1,
+          "text": "cmpl   $0x0,0x1c(%rsp)",
+          "write": 0
+        },
+        {
+          "address": "0x3aa4f",
+          "count": 434,
+          "line": 126,
+          "read": 0,
+          "text": "mov    %rcx,0x80(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3aa5a",
+          "count": 434,
+          "line": 128,
+          "read": 0,
+          "text": "mov    %rsi,0x28(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3aa65",
+          "count": 434,
+          "line": 130,
+          "read": 1,
+          "text": "mov    0x5520(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x3aa89",
+          "count": 434,
+          "line": 137,
+          "read": 0,
+          "text": "mov    %r13,0x8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3aa8e",
+          "count": 434,
+          "line": 138,
+          "read": 0,
+          "text": "mov    %rdi,0x58(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3aa93",
+          "count": 434,
+          "line": 139,
+          "read": 0,
+          "text": "mov    %rbp,0x60(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3aae6",
+          "count": 434,
+          "line": 160,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x3aaeb",
+          "count": 434,
+          "line": 161,
+          "read": 1,
+          "text": "mov    0x58(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x3ab14",
+          "count": 434,
+          "line": 170,
+          "read": 0,
+          "text": "mov    %rax,(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac1c",
+          "count": 434,
+          "line": 215,
+          "read": 0,
+          "text": "mov    %r9,0x78(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac4e",
+          "count": 434,
+          "line": 225,
+          "read": 0,
+          "text": "mov    %rbx,0xc0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac56",
+          "count": 434,
+          "line": 226,
+          "read": 1,
+          "text": "mov    0x60(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x3ac5b",
+          "count": 434,
+          "line": 227,
+          "read": 0,
+          "text": "mov    %rax,0xc8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac63",
+          "count": 434,
+          "line": 228,
+          "read": 0,
+          "text": "mov    %r13,0xd0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac6b",
+          "count": 434,
+          "line": 229,
+          "read": 1,
+          "text": "mov    0x5520(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x3ac73",
+          "count": 434,
+          "line": 230,
+          "read": 0,
+          "text": "mov    %rax,0x98(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac7b",
+          "count": 434,
+          "line": 231,
+          "read": 0,
+          "text": "mov    %rbp,0xa0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac83",
+          "count": 434,
+          "line": 232,
+          "read": 0,
+          "text": "mov    %r12,0xa8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac8b",
+          "count": 434,
+          "line": 233,
+          "read": 0,
+          "text": "mov    %r14,0xb0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac93",
+          "count": 434,
+          "line": 234,
+          "read": 0,
+          "text": "movl   $0x0,0x28e0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ac9e",
+          "count": 434,
+          "line": 235,
+          "read": 0,
+          "text": "movq   $0x0,0x28d8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3acaa",
+          "count": 434,
+          "line": 236,
+          "read": 1,
+          "text": "mov    (%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x3acae",
+          "count": 434,
+          "line": 237,
+          "read": 0,
+          "text": "mov    %rax,0xb8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3ae30",
+          "count": 434,
+          "line": 317,
+          "read": 1,
+          "text": "cmpl   $0x0,0x1c(%rsp)",
+          "write": 0
+        },
+        {
+          "address": "0x3aff4",
+          "count": 434,
+          "line": 410,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x3affc",
+          "count": 434,
+          "line": 412,
+          "read": 1,
+          "text": "mov    0x28(%rsp),%r14",
+          "write": 0
+        },
+        {
+          "address": "0x3bdd6",
+          "count": 434,
+          "line": 1250,
+          "read": 1,
+          "text": "mov    0x78(%rsp),%r12",
+          "write": 0
+        },
+        {
+          "address": "0x3bddb",
+          "count": 434,
+          "line": 1251,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x3bde0",
+          "count": 434,
+          "line": 1252,
+          "read": 1,
+          "text": "mov    0x60(%rsp),%rbp",
+          "write": 0
+        },
+        {
+          "address": "0x3beb9",
+          "count": 434,
+          "line": 1306,
+          "read": 1,
+          "text": "mov    0x58(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x3bec6",
+          "count": 434,
+          "line": 1309,
+          "read": 1,
+          "text": "mov    0x5520(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x3bee6",
+          "count": 434,
+          "line": 1315,
+          "read": 1,
+          "text": "mov    0x80(%rsp),%rax",
+          "write": 0
+        },
+        {
+          "address": "0x3b10e",
+          "count": 230,
+          "line": 472,
+          "read": 1,
+          "text": "mov    0x28e0(%rsp),%r12d",
+          "write": 0
+        },
+        {
+          "address": "0x3b11c",
+          "count": 230,
+          "line": 474,
+          "read": 1,
+          "text": "sub    0x28d8(%rsp),%r14",
+          "write": 0
+        },
+        {
+          "address": "0x3bc77",
+          "count": 230,
+          "line": 1167,
+          "read": 1,
+          "text": "mov    0x28e0(%rsp),%eax",
+          "write": 0
+        },
+        {
+          "address": "0x3bc7e",
+          "count": 230,
+          "line": 1168,
+          "read": 1,
+          "text": "mov    0x28d8(%rsp),%rcx",
+          "write": 0
+        },
+        {
+          "address": "0x3bc8c",
+          "count": 230,
+          "line": 1171,
+          "read": 1,
+          "text": "mov    0x8(%rsp),%r13",
+          "write": 0
+        },
+        {
+          "address": "0x3bc91",
+          "count": 230,
+          "line": 1172,
+          "read": 1,
+          "text": "mov    0x28(%rsp),%r14",
+          "write": 0
+        },
+        {
+          "address": "0x3bd11",
+          "count": 230,
+          "line": 1206,
+          "read": 0,
+          "text": "mov    %rcx,0x28d8(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3bd2d",
+          "count": 230,
+          "line": 1211,
+          "read": 0,
+          "text": "mov    %eax,0x28e0(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3bcef",
+          "count": 218,
+          "line": 1196,
+          "read": 1,
+          "text": "mov    0x20(%rsp),%r10",
+          "write": 0
+        },
+        {
+          "address": "0x3b0f2",
+          "count": 79,
+          "line": 465,
+          "read": 1,
+          "text": "mov    0x38(%rsp),%rcx",
+          "write": 0
+        },
+        {
+          "address": "0x3bc40",
+          "count": 9,
+          "line": 1155,
+          "read": 0,
+          "text": "mov    %rdx,0x10(%rsp)",
+          "write": 1
+        },
+        {
+          "address": "0x3bc68",
+          "count": 9,
+          "line": 1163,
+          "read": 1,
+          "text": "mov    0x20(%rsp),%r10",
+          "write": 0
+        },
+        {
+          "address": "0x3bc70",
+          "count": 9,
+          "line": 1165,
+          "read": 1,
+          "text": "mov    0x10(%rsp),%rdx",
+          "write": 0
+        },
+        {
+          "address": "0x3bf91",
+          "count": 8,
+          "line": 1354,
+          "read": 1,
+          "text": "mov    0x5520(%rsp),%rdi",
+          "write": 0
+        },
+        {
+          "address": "0x3bf7f",
+          "count": 7,
+          "line": 1351,
+          "read": 1,
+          "text": "mov    0x5520(%rsp),%rax",
+          "write": 0
+        }
+      ],
+      "inclusive_Ir": 1294414196,
+      "self": {
+        "Ir": 1026601670,
+        "explicit_reads": 243824750,
+        "explicit_writes": 130096265,
+        "implicit_reads": 3038,
+        "implicit_writes": 1843289,
+        "rsp_reads": 36881867,
+        "rsp_writes": 17015834
+      }
+    }
+  },
+  "inclusive_delta_saved": 56203667,
+  "inputs_sha256": {
+    "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-build-false.asm": "89dd82b89d7491f12a068ae99e103ea20ef7bf2bc17c17f19b2e9ed83ee53bcf",
+    "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-finish-false.asm": "be6f633a1b6105668455b6bcb76c5a8e0fd0f70505910e92eb129fff75a2c44a",
+    "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-refill-false.asm": "e0270dc301b40c91b6bc91e87bb4d278ced83892984e5d861ae5209d72a286c1",
+    "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-1/ctor2s-build-false.asm": "71a2ea68af146d5f381c8a198a61adafa42986a4ca6ef8efec34de8886ed0974",
+    "docs/journal/2026-11-04-compact30-scanner-prototype/attempt-2/ctor2s-build-false.asm": "9830c5ff935c0b6d2b7b509310dfc8d63b6d2d8e60168509025f827a7074f93f",
+    "docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/per-instruction.callgrind.gz": "c0248f6512954d788a20942d6447df85dd8acb4d162a1815cf63560814ffeb92",
+    "docs/journal/2026-11-04-compact30-scanner-prototype/corpora.jsonl": "741d771d09272c6ba68f6ff2fd35c1717dbf438d36187755faa145415adcc979",
+    "docs/journal/2026-11-04-compact30-scanner-prototype/listings/ctor2s-build-false.asm": "62bce2360aeff1f56275ae7e66c5fc52361a3ce6a026c6856f00ccb5ae23a598",
+    "docs/journal/2026-11-04-compact30-scanner-prototype/listings/ctor2s-finish-false.asm": "cb4a64c204b08998db123eb70da5ac07ba9787ef3127b6c14e3bcfbdd86b31e3",
+    "docs/journal/2026-11-04-compact30-scanner-prototype/listings/ctor2s-refill-false.asm": "1eab7a9fc2fcd82ddc3834e7ccef85ce03309329c05d5867d912172f071a00aa",
+    "docs/journal/2026-11-04-compact30-scanner-prototype/listings/v2-build-false-same-binary.asm": "f39f3d93783017916d578fe066d61d63d67a0c1946539f817b194d82e5b8b09c"
+  },
+  "primary_counters": {
+    "array_checks": 868,
+    "blocks": 434,
+    "complete_groups": 5127300,
+    "epoch_searches": 127249,
+    "epochs": 3654,
+    "extra_starts": false,
+    "fields_restored": 557338,
+    "fin_crossing": 41120,
+    "fin_fast": 1647416,
+    "fin_forced": 0,
+    "fin_ordinary": 75997,
+    "fin_wide": 30949,
+    "fresh_pairs": 2396084,
+    "held_reuses": 607750,
+    "input": "wikidata-20261026.bz2",
+    "lookahead_pairs": 10541706,
+    "max_ordinary_span": 65529,
+    "min_wide_span": 65535,
+    "multi_epoch_portions": 117029,
+    "norm_fields": 51701707,
+    "norm_full": 1723371,
+    "norm_partial": 42,
+    "permille": 0,
+    "raw_cycles": 1135,
+    "raw_entries_written": 1485808,
+    "raw_fields_read": 1485808,
+    "raw_groups": 49633,
+    "raw_moved": 48795,
+    "restoration_checks": 868,
+    "rows": 207006515,
+    "rows_bulk": 153819000,
+    "rows_bulk_raw": 0,
+    "rows_fragment": 14892632,
+    "rows_scalar": 38294883,
+    "run_rows": 168711632,
+    "runs": 610521,
+    "runs_no_full_tile": 2771,
+    "runs_split_at_epoch": 2638,
+    "tail_rows": 1875,
+    "tails": 230,
+    "tiles_nonuniform": 2393313,
+    "tiles_second_segment": 1116556,
+    "v1_entry_stores": 1485808,
+    "v1_field_loads": 476120,
+    "v1_field_stores": 52107477,
+    "v1_header_loads": 37605237,
+    "v1_rows": 207006515,
+    "walk_checks": 1302
+  },
+  "proposal_existing_site_exposure": {
+    "U1_U2": {
+      "sites": [
+        {
+          "address": "0x41b0c",
+          "count": 2393313,
+          "line": 534,
+          "text": "jb     42885 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x1755>"
+        },
+        {
+          "address": "0x41b12",
+          "count": 2393313,
+          "line": 535,
+          "text": "cmp    %rdi,%r15"
+        },
+        {
+          "address": "0x41b15",
+          "count": 2393313,
+          "line": 536,
+          "text": "ja     42885 <<c30walk::ctor2s::Ctor2s>::build::<false>+0x1755>"
+        },
+        {
+          "address": "0x41c00",
+          "count": 2393313,
+          "line": 584,
+          "text": "add    $0x10,%r14"
+        },
+        {
+          "address": "0x41c04",
+          "count": 2393313,
+          "line": 585,
+          "text": "cmp    %rdi,%r14"
+        },
+        {
+          "address": "0x41c07",
+          "count": 2393313,
+          "line": 586,
+          "text": "ja     4289a <<c30walk::ctor2s::Ctor2s>::build::<false>+0x176a>"
+        },
+        {
+          "address": "0x41c0d",
+          "count": 2393313,
+          "line": 587,
+          "text": "cmp    %r15,%r14"
+        },
+        {
+          "address": "0x41c15",
+          "count": 2393313,
+          "line": 589,
+          "text": "jb     4289a <<c30walk::ctor2s::Ctor2s>::build::<false>+0x176a>"
+        }
+      ],
+      "weighted_Ir": 19146504
+    },
+    "U3": {
+      "sites": [
+        {
+          "address": "0x41b23",
+          "count": 2393313,
+          "line": 538,
+          "text": "cmp    $0x1e,%rax"
+        },
+        {
+          "address": "0x41b27",
+          "count": 2393313,
+          "line": 539,
+          "text": "jne    41b60 <<c30walk::ctor2s::Ctor2s>::build::<false>+0xa30>"
+        }
+      ],
+      "weighted_Ir": 4786626
+    }
+  },
+  "self_delta_saved": {
+    "Ir": 56195817,
+    "explicit_reads": 3389475,
+    "explicit_writes": -1995539,
+    "implicit_reads": 0,
+    "implicit_writes": 0,
+    "rsp_reads": 3389475,
+    "rsp_writes": -1995539
+  }
+}

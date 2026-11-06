@@ -1,0 +1,14 @@
+{
+  "trigger": 6644912625,
+  "matched_P87": {
+    "A1": 2.842,
+    "A4": 3.843,
+    "B1": 2.854,
+    "B4": 3.777,
+    "A_gap": 1.001,
+    "B_gap": 0.923,
+    "D": 0.07799999999999985,
+    "gap_reduction_fraction": 0.07792207792207778
+  },
+  "caution": "Rounded-summary arithmetic, not a causal decomposition; no raw replay."
+}

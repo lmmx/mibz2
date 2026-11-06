@@ -1,0 +1,183 @@
+{
+  "S": 2393313,
+  "achieved_net_credit": null,
+  "advance_cases": 7936,
+  "b2_advance": [
+    {
+      "address": "3b1d0",
+      "instruction": "mov    0x28d8(%rsp),%rax"
+    },
+    {
+      "address": "3b1d8",
+      "instruction": "lea    0x10(%rax),%rcx"
+    },
+    {
+      "address": "3b1dc",
+      "instruction": "add    $0xfffffffffffffff2,%rax"
+    },
+    {
+      "address": "3b1e0",
+      "instruction": "xor    %edx,%edx"
+    },
+    {
+      "address": "3b1e2",
+      "instruction": "cmp    $0x1e,%rcx"
+    },
+    {
+      "address": "3b1e6",
+      "instruction": "setae  %dl"
+    },
+    {
+      "address": "3b1e9",
+      "instruction": "cmovb  %rcx,%rax"
+    },
+    {
+      "address": "3b1ed",
+      "instruction": "mov    %rax,0x28d8(%rsp)"
+    },
+    {
+      "address": "3b1f5",
+      "instruction": "mov    0x28e0(%rsp),%eax"
+    },
+    {
+      "address": "3b1fc",
+      "instruction": "lea    0x10(%rax,%rdx,2),%eax"
+    },
+    {
+      "address": "3b200",
+      "instruction": "mov    %eax,0x28e0(%rsp)"
+    }
+  ],
+  "bulk_cases": 992,
+  "conditional_caps": {
+    "B2_scoped_credit_minus_H": 4786626,
+    "H": "all other whole-constructor changes; unresolved; not zero",
+    "added_tile_setup_max_instructions": 1,
+    "new_advance_max_instructions": 8,
+    "scanner_scoped_credit_minus_H": 7179939
+  },
+  "counterexamples": {
+    "arbitrary_y_is_not_a_valid_phase": {
+      "y": 30,
+      "y_and_31": 30
+    },
+    "full_tile_equality_boundary": {
+      "crossing": true,
+      "k": 16,
+      "p": 14
+    },
+    "mod_30_is_wrong": {
+      "i": 30,
+      "p": 0,
+      "y": 32,
+      "y_mod_30": 2
+    },
+    "one_crossing_update_requires_k_le_30": {
+      "correct_y": 64,
+      "k": 31,
+      "p": 29,
+      "single_crossing_y": 62
+    }
+  },
+  "discriminator_reuse": {
+    "F_first_segment_refills": 996634,
+    "conditional_exposed_credit_minus_H": 1993268,
+    "extra_range_assumption": false,
+    "predicate_address": "0x41c1b",
+    "reload_address": "0x41be8",
+    "store_address": "0x41bb3"
+  },
+  "full_tile_reachable_phases": [
+    0,
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20,
+    22,
+    24,
+    26,
+    28
+  ],
+  "kind": "abstract-equivalence-and-conditional-target, not constructor execution",
+  "mapping_cases": 983011,
+  "pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+  "pins": {
+    "docs/journal/2026-11-04-compact30-scanner-prototype/callgrind/per-instruction.callgrind.gz": {
+      "git_blob": "57aec0e485610af49076f5471c478104728a5386",
+      "sha256": "c0248f6512954d788a20942d6447df85dd8acb4d162a1815cf63560814ffeb92"
+    },
+    "docs/journal/2026-11-04-compact30-scanner-prototype/corpora.jsonl": {
+      "git_blob": "b9f8906374bd1feab063a4e28a453255622c827d",
+      "sha256": "741d771d09272c6ba68f6ff2fd35c1717dbf438d36187755faa145415adcc979"
+    },
+    "docs/journal/2026-11-04-compact30-scanner-prototype/listings/ctor2s-build-false.asm": {
+      "git_blob": "5959078b339270db5fb9bdc5aaf7394faa6c44a0",
+      "sha256": "62bce2360aeff1f56275ae7e66c5fc52361a3ce6a026c6856f00ccb5ae23a598"
+    },
+    "docs/journal/2026-11-04-compact30-scanner-prototype/listings/v2-build-false-same-binary.asm": {
+      "git_blob": "84265e2afe4cbf797ea6fb7e1e46ad2fe4e4ee79",
+      "sha256": "f39f3d93783017916d578fe066d61d63d67a0c1946539f817b194d82e5b8b09c"
+    },
+    "examples/c30walk/ctor2s.rs": {
+      "git_blob": "998f52202bba035d5cd3bcf65b54b59786308d4c",
+      "sha256": "b1c84337dcb950da8ade7a316e414c66001c4887fcd94c0b3223d5ccd2b4d101"
+    }
+  },
+  "scanner_advance": [
+    {
+      "address": "41a10",
+      "instruction": "mov    0x28e8(%rsp),%rax"
+    },
+    {
+      "address": "41a18",
+      "instruction": "lea    0x10(%rax),%rcx"
+    },
+    {
+      "address": "41a1c",
+      "instruction": "add    $0xfffffffffffffff2,%rax"
+    },
+    {
+      "address": "41a20",
+      "instruction": "xor    %edx,%edx"
+    },
+    {
+      "address": "41a22",
+      "instruction": "cmp    $0x1e,%rcx"
+    },
+    {
+      "address": "41a26",
+      "instruction": "setae  %dl"
+    },
+    {
+      "address": "41a29",
+      "instruction": "cmovb  %rcx,%rax"
+    },
+    {
+      "address": "41a2d",
+      "instruction": "mov    %rax,0x28e8(%rsp)"
+    },
+    {
+      "address": "41a35",
+      "instruction": "mov    0x28f0(%rsp),%eax"
+    },
+    {
+      "address": "41a3c",
+      "instruction": "lea    (%rax,%rdx,2),%eax"
+    },
+    {
+      "address": "41a3f",
+      "instruction": "add    $0x10,%eax"
+    },
+    {
+      "address": "41a42",
+      "instruction": "mov    %eax,0x28f0(%rsp)"
+    }
+  ],
+  "temporary_label_cases": 35360
+}

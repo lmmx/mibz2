@@ -1,0 +1,30 @@
+{
+  "trigger": 6643809123,
+  "model_source": "9723f06847b88a10ba93d07c3f35680e58766015",
+  "blog_source": "bbce58b1a4d129e3dbe11746efbefddd1dd1a14b",
+  "unfitted": {
+    "issue": 2.466666666666667,
+    "window": 2.228671875,
+    "total": 4.695338541666667
+  },
+  "fitted": {
+    "latency": 34.998198198198196,
+    "window": 2.0233333333333334
+  },
+  "recurrence": {
+    "eight": 4.81875,
+    "thirtytwo": 1.2046875
+  },
+  "predicted_decoder_saving_B": [
+    0.09925788497217072,
+    0.11038961038961043
+  ],
+  "predicted_decoder_saving_C": [
+    0.12244897959183677,
+    0.18181818181818188
+  ],
+  "reuse_distinct_bytes": 900000,
+  "reuse_lines_at_64_bytes": 14062.5,
+  "historical_traversal_ratio": 1.4635332252836306,
+  "assumptions": "Arithmetic replay of published inputs only; no fresh hardware measurements, instruction-to-uop substitution, or transfer across hosts assumed."
+}

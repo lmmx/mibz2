@@ -1,0 +1,122 @@
+{
+  "abstract_scanner_cases": 436880,
+  "advance_domain_checks": 930,
+  "counterexamples": {
+    "advance_without_k_bound": {
+      "k": 31,
+      "p": 29,
+      "result": 30
+    },
+    "full_tile_contract_on_tail": {
+      "i": 0,
+      "len": 1,
+      "n1": 16,
+      "p": 0
+    },
+    "isolated_U2_negative_control": {
+      "first_range": [
+        16,
+        30
+      ],
+      "i": 16,
+      "n1": 14,
+      "p": 16,
+      "second_mutant_range": [
+        30,
+        33
+      ],
+      "slice_len": 32
+    },
+    "n1_17_not_U1_oob": {
+      "first_range": [
+        0,
+        17
+      ],
+      "i": 0,
+      "n1": 17,
+      "second_range": [
+        17,
+        16
+      ],
+      "second_valid": false,
+      "slice_len": 32,
+      "valid": true
+    }
+  },
+  "full_tile_range_checks": 150,
+  "jsonl": {
+    "adversarial": {
+      "array_checks": 1056,
+      "blocks": 528,
+      "records": 200,
+      "restoration_checks": 1056,
+      "walk_checks": 1584
+    },
+    "corpora": {
+      "array_checks": 12104,
+      "blocks": 6052,
+      "records": 44,
+      "restoration_checks": 12104,
+      "walk_checks": 18156
+    }
+  },
+  "limits": "Finite abstract scanner/proof-domain model plus archived-log consistency; not a constructor implementation, new Miri run, UB proof, compiler result or timing.",
+  "miri": {
+    "align": {
+      "arrays": 28,
+      "cases": 14,
+      "restorations": 28,
+      "walks": 42
+    },
+    "endrun": {
+      "arrays": 4,
+      "cases": 2,
+      "restorations": 4,
+      "walks": 6
+    },
+    "epoch": {
+      "arrays": 4,
+      "cases": 2,
+      "restorations": 4,
+      "walks": 6
+    },
+    "held": {
+      "arrays": 10,
+      "cases": 5,
+      "restorations": 10,
+      "walks": 15
+    },
+    "malformed": {
+      "arrays": 0,
+      "cases": 4,
+      "restorations": 0,
+      "walks": 0
+    },
+    "phase": {
+      "arrays": 30,
+      "cases": 15,
+      "restorations": 30,
+      "walks": 45
+    },
+    "tails": {
+      "arrays": 90,
+      "cases": 45,
+      "restorations": 90,
+      "walks": 135
+    },
+    "tiny": {
+      "arrays": 32,
+      "cases": 18,
+      "restorations": 32,
+      "walks": 48
+    }
+  },
+  "miri_totals": {
+    "arrays": 198,
+    "cases": 105,
+    "restorations": 198,
+    "walks": 297
+  },
+  "source_blob_sha1": "998f52202bba035d5cd3bcf65b54b59786308d4c",
+  "source_pin": "7f74e9f30e31af33b0d66fec3fe89af1758307d9"
+}
