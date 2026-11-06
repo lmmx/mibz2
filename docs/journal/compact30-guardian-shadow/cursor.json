@@ -431,8 +431,9 @@
       "commit": "dca06f62983447c277ca634bc453304aa2fe3901",
       "receipt_commit": "557b27624b3cb4ef87519451484c1c5bbedab78c",
       "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
-      "status": "complete",
-      "disposition": "material D026-D028 registration/reporting findings closed at pinned amendment; diagnostic and authority limits retained"
+      "status": "finished",
+      "disposition": "material D026-D028 registration/reporting findings closed at pinned amendment; diagnostic and authority limits retained",
+      "comment": 6682363998
     }
   ],
   "own_outgoing_comment_ids": [
@@ -460,7 +461,8 @@
     6646304926,
     6681996710,
     6682139215,
-    6682239005
+    6682239005,
+    6682363998
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -499,7 +501,8 @@
     "8158cb4c9958c3797748595426bb24ee9f168b4f",
     "8bbf90210adcd3ed9126f940a2af2c213c5c7a20",
     "557b27624b3cb4ef87519451484c1c5bbedab78c",
-    "dca06f62983447c277ca634bc453304aa2fe3901"
+    "dca06f62983447c277ca634bc453304aa2fe3901",
+    "5f3f2a4b68e2e39e71cdbbd5bffbf2de0cbdf7a7"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -528,7 +531,8 @@
     6646249200,
     6681847165,
     6682032075,
-    6682106949
+    6682106949,
+    6682260206
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -610,26 +614,24 @@
     "trigger": "new non-bot inbox #161 comment; headers do not gate eligibility under SPEC",
     "repository": "lmmx/mibz2",
     "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
-    "last_completed_incoming_comment": 6682106949,
-    "last_decision": "D028",
-    "last_outgoing_comment": 6682239005,
+    "last_completed_incoming_comment": 6682260206,
+    "last_decision": "D029",
+    "last_outgoing_comment": 6682363998,
     "after_completion": "stop; await next event; no automation or subscription changes",
     "polling": false,
     "timed_schedule": false,
     "own_outputs": "skip IDs in own_outgoing_comment_ids; handle remaining inbox comments under pinned SPEC",
     "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
-    "last_decision_commit": "8158cb4c9958c3797748595426bb24ee9f168b4f",
+    "last_decision_commit": "dca06f62983447c277ca634bc453304aa2fe3901",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "D029 complete; REVIEW reconciliation pending",
+    "source_app_reply": "one TYPE: REVIEW for D029 on #145",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "complete",
-    "queue_snapshot": "inbox snapshot contained five comments; D026, D027 and D028 after offset are finished; #145 QUEUED 6682167812 not dispatched in snapshot",
-    "active_comment_id": 6682260206,
-    "active_work_commit": "dca06f62983447c277ca634bc453304aa2fe3901"
+    "active_comment_status": "finished",
+    "queue_snapshot": "six inbox comments listed; all comments after offset finished, including dispatched 6682260206"
   },
   "duplicate_events": [
     {
@@ -843,6 +845,14 @@
       "decision": "D028",
       "commit": "8158cb4c9958c3797748595426bb24ee9f168b4f",
       "comment": 6682239005
+    },
+    {
+      "pr": 161,
+      "sha": "d6fc2d25959ee10af461143f3808534febdb7a00",
+      "evidence_digest": "git-blob:4db93c96b4915745b04175827bacc76d8eaec0b9",
+      "decision": "D029",
+      "commit": "dca06f62983447c277ca634bc453304aa2fe3901",
+      "comment": 6682363998
     }
   ],
   "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
@@ -880,10 +890,12 @@
     {
       "comment_id": 6682260206,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D029",
       "receipt_commit": "557b27624b3cb4ef87519451484c1c5bbedab78c",
-      "work_commit": "dca06f62983447c277ca634bc453304aa2fe3901"
+      "work_commit": "dca06f62983447c277ca634bc453304aa2fe3901",
+      "review_comment_id": 6682363998,
+      "complete_cursor_commit": "5f3f2a4b68e2e39e71cdbbd5bffbf2de0cbdf7a7"
     }
   ]
 }
