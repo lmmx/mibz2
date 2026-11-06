@@ -1315,3 +1315,69 @@ Operating sources remain the user-pinned common/Guardian SPEC at `0479b380f5d630
 **Disposition:** no D033 drafting/readiness objection remains at this pin. Louis's approval/re-pin and the actual handoff checks remain necessary. No migration, merge, task modification, candidate qualification, or reserved decision is performed or certified by D034. G6 remains reserved in this running task. Independent authorised work continues.
 
 Evidence digest: `git-blob:88825a4bf7c4b6e82ffab9fc53881fd7ade4781a`, with the pinned source diff and documents above.
+
+## D035 — attributed references: preserve provenance and one-version rendering
+
+**Decision:** G1 risk assessment for inbox [6693599811](https://github.com/lmmx/mibz2/pull/161#issuecomment-6693599811). Actor labels are useful provided they display the Oracle's recorded attribution, never authenticated identity or new authority. No implementation or blanket work HOLD. Refuse guessed attribution, mixed-version enrichment and automatic per-reference API discovery.
+
+**Operating pin:** `a6a703cefcc40ac4115803f44a8a29ad76a3a7ef`, common/Guardian SPEC plus MODE, RULES and PROTOCOL read there. This directly supplied pin replaces the old compact30 execution instructions. Historical decisions retain their original authority/evidence pins. Migration check passed before receipt: old branch head equals `f9dab3d2b40739d89d613f86e8c2d67bec3159e4`; SHA-256 of `state/MANIFEST.md` equals cursor value `60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488`. Initial state head `40c0a4f9825a3bd16ce050fe4ae540ecc0bf5ccd`. Only this checkpoint is unfinished in the listed inbox.
+
+### Observed source, not a proposed implementation
+
+Reviewed site commit `818d521c6d0d5da09b4b0f34322baaf54cbf39af`:
+- `docs/site/assets/javascripts/observatory.js`, blob `c288193910ed28457cd1fc243c792a8e41876276`;
+- page Markdown, blob `0b6089998d6f95ee88a39ad185f1a91fb2db1a92`.
+
+Normal loading resolves one commit and its tree with two API calls, then reads raw files at that SHA. The steady visible-page check is one API call per five minutes; when the head changes it additionally invokes the normal reload. Click resolution adds an API call for the clicked link. These existing paths must not be mistaken for a hard total of two calls regardless of reloads/clicks.
+
+Current bare-ID recognition is `\b\d{10}\b`, outside links/code. Replaying that expression matches “epoch 1700000000” and “budget 1234567890” as readily as comment 6693599811, and misses an eleven-digit ID. Width is neither existence nor resource type. Ordinary unmodified primary clicks resolve through the issue-comment endpoint; modifier/middle-click and copied links retain the guessed #145 URL. An API failure silently navigates there and marks the anchor resolved. This is an existing routing weakness, not evidence that all references belong to #145.
+
+The API-failure path sets the reference to the moving branch name and fetches multiple files independently. They may straddle commits. It cannot guarantee the page's advertised “same version” property. Adding a table at that branch name would also risk old text with new attribution. Historical account expansion correctly uses that historical SHA; any future table lookup must do likewise, including references in history subjects.
+
+### 1. Attribution: claimed role, recorded by the Oracle
+
+GitHub login identifies the posting account, not which team role spoke. A single unambiguous top-level FROM header is evidence of a **claimed role**, not authentication (RULES A1–A4). Quoted headers, forwarded text, missing or contradictory headers, historical aliases and prose saying “Louis said” do not justify inventing an actor. In particular, FROM: user is not proof of Louis's authorisation.
+
+The Oracle should record the role it found, source kind/repository/ID, exact source URL, observed header and observation time. Keep creation time distinct from edit time and observation time. Preserve enough captured provenance—header/relevant excerpt and, where used, a source-body digest—to explain a later discrepancy. A digest alone cannot show a reader what was observed. If an alias was normalised, retain the original value and the applicable mapping. Mark unresolved/conflicting attribution explicitly; do not infer it from destination PR, gist, topic or shared login.
+
+An actor label may say “Guardian” compactly, with source/provenance available beside it or on inspection; it must not imply verified authorship. Keep the ID accessible so two same-role comments remain distinguishable. The gist is the Oracle's summary, not a direct quotation or a finding established by the UI.
+
+Readers can follow the exact source link and compare it with the captured header/observation. Oracle validation on a rebuild can detect edits, missing sources and contradictory headers; a material discrepancy is corrected in a new version with a reason. The page does not continuously verify attribution and must not claim it does. Old versions retain what they recorded, with their observation time, rather than borrowing a later correction silently.
+
+### 2. Integrity: one immutable bundle, explicit unknowns
+
+A reference table committed beside the levels can fit the constraints: discover its path in the already-fetched tree and load it from raw content at the **same SHA**. This needs no additional GitHub API discovery per reference or build per Oracle update. Fetch/cache it once per displayed SHA, not once per label. The browser formats supplied fields; the Oracle owns attribution and gist.
+
+Minimal writer checks before declaring a version settled:
+- schema/version, unique typed keys (repository + issue-comment/review-comment kind + decimal-string ID), valid known role/type or explicit unknown, valid timestamps and exact URL/resource agreement;
+- every explicit attributed reference in the text resolves to a compatible entry; duplicate/conflicting entries fail; unused entries need not fail;
+- text, table, source observations and manifest are committed together; changed material source evidence is reconciled or explicitly flagged. A table cannot mechanically prove a prose gist truthful: the Oracle must compare it with the evidence.
+
+Do not key generic numbers by ten-digit shape. A node ID, PR number, timestamp, issue comment and inline review comment are different resources. Use explicit references or table membership to opt into enrichment. If a writer labels a reference as attributed but omits or contradicts its entry, that enriched version is not ready to publish as settled. Fix it or explicitly downgrade the reference to unknown. This blocks the false claim, not the team's independent work.
+
+Runtime degradation is different from knowingly publishing bad data. An absent optional legacy table need not blank valid prose. An invalid/ambiguous entry must not render an actor or confident location: retain the ID and a visible unresolved status. A mismatched bundle must never be merged into the current view. Keep the last complete pinned view, visibly dated/stale, or say the version is unavailable and link the repository. Missing optional attribution is recoverable; falsely asserting a consistent settled version is not.
+
+### 3. Failure behaviour
+
+| Condition | Required behaviour |
+|---|---|
+| API rate limit/network failure | No per-ID retries, token, proxy or extra background API traffic. Preserve a complete known-SHA view if available. On a cold load without a resolvable immutable version, show unavailability/repository link; do not claim moving-branch multi-file reads are one version. Raw fetches can fail too. |
+| Missing table or pre-table historical version | Render the original prose; actor unknown. Keep an already supplied exact link. Do not apply today's table to old text, silently fill fields or fabricate #145. |
+| Deleted/inaccessible comment | Distinguish unavailable from proven deletion. Preserve captured historical attribution as “observed at”, with source unavailable if known; do not fabricate a new actor or destination. A 404 alone cannot prove deletion. |
+| Edited comment | Historical snapshot remains historical. On the next relevant Oracle inspection, record the changed source and correct/reconcile a material discrepancy in a new commit. Never update visible labels from live API data while leaving the prose old. |
+| Invalid or non-comment ID / wrong endpoint kind | Leave it unexpanded or explicitly unresolved. Do not search unrelated resources until some number happens to resolve. Issue-comment and inline review URLs/endpoints are not interchangeable. |
+| Unsafe table fields | Treat metadata as untrusted text. Render role/gist as text, retain sanitisation, and validate exact HTTPS GitHub source URLs against the intended repository/resource; refuse script/HTML injection and arbitrary navigation targets. |
+
+### 4. Existing click resolver
+
+**Recommendation: remove it for table-backed references.** Exact committed hrefs work for keyboard navigation, copied links, modifier/middle clicks and API-unavailable clients, without the click-time call. Navigation does not authenticate the displayed role.
+
+For legacy unknowns, the clean minimum is an unresolved ID plus repository/source access, not a guessed #145 anchor. If an explicit user-invoked “look up this reference” fallback is retained for compatibility, keep it optional and within today's click-triggered call model, validate the returned resource/URL, and report failure visibly. It must not silently resolve failure to #145, change actor/gist, prefetch on view/hover, or add polling. Under a stricter zero-click-API interpretation, omit it entirely. No fallback is necessary once the Oracle supplies exact links.
+
+### Minimal acceptance checks and refusals
+
+Before shipping attribution: one known-role reference; missing/duplicate/quoted FROM; same role on different PRs; issue-comment versus inline-review URL; unrelated ten-digit and longer ID; missing/invalid/legacy table; historical SHA versus current table; refresh racing a newer commit; API/raw failure with and without a pinned cached view; source edit/deletion; unsafe text/URL; keyboard/copy/modifier-click; request-count check showing no new automatic GitHub API calls. These are recommended focused checks, not tests claimed to have run. Only source inspection and the four regex examples above were reproduced in this review; no browser or proposed implementation was tested.
+
+Refuse: authenticated-role claims from FROM/login; actor inference by prose or destination; latest-table overlays on old text; silent #145 guesses; treating an API failure as verified resolution; per-view per-ID lookups; credentials/new infrastructure; build/deploy per Oracle commit. Repair the existing moving-branch fallback before representing the enriched multi-file view as one version. No performance gate, new research approval prerequisite or authority expansion is introduced.
+
+Evidence digest: `git-blob:c288193910ed28457cd1fc243c792a8e41876276`; governing RULES blob `2aff5d9a7b71618ebdddae353b5ecc49d03554aa`, PROTOCOL `88c9438032acd6e6fedef9eb92b0242d7dfde2b2`, MODE `a1ae305664492eaac13695a7d6a2648f93ae4068`.
