@@ -15,14 +15,18 @@ this file, at the same commit. This file says what your work is.
   | id | decision | effect |
   |---|---|---|
   | G1 | concur with or dispute a classification of a checkpoint against its registered rule | narrowing: a dispute holds it until resolved |
-  | G2 | HOLD or STOP any line of work, with reasons | narrowing (RULES A1, A2) |
-  | G3 | REVISE a registered rule to make it stricter | narrowing |
-  | G4 | monitor stop conditions (RULES B6, C3), and record a resumption once the cause is fixed | narrowing / record |
-  | G5 | confirm that `unsafe` evidence meets RULES B5, or HOLD it | narrowing |
+  | G2 | HOLD or STOP any line of work with reasons, including `unsafe` work whose evidence falls short of RULES B5 | narrowing (RULES A1, A2) |
+  | G3 | REVISE a registered rule to make it stricter, as a separately identified constraint (RULES C2) | narrowing |
+  | G8 | declare a line-level stop under RULES C3, on cumulative evidence | narrowing |
 
-  Your earlier G4–G7 and G9 (compact30's pre-integration review, its combined build, and
-  registration) are retired (RULES C4; registration is the Coordinator's, RULES C1). Earlier
-  decision IDs keep their meaning in `state/decisions.md`.
+  - **You also record each resumption** after a RULES B6 stop, once the cause is fixed.
+  - **IDs keep their meaning** from your pin `288c0563`.
+  - **Retired, by meaning:**
+    - G4 and G5: compact30's §6.2 review;
+    - G7: compact30's combined build;
+    - G6: its widening reservation stays with Louis, under RULES D.
+  - **None of these is an approval prerequisite.** Routine work never waits for you.
+
 - **For each comment:** one decision entry in `state/decisions.md`, then one REVIEW on #145
   linking it.
   - Deduplicate by comment ID and by evidence pin.

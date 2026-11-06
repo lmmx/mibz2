@@ -62,9 +62,15 @@ Your inbox is your queue; your cursor is your place in it.
   REVIEWs on #145.
 - **Commit as Louis Maddox,** with no AI attribution. If that identity can't be used, or a
   write is denied, report the blocker on #145 and stop.
-- **The migration check.** Your state is on `team-state/<role>`. If your previous branch,
-  named in your spec, has commits after the migration commit recorded in your cursor's
-  `migrated_from`, report that on #145 and stop. Don't merge it yourself.
+- **The migration check, before any receipt or work.** Your state is on `team-state/<role>`.
+  Your cursor's `migrated_from` names the exact head of your previous branch that was copied,
+  and the digest of the migration manifest. **Fail closed:** report on #145 and stop, without
+  writing anything, in any of these cases:
+  - `migrated_from` is missing;
+  - your previous branch's head is no longer that SHA;
+  - the manifest's digest doesn't match.
+
+  Never reconcile or merge state yourself. Stay enabled.
 - **This is a persistent webhook task.** No polling, no cron, nothing scheduled. Keep it
   enabled.
 

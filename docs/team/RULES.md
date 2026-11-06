@@ -17,10 +17,16 @@ Each of their rules is listed below with:
 **Louis approves the whole table, not only the ⚑ rows.** A retirement changes what is enforced
 too. ⚑ marks a change from the rule's text, or from current practice.
 
-**Until he approves, nothing changes.** The roles keep their current pinned instructions, and
-the Coordinator works under STEWARDSHIP.md and CLAUDE.md as they stand. The charter's
-narrowing rules (A1–A3) still bind. Its scope is not generalised beyond the campaign it
-governed.
+**Until he approves and re-pins, nothing changes** (Guardian D033). Each role keeps its current
+authenticated pin, authority, state and registration scope. The Coordinator works under
+STEWARDSHIP.md and CLAUDE.md as they stand. Nothing in the charter is extended beyond what it
+already covered.
+
+**Sources audited.** The Guardian's live operating spec is GUARDIAN.md at pin `288c0563` on
+`review/compact30-guardian-setup`. It is ACTIVE, stage A; its decisions are G1–G5, G7 and G8, with
+G6 reserved and no G9. Its §4 delegates merges to the Coordinator under the full CI gate. The
+copies on master (`docs/journal/compact30-channel/`) are older. Retirements below are mapped by
+meaning against the pin.
 
 **Authority and evidence have different lifetimes** (Researcher, 6685052784). A campaign that
 failed can leave valid permanent stewardship, reusable evidence and useful scientific rules. A
@@ -44,7 +50,7 @@ origin.
 |---|---|---|---|---|
 | B1 | Output is byte-exact in every case (§2) | The decoder's contract | No | **Retain**, with the malformed-input, safety and API obligations that go with it |
 | B2 | compact30's invariants: canonical RAW order; `rec` and `raw` equal to the oracle's (§2) | compact30's representation | Yes | **Retire as a gate for unrelated work.** They stay binding on code that still relies on that representation, and stay as evidence |
-| B3 | Frozen evidence: v2, v3, Assembly 1 and their walker are never modified (§2) | compact30's baselines | Yes | **Retire the campaign freezes.** The evidence snapshots themselves stay immutable and reproducible |
+| B3 | Frozen evidence: v2, v3, Assembly 1 and their walker are never modified (§2); frozen-representation changes reserved (GUARDIAN §4) | compact30's baselines | Yes | **⚑ Retire the campaign freezes** and the reserved frozen-representation item. The evidence snapshots (*frozen evidence*) stay immutable and reproducible. That is separate from B4's *frozen verdicts* |
 | B4 | Recorded outcomes are never reinterpreted (§2) | A verdict can't be quietly rewritten | No | **Retain, generalised:** *a registered result is never rewritten. A corrected calculation or a later interpretation is recorded beside it, saying what it corrects* |
 | B5 | `unsafe` code needs:<ul><li>a written safety argument;</li><li>Miri, differential, fuzz and mutation testing;</li><li>an adversarial review by an agent other than the implementer.</li></ul>The Guardian may HOLD it. Nobody's approval is a precondition (§6.4) | Evidence-based autonomy without lowering safety | No | **Retain**, with the argument's proof scope and the reviewer's own involvement both stated. The test names alone don't satisfy it |
 | B6 | Immediate stops: unresolved undefined behaviour; an unsafe access that can't be justified; a violated invariant; a safety obligation outside the registered design; a mutation check that misses its target. The Guardian is told, and work resumes once the cause is fixed (§8.2) | Stop unsafe work at once, without blocking the rest | Mostly not | **Retain.** A stop names the invariant or frozen artifact it violates, and the work that shares it |
@@ -54,11 +60,11 @@ origin.
 
 | # | rule (source) | what it was for | compact30-specific? | proposal |
 |---|---|---|---|---|
-| C1 | The agents register bounded experiments, with:<ul><li>a justification;</li><li>a pinned baseline;</li><li>a pre-registered minimum;</li><li>safety conditions;</li><li>an evaluation plan.</li></ul>The Researcher assesses; the Coordinator registers; the Guardian may HOLD (§6.4) | Autonomy, with the bar fixed before the data | No | **Adapt:** a registration is a journal entry frozen before the run, not a charter amendment. A bounded diagnostic question with an information objective may be registered as such, without pretending it promises speed |
+| C1 | The agents register bounded experiments, with:<ul><li>a justification;</li><li>a pinned baseline;</li><li>a pre-registered minimum;</li><li>safety conditions;</li><li>an evaluation plan.</li></ul>The Researcher assesses; the Coordinator registers; the Guardian may HOLD. Registration is permission to experiment (§6.4) | Autonomy, with the bar fixed before the data | No | **Adapt where it's filed:** a registration is a journal entry frozen before the run, not a charter amendment. Every substantive bound stays.<br>**⚑ One change:** a bounded *diagnostic* question may be registered with a pre-registered information objective, in place of a performance minimum. It can never qualify a production change |
 | C2 | A registered rule, gate or minimum is never relaxed after registration (§2, §12.3) | The bar can't move after the data is seen | No | **Retain.** It may be made stricter, but a later, stricter rule is a separately identified admission constraint. It never rewrites the original verdict |
-| C3 | Continuing or stopping a line (§8.4) | Neither persistence nor abandonment by reflex | The general part isn't | **⚑ Retain and complete.**<ul><li>A failed gate is a verdict on its candidate, not on the whole line.</li><li>Continue while the line's marginal expected value, in performance *or* information, warrants the compute **against the alternatives**. Some chance of eventual success is not enough.</li><li>PAUSE, REDIRECT and STOP need no proof of impossibility.</li><li>Every significant report answers the four questions: what was expected and what happened; how much of the gap closed; what was learned about the mechanism; and the next experiment's value.</li><li>Research viability on the target machine is kept apart from adoption through CI. CI's grid of 1, 2 and nproc threads doesn't necessarily test the i9's question at 8–12 threads.</li><li>compact30's economic limits (CAMPAIGN.md) are retired.</li></ul> |
+| C3 | Continuing or stopping a line (§8.4) | Neither persistence nor abandonment by reflex | The general part isn't | **⚑ Retain and complete.**<ul><li>A failed gate is a verdict on its candidate, not on the whole line.</li><li>Continue while the line's marginal expected value, in performance *or* information, warrants the compute **against the alternatives**. Some chance of eventual success is not enough.</li><li>PAUSE, REDIRECT and STOP need no proof of impossibility.</li><li>Every significant report answers the four questions: what was expected and what happened; how much of the gap closed; what was learned about the mechanism; and the next experiment's value.</li><li>Progress in understanding is never confused with qualification for production (as GUARDIAN §4 says).</li><li>Research viability on the target machine is kept apart from adoption through CI. CI's grid of 1, 2 and nproc threads doesn't necessarily test the i9's question at 8–12 threads.</li><li>compact30's economic limits (CAMPAIGN.md) are retired.</li></ul> |
 | C4 | compact30's sequence machinery:<ul><li>three attempts per prototype (§3);</li><li>the instruction net-saving ledger as the gate (§5);</li><li>the §6.1–6.3 sequence, ending in a combined build;</li><li>V3's rules (§7)</li></ul> | compact30's constructor campaign | Yes | **Retire.** Kept: whole-cost accounting, with induced work, memory traffic, synchronisation and control all charged, and independent safety review. Instruction counts stay an important diagnostic, but they don't qualify a change for performance on their own, either way: more instructions can buy overlap, locality or less contention. STEWARDSHIP's count gate is reconciled in S2 |
-| C5 | No timing on the i9 or a workstation, nor local timing as evidence, without Louis (charter §2, §12.3; STEWARDSHIP) | In compact30, only CI measured | ⚑ No longer matches practice | **⚑ Adapt:**<ul><li>local timing is indicative only;</li><li>when Louis runs one exact recipe, registered and frozen before it ran, that is his authorisation for that run, and its result is evidence for that registration's question. It authorises no further captures, no changed method, and no timing by the agents;</li><li>what the run shows is limited to its hardware and workload;</li><li>adopting a change into master still needs CI's paired bench (see C3)</li></ul> |
+| C5 | No timing on the i9 or a workstation, nor local timing as evidence, without Louis (charter §2, §12.3; STEWARDSHIP) | In compact30, only CI measured | ⚑ No longer matches practice | **⚑ Adapt:**<ul><li>local timing is indicative only;</li><li>one exact recipe, registered and frozen before it ran, counts as evidence for its registration's question when Louis hands its results to the Coordinator in his session, saying which run it is. That act is the authorisation (A4). A run's attribution, a tarball's metadata or a repository message is not. It authorises no further captures, no changed method, and no timing by the agents;</li><li>what the run shows is limited to its hardware and workload;</li><li>adopting a change into master still needs CI's paired bench (see C3)</li></ul> |
 | C6 | Changes to the bench's workload, statistical method or acceptance criteria need Louis; diagnostic instrumentation is delegated (charter §2, §12.3; STEWARDSHIP) | The measuring stick can't move | ⚑ Boundary undefined | **⚑ Adapt, with an explicit boundary.**<br>**Reserved to Louis:**<ul><li>the workload: corpora, scale, the thread grid;</li><li>the statistical estimand (the paired geometric-mean ratio);</li><li>the repeat and multiplicity policy;</li><li>the merge acceptance rule (an end-to-end figure whose 95% interval excludes zero).</li></ul>**Delegated:** harness mechanics, reporting and diagnostic instrumentation that leave all of those unchanged.<br>The bench's version numbers record a change of meaning. They don't authorise one |
 
 ## D. What needs Louis
@@ -76,8 +82,9 @@ Each of these counts only when Louis says so in the Coordinator's session:
 **⚑ Retired:** "accepting a rebuttal the review didn't accept" (charter §6.2), which belonged
 to that campaign's sequence. In its place:
 - an unresolved, material objection from an independent safety review (B5) holds that work;
-- the objection is resolved by evidence: a fix, a test or a corrected argument;
-- if the reviewer and the implementer still disagree, the question goes to Louis.
+- it is resolved only when the reviewer accepts a fix, a test or a corrected argument, or
+  withdraws the objection. The implementer can't declare its own rebuttal resolved;
+- otherwise the question goes to Louis, as it did under G6.
 
 The challenger is not made permanently sovereign.
 
@@ -86,8 +93,8 @@ The challenger is not made permanently sovereign.
 | # | rule (source) | what it was for | compact30-specific? | proposal |
 |---|---|---|---|---|
 | E1 | Every decision the Coordinator acts on is logged with its source, the rule it relies on, and the action taken (§12.4) | Traceability | No | **Retain**, adding the policy's pin and anything it supersedes |
-| E2 | Every repository message is transcribed verbatim into `log.md` (§12.4, PROTOCOL §4) | A durable copy of the channel | No, but costly | **⚑ Adapt.** Retire wholesale transcription, which lapsed after 2026-11-05 without a decision. GitHub comments can be edited and deleted, so they are not immutable provenance. Each decision that authorises, narrows or changes policy is committed instead, as one entry: the comment ID, its words quoted or a content digest, the time observed, and the rule applied. Routine messages need no copy |
-| E3 | Stage activation: the end-to-end test, the shadow pilot, "stage A/B" (§13; GUARDIAN.md §§5, 7) | Bootstrapping the channel | Yes (done) | **Retire** the stages and the completed obligations. The migration gets its own read-back check instead (the journal entry's cutover). The Guardian is active |
+| E2 | Every repository message is transcribed verbatim into `log.md` (§12.4, PROTOCOL §4) | A durable copy of the channel | No, but costly | **⚑ Adapt.** Retire wholesale transcription, which lapsed after 2026-11-05 without a decision. GitHub comments can be edited and deleted, so they are not immutable provenance.<br>**In its place:** each decision that authorises, narrows or changes policy is committed as one entry in `docs/journal/decisions.md`, with the comment ID, its words quoted verbatim, the time observed, and the rule applied.<br>**The exact effect:** routine messages (reviews, ACKs, LOGs, assignments) lose their committed verbatim copy, and survive only on GitHub |
+| E3 | Stage activation: the end-to-end test, the shadow pilot, "stage A/B" (§13; GUARDIAN.md §§5, 7) | Bootstrapping the channel. Stage A/B was also an **authentication boundary**: only a separately authenticated Guardian identity (stage B) could make widening decisions | Partly | **Retire the completed bootstrap obligations** and the stage labels. **Keep the boundary:** no repository identity, the Guardian's included, makes a widening decision (A1, A4). Stage B is not pursued. The migration gets its own read-back check instead (the journal entry's cutover) |
 | E4 | Commits as Louis Maddox, without AI attribution; no force-pushes; one heavy job at a time (§2; STEWARDSHIP) | The user's identity; the shared machine | No | **Retain.** Deploy Release's own `github-actions[bot]` release commit is the existing exception (STEWARDSHIP) |
 
 ## S. STEWARDSHIP.md, reconciled
@@ -115,11 +122,12 @@ MODE.md never names compact30, but it does carry three inherited premises:
 ## F. Contradictions found in the inherited text
 
 These are resolved by the rows above:
-- **The Guardian's status.** GUARDIAN.md says "PROPOSED, not active"; SPEC.GUARDIAN.md says
-  "ACTIVE, stage A". → E3
-- **Merges.** GUARDIAN.md §4 reserves them to the user; the charter delegates them. → A6
-- **Workstation timing.** The charter and STEWARDSHIP forbid the timing that decided #219. → C5,
-  S3
-- **Harness changes.** These are reserved, yet versioned as routine PRs. → C6, S4
+- **Workstation timing.** The charter, STEWARDSHIP and GUARDIAN §4 reserve it, yet a
+  workstation run decided #219. → C5, S3
+- **Harness changes.** GUARDIAN §4 reserves them all, yet they are versioned as routine PRs.
+  → C6, S4
 - **The instruction gate.** It was retired with the campaign's ledger, but stayed live through
   STEWARDSHIP. → C4, S2
+- **The copies on master** (`docs/journal/compact30-channel/GUARDIAN.md`: "PROPOSED, not active";
+  §4 reserving merges) are older than the Guardian's live pin, `288c0563`. The pin is the
+  source, and it has neither contradiction. The copies stay as history.

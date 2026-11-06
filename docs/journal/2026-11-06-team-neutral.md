@@ -96,19 +96,31 @@ The evolving records are separated as well:
 
 ## Cutover
 
-1. Review: the Guardian (authority and routing) and the Researcher (inherited premises, and
-   this audit's completeness).
-2. Louis approves the ⚑ rows of `RULES.md`, or amends them.
-3. **When every role's current comment is *finished*,** not merely complete (a REVIEW is
-   followed by one last cursor write), with no assignment in flight:
-   - take each old branch's final head;
-   - create the four `team-state/<role>` continuation branches, and `observatory/intention`;
-   - check each manifest against its source.
-4. Merge, checking the head before and after.
-5. Louis loads the specs with SPEC.md's command at the merged commit: three renames and re-pins,
-   and the Oracle's creation.
-6. **Read back** each task's saved instruction text, and the state paths in each cursor.
-   Don't replay assignments as a test.
-7. Dispatch resumes. The Oracle's first assignment is to rebuild its record. Its first test is
-   whether its account would have caught this incident, from comments 6643481606 and
+Only after Louis approves and re-pins (Guardian D033):
+
+1. **Review.** The Guardian checks authority and routing. The Researcher checks inherited
+   premises and this audit's completeness.
+2. **Approval.** Louis approves the whole RULES.md table, and decides on MODE.md's proposals.
+3. **Drain.** Hold dispatch, and wait until every role's current comment is *finished*: its
+   REVIEW published, and its final cursor commit made.
+4. **Copy and verify** at each old branch's exact head:
+   - create `team-state/<role>` as a continuation of that head;
+   - commit the state under `state/`, with a manifest. It lists every processed ID, the
+     offset, every entry in progress, complete or finished, every REVIEW link and every open
+     HOLD;
+   - set `migrated_from` to that head's SHA and the manifest's digest;
+   - create `observatory/intention` from the seed, linking `review/oracle-intention`'s final
+     head.
+5. **Merge,** checking the head before and after.
+6. **Re-pin.** Louis loads the specs with SPEC.md's command at the merged commit: three tasks
+   edited in place, and the Oracle created. All tasks stay enabled.
+7. **Re-check before dispatch resumes:**
+   - each old branch's head still equals `migrated_from`;
+   - each task's saved instruction text carries the new pin;
+   - each cursor reads back from its new path.
+
+   Any mismatch fails closed: the role reports it and stops (SPEC.md, "Always"). Don't replay
+   assignments as a test.
+8. **Dispatch resumes.** The Oracle's first assignment is to rebuild its record. Its first test
+   is whether its account would have caught this incident, from comments 6643481606 and
    6643744616 onwards.
