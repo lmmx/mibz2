@@ -473,6 +473,14 @@
         "raw_profile_replay": false
       },
       "reply_id": 6683232182
+    },
+    {
+      "comment_id": 6693507432,
+      "pr": 160,
+      "status": "in_progress",
+      "completed": false,
+      "spec_commit": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+      "progress": "Migration head and manifest digest verified; designing policy and evidence plan only."
     }
   ],
   "migrated_from": {
