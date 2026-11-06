@@ -234,7 +234,9 @@
       if (sgm !== segs[0]) {
         const xg = xs.get(p[0]) - 6;
         svg("line", { x1: xg, x2: xg, y1: M.t, y2: H - M.b, class: "bh-gap" }, s);
-        const gt = svg("text", { x: xg + 3, y: M.t + 10, class: "bh-tick" }, s);
+        // the label on the side of the line with room for it, so it never leaves the plot
+        const right = xg > M.l + inner / 2;
+        const gt = svg("text", { x: right ? xg - 3 : xg + 3, y: M.t + 10, class: "bh-tick", "text-anchor": right ? "end" : "start" }, s);
         gt.textContent = narrow ? "gap" : "gap: a decoder change with no link";
         svg("title", {}, gt).textContent = "a decoder change with no link: the chain starts again here";
       }

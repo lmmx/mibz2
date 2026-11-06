@@ -35,6 +35,17 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.2.2] - 2026-11-06
+
+### Fixed
+
+- **A merge whose head was also benchmarked by a dispatch is linked** (`bench/links.py`).
+  A dispatch given a base, such as a cross-model check, runs as a pull request and uploads
+  the same `bench-pr-<head>` artifact as the pull request's own run. `sync` took the newest
+  artifact, found a `workflow_dispatch` run and left the merge unlinked, so #207 broke the
+  history's chain. It now takes the newest artifact from a successful `pull_request` run.
+  This is a change to what is stored. Every figure keeps its meaning.
+
 ## [3.2.1] - 2026-11-05
 
 ### Added
