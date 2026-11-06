@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Team-size review finished; awaiting next inbox comment",
+  "state": "Reviewing team-size amendment",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -438,5 +438,10 @@
     "authority_changed": false
   },
   "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-  "in_progress_comment": null
+  "in_progress_comment": {
+    "id": 6682105521,
+    "pr": 162,
+    "status": "in_progress",
+    "progress": "Receipt; verify matched-window amendment and scope helper tracing"
+  }
 }
