@@ -172,14 +172,23 @@ def gh(path: str) -> dict:
 
 
 def artifact(repo: str, head: str) -> tuple[dict, dict] | None:
-    """The pull request run's kept artifact for `head`, the latest if several, and its run."""
+    """The pull request run's kept artifact for `head`, and its run: the latest from a
+    successful `pull_request` run, else the latest of any (which `sync` then refuses, saying
+    why). A dispatch on the same head, such as a cross-model check, also leaves a
+    `bench-pr-<head>` artifact, and must not hide the pull request's own run."""
     found = gh(f"repos/{repo}/actions/artifacts?name=bench-pr-{head}&per_page=100")
-    kept = [a for a in found.get("artifacts", []) if not a.get("expired")]
-    if not kept:
-        return None
-    a = max(kept, key=lambda a: a["created_at"])
-    run = gh(f"repos/{repo}/actions/runs/{a['workflow_run']['id']}")
-    return a, run
+    kept = sorted(
+        (a for a in found.get("artifacts", []) if not a.get("expired")),
+        key=lambda a: a["created_at"],
+        reverse=True,
+    )
+    first = None
+    for a in kept:
+        run = gh(f"repos/{repo}/actions/runs/{a['workflow_run']['id']}")
+        if run.get("event") == "pull_request" and run.get("conclusion") == "success":
+            return a, run
+        first = first or (a, run)
+    return first
 
 
 def sync(a: argparse.Namespace) -> None:

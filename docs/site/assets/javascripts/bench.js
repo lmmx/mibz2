@@ -234,7 +234,9 @@
       if (sgm !== segs[0]) {
         const xg = xs.get(p[0]) - 6;
         svg("line", { x1: xg, x2: xg, y1: M.t, y2: H - M.b, class: "bh-gap" }, s);
-        const gt = svg("text", { x: xg + 3, y: M.t + 10, class: "bh-tick" }, s);
+        // the label on the side of the line with room for it, so it never leaves the plot
+        const right = xg > M.l + inner / 2;
+        const gt = svg("text", { x: right ? xg - 3 : xg + 3, y: M.t + 10, class: "bh-tick", "text-anchor": right ? "end" : "start" }, s);
         gt.textContent = narrow ? "gap" : "gap: a decoder change with no link";
         svg("title", {}, gt).textContent = "a decoder change with no link: the chain starts again here";
       }
@@ -378,6 +380,8 @@
     const H = narrow ? 240 : 300, M = { l: 52, r: 14, t: 16, b: 36 };
     const vals = run.arms.flatMap((a) => ts.map((t) => mb(a, t)).filter((v) => v));
     const yt = ticks(0, Math.max(...vals), narrow ? 4 : 5);
+    // the top tick at or above the highest point, so no line leaves the plot
+    while (yt[yt.length - 1] < Math.max(...vals)) yt.push(+(yt[yt.length - 1] + (yt[1] - yt[0])).toFixed(10));
     const y = (v) => M.t + (H - M.t - M.b) * (1 - v / yt[yt.length - 1]);
     const x = (i) => M.l + (ts.length === 1 ? (W - M.l - M.r) / 2 : (i * (W - M.l - M.r)) / (ts.length - 1));
     const s = svg("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": `Throughput of ${state.wsCorpus} on ${run.cpu} against threads, for ${run.arms.join(", ")}` }, body);
