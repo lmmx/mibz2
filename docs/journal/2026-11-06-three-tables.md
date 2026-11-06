@@ -85,4 +85,62 @@ here. The two primaries were frozen before collection, and no screen observation
 
 ## Result
 
-Not yet run.
+### Run 1 of 2 (the test): both primaries pass
+
+Louis handed over the bundle in the Coordinator's session on 2026-11-06 and named it run 1 of
+2. That act is the run's authorisation (RULES.md C5).
+
+**Provenance.**
+- **The bundle:** `20261106T105317Z.tar.gz`, SHA-256 `15ee5617cc9d32b2…`.
+- **When and where:** started 10:53:17 UTC on 2026-11-06, at `639c3df1`. That commit is on this
+  branch, 4½ minutes after the freeze at `656d2794`, and changes only the journal. The recipe,
+  `bench/`, the decoder and `Cargo.lock` are identical at the freeze, at `639c3df1` and at
+  `838d765c`.
+- **The machine:** the i9-10900K, 10 cores and 20 threads, with no CPU quota or throttling.
+- **The data:** the corpus SHA-256 matched. All 431 blocks decoded byte-identically in
+  libbzip2, lbzip2 and every mibz2 path.
+- **The counters:** none. perf couldn't count on the machine (`perf_event_paranoid`), and the
+  registration makes the counter pass conditional on that. The occupancy pass ran for all
+  three plans.
+
+**The report.**
+- The Coordinator reran `bench/team_size.py report` from the raw `runs.jsonl` with this
+  branch's script, and got the bundle's report back byte for byte, as JSON and as Markdown.
+- The two primaries' ratios, intervals, plans and adoption ratios were also recomputed
+  independently from the raw runs. They agree to four decimal places.
+
+**The predicates.**
+- **Bytes:** one output hash and one length across all 320 runs, and no failed run.
+- **The reference** `mibz2@8`: rounds 0–19 once each, 4 × 2 in every run.
+- **The grid:** 16 cells × 20 rounds, each round once.
+- **The control** `mibz2-team2@8`: 1.004 (0.992–1.016), within ±2%.
+
+| primary | plan in every run | 20 unique pairs | mean ≥ 1.03 | lower bound > 1.00 | peak RSS / ref (≤ 1.15) | CPU / ref (≤ 1.5) | registered prediction |
+|---|---|---|---|---|---|---|---|
+| `mibz2-team4@12` (3 × 4) | yes: 3 leaders, 9 helpers | yes | **1.090** | **1.072** | 0.82 | 1.04 | 1.04–1.09 |
+| `mibz2-team3@10` (3 × 3) | yes: 3 leaders, 6 helpers | yes | **1.076** | **1.058** | 0.82 | 0.90 | 1.03–1.07 |
+
+Both primaries pass every predicate in run 1. **This is not a qualification.** The same cell
+must pass again in one predeclared second run of `just bench-three-tables`, with no switching
+cells and no pooling. Until then, nothing changes in the policy.
+
+**Against the predictions.**
+- **3 × 4:** at the top of its predicted range.
+- **3 × 3:** just above its predicted range.
+- **Peak memory:** 18% below the reference's for both, as predicted.
+- **CPU:** 3 × 3 used less than the reference and 3 × 4 about the same, both as predicted.
+
+The screen's figures were 1.097 and 1.075. The predicted regression toward the middle didn't
+appear in this run. One run can't say why.
+
+**The occupancy pass (diagnostic only, under the limits the registration set).**
+- **The traces are uninterpreted-safe:** for every plan and placement, neither traced mode
+  perturbed throughput (each interval includes 0).
+- **The workers were busy:** in all three plans they spent about 96% of their time decoding and
+  about 3% idle, so no plan was starved for blocks.
+- **SMT siblings:** packing threads onto SMT siblings cost throughput in every plan:
+  - 4 × 2 at 8: −20.7% (−21.9 to −19.5);
+  - 3 × 3 at 10: −19.4% (−20.9 to −17.9);
+  - 3 × 4 at 12: −12.4% (−14.3 to −10.4).
+- **No table-count mechanism is claimed.** No two plans share a team size, and the window
+  differs, so the registration defers that claim (D030).
