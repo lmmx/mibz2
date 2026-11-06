@@ -1,0 +1,9 @@
+{
+  "role": "oracle",
+  "inbox": null,
+  "offset": null,
+  "processed_comment_ids": [],
+  "in_progress": [],
+  "reviews": {},
+  "last_rebuilt_from": null
+}
