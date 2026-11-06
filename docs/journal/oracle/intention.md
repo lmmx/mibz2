@@ -7,7 +7,15 @@ have found, and links to the record that shows it. Each item is linked to its pa
 Seeded by the Coordinator on 2026-11-06, before the Oracle's first run. From here the Oracle
 owns it.
 
-## Right now, in five lines
+**Settled at:** #145 comment 6684041836 (the Oracle spec merged). This is a snapshot at that
+point, not a live feed.
+
+## In one line (L0)
+
+Waiting for the i9 run that tests whether 3 decoding tables beat 4 (#220), in order to raise
+throughput past 8 threads (item 1).
+
+## Right now, in five lines (L1)
 
 1. **The aim:** make mibz2's production bzip2 decoder faster, and release it. The latest
    release is 0.2.4.
@@ -23,7 +31,7 @@ owns it.
    tarball. New performance work is paused until that result, by the Coordinator's choice
    (6683240055). The wikidata-pq bump (item 2) is open alongside.
 
-## The tree
+## The tree (L2 fronts, L3 experiments; the record below, by link)
 
 Each item has three fields. **Doing** says what we are doing. **In order to** links it to its
 parent. **Status** is one of:
@@ -140,6 +148,7 @@ Each item's "in order to" should lead up to 0. One that stops at a procedural re
 
 ## Changes since the last version
 
+- Reshaped into levels (L0 line, settled-at stamp), per the spec's précis rule.
 - Seeded (01ea79a3).
 - Corrected from the Researcher's review (6683945162):
   - "tables, not threads" restated as an association;
