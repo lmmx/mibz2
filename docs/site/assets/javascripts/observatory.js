@@ -78,9 +78,56 @@
       if (front) a.setAttribute("href", `#front-${front[1]}`);
       else a.setAttribute("href", `https://github.com/${ctx.repo}/blob/${ctx.ref}/${path}`);
     }
+    linkComments(holder, ctx);
     holder.className = "obs-md";
     return holder;
   }
+
+  /* A bare comment ID in the record (ten digits, outside a link or code) becomes a link to
+     that comment. Most are on the channel, #145, which is where the link points first; a
+     click asks GitHub's API where the comment really is (an inbox, another PR) and goes
+     there, falling back to the channel if the API refuses. */
+  const COMMENT_ID = /\b\d{10}\b/g;
+  function linkComments(holder, ctx) {
+    const walker = document.createTreeWalker(holder, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (n.parentElement.closest("a, code, pre") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    const texts = [];
+    while (walker.nextNode()) if (/\b\d{10}\b/.test(walker.currentNode.nodeValue)) texts.push(walker.currentNode);
+    for (const t of texts) {
+      const frag = document.createDocumentFragment();
+      let last = 0;
+      const value = t.nodeValue;
+      for (const m of value.matchAll(COMMENT_ID)) {
+        frag.appendChild(document.createTextNode(value.slice(last, m.index)));
+        const a = el("a", {
+          href: `https://github.com/${ctx.repo}/pull/145#issuecomment-${m[0]}`,
+          rel: "noopener",
+          class: "obs-comment",
+          title: `Comment ${m[0]} on GitHub`,
+          "data-comment": m[0],
+          text: m[0],
+        });
+        frag.appendChild(a);
+        last = m.index + m[0].length;
+      }
+      frag.appendChild(document.createTextNode(value.slice(last)));
+      t.replaceWith(frag);
+    }
+  }
+
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest("a.obs-comment");
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (a.dataset.resolved) return;
+    e.preventDefault();
+    const root = document.getElementById("obs-root");
+    const repo = (root && root.dataset.repo) || "lmmx/mibz2";
+    getJSON(`${API}/repos/${repo}/issues/comments/${a.dataset.comment}`)
+      .then((c) => { if (c && c.html_url) a.href = c.html_url; })
+      .catch(() => {})
+      .then(() => { a.dataset.resolved = "1"; window.location.href = a.href; });
+  });
 
   function section(id, title, node, note) {
     return el("section", { class: "obs-level", id }, [
@@ -154,7 +201,7 @@
       });
       list.appendChild(el("li", { class: i === 0 ? "obs-move obs-move--current" : "obs-move" }, [
         el("p", { class: "obs-move__when", text: day(c.commit.committer.date) + (i === 0 ? " · the version shown above" : "") }),
-        el("p", { class: "obs-move__subject", text: subject }),
+        (() => { const p = el("p", { class: "obs-move__subject", text: subject }); linkComments(p, ctx); return p; })(),
         links,
         d,
       ]));
