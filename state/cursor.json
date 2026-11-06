@@ -477,12 +477,13 @@
     {
       "comment_id": 6693507432,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "completed": false,
       "spec_commit": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
-      "progress": "Policy design and prospective regression/admission plan finished; production PR creation outside role authority.",
+      "progress": "Design and ledger committed; awaiting REVIEW.",
       "report_path": "state/records/reviews/inbox-6693507432/report.md",
-      "evidence_commit": "544462881497fc957fe17c35ae7508ca1bac23d5"
+      "evidence_commit": "544462881497fc957fe17c35ae7508ca1bac23d5",
+      "report_commit": "9101edf77c28fc6d52af0951abbf76e4ec9df490"
     }
   ],
   "migrated_from": {
