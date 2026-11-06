@@ -1,6 +1,6 @@
-/* "Behind the scenes" (background/behind-the-scenes.md): the Oracle's record, rendered by
-   assets/javascripts/observatory.js. Progressive disclosure: L0 large, L1 as a numbered
-   list, L2 as the tree, each L3 front and the meta sections folded. */
+/* "Behind the scenes" (background/behind-the-scenes.md), rendered by
+   assets/javascripts/observatory.js: the account first, its opening in a box, then the record
+   it is written from, each part folded, then the earlier versions. */
 .obs-root {
   --obs-rule: var(--md-default-fg-color--lightest);
   --obs-tint: var(--md-code-bg-color);
@@ -34,29 +34,11 @@
   margin: 1.4rem 0 0.5rem;
 }
 
-/* L0: the line or two that answer "what, and in order to do what" */
-.md-typeset .obs-root #now .obs-md {
-  padding: 0.7rem 1rem;
-  border-left: 0.2rem solid var(--obs-accent);
-  background: var(--obs-tint);
-  border-radius: 0 0.3rem 0.3rem 0;
-}
-.md-typeset .obs-root #now .obs-md > p:not(:last-child) {
-  font-size: 0.9rem;
-  line-height: 1.5;
-  margin: 0 0 0.5rem;
-}
-.md-typeset .obs-root #now .obs-md > p:last-child {
-  font-size: 0.68rem;
-  color: var(--md-default-fg-color--light);
-  margin: 0.4rem 0 0;
-}
-
 .md-typeset .obs-root .obs-md {
   overflow-wrap: anywhere;
 }
 
-/* L3 fronts and the meta sections: folded */
+/* The record's parts: folded */
 .md-typeset .obs-root details.obs-front {
   margin: 0.5rem 0;
   border: 1px solid var(--obs-rule);
@@ -160,4 +142,29 @@
 .md-typeset .obs-root .obs-jumps {
   margin: 0 0 0.4rem;
   font-size: 0.72rem;
+}
+
+/* The account under the page title, before everything else */
+.obs-root.obs-now {
+  margin: 0.4rem 0 1.4rem;
+}
+/* The account: its opening in a box, its questions as plain subheadings beneath */
+.md-typeset .obs-root .obs-lead {
+  padding: 0.8rem 1.1rem;
+  margin: 0 0 1rem;
+  border-left: 0.2rem solid var(--obs-accent);
+  background: var(--obs-tint);
+  border-radius: 0 0.3rem 0.3rem 0;
+}
+.md-typeset .obs-root .obs-lead p {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0 0 0.5rem;
+}
+.md-typeset .obs-root .obs-lead p:last-child {
+  margin-bottom: 0;
+}
+.md-typeset .obs-root .obs-account h3 {
+  margin: 1.2rem 0 0.3rem;
+  font-size: 0.85rem;
 }

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="What mibz2's agent team is doing, and to what end, as the Oracle last wrote it down: in a line, in five lines, as a tree, front by front, and every account since the first.">
+        <meta name="description" content="What mibz2's agent team is doing, and why, as the team's observer last wrote it down, with the record it rests on and every earlier version.">
       
       
         <meta name="author" content="Louis Maddox">
@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=16f70a51553d">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=a6a703cefcc4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=16f70a51553d">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=a6a703cefcc4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=16f70a51553d">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=a6a703cefcc4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=16f70a51553d">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=a6a703cefcc4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=16f70a51553d">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=a6a703cefcc4">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=16f70a51553d">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=a6a703cefcc4">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -90,7 +90,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="mibz2">
   <meta property="og:title" content="Behind the scenes">
-  <meta property="og:description" content="What mibz2's agent team is doing, and to what end, as the Oracle last wrote it down: in a line, in five lines, as a tree, front by front, and every account since the first.">
+  <meta property="og:description" content="What mibz2's agent team is doing, and why, as the team's observer last wrote it down, with the record it rests on and every earlier version.">
   <meta property="og:url" content="https://lmmx.github.io/mibz2/background/behind-the-scenes/">
   <meta property="og:image" content="https://lmmx.github.io/mibz2/assets/social/default.png">
   <meta property="og:image:type" content="image/png">
@@ -99,7 +99,7 @@
   <meta property="og:image:alt" content="Behind the scenes">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Behind the scenes">
-  <meta name="twitter:description" content="What mibz2's agent team is doing, and to what end, as the Oracle last wrote it down: in a line, in five lines, as a tree, front by front, and every account since the first.">
+  <meta name="twitter:description" content="What mibz2's agent team is doing, and why, as the team's observer last wrote it down, with the record it rests on and every earlier version.">
   <meta name="twitter:image" content="https://lmmx.github.io/mibz2/assets/social/default.png">
   <meta name="twitter:image:alt" content="Behind the scenes">
 
@@ -1836,73 +1836,29 @@
 
 
 <h1 id="behind-the-scenes">Behind the scenes<a class="headerlink" href="#behind-the-scenes" title="Permanent link">&para;</a></h1>
-<p>Most of the team that works on mibz2 is agents. One of them, the Oracle, does none of the
-work. It watches the others and writes down what they are doing, and to what end.</p>
-<p>What it writes is kept on a branch of its own,
-<a href="https://github.com/lmmx/mibz2/tree/observatory/intention"><code>observatory/intention</code></a>, which
-shares no history with the code. Each commit there is one settled account. A later account
-corrects an earlier one and leaves it standing.</p>
-<p>The account is read in layers, each a fuller version of the one before.</p>
-<table>
-<thead>
-<tr>
-<th>depth</th>
-<th>section</th>
-<th>what it holds</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>L0</strong></td>
-<td>Now</td>
-<td>a line or two: what, and to what end</td>
-</tr>
-<tr>
-<td><strong>L1</strong></td>
-<td>In five lines</td>
-<td>the aim, the question, what was found, what is under way, what is awaited</td>
-</tr>
-<tr>
-<td><strong>L2</strong></td>
-<td>The tree</td>
-<td>each front, and what it serves</td>
-</tr>
-<tr>
-<td><strong>L3</strong></td>
-<td>Each front</td>
-<td>its reasons, its status, its sources</td>
-</tr>
-<tr>
-<td>↔</td>
-<td>Where the "why" is weak</td>
-<td>reasons that are stale, contradicted or unestablished</td>
-</tr>
-<tr>
-<td>meta</td>
-<td>This version</td>
-<td>what the account covers, and what it was checked against</td>
-</tr>
-<tr>
-<td>meta</td>
-<td>Every move</td>
-<td>every account since the first, newest first</td>
-</tr>
-</tbody>
-</table>
+<div id="obs-now" class="obs-root obs-now" markdown="0"></div>
+
 <div id="obs-root" class="obs-root" data-repo="lmmx/mibz2" data-branch="observatory/intention" markdown="0">
 <p class="obs-status">Reading the account from
 <a href="https://github.com/lmmx/mibz2/tree/observatory/intention">observatory/intention</a>.
-It can also be read there, starting from <code>current/L0.md</code>.</p>
+It can also be read there, starting from <code>current/account.md</code>.</p>
 </div>
 
 <h2 id="about-this-page">About this page<a class="headerlink" href="#about-this-page" title="Permanent link">&para;</a></h2>
-<p>The page stays as it is when the account changes. Your browser reads the branch when the
-page opens, and every layer comes from the same commit. What you see is the last settled
-account, dated by the time it names. The page looks again every five minutes while it is
-open. GitHub allows sixty unauthenticated requests an hour from one address. If it turns
-the page away, the branch's files are read directly and the history is left out. The
-Oracle's instructions are in
+<p>Most of the team that works on mibz2 is agents. One of them, the Oracle, does none of the
+work. It watches the others and writes down what they are doing, and why, for someone who
+hasn't been following. Its instructions are in
 <a href="https://github.com/lmmx/mibz2/blob/master/docs/team/SPEC.ORACLE.md">SPEC.ORACLE.md</a>.</p>
+<p>What it writes is kept on a branch of its own,
+<a href="https://github.com/lmmx/mibz2/tree/observatory/intention"><code>observatory/intention</code></a>, which
+shares no history with the code. Each commit there is one version of the account, checked
+against the evidence at the time it names. A later version corrects an earlier one and
+leaves it standing.</p>
+<p>The page stays as it is when the account changes. Your browser reads the branch when the
+page opens, and everything shown comes from the same version. The page looks again every
+five minutes while it is open. GitHub allows sixty unauthenticated requests an hour from one
+address. If it turns the page away, the branch's files are read directly, and the earlier
+versions are left out.</p>
 
 
 
@@ -2047,19 +2003,19 @@ Oracle's instructions are in
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=16f70a51553d"></script>
+        <script src="../../assets/javascripts/bench.js?v=a6a703cefcc4"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=16f70a51553d"></script>
+        <script src="../../assets/javascripts/couriers.js?v=a6a703cefcc4"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=16f70a51553d"></script>
+        <script src="../../assets/javascripts/blog.js?v=a6a703cefcc4"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=16f70a51553d"></script>
+        <script src="../../assets/javascripts/frontier.js?v=a6a703cefcc4"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=16f70a51553d"></script>
+        <script src="../../assets/javascripts/observatory.js?v=a6a703cefcc4"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=16f70a51553d"></script>
+        <script src="../../assets/javascripts/katex.js?v=a6a703cefcc4"></script>
       
     
   </body>
