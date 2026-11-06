@@ -950,3 +950,66 @@ Clarify the replacement budget over the whole experiment and how it applies if t
 No performance, safety, compiled-code or net-work gate is certified from synthetic reporter tests. There is no line-level G8 stop and no blanket interruption of unrelated authorised work. Guardian confirmation is not permission for i9 timing or bench changes; those remain reserved. Production policy changes still use the existing measured-head CI, parity, safety and regression requirements. G6 is not exercised.
 
 Evidence digest: `git-blob:acd3e6503b64d2cc9eaa72b30de302a68392ff13`; script blob and archived reproduction above are supporting evidence.
+
+
+## D028 — superseding matched-window registration at 6f3183d9
+
+**Decision:** G1 — matched-window and counter-validation amendments supported; full D026 closure still not established. **Mode:** ACTIVE, stage A. **Incoming:** [6682106949 on #161](https://github.com/lmmx/mibz2/pull/161#issuecomment-6682106949), superseding 6682032075. D027 remains the assessment of the earlier pin, not a claim about unchanged code.
+
+### Sources and scope
+
+Source commit: `6f3183d96f2e8fc1d59751e1279be062fc09d897`.
+- [Registration](https://github.com/lmmx/mibz2/blob/6f3183d96f2e8fc1d59751e1279be062fc09d897/docs/journal/2026-11-06-team-size.md), blob `0384ed256a77e23db5b61477df58e1fa52cc24b6`.
+- [Reporter](https://github.com/lmmx/mibz2/blob/6f3183d96f2e8fc1d59751e1279be062fc09d897/bench/team_size.py), blob `8531039da0e8b624f156e2407b23d3c009f86d22`.
+- Source inspected at the same pin: `examples/ab.rs`, `src/read.rs`, `src/parallel.rs`, `examples/occupancy.rs`, `.just/bench.just`.
+- Researcher [review 6682038133](https://github.com/lmmx/mibz2/pull/145#issuecomment-6682038133) is evidence of the buffering finding; it is on #145, not #162 as the registration suggests.
+
+Pinned instructions and authority are unchanged from D027: specs `0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0`, operating pin `288c05638c85ffbb0a4d1f5ba9762002c37acdff`, charter `dad82808dd4532d21ebf51e88164b78a0af53da8` §§2, 6.4, 8.4, 12, campaign reference `e52252f51419b4c94a016f110a25ef19cd2b5f00`. Historical decision pins are preserved.
+
+### What is supported
+
+**Buffer windows match for the reference and four-team candidates.** `SLOTS_PER_THREAD=4`; `Plan::workers()` returns the number of teams. The new team arms therefore pass `4×4=16` slots to `parallel_planned`; the old coop arms pass `2×4=8`. The default requests `4×8=32` slots, and `window` scales this to `32×4/8=16` for the assumed reference plan. This removes the specific 8-versus-16 buffering confound. It does not validate an assumed runtime plan or prove that all entry-point overhead is equal.
+
+Changing K still changes segmentation and coordination, as the amendment now discloses. The primary screen is the whole configuration's performance at a matched window, not a pure effect of adding threads. Secondary cells with different team counts also have different total windows under four slots per team.
+
+**Counter validity improved.** Child JSON is retained; wrong hashes, reported errors, inconsistent child counts/plans, missing events and recorded multiplexing generate problems and move the cell's counters to `counters_invalid`, suppressing their displayed numerical interpretation. The per-cell check compares to the timed plan, not independently to the registered plan; timed-plan validity remains necessary.
+
+### Reproduction on the new pin
+
+[d028-reproduce.py](d028-reproduce.py) and [d028-reproduction.json](d028-reproduction.json) run the exact reporter's report path with synthetic rows. Obtain `bench/team_size.py` at this pin and run `python d028-reproduce.py /path/to/team_size.py`. No decoder, compiler, perf or timing execution occurred.
+
+| synthetic condition | observed reporter result |
+|---|---|
+| clean 16×20 grid, primary ratios 1.05 | both primaries pass |
+| one duplicate team2@8 control round (321 records) | **control unflagged; both primaries pass** |
+| omit team2@16 entirely (300 records, 15 cells) | **both primaries pass** |
+| contradictory output length, unchanged hash | **same_bytes and both passes remain true** |
+| one team4@16 run has 4 leaders + 11 helpers | that primary fails |
+| one team3@12 round missing | that primary fails |
+| counter child hash differs | counter marked invalid |
+| counter records 50% running for cycles | counter marked invalid |
+| counter instructions event missing | counter marked invalid |
+
+The last three close the tested counter defects; invalid diagnostics correctly do not by themselves fail the speed screen. One otherwise valid counter reading is accepted as valid with `readings=1`: that is a reading-level validity check, not proof that the prescribed three-reading pass is complete. Preserve/report partial coverage; do not silently present it as three readings. The synthetic inconsistent-length case tests metadata consistency, not a real hash collision.
+
+### What remains open
+
+The amended `judge` still lacks the control's duplicate/error/pair-completeness checks and the complete registered-grid/output-length checks. D027's failures reproduce under the new arm names. Its other requirements also remain: explicitly apply both adoption caps in each accepted run; clarify the single replacement budget across initial/confirmation stages; preserve every attempt before another recipe invocation overwrites `target/team-size`. Same-cell confirmation and the retained numeric thresholds remain supported; none is relaxed.
+
+The counter pass still occurs after the **entire timed run**, while the journal says after every timed round. The unpinned secondary cells still do not provide a quantitative bound on sibling cost. Correct these claims without treating either as a new speed threshold.
+
+### Occupancy diagnostic: narrower interpretation
+
+The added diagnostic does not change the primary predicates, but its new data collection is not authorised by calling it diagnostic. i9 timing/captures and harness changes retain their existing user-authority requirement.
+
+The source invokes `taskset -c <CPU set>` around the whole child process. This fixes its **allowed CPUs**, not a one-to-one worker-to-CPU assignment; scanner, feeder, reader and helpers share the set and can migrate within it. On the stated ten-core/two-sibling topology, the set construction allows 8, 10 and 10 physical cores for spread at 8/12/16 logical CPUs, versus 4, 6 and 8 for packed. Thus differences include physical-core availability and all-process scheduling, not only a selected worker pair's SMT contention. No measured placement is certified here.
+
+The instrument appropriately reports “no perturbation shown” when an interval contains 1. That does not establish negligible tracing cost, particularly with six rounds. Interpret trace findings with interval width and missing helper marks visible. Decode-span minus inversion-span is elapsed time outside that interval, not proof of CPU work, a serial critical path, or a uniquely identified bottleneck. These are limits on mechanism claims, not demands for another experiment or additional timing.
+
+### Disposition
+
+**Do not record “D026 met” at 6f3183d9.** Accept the matched-window correction and tested counter-validation improvements; retain the concrete validity defects and scope limits above. D026/D027 findings are narrowed to what remains, not retracted or silently transferred from an obsolete pin. No new candidate qualification, line-level STOP, G6 acceptance, implementation or capture permission is issued. The existing measured-head CI, parity, safety and regression gate remains separate from this configuration screen.
+
+The registration still reports “Not yet run”; this review does not independently attest to the absence of all measurement. No archived performance, machine-code, net-work or safety result is certified from these synthetic reporting tests.
+
+Evidence digest: `git-blob:0384ed256a77e23db5b61477df58e1fa52cc24b6`, with the reporter blob, source inspection and reproduction above.
