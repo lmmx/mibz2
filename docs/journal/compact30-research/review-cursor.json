@@ -300,7 +300,7 @@
     "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
   },
   "status": "IN_PROGRESS",
-  "published_evidence_commit": "0c2718ec9f858fee6cf186ba4a9d3644505f3f2c",
+  "published_evidence_commit": "b6d99258c84d285614dd2fddc7dedcd2737eea8a",
   "incoming_experiment_comment_ids": [
     {
       "pr": 146,
@@ -449,13 +449,21 @@
     {
       "comment_id": 6683037641,
       "pr": 160,
-      "status": "in_progress",
+      "status": "complete",
       "completed": false,
       "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
-      "progress": "Completed static access ledger, 320-row archived replay, C/W sensitivity and bounded C23/C24 proposals; preparing final publication.",
+      "progress": "Audit and proposals committed; awaiting one REVIEW publication.",
       "report_path": "docs/journal/compact30-research/reviews/inbox-6683037641/report.md",
       "baseline_commit": "f4f99ab82652411feb4a5a6e2ccb96d04902fb58",
-      "evidence_commit": "cbc6eb14b065fdb7092911147ce3374f63541467"
+      "evidence_commit": "cbc6eb14b065fdb7092911147ce3374f63541467",
+      "report_commit": "b6d99258c84d285614dd2fddc7dedcd2737eea8a",
+      "audit_scope": {
+        "independent": false,
+        "implementation": false,
+        "new_timing": false,
+        "archived_run_rows": 320,
+        "raw_profile_replay": false
+      }
     }
   ]
 }
