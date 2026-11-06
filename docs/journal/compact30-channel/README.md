@@ -1,10 +1,12 @@
-# The agent team's protocol
+# The agent team's protocol, as it was under compact30 (ARCHIVED)
 
-How the coordinator and the roles (Optimiser, Researcher, Guardian, Oracle) work together:
+**Frozen record.** The live team is in [`docs/team/`](../../team/README.md), made independent of compact30 on 2026-11-06 ([why](../2026-11-06-team-neutral.md)). Nothing here governs the team now; these files are kept exactly as #221 copied them.
+
+How the coordinator and the three roles (Optimiser, Researcher, Guardian) work together:
 the register (MODE.md), the message protocol (PROTOCOL.md), the roles (ROLES.md, SPEC.*.md,
 GUARDIAN.md, REVIEWER.md), the campaign procedure (CAMPAIGN.md) and the channel's log
-(log.md). The channel is PR #145; the inboxes are #160 (Optimiser), #161 (Guardian), #162
-(Researcher) and #222 (Oracle); `.github/coordination/coord.py` routes and verifies messages.
+(log.md). The channel is PR #145; the inboxes are #160 (Optimiser), #161 (Guardian) and #162
+(Researcher); `.github/coordination/coord.py` routes and verifies messages.
 
 The team began on the compact30 research, which has since been set aside; the protocol is
 the team's, not compact30's. It lived only on two research branches, and is kept here
@@ -26,8 +28,3 @@ byte-for-byte as they had it:
 
 MODE.md is changed only by Louis. The roles' own working files (cursors, decision logs)
 stay on their review branches.
-
-**Changed on master since the copy (2026-11-06):**
-- `SPEC.ORACLE.md` was added, with ROLES.md §7, for the Oracle, the team's record of what
-  it is doing and why.
-- Every other file is still as it was copied.

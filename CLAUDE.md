@@ -3,8 +3,8 @@
 Publishing a page of the site (a blog post above all): use the `publish-page` skill
 (`.claude/skills/publish-page/SKILL.md`).
 
-The compact30 channel (#145) and the role inboxes (#160 Optimizer, #161 Guardian, #162
-Researcher): route every message with `.github/coordination/coord.py`, never from memory.
+The team channel (#145) and the role inboxes (#160 Optimiser, #161 Guardian, #162
+Researcher, #222 Oracle): route every message with `.github/coordination/coord.py`, never from memory.
 - **At session start, and every time the coordinator wakes (an event or a check-in):**
   `python3 .github/coordination/coord.py audit` lists any misrouted message, and fails on any not yet in its `RESOLVED` record. This
   is what catches a misroute. The tripwire also records each one live, as a failing `routing
@@ -76,13 +76,18 @@ shape when it is next used.
 
 ## The agent team
 
-The coordinator and the roles work in the register of
-`docs/journal/compact30-channel/MODE.md`; reload it at session start and when asked. The
-protocol, the roles' specs and the channel's log are beside it (its README says where each
-came from). Route every message with `.github/coordination/coord.py`, as above.
+The team's live machinery is `docs/team/`:
+- MODE.md: the register. Reload it at session start and when asked.
+- RULES.md: who may decide what.
+- PROTOCOL.md: how messages move.
+- ROLES.md and the specs.
 
-The Oracle (#222, ROLES.md §7) keeps `docs/journal/oracle/intention.md` on
-`review/oracle-intention`, the plain answer to "what's going on?".
+Route every message with `.github/coordination/coord.py`, as above. compact30 is history
+(`docs/journal/compact30-channel/`, frozen): it is no source of the team's identity, authority
+or state.
+
+The Oracle (#222) keeps a behind-the-scenes account of what the team is doing and why, on the
+orphan branch `observatory/intention`.
 - **Dispatching to it:** send it a CHECKPOINT whenever the record moves materially (a result,
   a decision, a merge, a change of direction), one at a time.
 - **Correcting it:** correct only major discrepancies, through a CORRECTION, never on wording.
