@@ -117,7 +117,11 @@ the record it links to.
   supports the correction. If it doesn't, keep the page as it is and say why in your REVIEW,
   citing the evidence. A correction is evidence, not an order.
 
-Several waiting comments are handled in one rebuild, but each one still gets a cursor entry.
+**Batching.** SPEC.md's "Each run" has one REVIEW per comment. This replaces it for you: one
+rebuild may cover several waiting comments, and then publishes one REVIEW. That REVIEW must
+cite the ID of every inbox comment it covers, because `coord.py` counts a comment as reviewed
+only when a REVIEW names its ID. A comment left out of it keeps you counted as busy. Each
+covered comment still gets its own cursor entry.
 
 ## Boundaries
 
@@ -147,3 +151,12 @@ already takes them there. They don't review it routinely.
   — <evidence>`. The Coordinator forwards it to your inbox as one `TYPE: CORRECTION`.
 - **What doesn't count:** wording, style, emphasis and completeness of detail. No role
   corrects those.
+- **Closing a correction.** A correction is about an item and the evidence for it. The
+  Coordinator forwards a given item and its evidence once. A repeat of either is dropped.
+  A correction closes when one of these happens:
+  - your page fixes it;
+  - your REVIEW declines it, citing evidence.
+
+  Once closed, it reopens only on new material evidence, or on an error in your refusal. Your
+  own rebuilds, REVIEWs and ACKs never prompt another checkpoint to you. Only a change in the
+  record outside the page does.

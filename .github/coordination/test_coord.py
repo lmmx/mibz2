@@ -106,6 +106,21 @@ class Channel(unittest.TestCase):
                                                       TYPE="CHECKPOINT"), new))
         self.assertEqual(coord.completed("oracle", {"processed_comment_ids": [new]}), {new})
 
+    def test_an_inbox_takes_only_assignments_after_its_offset(self):
+        off = coord.ROLES["oracle"]["offset"]
+        ack = msg(FROM="coordinator", TO="oracle", TYPE="ACK")
+        self.assertIsNone(coord.misrouted(222, ack, off))  # the bootstrap ACK at the offset
+        for kind in ("ACK", "REVIEW", "DECISION", "LOG"):
+            body = msg(FROM="coordinator", TO="oracle", TYPE=kind)
+            self.assertIsNotNone(coord.misrouted(222, body, off + 1), kind)
+        for kind in ("CHECKPOINT", "CORRECTION"):
+            body = msg(FROM="coordinator", TO="oracle", TYPE=kind)
+            self.assertIsNone(coord.misrouted(222, body, off + 1), kind)
+        for role in ("optimizer", "guardian", "researcher"):
+            body = msg(FROM="coordinator", TO=role, TYPE="ACK")
+            self.assertIsNotNone(coord.misrouted(coord.ROLES[role]["inbox"], body,
+                                                 coord.ROLES[role]["offset"] + 1), role)
+
     def test_other_senders_on_the_channel_pass(self):
         body = msg(FROM="astra", TO="coordinator, guardian", TYPE="REVIEW")
         self.assertIsNone(coord.misrouted(145, body, self.new))

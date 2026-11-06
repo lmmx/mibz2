@@ -251,7 +251,9 @@ up any work. It is not a gate.
 **Correction:** the Guardian, the Researcher and the Coordinator correct only major
 discrepancies, ones that would mislead about the direction. A role raising one adds an
 `ORACLE:` line to its own REVIEW, and the Coordinator forwards it as one `TYPE: CORRECTION`.
-There is no routine review of the page.
+There is no routine review of the page. A given item and its evidence are forwarded once. A correction closes when the
+page fixes it, or when an Oracle REVIEW declines it, citing evidence. It reopens only on new
+material evidence.
 
 **Session:** a ChatGPT Work event-triggered task, **Compact30 (W) Oracle**. Louis creates and
 configures it.

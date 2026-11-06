@@ -118,14 +118,18 @@ def misrouted(issue, body, comment_id=None):
         return None
     if issue in INBOXES:
         role = INBOXES[issue]
-        if comment_id is not None and comment_id < ROLES[role]["offset"]:
-            return None  # before the role's queue began
+        if comment_id is not None and comment_id <= ROLES[role]["offset"]:
+            return None  # the queue's opening comment, or history before it
         if sender != "coordinator":
             return (f"a message from {sender or 'an unnamed sender'} in {role}'s inbox "
                     f"#{issue}. Only the coordinator writes in an inbox; replies go to "
                     f"#{CHANNEL}.")
         if kind == "QUEUED":
             return f"TYPE: QUEUED in {role}'s inbox #{issue}. Staged work goes on #{CHANNEL}."
+        if kind not in ASSIGNMENTS:
+            return (f"a {kind or 'untyped'} message in {role}'s inbox #{issue}, which wakes "
+                    f"{role} for nothing. An inbox takes only assignments "
+                    f"({', '.join(sorted(ASSIGNMENTS))}); publications go on #{CHANNEL}.")
         if role not in to:
             named = ", ".join(to) or h.get("TO", "nobody")
             return (f"a message to {named} in {role}'s inbox #{issue}, where only {role} "
