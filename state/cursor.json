@@ -476,6 +476,14 @@
       "disposition": "Recommend Oracle-authored descriptive Markdown links; compare per-version reference table and consistent citation style. Sender/recipient, mutable-source and fallback version-coherence limits documented. Proposal only.",
       "review_comment_id": 6693740945,
       "publication_verified": true
+    },
+    {
+      "trigger_comment_id": 6694153375,
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "status": "in_progress",
+      "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+      "progress": "Migration checks passed; science review receipt."
     }
   ],
   "active_delegations": [],
