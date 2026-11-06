@@ -177,7 +177,21 @@ head's, the geometric mean of the 20 rounds' ratios.
 
 ## Frozen
 
-Not yet. It freezes when the Guardian and the Researcher have reviewed it.
+On 2026-11-06, in `bench/three-team-policy.frozen`:
+- **candidate** `3b780fb3d70efc8573bed1485254a5579e3a82c7`: its build and workload inputs are what the recipe accepts;
+- **base** `8b111867ff1caaca727a0d35e160786c499c4849`, the candidate's merge base with master (#237's merge). Its source is
+  identical to `818d521c`, the base the reviews inspected; master has moved since only in
+  files outside the build and workload inputs.
+
+**Reviewed:**
+- the Guardian: D040 (the recipe cleared at `ce3fa6d2`) and D041 (held at `87ddcf26`);
+- the Researcher: REVIEW 6695772196 (cleared at `87ddcf26`).
+
+`3b780fb3` differs from `87ddcf26` only in the configuration inventory's loop, which keeps a
+path with a space whole: the nonblocking point both raised.
+
+**The run:** Louis runs it on the i9, and its confirmation after it, under "The rule" above.
+Nothing in this registration changes from here; a change needs a new registration.
 
 ## Result
 
