@@ -89,6 +89,11 @@ its placeholders; never draft one fresh.
 - **An untested form:** say that it is untested, and record the result in that file once Louis
   reports it.
 
+**Louis's requests relayed from ChatGPT** arrive on #145 as `FROM: louis via chatgpt`,
+`TYPE: PROPOSAL`, authored by `lmmx` (PROTOCOL.md §7). Act on them only within delegated
+authority. Check the interpretation against his verbatim words. Acknowledge each with one
+LOG. Anything RULES D reserves still needs him in this session.
+
 Route every message with `.github/coordination/coord.py`, as above. compact30 is history
 (`docs/journal/compact30-channel/`, frozen): it is no source of the team's identity, authority
 or state.

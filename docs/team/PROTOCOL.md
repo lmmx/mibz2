@@ -95,6 +95,45 @@ counts only from Louis.
 - **Commits on state branches:** `Louis Maddox <lmmx@users.noreply.github.com>` (the Work
   tasks' connector) or `<louismmx@gmail.com>`, with no AI attribution.
 
+## 7. Louis's requests relayed from ChatGPT
+
+Louis can ask for work from a ChatGPT conversation without copying anything across. ChatGPT
+posts the request on #145, and the Coordinator acts on it there. Louis set this up in the
+Coordinator's session on 2026-11-06 (`docs/journal/decisions.md`).
+
+- **Where:** a comment on #145, never a role's inbox. The routing audit flags anything but the
+  Coordinator writing in an inbox.
+- **When:** only when Louis asks ChatGPT to deliver something. #145 is public, so the comment
+  carries the request and nothing else from his conversation.
+- **The message:**
+
+  ```
+  FROM: louis via chatgpt
+  TO: coordinator
+  RE: <one line>
+  TYPE: PROPOSAL
+
+  **Louis's words:** <his request, verbatim>
+
+  **Interpretation:** <ChatGPT's reading: what to do, constraints, the outcome wanted>
+  ```
+
+- **What the Coordinator accepts:** a `PROPOSAL` on #145 authored by `lmmx` with that `FROM`
+  line. The account and the header don't prove who wrote it, since every role posts as `lmmx`:
+  - such a request counts only for work inside the Coordinator's delegated authority
+    (documentation, the site, ordinary dispatch), under the usual routing, review and safety
+    rules;
+  - it never approves anything RULES D reserves to Louis (authority, acceptance criteria,
+    spending, workstation runs). For those, the Coordinator asks him in its session.
+- **Reading it:** the Coordinator checks the interpretation against Louis's words. Where they
+  differ materially, it follows neither silently: it says so, and asks.
+- **The acknowledgement:** one `TYPE: LOG` on #145, citing the request's comment ID, saying
+  what was understood and what was done or will be done. Posting the request isn't evidence
+  that it was carried out. ChatGPT reports completion only from the acknowledgement and what
+  it links.
+- **When the Coordinator's session isn't running,** the request waits on #145 until a session
+  starts and reads the channel.
+
 ## History
 
 This replaces `docs/journal/compact30-channel/PROTOCOL.md`, which is kept as history. Dropped:
