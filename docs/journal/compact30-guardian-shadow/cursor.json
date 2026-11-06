@@ -400,6 +400,22 @@
       "status": "finished",
       "disposition": "D026 partially closed; duplicate-control false pass and whole-grid validity gaps reproduced",
       "comment": 6682139215
+    },
+    {
+      "id": "D028",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 161,
+      "output_pr": 145,
+      "sha": "6f3183d96f2e8fc1d59751e1279be062fc09d897",
+      "evidence_digest": "git-blob:0384ed256a77e23db5b61477df58e1fa52cc24b6",
+      "incoming_comment": 6682106949,
+      "commit": "8158cb4c9958c3797748595426bb24ee9f168b4f",
+      "receipt_commit": "208beb1ff28cc536820ed0aae8e2c48e017864fc",
+      "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+      "status": "complete",
+      "disposition": "matched window and tested counter checks supported; duplicate-control and full-grid gaps remain"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -460,7 +476,9 @@
     "94ea77479d881c10761fd88363004fe0f46ee985",
     "9f7a6099908c74a2b09b2c8958bcfde13dcebce9",
     "80722a9c2ce25f537b4efeecc354bbb7a9adf9b1",
-    "1fc297cee7ebafa005e40740dc8c67be319110be"
+    "1fc297cee7ebafa005e40740dc8c67be319110be",
+    "208beb1ff28cc536820ed0aae8e2c48e017864fc",
+    "8158cb4c9958c3797748595426bb24ee9f168b4f"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -581,13 +599,15 @@
     "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
     "last_decision_commit": "80722a9c2ce25f537b4efeecc354bbb7a9adf9b1",
     "last_duplicate_incoming_comment": 6633116288,
-    "source_app_reply": "D027 REVIEW published on #145; new inbox event 6682106949 pending",
+    "source_app_reply": "D028 complete; REVIEW reconciliation pending",
     "input_pr": 161,
     "output_pr": 145,
     "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
     "offset_comment_id": 6646249200,
-    "active_comment_status": "finished",
-    "queue_snapshot": "three inbox comments listed; only 6681847165 after offset; all eligible comments in snapshot finished"
+    "active_comment_status": "complete",
+    "queue_snapshot": "three inbox comments listed; only 6681847165 after offset; all eligible comments in snapshot finished",
+    "active_comment_id": 6682106949,
+    "active_work_commit": "8158cb4c9958c3797748595426bb24ee9f168b4f"
   },
   "duplicate_events": [
     {
@@ -820,9 +840,10 @@
     {
       "comment_id": 6682106949,
       "pr": 161,
-      "status": "in progress",
+      "status": "complete",
       "decision": "D028",
-      "receipt_commit": "208beb1ff28cc536820ed0aae8e2c48e017864fc"
+      "receipt_commit": "208beb1ff28cc536820ed0aae8e2c48e017864fc",
+      "work_commit": "8158cb4c9958c3797748595426bb24ee9f168b4f"
     }
   ]
 }
