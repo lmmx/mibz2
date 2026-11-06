@@ -1,7 +1,7 @@
 # The team's standing rules (APPROVED by Louis, 2026-11-06)
 
 These are the rules that decide who may decide what in the mibz2 agent team: the Coordinator,
-the Optimiser, the Guardian, the Researcher and the Oracle. The standing objective is
+the Optimiser, the Guardian, the Researcher and the Observer. The standing objective is
 STEWARDSHIP.md's: **a measurably faster, correct production decoder, properly released.**
 
 Until now, the team's authority came from two places:

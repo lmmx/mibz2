@@ -1,4 +1,4 @@
-/* "Behind the scenes" (background/behind-the-scenes.md): the Oracle's record, read at view
+/* "Behind the scenes" (background/behind-the-scenes.md): the Observer's record, read at view
    time from the orphan branch observatory/intention. One API call finds the branch's newest
    commit, one lists its files; every level is then fetched from raw.githubusercontent.com
    at that commit, so the levels on screen are one settled version. If the API refuses
@@ -226,7 +226,7 @@
 
       const history = el("div");
       if (commits && commits.length) history.appendChild(moves(ctx, commits));
-      if (got["changes.md"]) history.appendChild(disclose("changes", "What changed, version by version", "in the Oracle's words", render(got["changes.md"], ctx, ""), !commits));
+      if (got["changes.md"]) history.appendChild(disclose("changes", "What changed, version by version", "in the Observer's words", render(got["changes.md"], ctx, ""), !commits));
       out.appendChild(section("earlier-versions", "Earlier versions", history, commits ? `${commits.length} version${commits.length === 1 ? "" : "s"}, newest first.` : null));
 
       const nowBox = document.getElementById("obs-now");

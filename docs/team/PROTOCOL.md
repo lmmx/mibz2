@@ -14,7 +14,7 @@ and reads MODE.md first on every run.
   - #160 Optimiser;
   - #161 Guardian;
   - #162 Researcher;
-  - #222 Oracle.
+  - #222 Observer.
 
   Each is a quiet draft PR, never merged. A role's Work task is woken by its inbox PR's webhook (SPEC.md, "Your trigger"); new comments on its
   own inbox alone, so the inbox is the address.
@@ -26,9 +26,9 @@ and reads MODE.md first on every run.
   - each holds its role's cursor and records under `state/`;
   - each is written only by its role;
   - none has a PR, and the workflows' push filters run no CI on them.
-- **The Oracle's record: `observatory/intention`**, an orphan branch.
+- **The Observer's record: `observatory/intention`**, an orphan branch.
   - It shares no history with master, and the workflows' filters run no CI on it.
-  - It is written only by the Oracle, by direct commit, never through a PR.
+  - It is written only by the Observer, by direct commit, never through a PR.
 - **Experiment PRs** go into master, and their checkpoints go to the inboxes.
 
 ## 2. Dispatch: one assignment in flight per role
@@ -49,7 +49,7 @@ and reads MODE.md first on every run.
 ## 3. Message format
 
 ```
-FROM: coordinator | optimizer | guardian | researcher | oracle | user
+FROM: coordinator | optimizer | guardian | researcher | observer | user
 TO:   <role>                (assignments and QUEUED)
 RE:   <subject> @ <commit sha>
 TYPE: CHECKPOINT | PROPOSAL | CORRECTION | QUEUED | REVIEW | DECISION | ACK | LOG | ESCALATION
@@ -69,8 +69,8 @@ counts only from Louis.
    - the action it takes, or that it takes none.
 2. **Treat ambiguity, or conflict between messages, as a HOLD,** and say so.
 3. **A request that needs Louis** (RULES D) is refused in the ACK and escalated (§5).
-4. **Forward an `ORACLE:` line** in a role's REVIEW to the Oracle's inbox as one CORRECTION,
-   once for each item and its evidence (SPEC.ORACLE.md).
+4. **Forward an `OBSERVER:` line** (or `ORACLE:`, its earlier form) in a role's REVIEW to the Observer's inbox as one CORRECTION,
+   once for each item and its evidence (SPEC.OBSERVER.md).
 
 ## 5. Escalation to Louis
 

@@ -80,3 +80,31 @@ The instruction, verbatim:
 > Acknowledge each relay on #145, explaining what you understood and what you did or will do. Posting a message is not proof of execution, and the sender must not report completion until there is evidence.
 >
 > Please document this concisely, without creating another agent, PR inbox or unnecessary governance process.
+
+## 2026-11-06: the Oracle is renamed the Observer
+
+- **Source:** Louis, relayed from ChatGPT on #145 (comment 6694788681), and confirmed in the
+  Coordinator's session for the one part the relay can't approve: the role's name in RULES.md
+  (RULES D1).
+- **His words, relayed:**
+
+  > I'd like to do a full row rename. Can you send a request to Claude to do the rename via the
+  > GitHub root? And then can you also do the rename of the ChatGPT work tasks here? So two
+  > separate things
+  >
+  > \*route not root
+  >
+  > \*full role rename not full row rename
+
+- **His answer in session**, to whether the rename may change RULES.md: "Yes, rename it
+  (Recommended)", the option that reads: "I approve changing only the role's name in RULES.md
+  (Oracle → Observer), nothing else in the rules."
+- **What changed:** the role's name in the live team files, `coord.py` (with `oracle` kept as an
+  alias, so earlier messages and replies from a task still pinned to `SPEC.ORACLE.md` route as
+  the same role) and the site. `SPEC.ORACLE.md` became `SPEC.OBSERVER.md`.
+- **What didn't:** its work, authority, inbox #222 and its title (a retitle would fire the
+  inbox's webhook, PROTOCOL.md §1), its state branch `team-state/oracle` (moving it would need
+  a migration SPEC.md's check fails closed on), `observatory/intention`, history and old
+  citations, and "oracle" in its other sense, a reference implementation in the tests.
+- **The Work task:** already renamed `mibz2⠶Observer⠶H` in ChatGPT. Louis re-pins its
+  instructions to the merge's commit once its current assignment has its receipt.
