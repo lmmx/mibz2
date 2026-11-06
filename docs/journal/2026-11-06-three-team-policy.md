@@ -217,6 +217,24 @@ Nothing in this registration changes from here; a change needs a new registratio
 The 8-thread control passes its registered band, but its interval excludes 1. The plan is the same
 in both arms, so a pass here is not equivalence. Its cause, a build or layout effect, is untested.
 
-**Confirmation:** not yet run. The policy is admitted only if it passes too. It is to be submitted with
-`just submit bench-three-team-policy` (RULES C5, #242). This section is a record, not an input of
-the registration.
+**Confirmation: VALID PASS** (2026-11-06, `three-team-policy/20261106T225836Z`).
+- **Commit:** head `422db167`. Its build and workload inputs are those of candidate `3b780fb3`, as the recipe checked.
+- **Same build:** the executables and corpus are the first run's, by digest.
+- **Submission:** submitted with `just submit` (6698069738 on #145). The bundle is at
+  [`evidence@0b340a53`](https://github.com/lmmx/mibz2/blob/0b340a53ce9b11cf1e4db9d1746dcaf34afb2b74/three-team-policy/20261106T225836Z.tar.gz),
+  SHA-256 `7275bb95fe8328630fc856607544ea76ecc692c880518dcf1e5d9c49d6248c62`.
+- **Re-judged:** re-run on its `runs.jsonl`, the frozen judge's verdict is identical to the bundle's.
+
+| threads | role | plan base → head | speed (95%) | upper bound | CPU | RSS |
+|--:|---|---|--:|--:|--:|--:|
+| 8 | control | 4×2 → 4×2 | 1.005 (0.992–1.019) | 1.010 | 1.00 | 1.00 |
+| 9 | control | 4×2 → 4×2 | 1.007 (0.997–1.017) | 1.004 | 0.99 | 0.99 |
+| 10 | primary | 4×2 → 3×3 | 1.088 (1.076–1.101) | 0.931 | 0.89 | 0.81 |
+| 11 | no harm | 4×2 → 3×3 | 1.072 (1.053–1.091) | 0.953 | 0.89 | 0.81 |
+| 12 | no harm | 4×2 → 3×3 | 1.085 (1.071–1.100) | 0.936 | 0.88 | 0.82 |
+| 16 | no harm | 4×2 → 3×3 | 1.082 (1.065–1.099) | 0.941 | 0.90 | 0.82 |
+| 20 | no harm | 4×2 → 3×3 | 1.081 (1.069–1.093) | 0.937 | 0.89 | 0.82 |
+
+The first run's 8-thread offset did not recur.
+
+**Verdict: admitted.** Both runs passed, so no replacement was needed. #234 merged at `422db167` (squash `16646a9b`). What the result covers and what it doesn't are set out in "What a pass would not show" above: this machine shape and this workload.
