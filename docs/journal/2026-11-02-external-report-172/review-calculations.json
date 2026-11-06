@@ -1,0 +1,68 @@
+{
+  "pin": "85b87fb4f21bf52fe9f327dcb2a371ddeddc983d",
+  "scope": "Static recount and arithmetic on manually transcribed values from pinned artifacts; no candidate execution, no benchmark, no claim to reproduce the full test suite.",
+  "artifact_sources": [
+    "https://github.com/lmmx/mibz2/blob/85b87fb4f21bf52fe9f327dcb2a371ddeddc983d/docs/journal/2026-11-02-compact30-walker/room-false.asm",
+    "https://github.com/lmmx/mibz2/blob/85b87fb4f21bf52fe9f327dcb2a371ddeddc983d/docs/journal/2026-11-02-compact30-walker/corpora.jsonl",
+    "https://github.com/lmmx/mibz2/blob/85b87fb4f21bf52fe9f327dcb2a371ddeddc983d/docs/journal/2026-11-02-compact30-walker/provenance.txt"
+  ],
+  "listing_blob_sha": "53136801d0c1dfe31b9deecb2e02dba3600d55ed",
+  "reported_candidate_binary_sha256": "713c079e8bb8822222b7e6c1d1013f2e69d89ea2b5d1c4cf7f27ed351064c6a5",
+  "binary_hash_independently_verified": false,
+  "ordinary_path": {
+    "prefix_instructions": 8,
+    "ordinary_body_and_loop_instructions": 13,
+    "total_instructions": 21,
+    "data_loads": 4,
+    "stores": 2,
+    "prefetches": 1,
+    "reported_instructions": 19
+  },
+  "primary_transcribed_record": {
+    "rows": 207006515,
+    "emitted": 207006515,
+    "blocks": 434,
+    "segmented_blocks": 230,
+    "groups": 6900346,
+    "ordinary": 6850713,
+    "raw_crossing": 18684,
+    "raw_wide": 30949,
+    "raw_forced": 0,
+    "logical_bytes": 448002944,
+    "reserved_bytes_summed": 843364864,
+    "segments": 117558,
+    "starts_hit": 117558,
+    "replacements": 110198,
+    "midround_ends": 230,
+    "raw_arrivals": 1476765,
+    "resumptions": 1476765,
+    "wait_turns_full": 1387335,
+    "wait_turns_tail": 89430,
+    "grows_full": 1797,
+    "grows_tail": 420,
+    "tail_lanes": 7130,
+    "one_byte_segments": 64,
+    "raw_starts": 915
+  },
+  "checks": {
+    "logical_storage_formula": true,
+    "group_partition": true,
+    "arrivals_equal_resumptions": true,
+    "arrivals_equal_wait_turns": true,
+    "starts_equal_segments": true,
+    "replacement_count": true,
+    "one_exit_per_segmented_block": true,
+    "tail_lane_count": true
+  },
+  "derived": {
+    "raw_arrivals_per_emitted_byte": 0.007133905906294785,
+    "logical_bytes_per_row": 2.164197315239088,
+    "logical_reduction_vs_4_bytes_per_row": 0.45895067119022803
+  },
+  "test_coverage_issue": {
+    "actual_order": "build -> walk::<true> -> walk::<false> -> rebuild for next block",
+    "consequence": "Counted traversal pre-sizes segment buffers for the audited traversal; counted growth counters do not establish cold-start growth-path coverage in room::<false>.",
+    "marker_assertion": "Full-record equality is guarded by COUNT, and therefore not applied after room::<false>.",
+    "requested_narrow_repair": "Validate room::<false> first on fresh scratch, assert record restoration and output, then repeat it without rebuilding; preserve the candidate algorithm."
+  }
+}
