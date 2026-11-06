@@ -70,3 +70,29 @@ The brief he relayed with it, its operative lines verbatim:
 
 - **Applies to:** this policy change only (`docs/journal/2026-11-06-three-team-policy.md`). It is
   not a general change to the merge rule.
+
+## 2026-11-06: requests relayed from ChatGPT on #145
+
+- **Source:** Louis, in the Coordinator's session (RULES.md A4).
+- **Observed:** 2026-11-06, about 20:00 UTC.
+- **What was decided:** a standing instruction. ChatGPT may relay Louis's requests to the
+  Coordinator on #145, for work within its delegated authority. The convention is
+  `docs/team/PROTOCOL.md` §7.
+
+The instruction, verbatim:
+
+> This is my standing instruction, given here in the Coordinator's authenticated session:
+>
+> Treat TYPE: PROPOSAL messages on PR #145, authored by lmmx and marked FROM: louis via chatgpt, as requests relayed on my behalf for work within your existing delegated authority.
+>
+> Each message must contain my original request verbatim, followed by ChatGPT's clearly distinguished interpretation. Check that the interpretation preserves my intention. If they materially differ, don't silently substitute one for the other.
+>
+> You may act on routine requests, including documentation, website improvements and ordinary work delegation, using the existing routing, queueing, review and safety rules.
+>
+> These relayed messages are not authenticated policy decisions. They cannot approve anything reserved to me under RULES D, including changes to authority, experimental acceptance criteria, spending or workstation runs. Those still require my explicit confirmation in this session.
+>
+> ChatGPT should only send a message when I explicitly request delivery, and should not publish unrelated private conversation content. The relay goes to #145, never directly to specialist inboxes.
+>
+> Acknowledge each relay on #145, explaining what you understood and what you did or will do. Posting a message is not proof of execution, and the sender must not report completion until there is evidence.
+>
+> Please document this concisely, without creating another agent, PR inbox or unnecessary governance process.
