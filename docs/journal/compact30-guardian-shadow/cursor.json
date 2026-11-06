@@ -467,6 +467,18 @@
       "incoming_comment": 6683783830,
       "status": "published; authority/MODE concur; narrow routing/correction HOLD",
       "comment": 6683861491
+    },
+    {
+      "pr": 161,
+      "sha": "b58cb628ccbb86b34a9ceac8e852f5d978a29a0d",
+      "evidence_digest": "git-blob:07b625553b6b71db05c4675fc19a9ad62f98e726",
+      "decision": "G1",
+      "commit": "f1f8b92542476dd009a9b9cd5680824ab564461d",
+      "id": "D032",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "incoming_comment": 6683967083,
+      "status": "complete; D031 narrow HOLD lifted"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -543,7 +555,9 @@
     "d78700b3fe021c8bb53ade50371493bd7a767434",
     "aafc4d9b551aa8ccf584e0b62192c7c05cfb1143",
     "f5b8432327a532f111002f3a0b386d639f3eecb8",
-    "a13475e7a32fcd1d34b2d9bd868c584d5887db97"
+    "a13475e7a32fcd1d34b2d9bd868c584d5887db97",
+    "e9a40bd380df8c6b052743520ab0852f83fb00de",
+    "f1f8b92542476dd009a9b9cd5680824ab564461d"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -912,6 +926,13 @@
       "decision": "D031",
       "commit": "f5b8432327a532f111002f3a0b386d639f3eecb8",
       "comment": 6683861491
+    },
+    {
+      "pr": 161,
+      "sha": "b58cb628ccbb86b34a9ceac8e852f5d978a29a0d",
+      "evidence_digest": "git-blob:07b625553b6b71db05c4675fc19a9ad62f98e726",
+      "decision": "D032",
+      "commit": "f1f8b92542476dd009a9b9cd5680824ab564461d"
     }
   ],
   "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
@@ -979,8 +1000,10 @@
     {
       "comment_id": 6683967083,
       "pr": 161,
-      "status": "in_progress",
-      "decision": "D032"
+      "status": "complete",
+      "decision": "D032",
+      "receipt_commit": "e9a40bd380df8c6b052743520ab0852f83fb00de",
+      "work_commit": "f1f8b92542476dd009a9b9cd5680824ab564461d"
     }
   ]
 }
