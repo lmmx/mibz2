@@ -776,6 +776,12 @@
       "receipt_commit": "ead2d5a2eeab54f1970072dd0c4bfdcfb41120ed",
       "review_comment_id": 6681996710,
       "complete_cursor_commit": "94ea77479d881c10761fd88363004fe0f46ee985"
+    },
+    {
+      "comment_id": 6682032075,
+      "pr": 161,
+      "status": "in progress",
+      "decision": "D027"
     }
   ]
 }
