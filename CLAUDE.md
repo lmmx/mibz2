@@ -73,3 +73,10 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
 
 `bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
 shape when it is next used.
+
+## The agent team
+
+The coordinator and the three roles work in the register of
+`docs/journal/compact30-channel/MODE.md`; reload it at session start and when asked. The
+protocol, the roles' specs and the channel's log are beside it (its README says where each
+came from). Route every message with `.github/coordination/coord.py`, as above.
