@@ -424,6 +424,11 @@
     "read_order": "After event eligibility, addressee and cursor gates, read MODE and applicable role instructions.",
     "authority_changed": false
   },
-  "spec_pin": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
-  "in_progress_comment": null
+  "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+  "in_progress_comment": {
+    "id": 6681848572,
+    "pr": 162,
+    "status": "in_progress",
+    "progress": "Receipt; assess team-size design and prior work"
+  }
 }
