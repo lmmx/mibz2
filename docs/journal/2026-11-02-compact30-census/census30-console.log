@@ -1,0 +1,15 @@
+corpora/mixed-independent.bz2: 3 blocks, 2000689 rows, groups 66691 (ordinary 64196, RAW crossing 736, RAW wide 1759); RAW rows 3.741%; 2.2931 bytes a row; starts marked 1536 (87 on RAW rows); every check and both round trips exact
+corpora/period-3.bz2: 4 blocks, 2700000 rows, groups 90002 (ordinary 89994, RAW crossing 8, RAW wide 0); RAW rows 0.009%; 2.1339 bytes a row; starts marked 1539 (3 on RAW rows); every check and both round trips exact
+corpora/random.bz2: 9 blocks, 8000003 rows, groups 266672 (ordinary 264468, RAW crossing 2204, RAW wide 0); RAW rows 0.826%; 2.1687 bytes a row; starts marked 4608 (35 on RAW rows); every check and both round trips exact
+corpora/records.bz2: 11 blocks, 9600002 rows, groups 320007 (ordinary 317305, RAW crossing 2702, RAW wide 0); RAW rows 0.844%; 2.1695 bytes a row; starts marked 5632 (44 on RAW rows); every check and both round trips exact
+corpora/text-l1.bz2: 111 blocks, 11036297 rows, groups 367909 (ordinary 357400, RAW crossing 10405, RAW wide 104); RAW rows 2.848%; 2.2560 bytes a row; starts marked 56948 (1599 on RAW rows); every check and both round trips exact
+corpora/text-l5.bz2: 23 blocks, 11036297 rows, groups 367898 (ordinary 363657, RAW crossing 2453, RAW wide 1788); RAW rows 1.153%; 2.1828 bytes a row; starts marked 11781 (158 on RAW rows); every check and both round trips exact
+corpora/text.bz2: 13 blocks, 11036297 rows, groups 367885 (ordinary 363916, RAW crossing 1427, RAW wide 2542); RAW rows 1.079%; 2.1795 bytes a row; starts marked 6657 (73 on RAW rows); every check and both round trips exact
+corpora/wikidata-20261026.bz2: 434 blocks, 207006515 rows, groups 6900346 (ordinary 6850713, RAW crossing 18684, RAW wide 30949); RAW rows 0.718%; 2.1642 bytes a row; starts marked 126084 (8992 on RAW rows); every check and both round trips exact
+corpora/wikidata-fitted.bz2: 431 blocks, 209706557 rows, groups 6990346 (ordinary 6940738, RAW crossing 18853, RAW wide 30755); RAW rows 0.708%; 2.1638 bytes a row; starts marked 127598 (8866 on RAW rows); every check and both round trips exact
+corpora/wikidata-heldout.bz2: 473 blocks, 235773776 rows, groups 7859262 (ordinary 7803537, RAW crossing 21022, RAW wide 34703); RAW rows 0.708%; 2.1638 bytes a row; starts marked 142171 (8866 on RAW rows); every check and both round trips exact
+corpora/zeros.bz2: 1 blocks, 52945 rows, groups 1765 (ordinary 1764, RAW crossing 1, RAW wide 0); RAW rows 0.057%; 2.1372 bytes a row; starts marked 514 (0 on RAW rows); every check and both round trips exact
+
+real	0m39.057s
+user	0m38.564s
+sys	0m0.102s
