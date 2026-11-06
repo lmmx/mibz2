@@ -1565,3 +1565,62 @@ No cargo or rustc executable is available in this executor. I therefore could no
 Resolve the census name-update race, actual-artifact selection/isolation, and report-error exit status; add focused untimed checks for each. **Not CLEAR to freeze this pin.** The base schema and malformed-JSON fixes are accepted; the statistical rule stays outside this review's scope. Independent work continues; no merge or capture authority is granted.
 
 Evidence key: PR234 / `0a2d5b1389ef177372730ac0aaa19889316aa9b9` / registration blob `72c5dd6dfeb7112d02239258a3633f33eef086fc`. Recipe blob `214bea72094daccd7ec617058670325da7cd06ae`; judge `921b62c9dbaf14ea74180a9ed04210054536f932`; tests `53874220fdf3bf83929c0300323f7a53aeeaf634`; harness `3b37022b9e1d8bda69b4656af1a80f59f0bae227`.
+
+## D039 — D038 re-review: census and outcome defects closed; artifact HOLD remains
+
+**G1/G2: not CLEAR to freeze #234 at `03aa31f3c46e446c6616f3895880f1552d69a979`.** Inbox [6695438405](https://github.com/lmmx/mibz2/pull/161#issuecomment-6695438405). D038's census and REPORT ERROR objections are resolved. The artifact-provenance HOLD remains, narrowed to copy ordering and build-status propagation. No statistical rule changed; no timing, decoder run, implementation or merge performed.
+
+Operating SPEC pin `a6a703cefcc40ac4115803f44a8a29ad76a3a7ef`: common and Guardian SPEC, MODE, RULES and PROTOCOL read. Migration checked before receipt: previous branch head `f9dab3d2b40739d89d613f86e8c2d67bec3159e4`; manifest SHA-256 `60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488`. Receipt `46e6704dd83193d551e6ab4084cbe4cb0ae6773e`. Sixteen inbox comments listed; the fifteen earlier comments are finished. No duplicate evidence pin.
+
+### Closed: census name refresh
+
+The watcher now calls `census_saw` on every successful comm read. Its unconditional `BTreeMap::insert` replaces the prior name for that TID, preserving multiplicity across different TIDs. The supplied Rust test exercises the actual helper with ab → mibz2-coop-1 and an unchanged leader. Source inspection plus a deterministic replay of that update rule resolves the specific first-name-freeze objection. The replay ends with helper and leader, not ab and leader.
+
+I did not run the Rust test: cargo/rustc are unavailable here. This is not a live /proc or base-binary compatibility claim. Periodic sampling still records observed threads, not a guarantee of every short-lived thread; missing/mismatching counts remain invalid. D037's accepted window derivation and D038's base-arm wiring closure stand.
+
+### Closed: REPORT ERROR exit status
+
+The extracted `finish` function, with the pinned real `bench/bundle.sh`, produced the following untimed fixture results. Every case wrote its stated outcome and created a tarball.
+
+| outcome | incoming status | final status |
+|---|---:|---:|
+| VALID PASS | 0 | 0 |
+| VALID FAIL | 0 | 0 |
+| INVALID | 0 | 1 |
+| REPORT ERROR | 0 | 2 |
+| REFUSED | 1 | 1 |
+| INCOMPLETE | 7 | 7 |
+
+Thus D038's REPORT ERROR → successful shell exit defect is fixed. This does not turn a valid statistical FAIL into a replaceable attempt.
+
+### Still open: snapshots are taken after both builds
+
+Actual executable paths from Cargo messages, obtained in each checkout, repair the layout/cwd defects. The ordering still defeats isolation:
+
+1. `mapfile base_built < <(built base ab)` builds the base and retains its path.
+2. `mapfile head_built < <(built head ab windows)` builds the head.
+3. Only then does `cp base_built[0] bin/ab-base` snapshot the base.
+
+If both builds report the same configured output path, step 2 overwrites the base before step 3. Different destination filenames do not recover the overwritten bytes. Hashing both copies later records the alias, not the intended baseline. The registration's claim that neither build can overwrite the other's is therefore still false for this case.
+
+Reproduced with synthetic compiler-artifact messages and distinguishable BASE/HEAD file contents:
+- Separate configured-triple paths: ab-base=BASE, ab-head=HEAD, shell 0.
+- Shared path: **ab-base=HEAD, ab-head=HEAD, shell 0**.
+
+The existing plan predicate should reject a head-for-base substitution on the changed cells; that prevents qualification, but needlessly corrupts an attempt and its replacement accounting. This is not a demonstrated false performance PASS.
+
+### Related failure path: mapfile does not propagate the build failure
+
+The process-substitution producer's exit is not `mapfile`'s exit. `pipefail` makes `built` fail but does not transfer that status into the parent command. If Cargo emits the requested artifact records and subsequently exits nonzero, the array-length check still passes. In the untimed fixture the base producer emitted its artifact, exited **7**, and the enclosing build/copy block exited **0** and copied it. A successful path parse is not a successful build.
+
+Required resolution is limited: check each build's exit status in the parent, and snapshot the successful base artifact **before** starting the head build (or isolate outputs equivalently). Preserve the reported-path parser and copied-artifact hashes. Test both a shared path and a producer that emits artifact records before failing. No new acceptance threshold or unrelated schema work is requested.
+
+### Reproduction boundary
+
+[Probe script](records/d039/probes.py), [results](records/d039/results.json), extracted [recipe](records/d039/recipe.sh), and pinned [bundler](records/d039/bundle.sh) accompany this entry. Run `python probes.py` beside those files.
+
+This executor lacks usable /dev/fd process-substitution paths. For the artifact probe only, the two substitutions were replaced with named FIFOs and background producers; the producer exit was recorded diagnostically, not imposed on mapfile. Cargo was a synthetic message/file producer. The ordering and status results are shell-fixture reproductions, **not** an unmodified recipe run or real Cargo experiment. The outcome probe used the extracted finish/trap unchanged with the actual bundler. No A/B or timing was performed.
+
+Prior accepted repairs and the registered statistical rule stand. **HOLD only the remaining artifact evidence path; ordinary repairs continue.** Before freezing, retain the already requested baseline-relationship check and predeclared run identities. No capture, widening or merge authority is granted.
+
+Evidence key: PR234 / `03aa31f3c46e446c6616f3895880f1552d69a979` / registration blob `32e2bb0e9add1200d68d0d6d3a2052771efcb9fc`. Recipe `b37a9e9da8d312823e1439e0b47616fd527c7633`; harness `2e92ddcbbee3f16d1e85b69be6d19d5a5696415b`; bundler `1ce3e2a20b63032ad53a42945e14393c5e968231`. The compare from D038 changes only recipe, harness and registration; the judge and statistical predicates are unchanged.

@@ -1,0 +1,94 @@
+{
+  "method": "Untimed Bash fixtures extracted from pinned recipe. /dev/fd unavailable: two process substitutions replaced by named FIFOs, keeping background producers and mapfile status behavior. Cargo is a synthetic producer; no Rust build or decoder run.",
+  "artifacts": [
+    {
+      "case": "distinct",
+      "shell_exit": 0,
+      "stderr": "",
+      "base_producer_exit": "0",
+      "head_producer_exit": "0",
+      "copies": {
+        "windows": "HEAD:windows",
+        "ab-head": "HEAD:ab",
+        "ab-base": "BASE:ab"
+      }
+    },
+    {
+      "case": "shared",
+      "shell_exit": 0,
+      "stderr": "",
+      "base_producer_exit": "0",
+      "head_producer_exit": "0",
+      "copies": {
+        "windows": "HEAD:windows",
+        "ab-head": "HEAD:ab",
+        "ab-base": "HEAD:ab"
+      }
+    },
+    {
+      "case": "failed-build",
+      "shell_exit": 0,
+      "stderr": "",
+      "base_producer_exit": "7",
+      "head_producer_exit": "0",
+      "copies": {
+        "windows": "HEAD:windows",
+        "ab-head": "HEAD:ab",
+        "ab-base": "BASE:ab"
+      }
+    }
+  ],
+  "finish": [
+    {
+      "outcome": "VALID PASS",
+      "incoming_status": 0,
+      "shell_exit": 0,
+      "recorded": "VALID PASS",
+      "bundle_exists": true
+    },
+    {
+      "outcome": "VALID FAIL",
+      "incoming_status": 0,
+      "shell_exit": 0,
+      "recorded": "VALID FAIL",
+      "bundle_exists": true
+    },
+    {
+      "outcome": "INVALID: fixture",
+      "incoming_status": 0,
+      "shell_exit": 1,
+      "recorded": "INVALID: fixture",
+      "bundle_exists": true
+    },
+    {
+      "outcome": "REPORT ERROR: fixture",
+      "incoming_status": 0,
+      "shell_exit": 2,
+      "recorded": "REPORT ERROR: fixture",
+      "bundle_exists": true
+    },
+    {
+      "outcome": "REFUSED: fixture",
+      "incoming_status": 1,
+      "shell_exit": 1,
+      "recorded": "REFUSED: fixture",
+      "bundle_exists": true
+    },
+    {
+      "outcome": "INCOMPLETE: fixture",
+      "incoming_status": 7,
+      "shell_exit": 7,
+      "recorded": "INCOMPLETE: fixture",
+      "bundle_exists": true
+    }
+  ],
+  "census": {
+    "source_review": "census_saw uses unconditional BTreeMap.insert; watcher invokes it on each successful comm read; keyed by tid, preserving multiplicity",
+    "transition_model": {
+      "7": "mibz2-coop-1",
+      "8": "mibz2-0"
+    },
+    "rust_test_run": false,
+    "limitation": "cargo/rustc unavailable; deterministic Python model, not execution of Rust test or live /proc sampling"
+  }
+}
