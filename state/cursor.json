@@ -12,7 +12,8 @@
   "reviews": {
     "6686307919": 6686754574,
     "6686599413": 6686754574,
-    "6693088129": 6693181300
+    "6693088129": 6693181300,
+    "6693505093": 6693582783
   },
   "last_rebuilt_from": 6693504170,
   "migrated_from": {
@@ -46,9 +47,10 @@
     },
     "6693505093": {
       "comment_id": 6693505093,
-      "status": "complete",
-      "progress": "Account and levels committed; self-check passed; REVIEW pending.",
-      "work_commit": "456fcb964af5a3f28b33175f134a739fe10b9840"
+      "status": "finished",
+      "progress": "Account and levels published; REVIEW read back and Oracle routing/header/citation verified.",
+      "work_commit": "456fcb964af5a3f28b33175f134a739fe10b9840",
+      "review_id": 6693582783
     }
   },
   "last_record_commit": "456fcb964af5a3f28b33175f134a739fe10b9840"
