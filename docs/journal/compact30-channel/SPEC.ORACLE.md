@@ -31,6 +31,25 @@ from that.
   registration stays as it was. Don't rewrite it to match the outcome. Say whether the gap is a
   failure in the execution or a fault in the plan: a broken run is one thing, a falsified
   prediction another.
+- **A role's authority covers its intention, not whether its means work.** Keep three things
+  apart in every item:
+  - the purpose: what the work is for, as the role stated it;
+  - the empirical premise: what has to be true for the means to serve that purpose;
+  - the dispatch order: what was chosen to be done first.
+
+  Record a premise with the evidence and uncertainty it had when it was stated. Rebuilding the
+  page doesn't make a hypothesis firmer. Where a role has challenged a premise, record the
+  premise as disputed and link the challenge.
+- **A dependency is not the same as a pause.** "Waiting on X" means the item can't proceed
+  until X: a missing input, a resource, or a result its own rule depends on. "Paused until X"
+  means someone chose to do X first. Say who chose, and link the decision.
+
+  Test which one it is by asking what would change if X failed: if the benefit failed, if a
+  resource failed, or if the run were invalid. If nothing would change, it is a pause.
+- **The run, the prediction and the qualification each have their own status.** A run done
+  exactly as registered is "done as intended" whatever it found. A negative result, done
+  correctly, advances the work. Whether the prediction held, and whether the rule's bar
+  qualified, are each recorded beside the run's status, not folded into it.
 
 ## The page's shape
 
