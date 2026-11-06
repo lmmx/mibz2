@@ -92,6 +92,11 @@ counts only from Louis.
 - **A new event can displace a run in progress.** Nothing may rely on a message waiting for a
   run to end. Protection comes from dispatch (§2), not from queueing on the platform.
 - **Every assignment ends in a receipt:** the cursor entry, then the REVIEW citing the comment.
+- **A submitted workstation run** (RULES C5) arrives on #145 as `FROM: louis via workstation`,
+  `TYPE: LOG`, authored by `lmmx`, from `just submit`. It carries the run's directory, outcome
+  and digest, and a link to its bundle on the `evidence` branch at a commit. The Coordinator
+  fetches that object, checks its SHA-256 against the post, and judges the bundle as if it had been
+  handed over in session.
 - **Commits on state branches:** `Louis Maddox <lmmx@users.noreply.github.com>` (the Work
   tasks' connector) or `<louismmx@gmail.com>`, with no AI attribution.
 

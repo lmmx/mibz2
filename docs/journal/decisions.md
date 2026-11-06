@@ -128,3 +128,47 @@ The instruction, verbatim:
   with a REVIEW citing its ID is done and never repeated.
 - **Where it is:** PROTOCOL.md §7 ("The other direction"), `CHATGPT.md` ("Requests from the
   Coordinator"), WORK-TASKS.md.
+
+## 2026-11-06: a workstation run submitted by command counts as handed over (RULES C5)
+
+- **Source:** Louis, relayed from ChatGPT on #145 (comment 6697379232, `FROM: louis via
+  chatgpt`). He then approved the wording in the Coordinator's session (RULES A4, D1, D5).
+- **Observed:** 2026-11-06, about 22:20 UTC.
+- **What was decided:** RULES C5 is amended. A frozen recipe's run counts as evidence when Louis runs
+  it himself and either hands its bundle over in session or runs it with the opt-in submission
+  command (`just submit <recipe>`, `.just/submit.just`, `bench/submit.sh`). That command
+  archives the bundle on the `evidence` branch and posts its identity and digest on #145. The
+  run's identity is read from the bundle. The freeze, the provenance checks, the evidence test
+  and the prohibition on timing by agents are unchanged. The command is named `submit`, not
+  `publish`, on Louis's instruction: "publish" reads as publishing a package, and the Justfile
+  already has `publish-rust`.
+- **Applies:** RULES C5 and D5; PROTOCOL §6; CLAUDE.md, "Workstation recipes".
+
+Louis's words in the relay, verbatim:
+
+> in regards to what you said about auth, "automatic admission of the results as experimental
+> evidence requires … amendment to C5" — i think this has probably been overly locked down,
+> the thing about all these conditions on it being accepted is a bit much no? by running them
+> with an automated provision to the coordinator via a PR comment in the inbox we are doing
+> so… and the thing about "identifying the run" is just an implementation detail (if we need
+> it identifying then we can just… put that in the comment or in the tarball itself, we
+> should avoid requiring things that force us into a manual path)
+
+The wording put to him in session, and his answer:
+
+> A run of a registered, frozen recipe counts as evidence for its registration's question
+> when Louis runs it himself and either hands its bundle over in session, or runs it with the
+> opt-in publish command. Publishing archives the complete bundle immutably, on an evidence
+> branch with its SHA-256, and posts its identity and digest on #145. Your running the command
+> is the authorisation (A4). The run's identity is read from the bundle, not stated by you.
+> This authorises no further runs, no changed method and no timing by agents.
+
+> Approve as worded (Recommended)
+
+And on the name, in session: "also hold up do not call it "just publish", that sounds like
+publishing a package! be very careful not to tread on existing justfile naming conventions!"
+
+Why there is no attachment: GitHub has no supported scripted way to attach a file to a comment
+(`gh issue comment` has no attach option, and uploads go through the browser only). So the
+bundle is a git object on the orphan `evidence` branch, linked at its commit. Pushes to that
+branch start no workflow: the push triggers are master, main and `py-*` tags only.
