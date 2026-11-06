@@ -1,0 +1,25 @@
+{
+  "candidate": "87ddcf269603e4459667b4d1e2119c2a3b3b7932",
+  "source_sha256": {
+    ".just/bench.just": "02391ac622bd8e27acdd17ed0a585dac7b0626617002378b3c21b2275e216010",
+    "docs/journal/2026-11-06-three-team-policy.md": "588b3546e4840a8f7bc1e0297144058a6d9cffe3e793108a32aca0f25a33896c",
+    "examples/ab.rs": "9bbe1b97d922c5d85c278fe3ffa6bf699101ba9cd4c27bd67e50f364dc09c704",
+    "bench/policy_ab.py": "346a72555bcf99385fd3bf66bd569cc551a4b2d69a34b0e06e3c000dd52bd609",
+    "bench/test_policy_ab.py": "7a61254f3dae3bcb5131296df80d7118a3c2d8d73e92b1cccf203c050cd7283c"
+  },
+  "unchanged_from_523ceaa9": [
+    "examples/ab.rs",
+    "bench/policy_ab.py",
+    "bench/test_policy_ab.py"
+  ],
+  "python_tests_executed_this_run": false,
+  "previous_unchanged_python_tests_passed": 14,
+  "rust_tests_executed": false,
+  "timing_run": false,
+  "fixture": "Extracted shell block with simulated Cargo/rustc; no shell rewrite required",
+  "limitations": [
+    "No real Cargo compilation or decoder run",
+    "No live proc census test",
+    "Configuration recording fixture uses paths without whitespace or glob characters"
+  ]
+}

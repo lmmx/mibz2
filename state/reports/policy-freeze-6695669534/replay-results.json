@@ -1,0 +1,50 @@
+{
+  "build_cases": {
+    "success": {
+      "exit": 0,
+      "copies": {
+        "ab-base": "BASE ab",
+        "ab-head": "HEAD ab",
+        "windows": "HEAD windows"
+      },
+      "builds": [
+        "BASE",
+        "HEAD"
+      ],
+      "stderr": ""
+    },
+    "BASE": {
+      "exit": 1,
+      "copies": {},
+      "builds": [
+        "BASE"
+      ],
+      "stderr": "REFUSED: the base build failed"
+    },
+    "HEAD": {
+      "exit": 1,
+      "copies": {
+        "ab-base": "BASE ab"
+      },
+      "builds": [
+        "BASE",
+        "HEAD"
+      ],
+      "stderr": "REFUSED: the head build failed"
+    }
+  },
+  "config_cases": {
+    "clean": true,
+    "target/three-team-policy/.cargo/config": "refused",
+    "target/three-team-policy/.cargo/config.toml": "refused",
+    "target/.cargo/config": "refused",
+    "target/.cargo/config.toml": "refused",
+    ".cargo/config": "refused",
+    ".cargo/config.toml": "refused"
+  },
+  "common_configuration_record": {
+    "ancestor_hashed": true,
+    "cargo_home_hashed": true,
+    "exit": 0
+  }
+}
