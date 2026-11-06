@@ -47,7 +47,7 @@ one that created the first three. Fill in only N and ROLE:
 > Create an event-triggered task, not a scheduled one and not a one-off, that runs
 > automatically whenever a new comment is posted on pull request #N in `lmmx/mibz2`. Subscribe
 > to newly created comments only, excluding bots, reviews, commit updates and edits where
-> supported. Before enabling it, show me the trigger, the condition, the GitHub permissions it
+> supported. Do not filter by comment content. Before enabling it, show me the trigger, the condition, the GitHub permissions it
 > will use, and whether it runs on my plan or costs anything extra. The task's instructions
 > are:
 >
@@ -60,6 +60,11 @@ the Work task chat window's settings.
   the pinned spec, so what a task saved can be checked against the record. Rules such as
   commit identity, no polling and no widening live once, in this file ("Always"). Repeating
   them in the task would make a second copy that can drift.
+- **Why the prompt says "do not filter by comment content":** the inbox is the address. A
+  content filter, such as the first tasks' `TYPE: CHECKPOINT`, would silently drop other
+  assignments, for example the Oracle's `CORRECTION`.
+- **Why the prompt names no commit identity:** SPEC.md's "Always" allows the connector's
+  `lmmx@users.noreply.github.com`. Forcing another address could block every commit.
 - **Why the subscription line is required:** each inbox wakes its role only for new comments.
   Edits, bot comments and reviews would start runs that displace real work, which is what the
   inboxes exist to prevent (PROTOCOL.md §6).
