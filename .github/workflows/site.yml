@@ -7,7 +7,8 @@ name: Documentation site
 # https://lmmx.github.io/mibz2/. Each pull request from this repository that touches the site
 # or the package's source gets a preview under gh-pages/pr-preview/pr-<number>/, linked from
 # a comment on the pull request, updated on every push and removed when it closes.
-# Production deploys leave pr-preview/ alone, and previews touch only their own directory.
+# Production deploys leave pr-preview/ alone, and previews touch only their own directory. A
+# preview passes once its own files are served, whichever Pages build published them.
 #
 # Previews are deployed only once Pages serves the gh-pages branch (the pages job reads the
 # Pages build type: "legacy" is a branch source). Until then only production is pushed to
@@ -221,4 +222,26 @@ jobs:
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           qr-code: "false"
-          wait-for-pages-deployment: true
+          # Not the action's own wait: it follows the Pages build of this push alone (below).
+          wait-for-pages-deployment: false
+      # Pages builds gh-pages once per push, and a push landing while a build runs cancels
+      # that build: the next one publishes both pushes' files, but the first push's own build
+      # reads as failed. Each deploy touches only its own path, so wait for the outcome
+      # instead: the preview serving this run's files, whose assets carry ?v=<commit> (the
+      # build job's "Version the site's own assets"). A query string per request gets past
+      # the Pages cache.
+      - name: Wait until the preview serves this build
+        if: github.event.action != 'closed'
+        env:
+          URL: ${{ env.PAGES_URL }}pr-preview/pr-${{ github.event.pull_request.number }}/
+        run: |
+          want="?v=${GITHUB_SHA::12}\""
+          for i in $(seq 1 80); do
+            if curl -fsS "${URL}?run=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${i}" | grep -qF "${want}"; then
+              echo "The preview serves this build: ${URL}"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::The preview did not serve this build (${want}) within 20 minutes: ${URL}"
+          exit 1
