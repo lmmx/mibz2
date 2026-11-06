@@ -1,0 +1,16 @@
+{
+  "incoming_comment": 6637300905,
+  "pr": 145,
+  "claimed_policy_commit": "55b4b86be4ba7eed41b283a52f2c1d56fa43cc67",
+  "task_operating_commit": "931640523226053b758ebc0c2c9fd4eac61128b3",
+  "sources": {
+    "guardian": "56361d02455a1439b71444ef33e513b54c470fb9",
+    "roles": "8ea1583944e13ecdcb48dc1cb23f31c934c700b5",
+    "journal": "3bb8d83aa435b01f78f8caa430d2ad5cd6d049c0",
+    "newguardian": "3797c2eb9e61a816f2152a41b4e16bfd211e6b5a",
+    "newcharter": "0b332e6d70e8ae1a884253f75597e1a6a4b2df7d",
+    "cursor": "ed09a4db64f742008e5ab39d426c257f2456dca2",
+    "decisions": "1e959b530cc9c1f6cb8cd5f3bc451dd28d7f39ea"
+  },
+  "disposition": "Record policy evidence; decline adopting G9/G10 through repository content while task-level scope remains explicitly pinned and reserved. No ruling reversing decisions in coordinator session; no new prototype or unsafe authorization."
+}

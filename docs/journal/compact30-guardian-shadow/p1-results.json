@@ -1,0 +1,275 @@
+{
+  "capture_v1": {
+    "archive_sha256": "47c61c87c7433cf738a7ffb9ea03905384fbe28d21c00ea17f0a60953bfed5f3",
+    "failed_G1": [
+      "warm_w1_cpu_ns_row",
+      "cold_w1_cpu_ns_row"
+    ],
+    "formal_outcome": "INVALID",
+    "g2": {
+      "max_skew": 0.041249702063307,
+      "over_2pct": [
+        {
+          "arm": "P",
+          "gap_ns": 35132,
+          "regime": "warm",
+          "round": 7,
+          "rows": 3600000,
+          "skew": 0.041249702063307,
+          "span_ns": 851691,
+          "step": 1
+        }
+      ],
+      "passes": false,
+      "steps": 4560
+    },
+    "manifest_files_verified": 69,
+    "ratios_descriptive_only": {
+      "cold_w1_cpu_ns_row": {
+        "hi": 1.4647442397175754,
+        "lo": 1.3781383932867521,
+        "point": 1.4207815712136769
+      },
+      "cold_w4_completion_ns": {
+        "hi": 1.3960073729314513,
+        "lo": 1.3786045764724137,
+        "point": 1.3872786861739534
+      },
+      "cold_w4_cpu_ns_row": {
+        "hi": 1.3435430909727115,
+        "lo": 1.3279078812868477,
+        "point": 1.3357026088733808
+      },
+      "warm_w1_cpu_ns_row": {
+        "hi": 1.4913095028914685,
+        "lo": 1.4045302272796503,
+        "point": 1.4472695930753388
+      },
+      "warm_w4_completion_ns": {
+        "hi": 1.368458803193122,
+        "lo": 1.3597338402960943,
+        "point": 1.3640893459567744
+      },
+      "warm_w4_cpu_ns_row": {
+        "hi": 1.3208271530850528,
+        "lo": 1.3108465464144932,
+        "point": 1.3158273868680606
+      }
+    },
+    "records": 75087,
+    "source": {
+      "branch": "HEAD",
+      "commit": "14d9ecb016a1b6d05748d795e30802e8aae31e06",
+      "tracked_changes": []
+    },
+    "stability": {
+      "cold_w1_cpu_ns_row": {
+        "gated": true,
+        "max_over_min": 1.2232111797570575,
+        "max_round": 2,
+        "min_round": 10,
+        "passes": false
+      },
+      "cold_w4_completion_ns": {
+        "gated": true,
+        "max_over_min": 1.0246874176857488,
+        "max_round": 12,
+        "min_round": 7,
+        "passes": true
+      },
+      "cold_w4_cpu_ns_row": {
+        "gated": true,
+        "max_over_min": 1.023766756408328,
+        "max_round": 18,
+        "min_round": 11,
+        "passes": true
+      },
+      "warm_w1_cpu_ns_row": {
+        "gated": true,
+        "max_over_min": 1.2273602164484745,
+        "max_round": 0,
+        "min_round": 12,
+        "passes": false
+      },
+      "warm_w4_completion_ns": {
+        "gated": true,
+        "max_over_min": 1.021890259103212,
+        "max_round": 19,
+        "min_round": 2,
+        "passes": true
+      },
+      "warm_w4_cpu_ns_row": {
+        "gated": true,
+        "max_over_min": 1.0254022351593646,
+        "max_round": 3,
+        "min_round": 2,
+        "passes": true
+      }
+    }
+  },
+  "capture_v2": {
+    "archive_sha256": "ebdb74549b39f83f07ae1f7d1c943916bac2ecb0be85868799aa30fe5e3d8af9",
+    "failed_G1": [
+      "warm_w4_cpu_ns_row",
+      "warm_w4_completion_ns"
+    ],
+    "formal_outcome": "INVALID",
+    "g2": {
+      "C": {
+        "allowance": 1,
+        "max_skew": 0.0014483251598997697,
+        "outliers": 0,
+        "passes": true,
+        "steps": 1140,
+        "weighted_skew": 0.00019337257523158844
+      },
+      "P": {
+        "allowance": 1,
+        "max_skew": 0.0049950353989370805,
+        "outliers": 0,
+        "passes": true,
+        "steps": 1140,
+        "weighted_skew": 0.0002281688066688367
+      },
+      "passes": true
+    },
+    "manifest_files_verified": 69,
+    "ratios_descriptive_only": {
+      "cold_w1_cpu_ns_row": {
+        "hi": 1.2564193289150818,
+        "lo": 1.1527142113980162,
+        "point": 1.2034502133098708
+      },
+      "cold_w4_completion_ns": {
+        "hi": 1.1484854644433242,
+        "lo": 1.1375467342340455,
+        "point": 1.143003013728649
+      },
+      "cold_w4_cpu_ns_row": {
+        "hi": 1.110654698927299,
+        "lo": 1.100726130241647,
+        "point": 1.1056792703062435
+      },
+      "warm_w1_cpu_ns_row": {
+        "hi": 1.3274030605496292,
+        "lo": 1.2491717896715167,
+        "point": 1.2876934638190212
+      },
+      "warm_w4_completion_ns": {
+        "hi": 1.1369303421498136,
+        "lo": 1.0922555148096555,
+        "point": 1.1143690753819233
+      },
+      "warm_w4_cpu_ns_row": {
+        "hi": 1.0951735094588138,
+        "lo": 1.0772865053778353,
+        "point": 1.0861931885200098
+      }
+    },
+    "records": 75087,
+    "source": {
+      "branch": "HEAD",
+      "commit": "fa21f33b372f7534e7610d93710e06c3af506ccc",
+      "tracked_changes": []
+    },
+    "stability": {
+      "cold_w1_cpu_ns_row": {
+        "gated": false,
+        "max_over_min": 1.2686005143126773,
+        "max_round": 14,
+        "min_round": 3,
+        "passes": false
+      },
+      "cold_w4_completion_ns": {
+        "gated": false,
+        "max_over_min": 1.019871791650091,
+        "max_round": 12,
+        "min_round": 3,
+        "passes": true
+      },
+      "cold_w4_cpu_ns_row": {
+        "gated": false,
+        "max_over_min": 1.01656884997949,
+        "max_round": 12,
+        "min_round": 3,
+        "passes": true
+      },
+      "warm_w1_cpu_ns_row": {
+        "gated": false,
+        "max_over_min": 1.1847503695470452,
+        "max_round": 7,
+        "min_round": 17,
+        "passes": false
+      },
+      "warm_w4_completion_ns": {
+        "gated": true,
+        "max_over_min": 1.2147436795611257,
+        "max_round": 5,
+        "min_round": 14,
+        "passes": false
+      },
+      "warm_w4_cpu_ns_row": {
+        "gated": true,
+        "max_over_min": 1.0742818388617805,
+        "max_round": 5,
+        "min_round": 4,
+        "passes": false
+      }
+    }
+  },
+  "evidence_digest": "856635be3105b63e1df4fe78a317cd803b584c680d6e0b781588b3dc45fab797",
+  "limits": [
+    "Unblinded replay: required specification revealed expected outcomes.",
+    "Archive verification only; no new execution or economic qualification."
+  ],
+  "v3": {
+    "baseline_fast_instructions": 81,
+    "body_target": 40,
+    "call_target": 41,
+    "center": 60197437,
+    "counts": {
+      "blocks": 434,
+      "epochs": 3654,
+      "leaf_fast": 1647375,
+      "opens_ordinary": 1754362,
+      "rows": 207006515,
+      "slow_entries": 148107,
+      "slow_ordinary_partial_same_epoch": 41
+    },
+    "epoch_cost": 14616,
+    "gross": 60952875,
+    "historical_compiler_outcome": "STOP",
+    "interval": [
+      60049330,
+      60345544
+    ],
+    "leaf_instructions": 44,
+    "leaf_memory": {
+      "reads": 12,
+      "writes": 6
+    },
+    "length_exit_cost": 492,
+    "miri_cases": 134,
+    "miri_classes": [
+      127,
+      4,
+      2,
+      1
+    ],
+    "mutation_caught": true,
+    "read_target": 10,
+    "rebuild_consoles_equal": {
+      "adversarial.console": true,
+      "corpora.console": true,
+      "synthetic-quick.console": true,
+      "synthetic.console": true
+    },
+    "tag_exit_cost": 740330,
+    "whole_listing_sizes": {
+      "ctor3-build-false": 1432,
+      "ctor3-finish-slow-false": 378,
+      "ctor3-refill-false": 67
+    },
+    "with_call": 45
+  }
+}

@@ -1,0 +1,293 @@
+{
+  "incoming_comment": 6635419092,
+  "pr": 145,
+  "operating_pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+  "scope": "G1 gate 3 reassessment of S62-F01 counter remedy; no new gate 1/2 determination or integration authorization",
+  "pins": {
+    "scanner": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+    "descriptor": "7620c0c667018772a0ba3be28eb62263b55037f8"
+  },
+  "checks": {
+    "scanner": {
+      "classes": 31,
+      "expressions": 32,
+      "new_fields": 20,
+      "legacy_records_equal": 44,
+      "normalized_listings_equal": {
+        "build": 1382,
+        "refill": 67,
+        "finish": 379
+      },
+      "archived_closure_functions": 52,
+      "archived_closure_instructions": 4057,
+      "control_detects_change": true,
+      "counter_mutation_detected": true,
+      "caller_delta": 868,
+      "interval": [
+        84060421,
+        84060421
+      ],
+      "caller_charged": [
+        84059553,
+        84059553
+      ],
+      "width": 0
+    },
+    "descriptor": {
+      "classes": 34,
+      "expressions": 38,
+      "new_fields": 27,
+      "legacy_records_equal": 44,
+      "normalized_listings_equal": {
+        "build": 1450,
+        "refill": 74,
+        "finish": 379
+      },
+      "archived_closure_functions": 52,
+      "archived_closure_instructions": 4132,
+      "control_detects_change": true,
+      "counter_mutation_detected": true,
+      "caller_delta": 868,
+      "interval": [
+        57830163,
+        62277795
+      ],
+      "caller_charged": [
+        57829295,
+        62276927
+      ],
+      "width": 4447632,
+      "sequential_differences": [
+        "bitmap_in_place",
+        "bitmap_reserves",
+        "rec_grows",
+        "rec_grow_frees",
+        "raw_grows",
+        "snaps_reserves"
+      ],
+      "output_digest": "4efb1c13ae58340f"
+    }
+  },
+  "sources": [
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/README.txt",
+      "blob": "85b08746f0331bf43889e38ecaf4d53a85661eec"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/asmid.py",
+      "blob": "e0b54e55d1e5f8db06b0b8bfa1768bcdfd9d8da4"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/callsite.py",
+      "blob": "f0aab356c8d4438ee9f62fedba37b44472202671"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/counted/adversarial.console",
+      "blob": "fb60f4b76dd40665b60f1e235da052942f489a33"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/counted/adversarial.jsonl",
+      "blob": "bc89f9500740c0812c409ca53886cd3f31ff95e4"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/counted/corpora.console",
+      "blob": "c30342102539f6ab9c4a01af6020f0f71bd4546d"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/counted/corpora.jsonl",
+      "blob": "e9cd2a218cd9db5afc40f73d3ea76588b5d84983"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/counted/synthetic-quick.console",
+      "blob": "902a47a27dbf6eb0a331747b7d2ce4d011e38f92"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/counted/synthetic.console",
+      "blob": "ede6f01f511ae6db8d398173f7aee36628dbb2ce"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/f01_replay.py",
+      "blob": "759879843fb9cd80d380590aaaa7cabdb428852d"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/harness-callsite.asm",
+      "blob": "0de463ff017d657c9a96a75fb59bf44325b9aa26"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/identity/control-build-true.json",
+      "blob": "88149b0f1083e9b25774cede4fc68248c272682b"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/identity/ctor2su-build-false.asm",
+      "blob": "6ce88cf67f50ef8583ce069164b277b1be5e786d"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/identity/ctor2su-finish-false.asm",
+      "blob": "7c00b41b9b83b1fa9454924112ad866a15d32b9b"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/identity/ctor2su-refill-false.asm",
+      "blob": "f5b560cac55a4cba038db128d3c1c2ddf9518c37"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/identity/identity.json",
+      "blob": "926fccc1a4bf7b730f3bfe4ac4321b6ce6a11529"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/ledger.json",
+      "blob": "435d8aa3113667f913a8c331daf60d1abf519fbc"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-f01/ledger.txt",
+      "blob": "3b41039a8217cf6451131a28ca7cd1122a7513a1"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "docs/journal/2026-11-04-compact30-scanner-prototype.md",
+      "blob": "06e1f31593becbc7681bd88a25e81af6fd2acbf2"
+    },
+    {
+      "pin": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "path": "examples/c30walk/ctor2su.rs",
+      "blob": "7549f41b6da12b74d8863bcde177f27cb1cf3506"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/README.txt",
+      "blob": "95bf0cbaee6347a7d9f98f1d9db0a068dc46d3e4"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/asmid.py",
+      "blob": "e0b54e55d1e5f8db06b0b8bfa1768bcdfd9d8da4"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/callsite.py",
+      "blob": "f0aab356c8d4438ee9f62fedba37b44472202671"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/counted/adversarial.console",
+      "blob": "dbcfa36cea801101bc26be48c3c68ba81c9b5929"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/counted/adversarial.jsonl",
+      "blob": "d3e108bc4ec05faaa8850812b9afc20a12023eba"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/counted/corpora.console",
+      "blob": "1f17c8aa09a1604d48316eac9f2b999b57bbb164"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/counted/corpora.jsonl",
+      "blob": "02e9c7aa15e4689095b31c34f639442c599e6989"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/counted/sequential.jsonl",
+      "blob": "2eb1e03d5c5c61522c777e8da87222aeb110af80"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/counted/synthetic-quick.console",
+      "blob": "5fe45080fed0801c6f137adf60594feea57a74e0"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/counted/synthetic.console",
+      "blob": "0890477d5a625eac6c19539f97b002921f69706e"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/f01_replay.py",
+      "blob": "759879843fb9cd80d380590aaaa7cabdb428852d"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/harness-callsite.asm",
+      "blob": "7772a8f303557db1f729a0737693f1e3b45ca510"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/identity/control-build-true.json",
+      "blob": "1c92f7fd020cb882d15e677a1fda07b6d841a7d0"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/identity/ctor2d-build-false.asm",
+      "blob": "2ec0aed043b9a000106b55c8b83db32976a5f1f7"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/identity/ctor2d-finish-false.asm",
+      "blob": "715a4f815a7f0a1516dc13603ed8d95bee7c3856"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/identity/ctor2d-refill-false.asm",
+      "blob": "877b93ce2852994c8fa9e146680785097ce87c8a"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/identity/identity.json",
+      "blob": "92c5b333e378d15e9fe9427b3b855a9d31e7ccf3"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/ledger.json",
+      "blob": "c61c66f21e3e16f81a84ee978c9a4fde8a76158a"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-f01/ledger.txt",
+      "blob": "876ac4115866c79f2b19f9a3ec03230603c9bacb"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype.md",
+      "blob": "e561d23c03463435adde3d52d78630a281a7492d"
+    },
+    {
+      "pin": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "path": "examples/c30walk/ctor2d.rs",
+      "blob": "34322f66fa3520dd989ac76017029925d03d58e8"
+    }
+  ],
+  "raw_replay": {
+    "profile_count": 8,
+    "verification": "Cached files' SHA-256 verified against original retrieval manifest, Git blob hashes recomputed and matched current pinned recursive trees; both two-run replays exactly equal committed ledger.json.",
+    "replay_script_blob": "759879843fb9cd80d380590aaaa7cabdb428852d",
+    "commands": [
+      "python f01_replay.py scanner SCANNER_TRIAL_ARCHIVE scanner-f01/counted/corpora.jsonl scanner-replayed.json",
+      "python f01_replay.py descriptor DESCRIPTOR_PROTOTYPE_ARCHIVE descriptor-f01/counted/sequential.jsonl descriptor-replayed.json"
+    ]
+  },
+  "limitations": [
+    "No Rust build or execution, timing or fresh Miri run.",
+    "Full 52-function closure identity is archived evidence, not freshly reconstructed from binaries; six archived build/refill/finish listings independently compared after normalization.",
+    "Frequency histogram inventory can hide cancelling changed sites; mapped source/listing reasoning is required. No missing numerical cost demonstrated.",
+    "Only the primary corpus and archived counting convention are gate-3 ledgered."
+  ]
+}

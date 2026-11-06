@@ -1,0 +1,13 @@
+{
+  "phase_comparisons": 20,
+  "cursor_paths_checked": 4,
+  "function_ast_equal": [
+    "completed",
+    "state",
+    "route",
+    "verify",
+    "misrouted"
+  ],
+  "complete_before_consumed_remains_busy": true,
+  "stale_copy_is_not_reconciled_by_router": true
+}

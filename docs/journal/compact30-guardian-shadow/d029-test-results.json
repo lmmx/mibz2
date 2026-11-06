@@ -1,0 +1,8 @@
+{
+  "method": "direct invocation of exact source test functions with fresh temporary directories; pytest unavailable",
+  "results": {
+    "test_clean_grid_passes": "passed",
+    "test_each_defect_fails": "passed",
+    "test_uneven_helpers_fail_the_plan": "passed"
+  }
+}

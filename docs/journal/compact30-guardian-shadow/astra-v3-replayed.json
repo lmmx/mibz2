@@ -1,0 +1,74 @@
+{
+  "archived_ledger": {
+    "center": 60197437,
+    "gross": 60952875,
+    "lower": 60049330,
+    "upper": 60345544
+  },
+  "evidence_manifest_sha256": "18e8de1ca5a97cf81ef489ce7e3e24a8f01f42272d1dd05707d24c0689868e85",
+  "explicit_memory": {
+    "corrected_reads_delta_nonempty": -6185349,
+    "corrected_writes_delta_nonempty": -3290662,
+    "journal_push_pop_delta": -19768500,
+    "journal_reads_delta": -6186217,
+    "journal_writes_delta": -3294750,
+    "v2_fast": {
+      "pop": 6,
+      "push": 6,
+      "reads": 17,
+      "writes": 8
+    },
+    "v3_leaf": {
+      "pop": 0,
+      "push": 0,
+      "reads": 12,
+      "writes": 6
+    }
+  },
+  "limits": [
+    "Archived evidence replay only; no fresh Rust/Miri/corpus execution.",
+    "Archived primary counters are per-corpus totals; not an independent per-block collection.",
+    "Ledger interval is the checkpoint claim; whole-build/fallback review is recorded separately.",
+    "No completed sequence closeout index or combined build; this is not charter section 6.2."
+  ],
+  "miri": {
+    "arrays": 262,
+    "cases": 134,
+    "leaf": 6162,
+    "restorations": 262,
+    "slow": 189,
+    "walks": 393
+  },
+  "primary_counts": {
+    "blocks": 434,
+    "epochs": 3654,
+    "leaf_fast": 1647375,
+    "opens_ordinary": 1754362,
+    "rows": 207006515,
+    "slow_entries": 148107,
+    "slow_ordinary_old_epoch": 106946,
+    "slow_ordinary_partial_same_epoch": 41,
+    "slow_raw_preset": 41120
+  },
+  "rebuild_console_equivalent": {
+    "adversarial.console": true,
+    "corpora.console": true,
+    "synthetic-quick.console": true,
+    "synthetic.console": true
+  },
+  "supporting_cost_envelope": {
+    "canonical_ledger_replaced": false,
+    "conservative_empty_build_setup_charge_upper": 1302,
+    "lower": 60196135,
+    "reserve_move_saving_upper": 868,
+    "residual_field_saving_upper": 126,
+    "upper": 60198431
+  },
+  "verified_blobs": 25,
+  "whole_listing_sizes": {
+    "ctor3-build-false.asm": 1432,
+    "ctor3-finish-false.asm": 44,
+    "ctor3-finish-slow-false.asm": 378,
+    "ctor3-refill-false.asm": 67
+  }
+}

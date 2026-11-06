@@ -1,0 +1,495 @@
+{
+  "repository": "lmmx/mibz2",
+  "files": [
+    {
+      "key": "d-only-d-run1.callgrind.gz",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run1.callgrind.gz",
+      "blob": "b71ddd0d2df05dd579e8952b63eb3866efc900e8",
+      "sha256": "148cea76d6184df966ce132761f8b73c89bbfd1673dd5a71b569fdc9f7679050"
+    },
+    {
+      "key": "d-only-d-run2.callgrind.gz",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run2.callgrind.gz",
+      "blob": "3d8adbd68aef8fdeb7c298c8ef97c7a1febd6e10",
+      "sha256": "ae4401662f7dc844fb4ae3ebcf0df82a565469bc8b9a03037be666855ae016f2"
+    },
+    {
+      "key": "d-only-v2-run1.callgrind.gz",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run1.callgrind.gz",
+      "blob": "65a88a6112a09def52c831f1a3b268a2cfcfed98",
+      "sha256": "05f41895b2ceb07746b7729bb2f40720f14b08c82a02def7547226fd744e7000"
+    },
+    {
+      "key": "d-only-v2-run2.callgrind.gz",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run2.callgrind.gz",
+      "blob": "8283d7a9f133fe8f6862b89e579a295ffc4e90c8",
+      "sha256": "356a517bf5305027e56b9befe524929a0620ccd70a5c4e6f690c7fec1f2660e9"
+    },
+    {
+      "key": "s-only-su-run1.callgrind.gz",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run1.callgrind.gz",
+      "blob": "31d06ed66bec1e352b47410ea74a6dd3f293b54f",
+      "sha256": "94f082b1a8175ecd8574f08e8676dd9520050eebb1cc1f6a7dbbb56e1ca7c36c"
+    },
+    {
+      "key": "s-only-su-run2.callgrind.gz",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run2.callgrind.gz",
+      "blob": "fdde1ab4cb22bf0c8f3e7f9640bd8164d7bb497c",
+      "sha256": "b164e5fbb9b5ef90bc815d58153c829ac9fd3853e5f2186ac63fb4ba33380998"
+    },
+    {
+      "key": "s-only-v2-run1.callgrind.gz",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run1.callgrind.gz",
+      "blob": "9caa0bc1aa8d173e4c2a14a25a4f7ede8a0edbd4",
+      "sha256": "c5e3bd9dc7db0543572dfdf42bbab709f9b1e532298c6b84bf75ef99c60f3630"
+    },
+    {
+      "key": "s-only-v2-run2.callgrind.gz",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run2.callgrind.gz",
+      "blob": "f94493f0b5514187322635da476a6f01e3f58eaa",
+      "sha256": "00228de9ef5d7a0250bea954546d2f7fa15519b720aae7b18737f3dd976d06b8"
+    },
+    {
+      "key": "e-run1.callgrind.gz",
+      "ref": "a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b",
+      "path": "docs/journal/2026-11-04-compact30-scanner-prototype-erratum/run1.callgrind.gz",
+      "blob": "7f2e9840844ff83aa9017eabc6f70ce382fbfef4",
+      "sha256": "ab35b66e676fef3ba12a041db065aeec76467a379b55e2b8adb2ab36a75e769c"
+    },
+    {
+      "key": "e-run2.callgrind.gz",
+      "ref": "a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b",
+      "path": "docs/journal/2026-11-04-compact30-scanner-prototype-erratum/run2.callgrind.gz",
+      "blob": "e52754fea4c6bca1536b3e0fe5a50fbc687e2df8",
+      "sha256": "7e5e5a02cdff82d69b51f5384643dbf6e89e42ac216e4b4bc3039d673bf3501a"
+    },
+    {
+      "key": "d/adversarial.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/adversarial.console",
+      "blob": "71ccb7a2ede5b94551caae677818a56ab457422c",
+      "sha256": "213ca7b273bd2b399cee45b64cd9bc22bb2bbbc7ae9bf3475c0ce6690dd128fb"
+    },
+    {
+      "key": "d/callgrind/classes.py",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/classes.py",
+      "blob": "334ce3e949c1b5ed94fc0d9ef4a4b8883149083b",
+      "sha256": "b208090b17ecdc091643352d05688883b6dc514629b925176440def4ba462a0d"
+    },
+    {
+      "key": "d/callgrind/only-d-run1-library-sites.txt",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run1-library-sites.txt",
+      "blob": "22042002b438c48ec63a272de1b68b546dbb8b2e",
+      "sha256": "3c2b881e23e72d48d5b7c79e64ea4e2fe5e946e342182f7dc4ce5c66d7b6e388"
+    },
+    {
+      "key": "d/callgrind/only-d-run2-library-sites.txt",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-d-run2-library-sites.txt",
+      "blob": "22042002b438c48ec63a272de1b68b546dbb8b2e",
+      "sha256": "3c2b881e23e72d48d5b7c79e64ea4e2fe5e946e342182f7dc4ce5c66d7b6e388"
+    },
+    {
+      "key": "d/callgrind/only-v2-run1-library-sites.txt",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run1-library-sites.txt",
+      "blob": "e95f4bdeb8bf5f7566d8ef7dca81750f44f2a5c6",
+      "sha256": "d4d01d120a2f40cac46e339b4ba419f1d21cd750a9290e7e667540a8eee268a5"
+    },
+    {
+      "key": "d/callgrind/only-v2-run2-library-sites.txt",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/callgrind/only-v2-run2-library-sites.txt",
+      "blob": "e95f4bdeb8bf5f7566d8ef7dca81750f44f2a5c6",
+      "sha256": "d4d01d120a2f40cac46e339b4ba419f1d21cd750a9290e7e667540a8eee268a5"
+    },
+    {
+      "key": "d/corpora.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/corpora.console",
+      "blob": "acbe2be12791b73f5f2b438114e12c2c3af9d4ec",
+      "sha256": "8a9288442647e532e193c7aaf23ae22a7e0bcc57fc0c6ed16ffa206a5d39a75d"
+    },
+    {
+      "key": "d/listings/ctor2d-build-false.asm",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/ctor2d-build-false.asm",
+      "blob": "a6f9141bf2574419e76f1a9ce18061f0da3291ed",
+      "sha256": "43babd3e294cec1614933667b5b4d4fbd80b7574c4e10e8901cac8b46dbcc389"
+    },
+    {
+      "key": "d/listings/ctor2d-finish-false.asm",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/ctor2d-finish-false.asm",
+      "blob": "be3ca935f8a48278be45316f7750e3e182f4c6f8",
+      "sha256": "7a4952470b50830c437cadf5c67bd177ba9813dfbfedf1df7e0a5261a17275c3"
+    },
+    {
+      "key": "d/listings/ctor2d-refill-false.asm",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/ctor2d-refill-false.asm",
+      "blob": "60ad7562e7dd563f018a83daf84d0d5b1af3da97",
+      "sha256": "8188271ce5d53f08416d103524075d870edd4610d7aecec89cea07c5ce409279"
+    },
+    {
+      "key": "d/listings/row-loops.txt",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/row-loops.txt",
+      "blob": "0653fa2b01fca8733da523c1c439f390e29b0d83",
+      "sha256": "08b07bce47be7e4dbb29a0f4ebecd394d2f90bf1619c820318b2d77a9755f86f"
+    },
+    {
+      "key": "d/listings/v2-build-false-same-binary.asm",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/v2-build-false-same-binary.asm",
+      "blob": "dda9953ea4f7cb9c7fb6cb66757de756d8333276",
+      "sha256": "da1cc9244d8590fb1b846b963699983cb74b6aceb45807f37f34e014ad61c4b7"
+    },
+    {
+      "key": "d/listings/v2-refill-false-same-binary.asm",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/listings/v2-refill-false-same-binary.asm",
+      "blob": "1f3b4b5a91e889c344a18ee914b3f2d156febbb6",
+      "sha256": "37a94fd21e0d36176952cec0a471379399fc9e65724bb524f33f1ba0594bf4f2"
+    },
+    {
+      "key": "d/miri/miri-allbytes.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-allbytes.console",
+      "blob": "000bbaf3e444c4a51d8015b762b3cfdbfa498888",
+      "sha256": "6e14830e84fca1b8502dfddb6d2e28d95590240aac87b00245dafb778189cf8a"
+    },
+    {
+      "key": "d/miri/miri-crossing.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-crossing.console",
+      "blob": "49c4a9863347d6d3db1ac6e7aa7bd98846ee4654",
+      "sha256": "205c7508dac03e5fa80c8a48e965fcba205d6d662e755ca60ec6fdf178790db7"
+    },
+    {
+      "key": "d/miri/miri-epoch.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-epoch.console",
+      "blob": "192e8c02bafe6586370a3268fb51e742e88b5713",
+      "sha256": "1b77413bc5eacb9dc8deb0aa960d8e1d099c1624b2fe8203ce597a8889188c69"
+    },
+    {
+      "key": "d/miri/miri-malformed.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-malformed.console",
+      "blob": "cca88f2547f54585bf800308ef9244e14213b874",
+      "sha256": "9536395516795225c70136ec4345848acba20d4f012ec6b93dcf96a0e4adb40e"
+    },
+    {
+      "key": "d/miri/miri-pending.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-pending.console",
+      "blob": "5eb7143c37bf3e6bf01c4968a8eb4be038b0b586",
+      "sha256": "8fa6e214fcd7cb42fa16d286c88bed3602dfae4916724ffe1af5bc6c2bdfb56e"
+    },
+    {
+      "key": "d/miri/miri-reuse.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-reuse.console",
+      "blob": "a80b3011f45ea759b6e7d42e7f650cc66f82d797",
+      "sha256": "84c11bb92b9ef6948642261502b84f95e6a5db663d45f677db1c745d453e88da"
+    },
+    {
+      "key": "d/miri/miri-runs.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-runs.console",
+      "blob": "655b14b3af830e463481108fa75b307257207ce9",
+      "sha256": "1497064b7ada4971eb222f6df244e35c4c5bccccd88a6b54311dddf76b7a9308"
+    },
+    {
+      "key": "d/miri/miri-slots.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-slots.console",
+      "blob": "e97b0372c7d85373b5e4bb705fc5b11bf5d7aa57",
+      "sha256": "4ccd2a5f328804c88f33777eb59599ccce5ad93afcdc0082de9974e92778ae93"
+    },
+    {
+      "key": "d/miri/miri-tiny.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/miri/miri-tiny.console",
+      "blob": "a1e8d96a61633fa538514420c6a57f69aaff523d",
+      "sha256": "ba495a91285a88748aebaba0cbdc9fcec6b69d0aa7745c45cbeac8e64da5362d"
+    },
+    {
+      "key": "d/mutation-M1.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/mutation-M1.console",
+      "blob": "e89572737d167ee77dada7678ed9464f349e115a",
+      "sha256": "025bde34871343e47b8a8361dd9dd4e9fcc9649a591118763e8edf493930594c"
+    },
+    {
+      "key": "d/mutation-M2.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/mutation-M2.console",
+      "blob": "d04bddbb197ab568bfb60a64f60b2cb4d1cd7121",
+      "sha256": "6c4578f62fba36e9e01bf6debe1f86a09ef5cf77088b56844def76731a49c9fd"
+    },
+    {
+      "key": "d/synthetic.console",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/synthetic.console",
+      "blob": "e833f348c716dca4ce1561954701b6b25bc62da5",
+      "sha256": "fdc07a3c1db6099ae1b7376c124a904940112d300584ba10097a8ca1ff7acc95"
+    },
+    {
+      "key": "s/adversarial.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/adversarial.console",
+      "blob": "5352b1c1ec90319582f29803c96090ee5dc32a3a",
+      "sha256": "66834b3eb3e4ff9a4c6c80e969569a3e1a7bbe920e560e1cdf5fe4e7ebbc1298"
+    },
+    {
+      "key": "s/callgrind/classes.py",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/classes.py",
+      "blob": "807828dd45339fc3492756391b6fa3cd5e0321fa",
+      "sha256": "2b82403bf6927234222ba47c31294b59316d9b7f407126a6d39b7673030d53ec"
+    },
+    {
+      "key": "s/callgrind/only-su-run1-library-sites.txt",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run1-library-sites.txt",
+      "blob": "cbd48c1bda8d955898e83ee74462ddbbcdcc25aa",
+      "sha256": "f97ebb1840c9e6d7961782f216003d22b278722da6ba504a39f5863298f34d6e"
+    },
+    {
+      "key": "s/callgrind/only-su-run2-library-sites.txt",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-su-run2-library-sites.txt",
+      "blob": "cbd48c1bda8d955898e83ee74462ddbbcdcc25aa",
+      "sha256": "f97ebb1840c9e6d7961782f216003d22b278722da6ba504a39f5863298f34d6e"
+    },
+    {
+      "key": "s/callgrind/only-v2-run1-library-sites.txt",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run1-library-sites.txt",
+      "blob": "6d0562db63f15722a9d82cfbbc7a85c8d81617f7",
+      "sha256": "ee02612c22b0c25020dddfbdf694402386ea517da1c911d98e0a39dacb2831da"
+    },
+    {
+      "key": "s/callgrind/only-v2-run2-library-sites.txt",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/callgrind/only-v2-run2-library-sites.txt",
+      "blob": "6d0562db63f15722a9d82cfbbc7a85c8d81617f7",
+      "sha256": "ee02612c22b0c25020dddfbdf694402386ea517da1c911d98e0a39dacb2831da"
+    },
+    {
+      "key": "s/corpora.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/corpora.console",
+      "blob": "019860a6242ea8a0e794a8e0c54c153d41926814",
+      "sha256": "d6bf1be88dbf48d6b57b30f7b3d053f8201de0bdce4716c5b42c5b7e360f47df"
+    },
+    {
+      "key": "s/listings/ctor2s-build-false-same-binary.asm",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2s-build-false-same-binary.asm",
+      "blob": "c9b13d7a4403150b1ef5184f9e5f829382c6042e",
+      "sha256": "35aaf4db61659602757c8016bc985708da2116c5c6d8bac6d921bb1ab7884144"
+    },
+    {
+      "key": "s/listings/ctor2su-build-false.asm",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2su-build-false.asm",
+      "blob": "1937f1891764819355d34fc402d7b82c00026d8c",
+      "sha256": "c65163d625198ab0564aade7cbb0d44ebbcc7285766d33e42be9d535ec26a6bc"
+    },
+    {
+      "key": "s/listings/ctor2su-finish-false.asm",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2su-finish-false.asm",
+      "blob": "39f134cd77569266b4ed3650f075100beceb740a",
+      "sha256": "dfd734dd4e2d110e32848b7468b165dd006d77553606bfc7e72976da13b7d671"
+    },
+    {
+      "key": "s/listings/ctor2su-refill-false.asm",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/ctor2su-refill-false.asm",
+      "blob": "937a815cf0f9753b54d9a699bd7bd0e714366f9f",
+      "sha256": "4e0a59efea9c5b34055f6a4abeabafe0877d522e803c52c3b237f42b2da2c1e4"
+    },
+    {
+      "key": "s/listings/row-loops.txt",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/row-loops.txt",
+      "blob": "2b31c26920f38034369e55bba0bbc5537afca632",
+      "sha256": "2f02803035aea7f54317f9c50c4a5c50efcf137ee61e78dce868d0bd00379544"
+    },
+    {
+      "key": "s/listings/v2-build-false-same-binary.asm",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/listings/v2-build-false-same-binary.asm",
+      "blob": "31d23f11a9c0470f607ab2181ea735c28f8738fc",
+      "sha256": "1f3e152ba62d2d98a2ed204514f38b539f14f6120695a3e3cf80b5cc3024cea1"
+    },
+    {
+      "key": "s/miri/miri-align.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-align.console",
+      "blob": "6315c9b821685f3eafc354c2b9a94c4677e79b56",
+      "sha256": "fdc118d445c852314bd08b441b3831a49d6f8042847aa324957927d9e8266ef2"
+    },
+    {
+      "key": "s/miri/miri-controls.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-controls.console",
+      "blob": "8852a205d9e7380c19d0368f7e6ad4e031d0ce07",
+      "sha256": "b003fb6208bcc9241718b998d7c1f78c912ec766bc9ab732888a0a7cecb20ed2"
+    },
+    {
+      "key": "s/miri/miri-endrun.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-endrun.console",
+      "blob": "76ad2bbd1f7955dbbf6d044efc94c148643c8c46",
+      "sha256": "47c17c44c7807911b5f6579097cef815d736bf5c024437b9e0e488ebe1240a2a"
+    },
+    {
+      "key": "s/miri/miri-epoch.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-epoch.console",
+      "blob": "a8b9376a4046f56308f7cbfa55a291a6dd90fc5b",
+      "sha256": "4af616d7d1b3f666a90dd97c868cd63eeeb94138c08907b46ec051b55b921e64"
+    },
+    {
+      "key": "s/miri/miri-held.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-held.console",
+      "blob": "3a6e2619268e04c590f8a3a1db06f16ace91bd05",
+      "sha256": "ed38d2989e7aa2e743c35c20fd8118b895ff0c1edf67a6751b2000319c218d6e"
+    },
+    {
+      "key": "s/miri/miri-malformed.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-malformed.console",
+      "blob": "1e7db8c44d360a71fa7995efdbb6e2d5872a8013",
+      "sha256": "8584972171df068e21602d9fa862195d33d562b9ac04f7ecf92091ff40765f5f"
+    },
+    {
+      "key": "s/miri/miri-mu1-default.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu1-default.console",
+      "blob": "7405fdbdf4cd84e14bc8f068d4a803881043fbad",
+      "sha256": "b3c41fde0391bf3cccf5ccd69bc0af8dbad64d40c59341c0e87aa58ca758d861"
+    },
+    {
+      "key": "s/miri/miri-mu1-noubchecks.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu1-noubchecks.console",
+      "blob": "0a46469c34892f66f5b835ac52d79f41b62a45d5",
+      "sha256": "6a1c6d148038a69e3812ac7f337849077739e8c0bf89720cbdfea14ae9171f23"
+    },
+    {
+      "key": "s/miri/miri-mu2-default.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu2-default.console",
+      "blob": "23a49c122cc79202fac9a1e891b967c2f42eb1bc",
+      "sha256": "69b409fd705adf22fc3c49e288375769619f86303815313314d0f69866d43159"
+    },
+    {
+      "key": "s/miri/miri-mu2-noubchecks.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu2-noubchecks.console",
+      "blob": "e2d28a1957e0117b8144e1893ee70dcc0bb3435f",
+      "sha256": "00dda3875baa0f165598f101cc1ea8cfaaadb13b7fe322f31eab02bec839dee0"
+    },
+    {
+      "key": "s/miri/miri-mu3-default.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu3-default.console",
+      "blob": "ddaebff2044ba04a5abe5621896a68ff1121cd55",
+      "sha256": "e1ffe297427f550c798f73a5ec335229beea05059d13ea06d3e71b18746656e8"
+    },
+    {
+      "key": "s/miri/miri-mu3-noubchecks.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-mu3-noubchecks.console",
+      "blob": "d46a58df64d6472a103676a028115bafa314874d",
+      "sha256": "64c1cf3da66c5035ff7b4bc6b0069664e1b91400b2ba1f72641f01bc44ca53b0"
+    },
+    {
+      "key": "s/miri/miri-phase.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-phase.console",
+      "blob": "48f6a4c1cb639d775b76442b4a5450e57a4f75d1",
+      "sha256": "ddbd2eb2531612e3a9c00b81507677fea221e4b164bf984d5d3c0a66e0c7c606"
+    },
+    {
+      "key": "s/miri/miri-tails.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-tails.console",
+      "blob": "4ab27b3d9f05b452cd5fb3e20d08445019ef1172",
+      "sha256": "3aa417689c67cfc93caab7d15c054d56f8de5778903c7f39099a6132e9f42f32"
+    },
+    {
+      "key": "s/miri/miri-tiny.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/miri/miri-tiny.console",
+      "blob": "fa43ce565fc37854ecfe32f7a7137f3ad508a6d6",
+      "sha256": "da29b089895f1576798c36ca331a59f6817cd2ca3f82d7f4a87de9ad9c7a8d70"
+    },
+    {
+      "key": "s/mutations/m1.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/m1.console",
+      "blob": "229ce08435a7c6466ad5bc631819db73da1c0938",
+      "sha256": "0392696af1269f4acd8e520c2cdc4b39715b0e3d5bc34ce202ac66bb3aebf896"
+    },
+    {
+      "key": "s/mutations/m2.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/mutations/m2.console",
+      "blob": "8fcb45f2b8b60cda8666289fbe05c8c8b3bc217a",
+      "sha256": "b54b7f159df6f310c119aad7a882d4c0129812e3907c339bc2db4716d90f4f98"
+    },
+    {
+      "key": "s/synthetic.console",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/synthetic.console",
+      "blob": "b2a2614fcf55fb8f7f651d26afd9a230ad6f0b6e",
+      "sha256": "a9f11730c31a883e38275b48879199379beae25a73c6c8cc04b631e801168fdc"
+    },
+    {
+      "key": "d/corpora.jsonl",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "docs/journal/2026-11-04-compact30-descriptor-prototype/corpora.jsonl",
+      "blob": "c95769cb055dc57c512b035ae951c511bcbdd77a",
+      "sha256": "828a2a4392c36b8a7d8a98ddc3f817968a04260a7840109b13618442f1239604"
+    },
+    {
+      "key": "s/corpora.jsonl",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "docs/journal/2026-11-04-compact30-scanner-u1u2-trial/corpora.jsonl",
+      "blob": "2d536cddb46deff5f2b7a5b714cb13b8dec1e6b3",
+      "sha256": "f66df0c073332cb85fa5d03ef108b0bb07644c31d5c9fc1d10fdc5dfa2ef89f2"
+    },
+    {
+      "key": "dsource",
+      "ref": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "path": "examples/c30walk/ctor2d.rs",
+      "blob": "d7383f9e9f2793e1d270de646ebc08294b12cf48",
+      "sha256": "e41e6cac69539a8171f73de5a2296187d55381a2801cec4184346abf3144a9c6"
+    },
+    {
+      "key": "ssource",
+      "ref": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "path": "examples/c30walk/ctor2su.rs",
+      "blob": "028dfef9250bd257e1982082e93fd001301089bd",
+      "sha256": "9706aebd4ab2153bca08a72e0bfa38d03fbac0ddc3f4c000f7c985fdda48e56f"
+    }
+  ]
+}

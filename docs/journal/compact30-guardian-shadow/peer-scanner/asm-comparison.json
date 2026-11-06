@@ -1,0 +1,34 @@
+{
+  "ctor2-build-false.asm": {
+    "b2_count": 1431,
+    "scanner_archive_count": 1431,
+    "normalized_identical": true
+  },
+  "ctor2-finish-false.asm": {
+    "b2_count": 379,
+    "scanner_archive_count": 379,
+    "normalized_identical": true
+  },
+  "ctor2-refill-false.asm": {
+    "b2_count": 67,
+    "scanner_archive_count": 67,
+    "normalized_identical": true
+  },
+  "attempt3_final": {
+    "normalized_identical": true,
+    "attempt_start": "0x40f00",
+    "final_start": "0x41130"
+  },
+  "attempt1": {
+    "instruction_count": 1355,
+    "start": "0x40f00"
+  },
+  "attempt2": {
+    "instruction_count": 1355,
+    "start": "0x40f00"
+  },
+  "attempt3": {
+    "instruction_count": 1414,
+    "start": "0x40f00"
+  }
+}

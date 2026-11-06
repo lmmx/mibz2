@@ -1,0 +1,1140 @@
+{
+  "decision": "D018",
+  "incoming_comment": 6643744616,
+  "incoming_pr": 145,
+  "delivery_id": "f6052240-d89e-11f1-968c-32d63ba8a004",
+  "checkpoint_marker_verified": true,
+  "operating_pin": "931640523226053b758ebc0c2c9fd4eac61128b3",
+  "candidate": "75b13f009c619300bc914750b1a4a44f365def2e",
+  "test_only_child": "3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1",
+  "archive_pin": "b0f6e89db10e579d7626b7e93b10f2c8137ebec5",
+  "archive_manifest": [
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/README.md",
+      "sha": "ff81c6ba851e62d3602101843e8b6c5ec08f6f18",
+      "size": 6214
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg",
+      "sha": "92d963bd76a4eae93f4518bfd7028f10a9e48603"
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b0.console",
+      "sha": "5e89f6d025bfe62b109307c57678fce923bf4c51",
+      "size": 482
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b0.out",
+      "sha": "056be4100165bb428d2b8d9a110a49984ea0933c",
+      "size": 19821
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b0.stdout",
+      "sha": "7c4209ed30ceebe352db97aa57414549561f27a8",
+      "size": 32
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b1.console",
+      "sha": "17587de02ba7b059b8d364b347767129471549b0",
+      "size": 491
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b1.out",
+      "sha": "3203958889309986c73f4689bd7d7735c930ffb7",
+      "size": 70703
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b1.stdout",
+      "sha": "1cba316702228786b351c516c3a41fc038571c03",
+      "size": 36
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b233.console",
+      "sha": "c1736c0f6221709a19f160cdc9c15ae8fa896df5",
+      "size": 493
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b233.out",
+      "sha": "5e8749f591f39a1826eb05522c43d8e9dcff33ad",
+      "size": 70870
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b233.stdout",
+      "sha": "91a402f4d8f1764be5b3f69687d29264b4e7ed46",
+      "size": 38
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b400.console",
+      "sha": "b0c917fb9dee56ff15fa9fdadf4781fc3fc45403",
+      "size": 493
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b400.out",
+      "sha": "8abf157e78479184097e2193ccf7cdfb89300a45",
+      "size": 70370
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b400.stdout",
+      "sha": "35510abeba7cf8ec2e7dacd676c1a5c425aee7da",
+      "size": 38
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b41.console",
+      "sha": "967b4ee0b13efda1b0c812777f967cd8129e475e",
+      "size": 492
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b41.out",
+      "sha": "dd744fa738a848687ee5dc950b6b99ea760b52e4",
+      "size": 69544
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b41.stdout",
+      "sha": "c25382171387c091634384cba85d6a410835ac3b",
+      "size": 37
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b472.console",
+      "sha": "32ee7922382796e7cd7a629f1b54b26563018a02",
+      "size": 484
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b472.out",
+      "sha": "e10c9771e48724b01117032af018cd6608b81764",
+      "size": 21849
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b472.stdout",
+      "sha": "00d4913fd7a3994ee8fe3f6ffda035a4850e6cc9",
+      "size": 34
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b97.console",
+      "sha": "b1d61dcae3b04a436c670469ee8c70480feae74c",
+      "size": 483
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b97.out",
+      "sha": "232315a2e2895fb653508629543fb6d8f6330c9f",
+      "size": 21575
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/base-b97.stdout",
+      "sha": "63265808fefc7a0cd016d58a329774c23277401e",
+      "size": 33
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b0.console",
+      "sha": "3182a4e3f009fa2ff4741db8564514f3a0dfd28f",
+      "size": 482
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b0.out",
+      "sha": "eae1e0f0ab79b10ebf4872755cdd2a32caafd361",
+      "size": 19781
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b0.stdout",
+      "sha": "7c4209ed30ceebe352db97aa57414549561f27a8",
+      "size": 32
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b1.console",
+      "sha": "a2858fc6ffad3c76257b3933826e8941e4d1f4c8",
+      "size": 491
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b1.out",
+      "sha": "bbb3f1179310fadb7d789a39f2de3a33648594a9",
+      "size": 72380
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b1.stdout",
+      "sha": "1cba316702228786b351c516c3a41fc038571c03",
+      "size": 36
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b233.console",
+      "sha": "6efd284af9324e01c3d3754b7c1a12830bd1c10f",
+      "size": 493
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b233.out",
+      "sha": "088808b94a2d152520796624a8fb86bc03f208e4",
+      "size": 72364
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b233.stdout",
+      "sha": "91a402f4d8f1764be5b3f69687d29264b4e7ed46",
+      "size": 38
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b400.console",
+      "sha": "b9ccb13473f09aa824a09585546170a30fd05436",
+      "size": 493
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b400.out",
+      "sha": "1d95767388d7a06f6a302be31079c931dc9294bb",
+      "size": 71891
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b400.stdout",
+      "sha": "35510abeba7cf8ec2e7dacd676c1a5c425aee7da",
+      "size": 38
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b41.console",
+      "sha": "dab455fc49ac01cd3e30f0804ad9bfb6378b44b0",
+      "size": 492
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b41.out",
+      "sha": "c2fd13b20c492e97e6131ceaf52d9dbd3f31b36b",
+      "size": 71020
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b41.stdout",
+      "sha": "c25382171387c091634384cba85d6a410835ac3b",
+      "size": 37
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b472.console",
+      "sha": "2bbffa8da55daf8cef53cf56fc821d22b3d1ee89",
+      "size": 484
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b472.out",
+      "sha": "39e822340f91c622b816a9a6b54ff51285b7b866",
+      "size": 21918
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b472.stdout",
+      "sha": "00d4913fd7a3994ee8fe3f6ffda035a4850e6cc9",
+      "size": 34
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b97.console",
+      "sha": "69b17854a931e428da5a8df0779b52bd6243e20f",
+      "size": 483
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b97.out",
+      "sha": "f2cbd3746ccc5ed666d959b6f94489c19d3e0e79",
+      "size": 21409
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/cg/walk-b97.stdout",
+      "sha": "63265808fefc7a0cd016d58a329774c23277401e",
+      "size": 33
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/driver",
+      "sha": "0617f742e6488bbda75a717e7f7775caa9c09c66"
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/driver/Cargo.toml",
+      "sha": "aa2fa239ccfbea0587307c5ec83e7be199c5ca97",
+      "size": 291
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/driver/src",
+      "sha": "73fec2c831eadd042d6f0a53de1080a948b59d59"
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/driver/src/main.rs",
+      "sha": "65f336370c235c7f01993ce0706bb02c813c08c9",
+      "size": 2477
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/hotloop.py",
+      "sha": "88cd9b18e23b77fbf5986973337e0c7f3366ba15",
+      "size": 1572
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/listings",
+      "sha": "9d31c475b841dd732417e13737e0fc074cbb4df9"
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/listings/base-room_segments-hot-b1.txt",
+      "sha": "4c96acdb4cee384052d2be8fb67a1b965ce61a02",
+      "size": 798
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/listings/base-room_segments.asm",
+      "sha": "43d34b2da03fc38487cc38b0ac94b6b2b40ce0f2",
+      "size": 66697
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/listings/walk-room_segments-hot-b1.txt",
+      "sha": "893559860b85e8f9aae1766f222bf9f0a9c044b6",
+      "size": 3926
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/listings/walk-room_segments.asm",
+      "sha": "e4a2eccd79ce2cc3103c41c5129db868ebb21ade",
+      "size": 74568
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/miri.txt",
+      "sha": "af895cee659c115df0b033093b23eb594a606e3f",
+      "size": 793
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/test-debug.txt",
+      "sha": "47ef4feb3d6bf409e9ea49862da38682bd058d6e",
+      "size": 964
+    },
+    {
+      "path": "docs/journal/compact30-channel/evidence/walk-75b13f00/test-release-trace.txt",
+      "sha": "1d983c84d827b24f66fb1979758eca405691e0cd",
+      "size": 1844
+    }
+  ],
+  "profile_replay": [
+    {
+      "block": 0,
+      "arm": "base",
+      "blob": "056be4100165bb428d2b8d9a110a49984ea0933c",
+      "summary": 7573,
+      "selfTotal": 7573,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 7573,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 7557,
+          "self": 630
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 3150,
+          "self": 2568
+        }
+      ]
+    },
+    {
+      "block": 0,
+      "arm": "walk",
+      "blob": "eae1e0f0ab79b10ebf4872755cdd2a32caafd361",
+      "summary": 7573,
+      "selfTotal": 7573,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 7573,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 7557,
+          "self": 630
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 3150,
+          "self": 2568
+        }
+      ]
+    },
+    {
+      "block": 1,
+      "arm": "base",
+      "blob": "3203958889309986c73f4689bd7d7735c930ffb7",
+      "summary": 25751812,
+      "selfTotal": 25751812,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 25751812,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 25751796,
+          "self": 87
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 5429062,
+          "self": 5428357
+        },
+        {
+          "name": "mibz2::bwt::room_segments::<32, 1>",
+          "inclusive": 15426892,
+          "self": 15155948
+        }
+      ]
+    },
+    {
+      "block": 1,
+      "arm": "walk",
+      "blob": "bbb3f1179310fadb7d789a39f2de3a33648594a9",
+      "summary": 20184713,
+      "selfTotal": 20184713,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 20184713,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 20184697,
+          "self": 87
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 5429062,
+          "self": 5428357
+        },
+        {
+          "name": "mibz2::bwt::room_segments::<32, 1>",
+          "inclusive": 9859793,
+          "self": 9588849
+        }
+      ]
+    },
+    {
+      "block": 41,
+      "arm": "base",
+      "blob": "dd744fa738a848687ee5dc950b6b99ea760b52e4",
+      "summary": 25168396,
+      "selfTotal": 25168396,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 25168396,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 25168380,
+          "self": 87
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 5280730,
+          "self": 5280025
+        },
+        {
+          "name": "mibz2::bwt::room_segments::<32, 1>",
+          "inclusive": 15364532,
+          "self": 15100769
+        }
+      ]
+    },
+    {
+      "block": 41,
+      "arm": "walk",
+      "blob": "c2fd13b20c492e97e6131ceaf52d9dbd3f31b36b",
+      "summary": 19480528,
+      "selfTotal": 19480528,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 19480528,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 19480512,
+          "self": 87
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 5280730,
+          "self": 5280025
+        },
+        {
+          "name": "mibz2::bwt::room_segments::<32, 1>",
+          "inclusive": 9676664,
+          "self": 9412901
+        }
+      ]
+    },
+    {
+      "block": 97,
+      "arm": "base",
+      "blob": "232315a2e2895fb653508629543fb6d8f6330c9f",
+      "summary": 7942,
+      "selfTotal": 7942,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 7942,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 7926,
+          "self": 650
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 3318,
+          "self": 2600
+        }
+      ]
+    },
+    {
+      "block": 97,
+      "arm": "walk",
+      "blob": "f2cbd3746ccc5ed666d959b6f94489c19d3e0e79",
+      "summary": 7942,
+      "selfTotal": 7942,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 7942,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 7926,
+          "self": 650
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 3318,
+          "self": 2600
+        }
+      ]
+    },
+    {
+      "block": 233,
+      "arm": "base",
+      "blob": "5e8749f591f39a1826eb05522c43d8e9dcff33ad",
+      "summary": 25588420,
+      "selfTotal": 25588420,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 25588420,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 25588404,
+          "self": 87
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 5215492,
+          "self": 5214789
+        },
+        {
+          "name": "mibz2::bwt::room_segments::<32, 1>",
+          "inclusive": 15429922,
+          "self": 15175677
+        }
+      ]
+    },
+    {
+      "block": 233,
+      "arm": "walk",
+      "blob": "088808b94a2d152520796624a8fb86bc03f208e4",
+      "summary": 19989553,
+      "selfTotal": 19989553,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 19989553,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 19989537,
+          "self": 87
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 5215492,
+          "self": 5214789
+        },
+        {
+          "name": "mibz2::bwt::room_segments::<32, 1>",
+          "inclusive": 9831055,
+          "self": 9576810
+        }
+      ]
+    },
+    {
+      "block": 400,
+      "arm": "base",
+      "blob": "8abf157e78479184097e2193ccf7cdfb89300a45",
+      "summary": 25129270,
+      "selfTotal": 25129270,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 25129270,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 25129254,
+          "self": 87
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 5203460,
+          "self": 5202757
+        },
+        {
+          "name": "mibz2::bwt::room_segments::<32, 1>",
+          "inclusive": 15373793,
+          "self": 15117163
+        }
+      ]
+    },
+    {
+      "block": 400,
+      "arm": "walk",
+      "blob": "1d95767388d7a06f6a302be31079c931dc9294bb",
+      "summary": 19490552,
+      "selfTotal": 19490552,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 19490552,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 19490536,
+          "self": 87
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 5203460,
+          "self": 5202757
+        },
+        {
+          "name": "mibz2::bwt::room_segments::<32, 1>",
+          "inclusive": 9735075,
+          "self": 9478445
+        }
+      ]
+    },
+    {
+      "block": 472,
+      "arm": "base",
+      "blob": "e10c9771e48724b01117032af018cd6608b81764",
+      "summary": 8780,
+      "selfTotal": 8780,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 8780,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 8764,
+          "self": 790
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 3539,
+          "self": 2821
+        }
+      ]
+    },
+    {
+      "block": 472,
+      "arm": "walk",
+      "blob": "39e822340f91c622b816a9a6b54ff51285b7b866",
+      "summary": 8780,
+      "selfTotal": 8780,
+      "selected": [
+        {
+          "name": "c30cg::measured",
+          "inclusive": 8780,
+          "self": 16
+        },
+        {
+          "name": "mibz2::decode_block::<mibz2::bwt::Segmented>",
+          "inclusive": 8764,
+          "self": 790
+        },
+        {
+          "name": "mibz2::bwt::build",
+          "inclusive": 3539,
+          "self": 2821
+        }
+      ]
+    }
+  ],
+  "ledger": [
+    {
+      "block": 0,
+      "arm": "base",
+      "decode": 7557,
+      "build": 3150,
+      "walk": 0,
+      "rest": 4407,
+      "program": 7573
+    },
+    {
+      "block": 0,
+      "arm": "walk",
+      "decode": 7557,
+      "build": 3150,
+      "walk": 0,
+      "rest": 4407,
+      "program": 7573
+    },
+    {
+      "block": 1,
+      "arm": "base",
+      "decode": 25751796,
+      "build": 5429062,
+      "walk": 15426892,
+      "rest": 4895842,
+      "program": 25751812
+    },
+    {
+      "block": 1,
+      "arm": "walk",
+      "decode": 20184697,
+      "build": 5429062,
+      "walk": 9859793,
+      "rest": 4895842,
+      "program": 20184713
+    },
+    {
+      "block": 41,
+      "arm": "base",
+      "decode": 25168380,
+      "build": 5280730,
+      "walk": 15364532,
+      "rest": 4523118,
+      "program": 25168396
+    },
+    {
+      "block": 41,
+      "arm": "walk",
+      "decode": 19480512,
+      "build": 5280730,
+      "walk": 9676664,
+      "rest": 4523118,
+      "program": 19480528
+    },
+    {
+      "block": 97,
+      "arm": "base",
+      "decode": 7926,
+      "build": 3318,
+      "walk": 0,
+      "rest": 4608,
+      "program": 7942
+    },
+    {
+      "block": 97,
+      "arm": "walk",
+      "decode": 7926,
+      "build": 3318,
+      "walk": 0,
+      "rest": 4608,
+      "program": 7942
+    },
+    {
+      "block": 233,
+      "arm": "base",
+      "decode": 25588404,
+      "build": 5215492,
+      "walk": 15429922,
+      "rest": 4942990,
+      "program": 25588420
+    },
+    {
+      "block": 233,
+      "arm": "walk",
+      "decode": 19989537,
+      "build": 5215492,
+      "walk": 9831055,
+      "rest": 4942990,
+      "program": 19989553
+    },
+    {
+      "block": 400,
+      "arm": "base",
+      "decode": 25129254,
+      "build": 5203460,
+      "walk": 15373793,
+      "rest": 4552001,
+      "program": 25129270
+    },
+    {
+      "block": 400,
+      "arm": "walk",
+      "decode": 19490536,
+      "build": 5203460,
+      "walk": 9735075,
+      "rest": 4552001,
+      "program": 19490552
+    },
+    {
+      "block": 472,
+      "arm": "base",
+      "decode": 8764,
+      "build": 3539,
+      "walk": 0,
+      "rest": 5225,
+      "program": 8780
+    },
+    {
+      "block": 472,
+      "arm": "walk",
+      "decode": 8764,
+      "build": 3539,
+      "walk": 0,
+      "rest": 5225,
+      "program": 8780
+    }
+  ],
+  "parser_javascript": "function parse(s) {\nconst names={}, inclusive={}, own={};let fn=null, call=false;\nfor(const line of s.split(\"\\n\")){\nconst m=/^(c?fn)=\\((\\d+)\\)(?: (.*))?$/.exec(line);\nif(m){if(m[3])names[m[2]]=m[3];if(m[1]===\"fn\"){fn=m[2];call=false;}continue;}\nif(line.startsWith(\"calls=\")){call=true;continue;}\nconst cost=/^(?:0x[\\da-f]+|[+\\-]?\\d+|\\*)\\s+(?:[+\\-]?\\d+|\\*)\\s+(\\d+)\\s*$/i.exec(line);\nif(cost){if(fn===null)throw Error(\"cost without function\");const n=Number(cost[1]);inclusive[fn]=(inclusive[fn]||0)+n;if(!call)own[fn]=(own[fn]||0)+n;call=false;}\n}\nconst summary=Number(/^summary: (\\d+)/m.exec(s)[1]);\nconst selfTotal=Object.values(own).reduce((a,b)=>a+b,0);\nif(selfTotal!==summary)throw Error(\"self total mismatch \"+selfTotal+\" \"+summary);\nconst selected=Object.entries(names).filter(([id,n])=>/decode_block|bwt::build$|room_segments|c30cg::measured/.test(n)).map(([id,name])=>({name,inclusive:inclusive[id]||0,self:own[id]||0}));\nreturn {summary,selfTotal,selected};\n}",
+  "stdout": [
+    {
+      "block": 0,
+      "content": "block 0: 54 bytes, crc 4f31c4a1\n",
+      "sha": "7c4209ed30ceebe352db97aa57414549561f27a8",
+      "comparison": "candidate stdout has same Git blob SHA in archive tree"
+    },
+    {
+      "block": 1,
+      "content": "block 1: 899971 bytes, crc 0f0a732d\n",
+      "sha": "1cba316702228786b351c516c3a41fc038571c03",
+      "comparison": "candidate stdout has same Git blob SHA in archive tree"
+    },
+    {
+      "block": 41,
+      "content": "block 41: 900000 bytes, crc c91a77e1\n",
+      "sha": "c25382171387c091634384cba85d6a410835ac3b",
+      "comparison": "candidate stdout has same Git blob SHA in archive tree"
+    },
+    {
+      "block": 97,
+      "content": "block 97: 56 bytes, crc 2520e094\n",
+      "sha": "63265808fefc7a0cd016d58a329774c23277401e",
+      "comparison": "candidate stdout has same Git blob SHA in archive tree"
+    },
+    {
+      "block": 233,
+      "content": "block 233: 899978 bytes, crc 25492446\n",
+      "sha": "91a402f4d8f1764be5b3f69687d29264b4e7ed46",
+      "comparison": "candidate stdout has same Git blob SHA in archive tree"
+    },
+    {
+      "block": 400,
+      "content": "block 400: 899993 bytes, crc 11207343\n",
+      "sha": "35510abeba7cf8ec2e7dacd676c1a5c425aee7da",
+      "comparison": "candidate stdout has same Git blob SHA in archive tree"
+    },
+    {
+      "block": 472,
+      "content": "block 472: 70 bytes, crc 810193a4\n",
+      "sha": "00d4913fd7a3994ee8fe3f6ffda035a4850e6cc9",
+      "comparison": "candidate stdout has same Git blob SHA in archive tree"
+    }
+  ],
+  "read_files": [
+    {
+      "path": "README.md",
+      "content": "# Production walk evidence: master c4b69de3 → perf/walk-two-phase 75b13f00 (PR #157)\n\nThese files are the raw evidence for CHECKPOINT 6643481606 and PR #157, archived in answer to\nD017.\n\n## Setup\n- **Input:** `wikidata-independent.bz2`, sha256 `7f5c9a0044e5a30589bf343b9b31e698849b2acc69461a55c97b550193128b45`. Blocks 0, 97 and 472 are tiny; 1,\n  41, 233 and 400 are full. They cover both of the corpus's block classes.\n- **Driver:** `driver/`. It is the same for both arms; only the `mibz2` path dependency\n  differs: master's worktree at c4b69de3, or the branch at 75b13f00. Rust 1.97.0, fat LTO,\n  `codegen-units = 1`, line tables.\n- **Command:** `valgrind --tool=callgrind --dump-instr=yes --toggle-collect=c30cg::measured\n  c30cg cg FILE BLOCK 1`. The profiles are `cg/{base,walk}-b<block>.out`, with the program\n  stdout (length and CRC) and the console alongside each.\n\n## Accounting, at `decode_block`'s own boundary\nEvery figure is inclusive Ir from `callgrind_annotate --inclusive=yes`. PROGRAM TOTALS are 16\nhigher in every arm: driver instructions outside `decode_block`, as D016 noted.\n\n| block | arm | decode_block | build | walk: `room_segments` inclusive (setup, passes, handovers, tail) | rest |\n|---|---|--:|--:|--:|--:|\n| 1 | master | 25,751,796 | 5,429,062 | 15,426,892 | 4,895,842 |\n| 1 | branch | 20,184,697 | 5,429,062 | 9,859,793 | 4,895,842 |\n| 41 | master | 25,168,380 | 5,280,730 | 15,364,532 | 4,523,118 |\n| 41 | branch | 19,480,512 | 5,280,730 | 9,676,664 | 4,523,118 |\n| 233 | master | 25,588,404 | 5,215,492 | 15,429,922 | 4,942,990 |\n| 233 | branch | 19,989,537 | 5,215,492 | 9,831,055 | 4,942,990 |\n| 400 | master | 25,129,254 | 5,203,460 | 15,373,793 | 4,552,001 |\n| 400 | branch | 19,490,536 | 5,203,460 | 9,735,075 | 4,552,001 |\n| 0, 97, 472 | both | 7,557 / 7,926 / 8,764 | | 0 (plain walk) | |\n\n- **Build and rest are identical in both arms.** The whole delta is the walk: −5.57 to −5.69 M\n  per full block, −21.6% to −22.6% of `decode_block`, −36% to −37% of the walk. The walk\n  figures are whole-walk inclusive, so they charge the handovers, the remainder loop, setup and\n  the tail at their real frequencies.\n- **Run-to-run variation** in the totals is under 50 instructions (allocator layout).\n- **Output** (length and CRC) is identical in every block and arm.\n\n## Listings\n- `listings/{base,walk}-room_segments.asm`: the whole function.\n- `listings/*-hot-b1.txt`: per-instruction counts on block 1, from `hotloop.py`.\n  - **Master:** a 16-instruction step, executed 841,989 times.\n  - **Branch:** 9 instructions per step, plus 4 per eight-lane turn.\n\n\"About 7\" is the essential step from the source, not a measured or proven floor.\n\n## Tests at 75b13f00\n- `test-debug.txt`: `cargo test`.\n- `test-release-trace.txt`: `cargo test --release --features trace --lib`.\n- `miri.txt`: `cargo +nightly miri test --lib -- miri_`. 10 pass, including\n  `bwt::tests::miri_room_walk_handoffs`, which asserts every earlier room-walk transition is\n  reached.\n\nThe handover interleavings new in this change are covered by\n`bwt::tests::room_walk_deferred_handovers` (commit 3fc3f8c6, test-only). It is 400 random\ncolumns at 32 and 5 lanes, with up to n/2 segments, each output compared with `walk` and its\nsegments checked. It must reach all three classes:\n- several lanes marked at one offset;\n- the queue running out with a marked lane after it still waiting;\n- the queue running out after an earlier marked lane at that offset took a segment.\n\nTwo mutants fail it: every waiting lane at `off + 1`, and `waiting = false`. The release\nmachine code of `room_segments` at 3fc3f8c6 is identical to 75b13f00's.\n\n## The invariance argument, for the Researcher to break\nThe state a pass touches:\n- `lanes[k]`: row, seg, p, end;\n- `base[k]`;\n- `bufs[seg]`;\n- `next[seg]`;\n- `queued`.\n\n1. **A step of lane k** reads `T`, which the pass never writes. It writes only\n   `lanes[k].row` and the byte at `base[k] + off`, which lies in `bufs[lanes[k].seg]`. That\n   buffer is owned by lane k alone for as long as the lane holds that segment. So a step\n   commutes with every operation on any other lane.\n2. **A handover of lane k**:\n   - writes `lanes[k].p`;\n   - calls `finish`, which writes `bufs[lanes[k].seg]`'s length and `next[lanes[k].seg]`;\n   - calls `take(queued)`, which writes `bufs[queued]` and `lanes[k]`;\n   - writes `queued` and `base[k]`.\n\n   The segment `queued` names has not yet been taken, so no other lane owns its buffer. The\n   only state handovers share is `queued`.\n3. **Order is preserved.** The old order at offset `off` interleaves steps and handovers in\n   ascending k. The new order does all the steps, then the handovers in ascending k. By (1) the\n   steps commute with the handovers, and the handovers keep their relative order. So\n   `queued`, and with it the segment each lane takes, is assigned identically. Every byte\n   lands at the same address, and `next[]` gets the same values.\n4. **Exhaustion at lane k** (`queued == ns`). Every other lane's state must equal the state\n   the old order left at that point.\n   - An unmarked lane j < k had stepped in the old order too. The rule gives `off + 1`. ✓\n   - An unmarked lane j > k had not stepped in the old order: `p = off`, row unchanged. The new\n     order has stepped it: `p = off + 1`, row advanced. The tail would perform exactly that\n     step first, writing the same byte at the same address. The resulting state is reachable,\n     and the tail is order-independent across lanes by (1). ✓ (the same final buffers)\n   - A marked lane j < k was handed over in both orders, so `base[j] + off + 1` is its new p.\n     ✓\n   - A marked lane j > k waits in both orders: `p = off`, row on its START entry. The tail\n     finishes it first. ✓\n5. **Buffer bounds.** Every pointer left at `off + 1` is at most `base + room`, which is at\n   most `end`. The tail's pre-check grows a lane at `p == end` before writing, as before.\n\nThe open obligation is (4)'s second case. The final buffers are equal, but the intermediate\nlane states differ. Anything that reads lane state between the break and the tail would see\nthe difference. Nothing in `room_segments` does, but the review should confirm that.\n",
+      "encoding": "utf-8",
+      "sha": "ff81c6ba851e62d3602101843e8b6c5ec08f6f18",
+      "display_url": "https://github.com/lmmx/mibz2/blob/b0f6e89db10e579d7626b7e93b10f2c8137ebec5/docs/journal/compact30-channel/evidence/walk-75b13f00/README.md",
+      "display_title": "README.md"
+    },
+    {
+      "path": "driver/src/main.rs",
+      "content": "//! Scratch driver (not in the repo): decode blocks of a .bz2 with the crate's default\n//! kernel (`Scratch::default()`), each decode in `measured` for callgrind's toggle, or\n//! timed. Usage: c30cg cg FILE BLOCK REPEATS | c30cg time FILE THREADS ROUNDS\nuse mibz2::stream::{Event, Scanner, SliceSource};\nuse mibz2::{decode_block, Kernels, Scratch};\nuse std::io::Read;\n\n#[inline(never)]\nfn measured(s: &mibz2::block::Symbols, k: Kernels, sc: &mut Scratch, out: &mut Vec<u8>) -> u32 {\n    out.clear();\n    decode_block(s, k, sc, out).unwrap()\n}\n\nfn main() {\n    let a: Vec<String> = std::env::args().collect();\n    let data = std::fs::read(&a[2]).unwrap();\n    let k = Kernels::detect();\n    match a[1].as_str() {\n        \"cg\" => {\n            let want: usize = a[3].parse().unwrap();\n            let reps: usize = a[4].parse().unwrap();\n            let mut sc = Scanner::new(SliceSource(&data));\n            let mut syms = Vec::new();\n            let mut i = 0;\n            let block = loop {\n                match sc.next(syms).unwrap() {\n                    Event::Block { symbols, .. } => {\n                        if i == want {\n                            break symbols;\n                        }\n                        i += 1;\n                        syms = symbols.syms;\n                    }\n                    Event::Done => panic!(\"no block {want}\"),\n                }\n            };\n            let mut scratch = Scratch::default();\n            let mut out = Vec::new();\n            let mut crc = 0;\n            for _ in 0..reps {\n                crc ^= measured(&block, k, &mut scratch, &mut out);\n            }\n            println!(\"block {want}: {} bytes, crc {crc:08x}\", out.len());\n        }\n        \"time\" => {\n            let threads: usize = a[3].parse().unwrap();\n            let rounds: usize = a[4].parse().unwrap();\n            for _ in 0..rounds {\n                let owned = data.clone();\n                let mut out = Vec::with_capacity(256 << 20);\n                let t = std::time::Instant::now();\n                if threads == 1 {\n                    mibz2::BzReader::new(&data[..]).read_to_end(&mut out).unwrap();\n                } else {\n                    mibz2::BzReader::parallel(std::io::Cursor::new(owned), threads)\n                        .read_to_end(&mut out)\n                        .unwrap();\n                }\n                println!(\"{:.4}\", t.elapsed().as_secs_f64());\n            }\n        }\n        _ => panic!(\"mode\"),\n    }\n}\n",
+      "encoding": "utf-8",
+      "sha": "65f336370c235c7f01993ce0706bb02c813c08c9",
+      "display_url": "https://github.com/lmmx/mibz2/blob/b0f6e89db10e579d7626b7e93b10f2c8137ebec5/docs/journal/compact30-channel/evidence/walk-75b13f00/driver/src/main.rs",
+      "display_title": "main.rs"
+    },
+    {
+      "path": "miri.txt",
+      "content": "     Running unittests src/lib.rs (target/miri/x86_64-unknown-linux-gnu/debug/build/mibz2/a96ed9f45711006e/out/mibz2-a96ed9f45711006e)\ntest bwt::tests::miri_build_one_pass ... ok\ntest bwt::tests::miri_room_walk_handoffs ... ok\ntest coop::tests::miri_build_fused ... ok\ntest coop::tests::miri_pool_caller_panic_waits_for_the_helpers ... ok\ntest coop::tests::miri_pool_caller_panic_wins ... ok\ntest coop::tests::miri_pool_dropped_while_parked ... ok\ntest coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable ... ok\ntest coop::tests::miri_pool_runs_every_index_once ... ok\ntest coop::tests::miri_pool_writes_visible_after_run ... ok\ntest coop::tests::miri_walk_room_handoffs ... ok\ntest result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 22 filtered out; finished in 173.04s\n",
+      "encoding": "utf-8",
+      "sha": "af895cee659c115df0b033093b23eb594a606e3f",
+      "display_url": "https://github.com/lmmx/mibz2/blob/b0f6e89db10e579d7626b7e93b10f2c8137ebec5/docs/journal/compact30-channel/evidence/walk-75b13f00/miri.txt",
+      "display_title": "miri.txt"
+    },
+    {
+      "path": "test-debug.txt",
+      "content": "     Running unittests src/lib.rs (target/debug/deps/mibz2-f3f83d9a02d247d5)\ntest result: ok. 32 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.60s\n     Running tests/cooperative.rs (target/debug/deps/cooperative-23012644834f65ae)\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.64s\n     Running tests/corpus.rs (target/debug/deps/corpus-bcf87ed6eab495ba)\ntest result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.69s\n     Running tests/decode.rs (target/debug/deps/decode-3fe626165573880b)\ntest result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.73s\n     Running tests/mtf_checkpoints.rs (target/debug/deps/mtf_checkpoints-83e9899d6e9c3f2c)\ntest result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.60s\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s\n",
+      "encoding": "utf-8",
+      "sha": "47ef4feb3d6bf409e9ea49862da38682bd058d6e",
+      "display_url": "https://github.com/lmmx/mibz2/blob/b0f6e89db10e579d7626b7e93b10f2c8137ebec5/docs/journal/compact30-channel/evidence/walk-75b13f00/test-debug.txt",
+      "display_title": "test-debug.txt"
+    },
+    {
+      "path": "test-release-trace.txt",
+      "content": "     Running unittests src/lib.rs (target/release/deps/mibz2-c4d9c73963d0517d)\ntest bwt::tests::miri_build_one_pass ... ok\ntest bits::tests::reads_bits_at_any_offset ... ok\ntest bwt::tests::miri_room_walk_handoffs ... ok\ntest bwt::tests::one_pass_build_is_the_two_pass_build ... ok\ntest bwt::tests::room_walk_short_cycles ... ok\ntest bwt::tests::run_stores_equal_one_pass ... ok\ntest bwt::tests::flagged_walk_equals_plain ... ok\ntest bwt::tests::wrong_counts_take_the_two_pass_build ... ok\ntest block::tests::table_decodes_as_libbzip2 ... ok\ntest bwt::tests::segmented_walks_on_any_length ... ok\ntest coop::tests::cooperative_kernel_engages ... ok\ntest coop::tests::miri_build_fused ... ok\ntest coop::tests::build_fused_refuses_wrong_checkpoints ... ok\ntest coop::tests::build_fused_is_build ... ok\ntest coop::tests::miri_pool_dropped_while_parked ... ok\ntest coop::tests::miri_pool_caller_panic_waits_for_the_helpers ... ok\ntest coop::tests::miri_pool_caller_panic_wins ... ok\ntest coop::tests::miri_pool_helper_panic_is_resumed_and_the_pool_reusable ... ok\ntest coop::tests::miri_pool_writes_visible_after_run ... ok\ntest coop::tests::miri_pool_runs_every_index_once ... ok\ntest coop::tests::miri_walk_room_handoffs ... ok\ntest coop::tests::pool_per_worker ... ok\ntest crc::tests::kernels_agree ... ok\ntest parallel::plan_tests::the_default_is_the_plan ... ok\ntest parallel::plan_tests::the_policy ... ok\ntest parallel::plan_tests::the_policy_here ... ok\ntest parallel::plan_tests::the_window ... ok\ntest trace::tests::ledger_at_level_9 ... ok\ntest trace::tests::ledger_matches_a_workers_buffers ... ok\ntest coop::tests::walk_room_is_walk ... ok\ntest coop::tests::pool_many_short_runs ... ok\ntest bwt::tests::room_walk_crafted_permutations ... ok\ntest result: ok. 32 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.57s\n",
+      "encoding": "utf-8",
+      "sha": "1d983c84d827b24f66fb1979758eca405691e0cd",
+      "display_url": "https://github.com/lmmx/mibz2/blob/b0f6e89db10e579d7626b7e93b10f2c8137ebec5/docs/journal/compact30-channel/evidence/walk-75b13f00/test-release-trace.txt",
+      "display_title": "test-release-trace.txt"
+    },
+    {
+      "path": "listings/base-room_segments-hot-b1.txt",
+      "content": "self 15155948 hot instrs 16 hot sum 13466544\n   841,989 34940 lea    r10,[r8+0x1]\n   841,989 34944 mov    ebx,DWORD PTR [r11]\n   841,989 34947 mov    eax,DWORD PTR [r15+rbx*4]\n   841,989 3494b test   eax,eax\n   841,989 3494d js     34980 <_RINvNtCs5Rf2Z7g0iFY_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xb20>\n   841,509 3494f mov    edi,eax\n   841,509 34951 shr    edi,0x8\n   841,509 34954 mov    DWORD PTR [r11],edi\n   841,509 34957 prefetcht0 BYTE PTR [r15+rdi*4]\n   841,509 3495c mov    rdi,QWORD PTR [rsp+r8*8+0x70]\n   841,509 34961 mov    BYTE PTR [rdi+rcx*1],al\n   841,509 34964 lea    rax,[r10-0x1]\n   841,509 34968 add    r11,0x20\n   841,509 3496c mov    r8,r10\n   841,509 3496f cmp    rax,0x1f\n   841,509 34973 jb     34940 <_RINvNtCs5Rf2Z7g0iFY_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xae0>\n",
+      "encoding": "utf-8",
+      "sha": "4c96acdb4cee384052d2be8fb67a1b965ce61a02",
+      "display_url": "https://github.com/lmmx/mibz2/blob/b0f6e89db10e579d7626b7e93b10f2c8137ebec5/docs/journal/compact30-channel/evidence/walk-75b13f00/listings/base-room_segments-hot-b1.txt",
+      "display_title": "base-room_segments-hot-b1.txt"
+    },
+    {
+      "path": "listings/walk-room_segments-hot-b1.txt",
+      "content": "self 9588849 hot instrs 76 hot sum 7995072\n   105,192 34ec0 mov    rdx,QWORD PTR [rsp+rcx*8+0x98]\n   105,192 34ec8 mov    BYTE PTR [rdx+r8*1],dil\n   105,192 34ecc shr    edi,0x8\n   105,192 34ecf mov    DWORD PTR [rax],edi\n   105,192 34ed1 prefetcht0 BYTE PTR [rbx+rdi*4]\n   105,252 34ed5 add    rcx,0x8\n   105,252 34ed9 add    rax,0x100\n   105,252 34edf cmp    rcx,0x19\n   105,252 34ee3 jae    350c0 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xce0>\n   105,252 34ee9 mov    edx,DWORD PTR [rax-0xe0]\n   105,252 34eef mov    edi,DWORD PTR [rbx+rdx*4]\n   105,252 34ef2 test   edi,edi\n   105,252 34ef4 js     35000 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc20>\n   105,192 34efa mov    rdx,QWORD PTR [rsp+rcx*8+0x60]\n   105,192 34eff mov    BYTE PTR [rdx+r8*1],dil\n   105,192 34f03 shr    edi,0x8\n   105,192 34f06 mov    DWORD PTR [rax-0xe0],edi\n   105,192 34f0c prefetcht0 BYTE PTR [rbx+rdi*4]\n   105,192 34f10 mov    edx,DWORD PTR [rax-0xc0]\n   105,192 34f16 mov    edi,DWORD PTR [rbx+rdx*4]\n   105,192 34f19 test   edi,edi\n   105,192 34f1b js     35015 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc35>\n   105,190 34f21 mov    rdx,QWORD PTR [rsp+rcx*8+0x68]\n   105,190 34f26 mov    BYTE PTR [rdx+r8*1],dil\n   105,190 34f2a shr    edi,0x8\n   105,190 34f2d mov    DWORD PTR [rax-0xc0],edi\n   105,190 34f33 prefetcht0 BYTE PTR [rbx+rdi*4]\n   105,190 34f37 mov    edx,DWORD PTR [rax-0xa0]\n   105,190 34f3d mov    edi,DWORD PTR [rbx+rdx*4]\n   105,190 34f40 test   edi,edi\n   105,190 34f42 js     35031 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc51>\n   105,198 34f48 mov    rdx,QWORD PTR [rsp+rcx*8+0x70]\n   105,198 34f4d mov    BYTE PTR [rdx+r8*1],dil\n   105,198 34f51 shr    edi,0x8\n   105,198 34f54 mov    DWORD PTR [rax-0xa0],edi\n   105,198 34f5a prefetcht0 BYTE PTR [rbx+rdi*4]\n   105,198 34f5e mov    edx,DWORD PTR [rax-0x80]\n   105,198 34f61 mov    edi,DWORD PTR [rbx+rdx*4]\n   105,198 34f64 test   edi,edi\n   105,198 34f66 js     3504a <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc6a>\n   105,198 34f6c mov    rdx,QWORD PTR [rsp+rcx*8+0x78]\n   105,198 34f71 mov    BYTE PTR [rdx+r8*1],dil\n   105,198 34f75 shr    edi,0x8\n   105,198 34f78 mov    DWORD PTR [rax-0x80],edi\n   105,198 34f7b prefetcht0 BYTE PTR [rbx+rdi*4]\n   105,198 34f7f mov    edx,DWORD PTR [rax-0x60]\n   105,198 34f82 mov    edi,DWORD PTR [rbx+rdx*4]\n   105,198 34f85 test   edi,edi\n   105,198 34f87 js     35063 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc83>\n   105,189 34f8d mov    rdx,QWORD PTR [rsp+rcx*8+0x80]\n   105,189 34f95 mov    BYTE PTR [rdx+r8*1],dil\n   105,189 34f99 shr    edi,0x8\n   105,189 34f9c mov    DWORD PTR [rax-0x60],edi\n   105,189 34f9f prefetcht0 BYTE PTR [rbx+rdi*4]\n   105,189 34fa3 mov    edx,DWORD PTR [rax-0x40]\n   105,189 34fa6 mov    edi,DWORD PTR [rbx+rdx*4]\n   105,189 34fa9 test   edi,edi\n   105,189 34fab js     3507c <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xc9c>\n   105,187 34fb1 mov    rdx,QWORD PTR [rsp+rcx*8+0x88]\n   105,187 34fb9 mov    BYTE PTR [rdx+r8*1],dil\n   105,187 34fbd shr    edi,0x8\n   105,187 34fc0 mov    DWORD PTR [rax-0x40],edi\n   105,187 34fc3 prefetcht0 BYTE PTR [rbx+rdi*4]\n   105,187 34fc7 mov    edx,DWORD PTR [rax-0x20]\n   105,187 34fca mov    edi,DWORD PTR [rbx+rdx*4]\n   105,187 34fcd test   edi,edi\n   105,187 34fcf js     35095 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xcb5>\n   105,190 34fd5 mov    rdx,QWORD PTR [rsp+rcx*8+0x90]\n   105,190 34fdd mov    BYTE PTR [rdx+r8*1],dil\n   105,190 34fe1 shr    edi,0x8\n   105,190 34fe4 mov    DWORD PTR [rax-0x20],edi\n   105,190 34fe7 prefetcht0 BYTE PTR [rbx+rdi*4]\n   105,190 34feb mov    edx,DWORD PTR [rax]\n   105,190 34fed mov    edi,DWORD PTR [rbx+rdx*4]\n   105,190 34ff0 test   edi,edi\n   105,190 34ff2 jns    34ec0 <_RINvNtCsifwKkFJZ2U4_5mibz23bwt13room_segmentsKj20_Kh1_EB4_+0xae0>\n",
+      "encoding": "utf-8",
+      "sha": "893559860b85e8f9aae1766f222bf9f0a9c044b6",
+      "display_url": "https://github.com/lmmx/mibz2/blob/b0f6e89db10e579d7626b7e93b10f2c8137ebec5/docs/journal/compact30-channel/evidence/walk-75b13f00/listings/walk-room_segments-hot-b1.txt",
+      "display_title": "walk-room_segments-hot-b1.txt"
+    }
+  ],
+  "test_commit": {
+    "sha": "3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1",
+    "node_id": "C_kwDOVZCza9oAKDNmYzNmOGM2NGZlNDZlZWQzMjUyMDhkMGQ5MWU2NTg2ZWJmOGQyYzE",
+    "commit": {
+      "author": {
+        "name": "Louis Maddox",
+        "email": "louismmx@gmail.com",
+        "date": "2026-11-04T22:25:09Z"
+      },
+      "committer": {
+        "name": "Louis Maddox",
+        "email": "louismmx@gmail.com",
+        "date": "2026-11-04T22:25:09Z"
+      },
+      "message": "test(bwt): the room walk's deferred handovers, every interleaving reached\n\nThree test-only counters (several lanes marked at one offset; the queue running out with\na marked lane still waiting; running out after an earlier marked lane took a segment)\nand a randomised differential test against walk, at 32 lanes and 5, that must reach all\nthree. Mutating the waiting lanes' offset fails it. Release builds are unchanged.",
+      "tree": {
+        "sha": "7b446faec9f8d02c1ad3a717e611a87ddd65d22c",
+        "url": "https://api.github.com/repos/lmmx/mibz2/git/trees/7b446faec9f8d02c1ad3a717e611a87ddd65d22c"
+      },
+      "url": "https://api.github.com/repos/lmmx/mibz2/git/commits/3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unknown_key",
+        "signature": "-----BEGIN SSH SIGNATURE-----\nU1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgrLzsfFISF4by8Q+FKz27YpkK1USsBB+m\namu1QkJnbDsAAAADZ2l0AAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQFjvEaa3\n/xd+hAf3TJEQEccu4jMcjRCBc5S/Ru0wOJA0Zi7Lyf1Pu/FoxXi756v7Mo4ZjgSC3MOjwtGGfBGG\n9QI=\n-----END SSH SIGNATURE-----",
+        "payload": "tree 7b446faec9f8d02c1ad3a717e611a87ddd65d22c\nparent 75b13f009c619300bc914750b1a4a44f365def2e\nauthor Louis Maddox <louismmx@gmail.com> 1793831109 +0000\ncommitter Louis Maddox <louismmx@gmail.com> 1793831109 +0000\n\ntest(bwt): the room walk's deferred handovers, every interleaving reached\n\nThree test-only counters (several lanes marked at one offset; the queue running out with\na marked lane still waiting; running out after an earlier marked lane took a segment)\nand a randomised differential test against walk, at 32 lanes and 5, that must reach all\nthree. Mutating the waiting lanes' offset fails it. Release builds are unchanged.\n",
+        "verified_at": null
+      }
+    },
+    "url": "https://api.github.com/repos/lmmx/mibz2/commits/3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1",
+    "html_url": "https://github.com/lmmx/mibz2/commit/3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1",
+    "comments_url": "https://api.github.com/repos/lmmx/mibz2/commits/3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1/comments",
+    "author": {
+      "login": "lmmx",
+      "id": 2979452,
+      "node_id": "MDQ6VXNlcjI5Nzk0NTI=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2979452?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/lmmx",
+      "html_url": "https://github.com/lmmx",
+      "followers_url": "https://api.github.com/users/lmmx/followers",
+      "following_url": "https://api.github.com/users/lmmx/following{/other_user}",
+      "gists_url": "https://api.github.com/users/lmmx/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/lmmx/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/lmmx/subscriptions",
+      "organizations_url": "https://api.github.com/users/lmmx/orgs",
+      "repos_url": "https://api.github.com/users/lmmx/repos",
+      "events_url": "https://api.github.com/users/lmmx/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/lmmx/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "lmmx",
+      "id": 2979452,
+      "node_id": "MDQ6VXNlcjI5Nzk0NTI=",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2979452?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/lmmx",
+      "html_url": "https://github.com/lmmx",
+      "followers_url": "https://api.github.com/users/lmmx/followers",
+      "following_url": "https://api.github.com/users/lmmx/following{/other_user}",
+      "gists_url": "https://api.github.com/users/lmmx/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/lmmx/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/lmmx/subscriptions",
+      "organizations_url": "https://api.github.com/users/lmmx/orgs",
+      "repos_url": "https://api.github.com/users/lmmx/repos",
+      "events_url": "https://api.github.com/users/lmmx/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/lmmx/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "75b13f009c619300bc914750b1a4a44f365def2e",
+        "url": "https://api.github.com/repos/lmmx/mibz2/commits/75b13f009c619300bc914750b1a4a44f365def2e",
+        "html_url": "https://github.com/lmmx/mibz2/commit/75b13f009c619300bc914750b1a4a44f365def2e"
+      }
+    ],
+    "stats": {
+      "total": 83,
+      "additions": 83,
+      "deletions": 0
+    },
+    "files": [
+      {
+        "sha": "4533982cf53a10d80f50354eaf788e5c1c369a81",
+        "filename": "src/bwt.rs",
+        "status": "modified",
+        "additions": 83,
+        "deletions": 0,
+        "changes": 83,
+        "blob_url": "https://github.com/lmmx/mibz2/blob/3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1/src%2Fbwt.rs",
+        "raw_url": "https://github.com/lmmx/mibz2/raw/3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1/src%2Fbwt.rs",
+        "contents_url": "https://api.github.com/repos/lmmx/mibz2/contents/src%2Fbwt.rs?ref=3fc3f8c64fe46eed325208d0d91e6586ebf8d2c1",
+        "patch": "@@ -745,6 +745,12 @@ thread_local! {\n     static MID_PASS_TAKES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };\n     static FULL_PHASE_ENDS_MID_PASS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };\n     static TAIL_ENTERED_FULL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };\n+    // the room walk's deferred handovers: several lanes marked at one offset; the queue\n+    // running out with a marked lane after this one still waiting; and running out after\n+    // an earlier marked lane at the same offset took a segment\n+    static MARKED_SEVERAL: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };\n+    static ENDS_WITH_LANES_WAITING: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };\n+    static ENDS_AFTER_A_TAKE: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };\n }\n #[cfg(test)]\n macro_rules! transition {\n@@ -968,6 +974,12 @@ fn room_segments<const L: usize, const PF: u8>(\n                     step!(c);\n                     c += 1;\n                 }\n+                #[cfg(test)]\n+                if marked.count_ones() > 1 {\n+                    transition!(MARKED_SEVERAL);\n+                }\n+                #[cfg(test)]\n+                let mut took = false;\n                 while marked != 0 {\n                     let k = marked.trailing_zeros() as usize;\n                     marked &= marked - 1;\n@@ -986,6 +998,15 @@ fn room_segments<const L: usize, const PF: u8>(\n                             }\n                         }\n                         transition!(FULL_PHASE_ENDS_MID_PASS);\n+                        #[cfg(test)]\n+                        {\n+                            if marked != 0 {\n+                                transition!(ENDS_WITH_LANES_WAITING);\n+                            }\n+                            if took {\n+                                transition!(ENDS_AFTER_A_TAKE);\n+                            }\n+                        }\n                         break 'full;\n                     }\n                     transition!(MID_PASS_TAKES);\n@@ -996,6 +1017,10 @@ fn room_segments<const L: usize, const PF: u8>(\n                     queued += 1;\n                     // its next byte, at offset off + 1, goes at its p\n                     base[k] = l.p.wrapping_sub(off + 1);\n+                    #[cfg(test)]\n+                    {\n+                        took = true;\n+                    }\n                 }\n             }\n             for (l, b) in lanes.iter_mut().zip(base) {\n@@ -1495,6 +1520,64 @@ pub(crate) mod tests {\n         }\n     }\n \n+    /// The room walk's deferred handovers, against `walk` on random columns small enough\n+    /// for many lanes to reach a segment's end at the same offset: every interleaving the\n+    /// pass can take (several lanes marked at one offset, the queue running out with marked\n+    /// lanes still waiting, or after an earlier marked lane took a segment) is reached, at\n+    /// 32 lanes and at 5, and every output is `walk`'s\n+    #[test]\n+    fn room_walk_deferred_handovers() {\n+        for c in [\n+            &MARKED_SEVERAL,\n+            &ENDS_WITH_LANES_WAITING,\n+            &ENDS_AFTER_A_TAKE,\n+        ] {\n+            c.with(|c| c.set(0));\n+        }\n+        let mut x = 0x2545_f491_4f6c_dd1du64;\n+        let mut rnd = move |m: u64| {\n+            x ^= x << 13;\n+            x ^= x >> 7;\n+            x ^= x << 17;\n+            x % m\n+        };\n+        for case in 0..400 {\n+            let n = 64 + rnd(3000) as usize;\n+            let alphabet = 1 + rnd(if case % 2 == 0 { 3 } else { 256 });\n+            let ll: Vec<u8> = (0..n).map(|_| (rnd(alphabet) * 7) as u8).collect();\n+            let orig_ptr = rnd(n as u64) as u32;\n+            let mut counts = [0u32; 256];\n+            for &c in &ll {\n+                counts[c as usize] += 1;\n+            }\n+            let mut tt = TVector::new();\n+            build(&ll, &counts, &mut tt);\n+            let (mut plain, mut out, mut seg) = (Vec::new(), Vec::new(), SegScratch::default());\n+            walk(&tt, orig_ptr, &mut plain);\n+            let segments = 2 + rnd(n as u64 / 2) as usize;\n+            walk_segments_room_with_prefetch::<32, PF_L1>(\n+                &mut tt, orig_ptr, &mut out, &mut seg, segments,\n+            );\n+            assert!(plain == out, \"32 lanes, case {case}\");\n+            check_segments(&tt, &seg, \"32 lanes\");\n+            walk_segments_room_with_prefetch::<5, PF_OFF>(\n+                &mut tt, orig_ptr, &mut out, &mut seg, segments,\n+            );\n+            assert!(plain == out, \"5 lanes, case {case}\");\n+            check_segments(&tt, &seg, \"5 lanes\");\n+        }\n+        for (name, c) in [\n+            (\"several lanes marked at one offset\", &MARKED_SEVERAL),\n+            (\n+                \"the queue running out with lanes waiting\",\n+                &ENDS_WITH_LANES_WAITING,\n+            ),\n+            (\"the queue running out after a take\", &ENDS_AFTER_A_TAKE),\n+        ] {\n+            assert!(count(c) > 0, \"never reached: {name}\");\n+        }\n+    }\n+\n     /// The flagged walk on a random last column and on a periodic one (a list of several\n     /// cycles), both past MIN_SEGMENTED so the segments are walked\n     #[test]"
+      }
+    ]
+  },
+  "bench_comment_snapshot": {
+    "url": "https://api.github.com/repos/lmmx/mibz2/issues/comments/6643479692",
+    "html_url": "https://github.com/lmmx/mibz2/pull/157#issuecomment-6643479692",
+    "issue_url": "https://api.github.com/repos/lmmx/mibz2/issues/157",
+    "id": 6643479692,
+    "node_id": "IC_kwDOVZCza88AAAABi_t0jA",
+    "user": {
+      "login": "github-actions[bot]",
+      "id": 41898282,
+      "node_id": "MDM6Qm90NDE4OTgyODI=",
+      "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/github-actions%5Bbot%5D",
+      "html_url": "https://github.com/apps/github-actions",
+      "followers_url": "https://api.github.com/users/github-actions%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/github-actions%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/github-actions%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/github-actions%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/github-actions%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/github-actions%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/github-actions%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/github-actions%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/github-actions%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "created_at": "2026-11-04T22:13:58Z",
+    "updated_at": "2026-11-04T22:26:11Z",
+    "author_association": "CONTRIBUTOR",
+    "body": "<!-- mibz2-bench -->\n<!-- status --> ⏳ **Running** for `3fc3f8c` ([run](https://github.com/lmmx/mibz2/actions/runs/41925226768)); the figures below are the last run's, if any.\n\n## Benchmark: mibz2 decoder\n\n**head `75b13f0` against base `c4b69de`** (the merge base with master): 10 paired rounds on one runner · [run](https://github.com/lmmx/mibz2/actions/runs/41923819666)\n\nAMD EPYC 9V45 96-Core Processor, 4 cores · rustc 1.99.1 (58cf8f9c3 2026-10-13) · bench 3.2.0\n\nEach round decodes every corpus once with each build at each thread count (`ab run`: the base's harness binary as the arm `mibz2@base/ab`, so both builds run in the same process shape), the builds' order alternating. **Change** is head over base: the geometric mean of the rounds' paired ratios and its 95% interval; − is faster, and **faster** or **slower** where the interval excludes no change. 1-thread runs are pinned to one CPU.\n\n| corpus | threads | wall, base → head (median) | wall change | CPU change | peak RSS, base → head | head MB/s | same bytes |\n|---|--:|--:|--:|--:|--:|--:|---|\n| `wikidata` (11.9 MB → 210 MB, 17.7×) | 1 | 0.445 → 0.434 s | −4.2% (−8.0%, −0.3%) **faster** | −4.2% (−8.0%, −0.3%) **faster** | 26 → 26 MB (+0.1%) | 483 | yes |\n| `wikidata` (11.9 MB → 210 MB, 17.7×) | 2 | 0.318 → 0.323 s | +2.2% (−0.6%, +5.1%) | +1.4% (−0.5%, +3.4%) | 49 → 49 MB (−0.8%) | 650 | yes |\n| `wikidata` (11.9 MB → 210 MB, 17.7×) | 4 | 0.301 → 0.305 s | +0.4% (−2.8%, +3.8%) | +0.9% (−2.4%, +4.3%) | 74 → 74 MB (+0.7%) | 687 | yes |\n| `onebyte` (51 B → 20 MB, 392156.9×) | 1 | 0.015 → 0.015 s | −0.7% (−2.8%, +1.5%) | −0.7% (−2.7%, +1.4%) | 33 → 33 MB (−0.0%) | 1,316 | yes |\n| `onebyte` (51 B → 20 MB, 392156.9×) | 2 | 0.015 → 0.016 s | +10.8% (−10.8%, +37.7%) | +9.8% (−10.2%, +34.3%) | 33 → 33 MB (−0.1%) | 1,270 | yes |\n| `onebyte` (51 B → 20 MB, 392156.9×) | 4 | 0.015 → 0.016 s | +1.1% (−1.1%, +3.3%) | +0.8% (−1.4%, +3.0%) | 33 → 33 MB (+0.0%) | 1,274 | yes |\n| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 1 | 0.023 → 0.022 s | −5.3% (−6.8%, −3.8%) **faster** | −5.1% (−6.5%, −3.6%) **faster** | 17 → 17 MB (+0.1%) | 907 | yes |\n| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 2 | 0.016 → 0.016 s | −5.5% (−14.1%, +3.9%) | −4.3% (−7.5%, −0.9%) **faster** | 24 → 23 MB (+0.0%) | 1,206 | yes |\n| `pattern` (1.12 kB → 19.6 MB, 17562.7×) | 4 | 0.021 → 0.021 s | +2.9% (−2.3%, +8.3%) | −4.0% (−10.7%, +3.2%) | 42 → 43 MB (+1.5%) | 924 | yes |\n| `random` (7.1 MB → 8 MB, 1.1×) | 1 | 0.093 → 0.095 s | −0.5% (−2.4%, +1.5%) | −0.5% (−2.3%, +1.5%) | 23 → 23 MB (+0.1%) | 84 | yes |\n| `random` (7.1 MB → 8 MB, 1.1×) | 2 | 0.057 → 0.058 s | +0.8% (−2.5%, +4.1%) | −0.5% (−2.7%, +1.7%) | 36 → 36 MB (−0.0%) | 139 | yes |\n| `random` (7.1 MB → 8 MB, 1.1×) | 4 | 0.049 → 0.049 s | +0.1% (−3.2%, +3.4%) | −0.8% (−3.4%, +1.9%) | 53 → 54 MB (+1.9%) | 164 | yes |\n| `records` (9.59 MB → 9.6 MB, 1.0×) | 1 | 0.121 → 0.119 s | −0.2% (−1.7%, +1.2%) | −0.0% (−1.7%, +1.8%) | 24 → 24 MB (+0.2%) | 80 | yes |\n| `records` (9.59 MB → 9.6 MB, 1.0×) | 2 | 0.073 → 0.072 s | −2.1% (−6.6%, +2.6%) | −1.3% (−5.0%, +2.5%) | 40 → 40 MB (−1.5%) | 133 | yes |\n| `records` (9.59 MB → 9.6 MB, 1.0×) | 4 | 0.057 → 0.058 s | +1.2% (−0.4%, +2.7%) | +0.5% (−0.3%, +1.2%) | 59 → 60 MB (+1.9%) | 165 | yes |\n| `runs` (38 kB → 10 MB, 263.2×) | 1 | 0.010 → 0.010 s | −1.3% (−7.0%, +4.8%) | −0.5% (−5.3%, +4.5%) | 23 → 23 MB (−0.1%) | 971 | yes |\n| `runs` (38 kB → 10 MB, 263.2×) | 2 | 0.011 → 0.011 s | −0.0% (−2.8%, +2.8%) | −0.2% (−2.3%, +1.9%) | 23 → 23 MB (−0.2%) | 948 | yes |\n| `runs` (38 kB → 10 MB, 263.2×) | 4 | 0.011 → 0.011 s | +0.8% (−2.2%, +3.8%) | +0.8% (−2.5%, +4.1%) | 23 → 23 MB (−0.0%) | 922 | yes |\n| `text` (1.64 MB → 12.2 MB, 7.5×) | 1 | 0.053 → 0.054 s | +2.5% (−3.3%, +8.7%) | +2.5% (−3.2%, +8.5%) | 19 → 19 MB (+0.1%) | 227 | yes |\n| `text` (1.64 MB → 12.2 MB, 7.5×) | 2 | 0.036 → 0.035 s | −2.7% (−6.6%, +1.4%) | +1.6% (−0.5%, +3.7%) | 32 → 32 MB (+0.2%) | 347 | yes |\n| `text` (1.64 MB → 12.2 MB, 7.5×) | 4 | 0.033 → 0.033 s | −3.9% (−13.2%, +6.3%) | −6.3% (−14.9%, +3.2%) | 52 → 52 MB (−0.1%) | 376 | yes |\n\n**Same bytes:** every run of every arm gave the same output hash on that corpus, with no error.\n\n### Resources: CPU per byte and scaling, the `wikidata` corpus\n\n**Assessment:** Worse (contention sensitivity), and no measure better.\n**Needs a machine with more cores before a release:** CPU amplification rose. This runner has 2 physical cores; a change in CPU amplification or in memory can grow with the cores (the 10-core workstation's knee: #39, #65).\n\n**CPU per byte** is the process's CPU (every thread, user + sys) over the output. **Amplification** is that at N threads over the same build's at 1, paired by round: 1× is no extra CPU for the same bytes, and above it the work costs more as threads are added (stalls, sharing, synchronisation; CPU counts a thread stalled on memory as running). **Efficiency** is the speedup over N. **Run-queue** is the threads' mean count runnable but not running.\n\n| threads: placement | base MB/s | base CPU ns/B | base amplification | base efficiency | head MB/s | head CPU ns/B | head amplification | head efficiency | amplification, head over base |\n|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|\n| 1: pinned to CPU 1 | 471 | 2.13 | 1 | – | 483 | 2.08 | 1 | – |  |\n| 2: CPUs 0,2, one a core | 660 | 2.58 | 1.17× (1.12–1.22) | 72% | 650 | 2.60 | 1.24× (1.21–1.27) | 68% | +5.9% (+0.8%, +11.3%) **more** |\n| 4: all 4 CPUs, sharing SMT siblings | 696 | 4.76 | 2.18× (2.08–2.28) | 38% | 687 | 4.80 | 2.30× (2.23–2.36) | 36% | +5.4% (+0.8%, +10.1%) **more** |\n\n**Best:** base at 4 threads (696 MB/s); head at 4 threads (687 MB/s); head's best against base's, wall: +0.4% (−2.8%, +3.8%).\n\nConditions: 4 CPUs on 2 physical cores (0,1 | 2,3); no CPU quota; the run-queue counter checked and counting; 2-thread runs on CPUs 0,2 (one CPU a core); 4-thread runs share cores' SMT siblings.\n\n<details><summary>How to read it, and what it cannot show</summary>\n\n- **The four comparisons the assessment reads,** declared in bench/report.py (`assessment`): best against best (wall), CPU per byte at the most threads, amplification at each thread count, and peak RSS at the most threads. Each moves only where its 95% interval excludes no change. With no real change, about one run in five flags one by chance: a flag that matters reproduces on a re-run.\n- **A trade-off is not a failure.** Faster for more CPU or memory, or the reverse, is for the reviewer to weigh against the deployment; the report names it, and nothing here fails CI but the outputs and the accounting.\n- **What it can't show:** which shared resource a rise in amplification comes from (cache, memory bandwidth, SMT, the scanner's handoffs): no hardware counters are read. CI's runners have 2 physical cores, so it cannot show a knee past 2 (the workstation's is at 4-5 workers, #39). The cores' L3 is shared with other tenants and its size unknown.\n- **Run-queue wait** (threads' mean count runnable, not running; schedstat): base 1t 0.00, base 2t 0.73, base 4t 1.01, head 1t 0.00, head 2t 0.75, head 4t 1.02. A pinned 2-thread run has four threads (two workers, the scanner, the reader) on two CPUs, so some wait is its shape, not interference.\n- **The per-thread split's unattributed CPU** (the process's total that no sampled thread holds, sampled every 10 ms): base 2t 8%, base 4t 8%, head 2t 9%, head 4t 8%.\n\n</details>\n\n### Where mibz2's CPU goes: the Wikidata blocks at 4 threads (median CPU seconds)\n\n| build | scanner (serial) | workers (summed) | the reading thread and the rest | unattributed | wall |\n|---|--:|--:|--:|--:|--:|\n| head | 0.07 | 0.85 | 0.01 | 0.08 | 0.305 |\n| base | 0.07 | 0.83 | 0.01 | 0.08 | 0.301 |\n\nUnattributed: the process's CPU that no sampled thread holds (threads ending between samples). Before bench 3.0.0 the sampler ran every 50 ms and left 0.1-0.35 s a run here; a base built before 3.0.0 still does, so its split and the model below undercount its workers against head's.\n\n### Where a decode's time goes, stage by stage: the Wikidata blocks on one thread (median c/B)\n\nEach of 5 rounds runs each build's `examples/phases.rs` once (bench/stages.py), pinned to one CPU, the builds' order alternating: the file decoded in decode order, block by block, each stage timed as it runs with the library's own functions (each stage's fastest of 2 passes), summed over the blocks, in cycles a byte of output at the reported clock (4276 MHz). **Change** is head over base per stage, paired by round as above; with seven intervals a run, a mark on one stage alone can be chance (about one run in three). Diagnostic only: the decoder's own figures are the tables above. 10 runs, 1m26s of the run.\n\n| stage | base → head c/B (median) | head share | change |\n|---|--:|--:|--:|\n| scanner (headers, Huffman) | 1.07 → 1.07 | 12.6% | −0.5% (−2.1%, +1.1%) |\n| MTF + RLE2 | 1.95 → 1.93 | 22.5% | −1.1% (−2.7%, +0.5%) |\n| T-vector build | 1.49 → 1.51 | 17.7% | +0.7% (−2.1%, +3.5%) |\n| walk (the one each build uses) | 3.89 → 3.63 | 42.4% | −5.8% (−15.3%, +4.9%) |\n| of which: segment assembly | 0.13 → 0.13 | 1.5% | −1.9% (−9.2%, +5.9%) |\n| RLE1 | 0.16 → 0.16 | 1.8% | +0.9% (−2.7%, +4.6%) |\n| CRC | 0.26 → 0.26 | 3.0% | +0.4% (−1.4%, +2.3%) |\n| **total** | 8.82 → 8.56 |  | −2.7% (−7.3%, +2.2%) |\n\nThe walk row is the stage, the same in every build; its implementation is each build's own, as its `phases` names it: base, “walk, room (used)”; head, “walk, room (used)”.\n\n### Modelled, not measured: a whole dump\n\nThe decode of `wikidata-20261019-all.json.bz2` (103 GB of bz2; 1.83 TB of JSON at the sample's 17.69×), scaled from the Wikidata blocks' runs above, round by round (mean ± its 95% interval, the sample ratio's own uncertainty added in):\n\n| | base | head | head over base, paired |\n|---|--:|--:|--:|\n| 1 thread | 1h06m ± 8m49s | 1h03m ± 7m52s | −4.2% (−8.0%, −0.3%) **faster** |\n| 4 threads | 44m15s ± 6m17s | 44m29s ± 6m26s | +0.4% (−2.8%, +3.8%) |\n| 4 threads, the sample's overlap gap as a fixed cost | 30m33s ± 4m27s | 30m46s ± 4m35s |  |\n| the scanner alone (its serial part) | 10m11s ± 29.4s | 10m29s ± 39.5s |  |\n| the workers alone, over 4 | 30m33s ± 4m27s | 30m46s ± 4m35s |  |\n\nAt 4 threads the workers bound it. Per byte: the scanner 6.1 ns a byte of bz2, the workers 4.03 ns a byte of output at 4 threads (CPU, summed over them), 1.74 ns at 1 thread (wall, less the scanner's part); the scanner would bind from about 12 worker threads (head).\n\n<details><summary>What the model assumes</summary>\n\n- **Linear in bytes:** the scanner's time in the dump's bz2 bytes, the workers' in its output bytes.\n- **The sample stands for the dump:** 12 windows of 1 MiB at (2i + 1)/24 of the dump, 431 of its own blocks; their mix of entities and their ratio, 17.69× (the windows' 95% interval ±14.0%), stand for the whole dump's. Another sample of the same dump (wikidata-pq's bench/full, 24 windows of 25 MB) measured 18.68×; wikidata-pq's CI slice, lines recompressed, is 13.69×.\n- **The wall at N threads** is the larger of the scanner's time and the workers' time over N (the scanner is one thread; the workers run blocks in parallel), times the sample's own wall over that bound: its overlap and fill taken to grow with the work, which errs long. Read as a fixed cost instead, the same gap gives the third row.\n- **The machine is this runner,** reading the dump from page cache: no download, no disk, no other work. The output is hashed by the reading thread and discarded.\n- The uncertainty is the rounds' spread, with the sample ratio's added in quadrature to the part that scales with the output; not the runner's: another CPU model gives other figures.\n\n</details>\n\n<details><summary>The corpora, the machine and the toolchain</summary>\n\n| corpus | bz2 bytes | output bytes | SHA-256 | source |\n|---|--:|--:|---|---|\n| `wikidata` | 11,854,933 | 209,700,196 | `82f65ace0731962d…` | wikidata-20261019-all.json.bz2: 12 windows' whole blocks (bench/wikidata.json) |\n| `onebyte` | 51 | 20,000,000 | `22924f5b3187645f…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |\n| `pattern` | 1,116 | 19,600,000 | `0f07e2a274b91896…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |\n| `random` | 7,097,921 | 8,000,000 | `10d444e6204289af…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |\n| `records` | 9,587,840 | 9,600,000 | `ff8b5f6ed3dd4445…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |\n| `runs` | 37,995 | 10,000,235 | `af3be4d130faf312…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |\n| `text` | 1,639,278 | 12,237,525 | `c0034b2c7a601f5b…` | ab gen (tests/common/mod.rs corpora), libbzip2 -9 |\n\n- CPU: AMD EPYC 9V45 96-Core Processor, 4 cores, reported clock 4276.4 MHz (cycles a byte use it), flags avx2, avx512f, bmi1, bmi2, pclmulqdq, sse4_1, ssse3; kernel 7.0.0-1019-azure; image ubuntu26 20261101.186.1\n- rustc 1.99.1 (58cf8f9c3 2026-10-13); pbz2 0.2.0; lbzip2 version 2.5; libbzip2 (the corpora's encoder) 1.0.8 (the bzip2 crate's bundled source)\n- bench 3.2.0 (bench/report.py), 10 rounds, threads 1, 2, 4\n\n</details>\n",
+    "reactions": {
+      "url": "https://api.github.com/repos/lmmx/mibz2/issues/comments/6643479692/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "performed_via_github_app": {
+      "id": 15368,
+      "slug": "github-actions",
+      "node_id": "MDM6QXBwMTUzNjg=",
+      "owner": {
+        "login": "github",
+        "id": 9919,
+        "node_id": "MDEyOk9yZ2FuaXphdGlvbjk5MTk=",
+        "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/github",
+        "html_url": "https://github.com/github",
+        "followers_url": "https://api.github.com/users/github/followers",
+        "following_url": "https://api.github.com/users/github/following{/other_user}",
+        "gists_url": "https://api.github.com/users/github/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/github/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/github/subscriptions",
+        "organizations_url": "https://api.github.com/users/github/orgs",
+        "repos_url": "https://api.github.com/users/github/repos",
+        "events_url": "https://api.github.com/users/github/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/github/received_events",
+        "type": "Organization",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "name": "GitHub Actions",
+      "description": "Automate your workflow from idea to production",
+      "external_url": "https://help.github.com/en/actions",
+      "html_url": "https://github.com/apps/github-actions",
+      "created_at": "2018-07-30T09:30:17Z",
+      "updated_at": "2026-06-18T16:17:48Z",
+      "permissions": {
+        "actions": "write",
+        "administration": "read",
+        "artifact_metadata": "write",
+        "attestations": "write",
+        "checks": "write",
+        "code_quality": "write",
+        "contents": "write",
+        "copilot_requests": "write",
+        "deployments": "write",
+        "discussions": "write",
+        "drives": "write",
+        "issues": "write",
+        "merge_queues": "write",
+        "metadata": "read",
+        "models": "read",
+        "packages": "write",
+        "pages": "write",
+        "pull_requests": "write",
+        "repository_hooks": "write",
+        "repository_projects": "write",
+        "security_events": "write",
+        "statuses": "write",
+        "vulnerability_alerts": "read"
+      },
+      "events": [
+        "branch_protection_rule",
+        "check_run",
+        "check_suite",
+        "create",
+        "delete",
+        "deployment",
+        "deployment_status",
+        "discussion",
+        "discussion_comment",
+        "fork",
+        "gollum",
+        "issues",
+        "issue_comment",
+        "label",
+        "merge_group",
+        "milestone",
+        "page_build",
+        "public",
+        "pull_request",
+        "pull_request_review",
+        "pull_request_review_comment",
+        "push",
+        "registry_package",
+        "release",
+        "repository",
+        "repository_dispatch",
+        "status",
+        "watch",
+        "workflow_dispatch",
+        "workflow_run"
+      ]
+    },
+    "minimized": null,
+    "pin": null
+  },
+  "scope": "Replay of archived costs, not a fresh executable or timing run. CI report inspected, paired round data not replayed. No polling of running replicate; no independent safety proof claimed."
+}

@@ -1,0 +1,57 @@
+{
+  "CHECKPOINT": {
+    "inbox_reason": null,
+    "channel_reason": "a CHECKPOINT from the coordinator to oracle on #145, which wakes only the coordinator. It belongs in oracle's inbox #222, or here as TYPE: QUEUED while the role is busy."
+  },
+  "CORRECTION": {
+    "inbox_reason": null,
+    "channel_reason": "a CORRECTION from the coordinator to oracle on #145, which wakes only the coordinator. It belongs in oracle's inbox #222, or here as TYPE: QUEUED while the role is busy."
+  },
+  "REVIEW": {
+    "inbox_reason": null,
+    "channel_reason": null
+  },
+  "ACK": {
+    "inbox_reason": null,
+    "channel_reason": null
+  },
+  "DECISION": {
+    "inbox_reason": null,
+    "channel_reason": null
+  },
+  "QUEUED": {
+    "inbox_reason": "TYPE: QUEUED in oracle's inbox #222. Staged work goes on #145.",
+    "channel_reason": null
+  },
+  "no_citation": {
+    "incomplete": [],
+    "unreviewed": [
+      6683737091
+    ],
+    "queued": []
+  },
+  "cited": {
+    "incomplete": [],
+    "unreviewed": [],
+    "queued": []
+  },
+  "free_correction_route": {
+    "issue": 222,
+    "type": "CORRECTION",
+    "why": "oracle is free: its inbox #222"
+  },
+  "busy_correction_route": {
+    "issue": 145,
+    "type": "QUEUED",
+    "busy": {
+      "incomplete": [
+        6683737091
+      ],
+      "unreviewed": [
+        6683737091
+      ],
+      "queued": []
+    },
+    "why": "oracle is busy: stage it on #145 as TYPE: QUEUED"
+  }
+}

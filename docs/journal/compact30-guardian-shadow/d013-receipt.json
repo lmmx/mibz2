@@ -1,0 +1,45 @@
+{
+  "incoming_comment": 6639998280,
+  "pr": 145,
+  "evidence_pin": "888eccfc86d5d771e881b0f87d46a21e2cf1512a",
+  "decision": "D013",
+  "checks": {
+    "class_count": 83,
+    "groups": {
+      "build": -207720906,
+      "refill": 9059803,
+      "finish": -60212114
+    },
+    "own_delta": -258873217,
+    "lower": 258494335,
+    "upper": 262948911,
+    "floor": 147606687,
+    "margin_i": 110887648,
+    "margin_ii": 174433914,
+    "v3_lower": 59688510,
+    "leaf_count": 44,
+    "leaf_last": "   8ae81:\tret",
+    "inclusive_delta": 262948911,
+    "inclusive_fraction": 0.20313812709295037
+  },
+  "counter_checks": {
+    "counter_expressions_checked": 87,
+    "conservative_fraction": 0.19969679614317812,
+    "potential_S_nonrow": 31113069,
+    "potential_outer_reload": 12015336
+  },
+  "sources": {
+    "journal": "9fd4f04af6f5975510681fd073241652ffbe3eb7",
+    "readme": "82d4f0ca2ffa3b3eedb66c9ce60717afb9a818d7",
+    "ledger.json": "aec6bd3757e0a4b6ec84a882a1a5c42f7f9bf074",
+    "floor.json": "af319969f152211f5d7a250c8d23a389478f50db",
+    "tools/floor.py": "e98ca6d6ecc0b1e2edf0151930abbcc4be86f0a5",
+    "listings/ctor2c-finish-false.asm": "36ffd58545e8d54af4bc773c561f937638d5fe0e",
+    "miri/summary.txt": "61c1555afff50e27d18d1b95773bcfa8fa2eca19",
+    "guardian": "56361d02455a1439b71444ef33e513b54c470fb9",
+    "roles": "b89e6dc11d83c7d0c4582f53f19f4f690554e650",
+    "activation": "416441ac744ce67a0d2fe326bdd126ebc2ee748d"
+  },
+  "limitations": "Artifact arithmetic only; no raw-profile replay, compilation, Miri or mutation execution.",
+  "evidence_digest": "git-blob:aec6bd3757e0a4b6ec84a882a1a5c42f7f9bf074"
+}

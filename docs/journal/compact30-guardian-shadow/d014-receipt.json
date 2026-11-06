@@ -1,0 +1,52 @@
+{
+  "decision": "D014",
+  "incoming_comment": 6640153383,
+  "pr": 145,
+  "pin": "95977867fdf318b3f66420c383a73d9c48b36740",
+  "checks": {
+    "rows": 86,
+    "groups": {
+      "build": [
+        -84060421,
+        -67268848,
+        -207720906,
+        -56391637
+      ],
+      "refill": [
+        0,
+        9059803,
+        9059803,
+        0
+      ],
+      "finish": [
+        0,
+        0,
+        -60212114,
+        -60212114
+      ]
+    },
+    "cats": {
+      "unroll": -66676611,
+      "head": -12015336,
+      "s_class": 19146504,
+      "rest": 3153806
+    },
+    "rows01": 47866260,
+    "physical_row_detours": -18810351,
+    "nonrow_S": -28719756,
+    "own": -258873217,
+    "raw_replay": "four profiles; full ledger JSON identical; all retrieved files Git-blob verified",
+    "O": 2393313,
+    "F": 147606687,
+    "lower": 258494335,
+    "upper": 262948911
+  },
+  "sources": {
+    "paths": "a228dd47c717e30a304c2a4bbfe112dcf5940ae4",
+    "bridge": "1542bf66e9189559c74f569327649b84521cde48",
+    "bridge_script": "55e6fae100c975367eecb0026fa3e7f690db6658",
+    "ledger": "aec6bd3757e0a4b6ec84a882a1a5c42f7f9bf074"
+  },
+  "evidence_digest": "git-blob:1542bf66e9189559c74f569327649b84521cde48",
+  "source_app_reply": "omitted per this run's explicit no additional message/reply/notification instruction"
+}
