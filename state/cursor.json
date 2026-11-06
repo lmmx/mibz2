@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Re-reviewing frozen inputs and census correction",
+  "state": "Re-review complete; publication pending",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -79,9 +79,10 @@
     6693597404,
     6694153375,
     6694804971,
-    6695278609
+    6695278609,
+    6695535463
   ],
-  "last_processed_comment_id": 6695278609,
+  "last_processed_comment_id": 6695535463,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -527,9 +528,13 @@
       "trigger_comment_id": 6695535463,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
-      "source_commit": "523ceaa922e1c479f90aad113891dc8ce98ebf0a"
+      "source_commit": "523ceaa922e1c479f90aad113891dc8ce98ebf0a",
+      "report_commit": "fa60929757a3786372c49992b8352418f26fd33a",
+      "report_path": "state/reports/policy-freeze-6695535463/report.md",
+      "review_comment_pr": 145,
+      "disposition": "Prior root-input/env/census fixes accepted; freeze HOLD remains for shared-target overwrite before base copy and unrecorded base-only ancestor Cargo configuration."
     }
   ],
   "active_delegations": [],
