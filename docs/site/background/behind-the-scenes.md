@@ -28,5 +28,5 @@ leaves it standing.
 The page stays as it is when the account changes. Your browser reads the branch when the
 page opens, and everything shown comes from the same version. The page looks again every
 five minutes while it is open. GitHub allows sixty unauthenticated requests an hour from one
-address. If it turns the page away, the branch's files are read directly, and the earlier
-versions are left out.
+address. If it turns the page away, the page shows nothing rather than risk mixing two
+versions, and links to the account on GitHub instead.
