@@ -57,14 +57,17 @@ CPU.
     census reads every 5 ms and the child's sampler every 10 ms, as registered;
   - if the two checkouts select different toolchains (`rustc -vV` and `cargo -V`, asked in
     each);
+  - if a Cargo configuration (`.cargo/config` or `.cargo/config.toml`) sits in any directory
+    between the base checkout, which is inside this one, and this checkout's root: Cargo
+    would apply it to the base build only;
   - if the base build's worktree is not at the base, or has changes or untracked files.
 
   Each build runs in its own checkout, and Cargo's own build messages name each executable.
   The recipe copies them into the attempt's directory (`bin/`), and those copies are what
   run, so neither build can overwrite the other's. It records HEAD, the candidate and the
   base (`commits.txt`), and the sha256 of both `ab` copies, the corpus builder and the
-  corpus, with the toolchain and the sha256 of any Cargo configuration outside the
-  repository, which applies to both builds alike (`inputs.txt`). The digests are a record
+  corpus, with the toolchain and the sha256 of every Cargo configuration both builds read
+  from above this checkout and from Cargo's home (`inputs.txt`). The digests are a record
   of what ran, not a proof of what each was built from; the refusals above are what bind
   the builds to the frozen inputs.
 - **The arms:** the head build's `mibz2` against the base build's (`mibz2@<base ab>`). Both use

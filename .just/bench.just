@@ -398,6 +398,13 @@ bench-three-team-policy:
     if missing: sys.exit("no executable reported for: "+" ".join(missing))
     print("\n".join(got[w] for w in want))' "$@"
     }
+    # Cargo reads `.cargo/config(.toml)` in every directory above where it builds. The base
+    # checkout sits inside this one, so a configuration between the two (in target/, or this
+    # checkout's own root) would reach the base build only: refused. Above this checkout both
+    # builds read the same files, which inputs.txt records
+    configs() { local d=$1 stop=$2; while :; do for f in "$d/.cargo/config" "$d/.cargo/config.toml"; do [ -f "$f" ] && echo "$f"; done; [ "$d" = "$stop" ] && break; d=$(dirname "$d"); done; return 0; }
+    only_base=$(configs "$(dirname "$B/build-$base")" "$PWD")
+    [ -z "$only_base" ] || fail "Cargo configuration only the base build would read: $(echo $only_base)"
     # the toolchain each build will use, asked in its own checkout (a toolchain file there
     # would change it): they must be the same
     tool() { (cd "$1" && rustc -vV && cargo -V); }
@@ -429,7 +436,7 @@ bench-three-team-policy:
     {
       sha256sum "$AB" "$BASEAB" "$WINDOWS" "$B/wikidata.bz2"
       tool "$PWD"
-      for f in "${CARGO_HOME:-$HOME/.cargo}/config" "${CARGO_HOME:-$HOME/.cargo}/config.toml"; do
+      for f in "${CARGO_HOME:-$HOME/.cargo}/config" "${CARGO_HOME:-$HOME/.cargo}/config.toml" $(configs "$(dirname "$PWD")" /); do
         [ -f "$f" ] && sha256sum "$f"
       done
       echo "census every 5 ms (AB_CENSUS_MS unset)"
