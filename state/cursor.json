@@ -1,0 +1,1100 @@
+{
+  "version": 1,
+  "repository": "lmmx/mibz2",
+  "mode": "ACTIVE",
+  "branch": "review/compact30-guardian-shadow",
+  "pr": 149,
+  "base": "research/compact30-constructor",
+  "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+  "assessments": [
+    {
+      "id": "D001",
+      "pilot": "P1",
+      "pr": 145,
+      "sha": "931640523226053b758ebc0c2c9fd4eac61128b3",
+      "evidence_digest": "856635be3105b63e1df4fe78a317cd803b584c680d6e0b781588b3dc45fab797",
+      "commit": "0cee91f620eb12dbb72a33b52c2393898d86d73a",
+      "comment": 6630519853,
+      "status": "published; dispositions reproduced; blindness defect D0"
+    },
+    {
+      "id": "D002",
+      "pilot": "P2",
+      "pr": 146,
+      "sha": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+      "evidence_digest": "927600fecc6fd86541a3ad011274f39e411c4a1df451f6d3640cd9d7e78324ba",
+      "commit": "bb87cbe3521c09c4826e69f983e1775280695fe5",
+      "comment": 6630589596,
+      "status": "published; not qualified; conservative interval and missing raw memory evidence HOLD"
+    },
+    {
+      "id": "D003",
+      "pilot": "P3a",
+      "pr": 149,
+      "sha": "bb87cbe3521c09c4826e69f983e1775280695fe5",
+      "evidence_digest": "03c3a5dcf0b69be7f35597288d310c76d2e33e7c8af11048849be01d1ab1cf05",
+      "incoming_comment": 6630529621,
+      "commit": "cfa5a66c7b3aba3cbdac4b32d253658a37259e89",
+      "comment": 6630627391,
+      "status": "declined"
+    },
+    {
+      "id": "D004",
+      "pilot": "P3b",
+      "pr": 146,
+      "sha": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+      "evidence_digest": "03c3a5dcf0b69be7f35597288d310c76d2e33e7c8af11048849be01d1ab1cf05",
+      "incoming_pr": 149,
+      "incoming_comment": 6630530217,
+      "commit": "cfa5a66c7b3aba3cbdac4b32d253658a37259e89",
+      "outgoing_pr": 149,
+      "comment": 6630629015,
+      "status": "declined"
+    },
+    {
+      "id": "D006",
+      "pilot": "P4 closeout",
+      "pr": 149,
+      "sha": "51657ab576a804531de0e71a40d4197c42f7c592",
+      "evidence_digest": "8b764c7349136fd420e5db86377f1c5e0ae19f7f72e42a41111409c5a393aac5",
+      "incoming_comment": 6630672389,
+      "log_commit": "35c7cdcb68ffc5ecbcf0eeb37b9307a8ccf207fb",
+      "commit": "9bb210bc2fe52ef933da50239d85cc8260a759c8",
+      "comment": 6631014855,
+      "status": "P4 CLOSED; pilot execution complete with named defects; remains SHADOW"
+    },
+    {
+      "id": "D007",
+      "kind": "synthetic transport checkpoint",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 149,
+      "sha": "0cf0bb5936ce3b6360ac69d45e9062dab0a715e2",
+      "evidence_digest": "683cda073c6461f12a4ed1460c20fe67db96bc6012730f1074ee99db6a69fe4f",
+      "incoming_comment": 6632161918,
+      "incoming_created_at": "2026-11-04T13:41:14Z",
+      "body_sha256": "ed1a7de026ce87b273ffb15b54ba5bbaeb8d5c5bcd45339eaeca18d6eebc3b61",
+      "commit": "99952368535d6f7f970533c2cfb63c71261c435d",
+      "comment": 6632636427,
+      "status": "published; event receipt verified; user-approved noreply identity resolved publication blocker; no scientific gate qualification or changed research disposition",
+      "completion": "original event processing resumed by explicit user request after commit-identity approval; not an uninterrupted unattended end-to-end trial"
+    },
+    {
+      "id": "D008",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": [
+        "G1",
+        "G4"
+      ],
+      "pr": 145,
+      "sha": "e5d86cc508af495236c1019c5ce1daa24ec83c3e",
+      "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
+      "incoming_comment": 6632963394,
+      "incoming_created_at": "2026-11-04T14:16:41Z",
+      "body_sha256": "002b080a2313e67e1839643da827298d794df94a242abf5a8b42a33969befd66",
+      "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
+      "comment": 6633274082,
+      "checkpoint_keys": [
+        {
+          "pr": 151,
+          "sha": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        },
+        {
+          "pr": 146,
+          "sha": "49cb46b65070059af49e906fa8d98693b808bda2",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        },
+        {
+          "pr": 146,
+          "sha": "a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        }
+      ],
+      "status": "published; new isolated qualifications concurred pending section6.2; original scanner correction stays nonqualifying; Researcher appointed in fresh independent evidence-only instance; consolidated index/review outstanding"
+    },
+    {
+      "id": "D009",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G4",
+      "pr": 145,
+      "sha": "bde54f1218551766e6f6a404202e65599a06bfd4",
+      "evidence_digest": "f173ad09b100e451065369fee2540b7a818d416233a8b1215c43abee7c2010fa",
+      "incoming_comment": 6633793271,
+      "incoming_created_at": "2026-11-04T14:52:24Z",
+      "body_sha256": "29a295029590ebe4c4f342a7ed63623c9b8212d019b9c0c8d6a2f1b4090a5f16",
+      "commit": "5ae9cc83faa22721ad72f97974006384f00677d2",
+      "comment": 6633918984,
+      "status": "published; fresh Astra sub-instance route confirmed conditional on actual isolation, provenance and authorised publication scope; no launch or technical review completion claimed"
+    },
+    {
+      "id": "D010",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 145,
+      "sha": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48",
+      "evidence_digest": "621e464bad36bdf6c798c1a88fcee224bf1e9d955dd3fbd757c45bde3b57a0ff",
+      "incoming_comment": 6635380133,
+      "commit": "028d7206e79fae8081cef4ea13357b4546270530",
+      "comment": 6635476486,
+      "status": "published; registered floor uses demonstrated overlap lower bound; additional overlap subtracts; minima do not prove overlap upper bound; no component requalification"
+    },
+    {
+      "id": "D011",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 145,
+      "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa",
+      "incoming_comment": 6635419092,
+      "commit": "080dd146353485eb2e6e7b17bc78283278563e6e",
+      "comment": 6635620697,
+      "checkpoint_keys": [
+        {
+          "pr": 146,
+          "sha": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+          "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa"
+        },
+        {
+          "pr": 151,
+          "sha": "7620c0c667018772a0ba3be28eb62263b55037f8",
+          "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa"
+        }
+      ],
+      "status": "published; gate 3 PASS both pinned isolated models; mapped counter remedy accepted; normalized identity and histogram coverage limits retained; no integration authorization"
+    },
+    {
+      "id": "D012",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1 scope interpretation / section4 reservation",
+      "pr": 145,
+      "sha": "55b4b86be4ba7eed41b283a52f2c1d56fa43cc67",
+      "evidence_digest": "6424e00222686132af7e1d3febdd09a5135101b88787b72ca72293818e4d33d4",
+      "incoming_comment": 6637300905,
+      "commit": "2c2565aca5be9ffd2ce5ace8ba82d3af9b60523b",
+      "comment": 6637353454,
+      "status": "published; policy recorded as evidence; G9/G10 not adopted because direct task pin and reservations remain; no blanket HOLD or reversal of recorded user decisions"
+    },
+    {
+      "id": "D013",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": [
+        "G1",
+        "G7"
+      ],
+      "pr": 145,
+      "sha": "888eccfc86d5d771e881b0f87d46a21e2cf1512a",
+      "evidence_digest": "git-blob:aec6bd3757e0a4b6ec84a882a1a5c42f7f9bf074",
+      "incoming_comment": 6639998280,
+      "commit": "88bc570db02d8e617652ea56e081e4b4c6eae0c4",
+      "comment": 6640069360,
+      "status": "artifact arithmetic consistent; final combined qualification HOLD pending acknowledged gain reconciliation; no line STOP"
+    },
+    {
+      "id": "D014",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": [
+        "G1",
+        "G7"
+      ],
+      "pr": 145,
+      "sha": "95977867fdf318b3f66420c383a73d9c48b36740",
+      "evidence_digest": "git-blob:1542bf66e9189559c74f569327649b84521cde48",
+      "incoming_comment": 6640153383,
+      "comment": null,
+      "status": "D013 attribution HOLD lifted; four-profile full ledger replay; no economic or fresh safety certification",
+      "publication": "decision in enclosing commit; GitHub reply suppressed by direct batch instruction",
+      "commit": "a0473a6b6d9e4b69c459e560136d4841aa533b5c"
+    },
+    {
+      "id": "D015",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 145,
+      "sha": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+      "evidence_digest": "sha256:d72803342531ebd595bd57dc2fd528f78a004b413933623fea2c2ddf87638f0d",
+      "incoming_comment": 6641512290,
+      "comment": null,
+      "status": "constructor gate scope retained; quoted production arithmetic corrected; whole-decoder benefit unestablished; no line STOP",
+      "publication": "decision in enclosing commit; GitHub reply suppressed by direct batch instruction",
+      "commit": "aae003edfca79e23f0a65c7ed1fcc8b7840aa7ce"
+    },
+    {
+      "id": "D016",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 145,
+      "sha": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+      "evidence_digest": "sha256:ce68892e7fd704081718ae9b2dc976fa8c6f8065fc4a9513515905b7b002d76c",
+      "incoming_comment": 6641672441,
+      "commit": "2b58b12acc57e270a667923e7edf81808a41c39d",
+      "comment": 6641768409,
+      "status": "published; current production candidate rejection concurred; causal claims narrowed; parity screen distinct from qualification; no line STOP"
+    },
+    {
+      "id": "D017",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 145,
+      "sha": "8465207a1d71af51baa1725ecf695c41b52848a2",
+      "evidence_digest": "sha256:c2e5e0e1a36476b40a1f664ec7944782b69db2ad8369847cb80d5672500cc85c",
+      "incoming_comment": 6643481606,
+      "comment": null,
+      "status": "reported sampled instruction progress; qualification not established; no line STOP",
+      "publication": "decision in enclosing commit; GitHub reply suppressed by direct batch instruction",
+      "commit": "8278a3219228cf67c117f23efc3aad48323e7d3b"
+    },
+    {
+      "id": "D018",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "D018",
+      "pr": 145,
+      "sha": "75b13f009c619300bc914750b1a4a44f365def2e",
+      "evidence_digest": "sha256:8bf36cd55a53f0a35016b2625ef1f71ca59ae5a8c9c2228cda04c59d606e4eea",
+      "commit": "285f76d4daf16d494c05e4ec03be756b454cbee3",
+      "comment": 6643850845,
+      "incoming_comment": 6643744616,
+      "status": "published; archive/accounting gaps closed for new pin; safety and economic qualification unestablished; CI causal claims narrowed; no line STOP"
+    },
+    {
+      "id": "D019",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "pr": 145,
+      "sha": "4b90be58a19f12d2e2b1ea62e5443312bcb428c3",
+      "evidence_digest": "sha256:b8f11fed633118414578b5317725295dcf80136d5a388b0ba7a8f03e220f0faf",
+      "decision": "G1",
+      "commit": "71fcb3bc5e390500324afa652b447ca3de97a1f7",
+      "comment": 6643927959,
+      "incoming_comment": 6643809123,
+      "status": "published; prior research scoped; current bottleneck not identified; fitted model provenance unresolved; no line STOP"
+    },
+    {
+      "id": "D020",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "pr": 145,
+      "sha": "75b13f009c619300bc914750b1a4a44f365def2e",
+      "evidence_digest": "sha256:ec7718614e824bdebd0084852ce9aa254ed72aecb4b48bdd1aefc92ca2093738",
+      "decision": "G1",
+      "commit": "8d6a716d0dbf75bc5c6a2ff3e4a652f6e7df1662",
+      "comment": 6644051935,
+      "incoming_comment": 6643992749,
+      "status": "published; B2 provenance resolved; mixed-run and different-kernel validation disputed; no new measurement authority, PASS or line STOP"
+    },
+    {
+      "id": "D021",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "pr": 145,
+      "sha": "5f537871505fb50f1c84529418b88b7c60c3d7ec",
+      "evidence_digest": "sha256:d9153b9f795ec9f89d958601125aff4a40bf3dde37c69888c3d2547e484344b5",
+      "decision": "G1",
+      "commit": "4534bbc8d1cd4de6a9b1fe87269b60a9f1587654",
+      "comment": 6644422056,
+      "incoming_comment": 6644364456,
+      "status": "published; redelivery preserves prior decisions; four-worker and B2 falsifier claims scoped; ranking not qualification; no PASS or line STOP"
+    },
+    {
+      "id": "D022",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "pr": 145,
+      "sha": "08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7",
+      "evidence_digest": "sha256:1798ad72c0c64da2814e316465f27ee903e0a1afc1b7ea06dd1d3f5fa3f90970",
+      "decision": "G1",
+      "commit": "92468ff2b0adaa919721ac1b661c41cd9d089439",
+      "comment": 6644979187,
+      "incoming_comment": 6644912625,
+      "status": "published; causal retraction concurred; P87 historical gates retained; no fresh qualification or line STOP"
+    },
+    {
+      "id": "D023",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "pr": 160,
+      "sha": "08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7",
+      "evidence_digest": "sha256:4d57b6f869f123c55d7f7af27e8c54fa696a8de478b69f2006280b885f7fe379",
+      "decision": "G1",
+      "commit": "9f85bcb6da410334db12a3fc0efacec298d18a98",
+      "comment": 6645337230,
+      "incoming_comment": 6645304470,
+      "status": "published; corrected inbox brief preserves prior findings and role boundaries; no new qualification or authority"
+    },
+    {
+      "id": "D024",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "pr": 161,
+      "output_pr": 145,
+      "candidate_pr": 164,
+      "sha": "f142e38ea9ffbc37cce1047e643e8c2dbb907f9c",
+      "evidence_digest": "git-blob:f28e31a458692b89ed8f4714628a3d3ca191a914",
+      "decision": "G1",
+      "commit": "ca1b65de2ae684b5d0a32795154abd8f44857f7a",
+      "comment": 6645964170,
+      "incoming_comment": 6645920904,
+      "status": "published; historical P87 status preserved; unconditional merge qualification disputed; no new PASS or line STOP"
+    },
+    {
+      "id": "D025",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 161,
+      "output_pr": 145,
+      "sha": "a995ce87dcd63b318a10795a1860fc21edf039cf",
+      "evidence_digest": "git-blob:6def96def6c11f19df3137cf0159c07013a5ea2a",
+      "incoming_comment": 6646249200,
+      "comment": 6646304926,
+      "commit": "fd43a0a90e418a651f27c3c2197850582acd6379",
+      "receipt_commit": "7bc2724bf4e3769549e29ec6b75b8bae029fcb26",
+      "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+      "status": "completed; historical status preserved; summary predicates verified; replication and late-amendment claims bounded"
+    },
+    {
+      "id": "D026",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": [
+        "G1",
+        "G3"
+      ],
+      "pr": 161,
+      "output_pr": 145,
+      "sha": "bb9291abc6ec353fd07c0cba00a6fa8eaba61c15",
+      "evidence_digest": "git-blob:5aadf3ce52f696396eec1d8f04dc9ca071c2ab3e",
+      "supporting_script_blob": "52a615aef22aeb6e2d717e775ce1f246e52d5de1",
+      "incoming_comment": 6681847165,
+      "commit": "5a1fe19170ee66cd7d3fbbc7620552e4ca19a23d",
+      "receipt_commit": "ead2d5a2eeab54f1970072dd0c4bfdcfb41120ed",
+      "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+      "status": "finished",
+      "disposition": "prospective qualification rule narrowed; validity defects and causal limits recorded; no candidate PASS or line STOP",
+      "comment": 6681996710
+    },
+    {
+      "id": "D027",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 161,
+      "output_pr": 145,
+      "sha": "b8b8ce473c7acde505c266768fcd38a7f1f1eacb",
+      "evidence_digest": "git-blob:acd3e6503b64d2cc9eaa72b30de302a68392ff13",
+      "incoming_comment": 6682032075,
+      "commit": "80722a9c2ce25f537b4efeecc354bbb7a9adf9b1",
+      "receipt_commit": "9f7a6099908c74a2b09b2c8958bcfde13dcebce9",
+      "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+      "status": "finished",
+      "disposition": "D026 partially closed; duplicate-control false pass and whole-grid validity gaps reproduced",
+      "comment": 6682139215
+    },
+    {
+      "id": "D028",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 161,
+      "output_pr": 145,
+      "sha": "6f3183d96f2e8fc1d59751e1279be062fc09d897",
+      "evidence_digest": "git-blob:0384ed256a77e23db5b61477df58e1fa52cc24b6",
+      "incoming_comment": 6682106949,
+      "commit": "8158cb4c9958c3797748595426bb24ee9f168b4f",
+      "receipt_commit": "208beb1ff28cc536820ed0aae8e2c48e017864fc",
+      "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+      "status": "finished",
+      "disposition": "matched window and tested counter checks supported; duplicate-control and full-grid gaps remain",
+      "comment": 6682239005
+    },
+    {
+      "id": "D029",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "decision": "G1",
+      "pr": 161,
+      "output_pr": 145,
+      "sha": "d6fc2d25959ee10af461143f3808534febdb7a00",
+      "evidence_digest": "git-blob:4db93c96b4915745b04175827bacc76d8eaec0b9",
+      "incoming_comment": 6682260206,
+      "commit": "dca06f62983447c277ca634bc453304aa2fe3901",
+      "receipt_commit": "557b27624b3cb4ef87519451484c1c5bbedab78c",
+      "operating_pin": "288c05638c85ffbb0a4d1f5ba9762002c37acdff",
+      "status": "finished",
+      "disposition": "material D026-D028 registration/reporting findings closed at pinned amendment; diagnostic and authority limits retained",
+      "comment": 6682363998
+    },
+    {
+      "pr": 161,
+      "sha": "1091663e7beb6996eafb05a9896ac62b892600f1",
+      "evidence_digest": "git-blob:1b1f8c8ec1ab18e160bf0d3114887e3ef503fcf3",
+      "decision": [
+        "G1",
+        "G3"
+      ],
+      "commit": "527027c6a44ea5c2087384cc6be276dfb600393a",
+      "id": "D030",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "incoming_comment": 6682936439,
+      "status": "published; numerical carry-over concurred; outcome and mechanism claims narrowed",
+      "comment": 6683039047
+    },
+    {
+      "pr": 161,
+      "sha": "8e3f6352baad3c26c3aa1c19d3ab74c3a4752c65",
+      "evidence_digest": "git-blob:2e03210e89dfaf8b9e85f640f645d57756d84dc2",
+      "decision": [
+        "G1",
+        "G2",
+        "G3"
+      ],
+      "commit": "f5b8432327a532f111002f3a0b386d639f3eecb8",
+      "id": "D031",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "incoming_comment": 6683783830,
+      "status": "published; authority/MODE concur; narrow routing/correction HOLD",
+      "comment": 6683861491
+    },
+    {
+      "pr": 161,
+      "sha": "b58cb628ccbb86b34a9ceac8e852f5d978a29a0d",
+      "evidence_digest": "git-blob:07b625553b6b71db05c4675fc19a9ad62f98e726",
+      "decision": "G1",
+      "commit": "f1f8b92542476dd009a9b9cd5680824ab564461d",
+      "id": "D032",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "incoming_comment": 6683967083,
+      "status": "published; D031 narrow HOLD lifted",
+      "comment": 6684025721
+    },
+    {
+      "pr": 161,
+      "sha": "40709781a39758d14e037d70a9bb20a65fc0edf9",
+      "evidence_digest": "git-blob:7d085a668c313439bfb5316d0cc725fe4231d4d5",
+      "decision": [
+        "G1",
+        "G2"
+      ],
+      "commit": "8450b722f092e25b12a4713136dc0f3c6a86521e",
+      "id": "D033",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "incoming_comment": 6684935718,
+      "status": "published; HOLD team-neutral cutover readiness; independent authorised work continues",
+      "comment": 6685099382
+    },
+    {
+      "pr": 161,
+      "sha": "5cb46ba390de24c875f881e720f266f7fcd7e9b5",
+      "evidence_digest": "git-blob:88825a4bf7c4b6e82ffab9fc53881fd7ade4781a",
+      "decision": [
+        "G1"
+      ],
+      "commit": "d510599dbc5bccf84fe0139aa5626ef9f42638d1",
+      "id": "D034",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "incoming_comment": 6685165401,
+      "status": "published; D033 readiness HOLD lifted; reserved approval and cutover verification remain",
+      "comment": 6685253567
+    }
+  ],
+  "own_outgoing_comment_ids": [
+    6630519853,
+    6630589596,
+    6630627391,
+    6630629015,
+    6630660444,
+    6631014855,
+    6632636427,
+    6633274082,
+    6633918984,
+    6635476486,
+    6635620697,
+    6637353454,
+    6640069360,
+    6641768409,
+    6643850845,
+    6643927959,
+    6644051935,
+    6644422056,
+    6644979187,
+    6645337230,
+    6645964170,
+    6646304926,
+    6681996710,
+    6682139215,
+    6682239005,
+    6682363998,
+    6683039047,
+    6683861491,
+    6684025721,
+    6685099382,
+    6685253567
+  ],
+  "own_published_commit_ids": [
+    "0cee91f620eb12dbb72a33b52c2393898d86d73a",
+    "bb87cbe3521c09c4826e69f983e1775280695fe5",
+    "cfa5a66c7b3aba3cbdac4b32d253658a37259e89",
+    "51657ab576a804531de0e71a40d4197c42f7c592",
+    "806de8ef5dff19b7859ff51475fe5b8e563a6a1b",
+    "9bb210bc2fe52ef933da50239d85cc8260a759c8",
+    "99952368535d6f7f970533c2cfb63c71261c435d",
+    "62a313a89876c2bc980718cc094c9265ddf7ff2c",
+    "5ae9cc83faa22721ad72f97974006384f00677d2",
+    "028d7206e79fae8081cef4ea13357b4546270530",
+    "080dd146353485eb2e6e7b17bc78283278563e6e",
+    "2c2565aca5be9ffd2ce5ace8ba82d3af9b60523b",
+    "88bc570db02d8e617652ea56e081e4b4c6eae0c4",
+    "a0473a6b6d9e4b69c459e560136d4841aa533b5c",
+    "aae003edfca79e23f0a65c7ed1fcc8b7840aa7ce",
+    "2b58b12acc57e270a667923e7edf81808a41c39d",
+    "8278a3219228cf67c117f23efc3aad48323e7d3b",
+    "285f76d4daf16d494c05e4ec03be756b454cbee3",
+    "71fcb3bc5e390500324afa652b447ca3de97a1f7",
+    "8d6a716d0dbf75bc5c6a2ff3e4a652f6e7df1662",
+    "4534bbc8d1cd4de6a9b1fe87269b60a9f1587654",
+    "92468ff2b0adaa919721ac1b661c41cd9d089439",
+    "9f85bcb6da410334db12a3fc0efacec298d18a98",
+    "ca1b65de2ae684b5d0a32795154abd8f44857f7a",
+    "7bc2724bf4e3769549e29ec6b75b8bae029fcb26",
+    "fd43a0a90e418a651f27c3c2197850582acd6379",
+    "ead2d5a2eeab54f1970072dd0c4bfdcfb41120ed",
+    "5a1fe19170ee66cd7d3fbbc7620552e4ca19a23d",
+    "94ea77479d881c10761fd88363004fe0f46ee985",
+    "9f7a6099908c74a2b09b2c8958bcfde13dcebce9",
+    "80722a9c2ce25f537b4efeecc354bbb7a9adf9b1",
+    "1fc297cee7ebafa005e40740dc8c67be319110be",
+    "208beb1ff28cc536820ed0aae8e2c48e017864fc",
+    "8158cb4c9958c3797748595426bb24ee9f168b4f",
+    "8bbf90210adcd3ed9126f940a2af2c213c5c7a20",
+    "557b27624b3cb4ef87519451484c1c5bbedab78c",
+    "dca06f62983447c277ca634bc453304aa2fe3901",
+    "5f3f2a4b68e2e39e71cdbbd5bffbf2de0cbdf7a7",
+    "a2ab14e4f6fddd1156ac4cfed7bac399a1c973a4",
+    "527027c6a44ea5c2087384cc6be276dfb600393a",
+    "d78700b3fe021c8bb53ade50371493bd7a767434",
+    "aafc4d9b551aa8ccf584e0b62192c7c05cfb1143",
+    "f5b8432327a532f111002f3a0b386d639f3eecb8",
+    "a13475e7a32fcd1d34b2d9bd868c584d5887db97",
+    "e9a40bd380df8c6b052743520ab0852f83fb00de",
+    "f1f8b92542476dd009a9b9cd5680824ab564461d",
+    "08d50dd89532368fdde67ed8c524bf0672c43977",
+    "b950a6869425d6683d030cbfe0f8bf4d188bcc6b",
+    "8450b722f092e25b12a4713136dc0f3c6a86521e",
+    "d1e6f5e3e84a721ddbe11b88f681c2078658505c",
+    "6af1967e7e74c8f59113431abc5a7b90ab47321a",
+    "d510599dbc5bccf84fe0139aa5626ef9f42638d1",
+    "d7272ba8bba1b16e14dcac4cda7fe5630b528aca"
+  ],
+  "consumed_incoming_comment_ids": [
+    6630529621,
+    6630530217,
+    6630638365,
+    6630672389,
+    6632161918,
+    6632963394,
+    6633116288,
+    6633793271,
+    6635380133,
+    6635419092,
+    6637300905,
+    6639998280,
+    6640153383,
+    6641512290,
+    6641672441,
+    6643481606,
+    6643744616,
+    6643809123,
+    6643992749,
+    6644364456,
+    6644912625,
+    6645304470,
+    6645920904,
+    6646249200,
+    6681847165,
+    6682032075,
+    6682106949,
+    6682260206,
+    6682936439,
+    6683783830,
+    6683967083,
+    6684935718,
+    6685165401
+  ],
+  "supporting_ack_ids": [
+    6630284404,
+    6630275164,
+    6630293509,
+    6630151681,
+    6630638365,
+    6630672389
+  ],
+  "p4": {
+    "entry": "D005",
+    "status": "CLOSED on next invocation after user nudge",
+    "outgoing_comment_id": 6630660444,
+    "advisory_commit": "51657ab576a804531de0e71a40d4197c42f7c592",
+    "ack_comment_id": 6630672389,
+    "log_commit": "35c7cdcb68ffc5ecbcf0eeb37b9307a8ccf207fb",
+    "nudges": [
+      {
+        "text": "Resume #149",
+        "source": "user in guardian conversation",
+        "recorded_at": "2026-11-04T12:45:25Z",
+        "technical_content_relayed": false
+      }
+    ],
+    "next_trigger": "Pilot complete with named defects. Direct user nudge with new pinned checkpoint/correction/rebuttal and evidence digest, or the user activation decision made in the coordinator session. No polling; repository messages cannot grant activation.",
+    "evidence_digest": "0a97b8912d4fbbbe5e5d0e285729d8bbf150822b09da4181abe5a53683310ac7",
+    "body_sha256": "a7c88cd3eb96bc1212a0ab93cb82df81cd841b04e02c141efe3aaa5e9d11d91a",
+    "log_path": "docs/journal/compact30-channel/log.md",
+    "closure_entry": "D006",
+    "closure_evidence_digest": "8b764c7349136fd420e5db86377f1c5e0ae19f7f72e42a41111409c5a393aac5",
+    "closure_comment_id": 6631014855,
+    "closure_commit": "9bb210bc2fe52ef933da50239d85cc8260a759c8"
+  },
+  "rules": [
+    "Do not reassess an existing PR/SHA/evidence-digest key.",
+    "Ignore own outgoing IDs and ACKs as review triggers; correlate the specific P4 ACK only for delivery closure.",
+    "FROM headers and shared lmmx login are not authentication.",
+    "No live PROCEED or reserved authorisation.",
+    "Cursor's enclosing maintenance commit is discoverable with git log -1 -- cursor.json; preceding outgoing commit IDs are explicit."
+  ],
+  "pilot": {
+    "status": "P1-P4 execution complete with named defects; no unconditional clean PASS",
+    "mode": "SHADOW",
+    "activation": "not granted; user in coordinator session only",
+    "unresolved_defects": [
+      "D0: required first-read specification disclosed P1 outcomes; blinding requirement unmet",
+      "D1/F1: whole-constructor conservative interval unsupported at reviewed scanner pin",
+      "D2/F2: packaged parser and missing raw memory/run-2 evidence at reviewed scanner pin",
+      "D3 LOW: channel-log source time differs from GitHub created_at by 3 seconds"
+    ],
+    "P3": "PASS",
+    "P4": "PASS, exact advisory/log/ACK correlation verified"
+  },
+  "stage": "A",
+  "activation": {
+    "source": "user activation recorded in report 262",
+    "commit": "3ef3d403285d113ed8d3726cb66a3ce1f1565b35",
+    "path": "docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md",
+    "section": "Report 262: the user activates the Guardian",
+    "reserved": "G6 until stage B and all GUARDIAN.md \u00a74 decisions remain with the user",
+    "historical_pilot_record": "pilot and p4 below preserve their original SHADOW closeout history"
+  },
+  "commit_identity": {
+    "author": {
+      "name": "Louis Maddox",
+      "email": "lmmx@users.noreply.github.com"
+    },
+    "committer": {
+      "name": "Louis Maddox",
+      "email": "lmmx@users.noreply.github.com"
+    },
+    "scope": "review/compact30-guardian-shadow",
+    "authority": "explicit user approval in this conversation and PROTOCOL.md \u00a79",
+    "protocol_commit": "374cfe4d2e0fd1f436c4bee9a38e5366d6855726",
+    "protocol_path": "docs/journal/compact30-channel/PROTOCOL.md",
+    "ai_attribution": false
+  },
+  "current_execution": {
+    "trigger": "new non-bot inbox #161 comment; headers do not gate eligibility under SPEC",
+    "repository": "lmmx/mibz2",
+    "scope": "inbox #161 comments after offset 6646249200, oldest first; resume recorded progress; skip finished/consumed/own IDs",
+    "last_completed_incoming_comment": 6682260206,
+    "last_decision": "D029",
+    "last_outgoing_comment": 6682363998,
+    "after_completion": "stop; await next event; no automation or subscription changes",
+    "polling": false,
+    "timed_schedule": false,
+    "own_outputs": "skip IDs in own_outgoing_comment_ids; handle remaining inbox comments under pinned SPEC",
+    "duplicate_rule": "stop for an ID in consumed_incoming_comment_ids; preserve existing PR/SHA/evidence-digest deduplication",
+    "duplicate_delivery_test": "same-evidence second event deduplicated in this run; exact-ID redelivery not injected",
+    "last_decision_commit": "dca06f62983447c277ca634bc453304aa2fe3901",
+    "last_duplicate_incoming_comment": 6633116288,
+    "source_app_reply": "one TYPE: REVIEW for D029 on #145",
+    "input_pr": 161,
+    "output_pr": 145,
+    "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+    "offset_comment_id": 6646249200,
+    "active_comment_status": "finished",
+    "queue_snapshot": "six inbox comments listed; all comments after offset finished, including dispatched 6682260206"
+  },
+  "duplicate_events": [
+    {
+      "incoming_comment": 6633116288,
+      "pr": 145,
+      "created_at": "2026-11-04T14:23:21Z",
+      "duplicate_of_incoming_comment": 6632963394,
+      "decision": "D008",
+      "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
+      "checkpoint_keys": [
+        {
+          "pr": 151,
+          "sha": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        },
+        {
+          "pr": 146,
+          "sha": "49cb46b65070059af49e906fa8d98693b808bda2",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        },
+        {
+          "pr": 146,
+          "sha": "a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b",
+          "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47"
+        }
+      ],
+      "status": "same three pins and queue; no new Guardian evidence; no separate decision or outgoing review"
+    }
+  ],
+  "reviewed_checkpoint_keys": [
+    {
+      "pr": 151,
+      "sha": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
+      "decision": "D008",
+      "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
+      "comment": 6633274082
+    },
+    {
+      "pr": 146,
+      "sha": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
+      "decision": "D008",
+      "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
+      "comment": 6633274082
+    },
+    {
+      "pr": 146,
+      "sha": "a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b",
+      "evidence_digest": "6c47763aa612cf6107e6ceeb3ae3919359765ced9ba28e2874f750804a7f0e47",
+      "decision": "D008",
+      "commit": "62a313a89876c2bc980718cc094c9265ddf7ff2c",
+      "comment": 6633274082
+    },
+    {
+      "pr": 145,
+      "sha": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48",
+      "evidence_digest": "621e464bad36bdf6c798c1a88fcee224bf1e9d955dd3fbd757c45bde3b57a0ff",
+      "decision": "D010",
+      "commit": "028d7206e79fae8081cef4ea13357b4546270530",
+      "comment": 6635476486
+    },
+    {
+      "pr": 146,
+      "sha": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa",
+      "decision": "D011",
+      "commit": "080dd146353485eb2e6e7b17bc78283278563e6e",
+      "comment": 6635620697
+    },
+    {
+      "pr": 151,
+      "sha": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "evidence_digest": "38707dcdb07b3207311ac1b5c8be6ad2ec7fb47c39a62bee8112b81839dde5fa",
+      "decision": "D011",
+      "commit": "080dd146353485eb2e6e7b17bc78283278563e6e",
+      "comment": 6635620697
+    },
+    {
+      "pr": 145,
+      "sha": "55b4b86be4ba7eed41b283a52f2c1d56fa43cc67",
+      "evidence_digest": "6424e00222686132af7e1d3febdd09a5135101b88787b72ca72293818e4d33d4",
+      "decision": "D012",
+      "commit": "2c2565aca5be9ffd2ce5ace8ba82d3af9b60523b",
+      "comment": 6637353454
+    },
+    {
+      "pr": 145,
+      "sha": "888eccfc86d5d771e881b0f87d46a21e2cf1512a",
+      "evidence_digest": "git-blob:aec6bd3757e0a4b6ec84a882a1a5c42f7f9bf074",
+      "decision": "D013",
+      "commit": "88bc570db02d8e617652ea56e081e4b4c6eae0c4",
+      "comment": 6640069360
+    },
+    {
+      "pr": 145,
+      "sha": "95977867fdf318b3f66420c383a73d9c48b36740",
+      "evidence_digest": "git-blob:1542bf66e9189559c74f569327649b84521cde48",
+      "decision": "D014",
+      "comment": null,
+      "commit": "a0473a6b6d9e4b69c459e560136d4841aa533b5c"
+    },
+    {
+      "pr": 145,
+      "sha": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+      "evidence_digest": "sha256:d72803342531ebd595bd57dc2fd528f78a004b413933623fea2c2ddf87638f0d",
+      "decision": "D015",
+      "comment": null,
+      "commit": "aae003edfca79e23f0a65c7ed1fcc8b7840aa7ce"
+    },
+    {
+      "pr": 145,
+      "sha": "b4786f66366c9e404702c800cd360dc793b1a7a5",
+      "evidence_digest": "sha256:ce68892e7fd704081718ae9b2dc976fa8c6f8065fc4a9513515905b7b002d76c",
+      "decision": "D016",
+      "commit": "2b58b12acc57e270a667923e7edf81808a41c39d",
+      "comment": 6641768409
+    },
+    {
+      "pr": 145,
+      "sha": "8465207a1d71af51baa1725ecf695c41b52848a2",
+      "evidence_digest": "sha256:c2e5e0e1a36476b40a1f664ec7944782b69db2ad8369847cb80d5672500cc85c",
+      "decision": "D017",
+      "comment": null,
+      "commit": "8278a3219228cf67c117f23efc3aad48323e7d3b"
+    },
+    {
+      "pr": 145,
+      "sha": "75b13f009c619300bc914750b1a4a44f365def2e",
+      "evidence_digest": "sha256:8bf36cd55a53f0a35016b2625ef1f71ca59ae5a8c9c2228cda04c59d606e4eea",
+      "decision": "D018",
+      "commit": "285f76d4daf16d494c05e4ec03be756b454cbee3",
+      "comment": 6643850845
+    },
+    {
+      "pr": 145,
+      "sha": "4b90be58a19f12d2e2b1ea62e5443312bcb428c3",
+      "evidence_digest": "sha256:b8f11fed633118414578b5317725295dcf80136d5a388b0ba7a8f03e220f0faf",
+      "decision": "D019",
+      "commit": "71fcb3bc5e390500324afa652b447ca3de97a1f7",
+      "comment": 6643927959
+    },
+    {
+      "pr": 145,
+      "sha": "75b13f009c619300bc914750b1a4a44f365def2e",
+      "evidence_digest": "sha256:ec7718614e824bdebd0084852ce9aa254ed72aecb4b48bdd1aefc92ca2093738",
+      "decision": "D020",
+      "commit": "8d6a716d0dbf75bc5c6a2ff3e4a652f6e7df1662",
+      "comment": 6644051935
+    },
+    {
+      "pr": 145,
+      "sha": "5f537871505fb50f1c84529418b88b7c60c3d7ec",
+      "evidence_digest": "sha256:d9153b9f795ec9f89d958601125aff4a40bf3dde37c69888c3d2547e484344b5",
+      "decision": "D021",
+      "commit": "4534bbc8d1cd4de6a9b1fe87269b60a9f1587654",
+      "comment": 6644422056
+    },
+    {
+      "pr": 145,
+      "sha": "08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7",
+      "evidence_digest": "sha256:1798ad72c0c64da2814e316465f27ee903e0a1afc1b7ea06dd1d3f5fa3f90970",
+      "decision": "D022",
+      "commit": "92468ff2b0adaa919721ac1b661c41cd9d089439",
+      "comment": 6644979187
+    },
+    {
+      "pr": 160,
+      "sha": "08e7fc3b46c7a6adb61ce0e70b64e9973b95cbb7",
+      "evidence_digest": "sha256:4d57b6f869f123c55d7f7af27e8c54fa696a8de478b69f2006280b885f7fe379",
+      "decision": "D023",
+      "commit": "9f85bcb6da410334db12a3fc0efacec298d18a98",
+      "comment": 6645337230
+    },
+    {
+      "pr": 161,
+      "sha": "f142e38ea9ffbc37cce1047e643e8c2dbb907f9c",
+      "evidence_digest": "git-blob:f28e31a458692b89ed8f4714628a3d3ca191a914",
+      "decision": "D024",
+      "commit": "ca1b65de2ae684b5d0a32795154abd8f44857f7a",
+      "comment": 6645964170
+    },
+    {
+      "pr": 161,
+      "sha": "a995ce87dcd63b318a10795a1860fc21edf039cf",
+      "evidence_digest": "git-blob:6def96def6c11f19df3137cf0159c07013a5ea2a",
+      "decision": "D025",
+      "commit": "fd43a0a90e418a651f27c3c2197850582acd6379",
+      "comment": 6646304926
+    },
+    {
+      "pr": 161,
+      "sha": "bb9291abc6ec353fd07c0cba00a6fa8eaba61c15",
+      "evidence_digest": "git-blob:5aadf3ce52f696396eec1d8f04dc9ca071c2ab3e",
+      "decision": "D026",
+      "commit": "5a1fe19170ee66cd7d3fbbc7620552e4ca19a23d",
+      "comment": 6681996710
+    },
+    {
+      "pr": 161,
+      "sha": "b8b8ce473c7acde505c266768fcd38a7f1f1eacb",
+      "evidence_digest": "git-blob:acd3e6503b64d2cc9eaa72b30de302a68392ff13",
+      "decision": "D027",
+      "commit": "80722a9c2ce25f537b4efeecc354bbb7a9adf9b1",
+      "comment": 6682139215
+    },
+    {
+      "pr": 161,
+      "sha": "6f3183d96f2e8fc1d59751e1279be062fc09d897",
+      "evidence_digest": "git-blob:0384ed256a77e23db5b61477df58e1fa52cc24b6",
+      "decision": "D028",
+      "commit": "8158cb4c9958c3797748595426bb24ee9f168b4f",
+      "comment": 6682239005
+    },
+    {
+      "pr": 161,
+      "sha": "d6fc2d25959ee10af461143f3808534febdb7a00",
+      "evidence_digest": "git-blob:4db93c96b4915745b04175827bacc76d8eaec0b9",
+      "decision": "D029",
+      "commit": "dca06f62983447c277ca634bc453304aa2fe3901",
+      "comment": 6682363998
+    },
+    {
+      "pr": 161,
+      "sha": "1091663e7beb6996eafb05a9896ac62b892600f1",
+      "evidence_digest": "git-blob:1b1f8c8ec1ab18e160bf0d3114887e3ef503fcf3",
+      "decision": "D030",
+      "commit": "527027c6a44ea5c2087384cc6be276dfb600393a",
+      "comment": 6683039047
+    },
+    {
+      "pr": 161,
+      "sha": "8e3f6352baad3c26c3aa1c19d3ab74c3a4752c65",
+      "evidence_digest": "git-blob:2e03210e89dfaf8b9e85f640f645d57756d84dc2",
+      "decision": "D031",
+      "commit": "f5b8432327a532f111002f3a0b386d639f3eecb8",
+      "comment": 6683861491
+    },
+    {
+      "pr": 161,
+      "sha": "b58cb628ccbb86b34a9ceac8e852f5d978a29a0d",
+      "evidence_digest": "git-blob:07b625553b6b71db05c4675fc19a9ad62f98e726",
+      "decision": "D032",
+      "commit": "f1f8b92542476dd009a9b9cd5680824ab564461d",
+      "comment": 6684025721
+    },
+    {
+      "pr": 161,
+      "sha": "40709781a39758d14e037d70a9bb20a65fc0edf9",
+      "evidence_digest": "git-blob:7d085a668c313439bfb5316d0cc725fe4231d4d5",
+      "decision": "D033",
+      "commit": "8450b722f092e25b12a4713136dc0f3c6a86521e",
+      "comment": 6685099382
+    },
+    {
+      "pr": 161,
+      "sha": "5cb46ba390de24c875f881e720f266f7fcd7e9b5",
+      "evidence_digest": "git-blob:88825a4bf7c4b6e82ffab9fc53881fd7ade4781a",
+      "decision": "D034",
+      "commit": "d510599dbc5bccf84fe0139aa5626ef9f42638d1",
+      "comment": 6685253567
+    }
+  ],
+  "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+  "inbox_comments": [
+    {
+      "comment_id": 6681847165,
+      "pr": 161,
+      "status": "finished",
+      "decision": "D026",
+      "work_commit": "5a1fe19170ee66cd7d3fbbc7620552e4ca19a23d",
+      "receipt_commit": "ead2d5a2eeab54f1970072dd0c4bfdcfb41120ed",
+      "review_comment_id": 6681996710,
+      "complete_cursor_commit": "94ea77479d881c10761fd88363004fe0f46ee985"
+    },
+    {
+      "comment_id": 6682032075,
+      "pr": 161,
+      "status": "finished",
+      "decision": "D027",
+      "receipt_commit": "9f7a6099908c74a2b09b2c8958bcfde13dcebce9",
+      "work_commit": "80722a9c2ce25f537b4efeecc354bbb7a9adf9b1",
+      "review_comment_id": 6682139215,
+      "complete_cursor_commit": "1fc297cee7ebafa005e40740dc8c67be319110be"
+    },
+    {
+      "comment_id": 6682106949,
+      "pr": 161,
+      "status": "finished",
+      "decision": "D028",
+      "receipt_commit": "208beb1ff28cc536820ed0aae8e2c48e017864fc",
+      "work_commit": "8158cb4c9958c3797748595426bb24ee9f168b4f",
+      "review_comment_id": 6682239005,
+      "complete_cursor_commit": "8bbf90210adcd3ed9126f940a2af2c213c5c7a20"
+    },
+    {
+      "comment_id": 6682260206,
+      "pr": 161,
+      "status": "finished",
+      "decision": "D029",
+      "receipt_commit": "557b27624b3cb4ef87519451484c1c5bbedab78c",
+      "work_commit": "dca06f62983447c277ca634bc453304aa2fe3901",
+      "review_comment_id": 6682363998,
+      "complete_cursor_commit": "5f3f2a4b68e2e39e71cdbbd5bffbf2de0cbdf7a7"
+    },
+    {
+      "comment_id": 6682936439,
+      "pr": 161,
+      "status": "finished",
+      "decision": "D030",
+      "receipt_commit": "a2ab14e4f6fddd1156ac4cfed7bac399a1c973a4",
+      "work_commit": "527027c6a44ea5c2087384cc6be276dfb600393a",
+      "review_comment_id": 6683039047,
+      "complete_cursor_commit": "d78700b3fe021c8bb53ade50371493bd7a767434"
+    },
+    {
+      "comment_id": 6683783830,
+      "pr": 161,
+      "status": "finished",
+      "decision": "D031",
+      "receipt_commit": "aafc4d9b551aa8ccf584e0b62192c7c05cfb1143",
+      "work_commit": "f5b8432327a532f111002f3a0b386d639f3eecb8",
+      "review_comment_id": 6683861491,
+      "complete_cursor_commit": "a13475e7a32fcd1d34b2d9bd868c584d5887db97"
+    },
+    {
+      "comment_id": 6683967083,
+      "pr": 161,
+      "status": "finished",
+      "decision": "D032",
+      "receipt_commit": "e9a40bd380df8c6b052743520ab0852f83fb00de",
+      "work_commit": "f1f8b92542476dd009a9b9cd5680824ab564461d",
+      "review_comment_id": 6684025721,
+      "complete_cursor_commit": "08d50dd89532368fdde67ed8c524bf0672c43977"
+    },
+    {
+      "comment_id": 6684935718,
+      "pr": 161,
+      "status": "finished",
+      "decision": "D033",
+      "receipt_commit": "b950a6869425d6683d030cbfe0f8bf4d188bcc6b",
+      "work_commit": "8450b722f092e25b12a4713136dc0f3c6a86521e",
+      "review_comment_id": 6685099382,
+      "complete_cursor_commit": "d1e6f5e3e84a721ddbe11b88f681c2078658505c"
+    },
+    {
+      "comment_id": 6685165401,
+      "pr": 161,
+      "status": "finished",
+      "decision": "D034",
+      "receipt_commit": "6af1967e7e74c8f59113431abc5a7b90ab47321a",
+      "work_commit": "d510599dbc5bccf84fe0139aa5626ef9f42638d1",
+      "review_comment_id": 6685253567,
+      "complete_cursor_commit": "d7272ba8bba1b16e14dcac4cda7fe5630b528aca"
+    }
+  ],
+  "migrated_from": {
+    "branch": "review/compact30-guardian-shadow",
+    "sha": "f9dab3d2b40739d89d613f86e8c2d67bec3159e4",
+    "manifest": "state/MANIFEST.md",
+    "manifest_sha256": "60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488",
+    "date": "2026-11-06"
+  }
+}
