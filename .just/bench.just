@@ -403,12 +403,16 @@ bench-three-team-policy:
     tool() { (cd "$1" && rustc -vV && cargo -V); }
     [ "$(tool "$PWD")" = "$(tool "$B/build-$base")" ] || fail "the two checkouts select different toolchains"
     mkdir "$W/bin"
-    mapfile -t base_built < <(built "$B/build-$base" ab)
-    mapfile -t head_built < <(built "$PWD" ab windows)
-    [ "${#base_built[@]}" = 1 ] && [ "${#head_built[@]}" = 2 ] || fail "Cargo reported no executables for the builds"
-    cp "${base_built[0]}" "$W/bin/ab-base"
-    cp "${head_built[0]}" "$W/bin/ab-head"
-    cp "${head_built[1]}" "$W/bin/windows"
+    # (one build at a time, its status checked here, and its executable copied before the
+    # next build starts: a target directory both share can't swap one build's for the other's)
+    base_built=$(built "$B/build-$base" ab) || fail "the base build failed"
+    cp "$base_built" "$W/bin/ab-base"
+    sha256sum "$W/bin/ab-base" > "$W/bin/ab-base.sha256"
+    head_built=$(built "$PWD" ab windows) || fail "the head build failed"
+    [ "$(printf '%s\n' "$head_built" | wc -l)" = 2 ] || fail "Cargo reported no executables for the head build"
+    cp "$(printf '%s\n' "$head_built" | sed -n 1p)" "$W/bin/ab-head"
+    cp "$(printf '%s\n' "$head_built" | sed -n 2p)" "$W/bin/windows"
+    sha256sum -c --quiet "$W/bin/ab-base.sha256" || fail "the base executable changed after it was copied"
     AB=$W/bin/ab-head
     BASEAB=$W/bin/ab-base
     WINDOWS=$W/bin/windows
