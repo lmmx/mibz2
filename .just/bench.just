@@ -340,9 +340,17 @@ bench-three-team-policy:
     # a refusal, a failed build, a broken report or a full run
     outcome="INCOMPLETE: stopped before the run finished (see console.log)"
     finish() {
+      status=$?
       echo "$outcome" > "$W/outcome.txt"
       echo "bench-three-team-policy: OUTCOME: $outcome"
       bash bench/bundle.sh "$W"
+      # (VALID PASS and VALID FAIL exit 0, INVALID 1, anything that kept the run from a
+      # verdict, a refusal or a report error among them, 2 or its own failing status)
+      case "$outcome" in
+        "VALID "*) exit 0 ;;
+        INVALID*) exit 1 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
     }
     trap finish EXIT
     fail() { outcome="REFUSED: $*"; echo "bench-three-team-policy: $*"; exit 1; }
@@ -368,13 +376,33 @@ bench-three-team-policy:
     [ -d "$B/build-$base" ] || git worktree add -q --detach "$B/build-$base" "$base"
     [ "$(git -C "$B/build-$base" rev-parse HEAD)" = "$base" ] || fail "$B/build-$base is not at the base $base"
     [ -z "$(git -C "$B/build-$base" status --porcelain --untracked-files=all)" ] || fail "$B/build-$base has changes or untracked files"
-    # (the executables where Cargo says it put them, not where they usually are)
-    target_of() { cargo metadata -q --format-version 1 --no-deps --manifest-path "$1/Cargo.toml" | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])'; }
-    (cd "$B/build-$base" && cargo build -q --release --example ab)
-    cargo build -q --release --example ab --example windows
-    AB=$(target_of "$PWD")/release/examples/ab
-    BASEAB=$(target_of "$B/build-$base")/release/examples/ab
-    WINDOWS=$(target_of "$PWD")/release/examples/windows
+    # (each executable as Cargo reports building it, from its own checkout, then copied into
+    # this attempt's directory: the copies are what run and what the digests describe, so
+    # neither build can overwrite the other's, wherever Cargo's target directory is)
+    built() {  # built DIR EXAMPLE...: build in DIR, print each example's executable, in order
+      local dir=$1; shift
+      local args=(); for e in "$@"; do args+=(--example "$e"); done
+      (cd "$dir" && cargo build -q --release --message-format=json-render-diagnostics "${args[@]}") \
+        | python3 -c 'import json,sys
+    want=sys.argv[1:]; got={}
+    for line in sys.stdin:
+        m=json.loads(line)
+        if m.get("reason")=="compiler-artifact" and m.get("executable") and m["target"]["name"] in want and "example" in m["target"]["kind"]:
+            got[m["target"]["name"]]=m["executable"]
+    missing=[w for w in want if w not in got]
+    if missing: sys.exit("no executable reported for: "+" ".join(missing))
+    print("\n".join(got[w] for w in want))' "$@"
+    }
+    mkdir "$W/bin"
+    mapfile -t base_built < <(built "$B/build-$base" ab)
+    mapfile -t head_built < <(built "$PWD" ab windows)
+    [ "${#base_built[@]}" = 1 ] && [ "${#head_built[@]}" = 2 ] || fail "Cargo reported no executables for the builds"
+    cp "${base_built[0]}" "$W/bin/ab-base"
+    cp "${head_built[0]}" "$W/bin/ab-head"
+    cp "${head_built[1]}" "$W/bin/windows"
+    AB=$W/bin/ab-head
+    BASEAB=$W/bin/ab-base
+    WINDOWS=$W/bin/windows
     dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
     if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
       git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \

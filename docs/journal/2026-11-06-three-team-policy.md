@@ -54,9 +54,11 @@ CPU.
     `CARGO_PROFILE_RELEASE_OPT_LEVEL` is set;
   - if the base build's worktree is not at the base, or has changes or untracked files.
 
-  It runs the executables where Cargo reports it built them. It records HEAD, the candidate
-  and the base (`commits.txt`), and the sha256 of both `ab` executables, the corpus builder's
-  executable and the corpus, with `rustc -vV` and `cargo -V` (`inputs.txt`).
+  Each build runs in its own checkout, and Cargo's own build messages name each executable.
+  The recipe copies them into the attempt's directory (`bin/`), and those copies are what
+  run, so neither build can overwrite the other's. It records HEAD, the candidate and the
+  base (`commits.txt`), and the sha256 of both `ab` copies, the corpus builder and the
+  corpus, with `rustc -vV` and `cargo -V` (`inputs.txt`).
 - **The arms:** the head build's `mibz2` against the base build's (`mibz2@<base ab>`). Both use
   the default plan, unpinned, as a caller gets it.
 - **The grid:** 8, 9, 10, 11, 12, 16 and 20 threads, 20 rounds, paired by round, on the bench's
@@ -67,7 +69,9 @@ CPU.
     busiest's CPU);
   - from every thread the child ran, busy or not, so a helper that sat idle still counts
     (`observed_threads`). The parent `ab` reads these names from `/proc` every 5 ms while each
-    child runs, the same way for both builds; the base build's own `ab` records no such list.
+    child runs, the same way for both builds, keeping each thread's latest name (a new
+    thread carries its parent's name until it names itself); the base build's own `ab`
+    records no such list.
     The census thread runs in the parent, not in the decoding process, and alike for both
     arms. Its cost is not measured separately.
 
@@ -90,6 +94,9 @@ CPU.
   - `REFUSED: <why>`, before anything ran;
   - `REPORT ERROR`, when the judge wrote no report;
   - `INCOMPLETE`, when the attempt stopped before the run finished.
+
+  The recipe exits 0 for a valid verdict, 1 for `INVALID`, and nonzero for anything that
+  kept the run from a verdict.
 
   A broken runs file (truncated JSON, a null row or arm) is reported `INVALID`, never a
   crash.

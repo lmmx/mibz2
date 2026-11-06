@@ -364,6 +364,28 @@ impl Threads {
     }
 }
 
+/// A census reading: thread `tid` is now called `name`. The latest name wins: a new thread
+/// carries its parent's name (`ab`) until it names itself, and a reading can fall between
+fn census_saw(seen: &mut BTreeMap<u64, String>, tid: u64, name: &str) {
+    seen.insert(tid, name.trim().to_string());
+}
+
+#[cfg(test)]
+mod census_tests {
+    use super::*;
+
+    #[test]
+    fn a_thread_renamed_after_its_first_reading_counts_by_its_own_name() {
+        let mut seen = BTreeMap::new();
+        census_saw(&mut seen, 7, "ab\n");
+        census_saw(&mut seen, 8, "mibz2-0\n");
+        census_saw(&mut seen, 7, "mibz2-coop-1\n");
+        census_saw(&mut seen, 8, "mibz2-0\n");
+        let names: Vec<&str> = seen.values().map(String::as_str).collect();
+        assert_eq!(names, ["mibz2-coop-1", "mibz2-0"]);
+    }
+}
+
 /// The names of every thread a child process runs, read from outside it, by its parent, every
 /// AB_CENSUS_MS milliseconds (default 5) until it exits: the same observer for every arm,
 /// whichever build the child is. Only names: a thread's CPU is the child's own report
@@ -394,10 +416,8 @@ impl Census {
                         let Some(tid) = t.file_name().to_str().and_then(|x| x.parse().ok()) else {
                             continue;
                         };
-                        if let std::collections::btree_map::Entry::Vacant(e) = seen.entry(tid) {
-                            if let Ok(name) = std::fs::read_to_string(t.path().join("comm")) {
-                                e.insert(name.trim().to_string());
-                            }
+                        if let Ok(name) = std::fs::read_to_string(t.path().join("comm")) {
+                            census_saw(&mut seen, tid, &name);
                         }
                     }
                     std::thread::sleep(Duration::from_millis(every));
