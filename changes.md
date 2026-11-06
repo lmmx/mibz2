@@ -1,5 +1,7 @@
 # Changes, newest first
 
+- **2026-11-06, channel through 6697537827:** first registered policy run VALID PASS; replaced two-run wait with confirmation-only dependency. Recorded same-plan control slowdown without rejudging the rule. Submission approval recorded, implementation open and deliberately sequenced before confirmation; idempotency docs merged. Frozen journal and PR summaries lag the result LOG.
+
 - **2026-11-06, channel through 6696702367:** recipe objections resolved and exact comparison frozen; replaced review wait with Louis's run/confirmation dependency, keeping qualification separate. Recorded the corrected baseline-census claim and remaining instrumentation limits. Discovery guide and return relay merged; Observer rename/re-pin complete on the unchanged state branch; idempotency docs still open. Flagged stale PR-body status and ambiguous D041 wording.
 
 - **2026-11-06, channel through 6694853843:** policy design completed and implementation open; replaced the old design wait with held evidence-path repairs, pending two re-reviews before freeze and Louis's collection. Recorded the policy-specific workstation evidence decision and unchanged generalisation limits. Relay, single-version page fix and footer merged; deployment unverified, discovery guide open. Added the proposed role rename without adopting it or moving state.
