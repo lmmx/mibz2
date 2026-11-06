@@ -10,6 +10,7 @@ measurably faster, correct production decoder, properly released. MODE.md says t
 | [PROTOCOL.md](PROTOCOL.md) | how messages move: the channel #145, the inboxes, dispatch and format |
 | [ROLES.md](ROLES.md) | the five roles, and what each does and doesn't do |
 | [SPEC.md](SPEC.md) | what every Work task's spec has in common, and the command that loads them |
+| [WORK-TASKS.md](WORK-TASKS.md) | the only prompts for creating or re-pinning a ChatGPT Work task, each marked known to work or untested |
 | `SPEC.<ROLE>.md` | each Work role's own spec: OPTIMIZER, GUARDIAN, RESEARCHER, ORACLE |
 
 **Where the rest lives:**

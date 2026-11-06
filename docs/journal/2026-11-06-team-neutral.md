@@ -114,7 +114,7 @@ Only after Louis approves and re-pins (Guardian D033):
    - create `observatory/intention` from the seed, linking `review/oracle-intention`'s final
      head.
 5. **Merge,** checking the head before and after.
-6. **Re-pin.** Louis loads the specs with SPEC.md's command at the merged commit: three tasks
+6. **Re-pin.** Louis loads the specs at the merged commit with WORK-TASKS.md's prompts: three tasks
    edited in place, and the Oracle created. All tasks stay enabled.
 7. **Re-check before dispatch resumes:**
    - each old branch's head still equals `migrated_from`;

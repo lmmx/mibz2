@@ -82,6 +82,13 @@ The team's live machinery is `docs/team/`:
 - PROTOCOL.md: how messages move.
 - ROLES.md and the specs.
 
+**ChatGPT Work task prompts** come only from `docs/team/WORK-TASKS.md`. Copy the form and fill in
+its placeholders; never draft one fresh.
+- **Beside every prompt:** give the task's name, and its model and effort for Louis to select in
+  the chat window.
+- **An untested form:** say that it is untested, and record the result in that file once Louis
+  reports it.
+
 Route every message with `.github/coordination/coord.py`, as above. compact30 is history
 (`docs/journal/compact30-channel/`, frozen): it is no source of the team's identity, authority
 or state.

@@ -16,7 +16,7 @@ and reads MODE.md first on every run.
   - #162 Researcher;
   - #222 Oracle.
 
-  Each is a quiet draft PR, never merged. A role's Work task is subscribed to new comments on its
+  Each is a quiet draft PR, never merged. A role's Work task is woken by its inbox PR's webhook (SPEC.md, "Your trigger"); new comments on its
   own inbox alone, so the inbox is the address.
   - Only the Coordinator writes in an inbox, and after its offset it writes only assignments
     (CHECKPOINT, PROPOSAL, CORRECTION).
