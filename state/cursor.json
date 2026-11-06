@@ -694,7 +694,7 @@
     "commit": "3ef3d403285d113ed8d3726cb66a3ce1f1565b35",
     "path": "docs/journal/2026-11-03-compact30-constructor-v2-reassessment.md",
     "section": "Report 262: the user activates the Guardian",
-    "reserved": "G6 until stage B and all GUARDIAN.md \u00a74 decisions remain with the user",
+    "reserved": "G6 until stage B and all GUARDIAN.md §4 decisions remain with the user",
     "historical_pilot_record": "pilot and p4 below preserve their original SHADOW closeout history"
   },
   "commit_identity": {
@@ -707,7 +707,7 @@
       "email": "lmmx@users.noreply.github.com"
     },
     "scope": "review/compact30-guardian-shadow",
-    "authority": "explicit user approval in this conversation and PROTOCOL.md \u00a79",
+    "authority": "explicit user approval in this conversation and PROTOCOL.md §9",
     "protocol_commit": "374cfe4d2e0fd1f436c4bee9a38e5366d6855726",
     "protocol_path": "docs/journal/compact30-channel/PROTOCOL.md",
     "ai_attribution": false
@@ -1088,6 +1088,12 @@
       "work_commit": "d510599dbc5bccf84fe0139aa5626ef9f42638d1",
       "review_comment_id": 6685253567,
       "complete_cursor_commit": "d7272ba8bba1b16e14dcac4cda7fe5630b528aca"
+    },
+    {
+      "comment_id": 6693599811,
+      "pr": 161,
+      "status": "in_progress",
+      "decision": "D035"
     }
   ],
   "migrated_from": {
