@@ -41,17 +41,31 @@ the prompt, for Louis to select in the model setting of the Work task chat windo
 never put inside the
 prompt.
 
-**A new task gets its own single creation prompt** (Louis, 2026-11-06). It covers one task,
-in the form that created the first three:
+**A new task gets its own single creation prompt** (Louis, 2026-11-06), in this exact form, the
+one that created the first three. Fill in only N and ROLE:
 
 > Create an event-triggered task, not a scheduled one and not a one-off, that runs
-> automatically whenever a new comment is posted on pull request #N in lmmx/mibz2. Before
-> enabling it, show me the trigger, the condition, the GitHub permissions it will use, and
-> whether it runs on my plan or costs anything extra. Name it NAME. The task's instructions
-> are: INSTRUCTION TEXT
+> automatically whenever a new comment is posted on pull request #N in `lmmx/mibz2`. Subscribe
+> to newly created comments only, excluding bots, reviews, commit updates and edits where
+> supported. Before enabling it, show me the trigger, the condition, the GitHub permissions it
+> will use, and whether it runs on my plan or costs anything extra. The task's instructions
+> are:
+>
+> (the instruction text above, verbatim, with ROLE, Role and SHA filled in)
 
-The model and effort follow it, as the by-hand step above. Edits to existing tasks go in a separate prompt. The combined command above is for
-re-pinning the existing tasks only.
+Beside the prompt, never inside it, give Louis the task's name and its model and effort, for
+the Work task chat window's settings.
+
+- **Why the instruction text is exactly the template:** a task's instructions only point at
+  the pinned spec, so what a task saved can be checked against the record. Rules such as
+  commit identity, no polling and no widening live once, in this file ("Always"). Repeating
+  them in the task would make a second copy that can drift.
+- **Why the subscription line is required:** each inbox wakes its role only for new comments.
+  Edits, bot comments and reviews would start runs that displace real work, which is what the
+  inboxes exist to prevent (PROTOCOL.md §6).
+
+Edits to existing tasks go in a separate prompt. The combined command above is for re-pinning
+the existing tasks only.
 
 ## Each run
 
