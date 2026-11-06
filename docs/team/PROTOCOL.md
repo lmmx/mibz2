@@ -25,9 +25,9 @@ and reads MODE.md first on every run.
 - **State branches**, one per role (`team-state/<role>`):
   - each holds its role's cursor and records under `state/`;
   - each is written only by its role;
-  - none has CI, and none has a PR.
+  - none has a PR, and the workflows' push filters run no CI on them.
 - **The Oracle's record: `observatory/intention`**, an orphan branch.
-  - It shares no history with master and runs no CI.
+  - It shares no history with master, and the workflows' filters run no CI on it.
   - It is written only by the Oracle, by direct commit, never through a PR.
 - **Experiment PRs** go into master, and their checkpoints go to the inboxes.
 

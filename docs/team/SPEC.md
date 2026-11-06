@@ -40,8 +40,12 @@ Your inbox is your queue; your cursor is your place in it.
 
 1. **Read MODE.md, RULES.md and PROTOCOL.md** beside this file, at the same commit.
 2. **List your inbox,** oldest first, from the comment after your offset (in your spec).
-3. **Take each comment in turn.** Skip any your cursor marks finished. Resume any it marks in
-   progress. Otherwise start it.
+3. **Take each comment in turn.**
+   - Skip any your cursor marks **finished**.
+   - Resume any it marks **in progress** from your recorded progress.
+   - For any it marks **complete** but not finished, the work is done. Publish its REVIEW
+     unless one already cites it, then finish it. Don't redo the work.
+   - Otherwise, start it.
 4. **Commit a receipt first:** a cursor entry marking the comment in progress, with its ID. Then
    commit your work as you go, so an interrupted run can be resumed.
 5. **Finish before announcing.** Commit the completed work, then mark the comment complete in

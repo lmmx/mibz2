@@ -6,15 +6,15 @@ production inverse BWT, released.
 | file | what it is |
 |---|---|
 | [MODE.md](MODE.md) | the register every role writes in; read first on every run. Changed only by Louis ([why](MODE.RATIONALE.md)) |
-| [RULES.md](RULES.md) | who may decide what: the team's standing rules |
+| [RULES.md](RULES.md) | who may decide what: the team's standing rules, with STEWARDSHIP.md (`docs/STEWARDSHIP.md`) |
 | [PROTOCOL.md](PROTOCOL.md) | how messages move: the channel #145, the inboxes, dispatch and format |
 | [ROLES.md](ROLES.md) | the five roles, and what each does and doesn't do |
 | [SPEC.md](SPEC.md) | what every Work task's spec has in common, and the command that loads them |
 | `SPEC.<ROLE>.md` | each Work role's own spec: OPTIMIZER, GUARDIAN, RESEARCHER, ORACLE |
 
 **Where the rest lives:**
-- **Each role's state:** `team-state/<role>` (cursors and records). These branches have no CI
-  and no PR.
+- **Each role's state:** `team-state/<role>`, a continuation of its old branch, holding its
+  cursor and records. These branches have no PR, and the workflows' filters run no CI on them.
 - **The Oracle's record of what the team is doing and why:** `observatory/intention`, an orphan
   branch with its own history.
 - **Routing:** `.github/coordination/coord.py`.

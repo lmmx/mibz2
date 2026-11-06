@@ -38,6 +38,13 @@ changes.md       one dated line per transition, newest first
   branch's history is the record of how the team's intentions changed at each level.
 - **Each level changes at its own rate.** Rewrite only the files whose level changed: L3 may
   change at every result, while L0 rarely changes. Never rewrite a level just to restate it.
+- **The record and your cursor are on two branches,** and can't advance atomically:
+  1. commit the record;
+  2. write that commit's SHA into the cursor's progress for the comments it covers;
+  3. publish the REVIEW, unless one already cites them;
+  4. finish the comments.
+
+  An interrupted run resumes against the recorded SHA.
 - **Never rewrite history.** No force-push, rebase or amend. A previous version that was
   wrong is corrected by a new commit, and `changes.md` says what was wrong and why.
 
@@ -162,8 +169,9 @@ Keep the shape of the seeded page.
    - what it is waiting on, and from whom.
 
    Louis should be able to read only this.
-2. **The tree (L2 and L3).** Item 0 is the top aim, the Coordinator's objective in MODE.md: "faster
-   production inverse BWT, released". Below it, from general to specific, are:
+2. **The tree (L2 and L3).** Item 0 is the standing objective (STEWARDSHIP.md): "a measurably
+   faster, correct production decoder, properly released", with its current focus as Louis
+   sets it (RULES.md M3). Below it, from general to specific, are:
    - the fronts;
    - the experiments and PRs;
    - the current step, down to the detail actually being worked on (a T-vector layout, an
@@ -202,6 +210,16 @@ Keep the shape of the seeded page.
 
      To catch this, follow each live activity's authority, as well as its purpose, up to a
      source that is still current.
+   - **an item whose premise, authority source or fixed scope has unestablished
+     applicability after a pivot,** even before anyone has formally abandoned it.
+
+     After an explicit change of objective or regime, list which inherited clauses still
+     serve a standing objective, and which need a renewed decision. Don't infer that an
+     authority has expired from its name, its ancestry or a negative result: authority and
+     evidence have different lifetimes. In the model case, comments 6643481606 (22:14 UTC on
+     4 November: the record walk is a detour) and 6643744616 (22:27 UTC: the search is
+     redirected to the whole decoder, and instruction binding is questioned) were enough to
+     flag the instruction-only remit two days early.
 
    Each entry is one line: the item, the break, the evidence. You flag these. You don't decide
    them.
