@@ -97,11 +97,13 @@ body=$(mktemp)
   echo "- **Bundle:** [\`$path\`](https://github.com/$repo/blob/$commit/$path) at $commit, $size bytes"
   echo "- **SHA-256:** \`$digest\`"
   echo
-  echo '```'
-  [ -n "$commits" ] && echo "$commits"
-  [ -n "$inputs" ] && echo "$inputs"
-  echo '```'
-  echo
+  if [ -n "$commits$inputs" ]; then
+    echo '```'
+    [ -n "$commits" ] && echo "$commits"
+    [ -n "$inputs" ] && echo "$inputs"
+    echo '```'
+    echo
+  fi
   echo "Fetch and check: \`git fetch origin $branch && git show $commit:$path > b.tar.gz && sha256sum b.tar.gz\`"
 } > "$body"
 posted=$("$gh" api "repos/$repo/issues/$channel/comments" -F "body=@$body" --jq .html_url)
