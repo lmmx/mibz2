@@ -57,3 +57,19 @@ without asking first, whenever merged work is worth releasing. Nobody needs to p
   - Then bump mibz2 in lmmx/wikidata-pq's `reshape/Cargo.toml` in a PR. It merges under
     that repository's bench rules.
 - **Report** the release to the maintainer in one short message, and in the channel log.
+
+## Workstation recipes: one tarball back
+
+Every `just` recipe the maintainer runs on their own machine and sends results back from:
+- **Writes everything into one new directory per attempt,** never reused (`mkdir`, not
+  `mkdir -p`, on a timestamped path), its own console log included:
+  `exec > >(tee -a "$DIR/console.log") 2>&1` right after the directory is made. The
+  maintainer runs the bare `just` command, with no `| tee`.
+- **Ends with `bash bench/bundle.sh "$DIR"`.** It packs the directory into one `DIR.tar.gz`
+  beside it, leaving out symbolic links (a shared corpus) and files over 50 MB, and prints the
+  path. The maintainer uploads that one file: the chat takes at most 5 files a message.
+- **Is given to the maintainer as the git commands to get the branch and the `just` command,**
+  nothing else.
+
+`bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
+shape when it is next used.

@@ -225,6 +225,9 @@ bench-release-scaling NEW="v0.2.4" OLD="v0.2.1" ROUNDS="10" THREADS="" *FILES=""
     set -euo pipefail
     W=$PWD/target/release-scaling
     mkdir -p "$W"
+    O=$W/run-$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir "$O"
+    exec > >(tee -a "$O/console.log") 2>&1
     git fetch -q --tags origin
     for v in {{NEW}} {{OLD}}; do
       [ -d "$W/build-$v" ] || git worktree add -q --detach "$W/build-$v" "$v"
@@ -254,6 +257,9 @@ bench-release-scaling NEW="v0.2.4" OLD="v0.2.1" ROUNDS="10" THREADS="" *FILES=""
       --env "$W/env.json" --lscpu "$W/lscpu.txt" --ref mibz2 \
       --arm "mibz2={{trim_start_match(NEW, 'v')}}" --arm "mibz2@$OLDAB={{trim_start_match(OLD, 'v')}}" \
       --arm "lbzip2=lbzip2 $lb" "${files[@]}"
+    cp "$W/runs.jsonl" "$W/env.json" "$W/lscpu.txt" "$W/summary.txt" "$O/"
+    cp -r "bench/release-scaling/$(ls -t bench/release-scaling | head -1)" "$O/recorded"
+    bash bench/bundle.sh "$O"
 
 # Team size against live tables (docs/journal/2026-11-06-team-size.md, registered before any
 # run): what holds the decoder at its 8-thread ceiling. The cooperative decoder at teams × k
@@ -263,8 +269,9 @@ bench-release-scaling NEW="v0.2.4" OLD="v0.2.1" ROUNDS="10" THREADS="" *FILES=""
 # occupancy trace of 4 × 2, 4 × 3 and 4 × 4, pinned spread against packed. Writes
 # target/team-size/ and prints the report. About 20 minutes. Close the browser and anything
 # busy first.
-#   just bench-team-size 2>&1 | tee team-size-console.log
+#   just bench-team-size
 #   just bench-team-size 20 "8,10,12,16" /path/to/big.bz2
+# It keeps its own console log and ends by packing the attempt into one .tar.gz to upload.
 
 # Teams of 2, 3 and 4 at fixed live tables, against today's 4 × 2
 bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
@@ -276,6 +283,7 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
     W=$B/$(date -u +%Y%m%dT%H%M%SZ)
     mkdir -p "$B"
     mkdir "$W" || { echo "bench-team-size: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
     cargo build -q --release --example ab --example windows
     cargo build -q --release --features trace --example occupancy
     AB=$PWD/target/release/examples/ab
@@ -309,4 +317,4 @@ bench-team-size ROUNDS="20" THREADS="8,10,12,16" *FILES="":
         --meta "commit=$(git rev-parse HEAD)" \
         || echo "bench-team-size: the occupancy pass at $t threads, teams of $k, failed"
     done
-    echo "Upload all of $W (its wikidata.bz2 is a link; leave it out), and the console log"
+    bash bench/bundle.sh "$W"
