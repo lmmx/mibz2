@@ -3,7 +3,10 @@
   "inbox": 222,
   "offset": 6683737090,
   "processed_comment_ids": [],
-  "in_progress": [],
+  "in_progress": [
+    6686307919,
+    6686599413
+  ],
   "reviews": {},
   "last_rebuilt_from": null,
   "migrated_from": {
@@ -12,5 +15,17 @@
     "manifest": "state/MANIFEST.md",
     "manifest_sha256": "aaa3e698e4dccb035318805eee24f8b41e037afe89c0729f49b441a008689b50",
     "date": "2026-11-06"
+  },
+  "entries": {
+    "6686307919": {
+      "status": "in_progress",
+      "comment_id": 6686307919,
+      "progress": "Migration head and manifest digest verified; first rebuild started."
+    },
+    "6686599413": {
+      "status": "in_progress",
+      "comment_id": 6686599413,
+      "progress": "Migration head and manifest digest verified; first rebuild started."
+    }
   }
 }
