@@ -364,6 +364,80 @@ impl Threads {
     }
 }
 
+/// A census reading: thread `tid` is now called `name`. The latest name wins: a new thread
+/// carries its parent's name (`ab`) until it names itself, and a reading can fall between
+fn census_saw(seen: &mut BTreeMap<u64, String>, tid: u64, name: &str) {
+    seen.insert(tid, name.trim().to_string());
+}
+
+#[cfg(test)]
+mod census_tests {
+    use super::*;
+
+    #[test]
+    fn a_thread_renamed_after_its_first_reading_counts_by_its_own_name() {
+        let mut seen = BTreeMap::new();
+        census_saw(&mut seen, 7, "ab\n");
+        census_saw(&mut seen, 8, "mibz2-0\n");
+        census_saw(&mut seen, 7, "mibz2-coop-1\n");
+        census_saw(&mut seen, 8, "mibz2-0\n");
+        let names: Vec<&str> = seen.values().map(String::as_str).collect();
+        assert_eq!(names, ["mibz2-coop-1", "mibz2-0"]);
+    }
+}
+
+/// The names of every thread a child process runs, read from outside it, by its parent, every
+/// AB_CENSUS_MS milliseconds (default 5) until it exits: the same observer for every arm,
+/// whichever build the child is. Only names: a thread's CPU is the child's own report
+struct Census {
+    stop: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    handle: std::thread::JoinHandle<BTreeMap<u64, String>>,
+}
+
+impl Census {
+    fn watch(pid: u32) -> Census {
+        let stop = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let s = stop.clone();
+        let every: u64 = std::env::var("AB_CENSUS_MS")
+            .ok()
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(5)
+            .max(1);
+        let handle = std::thread::Builder::new()
+            .name("census".into())
+            .spawn(move || {
+                let mut seen = BTreeMap::new();
+                let dir = format!("/proc/{pid}/task");
+                while !s.load(std::sync::atomic::Ordering::Relaxed) {
+                    let Ok(tasks) = std::fs::read_dir(&dir) else {
+                        break;
+                    };
+                    for t in tasks.flatten() {
+                        let Some(tid) = t.file_name().to_str().and_then(|x| x.parse().ok()) else {
+                            continue;
+                        };
+                        if let Ok(name) = std::fs::read_to_string(t.path().join("comm")) {
+                            census_saw(&mut seen, tid, &name);
+                        }
+                    }
+                    std::thread::sleep(Duration::from_millis(every));
+                }
+                seen
+            })
+            .unwrap();
+        Census { stop, handle }
+    }
+
+    /// Every thread seen, by name, sorted (one entry a thread)
+    fn finish(self) -> String {
+        self.stop.store(true, std::sync::atomic::Ordering::Relaxed);
+        let seen: BTreeMap<u64, String> = self.handle.join().unwrap_or_default();
+        let mut names: Vec<String> = seen.into_values().map(|n| n.replace('"', "'")).collect();
+        names.sort_unstable();
+        names.join(" ")
+    }
+}
+
 /// Every byte of `r` through `h`; `last` runs after the last byte, while `r` (and a
 /// decoder's threads) still lives
 fn drain(mut r: impl Read, h: &mut Hash, last: &dyn Fn()) -> Result<(), String> {
@@ -987,7 +1061,17 @@ fn run(args: &[String]) {
                     let (b0, s0, tot0) = stat();
                     let (th0, psi0) = (throttled(), psi_cpu());
                     let w0 = Instant::now();
-                    let o = cmd.output().unwrap();
+                    // (every arm's child is watched alike from here, whatever build it is:
+                    // the names of the threads it runs, read from /proc, for the plan. A
+                    // child's own figures, wall, CPU and RSS among them, are its own)
+                    let child = cmd
+                        .stdout(std::process::Stdio::piped())
+                        .stderr(std::process::Stdio::inherit())
+                        .spawn()
+                        .unwrap();
+                    let census = Census::watch(child.id());
+                    let o = child.wait_with_output().unwrap();
+                    let observed = census.finish();
                     let span = w0.elapsed().as_secs_f64();
                     let (b1, s1, tot1) = stat();
                     let (th1, psi1) = (throttled(), psi_cpu());
@@ -1004,7 +1088,7 @@ fn run(args: &[String]) {
                         .to_string_lossy()
                         .to_string();
                     let rec = format!(
-                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},{}",
+                        "{{\"round\":{round},\"corpus\":\"{base}\",\"threads\":{t},\"arm\":\"{arm}\",\"parallel\":{},\"cpus\":\"{}\",\"load1\":{load:.2},\"others_busy\":{others:.2},\"pre_busy\":{busy:.2},\"steal_pct\":{steal:.1},\"throttled_n\":{},\"throttled_ms\":{},\"psi_cpu_ms\":{},\"waited_s\":{:.0},\"observed_threads\":\"{observed}\",{}",
                         parallel(&name),
                         cpus.as_deref().unwrap_or("all"),
                         opt(throttle.map(|x| x.0 as f64)),

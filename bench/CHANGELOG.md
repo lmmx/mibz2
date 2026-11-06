@@ -35,6 +35,19 @@ benchmark follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html). En
 to 2.1.0 were written after the fact, from the descriptions in `bench/report.py` and their
 pull requests. Until then, these versions were kept by hand, with no check in CI.
 
+## [3.2.3] - 2026-11-06
+
+### Added
+
+- **Every thread each run's child ran, busy or not** (`examples/ab.rs`, `observed_threads`).
+  The sampler's `thread_cpu` is the child's own report, and lists only the threads that ran
+  more than 2% of the busiest's CPU, so it can't show a team's idle helper. Now the parent
+  `ab` reads the names of every thread each child runs from `/proc`, every 5 ms
+  (`AB_CENSUS_MS`), the same way for every arm, including a base build's own `ab`, which
+  records no such list itself. The three-team policy's A/B (`bench/policy_ab.py`) reads each
+  run's plan from both. This is a change to what is stored. Every figure keeps its meaning:
+  the census runs in the parent, outside the child whose figures are reported.
+
 ## [3.2.2] - 2026-11-06
 
 ### Fixed
