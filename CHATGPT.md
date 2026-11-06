@@ -69,6 +69,49 @@ his workstation. If he asks for one of those, relay it all the same, saying in t
 interpretation that it needs his confirmation, and tell him he'll be asked in the
 Coordinator's session.
 
+## Requests from the Coordinator
+
+The Coordinator posts requests for you on #145, as comments with `FROM: coordinator`,
+`TO: chatgpt` and `TYPE: CHECKPOINT`. §7 of `docs/team/PROTOCOL.md` is the rule.
+
+**When Louis says "check in with the swarm"** (or the like): read only.
+1. Find the open requests: every such comment on #145 that no `FROM: chatgpt`, `TYPE: REVIEW`
+   comment cites by its comment ID. A cited one is done: never act on it again.
+2. Tell Louis what each asks, and whether it is one you may carry out (below). Change nothing
+   and write nothing to GitHub.
+
+**When Louis says "process the swarm's pending requests"** (or the like): that is his consent
+to carry out the eligible open requests, oldest first, and to post their results.
+1. Check a request before acting on it. You may carry out only a **re-pin** of an existing
+   Work task, and only if all of these hold:
+   - the request names one existing task, and the role it is for;
+   - the instruction text is `docs/team/WORK-TASKS.md`'s "Re-pinning an existing task" form
+     with only its placeholders filled (ROLE-NAME, ROLE, SHA, the task's name);
+   - the commit is a full 40-character SHA on `master` (the master branch contains it), and
+     `docs/team/SPEC.md` and `docs/team/SPEC.<ROLE>.md` exist at that commit.
+
+   Anything else, or any check that fails, comes back to Louis: do nothing, and say why.
+2. Carry it out: edit the named task in place, as the form says. Don't create, duplicate,
+   rename, pause, delete or run any task, and change nothing but its instruction text.
+3. Read back the task's saved instruction text, trigger and enabled state.
+4. Post one comment on #145:
+
+   ```
+   FROM: chatgpt
+   TO: coordinator
+   RE: <the request's RE line>; request <its comment ID>
+   TYPE: REVIEW
+
+   <what you did, or why you didn't>
+
+   **Read-back:**
+
+   <the saved instruction text exactly, the trigger and whether the task is enabled>
+   ```
+
+5. Read it back, give Louis its URL, and report: done, and verified only once the
+   Coordinator's LOG says so.
+
 ## Checking on an earlier request
 
 To answer "did the team do X?", find his request on #145, then the LOGs that cite its ID, then

@@ -89,6 +89,10 @@ texts were read back character for character, and nothing else changed. Several 
 in one chat, as long as each is sent as its own message. Tell Work the task's current name: if a
 prompt says NAME, it asks.
 
+ChatGPT may also send this form itself, when the Coordinator asks on #145 and Louis says to
+process the swarm's pending requests (PROTOCOL.md §7, `CHATGPT.md`); the Coordinator then
+verifies the read-back.
+
 This is for one existing task at a time, so that it loads the specs at a new pin. Beside the
 prompt, tell Louis the task's name, and to leave its model and effort as set.
 

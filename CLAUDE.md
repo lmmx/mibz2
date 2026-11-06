@@ -93,6 +93,8 @@ its placeholders; never draft one fresh.
 `TYPE: PROPOSAL`, authored by `lmmx` (PROTOCOL.md §7). Act on them only within delegated
 authority. Check the interpretation against his verbatim words. Acknowledge each with one
 LOG. Anything RULES D reserves still needs him in this session.
+Requests to ChatGPT (a re-pin, say) go on #145 as `TO: chatgpt`, `TYPE: CHECKPOINT`; Louis has
+it process them. Verify its REVIEW's read-back before acting on it (§7).
 
 Route every message with `.github/coordination/coord.py`, as above. compact30 is history
 (`docs/journal/compact30-channel/`, frozen): it is no source of the team's identity, authority

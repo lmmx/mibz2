@@ -108,3 +108,23 @@ The instruction, verbatim:
   citations, and "oracle" in its other sense, a reference implementation in the tests.
 - **The Work task:** already renamed `mibz2⠶Observer⠶H` in ChatGPT. Louis re-pins its
   instructions to the merge's commit once its current assignment has its receipt.
+
+## 2026-11-06: the Coordinator's requests to ChatGPT, and re-pins without Louis's review
+
+- **Source:** Louis, in the Coordinator's session (RULES D: a change to how a role's
+  instructions are set needs him there).
+- **The question and his answers, verbatim:**
+  - "How should messages from the Coordinator reach ChatGPT, so things like a re-pin don't
+    need you to copy anything?" → "Check-in on #145 (Recommended)".
+  - "May ChatGPT re-pin a role's Work task when the Coordinator asks, without you reviewing the
+    text first?" → "Yes, with checks (Recommended)", the option that read: "Only the
+    WORK-TASKS.md re-pin form, only to a commit already merged into master that contains the
+    role's spec, only the named existing task, then a read-back posted on #145 that I verify
+    character for character. Anything else still comes to you."
+- **Before it:** he asked for messages to go back to ChatGPT as well, so he wouldn't pass them
+  by hand: "i know the local i9 run requires me to read and run, but the re-pin does not".
+- **A refinement from ChatGPT, adopted:** "check in with the swarm" only reads and reports;
+  "process the swarm's pending requests" is the consent to carry requests out; a request
+  with a REVIEW citing its ID is done and never repeated.
+- **Where it is:** PROTOCOL.md §7 ("The other direction"), `CHATGPT.md` ("Requests from the
+  Coordinator"), WORK-TASKS.md.
