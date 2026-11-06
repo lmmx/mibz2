@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "P87 results review completed; awaiting next inbox comment",
+  "state": "Team-size review complete; REVIEW publication pending",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -383,6 +383,18 @@
       "review_comment_pr": 145,
       "review_comment_id": 6646303348,
       "disposition": "Verified 42 published wall intervals; narrowed inconclusive/safety claims; identified untimed production parity decode between timed phase passes; proposed binary audit; raw paired JSONL absent from archive."
+    },
+    {
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "trigger_comment_id": 6681848572,
+      "status": "complete",
+      "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "report_commit": "61e3325c5783b4fbfc2fa70742f2cc92086e0c0f",
+      "report_path": "docs/journal/compact30-adversarial/scanner-146/team-size-6681848572/report.md",
+      "review_comment_pr": 145,
+      "review_comment_id": null,
+      "disposition": "Fixed arms have 8 slots versus production reference 16; mechanism fields non-identifying. Phase/wait and placement diagnostics prioritized, shared-request contention prior art, counter validity corrections."
     }
   ],
   "active_delegations": [],
@@ -428,7 +440,9 @@
   "in_progress_comment": {
     "id": 6681848572,
     "pr": 162,
-    "status": "in_progress",
-    "progress": "Receipt; assess team-size design and prior work"
+    "status": "complete",
+    "report_commit": "61e3325c5783b4fbfc2fa70742f2cc92086e0c0f",
+    "report_path": "docs/journal/compact30-adversarial/scanner-146/team-size-6681848572/report.md",
+    "progress": "Source and literature review complete; publish one deduplicated REVIEW on #145"
   }
 }
