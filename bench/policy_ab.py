@@ -64,6 +64,19 @@ def build_of(arm):
     return None
 
 
+def label(plans):
+    """ "3×3", from (leaders, helpers); workers alone as "8 workers"; several, joined"""
+    out = []
+    for leaders, helpers in plans:
+        if helpers == 0:
+            out.append(f"{leaders} workers")
+        elif leaders and helpers % leaders == 0:
+            out.append(f"{leaders}×{1 + helpers // leaders}")
+        else:
+            out.append(f"{leaders} leaders + {helpers} helpers")
+    return " / ".join(out) or "nothing"
+
+
 def log_stats(ratios):
     logs = [math.log(r) for r in ratios]
     return statistics.fmean(logs), statistics.stdev(logs) / math.sqrt(len(logs))
@@ -90,12 +103,15 @@ def judge(rows):
         rounds = {b: sorted(r["round"] for r in runs[b]) for b in runs}
         complete = all(rounds[b] == list(range(ROUNDS)) for b in runs)
         plans_ok = all(plan_of(r["thread_cpu"]) == EXPECT[t][b] for b in runs for r in runs[b])
-        c = {"threads": t, "complete": complete, "plans": plans_ok}
+        seen = {b: sorted({plan_of(r["thread_cpu"]) for r in runs[b]}) for b in runs}
+        c = {"threads": t, "complete": complete, "plans": plans_ok, "seen": seen}
         if not complete:
             problems.append(f"{t} threads: rounds incomplete or repeated")
         if not plans_ok:
-            seen = sorted({(b, plan_of(r["thread_cpu"])) for b in runs for r in runs[b]})
-            problems.append(f"{t} threads: unexpected plan {seen}")
+            problems.append(
+                f"{t} threads: base ran {label(seen['base'])}, head {label(seen['head'])}, "
+                f"not {label([EXPECT[t]['base']])} and {label([EXPECT[t]['head']])}"
+            )
         valid = valid and complete and plans_ok
         if complete:
             base = {r["round"]: r for r in runs["base"]}
@@ -149,13 +165,14 @@ def markdown(v):
         "Speed is the base build's wall over the head's, paired by round (above 1 is faster); "
         "CPU and RSS are the head's median over the base's.",
         "",
-        "| threads | role | base plan → head plan | speed (95%) | head/base wall, upper bound | CPU | RSS |",
+        "| threads | role | plans run, base → head | speed (95%) | head/base wall, upper bound | CPU | RSS |",
         "|--:|---|---|--:|--:|--:|--:|",
     ]
     for t in THREADS:
         c = v["cells"].get(t, {})
         role = "control" if t in CONTROLS else "primary" if t == PRIMARY else "no harm"
-        plans = "4×2 → " + ("4×2" if t in CONTROLS else "3×3")
+        seen = c.get("seen", {})
+        plans = f"{label(seen.get('base', []))} → {label(seen.get('head', []))}"
         if "speed" not in c:
             out.append(f"| {t} | {role} | {plans} | – | – | – | – |")
             continue
