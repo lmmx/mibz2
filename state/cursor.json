@@ -32,7 +32,7 @@
     "operation-specific U1/U2 negative controls developed here"
   ],
   "fresh_package_critique": "fresh-check/REVIEW.md",
-  "state": "Policy A/B review finished; HOLD findings published; awaiting next assignment",
+  "state": "Policy freeze re-review complete; publication pending",
   "next_trigger": "new pinned scanner correction or U1/U2 checkpoint plus evidence digest; specific rebuttal; completed-sequence 6.2 evidence index; actual notification or user nudge",
   "automatic_github_wakeup_assumed": false,
   "polling_installed": false,
@@ -77,9 +77,10 @@
     6684137403,
     6684938042,
     6693597404,
-    6694153375
+    6694153375,
+    6694804971
   ],
-  "last_processed_comment_id": 6694153375,
+  "last_processed_comment_id": 6694804971,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -496,9 +497,12 @@
       "trigger_comment_id": 6694804971,
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "status": "in_progress",
+      "status": "complete",
       "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
-      "progress": "Migration checks passed; re-review receipt."
+      "report_commit": "2f9922db62b311a4c08a212f40cbd4e6554664cf",
+      "report_path": "state/reports/policy-freeze-6694804971/report.md",
+      "review_comment_pr": 145,
+      "disposition": "HOLD remains: old baseline does not emit required census; freeze still permits untracked build inputs and changed corpus inputs. H1, retry and disclosures substantially resolved; window derivation accepted."
     }
   ],
   "active_delegations": [],
@@ -518,10 +522,10 @@
   ],
   "last_batch": {
     "event_comment_ids": [
-      6694153375
+      6694804971
     ],
     "handled": [
-      6694153375
+      6694804971
     ],
     "skipped": [],
     "automation_modified": false
