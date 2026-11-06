@@ -7,13 +7,20 @@ have found, and links to the record that shows it. Each item is linked to its pa
 Seeded by the Coordinator on 2026-11-06, before the Oracle's first run. From here the Oracle
 owns it.
 
-**Settled at:** #145 comment 6684041836 (the Oracle spec merged). This is a snapshot at that
-point, not a live feed.
+**Settled:** channel covered through #145 comment 6684224966. Evidence inspected at
+2026-11-06 11:58 UTC:
+- master `bbfbed55`;
+- #220 head `838d765c`, CI green, waiting on the i9 run;
+- #224 head `44248603`;
+- #222 head, this page.
+
+Reconciled against that evidence. This is not a live feed.
 
 ## In one line (L0)
 
-Waiting for the i9 run that tests whether 3 decoding tables beat 4 (#220), in order to raise
-throughput past 8 threads (item 1).
+Waiting for the i9 run that tests whether 3 decoding tables beat 4 (#220), with the
+downstream 0.2.4 update open alongside it (item 2). Both serve faster decoding, delivered
+(item 0).
 
 ## Right now, in five lines (L1)
 
@@ -104,11 +111,14 @@ A run's status is separate from whether its prediction held and whether it quali
     block (b6d99258).
   - Cutting 25% from each team's footprint would make 4 teams' total effective footprint
     equal 3 teams' (Optimiser).
-- **Disputed:** the Coordinator made a 25% cut in the T vector touched per team the condition
-  for reopening footprint work. That premise is disputed. In the Optimiser's own model (20 MiB
-  of L3, 5.4 MB per team), a 2.9% cut lets 4 teams fit, and equal hit rates don't need equal
-  footprints. This doesn't predict a gain on the i9, and doesn't reopen the measured failure
-  C15. The decision stands, but its premise is open (Researcher, 6683945162).
+- **Retracted:** the Coordinator had made a 25% cut in the T vector touched per team the
+  condition for reopening footprint work. That threshold is withdrawn (6683965024), after the
+  Researcher's counterexample (6683945162). In the Optimiser's own model (20 MiB of L3,
+  5.4 MB per team), a 2.9% cut lets 4 teams fit, and equal hit rates don't need equal
+  footprints.
+  - What stays is the dispatch pause until #220.
+  - Footprint work reopens on its own measured price, with no fixed threshold.
+  - No gain is predicted on the i9, and C15's measured failure stands.
 - **Inferred, not shown:** contention in the shared L3 cache is consistent with the data.
   The occupancy pass can't isolate it: no two of its plans share a team size. The grid's
   exploratory same-size comparisons still mix concurrency and window with table count.
@@ -148,7 +158,11 @@ Each item's "in order to" should lead up to 0. One that stops at a procedural re
 
 ## Changes since the last version
 
-- Reshaped into levels (L0 line, settled-at stamp), per the spec's précis rule.
+- Reshaped into levels (an L0 line and a settled-at stamp), per the spec's précis rule.
+- Corrected from the Researcher's review (6684224966):
+  - 1.2 now says the 25% threshold was retracted; only the pause stands;
+  - L0's scope now includes the parallel front;
+  - the stamp is now a channel watermark plus an evidence manifest.
 - Seeded (01ea79a3).
 - Corrected from the Researcher's review (6683945162):
   - "tables, not threads" restated as an association;
