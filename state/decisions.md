@@ -1624,3 +1624,50 @@ This executor lacks usable /dev/fd process-substitution paths. For the artifact 
 Prior accepted repairs and the registered statistical rule stand. **HOLD only the remaining artifact evidence path; ordinary repairs continue.** Before freezing, retain the already requested baseline-relationship check and predeclared run identities. No capture, widening or merge authority is granted.
 
 Evidence key: PR234 / `03aa31f3c46e446c6616f3895880f1552d69a979` / registration blob `32e2bb0e9add1200d68d0d6d3a2052771efcb9fc`. Recipe `b37a9e9da8d312823e1439e0b47616fd527c7633`; harness `2e92ddcbbee3f16d1e85b69be6d19d5a5696415b`; bundler `1ce3e2a20b63032ad53a42945e14393c5e968231`. The compare from D038 changes only recipe, harness and registration; the judge and statistical predicates are unchanged.
+
+## D040 — D039 artifact HOLD resolved; recipe clear to freeze
+
+**G1/G2: lift the remaining D039 artifact-provenance HOLD at #234 `ce3fa6d203cf5ee2bdc03026039f88833b7ad49e`.** Inbox [6695594055](https://github.com/lmmx/mibz2/pull/161#issuecomment-6695594055). **CLEAR to freeze from this Guardian review.** This closes the scoped objections, not a performance qualification, merge decision or workstation-run authorisation. The registered statistical rule is unchanged.
+
+Operating pin `a6a703cefcc40ac4115803f44a8a29ad76a3a7ef`: SPEC, Guardian SPEC, MODE, RULES and PROTOCOL fetched/read. Migration verified before receipt: old branch head `f9dab3d2b40739d89d613f86e8c2d67bec3159e4`, manifest SHA-256 `60df88f62692909a122e174463e94c012b28e39ab08c6c8a765d41e762a72488`. Receipt `e5e679ad42bd2bcba7e93c833a9bde5685a71b0b`. Seventeen inbox comments listed; all earlier eligible comments finished; this pin has no prior decision.
+
+### D039's two failures are repaired
+
+The recipe now executes each `built` command through a checked assignment in its own shell. With `pipefail`, Cargo failure remains the function's failure even when its parser has emitted the requested paths. The base executable is copied and hashed before the head build starts; its copy is checked again afterwards. The head and corpus-builder copies remain the executables used and hashed for the attempt.
+
+I executed the exact extracted `built`, `tool`, and build/copy block with synthetic Cargo/rustc commands. Unlike D039, no FIFO or process-substitution replacement was needed in this block. Paths deliberately contain spaces.
+
+| Fixture | Result |
+|---|---|
+| Distinct configured-triple output paths | exit 0; base copy BASE, head copy HEAD |
+| Shared output path, overwritten by head | exit 0; base copy still BASE, head copy HEAD |
+| Base emits artifact, then exits 7 | refused, exit 1; no copies; head build never starts |
+| Head emits artifacts, then exits 7 | refused, exit 1; only the earlier base snapshot remains |
+| Base omits artifact | refused, exit 1; no copies |
+| Base emits malformed build JSON | refused, exit 1; no copies |
+| Head fixture changes the saved base copy | checksum detects it; refused, exit 1 |
+| Different toolchain version output between checkouts | refused, exit 1; neither build starts |
+
+Both material counterexamples in D039 are eliminated. The checksum probe additionally verifies the new integrity check; it is a synthetic fault injection, not a claim of an observed concurrent writer.
+
+### Additional changes at 523ceaa9
+
+The source comparison now names `build.rs`, `rust-toolchain` and `rust-toolchain.toml`. Six checks in fresh temporary Git repositories verify that each is detected both as a new untracked file and as a committed addition relative to the frozen source.
+
+Sixteen environment-guard fixtures pass: nine build/toolchain/sampling overrides are refused, and seven named installation/log/network/terminal exceptions are accepted. The denied fixtures include both AB_CENSUS_MS and AB_SAMPLE_MS. Together with the mismatch fixture above, these reproduce the intended additional refusal mechanisms.
+
+The configuration hash loop covers Cargo-home config/config.toml. It is useful provenance, not a hermetic-build certificate or an inventory of every ancestor configuration file. This scope does not reopen D039: artifacts now come from the actual build messages in each checkout, successful builds are checked, and snapshots precede any later overwrite. No untested claim that a digest proves all build inputs is adopted.
+
+### Freeze identity and remaining evidence boundary
+
+The freeze file still says candidate/base `unfrozen`, correctly refusing a run. Populate it once under the registration before any run, retaining the reviewed measured inputs and declaring first-run/confirmation identities.
+
+Fresh repository evidence: current master resolves to `aa5ce6f52796405feed4dba0a9f88c592f14a931`; its merge base with this candidate is **`8b111867ff1caaca727a0d35e160786c499c4849`**. Record that exact relationship when selecting the base rather than blindly carrying D037's then-observed `818d521c6d0d5da09b4b0f34322baaf54cbf39af` forward. I compared 818d521c → 8b111867: its three commits change protocol/docs/site material only, none of the recipe's measured build/workload paths. This records newer baseline evidence beside the old observation; it does not rewrite it or alter the decoder comparison.
+
+D039's census and exit-status closures stand. D038's malformed-input/base-arm repairs and D037's window derivation stand. The compare from D039 changes only recipe and registration; the judge, decoder and statistical predicates are unchanged.
+
+[Probe script](records/d040/probes.py), [results](records/d040/results.json), and [extracted recipe](records/d040/recipe.sh) are committed with this entry; run `python probes.py` beside recipe.sh. **Eight build/status fixtures, sixteen environment cases, and six new-input detection checks passed.** These are untimed shell/Git fixtures with synthetic compiler messages. No actual Cargo build, Rust test, binary compatibility run, corpus capture or A/B was performed; the restricted executor still does not supply those results. The full recipe's console process substitution was not exercised. That limitation is retained rather than turned into an invented runtime PASS or an additional routine-work gate.
+
+Expected repair: distinct preserved artifacts and checked producer failures. Observed: both now hold in the targeted counterexamples; the remaining Guardian recipe gap is closed. Mechanism: check status synchronously, snapshot before overwrite, verify the snapshot. Next consequential step is the registered freeze and Louis's separately governed evidence process, not another statistical revision. Performance, correctness and CI admission still require their registered evidence. No G3 revision, G8 stop, merge or widened authority.
+
+Evidence key: PR234 / `ce3fa6d203cf5ee2bdc03026039f88833b7ad49e` / registration blob `3e338d691ead5b469bf414ff172b528279edbccc`. Recipe blob `6005631680471be8fa132ba274296abf5fafc889`; frozen-file blob `89054e82aea59bb9f5087e1176b9ccc32821fd75`.

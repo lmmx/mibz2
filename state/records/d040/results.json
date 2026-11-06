@@ -1,0 +1,184 @@
+{
+  "method": "Exact extracted built/tool/build-copy block, no substitution edits. Synthetic cargo and rustc; no real Rust builds or decoder execution. No timing.",
+  "builds": [
+    {
+      "case": "distinct",
+      "exit": 0,
+      "events": [
+        "base",
+        "head"
+      ],
+      "copies": {
+        "windows": "HEAD:windows",
+        "ab-head": "HEAD:ab",
+        "ab-base": "BASE:ab"
+      },
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "case": "shared",
+      "exit": 0,
+      "events": [
+        "base",
+        "head"
+      ],
+      "copies": {
+        "windows": "HEAD:windows",
+        "ab-head": "HEAD:ab",
+        "ab-base": "BASE:ab"
+      },
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "case": "base-fails",
+      "exit": 1,
+      "events": [
+        "base"
+      ],
+      "copies": {},
+      "stdout": "bench-three-team-policy: the base build failed",
+      "stderr": ""
+    },
+    {
+      "case": "head-fails",
+      "exit": 1,
+      "events": [
+        "base",
+        "head"
+      ],
+      "copies": {
+        "ab-base": "BASE:ab"
+      },
+      "stdout": "bench-three-team-policy: the head build failed",
+      "stderr": ""
+    },
+    {
+      "case": "missing",
+      "exit": 1,
+      "events": [
+        "base"
+      ],
+      "copies": {},
+      "stdout": "bench-three-team-policy: the base build failed",
+      "stderr": "no executable reported for: ab"
+    },
+    {
+      "case": "malformed",
+      "exit": 1,
+      "events": [
+        "base"
+      ],
+      "copies": {},
+      "stdout": "bench-three-team-policy: the base build failed",
+      "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 4, in <module>\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/__init__.py\", line 346, in loads\n    return _default_decoder.decode(s)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/decoder.py\", line 338, in decode\n    obj, end = self.raw_decode(s, idx=_w(s, 0).end())\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/json/decoder.py\", line 354, in raw_decode\n    obj, end = self.scan_once(s, idx)\n               ^^^^^^^^^^^^^^^^^^^^^^\njson.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 2 column 1 (char 2)"
+    },
+    {
+      "case": "tamper",
+      "exit": 1,
+      "events": [
+        "base",
+        "head"
+      ],
+      "copies": {
+        "windows": "HEAD:windows",
+        "ab-head": "HEAD:ab",
+        "ab-base": "TAMPER"
+      },
+      "stdout": "/workspace/scratch/8d4531514871/guardian d040 5nid6hfh/attempt/bin/ab-base: FAILED\nbench-three-team-policy: the base executable changed after it was copied",
+      "stderr": "sha256sum: WARNING: 1 computed checksum did NOT match"
+    },
+    {
+      "case": "toolchain-mismatch",
+      "exit": 1,
+      "events": [],
+      "copies": {},
+      "stdout": "bench-three-team-policy: the two checkouts select different toolchains",
+      "stderr": ""
+    }
+  ],
+  "environment": [
+    {
+      "variable": "CARGO_BUILD_RUSTFLAGS",
+      "exit": 1
+    },
+    {
+      "variable": "CARGO_TARGET_DIR",
+      "exit": 1
+    },
+    {
+      "variable": "CARGO_BUILD_TARGET",
+      "exit": 1
+    },
+    {
+      "variable": "CARGO_PROFILE_RELEASE_OPT_LEVEL",
+      "exit": 1
+    },
+    {
+      "variable": "RUSTFLAGS",
+      "exit": 1
+    },
+    {
+      "variable": "RUSTC_WRAPPER",
+      "exit": 1
+    },
+    {
+      "variable": "RUSTUP_TOOLCHAIN",
+      "exit": 1
+    },
+    {
+      "variable": "AB_CENSUS_MS",
+      "exit": 1
+    },
+    {
+      "variable": "AB_SAMPLE_MS",
+      "exit": 1
+    },
+    {
+      "variable": "CARGO_HOME",
+      "exit": 0
+    },
+    {
+      "variable": "RUSTUP_HOME",
+      "exit": 0
+    },
+    {
+      "variable": "RUST_BACKTRACE",
+      "exit": 0
+    },
+    {
+      "variable": "RUST_LOG",
+      "exit": 0
+    },
+    {
+      "variable": "CARGO_HTTP_TIMEOUT",
+      "exit": 0
+    },
+    {
+      "variable": "CARGO_NET_OFFLINE",
+      "exit": 0
+    },
+    {
+      "variable": "CARGO_TERM_COLOR",
+      "exit": 0
+    }
+  ],
+  "frozen_paths": [
+    {
+      "path": "build.rs",
+      "untracked_detected": true,
+      "committed_addition_detected": true
+    },
+    {
+      "path": "rust-toolchain",
+      "untracked_detected": true,
+      "committed_addition_detected": true
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "untracked_detected": true,
+      "committed_addition_detected": true
+    }
+  ]
+}
