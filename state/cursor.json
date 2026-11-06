@@ -480,7 +480,9 @@
       "status": "in_progress",
       "completed": false,
       "spec_commit": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
-      "progress": "Migration verified; #220 journal/source reviewed. Prefer 3x3 over automatic 3x4 escalation; CI cannot qualify untouched branch. Raw confirmation bundles absent from reviewed tree; no independent raw replay claimed."
+      "progress": "Policy design and prospective regression/admission plan finished; production PR creation outside role authority.",
+      "report_path": "state/records/reviews/inbox-6693507432/report.md",
+      "evidence_commit": "544462881497fc957fe17c35ae7508ca1bac23d5"
     }
   ],
   "migrated_from": {

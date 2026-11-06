@@ -229,3 +229,16 @@ Source **f4f99ab82652411feb4a5a6e2ccb96d04902fb58**; results **cbc6eb14b065fdb70
 | C15/C17/C18 | Prior rejection/closure unchanged | New cache hypothesis does not reopen failed registered claims |
 
 T footprint≤4n, ll dead after build, rle untouched during cooperative traversal. L3 is20MiB; C/W using13.9MB allocation per team is invalid. At fixed shared load, four teams need25% effective footprint reduction to match three, not25% less allocated capacity. No calibrated speedup per MB; all new proposal credit zero. A1–A7, D013 and prior tail/phase-pairing qualifications unchanged.
+
+
+## Three-team policy design: inbox6693507432
+
+[Policy and prospective evidence plan](records/reviews/inbox-6693507432/report.md), evidence#220@544462881497fc957fe17c35ae7508ca1bac23d5, governing spec@a6a703cefcc40ac4115803f44a8a29ad76a3a7ef.
+
+- **Priority1: narrow3×3 policy candidate.** On10 physical cores /20MiB reportedL3, requests>=10 choose3×3; others retain old policy, including4×2 at8/9. Higher requests/same-topology other CPUs/corpora are explicit extrapolations. No global0.5L3 rule. Separate k4 remains experimental.
+- **Evidence:** journal records both frozen primaries qualified twice. Preferred3×3 speed1.076/1.087, CPU0.90/0.89, RSS0.82. Head-to-head k4 superiority not demonstrated; rounded ratios1.013/0.999 for~16% extraCPU. Confirmation raw bundles absent at inspected tree; no independent replay claimed.
+- **Admission unresolved:** forced-plan correctness tests cover changed code on small CI; unchanged1/2/nproc timings cannot establish changed-branch benefit. C6/D4 decision needed for representative CI coverage/admission; no relaxation made here. New workstation recipe needs C5 authorisation.
+- **C23/C24 lower priority:** confirmed policy economics outrank unpriced buffer changes. C15/C17 prior failures unchanged; no new verified cumulative credit.
+- **Correction:**25% footprint equality is sufficient to match aggregate footprints under stated model, not a necessary speed/fit threshold. Researcher6683945162 counterexample and Coordinator6683965024 retraction accepted; no fixed threshold retained.
+
+Only a design was published. The role cannot create the requested production PR under SPEC.OPTIMIZER. Existing evidence PR#220 is not a policy implementation link.
