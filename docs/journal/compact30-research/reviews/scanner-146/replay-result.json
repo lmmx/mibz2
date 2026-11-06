@@ -1,0 +1,659 @@
+{
+  "profile_total_ir": 9128951031,
+  "functions": {
+    "ctor2": {
+      "static_instructions": 1431,
+      "observed_instructions": 1026,
+      "self_ir": 1026601670,
+      "inclusive_ir": 1294414196,
+      "callees": {
+        "__memset_avx2_unaligned_erms": 1152859,
+        "__memcpy_avx_unaligned_erms": 4888654,
+        "<c30walk::ctor2::W<false>>::refill": 201234507,
+        "<c30walk::ctor2::W<false>>::finish": 56611441,
+        "c30walk::ctor::canonicalise": 3903384,
+        "free": 1544,
+        "<alloc::raw_vec::RawVecInner>::grow_exact": 18806,
+        "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>": 1331
+      },
+      "call_counts": {
+        "__memset_avx2_unaligned_erms": 4117,
+        "__memcpy_avx_unaligned_erms": 4088,
+        "<c30walk::ctor2::W<false>>::refill": 1299478,
+        "<c30walk::ctor2::W<false>>::finish": 532547,
+        "c30walk::ctor::canonicalise": 434,
+        "free": 8,
+        "<alloc::raw_vec::RawVecInner>::grow_exact": 10,
+        "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>": 3
+      }
+    },
+    "ctor2s": {
+      "static_instructions": 1414,
+      "observed_instructions": 1024,
+      "self_ir": 970405853,
+      "inclusive_ir": 1238210529,
+      "callees": {
+        "__memset_avx2_unaligned_erms": 1152859,
+        "__memcpy_avx_unaligned_erms": 4890494,
+        "<c30walk::ctor2s::W<false>>::refill": 201234507,
+        "<c30walk::ctor2s::W<false>>::finish": 56611441,
+        "c30walk::ctor::canonicalise": 3903384,
+        "free": 1688,
+        "<alloc::raw_vec::RawVecInner>::grow_exact": 8977,
+        "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>": 1326
+      },
+      "call_counts": {
+        "__memset_avx2_unaligned_erms": 4117,
+        "__memcpy_avx_unaligned_erms": 4088,
+        "<c30walk::ctor2s::W<false>>::refill": 1299478,
+        "<c30walk::ctor2s::W<false>>::finish": 532547,
+        "c30walk::ctor::canonicalise": 434,
+        "free": 8,
+        "<alloc::raw_vec::RawVecInner>::grow_exact": 10,
+        "<alloc::raw_vec::RawVecInner<_>>::reserve::do_reserve_and_handle::<alloc::alloc::Global>": 3
+      }
+    }
+  },
+  "count_classes": {
+    "ctor2": {
+      "1": 16,
+      "2": 28,
+      "7": 3,
+      "8": 15,
+      "9": 12,
+      "22": 4,
+      "79": 3,
+      "106": 12,
+      "109": 8,
+      "218": 6,
+      "230": 41,
+      "233": 10,
+      "432": 6,
+      "434": 204,
+      "786": 12,
+      "883": 17,
+      "1769": 12,
+      "2771": 1,
+      "3424": 3,
+      "3575": 5,
+      "3654": 33,
+      "4663": 3,
+      "13266": 2,
+      "13888": 38,
+      "18684": 36,
+      "23559": 8,
+      "27776": 35,
+      "55552": 13,
+      "55986": 3,
+      "75533": 2,
+      "111104": 37,
+      "175200": 11,
+      "201868": 1,
+      "220872": 9,
+      "284358": 2,
+      "296405": 43,
+      "296524": 9,
+      "302049": 9,
+      "467712": 14,
+      "491341": 2,
+      "496004": 34,
+      "508988": 5,
+      "509270": 12,
+      "597255": 2,
+      "607750": 4,
+      "610521": 32,
+      "801475": 18,
+      "883965": 3,
+      "996634": 10,
+      "1085833": 25,
+      "1106525": 8,
+      "1116556": 8,
+      "1435857": 9,
+      "2393313": 38,
+      "2396084": 10,
+      "2476050": 20,
+      "3003834": 13,
+      "3405776": 7,
+      "8935084": 12,
+      "10191389": 2,
+      "10541706": 9,
+      "10544477": 5,
+      "29357924": 12
+    },
+    "ctor2s": {
+      "1": 16,
+      "2": 28,
+      "7": 3,
+      "8": 15,
+      "9": 10,
+      "12": 1,
+      "22": 8,
+      "79": 1,
+      "106": 11,
+      "109": 8,
+      "121": 1,
+      "165": 3,
+      "218": 7,
+      "230": 40,
+      "233": 10,
+      "432": 6,
+      "434": 199,
+      "786": 10,
+      "883": 17,
+      "1769": 12,
+      "2606": 4,
+      "2771": 1,
+      "3575": 5,
+      "3654": 36,
+      "4663": 3,
+      "13888": 38,
+      "18684": 35,
+      "23559": 7,
+      "27776": 35,
+      "55552": 13,
+      "55986": 3,
+      "75533": 2,
+      "111104": 37,
+      "175200": 11,
+      "201868": 1,
+      "220872": 9,
+      "284358": 2,
+      "296405": 44,
+      "296524": 9,
+      "302049": 12,
+      "467712": 14,
+      "491341": 2,
+      "496004": 33,
+      "508988": 5,
+      "509270": 12,
+      "607750": 3,
+      "610356": 1,
+      "610521": 35,
+      "801475": 19,
+      "883965": 3,
+      "996634": 14,
+      "1085833": 24,
+      "1106525": 8,
+      "1116556": 8,
+      "1435857": 9,
+      "2393313": 46,
+      "2396084": 2,
+      "2476050": 20,
+      "3003834": 11,
+      "3405776": 7,
+      "8935084": 12,
+      "9933956": 4,
+      "10191389": 2,
+      "10541706": 5,
+      "29357924": 12
+    }
+  },
+  "self_saving": 56195817,
+  "inclusive_saving": 56203667,
+  "frequency_deltas": [
+    {
+      "frequency": 1,
+      "b2_instructions": 16,
+      "scanner_instructions": 16,
+      "delta": 0
+    },
+    {
+      "frequency": 2,
+      "b2_instructions": 28,
+      "scanner_instructions": 28,
+      "delta": 0
+    },
+    {
+      "frequency": 7,
+      "b2_instructions": 3,
+      "scanner_instructions": 3,
+      "delta": 0
+    },
+    {
+      "frequency": 8,
+      "b2_instructions": 15,
+      "scanner_instructions": 15,
+      "delta": 0
+    },
+    {
+      "frequency": 9,
+      "b2_instructions": 12,
+      "scanner_instructions": 10,
+      "delta": -18
+    },
+    {
+      "frequency": 12,
+      "b2_instructions": 0,
+      "scanner_instructions": 1,
+      "delta": 12
+    },
+    {
+      "frequency": 22,
+      "b2_instructions": 4,
+      "scanner_instructions": 8,
+      "delta": 88
+    },
+    {
+      "frequency": 79,
+      "b2_instructions": 3,
+      "scanner_instructions": 1,
+      "delta": -158
+    },
+    {
+      "frequency": 106,
+      "b2_instructions": 12,
+      "scanner_instructions": 11,
+      "delta": -106
+    },
+    {
+      "frequency": 109,
+      "b2_instructions": 8,
+      "scanner_instructions": 8,
+      "delta": 0
+    },
+    {
+      "frequency": 121,
+      "b2_instructions": 0,
+      "scanner_instructions": 1,
+      "delta": 121
+    },
+    {
+      "frequency": 165,
+      "b2_instructions": 0,
+      "scanner_instructions": 3,
+      "delta": 495
+    },
+    {
+      "frequency": 218,
+      "b2_instructions": 6,
+      "scanner_instructions": 7,
+      "delta": 218
+    },
+    {
+      "frequency": 230,
+      "b2_instructions": 41,
+      "scanner_instructions": 40,
+      "delta": -230
+    },
+    {
+      "frequency": 233,
+      "b2_instructions": 10,
+      "scanner_instructions": 10,
+      "delta": 0
+    },
+    {
+      "frequency": 432,
+      "b2_instructions": 6,
+      "scanner_instructions": 6,
+      "delta": 0
+    },
+    {
+      "frequency": 434,
+      "b2_instructions": 204,
+      "scanner_instructions": 199,
+      "delta": -2170
+    },
+    {
+      "frequency": 786,
+      "b2_instructions": 12,
+      "scanner_instructions": 10,
+      "delta": -1572
+    },
+    {
+      "frequency": 883,
+      "b2_instructions": 17,
+      "scanner_instructions": 17,
+      "delta": 0
+    },
+    {
+      "frequency": 1769,
+      "b2_instructions": 12,
+      "scanner_instructions": 12,
+      "delta": 0
+    },
+    {
+      "frequency": 2606,
+      "b2_instructions": 0,
+      "scanner_instructions": 4,
+      "delta": 10424
+    },
+    {
+      "frequency": 2771,
+      "b2_instructions": 1,
+      "scanner_instructions": 1,
+      "delta": 0
+    },
+    {
+      "frequency": 3424,
+      "b2_instructions": 3,
+      "scanner_instructions": 0,
+      "delta": -10272
+    },
+    {
+      "frequency": 3575,
+      "b2_instructions": 5,
+      "scanner_instructions": 5,
+      "delta": 0
+    },
+    {
+      "frequency": 3654,
+      "b2_instructions": 33,
+      "scanner_instructions": 36,
+      "delta": 10962
+    },
+    {
+      "frequency": 4663,
+      "b2_instructions": 3,
+      "scanner_instructions": 3,
+      "delta": 0
+    },
+    {
+      "frequency": 13266,
+      "b2_instructions": 2,
+      "scanner_instructions": 0,
+      "delta": -26532
+    },
+    {
+      "frequency": 13888,
+      "b2_instructions": 38,
+      "scanner_instructions": 38,
+      "delta": 0
+    },
+    {
+      "frequency": 18684,
+      "b2_instructions": 36,
+      "scanner_instructions": 35,
+      "delta": -18684
+    },
+    {
+      "frequency": 23559,
+      "b2_instructions": 8,
+      "scanner_instructions": 7,
+      "delta": -23559
+    },
+    {
+      "frequency": 27776,
+      "b2_instructions": 35,
+      "scanner_instructions": 35,
+      "delta": 0
+    },
+    {
+      "frequency": 55552,
+      "b2_instructions": 13,
+      "scanner_instructions": 13,
+      "delta": 0
+    },
+    {
+      "frequency": 55986,
+      "b2_instructions": 3,
+      "scanner_instructions": 3,
+      "delta": 0
+    },
+    {
+      "frequency": 75533,
+      "b2_instructions": 2,
+      "scanner_instructions": 2,
+      "delta": 0
+    },
+    {
+      "frequency": 111104,
+      "b2_instructions": 37,
+      "scanner_instructions": 37,
+      "delta": 0
+    },
+    {
+      "frequency": 175200,
+      "b2_instructions": 11,
+      "scanner_instructions": 11,
+      "delta": 0
+    },
+    {
+      "frequency": 201868,
+      "b2_instructions": 1,
+      "scanner_instructions": 1,
+      "delta": 0
+    },
+    {
+      "frequency": 220872,
+      "b2_instructions": 9,
+      "scanner_instructions": 9,
+      "delta": 0
+    },
+    {
+      "frequency": 284358,
+      "b2_instructions": 2,
+      "scanner_instructions": 2,
+      "delta": 0
+    },
+    {
+      "frequency": 296405,
+      "b2_instructions": 43,
+      "scanner_instructions": 44,
+      "delta": 296405
+    },
+    {
+      "frequency": 296524,
+      "b2_instructions": 9,
+      "scanner_instructions": 9,
+      "delta": 0
+    },
+    {
+      "frequency": 302049,
+      "b2_instructions": 9,
+      "scanner_instructions": 12,
+      "delta": 906147
+    },
+    {
+      "frequency": 467712,
+      "b2_instructions": 14,
+      "scanner_instructions": 14,
+      "delta": 0
+    },
+    {
+      "frequency": 491341,
+      "b2_instructions": 2,
+      "scanner_instructions": 2,
+      "delta": 0
+    },
+    {
+      "frequency": 496004,
+      "b2_instructions": 34,
+      "scanner_instructions": 33,
+      "delta": -496004
+    },
+    {
+      "frequency": 508988,
+      "b2_instructions": 5,
+      "scanner_instructions": 5,
+      "delta": 0
+    },
+    {
+      "frequency": 509270,
+      "b2_instructions": 12,
+      "scanner_instructions": 12,
+      "delta": 0
+    },
+    {
+      "frequency": 597255,
+      "b2_instructions": 2,
+      "scanner_instructions": 0,
+      "delta": -1194510
+    },
+    {
+      "frequency": 607750,
+      "b2_instructions": 4,
+      "scanner_instructions": 3,
+      "delta": -607750
+    },
+    {
+      "frequency": 610356,
+      "b2_instructions": 0,
+      "scanner_instructions": 1,
+      "delta": 610356
+    },
+    {
+      "frequency": 610521,
+      "b2_instructions": 32,
+      "scanner_instructions": 35,
+      "delta": 1831563
+    },
+    {
+      "frequency": 801475,
+      "b2_instructions": 18,
+      "scanner_instructions": 19,
+      "delta": 801475
+    },
+    {
+      "frequency": 883965,
+      "b2_instructions": 3,
+      "scanner_instructions": 3,
+      "delta": 0
+    },
+    {
+      "frequency": 996634,
+      "b2_instructions": 10,
+      "scanner_instructions": 14,
+      "delta": 3986536
+    },
+    {
+      "frequency": 1085833,
+      "b2_instructions": 25,
+      "scanner_instructions": 24,
+      "delta": -1085833
+    },
+    {
+      "frequency": 1106525,
+      "b2_instructions": 8,
+      "scanner_instructions": 8,
+      "delta": 0
+    },
+    {
+      "frequency": 1116556,
+      "b2_instructions": 8,
+      "scanner_instructions": 8,
+      "delta": 0
+    },
+    {
+      "frequency": 1435857,
+      "b2_instructions": 9,
+      "scanner_instructions": 9,
+      "delta": 0
+    },
+    {
+      "frequency": 2393313,
+      "b2_instructions": 38,
+      "scanner_instructions": 46,
+      "delta": 19146504
+    },
+    {
+      "frequency": 2396084,
+      "b2_instructions": 10,
+      "scanner_instructions": 2,
+      "delta": -19168672
+    },
+    {
+      "frequency": 2476050,
+      "b2_instructions": 20,
+      "scanner_instructions": 20,
+      "delta": 0
+    },
+    {
+      "frequency": 3003834,
+      "b2_instructions": 13,
+      "scanner_instructions": 11,
+      "delta": -6007668
+    },
+    {
+      "frequency": 3405776,
+      "b2_instructions": 7,
+      "scanner_instructions": 7,
+      "delta": 0
+    },
+    {
+      "frequency": 8935084,
+      "b2_instructions": 12,
+      "scanner_instructions": 12,
+      "delta": 0
+    },
+    {
+      "frequency": 9933956,
+      "b2_instructions": 0,
+      "scanner_instructions": 4,
+      "delta": 39735824
+    },
+    {
+      "frequency": 10191389,
+      "b2_instructions": 2,
+      "scanner_instructions": 2,
+      "delta": 0
+    },
+    {
+      "frequency": 10541706,
+      "b2_instructions": 9,
+      "scanner_instructions": 5,
+      "delta": -42166824
+    },
+    {
+      "frequency": 10544477,
+      "b2_instructions": 5,
+      "scanner_instructions": 0,
+      "delta": -52722385
+    },
+    {
+      "frequency": 29357924,
+      "b2_instructions": 12,
+      "scanner_instructions": 12,
+      "delta": 0
+    }
+  ],
+  "primary_counters": {
+    "input": "wikidata-20261026.bz2",
+    "permille": 0,
+    "extra_starts": false,
+    "array_checks": 868,
+    "walk_checks": 1302,
+    "restoration_checks": 868,
+    "blocks": 434,
+    "rows": 207006515,
+    "rows_bulk": 153819000,
+    "rows_bulk_raw": 0,
+    "rows_fragment": 14892632,
+    "rows_scalar": 38294883,
+    "runs": 610521,
+    "run_rows": 168711632,
+    "complete_groups": 5127300,
+    "fin_fast": 1647416,
+    "fin_ordinary": 75997,
+    "fin_wide": 30949,
+    "fin_crossing": 41120,
+    "fin_forced": 0,
+    "norm_full": 1723371,
+    "norm_partial": 42,
+    "norm_fields": 51701707,
+    "raw_fields_read": 1485808,
+    "raw_entries_written": 1485808,
+    "fields_restored": 557338,
+    "epoch_searches": 127249,
+    "epochs": 3654,
+    "runs_split_at_epoch": 2638,
+    "raw_groups": 49633,
+    "raw_moved": 48795,
+    "raw_cycles": 1135,
+    "multi_epoch_portions": 117029,
+    "max_ordinary_span": 65529,
+    "min_wide_span": 65535,
+    "fresh_pairs": 2396084,
+    "lookahead_pairs": 10541706,
+    "held_reuses": 607750,
+    "runs_no_full_tile": 2771,
+    "tiles_nonuniform": 2393313,
+    "tiles_second_segment": 1116556,
+    "tails": 230,
+    "tail_rows": 1875,
+    "v1_rows": 207006515,
+    "v1_field_stores": 52107477,
+    "v1_entry_stores": 1485808,
+    "v1_header_loads": 37605237,
+    "v1_field_loads": 476120
+  }
+}

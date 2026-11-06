@@ -1,0 +1,36 @@
+{
+  "baseline": "c94333183e01f338321c3b9735dc6a044fe762b7",
+  "assumed_window": 16,
+  "rows_per_block": 900000,
+  "threads": 4,
+  "physical_cores": 2,
+  "plain_bytes_per_table": 3600000,
+  "compact_main_bytes_per_table": 1920000,
+  "cold_unique_lines_per_row": {
+    "plain": 0.0625,
+    "compact_main": 0.03333333333333333
+  },
+  "ideal_uniform_shared_L2": [
+    {
+      "capacity_KiB": 512,
+      "plain_miss": 0.9271822222222222,
+      "compact_main_miss": 0.8634666666666666
+    },
+    {
+      "capacity_KiB": 1024,
+      "plain_miss": 0.8543644444444445,
+      "compact_main_miss": 0.7269333333333333
+    },
+    {
+      "capacity_KiB": 2048,
+      "plain_miss": 0.708728888888889,
+      "compact_main_miss": 0.45386666666666664
+    }
+  ],
+  "warning": "Illustrative independent uniform references, two active tables/core, full cache capacity assigned to tables; ignores L1/prefetch, metadata, RAW, other data and conflict. Not measured misses or a time forecast.",
+  "slack": {
+    "busy": 0.93,
+    "wall_reduction_at_98_percent": 0.05102040816326525,
+    "wall_reduction_at_100_percent": 0.07
+  }
+}

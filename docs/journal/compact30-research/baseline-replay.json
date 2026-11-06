@@ -1,0 +1,34 @@
+{
+  "append_path_instructions": [
+    12,
+    12,
+    12,
+    12
+  ],
+  "blocks": 434,
+  "descriptor_conditional_net_at_5m_cap": 71589766,
+  "descriptor_gross_two_lea_target": 76589766,
+  "input_sha256": {
+    "docs/journal/2026-11-03-compact30-constructor-v2-prototype/ctor2-build-false.asm": "89dd82b89d7491f12a068ae99e103ea20ef7bf2bc17c17f19b2e9ed83ee53bcf",
+    "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/corpora.jsonl": "ce0fcc3a68386bd92a1bc00bc1559f2282edfaae693aa53612a4da88a2373599",
+    "docs/journal/2026-11-04-compact30-epoch-tagged-finaliser/listings/ctor3-finish-false.asm": "d3c3a230b962b6c01fa1bbace8963a4f27ff683008c118cf0e3fd95e2d5289f6",
+    "examples/c30walk/ctor2.rs": "64025a40d7223212017d1d9cdc8b18ddcc4ddf17c1cc985345e4070f01ee0da1",
+    "examples/c30walk/ctor3.rs": "e3da574ab734bf61476fd63441c8757fe84d4a66deaf8126ee540c943bd81de8"
+  },
+  "rows": 207006515,
+  "scalar_explicit_reads": 153179532,
+  "scalar_explicit_writes": 76589766,
+  "scalar_instructions": 459538596,
+  "scalar_pointer_rmw": 38294883,
+  "scope": "archived assembly and aggregate counter arithmetic; no timing or compilation",
+  "sse_refinement_gross_target": 6589500,
+  "v3_gross_finish_saving": 60952875,
+  "v3_historical_model_interval": [
+    60049330,
+    60345544
+  ],
+  "v3_historical_read_delta_incomplete": -6186217,
+  "v3_historical_write_delta_incomplete": -3294750,
+  "v3_leaf_instructions": 44,
+  "v3_removed_push_pop_instructions_already_in_gross": 19768500
+}

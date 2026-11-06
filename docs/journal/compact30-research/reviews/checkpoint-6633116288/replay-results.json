@@ -1,0 +1,315 @@
+{
+  "descriptor_own_saving": 58209045,
+  "descriptor_interval": [
+    54550306,
+    62277795
+  ],
+  "u2_interval": [
+    84043218,
+    84060421
+  ],
+  "descriptor_own_writes_delta": 5004156,
+  "u2_own_writes_delta": 3391432,
+  "descriptor_wrapper_trace": [
+    [
+      "0x94330",
+      "push   %r15"
+    ],
+    [
+      "0x94332",
+      "push   %r14"
+    ],
+    [
+      "0x94334",
+      "push   %r12"
+    ],
+    [
+      "0x94336",
+      "push   %rbx"
+    ],
+    [
+      "0x94337",
+      "push   %rax"
+    ],
+    [
+      "0x94338",
+      "mov    %rsi,%rbx"
+    ],
+    [
+      "0x9433b",
+      "mov    %rdi,%r14"
+    ],
+    [
+      "0x9433e",
+      "mov    0x40(%rdi,%rsi,8),%r15"
+    ],
+    [
+      "0x94343",
+      "lea    (%rsi,%rsi,2),%rax"
+    ],
+    [
+      "0x94347",
+      "lea    (%rdi,%rax,8),%r12"
+    ],
+    [
+      "0x9434b",
+      "add    $0x1040,%r12"
+    ],
+    [
+      "0x94352",
+      "sub    0x1040(%rdi,%rax,8),%r15"
+    ],
+    [
+      "0x9435a",
+      "je     94367 <<c30walk::ctor2d::W<false>>::refill+0x37>"
+    ],
+    [
+      "0x9435c",
+      "mov    %r14,%rdi"
+    ],
+    [
+      "0x9435f",
+      "mov    %rbx,%rsi"
+    ],
+    [
+      "0x94362",
+      "call   93d20 <<c30walk::ctor2d::W<false>>::finish>"
+    ],
+    [
+      "0x94367",
+      "shr    $1,%r15"
+    ],
+    [
+      "0x9436a",
+      "add    0x8(%r12),%r15d"
+    ],
+    [
+      "0x9436f",
+      "mov    %r15d,0x8(%r12)"
+    ],
+    [
+      "0x94374",
+      "movq   $0x0,(%r12)"
+    ],
+    [
+      "0x9437c",
+      "movq   $0x0,0x40(%r14,%rbx,8)"
+    ],
+    [
+      "0x94385",
+      "movq   $0x0,0x840(%r14,%rbx,8)"
+    ],
+    [
+      "0x94391",
+      "mov    0xc(%r12),%eax"
+    ],
+    [
+      "0x94396",
+      "cmp    %eax,%r15d"
+    ],
+    [
+      "0x94399",
+      "jae    94431 <<c30walk::ctor2d::W<false>>::refill+0x101>"
+    ],
+    [
+      "0x9439f",
+      "mov    %r15d,%ecx"
+    ],
+    [
+      "0x943a2",
+      "mov    $0x88888889,%edi"
+    ],
+    [
+      "0x943a7",
+      "imul   %rcx,%rdi"
+    ],
+    [
+      "0x943ab",
+      "mov    %rdi,%rcx"
+    ],
+    [
+      "0x943ae",
+      "shr    $0x24,%rcx"
+    ],
+    [
+      "0x943b2",
+      "mov    %ecx,%r9d"
+    ],
+    [
+      "0x943b5",
+      "shl    $0x5,%r9d"
+    ],
+    [
+      "0x943b9",
+      "sub    %ecx,%r9d"
+    ],
+    [
+      "0x943bc",
+      "sub    %ecx,%r9d"
+    ],
+    [
+      "0x943bf",
+      "lea    0x1e(%r9),%edx"
+    ],
+    [
+      "0x943c3",
+      "cmp    %eax,%edx"
+    ],
+    [
+      "0x943c5",
+      "cmovae %eax,%edx"
+    ],
+    [
+      "0x943c8",
+      "shr    $0x2a,%rdi"
+    ],
+    [
+      "0x943cc",
+      "mov    0x10(%r14),%rsi"
+    ],
+    [
+      "0x943d0",
+      "cmp    %rsi,%rdi"
+    ],
+    [
+      "0x943d3",
+      "jae    94443 <<c30walk::ctor2d::W<false>>::refill+0x113>"
+    ],
+    [
+      "0x943d5",
+      "mov    %r15d,%esi"
+    ],
+    [
+      "0x943d8",
+      "mov    %rcx,%r8"
+    ],
+    [
+      "0x943db",
+      "shl    $0x6,%r8"
+    ],
+    [
+      "0x943df",
+      "add    0x28(%r14),%r8"
+    ],
+    [
+      "0x943e3",
+      "sub    %r9d,%esi"
+    ],
+    [
+      "0x943e6",
+      "mov    0x8(%r14),%r9"
+    ],
+    [
+      "0x943ea",
+      "mov    (%r9,%rdi,8),%rdi"
+    ],
+    [
+      "0x943ee",
+      "bt     %rcx,%rdi"
+    ],
+    [
+      "0x943f2",
+      "jae    943ff <<c30walk::ctor2d::W<false>>::refill+0xcf>"
+    ],
+    [
+      "0x943ff",
+      "mov    $0xffffffff,%edi"
+    ],
+    [
+      "0x94404",
+      "mov    %esi,%esi"
+    ],
+    [
+      "0x94406",
+      "lea    (%r8,%rsi,2),%rsi"
+    ],
+    [
+      "0x9440a",
+      "mov    %rsi,0x40(%r14,%rbx,8)"
+    ],
+    [
+      "0x9440f",
+      "sub    %r15d,%edx"
+    ],
+    [
+      "0x94412",
+      "lea    (%rsi,%rdx,2),%rdx"
+    ],
+    [
+      "0x94416",
+      "mov    %rdx,0x840(%r14,%rbx,8)"
+    ],
+    [
+      "0x9441e",
+      "mov    %rsi,(%r12)"
+    ],
+    [
+      "0x94422",
+      "mov    %r15d,0x8(%r12)"
+    ],
+    [
+      "0x94427",
+      "mov    %ecx,0x10(%r12)"
+    ],
+    [
+      "0x9442c",
+      "mov    %edi,0x14(%r12)"
+    ],
+    [
+      "0x94431",
+      "cmp    %eax,%r15d"
+    ],
+    [
+      "0x94434",
+      "setb   %al"
+    ],
+    [
+      "0x94437",
+      "add    $0x8,%rsp"
+    ],
+    [
+      "0x9443b",
+      "pop    %rbx"
+    ],
+    [
+      "0x9443c",
+      "pop    %r12"
+    ],
+    [
+      "0x9443e",
+      "pop    %r14"
+    ],
+    [
+      "0x94440",
+      "pop    %r15"
+    ],
+    [
+      "0x94442",
+      "ret"
+    ]
+  ],
+  "C6_incremental_conditional_before_H": 27909632,
+  "candidate_shared_negative_classes": [
+    [
+      79,
+      3
+    ],
+    [
+      106,
+      12
+    ],
+    [
+      3575,
+      5
+    ],
+    [
+      2393313,
+      38
+    ]
+  ],
+  "limitations": [
+    "Raw compressed profiles not replayed in this run; tables and listings replayed.",
+    "Equal execution-count classes do not prove identical eliminated instructions.",
+    "Missing structural counters remain a charter 5.3b method finding."
+  ]
+}

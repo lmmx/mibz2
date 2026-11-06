@@ -1,0 +1,478 @@
+{
+  "schema": 1,
+  "base_sha": "2f15e513bdb9808a2c7504e3f01b59ebce65f221",
+  "governing_blobs": {
+    "requested_reviewer": "ba2ab3dd5c09201c3809feeb93682de11583eec4",
+    "active_charter": "31ec5719ca24cd3204b34595401c68ffd31bb57f",
+    "protocol": "3f0160245cdb459a8cf755591a66c62ba8014da5",
+    "roles": "ab4f78fdb98b1932eee8579368ecca9fa11e7fff",
+    "mode": "4d27405b52a1b34c73a957fa0aebea3f9622dca3",
+    "campaign": "c5d2983f8e5c007a47da86202ce686750a5ab55c",
+    "spec": "791d1723f13dce77e9683e82e698222379c2fc83",
+    "spec_optimizer": "582b883f3b7b3e7f1f77bb0f149b94875704df59"
+  },
+  "incoming_channel_comment_ids": [
+    6628984134,
+    6629044041,
+    6629821793,
+    6633116288,
+    6634996672,
+    6635380133,
+    6635419092,
+    6637121066,
+    6639428570,
+    6639496192,
+    6640153383,
+    6645643541,
+    6646251725,
+    6651023083,
+    6653416078,
+    6657883434,
+    6659992544,
+    6683037641
+  ],
+  "outgoing_comment_ids": [
+    {
+      "pr": 145,
+      "id": 6630137149,
+      "type": "PROPOSAL",
+      "sha": "ff65301b7ed622df2dd92867ca1761478f2f8915"
+    },
+    {
+      "pr": 146,
+      "id": 6630265636,
+      "type": "REVIEW",
+      "sha": "0ac2e67e6826b9f2b1940cb876c3003e7a022144",
+      "checkpoint_sha": "7f74e9f30e31af33b0d66fec3fe89af1758307d9"
+    },
+    {
+      "pr": 145,
+      "id": 6630279852,
+      "type": "REVIEW",
+      "sha": "0ac2e67e6826b9f2b1940cb876c3003e7a022144"
+    },
+    {
+      "pr": 145,
+      "id": 6634221840,
+      "type": "REVIEW",
+      "sha": "ea3ace12614f8d078f6167c2d8fcda64f0328799"
+    },
+    {
+      "pr": 145,
+      "id": 6635366542,
+      "type": "REVIEW",
+      "sha": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48"
+    },
+    {
+      "pr": 145,
+      "id": 6637208801,
+      "type": "REVIEW",
+      "sha": "cd7004a8e1226253427839319b6cc278ffea7e1b"
+    },
+    {
+      "pr": 145,
+      "id": 6639751257,
+      "type": "REVIEW",
+      "sha": "82bc69b5cdad78fe7e90243d76b4418b0b4bbef5",
+      "checkpoint_comment_id": 6639496192
+    },
+    {
+      "pr": 145,
+      "id": 6640266327,
+      "type": "REVIEW",
+      "sha": "2f7a4c8a65af3e33787a696fbfd4357cdeeaf2f8",
+      "checkpoint_sha": "95977867fdf318b3f66420c383a73d9c48b36740",
+      "checkpoint_comment_id": 6640153383
+    },
+    {
+      "pr": 145,
+      "id": 6645738830,
+      "type": "REVIEW",
+      "sha": "dc5e9501fb7aaadc1aaaf34ecf18374ee742c14d",
+      "checkpoint_comment_id": 6645643541
+    },
+    {
+      "pr": 145,
+      "id": 6646432357,
+      "type": "REVIEW",
+      "sha": "d143d8fee0e2ea107b22ec9c80df18d61e264276",
+      "checkpoint_comment_id": 6646251725
+    },
+    {
+      "pr": 145,
+      "id": 6651150258,
+      "type": "REVIEW",
+      "sha": "6b720b2415ac04c1aed1e0447842ebf832f3dfd7",
+      "checkpoint_comment_id": 6651023083
+    },
+    {
+      "pr": 145,
+      "id": 6653724458,
+      "type": "REVIEW",
+      "sha": "a2eb08773c3231f839a6fbe73a764d3f3bb25b16",
+      "checkpoint_comment_id": 6653416078
+    },
+    {
+      "pr": 145,
+      "id": 6658149381,
+      "type": "REVIEW",
+      "sha": "9d82533f45030e05a7240b7baa1b0a38e471acab",
+      "checkpoint_comment_id": 6657883434
+    },
+    {
+      "pr": 145,
+      "id": 6660203300,
+      "type": "REVIEW",
+      "sha": "0c2718ec9f858fee6cf186ba4a9d3644505f3f2c",
+      "checkpoint_comment_id": 6659992544
+    },
+    {
+      "pr": 145,
+      "id": 6683232182,
+      "type": "REVIEW",
+      "sha": "b6d99258c84d285614dd2fddc7dedcd2737eea8a",
+      "checkpoint_comment_id": 6683037641
+    }
+  ],
+  "reviews": [
+    {
+      "pr": 146,
+      "sha": "7f74e9f30e31af33b0d66fec3fe89af1758307d9",
+      "status": "complete",
+      "independent": true,
+      "evidence_digest": "aa4f295b5ec152494e999eacf381a92602de329b03e2f76aecd9d6b8c2484753",
+      "gates": {
+        "safety": "PASS archived coverage",
+        "machine": "diagnostic partial miss",
+        "net": "REJECT qualification; HOLD claimed conservative interval"
+      }
+    },
+    {
+      "checkpoint": "v3_closeout",
+      "sha": "46c322213e5780e4be2a05ebcc57348836657720",
+      "status": "complete",
+      "independent": true,
+      "evidence_digest": "18e8de1ca5a97cf81ef489ce7e3e24a8f01f42272d1dd05707d24c0689868e85",
+      "gates": {
+        "safety": "PASS archived coverage",
+        "compiler": "STOP unchanged",
+        "historical_net": "PASS [60049330,60345544]",
+        "integration": "CONDITIONAL; not section6.2"
+      }
+    },
+    {
+      "pr": 151,
+      "sha": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "gates": {
+        "safety": "PASS archived coverage",
+        "machine": "partial miss",
+        "net": "numerical PASS; method CONDITIONAL F3"
+      },
+      "status": "complete_scoped_review",
+      "independent": false,
+      "independence_note": "Not fresh evidence-only section 6.2; C6 proposal assessment non-independent.",
+      "evidence_manifest": "docs/journal/compact30-research/reviews/checkpoint-6633116288/evidence-manifest.json",
+      "review_sha": "ea3ace12614f8d078f6167c2d8fcda64f0328799",
+      "raw_profile_replay": false
+    },
+    {
+      "pr": 146,
+      "sha": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "gates": {
+        "safety": "PASS archived coverage",
+        "machine": "partial miss",
+        "net": "numerical PASS; method CONDITIONAL F3"
+      },
+      "status": "complete_scoped_review",
+      "independent": false,
+      "independence_note": "Not fresh evidence-only section 6.2; C6 proposal assessment non-independent.",
+      "evidence_manifest": "docs/journal/compact30-research/reviews/checkpoint-6633116288/evidence-manifest.json",
+      "review_sha": "ea3ace12614f8d078f6167c2d8fcda64f0328799",
+      "raw_profile_replay": false
+    },
+    {
+      "pr": 146,
+      "sha": "a1d110c79520aff10e4ce6eb5ad8fb5cc3bbe51b",
+      "gates": {
+        "correction": "F1/F2 accepted in stated scope",
+        "net": "REJECT qualification; own-body scope only"
+      },
+      "status": "complete_scoped_review",
+      "independent": false,
+      "independence_note": "Not fresh evidence-only section 6.2; C6 proposal assessment non-independent.",
+      "evidence_manifest": "docs/journal/compact30-research/reviews/checkpoint-6633116288/evidence-manifest.json",
+      "review_sha": "ea3ace12614f8d078f6167c2d8fcda64f0328799",
+      "raw_profile_replay": false
+    },
+    {
+      "checkpoint": "overlap_6634996672",
+      "scanner_sha": "49cb46b65070059af49e906fa8d98693b808bda2",
+      "descriptor_sha": "29dd071f8787a28560a7a081fd7ac0ef13991466",
+      "independent_review_sha": "e62fc15f91311823ab0c48a6f6e9c7dd35a28d10",
+      "status": "complete_scoped_review",
+      "independent": false,
+      "review_sha": "37193bacd220f24b1d4c81b6a55ef4410ba6eb48",
+      "class_rows": 63,
+      "overlap": {
+        "demonstrated_lower": 2393313,
+        "upper": null,
+        "upper_status": "not established by component minima"
+      },
+      "registered_floor": {
+        "scanner_descriptor": 97606687,
+        "rule": "sum translated minima minus demonstrated overlap lower bound"
+      },
+      "correction_sha": "cd7004a8e1226253427839319b6cc278ffea7e1b"
+    },
+    {
+      "checkpoint": "counted_replay_6637121066",
+      "original_checkpoint_ids": [
+        6635380133,
+        6635419092
+      ],
+      "scanner_sha": "ba261eff245f45e1c07fdfb05fa2fe6ff1ced835",
+      "descriptor_sha": "7620c0c667018772a0ba3be28eb62263b55037f8",
+      "guardian_decisions": {
+        "floor": "028d7206e79fae8081cef4ea13357b4546270530",
+        "counted_gate3": "080dd146353485eb2e6e7b17bc78283278563e6e"
+      },
+      "status": "complete_scoped_review",
+      "independent": false,
+      "review_sha": "cd7004a8e1226253427839319b6cc278ffea7e1b",
+      "replay": {
+        "raw_profiles": 8,
+        "runs_identical": true,
+        "scanner_classes": [
+          31,
+          31
+        ],
+        "descriptor_classes": [
+          34,
+          34
+        ],
+        "exact_committed_ledger_match": true
+      },
+      "intervals": {
+        "scanner": [
+          84060421,
+          84060421
+        ],
+        "descriptor": [
+          57830163,
+          62277795
+        ]
+      },
+      "registered_floor": 97606687
+    },
+    {
+      "checkpoint": "assembly1_bridge_6640153383",
+      "combined_sha": "888eccfc86d5d771e881b0f87d46a21e2cf1512a",
+      "reconciliation_sha": "95977867fdf318b3f66420c383a73d9c48b36740",
+      "status": "complete_scoped_review",
+      "independent": false,
+      "review_sha": "2f7a4c8a65af3e33787a696fbfd4357cdeeaf2f8",
+      "replay": {
+        "paths_rows": 86,
+        "changed_classes": 83,
+        "nonzero_build_interaction_classes": 42,
+        "raw_profiles": false
+      },
+      "interval": [
+        258494335,
+        262948911
+      ],
+      "own_delta": -258873217,
+      "build_nonadditivity": -56391637,
+      "mechanisms": {
+        "unroll": -66676611,
+        "outer_head": -12015336,
+        "s_class": 19146504,
+        "rest": 3153806
+      },
+      "registered_overlap": 2393313,
+      "floor": 147606687,
+      "gates": {
+        "instruction_arithmetic": "PASS checked scope",
+        "qualification": "HOLD D013",
+        "economics": "unresolved"
+      }
+    }
+  ],
+  "pilot": "T1 observed; T2-T6 and end-to-end PASS not evidenced",
+  "wake": "Scan inbox #160 oldest first after offset 6646251725 under SPEC at 0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0.",
+  "next_trigger": "Next unfinished inbox #160 comment after offset 6646251725.",
+  "review_pr": 148,
+  "initial_publication_sha": "ff65301b7ed622df2dd92867ca1761478f2f8915",
+  "proposal_independence": {
+    "direct_refill": "proposed here; any audit by this thread non-independent; fresh evidence-only reviewer required",
+    "ranked_next_cuts_6639496192": "proposed here; C7-C10 are conditional, zero verified credit; any qualification requires fresh pinned evidence and applicable reviewer"
+  },
+  "status": "WAITING_FOR_INBOX",
+  "published_evidence_commit": "b6d99258c84d285614dd2fddc7dedcd2737eea8a",
+  "incoming_experiment_comment_ids": [
+    {
+      "pr": 146,
+      "id": 6629864932,
+      "classification": "coordinator CI explanation; not authority"
+    }
+  ],
+  "deduplication": "Inbox #160: skip finished; resume in_progress or complete, checking #145 before REVIEW publication.",
+  "mode_register": {
+    "source_comment_id": 6639428570,
+    "mode_commit": "e44d87f96c2bdcce904872ea4fb13ad79bdcf2af",
+    "mode_blob": "4d27405b52a1b34c73a957fa0aebea3f9622dca3",
+    "protocol_commit": "07fe905f",
+    "protocol_blob": "3f0160245cdb459a8cf755591a66c62ba8014da5",
+    "campaign_ref": "research/compact30-channel",
+    "campaign_blob": "c5d2983f8e5c007a47da86202ce686750a5ab55c",
+    "status": "adopted"
+  },
+  "ranked_next_cuts": {
+    "source_comment_id": 6639496192,
+    "redelivery_of": 6637300905,
+    "policy_sha": "2210e4457b383e4566df99eb881b4ca0401c4cd3",
+    "report_commit": "b54e3f27f93188fd4da0d294f94aa9206f64e508",
+    "ledger_commit": "82bc69b5cdad78fe7e90243d76b4418b0b4bbef5",
+    "status": "proposal_only_conditional",
+    "ids": [
+      "C7",
+      "C8",
+      "C9",
+      "C10"
+    ],
+    "verified_credit": 0
+  },
+  "inbox_briefs": [
+    {
+      "comment_id": 6645643541,
+      "pr": 160,
+      "resumes_comment_id": 6645304470,
+      "status": "completed",
+      "progress": "Published ranking, corrected parity model and canonical ledger; REVIEW published on #145.",
+      "completed": true,
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6645643541/report.md",
+      "report_commit": "dc5e9501fb7aaadc1aaaf34ecf18374ee742c14d",
+      "reply_id": 6645738830
+    },
+    {
+      "comment_id": 6646251725,
+      "pr": 160,
+      "status": "completed",
+      "completed": true,
+      "spec_commit": "beb7df121fddf69938fdf8c972a8c7d964267ac6",
+      "baseline_commit": "e26e3d9cbac6bcd2106b7070c869dd91fcd7217d",
+      "progress": "Published post-P87 ranking, normalized 14-profile call-arc audit, replay helper and canonical ledger; REVIEW on #145 recorded.",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6646251725/report.md",
+      "evidence_blobs": {
+        "validation": "6def96def6c11f19df3137cf0159c07013a5ea2a",
+        "bwt": "9b376e03439314e88e979cc87eb3ca8ef764fe22",
+        "parallel": "f44c688ad1960e8ffb5be2de43e1d02a09d82913",
+        "walk_listing": "e4a2eccd79ce2cc3103c41c5129db868ebb21ade",
+        "roles": "bce37a001b49bf0be57946736719c19b9c6968c6",
+        "reviewer": "ba2ab3dd5c09201c3809feeb93682de11583eec4"
+      },
+      "audit_scope": {
+        "independent": false,
+        "raw_call_arcs": true,
+        "raw_profiles": 14,
+        "per_instruction_replay": false,
+        "tests_rerun": false
+      },
+      "report_commit": "d143d8fee0e2ea107b22ec9c80df18d61e264276",
+      "reply_id": 6646432357
+    },
+    {
+      "comment_id": 6651023083,
+      "pr": 160,
+      "status": "finished",
+      "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "progress": "Work complete; REVIEW published and recorded.",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6651023083/report.md",
+      "completed": true,
+      "report_commit": "6b720b2415ac04c1aed1e0447842ebf832f3dfd7",
+      "evidence_blobs": {
+        "round": "907b7fe5de465b2a12b2ee3a3d4eca67dadd1a9b",
+        "staged": "8543d3904c4dd6e4b0144cb5cf311ea520ecef06",
+        "source_bwt": "c4c65a56c91cee373b8d1a8bd7965cc30ee51cf4",
+        "compact_source": "05c8fb20f33fc77018516e948f2c70693d56d14c",
+        "window": "7633c418c6ba18366d4cad06d4035de59da41019",
+        "assembly": "4e5421e1f9b5677a888f96b4a82347c4db1453b6"
+      },
+      "reply_id": 6651150258
+    },
+    {
+      "comment_id": 6653416078,
+      "pr": 160,
+      "status": "finished",
+      "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "progress": "Report, evidence and canonical ledger committed; REVIEW published and recorded.",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6653416078/report.md",
+      "completed": true,
+      "report_commit": "a2eb08773c3231f839a6fbe73a764d3f3bb25b16",
+      "baseline_commit": "3c4ed7939d107a7b7b2633ca913f2e640023f15a",
+      "audit_scope": {
+        "independent": false,
+        "raw_benchmark_replay": false,
+        "new_timing": false,
+        "implementation": false
+      },
+      "reply_id": 6653724458
+    },
+    {
+      "comment_id": 6657883434,
+      "pr": 160,
+      "status": "finished",
+      "completed": true,
+      "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "progress": "Report, static arithmetic and canonical ledger committed; REVIEW published and recorded.",
+      "report_commit": "9d82533f45030e05a7240b7baa1b0a38e471acab",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6657883434/report.md",
+      "baseline_commit": "decc71b866a1d55ae86251e6e227b9c11987f357",
+      "audit_scope": {
+        "independent": false,
+        "raw_benchmark_replay": false,
+        "new_timing": false,
+        "implementation": false
+      },
+      "reply_id": 6658149381
+    },
+    {
+      "comment_id": 6659992544,
+      "pr": 160,
+      "status": "finished",
+      "completed": true,
+      "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "progress": "Report, model and ledger committed; REVIEW published and recorded.",
+      "report_commit": "0c2718ec9f858fee6cf186ba4a9d3644505f3f2c",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6659992544/report.md",
+      "baseline_commit": "1132857e18819ce689424dd2df7751630b29522a",
+      "audit_scope": {
+        "independent": false,
+        "implementation": false,
+        "new_timing": false,
+        "raw_benchmark_replay": false
+      },
+      "reply_id": 6660203300
+    },
+    {
+      "comment_id": 6683037641,
+      "pr": 160,
+      "status": "finished",
+      "completed": true,
+      "spec_commit": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
+      "progress": "Report, archived arithmetic, sensitivity model and canonical ledger committed; REVIEW published and recorded.",
+      "report_path": "docs/journal/compact30-research/reviews/inbox-6683037641/report.md",
+      "baseline_commit": "f4f99ab82652411feb4a5a6e2ccb96d04902fb58",
+      "evidence_commit": "cbc6eb14b065fdb7092911147ce3374f63541467",
+      "report_commit": "b6d99258c84d285614dd2fddc7dedcd2737eea8a",
+      "audit_scope": {
+        "independent": false,
+        "implementation": false,
+        "new_timing": false,
+        "archived_run_rows": 320,
+        "raw_profile_replay": false
+      },
+      "reply_id": 6683232182
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "scope": "Static arithmetic from pinned census; no timing or raw artifact replay",
+  "pin": "decc71b866a1d55ae86251e6e227b9c11987f357",
+  "formula": "g = 1 - (C_new/C_old)*(u_old/u_new); at fixed u, g=delta_C/C_old",
+  "estimates": {
+    "7763_walk": {
+      "C_old": 1.235088,
+      "alone_seconds": 0.2845,
+      "f_old": 2.12,
+      "f_reference": [
+        1.43,
+        1.33
+      ],
+      "fraction": [
+        0.158940091718161,
+        0.18197488761934372
+      ]
+    },
+    "9V74_walk_scenario": {
+      "worker_share_assumed": [
+        0.81,
+        0.83
+      ],
+      "walk_share_within_workers": 0.597,
+      "f_old": 2.22,
+      "f_reference": [
+        1.32,
+        1.23
+      ],
+      "fraction": [
+        0.19604189189189192,
+        0.22097067567567572
+      ],
+      "warning": "No matched full decoder stage table; worker share transferred assumption"
+    },
+    "8370C_build": {
+      "C_old": 1.5256640000000001,
+      "alone_seconds": 0.1174,
+      "f_old": 2.25,
+      "f_reference": 1.55,
+      "fraction": 0.05386507120833945
+    },
+    "7763_build": {
+      "fraction": [
+        0,
+        0.011246162216781298
+      ]
+    },
+    "9V74_build_scenario": {
+      "fourcopy_excess": 0.048,
+      "assumed_worker_fraction_of_phase_total": 0.9,
+      "assumed_worker_share_of_process": 0.82,
+      "fraction": 0.043733333333333325
+    },
+    "huffman": {
+      "scanner_share": [
+        0.091,
+        0.107
+      ],
+      "alone_cut": [
+        0.15,
+        0.4
+      ],
+      "retention": [
+        0,
+        1
+      ],
+      "fraction": [
+        0,
+        0.042800000000000005
+      ]
+    },
+    "MTF_example": {
+      "alone_cut": 0.3,
+      "old_inflation": 1.33,
+      "new_inflation": 1.71,
+      "stage_gain": 0.1000000000000002,
+      "whole_fraction": 0.013200000000000028
+    },
+    "steady_supply_shared": {
+      "idle_fraction": [
+        0.02,
+        0.025
+      ],
+      "wall_conversion": [
+        0.59,
+        0.72
+      ],
+      "fraction": [
+        0.0118,
+        0.018
+      ]
+    }
+  }
+}

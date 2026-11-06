@@ -1,0 +1,4390 @@
+{
+  "Q_max": 3450,
+  "archive_git_blob": "c0e5ddbac2e60eba0d6e3123ad8b22d7b0fce7fd",
+  "archive_sha256": "ebdb74549b39f83f07ae1f7d1c943916bac2ecb0be85868799aa30fe5e3d8af9",
+  "archive_source_commit": "fa21f33b372f7534e7610d93710e06c3af506ccc",
+  "archived_all_full_steps": 1140,
+  "blocks": 434,
+  "exposures": {
+    "eligible_min": {
+      "assigned_mean": 4719.820175438596,
+      "latest_end_mean": 5144.558771929825,
+      "latest_end_vs_assigned": 1.0899904192751917,
+      "longest_duration_mean": 5144.4771929824565
+    },
+    "fin_fast": {
+      "assigned_mean": 7164.228070175439,
+      "latest_end_mean": 7829.837719298245,
+      "latest_end_vs_assigned": 1.0929073785204757,
+      "longest_duration_mean": 7829.807894736842
+    },
+    "rows_scalar": {
+      "assigned_mean": 166529.16666666666,
+      "latest_end_mean": 181263.84122807017,
+      "latest_end_vs_assigned": 1.0884810442299109,
+      "longest_duration_mean": 181264.27631578947
+    }
+  },
+  "fast_full_max": 1647407,
+  "fast_full_min": 1647374,
+  "full_tiles": 12937790,
+  "jsonl_sha256": "f25325eb2339b1a1385d598e8dd5a8a6d5e37c110c207ddcff18bae53f2e172b",
+  "large_blocks": 230,
+  "nonempty_refill_min": 1122673,
+  "nonuniform_tiles": 2393313,
+  "per_block": [
+    {
+      "block": 0,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 24,
+      "refill_min": 0,
+      "rows": 41,
+      "scalar_rows": 41
+    },
+    {
+      "block": 1,
+      "eligible_min": 4197,
+      "fast_finishes": 6780,
+      "nonuniform_tiles": 9551,
+      "portions": 7408,
+      "refill_min": 4359,
+      "rows": 900000,
+      "scalar_rows": 152816
+    },
+    {
+      "block": 2,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 1,
+      "portions": 18,
+      "refill_min": 0,
+      "rows": 31,
+      "scalar_rows": 31
+    },
+    {
+      "block": 3,
+      "eligible_min": 4331,
+      "fast_finishes": 6921,
+      "nonuniform_tiles": 9804,
+      "portions": 7550,
+      "refill_min": 4496,
+      "rows": 899828,
+      "scalar_rows": 156868
+    },
+    {
+      "block": 4,
+      "eligible_min": 3826,
+      "fast_finishes": 6364,
+      "nonuniform_tiles": 8836,
+      "portions": 6980,
+      "refill_min": 3989,
+      "rows": 900000,
+      "scalar_rows": 141376
+    },
+    {
+      "block": 5,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 24,
+      "refill_min": 0,
+      "rows": 62,
+      "scalar_rows": 62
+    },
+    {
+      "block": 6,
+      "eligible_min": 4323,
+      "fast_finishes": 7232,
+      "nonuniform_tiles": 10024,
+      "portions": 7869,
+      "refill_min": 4488,
+      "rows": 899959,
+      "scalar_rows": 160391
+    },
+    {
+      "block": 7,
+      "eligible_min": 4209,
+      "fast_finishes": 6982,
+      "nonuniform_tiles": 9723,
+      "portions": 7619,
+      "refill_min": 4376,
+      "rows": 900000,
+      "scalar_rows": 155568
+    },
+    {
+      "block": 8,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 15,
+      "scalar_rows": 15
+    },
+    {
+      "block": 9,
+      "eligible_min": 3788,
+      "fast_finishes": 5726,
+      "nonuniform_tiles": 8410,
+      "portions": 6329,
+      "refill_min": 3951,
+      "rows": 900000,
+      "scalar_rows": 134560
+    },
+    {
+      "block": 10,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 15,
+      "refill_min": 0,
+      "rows": 33,
+      "scalar_rows": 33
+    },
+    {
+      "block": 11,
+      "eligible_min": 3744,
+      "fast_finishes": 5481,
+      "nonuniform_tiles": 8214,
+      "portions": 6079,
+      "refill_min": 3904,
+      "rows": 900000,
+      "scalar_rows": 131424
+    },
+    {
+      "block": 12,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 4,
+      "portions": 31,
+      "refill_min": 0,
+      "rows": 72,
+      "scalar_rows": 72
+    },
+    {
+      "block": 13,
+      "eligible_min": 3855,
+      "fast_finishes": 6761,
+      "nonuniform_tiles": 9228,
+      "portions": 7398,
+      "refill_min": 4026,
+      "rows": 899907,
+      "scalar_rows": 147651
+    },
+    {
+      "block": 14,
+      "eligible_min": 4073,
+      "fast_finishes": 6361,
+      "nonuniform_tiles": 9064,
+      "portions": 6977,
+      "refill_min": 4233,
+      "rows": 900000,
+      "scalar_rows": 145024
+    },
+    {
+      "block": 15,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 5,
+      "portions": 26,
+      "refill_min": 0,
+      "rows": 90,
+      "scalar_rows": 90
+    },
+    {
+      "block": 16,
+      "eligible_min": 4088,
+      "fast_finishes": 6460,
+      "nonuniform_tiles": 9226,
+      "portions": 7083,
+      "refill_min": 4249,
+      "rows": 900000,
+      "scalar_rows": 147616
+    },
+    {
+      "block": 17,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 14,
+      "portions": 45,
+      "refill_min": 0,
+      "rows": 232,
+      "scalar_rows": 232
+    },
+    {
+      "block": 18,
+      "eligible_min": 4225,
+      "fast_finishes": 7040,
+      "nonuniform_tiles": 9823,
+      "portions": 7677,
+      "refill_min": 4386,
+      "rows": 900000,
+      "scalar_rows": 157168
+    },
+    {
+      "block": 19,
+      "eligible_min": 3641,
+      "fast_finishes": 5387,
+      "nonuniform_tiles": 8001,
+      "portions": 5985,
+      "refill_min": 3803,
+      "rows": 899947,
+      "scalar_rows": 128027
+    },
+    {
+      "block": 20,
+      "eligible_min": 4050,
+      "fast_finishes": 6414,
+      "nonuniform_tiles": 9153,
+      "portions": 7036,
+      "refill_min": 4216,
+      "rows": 900000,
+      "scalar_rows": 146448
+    },
+    {
+      "block": 21,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 4,
+      "portions": 24,
+      "refill_min": 0,
+      "rows": 66,
+      "scalar_rows": 66
+    },
+    {
+      "block": 22,
+      "eligible_min": 3564,
+      "fast_finishes": 5137,
+      "nonuniform_tiles": 7862,
+      "portions": 5726,
+      "refill_min": 3719,
+      "rows": 900000,
+      "scalar_rows": 125792
+    },
+    {
+      "block": 23,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 8,
+      "refill_min": 0,
+      "rows": 9,
+      "scalar_rows": 9
+    },
+    {
+      "block": 24,
+      "eligible_min": 4269,
+      "fast_finishes": 7347,
+      "nonuniform_tiles": 10100,
+      "portions": 7987,
+      "refill_min": 4435,
+      "rows": 900000,
+      "scalar_rows": 161600
+    },
+    {
+      "block": 25,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 4,
+      "portions": 24,
+      "refill_min": 0,
+      "rows": 74,
+      "scalar_rows": 74
+    },
+    {
+      "block": 26,
+      "eligible_min": 3898,
+      "fast_finishes": 6404,
+      "nonuniform_tiles": 8976,
+      "portions": 7017,
+      "refill_min": 4057,
+      "rows": 900000,
+      "scalar_rows": 143616
+    },
+    {
+      "block": 27,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 21,
+      "refill_min": 0,
+      "rows": 36,
+      "scalar_rows": 36
+    },
+    {
+      "block": 28,
+      "eligible_min": 4390,
+      "fast_finishes": 7222,
+      "nonuniform_tiles": 10264,
+      "portions": 7854,
+      "refill_min": 4559,
+      "rows": 900000,
+      "scalar_rows": 164224
+    },
+    {
+      "block": 29,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 14,
+      "refill_min": 0,
+      "rows": 24,
+      "scalar_rows": 24
+    },
+    {
+      "block": 30,
+      "eligible_min": 4685,
+      "fast_finishes": 7253,
+      "nonuniform_tiles": 10571,
+      "portions": 7892,
+      "refill_min": 4848,
+      "rows": 900000,
+      "scalar_rows": 169136
+    },
+    {
+      "block": 31,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 5,
+      "portions": 29,
+      "refill_min": 0,
+      "rows": 93,
+      "scalar_rows": 93
+    },
+    {
+      "block": 32,
+      "eligible_min": 3972,
+      "fast_finishes": 5704,
+      "nonuniform_tiles": 8635,
+      "portions": 6311,
+      "refill_min": 4133,
+      "rows": 900000,
+      "scalar_rows": 138160
+    },
+    {
+      "block": 33,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 6,
+      "portions": 29,
+      "refill_min": 0,
+      "rows": 99,
+      "scalar_rows": 99
+    },
+    {
+      "block": 34,
+      "eligible_min": 4712,
+      "fast_finishes": 6744,
+      "nonuniform_tiles": 10358,
+      "portions": 7385,
+      "refill_min": 4872,
+      "rows": 900000,
+      "scalar_rows": 165728
+    },
+    {
+      "block": 35,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 25,
+      "refill_min": 0,
+      "rows": 60,
+      "scalar_rows": 60
+    },
+    {
+      "block": 36,
+      "eligible_min": 4866,
+      "fast_finishes": 7511,
+      "nonuniform_tiles": 10951,
+      "portions": 8147,
+      "refill_min": 5029,
+      "rows": 900000,
+      "scalar_rows": 175216
+    },
+    {
+      "block": 37,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 6,
+      "portions": 34,
+      "refill_min": 0,
+      "rows": 98,
+      "scalar_rows": 98
+    },
+    {
+      "block": 38,
+      "eligible_min": 4324,
+      "fast_finishes": 7227,
+      "nonuniform_tiles": 10041,
+      "portions": 7850,
+      "refill_min": 4493,
+      "rows": 899996,
+      "scalar_rows": 160668
+    },
+    {
+      "block": 39,
+      "eligible_min": 3730,
+      "fast_finishes": 5822,
+      "nonuniform_tiles": 8320,
+      "portions": 6415,
+      "refill_min": 3890,
+      "rows": 900000,
+      "scalar_rows": 133120
+    },
+    {
+      "block": 40,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 3,
+      "refill_min": 0,
+      "rows": 3,
+      "scalar_rows": 3
+    },
+    {
+      "block": 41,
+      "eligible_min": 4890,
+      "fast_finishes": 6086,
+      "nonuniform_tiles": 10117,
+      "portions": 6681,
+      "refill_min": 5049,
+      "rows": 900000,
+      "scalar_rows": 161872
+    },
+    {
+      "block": 42,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 0,
+      "portions": 1,
+      "refill_min": 0,
+      "rows": 1,
+      "scalar_rows": 1
+    },
+    {
+      "block": 43,
+      "eligible_min": 5610,
+      "fast_finishes": 7009,
+      "nonuniform_tiles": 11566,
+      "portions": 7655,
+      "refill_min": 5773,
+      "rows": 899985,
+      "scalar_rows": 185057
+    },
+    {
+      "block": 44,
+      "eligible_min": 4925,
+      "fast_finishes": 6314,
+      "nonuniform_tiles": 10150,
+      "portions": 6880,
+      "refill_min": 5070,
+      "rows": 900000,
+      "scalar_rows": 162400
+    },
+    {
+      "block": 45,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 15,
+      "scalar_rows": 15
+    },
+    {
+      "block": 46,
+      "eligible_min": 4575,
+      "fast_finishes": 6947,
+      "nonuniform_tiles": 10022,
+      "portions": 7543,
+      "refill_min": 4735,
+      "rows": 900000,
+      "scalar_rows": 160352
+    },
+    {
+      "block": 47,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 15,
+      "scalar_rows": 15
+    },
+    {
+      "block": 48,
+      "eligible_min": 5667,
+      "fast_finishes": 8321,
+      "nonuniform_tiles": 11660,
+      "portions": 8958,
+      "refill_min": 5830,
+      "rows": 900000,
+      "scalar_rows": 186560
+    },
+    {
+      "block": 49,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 4,
+      "refill_min": 0,
+      "rows": 5,
+      "scalar_rows": 5
+    },
+    {
+      "block": 50,
+      "eligible_min": 5247,
+      "fast_finishes": 7777,
+      "nonuniform_tiles": 10782,
+      "portions": 8401,
+      "refill_min": 5405,
+      "rows": 900000,
+      "scalar_rows": 172512
+    },
+    {
+      "block": 51,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 8,
+      "refill_min": 0,
+      "rows": 9,
+      "scalar_rows": 9
+    },
+    {
+      "block": 52,
+      "eligible_min": 5677,
+      "fast_finishes": 8360,
+      "nonuniform_tiles": 11651,
+      "portions": 9027,
+      "refill_min": 5838,
+      "rows": 900000,
+      "scalar_rows": 186416
+    },
+    {
+      "block": 53,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 19,
+      "scalar_rows": 19
+    },
+    {
+      "block": 54,
+      "eligible_min": 6321,
+      "fast_finishes": 9108,
+      "nonuniform_tiles": 13692,
+      "portions": 9827,
+      "refill_min": 6489,
+      "rows": 900000,
+      "scalar_rows": 219072
+    },
+    {
+      "block": 55,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 12,
+      "refill_min": 0,
+      "rows": 15,
+      "scalar_rows": 15
+    },
+    {
+      "block": 56,
+      "eligible_min": 7106,
+      "fast_finishes": 9864,
+      "nonuniform_tiles": 15213,
+      "portions": 10594,
+      "refill_min": 7266,
+      "rows": 900000,
+      "scalar_rows": 243408
+    },
+    {
+      "block": 57,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 16,
+      "refill_min": 0,
+      "rows": 23,
+      "scalar_rows": 23
+    },
+    {
+      "block": 58,
+      "eligible_min": 7771,
+      "fast_finishes": 9590,
+      "nonuniform_tiles": 15927,
+      "portions": 10307,
+      "refill_min": 7935,
+      "rows": 900000,
+      "scalar_rows": 254832
+    },
+    {
+      "block": 59,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 17,
+      "refill_min": 0,
+      "rows": 34,
+      "scalar_rows": 34
+    },
+    {
+      "block": 60,
+      "eligible_min": 7513,
+      "fast_finishes": 9940,
+      "nonuniform_tiles": 15635,
+      "portions": 10670,
+      "refill_min": 7689,
+      "rows": 900000,
+      "scalar_rows": 250160
+    },
+    {
+      "block": 61,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 7,
+      "refill_min": 0,
+      "rows": 12,
+      "scalar_rows": 12
+    },
+    {
+      "block": 62,
+      "eligible_min": 7677,
+      "fast_finishes": 9614,
+      "nonuniform_tiles": 15577,
+      "portions": 10318,
+      "refill_min": 7836,
+      "rows": 900000,
+      "scalar_rows": 249232
+    },
+    {
+      "block": 63,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 17,
+      "scalar_rows": 17
+    },
+    {
+      "block": 64,
+      "eligible_min": 5444,
+      "fast_finishes": 6873,
+      "nonuniform_tiles": 11335,
+      "portions": 7512,
+      "refill_min": 5605,
+      "rows": 900000,
+      "scalar_rows": 181360
+    },
+    {
+      "block": 65,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 6,
+      "refill_min": 0,
+      "rows": 7,
+      "scalar_rows": 7
+    },
+    {
+      "block": 66,
+      "eligible_min": 5915,
+      "fast_finishes": 7621,
+      "nonuniform_tiles": 12288,
+      "portions": 8276,
+      "refill_min": 6076,
+      "rows": 900000,
+      "scalar_rows": 196608
+    },
+    {
+      "block": 67,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 20,
+      "refill_min": 0,
+      "rows": 40,
+      "scalar_rows": 40
+    },
+    {
+      "block": 68,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 5,
+      "refill_min": 0,
+      "rows": 8,
+      "scalar_rows": 8
+    },
+    {
+      "block": 69,
+      "eligible_min": 4744,
+      "fast_finishes": 7305,
+      "nonuniform_tiles": 10604,
+      "portions": 7927,
+      "refill_min": 4911,
+      "rows": 900000,
+      "scalar_rows": 169664
+    },
+    {
+      "block": 70,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 7,
+      "refill_min": 0,
+      "rows": 12,
+      "scalar_rows": 12
+    },
+    {
+      "block": 71,
+      "eligible_min": 4499,
+      "fast_finishes": 7201,
+      "nonuniform_tiles": 10174,
+      "portions": 7801,
+      "refill_min": 4668,
+      "rows": 900000,
+      "scalar_rows": 162784
+    },
+    {
+      "block": 72,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 9,
+      "refill_min": 0,
+      "rows": 10,
+      "scalar_rows": 10
+    },
+    {
+      "block": 73,
+      "eligible_min": 4178,
+      "fast_finishes": 7106,
+      "nonuniform_tiles": 9837,
+      "portions": 7688,
+      "refill_min": 4344,
+      "rows": 900000,
+      "scalar_rows": 157392
+    },
+    {
+      "block": 74,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 20,
+      "refill_min": 0,
+      "rows": 34,
+      "scalar_rows": 34
+    },
+    {
+      "block": 75,
+      "eligible_min": 4431,
+      "fast_finishes": 7096,
+      "nonuniform_tiles": 10031,
+      "portions": 7682,
+      "refill_min": 4597,
+      "rows": 900000,
+      "scalar_rows": 160496
+    },
+    {
+      "block": 76,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 2,
+      "refill_min": 0,
+      "rows": 2,
+      "scalar_rows": 2
+    },
+    {
+      "block": 77,
+      "eligible_min": 4513,
+      "fast_finishes": 7242,
+      "nonuniform_tiles": 10166,
+      "portions": 7820,
+      "refill_min": 4672,
+      "rows": 900000,
+      "scalar_rows": 162656
+    },
+    {
+      "block": 78,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 14,
+      "scalar_rows": 14
+    },
+    {
+      "block": 79,
+      "eligible_min": 4643,
+      "fast_finishes": 7423,
+      "nonuniform_tiles": 10511,
+      "portions": 8010,
+      "refill_min": 4805,
+      "rows": 900000,
+      "scalar_rows": 168176
+    },
+    {
+      "block": 80,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 14,
+      "refill_min": 0,
+      "rows": 23,
+      "scalar_rows": 23
+    },
+    {
+      "block": 81,
+      "eligible_min": 4610,
+      "fast_finishes": 7260,
+      "nonuniform_tiles": 10440,
+      "portions": 7864,
+      "refill_min": 4777,
+      "rows": 900000,
+      "scalar_rows": 167040
+    },
+    {
+      "block": 82,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 18,
+      "refill_min": 0,
+      "rows": 21,
+      "scalar_rows": 21
+    },
+    {
+      "block": 83,
+      "eligible_min": 4350,
+      "fast_finishes": 7140,
+      "nonuniform_tiles": 9966,
+      "portions": 7721,
+      "refill_min": 4512,
+      "rows": 900000,
+      "scalar_rows": 159456
+    },
+    {
+      "block": 84,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 15,
+      "scalar_rows": 15
+    },
+    {
+      "block": 85,
+      "eligible_min": 4262,
+      "fast_finishes": 7106,
+      "nonuniform_tiles": 9869,
+      "portions": 7683,
+      "refill_min": 4426,
+      "rows": 900000,
+      "scalar_rows": 157904
+    },
+    {
+      "block": 86,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 4,
+      "refill_min": 0,
+      "rows": 5,
+      "scalar_rows": 5
+    },
+    {
+      "block": 87,
+      "eligible_min": 4659,
+      "fast_finishes": 7493,
+      "nonuniform_tiles": 10578,
+      "portions": 8092,
+      "refill_min": 4822,
+      "rows": 900000,
+      "scalar_rows": 169248
+    },
+    {
+      "block": 88,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 9,
+      "refill_min": 0,
+      "rows": 12,
+      "scalar_rows": 12
+    },
+    {
+      "block": 89,
+      "eligible_min": 4284,
+      "fast_finishes": 7144,
+      "nonuniform_tiles": 9853,
+      "portions": 7728,
+      "refill_min": 4452,
+      "rows": 900000,
+      "scalar_rows": 157648
+    },
+    {
+      "block": 90,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 6,
+      "refill_min": 0,
+      "rows": 8,
+      "scalar_rows": 8
+    },
+    {
+      "block": 91,
+      "eligible_min": 4538,
+      "fast_finishes": 7271,
+      "nonuniform_tiles": 10194,
+      "portions": 7860,
+      "refill_min": 4694,
+      "rows": 900000,
+      "scalar_rows": 163104
+    },
+    {
+      "block": 92,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 16,
+      "refill_min": 0,
+      "rows": 23,
+      "scalar_rows": 23
+    },
+    {
+      "block": 93,
+      "eligible_min": 4465,
+      "fast_finishes": 7255,
+      "nonuniform_tiles": 10124,
+      "portions": 7844,
+      "refill_min": 4628,
+      "rows": 900000,
+      "scalar_rows": 161984
+    },
+    {
+      "block": 94,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 9,
+      "refill_min": 0,
+      "rows": 12,
+      "scalar_rows": 12
+    },
+    {
+      "block": 95,
+      "eligible_min": 4654,
+      "fast_finishes": 7444,
+      "nonuniform_tiles": 10520,
+      "portions": 8050,
+      "refill_min": 4818,
+      "rows": 900000,
+      "scalar_rows": 168320
+    },
+    {
+      "block": 96,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 19,
+      "refill_min": 0,
+      "rows": 42,
+      "scalar_rows": 42
+    },
+    {
+      "block": 97,
+      "eligible_min": 5035,
+      "fast_finishes": 7822,
+      "nonuniform_tiles": 11187,
+      "portions": 8433,
+      "refill_min": 5195,
+      "rows": 900000,
+      "scalar_rows": 178992
+    },
+    {
+      "block": 98,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 19,
+      "refill_min": 0,
+      "rows": 20,
+      "scalar_rows": 20
+    },
+    {
+      "block": 99,
+      "eligible_min": 5104,
+      "fast_finishes": 7474,
+      "nonuniform_tiles": 11045,
+      "portions": 8078,
+      "refill_min": 5268,
+      "rows": 900000,
+      "scalar_rows": 176720
+    },
+    {
+      "block": 100,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 12,
+      "refill_min": 0,
+      "rows": 22,
+      "scalar_rows": 22
+    },
+    {
+      "block": 101,
+      "eligible_min": 4852,
+      "fast_finishes": 7745,
+      "nonuniform_tiles": 10905,
+      "portions": 8372,
+      "refill_min": 5023,
+      "rows": 900000,
+      "scalar_rows": 174480
+    },
+    {
+      "block": 102,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 16,
+      "scalar_rows": 16
+    },
+    {
+      "block": 103,
+      "eligible_min": 4934,
+      "fast_finishes": 7745,
+      "nonuniform_tiles": 10969,
+      "portions": 8357,
+      "refill_min": 5100,
+      "rows": 900000,
+      "scalar_rows": 175504
+    },
+    {
+      "block": 104,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 6,
+      "refill_min": 0,
+      "rows": 9,
+      "scalar_rows": 9
+    },
+    {
+      "block": 105,
+      "eligible_min": 5517,
+      "fast_finishes": 8236,
+      "nonuniform_tiles": 11969,
+      "portions": 8865,
+      "refill_min": 5684,
+      "rows": 900000,
+      "scalar_rows": 191504
+    },
+    {
+      "block": 106,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 13,
+      "scalar_rows": 13
+    },
+    {
+      "block": 107,
+      "eligible_min": 4923,
+      "fast_finishes": 7974,
+      "nonuniform_tiles": 11115,
+      "portions": 8601,
+      "refill_min": 5085,
+      "rows": 900000,
+      "scalar_rows": 177840
+    },
+    {
+      "block": 108,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 2,
+      "refill_min": 0,
+      "rows": 3,
+      "scalar_rows": 3
+    },
+    {
+      "block": 109,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 19,
+      "portions": 53,
+      "refill_min": 0,
+      "rows": 307,
+      "scalar_rows": 307
+    },
+    {
+      "block": 110,
+      "eligible_min": 3056,
+      "fast_finishes": 4393,
+      "nonuniform_tiles": 6696,
+      "portions": 4947,
+      "refill_min": 3217,
+      "rows": 900000,
+      "scalar_rows": 107136
+    },
+    {
+      "block": 111,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 13,
+      "refill_min": 0,
+      "rows": 17,
+      "scalar_rows": 17
+    },
+    {
+      "block": 112,
+      "eligible_min": 3845,
+      "fast_finishes": 5932,
+      "nonuniform_tiles": 8754,
+      "portions": 6547,
+      "refill_min": 4009,
+      "rows": 900000,
+      "scalar_rows": 140064
+    },
+    {
+      "block": 113,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 4,
+      "refill_min": 0,
+      "rows": 4,
+      "scalar_rows": 4
+    },
+    {
+      "block": 114,
+      "eligible_min": 4092,
+      "fast_finishes": 6388,
+      "nonuniform_tiles": 9202,
+      "portions": 7003,
+      "refill_min": 4252,
+      "rows": 900000,
+      "scalar_rows": 147232
+    },
+    {
+      "block": 115,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 9,
+      "portions": 40,
+      "refill_min": 0,
+      "rows": 154,
+      "scalar_rows": 154
+    },
+    {
+      "block": 116,
+      "eligible_min": 4349,
+      "fast_finishes": 6867,
+      "nonuniform_tiles": 9886,
+      "portions": 7492,
+      "refill_min": 4513,
+      "rows": 900000,
+      "scalar_rows": 158176
+    },
+    {
+      "block": 117,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 14,
+      "refill_min": 0,
+      "rows": 24,
+      "scalar_rows": 24
+    },
+    {
+      "block": 118,
+      "eligible_min": 3776,
+      "fast_finishes": 5748,
+      "nonuniform_tiles": 8329,
+      "portions": 6340,
+      "refill_min": 3938,
+      "rows": 900000,
+      "scalar_rows": 133264
+    },
+    {
+      "block": 119,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 6,
+      "refill_min": 0,
+      "rows": 6,
+      "scalar_rows": 6
+    },
+    {
+      "block": 120,
+      "eligible_min": 3714,
+      "fast_finishes": 5680,
+      "nonuniform_tiles": 8228,
+      "portions": 6279,
+      "refill_min": 3873,
+      "rows": 900000,
+      "scalar_rows": 131648
+    },
+    {
+      "block": 121,
+      "eligible_min": 0,
+      "fast_finishes": 2,
+      "nonuniform_tiles": 13,
+      "portions": 51,
+      "refill_min": 0,
+      "rows": 213,
+      "scalar_rows": 213
+    },
+    {
+      "block": 122,
+      "eligible_min": 4094,
+      "fast_finishes": 6564,
+      "nonuniform_tiles": 9460,
+      "portions": 7188,
+      "refill_min": 4255,
+      "rows": 900000,
+      "scalar_rows": 151360
+    },
+    {
+      "block": 123,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 23,
+      "refill_min": 0,
+      "rows": 51,
+      "scalar_rows": 51
+    },
+    {
+      "block": 124,
+      "eligible_min": 3944,
+      "fast_finishes": 6120,
+      "nonuniform_tiles": 8842,
+      "portions": 6727,
+      "refill_min": 4105,
+      "rows": 900000,
+      "scalar_rows": 141472
+    },
+    {
+      "block": 125,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 16,
+      "refill_min": 0,
+      "rows": 32,
+      "scalar_rows": 32
+    },
+    {
+      "block": 126,
+      "eligible_min": 4321,
+      "fast_finishes": 6836,
+      "nonuniform_tiles": 9831,
+      "portions": 7464,
+      "refill_min": 4487,
+      "rows": 900000,
+      "scalar_rows": 157296
+    },
+    {
+      "block": 127,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 8,
+      "refill_min": 0,
+      "rows": 12,
+      "scalar_rows": 12
+    },
+    {
+      "block": 128,
+      "eligible_min": 4399,
+      "fast_finishes": 6739,
+      "nonuniform_tiles": 9830,
+      "portions": 7362,
+      "refill_min": 4563,
+      "rows": 900000,
+      "scalar_rows": 157280
+    },
+    {
+      "block": 129,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 14,
+      "scalar_rows": 14
+    },
+    {
+      "block": 130,
+      "eligible_min": 4002,
+      "fast_finishes": 6122,
+      "nonuniform_tiles": 8918,
+      "portions": 6735,
+      "refill_min": 4164,
+      "rows": 900000,
+      "scalar_rows": 142688
+    },
+    {
+      "block": 131,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 13,
+      "refill_min": 0,
+      "rows": 23,
+      "scalar_rows": 23
+    },
+    {
+      "block": 132,
+      "eligible_min": 4335,
+      "fast_finishes": 6739,
+      "nonuniform_tiles": 9670,
+      "portions": 7358,
+      "refill_min": 4494,
+      "rows": 900000,
+      "scalar_rows": 154720
+    },
+    {
+      "block": 133,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 22,
+      "refill_min": 0,
+      "rows": 38,
+      "scalar_rows": 38
+    },
+    {
+      "block": 134,
+      "eligible_min": 4094,
+      "fast_finishes": 6547,
+      "nonuniform_tiles": 9314,
+      "portions": 7175,
+      "refill_min": 4261,
+      "rows": 900000,
+      "scalar_rows": 149024
+    },
+    {
+      "block": 135,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 6,
+      "refill_min": 0,
+      "rows": 7,
+      "scalar_rows": 7
+    },
+    {
+      "block": 136,
+      "eligible_min": 4041,
+      "fast_finishes": 6292,
+      "nonuniform_tiles": 8950,
+      "portions": 6896,
+      "refill_min": 4198,
+      "rows": 900000,
+      "scalar_rows": 143200
+    },
+    {
+      "block": 137,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 16,
+      "refill_min": 0,
+      "rows": 32,
+      "scalar_rows": 32
+    },
+    {
+      "block": 138,
+      "eligible_min": 3909,
+      "fast_finishes": 6188,
+      "nonuniform_tiles": 8959,
+      "portions": 6798,
+      "refill_min": 4070,
+      "rows": 900000,
+      "scalar_rows": 143344
+    },
+    {
+      "block": 139,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 14,
+      "portions": 54,
+      "refill_min": 0,
+      "rows": 234,
+      "scalar_rows": 234
+    },
+    {
+      "block": 140,
+      "eligible_min": 4475,
+      "fast_finishes": 7066,
+      "nonuniform_tiles": 10161,
+      "portions": 7710,
+      "refill_min": 4637,
+      "rows": 900000,
+      "scalar_rows": 162576
+    },
+    {
+      "block": 141,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 28,
+      "refill_min": 0,
+      "rows": 56,
+      "scalar_rows": 56
+    },
+    {
+      "block": 142,
+      "eligible_min": 3894,
+      "fast_finishes": 6164,
+      "nonuniform_tiles": 8820,
+      "portions": 6768,
+      "refill_min": 4054,
+      "rows": 900000,
+      "scalar_rows": 141120
+    },
+    {
+      "block": 143,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 14,
+      "refill_min": 0,
+      "rows": 26,
+      "scalar_rows": 26
+    },
+    {
+      "block": 144,
+      "eligible_min": 4106,
+      "fast_finishes": 6483,
+      "nonuniform_tiles": 9376,
+      "portions": 7100,
+      "refill_min": 4268,
+      "rows": 900000,
+      "scalar_rows": 150016
+    },
+    {
+      "block": 145,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 11,
+      "portions": 41,
+      "refill_min": 0,
+      "rows": 177,
+      "scalar_rows": 177
+    },
+    {
+      "block": 146,
+      "eligible_min": 3906,
+      "fast_finishes": 6275,
+      "nonuniform_tiles": 8944,
+      "portions": 6897,
+      "refill_min": 4071,
+      "rows": 900000,
+      "scalar_rows": 143104
+    },
+    {
+      "block": 147,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 16,
+      "refill_min": 0,
+      "rows": 21,
+      "scalar_rows": 21
+    },
+    {
+      "block": 148,
+      "eligible_min": 4240,
+      "fast_finishes": 6648,
+      "nonuniform_tiles": 9559,
+      "portions": 7276,
+      "refill_min": 4407,
+      "rows": 900000,
+      "scalar_rows": 152944
+    },
+    {
+      "block": 149,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 7,
+      "portions": 36,
+      "refill_min": 0,
+      "rows": 124,
+      "scalar_rows": 124
+    },
+    {
+      "block": 150,
+      "eligible_min": 3676,
+      "fast_finishes": 5662,
+      "nonuniform_tiles": 8343,
+      "portions": 6275,
+      "refill_min": 3837,
+      "rows": 900000,
+      "scalar_rows": 133488
+    },
+    {
+      "block": 151,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 9,
+      "refill_min": 0,
+      "rows": 11,
+      "scalar_rows": 11
+    },
+    {
+      "block": 152,
+      "eligible_min": 3722,
+      "fast_finishes": 5826,
+      "nonuniform_tiles": 8460,
+      "portions": 6427,
+      "refill_min": 3882,
+      "rows": 900000,
+      "scalar_rows": 135360
+    },
+    {
+      "block": 153,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 26,
+      "refill_min": 0,
+      "rows": 56,
+      "scalar_rows": 56
+    },
+    {
+      "block": 154,
+      "eligible_min": 4202,
+      "fast_finishes": 6667,
+      "nonuniform_tiles": 9654,
+      "portions": 7300,
+      "refill_min": 4362,
+      "rows": 900000,
+      "scalar_rows": 154464
+    },
+    {
+      "block": 155,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 17,
+      "refill_min": 0,
+      "rows": 40,
+      "scalar_rows": 40
+    },
+    {
+      "block": 156,
+      "eligible_min": 4530,
+      "fast_finishes": 6041,
+      "nonuniform_tiles": 9693,
+      "portions": 6631,
+      "refill_min": 4690,
+      "rows": 900000,
+      "scalar_rows": 155088
+    },
+    {
+      "block": 157,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 18,
+      "refill_min": 0,
+      "rows": 44,
+      "scalar_rows": 44
+    },
+    {
+      "block": 158,
+      "eligible_min": 6544,
+      "fast_finishes": 8046,
+      "nonuniform_tiles": 13378,
+      "portions": 8731,
+      "refill_min": 6721,
+      "rows": 900000,
+      "scalar_rows": 214048
+    },
+    {
+      "block": 159,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 11,
+      "scalar_rows": 11
+    },
+    {
+      "block": 160,
+      "eligible_min": 7797,
+      "fast_finishes": 9956,
+      "nonuniform_tiles": 16120,
+      "portions": 10641,
+      "refill_min": 7972,
+      "rows": 899945,
+      "scalar_rows": 257929
+    },
+    {
+      "block": 161,
+      "eligible_min": 5714,
+      "fast_finishes": 7179,
+      "nonuniform_tiles": 11818,
+      "portions": 7854,
+      "refill_min": 5885,
+      "rows": 900000,
+      "scalar_rows": 189088
+    },
+    {
+      "block": 162,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 7,
+      "refill_min": 0,
+      "rows": 9,
+      "scalar_rows": 9
+    },
+    {
+      "block": 163,
+      "eligible_min": 3969,
+      "fast_finishes": 5021,
+      "nonuniform_tiles": 8354,
+      "portions": 5637,
+      "refill_min": 4119,
+      "rows": 900000,
+      "scalar_rows": 133664
+    },
+    {
+      "block": 164,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 16,
+      "scalar_rows": 16
+    },
+    {
+      "block": 165,
+      "eligible_min": 5859,
+      "fast_finishes": 7330,
+      "nonuniform_tiles": 12092,
+      "portions": 8010,
+      "refill_min": 6028,
+      "rows": 899971,
+      "scalar_rows": 193475
+    },
+    {
+      "block": 166,
+      "eligible_min": 6911,
+      "fast_finishes": 9476,
+      "nonuniform_tiles": 14728,
+      "portions": 10183,
+      "refill_min": 7087,
+      "rows": 899987,
+      "scalar_rows": 235651
+    },
+    {
+      "block": 167,
+      "eligible_min": 5343,
+      "fast_finishes": 6517,
+      "nonuniform_tiles": 10929,
+      "portions": 7131,
+      "refill_min": 5503,
+      "rows": 900000,
+      "scalar_rows": 174864
+    },
+    {
+      "block": 168,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 14,
+      "portions": 43,
+      "refill_min": 0,
+      "rows": 232,
+      "scalar_rows": 232
+    },
+    {
+      "block": 169,
+      "eligible_min": 5528,
+      "fast_finishes": 6683,
+      "nonuniform_tiles": 11287,
+      "portions": 7318,
+      "refill_min": 5695,
+      "rows": 900000,
+      "scalar_rows": 180592
+    },
+    {
+      "block": 170,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 6,
+      "portions": 27,
+      "refill_min": 0,
+      "rows": 96,
+      "scalar_rows": 96
+    },
+    {
+      "block": 171,
+      "eligible_min": 5590,
+      "fast_finishes": 6713,
+      "nonuniform_tiles": 11434,
+      "portions": 7356,
+      "refill_min": 5747,
+      "rows": 900000,
+      "scalar_rows": 182944
+    },
+    {
+      "block": 172,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 21,
+      "refill_min": 0,
+      "rows": 43,
+      "scalar_rows": 43
+    },
+    {
+      "block": 173,
+      "eligible_min": 6015,
+      "fast_finishes": 7523,
+      "nonuniform_tiles": 12428,
+      "portions": 8191,
+      "refill_min": 6177,
+      "rows": 900000,
+      "scalar_rows": 198848
+    },
+    {
+      "block": 174,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 17,
+      "refill_min": 0,
+      "rows": 60,
+      "scalar_rows": 60
+    },
+    {
+      "block": 175,
+      "eligible_min": 6724,
+      "fast_finishes": 9068,
+      "nonuniform_tiles": 14219,
+      "portions": 9765,
+      "refill_min": 6899,
+      "rows": 899975,
+      "scalar_rows": 227511
+    },
+    {
+      "block": 176,
+      "eligible_min": 4439,
+      "fast_finishes": 8274,
+      "nonuniform_tiles": 9603,
+      "portions": 8917,
+      "refill_min": 4603,
+      "rows": 900000,
+      "scalar_rows": 153648
+    },
+    {
+      "block": 177,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 2,
+      "refill_min": 0,
+      "rows": 2,
+      "scalar_rows": 2
+    },
+    {
+      "block": 178,
+      "eligible_min": 6189,
+      "fast_finishes": 8121,
+      "nonuniform_tiles": 12819,
+      "portions": 8775,
+      "refill_min": 6370,
+      "rows": 899962,
+      "scalar_rows": 205114
+    },
+    {
+      "block": 179,
+      "eligible_min": 5461,
+      "fast_finishes": 9273,
+      "nonuniform_tiles": 11588,
+      "portions": 9935,
+      "refill_min": 5632,
+      "rows": 900000,
+      "scalar_rows": 185408
+    },
+    {
+      "block": 180,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 12,
+      "refill_min": 0,
+      "rows": 14,
+      "scalar_rows": 14
+    },
+    {
+      "block": 181,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 13,
+      "scalar_rows": 13
+    },
+    {
+      "block": 182,
+      "eligible_min": 4811,
+      "fast_finishes": 7217,
+      "nonuniform_tiles": 10560,
+      "portions": 7819,
+      "refill_min": 4979,
+      "rows": 900000,
+      "scalar_rows": 168960
+    },
+    {
+      "block": 183,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 6,
+      "refill_min": 0,
+      "rows": 8,
+      "scalar_rows": 8
+    },
+    {
+      "block": 184,
+      "eligible_min": 4794,
+      "fast_finishes": 7319,
+      "nonuniform_tiles": 10630,
+      "portions": 7917,
+      "refill_min": 4958,
+      "rows": 900000,
+      "scalar_rows": 170080
+    },
+    {
+      "block": 185,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 8,
+      "refill_min": 0,
+      "rows": 10,
+      "scalar_rows": 10
+    },
+    {
+      "block": 186,
+      "eligible_min": 4902,
+      "fast_finishes": 7391,
+      "nonuniform_tiles": 10781,
+      "portions": 7997,
+      "refill_min": 5069,
+      "rows": 900000,
+      "scalar_rows": 172496
+    },
+    {
+      "block": 187,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 9,
+      "refill_min": 0,
+      "rows": 12,
+      "scalar_rows": 12
+    },
+    {
+      "block": 188,
+      "eligible_min": 4786,
+      "fast_finishes": 7229,
+      "nonuniform_tiles": 10589,
+      "portions": 7836,
+      "refill_min": 4951,
+      "rows": 900000,
+      "scalar_rows": 169424
+    },
+    {
+      "block": 189,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 14,
+      "refill_min": 0,
+      "rows": 36,
+      "scalar_rows": 36
+    },
+    {
+      "block": 190,
+      "eligible_min": 4765,
+      "fast_finishes": 7281,
+      "nonuniform_tiles": 10571,
+      "portions": 7889,
+      "refill_min": 4934,
+      "rows": 900000,
+      "scalar_rows": 169136
+    },
+    {
+      "block": 191,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 4,
+      "refill_min": 0,
+      "rows": 4,
+      "scalar_rows": 4
+    },
+    {
+      "block": 192,
+      "eligible_min": 4561,
+      "fast_finishes": 6689,
+      "nonuniform_tiles": 9899,
+      "portions": 7296,
+      "refill_min": 4723,
+      "rows": 900000,
+      "scalar_rows": 158384
+    },
+    {
+      "block": 193,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 12,
+      "scalar_rows": 12
+    },
+    {
+      "block": 194,
+      "eligible_min": 4516,
+      "fast_finishes": 6734,
+      "nonuniform_tiles": 9981,
+      "portions": 7327,
+      "refill_min": 4674,
+      "rows": 900000,
+      "scalar_rows": 159696
+    },
+    {
+      "block": 195,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 19,
+      "refill_min": 0,
+      "rows": 24,
+      "scalar_rows": 24
+    },
+    {
+      "block": 196,
+      "eligible_min": 4959,
+      "fast_finishes": 7428,
+      "nonuniform_tiles": 10875,
+      "portions": 8047,
+      "refill_min": 5121,
+      "rows": 900000,
+      "scalar_rows": 174000
+    },
+    {
+      "block": 197,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 4,
+      "portions": 30,
+      "refill_min": 0,
+      "rows": 66,
+      "scalar_rows": 66
+    },
+    {
+      "block": 198,
+      "eligible_min": 5038,
+      "fast_finishes": 7466,
+      "nonuniform_tiles": 11065,
+      "portions": 8079,
+      "refill_min": 5201,
+      "rows": 900000,
+      "scalar_rows": 177040
+    },
+    {
+      "block": 199,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 20,
+      "refill_min": 0,
+      "rows": 41,
+      "scalar_rows": 41
+    },
+    {
+      "block": 200,
+      "eligible_min": 4906,
+      "fast_finishes": 7199,
+      "nonuniform_tiles": 10692,
+      "portions": 7810,
+      "refill_min": 5073,
+      "rows": 900000,
+      "scalar_rows": 171072
+    },
+    {
+      "block": 201,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 6,
+      "portions": 29,
+      "refill_min": 0,
+      "rows": 102,
+      "scalar_rows": 102
+    },
+    {
+      "block": 202,
+      "eligible_min": 4910,
+      "fast_finishes": 7422,
+      "nonuniform_tiles": 10846,
+      "portions": 8041,
+      "refill_min": 5077,
+      "rows": 900000,
+      "scalar_rows": 173536
+    },
+    {
+      "block": 203,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 8,
+      "refill_min": 0,
+      "rows": 9,
+      "scalar_rows": 9
+    },
+    {
+      "block": 204,
+      "eligible_min": 4372,
+      "fast_finishes": 7056,
+      "nonuniform_tiles": 9964,
+      "portions": 7668,
+      "refill_min": 4542,
+      "rows": 900000,
+      "scalar_rows": 159424
+    },
+    {
+      "block": 205,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 12,
+      "refill_min": 0,
+      "rows": 17,
+      "scalar_rows": 17
+    },
+    {
+      "block": 206,
+      "eligible_min": 4681,
+      "fast_finishes": 6607,
+      "nonuniform_tiles": 9994,
+      "portions": 7212,
+      "refill_min": 4843,
+      "rows": 900000,
+      "scalar_rows": 159904
+    },
+    {
+      "block": 207,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 15,
+      "refill_min": 0,
+      "rows": 24,
+      "scalar_rows": 24
+    },
+    {
+      "block": 208,
+      "eligible_min": 4694,
+      "fast_finishes": 6673,
+      "nonuniform_tiles": 10060,
+      "portions": 7270,
+      "refill_min": 4851,
+      "rows": 900000,
+      "scalar_rows": 160960
+    },
+    {
+      "block": 209,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 24,
+      "refill_min": 0,
+      "rows": 35,
+      "scalar_rows": 35
+    },
+    {
+      "block": 210,
+      "eligible_min": 4482,
+      "fast_finishes": 6518,
+      "nonuniform_tiles": 9771,
+      "portions": 7108,
+      "refill_min": 4640,
+      "rows": 900000,
+      "scalar_rows": 156336
+    },
+    {
+      "block": 211,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 7,
+      "refill_min": 0,
+      "rows": 8,
+      "scalar_rows": 8
+    },
+    {
+      "block": 212,
+      "eligible_min": 4575,
+      "fast_finishes": 6756,
+      "nonuniform_tiles": 9982,
+      "portions": 7370,
+      "refill_min": 4737,
+      "rows": 900000,
+      "scalar_rows": 159712
+    },
+    {
+      "block": 213,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 20,
+      "scalar_rows": 20
+    },
+    {
+      "block": 214,
+      "eligible_min": 4942,
+      "fast_finishes": 7066,
+      "nonuniform_tiles": 10622,
+      "portions": 7669,
+      "refill_min": 5104,
+      "rows": 900000,
+      "scalar_rows": 169952
+    },
+    {
+      "block": 215,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 17,
+      "scalar_rows": 17
+    },
+    {
+      "block": 216,
+      "eligible_min": 4742,
+      "fast_finishes": 7304,
+      "nonuniform_tiles": 10567,
+      "portions": 7905,
+      "refill_min": 4896,
+      "rows": 900000,
+      "scalar_rows": 169072
+    },
+    {
+      "block": 217,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 9,
+      "refill_min": 0,
+      "rows": 15,
+      "scalar_rows": 15
+    },
+    {
+      "block": 218,
+      "eligible_min": 5073,
+      "fast_finishes": 7326,
+      "nonuniform_tiles": 11010,
+      "portions": 7917,
+      "refill_min": 5237,
+      "rows": 900000,
+      "scalar_rows": 176160
+    },
+    {
+      "block": 219,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 18,
+      "refill_min": 0,
+      "rows": 44,
+      "scalar_rows": 44
+    },
+    {
+      "block": 220,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 4,
+      "portions": 34,
+      "refill_min": 0,
+      "rows": 79,
+      "scalar_rows": 79
+    },
+    {
+      "block": 221,
+      "eligible_min": 4420,
+      "fast_finishes": 6885,
+      "nonuniform_tiles": 9945,
+      "portions": 7504,
+      "refill_min": 4576,
+      "rows": 900000,
+      "scalar_rows": 159120
+    },
+    {
+      "block": 222,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 4,
+      "portions": 26,
+      "refill_min": 0,
+      "rows": 69,
+      "scalar_rows": 69
+    },
+    {
+      "block": 223,
+      "eligible_min": 4244,
+      "fast_finishes": 6289,
+      "nonuniform_tiles": 9438,
+      "portions": 6905,
+      "refill_min": 4405,
+      "rows": 900000,
+      "scalar_rows": 151008
+    },
+    {
+      "block": 224,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 13,
+      "refill_min": 0,
+      "rows": 18,
+      "scalar_rows": 18
+    },
+    {
+      "block": 225,
+      "eligible_min": 4196,
+      "fast_finishes": 6527,
+      "nonuniform_tiles": 9476,
+      "portions": 7137,
+      "refill_min": 4361,
+      "rows": 900000,
+      "scalar_rows": 151616
+    },
+    {
+      "block": 226,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 23,
+      "refill_min": 0,
+      "rows": 49,
+      "scalar_rows": 49
+    },
+    {
+      "block": 227,
+      "eligible_min": 4047,
+      "fast_finishes": 6024,
+      "nonuniform_tiles": 8926,
+      "portions": 6630,
+      "refill_min": 4210,
+      "rows": 900000,
+      "scalar_rows": 142816
+    },
+    {
+      "block": 228,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 18,
+      "refill_min": 0,
+      "rows": 36,
+      "scalar_rows": 36
+    },
+    {
+      "block": 229,
+      "eligible_min": 4150,
+      "fast_finishes": 6382,
+      "nonuniform_tiles": 9213,
+      "portions": 6995,
+      "refill_min": 4313,
+      "rows": 900000,
+      "scalar_rows": 147408
+    },
+    {
+      "block": 230,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 7,
+      "portions": 32,
+      "refill_min": 0,
+      "rows": 121,
+      "scalar_rows": 121
+    },
+    {
+      "block": 231,
+      "eligible_min": 4226,
+      "fast_finishes": 6755,
+      "nonuniform_tiles": 9520,
+      "portions": 7371,
+      "refill_min": 4389,
+      "rows": 900000,
+      "scalar_rows": 152320
+    },
+    {
+      "block": 232,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 5,
+      "refill_min": 0,
+      "rows": 7,
+      "scalar_rows": 7
+    },
+    {
+      "block": 233,
+      "eligible_min": 3915,
+      "fast_finishes": 6649,
+      "nonuniform_tiles": 9154,
+      "portions": 7263,
+      "refill_min": 4076,
+      "rows": 899977,
+      "scalar_rows": 146473
+    },
+    {
+      "block": 234,
+      "eligible_min": 4148,
+      "fast_finishes": 6763,
+      "nonuniform_tiles": 9569,
+      "portions": 7384,
+      "refill_min": 4308,
+      "rows": 900000,
+      "scalar_rows": 153104
+    },
+    {
+      "block": 235,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 11,
+      "scalar_rows": 11
+    },
+    {
+      "block": 236,
+      "eligible_min": 3844,
+      "fast_finishes": 6148,
+      "nonuniform_tiles": 8768,
+      "portions": 6754,
+      "refill_min": 4004,
+      "rows": 900000,
+      "scalar_rows": 140288
+    },
+    {
+      "block": 237,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 6,
+      "portions": 39,
+      "refill_min": 0,
+      "rows": 106,
+      "scalar_rows": 106
+    },
+    {
+      "block": 238,
+      "eligible_min": 4041,
+      "fast_finishes": 6379,
+      "nonuniform_tiles": 9092,
+      "portions": 6983,
+      "refill_min": 4197,
+      "rows": 900000,
+      "scalar_rows": 145472
+    },
+    {
+      "block": 239,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 7,
+      "refill_min": 0,
+      "rows": 10,
+      "scalar_rows": 10
+    },
+    {
+      "block": 240,
+      "eligible_min": 4017,
+      "fast_finishes": 6784,
+      "nonuniform_tiles": 9425,
+      "portions": 7394,
+      "refill_min": 4183,
+      "rows": 900000,
+      "scalar_rows": 150800
+    },
+    {
+      "block": 241,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 20,
+      "refill_min": 0,
+      "rows": 44,
+      "scalar_rows": 44
+    },
+    {
+      "block": 242,
+      "eligible_min": 4180,
+      "fast_finishes": 6950,
+      "nonuniform_tiles": 9752,
+      "portions": 7565,
+      "refill_min": 4343,
+      "rows": 899954,
+      "scalar_rows": 156034
+    },
+    {
+      "block": 243,
+      "eligible_min": 4215,
+      "fast_finishes": 6650,
+      "nonuniform_tiles": 9571,
+      "portions": 7271,
+      "refill_min": 4381,
+      "rows": 900000,
+      "scalar_rows": 153136
+    },
+    {
+      "block": 244,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 4,
+      "portions": 33,
+      "refill_min": 0,
+      "rows": 73,
+      "scalar_rows": 73
+    },
+    {
+      "block": 245,
+      "eligible_min": 4042,
+      "fast_finishes": 7109,
+      "nonuniform_tiles": 9767,
+      "portions": 7735,
+      "refill_min": 4203,
+      "rows": 900000,
+      "scalar_rows": 156272
+    },
+    {
+      "block": 246,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 8,
+      "portions": 47,
+      "refill_min": 0,
+      "rows": 131,
+      "scalar_rows": 131
+    },
+    {
+      "block": 247,
+      "eligible_min": 3997,
+      "fast_finishes": 6473,
+      "nonuniform_tiles": 9062,
+      "portions": 7079,
+      "refill_min": 4158,
+      "rows": 900000,
+      "scalar_rows": 144992
+    },
+    {
+      "block": 248,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 20,
+      "refill_min": 0,
+      "rows": 44,
+      "scalar_rows": 44
+    },
+    {
+      "block": 249,
+      "eligible_min": 3990,
+      "fast_finishes": 6879,
+      "nonuniform_tiles": 9436,
+      "portions": 7501,
+      "refill_min": 4156,
+      "rows": 900000,
+      "scalar_rows": 150976
+    },
+    {
+      "block": 250,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 5,
+      "refill_min": 0,
+      "rows": 5,
+      "scalar_rows": 5
+    },
+    {
+      "block": 251,
+      "eligible_min": 4040,
+      "fast_finishes": 6356,
+      "nonuniform_tiles": 9238,
+      "portions": 6947,
+      "refill_min": 4194,
+      "rows": 900000,
+      "scalar_rows": 147808
+    },
+    {
+      "block": 252,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 18,
+      "refill_min": 0,
+      "rows": 45,
+      "scalar_rows": 45
+    },
+    {
+      "block": 253,
+      "eligible_min": 4353,
+      "fast_finishes": 6705,
+      "nonuniform_tiles": 9780,
+      "portions": 7316,
+      "refill_min": 4507,
+      "rows": 900000,
+      "scalar_rows": 156480
+    },
+    {
+      "block": 254,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 3,
+      "portions": 23,
+      "refill_min": 0,
+      "rows": 62,
+      "scalar_rows": 62
+    },
+    {
+      "block": 255,
+      "eligible_min": 3794,
+      "fast_finishes": 5688,
+      "nonuniform_tiles": 8393,
+      "portions": 6283,
+      "refill_min": 3959,
+      "rows": 900000,
+      "scalar_rows": 134288
+    },
+    {
+      "block": 256,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 17,
+      "refill_min": 0,
+      "rows": 22,
+      "scalar_rows": 22
+    },
+    {
+      "block": 257,
+      "eligible_min": 3918,
+      "fast_finishes": 6419,
+      "nonuniform_tiles": 8957,
+      "portions": 7031,
+      "refill_min": 4076,
+      "rows": 900000,
+      "scalar_rows": 143312
+    },
+    {
+      "block": 258,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 8,
+      "refill_min": 0,
+      "rows": 9,
+      "scalar_rows": 9
+    },
+    {
+      "block": 259,
+      "eligible_min": 4006,
+      "fast_finishes": 6787,
+      "nonuniform_tiles": 9331,
+      "portions": 7405,
+      "refill_min": 4167,
+      "rows": 900000,
+      "scalar_rows": 149296
+    },
+    {
+      "block": 260,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 22,
+      "refill_min": 0,
+      "rows": 54,
+      "scalar_rows": 54
+    },
+    {
+      "block": 261,
+      "eligible_min": 3926,
+      "fast_finishes": 6583,
+      "nonuniform_tiles": 9183,
+      "portions": 7198,
+      "refill_min": 4090,
+      "rows": 900000,
+      "scalar_rows": 146928
+    },
+    {
+      "block": 262,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 15,
+      "scalar_rows": 15
+    },
+    {
+      "block": 263,
+      "eligible_min": 3891,
+      "fast_finishes": 6011,
+      "nonuniform_tiles": 8530,
+      "portions": 6609,
+      "refill_min": 4051,
+      "rows": 900000,
+      "scalar_rows": 136480
+    },
+    {
+      "block": 264,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 6,
+      "refill_min": 0,
+      "rows": 6,
+      "scalar_rows": 6
+    },
+    {
+      "block": 265,
+      "eligible_min": 3877,
+      "fast_finishes": 5900,
+      "nonuniform_tiles": 8438,
+      "portions": 6506,
+      "refill_min": 4039,
+      "rows": 900000,
+      "scalar_rows": 135008
+    },
+    {
+      "block": 266,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 7,
+      "portions": 33,
+      "refill_min": 0,
+      "rows": 122,
+      "scalar_rows": 122
+    },
+    {
+      "block": 267,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 6,
+      "portions": 33,
+      "refill_min": 0,
+      "rows": 98,
+      "scalar_rows": 98
+    },
+    {
+      "block": 268,
+      "eligible_min": 7064,
+      "fast_finishes": 8901,
+      "nonuniform_tiles": 14557,
+      "portions": 9586,
+      "refill_min": 7235,
+      "rows": 899950,
+      "scalar_rows": 232926
+    },
+    {
+      "block": 269,
+      "eligible_min": 5522,
+      "fast_finishes": 7056,
+      "nonuniform_tiles": 11546,
+      "portions": 7695,
+      "refill_min": 5677,
+      "rows": 900000,
+      "scalar_rows": 184736
+    },
+    {
+      "block": 270,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 9,
+      "refill_min": 0,
+      "rows": 13,
+      "scalar_rows": 13
+    },
+    {
+      "block": 271,
+      "eligible_min": 4551,
+      "fast_finishes": 5577,
+      "nonuniform_tiles": 9465,
+      "portions": 6150,
+      "refill_min": 4698,
+      "rows": 900000,
+      "scalar_rows": 151440
+    },
+    {
+      "block": 272,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 15,
+      "scalar_rows": 15
+    },
+    {
+      "block": 273,
+      "eligible_min": 6519,
+      "fast_finishes": 9489,
+      "nonuniform_tiles": 14130,
+      "portions": 10167,
+      "refill_min": 6680,
+      "rows": 900000,
+      "scalar_rows": 226080
+    },
+    {
+      "block": 274,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 14,
+      "scalar_rows": 14
+    },
+    {
+      "block": 275,
+      "eligible_min": 7666,
+      "fast_finishes": 9222,
+      "nonuniform_tiles": 15470,
+      "portions": 9888,
+      "refill_min": 7834,
+      "rows": 900000,
+      "scalar_rows": 247520
+    },
+    {
+      "block": 276,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 13,
+      "refill_min": 0,
+      "rows": 23,
+      "scalar_rows": 23
+    },
+    {
+      "block": 277,
+      "eligible_min": 8106,
+      "fast_finishes": 9769,
+      "nonuniform_tiles": 16396,
+      "portions": 10472,
+      "refill_min": 8283,
+      "rows": 900000,
+      "scalar_rows": 262336
+    },
+    {
+      "block": 278,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 13,
+      "portions": 48,
+      "refill_min": 0,
+      "rows": 217,
+      "scalar_rows": 217
+    },
+    {
+      "block": 279,
+      "eligible_min": 7534,
+      "fast_finishes": 10954,
+      "nonuniform_tiles": 16279,
+      "portions": 11663,
+      "refill_min": 7709,
+      "rows": 899948,
+      "scalar_rows": 260476
+    },
+    {
+      "block": 280,
+      "eligible_min": 7393,
+      "fast_finishes": 10212,
+      "nonuniform_tiles": 15577,
+      "portions": 10894,
+      "refill_min": 7559,
+      "rows": 900000,
+      "scalar_rows": 249232
+    },
+    {
+      "block": 281,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 2,
+      "refill_min": 0,
+      "rows": 3,
+      "scalar_rows": 3
+    },
+    {
+      "block": 282,
+      "eligible_min": 6717,
+      "fast_finishes": 8874,
+      "nonuniform_tiles": 14010,
+      "portions": 9554,
+      "refill_min": 6895,
+      "rows": 900000,
+      "scalar_rows": 224160
+    },
+    {
+      "block": 283,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 5,
+      "portions": 24,
+      "refill_min": 0,
+      "rows": 85,
+      "scalar_rows": 85
+    },
+    {
+      "block": 284,
+      "eligible_min": 7433,
+      "fast_finishes": 11083,
+      "nonuniform_tiles": 16154,
+      "portions": 11778,
+      "refill_min": 7606,
+      "rows": 899991,
+      "scalar_rows": 258471
+    },
+    {
+      "block": 285,
+      "eligible_min": 6161,
+      "fast_finishes": 9003,
+      "nonuniform_tiles": 12605,
+      "portions": 9655,
+      "refill_min": 6315,
+      "rows": 900000,
+      "scalar_rows": 201680
+    },
+    {
+      "block": 286,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 14,
+      "scalar_rows": 14
+    },
+    {
+      "block": 287,
+      "eligible_min": 5886,
+      "fast_finishes": 8790,
+      "nonuniform_tiles": 13057,
+      "portions": 9474,
+      "refill_min": 6060,
+      "rows": 900000,
+      "scalar_rows": 208912
+    },
+    {
+      "block": 288,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 4,
+      "portions": 26,
+      "refill_min": 0,
+      "rows": 66,
+      "scalar_rows": 66
+    },
+    {
+      "block": 289,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 15,
+      "refill_min": 0,
+      "rows": 22,
+      "scalar_rows": 22
+    },
+    {
+      "block": 290,
+      "eligible_min": 3803,
+      "fast_finishes": 6846,
+      "nonuniform_tiles": 9087,
+      "portions": 7471,
+      "refill_min": 3970,
+      "rows": 900000,
+      "scalar_rows": 145392
+    },
+    {
+      "block": 291,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 25,
+      "refill_min": 0,
+      "rows": 59,
+      "scalar_rows": 59
+    },
+    {
+      "block": 292,
+      "eligible_min": 4087,
+      "fast_finishes": 7224,
+      "nonuniform_tiles": 9564,
+      "portions": 7842,
+      "refill_min": 4257,
+      "rows": 900000,
+      "scalar_rows": 153024
+    },
+    {
+      "block": 293,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 15,
+      "scalar_rows": 15
+    },
+    {
+      "block": 294,
+      "eligible_min": 3713,
+      "fast_finishes": 6743,
+      "nonuniform_tiles": 8933,
+      "portions": 7358,
+      "refill_min": 3880,
+      "rows": 900000,
+      "scalar_rows": 142928
+    },
+    {
+      "block": 295,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 25,
+      "refill_min": 0,
+      "rows": 63,
+      "scalar_rows": 63
+    },
+    {
+      "block": 296,
+      "eligible_min": 3937,
+      "fast_finishes": 6949,
+      "nonuniform_tiles": 9057,
+      "portions": 7558,
+      "refill_min": 4101,
+      "rows": 900000,
+      "scalar_rows": 144912
+    },
+    {
+      "block": 297,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 24,
+      "refill_min": 0,
+      "rows": 47,
+      "scalar_rows": 47
+    },
+    {
+      "block": 298,
+      "eligible_min": 3822,
+      "fast_finishes": 6922,
+      "nonuniform_tiles": 8983,
+      "portions": 7539,
+      "refill_min": 3983,
+      "rows": 900000,
+      "scalar_rows": 143728
+    },
+    {
+      "block": 299,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 25,
+      "refill_min": 0,
+      "rows": 57,
+      "scalar_rows": 57
+    },
+    {
+      "block": 300,
+      "eligible_min": 3915,
+      "fast_finishes": 6956,
+      "nonuniform_tiles": 8952,
+      "portions": 7556,
+      "refill_min": 4082,
+      "rows": 900000,
+      "scalar_rows": 143232
+    },
+    {
+      "block": 301,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 7,
+      "refill_min": 0,
+      "rows": 8,
+      "scalar_rows": 8
+    },
+    {
+      "block": 302,
+      "eligible_min": 3922,
+      "fast_finishes": 7083,
+      "nonuniform_tiles": 9266,
+      "portions": 7684,
+      "refill_min": 4072,
+      "rows": 900000,
+      "scalar_rows": 148256
+    },
+    {
+      "block": 303,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 13,
+      "scalar_rows": 13
+    },
+    {
+      "block": 304,
+      "eligible_min": 4217,
+      "fast_finishes": 7163,
+      "nonuniform_tiles": 9754,
+      "portions": 7776,
+      "refill_min": 4385,
+      "rows": 900000,
+      "scalar_rows": 156064
+    },
+    {
+      "block": 305,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 13,
+      "refill_min": 0,
+      "rows": 26,
+      "scalar_rows": 26
+    },
+    {
+      "block": 306,
+      "eligible_min": 4410,
+      "fast_finishes": 6550,
+      "nonuniform_tiles": 9655,
+      "portions": 7182,
+      "refill_min": 4572,
+      "rows": 900000,
+      "scalar_rows": 154480
+    },
+    {
+      "block": 307,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 4,
+      "refill_min": 0,
+      "rows": 6,
+      "scalar_rows": 6
+    },
+    {
+      "block": 308,
+      "eligible_min": 4432,
+      "fast_finishes": 6485,
+      "nonuniform_tiles": 9655,
+      "portions": 7130,
+      "refill_min": 4594,
+      "rows": 900000,
+      "scalar_rows": 154480
+    },
+    {
+      "block": 309,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 2,
+      "refill_min": 0,
+      "rows": 2,
+      "scalar_rows": 2
+    },
+    {
+      "block": 310,
+      "eligible_min": 4163,
+      "fast_finishes": 6477,
+      "nonuniform_tiles": 9396,
+      "portions": 7107,
+      "refill_min": 4326,
+      "rows": 900000,
+      "scalar_rows": 150336
+    },
+    {
+      "block": 311,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 7,
+      "refill_min": 0,
+      "rows": 8,
+      "scalar_rows": 8
+    },
+    {
+      "block": 312,
+      "eligible_min": 4187,
+      "fast_finishes": 6536,
+      "nonuniform_tiles": 9526,
+      "portions": 7165,
+      "refill_min": 4359,
+      "rows": 900000,
+      "scalar_rows": 152416
+    },
+    {
+      "block": 313,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 14,
+      "refill_min": 0,
+      "rows": 26,
+      "scalar_rows": 26
+    },
+    {
+      "block": 314,
+      "eligible_min": 4476,
+      "fast_finishes": 6779,
+      "nonuniform_tiles": 9872,
+      "portions": 7414,
+      "refill_min": 4644,
+      "rows": 900000,
+      "scalar_rows": 157952
+    },
+    {
+      "block": 315,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 7,
+      "refill_min": 0,
+      "rows": 8,
+      "scalar_rows": 8
+    },
+    {
+      "block": 316,
+      "eligible_min": 4343,
+      "fast_finishes": 6364,
+      "nonuniform_tiles": 9475,
+      "portions": 6993,
+      "refill_min": 4512,
+      "rows": 900000,
+      "scalar_rows": 151600
+    },
+    {
+      "block": 317,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 1,
+      "portions": 19,
+      "refill_min": 0,
+      "rows": 31,
+      "scalar_rows": 31
+    },
+    {
+      "block": 318,
+      "eligible_min": 4436,
+      "fast_finishes": 6676,
+      "nonuniform_tiles": 9740,
+      "portions": 7304,
+      "refill_min": 4602,
+      "rows": 900000,
+      "scalar_rows": 155840
+    },
+    {
+      "block": 319,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 16,
+      "refill_min": 0,
+      "rows": 28,
+      "scalar_rows": 28
+    },
+    {
+      "block": 320,
+      "eligible_min": 4398,
+      "fast_finishes": 6643,
+      "nonuniform_tiles": 9669,
+      "portions": 7278,
+      "refill_min": 4565,
+      "rows": 900000,
+      "scalar_rows": 154704
+    },
+    {
+      "block": 321,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 21,
+      "refill_min": 0,
+      "rows": 35,
+      "scalar_rows": 35
+    },
+    {
+      "block": 322,
+      "eligible_min": 4673,
+      "fast_finishes": 6817,
+      "nonuniform_tiles": 10100,
+      "portions": 7465,
+      "refill_min": 4836,
+      "rows": 900000,
+      "scalar_rows": 161600
+    },
+    {
+      "block": 323,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 22,
+      "refill_min": 0,
+      "rows": 44,
+      "scalar_rows": 44
+    },
+    {
+      "block": 324,
+      "eligible_min": 4206,
+      "fast_finishes": 6686,
+      "nonuniform_tiles": 9567,
+      "portions": 7305,
+      "refill_min": 4376,
+      "rows": 900000,
+      "scalar_rows": 153072
+    },
+    {
+      "block": 325,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 9,
+      "refill_min": 0,
+      "rows": 14,
+      "scalar_rows": 14
+    },
+    {
+      "block": 326,
+      "eligible_min": 4154,
+      "fast_finishes": 6331,
+      "nonuniform_tiles": 9221,
+      "portions": 6954,
+      "refill_min": 4323,
+      "rows": 900000,
+      "scalar_rows": 147536
+    },
+    {
+      "block": 327,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 4,
+      "refill_min": 0,
+      "rows": 4,
+      "scalar_rows": 4
+    },
+    {
+      "block": 328,
+      "eligible_min": 4266,
+      "fast_finishes": 6771,
+      "nonuniform_tiles": 9617,
+      "portions": 7409,
+      "refill_min": 4437,
+      "rows": 900000,
+      "scalar_rows": 153872
+    },
+    {
+      "block": 329,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 4,
+      "refill_min": 0,
+      "rows": 4,
+      "scalar_rows": 4
+    },
+    {
+      "block": 330,
+      "eligible_min": 4200,
+      "fast_finishes": 6607,
+      "nonuniform_tiles": 9534,
+      "portions": 7234,
+      "refill_min": 4370,
+      "rows": 900000,
+      "scalar_rows": 152544
+    },
+    {
+      "block": 331,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 12,
+      "refill_min": 0,
+      "rows": 18,
+      "scalar_rows": 18
+    },
+    {
+      "block": 332,
+      "eligible_min": 4336,
+      "fast_finishes": 6547,
+      "nonuniform_tiles": 9566,
+      "portions": 7169,
+      "refill_min": 4499,
+      "rows": 900000,
+      "scalar_rows": 153056
+    },
+    {
+      "block": 333,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 14,
+      "refill_min": 0,
+      "rows": 20,
+      "scalar_rows": 20
+    },
+    {
+      "block": 334,
+      "eligible_min": 4355,
+      "fast_finishes": 6480,
+      "nonuniform_tiles": 9520,
+      "portions": 7117,
+      "refill_min": 4525,
+      "rows": 900000,
+      "scalar_rows": 152320
+    },
+    {
+      "block": 335,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 7,
+      "refill_min": 0,
+      "rows": 8,
+      "scalar_rows": 8
+    },
+    {
+      "block": 336,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 28,
+      "refill_min": 0,
+      "rows": 53,
+      "scalar_rows": 53
+    },
+    {
+      "block": 337,
+      "eligible_min": 4046,
+      "fast_finishes": 7010,
+      "nonuniform_tiles": 9358,
+      "portions": 7641,
+      "refill_min": 4210,
+      "rows": 900000,
+      "scalar_rows": 149728
+    },
+    {
+      "block": 338,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 4,
+      "portions": 29,
+      "refill_min": 0,
+      "rows": 66,
+      "scalar_rows": 66
+    },
+    {
+      "block": 339,
+      "eligible_min": 3702,
+      "fast_finishes": 6521,
+      "nonuniform_tiles": 8876,
+      "portions": 7137,
+      "refill_min": 3866,
+      "rows": 900000,
+      "scalar_rows": 142016
+    },
+    {
+      "block": 340,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 6,
+      "portions": 36,
+      "refill_min": 0,
+      "rows": 103,
+      "scalar_rows": 103
+    },
+    {
+      "block": 341,
+      "eligible_min": 3740,
+      "fast_finishes": 6241,
+      "nonuniform_tiles": 8607,
+      "portions": 6846,
+      "refill_min": 3899,
+      "rows": 900000,
+      "scalar_rows": 137712
+    },
+    {
+      "block": 342,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 19,
+      "refill_min": 0,
+      "rows": 40,
+      "scalar_rows": 40
+    },
+    {
+      "block": 343,
+      "eligible_min": 3866,
+      "fast_finishes": 6331,
+      "nonuniform_tiles": 8879,
+      "portions": 6946,
+      "refill_min": 4028,
+      "rows": 900000,
+      "scalar_rows": 142064
+    },
+    {
+      "block": 344,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 2,
+      "refill_min": 0,
+      "rows": 2,
+      "scalar_rows": 2
+    },
+    {
+      "block": 345,
+      "eligible_min": 4079,
+      "fast_finishes": 6975,
+      "nonuniform_tiles": 9267,
+      "portions": 7596,
+      "refill_min": 4239,
+      "rows": 900000,
+      "scalar_rows": 148272
+    },
+    {
+      "block": 346,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 21,
+      "refill_min": 0,
+      "rows": 46,
+      "scalar_rows": 46
+    },
+    {
+      "block": 347,
+      "eligible_min": 4057,
+      "fast_finishes": 7165,
+      "nonuniform_tiles": 9666,
+      "portions": 7795,
+      "refill_min": 4217,
+      "rows": 900000,
+      "scalar_rows": 154656
+    },
+    {
+      "block": 348,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 19,
+      "refill_min": 0,
+      "rows": 43,
+      "scalar_rows": 43
+    },
+    {
+      "block": 349,
+      "eligible_min": 4109,
+      "fast_finishes": 6613,
+      "nonuniform_tiles": 9327,
+      "portions": 7222,
+      "refill_min": 4265,
+      "rows": 900000,
+      "scalar_rows": 149232
+    },
+    {
+      "block": 350,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 6,
+      "refill_min": 0,
+      "rows": 11,
+      "scalar_rows": 11
+    },
+    {
+      "block": 351,
+      "eligible_min": 3755,
+      "fast_finishes": 5647,
+      "nonuniform_tiles": 8388,
+      "portions": 6251,
+      "refill_min": 3910,
+      "rows": 900000,
+      "scalar_rows": 134208
+    },
+    {
+      "block": 352,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 18,
+      "refill_min": 0,
+      "rows": 37,
+      "scalar_rows": 37
+    },
+    {
+      "block": 353,
+      "eligible_min": 4121,
+      "fast_finishes": 6984,
+      "nonuniform_tiles": 9703,
+      "portions": 7597,
+      "refill_min": 4284,
+      "rows": 900000,
+      "scalar_rows": 155248
+    },
+    {
+      "block": 354,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 2,
+      "portions": 24,
+      "refill_min": 0,
+      "rows": 37,
+      "scalar_rows": 37
+    },
+    {
+      "block": 355,
+      "eligible_min": 4053,
+      "fast_finishes": 6581,
+      "nonuniform_tiles": 9347,
+      "portions": 7210,
+      "refill_min": 4222,
+      "rows": 900000,
+      "scalar_rows": 149552
+    },
+    {
+      "block": 356,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 19,
+      "refill_min": 0,
+      "rows": 52,
+      "scalar_rows": 52
+    },
+    {
+      "block": 357,
+      "eligible_min": 3822,
+      "fast_finishes": 6521,
+      "nonuniform_tiles": 8943,
+      "portions": 7136,
+      "refill_min": 3977,
+      "rows": 900000,
+      "scalar_rows": 143088
+    },
+    {
+      "block": 358,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 16,
+      "refill_min": 0,
+      "rows": 22,
+      "scalar_rows": 22
+    },
+    {
+      "block": 359,
+      "eligible_min": 3714,
+      "fast_finishes": 5416,
+      "nonuniform_tiles": 8138,
+      "portions": 6013,
+      "refill_min": 3869,
+      "rows": 900000,
+      "scalar_rows": 130208
+    },
+    {
+      "block": 360,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 8,
+      "refill_min": 0,
+      "rows": 12,
+      "scalar_rows": 12
+    },
+    {
+      "block": 361,
+      "eligible_min": 3686,
+      "fast_finishes": 6043,
+      "nonuniform_tiles": 8402,
+      "portions": 6651,
+      "refill_min": 3855,
+      "rows": 900000,
+      "scalar_rows": 134432
+    },
+    {
+      "block": 362,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 12,
+      "refill_min": 0,
+      "rows": 23,
+      "scalar_rows": 23
+    },
+    {
+      "block": 363,
+      "eligible_min": 4309,
+      "fast_finishes": 7084,
+      "nonuniform_tiles": 9958,
+      "portions": 7730,
+      "refill_min": 4483,
+      "rows": 899962,
+      "scalar_rows": 159338
+    },
+    {
+      "block": 364,
+      "eligible_min": 4282,
+      "fast_finishes": 6693,
+      "nonuniform_tiles": 9645,
+      "portions": 7317,
+      "refill_min": 4443,
+      "rows": 900000,
+      "scalar_rows": 154320
+    },
+    {
+      "block": 365,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 16,
+      "refill_min": 0,
+      "rows": 26,
+      "scalar_rows": 26
+    },
+    {
+      "block": 366,
+      "eligible_min": 4463,
+      "fast_finishes": 7036,
+      "nonuniform_tiles": 10065,
+      "portions": 7673,
+      "refill_min": 4627,
+      "rows": 899361,
+      "scalar_rows": 161041
+    },
+    {
+      "block": 367,
+      "eligible_min": 4693,
+      "fast_finishes": 7315,
+      "nonuniform_tiles": 10452,
+      "portions": 7946,
+      "refill_min": 4853,
+      "rows": 900000,
+      "scalar_rows": 167232
+    },
+    {
+      "block": 368,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 21,
+      "refill_min": 0,
+      "rows": 60,
+      "scalar_rows": 60
+    },
+    {
+      "block": 369,
+      "eligible_min": 3613,
+      "fast_finishes": 5277,
+      "nonuniform_tiles": 7958,
+      "portions": 5871,
+      "refill_min": 3775,
+      "rows": 900000,
+      "scalar_rows": 127328
+    },
+    {
+      "block": 370,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 30,
+      "refill_min": 0,
+      "rows": 55,
+      "scalar_rows": 55
+    },
+    {
+      "block": 371,
+      "eligible_min": 4155,
+      "fast_finishes": 6756,
+      "nonuniform_tiles": 9542,
+      "portions": 7370,
+      "refill_min": 4312,
+      "rows": 900000,
+      "scalar_rows": 152672
+    },
+    {
+      "block": 372,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 15,
+      "refill_min": 0,
+      "rows": 27,
+      "scalar_rows": 27
+    },
+    {
+      "block": 373,
+      "eligible_min": 4106,
+      "fast_finishes": 6306,
+      "nonuniform_tiles": 9214,
+      "portions": 6930,
+      "refill_min": 4263,
+      "rows": 900000,
+      "scalar_rows": 147424
+    },
+    {
+      "block": 374,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 8,
+      "portions": 37,
+      "refill_min": 0,
+      "rows": 142,
+      "scalar_rows": 142
+    },
+    {
+      "block": 375,
+      "eligible_min": 3618,
+      "fast_finishes": 5373,
+      "nonuniform_tiles": 7895,
+      "portions": 5980,
+      "refill_min": 3786,
+      "rows": 899951,
+      "scalar_rows": 126335
+    },
+    {
+      "block": 376,
+      "eligible_min": 4254,
+      "fast_finishes": 6580,
+      "nonuniform_tiles": 9552,
+      "portions": 7202,
+      "refill_min": 4414,
+      "rows": 900000,
+      "scalar_rows": 152832
+    },
+    {
+      "block": 377,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 4,
+      "portions": 24,
+      "refill_min": 0,
+      "rows": 65,
+      "scalar_rows": 65
+    },
+    {
+      "block": 378,
+      "eligible_min": 3973,
+      "fast_finishes": 5626,
+      "nonuniform_tiles": 8668,
+      "portions": 6229,
+      "refill_min": 4132,
+      "rows": 900000,
+      "scalar_rows": 138688
+    },
+    {
+      "block": 379,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 17,
+      "refill_min": 0,
+      "rows": 29,
+      "scalar_rows": 29
+    },
+    {
+      "block": 380,
+      "eligible_min": 4539,
+      "fast_finishes": 7650,
+      "nonuniform_tiles": 10720,
+      "portions": 8289,
+      "refill_min": 4700,
+      "rows": 900000,
+      "scalar_rows": 171520
+    },
+    {
+      "block": 381,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 23,
+      "refill_min": 0,
+      "rows": 58,
+      "scalar_rows": 58
+    },
+    {
+      "block": 382,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 3,
+      "refill_min": 0,
+      "rows": 3,
+      "scalar_rows": 3
+    },
+    {
+      "block": 383,
+      "eligible_min": 5607,
+      "fast_finishes": 8385,
+      "nonuniform_tiles": 11529,
+      "portions": 9051,
+      "refill_min": 5765,
+      "rows": 899952,
+      "scalar_rows": 184464
+    },
+    {
+      "block": 384,
+      "eligible_min": 5416,
+      "fast_finishes": 8234,
+      "nonuniform_tiles": 11329,
+      "portions": 8927,
+      "refill_min": 5586,
+      "rows": 900000,
+      "scalar_rows": 181264
+    },
+    {
+      "block": 385,
+      "eligible_min": 0,
+      "fast_finishes": 1,
+      "nonuniform_tiles": 0,
+      "portions": 1,
+      "refill_min": 0,
+      "rows": 1,
+      "scalar_rows": 1
+    },
+    {
+      "block": 386,
+      "eligible_min": 5528,
+      "fast_finishes": 8437,
+      "nonuniform_tiles": 11424,
+      "portions": 9079,
+      "refill_min": 5688,
+      "rows": 899935,
+      "scalar_rows": 182799
+    },
+    {
+      "block": 387,
+      "eligible_min": 5896,
+      "fast_finishes": 8733,
+      "nonuniform_tiles": 12119,
+      "portions": 9405,
+      "refill_min": 6058,
+      "rows": 899900,
+      "scalar_rows": 193916
+    },
+    {
+      "block": 388,
+      "eligible_min": 6219,
+      "fast_finishes": 9299,
+      "nonuniform_tiles": 13733,
+      "portions": 9989,
+      "refill_min": 6386,
+      "rows": 900000,
+      "scalar_rows": 219728
+    },
+    {
+      "block": 389,
+      "eligible_min": 6597,
+      "fast_finishes": 9155,
+      "nonuniform_tiles": 13840,
+      "portions": 9800,
+      "refill_min": 6767,
+      "rows": 900000,
+      "scalar_rows": 221440
+    },
+    {
+      "block": 390,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 15,
+      "refill_min": 0,
+      "rows": 28,
+      "scalar_rows": 28
+    },
+    {
+      "block": 391,
+      "eligible_min": 6772,
+      "fast_finishes": 9786,
+      "nonuniform_tiles": 14076,
+      "portions": 10483,
+      "refill_min": 6944,
+      "rows": 899951,
+      "scalar_rows": 225231
+    },
+    {
+      "block": 392,
+      "eligible_min": 6442,
+      "fast_finishes": 9456,
+      "nonuniform_tiles": 13294,
+      "portions": 10115,
+      "refill_min": 6608,
+      "rows": 899994,
+      "scalar_rows": 212714
+    },
+    {
+      "block": 393,
+      "eligible_min": 5824,
+      "fast_finishes": 8691,
+      "nonuniform_tiles": 11907,
+      "portions": 9365,
+      "refill_min": 5990,
+      "rows": 900000,
+      "scalar_rows": 190512
+    },
+    {
+      "block": 394,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 10,
+      "refill_min": 0,
+      "rows": 22,
+      "scalar_rows": 22
+    },
+    {
+      "block": 395,
+      "eligible_min": 6157,
+      "fast_finishes": 9289,
+      "nonuniform_tiles": 13465,
+      "portions": 9979,
+      "refill_min": 6333,
+      "rows": 899978,
+      "scalar_rows": 215450
+    },
+    {
+      "block": 396,
+      "eligible_min": 5804,
+      "fast_finishes": 8636,
+      "nonuniform_tiles": 12087,
+      "portions": 9315,
+      "refill_min": 5967,
+      "rows": 899995,
+      "scalar_rows": 193403
+    },
+    {
+      "block": 397,
+      "eligible_min": 6105,
+      "fast_finishes": 9070,
+      "nonuniform_tiles": 12732,
+      "portions": 9760,
+      "refill_min": 6267,
+      "rows": 900000,
+      "scalar_rows": 203712
+    },
+    {
+      "block": 398,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 15,
+      "refill_min": 0,
+      "rows": 29,
+      "scalar_rows": 29
+    },
+    {
+      "block": 399,
+      "eligible_min": 5769,
+      "fast_finishes": 8664,
+      "nonuniform_tiles": 11918,
+      "portions": 9346,
+      "refill_min": 5932,
+      "rows": 900000,
+      "scalar_rows": 190688
+    },
+    {
+      "block": 400,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 14,
+      "refill_min": 0,
+      "rows": 21,
+      "scalar_rows": 21
+    },
+    {
+      "block": 401,
+      "eligible_min": 4517,
+      "fast_finishes": 7764,
+      "nonuniform_tiles": 10581,
+      "portions": 8405,
+      "refill_min": 4688,
+      "rows": 899998,
+      "scalar_rows": 169310
+    },
+    {
+      "block": 402,
+      "eligible_min": 4278,
+      "fast_finishes": 7556,
+      "nonuniform_tiles": 10191,
+      "portions": 8190,
+      "refill_min": 4446,
+      "rows": 900000,
+      "scalar_rows": 163056
+    },
+    {
+      "block": 403,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 11,
+      "refill_min": 0,
+      "rows": 14,
+      "scalar_rows": 14
+    },
+    {
+      "block": 404,
+      "eligible_min": 4518,
+      "fast_finishes": 7606,
+      "nonuniform_tiles": 10384,
+      "portions": 8243,
+      "refill_min": 4689,
+      "rows": 900000,
+      "scalar_rows": 166144
+    },
+    {
+      "block": 405,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 5,
+      "refill_min": 0,
+      "rows": 5,
+      "scalar_rows": 5
+    },
+    {
+      "block": 406,
+      "eligible_min": 4901,
+      "fast_finishes": 8095,
+      "nonuniform_tiles": 11215,
+      "portions": 8764,
+      "refill_min": 5072,
+      "rows": 900000,
+      "scalar_rows": 179440
+    },
+    {
+      "block": 407,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 26,
+      "refill_min": 0,
+      "rows": 48,
+      "scalar_rows": 48
+    },
+    {
+      "block": 408,
+      "eligible_min": 4386,
+      "fast_finishes": 7862,
+      "nonuniform_tiles": 10524,
+      "portions": 8509,
+      "refill_min": 4562,
+      "rows": 899997,
+      "scalar_rows": 168397
+    },
+    {
+      "block": 409,
+      "eligible_min": 4563,
+      "fast_finishes": 7937,
+      "nonuniform_tiles": 10740,
+      "portions": 8595,
+      "refill_min": 4740,
+      "rows": 899988,
+      "scalar_rows": 171844
+    },
+    {
+      "block": 410,
+      "eligible_min": 4760,
+      "fast_finishes": 7560,
+      "nonuniform_tiles": 10568,
+      "portions": 8211,
+      "refill_min": 4927,
+      "rows": 900000,
+      "scalar_rows": 169088
+    },
+    {
+      "block": 411,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 15,
+      "portions": 45,
+      "refill_min": 0,
+      "rows": 244,
+      "scalar_rows": 244
+    },
+    {
+      "block": 412,
+      "eligible_min": 5133,
+      "fast_finishes": 7753,
+      "nonuniform_tiles": 11265,
+      "portions": 8417,
+      "refill_min": 5300,
+      "rows": 900000,
+      "scalar_rows": 180240
+    },
+    {
+      "block": 413,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 4,
+      "refill_min": 0,
+      "rows": 5,
+      "scalar_rows": 5
+    },
+    {
+      "block": 414,
+      "eligible_min": 4611,
+      "fast_finishes": 7172,
+      "nonuniform_tiles": 10362,
+      "portions": 7810,
+      "refill_min": 4770,
+      "rows": 900000,
+      "scalar_rows": 165792
+    },
+    {
+      "block": 415,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 3,
+      "portions": 26,
+      "refill_min": 0,
+      "rows": 55,
+      "scalar_rows": 55
+    },
+    {
+      "block": 416,
+      "eligible_min": 4648,
+      "fast_finishes": 7207,
+      "nonuniform_tiles": 10462,
+      "portions": 7851,
+      "refill_min": 4809,
+      "rows": 900000,
+      "scalar_rows": 167392
+    },
+    {
+      "block": 417,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 9,
+      "refill_min": 0,
+      "rows": 11,
+      "scalar_rows": 11
+    },
+    {
+      "block": 418,
+      "eligible_min": 4766,
+      "fast_finishes": 7405,
+      "nonuniform_tiles": 10684,
+      "portions": 8070,
+      "refill_min": 4941,
+      "rows": 899961,
+      "scalar_rows": 170953
+    },
+    {
+      "block": 419,
+      "eligible_min": 4475,
+      "fast_finishes": 6878,
+      "nonuniform_tiles": 9937,
+      "portions": 7511,
+      "refill_min": 4643,
+      "rows": 900000,
+      "scalar_rows": 158992
+    },
+    {
+      "block": 420,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 4,
+      "refill_min": 0,
+      "rows": 4,
+      "scalar_rows": 4
+    },
+    {
+      "block": 421,
+      "eligible_min": 5117,
+      "fast_finishes": 7916,
+      "nonuniform_tiles": 11302,
+      "portions": 8570,
+      "refill_min": 5292,
+      "rows": 899996,
+      "scalar_rows": 180844
+    },
+    {
+      "block": 422,
+      "eligible_min": 4369,
+      "fast_finishes": 7350,
+      "nonuniform_tiles": 10027,
+      "portions": 7974,
+      "refill_min": 4541,
+      "rows": 900000,
+      "scalar_rows": 160432
+    },
+    {
+      "block": 423,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 4,
+      "refill_min": 0,
+      "rows": 4,
+      "scalar_rows": 4
+    },
+    {
+      "block": 424,
+      "eligible_min": 4663,
+      "fast_finishes": 7046,
+      "nonuniform_tiles": 10377,
+      "portions": 7695,
+      "refill_min": 4836,
+      "rows": 899996,
+      "scalar_rows": 166044
+    },
+    {
+      "block": 425,
+      "eligible_min": 5193,
+      "fast_finishes": 7577,
+      "nonuniform_tiles": 10979,
+      "portions": 8246,
+      "refill_min": 5367,
+      "rows": 900000,
+      "scalar_rows": 175664
+    },
+    {
+      "block": 426,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 8,
+      "portions": 39,
+      "refill_min": 0,
+      "rows": 138,
+      "scalar_rows": 138
+    },
+    {
+      "block": 427,
+      "eligible_min": 4839,
+      "fast_finishes": 7904,
+      "nonuniform_tiles": 11095,
+      "portions": 8569,
+      "refill_min": 5008,
+      "rows": 900000,
+      "scalar_rows": 177520
+    },
+    {
+      "block": 428,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 1,
+      "portions": 14,
+      "refill_min": 0,
+      "rows": 19,
+      "scalar_rows": 19
+    },
+    {
+      "block": 429,
+      "eligible_min": 4794,
+      "fast_finishes": 7211,
+      "nonuniform_tiles": 10539,
+      "portions": 7858,
+      "refill_min": 4966,
+      "rows": 899994,
+      "scalar_rows": 168634
+    },
+    {
+      "block": 430,
+      "eligible_min": 4737,
+      "fast_finishes": 7207,
+      "nonuniform_tiles": 10442,
+      "portions": 7859,
+      "refill_min": 4909,
+      "rows": 900000,
+      "scalar_rows": 167072
+    },
+    {
+      "block": 431,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 5,
+      "refill_min": 0,
+      "rows": 5,
+      "scalar_rows": 5
+    },
+    {
+      "block": 432,
+      "eligible_min": 4667,
+      "fast_finishes": 7122,
+      "nonuniform_tiles": 10334,
+      "portions": 7768,
+      "refill_min": 4837,
+      "rows": 900000,
+      "scalar_rows": 165344
+    },
+    {
+      "block": 433,
+      "eligible_min": 0,
+      "fast_finishes": 0,
+      "nonuniform_tiles": 0,
+      "portions": 8,
+      "refill_min": 0,
+      "rows": 10,
+      "scalar_rows": 10
+    }
+  ],
+  "refill_conditional_net_before_unbounded_H": 20315241,
+  "refill_eligible_min": 1084913,
+  "refill_eligible_min_large_blocks": 1084913,
+  "refill_eligible_positive_blocks": 230,
+  "refill_transient_store_bytes_before_shifted_costs": 26037912,
+  "rows": 207006515,
+  "scanner_gross_interval": [
+    88622080,
+    88632430
+  ],
+  "scope": "structural replay and descriptive exposure; capture remains INVALID; no timing inference",
+  "tail_rows": 1875,
+  "uniform_tiles": 10544477
+}

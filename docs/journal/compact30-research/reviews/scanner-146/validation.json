@@ -1,0 +1,12 @@
+{
+  "result": "PASS",
+  "method": "reproduce.py --repo CHECKOUT --evidence-dir SCRATCH_EVIDENCE --output-dir SCRATCH_RESULTS",
+  "evidence_sha256": "aa4f295b5ec152494e999eacf381a92602de329b03e2f76aecd9d6b8c2484753",
+  "all_pinned_blobs_reextracted": true,
+  "all_replay_results_match": true,
+  "own_body_saving": 56195817,
+  "observed_run1_inclusive_saving": 56203667,
+  "miri_cases_in_archived_completed_classes": 105,
+  "symbolic_tile_sequences": 19531,
+  "constructor_compilation_or_execution": false
+}
