@@ -170,8 +170,8 @@ Keep the shape of the seeded page.
 
    Louis should be able to read only this.
 2. **The tree (L2 and L3).** Item 0 is the standing objective (STEWARDSHIP.md): "a measurably
-   faster, correct production decoder, properly released", with its current focus as Louis
-   sets it (RULES.md M3). Below it, from general to specific, are:
+   faster, correct production decoder, properly released" (MODE.md: "faster production
+   decoder, released"; the inverse BWT is a subgoal, RULES.md M3). Below it, from general to specific, are:
    - the fronts;
    - the experiments and PRs;
    - the current step, down to the detail actually being worked on (a T-vector layout, an

@@ -1,8 +1,8 @@
 # The mibz2 agent team: roles
 
 The team works toward STEWARDSHIP.md's standing objective: **a measurably faster, correct
-production decoder, properly released.** MODE.md's "faster production inverse BWT" names the
-current focus within it. Whether to keep that focus or widen it is Louis's (RULES.md M3).
+production decoder, properly released.** MODE.md now says the same, "faster production decoder, released",
+with the inverse BWT as a subgoal (RULES.md M3, Louis, 2026-11-06).
 Authority comes from RULES.md, not from any role's title. Roles are defined by their
 responsibilities, not by the model a role runs on.
 

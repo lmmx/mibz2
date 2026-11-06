@@ -1,8 +1,7 @@
 # The mibz2 agent team
 
 The live machinery of the agent team that works on mibz2. Its objective is STEWARDSHIP.md's: a
-measurably faster, correct production decoder, properly released. MODE.md names the current
-focus within it.
+measurably faster, correct production decoder, properly released. MODE.md says the same.
 
 | file | what it is |
 |---|---|

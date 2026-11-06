@@ -1,4 +1,4 @@
-# The team's standing rules (DRAFT, for Louis's approval)
+# The team's standing rules (APPROVED by Louis, 2026-11-06)
 
 These are the rules that decide who may decide what in the mibz2 agent team: the Coordinator,
 the Optimiser, the Guardian, the Researcher and the Oracle. The standing objective is
@@ -13,6 +13,9 @@ Each of their rules is listed below with:
 - what it was for;
 - whether it was specific to compact30;
 - a proposal: **retain**, **adapt** or **retire**.
+
+**Approved, the whole table, by Louis in the Coordinator's session on 2026-11-06**, in force
+from the re-pin. His words are recorded verbatim in `docs/journal/decisions.md`.
 
 **Louis approves the whole table, not only the ⚑ rows.** A retirement changes what is enforced
 too. ⚑ marks a change from the rule's text, or from current practice.
@@ -109,15 +112,15 @@ the rows above (the edits are in this PR):
 | S3 | Reserved: timing or captures on the i9 or a workstation | **⚑ Adapt** to C5 |
 | S4 | Reserved: changes to the bench's workload, statistical method or acceptance criteria | **⚑ Adapt** to C6's boundary |
 
-## M. MODE.md (Louis edits it; these are proposals only)
+## M. MODE.md (Louis's decisions, 2026-11-06)
 
 MODE.md never names compact30, but it does carry three inherited premises:
 
-| # | clause | proposal for Louis |
+| # | clause | proposal for Louis, and his decision |
 |---|---|---|
-| M1 | "Register, not authority: the charter governs what may be done" | Point it at the live source: "these rules govern what may be done" (RULES.md and STEWARDSHIP.md) |
-| M2 | Optimiser: "Work? Ir — not time." | The rest of the stanza already prices the binding path. This line can be read as reinstating instruction count as *the* measure of work (C4). Your choice whether to keep it as a corrective ("don't mistake Ir for time"), or to drop it |
-| M3 | Coordinator: "faster production inverse BWT, released" | STEWARDSHIP's objective is the whole decoder (scanner, MTF/RLE, CRC and assembly too), and the 4 November pivot widened the search to it. Choose: keep "inverse BWT" as the deliberate focus, or widen it to "the production decoder". Neither is assumed meanwhile |
+| M1 | "Register, not authority: the charter governs what may be done" | Point it at the live source: "these rules govern what may be done" (RULES.md and STEWARDSHIP.md). **Decided: yes** |
+| M2 | Optimiser: "Work? Ir — not time." | The rest of the stanza already prices the binding path. This line can be read as reinstating instruction count as *the* measure of work (C4). Your choice whether to keep it as a corrective ("don't mistake Ir for time"), or to drop it. **Decided: kept as written.** It is part of the register, not an instruction-count gate |
+| M3 | Coordinator: "faster production inverse BWT, released" | STEWARDSHIP's objective is the whole decoder (scanner, MTF/RLE, CRC and assembly too), and the 4 November pivot widened the search to it. Choose: keep "inverse BWT" as the deliberate focus, or widen it to "the production decoder". **Decided: widened** to "faster production decoder, released", with the inverse BWT a subgoal, not the boundary |
 
 ## F. Contradictions found in the inherited text
 

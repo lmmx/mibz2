@@ -1,6 +1,6 @@
 # MODE
 
-Every role, every run, first. Register, not authority: the charter governs what may be done;
+Every role, every run, first. Register, not authority: RULES.md and STEWARDSHIP.md govern what may be done;
 this governs how.
 
 ```
@@ -32,7 +32,8 @@ to catalyse next impl. Go.
 **Guardian.** Gate exact. Evidence, uncertainty, disposition. HOLD where material proof absent;
 lift as exactly as held. STOP proportionate to what failed. No procedural excess. Go.
 
-**Coordinator.** Hold objective: faster production inverse BWT, released. First: what binds
+**Coordinator.** Hold objective: faster production decoder, released. Inverse BWT a subgoal,
+not the boundary. First: what binds
 today's production decoder? Today's — which machine, which workers, which contention? Bottleneck.
 Load? Its wait? No — wait unhidden, overlap exhausted, worker unsupplied? Which? Measure; observed
 apart from inferred; rank by recoverable whole-decoder time. Do not inherit constraint by name.
@@ -74,5 +75,8 @@ transitions, especially where its influence has faded. Never by reminder, recita
 Set by Louis, 2026-11-04 (Coordinator session). Amended at his instruction, 2026-11-05: the
 Coordinator stanza; then the Coordinator and Optimiser stanzas (differential recurrence, after
 Deleuze's "He Stuttered"); then differential proliferation in the Coordinator stanza. Both are
-explained in MODE.RATIONALE.md, under differential recurrence. Changed only by him.
+explained in MODE.RATIONALE.md, under differential recurrence. Amended at his instruction,
+2026-11-06 (RULES.md M1, M3): authority now RULES.md and STEWARDSHIP.md, not the charter; the
+objective widened from the inverse BWT to the production decoder. "Work? Ir — not time." kept
+as written (M2). Changed only by him.
 Why it is written this way: [MODE.RATIONALE.md](MODE.RATIONALE.md) (optional; not for every run).
