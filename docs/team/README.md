@@ -19,6 +19,8 @@ measurably faster, correct production decoder, properly released. MODE.md says t
 - **The Oracle's record of what the team is doing and why:** `observatory/intention`, an orphan
   branch with its own history.
 - **Routing:** `.github/coordination/coord.py`.
+- **Louis's requests from ChatGPT:** PROTOCOL.md §7 is the rule; `CHATGPT.md` at the
+  repository's root is the procedure a ChatGPT conversation follows to send one.
 - **History:** the team began as the compact30 research channel. That record is frozen in
   `docs/journal/compact30-channel/` and on the compact30 branches. How it was separated:
   `docs/journal/2026-11-06-team-neutral.md`.

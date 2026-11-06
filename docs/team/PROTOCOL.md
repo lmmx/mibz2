@@ -98,7 +98,8 @@ counts only from Louis.
 ## 7. Louis's requests relayed from ChatGPT
 
 Louis can ask for work from a ChatGPT conversation without copying anything across. ChatGPT
-posts the request on #145, and the Coordinator acts on it there. Louis set this up in the
+posts the request on #145, and the Coordinator acts on it there. A ChatGPT conversation finds how in
+`CHATGPT.md` at the repository's root, which follows this section. Louis set this up in the
 Coordinator's session on 2026-11-06 (`docs/journal/decisions.md`).
 
 - **Where:** a comment on #145, never a role's inbox. The routing audit flags anything but the
