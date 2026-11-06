@@ -448,7 +448,8 @@
       "mode": "ACTIVE",
       "stage": "A",
       "incoming_comment": 6682936439,
-      "status": "complete; numerical carry-over concurred; outcome and mechanism claims narrowed"
+      "status": "published; numerical carry-over concurred; outcome and mechanism claims narrowed",
+      "comment": 6683039047
     }
   ],
   "own_outgoing_comment_ids": [
@@ -477,7 +478,8 @@
     6681996710,
     6682139215,
     6682239005,
-    6682363998
+    6682363998,
+    6683039047
   ],
   "own_published_commit_ids": [
     "0cee91f620eb12dbb72a33b52c2393898d86d73a",
@@ -519,7 +521,8 @@
     "dca06f62983447c277ca634bc453304aa2fe3901",
     "5f3f2a4b68e2e39e71cdbbd5bffbf2de0cbdf7a7",
     "a2ab14e4f6fddd1156ac4cfed7bac399a1c973a4",
-    "527027c6a44ea5c2087384cc6be276dfb600393a"
+    "527027c6a44ea5c2087384cc6be276dfb600393a",
+    "d78700b3fe021c8bb53ade50371493bd7a767434"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -549,7 +552,8 @@
     6681847165,
     6682032075,
     6682106949,
-    6682260206
+    6682260206,
+    6682936439
   ],
   "supporting_ack_ids": [
     6630284404,
@@ -876,7 +880,8 @@
       "sha": "1091663e7beb6996eafb05a9896ac62b892600f1",
       "evidence_digest": "git-blob:1b1f8c8ec1ab18e160bf0d3114887e3ef503fcf3",
       "decision": "D030",
-      "commit": "527027c6a44ea5c2087384cc6be276dfb600393a"
+      "commit": "527027c6a44ea5c2087384cc6be276dfb600393a",
+      "comment": 6683039047
     }
   ],
   "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
@@ -924,10 +929,12 @@
     {
       "comment_id": 6682936439,
       "pr": 161,
-      "status": "complete",
+      "status": "finished",
       "decision": "D030",
       "receipt_commit": "a2ab14e4f6fddd1156ac4cfed7bac399a1c973a4",
-      "work_commit": "527027c6a44ea5c2087384cc6be276dfb600393a"
+      "work_commit": "527027c6a44ea5c2087384cc6be276dfb600393a",
+      "review_comment_id": 6683039047,
+      "complete_cursor_commit": "d78700b3fe021c8bb53ade50371493bd7a767434"
     }
   ]
 }
