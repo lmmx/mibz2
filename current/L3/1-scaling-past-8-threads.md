@@ -1,23 +1,35 @@
 # 1. Scaling beyond eight threads on the i9
 
-- **Doing:** testing a different team count before changing production policy.
+- **Doing:** moving from the completed experiment to production-policy design.
 - **In order to:** 0, faster correct production decoding. Recoverable headroom and its mechanism remain questions.
-- **Status:** waiting on confirmation results from Louis; run 1 passed both arrangements. Alternative-performance dispatch was last paused; no new dispatch is recorded.
+- **Status:** policy design assigned to the Optimiser; no implementation or adoption established. Mechanism and other performance investigations have no new recorded dispatch.
 - **Known:** the [team-size screen](https://github.com/lmmx/mibz2/blob/3421fe600f544724425db665caf06fa89dd25f06/docs/journal/2026-11-06-team-size.md) completed 320 runs with matching output, a complete grid and an unflagged control. Its registered primaries returned 1.017 (95% interval 1.008–1.026) and 1.003 (0.993–1.014), below the 1.03 minimum. The run was done as intended; neither primary qualified. Both point estimates fell within their broad predicted ranges. No confirmation was due for either failed primary.
 - **Exploration, not qualification:** three teams at 10 and 12 requested threads returned 1.075 and 1.097, with about 18% less peak memory. These cells were selected after seeing the data. The [screen and corrected interpretation](https://github.com/lmmx/mibz2/blob/838d765c7de4956ada5a29c61ee30a436b1cf605/docs/journal/2026-11-06-team-size.md) separates table-count association from causation: concurrency and window change too; the last-level cache explanation is a hypothesis. Throughput divided by tables is not measured block service rate.
 
 ## 1.1 Three-team confirmation (#220)
 
-- **Doing:** testing three teams of four at 12 threads and three teams of three at 10 requested threads (nine decoding threads), against four teams of two at eight.
-- **In order to:** 1, identify a policy candidate; production adoption would need its own continuous-integration (CI), parity, safety and regression evidence.
-- **Status:** run 1 done as intended, as recorded by the Coordinator; both primaries pass. The conditional counter collection was unavailable, not a failure of the registered run. Confirmation execution is unconfirmed, and its results are outstanding from Louis. No qualification or production change yet ([handoff](https://github.com/lmmx/mibz2/pull/145#issuecomment-6693085860); [journal](https://github.com/lmmx/mibz2/blob/a3880ce89c6e40e6efa19a3f6ac352f8cc7d6f83/docs/journal/2026-11-06-three-tables.md#result)).
-- **Result:** three groups of four: 1.090× throughput, 95% interval 1.072–1.107, peak memory 0.82×, processor time 1.04× reference. Three groups of three: 1.076×, interval 1.058–1.095, memory 0.82×, processor time 0.90×. The journal records all byte/grid/plan/reference/control predicates passing.
-- **Prediction separate from verdict:** 1.04–1.09 and 1.03–1.07 were predicted. The first is at the upper end, the second just above its range. The expected regression from the exploratory screen did not clearly appear; one run does not explain why. Both memory predictions held.
-- **Rule unchanged:** [registration](https://github.com/lmmx/mibz2/blob/a3880ce89c6e40e6efa19a3f6ac352f8cc7d6f83/docs/journal/2026-11-06-three-tables.md#the-rule). Mean ≥1.03, lower bound >1.00, all predicates, peak memory ≤1.15× and processor time ≤1.5× reference; the same cell must pass one predeclared second run. No pooling, switching or third run; one invalidation replacement budget across the experiment. Qualification would only produce a policy candidate, still requiring separate production checks.
-- **Pause versus dependency:** the prior deliberate hold for Oracle verification ended with the verified first account and Louis's run-1 handoff. The second result is a genuine qualification dependency, not a new Oracle gate.
-- **Evidence scope:** Louis identified bundle 20261106T105317Z as run 1; the journal records code at 639c3df1, unchanged from freeze 656d2794, and report reproduction from raw runs. This account reads the recorded evidence; it does not independently recalculate the benchmark or adjudicate its gate.
-- **Diagnostics:** packing versus spreading workers reduced throughput by 12–21% across the plans. This is a whole-placement effect, not an isolated measurement of sibling sharing. An interval including zero does not prove tracing had no effect; worker activity does not establish every helper's productive occupancy. Table count, group size and window remain confounded.
+- **Doing:** completed two registered runs comparing three groups of four at 12 threads and three groups of three at 10 requested threads (nine decoding threads) with four groups of two at eight.
+- **In order to:** 1, identify production-policy candidates.
+- **Status:** done as intended, as recorded in the [result journal](https://github.com/lmmx/mibz2/blob/544462881497fc957fe17c35ae7508ca1bac23d5/docs/journal/2026-11-06-three-tables.md#result); both arrangements qualify under the unchanged rule. This records the Coordinator's analysis, not a fresh Oracle adjudication.
 
+| Arrangement | Run 1 throughput ratio (95% interval) | Run 2 throughput ratio (95% interval) | Peak memory, runs 1 / 2 | Processor time, runs 1 / 2 |
+|---|---|---|---|---|
+| Three groups of four | 1.090 (1.072–1.107) | 1.086 (1.062–1.111) | 0.82 / 0.83 | 1.04 / 1.04 |
+| Three groups of three | 1.076 (1.058–1.095) | 1.087 (1.074–1.100) | 0.82 / 0.82 | 0.90 / 0.89 |
+
+- **Prediction separate from qualification:** groups of four were predicted at 1.04–1.09 and both point estimates lie in that range; groups of three were predicted at 1.03–1.07 and both exceeded its upper end. Memory and processor-time directions agree with predictions. No mechanism follows from that agreement.
+- **Rule and outcome:** the same cell passed all predicates and resource limits twice; no switching, pooling or replacement. Both qualify, but the rule neither ranks them nor adopts either. Scope: i9-10900K and the level-9 Wikidata corpus. The nominal fixed-run error bound is 0.05 for this experiment under its model, not all future work ([rule and outcome](https://github.com/lmmx/mibz2/blob/544462881497fc957fe17c35ae7508ca1bac23d5/docs/journal/2026-11-06-three-tables.md)).
+- **Provenance:** Louis handed over confirmation bundle 20261106T190811Z, collected at a3880ce8 with executable inputs unchanged from freeze 656d2794. The Coordinator records report reproduction and independent recomputation from fresh raw runs. Hardware counters were conditionally unavailable in both runs. This account does not independently recalculate the data.
+- **Diagnostics:** placement effects remain whole-placement comparisons. The journal has corrected its tracing and sibling-sharing wording. Neither run establishes the table-count mechanism.
+
+## 1.4 Production-policy design
+
+- **Doing:** designing a plan rule and evidence plan; [assigned to the Optimiser](https://github.com/lmmx/mibz2/pull/160#issuecomment-6693507432). A brief establishes dispatch, not continuing execution or completion.
+- **In order to:** 1 and 0, translate the candidate gains into a safely validated production improvement.
+- **Status:** waiting on the Optimiser's design; no finished PR or adopted policy is established.
+- **Purpose and premise:** today's policy fixes groups of two and caps group count. The measured candidates change both. The brief requires selecting a plan by requested threads and explaining any extrapolation from cores/cache beyond the one measured machine and workload.
+- **Evidence dependency:** separate measured-head continuous-integration (CI), output parity, safety and regression evidence remains required. Four-core CI runners do not exercise the changed workstation plans; coverage must be specified. A new workstation recipe requires Louis under the standing rule, not implicit permission from these completed runs.
+- **Dispatch choice:** this is the next assigned work. No mechanism claim or restart of other paused investigations follows.
 
 ## 1.2 Mechanism
 
@@ -36,4 +48,4 @@
 
 ## Accepted, not aimed at
 
-Run 1 also saved about 18% peak memory for both three-team cells while pursuing throughput. This matches the prediction and the earlier screen, but remains subject to confirmation and is not an independent production qualification ([frozen registration](https://github.com/lmmx/mibz2/blob/838d765c7de4956ada5a29c61ee30a436b1cf605/docs/journal/2026-11-06-three-tables.md)).
+Both registered runs saved about 17–18% peak memory while pursuing throughput. That accepted side effect accompanies the qualified candidates; it is not independent approval for production adoption ([outcome](https://github.com/lmmx/mibz2/blob/544462881497fc957fe17c35ae7508ca1bac23d5/docs/journal/2026-11-06-three-tables.md#outcome)).
