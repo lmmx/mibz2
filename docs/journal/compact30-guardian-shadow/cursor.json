@@ -434,6 +434,21 @@
       "status": "finished",
       "disposition": "material D026-D028 registration/reporting findings closed at pinned amendment; diagnostic and authority limits retained",
       "comment": 6682363998
+    },
+    {
+      "pr": 161,
+      "sha": "1091663e7beb6996eafb05a9896ac62b892600f1",
+      "evidence_digest": "git-blob:1b1f8c8ec1ab18e160bf0d3114887e3ef503fcf3",
+      "decision": [
+        "G1",
+        "G3"
+      ],
+      "commit": "527027c6a44ea5c2087384cc6be276dfb600393a",
+      "id": "D030",
+      "mode": "ACTIVE",
+      "stage": "A",
+      "incoming_comment": 6682936439,
+      "status": "complete; numerical carry-over concurred; outcome and mechanism claims narrowed"
     }
   ],
   "own_outgoing_comment_ids": [
@@ -502,7 +517,9 @@
     "8bbf90210adcd3ed9126f940a2af2c213c5c7a20",
     "557b27624b3cb4ef87519451484c1c5bbedab78c",
     "dca06f62983447c277ca634bc453304aa2fe3901",
-    "5f3f2a4b68e2e39e71cdbbd5bffbf2de0cbdf7a7"
+    "5f3f2a4b68e2e39e71cdbbd5bffbf2de0cbdf7a7",
+    "a2ab14e4f6fddd1156ac4cfed7bac399a1c973a4",
+    "527027c6a44ea5c2087384cc6be276dfb600393a"
   ],
   "consumed_incoming_comment_ids": [
     6630529621,
@@ -853,6 +870,13 @@
       "decision": "D029",
       "commit": "dca06f62983447c277ca634bc453304aa2fe3901",
       "comment": 6682363998
+    },
+    {
+      "pr": 161,
+      "sha": "1091663e7beb6996eafb05a9896ac62b892600f1",
+      "evidence_digest": "git-blob:1b1f8c8ec1ab18e160bf0d3114887e3ef503fcf3",
+      "decision": "D030",
+      "commit": "527027c6a44ea5c2087384cc6be276dfb600393a"
     }
   ],
   "spec_pin": "0479b380f5d6309f3fd0f23e0ad6dfade4b7a5c0",
@@ -900,8 +924,10 @@
     {
       "comment_id": 6682936439,
       "pr": 161,
-      "status": "in_progress",
-      "decision": "D030"
+      "status": "complete",
+      "decision": "D030",
+      "receipt_commit": "a2ab14e4f6fddd1156ac4cfed7bac399a1c973a4",
+      "work_commit": "527027c6a44ea5c2087384cc6be276dfb600393a"
     }
   ]
 }
