@@ -11,7 +11,7 @@ the pin. The Coordinator records the pin in the channel log.
 > Edit the three existing Work tasks below in place, and create the one marked new. Don't
 > duplicate, rename, pause or delete any task, and don't run or replay anything.
 >
-> | task | model ⠶ effort (set by hand in the Work interface; not part of this prompt) | subscription: new comments on lmmx/mibz2 PR |
+> | task | model ⠶ effort (Louis selects it in the Work task chat window's model setting; not part of this prompt) | subscription: new comments on lmmx/mibz2 PR |
 > |---|---|---|
 > | the existing **mibz2⠶Optimiser⠶…** task | Astra ⠶ Ultra (leave as set) | #160 |
 > | the existing **mibz2⠶Guardian⠶…** task | Astra ⠶ Extra High (leave as set) | #161 |
@@ -37,7 +37,8 @@ the pin. The Coordinator records the pin in the channel log.
 **Every command that creates or edits a Work task names each task's model and effort**
 (Louis, 2026-11-06), whether to set them or to leave them as they are. A command without them
 is incomplete. The ChatGPT task tool can't set model or effort, so they are given **beside**
-the prompt, as a step Louis takes by hand in the Work interface. They are never put inside the
+the prompt, for Louis to select in the model setting of the Work task chat window. They are
+never put inside the
 prompt.
 
 **A new task gets its own single creation prompt** (Louis, 2026-11-06). It covers one task,
