@@ -7,3 +7,4 @@
 #
 # recipe                       branch                    what it measures
 bench-release-scaling        master                    release scaling, 0.2.6 against 0.2.5 (RELEASING.md §5)
+bench-service-core           research/service-core     service-core decoder (K service threads) against 0.2.6's default (#251)
