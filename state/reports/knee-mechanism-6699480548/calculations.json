@@ -1,0 +1,476 @@
+[
+  {
+    "file": "occupancy-t8-k2.json",
+    "mode": "timeline",
+    "rounds": [
+      {
+        "round": 0,
+        "decode_ms": 1.382347,
+        "inversion_ms": 0.98418724787471,
+        "outside_inversion_ms": 0.39815975212529,
+        "outside_fraction": 0.2880316969077157,
+        "span_s": 0.154389,
+        "mean_inversion_count": 2.747506,
+        "mean_decoding_count": 3.859038
+      },
+      {
+        "round": 1,
+        "decode_ms": 1.385648,
+        "inversion_ms": 0.9903928375684455,
+        "outside_inversion_ms": 0.39525516243155445,
+        "outside_fraction": 0.2852493291453201,
+        "span_s": 0.155148,
+        "mean_inversion_count": 2.751304,
+        "mean_decoding_count": 3.849318
+      },
+      {
+        "round": 2,
+        "decode_ms": 1.3701,
+        "inversion_ms": 0.9745417114176335,
+        "outside_inversion_ms": 0.39555828858236664,
+        "outside_fraction": 0.2887076042495924,
+        "span_s": 0.153173,
+        "mean_inversion_count": 2.742177,
+        "mean_decoding_count": 3.85521
+      },
+      {
+        "round": 3,
+        "decode_ms": 1.393328,
+        "inversion_ms": 0.9932009861461717,
+        "outside_inversion_ms": 0.4001270138538282,
+        "outside_fraction": 0.28717359721029667,
+        "span_s": 0.156253,
+        "mean_inversion_count": 2.739593,
+        "mean_decoding_count": 3.843273
+      },
+      {
+        "round": 4,
+        "decode_ms": 1.387911,
+        "inversion_ms": 0.9876394392714616,
+        "outside_inversion_ms": 0.4002715607285383,
+        "outside_fraction": 0.28839857939632896,
+        "span_s": 0.154961,
+        "mean_inversion_count": 2.746966,
+        "mean_decoding_count": 3.860262
+      },
+      {
+        "round": 5,
+        "decode_ms": 1.394996,
+        "inversion_ms": 0.9947667175777262,
+        "outside_inversion_ms": 0.40022928242227374,
+        "outside_fraction": 0.28690353407627966,
+        "span_s": 0.156082,
+        "mean_inversion_count": 2.746918,
+        "mean_decoding_count": 3.852096
+      }
+    ],
+    "median": {
+      "decode_ms": 1.3867794999999998,
+      "inversion_ms": 0.9890161384199536,
+      "outside_inversion_ms": 0.3991433829895591,
+      "outside_fraction": 0.2876026470590062,
+      "span_s": 0.15505449999999998,
+      "mean_inversion_count": 2.7469419999999998,
+      "mean_decoding_count": 3.853653
+    },
+    "outside_fraction_range": [
+      0.2852493291453201,
+      0.2887076042495924
+    ]
+  },
+  {
+    "file": "occupancy-t8-k2.json",
+    "mode": "full",
+    "rounds": [
+      {
+        "round": 0,
+        "decode_ms": 1.393635,
+        "inversion_ms": 0.9941867583341069,
+        "outside_inversion_ms": 0.3994482416658931,
+        "outside_fraction": 0.2866232849102477,
+        "span_s": 0.156342,
+        "mean_inversion_count": 2.740751,
+        "mean_decoding_count": 3.841951
+      },
+      {
+        "round": 1,
+        "decode_ms": 1.392608,
+        "inversion_ms": 0.9919726216937356,
+        "outside_inversion_ms": 0.4006353783062645,
+        "outside_fraction": 0.2876871153305629,
+        "span_s": 0.15595,
+        "mean_inversion_count": 2.741521,
+        "mean_decoding_count": 3.848748
+      },
+      {
+        "round": 2,
+        "decode_ms": 1.398194,
+        "inversion_ms": 0.9989058303851509,
+        "outside_inversion_ms": 0.39928816961484903,
+        "outside_fraction": 0.2855742261909643,
+        "span_s": 0.156704,
+        "mean_inversion_count": 2.747399,
+        "mean_decoding_count": 3.845606
+      },
+      {
+        "round": 3,
+        "decode_ms": 1.408632,
+        "inversion_ms": 1.0038278643805105,
+        "outside_inversion_ms": 0.4048041356194896,
+        "outside_fraction": 0.28737394551557083,
+        "span_s": 0.157718,
+        "mean_inversion_count": 2.743186,
+        "mean_decoding_count": 3.849397
+      },
+      {
+        "round": 4,
+        "decode_ms": 1.383902,
+        "inversion_ms": 0.9852293079814384,
+        "outside_inversion_ms": 0.3986726920185616,
+        "outside_fraction": 0.2880787021180413,
+        "span_s": 0.155495,
+        "mean_inversion_count": 2.730852,
+        "mean_decoding_count": 3.835879
+      },
+      {
+        "round": 5,
+        "decode_ms": 1.394776,
+        "inversion_ms": 0.9892885567053364,
+        "outside_inversion_ms": 0.4054874432946636,
+        "outside_fraction": 0.2907186840716097,
+        "span_s": 0.156479,
+        "mean_inversion_count": 2.72486,
+        "mean_decoding_count": 3.841727
+      }
+    ],
+    "median": {
+      "decode_ms": 1.3942055,
+      "inversion_ms": 0.9930796900139212,
+      "outside_inversion_ms": 0.4000418099860788,
+      "outside_fraction": 0.28753053042306687,
+      "span_s": 0.1564105,
+      "mean_inversion_count": 2.741136,
+      "mean_decoding_count": 3.8437785
+    },
+    "outside_fraction_range": [
+      0.2855742261909643,
+      0.2907186840716097
+    ]
+  },
+  {
+    "file": "occupancy-t12-k3.json",
+    "mode": "timeline",
+    "rounds": [
+      {
+        "round": 0,
+        "decode_ms": 1.37358,
+        "inversion_ms": 0.9266397686983759,
+        "outside_inversion_ms": 0.4469402313016241,
+        "outside_fraction": 0.32538347333364204,
+        "span_s": 0.153469,
+        "mean_inversion_count": 2.602361,
+        "mean_decoding_count": 3.857544
+      },
+      {
+        "round": 1,
+        "decode_ms": 1.384253,
+        "inversion_ms": 0.9521804867401392,
+        "outside_inversion_ms": 0.43207251325986074,
+        "outside_fraction": 0.31213406310830516,
+        "span_s": 0.154677,
+        "mean_inversion_count": 2.653205,
+        "mean_decoding_count": 3.857143
+      },
+      {
+        "round": 2,
+        "decode_ms": 1.389669,
+        "inversion_ms": 0.9481279510719257,
+        "outside_inversion_ms": 0.44154104892807433,
+        "outside_fraction": 0.31773109202844296,
+        "span_s": 0.155696,
+        "mean_inversion_count": 2.624622,
+        "mean_decoding_count": 3.846905
+      },
+      {
+        "round": 3,
+        "decode_ms": 1.366768,
+        "inversion_ms": 0.9249793228677494,
+        "outside_inversion_ms": 0.44178867713225056,
+        "outside_fraction": 0.3232360408878834,
+        "span_s": 0.153412,
+        "mean_inversion_count": 2.598663,
+        "mean_decoding_count": 3.839831
+      },
+      {
+        "round": 4,
+        "decode_ms": 1.384125,
+        "inversion_ms": 0.93926625349884,
+        "outside_inversion_ms": 0.4448587465011601,
+        "outside_fraction": 0.32140070188831216,
+        "span_s": 0.154921,
+        "mean_inversion_count": 2.613098,
+        "mean_decoding_count": 3.850719
+      },
+      {
+        "round": 5,
+        "decode_ms": 1.359759,
+        "inversion_ms": 0.9184318565939674,
+        "outside_inversion_ms": 0.4413271434060325,
+        "outside_fraction": 0.32456276693592945,
+        "span_s": 0.152468,
+        "mean_inversion_count": 2.596244,
+        "mean_decoding_count": 3.843789
+      }
+    ],
+    "median": {
+      "decode_ms": 1.3788525,
+      "inversion_ms": 0.932953011098608,
+      "outside_inversion_ms": 0.44166486303016245,
+      "outside_fraction": 0.32231837138809777,
+      "span_s": 0.15407300000000002,
+      "mean_inversion_count": 2.6077295,
+      "mean_decoding_count": 3.8488119999999997
+    },
+    "outside_fraction_range": [
+      0.31213406310830516,
+      0.32538347333364204
+    ]
+  },
+  {
+    "file": "occupancy-t12-k3.json",
+    "mode": "full",
+    "rounds": [
+      {
+        "round": 0,
+        "decode_ms": 1.368966,
+        "inversion_ms": 0.9406925741577726,
+        "outside_inversion_ms": 0.4282734258422273,
+        "outside_fraction": 0.31284445767259905,
+        "span_s": 0.153614,
+        "mean_inversion_count": 2.639333,
+        "mean_decoding_count": 3.840952
+      },
+      {
+        "round": 1,
+        "decode_ms": 1.381075,
+        "inversion_ms": 0.9313162816983759,
+        "outside_inversion_ms": 0.44975871830162417,
+        "outside_fraction": 0.3256584315128608,
+        "span_s": 0.155428,
+        "mean_inversion_count": 2.582529,
+        "mean_decoding_count": 3.829714
+      },
+      {
+        "round": 2,
+        "decode_ms": 1.378682,
+        "inversion_ms": 0.939158490937355,
+        "outside_inversion_ms": 0.4395235090626449,
+        "outside_fraction": 0.3187997733071477,
+        "span_s": 0.154679,
+        "mean_inversion_count": 2.616886,
+        "mean_decoding_count": 3.841592
+      },
+      {
+        "round": 3,
+        "decode_ms": 1.393315,
+        "inversion_ms": 0.927865756287703,
+        "outside_inversion_ms": 0.4654492437122971,
+        "outside_fraction": 0.3340588766447624,
+        "span_s": 0.156295,
+        "mean_inversion_count": 2.558688,
+        "mean_decoding_count": 3.842216
+      },
+      {
+        "round": 4,
+        "decode_ms": 1.392857,
+        "inversion_ms": 0.9694122101624129,
+        "outside_inversion_ms": 0.42344478983758715,
+        "outside_fraction": 0.3040116751666446,
+        "span_s": 0.156213,
+        "mean_inversion_count": 2.67466,
+        "mean_decoding_count": 3.842979
+      },
+      {
+        "round": 5,
+        "decode_ms": 1.363003,
+        "inversion_ms": 0.9214066070951277,
+        "outside_inversion_ms": 0.4415963929048723,
+        "outside_fraction": 0.3239878363472951,
+        "span_s": 0.152954,
+        "mean_inversion_count": 2.596377,
+        "mean_decoding_count": 3.840712
+      }
+    ],
+    "median": {
+      "decode_ms": 1.3798785,
+      "inversion_ms": 0.9352373863178655,
+      "outside_inversion_ms": 0.4405599509837586,
+      "outside_fraction": 0.3213938048272214,
+      "span_s": 0.1550535,
+      "mean_inversion_count": 2.6066314999999998,
+      "mean_decoding_count": 3.841272
+    },
+    "outside_fraction_range": [
+      0.3040116751666446,
+      0.3340588766447624
+    ]
+  },
+  {
+    "file": "occupancy-t16-k4.json",
+    "mode": "timeline",
+    "rounds": [
+      {
+        "round": 0,
+        "decode_ms": 1.405787,
+        "inversion_ms": 0.9321373426705336,
+        "outside_inversion_ms": 0.4736496573294663,
+        "outside_fraction": 0.33692846592653536,
+        "span_s": 0.157587,
+        "mean_inversion_count": 2.549393,
+        "mean_decoding_count": 3.844825
+      },
+      {
+        "round": 1,
+        "decode_ms": 1.390796,
+        "inversion_ms": 0.9374115954292342,
+        "outside_inversion_ms": 0.4533844045707657,
+        "outside_fraction": 0.3259891490705795,
+        "span_s": 0.15547,
+        "mean_inversion_count": 2.598729,
+        "mean_decoding_count": 3.855615
+      },
+      {
+        "round": 2,
+        "decode_ms": 1.404342,
+        "inversion_ms": 0.9391540426589328,
+        "outside_inversion_ms": 0.4651879573410672,
+        "outside_fraction": 0.3312497649013326,
+        "span_s": 0.157034,
+        "mean_inversion_count": 2.577629,
+        "mean_decoding_count": 3.854393
+      },
+      {
+        "round": 3,
+        "decode_ms": 1.406447,
+        "inversion_ms": 0.9600112087099768,
+        "outside_inversion_ms": 0.4464357912900232,
+        "outside_fraction": 0.31742098443099753,
+        "span_s": 0.157149,
+        "mean_inversion_count": 2.632946,
+        "mean_decoding_count": 3.857342
+      },
+      {
+        "round": 4,
+        "decode_ms": 1.388663,
+        "inversion_ms": 0.928648834837587,
+        "outside_inversion_ms": 0.460014165162413,
+        "outside_fraction": 0.3312640757062102,
+        "span_s": 0.155605,
+        "mean_inversion_count": 2.572203,
+        "mean_decoding_count": 3.846364
+      },
+      {
+        "round": 5,
+        "decode_ms": 1.390988,
+        "inversion_ms": 0.9404601686867748,
+        "outside_inversion_ms": 0.45052783131322505,
+        "outside_fraction": 0.3238905233641305,
+        "span_s": 0.155576,
+        "mean_inversion_count": 2.605404,
+        "mean_decoding_count": 3.853515
+      }
+    ],
+    "median": {
+      "decode_ms": 1.397665,
+      "inversion_ms": 0.9382828190440835,
+      "outside_inversion_ms": 0.45669928486658934,
+      "outside_fraction": 0.32861945698595607,
+      "span_s": 0.1563195,
+      "mean_inversion_count": 2.5881790000000002,
+      "mean_decoding_count": 3.853954
+    },
+    "outside_fraction_range": [
+      0.31742098443099753,
+      0.33692846592653536
+    ]
+  },
+  {
+    "file": "occupancy-t16-k4.json",
+    "mode": "full",
+    "rounds": [
+      {
+        "round": 0,
+        "decode_ms": 1.395763,
+        "inversion_ms": 0.949289779837587,
+        "outside_inversion_ms": 0.4464732201624131,
+        "outside_fraction": 0.3198775294676912,
+        "span_s": 0.156645,
+        "mean_inversion_count": 2.611918,
+        "mean_decoding_count": 3.840371
+      },
+      {
+        "round": 1,
+        "decode_ms": 1.411343,
+        "inversion_ms": 0.9435078403897913,
+        "outside_inversion_ms": 0.4678351596102087,
+        "outside_fraction": 0.331482254569023,
+        "span_s": 0.158276,
+        "mean_inversion_count": 2.569258,
+        "mean_decoding_count": 3.843212
+      },
+      {
+        "round": 2,
+        "decode_ms": 1.390097,
+        "inversion_ms": 0.948104113148492,
+        "outside_inversion_ms": 0.44199288685150795,
+        "outside_fraction": 0.3179583056804727,
+        "span_s": 0.155869,
+        "mean_inversion_count": 2.621643,
+        "mean_decoding_count": 3.843822
+      },
+      {
+        "round": 3,
+        "decode_ms": 1.397773,
+        "inversion_ms": 0.9314413410162413,
+        "outside_inversion_ms": 0.4663316589837586,
+        "outside_fraction": 0.3336247437772504,
+        "span_s": 0.157018,
+        "mean_inversion_count": 2.556721,
+        "mean_decoding_count": 3.836757
+      },
+      {
+        "round": 4,
+        "decode_ms": 1.426724,
+        "inversion_ms": 0.9681892046310905,
+        "outside_inversion_ms": 0.4585347953689096,
+        "outside_fraction": 0.32138997827814597,
+        "span_s": 0.160074,
+        "mean_inversion_count": 2.606854,
+        "mean_decoding_count": 3.84146
+      },
+      {
+        "round": 5,
+        "decode_ms": 1.409154,
+        "inversion_ms": 0.9348495561716936,
+        "outside_inversion_ms": 0.4743044438283064,
+        "outside_fraction": 0.3365880832246202,
+        "span_s": 0.158217,
+        "mean_inversion_count": 2.54663,
+        "mean_decoding_count": 3.838683
+      }
+    ],
+    "median": {
+      "decode_ms": 1.4034635,
+      "inversion_ms": 0.9458059767691416,
+      "outside_inversion_ms": 0.4624332271763341,
+      "outside_fraction": 0.3264361164235845,
+      "span_s": 0.1576175,
+      "mean_inversion_count": 2.588056,
+      "mean_decoding_count": 3.8409155000000004
+    },
+    "outside_fraction_range": [
+      0.3179583056804727,
+      0.3365880832246202
+    ]
+  }
+]

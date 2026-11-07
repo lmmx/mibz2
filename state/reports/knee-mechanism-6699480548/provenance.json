@@ -1,0 +1,10 @@
+{
+  "source_commit": "853dd1af32fd1df3a8132a0452d7fa5a2f0ee8c0",
+  "measurement_commit": "f4f99ab82652411feb4a5a6e2ccb96d04902fb58",
+  "compact_psi_archive_commit": "42794eba51a651238ce9dd3165fe546970a020a8",
+  "inputs": {
+    "occupancy-t16-k4.json": "dd11e4f006bcbb1c5062e35dab2e3813a9e9c4f96f746a25d512cff6cd721f22",
+    "occupancy-t12-k3.json": "d7429adc035239c813b327eca31275aaafd987338eded10bad2fd1514b03af93",
+    "occupancy-t8-k2.json": "6a941f72f33ff2804d5015893216bc7c89e92a9de02f32bc3e8b0bb74ab126ff"
+  }
+}
