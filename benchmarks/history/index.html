@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=84bc92ec9c7c">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=e01db6a28957">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=84bc92ec9c7c">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=e01db6a28957">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=84bc92ec9c7c">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=e01db6a28957">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=84bc92ec9c7c">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=e01db6a28957">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=84bc92ec9c7c">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=e01db6a28957">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=84bc92ec9c7c">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=e01db6a28957">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -748,6 +748,17 @@
   
     <nav class="md-nav" aria-label="Release scaling, past 4 threads">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#2026-11-07-intelr-coretm-i9-10900k-cpu-370ghz" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2026-11-07: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+      </span>
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#2026-11-06-intelr-coretm-i9-10900k-cpu-370ghz" class="md-nav__link">
@@ -1919,6 +1930,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#2026-11-07-intelr-coretm-i9-10900k-cpu-370ghz" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        2026-11-07: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#2026-11-06-intelr-coretm-i9-10900k-cpu-370ghz" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2036,6 +2058,88 @@ Runs on different machines are never compared or combined.</p>
 paired wall ratios against the reference arm, with its 95% interval: a minus sign is
 faster. Up to the machine's physical core count, each thread runs on a core of its own
 (<code>--spread</code>); above it, threads share cores.</p>
+<h3 id="2026-11-07-intelr-coretm-i9-10900k-cpu-370ghz">2026-11-07: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz<a class="headerlink" href="#2026-11-07-intelr-coretm-i9-10900k-cpu-370ghz" title="Permanent link">&para;</a></h3>
+<p>10 cores, 20 threads · 10 paired rounds · the reference arm is <strong>0.2.6</strong> · <a href="https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-07-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.2.6">the records</a></p>
+<p><strong><code>wikidata</code></strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">threads</th>
+<th style="text-align: right;">0.2.6 wall (median)</th>
+<th style="text-align: right;">lbzip2 2.5 wall (median)</th>
+<th style="text-align: right;">0.2.5 wall (median)</th>
+<th style="text-align: right;">lbzip2 2.5 against 0.2.6</th>
+<th style="text-align: right;">0.2.5 against 0.2.6</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.524 s</td>
+<td style="text-align: right;">2.503 s</td>
+<td style="text-align: right;">0.516 s</td>
+<td style="text-align: right;">+376.7% (+371.5, +381.9) <strong>slower</strong></td>
+<td style="text-align: right;">−1.1% (−2.6, +0.5)</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.300 s</td>
+<td style="text-align: right;">1.301 s</td>
+<td style="text-align: right;">0.302 s</td>
+<td style="text-align: right;">+334.7% (+329.6, +339.8) <strong>slower</strong></td>
+<td style="text-align: right;">+0.5% (−0.8, +1.7)</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.205 s</td>
+<td style="text-align: right;">0.715 s</td>
+<td style="text-align: right;">0.205 s</td>
+<td style="text-align: right;">+250.6% (+246.2, +255.1) <strong>slower</strong></td>
+<td style="text-align: right;">+0.5% (−1.0, +1.9)</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.161 s</td>
+<td style="text-align: right;">0.524 s</td>
+<td style="text-align: right;">0.161 s</td>
+<td style="text-align: right;">+224.3% (+222.2, +226.5) <strong>slower</strong></td>
+<td style="text-align: right;">−0.7% (−1.7, +0.4)</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.140 s</td>
+<td style="text-align: right;">0.518 s</td>
+<td style="text-align: right;">0.149 s</td>
+<td style="text-align: right;">+262.1% (+243.4, +281.8) <strong>slower</strong></td>
+<td style="text-align: right;">+3.7% (−1.6, +9.3)</td>
+</tr>
+<tr>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">0.145 s</td>
+<td style="text-align: right;">0.509 s</td>
+<td style="text-align: right;">0.152 s</td>
+<td style="text-align: right;">+248.9% (+241.0, +256.9) <strong>slower</strong></td>
+<td style="text-align: right;">+4.6% (+2.2, +7.0) <strong>slower</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">0.146 s</td>
+<td style="text-align: right;">0.501 s</td>
+<td style="text-align: right;">0.153 s</td>
+<td style="text-align: right;">+241.3% (+235.0, +247.7) <strong>slower</strong></td>
+<td style="text-align: right;">+6.1% (+2.9, +9.5) <strong>slower</strong></td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.144 s</td>
+<td style="text-align: right;">0.493 s</td>
+<td style="text-align: right;">0.153 s</td>
+<td style="text-align: right;">+242.9% (+235.1, +250.9) <strong>slower</strong></td>
+<td style="text-align: right;">+6.5% (+3.1, +10.1) <strong>slower</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Every arm's output was the same bytes as the reference's.</p>
 <h3 id="2026-11-06-intelr-coretm-i9-10900k-cpu-370ghz">2026-11-06: Intel(R) Core(TM) i9-10900K CPU @ 3.70GHz<a class="headerlink" href="#2026-11-06-intelr-coretm-i9-10900k-cpu-370ghz" title="Permanent link">&para;</a></h3>
 <p>10 cores, 20 threads · 10 paired rounds · the reference arm is <strong>0.2.5</strong> · <a href="https://github.com/lmmx/mibz2/tree/master/bench/release-scaling/2026-11-06-intel-r-core-tm-i9-10900k-cpu-3-70ghz-0.2.5">the records</a></p>
 <p><strong><code>wikidata</code></strong></p>
@@ -2375,19 +2479,19 @@ and commits its record.</p>
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=84bc92ec9c7c"></script>
+        <script src="../../assets/javascripts/bench.js?v=e01db6a28957"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=84bc92ec9c7c"></script>
+        <script src="../../assets/javascripts/couriers.js?v=e01db6a28957"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=84bc92ec9c7c"></script>
+        <script src="../../assets/javascripts/blog.js?v=e01db6a28957"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=84bc92ec9c7c"></script>
+        <script src="../../assets/javascripts/frontier.js?v=e01db6a28957"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=84bc92ec9c7c"></script>
+        <script src="../../assets/javascripts/observatory.js?v=e01db6a28957"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=84bc92ec9c7c"></script>
+        <script src="../../assets/javascripts/katex.js?v=e01db6a28957"></script>
       
     
   </body>
