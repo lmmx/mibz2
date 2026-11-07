@@ -10,7 +10,7 @@
 #                   requires its head to be exactly that commit, then runs
 #                   `just submit <recipe>` once.
 #   hold/<recipe>   stop without running anything.
-# It polls every 60 s, for at most --hours (default 8). Whatever the outcome (run passed,
+# It polls every 5 minutes, for at most --hours (default 8). Whatever the outcome (run passed,
 # run failed, hold, timeout or a refusal), it suspends afterwards, unless --no-suspend.
 # Everything is logged to ~/await-submit-<recipe>-<stamp>.log.
 set -uo pipefail
@@ -51,7 +51,7 @@ finish() {
 }
 
 cd "$(git rev-parse --show-toplevel)" || { say "not in a git checkout"; exit 2; }
-say "waiting for ready/$recipe or hold/$recipe on origin (every 60 s, up to ${hours} h); log $log"
+say "waiting for ready/$recipe or hold/$recipe on origin (every 5 min, up to ${hours} h); log $log"
 
 deadline=$(( $(date +%s) + hours * 3600 ))
 ready=""
@@ -62,7 +62,7 @@ while (( $(date +%s) < deadline )); do
   fi
   ready=$(awk -v r="refs/tags/ready/$recipe" '$2==r {print $1}' <<<"$refs")
   [[ -n "$ready" ]] && break
-  sleep 60
+  sleep 300
 done
 [[ -z "$ready" ]] && finish "TIMEOUT: no ready/$recipe after ${hours} h; nothing was run"
 say "ready/$recipe -> $ready"
