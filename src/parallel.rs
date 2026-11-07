@@ -934,7 +934,7 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
             continue;
         };
         if t.pool
-            .get_or_insert_with(|| super::coop::Pool::new(team_k))
+            .get_or_insert_with(|| super::coop::Pool::pipelined(team_k))
             .is_err()
         {
             // (no team: every block on this thread, as `bwt::Cooperative` falls back)

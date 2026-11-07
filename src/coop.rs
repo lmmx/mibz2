@@ -80,10 +80,27 @@ pub(crate) struct Pool {
     helpers: Vec<JoinHandle<()>>,
 }
 
+/// A plain team's helper threads' names: this and a number (`mibz2-coop-1`)
+pub(crate) const HELPER: &str = "mibz2-coop-";
+/// A pipelined team's helper threads' names: this and a number (`mibz2-coop-p1`)
+pub(crate) const PIPELINED_HELPER: &str = "mibz2-coop-p";
+
 impl Pool {
     /// A pool of `k` threads (`k` − 1 spawned; `k` of 0 is taken as 1). A helper that
     /// can't be spawned makes this an error, with those spawned before it shut down.
     pub(crate) fn new(k: usize) -> std::io::Result<Pool> {
+        Self::named(k, HELPER)
+    }
+
+    /// `new`, for a pipelined team (`parallel::StreamDecoder::pipelined`): its helpers are
+    /// named `PIPELINED_HELPER` and a number, so an observer of the threads' names (`ab`'s
+    /// census and `thread_cpu`) can tell a pipelined team from a plain one. Both names start
+    /// `mibz2-coop`, so whatever counts helpers by that prefix counts both.
+    pub(crate) fn pipelined(k: usize) -> std::io::Result<Pool> {
+        Self::named(k, PIPELINED_HELPER)
+    }
+
+    fn named(k: usize, prefix: &str) -> std::io::Result<Pool> {
         let k = k.max(1);
         let shared = Arc::new(Shared {
             epoch: AtomicUsize::new(0),
@@ -100,7 +117,7 @@ impl Pool {
         for idx in 1..k {
             let shared = Arc::clone(&pool.shared);
             let h = thread::Builder::new()
-                .name(format!("mibz2-coop-{idx}"))
+                .name(format!("{prefix}{idx}"))
                 .spawn(move || helper(&shared, idx))?;
             // (on an error above, `pool` drops with the helpers spawned so far, its k
             // counting only them)
@@ -1192,6 +1209,31 @@ mod tests {
             hits[j].fetch_add(1, Ordering::Relaxed);
         });
         assert!(hits.iter().all(|h| h.load(Ordering::Relaxed) == 1));
+    }
+
+    /// A plain pool's helpers and a pipelined team's are told apart by name (`ab`'s census
+    /// reads the names), and both counted as helpers by the `mibz2-coop` prefix
+    #[test]
+    fn helper_names() {
+        for (p, want) in [
+            (Pool::new(3).unwrap(), ["mibz2-coop-1", "mibz2-coop-2"]),
+            (
+                Pool::pipelined(3).unwrap(),
+                ["mibz2-coop-p1", "mibz2-coop-p2"],
+            ),
+        ] {
+            let names: Vec<_> = p
+                .helpers
+                .iter()
+                .map(|h| h.thread().name().unwrap().to_string())
+                .collect();
+            assert_eq!(names, want);
+            // (Linux keeps 15 bytes of a thread's name, which is what the census reads)
+            assert!(names
+                .iter()
+                .all(|n| n.len() <= 15 && n.starts_with("mibz2-coop")));
+            each_index_once(&p);
+        }
     }
 
     #[test]

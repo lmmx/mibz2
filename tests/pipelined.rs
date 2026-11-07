@@ -460,6 +460,7 @@ fn an_mtf_error_on_the_prefetched_block() {
     let mut expect = reference(&column(n, 5), 777).unwrap();
     expect.extend(reference(&column(n, 6), 777).unwrap());
     assert!(want == expect);
+    default_33_same(&z, &want, &want_res, "an MTF error on the prefetched block");
     // until a run has staged it overlapped (the scanner is far ahead of the decode, so
     // nearly always the first time), and every time the same bytes and error
     let mut overlapped_errors = 0;
