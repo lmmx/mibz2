@@ -688,9 +688,10 @@ bench-pipeline-levers ROUNDS="20" DRY="" CORPUS="":
 # sample, judged by bench/pipelined_default.py. One run, as decided. About 10 minutes; it ends
 # with one .tar.gz.
 #   just submit bench-pipelined-default
-# DRY=1 is the untimed check of the recipe itself (one round, no settling, CORPUS= a .bz2 to
-# use instead of building the bench's sample): never evidence, and the report never calls it
-# VALID.
+# A DRY value is the untimed check of the recipe itself (one round, no settling), with
+# optionally a CORPUS, a .bz2 to use instead of building the bench's sample, both positional:
+#   just bench-pipelined-default 1 [CORPUS]
+# never evidence, and the report never calls it VALID.
 
 # Head default (pipelined at 3 × 3) against v0.2.5's default, 8 to 20 threads
 bench-pipelined-default DRY="" CORPUS="":
@@ -725,7 +726,7 @@ bench-pipelined-default DRY="" CORPUS="":
       rounds=1; busy=(--max-busy 64 --settle 0.2)
       echo "bench-pipelined-default: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
     elif [ -n "$corpus" ]; then
-      fail "CORPUS= is for a DRY=1 check only; the registered run builds the bench's sample"
+      fail "a CORPUS is for a DRY check only; the registered run builds the bench's sample"
     fi
     # the commits the registration froze (bench/pipelined-default.frozen): the candidate, whose
     # build and workload inputs HEAD must match exactly, and the base it is measured against
@@ -817,7 +818,7 @@ bench-pipelined-default DRY="" CORPUS="":
       tool "$PWD"
       # (one path a line, so a directory with a space in its name stays one path)
       { printf '%s\n' "${CARGO_HOME:-$HOME/.cargo}/config" "${CARGO_HOME:-$HOME/.cargo}/config.toml"; configs "$(dirname "$PWD")" /; } \
-        | while IFS= read -r f; do [ -f "$f" ] && sha256sum "$f"; done; true
+        | while IFS= read -r f; do if [ -f "$f" ]; then sha256sum "$f"; fi; done
       echo "census every 5 ms (AB_CENSUS_MS unset)"
     } > "$W/inputs.txt"
     cat "$W/inputs.txt"

@@ -71,7 +71,7 @@ that run.
     between the base checkout, which is inside this one, and this checkout's root: Cargo
     would apply it to the base build only;
   - if the base build's worktree is not at the base, or has changes or untracked files;
-  - if `CORPUS=` is given without `DRY=1`.
+  - if a CORPUS is given without a DRY value.
 
   Each build runs in its own checkout, and Cargo's own build messages name each executable.
   The recipe copies them into the attempt's directory (`bin/`), and those copies are what
@@ -81,6 +81,12 @@ that run.
   from above this checkout and from Cargo's home (`inputs.txt`). The digests are a record
   of what ran, not a proof of what each was built from; the refusals above are what bind
   the builds to the frozen inputs.
+
+  **One departure from the precedent's recipe.** Its configuration inventory ended in
+  `[ -f "$f" ] && sha256sum "$f"; done; true`. Under `set -e` and `pipefail`, it stopped the
+  recipe whenever the last path it checked was not a file, as on a machine with no Cargo
+  configuration above the checkout. This recipe's dry run found it. The loop here uses
+  `if [ -f "$f" ]; then sha256sum "$f"; fi`, which records the same digests.
 - **The arms:** the head build's `mibz2` against the base build's (`mibz2@<base ab>`), the same
   `ab` mechanism as the precedent. Both use the default decoder, unpinned, as a caller gets it.
 - **The grid:** 8, 9, 10, 11, 12, 16 and 20 threads, 20 rounds, paired by round, on the bench's
@@ -126,8 +132,9 @@ that run.
 
   A broken runs file (truncated JSON, a null row or arm) is reported `INVALID`, never a
   crash.
-- **`DRY=1`** is the untimed check of the recipe itself: one round, no settling, and
-  optionally `CORPUS=` a .bz2 in place of the built sample. It is never evidence: its one round
+- **A DRY value** (`just bench-pipelined-default 1 [CORPUS]`, both positional) is the untimed
+  check of the recipe itself: one round, no settling, and optionally a CORPUS, a .bz2 in place
+  of the built sample. It is never evidence: its one round
   makes every cell incomplete, so the judge never calls it valid.
 
 ## The rule
