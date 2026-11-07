@@ -163,7 +163,9 @@ impl StreamDecoder {
     pub fn pipelined(teams: usize, k: usize, slots: usize, kernels: Kernels) -> StreamDecoder {
         let (teams, team_k) = (teams.max(1), k.max(2));
         let mut dec = Self::launch(teams, slots, move |shared, jobs| {
-            pipelined_worker::<false, false>(shared, jobs, kernels, team_k)
+            pipelined_worker::<false, false, { super::coop::BARRIER_SPINS }>(
+                shared, jobs, kernels, team_k,
+            )
         });
         dec.threads = teams * team_k;
         dec
@@ -180,20 +182,24 @@ impl StreamDecoder {
         kernels: Kernels,
         levers: Levers,
     ) -> StreamDecoder {
+        use super::coop::{BARRIER_SPINS as LONG, SHORT_SPINS as SHORT};
         let (teams, team_k) = (teams.max(1), k.max(2));
-        let mut dec = match (levers.park, levers.small) {
-            (false, false) => Self::launch(teams, slots, move |shared, jobs| {
-                pipelined_worker::<false, false>(shared, jobs, kernels, team_k)
-            }),
-            (true, false) => Self::launch(teams, slots, move |shared, jobs| {
-                pipelined_worker::<true, false>(shared, jobs, kernels, team_k)
-            }),
-            (false, true) => Self::launch(teams, slots, move |shared, jobs| {
-                pipelined_worker::<false, true>(shared, jobs, kernels, team_k)
-            }),
-            (true, true) => Self::launch(teams, slots, move |shared, jobs| {
-                pipelined_worker::<true, true>(shared, jobs, kernels, team_k)
-            }),
+        macro_rules! launch {
+            ($park:literal, $small:literal, $spin:ident) => {
+                Self::launch(teams, slots, move |shared, jobs| {
+                    pipelined_worker::<$park, $small, $spin>(shared, jobs, kernels, team_k)
+                })
+            };
+        }
+        let mut dec = match (levers.park, levers.small, levers.spin2k) {
+            (false, false, false) => launch!(false, false, LONG),
+            (true, false, false) => launch!(true, false, LONG),
+            (false, true, false) => launch!(false, true, LONG),
+            (true, true, false) => launch!(true, true, LONG),
+            (false, false, true) => launch!(false, false, SHORT),
+            (true, false, true) => launch!(true, false, SHORT),
+            (false, true, true) => launch!(false, true, SHORT),
+            (true, true, true) => launch!(true, true, SHORT),
         };
         dec.threads = teams * team_k;
         dec
@@ -578,10 +584,14 @@ fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct Levers {
     /// Lever A: a thread waiting for the build's end (a helper at the helpers' barrier,
-    /// the leader waiting to join the walk) spins as the pool's own waits do, then parks
-    /// until the build's last helper unparks it, rather than spinning and then yielding
-    /// in a loop (`coop::invert_pipelined_with`'s `PARK`)
+    /// the leader waiting to join the walk) spins its budget, then parks until the build's
+    /// last helper unparks it, as the pool's own waits park, rather than yielding in a loop
+    /// (`coop::invert_pipelined_with`'s `PARK`)
     pub park: bool,
+    /// The spin-budget control: that wait's budget is `coop::SHORT_SPINS` (2,000, the
+    /// pool's) rather than the registered `coop::BARRIER_SPINS` (4,096), whether it then
+    /// yields or parks (`coop::invert_pipelined_with`'s `SPIN`)
+    pub spin2k: bool,
     /// Lever B: after the leader decodes a block below `MIN_COOP` inside a run, it takes
     /// the next queued job too (never waiting for one), and so on until it stages a block
     /// for the team or finds none queued, so a small block no longer leaves the next run
@@ -850,8 +860,9 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> 
 }
 
 /// A pipelined team's worker: its leader's loop. `PARK` and `SMALL` are `Levers`' park and
-/// small; both false, it is the registered prototype's
-fn pipelined_worker<const PARK: bool, const SMALL: bool>(
+/// small, `SPIN` the waits' spin budget; both false at `coop::BARRIER_SPINS`, it is the
+/// registered prototype's
+fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
     shared: &Shared,
     jobs: &Mutex<Receiver<Job>>,
     k: Kernels,
@@ -975,7 +986,7 @@ fn pipelined_worker<const PARK: bool, const SMALL: bool>(
         // its `decode_block`, which a pipelined team never runs)
         mark!(RunStart, s.place);
         let r = catch_unwind(AssertUnwindSafe(|| {
-            super::coop::invert_pipelined_with::<FLAGGED_LANES, PARK>(
+            super::coop::invert_pipelined_with::<FLAGGED_LANES, PARK, SPIN>(
                 pool,
                 &hf.ll,
                 &hf.counts,

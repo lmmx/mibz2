@@ -6,7 +6,8 @@
 //! (a block CRC, a primary index, a truncation, and a move-to-front error on the block a
 //! leader prefetched while the one before was in flight); and a reader dropped mid-stream.
 //! Every test runs the registered prototype and each of its levers
-//! (`StreamDecoder::pipelined_levers`): park, small, and both.
+//! (`StreamDecoder::pipelined_levers`): park, the spin-budget control (spin2k), small, park
+//! and small together, and park after the short spin.
 
 mod common;
 use common::*;
@@ -42,26 +43,24 @@ fn run(dec: &StreamDecoder, z: &[u8]) -> (Vec<u8>, Result<(), Error>) {
     (out, res)
 }
 
-/// The registered prototype (`StreamDecoder::pipelined`, no lever), then each lever alone
-/// and both together
-const LEVERS: [Levers; 4] = [
-    Levers {
-        park: false,
-        small: false,
-    },
-    Levers {
-        park: true,
-        small: false,
-    },
-    Levers {
-        park: false,
-        small: true,
-    },
-    Levers {
-        park: true,
-        small: true,
-    },
+/// The registered prototype (`StreamDecoder::pipelined`, no lever), then each lever alone,
+/// the spin-budget control, park and small together, and park at the short budget
+const LEVERS: [Levers; 6] = [
+    lv(false, false, false),
+    lv(true, false, false),
+    lv(false, false, true),
+    lv(false, true, false),
+    lv(true, true, false),
+    lv(true, false, true),
 ];
+
+const fn lv(park: bool, small: bool, spin2k: bool) -> Levers {
+    Levers {
+        park,
+        small,
+        spin2k,
+    }
+}
 
 fn pipe(
     z: &[u8],
@@ -213,7 +212,7 @@ fn small_blocks_keep_the_pipeline_primed() {
             res.unwrap();
             assert!(got == want);
             for park in [false, true] {
-                let levers = Levers { park, small: true };
+                let levers = lv(park, true, false);
                 let (got, res, (primed, _)) = pipe_with(&z, 1, k, 16, levers);
                 res.unwrap();
                 assert!(got == want, "k {k}, {levers:?}");
@@ -378,7 +377,7 @@ fn an_mtf_error_after_a_small_block() {
     for _ in 0..20 {
         for k in [2, 3, 4] {
             for park in [false, true] {
-                let levers = Levers { park, small: true };
+                let levers = lv(park, true, false);
                 let (got, res, (_, errs)) = pipe_with(&z, 1, k, 8, levers);
                 assert!(got == want, "k {k}, {levers:?}: the bytes before the error");
                 assert_eq!(res, want_res, "k {k}, {levers:?}");

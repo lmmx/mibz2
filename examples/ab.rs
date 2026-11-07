@@ -47,10 +47,12 @@
 //! - `mibz2-pipe2`, `-pipe3`, `-pipe4` (research: the pipelined team,
 //!   `BzReader::parallel_pipelined`, its leader's RLE1, CRC and next move-to-front overlapped
 //!   with its helpers' build and walk: THREADS / K teams of K in the teamK arms' window);
-//! - `mibz2-pipe2-park`, `-pipe3-park`, `-pipe4-park`, and the same with `-small` and
-//!   `-both` (research: a pipeK arm with its levers, `BzReader::parallel_pipelined_levers`:
-//!   `park`, its waits for the build's end parking; `small`, its leader staging on after a
-//!   block below `MIN_COOP`; `both`, the two together), each its pipeK arm's plan and window;
+//! - `mibz2-pipe2-park`, `-pipe3-park`, `-pipe4-park`, and the same with `-spin2k`,
+//!   `-small` and `-both` (research: a pipeK arm with its levers,
+//!   `BzReader::parallel_pipelined_levers`: `park`, its waits for the build's end parking
+//!   after the same 4,096 spins; `spin2k`, those waits yielding after 2,000 spins, the
+//!   spin-budget control; `small`, its leader staging on after a block below `MIN_COOP`;
+//!   `both`, park and small together), each its pipeK arm's plan and window;
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
 //!   `ParallelDecoder::with_threads`);
 //! - `libbzip2` (libbzip2 1.0.8, C, the bzip2 crate's bundled source: `MultiBzDecoder`),
@@ -578,14 +580,16 @@ fn decode(
         // pipeK arm's plan and window, with lever A (park), lever B (small) or both
         "mibz2-pipe2-park" | "mibz2-pipe3-park" | "mibz2-pipe4-park" | "mibz2-pipe2-small"
         | "mibz2-pipe3-small" | "mibz2-pipe4-small" | "mibz2-pipe2-both" | "mibz2-pipe3-both"
-        | "mibz2-pipe4-both" => {
+        | "mibz2-pipe4-both" | "mibz2-pipe2-spin2k" | "mibz2-pipe3-spin2k"
+        | "mibz2-pipe4-spin2k" => {
             let (base, lever) = arm.rsplit_once('-').expect("mibz2-pipeK-LEVER");
             let k = (base.as_bytes()[base.len() - 1] - b'0') as usize;
             let teams = (threads / k).max(1);
             let slots = mibz2::parallel::SLOTS_PER_THREAD * teams;
             let levers = mibz2::parallel::Levers {
-                park: lever != "small",
-                small: lever != "park",
+                park: lever == "park" || lever == "both",
+                small: lever == "small" || lever == "both",
+                spin2k: lever == "spin2k",
             };
             drain(
                 mibz2::BzReader::parallel_pipelined_levers(

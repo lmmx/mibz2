@@ -572,17 +572,17 @@ bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
 # The pipelined team's two levers on the workstation
 # (docs/journal/2026-11-07-pipeline-levers-registration.md, registered before any run): at
 # 3 × 3 on 10 threads and 3 × 4 on 12, the registered pipe (mibz2-pipe3/4) against each lever
-# alone (-park, -small) and both (-both), with the non-pipelined twins (mibz2-team3/4) and the
-# default (mibz2, the noise control's reference at 10); each thread count its own ab run,
-# interleaved by round; then occupancy traces of every pipelined arm with the phase marks; then
-# bench/pipeline_levers.py's report and verdict. About 35 minutes. Close the browser and
-# anything busy first.
+# alone (-park, -small), the spin-budget control (-spin2k), and park and small together
+# (-both), with the non-pipelined twins (mibz2-team3/4) and the default (mibz2, the noise
+# control's reference at 10); each thread count its own ab run, interleaved by round; then
+# occupancy traces of every pipelined arm with the phase marks; then bench/pipeline_levers.py's
+# report and verdict. About 40 minutes. Close the browser and anything busy first.
 #   just submit bench-pipeline-levers
 # DRY=1 is the untimed check of the recipe itself (one round, one trace round, no settling):
 # never evidence, and the report never calls it VALID. CORPUS= a .bz2 to use instead of
 # building the bench's sample.
 
-# The pipelined team's levers (park, small blocks, both) against the registered pipe
+# The pipelined team's levers (park, spin2k, small blocks, both) against the registered pipe
 bench-pipeline-levers ROUNDS="20" DRY="" CORPUS="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -653,12 +653,12 @@ bench-pipeline-levers ROUNDS="20" DRY="" CORPUS="":
     for tk in 10:3 12:4; do
       IFS=: read -r t k <<< "$tk"
       if [ "$t" = 10 ]; then arms="mibz2,mibz2-team3"; else arms="mibz2-team4"; fi
-      arms="$arms,mibz2-pipe$k,mibz2-pipe$k-park,mibz2-pipe$k-small,mibz2-pipe$k-both"
+      arms="$arms,mibz2-pipe$k,mibz2-pipe$k-spin2k,mibz2-pipe$k-park,mibz2-pipe$k-small,mibz2-pipe$k-both"
       "$AB" run "$W/runs.jsonl" --arms "$arms" --threads "$t" --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
     done
     "$AB" summary "$W/runs.jsonl" --ref mibz2-pipe3 > "$W/summary.txt" || true
     occ=()
-    for tkl in 10:3: 10:3:park 10:3:small 10:3:both 12:4: 12:4:park 12:4:small 12:4:both; do
+    for tkl in 10:3: 10:3:spin2k 10:3:park 10:3:small 10:3:both 12:4: 12:4:spin2k 12:4:park 12:4:small 12:4:both; do
       IFS=: read -r t k l <<< "$tkl"
       lever=(); name="occupancy-t$t-pipe$k"
       if [ -n "$l" ]; then lever=(--levers "$l"); name="$name-$l"; fi

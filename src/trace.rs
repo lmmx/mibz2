@@ -107,6 +107,12 @@ pub enum Kind {
     ///   `MIN_COOP` (or with no team), the one-core build and walk on the leader alone.
     RunStart,
     RunEnd,
+    /// - the leader: its own work inside a team run (`coop::invert_pipelined`'s `lead`: the
+    ///   last block's RLE1 and CRC, the next jobs' move-to-front, small blocks decoded
+    ///   whole), from its start to the moment it turns to join the walk. Its end, against
+    ///   the build's end (`WalkSetupEnd`), is how late the leader joins the walk.
+    LeadStart,
+    LeadEnd,
 }
 
 /// No block: the place of a mark that has none

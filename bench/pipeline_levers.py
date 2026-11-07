@@ -15,11 +15,13 @@ must show):
     mibz2@10              3 x 3   today's default on the i9 (the noise control's reference)
     mibz2-team3@10        3 x 3   cooperative, not pipelined
     mibz2-pipe3@10        3 x 3   pipelined, as registered at f8aa9dc2 (no lever)
-    mibz2-pipe3-park@10   3 x 3   lever A: the waits for the build's end park
+    mibz2-pipe3-spin2k@10 3 x 3   the spin-budget control: the waits yield after 2,000 spins
+    mibz2-pipe3-park@10   3 x 3   lever A: the waits park after the same 4,096 spins
     mibz2-pipe3-small@10  3 x 3   lever B: the leader stages on after a small block
     mibz2-pipe3-both@10   3 x 3   both levers
     mibz2-team4@12        3 x 4   cooperative, not pipelined
     mibz2-pipe4@12        3 x 4   pipelined, no lever
+    mibz2-pipe4-spin2k@12 3 x 4   the spin-budget control
     mibz2-pipe4-park@12   3 x 4   lever A
     mibz2-pipe4-small@12  3 x 4   lever B
     mibz2-pipe4-both@12   3 x 4   both levers
@@ -42,7 +44,7 @@ from collections import defaultdict
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
 from team_size import geo_ci, plan_label, plan_of, threads_of  # noqa: E402
 
-LEVERS = ("park", "small", "both")
+LEVERS = ("park", "spin2k", "small", "both")
 CELLS = {"mibz2@10": (3, 3), "mibz2-team3@10": (3, 3), "mibz2-team4@12": (3, 4)}
 for _k, _t in ((3, 10), (4, 12)):
     CELLS[f"mibz2-pipe{_k}@{_t}"] = (3, _k)
@@ -50,7 +52,7 @@ for _k, _t in ((3, 10), (4, 12)):
         CELLS[f"mibz2-pipe{_k}-{_l}@{_t}"] = (3, _k)
 # (name, lever, arm, reference): each lever against the pipe it changes, at both plans
 COMPARISONS = []
-for _l, _tag in (("park", "A"), ("small", "B"), ("both", "AB")):
+for _l, _tag in (("park", "A"), ("spin2k", "S"), ("small", "B"), ("both", "AB")):
     for _i, (_k, _t) in enumerate(((3, 10), (4, 12)), 1):
         COMPARISONS.append(
             (f"{_tag}{_i}", _l, f"mibz2-pipe{_k}-{_l}@{_t}", f"mibz2-pipe{_k}@{_t}")
@@ -64,6 +66,10 @@ REPLICATIONS = [
     (f"T-{_l}{_i}", f"mibz2-pipe{_k}-{_l}@{_t}", f"mibz2-team{_k}@{_t}")
     for _l in LEVERS
     for _i, (_k, _t) in enumerate(((3, 10), (4, 12)), 1)
+] + [
+    # park against the short-spin yield: both changes at once (the prototype's first park)
+    (f"PS{_i}", f"mibz2-pipe{_k}-park@{_t}", f"mibz2-pipe{_k}-spin2k@{_t}")
+    for _i, (_k, _t) in enumerate(((3, 10), (4, 12)), 1)
 ]
 # the noise control: the same plan twice, the default against its forced twin
 CONTROL = ("N1", "mibz2-team3@10", "mibz2@10")
@@ -75,6 +81,10 @@ CONTROL_EQUIV = 0.03
 # lever B's mechanism: its median cross-thread overlap above the pipe's by this share of
 # the blocks
 B_MECHANISM = 0.10
+# lever B's counterexample, a later join: its summed join delay at least this multiple of
+# the pipe's, and at least this many ms more (both medians over the trace's rounds)
+LATE_JOIN_RATIO = 1.2
+LATE_JOIN_MS = 5.0
 REGISTERED_ROUNDS = 20
 
 
@@ -309,8 +319,8 @@ def report(a):
         tls, unreadable = timelines(a.occupancy)
         lines += ["", "## The traces (occupancy, medians over complete rounds)", ""]
         lines += [
-            "| trace | complete rounds | blocks | MTFs | MTF overlapped (cross thread) | (same thread) | RLE overlapped (cross thread) | build wait ms | build + walk ms |",
-            "|---|---|---|---|---|---|---|---|---|",
+            "| trace | complete rounds | blocks | MTFs | MTF overlapped (cross thread) | (same thread) | RLE overlapped (cross thread) | build wait ms | build + walk ms | lead ms | join delay ms | runs: late joins / missed / all |",
+            "|---|---|---|---|---|---|---|---|---|---|---|---|",
         ]
         for name in sorted(tls):
             tl = tls[name]
@@ -319,11 +329,14 @@ def report(a):
                 f"| {name} | {g('complete_rounds')} | {g('blocks')} | {g('pipe.n.mtf')} | "
                 f"{g('pipe.overlap.cross_thread')} | {g('pipe.overlap.same_thread')} | "
                 f"{g('pipe.overlap.rle_cross_thread')} | {g('pipe.ms.build_wait')} | "
-                f"{g('pipe.ms.build') + g('pipe.ms.walk'):.1f} |"
+                f"{g('pipe.ms.build') + g('pipe.ms.walk'):.1f} | {g('pipe.ms.lead')} | "
+                f"{g('pipe.ms.join_delay')} | {g('pipe.n.join_late')} / {g('pipe.n.join_missed')} / {g('pipe.n.join_runs')} |"
             )
-        lines += [f"| {u} | | | | | | | | |" for u in unreadable]
+        lines += [f"| {u} | | | | | | | | | | | |" for u in unreadable]
         lines += ["", "**Lever B's mechanism** (registered: its cross-thread overlap above the pipe's by at least "
-                  f"{B_MECHANISM:.0%} of the blocks):", ""]
+                  f"{B_MECHANISM:.0%} of the blocks), and its counterexample (a later join: the leader's summed join "
+                  f"delay at least {LATE_JOIN_RATIO}x the pipe's and {LATE_JOIN_MS:g} ms more). "
+                  "`pipeline_counts` (jobs taken in a run) is context only, never evidence:", ""]
         for k, t in ((3, 10), (4, 12)):
             base = tls.get(f"occupancy-t{t}-pipe{k}", {})
             for lever in ("small", "both"):
@@ -335,8 +348,27 @@ def report(a):
                     shown = "UNRESOLVED (a trace missing or incomplete)"
                 else:
                     shown = "SHOWN" if x - y >= B_MECHANISM * blocks else "NOT SHOWN"
-                lines.append(f"- {lever} at 3 x {k} ({t} threads): {x} against {y} of {blocks} blocks: **{shown}**")
-                out["traces"][f"{lever}{k}"] = {"lever": x, "pipe": y, "blocks": blocks, "mechanism": shown}
+                jx, jy = tl.get("pipe.ms.join_delay"), base.get("pipe.ms.join_delay")
+                if None in (jx, jy) or not complete:
+                    late = "UNRESOLVED"
+                else:
+                    late = (
+                        "LATER JOIN"
+                        if jx >= LATE_JOIN_RATIO * jy and jx - jy >= LATE_JOIN_MS
+                        else "no later join"
+                    )
+                lines.append(
+                    f"- {lever} at 3 x {k} ({t} threads): cross-thread overlap {x} against {y} of {blocks} blocks: "
+                    f"**{shown}**; the leader's join delay {jx} against {jy} ms: **{late}**"
+                )
+                out["traces"][f"{lever}{k}"] = {
+                    "lever": x,
+                    "pipe": y,
+                    "blocks": blocks,
+                    "mechanism": shown,
+                    "join_delay": [jx, jy],
+                    "join": late,
+                }
         lines += [
             "",
             "A pipelined trace with no cross-thread overlap, or lever B's mechanism not shown, means no mechanism verdict for that arm (the registration's outcome map).",
