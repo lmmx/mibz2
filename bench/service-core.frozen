@@ -1,4 +1,4 @@
 # The service core on the workstation (docs/journal/2026-11-07-service-core-registration.md).
 # The commit the registration, the prototype, the recipe and the report are frozen at:
 # just bench-service-core's measured inputs must match it exactly.
-frozen 0dfe1a83f2f7f80ab51745ae137d4f66968c626a
+frozen 7674535c0498c4f80ec1b284ea7936e039dcd3f7
