@@ -1,9 +1,7 @@
-# 2. Deliver the current decoder to downstream users
+# 2. Deliver the current decoder downstream
 
-- **Doing:** updating wikidata-pq from mibz2 0.2.2 to 0.2.5, superseding this PR's earlier 0.2.4 target.
-- **In order to:** 0, deliver released decoder improvements through its real consumer.
-- **Status:** [wikidata-pq #219](https://github.com/lmmx/wikidata-pq/pull/219) open at 93240f94d13bd15cd1c261525725596f2a45cc11; [Benchmark 42313607695](https://github.com/lmmx/wikidata-pq/actions/runs/42313607695) in progress when inspected. No new verdict inferred.
-- **Earlier result, scoped to 66544d5498a52f5f81256e0f350380b079c39166:** [6672648270](https://github.com/lmmx/wikidata-pq/pull/219#issuecomment-6672648270) reports no end-to-end gain beyond noise: split estimate 1h35m00s→1h33m49s and release estimate 5h05m50s→5h04m45s; parity passed, 68 native split files byte-identical to lbzip2. Peak memory across processes rose 1.303→1.433 GB, +9.8% ±3.4%. Those are modelled completion estimates, not timed full-dump results.
-- **Disposition of old revision:** left open for maintainer's call because the project's merge rule requires end-to-end gain beyond noise. It was not waiting on mibz2's release.
-- **New premise:** 0.2.5 includes the earlier move-to-front improvement plus the ten-core policy; the latter cannot apply on this project's four-core runners. PR expects only the small earlier effect there, below the old three-round precision. This is an expectation, not the new result.
-- **Dependency:** the new revision's own benchmark/merge disposition. A successful i9 decoder experiment neither proves end-to-end pipeline gain nor overrides the downstream rule; no automatic merge authority inferred.
+- **Doing/status:** dependency update done as intended: wikidata-pq #219 merged 2026-11-07 00:08:02 UTC, head 93240f94d13bd15cd1c261525725596f2a45cc11, merge 520bb37851d04ab95313746a006454278de3e4b8.
+- **In order to:** 0, deliver released decoder improvements to its consumer.
+- **Decision:** [6699288552](https://github.com/lmmx/wikidata-pq/pull/97#issuecomment-6699288552) records Louis's one-off call to bump 0.2.2→0.2.5 without an end-to-end CI gain. Coordinator reports parity/no regression. The ten-core policy cannot apply on the four-core runner; extrapolated benefit is not a measured downstream pipeline gain.
+- **Rule unchanged:** the recorded exception does not replace the ordinary merge rule. Earlier 0.2.4 no-gain and memory-rise findings remain scoped to head 66544d54; [prior detail](https://github.com/lmmx/mibz2/blob/bd440eac0c946aa3026ff13747984d9291eee25c/current/L3/2-users.md).
+- **Next proposed step:** release-shaped i9 split benchmark, opt-in per PR with a matching rule proposal, in order to evaluate future workstation-specific changes. Queued pending Louis's approval, not an approved criterion or an assigned run.

@@ -1,5 +1,7 @@
 # Changes, newest first
 
+- **2026-11-07, channel through 6699486962:** downstream 0.2.5 update merged on a one-off maintainer decision; release-scaling results and release notes completed. Scaling research resumed, with reported overlap prototype and adversarial review before freeze. Replaced the old dispatch pause; distinguished measurements from causal attributions, predictions and unconfirmed implementation completion.
+
 - **2026-11-06, channel through 6698812800:** 0.2.5 published after successful pre-release checks. Added informative release-scaling follow-up pending Louis, with current/previous defaults merged; release does not wait. Confirmation journal merged; release notes open. Downstream PR retargeted to 0.2.5 with its new benchmark running; exposed the prior revision's no-gain hold and memory flag without transplanting its verdict.
 
 - **2026-11-06, channel through 6698087098:** confirmation VALID PASS, policy admitted and #234 merged; collapsed the completed comparison and moved current work to release validation. First control offset did not recur, without proving equivalence. Submission #242 merged and delivered confirmation successfully. #243 documentation catches up with the result; master tests and pre-release benchmark still running, no new release observed.

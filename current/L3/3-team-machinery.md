@@ -15,7 +15,7 @@
 - **Status:** #242 merged as 9ece704953d815d1d0e8dd184c99defce273dd4d; first end-to-end use is confirmation [6698069738](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698069738), fetched, checksum-checked and re-judged by the Coordinator in [6698087098](https://github.com/lmmx/mibz2/pull/145#issuecomment-6698087098).
 - **Behavior:** Louis's opt-in `just submit <recipe>` runs the frozen recipe unchanged, archives bundle/checksum at an immutable evidence-branch commit and posts identity to #145. Ordinary runs submit nothing; `just submit-bundle <tarball>` retries delivery without another run. Deduplication uses run and digest.
 - **Authority history:** Louis's recorded C5/D5 approval is now merged; the command counts as handover of his own run, not automatic qualification or permission for agent timing. This Observer still executes the authenticated aa5ce6f5 pin; it observes this history without widening its own remit.
-- **Sequence resolved:** submission integration and confirmation are complete. Keeping the old tooling wait would now misstate direction. Release validation and publication are now complete; the new scaling follow-up has its own pending run.
+- **Sequence resolved:** submission integration and confirmation are complete. Keeping the old tooling wait would now misstate direction. Release validation and publication are now complete; the release-scaling files are now recorded on master (see 1.6).
 
 ## Release procedure
 
