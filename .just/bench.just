@@ -837,3 +837,370 @@ bench-pipelined-default DRY="" CORPUS="":
     else
       outcome="REPORT ERROR: pipelined_default.py exited $rc without writing its report"
     fi
+
+# The general plan policy's diagnostic registrations on the workstation
+# (docs/journal/2026-11-07-general-plan-policy.md §5, registrations 1, 2 and 5). Diagnostic
+# only (RULES C1): no outcome of theirs can qualify a production change. Each runs the
+# registered cells of bench/plan_diagnostics.py (`cells`), one `ab run` a cell, 20 paired
+# rounds, every arm a plan forced through `mibz2-plan-TxK[p]` (or a default), judged by
+# bench/plan_diagnostics.py. Close the browser and anything busy first.
+#   just submit bench-plan-boundaries      (about 15 minutes)
+#   just submit bench-plan-bytes           (about 12 minutes)
+#   just submit bench-plan-levels          (about 20 minutes)
+# Both arguments are positional. DRY, the first (`just bench-plan-bytes 1`), is the untimed
+# check of the recipe itself: one round, no settling, the topology unchecked and masks wider
+# than the machine narrowed to its cores; never evidence, and the report never calls it
+# VALID. CORPUS, the second (`just bench-plan-bytes 1 FILE.bz2`), with DRY only, is a .bz2 to
+# use (and to recompress, for bytes and levels) instead of the bench's Wikidata sample.
+
+# Registration 1: rule A's and rule B's boundaries, unmasked and under taskset masks
+bench-plan-boundaries DRY="" CORPUS="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/plan-boundaries
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-plan-boundaries: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends:
+    # a refusal, a failed build, a broken report or a full run
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-plan-boundaries: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W"
+      case "$outcome" in
+        VALID*) exit 0 ;;
+        INVALID*) exit 1 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-plan-boundaries: $*"; exit 1; }
+    rounds=20; busy=(); dry="{{DRY}}"; corpus="{{CORPUS}}"; dryflag=()
+    if [ -n "$dry" ]; then
+      rounds=1; busy=(--max-busy 64 --settle 0.2); dryflag=(--dry)
+      echo "bench-plan-boundaries: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
+    elif [ -n "$corpus" ]; then
+      fail "a CORPUS is for a DRY check only; the registered run builds the bench's sample"
+    fi
+    git rev-parse HEAD > "$W/commit.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit (bench/plan-boundaries.frozen): everything the run is
+    # built, driven and judged from must be as it was there
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/plan-boundaries.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/plan-boundaries.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      bench/plan_diagnostics.py bench/wikidata.py bench/wikidata.json bench/bundle.sh
+      .just/bench.just docs/journal/2026-11-07-plan-boundaries-registration.md)
+    overrides=$(env | cut -d= -f1 | grep -E '^(CARGO_|RUST|AB_CENSUS_MS$|AB_SAMPLE_MS$)' | grep -vxE 'CARGO_HOME|RUSTUP_HOME|RUST_BACKTRACE|RUST_LOG|CARGO_(HTTP|NET|TERM)_[A-Z_]+' || true)
+    [ -z "$overrides" ] || fail "unset these, so the build and the arms run the registered way: $(echo $overrides)"
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    # the ten-core topology (1 socket, 10 cores, 2 threads a core, a 20 MiB L3), checked
+    # before anything is built; the report checks it again
+    lscpu > "$W/lscpu.txt"
+    if ! python3 bench/plan_diagnostics.py topology "$W/lscpu.txt"; then
+      [ -n "$dry" ] || fail "not the ten-core topology the registration is for"
+      echo "bench-plan-boundaries: DRY: not the ten-core topology; going on"
+    fi
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    if [ -z "$corpus" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$B/wikidata.bz2"
+      corpus=$B/wikidata.bz2
+    fi
+    ln -sf "$(realpath "$corpus")" "$W/wikidata.bz2"
+    sha256sum "$W/wikidata.bz2" > "$W/corpus.sha256"
+    [ -n "$dry" ] || [ "$(cut -d' ' -f1 "$W/corpus.sha256")" = "$(python3 bench/plan_diagnostics.py sha wikidata)" ] \
+      || fail "the bench's sample is not the registered one"
+    "$AB" env > "$W/env.json"
+    # the cells, their masks on this machine's cores (the first c cores in the kernel's order,
+    # one CPU each or both), recorded; one `ab run` a cell, appended to its own file, under
+    # taskset where masked (`ab run`'s every unpinned run inherits the mask)
+    python3 bench/plan_diagnostics.py cells boundaries "$W/env.json" "${dryflag[@]}" > "$W/cells.txt"
+    awk '{print $1, $2}' "$W/cells.txt" > "$W/masks.txt"
+    cat "$W/cells.txt"
+    while read -r name mask t arms corpora; do
+      files=(); IFS=, read -ra cs <<< "$corpora"; for c in "${cs[@]}"; do files+=("$W/$c.bz2"); done
+      wrap=(); [ "$mask" = all ] || wrap=(taskset -c "$mask")
+      echo "bench-plan-boundaries: cell $name: $t threads, mask $mask, arms $arms"
+      "${wrap[@]}" "$AB" run "$W/runs-$name.jsonl" --arms "$arms" --threads "$t" --rounds "$rounds" "${busy[@]}" "${files[@]}" < /dev/null
+    done < "$W/cells.txt"
+    status=0
+    python3 bench/plan_diagnostics.py boundaries "$W" --out "$W/plan-boundaries" > /dev/null || status=$?
+    verdict=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/plan-boundaries.json" 2>/dev/null || echo "")
+    case "$verdict" in
+      VALID) outcome="VALID: see plan-boundaries.md for the readings" ;;
+      INVALID) outcome="INVALID: see plan-boundaries.md's validity checks" ;;
+      *) outcome="REPORT FAILED (status $status): see console.log" ;;
+    esac
+
+# Registration 2: plain 3x3, 3x3 pipelined and 4x2 at 10 threads on levels 6, 7 and 9
+bench-plan-bytes DRY="" CORPUS="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/plan-bytes
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-plan-bytes: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends:
+    # a refusal, a failed build, a broken report or a full run
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-plan-bytes: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W"
+      case "$outcome" in
+        VALID*) exit 0 ;;
+        INVALID*) exit 1 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-plan-bytes: $*"; exit 1; }
+    rounds=20; busy=(); dry="{{DRY}}"; corpus="{{CORPUS}}"; dryflag=()
+    if [ -n "$dry" ]; then
+      rounds=1; busy=(--max-busy 64 --settle 0.2); dryflag=(--dry)
+      echo "bench-plan-bytes: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
+    elif [ -n "$corpus" ]; then
+      fail "a CORPUS is for a DRY check only; the registered run builds the bench's sample"
+    fi
+    git rev-parse HEAD > "$W/commit.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit (bench/plan-bytes.frozen): everything the run is
+    # built, driven and judged from must be as it was there
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/plan-bytes.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/plan-bytes.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      bench/plan_diagnostics.py bench/wikidata.py bench/wikidata.json bench/bundle.sh
+      .just/bench.just docs/journal/2026-11-07-plan-bytes-registration.md)
+    overrides=$(env | cut -d= -f1 | grep -E '^(CARGO_|RUST|AB_CENSUS_MS$|AB_SAMPLE_MS$)' | grep -vxE 'CARGO_HOME|RUSTUP_HOME|RUST_BACKTRACE|RUST_LOG|CARGO_(HTTP|NET|TERM)_[A-Z_]+' || true)
+    [ -z "$overrides" ] || fail "unset these, so the build and the arms run the registered way: $(echo $overrides)"
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    lscpu > "$W/lscpu.txt"
+    if ! python3 bench/plan_diagnostics.py topology "$W/lscpu.txt"; then
+      [ -n "$dry" ] || fail "not the ten-core topology the registration is for"
+      echo "bench-plan-bytes: DRY: not the ten-core topology; going on"
+    fi
+    cargo build -q --release --example ab --example windows
+    AB=$PWD/target/release/examples/ab
+    if [ -z "$corpus" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$B/wikidata.bz2"
+      corpus=$B/wikidata.bz2
+    fi
+    # the sample's content recompressed at each level by `ab recompress` (libbzip2 1.0.8, the
+    # bundled source: the same bytes on any machine), kept beside the attempts by the source's
+    # digest and linked in; each must be the registered file, by SHA-256
+    src=$(sha256sum "$corpus" | cut -c1-16)
+    mkdir -p "$B/recompressed-$src"
+    for lv in 6 7 9; do
+      f=$B/recompressed-$src/wikidata-l$lv.bz2
+      [ -s "$f" ] || "$AB" recompress "$corpus" "$lv" "$f"
+      ln -sf "$f" "$W/wikidata-l$lv.bz2"
+    done
+    sha256sum "$W"/wikidata-l*.bz2 > "$W/corpus.sha256"
+    cat "$W/corpus.sha256"
+    if [ -z "$dry" ]; then
+      for lv in 6 7 9; do
+        [ "$(grep "wikidata-l$lv.bz2" "$W/corpus.sha256" | cut -d' ' -f1)" = "$(python3 bench/plan_diagnostics.py sha wikidata-l$lv)" ] \
+          || fail "the level-$lv recompression is not the registered file"
+      done
+    fi
+    "$AB" env > "$W/env.json"
+    python3 bench/plan_diagnostics.py cells bytes "$W/env.json" "${dryflag[@]}" > "$W/cells.txt"
+    awk '{print $1, $2}' "$W/cells.txt" > "$W/masks.txt"
+    cat "$W/cells.txt"
+    while read -r name mask t arms corpora; do
+      files=(); IFS=, read -ra cs <<< "$corpora"; for c in "${cs[@]}"; do files+=("$W/$c.bz2"); done
+      wrap=(); [ "$mask" = all ] || wrap=(taskset -c "$mask")
+      echo "bench-plan-bytes: cell $name: $t threads, mask $mask, arms $arms, corpora $corpora"
+      "${wrap[@]}" "$AB" run "$W/runs-$name.jsonl" --arms "$arms" --threads "$t" --rounds "$rounds" "${busy[@]}" "${files[@]}" < /dev/null
+    done < "$W/cells.txt"
+    status=0
+    python3 bench/plan_diagnostics.py bytes "$W" --out "$W/plan-bytes" > /dev/null || status=$?
+    verdict=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/plan-bytes.json" 2>/dev/null || echo "")
+    case "$verdict" in
+      VALID) outcome="VALID: see plan-bytes.md for the reading" ;;
+      INVALID) outcome="INVALID: see plan-bytes.md's validity checks" ;;
+      *) outcome="REPORT FAILED (status $status): see console.log" ;;
+    esac
+
+# Registration 5: levels 1 and 2 (and 3, separately) on 0.2.6 against v0.2.4, pinned by SHA
+bench-plan-levels DRY="" CORPUS="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/plan-levels
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-plan-levels: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends:
+    # a refusal, a failed build, a broken report or a full run
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-plan-levels: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W"
+      case "$outcome" in
+        VALID*) exit 0 ;;
+        INVALID*) exit 1 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-plan-levels: $*"; exit 1; }
+    rounds=20; busy=(); dry="{{DRY}}"; corpus="{{CORPUS}}"; dryflag=()
+    if [ -n "$dry" ]; then
+      rounds=1; busy=(--max-busy 64 --settle 0.2); dryflag=(--dry)
+      echo "bench-plan-levels: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
+    elif [ -n "$corpus" ]; then
+      fail "a CORPUS is for a DRY check only; the registered run builds the bench's sample"
+    fi
+    git rev-parse HEAD > "$W/commit.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit and its base (bench/plan-levels.frozen): everything the
+    # run is built, driven and judged from must be as it was at the frozen commit, and the
+    # base is v0.2.4's release commit, by its SHA, never by the tag's name
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/plan-levels.frozen)
+    base=$(awk '$1 == "base" {print $2}' bench/plan-levels.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ && $base =~ ^[0-9a-f]{40}$ ]] || fail "bench/plan-levels.frozen names no frozen commit and base"
+    [ "$base" = 1e644f9a327cd7282e79b40d9f870abc440e33e5 ] || fail "the base $base is not v0.2.4's release commit 1e644f9a"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      bench/plan_diagnostics.py bench/wikidata.py bench/wikidata.json bench/bundle.sh
+      .just/bench.just docs/journal/2026-11-07-plan-levels-registration.md)
+    overrides=$(env | cut -d= -f1 | grep -E '^(CARGO_|RUST|AB_CENSUS_MS$|AB_SAMPLE_MS$)' | grep -vxE 'CARGO_HOME|RUSTUP_HOME|RUST_BACKTRACE|RUST_LOG|CARGO_(HTTP|NET|TERM)_[A-Z_]+' || true)
+    [ -z "$overrides" ] || fail "unset these, so both builds and every arm run the registered way: $(echo $overrides)"
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" && git cat-file -e "$base^{commit}" || fail "fetch the branch and v0.2.4: the frozen commits are missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    head=$(git rev-parse HEAD)
+    printf 'head %s\nfrozen %s\nbase %s\n' "$head" "$frozen" "$base" > "$W/commits.txt"
+    lscpu > "$W/lscpu.txt"
+    if ! python3 bench/plan_diagnostics.py topology "$W/lscpu.txt"; then
+      [ -n "$dry" ] || fail "not the ten-core topology the registration is for"
+      echo "bench-plan-levels: DRY: not the ten-core topology; going on"
+    fi
+    [ -d "$B/build-$base" ] || git worktree add -q --detach "$B/build-$base" "$base"
+    [ "$(git -C "$B/build-$base" rev-parse HEAD)" = "$base" ] || fail "$B/build-$base is not at the base $base"
+    [ -z "$(git -C "$B/build-$base" status --porcelain --untracked-files=all)" ] || fail "$B/build-$base has changes or untracked files"
+    # (each executable as Cargo reports building it, from its own checkout, then copied into
+    # this attempt's directory: the copies are what run and what the digests describe)
+    built() {  # built DIR EXAMPLE...: build in DIR, print each example's executable, in order
+      local dir=$1; shift
+      local args=(); for e in "$@"; do args+=(--example "$e"); done
+      (cd "$dir" && cargo build -q --release --message-format=json-render-diagnostics "${args[@]}") \
+        | python3 -c 'import json,sys
+    want=sys.argv[1:]; got={}
+    for line in sys.stdin:
+        m=json.loads(line)
+        if m.get("reason")=="compiler-artifact" and m.get("executable") and m["target"]["name"] in want and "example" in m["target"]["kind"]:
+            got[m["target"]["name"]]=m["executable"]
+    missing=[w for w in want if w not in got]
+    if missing: sys.exit("no executable reported for: "+" ".join(missing))
+    print("\n".join(got[w] for w in want))' "$@"
+    }
+    # Cargo configuration only the base build would read (between the two checkouts): refused
+    configs() { local d=$1 stop=$2; while :; do for f in "$d/.cargo/config" "$d/.cargo/config.toml"; do [ -f "$f" ] && echo "$f"; done; [ "$d" = "$stop" ] && break; d=$(dirname "$d"); done; return 0; }
+    only_base=$(configs "$(dirname "$B/build-$base")" "$PWD")
+    [ -z "$only_base" ] || fail "Cargo configuration only the base build would read: $(echo $only_base)"
+    tool() { (cd "$1" && rustc -vV && cargo -V); }
+    [ "$(tool "$PWD")" = "$(tool "$B/build-$base")" ] || fail "the two checkouts select different toolchains"
+    mkdir "$W/bin"
+    base_built=$(built "$B/build-$base" ab) || fail "the base build failed"
+    cp "$base_built" "$W/bin/ab-base"
+    sha256sum "$W/bin/ab-base" > "$W/bin/ab-base.sha256"
+    head_built=$(built "$PWD" ab windows) || fail "the head build failed"
+    [ "$(printf '%s\n' "$head_built" | wc -l)" = 2 ] || fail "Cargo reported no executables for the head build"
+    cp "$(printf '%s\n' "$head_built" | sed -n 1p)" "$W/bin/ab-head"
+    cp "$(printf '%s\n' "$head_built" | sed -n 2p)" "$W/bin/windows"
+    sha256sum -c --quiet "$W/bin/ab-base.sha256" || fail "the base executable changed after it was copied"
+    AB=$W/bin/ab-head
+    BASEAB=$W/bin/ab-base
+    if [ -z "$corpus" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" "$W/bin/windows" "$B/wikidata.bz2"
+      corpus=$B/wikidata.bz2
+    fi
+    # the sample's content recompressed at levels 1, 2 and 3 by `ab recompress` (libbzip2
+    # 1.0.8, the bundled source: the same bytes on any machine); each the registered file
+    src=$(sha256sum "$corpus" | cut -c1-16)
+    mkdir -p "$B/recompressed-$src"
+    for lv in 1 2 3; do
+      f=$B/recompressed-$src/wikidata-l$lv.bz2
+      [ -s "$f" ] || "$AB" recompress "$corpus" "$lv" "$f"
+      ln -sf "$f" "$W/wikidata-l$lv.bz2"
+    done
+    sha256sum "$W"/wikidata-l*.bz2 > "$W/corpus.sha256"
+    cat "$W/corpus.sha256"
+    if [ -z "$dry" ]; then
+      for lv in 1 2 3; do
+        [ "$(grep "wikidata-l$lv.bz2" "$W/corpus.sha256" | cut -d' ' -f1)" = "$(python3 bench/plan_diagnostics.py sha wikidata-l$lv)" ] \
+          || fail "the level-$lv recompression is not the registered file"
+      done
+    fi
+    {
+      sha256sum "$AB" "$BASEAB" "$W/bin/windows"
+      tool "$PWD"
+    } > "$W/inputs.txt"
+    "$AB" env > "$W/env.json"
+    python3 bench/plan_diagnostics.py cells levels "$W/env.json" "${dryflag[@]}" > "$W/cells.txt"
+    awk '{print $1, $2}' "$W/cells.txt" > "$W/masks.txt"
+    cat "$W/cells.txt"
+    while read -r name mask t arms corpora; do
+      files=(); IFS=, read -ra cs <<< "$corpora"; for c in "${cs[@]}"; do files+=("$W/$c.bz2"); done
+      # (the registration's `base` arm is v0.2.4's own `mibz2`, run by its own harness binary)
+      arms=${arms//base/mibz2@$BASEAB}
+      echo "bench-plan-levels: cell $name: $t threads, arms $arms, corpora $corpora"
+      "$AB" run "$W/runs-$name.jsonl" --arms "$arms" --threads "$t" --rounds "$rounds" "${busy[@]}" "${files[@]}" < /dev/null
+    done < "$W/cells.txt"
+    status=0
+    python3 bench/plan_diagnostics.py levels "$W" --out "$W/plan-levels" > /dev/null || status=$?
+    verdict=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/plan-levels.json" 2>/dev/null || echo "")
+    case "$verdict" in
+      VALID) outcome="VALID: see plan-levels.md for the readings" ;;
+      INVALID) outcome="INVALID: see plan-levels.md's validity checks" ;;
+      *) outcome="REPORT FAILED (status $status): see console.log" ;;
+    esac
