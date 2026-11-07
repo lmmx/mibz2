@@ -9,12 +9,13 @@ decoder and the pipelined and lever paths are unchanged.
 **How it is frozen.** `bench/service-core.frozen` names the commit this registration, the
 prototype, the recipe (`just bench-service-core`) and the report (`bench/service_core.py`)
 are frozen at. The recipe refuses to run if any measured input differs from it, and the
-report calls nothing VALID but the registered run.
+report calls nothing VALID but the registered run. The report also prints the
+architecture's reading (below) as one line, computed mechanically from C1–C4's outcomes.
 
 **Frozen at** the commit that adds this sentence, before any timed run; its full SHA is the
 `frozen` line of `bench/service-core.frozen` (a file the recipe reads but doesn't measure, so
-a registration can't name its own commit's SHA itself). The untimed `DRY=1` run (just
-`bench-service-core 20 1`) was made on the shared 4-core machine first: every svc cell's
+a registration can't name its own commit's SHA itself). The untimed dry run (`just
+bench-service-core 20 1`, DRY positional) was made on the shared 4-core machine first: every svc cell's
 plan and all six traces checked, the run INVALID as registered for a dry run.
 
 ## The question
@@ -63,7 +64,8 @@ pipelined run's in-run barrier, and the levers' parked wait for it, aren't neede
 **Two queues in a hub**, each bounded by buffers that are reused, never allocated per block:
 - **Prepared** (service → teams): blocks whose move-to-front is done, each in a front set
   (`ll`, counts, checkpoints). There are teams + lookahead + K front sets, with the
-  lookahead at one block a team.
+  lookahead at one block a team. A team returns its front set once its block is walked
+  (or dropped, or failed), not after the build: the set stays held through the walk.
 - **Finishing** (teams → service): blocks walked, each in a back set (the walk's segments,
   or the bytes of a block too short to segment). There are two back sets a team.
 

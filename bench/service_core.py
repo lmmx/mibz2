@@ -118,6 +118,25 @@ def is_gain(word):
     return word == "GAIN" or word.startswith("SMALL GAIN")
 
 
+def architecture(causal):
+    """The registration's reading, mechanically: FOR IT if C2 or C4 is a speed gain BEYOND
+    ITS THREADS with CPU not a CPU COST; A TRADE if C2 or C4 is a speed gain with a CPU COST;
+    FAILS if C1-C4 are all NULL or REGRESSION on speed; otherwise none of the three"""
+    by = {c["name"]: c for c in causal}
+    against_default = [by[n] for n in ("C2", "C4") if n in by]
+    if any(
+        is_gain(c["speed_outcome"]) and c["cpu_outcome"] != "CPU COST" and c["extra_thread"].startswith("BEYOND")
+        for c in against_default
+    ):
+        return "FOR IT (C2 or C4: a gain over today's default, beyond its threads, CPU not a cost)"
+    if any(is_gain(c["speed_outcome"]) and c["cpu_outcome"] == "CPU COST" for c in against_default):
+        return "A TRADE (C2 or C4: a gain over today's default for a CPU cost, for Louis to weigh)"
+    four = [by[n] for n in ("C1", "C2", "C3", "C4") if n in by]
+    if len(four) == 4 and all(c["speed_outcome"] in ("NULL", "REGRESSION") for c in four):
+        return "FAILS (C1-C4 all NULL or REGRESSION)"
+    return "NONE OF THE THREE (see the comparisons)"
+
+
 def decode_threads(plan):
     leaders, helpers, services = plan
     return leaders + helpers + services
@@ -311,6 +330,8 @@ def report(a):
         lines.append("")
 
     judged("The causal comparisons (equal budget; judged; C2 and C4 are also the product comparisons, against today's default)", CAUSAL, "causal")
+    out["architecture"] = architecture(out["causal"]) if verdict == "VALID" else "NONE (the run is invalid)"
+    lines += [f"**The architecture's reading** (the registration's rule, computed from C1–C4): **{out['architecture']}**", ""]
     lines += [
         "## Reported, never judged",
         "",

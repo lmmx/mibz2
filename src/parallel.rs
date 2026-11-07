@@ -1090,7 +1090,7 @@ fn lock_lead(m: &Mutex<Lead>) -> std::sync::MutexGuard<'_, Lead> {
 // - **prepared** (service → teams): blocks whose move-to-front is done, each in a front
 //   set (`Front`: `ll`, counts, checkpoints). Fronts: a team's each, the queue's lookahead
 //   (`teams`), and a service worker's each; a service worker takes a free one to prepare
-//   into, a team gives it back once its build has read it.
+//   into, a team gives it back once its block is walked (or dropped, or failed).
 // - **finishing** (teams → service): blocks walked, each in a back set (`Back`: the walk's
 //   segments, or for a block below `MIN_SEGMENTED` its bytes). Backs: two a team; a team
 //   takes one with each block, a service worker gives it back once it has finished it.
@@ -1469,6 +1469,45 @@ fn finish(shared: &Shared, hub: &Hub, w: Walked, asm: &mut Vec<u8>, k: Kernels) 
     hub.retire(None, Some(back));
 }
 
+/// A team's next prepared block and a back set to walk it into, waiting until both are
+/// there; None once the decode has ended. Taking a prepared block wakes the hub's waiters:
+/// a service worker waiting with the prepared queue at its lookahead (its rule 3) may now
+/// prepare again. (`notify_all`: teams and service workers share the one condition, so a
+/// single wake-up could go to a team that can't use it.)
+fn take_prepared(hub: &Hub) -> Option<(Prepared, Back)> {
+    let mut st = hub.lock();
+    let mut idle = false;
+    let got = loop {
+        if !st.prepared.is_empty() && !st.backs.is_empty() {
+            let p = st.prepared.pop_front().expect("a prepared block");
+            let b = st.backs.pop().expect("a back set");
+            mark!(TeamGot, p.place, st.prepared.len(), 0);
+            break Some((p, b));
+        }
+        if st.done() {
+            break None;
+        }
+        if !idle {
+            idle = true;
+            mark!(
+                TeamIdleStart,
+                crate::trace::NONE,
+                u8::from(!st.prepared.is_empty()),
+                0
+            );
+        }
+        st = hub.wait(st);
+    };
+    drop(st);
+    if idle {
+        mark!(TeamIdleEnd);
+    }
+    if got.is_some() {
+        hub.cv.notify_all();
+    }
+    got
+}
+
 /// A team: its first thread takes prepared blocks and inverts each on the team's pool
 /// (`coop::invert_team`), or alone for a block below `MIN_COOP` (or with no pool), into a
 /// back set, then queues it for finishing
@@ -1477,37 +1516,8 @@ fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
     let mut tt = super::bwt::TVector::default();
     let mut pool: Option<std::io::Result<super::coop::Pool>> = None;
     loop {
-        let (p, mut back) = {
-            let mut st = hub.lock();
-            let mut idle = false;
-            let got = loop {
-                if !st.prepared.is_empty() && !st.backs.is_empty() {
-                    let p = st.prepared.pop_front().expect("a prepared block");
-                    let b = st.backs.pop().expect("a back set");
-                    mark!(TeamGot, p.place, st.prepared.len(), 0);
-                    break Some((p, b));
-                }
-                if st.done() {
-                    break None;
-                }
-                if !idle {
-                    idle = true;
-                    mark!(
-                        TeamIdleStart,
-                        crate::trace::NONE,
-                        u8::from(!st.prepared.is_empty()),
-                        0
-                    );
-                }
-                st = hub.wait(st);
-            };
-            if idle {
-                mark!(TeamIdleEnd);
-            }
-            let Some(got) = got else {
-                return;
-            };
-            got
+        let Some((p, mut back)) = take_prepared(hub) else {
+            return;
         };
         let Prepared {
             place,
@@ -1816,6 +1826,107 @@ mod service_tests {
         let mut z = Z.to_vec();
         z[at[s] + 4 + 6] ^= 0x10;
         (z, (at[s] as u64 + 4) * 8)
+    }
+
+    /// A hub as `service_with_fault` makes it, with no threads: `lookahead` blocks of
+    /// lookahead and `fronts` front sets
+    fn hub(lookahead: usize, fronts: usize) -> Hub {
+        Hub {
+            st: Mutex::new(HubState {
+                jobs: Default::default(),
+                closed: false,
+                prepared: Default::default(),
+                walked: Vec::new(),
+                fronts: (0..fronts).map(|_| Front::default()).collect(),
+                backs: vec![Back::default()],
+                live: 0,
+            }),
+            cv: Condvar::new(),
+            lookahead,
+            fault: None,
+        }
+    }
+
+    fn job(place: u64) -> Job {
+        let symbols = super::super::block::Symbols {
+            crc: 0,
+            orig_ptr: 0,
+            seq_to_unseq: [0; 256],
+            syms: vec![],
+            eob: 1,
+            max_len: 100_000,
+        };
+        (place, 0, symbols)
+    }
+
+    /// A service worker waiting with the prepared queue at its lookahead (rule 3) wakes when
+    /// a team takes a prepared block, with nothing else to wake it (no walked block, no
+    /// front set returned, no new job), and prepares the job waiting
+    #[test]
+    fn miri_a_team_taking_a_prepared_block_wakes_the_service() {
+        let shared = Shared {
+            state: Mutex::new(State {
+                ready: BTreeMap::new(),
+                issued: 0,
+                taken: 0,
+                end: None,
+                cancelled: false,
+                free_out: Vec::new(),
+                free_syms: Vec::new(),
+            }),
+            cv: Condvar::new(),
+            slots: 4,
+            overlapped: AtomicU64::new(0),
+            overlap_errors: AtomicU64::new(0),
+        };
+        let h = hub(1, 2);
+        {
+            // block 0 prepared (the queue at its lookahead of 1), block 1 waiting as a job
+            let mut st = h.lock();
+            st.live = 1;
+            let front = st.fronts.pop().unwrap();
+            st.prepared.push_back(Prepared {
+                place: 0,
+                bit: 0,
+                symbols: job(0).2,
+                front,
+                rows: 0,
+            });
+            st.jobs.push_back(job(1));
+        }
+        std::thread::scope(|s| {
+            let svc = s.spawn(|| service_worker(&shared, &h, Kernels::scalar()));
+            // the service worker can't prepare yet: wait until it is parked on the hub (it
+            // holds the lock only while it decides), then give it nothing else to see
+            for _ in 0..if cfg!(miri) { 20 } else { 2000 } {
+                std::thread::yield_now();
+            }
+            assert_eq!(h.lock().jobs.len(), 1, "prepared beyond the lookahead");
+            let (p, back) = take_prepared(&h).expect("block 0");
+            assert_eq!(p.place, 0);
+            // the service takes the job only if the pop woke it
+            let wait = std::time::Duration::from_secs(if cfg!(miri) { 120 } else { 10 });
+            let deadline = std::time::Instant::now() + wait;
+            let mut woke = true;
+            while !h.lock().jobs.is_empty() {
+                if std::time::Instant::now() > deadline {
+                    woke = false;
+                    break;
+                }
+                std::thread::yield_now();
+            }
+            // (block 1's empty symbols fail their move-to-front: its error published, and
+            // it retires; block 0 retires here, then the hub is closed and both end, the
+            // close's own wake-up ending the service worker even if the pop's was missing)
+            h.retire(Some(p.front), Some(back));
+            h.lock().closed = true;
+            h.cv.notify_all();
+            svc.join().unwrap();
+            assert!(woke, "the service worker never woke on the team's pop");
+        });
+        let st = h.lock();
+        assert!(st.done() && st.prepared.is_empty());
+        assert!(shared.lock().ready.get(&1).is_some_and(|r| r.is_err()));
     }
 
     #[test]

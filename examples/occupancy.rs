@@ -1763,7 +1763,7 @@ fn parent(args: &[String]) {
                 ("threads".into(), J::A(threads.iter().map(|t| J::N(*t as f64)).collect())),
                 ("rounds".into(), J::N(rounds as f64)),
                 ("gap_seconds".into(), J::N(gap)),
-                ("slots".into(), slots.map_or(J::S("2 x threads (BzReader::parallel's)".into()), |s| J::N(s as f64))),
+                ("slots".into(), slots.map_or(J::S("SLOTS_PER_THREAD (4) x threads (BzReader::parallel's)".into()), |s| J::N(s as f64))),
                 ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(match &svc { Some(spec) => format!("the service core, mibz2-svc{spec}'s plan"), None => format!("{} of {k}, forced{}", if pipe { "pipelined teams" } else { "teams" }, lever.as_ref().map_or(String::new(), |l| format!(", levers: {l}"))) }))),
                 (
                     "workload".into(),

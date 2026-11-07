@@ -578,8 +578,9 @@ bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
 # bench/service_core.py's report and verdict. About 40 minutes. Close the browser and
 # anything busy first.
 #   just submit bench-service-core
-# DRY=1 is the untimed check of the recipe itself (one round, one trace round, no settling):
-# never evidence, and the report never calls it VALID. CORPUS= a .bz2 to use instead of
+# DRY (the second argument, positional: `just bench-service-core 20 1`) is the untimed check
+# of the recipe itself (one round, one trace round, no settling): never evidence, and the
+# report never calls it VALID. CORPUS (the third, positional) is a .bz2 to use instead of
 # building the bench's sample.
 
 # The service core (svc1, svc2, svc1-t2) against the plain team and today's pipelined default
