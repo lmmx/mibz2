@@ -1,9 +1,10 @@
 # 2026-11-07: The pipelined team, registered before any workstation run
 
-**Status:** registered, not run. This entry, the prototype it tests and the recipe that runs
-it are frozen by the commit that adds this entry. The recipe (`just bench-team-pipeline`,
-`.just/bench.just`) names that commit and records, in the attempt's directory, whether the
-code and this entry still match it (`NOT-FROZEN.txt` if they don't). Nothing here changes the
+**Status:** registered, not run. This entry and the prototype it tests are frozen at one
+commit, the one the recipe names (`frozen=` in `just bench-team-pipeline`,
+`.just/bench.just`, the commit after this entry's last change). The recipe records, in the
+attempt's directory, whether the code and this entry still match it (`NOT-FROZEN.txt` if
+they don't). Nothing here changes the
 default decoder: the pipelined team is opt-in (`StreamDecoder::pipelined`,
 `BzReader::parallel_pipelined`, both `#[doc(hidden)]`).
 
