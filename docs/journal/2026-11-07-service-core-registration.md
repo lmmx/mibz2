@@ -12,11 +12,15 @@ are frozen at. The recipe refuses to run if any measured input differs from it, 
 report calls nothing VALID but the registered run. The report also prints the
 architecture's reading (below) as one line, computed mechanically from C1–C4's outcomes.
 
-**Frozen at** the commit that adds this sentence, before any timed run; its full SHA is the
-`frozen` line of `bench/service-core.frozen` (a file the recipe reads but doesn't measure, so
-a registration can't name its own commit's SHA itself). The untimed dry run (`just
-bench-service-core 20 1`, DRY positional) was made on the shared 4-core machine first: every svc cell's
-plan and all six traces checked, the run INVALID as registered for a dry run.
+**Frozen at** the commit `bench/service-core.frozen` names (its `frozen` line, a file the
+recipe reads but doesn't measure, since a registration can't name its own commit's SHA):
+the commit before that file's last change, so the branch's head differs from it in that
+file alone. Re-frozen once, before any timed run, after the pre-run review (a missing
+wake-up fixed: a team's taking a prepared block now wakes the service; comments
+corrected); the first freeze, 7674535c, ran nothing timed. The untimed dry run (`just
+bench-service-core 20 1`, DRY positional) was made on the shared 4-core machine at each
+freeze: every svc cell's plan and all six traces checked, the run INVALID as registered for
+a dry run.
 
 ## The question
 
