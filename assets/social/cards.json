@@ -53,6 +53,12 @@
     "section": " · Research blog",
     "title": "Huffman decoding in mibz2: keeping the bit buffer in a register"
   },
+  "assets/social/blog-2026-11-07-why-mibz2-stops-scaling.png": {
+    "description": "Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open.",
+    "foot": "lmmx.github.io/mibz2 · 7 November 2026",
+    "section": " · Research blog",
+    "title": "Why mibz2 stops scaling at eight threads, and why three teams help"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
