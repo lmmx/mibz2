@@ -11,6 +11,12 @@ prototype, the recipe (`just bench-service-core`) and the report (`bench/service
 are frozen at. The recipe refuses to run if any measured input differs from it, and the
 report calls nothing VALID but the registered run.
 
+**Frozen at** the commit that adds this sentence, before any timed run; its full SHA is the
+`frozen` line of `bench/service-core.frozen` (a file the recipe reads but doesn't measure, so
+a registration can't name its own commit's SHA itself). The untimed `DRY=1` run (just
+`bench-service-core 20 1`) was made on the shared 4-core machine first: every svc cell's
+plan and all six traces checked, the run INVALID as registered for a dry run.
+
 ## The question
 
 In the 3 × 3 plan, each team's leader does the block's move-to-front and checkpoints, then
