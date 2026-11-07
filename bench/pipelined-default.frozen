@@ -1,0 +1,6 @@
+# The pipelined default's workstation A/B (docs/journal/2026-11-07-pipelined-default-registration.md).
+# Frozen on 2026-11-07, in its own commit. The candidate is the commit whose build and workload
+# inputs (the recipe's `measured` list) HEAD must match; the base is v0.2.5's release commit,
+# by its SHA.
+candidate dd3b8b5f789d2aa5b7c695392e02f3310b25eceb
+base e46f826379313b7a04d93005c349e2aada203582
