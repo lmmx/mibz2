@@ -81,9 +81,10 @@
     6694804971,
     6695278609,
     6695535463,
-    6695669534
+    6695669534,
+    6699480548
   ],
-  "last_processed_comment_id": 6695669534,
+  "last_processed_comment_id": 6699480548,
   "comment_reviews": [
     {
       "repository": "lmmx/mibz2",
@@ -557,10 +558,15 @@
     },
     {
       "trigger_comment_id": 6699480548,
-      "status": "in_progress",
+      "status": "complete",
       "repository": "lmmx/mibz2",
       "pr": 162,
-      "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef"
+      "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef",
+      "source_commit": "853dd1af32fd1df3a8132a0452d7fa5a2f0ee8c0",
+      "report_commit": "570a89ee8606081346b77728f208b2b635189abe",
+      "report_path": "state/reports/knee-mechanism-6699480548/report.md",
+      "review_comment_pr": 145,
+      "disposition": "REVISE mechanism and registration: corrected inversion occupancy, unresolved saturation cause, conditional pipeline forecast and falsifiers, ledger and placement corrections. Archived data only; no timing."
     }
   ],
   "active_delegations": [],
