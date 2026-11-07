@@ -7,6 +7,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+On a machine with 10 physical cores and a 20 MiB L3, such as the i9-10900K, the decoder now
+pipelines its three teams of three at 10 or more threads: each team's leader undoes one
+block's RLE1 and checks its CRC, and runs the next block's move-to-front, while its helpers
+build and walk the block between (#247). Two levers are on: waiting helpers park rather than
+yield (#249's park), and a leader keeps staging after a small block (#249's small). Only that
+plan changes: every other plan, and every other machine shape, keeps the 0.2.5 path. So do
+the output, the errors, the API and the supported inputs.
+
+### Measured
+
+**On the target machine:** three registered runs on an Intel i9-10900K (10 cores, 20 CPUs), 20
+rounds each, on the bench's Wikidata sample. Louis ran all three with `just submit`. Their bundles are
+on the `evidence` branch, as `team-pipeline/20261107T042622Z`, `pipeline-levers/20261107T091926Z`
+and `pipelined-default/20261107T105448Z`.
+
+- **The confirmation (`pipelined-default/20261107T105448Z`, VALID PASS):** this release's
+  default against 0.2.5's, paired by round, admitted on the terms in `docs/journal/decisions.md`
+  (2026-11-07):
+
+  | threads | plan, 0.2.5 → 0.2.6 | speed (95%) | CPU | peak RSS |
+  |--:|---|--:|--:|--:|
+  | 8 | 4 × 2 → 4 × 2 (unchanged) | 1.002 (0.991–1.013) | 0.99 | 1.00 |
+  | 9 | 4 × 2 → 4 × 2 (unchanged) | 1.001 (0.991–1.012) | 1.00 | 1.00 |
+  | 10 | 3 × 3 → 3 × 3 pipelined | **1.072 (1.054–1.089)** | 1.04 | 1.10 |
+  | 11 | 3 × 3 → 3 × 3 pipelined | 1.070 (1.055–1.085) | 1.05 | 1.12 |
+  | 12 | 3 × 3 → 3 × 3 pipelined | 1.069 (1.054–1.085) | 1.05 | 1.10 |
+  | 16 | 3 × 3 → 3 × 3 pipelined | 1.065 (1.045–1.085) | 1.05 | 1.13 |
+  | 20 | 3 × 3 → 3 × 3 pipelined | 1.070 (1.048–1.092) | 1.04 | 1.12 |
+
+  CPU and peak RSS are the new default's medians over 0.2.5's. Both are reported, not judged.
+  The figures below are from the earlier, exploratory runs.
+
+- **Speed:** 7.2% faster, 95% CI +5.3% to +9.1%. This is a paired ratio of 1.072
+  [1.053, 1.091]: the pipelined teams with both levers against the plain three teams of three
+  (0.2.5's plan), both on 10 threads.
+- **CPU:** 5.2% more, from the paired ratio 0.951 (1/0.951) alongside that speedup.
+  - **The medians tell a slightly different story.** Against the shipped default, the medians
+    are 1.030 s against 0.973 s of CPU, which is 5.9% more.
+  - **Both figures stand.** They use different summaries (a paired ratio, and a ratio of
+    medians), and neither corrects the other.
+- **Wall, by the medians, against the shipped default (mibz2@10):** 0.142 s against 0.154 s.
+- **Memory:** peak RSS 75 MB against 67 MB (+8 MB) on the measured workload. The extra is a
+  second set of move-to-front buffers and a second assembled buffer, in each team.
+- **The levers, separately (each against the plain pipeline, at 3 × 3 on 10 threads):**
+  - park cuts CPU by about 5% (a ratio of 1.055, about 5.2% less) at an unchanged wall: 0.999 [0.981, 1.017] speed, 1.055
+    [1.039, 1.071] CPU;
+  - small is 4.3% faster: 1.043 [1.020, 1.066];
+  - both: 1.038 [1.021, 1.055] faster, 1.032 [1.018, 1.046] less CPU.
+- **The pipeline alone (`team-pipeline/20261107T042622Z`):** 1.042 [1.016, 1.068] faster
+  than the plain teams at 3 × 3, for 0.918 [0.895, 0.942] of their CPU.
+  - The levers' run reproduced it at 1.033 [1.017, 1.049].
+
+**On CI:** CI's 4-CPU runners have 2 physical cores, so neither build takes the 3 × 3 plan
+there. CI's paired bench is therefore only the no-regression check of every other path.
+
+**Caveats:**
+- **One machine, one corpus.** The evidence is the i9-10900K decoding Wikidata's bzip2 blocks.
+  Any CPU with 10 physical cores and a 20 MiB L3 gets the change, measured or not.
+- **The 3 × 3 plan only.** The pipelined teams are the default at that plan alone (`PIPELINED_PLAN`). Their gain at
+  other plans, 3 × 4 at 12 threads among them, isn't shipped.
+- **The gain is not split into causes.** The runs can't separate the overlap's gain from the
+  leader's extra walking: a leader that has finished its serial work joins its helpers' walk.
+- **A frozen confirmation run** against 0.2.5 is registered before release
+  (`docs/journal/2026-11-07-pipelined-default-registration.md`). Its result is recorded there.
+
+**The lower-CPU path stays available.** The plain three teams of three are
+`StreamDecoder::planned(Plan::Teams { teams: 3, k: 3 }, slots, kernels)`, or
+`BzReader::parallel_planned` with the same plan. The default's window is 12 blocks.
+
 ## [0.2.5](https://github.com/lmmx/mibz2/compare/v0.2.4...v0.2.5) - 2026-11-06
 
 On a machine with 10 physical cores and a 20 MiB L3, such as the i9-10900K, the decoder now

@@ -100,6 +100,19 @@ for span in mibz2::scan(&data) {
 | `Kernels::detect()`, `Kernels::scalar()` | the SIMD kernels, or the portable ones |
 | `bwt::InverseBwt` (`Segmented`, the default; `Plain`), `decode_with::<I>`, `StreamDecoder::with_inverse::<I>` | the inverse-BWT kernel, swappable and timeable as part of the whole decoder |
 
+**How the threads are spent** (`Plan::for_threads`, the default for `decode_parallel`,
+`BzReader::parallel` and `StreamDecoder::new`):
+- **Below 6 physical cores, or where the topology can't be read:** one block a worker thread.
+- **From 6 physical cores serving the threads:** teams of 2 threads sharing each block, as many as fit the L3.
+- **On 10 physical cores with a 20 MiB L3 (the i9-10900K), at 10 or more threads:** three
+  teams of three.
+  - **Pipelined there:** each leader's serial stages overlap its helpers' inversion of
+    another block, with park and small on. On the i9, this was 7.2% faster
+    (95% CI +5.3% to +9.1%) for about 5% more CPU and 8 MB more peak RSS (CHANGELOG).
+  - **Not pipelined elsewhere:** every other plan runs plain teams or workers.
+  - **The plain three teams of three:** `planned(Plan::Teams { teams: 3, k: 3 }, ..)`, for
+    less CPU.
+
 **Errors** (`ErrorKind`) cover the following:
 
 - the input: `Empty`, `NotBz2`, `Truncated`, `TrailingData`;

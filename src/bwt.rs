@@ -429,7 +429,7 @@ const SEGMENTS: usize = 256;
 /// are no longer bounded by how many steps the reorder buffer holds, and more lanes keep
 /// more of them in flight: 32 lanes and 512 segments were the best of 8-32 lanes and
 /// 256-1024 segments on Wikidata's blocks, at one walk and at four at once
-const FLAGGED_LANES: usize = 32;
+pub(crate) const FLAGGED_LANES: usize = 32;
 pub(crate) const FLAGGED_SEGMENTS: usize = 512;
 const PREFETCH: u8 = PF_L1;
 /// The walks' prefetch (their `PF`): none, or a hint into L1 (`prefetcht0`, `prfm
