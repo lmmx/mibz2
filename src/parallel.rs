@@ -31,6 +31,11 @@ use std::sync::mpsc::{channel, sync_channel, Receiver, SyncSender};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
 
+/// Research, opt-in: the general plan policy's rule A, its envelope and the topology it
+/// reads (never the default's)
+#[doc(hidden)]
+pub mod general;
+
 /// Input chunks queued for the scanner (the split writes 8 MB at a time)
 pub(crate) const INPUT_QUEUE: usize = 2;
 /// The blocks in flight a thread where the caller gives no window (`BzReader::parallel`,
