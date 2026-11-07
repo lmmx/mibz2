@@ -7,11 +7,11 @@
 #
 # The signal is a tag on origin. The coordinator pushes it only once the recipe is frozen,
 # reviewed and green:
-#   ready/<recipe>  points at the exact commit to run. The script checks out <branch>,
-#                   requires its head to be exactly that commit, then runs
-#                   `just submit <recipe>` once.
+#   ready/<recipe>  points at the exact commit to run. The script requires that commit to
+#                   be on <branch>, checks it out (detached), then runs
+#                   `just submit <recipe>` once. So the branch may move on meanwhile.
 #   hold/<recipe>   stop without running anything.
-# It polls every 5 minutes, for at most --hours (default 8). Whatever the outcome (run passed,
+# It polls every 5 minutes, for at most --hours (default 8; 0 looks once and doesn't wait). Whatever the outcome (run passed,
 # run failed, hold, timeout or a refusal), it suspends afterwards, unless --no-suspend.
 # Everything is logged to ~/await-submit-<recipe>-<stamp>.log.
 #
@@ -84,7 +84,7 @@ say "waiting for ready/$recipe or hold/$recipe on origin (every 5 min, up to ${h
 
 deadline=$(( $(date +%s) + hours * 3600 ))
 ready=""
-while (( $(date +%s) < deadline )); do
+while :; do
   if refs=$(query); then
     if grep -q "refs/tags/hold/$recipe\$" <<<"$refs"; then
       finish "HOLD: the coordinator put the run on hold; nothing was run" 3
@@ -92,6 +92,7 @@ while (( $(date +%s) < deadline )); do
     ready=$(ready_commit "$refs")
   fi
   [[ -n "$ready" ]] && break
+  (( $(date +%s) + 300 <= deadline )) || break
   sleep 300
 done
 [[ -z "$ready" ]] && finish "TIMEOUT: no ready/$recipe after ${hours} h; nothing was run" 4
@@ -102,11 +103,11 @@ if [[ -n "$(git status --porcelain)" ]]; then
   finish "REFUSED: the checkout has uncommitted changes; nothing was run" 5
 fi
 git fetch origin "$branch" || finish "REFUSED: could not fetch $branch" 5
-git checkout "$branch" && git merge --ff-only "origin/$branch" || finish "REFUSED: could not check out $branch" 5
+git merge-base --is-ancestor "$ready" "origin/$branch" 2>/dev/null \
+  || finish "REFUSED: the ready commit $ready is not on $branch; nothing was run" 5
+git checkout --quiet --detach "$ready" || finish "REFUSED: could not check out $ready" 5
 head=$(git rev-parse HEAD)
-if [[ "$head" != "$ready" ]]; then
-  finish "REFUSED: $branch is at $head, not the ready commit $ready; nothing was run" 5
-fi
+[[ "$head" == "$ready" ]] || finish "REFUSED: HEAD is $head, not the ready commit $ready; nothing was run" 5
 
 # HOLD once more, just before the run.
 if refs=$(query) && grep -q "refs/tags/hold/$recipe\$" <<<"$refs"; then

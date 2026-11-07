@@ -24,3 +24,7 @@ submit-bundle tarball:
 # wait for the coordinator's ready tag on origin, then run `just submit <recipe>` once and suspend
 submit-when-ready recipe branch *args:
     bash bench/await-submit.sh {{ recipe }} {{ branch }} {{ args }}
+
+# run every ready entry in bench/workstation-queue.txt once, in order, then suspend
+workstation-queue *args:
+    bash bench/run-queue.sh {{ args }}

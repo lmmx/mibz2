@@ -190,6 +190,35 @@ The rule is ROLES.md, "When a role's Work task is unavailable". Here is how one 
 
   The role's queued assignment stays queued for its own task.
 
+## 9. The workstation queue
+
+Runs that need the workstation are prepared in full by the team, then queued for Louis to run
+with one command whenever suits him. Nothing about a queued run is left to decide when it runs.
+- **The queue:** `bench/workstation-queue.txt` on master, in run order: one line per entry, giving
+  the recipe, its branch, and in a few words what it measures.
+- **An entry is added only when it needs no further decision.** The Coordinator adds it after
+  all of these:
+  - the registration is frozen;
+  - the recipe has passed its untimed dry run;
+  - CI is green on the commit to run;
+  - a review has said PROCEED: the role's own, or a stand-in's under §8;
+  - the `ready/<recipe>` tag points at exactly that commit, set by the Run signal workflow.
+
+  It also posts a LOG on #145 naming the entry, the commit and the review.
+- **Running it:** Louis runs `just workstation-queue` (`bench/run-queue.sh`). It reads the queue
+  from origin's master, then for each entry runs `just submit <recipe>` once, at exactly the
+  tagged commit (`bench/await-submit.sh`), and posts each bundle on #145 as usual. Then it
+  suspends the machine.
+  - It skips an entry that isn't ready, is on HOLD, or already ran on that machine at that commit.
+  - `--no-suspend` keeps the machine on.
+  - `--hours N` waits up to N hours for entries not yet ready.
+  - A single entry can still be run on its own with `just submit-when-ready <recipe> <branch>`.
+- **Withdrawing an entry:** the Coordinator sets `hold/<recipe>` through the same workflow, then
+  removes the line.
+- **After a run:** the Coordinator reads the bundle, removes the entry, and clears its tags.
+- **Order:** the queue's order is the run order. An entry that depends on another's result is
+  not queued until that result has been read.
+
 ## History
 
 This replaces `docs/journal/compact30-channel/PROTOCOL.md`, which is kept as history. Dropped:

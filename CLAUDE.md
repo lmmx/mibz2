@@ -58,6 +58,9 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
 then suspends; `hold/<recipe>` stops it. The coordinator sets the tag only once the recipe is
 frozen, reviewed and green, through the dispatch-only workflow `.github/workflows/run-signal.yml`
 (`signal`: ready, hold or clear), since this session's git proxy refuses tag pushes.
+Prepared runs wait in the **workstation queue**, `bench/workstation-queue.txt`
+(PROTOCOL.md §9). An entry goes in only once nothing about it remains to be decided. One
+command, `just workstation-queue`, runs every ready entry once, then suspends.
 
 `bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
 shape when it is next used.
