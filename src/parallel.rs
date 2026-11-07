@@ -1073,6 +1073,533 @@ fn lock_lead(m: &Mutex<Lead>) -> std::sync::MutexGuard<'_, Lead> {
     m.lock().unwrap_or_else(|e| e.into_inner())
 }
 
+// ---- The service core (research, opt-in: `StreamDecoder::service`) ----
+//
+// The teams' serial work taken out of the teams. K service workers serve every team: for
+// a block to come, its move-to-front and checkpoints ("preparing"); for a block walked,
+// its assembly, RLE1, CRC and publish ("finishing"). Each team's k threads only build and
+// walk (`coop::invert_team`: `bwt::Cooperative`'s build and walk, unassembled).
+//
+// Threads: the scanner (as every decoder's); a feeder (`mibz2-svc-feed`) moving the
+// scanner's jobs into the hub, so a service worker waits on one condition for either kind
+// of work (it never sits in the jobs' `recv` while a walked block waits for it, which could
+// leave the reader's next block behind a scanner waiting for the reader's slot); K service
+// workers (`mibz2-svc-N`); and the teams (`mibz2-N`, each with its pool's `mibz2-coop-*`).
+//
+// The hub's two queues, and the buffers that bound them:
+// - **prepared** (service → teams): blocks whose move-to-front is done, each in a front
+//   set (`Front`: `ll`, counts, checkpoints). Fronts: a team's each, the queue's lookahead
+//   (`teams`), and a service worker's each; a service worker takes a free one to prepare
+//   into, a team gives it back once its block is walked (or dropped, or failed).
+// - **finishing** (teams → service): blocks walked, each in a back set (`Back`: the walk's
+//   segments, or for a block below `MIN_SEGMENTED` its bytes). Backs: two a team; a team
+//   takes one with each block, a service worker gives it back once it has finished it.
+//
+// **The service's priority (registered):** finishing first, except that the prepared queue
+// is never left empty while a block can be prepared. In order, a service worker:
+// 1. prepares, if the prepared queue is empty and a job and a front set are free (so no
+//    team waits for a block while finishing is backed up);
+// 2. finishes the walked block earliest in the stream, if any (the reader's next, and a
+//    back set freed for the teams);
+// 3. prepares, if the prepared queue is below its lookahead (a block a team) and a job and
+//    a front set are free;
+// 4. ends, once the jobs are closed and no block is left in flight; else waits.
+//
+// **Small blocks** (below `MIN_COOP`) are prepared and finished by the service, as every
+// block, and inverted whole by a team's first thread on the one-core kernel (its helpers
+// idle meanwhile), exactly as a `Cooperative` team inverts them today. Not by the service:
+// the model makes the service the scarce resource (about 0.8 of a core at 1.4 GB/s on its
+// own stages), and a block's inversion costs about three times its serial stages, so small
+// blocks on the service would saturate it first (registration).
+//
+// **Ordered output, errors, cancellation, panics:** every block's result (or its error,
+// with its place and bit) goes to the decoder's `ready` through `publish`, as a worker's
+// does, so the reader takes them in order. A cancelled decode drops its blocks wherever
+// they are (their buffers returned), and the feeder drains the jobs so the scanner never
+// waits on them. A panic in any stage (a service worker's preparing or finishing, a team's
+// build or walk, any of its pool's threads) is caught where it happens and becomes that
+// block's `Internal` error, the buffers it held replaced with new ones (never lost, so the
+// buffer bounds never shrink into a deadlock). Each thread ends once the jobs are closed
+// (the scanner's end) and every block taken has been published or dropped: the end of
+// stream's flush.
+
+/// A block's inversion's buffers (a back set): the walk's segments, or, for a block too
+/// short to segment, its bytes walked straight into `direct`
+#[derive(Default)]
+struct Back {
+    seg: super::bwt::SegScratch,
+    direct: Vec<u8>,
+    segmented: bool,
+}
+
+/// A block prepared (move-to-front done), in its front set
+struct Prepared {
+    place: u64,
+    bit: u64,
+    symbols: super::block::Symbols,
+    front: Front,
+    rows: usize,
+}
+
+/// A block walked, in its back set
+struct Walked {
+    place: u64,
+    bit: u64,
+    symbols: super::block::Symbols,
+    back: Back,
+}
+
+/// Where the tests' fault hook makes a service-core stage panic (research, tests only):
+/// a block's preparing or finishing on a service worker, or a team's pool thread `thread`
+/// in that block's walk (0 the team's first thread, 1.. its helpers)
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ServiceFault {
+    Prepare { place: u64 },
+    Finish { place: u64 },
+    Team { place: u64, thread: usize },
+}
+
+struct HubState {
+    /// the scanner's jobs, moved here by the feeder; closed at the scanner's end
+    jobs: std::collections::VecDeque<Job>,
+    closed: bool,
+    prepared: std::collections::VecDeque<Prepared>,
+    walked: Vec<Walked>,
+    fronts: Vec<Front>,
+    backs: Vec<Back>,
+    /// blocks taken from `jobs`, not yet published or dropped
+    live: usize,
+}
+
+impl HubState {
+    fn done(&self) -> bool {
+        self.closed && self.jobs.is_empty() && self.live == 0
+    }
+}
+
+struct Hub {
+    st: Mutex<HubState>,
+    cv: Condvar,
+    lookahead: usize,
+    fault: Option<ServiceFault>,
+}
+
+impl Hub {
+    fn lock(&self) -> std::sync::MutexGuard<'_, HubState> {
+        // (no stage runs under this lock; it is consistent at every unlock)
+        self.st.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    fn wait<'a>(
+        &self,
+        g: std::sync::MutexGuard<'a, HubState>,
+    ) -> std::sync::MutexGuard<'a, HubState> {
+        self.cv.wait(g).unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// A block left the decode (published or dropped): its buffers back, if any
+    fn retire(&self, front: Option<Front>, back: Option<Back>) {
+        let mut st = self.lock();
+        st.live -= 1;
+        st.fronts.extend(front);
+        st.backs.extend(back);
+        drop(st);
+        self.cv.notify_all();
+    }
+}
+
+impl StreamDecoder {
+    /// Research, opt-in, not the default: the service core. `teams` teams of `k` threads
+    /// (at least 1 team, and `k` of 1 to 4) only build and walk each block, while `services`
+    /// service workers (at least 1) do every block's move-to-front and checkpoints, and its
+    /// assembly, RLE1, CRC and publish, with `slots` blocks in flight (at least `teams`).
+    /// Byte for byte the default decoder's output and errors.
+    #[doc(hidden)]
+    pub fn service(
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        kernels: Kernels,
+    ) -> StreamDecoder {
+        Self::service_with_fault(teams, k, services, slots, kernels, None)
+    }
+
+    /// `service` with the tests' fault hook (research: a stage made to panic, for the tests
+    /// of the panic path; `None` is `service`)
+    #[doc(hidden)]
+    pub fn service_with_fault(
+        teams: usize,
+        k: usize,
+        services: usize,
+        slots: usize,
+        kernels: Kernels,
+        fault: Option<ServiceFault>,
+    ) -> StreamDecoder {
+        let (teams, team_k, services) = (teams.max(1), k.clamp(1, 4), services.max(1));
+        let slots = slots.max(teams) as u64;
+        let shared = Arc::new(Shared {
+            state: Mutex::new(State {
+                ready: BTreeMap::new(),
+                issued: 0,
+                taken: 0,
+                end: None,
+                cancelled: false,
+                free_out: Vec::new(),
+                free_syms: Vec::new(),
+            }),
+            cv: Condvar::new(),
+            slots,
+            overlapped: AtomicU64::new(0),
+            overlap_errors: AtomicU64::new(0),
+        });
+        let lookahead = teams;
+        let hub = Arc::new(Hub {
+            st: Mutex::new(HubState {
+                jobs: Default::default(),
+                closed: false,
+                prepared: Default::default(),
+                walked: Vec::new(),
+                fronts: (0..teams + lookahead + services)
+                    .map(|_| Front::default())
+                    .collect(),
+                backs: (0..2 * teams).map(|_| Back::default()).collect(),
+                live: 0,
+            }),
+            cv: Condvar::new(),
+            lookahead,
+            fault,
+        });
+        let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
+        let (job_tx, job_rx) = channel::<Job>();
+        let mut handles = Vec::with_capacity(teams + services + 2);
+        let spawn = |name: String, f: Box<dyn FnOnce() + Send>| {
+            std::thread::Builder::new()
+                .name(name)
+                .spawn(f)
+                .expect("spawn a bz2 service-core thread")
+        };
+        let h = hub.clone();
+        handles.push(spawn(
+            "mibz2-svc-feed".into(),
+            Box::new(move || feed(&h, job_rx)),
+        ));
+        for i in 0..services {
+            let (s, h) = (shared.clone(), hub.clone());
+            handles.push(spawn(
+                format!("mibz2-svc-{i}"),
+                Box::new(move || service_worker(&s, &h, kernels)),
+            ));
+        }
+        for i in 0..teams {
+            let (s, h) = (shared.clone(), hub.clone());
+            handles.push(spawn(
+                format!("mibz2-{i}"),
+                Box::new(move || team_worker(&s, &h, team_k)),
+            ));
+        }
+        let sh = shared.clone();
+        handles.push(spawn(
+            "mibz2-scan".into(),
+            Box::new(move || scanner(&sh, in_rx, job_tx)),
+        ));
+        StreamDecoder {
+            input: Mutex::new(Some(in_tx)),
+            shared,
+            handles: Mutex::new(handles),
+            reader: Mutex::default(),
+            threads: teams * team_k + services,
+            pipelined: false,
+        }
+    }
+}
+
+/// The scanner's jobs into the hub, then its end (the jobs' channel closed)
+fn feed(hub: &Hub, rx: Receiver<Job>) {
+    while let Ok(job) = rx.recv() {
+        hub.lock().jobs.push_back(job);
+        hub.cv.notify_all();
+    }
+    hub.lock().closed = true;
+    hub.cv.notify_all();
+}
+
+/// What a service worker does next (the priority above)
+// (one at a time, on the worker's stack: a front set's counts are 1 KB)
+#[allow(clippy::large_enum_variant)]
+enum SvcTask {
+    Prepare(Job, Front),
+    Finish(Walked),
+}
+
+fn service_worker(shared: &Shared, hub: &Hub, k: Kernels) {
+    // the assembly's buffer, this worker's own
+    let mut asm: Vec<u8> = Vec::new();
+    loop {
+        let task = {
+            let mut st = hub.lock();
+            let mut idle = false;
+            let task = loop {
+                let can_prepare = !st.jobs.is_empty() && !st.fronts.is_empty();
+                if can_prepare && st.prepared.is_empty() {
+                    break Some(take_job(&mut st));
+                }
+                if !st.walked.is_empty() {
+                    // (the earliest place: the reader's next)
+                    let i = (0..st.walked.len())
+                        .min_by_key(|&i| st.walked[i].place)
+                        .unwrap_or(0);
+                    let w = st.walked.swap_remove(i);
+                    mark!(SvcGot, w.place, st.walked.len(), 0);
+                    break Some(SvcTask::Finish(w));
+                }
+                if can_prepare && st.prepared.len() < hub.lookahead {
+                    break Some(take_job(&mut st));
+                }
+                if st.done() {
+                    break None;
+                }
+                if !idle {
+                    idle = true;
+                    mark!(SvcIdleStart);
+                }
+                st = hub.wait(st);
+            };
+            if idle {
+                mark!(SvcIdleEnd);
+            }
+            task
+        };
+        match task {
+            None => return,
+            Some(SvcTask::Prepare(job, front)) => prepare(shared, hub, job, front, k),
+            Some(SvcTask::Finish(w)) => finish(shared, hub, w, &mut asm, k),
+        }
+    }
+}
+
+/// The next job and a front set, taken (the block live from here)
+fn take_job(st: &mut HubState) -> SvcTask {
+    let job = st.jobs.pop_front().expect("a job");
+    let front = st.fronts.pop().expect("a front set");
+    st.live += 1;
+    SvcTask::Prepare(job, front)
+}
+
+/// A block's move-to-front (and its primary index's check) into `front`, then queued for
+/// the teams; its error published, or its panic made its `Internal` error
+fn prepare(shared: &Shared, hub: &Hub, job: Job, mut front: Front, k: Kernels) {
+    let (place, bit, symbols) = job;
+    mark!(JobGot, place);
+    if shared.lock().cancelled {
+        return hub.retire(Some(front), None);
+    }
+    mark!(MtfStart, place);
+    let r = catch_unwind(AssertUnwindSafe(|| {
+        if hub.fault == Some(ServiceFault::Prepare { place }) {
+            panic!("an injected panic in block {place}'s preparing");
+        }
+        front_stage(&symbols, &mut front, k)
+    }));
+    mark!(MtfEnd, place);
+    match r {
+        Ok(Ok(rows)) => {
+            let mut st = hub.lock();
+            st.prepared.push_back(Prepared {
+                place,
+                bit,
+                symbols,
+                front,
+                rows,
+            });
+            mark!(Prepared, place, st.prepared.len(), 0);
+            drop(st);
+            hub.cv.notify_all();
+        }
+        Ok(Err(kind)) => {
+            publish(shared, place, bit, Err(kind), symbols.syms);
+            hub.retire(Some(front), None);
+        }
+        Err(p) => {
+            let kind = ErrorKind::Internal(panic_message(p));
+            publish(shared, place, bit, Err(kind), symbols.syms);
+            hub.retire(Some(Front::default()), None);
+        }
+    }
+}
+
+/// A walked block's assembly, RLE1 and CRC, and its result published; a panic made its
+/// `Internal` error, its back set and the assembly's buffer replaced
+fn finish(shared: &Shared, hub: &Hub, w: Walked, asm: &mut Vec<u8>, k: Kernels) {
+    let Walked {
+        place,
+        bit,
+        symbols,
+        back,
+    } = w;
+    let Some(mut out) = take_out(shared) else {
+        return hub.retire(None, Some(back)); // (cancelled)
+    };
+    let r = catch_unwind(AssertUnwindSafe(|| {
+        let inverted: &[u8] = if back.segmented {
+            mark!(AssembleStart, place);
+            back.seg.assemble(asm);
+            mark!(AssembleEnd, place);
+            asm
+        } else {
+            &back.direct
+        };
+        mark!(RleStart, place);
+        if hub.fault == Some(ServiceFault::Finish { place }) {
+            panic!("an injected panic in block {place}'s finishing");
+        }
+        finish_block(inverted, symbols.crc, k, &mut out)
+    }));
+    mark!(RleEnd, place, out.len(), out.capacity());
+    let (res, back) = match r {
+        Ok(Ok(())) => (Ok(out), back),
+        Ok(Err(kind)) => (Err(kind), back),
+        Err(p) => {
+            *asm = Vec::new();
+            (Err(ErrorKind::Internal(panic_message(p))), Back::default())
+        }
+    };
+    publish(shared, place, bit, res, symbols.syms);
+    hub.retire(None, Some(back));
+}
+
+/// A team's next prepared block and a back set to walk it into, waiting until both are
+/// there; None once the decode has ended. Taking a prepared block wakes the hub's waiters:
+/// a service worker waiting with the prepared queue at its lookahead (its rule 3) may now
+/// prepare again. (`notify_all`: teams and service workers share the one condition, so a
+/// single wake-up could go to a team that can't use it.)
+fn take_prepared(hub: &Hub) -> Option<(Prepared, Back)> {
+    let mut st = hub.lock();
+    let mut idle = false;
+    let got = loop {
+        if !st.prepared.is_empty() && !st.backs.is_empty() {
+            let p = st.prepared.pop_front().expect("a prepared block");
+            let b = st.backs.pop().expect("a back set");
+            mark!(TeamGot, p.place, st.prepared.len(), 0);
+            break Some((p, b));
+        }
+        if st.done() {
+            break None;
+        }
+        if !idle {
+            idle = true;
+            mark!(
+                TeamIdleStart,
+                crate::trace::NONE,
+                u8::from(!st.prepared.is_empty()),
+                0
+            );
+        }
+        st = hub.wait(st);
+    };
+    drop(st);
+    if idle {
+        mark!(TeamIdleEnd);
+    }
+    if got.is_some() {
+        hub.cv.notify_all();
+    }
+    got
+}
+
+/// A team: its first thread takes prepared blocks and inverts each on the team's pool
+/// (`coop::invert_team`), or alone for a block below `MIN_COOP` (or with no pool), into a
+/// back set, then queues it for finishing
+fn team_worker(shared: &Shared, hub: &Hub, team_k: usize) {
+    use super::bwt::FLAGGED_LANES;
+    let mut tt = super::bwt::TVector::default();
+    let mut pool: Option<std::io::Result<super::coop::Pool>> = None;
+    loop {
+        let Some((p, mut back)) = take_prepared(hub) else {
+            return;
+        };
+        let Prepared {
+            place,
+            bit,
+            symbols,
+            front,
+            rows,
+        } = p;
+        if shared.lock().cancelled {
+            hub.retire(Some(front), Some(back));
+            continue;
+        }
+        let team = if team_k >= 2 && rows >= super::bwt::MIN_COOP {
+            pool.get_or_insert_with(|| super::coop::Pool::new(team_k))
+                .as_ref()
+                .ok()
+        } else {
+            None
+        };
+        let thread_fault = match hub.fault {
+            Some(ServiceFault::Team { place: p, thread }) if p == place => Some(thread),
+            _ => None,
+        };
+        mark!(RunStart, place);
+        let r = catch_unwind(AssertUnwindSafe(|| match team {
+            Some(pool) => {
+                super::coop::invert_team::<FLAGGED_LANES>(
+                    pool,
+                    &front.ll,
+                    &front.counts,
+                    &front.checkpoints,
+                    super::mtf::CHECKPOINT,
+                    symbols.orig_ptr,
+                    &mut tt,
+                    &mut back.seg,
+                    place,
+                    thread_fault,
+                );
+                back.segmented = true;
+            }
+            None => {
+                // (the one-core kernel, as `bwt::Cooperative` inverts a small block)
+                if thread_fault == Some(0) {
+                    panic!("an injected panic in block {place}'s one-core inversion");
+                }
+                super::bwt::build(&front.ll, &front.counts, &mut tt);
+                back.segmented = super::bwt::walk_segments_room_parts(
+                    &mut tt,
+                    symbols.orig_ptr,
+                    &mut back.direct,
+                    &mut back.seg,
+                );
+            }
+        }));
+        mark!(RunEnd, place);
+        match r {
+            Ok(()) => {
+                let mut st = hub.lock();
+                st.fronts.push(front);
+                st.walked.push(Walked {
+                    place,
+                    bit,
+                    symbols,
+                    back,
+                });
+                mark!(Walked, place, st.walked.len(), 0);
+                drop(st);
+                hub.cv.notify_all();
+            }
+            Err(p) => {
+                // a team thread's stage panicked: the block fails, the table and the back
+                // set are replaced (the pool is reusable: `Pool::run` resumed the panic
+                // once all its threads had ended)
+                tt = Default::default();
+                let kind = ErrorKind::Internal(panic_message(p));
+                publish(shared, place, bit, Err(kind), symbols.syms);
+                hub.retire(Some(front), Some(Back::default()));
+            }
+        }
+    }
+}
+
 /// How a decoder spends its threads: production's one block a worker, or teams of `k`
 /// threads each inverting one block together (`bwt::Cooperative<k>`), so `teams` tables
 /// are live on `teams × k` threads
@@ -1247,6 +1774,222 @@ fn l3_bytes() -> Option<u64> {
     }
     #[cfg(not(target_os = "linux"))]
     None
+}
+
+/// The service core's hub under Miri's race detector: its threads (feeder, service
+/// workers, teams), queues, buffer bounds and wake-ups, on a stream small enough to
+/// interpret (four streams of a small block each, as Python's bz2 writes them)
+#[cfg(test)]
+mod service_tests {
+    use super::*;
+
+    /// `bz2.compress(b"service core %d " % i * (3 + i), 1)` for i in 0..4, concatenated
+    const Z: &[u8] = &[
+        66, 90, 104, 49, 49, 65, 89, 38, 83, 89, 8, 54, 204, 213, 0, 0, 20, 153, 128, 64, 0, 64, 0,
+        10, 32, 153, 0, 32, 0, 34, 191, 213, 79, 81, 147, 66, 12, 152, 142, 105, 17, 214, 214, 167,
+        152, 140, 98, 214, 248, 187, 146, 41, 194, 132, 128, 65, 182, 102, 168, 66, 90, 104, 49,
+        49, 65, 89, 38, 83, 89, 209, 238, 231, 126, 0, 0, 27, 153, 128, 64, 0, 32, 0, 10, 32, 153,
+        0, 32, 0, 49, 6, 76, 64, 85, 71, 168, 201, 167, 4, 33, 211, 101, 148, 120, 194, 24, 97,
+        101, 159, 23, 114, 69, 56, 80, 144, 209, 238, 231, 126, 66, 90, 104, 49, 49, 65, 89, 38,
+        83, 89, 96, 89, 60, 120, 0, 0, 34, 153, 128, 64, 0, 16, 0, 10, 32, 153, 0, 32, 0, 49, 6,
+        76, 64, 138, 158, 161, 234, 105, 177, 34, 68, 226, 105, 42, 117, 60, 152, 145, 49, 49, 42,
+        84, 248, 187, 146, 41, 194, 132, 131, 2, 201, 227, 192, 66, 90, 104, 49, 49, 65, 89, 38,
+        83, 89, 195, 71, 89, 100, 0, 0, 41, 153, 128, 64, 0, 8, 0, 10, 32, 153, 0, 32, 0, 49, 6,
+        76, 64, 138, 158, 161, 234, 105, 176, 96, 193, 224, 232, 104, 244, 124, 56, 48, 112, 112,
+        104, 209, 248, 187, 146, 41, 194, 132, 134, 26, 58, 203, 32,
+    ];
+
+    fn want() -> Vec<u8> {
+        (0..4)
+            .flat_map(|i| format!("service core {i} ").repeat(3 + i).into_bytes())
+            .collect()
+    }
+
+    fn run(dec: &StreamDecoder, z: &[u8]) -> (Vec<u8>, Result<(), Error>) {
+        dec.write(z.to_vec()).unwrap();
+        dec.close();
+        let (mut out, mut buf) = (Vec::new(), [0u8; 64]);
+        loop {
+            match dec.read(&mut buf) {
+                Ok(0) => return (out, Ok(())),
+                Ok(n) => out.extend_from_slice(&buf[..n]),
+                Err(e) => return (out, Err(e)),
+            }
+        }
+    }
+
+    /// Each stream's block's stored CRC flipped in turn, and stream `s`'s first block's bit
+    fn flipped(s: usize) -> (Vec<u8>, u64) {
+        let at: Vec<usize> = (0..Z.len() - 3)
+            .filter(|&i| &Z[i..i + 4] == b"BZh1")
+            .collect();
+        let mut z = Z.to_vec();
+        z[at[s] + 4 + 6] ^= 0x10;
+        (z, (at[s] as u64 + 4) * 8)
+    }
+
+    /// A hub as `service_with_fault` makes it, with no threads: `lookahead` blocks of
+    /// lookahead and `fronts` front sets
+    fn hub(lookahead: usize, fronts: usize) -> Hub {
+        Hub {
+            st: Mutex::new(HubState {
+                jobs: Default::default(),
+                closed: false,
+                prepared: Default::default(),
+                walked: Vec::new(),
+                fronts: (0..fronts).map(|_| Front::default()).collect(),
+                backs: vec![Back::default()],
+                live: 0,
+            }),
+            cv: Condvar::new(),
+            lookahead,
+            fault: None,
+        }
+    }
+
+    fn job(place: u64) -> Job {
+        let symbols = super::super::block::Symbols {
+            crc: 0,
+            orig_ptr: 0,
+            seq_to_unseq: [0; 256],
+            syms: vec![],
+            eob: 1,
+            max_len: 100_000,
+        };
+        (place, 0, symbols)
+    }
+
+    /// A service worker waiting with the prepared queue at its lookahead (rule 3) wakes when
+    /// a team takes a prepared block, with nothing else to wake it (no walked block, no
+    /// front set returned, no new job), and prepares the job waiting
+    #[test]
+    fn miri_a_team_taking_a_prepared_block_wakes_the_service() {
+        let shared = Shared {
+            state: Mutex::new(State {
+                ready: BTreeMap::new(),
+                issued: 0,
+                taken: 0,
+                end: None,
+                cancelled: false,
+                free_out: Vec::new(),
+                free_syms: Vec::new(),
+            }),
+            cv: Condvar::new(),
+            slots: 4,
+            overlapped: AtomicU64::new(0),
+            overlap_errors: AtomicU64::new(0),
+        };
+        let h = hub(1, 2);
+        {
+            // block 0 prepared (the queue at its lookahead of 1), block 1 waiting as a job
+            let mut st = h.lock();
+            st.live = 1;
+            let front = st.fronts.pop().unwrap();
+            st.prepared.push_back(Prepared {
+                place: 0,
+                bit: 0,
+                symbols: job(0).2,
+                front,
+                rows: 0,
+            });
+            st.jobs.push_back(job(1));
+        }
+        std::thread::scope(|s| {
+            let svc = s.spawn(|| service_worker(&shared, &h, Kernels::scalar()));
+            // the service worker can't prepare yet: wait until it is parked on the hub (it
+            // holds the lock only while it decides), then give it nothing else to see
+            for _ in 0..if cfg!(miri) { 20 } else { 2000 } {
+                std::thread::yield_now();
+            }
+            assert_eq!(h.lock().jobs.len(), 1, "prepared beyond the lookahead");
+            let (p, back) = take_prepared(&h).expect("block 0");
+            assert_eq!(p.place, 0);
+            // the service takes the job only if the pop woke it
+            let wait = std::time::Duration::from_secs(if cfg!(miri) { 120 } else { 10 });
+            let deadline = std::time::Instant::now() + wait;
+            let mut woke = true;
+            while !h.lock().jobs.is_empty() {
+                if std::time::Instant::now() > deadline {
+                    woke = false;
+                    break;
+                }
+                std::thread::yield_now();
+            }
+            // (block 1's empty symbols fail their move-to-front: its error published, and
+            // it retires; block 0 retires here, then the hub is closed and both end, the
+            // close's own wake-up ending the service worker even if the pop's was missing)
+            h.retire(Some(p.front), Some(back));
+            h.lock().closed = true;
+            h.cv.notify_all();
+            svc.join().unwrap();
+            assert!(woke, "the service worker never woke on the team's pop");
+        });
+        let st = h.lock();
+        assert!(st.done() && st.prepared.is_empty());
+        assert!(shared.lock().ready.get(&1).is_some_and(|r| r.is_err()));
+    }
+
+    #[test]
+    fn miri_service_core_hub() {
+        let k = Kernels::scalar();
+        let shapes: &[(usize, usize, usize, usize)] = if cfg!(miri) {
+            &[(1, 2, 1, 1), (2, 1, 2, 3)]
+        } else {
+            &[(1, 2, 1, 1), (2, 1, 2, 3), (3, 3, 1, 12), (1, 4, 2, 2)]
+        };
+        for &(teams, tk, services, slots) in shapes {
+            let shape = format!("{teams} x {tk} + {services} in {slots}");
+            let (got, res) = run(&StreamDecoder::service(teams, tk, services, slots, k), Z);
+            res.unwrap();
+            assert!(got == want(), "{shape}");
+            // a bad block CRC: the error at its place and bit, as the default's
+            let (z, bit) = flipped(2);
+            let (got, res) = run(&StreamDecoder::service(teams, tk, services, slots, k), &z);
+            let (want_got, want_res) = run(
+                &StreamDecoder::with_inverse::<super::super::bwt::Segmented>(1, 2, k),
+                &z,
+            );
+            let e = res.clone().unwrap_err();
+            assert!(matches!(e.kind, ErrorKind::BlockCrc { .. }), "{shape}: {e}");
+            assert_eq!((e.block, e.bit), (Some(2), Some(bit)), "{shape}");
+            assert_eq!(res, want_res, "{shape}");
+            assert!(got == want_got, "{shape}");
+            // a panic in each kind of stage: its block's Internal error, the bytes before
+            for fault in [
+                ServiceFault::Prepare { place: 1 },
+                ServiceFault::Finish { place: 2 },
+                ServiceFault::Team {
+                    place: 1,
+                    thread: 0,
+                },
+            ] {
+                let dec =
+                    StreamDecoder::service_with_fault(teams, tk, services, slots, k, Some(fault));
+                let (got, res) = run(&dec, Z);
+                let e = res.unwrap_err();
+                assert!(matches!(&e.kind, ErrorKind::Internal(m) if m.contains("injected")));
+                let place = match fault {
+                    ServiceFault::Prepare { place }
+                    | ServiceFault::Finish { place }
+                    | ServiceFault::Team { place, .. } => place,
+                };
+                assert_eq!(e.block, Some(place), "{shape} {fault:?}");
+                let before: usize = (0..place as usize)
+                    .map(|i| format!("service core {i} ").len() * (3 + i))
+                    .sum();
+                assert!(got == want()[..before], "{shape} {fault:?}");
+            }
+            // cancelled before its input ends, and dropped
+            let dec = StreamDecoder::service(teams, tk, services, slots, k);
+            dec.write(Z[..100].to_vec()).unwrap();
+            dec.cancel();
+            assert_eq!(
+                dec.read(&mut [0; 8]).unwrap_err().kind,
+                ErrorKind::Cancelled
+            );
+            drop(dec);
+        }
+    }
 }
 
 #[cfg(test)]

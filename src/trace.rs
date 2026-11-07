@@ -107,6 +107,33 @@ pub enum Kind {
     ///   `MIN_COOP` (or with no team), the one-core build and walk on the leader alone.
     RunStart,
     RunEnd,
+    /// The service core (`StreamDecoder::service`, research), each with its block's place
+    /// (none for the idle marks); none is used on any other decoder's path. A service
+    /// worker's phases reuse the pipelined kinds (`JobGot`, `MtfStart`/`MtfEnd`,
+    /// `AssembleStart`/`AssembleEnd`, `RleStart`/`RleEnd`, `Ready`), and a team's its
+    /// (`RunStart`/`RunEnd` on its first thread; `BuildStart`/`BuildEnd`,
+    /// `WalkSetupStart`/`WalkSetupEnd` and `WalkStart`/`WalkEnd` on each pool thread).
+    /// - a service worker: waiting with nothing it may do (no job it has a front set for,
+    ///   no block to finish), from its wait's start to its end;
+    SvcIdleStart,
+    SvcIdleEnd,
+    /// - a service worker: a block's move-to-front done and queued for the teams (`len`:
+    ///   the prepared queue's length once it is in);
+    Prepared,
+    /// - a team's first thread: a prepared block taken (`len`: the prepared queue's length
+    ///   left);
+    TeamGot,
+    /// - a team's first thread: waiting for a prepared block, or for a free back set to
+    ///   walk into (`len` 0: no prepared block; 1: a block, but no back set), until it
+    ///   can take one (or the decode ends);
+    TeamIdleStart,
+    TeamIdleEnd,
+    /// - a team's first thread: a block walked and queued for finishing (`len`: the
+    ///   finishing queue's length once it is in);
+    Walked,
+    /// - a service worker: a walked block taken to finish (`len`: the finishing queue's
+    ///   length left).
+    SvcGot,
     /// - the leader: its own work inside a team run (`coop::invert_pipelined`'s `lead`: the
     ///   last block's RLE1 and CRC, the next jobs' move-to-front, small blocks decoded
     ///   whole), from its start to the moment it turns to join the walk. Its end, against

@@ -3,7 +3,7 @@
 //! pinned Wikidata corpus); CI runs the same recipe.
 //!
 //! ```text
-//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both]] [--gap SECONDS] [--out PATH] [--meta K=V]...
+//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both] | --svc S] [--gap SECONDS] [--out PATH] [--meta K=V]...
 //! occupancy FILE.bz2 --ledger [--threads 1,2,4,10] [--slots N]
 //! ```
 //!
@@ -32,6 +32,17 @@
 //! `--levers park|spin2k|small|both` (with `--pipe`) runs the pipelined teams with those levers
 //! (`BzReader::parallel_pipelined_levers`, `parallel::Levers`), as ab's
 //! `mibz2-pipeK-LEVER` arms do.
+//!
+//! `--svc S` (research) runs the service core instead (`BzReader::parallel_service`), as
+//! examples/ab.rs's `mibz2-svcS` arm: `S` is `1`, `2` (K service workers, teams of 3) or
+//! `1t2` (one, teams of 2), the teams as many as fit t after the service threads, at most 3,
+//! the window as `--teams`'s. Each team's first thread is traced as its worker; its pool's
+//! threads and the service workers (`mibz2-svc-N`) record marks too, and are waited for. A
+//! block's end is its `RleEnd`, on a service worker. Its own figures (`t.svc.*`,
+//! `service_phases`) are matched by block (place), never by thread name: a service
+//! worker's busy share of the run, both queues' waits, the backlogs, and the teams' idle
+//! time waiting for a prepared block or a back set. The workers' states in the table read
+//! a team's first thread as a worker, an approximation, as for `--pipe`.
 //!
 //! **Placements** (`--placements packed/spread`, or CPU lists): each an arm of its own in
 //! every round, the whole process pinned to its CPUs (the scanner, feeder and reader with
@@ -131,12 +142,21 @@ fn child(a: &[String]) {
         small: lever == "small" || lever == "both",
         spin2k: lever == "spin2k",
     };
+    // the service core (`--svc`): "s1", "s2", "s1t2": (service workers, team size)
+    let svc: Option<(usize, usize)> = a.get(4).and_then(|k| k.strip_prefix('s')).map(|k| {
+        let (n, t) = k.split_once('t').unwrap_or((k, "3"));
+        (n.parse().unwrap(), t.parse().unwrap())
+    });
     let teams_of: Option<usize> = Some(team_arg)
-        .filter(|k| *k != "auto")
+        .filter(|k| *k != "auto" && svc.is_none())
         .map(|k| k.trim_start_matches('p').parse().unwrap());
-    let plan = match teams_of {
-        None => Plan::for_threads(threads),
-        Some(k) => Plan::Teams {
+    let plan = match (teams_of, svc) {
+        (_, Some((services, k))) => Plan::Teams {
+            teams: (threads.saturating_sub(services) / k).clamp(1, 3),
+            k,
+        },
+        (None, None) => Plan::for_threads(threads),
+        (Some(k), None) => Plan::Teams {
             teams: (threads / k).max(1),
             k,
         },
@@ -148,6 +168,11 @@ fn child(a: &[String]) {
         .map_err(|e| e.to_string())
         .and_then(|f| {
             let reader = match plan {
+                Plan::Teams { teams, k } if svc.is_some() => {
+                    let window = (slots * teams / threads).max(teams);
+                    let services = svc.map_or(1, |s| s.0);
+                    BzReader::parallel_service(f, teams, k, services, window, Kernels::detect())
+                }
                 Plan::Teams { teams, k } if pipe => {
                     let window = (slots * teams / threads).max(teams);
                     BzReader::parallel_pipelined_levers(
@@ -174,7 +199,12 @@ fn child(a: &[String]) {
         // feeder's, so wait for their marks rather than assume them: the plan's workers,
         // a team's caller each, and the scanner)
         // (a pipelined team's helpers record marks too, and end before its leader)
-        let want = if pipe { plan.threads() } else { plan.workers() } + 1;
+        // (and the service core's pool threads and service workers: `--svc`)
+        let want = match svc {
+            Some((services, _)) => plan.threads() + services,
+            None if pipe => plan.threads(),
+            None => plan.workers(),
+        } + 1;
         let deadline = Instant::now() + Duration::from_secs(5);
         while trace::finished() < want && Instant::now() < deadline {
             std::thread::sleep(Duration::from_millis(1));
@@ -198,6 +228,9 @@ fn child(a: &[String]) {
     let err = res.err().unwrap_or_default();
     let plan = match plan {
         Plan::Workers(n) => format!("workers{n}"),
+        Plan::Teams { teams, k } if svc.is_some() => {
+            format!("svc{teams}x{k}+{}", svc.map_or(0, |s| s.0))
+        }
         Plan::Teams { teams, k } if pipe && lever.is_empty() => format!("pipe{teams}x{k}"),
         Plan::Teams { teams, k } if pipe => format!("pipe{teams}x{k}-{lever}"),
         Plan::Teams { teams, k } => format!("teams{teams}x{k}"),
@@ -418,6 +451,193 @@ fn cross_overlaps(iv: &[Interval], lead: &str) -> usize {
         .count()
 }
 
+/// The service core's figures (`--svc`; nothing for another plan), into `kv` (keys
+/// `t.svc.*`), from the marks alone, every pairing by block (place) or within one thread's
+/// own marks, never by thread name across threads:
+/// - `util.N`, `util.max`, `util.mean`: each service worker's busy share of the run's span
+///   (its life, from its first mark to its last, less its idle waits, `SvcIdle*`, over the
+///   span of every thread's marks), and `ms.svc_idle`; `ms.mtf`, `ms.assemble`, `ms.rle` its
+///   stages' time summed;
+/// - `queue.{job,prep,finish}.{mean,median,p90}_ms`: each block's wait in a queue: the
+///   scanner's `Enqueued` to a service worker's `JobGot` (the jobs), its `Prepared` to a
+///   team's `TeamGot` (the prepared queue), and a team's `Walked` to a service worker's
+///   `SvcGot` (the finishing queue: the service-saturation measure);
+/// - `backlog.{prep,finish}_mean`: the blocks waiting in each queue, averaged over the span
+///   (the waits summed over the span), and `backlog.{prep,finish}_max`: the most queued, by
+///   the `len` the marks carry;
+/// - `team.idle_prep_share`, `team.idle_back_share`: the teams' idle time waiting for a
+///   prepared block (prep starvation), and for a back set with a block prepared (finish
+///   backlog reaching the teams), each over the teams' total time (teams × span);
+/// - `team.ms.{build,walk,walk_setup}`: those phases summed over every pool thread, and
+///   `team.ms.run_wait`: each cooperative run's thread time (its threads × its length) not in
+///   a build, walk or walk set-up of its block (the pool's waits and hand-offs);
+///   `team.n.runs`, `team.n.small` (runs with no pool: a small block on one thread).
+fn service_phases(traces: &[ThreadTrace], kv: &mut Kv) {
+    use Kind::*;
+    let span = traces
+        .iter()
+        .flat_map(|t| t.marks.last())
+        .map(|m| m.ns)
+        .max()
+        .unwrap_or(0)
+        .max(1) as f64;
+    let ms = |ns: u64| ns as f64 / 1e6;
+    // every interval: (phase, place, start, end, thread)
+    let pairs = [
+        ("mtf", MtfStart, MtfEnd),
+        ("assemble", AssembleStart, AssembleEnd),
+        ("rle", RleStart, RleEnd),
+        ("svc_idle", SvcIdleStart, SvcIdleEnd),
+        ("team_idle", TeamIdleStart, TeamIdleEnd),
+        ("build", BuildStart, BuildEnd),
+        ("walk", WalkStart, WalkEnd),
+        ("walk_setup", WalkSetupStart, WalkSetupEnd),
+        ("run", RunStart, RunEnd),
+    ];
+    let mut iv: Vec<(&str, u64, u64, u64, usize, u64)> = Vec::new();
+    // the first mark of each block's event: (kind, place) -> ns
+    let mut at: BTreeMap<(u8, u64), u64> = BTreeMap::new();
+    let mut prep_max = 0u64;
+    let mut finish_max = 0u64;
+    let mut utils = Vec::new();
+    for (ti, t) in traces.iter().enumerate() {
+        let mut open: BTreeMap<(&str, u64), (u64, u64)> = BTreeMap::new();
+        for m in &t.marks {
+            for &(name, a, b) in &pairs {
+                if m.kind == a {
+                    open.insert((name, m.place), (m.ns, m.len));
+                } else if m.kind == b {
+                    if let Some((s, len)) = open.remove(&(name, m.place)) {
+                        iv.push((name, m.place, s, m.ns, ti, len));
+                    }
+                }
+            }
+            let ev = match m.kind {
+                Enqueued => Some(0),
+                JobGot => Some(1),
+                Prepared => {
+                    prep_max = prep_max.max(m.len);
+                    Some(2)
+                }
+                TeamGot => Some(3),
+                Walked => {
+                    finish_max = finish_max.max(m.len);
+                    Some(4)
+                }
+                SvcGot => Some(5),
+                _ => None,
+            };
+            if let Some(e) = ev {
+                at.entry((e, m.place)).or_insert(m.ns);
+            }
+        }
+        if t.name.starts_with("mibz2-svc-") && t.name[10..].parse::<usize>().is_ok() {
+            let life = match (t.marks.first(), t.marks.last()) {
+                (Some(a), Some(b)) => b.ns - a.ns,
+                _ => 0,
+            };
+            let idle: u64 = iv
+                .iter()
+                .filter(|x| x.4 == ti && x.0 == "svc_idle")
+                .map(|x| x.3 - x.2)
+                .sum();
+            let u = life.saturating_sub(idle) as f64 / span;
+            kv.f(&format!("t.svc.util.{}", &t.name[10..]), u);
+            utils.push(u);
+        }
+    }
+    kv.f(
+        "t.svc.util.max",
+        utils.iter().cloned().fold(f64::NAN, f64::max),
+    );
+    kv.f(
+        "t.svc.util.mean",
+        utils.iter().sum::<f64>() / utils.len().max(1) as f64,
+    );
+    kv.f("t.svc.n.services", utils.len() as f64);
+    let sum = |name: &str| {
+        iv.iter()
+            .filter(|x| x.0 == name)
+            .map(|x| x.3 - x.2)
+            .sum::<u64>()
+    };
+    for name in ["mtf", "assemble", "rle", "svc_idle"] {
+        kv.f(&format!("t.svc.ms.{name}"), ms(sum(name)));
+    }
+    for name in ["build", "walk", "walk_setup"] {
+        kv.f(&format!("t.svc.team.ms.{name}"), ms(sum(name)));
+    }
+    // the queues' waits, by place
+    let waits = |from: u8, to: u8| -> Vec<f64> {
+        at.iter()
+            .filter(|((e, _), _)| *e == from)
+            .filter_map(|((_, p), &s)| at.get(&(to, *p)).map(|&e| ms(e.saturating_sub(s))))
+            .collect()
+    };
+    for (q, from, to) in [("job", 0, 1), ("prep", 2, 3), ("finish", 4, 5)] {
+        let mut w = waits(from, to);
+        let n = w.len().max(1) as f64;
+        let total: f64 = w.iter().sum();
+        kv.f(&format!("t.svc.queue.{q}.mean_ms"), total / n);
+        kv.f(
+            &format!("t.svc.queue.{q}.median_ms"),
+            median(&mut w.clone()),
+        );
+        w.sort_by(f64::total_cmp);
+        let p90 = w.get(((w.len() as f64 * 0.9) as usize).min(w.len().saturating_sub(1)));
+        kv.f(
+            &format!("t.svc.queue.{q}.p90_ms"),
+            p90.copied().unwrap_or(f64::NAN),
+        );
+        if q != "job" {
+            kv.f(&format!("t.svc.backlog.{q}_mean"), total / ms(span as u64));
+        }
+    }
+    kv.f("t.svc.backlog.prep_max", prep_max as f64);
+    kv.f("t.svc.backlog.finish_max", finish_max as f64);
+    // the teams' idle time, by what they waited for
+    let teams = traces
+        .iter()
+        .filter(|t| t.name.starts_with("mibz2-") && t.name[6..].parse::<usize>().is_ok())
+        .count()
+        .max(1) as f64;
+    for (what, len) in [("prep", 0), ("back", 1)] {
+        let idle: u64 = iv
+            .iter()
+            .filter(|x| x.0 == "team_idle" && x.5 == len)
+            .map(|x| x.3 - x.2)
+            .sum();
+        kv.f(
+            &format!("t.svc.team.idle_{what}_share"),
+            idle as f64 / (teams * span),
+        );
+        kv.f(&format!("t.svc.team.ms.idle_{what}"), ms(idle));
+    }
+    // each run's thread time outside its block's build, walk and set-up
+    let (mut runs, mut small, mut wait) = (0usize, 0usize, 0u64);
+    for r in iv.iter().filter(|x| x.0 == "run") {
+        let work: Vec<_> = iv
+            .iter()
+            .filter(|x| matches!(x.0, "build" | "walk" | "walk_setup") && x.1 == r.1)
+            .collect();
+        let threads: BTreeSet<usize> = work
+            .iter()
+            .filter(|x| x.0 == "build")
+            .map(|x| x.4)
+            .collect();
+        if threads.is_empty() {
+            small += 1;
+            continue;
+        }
+        runs += 1;
+        let busy: u64 = work.iter().map(|x| x.3 - x.2).sum();
+        wait += (threads.len() as u64 * (r.3 - r.2)).saturating_sub(busy);
+    }
+    kv.f("t.svc.team.ms.run_wait", ms(wait));
+    kv.f("t.svc.team.n.runs", runs as f64);
+    kv.f("t.svc.team.n.small", small as f64);
+}
+
 /// The trace's checks and its sweep, into `kv` (keys `t.*`)
 fn summarise(
     traces: &[ThreadTrace],
@@ -432,6 +652,8 @@ fn summarise(
         "mibz2-read" => None,
         // (a team's helpers: they record marks only in a pipelined team, `--pipe`)
         n if n.starts_with("mibz2-coop-") => None,
+        // (the service core's workers and feeder: `--svc`)
+        n if n.starts_with("mibz2-svc-") => None,
         _ => Some(Role::Reader),
     };
     let roles: Vec<Option<Role>> = traces.iter().map(|t| role(&t.name)).collect();
@@ -511,7 +733,11 @@ fn summarise(
     if !problem.is_empty() {
         return;
     }
-    pipeline_phases(traces, kv);
+    if traces.iter().any(|t| t.name.starts_with("mibz2-svc-")) {
+        service_phases(traces, kv);
+    } else {
+        pipeline_phases(traces, kv);
+    }
 
     // the sweep: every mark in time order, each interval credited to the states then
     let mut ev: Vec<(u64, usize, Kind, u64)> = Vec::new();
@@ -1043,6 +1269,7 @@ fn parent(args: &[String]) {
     let mut placements: Option<Vec<String>> = None;
     let mut teams: Option<usize> = None;
     let mut pipe = false;
+    let mut svc: Option<String> = None;
     let mut lever: Option<String> = None;
     let mut meta: Vec<(String, String)> = Vec::new();
     let mut ledger_only = false;
@@ -1114,9 +1341,18 @@ fn parent(args: &[String]) {
                 );
                 lever = Some(l.clone());
             }
+            "--svc" => {
+                let spec = it.next().expect("--svc S").to_string();
+                assert!(
+                    ["1", "2", "1t2"].contains(&spec.as_str()),
+                    "--svc takes 1, 2 or 1t2"
+                );
+                svc = Some(spec);
+                teams = Some(3);
+            }
             "--ledger" => ledger_only = true,
             "-h" | "--help" => {
-                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both]] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
+                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both] | --svc S] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
                 return;
             }
             f => file = Some(f.to_string()),
@@ -1217,10 +1453,14 @@ fn parent(args: &[String]) {
                         &t.to_string(),
                         &s.to_string(),
                         &level.to_string(),
-                        &teams.map_or("auto".to_string(), |k| {
-                            let lever = lever.as_ref().map_or(String::new(), |l| format!("-{l}"));
-                            format!("{}{k}{lever}", if pipe { "p" } else { "" })
-                        }),
+                        &match &svc {
+                            Some(spec) => format!("s{spec}"),
+                            None => teams.map_or("auto".to_string(), |k| {
+                                let lever =
+                                    lever.as_ref().map_or(String::new(), |l| format!("-{l}"));
+                                format!("{}{k}{lever}", if pipe { "p" } else { "" })
+                            }),
+                        },
                     ]);
                     let o = cmd.output().expect("run a child");
                     let line = String::from_utf8_lossy(&o.stdout).trim().to_string();
@@ -1523,8 +1763,8 @@ fn parent(args: &[String]) {
                 ("threads".into(), J::A(threads.iter().map(|t| J::N(*t as f64)).collect())),
                 ("rounds".into(), J::N(rounds as f64)),
                 ("gap_seconds".into(), J::N(gap)),
-                ("slots".into(), slots.map_or(J::S("2 x threads (BzReader::parallel's)".into()), |s| J::N(s as f64))),
-                ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(format!("{} of {k}, forced{}", if pipe { "pipelined teams" } else { "teams" }, lever.as_ref().map_or(String::new(), |l| format!(", levers: {l}")))))),
+                ("slots".into(), slots.map_or(J::S("SLOTS_PER_THREAD (4) x threads (BzReader::parallel's)".into()), |s| J::N(s as f64))),
+                ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(match &svc { Some(spec) => format!("the service core, mibz2-svc{spec}'s plan"), None => format!("{} of {k}, forced{}", if pipe { "pipelined teams" } else { "teams" }, lever.as_ref().map_or(String::new(), |l| format!(", levers: {l}"))) }))),
                 (
                     "workload".into(),
                     J::S("BzReader::parallel_with(File, t, slots, Kernels::detect()), drained in 4 MiB reads into a streaming hash: examples/ab.rs's mibz2 arm".into()),
@@ -2360,6 +2600,86 @@ mod tests {
             len,
             cap,
         }
+    }
+
+    /// The service core's figures on a hand-built trace (ms; queue lengths as the marks
+    /// carry them): a service worker idle 0-10 and 50-60 of a 100 ms run (busy 0.8); block
+    /// 0 prepared at 10, taken by the team at 20 (a 10 ms prep wait, the team idle for a
+    /// prepared block 0-20), built 20-25 and walked 26-40 by the team's two threads, walked
+    /// at 40 and taken to finish at 45 (5 ms)
+    #[test]
+    fn service_phases_by_place() {
+        let at = |ms: u64, k: Kind, p: u64, len: u64| mk(ms * 1_000_000, k, p, len, UNREAD);
+        let t = |name: &str, marks: Vec<Mark>| ThreadTrace {
+            name: name.into(),
+            marks,
+            buffers: vec![],
+        };
+        let svc = t(
+            "mibz2-svc-0",
+            vec![
+                at(0, Kind::ThreadStart, NONE, UNREAD),
+                at(0, Kind::SvcIdleStart, NONE, UNREAD),
+                at(10, Kind::SvcIdleEnd, NONE, UNREAD),
+                at(10, Kind::Prepared, 0, 1),
+                at(45, Kind::SvcGot, 0, 0),
+                at(50, Kind::SvcIdleStart, NONE, UNREAD),
+                at(60, Kind::SvcIdleEnd, NONE, UNREAD),
+                at(100, Kind::ThreadEnd, NONE, UNREAD),
+            ],
+        );
+        let team = t(
+            "mibz2-0",
+            vec![
+                at(0, Kind::ThreadStart, NONE, UNREAD),
+                at(0, Kind::TeamIdleStart, NONE, 0),
+                at(20, Kind::TeamIdleEnd, NONE, UNREAD),
+                at(20, Kind::TeamGot, 0, 0),
+                at(20, Kind::RunStart, 0, UNREAD),
+                at(20, Kind::BuildStart, 0, UNREAD),
+                at(25, Kind::BuildEnd, 0, UNREAD),
+                at(26, Kind::WalkStart, 0, UNREAD),
+                at(40, Kind::WalkEnd, 0, UNREAD),
+                at(40, Kind::RunEnd, 0, UNREAD),
+                at(40, Kind::Walked, 0, 1),
+                at(90, Kind::ThreadEnd, NONE, UNREAD),
+            ],
+        );
+        let helper = t(
+            "mibz2-coop-1",
+            vec![
+                at(20, Kind::ThreadStart, NONE, UNREAD),
+                at(20, Kind::BuildStart, 0, UNREAD),
+                at(25, Kind::BuildEnd, 0, UNREAD),
+                at(26, Kind::WalkStart, 0, UNREAD),
+                at(40, Kind::WalkEnd, 0, UNREAD),
+                at(90, Kind::ThreadEnd, NONE, UNREAD),
+            ],
+        );
+        let mut kv = Kv::default();
+        service_phases(&[svc, team, helper], &mut kv);
+        let g = |k: &str| {
+            kv.0.iter()
+                .find(|(kk, _)| kk == k)
+                .map(|(_, v)| v.parse::<f64>().unwrap())
+                .unwrap_or_else(|| panic!("{k}"))
+        };
+        assert!((g("t.svc.util.0") - 0.8).abs() < 1e-9);
+        assert!((g("t.svc.queue.prep.median_ms") - 10.0).abs() < 1e-9);
+        assert!((g("t.svc.queue.finish.median_ms") - 5.0).abs() < 1e-9);
+        assert!((g("t.svc.backlog.finish_mean") - 0.05).abs() < 1e-9);
+        assert!((g("t.svc.team.idle_prep_share") - 0.2).abs() < 1e-9);
+        assert_eq!(g("t.svc.team.idle_back_share"), 0.0);
+        // 2 threads x 20 ms, less 2 x (5 build + 14 walk)
+        assert!((g("t.svc.team.ms.run_wait") - 2.0).abs() < 1e-9);
+        assert_eq!(
+            (g("t.svc.team.n.runs"), g("t.svc.team.n.small")),
+            (1.0, 0.0)
+        );
+        assert_eq!(
+            (g("t.svc.backlog.prep_max"), g("t.svc.backlog.finish_max")),
+            (1.0, 1.0)
+        );
     }
 
     /// A thread's marks, its times in ms and its sizes in MB (so that every figure below
