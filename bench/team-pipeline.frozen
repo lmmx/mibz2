@@ -1,4 +1,4 @@
 # The pipelined team's workstation run (docs/journal/2026-11-07-team-pipeline-registration.md).
 # The commit the registration, the prototype, the recipe and the report are frozen at:
 # just bench-team-pipeline's measured inputs must match it exactly.
-frozen PENDING
+frozen f8aa9dc2a97b1e37bfd07ccc117132c77237c2dc
