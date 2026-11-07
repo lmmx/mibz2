@@ -186,11 +186,13 @@ fn small_blocks_among_large_and_streams() {
     assert!(got == want);
 }
 
-/// Lever B's mechanism: full blocks and small ones alternating, one team. As registered, a
+/// Lever B's code path: full blocks and small ones alternating, one team. As registered, a
 /// small block taken in a run leaves the next run nothing staged, so the job after it is
 /// taken with the pipeline drained; with lever B the leader takes it in the run too. So the
-/// jobs taken overlapped (`pipeline_counts`) rise, whenever the scanner is ahead (nearly
-/// always: it is tried until it is), and the bytes are the same either way.
+/// jobs taken during runs (`pipeline_counts`) rise, whenever the scanner is ahead (nearly
+/// always: it is tried until it is), and the bytes are the same either way. Jobs taken are
+/// not overlap: this shows the path runs, not that it helps (the registration's evidence is
+/// the traces' overlap and join delay, and the wall and CPU).
 #[test]
 fn small_blocks_keep_the_pipeline_primed() {
     let n = 300_000;
