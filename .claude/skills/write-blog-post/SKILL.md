@@ -148,7 +148,15 @@ and detail moved to a technical appendix [E: 2464928e, 54220de4, d0640e02].
 
 ## The opening
 
-**Don't start in medias res.** Open in this order:
+**Don't start in medias res, and don't continue in it.** The main failure of a drafted post
+is not a bad first paragraph. It is assuming, all through the post, background the reader
+can't reasonably have: a term from the journal, a number whose total is never given, a
+figure whose axes measure something not yet explained. The maintainer calls it "death by in
+medias res" [E: the maintainer, 2026-11-07]. It applies to every section and every figure:
+each must be followable by someone who has read only what comes before it in the post. The
+key-facts audit below is how to check it.
+
+Open in this order:
 
 1. **What the thing is,** in plain words, and **why it matters to the decoder**: what
    stage it is, what share of the time it takes, what depends on it.
@@ -173,6 +181,30 @@ The evidence:
 - A follow-up post can open from where the last one left off, linking it, without
   re-introducing mibz2 [E: 920b77f1]. It still says what this post is about before it goes
   into detail.
+
+### Why the reader cares, then the answer, then the reader's next question
+
+These rules are adapted from the Observer's account
+(`docs/team/SPEC.OBSERVER.md`, "The account" and
+"Writing"), which is written for a reader who hasn't been following the team. A blog reader
+hasn't either. The account's status and "who is awaited" parts don't carry over to a post.
+
+- **Lead with why the reader should care, then the answer,** before any mechanism, table or
+  fine detail. For example: "more threads stop making the decoder faster, and the reason
+  says what to try next", then what the reason is. The opening order above says where these
+  go; this says that the reader's stake comes before the post's machinery.
+- **Head the sections after the opening with the reader's next question,** in plain words,
+  where a question fits: "Why would more blocks at once slow each block down?", "What will we
+  try next?". Each section then answers the question its heading asks. A heading that states
+  a result ("What the census found") is still fine where no question reads naturally.
+- **No codenames, item labels or IDs in the prose** unless explained where they appear: a
+  journal's E4 or H1, a comment ID, "compact30", "the i9 run". Name the thing instead, and put
+  the IDs in link targets, as the spec says: "The IDs live in the link targets, not in the
+  sentences."
+- **Read it as the reader would before publishing,** with the spec's check adapted: someone
+  new to the project follows it without the journal; the opening says what was found; the
+  purpose of the work is clear; the reader can tell what happens next; and no term, codename
+  or ID is left unexplained.
 
 ## Understanding before mechanism
 
@@ -208,7 +240,16 @@ far in.
 ### The key-facts audit (do it on every draft)
 
 Before revising, write down the facts and connections a reader needs to follow the post's
-claim, in the order the argument uses them. For each:
+claim, in the order the argument uses them. The scope is the whole post, not the opening:
+
+- **every term,** including the project's own names for things (in a post about parallel
+  decoding: a block and why blocks decode independently, a team, its leader and helpers, the
+  T-vector, the knee, the cooperative inversion, MTF, RLE1 and the CRC, "planned tables");
+- **every number's denominator:** a share of what, a rate of what, a ratio against what;
+- **every named thing:** a machine, a sample, a release, a plan, a run;
+- **every figure's axes and marks:** what each axis measures, and in what unit.
+
+For each:
 
 1. **Background or not?** Assume a general computer-science grounding: registers, memory
    and caches, compilers, bits and bytes, what a lookup table is. Don't assume the domain:
@@ -535,6 +576,12 @@ Before `publish-page`:
       the draft. Its stuck points were fixed by restructuring, and the revision was read
       again.
 - [ ] Every term is defined or linked at first use, and every symbol is bound.
+- [ ] The opening says why the reader should care, and the answer, before any mechanism or
+      table. Section headings after it ask the reader's next question where one fits. No
+      codename, item label or ID is in the prose unexplained (SPEC.OBSERVER.md, adapted).
+- [ ] Every section and figure can be followed from what comes before it in the post alone:
+      no "death by in medias res" anywhere, checked by the key-facts audit over every term,
+      denominator, named thing and figure axis.
 - [ ] The first paragraph says concretely what the title's subject is. Section 1 shows it
       working. A fresh reader asked where to start says "at the top".
 - [ ] The key-facts audit is done and in the PR body. Every fact the introduction relies on
