@@ -358,8 +358,54 @@ such flip.
   the share at which the i9's 4 × 2 lost to 3 × 3. For example, 16 cores with 36 MiB: T_cap = 6
   needs 19 cores, so it runs 7 × 2, with tables at 0.67 of the L3. With 37 MiB it runs 8 × 2.
   - **Rule A makes no claim there;** it keeps today's plan.
-  - **A partial fast plan** (fewer teams of three than T_cap) is what caused the flips, so it is
-    left out until something measures one.
+
+**What caused the flips, and the alternative that was not chosen** (re-review point 2).
+- **The cause:** the flips came from the first version's 2/3 clause (3 T_f ≥ 2 T_b), not from
+  partial fast plans as such.
+- **The alternative:** a cores-bound partial plan, T_f = min(T_cap, ⌊(P − 1) / 3⌋), used when
+  T_f ≥ 2, 3 T_f ≤ N and T_b > T_f (`rule_a_partial` in the script). It has no 2/3 clause, and
+  scanned the same way it shows:
+  - **no fall in threads used**;
+  - **no L3 cliffs:** no point where one more MiB swaps a width-3 plan for a lower-scored width-2
+    one;
+  - **but 2,070 modelled throughput falls in N involving a width-3 plan**, against rule A's 0.
+- **The trade-off:** the partial variant moves the irregularity from the cache-size axis to the
+  thread axis.
+- **Rule A keeps the full-budget form, because:**
+  - **A fall in N is what one user meets on one machine:** asking for more threads and getting less
+    speed. A cliff in L3 size separates two different machines, and no user moves between them by
+    asking.
+  - **It reaches fewer unmeasured topologies:** a partial plan runs fewer fast teams than T_cap, a
+    configuration nothing has measured.
+- **The caveat on both counts:** they rest on rule B's per-table curve, which is itself unvalidated
+  (§4). So they rank the two variants by a model, not by evidence.
+
+**The cliffs rule A keeps** (re-review point 1). With all CPUs asked for, over 6–64 cores and L3
+sizes of 2–128 MiB in 1 MiB steps, `plan_tables.py` finds 57 points where one more MiB makes rule A
+swap a width-3 plan for a width-2 one scored lower under rule B's curve. The new plan's modelled
+throughput is 0.85–0.96 of the old one's, with both scored at the larger L3. The re-review's own
+count was 57 at 0.87–0.96; the low end differs, by the scoring. Examples:
+
+| cores | L3, one more MiB | plan | modelled ratio |
+|--:|---|---|--:|
+| 10 | 22 → 23 MiB | 3 × 3 p → 5 × 2 | 0.888 |
+| 16 | 34 → 35 MiB | 5 × 3 p → 7 × 2 | 0.874 |
+
+Each is where T_cap + 1 fast teams would need more cores than P − 1 allows, so the rule falls back
+to the old plan, which then holds more tables than the curve favours.
+
+**The fast plan's reach.** It needs 3 T_cap ≤ P − 1 and T_cap < T_b, so it fires only below about
+L3 = 2 MB × (P − 1) + 6 MB. On the scanned grid, the largest L3 with a fast plan is:
+- 22 MiB at 10 cores;
+- 34 MiB at 16 cores;
+- 62 MiB at 32 cores;
+- 125 MiB at 64 cores.
+
+Above that, every part gets the old plan, which is today's, whatever its L3.
+
+**Not monotone in its own constant.** At 16 cores and 32 MiB, rule A picks 7 × 2 at 5.30 MB per
+fast team, 5 × 3 p at 6.00 MB, and 4 × 3 p at 6.99 MB (the table below). More cache per fast team
+does not move the plan steadily in one direction, because the fill condition switches on and off.
 
 **The constant, and what the i9 can and can't fix** (review point 4).
 - **The interval.** The i9 pins T_cap = 3, which holds for any figure in (5.24, 6.99] MB of L3 per
@@ -554,7 +600,7 @@ pipelining, as 3 × 3 did on the i9. Every one of those rows, apart from the i9'
 | 8 threads, unmasked | 4 × 2 | 3 × 2 | 2 × 4 p | not faster than 4 × 2 by 3% | slower than 3 × 2 |
 | 8-core mask, 8 threads | 4 × 2 | 3 × 2 | | as at 8 unmasked | as at 8 unmasked |
 | 8-core sibling mask, 16 threads | 4 × 2 | 3 × 2 | | as at 8 unmasked | as at 8 unmasked |
-| 9-core mask, 9 threads | 4 × 2 | 3 × 2 | 3 × 3 p (no core left over) | no claim: the assumption under test | no claim |
+| 9-core mask, 9 threads | 4 × 2 | 3 × 2 | 3 × 3 p (no core left over) | no claim: the assumption under test (information only) | no claim |
 
 - **The 2 × 4 pipelined arm** comes from the unregistered cell of §1.4 (0.159 s against 0.181 s).
   If it beats 4 × 2 at 8, the rule is missing a budget for teams of four at small budgets.
@@ -636,7 +682,8 @@ and runs the plan-table and correctness tests. It cannot measure any team plan.
 ### Phase 2: the opt-in implementation
 
 - **`Topology`:** `Topology { phys, l3, l3_shared_by_all, one_kind }`, with `Topology::detect()`.
-  It reads sysfs: the L3 of a CPU in the affinity, its `shared_cpu_list` against the affinity, and
+  Both are proposals: master today has only `physical_cores()` and `l3_bytes()` (cpu0's L3) in
+  `src/parallel.rs`. `Topology::detect()` would read sysfs: the L3 of a CPU in the affinity, its `shared_cpu_list` against the affinity, and
   the core-kind signals of §2.
 - **`Plan::general`:** `Plan::general(threads, &Topology, block_rows: Option<usize>) -> Decision`,
   a pure function.
@@ -722,19 +769,40 @@ boundaries hold).
     intervals);
   - at 80% power, a true difference of about (3.1 + 0.86) × sd / √20 = 2.4–3.8% is detectable;
   - together with the 1.03 point bar, effects below about 3–4.5% will usually read "unresolved".
-- **How each rule is read:**
-  - **Rule A** survives if no alternative is "faster" at its 4 × 2 cells, and 3 × 3 p is "faster"
-    at unmasked 9.
-  - **Rule B's 8-thread claim is falsified** if 3 × 2 is "slower" or its point estimate is below
-    1.03 at all three 8-thread cells.
+- **How each rule is read** (re-review points 5 and 6). The 9-core mask's 3 × 3 p comparison is in
+  the family for multiplicity, but **it is information only**: it enters neither rule's reading. If
+  it reads "faster", the core-left-over assumption is unnecessary, and the 9-core shape becomes a
+  candidate envelope entry by its own registration. Otherwise nothing follows. The other six
+  comparisons are read symmetrically:
+  - **The shared 9-thread cell (unmasked 3 × 3 p against 4 × 2):** "faster" supports both rules;
+    "slower" falsifies both. Anything else leaves both open.
+  - **Rule A is falsified at 8 threads** if any alternative (3 × 2 or 2 × 4 p) is "faster" at any of
+    the three 8-thread cells.
+  - **Rule B is falsified at 8 threads** only if 3 × 2's Bonferroni upper bound is below 1.03 at all
+    three 8-thread cells, so that its predicted gain is excluded.
+  - **Rule B is supported** if 3 × 2 is "faster" at all three.
+  - **Neither resolved:** any other combination. This outcome does not favour rule A. It records
+    that the run could not separate the rules at 8 threads, and the default stays 0.2.6's because
+    of the envelope, not because of the run.
 - **What it does not show:** anything about the L3 extrapolation.
 
 **Registration 2, diagnostic: `bench-plan-bytes`** (information objective: does the table's size
 move the three-team advantage?).
 - **Cells:** N = 10 on the level-6, -7 and -9 recompressions of the bench content.
 - **Arms:** plain 3 × 3, 3 × 3 pipelined and 4 × 2.
-- **The method:** 20 rounds, paired, with the same family treatment over its 6 comparisons.
-- **Predictions:** as in §4.
+- **The method:** 20 rounds, paired, with the same family treatment over its 6 comparisons
+  (Bonferroni, two-sided 95% overall).
+- **The pre-stated decision rule**, on plain 3 × 3 against 4 × 2 (the pipelined arm is reported):
+  - **Validity:** the run reads the premise only if level 9 reproduces the advantage, with a lower
+    bound above 1. Otherwise it is inconclusive.
+  - **The premise is contradicted** if the level-6 ratio's lower bound stays above 1.03. The
+    three-team advantage would then survive tables that fit four to the L3.
+  - **The premise is supported** if the level-6 ratio's upper bound is below 1.03, and its point
+    estimate is below level 9's by more than both intervals' half-widths combined.
+  - **Unresolved:** anything else. Level 7 is reported as the boundary, and not judged.
+  - **What follows:** a contradiction would count against rule A's L3 scaling, and against rule B's
+    curve, before either reaches another machine. Support would not validate the extrapolation;
+    it would only fail to refute its premise on one machine.
 
 **Registration 3, qualifying: the N = 9 entry.** This runs only if registration 1 shows 3 × 3 p
 "faster" at unmasked 9.
@@ -743,6 +811,16 @@ move the three-team advantage?).
 - **The precedent's terms:** at least 1.03 at 9 with its lower bound above 1, and no more than 2%
   slower elsewhere, run plus confirmation.
 - **If it passes,** the envelope entry widens to 9 threads or more.
+- **Its reach** (re-review point 3). The envelope matches (10 cores, 20 MiB) as 0.2.6 reads them, so
+  a widened N = 9 cell would also reach the hybrid 10-core / 20 MB parts, two-socket machines and
+  VMs of the live-release note, all unmeasured. **The decision here: the widened cell carries the
+  guards.**
+  - **The N = 9 cell requires** the L3 read from a CPU in the affinity, the affinity inside one L3's
+    `shared_cpu_list`, and cores of one kind.
+  - **The N ≥ 10 cells keep 0.2.6's unguarded match.** Guarding them would change 0.2.6's behaviour
+    on those parts, which the README note defers to the general-policy work.
+  - **The effect:** no new reach is added on the strength of an i9-only run, and the existing reach
+    is neither added to nor silently removed.
 
 **Registration 4, qualifying: the step-1 A/A** (below). It is a separate registration, because
 step 1 changes the default path's code.
@@ -794,8 +872,19 @@ That decision applies to its change only. Proposed for this one, in two steps:
        Earlier same-plan controls of 1.008 [0.992, 1.026] and 1.007 [0.987, 1.027] would both pass
        it. They would fail a two-one-sided equivalence test at ±2% with 20 rounds, whose 90% bounds
        reach about 1.024.
-     - **A stronger claim** needs ±3% or 40 rounds.
-     - **Which, if either, is Louis's choice:** the statistical method is reserved (C6).
+     - **What it screens:** the three-team run's same-plan 8-thread control read 0.986
+       (0.977–0.995), a build or layout offset on an identical plan. So an A/A between two builds
+       screens build layout at least as much as the rule's dispatch.
+     - **The choice of statistical method is pending Louis's decision** (RULES C6). The options,
+       listed neutrally:
+       1. the screen as defined above (20 rounds, flagged wholly outside ±2%, insensitive below
+          about 4%);
+       2. an equivalence test at ±2% with 40 rounds;
+       3. an equivalence test at ±3% with 20 rounds;
+       4. no workstation A/A, with step 1 resting on CI and the equivalence test.
+     - **Freezing:** registrations 3 and 4 can't be frozen until he decides, since both use
+       acceptance terms he has not set for this change. The diagnostic registrations 1, 2 and 5 can
+       be frozen now.
    - **The weighing (C3):** the complexity bought against a branch that stays off by default. The
      cheaper first step of phase 2 avoids most of it.
 2. **Widening the envelope.**
@@ -821,9 +910,11 @@ machines' sysfs, these may match it and so run 3 × 3 pipelined, unmeasured:
 - **Two-socket machines with 5 cores and 20 MiB of L3 a socket,** or VMs presenting such a
   topology. `physical_cores` counts both sockets' cores; `l3_bytes` reads one socket's cache.
 
-Whether 0.2.6 needs a guard for these is a live-release question. It is flagged here for the
-Coordinator, not decided. Rule A's step 1 keeps 0.2.6's choice there, so that any change is made
-deliberately, in its own PR.
+**What was decided.** These topologies are now documented in the README ("Unmeasured
+topologies"), with how to choose another plan. There is no patch release: a guard would swap one
+unmeasured default for another (4 × 2 is no more measured on a hybrid part than 3 × 3), so the
+guard is deferred to the general-policy work. Rule A's step 1 keeps 0.2.6's choice there, so that
+any change is made deliberately, in its own PR.
 
 ## 6. Recommendation: rule A
 
@@ -892,3 +983,17 @@ The stand-in Researcher review at `2e1322f4` returned REVISE.
 **One point taken further than asked.** Under the new conventions, rule B also picks 3 × 3 p at 9
 threads. So the two rules now differ on the i9 only at 8 threads and under the masks, which is where
 registration 1 concentrates.
+
+### The re-review (at `64f62464`: ACCEPT WITH CHANGES)
+
+| # | change asked | done | where |
+|--:|---|---|---|
+| 1 | Quantify the L3 cliffs; non-monotone in m; the fast plan's reach | Verified with the script: 57 cliffs at 0.85–0.96 (the re-review had 0.87–0.96), with its two examples. Non-monotone in m at 16 cores / 32 MiB. Reach below about 2 MB × (P − 1) + 6 MB | §2 "The cliffs rule A keeps", "The fast plan's reach" |
+| 2 | The 2/3 clause caused the flips; the cores-bound partial trade-off | Corrected. The partial variant was scanned (`rule_a_partial`): 0 thread falls, 0 cliffs, 2,070 width-3 modelled falls in N, all verified. The full-budget form is kept, with the reasons stated | §2 "What caused the flips" |
+| 3 | Registration 3's reach to hybrid parts | It reaches them. Decided: the widened N = 9 cell carries the single-L3 and core-kind guards; N ≥ 10 keeps 0.2.6's match | §5 registration 3 |
+| 4 | `Topology::detect` is a proposal | Stated; master has `physical_cores()` and `l3_bytes()` | §5 phase 2 |
+| 5 | The 9-core mask's reading | Information only: in the family for multiplicity, in neither rule's reading | §4 table, registration 1 |
+| 6 | Symmetric readings | Rule B falsified only when its Bonferroni upper bound is below 1.03; a "neither resolved" outcome that does not favour A | registration 1 |
+| 7 | A decision rule for `bench-plan-bytes` | Pre-stated: contradicted if the level-6 lower bound stays above 1.03, with a level-9 validity check | registration 2 |
+| 8 | The A/A criterion | Kept as the defined 4% screen. The method is pending Louis (C6), with the options listed neutrally. The 0.986 (0.977–0.995) control is cited. Registrations 3 and 4 wait for his decision; 1, 2 and 5 can be frozen | admission step 1 |
+| — | The live-release note | README "Unmeasured topologies", in its own commit. No patch release | README.md, "A question for the live release" |

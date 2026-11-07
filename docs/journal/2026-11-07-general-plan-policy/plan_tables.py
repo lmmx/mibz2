@@ -73,6 +73,39 @@ def rule_a_first(n, phys, l3, m_fast=M_FAST, shared=True):
     return ("teams", t_b, 2, False)
 
 
+def rule_a_partial(n, phys, l3, m_fast=M_FAST, shared=True):
+    """the cores-bound partial variant the re-review proposed (not chosen): fewer fast teams
+    than T_cap when the cores can't fill T_cap, T_f = min(T_cap, (P - 1) // 3)"""
+    if phys is None:
+        return ("workers", n)
+    c = min(n, phys)
+    if c < COOP_MIN_CORES:
+        return ("workers", n)
+    t_wide = 4 if l3 is None else max(1, round(0.7 * l3 / FULL_TABLE))
+    t_b = max(1, min(c // 2, t_wide))
+    if l3 is not None and shared:
+        t_f = min(int(l3 // m_fast), (phys - 1) // 3)
+        if t_f >= 2 and t_b > t_f and 3 * t_f <= n:
+            return ("teams", t_f, 3, True)
+    return ("teams", t_b, 2, False)
+
+
+def l3_cliffs(rule):
+    """with all CPUs asked for, 6-64 cores, L3 2-128 MiB in 1 MiB steps: the points where one
+    more MiB swaps a width-3 plan for a width-2 one, each with the new plan's modelled
+    throughput over the old one's, both scored at the larger L3 under rule B's curve"""
+    out = []
+    for phys in range(6, 65):
+        prev = None
+        for m in range(2, 129):
+            l3 = m * MIB
+            q = rule(2 * phys, phys, l3)
+            if prev and prev[0] == q[0] == "teams" and prev[2] == 3 and q[2] == 2:
+                out.append((phys, m - 1, m, prev, q, score(q[1], q[2], l3) / score(prev[1], prev[2], l3)))
+            prev = q
+    return out
+
+
 # Rule B: the fitted throughput model (per-table MB/s against the tables' share of the L3,
 # from the i9's team-size grid, 2026-11-06), under rule A's budget conventions: plans of
 # width 2 within c = min(threads, physical); plans of width 3 or more within the threads
@@ -178,7 +211,7 @@ def main():
     print("\n## Monotonicity on a grid (1-64 cores, L3 2-128 MiB in 1 MiB steps, threads 1 to 2 x cores)\n")
     grid = [(p, m * MIB // 4) for p in range(1, 65) for m in range(8, 513, 4)]
     rows = []
-    for name, rule in (("today", today), ("rule A, first version", rule_a_first), ("rule A", rule_a), ("rule B", rule_b)):
+    for name, rule in (("today", today), ("rule A, first version", rule_a_first), ("rule A", rule_a), ("rule A, partial variant", rule_a_partial), ("rule B", rule_b)):
         team, step = monotonicity(rule, grid)
         drops = fast = 0
         for phys, l3 in grid:
@@ -190,8 +223,11 @@ def main():
                         drops += 1
                         fast += (q[2] >= 3) or (prev[2] >= 3)
                 prev = q
-        rows.append((name, team, step, drops, fast))
-    print(table(rows, ["rule", "threads used fall (teams)", "threads used fall (workers to teams)", "modelled throughput falls > 2%", "of which a width-3 plan is involved"]))
+        cl = l3_cliffs(rule)
+        below = [r for *_, r in cl if r < 1]
+        span = f"{len(below)} ({min(below):.3f}-{max(below):.3f})" if below else "0"
+        rows.append((name, team, step, drops, fast, span))
+    print(table(rows, ["rule", "threads used fall (teams)", "threads used fall (workers to teams)", "modelled throughput falls > 2%", "of which a width-3 plan is involved", "L3 cliffs to a lower-scored width-2 plan"]))
 
     print("\n## Rule A's one fitted constant: L3 per fast team\n")
     rows = []
