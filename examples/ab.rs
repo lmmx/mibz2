@@ -47,6 +47,12 @@
 //! - `mibz2-pipe2`, `-pipe3`, `-pipe4` (research: the pipelined team,
 //!   `BzReader::parallel_pipelined`, its leader's RLE1, CRC and next move-to-front overlapped
 //!   with its helpers' build and walk: THREADS / K teams of K in the teamK arms' window);
+//! - `mibz2-svc1`, `-svc2` (research: the service core, `BzReader::parallel_service`: K
+//!   service workers doing every block's move-to-front, assembly, RLE1, CRC and publish,
+//!   and teams of 3 that only build and walk, as many as fit THREADS after the K service
+//!   threads, at most 3: 3 x 3 + 1 at 10 or 12 threads, 2 x 3 + 2 at 10, 3 x 3 + 2 at 12),
+//!   and `mibz2-svc1-t2` (teams of 2: 3 x 2 + 1); each in the teamK arms' window
+//!   (SLOTS_PER_THREAD a team);
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
 //!   `ParallelDecoder::with_threads`);
 //! - `libbzip2` (libbzip2 1.0.8, C, the bzip2 crate's bundled source: `MultiBzDecoder`),
@@ -563,6 +569,30 @@ fn decode(
                     open()?,
                     teams,
                     k,
+                    slots,
+                    mibz2::Kernels::detect(),
+                ),
+                h,
+                last,
+            )
+        }
+        // the service core (research, `StreamDecoder::service`): K service threads, and
+        // teams of T in what is left of THREADS, at most 3 teams (the three-table knee), so
+        // the arm never runs more decoding threads than THREADS
+        "mibz2-svc1" | "mibz2-svc2" | "mibz2-svc1-t2" => {
+            let (services, k) = match arm {
+                "mibz2-svc1" => (1, 3),
+                "mibz2-svc2" => (2, 3),
+                _ => (1, 2),
+            };
+            let teams = (threads.saturating_sub(services) / k).clamp(1, 3);
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * teams;
+            drain(
+                mibz2::BzReader::parallel_service(
+                    open()?,
+                    teams,
+                    k,
+                    services,
                     slots,
                     mibz2::Kernels::detect(),
                 ),
