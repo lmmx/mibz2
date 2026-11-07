@@ -257,8 +257,9 @@ enum S {
 ///   block (between `RunStart` and `RunEnd` of a different place; a small block's own run,
 ///   decoded whole by the leader, nests inside the team's);
 /// - `overlap.cross_thread`: blocks whose move-to-front interval (on its leader) intersects
-///   a helper's build or walk of a different block, by the marks' clock: the cross-block
-///   overlap itself, shown rather than inferred;
+///   a helper's build or walk of the block the same leader's enclosing run is inverting, by
+///   the marks' clock: the cross-block overlap within one team, shown rather than inferred
+///   (`cross_overlaps`: another team's helpers never count);
 /// - `overlap.rle_cross_thread`: the same for the leaders' RLE1 and CRC intervals.
 fn pipeline_phases(traces: &[ThreadTrace], kv: &mut Kv) {
     use Kind::*;
@@ -310,22 +311,42 @@ fn pipeline_phases(traces: &[ThreadTrace], kv: &mut Kv) {
     let same = of("mtf")
         .filter(|m| of("run").any(|r| r.4 == m.4 && r.1 != m.1 && r.2 <= m.2 && m.3 <= r.3))
         .count();
-    let cross = |lead: &'static str| {
-        of(lead)
-            .filter(|m| {
-                iv.iter().any(|h| {
-                    (h.0 == "build" || h.0 == "walk")
-                        && h.4 != m.4
-                        && h.1 != m.1
-                        && h.2 < m.3
-                        && m.2 < h.3
-                })
-            })
-            .count()
-    };
     kv.f("t.pipe.overlap.same_thread", same as f64);
-    kv.f("t.pipe.overlap.cross_thread", cross("mtf") as f64);
-    kv.f("t.pipe.overlap.rle_cross_thread", cross("rle") as f64);
+    kv.f(
+        "t.pipe.overlap.cross_thread",
+        cross_overlaps(&iv, "mtf") as f64,
+    );
+    kv.f(
+        "t.pipe.overlap.rle_cross_thread",
+        cross_overlaps(&iv, "rle") as f64,
+    );
+}
+
+/// A phase's intervals (`pipeline_phases`'s: phase, place, start ns, end ns, thread)
+type Interval<'a> = (&'a str, u64, u64, u64, usize);
+
+/// The `lead` intervals (a leader's `mtf` or `rle`) that overlap their own team's inversion
+/// of another block: the interval lies inside a `run` of a different place on the same
+/// thread (its leader's), and intersects a helper's `build` or `walk` of that run's place on
+/// another thread. A place is one block, inverted by one team, so another team's helpers
+/// (working on other places) never count.
+fn cross_overlaps(iv: &[Interval], lead: &str) -> usize {
+    iv.iter()
+        .filter(|m| m.0 == lead)
+        .filter(|m| {
+            iv.iter()
+                .filter(|r| r.0 == "run" && r.4 == m.4 && r.1 != m.1 && r.2 <= m.2 && m.3 <= r.3)
+                .any(|r| {
+                    iv.iter().any(|h| {
+                        (h.0 == "build" || h.0 == "walk")
+                            && h.4 != m.4
+                            && h.1 == r.1
+                            && h.2 < m.3
+                            && m.2 < h.3
+                    })
+                })
+        })
+        .count()
 }
 
 /// The trace's checks and its sweep, into `kv` (keys `t.*`)
@@ -2211,6 +2232,39 @@ impl std::fmt::Display for J {
 
 #[cfg(test)]
 mod tests {
+    /// Two teams: team A's leader (thread 0) runs block 1's move-to-front inside its run of
+    /// block 0 while its own helper (thread 1) is between its build and walk, so A never
+    /// overlaps; team B's helper (thread 3) builds block 2 all the while. A counts 0, and B,
+    /// whose leader (thread 2) stages block 3 during its helper's walk of block 2, counts 1
+    #[test]
+    fn cross_overlaps_count_a_team_alone() {
+        let iv: Vec<super::Interval> = vec![
+            // team A: run of block 0 on its leader, the MTF of block 1 inside it
+            ("run", 0, 0, 100, 0),
+            ("mtf", 1, 10, 30, 0),
+            ("rle", 9, 32, 38, 0),
+            // A's helper: block 0's build before the MTF, its walk after the RLE
+            ("build", 0, 0, 9, 1),
+            ("walk", 0, 40, 90, 1),
+            // team B: its helper builds and walks block 2 the whole time
+            ("build", 2, 0, 50, 3),
+            ("walk", 2, 50, 100, 3),
+            ("run", 2, 0, 100, 2),
+            ("mtf", 3, 60, 70, 2),
+        ];
+        // A's MTF and RLE meet B's helper (block 2) only: not counted; B's MTF meets its own
+        // helper's walk of block 2: counted
+        assert_eq!(super::cross_overlaps(&iv, "mtf"), 1);
+        assert_eq!(super::cross_overlaps(&iv, "rle"), 0);
+        let a_only: Vec<super::Interval> =
+            iv.iter().copied().filter(|x| x.4 < 2 || x.4 == 3).collect();
+        assert_eq!(super::cross_overlaps(&a_only, "mtf"), 0, "team A alone");
+        // and A's MTF moved into its helper's walk: counted
+        let mut moved = a_only.clone();
+        moved[1] = ("mtf", 1, 45, 55, 0);
+        assert_eq!(super::cross_overlaps(&moved, "mtf"), 1);
+    }
+
     use super::*;
     use mibz2::trace::{Mark, NONE};
 
