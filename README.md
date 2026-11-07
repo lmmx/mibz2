@@ -113,6 +113,23 @@ for span in mibz2::scan(&data) {
   - **The plain three teams of three:** `planned(Plan::Teams { teams: 3, k: 3 }, ..)`, for
     less CPU.
 
+**Unmeasured topologies.** The three teams of three are chosen by two numbers alone: the
+physical cores the process may use (10), and cpu0's L3 size as Linux reports it (20 MiB). The
+planner has no CPU model to check. So some machines that are not an i9-10900K get the plan too,
+without anyone having measured it there. They have had the three teams since 0.2.5, pipelined
+since 0.2.6:
+- **Hybrid Intel parts with 10 cores and a 20 MB L3,** such as the i5-12600K and i5-13400 (6
+  performance and 4 efficiency cores);
+- **two-socket machines** with 10 physical cores in all and 20 MiB of L3 behind cpu0;
+- **virtual machines** that report 10 cores and a 20 MiB L3.
+
+The output is the same on every plan: only the speed can differ. To choose another plan, pass it
+explicitly: `BzReader::parallel_planned(r, plan, slots, kernels)` or
+`StreamDecoder::planned(plan, slots, kernels)`, with `Plan::Teams { teams: 4, k: 2 }` or
+`Plan::Workers(n)`, say. Or ask for fewer than 10 threads: `BzReader::parallel(r, 8)` and
+Python's `threads=8` give four teams of two there. A topology-aware rule is being designed
+(#253).
+
 **Errors** (`ErrorKind`) cover the following:
 
 - the input: `Empty`, `NotBz2`, `Truncated`, `TrailingData`;
