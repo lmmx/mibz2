@@ -254,7 +254,8 @@ enum S {
 ///   `mtf`, `build_setup`, `rle` and `run`; the helpers' `helper`, `build`, `walk_setup`,
 ///   `assemble`; both's `build_wait` and `walk`), and `n.PHASE` its intervals;
 /// - `overlap.same_thread`: blocks whose move-to-front a leader ran inside its run of another
-///   block (between `RunStart` and `RunEnd` of a different place);
+///   block (between `RunStart` and `RunEnd` of a different place; a small block's own run,
+///   decoded whole by the leader, nests inside the team's);
 /// - `overlap.cross_thread`: blocks whose move-to-front interval (on its leader) intersects
 ///   a helper's build or walk of a different block, by the marks' clock: the cross-block
 ///   overlap itself, shown rather than inferred;
@@ -283,14 +284,15 @@ fn pipeline_phases(traces: &[ThreadTrace], kv: &mut Kv) {
     // every interval: (phase, place, start ns, end ns, thread)
     let mut iv: Vec<(&str, u64, u64, u64, usize)> = Vec::new();
     for (ti, t) in traces.iter().enumerate() {
-        let mut open: BTreeMap<&str, (u64, u64)> = BTreeMap::new();
+        // (by phase and block: a leader's run of a small block nests inside its team's run)
+        let mut open: BTreeMap<(&str, u64), u64> = BTreeMap::new();
         for m in &t.marks {
             for &(name, a, b) in &pairs {
                 if m.kind == a {
-                    open.insert(name, (m.place, m.ns));
+                    open.insert((name, m.place), m.ns);
                 } else if m.kind == b {
-                    if let Some((p, s)) = open.remove(name) {
-                        iv.push((name, p, s, m.ns, ti));
+                    if let Some(s) = open.remove(&(name, m.place)) {
+                        iv.push((name, m.place, s, m.ns, ti));
                     }
                 }
             }
