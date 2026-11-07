@@ -8,3 +8,6 @@
 # recipe                       branch                    what it measures
 bench-release-scaling        master                    release scaling, 0.2.6 against 0.2.5 (RELEASING.md §5)
 bench-service-core           research/service-core     service-core decoder (K service threads) against 0.2.6's default (#251)
+bench-plan-boundaries        research/general-plan-impl  plan policy: rule A's boundaries at 8-9 threads, masks (#254, diagnostic)
+bench-plan-bytes             research/general-plan-impl  plan policy: bytes per L3, levels 6/7/9 (#254, diagnostic)
+bench-plan-levels            research/general-plan-impl  levels 1-3: 0.2.6 against 0.2.4, and forced 4x2 (#254, diagnostic)
