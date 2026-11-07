@@ -82,8 +82,9 @@ impl<R: Read> BzReader<R> {
 
 impl<R: Read + Send + 'static> BzReader<R> {
     /// Decode on `threads` threads (at least 1), with at most `SLOTS_PER_THREAD` x `threads`
-    /// blocks in flight (`parallel::SLOTS_PER_THREAD`), spent as `StreamDecoder::new` plans them (a block a worker, or teams of 2
-    /// sharing each block on 6 or more physical cores: `Plan::for_threads`)
+    /// blocks in flight (`parallel::SLOTS_PER_THREAD`), spent as `StreamDecoder::new` plans them (a block a worker, or teams
+    /// sharing each block on 6 or more physical cores: `Plan::for_threads`; pipelined
+    /// teams at three teams of three, `parallel::PIPELINED_PLAN`)
     pub fn parallel(r: R, threads: usize) -> Self {
         Self::parallel_with(
             r,

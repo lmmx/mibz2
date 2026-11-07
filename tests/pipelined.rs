@@ -8,10 +8,17 @@
 //! Every test runs the registered prototype and each of its levers
 //! (`StreamDecoder::pipelined_levers`): park, the spin-budget control (spin2k), small, park
 //! and small together, and park after the short spin.
+//!
+//! **The default at the measured plan:** `StreamDecoder::new` (so `BzReader::parallel` and
+//! `decode_parallel`) runs pipelined teams with park and small at three teams of three
+//! (`PIPELINED_PLAN`) alone. Every test here also runs the default constructor with that
+//! plan forced (`parallel::with_plan`, on any machine), against the default decoder, the
+//! plain three teams of three (`planned`) and libbzip2; and every other plan forced through
+//! the default constructor takes the plain path.
 
 mod common;
 use common::*;
-use mibz2::parallel::Levers;
+use mibz2::parallel::{with_plan, Levers, Plan, PIPELINED_PLAN};
 use mibz2::{Error, ErrorKind, Kernels, StreamDecoder};
 use std::io::Read;
 
@@ -97,6 +104,36 @@ fn default(z: &[u8]) -> (Vec<u8>, Result<(), Error>) {
     )
 }
 
+/// The default constructor (`StreamDecoder::new`) with `plan` forced, on 4 threads asked
+/// for in 16 slots (the plan's own threads, and its window scaled as the policy's)
+fn forced_new(plan: Plan) -> StreamDecoder {
+    with_plan(plan, || StreamDecoder::new(4, 16, Kernels::detect()))
+}
+
+/// The default constructor at the measured plan: pipelined, its threads the plan's
+fn default_33() -> StreamDecoder {
+    let dec = forced_new(PIPELINED_PLAN);
+    assert!(dec.is_pipelined() && dec.threads() == 9);
+    dec
+}
+
+/// The default constructor at 3 × 3 against the plain three teams of three
+/// (`StreamDecoder::planned`, which never pipelines) and `want`: the same bytes and result.
+/// Its pipeline counts.
+fn default_33_same(z: &[u8], want: &[u8], want_res: &Result<(), Error>, what: &str) -> (u64, u64) {
+    let dec = default_33();
+    let (got, res) = run(&dec, z);
+    assert!(got == want, "{what}: the default at 3 × 3: the bytes");
+    assert_eq!(&res, want_res, "{what}: the default at 3 × 3: the result");
+    let plain = StreamDecoder::planned(PIPELINED_PLAN, 12, Kernels::detect());
+    assert!(!plain.is_pipelined());
+    let (pgot, pres) = run(&plain, z);
+    assert!(pgot == want, "{what}: the plain 3 × 3: the bytes");
+    assert_eq!(&pres, want_res, "{what}: the plain 3 × 3: the result");
+    assert_eq!(plain.pipeline_counts(), (0, 0));
+    dec.pipeline_counts()
+}
+
 /// The plans each test runs: teams of 2, 3 and 4; one team or two; a tight window and a wide
 const PLANS: [(usize, usize, usize); 6] = [
     (1, 2, 1),
@@ -126,7 +163,8 @@ fn same_as_default(z: &[u8], what: &str) -> (u64, u64) {
             counts = (counts.0 + c.0, counts.1 + c.1);
         }
     }
-    counts
+    let c = default_33_same(z, &want, &want_res, what);
+    (counts.0 + c.0, counts.1 + c.1)
 }
 
 #[test]
@@ -145,11 +183,98 @@ fn the_corpora() {
         res.unwrap();
         assert!(got == data, "{name}: against the input");
         overlapped += same_as_default(&z, name).0;
+        // the default at 3 × 3 through each default entry point: libbzip2's bytes
+        let (got, res) = run(&default_33(), &z);
+        res.unwrap();
+        assert!(got == data, "{name}: StreamDecoder::new at 3 × 3");
+        let got = with_plan(PIPELINED_PLAN, || mibz2::decode_parallel(&z, 10)).unwrap();
+        assert!(got == data, "{name}: decode_parallel at 3 × 3");
+        let mut got = Vec::new();
+        let mut r = with_plan(PIPELINED_PLAN, || {
+            mibz2::BzReader::parallel(std::io::Cursor::new(z.clone()), 10)
+        });
+        r.read_to_end(&mut got).unwrap();
+        assert!(got == data, "{name}: BzReader::parallel at 3 × 3");
+        let mut got = Vec::new();
+        let mut r = with_plan(PIPELINED_PLAN, || {
+            mibz2::BzReader::parallel_with(
+                std::io::Cursor::new(z.clone()),
+                4,
+                16,
+                Kernels::detect(),
+            )
+        });
+        r.read_to_end(&mut got).unwrap();
+        assert!(got == data, "{name}: BzReader::parallel_with at 3 × 3");
     }
     assert!(
         overlapped > 0,
         "no block was ever staged during another's inversion"
     );
+}
+
+/// Every plan but three teams of three, forced through the default constructor, takes the
+/// plain path: not pipelined, no job ever taken overlapped, the plan's threads, and the
+/// default's bytes and errors
+#[test]
+fn other_plans_take_the_plain_path() {
+    let corp = corpora(1);
+    let text = &corp[0].1[..3_000_000];
+    let z = compress(text, 9);
+    let mut bad = z.clone();
+    let starts = block_starts(&z);
+    let bit = starts[1] + 48 + 5;
+    bad[(bit / 8) as usize] ^= 0x80 >> (bit % 8);
+    let (want_bad, want_bad_res) = default(&bad);
+    assert!(matches!(
+        want_bad_res.as_ref().unwrap_err().kind,
+        ErrorKind::BlockCrc { .. }
+    ));
+    let plans = [
+        Plan::Workers(1),
+        Plan::Workers(4),
+        Plan::Workers(9),
+        Plan::Teams { teams: 1, k: 3 },
+        Plan::Teams { teams: 2, k: 3 },
+        Plan::Teams { teams: 4, k: 3 },
+        Plan::Teams { teams: 3, k: 2 },
+        Plan::Teams { teams: 4, k: 2 },
+        Plan::Teams { teams: 3, k: 4 },
+        Plan::Teams { teams: 3, k: 1 },
+        Plan::Teams { teams: 3, k: 5 },
+    ];
+    for plan in plans {
+        let dec = forced_new(plan);
+        assert!(!dec.is_pipelined(), "{plan:?}");
+        assert_eq!(dec.threads(), plan.threads(), "{plan:?}");
+        let (got, res) = run(&dec, &z);
+        res.unwrap();
+        assert!(got == text, "{plan:?}: the bytes");
+        assert_eq!(dec.pipeline_counts(), (0, 0), "{plan:?}");
+        let (got, res) = run(&forced_new(plan), &bad);
+        assert!(got == want_bad, "{plan:?}: the bytes before the error");
+        assert_eq!(res, want_bad_res, "{plan:?}: the error");
+        let got = with_plan(plan, || mibz2::decode_parallel(&z, 10)).unwrap();
+        assert!(got == text, "{plan:?}: decode_parallel");
+    }
+    // and the plan this machine's policy gives, unforced: pipelined at 3 × 3 only
+    for t in [1, 2, 4, 8, 10, 20] {
+        let dec = StreamDecoder::new(t, 4 * t, Kernels::detect());
+        let plan = Plan::for_threads(t);
+        assert_eq!(dec.is_pipelined(), plan == PIPELINED_PLAN, "{t}: {plan:?}");
+        assert_eq!(dec.threads(), plan.threads(), "{t}");
+        dec.close();
+        assert_eq!(dec.read(&mut [0; 8]).unwrap_err().kind, ErrorKind::Empty);
+    }
+    // the forced plan is this thread's alone, and restored after
+    let p = with_plan(PIPELINED_PLAN, || {
+        std::thread::spawn(|| Plan::for_threads(10)).join().unwrap()
+    });
+    let here = Plan::for_threads(10);
+    assert_eq!(p, here);
+    let unwound = std::panic::catch_unwind(|| with_plan(PIPELINED_PLAN, || panic!("inside")));
+    assert!(unwound.is_err());
+    assert_eq!(Plan::for_threads(10), here);
 }
 
 #[test]
@@ -432,14 +557,48 @@ fn dropped_mid_stream() {
                 .unwrap_or_else(|_| panic!("{teams} teams of {k}, {levers:?}: the drop hung"));
         }
     }
+    // the default constructor at 3 × 3 (`BzReader::parallel`), dropped mid-stream, and
+    // dropped before any read
+    for read in [1_500_000, 0] {
+        let z = z.clone();
+        let data = data.clone();
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let mut r = with_plan(PIPELINED_PLAN, || {
+                mibz2::BzReader::parallel(std::io::Cursor::new(z), 10)
+            });
+            let mut buf = vec![0u8; read];
+            r.read_exact(&mut buf).unwrap();
+            assert!(buf == data[..read]);
+            drop(r);
+            tx.send(()).unwrap();
+        });
+        rx.recv_timeout(std::time::Duration::from_secs(60))
+            .unwrap_or_else(|_| panic!("the default at 3 × 3, read {read}: the drop hung"));
+    }
     // and the push form, cancelled by its reader while its writer writes
     for levers in LEVERS {
-        cancelled_while_writing(&z, levers);
+        cancelled_while_writing(&z, || {
+            StreamDecoder::pipelined_levers(1, 3, 3, Kernels::detect(), levers)
+        });
     }
+    cancelled_while_writing(&z, default_33);
+    // the default at 3 × 3 cancelled before anything is written, and dropped unread
+    let dec = default_33();
+    dec.cancel();
+    assert!(dec.write(z[..1000].to_vec()).is_err());
+    assert_eq!(
+        dec.read(&mut [0; 8]).unwrap_err().kind,
+        ErrorKind::Cancelled
+    );
+    dec.join();
+    let dec = default_33();
+    dec.write(z[..200_000].to_vec()).unwrap();
+    drop(dec);
 }
 
-fn cancelled_while_writing(z: &[u8], levers: Levers) {
-    let dec = StreamDecoder::pipelined_levers(1, 3, 3, Kernels::detect(), levers);
+fn cancelled_while_writing(z: &[u8], make: impl FnOnce() -> StreamDecoder) {
+    let dec = make();
     std::thread::scope(|s| {
         let w = s.spawn(|| {
             for c in z.chunks(1000) {
