@@ -52,7 +52,14 @@
 //!   and teams of 3 that only build and walk, as many as fit THREADS after the K service
 //!   threads, at most 3: 3 x 3 + 1 at 10 or 12 threads, 2 x 3 + 2 at 10, 3 x 3 + 2 at 12),
 //!   and `mibz2-svc1-t2` (teams of 2: 3 x 2 + 1); each in the teamK arms' window
-//!   (SLOTS_PER_THREAD a team);
+//!   (SLOTS_PER_THREAD a team); and `mibz2-team3-twin`, `mibz2-team3` under another name
+//!   (the same decoder twice in one run: the service core's noise control);
+//! - `mibz2-pipe2-park`, `-pipe3-park`, `-pipe4-park`, and the same with `-spin2k`,
+//!   `-small` and `-both` (research: a pipeK arm with its levers,
+//!   `BzReader::parallel_pipelined_levers`: `park`, its waits for the build's end parking
+//!   after the same 4,096 spins; `spin2k`, those waits yielding after 2,000 spins, the
+//!   spin-budget control; `small`, its leader staging on after a block below `MIN_COOP`;
+//!   `both`, park and small together), each its pipeK arm's plan and window;
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
 //!   `ParallelDecoder::with_threads`);
 //! - `libbzip2` (libbzip2 1.0.8, C, the bzip2 crate's bundled source: `MultiBzDecoder`),
@@ -529,8 +536,15 @@ fn decode(
         // the cooperative decoder (bwt::Cooperative): THREADS cores as THREADS / K teams of
         // K, or as the policy plans THREADS (`Plan::for_threads`)
         "mibz2-coop2" | "mibz2-coop3" | "mibz2-coop4" | "mibz2-team2" | "mibz2-team3"
-        | "mibz2-team4" | "mibz2-auto" | "mibz2-workers" => {
+        | "mibz2-team4" | "mibz2-auto" | "mibz2-workers" | "mibz2-team3-twin" => {
             use mibz2::parallel::Plan;
+            // (`mibz2-team3-twin` is `mibz2-team3` under another name: the same decoder twice
+            // in one interleaved run, a same-plan noise control)
+            let arm = if arm == "mibz2-team3-twin" {
+                "mibz2-team3"
+            } else {
+                arm
+            };
             let plan = match arm {
                 "mibz2-auto" => Plan::for_threads(threads),
                 "mibz2-workers" => Plan::Workers(threads),
@@ -571,6 +585,34 @@ fn decode(
                     k,
                     slots,
                     mibz2::Kernels::detect(),
+                ),
+                h,
+                last,
+            )
+        }
+        // the pipelined team's levers (research, `StreamDecoder::pipelined_levers`): a
+        // pipeK arm's plan and window, with lever A (park), lever B (small) or both
+        "mibz2-pipe2-park" | "mibz2-pipe3-park" | "mibz2-pipe4-park" | "mibz2-pipe2-small"
+        | "mibz2-pipe3-small" | "mibz2-pipe4-small" | "mibz2-pipe2-both" | "mibz2-pipe3-both"
+        | "mibz2-pipe4-both" | "mibz2-pipe2-spin2k" | "mibz2-pipe3-spin2k"
+        | "mibz2-pipe4-spin2k" => {
+            let (base, lever) = arm.rsplit_once('-').expect("mibz2-pipeK-LEVER");
+            let k = (base.as_bytes()[base.len() - 1] - b'0') as usize;
+            let teams = (threads / k).max(1);
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * teams;
+            let levers = mibz2::parallel::Levers {
+                park: lever == "park" || lever == "both",
+                small: lever == "small" || lever == "both",
+                spin2k: lever == "spin2k",
+            };
+            drain(
+                mibz2::BzReader::parallel_pipelined_levers(
+                    open()?,
+                    teams,
+                    k,
+                    slots,
+                    mibz2::Kernels::detect(),
+                    levers,
                 ),
                 h,
                 last,

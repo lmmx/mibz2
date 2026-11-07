@@ -116,6 +116,35 @@ to carry out the eligible open requests, oldest first, and to post their results
 5. Read it back, give Louis its URL, and report: done, and verified only once the
    Coordinator's LOG says so.
 
+## Standing in for a team role
+
+When a role's Work task is paused, Louis may ask you to do one assignment in its place
+(`docs/team/PROTOCOL.md` §8). Do it only when he tells you to, in his own words, for that
+request; "process the swarm's pending requests" doesn't cover it.
+1. Find the request on #145 (`FROM: coordinator`, `TO: chatgpt`, `TYPE: CHECKPOINT`) by the
+   comment ID Louis gives you.
+2. Read `docs/team/SPEC.md`, the role's `docs/team/SPEC.<ROLE>.md`, `MODE.md`, `RULES.md` and
+   `PROTOCOL.md` at master, and then the evidence the request names at its exact SHA. Review
+   the code or data itself, not the Coordinator's summary of it.
+3. Post one comment on #145:
+
+   ```
+   FROM: chatgpt
+   TO: coordinator
+   RE: stand-in <role> review of <what>; request <its comment ID>
+   TYPE: REVIEW
+
+   **Reviewed:** <the exact SHA>, against <the specs and evidence read>
+   **Not checked:** <anything out of reach: no build, no tests run, and so on>
+   **Verdict:** PROCEED | HOLD
+
+   <findings, each with file:line, a concrete scenario and its severity>
+   ```
+
+4. Never post as the role (`FROM: guardian` and the like). Write to no role's state branch,
+   and change no Work task.
+5. Read it back and give Louis its URL.
+
 ## Checking on an earlier request
 
 To answer "did the team do X?", find his request on #145, then the LOGs that cite its ID, then

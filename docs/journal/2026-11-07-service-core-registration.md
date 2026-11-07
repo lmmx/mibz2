@@ -1,7 +1,8 @@
 # The service core: registration
 
 7 November 2026. Registered before any run. The prototype is on `research/service-core`
-(from `research/team-pipeline`, #247). It is opt-in and doc-hidden:
+(from `research/team-pipeline`, #247, with master merged in at dd939518 so the shipped
+0.2.6 default is on the branch). It is opt-in and doc-hidden:
 `StreamDecoder::service`, `BzReader::parallel_service`, the `mibz2-svcK` arms. The default
 decoder and the pipelined and lever paths are unchanged.
 
@@ -23,9 +24,14 @@ leaves the build and the walk.
   - finishing: the assembly, RLE1, CRC and publish, for blocks walked.
 - Each team's k threads only build and walk.
 
+**The bar moved before this run.** 0.2.6 (#250, 0015de8c) made the default at 3 × 3 on the
+ten-core topology the pipelined team with park and small: 1.072 [1.053, 1.091] faster than
+the plain teams, for about 5% more CPU (`2026-11-07-pipeline-levers-result.md`). That
+default (`mibz2`) is the bar now, not plain pipe3.
+
 **The causal question:** at an equal budget of decode threads, is a plan with service
-workers faster than the 3 × 3 team (`team3`) and the pipelined team (`pipe3`)? And at what
-CPU cost?
+workers faster than today's default (the pipelined 3 × 3 with park and small) and than the
+plain 3 × 3 team (`team3`, the second control)? And at what CPU cost?
 
 ## The design
 
@@ -127,23 +133,24 @@ measured at another plan. Every figure below inherits that.
 - **2 teams** (svc2 at 10): E1's 2-team per-table rate, 558–583 MB/s, gives
   **1.61–1.74 GB/s**.
 
-**The bound** is X ≤ min(teams' capacity, K / S), against `team3`'s 1.39 GB/s:
+**The bound** is X ≤ min(teams' capacity, K / S). Against `team3`'s 1.39 GB/s, and against
+today's default at 1.072 × that, about 1.49 GB/s:
 
-| arm | plan | teams' bound GB/s | service bound GB/s | X bound GB/s | speed bound vs team3 | service utilisation at the bound |
-|---|---|---|---|---|---|---|
-| svc1 at 10 or 12 | 3 × 3 + 1 | 1.96–2.07 | 1.75 | **1.75** (service-bound) | ≤ 1.26 | **1.00** |
-| svc2 at 12 | 3 × 3 + 2 | 1.96–2.07 | 3.51 | 1.96–2.07 (team-bound) | ≤ 1.41–1.49 | 0.56–0.59 each |
-| svc2 at 10 | 2 × 3 + 2 | 1.61–1.74 | 3.51 | 1.61–1.74 (team-bound) | ≤ 1.16–1.25 | 0.46–0.50 each |
-| svc1-t2 | 3 × 2 + 1 | about 1.96–2.07 (E3: team size barely matters at a fixed team count) | 1.75 | **1.75** (service-bound) | ≤ 1.26 | **1.00** |
+| arm | plan | teams' bound GB/s | service bound GB/s | X bound GB/s | speed bound vs team3 | vs the default | service utilisation at the bound |
+|---|---|---|---|---|---|---|---|
+| svc1 at 10 or 12 | 3 × 3 + 1 | 1.96–2.07 | 1.75 | **1.75** (service-bound) | ≤ 1.26 | ≤ 1.17 | **1.00** |
+| svc2 at 12 | 3 × 3 + 2 | 1.96–2.07 | 3.51 | 1.96–2.07 (team-bound) | ≤ 1.41–1.49 | ≤ 1.32–1.39 | 0.56–0.59 each |
+| svc2 at 10 | 2 × 3 + 2 | 1.61–1.74 | 3.51 | 1.61–1.74 (team-bound) | ≤ 1.16–1.25 | ≤ 1.08–1.17 | 0.46–0.50 each |
+| svc1-t2 | 3 × 2 + 1 | about 1.96–2.07 (E3: team size barely matters at a fixed team count) | 1.75 | **1.75** (service-bound) | ≤ 1.26 | ≤ 1.17 | **1.00** |
 
 **Sensitivity to the service's cost on the i9.** A factor f is applied to S for contention:
 its move-to-front sharing the L3 and memory with nine busy threads.
 
-| f | K = 1 capacity GB/s | svc1's speed bound vs team3 | K = 2 capacity GB/s |
-|---|---|---|---|
-| 1.0 | 1.75 | 1.26 | 3.51 (teams bind) |
-| 1.2 | 1.46 | 1.05 | 2.92 (teams bind) |
-| 1.4 | 1.25 | **0.90 (a regression)** | 2.51 (teams bind) |
+| f | K = 1 capacity GB/s | svc1's speed bound vs team3 | vs the default | K = 2 capacity GB/s |
+|---|---|---|---|---|
+| 1.0 | 1.75 | 1.26 | 1.17 | 3.51 (teams bind) |
+| 1.2 | 1.46 | 1.05 | **0.98 (no gain)** | 2.92 (teams bind) |
+| 1.4 | 1.25 | **0.90 (a regression)** | **0.84 (a regression)** | 2.51 (teams bind) |
 
 **Queueing near saturation.**
 - **A block's service time:** the sample's 431 blocks decode to about 210 MB, about
@@ -159,8 +166,8 @@ its move-to-front sharing the L3 and memory with nine busy threads.
 
 **What the model predicts:**
 - K = 1 runs at or near saturation at any gain worth having (ρ ≥ 0.8). Its gain over
-  `team3` is at most about 26%, and plausibly small, null or negative once the service's
-  i9 cost and the queueing are counted.
+  `team3` is at most about 26%, over today's default at most about 17%, and plausibly
+  small, null or negative once the service's i9 cost and the queueing are counted.
 - K = 2 is team-bound, not service-bound.
 - So **K = 2 is registered as a co-equal arm, not an option**: C3 and C4 below are judged
   like C1 and C2. D1 (K = 2 against K = 1 at the same three teams) is the saturation's own
@@ -181,8 +188,9 @@ All three would lower the gain.
 causal comparison is at an equal budget. ab's THREADS is the budget, and no arm runs more
 decode threads than it.
 
-- **How the controls use their budget:** `team3` and `pipe3` run THREADS / 3 teams of 3.
-  At 10 that is 3 × 3, 9 decode threads: teams of 3 can't use the tenth.
+- **How the controls use their budget:** `team3` runs THREADS / 3 teams of 3: at 10, 3 × 3,
+  9 decode threads (teams of 3 can't use the tenth); at 12, 4 × 3. Today's default
+  (`mibz2`) runs 3 × 3 pipelined at every budget of 10 or more, 9 decode threads.
 - **The svcK arms:** K service threads, and teams of T (3, or 2 in `svc1-t2`), as many as
   fit the rest of the budget, at most 3 (the three-table knee, and today's policy above 9
   threads).
@@ -195,9 +203,9 @@ except for one wake a block. None is counted in the budget, the same way for eve
 
 | cell | plan | decode threads | other threads | tables at once |
 |---|---|---|---|---|
-| mibz2@10, mibz2@12 | 3 × 3 (the policy) | 9 | 3 | 3 |
-| team3@10, pipe3@10 | 3 × 3 | 9 | 3 | 3 |
-| team3@12, pipe3@12 | 4 × 3 | 12 | 3 | 4 |
+| mibz2@10, mibz2@12 | 3 × 3 pipelined, park and small (the 0.2.6 default) | 9 | 3 | 3 |
+| team3@10, team3-twin@10 | 3 × 3 plain | 9 | 3 | 3 |
+| team3@12 | 4 × 3 plain | 12 | 3 | 4 |
 | svc1@10, svc1@12 | 3 × 3 + 1 | 10 | 4 | 3 |
 | svc2@10 | 2 × 3 + 2 | 8 | 4 | 2 |
 | svc2@12 | 3 × 3 + 2 | 11 | 4 | 3 |
@@ -205,21 +213,20 @@ except for one wake a block. None is counted in the budget, the same way for eve
 
 - **Comparisons where the arm has more decode threads:**
   - C1 and C2: 10 against 9;
-  - D1: 11 against 10;
-  - P1: 10 against 9;
-  - P2: 11 against 9.
+  - C4: 11 against 9;
+  - D1: 11 against 10.
 - **Physical cores:** on the i9 (10 cores, 20 hardware threads, nothing pinned), svc1@10's
   10 decode threads can occupy every physical core, where team3@10's 9 leave one free.
   Every cell at 12, and svc1@10 with its other threads, runs more busy threads than
   physical cores, so SMT siblings are shared.
-- **At 12,** the controls run four tables (4 × 3), past the three-table knee. C3 and C4
-  compare against that plan, as the budget gives it, and say so.
+- **At 12,** `team3` runs four tables (4 × 3), past the three-table knee. C3 compares
+  against that plan, as the budget gives it, and says so. The default stays at 3 × 3.
 
 **The extra-thread rule (registered).** Where the arm runs more decode threads than its
-reference (C1, C2, D1, P1, P2):
+reference (C1, C2, C4, D1):
 - **Beyond its threads:** a speed gain counts as more than the extra thread only if its
-  interval's lower bound is above the threads' ratio: 10/9 = 1.111 for C1, C2 and P1,
-  11/10 = 1.100 for D1, and 11/9 = 1.222 for P2. That reads the reference as if speed
+  interval's lower bound is above the threads' ratio: 10/9 = 1.111 for C1 and C2,
+  11/9 = 1.222 for C4, and 11/10 = 1.100 for D1. That reads the reference as if speed
   scaled linearly with threads, its most generous reading.
 - **Otherwise:** a gain that doesn't clear the ratio is recorded as an equal-budget gain
   from using one more decode thread. It goes in the product reading, labelled so, and
@@ -233,8 +240,15 @@ ab arms at budgets 10 and 12, each budget its own `ab run`, interleaved by round
 
 | budget | arms |
 |---|---|
-| 10 | `mibz2`, `mibz2-team3`, `mibz2-pipe3`, `mibz2-svc1`, `mibz2-svc2`, `mibz2-svc1-t2` |
-| 12 | `mibz2`, `mibz2-team3`, `mibz2-pipe3`, `mibz2-svc1`, `mibz2-svc2`, `mibz2-svc1-t2` |
+| 10 | `mibz2`, `mibz2-team3`, `mibz2-team3-twin`, `mibz2-svc1`, `mibz2-svc2`, `mibz2-svc1-t2` |
+| 12 | `mibz2`, `mibz2-team3`, `mibz2-svc1`, `mibz2-svc2`, `mibz2-svc1-t2` |
+
+- `mibz2` is the shipped default. It is the pipelined 3 × 3 with park and small only on the
+  ten-core topology (10 physical cores, a 20 MiB L3), so the report checks the machine's
+  `lscpu.txt` for that topology: then `mibz2@10` and `mibz2@12` name the default
+  unambiguously.
+- `mibz2-team3-twin` is `mibz2-team3` under another name, for the noise control.
+- Plain pipe3 is no longer a cell: the default supersedes it.
 
 - The window is SLOTS_PER_THREAD (4) blocks a team in every team and service arm, as the
   teamK arms keep it.
@@ -251,23 +265,24 @@ geometric mean and its 95% t-interval over the 20 registered rounds. **Speed and
 co-primary**, each with its own outcome.
 
 **Causal** (equal budget, judged):
-- **C1:** svc1@10 against team3@10;
-- **C2:** svc1@10 against pipe3@10;
+- **C1:** svc1@10 against team3@10 (the plain 3 × 3, the second control);
+- **C2:** svc1@10 against mibz2@10 (today's default, the bar);
 - **C3:** svc2@12 against team3@12;
-- **C4:** svc2@12 against pipe3@12;
+- **C4:** svc2@12 against mibz2@12;
 - **D1:** svc2@12 against svc1@12. K's effect at the same three teams of three: the
   saturation's causal test.
 
-**Product** (against today's default at the same budget, kept apart from the causal ones):
-- **P1:** svc1@10 against mibz2@10;
-- **P2:** svc2@12 against mibz2@12.
+**Product:** the earlier P1 and P2 (each svc arm against today's default at its budget)
+are now C2 and C4 exactly, since the default is the pipelined team. They are dropped as
+separate comparisons. C2's and C4's results are also the product reading, and the
+extra-thread rule labels any gain that comes from the extra decode threads.
 
 **Reported, never judged:**
-- **S1–S2:** svc1@12 against team3@12 and pipe3@12;
-- **S3–S4:** svc2@10 against team3@10 and pipe3@10;
+- **S1–S2:** svc1@12 against team3@12 and mibz2@12;
+- **S3–S4:** svc2@10 against team3@10 and mibz2@10;
 - **S5–S6:** svc1-t2 against team3 at 10 and 12;
 - **S7:** svc2@10 against svc1@10;
-- **R1–R2:** #247's pipe3 against team3, replicated.
+- **R1–R2:** today's default against team3 at 10 and 12, the levers' result replicated.
 
 ## The outcome map (numeric)
 
@@ -284,8 +299,9 @@ On a ratio's 95% interval [lo, hi], speed and CPU each:
 - **A speed gain also gets the extra-thread label** (above), where the arm has more decode
   threads.
 - **The architecture's reading:**
-  - **For it:** C1 or C3 a GAIN, with CPU not a CPU COST. For C1, the gain must be BEYOND
-    ITS THREADS.
+  - **For it:** C2 or C4 a GAIN over today's default, with CPU not a CPU COST, and BEYOND
+    ITS THREADS. A gain over team3 alone (C1, C3) that doesn't beat the default is
+    recorded but doesn't make the case.
   - **A trade:** a speed gain with a CPU COST. It is reported as such, for Louis to weigh.
   - **NULL or REGRESSION in C1, C2, C3 and C4 together:** the idea fails on this machine.
     It is recorded in the journal and on the queue's "Rejected" list.
@@ -342,8 +358,11 @@ The run is VALID only if all of these hold:
   leaders, helpers and service threads counted from ab's per-thread CPU);
 - no other cell;
 - every registered trace complete, with at least one complete round;
-- **the noise control N1:** team3@10 against mibz2@10 (the same 3 × 3 plan) within
-  1 ± 0.03.
+- **the ten-core topology** in `lscpu.txt` (1 socket, 10 cores, a 20 MiB L3), so `mibz2` is
+  the pipelined default;
+- **the noise control N1:** team3-twin@10 against team3@10 (the same decoder under two
+  names, in one interleaved run) within 1 ± 0.03. The earlier N1, team3 against mibz2, no
+  longer compares one plan with itself.
 
 An INVALID run judges nothing.
 
@@ -357,9 +376,10 @@ An INVALID run judges nothing.
 
 The extra-thread rule handles the last.
 
-**C2 against pipe3:** pipe3's leader joins the walk, and its waits spin and yield (#247).
-The service core's teams use the pool's park waits. So C2 is a comparison of designs, not
-of one factor.
+**C2 and C4 against the default:** the default's leader overlaps its serial work, joins
+the walk, parks its waits and stages on after small blocks (#247, #250). The service
+core's teams use the pool's park waits, and their leaders never leave the build and
+walk. So C2 and C4 compare designs, not one factor.
 
 **What is not measured:** the L3 footprint of the queued front and back sets. Peak RSS is
 reported, and RSS is not cache residency.

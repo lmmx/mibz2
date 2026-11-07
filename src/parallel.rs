@@ -101,6 +101,8 @@ pub struct StreamDecoder {
     handles: Mutex<Vec<JoinHandle<()>>>,
     reader: Mutex<Reader>,
     threads: usize,
+    /// its workers are pipelined teams
+    pipelined: bool,
 }
 
 #[derive(Default)]
@@ -115,12 +117,33 @@ impl StreamDecoder {
     /// A decoder on `threads` threads (at least 1) with `slots` blocks in flight (at least
     /// `threads`), on kernels `k`, spending them as the cooperative policy plans
     /// (`Plan::for_threads`): `threads` workers of a block each, or, on 6 or more physical
-    /// cores, teams of 2 sharing each block, with the window scaled to the teams (`window`).
-    /// `planned(Plan::Workers(threads), ..)` is the decoder before the policy.
+    /// cores, teams sharing each block, with the window scaled to the teams (`window`).
+    /// At the measured plan, three teams of three (`PIPELINED_PLAN`), the teams are
+    /// pipelined, with park and small (`PIPELINED_LEVERS`); every other plan runs as
+    /// `planned` runs it. `planned(Plan::Workers(threads), ..)` is the decoder before the
+    /// policy, and `planned(PIPELINED_PLAN, ..)` the three plain teams of three.
     pub fn new(threads: usize, slots: usize, k: Kernels) -> StreamDecoder {
         let threads = threads.max(1);
         let plan = Plan::for_threads(threads);
-        Self::planned(plan, window(plan, threads, slots), k)
+        Self::defaulted(plan, window(plan, threads, slots), k)
+    }
+
+    /// The default decoder for `plan` (`new`'s): the pipelined teams with
+    /// `PIPELINED_LEVERS` at exactly `PIPELINED_PLAN`, else `planned`
+    fn defaulted(plan: Plan, slots: usize, k: Kernels) -> StreamDecoder {
+        match plan {
+            Plan::Teams { teams, k: team_k } if plan == PIPELINED_PLAN => {
+                Self::pipelined_levers(teams, team_k, slots, k, PIPELINED_LEVERS)
+            }
+            _ => Self::planned(plan, slots, k),
+        }
+    }
+
+    /// Whether this decoder runs pipelined teams (`pipelined`, `pipelined_levers`, or the
+    /// default at `PIPELINED_PLAN`)
+    #[doc(hidden)]
+    pub fn is_pipelined(&self) -> bool {
+        self.pipelined
     }
 
     /// A decoder spending its threads as `plan` says: production's workers, or teams of
@@ -163,9 +186,47 @@ impl StreamDecoder {
     pub fn pipelined(teams: usize, k: usize, slots: usize, kernels: Kernels) -> StreamDecoder {
         let (teams, team_k) = (teams.max(1), k.max(2));
         let mut dec = Self::launch(teams, slots, move |shared, jobs| {
-            pipelined_worker(shared, jobs, kernels, team_k)
+            pipelined_worker::<false, false, { super::coop::BARRIER_SPINS }>(
+                shared, jobs, kernels, team_k,
+            )
         });
         dec.threads = teams * team_k;
+        dec.pipelined = true;
+        dec
+    }
+
+    /// Research, opt-in, not the default: `pipelined` with its levers (`Levers`), each
+    /// separately. With no lever set, it is `pipelined` exactly (the registered prototype).
+    /// Byte for byte the default decoder's output and errors, whatever the levers.
+    #[doc(hidden)]
+    pub fn pipelined_levers(
+        teams: usize,
+        k: usize,
+        slots: usize,
+        kernels: Kernels,
+        levers: Levers,
+    ) -> StreamDecoder {
+        use super::coop::{BARRIER_SPINS as LONG, SHORT_SPINS as SHORT};
+        let (teams, team_k) = (teams.max(1), k.max(2));
+        macro_rules! launch {
+            ($park:literal, $small:literal, $spin:ident) => {
+                Self::launch(teams, slots, move |shared, jobs| {
+                    pipelined_worker::<$park, $small, $spin>(shared, jobs, kernels, team_k)
+                })
+            };
+        }
+        let mut dec = match (levers.park, levers.small, levers.spin2k) {
+            (false, false, false) => launch!(false, false, LONG),
+            (true, false, false) => launch!(true, false, LONG),
+            (false, true, false) => launch!(false, true, LONG),
+            (true, true, false) => launch!(true, true, LONG),
+            (false, false, true) => launch!(false, false, SHORT),
+            (true, false, true) => launch!(true, false, SHORT),
+            (false, true, true) => launch!(false, true, SHORT),
+            (true, true, true) => launch!(true, true, SHORT),
+        };
+        dec.threads = teams * team_k;
+        dec.pipelined = true;
         dec
     }
 
@@ -228,6 +289,7 @@ impl StreamDecoder {
             handles: Mutex::new(handles),
             reader: Mutex::default(),
             threads,
+            pipelined: false,
         }
     }
 
@@ -540,6 +602,29 @@ fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
 // waited for (`recv`) only with the pipeline empty, so a block the reader needs can never
 // sit behind a team waiting for the scanner, which may be waiting for the reader's slot.
 
+/// The pipelined team's levers (research, opt-in: `StreamDecoder::pipelined_levers`),
+/// each off unless set, so that each can be measured alone and together
+/// (docs/journal/2026-11-07-pipeline-levers-registration.md). Neither changes any output
+/// or error.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Levers {
+    /// Lever A: a thread waiting for the build's end (a helper at the helpers' barrier,
+    /// the leader waiting to join the walk) spins its budget, then parks until the build's
+    /// last helper unparks it, as the pool's own waits park, rather than yielding in a loop
+    /// (`coop::invert_pipelined_with`'s `PARK`)
+    pub park: bool,
+    /// The spin-budget control: that wait's budget is `coop::SHORT_SPINS` (2,000, the
+    /// pool's) rather than the registered `coop::BARRIER_SPINS` (4,096), whether it then
+    /// yields or parks (`coop::invert_pipelined_with`'s `SPIN`)
+    pub spin2k: bool,
+    /// Lever B: after the leader decodes a block below `MIN_COOP` inside a run, it takes
+    /// the next queued job too (never waiting for one), and so on until it stages a block
+    /// for the team or finds none queued, so a small block no longer leaves the next run
+    /// with nothing staged (`pipelined_worker`'s `SMALL`)
+    pub small: bool,
+}
+
 /// A block's move-to-front stage's buffers (`Scratch`'s first three)
 struct Front {
     ll: Vec<u8>,
@@ -800,7 +885,15 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> 
     }
 }
 
-fn pipelined_worker(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels, team_k: usize) {
+/// A pipelined team's worker: its leader's loop. `PARK` and `SMALL` are `Levers`' park and
+/// small, `SPIN` the waits' spin budget; both false at `coop::BARRIER_SPINS`, it is the
+/// registered prototype's
+fn pipelined_worker<const PARK: bool, const SMALL: bool, const SPIN: u32>(
+    shared: &Shared,
+    jobs: &Mutex<Receiver<Job>>,
+    k: Kernels,
+    team_k: usize,
+) {
     use super::bwt::FLAGGED_LANES;
     let mut t = Team::default();
     let mut staged: Option<Staged> = None;
@@ -841,7 +934,7 @@ fn pipelined_worker(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels, te
             continue;
         };
         if t.pool
-            .get_or_insert_with(|| super::coop::Pool::new(team_k))
+            .get_or_insert_with(|| super::coop::Pool::pipelined(team_k))
             .is_err()
         {
             // (no team: every block on this thread, as `bwt::Cooperative` falls back)
@@ -884,7 +977,11 @@ fn pipelined_worker(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels, te
             if let Some(b) = l.inverted.take() {
                 l.rle_panicked = finish_and_publish(shared, b, lb, k);
             }
-            if let Some(job) = try_job(jobs) {
+            // (one job, as registered; with `SMALL`, another after each block below
+            // `MIN_COOP`, until one is staged for the team or none is queued: `try_job`
+            // never waits, so the leader never holds the run waiting for the scanner)
+            let mut next_job = try_job(jobs);
+            while let Some(job) = next_job.take() {
                 mark!(JobGot, job.0);
                 shared.overlapped.fetch_add(1, Ordering::Relaxed);
                 if shared.lock().cancelled {
@@ -900,6 +997,10 @@ fn pipelined_worker(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels, te
                             **f = Front::default();
                             **sc = Solo::default();
                         }
+                        // (lever B: its front set is free again, published and done with)
+                        if SMALL {
+                            next_job = try_job(jobs);
+                        }
                     }
                     Staging::Failed => {
                         shared.overlap_errors.fetch_add(1, Ordering::Relaxed);
@@ -911,7 +1012,7 @@ fn pipelined_worker(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels, te
         // its `decode_block`, which a pipelined team never runs)
         mark!(RunStart, s.place);
         let r = catch_unwind(AssertUnwindSafe(|| {
-            super::coop::invert_pipelined::<FLAGGED_LANES>(
+            super::coop::invert_pipelined_with::<FLAGGED_LANES, PARK, SPIN>(
                 pool,
                 &hf.ll,
                 &hf.counts,
@@ -1209,6 +1310,7 @@ impl StreamDecoder {
             handles: Mutex::new(handles),
             reader: Mutex::default(),
             threads: teams * team_k + services,
+            pipelined: false,
         }
     }
 }
@@ -1511,6 +1613,41 @@ const FULL_TABLE: f64 = 3.6e6;
 const TEN_CORES: (usize, u64) = (10, 20 << 20);
 const TEN_CORES_MIN_THREADS: usize = 10;
 
+/// The one plan the default decoder runs pipelined (`StreamDecoder::new`): three teams of
+/// three, the plan the pipelined team with both levers was measured at against the plain
+/// teams, on the i9-10900K (docs/journal/2026-11-07-pipeline-levers-result.md: 1.072
+/// [1.053, 1.091] faster, for about 5% more CPU and 8 MB more peak RSS). Every other plan
+/// keeps the plain path.
+pub const PIPELINED_PLAN: Plan = Plan::Teams { teams: 3, k: 3 };
+
+/// The default pipelined teams' levers: park and small, not the spin-budget control
+pub const PIPELINED_LEVERS: Levers = Levers {
+    park: true,
+    small: true,
+    spin2k: false,
+};
+
+thread_local! {
+    /// `Plan::for_threads`'s answer on this thread while `with_plan` runs
+    static FORCED: std::cell::Cell<Option<Plan>> = const { std::cell::Cell::new(None) };
+}
+
+/// Testing: `f` run with `Plan::for_threads` answering `plan` on this thread, whatever the
+/// machine and the threads asked for, so the default constructors (`StreamDecoder::new`,
+/// `BzReader::parallel`, `decode_parallel`) build `plan`'s decoder. Restored on return or
+/// unwind; other threads are unaffected.
+#[doc(hidden)]
+pub fn with_plan<T>(plan: Plan, f: impl FnOnce() -> T) -> T {
+    struct Restore(Option<Plan>);
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            FORCED.with(|c| c.set(self.0));
+        }
+    }
+    let _restore = Restore(FORCED.with(|c| c.replace(Some(plan))));
+    f()
+}
+
 impl Plan {
     /// The cooperative decoder's policy for a caller's `threads`, on this machine, and the
     /// default (`StreamDecoder::new`, so `BzReader::parallel` and `decode_parallel`), as
@@ -1525,8 +1662,13 @@ impl Plan {
     /// - except on the measured ten-core topology (10 physical cores, a 20 MiB L3) at 10 or
     ///   more threads: three teams of three, which two registered runs qualified against
     ///   four teams of two on the i9-10900K (docs/journal/2026-11-06-three-tables.md). Any
-    ///   other CPU with that topology gets it too, unmeasured.
+    ///   other CPU with that topology gets it too, unmeasured. At that plan alone
+    ///   (`PIPELINED_PLAN`) the default decoder runs its teams pipelined, with park and
+    ///   small (`PIPELINED_LEVERS`; docs/journal/2026-11-07-pipeline-levers-result.md).
     pub fn for_threads(threads: usize) -> Plan {
+        if let Some(plan) = FORCED.with(|c| c.get()) {
+            return plan;
+        }
         plan_with(threads.max(1), physical_cores(), l3_bytes())
     }
 
@@ -1781,6 +1923,8 @@ mod plan_tests {
     #[test]
     fn the_ten_core_exception() {
         let t33 = Plan::Teams { teams: 3, k: 3 };
+        // (the plan the default runs pipelined, and the only one: `StreamDecoder::new`)
+        assert_eq!(t33, PIPELINED_PLAN);
         let mib = 1u64 << 20;
         // a core more or fewer, or a cache a byte off or unread: the old rule
         for (phys, l3) in [
@@ -1835,12 +1979,28 @@ mod plan_tests {
         assert_eq!(window(t4, 20, usize::MAX), usize::MAX / 20);
     }
 
-    /// The default decoder's threads are the plan's for this machine
+    /// The default decoder's threads are the plan's for this machine, pipelined at
+    /// `PIPELINED_PLAN` alone; and with each plan forced, whatever the machine
     #[test]
     fn the_default_is_the_plan() {
         for t in [1, 4, 8] {
             let dec = StreamDecoder::new(t, 2 * t, Kernels::detect());
             assert_eq!(dec.threads(), Plan::for_threads(t).threads());
+            assert_eq!(dec.is_pipelined(), Plan::for_threads(t) == PIPELINED_PLAN);
+            dec.close();
+            let e = dec.read(&mut [0; 16]).unwrap_err();
+            assert_eq!(e.kind, ErrorKind::Empty);
+        }
+        for plan in [
+            PIPELINED_PLAN,
+            Plan::Workers(4),
+            Plan::Teams { teams: 4, k: 2 },
+            Plan::Teams { teams: 2, k: 3 },
+            Plan::Teams { teams: 3, k: 4 },
+        ] {
+            let dec = with_plan(plan, || StreamDecoder::new(10, 40, Kernels::detect()));
+            assert_eq!(dec.is_pipelined(), plan == PIPELINED_PLAN, "{plan:?}");
+            assert_eq!(dec.threads(), plan.threads(), "{plan:?}");
             dec.close();
             let e = dec.read(&mut [0; 16]).unwrap_err();
             assert_eq!(e.kind, ErrorKind::Empty);

@@ -1,0 +1,8 @@
+# The workstation queue: frozen recipes ready to run on the workstation, in run order.
+# `just workstation-queue` runs every entry whose ready/<recipe> tag is set, once each,
+# then suspends. The coordinator maintains this file (docs/team/PROTOCOL.md §9):
+# - an entry is added only when its run needs no further decision: the recipe frozen,
+#   reviewed and green, and its ready tag set at the exact commit to run;
+# - an entry is removed once its bundle has been read.
+#
+# recipe                       branch                    what it measures

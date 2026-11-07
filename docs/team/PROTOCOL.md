@@ -166,6 +166,59 @@ procedure ChatGPT follows.
   says it is closed: when the Coordinator has verified the same result by another route,
   such as a read-back relayed in a PROPOSAL.
 
+## 8. Stand-in reviews while a role's task is unavailable
+
+The rule is ROLES.md, "When a role's Work task is unavailable". Here is how one runs.
+- **The request:** the Coordinator posts it on #145 as `FROM: coordinator`, `TO: chatgpt`,
+  `TYPE: CHECKPOINT`. It names:
+  - the role whose spec to apply;
+  - the exact 40-character head SHA, or commit, to review;
+  - the scope: what to check;
+  - the read-back the Coordinator will verify.
+- **Who carries it out:** a ChatGPT conversation, when Louis tells it to do that one request,
+  in its own words, in that conversation. "Process the swarm's pending requests" doesn't
+  cover a stand-in review: it covers only re-pins (§7).
+- **The result:** one comment on #145:
+  - `FROM: chatgpt`, `TO: coordinator`, `TYPE: REVIEW`;
+  - `RE:` naming the role it stands in for and the request's comment ID;
+  - the reviewed head SHA, the specs and evidence it read, what it did not check, and a
+    verdict of PROCEED or HOLD with findings.
+- **The Coordinator:**
+  - checks the head SHA and the scope against the request;
+  - acknowledges the REVIEW with one LOG that records it as a stand-in review;
+  - acts on its findings as it would on the role's.
+
+  The role's queued assignment stays queued for its own task.
+
+## 9. The workstation queue
+
+Runs that need the workstation are prepared in full by the team, then queued for Louis to run
+with one command whenever suits him. Nothing about a queued run is left to decide when it runs.
+- **The queue:** `bench/workstation-queue.txt` on master, in run order: one line per entry, giving
+  the recipe, its branch, and in a few words what it measures.
+- **An entry is added only when it needs no further decision.** The Coordinator adds it after
+  all of these:
+  - the registration is frozen;
+  - the recipe has passed its untimed dry run;
+  - CI is green on the commit to run;
+  - a review has said PROCEED: the role's own, or a stand-in's under §8;
+  - the `ready/<recipe>` tag points at exactly that commit, set by the Run signal workflow.
+
+  It also posts a LOG on #145 naming the entry, the commit and the review.
+- **Running it:** Louis runs `just workstation-queue` (`bench/run-queue.sh`). It reads the queue
+  from origin's master, then for each entry runs `just submit <recipe>` once, at exactly the
+  tagged commit (`bench/await-submit.sh`), and posts each bundle on #145 as usual. Then it
+  suspends the machine.
+  - It skips an entry that isn't ready, is on HOLD, or already ran on that machine at that commit.
+  - `--no-suspend` keeps the machine on.
+  - `--hours N` waits up to N hours for entries not yet ready.
+  - A single entry can still be run on its own with `just submit-when-ready <recipe> <branch>`.
+- **Withdrawing an entry:** the Coordinator sets `hold/<recipe>` through the same workflow, then
+  removes the line.
+- **After a run:** the Coordinator reads the bundle, removes the entry, and clears its tags.
+- **Order:** the queue's order is the run order. An entry that depends on another's result is
+  not queued until that result has been read.
+
 ## History
 
 This replaces `docs/journal/compact30-channel/PROTOCOL.md`, which is kept as history. Dropped:

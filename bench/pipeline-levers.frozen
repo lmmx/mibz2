@@ -1,0 +1,5 @@
+# The pipelined team's levers on the workstation (docs/journal/2026-11-07-pipeline-levers-registration.md).
+# The commit the registration, the levers, the recipe and the report are frozen at:
+# just bench-pipeline-levers's measured inputs must match it exactly.
+# (Supersedes bf08ec555e9f37b088579695885b597e484326b0, under which nothing ran.)
+frozen 1c853cfc0c1132a2df78c4ef02ad8d4017e8ade4

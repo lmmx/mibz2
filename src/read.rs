@@ -82,8 +82,9 @@ impl<R: Read> BzReader<R> {
 
 impl<R: Read + Send + 'static> BzReader<R> {
     /// Decode on `threads` threads (at least 1), with at most `SLOTS_PER_THREAD` x `threads`
-    /// blocks in flight (`parallel::SLOTS_PER_THREAD`), spent as `StreamDecoder::new` plans them (a block a worker, or teams of 2
-    /// sharing each block on 6 or more physical cores: `Plan::for_threads`)
+    /// blocks in flight (`parallel::SLOTS_PER_THREAD`), spent as `StreamDecoder::new` plans them (a block a worker, or teams
+    /// sharing each block on 6 or more physical cores: `Plan::for_threads`; pipelined
+    /// teams at three teams of three, `parallel::PIPELINED_PLAN`)
     pub fn parallel(r: R, threads: usize) -> Self {
         Self::parallel_with(
             r,
@@ -116,6 +117,23 @@ impl<R: Read + Send + 'static> BzReader<R> {
         kernels: Kernels,
     ) -> Self {
         Self::on(r, StreamDecoder::pipelined(teams, k, slots, kernels))
+    }
+
+    /// Research, opt-in: `parallel_pipelined` with its levers
+    /// (`StreamDecoder::pipelined_levers`)
+    #[doc(hidden)]
+    pub fn parallel_pipelined_levers(
+        r: R,
+        teams: usize,
+        k: usize,
+        slots: usize,
+        kernels: Kernels,
+        levers: crate::parallel::Levers,
+    ) -> Self {
+        Self::on(
+            r,
+            StreamDecoder::pipelined_levers(teams, k, slots, kernels, levers),
+        )
     }
 
     /// Research, opt-in: the service core (`StreamDecoder::service`): `teams` teams of `k`

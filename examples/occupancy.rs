@@ -3,7 +3,7 @@
 //! pinned Wikidata corpus); CI runs the same recipe.
 //!
 //! ```text
-//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K | --svc S] [--gap SECONDS] [--out PATH] [--meta K=V]...
+//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both] | --svc S] [--gap SECONDS] [--out PATH] [--meta K=V]...
 //! occupancy FILE.bz2 --ledger [--threads 1,2,4,10] [--slots N]
 //! ```
 //!
@@ -29,6 +29,9 @@
 //! (a pipelined team has no `DecodeStart`/`DecodeEnd` span); the rest of the summary (the
 //! workers' states, the ledger) reads the leader as a team's caller and the plan as teams
 //! of K, so its figures are a team plan's approximation, not the pipeline's own account.
+//! `--levers park|spin2k|small|both` (with `--pipe`) runs the pipelined teams with those levers
+//! (`BzReader::parallel_pipelined_levers`, `parallel::Levers`), as ab's
+//! `mibz2-pipeK-LEVER` arms do.
 //!
 //! `--svc S` (research) runs the service core instead (`BzReader::parallel_service`), as
 //! examples/ab.rs's `mibz2-svcS` arm: `S` is `1`, `2` (K service workers, teams of 3) or
@@ -130,13 +133,21 @@ fn child(a: &[String]) {
     let level: u8 = a[3].parse().unwrap();
     // the plan the decoder runs: the policy's, or teams of K (`--teams`)
     let pipe = a.get(4).is_some_and(|k| k.starts_with('p'));
+    // ("p3", or "p3-park" and the like: `--levers`)
+    let (team_arg, lever) = a
+        .get(4)
+        .map_or(("auto", ""), |k| k.split_once('-').unwrap_or((k, "")));
+    let levers = mibz2::parallel::Levers {
+        park: lever == "park" || lever == "both",
+        small: lever == "small" || lever == "both",
+        spin2k: lever == "spin2k",
+    };
     // the service core (`--svc`): "s1", "s2", "s1t2": (service workers, team size)
     let svc: Option<(usize, usize)> = a.get(4).and_then(|k| k.strip_prefix('s')).map(|k| {
         let (n, t) = k.split_once('t').unwrap_or((k, "3"));
         (n.parse().unwrap(), t.parse().unwrap())
     });
-    let teams_of: Option<usize> = a
-        .get(4)
+    let teams_of: Option<usize> = Some(team_arg)
         .filter(|k| *k != "auto" && svc.is_none())
         .map(|k| k.trim_start_matches('p').parse().unwrap());
     let plan = match (teams_of, svc) {
@@ -164,7 +175,14 @@ fn child(a: &[String]) {
                 }
                 Plan::Teams { teams, k } if pipe => {
                     let window = (slots * teams / threads).max(teams);
-                    BzReader::parallel_pipelined(f, teams, k, window, Kernels::detect())
+                    BzReader::parallel_pipelined_levers(
+                        f,
+                        teams,
+                        k,
+                        window,
+                        Kernels::detect(),
+                        levers,
+                    )
                 }
                 Plan::Teams { teams, .. } if teams_of.is_some() => {
                     let window = (slots * teams / threads).max(teams);
@@ -213,7 +231,8 @@ fn child(a: &[String]) {
         Plan::Teams { teams, k } if svc.is_some() => {
             format!("svc{teams}x{k}+{}", svc.map_or(0, |s| s.0))
         }
-        Plan::Teams { teams, k } if pipe => format!("pipe{teams}x{k}"),
+        Plan::Teams { teams, k } if pipe && lever.is_empty() => format!("pipe{teams}x{k}"),
+        Plan::Teams { teams, k } if pipe => format!("pipe{teams}x{k}-{lever}"),
         Plan::Teams { teams, k } => format!("teams{teams}x{k}"),
     };
     let mut line = format!(
@@ -293,7 +312,9 @@ enum S {
 ///   a helper's build or walk of the block the same leader's enclosing run is inverting, by
 ///   the marks' clock: the cross-block overlap within one team, shown rather than inferred
 ///   (`cross_overlaps`: another team's helpers never count);
-/// - `overlap.rle_cross_thread`: the same for the leaders' RLE1 and CRC intervals.
+/// - `overlap.rle_cross_thread`: the same for the leaders' RLE1 and CRC intervals;
+/// - `ms.join_delay`, `n.join_runs`, `n.join_late`, `n.join_missed`: the leader's join into
+///   its team's walk (`joins`), and `ms.lead`, its own work inside the runs.
 fn pipeline_phases(traces: &[ThreadTrace], kv: &mut Kv) {
     use Kind::*;
     let pairs = [
@@ -307,6 +328,7 @@ fn pipeline_phases(traces: &[ThreadTrace], kv: &mut Kv) {
         ("assemble", AssembleStart, AssembleEnd),
         ("rle", RleStart, RleEnd),
         ("run", RunStart, RunEnd),
+        ("lead", LeadStart, LeadEnd),
     ];
     if !traces
         .iter()
@@ -353,6 +375,53 @@ fn pipeline_phases(traces: &[ThreadTrace], kv: &mut Kv) {
         "t.pipe.overlap.rle_cross_thread",
         cross_overlaps(&iv, "rle") as f64,
     );
+    let j = joins(&iv);
+    kv.f("t.pipe.ms.join_delay", j.delay_ns as f64 / 1e6);
+    kv.f("t.pipe.n.join_runs", j.runs as f64);
+    kv.f("t.pipe.n.join_late", j.late as f64);
+    kv.f("t.pipe.n.join_missed", j.missed as f64);
+}
+
+/// The leader's join into its team's walk, over the team runs (`joins`)
+#[derive(Default)]
+struct Joins {
+    /// the team runs with a walk (a `lead` on the leader and the `walk_setup` that ended
+    /// the build, on a helper, of the same place)
+    runs: usize,
+    /// the runs whose leader ended its own work after the walk was ready
+    late: usize,
+    /// summed over the runs, how long after the walk was ready the leader ended its own
+    /// work (0 for a run whose leader was done first, and waited)
+    delay_ns: u64,
+    /// the runs whose leader never walked: the walk was over when it came to join
+    missed: usize,
+}
+
+/// The leader's join delay into each run's walk, from the marks: the end of its `lead`
+/// against the end of the build's `walk_setup` (on a helper) for the run's place. A leader
+/// that takes more jobs inside a run (lever B) ends its `lead` later, so the counterexample
+/// (more jobs taken, a later join, less walking) shows here.
+fn joins(iv: &[Interval]) -> Joins {
+    let mut j = Joins::default();
+    for l in iv.iter().filter(|x| x.0 == "lead") {
+        let Some(ready) = iv
+            .iter()
+            .filter(|h| h.0 == "walk_setup" && h.1 == l.1 && h.4 != l.4)
+            .map(|h| h.3)
+            .min()
+        else {
+            continue;
+        };
+        j.runs += 1;
+        if l.3 > ready {
+            j.late += 1;
+            j.delay_ns += l.3 - ready;
+        }
+        if !iv.iter().any(|w| w.0 == "walk" && w.1 == l.1 && w.4 == l.4) {
+            j.missed += 1;
+        }
+    }
+    j
 }
 
 /// A phase's intervals (`pipeline_phases`'s: phase, place, start ns, end ns, thread)
@@ -1201,6 +1270,7 @@ fn parent(args: &[String]) {
     let mut teams: Option<usize> = None;
     let mut pipe = false;
     let mut svc: Option<String> = None;
+    let mut lever: Option<String> = None;
     let mut meta: Vec<(String, String)> = Vec::new();
     let mut ledger_only = false;
     let mut it = args.iter();
@@ -1263,6 +1333,14 @@ fn parent(args: &[String]) {
                 teams = Some(k);
                 pipe = true;
             }
+            "--levers" => {
+                let l = it.next().expect("--levers park|spin2k|small|both");
+                assert!(
+                    ["park", "spin2k", "small", "both"].contains(&l.as_str()),
+                    "--levers takes park, spin2k, small or both"
+                );
+                lever = Some(l.clone());
+            }
             "--svc" => {
                 let spec = it.next().expect("--svc S").to_string();
                 assert!(
@@ -1274,13 +1352,14 @@ fn parent(args: &[String]) {
             }
             "--ledger" => ledger_only = true,
             "-h" | "--help" => {
-                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K | --svc S] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
+                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|spin2k|small|both] | --svc S] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
                 return;
             }
             f => file = Some(f.to_string()),
         }
     }
     let file = file.expect("occupancy FILE.bz2 [...]");
+    assert!(lever.is_none() || pipe, "--levers needs --pipe K");
     let m = machine();
     let threads = threads.unwrap_or_else(|| {
         let mut v: Vec<usize> = std::iter::successors(Some(1usize), |t| Some(t * 2))
@@ -1377,7 +1456,9 @@ fn parent(args: &[String]) {
                         &match &svc {
                             Some(spec) => format!("s{spec}"),
                             None => teams.map_or("auto".to_string(), |k| {
-                                format!("{}{k}", if pipe { "p" } else { "" })
+                                let lever =
+                                    lever.as_ref().map_or(String::new(), |l| format!("-{l}"));
+                                format!("{}{k}{lever}", if pipe { "p" } else { "" })
                             }),
                         },
                     ]);
@@ -1683,7 +1764,7 @@ fn parent(args: &[String]) {
                 ("rounds".into(), J::N(rounds as f64)),
                 ("gap_seconds".into(), J::N(gap)),
                 ("slots".into(), slots.map_or(J::S("2 x threads (BzReader::parallel's)".into()), |s| J::N(s as f64))),
-                ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(match &svc { Some(spec) => format!("the service core, mibz2-svc{spec}'s plan"), None => format!("{} of {k}, forced", if pipe { "pipelined teams" } else { "teams" }) }))),
+                ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(match &svc { Some(spec) => format!("the service core, mibz2-svc{spec}'s plan"), None => format!("{} of {k}, forced{}", if pipe { "pipelined teams" } else { "teams" }, lever.as_ref().map_or(String::new(), |l| format!(", levers: {l}"))) }))),
                 (
                     "workload".into(),
                     J::S("BzReader::parallel_with(File, t, slots, Kernels::detect()), drained in 4 MiB reads into a streaming hash: examples/ab.rs's mibz2 arm".into()),

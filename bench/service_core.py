@@ -13,18 +13,21 @@ The budget is the decode threads: the teams' threads plus the service threads. R
 holds two `ab run`s, appended: the arms at a budget of 10, then at 12, each interleaved by
 round. The registered cells (ARM@BUDGET: team leaders, helpers, service threads):
 
-    mibz2@10           3, 6, 0   today's default (3 x 3), the noise control's reference
-    mibz2@12           3, 6, 0   today's default (3 x 3)
-    mibz2-team3@10     3, 6, 0   3 x 3, not pipelined
-    mibz2-team3@12     4, 8, 0   4 x 3
-    mibz2-pipe3@10     3, 6, 0   3 x 3 pipelined (#247)
-    mibz2-pipe3@12     4, 8, 0   4 x 3 pipelined
-    mibz2-svc1@10      3, 6, 1   3 x 3 + 1
-    mibz2-svc1@12      3, 6, 1   3 x 3 + 1 (the teams capped at 3)
-    mibz2-svc2@10      2, 4, 2   2 x 3 + 2 (3 teams don't fit 10 with 2 service threads)
-    mibz2-svc2@12      3, 6, 2   3 x 3 + 2
-    mibz2-svc1-t2@10   3, 3, 1   3 x 2 + 1
-    mibz2-svc1-t2@12   3, 3, 1   3 x 2 + 1
+    mibz2@10            3, 6, 0   today's default (0.2.6): 3 x 3 pipelined, park and small
+    mibz2@12            3, 6, 0   today's default: the same 3 x 3 pipelined (9 threads)
+    mibz2-team3@10      3, 6, 0   3 x 3, plain (not pipelined)
+    mibz2-team3-twin@10 3, 6, 0   mibz2-team3 under another name: the noise control
+    mibz2-team3@12      4, 8, 0   4 x 3, plain
+    mibz2-svc1@10       3, 6, 1   3 x 3 + 1
+    mibz2-svc1@12       3, 6, 1   3 x 3 + 1 (the teams capped at 3)
+    mibz2-svc2@10       2, 4, 2   2 x 3 + 2 (3 teams don't fit 10 with 2 service threads)
+    mibz2-svc2@12       3, 6, 2   3 x 3 + 2
+    mibz2-svc1-t2@10    3, 3, 1   3 x 2 + 1
+    mibz2-svc1-t2@12    3, 3, 1   3 x 2 + 1
+
+`mibz2` is the pipelined default only on the ten-core topology (10 physical cores, a 20 MiB
+L3: `Plan::for_threads` and `StreamDecoder::new`); the report checks the machine's
+`lscpu.txt` for it, so `mibz2@10` and `mibz2@12` name the shipped default unambiguously.
 
 Each comparison is paired by round: the speed ratio is the reference's wall over the arm's
 (> 1: the arm is faster), the CPU ratio the reference's CPU over the arm's (> 1: the arm
@@ -51,9 +54,8 @@ CELLS = {
     "mibz2@10": (3, 6, 0),
     "mibz2@12": (3, 6, 0),
     "mibz2-team3@10": (3, 6, 0),
+    "mibz2-team3-twin@10": (3, 6, 0),
     "mibz2-team3@12": (4, 8, 0),
-    "mibz2-pipe3@10": (3, 6, 0),
-    "mibz2-pipe3@12": (4, 8, 0),
     "mibz2-svc1@10": (3, 6, 1),
     "mibz2-svc1@12": (3, 6, 1),
     "mibz2-svc2@10": (2, 4, 2),
@@ -64,30 +66,27 @@ CELLS = {
 # the causal comparisons, at an equal budget (name, arm, reference): judged, co-primary
 CAUSAL = [
     ("C1", "mibz2-svc1@10", "mibz2-team3@10"),
-    ("C2", "mibz2-svc1@10", "mibz2-pipe3@10"),
+    ("C2", "mibz2-svc1@10", "mibz2@10"),
     ("C3", "mibz2-svc2@12", "mibz2-team3@12"),
-    ("C4", "mibz2-svc2@12", "mibz2-pipe3@12"),
+    ("C4", "mibz2-svc2@12", "mibz2@12"),
     # K's own effect at a fixed plan of teams: the saturation's causal test
     ("D1", "mibz2-svc2@12", "mibz2-svc1@12"),
 ]
-# the product comparisons, kept apart: against today's default at the same budget
-PRODUCT = [
-    ("P1", "mibz2-svc1@10", "mibz2@10"),
-    ("P2", "mibz2-svc2@12", "mibz2@12"),
-]
+# (the product comparisons, against today's default at the same budget, are C2 and C4
+# themselves since the default is the pipelined team: no separate P1 or P2)
 # reported, never judged
 SECONDARY = [
     ("S1", "mibz2-svc1@12", "mibz2-team3@12"),
-    ("S2", "mibz2-svc1@12", "mibz2-pipe3@12"),
+    ("S2", "mibz2-svc1@12", "mibz2@12"),
     ("S3", "mibz2-svc2@10", "mibz2-team3@10"),
-    ("S4", "mibz2-svc2@10", "mibz2-pipe3@10"),
+    ("S4", "mibz2-svc2@10", "mibz2@10"),
     ("S5", "mibz2-svc1-t2@10", "mibz2-team3@10"),
     ("S6", "mibz2-svc1-t2@12", "mibz2-team3@12"),
     ("S7", "mibz2-svc2@10", "mibz2-svc1@10"),
-    ("R1", "mibz2-pipe3@10", "mibz2-team3@10"),
-    ("R2", "mibz2-pipe3@12", "mibz2-team3@12"),
+    ("R1", "mibz2@10", "mibz2-team3@10"),
+    ("R2", "mibz2@12", "mibz2-team3@12"),
 ]
-CONTROL = ("N1", "mibz2-team3@10", "mibz2@10")
+CONTROL = ("N1", "mibz2-team3-twin@10", "mibz2-team3@10")
 GAIN = 1.02
 EQUIV = 0.03
 CONTROL_EQUIV = 0.03
@@ -230,6 +229,20 @@ def report(a):
     checks.append(("no `DRY-RUN.txt` (not a dry run)", text("DRY-RUN.txt") is None))
     commit = text("commit.txt")
     checks.append((f"`commit.txt` ({commit}) is the checkout's head ({head})", bool(commit) and commit == head))
+    lscpu = text("lscpu.txt") or ""
+
+    def lscpu_field(name):
+        m = re.search(rf"^{name}:\s*(.+)$", lscpu, re.M)
+        return m.group(1).strip() if m else None
+
+    sockets, per_socket, l3 = lscpu_field("Socket\\(s\\)"), lscpu_field("Core\\(s\\) per socket"), lscpu_field("L3 cache") or lscpu_field("L3")
+    ten = sockets == "1" and per_socket == "10" and bool(l3) and l3.split()[0:2] in (["20", "MiB"], ["20"])
+    checks.append(
+        (
+            f"the ten-core topology, so `mibz2` is the pipelined default (lscpu: {sockets} socket, {per_socket} cores, L3 {l3})",
+            ten,
+        )
+    )
     checks.append(("every run the same bytes, none failed", len(hashes) == 1 and len(lengths) == 1 and not bad))
     for c, plan in CELLS.items():
         rs = by.get(c, {})
@@ -266,7 +279,7 @@ def report(a):
     )
     verdict = "VALID" if valid and control_ok else "INVALID"
     lines += ["", f"Run: **{verdict}**", ""]
-    out = {"verdict": verdict, "checks": checks, "causal": [], "product": [], "secondary": [], "traces": {}}
+    out = {"verdict": verdict, "checks": checks, "causal": [], "secondary": [], "traces": {}}
 
     def judged(section, rows, key):
         lines.extend(
@@ -297,8 +310,7 @@ def report(a):
             )
         lines.append("")
 
-    judged("The causal comparisons (equal budget; judged)", CAUSAL, "causal")
-    judged("The product comparisons (against today's default; kept apart)", PRODUCT, "product")
+    judged("The causal comparisons (equal budget; judged; C2 and C4 are also the product comparisons, against today's default)", CAUSAL, "causal")
     lines += [
         "## Reported, never judged",
         "",
