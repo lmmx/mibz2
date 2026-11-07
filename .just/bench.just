@@ -495,7 +495,7 @@ bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
     git rev-parse HEAD > "$W/commit.txt"
     git status --porcelain > "$W/git-status.txt"
     # the registration's frozen code: what this run measures must be the commit it registered
-    frozen=HEAD
+    frozen=da8b8dfd1351689e5e5455fe8b5a45b67cc6759f
     if ! git diff --quiet "$frozen" HEAD -- src examples Cargo.toml Cargo.lock \
         bench/team_pipeline.py bench/team_size.py bench/wikidata.py bench/wikidata.json \
         docs/journal/2026-11-07-team-pipeline-registration.md; then
