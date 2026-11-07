@@ -84,6 +84,21 @@ it fits the small gain.
 Reducing α (fewer spins, less contention for the build and walk) is a second lever, alongside
 more overlap per block.
 
+**α is not identified.** A stand-in Researcher review (an independent ChatGPT read, relayed by
+Louis; not the Researcher task's REVIEW) refitted the 1.042 gain under different assumed handoff
+costs:
+
+| assumed handoff | fitted α |
+|---|---|
+| 0 ms | 1.545 |
+| 0.05 ms | 1.468 |
+| 0.10 ms | 1.392 |
+
+These are conditional calculations with the model's approximate stage times, not a measurement
+of the parallel stage. The 29–33% outside-inversion shares were measured at another team layout,
+so they don't pin α down either. Cutting spin or parking overhead is a candidate improvement to
+the implementation, and its result won't establish the inferred mechanism.
+
 ## What it decides, and what it doesn't
 
 - **It is evidence for H1's mechanism question** under its registration, on this machine.
