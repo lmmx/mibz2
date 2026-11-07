@@ -568,3 +568,115 @@ bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
       INVALID) outcome="INVALID: see team-pipeline.md's validity checks" ;;
       *) outcome="REPORT FAILED (status $status): see console.log" ;;
     esac
+
+# The pipelined team's two levers on the workstation
+# (docs/journal/2026-11-07-pipeline-levers-registration.md, registered before any run): at
+# 3 × 3 on 10 threads and 3 × 4 on 12, the registered pipe (mibz2-pipe3/4) against each lever
+# alone (-park, -small) and both (-both), with the non-pipelined twins (mibz2-team3/4) and the
+# default (mibz2, the noise control's reference at 10); each thread count its own ab run,
+# interleaved by round; then occupancy traces of every pipelined arm with the phase marks; then
+# bench/pipeline_levers.py's report and verdict. About 35 minutes. Close the browser and
+# anything busy first.
+#   just submit bench-pipeline-levers
+# DRY=1 is the untimed check of the recipe itself (one round, one trace round, no settling):
+# never evidence, and the report never calls it VALID. CORPUS= a .bz2 to use instead of
+# building the bench's sample.
+
+# The pipelined team's levers (park, small blocks, both) against the registered pipe
+bench-pipeline-levers ROUNDS="20" DRY="" CORPUS="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/pipeline-levers
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-pipeline-levers: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends:
+    # a refusal, a failed build, a broken report or a full run
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-pipeline-levers: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W"
+      case "$outcome" in
+        VALID*) exit 0 ;;
+        INVALID*) exit 1 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-pipeline-levers: $*"; exit 1; }
+    rounds={{ROUNDS}}; trace_rounds=6; busy=(); dry="{{DRY}}"
+    if [ -n "$dry" ]; then
+      rounds=1; trace_rounds=1; busy=(--max-busy 64 --settle 0.2)
+      echo "bench-pipeline-levers: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
+    fi
+    git rev-parse HEAD > "$W/commit.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit (bench/pipeline-levers.frozen): everything the run is
+    # built, driven and judged from must be as it was there
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/pipeline-levers.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/pipeline-levers.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      bench/pipeline_levers.py bench/team_size.py bench/wikidata.py bench/wikidata.json bench/bundle.sh
+      .just/bench.just docs/journal/2026-11-07-pipeline-levers-registration.md)
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
+    fi
+    echo "frozen $frozen" > "$W/frozen.txt"
+    cargo build -q --release --example ab --example windows
+    cargo build -q --release --features trace --example occupancy
+    AB=$PWD/target/release/examples/ab
+    corpus="{{CORPUS}}"
+    if [ -z "$corpus" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$B/wikidata.bz2"
+      corpus=$B/wikidata.bz2
+    fi
+    ln -sf "$(realpath "$corpus")" "$W/wikidata.bz2"
+    sha256sum "$corpus" > "$W/corpus.sha256"
+    "$AB" env > "$W/env.json"
+    lscpu > "$W/lscpu.txt"
+    # one ab run a plan (each lever is compared within its own thread count), appended to one
+    # file: 3 × 3 at 10 threads, then 3 × 4 at 12
+    for tk in 10:3 12:4; do
+      IFS=: read -r t k <<< "$tk"
+      if [ "$t" = 10 ]; then arms="mibz2,mibz2-team3"; else arms="mibz2-team4"; fi
+      arms="$arms,mibz2-pipe$k,mibz2-pipe$k-park,mibz2-pipe$k-small,mibz2-pipe$k-both"
+      "$AB" run "$W/runs.jsonl" --arms "$arms" --threads "$t" --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
+    done
+    "$AB" summary "$W/runs.jsonl" --ref mibz2-pipe3 > "$W/summary.txt" || true
+    occ=()
+    for tkl in 10:3: 10:3:park 10:3:small 10:3:both 12:4: 12:4:park 12:4:small 12:4:both; do
+      IFS=: read -r t k l <<< "$tkl"
+      lever=(); name="occupancy-t$t-pipe$k"
+      if [ -n "$l" ]; then lever=(--levers "$l"); name="$name-$l"; fi
+      o="$W/$name.json"
+      if target/release/examples/occupancy "$W/wikidata.bz2" --threads "$t" --pipe "$k" "${lever[@]}" \
+          --rounds "$trace_rounds" --out "$o" --meta "commit=$(git rev-parse HEAD)" \
+          > "$W/$name.txt" 2>&1; then
+        occ+=("$o")
+      else
+        echo "bench-pipeline-levers: the occupancy pass at $t threads, pipe $k ${l:-(no lever)}, failed"
+      fi
+    done
+    status=0
+    python3 bench/pipeline_levers.py report "$W/runs.jsonl" --occupancy "${occ[@]}" \
+      --out "$W/pipeline-levers" || status=$?
+    verdict=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/pipeline-levers.json" 2>/dev/null || echo "")
+    case "$verdict" in
+      VALID) outcome="VALID: see pipeline-levers.md for the registered comparisons' outcomes" ;;
+      INVALID) outcome="INVALID: see pipeline-levers.md's validity checks" ;;
+      *) outcome="REPORT FAILED (status $status): see console.log" ;;
+    esac
