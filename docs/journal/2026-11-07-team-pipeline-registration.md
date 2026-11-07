@@ -1,10 +1,12 @@
 # 2026-11-07: The pipelined team, registered before any workstation run
 
-**Status:** registered, not run. This entry and the prototype it tests are frozen at one
-commit, the one the recipe names (`frozen=` in `just bench-team-pipeline`,
-`.just/bench.just`, the commit after this entry's last change). The recipe records, in the
-attempt's directory, whether the code and this entry still match it (`NOT-FROZEN.txt` if
-they don't). Nothing here changes the
+**Status:** registered, not run. This entry, the prototype it tests, the recipe and the
+report are frozen at one commit: the one `bench/team-pipeline.frozen` names, the commit after
+this entry's last change. `just bench-team-pipeline` refuses to run if any of its measured
+inputs (the sources, Cargo's files, `examples/`, `bench/team_pipeline.py` and the scripts it
+uses, `.just/bench.just`, this entry) differ from that commit, or if the tree is dirty. The
+report never calls a run VALID unless it is the registered one: 20 rounds, a clean tree, no
+`NOT-FROZEN.txt` or `DRY-RUN.txt`, and `commit.txt` the checkout's head. Nothing here changes the
 default decoder: the pipelined team is opt-in (`StreamDecoder::pipelined`,
 `BzReader::parallel_pipelined`, both `#[doc(hidden)]`).
 
@@ -30,10 +32,19 @@ ones.
 **Deviations from the brief, each with its reason:**
 - **The leader joins the walk** once its own work is done. Otherwise a team of 2 would
   leave one thread inverting alone and its leader idle for most of each block.
-- **A block below `MIN_COOP` doesn't drain the pipeline.** The leader decodes it whole,
-  inside the run, on its own one-core buffers (a table of at most 1 MB). The reason: the
-  bench's Wikidata sample has 198 of its 431 blocks below `MIN_COOP` (the trace's counts:
-  233 team runs, 431 blocks), so draining at each would have measured mostly the drain.
+- **A block below `MIN_COOP` doesn't drain the pipeline before it.** The leader decodes it
+  whole, inside the run, on its own one-core buffers (a table of at most 1 MB). The reason:
+  the bench's Wikidata sample has 198 of its 431 blocks below `MIN_COOP` (the trace's
+  counts: 233 team runs, 431 blocks).
+- **A small block still costs the pipeline one block of overlap.**
+  - **Inside the run:** while the leader decodes the small block, the helpers, once their
+    own block is inverted, wait idle in the pool.
+  - **After the run:** the leader has staged no next block (`l.next` stays empty after a
+    small one). So the block just inverted gets its RLE1 and CRC alone, and the next job's
+    move-to-front runs serially, with no helper work beside it.
+  - **So:** each small block takes about one block's overlap away. On a corpus with this
+    many small blocks, the pipeline overlaps only part of the time (the trace's
+    `pipe.overlap.*` against `pipe.n.mtf` shows how much).
 - **The leader takes a job only if one is already queued.** A team never waits for the
   scanner while it holds an unpublished block. That wait could deadlock: the scanner
   waits for a slot the reader frees only once it has that block.
@@ -157,9 +168,9 @@ The pipelined passes record the new phase marks (src/trace.rs: `Mtf*`, `BuildSet
 `Helper*`, `Build*`, `BuildWait*`, `WalkSetup*`, `Walk*`, `Assemble*`, `Rle*`, `Run*`). From
 them the summary gives:
 - each phase's summed time and count (`pipe.ms.*`, `pipe.n.*`);
-- `pipe.overlap.cross_thread`: the blocks whose move-to-front, on the leader, intersects a
-  helper's build or walk of another block. This is the cross-block overlap, shown from the
-  marks' clock;
+- `pipe.overlap.cross_thread`: the blocks whose move-to-front, on the leader, intersects
+  its own team's helpers' build or walk of the block its enclosing run inverts (another
+  team's helpers never count). This is the cross-block overlap, shown from the marks' clock;
 - the same for the RLE1 and CRC (`pipe.overlap.rle_cross_thread`);
 - the same-thread containment (`pipe.overlap.same_thread`).
 
@@ -168,8 +179,9 @@ them the summary gives:
 | observation | interpretation allowed |
 |---|---|
 | a pipelined trace incomplete, or its median `pipe.overlap.cross_thread` 0 | the implementation or the instrument is unresolved: no mechanism verdict, whatever the timing |
-| overlap shown, C1 or C2 a GAIN | the pipeline helps on this machine and workload. The mechanism still needs stage evidence: the pipelined trace's `pipe.ms.build` + `pipe.ms.walk` per team run, against the non-pipelined trace's inversion time per block |
+| overlap shown, C1 or C2 a GAIN | the pipeline helps on this machine and workload. The mechanism still needs stage evidence: the pipelined trace's `pipe.ms.build` + `pipe.ms.walk` per team run, against the non-pipelined trace's inversion time per block. The gain is bounded by the share of blocks that overlapped (`pipe.overlap.cross_thread` over `pipe.n.mtf`): each small block costs a block of overlap (Deviations) |
 | overlap shown, NULL or REGRESSION, the build and walk per run longer than the non-pipelined inversion | added service cost cancels the overlap (fewer threads on the table, the leader's late join); locate it with the phase times |
+| overlap shown in few blocks (a low `pipe.overlap.cross_thread` over `pipe.n.mtf`), NULL | too little was overlapped to show, on this corpus's mix of small and full blocks: not a falsification of the pipeline on full blocks |
 | overlap shown, NULL or REGRESSION, the build and walk unchanged, `pipe.ms.build_wait` or the leader's `pipe.ms.rle` + `pipe.ms.mtf` per run above the build and walk | pipeline overhead, or the leader's serial stage, limits it |
 | INCONCLUSIVE | inconclusive, not a falsification |
 

@@ -475,7 +475,8 @@ bench-three-team-policy:
 # Close the browser and anything busy first.
 #   just submit bench-team-pipeline
 # DRY=1 is the untimed check of the recipe itself (one round, one trace round, no settling):
-# never evidence. CORPUS= a .bz2 to use instead of building the bench's sample.
+# never evidence, and the report never calls it VALID. CORPUS= a .bz2 to use instead of
+# building the bench's sample.
 
 # Pipelined teams against their non-pipelined twins, at 3 × 3 and 3 × 4
 bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
@@ -487,20 +488,44 @@ bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
     mkdir -p "$B"
     mkdir "$W" || { echo "bench-team-pipeline: $W already exists; not reusing an attempt's directory"; exit 1; }
     exec > >(tee -a "$W/console.log") 2>&1
+    # every attempt ends with one stated outcome (outcome.txt) and is packed, however it ends:
+    # a refusal, a failed build, a broken report or a full run
+    outcome="INCOMPLETE: stopped before the run finished (see console.log)"
+    finish() {
+      status=$?
+      echo "$outcome" > "$W/outcome.txt"
+      echo "bench-team-pipeline: OUTCOME: $outcome"
+      bash bench/bundle.sh "$W"
+      case "$outcome" in
+        VALID*) exit 0 ;;
+        INVALID*) exit 1 ;;
+        *) [ "$status" -ne 0 ] && exit "$status"; exit 2 ;;
+      esac
+    }
+    trap finish EXIT
+    fail() { outcome="REFUSED: $*"; echo "bench-team-pipeline: $*"; exit 1; }
     rounds={{ROUNDS}}; trace_rounds=6; busy=(); dry="{{DRY}}"
     if [ -n "$dry" ]; then
       rounds=1; trace_rounds=1; busy=(--max-busy 64 --settle 0.2)
       echo "bench-team-pipeline: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
     fi
     git rev-parse HEAD > "$W/commit.txt"
-    git status --porcelain > "$W/git-status.txt"
-    # the registration's frozen code: what this run measures must be the commit it registered
-    frozen=989d622181e7b4f5083738691ab5d90b768c67bb
-    if ! git diff --quiet "$frozen" HEAD -- src examples Cargo.toml Cargo.lock \
-        bench/team_pipeline.py bench/team_size.py bench/wikidata.py bench/wikidata.json \
-        docs/journal/2026-11-07-team-pipeline-registration.md; then
-      echo "bench-team-pipeline: the code or the registration differs from the frozen $frozen" | tee "$W/NOT-FROZEN.txt"
+    git status --porcelain --untracked-files=no > "$W/git-status.txt"
+    # the registration's frozen commit (bench/team-pipeline.frozen): everything the run is
+    # built, driven and judged from must be as it was there
+    frozen=$(awk '$1 == "frozen" {print $2}' bench/team-pipeline.frozen)
+    [[ $frozen =~ ^[0-9a-f]{40}$ ]] || fail "bench/team-pipeline.frozen names no frozen commit"
+    measured=(src Cargo.toml Cargo.lock .cargo build.rs rust-toolchain rust-toolchain.toml examples
+      bench/team_pipeline.py bench/team_size.py bench/wikidata.py bench/wikidata.json bench/bundle.sh
+      .just/bench.just docs/journal/2026-11-07-team-pipeline-registration.md)
+    [ ! -s "$W/git-status.txt" ] || fail "the checkout has uncommitted changes"
+    [ -z "$(git status --porcelain --untracked-files=all -- "${measured[@]}")" ] || fail "untracked files among the measured inputs"
+    git cat-file -e "$frozen^{commit}" || fail "fetch the branch: the frozen commit $frozen is missing"
+    if ! git diff --quiet "$frozen" HEAD -- "${measured[@]}"; then
+      echo "the measured inputs differ from the frozen $frozen" > "$W/NOT-FROZEN.txt"
+      fail "HEAD's measured inputs differ from the frozen $frozen"
     fi
+    echo "frozen $frozen" > "$W/frozen.txt"
     cargo build -q --release --example ab --example windows
     cargo build -q --release --features trace --example occupancy
     AB=$PWD/target/release/examples/ab
@@ -535,7 +560,11 @@ bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
       fi
     done
     status=0
-    python3 bench/team_pipeline.py report "$W/runs.jsonl" --rounds "$rounds" \
-      --occupancy "${occ[@]}" --out "$W/team-pipeline" || status=$?
-    [ "$status" = 0 ] || echo "bench-team-pipeline: the report's verdict is not VALID (see team-pipeline.md)"
-    bash bench/bundle.sh "$W"
+    python3 bench/team_pipeline.py report "$W/runs.jsonl" --occupancy "${occ[@]}" \
+      --out "$W/team-pipeline" || status=$?
+    verdict=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["verdict"])' "$W/team-pipeline.json" 2>/dev/null || echo "")
+    case "$verdict" in
+      VALID) outcome="VALID: see team-pipeline.md for the registered comparisons' outcomes" ;;
+      INVALID) outcome="INVALID: see team-pipeline.md's validity checks" ;;
+      *) outcome="REPORT FAILED (status $status): see console.log" ;;
+    esac

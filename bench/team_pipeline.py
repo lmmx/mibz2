@@ -1,8 +1,11 @@
 """The pipelined team's workstation run (docs/journal/2026-11-07-team-pipeline-registration.md,
 registered before any run): its report and verdicts, each predicate checked here.
 
-    python3 bench/team_pipeline.py report RUNS.jsonl --rounds N [--occupancy W/occupancy-*.json]
-        [--out STEM]
+    python3 bench/team_pipeline.py report RUNS.jsonl [--occupancy W/occupancy-*.json] [--out STEM]
+
+A run is VALID only as the registered one: the registered 20 rounds (whatever the recipe was
+asked for), from the attempt's directory (RUNS.jsonl's) a clean tree (`git-status.txt`
+empty), no `NOT-FROZEN.txt` or `DRY-RUN.txt`, and `commit.txt` the checkout's head.
 
 RUNS.jsonl is `ab run`'s, arms mibz2, mibz2-team3, mibz2-pipe3, mibz2-team4, mibz2-pipe4 at 10
 and 12 threads, interleaved by round. The registered cells (ARM@THREADS, the plan its
@@ -23,7 +26,9 @@ t-interval over the registered rounds; and CPU and peak RSS beside it.
 import argparse
 import json
 import math
+import os
 import statistics
+import subprocess
 import sys
 from collections import defaultdict
 
@@ -49,6 +54,8 @@ CONTROL = ("N1", "mibz2-team3@10", "mibz2@10")
 GAIN = 1.02  # a gain is an interval wholly above this
 EQUIV = 0.03  # a null is an interval containing 1 and wholly within 1 +/- this
 CONTROL_EQUIV = 0.03
+# the registered rounds: a run of any other count is never VALID
+REGISTERED_ROUNDS = 20
 # the model's figures (the knee journal, H1): a 3 x 3 team's cycle per block, its leader's
 # serial stage, in ms
 C0, S0 = 1.056, 0.40
@@ -94,10 +101,45 @@ def report(a):
             continue
         if not r.get("err"):
             by[c][r["round"]] = r
-    want = list(range(a.rounds))
+    want = list(range(REGISTERED_ROUNDS))
+    w = os.path.dirname(os.path.abspath(a.runs))
+
+    def text(name):
+        try:
+            return open(os.path.join(w, name)).read().strip()
+        except OSError:
+            return None
+
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        head = None
+    rounds_seen = len({r["round"] for r in runs})
     lines = ["# The pipelined team: the workstation run's report", ""]
     checks = []
     same = len(hashes) == 1 and len(lengths) == 1 and not bad
+    checks.append(
+        (
+            f"the registered {REGISTERED_ROUNDS} rounds (seen: {rounds_seen})",
+            rounds_seen == REGISTERED_ROUNDS,
+        )
+    )
+    checks.append(
+        ("a clean tree (`git-status.txt` present and empty)", text("git-status.txt") == "")
+    )
+    checks.append(
+        ("no `NOT-FROZEN.txt` (the frozen inputs unchanged)", text("NOT-FROZEN.txt") is None)
+    )
+    checks.append(("no `DRY-RUN.txt` (not a dry run)", text("DRY-RUN.txt") is None))
+    commit = text("commit.txt")
+    checks.append(
+        (
+            f"`commit.txt` ({commit}) is the checkout's head ({head})",
+            bool(commit) and commit == head,
+        )
+    )
     checks.append(("every run the same bytes, none failed", same))
     for c, plan in CELLS.items():
         rs = by.get(c, {})
@@ -105,7 +147,12 @@ def report(a):
         want_plan = (plan[0], plan[0] * (plan[1] - 1))
         ok = sorted(rs) == want and not dupes[c] and plans == {want_plan}
         seen = ", ".join(plan_label(p) for p in sorted(plans)) or "none"
-        checks.append((f"`{c}`: rounds 0-{a.rounds - 1} once each, every run {plan[0]} x {plan[1]} (seen: {seen})", ok))
+        checks.append(
+            (
+                f"`{c}`: rounds 0-{REGISTERED_ROUNDS - 1} once each, every run {plan[0]} x {plan[1]} (seen: {seen})",
+                ok,
+            )
+        )
     valid = all(ok for _, ok in checks)
 
     def ratio(arm, ref, key="wall"):
@@ -125,7 +172,9 @@ def report(a):
     lines.append("")
     verdict = "VALID" if valid and control_ok else "INVALID"
     lines += [f"Run: **{verdict}**", "", "## The registered comparisons", ""]
-    lines.append("| | arm | against | speed ratio [95% CI] | CPU ratio [95% CI] | outcome | α implied (H = 0) |")
+    lines.append(
+        "| | arm | against | speed ratio [95% CI] | CPU ratio [95% CI] | outcome | α implied (H = 0) |"
+    )
     lines.append("|---|---|---|---|---|---|---|")
     out = {"verdict": verdict, "checks": checks, "comparisons": []}
     for name, arm, ref, kind in COMPARISONS:
@@ -138,11 +187,24 @@ def report(a):
             f"{cg:.3f} [{clo:.3f}, {chi:.3f}] | {oc} | {'' if math.isnan(alpha) else f'{alpha:.2f}'} |"
         )
         out["comparisons"].append(
-            {"name": name, "kind": kind, "arm": arm, "ref": ref, "speed": [g, lo, hi],
-             "cpu": [cg, clo, chi], "rounds": n, "outcome": oc}
+            {
+                "name": name,
+                "kind": kind,
+                "arm": arm,
+                "ref": ref,
+                "speed": [g, lo, hi],
+                "cpu": [cg, clo, chi],
+                "rounds": n,
+                "outcome": oc,
+            }
         )
     lines += ["", "(CPU ratio: the reference's CPU over the arm's; < 1, the arm spends more.)", ""]
-    lines += ["## Every cell (medians)", "", "| cell | plan | wall s | CPU s | peak RSS MB | rounds |", "|---|---|---|---|---|---|"]
+    lines += [
+        "## Every cell (medians)",
+        "",
+        "| cell | plan | wall s | CPU s | peak RSS MB | rounds |",
+        "|---|---|---|---|---|---|",
+    ]
     for c in sorted(by):
         rs = list(by[c].values())
         plans = sorted({plan_of(threads_of(r.get("thread_cpu", ""))) for r in rs})
@@ -153,7 +215,10 @@ def report(a):
         )
     if a.occupancy:
         lines += ["", "## The traces (occupancy, medians over complete rounds)", ""]
-        lines += ["| trace | complete rounds | MTF overlapped (same thread) | MTF overlapped (cross thread) | RLE overlapped (cross thread) | blocks |", "|---|---|---|---|---|---|"]
+        lines += [
+            "| trace | complete rounds | MTF overlapped (same thread) | MTF overlapped (cross thread) | RLE overlapped (cross thread) | blocks |",
+            "|---|---|---|---|---|---|",
+        ]
         for path in a.occupancy:
             try:
                 o = json.load(open(path))
@@ -168,7 +233,10 @@ def report(a):
                     f"{g('pipe.overlap.same_thread')} | {g('pipe.overlap.cross_thread')} | "
                     f"{g('pipe.overlap.rle_cross_thread')} | {g('blocks')} |"
                 )
-        lines += ["", "No cross-block overlap in a pipelined trace (cross thread 0) means no mechanism verdict (the registration's outcome map)."]
+        lines += [
+            "",
+            "No cross-block overlap in a pipelined trace (cross thread 0) means no mechanism verdict (the registration's outcome map).",
+        ]
     text = "\n".join(lines) + "\n"
     print(text)
     if a.out:
@@ -182,7 +250,6 @@ def main():
     sub = p.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("report")
     r.add_argument("runs")
-    r.add_argument("--rounds", type=int, required=True)
     r.add_argument("--occupancy", nargs="*", default=[])
     r.add_argument("--out")
     a = p.parse_args()
