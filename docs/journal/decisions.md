@@ -71,6 +71,28 @@ The brief he relayed with it, its operative lines verbatim:
 - **Applies to:** this policy change only (`docs/journal/2026-11-06-three-team-policy.md`). It is
   not a general change to the merge rule.
 
+## 2026-11-07: admitting the pipelined 3 × 3 default (0.2.6) on workstation evidence
+
+- **Source:** Louis, in the Coordinator's session (RULES.md A4; C6 reserves the merge
+  acceptance rule to him).
+- **Observed:** 2026-11-07, about 09:50 UTC.
+- **The question:** the three-team admission above applies to that policy only. CI's 4-core
+  runners can't reach the 3 × 3 plan, so making the pipelined team with park and small the
+  default at that plan needs its own admission. The evidence so far is one registered i9 run
+  (`pipeline-levers/20261107T091926Z`): both levers against plain 3 × 3 at 10 threads, 1.072
+  [1.053, 1.091]. No confirmation run has been made, and nothing at 11, 12, 16 or 20 threads.
+- **What was decided:** "Confirm first, then ship", chosen from three options (the others were:
+  ship now, with the post-release release-scaling run as the confirmation; ship on the
+  existing run only). The option as put to him, verbatim:
+
+> Before release, you run one frozen A/B of the new default against 0.2.5's at 10, 11, 12, 16 and 20 threads (about 30–40 min on the i9), on the precedent's terms. Release only if it passes. Slower, but follows the precedent exactly.
+
+- **The precedent's terms:** at least 1.03 at 10 threads with a lower bound above 1, and no more
+  than 2% slower at 11, 12, 16 and 20. They are applied exactly as the three-team registration
+  defines them.
+- **Applies to:** this change only (the pipelined default at the 3 × 3 plan). It is not a
+  general change to the merge rule.
+
 ## 2026-11-06: requests relayed from ChatGPT on #145
 
 - **Source:** Louis, in the Coordinator's session (RULES.md A4).
