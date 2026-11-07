@@ -31,6 +31,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ## Optional
 
 - [Blog](<https://lmmx.github.io/mibz2/blog/index.md>): What mibz2's experiments are finding, and where they go next.
+- [Pipelined teams in mibz2 0.2.6](<https://lmmx.github.io/mibz2/blog/2026-11-07-pipelined-teams/index.md>): While a team's helpers invert one block, its leader finishes the last and prepares the next: 7% faster than 0.2.5 on ten cores, for 5% more processor time.
 - [Why mibz2 stops scaling at eight threads](<https://lmmx.github.io/mibz2/blog/2026-11-07-why-mibz2-stops-scaling/index.md>): Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open.
 - [Huffman decoding: the bit buffer in a register](<https://lmmx.github.io/mibz2/blog/2026-11-05-huffman-bit-buffer/index.md>): The Huffman decoder wrote its bit buffer to memory and read it back at every lookup. Kept in a register, the stage ran 13% faster on Intel and 5% on AMD.
 - [An autonomous agent team](<https://lmmx.github.io/mibz2/blog/2026-11-04-autonomous-agent-team/index.md>): Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus.
