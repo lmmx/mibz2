@@ -13,6 +13,16 @@
 # It polls every 5 minutes, for at most --hours (default 8). Whatever the outcome (run passed,
 # run failed, hold, timeout or a refusal), it suspends afterwards, unless --no-suspend.
 # Everything is logged to ~/await-submit-<recipe>-<stamp>.log.
+#
+# Guarantees:
+# - a run happens at most once per recipe and commit on this machine: a marker directory
+#   under ~/.cache/await-submit is made atomically just before the run, so a restarted or
+#   second watcher refuses;
+# - HOLD is checked once more just before the run;
+# - an annotated ready tag is resolved to its commit;
+# - a failed check of origin is logged, and retried at the next poll;
+# - the exit status is 0 only when the run ran and passed: 1 when it failed, 3 on HOLD,
+#   4 on timeout, 5 on a refusal.
 set -uo pipefail
 
 # Run from a copy, so that checking out another branch can't change this script mid-run.
@@ -47,7 +57,25 @@ finish() {
     sleep 30
     systemctl suspend || say "systemctl suspend failed"
   fi
-  exit 0
+  exit "${2:-0}"
+}
+
+# Print origin's ready/hold refs, with annotated tags resolved to their commits.
+# Fails, and says so, when origin can't be read.
+query() {
+  local out
+  if ! out=$(git ls-remote --tags origin "refs/tags/ready/$recipe" "refs/tags/ready/$recipe^{}" \
+               "refs/tags/hold/$recipe" 2>&1); then
+    say "could not read origin's tags (retrying at the next poll): $out"
+    return 1
+  fi
+  printf '%s\n' "$out"
+}
+ready_commit() {  # the peeled commit if the tag is annotated, else the tag's own target
+  local peeled plain
+  peeled=$(awk -v r="refs/tags/ready/$recipe^{}" '$2==r {print $1}' <<<"$1")
+  plain=$(awk -v r="refs/tags/ready/$recipe" '$2==r {print $1}' <<<"$1")
+  echo "${peeled:-$plain}"
 }
 
 cd "$(git rev-parse --show-toplevel)" || { say "not in a git checkout"; exit 2; }
@@ -56,31 +84,44 @@ say "waiting for ready/$recipe or hold/$recipe on origin (every 5 min, up to ${h
 deadline=$(( $(date +%s) + hours * 3600 ))
 ready=""
 while (( $(date +%s) < deadline )); do
-  refs=$(git ls-remote --tags origin "refs/tags/ready/$recipe" "refs/tags/hold/$recipe" 2>/dev/null)
-  if grep -q "refs/tags/hold/$recipe" <<<"$refs"; then
-    finish "HOLD: the coordinator put the run on hold; nothing was run"
+  if refs=$(query); then
+    if grep -q "refs/tags/hold/$recipe\$" <<<"$refs"; then
+      finish "HOLD: the coordinator put the run on hold; nothing was run" 3
+    fi
+    ready=$(ready_commit "$refs")
   fi
-  ready=$(awk -v r="refs/tags/ready/$recipe" '$2==r {print $1}' <<<"$refs")
   [[ -n "$ready" ]] && break
   sleep 300
 done
-[[ -z "$ready" ]] && finish "TIMEOUT: no ready/$recipe after ${hours} h; nothing was run"
+[[ -z "$ready" ]] && finish "TIMEOUT: no ready/$recipe after ${hours} h; nothing was run" 4
 say "ready/$recipe -> $ready"
 
 if [[ -n "$(git status --porcelain)" ]]; then
   git status --short
-  finish "REFUSED: the checkout has uncommitted changes; nothing was run"
+  finish "REFUSED: the checkout has uncommitted changes; nothing was run" 5
 fi
-git fetch origin "$branch" || finish "REFUSED: could not fetch $branch"
-git checkout "$branch" && git merge --ff-only "origin/$branch" || finish "REFUSED: could not check out $branch"
+git fetch origin "$branch" || finish "REFUSED: could not fetch $branch" 5
+git checkout "$branch" && git merge --ff-only "origin/$branch" || finish "REFUSED: could not check out $branch" 5
 head=$(git rev-parse HEAD)
 if [[ "$head" != "$ready" ]]; then
-  finish "REFUSED: $branch is at $head, not the ready commit $ready; nothing was run"
+  finish "REFUSED: $branch is at $head, not the ready commit $ready; nothing was run" 5
+fi
+
+# HOLD once more, just before the run.
+if refs=$(query) && grep -q "refs/tags/hold/$recipe\$" <<<"$refs"; then
+  finish "HOLD: the coordinator put the run on hold before it started; nothing was run" 3
+fi
+# At most once per recipe and commit on this machine (mkdir is atomic).
+mark=~/.cache/await-submit/$recipe-$ready
+mkdir -p ~/.cache/await-submit
+if ! mkdir "$mark" 2>/dev/null; then
+  finish "REFUSED: $recipe at $ready already ran on this machine ($mark); nothing was run" 5
 fi
 
 say "running: just submit $recipe"
 if just submit "$recipe"; then
-  finish "RUN DONE: just submit $recipe exited 0"
+  finish "RUN DONE: just submit $recipe exited 0" 0
 else
-  finish "RUN FAILED: just submit $recipe exited $?"
+  rc=$?
+  finish "RUN FAILED: just submit $recipe exited $rc" 1
 fi
