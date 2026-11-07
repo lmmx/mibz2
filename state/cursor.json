@@ -554,6 +554,13 @@
       "review_comment_id": 6695772196,
       "publication_verified": true,
       "verification_note": "Exact body and #145 read back; role-aware routing check passed. Pinned verify helper rejects non-Coordinator FROM."
+    },
+    {
+      "trigger_comment_id": 6699480548,
+      "status": "in_progress",
+      "repository": "lmmx/mibz2",
+      "pr": 162,
+      "spec_pin": "a6a703cefcc40ac4115803f44a8a29ad76a3a7ef"
     }
   ],
   "active_delegations": [],
