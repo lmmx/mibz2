@@ -5,9 +5,12 @@
 //! bad ones failing as the default fails, at the same block, with the same bytes before it
 //! (a block CRC, a primary index, a truncation, and a move-to-front error on the block a
 //! leader prefetched while the one before was in flight); and a reader dropped mid-stream.
+//! Every test runs the registered prototype and each of its levers
+//! (`StreamDecoder::pipelined_levers`): park, small, and both.
 
 mod common;
 use common::*;
+use mibz2::parallel::Levers;
 use mibz2::{Error, ErrorKind, Kernels, StreamDecoder};
 use std::io::Read;
 
@@ -39,13 +42,49 @@ fn run(dec: &StreamDecoder, z: &[u8]) -> (Vec<u8>, Result<(), Error>) {
     (out, res)
 }
 
+/// The registered prototype (`StreamDecoder::pipelined`, no lever), then each lever alone
+/// and both together
+const LEVERS: [Levers; 4] = [
+    Levers {
+        park: false,
+        small: false,
+    },
+    Levers {
+        park: true,
+        small: false,
+    },
+    Levers {
+        park: false,
+        small: true,
+    },
+    Levers {
+        park: true,
+        small: true,
+    },
+];
+
 fn pipe(
     z: &[u8],
     teams: usize,
     k: usize,
     slots: usize,
 ) -> (Vec<u8>, Result<(), Error>, (u64, u64)) {
-    let dec = StreamDecoder::pipelined(teams, k, slots, Kernels::detect());
+    pipe_with(z, teams, k, slots, Levers::default())
+}
+
+/// A pipelined decoder with its levers (none: `StreamDecoder::pipelined` itself)
+fn pipe_with(
+    z: &[u8],
+    teams: usize,
+    k: usize,
+    slots: usize,
+    levers: Levers,
+) -> (Vec<u8>, Result<(), Error>, (u64, u64)) {
+    let dec = if levers == Levers::default() {
+        StreamDecoder::pipelined(teams, k, slots, Kernels::detect())
+    } else {
+        StreamDecoder::pipelined_levers(teams, k, slots, Kernels::detect(), levers)
+    };
     assert_eq!(dec.threads(), teams * k);
     let (out, res) = run(&dec, z);
     let counts = dec.pipeline_counts();
@@ -70,20 +109,23 @@ const PLANS: [(usize, usize, usize); 6] = [
 ];
 
 /// Byte for byte the default decoder's output and error (kind, block and bit), at every plan
+/// and with every lever setting
 fn same_as_default(z: &[u8], what: &str) -> (u64, u64) {
     let (want, want_res) = default(z);
     let mut counts = (0, 0);
-    for (teams, k, slots) in PLANS {
-        let (got, res, c) = pipe(z, teams, k, slots);
-        assert!(
-            got == want,
-            "{what}: {teams} teams of {k} in {slots}: the bytes"
-        );
-        assert_eq!(
-            res, want_res,
-            "{what}: {teams} teams of {k} in {slots}: the result"
-        );
-        counts = (counts.0 + c.0, counts.1 + c.1);
+    for levers in LEVERS {
+        for (teams, k, slots) in PLANS {
+            let (got, res, c) = pipe_with(z, teams, k, slots, levers);
+            assert!(
+                got == want,
+                "{what}: {teams} teams of {k} in {slots}, {levers:?}: the bytes"
+            );
+            assert_eq!(
+                res, want_res,
+                "{what}: {teams} teams of {k} in {slots}, {levers:?}: the result"
+            );
+            counts = (counts.0 + c.0, counts.1 + c.1);
+        }
     }
     counts
 }
@@ -143,6 +185,49 @@ fn small_blocks_among_large_and_streams() {
     let (got, res, _) = pipe(&z, 1, 4, 4);
     res.unwrap();
     assert!(got == want);
+}
+
+/// Lever B's mechanism: full blocks and small ones alternating, one team. As registered, a
+/// small block taken in a run leaves the next run nothing staged, so the job after it is
+/// taken with the pipeline drained; with lever B the leader takes it in the run too. So the
+/// jobs taken overlapped (`pipeline_counts`) rise, whenever the scanner is ahead (nearly
+/// always: it is tried until it is), and the bytes are the same either way.
+#[test]
+fn small_blocks_keep_the_pipeline_primed() {
+    let n = 300_000;
+    let mut specs = Vec::new();
+    for i in 0..6u64 {
+        specs.push(Spec::of(column(n, 40 + i), 1_234));
+        specs.push(Spec::of(column(2_000, 50 + i), 99));
+    }
+    specs.push(Spec::of(column(n, 60), 1_234));
+    let z = craft(9, &specs, None);
+    let (want, want_res) = default(&z);
+    want_res.unwrap();
+    assert!(oracle(&z).unwrap() == want);
+    same_as_default(&z, "alternating");
+    let mut raised = false;
+    for _ in 0..20 {
+        for k in [2, 3] {
+            let (got, res, (plain, _)) = pipe(&z, 1, k, 16);
+            res.unwrap();
+            assert!(got == want);
+            for park in [false, true] {
+                let levers = Levers { park, small: true };
+                let (got, res, (primed, _)) = pipe_with(&z, 1, k, 16, levers);
+                res.unwrap();
+                assert!(got == want, "k {k}, {levers:?}");
+                raised |= primed > plain;
+            }
+        }
+        if raised {
+            break;
+        }
+    }
+    assert!(
+        raised,
+        "lever B never took more jobs overlapped than the prototype"
+    );
 }
 
 #[test]
@@ -269,6 +354,47 @@ fn an_mtf_error_on_the_prefetched_block() {
     );
 }
 
+/// A block whose move-to-front fails right after a small block, after a full one: with one
+/// team and lever B, the leader stages it in the run that decoded the small block; every
+/// lever setting gives the default's bytes and error
+#[test]
+fn an_mtf_error_after_a_small_block() {
+    let n = 400_000;
+    let good = |seed| Spec::of(column(n, seed), 777);
+    let small = Spec::of(column(1_500, 9), 42);
+    let mut bad = Spec::of(vec![b'a'; 10], 0);
+    bad.in_use = Some(vec![b'a']);
+    bad.syms = Some([vec![0u16; 22], vec![2]].concat());
+    bad.crc = Some(0);
+    let z = craft(9, &[good(5), small, bad, good(7)], Some(0));
+    let (want, want_res) = default(&z);
+    let e = want_res.clone().unwrap_err();
+    assert_eq!((e.kind.clone(), e.block), (ErrorKind::RunTooLong, Some(2)));
+    let mut expect = reference(&column(n, 5), 777).unwrap();
+    expect.extend(reference(&column(1_500, 9), 42).unwrap());
+    assert!(want == expect);
+    same_as_default(&z, "an MTF error after a small block");
+    let mut overlapped_errors = 0;
+    for _ in 0..20 {
+        for k in [2, 3, 4] {
+            for park in [false, true] {
+                let levers = Levers { park, small: true };
+                let (got, res, (_, errs)) = pipe_with(&z, 1, k, 8, levers);
+                assert!(got == want, "k {k}, {levers:?}: the bytes before the error");
+                assert_eq!(res, want_res, "k {k}, {levers:?}");
+                overlapped_errors += errs;
+            }
+        }
+        if overlapped_errors > 0 {
+            break;
+        }
+    }
+    assert!(
+        overlapped_errors > 0,
+        "the failing block was never staged overlapped after the small one"
+    );
+}
+
 /// The reader dropped mid-stream, on every plan: nothing hangs (a watchdog fails the test
 /// if a drop takes a minute)
 #[test]
@@ -276,29 +402,43 @@ fn dropped_mid_stream() {
     let corp = corpora(1);
     let data = corp[0].1.clone();
     let z = compress(&data, 9);
-    for (teams, k, slots) in PLANS {
-        let z = z.clone();
-        let data = data.clone();
-        let (tx, rx) = std::sync::mpsc::channel();
-        std::thread::spawn(move || {
-            let mut r = mibz2::BzReader::parallel_pipelined(
-                std::io::Cursor::new(z),
-                teams,
-                k,
-                slots,
-                Kernels::detect(),
-            );
-            let mut buf = vec![0u8; 1_500_000];
-            r.read_exact(&mut buf).unwrap();
-            assert!(buf == data[..buf.len()]);
-            drop(r);
-            tx.send(()).unwrap();
-        });
-        rx.recv_timeout(std::time::Duration::from_secs(60))
-            .unwrap_or_else(|_| panic!("{teams} teams of {k}: the drop hung"));
+    for levers in LEVERS {
+        for (teams, k, slots) in PLANS {
+            let z = z.clone();
+            let data = data.clone();
+            let (tx, rx) = std::sync::mpsc::channel();
+            std::thread::spawn(move || {
+                let r = std::io::Cursor::new(z);
+                let mut r = if levers == Levers::default() {
+                    mibz2::BzReader::parallel_pipelined(r, teams, k, slots, Kernels::detect())
+                } else {
+                    mibz2::BzReader::parallel_pipelined_levers(
+                        r,
+                        teams,
+                        k,
+                        slots,
+                        Kernels::detect(),
+                        levers,
+                    )
+                };
+                let mut buf = vec![0u8; 1_500_000];
+                r.read_exact(&mut buf).unwrap();
+                assert!(buf == data[..buf.len()]);
+                drop(r);
+                tx.send(()).unwrap();
+            });
+            rx.recv_timeout(std::time::Duration::from_secs(60))
+                .unwrap_or_else(|_| panic!("{teams} teams of {k}, {levers:?}: the drop hung"));
+        }
     }
     // and the push form, cancelled by its reader while its writer writes
-    let dec = StreamDecoder::pipelined(1, 3, 3, Kernels::detect());
+    for levers in LEVERS {
+        cancelled_while_writing(&z, levers);
+    }
+}
+
+fn cancelled_while_writing(z: &[u8], levers: Levers) {
+    let dec = StreamDecoder::pipelined_levers(1, 3, 3, Kernels::detect(), levers);
     std::thread::scope(|s| {
         let w = s.spawn(|| {
             for c in z.chunks(1000) {

@@ -3,7 +3,7 @@
 //! pinned Wikidata corpus); CI runs the same recipe.
 //!
 //! ```text
-//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K] [--gap SECONDS] [--out PATH] [--meta K=V]...
+//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|small|both]] [--gap SECONDS] [--out PATH] [--meta K=V]...
 //! occupancy FILE.bz2 --ledger [--threads 1,2,4,10] [--slots N]
 //! ```
 //!
@@ -29,6 +29,9 @@
 //! (a pipelined team has no `DecodeStart`/`DecodeEnd` span); the rest of the summary (the
 //! workers' states, the ledger) reads the leader as a team's caller and the plan as teams
 //! of K, so its figures are a team plan's approximation, not the pipeline's own account.
+//! `--levers park|small|both` (with `--pipe`) runs the pipelined teams with those levers
+//! (`BzReader::parallel_pipelined_levers`, `parallel::Levers`), as ab's
+//! `mibz2-pipeK-LEVER` arms do.
 //!
 //! **Placements** (`--placements packed/spread`, or CPU lists): each an arm of its own in
 //! every round, the whole process pinned to its CPUs (the scanner, feeder and reader with
@@ -119,8 +122,15 @@ fn child(a: &[String]) {
     let level: u8 = a[3].parse().unwrap();
     // the plan the decoder runs: the policy's, or teams of K (`--teams`)
     let pipe = a.get(4).is_some_and(|k| k.starts_with('p'));
-    let teams_of: Option<usize> = a
+    // ("p3", or "p3-park" and the like: `--levers`)
+    let (team_arg, lever) = a
         .get(4)
+        .map_or(("auto", ""), |k| k.split_once('-').unwrap_or((k, "")));
+    let levers = mibz2::parallel::Levers {
+        park: lever == "park" || lever == "both",
+        small: lever == "small" || lever == "both",
+    };
+    let teams_of: Option<usize> = Some(team_arg)
         .filter(|k| *k != "auto")
         .map(|k| k.trim_start_matches('p').parse().unwrap());
     let plan = match teams_of {
@@ -139,7 +149,14 @@ fn child(a: &[String]) {
             let reader = match plan {
                 Plan::Teams { teams, k } if pipe => {
                     let window = (slots * teams / threads).max(teams);
-                    BzReader::parallel_pipelined(f, teams, k, window, Kernels::detect())
+                    BzReader::parallel_pipelined_levers(
+                        f,
+                        teams,
+                        k,
+                        window,
+                        Kernels::detect(),
+                        levers,
+                    )
                 }
                 Plan::Teams { teams, .. } if teams_of.is_some() => {
                     let window = (slots * teams / threads).max(teams);
@@ -180,7 +197,8 @@ fn child(a: &[String]) {
     let err = res.err().unwrap_or_default();
     let plan = match plan {
         Plan::Workers(n) => format!("workers{n}"),
-        Plan::Teams { teams, k } if pipe => format!("pipe{teams}x{k}"),
+        Plan::Teams { teams, k } if pipe && lever.is_empty() => format!("pipe{teams}x{k}"),
+        Plan::Teams { teams, k } if pipe => format!("pipe{teams}x{k}-{lever}"),
         Plan::Teams { teams, k } => format!("teams{teams}x{k}"),
     };
     let mut line = format!(
@@ -974,6 +992,7 @@ fn parent(args: &[String]) {
     let mut placements: Option<Vec<String>> = None;
     let mut teams: Option<usize> = None;
     let mut pipe = false;
+    let mut lever: Option<String> = None;
     let mut meta: Vec<(String, String)> = Vec::new();
     let mut ledger_only = false;
     let mut it = args.iter();
@@ -1036,15 +1055,24 @@ fn parent(args: &[String]) {
                 teams = Some(k);
                 pipe = true;
             }
+            "--levers" => {
+                let l = it.next().expect("--levers park|small|both");
+                assert!(
+                    ["park", "small", "both"].contains(&l.as_str()),
+                    "--levers takes park, small or both"
+                );
+                lever = Some(l.clone());
+            }
             "--ledger" => ledger_only = true,
             "-h" | "--help" => {
-                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
+                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K [--levers park|small|both]] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
                 return;
             }
             f => file = Some(f.to_string()),
         }
     }
     let file = file.expect("occupancy FILE.bz2 [...]");
+    assert!(lever.is_none() || pipe, "--levers needs --pipe K");
     let m = machine();
     let threads = threads.unwrap_or_else(|| {
         let mut v: Vec<usize> = std::iter::successors(Some(1usize), |t| Some(t * 2))
@@ -1139,7 +1167,8 @@ fn parent(args: &[String]) {
                         &s.to_string(),
                         &level.to_string(),
                         &teams.map_or("auto".to_string(), |k| {
-                            format!("{}{k}", if pipe { "p" } else { "" })
+                            let lever = lever.as_ref().map_or(String::new(), |l| format!("-{l}"));
+                            format!("{}{k}{lever}", if pipe { "p" } else { "" })
                         }),
                     ]);
                     let o = cmd.output().expect("run a child");
@@ -1444,7 +1473,7 @@ fn parent(args: &[String]) {
                 ("rounds".into(), J::N(rounds as f64)),
                 ("gap_seconds".into(), J::N(gap)),
                 ("slots".into(), slots.map_or(J::S("2 x threads (BzReader::parallel's)".into()), |s| J::N(s as f64))),
-                ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(format!("{} of {k}, forced", if pipe { "pipelined teams" } else { "teams" })))),
+                ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(format!("{} of {k}, forced{}", if pipe { "pipelined teams" } else { "teams" }, lever.as_ref().map_or(String::new(), |l| format!(", levers: {l}")))))),
                 (
                     "workload".into(),
                     J::S("BzReader::parallel_with(File, t, slots, Kernels::detect()), drained in 4 MiB reads into a streaming hash: examples/ab.rs's mibz2 arm".into()),

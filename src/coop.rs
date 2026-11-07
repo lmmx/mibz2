@@ -831,7 +831,7 @@ macro_rules! tmark {
 /// Spins before a pipelined team's thread yields while it waits for the build to end
 const BARRIER_SPINS: u32 = if cfg!(miri) { 4 } else { 1 << 12 };
 
-/// Wait, spinning then yielding, until `f` holds
+/// Wait, spinning then yielding, until `f` holds (the registered pipelined team's wait)
 fn wait_until(f: impl Fn() -> bool) {
     let mut spins = 0u32;
     while !f() {
@@ -869,6 +869,9 @@ struct Relay<'a> {
     built: AtomicUsize,
     /// set (release) once the stage is the walk or over: the build's last helper made it so
     walk_ready: std::sync::atomic::AtomicBool,
+    /// lever A's waiters (`PARK`): the threads parked, or about to park, until `walk_ready`
+    /// is set; whoever sets it unparks them. Always empty without `PARK`
+    sleepers: Mutex<Vec<Thread>>,
     /// the threads in the walk, plus the helpers not yet in it; whoever leaves it at 0
     /// ends the walk. Once 0 it stays 0: a thread joins only while it is above 0
     walkers: AtomicUsize,
@@ -884,6 +887,46 @@ struct Relay<'a> {
 unsafe impl Sync for Relay<'_> {}
 
 impl Relay<'_> {
+    /// Wait until the build has ended (`walk_ready`). Without `PARK`, the registered wait:
+    /// `BARRIER_SPINS` spins, then `yield_now` in a loop. With `PARK` (lever A), the pool's
+    /// own wait: `SPINS` spins, then this thread is listed in `sleepers` and parks until
+    /// `set_walk_ready` unparks it.
+    ///
+    /// No wake-up is lost: the waiter lists itself under the lock, then loads the flag;
+    /// the setter stores the flag (release), then takes the lock and unparks everyone
+    /// listed. If the waiter's lock came first, the setter finds it listed and unparks it
+    /// (an unpark before the park makes the park return at once); if the setter's came
+    /// first, its store happened before the waiter's lock, so the waiter's load sees the
+    /// flag and it never parks. A spurious wake-up, or a token left from an earlier
+    /// unpark, only makes it check the flag again.
+    fn wait_walk_ready<const PARK: bool>(&self) {
+        let ready = || self.walk_ready.load(Ordering::Acquire);
+        if !PARK {
+            return wait_until(ready);
+        }
+        for _ in 0..SPINS {
+            if ready() {
+                return;
+            }
+            std::hint::spin_loop();
+        }
+        lock(&self.sleepers).push(thread::current());
+        while !ready() {
+            thread::park();
+        }
+    }
+
+    /// The build's end published to the walk's threads (`wait_walk_ready`): with `PARK`,
+    /// every thread listed as waiting is unparked
+    fn set_walk_ready<const PARK: bool>(&self) {
+        self.walk_ready.store(true, Ordering::Release);
+        if PARK {
+            for t in lock(&self.sleepers).drain(..) {
+                t.unpark();
+            }
+        }
+    }
+
     fn caught(&self, r: std::thread::Result<()>) {
         if let Err(p) = r {
             self.failed.store(true, Ordering::Relaxed);
@@ -965,9 +1008,9 @@ impl Relay<'_> {
     }
 
     /// The leader's join, once its own work is done: into the walk if it has not ended
-    fn join<const L: usize>(&self) {
+    fn join<const L: usize, const PARK: bool>(&self) {
         tmark!(BuildWaitStart, self.place);
-        wait_until(|| self.walk_ready.load(Ordering::Acquire));
+        self.wait_walk_ready::<PARK>();
         tmark!(BuildWaitEnd, self.place);
         let mut v = self.walkers.load(Ordering::Acquire);
         loop {
@@ -1004,8 +1047,42 @@ impl Relay<'_> {
 /// ends it). The first is returned as an Err; then `out` holds nothing to trust, and the
 /// table and scratch are to be reset. A panic in `lead` is resumed (`Pool::run`) once the
 /// helpers have ended.
+// (the tests' name for the registered waits; the decoder calls `invert_pipelined_with`)
+#[cfg(test)]
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn invert_pipelined<const L: usize>(
+    pool: &Pool,
+    ll: &[u8],
+    counts: &[u32; 256],
+    checkpoints: &[[u32; 256]],
+    stride: usize,
+    orig_ptr: u32,
+    tt: &mut TVector,
+    seg: &mut SegScratch,
+    out: &mut Vec<u8>,
+    lead: &(dyn Fn() + Sync),
+    place: u64,
+) -> Result<(), Box<dyn Any + Send>> {
+    invert_pipelined_with::<L, false>(
+        pool,
+        ll,
+        counts,
+        checkpoints,
+        stride,
+        orig_ptr,
+        tt,
+        seg,
+        out,
+        lead,
+        place,
+    )
+}
+
+/// `invert_pipelined`, its waits for the build's end chosen: the registered spin and yield
+/// (`PARK` false, `invert_pipelined` itself), or lever A's spin and park (`PARK` true:
+/// research, `parallel::Levers::park`). The same output, errors and panics either way.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn invert_pipelined_with<const L: usize, const PARK: bool>(
     pool: &Pool,
     ll: &[u8],
     counts: &[u32; 256],
@@ -1045,6 +1122,11 @@ pub(crate) fn invert_pipelined<const L: usize>(
         out: std::cell::UnsafeCell::new(out),
         built: AtomicUsize::new(0),
         walk_ready: AtomicBool::new(false),
+        sleepers: Mutex::new(if PARK {
+            Vec::with_capacity(pool.threads())
+        } else {
+            Vec::new()
+        }),
         walkers: AtomicUsize::new(helpers),
         failed: AtomicBool::new(false),
         panic: Mutex::new(None),
@@ -1062,10 +1144,10 @@ pub(crate) fn invert_pipelined<const L: usize>(
         if relay.built.fetch_add(1, Ordering::AcqRel) + 1 == helpers {
             // SAFETY: this is the last helper to count in: every share has ended
             unsafe { relay.end_build() };
-            relay.walk_ready.store(true, Ordering::Release);
+            relay.set_walk_ready::<PARK>();
         } else {
             tmark!(BuildWaitStart, place);
-            wait_until(|| relay.walk_ready.load(Ordering::Acquire));
+            relay.wait_walk_ready::<PARK>();
             tmark!(BuildWaitEnd, place);
         }
         relay.walk_and_leave::<L>();
@@ -1078,7 +1160,7 @@ pub(crate) fn invert_pipelined<const L: usize>(
         pool.run(&|j| {
             if j == 0 {
                 lead();
-                relay.join::<L>();
+                relay.join::<L, PARK>();
             } else {
                 helper(j - 1);
             }
@@ -1598,35 +1680,73 @@ mod tests {
                 out == want,
                 "{what}: shares {s}, orig_ptr {op}: the split walk"
             );
-            // the pipelined run: s helpers, and the leader's work meanwhile
-            let p = Pool::new(s + 1).unwrap();
-            let mut pt = TVector::new();
-            let mut ps = SegScratch::default();
-            let mut out = vec![7; 3];
-            let led = AtomicUsize::new(0);
-            invert_pipelined::<8>(
-                &p,
-                ll,
-                &counts,
-                &cps,
-                stride,
-                op,
-                &mut pt,
-                &mut ps,
-                &mut out,
-                &|| {
-                    led.fetch_add(1, Ordering::Relaxed);
-                },
-                0,
-            )
-            .unwrap();
-            assert_eq!(led.load(Ordering::Relaxed), 1);
-            assert!(
-                out == want,
-                "{what}: {s} helpers, orig_ptr {op}: the pipelined run"
-            );
-            assert!(pt.0 == want_tt.0, "{what}: the pipelined run's table");
+            // the pipelined run: s helpers, and the leader's work meanwhile, its waits
+            // spinning and yielding (as registered) or parking (lever A)
+            for park in [false, true] {
+                let p = Pool::new(s + 1).unwrap();
+                let mut pt = TVector::new();
+                let mut ps = SegScratch::default();
+                let mut out = vec![7; 3];
+                let led = AtomicUsize::new(0);
+                pipelined::<8>(
+                    park,
+                    &p,
+                    ll,
+                    &counts,
+                    &cps,
+                    stride,
+                    op,
+                    &mut pt,
+                    &mut ps,
+                    &mut out,
+                    &|| {
+                        led.fetch_add(1, Ordering::Relaxed);
+                    },
+                )
+                .unwrap();
+                assert_eq!(led.load(Ordering::Relaxed), 1);
+                assert!(
+                    out == want,
+                    "{what}: {s} helpers, orig_ptr {op}, park {park}: the pipelined run"
+                );
+                assert!(pt.0 == want_tt.0, "{what}: the pipelined run's table");
+            }
         }
+    }
+
+    /// `invert_pipelined_with`, its waits parking (lever A) or not
+    #[allow(clippy::too_many_arguments)]
+    fn pipelined<const L: usize>(
+        park: bool,
+        pool: &Pool,
+        ll: &[u8],
+        counts: &[u32; 256],
+        checkpoints: &[[u32; 256]],
+        stride: usize,
+        orig_ptr: u32,
+        tt: &mut TVector,
+        seg: &mut SegScratch,
+        out: &mut Vec<u8>,
+        lead: &(dyn Fn() + Sync),
+    ) -> Result<(), Box<dyn Any + Send>> {
+        let f = if park {
+            invert_pipelined_with::<L, true>
+        } else {
+            invert_pipelined_with::<L, false>
+        };
+        f(
+            pool,
+            ll,
+            counts,
+            checkpoints,
+            stride,
+            orig_ptr,
+            tt,
+            seg,
+            out,
+            lead,
+            0,
+        )
     }
 
     #[test]
@@ -1676,7 +1796,7 @@ mod tests {
         crate::bwt::walk(&tt, 77, &mut want);
         for k in [2, 3, 4] {
             let p = Pool::new(k).unwrap();
-            for late in [false, true] {
+            for (late, park) in [(false, false), (true, false), (false, true), (true, true)] {
                 let (mut tt, mut seg, mut out) =
                     (TVector::new(), SegScratch::default(), Vec::new());
                 let lead = || {
@@ -1684,11 +1804,11 @@ mod tests {
                         thread::sleep(std::time::Duration::from_millis(30));
                     }
                 };
-                invert_pipelined::<32>(
-                    &p, &ll, &counts, &cps, CP, 77, &mut tt, &mut seg, &mut out, &lead, 0,
+                pipelined::<32>(
+                    park, &p, &ll, &counts, &cps, CP, 77, &mut tt, &mut seg, &mut out, &lead,
                 )
                 .unwrap();
-                assert!(out == want, "k {k}, late {late}");
+                assert!(out == want, "k {k}, late {late}, park {park}");
             }
         }
     }
@@ -1743,6 +1863,52 @@ mod tests {
     }
 
     const CP: usize = crate::mtf::CHECKPOINT;
+
+    /// Lever A's wait alone, its race between a waiter listing itself and the setter's
+    /// unpark: many waiters, the flag set after a spin, a yield or a sleep, so some find it
+    /// set before they list themselves, some after, and some park first (no wake-up lost:
+    /// a lost wake-up would hang the test)
+    #[test]
+    fn miri_parked_wait_loses_no_wakeup() {
+        let rounds = if cfg!(miri) { 6 } else { 300 };
+        for i in 0..rounds {
+            let mut tt = TVector::new();
+            let mut seg = SegScratch::default();
+            let mut out = Vec::new();
+            let relay = Relay {
+                stage: std::cell::UnsafeCell::new(Stage::Build(Err(&mut tt), &mut seg)),
+                ll: &[],
+                counts: &[0; 256],
+                orig_ptr: 0,
+                segments: 1,
+                out: std::cell::UnsafeCell::new(&mut out),
+                place: 0,
+                built: AtomicUsize::new(0),
+                walk_ready: AtomicBool::new(false),
+                sleepers: Mutex::new(Vec::new()),
+                walkers: AtomicUsize::new(0),
+                failed: AtomicBool::new(false),
+                panic: Mutex::new(None),
+            };
+            let woke = AtomicUsize::new(0);
+            thread::scope(|sc| {
+                for _ in 0..3 {
+                    sc.spawn(|| {
+                        relay.wait_walk_ready::<true>();
+                        woke.fetch_add(1, Ordering::Relaxed);
+                    });
+                }
+                match i % 3 {
+                    0 => {}
+                    1 => thread::yield_now(),
+                    _ => thread::sleep(std::time::Duration::from_micros(200)),
+                }
+                relay.set_walk_ready::<true>();
+            });
+            assert_eq!(woke.load(Ordering::Relaxed), 3);
+            assert!(lock(&relay.sleepers).is_empty());
+        }
+    }
 
     /// Pools kept by several threads at once, as the decoder's workers would keep them
     #[test]

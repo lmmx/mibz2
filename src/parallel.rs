@@ -163,8 +163,38 @@ impl StreamDecoder {
     pub fn pipelined(teams: usize, k: usize, slots: usize, kernels: Kernels) -> StreamDecoder {
         let (teams, team_k) = (teams.max(1), k.max(2));
         let mut dec = Self::launch(teams, slots, move |shared, jobs| {
-            pipelined_worker(shared, jobs, kernels, team_k)
+            pipelined_worker::<false, false>(shared, jobs, kernels, team_k)
         });
+        dec.threads = teams * team_k;
+        dec
+    }
+
+    /// Research, opt-in, not the default: `pipelined` with its levers (`Levers`), each
+    /// separately. With no lever set, it is `pipelined` exactly (the registered prototype).
+    /// Byte for byte the default decoder's output and errors, whatever the levers.
+    #[doc(hidden)]
+    pub fn pipelined_levers(
+        teams: usize,
+        k: usize,
+        slots: usize,
+        kernels: Kernels,
+        levers: Levers,
+    ) -> StreamDecoder {
+        let (teams, team_k) = (teams.max(1), k.max(2));
+        let mut dec = match (levers.park, levers.small) {
+            (false, false) => Self::launch(teams, slots, move |shared, jobs| {
+                pipelined_worker::<false, false>(shared, jobs, kernels, team_k)
+            }),
+            (true, false) => Self::launch(teams, slots, move |shared, jobs| {
+                pipelined_worker::<true, false>(shared, jobs, kernels, team_k)
+            }),
+            (false, true) => Self::launch(teams, slots, move |shared, jobs| {
+                pipelined_worker::<false, true>(shared, jobs, kernels, team_k)
+            }),
+            (true, true) => Self::launch(teams, slots, move |shared, jobs| {
+                pipelined_worker::<true, true>(shared, jobs, kernels, team_k)
+            }),
+        };
         dec.threads = teams * team_k;
         dec
     }
@@ -540,6 +570,25 @@ fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
 // waited for (`recv`) only with the pipeline empty, so a block the reader needs can never
 // sit behind a team waiting for the scanner, which may be waiting for the reader's slot.
 
+/// The pipelined team's levers (research, opt-in: `StreamDecoder::pipelined_levers`),
+/// each off unless set, so that each can be measured alone and together
+/// (docs/journal/2026-11-07-pipeline-levers-registration.md). Neither changes any output
+/// or error.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Levers {
+    /// Lever A: a thread waiting for the build's end (a helper at the helpers' barrier,
+    /// the leader waiting to join the walk) spins as the pool's own waits do, then parks
+    /// until the build's last helper unparks it, rather than spinning and then yielding
+    /// in a loop (`coop::invert_pipelined_with`'s `PARK`)
+    pub park: bool,
+    /// Lever B: after the leader decodes a block below `MIN_COOP` inside a run, it takes
+    /// the next queued job too (never waiting for one), and so on until it stages a block
+    /// for the team or finds none queued, so a small block no longer leaves the next run
+    /// with nothing staged (`pipelined_worker`'s `SMALL`)
+    pub small: bool,
+}
+
 /// A block's move-to-front stage's buffers (`Scratch`'s first three)
 struct Front {
     ll: Vec<u8>,
@@ -800,7 +849,14 @@ fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> 
     }
 }
 
-fn pipelined_worker(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels, team_k: usize) {
+/// A pipelined team's worker: its leader's loop. `PARK` and `SMALL` are `Levers`' park and
+/// small; both false, it is the registered prototype's
+fn pipelined_worker<const PARK: bool, const SMALL: bool>(
+    shared: &Shared,
+    jobs: &Mutex<Receiver<Job>>,
+    k: Kernels,
+    team_k: usize,
+) {
     use super::bwt::FLAGGED_LANES;
     let mut t = Team::default();
     let mut staged: Option<Staged> = None;
@@ -884,7 +940,11 @@ fn pipelined_worker(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels, te
             if let Some(b) = l.inverted.take() {
                 l.rle_panicked = finish_and_publish(shared, b, lb, k);
             }
-            if let Some(job) = try_job(jobs) {
+            // (one job, as registered; with `SMALL`, another after each block below
+            // `MIN_COOP`, until one is staged for the team or none is queued: `try_job`
+            // never waits, so the leader never holds the run waiting for the scanner)
+            let mut next_job = try_job(jobs);
+            while let Some(job) = next_job.take() {
                 mark!(JobGot, job.0);
                 shared.overlapped.fetch_add(1, Ordering::Relaxed);
                 if shared.lock().cancelled {
@@ -900,6 +960,10 @@ fn pipelined_worker(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels, te
                             **f = Front::default();
                             **sc = Solo::default();
                         }
+                        // (lever B: its front set is free again, published and done with)
+                        if SMALL {
+                            next_job = try_job(jobs);
+                        }
                     }
                     Staging::Failed => {
                         shared.overlap_errors.fetch_add(1, Ordering::Relaxed);
@@ -911,7 +975,7 @@ fn pipelined_worker(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels, te
         // its `decode_block`, which a pipelined team never runs)
         mark!(RunStart, s.place);
         let r = catch_unwind(AssertUnwindSafe(|| {
-            super::coop::invert_pipelined::<FLAGGED_LANES>(
+            super::coop::invert_pipelined_with::<FLAGGED_LANES, PARK>(
                 pool,
                 &hf.ll,
                 &hf.counts,

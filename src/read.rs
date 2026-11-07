@@ -118,6 +118,23 @@ impl<R: Read + Send + 'static> BzReader<R> {
         Self::on(r, StreamDecoder::pipelined(teams, k, slots, kernels))
     }
 
+    /// Research, opt-in: `parallel_pipelined` with its levers
+    /// (`StreamDecoder::pipelined_levers`)
+    #[doc(hidden)]
+    pub fn parallel_pipelined_levers(
+        r: R,
+        teams: usize,
+        k: usize,
+        slots: usize,
+        kernels: Kernels,
+        levers: crate::parallel::Levers,
+    ) -> Self {
+        Self::on(
+            r,
+            StreamDecoder::pipelined_levers(teams, k, slots, kernels, levers),
+        )
+    }
+
     fn on(mut r: R, dec: StreamDecoder) -> Self {
         let dec = Arc::new(dec);
         let read_error = Arc::new(Mutex::new(None));
