@@ -44,6 +44,11 @@
 //!   window, `parallel::SLOTS_PER_THREAD` blocks a team) and
 //!   `mibz2-auto` (the cooperative policy's plan for THREADS, `Plan::for_threads`: today's
 //!   workers below 6 physical cores, else teams of 2 capped by the L3);
+//! - `mibz2-general` (research, opt-in: the general plan policy's plan and mode for THREADS
+//!   on this machine, `parallel::general::plan_general`: rule A outside its evidence
+//!   envelope, docs/journal/2026-11-07-general-plan-policy.md), in the default's window,
+//!   `parallel::SLOTS_PER_THREAD` blocks a team or worker, so it differs from `mibz2` in its
+//!   plan and mode alone;
 //! - `mibz2-pipe2`, `-pipe3`, `-pipe4` (research: the pipelined team,
 //!   `BzReader::parallel_pipelined`, its leader's RLE1, CRC and next move-to-front overlapped
 //!   with its helpers' build and walk: THREADS / K teams of K in the teamK arms' window);
@@ -556,6 +561,35 @@ fn decode(
                 h,
                 last,
             )
+        }
+        // the general plan policy (research, opt-in: `parallel::general`): rule A's plan and
+        // mode for THREADS on this machine, in the default's window (`StreamDecoder::new`'s
+        // for SLOTS_PER_THREAD a thread: SLOTS_PER_THREAD a team or worker)
+        "mibz2-general" => {
+            use mibz2::parallel::general::{plan_general, Mode, Topology};
+            use mibz2::parallel::Plan;
+            let (plan, mode) = plan_general(&Topology::detect(), threads);
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * plan.workers();
+            let k = mibz2::Kernels::detect();
+            match (plan, mode) {
+                (Plan::Teams { teams, k: team_k }, Mode::Pipelined(levers)) => drain(
+                    mibz2::BzReader::parallel_pipelined_levers(
+                        open()?,
+                        teams,
+                        team_k,
+                        slots,
+                        k,
+                        levers,
+                    ),
+                    h,
+                    last,
+                ),
+                _ => drain(
+                    mibz2::BzReader::parallel_planned(open()?, plan, slots, k),
+                    h,
+                    last,
+                ),
+            }
         }
         // the pipelined team (research, `StreamDecoder::pipelined`): THREADS cores as
         // THREADS / K teams of K, as the teamK arms, and their window (SLOTS_PER_THREAD a
