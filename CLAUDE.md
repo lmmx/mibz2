@@ -53,6 +53,12 @@ Every `just` recipe the maintainer runs on their own machine and sends results b
   rerun. The coordinator reads the bundle from the `evidence` branch at the commit the post
   names, and checks its SHA-256.
 
+**Unattended:** `just submit-when-ready <recipe> <branch>` waits on the workstation for a
+`ready/<recipe>` tag on origin. It runs `just submit <recipe>` once at exactly the tagged commit,
+then suspends; `hold/<recipe>` stops it. The coordinator sets the tag only once the recipe is
+frozen, reviewed and green, through the dispatch-only workflow `.github/workflows/run-signal.yml`
+(`signal`: ready, hold or clear), since this session's git proxy refuses tag pushes.
+
 `bench-team-size` and `bench-release-scaling` follow it; give any older recipe the same
 shape when it is next used.
 

@@ -2,7 +2,8 @@
 # Wait for the coordinator to mark a frozen recipe ready, run it once with `just submit`,
 # then suspend the machine.
 #
-#   bash bench/await-submit.sh <recipe> <branch> [--no-suspend] [--hours N]
+#   just submit-when-ready <recipe> <branch> [--no-suspend] [--hours N]
+#   (or: bash bench/await-submit.sh <recipe> <branch> ...)
 #
 # The signal is a tag on origin. The coordinator pushes it only once the recipe is frozen,
 # reviewed and green:
