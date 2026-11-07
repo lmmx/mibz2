@@ -70,6 +70,43 @@ pub enum Kind {
     /// the scanner: its window once a chunk is appended (`len`: the bytes not yet
     /// released, which it will still read; `cap`: the window's capacity)
     Window,
+    /// The pipelined team (`StreamDecoder::pipelined`, research), each with its block's
+    /// place, on the thread doing the work; none is used on any other decoder's path, so
+    /// the kinds above keep their meaning.
+    /// - the leader: a block's move-to-front (with its primary index's check) start and end;
+    MtfStart,
+    MtfEnd,
+    /// - the leader: the fused build's checks and the table's reserve, before the run;
+    BuildSetupStart,
+    BuildSetupEnd,
+    /// - a helper: its part of the run, from its call's start to its end;
+    HelperStart,
+    HelperEnd,
+    /// - a helper: its share of the fused build;
+    BuildStart,
+    BuildEnd,
+    /// - a helper (or the leader, joining): waiting for the build's end (`walk_ready`);
+    BuildWaitStart,
+    BuildWaitEnd,
+    /// - the last helper of the build: its end check and the walk's set-up
+    ///   (`RoomWalk::new`);
+    WalkSetupStart,
+    WalkSetupEnd,
+    /// - a helper, or the leader joining: its lanes of the walk;
+    WalkStart,
+    WalkEnd,
+    /// - the last thread to leave the walk: the starts unflagged and the segments joined;
+    AssembleStart,
+    AssembleEnd,
+    /// - the leader: RLE1 undone and the CRC checked, from the assembled block (its
+    ///   publish is `Ready`, as a worker's). The `len` of `RleEnd` is the decoded bytes.
+    RleStart,
+    RleEnd,
+    /// - the leader: the block's inversion, the whole run (`coop::invert_pipelined`) from
+    ///   before its helpers start to after they have all ended, or, for a block below
+    ///   `MIN_COOP` (or with no team), the one-core build and walk on the leader alone.
+    RunStart,
+    RunEnd,
 }
 
 /// No block: the place of a mark that has none

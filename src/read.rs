@@ -105,6 +105,19 @@ impl<R: Read + Send + 'static> BzReader<R> {
         Self::on(r, StreamDecoder::planned(plan, slots, kernels))
     }
 
+    /// Research, opt-in: `teams` pipelined teams of `k` (`StreamDecoder::pipelined`),
+    /// with `slots` blocks in flight and the kernels given
+    #[doc(hidden)]
+    pub fn parallel_pipelined(
+        r: R,
+        teams: usize,
+        k: usize,
+        slots: usize,
+        kernels: Kernels,
+    ) -> Self {
+        Self::on(r, StreamDecoder::pipelined(teams, k, slots, kernels))
+    }
+
     fn on(mut r: R, dec: StreamDecoder) -> Self {
         let dec = Arc::new(dec);
         let read_error = Arc::new(Mutex::new(None));

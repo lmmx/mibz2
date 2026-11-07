@@ -44,6 +44,9 @@
 //!   window, `parallel::SLOTS_PER_THREAD` blocks a team) and
 //!   `mibz2-auto` (the cooperative policy's plan for THREADS, `Plan::for_threads`: today's
 //!   workers below 6 physical cores, else teams of 2 capped by the L3);
+//! - `mibz2-pipe2`, `-pipe3`, `-pipe4` (research: the pipelined team,
+//!   `BzReader::parallel_pipelined`, its leader's RLE1, CRC and next move-to-front overlapped
+//!   with its helpers' build and walk: THREADS / K teams of K in the teamK arms' window);
 //! - `pbz2` (pbz2 0.2.0, a dev-dependency only: `DecoderReader`, or
 //!   `ParallelDecoder::with_threads`);
 //! - `libbzip2` (libbzip2 1.0.8, C, the bzip2 crate's bundled source: `MultiBzDecoder`),
@@ -544,6 +547,25 @@ fn decode(
             };
             drain(
                 mibz2::BzReader::parallel_planned(open()?, plan, slots, mibz2::Kernels::detect()),
+                h,
+                last,
+            )
+        }
+        // the pipelined team (research, `StreamDecoder::pipelined`): THREADS cores as
+        // THREADS / K teams of K, as the teamK arms, and their window (SLOTS_PER_THREAD a
+        // team), so a pipeK arm differs from its teamK arm in the pipeline alone
+        "mibz2-pipe2" | "mibz2-pipe3" | "mibz2-pipe4" => {
+            let k = (arm.as_bytes()[arm.len() - 1] - b'0') as usize;
+            let teams = (threads / k).max(1);
+            let slots = mibz2::parallel::SLOTS_PER_THREAD * teams;
+            drain(
+                mibz2::BzReader::parallel_pipelined(
+                    open()?,
+                    teams,
+                    k,
+                    slots,
+                    mibz2::Kernels::detect(),
+                ),
                 h,
                 last,
             )

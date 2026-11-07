@@ -3,7 +3,7 @@
 //! pinned Wikidata corpus); CI runs the same recipe.
 //!
 //! ```text
-//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K] [--gap SECONDS] [--out PATH] [--meta K=V]...
+//! occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K] [--gap SECONDS] [--out PATH] [--meta K=V]...
 //! occupancy FILE.bz2 --ledger [--threads 1,2,4,10] [--slots N]
 //! ```
 //!
@@ -21,6 +21,14 @@
 //! traced as its worker; its helpers (`mibz2-coop-*`) record no marks, so a team's worker
 //! time is its caller's. A trace is complete when the plan's workers and the scanner have
 //! all ended, whatever the threads asked for.
+//!
+//! `--pipe K` (research) runs t / K pipelined teams of K instead
+//! (`BzReader::parallel_pipelined`, the window as `--teams`'s): each team's leader is traced
+//! as its worker, and its helpers record marks too (src/trace.rs's pipelined kinds, `Mtf*`
+//! to `Run*`), so their threads are waited for as well. A block's end is its `RleEnd` there
+//! (a pipelined team has no `DecodeStart`/`DecodeEnd` span); the rest of the summary (the
+//! workers' states, the ledger) reads the leader as a team's caller and the plan as teams
+//! of K, so its figures are a team plan's approximation, not the pipeline's own account.
 //!
 //! **Placements** (`--placements packed/spread`, or CPU lists): each an arm of its own in
 //! every round, the whole process pinned to its CPUs (the scanner, feeder and reader with
@@ -110,10 +118,11 @@ fn child(a: &[String]) {
     let slots: usize = a[2].parse().unwrap();
     let level: u8 = a[3].parse().unwrap();
     // the plan the decoder runs: the policy's, or teams of K (`--teams`)
+    let pipe = a.get(4).is_some_and(|k| k.starts_with('p'));
     let teams_of: Option<usize> = a
         .get(4)
         .filter(|k| *k != "auto")
-        .map(|k| k.parse().unwrap());
+        .map(|k| k.trim_start_matches('p').parse().unwrap());
     let plan = match teams_of {
         None => Plan::for_threads(threads),
         Some(k) => Plan::Teams {
@@ -128,6 +137,10 @@ fn child(a: &[String]) {
         .map_err(|e| e.to_string())
         .and_then(|f| {
             let reader = match plan {
+                Plan::Teams { teams, k } if pipe => {
+                    let window = (slots * teams / threads).max(teams);
+                    BzReader::parallel_pipelined(f, teams, k, window, Kernels::detect())
+                }
                 Plan::Teams { teams, .. } if teams_of.is_some() => {
                     let window = (slots * teams / threads).max(teams);
                     BzReader::parallel_planned(f, plan, window, Kernels::detect())
@@ -142,7 +155,8 @@ fn child(a: &[String]) {
         // (the decoder's threads end once it is dropped; its last reference can be the
         // feeder's, so wait for their marks rather than assume them: the plan's workers,
         // a team's caller each, and the scanner)
-        let want = plan.workers() + 1;
+        // (a pipelined team's helpers record marks too, and end before its leader)
+        let want = if pipe { plan.threads() } else { plan.workers() } + 1;
         let deadline = Instant::now() + Duration::from_secs(5);
         while trace::finished() < want && Instant::now() < deadline {
             std::thread::sleep(Duration::from_millis(1));
@@ -166,6 +180,7 @@ fn child(a: &[String]) {
     let err = res.err().unwrap_or_default();
     let plan = match plan {
         Plan::Workers(n) => format!("workers{n}"),
+        Plan::Teams { teams, k } if pipe => format!("pipe{teams}x{k}"),
         Plan::Teams { teams, k } => format!("teams{teams}x{k}"),
     };
     let mut line = format!(
@@ -245,6 +260,8 @@ fn summarise(
         "mibz2-scan" => Some(Role::Scanner),
         n if n.starts_with("mibz2-") && n[6..].parse::<usize>().is_ok() => Some(Role::Worker),
         "mibz2-read" => None,
+        // (a team's helpers: they record marks only in a pipelined team, `--pipe`)
+        n if n.starts_with("mibz2-coop-") => None,
         _ => Some(Role::Reader),
     };
     let roles: Vec<Option<Role>> = traces.iter().map(|t| role(&t.name)).collect();
@@ -294,6 +311,8 @@ fn summarise(
                     problem = format!("{}: an inverse BWT's end without its start", t.name)
                 }
                 Kind::InvertEnd => inverting = false,
+                // (a pipelined team's block ends in its RLE1 and CRC: `--pipe`)
+                Kind::RleEnd => ended.push(m.place),
                 Kind::Ready => published.push(m.place),
                 Kind::Taken => taken_set.push(m.place),
                 Kind::Issued => issued += 1,
@@ -852,6 +871,7 @@ fn parent(args: &[String]) {
     let mut gap = 0.0f64;
     let mut placements: Option<Vec<String>> = None;
     let mut teams: Option<usize> = None;
+    let mut pipe = false;
     let mut meta: Vec<(String, String)> = Vec::new();
     let mut ledger_only = false;
     let mut it = args.iter();
@@ -905,9 +925,18 @@ fn parent(args: &[String]) {
                 );
                 teams = Some(k);
             }
+            "--pipe" => {
+                let k: usize = it.next().expect("--pipe K").parse().expect("a team size");
+                assert!(
+                    (2..=4).contains(&k),
+                    "--pipe takes a team size of 2, 3 or 4"
+                );
+                teams = Some(k);
+                pipe = true;
+            }
             "--ledger" => ledger_only = true,
             "-h" | "--help" => {
-                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
+                println!("occupancy FILE.bz2 [--threads 1,2,4] [--rounds N] [--slots N] [--teams K | --pipe K] [--placements packed/spread] [--gap SECONDS] [--out PATH] [--meta K=V]... [--ledger]");
                 return;
             }
             f => file = Some(f.to_string()),
@@ -1007,7 +1036,9 @@ fn parent(args: &[String]) {
                         &t.to_string(),
                         &s.to_string(),
                         &level.to_string(),
-                        &teams.map_or("auto".to_string(), |k| k.to_string()),
+                        &teams.map_or("auto".to_string(), |k| {
+                            format!("{}{k}", if pipe { "p" } else { "" })
+                        }),
                     ]);
                     let o = cmd.output().expect("run a child");
                     let line = String::from_utf8_lossy(&o.stdout).trim().to_string();
@@ -1311,7 +1342,7 @@ fn parent(args: &[String]) {
                 ("rounds".into(), J::N(rounds as f64)),
                 ("gap_seconds".into(), J::N(gap)),
                 ("slots".into(), slots.map_or(J::S("2 x threads (BzReader::parallel's)".into()), |s| J::N(s as f64))),
-                ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(format!("teams of {k}, forced")))),
+                ("teams".into(), teams.map_or(J::S("the policy's plan (Plan::for_threads)".into()), |k| J::S(format!("{} of {k}, forced", if pipe { "pipelined teams" } else { "teams" })))),
                 (
                     "workload".into(),
                     J::S("BzReader::parallel_with(File, t, slots, Kernels::detect()), drained in 4 MiB reads into a streaming hash: examples/ab.rs's mibz2 arm".into()),

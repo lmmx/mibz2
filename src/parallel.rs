@@ -26,6 +26,7 @@ use super::stream::{Event, Scanner, Source};
 use super::{decode_block, Error, ErrorKind, Kernels, Scratch};
 use std::collections::BTreeMap;
 use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{channel, sync_channel, Receiver, SyncSender};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
@@ -76,6 +77,10 @@ struct Shared {
     state: Mutex<State>,
     cv: Condvar,
     slots: u64,
+    /// the pipelined teams' counts (`StreamDecoder::pipeline_counts`): jobs taken by a
+    /// leader while its helpers inverted another block, and those of them that failed
+    overlapped: AtomicU64,
+    overlap_errors: AtomicU64,
 }
 
 impl Shared {
@@ -144,6 +149,42 @@ impl StreamDecoder {
         slots: usize,
         k: Kernels,
     ) -> StreamDecoder {
+        Self::launch(threads, slots, move |shared, jobs| {
+            worker::<I>(shared, jobs, k)
+        })
+    }
+
+    /// Research, opt-in, not the default: `teams` pipelined teams of `k` threads (at least
+    /// 2), each overlapping its leader's serial stages (a block's RLE1 and CRC, the next
+    /// block's move-to-front) with its helpers' build and walk of the block between, on
+    /// one table a team, with `slots` blocks in flight (at least `teams`). Byte for byte
+    /// the default decoder's output and errors.
+    #[doc(hidden)]
+    pub fn pipelined(teams: usize, k: usize, slots: usize, kernels: Kernels) -> StreamDecoder {
+        let (teams, team_k) = (teams.max(1), k.max(2));
+        let mut dec = Self::launch(teams, slots, move |shared, jobs| {
+            pipelined_worker(shared, jobs, kernels, team_k)
+        });
+        dec.threads = teams * team_k;
+        dec
+    }
+
+    /// The pipelined teams' counts so far: jobs a leader took while its helpers inverted
+    /// another block, and those of them whose move-to-front failed (both 0 for the other
+    /// decoders). Research only.
+    #[doc(hidden)]
+    pub fn pipeline_counts(&self) -> (u64, u64) {
+        (
+            self.shared.overlapped.load(Ordering::Relaxed),
+            self.shared.overlap_errors.load(Ordering::Relaxed),
+        )
+    }
+
+    /// The scanner, and `threads` workers each running `work`
+    fn launch<W>(threads: usize, slots: usize, work: W) -> StreamDecoder
+    where
+        W: Fn(&Shared, &Mutex<Receiver<Job>>) + Clone + Send + 'static,
+    {
         let threads = threads.max(1);
         let slots = slots.max(threads) as u64;
         let shared = Arc::new(Shared {
@@ -158,17 +199,19 @@ impl StreamDecoder {
             }),
             cv: Condvar::new(),
             slots,
+            overlapped: AtomicU64::new(0),
+            overlap_errors: AtomicU64::new(0),
         });
         let (in_tx, in_rx) = sync_channel::<Vec<u8>>(INPUT_QUEUE);
         let (job_tx, job_rx) = channel::<Job>();
         let job_rx = Arc::new(Mutex::new(job_rx));
         let mut handles = Vec::with_capacity(threads + 1);
         for i in 0..threads {
-            let (shared, job_rx) = (shared.clone(), job_rx.clone());
+            let (shared, job_rx, work) = (shared.clone(), job_rx.clone(), work.clone());
             handles.push(
                 std::thread::Builder::new()
                     .name(format!("mibz2-{i}"))
-                    .spawn(move || worker::<I>(&shared, &job_rx, k))
+                    .spawn(move || work(&shared, &job_rx))
                     .expect("spawn a bz2 worker"),
             );
         }
@@ -477,6 +520,436 @@ fn panic_message(p: Box<dyn std::any::Any + Send>) -> String {
         .map(|s| s.to_string())
         .or_else(|| p.downcast_ref::<String>().cloned())
         .unwrap_or_else(|| "a panic".into())
+}
+
+// ---- The pipelined team (research, opt-in: `StreamDecoder::pipelined`) ----
+//
+// A team of k threads whose leader overlaps its serial stages with the helpers' parallel
+// ones, on different blocks. In each run of the team's pool (`coop::invert_pipelined`):
+// - helpers 1..k build and walk block i on the team's one table, and assemble it;
+// - the leader, meanwhile: block i − 1's RLE1 and CRC (from its assembled buffer) and its
+//   result published; the next job taken, if one is queued (never waiting for one); its
+//   move-to-front into the second front set; then it joins block i's walk if it is still
+//   going.
+// So a team keeps two front sets (`ll`, `counts`, `checkpoints`) and two assembled
+// buffers, and one table, pool and segment scratch.
+//
+// The worker never waits for a job while it holds a block not yet published: a job is
+// waited for (`recv`) only with the pipeline empty, so a block the reader needs can never
+// sit behind a team waiting for the scanner, which may be waiting for the reader's slot.
+
+/// A block's move-to-front stage's buffers (`Scratch`'s first three)
+struct Front {
+    ll: Vec<u8>,
+    counts: [u32; 256],
+    checkpoints: Vec<[u32; 256]>,
+}
+
+impl Default for Front {
+    fn default() -> Self {
+        Front {
+            ll: Vec::new(),
+            counts: [0; 256],
+            checkpoints: Vec::new(),
+        }
+    }
+}
+
+/// A pipelined team's buffers, kept from block to block
+#[derive(Default)]
+struct Team {
+    fronts: [Front; 2],
+    /// the inverse BWT's assembled output: one block's being written while the other's
+    /// RLE1 is undone
+    bufs: [Vec<u8>; 2],
+    tt: super::bwt::TVector,
+    seg: super::bwt::SegScratch,
+    /// None until the first cooperative block; an Err if its threads couldn't be spawned
+    pool: Option<std::io::Result<super::coop::Pool>>,
+}
+
+impl Team {
+    #[cfg(feature = "trace")]
+    fn buffers(&self) -> Vec<crate::trace::Buffer> {
+        use crate::trace::Buffer;
+        let [f0, f1] = &self.fronts;
+        let s = &self.seg;
+        vec![
+            Buffer::of("ll", &f0.ll),
+            Buffer::of("ll.b", &f1.ll),
+            Buffer::of("checkpoints", &f0.checkpoints),
+            Buffer::of("checkpoints.b", &f1.checkpoints),
+            Buffer::of("rle", &self.bufs[0]),
+            Buffer::of("rle.b", &self.bufs[1]),
+            Buffer::of("tt", &self.tt.0),
+            Buffer {
+                name: "seg.bufs",
+                len: s.bufs.iter().map(Vec::len).sum(),
+                cap: s.bufs.iter().map(Vec::capacity).sum(),
+            },
+        ]
+    }
+}
+
+/// A block whose move-to-front is done, in `Team::fronts[front]`
+struct Staged {
+    place: u64,
+    bit: u64,
+    symbols: super::block::Symbols,
+    front: usize,
+}
+
+/// A block inverted and assembled, in `Team::bufs[buf]`, its RLE1 and CRC to come
+struct Inverted {
+    place: u64,
+    bit: u64,
+    symbols: super::block::Symbols,
+    buf: usize,
+}
+
+/// The move-to-front stage of a block into `f`, and its primary index checked
+/// (`decode_block`'s first steps): its length
+fn front_stage(b: &super::block::Symbols, f: &mut Front, k: Kernels) -> Result<usize, ErrorKind> {
+    let n = super::mtf::mtf_checkpoints(b, &mut f.ll, &mut f.counts, &mut f.checkpoints, k)?;
+    if b.orig_ptr as usize >= n {
+        return Err(ErrorKind::BadOrigPtr);
+    }
+    Ok(n)
+}
+
+/// RLE1 undone into `out` and the block's CRC checked (`decode_block`'s last steps)
+fn finish_block(inverted: &[u8], crc: u32, k: Kernels, out: &mut Vec<u8>) -> Result<(), ErrorKind> {
+    let start = out.len();
+    if let Err(kind) = super::rle::unrle(inverted, out, k) {
+        out.truncate(start);
+        return Err(kind);
+    }
+    let computed = super::crc::crc32(&out[start..], k);
+    if computed != crc {
+        out.truncate(start);
+        return Err(ErrorKind::BlockCrc {
+            stored: crc,
+            computed,
+        });
+    }
+    Ok(())
+}
+
+/// A block's result (or error, with its place and bit) into `ready`, and its symbols'
+/// buffer recycled: the worker's own last steps
+fn publish(shared: &Shared, place: u64, bit: u64, res: Result<Vec<u8>, ErrorKind>, syms: Vec<u16>) {
+    let res = res.map_err(|kind| Error {
+        kind,
+        block: Some(place),
+        bit: Some(bit),
+    });
+    let mut st = shared.lock();
+    if !st.cancelled {
+        st.ready.insert(place, res);
+    }
+    if st.free_syms.len() < shared.slots as usize {
+        st.free_syms.push(syms);
+    }
+    drop(st);
+    mark!(Ready, place);
+    shared.cv.notify_all();
+}
+
+/// An output buffer to reuse, or None once the decode is cancelled
+fn take_out(shared: &Shared) -> Option<Vec<u8>> {
+    let mut st = shared.lock();
+    if st.cancelled {
+        return None;
+    }
+    let mut out = st.free_out.pop().unwrap_or_default();
+    out.clear();
+    Some(out)
+}
+
+/// An inverted block's RLE1 and CRC, from `inverted` (its assembled bytes), and its result
+/// published; a panic in it becomes the block's `Internal` error. Returns whether it
+/// panicked (then `inverted` is to be reset).
+fn finish_and_publish(shared: &Shared, b: Inverted, inverted: &[u8], k: Kernels) -> bool {
+    let Some(mut out) = take_out(shared) else {
+        return false; // (cancelled: nothing to publish, the symbols dropped as the worker drops them)
+    };
+    mark!(RleStart, b.place);
+    let crc = b.symbols.crc;
+    let r = catch_unwind(AssertUnwindSafe(|| {
+        finish_block(inverted, crc, k, &mut out)
+    }));
+    mark!(RleEnd, b.place, out.len(), out.capacity());
+    let (res, panicked) = match r {
+        Ok(Ok(())) => (Ok(out), false),
+        Ok(Err(kind)) => (Err(kind), false),
+        Err(p) => (Err(ErrorKind::Internal(panic_message(p))), true),
+    };
+    publish(shared, b.place, b.bit, res, b.symbols.syms);
+    panicked
+}
+
+/// A block staged in `t.fronts[s.front]` inverted on this thread alone (`bwt::Cooperative`'s
+/// one-core kernel: a block below `MIN_COOP`, or a team whose threads couldn't be
+/// spawned), then finished and published; a panic resets the team's buffers
+fn solo(shared: &Shared, t: &mut Team, s: Staged, k: Kernels) {
+    let Some(mut out) = take_out(shared) else {
+        return;
+    };
+    let r = catch_unwind(AssertUnwindSafe(|| {
+        let f = &t.fronts[s.front];
+        mark!(RunStart, s.place);
+        super::bwt::build(&f.ll, &f.counts, &mut t.tt);
+        super::bwt::walk_segments_room(&mut t.tt, s.symbols.orig_ptr, &mut t.bufs[0], &mut t.seg);
+        mark!(RunEnd, s.place);
+        mark!(RleStart, s.place);
+        let r = finish_block(&t.bufs[0], s.symbols.crc, k, &mut out);
+        mark!(RleEnd, s.place, out.len(), out.capacity());
+        r
+    }));
+    let res = match r {
+        Ok(Ok(())) => Ok(out),
+        Ok(Err(kind)) => Err(kind),
+        Err(p) => {
+            let pool = t.pool.take();
+            *t = Team::default();
+            t.pool = pool;
+            Err(ErrorKind::Internal(panic_message(p)))
+        }
+    };
+    publish(shared, s.place, s.bit, res, s.symbols.syms);
+}
+
+/// What the leader's part of a run did with the next job
+#[derive(Default)]
+struct Lead {
+    /// the block to finish (block i − 1), taken by the leader
+    inverted: Option<Inverted>,
+    /// the next block, staged for the next run, or (below `MIN_COOP`) for this thread
+    /// alone once the pipeline is drained
+    next: Option<Staged>,
+    small: Option<Staged>,
+    /// the leader's RLE1 panicked: its assembled buffer is to be reset
+    rle_panicked: bool,
+}
+
+/// The next job if one is queued, without waiting: None if none is (or the jobs' lock is
+/// held, by a worker waiting in `recv`, which will take the next one)
+fn try_job(jobs: &Mutex<Receiver<Job>>) -> Option<Job> {
+    use std::sync::TryLockError;
+    let rx = match jobs.try_lock() {
+        Ok(rx) => rx,
+        Err(TryLockError::Poisoned(p)) => p.into_inner(),
+        Err(TryLockError::WouldBlock) => return None,
+    };
+    rx.try_recv().ok()
+}
+
+/// What a job's move-to-front gave: a block for the team, a block below `MIN_COOP` for the
+/// leader alone, or none (its error published)
+enum Staging {
+    Team(Staged),
+    Small(Staged),
+    Failed,
+}
+
+/// A job's move-to-front into `f`. A panic resets `f`.
+fn stage(shared: &Shared, job: Job, f: &mut Front, front: usize, k: Kernels) -> Staging {
+    let (place, bit, symbols) = job;
+    mark!(MtfStart, place);
+    let r = catch_unwind(AssertUnwindSafe(|| front_stage(&symbols, f, k)));
+    mark!(MtfEnd, place);
+    let s = Staged {
+        place,
+        bit,
+        symbols,
+        front,
+    };
+    match r {
+        Ok(Ok(n)) if n >= super::bwt::MIN_COOP => Staging::Team(s),
+        Ok(Ok(_)) => Staging::Small(s),
+        Ok(Err(kind)) => {
+            publish(shared, place, bit, Err(kind), s.symbols.syms);
+            Staging::Failed
+        }
+        Err(p) => {
+            *f = Front::default();
+            let kind = ErrorKind::Internal(panic_message(p));
+            publish(shared, place, bit, Err(kind), s.symbols.syms);
+            Staging::Failed
+        }
+    }
+}
+
+fn pipelined_worker(shared: &Shared, jobs: &Mutex<Receiver<Job>>, k: Kernels, team_k: usize) {
+    use super::bwt::FLAGGED_LANES;
+    let mut t = Team::default();
+    let mut staged: Option<Staged> = None;
+    let mut inverted: Option<Inverted> = None;
+    loop {
+        let Some(s) = staged.take() else {
+            // the pipeline drained: a block inverted is finished alone
+            if let Some(b) = inverted.take() {
+                let i = b.buf;
+                if finish_and_publish(shared, b, &t.bufs[i], k) {
+                    t.bufs[i] = Vec::new();
+                }
+                continue;
+            }
+            // nothing in flight: wait for the next job
+            mark!(JobLock);
+            let job = {
+                let rx = jobs.lock().unwrap_or_else(|e| e.into_inner());
+                mark!(JobRecv);
+                rx.recv()
+            };
+            let Ok(job) = job else {
+                #[cfg(feature = "trace")]
+                if crate::trace::level() > 0 {
+                    crate::trace::buffers(&t.buffers());
+                }
+                return;
+            };
+            mark!(JobGot, job.0);
+            if shared.lock().cancelled {
+                continue; // (drain the queue, so the scanner never waits on it)
+            }
+            match stage(shared, job, &mut t.fronts[0], 0, k) {
+                Staging::Team(s) => staged = Some(s),
+                Staging::Small(small) => solo(shared, &mut t, small, k),
+                Staging::Failed => {}
+            }
+            continue;
+        };
+        if t.pool
+            .get_or_insert_with(|| super::coop::Pool::new(team_k))
+            .is_err()
+        {
+            // (no team: every block on this thread, as `bwt::Cooperative` falls back)
+            if let Some(b) = inverted.take() {
+                let i = b.buf;
+                if finish_and_publish(shared, b, &t.bufs[i], k) {
+                    t.bufs[i] = Vec::new();
+                }
+            }
+            solo(shared, &mut t, s, k);
+            continue;
+        }
+        // the run: the helpers invert `s` into bufs[a], while the leader finishes
+        // `inverted` from bufs[1 - a] and stages the next job in fronts[1 - s.front]
+        let a = inverted.as_ref().map_or(0, |b| 1 - b.buf);
+        let other = 1 - s.front;
+        let lead = Mutex::new(Lead {
+            inverted: inverted.take(),
+            ..Lead::default()
+        });
+        let Team {
+            fronts,
+            bufs,
+            tt,
+            seg,
+            pool,
+        } = &mut t;
+        let Some(Ok(pool)) = pool.as_ref() else {
+            unreachable!("the pool was spawned above")
+        };
+        let [f0, f1] = fronts;
+        let (hf, lf) = if s.front == 0 { (&*f0, f1) } else { (&*f1, f0) };
+        let [b0, b1] = bufs;
+        let (hb, lb) = if a == 0 { (b0, &*b1) } else { (b1, &*b0) };
+        let lf = Mutex::new(lf);
+        let leader = || {
+            let mut l = lock_lead(&lead);
+            if let Some(b) = l.inverted.take() {
+                l.rle_panicked = finish_and_publish(shared, b, lb, k);
+            }
+            if let Some(job) = try_job(jobs) {
+                mark!(JobGot, job.0);
+                shared.overlapped.fetch_add(1, Ordering::Relaxed);
+                if shared.lock().cancelled {
+                    return;
+                }
+                let mut f = lf.lock().unwrap_or_else(|e| e.into_inner());
+                match stage(shared, job, &mut f, other, k) {
+                    Staging::Team(next) => l.next = Some(next),
+                    Staging::Small(small) => l.small = Some(small),
+                    Staging::Failed => {
+                        shared.overlap_errors.fetch_add(1, Ordering::Relaxed);
+                    }
+                }
+            }
+        };
+        // (the run's own kinds, not `InvertStart`/`InvertEnd`: a worker's inversion inside
+        // its `decode_block`, which a pipelined team never runs)
+        mark!(RunStart, s.place);
+        let r = catch_unwind(AssertUnwindSafe(|| {
+            super::coop::invert_pipelined::<FLAGGED_LANES>(
+                pool,
+                &hf.ll,
+                &hf.counts,
+                &hf.checkpoints,
+                s.symbols.orig_ptr,
+                tt,
+                seg,
+                hb,
+                &leader,
+                s.place,
+            )
+        }));
+        mark!(RunEnd, s.place);
+        let mut l = lead.into_inner().unwrap_or_else(|e| e.into_inner());
+        match r {
+            Ok(Ok(())) => {
+                inverted = Some(Inverted {
+                    place: s.place,
+                    bit: s.bit,
+                    symbols: s.symbols,
+                    buf: a,
+                });
+                if l.rle_panicked {
+                    t.bufs[1 - a] = Vec::new();
+                }
+            }
+            Ok(Err(p)) => {
+                // a helper's stage panicked: block i fails, and the back set is reset
+                let kind = ErrorKind::Internal(panic_message(p));
+                publish(shared, s.place, s.bit, Err(kind), s.symbols.syms);
+                t.tt = Default::default();
+                t.seg = Default::default();
+                t.bufs = Default::default();
+            }
+            Err(p) => {
+                // the run itself panicked (the leader's part catches its own stages', so a
+                // bug outside them): every block the run held fails, and the team is reset
+                let msg = panic_message(p);
+                let held = [Some(s), l.next.take(), l.small.take()];
+                for b in held.into_iter().flatten() {
+                    let kind = ErrorKind::Internal(msg.clone());
+                    publish(shared, b.place, b.bit, Err(kind), b.symbols.syms);
+                }
+                if let Some(b) = l.inverted.take() {
+                    let kind = ErrorKind::Internal(msg.clone());
+                    publish(shared, b.place, b.bit, Err(kind), b.symbols.syms);
+                }
+                t = Team::default();
+                continue;
+            }
+        }
+        staged = l.next.take();
+        if let Some(small) = l.small.take() {
+            // a block below `MIN_COOP`: the pipeline drained, then it alone
+            if let Some(b) = inverted.take() {
+                let i = b.buf;
+                if finish_and_publish(shared, b, &t.bufs[i], k) {
+                    t.bufs[i] = Vec::new();
+                }
+            }
+            solo(shared, &mut t, small, k);
+        }
+    }
+}
+
+fn lock_lead(m: &Mutex<Lead>) -> std::sync::MutexGuard<'_, Lead> {
+    m.lock().unwrap_or_else(|e| e.into_inner())
 }
 
 /// How a decoder spends its threads: production's one block a worker, or teams of `k`
