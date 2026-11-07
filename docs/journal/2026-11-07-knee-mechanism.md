@@ -156,7 +156,7 @@ This follows from E1–E5, but no counter run has shown it directly for the deco
 
 ## What needs the i9, and what doesn't
 
-**Done here, without new workstation timing:**
+**To be done here, without new workstation timing** (in progress at the time of writing; none of it done yet):
 - H1's prototype, its correctness tests, and an indicative local run (on 4 cores and a large
   L3, where tables don't contend, isolating the overlap);
 - H2's implementation as an arm;
