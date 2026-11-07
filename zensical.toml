@@ -55,6 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Why mibz2 stops scaling at eight threads" = "blog/2026-11-07-why-mibz2-stops-scaling.md" },
     { "Huffman decoding: the bit buffer in a register" = "blog/2026-11-05-huffman-bit-buffer.md" },
     { "An autonomous agent team" = "blog/2026-11-04-autonomous-agent-team.md" },
     { "Building a smaller bzip2 decoding table" = [
@@ -238,6 +239,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-07-why-mibz2-stops-scaling.md" = "Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open." },
   { "blog/2026-11-05-huffman-bit-buffer.md" = "The Huffman decoder wrote its bit buffer to memory and read it back at every lookup. Kept in a register, the stage ran 13% faster on Intel and 5% on AMD." },
   { "blog/2026-11-04-autonomous-agent-team.md" = "Each of four agents does one part of the research. A GitHub doorbell lets them hand work to each other directly, without me acting as their message bus." },
   { "blog/2026-11-04-compact30-constructor.md" = "Writing a cheap placeholder for each row, and finishing each 30-row group once, shrank the inner loop. It still builds too slowly." },
