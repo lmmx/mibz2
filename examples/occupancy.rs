@@ -477,13 +477,21 @@ fn service_phases(traces: &[ThreadTrace], kv: &mut Kv) {
             utils.push(u);
         }
     }
-    kv.f("t.svc.util.max", utils.iter().cloned().fold(f64::NAN, f64::max));
+    kv.f(
+        "t.svc.util.max",
+        utils.iter().cloned().fold(f64::NAN, f64::max),
+    );
     kv.f(
         "t.svc.util.mean",
         utils.iter().sum::<f64>() / utils.len().max(1) as f64,
     );
     kv.f("t.svc.n.services", utils.len() as f64);
-    let sum = |name: &str| iv.iter().filter(|x| x.0 == name).map(|x| x.3 - x.2).sum::<u64>();
+    let sum = |name: &str| {
+        iv.iter()
+            .filter(|x| x.0 == name)
+            .map(|x| x.3 - x.2)
+            .sum::<u64>()
+    };
     for name in ["mtf", "assemble", "rle", "svc_idle"] {
         kv.f(&format!("t.svc.ms.{name}"), ms(sum(name)));
     }
@@ -502,10 +510,16 @@ fn service_phases(traces: &[ThreadTrace], kv: &mut Kv) {
         let n = w.len().max(1) as f64;
         let total: f64 = w.iter().sum();
         kv.f(&format!("t.svc.queue.{q}.mean_ms"), total / n);
-        kv.f(&format!("t.svc.queue.{q}.median_ms"), median(&mut w.clone()));
+        kv.f(
+            &format!("t.svc.queue.{q}.median_ms"),
+            median(&mut w.clone()),
+        );
         w.sort_by(f64::total_cmp);
         let p90 = w.get(((w.len() as f64 * 0.9) as usize).min(w.len().saturating_sub(1)));
-        kv.f(&format!("t.svc.queue.{q}.p90_ms"), p90.copied().unwrap_or(f64::NAN));
+        kv.f(
+            &format!("t.svc.queue.{q}.p90_ms"),
+            p90.copied().unwrap_or(f64::NAN),
+        );
         if q != "job" {
             kv.f(&format!("t.svc.backlog.{q}_mean"), total / ms(span as u64));
         }
@@ -524,7 +538,10 @@ fn service_phases(traces: &[ThreadTrace], kv: &mut Kv) {
             .filter(|x| x.0 == "team_idle" && x.5 == len)
             .map(|x| x.3 - x.2)
             .sum();
-        kv.f(&format!("t.svc.team.idle_{what}_share"), idle as f64 / (teams * span));
+        kv.f(
+            &format!("t.svc.team.idle_{what}_share"),
+            idle as f64 / (teams * span),
+        );
         kv.f(&format!("t.svc.team.ms.idle_{what}"), ms(idle));
     }
     // each run's thread time outside its block's build, walk and set-up
@@ -534,7 +551,11 @@ fn service_phases(traces: &[ThreadTrace], kv: &mut Kv) {
             .iter()
             .filter(|x| matches!(x.0, "build" | "walk" | "walk_setup") && x.1 == r.1)
             .collect();
-        let threads: BTreeSet<usize> = work.iter().filter(|x| x.0 == "build").map(|x| x.4).collect();
+        let threads: BTreeSet<usize> = work
+            .iter()
+            .filter(|x| x.0 == "build")
+            .map(|x| x.4)
+            .collect();
         if threads.is_empty() {
             small += 1;
             continue;
@@ -2570,8 +2591,14 @@ mod tests {
         assert_eq!(g("t.svc.team.idle_back_share"), 0.0);
         // 2 threads x 20 ms, less 2 x (5 build + 14 walk)
         assert!((g("t.svc.team.ms.run_wait") - 2.0).abs() < 1e-9);
-        assert_eq!((g("t.svc.team.n.runs"), g("t.svc.team.n.small")), (1.0, 0.0));
-        assert_eq!((g("t.svc.backlog.prep_max"), g("t.svc.backlog.finish_max")), (1.0, 1.0));
+        assert_eq!(
+            (g("t.svc.team.n.runs"), g("t.svc.team.n.small")),
+            (1.0, 0.0)
+        );
+        assert_eq!(
+            (g("t.svc.backlog.prep_max"), g("t.svc.backlog.finish_max")),
+            (1.0, 1.0)
+        );
     }
 
     /// A thread's marks, its times in ms and its sizes in MB (so that every figure below
