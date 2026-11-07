@@ -248,6 +248,84 @@ enum S {
     Slot,
 }
 
+/// A pipelined team's phases (`--pipe`; nothing for another plan), into `kv` (keys
+/// `t.pipe.*`), from the marks alone:
+/// - `ms.PHASE`: each phase's time summed over every thread and block, in ms (the leaders'
+///   `mtf`, `build_setup`, `rle` and `run`; the helpers' `helper`, `build`, `walk_setup`,
+///   `assemble`; both's `build_wait` and `walk`), and `n.PHASE` its intervals;
+/// - `overlap.same_thread`: blocks whose move-to-front a leader ran inside its run of another
+///   block (between `RunStart` and `RunEnd` of a different place);
+/// - `overlap.cross_thread`: blocks whose move-to-front interval (on its leader) intersects
+///   a helper's build or walk of a different block, by the marks' clock: the cross-block
+///   overlap itself, shown rather than inferred;
+/// - `overlap.rle_cross_thread`: the same for the leaders' RLE1 and CRC intervals.
+fn pipeline_phases(traces: &[ThreadTrace], kv: &mut Kv) {
+    use Kind::*;
+    let pairs = [
+        ("mtf", MtfStart, MtfEnd),
+        ("build_setup", BuildSetupStart, BuildSetupEnd),
+        ("helper", HelperStart, HelperEnd),
+        ("build", BuildStart, BuildEnd),
+        ("build_wait", BuildWaitStart, BuildWaitEnd),
+        ("walk_setup", WalkSetupStart, WalkSetupEnd),
+        ("walk", WalkStart, WalkEnd),
+        ("assemble", AssembleStart, AssembleEnd),
+        ("rle", RleStart, RleEnd),
+        ("run", RunStart, RunEnd),
+    ];
+    if !traces
+        .iter()
+        .flat_map(|t| &t.marks)
+        .any(|m| m.kind == MtfStart)
+    {
+        return;
+    }
+    // every interval: (phase, place, start ns, end ns, thread)
+    let mut iv: Vec<(&str, u64, u64, u64, usize)> = Vec::new();
+    for (ti, t) in traces.iter().enumerate() {
+        let mut open: BTreeMap<&str, (u64, u64)> = BTreeMap::new();
+        for m in &t.marks {
+            for &(name, a, b) in &pairs {
+                if m.kind == a {
+                    open.insert(name, (m.place, m.ns));
+                } else if m.kind == b {
+                    if let Some((p, s)) = open.remove(name) {
+                        iv.push((name, p, s, m.ns, ti));
+                    }
+                }
+            }
+        }
+    }
+    for &(name, _, _) in &pairs {
+        let (n, ns) = iv
+            .iter()
+            .filter(|x| x.0 == name)
+            .fold((0usize, 0u64), |(n, s), x| (n + 1, s + (x.3 - x.2)));
+        kv.f(&format!("t.pipe.ms.{name}"), ns as f64 / 1e6);
+        kv.f(&format!("t.pipe.n.{name}"), n as f64);
+    }
+    let of = |name: &'static str| iv.iter().filter(move |x| x.0 == name);
+    let same = of("mtf")
+        .filter(|m| of("run").any(|r| r.4 == m.4 && r.1 != m.1 && r.2 <= m.2 && m.3 <= r.3))
+        .count();
+    let cross = |lead: &'static str| {
+        of(lead)
+            .filter(|m| {
+                iv.iter().any(|h| {
+                    (h.0 == "build" || h.0 == "walk")
+                        && h.4 != m.4
+                        && h.1 != m.1
+                        && h.2 < m.3
+                        && m.2 < h.3
+                })
+            })
+            .count()
+    };
+    kv.f("t.pipe.overlap.same_thread", same as f64);
+    kv.f("t.pipe.overlap.cross_thread", cross("mtf") as f64);
+    kv.f("t.pipe.overlap.rle_cross_thread", cross("rle") as f64);
+}
+
 /// The trace's checks and its sweep, into `kv` (keys `t.*`)
 fn summarise(
     traces: &[ThreadTrace],
@@ -341,6 +419,7 @@ fn summarise(
     if !problem.is_empty() {
         return;
     }
+    pipeline_phases(traces, kv);
 
     // the sweep: every mark in time order, each interval credited to the states then
     let mut ev: Vec<(u64, usize, Kind, u64)> = Vec::new();

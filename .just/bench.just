@@ -466,3 +466,76 @@ bench-three-team-policy:
     else
       outcome="REPORT ERROR: policy_ab.py exited $rc without writing its report"
     fi
+
+# The pipelined team on the workstation (docs/journal/2026-11-07-team-pipeline-registration.md,
+# registered before any run): 3 × 3 and 3 × 4, each pipelined (mibz2-pipe3/4, research,
+# opt-in) and not (mibz2-team3/4), with the default (mibz2) as the product reference, at 10
+# and 12 threads, interleaved by round; then occupancy traces of each registered plan with the
+# pipeline's phase marks; then bench/team_pipeline.py's report and verdict. About 25 minutes.
+# Close the browser and anything busy first.
+#   just submit bench-team-pipeline
+# DRY=1 is the untimed check of the recipe itself (one round, one trace round, no settling):
+# never evidence. CORPUS= a .bz2 to use instead of building the bench's sample.
+
+# Pipelined teams against their non-pipelined twins, at 3 × 3 and 3 × 4
+bench-team-pipeline ROUNDS="20" DRY="" CORPUS="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # each attempt in a directory of its own, never overwritten
+    B=$PWD/target/team-pipeline
+    W=$B/$(date -u +%Y%m%dT%H%M%SZ)
+    mkdir -p "$B"
+    mkdir "$W" || { echo "bench-team-pipeline: $W already exists; not reusing an attempt's directory"; exit 1; }
+    exec > >(tee -a "$W/console.log") 2>&1
+    rounds={{ROUNDS}}; trace_rounds=6; busy=(); dry="{{DRY}}"
+    if [ -n "$dry" ]; then
+      rounds=1; trace_rounds=1; busy=(--max-busy 64 --settle 0.2)
+      echo "bench-team-pipeline: DRY RUN: one round, untimed; not evidence" | tee "$W/DRY-RUN.txt"
+    fi
+    git rev-parse HEAD > "$W/commit.txt"
+    git status --porcelain > "$W/git-status.txt"
+    # the registration's frozen code: what this run measures must be the commit it registered
+    frozen=HEAD
+    if ! git diff --quiet "$frozen" HEAD -- src examples Cargo.toml Cargo.lock \
+        bench/team_pipeline.py bench/team_size.py bench/wikidata.py bench/wikidata.json \
+        docs/journal/2026-11-07-team-pipeline-registration.md; then
+      echo "bench-team-pipeline: the code or the registration differs from the frozen $frozen" | tee "$W/NOT-FROZEN.txt"
+    fi
+    cargo build -q --release --example ab --example windows
+    cargo build -q --release --features trace --example occupancy
+    AB=$PWD/target/release/examples/ab
+    corpus="{{CORPUS}}"
+    if [ -z "$corpus" ]; then
+      dir=$(python3 -c 'import json; print(json.load(open("bench/wikidata.json"))["windows_dir"])')
+      if [ "$(ls "$dir"/*.bin 2>/dev/null | wc -l)" = 0 ]; then
+        git fetch -q origin bench-data:refs/remotes/origin/bench-data 2>/dev/null \
+          && git archive origin/bench-data "$dir" | tar -x || true
+      fi
+      python3 bench/wikidata.py fetch bench/wikidata.json "$dir" >/dev/null
+      python3 bench/wikidata.py build bench/wikidata.json "$dir" target/release/examples/windows "$B/wikidata.bz2"
+      corpus=$B/wikidata.bz2
+    fi
+    ln -sf "$(realpath "$corpus")" "$W/wikidata.bz2"
+    sha256sum "$corpus" > "$W/corpus.sha256"
+    "$AB" env > "$W/env.json"
+    lscpu > "$W/lscpu.txt"
+    arms="mibz2,mibz2-team3,mibz2-pipe3,mibz2-team4,mibz2-pipe4"
+    "$AB" run "$W/runs.jsonl" --arms "$arms" --threads 10,12 --rounds "$rounds" "${busy[@]}" "$W/wikidata.bz2"
+    "$AB" summary "$W/runs.jsonl" --ref mibz2 > "$W/summary.txt" || true
+    occ=()
+    for tkm in 10:3:teams 10:3:pipe 12:4:teams 12:4:pipe; do
+      IFS=: read -r t k m <<< "$tkm"
+      o="$W/occupancy-t$t-$m$k.json"
+      if target/release/examples/occupancy "$W/wikidata.bz2" --threads "$t" "--$m" "$k" \
+          --rounds "$trace_rounds" --out "$o" --meta "commit=$(git rev-parse HEAD)" \
+          > "$W/occupancy-t$t-$m$k.txt" 2>&1; then
+        occ+=("$o")
+      else
+        echo "bench-team-pipeline: the occupancy pass at $t threads, $m of $k, failed"
+      fi
+    done
+    status=0
+    python3 bench/team_pipeline.py report "$W/runs.jsonl" --rounds "$rounds" \
+      --occupancy "${occ[@]}" --out "$W/team-pipeline" || status=$?
+    [ "$status" = 0 ] || echo "bench-team-pipeline: the report's verdict is not VALID (see team-pipeline.md)"
+    bash bench/bundle.sh "$W"

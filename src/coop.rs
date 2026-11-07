@@ -1010,6 +1010,7 @@ pub(crate) fn invert_pipelined<const L: usize>(
     ll: &[u8],
     counts: &[u32; 256],
     checkpoints: &[[u32; 256]],
+    stride: usize,
     orig_ptr: u32,
     tt: &mut TVector,
     seg: &mut SegScratch,
@@ -1020,7 +1021,6 @@ pub(crate) fn invert_pipelined<const L: usize>(
     // (a pool of one thread runs the helpers' part itself, after `lead`)
     let helpers = pool.threads().saturating_sub(1).max(1);
     let shares = helpers.min(MAX_SHARES);
-    let stride = crate::mtf::CHECKPOINT;
     tmark!(BuildSetupStart, place);
     let build = match FusedBuild::new(ll, counts, checkpoints, stride, shares, tt) {
         Ok(b) => Ok(b),
@@ -1609,6 +1609,7 @@ mod tests {
                 ll,
                 &counts,
                 &cps,
+                stride,
                 op,
                 &mut pt,
                 &mut ps,
@@ -1684,7 +1685,7 @@ mod tests {
                     }
                 };
                 invert_pipelined::<32>(
-                    &p, &ll, &counts, &cps, 77, &mut tt, &mut seg, &mut out, &lead, 0,
+                    &p, &ll, &counts, &cps, CP, 77, &mut tt, &mut seg, &mut out, &lead, 0,
                 )
                 .unwrap();
                 assert!(out == want, "k {k}, late {late}");
@@ -1712,6 +1713,7 @@ mod tests {
                 &ll,
                 &counts,
                 &cps,
+                CP,
                 3,
                 &mut tt,
                 &mut seg,
@@ -1728,6 +1730,7 @@ mod tests {
             &ll,
             &counts,
             &cps,
+            CP,
             3,
             &mut tt,
             &mut seg,
@@ -1738,6 +1741,8 @@ mod tests {
         .unwrap();
         assert!(out == want);
     }
+
+    const CP: usize = crate::mtf::CHECKPOINT;
 
     /// Pools kept by several threads at once, as the decoder's workers would keep them
     #[test]
