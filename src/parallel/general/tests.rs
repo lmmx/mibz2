@@ -346,7 +346,7 @@ impl Sys {
         self
     }
     /// a CPU: its package and core, its L3 (size and sharers, as index3 with its level),
-    /// and optionally its max frequency (kHz) and capacity
+    /// and optionally its max frequency (kHz) and capacity, `(freq, cap)`
     fn cpu(
         &self,
         c: usize,
@@ -354,8 +354,7 @@ impl Sys {
         core: usize,
         l3: &str,
         shared: &str,
-        freq: Option<u64>,
-        cap: Option<u64>,
+        (freq, cap): (Option<u64>, Option<u64>),
     ) -> &Self {
         let b = format!("devices/system/cpu/cpu{c}");
         self.put(
@@ -402,7 +401,7 @@ fn fixture_i9() {
         } else {
             5_100_000
         };
-        s.cpu(c, 0, ids[c % 10], "20480K", "0-19", Some(f), None);
+        s.cpu(c, 0, ids[c % 10], "20480K", "0-19", (Some(f), None));
     }
     s.put("devices/cpu/type", "4");
     let t = Topology::read(&s.0, &all(20));
@@ -441,7 +440,7 @@ fn fixture_hybrid_6p_4e() {
         } else {
             (32 + c - 12, 3_600_000)
         };
-        s.cpu(c, 0, core, "20480K", "0-15", Some(f), None);
+        s.cpu(c, 0, core, "20480K", "0-15", (Some(f), None));
     }
     s.put("devices/cpu_core/cpus", "0-11");
     s.put("devices/cpu_atom/cpus", "12-15");
@@ -475,7 +474,7 @@ fn fixture_two_sockets() {
     for c in 0..20 {
         let pkg = (c % 10) / 5;
         let shared = if pkg == 0 { "0-4,10-14" } else { "5-9,15-19" };
-        s.cpu(c, pkg, c % 5, "20480K", shared, Some(3_000_000), None);
+        s.cpu(c, pkg, c % 5, "20480K", shared, (Some(3_000_000), None));
     }
     let t = Topology::read(&s.0, &all(20));
     assert_eq!(
@@ -497,7 +496,7 @@ fn fixture_two_sockets() {
 fn fixture_ci_runner() {
     let s = Sys::new("ci");
     for c in 0..4 {
-        s.cpu(c, 0, c / 2, "32768K", "0-3", None, None);
+        s.cpu(c, 0, c / 2, "32768K", "0-3", (None, None));
     }
     let t = Topology::read(&s.0, &all(4));
     assert_eq!(
@@ -541,8 +540,7 @@ fn arm_capacity() {
             c,
             "8192K",
             "0-7",
-            None,
-            Some(if c < 4 { 1024 } else { 446 }),
+            (None, Some(if c < 4 { 1024 } else { 446 })),
         );
     }
     let t = Topology::read(&s.0, &all(8));
