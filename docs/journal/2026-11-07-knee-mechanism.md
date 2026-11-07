@@ -107,9 +107,13 @@ Peak RSS rises about 15 MB per team (52, 67, 82, 96, 110 and 138 MB at 2–8 tea
 this is hot in the L3 at once is not measured.
 
 **E6. CPU-mask placement changes the result most at k = 2.** At 4 teams, packed against spread:
-- 4 × 2: 1,060 against 1,374 MB/s, −23%;
-- 4 × 3: −7%;
-- 4 × 4: −2%.
+- 4 × 2: 1,055 against 1,369 MB/s, −23%;
+- 4 × 3: −8%;
+- 4 × 4: −1%.
+
+These are the six-round medians, as the team-size journal gives them. An earlier version of
+this entry gave 1,060 against 1,374 MB/s, −7% and −2%: the upper of the two middle values,
+not medians (found while checking the blog post, #248).
 
 The masks change how many physical cores are available (4 against 8 at the eight-thread mask).
 They are not a per-thread affinity experiment.
