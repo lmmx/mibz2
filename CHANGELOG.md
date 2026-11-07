@@ -17,9 +17,27 @@ the output, the errors, the API and the supported inputs.
 
 ### Measured
 
-**On the target machine:** two registered runs on an Intel i9-10900K (10 cores, 20 CPUs), 20
-rounds each, on the bench's Wikidata sample. Louis ran both with `just submit`. Their bundles are on the
-`evidence` branch, as `team-pipeline/20261107T042622Z` and `pipeline-levers/20261107T091926Z`.
+**On the target machine:** three registered runs on an Intel i9-10900K (10 cores, 20 CPUs), 20
+rounds each, on the bench's Wikidata sample. Louis ran all three with `just submit`. Their bundles are
+on the `evidence` branch, as `team-pipeline/20261107T042622Z`, `pipeline-levers/20261107T091926Z`
+and `pipelined-default/20261107T105448Z`.
+
+- **The confirmation (`pipelined-default/20261107T105448Z`, VALID PASS):** this release's
+  default against 0.2.5's, paired by round, admitted on the terms in `docs/journal/decisions.md`
+  (2026-11-07):
+
+  | threads | plan, 0.2.5 → 0.2.6 | speed (95%) | CPU | peak RSS |
+  |--:|---|--:|--:|--:|
+  | 8 | 4 × 2 → 4 × 2 (unchanged) | 1.002 (0.991–1.013) | 0.99 | 1.00 |
+  | 9 | 4 × 2 → 4 × 2 (unchanged) | 1.001 (0.991–1.012) | 1.00 | 1.00 |
+  | 10 | 3 × 3 → 3 × 3 pipelined | **1.072 (1.054–1.089)** | 1.04 | 1.10 |
+  | 11 | 3 × 3 → 3 × 3 pipelined | 1.070 (1.055–1.085) | 1.05 | 1.12 |
+  | 12 | 3 × 3 → 3 × 3 pipelined | 1.069 (1.054–1.085) | 1.05 | 1.10 |
+  | 16 | 3 × 3 → 3 × 3 pipelined | 1.065 (1.045–1.085) | 1.05 | 1.13 |
+  | 20 | 3 × 3 → 3 × 3 pipelined | 1.070 (1.048–1.092) | 1.04 | 1.12 |
+
+  CPU and peak RSS are the new default's medians over 0.2.5's. Both are reported, not judged.
+  The figures below are from the earlier, exploratory runs.
 
 - **Speed:** 7.2% faster, 95% CI +5.3% to +9.1%. This is a paired ratio of 1.072
   [1.053, 1.091]: the pipelined teams with both levers against the plain three teams of three
@@ -29,11 +47,11 @@ rounds each, on the bench's Wikidata sample. Louis ran both with `just submit`. 
     are 1.030 s against 0.973 s of CPU, which is 5.9% more.
   - **Both figures stand.** They use different summaries (a paired ratio, and a ratio of
     medians), and neither corrects the other.
-- **Wall, by the medians:** 0.142 s against 0.154 s.
+- **Wall, by the medians, against the shipped default (mibz2@10):** 0.142 s against 0.154 s.
 - **Memory:** peak RSS 75 MB against 67 MB (+8 MB) on the measured workload. The extra is a
   second set of move-to-front buffers and a second assembled buffer, in each team.
 - **The levers, separately (each against the plain pipeline, at 3 × 3 on 10 threads):**
-  - park saves 5.5% of CPU at an unchanged wall: 0.999 [0.981, 1.017] speed, 1.055
+  - park cuts CPU by about 5% (a ratio of 1.055, about 5.2% less) at an unchanged wall: 0.999 [0.981, 1.017] speed, 1.055
     [1.039, 1.071] CPU;
   - small is 4.3% faster: 1.043 [1.020, 1.066];
   - both: 1.038 [1.021, 1.055] faster, 1.032 [1.018, 1.046] less CPU.
