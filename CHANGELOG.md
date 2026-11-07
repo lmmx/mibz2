@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6](https://github.com/lmmx/mibz2/compare/v0.2.5...v0.2.6) - 2026-11-07
+
+### <!-- 4 -->Documentation
+
+- *(changelog)* 0.2.5's notes from its i9 runs and its paired run against 0.2.4 ([#245](https://github.com/lmmx/mibz2/pull/245))
+
+### <!-- 9 -->Other
+
+- The default pipelines three teams of three on the ten-core topology, with park and small ([#250](https://github.com/lmmx/mibz2/pull/250))
+- just submit-when-ready: the unattended wait-run-suspend as a recipe; CLAUDE.md documents it and the run-signal workflow
+- stand-in reviews when a role's Work task is unavailable (ROLES, PROTOCOL 8, CHATGPT.md)
+- why mibz2 stops scaling at eight threads, and why three teams help ([#248](https://github.com/lmmx/mibz2/pull/248))
+- Release runbook: docs/RELEASING.md, referenced from CLAUDE.md
+
 On a machine with 10 physical cores and a 20 MiB L3, such as the i9-10900K, the decoder now
 pipelines its three teams of three at 10 or more threads: each team's leader undoes one
 block's RLE1 and checks its CRC, and runs the next block's move-to-front, while its helpers
