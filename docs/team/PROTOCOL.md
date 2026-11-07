@@ -166,6 +166,30 @@ procedure ChatGPT follows.
   says it is closed: when the Coordinator has verified the same result by another route,
   such as a read-back relayed in a PROPOSAL.
 
+## 8. Stand-in reviews while a role's task is unavailable
+
+The rule is ROLES.md, "When a role's Work task is unavailable". Here is how one runs.
+- **The request:** the Coordinator posts it on #145 as `FROM: coordinator`, `TO: chatgpt`,
+  `TYPE: CHECKPOINT`. It names:
+  - the role whose spec to apply;
+  - the exact 40-character head SHA, or commit, to review;
+  - the scope: what to check;
+  - the read-back the Coordinator will verify.
+- **Who carries it out:** a ChatGPT conversation, when Louis tells it to do that one request,
+  in its own words, in that conversation. "Process the swarm's pending requests" doesn't
+  cover a stand-in review: it covers only re-pins (§7).
+- **The result:** one comment on #145:
+  - `FROM: chatgpt`, `TO: coordinator`, `TYPE: REVIEW`;
+  - `RE:` naming the role it stands in for and the request's comment ID;
+  - the reviewed head SHA, the specs and evidence it read, what it did not check, and a
+    verdict of PROCEED or HOLD with findings.
+- **The Coordinator:**
+  - checks the head SHA and the scope against the request;
+  - acknowledges the REVIEW with one LOG that records it as a stand-in review;
+  - acts on its findings as it would on the role's.
+
+  The role's queued assignment stays queued for its own task.
+
 ## History
 
 This replaces `docs/journal/compact30-channel/PROTOCOL.md`, which is kept as history. Dropped:

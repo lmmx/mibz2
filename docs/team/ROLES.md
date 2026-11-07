@@ -91,6 +91,24 @@ No role is automatically subordinate to another's scientific opinion.
 3. Each agent writes only to its own state branch, plus one REVIEW per assignment on #145.
 4. Successions are recorded here, never treated silently as the same execution.
 
+## When a role's Work task is unavailable
+
+Each role is defined by its spec, not by the Work task that usually runs it. The Work tasks
+above remain the default, and their routing and pins are unchanged. When a task is paused
+(a quota limit, an outage, anything else), its work need not wait:
+- **A stand-in:** any ChatGPT conversation, or another capable reviewer, can take one bounded
+  assignment in the role's place. It reads `SPEC.md`, the role's `SPEC.<ROLE>.md`, `MODE.md`,
+  `RULES.md`, `PROTOCOL.md` and the assignment's evidence, and does the work itself.
+  PROTOCOL.md §8 is the procedure.
+- **What a stand-in is not:** it is not the role's identity. It posts `FROM: chatgpt`, never
+  `FROM: guardian` or another role's name. It writes to no role's state branch or cursor, and
+  takes no role's queued assignment. The role's own task reviews independently once it
+  resumes, and its findings stay distinct from the stand-in's.
+- **Authority:** a stand-in's review can meet the substance of an adversarial-review duty, but
+  it carries no authority the role itself lacks. Every comment is posted as `lmmx` (rule 2
+  above), so the account proves nothing about who wrote it. RULES A1–A4, B5, C1–C6 and D
+  stand. What RULES D reserves still needs Louis in the Coordinator's session.
+
 ## History
 
 - The team began on 2026-11-04 as the compact30 research channel, with three Codex roles
