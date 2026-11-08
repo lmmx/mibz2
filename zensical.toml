@@ -55,6 +55,7 @@ nav = [
   ] },
   { "Blog" = [
     "blog/index.md",
+    { "Inverse-BWT navigation: the mathematics" = "blog/2026-11-08-inverse-bwt-navigation.md" },
     { "Pipelined teams in mibz2 0.2.6" = "blog/2026-11-07-pipelined-teams.md" },
     { "Why mibz2 stops scaling at eight threads" = "blog/2026-11-07-why-mibz2-stops-scaling.md" },
     { "Huffman decoding: the bit buffer in a register" = "blog/2026-11-05-huffman-bit-buffer.md" },
@@ -240,6 +241,7 @@ is the Markdown version of a page of https://lmmx.github.io/mibz2/.
 ]
 "Optional" = [
   { "blog/index.md" = "What mibz2's experiments are finding, and where they go next." },
+  { "blog/2026-11-08-inverse-bwt-navigation.md" = "The inverse BWT's next-row map is one shift per run of equal bytes, so it can be stored per run rather than per row. Whether that beats mibz2's table is unproven." },
   { "blog/2026-11-07-pipelined-teams.md" = "While a team's helpers invert one block, its leader finishes the last and prepares the next: 7% faster than 0.2.5 on ten cores, for 5% more processor time." },
   { "blog/2026-11-07-why-mibz2-stops-scaling.md" = "Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open." },
   { "blog/2026-11-05-huffman-bit-buffer.md" = "The Huffman decoder wrote its bit buffer to memory and read it back at every lookup. Kept in a register, the stage ran 13% faster on Intel and 5% on AMD." },

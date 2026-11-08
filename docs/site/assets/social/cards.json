@@ -65,6 +65,12 @@
     "section": " · Research blog",
     "title": "Why mibz2 stops scaling at eight threads, and why three teams help"
   },
+  "assets/social/blog-2026-11-08-inverse-bwt-navigation.png": {
+    "description": "The inverse BWT's next-row map is one shift per run of equal bytes, so it can be stored per run rather than per row. Whether that beats mibz2's table is unproven.",
+    "foot": "lmmx.github.io/mibz2 · 8 November 2026",
+    "section": " · Research blog",
+    "title": "The mathematical structure of inverse-BWT navigation"
+  },
   "assets/social/default.png": {
     "description": "Block-parallel bzip2 decoding, byte for byte with libbzip2, from Python and Rust: pip install mibz2, cargo add mibz2.",
     "foot": "lmmx.github.io/mibz2",
