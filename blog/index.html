@@ -24,7 +24,7 @@
         <link rel="prev" href="../background/behind-the-scenes/">
       
       
-        <link rel="next" href="./2026-11-07-pipelined-teams/">
+        <link rel="next" href="./2026-11-08-inverse-bwt-navigation/">
       
       
         
@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=5469a770ff3c">
+      <link rel="stylesheet" href="../assets/stylesheets/extra.css?v=6527d2435cb7">
     
-      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=5469a770ff3c">
+      <link rel="stylesheet" href="../assets/stylesheets/bench.css?v=6527d2435cb7">
     
-      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=5469a770ff3c">
+      <link rel="stylesheet" href="../assets/stylesheets/couriers.css?v=6527d2435cb7">
     
-      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=5469a770ff3c">
+      <link rel="stylesheet" href="../assets/stylesheets/blog.css?v=6527d2435cb7">
     
-      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=5469a770ff3c">
+      <link rel="stylesheet" href="../assets/stylesheets/frontier.css?v=6527d2435cb7">
     
-      <link rel="stylesheet" href="../assets/stylesheets/observatory.css?v=5469a770ff3c">
+      <link rel="stylesheet" href="../assets/stylesheets/observatory.css?v=6527d2435cb7">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -1082,6 +1082,8 @@
       
         
       
+        
+      
     
     
     
@@ -1128,6 +1130,33 @@
             </label>
             <ul class="md-nav__list" data-md-scrollfix>
               
+                
+              
+                
+                  
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./2026-11-08-inverse-bwt-navigation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Inverse-BWT navigation: the mathematics
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
                 
               
                 
@@ -1259,10 +1288,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_7" >
         
           
-          <label class="md-nav__link" for="__nav_7_6" id="__nav_7_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_7" id="__nav_7_7_label" tabindex="0">
             
   
   
@@ -1280,8 +1309,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_6_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_6">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_7_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_7">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -1401,10 +1430,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_8" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_9" >
         
           
-          <label class="md-nav__link" for="__nav_7_8" id="__nav_7_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7_9" id="__nav_7_9_label" tabindex="0">
             
   
   
@@ -1422,8 +1451,8 @@
           </label>
         
         
-          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_8_label" aria-expanded="false">
-            <label class="md-nav__title" for="__nav_7_8">
+          <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_9_label" aria-expanded="false">
+            <label class="md-nav__title" for="__nav_7_9">
               <span class="md-nav__icon md-icon"></span>
               
   
@@ -1815,6 +1844,7 @@
 <p>What mibz2's experiments are finding, and where they go next. The evidence behind each
 post is in the <a href="../background/journals/">journals</a> and the pull requests they link.</p>
 <div class="post-list">
+<a class="post-card" href="2026-11-08-inverse-bwt-navigation/"><img src="../assets/social/blog-2026-11-08-inverse-bwt-navigation.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">8 November 2026 · Open question</span><span class="post-card-title">The mathematical structure of inverse-BWT navigation</span><span class="post-card-dek">The inverse BWT's next-row map is one shift per run of equal bytes, so it can be stored per run rather than per row. Whether that beats mibz2's table is unproven.</span></span></a>
 <a class="post-card" href="2026-11-07-pipelined-teams/"><img src="../assets/social/blog-2026-11-07-pipelined-teams.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">7 November 2026 · Research result</span><span class="post-card-title">Pipelined teams: how mibz2 0.2.6 decodes 7% faster on ten cores</span><span class="post-card-dek">While a team's helpers invert one block, its leader finishes the last and prepares the next: 7% faster than 0.2.5 on ten cores, for 5% more processor time.</span></span></a>
 <a class="post-card" href="2026-11-07-why-mibz2-stops-scaling/"><img src="../assets/social/blog-2026-11-07-why-mibz2-stops-scaling.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">7 November 2026 · Research in progress</span><span class="post-card-title">Why mibz2 stops scaling at eight threads, and why three teams help</span><span class="post-card-dek">Each block decoded at once slows the others, and more threads per block barely help, so three teams of three beat four of two by 9%. Why blocks interfere is open.</span></span></a>
 <a class="post-card" href="2026-11-05-huffman-bit-buffer/"><img src="../assets/social/blog-2026-11-05-huffman-bit-buffer.png" alt="" loading="lazy"><span class="post-card-text"><span class="post-card-date">5 November 2026 · Research result</span><span class="post-card-title">Huffman decoding in mibz2: keeping the bit buffer in a register</span><span class="post-card-dek">The Huffman decoder wrote its bit buffer to memory and read it back at every lookup. Kept in a register, the stage ran 13% faster on Intel and 5% on AMD.</span></span></a>
@@ -1886,13 +1916,13 @@ post is in the <a href="../background/journals/">journals</a> and the pull reque
         
         
           
-          <a href="./2026-11-07-pipelined-teams/" class="md-footer__link md-footer__link--next" aria-label="Next: Pipelined teams in mibz2 0.2.6">
+          <a href="./2026-11-08-inverse-bwt-navigation/" class="md-footer__link md-footer__link--next" aria-label="Next: Inverse-BWT navigation: the mathematics">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Pipelined teams in mibz2 0.2.6
+                Inverse-BWT navigation: the mathematics
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1987,19 +2017,19 @@ post is in the <a href="../background/journals/">journals</a> and the pull reque
     
       <script src="../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../assets/javascripts/bench.js?v=5469a770ff3c"></script>
+        <script src="../assets/javascripts/bench.js?v=6527d2435cb7"></script>
       
-        <script src="../assets/javascripts/couriers.js?v=5469a770ff3c"></script>
+        <script src="../assets/javascripts/couriers.js?v=6527d2435cb7"></script>
       
-        <script src="../assets/javascripts/blog.js?v=5469a770ff3c"></script>
+        <script src="../assets/javascripts/blog.js?v=6527d2435cb7"></script>
       
-        <script src="../assets/javascripts/frontier.js?v=5469a770ff3c"></script>
+        <script src="../assets/javascripts/frontier.js?v=6527d2435cb7"></script>
       
-        <script src="../assets/javascripts/observatory.js?v=5469a770ff3c"></script>
+        <script src="../assets/javascripts/observatory.js?v=6527d2435cb7"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../assets/javascripts/katex.js?v=5469a770ff3c"></script>
+        <script src="../assets/javascripts/katex.js?v=6527d2435cb7"></script>
       
     
   </body>

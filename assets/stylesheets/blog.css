@@ -646,3 +646,10 @@
 @media (prefers-reduced-motion: reduce) {
   .md-typeset .bf-bitbuf .bf-bit, .md-typeset .bf-bitbuf .bf-key, .bf-bitbuf .bf-btn { transition: none; }
 }
+
+/* A numbered equation (KaTeX \tag) on a phone: the theme sizes a displayed formula to its
+   content and scrolls it sideways, and KaTeX pins the number to the right edge, so the number
+   would cover the formula's end. Set it after the formula instead, where it scrolls with it. */
+@media screen and (max-width: 44.9375em) {
+  .md-typeset div.arithmatex .katex-display .tag { position: static; display: inline-block; margin-left: 1.2em; }
+}
