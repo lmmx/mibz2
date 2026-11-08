@@ -66,17 +66,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=445099d5d031">
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css?v=8743487d9255">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=445099d5d031">
+      <link rel="stylesheet" href="../../assets/stylesheets/bench.css?v=8743487d9255">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=445099d5d031">
+      <link rel="stylesheet" href="../../assets/stylesheets/couriers.css?v=8743487d9255">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=445099d5d031">
+      <link rel="stylesheet" href="../../assets/stylesheets/blog.css?v=8743487d9255">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=445099d5d031">
+      <link rel="stylesheet" href="../../assets/stylesheets/frontier.css?v=8743487d9255">
     
-      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=445099d5d031">
+      <link rel="stylesheet" href="../../assets/stylesheets/observatory.css?v=8743487d9255">
     
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
     
@@ -2183,19 +2183,27 @@ could be listed without writing the column. It is not built.</p>
 </div>
 <div class="post-hero-art"><img src="../../assets/images/hero.svg" alt=""></div>
 </div>
-<p>Before a bzip2 decoder can undo the Burrows–Wheeler transform (BWT), it has to rebuild the
-transform's output: a column of bytes, <span class="arithmatex">\(L\)</span>, one byte for each of the block's <span class="arithmatex">\(n\)</span> rows, up to
-900,000 of them. bzip2 stores that column in coded form. Its <em>move-to-front</em> (MTF) stage
-writes each byte as a small number, its position in a list of recently used bytes, and it
-writes repeats of the last byte as a separate count. mibz2, our bzip2 decoder, turns those
-codes back into all <span class="arithmatex">\(n\)</span> bytes of <span class="arithmatex">\(L\)</span>, then reads <span class="arithmatex">\(L\)</span> again to build its table for the inverse
-BWT, the T-vector, at four bytes a row.</p>
-<p>Take the word <code>banana</code>. Its column is <span class="arithmatex">\(L=\texttt{nnbaaa}\)</span>: three <em>runs</em>, stretches of one
-repeated byte, <code>nn</code>, <code>b</code> and <code>aaa</code>. bzip2's codes for it say, in effect: change to <code>n</code>,
-repeat it once; change to <code>b</code>; change to <code>a</code>, repeat it twice. A decoder could write all six
-bytes and then scan them to find the three runs. But the codes have already said where each
-run starts and how long it is, so three run records, (<code>n</code>, 2), (<code>b</code>, 1) and (<code>a</code>, 3), could
-be built while the codes are decoded, and the six-byte column never written.</p>
+<p>bzip2's codes already say where the BWT's runs of repeated bytes are. Today mibz2 expands
+those codes into an array of every byte, then reads that array again to build the table it
+navigates the BWT with. It could instead keep the runs as it decodes the codes, and build a
+smaller navigation structure straight from them, without the big intermediate array.</p>
+<p>Take the word <code>banana</code>. After the BWT its bytes are <span class="arithmatex">\(L=\texttt{nnbaaa}\)</span>, and bzip2's codes for
+them say, in effect: change to <code>n</code>, repeat it once; change to <code>b</code>; change to <code>a</code>, repeat it
+twice. That is already the three groups <code>nn | b | aaa</code>, as three run records: (<code>n</code>, 2),
+(<code>b</code>, 1) and (<code>a</code>, 3). The navigation structure can be built from those three records, and
+the six bytes never written out and scanned again.</p>
+<p><strong>What is proved, and what isn't.</strong> That the codes give the runs, and the bound on how many
+codes there are, are mathematical results (sections 2 and 4). The inversion still has to
+write every byte, so it is not faster in principle, and the one such structure mibz2 has
+tried navigated more slowly than today's table (section 5). Nothing here has been built or
+timed.</p>
+<p>Some background, for what follows. Before a decoder can undo the Burrows–Wheeler transform
+(BWT), it rebuilds the transform's output: a column of bytes, <span class="arithmatex">\(L\)</span>, one for each of the block's
+<span class="arithmatex">\(n\)</span> rows, up to 900,000 of them. bzip2 stores that column in coded form. Its <em>move-to-front</em>
+(MTF) stage writes each byte as a small number, its position in a list of recently used
+bytes, and it writes repeats of the last byte as a separate count. mibz2, our bzip2 decoder,
+turns those codes back into all <span class="arithmatex">\(n\)</span> bytes of <span class="arithmatex">\(L\)</span>, then reads <span class="arithmatex">\(L\)</span> again to build its table for
+the inverse BWT, the T-vector, at four bytes a row.</p>
 <p>Why would a decoder want the runs? <a href="../2026-11-08-inverse-bwt-navigation/">The previous post</a>
 showed that the inverse BWT's next-row map needs only one record per run of <span class="arithmatex">\(L\)</span>, rather than
 one entry per row. Published structures built from those records, <em>move structures</em>, step
@@ -2215,8 +2223,7 @@ The same issue then built and timed a move structure for mibz2's walk, and it lo
 a loss that a run list handed over for free would not have changed (section 5). That
 experiment did not time a builder fused with MTF. What this post
 adds is the mechanism worked through, its edge cases, what it would cost in theory, and a
-search for prior work. <strong>Nothing here has been built or timed, and it changes nothing in the
-decoder.</strong> The costs in section 4 are our own accounting, which an independent review has
+search for prior work. It changes nothing in the decoder. The costs in section 4 are our own accounting, which an independent review has
 since checked (section 6).</p>
 <p><a href="#1-how-does-bzip2-write-banana">Section 1</a> decodes the codes of <code>banana</code> by hand.
 <a href="#2-why-does-every-literal-start-a-run">Section 2</a> proves that the codes give every run, and
@@ -2804,19 +2811,19 @@ column (<a href="../2026-11-08-inverse-bwt-navigation-notes/#4-what-the-interval
     
       <script src="../../assets/javascripts/bundle.a2388154.min.js"></script>
       
-        <script src="../../assets/javascripts/bench.js?v=445099d5d031"></script>
+        <script src="../../assets/javascripts/bench.js?v=8743487d9255"></script>
       
-        <script src="../../assets/javascripts/couriers.js?v=445099d5d031"></script>
+        <script src="../../assets/javascripts/couriers.js?v=8743487d9255"></script>
       
-        <script src="../../assets/javascripts/blog.js?v=445099d5d031"></script>
+        <script src="../../assets/javascripts/blog.js?v=8743487d9255"></script>
       
-        <script src="../../assets/javascripts/frontier.js?v=445099d5d031"></script>
+        <script src="../../assets/javascripts/frontier.js?v=8743487d9255"></script>
       
-        <script src="../../assets/javascripts/observatory.js?v=445099d5d031"></script>
+        <script src="../../assets/javascripts/observatory.js?v=8743487d9255"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
       
-        <script src="../../assets/javascripts/katex.js?v=445099d5d031"></script>
+        <script src="../../assets/javascripts/katex.js?v=8743487d9255"></script>
       
     
   </body>
